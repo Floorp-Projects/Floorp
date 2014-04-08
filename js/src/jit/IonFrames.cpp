@@ -20,6 +20,7 @@
 #include "jit/JitCompartment.h"
 #include "jit/ParallelFunctions.h"
 #include "jit/PcScriptCache.h"
+#include "jit/Recover.h"
 #include "jit/Safepoints.h"
 #include "jit/Snapshots.h"
 #include "jit/VMFunctions.h"
@@ -1498,6 +1499,42 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc)
     }
 }
 
+const RResumePoint *
+SnapshotIterator::resumePoint() const
+{
+    return instruction()->toResumePoint();
+}
+
+uint32_t
+SnapshotIterator::numAllocations() const
+{
+    return resumePoint()->numOperands();
+}
+
+uint32_t
+SnapshotIterator::pcOffset() const
+{
+    return resumePoint()->pcOffset();
+}
+
+void
+SnapshotIterator::skipInstruction()
+{
+    MOZ_ASSERT(snapshot_.numAllocationsRead() == 0);
+    size_t numOperands = instruction()->numOperands();
+    for (size_t i = 0; i < numOperands; i++)
+        skip();
+    nextInstruction();
+}
+
+void
+SnapshotIterator::nextFrame()
+{
+    nextInstruction();
+    while (!instruction()->isResumePoint())
+        skipInstruction();
+}
+
 IonScript *
 IonFrameIterator::ionScript() const
 {
@@ -1536,6 +1573,7 @@ InlineFrameIteratorMaybeGC<allowGC>::resetOn(const IonFrameIterator *iter)
 {
     frame_ = iter;
     framesRead_ = 0;
+    frameCount_ = UINT32_MAX;
 
     if (iter) {
         start_ = SnapshotIterator(*iter);
@@ -1553,9 +1591,15 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
 
     si_ = start_;
 
-    // Read the initial frame.
+    // Read the initial frame out of the C stack.
     callee_ = frame_->maybeCallee();
     script_ = frame_->script();
+
+    // Settle on the outermost frame without evaluating any instructions before
+    // looking for a pc.
+    if (!si_.instruction()->isResumePoint())
+        si_.nextFrame();
+
     pc_ = script_->offsetToPC(si_.pcOffset());
 #ifdef DEBUG
     numActualArgs_ = 0xbadbad;
@@ -1563,8 +1607,15 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
 
     // This unfortunately is O(n*m), because we must skip over outer frames
     // before reading inner ones.
-    unsigned remaining = start_.frameCount() - framesRead_ - 1;
-    for (unsigned i = 0; i < remaining; i++) {
+
+    // The first time (frameCount_ == UINT32_MAX) we do not know the number of
+    // frames that we are going to inspect.  So we are iterating until there is
+    // no more frames, to settle on the inner most frame and to count the number
+    // of frames.
+    size_t remaining = (frameCount_ != UINT32_MAX) ? frameNo() - 1 : SIZE_MAX;
+
+    size_t i = 1;
+    for (; i <= remaining && si_.moreFrames(); i++) {
         JS_ASSERT(IsIonInlinablePC(pc_));
 
         // Recover the number of actual arguments from the script.
@@ -1582,10 +1633,11 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
         JS_ASSERT(numActualArgs_ != 0xbadbad);
 
         // Skip over non-argument slots, as well as |this|.
-        unsigned skipCount = (si_.allocations() - 1) - numActualArgs_ - 1;
+        unsigned skipCount = (si_.numAllocations() - 1) - numActualArgs_ - 1;
         for (unsigned j = 0; j < skipCount; j++)
             si_.skip();
 
+        // The JSFunction is a constant, otherwise we would not have inlined it.
         Value funval = si_.read();
 
         // Skip extra value allocations.
@@ -1602,6 +1654,14 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
         script_ = callee_->existingScript();
 
         pc_ = script_->offsetToPC(si_.pcOffset());
+    }
+
+    // The first time we do not know the number of frames, we only settle on the
+    // last frame, and update the number of frames based on the number of
+    // iteration that we have done.
+    if (frameCount_ == UINT32_MAX) {
+        MOZ_ASSERT(!si_.moreFrames());
+        frameCount_ = i;
     }
 
     framesRead_++;
@@ -1804,8 +1864,8 @@ InlineFrameIteratorMaybeGC<allowGC>::dump() const
     }
 
     SnapshotIterator si = snapshotIterator();
-    fprintf(stderr, "  slots: %u\n", si.allocations() - 1);
-    for (unsigned i = 0; i < si.allocations() - 1; i++) {
+    fprintf(stderr, "  slots: %u\n", si.numAllocations() - 1);
+    for (unsigned i = 0; i < si.numAllocations() - 1; i++) {
         if (isFunction) {
             if (i == 0)
                 fprintf(stderr, "  scope chain: ");

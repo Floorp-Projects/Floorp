@@ -253,8 +253,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 
           // convert the new rectangle into outer window coordinates
           nsIntPoint clientOffset = widget->GetClientOffset();
-          rect.x -= clientOffset.x; 
-          rect.y -= clientOffset.y; 
+          rect.x -= clientOffset.x;
+          rect.y -= clientOffset.y;
         }
 
         SizeInfo sizeInfo, originalSizeInfo;
@@ -271,6 +271,9 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
             (oldRect.x != rect.x || oldRect.y != rect.y) &&
             (!menuPopupFrame->IsAnchored() ||
              menuPopupFrame->PopupLevel() != ePopupLevelParent)) {
+
+          rect.x = aPresContext->DevPixelsToIntCSSPixels(rect.x);
+          rect.y = aPresContext->DevPixelsToIntCSSPixels(rect.y);
           menuPopupFrame->MoveTo(rect.x, rect.y, true);
         }
       }

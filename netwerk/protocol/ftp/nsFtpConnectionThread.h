@@ -20,6 +20,7 @@
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
+#include "nsProxyRelease.h"
 #endif
 
 // ftp server types
@@ -263,7 +264,7 @@ private:
 // Currently, they are only available on gonk.
     uint64_t                           mCountRecv;
 #ifdef MOZ_WIDGET_GONK
-    nsCOMPtr<nsINetworkInterface>      mActiveNetwork;
+    nsMainThreadPtrHandle<nsINetworkInterface> mActiveNetwork;
 #endif
     nsresult                           SaveNetworkStats(bool);
     void                               CountRecvBytes(uint64_t recvBytes)

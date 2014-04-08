@@ -291,7 +291,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(RegExpReplace)
     UNSAFE_OP(StringReplace)
     UNSAFE_OP(CallInstanceOf)
-    UNSAFE_OP(FunctionBoundary)
+    UNSAFE_OP(ProfilerStackOp)
     UNSAFE_OP(GuardString)
     UNSAFE_OP(NewDeclEnvObject)
     UNSAFE_OP(In)

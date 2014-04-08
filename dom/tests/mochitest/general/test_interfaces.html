@@ -1224,11 +1224,11 @@ function createInterfaceMap(isXBLScope) {
 
   var interfaceMap = {};
 
-  function addInterfaces(interfaces, shouldExpect)
+  function addInterfaces(interfaces)
   {
     for (var entry of interfaces) {
       if (typeof(entry) === "string") {
-        interfaceMap[entry] = shouldExpect;
+        interfaceMap[entry] = true;
       } else if ((entry.nightly === !isNightly) ||
                  (entry.xbl === !isXBLScope) ||
                  (entry.desktop === !isDesktop) ||
@@ -1238,13 +1238,19 @@ function createInterfaceMap(isXBLScope) {
                  (entry.permission && !hasPermission(entry.permission))) {
         interfaceMap[entry.name] = false;
       } else {
-        interfaceMap[entry.name] = shouldExpect;
+        interfaceMap[entry.name] = true;
       }
     }
   }
 
-  addInterfaces(ecmaGlobals, true);
-  addInterfaces(interfaceNamesInGlobalScope, true);
+  addInterfaces(ecmaGlobals);
+  addInterfaces(interfaceNamesInGlobalScope);
+  if (isXBLScope) {
+    // We expose QueryInterface to XBL scopes. It's not an interface but we
+    // need to handle it because it's an own property of the global and the
+    // property name starts with an uppercase letter.
+    interfaceMap["QueryInterface"] = true;
+  }
 
   return interfaceMap;
 }
