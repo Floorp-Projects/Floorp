@@ -833,3 +833,76 @@ add_task(function test_direct() {
   yield deferred.promise;
 });
 
+/**
+ * Test Sqlite.cloneStorageConnection.
+ */
+add_task(function* test_cloneStorageConnection() {
+  let file = new FileUtils.File(OS.Path.join(OS.Constants.Path.profileDir,
+                                             "test_cloneStorageConnection.sqlite"));
+  let c = yield new Promise((success, failure) => {
+    Services.storage.openAsyncDatabase(file, null, (status, db) => {
+      if (Components.isSuccessCode(status)) {
+        success(db.QueryInterface(Ci.mozIStorageAsyncConnection));
+      } else {
+        failure(new Error(status));
+      }
+    });
+  });
+
+  let clone = yield Sqlite.cloneStorageConnection({ connection: c, readOnly: true });
+  // Just check that it works.
+  yield clone.execute("SELECT 1");
+
+  let clone2 = yield Sqlite.cloneStorageConnection({ connection: c, readOnly: false });
+  // Just check that it works.
+  yield clone2.execute("CREATE TABLE test (id INTEGER PRIMARY KEY)");
+
+  // Closing order should not matter.
+  yield c.asyncClose();
+  yield clone2.close();
+  yield clone.close();
+});
+
+/**
+ * Test Sqlite.cloneStorageConnection invalid argument.
+ */
+add_task(function* test_cloneStorageConnection() {
+  try {
+    let clone = yield Sqlite.cloneStorageConnection({ connection: null });
+    do_throw(new Error("Should throw on invalid connection"));
+  } catch (ex if ex.name == "TypeError") {}
+});
+
+/**
+ * Test clone() method.
+ */
+add_task(function* test_clone() {
+  let c = yield getDummyDatabase("clone");
+
+  let clone = yield c.clone();
+  // Just check that it works.
+  yield clone.execute("SELECT 1");
+  // Closing order should not matter.
+  yield c.close();
+  yield clone.close();
+});
+
+/**
+ * Test clone(readOnly) method.
+ */
+add_task(function* test_readOnly_clone() {
+  let path = OS.Path.join(OS.Constants.Path.profileDir, "test_readOnly_clone.sqlite");
+  let c = yield Sqlite.openConnection({path: path, sharedMemoryCache: false});
+
+  let clone = yield c.clone(true);
+  // Just check that it works.
+  yield clone.execute("SELECT 1");
+  // But should not be able to write.
+  try {
+    yield clone.execute("CREATE TABLE test (id INTEGER PRIMARY KEY)");
+    do_throw(new Error("Should not be able to write to a read-only clone."));
+  } catch (ex) {}
+  // Closing order should not matter.
+  yield c.close();
+  yield clone.close();
+});

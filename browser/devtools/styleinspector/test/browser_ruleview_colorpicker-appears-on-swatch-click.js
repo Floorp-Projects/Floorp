@@ -6,8 +6,6 @@
 
 // Test that color pickers appear when clicking on color swatches
 
-let ruleView, swatches;
-
 const PAGE_CONTENT = [
   '<style type="text/css">',
   '  body {',
@@ -20,58 +18,37 @@ const PAGE_CONTENT = [
   'Testing the color picker tooltip!'
 ].join("\n");
 
-function test() {
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function load(evt) {
-    gBrowser.selectedBrowser.removeEventListener("load", load, true);
-    waitForFocus(createDocument, content);
-  }, true);
-
-  content.location = "data:text/html,rule view color picker tooltip test";
-}
-
-function createDocument() {
+let test = asyncTest(function*() {
+  yield addTab("data:text/html,rule view color picker tooltip test");
   content.document.body.innerHTML = PAGE_CONTENT;
+  let {toolbox, inspector, view} = yield openRuleView();
 
-  openRuleView((inspector, view) => {
-    ruleView = view;
-    inspector.once("inspector-updated", () => {
-      let cSwatch = getRuleViewProperty("color", ruleView).valueSpan
-        .querySelector(".ruleview-colorswatch");
-      let bgSwatch = getRuleViewProperty("background-color", ruleView).valueSpan
-        .querySelector(".ruleview-colorswatch");
-      let bSwatch = getRuleViewProperty("border", ruleView).valueSpan
-        .querySelector(".ruleview-colorswatch");
-      swatches = [cSwatch, bgSwatch, bSwatch];
+  let cSwatch = getRuleViewProperty(view, "body", "color").valueSpan
+    .querySelector(".ruleview-colorswatch");
+  let bgSwatch = getRuleViewProperty(view, "body", "background-color").valueSpan
+    .querySelector(".ruleview-colorswatch");
+  let bSwatch = getRuleViewProperty(view, "body", "border").valueSpan
+    .querySelector(".ruleview-colorswatch");
 
-      testColorPickerAppearsOnColorSwatchClick();
-    });
-  });
-}
+  for (let swatch of [cSwatch, bgSwatch, bSwatch]) {
+    info("Testing that the colorpicker appears colorswatch click");
+    yield testColorPickerAppearsOnColorSwatchClick(view, swatch);
+  }
+});
 
-function testColorPickerAppearsOnColorSwatchClick() {
-  let cPicker = ruleView.colorPicker;
+function* testColorPickerAppearsOnColorSwatchClick(view, swatch) {
+  let cPicker = view.colorPicker;
+  ok(cPicker, "The rule-view has the expected colorPicker property");
+
   let cPickerPanel = cPicker.tooltip.panel;
   ok(cPickerPanel, "The XUL panel for the color picker exists");
 
-  function clickOnSwatch(index, cb) {
-    if (index === swatches.length) {
-      return cb();
-    }
+  let onShown = cPicker.tooltip.once("shown");
+  swatch.click();
+  yield onShown;
 
-    let swatch = swatches[index];
-    cPicker.tooltip.once("shown", () => {
-      ok(true, "The color picker was shown on click of the color swatch");
-      ok(!inplaceEditor(swatch.parentNode),
-        "The inplace editor wasn't shown as a result of the color swatch click");
-      cPicker.hide();
-      clickOnSwatch(index + 1, cb);
-    });
-    swatch.click();
-  }
-
-  clickOnSwatch(0, () => {
-    ruleView = swatches = null;
-    finish();
-  });
+  ok(true, "The color picker was shown on click of the color swatch");
+  ok(!inplaceEditor(swatch.parentNode),
+    "The inplace editor wasn't shown as a result of the color swatch click");
+  cPicker.hide();
 }
