@@ -18,6 +18,7 @@ dictionary MediaStreamConstraints {
     (boolean or MediaTrackConstraints) video = false;
     boolean picture = false;
     boolean fake = false;
+    DOMString? peerIdentity = null;
 };
 
 dictionary MediaStreamConstraintsInternal {
@@ -25,6 +26,7 @@ dictionary MediaStreamConstraintsInternal {
     (boolean or MediaTrackConstraintsInternal) video;
     boolean picture = false;
     boolean fake = false;
+    DOMString? peerIdentity = null;
 };
 
 interface MediaStream {

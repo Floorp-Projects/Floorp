@@ -15,4 +15,5 @@ dictionary RTCIceServer {
 
 dictionary RTCConfiguration {
     sequence<RTCIceServer> iceServers;
+    DOMString? peerIdentity = null;
 };
