@@ -71,7 +71,7 @@ const isData = document => document.URL.startsWith("data:");
 
 const uri1 = "data:text/html;charset=utf-8,<h1>1</h1>";
 // For whatever reason going back on load event doesn't work so timeout it is :(
-const uri2 = "data:text/html;charset=utf-8,<h1>2</h1><script>setTimeout(back,100)</script>";
+const uri2 = "data:text/html;charset=utf-8,<h1>2</h1><script>setTimeout(SpecialPowers.wrap(window).back,100)</script>";
 const uri3 = "data:text/html;charset=utf-8,<h1>3</h1>";
 
 const uri4 = "chrome://browser/content/license.html";
