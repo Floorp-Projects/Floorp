@@ -118,6 +118,13 @@ function notifyObservers(aTopic, aInitialImport) {
                                                             : "html");
 }
 
+function promiseSoon() {
+  let deferred = Promise.defer();
+  Services.tm.mainThread.dispatch(deferred.resolve,
+                                  Ci.nsIThread.DISPATCH_NORMAL);
+  return deferred.promise;
+}
+
 this.BookmarkHTMLUtils = Object.freeze({
   /**
    * Loads the current bookmarks hierarchy from a "bookmarks.html" file.
@@ -1089,6 +1096,10 @@ BookmarkExporter.prototype = {
   },
 
   _writeItem: function (aItem, aIndent) {
+    // This is a workaround for "too much recursion" error, due to the fact
+    // Task.jsm still uses old on-same-tick promises.  It may be removed as
+    // soon as bug 887923 is fixed.
+    yield promiseSoon();
     let uri = null;
     try {
       uri = NetUtil.newURI(aItem.uri);
