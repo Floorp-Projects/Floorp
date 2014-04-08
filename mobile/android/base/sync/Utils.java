@@ -28,6 +28,7 @@ import org.json.simple.JSONArray;
 import org.mozilla.apache.commons.codec.binary.Base32;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.nativecode.NativeCrypto;
 import org.mozilla.gecko.sync.setup.Constants;
 
 import android.annotation.SuppressLint;
@@ -210,8 +211,18 @@ public class Utils {
 
   protected static byte[] sha1(final String utf8)
       throws NoSuchAlgorithmException, UnsupportedEncodingException {
-    MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
-    return sha1.digest(utf8.getBytes("UTF-8"));
+    final byte[] bytes = utf8.getBytes("UTF-8");
+    try {
+      return NativeCrypto.sha1(bytes);
+    } catch (final LinkageError e) {
+      // This will throw UnsatisifiedLinkError (missing mozglue) the first time it is called, and
+      // ClassNotDefFoundError, for the uninitialized NativeCrypto class, each subsequent time this
+      // is called; LinkageError is their common ancestor.
+      Logger.warn(LOG_TAG, "Got throwable stretching password using native sha1 implementation; " +
+          "ignoring and using Java implementation.", e);
+      final MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+      return sha1.digest(utf8.getBytes("UTF-8"));
+    }
   }
 
   protected static String sha1Base32(final String utf8)

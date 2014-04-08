@@ -112,9 +112,12 @@ public class FxAccountUtils {
     byte[] S = FxAccountUtils.KWE("quickStretch", emailUTF8);
     try {
       return NativeCrypto.pbkdf2SHA256(passwordUTF8, S, NUMBER_OF_QUICK_STRETCH_ROUNDS, 32);
-    } catch (Throwable t) {
-      // Important to catch Throwable's; we expressly want to catch UnsatisfiedLinkError instances.
-      Logger.warn(LOG_TAG, "Got throwable stretching password using native pbkdf2SHA256 implementation; ignoring and using Java implementation.", t);
+    } catch (final LinkageError e) {
+      // This will throw UnsatisifiedLinkError (missing mozglue) the first time it is called, and
+      // ClassNotDefFoundError, for the uninitialized NativeCrypto class, each subsequent time this
+      // is called; LinkageError is their common ancestor.
+      Logger.warn(LOG_TAG, "Got throwable stretching password using native pbkdf2SHA256 " +
+          "implementation; ignoring and using Java implementation.", e);
       return PBKDF2.pbkdf2SHA256(passwordUTF8, S, NUMBER_OF_QUICK_STRETCH_ROUNDS, 32);
     }
   }
