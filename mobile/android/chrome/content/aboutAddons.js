@@ -10,6 +10,8 @@ Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+const AMO_ICON = "chrome://browser/skin/images/amo-logo.png";
+
 let gStringBundle = Services.strings.createBundle("chrome://browser/locale/aboutAddons.properties");
 
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", function()
@@ -147,7 +149,7 @@ var Addons = {
 
     let img = document.createElement("img");
     img.className = "icon";
-    img.setAttribute("src", aAddon.iconURL);
+    img.setAttribute("src", aAddon.iconURL || AMO_ICON);
     outer.appendChild(img);
 
     let inner = document.createElement("div");
@@ -192,7 +194,7 @@ var Addons = {
 
     let img = document.createElement("img");
     img.className = "icon";
-    img.setAttribute("src", "chrome://browser/skin/images/amo-logo.png");
+    img.setAttribute("src", AMO_ICON);
     outer.appendChild(img);
 
     let inner = document.createElement("div");
@@ -302,10 +304,7 @@ var Addons = {
     let addon = detailItem.addon = aListItem.addon;
 
     let favicon = document.querySelector("#addons-details > .addon-item .icon");
-    if (addon.iconURL)
-      favicon.setAttribute("src", addon.iconURL);
-    else
-      favicon.removeAttribute("src");
+    favicon.setAttribute("src", addon.iconURL || AMO_ICON);
 
     detailItem.querySelector(".title").textContent = addon.name;
     detailItem.querySelector(".version").textContent = addon.version;
