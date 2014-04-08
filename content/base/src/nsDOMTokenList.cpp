@@ -309,7 +309,7 @@ nsDOMTokenList::Stringify(nsAString& aResult)
 }
 
 JSObject*
-nsDOMTokenList::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
+nsDOMTokenList::WrapObject(JSContext *cx)
 {
   return DOMTokenListBinding::Wrap(cx, this);
 }

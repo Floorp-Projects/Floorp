@@ -34,7 +34,7 @@ WorkerNavigator::Create(bool aOnLine)
 }
 
 JSObject*
-WorkerNavigator::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+WorkerNavigator::WrapObject(JSContext* aCx)
 {
   return WorkerNavigatorBinding_workers::Wrap(aCx, this);
 }

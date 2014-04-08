@@ -2760,11 +2760,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
     nsRefPtr<ImageData> imageData = new ImageData(width, height,
                                                   dataArray.toObject());
     // Wrap it in a JS::Value.
-    JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
-    if (!global) {
-      return nullptr;
-    }
-    return imageData->WrapObject(cx, global);
+    return imageData->WrapObject(cx);
   }
 
   // Don't know what this is. Bail.

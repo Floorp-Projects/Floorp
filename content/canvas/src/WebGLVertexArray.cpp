@@ -12,7 +12,7 @@
 using namespace mozilla;
 
 JSObject*
-WebGLVertexArray::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) {
+WebGLVertexArray::WrapObject(JSContext *cx) {
     return dom::WebGLVertexArrayBinding::Wrap(cx, this);
 }
 

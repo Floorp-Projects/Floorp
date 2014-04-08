@@ -29,7 +29,7 @@ SVGPreserveAspectRatio::operator==(const SVGPreserveAspectRatio& aOther) const
 }
 
 JSObject*
-DOMSVGPreserveAspectRatio::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+DOMSVGPreserveAspectRatio::WrapObject(JSContext* aCx)
 {
   return mozilla::dom::SVGPreserveAspectRatioBinding::Wrap(aCx, this);
 }

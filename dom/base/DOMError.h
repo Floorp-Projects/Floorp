@@ -52,7 +52,7 @@ public:
   }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   static already_AddRefed<DOMError>
   Constructor(const GlobalObject& global, const nsAString& name,

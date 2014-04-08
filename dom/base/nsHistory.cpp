@@ -61,7 +61,7 @@ nsHistory::GetParentObject() const
 }
 
 JSObject*
-nsHistory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+nsHistory::WrapObject(JSContext* aCx)
 {
   return HistoryBinding::Wrap(aCx, this);
 }

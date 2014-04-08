@@ -60,7 +60,7 @@ AudioChannelManager::Init(nsPIDOMWindow* aWindow)
 }
 
 JSObject*
-AudioChannelManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+AudioChannelManager::WrapObject(JSContext* aCx)
 {
   return AudioChannelManagerBinding::Wrap(aCx, this);
 }

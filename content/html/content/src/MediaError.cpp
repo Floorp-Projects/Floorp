@@ -37,7 +37,7 @@ NS_IMETHODIMP MediaError::GetCode(uint16_t* aCode)
 }
 
 JSObject*
-MediaError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+MediaError::WrapObject(JSContext* aCx)
 {
   return MediaErrorBinding::Wrap(aCx, this);
 }

@@ -105,7 +105,7 @@ ImageData::DropData()
 }
 
 JSObject*
-ImageData::WrapObject(JSContext* cx, JS::Handle<JSObject*> scope)
+ImageData::WrapObject(JSContext* cx)
 {
   return ImageDataBinding::Wrap(cx, this);
 }

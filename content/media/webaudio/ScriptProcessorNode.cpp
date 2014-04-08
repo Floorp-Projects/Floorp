@@ -451,7 +451,7 @@ ScriptProcessorNode::~ScriptProcessorNode()
 }
 
 JSObject*
-ScriptProcessorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+ScriptProcessorNode::WrapObject(JSContext* aCx)
 {
   return ScriptProcessorNodeBinding::Wrap(aCx, this);
 }

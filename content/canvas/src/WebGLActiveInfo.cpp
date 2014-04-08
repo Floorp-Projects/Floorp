@@ -10,6 +10,6 @@
 using namespace mozilla;
 
 JSObject*
-WebGLActiveInfo::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) {
+WebGLActiveInfo::WrapObject(JSContext *cx) {
     return dom::WebGLActiveInfoBinding::Wrap(cx, this);
 }

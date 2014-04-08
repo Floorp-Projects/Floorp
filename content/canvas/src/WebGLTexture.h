@@ -58,8 +58,7 @@ public:
         return Context();
     }
 
-    virtual JSObject* WrapObject(JSContext *cx,
-                                 JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLTexture)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLTexture)

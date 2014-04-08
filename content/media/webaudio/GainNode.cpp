@@ -120,7 +120,7 @@ GainNode::GainNode(AudioContext* aContext)
 }
 
 JSObject*
-GainNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+GainNode::WrapObject(JSContext* aCx)
 {
   return GainNodeBinding::Wrap(aCx, this);
 }

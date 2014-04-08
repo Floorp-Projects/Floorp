@@ -57,7 +57,7 @@ nsDOMCaretPosition::GetClientRect() const
 }
 
 JSObject*
-nsDOMCaretPosition::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
+nsDOMCaretPosition::WrapObject(JSContext *aCx)
 {
   return mozilla::dom::CaretPositionBinding::Wrap(aCx, this);
 }

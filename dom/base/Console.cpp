@@ -592,7 +592,7 @@ Console::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 JSObject*
-Console::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+Console::WrapObject(JSContext* aCx)
 {
   return ConsoleBinding::Wrap(aCx, this);
 }

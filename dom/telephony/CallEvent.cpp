@@ -25,7 +25,7 @@ CallEvent::Create(EventTarget* aOwner, const nsAString& aType,
 }
 
 JSObject*
-CallEvent::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+CallEvent::WrapObject(JSContext* aCx)
 {
   return CallEventBinding::Wrap(aCx, this);
 }

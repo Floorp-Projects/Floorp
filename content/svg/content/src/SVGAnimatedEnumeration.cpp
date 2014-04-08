@@ -23,7 +23,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimatedEnumeration)
 NS_INTERFACE_MAP_END
 
 JSObject*
-SVGAnimatedEnumeration::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGAnimatedEnumeration::WrapObject(JSContext* aCx)
 {
   return SVGAnimatedEnumerationBinding::Wrap(aCx, this);
 }
