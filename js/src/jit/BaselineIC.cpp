@@ -4373,6 +4373,7 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler &masm)
             // Load function in scratchReg and ensure that it has a jit script.
             masm.loadPtr(Address(BaselineStubReg, ICGetElemNativeGetterStub::offsetOfGetter()),
                          scratchReg);
+            masm.branchIfFunctionHasNoScript(scratchReg, popR1 ? &failurePopR1 : &failure);
             masm.loadPtr(Address(scratchReg, JSFunction::offsetOfNativeOrScript()), scratchReg);
             masm.loadBaselineOrIonRaw(scratchReg, scratchReg, SequentialExecution,
                                       popR1 ? &failurePopR1 : &failure);
@@ -6679,6 +6680,7 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
     }
     Register code = regs.takeAny();
     masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallScripted::offsetOfGetter()), callee);
+    masm.branchIfFunctionHasNoScript(callee, &failureLeaveStubFrame);
     masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), code);
     masm.loadBaselineOrIonRaw(code, code, SequentialExecution, &failureLeaveStubFrame);
 
@@ -7587,6 +7589,7 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
     }
     Register code = regs.takeAny();
     masm.loadPtr(Address(BaselineStubReg, ICSetProp_CallScripted::offsetOfSetter()), callee);
+    masm.branchIfFunctionHasNoScript(callee, &failureLeaveStubFrame);
     masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), code);
     masm.loadBaselineOrIonRaw(code, code, SequentialExecution, &failureLeaveStubFrame);
 
