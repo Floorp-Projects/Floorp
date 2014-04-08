@@ -1105,7 +1105,6 @@ PromiseReportRejectFeature::Notify(JSContext* aCx, workers::Status aStatus)
 bool
 Promise::ArgumentToJSValue(const nsAString& aArgument,
                            JSContext* aCx,
-                           JSObject* aScope,
                            JS::MutableHandle<JS::Value> aValue)
 {
   // XXXkhuey I'd love to use xpc::NonVoidStringToJsval here, but it requires
@@ -1126,7 +1125,6 @@ Promise::ArgumentToJSValue(const nsAString& aArgument,
 bool
 Promise::ArgumentToJSValue(bool aArgument,
                            JSContext* aCx,
-                           JSObject* aScope,
                            JS::MutableHandle<JS::Value> aValue)
 {
   aValue.setBoolean(aArgument);
