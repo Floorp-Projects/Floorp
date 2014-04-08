@@ -22,8 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=397571
 /** Test for Bug 397571 **/
 
 // Get the interface
-var utils = window.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
-               getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+var utils = SpecialPowers.DOMWindowUtils.SpecialPowers_wrappedObject;
 
 // Try to call functions without privileges
 var success = false;

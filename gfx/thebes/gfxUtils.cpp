@@ -7,6 +7,8 @@
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "gfxDrawable.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 #include "nsRegion.h"
 #include "yuv_convert.h"
 #include "ycbcr_to_rgb565.h"
@@ -846,6 +848,76 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
                                aStride,
                                yuvtype);
   }
+}
+
+/* static */ TemporaryRef<DataSourceSurface>
+gfxUtils::CopySurfaceToDataSourceSurfaceWithFormat(SourceSurface* aSurface,
+                                                   SurfaceFormat aFormat)
+{
+  MOZ_ASSERT(aFormat != aSurface->GetFormat(),
+             "Unnecessary - and very expersive - surface format conversion");
+
+  Rect bounds(0, 0, aSurface->GetSize().width, aSurface->GetSize().height);
+
+  if (aSurface->GetType() != SurfaceType::DATA) {
+    // If the surface is NOT of type DATA then its data is not mapped into main
+    // memory. Format conversion is probably faster on the GPU, and by doing it
+    // there we can avoid any expensive uploads/readbacks except for (possibly)
+    // a single readback due to the unavoidable GetDataSurface() call. Using
+    // CreateOffscreenContentDrawTarget ensures the conversion happens on the
+    // GPU.
+    RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
+      CreateOffscreenContentDrawTarget(aSurface->GetSize(), aFormat);
+    // Using DrawSurface() here rather than CopySurface() because CopySurface
+    // is optimized for memcpy and therefore isn't good for format conversion.
+    // Using OP_OVER since in our case it's equivalent to OP_SOURCE and
+    // generally more optimized.
+    dt->DrawSurface(aSurface, bounds, bounds, DrawSurfaceOptions(),
+                    DrawOptions(1.0f, CompositionOp::OP_OVER));
+    RefPtr<SourceSurface> surface = dt->Snapshot();
+    return surface->GetDataSurface();
+  }
+
+  // If the surface IS of type DATA then it may or may not be in main memory
+  // depending on whether or not it has been mapped yet. We have no way of
+  // knowing, so we can't be sure if it's best to create a data wrapping
+  // DrawTarget for the conversion or an offscreen content DrawTarget. We could
+  // guess it's not mapped and create an offscreen content DrawTarget, but if
+  // it is then we'll end up uploading the surface data, and most likely the
+  // caller is going to be accessing the resulting surface data, resulting in a
+  // readback (both very expensive operations). Alternatively we could guess
+  // the data is mapped and create a data wrapping DrawTarget and, if the
+  // surface is not in main memory, then we will incure a readback. The latter
+  // of these two "wrong choices" is the least costly (a readback, vs an
+  // upload and a readback), and more than likely the DATA surface that we've
+  // been passed actually IS in main memory anyway. For these reasons it's most
+  // likely best to create a data wrapping DrawTarget here to do the format
+  // conversion.
+  RefPtr<DataSourceSurface> dataSurface =
+    Factory::CreateDataSourceSurface(aSurface->GetSize(), aFormat);
+  DataSourceSurface::MappedSurface map;
+  if (!dataSurface ||
+      !dataSurface->Map(DataSourceSurface::MapType::READ_WRITE, &map)) {
+    return nullptr;
+  }
+  RefPtr<DrawTarget> dt =
+    Factory::CreateDrawTargetForData(BackendType::CAIRO,
+                                     map.mData,
+                                     dataSurface->GetSize(),
+                                     map.mStride,
+                                     aFormat);
+  if (!dt) {
+    dataSurface->Unmap();
+    return nullptr;
+  }
+  // Using DrawSurface() here rather than CopySurface() because CopySurface
+  // is optimized for memcpy and therefore isn't good for format conversion.
+  // Using OP_OVER since in our case it's equivalent to OP_SOURCE and
+  // generally more optimized.
+  dt->DrawSurface(aSurface, bounds, bounds, DrawSurfaceOptions(),
+                  DrawOptions(1.0f, CompositionOp::OP_OVER));
+  dataSurface->Unmap();
+  return dataSurface.forget();
 }
 
 #ifdef MOZ_DUMP_PAINTING

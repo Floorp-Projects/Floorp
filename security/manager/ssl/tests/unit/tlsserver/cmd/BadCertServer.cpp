@@ -41,6 +41,7 @@ const BadCertHost sBadCertHosts[] =
   { "mismatch-untrusted-expired.example.com", "mismatch-untrusted-expired" },
   { "inadequatekeyusage.example.com", "inadequatekeyusage" },
   { "selfsigned-inadequateEKU.example.com", "selfsigned-inadequateEKU" },
+  { "self-signed-end-entity-with-cA-true.example.com", "self-signed-EE-with-cA-true" },
   { nullptr, nullptr }
 };
 

@@ -103,6 +103,7 @@ let PanelFactory = {
     let panel = doc.createElement("panel");
     panel.setAttribute("hidden", true);
     panel.setAttribute("ignorekeys", true);
+    panel.setAttribute("animate", false);
 
     panel.setAttribute("consumeoutsideclicks", options.get("consumeOutsideClick"));
     panel.setAttribute("noautofocus", options.get("noAutoFocus"));

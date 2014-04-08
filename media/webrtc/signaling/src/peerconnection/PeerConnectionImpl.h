@@ -48,6 +48,7 @@ class AFakePCObserver;
 class Fake_DOMMediaStream;
 #endif
 
+class nsGlobalWindow;
 class nsIDOMMediaStream;
 class nsDOMDataChannel;
 

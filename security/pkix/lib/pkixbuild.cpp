@@ -206,21 +206,20 @@ BuildForward(TrustDomain& trustDomain,
   Result rv;
 
   TrustDomain::TrustLevel trustLevel;
-  bool expiredEndEntity = false;
+  // If this is an end-entity and not a trust anchor, we defer reporting
+  // any error found here until after attempting to find a valid chain.
+  // See the explanation of error prioritization in pkix.h.
   rv = CheckIssuerIndependentProperties(trustDomain, subject, time,
                                         endEntityOrCA,
                                         requiredKeyUsagesIfPresent,
                                         requiredEKUIfPresent, requiredPolicy,
                                         subCACount, &trustLevel);
+  PRErrorCode deferredEndEntityError = 0;
   if (rv != Success) {
-    // CheckIssuerIndependentProperties checks for expiration last, so if
-    // it returned SEC_ERROR_EXPIRED_CERTIFICATE we know that is the only
-    // problem with the cert found so far. Keep going to see if we can build
-    // a path; if not, it's better to return the path building failure.
-    expiredEndEntity = endEntityOrCA == MustBeEndEntity &&
-                       trustLevel != TrustDomain::TrustAnchor &&
-                       PR_GetError() == SEC_ERROR_EXPIRED_CERTIFICATE;
-    if (!expiredEndEntity) {
+    if (endEntityOrCA == MustBeEndEntity &&
+        trustLevel != TrustDomain::TrustAnchor) {
+      deferredEndEntityError = PR_GetError();
+    } else {
       return rv;
     }
   }
@@ -256,12 +255,11 @@ BuildForward(TrustDomain& trustDomain,
                            n->cert, stapledOCSPResponse, subCACount,
                            results);
     if (rv == Success) {
-      if (expiredEndEntity) {
-        // We deferred returning this error to see if we should return
-        // "unknown issuer" instead. Since we found a valid issuer, it's
-        // time to return "expired."
-        PR_SetError(SEC_ERROR_EXPIRED_CERTIFICATE, 0);
-        return RecoverableError;
+      // If we found a valid chain but deferred reporting an error with the
+      // end-entity certificate, report it now.
+      if (deferredEndEntityError != 0) {
+        PR_SetError(deferredEndEntityError, 0);
+        return FatalError;
       }
 
       SECStatus srv = trustDomain.CheckRevocation(endEntityOrCA,

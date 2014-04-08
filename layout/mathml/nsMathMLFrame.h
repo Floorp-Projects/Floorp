@@ -98,6 +98,12 @@ public:
     return 0;
   }
 
+  bool
+  IsMrowLike() MOZ_OVERRIDE
+  {
+    return false;
+  }
+
   // helper to give a style context suitable for doing the stretching to the
   // MathMLChar. Frame classes that use this should make the extra style contexts
   // accessible to the Style System via Get/Set AdditionalStyleContext.

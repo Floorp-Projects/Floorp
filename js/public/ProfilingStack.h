@@ -35,9 +35,9 @@ class ProfileEntry
     // if a sample were taken it would be examining bogus information.
     //
     // A ProfileEntry represents both a C++ profile entry and a JS one. Both use
-    // the string as a description, but JS uses the sp as nullptr to indicate
-    // that it is a JS entry. The script_ is then only ever examined for a JS
-    // entry, and the idx is used by both, but with different meanings.
+    // the string as a description, but JS uses the sp as nullptr or (void*)1 to
+    // indicate that it is a JS entry. The script_ is then only ever examined for
+    // a JS entry, and the idx is used by both, but with different meanings.
     //
     const char * volatile string; // Descriptive string of this entry
     void * volatile sp;           // Relevant stack pointer for the entry
