@@ -13553,13 +13553,7 @@ nsGlobalWindow::GetConsole(JSContext* aCx,
     return rv.ErrorCode();
   }
 
-  JS::Rooted<JSObject*> thisObj(aCx, GetWrapper());
-  if (!thisObj) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (!JS_WrapObject(aCx, &thisObj) ||
-      !WrapNewBindingObject(aCx, thisObj, console, aConsole)) {
+  if (!WrapNewBindingObject(aCx, console, aConsole)) {
     return NS_ERROR_FAILURE;
   }
 

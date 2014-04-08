@@ -2390,8 +2390,7 @@ ConvertExceptionToPromise(JSContext* cx,
     return false;
   }
 
-  JS::Rooted<JSObject*> wrapScope(cx, JS::CurrentGlobalOrNull(cx));
-  return WrapNewBindingObject(cx, wrapScope, promise, rval);
+  return WrapNewBindingObject(cx, promise, rval);
 }
 
 } // namespace dom

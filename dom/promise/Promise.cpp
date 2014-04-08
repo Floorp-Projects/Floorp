@@ -257,7 +257,7 @@ Promise::GetOrCreateWrapper(JSContext* aCx)
   JSAutoCompartment ac(aCx, scope);
 
   JS::Rooted<JS::Value> val(aCx);
-  if (!WrapNewBindingObject(aCx, scope, this, &val)) {
+  if (!WrapNewBindingObject(aCx, this, &val)) {
     MOZ_ASSERT(JS_IsExceptionPending(aCx));
     return nullptr;
   }
@@ -433,7 +433,7 @@ Promise::CreateFunction(JSContext* aCx, JSObject* aParent, Promise* aPromise,
   JS::Rooted<JSObject*> obj(aCx, JS_GetFunctionObject(func));
 
   JS::Rooted<JS::Value> promiseObj(aCx);
-  if (!dom::WrapNewBindingObject(aCx, obj, aPromise, &promiseObj)) {
+  if (!dom::WrapNewBindingObject(aCx, aPromise, &promiseObj)) {
     return nullptr;
   }
 
@@ -460,7 +460,7 @@ Promise::CreateThenableFunction(JSContext* aCx, Promise* aPromise, uint32_t aTas
   JS::Rooted<JSObject*> obj(aCx, JS_GetFunctionObject(func));
 
   JS::Rooted<JS::Value> promiseObj(aCx);
-  if (!dom::WrapNewBindingObject(aCx, obj, aPromise, &promiseObj)) {
+  if (!dom::WrapNewBindingObject(aCx, aPromise, &promiseObj)) {
     return nullptr;
   }
 
