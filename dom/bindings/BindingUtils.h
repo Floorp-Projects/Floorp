@@ -1356,12 +1356,11 @@ struct WrapNativeParentHelper<T, false >
 // Wrapping of our native parent.
 template<typename T>
 static inline JSObject*
-WrapNativeParent(JSContext* cx, JS::Handle<JSObject*> scope, T* p,
-                 nsWrapperCache* cache, bool useXBLScope = false)
+WrapNativeParent(JSContext* cx, T* p, nsWrapperCache* cache,
+                 bool useXBLScope = false)
 {
-  MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
   if (!p) {
-    return scope;
+    return JS::CurrentGlobalOrNull(cx);
   }
 
   JSObject* parent = WrapNativeParentHelper<T>::Wrap(cx, p, cache);
@@ -1388,9 +1387,9 @@ WrapNativeParent(JSContext* cx, JS::Handle<JSObject*> scope, T* p,
 // things like the nsWrapperCache for it.
 template<typename T>
 static inline JSObject*
-WrapNativeParent(JSContext* cx, JS::Handle<JSObject*> scope, const T& p)
+WrapNativeParent(JSContext* cx, const T& p)
 {
-  return WrapNativeParent(cx, scope, GetParentPointer(p), GetWrapperCache(p), GetUseXBLScope(p));
+  return WrapNativeParent(cx, GetParentPointer(p), GetWrapperCache(p), GetUseXBLScope(p));
 }
 
 // A way to differentiate between nodes, which use the parent object
@@ -1416,10 +1415,11 @@ struct GetParentObject
 {
   static JSObject* Get(JSContext* cx, JS::Handle<JSObject*> obj)
   {
+    MOZ_ASSERT(js::IsObjectInContextCompartment(obj, cx));
     T* native = UnwrapDOMObject<T>(obj);
     return
       GetRealParentObject(native,
-                          WrapNativeParent(cx, obj, native->GetParentObject()));
+                          WrapNativeParent(cx, native->GetParentObject()));
   }
 };
 
@@ -1456,7 +1456,8 @@ WrapCallThisObject(JSContext* cx, JS::Handle<JSObject*> scope, const T& p)
   if (!obj) {
     // WrapNativeParent is a bit of a Swiss army knife that will
     // wrap anything for us.
-    obj = WrapNativeParent(cx, scope, p);
+    MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
+    obj = WrapNativeParent(cx, p);
     if (!obj) {
       return nullptr;
     }
