@@ -45,6 +45,11 @@
           Cu.import("resource:///modules/CustomizableUI.jsm", scope);
           let CustomizableUI = scope.CustomizableUI;
 
+          // Bug 989289: Forcibly set the now unsupported "mode" attribute, just
+          // in case it gets accidentally restored from persistence from a user
+          // that's been upgrading and downgrading.
+          this.setAttribute("mode", "icons");
+
           // Searching for the toolbox palette in the toolbar binding because
           // toolbars are constructed first.
           let toolbox = this.toolbox;
