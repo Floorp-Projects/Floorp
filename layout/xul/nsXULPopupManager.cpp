@@ -937,7 +937,8 @@ public:
   nsCOMPtr<nsIContent> mContent;
   bool mDeselectMenu;
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(TransitionEnder)
 
   TransitionEnder(nsIContent* aContent, bool aDeselectMenu)
     : mContent(aContent), mDeselectMenu(aDeselectMenu)
@@ -965,7 +966,14 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(TransitionEnder, nsIDOMEventListener)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(TransitionEnder)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(TransitionEnder)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransitionEnder)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_1(TransitionEnder, mContent);
 
 void
 nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
