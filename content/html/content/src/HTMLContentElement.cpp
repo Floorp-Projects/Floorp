@@ -315,7 +315,7 @@ DistributedContentList::IndexOf(nsIContent* aContent)
 }
 
 JSObject*
-DistributedContentList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+DistributedContentList::WrapObject(JSContext* aCx)
 {
   return NodeListBinding::Wrap(aCx, this);
 }

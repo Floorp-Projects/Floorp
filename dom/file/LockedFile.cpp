@@ -391,7 +391,7 @@ LockedFile::IsOpen() const
 
 // virtual
 JSObject*
-LockedFile::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+LockedFile::WrapObject(JSContext* aCx)
 {
   return LockedFileBinding::Wrap(aCx, this);
 }

@@ -40,7 +40,7 @@ DOMQuad::~DOMQuad()
 }
 
 JSObject*
-DOMQuad::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+DOMQuad::WrapObject(JSContext* aCx)
 {
   return DOMQuadBinding::Wrap(aCx, this);
 }

@@ -70,7 +70,7 @@ public:
     }
     // The XPCOM Detach() is fine for our purposes
 
-    JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> scope);
+    JSObject* WrapObject(JSContext *cx);
 
 private:
     struct NodePointer {

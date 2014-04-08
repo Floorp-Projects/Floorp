@@ -98,7 +98,7 @@ ValidityState::GetValid(bool* aValid)
 }
 
 JSObject*
-ValidityState::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+ValidityState::WrapObject(JSContext* aCx)
 {
   return ValidityStateBinding::Wrap(aCx, this);
 }

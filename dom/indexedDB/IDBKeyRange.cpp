@@ -159,7 +159,7 @@ IDBKeyRange::~IDBKeyRange()
 }
 
 JSObject*
-IDBKeyRange::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+IDBKeyRange::WrapObject(JSContext* aCx)
 {
   return IDBKeyRangeBinding::Wrap(aCx, this);
 }

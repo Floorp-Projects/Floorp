@@ -18,7 +18,7 @@ public:
   MediaElementAudioSourceNode(AudioContext* aContext,
                               DOMMediaStream* aStream);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 };
 
 }

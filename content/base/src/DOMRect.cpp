@@ -21,7 +21,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMRectReadOnly)
 NS_INTERFACE_MAP_END
 
 JSObject*
-DOMRectReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+DOMRectReadOnly::WrapObject(JSContext* aCx)
 {
   MOZ_ASSERT(mParent);
   return DOMRectReadOnlyBinding::Wrap(aCx, this);
@@ -47,7 +47,7 @@ FORWARD_GETTER(Width)
 FORWARD_GETTER(Height)
 
 JSObject*
-DOMRect::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+DOMRect::WrapObject(JSContext* aCx)
 {
   MOZ_ASSERT(mParent);
   return DOMRectBinding::Wrap(aCx, this);
@@ -99,7 +99,7 @@ DOMRectList::Item(uint32_t aIndex, nsIDOMClientRect** aReturn)
 }
 
 JSObject*
-DOMRectList::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
+DOMRectList::WrapObject(JSContext *cx)
 {
   return mozilla::dom::DOMRectListBinding::Wrap(cx, this);
 }

@@ -74,7 +74,7 @@ WebGLBuffer::Validate(GLenum type, uint32_t max_allowed,
 
 
 JSObject*
-WebGLBuffer::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) {
+WebGLBuffer::WrapObject(JSContext *cx) {
     return dom::WebGLBufferBinding::Wrap(cx, this);
 }
 

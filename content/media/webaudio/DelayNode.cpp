@@ -186,7 +186,7 @@ DelayNode::DelayNode(AudioContext* aContext, double aMaxDelay)
 }
 
 JSObject*
-DelayNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+DelayNode::WrapObject(JSContext* aCx)
 {
   return DelayNodeBinding::Wrap(aCx, this);
 }

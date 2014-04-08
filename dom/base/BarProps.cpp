@@ -35,7 +35,7 @@ BarProp::GetParentObject() const
 }
 
 JSObject*
-BarProp::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+BarProp::WrapObject(JSContext* aCx)
 {
   return BarPropBinding::Wrap(aCx, this);
 }

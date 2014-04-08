@@ -546,7 +546,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBCursor)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBCursor)
 
 JSObject*
-IDBCursor::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+IDBCursor::WrapObject(JSContext* aCx)
 {
   MOZ_ASSERT(NS_IsMainThread());
 

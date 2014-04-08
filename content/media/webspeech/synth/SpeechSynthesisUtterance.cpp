@@ -44,8 +44,7 @@ SpeechSynthesisUtterance::SpeechSynthesisUtterance(nsPIDOMWindow* aOwnerWindow,
 SpeechSynthesisUtterance::~SpeechSynthesisUtterance() {}
 
 JSObject*
-SpeechSynthesisUtterance::WrapObject(JSContext* aCx,
-                                     JS::Handle<JSObject*> aScope)
+SpeechSynthesisUtterance::WrapObject(JSContext* aCx)
 {
   return SpeechSynthesisUtteranceBinding::Wrap(aCx, this);
 }

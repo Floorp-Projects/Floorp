@@ -45,7 +45,7 @@ static bool SplitLastSquareBracket(nsACString& string, nsCString& bracketPart)
 }
 
 JSObject*
-WebGLProgram::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) {
+WebGLProgram::WrapObject(JSContext *cx) {
     return dom::WebGLProgramBinding::Wrap(cx, this);
 }
 

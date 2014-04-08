@@ -76,7 +76,7 @@ Icc::NotifyStkEvent(const nsAString& aName, const nsAString& aMessage)
 // WrapperCache
 
 JSObject*
-Icc::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+Icc::WrapObject(JSContext* aCx)
 {
   return MozIccBinding::Wrap(aCx, this);
 }

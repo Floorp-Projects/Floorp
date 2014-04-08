@@ -200,7 +200,7 @@ nsDOMCameraControl::~nsDOMCameraControl()
 }
 
 JSObject*
-nsDOMCameraControl::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+nsDOMCameraControl::WrapObject(JSContext* aCx)
 {
   return CameraControlBinding::Wrap(aCx, this);
 }

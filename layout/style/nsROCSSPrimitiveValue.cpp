@@ -63,7 +63,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsROCSSPrimitiveValue)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 JSObject*
-nsROCSSPrimitiveValue::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
+nsROCSSPrimitiveValue::WrapObject(JSContext *cx)
 {
   return dom::CSSPrimitiveValueBinding::Wrap(cx, this);
 }

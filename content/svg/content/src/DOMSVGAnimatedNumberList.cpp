@@ -35,7 +35,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGAnimatedNumberList)
 NS_INTERFACE_MAP_END
 
 JSObject*
-DOMSVGAnimatedNumberList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+DOMSVGAnimatedNumberList::WrapObject(JSContext* aCx)
 {
   return mozilla::dom::SVGAnimatedNumberListBinding::Wrap(aCx, this);
 }

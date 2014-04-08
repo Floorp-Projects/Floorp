@@ -171,7 +171,7 @@ def print_class_declaration(eventname, iface, fd, conf):
     fd.write("const %sInit& aParam, " % eventname)
     fd.write("ErrorResult& aRv);\n\n")
 
-    fd.write("  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE\n")
+    fd.write("  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE\n")
     fd.write("  {\n")
     fd.write("    return mozilla::dom::%sBinding::Wrap(aCx, this);\n" % eventname)
     fd.write("  }\n\n")

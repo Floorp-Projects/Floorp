@@ -58,7 +58,7 @@ nsDOMDataChannel::~nsDOMDataChannel()
 }
 
 /* virtual */ JSObject*
-nsDOMDataChannel::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+nsDOMDataChannel::WrapObject(JSContext* aCx)
 {
   return DataChannelBinding::Wrap(aCx, this);
 }

@@ -172,7 +172,7 @@ Position::GetParentObject() const
 }
 
 JSObject*
-Position::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+Position::WrapObject(JSContext* aCx)
 {
   return PositionBinding::Wrap(aCx, this);
 }
@@ -226,7 +226,7 @@ Coordinates::GetParentObject() const
 }
 
 JSObject*
-Coordinates::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+Coordinates::WrapObject(JSContext* aCx)
 {
   return CoordinatesBinding::Wrap(aCx, this);
 }

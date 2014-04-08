@@ -49,7 +49,7 @@ WakeLock::~WakeLock()
 }
 
 JSObject*
-WakeLock::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+WakeLock::WrapObject(JSContext* aCx)
 {
   return MozWakeLockBinding::Wrap(aCx, this);
 }

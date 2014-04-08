@@ -805,7 +805,8 @@ WrapNewBindingObject(JSContext* cx, JS::Handle<JSObject*> scope, T* value,
       return false;
     }
 
-    obj = value->WrapObject(cx, scope);
+    MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
+    obj = value->WrapObject(cx);
     if (!obj) {
       // At this point, obj is null, so just return false.
       // Callers seem to be testing JS_IsExceptionPending(cx) to
@@ -880,7 +881,8 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
       ac.construct(cx, scope);
     }
 
-    obj = value->WrapObject(cx, scope);
+    MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
+    obj = value->WrapObject(cx);
   }
 
   if (!obj) {
@@ -927,7 +929,8 @@ WrapNewBindingNonWrapperCachedOwnedObject(JSContext* cx,
     }
 
     bool tookOwnership = false;
-    obj = value->WrapObject(cx, scope, &tookOwnership);
+    MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
+    obj = value->WrapObject(cx, &tookOwnership);
     MOZ_ASSERT_IF(obj, tookOwnership);
     if (tookOwnership) {
       value.forget();
@@ -1325,8 +1328,7 @@ struct WrapNativeParentHelper
     if (!CouldBeDOMBinding(parent)) {
       obj = WrapNativeParentFallback<T>::Wrap(cx, parent, cache);
     } else {
-      JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
-      obj = parent->WrapObject(cx, scope);
+      obj = parent->WrapObject(cx);
     }
 
     return obj;

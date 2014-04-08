@@ -13,7 +13,7 @@
 using namespace mozilla;
 
 JSObject*
-WebGLShader::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) {
+WebGLShader::WrapObject(JSContext *cx) {
     return dom::WebGLShaderBinding::Wrap(cx, this);
 }
 

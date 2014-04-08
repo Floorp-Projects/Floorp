@@ -636,7 +636,7 @@ MediaRecorder::RequestData(ErrorResult& aResult)
 }
 
 JSObject*
-MediaRecorder::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+MediaRecorder::WrapObject(JSContext* aCx)
 {
   return MediaRecorderBinding::Wrap(aCx, this);
 }

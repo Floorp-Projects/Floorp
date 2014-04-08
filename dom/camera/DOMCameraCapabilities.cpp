@@ -61,7 +61,7 @@ CameraCapabilities::~CameraCapabilities()
 }
 
 JSObject*
-CameraCapabilities::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+CameraCapabilities::WrapObject(JSContext* aCx)
 {
   return CameraCapabilitiesBinding::Wrap(aCx, this);
 }
