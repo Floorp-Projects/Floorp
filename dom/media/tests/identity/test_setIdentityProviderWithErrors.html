@@ -6,6 +6,7 @@
   <script type="application/javascript" src="../mochitest/head.js"></script>
   <script type="application/javascript" src="../mochitest/pc.js"></script>
   <script type="application/javascript" src="../mochitest/templates.js"></script>
+  <script type="application/javascript" src="identityevent.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -20,25 +21,60 @@ runTest(function () {
   test.setMediaConstraints([{audio: true}], [{audio: true}]);
   // first example generates an error
   test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html#error', 'nobody');
-  // first doesn't even get a ready message from the IdP - results in a timeout
-  test.setIdentityProvider(test.pcRemote, 'example.com', 'idp.html#error:ready', 'nobody');
+  // second generates a bad assertion; which fails to validate
+  test.setIdentityProvider(test.pcRemote, 'example.com', 'idp.html#bad', 'nobody');
+
+  var localEvents = trapIdentityEvents(test.pcLocal._pc);
+  var remoteEvents = trapIdentityEvents(test.pcRemote._pc);
+
   test.chain.append([
-  [
-    "PEER_IDENTITY_IS_EMPTY",
-    function(test) {
-      ok(!test.pcLocal._pc.peerIdentity, "local peerIdentity is not set");
-      ok(!test.pcRemote._pc.peerIdentity, "remote peerIdentity is not set");
-      test.next();
-    }
-  ],
-  [
-    "OFFERS_AND_ANSWERS_DONT_INCLUDE_IDENTITY",
-    function(test) {
-      ok(!test.pcLocal._last_offer.sdp.contains("a=identity"), "a=identity not contained in the offer SDP");
-      ok(!test.pcRemote._last_answer.sdp.contains("a=identity"), "a=identity not contained in the answer SDP");
-      test.next();
-    }
-  ],
+    [
+      'CHECK_IDENTITY_EVENTS',
+      function(test) {
+        function checkEvents() {
+          ok(localEvents.idpassertionerror, 'local assertion generation should fail (idpassertionerror)');
+          is(localEvents.idpassertionerror.idp, 'example.com', 'event IdP is correct');
+          is(localEvents.idpassertionerror.protocol, 'idp.html#error', 'event IdP protocol is #error');
+          ok(!remoteEvents.idpassertionerror, 'remote assertion generation should succeed (idpassertionerror)');
+          ok(!localEvents.identityresult, 'local assertion generation should fail (identityresult)');
+          ok(remoteEvents.identityresult, 'remote assertion generation should succeed (identityresult)');
+
+          ok(!localEvents.peeridentity, 'no peer identity event for local peer');
+          ok(!remoteEvents.peeridentity, 'no peer identity event for remote peer');
+          ok(localEvents.idpvalidationerror, 'local fails to validate');
+          is(localEvents.idpvalidationerror.idp, 'example.com', 'event IdP is correct');
+          is(localEvents.idpvalidationerror.protocol, 'idp.html#bad', 'event IdP protocol is #bad');
+          ok(!remoteEvents.idpvalidationerror, 'remote doesn\'t even see an assertion');
+
+          test.next();
+        }
+
+        // we actually have to wait on this because IdP validation happens asynchronously
+        if (localEvents.idpvalidationerror) {
+          checkEvents();
+        } else {
+          // have to let the other event handler have a chance to record success
+          // before we run the checks that rely on that recording
+          test.pcLocal._pc.onidpvalidationerror = setTimeout.bind(window, checkEvents, 1);
+        }
+      }
+    ],
+    [
+      'PEER_IDENTITY_IS_EMPTY',
+      function(test) {
+        ok(!test.pcLocal._pc.peerIdentity, 'local peerIdentity is not set');
+        ok(!test.pcRemote._pc.peerIdentity, 'remote peerIdentity is not set');
+        test.next();
+      }
+    ],
+    [
+      'ONLY_REMOTE_SDP_INCLUDES_IDENTITY_ASSERTION',
+      function(test) {
+        ok(!test.pcLocal._last_offer.sdp.contains('a=identity'), 'a=identity not contained in the offer SDP');
+        ok(test.pcRemote._last_answer.sdp.contains('a=identity'), 'a=identity is contained in the answer SDP');
+        test.next();
+      }
+    ]
   ]);
   test.run();
 });
