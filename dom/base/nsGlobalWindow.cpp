@@ -1942,11 +1942,11 @@ nsGlobalWindow::TraceGlobalJSObject(JSTracer* aTrc)
 
 /* static */
 JSObject*
-nsGlobalWindow::OuterObject(JSContext* aCx, JS::HandleObject aObj)
+nsGlobalWindow::OuterObject(JSContext* aCx, JS::Handle<JSObject*> aObj)
 {
-  nsGlobalWindow *origWin;
+  nsGlobalWindow* origWin;
   UNWRAP_OBJECT(Window, aObj, origWin);
-  nsGlobalWindow *win = origWin->GetOuterWindowInternal();
+  nsGlobalWindow* win = origWin->GetOuterWindowInternal();
 
   if (!win) {
     // If we no longer have an outer window. No code should ever be
