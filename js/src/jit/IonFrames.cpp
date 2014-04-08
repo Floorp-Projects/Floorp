@@ -1499,6 +1499,12 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc)
     }
 }
 
+const RResumePoint *
+SnapshotIterator::resumePoint() const
+{
+    return instruction()->toResumePoint();
+}
+
 uint32_t
 SnapshotIterator::numAllocations() const
 {

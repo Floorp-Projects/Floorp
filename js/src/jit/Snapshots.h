@@ -441,8 +441,8 @@ class SnapshotReader
     }
 };
 
-typedef mozilla::AlignedStorage<2 * sizeof(uint32_t)> RInstructionStorage;
-class RResumePoint;
+typedef mozilla::AlignedStorage<4 * sizeof(uint32_t)> RInstructionStorage;
+class RInstruction;
 
 class RecoverReader
 {
@@ -473,8 +473,8 @@ class RecoverReader
         return frameCount_;
     }
 
-    const RResumePoint *resumePoint() const {
-        return reinterpret_cast<const RResumePoint *>(rawData_.addr());
+    const RInstruction *instruction() const {
+        return reinterpret_cast<const RInstruction *>(rawData_.addr());
     }
 
     bool resumeAfter() const {

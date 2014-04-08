@@ -13,10 +13,24 @@
 using namespace js;
 using namespace js::jit;
 
+void
+RInstruction::readRecoverData(CompactBufferReader &reader, RInstructionStorage *raw)
+{
+    uint32_t op = reader.readUnsigned();
+    switch (Opcode(op)) {
+      case Recover_ResumePoint:
+        new (raw->addr()) RResumePoint(reader);
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Bad decoding of the previous instruction?");
+        break;
+    }
+}
+
 bool
 MResumePoint::writeRecoverData(CompactBufferWriter &writer) const
 {
-    writer.writeUnsigned(uint32_t(Recover_ResumePoint));
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_ResumePoint));
 
     MBasicBlock *bb = block();
     JSFunction *fun = bb->info().funMaybeLazy();
@@ -93,12 +107,4 @@ RResumePoint::RResumePoint(CompactBufferReader &reader)
     numOperands_ = reader.readUnsigned();
     IonSpew(IonSpew_Snapshots, "Read RResumePoint (pc offset %u, nslots %u)",
             pcOffset_, numOperands_);
-}
-
-void
-RResumePoint::readRecoverData(CompactBufferReader &reader, RInstructionStorage *raw)
-{
-    mozilla::DebugOnly<uint32_t> op = reader.readUnsigned();
-    MOZ_ASSERT(op == uint32_t(Recover_ResumePoint));
-    new (raw->addr()) RResumePoint(reader);
 }
