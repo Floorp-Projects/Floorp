@@ -482,9 +482,9 @@ static const uint32_t RECOVER_RESUMEAFTER_SHIFT = 0;
 static const uint32_t RECOVER_RESUMEAFTER_BITS = 1;
 static const uint32_t RECOVER_RESUMEAFTER_MASK = COMPUTE_MASK_(RECOVER_RESUMEAFTER);
 
-static const uint32_t RECOVER_FRAMECOUNT_SHIFT = COMPUTE_SHIFT_AFTER_(RECOVER_RESUMEAFTER);
-static const uint32_t RECOVER_FRAMECOUNT_BITS = 32 - RECOVER_FRAMECOUNT_SHIFT;
-static const uint32_t RECOVER_FRAMECOUNT_MASK = COMPUTE_MASK_(RECOVER_FRAMECOUNT);
+static const uint32_t RECOVER_RINSCOUNT_SHIFT = COMPUTE_SHIFT_AFTER_(RECOVER_RESUMEAFTER);
+static const uint32_t RECOVER_RINSCOUNT_BITS = 32 - RECOVER_RINSCOUNT_SHIFT;
+static const uint32_t RECOVER_RINSCOUNT_MASK = COMPUTE_MASK_(RECOVER_RINSCOUNT);
 
 #undef COMPUTE_MASK_
 #undef COMPUTE_SHIFT_AFTER_
@@ -531,13 +531,18 @@ SnapshotReader::spewBailingFrom() const
 }
 #endif
 
+uint32_t
+SnapshotReader::readAllocationIndex()
+{
+    allocRead_++;
+    return reader_.readUnsigned();
+}
+
 RValueAllocation
 SnapshotReader::readAllocation()
 {
     IonSpew(IonSpew_Snapshots, "Reading slot %u", allocRead_);
-    allocRead_++;
-
-    uint32_t offset = reader_.readUnsigned() * ALLOCATION_TABLE_ALIGNMENT;
+    uint32_t offset = readAllocationIndex() * ALLOCATION_TABLE_ALIGNMENT;
     allocReader_.seek(allocTable_, offset);
     return RValueAllocation::read(allocReader_);
 }
@@ -553,14 +558,14 @@ SnapshotWriter::init()
 
 RecoverReader::RecoverReader(SnapshotReader &snapshot, const uint8_t *recovers, uint32_t size)
   : reader_(nullptr, nullptr),
-    frameCount_(0),
-    framesRead_(0)
+    numInstructions_(0),
+    numInstructionsRead_(0)
 {
     if (!recovers)
         return;
     reader_ = CompactBufferReader(recovers + snapshot.recoverOffset(), recovers + size);
     readRecoverHeader();
-    readFrame();
+    readInstruction();
 }
 
 void
@@ -568,20 +573,20 @@ RecoverReader::readRecoverHeader()
 {
     uint32_t bits = reader_.readUnsigned();
 
-    frameCount_ = (bits & RECOVER_FRAMECOUNT_MASK) >> RECOVER_FRAMECOUNT_SHIFT;
+    numInstructions_ = (bits & RECOVER_RINSCOUNT_MASK) >> RECOVER_RINSCOUNT_SHIFT;
     resumeAfter_ = (bits & RECOVER_RESUMEAFTER_MASK) >> RECOVER_RESUMEAFTER_SHIFT;
-    JS_ASSERT(frameCount_);
+    MOZ_ASSERT(numInstructions_);
 
-    IonSpew(IonSpew_Snapshots, "Read recover header with frameCount %u (ra: %d)",
-            frameCount_, resumeAfter_);
+    IonSpew(IonSpew_Snapshots, "Read recover header with instructionCount %u (ra: %d)",
+            numInstructions_, resumeAfter_);
 }
 
 void
-RecoverReader::readFrame()
+RecoverReader::readInstruction()
 {
-    JS_ASSERT(moreFrames());
+    MOZ_ASSERT(moreInstructions());
     RInstruction::readRecoverData(reader_, &rawData_);
-    framesRead_++;
+    numInstructionsRead_++;
 }
 
 SnapshotOffset
@@ -667,10 +672,10 @@ RecoverWriter::startRecover(uint32_t frameCount, bool resumeAfter)
             frameCount);
 
     MOZ_ASSERT(!(uint32_t(resumeAfter) &~ RECOVER_RESUMEAFTER_MASK));
-    MOZ_ASSERT(frameCount < uint32_t(1 << RECOVER_FRAMECOUNT_BITS));
+    MOZ_ASSERT(frameCount < uint32_t(1 << RECOVER_RINSCOUNT_BITS));
     uint32_t bits =
         (uint32_t(resumeAfter) << RECOVER_RESUMEAFTER_SHIFT) |
-        (frameCount << RECOVER_FRAMECOUNT_SHIFT);
+        (frameCount << RECOVER_RINSCOUNT_SHIFT);
 
     RecoverOffset recoverOffset = writer_.length();
     writer_.writeUnsigned(bits);
