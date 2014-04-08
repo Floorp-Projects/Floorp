@@ -227,7 +227,7 @@ const kEventConstructors = {
                                                        },
                                              },
   MozApplicationEvent:                       { create: function (aName, aProps) {
-                                                         return new MozApplicationEvent(aName, aProps);                                                       
+                                                         return new MozApplicationEvent(aName, aProps);
                                                        },
                                              },
   MozCellBroadcastEvent:                     { create: function (aName, aProps) {
@@ -324,6 +324,10 @@ const kEventConstructors = {
                                              },
   RTCPeerConnectionIdentityEvent:            { create: function (aName, aProps) {
                                                          return new RTCPeerConnectionIdentityEvent(aName, aProps);
+                                                       },
+                                             },
+  RTCPeerConnectionIdentityErrorEvent:       { create: function (aName, aProps) {
+                                                         return new RTCPeerConnectionIdentityErrorEvent(aName, aProps);
                                                        },
                                              },
   ScrollAreaEvent:                           { create: function (aName, aProps) {

@@ -55,19 +55,16 @@ function handleFailure(done) {
     ok(false, "IdP error" + error);
     done();
   }
-  setTimeout(failure, 5000);
   return failure;
 }
 
 function test_success_response(done) {
   var idp;
   var failure = handleFailure(done);
-  var timeout = setTimeout(failure, 5000);;
 
   function handleResponse(response) {
     is(SpecialPowers.wrap(response).type, "SUCCESS", "IdP responds with SUCCESS");
     idp.close();
-    clearTimeout(timeout);
     done();
   }
 
@@ -79,12 +76,10 @@ function test_success_response(done) {
 function test_error_response(done) {
   var idp;
   var failure = handleFailure(done);
-  var timeout = setTimeout(failure, 5000);;
 
   function handleResponse(response) {
     is(SpecialPowers.wrap(response).type, "ERROR", "IdP should produce ERROR");
     idp.close();
-    clearTimeout(timeout);
     done();
   }
 
@@ -96,13 +91,11 @@ function test_error_response(done) {
 function test_delayed_response(done) {
   var idp;
   var failure = handleFailure(done);
-  var timeout = setTimeout(failure, 5000);;
 
   function handleResponse(response) {
     is(SpecialPowers.wrap(response).type, "SUCCESS",
        "IdP should handle delayed response");
     idp.close();
-    clearTimeout(timeout);
     done();
   }
 

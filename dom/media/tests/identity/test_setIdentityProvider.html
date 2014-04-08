@@ -7,6 +7,7 @@
   <script type="application/javascript" src="../mochitest/head.js"></script>
   <script type="application/javascript" src="../mochitest/pc.js"></script>
   <script type="application/javascript" src="../mochitest/templates.js"></script>
+  <script type="application/javascript" src="identityevent.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -21,6 +22,10 @@ function theTest() {
   test.setMediaConstraints([{audio: true}], [{audio: true}]);
   test.setIdentityProvider(test.pcLocal, "test1.example.com", "idp.html", "someone");
   test.setIdentityProvider(test.pcRemote, "test2.example.com", "idp.html", "someone");
+
+  var localEvents = trapIdentityEvents(test.pcLocal._pc);
+  var remoteEvents = trapIdentityEvents(test.pcRemote._pc);
+
   test.chain.append([
   [
     "PEER_IDENTITY_IS_SET_CORRECTLY",
@@ -33,6 +38,7 @@ function theTest() {
 
       function checkOrSetupCheck(pc, pfx, idp, name) {
         function checkIdentity() {
+          ok(pc.peerIdentity, pfx + "peerIdentity is set");
           is(pc.peerIdentity.idp, idp, pfx + "IdP is correct");
           is(pc.peerIdentity.name, name + "@" + idp, pfx + "identity is correct");
         }
@@ -53,16 +59,25 @@ function theTest() {
         }
       }
 
-      setTimeout(function() {
-        ok(false, "Timed out waiting for peerIdentity.");
-        test.next();
-      }, 5000); // probably should be something in the base harness for this
-
       checkOrSetupCheck(test.pcLocal._pc, "local: ", "test2.example.com", "someone");
       checkOrSetupCheck(test.pcRemote._pc, "remote: ", "test1.example.com", "someone");
       if (outstanding <= 0) {
         test.next();
       }
+    }
+  ],
+  [
+    "CHECK_IDENTITY_EVENTS",
+    function(test) {
+      ok(!localEvents.idpassertionerror , "No assertion generation errors on local");
+      ok(!remoteEvents.idpassertionerror, "No assertion generation errors on remote");
+      ok(!localEvents.idpvalidationerror, "No assertion validation errors on local");
+      ok( !remoteEvents.idpvalidationerror, "No assertion validation errors on remote");
+      ok(localEvents.identityresult, "local acquired identity assertions");
+      ok(remoteEvents.identityresult, "remote acquired identity assertions");
+      ok(localEvents.peeridentity, "local got peer identity");
+      ok(remoteEvents.peeridentity, "remote got peer identity");
+      test.next();
     }
   ],
   [
