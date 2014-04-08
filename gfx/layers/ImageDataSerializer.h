@@ -89,6 +89,7 @@ public:
   {
     Validate();
   }
+
 };
 
 } // namespace layers

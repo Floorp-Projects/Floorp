@@ -420,6 +420,13 @@ public:
   virtual LayersBackend GetBackendType() = 0;
 
   /**
+   * Type of layers backend that will be used to composite this layer tree.
+   * When compositing is done remotely, then this returns the layers type
+   * of the compositor.
+   */
+  virtual LayersBackend GetCompositorBackendType() { return GetBackendType(); }
+
+  /**
    * Creates a surface which is optimized for inter-operating with this layer
    * manager.
    */

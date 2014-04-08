@@ -15,7 +15,7 @@
     <Url type="text/html" method="GET" template="http://www.bing.com/search">
         <Param name="q" value="{searchTerms}"/>
         <MozParam name="pc" condition="pref" pref="ms-pc"/>
-        <MozParam name="form" condition="purpose" purpose="contextmenu" value="MOZSBR"/>
+        <MozParam name="form" condition="purpose" purpose="contextmenu" value="MOZCON"/>
         <MozParam name="form" condition="purpose" purpose="searchbar" value="MOZSBR"/>
         <MozParam name="form" condition="purpose" purpose="homepage" value="MOZSPG"/>
         <MozParam name="form" condition="purpose" purpose="keyword" value="MOZLBR"/>

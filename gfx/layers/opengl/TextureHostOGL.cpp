@@ -13,11 +13,9 @@
 #include "SharedSurfaceGL.h"            // for SharedSurface_GLTexture, etc
 #include "SurfaceStream.h"              // for SurfaceStream
 #include "SurfaceTypes.h"               // for SharedSurfaceType, etc
-#include "TiledLayerBuffer.h"           // for TILEDLAYERBUFFER_TILE_SIZE
 #include "gfx2DGlue.h"                  // for ContentForFormat, etc
 #include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxReusableSurfaceWrapper.h"  // for gfxReusableSurfaceWrapper
-#include "ipc/AutoOpenSurface.h"        // for AutoOpenSurface
 #include "mozilla/gfx/2D.h"             // for DataSourceSurface
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
@@ -131,10 +129,12 @@ WrapMode(gl::GLContext *aGl, bool aAllowRepeat)
 }
 
 CompositableDataGonkOGL::CompositableDataGonkOGL()
+ : mTexture(0)
 {
 }
 CompositableDataGonkOGL::~CompositableDataGonkOGL()
 {
+  DeleteTextureIfPresent();
 }
 
 gl::GLContext*
@@ -151,6 +151,28 @@ void CompositableDataGonkOGL::SetCompositor(Compositor* aCompositor)
 void CompositableDataGonkOGL::ClearData()
 {
   CompositableBackendSpecificData::ClearData();
+  DeleteTextureIfPresent();
+}
+
+GLuint CompositableDataGonkOGL::GetTexture()
+{
+  if (!mTexture) {
+    if (gl()->MakeCurrent()) {
+      gl()->fGenTextures(1, &mTexture);
+    }
+  }
+  return mTexture;
+}
+
+void
+CompositableDataGonkOGL::DeleteTextureIfPresent()
+{
+  if (mTexture) {
+    if (gl()->MakeCurrent()) {
+      gl()->fDeleteTextures(1, &mTexture);
+    }
+    mTexture = 0;
+  }
 }
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17

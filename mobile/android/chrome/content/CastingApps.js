@@ -11,6 +11,12 @@ var CastingApps = {
       return;
     }
 
+    // Register a service target
+    SimpleServiceDiscovery.registerTarget("roku:ecp", function(aService, aApp) {
+      Cu.import("resource://gre/modules/RokuApp.jsm");
+      return new RokuApp(aService, "FirefoxTest");
+    });
+
     // Search for devices continuously every 120 seconds
     SimpleServiceDiscovery.search(120 * 1000);
 

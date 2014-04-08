@@ -27,23 +27,11 @@ AutoMaskData::Construct(const gfx::Matrix& aTransform,
   mSurface = aSurface;
 }
 
-void
-AutoMaskData::Construct(const gfx::Matrix& aTransform,
-                        const SurfaceDescriptor& aSurface)
-{
-  MOZ_ASSERT(!IsConstructed());
-  mTransform = aTransform;
-  mSurfaceOpener.construct(OPEN_READ_ONLY, aSurface);
-}
-
 gfxASurface*
 AutoMaskData::GetSurface()
 {
   MOZ_ASSERT(IsConstructed());
-  if (mSurface) {
-    return mSurface.get();
-  }
-  return mSurfaceOpener.ref().Get();
+  return mSurface.get();
 }
 
 const gfx::Matrix&
@@ -56,7 +44,7 @@ AutoMaskData::GetTransform()
 bool
 AutoMaskData::IsConstructed()
 {
-  return !!mSurface || !mSurfaceOpener.empty();
+  return !!mSurface;
 }
 
 bool
@@ -64,19 +52,14 @@ GetMaskData(Layer* aMaskLayer, AutoMaskData* aMaskData)
 {
   if (aMaskLayer) {
     nsRefPtr<gfxASurface> surface;
-    SurfaceDescriptor descriptor;
     if (static_cast<BasicImplData*>(aMaskLayer->ImplData())
-        ->GetAsSurface(getter_AddRefs(surface), &descriptor) &&
-        (surface || IsSurfaceDescriptorValid(descriptor))) {
+        ->GetAsSurface(getter_AddRefs(surface)) &&
+        surface) {
       Matrix transform;
       Matrix4x4 effectiveTransform = aMaskLayer->GetEffectiveTransform();
       DebugOnly<bool> maskIs2D = effectiveTransform.CanDraw2D(&transform);
       NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
-      if (surface) {
-        aMaskData->Construct(transform, surface);
-      } else {
-        aMaskData->Construct(transform, descriptor);
-      }
+      aMaskData->Construct(transform, surface);
       return true;
     }
   }

@@ -839,6 +839,9 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     // Script has been reused for a clone.
     bool hasBeenCloned_:1;
 
+    // Script has been inlined at least once, and can't be relazified.
+    bool hasBeenInlined_:1;
+
     // Script came from eval(), and is still active.
     bool isActiveEval_:1;
 
@@ -1028,10 +1031,12 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     }
     bool hasRunOnce() const { return hasRunOnce_; }
     bool hasBeenCloned() const { return hasBeenCloned_; }
+    bool hasBeenInlined() const { return hasBeenInlined_; }
 
     void setTreatAsRunOnce() { treatAsRunOnce_ = true; }
     void setHasRunOnce() { hasRunOnce_ = true; }
     void setHasBeenCloned() { hasBeenCloned_ = true; }
+    void setHasBeenInlined() { hasBeenInlined_ = true; }
 
     bool isActiveEval() const { return isActiveEval_; }
     bool isCachedEval() const { return isCachedEval_; }
@@ -1246,7 +1251,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
 
     bool isRelazifiable() const {
         return (selfHosted() || lazyScript) &&
-               !isGenerator() && !hasBaselineScript() && !hasAnyIonScript();
+               !isGenerator() && !hasBaselineScript() && !hasAnyIonScript() && !hasBeenInlined();
     }
     void setLazyScript(js::LazyScript *lazy) {
         lazyScript = lazy;

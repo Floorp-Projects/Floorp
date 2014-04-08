@@ -48,7 +48,6 @@ class PLayerTransactionParent;
 class LayerTransactionChild;
 class RefLayerComposite;
 class ShadowableLayer;
-class Shmem;
 class ShmemTextureClient;
 class SurfaceDescriptor;
 class TextureClient;
@@ -134,7 +133,6 @@ class Transaction;
 
 class ShadowLayerForwarder : public CompositableForwarder
 {
-  friend class AutoOpenSurface;
   friend class ContentClientIncremental;
   friend class ClientLayerManager;
 
@@ -199,16 +197,6 @@ public:
   void CreatedColorLayer(ShadowableLayer* aColor);
   void CreatedCanvasLayer(ShadowableLayer* aCanvas);
   void CreatedRefLayer(ShadowableLayer* aRef);
-
-  /**
-   * The specified layer is destroying its buffers.
-   * |aBackBufferToDestroy| is deallocated when this transaction is
-   * posted to the parent.  During the parent-side transaction, the
-   * shadow is told to destroy its front buffer.  This can happen when
-   * a new front/back buffer pair have been created because of a layer
-   * resize, e.g.
-   */
-  virtual void DestroyedThebesBuffer(const SurfaceDescriptor& aBackBufferToDestroy) MOZ_OVERRIDE;
 
   /**
    * At least one attribute of |aMutant| has changed, and |aMutant|
@@ -378,9 +366,6 @@ public:
 
   static void PlatformSyncBeforeUpdate();
 
-  static already_AddRefed<gfxASurface>
-  OpenDescriptor(OpenMode aMode, const SurfaceDescriptor& aSurface);
-
 protected:
   ShadowLayerForwarder();
 
@@ -403,61 +388,6 @@ protected:
 #endif
 
 private:
-  /**
-   * Try to query the content type efficiently, but at worst map the
-   * surface and return it in *aSurface.
-   */
-  static gfxContentType
-  GetDescriptorSurfaceContentType(const SurfaceDescriptor& aDescriptor,
-                                  OpenMode aMode,
-                                  gfxASurface** aSurface);
-  /**
-   * It can be expensive to open a descriptor just to query its
-   * content type.  If the platform impl can do this cheaply, it will
-   * set *aContent and return true.
-   */
-  static bool
-  PlatformGetDescriptorSurfaceContentType(const SurfaceDescriptor& aDescriptor,
-                                          OpenMode aMode,
-                                          gfxContentType* aContent,
-                                          gfxASurface** aSurface);
-  // (Same as above, but for surface size.)
-  static gfx::IntSize
-  GetDescriptorSurfaceSize(const SurfaceDescriptor& aDescriptor,
-                           OpenMode aMode,
-                           gfxASurface** aSurface);
-  static bool
-  PlatformGetDescriptorSurfaceSize(const SurfaceDescriptor& aDescriptor,
-                                   OpenMode aMode,
-                                   gfx::IntSize* aSize,
-                                   gfxASurface** aSurface);
-  // And again, for the image format.
-  // This function will return gfxImageFormat::Unknown only if |aDescriptor|
-  // describes a non-ImageSurface.
-  static gfxImageFormat
-  GetDescriptorSurfaceImageFormat(const SurfaceDescriptor& aDescriptor,
-                                  OpenMode aMode,
-                                  gfxASurface** aSurface);
-  static bool
-  PlatformGetDescriptorSurfaceImageFormat(const SurfaceDescriptor& aDescriptor,
-                                          OpenMode aMode,
-                                          gfxImageFormat* aContent,
-                                          gfxASurface** aSurface);
-
-  static already_AddRefed<gfxASurface>
-  PlatformOpenDescriptor(OpenMode aMode, const SurfaceDescriptor& aDescriptor);
-
-  /**
-   * Make this descriptor unusable for gfxASurface clients. A
-   * private interface with AutoOpenSurface.
-   */
-  static void
-  CloseDescriptor(const SurfaceDescriptor& aDescriptor);
-
-  static bool
-  PlatformCloseDescriptor(const SurfaceDescriptor& aDescriptor);
-
-  bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
 
   Transaction* mTxn;
   DiagnosticTypes mDiagnosticTypes;
