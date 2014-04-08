@@ -250,11 +250,7 @@ CodeGeneratorShared::encode(LRecoverInfo *recover)
 
     RecoverOffset offset = recovers_.startRecover(frameCount, resumeAfter);
 
-    FlattenedMResumePointIter mirOperandIter(recover->mir());
-    if (!mirOperandIter.init())
-        return false;
-
-    for (MResumePoint **it = mirOperandIter.begin(), **end = mirOperandIter.end();
+    for (MResumePoint **it = recover->begin(), **end = recover->end();
          it != end;
          ++it)
     {
@@ -320,14 +316,15 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     if (snapshot->snapshotOffset() != INVALID_SNAPSHOT_OFFSET)
         return true;
 
-    if (!encode(snapshot->recoverInfo()))
+    LRecoverInfo *recoverInfo = snapshot->recoverInfo();
+    if (!encode(recoverInfo))
         return false;
 
-    RecoverOffset recoverOffset = snapshot->recoverInfo()->recoverOffset();
+    RecoverOffset recoverOffset = recoverInfo->recoverOffset();
     MOZ_ASSERT(recoverOffset != INVALID_RECOVER_OFFSET);
 
-    IonSpew(IonSpew_Snapshots, "Encoding LSnapshot %p (LRecoverInfo %p)",
-            (void *)snapshot, (void*) snapshot->recoverInfo());
+    IonSpew(IonSpew_Snapshots, "Encoding LSnapshot %p (LRecover %p)",
+            (void *)snapshot, (void*) recoverInfo);
 
     SnapshotOffset offset = snapshots_.startSnapshot(recoverOffset, snapshot->bailoutKind());
 
@@ -351,12 +348,8 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     snapshots_.trackSnapshot(pcOpcode, mirOpcode, mirId, lirOpcode, lirId);
 #endif
 
-    FlattenedMResumePointIter mirOperandIter(snapshot->recoverInfo()->mir());
-    if (!mirOperandIter.init())
-        return false;
-
     uint32_t startIndex = 0;
-    for (MResumePoint **it = mirOperandIter.begin(), **end = mirOperandIter.end();
+    for (MResumePoint **it = recoverInfo->begin(), **end = recoverInfo->end();
          it != end;
          ++it)
     {
