@@ -36,9 +36,8 @@
 #include <algorithm>
 
 #ifdef MOZ_WIDGET_GONK
-#include "nsINetworkStatsServiceProxy.h"
+#include "NetStatistics.h"
 #endif
-
 
 //-----------------------------------------------------------------------------
 
@@ -54,6 +53,8 @@ static NS_DEFINE_CID(kMultiplexInputStream, NS_MULTIPLEXINPUTSTREAM_CID);
 // Place a limit on how much non-compliant HTTP can be skipped while
 // looking for a response header
 #define MAX_INVALID_RESPONSE_BODY_SIZE (1024 * 128)
+
+using namespace mozilla::net;
 
 namespace mozilla {
 namespace net {
@@ -244,7 +245,7 @@ nsHttpTransaction::Init(uint32_t caps,
 #ifdef MOZ_WIDGET_GONK
     if (mAppId != NECKO_NO_APP_ID) {
         nsCOMPtr<nsINetworkInterface> activeNetwork;
-        NS_GetActiveNetworkInterface(activeNetwork);
+        GetActiveNetworkInterface(activeNetwork);
         mActiveNetwork =
             new nsMainThreadPtrHolder<nsINetworkInterface>(activeNetwork);
     }
@@ -733,58 +734,6 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
     return rv;
 }
 
-//-----------------------------------------------------------------------------
-// nsHttpTransaction save network statistics event
-//-----------------------------------------------------------------------------
-
-#ifdef MOZ_WIDGET_GONK
-namespace {
-class SaveNetworkStatsEvent : public nsRunnable {
-public:
-    SaveNetworkStatsEvent(uint32_t aAppId,
-                          nsMainThreadPtrHandle<nsINetworkInterface> &aActiveNetwork,
-                          uint64_t aCountRecv,
-                          uint64_t aCountSent)
-        : mAppId(aAppId),
-          mActiveNetwork(aActiveNetwork),
-          mCountRecv(aCountRecv),
-          mCountSent(aCountSent)
-    {
-        MOZ_ASSERT(mAppId != NECKO_NO_APP_ID);
-        MOZ_ASSERT(mActiveNetwork);
-    }
-
-    NS_IMETHOD Run()
-    {
-        MOZ_ASSERT(NS_IsMainThread());
-
-        nsresult rv;
-        nsCOMPtr<nsINetworkStatsServiceProxy> mNetworkStatsServiceProxy =
-            do_GetService("@mozilla.org/networkstatsServiceProxy;1", &rv);
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
-
-        // save the network stats through NetworkStatsServiceProxy
-        mNetworkStatsServiceProxy->SaveAppStats(mAppId,
-                                                mActiveNetwork,
-                                                PR_Now() / 1000,
-                                                mCountRecv,
-                                                mCountSent,
-                                                false,
-                                                nullptr);
-
-        return NS_OK;
-    }
-private:
-    uint32_t mAppId;
-    nsMainThreadPtrHandle<nsINetworkInterface> mActiveNetwork;
-    uint64_t mCountRecv;
-    uint64_t mCountSent;
-};
-};
-#endif
-
 nsresult
 nsHttpTransaction::SaveNetworkStats(bool enforce)
 {
@@ -811,7 +760,7 @@ nsHttpTransaction::SaveNetworkStats(bool enforce)
     // the event is then dispathed to the main thread.
     nsRefPtr<nsRunnable> event =
         new SaveNetworkStatsEvent(mAppId, mActiveNetwork,
-                                  mCountRecv, mCountSent);
+                                  mCountRecv, mCountSent, false);
     NS_DispatchToMainThread(event);
 
     // Reset the counters after saving.

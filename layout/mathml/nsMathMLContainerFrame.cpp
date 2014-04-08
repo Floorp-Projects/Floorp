@@ -1600,6 +1600,10 @@ NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmathBlockFrame)
 
+NS_QUERYFRAME_HEAD(nsMathMLmathBlockFrame)
+  NS_QUERYFRAME_ENTRY(nsMathMLmathBlockFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
+
 nsIFrame*
 NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -1607,3 +1611,7 @@ NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmathInlineFrame)
+
+NS_QUERYFRAME_HEAD(nsMathMLmathInlineFrame)
+  NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsInlineFrame)

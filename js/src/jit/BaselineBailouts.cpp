@@ -10,6 +10,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/CompileInfo.h"
 #include "jit/IonSpewer.h"
+#include "jit/Recover.h"
 #include "vm/ArgumentsObject.h"
 
 #include "jsscriptinlines.h"
@@ -476,7 +477,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     if (excInfo)
         exprStackSlots = excInfo->numExprSlots;
     else
-        exprStackSlots = iter.allocations() - (script->nfixed() + CountArgSlots(script, fun));
+        exprStackSlots = iter.numAllocations() - (script->nfixed() + CountArgSlots(script, fun));
 
     builder.resetFramePushed();
 
@@ -629,9 +630,9 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         size_t thisvOffset = builder.framePushed() + IonJSFrameLayout::offsetOfThis();
         *builder.valuePointerAtStackOffset(thisvOffset) = thisv;
 
-        JS_ASSERT(iter.allocations() >= CountArgSlots(script, fun));
+        JS_ASSERT(iter.numAllocations() >= CountArgSlots(script, fun));
         IonSpew(IonSpew_BaselineBailouts, "      frame slots %u, nargs %u, nfixed %u",
-                iter.allocations(), fun->nargs(), script->nfixed());
+                iter.numAllocations(), fun->nargs(), script->nfixed());
 
         if (!callerPC) {
             // This is the first frame. Store the formals in a Vector until we
@@ -1348,6 +1349,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     jsbytecode *topCallerPC = nullptr;
 
     while (true) {
+        MOZ_ASSERT(snapIter.instruction()->isResumePoint());
+
 #if JS_TRACE_LOGGING
         if (frameNo > 0) {
             TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_START, scr);
@@ -1383,7 +1386,6 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
         callerPC = callPC;
         fun = nextCallee;
         scr = fun->existingScript();
-        snapIter.nextFrame();
 
         // Save top caller info for adjusting SPS frames later.
         if (!topCaller) {
@@ -1393,6 +1395,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
         }
 
         frameNo++;
+
+        snapIter.nextInstruction();
     }
     IonSpew(IonSpew_BaselineBailouts, "  Done restoring frames");
 

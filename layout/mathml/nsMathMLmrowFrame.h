@@ -32,6 +32,15 @@ public:
     return TransmitAutomaticDataForMrowLikeElement();
   }
 
+  bool
+  IsMrowLike() MOZ_OVERRIDE {
+    // <mrow> elements with a single child are treated identically to the case
+    // where the child wasn't within an mrow, so we pretend the mrow isn't an
+    // mrow in that situation.
+    return mFrames.FirstChild() != mFrames.LastChild() ||
+           !mFrames.FirstChild();
+  }
+
 protected:
   nsMathMLmrowFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmrowFrame();
