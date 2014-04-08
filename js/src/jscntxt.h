@@ -560,6 +560,8 @@ struct JSContext : public js::ExclusiveContext,
     MOZ_WARN_UNUSED_RESULT
     bool getPendingException(JS::MutableHandleValue rval);
 
+    bool isThrowingOutOfMemory();
+
     void setPendingException(js::Value v);
 
     void clearPendingException() {

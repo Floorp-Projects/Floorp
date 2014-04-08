@@ -1083,12 +1083,7 @@ ThreadSafeContext::recoverFromOutOfMemory()
     // If this is not a JSContext, there's nothing to do.
     if (JSContext *maybecx = maybeJSContext()) {
         if (maybecx->isExceptionPending()) {
-#ifdef DEBUG
-            RootedValue v(maybecx);
-            bool ok = maybecx->getPendingException(&v);
-            MOZ_ASSERT(ok);
-            MOZ_ASSERT(v == StringValue(maybecx->names().outOfMemory));
-#endif
+            MOZ_ASSERT(maybecx->isThrowingOutOfMemory());
             maybecx->clearPendingException();
         } else {
             MOZ_ASSERT(maybecx->runtime()->hadOutOfMemory);
@@ -1148,6 +1143,12 @@ JSContext::getPendingException(MutableHandleValue rval)
     assertSameCompartment(this, rval);
     setPendingException(rval);
     return true;
+}
+
+bool
+JSContext::isThrowingOutOfMemory()
+{
+    return throwing && unwrappedException_ == StringValue(names().outOfMemory);
 }
 
 void
