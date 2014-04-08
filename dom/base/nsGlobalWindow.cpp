@@ -2476,7 +2476,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       NS_ENSURE_TRUE(outer, NS_ERROR_FAILURE);
 
       js::SetProxyExtra(outer, 0, js::PrivateValue(ToSupports(this)));
-      js::SetProxyExtra(outer, 1, JS::ObjectValue(*newInnerGlobal));
 
       // Inform the nsJSContext, which is the canonical holder of the outer.
       mContext->SetWindowProxy(outer);
