@@ -26,10 +26,9 @@ let test = asyncTest(function*() {
   checkPropertyOnAllRules(view);
 });
 
-function reselectElement(node, inspector) {
-  return selectNode(node.parentNode, inspector).then(() => {
-    return selectNode(node, inspector);
-  });
+function* reselectElement(node, inspector) {
+  yield selectNode(node.parentNode, inspector);
+  yield selectNode(node, inspector);
 }
 
 function setPropertyOnAllRules(view) {
