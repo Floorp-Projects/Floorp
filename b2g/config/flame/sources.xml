@@ -120,7 +120,7 @@
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="c2c115bec6f5e9bc1daf7bb74bb4d14861c00b9c"/>
   <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="92f9b79e3a5ecf24cb0f66e20d5292b300f8cac9"/>
-  <project name="kernel/msm" path="kernel" revision="04091010c73a3ee6420214fbb19e394e4100cb62"/>
+  <project name="kernel/msm" path="kernel" revision="ecf7fb3e0178b28a61c4cccc9073ea111e5522ef"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="f2914eacee9120680a41463708bb6ee8291749fc"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="c53977638eb8a7091f752d870e8e0f00f7a23d95"/>
   <project name="platform/external/bluetooth/bluez" path="external/bluetooth/bluez" revision="f0689ac1914cdbc59e53bdc9edd9013dc157c299"/>
