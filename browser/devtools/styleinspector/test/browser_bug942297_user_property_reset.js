@@ -2,12 +2,10 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that user set style properties can be changed from the markup-view and
 // don't survive page reload
-
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let promise = devtools.require("sdk/core/promise");
-let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 
 let TEST_PAGE = [
   "data:text/html,",
@@ -15,89 +13,58 @@ let TEST_PAGE = [
   "<p id='id2' style='width:100px;'>element 2</p>"
 ].join("");
 
-let doc;
-let inspector;
-let ruleView;
-let markupView;
+let test = asyncTest(function*() {
+  yield addTab(TEST_PAGE);
+  let {toolbox, inspector, view} = yield openRuleView();
 
-function test() {
-  waitForExplicitFinish();
+  yield selectNode("#id1", inspector);
+  yield modifyRuleViewWidth("300px", view, inspector);
+  assertRuleAndMarkupViewWidth("id1", "300px", view, inspector);
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload(evt) {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    doc = content.document;
-    waitForFocus(() => {
-      openRuleView((aInspector, aView) => {
-        inspector = aInspector;
-        ruleView = aView;
-        markupView = inspector.markup;
+  yield selectNode("#id2", inspector);
+  assertRuleAndMarkupViewWidth("id2", "100px", view, inspector);
+  yield modifyRuleViewWidth("50px", view, inspector);
+  assertRuleAndMarkupViewWidth("id2", "50px", view, inspector);
 
-        Task.spawn(function() {
-          yield selectElement("id1");
-          yield modifyRuleViewWidth("300px");
-          assertRuleAndMarkupViewWidth("id1", "300px");
-          yield selectElement("id2");
-          assertRuleAndMarkupViewWidth("id2", "100px");
-          yield modifyRuleViewWidth("50px");
-          assertRuleAndMarkupViewWidth("id2", "50px");
+  yield reloadPage(inspector);
 
-          yield reloadPage();
-          yield selectElement("id1");
-          assertRuleAndMarkupViewWidth("id1", "200px");
-          yield selectElement("id2");
-          assertRuleAndMarkupViewWidth("id2", "100px");
+  yield selectNode("#id1", inspector);
+  assertRuleAndMarkupViewWidth("id1", "200px", view, inspector);
+  yield selectNode("#id2", inspector);
+  assertRuleAndMarkupViewWidth("id2", "100px", view, inspector);
+});
 
-          finishTest();
-        }).then(null, Cu.reportError);
-      });
-    }, content);
-  }, true);
-
-  content.location = TEST_PAGE;
-}
-
-function finishTest() {
-  doc = inspector = ruleView = markupView = null;
-  gBrowser.removeCurrentTab();
-  finish();
-}
-
-function selectElement(id) {
-  let deferred = promise.defer();
-  inspector.selection.setNode(doc.getElementById(id));
-  inspector.once("inspector-updated", deferred.resolve);
-  return deferred.promise;
-}
-
-function getStyleRule() {
+function getStyleRule(ruleView) {
   return ruleView.doc.querySelector(".ruleview-rule");
 }
 
-function modifyRuleViewWidth(value) {
-  let deferred = promise.defer();
+function* modifyRuleViewWidth(value, ruleView, inspector) {
+  info("Getting the property value element");
+  let valueSpan = getStyleRule(ruleView).querySelector(".ruleview-propertyvalue");
 
-  let valueSpan = getStyleRule().querySelector(".ruleview-propertyvalue");
-  waitForEditorFocus(valueSpan.parentNode, () => {
-    let editor = inplaceEditor(valueSpan);
-    editor.input.value = value;
-    waitForEditorBlur(editor, () => {
-      // Changing the style will refresh the markup view, let's wait for that
-      inspector.once("markupmutation", () => {
-        waitForEditorBlur({input: ruleView.doc.activeElement}, deferred.resolve);
-        EventUtils.sendKey("escape");
-      });
-    });
-    EventUtils.sendKey("return");
-  });
-  valueSpan.click();
+  info("Focusing the property value to set it to edit mode");
+  let editor = yield focusEditableField(valueSpan.parentNode);
 
-  return deferred.promise;
+  ok(editor.input, "The inplace-editor field is ready");
+  info("Setting the new value");
+  editor.input.value = value;
+
+  info("Pressing return and waiting for the field to blur and for the markup-view to show the mutation");
+  let onBlur = once(editor.input, "blur", true);
+  let onMutation = inspector.once("markupmutation");
+  EventUtils.sendKey("return");
+  yield onBlur;
+  yield onMutation;
+
+  info("Escaping out of the new property field that has been created after the value was edited");
+  let onNewFieldBlur = once(ruleView.doc.activeElement, "blur", true);
+  EventUtils.sendKey("escape");
+  yield onNewFieldBlur;
 }
 
-function getContainerStyleAttrValue(id) {
-  let front = markupView.walker.frontForRawNode(doc.getElementById(id));
-  let container = markupView.getContainer(front);
+function getContainerStyleAttrValue(id, {markup}) {
+  let front = markup.walker.frontForRawNode(content.document.getElementById(id));
+  let container = markup.getContainer(front);
 
   let attrIndex = 0;
   for (let attrName of container.elt.querySelectorAll(".attr-name")) {
@@ -108,21 +75,16 @@ function getContainerStyleAttrValue(id) {
   }
 }
 
-function assertRuleAndMarkupViewWidth(id, value) {
-  let valueSpan = getStyleRule().querySelector(".ruleview-propertyvalue");
+function assertRuleAndMarkupViewWidth(id, value, ruleView, inspector) {
+  let valueSpan = getStyleRule(ruleView).querySelector(".ruleview-propertyvalue");
   is(valueSpan.textContent, value, "Rule-view style width is " + value + " as expected");
 
-  let attr = getContainerStyleAttrValue(id);
+  let attr = getContainerStyleAttrValue(id, inspector);
   is(attr.textContent.replace(/\s/g, ""), "width:" + value + ";", "Markup-view style attribute width is " + value);
 }
 
-function reloadPage() {
-  let deferred = promise.defer();
-  inspector.once("new-root", () => {
-    doc = content.document;
-    markupView = inspector.markup;
-    markupView._waitForChildren().then(deferred.resolve);
-  });
+function reloadPage(inspector) {
+  let onNewRoot = inspector.once("new-root");
   content.location.reload();
-  return deferred.promise;
+  return onNewRoot.then(inspector.markup._waitForChildren);
 }
