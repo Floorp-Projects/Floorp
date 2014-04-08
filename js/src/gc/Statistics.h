@@ -68,6 +68,7 @@ enum Phase {
 enum Stat {
     STAT_NEW_CHUNK,
     STAT_DESTROY_CHUNK,
+    STAT_MINOR_GC,
 
     STAT_LIMIT
 };

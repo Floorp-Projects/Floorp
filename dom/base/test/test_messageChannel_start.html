@@ -213,7 +213,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
       }
     }
 
-    postMessage(a.port2, '*');
+    postMessage(a.port2, '*', [a.port2]);
   }
 
   var tests = [

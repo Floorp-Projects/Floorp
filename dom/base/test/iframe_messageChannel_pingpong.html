@@ -16,7 +16,7 @@
         if (counter++ == 0) {
           ok(!(evt.data % 2), "The number " + evt.data + " has been received correctly by the iframe");
 
-          window.parent.postMessage({ type: 'PORT', port: port }, '*');
+          window.parent.postMessage({ type: 'PORT', port: port }, '*', [port]);
         }
         else {
           ok(false, "Wrong message!");
