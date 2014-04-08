@@ -97,7 +97,7 @@ ShadowRoot::~ShadowRoot()
 }
 
 JSObject*
-ShadowRoot::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+ShadowRoot::WrapObject(JSContext* aCx)
 {
   return mozilla::dom::ShadowRootBinding::Wrap(aCx, this);
 }

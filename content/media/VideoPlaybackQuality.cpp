@@ -35,7 +35,7 @@ VideoPlaybackQuality::GetParentObject() const
 }
 
 JSObject*
-VideoPlaybackQuality::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
+VideoPlaybackQuality::WrapObject(JSContext *aCx)
 {
   return VideoPlaybackQualityBinding::Wrap(aCx, this);
 }

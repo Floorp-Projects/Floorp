@@ -42,8 +42,7 @@ SVGAnimatedRect::GetAnimVal()
 }
 
 JSObject*
-SVGAnimatedRect::WrapObject(JSContext* aCx,
-                            JS::Handle<JSObject*> aScope)
+SVGAnimatedRect::WrapObject(JSContext* aCx)
 {
   return SVGAnimatedRectBinding::Wrap(aCx, this);
 }

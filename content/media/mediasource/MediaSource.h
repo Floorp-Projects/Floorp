@@ -69,7 +69,7 @@ public:
 
   nsPIDOMWindow* GetParentObject() const;
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   // Attach this MediaSource to Decoder aDecoder.  Returns false if already attached.
   bool Attach(MediaSourceDecoder* aDecoder);

@@ -74,7 +74,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkerGlobalScope)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 JSObject*
-WorkerGlobalScope::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+WorkerGlobalScope::WrapObject(JSContext* aCx)
 {
   MOZ_CRASH("We should never get here!");
 }

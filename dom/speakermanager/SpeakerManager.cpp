@@ -168,7 +168,7 @@ SpeakerManager::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 }
 
 JSObject*
-SpeakerManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SpeakerManager::WrapObject(JSContext* aCx)
 {
   return MozSpeakerManagerBinding::Wrap(aCx, this);
 }

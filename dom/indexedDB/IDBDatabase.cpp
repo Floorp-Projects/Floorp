@@ -483,7 +483,7 @@ NS_IMPL_ADDREF_INHERITED(IDBDatabase, IDBWrapperCache)
 NS_IMPL_RELEASE_INHERITED(IDBDatabase, IDBWrapperCache)
 
 JSObject*
-IDBDatabase::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+IDBDatabase::WrapObject(JSContext* aCx)
 {
   return IDBDatabaseBinding::Wrap(aCx, this);
 }

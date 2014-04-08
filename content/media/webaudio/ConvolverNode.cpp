@@ -176,7 +176,7 @@ ConvolverNode::ConvolverNode(AudioContext* aContext)
 }
 
 JSObject*
-ConvolverNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+ConvolverNode::WrapObject(JSContext* aCx)
 {
   return ConvolverNodeBinding::Wrap(aCx, this);
 }

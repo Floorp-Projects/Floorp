@@ -59,7 +59,7 @@ DOMError::~DOMError()
 }
 
 JSObject*
-DOMError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+DOMError::WrapObject(JSContext* aCx)
 {
   return DOMErrorBinding::Wrap(aCx, this);
 }

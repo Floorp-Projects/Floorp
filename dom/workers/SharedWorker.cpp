@@ -191,7 +191,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SharedWorker,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 JSObject*
-SharedWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SharedWorker::WrapObject(JSContext* aCx)
 {
   AssertIsOnMainThread();
 

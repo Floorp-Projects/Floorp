@@ -46,7 +46,7 @@ URL::URL(nsIURI* aURI)
 }
 
 JSObject*
-URL::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+URL::WrapObject(JSContext* aCx)
 {
   return URLBinding::Wrap(aCx, this);
 }

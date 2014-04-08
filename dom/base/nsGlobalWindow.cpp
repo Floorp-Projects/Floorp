@@ -7741,13 +7741,10 @@ PostMessageReadTransferStructuredClone(JSContext* aCx,
     port->BindToOwner(scInfo->window);
     scInfo->ports.Put(port, nullptr);
 
-    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-    if (global) {
-      JS::Rooted<JSObject*> obj(aCx, port->WrapObject(aCx, global));
-      if (JS_WrapObject(aCx, &obj)) {
-        MOZ_ASSERT(port->GetOwner() == scInfo->window);
-        returnObject.set(obj);
-      }
+    JS::Rooted<JSObject*> obj(aCx, port->WrapObject(aCx));
+    if (JS_WrapObject(aCx, &obj)) {
+      MOZ_ASSERT(port->GetOwner() == scInfo->window);
+      returnObject.set(obj);
     }
 
     return true;

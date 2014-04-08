@@ -60,7 +60,7 @@ ChannelSplitterNode::ChannelSplitterNode(AudioContext* aContext,
 }
 
 JSObject*
-ChannelSplitterNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+ChannelSplitterNode::WrapObject(JSContext* aCx)
 {
   return ChannelSplitterNodeBinding::Wrap(aCx, this);
 }
