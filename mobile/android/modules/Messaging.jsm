@@ -26,6 +26,11 @@ function sendMessageToJava(aMessage, aCallback) {
 
         Services.obs.removeObserver(obs, aMessage.type + ":Response", false);
 
+        if (data.status === "cancel") {
+          // No Java-side listeners handled our callback.
+          return;
+        }
+
         aCallback(data.status === "success" ? data.response : null,
                   data.status === "error"   ? data.response : null);
       }
