@@ -1668,6 +1668,8 @@ private:
 nsresult
 ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
 {
+  js::AssertSameCompartment(aCx, aObjArg);
+
   // Check if we're near the stack limit before we get anywhere near the
   // transplanting code.
   JS_CHECK_RECURSION(aCx, return NS_ERROR_FAILURE);
