@@ -3586,6 +3586,9 @@ LIRGenerator::visitInstruction(MInstruction *ins)
     if (!ins->accept(this))
         return false;
 
+    if (ins->isCall())
+        gen->setPerformsCall();
+
     if (ins->resumePoint())
         updateResumeState(ins);
 
