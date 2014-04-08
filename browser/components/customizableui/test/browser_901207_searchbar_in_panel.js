@@ -8,7 +8,7 @@ let openUILinkInCalled = false;
 let expectOpenUILinkInCall = false;
 this.originalOpenUILinkIn = openUILinkIn;
 openUILinkIn = (aUrl, aWhichTab) => {
-  is(aUrl, Services.search.defaultEngine.searchForm, "Search page should be requested to open.");
+  is(aUrl, "about:home", "about:home should be requested to open.");
   is(aWhichTab, "current", "Should use the current tab for the search page.");
   openUILinkInCalled = true;
   if (!expectOpenUILinkInCall) {

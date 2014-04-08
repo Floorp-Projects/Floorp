@@ -145,7 +145,7 @@ MP4Reader::InitLayersBackendType()
     nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
   NS_ENSURE_TRUE_VOID(layerManager);
 
-  mLayersBackendType = layerManager->GetBackendType();
+  mLayersBackendType = layerManager->GetCompositorBackendType();
 }
 
 nsresult

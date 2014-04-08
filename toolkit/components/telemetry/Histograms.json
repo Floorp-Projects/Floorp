@@ -2241,6 +2241,34 @@
       "kind": "boolean",
       "description": "Whether or not we actually try the cleanup method when we think about it"
   },
+  "SEER_LOAD_COUNT_IS_ZERO": {
+      "expires_in_version": "never",
+      "kind": "linear",
+      "high": "100",
+      "n_buckets": 50,
+      "description": "Number of times load count is zero"
+  },
+  "SEER_LOAD_COUNT_OVERFLOWS": {
+      "expires_in_version": "never",
+      "kind": "linear",
+      "high": "100",
+      "n_buckets": 50,
+      "description": "Number of times load count overflowed"
+  },
+  "SEER_STARTUP_COUNT_IS_ZERO": {
+      "expires_in_version": "never",
+      "kind": "linear",
+      "high": "100",
+      "n_buckets": 50,
+      "description": "Number of times startup count is zero"
+  },
+  "SEER_STARTUP_COUNT_OVERFLOWS": {
+      "expires_in_version": "never",
+      "kind": "linear",
+      "high": "100",
+      "n_buckets": 50,
+      "description": "Number of times startup count overflowed"
+  },
   "FIND_PLUGINS": {
     "expires_in_version": "never",
     "kind": "exponential",

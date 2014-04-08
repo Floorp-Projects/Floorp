@@ -8,7 +8,6 @@
 #include "ShadowLayers.h"
 #include <set>                          // for _Rb_tree_const_iterator, etc
 #include <vector>                       // for vector
-#include "AutoOpenSurface.h"            // for AutoOpenSurface, etc
 #include "GeckoProfiler.h"              // for PROFILER_LABEL
 #include "ISurfaceAllocator.h"          // for IsSurfaceDescriptorValid
 #include "Layers.h"                     // for Layer
@@ -120,21 +119,10 @@ public:
     NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
     mMutants.insert(aLayer);
   }
-  void AddBufferToDestroy(gfxSharedImageSurface* aBuffer)
-  {
-    return AddBufferToDestroy(aBuffer->GetShmem());
-  }
-  void AddBufferToDestroy(const SurfaceDescriptor& aBuffer)
-  {
-    NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
-    mDyingBuffers.AppendElement(aBuffer);
-  }
-
   void End()
   {
     mCset.clear();
     mPaints.clear();
-    mDyingBuffers.Clear();
     mMutants.clear();
     mOpen = false;
     mSwapRequired = false;
@@ -151,7 +139,6 @@ public:
 
   EditVector mCset;
   EditVector mPaints;
-  BufferArray mDyingBuffers;
   ShadowableLayerSet mMutants;
   nsIntRect mTargetBounds;
   ScreenRotation mTargetRotation;
@@ -249,12 +236,6 @@ ShadowLayerForwarder::CreatedRefLayer(ShadowableLayer* aRef)
 }
 
 void
-ShadowLayerForwarder::DestroyedThebesBuffer(const SurfaceDescriptor& aBackBufferToDestroy)
-{
-  mTxn->AddBufferToDestroy(aBackBufferToDestroy);
-}
-
-void
 ShadowLayerForwarder::Mutated(ShadowableLayer* aMutant)
 {
 mTxn->AddMutant(aMutant);
@@ -316,11 +297,11 @@ ShadowLayerForwarder::CheckSurfaceDescriptor(const SurfaceDescriptor* aDescripto
     return;
   }
 
-  if (aDescriptor->type() == SurfaceDescriptor::TShmem) {
-    const mozilla::ipc::Shmem& shmem = aDescriptor->get_Shmem();
-    shmem.AssertInvariants();
+  if (aDescriptor->type() == SurfaceDescriptor::TSurfaceDescriptorShmem) {
+    const SurfaceDescriptorShmem& shmem = aDescriptor->get_SurfaceDescriptorShmem();
+    shmem.data().AssertInvariants();
     MOZ_ASSERT(mShadowManager &&
-               mShadowManager->IsTrackingSharedMemory(shmem.mSegment));
+               mShadowManager->IsTrackingSharedMemory(shmem.data().mSegment));
   }
 }
 #endif
@@ -455,10 +436,6 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
   }
 
   MOZ_LAYERS_LOG(("[LayersForwarder] destroying buffers..."));
-
-  for (uint32_t i = 0; i < mTxn->mDyingBuffers.Length(); ++i) {
-    DestroySharedSurface(&mTxn->mDyingBuffers[i]);
-  }
 
   MOZ_LAYERS_LOG(("[LayersForwarder] building transaction..."));
 
@@ -600,111 +577,6 @@ ShadowLayerForwarder::IsSameProcess() const
   return mShadowManager->OtherProcess() == kInvalidProcessHandle;
 }
 
-/*static*/ already_AddRefed<gfxASurface>
-ShadowLayerForwarder::OpenDescriptor(OpenMode aMode,
-                                     const SurfaceDescriptor& aSurface)
-{
-  nsRefPtr<gfxASurface> surf = PlatformOpenDescriptor(aMode, aSurface);
-  if (surf) {
-    return surf.forget();
-  }
-
-  switch (aSurface.type()) {
-  case SurfaceDescriptor::TShmem: {
-    surf = gfxSharedImageSurface::Open(aSurface.get_Shmem());
-    return surf.forget();
-  } case SurfaceDescriptor::TRGBImage: {
-    const RGBImage& rgb = aSurface.get_RGBImage();
-    gfxImageFormat rgbFormat
-      = static_cast<gfxImageFormat>(rgb.rgbFormat());
-    uint32_t stride = gfxASurface::BytesPerPixel(rgbFormat) * rgb.picture().width;
-    nsIntSize size(rgb.picture().width, rgb.picture().height);
-    surf = new gfxImageSurface(rgb.data().get<uint8_t>(),
-                               size,
-                               stride,
-                               rgbFormat);
-    return surf.forget();
-  }
-  case SurfaceDescriptor::TMemoryImage: {
-    const MemoryImage& image = aSurface.get_MemoryImage();
-    gfxImageFormat format
-      = static_cast<gfxImageFormat>(image.format());
-    surf = new gfxImageSurface((unsigned char *)image.data(),
-                               gfx::ThebesIntSize(image.size()),
-                               image.stride(),
-                               format);
-    return surf.forget();
-  }
-  default:
-    NS_ERROR("unexpected SurfaceDescriptor type!");
-    return nullptr;
-  }
-}
-
-/*static*/ gfxContentType
-ShadowLayerForwarder::GetDescriptorSurfaceContentType(
-  const SurfaceDescriptor& aDescriptor, OpenMode aMode,
-  gfxASurface** aSurface)
-{
-  gfxContentType content;
-  if (PlatformGetDescriptorSurfaceContentType(aDescriptor, aMode,
-                                              &content, aSurface)) {
-    return content;
-  }
-
-  nsRefPtr<gfxASurface> surface = OpenDescriptor(aMode, aDescriptor);
-  content = surface->GetContentType();
-  surface.forget(aSurface);
-  return content;
-}
-
-/*static*/ gfx::IntSize
-ShadowLayerForwarder::GetDescriptorSurfaceSize(
-  const SurfaceDescriptor& aDescriptor, OpenMode aMode,
-  gfxASurface** aSurface)
-{
-  gfx::IntSize size;
-  if (PlatformGetDescriptorSurfaceSize(aDescriptor, aMode, &size, aSurface)) {
-    return size;
-  }
-
-  nsRefPtr<gfxASurface> surface = OpenDescriptor(aMode, aDescriptor);
-  size = surface->GetSize().ToIntSize();
-  surface.forget(aSurface);
-  return size;
-}
-
-/*static*/ gfxImageFormat
-ShadowLayerForwarder::GetDescriptorSurfaceImageFormat(
-  const SurfaceDescriptor& aDescriptor, OpenMode aMode,
-  gfxASurface** aSurface)
-{
-  gfxImageFormat format;
-  if (PlatformGetDescriptorSurfaceImageFormat(aDescriptor, aMode, &format, aSurface)) {
-    return format;
-  }
-
-  nsRefPtr<gfxASurface> surface = OpenDescriptor(aMode, aDescriptor);
-  NS_ENSURE_TRUE(surface, gfxImageFormat::Unknown);
-
-  nsRefPtr<gfxImageSurface> img = surface->GetAsImageSurface();
-  NS_ENSURE_TRUE(img, gfxImageFormat::Unknown);
-
-  format = img->Format();
-  NS_ASSERTION(format != gfxImageFormat::Unknown,
-               "ImageSurface RGB format should be known");
-
-  surface.forget(aSurface);
-  return format;
-}
-
-/*static*/ void
-ShadowLayerForwarder::CloseDescriptor(const SurfaceDescriptor& aDescriptor)
-{
-  PlatformCloseDescriptor(aDescriptor);
-  // There's no "close" needed for Shmem surfaces.
-}
-
 /**
   * We bail out when we have no shadow manager. That can happen when the
   * layer manager is created by the preallocated process.
@@ -719,139 +591,12 @@ ShadowLayerForwarder::ConstructShadowFor(ShadowableLayer* aLayer)
 
 #if !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
 
-/*static*/ already_AddRefed<gfxASurface>
-ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode,
-                                             const SurfaceDescriptor&)
-{
-  return nullptr;
-}
-
-/*static*/ bool
-ShadowLayerForwarder::PlatformCloseDescriptor(const SurfaceDescriptor&)
-{
-  return false;
-}
-
-/*static*/ bool
-ShadowLayerForwarder::PlatformGetDescriptorSurfaceContentType(
-  const SurfaceDescriptor&,
-  OpenMode,
-  gfxContentType*,
-  gfxASurface**)
-{
-  return false;
-}
-
-/*static*/ bool
-ShadowLayerForwarder::PlatformGetDescriptorSurfaceSize(
-  const SurfaceDescriptor&,
-  OpenMode,
-  gfx::IntSize*,
-  gfxASurface**)
-{
-  return false;
-}
-
-/*static*/ bool
-ShadowLayerForwarder::PlatformGetDescriptorSurfaceImageFormat(
-  const SurfaceDescriptor&,
-  OpenMode,
-  gfxImageFormat*,
-  gfxASurface**)
-{
-  return false;
-}
-
-bool
-ShadowLayerForwarder::PlatformDestroySharedSurface(SurfaceDescriptor*)
-{
-  return false;
-}
-
 /*static*/ void
 ShadowLayerForwarder::PlatformSyncBeforeUpdate()
 {
 }
 
-bool
-ISurfaceAllocator::PlatformDestroySharedSurface(SurfaceDescriptor*)
-{
-  return false;
-}
-
 #endif  // !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
-
-AutoOpenSurface::AutoOpenSurface(OpenMode aMode,
-                                 const SurfaceDescriptor& aDescriptor)
-  : mDescriptor(aDescriptor)
-  , mMode(aMode)
-{
-  MOZ_ASSERT(IsSurfaceDescriptorValid(mDescriptor));
-}
-
-AutoOpenSurface::~AutoOpenSurface()
-{
-  if (mSurface) {
-    mSurface = nullptr;
-    ShadowLayerForwarder::CloseDescriptor(mDescriptor);
-  }
-}
-
-gfxContentType
-AutoOpenSurface::ContentType()
-{
-  if (mSurface) {
-    return mSurface->GetContentType();
-  }
-  return ShadowLayerForwarder::GetDescriptorSurfaceContentType(
-    mDescriptor, mMode, getter_AddRefs(mSurface));
-}
-
-gfxImageFormat
-AutoOpenSurface::ImageFormat()
-{
-  if (mSurface) {
-    nsRefPtr<gfxImageSurface> img = mSurface->GetAsImageSurface();
-    if (img) {
-      gfxImageFormat format = img->Format();
-      NS_ASSERTION(format != gfxImageFormat::Unknown,
-                   "ImageSurface RGB format should be known");
-
-      return format;
-    }
-  }
-
-  return ShadowLayerForwarder::GetDescriptorSurfaceImageFormat(
-    mDescriptor, mMode, getter_AddRefs(mSurface));
-}
-
-gfx::IntSize
-AutoOpenSurface::Size()
-{
-  if (mSurface) {
-    return mSurface->GetSize().ToIntSize();
-  }
-  return ShadowLayerForwarder::GetDescriptorSurfaceSize(
-    mDescriptor, mMode, getter_AddRefs(mSurface));
-}
-
-gfxASurface*
-AutoOpenSurface::Get()
-{
-  if (!mSurface) {
-    mSurface = ShadowLayerForwarder::OpenDescriptor(mMode, mDescriptor);
-  }
-  return mSurface.get();
-}
-
-gfxImageSurface*
-AutoOpenSurface::GetAsImage()
-{
-  if (!mSurfaceAsImage) {
-    mSurfaceAsImage = Get()->GetAsImageSurface();
-  }
-  return mSurfaceAsImage.get();
-}
 
 void
 ShadowLayerForwarder::Connect(CompositableClient* aCompositable)

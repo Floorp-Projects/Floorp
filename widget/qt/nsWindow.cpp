@@ -1789,18 +1789,6 @@ nsWindow::GetScreenBounds(nsIntRect &aRect)
 }
 
 NS_IMETHODIMP
-nsWindow::SetForegroundColor(const nscolor &aColor)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsWindow::SetBackgroundColor(const nscolor &aColor)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsWindow::SetIcon(const nsAString& aIconSpec)
 {
     if (!mWidget)

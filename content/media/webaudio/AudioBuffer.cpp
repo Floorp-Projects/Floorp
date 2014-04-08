@@ -197,7 +197,7 @@ StealJSArrayDataIntoThreadSharedFloatArrayBufferList(JSContext* aJSContext,
     new ThreadSharedFloatArrayBufferList(aJSArrays.Length());
   for (uint32_t i = 0; i < aJSArrays.Length(); ++i) {
     JS::Rooted<JSObject*> arrayBuffer(aJSContext,
-                                      JS_GetArrayBufferViewBuffer(aJSArrays[i]));
+                                      JS_GetArrayBufferViewBuffer(aJSContext, aJSArrays[i]));
     uint8_t* stolenData = arrayBuffer
                           ? (uint8_t*) JS_StealArrayBufferContents(aJSContext, arrayBuffer)
                           : nullptr;

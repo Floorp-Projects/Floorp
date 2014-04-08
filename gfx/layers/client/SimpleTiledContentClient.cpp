@@ -14,6 +14,7 @@
 #include "CompositorChild.h"            // for CompositorChild
 #include "gfxContext.h"                 // for gfxContext, etc
 #include "gfxPlatform.h"                // for gfxPlatform
+#include "gfxPrefs.h"                   // for gfxPrefs::LayersTileWidth/Height
 #include "gfxRect.h"                    // for gfxRect
 #include "mozilla/Attributes.h"         // for MOZ_THIS_IN_INITIALIZER_LIST
 #include "mozilla/MathAlgorithms.h"     // for Abs
@@ -74,7 +75,7 @@ SimpleTiledLayerBuffer::ValidateTile(SimpleTiledLayerTile aTile,
                                      const nsIntRegion& aDirtyRegion)
 {
   PROFILER_LABEL("SimpleTiledLayerBuffer", "ValidateTile");
-  static gfx::IntSize kTileSize(TILEDLAYERBUFFER_TILE_SIZE, TILEDLAYERBUFFER_TILE_SIZE);
+  static gfx::IntSize kTileSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight());
 
   gfx::SurfaceFormat tileFormat = gfxPlatform::GetPlatform()->Optimal2DFormatForContent(GetContentType());
 
@@ -129,7 +130,7 @@ SimpleTiledLayerBuffer::ValidateTile(SimpleTiledLayerTile aTile,
                                                                        tileFormat);
 
       if (fullPaint) {
-        drawBounds = nsIntRect(aTileOrigin.x, aTileOrigin.y, GetScaledTileLength(), GetScaledTileLength());
+        drawBounds = nsIntRect(aTileOrigin.x, aTileOrigin.y, GetScaledTileSize().width, GetScaledTileSize().height);
         drawRegion = nsIntRegion(drawBounds);
       } else {
         drawBounds = aDirtyRegion.GetBounds();
@@ -149,7 +150,7 @@ SimpleTiledLayerBuffer::ValidateTile(SimpleTiledLayerTile aTile,
     drawTarget = textureClient->AsTextureClientDrawTarget()->GetAsDrawTarget();
 
     fullPaint = true;
-    drawBounds = nsIntRect(aTileOrigin.x, aTileOrigin.y, GetScaledTileLength(), GetScaledTileLength());
+    drawBounds = nsIntRect(aTileOrigin.x, aTileOrigin.y, GetScaledTileSize().width, GetScaledTileSize().height);
     drawRegion = nsIntRegion(drawBounds);
 
     if (GetContentType() == gfxContentType::COLOR_ALPHA)

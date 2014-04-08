@@ -697,6 +697,10 @@ public:
 
   virtual void SetDocumentURI(nsIURI* aURI) MOZ_OVERRIDE;
 
+  virtual void SetChromeXHRDocURI(nsIURI* aURI) MOZ_OVERRIDE;
+
+  virtual void SetChromeXHRDocBaseURI(nsIURI* aURI) MOZ_OVERRIDE;
+
   /**
    * Set the principal responsible for this document.
    */

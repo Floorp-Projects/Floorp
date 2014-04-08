@@ -258,4 +258,12 @@ js::ZoneOfObjectFromAnyThread(const JSObject &obj)
     return obj.zoneFromAnyThread();
 }
 
-
+bool
+Zone::hasMarkedCompartments()
+{
+    for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next()) {
+        if (comp->marked)
+            return true;
+    }
+    return false;
+}

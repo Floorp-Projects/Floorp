@@ -23,6 +23,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
+XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
+                                  "resource://gre/modules/SystemAppProxy.jsm");
+
 function PaymentUI() {
   try {
     this._debug =
@@ -44,13 +47,6 @@ PaymentUI.prototype = {
         aErrorCb.onresult(aRequestId, errorMsg);
       }
     };
-
-    let browser = Services.wm.getMostRecentWindow("navigator:browser");
-    let content = browser.getContentWindow();
-    if (!content) {
-      _error("NO_CONTENT_WINDOW");
-      return;
-    }
 
     // The UI should listen for mozChromeEvent 'open-payment-confirmation-dialog'
     // type in order to create and show the payment request confirmation frame
@@ -78,12 +74,12 @@ PaymentUI.prototype = {
         _error(msg.errorMsg);
       }
 
-      content.removeEventListener("mozContentEvent", this._handleSelection);
+      SystemAppProxy.removeEventListener("mozContentEvent", this._handleSelection);
       this._handleSelection = null;
     }).bind(this);
-    content.addEventListener("mozContentEvent", this._handleSelection);
+    SystemAppProxy.addEventListener("mozContentEvent", this._handleSelection);
 
-    browser.shell.sendChromeEvent(detail);
+    SystemAppProxy.dispatchEvent(detail);
   },
 
   showPaymentFlow: function showPaymentFlow(aRequestId,
@@ -96,13 +92,6 @@ PaymentUI.prototype = {
     };
 
     // We ask the UI to browse to the selected payment flow.
-    let browser = Services.wm.getMostRecentWindow("navigator:browser");
-    let content = browser.getContentWindow();
-    if (!content) {
-      _error("NO_CONTENT_WINDOW");
-      return;
-    }
-
     let id = kOpenPaymentFlowEvent + "-" + this.getRandomId();
     let detail = {
       type: kOpenPaymentFlowEvent,
@@ -123,14 +112,14 @@ PaymentUI.prototype = {
       }
 
       if (msg.errorMsg) {
-        content.removeEventListener("mozContentEvent", this._loadPaymentShim);
+        SystemAppProxy.removeEventListener("mozContentEvent", this._loadPaymentShim);
         this._loadPaymentShim = null;
         _error("ERROR_LOADING_PAYMENT_SHIM: " + msg.errorMsg);
         return;
       }
 
       if (!msg.frame) {
-        content.removeEventListener("mozContentEvent", this._loadPaymentShim);
+        SystemAppProxy.removeEventListener("mozContentEvent", this._loadPaymentShim);
         this._loadPaymentShim = null;
         _error("ERROR_LOADING_PAYMENT_SHIM");
         return;
@@ -152,11 +141,11 @@ PaymentUI.prototype = {
         }
         _error("ERROR_LOADING_PAYMENT_SHIM");
       } finally {
-        content.removeEventListener("mozContentEvent", this._loadPaymentShim);
+        SystemAppProxy.removeEventListener("mozContentEvent", this._loadPaymentShim);
         this._loadPaymentShim = null;
       }
     }).bind(this);
-    content.addEventListener("mozContentEvent", this._loadPaymentShim);
+    SystemAppProxy.addEventListener("mozContentEvent", this._loadPaymentShim);
 
     // We also listen for UI notifications about a closed payment flow. The UI
     // should provide the reason of the closure within the 'errorMsg' parameter
@@ -173,35 +162,29 @@ PaymentUI.prototype = {
       if (msg.errorMsg) {
         _error(msg.errorMsg);
       }
-      content.removeEventListener("mozContentEvent",
-                                  this._notifyPayFlowClosed);
+      SystemAppProxy.removeEventListener("mozContentEvent",
+                                         this._notifyPayFlowClosed);
       this._notifyPayFlowClosed = null;
     }).bind(this);
-    content.addEventListener("mozContentEvent",
-                             this._notifyPayFlowClosed);
+    SystemAppProxy.addEventListener("mozContentEvent",
+                               this._notifyPayFlowClosed);
 
-    browser.shell.sendChromeEvent(detail);
+    SystemAppProxy.dispatchEvent(detail);
   },
 
   cleanup: function cleanup() {
-    let browser = Services.wm.getMostRecentWindow("navigator:browser");
-    let content = browser.getContentWindow();
-    if (!content) {
-      return;
-    }
-
     if (this._handleSelection) {
-      content.removeEventListener("mozContentEvent", this._handleSelection);
+      SystemAppProxy.removeEventListener("mozContentEvent", this._handleSelection);
       this._handleSelection = null;
     }
 
     if (this._notifyPayFlowClosed) {
-      content.removeEventListener("mozContentEvent", this._notifyPayFlowClosed);
+      SystemAppProxy.removeEventListener("mozContentEvent", this._notifyPayFlowClosed);
       this._notifyPayFlowClosed = null;
     }
 
     if (this._loadPaymentShim) {
-      content.removeEventListener("mozContentEvent", this._loadPaymentShim);
+      SystemAppProxy.removeEventListener("mozContentEvent", this._loadPaymentShim);
       this._loadPaymentShim = null;
     }
   },

@@ -16,6 +16,7 @@ EXTRA_JS_MODULES += [
     'Notifications.jsm',
     'OrderedBroadcast.jsm',
     'Prompt.jsm',
+    'RokuApp.jsm',
     'Sanitizer.jsm',
     'SharedPreferences.jsm',
     'SimpleServiceDiscovery.jsm',

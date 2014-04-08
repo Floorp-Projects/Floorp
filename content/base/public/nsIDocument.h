@@ -126,8 +126,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x94629cb0, 0xfe8a, 0x4627, \
-  { 0x8e, 0x59, 0xab, 0x1a, 0xaf, 0xdc, 0x99, 0x56 } }
+{ 0xa7679e4a, 0xa5ec, 0x45bf, \
+  { 0x8f, 0xe4, 0xad, 0x4a, 0xb8, 0xc7, 0x7f, 0xc7 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -252,6 +252,18 @@ public:
   virtual void SetDocumentURI(nsIURI* aURI) = 0;
 
   /**
+   * Set the URI for the document loaded via XHR, when accessed from
+   * chrome privileged script.
+   */
+  virtual void SetChromeXHRDocURI(nsIURI* aURI) = 0;
+
+  /**
+   * Set the base URI for the document loaded via XHR, when accessed from
+   * chrome privileged script.
+   */
+  virtual void SetChromeXHRDocBaseURI(nsIURI* aURI) = 0;
+
+  /**
    * Set the principal responsible for this document.
    */
   virtual void SetPrincipal(nsIPrincipal *aPrincipal) = 0;
@@ -278,7 +290,7 @@ public:
     }
     return mDocumentBaseURI ? mDocumentBaseURI : mDocumentURI;
   }
-  virtual already_AddRefed<nsIURI> GetBaseURI() const MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIURI> GetBaseURI(bool aTryUseXHRDocBaseURI = false) const MOZ_OVERRIDE;
 
   virtual nsresult SetBaseURI(nsIURI* aURI) = 0;
 
@@ -1985,6 +1997,11 @@ public:
     GetImplementation(mozilla::ErrorResult& rv) = 0;
   void GetURL(nsString& retval) const;
   void GetDocumentURI(nsString& retval) const;
+  // Return the URI for the document.
+  // The returned value may differ if the document is loaded via XHR, and
+  // when accessed from chrome privileged script and
+  // from content privileged script for compatibility.
+  void GetDocumentURIFromJS(nsString& aDocumentURI) const;
   void GetCompatMode(nsString& retval) const;
   void GetCharacterSet(nsAString& retval) const;
   // Skip GetContentType, because our NS_IMETHOD version above works fine here.
@@ -2120,10 +2137,7 @@ public:
   void ReleaseCapture() const;
   virtual void MozSetImageElement(const nsAString& aImageElementId,
                                   Element* aElement) = 0;
-  nsIURI* GetDocumentURIObject()
-  {
-    return GetDocumentURI();
-  }
+  nsIURI* GetDocumentURIObject() const;
   // Not const because all the full-screen goop is not const
   virtual bool MozFullScreenEnabled() = 0;
   virtual Element* GetMozFullScreenElement(mozilla::ErrorResult& rv) = 0;
@@ -2275,7 +2289,9 @@ protected:
 
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mOriginalURI;
+  nsCOMPtr<nsIURI> mChromeXHRDocURI;
   nsCOMPtr<nsIURI> mDocumentBaseURI;
+  nsCOMPtr<nsIURI> mChromeXHRDocBaseURI;
 
   nsWeakPtr mDocumentLoadGroup;
 
