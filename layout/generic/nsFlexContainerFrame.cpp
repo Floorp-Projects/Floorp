@@ -639,16 +639,20 @@ public:
     return mNumItems;
   }
 
-  // Adds the given FlexItem to our list of items, and adds its hypothetical
+  // Adds the given FlexItem to our list of items (at the front or back
+  // depending on aShouldInsertAtFront), and adds its hypothetical
   // outer & inner main sizes to our totals. Use this method instead of
   // directly modifying the item list, so that our bookkeeping remains correct.
-  // XXXdholbert Bug 983427 will extend this to let the caller choose whether
-  // the new FlexItem goes at the front or the back of the list.
   void AddItem(FlexItem* aItem,
+               bool aShouldInsertAtFront,
                nscoord aItemInnerHypotheticalMainSize,
                nscoord aItemOuterHypotheticalMainSize)
   {
-    mItems.insertBack(aItem);
+    if (aShouldInsertAtFront) {
+      mItems.insertFront(aItem);
+    } else {
+      mItems.insertBack(aItem);
+    }
     mNumItems++;
     mTotalInnerHypotheticalMainSize += aItemInnerHypotheticalMainSize;
     mTotalOuterHypotheticalMainSize += aItemOuterHypotheticalMainSize;
@@ -2360,15 +2364,18 @@ FlexboxAxisTracker::FlexboxAxisTracker(
              "main & cross axes should be in different dimensions");
 }
 
-// Allocates a new FlexLine, adds it at the back of the given LinkedList,
-// and returs a pointer to it.
-// XXXdholbert Bug 983427 will extend this to let the caller choose whether
-// the new FlexLine goes at the front or the back of the list.
+// Allocates a new FlexLine, adds it to the given LinkedList (at the front or
+// back depending on aShouldInsertAtFront), and returns a pointer to it.
 static FlexLine*
-AddNewFlexLineToList(LinkedList<FlexLine>& aLines)
+AddNewFlexLineToList(LinkedList<FlexLine>& aLines,
+                     bool aShouldInsertAtFront)
 {
   FlexLine* newLine = new FlexLine();
-  aLines.insertBack(newLine);
+  if (aShouldInsertAtFront) {
+    aLines.insertFront(newLine);
+  } else {
+    aLines.insertBack(newLine);
+  }
   return newLine;
 }
 
@@ -2387,9 +2394,17 @@ nsFlexContainerFrame::GenerateFlexLines(
   const bool isSingleLine =
     NS_STYLE_FLEX_WRAP_NOWRAP == aReflowState.mStylePosition->mFlexWrap;
 
+  // If we're transparently reversing axes, then we'll need to link up our
+  // FlexItems and FlexLines in the reverse order, so that the rest of flex
+  // layout (with flipped axes) will still produce the correct result.
+  // Here, we declare a convenience bool that we'll pass when adding a new
+  // FlexLine or FlexItem, to make us insert it at the beginning of its list
+  // (so the list ends up reversed).
+  const bool shouldInsertAtFront = aAxisTracker.AreAxesInternallyReversed();
+
   // We have at least one FlexLine. Even an empty flex container has a single
   // (empty) flex line.
-  FlexLine* curLine = AddNewFlexLineToList(aLines);
+  FlexLine* curLine = AddNewFlexLineToList(aLines, shouldInsertAtFront);
 
   nscoord wrapThreshold;
   if (isSingleLine) {
@@ -2433,7 +2448,7 @@ nsFlexContainerFrame::GenerateFlexLines(
     // Honor "page-break-before", if we're multi-line and this line isn't empty:
     if (!isSingleLine && !curLine->IsEmpty() &&
         childFrame->StyleDisplay()->mBreakBefore) {
-      curLine = AddNewFlexLineToList(aLines);
+      curLine = AddNewFlexLineToList(aLines, shouldInsertAtFront);
     }
 
     nsAutoPtr<FlexItem> item;
@@ -2463,19 +2478,19 @@ nsFlexContainerFrame::GenerateFlexLines(
         !curLine->IsEmpty() && // No need to wrap at start of a line.
         wrapThreshold < (curLine->GetTotalOuterHypotheticalMainSize() +
                          itemOuterHypotheticalMainSize)) {
-      curLine = AddNewFlexLineToList(aLines);
+      curLine = AddNewFlexLineToList(aLines, shouldInsertAtFront);
     }
 
     // Add item to current flex line (and update the line's bookkeeping about
     // how large its items collectively are).
-    curLine->AddItem(item.forget(),
+    curLine->AddItem(item.forget(), shouldInsertAtFront,
                      itemInnerHypotheticalMainSize,
                      itemOuterHypotheticalMainSize);
 
     // Honor "page-break-after", if we're multi-line and have more children:
     if (!isSingleLine && childFrame->GetNextSibling() &&
         childFrame->StyleDisplay()->mBreakAfter) {
-      curLine = AddNewFlexLineToList(aLines);
+      curLine = AddNewFlexLineToList(aLines, shouldInsertAtFront);
     }
     itemIdxInContainer++;
   }
