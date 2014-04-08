@@ -107,9 +107,6 @@ using mozilla::net::nsMediaFragmentURIParser;
 namespace mozilla {
 namespace dom {
 
-// Number of milliseconds between timeupdate events as defined by spec
-#define TIMEUPDATE_MS 250
-
 // Used by AudioChannel for suppresssing the volume to this ratio.
 #define FADED_VOLUME_RATIO 0.25
 
@@ -3385,6 +3382,7 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
   nsIDocument* ownerDoc = OwnerDoc();
 
   if (mDecoder) {
+    mDecoder->SetElementVisibility(!ownerDoc->Hidden());
     mDecoder->SetDormantIfNecessary(ownerDoc->Hidden());
   }
 
