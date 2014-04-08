@@ -7938,15 +7938,15 @@ static const VMFunction SPSEnterInfo = FunctionInfo<SPSFn>(SPSEnter);
 static const VMFunction SPSExitInfo = FunctionInfo<SPSFn>(SPSExit);
 
 bool
-CodeGenerator::visitFunctionBoundary(LFunctionBoundary *lir)
+CodeGenerator::visitProfilerStackOp(LProfilerStackOp *lir)
 {
     Register temp = ToRegister(lir->temp()->output());
     bool inlinedFunction = lir->inlineLevel() > 0;
 
     switch (lir->type()) {
-        case MFunctionBoundary::Inline_Enter:
+        case MProfilerStackOp::InlineEnter:
             // Multiple scripts can be inlined at one depth, but there is only
-            // one Inline_Exit node to signify this. To deal with this, if we
+            // one InlineExit node to signify this. To deal with this, if we
             // reach the entry of another inline script on the same level, then
             // just reset the sps metadata about the frame. We must balance
             // calls to leave()/reenter(), so perform the balance without
@@ -7965,7 +7965,7 @@ CodeGenerator::visitFunctionBoundary(LFunctionBoundary *lir)
                 return false;
             // fallthrough
 
-        case MFunctionBoundary::Enter:
+        case MProfilerStackOp::Enter:
             if (gen->options.spsSlowAssertionsEnabled()) {
                 if (!inlinedFunction || js_JitOptions.profileInlineFrames) {
                     saveLive(lir);
@@ -7980,7 +7980,7 @@ CodeGenerator::visitFunctionBoundary(LFunctionBoundary *lir)
 
             return sps_.push(lir->script(), masm, temp, /* inlinedFunction = */ inlinedFunction);
 
-        case MFunctionBoundary::Inline_Exit:
+        case MProfilerStackOp::InlineExit:
             // all inline returns were covered with ::Exit, so we just need to
             // maintain the state of inline frames currently active and then
             // reenter the caller
@@ -7988,7 +7988,7 @@ CodeGenerator::visitFunctionBoundary(LFunctionBoundary *lir)
             sps_.reenter(masm, temp, /* inlinedFunction = */ true);
             return true;
 
-        case MFunctionBoundary::Exit:
+        case MProfilerStackOp::Exit:
             if (gen->options.spsSlowAssertionsEnabled()) {
                 if (!inlinedFunction || js_JitOptions.profileInlineFrames) {
                     saveLive(lir);
@@ -8008,7 +8008,7 @@ CodeGenerator::visitFunctionBoundary(LFunctionBoundary *lir)
             return true;
 
         default:
-            MOZ_ASSUME_UNREACHABLE("invalid LFunctionBoundary type");
+            MOZ_ASSUME_UNREACHABLE("invalid LProfilerStackOp type");
     }
 }
 

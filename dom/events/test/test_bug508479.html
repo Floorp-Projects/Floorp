@@ -13,10 +13,7 @@ var gGotNotHandlingDrop = false;
 SimpleTest.waitForExplicitFinish();
 
 function fireEvent(target, event) {
-  var utils =
-    window.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
-           getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
-  SpecialPowers.wrap(utils).dispatchDOMEventViaPresShell(target, event, true);
+  SpecialPowers.DOMWindowUtils.dispatchDOMEventViaPresShell(target, event, true);
 }
 
 function fireDrop(element, shouldAllowDrop, shouldAllowOnlyChromeDrop) {

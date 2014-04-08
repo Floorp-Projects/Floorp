@@ -90,6 +90,8 @@ var properties1 = {
   name: ["Test1 TestFamilyName", "Test2 Wagner"],
   familyName: ["TestFamilyName","Wagner"],
   givenName: ["Test1","Test2"],
+  phoneticFamilyName: ["TestphoneticFamilyName1","TestphoneticFamilyName2"],
+  phoneticGivenName: ["TestphoneticGivenName1","TestphoneticGivenName2"],
   nickname: ["nicktest"],
   tel: [{type: ["work"], value: "123456", carrier: "testCarrier"} , {type: ["home", "fax"], value: "+55 (31) 9876-3456"}, {type: ["home"], value: "+49 451 491934"}],
   adr: [adr1],
@@ -100,10 +102,92 @@ var properties2 = {
   name: ["dummyHonorificPrefix dummyGivenName dummyFamilyName dummyHonorificSuffix", "dummyHonorificPrefix2"],
   familyName: ["dummyFamilyName"],
   givenName: ["dummyGivenName"],
+  phoneticFamilyName: ["dummyphoneticFamilyName"],
+  phoneticGivenName: ["dummyphoneticGivenName"],
   honorificPrefix: ["dummyHonorificPrefix","dummyHonorificPrefix2"],
   honorificSuffix: ["dummyHonorificSuffix"],
   additionalName: ["dummyadditionalName"],
   nickname: ["dummyNickname"],
+  tel: [{type: ["test"], value: "7932012345", carrier: "myCarrier", pref: 1},{type: ["home", "custom"], value: "7932012346", pref: 0}],
+  email: [{type: ["test"], value: "a@b.c"}, {value: "b@c.d", pref: 1}],
+  adr: [adr1, adr2],
+  impp: [{type: ["aim"], value:"im1", pref: 1}, {value: "im2"}],
+  org: ["org1", "org2"],
+  jobTitle: ["boss", "superboss"],
+  note: ["test note"],
+  category: ["cat1", "cat2"],
+  url: [{type: ["work", "work2"], value: "www.1.com", pref: 1}, {value:"www2.com"}],
+  bday: new Date("1980, 12, 01"),
+  anniversary: new Date("2000, 12, 01"),
+  sex: "male",
+  genderIdentity: "test",
+  key: ["ERPJ394GJJWEVJ0349GJ09W3H4FG0WFW80VHW3408GH30WGH348G3H"]
+};
+
+// To test sorting(CJK)
+var c9 = {
+  phoneticFamilyName: ["a"],
+  phoneticGivenName: ["a"],
+};
+
+var c10 = {
+  phoneticFamilyName: ["b"],
+  phoneticGivenName: ["b"],
+};
+
+var c11 = {
+  phoneticFamilyName: ["c","a","b"],
+  phoneticGivenName: ["c","a","b"],
+};
+
+var c12 = {
+  phoneticFamilyName: ["c","a","c"],
+  phoneticGivenName: ["c","a","c"],
+};
+
+var c13 = {
+  phoneticFamilyName: [],
+  phoneticGivenName: [],
+};
+
+var c14 = {
+  phoneticFamilyName: ["e","e","e"],
+  phoneticGivenName: ["e","e","e"],
+};
+
+var c15 = {
+  phoneticFamilyName: ["e","e","e"],
+  phoneticGivenName: ["e","e","e"],
+};
+
+var c16 = {
+  phoneticFamilyName: ["e","e","e"],
+  phoneticGivenName: ["e","e","e"],
+};
+
+var properties3 = {
+  // please keep capital letters at the start of these names
+  name: ["Taro Yamada", "Ichiro Suzuki"],
+  familyName: ["Yamada","Suzuki"],
+  givenName: ["Taro","Ichiro"],
+  phoneticFamilyName: ["TestPhoneticFamilyYamada","TestPhoneticFamilySuzuki"],
+  phoneticGivenName: ["TestPhoneticGivenTaro","TestPhoneticGivenIchiro"],
+  nickname: ["phoneticNicktest"],
+  tel: [{type: ["work"], value: "123456", carrier: "testCarrier"} , {type: ["home", "fax"], value: "+55 (31) 9876-3456"}, {type: ["home"], value: "+49 451 491934"}],
+  adr: [adr1],
+  email: [{type: ["work"], value: "x@y.com"}],
+};
+
+var properties4 = {
+  name: ["dummyHonorificPrefix dummyTaro dummyYamada dummyHonorificSuffix", "dummyHonorificPrefix2"],
+  familyName: ["dummyYamada"],
+  givenName: ["dummyTaro"],
+  phoneticFamilyName: ["dummyTestPhoneticFamilyYamada"],
+  phoneticGivenName: ["dummyTestPhoneticGivenTaro"],
+  honorificPrefix: ["dummyPhoneticHonorificPrefix","dummyPhoneticHonorificPrefix2"],
+  honorificSuffix: ["dummyPhoneticHonorificSuffix"],
+  additionalName: ["dummyPhoneticAdditionalName"],
+  nickname: ["dummyPhoneticNickname"],
   tel: [{type: ["test"], value: "7932012345", carrier: "myCarrier", pref: 1},{type: ["home", "custom"], value: "7932012346", pref: 0}],
   email: [{type: ["test"], value: "a@b.c"}, {value: "b@c.d", pref: 1}],
   adr: [adr1, adr2],
@@ -265,6 +349,8 @@ function checkContacts(contact1, contact2) {
   checkStrArray(contact1.givenName, contact2.givenName, "Same givenName");
   checkStrArray(contact1.additionalName, contact2.additionalName, "Same additionalName");
   checkStrArray(contact1.familyName, contact2.familyName, "Same familyName");
+  checkStrArray(contact1.phoneticFamilyName, contact2.phoneticFamilyName, "Same phoneticFamilyName");
+  checkStrArray(contact1.phoneticGivenName, contact2.phoneticGivenName, "Same phoneticGivenName");
   checkStrArray(contact1.honorificSuffix, contact2.honorificSuffix, "Same honorificSuffix");
   checkStrArray(contact1.nickname, contact2.nickname, "Same nickname");
   checkCategory(contact1.category, contact2.category);

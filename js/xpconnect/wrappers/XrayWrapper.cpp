@@ -1454,16 +1454,18 @@ DOMXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                               MutableHandle<JSPropertyDescriptor> desc,
                               Handle<JSPropertyDescriptor> existingDesc, bool *defined)
 {
-    if (!existingDesc.object())
-        return true;
-
     // Check for an indexed property on a Window.  If that's happening, do
     // nothing but claim we defined it so it won't get added as an expando.
-    int32_t index = GetArrayIndexFromId(cx, id);
-    if (IsArrayIndex(index) && IsWindow(cx, wrapper)) {
-        *defined = true;
-        return true;
+    if (IsWindow(cx, wrapper)) {
+        int32_t index = GetArrayIndexFromId(cx, id);
+        if (IsArrayIndex(index)) {
+            *defined = true;
+            return true;
+        }
     }
+
+    if (!existingDesc.object())
+        return true;
 
     JS::Rooted<JSObject*> obj(cx, getTargetObject(wrapper));
     return XrayDefineProperty(cx, wrapper, obj, id, desc, defined);

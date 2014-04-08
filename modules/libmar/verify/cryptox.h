@@ -17,6 +17,12 @@
 
 #include "nss_secutil.h"
 
+#define CryptoX_InvalidHandleValue NULL
+#define CryptoX_ProviderHandle void*
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 CryptoX_Result NSS_LoadPublicKey(const char *certNickname, 
                                  SECKEYPublicKey **publicKey, 
                                  CERTCertificate **cert);
@@ -25,9 +31,61 @@ CryptoX_Result NSS_VerifyBegin(VFYContext **ctx,
 CryptoX_Result NSS_VerifySignature(VFYContext * const *ctx , 
                                    const unsigned char *signature, 
                                    unsigned int signatureLen);
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
-#define CryptoX_InvalidHandleValue NULL
-#define CryptoX_ProviderHandle void*
+#ifdef XP_MACOSX
+
+#define CryptoX_SignatureHandle void*
+#define CryptoX_PublicKey void*
+#define CryptoX_Certificate void*
+
+// Forward-declare Objective-C functions implemented in MacVerifyCrypto.mm.
+#ifdef __cplusplus
+extern "C" {
+#endif
+CryptoX_Result CryptoMac_InitCryptoProvider();
+CryptoX_Result CryptoMac_VerifyBegin(CryptoX_SignatureHandle* aInputData,
+                                     CryptoX_PublicKey* aPublicKey);
+CryptoX_Result CryptoMac_VerifyUpdate(CryptoX_SignatureHandle* aInputData,
+                                      void* aBuf, unsigned int aLen);
+CryptoX_Result CryptoMac_LoadPublicKey(const unsigned char* aCertData,
+                                       CryptoX_PublicKey* aPublicKey,
+                                       const char* aCertName,
+                                       CryptoX_Certificate* aCert);
+CryptoX_Result CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
+                                         CryptoX_PublicKey* aPublicKey,
+                                         const unsigned char* aSignature,
+                                         unsigned int aSignatureLen);
+void CryptoMac_FreeSignatureHandle(CryptoX_SignatureHandle* aInputData);
+void CryptoMac_FreePublicKey(CryptoX_PublicKey* aPublicKey);
+void CryptoMac_FreeCertificate(CryptoX_Certificate* aCertificate);
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#define CryptoX_InitCryptoProvider(aCryptoHandle) \
+  CryptoMac_InitCryptoProvider()
+#define CryptoX_VerifyBegin(aCryptoHandle, aInputData, aPublicKey) \
+  CryptoMac_VerifyBegin(aInputData, aPublicKey)
+#define CryptoX_VerifyUpdate(aInputData, aBuf, aLen) \
+  CryptoMac_VerifyUpdate(aInputData, aBuf, aLen)
+#define CryptoX_LoadPublicKey(aCryptoHandle, aCertData, aDataSize, \
+                              aPublicKey, aCertName, aCert) \
+  CryptoMac_LoadPublicKey(aCertData, aPublicKey, aCertName, aCert)
+#define CryptoX_VerifySignature(aInputData, aPublicKey, aSignature, \
+                                aSignatureLen) \
+  CryptoMac_VerifySignature(aInputData, aPublicKey, aSignature, aSignatureLen)
+#define CryptoX_FreeSignatureHandle(aInputData) \
+  CryptoMac_FreeSignatureHandle(aInputData)
+#define CryptoX_FreePublicKey(aPublicKey) \
+  CryptoMac_FreePublicKey(aPublicKey)
+#define CryptoX_FreeCertificate(aCertificate) \
+  CryptoMac_FreeCertificate(aCertificate)
+
+#else
+
 #define CryptoX_SignatureHandle VFYContext *
 #define CryptoX_PublicKey SECKEYPublicKey *
 #define CryptoX_Certificate CERTCertificate *
@@ -48,6 +106,8 @@ CryptoX_Result NSS_VerifySignature(VFYContext * const *ctx ,
   SECKEY_DestroyPublicKey(*key)
 #define CryptoX_FreeCertificate(cert) \
   CERT_DestroyCertificate(*cert)
+
+#endif
 
 #elif defined(XP_WIN) 
 

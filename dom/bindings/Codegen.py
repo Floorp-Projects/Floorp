@@ -53,7 +53,8 @@ def isTypeCopyConstructible(type):
 def wantsAddProperty(desc):
     return (desc.concrete and
             desc.wrapperCache and
-            not desc.interface.getExtendedAttribute("Global"))
+            not (desc.workers and
+                 desc.interface.getExtendedAttribute("Global")))
 
 
 # We'll want to insert the indent at the beginnings of lines, but we
@@ -330,9 +331,46 @@ class CGDOMJSClass(CGThing):
         callHook = LEGACYCALLER_HOOK_NAME if self.descriptor.operations["LegacyCaller"] else 'nullptr'
         slotCount = INSTANCE_RESERVED_SLOTS + self.descriptor.interface.totalMembersInSlots
         classFlags = "JSCLASS_IS_DOMJSCLASS | "
+        classExtensionAndObjectOps = """\
+JS_NULL_CLASS_EXT,
+JS_NULL_OBJECT_OPS
+"""
         if self.descriptor.interface.getExtendedAttribute("Global"):
             classFlags += "JSCLASS_DOM_GLOBAL | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS) | JSCLASS_IMPLEMENTS_BARRIERS"
             traceHook = "JS_GlobalObjectTraceHook"
+            if not self.descriptor.workers:
+                classExtensionAndObjectOps = """\
+{
+  nsGlobalWindow::OuterObject, /* outerObject */
+  nullptr, /* innerObject */
+  nullptr, /* iteratorObject */
+  false, /* isWrappedNative */
+  nullptr /* weakmapKeyDelegateOp */
+},
+{
+  nullptr, /* lookupGeneric */
+  nullptr, /* lookupProperty */
+  nullptr, /* lookupElement */
+  nullptr, /* defineGeneric */
+  nullptr, /* defineProperty */
+  nullptr, /* defineElement */
+  nullptr, /* getGeneric  */
+  nullptr, /* getProperty */
+  nullptr, /* getElement */
+  nullptr, /* setGeneric */
+  nullptr, /* setProperty */
+  nullptr, /* setElement */
+  nullptr, /* getGenericAttributes */
+  nullptr, /* setGenericAttributes */
+  nullptr, /* deleteProperty */
+  nullptr, /* deleteElement */
+  nullptr, /* watch */
+  nullptr, /* unwatch */
+  nullptr, /* slice */
+  nullptr, /* enumerate */
+  JS_ObjectToOuterObject /* thisObject */
+}
+"""
         else:
             classFlags += "JSCLASS_HAS_RESERVED_SLOTS(%d)" % slotCount
         if self.descriptor.interface.getExtendedAttribute("NeedNewResolve"):
@@ -366,8 +404,7 @@ class CGDOMJSClass(CGThing):
                 nullptr,               /* construct */
                 ${trace}, /* trace */
                 JS_NULL_CLASS_SPEC,
-                JS_NULL_CLASS_EXT,
-                JS_NULL_OBJECT_OPS
+                $*{classExtensionAndObjectOps}
               },
               $*{descriptor}
             };
@@ -380,6 +417,7 @@ class CGDOMJSClass(CGThing):
             finalize=FINALIZE_HOOK_NAME,
             call=callHook,
             trace=traceHook,
+            classExtensionAndObjectOps=classExtensionAndObjectOps,
             descriptor=DOMClass(self.descriptor))
 
 
