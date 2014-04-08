@@ -24,8 +24,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public final class EventDispatcher {
     private static final String LOGTAG = "GeckoEventDispatcher";
     private static final String GUID = "__guid__";
-    private static final String SUFFIX_RETURN = "Return";
-    private static final String SUFFIX_ERROR = "Error";
+    private static final String STATUS_ERROR = "error";
+    private static final String STATUS_SUCCESS = "success";
 
     /**
      * The capacity of a HashMap is rounded up to the next power-of-2. Every time the size
@@ -195,21 +195,22 @@ public final class EventDispatcher {
     }
 
     public static void sendResponse(JSONObject message, Object response) {
-        sendResponseHelper(SUFFIX_RETURN, message, response);
+        sendResponseHelper(STATUS_SUCCESS, message, response);
     }
 
     public static void sendError(JSONObject message, Object response) {
-        sendResponseHelper(SUFFIX_ERROR, message, response);
+        sendResponseHelper(STATUS_ERROR, message, response);
     }
 
-    private static void sendResponseHelper(String suffix, JSONObject message, Object response) {
+    private static void sendResponseHelper(String status, JSONObject message, Object response) {
         try {
             final JSONObject wrapper = new JSONObject();
             wrapper.put(GUID, message.getString(GUID));
+            wrapper.put("status", status);
             wrapper.put("response", response);
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(message.getString("type") + ":" + suffix, wrapper.toString()));
-        } catch (Exception e) {
-            Log.e(LOGTAG, "Unable to send " + suffix, e);
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(message.getString("type") + ":Response", wrapper.toString()));
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Unable to send response", e);
         }
     }
 }
