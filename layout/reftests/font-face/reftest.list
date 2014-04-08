@@ -92,9 +92,8 @@ HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
 # bug 493976 - for some reason the Arabic tests below cause Tinderbox timeouts
 # HTTP(..) == src-format-arabic.html src-format-arabic-ot-ref.html
 
-# bug 769194 - src:local() completely broken on android
-skip-if(B2G) fails-if(Android) == local-1.html local-1-ref.html # bug 773482
-skip-if(B2G) fails-if(Android) == local-styled-1.html local-styled-1-ref.html # bug 773482
+== local-1.html local-1-ref.html
+== local-styled-1.html local-styled-1-ref.html
 
 skip-if(B2G) HTTP(..) == synthetic-weight-style.html synthetic-weight-style-ref.html # bug 773482
 skip-if(B2G) HTTP(..) == synthetic-variations.html synthetic-variations-ref.html
