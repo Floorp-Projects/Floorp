@@ -33,10 +33,8 @@ class nsDOMMutationRecord : public nsISupports,
 {
 public:
   nsDOMMutationRecord(nsIAtom* aType, nsISupports* aOwner)
-  : mType(aType), mOwner(aOwner)
+  : mType(aType), mAttrNamespace(NullString()), mPrevValue(NullString()), mOwner(aOwner)
   {
-    mAttrNamespace.SetIsVoid(PR_TRUE);
-    mPrevValue.SetIsVoid(PR_TRUE);
     SetIsDOMBinding();
   }
   virtual ~nsDOMMutationRecord() {}
