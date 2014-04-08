@@ -86,6 +86,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "IdentityService",
 XPCOMUtils.defineLazyModuleGetter(this, "Logger",
                                   "resource://gre/modules/identity/LogUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
+                                  "resource://gre/modules/SystemAppProxy.jsm");
+
 // The default persona uri; can be overwritten with toolkit.identity.uri pref.
 // Do this if you want to repoint to a different service for testing.
 // There's no point in setting up an observer to monitor the pref, as b2g prefs
@@ -122,26 +125,10 @@ function log(...aMessageArgs) {
 
 log("persona uri =", kPersonaUri);
 
-/*
- * ContentInterface encapsulates the our content functions.  There are only two:
- *
- * getContent       - return the current content window
- * sendChromeEvent  - send a chromeEvent from the browser shell
- */
-let ContentInterface = {
-  _getBrowser: function SignInToWebsiteController__getBrowser() {
-    return Services.wm.getMostRecentWindow("navigator:browser");
-  },
-
-  getContent: function SignInToWebsiteController_getContent() {
-    return this._getBrowser().getContentWindow();
-  },
-
-  sendChromeEvent: function SignInToWebsiteController_sendChromeEvent(detail) {
-    detail.uri = kPersonaUri;
-    this._getBrowser().shell.sendChromeEvent(detail);
-  }
-};
+function sendChromeEvent(details) {
+  details.uri = kPersonaUri;
+  SystemAppProxy.dispatchEvent(details);
+}
 
 function Pipe() {
   this._watchers = [];
@@ -217,7 +204,7 @@ Pipe.prototype = {
       };
       log('telling content to close the dialog');
       // tell content to close the dialog
-      ContentInterface.sendChromeEvent(detail);
+      sendChromeEvent(detail);
     }
   },
 
@@ -233,16 +220,9 @@ Pipe.prototype = {
     // This content variable is injected into the scope of
     // kIdentityShimFile, where it is used to access the BrowserID object
     // and its internal API.
-    let content = ContentInterface.getContent();
     let mm = null;
     let uuid = getRandomId();
     let self = this;
-
-    if (!content) {
-      log("ERROR: what the what? no content window?");
-      // aErrorCb.onresult("NO_CONTENT_WINDOW");
-      return;
-    }
 
     function removeMessageListeners() {
       if (mm) {
@@ -261,11 +241,11 @@ Pipe.prototype = {
         requestId: aRpOptions.id
       };
       log('received delegate finished; telling content to close the dialog');
-      ContentInterface.sendChromeEvent(detail);
+      sendChromeEvent(detail);
       self._removeWatchers(rpID, rpMM);
     }
 
-    content.addEventListener("mozContentEvent", function getAssertion(evt) {
+    SystemAppProxy.addEventListener("mozContentEvent", function getAssertion(evt) {
       let msg = evt.detail;
       if (!msg.id.match(uuid)) {
         return;
@@ -275,7 +255,7 @@ Pipe.prototype = {
         case kOpenIdentityDialog + '-' + uuid:
           if (msg.type === 'cancel') {
             // The user closed the dialog.  Clean up and call cancel.
-            content.removeEventListener("mozContentEvent", getAssertion);
+            SystemAppProxy.removeEventListener("mozContentEvent", getAssertion);
             removeMessageListeners();
             aMessageCallback({json: {method: "cancel"}});
           } else {
@@ -309,7 +289,7 @@ Pipe.prototype = {
           // Received our assertion.  The message manager callbacks will handle
           // communicating back to the IDService.  All we have to do is remove
           // this listener.
-          content.removeEventListener("mozContentEvent", getAssertion);
+          SystemAppProxy.removeEventListener("mozContentEvent", getAssertion);
           break;
 
         default:
@@ -330,7 +310,7 @@ Pipe.prototype = {
       requestId: aRpOptions.id
     };
 
-    ContentInterface.sendChromeEvent(detail);
+    sendChromeEvent(detail);
   }
 
 };
