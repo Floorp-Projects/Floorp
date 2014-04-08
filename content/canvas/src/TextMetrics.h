@@ -33,7 +33,7 @@ public:
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope,
                        bool* aTookOwnership)
   {
-    return TextMetricsBinding::Wrap(aCx, aScope, this, aTookOwnership);
+    return TextMetricsBinding::Wrap(aCx, this, aTookOwnership);
   }
 
 private:

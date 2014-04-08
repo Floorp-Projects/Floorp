@@ -17,7 +17,7 @@ namespace dom {
 JSObject*
 SVGFEPointLightElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGFEPointLightElementBinding::Wrap(aCx, aScope, this);
+  return SVGFEPointLightElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::NumberInfo SVGFEPointLightElement::sNumberInfo[3] =

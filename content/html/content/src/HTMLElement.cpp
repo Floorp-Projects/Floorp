@@ -61,7 +61,7 @@ HTMLElement::GetInnerHTML(nsAString& aInnerHTML)
 JSObject*
 HTMLElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return dom::HTMLElementBinding::Wrap(aCx, aScope, this);
+  return dom::HTMLElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

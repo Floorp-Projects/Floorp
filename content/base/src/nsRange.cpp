@@ -41,7 +41,7 @@ using namespace mozilla::dom;
 JSObject*
 nsRange::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return RangeBinding::Wrap(aCx, aScope, this);
+  return RangeBinding::Wrap(aCx, this);
 }
 
 /******************************************************

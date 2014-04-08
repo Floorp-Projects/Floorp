@@ -18,7 +18,7 @@ namespace dom {
 JSObject*
 SVGMaskElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGMaskElementBinding::Wrap(aCx, aScope, this);
+  return SVGMaskElementBinding::Wrap(aCx, this);
 }
 
 //--------------------- Masks ------------------------

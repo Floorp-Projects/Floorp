@@ -31,7 +31,7 @@ WebGL1Context::~WebGL1Context()
 JSObject*
 WebGL1Context::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
-    return dom::WebGLRenderingContextBinding::Wrap(cx, scope, this);
+    return dom::WebGLRenderingContextBinding::Wrap(cx, this);
 }
 
 

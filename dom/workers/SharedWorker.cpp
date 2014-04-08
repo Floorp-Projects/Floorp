@@ -195,7 +195,7 @@ SharedWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   AssertIsOnMainThread();
 
-  return SharedWorkerBinding::Wrap(aCx, aScope, this);
+  return SharedWorkerBinding::Wrap(aCx, this);
 }
 
 nsresult

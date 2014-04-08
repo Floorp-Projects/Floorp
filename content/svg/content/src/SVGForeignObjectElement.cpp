@@ -17,7 +17,7 @@ namespace dom {
 JSObject*
 SVGForeignObjectElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGForeignObjectElementBinding::Wrap(aCx, aScope, this);
+  return SVGForeignObjectElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::LengthInfo SVGForeignObjectElement::sLengthInfo[4] =

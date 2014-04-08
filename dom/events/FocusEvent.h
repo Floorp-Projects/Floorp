@@ -26,7 +26,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return FocusEventBinding::Wrap(aCx, aScope, this);
+    return FocusEventBinding::Wrap(aCx, this);
   }
 
   FocusEvent(EventTarget* aOwner,

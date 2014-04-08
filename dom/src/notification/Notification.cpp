@@ -738,7 +738,7 @@ Notification::Get(const GlobalObject& aGlobal,
 JSObject*
 Notification::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return mozilla::dom::NotificationBinding::Wrap(aCx, aScope, this);
+  return mozilla::dom::NotificationBinding::Wrap(aCx, this);
 }
 
 void

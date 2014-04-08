@@ -82,7 +82,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(HTMLTemplateElement)
 JSObject*
 HTMLTemplateElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLTemplateElementBinding::Wrap(aCx, aScope, this);
+  return HTMLTemplateElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

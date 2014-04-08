@@ -26,7 +26,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLDataElement)
 JSObject*
 HTMLDataElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLDataElementBinding::Wrap(aCx, aScope, this);
+  return HTMLDataElementBinding::Wrap(aCx, this);
 }
 
 void

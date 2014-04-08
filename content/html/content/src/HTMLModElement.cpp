@@ -26,7 +26,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLModElement)
 JSObject*
 HTMLModElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLModElementBinding::Wrap(aCx, aScope, this);
+  return HTMLModElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

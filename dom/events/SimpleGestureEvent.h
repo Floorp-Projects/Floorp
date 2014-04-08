@@ -33,7 +33,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return SimpleGestureEventBinding::Wrap(aCx, aScope, this);
+    return SimpleGestureEventBinding::Wrap(aCx, this);
   }
 
   uint32_t AllowedDirections();

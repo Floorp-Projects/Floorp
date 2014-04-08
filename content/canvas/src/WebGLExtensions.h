@@ -46,7 +46,7 @@ protected:
 #define IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionType) \
     JSObject* \
     WebGLExtensionType::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) { \
-        return dom::WebGLExtensionType##Binding::Wrap(cx, scope, this); \
+        return dom::WebGLExtensionType##Binding::Wrap(cx, this); \
     }
 
 class WebGLExtensionCompressedTextureATC

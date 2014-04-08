@@ -31,7 +31,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 DOMSVGAnimatedPreserveAspectRatio::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGAnimatedPreserveAspectRatioBinding::Wrap(aCx, aScope, this);
+  return SVGAnimatedPreserveAspectRatioBinding::Wrap(aCx, this);
 }
 
 /* Implementation */

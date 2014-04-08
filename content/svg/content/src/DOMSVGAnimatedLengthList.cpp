@@ -32,7 +32,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGAnimatedLengthList, Release)
 JSObject*
 DOMSVGAnimatedLengthList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return dom::SVGAnimatedLengthListBinding::Wrap(aCx, aScope, this);
+  return dom::SVGAnimatedLengthListBinding::Wrap(aCx, this);
 }
 
 already_AddRefed<DOMSVGLengthList>

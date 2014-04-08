@@ -14,7 +14,7 @@ namespace dom {
 JSObject*
 SVGPolylineElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGPolylineElementBinding::Wrap(aCx, aScope, this);
+  return SVGPolylineElementBinding::Wrap(aCx, this);
 }
 
 //----------------------------------------------------------------------

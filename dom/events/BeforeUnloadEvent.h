@@ -27,7 +27,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return BeforeUnloadEventBinding::Wrap(aCx, aScope, this);
+    return BeforeUnloadEventBinding::Wrap(aCx, this);
   }
 
   NS_DECL_ISUPPORTS_INHERITED

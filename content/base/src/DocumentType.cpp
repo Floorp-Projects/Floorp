@@ -62,7 +62,7 @@ namespace dom {
 JSObject*
 DocumentType::WrapNode(JSContext *cx, JS::Handle<JSObject*> scope)
 {
-  return DocumentTypeBinding::Wrap(cx, scope, this);
+  return DocumentTypeBinding::Wrap(cx, this);
 }
 
 DocumentType::DocumentType(already_AddRefed<nsINodeInfo>& aNodeInfo,

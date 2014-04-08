@@ -31,7 +31,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMImplementation)
 JSObject*
 DOMImplementation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return DOMImplementationBinding::Wrap(aCx, aScope, this);
+  return DOMImplementationBinding::Wrap(aCx, this);
 }
 
 bool

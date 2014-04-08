@@ -16,7 +16,7 @@ namespace dom {
 JSObject*
 HTMLUnknownElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLUnknownElementBinding::Wrap(aCx, aScope, this);
+  return HTMLUnknownElementBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_ELEMENT_CLONE(HTMLUnknownElement)

@@ -16,7 +16,7 @@ namespace dom {
 JSObject*
 SVGPolygonElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGPolygonElementBinding::Wrap(aCx, aScope, this);
+  return SVGPolygonElementBinding::Wrap(aCx, this);
 }
 
 //----------------------------------------------------------------------

@@ -44,7 +44,7 @@ public:
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope,
                        bool* aTookOwnership)
   {
-    return TextEncoderBinding::Wrap(aCx, aScope, this, aTookOwnership);
+    return TextEncoderBinding::Wrap(aCx, this, aTookOwnership);
   }
 
   nsISupports*

@@ -30,7 +30,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(PaintRequest)
 /* virtual */ JSObject*
 PaintRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return PaintRequestBinding::Wrap(aCx, aScope, this);
+  return PaintRequestBinding::Wrap(aCx, this);
 }
 
 already_AddRefed<DOMRect>
@@ -73,7 +73,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(PaintRequestList)
 JSObject*
 PaintRequestList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return PaintRequestListBinding::Wrap(aCx, aScope, this);
+  return PaintRequestListBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

@@ -554,5 +554,5 @@ nsDOMFileReader::GetAsDataURL(nsIDOMBlob *aFile,
 /* virtual */ JSObject*
 nsDOMFileReader::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return FileReaderBinding::Wrap(aCx, aScope, this);
+  return FileReaderBinding::Wrap(aCx, this);
 }

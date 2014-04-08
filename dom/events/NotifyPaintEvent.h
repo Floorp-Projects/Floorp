@@ -46,7 +46,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return NotifyPaintEventBinding::Wrap(aCx, aScope, this);
+    return NotifyPaintEventBinding::Wrap(aCx, this);
   }
 
   already_AddRefed<DOMRectList> ClientRects();

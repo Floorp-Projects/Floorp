@@ -50,7 +50,7 @@ JSObject*
 MediaStreamList::WrapObject(JSContext* cx, JS::Handle<JSObject*> scope)
 {
 #ifdef MOZILLA_INTERNAL_API
-  return MediaStreamListBinding::Wrap(cx, scope, this);
+  return MediaStreamListBinding::Wrap(cx, this);
 #else
   return nullptr;
 #endif

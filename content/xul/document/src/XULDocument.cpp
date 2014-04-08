@@ -4784,7 +4784,7 @@ XULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
 JSObject*
 XULDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return XULDocumentBinding::Wrap(aCx, aScope, this);
+  return XULDocumentBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

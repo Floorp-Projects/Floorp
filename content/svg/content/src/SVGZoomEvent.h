@@ -36,7 +36,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return SVGZoomEventBinding::Wrap(aCx, aScope, this);
+    return SVGZoomEventBinding::Wrap(aCx, this);
   }
 
   float PreviousScale() const

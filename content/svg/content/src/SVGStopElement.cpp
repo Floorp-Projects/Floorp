@@ -14,7 +14,7 @@ namespace dom {
 JSObject*
 SVGStopElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGStopElementBinding::Wrap(aCx, aScope, this);
+  return SVGStopElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::NumberInfo SVGStopElement::sNumberInfo =

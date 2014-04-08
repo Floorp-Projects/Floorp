@@ -46,7 +46,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLContentElement)
 JSObject*
 HTMLContentElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLContentElementBinding::Wrap(aCx, aScope, this);
+  return HTMLContentElementBinding::Wrap(aCx, this);
 }
 
 nsresult
@@ -317,6 +317,6 @@ DistributedContentList::IndexOf(nsIContent* aContent)
 JSObject*
 DistributedContentList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return NodeListBinding::Wrap(aCx, aScope, this);
+  return NodeListBinding::Wrap(aCx, this);
 }
 

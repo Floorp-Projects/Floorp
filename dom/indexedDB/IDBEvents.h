@@ -56,7 +56,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::IDBVersionChangeEventBinding::Wrap(aCx, aScope, this);
+    return mozilla::dom::IDBVersionChangeEventBinding::Wrap(aCx, this);
   }
 
   static already_AddRefed<IDBVersionChangeEvent>

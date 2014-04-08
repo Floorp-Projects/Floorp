@@ -453,7 +453,7 @@ TreeWalker::NextSiblingInternal(bool aReversed, ErrorResult& aResult)
 JSObject*
 TreeWalker::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
-    return TreeWalkerBinding::Wrap(cx, scope, this);
+    return TreeWalkerBinding::Wrap(cx, this);
 }
 
 } // namespace dom

@@ -17,7 +17,7 @@ namespace dom {
 JSObject*
 SVGClipPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGClipPathElementBinding::Wrap(aCx, aScope, this);
+  return SVGClipPathElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::EnumInfo SVGClipPathElement::sEnumInfo[1] =

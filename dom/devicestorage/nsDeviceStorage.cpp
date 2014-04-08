@@ -3108,7 +3108,7 @@ nsDOMDeviceStorage::nsDOMDeviceStorage(nsPIDOMWindow* aWindow)
 /* virtual */ JSObject*
 nsDOMDeviceStorage::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return DeviceStorageBinding::Wrap(aCx, aScope, this);
+  return DeviceStorageBinding::Wrap(aCx, this);
 }
 
 nsresult

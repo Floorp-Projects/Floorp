@@ -52,7 +52,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::XMLSerializerBinding::Wrap(aCx, aScope, this);
+    return mozilla::dom::XMLSerializerBinding::Wrap(aCx, this);
   }
 
 private:

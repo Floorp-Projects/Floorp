@@ -18,7 +18,7 @@ namespace dom {
 JSObject*
 SVGLineElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGLineElementBinding::Wrap(aCx, aScope, this);
+  return SVGLineElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::LengthInfo SVGLineElement::sLengthInfo[4] =
