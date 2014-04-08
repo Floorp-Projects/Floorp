@@ -368,7 +368,7 @@ public:
 
   virtual void NotifyWaitingForResourcesStatusChanged() MOZ_OVERRIDE;
 
-  void SetPlaybackRate(double aPlaybackRate);
+  virtual void SetPlaybackRate(double aPlaybackRate);
   void SetPreservesPitch(bool aPreservesPitch);
 
   // Directs the decoder to not preroll extra samples until the media is
@@ -760,7 +760,7 @@ public:
   // Change to a new play state. This updates the mState variable and
   // notifies any thread blocking on this object's monitor of the
   // change. Call on the main thread only.
-  void ChangeState(PlayState aState);
+  virtual void ChangeState(PlayState aState);
 
   // Called by |ChangeState|, to update the state machine.
   // Call on the main thread only and the lock must be obtained.
@@ -772,7 +772,11 @@ public:
 
   // Called when the metadata from the media file has been loaded by the
   // state machine. Call on the main thread only.
-  void MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags);
+  virtual void MetadataLoaded(int aChannels,
+                              int aRate,
+                              bool aHasAudio,
+                              bool aHasVideo,
+                              MetadataTags* aTags);
 
   // Called when the first frame has been loaded.
   // Call on the main thread only.
@@ -805,7 +809,7 @@ public:
 
   // Calls mElement->UpdateReadyStateForData, telling it whether we have
   // data for the next frame and if we're buffering. Main thread only.
-  void UpdateReadyStateForData();
+  virtual void UpdateReadyStateForData();
 
   // Find the end of the cached data starting at the current decoder
   // position.

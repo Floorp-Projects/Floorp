@@ -362,6 +362,12 @@ bool OmxDecoder::Init(sp<MediaExtractor>& extractor) {
 
   if (audioTrackIndex != -1) {
     mAudioTrack = extractor->getTrack(audioTrackIndex);
+
+#ifdef MOZ_AUDIO_OFFLOAD
+    // mAudioTrack is be used by OMXCodec. For offloaded audio track, using same
+    // object gives undetermined behavior. So get a new track
+    mAudioOffloadTrack = extractor->getTrack(audioTrackIndex);
+#endif
   }
   return true;
 }
