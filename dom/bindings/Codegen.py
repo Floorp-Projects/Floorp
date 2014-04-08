@@ -1506,7 +1506,7 @@ class CGConstructNavigatorObject(CGAbstractMethod):
     return nullptr;
   }
   JS::Rooted<JS::Value> v(aCx);
-  if (!WrapNewBindingObject(aCx, aObj, result, &v)) {
+  if (!WrapNewBindingObject(aCx, result, &v)) {
     //XXX Assertion disabled for now, see bug 991271.
     MOZ_ASSERT(true || JS_IsExceptionPending(aCx));
     return nullptr;
@@ -11402,8 +11402,9 @@ class CGJSImplMethod(CGJSImplMember):
 // Wrap the object before calling __Init so that __DOM_IMPL__ is available.
 nsCOMPtr<nsIGlobalObject> globalHolder = do_QueryInterface(window);
 JS::Rooted<JSObject*> scopeObj(cx, globalHolder->GetGlobalJSObject());
+MOZ_ASSERT(js::IsObjectInContextCompartment(scopeObj, cx));
 JS::Rooted<JS::Value> wrappedVal(cx);
-if (!WrapNewBindingObject(cx, scopeObj, impl, &wrappedVal)) {
+if (!WrapNewBindingObject(cx, impl, &wrappedVal)) {
   //XXX Assertion disabled for now, see bug 991271.
   MOZ_ASSERT(true || JS_IsExceptionPending(cx));
   aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -11664,7 +11665,8 @@ class CGJSImplClass(CGBindingImplClass):
             "}\n"
             "JS::Rooted<JSObject*> arg(cx, &args[1].toObject());\n"
             "nsRefPtr<${implName}> impl = new ${implName}(arg, window);\n"
-            "return WrapNewBindingObject(cx, arg, impl, args.rval());"
+            "MOZ_ASSERT(js::IsObjectInContextCompartment(arg, cx));\n"
+            "return WrapNewBindingObject(cx, impl, args.rval());"
         ).substitute({
             "ifaceName": self.descriptor.interface.identifier.name,
             "implName": self.descriptor.name
