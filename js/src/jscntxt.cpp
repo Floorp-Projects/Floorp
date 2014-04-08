@@ -1056,7 +1056,7 @@ js::HandleExecutionInterrupt(JSContext *cx)
     return true;
 }
 
-js::ThreadSafeContext::ThreadSafeContext(JSRuntime *rt, PerThreadData *pt, ContextKind kind)
+ThreadSafeContext::ThreadSafeContext(JSRuntime *rt, PerThreadData *pt, ContextKind kind)
   : ContextFriendFields(rt),
     contextKind_(kind),
     perThreadData(pt),
@@ -1075,6 +1075,25 @@ ThreadSafeContext::asForkJoinContext()
 {
     JS_ASSERT(isForkJoinContext());
     return reinterpret_cast<ForkJoinContext *>(this);
+}
+
+void
+ThreadSafeContext::recoverFromOutOfMemory()
+{
+    // If this is not a JSContext, there's nothing to do.
+    if (JSContext *maybecx = maybeJSContext()) {
+        if (maybecx->isExceptionPending()) {
+#ifdef DEBUG
+            RootedValue v(maybecx);
+            bool ok = maybecx->getPendingException(&v);
+            MOZ_ASSERT(ok);
+            MOZ_ASSERT(v == StringValue(maybecx->names().outOfMemory));
+#endif
+            maybecx->clearPendingException();
+        } else {
+            MOZ_ASSERT(maybecx->runtime()->hadOutOfMemory);
+        }
+    }
 }
 
 JSContext::JSContext(JSRuntime *rt)
