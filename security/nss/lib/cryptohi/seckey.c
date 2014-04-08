@@ -1213,12 +1213,17 @@ SECKEY_ConvertToPublicKey(SECKEYPrivateKey *privk)
     return NULL;
 }
 
-static CERTSubjectPublicKeyInfo *
-seckey_CreateSubjectPublicKeyInfo_helper(SECKEYPublicKey *pubk)
+CERTSubjectPublicKeyInfo *
+SECKEY_CreateSubjectPublicKeyInfo(SECKEYPublicKey *pubk)
 {
     CERTSubjectPublicKeyInfo *spki;
     PLArenaPool *arena;
     SECItem params = { siBuffer, NULL, 0 };
+
+    if (!pubk) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL) {
@@ -1327,26 +1332,6 @@ seckey_CreateSubjectPublicKeyInfo_helper(SECKEYPublicKey *pubk)
     return NULL;
 }
 
-CERTSubjectPublicKeyInfo *
-SECKEY_CreateSubjectPublicKeyInfo(const SECKEYPublicKey *pubk)
-{
-    CERTSubjectPublicKeyInfo *spki;
-    SECKEYPublicKey *tempKey;
-
-    if (!pubk) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return NULL;
-    }
-
-    tempKey = SECKEY_CopyPublicKey(pubk);
-    if (!tempKey) {
-        return NULL;
-    }
-    spki = seckey_CreateSubjectPublicKeyInfo_helper(tempKey);
-    SECKEY_DestroyPublicKey(tempKey);
-    return spki;
-}
-
 void
 SECKEY_DestroySubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki)
 {
@@ -1355,70 +1340,8 @@ SECKEY_DestroySubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki)
     }
 }
 
-/*
- * this only works for RSA keys... need to do something
- * similiar to CERT_ExtractPublicKey for other key times.
- */
-SECKEYPublicKey *
-SECKEY_DecodeDERPublicKey(const SECItem *pubkder)
-{
-    PLArenaPool *arena;
-    SECKEYPublicKey *pubk;
-    SECStatus rv;
-    SECItem newPubkder;
-
-    arena = PORT_NewArena (DER_DEFAULT_CHUNKSIZE);
-    if (arena == NULL) {
-	PORT_SetError (SEC_ERROR_NO_MEMORY);
-	return NULL;
-    }
-
-    pubk = (SECKEYPublicKey *) PORT_ArenaZAlloc (arena, sizeof (SECKEYPublicKey));
-    if (pubk != NULL) {
-	pubk->arena = arena;
-	pubk->pkcs11Slot = NULL;
-	pubk->pkcs11ID = 0;
-	prepare_rsa_pub_key_for_asn1(pubk);
-        /* copy the DER into the arena, since Quick DER returns data that points
-           into the DER input, which may get freed by the caller */
-        rv = SECITEM_CopyItem(arena, &newPubkder, pubkder);
-        if ( rv == SECSuccess ) {
-	    rv = SEC_QuickDERDecodeItem(arena, pubk, SECKEY_RSAPublicKeyTemplate,
-				&newPubkder);
-        }
-	if (rv == SECSuccess)
-	    return pubk;
-	SECKEY_DestroyPublicKey (pubk);
-    } else {
-	PORT_SetError (SEC_ERROR_NO_MEMORY);
-    }
-
-    PORT_FreeArena (arena, PR_FALSE);
-    return NULL;
-}
-
-/*
- * Decode a base64 ascii encoded DER encoded public key.
- */
-SECKEYPublicKey *
-SECKEY_ConvertAndDecodePublicKey(const char *pubkstr)
-{
-    SECKEYPublicKey *pubk;
-    SECStatus rv;
-    SECItem der;
-
-    rv = ATOB_ConvertAsciiToItem (&der, pubkstr);
-    if (rv != SECSuccess)
-	return NULL;
-
-    pubk = SECKEY_DecodeDERPublicKey (&der);
-
-    PORT_Free (der.data);
-    return pubk;
-}
-
 SECItem *
-SECKEY_EncodeDERSubjectPublicKeyInfo(const SECKEYPublicKey *pubk)
+SECKEY_EncodeDERSubjectPublicKeyInfo(SECKEYPublicKey *pubk)
 {
     CERTSubjectPublicKeyInfo *spki=NULL;
     SECItem *spkiDER=NULL;
@@ -1772,7 +1695,7 @@ SECKEY_ImportDERPublicKey(const SECItem *derKey, CK_KEY_TYPE type)
 finish:
     if (rv != SECSuccess) {
         if (arena != NULL) {
-            PORT_FreeArena(arena, PR_TRUE);
+            PORT_FreeArena(arena, PR_FALSE);
         }
         pubk = NULL;
     }

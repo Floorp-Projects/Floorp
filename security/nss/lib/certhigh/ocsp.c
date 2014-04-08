@@ -2577,9 +2577,8 @@ loser:
 static SECStatus
 ocsp_DecodeResponseBytes(PLArenaPool *arena, ocspResponseBytes *rbytes)
 {
-    PORT_Assert(rbytes != NULL);		/* internal error, really */
     if (rbytes == NULL) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);	/* XXX set better error? */
+	PORT_SetError(SEC_ERROR_OCSP_UNKNOWN_RESPONSE_TYPE);
 	return SECFailure;
     }
 

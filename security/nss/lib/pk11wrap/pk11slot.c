@@ -1502,6 +1502,12 @@ PK11_GetDisabledReason(PK11SlotInfo *slot)
 /* returns PR_FALSE otherwise */
 PRBool PK11_UserDisableSlot(PK11SlotInfo *slot) {
 
+    /* Prevent users from disabling the internal module. */
+    if (slot->isInternal) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return PR_FALSE;
+    }
+
     slot->defaultFlags |= PK11_DISABLE_FLAG;
     slot->disabled = PR_TRUE;
     slot->reason = PK11_DIS_USER_SELECTED;
