@@ -224,7 +224,7 @@ TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlag
   mSize = aSize;
   ID3D10Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
 
-  CD3D10_TEXTURE2D_DESC newDesc(SurfaceFormatToDXGIFormat(mFormat),
+  CD3D10_TEXTURE2D_DESC newDesc(DXGI_FORMAT_B8G8R8A8_UNORM,
                                 aSize.width, aSize.height, 1, 1,
                                 D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE);
 
