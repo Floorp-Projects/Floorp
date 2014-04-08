@@ -1220,6 +1220,7 @@ Toolbox.prototype = {
     if (this.target.isLocalTab) {
       this._requisition.destroy();
     }
+    this._telemetry.toolClosed("toolbox");
     this._telemetry.destroy();
 
     return this._destroyer = promise.all(outstanding).then(() => {
