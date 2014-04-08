@@ -43,7 +43,7 @@ ProfileEntry::ProfileEntry(char aTagName, void *aTagPtr)
   , mTagName(aTagName)
 { }
 
-ProfileEntry::ProfileEntry(char aTagName, double aTagFloat)
+ProfileEntry::ProfileEntry(char aTagName, float aTagFloat)
   : mTagFloat(aTagFloat)
   , mTagName(aTagName)
 { }
