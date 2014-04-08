@@ -317,7 +317,7 @@ function waitForManagerEvent(aEventName, aServiceId) {
  * Get available networks.
  *
  * Fulfill params:
- *   An array of nsIDOMMozMobileNetworkInfo.
+ *   An array of MozMobileNetworkInfo.
  * Reject params:
  *   A DOMEvent.
  *
@@ -337,7 +337,7 @@ function getNetworks() {
  *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'
  *
  * @param aNetwork
- *        A nsIDOMMozMobileNetworkInfo.
+ *        A MozMobileNetworkInfo.
  *
  * @return A deferred promise.
  */
@@ -355,7 +355,7 @@ function selectNetwork(aNetwork) {
  *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'
  *
  * @param aNetwork
- *        A nsIDOMMozMobileNetworkInfo.
+ *        A MozMobileNetworkInfo.
  *
  * @return A deferred promise.
  */
