@@ -340,10 +340,10 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
                                nsIntRegion* aDestRegion,
                                IntPoint* aSrcOffset)
 {
-  // Right now we only support null aDestRegion and aSrcOffset (which means)
-  // full surface update. Incremental update is only used on Mac so it is
-  // not clear that we ever will need to support it for D3D.
-  MOZ_ASSERT(!aDestRegion && !aSrcOffset);
+  // Right now we only support full surface update. If aDestRegion is provided,
+  // It will be ignored. Incremental update with a source offset is only used
+  // on Mac so it is not clear that we ever will need to support it for D3D.
+  MOZ_ASSERT(!aSrcOffset);
   MOZ_ASSERT(aSurface);
 
   if (!mCompositor || !mCompositor->GetDevice()) {
