@@ -49,6 +49,14 @@ template <class TargetUnits>
 gfx::IntSizeTyped<TargetUnits> ViewAs(const nsIntSize& aSize) {
   return gfx::IntSizeTyped<TargetUnits>(aSize.width, aSize.height);
 }
+template <class TargetUnits>
+gfx::IntPointTyped<TargetUnits> ViewAs(const nsIntPoint& aPoint) {
+  return gfx::IntPointTyped<TargetUnits>(aPoint.x, aPoint.y);
+}
+template <class TargetUnits>
+gfx::IntRectTyped<TargetUnits> ViewAs(const nsIntRect& aRect) {
+  return gfx::IntRectTyped<TargetUnits>(aRect.x, aRect.y, aRect.width, aRect.height);
+}
 
 // Convenience functions for casting typed entities to untyped entities.
 // Using these functions does not require a justification, but once we convert
