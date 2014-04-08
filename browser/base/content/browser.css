@@ -922,11 +922,11 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
   -moz-binding: url("chrome://browser/content/places/menu.xml#places-popup-arrow");
   background: transparent;
   border: none;
-  transform: scale(.1);
+  transform: scale(.7);
   opacity: 0;
   transition-property: transform, opacity;
-  transition-duration: 0.25s;
-  transition-timing-function: cubic-bezier(.6, 1.0, .65, 1.0), ease;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
   /* The popup inherits -moz-image-region from the button, must reset it */
   -moz-image-region: auto;
 }
@@ -954,12 +954,12 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 
 #BMB_bookmarksPopup[arrowposition="after_start"][animate="cancel"],
 #BMB_bookmarksPopup[arrowposition="before_end"][animate="cancel"] {
-  transform: scale(.1) skew(30deg, 20deg);
+  transform: scale(.7) skew(30deg, 20deg);
 }
 
 #BMB_bookmarksPopup[arrowposition="after_end"][animate="cancel"],
 #BMB_bookmarksPopup[arrowposition="before_start"][animate="cancel"] {
-  transform: scale(.1) skew(-30deg, -20deg);
+  transform: scale(.7) skew(-30deg, -20deg);
 }
 
 
