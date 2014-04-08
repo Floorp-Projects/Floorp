@@ -1,28 +1,15 @@
-/* vim: set ts=2 et sw=2 tw=80: */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests that the style inspector works properly
+"use strict";
 
-let doc, computedView, inspector;
+// Tests the computed-view keyboard navigation
 
-function test()
-{
-  waitForExplicitFinish();
+let test = asyncTest(function*() {
+  yield addTab("data:text/html,computed view keyboard nav test");
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onBrowserLoad(evt) {
-    gBrowser.selectedBrowser.removeEventListener("load", onBrowserLoad, true);
-    doc = content.document;
-    waitForFocus(createDocument, content);
-  }, true);
-
-  content.location = "data:text/html,computed view context menu test";
-}
-
-function createDocument()
-{
-  doc.body.innerHTML = '<style type="text/css"> ' +
+  content.document.body.innerHTML = '<style type="text/css"> ' +
     'span { font-variant: small-caps; color: #000000; } ' +
     '.nomatches {color: #ff0000;}</style> <div id="first" style="margin: 10em; ' +
     'font-size: 14pt; font-family: helvetica, sans-serif; color: #AAA">\n' +
@@ -38,57 +25,38 @@ function createDocument()
     '<p id="closing">more text</p>\n' +
     '<p>even more text</p>' +
     '</div>';
-  doc.title = "Computed view keyboard navigation test";
+  content.document.title = "Computed view keyboard navigation test";
 
-  openComputedView(startTests);
-}
+  info("Opening the computed-view");
+  let {toolbox, inspector, view} = yield openComputedView();
 
-function startTests(aInspector, aComputedView)
-{
-  computedView = aComputedView;
-  inspector = aInspector;
-  testTabThrougStyles();
-}
+  info("Selecting the test node");
+  yield selectNode("span", inspector);
 
-function endTests()
-{
-  computedView = inspector = doc = null;
-  gBrowser.removeCurrentTab();
-  finish();
-}
+  info("Selecting the first computed style in the list");
+  let firstStyle = view.styleDocument.querySelector(".property-view");
+  ok(firstStyle, "First computed style found in panel");
+  firstStyle.focus();
 
-function testTabThrougStyles()
-{
-  let span = doc.querySelector("span");
+  info("Tab to select the 2nd style and press return");
+  let onExpanded = inspector.once("computed-view-property-expanded");
+  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("VK_RETURN", {});
+  yield onExpanded;
 
-  inspector.once("computed-view-refreshed", () => {
-    // Selecting the first computed style in the list
-    let firstStyle = computedView.styleDocument.querySelector(".property-view");
-    ok(firstStyle, "First computed style found in panel");
-    firstStyle.focus();
+  info("Verify the 2nd style has been expanded");
+  let secondStyleSelectors = view.styleDocument.querySelectorAll(
+    ".property-content .matchedselectors")[1];
+  ok(secondStyleSelectors.childNodes.length > 0, "Matched selectors expanded");
 
-    // Tab to select the 2nd style, press return
-    EventUtils.synthesizeKey("VK_TAB", {});
-    EventUtils.synthesizeKey("VK_RETURN", {});
-    inspector.once("computed-view-property-expanded", () => {
-      // Verify the 2nd style has been expanded
-      let secondStyleSelectors = computedView.styleDocument.querySelectorAll(
-        ".property-content .matchedselectors")[1];
-      ok(secondStyleSelectors.childNodes.length > 0, "Matched selectors expanded");
+  info("Tab back up and test the same thing, with space");
+  let onExpanded = inspector.once("computed-view-property-expanded");
+  EventUtils.synthesizeKey("VK_TAB", {shiftKey: true});
+  EventUtils.synthesizeKey("VK_SPACE", {});
+  yield onExpanded;
 
-      // Tab back up and test the same thing, with space
-      EventUtils.synthesizeKey("VK_TAB", {shiftKey: true});
-      EventUtils.synthesizeKey("VK_SPACE", {});
-      inspector.once("computed-view-property-expanded", () => {
-        // Verify the 1st style has been expanded too
-        let firstStyleSelectors = computedView.styleDocument.querySelectorAll(
-          ".property-content .matchedselectors")[0];
-        ok(firstStyleSelectors.childNodes.length > 0, "Matched selectors expanded");
-
-        endTests();
-      });
-    });
-  });
-
-  inspector.selection.setNode(span);
-}
+  info("Verify the 1st style has been expanded too");
+  let firstStyleSelectors = view.styleDocument.querySelectorAll(
+    ".property-content .matchedselectors")[0];
+  ok(firstStyleSelectors.childNodes.length > 0, "Matched selectors expanded");
+});

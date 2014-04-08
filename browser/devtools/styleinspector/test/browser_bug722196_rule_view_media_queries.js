@@ -1,44 +1,21 @@
-/* vim: set ts=2 et sw=2 tw=80: */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
 
 // Tests that we correctly display appropriate media query titles in the
 // rule view.
 
-let doc;
-let inspector;
+const TEST_URI = TEST_URL_ROOT + "browser_bug722196_identify_media_queries.html";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/styleinspector/" +
-  "test/browser_bug722196_identify_media_queries.html";
+let test = asyncTest(function*() {
+  yield addTab(TEST_URI);
+  let {inspector, view} = yield openRuleView();
 
-function test()
-{
-  waitForExplicitFinish();
-  addTab(TEST_URI);
-  browser.addEventListener("load", docLoaded, true);
-}
+  yield selectNode("div", inspector);
 
-function docLoaded()
-{
-  browser.removeEventListener("load", docLoaded, true);
-  doc = content.document;
-  openRuleView(selectNode);
-}
-
-function selectNode(aInspector, aRuleView)
-{
-  inspector = aInspector;
-
-  inspector.selection.setNode(doc.querySelector("div"));
-  inspector.once("inspector-updated", checkSheets);
-}
-
-function checkSheets()
-{
-  var div = doc.querySelector("div");
-  ok(div, "captain, we have the div");
-
-  let elementStyle = ruleView()._elementStyle;
+  let elementStyle = view._elementStyle;
 
   let _strings = Services.strings
     .createBundle("chrome://global/locale/devtools/styleinspector.properties");
@@ -50,12 +27,5 @@ function checkSheets()
   is(elementStyle.rules[1].title, inline +
     ":15 @media screen and (min-width: 1px)", "check rule 1 title");
   is(elementStyle.rules[2].title, inline + ":8", "check rule 2 title");
-  finishUp();
-}
+});
 
-function finishUp()
-{
-  doc = inspector = null;
-  gBrowser.removeCurrentTab();
-  finish();
-}

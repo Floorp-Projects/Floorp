@@ -1,17 +1,12 @@
-/* vim: set ts=2 et sw=2 tw=80: */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test that CSS property names are autocompleted and cycled correctly.
+"use strict";
 
-const MAX_ENTRIES = 10;
+// Test that CSS property names and values are autocompleted and cycled correctly
+// when editing existing properties in the rule view
 
-let doc;
-let inspector;
-let ruleViewWindow;
-let editor;
-let state;
-let brace;
 // format :
 //  [
 //    what key to press,
@@ -41,110 +36,66 @@ let testData = [
   ["VK_RETURN", {}, null, -1, 0]
 ];
 
-function openRuleView()
-{
-  var target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-    inspector = toolbox.getCurrentPanel();
-    inspector.sidebar.select("ruleview");
+let TEST_URL = "data:text/html,<h1 style='color: red'>Filename: " +
+               "browser_bug894376_css_value_completion_existing_property_value_pair.js</h1>";
 
-    // Highlight a node.
-    let node = content.document.getElementsByTagName("h1")[0];
-    inspector.selection.setNode(node);
+let test = asyncTest(function*() {
+  yield addTab(TEST_URL);
+  let {toolbox, inspector, view} = yield openRuleView();
 
-    inspector.once("inspector-updated", testCompletion);
-  });
-}
+  info("Selecting the test node");
+  yield selectNode("h1", inspector);
 
-function testCompletion()
-{
-  ruleViewWindow = inspector.sidebar.getWindowForTab("ruleview");
-  brace = ruleViewWindow.document.querySelector(".ruleview-ruleclose");
+  info("Focusing the css property editable value");
+  let value = view.doc.querySelectorAll(".ruleview-propertyvalue")[0];
+  let editor = yield focusEditableField(value);
 
-  waitForEditorFocus(brace.parentNode, function onNewElement(aEditor) {
-    editor = aEditor;
-    checkStateAndMoveOn(0);
-  });
-
-  ruleViewWindow.document.querySelector(".ruleview-propertyvalue").click();
-}
-
-function checkStateAndMoveOn(index) {
-  if (index == testData.length) {
-    finishUp();
-    return;
+  info("Starting to test for css property completion");
+  for (let i = 0; i < testData.length; i ++) {
+    // Re-define the editor at each iteration, because the focus may have moved
+    // from property to value and back
+    editor = inplaceEditor(view.doc.activeElement);
+    yield testCompletion(testData[i], editor, view);
   }
+});
 
-  let [key, modifiers] = testData[index];
-  state = index;
+function* testCompletion([key, modifiers, completion, index, total], editor, view) {
+  info("Pressing key " + key);
+  info("Expecting " + completion + ", " + index + ", " + total);
 
-  info("pressing key " + key + " to get result: [" + testData[index].slice(2) +
-       "] for state " + state);
+  let onKeyPress;
+
   if (/tab/ig.test(key)) {
-    info("waiting for the editor to get focused");
-    waitForEditorFocus(brace.parentNode, function onNewElement(aEditor) {
-      info("editor focused : " + aEditor.input);
-      editor = aEditor;
-      checkState();
-    });
+    info("Waiting for the new property or value editor to get focused");
+    let brace = view.doc.querySelector(".ruleview-ruleclose");
+    onKeyPress = once(brace.parentNode, "focus", true);
+  } else if (/(right|return|back_space)/ig.test(key)) {
+    info("Adding event listener for right|return|back_space keys");
+    onKeyPress = once(editor.input, "keypress");
+  } else {
+    info("Waiting for after-suggest event on the editor");
+    onKeyPress = editor.once("after-suggest");
   }
-  else if (/(right|return|back_space)/ig.test(key)) {
-    info("added event listener for right|return|back_space keys");
-    editor.input.addEventListener("keypress", function onKeypress() {
-      if (editor.input) {
-        editor.input.removeEventListener("keypress", onKeypress);
-      }
-      info("inside event listener");
-      checkState();
-    });
+
+  info("Synthesizing key " + key + ", modifiers: " + Object.keys(modifiers));
+  EventUtils.synthesizeKey(key, modifiers, view.doc.defaultView);
+
+  yield onKeyPress;
+  yield wait(1); // Equivalent of executeSoon
+
+  // The key might have been a TAB or shift-TAB, in which case the editor will
+  // be a new one
+  editor = inplaceEditor(view.doc.activeElement);
+
+  info("Checking the state");
+  if (completion != null) {
+    is(editor.input.value, completion, "Correct value is autocompleted");
   }
-  else {
-    editor.once("after-suggest", checkState);
+  if (total == 0) {
+    ok(!(editor.popup && editor.popup.isOpen), "Popup is closed");
+  } else {
+    ok(editor.popup._panel.state == "open" || editor.popup._panel.state == "showing", "Popup is open");
+    is(editor.popup.getItems().length, total, "Number of suggestions match");
+    is(editor.popup.selectedIndex, index, "Correct item is selected");
   }
-  EventUtils.synthesizeKey(key, modifiers, ruleViewWindow);
-}
-
-function checkState(event) {
-  executeSoon(() => {
-    info("After keypress for state " + state);
-    let [key, modifier, completion, index, total] = testData[state];
-    if (completion != null) {
-      is(editor.input.value, completion,
-         "Correct value is autocompleted for state " + state);
-    }
-    if (total == 0) {
-      ok(!(editor.popup && editor.popup.isOpen), "Popup is closed for state " +
-         state);
-    }
-    else {
-      ok(editor.popup.isOpen, "Popup is open for state " + state);
-      is(editor.popup.getItems().length, total,
-         "Number of suggestions match for state " + state);
-      is(editor.popup.selectedIndex, index,
-         "Correct item is selected for state " + state);
-    }
-    checkStateAndMoveOn(state + 1);
-  });
-}
-
-function finishUp()
-{
-  brace = doc = inspector = editor = ruleViewWindow = state = null;
-  gBrowser.removeCurrentTab();
-  finish();
-}
-
-function test()
-{
-  waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, arguments.callee, true);
-    doc = content.document;
-    doc.title = "Rule View Test";
-    waitForFocus(openRuleView, content);
-  }, true);
-
-  content.location = "data:text/html,<h1 style='color: red'>Filename: " +
-                     "browser_bug894376_css_value_completion_existing_property_value_pair.js</h1>";
 }

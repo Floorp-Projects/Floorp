@@ -15,59 +15,45 @@ const PAGE_CONTENT = [
   'Testing the color picker tooltip!'
 ].join("\n");
 
-function test() {
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function load(evt) {
-    gBrowser.selectedBrowser.removeEventListener("load", load, true);
-    waitForFocus(createDocument, content);
-  }, true);
-
-  content.location = "data:text/html,rule view color picker tooltip test";
-}
-
-function createDocument() {
+let test = asyncTest(function*() {
+  yield addTab("data:text/html,rule view color picker tooltip test");
   content.document.body.innerHTML = PAGE_CONTENT;
+  let {toolbox, inspector, view} = yield openRuleView();
 
-  openRuleView((inspector, ruleView) => {
-    inspector.once("inspector-updated", () => {
-      let swatch = getRuleViewProperty("border", ruleView).valueSpan
-        .querySelector(".ruleview-colorswatch");
-      testPressingEnterCommitsChanges(swatch, ruleView);
-    });
+  let swatch = getRuleViewProperty(view, "body" , "border").valueSpan
+    .querySelector(".ruleview-colorswatch");
+  yield testPressingEnterCommitsChanges(swatch, view);
+});
+
+function* testPressingEnterCommitsChanges(swatch, ruleView) {
+  let cPicker = ruleView.colorPicker;
+
+  let onShown = cPicker.tooltip.once("shown");
+  swatch.click();
+  yield onShown;
+
+  yield simulateColorPickerChange(cPicker, [0, 255, 0, .5], {
+    element: content.document.body,
+    name: "borderLeftColor",
+    value: "rgba(0, 255, 0, 0.5)"
   });
-}
 
-function testPressingEnterCommitsChanges(swatch, ruleView) {
-  Task.spawn(function*() {
-    let cPicker = ruleView.colorPicker;
+  is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
+    "The color swatch's background was updated");
+  is(getRuleViewProperty(ruleView, "body", "border").valueSpan.textContent,
+    "2em solid rgba(0, 255, 0, 0.5)",
+    "The text of the border css property was updated");;
 
-    let onShown = cPicker.tooltip.once("shown");
-    swatch.click();
-    yield onShown;
+  let spectrum = yield cPicker.spectrum;
+  let onHidden = cPicker.tooltip.once("hidden");
+  EventUtils.sendKey("RETURN", spectrum.element.ownerDocument.defaultView);
+  yield onHidden;
 
-    yield simulateColorChange(cPicker, [0, 255, 0, .5], {
-      element: content.document.body,
-      name: "borderLeftColor",
-      value: "rgba(0, 255, 0, 0.5)"
-    });
-
-    is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
-      "The color swatch's background was updated");
-    is(getRuleViewProperty("border", ruleView).valueSpan.textContent,
-      "2em solid rgba(0, 255, 0, 0.5)",
-      "The text of the border css property was updated");;
-
-    let spectrum = yield cPicker.spectrum;
-    let onHidden = cPicker.tooltip.once("hidden");
-    EventUtils.sendKey("RETURN", spectrum.element.ownerDocument.defaultView);
-    yield onHidden;
-
-    is(content.getComputedStyle(content.document.body).borderLeftColor,
-      "rgba(0, 255, 0, 0.5)", "The element's border was kept after RETURN");
-    is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
-      "The color swatch's background was kept after RETURN");
-    is(getRuleViewProperty("border", ruleView).valueSpan.textContent,
-      "2em solid rgba(0, 255, 0, 0.5)",
-      "The text of the border css property was kept after RETURN");
-  }).then(finish);
+  is(content.getComputedStyle(content.document.body).borderLeftColor,
+    "rgba(0, 255, 0, 0.5)", "The element's border was kept after RETURN");
+  is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
+    "The color swatch's background was kept after RETURN");
+  is(getRuleViewProperty(ruleView, "body", "border").valueSpan.textContent,
+    "2em solid rgba(0, 255, 0, 0.5)",
+    "The text of the border css property was kept after RETURN");
 }
