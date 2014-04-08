@@ -739,6 +739,8 @@ UnixSocketConsumer::UnixSocketConsumer() : mImpl(nullptr)
 
 UnixSocketConsumer::~UnixSocketConsumer()
 {
+  MOZ_ASSERT(mConnectionStatus == SOCKET_DISCONNECTED);
+  MOZ_ASSERT(!mImpl);
 }
 
 bool
