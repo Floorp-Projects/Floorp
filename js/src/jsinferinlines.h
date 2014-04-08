@@ -375,7 +375,7 @@ EnsureTrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
             return;
         }
         if (!obj->type()->unknownProperties() && !obj->type()->getProperty(cx, id)) {
-            obj->type()->markUnknown(cx);
+            MOZ_ASSERT(obj->type()->unknownProperties());
             return;
         }
     }
