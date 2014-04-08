@@ -123,16 +123,7 @@
  * text and icons to not appear fuzzy.
  */
 @media (-moz-windows-classic) {
-  #main-window[tabsintitlebar]:not([sizemode=fullscreen]) .tabbrowser-tab[selected=true] {
-    position: relative;
-    z-index: 3;
-  }
-
-  #main-window[tabsintitlebar]:not([sizemode=fullscreen]) .tabbrowser-tab:not([selected=true]) {
-    position: relative;
-    z-index: 2;
-  }
-
+  #main-window[tabsintitlebar]:not([sizemode=fullscreen]) .tabbrowser-tab:not([selected=true]),
   #main-window[tabsintitlebar]:not([sizemode=fullscreen]) .tabs-newtab-button {
     position: relative;
     z-index: 1;
