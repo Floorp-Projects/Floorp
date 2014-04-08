@@ -4,6 +4,8 @@
 
 "use strict";
 
+// Test that pseudoelements are displayed correctly in the rule view
+
 const TEST_URI = TEST_URL_ROOT + "browser_ruleview_pseudoelement.html";
 
 let test = asyncTest(function*() {
