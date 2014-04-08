@@ -1955,7 +1955,7 @@ nsTableFrame::FixupPositionedTableParts(nsPresContext*           aPresContext,
     // FIXME: Unconditionally using NS_UNCONSTRAINEDSIZE for the height and
     // ignoring any change to the reflow status aren't correct. We'll never
     // paginate absolutely positioned frames.
-    overflowTracker.AddFrame(positionedPart, OverflowChangedTracker::CHILDREN_CHANGED);
+    overflowTracker.AddFrame(positionedPart);
     nsFrame* positionedFrame = static_cast<nsFrame*>(positionedPart);
     positionedFrame->FinishReflowWithAbsoluteFrames(PresContext(),
                                                     desiredSize,

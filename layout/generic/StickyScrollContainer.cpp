@@ -371,12 +371,9 @@ StickyScrollContainer::UpdatePositions(nsPoint aScrollPosition,
     // nsIFrame::Init.
     PositionContinuations(f);
 
-    f = f->GetParent();
-    if (f != aSubtreeRoot) {
-      for (nsIFrame* cont = f; cont;
-           cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
-        oct.AddFrame(cont, OverflowChangedTracker::CHILDREN_CHANGED);
-      }
+    for (nsIFrame* cont = f; cont;
+         cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
+      oct.AddFrame(cont);
     }
   }
   oct.Flush();
