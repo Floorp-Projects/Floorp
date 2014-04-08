@@ -16,6 +16,7 @@
  */
 
 interface ApplicationCache;
+interface IID;
 interface MozFrameRequestCallback;
 interface nsIBrowserDOMWindow;
 interface nsIMessageBroadcaster;
@@ -225,6 +226,14 @@ interface SpeechSynthesisGetter {
 Window implements SpeechSynthesisGetter;
 #endif
 
+// http://www.whatwg.org/specs/web-apps/current-work/
+[NoInterfaceObject]
+interface WindowModal {
+  [Throws, Func="nsGlobalWindow::IsModalContentWindow"] readonly attribute any dialogArguments;
+  [Throws, Func="nsGlobalWindow::IsModalContentWindow"] attribute any returnValue;
+};
+Window implements WindowModal;
+
 // Mozilla-specific stuff
 partial interface Window {
   //[NewObject, Throws] CSSStyleDeclaration getDefaultComputedStyle(Element elt, optional DOMString pseudoElt = "");
@@ -341,6 +350,8 @@ partial interface Window {
   [Replaceable, Throws] readonly attribute object? content;
 
   [ChromeOnly, Throws] readonly attribute object? __content;
+
+  [Throws, ChromeOnly] any getInterface(IID iid);
 };
 
 Window implements TouchEventHandlers;

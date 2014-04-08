@@ -135,7 +135,7 @@ void FramebufferSurface::onFrameAvailable() {
                 strerror(-err), err);
         return;
     }
-    if (acquireFence.get())
+    if (acquireFence.get() && acquireFence->isValid())
         mPrevFBAcquireFence = new Fence(acquireFence->dup());
     else
         mPrevFBAcquireFence = Fence::NO_FENCE;

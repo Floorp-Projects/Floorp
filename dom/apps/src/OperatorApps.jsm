@@ -142,7 +142,8 @@ this.OperatorAppsRegistry = {
         let orgDir = Cc["@mozilla.org/file/local;1"]
                        .createInstance(Ci.nsIFile);
         orgDir.initWithPath(aOrg);
-        if (!orgDir.isDirectory()) {
+        if (!orgDir.exists() || !orgDir.isDirectory()) {
+          debug(aOrg + " does not exist or is not a directory");
           return;
         }
 
@@ -168,7 +169,7 @@ this.OperatorAppsRegistry = {
             entry.copyTo(dstDir, entry.leafName);
           } else {
             yield this._copyDirectory(entry.path,
-                                      Path.join(aDst, entry.name));
+                                      Path.join(aDst, entry.leafName));
           }
         }
       } catch (e) {
