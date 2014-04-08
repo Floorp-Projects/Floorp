@@ -2141,7 +2141,7 @@ js::ArrayShiftMoveElements(JSObject *obj)
      * themselves.
      */
     uint32_t initlen = obj->getDenseInitializedLength();
-    obj->moveDenseElementsUnbarriered(0, 1, initlen);
+    obj->moveDenseElementsNoPreBarrier(0, 1, initlen);
 }
 
 /* ES5 15.4.4.9 */

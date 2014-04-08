@@ -28,7 +28,7 @@ enum StructuredCloneTags {
 
   // These tags are used for both main thread and workers.
   SCTAG_DOM_IMAGEDATA,
-  SCTAG_DOM_MESSAGEPORT,
+  SCTAG_DOM_MAP_MESSAGEPORT,
 
   SCTAG_DOM_FUNCTION,
 

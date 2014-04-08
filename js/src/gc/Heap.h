@@ -288,6 +288,7 @@ struct FreeSpan
             return nullptr;
         }
         checkSpan();
+        JS_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
         return reinterpret_cast<void *>(thing);
     }
 

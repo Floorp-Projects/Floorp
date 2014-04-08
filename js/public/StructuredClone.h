@@ -23,6 +23,32 @@ struct JSStructuredCloneWriter;
 
 // API for the HTML5 internal structured cloning algorithm.
 
+namespace JS {
+enum TransferableOwnership {
+    // Transferable data has not been filled in yet
+    SCTAG_TMO_UNFILLED = 0,
+
+    // Structured clone buffer does not yet own the data
+    SCTAG_TMO_UNOWNED = 1,
+
+    // All values at least this large are owned by the clone buffer
+    SCTAG_TMO_FIRST_OWNED = 2,
+
+    // Data is a pointer that can be freed
+    SCTAG_TMO_ALLOC_DATA = 2,
+
+    // Data is a SharedArrayBufferObject's buffer
+    SCTAG_TMO_SHARED_BUFFER = 3,
+
+    // Data is embedding-specific. The engine can free it by calling the
+    // freeTransfer op. The embedding can also use SCTAG_TMO_USER_MIN and
+    // greater, up to 32 bits, to distinguish specific ownership variants.
+    SCTAG_TMO_CUSTOM = 4,
+
+    SCTAG_TMO_USER_MIN
+};
+} /* namespace JS */
+
 // Read structured data from the reader r. This hook is used to read a value
 // previously serialized by a call to the WriteStructuredCloneOp hook.
 //
@@ -43,12 +69,51 @@ typedef JSObject *(*ReadStructuredCloneOp)(JSContext *cx, JSStructuredCloneReade
 //
 // Return true on success, false on error/exception.
 typedef bool (*WriteStructuredCloneOp)(JSContext *cx, JSStructuredCloneWriter *w,
-                                         JS::HandleObject obj, void *closure);
+                                       JS::HandleObject obj, void *closure);
 
 // This is called when JS_WriteStructuredClone is given an invalid transferable.
 // To follow HTML5, the application must throw a DATA_CLONE_ERR DOMException
 // with error set to one of the JS_SCERR_* values.
 typedef void (*StructuredCloneErrorOp)(JSContext *cx, uint32_t errorid);
+
+// This is called when JS_ReadStructuredClone receives a transferable object
+// not known to the engine. If this hook does not exist or returns false, the
+// JS engine calls the reportError op if set, otherwise it throws a
+// DATA_CLONE_ERR DOM Exception. This method is called before any other
+// callback and must return a non-null object in returnObject on success.
+typedef bool (*ReadTransferStructuredCloneOp)(JSContext *cx, JSStructuredCloneReader *r,
+                                              uint32_t tag, void *content, uint64_t extraData,
+                                              void *closure,
+                                              JS::MutableHandleObject returnObject);
+
+// Called when JS_WriteStructuredClone receives a transferable object not
+// handled by the engine. If this hook does not exist or returns false, the JS
+// engine will call the reportError hook or fall back to throwing a
+// DATA_CLONE_ERR DOM Exception. This method is called before any other
+// callback.
+//
+//  tag: indicates what type of transferable this is. Must be greater than
+//       0xFFFF0201 (value of the internal SCTAG_TRANSFER_MAP_PENDING_ENTRY)
+//
+//  ownership: see TransferableOwnership, above. Used to communicate any needed
+//       ownership info to the FreeTransferStructuredCloneOp.
+//
+//  content, extraData: what the ReadTransferStructuredCloneOp will receive
+//
+typedef bool (*TransferStructuredCloneOp)(JSContext *cx,
+                                          JS::Handle<JSObject*> obj,
+                                          void *closure,
+                                          // Output:
+                                          uint32_t *tag,
+                                          JS::TransferableOwnership *ownership,
+                                          void **content,
+                                          uint64_t *extraData);
+
+// Called when JS_ClearStructuredClone has to free an unknown transferable
+// object. Note that it should never trigger a garbage collection (and will
+// assert in a debug build if it does.)
+typedef void (*FreeTransferStructuredCloneOp)(uint32_t tag, JS::TransferableOwnership ownership,
+                                              void *content, uint64_t extraData, void *closure);
 
 // The maximum supported structured-clone serialization format version. Note
 // that this does not need to be bumped for Transferable-only changes, since
@@ -59,6 +124,9 @@ struct JSStructuredCloneCallbacks {
     ReadStructuredCloneOp read;
     WriteStructuredCloneOp write;
     StructuredCloneErrorOp reportError;
+    ReadTransferStructuredCloneOp readTransfer;
+    TransferStructuredCloneOp writeTransfer;
+    FreeTransferStructuredCloneOp freeTransfer;
 };
 
 // Note: if the *data contains transferable objects, it can be read only once.
@@ -68,14 +136,16 @@ JS_ReadStructuredClone(JSContext *cx, uint64_t *data, size_t nbytes, uint32_t ve
                        const JSStructuredCloneCallbacks *optionalCallbacks, void *closure);
 
 // Note: On success, the caller is responsible for calling
-// JS_ClearStructuredClone(*datap, nbytesp).
+// JS_ClearStructuredClone(*datap, nbytes, optionalCallbacks, closure).
 JS_PUBLIC_API(bool)
 JS_WriteStructuredClone(JSContext *cx, JS::HandleValue v, uint64_t **datap, size_t *nbytesp,
                         const JSStructuredCloneCallbacks *optionalCallbacks,
                         void *closure, JS::HandleValue transferable);
 
 JS_PUBLIC_API(bool)
-JS_ClearStructuredClone(const uint64_t *data, size_t nbytes);
+JS_ClearStructuredClone(uint64_t *data, size_t nbytes,
+                        const JSStructuredCloneCallbacks *optionalCallbacks,
+                        void *closure);
 
 JS_PUBLIC_API(bool)
 JS_StructuredCloneHasTransferables(const uint64_t *data, size_t nbytes, bool *hasTransferable);
@@ -89,10 +159,19 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
     uint64_t *data_;
     size_t nbytes_;
     uint32_t version_;
+    const JSStructuredCloneCallbacks *callbacks_;
+    void *closure_;
 
   public:
     JSAutoStructuredCloneBuffer()
-        : data_(nullptr), nbytes_(0), version_(JS_STRUCTURED_CLONE_VERSION) {}
+        : data_(nullptr), nbytes_(0), version_(JS_STRUCTURED_CLONE_VERSION),
+          callbacks_(nullptr), closure_(nullptr)
+    {}
+
+    JSAutoStructuredCloneBuffer(const JSStructuredCloneCallbacks *callbacks, void *closure)
+        : data_(nullptr), nbytes_(0), version_(JS_STRUCTURED_CLONE_VERSION),
+          callbacks_(callbacks), closure_(closure)
+    {}
 
     JSAutoStructuredCloneBuffer(JSAutoStructuredCloneBuffer &&other);
     JSAutoStructuredCloneBuffer &operator=(JSAutoStructuredCloneBuffer &&other);
@@ -128,8 +207,8 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
 
   private:
     // Copy and assignment are not supported.
-    JSAutoStructuredCloneBuffer(const JSAutoStructuredCloneBuffer &other);
-    JSAutoStructuredCloneBuffer &operator=(const JSAutoStructuredCloneBuffer &other);
+    JSAutoStructuredCloneBuffer(const JSAutoStructuredCloneBuffer &other) MOZ_DELETE;
+    JSAutoStructuredCloneBuffer &operator=(const JSAutoStructuredCloneBuffer &other) MOZ_DELETE;
 };
 
 // The range of tag values the application may use for its own custom object types.
