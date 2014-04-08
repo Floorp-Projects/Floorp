@@ -15,31 +15,26 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
+XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
+                                  "resource://gre/modules/SystemAppProxy.jsm");
+
 function FxAccountsUIGlue() {
 }
 
 FxAccountsUIGlue.prototype = {
 
-  _browser: Services.wm.getMostRecentWindow("navigator:browser"),
-
   _contentRequest: function(aEventName, aData) {
     let deferred = Promise.defer();
 
-    let content = this._browser.getContentWindow();
-    if (!content) {
-      deferred.reject("InternalErrorNoContent");
-      return;
-    }
-
     let id = uuidgen.generateUUID().toString();
 
-    content.addEventListener("mozFxAccountsRPContentEvent",
-                             function onContentEvent(result) {
+    SystemAppProxy.addEventListener("mozFxAccountsRPContentEvent",
+                                    function onContentEvent(result) {
       let msg = result.detail;
       if (!msg || !msg.id || msg.id != id) {
         deferred.reject("InternalErrorWrongContentEvent");
-        content.removeEventListener("mozFxAccountsRPContentEvent",
-                                    onContentEvent);
+        SystemAppProxy.removeEventListener("mozFxAccountsRPContentEvent",
+                                           onContentEvent);
         return;
       }
 
@@ -50,8 +45,8 @@ FxAccountsUIGlue.prototype = {
       } else {
         deferred.resolve(msg.result);
       }
-      content.removeEventListener("mozFxAccountsRPContentEvent",
-                                  onContentEvent);
+      SystemAppProxy.removeEventListener("mozFxAccountsRPContentEvent",
+                                         onContentEvent);
     });
 
     let detail = {
@@ -60,7 +55,7 @@ FxAccountsUIGlue.prototype = {
        data: aData
     };
     log.debug("Send chrome event " + JSON.stringify(detail));
-    this._browser.shell.sendCustomEvent("mozFxAccountsUnsolChromeEvent", detail);
+    SystemAppProxy._sendCustomEvent("mozFxAccountsUnsolChromeEvent", detail);
 
     return deferred.promise;
   },
