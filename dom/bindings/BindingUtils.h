@@ -1447,7 +1447,7 @@ JSObject* GetJSObjectFromCallback(void* noncallback)
 
 template<typename T>
 static inline JSObject*
-WrapCallThisObject(JSContext* cx, JS::Handle<JSObject*> scope, const T& p)
+WrapCallThisObject(JSContext* cx, const T& p)
 {
   // Callbacks are nsISupports, so WrapNativeParent will just happily wrap them
   // up as an nsISupports XPCWrappedNative... which is not at all what we want.
@@ -1456,7 +1456,6 @@ WrapCallThisObject(JSContext* cx, JS::Handle<JSObject*> scope, const T& p)
   if (!obj) {
     // WrapNativeParent is a bit of a Swiss army knife that will
     // wrap anything for us.
-    MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
     obj = WrapNativeParent(cx, p);
     if (!obj) {
       return nullptr;
@@ -1478,7 +1477,6 @@ WrapCallThisObject(JSContext* cx, JS::Handle<JSObject*> scope, const T& p)
 template<>
 inline JSObject*
 WrapCallThisObject<JS::Rooted<JSObject*>>(JSContext* cx,
-                                          JS::Handle<JSObject*> scope,
                                           const JS::Rooted<JSObject*>& p)
 {
   JS::Rooted<JSObject*> obj(cx, p);
