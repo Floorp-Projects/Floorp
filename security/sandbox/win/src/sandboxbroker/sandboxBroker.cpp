@@ -47,13 +47,13 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
   }
 
   // Setup the sandbox policy, this is initially:
-  // Medium integrity, unrestricted, in the same window station, within the
+  // Low integrity, unrestricted, in the same window station, within the
   // same desktop, and has no job object.
   // We'll start to increase the restrictions over time.
   mPolicy->SetJobLevel(sandbox::JOB_NONE, 0);
   mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
                          sandbox::USER_RESTRICTED_SAME_ACCESS);
-  mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_UNTRUSTED);
+  mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
 
   // Set an alternate Desktop within a new window station
   mPolicy->SetAlternateDesktop(false);
