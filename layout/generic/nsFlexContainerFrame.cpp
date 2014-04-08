@@ -2752,6 +2752,23 @@ ResolveReflowedChildAscent(nsIFrame* aFrame,
   }
 }
 
+/**
+ * Given the flex container's "logical ascent" (i.e. distance from the
+ * flex container's content-box cross-start edge to its baseline), returns
+ * its actual physical ascent value (the distance from the *border-box* top
+ * edge to its baseline).
+ */
+static nscoord
+ComputePhysicalAscentFromLogicalAscent(nscoord aLogicalAscent,
+                                       nscoord aContentBoxCrossSize,
+                                       const nsHTMLReflowState& aReflowState,
+                                       const FlexboxAxisTracker& aAxisTracker)
+{
+  return aReflowState.ComputedPhysicalBorderPadding().top +
+    PhysicalPosFromLogicalPos(aLogicalAscent, aContentBoxCrossSize,
+                              aAxisTracker.GetCrossAxis());
+}
+
 nsresult
 nsFlexContainerFrame::SizeItemInCrossAxis(
   nsPresContext* aPresContext,
@@ -3065,29 +3082,23 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     }
   }
 
-  // Set the flex container's baseline, from the baseline-alignment position
-  // of the first line's baseline-aligned items.
+  // If the container should derive its baseline from the first FlexLine,
+  // do that here (while crossAxisPosnTracker is conveniently pointing
+  // at the cross-start edge of that line, which the line's baseline offset is
+  // measured from):
   nscoord flexContainerAscent;
-  nscoord firstLineBaselineOffset =
-    lines.getFirst()->GetBaselineOffset();
-  if (firstLineBaselineOffset == nscoord_MIN) {
-    // No baseline-aligned flex items in first line --> just use a sentinel
-    // value for now, and we'll update it during final reflow.
-    flexContainerAscent = nscoord_MIN;
-  } else {
-    // Add the position of the first line to that line's baseline-alignment
-    // offset, to get the baseline offset with respect to the *container's*
-    // cross-start edge.
-    nscoord firstLineBaselineOffsetWRTContainer =
-      firstLineBaselineOffset + crossAxisPosnTracker.GetPosition();
-
-    // The container's ascent is that ^ offset, converted out of logical coords
-    // (into distance from top of content-box), plus the top border/padding
-    // (since ascent is measured with respect to the top of the border-box).
-    flexContainerAscent = aReflowState.ComputedPhysicalBorderPadding().top +
-      PhysicalPosFromLogicalPos(firstLineBaselineOffsetWRTContainer,
-                                contentBoxCrossSize,
-                                aAxisTracker.GetCrossAxis());
+  if (!aAxisTracker.AreAxesInternallyReversed()) {
+    nscoord firstLineBaselineOffset = lines.getFirst()->GetBaselineOffset();
+    if (firstLineBaselineOffset == nscoord_MIN) {
+      // No baseline-aligned items in line. Use sentinel value to prompt us to
+      // get baseline from the first FlexItem after we've reflowed it.
+      flexContainerAscent = nscoord_MIN;
+    } else  {
+      flexContainerAscent =
+        ComputePhysicalAscentFromLogicalAscent(
+          crossAxisPosnTracker.GetPosition() + firstLineBaselineOffset,
+          contentBoxCrossSize, aReflowState, aAxisTracker);
+    }
   }
 
   for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
@@ -3104,6 +3115,24 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                    aAxisTracker);
     crossAxisPosnTracker.TraverseLine(*line);
     crossAxisPosnTracker.TraversePackingSpace();
+  }
+
+  // If the container should derive its baseline from the last FlexLine,
+  // do that here (while crossAxisPosnTracker is conveniently pointing
+  // at the cross-end edge of that line, which the line's baseline offset is
+  // measured from):
+  if (aAxisTracker.AreAxesInternallyReversed()) {
+    nscoord lastLineBaselineOffset = lines.getLast()->GetBaselineOffset();
+    if (lastLineBaselineOffset == nscoord_MIN) {
+      // No baseline-aligned items in line. Use sentinel value to prompt us to
+      // get baseline from the last FlexItem after we've reflowed it.
+      flexContainerAscent = nscoord_MIN;
+    } else {
+      flexContainerAscent =
+        ComputePhysicalAscentFromLogicalAscent(
+          crossAxisPosnTracker.GetPosition() - lastLineBaselineOffset,
+          contentBoxCrossSize, aReflowState, aAxisTracker);
+    }
   }
 
   // Before giving each child a final reflow, calculate the origin of the
