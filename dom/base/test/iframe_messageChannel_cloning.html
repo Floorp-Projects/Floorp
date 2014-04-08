@@ -13,7 +13,7 @@
     ok (evt.data.port instanceof MessagePort, "Data contains a MessagePort");
 
     var a = new MessageChannel();
-    window.parent.postMessage({ status: "FINISH", port: a.port2 }, '*');
+    window.parent.postMessage({ status: "FINISH", port: a.port2 }, '*', [a.port2]);
   }
 
   </script>
