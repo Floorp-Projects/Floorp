@@ -304,6 +304,22 @@ public:
         m_pattern.m_disjunctions.append(m_pattern.m_body);
     }
 
+    void setStackBase(uint8_t *stackBase) {
+        m_stackBase = stackBase;
+    }
+
+    bool isOverRecursed() {
+        /*
+         * Bug 616491: attempt detection of over-recursion.
+         * "256KB should be enough stack for anyone."
+         */
+        uint8_t stackDummy_;
+        JS_ASSERT(m_stackBase != nullptr);
+        if (m_stackBase - &stackDummy > (1 << 18))
+            return true;
+        return false;
+    }
+
     void assertionBOL()
     {
         if (!m_alternative->m_terms.size() & !m_invertParentheticalAssertion) {
@@ -574,12 +590,7 @@ public:
     ErrorCode setupAlternativeOffsets(PatternAlternative* alternative, unsigned currentCallFrameSize, unsigned initialInputPosition,
                                       unsigned *callFrameSizeOut)
     {
-        /*
-         * Attempt detection of over-recursion:
-         * "1MB should be enough stack for anyone."
-         */
-        uint8_t stackDummy_;
-        if (m_stackBase - &stackDummy_ > 1024*1024)
+        if (isOverRecursed())
             return PatternTooLarge;
 
         alternative->m_hasFixedSize = true;
@@ -674,6 +685,9 @@ public:
 
     ErrorCode setupDisjunctionOffsets(PatternDisjunction* disjunction, unsigned initialCallFrameSize, unsigned initialInputPosition, unsigned *maximumCallFrameSizeOut)
     {
+        if (isOverRecursed())
+            return PatternTooLarge;
+
         if ((disjunction != m_pattern.m_body) && (disjunction->m_alternatives.size() > 1))
             initialCallFrameSize += YarrStackSpaceForBackTrackInfoAlternative;
 
@@ -850,10 +864,6 @@ public:
         }
     }
 
-    void setStackBase(uint8_t *stackBase) {
-        m_stackBase = stackBase;
-    }
-
 private:
     YarrPattern& m_pattern;
     uint8_t * m_stackBase;
@@ -866,6 +876,9 @@ private:
 ErrorCode YarrPattern::compile(const String& patternString)
 {
     YarrPatternConstructor constructor(*this);
+
+    uint8_t stackDummy_;
+    constructor.setStackBase(&stackDummy_);
 
     if (ErrorCode error = parse(constructor, patternString))
         return error;
@@ -886,9 +899,6 @@ ErrorCode YarrPattern::compile(const String& patternString)
         ASSERT(!error);
         ASSERT(numSubpatterns == m_numSubpatterns);
     }
-
-    uint8_t stackDummy_;
-    constructor.setStackBase(&stackDummy_);
 
     constructor.checkForTerminalParentheses();
     constructor.optimizeDotStarWrappedExpressions();
