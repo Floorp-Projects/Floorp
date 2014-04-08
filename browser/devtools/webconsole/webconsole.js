@@ -3489,6 +3489,7 @@ JSTerm.prototype = {
 
     this._sidebarDestroy();
     this.inputNode.focus();
+    aEvent.stopPropagation();
   },
 
   /**
@@ -3922,10 +3923,12 @@ JSTerm.prototype = {
         if (this.autocompletePopup.isOpen) {
           this.clearCompletion();
           aEvent.preventDefault();
+          aEvent.stopPropagation();
         }
         else if (this.sidebar) {
           this._sidebarDestroy();
           aEvent.preventDefault();
+          aEvent.stopPropagation();
         }
         break;
 

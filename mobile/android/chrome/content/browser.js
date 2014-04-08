@@ -546,7 +546,6 @@ var BrowserApp = {
         return {
           title: title,
           uri: emailAddr,
-          type: "text/mailto",
         };
       },
       icon: "drawable://ic_menu_share",
@@ -564,7 +563,6 @@ var BrowserApp = {
         return {
           title: title,
           uri: phoneNumber,
-          type: "text/tel",
         };
       },
       icon: "drawable://ic_menu_share",
@@ -4594,9 +4592,13 @@ var BrowserEventHandler = {
 
       if (this._scrollableElement != null) {
         // Discard if it's the top-level scrollable, we let Java handle this
+        // The top-level scrollable is the body in quirks mode and the html element
+        // in standards mode
         let doc = BrowserApp.selectedBrowser.contentDocument;
-        if (this._scrollableElement != doc.body && this._scrollableElement != doc.documentElement)
+        let rootScrollable = (doc.compatMode === "BackCompat" ? doc.body : doc.documentElement);
+        if (this._scrollableElement != rootScrollable) {
           sendMessageToJava({ type: "Panning:Override" });
+        }
       }
     }
 
@@ -4684,7 +4686,6 @@ var BrowserEventHandler = {
 
           let doc = BrowserApp.selectedBrowser.contentDocument;
           if (this._scrollableElement == null ||
-              this._scrollableElement == doc.body ||
               this._scrollableElement == doc.documentElement) {
             sendMessageToJava({ type: "Panning:CancelOverride" });
             return;
@@ -4925,8 +4926,10 @@ var BrowserEventHandler = {
     var computedStyle = win.getComputedStyle(elem);
     if (!computedStyle)
       return false;
-    return computedStyle.overflowX == 'auto' || computedStyle.overflowX == 'scroll'
-        || computedStyle.overflowY == 'auto' || computedStyle.overflowY == 'scroll';
+    // We check for overflow:hidden only because all the other cases are scrollable
+    // under various conditions. See https://bugzilla.mozilla.org/show_bug.cgi?id=911574#c24
+    // for some more details.
+    return !(computedStyle.overflowX == 'hidden' && computedStyle.overflowY == 'hidden');
   },
 
   _findScrollableElement: function(elem, checkElem) {
@@ -4934,16 +4937,15 @@ var BrowserEventHandler = {
     let scrollable = false;
     while (elem) {
       /* Element is scrollable if its scroll-size exceeds its client size, and:
-       * - It has overflow 'auto' or 'scroll'
-       * - It's a textarea
-       * - It's an HTML/BODY node
-       * - It's a text input
+       * - It has overflow other than 'hidden', or
+       * - It's a textarea node, or
+       * - It's a text input, or
        * - It's a select element showing multiple rows
        */
       if (checkElem) {
         if ((elem.scrollTopMax > 0 || elem.scrollLeftMax > 0) &&
             (this._hasScrollableOverflow(elem) ||
-             elem.mozMatchesSelector("html, body, textarea")) ||
+             elem.mozMatchesSelector("textarea")) ||
             (elem instanceof HTMLInputElement && elem.mozIsTextField(false)) ||
             (elem instanceof HTMLSelectElement && (elem.size > 1 || elem.multiple))) {
           scrollable = true;
@@ -7536,17 +7538,13 @@ let Reader = {
   pageAction: {
     readerModeCallback: function(){
       sendMessageToJava({
-        gecko: {
-          type: "Reader:Click",
-        }
+        type: "Reader:Click",
       });
     },
 
     readerModeActiveCallback: function(){
       sendMessageToJava({
-        gecko: {
-          type: "Reader:LongClick",
-        }
+        type: "Reader:LongClick",
       });
     },
   },

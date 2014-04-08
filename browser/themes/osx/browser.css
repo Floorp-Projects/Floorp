@@ -3603,6 +3603,31 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
+.translate-notification-icon,
+#translate-notification-icon {
+  list-style-image: url(chrome://browser/skin/translation-16.png);
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+@media (min-resolution: 2dppx) {
+  .translate-notification-icon,
+  #translate-notification-icon {
+    list-style-image: url(chrome://browser/skin/translation-16@2x.png);
+    -moz-image-region: rect(0px, 32px, 32px, 0px);
+  }
+}
+
+.translated-notification-icon,
+#translated-notification-icon {
+  list-style-image: url(chrome://browser/skin/translation-16.png);
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+@media (min-resolution: 2dppx) {
+  .translated-notification-icon,
+  #translated-notification-icon {
+    list-style-image: url(chrome://browser/skin/translation-16@2x.png);
+    -moz-image-region: rect(0px, 64px, 32px, 32px);
+  }
+}
 
 
 .popup-notification-icon {

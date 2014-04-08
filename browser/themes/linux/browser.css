@@ -1428,6 +1428,18 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   margin: 0px;
 }
 
+.translate-notification-icon,
+#translate-notification-icon {
+  list-style-image: url(chrome://browser/skin/translation-16.png);
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.translated-notification-icon,
+#translated-notification-icon {
+  list-style-image: url(chrome://browser/skin/translation-16.png);
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
 #treecolAutoCompleteImage {
   max-width : 36px;
 }

@@ -135,7 +135,7 @@ enum SocketConnectionStatus {
   SOCKET_CONNECTED = 3
 };
 
-class UnixSocketConsumer : public RefCounted<UnixSocketConsumer>
+class UnixSocketConsumer : public AtomicRefCounted<UnixSocketConsumer>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(UnixSocketConsumer)

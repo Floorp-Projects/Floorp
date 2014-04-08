@@ -74,9 +74,9 @@ var SelectionHandler = {
     Services.obs.removeObserver(this, "TextSelection:End");
     Services.obs.removeObserver(this, "TextSelection:Action");
 
-    BrowserApp.deck.removeEventListener("pagehide", this);
-    BrowserApp.deck.removeEventListener("blur", this);
-    BrowserApp.deck.removeEventListener("scroll", this);
+    BrowserApp.deck.removeEventListener("pagehide", this, false);
+    BrowserApp.deck.removeEventListener("blur", this, true);
+    BrowserApp.deck.removeEventListener("scroll", this, true);
   },
 
   observe: function sh_observe(aSubject, aTopic, aData) {

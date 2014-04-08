@@ -736,7 +736,7 @@ let Pool = Class({
         actor.destroy = destroy;
       }
     };
-    this.conn.removeActorPool(this);
+    this.conn.removeActorPool(this, true);
     this.__poolMap.clear();
     this.__poolMap = null;
   },

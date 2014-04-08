@@ -5,6 +5,8 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 const logsdir            = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 const LOG_PREFIX_SUCCESS = "success-";
