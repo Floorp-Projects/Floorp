@@ -1,0 +1,62 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=688580
+-->
+<head>
+  <title>Test for Bug 688580</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 688580 **/
+
+  // Expected order:
+  // Test starting
+  // readyState interactive
+  // defer
+  // DOMContentLoaded
+  // readyState complete
+  // load
+
+  var state = "Test starting";
+  var readyStateCall = 0;
+  SimpleTest.waitForExplicitFinish();
+  is(document.readyState, "loading", "Document should have been loading.");
+  document.addEventListener("DOMContentLoaded", function () {
+    is(document.readyState, "interactive", "readyState should be interactive during DOMContentLoaded.");
+    is(state, "defer", "Bad state upon DOMContentLoaded");
+    state = "DOMContentLoaded";
+  });
+  document.addEventListener("readystatechange", function () {
+    readyStateCall++;
+    if (readyStateCall == 1) {
+      is(document.readyState, "interactive", "readyState should have changed to interactive.");
+      is(state, "Test starting", "Bad state upon first readystatechange.");
+      state = "readyState interactive";
+    } else if (readyStateCall == 2) {
+      is(document.readyState, "complete", "readyState should have changed to complete.");
+      is(state, "DOMContentLoaded", "Bad state upon second readystatechange.");
+      state = "readyState complete";
+    } else {
+      ok(false, "Too many readystatechanges");
+    }
+  });
+  window.addEventListener("load", function () {
+    is(document.readyState, "complete", "readyState should be complete during load.");
+    is(state, "readyState complete", "Bad state upon load")
+    state = "load";
+    SimpleTest.finish();
+  });
+  </script>
+  <script defer="" src="file_bug688580.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=688580">Mozilla Bug 688580</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
