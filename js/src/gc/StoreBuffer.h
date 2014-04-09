@@ -289,40 +289,40 @@ class StoreBuffer
         const static int SlotKind = 0;
         const static int ElementKind = 1;
 
-        JSObject *object_;
+        uintptr_t objectAndKind_; // JSObject* | Kind
         int32_t start_;
         int32_t count_;
 
         SlotsEdge(JSObject *object, int kind, int32_t start, int32_t count)
-          : object_(object), start_(start), count_(count)
+          : objectAndKind_(uintptr_t(object) | kind), start_(start), count_(count)
         {
+            JS_ASSERT((uintptr_t(object) & 1) == 0);
+            JS_ASSERT(kind <= 1);
             JS_ASSERT(start >= 0);
-            JS_ASSERT(count > 0); // Must be non-zero size so that |count_| < 0 can be kind.
-            if (kind == SlotKind)
-                count_ = -count_;
+            JS_ASSERT(count > 0);
         }
 
+        JSObject *object() const { return reinterpret_cast<JSObject *>(objectAndKind_ & ~1); }
+        int kind() const { return (int)(objectAndKind_ & 1); }
+
         bool operator==(const SlotsEdge &other) const {
-            return object_ == other.object_ && start_ == other.start_ && count_ == other.count_;
+            return objectAndKind_ == other.objectAndKind_ &&
+                   start_ == other.start_ &&
+                   count_ == other.count_;
         }
 
         bool operator!=(const SlotsEdge &other) const {
-            return object_ != other.object_ || start_ != other.start_ || count_ != other.count_;
+            return !(*this == other);
         }
 
         bool canMergeWith(const SlotsEdge &other) const {
-            JS_ASSERT(sizeof(count_) == 4);
-            return object_ == other.object_ && count_ >> 31 == other.count_ >> 31;
+            return objectAndKind_ == other.objectAndKind_;
         }
 
         void mergeInplace(const SlotsEdge &other) {
-            JS_ASSERT((count_ > 0 && other.count_ > 0) || (count_ < 0 && other.count_ < 0));
-            int32_t end1 = start_ + abs(count_);
-            int32_t end2 = other.start_ + abs(other.count_);
+            int32_t end = Max(start_ + count_, other.start_ + other.count_);
             start_ = Min(start_, other.start_);
-            count_ = Max(end1, end2) - start_;
-            if (other.count_ < 0)
-                count_ = -count_;
+            count_ = end - start_;
         }
 
         static bool supportsDeduplication() { return false; }
@@ -332,7 +332,7 @@ class StoreBuffer
         }
 
         bool maybeInRememberedSet(const Nursery &nursery) const {
-            return !nursery.isInside(object_);
+            return !nursery.isInside(object());
         }
 
         void mark(JSTracer *trc);

@@ -29,9 +29,9 @@ URLSearchParams::~URLSearchParams()
 }
 
 JSObject*
-URLSearchParams::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+URLSearchParams::WrapObject(JSContext* aCx)
 {
-  return URLSearchParamsBinding::Wrap(aCx, aScope, this);
+  return URLSearchParamsBinding::Wrap(aCx, this);
 }
 
 /* static */ already_AddRefed<URLSearchParams>

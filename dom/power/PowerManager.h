@@ -45,7 +45,7 @@ public:
   {
     return mWindow;
   }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
   void Reboot(ErrorResult& aRv);
   void FactoryReset();
   void PowerOff(ErrorResult& aRv);

@@ -39,9 +39,9 @@ TextTrackCueList::TextTrackCueList(nsISupports* aParent) : mParent(aParent)
 }
 
 JSObject*
-TextTrackCueList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+TextTrackCueList::WrapObject(JSContext* aCx)
 {
-  return TextTrackCueListBinding::Wrap(aCx, aScope, this);
+  return TextTrackCueListBinding::Wrap(aCx, this);
 }
 
 TextTrackCue*

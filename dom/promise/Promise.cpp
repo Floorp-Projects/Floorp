@@ -233,9 +233,9 @@ Promise::~Promise()
 }
 
 JSObject*
-Promise::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+Promise::WrapObject(JSContext* aCx)
 {
-  return PromiseBinding::Wrap(aCx, aScope, this);
+  return PromiseBinding::Wrap(aCx, this);
 }
 
 JSObject*
@@ -257,7 +257,7 @@ Promise::GetOrCreateWrapper(JSContext* aCx)
   JSAutoCompartment ac(aCx, scope);
 
   JS::Rooted<JS::Value> val(aCx);
-  if (!WrapNewBindingObject(aCx, scope, this, &val)) {
+  if (!WrapNewBindingObject(aCx, this, &val)) {
     MOZ_ASSERT(JS_IsExceptionPending(aCx));
     return nullptr;
   }
@@ -433,7 +433,7 @@ Promise::CreateFunction(JSContext* aCx, JSObject* aParent, Promise* aPromise,
   JS::Rooted<JSObject*> obj(aCx, JS_GetFunctionObject(func));
 
   JS::Rooted<JS::Value> promiseObj(aCx);
-  if (!dom::WrapNewBindingObject(aCx, obj, aPromise, &promiseObj)) {
+  if (!dom::WrapNewBindingObject(aCx, aPromise, &promiseObj)) {
     return nullptr;
   }
 
@@ -460,7 +460,7 @@ Promise::CreateThenableFunction(JSContext* aCx, Promise* aPromise, uint32_t aTas
   JS::Rooted<JSObject*> obj(aCx, JS_GetFunctionObject(func));
 
   JS::Rooted<JS::Value> promiseObj(aCx);
-  if (!dom::WrapNewBindingObject(aCx, obj, aPromise, &promiseObj)) {
+  if (!dom::WrapNewBindingObject(aCx, aPromise, &promiseObj)) {
     return nullptr;
   }
 
@@ -1105,7 +1105,6 @@ PromiseReportRejectFeature::Notify(JSContext* aCx, workers::Status aStatus)
 bool
 Promise::ArgumentToJSValue(const nsAString& aArgument,
                            JSContext* aCx,
-                           JSObject* aScope,
                            JS::MutableHandle<JS::Value> aValue)
 {
   // XXXkhuey I'd love to use xpc::NonVoidStringToJsval here, but it requires
@@ -1126,7 +1125,6 @@ Promise::ArgumentToJSValue(const nsAString& aArgument,
 bool
 Promise::ArgumentToJSValue(bool aArgument,
                            JSContext* aCx,
-                           JSObject* aScope,
                            JS::MutableHandle<JS::Value> aValue)
 {
   aValue.setBoolean(aArgument);

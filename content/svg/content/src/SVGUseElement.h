@@ -39,8 +39,7 @@ protected:
                                          already_AddRefed<nsINodeInfo>&& aNodeInfo));
   SVGUseElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~SVGUseElement();
-  virtual JSObject* WrapNode(JSContext *cx,
-                             JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:
   // interfaces:

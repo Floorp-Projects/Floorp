@@ -185,8 +185,8 @@ ifeq ($(CPU_ARCH),x86_64)
     DEFINES += -DNSS_USE_COMBA
     DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
 #   DEFINES += -DMPI_AMD64_ADD
-    # comment the next two lines to turn off intel HW accelleration
-    DEFINES += -DUSE_HW_AES
+    # comment the next four lines to turn off Intel HW acceleration.
+    DEFINES += -DUSE_HW_AES -DINTEL_GCM
     ASFILES += intel-aes.s intel-gcm.s
     EXTRA_SRCS += intel-gcm-wrap.c
     INTEL_GCM = 1
@@ -419,6 +419,11 @@ else
 	    ASFILES  = arcfour-amd64-gas.s mpi_amd64_gas.s
 	    ASFLAGS += -march=opteron -m64 -fPIC
 	    MPI_SRCS += mp_comba.c
+	    # comment the next four lines to turn off Intel HW acceleration
+	    ASFILES += intel-gcm.s
+	    EXTRA_SRCS += intel-gcm-wrap.c
+	    INTEL_GCM = 1
+	    DEFINES += -DINTEL_GCM
 	else
 	    ASFILES  = arcfour-amd64-sun.s mpi_amd64_sun.s sha-fast-amd64-sun.s
  	    ASFILES += mp_comba_amd64_sun.s mpcpucache_amd64.s
@@ -426,14 +431,13 @@ else
             SOL_CFLAGS += -xprefetch=no
 	    SHA_SRCS =
  	    MPCPU_SRCS =
+	    # Intel acceleration for GCM does not build currently with Studio
 	endif
 	DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
 	DEFINES += -DNSS_USE_COMBA -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
-	# comment the next two lines to turn off intel HW accelleration
+	# comment the next two lines to turn off Intel HW acceleration
 	DEFINES += -DUSE_HW_AES
-	ASFILES += intel-aes.s intel-gcm.s
-        EXTRA_SRCS += intel-gcm-wrap.c
-        INTEL_GCM = 1
+	ASFILES += intel-aes.s
 	MPI_SRCS += mpi_amd64.c
     else
 	# Solaris x86

@@ -19,9 +19,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGMPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+SVGMPathElement::WrapNode(JSContext *aCx)
 {
-  return SVGMPathElementBinding::Wrap(aCx, aScope, this);
+  return SVGMPathElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::StringInfo SVGMPathElement::sStringInfo[1] =

@@ -80,9 +80,9 @@ MobileConnectionArray::GetParentObject() const
 }
 
 JSObject*
-MobileConnectionArray::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+MobileConnectionArray::WrapObject(JSContext* aCx)
 {
-  return MozMobileConnectionArrayBinding::Wrap(aCx, aScope, this);
+  return MozMobileConnectionArrayBinding::Wrap(aCx, this);
 }
 
 nsIDOMMozMobileConnection*

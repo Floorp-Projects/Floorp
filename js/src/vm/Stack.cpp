@@ -239,14 +239,11 @@ InterpreterFrame::prologue(JSContext *cx)
             pushOnScopeChain(*callobj);
             flags_ |= HAS_CALL_OBJ;
         }
-        probes::EnterScript(cx, script, nullptr, this);
-        return true;
+        return probes::EnterScript(cx, script, nullptr, this);
     }
 
-    if (isGlobalFrame()) {
-        probes::EnterScript(cx, script, nullptr, this);
-        return true;
-    }
+    if (isGlobalFrame())
+        return probes::EnterScript(cx, script, nullptr, this);
 
     JS_ASSERT(isNonEvalFunctionFrame());
     AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
@@ -263,8 +260,7 @@ InterpreterFrame::prologue(JSContext *cx)
         functionThis() = ObjectValue(*obj);
     }
 
-    probes::EnterScript(cx, script, script->functionNonDelazifying(), this);
-    return true;
+    return probes::EnterScript(cx, script, script->functionNonDelazifying(), this);
 }
 
 void

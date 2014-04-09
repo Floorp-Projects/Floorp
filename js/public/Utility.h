@@ -76,7 +76,7 @@ extern JS_PUBLIC_API(void) JS_Abort(void);
  * oomAfterAllocations COUNT is passed, we fail continuously after the NUM'th
  * allocation from now.
  */
-extern JS_PUBLIC_DATA(uint32_t) OOM_maxAllocations; /* set in builtins/TestingFunctions.cpp */
+extern JS_PUBLIC_DATA(uint32_t) OOM_maxAllocations; /* set in builtin/TestingFunctions.cpp */
 extern JS_PUBLIC_DATA(uint32_t) OOM_counter; /* data race, who cares. */
 
 #ifdef JS_OOM_BREAKPOINT

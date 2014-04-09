@@ -237,11 +237,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MessagePort,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 JSObject*
-MessagePort::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+MessagePort::WrapObject(JSContext* aCx)
 {
   AssertCorrectThread();
 
-  return MessagePortBinding::Wrap(aCx, aScope, this);
+  return MessagePortBinding::Wrap(aCx, this);
 }
 
 nsresult
