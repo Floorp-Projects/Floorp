@@ -720,6 +720,27 @@ imgMemoryReporter* imgLoader::sMemReporter;
 
 NS_IMPL_ISUPPORTS5(imgLoader, imgILoader, nsIContentSniffer, imgICache, nsISupportsWeakReference, nsIObserver)
 
+static imgLoader* gSingleton = nullptr;
+static imgLoader* gPBSingleton = nullptr;
+
+imgLoader*
+imgLoader::Singleton()
+{
+  if (!gSingleton)
+    gSingleton = imgLoader::Create();
+  return gSingleton;
+}
+
+imgLoader*
+imgLoader::PBSingleton()
+{
+  if (!gPBSingleton) {
+    gPBSingleton = imgLoader::Create();
+    gPBSingleton->RespectPrivacyNotifications();
+  }
+  return gPBSingleton;
+}
+
 imgLoader::imgLoader()
 : mRespectPrivacy(false)
 {
@@ -946,6 +967,8 @@ NS_IMETHODIMP imgLoader::FindEntryProperties(nsIURI *uri, nsIProperties **_retva
 
 void imgLoader::Shutdown()
 {
+  NS_IF_RELEASE(gSingleton);
+  NS_IF_RELEASE(gPBSingleton);
   NS_RELEASE(gCacheObserver);
 }
 
