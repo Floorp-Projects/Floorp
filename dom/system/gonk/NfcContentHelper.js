@@ -372,7 +372,11 @@ NfcContentHelper.prototype = {
       case "NFC:MakeReadOnlyNDEFResponse":
       case "NFC:CheckP2PRegistrationResponse":
       case "NFC:NotifySendFileStatusResponse":
-        this.fireRequestSuccess(atob(result.requestId), result);
+        if (result.status !== NFC.GECKO_NFC_ERROR_SUCCESS) {
+          this.fireRequestError(atob(result.requestId), result.status);
+        } else {
+          this.fireRequestSuccess(atob(result.requestId), result);
+        }
         break;
       case "NFC:PeerEvent":
         let callback = this.peerEventsCallbackMap[result.event];
