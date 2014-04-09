@@ -1656,7 +1656,7 @@ AttachFinishedCompilations(JSContext *cx)
             RootedScript script(cx, builder->script());
             IonContext ictx(cx, &builder->alloc());
             AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, script));
-            AutoTraceLog logLink(logger, TraceLogger::IonLink);
+            AutoTraceLog logLink(logger, TraceLogger::IonLinking);
 
             // Root the assembler until the builder is finished below. As it
             // was constructed off thread, the assembler has not been rooted
@@ -1752,7 +1752,7 @@ IonCompile(JSContext *cx, JSScript *script,
 {
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
     AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, script));
-    AutoTraceLog logCompile(logger, TraceLogger::IonCompile);
+    AutoTraceLog logCompile(logger, TraceLogger::IonCompilation);
 
     JS_ASSERT(optimizationLevel > Optimization_DontCompile);
 

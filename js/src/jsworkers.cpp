@@ -782,7 +782,7 @@ WorkerThread::handleIonWorkload()
 
     TraceLogger *logger = TraceLoggerForThread(thread);
     AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, ionBuilder->script()));
-    AutoTraceLog logCompile(logger, TraceLogger::IonCompile);
+    AutoTraceLog logCompile(logger, TraceLogger::IonCompilation);
 
     JSRuntime *rt = ionBuilder->script()->compartment()->runtimeFromAnyThread();
 
