@@ -42,6 +42,10 @@ namespace layout {
 class RenderFrameChild;
 }
 
+namespace widget {
+class ActiveElementManager;
+}
+
 namespace dom {
 
 class TabChild;
@@ -228,6 +232,7 @@ class TabChild : public PBrowserChild,
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
     typedef mozilla::layout::RenderFrameChild RenderFrameChild;
     typedef mozilla::layout::ScrollingBehavior ScrollingBehavior;
+    typedef mozilla::widget::ActiveElementManager ActiveElementManager;
 
 public:
     /** 
@@ -545,6 +550,7 @@ private:
     void FireSingleTapEvent(LayoutDevicePoint aPoint);
 
     bool mIgnoreKeyPressEvent;
+    nsRefPtr<ActiveElementManager> mActiveElementManager;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
