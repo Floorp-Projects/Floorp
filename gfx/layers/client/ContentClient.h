@@ -63,7 +63,6 @@ class ThebesLayer;
  * it alive anymore, so we clear mOldTextures.
  *
  * The sequence for painting is: call BeginPaint on the content client;
- * call PrepareFrame on the content client;
  * call BeginPaintBuffer on the content client. That will initialise the buffer
  * for painting, by calling RotatedContentBuffer::BeginPaint (usually) which
  * will call back to ContentClient::FinalizeFrame to finalize update of the
@@ -71,7 +70,6 @@ class ThebesLayer;
  * BorrowDrawTargetForPainting to get a DrawTarget to paint into. Then paint.
  * Then return that DrawTarget using ReturnDrawTarget.
  * Call EndPaint on the content client;
- * call OnTransaction on the content client.
  *
  * SwapBuffers is called in response to the transaction reply from the compositor.
  */
@@ -99,8 +97,6 @@ public:
                                                        RotatedContentBuffer::DrawIterator* aIter = nullptr) = 0;
   virtual void ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned) = 0;
 
-  virtual void PrepareFrame() {}
-
   // Called as part of the layers transation reply. Conveys data about our
   // buffer(s) from the compositor. If appropriate we should swap references
   // to our buffers.
@@ -108,8 +104,7 @@ public:
 
   // call before and after painting into this content client
   virtual void BeginPaint() {}
-  virtual void EndPaint() {}
-
+  virtual void EndPaint();
 };
 
 /**
@@ -333,7 +328,7 @@ public:
 
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) MOZ_OVERRIDE;
 
-  virtual void PrepareFrame() MOZ_OVERRIDE;
+  virtual void BeginPaint() MOZ_OVERRIDE;
 
   virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) MOZ_OVERRIDE;
 
@@ -439,6 +434,7 @@ public:
     if (IsSurfaceDescriptorValid(mUpdateDescriptorOnWhite)) {
       mForwarder->DestroySharedSurface(&mUpdateDescriptorOnWhite);
     }
+    ContentClientRemote::EndPaint();
   }
 
 private:
