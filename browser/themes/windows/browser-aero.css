@@ -144,6 +144,18 @@
     border-right-style: none !important;
   }
 
+  /* Use a different color only on Windows 8 and higher for inactive windows.
+   * On aero, the menubar fog disappears for inactive windows, and renders gray
+   * illegible.
+   */
+  @media not all and (-moz-os-version: windows-vista) {
+    @media not all and (-moz-os-version: windows-win7) {
+      #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
+        color: ThreeDShadow;
+      }
+    }
+  }
+
   #main-window[darkwindowframe="true"] #toolbar-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive),
   #main-window[darkwindowframe="true"] #TabsToolbar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
     color: white;
