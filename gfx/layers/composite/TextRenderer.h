@@ -7,6 +7,7 @@
 #define GFX_TextRenderer_H
 
 #include "mozilla/gfx/2D.h"
+#include "nsISupportsImpl.h"
 #include <string>
 
 namespace mozilla {
