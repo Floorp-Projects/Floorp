@@ -437,6 +437,7 @@ WEBIDL_FILES = [
     'Telephony.webidl',
     'TelephonyCall.webidl',
     'TelephonyCallGroup.webidl',
+    'TelephonyCallId.webidl',
     'Text.webidl',
     'TextDecoder.webidl',
     'TextEncoder.webidl',
