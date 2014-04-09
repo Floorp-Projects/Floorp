@@ -147,6 +147,32 @@ add_task(function test_createTable_already_created()
   }
 });
 
+add_task(function test_attach_createTable_tableExists_indexExists()
+{
+  var msc = getOpenedDatabase();
+  var file = do_get_file("storage_attach.sqlite", true);
+  var msc2 = getDatabase(file);
+  msc.executeSimpleSQL("ATTACH DATABASE '" + file.path + "' AS sample");
+
+  do_check_false(msc.tableExists("sample.test"));
+  msc.createTable("sample.test", "id INTEGER PRIMARY KEY, name TEXT");
+  do_check_true(msc.tableExists("sample.test"));
+  try {
+    msc.createTable("sample.test", "id INTEGER PRIMARY KEY, name TEXT");
+    do_throw("We shouldn't get here!");
+  } catch (e if e.result == Components.results.NS_ERROR_FAILURE) {
+    // we expect to fail because this table should exist already.
+  }
+
+  do_check_false(msc.indexExists("sample.test_ind"));
+  msc.executeSimpleSQL("CREATE INDEX sample.test_ind ON test (name)");
+  do_check_true(msc.indexExists("sample.test_ind"));
+
+  msc.executeSimpleSQL("DETACH DATABASE sample");
+  msc2.close();
+  try { file.remove(false); } catch(e) { }
+});
+
 add_task(function test_lastInsertRowID()
 {
   var msc = getOpenedDatabase();
