@@ -18,7 +18,7 @@
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
 
-class PRThread;
+struct PRThread;
 struct JSRuntime;
 
 namespace JS {
