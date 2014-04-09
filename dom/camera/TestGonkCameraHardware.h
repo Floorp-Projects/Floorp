@@ -25,6 +25,8 @@ class TestGonkCameraHardware : public android::GonkCameraHardware
 {
 public:
   virtual int AutoFocus() MOZ_OVERRIDE;
+  virtual int StartFaceDetection() MOZ_OVERRIDE;
+  virtual int StopFaceDetection() MOZ_OVERRIDE;
   virtual int TakePicture() MOZ_OVERRIDE;
   virtual int StartPreview() MOZ_OVERRIDE;
   virtual int PushParameters(const mozilla::GonkCameraParameters& aParams) MOZ_OVERRIDE;

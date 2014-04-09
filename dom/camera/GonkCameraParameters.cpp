@@ -114,6 +114,8 @@ GonkCameraParameters::Parameters::GetTextKey(uint32_t aKey)
       return KEY_ZOOM_SUPPORTED;
     case CAMERA_PARAM_SUPPORTED_ZOOMRATIOS:
       return KEY_ZOOM_RATIOS;
+    case CAMERA_PARAM_SUPPORTED_MAXDETECTEDFACES:
+      return KEY_MAX_NUM_DETECTED_FACES_HW;
     case CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES:
       return KEY_SUPPORTED_JPEG_THUMBNAIL_SIZES;
     case CAMERA_PARAM_SUPPORTED_ISOMODES:
@@ -545,25 +547,23 @@ GonkCameraParameters::SetTranslated(uint32_t aKey, const double& aValue)
           // mZoomRatios is sorted, so we can binary search it
           int bottom = 0;
           int top = mZoomRatios.Length() - 1;
-          int middle;
 
           while (top >= bottom) {
-            middle = (top + bottom) / 2;
-            if (value == mZoomRatios[middle]) {
+            index = (top + bottom) / 2;
+            if (value == mZoomRatios[index]) {
               // exact match
               break;
             }
-            if (value > mZoomRatios[middle] && value < mZoomRatios[middle + 1]) {
+            if (value > mZoomRatios[index] && value < mZoomRatios[index + 1]) {
               // the specified zoom value lies in this interval
               break;
             }
-            if (value > mZoomRatios[middle]) {
-              bottom = middle + 1;
+            if (value > mZoomRatios[index]) {
+              bottom = index + 1;
             } else {
-              top = middle - 1;
+              top = index - 1;
             }
           }
-          index = middle;
         }
         DOM_CAMERA_LOGI("Zoom = %fx --> index = %d\n", aValue, index);
       }

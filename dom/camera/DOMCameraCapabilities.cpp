@@ -149,6 +149,11 @@ CameraCapabilities::Populate(ICameraControl* aCameraControl)
   LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_MAXMETERINGAREAS);
   mMaxMeteringAreas = areas < 0 ? 0 : areas;
 
+  int32_t faces;
+  rv = aCameraControl->Get(CAMERA_PARAM_SUPPORTED_MAXDETECTEDFACES, faces);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_MAXDETECTEDFACES);
+  mMaxDetectedFaces = faces < 0 ? 0 : faces;
+
   rv = aCameraControl->Get(CAMERA_PARAM_SUPPORTED_MINEXPOSURECOMPENSATION, mMinExposureCompensation);
   LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_MINEXPOSURECOMPENSATION);
 
@@ -255,6 +260,12 @@ uint32_t
 CameraCapabilities::MaxMeteringAreas() const
 {
   return mMaxMeteringAreas;
+}
+
+uint32_t
+CameraCapabilities::MaxDetectedFaces() const
+{
+  return mMaxDetectedFaces;
 }
 
 double
