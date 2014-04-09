@@ -38,48 +38,74 @@ ClientThebesLayer::PaintThebes()
   NS_ASSERTION(ClientManager()->InDrawing(),
                "Can only draw in drawing phase");
   
-  {
-    mContentClient->PrepareFrame();
+  mContentClient->PrepareFrame();
 
-    uint32_t flags = 0;
+  uint32_t flags = 0;
 #ifndef MOZ_WIDGET_ANDROID
-    if (ClientManager()->CompositorMightResample()) {
+  if (ClientManager()->CompositorMightResample()) {
+    flags |= RotatedContentBuffer::PAINT_WILL_RESAMPLE;
+  }
+  if (!(flags & RotatedContentBuffer::PAINT_WILL_RESAMPLE)) {
+    if (MayResample()) {
       flags |= RotatedContentBuffer::PAINT_WILL_RESAMPLE;
     }
-    if (!(flags & RotatedContentBuffer::PAINT_WILL_RESAMPLE)) {
-      if (MayResample()) {
-        flags |= RotatedContentBuffer::PAINT_WILL_RESAMPLE;
-      }
-    }
+  }
 #endif
-    PaintState state =
-      mContentClient->BeginPaintBuffer(this, flags);
-    mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
+  PaintState state =
+    mContentClient->BeginPaintBuffer(this, flags);
+  mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
-    if (DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state)) {
-      // The area that became invalid and is visible needs to be repainted
-      // (this could be the whole visible area if our buffer switched
-      // from RGB to RGBA, because we might need to repaint with
-      // subpixel AA)
-      state.mRegionToInvalidate.And(state.mRegionToInvalidate,
-                                    GetEffectiveVisibleRegion());
-      SetAntialiasingFlags(this, target);
+  if (!state.mRegionToDraw.IsEmpty() && !ClientManager()->GetThebesLayerCallback()) {
+    ClientManager()->SetTransactionIncomplete();
+    return;
+  }
 
-      nsRefPtr<gfxContext> ctx = gfxContext::ContextForDrawTarget(target);
-      PaintBuffer(ctx,
-                  state.mRegionToDraw, state.mRegionToDraw, state.mRegionToInvalidate,
-                  state.mDidSelfCopy, state.mClip);
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) PaintThebes", this));
-      Mutated();
-      ctx = nullptr;
-      mContentClient->ReturnDrawTargetToBuffer(target);
-    } else {
-      // It's possible that state.mRegionToInvalidate is nonempty here,
-      // if we are shrinking the valid region to nothing. So use mRegionToDraw
-      // instead.
-      NS_WARN_IF_FALSE(state.mRegionToDraw.IsEmpty(),
-                       "No context when we have something to draw, resource exhaustion?");
-    }
+  // The area that became invalid and is visible needs to be repainted
+  // (this could be the whole visible area if our buffer switched
+  // from RGB to RGBA, because we might need to repaint with
+  // subpixel AA)
+  state.mRegionToInvalidate.And(state.mRegionToInvalidate,
+                                GetEffectiveVisibleRegion());
+
+  bool didUpdate = false;
+  if (DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state)) {
+    SetAntialiasingFlags(this, target);
+
+    nsRefPtr<gfxContext> ctx = gfxContext::ContextForDrawTarget(target);
+
+    ClientManager()->GetThebesLayerCallback()(this,
+                                              ctx,
+                                              state.mRegionToDraw,
+                                              state.mClip,
+                                              state.mRegionToInvalidate,
+                                              ClientManager()->GetThebesLayerCallbackData());
+
+    ctx = nullptr;
+    mContentClient->ReturnDrawTargetToBuffer(target);
+    didUpdate = true;
+  } else {
+    // It's possible that state.mRegionToInvalidate is nonempty here,
+    // if we are shrinking the valid region to nothing. So use mRegionToDraw
+    // instead.
+    NS_WARN_IF_FALSE(state.mRegionToDraw.IsEmpty(),
+                     "No context when we have something to draw, resource exhaustion?");
+  }
+
+  if (didUpdate) {
+    Mutated();
+
+    mValidRegion.Or(mValidRegion, state.mRegionToDraw);
+
+    ContentClientRemote* contentClientRemote = static_cast<ContentClientRemote*>(mContentClient.get());
+    MOZ_ASSERT(contentClientRemote->GetIPDLActor());
+
+    // Hold(this) ensures this layer is kept alive through the current transaction
+    // The ContentClient assumes this layer is kept alive (e.g., in CreateBuffer),
+    // so deleting this Hold for whatever reason will break things.
+    ClientManager()->Hold(this);
+    contentClientRemote->Updated(state.mRegionToDraw,
+                                 mVisibleRegion,
+                                 state.mDidSelfCopy);
   }
 }
 
@@ -115,48 +141,6 @@ ClientThebesLayer::RenderLayer()
   // happens from OnTransaction.
   // It is important that these steps happen in order.
   mContentClient->OnTransaction();
-}
-
-void
-ClientThebesLayer::PaintBuffer(gfxContext* aContext,
-                               const nsIntRegion& aRegionToDraw,
-                               const nsIntRegion& aExtendedRegionToDraw,
-                               const nsIntRegion& aRegionToInvalidate,
-                               bool aDidSelfCopy, DrawRegionClip aClip)
-{
-  ContentClientRemote* contentClientRemote = static_cast<ContentClientRemote*>(mContentClient.get());
-  MOZ_ASSERT(contentClientRemote->GetIPDLActor());
-
-  // NB: this just throws away the entire valid region if there are
-  // too many rects.
-  mValidRegion.SimplifyInward(8);
-
-  if (!ClientManager()->GetThebesLayerCallback()) {
-    ClientManager()->SetTransactionIncomplete();
-    return;
-  }
-  ClientManager()->GetThebesLayerCallback()(this,
-                                            aContext,
-                                            aExtendedRegionToDraw,
-                                            aClip,
-                                            aRegionToInvalidate,
-                                            ClientManager()->GetThebesLayerCallbackData());
-
-  // Everything that's visible has been validated. Do this instead of just
-  // OR-ing with aRegionToDraw, since that can lead to a very complex region
-  // here (OR doesn't automatically simplify to the simplest possible
-  // representation of a region.)
-  nsIntRegion tmp;
-  tmp.Or(mVisibleRegion, aExtendedRegionToDraw);
-  mValidRegion.Or(mValidRegion, tmp);
-
-  // Hold(this) ensures this layer is kept alive through the current transaction
-  // The ContentClient assumes this layer is kept alive (e.g., in CreateBuffer),
-  // so deleting this Hold for whatever reason will break things.
-  ClientManager()->Hold(this);
-  contentClientRemote->Updated(aRegionToDraw,
-                               mVisibleRegion,
-                               aDidSelfCopy);
 }
 
 already_AddRefed<ThebesLayer>
