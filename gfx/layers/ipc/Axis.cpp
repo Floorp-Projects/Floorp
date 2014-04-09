@@ -244,6 +244,12 @@ bool Axis::ScaleWillOverscrollBothSides(float aScale) {
   return GetRectLength(metrics.mScrollableRect) < GetRectLength(cssCompositionBounds);
 }
 
+bool Axis::HasRoomToPan() const {
+  return GetOrigin() > GetPageStart()
+      || GetCompositionEnd() < GetPageEnd();
+}
+
+
 AxisX::AxisX(AsyncPanZoomController* aAsyncPanZoomController)
   : Axis(aAsyncPanZoomController)
 {
