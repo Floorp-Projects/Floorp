@@ -121,11 +121,10 @@ public:
          JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  Then(JSContext* aCx, AnyCallback* aResolveCallback,
-       AnyCallback* aRejectCallback);
+  Then(AnyCallback* aResolveCallback, AnyCallback* aRejectCallback);
 
   already_AddRefed<Promise>
-  Catch(JSContext* aCx, AnyCallback* aRejectCallback);
+  Catch(AnyCallback* aRejectCallback);
 
   static already_AddRefed<Promise>
   All(const GlobalObject& aGlobal, JSContext* aCx,
