@@ -154,6 +154,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitRegExpReplace(MRegExpReplace *ins);
     bool visitStringReplace(MStringReplace *ins);
     bool visitLambda(MLambda *ins);
+    bool visitLambdaArrow(MLambdaArrow *ins);
     bool visitLambdaPar(MLambdaPar *ins);
     bool visitImplicitThis(MImplicitThis *ins);
     bool visitSlots(MSlots *ins);
