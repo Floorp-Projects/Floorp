@@ -9,6 +9,7 @@ interface nsIOutputStream;
 interface nsIRequestObserver;
 interface nsIEventTarget;
 
+// You should prefer nsIAsyncStreamCopier2
 [scriptable, uuid(5a19ca27-e041-4aca-8287-eb248d4c50c0)]
 interface nsIAsyncStreamCopier : nsIRequest
 {
@@ -36,7 +37,9 @@ interface nsIAsyncStreamCopier : nsIRequest
      * @param aCloseSink
      *        true if aSink should be closed after copying.
      *
-     * NOTE: at least one of the streams must be buffered.
+     * NOTE: at least one of the streams must be buffered. If you do not know
+     * whether your streams are buffered, you should use nsIAsyncStreamCopier2
+     * instead.
      */
     void init(in nsIInputStream    aSource,
               in nsIOutputStream   aSink,
