@@ -255,9 +255,9 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
       case AsmJSImm_ModD:
         return RedirectCall(FuncCast(NumberMod), Args_Double_DoubleDouble);
       case AsmJSImm_SinD:
-        return RedirectCall(FuncCast<double (double)>(sin), Args_Double_Double);
+        return RedirectCall(FuncCast<double (double)>(math_sin_impl), Args_Double_Double);
       case AsmJSImm_CosD:
-        return RedirectCall(FuncCast<double (double)>(cos), Args_Double_Double);
+        return RedirectCall(FuncCast<double (double)>(math_cos_impl), Args_Double_Double);
       case AsmJSImm_TanD:
         return RedirectCall(FuncCast<double (double)>(tan), Args_Double_Double);
       case AsmJSImm_ASinD:

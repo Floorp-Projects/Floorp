@@ -309,16 +309,138 @@ js::math_ceil(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-double
-js::math_cos_impl(MathCache *cache, double x)
+/*
+ * Fast sine and cosine approximation code, based on the sin [0] and cos [1]
+ * implementations [2] in the cephes library [3].
+ * Some of the optimization ideas are inspired by the fast_sincos in VDT [4].
+ *
+ * This implementation satisfies the requirements for sin and cos in JS [5].
+ * However, it does not take the standard's recommendation to use fdlibm [6],
+ * nor does it take advantage of the standard's intent to permit JS to use the
+ * system C math library.
+ *
+ * The code carefully avoids branching, to avoid the cost of mispredictions
+ * either on random input sets or on input sets straddling a boundary condition
+ * in the algorithm. It contains only one branch, which is for testing for
+ * unusual inputs (infinities, NaNs, and extremely large values), and it
+ * should be very predictable.
+ *
+ * This implementation computes both a sin and cos value even when only one
+ * of the two is needed. While creating specialized routines for computing just
+ * sin or just cost would allow them to do less work, the speed benefits would
+ * be expected to be marginal, and not worth the extra code it would take, given
+ * that we'll still want the ability to compute sin and cos together anyway.
+ *
+ * [0] http://netlib.org/cephes/doubldoc.html#sin
+ * [1] http://netlib.org/cephes/doubldoc.html#cos
+ * [2] http://netlib.org/cephes/cmath.tgz
+ * [3] http://netlib.org/cephes/
+ * [4] https://svnweb.cern.ch/trac/vdt
+ * [5] http://www.ecma-international.org/ecma-262/5.1/#sec-15.8.2
+ * [6] http://netlib.org/fdlibm
+ */
+
+static double polevl_sin(double z, double zz)
 {
-    return cache->lookup(cos, x);
+    // Constants taken from fdlibm k_sin.c
+    double ans = 1.58969099521155010221e-10;
+    ans *= zz;
+    ans += -2.50507602534068634195e-08;
+    ans *= zz;
+    ans +=  2.75573137070700676789e-06;
+    ans *= zz;
+    ans += -1.98412698298579493134e-04;
+    ans *= zz;
+    ans +=  8.33333333332248946124e-03;
+    ans *= zz;
+    ans += -1.66666666666666324348e-01;
+    ans *= zz * z;
+    ans += z;
+    return ans;
+}
+
+static double polevl_cos(double zz)
+{
+    // Constants taken from fdlibm k_cos.c
+    double ans = -1.13596475577881948265e-11;
+    ans *= zz;
+    ans += 2.08757232129817482790e-09;
+    ans *= zz;
+    ans += -2.75573143513906633035e-07;
+    ans *= zz;
+    ans += 2.48015872894767294178e-05;
+    ans *= zz;
+    ans += -1.38888888888741095749e-03;
+    ans *= zz;
+    ans += 4.16666666666666019037e-02;
+    ans *= zz;
+    ans += -0.5;
+    ans *= zz;
+    ans += 1.0;
+    return ans;
+}
+
+namespace {
+struct sincos_result { double s, c; };
+}
+
+static sincos_result fast_sincos(double x)
+{
+    // Make argument non-negative but save the sign.
+    double orig_sign = js_copysign(1.0, x);
+    double absx = fabs(x);
+
+    // The optimized algorithm below doesn't currently support values of x beyond
+    // pow(2, 32) - 2. If x is beyond the range we support, fall back to the libm
+    // implementation. This check also handles the Infinity and NaN input cases.
+    // abs(x) < (221069929647945 / pow(2,16))
+    if (MOZ_UNLIKELY(!(absx < 3.37325942455970764160e9))) {
+        sincos_result result = {
+            sin(x),
+            cos(x)
+        };
+        return result;
+    }
+
+    static const double m_4_pi = 1.27323954473516276487; // 4.0 / M_PI
+    uint32_t i = static_cast<uint32_t>(absx * m_4_pi);
+
+    // Integer and fractional part modulo one octant.
+    uint32_t quad_index = ((i + 1) >> 1) & 3;
+    double y = static_cast<double>(i + (i & 1));
+
+    // Extended precision modular arithmetic
+    double e0 = y * -7.85398006439208984375e-1;  // 1647099 / pow(2,21)
+    double e1 = y * -1.56958208208379801363e-7;  // 1380619 / pow(2,43)
+    double e2 = y * -3.11168608594830669189e-14; // 4930663418217751 / pow(2,97)
+    double z = absx + e0 + e1 + e2;
+
+    // Compute the sin/cos in quadrant 0.
+    double zz = z * z;
+    double q0_sin = polevl_sin(z, zz);
+    double q0_cos = polevl_cos(zz);
+
+    // Reflect the result into the correct quadrant.
+    const double reflect[4] = {
+      q0_sin, q0_cos, -q0_sin, -q0_cos
+    };
+
+    // Adjust the sine value by the sign of the input.
+    // Missed optimization: C++ doesn't provide convenient access to
+    // floating-point xor; hand-written assembler could change the copysign
+    // above to use 0.0 instead of 1.0, and then just xor the sign with p[0]
+    // here instead of multiplying.
+    sincos_result result = {
+        reflect[quad_index] * orig_sign,
+        reflect[(quad_index + 1) & 3]
+    };
+    return result;
 }
 
 double
-js::math_cos_uncached(double x)
+js::math_cos_impl(double x)
 {
-    return cos(x);
+    return fast_sincos(x).c;
 }
 
 bool
@@ -335,11 +457,7 @@ js::math_cos(JSContext *cx, unsigned argc, Value *vp)
     if (!ToNumber(cx, args[0], &x))
         return false;
 
-    MathCache *mathCache = cx->runtime()->getMathCache(cx);
-    if (!mathCache)
-        return false;
-
-    double z = math_cos_impl(mathCache, x);
+    double z = math_cos_impl(x);
     args.rval().setDouble(z);
     return true;
 }
@@ -790,15 +908,9 @@ js::math_round(JSContext *cx, unsigned argc, Value *vp)
 }
 
 double
-js::math_sin_impl(MathCache *cache, double x)
+js::math_sin_impl(double x)
 {
-    return cache->lookup(sin, x);
-}
-
-double
-js::math_sin_uncached(double x)
-{
-    return sin(x);
+    return fast_sincos(x).s;
 }
 
 bool
@@ -815,11 +927,7 @@ js::math_sin(JSContext *cx, unsigned argc, Value *vp)
     if (!ToNumber(cx, args[0], &x))
         return false;
 
-    MathCache *mathCache = cx->runtime()->getMathCache(cx);
-    if (!mathCache)
-        return false;
-
-    double z = math_sin_impl(mathCache, x);
+    double z = math_sin_impl(x);
     args.rval().setDouble(z);
     return true;
 }
