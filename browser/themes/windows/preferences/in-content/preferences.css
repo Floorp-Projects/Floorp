@@ -11,14 +11,13 @@ menulist:not([editable="true"]) > .menulist-dropmarker {
 
 checkbox:hover::before,
 checkbox[checked]::before {
-  margin-bottom: -1px;
   -moz-margin-end: -19px;
   -moz-margin-start: 4px;
 }
 
 radio {
   -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
-  margin: 7px 0;
+  -moz-margin-start: 0;
 }
 
 radio:hover::before,
