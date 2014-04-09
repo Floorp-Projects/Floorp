@@ -592,6 +592,14 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/menupanel.inc.css
 
+  #home-button.bookmark-item {
+    list-style-image: url("chrome://browser/skin/Toolbar.png");
+  }
+
+  #home-button.bookmark-item:not(@inAnyPanel@):-moz-lwtheme-brighttext {
+    list-style-image: url(chrome://browser/skin/Toolbar-inverted.png);
+  }
+
   #back-button:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(18px, 36px, 36px, 18px);
   }
@@ -751,11 +759,13 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
      to avoid potentially breaking add-on toolbar buttons. */
 
   :-moz-any(@primaryToolbarButtons@),
+  #home-button.bookmark-item,
   #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
     list-style-image: url("chrome://browser/skin/Toolbar@2x.png");
   }
 
   :-moz-any(@primaryToolbarButtons@):not(@inAnyPanel@):-moz-lwtheme-brighttext,
+  #home-button.bookmark-item:not(@inAnyPanel@):-moz-lwtheme-brighttext,
   #bookmarks-menu-button:not(@inAnyPanel@):-moz-lwtheme-brighttext > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
     list-style-image: url("chrome://browser/skin/Toolbar-inverted@2x.png");
   }
@@ -2623,12 +2633,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 
-.bookmark-item:not(#home-button) {
+.bookmark-item {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 @media (min-resolution: 2dppx) {
-  .bookmark-item:not(#home-button) {
+  .bookmark-item {
     list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
   }
 

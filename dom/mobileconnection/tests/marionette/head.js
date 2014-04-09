@@ -36,11 +36,39 @@ function runEmulatorCmdSafe(aCommand) {
     --_pendingEmulatorCmdCount;
 
     ok(true, "Emulator response: " + JSON.stringify(aResult));
-    if (Array.isArray(aResult) && aResult[0] === "OK") {
+    if (Array.isArray(aResult) &&
+        aResult[aResult.length - 1] === "OK") {
       deferred.resolve(aResult);
     } else {
       deferred.reject(aResult);
     }
+  });
+
+  return deferred.promise;
+}
+
+/**
+ * Wrap DOMRequest onsuccess/onerror events to Promise resolve/reject.
+ *
+ * Fulfill params: A DOMEvent.
+ * Reject params: A DOMEvent.
+ *
+ * @param aRequest
+ *        A DOMRequest instance.
+ *
+ * @return A deferred promise.
+ */
+function wrapDomRequestAsPromise(aRequest) {
+  let deferred = Promise.defer();
+
+  ok(aRequest instanceof DOMRequest,
+     "aRequest is instanceof " + aRequest.constructor);
+
+  aRequest.addEventListener("success", function(aEvent) {
+    deferred.resolve(aEvent);
+  });
+  aRequest.addEventListener("error", function(aEvent) {
+    deferred.reject(aEvent);
   });
 
   return deferred.promise;
@@ -65,19 +93,14 @@ function runEmulatorCmdSafe(aCommand) {
  * @return A deferred promise.
  */
 function getSettings(aKey, aAllowError) {
-  let deferred = Promise.defer();
-
   let request = navigator.mozSettings.createLock().get(aKey);
-  request.addEventListener("success", function(aEvent) {
-    ok(true, "getSettings(" + aKey + ") - success");
-    deferred.resolve(aEvent.target.result[aKey]);
-  });
-  request.addEventListener("error", function() {
-    ok(aAllowError, "getSettings(" + aKey + ") - error");
-    deferred.reject();
-  });
-
-  return deferred.promise;
+  return wrapDomRequestAsPromise(request)
+    .then(function resolve(aEvent) {
+      ok(true, "getSettings(" + aKey + ") - success");
+      return aEvent.target.result[aKey];
+    }, function reject(aEvent) {
+      ok(aAllowError, "getSettings(" + aKey + ") - error");
+    });
 }
 
 /**
@@ -97,19 +120,13 @@ function getSettings(aKey, aAllowError) {
  * @return A deferred promise.
  */
 function setSettings(aSettings, aAllowError) {
-  let deferred = Promise.defer();
-
   let request = navigator.mozSettings.createLock().set(aSettings);
-  request.addEventListener("success", function() {
-    ok(true, "setSettings(" + JSON.stringify(aSettings) + ")");
-    deferred.resolve();
-  });
-  request.addEventListener("error", function() {
-    ok(aAllowError, "setSettings(" + JSON.stringify(aSettings) + ")");
-    deferred.reject();
-  });
-
-  return deferred.promise;
+  return wrapDomRequestAsPromise(request)
+    .then(function resolve() {
+      ok(true, "setSettings(" + JSON.stringify(aSettings) + ")");
+    }, function reject() {
+      ok(aAllowError, "setSettings(" + JSON.stringify(aSettings) + ")");
+    });
 }
 
 /**
@@ -270,6 +287,94 @@ function waitForManagerEvent(aEventName) {
 }
 
 /**
+ * Get available networks.
+ *
+ * Fulfill params:
+ *   An array of nsIDOMMozMobileNetworkInfo.
+ * Reject params:
+ *   A DOMEvent.
+ *
+ * @return A deferred promise.
+ */
+function getNetworks() {
+  let request = mobileConnection.getNetworks();
+  return wrapDomRequestAsPromise(request)
+    .then(() => request.result);
+}
+
+/**
+ * Manually select a network.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'
+ *
+ * @param aNetwork
+ *        A nsIDOMMozMobileNetworkInfo.
+ *
+ * @return A deferred promise.
+ */
+function selectNetwork(aNetwork) {
+  let request = mobileConnection.selectNetwork(aNetwork);
+  return wrapDomRequestAsPromise(request)
+    .then(null, () => { throw request.error });
+}
+
+/**
+ * Manually select a network and wait for a 'voicechange' event.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'
+ *
+ * @param aNetwork
+ *        A nsIDOMMozMobileNetworkInfo.
+ *
+ * @return A deferred promise.
+ */
+function selectNetworkAndWait(aNetwork) {
+  let promises = [];
+
+  promises.push(waitForManagerEvent("voicechange"));
+  promises.push(selectNetwork(aNetwork));
+
+  return Promise.all(promises);
+}
+
+/**
+ * Automatically select a network.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'
+ *
+ * @return A deferred promise.
+ */
+function selectNetworkAutomatically() {
+  let request = mobileConnection.selectNetworkAutomatically();
+  return wrapDomRequestAsPromise(request)
+    .then(null, () => { throw request.error });
+}
+
+/**
+ * Automatically select a network and wait for a 'voicechange' event.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'
+ *
+ * @return A deferred promise.
+ */
+function selectNetworkAutomaticallyAndWait() {
+  let promises = [];
+
+  promises.push(waitForManagerEvent("voicechange"));
+  promises.push(selectNetworkAutomatically());
+
+  return Promise.all(promises);
+}
+
+/**
  * Set data connection enabling state and wait for "datachange" event.
  *
  * Resolve if data connection state changed to the expected one.  Never reject.
@@ -303,7 +408,28 @@ function setDataEnabledAndWait(aEnabled) {
 }
 
 /**
- * Set voice/data roaming emulation and wait for state change.
+ * Set voice/data state and wait for state change.
+ *
+ * Fulfill params: (none)
+ *
+ * @param aWhich
+ *        "voice" or "data".
+ * @param aState
+ *        "unregistered", "searching", "denied", "roaming", or "home".
+ *
+ * @return A deferred promise.
+ */
+function setEmulatorVoiceDataStateAndWait(aWhich, aState) {
+  let promises = [];
+  promises.push(waitForManagerEvent(aWhich + "change"));
+
+  let cmd = "gsm " + aWhich + " " + aState;
+  promises.push(runEmulatorCmdSafe(cmd));
+  return Promise.all(promises);
+}
+
+/**
+ * Set voice and data roaming emulation and wait for state change.
  *
  * Fulfill params: (none)
  *
@@ -314,12 +440,8 @@ function setDataEnabledAndWait(aEnabled) {
  */
 function setEmulatorRoamingAndWait(aRoaming) {
   function doSetAndWait(aWhich, aRoaming) {
-    let promises = [];
-    promises.push(waitForManagerEvent(aWhich + "change"));
-
-    let cmd = "gsm " + aWhich + " " + (aRoaming ? "roaming" : "home");
-    promises.push(runEmulatorCmdSafe(cmd));
-    return Promise.all(promises)
+    let state = (aRoaming ? "roaming" : "home");
+    return setEmulatorVoiceDataStateAndWait(aWhich, state)
       .then(() => is(mobileConnection[aWhich].roaming, aRoaming,
                      aWhich + ".roaming"));
   }
@@ -327,6 +449,126 @@ function setEmulatorRoamingAndWait(aRoaming) {
   // Set voice registration state first and then data registration state.
   return doSetAndWait("voice", aRoaming)
     .then(() => doSetAndWait("data", aRoaming));
+}
+
+/**
+ * Get GSM location emulation.
+ *
+ * Fulfill params:
+ *   { lac: <lac>, cid: <cid> }
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @return A deferred promise.
+ */
+function getEmulatorGsmLocation() {
+  let cmd = "gsm location";
+  return runEmulatorCmdSafe(cmd)
+    .then(function(aResults) {
+      // lac: <lac>
+      // ci: <cid>
+      // OK
+      is(aResults[0].substring(0,3), "lac", "lac output");
+      is(aResults[1].substring(0,2), "ci", "ci output");
+
+      let lac = parseInt(aResults[0].substring(5));
+      lac = (lac < 0 ? 65535 : lac);
+      let cid = parseInt(aResults[1].substring(4));
+      cid = (cid < 0 ? 268435455 : cid);
+
+      return { lac: lac, cid: cid };
+    });
+}
+
+/**
+ * Set GSM location emulation.
+ *
+ * Fulfill params: (none)
+ * Reject params: (none)
+ *
+ * @param aLac
+ * @param aCid
+ *
+ * @return A deferred promise.
+ */
+function setEmulatorGsmLocation(aLac, aCid) {
+  let cmd = "gsm location " + aLac + " " + aCid;
+  return runEmulatorCmdSafe(cmd);
+}
+
+/**
+ * Get emulator operators info.
+ *
+ * Fulfill params:
+ *   An array of { longName: <string>, shortName: <string>, mccMnc: <string> }.
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @return A deferred promise.
+ */
+function getEmulatorOperatorNames() {
+  let cmd = "operator dumpall";
+  return runEmulatorCmdSafe(cmd)
+    .then(function(aResults) {
+      let operators = [];
+
+      for (let i = 0; i < aResults.length - 1; i++) {
+        let names = aResults[i].split(',');
+        operators.push({
+          longName: names[0],
+          shortName: names[1],
+          mccMnc: names[2],
+        });
+      }
+
+      ok(true, "emulator operators list: " + JSON.stringify(operators));
+      return operators;
+    });
+}
+
+/**
+ * Set emulator operators info.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @param aOperator
+ *        "home" or "roaming".
+ * @param aLongName
+ *        A string.
+ * @param aShortName
+ *        A string.
+ * @param aMcc [optional]
+ *        A string.
+ * @param aMnc [optional]
+ *        A string.
+ *
+ * @return A deferred promise.
+ */
+function setEmulatorOperatorNames(aOperator, aLongName, aShortName, aMcc, aMnc) {
+  const EMULATOR_OPERATORS = [ "home", "roaming" ];
+
+  let index = EMULATOR_OPERATORS.indexOf(aOperator);
+  if (index < 0) {
+    throw "invalid operator";
+  }
+
+  let cmd = "operator set " + index + " " + aLongName + "," + aShortName;
+  if (aMcc && aMnc) {
+    cmd = cmd + "," + aMcc + aMnc;
+  }
+  return runEmulatorCmdSafe(cmd)
+    .then(function(aResults) {
+      let exp = "^" + aLongName + "," + aShortName + ",";
+      if (aMcc && aMnc) {
+        cmd = cmd + aMcc + aMnc;
+      }
+
+      let re = new RegExp(exp);
+      ok(aResults[index].match(new RegExp(exp)),
+         "Long/short name and/or mcc/mnc should be changed.");
+    });
 }
 
 let _networkManager;
