@@ -286,6 +286,94 @@ function waitForManagerEvent(aEventName) {
 }
 
 /**
+ * Get available networks.
+ *
+ * Fulfill params:
+ *   An array of nsIDOMMozMobileNetworkInfo.
+ * Reject params:
+ *   A DOMEvent.
+ *
+ * @return A deferred promise.
+ */
+function getNetworks() {
+  let request = mobileConnection.getNetworks();
+  return wrapDomRequestAsPromise(request)
+    .then(() => request.result);
+}
+
+/**
+ * Manually select a network.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'
+ *
+ * @param aNetwork
+ *        A nsIDOMMozMobileNetworkInfo.
+ *
+ * @return A deferred promise.
+ */
+function selectNetwork(aNetwork) {
+  let request = mobileConnection.selectNetwork(aNetwork);
+  return wrapDomRequestAsPromise(request)
+    .then(null, () => { throw request.error });
+}
+
+/**
+ * Manually select a network and wait for a 'voicechange' event.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'
+ *
+ * @param aNetwork
+ *        A nsIDOMMozMobileNetworkInfo.
+ *
+ * @return A deferred promise.
+ */
+function selectNetworkAndWait(aNetwork) {
+  let promises = [];
+
+  promises.push(waitForManagerEvent("voicechange"));
+  promises.push(selectNetwork(aNetwork));
+
+  return Promise.all(promises);
+}
+
+/**
+ * Automatically select a network.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'
+ *
+ * @return A deferred promise.
+ */
+function selectNetworkAutomatically() {
+  let request = mobileConnection.selectNetworkAutomatically();
+  return wrapDomRequestAsPromise(request)
+    .then(null, () => { throw request.error });
+}
+
+/**
+ * Automatically select a network and wait for a 'voicechange' event.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'
+ *
+ * @return A deferred promise.
+ */
+function selectNetworkAutomaticallyAndWait() {
+  let promises = [];
+
+  promises.push(waitForManagerEvent("voicechange"));
+  promises.push(selectNetworkAutomatically());
+
+  return Promise.all(promises);
+}
+
+/**
  * Set data connection enabling state and wait for "datachange" event.
  *
  * Resolve if data connection state changed to the expected one.  Never reject.
