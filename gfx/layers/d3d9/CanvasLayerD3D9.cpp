@@ -100,13 +100,14 @@ CanvasLayerD3D9::UpdateSurface()
     }
 
     D3DLOCKED_RECT rect = textureLock.GetLockRect();
-    
+
     DataSourceSurface* frameData = shareSurf->GetData();
     // Scope for DrawTarget, so it's destroyed early.
     {
+      IntSize boundsSize(mBounds.width, mBounds.height);
       RefPtr<DrawTarget> rectDt = Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                                                    (uint8_t*)rect.pBits,
-                                                                   frameData->GetSize(),
+                                                                   boundsSize,
                                                                    rect.Pitch,
                                                                    SurfaceFormat::B8G8R8A8);
 
@@ -188,7 +189,7 @@ CanvasLayerD3D9::RenderLayer()
     return;
 
   /*
-   * We flip the Y axis here, note we can only do this because we are in 
+   * We flip the Y axis here, note we can only do this because we are in
    * CULL_NONE mode!
    */
 
