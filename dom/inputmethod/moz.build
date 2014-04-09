@@ -6,12 +6,6 @@
 
 TEST_DIRS += ['mochitest']
 
-XPIDL_SOURCES += [
-    'nsIB2GKeyboard.idl',
-]
-
-XPIDL_MODULE = 'dom_inputmethod'
-
 EXTRA_COMPONENTS += [
     'InputMethod.manifest',
     'MozKeyboard.js',
