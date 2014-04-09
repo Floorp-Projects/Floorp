@@ -704,9 +704,21 @@ Connection::databaseElementExists(enum DatabaseElementType aElementType,
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
-  nsCString query("SELECT name FROM (SELECT * FROM sqlite_master UNION ALL "
-                                    "SELECT * FROM sqlite_temp_master) "
-                  "WHERE type = '");
+  // When constructing the query, make sure to SELECT the correct db's sqlite_master
+  // if the user is prefixing the element with a specific db. ex: sample.test
+  nsCString query("SELECT name FROM (SELECT * FROM ");
+  nsDependentCSubstring element;
+  int32_t ind = aElementName.FindChar('.');
+  if (ind == kNotFound) {
+    element.Assign(aElementName);
+  }
+  else {
+    nsDependentCSubstring db(Substring(aElementName, 0, ind + 1));
+    element.Assign(Substring(aElementName, ind + 1, aElementName.Length()));
+    query.Append(db);
+  }
+  query.Append("sqlite_master UNION ALL SELECT * FROM sqlite_temp_master) WHERE type = '");
+
   switch (aElementType) {
     case INDEX:
       query.Append("index");
@@ -716,7 +728,7 @@ Connection::databaseElementExists(enum DatabaseElementType aElementType,
       break;
   }
   query.Append("' AND name ='");
-  query.Append(aElementName);
+  query.Append(element);
   query.Append("'");
 
   sqlite3_stmt *stmt;
