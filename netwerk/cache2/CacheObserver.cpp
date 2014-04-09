@@ -62,6 +62,12 @@ uint32_t CacheObserver::sMaxDiskEntrySize = kDefaultMaxDiskEntrySize;
 static uint32_t const kDefaultCompressionLevel = 1;
 uint32_t CacheObserver::sCompressionLevel = kDefaultCompressionLevel;
 
+static bool kDefaultSanitizeOnShutdown = false;
+bool CacheObserver::sSanitizeOnShutdown = kDefaultSanitizeOnShutdown;
+
+static bool kDefaultClearCacheOnShutdown = false;
+bool CacheObserver::sClearCacheOnShutdown = kDefaultClearCacheOnShutdown;
+
 NS_IMPL_ISUPPORTS2(CacheObserver,
                    nsIObserver,
                    nsISupportsWeakReference)
@@ -188,6 +194,11 @@ CacheObserver::AttachToPreferences()
       "browser.cache.frecency_half_life_hours", kDefaultHalfLifeHours)));
     break;
   }
+
+  mozilla::Preferences::AddBoolVarCache(
+    &sSanitizeOnShutdown, "privacy.sanitize.sanitizeOnShutdown", kDefaultSanitizeOnShutdown);
+  mozilla::Preferences::AddBoolVarCache(
+    &sClearCacheOnShutdown, "privacy.clearOnShutdown.cache", kDefaultClearCacheOnShutdown);
 }
 
 // static

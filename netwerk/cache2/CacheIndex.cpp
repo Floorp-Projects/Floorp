@@ -490,9 +490,11 @@ CacheIndex::Shutdown()
 
   CacheIndexAutoLock lock(index);
 
+  bool sanitize = CacheObserver::ClearCacheOnShutdown();
+
   LOG(("CacheIndex::Shutdown() - [state=%d, indexOnDiskIsValid=%d, "
-       "dontMarkIndexClean=%d]", index->mState, index->mIndexOnDiskIsValid,
-       index->mDontMarkIndexClean));
+       "dontMarkIndexClean=%d, sanitize=%d]", index->mState,
+       index->mIndexOnDiskIsValid, index->mDontMarkIndexClean, sanitize));
 
   MOZ_ASSERT(index->mShuttingDown);
 
@@ -510,7 +512,7 @@ CacheIndex::Shutdown()
       // no break
     case READY:
       if (index->mIndexOnDiskIsValid && !index->mDontMarkIndexClean) {
-        if (NS_FAILED(index->WriteLogToDisk())) {
+        if (!sanitize && NS_FAILED(index->WriteLogToDisk())) {
           index->RemoveIndexFromDisk();
         }
       } else {
@@ -526,6 +528,10 @@ CacheIndex::Shutdown()
       break;
     default:
       MOZ_ASSERT(false, "Unexpected state!");
+  }
+
+  if (sanitize) {
+    index->RemoveIndexFromDisk();
   }
 
   return NS_OK;
