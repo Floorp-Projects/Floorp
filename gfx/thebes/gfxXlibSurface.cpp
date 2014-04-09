@@ -32,13 +32,13 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
     , mGLXPixmap(None)
 #endif
 {
-    DoSizeQuery();
-    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, mSize.width, mSize.height);
+    const gfxIntSize size = DoSizeQuery();
+    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, size.width, size.height);
     Init(surf);
 }
 
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, const gfxIntSize& size)
-    : mPixmapTaken(false), mDisplay(dpy), mDrawable(drawable), mSize(size)
+    : mPixmapTaken(false), mDisplay(dpy), mDrawable(drawable)
 #if defined(GL_PROVIDER_GLX)
     , mGLXPixmap(None)
 #endif
@@ -46,14 +46,14 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, 
     NS_ASSERTION(CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT),
                  "Bad size");
 
-    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, mSize.width, mSize.height);
+    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, size.width, size.height);
     Init(surf);
 }
 
 gfxXlibSurface::gfxXlibSurface(Screen *screen, Drawable drawable, XRenderPictFormat *format,
                                const gfxIntSize& size)
     : mPixmapTaken(false), mDisplay(DisplayOfScreen(screen)),
-      mDrawable(drawable), mSize(size)
+      mDrawable(drawable)
 #if defined(GL_PROVIDER_GLX)
       , mGLXPixmap(None)
 #endif
@@ -64,14 +64,12 @@ gfxXlibSurface::gfxXlibSurface(Screen *screen, Drawable drawable, XRenderPictFor
     cairo_surface_t *surf =
         cairo_xlib_surface_create_with_xrender_format(mDisplay, drawable,
                                                       screen, format,
-                                                      mSize.width, mSize.height);
+                                                      size.width, size.height);
     Init(surf);
 }
 
 gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
-    : mPixmapTaken(false),
-      mSize(cairo_xlib_surface_get_width(csurf),
-            cairo_xlib_surface_get_height(csurf))
+    : mPixmapTaken(false)
 #if defined(GL_PROVIDER_GLX)
       , mGLXPixmap(None)
 #endif
@@ -125,11 +123,12 @@ gfxXlibSurface::TakePixmap()
     // The bit depth returned from Cairo is technically int, but this is
     // the last place we'd be worried about that scenario.
     unsigned int bitDepth = cairo_xlib_surface_get_depth(CairoSurface());
-    MOZ_ASSERT((bitDepth % 8) == 0, "Memory used not recorded correctly");
+    MOZ_ASSERT((bitDepth % 8) == 0, "Memory used not recorded correctly");    
 
     // Divide by 8 because surface_get_depth gives us the number of *bits* per
     // pixel.
-    CheckedInt32 totalBytes = CheckedInt32(mSize.width) * CheckedInt32(mSize.height) * (bitDepth/8);
+    gfxIntSize size = GetSize();
+    CheckedInt32 totalBytes = CheckedInt32(size.width) * CheckedInt32(size.height) * (bitDepth/8);
 
     // Don't do anything in the "else" case.  We could add INT32_MAX, but that
     // would overflow the memory used counter.  It would also mean we tried for
@@ -285,7 +284,17 @@ gfxXlibSurface::Finish()
     gfxASurface::Finish();
 }
 
-void
+const gfxIntSize
+gfxXlibSurface::GetSize() const
+{
+    if (!mSurfaceValid)
+        return gfxIntSize(0,0);
+
+    return gfxIntSize(cairo_xlib_surface_get_width(mSurface),
+                      cairo_xlib_surface_get_height(mSurface));
+}
+
+const gfxIntSize
 gfxXlibSurface::DoSizeQuery()
 {
     // figure out width/height/depth
@@ -299,8 +308,7 @@ gfxXlibSurface::DoSizeQuery()
                  &width, &height,
                  &bwidth_ignore, &depth);
 
-    mSize.width = width;
-    mSize.height = height;
+    return gfxIntSize(width, height);
 }
 
 class DisplayTable {
