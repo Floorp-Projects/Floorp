@@ -20,7 +20,7 @@
 static GtkWidget* gProtoWindow;
 static GtkWidget* gProtoLayout;
 static GtkWidget* gButtonWidget;
-static GtkWidget* gToggleButtonWidget;
+static GtkWidget* gToggleMenuButtonWidget;
 static GtkWidget* gButtonArrowWidget;
 static GtkWidget* gCheckboxWidget;
 static GtkWidget* gRadiobuttonWidget;
@@ -162,11 +162,11 @@ ensure_vpaned_widget()
 }
 
 static gint
-ensure_toggle_button_widget()
+ensure_toggle_menu_button_widget()
 {
-    if (!gToggleButtonWidget) {
-        gToggleButtonWidget = gtk_toggle_button_new();
-        setup_widget_prototype(gToggleButtonWidget);
+    if (!gToggleMenuButtonWidget) {
+        gToggleMenuButtonWidget = gtk_menu_button_new();
+        setup_widget_prototype(gToggleMenuButtonWidget);
   }
   return MOZ_GTK_SUCCESS;
 }
@@ -175,11 +175,8 @@ static gint
 ensure_button_arrow_widget()
 {
     if (!gButtonArrowWidget) {
-        ensure_toggle_button_widget();
-
-        gButtonArrowWidget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_OUT);
-        gtk_container_add(GTK_CONTAINER(gToggleButtonWidget), gButtonArrowWidget);
-        gtk_widget_realize(gButtonArrowWidget);
+        ensure_toggle_menu_button_widget();
+        gButtonArrowWidget = gtk_bin_get_child(GTK_BIN(gToggleMenuButtonWidget));
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -332,8 +329,8 @@ ensure_combo_box_widgets()
         /* Shouldn't be reached with current internal gtk implementation; we
          * use a generic toggle button as last resort fallback to avoid
          * crashing. */
-        ensure_toggle_button_widget();
-        gComboBoxButtonWidget = gToggleButtonWidget;
+        ensure_toggle_menu_button_widget();
+        gComboBoxButtonWidget = gToggleMenuButtonWidget;
     }
 
     if (!gComboBoxArrowWidget) {
@@ -438,8 +435,8 @@ ensure_combo_box_entry_widgets()
         /* Shouldn't be reached with current internal gtk implementation;
          * we use a generic toggle button as last resort fallback to avoid
          * crashing. */
-        ensure_toggle_button_widget();
-        gComboBoxEntryButtonWidget = gToggleButtonWidget;
+        ensure_toggle_menu_button_widget();
+        gComboBoxEntryButtonWidget = gToggleMenuButtonWidget;
     }
 
     if (!gComboBoxEntryArrowWidget) {
@@ -3062,10 +3059,10 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, cairo_t *cr,
     switch (widget) {
     case MOZ_GTK_BUTTON:
         if (state->depressed) {
-            ensure_toggle_button_widget();
+            ensure_toggle_menu_button_widget();
             return moz_gtk_button_paint(cr, rect, state,
                                         (GtkReliefStyle) flags,
-                                        gToggleButtonWidget, direction);
+                                        gToggleMenuButtonWidget, direction);
         }
         ensure_button_widget();
         return moz_gtk_button_paint(cr, rect, state,
@@ -3278,7 +3275,7 @@ moz_gtk_shutdown()
     gProtoWindow = NULL;
     gProtoLayout = NULL;
     gButtonWidget = NULL;
-    gToggleButtonWidget = NULL;
+    gToggleMenuButtonWidget = NULL;
     gButtonArrowWidget = NULL;
     gCheckboxWidget = NULL;
     gRadiobuttonWidget = NULL;
