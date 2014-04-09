@@ -3265,10 +3265,8 @@
       </method>
       <field name="_tabMarginLeft">null</field>
       <field name="_tabMarginRight">null</field>
-      <method name="_adjustElementStartAndEnd">
+      <method name="_calcTabMargins">
         <parameter name="aTab"/>
-        <parameter name="tabStart"/>
-        <parameter name="tabEnd"/>
         <body><![CDATA[
           if (this._tabMarginLeft === null || this._tabMarginRight === null) {
             let tabMiddle = document.getAnonymousElementByAttribute(aTab, "class", "tab-background-middle");
@@ -3276,6 +3274,14 @@
             this._tabMarginLeft = parseFloat(tabMiddleStyle.marginLeft);
             this._tabMarginRight = parseFloat(tabMiddleStyle.marginRight);
           }
+        ]]></body>
+      </method>
+      <method name="_adjustElementStartAndEnd">
+        <parameter name="aTab"/>
+        <parameter name="tabStart"/>
+        <parameter name="tabEnd"/>
+        <body><![CDATA[
+          this._calcTabMargins(aTab);
           if (this._tabMarginLeft < 0) {
             tabStart = tabStart + this._tabMarginLeft;
           }
@@ -3920,6 +3926,10 @@
 
           var scrollRect = this.mTabstrip.scrollClientRect;
           var tab = aTab.getBoundingClientRect();
+          this.mTabstrip._calcTabMargins(aTab);
+
+          // DOMRect left/right properties are immutable.
+          tab = {left: tab.left, right: tab.right};
 
           // Is the new tab already completely visible?
           if (scrollRect.left <= tab.left && tab.right <= scrollRect.right)
@@ -3928,6 +3938,15 @@
           if (this.mTabstrip.smoothScroll) {
             let selected = !this.selectedItem.pinned &&
                            this.selectedItem.getBoundingClientRect();
+            if (selected) {
+              selected = {left: selected.left, right: selected.right};
+              // Need to take in to account the width of the left/right margins on tabs.
+              selected.left = selected.left + this.mTabstrip._tabMarginLeft;
+              selected.right = selected.right - this.mTabstrip._tabMarginRight;
+            }
+
+            tab.left += this.mTabstrip._tabMarginLeft;
+            tab.right -= this.mTabstrip._tabMarginRight;
 
             // Can we make both the new tab and the selected tab completely visible?
             if (!selected ||
