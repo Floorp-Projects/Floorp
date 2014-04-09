@@ -39,6 +39,9 @@ bool
 ApplyTypeInformation(MIRGenerator *mir, MIRGraph &graph);
 
 bool
+MakeMRegExpHoistable(MIRGraph &graph);
+
+bool
 RenumberBlocks(MIRGraph &graph);
 
 bool

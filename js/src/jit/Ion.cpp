@@ -1256,6 +1256,11 @@ OptimizeMIR(MIRGenerator *mir)
 {
     MIRGraph &graph = mir->graph();
 
+    if (!mir->compilingAsmJS()) {
+        if (!MakeMRegExpHoistable(graph))
+            return false;
+    }
+
     IonSpewPass("BuildSSA");
     AssertBasicGraphCoherency(graph);
 
