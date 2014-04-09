@@ -244,7 +244,6 @@ panelview:not([mainview]) .toolbarbutton-text,
 
 toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item),
 .panelUI-grid .toolbarbutton-1,
-toolbarpaletteitem[place="panel"]:not([haswideitem=true]),
 .panel-customization-placeholder-child {
   -moz-appearance: none;
   -moz-box-orient: vertical;
@@ -918,8 +917,12 @@ toolbarpaletteitem[place="palette"] > #search-container {
 
 /* Make direct siblings overlap borders: */
 .toolbaritem-combined-buttons + .toolbaritem-combined-buttons@inAnyPanel@ {
-  margin-top: -1px;
   border-top-color: transparent !important;
+}
+
+.toolbaritem-combined-buttons + .toolbaritem-combined-buttons@inAnyPanel@,
+toolbarpaletteitem[haswideitem][place="panel"] + toolbarpaletteitem[haswideitem][place="panel"] {
+  margin-top: -1px;
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
