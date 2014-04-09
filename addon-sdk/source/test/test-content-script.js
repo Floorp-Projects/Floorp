@@ -842,4 +842,30 @@ exports["test MutationObvserver"] = createProxyTest(html, function (helper) {
 
 });
 
+let html = '<script>' +
+  'var accessCheck = function() {' +
+  '  assert(true, "exporting function works");' +
+  '  try{' +
+  '    exportedObj.prop;' +
+  '    assert(false, "content should not have access to content-script");' +
+  '  } catch(e) {' +
+  '    assert(e.toString().indexOf("Permission denied") != -1,' +
+  '           "content should not have access to content-script");' +
+  '  }' +
+  '}</script>';
+exports["test nsEp for content-script"] = createProxyTest(html, function (helper) {
+
+  helper.createWorker(
+    'let glob = this; new ' + function ContentScriptScope() {
+
+      exportFunction(assert, unsafeWindow, { defineAs: "assert" });
+      window.wrappedJSObject.assert(true, "assert exported");
+      window.wrappedJSObject.exportedObj = { prop: 42 };
+      window.wrappedJSObject.accessCheck();
+      done();
+    }
+  );
+
+});
+
 require("test").run(exports);
