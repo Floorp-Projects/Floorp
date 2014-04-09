@@ -12,6 +12,7 @@
 
 #include "jsnativestack.h"
 #include "prmjtime.h"
+#include "TraceLogging.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "jit/IonBuilder.h"
@@ -779,12 +780,9 @@ WorkerThread::handleIonWorkload()
 
     ionBuilder = WorkerThreadState().ionWorklist().popCopy();
 
-#if JS_TRACE_LOGGING
-    AutoTraceLog logger(TraceLogging::getLogger(TraceLogging::ION_BACKGROUND_COMPILER),
-                        TraceLogging::ION_COMPILE_START,
-                        TraceLogging::ION_COMPILE_STOP,
-                        ionBuilder->script());
-#endif
+    TraceLogger *logger = TraceLoggerForThread(thread);
+    AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, ionBuilder->script()));
+    AutoTraceLog logCompile(logger, TraceLogger::IonCompile);
 
     JSRuntime *rt = ionBuilder->script()->compartment()->runtimeFromAnyThread();
 

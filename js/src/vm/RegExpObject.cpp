@@ -8,6 +8,8 @@
 
 #include "mozilla/MemoryReporting.h"
 
+#include "TraceLogging.h"
+
 #include "frontend/TokenStream.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpStatics.h"
@@ -520,9 +522,14 @@ RegExpRunStatus
 RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length,
                       size_t *lastIndex, MatchPairs &matches)
 {
-    /* Compile the code at point-of-use. */
-    if (!compileIfNecessary(cx))
-        return RegExpRunStatus_Error;
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+
+    {
+        /* Compile the code at point-of-use. */
+        AutoTraceLog logCompile(logger, TraceLogger::YarrCompile);
+        if (!compileIfNecessary(cx))
+            return RegExpRunStatus_Error;
+    }
 
     /* Ensure sufficient memory for output vector. */
     if (!matches.initArray(pairCount()))
@@ -547,12 +554,18 @@ RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length,
     unsigned result;
 
 #if ENABLE_YARR_JIT
-    if (codeBlock.isFallBack())
+    if (codeBlock.isFallBack()) {
+        AutoTraceLog logInterpret(logger, TraceLogger::YarrInterpret);
         result = JSC::Yarr::interpret(cx, bytecode, chars, length, start, outputBuf);
-    else
+    } else {
+        AutoTraceLog logJIT(logger, TraceLogger::YarrJIT);
         result = codeBlock.execute(chars, start, length, (int *)outputBuf).start;
+    }
 #else
-    result = JSC::Yarr::interpret(cx, bytecode, chars, length, start, outputBuf);
+    {
+        AutoTraceLog logInterpret(logger, TraceLogger::YarrInterpret);
+        result = JSC::Yarr::interpret(cx, bytecode, chars, length, start, outputBuf);
+    }
 #endif
 
     if (result == JSC::Yarr::offsetError) {
@@ -573,9 +586,14 @@ RegExpRunStatus
 RegExpShared::executeMatchOnly(JSContext *cx, const jschar *chars, size_t length,
                                size_t *lastIndex, MatchPair &match)
 {
-    /* Compile the code at point-of-use. */
-    if (!compileMatchOnlyIfNecessary(cx))
-        return RegExpRunStatus_Error;
+    TraceLogger *logger = js::TraceLoggerForMainThread(cx->runtime());
+
+    {
+        /* Compile the code at point-of-use. */
+        AutoTraceLog logCompile(logger, TraceLogger::YarrCompile);
+        if (!compileMatchOnlyIfNecessary(cx))
+            return RegExpRunStatus_Error;
+    }
 
 #ifdef DEBUG
     const size_t origLength = length;
@@ -592,6 +610,7 @@ RegExpShared::executeMatchOnly(JSContext *cx, const jschar *chars, size_t length
 
 #if ENABLE_YARR_JIT
     if (!codeBlock.isFallBack()) {
+        AutoTraceLog logJIT(logger, TraceLogger::YarrJIT);
         MatchResult result = codeBlock.execute(chars, start, length);
         if (!result)
             return RegExpRunStatus_Success_NotFound;
@@ -613,8 +632,11 @@ RegExpShared::executeMatchOnly(JSContext *cx, const jschar *chars, size_t length
     if (!matches.initArray(pairCount()))
         return RegExpRunStatus_Error;
 
-    unsigned result =
-        JSC::Yarr::interpret(cx, bytecode, chars, length, start, matches.rawBuf());
+    unsigned result;
+    {
+        AutoTraceLog logInterpret(logger, TraceLogger::YarrInterpret);
+        result = JSC::Yarr::interpret(cx, bytecode, chars, length, start, matches.rawBuf());
+    }
 
     if (result == JSC::Yarr::offsetError) {
         reportYarrError(cx, nullptr, JSC::Yarr::RuntimeError);
