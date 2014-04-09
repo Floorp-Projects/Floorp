@@ -168,7 +168,7 @@ js::Nursery::allocate(size_t size)
     void *thing = (void *)position();
     position_ = position() + size;
 
-    JS_POISON(thing, JS_ALLOCATED_NURSERY_PATTERN, size);
+    JS_EXTRA_POISON(thing, JS_ALLOCATED_NURSERY_PATTERN, size);
     return thing;
 }
 
