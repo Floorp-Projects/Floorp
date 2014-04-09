@@ -5,6 +5,7 @@
 #ifndef MEDIAENGINE_H_
 #define MEDIAENGINE_H_
 
+#include "mozilla/RefPtr.h"
 #include "nsIDOMFile.h"
 #include "DOMMediaStream.h"
 #include "MediaStreamGraph.h"
@@ -35,13 +36,11 @@ enum {
   kAudioTrack = 2
 };
 
-class MediaEngine
+class MediaEngine : public RefCounted<MediaEngine>
 {
-protected:
-  virtual ~MediaEngine() {}
-
 public:
-  NS_INLINE_DECL_REFCOUNTING(MediaEngine)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(MediaEngine)
+  virtual ~MediaEngine() {}
 
   static const int DEFAULT_VIDEO_FPS = 30;
   static const int DEFAULT_VIDEO_MIN_FPS = 10;
