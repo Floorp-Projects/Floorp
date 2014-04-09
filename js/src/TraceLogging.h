@@ -26,6 +26,11 @@ namespace JS {
 }
 
 namespace js {
+class PerThreadData;
+
+namespace jit {
+    class CompileRuntime;
+}
 
 /*
  * Tracelogging overview.
@@ -224,6 +229,23 @@ class TraceLogger
       YarrInterpret,
       YarrJIT,
 
+      // Specific passes during ion compilation:
+      SplitCriticalEdges,
+      RenumberBlocks,
+      DominatorTree,
+      PhiAnalysis,
+      ApplyTypes,
+      ParallelSafetyAnalysis,
+      AliasAnalysis,
+      GVN,
+      UCE,
+      LICM,
+      RangeAnalysis,
+      EffectiveAddressAnalysis,
+      EliminateDeadCode,
+      EdgeCaseAnalysis,
+      EliminateRedundantChecks,
+
       LAST
     };
 
@@ -388,6 +410,7 @@ class TraceLogging
     ~TraceLogging();
 
     TraceLogger *forMainThread(JSRuntime *runtime);
+    TraceLogger *forMainThread(jit::CompileRuntime *runtime);
     TraceLogger *forThread(PRThread *thread);
 
     bool isTextIdEnabled(uint32_t textId) {
@@ -397,6 +420,7 @@ class TraceLogging
     }
 
   private:
+    TraceLogger *forMainThread(PerThreadData *mainThread);
     TraceLogger *create();
     bool lazyInit();
 #endif
@@ -404,9 +428,13 @@ class TraceLogging
 
 #ifdef JS_TRACE_LOGGING
 TraceLogger *TraceLoggerForMainThread(JSRuntime *runtime);
+TraceLogger *TraceLoggerForMainThread(jit::CompileRuntime *runtime);
 TraceLogger *TraceLoggerForThread(PRThread *thread);
 #else
 inline TraceLogger *TraceLoggerForMainThread(JSRuntime *runtime) {
+    return nullptr;
+};
+inline TraceLogger *TraceLoggerForMainThread(jit::CompileRuntime *runtime) {
     return nullptr;
 };
 inline TraceLogger *TraceLoggerForThread(PRThread *thread) {
