@@ -575,7 +575,7 @@ protected:
     MediaTime mBlockedAudioTime;
     // Last tick written to the audio output.
     TrackTicks mLastTickWritten;
-    nsAutoPtr<AudioStream> mStream;
+    RefPtr<AudioStream> mStream;
     TrackID mTrackID;
   };
   nsTArray<AudioOutputStream> mAudioOutputStreams;

@@ -18,8 +18,16 @@
 
 namespace mozilla {
 
+#ifdef LOG
+#undef LOG
+#endif
+
 #ifdef PR_LOGGING
 PRLogModuleInfo* gAudioStreamLog = nullptr;
+// For simple logs
+#define LOG(x) PR_LOG(gAudioStreamLog, PR_LOG_DEBUG, x)
+#else
+#define LOG(x)
 #endif
 
 /**
@@ -149,6 +157,7 @@ AudioStream::AudioStream()
   , mVolume(1.0)
   , mBytesPerFrame(0)
   , mState(INITIALIZED)
+  , mNeedsStart(false)
 {
   // keep a ref in case we shut down later than nsLayoutStatics
   mLatencyLog = AsyncLatencyLogger::Get(true);
@@ -156,6 +165,7 @@ AudioStream::AudioStream()
 
 AudioStream::~AudioStream()
 {
+  LOG(("AudioStream: delete %p, state %d", this, mState));
   Shutdown();
   if (mDumpFile) {
     fclose(mDumpFile);
@@ -347,19 +357,19 @@ WriteDumpFile(FILE* aDumpFile, AudioStream* aStream, uint32_t aFrames,
   fflush(aDumpFile);
 }
 
+// NOTE: this must not block a LowLatency stream for any significant amount
+// of time, or it will block the entirety of MSG
 nsresult
 AudioStream::Init(int32_t aNumChannels, int32_t aRate,
                   const dom::AudioChannel aAudioChannel,
                   LatencyRequest aLatencyRequest)
 {
-  cubeb* cubebContext = GetCubebContext();
-
-  if (!cubebContext || aNumChannels < 0 || aRate < 0) {
+  if (!GetCubebContext() || aNumChannels < 0 || aRate < 0) {
     return NS_ERROR_FAILURE;
   }
 
   PR_LOG(gAudioStreamLog, PR_LOG_DEBUG,
-    ("%s  channels: %d, rate: %d", __FUNCTION__, aNumChannels, aRate));
+    ("%s  channels: %d, rate: %d for %p", __FUNCTION__, aNumChannels, aRate, this));
   mInRate = mOutRate = aRate;
   mChannels = aNumChannels;
   mOutChannels = (aNumChannels > 2) ? 2 : aNumChannels;
@@ -390,12 +400,49 @@ AudioStream::Init(int32_t aNumChannels, int32_t aRate,
 
   mAudioClock.Init();
 
+  // Size mBuffer for one second of audio.  This value is arbitrary, and was
+  // selected based on the observed behaviour of the existing AudioStream
+  // implementations.
+  uint32_t bufferLimit = FramesToBytes(aRate);
+  NS_ABORT_IF_FALSE(bufferLimit % mBytesPerFrame == 0, "Must buffer complete frames");
+  mBuffer.SetCapacity(bufferLimit);
+
+  if (aLatencyRequest == LowLatency) {
+    // Don't block this thread to initialize a cubeb stream.
+    // When this is done, it will start callbacks from Cubeb.  Those will
+    // cause us to move from INITIALIZED to RUNNING.  Until then, we
+    // can't access any cubeb functions.
+    AudioInitTask *init = new AudioInitTask(this, aLatencyRequest, params);
+    init->Dispatch();
+    return NS_OK;
+  }
+  // High latency - open synchronously
+  nsresult rv = OpenCubeb(params, aLatencyRequest);
+  // See if we need to start() the stream, since we must do that from this
+  // thread for now (cubeb API issue)
+  CheckForStart();
+  return rv;
+}
+
+// This code used to live inside AudioStream::Init(), but on Mac (others?)
+// it has been known to take 300-800 (or even 8500) ms to execute(!)
+nsresult
+AudioStream::OpenCubeb(cubeb_stream_params &aParams,
+                       LatencyRequest aLatencyRequest)
+{
+  cubeb* cubebContext = GetCubebContext();
+  if (!cubebContext) {
+    MonitorAutoLock mon(mMonitor);
+    mState = AudioStream::ERRORED;
+    return NS_ERROR_FAILURE;
+  }
+
   // If the latency pref is set, use it. Otherwise, if this stream is intended
   // for low latency playback, try to get the lowest latency possible.
   // Otherwise, for normal streams, use 100ms.
   uint32_t latency;
   if (aLatencyRequest == LowLatency && !CubebLatencyPrefSet()) {
-    if (cubeb_get_min_latency(cubebContext, params, &latency) != CUBEB_OK) {
+    if (cubeb_get_min_latency(cubebContext, aParams, &latency) != CUBEB_OK) {
       latency = GetCubebLatency();
     }
   } else {
@@ -404,42 +451,67 @@ AudioStream::Init(int32_t aNumChannels, int32_t aRate,
 
   {
     cubeb_stream* stream;
-    if (cubeb_stream_init(cubebContext, &stream, "AudioStream", params,
+    if (cubeb_stream_init(cubebContext, &stream, "AudioStream", aParams,
                           latency, DataCallback_S, StateCallback_S, this) == CUBEB_OK) {
+      MonitorAutoLock mon(mMonitor);
       mCubebStream.own(stream);
+      // Make sure we weren't shut down while in flight!
+      if (mState == SHUTDOWN) {
+        mCubebStream.reset();
+        LOG(("AudioStream::OpenCubeb() %p Shutdown while opening cubeb", this));
+        return NS_ERROR_FAILURE;
+      }
+
+      // We can't cubeb_stream_start() the thread from a transient thread due to
+      // cubeb API requirements (init can be called from another thread, but
+      // not start/stop/destroy/etc)
+    } else {
+      MonitorAutoLock mon(mMonitor);
+      mState = ERRORED;
+      LOG(("AudioStream::OpenCubeb() %p failed to init cubeb", this));
+      return NS_ERROR_FAILURE;
     }
-  }
-
-  if (!mCubebStream) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Size mBuffer for one second of audio.  This value is arbitrary, and was
-  // selected based on the observed behaviour of the existing AudioStream
-  // implementations.
-  uint32_t bufferLimit = FramesToBytes(aRate);
-  NS_ABORT_IF_FALSE(bufferLimit % mBytesPerFrame == 0, "Must buffer complete frames");
-  mBuffer.SetCapacity(bufferLimit);
-
-  // Start the stream right away when low latency has been requested. This means
-  // that the DataCallback will feed silence to cubeb, until the first frames
-  // are writtent to this AudioStream.
-  if (mLatencyRequest == LowLatency) {
-    Start();
   }
 
   return NS_OK;
 }
 
 void
-AudioStream::Shutdown()
+AudioStream::CheckForStart()
 {
-  if (mState == STARTED) {
-    Pause();
+  if (mState == INITIALIZED) {
+    // Start the stream right away when low latency has been requested. This means
+    // that the DataCallback will feed silence to cubeb, until the first frames
+    // are written to this AudioStream.  Also start if a start has been queued.
+    if (mLatencyRequest == LowLatency || mNeedsStart) {
+      StartUnlocked(); // mState = STARTED or ERRORED
+      mNeedsStart = false;
+      PR_LOG(gAudioStreamLog, PR_LOG_WARNING,
+             ("Started waiting %s-latency stream",
+              mLatencyRequest == LowLatency ? "low" : "high"));
+    } else {
+      // high latency, not full - OR Pause() was called before we got here
+      PR_LOG(gAudioStreamLog, PR_LOG_DEBUG,
+             ("Not starting waiting %s-latency stream",
+              mLatencyRequest == LowLatency ? "low" : "high"));
+    }
   }
-  if (mCubebStream) {
-    mCubebStream.reset();
+}
+
+NS_IMETHODIMP
+AudioInitTask::Run()
+{
+  if (NS_IsMainThread()) {
+    mThread->Shutdown(); // can't Shutdown from the thread itself, darn
+    mThread = nullptr;
+    return NS_OK;
   }
+
+  nsresult rv = mAudioStream->OpenCubeb(mParams, mLatencyRequest);
+
+  // and now kill this thread
+  NS_DispatchToMainThread(this);
+  return rv;
 }
 
 // aTime is the time in ms the samples were inserted into MediaStreamGraph
@@ -447,11 +519,14 @@ nsresult
 AudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames, TimeStamp *aTime)
 {
   MonitorAutoLock mon(mMonitor);
-  if (!mCubebStream || mState == ERRORED) {
+  if (mState == ERRORED) {
     return NS_ERROR_FAILURE;
   }
-  NS_ASSERTION(mState == INITIALIZED || mState == STARTED,
+  NS_ASSERTION(mState == INITIALIZED || mState == STARTED || mState == RUNNING,
     "Stream write in unexpected state.");
+
+  // See if we need to start() the stream, since we must do that from this thread
+  CheckForStart();
 
   // Downmix to Stereo.
   if (mChannels > 2 && mChannels <= 8) {
@@ -490,15 +565,33 @@ AudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames, TimeStamp *aTim
     bytesToCopy -= available;
 
     if (bytesToCopy > 0) {
-      // If we are not playing, but our buffer is full, start playing to make
-      // room for soon-to-be-decoded data.
-      if (mState != STARTED) {
-        StartUnlocked();
-        if (mState != STARTED) {
-          return NS_ERROR_FAILURE;
+      // Careful - the CubebInit thread may not have gotten to STARTED yet
+      if ((mState == INITIALIZED || mState == STARTED) && mLatencyRequest == LowLatency) {
+        // don't ever block MediaStreamGraph low-latency streams
+        uint32_t remains = 0; // we presume the buffer is full
+        if (mBuffer.Length() > bytesToCopy) {
+          remains = mBuffer.Length() - bytesToCopy; // Free up just enough space
         }
+        // account for dropping samples
+        PR_LOG(gAudioStreamLog, PR_LOG_WARNING, ("Stream %p dropping %u bytes (%u frames)in Write()",
+            this, mBuffer.Length() - remains, BytesToFrames(mBuffer.Length() - remains)));
+        mReadPoint += BytesToFrames(mBuffer.Length() - remains);
+        mBuffer.ContractTo(remains);
+      } else { // RUNNING or high latency
+        // If we are not playing, but our buffer is full, start playing to make
+        // room for soon-to-be-decoded data.
+        if (mState != STARTED && mState != RUNNING) {
+          PR_LOG(gAudioStreamLog, PR_LOG_WARNING, ("Starting stream %p in Write (%u waiting)",
+                                                 this, bytesToCopy));
+          StartUnlocked();
+          if (mState == ERRORED) {
+            return NS_ERROR_FAILURE;
+          }
+        }
+        PR_LOG(gAudioStreamLog, PR_LOG_WARNING, ("Stream %p waiting in Write() (%u waiting)",
+                                                 this, bytesToCopy));
+        mon.Wait();
       }
-      mon.Wait();
     }
   }
 
@@ -526,8 +619,9 @@ void
 AudioStream::Drain()
 {
   MonitorAutoLock mon(mMonitor);
-  if (mState != STARTED) {
-    NS_ASSERTION(mBuffer.Available() == 0, "Draining with unplayed audio");
+  LOG(("AudioStream::Drain() for %p, state %d, avail %u", this, mState, mBuffer.Available()));
+  if (mState != STARTED && mState != RUNNING) {
+    NS_ASSERTION(mState == ERRORED || mBuffer.Available() == 0, "Draining without full buffer of unplayed audio");
     return;
   }
   mState = DRAINING;
@@ -547,18 +641,15 @@ void
 AudioStream::StartUnlocked()
 {
   mMonitor.AssertCurrentThreadOwns();
-  if (!mCubebStream || mState != INITIALIZED) {
+  if (!mCubebStream) {
+    mNeedsStart = true;
     return;
   }
-  if (mState != STARTED) {
-    int r;
-    {
-      MonitorAutoUnlock mon(mMonitor);
-      r = cubeb_stream_start(mCubebStream);
-    }
-    if (mState != ERRORED) {
-      mState = r == CUBEB_OK ? STARTED : ERRORED;
-    }
+  MonitorAutoUnlock mon(mMonitor);
+  if (mState == INITIALIZED) {
+    int r = cubeb_stream_start(mCubebStream);
+    mState = r == CUBEB_OK ? STARTED : ERRORED;
+    LOG(("AudioStream: started %p, state %s", this, mState == STARTED ? "STARTED" : "ERRORED"));
   }
 }
 
@@ -566,7 +657,9 @@ void
 AudioStream::Pause()
 {
   MonitorAutoLock mon(mMonitor);
-  if (!mCubebStream || mState != STARTED) {
+  if (!mCubebStream || (mState != STARTED && mState != RUNNING)) {
+    mNeedsStart = false;
+    mState = STOPPED; // which also tells async OpenCubeb not to start, just init
     return;
   }
 
@@ -595,6 +688,26 @@ AudioStream::Resume()
   }
   if (mState != ERRORED && r == CUBEB_OK) {
     mState = STARTED;
+  }
+}
+
+void
+AudioStream::Shutdown()
+{
+  LOG(("AudioStream: Shutdown %p, state %d", this, mState));
+  {
+    MonitorAutoLock mon(mMonitor);
+    if (mState == STARTED || mState == RUNNING) {
+      MonitorAutoUnlock mon(mMonitor);
+      Pause();
+    }
+    MOZ_ASSERT(mState != STARTED && mState != RUNNING); // paranoia
+    mState = SHUTDOWN;
+  }
+  // Must not try to shut down cubeb from within the lock!  wasapi may still
+  // call our callback after Pause()/stop()!?! Bug 996162
+  if (mCubebStream) {
+    mCubebStream.reset();
   }
 }
 
@@ -792,6 +905,42 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
   uint32_t servicedFrames = 0;
   int64_t insertTime;
 
+  // NOTE: wasapi (others?) can call us back *after* stop()/Shutdown() (mState == SHUTDOWN)
+  // Bug 996162
+
+  // callback tells us cubeb succeeded initializing
+  if (mState == STARTED) {
+    // For low-latency streams, we want to minimize any built-up data when
+    // we start getting callbacks.
+    // Simple version - contract on first callback only.
+    if (mLatencyRequest == LowLatency) {
+#ifdef PR_LOGGING
+      uint32_t old_len = mBuffer.Length();
+#endif
+      available = mBuffer.ContractTo(FramesToBytes(aFrames));
+#ifdef PR_LOGGING
+      TimeStamp now = TimeStamp::Now();
+      if (!mStartTime.IsNull()) {
+        int64_t timeMs = (now - mStartTime).ToMilliseconds();
+        PR_LOG(gAudioStreamLog, PR_LOG_WARNING,
+               ("Stream took %lldms to start after first Write() @ %u", timeMs, mOutRate));
+      } else {
+        PR_LOG(gAudioStreamLog, PR_LOG_WARNING,
+          ("Stream started before Write() @ %u", mOutRate));
+      }
+
+      if (old_len != available) {
+        // Note that we may have dropped samples in Write() as well!
+        PR_LOG(gAudioStreamLog, PR_LOG_WARNING,
+               ("AudioStream %p dropped %u + %u initial frames @ %u", this,
+                 mReadPoint, BytesToFrames(old_len - available), mOutRate));
+        mReadPoint += BytesToFrames(old_len - available);
+      }
+#endif
+    }
+    mState = RUNNING;
+  }
+
   if (available) {
     // When we are playing a low latency stream, and it is the first time we are
     // getting data from the buffer, we prefer to add the silence for an
@@ -834,6 +983,7 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
   WriteDumpFile(mDumpFile, this, aFrames, aBuffer);
   // Don't log if we're not interested or if the stream is inactive
   if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG) &&
+      mState != SHUTDOWN &&
       insertTime != INT64_MAX && servicedFrames > underrunFrames) {
     uint32_t latency = UINT32_MAX;
     if (cubeb_stream_get_latency(mCubebStream, &latency)) {
@@ -858,6 +1008,7 @@ AudioStream::StateCallback(cubeb_state aState)
   if (aState == CUBEB_STATE_DRAINED) {
     mState = DRAINED;
   } else if (aState == CUBEB_STATE_ERROR) {
+    LOG(("AudioStream::StateCallback() state %d cubeb error", mState));
     mState = ERRORED;
   }
   mon.NotifyAll();
