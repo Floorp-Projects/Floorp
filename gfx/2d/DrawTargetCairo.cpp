@@ -952,6 +952,10 @@ DrawTargetCairo::MaskSurface(const Pattern &aSource,
   }
 
   cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(aMask);
+  if (!surf) {
+    cairo_pattern_destroy(pat);
+    return;
+  }
   cairo_pattern_t* mask = cairo_pattern_create_for_surface(surf);
   cairo_matrix_t matrix;
 
