@@ -168,7 +168,7 @@ UnknownAtCallback(char *at_string)
 static void
 KeyPressedCallback()
 {
-  // No support
+  BT_HF_PROCESS_CB(ProcessKeyPressed);
 }
 
 static bthf_callbacks_t sBluetoothHfpCallbacks = {
@@ -711,6 +711,47 @@ BluetoothHfpManager::ProcessUnknownAt(char *aAtString)
   NS_ENSURE_TRUE_VOID(sBluetoothHfpInterface);
   NS_ENSURE_TRUE_VOID(BT_STATUS_SUCCESS ==
     sBluetoothHfpInterface->at_response(BTHF_AT_RESPONSE_ERROR, 0));
+}
+
+void
+BluetoothHfpManager::ProcessKeyPressed()
+{
+  bool hasActiveCall =
+    (FindFirstCall(nsITelephonyProvider::CALL_STATE_CONNECTED) > 0);
+
+  // Refer to AOSP HeadsetStateMachine.processKeyPressed
+  if (mCallSetupState == nsITelephonyProvider::CALL_STATE_INCOMING
+      && !hasActiveCall) {
+    /**
+     * Bluetooth HSP spec 4.2.2
+     * There is an incoming call, notify Dialer to pick up the phone call
+     * and SCO will be established after we get the CallStateChanged event
+     * indicating the call is answered successfully.
+     */
+    ProcessAnswerCall();
+  } else if (hasActiveCall) {
+    if (!IsScoConnected()) {
+      /**
+       * Bluetooth HSP spec 4.3
+       * If there's no SCO, set up a SCO link.
+       */
+      ConnectSco();
+    } else {
+      /**
+       * Bluetooth HSP spec 4.5
+       * There are two ways to release SCO: sending CHUP to dialer or closing
+       * SCO socket directly. We notify dialer only if there is at least one
+       * active call.
+       */
+      ProcessHangupCall();
+    }
+  } else {
+    // BLDN
+    mDialingRequestProcessed = false;
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
+                        NS_LITERAL_STRING("BLDN"));
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::POST_TASK_RESPOND_TO_BLDN);
+  }
 }
 
 void
