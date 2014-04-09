@@ -20,6 +20,7 @@
 #include "nsIDOMDeviceStorage.h"
 #include "nsIDOMEventListener.h"
 #include "nsIScriptSecurityManager.h"
+#include "Navigator.h"
 #include "nsXULAppAPI.h"
 #include "DOMCameraManager.h"
 #include "DOMCameraCapabilities.h"
@@ -65,6 +66,13 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED_20(nsDOMCameraControl, DOMMediaStream,
                                       mOnPreviewStateChangeCb,
                                       mOnAutoFocusMovingCb,
                                       mOnFacesDetectedCb)
+
+/* static */
+bool
+nsDOMCameraControl::HasSupport(JSContext* aCx, JSObject* aGlobal)
+{
+  return Navigator::HasCameraSupport(aCx, aGlobal);
+}
 
 class mozilla::StartRecordingHelper : public nsIDOMEventListener
 {
