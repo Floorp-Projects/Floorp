@@ -581,7 +581,7 @@ MediaEngineWebRTCVideoSource::StartImpl(webrtc::CaptureCapability aCapability) {
   config.mPreviewSize.width = aCapability.width;
   config.mPreviewSize.height = aCapability.height;
   mCameraControl->Start(&config);
-  mCameraControl->Set(CAMERA_PARAM_PICTURESIZE, config.mPreviewSize);
+  mCameraControl->Set(CAMERA_PARAM_PICTURE_SIZE, config.mPreviewSize);
 
   hal::RegisterScreenConfigurationObserver(this);
 }
