@@ -270,15 +270,12 @@ nsMenuPopupFrame::CreateWidgetForView(nsView* aView)
   }
 
   nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(this, this);
-  bool viewHasTransparentContent = !mInContentShell &&
-                                     (eTransparencyTransparent ==
-                                      mode);
   nsIContent* parentContent = GetContent()->GetParent();
   nsIAtom *tag = nullptr;
   if (parentContent)
     tag = parentContent->Tag();
   widgetData.mSupportTranslucency = mode == eTransparencyTransparent;
-  widgetData.mDropShadow = !(viewHasTransparentContent || tag == nsGkAtoms::menulist);
+  widgetData.mDropShadow = !(mode == eTransparencyTransparent || tag == nsGkAtoms::menulist);
   widgetData.mPopupLevel = PopupLevel(widgetData.mNoAutoHide);
 
   // panels which have a parent level need a parent widget. This allows them to
