@@ -2,12 +2,12 @@
 .\"     Title: CERTUTIL
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 12 November 2013
+.\"      Date: 31 March 2014
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "CERTUTIL" "1" "12 November 2013" "nss-tools" "NSS Security Tools"
+.TH "CERTUTIL" "1" "31 March 2014" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -263,7 +263,7 @@ Specify a file that will automatically supply the password to include in a certi
 .PP
 \-g keysize
 .RS 4
-Set a key size to use when generating new public and private key pairs\&. The minimum is 512 bits and the maximum is 8192 bits\&. The default is 1024 bits\&. Any size between the minimum and maximum is allowed\&.
+Set a key size to use when generating new public and private key pairs\&. The minimum is 512 bits and the maximum is 16384 bits\&. The default is 1024 bits\&. Any size between the minimum and maximum is allowed\&.
 .RE
 .PP
 \-h tokenname
@@ -414,7 +414,7 @@ for each trust setting\&. In each category position, use none, any, or all of th
 .sp
 The attribute codes for the categories are separated by commas, and the entire set of attributes enclosed by quotation marks\&. For example:
 .sp
-\fB\-t "TCu,Cu,Tuw"\fR
+\fB\-t "TCu,Cu,Tu"\fR
 .sp
 Use the \-L option to see a list of the current certificates and trust attributes in a certificate database\&.
 .RE

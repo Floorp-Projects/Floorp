@@ -637,7 +637,7 @@ class MachCommands(MachCommandBase):
 # they should be modified to work with all devices.
 def is_emulator(cls):
     """Emulator needs to be configured."""
-    return cls.device_name in ('emulator', 'emulator-jb')
+    return cls.device_name.find('emulator') == 0
 
 
 @CommandProvider

@@ -1045,3 +1045,10 @@ CERT_GetSubjectPublicKeyDigest;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.16.1 { 	# NSS 3.16.1 release
+;+    global:
+PK11_ExportDERPrivateKeyInfo;
+PK11_ExportPrivKeyInfo;
+;+    local:
+;+       *;
+;+};

@@ -289,9 +289,9 @@ PositionError::GetParentObject() const
 }
 
 JSObject*
-PositionError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+PositionError::WrapObject(JSContext* aCx)
 {
-  return PositionErrorBinding::Wrap(aCx, aScope, this);
+  return PositionErrorBinding::Wrap(aCx, this);
 }
 
 void
@@ -1518,7 +1518,7 @@ Geolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
 }
 
 JSObject*
-Geolocation::WrapObject(JSContext *aCtx, JS::Handle<JSObject*> aScope)
+Geolocation::WrapObject(JSContext *aCtx)
 {
-  return GeolocationBinding::Wrap(aCtx, aScope, this);
+  return GeolocationBinding::Wrap(aCtx, this);
 }

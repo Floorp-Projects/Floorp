@@ -59,9 +59,9 @@ MessageChannel::~MessageChannel()
 }
 
 JSObject*
-MessageChannel::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+MessageChannel::WrapObject(JSContext* aCx)
 {
-  return MessageChannelBinding::Wrap(aCx, aScope, this);
+  return MessageChannelBinding::Wrap(aCx, this);
 }
 
 /* static */ already_AddRefed<MessageChannel>

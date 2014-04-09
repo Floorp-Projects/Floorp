@@ -1986,9 +1986,9 @@ Navigator::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
 }
 
 JSObject*
-Navigator::WrapObject(JSContext* cx, JS::Handle<JSObject*> scope)
+Navigator::WrapObject(JSContext* cx)
 {
-  return NavigatorBinding::Wrap(cx, scope, this);
+  return NavigatorBinding::Wrap(cx, this);
 }
 
 /* static */

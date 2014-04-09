@@ -12,9 +12,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGPolylineElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+SVGPolylineElement::WrapNode(JSContext *aCx)
 {
-  return SVGPolylineElementBinding::Wrap(aCx, aScope, this);
+  return SVGPolylineElementBinding::Wrap(aCx, this);
 }
 
 //----------------------------------------------------------------------

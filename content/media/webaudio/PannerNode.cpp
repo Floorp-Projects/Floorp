@@ -243,9 +243,9 @@ PannerNode::~PannerNode()
 }
 
 JSObject*
-PannerNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+PannerNode::WrapObject(JSContext* aCx)
 {
-  return PannerNodeBinding::Wrap(aCx, aScope, this);
+  return PannerNodeBinding::Wrap(aCx, this);
 }
 
 void PannerNode::DestroyMediaStream()

@@ -221,9 +221,9 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsDocument)
 
 JSObject*
-nsHTMLDocument::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+nsHTMLDocument::WrapNode(JSContext* aCx)
 {
-  return HTMLDocumentBinding::Wrap(aCx, aScope, this);
+  return HTMLDocumentBinding::Wrap(aCx, this);
 }
 
 nsresult
@@ -1593,6 +1593,7 @@ nsHTMLDocument::Open(JSContext* cx,
     nsCOMPtr<nsIScriptGlobalObject> newScope(do_QueryReferent(mScopeObject));
     JS::Rooted<JSObject*> wrapper(cx, GetWrapper());
     if (oldScope && newScope != oldScope && wrapper) {
+      JSAutoCompartment ac(cx, wrapper);
       rv = mozilla::dom::ReparentWrapper(cx, wrapper);
       if (rv.Failed()) {
         return nullptr;

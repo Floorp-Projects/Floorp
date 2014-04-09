@@ -22,6 +22,9 @@ Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
+XPCOMUtils.defineLazyServiceGetter(this, "mrm",
+                                   "@mozilla.org/memory-reporter-manager;1",
+                                   "nsIMemoryReporterManager");
 
 function SettingsLock(aSettingsManager) {
   this._open = true;
@@ -343,6 +346,7 @@ SettingsManager.prototype = {
   },
 
   init: function(aWindow) {
+    mrm.registerStrongReporter(this);
     cpmm.addMessageListener("Settings:Change:Return:OK", this);
     this._window = aWindow;
     Services.obs.addObserver(this, "inner-window-destroyed", false);
@@ -369,20 +373,50 @@ SettingsManager.prototype = {
     if (aTopic == "inner-window-destroyed") {
       let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
       if (wId == this.innerWindowID) {
-        Services.obs.removeObserver(this, "inner-window-destroyed");
-        cpmm.removeMessageListener("Settings:Change:Return:OK", this);
-        this._requests = null;
-        this._window = null;
-        this._innerWindowID = null;
-        this._settingsDB.close();
+        this.cleanup();
       }
     }
+  },
+
+  collectReports: function(aCallback, aData) {
+    for (var topic in this._callbacks) {
+      let length = this._callbacks[topic].length;
+      if (length == 0) {
+        continue;
+      }
+
+      let path;
+      if (length < 20) {
+        path = "settings-observers";
+      } else {
+        path = "settings-observers-suspect/referent(topic=" + topic + ")";
+      }
+
+      aCallback.callback("", path,
+                         Ci.nsIMemoryReporter.KIND_OTHER,
+                         Ci.nsIMemoryReporter.UNITS_COUNT,
+                         this._callbacks[topic].length,
+                         "The number of settings observers for this topic.",
+                         aData);
+    }
+  },
+
+  cleanup: function() {
+    Services.obs.removeObserver(this, "inner-window-destroyed");
+    cpmm.removeMessageListener("Settings:Change:Return:OK", this);
+    mrm.unregisterStrongReporter(this);
+    this._requests = null;
+    this._window = null;
+    this._innerWindowID = null;
+    this._settingsDB.close();
   },
 
   classID: Components.ID("{c40b1c70-00fb-11e2-a21f-0800200c9a66}"),
   contractID: "@mozilla.org/settingsManager;1",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsIDOMGlobalPropertyInitializer]),
+                                         Ci.nsIDOMGlobalPropertyInitializer,
+                                         Ci.nsIObserver,
+                                         Ci.nsIMemoryReporter]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SettingsManager, SettingsLock])

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252"><title>box-shadow + transparent background + opacity =&gt; overflow hidden does not work</title></head>
+<body>
+<style>
+#parent {
+    width: 200px;
+    height: 200px;
+    background-color: #BADA55;
+    overflow: hidden;
+    position: relative;
+}
+
+#child {
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    left: 50px;
+    top: 50px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+</style>
+
+<div id="parent">
+	<div id="child"></div>
+</div>
+
+
+</body></html>

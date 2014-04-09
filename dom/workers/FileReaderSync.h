@@ -40,7 +40,7 @@ public:
   static already_AddRefed<FileReaderSync>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
+  JSObject* WrapObject(JSContext* aCx);
 
   JSObject* ReadAsArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aScopeObj,
                               JS::Handle<JSObject*> aBlob,

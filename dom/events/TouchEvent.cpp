@@ -36,9 +36,9 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(TouchList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TouchList)
 
 JSObject*
-TouchList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+TouchList::WrapObject(JSContext* aCx)
 {
-  return TouchListBinding::Wrap(aCx, aScope, this);
+  return TouchListBinding::Wrap(aCx, this);
 }
 
 // static

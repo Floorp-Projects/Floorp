@@ -58,9 +58,9 @@ nsDOMDataChannel::~nsDOMDataChannel()
 }
 
 /* virtual */ JSObject*
-nsDOMDataChannel::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+nsDOMDataChannel::WrapObject(JSContext* aCx)
 {
-  return DataChannelBinding::Wrap(aCx, aScope, this);
+  return DataChannelBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMDataChannel)

@@ -16,9 +16,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEGaussianBlurElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGFEGaussianBlurElement::WrapNode(JSContext* aCx)
 {
-  return SVGFEGaussianBlurElementBinding::Wrap(aCx, aScope, this);
+  return SVGFEGaussianBlurElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::NumberPairInfo SVGFEGaussianBlurElement::sNumberPairInfo[1] =

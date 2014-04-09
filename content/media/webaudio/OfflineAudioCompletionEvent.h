@@ -26,8 +26,7 @@ public:
   NS_FORWARD_TO_EVENT
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(OfflineAudioCompletionEvent, Event)
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   void InitEvent(AudioBuffer* aRenderedBuffer)
   {

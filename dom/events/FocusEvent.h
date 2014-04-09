@@ -23,10 +23,9 @@ public:
   // Forward to base class
   NS_FORWARD_TO_UIEVENT
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
   {
-    return FocusEventBinding::Wrap(aCx, aScope, this);
+    return FocusEventBinding::Wrap(aCx, this);
   }
 
   FocusEvent(EventTarget* aOwner,

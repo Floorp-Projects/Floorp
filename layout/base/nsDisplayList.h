@@ -1206,7 +1206,11 @@ public:
    * Stores the given opacity value to be applied when drawing. Returns
    * false if this isn't supported for this display item.
    */
-  virtual bool ApplyOpacity(float aOpacity) { return false; }
+  virtual bool ApplyOpacity(nsDisplayListBuilder* aBuilder,
+                            float aOpacity,
+                            const DisplayItemClip* aClip) {
+    return false;
+  }
   
 #ifdef MOZ_DUMP_PAINTING
   /**
@@ -1280,6 +1284,17 @@ public:
       return;
     }
     mClip = aBuilder->AllocateDisplayItemClip(aClip);
+  }
+
+  void IntersectClip(nsDisplayListBuilder* aBuilder, const DisplayItemClip& aClip)
+  {
+    if (mClip) {
+      DisplayItemClip temp = *mClip;
+      temp.IntersectWith(aClip);
+      SetClip(aBuilder, temp);
+    } else {
+      SetClip(aBuilder, aClip);
+    }
   }
 
   // If we return false here it means that if this item creates a layer then
@@ -2296,9 +2311,14 @@ public:
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) MOZ_OVERRIDE;
   
-  virtual bool ApplyOpacity(float aOpacity) MOZ_OVERRIDE
+  virtual bool ApplyOpacity(nsDisplayListBuilder* aBuilder,
+                            float aOpacity,
+                            const DisplayItemClip* aClip) MOZ_OVERRIDE
   {
     mOpacity = aOpacity;
+    if (aClip) {
+      IntersectClip(aBuilder, *aClip);
+    }
     return true;
   }
 

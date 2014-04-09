@@ -30,10 +30,9 @@ public:
   // Forward to base class
   NS_FORWARD_TO_UIEVENT
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
   {
-    return KeyboardEventBinding::Wrap(aCx, aScope, this);
+    return KeyboardEventBinding::Wrap(aCx, this);
   }
 
   bool AltKey();

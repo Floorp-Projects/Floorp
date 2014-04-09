@@ -95,11 +95,27 @@ class B2GVersion(Version):
                     self._info['_'.join([path, 'changeset'])] = changeset
 
     def get_gaia_info(self, app_zip):
-        with app_zip.open('resources/gaia_commit.txt') as f:
-            changeset, date = f.read().splitlines()
-            self._info['gaia_changeset'] = re.match('^\w{40}$', changeset) and \
-                changeset or None
-            self._info['gaia_date'] = date
+        tempdir = tempfile.mkdtemp()
+        try:
+            gaia_commit = os.path.join(tempdir, 'gaia_commit.txt')
+            try:
+                zip_file = zipfile.ZipFile(app_zip.name)
+                with open(gaia_commit, 'w') as f:
+                    f.write(zip_file.read('resources/gaia_commit.txt'))
+            except zipfile.BadZipfile:
+                self.info('Unable to unzip application.zip, falling back to '
+                          'system unzip')
+                from subprocess import call
+                call(['unzip', '-j', app_zip.name, 'resources/gaia_commit.txt',
+                      '-d', tempdir])
+
+            with open(gaia_commit) as f:
+                changeset, date = f.read().splitlines()
+                self._info['gaia_changeset'] = re.match(
+                    '^\w{40}$', changeset) and changeset or None
+                self._info['gaia_date'] = date
+        finally:
+            mozfile.remove(tempdir)
 
 
 class LocalB2GVersion(B2GVersion):
@@ -121,8 +137,8 @@ class LocalB2GVersion(B2GVersion):
             path, 'gaia', 'profile', 'webapps',
             'settings.gaiamobile.org', 'application.zip')
         if os.path.exists(zip_path):
-            zip_file = zipfile.ZipFile(zip_path)
-            self.get_gaia_info(zip_file)
+            with open(zip_path, 'rb') as zip_file:
+                self.get_gaia_info(zip_file)
         else:
             self.warn('Error pulling gaia file')
 
@@ -159,8 +175,9 @@ class RemoteB2GVersion(B2GVersion):
         for path in ['/system/b2g', '/data/local']:
             path += '/webapps/settings.gaiamobile.org/application.zip'
             if dm.fileExists(path):
-                zip_file = zipfile.ZipFile(StringIO(dm.pullFile(path)))
-                self.get_gaia_info(zip_file)
+                with tempfile.NamedTemporaryFile() as f:
+                    dm.getFile(path, f.name)
+                    self.get_gaia_info(f)
                 break
         else:
             self.warn('Error pulling gaia file')

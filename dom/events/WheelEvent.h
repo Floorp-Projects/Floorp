@@ -37,10 +37,9 @@ public:
                                            const WheelEventInit& aParam,
                                            ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
   {
-    return WheelEventBinding::Wrap(aCx, aScope, this);
+    return WheelEventBinding::Wrap(aCx, this);
   }
 
   // NOTE: DeltaX(), DeltaY() and DeltaZ() return CSS pixels when deltaMode is
