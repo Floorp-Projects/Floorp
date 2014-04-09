@@ -3426,19 +3426,18 @@ private:
 class OnGetServiceChannelRunnable : public nsRunnable
 {
 public:
-  OnGetServiceChannelRunnable(const nsAString& aObjectPath,
+  OnGetServiceChannelRunnable(const nsAString& aDeviceAddress,
                               const nsAString& aServiceUuid,
                               int aChannel,
                               BluetoothProfileManagerBase* aManager)
-    : mServiceUuid(aServiceUuid),
-      mChannel(aChannel),
-      mManager(aManager)
+    : mDeviceAddress(aDeviceAddress)
+    , mServiceUuid(aServiceUuid)
+    , mChannel(aChannel)
+    , mManager(aManager)
   {
-    MOZ_ASSERT(!aObjectPath.IsEmpty());
+    MOZ_ASSERT(!aDeviceAddress.IsEmpty());
     MOZ_ASSERT(!aServiceUuid.IsEmpty());
     MOZ_ASSERT(aManager);
-
-    mDeviceAddress = GetAddressFromObjectPath(aObjectPath);
   }
 
   NS_IMETHOD Run()
@@ -3460,10 +3459,10 @@ private:
 class OnGetServiceChannelReplyHandler : public DBusReplyHandler
 {
 public:
-  OnGetServiceChannelReplyHandler(const nsAString& aObjectPath,
+  OnGetServiceChannelReplyHandler(const nsAString& aDeviceAddress,
                                   const nsAString& aServiceUUID,
                                   BluetoothProfileManagerBase* aBluetoothProfileManager)
-  : mObjectPath(aObjectPath),
+  : mDeviceAddress(aDeviceAddress),
     mServiceUUID(aServiceUUID),
     mBluetoothProfileManager(aBluetoothProfileManager)
   {
@@ -3485,7 +3484,7 @@ public:
       channel = dbus_returns_int32(aReply);
     }
 
-    nsRefPtr<nsRunnable> r = new OnGetServiceChannelRunnable(mObjectPath,
+    nsRefPtr<nsRunnable> r = new OnGetServiceChannelRunnable(mDeviceAddress,
                                                              mServiceUUID,
                                                              channel,
                                                              mBluetoothProfileManager);
@@ -3494,7 +3493,7 @@ public:
   }
 
 private:
-  nsString mObjectPath;
+  nsString mDeviceAddress;
   nsString mServiceUUID;
   BluetoothProfileManagerBase* mBluetoothProfileManager;
 };
@@ -3527,7 +3526,7 @@ public:
       GetObjectPathFromAddress(mAdapterPath, mDeviceAddress);
 
     nsRefPtr<OnGetServiceChannelReplyHandler> handler =
-      new OnGetServiceChannelReplyHandler(objectPath, mServiceUUID,
+      new OnGetServiceChannelReplyHandler(mDeviceAddress, mServiceUUID,
                                           mBluetoothProfileManager);
 
     nsCString serviceUUID = NS_ConvertUTF16toUTF8(mServiceUUID);
@@ -3574,16 +3573,13 @@ BluetoothDBusService::GetServiceChannel(const nsAString& aDeviceAddress,
                                          aManager);
   DispatchToDBusThread(task);
 #else
-  MOZ_ASSERT(!sAdapterPath.IsEmpty());
-  nsString objectPath(GetObjectPathFromAddress(sAdapterPath, aDeviceAddress));
-
   // FIXME/Bug 793977 qdot: Just set something for desktop, until we have a
   // parser for the GetServiceAttributes xml block
   //
   // Even though we are on the main thread already, we need to dispatch a
   // runnable here. OnGetServiceChannel needs mRunnable to be set, which
   // happens after GetServiceChannel returns.
-  nsRefPtr<nsRunnable> r = new OnGetServiceChannelRunnable(objectPath,
+  nsRefPtr<nsRunnable> r = new OnGetServiceChannelRunnable(aDeviceAddress,
                                                            aServiceUUID,
                                                            1,
                                                            aManager);
