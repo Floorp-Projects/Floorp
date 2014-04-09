@@ -208,12 +208,12 @@ class TraceLogger
       Bailout,
       Baseline,
       GC,
-      GCAllocating,
+      GCAllocation,
       GCSweeping,
       Interpreter,
       Invalidation,
-      IonCompile,
-      IonLink,
+      IonCompilation,
+      IonLinking,
       IonMonkey,
       MinorGC,
       ParserCompileFunction,
@@ -261,13 +261,15 @@ class TraceLogger
         { }
     };
 
-    // Helper structure for keeping track of the currently active entries in
-    // the tree. Pushed by `start(id)`, popped by `stop(id)`.
+    // Helper structure for keeping track of the current entries in
+    // the tree. Pushed by `start(id)`, popped by `stop(id)`. The active flag
+    // is used to know if a subtree doesn't need to get logged.
     struct StackEntry {
         uint32_t treeId;
         uint32_t lastChildId;
-        StackEntry(uint32_t treeId, uint32_t lastChildId)
-          : treeId(treeId), lastChildId(lastChildId)
+        bool active;
+        StackEntry(uint32_t treeId, uint32_t lastChildId, bool active = true)
+          : treeId(treeId), lastChildId(lastChildId), active(active)
         { }
     };
 
@@ -309,6 +311,9 @@ class TraceLogger
     // Helper functions to get/save a tree from file.
     bool getTreeEntry(uint32_t treeId, TreeEntry *entry);
     bool saveTreeEntry(uint32_t treeId, TreeEntry *entry);
+
+    // Return the first StackEntry that is active.
+    StackEntry &getActiveAncestor();
 
     // This contains the meat of startEvent, except the test for enough space,
     // the test if tracelogger is enabled and the timestamp computation.
@@ -367,6 +372,7 @@ class TraceLogging
 
     bool initialized;
     bool enabled;
+    bool enabledTextIds[TraceLogger::LAST];
     ThreadLoggerHashMap threadLoggers;
     MainThreadLoggers mainThreadLoggers;
     uint32_t loggerId;
@@ -383,6 +389,12 @@ class TraceLogging
 
     TraceLogger *forMainThread(JSRuntime *runtime);
     TraceLogger *forThread(PRThread *thread);
+
+    bool isTextIdEnabled(uint32_t textId) {
+        if (textId < TraceLogger::LAST)
+            return enabledTextIds[textId];
+        return true;
+    }
 
   private:
     TraceLogger *create();

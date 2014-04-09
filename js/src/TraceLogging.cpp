@@ -73,12 +73,12 @@ const char* const text[] = {
     "Bailout",
     "Baseline",
     "GC",
-    "GCAllocating",
+    "GCAllocation",
     "GCSweeping",
     "Interpreter",
     "Invalidation",
-    "IonCompile",
-    "IonLink",
+    "IonCompilation",
+    "IonLinking",
     "IonMonkey",
     "MinorGC",
     "ParserCompileFunction",
@@ -150,6 +150,7 @@ TraceLogger::init(uint32_t loggerId)
     StackEntry &stackEntry = stack.pushUninitialized();
     stackEntry.treeId = 0;
     stackEntry.lastChildId = 0;
+    stackEntry.active = true;
 
     int written = fprintf(dictFile, "[");
     if (written < 0)
@@ -494,14 +495,32 @@ TraceLogger::startEvent(uint32_t id)
     }
 }
 
+TraceLogger::StackEntry &
+TraceLogger::getActiveAncestor()
+{
+    uint32_t parentId = stack.currentId();
+    while (!stack[parentId].active)
+        parentId--;
+    return stack[parentId];
+}
+
 bool
 TraceLogger::startEvent(uint32_t id, uint64_t timestamp)
 {
+    // When a textId is disabled, a stack entry still needs to be pushed,
+    // together with an annotation that nothing needs to get done when receiving
+    // the stop event.
+    if (!traceLoggers.isTextIdEnabled(id)) {
+        StackEntry &stackEntry = stack.pushUninitialized();
+        stackEntry.active = false;
+        return true;
+    }
+
     // Patch up the tree to be correct. There are two scenarios:
     // 1) Parent has no children yet. So update parent to include children.
     // 2) Parent has already children. Update last child to link to the new
     //    child.
-    StackEntry &parent = stack.current();
+    StackEntry &parent = getActiveAncestor();
 #ifdef DEBUG
     TreeEntry entry;
     if (!getTreeEntry(parent.treeId, &entry))
@@ -533,6 +552,7 @@ TraceLogger::startEvent(uint32_t id, uint64_t timestamp)
     StackEntry &stackEntry = stack.pushUninitialized();
     stackEntry.treeId = tree.currentId() + treeOffset;
     stackEntry.lastChildId = 0;
+    stackEntry.active = true;
 
     // Set the last child of the parent to this newly added entry.
     parent.lastChildId = tree.currentId() + treeOffset;
@@ -557,12 +577,14 @@ TraceLogger::stopEvent()
     if (!enabled)
         return;
 
-    uint64_t stop = rdtsc() - traceLoggers.startupTime;
-    if (!updateStop(stack.current().treeId, stop)) {
-        fprintf(stderr, "TraceLogging: Failed to stop an event.\n");
-        enabled = false;
-        failed = true;
-        return;
+    if (stack.current().active) {
+        uint64_t stop = rdtsc() - traceLoggers.startupTime;
+        if (!updateStop(stack.current().treeId, stop)) {
+            fprintf(stderr, "TraceLogging: Failed to stop an event.\n");
+            enabled = false;
+            failed = true;
+            return;
+        }
     }
     stack.pop();
 }
@@ -608,6 +630,19 @@ TraceLogging::~TraceLogging()
     enabled = false;
 }
 
+static bool
+ContainsFlag(const char *str, const char *flag)
+{
+    size_t flaglen = strlen(flag);
+    const char *index = strstr(str, flag);
+    while (index) {
+        if ((index == str || index[-1] == ',') && (index[flaglen] == 0 || index[flaglen] == ','))
+            return true;
+        index = strstr(index + flaglen, flag);
+    }
+    return false;
+}
+
 bool
 TraceLogging::lazyInit()
 {
@@ -623,6 +658,59 @@ TraceLogging::lazyInit()
 
     if (!threadLoggers.init())
         return false;
+
+    const char *env = getenv("TLLOG");
+    if (!env)
+        return false;
+
+    if (strstr(env, "help")) {
+        fflush(nullptr);
+        printf(
+            "\n"
+            "usage: TLLOG=option,option,option,... where options can be:\n"
+            "\n"
+            "Collections:\n"
+            "  Default        Output all default\n"
+            "  IonCompile     Output all information about compilation\n"
+            "\n"
+            "Specific log items:\n"
+        );
+        for (uint32_t i = 1; i < TraceLogger::LAST; i++) {
+            printf("  %s\n", text[i]);
+        }
+        printf("\n");
+        exit(0);
+        /*NOTREACHED*/
+    }
+
+    enabledTextIds[TraceLogger::TL_Error] = true;
+    for (uint32_t i = 1; i < TraceLogger::LAST; i++)
+        enabledTextIds[i] = ContainsFlag(env, text[i]);
+
+    if (ContainsFlag(env, "Default") || strlen(env) == 0) {
+        enabledTextIds[TraceLogger::Bailout] = true;
+        enabledTextIds[TraceLogger::Baseline] = true;
+        enabledTextIds[TraceLogger::GC] = true;
+        enabledTextIds[TraceLogger::GCAllocation] = true;
+        enabledTextIds[TraceLogger::GCSweeping] = true;
+        enabledTextIds[TraceLogger::Interpreter] = true;
+        enabledTextIds[TraceLogger::IonCompilation] = true;
+        enabledTextIds[TraceLogger::IonLinking] = true;
+        enabledTextIds[TraceLogger::IonMonkey] = true;
+        enabledTextIds[TraceLogger::MinorGC] = true;
+        enabledTextIds[TraceLogger::ParserCompileFunction] = true;
+        enabledTextIds[TraceLogger::ParserCompileLazy] = true;
+        enabledTextIds[TraceLogger::ParserCompileScript] = true;
+        enabledTextIds[TraceLogger::TL] = true;
+        enabledTextIds[TraceLogger::YarrCompile] = true;
+        enabledTextIds[TraceLogger::YarrInterpret] = true;
+        enabledTextIds[TraceLogger::YarrJIT] = true;
+    }
+
+    if (ContainsFlag(env, "IonCompiler") || strlen(env) == 0) {
+        enabledTextIds[TraceLogger::IonCompilation] = true;
+        enabledTextIds[TraceLogger::IonLinking] = true;
+    }
 
     startupTime = rdtsc();
     enabled = true;
