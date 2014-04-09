@@ -25,6 +25,7 @@ public:
   FallbackCameraControl(uint32_t aCameraId) : CameraControlImpl(aCameraId) { }
 
   void OnAutoFocusComplete(bool aSuccess);
+  void OnAutoFocusMoving(bool aIsMoving) { }
   void OnTakePictureComplete(uint8_t* aData, uint32_t aLength) { }
   void OnTakePictureError() { }
   void OnNewPreviewFrame(layers::GraphicBufferLocked* aBuffer) { }

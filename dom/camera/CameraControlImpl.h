@@ -53,10 +53,12 @@ public:
 
   virtual void Shutdown() MOZ_OVERRIDE;
 
+  // Event handlers called directly from outside this class.
   void OnShutter();
   void OnClosed();
   void OnError(CameraControlListener::CameraErrorContext aContext,
                CameraControlListener::CameraError aError);
+  void OnAutoFocusMoving(bool aIsMoving);
 
 protected:
   // Event handlers.

@@ -121,6 +121,17 @@ CameraControlImpl::OnAutoFocusComplete(bool aAutoFocusSucceeded)
 }
 
 void
+CameraControlImpl::OnAutoFocusMoving(bool aIsMoving)
+{
+  RwLockAutoEnterRead lock(mListenerLock);
+
+  for (uint32_t i = 0; i < mListeners.Length(); ++i) {
+    CameraControlListener* l = mListeners[i];
+    l->OnAutoFocusMoving(aIsMoving);
+  }
+}
+
+void
 CameraControlImpl::OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType)
 {
   // This callback can run on threads other than the Main Thread and

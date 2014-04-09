@@ -128,6 +128,7 @@ callback CameraClosedCallback = void ();
 callback CameraReleaseCallback = void ();
 callback CameraRecorderStateChange = void (DOMString newState);
 callback CameraPreviewStateChange = void (DOMString newState);
+callback CameraAutoFocusMovingCallback = void (boolean isMoving);
 
 /*
     attributes here affect the preview, any pictures taken, and/or
@@ -279,6 +280,15 @@ interface CameraControl : MediaStream
   /* tell the camera to attempt to focus the image */
   [Throws]
   void autoFocus(CameraAutoFocusCallback onSuccess, optional CameraErrorCallback onError);
+
+  /* if continuous autofocus is supported and focusMode is set to enable it,
+     then this function is called whenever the camera decides to start and
+     stop moving the focus position; it can be used to update a UI element to
+     indicate that the camera is still trying to focus, or has finished. Some
+     platforms do not support this event, in which case the callback is never
+     invoked. */
+  [Pref="camera.control.autofocus_moving_callback.enabled"]
+  attribute CameraAutoFocusMovingCallback? onAutoFocusMoving;
 
   /* capture an image and return it as a blob to the 'onSuccess' callback;
      if the camera supports it, this may be invoked while the camera is
