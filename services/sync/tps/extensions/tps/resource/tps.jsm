@@ -42,27 +42,37 @@ var prefs = Cc["@mozilla.org/preferences-service;1"]
 var mozmillInit = {};
 Cu.import('resource://mozmill/modules/init.js', mozmillInit);
 
-const ACTION_ADD              = "add";
-const ACTION_VERIFY           = "verify";
-const ACTION_VERIFY_NOT       = "verify-not";
-const ACTION_MODIFY           = "modify";
-const ACTION_SYNC             = "sync";
-const ACTION_DELETE           = "delete";
-const ACTION_PRIVATE_BROWSING = "private-browsing";
-const ACTION_WIPE_REMOTE      = "wipe-remote";
-const ACTION_WIPE_SERVER      = "wipe-server";
-const ACTION_SET_ENABLED      = "set-enabled";
+// Options for wiping data during a sync
+const SYNC_RESET_CLIENT = "resetClient";
+const SYNC_WIPE_CLIENT  = "wipeClient";
+const SYNC_WIPE_REMOTE  = "wipeRemote";
 
-const ACTIONS = [ACTION_ADD, ACTION_VERIFY, ACTION_VERIFY_NOT,
-                 ACTION_MODIFY, ACTION_SYNC, ACTION_DELETE,
-                 ACTION_PRIVATE_BROWSING, ACTION_WIPE_REMOTE,
-                 ACTION_WIPE_SERVER, ACTION_SET_ENABLED];
+// Actions a test can perform
+const ACTION_ADD                = "add";
+const ACTION_DELETE             = "delete";
+const ACTION_MODIFY             = "modify";
+const ACTION_PRIVATE_BROWSING   = "private-browsing";
+const ACTION_SET_ENABLED        = "set-enabled";
+const ACTION_SYNC               = "sync";
+const ACTION_SYNC_RESET_CLIENT  = SYNC_RESET_CLIENT;
+const ACTION_SYNC_WIPE_CLIENT   = SYNC_WIPE_CLIENT;
+const ACTION_SYNC_WIPE_REMOTE   = SYNC_WIPE_REMOTE;
+const ACTION_VERIFY             = "verify";
+const ACTION_VERIFY_NOT         = "verify-not";
 
-const SYNC_WIPE_CLIENT  = "wipe-client";
-const SYNC_WIPE_REMOTE  = "wipe-remote";
-const SYNC_WIPE_SERVER  = "wipe-server";
-const SYNC_RESET_CLIENT = "reset-client";
-const SYNC_START_OVER   = "start-over";
+const ACTIONS = [
+  ACTION_ADD,
+  ACTION_DELETE,
+  ACTION_MODIFY,
+  ACTION_PRIVATE_BROWSING,
+  ACTION_SET_ENABLED,
+  ACTION_SYNC,
+  ACTION_SYNC_RESET_CLIENT,
+  ACTION_SYNC_WIPE_CLIENT,
+  ACTION_SYNC_WIPE_REMOTE,
+  ACTION_VERIFY,
+  ACTION_VERIFY_NOT,
+];
 
 const OBSERVER_TOPICS = ["fxaccounts:onlogin",
                          "fxaccounts:onlogout",
@@ -92,6 +102,7 @@ let TPS = {
   _setupComplete: false,
   _syncActive: false,
   _syncErrors: 0,
+  _syncWipeAction: null,
   _tabsAdded: 0,
   _tabsFinished: 0,
   _test: null,
@@ -158,6 +169,12 @@ let TPS = {
 
         case "weave:service:setup-complete":
           this._setupComplete = true;
+
+          if (this._syncWipeAction) {
+            Weave.Svc.Prefs.set("firstSync", this._syncWipeAction);
+            this._syncWipeAction = null;
+          }
+
           break;
 
         case "weave:service:sync:error":
@@ -826,21 +843,24 @@ let TPS = {
     this.waitForTracking();
   },
 
-  Sync: function TPS__Sync(options) {
-    Logger.logInfo("executing Sync " + (options ? options : ""));
+  /**
+   * Triggers a sync operation
+   *
+   * @param {String} [wipeAction]
+   *        Type of wipe to perform (resetClient, wipeClient, wipeRemote)
+   *
+   */
+  Sync: function TPS__Sync(wipeAction) {
+    Logger.logInfo("Executing Sync" + (wipeAction ? ": " + wipeAction : ""));
 
-    if (options == SYNC_WIPE_REMOTE) {
-      Weave.Svc.Prefs.set("firstSync", "wipeRemote");
+    // Force a wipe action if requested. In case of an initial sync the pref
+    // will be overwritten by Sync itself (see bug 992198), so ensure that we
+    // also handle it via the "weave:service:setup-complete" notification.
+    if (wipeAction) {
+      this._syncWipeAction = wipeAction;
+      Weave.Svc.Prefs.set("firstSync", wipeAction);
     }
-    else if (options == SYNC_WIPE_CLIENT) {
-      Weave.Svc.Prefs.set("firstSync", "wipeClient");
-    }
-    else if (options == SYNC_RESET_CLIENT) {
-      Weave.Svc.Prefs.set("firstSync", "resetClient");
-    }
-    else if (options) {
-      throw new Error("Unhandled options to Sync(): " + options);
-    } else {
+    else {
       Weave.Svc.Prefs.reset("firstSync");
     }
 
@@ -848,7 +868,6 @@ let TPS = {
 
     this._waitingForSync = true;
     this.StartAsyncOperation();
-
     Weave.Service.sync();
   },
 
