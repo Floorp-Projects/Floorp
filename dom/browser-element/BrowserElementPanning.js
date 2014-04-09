@@ -139,7 +139,8 @@ const ContentPanning = {
   onTouchStart: function cp_onTouchStart(evt) {
     let screenX, screenY;
     if (this.watchedEventsType == 'touch') {
-      if ('primaryPointerId' in this) {
+      if ('primaryPointerId' in this || evt.touches.length >= 2) {
+        this._resetActive();
         return;
       }
 
