@@ -125,8 +125,7 @@ public:
   void DispatchTrackRunnable(const nsString& aEventName);
   void DispatchTrustedEvent(const nsAString& aName);
 protected:
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
   void OnChannelRedirect(nsIChannel* aChannel, nsIChannel* aNewChannel,
                          uint32_t aFlags);
   // Open a new channel to the HTMLTrackElement's src attribute and call

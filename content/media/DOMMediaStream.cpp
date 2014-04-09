@@ -153,9 +153,9 @@ DOMMediaStream::Destroy()
 }
 
 JSObject*
-DOMMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+DOMMediaStream::WrapObject(JSContext* aCx)
 {
-  return dom::MediaStreamBinding::Wrap(aCx, aScope, this);
+  return dom::MediaStreamBinding::Wrap(aCx, this);
 }
 
 double
@@ -350,9 +350,9 @@ DOMLocalMediaStream::~DOMLocalMediaStream()
 }
 
 JSObject*
-DOMLocalMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+DOMLocalMediaStream::WrapObject(JSContext* aCx)
 {
-  return dom::LocalMediaStreamBinding::Wrap(aCx, aScope, this);
+  return dom::LocalMediaStreamBinding::Wrap(aCx, this);
 }
 
 void

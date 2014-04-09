@@ -1949,9 +1949,9 @@ nsXULElement::IsEventAttributeName(nsIAtom *aName)
 }
 
 JSObject*
-nsXULElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+nsXULElement::WrapNode(JSContext *aCx)
 {
-    return dom::XULElementBinding::Wrap(aCx, aScope, this);
+    return dom::XULElementBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULPrototypeNode)

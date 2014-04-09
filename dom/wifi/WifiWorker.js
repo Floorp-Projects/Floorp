@@ -747,6 +747,8 @@ var WifiManager = (function() {
       if (manager.state !== "DISABLING" && manager.state !== "UNINITIALIZED") {
         notify("supplicantlost", { success: true });
       }
+      wifiCommand.closeSupplicantConnection(function() {
+      });
       return false;
     }
     if (eventData.indexOf("CTRL-EVENT-DISCONNECTED") === 0) {
@@ -949,19 +951,17 @@ var WifiManager = (function() {
         });
       });
     } else {
+      manager.state = "DISABLING";
       // Note these following calls ignore errors. If we fail to kill the
       // supplicant gracefully, then we need to continue telling it to die
       // until it does.
       let doDisableWifi = function() {
-        manager.state = "DISABLING";
         wifiCommand.terminateSupplicant(function (ok) {
           manager.connectionDropped(function () {
             wifiCommand.stopSupplicant(function (status) {
-              wifiCommand.closeSupplicantConnection(function () {
-                manager.state = "UNINITIALIZED";
-                netUtil.disableInterface(manager.ifname, function (ok) {
-                  unloadDriver(WIFI_FIRMWARE_STATION, callback);
-                });
+              manager.state = "UNINITIALIZED";
+              netUtil.disableInterface(manager.ifname, function (ok) {
+                unloadDriver(WIFI_FIRMWARE_STATION, callback);
               });
             });
           });
@@ -1300,7 +1300,7 @@ var WifiManager = (function() {
   manager.enableP2p = function(callback) {
     p2pManager.setEnabled(true, {
       onSupplicantConnected: function() {
-        wifiService.waitForEvent(WifiP2pManager.INTERFACE_NAME);
+        waitForEvent(WifiP2pManager.INTERFACE_NAME);
       },
 
       onEnabled: function(success) {

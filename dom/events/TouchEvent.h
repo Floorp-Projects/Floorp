@@ -46,8 +46,7 @@ public:
     mPoints.AppendElement(aPoint);
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   nsISupports* GetParentObject() const
   {
@@ -90,10 +89,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TouchEvent, UIEvent)
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
   {
-    return TouchEventBinding::Wrap(aCx, aScope, this);
+    return TouchEventBinding::Wrap(aCx, this);
   }
 
   TouchList* Touches();

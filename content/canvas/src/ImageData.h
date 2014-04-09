@@ -71,7 +71,7 @@ public:
     return mData;
   }
 
-  JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> scope);
+  JSObject* WrapObject(JSContext* cx);
 
 private:
   void HoldData();

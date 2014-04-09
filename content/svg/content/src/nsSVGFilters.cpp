@@ -366,9 +366,9 @@ SVGComponentTransferFunctionElement::GetNumberInfo()
 }
 
 /* virtual */ JSObject*
-SVGFEFuncRElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGFEFuncRElement::WrapNode(JSContext* aCx)
 {
-  return SVGFEFuncRElementBinding::Wrap(aCx, aScope, this);
+  return SVGFEFuncRElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom
@@ -382,9 +382,9 @@ namespace dom {
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncRElement)
 
 /* virtual */ JSObject*
-SVGFEFuncGElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGFEFuncGElement::WrapNode(JSContext* aCx)
 {
-  return SVGFEFuncGElementBinding::Wrap(aCx, aScope, this);
+  return SVGFEFuncGElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom
@@ -398,9 +398,9 @@ namespace dom {
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncGElement)
 
 /* virtual */ JSObject*
-SVGFEFuncBElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGFEFuncBElement::WrapNode(JSContext* aCx)
 {
-  return SVGFEFuncBElementBinding::Wrap(aCx, aScope, this);
+  return SVGFEFuncBElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom
@@ -414,9 +414,9 @@ namespace dom {
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncBElement)
 
 /* virtual */ JSObject*
-SVGFEFuncAElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGFEFuncAElement::WrapNode(JSContext* aCx)
 {
-  return SVGFEFuncAElementBinding::Wrap(aCx, aScope, this);
+  return SVGFEFuncAElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

@@ -86,7 +86,7 @@
 
       <varlistentry>
         <term>-disable modulename</term>
-	  <listitem><para>Disable all slots on the named module. Use the <option>-slot</option> argument to disable a specific slot.</para></listitem>
+	  <listitem><para>Disable all slots on the named module. Use the <option>-slot</option> argument to disable a specific slot.</para><para>The internal NSS PKCS #11 module cannot be disabled.</para></listitem>
       </varlistentry>
 
       <varlistentry>

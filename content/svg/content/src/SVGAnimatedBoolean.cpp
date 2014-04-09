@@ -15,8 +15,8 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAnimatedBoolean, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedBoolean, Release)
 
 JSObject*
-SVGAnimatedBoolean::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGAnimatedBoolean::WrapObject(JSContext* aCx)
 {
-  return SVGAnimatedBooleanBinding::Wrap(aCx, aScope, this);
+  return SVGAnimatedBooleanBinding::Wrap(aCx, this);
 }
 

@@ -208,7 +208,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void inheritPhis(MBasicBlock *header);
 
     // Compute the types for phis in this block according to their inputs.
-    void specializePhis();
+    bool specializePhis();
 
     void insertBefore(MInstruction *at, MInstruction *ins);
     void insertAfter(MInstruction *at, MInstruction *ins);

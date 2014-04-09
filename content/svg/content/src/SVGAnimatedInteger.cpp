@@ -23,9 +23,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimatedInteger)
 NS_INTERFACE_MAP_END
 
 JSObject*
-SVGAnimatedInteger::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGAnimatedInteger::WrapObject(JSContext* aCx)
 {
-  return SVGAnimatedIntegerBinding::Wrap(aCx, aScope, this);
+  return SVGAnimatedIntegerBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

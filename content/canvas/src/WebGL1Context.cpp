@@ -29,9 +29,9 @@ WebGL1Context::~WebGL1Context()
 // IMPLEMENT nsWrapperCache
 
 JSObject*
-WebGL1Context::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
+WebGL1Context::WrapObject(JSContext *cx)
 {
-    return dom::WebGLRenderingContextBinding::Wrap(cx, scope, this);
+    return dom::WebGLRenderingContextBinding::Wrap(cx, this);
 }
 
 
