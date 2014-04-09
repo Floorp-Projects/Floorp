@@ -211,9 +211,10 @@ class TypedArrayCreator
       : mArray(aArray)
     {}
 
-    JSObject* Create(JSContext* aCx, JS::Handle<JSObject*> aCreator) const
+    JSObject* Create(JSContext* aCx) const
     {
-      return TypedArrayType::Create(aCx, aCreator, mArray.Length(), mArray.Elements());
+      return TypedArrayType::Create(aCx, JS::NullPtr(), mArray.Length(),
+                                    mArray.Elements());
     }
 
   private:

@@ -20,8 +20,7 @@ class SVGTextElement MOZ_FINAL : public SVGTextElementBase
 {
 protected:
   SVGTextElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx,
-                             JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
   friend nsresult (::NS_NewSVGTextElement(nsIContent **aResult,
                                           already_AddRefed<nsINodeInfo>&& aNodeInfo));

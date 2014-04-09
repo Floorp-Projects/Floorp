@@ -10,7 +10,7 @@
 using namespace mozilla;
 
 JSObject*
-WebGLShaderPrecisionFormat::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
+WebGLShaderPrecisionFormat::WrapObject(JSContext *cx)
 {
-    return dom::WebGLShaderPrecisionFormatBinding::Wrap(cx, scope, this);
+    return dom::WebGLShaderPrecisionFormatBinding::Wrap(cx, this);
 }

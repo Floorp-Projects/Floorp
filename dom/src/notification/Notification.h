@@ -90,8 +90,7 @@ public:
     return GetOwner();
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 protected:
   Notification(const nsAString& aID, const nsAString& aTitle, const nsAString& aBody,
                NotificationDirection aDir, const nsAString& aLang,

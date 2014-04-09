@@ -1908,9 +1908,9 @@ HTMLSelectElement::UpdateSelectedOptions()
 }
 
 JSObject*
-HTMLSelectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+HTMLSelectElement::WrapNode(JSContext* aCx)
 {
-  return HTMLSelectElementBinding::Wrap(aCx, aScope, this);
+  return HTMLSelectElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

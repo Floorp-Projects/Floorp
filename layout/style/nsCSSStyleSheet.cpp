@@ -507,9 +507,9 @@ nsMediaList::~nsMediaList()
 }
 
 /* virtual */ JSObject*
-nsMediaList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+nsMediaList::WrapObject(JSContext* aCx)
 {
-  return MediaListBinding::Wrap(aCx, aScope, this);
+  return MediaListBinding::Wrap(aCx, this);
 }
 
 void
@@ -2199,7 +2199,7 @@ nsCSSStyleSheet::GetOriginalURI() const
 
 /* virtual */
 JSObject*
-nsCSSStyleSheet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+nsCSSStyleSheet::WrapObject(JSContext* aCx)
 {
-  return CSSStyleSheetBinding::Wrap(aCx, aScope, this);
+  return CSSStyleSheetBinding::Wrap(aCx, this);
 }

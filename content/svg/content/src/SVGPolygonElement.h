@@ -21,8 +21,7 @@ class SVGPolygonElement MOZ_FINAL : public SVGPolygonElementBase
 {
 protected:
   SVGPolygonElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx,
-                             JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGPolygonElement(nsIContent **aResult,
                                              already_AddRefed<nsINodeInfo>&& aNodeInfo));
 
