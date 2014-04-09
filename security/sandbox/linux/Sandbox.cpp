@@ -386,6 +386,14 @@ BroadcastSetThreadSandbox()
   SetThreadSandbox();
 }
 
+// This function can overapproximate (i.e., return true even if
+// sandboxing isn't supported, but not the reverse).  See bug 993145.
+static bool
+IsSandboxingSupported(void)
+{
+  return prctl(PR_GET_SECCOMP) != -1;
+}
+
 /**
  * Starts the seccomp sandbox for this process and sets user/group-based privileges.
  * Should be called only once, and before any potentially harmful content is loaded.
@@ -408,7 +416,9 @@ SetCurrentProcessSandbox()
   }
 #endif
 
-  BroadcastSetThreadSandbox();
+  if (IsSandboxingSupported()) {
+    BroadcastSetThreadSandbox();
+  }
 }
 
 } // namespace mozilla
