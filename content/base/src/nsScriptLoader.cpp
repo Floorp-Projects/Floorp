@@ -124,7 +124,8 @@ nsScriptLoader::nsScriptLoader(nsIDocument *aDocument)
     mBlockerCount(0),
     mEnabled(true),
     mDeferEnabled(false),
-    mDocumentParsingDone(false)
+    mDocumentParsingDone(false),
+    mBlockingDOMContentLoaded(false)
 {
   // enable logging for CSP
 #ifdef PR_LOGGING
@@ -656,7 +657,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       NS_ASSERTION(mDocument->GetCurrentContentSink() ||
                    aElement->GetParserCreated() == FROM_PARSER_XSLT,
           "Non-XSLT Defer script on a document without an active parser; bug 592366.");
-      mDeferRequests.AppendElement(request);
+      AddDeferRequest(request);
       return false;
     }
 
@@ -1171,6 +1172,9 @@ nsScriptLoader::ProcessPendingRequests()
       !mParserBlockingRequest && mAsyncRequests.IsEmpty() &&
       mNonAsyncExternalScriptInsertedRequests.IsEmpty() &&
       mXSLTRequests.IsEmpty() && mDeferRequests.IsEmpty()) {
+    if (MaybeRemovedDeferRequests()) {
+      return ProcessPendingRequests();
+    }
     // No more pending scripts; time to unblock onload.
     // OK to unblock onload synchronously here, since callers must be
     // prepared for the world changing anyway.
@@ -1487,4 +1491,28 @@ nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
   PreloadInfo *pi = mPreloads.AppendElement();
   pi->mRequest = request;
   pi->mCharset = aCharset;
+}
+
+void
+nsScriptLoader::AddDeferRequest(nsScriptLoadRequest* aRequest)
+{
+  mDeferRequests.AppendElement(aRequest);
+  if (mDeferEnabled && mDeferRequests.Length() == 1 && mDocument &&
+      !mBlockingDOMContentLoaded) {
+    MOZ_ASSERT(mDocument->GetReadyStateEnum() == nsIDocument::READYSTATE_LOADING);
+    mBlockingDOMContentLoaded = true;
+    mDocument->BlockDOMContentLoaded();
+  }
+}
+
+bool
+nsScriptLoader::MaybeRemovedDeferRequests()
+{
+  if (mDeferRequests.Length() == 0 && mDocument &&
+      mBlockingDOMContentLoaded) {
+    mBlockingDOMContentLoaded = false;
+    mDocument->UnblockDOMContentLoaded();
+    return true;
+  }
+  return false;
 }
