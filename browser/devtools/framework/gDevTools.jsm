@@ -317,7 +317,7 @@ DevTools.prototype = {
   closeToolbox: function DT_closeToolbox(target) {
     let toolbox = this._toolboxes.get(target);
     if (toolbox == null) {
-      return;
+      return promise.reject(null);
     }
     return toolbox.destroy();
   },
