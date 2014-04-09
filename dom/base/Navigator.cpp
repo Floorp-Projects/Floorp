@@ -1602,8 +1602,6 @@ Navigator::GetConnection(ErrorResult& aRv)
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
-    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
-
     mConnection = new network::Connection();
     mConnection->Init(mWindow);
   }
