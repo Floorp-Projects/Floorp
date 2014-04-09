@@ -15,6 +15,7 @@
 #include "jit/IonLinker.h"
 #include "jit/JitCompartment.h"
 #include "jit/RangeAnalysis.h"
+#include "vm/TraceLogging.h"
 
 #include "jit/shared/CodeGenerator-shared-inl.h"
 
@@ -48,7 +49,7 @@ CodeGeneratorX86Shared::generateEpilogue()
 {
     masm.bind(&returnLabel_);
 
-#if JS_TRACE_LOGGING
+#ifdef JS_TRACE_LOGGING
     if (!gen->compilingAsmJS() && gen->info().executionMode() == SequentialExecution) {
         if (!emitTracelogStopEvent(TraceLogger::IonMonkey))
             return false;

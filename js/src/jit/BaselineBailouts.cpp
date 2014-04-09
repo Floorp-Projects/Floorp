@@ -12,6 +12,7 @@
 #include "jit/IonSpewer.h"
 #include "jit/Recover.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/TraceLogging.h"
 
 #include "jsscriptinlines.h"
 

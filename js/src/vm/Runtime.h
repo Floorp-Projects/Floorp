@@ -56,7 +56,7 @@ namespace js {
 class PerThreadData;
 class ThreadSafeContext;
 class AutoKeepAtoms;
-#if JS_TRACE_LOGGING
+#ifdef JS_TRACE_LOGGING
 class TraceLogger;
 #endif
 
@@ -541,7 +541,7 @@ class PerThreadData : public PerThreadDataFriendFields
 
     inline void setJitStackLimit(uintptr_t limit);
 
-#if JS_TRACE_LOGGING
+#ifdef JS_TRACE_LOGGING
     TraceLogger         *traceLogger;
 #endif
 

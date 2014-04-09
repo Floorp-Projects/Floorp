@@ -232,7 +232,7 @@ if CONFIG['MOZ_INSTRUMENTS']:
 
 if CONFIG['ENABLE_TRACE_LOGGING']:
     SOURCES += [
-        'TraceLogging.cpp',
+        'vm/TraceLogging.cpp',
     ]
 
 if CONFIG['ENABLE_ION']:

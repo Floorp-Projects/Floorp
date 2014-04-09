@@ -10,7 +10,6 @@
 #ifdef JS_ION
 
 #include "jscompartment.h"
-#include "TraceLogging.h"
 
 #if defined(JS_CODEGEN_X86)
 # include "jit/x86/MacroAssembler-x86.h"
@@ -1123,7 +1122,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void printf(const char *output);
     void printf(const char *output, Register value);
 
-#if JS_TRACE_LOGGING
+#ifdef JS_TRACE_LOGGING
     void tracelogStart(Register logger, uint32_t textId);
     void tracelogStart(Register logger, Register textId);
     void tracelogStop(Register logger, uint32_t textId);
