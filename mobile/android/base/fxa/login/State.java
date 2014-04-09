@@ -9,7 +9,7 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 
 public abstract class State {
-  public static final long CURRENT_VERSION = 1L;
+  public static final long CURRENT_VERSION = 2L;
 
   public enum StateLabel {
     Engaged,
