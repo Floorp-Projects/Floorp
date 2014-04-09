@@ -16,6 +16,7 @@
 
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"
+#include "js/Vector.h"
 
 class PRThread;
 struct JSRuntime;
@@ -256,6 +257,8 @@ class TraceLogger
             this->u.s.hasChildren = hasChildren;
             this->nextId = nextId;
         }
+        TreeEntry()
+        { }
     };
 
     // Helper structure for keeping track of the currently active entries in
@@ -283,6 +286,7 @@ class TraceLogger
     FILE *eventFile;
 
     bool enabled;
+    bool failed;
     uint32_t nextTextId;
 
     PointerHashMap pointerMap;
@@ -297,10 +301,27 @@ class TraceLogger
     AutoTraceLog *top;
 
   private:
-    void updateHasChildren(uint32_t treeId, bool hasChildren = false);
-    void updateNextId(uint32_t treeId, bool nextId);
-    void updateStop(uint32_t treeId, uint64_t timestamp);
-    void flush();
+    // Helper functions that convert a TreeEntry in different endianness
+    // in place.
+    void entryToBigEndian(TreeEntry *entry);
+    void entryToSystemEndian(TreeEntry *entry);
+
+    // Helper functions to get/save a tree from file.
+    bool getTreeEntry(uint32_t treeId, TreeEntry *entry);
+    bool saveTreeEntry(uint32_t treeId, TreeEntry *entry);
+
+    // This contains the meat of startEvent, except the test for enough space,
+    // the test if tracelogger is enabled and the timestamp computation.
+    bool startEvent(uint32_t id, uint64_t timestamp);
+
+    // Update functions that can adjust the items in the tree,
+    // both in memory or already written to disk.
+    bool updateHasChildren(uint32_t treeId, bool hasChildren = true);
+    bool updateNextId(uint32_t treeId, uint32_t nextId);
+    bool updateStop(uint32_t treeId, uint64_t timestamp);
+
+    // Flush the tree and events.
+    bool flush();
 
   public:
     TraceLogger();
@@ -342,10 +363,12 @@ class TraceLogging
                     TraceLogger *,
                     PointerHasher<PRThread *, 3>,
                     SystemAllocPolicy> ThreadLoggerHashMap;
+    typedef Vector<TraceLogger *, 1, js::SystemAllocPolicy > MainThreadLoggers;
 
     bool initialized;
     bool enabled;
     ThreadLoggerHashMap threadLoggers;
+    MainThreadLoggers mainThreadLoggers;
     uint32_t loggerId;
     FILE *out;
 
