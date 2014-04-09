@@ -579,7 +579,7 @@ let PlacesProvider = {
               lastVisitDate: lastVisitDate,
               bgColor: "transparent",
               type: "history",
-              imageURISpec: null,
+              imageURI: null,
             });
           }
         }

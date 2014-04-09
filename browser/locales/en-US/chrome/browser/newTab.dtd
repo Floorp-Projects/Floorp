@@ -9,5 +9,4 @@
 <!ENTITY newtab.undo.restoreButton "Restore All.">
 <!ENTITY newtab.undo.closeTooltip "Hide">
 <!ENTITY newtab.panel.message "This site is being suggested because it has sponsored Mozilla, helping us promote openness, innovation and opportunity on the Web.">
-<!ENTITY newtab.panel.link.url "https://support.mozilla.org/kb/how-do-sponsored-tiles-work">
 <!ENTITY newtab.panel.link.text "Learn more…">
