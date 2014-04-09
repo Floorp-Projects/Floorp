@@ -65,9 +65,9 @@ ArchiveReader::~ArchiveReader()
 }
 
 /* virtual */ JSObject*
-ArchiveReader::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+ArchiveReader::WrapObject(JSContext* aCx)
 {
-  return ArchiveReaderBinding::Wrap(aCx, aScope, this);
+  return ArchiveReaderBinding::Wrap(aCx, this);
 }
 
 nsresult

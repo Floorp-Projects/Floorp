@@ -9,6 +9,7 @@
 #include "nsISupportsImpl.h"
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
+#include "mozilla/IOInterposer.h"
 #include "mozilla/VisualEventTracer.h"
 
 namespace mozilla {
@@ -152,8 +153,10 @@ already_AddRefed<nsIEventTarget> CacheIOThread::Target()
 void CacheIOThread::ThreadFunc(void* aClosure)
 {
   PR_SetCurrentThreadName("Cache2 I/O");
+  mozilla::IOInterposer::RegisterCurrentThread();
   CacheIOThread* thread = static_cast<CacheIOThread*>(aClosure);
   thread->ThreadFunc();
+  mozilla::IOInterposer::UnregisterCurrentThread();
 }
 
 void CacheIOThread::ThreadFunc()

@@ -184,9 +184,9 @@ FMRadio::Shutdown()
 }
 
 JSObject*
-FMRadio::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+FMRadio::WrapObject(JSContext* aCx)
 {
-  return FMRadioBinding::Wrap(aCx, aScope, this);
+  return FMRadioBinding::Wrap(aCx, this);
 }
 
 void

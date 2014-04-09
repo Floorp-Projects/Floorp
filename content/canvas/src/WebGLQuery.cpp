@@ -12,8 +12,8 @@
 using namespace mozilla;
 
 JSObject*
-WebGLQuery::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) {
-    return dom::WebGLQueryBinding::Wrap(cx, scope, this);
+WebGLQuery::WrapObject(JSContext *cx) {
+    return dom::WebGLQueryBinding::Wrap(cx, this);
 }
 
 WebGLQuery::WebGLQuery(WebGLContext* context)

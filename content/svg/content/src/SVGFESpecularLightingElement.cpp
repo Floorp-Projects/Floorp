@@ -16,9 +16,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFESpecularLightingElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGFESpecularLightingElement::WrapNode(JSContext* aCx)
 {
-  return SVGFESpecularLightingElementBinding::Wrap(aCx, aScope, this);
+  return SVGFESpecularLightingElementBinding::Wrap(aCx, this);
 }
 
 //----------------------------------------------------------------------

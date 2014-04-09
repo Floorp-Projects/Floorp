@@ -169,7 +169,7 @@ public:
   virtual nsINode* GetParentObject() { return mParent; }
   virtual nsIContent* Item(uint32_t aIndex);
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
 
   bool IsListFor(nsIContent* aContent) {
     return mParent == aContent;

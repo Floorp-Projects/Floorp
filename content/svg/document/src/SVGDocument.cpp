@@ -69,9 +69,9 @@ SVGDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 }
 
 JSObject*
-SVGDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+SVGDocument::WrapNode(JSContext *aCx)
 {
-  return SVGDocumentBinding::Wrap(aCx, aScope, this);
+  return SVGDocumentBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

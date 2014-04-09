@@ -26,7 +26,8 @@ zlib_free(void *cx, void *addr)
 Compressor::Compressor(const unsigned char *inp, size_t inplen)
     : inp(inp),
       inplen(inplen),
-      outbytes(0)
+      outbytes(0),
+      initialized(false)
 {
     JS_ASSERT(inplen > 0);
     zs.opaque = nullptr;
@@ -41,11 +42,13 @@ Compressor::Compressor(const unsigned char *inp, size_t inplen)
 
 Compressor::~Compressor()
 {
-    int ret = deflateEnd(&zs);
-    if (ret != Z_OK) {
-        // If we finished early, we can get a Z_DATA_ERROR.
-        JS_ASSERT(ret == Z_DATA_ERROR);
-        JS_ASSERT(uInt(zs.next_in - inp) < inplen || !zs.avail_out);
+    if (initialized) {
+        int ret = deflateEnd(&zs);
+        if (ret != Z_OK) {
+            // If we finished early, we can get a Z_DATA_ERROR.
+            JS_ASSERT(ret == Z_DATA_ERROR);
+            JS_ASSERT(uInt(zs.next_in - inp) < inplen || !zs.avail_out);
+        }
     }
 }
 
@@ -62,6 +65,7 @@ Compressor::init()
         JS_ASSERT(ret == Z_MEM_ERROR);
         return false;
     }
+    initialized = true;
     return true;
 }
 

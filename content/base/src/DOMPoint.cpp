@@ -37,7 +37,7 @@ DOMPoint::Constructor(const GlobalObject& aGlobal, double aX, double aY,
 }
 
 JSObject*
-DOMPoint::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+DOMPoint::WrapObject(JSContext* aCx)
 {
-  return DOMPointBinding::Wrap(aCx, aScope, this);
+  return DOMPointBinding::Wrap(aCx, this);
 }

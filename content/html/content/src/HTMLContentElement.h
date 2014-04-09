@@ -67,7 +67,7 @@ public:
   }
 
 protected:
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
   /**
    * An array of nodes from the ShadowRoot host that match the
@@ -97,7 +97,7 @@ public:
   virtual int32_t IndexOf(nsIContent* aContent);
   virtual nsINode* GetParentObject() { return mParent; }
   virtual uint32_t Length() const;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 protected:
   nsRefPtr<HTMLContentElement> mParent;
   nsCOMArray<nsIContent> mDistributedNodes;

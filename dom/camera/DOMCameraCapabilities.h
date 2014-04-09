@@ -40,7 +40,7 @@ public:
 
   nsPIDOMWindow* GetParentObject() const { return mWindow; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   void GetPreviewSizes(nsTArray<CameraSize>& aRetVal) const;
   void GetPictureSizes(nsTArray<CameraSize>& aRetVal) const;

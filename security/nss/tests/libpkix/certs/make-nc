@@ -423,6 +423,57 @@ y
 n
 CERTSCRIPT
 
+#DCISS copy certs
+certutil -S -z noise -g 2048 -d . -n dcisscopy -s "E=igca@sgdn.pm.gouv.fr,CN=IGC/A,OU=DCSSI,O=PM/SGDN,L=Paris,ST=France,C=FR" -t C,C,C -x -m 998899 -w -2 -v 120 -1 -2 -5 <<CERTSCRIPT
+5
+6
+9
+n
+y
+
+n
+5
+6
+7
+9
+n
+CERTSCRIPT
+
+#the following cert MUST not pass
+certutil -S -z noise -g 2048 -d . -n dcissblocked -s "CN=foo.example.com,O=Foo,ST=CA,C=US" -t ,, -c dcisscopy -m 998900 -v 120 -1 -2 -5 <<CERTSCRIPT
+0
+2
+3
+4
+9
+n
+n
+
+y
+0
+1
+9
+n
+CERTSCRIPT
+
+#the following cert MUST not pass
+certutil -S -z noise -g 2048 -d . -n dcissallowed -s "CN=foo.example.fr,O=Foo,ST=CA,C=US" -t ,, -c dcisscopy -m 998901 -v 120 -1 -2 -5 <<CERTSCRIPT
+0
+2
+3
+4
+9
+n
+n
+
+y
+0
+1
+9
+n
+CERTSCRIPT
+
+
 
 certutil -d . -L -n ca -r > NameConstraints.ca.cert
 certutil -d . -L -n ica -r > NameConstraints.intermediate.cert
@@ -450,5 +501,8 @@ certutil -d . -L -n ica6 -r > NameConstraints.intermediate6.cert
 certutil -d . -L -n server15 -r > NameConstraints.server15.cert
 certutil -d . -L -n server16 -r > NameConstraints.server16.cert
 certutil -d . -L -n server17 -r > NameConstraints.server17.cert
+certutil -d . -L -n dcisscopy -r >  NameConstraints.dcisscopy.cert
+certutil -d . -L -n dcissblocked -r >  NameConstraints.dcissblocked.cert
+certutil -d . -L -n dcissallowed -r >  NameConstraints.dcissallowed.cert
 
 echo "Created multiple files in subdirectory tmp: NameConstraints.ca.cert NameConstraints.intermediate.cert NameConstraints.server1.cert NameConstraints.server2.cert NameConstraints.server3.cert NameConstraints.intermediate2.cert NameConstraints.server4.cert NameConstraints.server5.cert NameConstraints.server6.cert"

@@ -116,7 +116,7 @@ public:
                        const dom::Optional<dom::OwningNonNull<dom::CameraErrorCallback> >& aOnError,
                        ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
 protected:
   virtual ~nsDOMCameraControl();

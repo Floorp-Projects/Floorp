@@ -79,13 +79,6 @@ extern CERTRDN *CERT_CreateRDN(PLArenaPool *arena, CERTAVA *avas, ...);
 extern SECStatus CERT_CopyRDN(PLArenaPool *arena, CERTRDN *dest, CERTRDN *src);
 
 /*
-** Destory an RDN object.
-**	"rdn" the RDN to destroy
-**	"freeit" if PR_TRUE then free the object as well as its sub-objects
-*/
-extern void CERT_DestroyRDN(CERTRDN *rdn, PRBool freeit);
-
-/*
 ** Add an AVA to an RDN.
 **	"rdn" the RDN to add to
 **	"ava" the AVA to add

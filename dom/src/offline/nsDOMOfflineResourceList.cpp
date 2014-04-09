@@ -97,10 +97,9 @@ nsDOMOfflineResourceList::~nsDOMOfflineResourceList()
 }
 
 JSObject*
-nsDOMOfflineResourceList::WrapObject(JSContext* aCx,
-                                     JS::Handle<JSObject*> aScope)
+nsDOMOfflineResourceList::WrapObject(JSContext* aCx)
 {
-  return OfflineResourceListBinding::Wrap(aCx, aScope, this);
+  return OfflineResourceListBinding::Wrap(aCx, this);
 }
 
 nsresult

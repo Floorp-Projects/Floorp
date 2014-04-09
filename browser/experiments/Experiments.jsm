@@ -18,9 +18,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
-Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
-Cu.import("resource://gre/modules/Metrics.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
@@ -30,6 +28,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "TelemetryPing",
                                   "resource://gre/modules/TelemetryPing.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
                                   "resource://gre/modules/TelemetryLog.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
+                                  "resource://services-common/utils.js");
+XPCOMUtils.defineLazyModuleGetter(this, "Metrics",
+                                  "resource://gre/modules/Metrics.jsm");
+
 // CertUtils.jsm doesn't expose a single "CertUtils" object like a normal .jsm
 // would.
 XPCOMUtils.defineLazyGetter(this, "CertUtils",

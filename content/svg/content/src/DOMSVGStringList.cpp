@@ -90,9 +90,9 @@ DOMSVGStringList::~DOMSVGStringList()
 }
 
 /* virtual */ JSObject*
-DOMSVGStringList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+DOMSVGStringList::WrapObject(JSContext* aCx)
 {
-  return SVGStringListBinding::Wrap(aCx, aScope, this);
+  return SVGStringListBinding::Wrap(aCx, this);
 }
 
 // ----------------------------------------------------------------------------

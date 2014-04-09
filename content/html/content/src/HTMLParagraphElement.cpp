@@ -68,9 +68,9 @@ HTMLParagraphElement::GetAttributeMappingFunction() const
 }
 
 JSObject*
-HTMLParagraphElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+HTMLParagraphElement::WrapNode(JSContext *aCx)
 {
-  return HTMLParagraphElementBinding::Wrap(aCx, aScope, this);
+  return HTMLParagraphElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

@@ -57,9 +57,9 @@ TextTrackList::UpdateAndGetShowingCues(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
 }
 
 JSObject*
-TextTrackList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+TextTrackList::WrapObject(JSContext* aCx)
 {
-  return TextTrackListBinding::Wrap(aCx, aScope, this);
+  return TextTrackListBinding::Wrap(aCx, this);
 }
 
 TextTrack*
