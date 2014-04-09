@@ -17,7 +17,6 @@ import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.SkewHandler;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
-import org.mozilla.gecko.browserid.RSACryptoImplementation;
 import org.mozilla.gecko.browserid.verifier.BrowserIDRemoteVerifierClient;
 import org.mozilla.gecko.browserid.verifier.BrowserIDVerifierDelegate;
 import org.mozilla.gecko.fxa.FxAccountConstants;
@@ -30,6 +29,7 @@ import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.Transition;
 import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
+import org.mozilla.gecko.fxa.login.StateFactory;
 import org.mozilla.gecko.sync.BackoffHandler;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.GlobalSession;
@@ -525,7 +525,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
         @Override
         public BrowserIDKeyPair generateKeyPair() throws NoSuchAlgorithmException {
-          return RSACryptoImplementation.generateKeyPair(1024);
+          return StateFactory.generateKeyPair();
         }
 
         @Override
