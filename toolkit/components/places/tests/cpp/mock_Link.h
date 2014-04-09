@@ -153,7 +153,7 @@ URLSearchParams::~URLSearchParams()
 }
 
 JSObject*
-URLSearchParams::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+URLSearchParams::WrapObject(JSContext* aCx)
 {
   return nullptr;
 }

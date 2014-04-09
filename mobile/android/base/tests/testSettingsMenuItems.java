@@ -14,8 +14,6 @@ import org.mozilla.gecko.AppConstants;
  *  default values for them
  */
 public class testSettingsMenuItems extends PixelTest {
-    int mMidWidth;
-    int mMidHeight;
     String BRAND_NAME = "(Fennec|Nightly|Aurora|Firefox|Firefox Beta)";
 
     /**
@@ -100,8 +98,6 @@ public class testSettingsMenuItems extends PixelTest {
 
     public void testSettingsMenuItems() {
         blockForGeckoReady();
-        mMidWidth = mDriver.getGeckoWidth()/2;
-        mMidHeight = mDriver.getGeckoHeight()/2;
 
         Map<String[], List<String[]>> settingsMenuItems = new HashMap<String[], List<String[]>>();
         setupSettingsMap(settingsMenuItems);
@@ -155,9 +151,11 @@ public class testSettingsMenuItems extends PixelTest {
             settingsMap.get(PATH_DISPLAY).add(textReflowUi);
 
             // Anonymous cell tower/wifi collection - only built if *not* release build
-            String[] networkReportingUi = { "Mozilla location services", "Help improve geolocation services for the Open Web by letting " + BRAND_NAME + " collect and send anonymous cellular tower data" };
+            String[] networkReportingUi = { "Mozilla Location Service", "Receives Wi-Fi and cellular location data when running in the background and shares it with Mozilla to improve our geolocation service" };
             settingsMap.get(PATH_MOZILLA).add(networkReportingUi);
 
+            String[] learnMoreUi = { "Learn more" };
+            settingsMap.get(PATH_MOZILLA).add(learnMoreUi);
         }
 
         // Automatic updates
@@ -203,13 +201,14 @@ public class testSettingsMenuItems extends PixelTest {
 
                 // Check item title.
                 String itemTitle = "^" + item[0] + "$";
-                boolean foundText = waitExtraForText(itemTitle);
+                boolean foundText = waitForPreferencesText(itemTitle);
+
                 mAsserter.ok(foundText, "Waiting for settings item " + itemTitle + " in section " + section,
                              "The " + itemTitle + " option is present in section " + section);
                 // Check item default, if it exists.
                 if (itemLen > 1) {
                     String itemDefault = "^" + item[1] + "$";
-                    foundText = waitExtraForText(itemDefault);
+                    foundText = waitForPreferencesText(itemDefault);
                     mAsserter.ok(foundText, "Waiting for settings item default " + itemDefault
                                  + " in section " + section,
                                  "The " + itemDefault + " default is present in section " + section);
@@ -220,7 +219,7 @@ public class testSettingsMenuItems extends PixelTest {
                     mSolo.clickOnText(itemTitle);
                     for (int i = 2; i < itemLen; i++) {
                         String itemChoice = "^" + item[i] + "$";
-                        foundText = waitExtraForText(itemChoice);
+                        foundText = waitForPreferencesText(itemChoice);
                         mAsserter.ok(foundText, "Waiting for settings item choice " + itemChoice
                                      + " in section " + section,
                                      "The " + itemChoice + " choice is present in section " + section);
@@ -247,21 +246,5 @@ public class testSettingsMenuItems extends PixelTest {
                 }
             }
         }
-    }
-
-    // Solo.waitForText usually scrolls down in a view when text is not visible.
-    // In this test, Solo.waitForText scrolling does not work, so we use this
-    // hack to do the same thing.
-    private boolean waitExtraForText(String txt) {
-        boolean foundText = waitForText(txt);
-        if (!foundText) {
-            // If we don't see the item, scroll down once in case it's off-screen.
-            // Hacky way to scroll down.  solo.scroll* does not work in dialogs.
-            MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
-            meh.dragSync(mMidWidth, mMidHeight+100, mMidWidth, mMidHeight-100);
-
-            foundText = mSolo.waitForText(txt);
-        }
-        return foundText;
     }
 }

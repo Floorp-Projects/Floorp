@@ -428,9 +428,9 @@ HTMLOptionElement::CopyInnerTo(Element* aDest)
 }
 
 JSObject*
-HTMLOptionElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+HTMLOptionElement::WrapNode(JSContext* aCx)
 {
-  return HTMLOptionElementBinding::Wrap(aCx, aScope, this);
+  return HTMLOptionElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

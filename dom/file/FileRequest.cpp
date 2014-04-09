@@ -107,12 +107,12 @@ NS_IMPL_RELEASE_INHERITED(FileRequest, DOMRequest)
 
 // virtual
 JSObject*
-FileRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+FileRequest::WrapObject(JSContext* aCx)
 {
   if (mWrapAsDOMRequest) {
-    return DOMRequest::WrapObject(aCx, aScope);
+    return DOMRequest::WrapObject(aCx);
   }
-  return FileRequestBinding::Wrap(aCx, aScope, this);
+  return FileRequestBinding::Wrap(aCx, this);
 }
 
 LockedFile*

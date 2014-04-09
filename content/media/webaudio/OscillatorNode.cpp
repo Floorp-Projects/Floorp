@@ -513,9 +513,9 @@ OscillatorNode::~OscillatorNode()
 }
 
 JSObject*
-OscillatorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+OscillatorNode::WrapObject(JSContext* aCx)
 {
-  return OscillatorNodeBinding::Wrap(aCx, aScope, this);
+  return OscillatorNodeBinding::Wrap(aCx, this);
 }
 
 void

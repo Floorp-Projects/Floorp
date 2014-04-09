@@ -17,9 +17,9 @@ MediaElementAudioSourceNode::MediaElementAudioSourceNode(AudioContext* aContext,
 }
 
 JSObject*
-MediaElementAudioSourceNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+MediaElementAudioSourceNode::WrapObject(JSContext* aCx)
 {
-  return MediaElementAudioSourceNodeBinding::Wrap(aCx, aScope, this);
+  return MediaElementAudioSourceNodeBinding::Wrap(aCx, this);
 }
 
 }

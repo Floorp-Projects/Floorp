@@ -38,8 +38,7 @@ public:
     SetHTMLAttr(nsGkAtoms::datetime, aDateTime, aRv);
   }
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 };
 
 } // namespace dom

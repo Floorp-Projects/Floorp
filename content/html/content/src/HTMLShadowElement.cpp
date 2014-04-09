@@ -50,9 +50,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 NS_IMPL_ELEMENT_CLONE(HTMLShadowElement)
 
 JSObject*
-HTMLShadowElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+HTMLShadowElement::WrapNode(JSContext *aCx)
 {
-  return HTMLShadowElementBinding::Wrap(aCx, aScope, this);
+  return HTMLShadowElementBinding::Wrap(aCx, this);
 }
 
 void

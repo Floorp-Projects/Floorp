@@ -35,8 +35,7 @@ friend class nsSVGPathFrame;
 protected:
   friend nsresult (::NS_NewSVGPathElement(nsIContent **aResult,
                                           already_AddRefed<nsINodeInfo>&& aNodeInfo));
-  virtual JSObject* WrapNode(JSContext *cx,
-                             JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
   SVGPathElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
 
 public:

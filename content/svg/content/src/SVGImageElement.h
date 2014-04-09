@@ -31,8 +31,7 @@ class SVGImageElement : public SVGImageElementBase,
 protected:
   SVGImageElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~SVGImageElement();
-  virtual JSObject* WrapNode(JSContext *aCx,
-                             JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGImageElement(nsIContent **aResult,
                                            already_AddRefed<nsINodeInfo>&& aNodeInfo));
 

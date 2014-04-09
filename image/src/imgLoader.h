@@ -221,6 +221,9 @@ public:
   NS_DECL_IMGICACHE
   NS_DECL_NSIOBSERVER
 
+  static imgLoader* Singleton();
+  static imgLoader* PBSingleton();
+
   imgLoader();
   virtual ~imgLoader();
 

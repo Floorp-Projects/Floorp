@@ -120,8 +120,7 @@ public:
 
   // WebIDL
   DOMSVGTransformList* GetParentObject() const { return mList; }
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
   uint16_t Type() const;
   dom::SVGMatrix* GetMatrix();
   float Angle() const;

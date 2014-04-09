@@ -106,9 +106,9 @@ SpeechRecognition::SetState(FSMState state)
 }
 
 JSObject*
-SpeechRecognition::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SpeechRecognition::WrapObject(JSContext* aCx)
 {
-  return SpeechRecognitionBinding::Wrap(aCx, aScope, this);
+  return SpeechRecognitionBinding::Wrap(aCx, this);
 }
 
 already_AddRefed<SpeechRecognition>

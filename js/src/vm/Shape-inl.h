@@ -132,6 +132,8 @@ Shape::search(ExclusiveContext *cx, Shape *start, jsid id, Shape ***pspp, bool a
             if (Shape::hashify(cx, start)) {
                 Shape **spp = start->table().search(id, adding);
                 return SHAPE_FETCH(spp);
+            } else {
+                cx->recoverFromOutOfMemory();
             }
         }
         /*

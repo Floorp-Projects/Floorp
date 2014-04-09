@@ -44,9 +44,9 @@ SpeechGrammar::GetParentObject() const
 }
 
 JSObject*
-SpeechGrammar::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SpeechGrammar::WrapObject(JSContext* aCx)
 {
-  return SpeechGrammarBinding::Wrap(aCx, aScope, this);
+  return SpeechGrammarBinding::Wrap(aCx, this);
 }
 
 void

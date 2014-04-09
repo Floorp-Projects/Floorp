@@ -11,9 +11,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-AudioStreamTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+AudioStreamTrack::WrapObject(JSContext* aCx)
 {
-  return AudioStreamTrackBinding::Wrap(aCx, aScope, this);
+  return AudioStreamTrackBinding::Wrap(aCx, this);
 }
 
 }
