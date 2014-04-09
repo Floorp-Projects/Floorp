@@ -1857,12 +1857,17 @@ let CustomizableUIInternal = {
 
     // Look through previously saved state to see if we're restoring a widget.
     let seenAreas = new Set();
+    let widgetMightNeedAutoAdding = true;
     for (let [area, placements] of gPlacements) {
       seenAreas.add(area);
+      let areaIsRegistered = gAreas.has(area);
       let index = gPlacements.get(area).indexOf(widget.id);
       if (index != -1) {
-        widget.currentArea = area;
-        widget.currentPosition = index;
+        widgetMightNeedAutoAdding = false;
+        if (areaIsRegistered) {
+          widget.currentArea = area;
+          widget.currentPosition = index;
+        }
         break;
       }
     }
@@ -1870,16 +1875,20 @@ let CustomizableUIInternal = {
     // Also look at saved state data directly in areas that haven't yet been
     // restored. Can't rely on this for restored areas, as they may have
     // changed.
-    if (!widget.currentArea && gSavedState) {
+    if (widgetMightNeedAutoAdding && gSavedState) {
       for (let area of Object.keys(gSavedState.placements)) {
         if (seenAreas.has(area)) {
           continue;
         }
 
+        let areaIsRegistered = gAreas.has(area);
         let index = gSavedState.placements[area].indexOf(widget.id);
         if (index != -1) {
-          widget.currentArea = area;
-          widget.currentPosition = index;
+          widgetMightNeedAutoAdding = false;
+          if (areaIsRegistered) {
+            widget.currentArea = area;
+            widget.currentPosition = index;
+          }
           break;
         }
       }
@@ -1891,7 +1900,7 @@ let CustomizableUIInternal = {
     if (widget.currentArea) {
       this.notifyListeners("onWidgetAdded", widget.id, widget.currentArea,
                            widget.currentPosition);
-    } else {
+    } else if (widgetMightNeedAutoAdding) {
       let autoAdd = true;
       try {
         autoAdd = Services.prefs.getBoolPref(kPrefCustomizationAutoAdd);
