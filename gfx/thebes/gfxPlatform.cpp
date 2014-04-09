@@ -485,11 +485,6 @@ gfxPlatform::Init()
     mozilla::gl::TexturePoolOGL::Init();
 #endif
 
-    // Force registration of the gfx component, thus arranging for
-    // ::Shutdown to be called.
-    nsCOMPtr<nsISupports> forceReg
-        = do_CreateInstance("@mozilla.org/gfx/init;1");
-
     Preferences::RegisterCallbackAndCall(RecordingPrefChanged, "gfx.2d.recording", nullptr);
 
     gPlatform->mOrientationSyncMillis = Preferences::GetUint("layers.orientation.sync.timeout", (uint32_t)0);
