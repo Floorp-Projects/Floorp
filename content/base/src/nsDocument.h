@@ -1244,6 +1244,8 @@ public:
                                                     mozilla::ErrorResult& rv) MOZ_OVERRIDE;
   virtual void UseRegistryFromDocument(nsIDocument* aDocument) MOZ_OVERRIDE;
 
+  virtual void UnblockDOMContentLoaded() MOZ_OVERRIDE;
+
 protected:
   friend class nsNodeUtils;
   friend class nsDocumentOnStack;

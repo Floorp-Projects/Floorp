@@ -1527,7 +1527,8 @@ nsIDocument::nsIDocument()
     mAllowDNSPrefetch(true),
     mIsBeingUsedAsImage(false),
     mHasLinksToUpdate(false),
-    mPartID(0)
+    mPartID(0),
+    mDidFireDOMContentLoaded(true)
 {
   SetInDocument();
 }
@@ -4679,6 +4680,8 @@ nsDocument::BeginLoad()
   // Block onload here to prevent having to deal with blocking and
   // unblocking it while we know the document is loading.
   BlockOnload();
+  mDidFireDOMContentLoaded = false;
+  BlockDOMContentLoaded();
 
   if (mScriptLoader) {
     mScriptLoader->BeginDeferringScripts();
@@ -4920,6 +4923,19 @@ nsDocument::EndLoad()
 
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
 
+  UnblockDOMContentLoaded();
+}
+
+void
+nsDocument::UnblockDOMContentLoaded()
+{
+  MOZ_ASSERT(mBlockDOMContentLoaded);
+  if (--mBlockDOMContentLoaded != 0 || mDidFireDOMContentLoaded) {
+    return;
+  }
+  mDidFireDOMContentLoaded = true;
+
+  MOZ_ASSERT(mReadyState == READYSTATE_INTERACTIVE);
   if (!mSynchronousDOMContentLoaded) {
     nsRefPtr<nsIRunnable> ev =
       NS_NewRunnableMethod(this, &nsDocument::DispatchContentLoadedEvents);
