@@ -13,6 +13,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "vm/Runtime.h"
+#include "jit/CompileWrappers.h"
 
 using namespace js;
 
@@ -87,7 +88,22 @@ const char* const text[] = {
     "TraceLogger",
     "YarrCompile",
     "YarrInterpret",
-    "YarrJIT"
+    "YarrJIT",
+    "SplitCriticalEdges",
+    "RenumberBlocks",
+    "DominatorTree",
+    "PhiAnalysis",
+    "ApplyTypes",
+    "ParallelSafetyAnalysis",
+    "AliasAnalysis",
+    "GVN",
+    "UCE",
+    "LICM",
+    "RangeAnalysis",
+    "EffectiveAddressAnalysis",
+    "EliminateDeadCode",
+    "EdgeCaseAnalysis",
+    "EliminateRedundantChecks"
 };
 
 TraceLogger::TraceLogger()
@@ -671,7 +687,7 @@ TraceLogging::lazyInit()
             "\n"
             "Collections:\n"
             "  Default        Output all default\n"
-            "  IonCompile     Output all information about compilation\n"
+            "  IonCompiler    Output all information about compilation\n"
             "\n"
             "Specific log items:\n"
         );
@@ -683,9 +699,11 @@ TraceLogging::lazyInit()
         /*NOTREACHED*/
     }
 
-    enabledTextIds[TraceLogger::TL_Error] = true;
     for (uint32_t i = 1; i < TraceLogger::LAST; i++)
         enabledTextIds[i] = ContainsFlag(env, text[i]);
+
+    enabledTextIds[TraceLogger::TL_Error] = true;
+    enabledTextIds[TraceLogger::TL] = true;
 
     if (ContainsFlag(env, "Default") || strlen(env) == 0) {
         enabledTextIds[TraceLogger::Bailout] = true;
@@ -701,7 +719,6 @@ TraceLogging::lazyInit()
         enabledTextIds[TraceLogger::ParserCompileFunction] = true;
         enabledTextIds[TraceLogger::ParserCompileLazy] = true;
         enabledTextIds[TraceLogger::ParserCompileScript] = true;
-        enabledTextIds[TraceLogger::TL] = true;
         enabledTextIds[TraceLogger::YarrCompile] = true;
         enabledTextIds[TraceLogger::YarrInterpret] = true;
         enabledTextIds[TraceLogger::YarrJIT] = true;
@@ -710,11 +727,38 @@ TraceLogging::lazyInit()
     if (ContainsFlag(env, "IonCompiler") || strlen(env) == 0) {
         enabledTextIds[TraceLogger::IonCompilation] = true;
         enabledTextIds[TraceLogger::IonLinking] = true;
+        enabledTextIds[TraceLogger::SplitCriticalEdges] = true;
+        enabledTextIds[TraceLogger::RenumberBlocks] = true;
+        enabledTextIds[TraceLogger::DominatorTree] = true;
+        enabledTextIds[TraceLogger::PhiAnalysis] = true;
+        enabledTextIds[TraceLogger::ApplyTypes] = true;
+        enabledTextIds[TraceLogger::ParallelSafetyAnalysis] = true;
+        enabledTextIds[TraceLogger::AliasAnalysis] = true;
+        enabledTextIds[TraceLogger::GVN] = true;
+        enabledTextIds[TraceLogger::UCE] = true;
+        enabledTextIds[TraceLogger::LICM] = true;
+        enabledTextIds[TraceLogger::RangeAnalysis] = true;
+        enabledTextIds[TraceLogger::EffectiveAddressAnalysis] = true;
+        enabledTextIds[TraceLogger::EliminateDeadCode] = true;
+        enabledTextIds[TraceLogger::EdgeCaseAnalysis] = true;
+        enabledTextIds[TraceLogger::EliminateRedundantChecks] = true;
     }
 
     startupTime = rdtsc();
     enabled = true;
     return true;
+}
+
+TraceLogger *
+js::TraceLoggerForMainThread(jit::CompileRuntime *runtime)
+{
+    return traceLoggers.forMainThread(runtime);
+}
+
+TraceLogger *
+TraceLogging::forMainThread(jit::CompileRuntime *runtime)
+{
+    return forMainThread(runtime->mainThread());
 }
 
 TraceLogger *
@@ -726,20 +770,26 @@ js::TraceLoggerForMainThread(JSRuntime *runtime)
 TraceLogger *
 TraceLogging::forMainThread(JSRuntime *runtime)
 {
-    if (!runtime->mainThread.traceLogger) {
+    return forMainThread(&runtime->mainThread);
+}
+
+TraceLogger *
+TraceLogging::forMainThread(PerThreadData *mainThread)
+{
+    if (!mainThread->traceLogger) {
         AutoTraceLoggingLock lock(this);
 
         if (!lazyInit())
             return nullptr;
 
         TraceLogger *logger = create();
-        runtime->mainThread.traceLogger = logger;
+        mainThread->traceLogger = logger;
 
         if (!mainThreadLoggers.append(logger))
             return nullptr;
     }
 
-    return runtime->mainThread.traceLogger;
+    return mainThread->traceLogger;
 }
 
 TraceLogger *
