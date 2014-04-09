@@ -18,35 +18,6 @@ namespace layers {
  * This helper class manages the gfxASurface
  * logic.
  */
-class MOZ_STACK_CLASS AutoMaskData {
-public:
-  AutoMaskData() { }
-  ~AutoMaskData() { }
-
-  /**
-   * Construct this out of either a gfxASurface or a
-   * SurfaceDescriptor.  Construct() must only be called once.
-   * GetSurface() and GetTransform() must not be called until this has
-   * been constructed.
-   */
-
-  void Construct(const gfx::Matrix& aTransform,
-                 gfxASurface* aSurface);
-
-  /** The returned surface can't escape the scope of |this|. */
-  gfxASurface* GetSurface();
-  const gfx::Matrix& GetTransform();
-
-private:
-  bool IsConstructed();
-
-  gfx::Matrix mTransform;
-  nsRefPtr<gfxASurface> mSurface;
-
-  AutoMaskData(const AutoMaskData&) MOZ_DELETE;
-  AutoMaskData& operator=(const AutoMaskData&) MOZ_DELETE;
-};
-
 class MOZ_STACK_CLASS AutoMoz2DMaskData {
 public:
   AutoMoz2DMaskData() { }
