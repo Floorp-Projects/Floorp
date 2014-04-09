@@ -429,9 +429,7 @@ T* DowncastCCParticipant(void *p)
     aCallbacks.Trace(&tmp->_field, #_field, aClosure);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(_field)           \
-  if (JSVAL_IS_TRACEABLE(tmp->_field)) {                                       \
-    aCallbacks.Trace(&tmp->_field, #_field, aClosure);                         \
-  }
+  aCallbacks.Trace(&tmp->_field, #_field, aClosure);
 
 // NB: The (void)tmp; hack in the TRACE_END macro exists to support
 // implementations that don't need to do anything in their Trace method.
