@@ -74,6 +74,7 @@
 #include "mozilla/gfx/Matrix.h"
 #include "UnitTransforms.h"
 #include "ClientLayerManager.h"
+#include "ActiveElementManager.h"
 
 #include "nsColorPickerProxy.h"
 
@@ -687,6 +688,7 @@ TabChild::TabChild(ContentChild* aManager, const TabContext& aContext, uint32_t 
   , mContextMenuHandled(false)
   , mWaitingTouchListeners(false)
   , mIgnoreKeyPressEvent(false)
+  , mActiveElementManager(new ActiveElementManager())
 {
   if (!sActiveDurationMsSet) {
     Preferences::AddIntVarCache(&sActiveDurationMs,
@@ -1754,6 +1756,21 @@ TabChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
     }
     break;
   }
+  case APZStateChange::StartTouch:
+  {
+    mActiveElementManager->HandleTouchStart(aArg);
+    break;
+  }
+  case APZStateChange::StartPanning:
+  {
+    mActiveElementManager->HandlePanStart();
+    break;
+  }
+  case APZStateChange::EndTouch:
+  {
+    mActiveElementManager->HandleTouchEnd(aArg);
+    break;
+  }
   default:
     // APZStateChange has a 'sentinel' value, and the compiler complains
     // if an enumerator is not handled and there is no 'default' case.
@@ -1960,6 +1977,10 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
   if (!IsAsyncPanZoomEnabled()) {
     UpdateTapState(localEvent, status);
     return true;
+  }
+
+  if (aEvent.message == NS_TOUCH_START && localEvent.touches.Length() > 0) {
+    mActiveElementManager->SetTargetElement(localEvent.touches[0]->Target());
   }
 
   nsCOMPtr<nsPIDOMWindow> outerWindow = do_GetInterface(WebNavigation());
