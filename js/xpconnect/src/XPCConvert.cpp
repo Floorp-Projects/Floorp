@@ -822,7 +822,8 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
     RootedObject flat(cx, cache ? cache->GetWrapper() : nullptr);
     if (!flat && cache && cache->IsDOMBinding()) {
         RootedObject global(cx, xpcscope->GetGlobalJSObject());
-        flat = cache->WrapObject(cx, global);
+        js::AssertSameCompartment(cx, global);
+        flat = cache->WrapObject(cx);
         if (!flat)
             return false;
     }

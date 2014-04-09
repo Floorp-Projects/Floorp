@@ -17,9 +17,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGCircleElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+SVGCircleElement::WrapNode(JSContext *aCx)
 {
-  return SVGCircleElementBinding::Wrap(aCx, aScope, this);
+  return SVGCircleElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::LengthInfo SVGCircleElement::sLengthInfo[3] =

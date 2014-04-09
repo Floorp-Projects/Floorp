@@ -12,9 +12,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGAltGlyphElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+SVGAltGlyphElement::WrapNode(JSContext *aCx)
 {
-  return SVGAltGlyphElementBinding::Wrap(aCx, aScope, this);
+  return SVGAltGlyphElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::StringInfo SVGAltGlyphElement::sStringInfo[1] =

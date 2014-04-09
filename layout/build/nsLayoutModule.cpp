@@ -7,6 +7,7 @@
 
 #include "XPCModule.h"
 #include "mozilla/ModuleUtils.h"
+#include "nsImageModule.h"
 #include "nsLayoutStatics.h"
 #include "nsContentCID.h"
 #include "nsContentDLF.h"
@@ -70,6 +71,7 @@
 #include "nsDOMBlobBuilder.h"
 #include "nsDOMFileReader.h"
 
+#include "gfxPlatform.h"
 #include "nsFormData.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsHostObjectURI.h"
@@ -352,35 +354,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelephonyProvider,
 
 //-----------------------------------------------------------------------------
 
-// Per bug 209804, it is necessary to observe the "xpcom-shutdown" event and
-// perform shutdown of the layout modules at that time instead of waiting for
-// our module destructor to run.  If we do not do this, then we risk holding
-// references to objects in other component libraries that have already been
-// shutdown (and possibly unloaded if 60709 is ever fixed).
-
-class LayoutShutdownObserver MOZ_FINAL : public nsIObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-};
-
-NS_IMPL_ISUPPORTS1(LayoutShutdownObserver, nsIObserver)
-
-NS_IMETHODIMP
-LayoutShutdownObserver::Observe(nsISupports *aSubject,
-                                const char *aTopic,
-                                const char16_t *someData)
-{
-  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    Shutdown();
-    nsContentUtils::XPCOMShutdown();
-  }
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-
 static bool gInitialized = false;
 
 // Perform our one-time intialization for this module
@@ -409,24 +382,6 @@ Initialize()
   if (NS_FAILED(rv)) {
     Shutdown();
     return rv;
-  }
-
-  // Add our shutdown observer.
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-
-  if (observerService) {
-    LayoutShutdownObserver* observer = new LayoutShutdownObserver();
-
-    if (!observer) {
-      Shutdown();
-
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    observerService->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-  } else {
-    NS_WARNING("Could not get an observer service.  We will leak on shutdown.");
   }
 
 #ifdef DEBUG
@@ -1293,8 +1248,15 @@ static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
 static void
 LayoutModuleDtor()
 {
+  Shutdown();
+  nsContentUtils::XPCOMShutdown();
   nsScriptSecurityManager::Shutdown();
   xpcModuleDtor();
+
+  // Layout depends heavily on gfx and imagelib, so we want to make sure that
+  // these modules are shut down after all the layout cleanup runs.
+  mozilla::image::ShutdownModule();
+  gfxPlatform::Shutdown();
 }
 
 static const mozilla::Module kLayoutModule = {

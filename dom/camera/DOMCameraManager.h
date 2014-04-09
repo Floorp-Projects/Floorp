@@ -73,7 +73,7 @@ public:
   void GetListOfCameras(nsTArray<nsString>& aList, mozilla::ErrorResult& aRv);
 
   nsPIDOMWindow* GetParentObject() const { return mWindow; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+  virtual JSObject* WrapObject(JSContext* aCx)
     MOZ_OVERRIDE;
 
 protected:

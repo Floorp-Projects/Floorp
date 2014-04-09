@@ -264,9 +264,9 @@ NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequestUpload, nsXHREventTarget)
 NS_IMPL_RELEASE_INHERITED(nsXMLHttpRequestUpload, nsXHREventTarget)
 
 /* virtual */ JSObject*
-nsXMLHttpRequestUpload::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+nsXMLHttpRequestUpload::WrapObject(JSContext* aCx)
 {
-  return XMLHttpRequestUploadBinding::Wrap(aCx, aScope, this);
+  return XMLHttpRequestUploadBinding::Wrap(aCx, this);
 }
 
 /////////////////////////////////////////////

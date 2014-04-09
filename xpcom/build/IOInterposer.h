@@ -161,9 +161,6 @@ protected:
  */
 class IOInterposer MOZ_FINAL
 {
-  // Track whether or not a given type of observation is being observed
-  static IOInterposeObserver::Operation sObservedOperations;
-
   // No instance of class should be created, they'd be empty anyway.
   IOInterposer();
 public:
@@ -178,7 +175,7 @@ public:
    * Remark, it's safe to call this method multiple times, so just call it when
    * you to utilize IO interposing.
    */
-  static void Init();
+  static bool Init();
 
   /**
    * This function must be called from the main thread, and furthermore
@@ -249,13 +246,26 @@ public:
                          IOInterposeObserver* aObserver);
 
   /**
-   * Registers the current thread with the IOInterposer.
+   * Registers the current thread with the IOInterposer. This must be done to
+   * ensure that per-thread data is created in an orderly fashion.
+   * We could have written this to initialize that data lazily, however this
+   * could have unintended consequences if a thread that is not aware of
+   * IOInterposer was implicitly registered: its per-thread data would never
+   * be deleted because it would not know to unregister itself.
    *
    * @param aIsMainThread true if IOInterposer should treat the current thread
    *                      as the main thread.
    */
   static void
   RegisterCurrentThread(bool aIsMainThread = false);
+
+  /**
+   * Unregisters the current thread with the IOInterposer. This is important
+   * to call when a thread is shutting down because it cleans up data that
+   * is stored in a TLS slot.
+   */
+  static void
+  UnregisterCurrentThread();
 };
 
 class IOInterposerInit

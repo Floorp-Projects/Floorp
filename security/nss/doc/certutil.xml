@@ -222,7 +222,7 @@ If this option is not used, the validity check defaults to the current system ti
 
       <varlistentry>
         <term>-g keysize</term>
-        <listitem><para>Set a key size to use when generating new public and private key pairs. The minimum is 512 bits and the maximum is 8192 bits. The default is 1024 bits. Any size between the minimum and maximum is allowed.</para></listitem>
+        <listitem><para>Set a key size to use when generating new public and private key pairs. The minimum is 512 bits and the maximum is 16384 bits. The default is 1024 bits. Any size between the minimum and maximum is allowed.</para></listitem>
       </varlistentry>
 
 
@@ -360,7 +360,7 @@ of the attribute codes:
 	<para>
 		The attribute codes for the categories are separated by commas, and the entire set of attributes enclosed by quotation marks. For example:
 	</para>
-<para><command>-t "TCu,Cu,Tuw"</command></para>
+<para><command>-t "TCu,Cu,Tu"</command></para>
 	<para>
 	Use the -L option to see a list of the current certificates and trust attributes in a certificate database. </para></listitem>
       </varlistentry>

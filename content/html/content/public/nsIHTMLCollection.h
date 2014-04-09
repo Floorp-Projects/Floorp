@@ -78,7 +78,7 @@ public:
   {
     return GetWrapperPreserveColorInternal();
   }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) = 0;
+  virtual JSObject* WrapObject(JSContext* aCx) = 0;
 protected:
   virtual JSObject* GetWrapperPreserveColorInternal() = 0;
 };

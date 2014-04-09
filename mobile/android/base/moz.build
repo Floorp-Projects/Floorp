@@ -49,6 +49,7 @@ gujar.sources += [
     'util/ActivityResultHandler.java',
     'util/ActivityResultHandlerMap.java',
     'util/Clipboard.java',
+    'util/EventCallback.java',
     'util/FileUtils.java',
     'util/FloatUtils.java',
     'util/GamepadUtils.java',

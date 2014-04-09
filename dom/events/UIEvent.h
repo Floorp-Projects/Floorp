@@ -102,10 +102,9 @@ public:
                                                const UIEventInit& aParam,
                                                ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
   {
-    return UIEventBinding::Wrap(aCx, aScope, this);
+    return UIEventBinding::Wrap(aCx, this);
   }
 
   nsIDOMWindow* GetView() const

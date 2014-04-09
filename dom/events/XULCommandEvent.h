@@ -31,10 +31,9 @@ public:
   // Forward our inherited virtual methods to the base class
   NS_FORWARD_TO_UIEVENT
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
   {
-    return XULCommandEventBinding::Wrap(aCx, aScope, this);
+    return XULCommandEventBinding::Wrap(aCx, this);
   }
 
   bool AltKey();

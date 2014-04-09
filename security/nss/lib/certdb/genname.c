@@ -1523,6 +1523,75 @@ done:
     return rv;
 }
 
+/* Add name constraints to certain certs that do not include name constraints
+ * This is the core of the implementation for bug 952572.
+ */
+
+static SECStatus
+getNameExtensionsBuiltIn(CERTCertificate  *cert,
+                         SECItem *extensions)
+{
+  const char constraintFranceGov[] = "\x30\x5D" /* sequence len = 93*/
+                                     "\xA0\x5B" /* element len =91 */
+                                     "\x30\x05" /* sequence len 5 */
+                                     "\x82\x03" /* entry len 3 */
+                                     ".fr"
+                                     "\x30\x05\x82\x03" /* sequence len5, entry len 3 */
+                                     ".gp"
+                                     "\x30\x05\x82\x03"
+                                     ".gf"
+                                     "\x30\x05\x82\x03"
+                                     ".mq"
+                                     "\x30\x05\x82\x03"
+                                     ".re"
+                                     "\x30\x05\x82\x03"
+                                     ".yt"
+                                     "\x30\x05\x82\x03"
+                                     ".pm"
+                                     "\x30\x05\x82\x03"
+                                     ".bl"
+                                     "\x30\x05\x82\x03"
+                                     ".mf"
+                                     "\x30\x05\x82\x03"
+                                     ".wf"
+                                     "\x30\x05\x82\x03"
+                                     ".pf"
+                                     "\x30\x05\x82\x03"
+                                     ".nc"
+                                     "\x30\x05\x82\x03"
+                                     ".tf";
+
+  /* The stringified value for the subject is:
+     E=igca@sgdn.pm.gouv.fr,CN=IGC/A,OU=DCSSI,O=PM/SGDN,L=Paris,ST=France,C=FR
+   */
+  const char rawANSSISubject[] = "\x30\x81\x85\x31\x0B\x30\x09\x06\x03\x55\x04"
+                                 "\x06\x13\x02\x46\x52\x31\x0F\x30\x0D\x06\x03"
+                                 "\x55\x04\x08\x13\x06\x46\x72\x61\x6E\x63\x65"
+                                 "\x31\x0E\x30\x0C\x06\x03\x55\x04\x07\x13\x05"
+                                 "\x50\x61\x72\x69\x73\x31\x10\x30\x0E\x06\x03"
+                                 "\x55\x04\x0A\x13\x07\x50\x4D\x2F\x53\x47\x44"
+                                 "\x4E\x31\x0E\x30\x0C\x06\x03\x55\x04\x0B\x13"
+                                 "\x05\x44\x43\x53\x53\x49\x31\x0E\x30\x0C\x06"
+                                 "\x03\x55\x04\x03\x13\x05\x49\x47\x43\x2F\x41"
+                                 "\x31\x23\x30\x21\x06\x09\x2A\x86\x48\x86\xF7"
+                                 "\x0D\x01\x09\x01\x16\x14\x69\x67\x63\x61\x40"
+                                 "\x73\x67\x64\x6E\x2E\x70\x6D\x2E\x67\x6F\x75"
+                                 "\x76\x2E\x66\x72";
+
+  const SECItem anssi_subject = {0, (char *) rawANSSISubject,
+                                 sizeof(rawANSSISubject)-1};
+  const SECItem permitFranceGovNC = {0, (char *) constraintFranceGov,
+                                     sizeof(constraintFranceGov)-1};
+
+  if (SECITEM_ItemsAreEqual(&cert->derSubject, &anssi_subject)) {
+    SECStatus rv;
+    rv = SECITEM_CopyItem(NULL, extensions, &permitFranceGovNC);
+    return rv;
+  }
+  PORT_SetError(SEC_ERROR_EXTENSION_NOT_FOUND);
+  return SECFailure;
+}
+
 /* Extract the name constraints extension from the CA cert. */
 SECStatus
 CERT_FindNameConstraintsExten(PLArenaPool      *arena,
@@ -1538,10 +1607,16 @@ CERT_FindNameConstraintsExten(PLArenaPool      *arena,
     rv = CERT_FindCertExtension(cert, SEC_OID_X509_NAME_CONSTRAINTS, 
                                 &constraintsExtension);
     if (rv != SECSuccess) {
-        if (PORT_GetError() == SEC_ERROR_EXTENSION_NOT_FOUND) {
-            rv = SECSuccess;
+        if (PORT_GetError() != SEC_ERROR_EXTENSION_NOT_FOUND) {
+            return rv;
         }
-        return rv;
+        rv = getNameExtensionsBuiltIn(cert, &constraintsExtension);
+        if (rv != SECSuccess) {
+          if (PORT_GetError() == SEC_ERROR_EXTENSION_NOT_FOUND) {
+            return SECSuccess;
+          }
+          return rv;
+        }
     }
 
     mark = PORT_ArenaMark(arena);

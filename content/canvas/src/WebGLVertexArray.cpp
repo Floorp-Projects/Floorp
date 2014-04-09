@@ -12,8 +12,8 @@
 using namespace mozilla;
 
 JSObject*
-WebGLVertexArray::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) {
-    return dom::WebGLVertexArrayBinding::Wrap(cx, scope, this);
+WebGLVertexArray::WrapObject(JSContext *cx) {
+    return dom::WebGLVertexArrayBinding::Wrap(cx, this);
 }
 
 WebGLVertexArray::WebGLVertexArray(WebGLContext* context)

@@ -632,9 +632,9 @@ NS_IMPL_ADDREF_INHERITED(IDBTransaction, IDBWrapperCache)
 NS_IMPL_RELEASE_INHERITED(IDBTransaction, IDBWrapperCache)
 
 JSObject*
-IDBTransaction::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+IDBTransaction::WrapObject(JSContext* aCx)
 {
-  return IDBTransactionBinding::Wrap(aCx, aScope, this);
+  return IDBTransactionBinding::Wrap(aCx, this);
 }
 
 mozilla::dom::IDBTransactionMode

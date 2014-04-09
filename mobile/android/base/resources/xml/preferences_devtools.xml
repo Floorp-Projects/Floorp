@@ -11,7 +11,7 @@
        <CheckBoxPreference android:key="devtools.debugger.remote-enabled"
                            android:title="@string/pref_developer_remotedebugging" />
 
-       <org.mozilla.gecko.preferences.AlignRightLinkPreference android:title="@string/pref_developer_remotedebugging_docs"
+       <org.mozilla.gecko.preferences.AlignRightLinkPreference android:title="@string/pref_learn_more"
                                                                url="https://developer.mozilla.org/docs/Tools/Remote_Debugging" />
 
 </PreferenceScreen>

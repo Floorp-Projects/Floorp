@@ -562,9 +562,9 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
 }
 
 JSObject*
-CanvasRenderingContext2D::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
+CanvasRenderingContext2D::WrapObject(JSContext *cx)
 {
-  return CanvasRenderingContext2DBinding::Wrap(cx, scope, this);
+  return CanvasRenderingContext2DBinding::Wrap(cx, this);
 }
 
 bool
@@ -4368,9 +4368,9 @@ CanvasPath::CanvasPath(nsCOMPtr<nsISupports> aParent, RefPtr<PathBuilder> aPathB
 }
 
 JSObject*
-CanvasPath::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+CanvasPath::WrapObject(JSContext* aCx)
 {
-  return Path2DBinding::Wrap(aCx, aScope, this);
+  return Path2DBinding::Wrap(aCx, this);
 }
 
 already_AddRefed<CanvasPath>

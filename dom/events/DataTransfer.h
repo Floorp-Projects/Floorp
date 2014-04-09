@@ -104,7 +104,7 @@ public:
   DataTransfer(nsISupports* aParent, uint32_t aEventType, bool aIsExternal,
                int32_t aClipboardType);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
+  virtual JSObject* WrapObject(JSContext* aCx);
   nsISupports* GetParentObject()
   {
     return mParent;
