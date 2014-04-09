@@ -54,7 +54,7 @@ import android.content.Context;
 public class AccountPickler {
   public static final String LOG_TAG = AccountPickler.class.getSimpleName();
 
-  public static final long PICKLE_VERSION = 1;
+  public static final long PICKLE_VERSION = 2;
 
   private static final String KEY_PICKLE_VERSION = "pickle_version";
   private static final String KEY_PICKLE_TIMESTAMP = "pickle_timestamp";
@@ -216,10 +216,34 @@ public class AccountPickler {
         throw new IllegalStateException("Pickle version not found.");
       }
 
+      /*
+       * Version 1 and version 2 are identical, except version 2 throws if the
+       * internal Android Account type has changed. Version 1 used to throw in
+       * this case, but we intentionally used the pickle file to migrate across
+       * Account types, bumping the version simultaneously.
+       */
       switch (params.pickleVersion.intValue()) {
-        case 1:
+        case 2: {
+          // Sanity check.
+          final String accountType = json.getString(KEY_ACCOUNT_TYPE);
+          if (!FxAccountConstants.ACCOUNT_TYPE.equals(accountType)) {
+            throw new IllegalStateException("Account type has changed from " + accountType + " to " + FxAccountConstants.ACCOUNT_TYPE + ".");
+          }
+
           params.unpickleV1(json);
-          break;
+        }
+        break;
+
+        case 1: {
+          // Warn about account type changing, but don't throw over it.
+          final String accountType = json.getString(KEY_ACCOUNT_TYPE);
+          if (!FxAccountConstants.ACCOUNT_TYPE.equals(accountType)) {
+            Logger.warn(LOG_TAG, "Account type has changed from " + accountType + " to " + FxAccountConstants.ACCOUNT_TYPE + "; ignoring.");
+          }
+
+          params.unpickleV1(json);
+        }
+        break;
 
         default:
           throw new IllegalStateException("Unknown pickle version, " + params.pickleVersion + ".");
@@ -230,12 +254,6 @@ public class AccountPickler {
 
     private void unpickleV1(final ExtendedJSONObject json)
         throws NonObjectJSONException, NoSuchAlgorithmException, InvalidKeySpecException {
-      // Sanity check.
-      final String accountType = json.getString(KEY_ACCOUNT_TYPE);
-      if (!FxAccountConstants.ACCOUNT_TYPE.equals(accountType)) {
-        throw new IllegalStateException("Account type has changed from, " + accountType +
-            ", to, " + FxAccountConstants.ACCOUNT_TYPE + ".");
-      }
 
       this.accountVersion = json.getIntegerSafely(KEY_ACCOUNT_VERSION);
       this.email = json.getString(KEY_EMAIL);
