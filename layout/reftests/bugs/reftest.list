@@ -1804,4 +1804,5 @@ skip-if(Android) == 966510-2.html 966510-2-ref.html # same as above
 == 983084-2.html 983084-2-ref.html
 == 983084-3.html 983084-1-ref.html
 == 983691-1.html 983691-ref.html
+fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,24) == 991046-1.html 991046-1-ref.html
 pref(layout.css.overflow-clip-box.enabled,true) == 992447.html 992447-ref.html

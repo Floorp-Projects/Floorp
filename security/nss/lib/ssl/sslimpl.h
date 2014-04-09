@@ -1380,8 +1380,6 @@ extern SECStatus   ssl_GatherRecord1stHandshake(sslSocket *ss);
 
 extern SECStatus   ssl2_HandleClientHelloMessage(sslSocket *ss);
 extern SECStatus   ssl2_HandleServerHelloMessage(sslSocket *ss);
-extern int         ssl2_StartGatherBytes(sslSocket *ss, sslGather *gs, 
-                                         unsigned int count);
 
 extern SECStatus   ssl_CreateSecurityInfo(sslSocket *ss);
 extern SECStatus   ssl_CopySecurityInfo(sslSocket *ss, sslSocket *os);

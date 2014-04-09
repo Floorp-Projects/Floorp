@@ -391,9 +391,9 @@ LockedFile::IsOpen() const
 
 // virtual
 JSObject*
-LockedFile::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+LockedFile::WrapObject(JSContext* aCx)
 {
-  return LockedFileBinding::Wrap(aCx, aScope, this);
+  return LockedFileBinding::Wrap(aCx, this);
 }
 
 already_AddRefed<FileRequest>

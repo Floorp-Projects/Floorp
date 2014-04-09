@@ -40,13 +40,12 @@ protected:
 };
 
 #define DECL_WEBGL_EXTENSION_GOOP                                           \
-    virtual JSObject* WrapObject(JSContext *cx,                             \
-                                 JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
 
 #define IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionType) \
     JSObject* \
-    WebGLExtensionType::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) { \
-        return dom::WebGLExtensionType##Binding::Wrap(cx, scope, this); \
+    WebGLExtensionType::WrapObject(JSContext *cx) { \
+        return dom::WebGLExtensionType##Binding::Wrap(cx, this); \
     }
 
 class WebGLExtensionCompressedTextureATC

@@ -12129,11 +12129,11 @@ nsDocument::Evaluate(const nsAString& aExpression, nsIDOMNode* aContextNode,
 // This is just a hack around the fact that window.document is not
 // [Unforgeable] yet.
 JSObject*
-nsIDocument::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
+nsIDocument::WrapObject(JSContext *aCx)
 {
   MOZ_ASSERT(IsDOMBinding());
 
-  JS::Rooted<JSObject*> obj(aCx, nsINode::WrapObject(aCx, aScope));
+  JS::Rooted<JSObject*> obj(aCx, nsINode::WrapObject(aCx));
   if (!obj) {
     return nullptr;
   }

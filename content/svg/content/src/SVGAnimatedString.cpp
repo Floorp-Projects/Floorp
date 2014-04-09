@@ -10,10 +10,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGAnimatedString::WrapObject(JSContext* aCx,
-                              JS::Handle<JSObject*> aScope)
+SVGAnimatedString::WrapObject(JSContext* aCx)
 {
-  return SVGAnimatedStringBinding::Wrap(aCx, aScope, this);
+  return SVGAnimatedStringBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

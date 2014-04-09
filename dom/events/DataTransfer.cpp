@@ -169,9 +169,9 @@ DataTransfer::Constructor(const GlobalObject& aGlobal,
 }
 
 JSObject*
-DataTransfer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+DataTransfer::WrapObject(JSContext* aCx)
 {
-  return DataTransferBinding::Wrap(aCx, aScope, this);
+  return DataTransferBinding::Wrap(aCx, this);
 }
 
 NS_IMETHODIMP

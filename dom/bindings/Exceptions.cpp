@@ -90,10 +90,11 @@ ThrowExceptionObject(JSContext* aCx, Exception* aException)
 
   JS::Rooted<JSObject*> glob(aCx, JS::CurrentGlobalOrNull(aCx));
   if (!glob) {
+    // XXXbz Can this actually be null here?
     return false;
   }
 
-  if (!WrapNewBindingObject(aCx, glob, aException, &thrown)) {
+  if (!WrapNewBindingObject(aCx, aException, &thrown)) {
     return false;
   }
 

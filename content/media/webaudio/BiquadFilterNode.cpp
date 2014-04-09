@@ -243,9 +243,9 @@ BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
 }
 
 JSObject*
-BiquadFilterNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+BiquadFilterNode::WrapObject(JSContext* aCx)
 {
-  return BiquadFilterNodeBinding::Wrap(aCx, aScope, this);
+  return BiquadFilterNodeBinding::Wrap(aCx, this);
 }
 
 void

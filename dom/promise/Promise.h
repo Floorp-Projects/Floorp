@@ -79,7 +79,7 @@ public:
 
   // Helpers for using Promise from C++.
   // Most DOM objects are handled already.  To add a new type T, such as ints,
-  // or dictionaries, add an ArgumentToJSVal overload below.
+  // or dictionaries, add an ArgumentToJSValue overload below.
   template <typename T>
   void MaybeResolve(T& aArg) {
     MaybeSomething(aArg, &Promise::MaybeResolve);
@@ -98,7 +98,7 @@ public:
   }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   static already_AddRefed<Promise>
   Constructor(const GlobalObject& aGlobal, PromiseInit& aInit,
@@ -209,14 +209,12 @@ private:
   bool
   ArgumentToJSValue(const nsAString& aArgument,
                     JSContext* aCx,
-                    JSObject* aScope,
                     JS::MutableHandle<JS::Value> aValue);
 
   // Accept booleans.
   bool
   ArgumentToJSValue(bool aArgument,
                     JSContext* aCx,
-                    JSObject* aScope,
                     JS::MutableHandle<JS::Value> aValue);
 
   // Accept objects that inherit from nsWrapperCache and nsISupports (e.g. most
@@ -226,12 +224,9 @@ private:
                     IsBaseOf<nsISupports, T>::value, bool>::Type
   ArgumentToJSValue(T& aArgument,
                     JSContext* aCx,
-                    JSObject* aScope,
                     JS::MutableHandle<JS::Value> aValue)
   {
-    JS::Rooted<JSObject*> scope(aCx, aScope);
-
-    return WrapNewBindingObject(aCx, scope, aArgument, aValue);
+    return WrapNewBindingObject(aCx, aArgument, aValue);
   }
 
   // Accept typed arrays built from appropriate nsTArray values
@@ -239,12 +234,9 @@ private:
   typename EnableIf<IsBaseOf<AllTypedArraysBase, T>::value, bool>::Type
   ArgumentToJSValue(const TypedArrayCreator<T>& aArgument,
                     JSContext* aCx,
-                    JSObject* aScope,
                     JS::MutableHandle<JS::Value> aValue)
   {
-    JS::RootedObject scope(aCx, aScope);
-
-    JSObject* abv = aArgument.Create(aCx, scope);
+    JSObject* abv = aArgument.Create(aCx);
     if (!abv) {
       return false;
     }
@@ -259,10 +251,9 @@ private:
                     IsBaseOf<nsISupports, T>::value, bool>::Type
   ArgumentToJSValue(T& aArgument,
                     JSContext* aCx,
-                    JSObject* aScope,
                     JS::MutableHandle<JS::Value> aValue)
   {
-    JS::Rooted<JSObject*> scope(aCx, aScope);
+    JS::Rooted<JSObject*> scope(aCx, JS::CurrentGlobalOrNull(aCx));
 
     nsresult rv = nsContentUtils::WrapNative(aCx, scope, &aArgument, aValue);
     return NS_SUCCEEDED(rv);
@@ -272,10 +263,9 @@ private:
   bool
   ArgumentToJSValue(const SmartPtr<T>& aArgument,
                     JSContext* aCx,
-                    JSObject* aScope,
                     JS::MutableHandle<JS::Value> aValue)
   {
-    return ArgumentToJSValue(*aArgument.get(), aCx, aScope, aValue);
+    return ArgumentToJSValue(*aArgument.get(), aCx, aValue);
   }
 
   template <typename T>
@@ -290,7 +280,7 @@ private:
 
     JSAutoCompartment ac(cx, wrapper);
     JS::Rooted<JS::Value> val(cx);
-    if (!ArgumentToJSValue(aArgument, cx, wrapper, &val)) {
+    if (!ArgumentToJSValue(aArgument, cx, &val)) {
       HandleException(cx);
       return;
     }

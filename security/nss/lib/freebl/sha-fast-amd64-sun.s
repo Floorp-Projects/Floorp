@@ -1907,7 +1907,10 @@ SHA1_End:
 /NO_APP
 	movq	(%rsp), %rbx
 	movl	%eax, 16(%r13)
+        cmpq    $0, %r14
+        je      .L133
 	movl	$20, (%r14)
+.L133:
 	movq	16(%rsp), %r13
 	movq	24(%rsp), %r14
 	leave
@@ -2108,3 +2111,41 @@ SHA1_TraceState:
 	jmp	PORT_SetError_Util@PLT
 .LFE16:
 	.size	SHA1_TraceState, .-SHA1_TraceState
+	.align 16
+.globl SHA1_EndRaw
+        .type   SHA1_EndRaw, @function
+SHA1_EndRaw:
+.LFB50:
+        movq    72(%rdi), %rax
+/APP
+        bswap %eax
+/NO_APP
+        movl    %eax, (%rsi)
+        movq    80(%rdi), %rax
+/APP
+        bswap %eax
+/NO_APP
+        movl    %eax, 4(%rsi)
+        movq    88(%rdi), %rax
+/APP
+        bswap %eax
+/NO_APP
+        movl    %eax, 8(%rsi)
+        movq    96(%rdi), %rax
+/APP
+        bswap %eax
+/NO_APP
+        movl    %eax, 12(%rsi)
+        movq    104(%rdi), %rax
+/APP
+        bswap %eax
+/NO_APP
+        testq   %rdx, %rdx
+        movl    %eax, 16(%rsi)
+        je      .L14
+        movl    $20, (%rdx)
+.L14:
+        rep
+        ret
+.LFE50:
+        .size   SHA1_EndRaw, .-SHA1_EndRaw

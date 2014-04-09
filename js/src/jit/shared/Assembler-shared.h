@@ -356,8 +356,15 @@ class Label : public LabelBase
     { }
     ~Label()
     {
-        if (MaybeGetIonContext())
-            JS_ASSERT_IF(!GetIonContext()->runtime->hadOutOfMemory(), !used());
+#ifdef DEBUG
+        // The assertion below doesn't hold if an error occurred.
+        if (OOM_counter > OOM_maxAllocations)
+            return;
+        if (MaybeGetIonContext() && GetIonContext()->runtime->hadOutOfMemory())
+            return;
+
+        MOZ_ASSERT(!used());
+#endif
     }
 };
 

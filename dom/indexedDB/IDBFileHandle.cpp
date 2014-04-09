@@ -108,9 +108,9 @@ IDBFileHandle::CreateFileObject(mozilla::dom::file::LockedFile* aLockedFile,
 
 // virtual
 JSObject*
-IDBFileHandle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+IDBFileHandle::WrapObject(JSContext* aCx)
 {
-  return IDBFileHandleBinding::Wrap(aCx, aScope, this);
+  return IDBFileHandleBinding::Wrap(aCx, this);
 }
 
 IDBDatabase*

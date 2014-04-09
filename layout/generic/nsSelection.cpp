@@ -5828,9 +5828,9 @@ Selection::SetSelectionDirection(nsDirection aDirection) {
 }
 
 JSObject*
-Selection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+Selection::WrapObject(JSContext* aCx)
 {
-  return mozilla::dom::SelectionBinding::Wrap(aCx, aScope, this);
+  return mozilla::dom::SelectionBinding::Wrap(aCx, this);
 }
 
 // nsAutoCopyListener

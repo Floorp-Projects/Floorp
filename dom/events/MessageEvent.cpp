@@ -57,9 +57,9 @@ MessageEvent::~MessageEvent()
 }
 
 JSObject*
-MessageEvent::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+MessageEvent::WrapObject(JSContext* aCx)
 {
-  return mozilla::dom::MessageEventBinding::Wrap(aCx, aScope, this);
+  return mozilla::dom::MessageEventBinding::Wrap(aCx, this);
 }
 
 NS_IMETHODIMP

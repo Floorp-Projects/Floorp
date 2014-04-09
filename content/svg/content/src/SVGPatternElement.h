@@ -33,8 +33,7 @@ protected:
   friend nsresult (::NS_NewSVGPatternElement(nsIContent **aResult,
                                              already_AddRefed<nsINodeInfo>&& aNodeInfo));
   SVGPatternElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx,
-                             JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:
   typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;

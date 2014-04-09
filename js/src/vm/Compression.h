@@ -23,6 +23,7 @@ class Compressor
     const unsigned char *inp;
     size_t inplen;
     size_t outbytes;
+    bool initialized;
 
   public:
     enum Status {

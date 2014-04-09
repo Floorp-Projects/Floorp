@@ -26,7 +26,7 @@
 
 #if defined(__INTEL_COMPILER)
 #include <ia32intrin.h> 
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__SUNPRO_C)
 #include <emmintrin.h>
 #include <tmmintrin.h>
 #endif

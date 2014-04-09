@@ -43,8 +43,7 @@ public:
     MOZ_ASSERT(mParent);
     return mParent;
   }
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   virtual double X() const = 0;
   virtual double Y() const = 0;
@@ -99,8 +98,7 @@ public:
   Constructor(const GlobalObject& aGlobal, double aX, double aY,
               double aWidth, double aHeight, ErrorResult& aRV);
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   void SetRect(float aX, float aY, float aWidth, float aHeight) {
     mX = aX; mY = aY; mWidth = aWidth; mHeight = aHeight;
@@ -159,8 +157,7 @@ public:
 
   NS_DECL_NSIDOMCLIENTRECTLIST
   
-  virtual JSObject* WrapObject(JSContext *cx,
-                               JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
 
   nsISupports* GetParentObject()
   {
