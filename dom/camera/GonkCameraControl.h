@@ -49,6 +49,7 @@ public:
   nsGonkCameraControl(uint32_t aCameraId);
 
   void OnAutoFocusComplete(bool aSuccess);
+  void OnFacesDetected(camera_frame_metadata_t* aMetaData);
   void OnTakePictureComplete(uint8_t* aData, uint32_t aLength);
   void OnTakePictureError();
   void OnNewPreviewFrame(layers::TextureClient* aBuffer);
@@ -83,6 +84,7 @@ protected:
 
   using CameraControlImpl::OnNewPreviewFrame;
   using CameraControlImpl::OnAutoFocusComplete;
+  using CameraControlImpl::OnFacesDetected;
   using CameraControlImpl::OnTakePictureComplete;
   using CameraControlImpl::OnConfigurationChange;
   using CameraControlImpl::OnError;
@@ -104,6 +106,8 @@ protected:
   virtual nsresult StartPreviewImpl() MOZ_OVERRIDE;
   virtual nsresult StopPreviewImpl() MOZ_OVERRIDE;
   virtual nsresult AutoFocusImpl(bool aCancelExistingCall) MOZ_OVERRIDE;
+  virtual nsresult StartFaceDetectionImpl() MOZ_OVERRIDE;
+  virtual nsresult StopFaceDetectionImpl() MOZ_OVERRIDE;
   virtual nsresult TakePictureImpl() MOZ_OVERRIDE;
   virtual nsresult StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescriptor,
                                       const StartRecordingOptions* aOptions = nullptr) MOZ_OVERRIDE;
@@ -166,6 +170,7 @@ void OnTakePictureComplete(nsGonkCameraControl* gc, uint8_t* aData, uint32_t aLe
 void OnTakePictureError(nsGonkCameraControl* gc);
 void OnAutoFocusComplete(nsGonkCameraControl* gc, bool aSuccess);
 void OnAutoFocusMoving(nsGonkCameraControl* gc, bool aIsMoving);
+void OnFacesDetected(nsGonkCameraControl* gc, camera_frame_metadata_t* aMetaData);
 void OnNewPreviewFrame(nsGonkCameraControl* gc, layers::TextureClient* aBuffer);
 void OnShutter(nsGonkCameraControl* gc);
 void OnClosed(nsGonkCameraControl* gc);

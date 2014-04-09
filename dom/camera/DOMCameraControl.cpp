@@ -29,6 +29,7 @@
 #include "mozilla/dom/CameraControlBinding.h"
 #include "mozilla/dom/CameraManagerBinding.h"
 #include "mozilla/dom/CameraCapabilitiesBinding.h"
+#include "DOMCameraDetectedFace.h"
 #include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
@@ -43,7 +44,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 NS_IMPL_ADDREF_INHERITED(nsDOMCameraControl, DOMMediaStream)
 NS_IMPL_RELEASE_INHERITED(nsDOMCameraControl, DOMMediaStream)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_19(nsDOMCameraControl, DOMMediaStream,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_20(nsDOMCameraControl, DOMMediaStream,
                                       mCapabilities,
                                       mWindow,
                                       mGetCameraOnSuccessCb,
@@ -62,7 +63,8 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED_19(nsDOMCameraControl, DOMMediaStream,
                                       mOnClosedCb,
                                       mOnRecorderStateChangeCb,
                                       mOnPreviewStateChangeCb,
-                                      mOnAutoFocusMovingCb)
+                                      mOnAutoFocusMovingCb,
+                                      mOnFacesDetectedCb)
 
 class mozilla::StartRecordingHelper : public nsIDOMEventListener
 {
@@ -144,6 +146,7 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
   , mOnRecorderStateChangeCb(nullptr)
   , mOnPreviewStateChangeCb(nullptr)
   , mOnAutoFocusMovingCb(nullptr)
+  , mOnFacesDetectedCb(nullptr)
   , mWindow(aWindow)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
@@ -612,52 +615,45 @@ nsDOMCameraControl::SensorAngle()
   return angle;
 }
 
-already_AddRefed<CameraShutterCallback>
+// Callback attributes
+
+CameraShutterCallback*
 nsDOMCameraControl::GetOnShutter()
 {
-  nsRefPtr<CameraShutterCallback> cb = mOnShutterCb;
-  return cb.forget();
+  return mOnShutterCb;
 }
-
 void
 nsDOMCameraControl::SetOnShutter(CameraShutterCallback* aCb)
 {
   mOnShutterCb = aCb;
 }
 
-/* attribute CameraClosedCallback onClosed; */
-already_AddRefed<CameraClosedCallback>
+CameraClosedCallback*
 nsDOMCameraControl::GetOnClosed()
 {
-  nsRefPtr<CameraClosedCallback> onClosed = mOnClosedCb;
-  return onClosed.forget();
+  return mOnClosedCb;
 }
-
 void
 nsDOMCameraControl::SetOnClosed(CameraClosedCallback* aCb)
 {
   mOnClosedCb = aCb;
 }
 
-already_AddRefed<CameraRecorderStateChange>
+CameraRecorderStateChange*
 nsDOMCameraControl::GetOnRecorderStateChange()
 {
-  nsRefPtr<CameraRecorderStateChange> cb = mOnRecorderStateChangeCb;
-  return cb.forget();
+  return mOnRecorderStateChangeCb;
 }
-
 void
 nsDOMCameraControl::SetOnRecorderStateChange(CameraRecorderStateChange* aCb)
 {
   mOnRecorderStateChangeCb = aCb;
 }
 
-/* attribute CameraPreviewStateChange onPreviewStateChange; */
-already_AddRefed<CameraPreviewStateChange>
+CameraPreviewStateChange*
 nsDOMCameraControl::GetOnPreviewStateChange()
 {
-  nsRefPtr<CameraPreviewStateChange> cb = mOnPreviewStateChangeCb;
-  return cb.forget();
+  return mOnPreviewStateChangeCb;
 }
 void
 nsDOMCameraControl::SetOnPreviewStateChange(CameraPreviewStateChange* aCb)
@@ -665,16 +661,26 @@ nsDOMCameraControl::SetOnPreviewStateChange(CameraPreviewStateChange* aCb)
   mOnPreviewStateChangeCb = aCb;
 }
 
-already_AddRefed<CameraAutoFocusMovingCallback>
+CameraAutoFocusMovingCallback*
 nsDOMCameraControl::GetOnAutoFocusMoving()
 {
-  nsRefPtr<CameraAutoFocusMovingCallback> cb = mOnAutoFocusMovingCb;
-  return cb.forget();
+  return mOnAutoFocusMovingCb;
 }
 void
 nsDOMCameraControl::SetOnAutoFocusMoving(CameraAutoFocusMovingCallback* aCb)
 {
   mOnAutoFocusMovingCb = aCb;
+}
+
+CameraFaceDetectionCallback*
+nsDOMCameraControl::GetOnFacesDetected()
+{
+  return mOnFacesDetectedCb;
+}
+void
+nsDOMCameraControl::SetOnFacesDetected(CameraFaceDetectionCallback* aCb)
+{
+  mOnFacesDetectedCb = aCb;
 }
 
 already_AddRefed<dom::CameraCapabilities>
@@ -859,6 +865,20 @@ nsDOMCameraControl::AutoFocus(CameraAutoFocusCallback& aOnSuccess,
 }
 
 void
+nsDOMCameraControl::StartFaceDetection(ErrorResult& aRv)
+{
+  MOZ_ASSERT(mCameraControl);
+  aRv = mCameraControl->StartFaceDetection();
+}
+
+void
+nsDOMCameraControl::StopFaceDetection(ErrorResult& aRv)
+{
+  MOZ_ASSERT(mCameraControl);
+  aRv = mCameraControl->StopFaceDetection();
+}
+
+void
 nsDOMCameraControl::TakePicture(const CameraPictureOptions& aOptions,
                                 CameraTakePictureCallback& aOnSuccess,
                                 const Optional<OwningNonNull<CameraErrorCallback> >& aOnError,
@@ -957,6 +977,7 @@ nsDOMCameraControl::Shutdown()
   mOnRecorderStateChangeCb = nullptr;
   mOnPreviewStateChangeCb = nullptr;
   mOnAutoFocusMovingCb = nullptr;
+  mOnFacesDetectedCb = nullptr;
 
   mCameraControl->Shutdown();
 }
@@ -1163,6 +1184,32 @@ nsDOMCameraControl::OnAutoFocusMoving(bool aIsMoving)
     ErrorResult ignored;
     cb->Call(aIsMoving, ignored);
   }
+}
+
+void
+nsDOMCameraControl::OnFacesDetected(const nsTArray<ICameraControl::Face>& aFaces)
+{
+  DOM_CAMERA_LOGI("DOM OnFacesDetected %u face(s)\n", aFaces.Length());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsRefPtr<CameraFaceDetectionCallback> cb = mOnFacesDetectedCb;
+  if (!cb) {
+    return;
+  }
+
+  Sequence<OwningNonNull<DOMCameraDetectedFace> > faces;
+  uint32_t len = aFaces.Length();
+
+  if (faces.SetCapacity(len)) {
+    nsRefPtr<DOMCameraDetectedFace> f;
+    for (uint32_t i = 0; i < len; ++i) {
+      f = new DOMCameraDetectedFace(this, aFaces[i]);
+      *faces.AppendElement() = f.forget().take();
+    }
+  }
+
+  ErrorResult ignored;
+  cb->Call(faces, ignored);
 }
 
 void

@@ -555,6 +555,34 @@ nsGonkCameraControl::AutoFocusImpl(bool aCancelExistingCall)
 }
 
 nsresult
+nsGonkCameraControl::StartFaceDetectionImpl()
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mCameraThread);
+  RETURN_IF_NO_CAMERA_HW();
+
+  DOM_CAMERA_LOGI("Starting face detection\n");
+
+  if (mCameraHw->StartFaceDetection() != OK) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsGonkCameraControl::StopFaceDetectionImpl()
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mCameraThread);
+  RETURN_IF_NO_CAMERA_HW();
+
+  DOM_CAMERA_LOGI("Stopping face detection\n");
+
+  if (mCameraHw->StopFaceDetection() != OK) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+nsresult
 nsGonkCameraControl::SetThumbnailSizeImpl(const Size& aSize)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mCameraThread);
@@ -970,6 +998,83 @@ nsGonkCameraControl::OnAutoFocusComplete(bool aSuccess)
    * we need to dispatch this callback through the Camera Thread.
    */
   mCameraThread->Dispatch(new AutoFocusComplete(this, aSuccess), NS_DISPATCH_NORMAL);
+}
+
+bool
+FeatureDetected(int32_t feature[])
+{
+  /**
+   * For information on what constitutes a valid feature, see:
+   * http://androidxref.com/4.0.4/xref/system/core/include/system/camera.h#202
+   *
+   * Although the comments explicitly state that undetected features are
+   * indicated using the value -2000, we conservatively include anything
+   * outside the explicitly valid range of [-1000, 1000] as undetected
+   * as well.
+   */
+  const int32_t kLowerFeatureBound = -1000;
+  const int32_t kUpperFeatureBound = 1000;
+  return (feature[0] >= kLowerFeatureBound && feature[0] <= kUpperFeatureBound) ||
+         (feature[1] >= kLowerFeatureBound && feature[1] <= kUpperFeatureBound);
+}
+
+void
+nsGonkCameraControl::OnFacesDetected(camera_frame_metadata_t* aMetaData)
+{
+  NS_ENSURE_TRUE_VOID(aMetaData);
+
+  nsTArray<Face> faces;
+  uint32_t numFaces = aMetaData->number_of_faces;
+  DOM_CAMERA_LOGI("Camera detected %d face(s)", numFaces);
+
+  faces.SetCapacity(numFaces);
+
+  for (uint32_t i = 0; i < numFaces; ++i) {
+    Face* f = faces.AppendElement();
+
+    f->id = aMetaData->faces[i].id;
+    f->score = aMetaData->faces[i].score;
+    if (f->score > 100) {
+      f->score = 100;
+    }
+    f->bound.left = aMetaData->faces[i].rect[0];
+    f->bound.top = aMetaData->faces[i].rect[1];
+    f->bound.right = aMetaData->faces[i].rect[2];
+    f->bound.bottom = aMetaData->faces[i].rect[3];
+    DOM_CAMERA_LOGI("Camera face[%u] appended: id=%d, score=%d, bound=(%d, %d)-(%d, %d)\n",
+      i, f->id, f->score, f->bound.left, f->bound.top, f->bound.right, f->bound.bottom);
+
+    f->hasLeftEye = FeatureDetected(aMetaData->faces[i].left_eye);
+    if (f->hasLeftEye) {
+      f->leftEye.x = aMetaData->faces[i].left_eye[0];
+      f->leftEye.y = aMetaData->faces[i].left_eye[1];
+      DOM_CAMERA_LOGI("    Left eye detected at (%d, %d)\n",
+        f->leftEye.x, f->leftEye.y);
+    } else {
+      DOM_CAMERA_LOGI("    No left eye detected\n");
+    }
+
+    f->hasRightEye = FeatureDetected(aMetaData->faces[i].right_eye);
+    if (f->hasRightEye) {
+      f->rightEye.x = aMetaData->faces[i].right_eye[0];
+      f->rightEye.y = aMetaData->faces[i].right_eye[1];
+      DOM_CAMERA_LOGI("    Right eye detected at (%d, %d)\n",
+        f->rightEye.x, f->rightEye.y);
+    } else {
+      DOM_CAMERA_LOGI("    No right eye detected\n");
+    }
+
+    f->hasMouth = FeatureDetected(aMetaData->faces[i].mouth);
+    if (f->hasMouth) {
+      f->mouth.x = aMetaData->faces[i].mouth[0];
+      f->mouth.y = aMetaData->faces[i].mouth[1];
+      DOM_CAMERA_LOGI("    Mouth detected at (%d, %d)\n", f->mouth.x, f->mouth.y);
+    } else {
+      DOM_CAMERA_LOGI("    No mouth detected\n");
+    }
+  }
+
+  CameraControlImpl::OnFacesDetected(faces);
 }
 
 void
@@ -1474,6 +1579,12 @@ void
 OnAutoFocusMoving(nsGonkCameraControl* gc, bool aIsMoving)
 {
   gc->OnAutoFocusMoving(aIsMoving);
+}
+
+void
+OnFacesDetected(nsGonkCameraControl* gc, camera_frame_metadata_t* aMetaData)
+{
+  gc->OnFacesDetected(aMetaData);
 }
 
 void

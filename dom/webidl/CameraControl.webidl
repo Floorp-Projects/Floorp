@@ -345,3 +345,100 @@ interface CameraControl : MediaStream
                         optional CameraSetConfigurationCallback onSuccess,
                         optional CameraErrorCallback onError);
 };
+
+/* The coordinates of a point, relative to the camera sensor, of the center of
+   detected facial features. As with CameraRegions:
+     { x: -1000, y: -1000 } is the top-left corner
+     { x:  1000, y:  1000 } is the bottom-right corner
+   x and y can range from -1000 to 1000.
+*/
+[Pref="camera.control.face_detection.enabled"]
+interface CameraPoint
+{
+  attribute long x;
+  attribute long y;
+};
+
+/* The information of the each face detected by a camera device, e.g.
+     {
+       id: 1,
+       score: 80,
+       bound: { left:   -203,
+                top:    -400,
+                right:   300,
+                bottom:  250 },
+       leftEye:  { x:  -100,
+                   y:  -200 },
+       rightEye: { x:   100,
+                   y:   100 },
+       mouth:    { x:   150,
+                   y:   150 } }
+
+   'id' is an unique value per face while the face is visible to the tracker.
+   If the face leaves the viewfinder and then returns, it will be assigned
+   a new value.
+
+   'score' is the confidence level for the detection of the face.
+   This range is 1 to 100, where 100 is the highest confidence.
+
+   'bounds' is the bounds of the face. It is guaranteed left < right and
+   top < bottom. The coordinates can be smaller than -1000 or bigger than 1000.
+   But at least one vertex will be within (-1000, -1000) and (1000, 1000).
+
+   'leftEye' is the coordinates of the centre of the left eye. The coordinates
+   are in the same space as the ones for 'bounds'. This is an optional field
+   and may not be supported on all devices. If it is not supported or detected,
+   the value will be set to null.
+
+   'rightEye' is the coordinates of the detected right eye; null if not
+   supported or detected.
+
+   'mouth' is the coordinates of the detected mouth; null if not supported or
+   detected.
+*/
+[Pref="camera.control.face_detection.enabled"]
+interface CameraDetectedFace
+{
+  readonly attribute unsigned long id;
+
+  readonly attribute unsigned long score;
+
+  readonly attribute DOMRect bounds;
+
+  readonly attribute boolean hasLeftEye;
+  readonly attribute CameraPoint? leftEye;
+
+  readonly attribute boolean hasRightEye;
+  readonly attribute CameraPoint? rightEye;
+
+  readonly attribute boolean hasMouth;
+  readonly attribute CameraPoint? mouth;
+};
+
+callback CameraFaceDetectionCallback = void (sequence<CameraDetectedFace> faces);
+
+partial interface CameraControl
+{
+  /* Starts the face detection. This should be called after the preview is
+     started. The camera will periodically call 'onFacesDetected' with a
+     sequence of zero or one or more detected faces in the preview frame.
+
+     How often the callback is invoked is implementation dependent.
+
+     This method throws an exception if face detection fails to start.
+  */
+  [Throws, Pref="camera.control.face_detection.enabled"]
+  void startFaceDetection();
+
+  /* Stops the face detection.
+
+     This method throws an exception if face detection can't be stopped.
+  */
+  [Throws, Pref="camera.control.face_detection.enabled"]
+  void stopFaceDetection();
+
+  /* Callback for faces detected in the preview frame. If no faces are
+     detected, the callback is invoked with an empty sequence. */
+  [Pref="camera.control.face_detection.enabled"]
+  attribute CameraFaceDetectionCallback? onFacesDetected;
+};
