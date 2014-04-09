@@ -332,20 +332,36 @@ AreaPositionManager.prototype = {
   _lazyStoreGet: function(aNode) {
     let rect = this._nodePositionStore.get(aNode);
     if (!rect) {
-      rect = aNode.getBoundingClientRect();
+      // getBoundingClientRect() returns a DOMRect that is live, meaning that
+      // as the element moves around, the rects values change. We don't want
+      // that - we want a snapshot of what the rect values are right at this
+      // moment, and nothing else. So we have to clone the values.
+      let clientRect = aNode.getBoundingClientRect();
+      rect = {
+        left: clientRect.left,
+        right: clientRect.right,
+        width: clientRect.width,
+        height: clientRect.height,
+        top: clientRect.top,
+        bottom: clientRect.bottom,
+      };
       rect.x = rect.left + rect.width / 2;
       rect.y = rect.top + rect.height / 2;
+      Object.freeze(rect);
       this._nodePositionStore.set(aNode, rect);
     }
     return rect;
   },
 
   _firstInRow: function(aNode) {
-    let bound = this._lazyStoreGet(aNode).top;
+    // XXXmconley: I'm not entirely sure why we need to take the floor of these
+    // values - it looks like, periodically, we're getting fractional pixels back
+    //from lazyStoreGet. I've filed bug 994247 to investigate.
+    let bound = Math.floor(this._lazyStoreGet(aNode).top);
     let rv = aNode;
     let prev;
     while (rv && (prev = this._getVisibleSiblingForDirection(rv, "previous"))) {
-      if (this._lazyStoreGet(prev).bottom <= bound) {
+      if (Math.floor(this._lazyStoreGet(prev).bottom) <= bound) {
         return rv;
       }
       rv = prev;
