@@ -271,6 +271,13 @@ public:
 
   bool FlushRepaintsForOverscrollHandoffChain();
 
+  /**
+   * Determine whether |aApzc|, or any APZC along its overscroll handoff chain,
+   * has room to be panned.
+   * Expects the overscroll handoff chain to already be built.
+   */
+  bool CanBePanned(AsyncPanZoomController* aApzc);
+
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~APZCTreeManager();

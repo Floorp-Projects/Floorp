@@ -170,6 +170,11 @@ public:
    */
   bool ScaleWillOverscrollBothSides(float aScale);
 
+  /**
+   * Returns whether there is room to pan on this axis in either direction.
+   */
+  bool HasRoomToPan() const;
+
   float GetOrigin() const;
   float GetCompositionLength() const;
   float GetPageStart() const;
