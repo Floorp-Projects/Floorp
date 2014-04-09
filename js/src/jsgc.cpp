@@ -197,7 +197,6 @@
 # include "jswin.h"
 #endif
 #include "prmjtime.h"
-#include "TraceLogging.h"
 
 #include "gc/FindSCCs.h"
 #include "gc/GCInternals.h"
@@ -213,6 +212,7 @@
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
 #include "vm/String.h"
+#include "vm/TraceLogging.h"
 #include "vm/WrapperObject.h"
 
 #include "jsobjinlines.h"

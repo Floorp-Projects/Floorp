@@ -8,7 +8,6 @@
 
 #include "jscntxt.h"
 #include "jsscript.h"
-#include "TraceLogging.h"
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
@@ -16,6 +15,7 @@
 #include "frontend/Parser.h"
 #include "jit/AsmJSLink.h"
 #include "vm/GlobalObject.h"
+#include "vm/TraceLogging.h"
 
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"

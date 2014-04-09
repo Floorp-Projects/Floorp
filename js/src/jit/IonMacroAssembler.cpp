@@ -18,6 +18,7 @@
 #include "jit/MIR.h"
 #include "jit/ParallelFunctions.h"
 #include "vm/ForkJoin.h"
+#include "vm/TraceLogging.h"
 
 #ifdef JSGC_GENERATIONAL
 # include "jsgcinlines.h"
@@ -1136,7 +1137,7 @@ MacroAssembler::printf(const char *output, Register value)
     PopRegsInMask(RegisterSet::Volatile());
 }
 
-#if JS_TRACE_LOGGING
+#ifdef JS_TRACE_LOGGING
 void
 MacroAssembler::tracelogStart(Register logger, uint32_t textId)
 {

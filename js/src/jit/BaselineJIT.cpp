@@ -14,6 +14,7 @@
 #include "jit/IonSpewer.h"
 #include "jit/JitCommon.h"
 #include "vm/Interpreter.h"
+#include "vm/TraceLogging.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"

@@ -12,11 +12,11 @@
 
 #include "jsnativestack.h"
 #include "prmjtime.h"
-#include "TraceLogging.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "jit/IonBuilder.h"
 #include "vm/Debugger.h"
+#include "vm/TraceLogging.h"
 
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"

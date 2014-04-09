@@ -72,7 +72,7 @@ PerThreadData::PerThreadData(JSRuntime *runtime)
     ionTop(nullptr),
     jitJSContext(nullptr),
     jitStackLimit(0),
-#if JS_TRACE_LOGGING
+#ifdef JS_TRACE_LOGGING
     traceLogger(nullptr),
 #endif
     activation_(nullptr),

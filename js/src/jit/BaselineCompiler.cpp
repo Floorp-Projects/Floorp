@@ -16,6 +16,7 @@
 # include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
+#include "vm/TraceLogging.h"
 
 #include "jsscriptinlines.h"
 
@@ -344,7 +345,7 @@ BaselineCompiler::emitPrologue()
     if (needsEarlyStackCheck())
         masm.bind(&earlyStackCheckFailed);
 
-#if JS_TRACE_LOGGING
+#ifdef JS_TRACE_LOGGING
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
     Register loggerReg = RegisterSet::Volatile().takeGeneral();
     masm.Push(loggerReg);
@@ -386,7 +387,7 @@ BaselineCompiler::emitEpilogue()
 {
     masm.bind(&return_);
 
-#if JS_TRACE_LOGGING
+#ifdef JS_TRACE_LOGGING
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
     Register loggerReg = RegisterSet::Volatile().takeGeneral();
     masm.Push(loggerReg);
