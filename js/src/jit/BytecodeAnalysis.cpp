@@ -156,6 +156,7 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
           case JSOP_CALLALIASEDVAR:
           case JSOP_SETALIASEDVAR:
           case JSOP_LAMBDA:
+          case JSOP_LAMBDA_ARROW:
           case JSOP_DEFFUN:
           case JSOP_DEFVAR:
           case JSOP_DEFCONST:
