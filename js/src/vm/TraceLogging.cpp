@@ -837,11 +837,13 @@ TraceLogging::create()
             fprintf(stderr, "TraceLogging: Error while writing.\n");
     }
 
-
-    fprintf(out, "{\"tree\":\"tl-tree.%d.tl\", \"events\":\"tl-event.%d.tl\", \"dict\":\"tl-dict.%d.json\", \"treeFormat\":\"64,64,31,1,32\"}",
-            loggerId, loggerId, loggerId);
-
     loggerId++;
+
+    int written = fprintf(out, "{\"tree\":\"tl-tree.%d.tl\", \"events\":\"tl-event.%d.tl\", \"dict\":\"tl-dict.%d.json\", \"treeFormat\":\"64,64,31,1,32\"}",
+                          loggerId, loggerId, loggerId);
+    if (written < 0)
+        fprintf(stderr, "TraceLogging: Error while writing.\n");
+
 
     TraceLogger *logger = new TraceLogger();
     if (!logger)
