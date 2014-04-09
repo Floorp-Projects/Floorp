@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=766694
 // are what we intend. Each entry in the arrays below can either be a
 // simple string with the interface name, or an object with a 'name'
 // property giving the interface name as a string, and additional
-// properties which quality the exposure of that interface. For example:
+// properties which qualify the exposure of that interface. For example:
 //
 // [
 //   "AGlobalInterface",
@@ -168,15 +168,15 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "CallGroupErrorEvent", b2g: true, pref: "dom.telephony.enabled"},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "CameraCapabilities",
+    {name: "CameraCapabilities", b2g: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "CameraControl",
+    {name: "CameraControl", b2g: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "CameraDetectedFace", pref: "camera.control.face_detection.enabled"},
+    {name: "CameraDetectedFace", b2g: true, pref: "camera.control.face_detection.enabled"},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "CameraManager",
+    {name: "CameraManager", b2g: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "CameraPoint", pref: "camera.control.face_detection.enabled"},
+    {name: "CameraPoint", b2g: true, pref: "camera.control.face_detection.enabled"},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "CanvasGradient",
 // IMPORTANT: Do not change this list without review from a DOM peer!

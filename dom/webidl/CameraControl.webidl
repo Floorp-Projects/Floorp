@@ -134,6 +134,7 @@ callback CameraAutoFocusMovingCallback = void (boolean isMoving);
     attributes here affect the preview, any pictures taken, and/or
     any video recorded by the camera.
 */
+[Func="nsDOMCameraControl::HasSupport"]
 interface CameraControl : MediaStream
 {
   [Constant, Cached]
@@ -352,7 +353,7 @@ interface CameraControl : MediaStream
      { x:  1000, y:  1000 } is the bottom-right corner
    x and y can range from -1000 to 1000.
 */
-[Pref="camera.control.face_detection.enabled"]
+[Pref="camera.control.face_detection.enabled", Func="DOMCameraPoint::HasSupport"]
 interface CameraPoint
 {
   attribute long x;
@@ -396,7 +397,7 @@ interface CameraPoint
    'mouth' is the coordinates of the detected mouth; null if not supported or
    detected.
 */
-[Pref="camera.control.face_detection.enabled"]
+[Pref="camera.control.face_detection.enabled", Func="DOMCameraDetectedFace::HasSupport"]
 interface CameraDetectedFace
 {
   readonly attribute unsigned long id;

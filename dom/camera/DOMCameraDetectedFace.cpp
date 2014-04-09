@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DOMCameraDetectedFace.h"
+#include "Navigator.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -25,6 +26,20 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMCameraDetectedFace)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+/* static */
+bool
+DOMCameraPoint::HasSupport(JSContext* aCx, JSObject* aGlobal)
+{
+  return Navigator::HasCameraSupport(aCx, aGlobal);
+}
+
+/* static */
+bool
+DOMCameraDetectedFace::HasSupport(JSContext* aCx, JSObject* aGlobal)
+{
+  return Navigator::HasCameraSupport(aCx, aGlobal);
+}
 
 JSObject*
 DOMCameraPoint::WrapObject(JSContext* aCx)
