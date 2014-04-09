@@ -4,7 +4,7 @@
 -->
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>Test that overlay scrollbars are covered by overlapping non-positioned siblings</title>
+<title>Test that overlay scrollbars are not covered by overlapping non-positioned siblings</title>
 
 <style>
 
@@ -19,11 +19,17 @@
   height: 400px;
 }
 
-#cover {
-  margin-top: -200px;
-  width: 200px;
-  height: 200px;
-  background: cyan;
+/* This test has different behavior depending on the type of scrollbar used.
+ * We want the scrollbar to be visible. But for non-overlay scrollbars, the
+ * cover would cover them so we disable the cover.
+ */
+@media all and (-moz-overlay-scrollbars) {
+  #cover {
+    margin-top: -200px;
+    width: 200px;
+    height: 200px;
+    background: cyan;
+  }
 }
 
 </style>
