@@ -491,7 +491,7 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
         JS_ASSERT(newListTail == &newListHead);
         JS_ASSERT(!newFreeSpanStart ||
                   newFreeSpanStart == thingsStart(thingKind));
-        JS_POISON(data, JS_SWEPT_TENURED_PATTERN, sizeof(data));
+        JS_EXTRA_POISON(data, JS_SWEPT_TENURED_PATTERN, sizeof(data));
         return true;
     }
 
