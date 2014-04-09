@@ -98,6 +98,12 @@ GonkCameraHardware::notify(int32_t aMsgType, int32_t ext1, int32_t ext2)
       OnAutoFocusComplete(mTarget, !!ext1);
       break;
 
+#if ANDROID_VERSION >= 16
+    case CAMERA_MSG_FOCUS_MOVE:
+      OnAutoFocusMoving(mTarget, !!ext1);
+      break;
+#endif
+
     case CAMERA_MSG_SHUTTER:
       OnShutter(mTarget);
       break;
@@ -174,6 +180,13 @@ GonkCameraHardware::Init()
   mCamera->setPreviewTexture(mNativeWindow->getBufferQueue());
 #else
   mCamera->setPreviewTexture(mNativeWindow);
+#endif
+
+#if ANDROID_VERSION >= 16
+  rv = mCamera->sendCommand(CAMERA_CMD_ENABLE_FOCUS_MOVE_MSG, 1, 0);
+  if (rv != OK) {
+    NS_WARNING("Failed to send command CAMERA_CMD_ENABLE_FOCUS_MOVE_MSG");
+  }
 #endif
 
 #endif
