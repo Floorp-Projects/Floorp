@@ -122,6 +122,11 @@ public:
      * APZ finished modifying the view.
      */
     TransformEnd,
+    /**
+     * APZ started a touch.
+     * |aArg| is 1 if touch can be a pan, 0 otherwise.
+     */
+    StartTouch,
     APZStateChangeSentinel
   MOZ_END_NESTED_ENUM_CLASS(APZStateChange)
 
