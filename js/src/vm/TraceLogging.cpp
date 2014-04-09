@@ -4,16 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TraceLogging.h"
+#include "vm/TraceLogging.h"
+
+#include "mozilla/DebugOnly.h"
 
 #include <string.h>
 
 #include "jsapi.h"
 #include "jsscript.h"
 
-#include "mozilla/DebugOnly.h"
-#include "vm/Runtime.h"
 #include "jit/CompileWrappers.h"
+#include "vm/Runtime.h"
 
 using namespace js;
 

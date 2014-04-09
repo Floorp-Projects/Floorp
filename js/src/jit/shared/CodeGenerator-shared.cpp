@@ -995,7 +995,7 @@ CodeGeneratorShared::addCacheLocations(const CacheLocationList &locs, size_t *nu
     return firstIndex;
 }
 
-#if JS_TRACE_LOGGING
+#ifdef JS_TRACE_LOGGING
 
 bool
 CodeGeneratorShared::emitTracelogScript(bool isStart)

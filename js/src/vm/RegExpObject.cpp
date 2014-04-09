@@ -8,12 +8,11 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "TraceLogging.h"
-
 #include "frontend/TokenStream.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StringBuffer.h"
+#include "vm/TraceLogging.h"
 #include "vm/Xdr.h"
 #include "yarr/YarrSyntaxChecker.h"
 

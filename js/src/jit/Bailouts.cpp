@@ -7,13 +7,13 @@
 #include "jit/Bailouts.h"
 
 #include "jscntxt.h"
-#include "TraceLogging.h"
 
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/IonSpewer.h"
 #include "jit/JitCompartment.h"
 #include "jit/Snapshots.h"
+#include "vm/TraceLogging.h"
 
 #include "jit/IonFrameIterator-inl.h"
 #include "vm/Stack-inl.h"

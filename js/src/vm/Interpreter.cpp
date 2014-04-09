@@ -29,7 +29,6 @@
 #include "jsprf.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "TraceLogging.h"
 
 #include "builtin/Eval.h"
 #include "jit/BaselineJIT.h"
@@ -38,6 +37,7 @@
 #include "vm/Debugger.h"
 #include "vm/Opcodes.h"
 #include "vm/Shape.h"
+#include "vm/TraceLogging.h"
 
 #include "jsatominlines.h"
 #include "jsboolinlines.h"

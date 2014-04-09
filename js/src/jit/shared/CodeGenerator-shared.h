@@ -89,7 +89,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     // Patchable backedges generated for loops.
     Vector<PatchableBackedgeInfo, 0, SystemAllocPolicy> patchableBackedges_;
 
-#if JS_TRACE_LOGGING
+#ifdef JS_TRACE_LOGGING
     js::Vector<CodeOffsetLabel, 0, SystemAllocPolicy> patchableTraceLoggers_;
     js::Vector<CodeOffsetLabel, 0, SystemAllocPolicy> patchableTLScripts_;
 #endif
@@ -449,7 +449,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     virtual bool visitOutOfLineAbortPar(OutOfLineAbortPar *ool) = 0;
     virtual bool visitOutOfLinePropagateAbortPar(OutOfLinePropagateAbortPar *ool) = 0;
 
-#if JS_TRACE_LOGGING
+#ifdef JS_TRACE_LOGGING
   protected:
     bool emitTracelogScript(bool isStart);
     bool emitTracelogTree(bool isStart, uint32_t textId);
