@@ -496,6 +496,81 @@ function setEmulatorGsmLocation(aLac, aCid) {
   return runEmulatorCmdSafe(cmd);
 }
 
+/**
+ * Get emulator operators info.
+ *
+ * Fulfill params:
+ *   An array of { longName: <string>, shortName: <string>, mccMnc: <string> }.
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @return A deferred promise.
+ */
+function getEmulatorOperatorNames() {
+  let cmd = "operator dumpall";
+  return runEmulatorCmdSafe(cmd)
+    .then(function(aResults) {
+      let operators = [];
+
+      for (let i = 0; i < aResults.length - 1; i++) {
+        let names = aResults[i].split(',');
+        operators.push({
+          longName: names[0],
+          shortName: names[1],
+          mccMnc: names[2],
+        });
+      }
+
+      ok(true, "emulator operators list: " + JSON.stringify(operators));
+      return operators;
+    });
+}
+
+/**
+ * Set emulator operators info.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @param aOperator
+ *        "home" or "roaming".
+ * @param aLongName
+ *        A string.
+ * @param aShortName
+ *        A string.
+ * @param aMcc [optional]
+ *        A string.
+ * @param aMnc [optional]
+ *        A string.
+ *
+ * @return A deferred promise.
+ */
+function setEmulatorOperatorNames(aOperator, aLongName, aShortName, aMcc, aMnc) {
+  const EMULATOR_OPERATORS = [ "home", "roaming" ];
+
+  let index = EMULATOR_OPERATORS.indexOf(aOperator);
+  if (index < 0) {
+    throw "invalid operator";
+  }
+
+  let cmd = "operator set " + index + " " + aLongName + "," + aShortName;
+  if (aMcc && aMnc) {
+    cmd = cmd + "," + aMcc + aMnc;
+  }
+  return runEmulatorCmdSafe(cmd)
+    .then(function(aResults) {
+      let exp = "^" + aLongName + "," + aShortName + ",";
+      if (aMcc && aMnc) {
+        cmd = cmd + aMcc + aMnc;
+      }
+
+      let re = new RegExp(exp);
+      ok(aResults[index].match(new RegExp(exp)),
+         "Long/short name and/or mcc/mnc should be changed.");
+    });
+}
+
 let _networkManager;
 
 /**
