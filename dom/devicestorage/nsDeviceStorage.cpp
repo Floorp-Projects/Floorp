@@ -189,10 +189,10 @@ DeviceStorageUsedSpaceCache::SetUsedSizes(const nsAString& aStorageName,
   cacheEntry->mDirty = false;
 }
 
-class GlobalDirs
+class GlobalDirs : public RefCounted<GlobalDirs>
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(GlobalDirs)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(GlobalDirs)
 #if !defined(MOZ_WIDGET_GONK)
   nsCOMPtr<nsIFile> pictures;
   nsCOMPtr<nsIFile> videos;
