@@ -49,7 +49,9 @@ using namespace mozilla::unicode;
 
 gfxFontconfigUtils *gfxPlatformGtk::sFontconfigUtils = nullptr;
 
+#if (MOZ_WIDGET_GTK == 2)
 static cairo_user_data_key_t cairo_gdk_drawable_key;
+#endif
 
 #ifdef MOZ_X11
     bool gfxPlatformGtk::sUseXRender = true;
