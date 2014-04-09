@@ -284,6 +284,9 @@ ClearAllBitArrayElements(size_t *array, size_t length)
 # define JS_POISON(p, val, size) ((void) 0)
 #endif
 
+/* Bug 984101: Disable labeled poisoning until we have poison checking. */
+#define JS_EXTRA_POISON(p, val, size) ((void) 0)
+
 /* Basic stats */
 #ifdef DEBUG
 # define JS_BASIC_STATS 1
