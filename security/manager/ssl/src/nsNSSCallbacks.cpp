@@ -610,6 +610,10 @@ nsHTTPListener::~nsHTTPListener()
   if (mResponsibleForDoneSignal)
     send_done_signal();
 
+  if (mResultData) {
+    NS_Free(const_cast<uint8_t *>(mResultData));
+  }
+
   if (mLoader) {
     nsCOMPtr<nsIThread> mainThread(do_GetMainThread());
     NS_ProxyRelease(mainThread, mLoader);
@@ -678,7 +682,8 @@ nsHTTPListener::OnStreamComplete(nsIStreamLoader* aLoader,
       mHttpRequestSucceeded = false;
 
     mResultLen = stringLen;
-    mResultData = string; // reference. Make sure loader lives as long as this
+    mResultData = string; // take ownership of allocation
+    aStatus = NS_SUCCESS_ADOPTED_DATA;
 
     unsigned int rcode;
     rv = hchan->GetResponseStatus(&rcode);
