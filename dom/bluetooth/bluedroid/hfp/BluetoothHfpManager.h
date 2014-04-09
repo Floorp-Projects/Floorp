@@ -111,6 +111,7 @@ public:
   void ProcessAtCops();
   void ProcessAtClcc();
   void ProcessUnknownAt(char *aAtString);
+  void ProcessKeyPressed();
 
   // CDMA-specific functions
   void UpdateSecondNumber(const nsAString& aNumber);
