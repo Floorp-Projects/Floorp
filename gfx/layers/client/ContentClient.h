@@ -152,7 +152,7 @@ public:
               gfx::DrawTarget* aTarget,
               float aOpacity,
               gfx::CompositionOp aOp,
-              gfxASurface* aMask,
+              gfx::SourceSurface* aMask,
               const gfx::Matrix* aMaskTransform)
   {
     RotatedContentBuffer::DrawTo(aLayer, aTarget, aOpacity, aOp,

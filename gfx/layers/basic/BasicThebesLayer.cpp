@@ -123,8 +123,8 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
 
   // Pull out the mask surface and transform here, because the mask
   // is internal to basic layers
-  AutoMaskData mask;
-  gfxASurface* maskSurface = nullptr;
+  AutoMoz2DMaskData mask;
+  SourceSurface* maskSurface = nullptr;
   Matrix maskTransform;
   if (GetMaskData(aMaskLayer, &mask)) {
     maskSurface = mask.GetSurface();
