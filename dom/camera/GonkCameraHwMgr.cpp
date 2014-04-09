@@ -79,6 +79,10 @@ GonkCameraHardware::postData(int32_t aMsgType, const sp<IMemory>& aDataPtr, came
       }
       break;
 
+    case CAMERA_MSG_PREVIEW_METADATA:
+      OnFacesDetected(mTarget, metadata);
+      break;
+
     default:
       DOM_CAMERA_LOGE("Unhandled data callback event %d\n", aMsgType);
       break;
@@ -293,6 +297,38 @@ GonkCameraHardware::CancelAutoFocus()
 {
   DOM_CAMERA_LOGI("%s\n", __func__);
   mCamera->cancelAutoFocus();
+}
+
+int
+GonkCameraHardware::StartFaceDetection()
+{
+  DOM_CAMERA_LOGI("%s\n", __func__);
+  int rv = INVALID_OPERATION;
+
+#if ANDROID_VERSION >= 15
+  rv = mCamera->sendCommand(CAMERA_CMD_START_FACE_DETECTION, CAMERA_FACE_DETECTION_HW, 0);
+#endif
+  if (rv != OK) {
+    DOM_CAMERA_LOGE("Start face detection failed with status %d", rv);
+  }
+
+  return rv;
+}
+
+int
+GonkCameraHardware::StopFaceDetection()
+{
+  DOM_CAMERA_LOGI("%s\n", __func__);
+  int rv = INVALID_OPERATION;
+
+#if ANDROID_VERSION >= 15
+  rv = mCamera->sendCommand(CAMERA_CMD_STOP_FACE_DETECTION, 0, 0);
+#endif
+  if (rv != OK) {
+    DOM_CAMERA_LOGE("Stop face detection failed with status %d", rv);
+  }
+
+  return rv;
 }
 
 int

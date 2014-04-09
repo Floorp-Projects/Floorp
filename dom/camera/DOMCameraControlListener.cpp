@@ -243,6 +243,31 @@ DOMCameraControlListener::OnAutoFocusMoving(bool aIsMoving)
 }
 
 void
+DOMCameraControlListener::OnFacesDetected(const nsTArray<ICameraControl::Face>& aFaces)
+{
+  class Callback : public DOMCallback
+  {
+  public:
+    Callback(nsMainThreadPtrHandle<nsDOMCameraControl> aDOMCameraControl,
+             const nsTArray<ICameraControl::Face>& aFaces)
+      : DOMCallback(aDOMCameraControl)
+      , mFaces(aFaces)
+    { }
+
+    void
+    RunCallback(nsDOMCameraControl* aDOMCameraControl) MOZ_OVERRIDE
+    {
+      aDOMCameraControl->OnFacesDetected(mFaces);
+    }
+
+  protected:
+    const nsTArray<ICameraControl::Face> mFaces;
+  };
+
+  NS_DispatchToMainThread(new Callback(mDOMCameraControl, aFaces));
+}
+
+void
 DOMCameraControlListener::OnShutter()
 {
   class Callback : public DOMCallback

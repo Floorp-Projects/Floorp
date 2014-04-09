@@ -24,6 +24,7 @@ interface CameraCapabilities
 
   [Constant, Cached] readonly attribute unsigned long maxFocusAreas;
   [Constant, Cached] readonly attribute unsigned long maxMeteringAreas;
+  [Constant, Cached] readonly attribute unsigned long maxDetectedFaces;
 
   [Constant, Cached] readonly attribute double minExposureCompensation;
   [Constant, Cached] readonly attribute double maxExposureCompensation;

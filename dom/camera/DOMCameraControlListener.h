@@ -20,6 +20,7 @@ public:
 
   virtual void OnAutoFocusComplete(bool aAutoFocusSucceeded) MOZ_OVERRIDE;
   virtual void OnAutoFocusMoving(bool aIsMoving) MOZ_OVERRIDE;
+  virtual void OnFacesDetected(const nsTArray<ICameraControl::Face>& aFaces) MOZ_OVERRIDE;
   virtual void OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType) MOZ_OVERRIDE;
 
   virtual void OnHardwareStateChange(HardwareState aState) MOZ_OVERRIDE;
