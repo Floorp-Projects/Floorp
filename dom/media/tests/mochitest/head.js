@@ -120,7 +120,7 @@ function runTest(aCallback) {
       ['dom.messageChannel.enabled', true],
       ['media.peerconnection.enabled', true],
       ['media.peerconnection.identity.enabled', true],
-      ['media.peerconnection.identity.timeout', 3000],
+      ['media.peerconnection.identity.timeout', 12000],
       ['media.navigator.permission.disabled', true]]
     }, function () {
       try {
