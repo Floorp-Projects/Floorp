@@ -129,7 +129,7 @@ MozNFCPeer.prototype = {
 
   sendFile: function sendFile(blob) {
     let data = {
-      "blob": blob.slice()
+      "blob": blob
     };
     return this._nfcContentHelper.sendFile(this._window,
                                            Cu.cloneInto(data, this._window),
