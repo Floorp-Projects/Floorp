@@ -616,11 +616,18 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
     case FLING:
       CancelAnimation();
       // Fall through.
-    case NOTHING:
+    case NOTHING: {
       mX.StartTouch(point.x);
       mY.StartTouch(point.y);
+      APZCTreeManager* treeManagerLocal = mTreeManager;
+      if (treeManagerLocal) {
+        bool touchCanBePan = treeManagerLocal->CanBePanned(this);
+        mGeckoContentController->NotifyAPZStateChange(
+            GetGuid(), APZStateChange::StartTouch, touchCanBePan);
+      }
       SetState(TOUCHING);
       break;
+    }
     case TOUCHING:
     case PANNING:
     case PANNING_LOCKED_X:
@@ -1446,6 +1453,11 @@ void AsyncPanZoomController::FlushRepaintForOverscrollHandoff() {
   UpdateSharedCompositorFrameMetrics();
 }
 
+bool AsyncPanZoomController::IsPannable() const {
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  return mX.HasRoomToPan() || mY.HasRoomToPan();
+}
+
 void AsyncPanZoomController::RequestContentRepaint() {
   RequestContentRepaint(mFrameMetrics);
 }
@@ -1994,10 +2006,10 @@ void AsyncPanZoomController::SetState(PanZoomState aNewState) {
   if (mGeckoContentController) {
     if (!IsTransformingState(oldState) && IsTransformingState(aNewState)) {
       mGeckoContentController->NotifyAPZStateChange(
-        GetGuid(), APZStateChange::TransformBegin);
+          GetGuid(), APZStateChange::TransformBegin);
     } else if (IsTransformingState(oldState) && !IsTransformingState(aNewState)) {
       mGeckoContentController->NotifyAPZStateChange(
-        GetGuid(), APZStateChange::TransformEnd);
+          GetGuid(), APZStateChange::TransformEnd);
     }
   }
 }
