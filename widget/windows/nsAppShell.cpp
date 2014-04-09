@@ -18,6 +18,8 @@
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
 #include "mozilla/StaticPtr.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 #include "GeckoProfiler.h"
 
 using namespace mozilla;
@@ -32,15 +34,33 @@ public:
 
 private:
   NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) {
-    if (aState.Equals(NS_LITERAL_STRING("locked-foreground"))) {
-      // Prevent screen saver.
-      SetThreadExecutionState(ES_DISPLAY_REQUIRED|ES_CONTINUOUS);
+    bool isLocked = mLockedTopics.Contains(aTopic);
+    bool shouldLock = aState.Equals(NS_LITERAL_STRING("locked-foreground"));
+    if (isLocked == shouldLock) {
+      return NS_OK;
+    }
+    if (shouldLock) {
+      if (!mLockedTopics.Count()) {
+        // This is the first topic to request the screen saver be disabled.
+        // Prevent screen saver.
+        SetThreadExecutionState(ES_DISPLAY_REQUIRED|ES_CONTINUOUS);
+      }
+      mLockedTopics.PutEntry(aTopic);
     } else {
-      // Re-enable screen saver.
-      SetThreadExecutionState(ES_CONTINUOUS);
+      mLockedTopics.RemoveEntry(aTopic);
+      if (!mLockedTopics.Count()) {
+        // No other outstanding topics have requested screen saver be disabled.
+        // Re-enable screen saver.
+        SetThreadExecutionState(ES_CONTINUOUS);
+      }
    }
     return NS_OK;
   }
+
+  // Keep track of all the topics that have requested a wake lock. When the
+  // number of topics in the hashtable reaches zero, we can uninhibit the
+  // screensaver again.
+  nsTHashtable<nsStringHashKey> mLockedTopics;
 };
 
 NS_IMPL_ISUPPORTS1(WinWakeLockListener, nsIDOMMozWakeLockListener)
