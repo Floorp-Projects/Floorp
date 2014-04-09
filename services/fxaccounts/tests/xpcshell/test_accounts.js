@@ -77,6 +77,8 @@ function MockFxAccountsClient() {
 
   this.signCertificate = function() { throw "no" };
 
+  this.signOut = function() { return Promise.resolve(); };
+
   FxAccountsClient.apply(this);
 }
 MockFxAccountsClient.prototype = {
@@ -535,6 +537,45 @@ add_test(function test_resend_email() {
       });
     });
   });
+});
+
+add_test(function test_sign_out() {
+  do_test_pending();
+  let fxa = new MockFxAccounts();
+  let remoteSignOutCalled = false;
+  let client = fxa.internal.fxAccountsClient;
+  client.signOut = function() { remoteSignOutCalled = true; return Promise.resolve(); };
+  makeObserver(ONLOGOUT_NOTIFICATION, function() {
+    log.debug("test_sign_out_with_remote_error observed onlogout");
+    // user should be undefined after sign out
+    fxa.internal.getUserAccountData().then(user => {
+      do_check_eq(user, null);
+      do_check_true(remoteSignOutCalled);
+      do_test_finished();
+      run_next_test();
+    });
+  });
+  fxa.signOut();
+});
+
+add_test(function test_sign_out_with_remote_error() {
+  do_test_pending();
+  let fxa = new MockFxAccounts();
+  let client = fxa.internal.fxAccountsClient;
+  let remoteSignOutCalled = false;
+  // Force remote sign out to trigger an error
+  client.signOut = function() { remoteSignOutCalled = true; throw "Remote sign out error"; };
+  makeObserver(ONLOGOUT_NOTIFICATION, function() {
+    log.debug("test_sign_out_with_remote_error observed onlogout");
+    // user should be undefined after sign out
+    fxa.internal.getUserAccountData().then(user => {
+      do_check_eq(user, null);
+      do_check_true(remoteSignOutCalled);
+      do_test_finished();
+      run_next_test();
+    });
+  });
+  fxa.signOut();
 });
 
 /*
