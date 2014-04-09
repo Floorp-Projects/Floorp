@@ -500,7 +500,7 @@ nsDOMCameraControl::GetPictureSize(JSContext* cx, ErrorResult& aRv)
   JS::Rooted<JS::Value> value(cx);
 
   ICameraControl::Size size;
-  aRv = mCameraControl->Get(CAMERA_PARAM_PICTURESIZE, size);
+  aRv = mCameraControl->Get(CAMERA_PARAM_PICTURE_SIZE, size);
   if (aRv.Failed()) {
     return value;
   }
@@ -518,7 +518,7 @@ nsDOMCameraControl::SetPictureSize(JSContext* aCx, JS::Handle<JS::Value> aSize, 
   }
 
   ICameraControl::Size s = { size.mWidth, size.mHeight };
-  aRv = mCameraControl->Set(CAMERA_PARAM_PICTURESIZE, s);
+  aRv = mCameraControl->Set(CAMERA_PARAM_PICTURE_SIZE, s);
 }
 
 /* attribute any thumbnailSize */
@@ -764,6 +764,7 @@ nsDOMCameraControl::OnCreatedFileDescriptor(bool aSucceeded)
     o.rotation = mOptions.mRotation;
     o.maxFileSizeBytes = mOptions.mMaxFileSizeBytes;
     o.maxVideoLengthMs = mOptions.mMaxVideoLengthMs;
+    o.autoEnableLowLightTorch = mOptions.mAutoEnableLowLightTorch;
     nsresult rv = mCameraControl->StartRecording(mDSFileDescriptor.get(), &o);
     if (NS_SUCCEEDED(rv)) {
       return;

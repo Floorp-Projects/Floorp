@@ -58,8 +58,6 @@ GonkCameraParameters::Parameters::GetTextKey(uint32_t aKey)
       return KEY_FOCUS_DISTANCES;
     case CAMERA_PARAM_EXPOSURECOMPENSATION:
       return KEY_EXPOSURE_COMPENSATION;
-    case CAMERA_PARAM_PICTURESIZE:
-      return KEY_PICTURE_SIZE;
     case CAMERA_PARAM_THUMBNAILQUALITY:
       return KEY_JPEG_THUMBNAIL_QUALITY;
     case CAMERA_PARAM_PICTURE_SIZE:
@@ -81,6 +79,8 @@ GonkCameraParameters::Parameters::GetTextKey(uint32_t aKey)
       // Not every platform defines KEY_ISO_MODE;
       // for those that don't, we use the raw string key.
       return "iso";
+    case CAMERA_PARAM_LUMINANCE:
+      return "luminance-condition";
 
     case CAMERA_PARAM_SUPPORTED_PREVIEWSIZES:
       return KEY_SUPPORTED_PREVIEW_SIZES;
@@ -266,8 +266,10 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, nsAString& aValue)
   }
   if (aKey == CAMERA_PARAM_ISOMODE) {
     rv = MapIsoFromGonk(val, aValue);
-  } else {
+  } else if(val) {
     aValue.AssignASCII(val);
+  } else {
+    aValue.Truncate(0);
   }
   return rv;
 }

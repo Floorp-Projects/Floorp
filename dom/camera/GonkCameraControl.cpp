@@ -65,6 +65,9 @@ nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId)
   , mLastThumbnailSize({0, 0})
   , mPreviewFps(30)
   , mResumePreviewAfterTakingPicture(false) // XXXmikeh - see bug 950102
+  , mFlashSupported(false)
+  , mLuminanceSupported(false)
+  , mAutoFlashModeOverridden(false)
   , mDeferConfigUpdate(0)
   , mMediaProfiles(nullptr)
   , mRecorder(nullptr)
@@ -153,6 +156,14 @@ nsGonkCameraControl::Initialize()
   mParams.Get(CAMERA_PARAM_PREVIEWSIZE, mCurrentConfiguration.mPreviewSize);
   mParams.Get(CAMERA_PARAM_VIDEOSIZE, mLastRecorderSize);
 
+  nsString luminance; // check for support
+  mParams.Get(CAMERA_PARAM_LUMINANCE, luminance);
+  mLuminanceSupported = !luminance.IsEmpty();
+
+  nsString flashMode;
+  mParams.Get(CAMERA_PARAM_FLASHMODE, flashMode);
+  mFlashSupported = !flashMode.IsEmpty();
+
   DOM_CAMERA_LOGI(" - maximum metering areas:        %u\n", mCurrentConfiguration.mMaxMeteringAreas);
   DOM_CAMERA_LOGI(" - maximum focus areas:           %u\n", mCurrentConfiguration.mMaxFocusAreas);
   DOM_CAMERA_LOGI(" - default picture size:          %u x %u\n",
@@ -165,6 +176,14 @@ nsGonkCameraControl::Initialize()
     mLastRecorderSize.width, mLastRecorderSize.height);
   DOM_CAMERA_LOGI(" - default picture file format:   %s\n",
     NS_ConvertUTF16toUTF8(mFileFormat).get());
+  DOM_CAMERA_LOGI(" - luminance reporting:           %ssupported\n",
+    mLuminanceSupported ? "" : "NOT ");
+  if (mFlashSupported) {
+    DOM_CAMERA_LOGI(" - flash:                         supported, default mode '%s'\n",
+      NS_ConvertUTF16toUTF8(flashMode).get());
+  } else {
+    DOM_CAMERA_LOGI(" - flash:                         NOT supported\n");
+  }
 
   return NS_OK;
 }
@@ -382,9 +401,16 @@ nsGonkCameraControl::Set(uint32_t aKey, const nsAString& aValue)
     return rv;
   }
 
-  if (aKey == CAMERA_PARAM_PICTURE_FILEFORMAT) {
-    // Picture format -- need to keep it for the TakePicture() callback.
-    mFileFormat = aValue;
+  switch (aKey) {
+    case CAMERA_PARAM_PICTURE_FILEFORMAT:
+      // Picture format -- need to keep it for the TakePicture() callback.
+      mFileFormat = aValue;
+      break;
+
+    case CAMERA_PARAM_FLASHMODE:
+      // Explicit flash mode changes always win and stick.
+      mAutoFlashModeOverridden = false;
+      break;
   }
 
   return PushParameters();
@@ -440,7 +466,7 @@ nsresult
 nsGonkCameraControl::Set(uint32_t aKey, const Size& aSize)
 {
   switch (aKey) {
-    case CAMERA_PARAM_PICTURESIZE:
+    case CAMERA_PARAM_PICTURE_SIZE:
       DOM_CAMERA_LOGI("setting picture size to %ux%u\n", aSize.width, aSize.height);
       return SetPictureSize(aSize);
 
@@ -752,7 +778,7 @@ nsGonkCameraControl::SetPictureSizeImpl(const Size& aSize)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = mParams.Set(CAMERA_PARAM_PICTURESIZE, size);
+  nsresult rv = mParams.Set(CAMERA_PARAM_PICTURE_SIZE, size);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -866,9 +892,55 @@ nsGonkCameraControl::PullParametersImpl()
 }
 
 nsresult
+nsGonkCameraControl::SetupRecordingFlash(bool aAutoEnableLowLightTorch)
+{
+  mAutoFlashModeOverridden = false;
+
+  if (!aAutoEnableLowLightTorch || !mLuminanceSupported || !mFlashSupported) {
+    return NS_OK;
+  }
+
+  DOM_CAMERA_LOGI("Luminance reporting and flash supported\n");
+
+  nsresult rv = PullParametersImpl();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsString luminance;
+  rv = mParams.Get(CAMERA_PARAM_LUMINANCE, luminance);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // If we failed to get the luminance, assume it's "high"
+    return NS_OK;
+  }
+
+  nsString flashMode;
+  rv = mParams.Get(CAMERA_PARAM_FLASHMODE, flashMode);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // If we failed to get the current flash mode, swallow the error
+    return NS_OK;
+  }
+
+  if (luminance.EqualsASCII("low") && flashMode.EqualsASCII("auto")) {
+    DOM_CAMERA_LOGI("Low luminance detected, turning on flash\n");
+    rv = SetAndPush(CAMERA_PARAM_FLASHMODE, NS_LITERAL_STRING("torch"));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // If we failed to turn on the flash, swallow the error
+      return NS_OK;
+    }
+
+    mAutoFlashModeOverridden = true;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsGonkCameraControl::StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescriptor,
                                         const StartRecordingOptions* aOptions)
 {
+  MOZ_ASSERT(NS_GetCurrentThread() == mCameraThread);
+
   NS_ENSURE_TRUE(mRecorderProfile, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_FALSE(mRecorder, NS_ERROR_FAILURE);
 
@@ -905,15 +977,24 @@ nsGonkCameraControl::StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescri
   if (aOptions) {
     rv = SetupRecording(fd, aOptions->rotation, aOptions->maxFileSizeBytes,
                         aOptions->maxVideoLengthMs);
+    if (NS_SUCCEEDED(rv)) {
+      rv = SetupRecordingFlash(aOptions->autoEnableLowLightTorch);
+    }
   } else {
     rv = SetupRecording(fd, 0, 0, 0);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   if (mRecorder->start() != OK) {
     DOM_CAMERA_LOGE("mRecorder->start() failed\n");
     // important: we MUST destroy the recorder if start() fails!
     mRecorder = nullptr;
+    // put the flash back to the 'auto' state
+    if (mAutoFlashModeOverridden) {
+      SetAndPush(CAMERA_PARAM_FLASHMODE, NS_LITERAL_STRING("auto"));
+    }
     return NS_ERROR_FAILURE;
   }
 
@@ -955,6 +1036,10 @@ nsGonkCameraControl::StopRecordingImpl()
   mRecorder->stop();
   mRecorder = nullptr;
   OnRecorderStateChange(CameraControlListener::kRecorderStopped);
+
+  if (mAutoFlashModeOverridden) {
+    SetAndPush(CAMERA_PARAM_FLASHMODE, NS_LITERAL_STRING("auto"));
+  }
 
   // notify DeviceStorage that the new video file is closed and ready
   return NS_DispatchToMainThread(new RecordingComplete(mVideoFile), NS_DISPATCH_NORMAL);
@@ -1430,7 +1515,9 @@ nsGonkCameraControl::OnRecorderEvent(int msg, int ext1, int ext2)
 }
 
 nsresult
-nsGonkCameraControl::SetupRecording(int aFd, int aRotation, int64_t aMaxFileSizeBytes, int64_t aMaxVideoLengthMs)
+nsGonkCameraControl::SetupRecording(int aFd, int aRotation,
+                                    int64_t aMaxFileSizeBytes,
+                                    int64_t aMaxVideoLengthMs)
 {
   RETURN_IF_NO_CAMERA_HW();
 
@@ -1473,6 +1560,7 @@ nsGonkCameraControl::SetupRecording(int aFd, int aRotation, int64_t aMaxFileSize
   // recording API needs file descriptor of output file
   CHECK_SETARG(mRecorder->setOutputFile(aFd, 0, 0));
   CHECK_SETARG(mRecorder->prepare());
+
   return NS_OK;
 }
 
@@ -1482,12 +1570,7 @@ nsGonkCameraControl::StopImpl()
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
 
   // if we're recording, stop recording
-  if (mRecorder) {
-    DOM_CAMERA_LOGI("Stopping existing video recorder\n");
-    mRecorder->stop();
-    mRecorder = nullptr;
-    OnRecorderStateChange(CameraControlListener::kRecorderStopped);
-  }
+  StopRecordingImpl();
 
   // stop the preview
   StopPreviewImpl();

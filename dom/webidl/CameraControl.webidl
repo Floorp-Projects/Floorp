@@ -72,26 +72,6 @@ dictionary CameraPictureOptions
   long long dateTime = 0;
 };
 
-/* These properties affect the video recording preview, e.g.
-      {
-         profile: "1080p",
-         rotation: 0
-      }
-
-   'profile' is one of the profiles returned by
-   CameraCapabilities.recorderProfiles'; if this profile is missing,
-   an arbitrary profile will be chosen.
-
-   'rotation' is the degrees clockwise to rotate the preview; if
-   this option is not supported, it will be ignored; if this option
-   is missing, the default is 0.
-*/
-dictionary CameraRecorderOptions
-{
-  DOMString profile;
-  long      rotation;
-};
-
 /* These properties affect the actual video recording, e.g.
       {
          rotation: 0,
@@ -117,6 +97,15 @@ dictionary CameraStartRecordingOptions
   long      rotation = 0;
   long long maxFileSizeBytes = 0;
   long long maxVideoLengthMs = 0;
+
+  /* If startRecording() is called with flashMode set to "auto" and the
+     camera has determined that the scene is poorly lit, the flash mode
+     will be automatically changed to "torch" until stopRecording() is
+     called. During this time, flashMode will reflect the new setting. If
+     flashMode is changed while recording is in progress, the new setting
+     will be left as-is on stopRecording(). If the camera does not
+     support this setting, it will be ignored. */
+  boolean autoEnableLowLightTorch = false;
 };
 
 callback CameraSetConfigurationCallback = void (CameraConfiguration configuration);
