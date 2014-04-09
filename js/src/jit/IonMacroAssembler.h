@@ -10,6 +10,7 @@
 #ifdef JS_ION
 
 #include "jscompartment.h"
+#include "TraceLogging.h"
 
 #if defined(JS_CODEGEN_X86)
 # include "jit/x86/MacroAssembler-x86.h"
@@ -1123,9 +1124,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     void printf(const char *output, Register value);
 
 #if JS_TRACE_LOGGING
-    void tracelogStart(JSScript *script);
-    void tracelogStop();
-    void tracelogLog(TraceLogging::Type type);
+    void tracelogStart(Register logger, uint32_t textId);
+    void tracelogStart(Register logger, Register textId);
+    void tracelogStop(Register logger, uint32_t textId);
+    void tracelogStop(Register logger, Register textId);
+    void tracelogStop(Register logger);
 #endif
 
 #define DISPATCH_FLOATING_POINT_OP(method, type, arg1d, arg1f, arg2)    \

@@ -7,6 +7,7 @@
 #include "jit/Bailouts.h"
 
 #include "jscntxt.h"
+#include "TraceLogging.h"
 
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
@@ -78,6 +79,9 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
     IonBailoutIterator iter(jitActivations, sp);
     JitActivation *activation = jitActivations.activation()->asJit();
 
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLogTimestamp(logger, TraceLogger::Bailout);
+
     IonSpew(IonSpew_Bailouts, "Took bailout! Snapshot offset: %d", iter.snapshotOffset());
 
     JS_ASSERT(IsBaselineEnabled(cx));
@@ -108,6 +112,9 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
     JitActivationIterator jitActivations(cx->runtime());
     IonBailoutIterator iter(jitActivations, sp);
     JitActivation *activation = jitActivations.activation()->asJit();
+
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLogTimestamp(logger, TraceLogger::Invalidation);
 
     IonSpew(IonSpew_Bailouts, "Took invalidation bailout! Snapshot offset: %d", iter.snapshotOffset());
 

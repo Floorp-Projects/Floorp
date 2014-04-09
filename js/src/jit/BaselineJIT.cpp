@@ -200,9 +200,9 @@ jit::EnterBaselineAtBranch(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc)
             data.calleeToken = CalleeToToken(fp->script());
     }
 
-#if JS_TRACE_LOGGING
-    TraceLogging::defaultLogger()->log(TraceLogging::INFO_ENGINE_BASELINE);
-#endif
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLogStopEvent(logger, TraceLogger::Interpreter);
+    TraceLogStartEvent(logger, TraceLogger::Baseline);
 
     IonExecStatus status = EnterBaseline(cx, data);
     if (status != IonExec_Ok)
