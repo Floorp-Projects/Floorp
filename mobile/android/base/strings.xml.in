@@ -110,7 +110,6 @@
 
   <string name="pref_category_devtools">&pref_category_devtools;</string>
   <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
-  <string name="pref_developer_remotedebugging_docs">&pref_developer_remotedebugging_docs;</string>
 
   <string name="pref_category_home">&pref_category_home;</string>
   <string name="pref_category_home_summary">&pref_category_home_summary;</string>
@@ -129,6 +128,8 @@
   <string name="pref_header_privacy_short">&pref_header_privacy_short;</string>
   <string name="pref_header_vendor">&pref_header_vendor;</string>
   <string name="pref_header_devtools">&pref_header_devtools;</string>
+
+  <string name="pref_learn_more">&pref_learn_more;</string>
 
   <string name="pref_remember_signons">&pref_remember_signons;</string>
 
@@ -211,8 +212,8 @@
   <string name="datareporting_abouthr_title">&datareporting_abouthr_title;</string>
   <string name="datareporting_crashreporter_title_short">&datareporting_crashreporter_title_short;</string>
   <string name="datareporting_crashreporter_summary">&datareporting_crashreporter_summary;</string>
-  <string name="datareporting_wifi_title">&datareporting_wifi_title;</string>
-  <string name="datareporting_wifi_summary">&datareporting_wifi_summary;</string>
+  <string name="datareporting_wifi_title">&datareporting_wifi_title2;</string>
+  <string name="datareporting_wifi_geolocation_summary">&datareporting_wifi_geolocation_summary;</string>
 
   <string name="go">&go;</string>
   <string name="search">&search;</string>
