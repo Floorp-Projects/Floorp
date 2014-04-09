@@ -38,22 +38,25 @@ PromiseCallback::~PromiseCallback()
   MOZ_COUNT_DTOR(PromiseCallback);
 }
 
-static void
-EnterCompartment(Maybe<JSAutoCompartment>& aAc, JSContext* aCx,
-                 JS::Handle<JS::Value> aValue)
-{
-  // FIXME Bug 878849
-  if (aValue.isObject()) {
-    JS::Rooted<JSObject*> rooted(aCx, &aValue.toObject());
-    aAc.construct(aCx, rooted);
-  }
-}
-
 // ResolvePromiseCallback
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(ResolvePromiseCallback,
-                                     PromiseCallback,
-                                     mPromise)
+NS_IMPL_CYCLE_COLLECTION_CLASS(ResolvePromiseCallback)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ResolvePromiseCallback,
+                                                PromiseCallback)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromise)
+  tmp->mGlobal = nullptr;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ResolvePromiseCallback,
+                                                  PromiseCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromise)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ResolvePromiseCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mGlobal)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ResolvePromiseCallback)
 NS_INTERFACE_MAP_END_INHERITING(PromiseCallback)
@@ -61,16 +64,21 @@ NS_INTERFACE_MAP_END_INHERITING(PromiseCallback)
 NS_IMPL_ADDREF_INHERITED(ResolvePromiseCallback, PromiseCallback)
 NS_IMPL_RELEASE_INHERITED(ResolvePromiseCallback, PromiseCallback)
 
-ResolvePromiseCallback::ResolvePromiseCallback(Promise* aPromise)
+ResolvePromiseCallback::ResolvePromiseCallback(Promise* aPromise,
+                                               JS::Handle<JSObject*> aGlobal)
   : mPromise(aPromise)
+  , mGlobal(aGlobal)
 {
   MOZ_ASSERT(aPromise);
+  MOZ_ASSERT(aGlobal);
   MOZ_COUNT_CTOR(ResolvePromiseCallback);
+  HoldJSObjects(this);
 }
 
 ResolvePromiseCallback::~ResolvePromiseCallback()
 {
   MOZ_COUNT_DTOR(ResolvePromiseCallback);
+  DropJSObjects(this);
 }
 
 void
@@ -79,34 +87,58 @@ ResolvePromiseCallback::Call(JS::Handle<JS::Value> aValue)
   // Run resolver's algorithm with value and the synchronous flag set.
   ThreadsafeAutoSafeJSContext cx;
 
-  Maybe<JSAutoCompartment> ac;
-  EnterCompartment(ac, cx, aValue);
+  JSAutoCompartment ac(cx, mGlobal);
+  JS::Rooted<JS::Value> value(cx, aValue);
+  if (!JS_WrapValue(cx, &value)) {
+    NS_WARNING("Failed to wrap value into the right compartment.");
+    return;
+  }
 
-  mPromise->ResolveInternal(cx, aValue, Promise::SyncTask);
+  mPromise->ResolveInternal(cx, value, Promise::SyncTask);
 }
 
 // RejectPromiseCallback
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(RejectPromiseCallback,
-                                     PromiseCallback,
-                                     mPromise)
+NS_IMPL_CYCLE_COLLECTION_CLASS(RejectPromiseCallback)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(RejectPromiseCallback,
+                                                PromiseCallback)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromise)
+  tmp->mGlobal = nullptr;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(RejectPromiseCallback,
+                                                  PromiseCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromise)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(RejectPromiseCallback)
 NS_INTERFACE_MAP_END_INHERITING(PromiseCallback)
 
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(RejectPromiseCallback,
+                                               PromiseCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mGlobal)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_IMPL_ADDREF_INHERITED(RejectPromiseCallback, PromiseCallback)
 NS_IMPL_RELEASE_INHERITED(RejectPromiseCallback, PromiseCallback)
 
-RejectPromiseCallback::RejectPromiseCallback(Promise* aPromise)
+RejectPromiseCallback::RejectPromiseCallback(Promise* aPromise,
+                                             JS::Handle<JSObject*> aGlobal)
   : mPromise(aPromise)
+  , mGlobal(aGlobal)
 {
   MOZ_ASSERT(aPromise);
+  MOZ_ASSERT(mGlobal);
   MOZ_COUNT_CTOR(RejectPromiseCallback);
+  HoldJSObjects(this);
 }
 
 RejectPromiseCallback::~RejectPromiseCallback()
 {
   MOZ_COUNT_DTOR(RejectPromiseCallback);
+  DropJSObjects(this);
 }
 
 void
@@ -115,17 +147,37 @@ RejectPromiseCallback::Call(JS::Handle<JS::Value> aValue)
   // Run resolver's algorithm with value and the synchronous flag set.
   ThreadsafeAutoSafeJSContext cx;
 
-  Maybe<JSAutoCompartment> ac;
-  EnterCompartment(ac, cx, aValue);
+  JSAutoCompartment ac(cx, mGlobal);
+  JS::Rooted<JS::Value> value(cx, aValue);
+  if (!JS_WrapValue(cx, &value)) {
+    NS_WARNING("Failed to wrap value into the right compartment.");
+    return;
+  }
 
-  mPromise->RejectInternal(cx, aValue, Promise::SyncTask);
+
+  mPromise->RejectInternal(cx, value, Promise::SyncTask);
 }
 
 // WrapperPromiseCallback
+NS_IMPL_CYCLE_COLLECTION_CLASS(WrapperPromiseCallback)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(WrapperPromiseCallback,
-                                     PromiseCallback,
-                                     mNextPromise, mCallback)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WrapperPromiseCallback,
+                                                PromiseCallback)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mNextPromise)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
+  tmp->mGlobal = nullptr;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WrapperPromiseCallback,
+                                                  PromiseCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNextPromise)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(WrapperPromiseCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mGlobal)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(WrapperPromiseCallback)
 NS_INTERFACE_MAP_END_INHERITING(PromiseCallback)
@@ -134,17 +186,22 @@ NS_IMPL_ADDREF_INHERITED(WrapperPromiseCallback, PromiseCallback)
 NS_IMPL_RELEASE_INHERITED(WrapperPromiseCallback, PromiseCallback)
 
 WrapperPromiseCallback::WrapperPromiseCallback(Promise* aNextPromise,
+                                               JS::Handle<JSObject*> aGlobal,
                                                AnyCallback* aCallback)
   : mNextPromise(aNextPromise)
+  , mGlobal(aGlobal)
   , mCallback(aCallback)
 {
   MOZ_ASSERT(aNextPromise);
+  MOZ_ASSERT(aGlobal);
   MOZ_COUNT_CTOR(WrapperPromiseCallback);
+  HoldJSObjects(this);
 }
 
 WrapperPromiseCallback::~WrapperPromiseCallback()
 {
   MOZ_COUNT_DTOR(WrapperPromiseCallback);
+  DropJSObjects(this);
 }
 
 void
@@ -152,15 +209,19 @@ WrapperPromiseCallback::Call(JS::Handle<JS::Value> aValue)
 {
   ThreadsafeAutoSafeJSContext cx;
 
-  Maybe<JSAutoCompartment> ac;
-  EnterCompartment(ac, cx, aValue);
+  JSAutoCompartment ac(cx, mGlobal);
+  JS::Rooted<JS::Value> value(cx, aValue);
+  if (!JS_WrapValue(cx, &value)) {
+    NS_WARNING("Failed to wrap value into the right compartment.");
+    return;
+  }
 
   ErrorResult rv;
 
   // If invoking callback threw an exception, run resolver's reject with the
   // thrown exception as argument and the synchronous flag set.
-  JS::Rooted<JS::Value> value(cx,
-    mCallback->Call(aValue, rv, CallbackObject::eRethrowExceptions));
+  JS::Rooted<JS::Value> retValue(cx,
+    mCallback->Call(value, rv, CallbackObject::eRethrowExceptions));
 
   rv.WouldReportJSException();
 
@@ -168,15 +229,18 @@ WrapperPromiseCallback::Call(JS::Handle<JS::Value> aValue)
     JS::Rooted<JS::Value> value(cx);
     rv.StealJSException(cx, &value);
 
-    Maybe<JSAutoCompartment> ac2;
-    EnterCompartment(ac2, cx, value);
+    if (!JS_WrapValue(cx, &value)) {
+      NS_WARNING("Failed to wrap value into the right compartment.");
+      return;
+    }
+
     mNextPromise->RejectInternal(cx, value, Promise::SyncTask);
     return;
   }
 
   // If the return value is the same as the promise itself, throw TypeError.
-  if (value.isObject()) {
-    JS::Rooted<JSObject*> valueObj(cx, &value.toObject());
+  if (retValue.isObject()) {
+    JS::Rooted<JSObject*> valueObj(cx, &retValue.toObject());
     Promise* returnedPromise;
     nsresult r = UNWRAP_OBJECT(Promise, valueObj, returnedPromise);
 
@@ -237,9 +301,12 @@ WrapperPromiseCallback::Call(JS::Handle<JS::Value> aValue)
 
   // Otherwise, run resolver's resolve with value and the synchronous flag
   // set.
-  Maybe<JSAutoCompartment> ac2;
-  EnterCompartment(ac2, cx, value);
-  mNextPromise->ResolveInternal(cx, value, Promise::SyncTask);
+  if (!JS_WrapValue(cx, &retValue)) {
+    NS_WARNING("Failed to wrap value into the right compartment.");
+    return;
+  }
+
+  mNextPromise->ResolveInternal(cx, retValue, Promise::SyncTask);
 }
 
 // NativePromiseCallback
@@ -284,23 +351,23 @@ NativePromiseCallback::Call(JS::Handle<JS::Value> aValue)
 }
 
 /* static */ PromiseCallback*
-PromiseCallback::Factory(Promise* aNextPromise, AnyCallback* aCallback,
-                         Task aTask)
+PromiseCallback::Factory(Promise* aNextPromise, JS::Handle<JSObject*> aGlobal,
+                         AnyCallback* aCallback, Task aTask)
 {
   MOZ_ASSERT(aNextPromise);
 
   // If we have a callback and a next resolver, we have to exec the callback and
   // then propagate the return value to the next resolver->resolve().
   if (aCallback) {
-    return new WrapperPromiseCallback(aNextPromise, aCallback);
+    return new WrapperPromiseCallback(aNextPromise, aGlobal, aCallback);
   }
 
   if (aTask == Resolve) {
-    return new ResolvePromiseCallback(aNextPromise);
+    return new ResolvePromiseCallback(aNextPromise, aGlobal);
   }
 
   if (aTask == Reject) {
-    return new RejectPromiseCallback(aNextPromise);
+    return new RejectPromiseCallback(aNextPromise, aGlobal);
   }
 
   MOZ_ASSERT(false, "This should not happen");
