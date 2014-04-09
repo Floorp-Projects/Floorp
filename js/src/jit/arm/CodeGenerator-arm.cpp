@@ -56,9 +56,16 @@ bool
 CodeGeneratorARM::generateEpilogue()
 {
     masm.bind(&returnLabel_);
+
 #if JS_TRACE_LOGGING
-    masm.tracelogStop();
+    if (!gen->compilingAsmJS() && gen->info().executionMode() == SequentialExecution) {
+        if (!emitTracelogStopEvent(TraceLogger::IonMonkey))
+            return false;
+        if (!emitTracelogScriptStop())
+            return false;
+    }
 #endif
+
     if (gen->compilingAsmJS()) {
         // Pop the stack we allocated at the start of the function.
         masm.freeStack(frameDepth_);

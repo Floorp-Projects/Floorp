@@ -995,5 +995,75 @@ CodeGeneratorShared::addCacheLocations(const CacheLocationList &locs, size_t *nu
     return firstIndex;
 }
 
+#if JS_TRACE_LOGGING
+
+bool
+CodeGeneratorShared::emitTracelogScript(bool isStart)
+{
+    RegisterSet regs = RegisterSet::Volatile();
+    Register logger = regs.takeGeneral();
+    Register script = regs.takeGeneral();
+
+    masm.Push(logger);
+    masm.Push(script);
+
+    CodeOffsetLabel patchLogger = masm.movWithPatch(ImmPtr(nullptr), logger);
+    if (!patchableTraceLoggers_.append(patchLogger))
+        return false;
+
+    CodeOffsetLabel patchScript = masm.movWithPatch(ImmWord(0), script);
+    if (!patchableTLScripts_.append(patchScript))
+        return false;
+
+    if (isStart)
+        masm.tracelogStart(logger, script);
+    else
+        masm.tracelogStop(logger, script);
+
+    masm.Pop(script);
+    masm.Pop(logger);
+    return true;
+}
+
+bool
+CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId)
+{
+    RegisterSet regs = RegisterSet::Volatile();
+    Register logger = regs.takeGeneral();
+
+    masm.Push(logger);
+
+    CodeOffsetLabel patchLocation = masm.movWithPatch(ImmPtr(nullptr), logger);
+    if (!patchableTraceLoggers_.append(patchLocation))
+        return false;
+
+    if (isStart)
+        masm.tracelogStart(logger, textId);
+    else
+        masm.tracelogStop(logger, textId);
+
+    masm.Pop(logger);
+    return true;
+}
+
+bool
+CodeGeneratorShared::emitTracelogStopEvent()
+{
+    RegisterSet regs = RegisterSet::Volatile();
+    Register logger = regs.takeGeneral();
+
+    masm.Push(logger);
+
+    CodeOffsetLabel patchLocation = masm.movWithPatch(ImmPtr(nullptr), logger);
+    if (!patchableTraceLoggers_.append(patchLocation))
+        return false;
+
+    masm.tracelogStop(logger);
+
+    masm.Pop(logger);
+    return true;
+}
+#endif
+
 } // namespace jit
 } // namespace js
