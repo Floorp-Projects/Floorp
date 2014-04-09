@@ -522,43 +522,16 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
 }
 
 void
-ContentClientSingleBuffered::PrepareFrame()
+ContentClientSingleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 {
-  if (!mFrontAndBackBufferDiffer) {
-    if (mTextureClient) {
-      DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
-      MOZ_ASSERT(locked);
-    }
-    if (mTextureClientOnWhite) {
-      DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
-      MOZ_ASSERT(locked);
-    }
-    return;
-  }
-
-  RefPtr<DrawTarget> backBuffer = GetDTBuffer();
-  if (!backBuffer && mTextureClient) {
+  if (mTextureClient) {
     DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
     MOZ_ASSERT(locked);
-    backBuffer = mTextureClient->AsTextureClientDrawTarget()->GetAsDrawTarget();
   }
-
-  RefPtr<DrawTarget> oldBuffer;
-  oldBuffer = SetDTBuffer(backBuffer,
-                          mBufferRect,
-                          mBufferRotation);
-
-  backBuffer = GetDTBufferOnWhite();
-  if (!backBuffer && mTextureClientOnWhite) {
+  if (mTextureClientOnWhite) {
     DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
     MOZ_ASSERT(locked);
-    backBuffer = mTextureClientOnWhite->AsTextureClientDrawTarget()->GetAsDrawTarget();
   }
-
-  oldBuffer = SetDTBufferOnWhite(backBuffer);
-
-  mIsNewBuffer = false;
-  mFrontAndBackBufferDiffer = false;
 }
 
 static void
