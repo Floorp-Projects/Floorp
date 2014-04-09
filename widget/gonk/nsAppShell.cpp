@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <utils/BitSet.h>
 
 #include "base/basictypes.h"
 #include "GonkPermission.h"
@@ -621,6 +622,7 @@ private:
     int mKeyDownCount;
     bool mTouchEventsFiltered;
     bool mKeyEventsFiltered;
+    BitSet32 mTouchDown;
 };
 
 // GeckoInputReaderPolicy
@@ -698,10 +700,15 @@ GeckoInputDispatcher::dispatchOnce()
         }
 
         int32_t action = data.action & AMOTION_EVENT_ACTION_MASK;
+        int32_t index = data.action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK;
+        index >>= AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
         switch (action) {
         case AMOTION_EVENT_ACTION_DOWN:
         case AMOTION_EVENT_ACTION_POINTER_DOWN:
-            mTouchDownCount++;
+            if (!mTouchDown.hasBit(index)) {
+                mTouchDown.markBit(index);
+                mTouchDownCount++;
+            }
             break;
         case AMOTION_EVENT_ACTION_MOVE:
         case AMOTION_EVENT_ACTION_HOVER_MOVE:
@@ -711,7 +718,10 @@ GeckoInputDispatcher::dispatchOnce()
         case AMOTION_EVENT_ACTION_POINTER_UP:
         case AMOTION_EVENT_ACTION_OUTSIDE:
         case AMOTION_EVENT_ACTION_CANCEL:
-            mTouchDownCount--;
+            if (mTouchDown.hasBit(index)) {
+                mTouchDown.clearBit(index);
+                mTouchDownCount--;
+            }
             break;
         default:
             break;
