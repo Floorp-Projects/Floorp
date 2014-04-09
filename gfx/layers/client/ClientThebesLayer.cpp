@@ -40,7 +40,7 @@ ClientThebesLayer::PaintThebes()
   
   mContentClient->PrepareFrame();
 
-  uint32_t flags = 0;
+  uint32_t flags = RotatedContentBuffer::PAINT_CAN_DRAW_ROTATED;
 #ifndef MOZ_WIDGET_ANDROID
   if (ClientManager()->CompositorMightResample()) {
     flags |= RotatedContentBuffer::PAINT_WILL_RESAMPLE;
@@ -68,14 +68,15 @@ ClientThebesLayer::PaintThebes()
                                 GetEffectiveVisibleRegion());
 
   bool didUpdate = false;
-  if (DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state)) {
+  RotatedContentBuffer::DrawIterator iter;
+  while (DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state, &iter)) {
     SetAntialiasingFlags(this, target);
 
     nsRefPtr<gfxContext> ctx = gfxContext::ContextForDrawTarget(target);
 
     ClientManager()->GetThebesLayerCallback()(this,
                                               ctx,
-                                              state.mRegionToDraw,
+                                              iter.mDrawRegion,
                                               state.mClip,
                                               state.mRegionToInvalidate,
                                               ClientManager()->GetThebesLayerCallbackData());
@@ -83,12 +84,6 @@ ClientThebesLayer::PaintThebes()
     ctx = nullptr;
     mContentClient->ReturnDrawTargetToBuffer(target);
     didUpdate = true;
-  } else {
-    // It's possible that state.mRegionToInvalidate is nonempty here,
-    // if we are shrinking the valid region to nothing. So use mRegionToDraw
-    // instead.
-    NS_WARN_IF_FALSE(state.mRegionToDraw.IsEmpty(),
-                     "No context when we have something to draw, resource exhaustion?");
   }
 
   if (didUpdate) {
