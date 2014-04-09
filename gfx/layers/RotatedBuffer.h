@@ -223,7 +223,8 @@ public:
 
   enum {
     PAINT_WILL_RESAMPLE = 0x01,
-    PAINT_NO_ROTATION = 0x02
+    PAINT_NO_ROTATION = 0x02,
+    PAINT_CAN_DRAW_ROTATED = 0x04
   };
   /**
    * Start a drawing operation. This returns a PaintState describing what
@@ -240,18 +241,44 @@ public:
    * make the entire buffer contents valid (since we don't want to sample
    * invalid pixels outside the visible region, if the visible region doesn't
    * fill the buffer bounds).
+   * PAINT_CAN_DRAW_ROTATED can be passed if the caller supports drawing
+   * rotated content that crosses the physical buffer boundary. The caller
+   * will need to call BorrowDrawTargetForPainting multiple times to achieve
+   * this.
    */
   PaintState BeginPaint(ThebesLayer* aLayer,
                         uint32_t aFlags);
+
+  struct DrawIterator {
+    friend class RotatedContentBuffer;
+    friend class ContentClientIncremental;
+    DrawIterator()
+      : mCount(0)
+    {}
+
+    nsIntRegion mDrawRegion;
+
+  private:
+    uint32_t mCount;
+  };
 
   /**
    * Fetch a DrawTarget for rendering. The DrawTarget remains owned by
    * this. See notes on BorrowDrawTargetForQuadrantUpdate.
    * May return null. If the return value is non-null, it must be
    * 'un-borrowed' using ReturnDrawTarget.
+   *
+   * If PAINT_CAN_DRAW_ROTATED was specified for BeginPaint, then the caller
+   * must call this function repeatedly (with an iterator) until it returns
+   * nullptr. The caller should draw the mDrawRegion of the iterator instead
+   * of mRegionToDraw in the PaintState.
+   *
+   * @param aPaintState Paint state data returned by a call to BeginPaint
+   * @param aIter Paint state iterator. Only required if PAINT_CAN_DRAW_ROTATED
+   * was specified to BeginPaint.
    */
-  gfx::DrawTarget* BorrowDrawTargetForPainting(ThebesLayer* aLayer,
-                                               const PaintState& aPaintState);
+  gfx::DrawTarget* BorrowDrawTargetForPainting(const PaintState& aPaintState,
+                                               DrawIterator* aIter = nullptr);
 
   enum {
     ALLOW_REPEAT = 0x01,

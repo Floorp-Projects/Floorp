@@ -785,11 +785,18 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
 }
 
 DrawTarget*
-ContentClientIncremental::BorrowDrawTargetForPainting(ThebesLayer* aLayer,
-                                                      const PaintState& aPaintState)
+ContentClientIncremental::BorrowDrawTargetForPainting(const PaintState& aPaintState,
+                                                      RotatedContentBuffer::DrawIterator* aIter)
 {
   if (aPaintState.mMode == SurfaceMode::SURFACE_NONE) {
     return nullptr;
+  }
+
+  if (aIter) {
+    if (aIter->mCount++ > 0) {
+      return nullptr;
+    }
+    aIter->mDrawRegion = aPaintState.mRegionToDraw;
   }
 
   DrawTarget* result = nullptr;
