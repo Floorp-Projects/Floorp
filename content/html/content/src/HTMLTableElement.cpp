@@ -49,8 +49,7 @@ public:
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 protected:
   virtual JSObject* GetWrapperPreserveColorInternal() MOZ_OVERRIDE
   {
@@ -83,10 +82,9 @@ TableRowsCollection::~TableRowsCollection()
 }
 
 JSObject*
-TableRowsCollection::WrapObject(JSContext* aCx,
-                                JS::Handle<JSObject*> aScope)
+TableRowsCollection::WrapObject(JSContext* aCx)
 {
-  return HTMLCollectionBinding::Wrap(aCx, aScope, this);
+  return HTMLCollectionBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(TableRowsCollection, mOrphanRows)
@@ -298,9 +296,9 @@ HTMLTableElement::~HTMLTableElement()
 }
 
 JSObject*
-HTMLTableElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+HTMLTableElement::WrapNode(JSContext *aCx)
 {
-  return HTMLTableElementBinding::Wrap(aCx, aScope, this);
+  return HTMLTableElementBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTableElement)

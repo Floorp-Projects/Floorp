@@ -29,9 +29,9 @@ OfflineAudioCompletionEvent::OfflineAudioCompletionEvent(AudioContext* aOwner,
 }
 
 JSObject*
-OfflineAudioCompletionEvent::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+OfflineAudioCompletionEvent::WrapObject(JSContext* aCx)
 {
-  return OfflineAudioCompletionEventBinding::Wrap(aCx, aScope, this);
+  return OfflineAudioCompletionEventBinding::Wrap(aCx, this);
 }
 
 }

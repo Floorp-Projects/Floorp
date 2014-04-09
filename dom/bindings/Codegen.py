@@ -1506,7 +1506,7 @@ class CGConstructNavigatorObject(CGAbstractMethod):
     return nullptr;
   }
   JS::Rooted<JS::Value> v(aCx);
-  if (!WrapNewBindingObject(aCx, aObj, result, &v)) {
+  if (!WrapNewBindingObject(aCx, result, &v)) {
     //XXX Assertion disabled for now, see bug 991271.
     MOZ_ASSERT(true || JS_IsExceptionPending(aCx));
     return nullptr;
@@ -2693,7 +2693,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
     def __init__(self, descriptor, properties):
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
-                Argument('JS::Handle<JSObject*>', 'aScope'),
                 Argument(descriptor.nativeType + '*', 'aObject'),
                 Argument('nsWrapperCache*', 'aCache')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
@@ -2707,7 +2706,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 %s
   JS::Rooted<JSObject*> parent(aCx,
     GetRealParentObject(aObject,
-                        WrapNativeParent(aCx, aScope, aObject->GetParentObject())));
+                        WrapNativeParent(aCx, aObject->GetParentObject())));
   if (!parent) {
     return nullptr;
   }
@@ -2746,13 +2745,12 @@ class CGWrapMethod(CGAbstractMethod):
         # XXX can we wrap if we don't have an interface prototype object?
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
-                Argument('JS::Handle<JSObject*>', 'aScope'),
                 Argument('T*', 'aObject')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args,
                                   inline=True, templateArgs=["class T"])
 
     def definition_body(self):
-        return "  return Wrap(aCx, aScope, aObject, aObject);"
+        return "  return Wrap(aCx, aObject, aObject);"
 
 
 class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
@@ -2766,7 +2764,6 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
         # XXX can we wrap if we don't have an interface prototype object?
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
-                Argument('JS::Handle<JSObject*>', 'aScope'),
                 Argument(descriptor.nativeType + '*', 'aObject')]
         if descriptor.nativeOwnership == 'owned':
             args.append(Argument('bool*', 'aTookOwnership'))
@@ -2775,7 +2772,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
 
     def definition_body(self):
         return """%s
-  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, aScope));
+  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   JS::Handle<JSObject*> proto = GetProtoObject(aCx, global);
   if (!proto) {
     return nullptr;
@@ -11131,8 +11128,7 @@ class CGBindingImplClass(CGClass):
                      []),
                     {"infallible": True}))
 
-        wrapArgs = [Argument('JSContext*', 'aCx'),
-                    Argument('JS::Handle<JSObject*>', 'aScope')]
+        wrapArgs = [Argument('JSContext*', 'aCx')]
         self.methodDecls.insert(0,
                                 ClassMethod("WrapObject", "JSObject*",
                                             wrapArgs, virtual=descriptor.wrapperCache,
@@ -11270,9 +11266,9 @@ NS_INTERFACE_MAP_END
 
         classImpl += """%s
 JSObject*
-${nativeType}::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+${nativeType}::WrapObject(JSContext* aCx)
 {
-  return ${ifaceName}Binding::Wrap(aCx, aScope, this);
+  return ${ifaceName}Binding::Wrap(aCx, this);
 }
 
 """ % ctordtor
@@ -11406,8 +11402,9 @@ class CGJSImplMethod(CGJSImplMember):
 // Wrap the object before calling __Init so that __DOM_IMPL__ is available.
 nsCOMPtr<nsIGlobalObject> globalHolder = do_QueryInterface(window);
 JS::Rooted<JSObject*> scopeObj(cx, globalHolder->GetGlobalJSObject());
+MOZ_ASSERT(js::IsObjectInContextCompartment(scopeObj, cx));
 JS::Rooted<JS::Value> wrappedVal(cx);
-if (!WrapNewBindingObject(cx, scopeObj, impl, &wrappedVal)) {
+if (!WrapNewBindingObject(cx, impl, &wrappedVal)) {
   //XXX Assertion disabled for now, see bug 991271.
   MOZ_ASSERT(true || JS_IsExceptionPending(cx));
   aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -11617,7 +11614,7 @@ class CGJSImplClass(CGBindingImplClass):
                          extradefinitions=extradefinitions)
 
     def getWrapObjectBody(self):
-        return ("JS::Rooted<JSObject*> obj(aCx, %sBinding::Wrap(aCx, aScope, this));\n"
+        return ("JS::Rooted<JSObject*> obj(aCx, %sBinding::Wrap(aCx, this));\n"
                 "if (!obj) {\n"
                 "  return nullptr;\n"
                 "}\n"
@@ -11668,7 +11665,8 @@ class CGJSImplClass(CGBindingImplClass):
             "}\n"
             "JS::Rooted<JSObject*> arg(cx, &args[1].toObject());\n"
             "nsRefPtr<${implName}> impl = new ${implName}(arg, window);\n"
-            "return WrapNewBindingObject(cx, arg, impl, args.rval());"
+            "MOZ_ASSERT(js::IsObjectInContextCompartment(arg, cx));\n"
+            "return WrapNewBindingObject(cx, impl, args.rval());"
         ).substitute({
             "ifaceName": self.descriptor.interface.identifier.name,
             "implName": self.descriptor.name
@@ -11762,7 +11760,7 @@ class CGCallback(CGClass):
         bodyWithThis = string.Template(
             setupCall +
             "JS::Rooted<JSObject*> thisObjJS(s.GetContext(),\n"
-            "  WrapCallThisObject(s.GetContext(), CallbackPreserveColor(), thisObjPtr));\n"
+            "  WrapCallThisObject(s.GetContext(), thisObjPtr));\n"
             "if (!thisObjJS) {\n"
             "  aRv.Throw(NS_ERROR_FAILURE);\n"
             "  return${errorReturn};\n"
@@ -12796,7 +12794,7 @@ class CGEventClass(CGBindingImplClass):
                          extradeclarations=baseDeclarations)
 
     def getWrapObjectBody(self):
-        return "return %sBinding::Wrap(aCx, aScope, this);" % self.descriptor.name
+        return "return %sBinding::Wrap(aCx, this);" % self.descriptor.name
 
     def implTraverse(self):
         retVal = ""

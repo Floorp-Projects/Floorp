@@ -21,7 +21,7 @@ nsDOMSettableTokenList::SetValue(const nsAString& aValue, mozilla::ErrorResult& 
 }
 
 JSObject*
-nsDOMSettableTokenList::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
+nsDOMSettableTokenList::WrapObject(JSContext *cx)
 {
-  return mozilla::dom::DOMSettableTokenListBinding::Wrap(cx, scope, this);
+  return mozilla::dom::DOMSettableTokenListBinding::Wrap(cx, this);
 }

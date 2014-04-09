@@ -698,6 +698,7 @@ NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
                                          const nsIID* aIID,
                                          bool aAllowNativeWrapper)
 {
+  js::AssertSameCompartment(aCx, aScope);
   nsresult rv;
   // Inline some logic from XPCConvert::NativeInterfaceToJSObject that we need
   // on all threads.
@@ -706,7 +707,7 @@ NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
   if (cache && cache->IsDOMBinding()) {
       JS::Rooted<JSObject*> obj(aCx, cache->GetWrapper());
       if (!obj) {
-          obj = cache->WrapObject(aCx, aScope);
+          obj = cache->WrapObject(aCx);
       }
 
       if (obj && aAllowNativeWrapper && !JS_WrapObject(aCx, &obj)) {
@@ -881,8 +882,7 @@ GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
     return JS::NullValue();
   }
 
-  JS::Rooted<JSObject*> wrapper(aCx, aCache->GetWrapper());
-  JS::Rooted<JSObject*> global(aCx, js::GetGlobalForObjectCrossCompartment(wrapper));
+  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   JS::Rooted<JS::Value> v(aCx, JSVAL_NULL);
   if (!WrapObject(aCx, global, result, iid, &v)) {
     aError.Throw(NS_ERROR_FAILURE);
@@ -1669,6 +1669,8 @@ private:
 nsresult
 ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
 {
+  js::AssertSameCompartment(aCx, aObjArg);
+
   // Check if we're near the stack limit before we get anywhere near the
   // transplanting code.
   JS_CHECK_RECURSION(aCx, return NS_ERROR_FAILURE);
@@ -2388,8 +2390,7 @@ ConvertExceptionToPromise(JSContext* cx,
     return false;
   }
 
-  JS::Rooted<JSObject*> wrapScope(cx, JS::CurrentGlobalOrNull(cx));
-  return WrapNewBindingObject(cx, wrapScope, promise, rval);
+  return WrapNewBindingObject(cx, promise, rval);
 }
 
 } // namespace dom

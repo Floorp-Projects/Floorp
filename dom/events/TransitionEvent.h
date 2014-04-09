@@ -33,10 +33,9 @@ public:
               const TransitionEventInit& aParam,
               ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
   {
-    return TransitionEventBinding::Wrap(aCx, aScope, this);
+    return TransitionEventBinding::Wrap(aCx, this);
   }
 
   // xpidl implementation

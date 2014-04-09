@@ -36,9 +36,9 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMCSSRect)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_4(nsDOMCSSRect, mTop, mBottom, mLeft, mRight)
  
 JSObject*
-nsDOMCSSRect::WrapObject(JSContext* cx, JS::Handle<JSObject*> scope)
+nsDOMCSSRect::WrapObject(JSContext* cx)
 {
- return dom::RectBinding::Wrap(cx, scope, this);
+ return dom::RectBinding::Wrap(cx, this);
 }
 
 NS_IMETHODIMP

@@ -57,7 +57,7 @@ public:
   nsISupports* GetParentObject() const;
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   void GetTopic(nsAString& aTopic);
 

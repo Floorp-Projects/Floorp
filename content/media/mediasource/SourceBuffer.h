@@ -93,7 +93,7 @@ public:
 
   MediaSource* GetParentObject() const;
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   // Notify the SourceBuffer that it has been detached from the
   // MediaSource's sourceBuffer list.

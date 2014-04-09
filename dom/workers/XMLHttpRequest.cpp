@@ -1561,9 +1561,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(XMLHttpRequest,
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 JSObject*
-XMLHttpRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+XMLHttpRequest::WrapObject(JSContext* aCx)
 {
-  return XMLHttpRequestBinding_workers::Wrap(aCx, aScope, this);
+  return XMLHttpRequestBinding_workers::Wrap(aCx, this);
 }
 
 // static

@@ -132,8 +132,7 @@ public:
   virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
 
 protected:
-  virtual JSObject* WrapNode(JSContext *aCx,
-                             JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
   nsRefPtr<BodyRule> mContentStyleRule;
 
