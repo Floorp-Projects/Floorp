@@ -144,7 +144,7 @@ Site.prototype = {
    * existing thumbnail and the page allows background captures.
    */
   captureIfMissing: function Site_captureIfMissing() {
-    if (gPage.allowBackgroundCaptures && !this.link.imageURISpec) {
+    if (gPage.allowBackgroundCaptures && !this.link.imageURI) {
       BackgroundPageThumbs.captureIfMissing(this.url);
     }
   },
@@ -157,7 +157,7 @@ Site.prototype = {
     if (this.link.bgColor) {
       thumbnail.style.backgroundColor = this.link.bgColor;
     }
-    let uri = this.link.imageURISpec || PageThumbs.getThumbnailURL(this.url);
+    let uri = this.link.imageURI || PageThumbs.getThumbnailURL(this.url);
     thumbnail.style.backgroundImage = "url(" + uri + ")";
   },
 
