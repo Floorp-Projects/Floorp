@@ -18,54 +18,6 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-void
-AutoMaskData::Construct(const gfx::Matrix& aTransform,
-                        gfxASurface* aSurface)
-{
-  MOZ_ASSERT(!IsConstructed());
-  mTransform = aTransform;
-  mSurface = aSurface;
-}
-
-gfxASurface*
-AutoMaskData::GetSurface()
-{
-  MOZ_ASSERT(IsConstructed());
-  return mSurface.get();
-}
-
-const gfx::Matrix&
-AutoMaskData::GetTransform()
-{
-  MOZ_ASSERT(IsConstructed());
-  return mTransform;
-}
-
-bool
-AutoMaskData::IsConstructed()
-{
-  return !!mSurface;
-}
-
-bool
-GetMaskData(Layer* aMaskLayer, AutoMaskData* aMaskData)
-{
-  if (aMaskLayer) {
-    nsRefPtr<gfxASurface> surface;
-    if (static_cast<BasicImplData*>(aMaskLayer->ImplData())
-        ->GetAsSurface(getter_AddRefs(surface)) &&
-        surface) {
-      Matrix transform;
-      Matrix4x4 effectiveTransform = aMaskLayer->GetEffectiveTransform();
-      DebugOnly<bool> maskIs2D = effectiveTransform.CanDraw2D(&transform);
-      NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
-      aMaskData->Construct(transform, surface);
-      return true;
-    }
-  }
-  return false;
-}
-
 bool
 GetMaskData(Layer* aMaskLayer, AutoMoz2DMaskData* aMaskData)
 {
