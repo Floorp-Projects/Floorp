@@ -24,7 +24,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1f6a1fe07f81c5bc5e1d079c9b60f7f78ca2bf4f"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="70b698c2e8d1764a1e27527a102df6452e405b9a"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="89c5816399e71bda92a8959b5b771c04d6672ea3"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="daa1a0266956272c8349c965c32f57d4a7b2ddde"/>
   <!-- Stock Android things -->
   <project name="platform/abi/cpp" path="abi/cpp" revision="6426040f1be4a844082c9769171ce7f5341a5528"/>
   <project name="platform/bionic" path="bionic" revision="cd5dfce80bc3f0139a56b58aca633202ccaee7f8"/>
