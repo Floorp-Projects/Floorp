@@ -115,7 +115,13 @@ const CONNECTION_TYPE_WIFI      = 3;
 const CONNECTION_TYPE_OTHER     = 4;
 const CONNECTION_TYPE_NONE      = 5;
 
-const DEBUG = false;
+let DEBUG = false;
+
+// Read debug setting from pref.
+try {
+  let debugPref = Services.prefs.getBoolPref("network.debugging.enabled");
+  DEBUG = DEBUG || debugPref;
+} catch (e) {}
 
 function defineLazyRegExp(obj, name, pattern) {
   obj.__defineGetter__(name, function() {
