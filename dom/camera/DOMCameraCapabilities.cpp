@@ -9,6 +9,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/CameraManagerBinding.h"
 #include "mozilla/dom/CameraCapabilitiesBinding.h"
+#include "Navigator.h"
 #include "CameraCommon.h"
 #include "ICameraControl.h"
 #include "CameraRecorderProfiles.h"
@@ -41,6 +42,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CameraCapabilities)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+/* static */
+bool
+CameraCapabilities::HasSupport(JSContext* aCx, JSObject* aGlobal)
+{
+  return Navigator::HasCameraSupport(aCx, aGlobal);
+}
 
 CameraCapabilities::CameraCapabilities(nsPIDOMWindow* aWindow)
   : mRecorderProfiles(JS::UndefinedValue())
