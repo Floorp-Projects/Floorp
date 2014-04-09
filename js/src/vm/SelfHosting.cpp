@@ -1063,6 +1063,8 @@ CloneObject(JSContext *cx, HandleObject selfHostedObject)
     if (selfHostedObject->is<JSFunction>()) {
         RootedFunction selfHostedFunction(cx, &selfHostedObject->as<JSFunction>());
         bool hasName = selfHostedFunction->atom() != nullptr;
+        // Arrow functions use the first extended slot for their lexical |this| value.
+        JS_ASSERT(!selfHostedFunction->isArrow());
         js::gc::AllocKind kind = hasName
                                  ? JSFunction::ExtendedFinalizeKind
                                  : selfHostedFunction->getAllocKind();

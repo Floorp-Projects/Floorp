@@ -3487,6 +3487,28 @@ class LLambda : public LInstructionHelper<1, 1, 1>
     }
 };
 
+class LLambdaArrow : public LInstructionHelper<1, 1 + BOX_PIECES, 1>
+{
+  public:
+    LIR_HEADER(LambdaArrow)
+
+    static const size_t ThisValue = 1;
+
+    LLambdaArrow(const LAllocation &scopeChain, const LDefinition &temp) {
+        setOperand(0, scopeChain);
+        setTemp(0, temp);
+    }
+    const LAllocation *scopeChain() {
+        return getOperand(0);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    const MLambdaArrow *mir() const {
+        return mir_->toLambdaArrow();
+    }
+};
+
 class LLambdaPar : public LInstructionHelper<1, 2, 2>
 {
   public:
