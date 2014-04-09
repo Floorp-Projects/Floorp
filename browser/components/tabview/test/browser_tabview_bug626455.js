@@ -85,6 +85,8 @@ function finishTest() {
   is(contentWindow.GroupItems.groupItems.length, 1,
      "Only one group is open");
 
+  contentWindow = null;
+  activeGroup = null;
   finish();
 }
 
