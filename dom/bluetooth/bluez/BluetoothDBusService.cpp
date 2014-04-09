@@ -303,6 +303,15 @@ static const BluetoothServiceClass sAuthorizedServiceClass[] = {
 static const int sWaitingForAdapterNameInterval = 1000; // unit: ms
 
 //
+// main-thread-only variables
+//
+// The variables below must be accessed from within the main thread.
+//
+
+// A queue for connect/disconnect request. See Bug 913372 for details.
+static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
+
+//
 // I/O-thread-only variables
 //
 // The variables below must be accessed from within the I/O thread.
@@ -337,9 +346,6 @@ static int sConnectedDeviceCount = 0;
 // and replaced or implemented with Atomic<>.
 static StaticAutoPtr<Monitor> sGetPropertyMonitor;
 static StaticAutoPtr<Monitor> sStopBluetoothMonitor;
-
-// A queue for connect/disconnect request. See Bug 913372 for details.
-static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
 
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
 typedef bool (*FilterFunc)(const BluetoothValue&);
@@ -2021,6 +2027,8 @@ public:
   NS_IMETHOD Run()
   {
     if (NS_IsMainThread()) {
+      // Clear |sControllerArray| here while we're on the main thread
+      sControllerArray.Clear();
       // Forward this runnable to BT thread
       return DispatchToBtThread(this);
     }
@@ -2088,8 +2096,6 @@ public:
 
     sIsPairing = 0;
     sConnectedDeviceCount = 0;
-
-    sControllerArray.Clear();
 
     // This command closes the DBus connection and all its instances
     // of DBusWatch will be removed and free'd.
