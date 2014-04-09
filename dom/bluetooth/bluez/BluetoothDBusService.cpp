@@ -306,7 +306,7 @@ static const int sWaitingForAdapterNameInterval = 1000; // unit: ms
 static StaticAutoPtr<RawDBusConnection> sDBusConnection;
 
 // Keep the pairing requests.
-static Atomic<int32_t> sIsPairing(0);
+static unsigned int sIsPairing = 0;
 
 static nsDataHashtable<nsStringHashKey, DBusMessage* >* sPairingReqTable;
 
