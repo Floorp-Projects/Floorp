@@ -197,10 +197,6 @@ nsIScriptSecurityManager *nsContentUtils::sSecurityManager;
 nsIParserService *nsContentUtils::sParserService = nullptr;
 nsINameSpaceManager *nsContentUtils::sNameSpaceManager;
 nsIIOService *nsContentUtils::sIOService;
-imgLoader *nsContentUtils::sImgLoader;
-imgLoader *nsContentUtils::sPrivateImgLoader;
-imgICache *nsContentUtils::sImgCache;
-imgICache *nsContentUtils::sPrivateImgCache;
 nsIConsoleService *nsContentUtils::sConsoleService;
 nsDataHashtable<nsISupportsHashKey, EventNameMapping>* nsContentUtils::sAtomEventTable = nullptr;
 nsDataHashtable<nsStringHashKey, EventNameMapping>* nsContentUtils::sStringEventTable = nullptr;
@@ -545,26 +541,6 @@ nsContentUtils::InitializeModifierStrings()
   sAltText = new nsString(altModifier);
   sControlText = new nsString(controlModifier);
   sModifierSeparator = new nsString(modifierSeparator);  
-}
-
-bool nsContentUtils::sImgLoaderInitialized;
-
-void
-nsContentUtils::InitImgLoader()
-{
-  sImgLoaderInitialized = true;
-
-  // Ignore failure and just don't load images
-  sImgLoader = imgLoader::Create();
-  NS_ABORT_IF_FALSE(sImgLoader, "Creation should have succeeded");
-
-  sPrivateImgLoader = imgLoader::Create();
-  NS_ABORT_IF_FALSE(sPrivateImgLoader, "Creation should have succeeded");
-
-  NS_ADDREF(sImgCache = sImgLoader);
-  NS_ADDREF(sPrivateImgCache = sPrivateImgLoader);
-
-  sPrivateImgCache->RespectPrivacyNotifications();
 }
 
 bool
@@ -1466,10 +1442,6 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
-  NS_IF_RELEASE(sImgLoader);
-  NS_IF_RELEASE(sPrivateImgLoader);
-  NS_IF_RELEASE(sImgCache);
-  NS_IF_RELEASE(sPrivateImgCache);
 #ifdef IBMBIDI
   NS_IF_RELEASE(sBidiKeyboard);
 #endif
@@ -2662,10 +2634,8 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
 imgLoader*
 nsContentUtils::GetImgLoaderForDocument(nsIDocument* aDoc)
 {
-  if (!sImgLoaderInitialized)
-    InitImgLoader();
   if (!aDoc)
-    return sImgLoader;
+    return imgLoader::Singleton();
   bool isPrivate = false;
   nsCOMPtr<nsILoadGroup> loadGroup = aDoc->GetDocumentLoadGroup();
   nsCOMPtr<nsIInterfaceRequestor> callbacks;
@@ -2679,29 +2649,24 @@ nsContentUtils::GetImgLoaderForDocument(nsIDocument* aDoc)
     nsCOMPtr<nsIChannel> channel = aDoc->GetChannel();
     isPrivate = channel && NS_UsePrivateBrowsing(channel);
   }
-  return isPrivate ? sPrivateImgLoader : sImgLoader;
+  return isPrivate ? imgLoader::PBSingleton() : imgLoader::Singleton();
 }
 
 // static
 imgLoader*
 nsContentUtils::GetImgLoaderForChannel(nsIChannel* aChannel)
 {
-  if (!sImgLoaderInitialized)
-    InitImgLoader();
   if (!aChannel)
-    return sImgLoader;
+    return imgLoader::Singleton();
   nsCOMPtr<nsILoadContext> context;
   NS_QueryNotificationCallbacks(aChannel, context);
-  return context && context->UsePrivateBrowsing() ? sPrivateImgLoader : sImgLoader;
+  return context && context->UsePrivateBrowsing() ? imgLoader::PBSingleton() : imgLoader::Singleton();
 }
 
 // static
 bool
 nsContentUtils::IsImageInCache(nsIURI* aURI, nsIDocument* aDocument)
 {
-    if (!sImgLoaderInitialized)
-        InitImgLoader();
-
     imgILoader* loader = GetImgLoaderForDocument(aDocument);
     nsCOMPtr<imgICache> cache = do_QueryInterface(loader);
 
