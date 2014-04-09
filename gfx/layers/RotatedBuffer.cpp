@@ -194,7 +194,7 @@ RotatedContentBuffer::DrawTo(ThebesLayer* aLayer,
                              DrawTarget* aTarget,
                              float aOpacity,
                              CompositionOp aOp,
-                             gfxASurface* aMask,
+                             SourceSurface* aMask,
                              const Matrix* aMaskTransform)
 {
   if (!EnsureBuffer()) {
@@ -220,17 +220,7 @@ RotatedContentBuffer::DrawTo(ThebesLayer* aLayer,
     clipped = true;
   }
 
-  RefPtr<gfx::SourceSurface> mask;
-  if (aMask) {
-    mask = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(aTarget, aMask);
-  }
-
-  Matrix maskTransform;
-  if (aMaskTransform) {
-    maskTransform = *aMaskTransform;
-  }
-
-  DrawBufferWithRotation(aTarget, BUFFER_BLACK, aOpacity, aOp, mask, &maskTransform);
+  DrawBufferWithRotation(aTarget, BUFFER_BLACK, aOpacity, aOp, aMask, aMaskTransform);
   if (clipped) {
     aTarget->PopClip();
   }
