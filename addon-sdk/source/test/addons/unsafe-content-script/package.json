@@ -1,6 +1,0 @@
-{
-  "id": "content-permissions",
-  "permissions": {
-    "unsafe-content-script": true
-  }
-}
