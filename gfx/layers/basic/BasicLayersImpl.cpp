@@ -87,7 +87,7 @@ GetMaskData(Layer* aMaskLayer, AutoMoz2DMaskData* aMaskData)
 void
 PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
 {
-  AutoMaskData mask;
+  AutoMoz2DMaskData mask;
   if (GetMaskData(aMaskLayer, &mask)) {
     if (aOpacity < 1.0) {
       aContext->PushGroup(gfxContentType::COLOR_ALPHA);
