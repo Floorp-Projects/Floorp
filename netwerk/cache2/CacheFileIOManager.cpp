@@ -1213,6 +1213,10 @@ CacheFileIOManager::Shutdown()
 
   CacheIndex::Shutdown();
 
+  if (CacheObserver::ClearCacheOnShutdown()) {
+    gInstance->SyncRemoveAllCacheFiles();
+  }
+
   nsRefPtr<CacheFileIOManager> ioMan;
   ioMan.swap(gInstance);
 
@@ -2854,7 +2858,9 @@ CacheFileIOManager::FindTrashDirToRemove()
 
   nsresult rv;
 
-  MOZ_ASSERT(mIOThread->IsCurrentThread());
+  // We call this method on the main thread during shutdown when user wants to
+  // remove all cache files.
+  MOZ_ASSERT(mIOThread->IsCurrentThread() || mShuttingDown);
 
   nsCOMPtr<nsISimpleEnumerator> iter;
   rv = mCacheDirectory->GetDirectoryEntries(getter_AddRefs(iter));
@@ -3279,6 +3285,81 @@ CacheFileIOManager::NSPRHandleUsed(CacheFileHandle *aHandle)
   MOZ_ASSERT(found);
 
   mHandlesByLastUsed.AppendElement(aHandle);
+}
+
+nsresult
+CacheFileIOManager::SyncRemoveDir(nsIFile *aFile, const char *aDir)
+{
+  nsresult rv;
+  nsCOMPtr<nsIFile> file;
+
+  if (!aDir) {
+    file = aFile;
+  } else {
+    rv = aFile->Clone(getter_AddRefs(file));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = file->AppendNative(nsDependentCString(aDir));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+#ifdef PR_LOGGING
+  nsAutoCString path;
+  file->GetNativePath(path);
+#endif
+
+  LOG(("CacheFileIOManager::SyncRemoveDir() - Removing directory %s",
+       path.get()));
+
+  rv = file->Remove(true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("CacheFileIOManager::SyncRemoveDir() - Removing failed! [rv=0x%08x]",
+         rv));
+  }
+
+  return rv;
+}
+
+void
+CacheFileIOManager::SyncRemoveAllCacheFiles()
+{
+  LOG(("CacheFileIOManager::SyncRemoveAllCacheFiles()"));
+
+  nsresult rv;
+
+  SyncRemoveDir(mCacheDirectory, kEntriesDir);
+  SyncRemoveDir(mCacheDirectory, kDoomedDir);
+
+  // Clear any intermediate state of trash dir enumeration.
+  mFailedTrashDirs.Clear();
+  mTrashDir = nullptr;
+
+  while (true) {
+    // FindTrashDirToRemove() fills mTrashDir if there is any trash directory.
+    rv = FindTrashDirToRemove();
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+      LOG(("CacheFileIOManager::SyncRemoveAllCacheFiles() - No trash directory "
+           "found."));
+      break;
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      LOG(("CacheFileIOManager::SyncRemoveAllCacheFiles() - "
+           "FindTrashDirToRemove() returned an unexpected error. [rv=0x%08x]",
+           rv));
+      break;
+    }
+
+    rv = SyncRemoveDir(mTrashDir, nullptr);
+    if (NS_FAILED(rv)) {
+      nsAutoCString leafName;
+      mTrashDir->GetNativeLeafName(leafName);
+      mFailedTrashDirs.AppendElement(leafName);
+    }
+  }
 }
 
 // Memory reporting

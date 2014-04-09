@@ -342,6 +342,10 @@ private:
   nsresult OpenNSPRHandle(CacheFileHandle *aHandle, bool aCreate = false);
   void     NSPRHandleUsed(CacheFileHandle *aHandle);
 
+  // Removing all cache files during shutdown
+  nsresult SyncRemoveDir(nsIFile *aFile, const char *aDir);
+  void     SyncRemoveAllCacheFiles();
+
   nsresult ScheduleMetadataWriteInternal(CacheFile * aFile);
   nsresult UnscheduleMetadataWriteInternal(CacheFile * aFile);
   nsresult ShutdownMetadataWriteSchedulingInternal();
