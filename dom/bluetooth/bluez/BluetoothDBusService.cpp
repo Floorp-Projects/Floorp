@@ -331,21 +331,19 @@ static nsString sAdapterPath;
 
 //
 // The variables below are currently accessed from within multiple
-// threads and should be moved to one specific thread soon.
+// threads and should be moved to one specific thread if possible.
 //
-// TODO: cleanup access to variables below.
+// TODO: Concurrency control is implemented by locking. Maybe there's
+//       a non-blocking way to implement this.
 //
 
-/**
- * Disconnect all profiles before turning off Bluetooth. Please see Bug 891257
- * for more details. TODO: should be replaced or implemented with Atomic<>.
- */
+// Disconnect all profiles before turning off Bluetooth. Please see Bug 891257
+// for more details. |sStopBluetoothMonitor| protects access to this variable.
 static int sConnectedDeviceCount = 0;
-
-// sStopBluetoothMonitor protects sGetPropertyMonitor. TODO: should be reviewed
-// and replaced or implemented with Atomic<>.
-static StaticAutoPtr<Monitor> sGetPropertyMonitor;
 static StaticAutoPtr<Monitor> sStopBluetoothMonitor;
+
+// Protects against bug 969447.
+static StaticAutoPtr<Monitor> sGetPropertyMonitor;
 
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
 typedef bool (*FilterFunc)(const BluetoothValue&);
