@@ -378,7 +378,7 @@ public:
   }
   virtual ~ContentClientSingleBuffered() {}
 
-  virtual void PrepareFrame() MOZ_OVERRIDE;
+  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) MOZ_OVERRIDE;
 
 protected:
   virtual void CreateFrontBuffer(const nsIntRect& aBufferRect) MOZ_OVERRIDE {}

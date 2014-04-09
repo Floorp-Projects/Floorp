@@ -318,26 +318,6 @@ public:
               const gfx::Matrix* aMaskTransform);
 
 protected:
-  TemporaryRef<gfx::DrawTarget>
-  SetDTBuffer(gfx::DrawTarget* aBuffer,
-              const nsIntRect& aBufferRect,
-              const nsIntPoint& aBufferRotation)
-  {
-    RefPtr<gfx::DrawTarget> tmp = mDTBuffer.forget();
-    mDTBuffer = aBuffer;
-    mBufferRect = aBufferRect;
-    mBufferRotation = aBufferRotation;
-    return tmp.forget();
-  }
-
-  TemporaryRef<gfx::DrawTarget>
-  SetDTBufferOnWhite(gfx::DrawTarget* aBuffer)
-  {
-    RefPtr<gfx::DrawTarget> tmp = mDTBufferOnWhite.forget();
-    mDTBufferOnWhite = aBuffer;
-    return tmp.forget();
-  }
-
   // new texture client versions
   void SetBufferProvider(TextureClient* aClient)
   {
