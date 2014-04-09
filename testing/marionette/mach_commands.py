@@ -77,7 +77,7 @@ class B2GCommands(MachCommandBase):
     @CommandArgument('tests', nargs='*', metavar='TESTS',
         help='Path to test(s) to run.')
     def run_marionette_webapi(self, tests, emulator=None, testtype=None):
-        if not emulator and self.device_name in ('emulator', 'emulator-jb'):
+        if not emulator and self.device_name.find('emulator') == 0:
             emulator='arm'
 
         if self.substs.get('ENABLE_MARIONETTE') != '1':
