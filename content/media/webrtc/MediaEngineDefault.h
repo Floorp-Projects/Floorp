@@ -121,7 +121,7 @@ protected:
   nsCOMPtr<nsITimer> mTimer;
 
   SourceMediaStream* mSource;
-  nsRefPtr<SineWaveGenerator> mSineGenerator;
+  nsAutoPtr<SineWaveGenerator> mSineGenerator;
 };
 
 
