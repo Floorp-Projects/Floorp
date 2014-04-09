@@ -36,7 +36,8 @@ function runEmulatorCmdSafe(aCommand) {
     --_pendingEmulatorCmdCount;
 
     ok(true, "Emulator response: " + JSON.stringify(aResult));
-    if (Array.isArray(aResult) && aResult[0] === "OK") {
+    if (Array.isArray(aResult) &&
+        aResult[aResult.length - 1] === "OK") {
       deferred.resolve(aResult);
     } else {
       deferred.reject(aResult);
@@ -448,6 +449,51 @@ function setEmulatorRoamingAndWait(aRoaming) {
   // Set voice registration state first and then data registration state.
   return doSetAndWait("voice", aRoaming)
     .then(() => doSetAndWait("data", aRoaming));
+}
+
+/**
+ * Get GSM location emulation.
+ *
+ * Fulfill params:
+ *   { lac: <lac>, cid: <cid> }
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @return A deferred promise.
+ */
+function getEmulatorGsmLocation() {
+  let cmd = "gsm location";
+  return runEmulatorCmdSafe(cmd)
+    .then(function(aResults) {
+      // lac: <lac>
+      // ci: <cid>
+      // OK
+      is(aResults[0].substring(0,3), "lac", "lac output");
+      is(aResults[1].substring(0,2), "ci", "ci output");
+
+      let lac = parseInt(aResults[0].substring(5));
+      lac = (lac < 0 ? 65535 : lac);
+      let cid = parseInt(aResults[1].substring(4));
+      cid = (cid < 0 ? 268435455 : cid);
+
+      return { lac: lac, cid: cid };
+    });
+}
+
+/**
+ * Set GSM location emulation.
+ *
+ * Fulfill params: (none)
+ * Reject params: (none)
+ *
+ * @param aLac
+ * @param aCid
+ *
+ * @return A deferred promise.
+ */
+function setEmulatorGsmLocation(aLac, aCid) {
+  let cmd = "gsm location " + aLac + " " + aCid;
+  return runEmulatorCmdSafe(cmd);
 }
 
 let _networkManager;
