@@ -2579,7 +2579,7 @@ GCHelperThread::threadLoop()
             break;
           }
           case ALLOCATING: {
-            AutoTraceLog logAllocating(logger, TraceLogger::GCAllocating);
+            AutoTraceLog logAllocating(logger, TraceLogger::GCAllocation);
             do {
                 Chunk *chunk;
                 {
