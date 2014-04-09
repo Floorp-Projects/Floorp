@@ -47,6 +47,33 @@ function runEmulatorCmdSafe(aCommand) {
 }
 
 /**
+ * Wrap DOMRequest onsuccess/onerror events to Promise resolve/reject.
+ *
+ * Fulfill params: A DOMEvent.
+ * Reject params: A DOMEvent.
+ *
+ * @param aRequest
+ *        A DOMRequest instance.
+ *
+ * @return A deferred promise.
+ */
+function wrapDomRequestAsPromise(aRequest) {
+  let deferred = Promise.defer();
+
+  ok(aRequest instanceof DOMRequest,
+     "aRequest is instanceof " + aRequest.constructor);
+
+  aRequest.addEventListener("success", function(aEvent) {
+    deferred.resolve(aEvent);
+  });
+  aRequest.addEventListener("error", function(aEvent) {
+    deferred.reject(aEvent);
+  });
+
+  return deferred.promise;
+}
+
+/**
  * Get mozSettings value specified by @aKey.
  *
  * Resolve if that mozSettings value is retrieved successfully, reject
@@ -65,19 +92,14 @@ function runEmulatorCmdSafe(aCommand) {
  * @return A deferred promise.
  */
 function getSettings(aKey, aAllowError) {
-  let deferred = Promise.defer();
-
   let request = navigator.mozSettings.createLock().get(aKey);
-  request.addEventListener("success", function(aEvent) {
-    ok(true, "getSettings(" + aKey + ") - success");
-    deferred.resolve(aEvent.target.result[aKey]);
-  });
-  request.addEventListener("error", function() {
-    ok(aAllowError, "getSettings(" + aKey + ") - error");
-    deferred.reject();
-  });
-
-  return deferred.promise;
+  return wrapDomRequestAsPromise(request)
+    .then(function resolve(aEvent) {
+      ok(true, "getSettings(" + aKey + ") - success");
+      return aEvent.target.result[aKey];
+    }, function reject(aEvent) {
+      ok(aAllowError, "getSettings(" + aKey + ") - error");
+    });
 }
 
 /**
@@ -97,19 +119,13 @@ function getSettings(aKey, aAllowError) {
  * @return A deferred promise.
  */
 function setSettings(aSettings, aAllowError) {
-  let deferred = Promise.defer();
-
   let request = navigator.mozSettings.createLock().set(aSettings);
-  request.addEventListener("success", function() {
-    ok(true, "setSettings(" + JSON.stringify(aSettings) + ")");
-    deferred.resolve();
-  });
-  request.addEventListener("error", function() {
-    ok(aAllowError, "setSettings(" + JSON.stringify(aSettings) + ")");
-    deferred.reject();
-  });
-
-  return deferred.promise;
+  return wrapDomRequestAsPromise(request)
+    .then(function resolve() {
+      ok(true, "setSettings(" + JSON.stringify(aSettings) + ")");
+    }, function reject() {
+      ok(aAllowError, "setSettings(" + JSON.stringify(aSettings) + ")");
+    });
 }
 
 /**
