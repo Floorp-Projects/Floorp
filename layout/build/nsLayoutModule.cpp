@@ -7,6 +7,7 @@
 
 #include "XPCModule.h"
 #include "mozilla/ModuleUtils.h"
+#include "nsImageModule.h"
 #include "nsLayoutStatics.h"
 #include "nsContentCID.h"
 #include "nsContentDLF.h"
@@ -1252,8 +1253,9 @@ LayoutModuleDtor()
   nsScriptSecurityManager::Shutdown();
   xpcModuleDtor();
 
-  // Layout depends heavily on gfx, so we want to make sure that gfx is shut
-  // down after all the layout cleanup runs.
+  // Layout depends heavily on gfx and imagelib, so we want to make sure that
+  // these modules are shut down after all the layout cleanup runs.
+  mozilla::image::ShutdownModule();
   gfxPlatform::Shutdown();
 }
 
