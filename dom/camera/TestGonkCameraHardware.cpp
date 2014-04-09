@@ -185,10 +185,54 @@ TestGonkCameraHardware::StartPreview()
 }
 
 int
+TestGonkCameraHardware::StartAutoFocusMoving(bool aIsMoving)
+{
+  class AutoFocusMoving : public nsRunnable
+  {
+  public:
+    AutoFocusMoving(nsGonkCameraControl* aTarget, bool aIsMoving)
+      : mTarget(aTarget)
+      , mIsMoving(aIsMoving)
+    { }
+
+    NS_IMETHODIMP
+    Run()
+    {
+      OnAutoFocusMoving(mTarget, mIsMoving);
+      return NS_OK;
+    }
+
+  protected:
+    nsGonkCameraControl* mTarget;
+    bool mIsMoving;
+  };
+
+  nsresult rv = NS_DispatchToCurrentThread(new AutoFocusMoving(mTarget, aIsMoving));
+  if (NS_SUCCEEDED(rv)) {
+    return OK;
+  }
+  DOM_CAMERA_LOGE("Failed to dispatch AutoFocusMoving runnable (0x%08x)\n", rv);
+  return UNKNOWN_ERROR;
+}
+
+int
 TestGonkCameraHardware::PushParameters(const GonkCameraParameters& aParams)
 {
   if (IsTestCase("push-parameters-failure")) {
     return TestCaseError(UNKNOWN_ERROR);
+  }
+
+  nsString focusMode;
+  GonkCameraParameters& params = const_cast<GonkCameraParameters&>(aParams);
+  params.Get(CAMERA_PARAM_FOCUSMODE, focusMode);
+  if (focusMode.EqualsASCII("continuous-picture") ||
+      focusMode.EqualsASCII("continuous-video"))
+  {
+    if (IsTestCase("autofocus-moving-true")) {
+      return StartAutoFocusMoving(true);
+    } else if (IsTestCase("autofocus-moving-false")) {
+      return StartAutoFocusMoving(false);
+    }
   }
 
   return GonkCameraHardware::PushParameters(aParams);

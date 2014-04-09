@@ -219,6 +219,30 @@ DOMCameraControlListener::OnConfigurationChange(const CameraListenerConfiguratio
 }
 
 void
+DOMCameraControlListener::OnAutoFocusMoving(bool aIsMoving)
+{
+  class Callback : public DOMCallback
+  {
+  public:
+    Callback(nsMainThreadPtrHandle<nsDOMCameraControl> aDOMCameraControl, bool aIsMoving)
+      : DOMCallback(aDOMCameraControl)
+      , mIsMoving(aIsMoving)
+    { }
+
+    void
+    RunCallback(nsDOMCameraControl* aDOMCameraControl) MOZ_OVERRIDE
+    {
+      aDOMCameraControl->OnAutoFocusMoving(mIsMoving);
+    }
+
+  protected:
+    bool mIsMoving;
+  };
+
+  NS_DispatchToMainThread(new Callback(mDOMCameraControl, aIsMoving));
+}
+
+void
 DOMCameraControlListener::OnShutter()
 {
   class Callback : public DOMCallback

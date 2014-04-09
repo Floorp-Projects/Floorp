@@ -59,6 +59,8 @@ protected:
   bool IsTestCaseInternal(const char* aTest, const char* aFile, int aLine);
   int TestCaseError(int aDefaultError);
 
+  int StartAutoFocusMoving(bool aIsMoving);
+
 private:
   TestGonkCameraHardware(const TestGonkCameraHardware&) MOZ_DELETE;
   TestGonkCameraHardware& operator=(const TestGonkCameraHardware&) MOZ_DELETE;

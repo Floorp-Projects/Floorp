@@ -1471,6 +1471,12 @@ OnAutoFocusComplete(nsGonkCameraControl* gc, bool aSuccess)
 }
 
 void
+OnAutoFocusMoving(nsGonkCameraControl* gc, bool aIsMoving)
+{
+  gc->OnAutoFocusMoving(aIsMoving);
+}
+
+void
 OnNewPreviewFrame(nsGonkCameraControl* gc, layers::TextureClient* aBuffer)
 {
   gc->OnNewPreviewFrame(aBuffer);

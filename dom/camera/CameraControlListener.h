@@ -78,6 +78,7 @@ public:
   virtual void OnConfigurationChange(const CameraListenerConfiguration& aConfiguration) { }
 
   virtual void OnAutoFocusComplete(bool aAutoFocusSucceeded) { }
+  virtual void OnAutoFocusMoving(bool aIsMoving) { }
   virtual void OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType) { }
 
   enum CameraErrorContext
