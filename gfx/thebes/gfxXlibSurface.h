@@ -54,7 +54,7 @@ public:
     CreateSimilarSurface(gfxContentType aType, const gfxIntSize& aSize);
     virtual void Finish() MOZ_OVERRIDE;
 
-    virtual const gfxIntSize GetSize() const { return mSize; }
+    virtual const gfxIntSize GetSize() const;
 
     Display* XDisplay() { return mDisplay; }
     Screen* XScreen();
@@ -105,9 +105,7 @@ protected:
     Display *mDisplay;
     Drawable mDrawable;
 
-    void DoSizeQuery();
-
-    gfxIntSize mSize;
+    const gfxIntSize DoSizeQuery();
 
 #if defined(GL_PROVIDER_GLX)
     GLXPixmap mGLXPixmap;
