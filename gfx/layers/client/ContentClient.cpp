@@ -156,10 +156,10 @@ ContentClientRemoteBuffer::EndPaint()
   }
   mOldTextures.Clear();
 
-  if (mTextureClient) {
+  if (mTextureClient && mTextureClient->IsLocked()) {
     mTextureClient->Unlock();
   }
-  if (mTextureClientOnWhite) {
+  if (mTextureClientOnWhite && mTextureClientOnWhite->IsLocked()) {
     mTextureClientOnWhite->Unlock();
   }
 }
@@ -382,15 +382,6 @@ ContentClientDoubleBuffered::PrepareFrame()
 {
   mIsNewBuffer = false;
 
-  if (mTextureClient) {
-    DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
-    MOZ_ASSERT(locked);
-  }
-  if (mTextureClientOnWhite) {
-    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
-    MOZ_ASSERT(locked);
-  }
-
   if (!mFrontAndBackBufferDiffer) {
     return;
   }
@@ -415,6 +406,15 @@ ContentClientDoubleBuffered::PrepareFrame()
 void
 ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 {
+  if (mTextureClient) {
+    DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
+    MOZ_ASSERT(locked);
+  }
+  if (mTextureClientOnWhite) {
+    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
+    MOZ_ASSERT(locked);
+  }
+
   if (!mFrontAndBackBufferDiffer) {
     MOZ_ASSERT(!mDidSelfCopy, "If we have to copy the world, then our buffers are different, right?");
     return;
