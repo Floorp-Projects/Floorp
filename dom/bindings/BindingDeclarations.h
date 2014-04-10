@@ -111,21 +111,25 @@ public:
     return !mImpl.empty();
   }
 
-  void Construct()
+  // Return InternalType here so we can work with it usefully.
+  InternalType& Construct()
   {
     mImpl.construct();
+    return mImpl.ref();
   }
 
   template <class T1>
-  void Construct(const T1 &t1)
+  InternalType& Construct(const T1 &t1)
   {
     mImpl.construct(t1);
+    return mImpl.ref();
   }
 
   template <class T1, class T2>
-  void Construct(const T1 &t1, const T2 &t2)
+  InternalType& Construct(const T1 &t1, const T2 &t2)
   {
     mImpl.construct(t1, t2);
+    return mImpl.ref();
   }
 
   void Reset()
@@ -228,18 +232,18 @@ public:
   {}
 
   // Don't allow us to have an uninitialized JSObject*
-  void Construct()
+  JSObject*& Construct()
   {
     // The Android compiler sucks and thinks we're trying to construct
     // a JSObject* from an int if we don't cast here.  :(
-    Optional_base<JSObject*, JSObject*>::Construct(
+    return Optional_base<JSObject*, JSObject*>::Construct(
       static_cast<JSObject*>(nullptr));
   }
 
   template <class T1>
-  void Construct(const T1& t1)
+  JSObject*& Construct(const T1& t1)
   {
-    Optional_base<JSObject*, JSObject*>::Construct(t1);
+    return Optional_base<JSObject*, JSObject*>::Construct(t1);
   }
 };
 
