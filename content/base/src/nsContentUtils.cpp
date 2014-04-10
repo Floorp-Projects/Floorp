@@ -5651,9 +5651,7 @@ nsContentUtils::WrapNative(JSContext *cx, nsISupports *native,
     return NS_OK;
   }
 
-  JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
-
-  JSObject *wrapper = xpc_FastGetCachedWrapper(cache, scope, vp);
+  JSObject *wrapper = xpc_FastGetCachedWrapper(cx, cache, vp);
   if (wrapper) {
     return NS_OK;
   }
@@ -5665,6 +5663,7 @@ nsContentUtils::WrapNative(JSContext *cx, nsISupports *native,
   }
 
   nsresult rv = NS_OK;
+  JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
   AutoPushJSContext context(cx);
   rv = sXPConnect->WrapNativeToJSVal(context, scope, native, cache, aIID,
                                      aAllowWrapping, vp);

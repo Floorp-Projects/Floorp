@@ -706,7 +706,7 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
                     "      return true;\n"
                     "    }\n"
                     "    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
-                    "    if (xpc_FastGetCachedWrapper(cache, obj, %s)) {\n"
+                    "    if (xpc_FastGetCachedWrapper(cx, cache, %s)) {\n"
                     "      return true;\n"
                     "    }\n"
                     "    // After this point do not use 'result'!\n"
