@@ -15,14 +15,14 @@
   <project name="platform_build" path="build" remote="b2g" revision="52c909ccead537f8f9dbf634f3e6639078a8b0bd">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="9d0b1bdf746823a94b13e6574c1d8304dc584763"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="4bc61f9faa7fe76c911b4a7f3f89424cd38400bf"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="266bca6e60dad43e395f38b66edabe8bdc882334"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="70b698c2e8d1764a1e27527a102df6452e405b9a"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="89c5816399e71bda92a8959b5b771c04d6672ea3"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="8d6c36d74ba9aefbc8c3618fc93dd4907a0dbf5e"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="f92a936f2aa97526d4593386754bdbf02db07a12"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="6e47ff2790f5656b5b074407829ceecf3e6188c4"/>

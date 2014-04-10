@@ -178,10 +178,10 @@ button[type="menu"] > .button-box > .button-menu-dropmarker {
   -moz-margin-start: 10px;
   padding: 0;
   width: 10px;
-  height: 15px;
+  height: 16px;
   border: none;
   background-color: transparent;
-  list-style-image: url("chrome://browser/skin/preferences/in-content/dropdown.png")
+  list-style-image: url("chrome://browser/skin/preferences/in-content/dropdown.png");
 }
 
 .spinbuttons-button {
@@ -230,6 +230,23 @@ menulist:not([editable="true"]) > .menulist-dropmarker {
 
 menulist[disabled="true"]:not([editable="true"]) > .menulist-dropmarker {
   list-style-image: url("chrome://browser/skin/preferences/in-content/dropdown-disabled.png")
+}
+
+@media (min-resolution: 2dppx) {
+  menulist:not([editable="true"]) > .menulist-dropmarker,
+  button[type="menu"] > .button-box > .button-menu-dropmarker {
+    list-style-image: url("chrome://browser/skin/preferences/in-content/dropdown@2x.png");
+  }
+
+  menulist[disabled="true"]:not([editable="true"]) > .menulist-dropmarker {
+    list-style-image: url("chrome://browser/skin/preferences/in-content/dropdown-disabled@2x.png")
+  }
+
+  menulist:not([editable="true"]) > .menulist-dropmarker > .dropmarker-icon,
+  button[type="menu"] > .button-box > .button-menu-dropmarker > .dropmarker-icon {
+    width: 10px;
+    height: 16px;
+  }
 }
 
 menulist > menupopup,
@@ -363,6 +380,18 @@ checkbox[checked]::before {
 
 checkbox[checked]::before {
   background-position: -15px 0;
+}
+
+@media (min-resolution: 2dppx) {
+  checkbox:hover::before {
+    background-size: cover;
+    background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check@2x.png"), 0, 30, 30, 0);
+  }
+
+  checkbox[checked]::before {
+    background-size: cover;
+    background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check@2x.png"), 0, 60, 30, 30);
+  }
 }
 
 .radio-check {
@@ -509,6 +538,68 @@ radio[selected]::before {
   -moz-image-region: rect(24px, 168px, 48px, 144px);
 }
 
+@media (min-resolution: 2dppx) {
+  .category-icon {
+    list-style-image: url("chrome://browser/skin/preferences/in-content/icons@2x.png");
+  }
+
+  #category-general > .category-icon {
+    -moz-image-region: rect(0, 48px, 48px, 0);
+  }
+
+  #category-general[selected] > .category-icon {
+    -moz-image-region: rect(48px, 48px, 96px, 0);
+  }
+
+  #category-content > .category-icon {
+    -moz-image-region: rect(0, 96px, 48px, 48px);
+  }
+
+  #category-content[selected] > .category-icon {
+    -moz-image-region: rect(48px, 96px, 96px, 48px);
+  }
+
+  #category-application > .category-icon {
+    -moz-image-region: rect(0, 144px, 48px, 96px);
+  }
+
+  #category-application[selected] > .category-icon {
+    -moz-image-region: rect(48px, 144px, 96px, 96px);
+  }
+
+  #category-privacy > .category-icon {
+    -moz-image-region: rect(0, 192px, 48px, 144px);
+  }
+
+  #category-privacy[selected] > .category-icon {
+    -moz-image-region: rect(48px, 192px, 96px, 144px);
+  }
+
+  #category-security > .category-icon {
+    -moz-image-region: rect(0, 240px, 48px, 192px);
+  }
+
+  #category-security[selected] > .category-icon {
+    -moz-image-region: rect(48px, 240px, 96px, 192px);
+  }
+
+  #category-sync > .category-icon {
+    -moz-image-region: rect(0, 288px, 48px, 240px);
+  }
+
+  #category-sync[selected] > .category-icon {
+    -moz-image-region: rect(48px, 288px, 96px, 240px);
+  }
+
+  #category-advanced > .category-icon {
+    -moz-image-region: rect(0, 336px, 48px, 288px);
+  }
+
+  #category-advanced[selected] > .category-icon {
+    -moz-image-region: rect(48px, 336px, 96px, 288px);
+  }
+}
+
 /* header */
 
 .header {
@@ -530,31 +621,65 @@ radio[selected]::before {
 }
 
 #header-general > .header-icon {
-  -moz-image-region: rect(3px, 45px, 45px, 3px);
+  -moz-image-region: rect(0, 40px, 40px, 0);
 }
 
 #header-content > .header-icon {
-  -moz-image-region: rect(3px, 93px, 45px, 51px);
+  -moz-image-region: rect(0, 80px, 40px, 40px);
 }
 
 #header-application > .header-icon {
-  -moz-image-region: rect(3px, 141px, 45px, 99px);
+  -moz-image-region: rect(0, 120px, 40px, 80px);
 }
 
 #header-privacy > .header-icon {
-  -moz-image-region: rect(3px, 189px, 45px, 147px);
+  -moz-image-region: rect(0, 160px, 40px, 120px);
 }
 
 #header-security > .header-icon {
-  -moz-image-region: rect(3px, 237px, 45px, 195px);
+  -moz-image-region: rect(0, 200px, 40px, 160px);
 }
 
 #header-sync > .header-icon {
-  -moz-image-region: rect(3px, 285px, 45px, 243px);
+  -moz-image-region: rect(0, 240px, 40px, 200px);
 }
 
 #header-advanced > .header-icon {
-  -moz-image-region: rect(3px, 333px, 45px, 291px);
+  -moz-image-region: rect(0, 280px, 40px, 240px);
+}
+
+@media (min-resolution: 2dppx) {
+  .header-icon {
+    list-style-image: url("chrome://browser/skin/preferences/in-content/header@2x.png");
+  }
+
+  #header-general > .header-icon {
+    -moz-image-region: rect(0, 80px, 80px, 0);
+  }
+
+  #header-content > .header-icon {
+    -moz-image-region: rect(0, 160px, 80px, 80px);
+  }
+
+  #header-application > .header-icon {
+    -moz-image-region: rect(0, 240px, 80px, 160px);
+  }
+
+  #header-privacy > .header-icon {
+    -moz-image-region: rect(0, 320px, 80px, 240px);
+  }
+
+  #header-security > .header-icon {
+    -moz-image-region: rect(0, 400px, 80px, 320px);
+  }
+
+  #header-sync > .header-icon {
+    -moz-image-region: rect(0, 480px, 80px, 400px);
+  }
+
+  #header-advanced > .header-icon {
+    -moz-image-region: rect(0, 560px, 80px, 480px);
+  }
 }
 
 .indent {
@@ -645,7 +770,7 @@ filefield {
 #typeColumn > .treecol-sortdirection[sortDirection=ascending],
 #actionColumn > .treecol-sortdirection[sortDirection=ascending],
 #typeColumn > .treecol-sortdirection[sortDirection=descending],
-#actionColumn > .treecol-sortdirection[sortDirection=descending]  {
+#actionColumn > .treecol-sortdirection[sortDirection=descending] {
   -moz-appearance: none;
   list-style-image: url("chrome://browser/skin/preferences/in-content/sorter.png");
 }
@@ -653,6 +778,17 @@ filefield {
 #typeColumn > .treecol-sortdirection[sortDirection=descending],
 #actionColumn > .treecol-sortdirection[sortDirection=descending] {
   transform: scaleY(-1);
+}
+
+@media (min-resolution: 2dppx) {
+  #typeColumn > .treecol-sortdirection[sortDirection=ascending],
+  #actionColumn > .treecol-sortdirection[sortDirection=ascending],
+  #typeColumn > .treecol-sortdirection[sortDirection=descending],
+  #actionColumn > .treecol-sortdirection[sortDirection=descending] {
+    width: 12px;
+    height: 8px;
+    list-style-image: url("chrome://browser/skin/preferences/in-content/sorter@2x.png");
+  }
 }
 
 #handlersView > richlistitem {

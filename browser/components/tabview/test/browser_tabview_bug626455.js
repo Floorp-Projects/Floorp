@@ -7,10 +7,10 @@
  *   Raymond Lee <raymond@appcoast.com>
  */
 
+"use strict";
+
 const TEST_URL = 'data:text/html,<script>window.onbeforeunload=' +
-                 'function(e){e.returnValue="?"}</script><body ' +
-                 'onunload="alert(\'onunload\')" onpagehide="' +
-                 'alert(\'onpagehide\')"></body>';
+                 'function(e){e.returnValue="?"}</script>';
 
 let contentWindow;
 let activeGroup;
@@ -23,25 +23,27 @@ function test() {
     activeGroup = contentWindow.GroupItems.getActiveGroupItem();
 
     gBrowser.browsers[0].loadURI("data:text/html,<p>test for bug 626455, tab1");
-    gBrowser.addTab(TEST_URL);
 
-    afterAllTabsLoaded(testStayOnPage);
+    let tab = gBrowser.addTab(TEST_URL);
+    afterAllTabsLoaded(() => testStayOnPage(tab));
   });
 }
 
-function testStayOnPage() {
-  whenDialogOpened(function (dialog) {
+function testStayOnPage(blockingTab) {
+  let browser = blockingTab.linkedBrowser;
+  waitForOnBeforeUnloadDialog(browser, function (btnLeave, btnStay) {
     // stay on page
-    dialog.cancelDialog();
+    btnStay.click();
 
     executeSoon(function () {
       showTabView(function () {
         is(gBrowser.tabs.length, 1,
            "The total number of tab is 1 when staying on the page");
 
-        let location = gBrowser.browsers[0].currentURI.spec;
-        isnot(location.indexOf("onbeforeunload"), -1,
-              "The open tab is the expected one");
+        // The other initial tab has been closed when trying to close the tab
+        // group. The only tab left is the one with the onbeforeunload dialog.
+        let url = gBrowser.browsers[0].currentURI.spec;
+        ok(url.contains("onbeforeunload"), "The open tab is the expected one");
 
         is(contentWindow.GroupItems.getActiveGroupItem(), activeGroup,
            "Active group is still the same");
@@ -50,7 +52,7 @@ function testStayOnPage() {
            "Only one group is open");
 
         // start the next test
-        testLeavePage();
+        testLeavePage(gBrowser.tabs[0]);
       });
     });
   });
@@ -58,12 +60,11 @@ function testStayOnPage() {
   closeGroupItem(activeGroup);
 }
 
-function testLeavePage() {
-  let dialogsAccepted = 0;
-
-  whenDialogOpened(function onDialogOpened(dialog) {
+function testLeavePage(blockingTab) {
+  let browser = blockingTab.linkedBrowser;
+  waitForOnBeforeUnloadDialog(browser, function (btnLeave, btnStay) {
     // Leave page
-    dialog.acceptDialog();
+    btnLeave.click();
   });
 
   whenGroupClosed(activeGroup, finishTest);
@@ -85,6 +86,8 @@ function finishTest() {
   is(contentWindow.GroupItems.groupItems.length, 1,
      "Only one group is open");
 
+  contentWindow = null;
+  activeGroup = null;
   finish();
 }
 
@@ -94,30 +97,4 @@ function whenGroupClosed(group, callback) {
     group.removeSubscriber("close", onClose);
     callback();
   });
-}
-
-// ----------
-function whenDialogOpened(callback) {
-  let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-           .getService(Ci.nsIWindowMediator);
-
-  let listener = {
-    onCloseWindow: function () {},
-    onWindowTitleChange: function () {},
-
-    onOpenWindow: function (xulWin) {
-      let domWin = xulWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindow);
-
-      whenWindowLoaded(domWin, function () {
-        let dialog = domWin.document.querySelector("dialog");
-        if (dialog) {
-          wm.removeListener(listener);
-          callback(dialog);
-        }
-      });
-    }
-  };
-
-  wm.addListener(listener);
 }

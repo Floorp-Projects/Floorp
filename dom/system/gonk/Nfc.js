@@ -57,7 +57,10 @@ const NFC_IPC_MSG_NAMES = [
 
 const NFC_IPC_PEER_MSG_NAMES = [
   "NFC:RegisterPeerTarget",
-  "NFC:UnregisterPeerTarget",
+  "NFC:UnregisterPeerTarget"
+];
+
+const NFC_IPC_MANAGER_MSG_NAMES = [
   "NFC:CheckP2PRegistration",
   "NFC:NotifyUserAcceptedP2P",
   "NFC:NotifySendFileStatus"
@@ -117,6 +120,10 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       for (let msgname of NFC_IPC_PEER_MSG_NAMES) {
         ppmm.addMessageListener(msgname, this);
       }
+
+      for (let msgname of NFC_IPC_MANAGER_MSG_NAMES) {
+        ppmm.addMessageListener(msgname, this);
+      }
     },
 
     _unregisterMessageListeners: function _unregisterMessageListeners() {
@@ -128,6 +135,11 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       for (let msgname of NFC_IPC_PEER_MSG_NAMES) {
         ppmm.removeMessageListener(msgname, this);
       }
+
+      for (let msgname of NFC_IPC_MANAGER_MSG_NAMES) {
+        ppmm.removeMessageListener(msgname, this);
+      }
+
       ppmm = null;
     },
 
@@ -309,19 +321,11 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
                 " from a content process with no 'nfc-write' privileges.");
           return null;
         }
-
-        // Add extra permission check for below events:
-        // 'NFC:CheckP2PRegistration' , 'NFC:NotifyUserAcceptedP2P',
-        // 'NFC:NotifySendFileStatus'
-        if ((msg.name == "NFC:CheckP2PRegistration") ||
-            (msg.name == "NFC:NotifyUserAcceptedP2P") ||
-            (msg.name == "NFC:NotifySendFileStatus")) {
-          // ONLY privileged Content can send these events
-          if (!msg.target.assertPermission("nfc-manager")) {
-            debug("NFC message " + message.name +
-                  " from a content process with no 'nfc-manager' privileges.");
-            return null;
-          }
+      } else if (NFC_IPC_MANAGER_MSG_NAMES.indexOf(msg.name) != -1) {
+        if (!msg.target.assertPermission("nfc-manager")) {
+          debug("NFC message " + message.name +
+                " from a content process with no 'nfc-manager' privileges.");
+          return null;
         }
       } else {
         debug("Ignoring unknown message type: " + msg.name);
