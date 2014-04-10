@@ -714,6 +714,8 @@ TelephonyProvider.prototype = {
       new Date().getTime() - aCall.started : 0;
     let data = {
       number: aCall.number,
+      serviceId: aClientId,
+      emergency: aCall.isEmergency,
       duration: duration,
       direction: aCall.isOutgoing ? "outgoing" : "incoming"
     };

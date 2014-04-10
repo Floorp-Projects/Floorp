@@ -43,6 +43,8 @@ public:
   virtual nsresult StartPreview() MOZ_OVERRIDE;
   virtual nsresult StopPreview() MOZ_OVERRIDE;
   virtual nsresult AutoFocus(bool aCancelExistingCall) MOZ_OVERRIDE;
+  virtual nsresult StartFaceDetection() MOZ_OVERRIDE;
+  virtual nsresult StopFaceDetection() MOZ_OVERRIDE;
   virtual nsresult TakePicture() MOZ_OVERRIDE;
   virtual nsresult StartRecording(DeviceStorageFileDescriptor* aFileDescriptor,
                                   const StartRecordingOptions* aOptions) MOZ_OVERRIDE;
@@ -53,14 +55,17 @@ public:
 
   virtual void Shutdown() MOZ_OVERRIDE;
 
+  // Event handlers called directly from outside this class.
   void OnShutter();
   void OnClosed();
   void OnError(CameraControlListener::CameraErrorContext aContext,
                CameraControlListener::CameraError aError);
+  void OnAutoFocusMoving(bool aIsMoving);
 
 protected:
   // Event handlers.
   void OnAutoFocusComplete(bool aAutoFocusSucceeded);
+  void OnFacesDetected(const nsTArray<Face>& aFaces);
   void OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType);
 
   bool OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight);
@@ -98,6 +103,8 @@ protected:
   virtual nsresult StartPreviewImpl() = 0;
   virtual nsresult StopPreviewImpl() = 0;
   virtual nsresult AutoFocusImpl(bool aCancelExistingCall) = 0;
+  virtual nsresult StartFaceDetectionImpl() = 0;
+  virtual nsresult StopFaceDetectionImpl() = 0;
   virtual nsresult TakePictureImpl() = 0;
   virtual nsresult StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescriptor,
                                       const StartRecordingOptions* aOptions) = 0;
