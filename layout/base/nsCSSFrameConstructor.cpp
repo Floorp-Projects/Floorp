@@ -9434,8 +9434,9 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     // no?  And if we cared we could look through the item list
     // instead of groveling through the framelist here..
     nsStyleContext *frameStyleContext = aFrame->StyleContext();
-    // Report a warning for non-GC frames:
-    if (!aFrame->IsGeneratedContentFrame()) {
+    // Report a warning for non-GC frames, for chrome:
+    if (!aFrame->IsGeneratedContentFrame() &&
+        mPresShell->GetPresContext()->IsChrome()) {
       nsIContent *badKid = AnyKidsNeedBlockParent(aFrameItems.FirstChild());
       nsDependentAtomString parentTag(aContent->Tag()), kidTag(badKid->Tag());
       const char16_t* params[] = { parentTag.get(), kidTag.get() };
