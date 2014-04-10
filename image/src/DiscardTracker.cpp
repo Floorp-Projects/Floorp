@@ -19,10 +19,9 @@ static const char* sDiscardTimeoutPref = "image.mem.min_discard_timeout_ms";
 /* static */ bool DiscardTracker::sInitialized = false;
 /* static */ bool DiscardTracker::sTimerOn = false;
 /* static */ Atomic<bool> DiscardTracker::sDiscardRunnablePending(false);
-/* static */ uint64_t DiscardTracker::sCurrentDecodedImageBytes = 0;
+/* static */ int64_t DiscardTracker::sCurrentDecodedImageBytes = 0;
 /* static */ uint32_t DiscardTracker::sMinDiscardTimeoutMs = 10000;
 /* static */ uint32_t DiscardTracker::sMaxDecodedImageKB = 42 * 1024;
-/* static */ uint32_t DiscardTracker::sHardLimitDecodedImageKB = 0;
 /* static */ PRLock * DiscardTracker::sAllocationLock = nullptr;
 /* static */ mozilla::Mutex* DiscardTracker::sNodeListMutex = nullptr;
 /* static */ Atomic<bool> DiscardTracker::sShutdown(false);
@@ -139,39 +138,21 @@ DiscardTracker::DiscardAll()
   DisableTimer();
 }
 
-/* static */ bool
-DiscardTracker::TryAllocation(uint64_t aBytes)
-{
-  MOZ_ASSERT(sInitialized);
-
-  PR_Lock(sAllocationLock);
-  bool enoughSpace =
-    !sHardLimitDecodedImageKB ||
-    (sHardLimitDecodedImageKB * 1024) - sCurrentDecodedImageBytes >= aBytes;
-
-  if (enoughSpace) {
-    sCurrentDecodedImageBytes += aBytes;
-  }
-  PR_Unlock(sAllocationLock);
-
-  // If we're using too much memory for decoded images, MaybeDiscardSoon will
-  // enqueue a callback to discard some images.
-  MaybeDiscardSoon();
-
-  return enoughSpace;
-}
-
-/* static */ void
-DiscardTracker::InformDeallocation(uint64_t aBytes)
+void
+DiscardTracker::InformAllocation(int64_t bytes)
 {
   // This function is called back e.g. from RasterImage::Discard(); be careful!
 
   MOZ_ASSERT(sInitialized);
 
   PR_Lock(sAllocationLock);
-  MOZ_ASSERT(aBytes <= sCurrentDecodedImageBytes);
-  sCurrentDecodedImageBytes -= aBytes;
+  sCurrentDecodedImageBytes += bytes;
+  MOZ_ASSERT(sCurrentDecodedImageBytes >= 0);
   PR_Unlock(sAllocationLock);
+
+  // If we're using too much memory for decoded images, MaybeDiscardSoon will
+  // enqueue a callback to discard some images.
+  MaybeDiscardSoon();
 }
 
 /**
@@ -188,9 +169,6 @@ DiscardTracker::Initialize()
                               "image.mem.max_decoded_image_kb",
                               50 * 1024);
 
-  Preferences::AddUintVarCache(&sHardLimitDecodedImageKB,
-                               "image.mem.hard_limit_decoded_image_kb",
-                               0);
   // Create the timer.
   sTimer = do_CreateInstance("@mozilla.org/timer;1");
 
@@ -300,7 +278,7 @@ DiscardTracker::DiscardNow()
         sCurrentDecodedImageBytes > sMaxDecodedImageKB * 1024) {
 
       // Discarding the image should cause sCurrentDecodedImageBytes to
-      // decrease via a call to InformDeallocation().
+      // decrease via a call to InformAllocation().
       node->img->Discard();
 
       // Careful: Discarding may have caused the node to have been removed
