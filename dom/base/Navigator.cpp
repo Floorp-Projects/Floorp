@@ -1942,7 +1942,7 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
     // of naviObj, especially since we plan to cache that object.
     JSAutoCompartment ac(aCx, naviObj);
 
-    rv = nsContentUtils::WrapNative(aCx, naviObj, native, &prop_val);
+    rv = nsContentUtils::WrapNative(aCx, native, &prop_val);
 
     if (NS_FAILED(rv)) {
       return Throw(aCx, rv);

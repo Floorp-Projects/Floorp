@@ -178,7 +178,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   bool defineOnGlobal = dom::XULElementBinding::ConstructorEnabled(cx, global);
   dom::XULElementBinding::GetConstructorObject(cx, global, defineOnGlobal);
 
-  rv = nsContentUtils::WrapNative(cx, global, aBoundElement, &v,
+  rv = nsContentUtils::WrapNative(cx, aBoundElement, &v,
                                   /* aAllowWrapping = */ false);
   NS_ENSURE_SUCCESS(rv, rv);
 

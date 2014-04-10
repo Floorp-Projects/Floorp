@@ -927,8 +927,8 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       NS_ENSURE_TRUE(param, NS_ERROR_OUT_OF_MEMORY);
 
       JS::Rooted<JS::Value> targetv(cx);
-      JS::Rooted<JSObject*> global(cx, JS_GetGlobalForObject(cx, object));
-      nsresult rv = nsContentUtils::WrapNative(cx, global, aTarget, &targetv);
+      js::AssertSameCompartment(cx, object);
+      nsresult rv = nsContentUtils::WrapNative(cx, aTarget, &targetv);
       NS_ENSURE_SUCCESS(rv, rv);
 
       JS::Rooted<JSObject*> cpows(cx);
@@ -1018,8 +1018,8 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         } else {
           defaultThisValue = aTarget;
         }
-        JS::Rooted<JSObject*> global(cx, JS_GetGlobalForObject(cx, object));
-        nsresult rv = nsContentUtils::WrapNative(cx, global, defaultThisValue, &thisValue);
+        js::AssertSameCompartment(cx, object);
+        nsresult rv = nsContentUtils::WrapNative(cx, defaultThisValue, &thisValue);
         NS_ENSURE_SUCCESS(rv, rv);
       } else {
         // If the listener is a JS object which has receiveMessage function:

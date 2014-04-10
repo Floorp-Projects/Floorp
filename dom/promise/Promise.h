@@ -254,9 +254,7 @@ private:
                     JSContext* aCx,
                     JS::MutableHandle<JS::Value> aValue)
   {
-    JS::Rooted<JSObject*> scope(aCx, JS::CurrentGlobalOrNull(aCx));
-
-    nsresult rv = nsContentUtils::WrapNative(aCx, scope, &aArgument, aValue);
+    nsresult rv = nsContentUtils::WrapNative(aCx, &aArgument, aValue);
     return NS_SUCCEEDED(rv);
   }
 

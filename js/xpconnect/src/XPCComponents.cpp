@@ -3485,12 +3485,9 @@ CloneIntoReadStructuredClone(JSContext *cx,
 
         nsISupports *supports;
         if (JS_ReadBytes(reader, &supports, sizeof(supports))) {
-            RootedObject global(cx, CurrentGlobalOrNull(cx));
-            if (global) {
-                RootedValue val(cx);
-                if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, global, supports, &val)))
-                    return val.toObjectOrNull();
-            }
+            RootedValue val(cx);
+            if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, supports, &val)))
+                return val.toObjectOrNull();
         }
     }
 

@@ -5641,16 +5641,17 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
 
 // static
 nsresult
-nsContentUtils::WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
-                           nsISupports *native, nsWrapperCache *cache,
-                           const nsIID* aIID, JS::MutableHandle<JS::Value> vp,
-                           bool aAllowWrapping)
+nsContentUtils::WrapNative(JSContext *cx, nsISupports *native,
+                           nsWrapperCache *cache, const nsIID* aIID,
+                           JS::MutableHandle<JS::Value> vp, bool aAllowWrapping)
 {
   if (!native) {
     vp.setNull();
 
     return NS_OK;
   }
+
+  JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
 
   JSObject *wrapper = xpc_FastGetCachedWrapper(cache, scope, vp);
   if (wrapper) {
@@ -5708,8 +5709,7 @@ nsContentUtils::CreateBlobBuffer(JSContext* aCx,
   } else {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  JS::Rooted<JSObject*> scope(aCx, JS::CurrentGlobalOrNull(aCx));
-  return nsContentUtils::WrapNative(aCx, scope, blob, aBlob);
+  return nsContentUtils::WrapNative(aCx, blob, aBlob);
 }
 
 void
