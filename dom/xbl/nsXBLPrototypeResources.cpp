@@ -25,7 +25,6 @@ nsXBLPrototypeResources::nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding
   MOZ_COUNT_CTOR(nsXBLPrototypeResources);
 
   mLoader = new nsXBLResourceLoader(aBinding, this);
-  NS_IF_ADDREF(mLoader);
 }
 
 nsXBLPrototypeResources::~nsXBLPrototypeResources()
@@ -33,7 +32,6 @@ nsXBLPrototypeResources::~nsXBLPrototypeResources()
   MOZ_COUNT_DTOR(nsXBLPrototypeResources);
   if (mLoader) {
     mLoader->mResources = nullptr;
-    NS_RELEASE(mLoader);
   }
 }
 
@@ -120,5 +118,5 @@ nsXBLPrototypeResources::Traverse(nsCycleCollectionTraversalCallback &cb) const
 void
 nsXBLPrototypeResources::ClearLoader()
 {
-  NS_RELEASE(mLoader);
+  mLoader = nullptr;
 }

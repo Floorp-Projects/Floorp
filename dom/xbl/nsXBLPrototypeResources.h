@@ -40,7 +40,7 @@ public:
 
 private:
   // A loader object. Exists only long enough to load resources, and then it dies.
-  nsXBLResourceLoader* mLoader;
+  nsRefPtr<nsXBLResourceLoader> mLoader;
 
 public:
   // A list of loaded stylesheets for this binding.
