@@ -291,9 +291,6 @@ private:
                                 uint32_t aStringLen,
                                 const uint8_t* aString);
 
-  void AddDeferRequest(nsScriptLoadRequest* aRequest);
-  bool MaybeRemovedDeferRequests();
-
   nsIDocument* mDocument;                   // [WEAK]
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
   nsTArray<nsRefPtr<nsScriptLoadRequest> > mNonAsyncExternalScriptInsertedRequests;
@@ -328,7 +325,6 @@ private:
   bool mEnabled;
   bool mDeferEnabled;
   bool mDocumentParsingDone;
-  bool mBlockingDOMContentLoaded;
 };
 
 class nsAutoScriptLoaderDisabler

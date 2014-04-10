@@ -95,14 +95,14 @@ nsHtml5TreeOpExecutor::WillParse()
 NS_IMETHODIMP
 nsHtml5TreeOpExecutor::WillBuildModel(nsDTDMode aDTDMode)
 {
-  mDocument->AddObserver(this);
-  WillBuildModelImpl();
-  GetDocument()->BeginLoad();
   if (mDocShell && !GetDocument()->GetWindow() &&
       !IsExternalViewSource()) {
     // Not loading as data but script global object not ready
     return MarkAsBroken(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
+  mDocument->AddObserver(this);
+  WillBuildModelImpl();
+  GetDocument()->BeginLoad();
   return NS_OK;
 }
 
@@ -111,6 +111,8 @@ nsHtml5TreeOpExecutor::WillBuildModel(nsDTDMode aDTDMode)
 NS_IMETHODIMP
 nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
 {
+  NS_PRECONDITION(mStarted, "Bad life cycle.");
+
   if (!aTerminated) {
     // This is needed to avoid unblocking loads too many times on one hand
     // and on the other hand to avoid destroying the frame constructor from
@@ -160,12 +162,7 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
     // Return early to avoid unblocking the onload event too many times.
     return NS_OK;
   }
-
-  // We may not have called BeginLoad() if loading is terminated before
-  // OnStartRequest call.
-  if (mStarted) {
-    mDocument->EndLoad();
-  }
+  mDocument->EndLoad();
   DropParserAndPerfHint();
 #ifdef GATHER_DOCWRITE_STATISTICS
   printf("UNSAFE SCRIPTS: %d\n", sUnsafeDocWrites);
