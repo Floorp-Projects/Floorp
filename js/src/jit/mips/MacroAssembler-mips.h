@@ -205,8 +205,22 @@ class MacroAssemblerMIPS : public Assembler
     // branches when done from within mips-specific code
     void ma_b(Register lhs, Register rhs, Label *l, Condition c, JumpKind jumpKind = LongJump);
     void ma_b(Register lhs, Imm32 imm, Label *l, Condition c, JumpKind jumpKind = LongJump);
+    void ma_b(Register lhs, ImmPtr imm, Label *l, Condition c, JumpKind jumpKind = LongJump) {
+        ma_b(lhs, Imm32(uint32_t(imm.value)), l, c, jumpKind);
+    }
+    void ma_b(Register lhs, ImmGCPtr imm, Label *l, Condition c, JumpKind jumpKind = LongJump) {
+        MOZ_ASSERT(lhs != ScratchRegister);
+        ma_li(ScratchRegister, imm);
+        ma_b(lhs, Imm32(uint32_t(imm.value)), l, c, jumpKind);
+    }
     void ma_b(Register lhs, Address addr, Label *l, Condition c, JumpKind jumpKind = LongJump);
     void ma_b(Address addr, Imm32 imm, Label *l, Condition c, JumpKind jumpKind = LongJump);
+    void ma_b(Address addr, Register rhs, Label *l, Condition c, JumpKind jumpKind = LongJump) {
+        MOZ_ASSERT(rhs != ScratchRegister);
+        ma_lw(ScratchRegister, addr);
+        ma_b(ScratchRegister, rhs, l, c, jumpKind);
+    }
+
     void ma_b(Label *l, JumpKind jumpKind = LongJump);
     void ma_bal(Label *l, JumpKind jumpKind = LongJump);
 
@@ -282,8 +296,16 @@ class MacroAssemblerMIPS : public Assembler
 
     void ma_cmp_set(Register dst, Register lhs, Register rhs, Condition c);
     void ma_cmp_set(Register dst, Register lhs, Imm32 imm, Condition c);
+    void ma_cmp_set(Register dst, Register lhs, ImmPtr imm, Condition c) {
+        ma_cmp_set(dst, lhs, Imm32(uint32_t(imm.value)), c);
+    }
     void ma_cmp_set(Register rd, Register rs, Address addr, Condition c);
-    void ma_cmp_set(Register dst, Address lhs, Register imm, Condition c);
+    void ma_cmp_set(Register dst, Address lhs, Register rhs, Condition c);
+    void ma_cmp_set(Register dst, Address lhs, ImmPtr imm, Condition c) {
+        ma_lw(ScratchRegister, lhs);
+        ma_li(SecondScratchReg, Imm32(uint32_t(imm.value)));
+        ma_cmp_set(dst, ScratchRegister, SecondScratchReg, c);
+    }
     void ma_cmp_set_double(Register dst, FloatRegister lhs, FloatRegister rhs, DoubleCondition c);
     void ma_cmp_set_float32(Register dst, FloatRegister lhs, FloatRegister rhs, DoubleCondition c);
 };
@@ -615,6 +637,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void branchTestNull(Condition cond, const ValueOperand &value, Label *label);
     void branchTestNull(Condition cond, const Register &tag, Label *label);
     void branchTestNull(Condition cond, const BaseIndex &src, Label *label);
+    void testNullSet(Condition cond, const ValueOperand &value, Register dest);
 
     void branchTestObject(Condition cond, const ValueOperand &value, Label *label);
     void branchTestObject(Condition cond, const Register &tag, Label *label);
@@ -628,6 +651,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void branchTestUndefined(Condition cond, const Register &tag, Label *label);
     void branchTestUndefined(Condition cond, const BaseIndex &src, Label *label);
     void branchTestUndefined(Condition cond, const Address &address, Label *label);
+    void testUndefinedSet(Condition cond, const ValueOperand &value, Register dest);
 
     void branchTestNumber(Condition cond, const ValueOperand &value, Label *label);
     void branchTestNumber(Condition cond, const Register &tag, Label *label);
@@ -921,6 +945,32 @@ public:
     void sub32(Imm32 imm, Register dest);
     void sub32(Register src, Register dest);
 
+    template <typename T>
+    void branchAdd32(Condition cond, T src, Register dest, Label *overflow) {
+        switch (cond) {
+          case Overflow:
+            ma_addTestOverflow(dest, dest, src, overflow);
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("NYI");
+        }
+    }
+    template <typename T>
+    void branchSub32(Condition cond, T src, Register dest, Label *overflow) {
+        switch (cond) {
+          case Overflow:
+            ma_subTestOverflow(dest, dest, src, overflow);
+            break;
+          case NonZero:
+          case Zero:
+            sub32(src, dest);
+            ma_b(dest, dest, overflow, cond);
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("NYI");
+        }
+    }
+
     void and32(Imm32 imm, Register dest);
     void and32(Imm32 imm, const Address &dest);
     void or32(Imm32 imm, const Address &dest);
@@ -1047,6 +1097,7 @@ public:
     }
 
     void subPtr(Imm32 imm, const Register dest);
+    void subPtr(const Register &src, const Address &dest);
     void addPtr(Imm32 imm, const Register dest);
     void addPtr(Imm32 imm, const Address &dest);
     void addPtr(ImmWord imm, const Register dest) {
@@ -1078,6 +1129,18 @@ public:
     // If source is a double, load it into dest. If source is int32,
     // convert it to double. Else, branch to failure.
     void ensureDouble(const ValueOperand &source, FloatRegister dest, Label *failure);
+
+    template <typename T1, typename T2>
+    void cmpPtrSet(Assembler::Condition cond, T1 lhs, T2 rhs, const Register &dest)
+    {
+        ma_cmp_set(dest, lhs, rhs, cond);
+    }
+
+    template <typename T1, typename T2>
+    void cmp32Set(Assembler::Condition cond, T1 lhs, T2 rhs, const Register &dest)
+    {
+        ma_cmp_set(dest, lhs, rhs, cond);
+    }
 
     // Setup a call to C/C++ code, given the number of general arguments it
     // takes. Note that this only supports cdecl.
@@ -1120,15 +1183,17 @@ public:
     }
 
     void memIntToValue(Address Source, Address Dest) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
+        load32(Source, SecondScratchReg);
+        storeValue(JSVAL_TYPE_INT32, SecondScratchReg, Dest);
     }
 
     void lea(Operand addr, Register dest) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
+        ma_addu(dest, addr.baseReg(), Imm32(addr.disp()));
     }
 
     void abiret() {
-        MOZ_ASSUME_UNREACHABLE("NYI");
+        as_jr(ra);
+        as_nop();
     }
 
     void ma_storeImm(Imm32 imm, const Address &addr) {
