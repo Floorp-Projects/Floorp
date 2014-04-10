@@ -7,40 +7,32 @@
 #define mozilla_dom_StyleSheetList_h
 
 #include "nsIDOMStyleSheetList.h"
-#include "nsWrapperCache.h"
 
 class nsCSSStyleSheet;
-class nsINode;
 
 namespace mozilla {
 namespace dom {
 
 class StyleSheetList : public nsIDOMStyleSheetList
-                     , public nsWrapperCache
 {
 public:
-  StyleSheetList()
+  static StyleSheetList* FromSupports(nsISupports* aSupports)
   {
-    SetIsDOMBinding();
+    nsIDOMStyleSheetList* list = static_cast<nsIDOMStyleSheetList*>(aSupports);
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIDOMStyleSheetList> list_qi = do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsIDOMStyleSheetList pointer as the
+      // nsISupports pointer. That must be fixed, or we'll crash...
+      MOZ_ASSERT(list_qi == list, "Uh, fix QI!");
+    }
+#endif
+    return static_cast<StyleSheetList*>(list);
   }
-  virtual ~StyleSheetList() {}
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StyleSheetList)
-  NS_DECL_NSIDOMSTYLESHEETLIST
-
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE MOZ_FINAL;
-
-  virtual nsINode* GetParentObject() const = 0;
-
-  virtual uint32_t Length() = 0;
-  virtual nsCSSStyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) = 0;
-  nsCSSStyleSheet* Item(uint32_t aIndex)
-  {
-    bool dummy = false;
-    return IndexedGetter(aIndex, dummy);
-  }
+  virtual nsCSSStyleSheet* GetItemAt(uint32_t aIndex) = 0;
 };
 
 } // namespace dom

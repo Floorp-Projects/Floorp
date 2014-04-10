@@ -484,7 +484,7 @@ ShadowRoot::SetApplyAuthorStyles(bool aApplyAuthorStyles)
   }
 }
 
-StyleSheetList*
+nsIDOMStyleSheetList*
 ShadowRoot::StyleSheets()
 {
   if (!mStyleSheetList) {
@@ -655,14 +655,16 @@ ShadowRoot::ContentRemoved(nsIDocument* aDocument,
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(ShadowRootStyleSheetList, StyleSheetList,
-                                     mShadowRoot)
+NS_IMPL_CYCLE_COLLECTION_1(ShadowRootStyleSheetList, mShadowRoot)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ShadowRootStyleSheetList)
-NS_INTERFACE_MAP_END_INHERITING(StyleSheetList)
+NS_INTERFACE_TABLE_HEAD(ShadowRootStyleSheetList)
+  NS_INTERFACE_TABLE1(ShadowRootStyleSheetList, nsIDOMStyleSheetList)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(ShadowRootStyleSheetList)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StyleSheetList)
+NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF_INHERITED(ShadowRootStyleSheetList, StyleSheetList)
-NS_IMPL_RELEASE_INHERITED(ShadowRootStyleSheetList, StyleSheetList)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ShadowRootStyleSheetList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ShadowRootStyleSheetList)
 
 ShadowRootStyleSheetList::ShadowRootStyleSheetList(ShadowRoot* aShadowRoot)
   : mShadowRoot(aShadowRoot)
@@ -676,30 +678,37 @@ ShadowRootStyleSheetList::~ShadowRootStyleSheetList()
 }
 
 nsCSSStyleSheet*
-ShadowRootStyleSheetList::IndexedGetter(uint32_t aIndex, bool& aFound)
+ShadowRootStyleSheetList::GetItemAt(uint32_t aIndex)
 {
   nsTArray<nsRefPtr<nsCSSStyleSheet>>* sheets =
     mShadowRoot->mProtoBinding->GetStyleSheets();
 
   if (!sheets) {
-    aFound = false;
     return nullptr;
   }
 
-  aFound = aIndex < sheets->Length();
   return sheets->SafeElementAt(aIndex);
 }
 
-uint32_t
-ShadowRootStyleSheetList::Length()
+NS_IMETHODIMP
+ShadowRootStyleSheetList::Item(uint32_t aIndex, nsIDOMStyleSheet** aReturn)
+{
+  NS_IF_ADDREF(*aReturn = GetItemAt(aIndex));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ShadowRootStyleSheetList::GetLength(uint32_t* aLength)
 {
   nsTArray<nsRefPtr<nsCSSStyleSheet> >* sheets =
     mShadowRoot->mProtoBinding->GetStyleSheets();
 
-  if (!sheets) {
-    return 0;
+  if (sheets) {
+    *aLength = sheets->Length();
+  } else {
+    *aLength = 0;
   }
 
-  return sheets->Length();
+  return NS_OK;
 }
 
