@@ -8,6 +8,15 @@ in the same format.  The tests are run based on a manifest file, and for
 each test, PASS or FAIL is reported, and UNEXPECTED is reported if the
 result (PASS or FAIL) was not the expected result noted in the manifest.
 
+Images of the display of both tests are captured, and most test types
+involve comparing these images (e.g., test types == or !=) to determine
+whether the test passed.  The captures of the tests are taken in a
+viewport that is 800 pixels wide and 1000 pixels tall, so any content
+outside that area will be ignored (except for any scrollbars that are
+displayed).  Ideally, however, tests should be written so that they fit
+within 600x600, since we may in the future want to switch to 600x600 to
+match http://lists.w3.org/Archives/Public/www-style/2012Sep/0562.html .
+
 Why this way?
 =============
 
