@@ -12,7 +12,7 @@
  * types don't need to be exported outside the SVG module.
  */
 
-#include "nsString.h"
+#include "nsStringGlue.h"
 
 class nsSVGAngle;
 class nsSVGIntegerPair;
