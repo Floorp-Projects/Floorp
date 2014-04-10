@@ -1154,8 +1154,8 @@ XPCOMObjectToJsval(JSContext* cx, JS::Handle<JSObject*> scope,
 
 // Special-cased wrapping for variants
 bool
-VariantToJsval(JSContext* aCx, JS::Handle<JSObject*> aScope,
-               nsIVariant* aVariant, JS::MutableHandle<JS::Value> aRetval);
+VariantToJsval(JSContext* aCx, nsIVariant* aVariant,
+               JS::MutableHandle<JS::Value> aRetval);
 
 // Wrap an object "p" which is not using WebIDL bindings yet.  This _will_
 // actually work on WebIDL binding objects that are wrappercached, but will be
@@ -1163,14 +1163,13 @@ VariantToJsval(JSContext* aCx, JS::Handle<JSObject*> aScope,
 // nsWrapperCache for "p".
 template<class T>
 inline bool
-WrapObject(JSContext* cx, JS::Handle<JSObject*> scope, T* p,
-           nsWrapperCache* cache, const nsIID* iid,
+WrapObject(JSContext* cx, T* p, nsWrapperCache* cache, const nsIID* iid,
            JS::MutableHandle<JS::Value> rval)
 {
-  MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
   if (xpc_FastGetCachedWrapper(cx, cache, rval))
     return true;
   qsObjectHelper helper(p, cache);
+  JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
   return XPCOMObjectToJsval(cx, scope, helper, iid, true, rval);
 }
 
@@ -1178,13 +1177,13 @@ WrapObject(JSContext* cx, JS::Handle<JSObject*> scope, T* p,
 // do something different.
 template<>
 inline bool
-WrapObject<nsIVariant>(JSContext* cx, JS::Handle<JSObject*> scope, nsIVariant* p,
+WrapObject<nsIVariant>(JSContext* cx, nsIVariant* p,
                        nsWrapperCache* cache, const nsIID* iid,
                        JS::MutableHandle<JS::Value> rval)
 {
   MOZ_ASSERT(iid);
   MOZ_ASSERT(iid->Equals(NS_GET_IID(nsIVariant)));
-  return VariantToJsval(cx, scope, p, rval);
+  return VariantToJsval(cx, p, rval);
 }
 
 // Wrap an object "p" which is not using WebIDL bindings yet.  Just like the
@@ -1192,10 +1191,10 @@ WrapObject<nsIVariant>(JSContext* cx, JS::Handle<JSObject*> scope, nsIVariant* p
 // nsWrapperCache* from "p".
 template<class T>
 inline bool
-WrapObject(JSContext* cx, JS::Handle<JSObject*> scope, T* p, const nsIID* iid,
+WrapObject(JSContext* cx, T* p, const nsIID* iid,
            JS::MutableHandle<JS::Value> rval)
 {
-  return WrapObject(cx, scope, p, GetWrapperCache(p), iid, rval);
+  return WrapObject(cx, p, GetWrapperCache(p), iid, rval);
 }
 
 // Just like the WrapObject above, but without requiring you to pick which
@@ -1203,52 +1202,51 @@ WrapObject(JSContext* cx, JS::Handle<JSObject*> scope, T* p, const nsIID* iid,
 // classinfo, for which it doesn't matter what IID is used to wrap.
 template<class T>
 inline bool
-WrapObject(JSContext* cx, JS::Handle<JSObject*> scope, T* p,
-           JS::MutableHandle<JS::Value> rval)
+WrapObject(JSContext* cx, T* p, JS::MutableHandle<JS::Value> rval)
 {
-  return WrapObject(cx, scope, p, nullptr, rval);
+  return WrapObject(cx, p, nullptr, rval);
 }
 
 // Helper to make it possible to wrap directly out of an nsCOMPtr
 template<class T>
 inline bool
-WrapObject(JSContext* cx, JS::Handle<JSObject*> scope, const nsCOMPtr<T>& p,
+WrapObject(JSContext* cx, const nsCOMPtr<T>& p,
            const nsIID* iid, JS::MutableHandle<JS::Value> rval)
 {
-  return WrapObject(cx, scope, p.get(), iid, rval);
+  return WrapObject(cx, p.get(), iid, rval);
 }
 
 // Helper to make it possible to wrap directly out of an nsCOMPtr
 template<class T>
 inline bool
-WrapObject(JSContext* cx, JS::Handle<JSObject*> scope, const nsCOMPtr<T>& p,
+WrapObject(JSContext* cx, const nsCOMPtr<T>& p,
            JS::MutableHandle<JS::Value> rval)
 {
-  return WrapObject(cx, scope, p, nullptr, rval);
+  return WrapObject(cx, p, nullptr, rval);
 }
 
 // Helper to make it possible to wrap directly out of an nsRefPtr
 template<class T>
 inline bool
-WrapObject(JSContext* cx, JS::Handle<JSObject*> scope, const nsRefPtr<T>& p,
+WrapObject(JSContext* cx, const nsRefPtr<T>& p,
            const nsIID* iid, JS::MutableHandle<JS::Value> rval)
 {
-  return WrapObject(cx, scope, p.get(), iid, rval);
+  return WrapObject(cx, p.get(), iid, rval);
 }
 
 // Helper to make it possible to wrap directly out of an nsRefPtr
 template<class T>
 inline bool
-WrapObject(JSContext* cx, JS::Handle<JSObject*> scope, const nsRefPtr<T>& p,
+WrapObject(JSContext* cx, const nsRefPtr<T>& p,
            JS::MutableHandle<JS::Value> rval)
 {
-  return WrapObject(cx, scope, p, nullptr, rval);
+  return WrapObject(cx, p, nullptr, rval);
 }
 
 // Specialization to make it easy to use WrapObject in codegen.
 template<>
 inline bool
-WrapObject<JSObject>(JSContext* cx, JS::Handle<JSObject*> scope, JSObject* p,
+WrapObject<JSObject>(JSContext* cx, JSObject* p,
                      JS::MutableHandle<JS::Value> rval)
 {
   rval.set(JS::ObjectOrNullValue(p));
@@ -1256,8 +1254,7 @@ WrapObject<JSObject>(JSContext* cx, JS::Handle<JSObject*> scope, JSObject* p,
 }
 
 inline bool
-WrapObject(JSContext* cx, JS::Handle<JSObject*> scope, JSObject& p,
-           JS::MutableHandle<JS::Value> rval)
+WrapObject(JSContext* cx, JSObject& p, JS::MutableHandle<JS::Value> rval)
 {
   rval.set(JS::ObjectValue(p));
   return true;
