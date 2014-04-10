@@ -288,7 +288,7 @@ struct FreeSpan
             return nullptr;
         }
         checkSpan();
-        JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
+        JS_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
         return reinterpret_cast<void *>(thing);
     }
 
@@ -304,7 +304,6 @@ struct FreeSpan
             *this = *reinterpret_cast<FreeSpan *>(thing);
         }
         checkSpan();
-        JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
         return reinterpret_cast<void *>(thing);
     }
 
@@ -321,7 +320,6 @@ struct FreeSpan
         first = thing + thingSize;
         last = arenaAddr | ArenaMask;
         checkSpan();
-        JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
         return reinterpret_cast<void *>(thing);
     }
 
