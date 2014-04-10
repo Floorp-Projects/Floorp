@@ -5,7 +5,7 @@
 
 const TEST_URI = "http://example.com/browser/dom/tests/browser/test-console-api.html";
 
-var gWindow, gLevel, gArgs, gTestDriver;
+var gWindow, gLevel, gArgs, gTestDriver, gStyle;
 
 function test() {
   waitForExplicitFinish();
@@ -64,6 +64,14 @@ function testConsoleData(aMessageObject) {
           arg = arg.wrappedJSObject;
         is(arg, a, "correct arg " + i);
       });
+
+      if (gStyle) {
+        is(aMessageObject.styles.length, gStyle.length, "styles.length matches");
+        is(aMessageObject.styles + "", gStyle + "", "styles match");
+      } else {
+        ok(!aMessageObject.styles || aMessageObject.styles.length === 0,
+           "styles match");
+      }
     }
   }
 
@@ -245,12 +253,12 @@ function observeConsoleTest() {
   win.console.log("%d, %s, %l");
   yield undefined;
 
-  expect("log", "%a %b %c");
-  win.console.log("%a %b %c");
+  expect("log", "%a %b %g");
+  win.console.log("%a %b %g");
   yield undefined;
 
-  expect("log", "%a %b %c", "a", "b");
-  win.console.log("%a %b %c", "a", "b");
+  expect("log", "%a %b %g", "a", "b");
+  win.console.log("%a %b %g", "a", "b");
   yield undefined;
 
   expect("log", "2, a, %l", 3);
@@ -280,6 +288,24 @@ function observeConsoleTest() {
   win.console.exception("arg");
   yield undefined;
 
+  expect("log", "foobar");
+  gStyle = ["color:red;foobar;;"];
+  win.console.log("%cfoobar", gStyle[0]);
+  yield undefined;
+
+  let obj4 = { d: 4 };
+  expect("warn", "foobar", obj4, "test", "bazbazstr", "last");
+  gStyle = [null, null, null, "color:blue;", "color:red"];
+  win.console.warn("foobar%Otest%cbazbaz%s%clast", obj4, gStyle[3], "str", gStyle[4]);
+  yield undefined;
+
+  let obj3 = { c: 3 };
+  expect("info", "foobar", "bazbaz", obj3, "%comg", "color:yellow");
+  gStyle = [null, "color:pink;"];
+  win.console.info("foobar%cbazbaz", gStyle[1], obj3, "%comg", "color:yellow");
+  yield undefined;
+
+  gStyle = null;
   let obj2 = { b: 2 };
   expect("log", "omg ", obj, " foo ", 4, obj2);
   win.console.log("omg %o foo %o", obj, 4, obj2);
