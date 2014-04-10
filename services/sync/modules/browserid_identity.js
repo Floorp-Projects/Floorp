@@ -539,6 +539,7 @@ this.BrowserIDManager.prototype = {
   // current user stored in this._token.  When resolved, this._token is valid.
   _ensureValidToken: function() {
     if (this.hasValidToken()) {
+      this._log.debug("_ensureValidToken already has one");
       return Promise.resolve();
     }
     return this._fetchTokenForUser().then(
@@ -627,15 +628,25 @@ BrowserIDClusterManager.prototype = {
       if (!endpoint.endsWith("/")) {
         endpoint += "/";
       }
+      log.debug("_findCluster returning " + endpoint);
       return endpoint;
     }.bind(this);
 
     // Spinningly ensure we are ready to authenticate and have a valid token.
     let promiseClusterURL = function() {
       return this.identity.whenReadyToAuthenticate.promise.then(
-        () => this.identity._ensureValidToken()
-      ).then(
-        () => endPointFromIdentityToken()
+        () => {
+          // We need to handle node reassignment here.  If we are being asked
+          // for a clusterURL while the service already has a clusterURL, then
+          // it's likely a 401 was received using the existing token - in which
+          // case we just discard the existing token and fetch a new one.
+          if (this.service.clusterURL) {
+            log.debug("_findCluster found existing clusterURL, so discarding the current token");
+            this.identity._token = null;
+          }
+          return this.identity._ensureValidToken();
+        }
+      ).then(endPointFromIdentityToken
       );
     }.bind(this);
 
