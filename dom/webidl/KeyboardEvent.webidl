@@ -27,6 +27,7 @@ interface KeyboardEvent : UIEvent
 
   readonly attribute unsigned long location;
   readonly attribute boolean       repeat;
+  readonly attribute boolean       isComposing;
 
   readonly attribute DOMString key;
 };
