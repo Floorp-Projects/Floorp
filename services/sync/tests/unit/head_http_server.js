@@ -806,7 +806,12 @@ SyncServer.prototype = {
     }
 
     let [all, version, username, first, rest] = parts;
-    if (version != SYNC_API_VERSION) {
+    // Doing a float compare of the version allows for us to pretend there was
+    // a node-reassignment - eg, we could re-assign from "1.1/user/" to
+    // "1.10/user" - this server will then still accept requests with the new
+    // URL while any code in sync itself which compares URLs will see a
+    // different URL.
+    if (parseFloat(version) != parseFloat(SYNC_API_VERSION)) {
       this._log.debug("SyncServer: Unknown version.");
       throw HTTP_404;
     }
