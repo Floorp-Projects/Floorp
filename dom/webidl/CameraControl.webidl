@@ -72,26 +72,6 @@ dictionary CameraPictureOptions
   long long dateTime = 0;
 };
 
-/* These properties affect the video recording preview, e.g.
-      {
-         profile: "1080p",
-         rotation: 0
-      }
-
-   'profile' is one of the profiles returned by
-   CameraCapabilities.recorderProfiles'; if this profile is missing,
-   an arbitrary profile will be chosen.
-
-   'rotation' is the degrees clockwise to rotate the preview; if
-   this option is not supported, it will be ignored; if this option
-   is missing, the default is 0.
-*/
-dictionary CameraRecorderOptions
-{
-  DOMString profile;
-  long      rotation;
-};
-
 /* These properties affect the actual video recording, e.g.
       {
          rotation: 0,
@@ -117,6 +97,15 @@ dictionary CameraStartRecordingOptions
   long      rotation = 0;
   long long maxFileSizeBytes = 0;
   long long maxVideoLengthMs = 0;
+
+  /* If startRecording() is called with flashMode set to "auto" and the
+     camera has determined that the scene is poorly lit, the flash mode
+     will be automatically changed to "torch" until stopRecording() is
+     called. During this time, flashMode will reflect the new setting. If
+     flashMode is changed while recording is in progress, the new setting
+     will be left as-is on stopRecording(). If the camera does not
+     support this setting, it will be ignored. */
+  boolean autoEnableLowLightTorch = false;
 };
 
 callback CameraSetConfigurationCallback = void (CameraConfiguration configuration);
@@ -128,11 +117,13 @@ callback CameraClosedCallback = void ();
 callback CameraReleaseCallback = void ();
 callback CameraRecorderStateChange = void (DOMString newState);
 callback CameraPreviewStateChange = void (DOMString newState);
+callback CameraAutoFocusMovingCallback = void (boolean isMoving);
 
 /*
     attributes here affect the preview, any pictures taken, and/or
     any video recorded by the camera.
 */
+[Func="nsDOMCameraControl::HasSupport"]
 interface CameraControl : MediaStream
 {
   [Constant, Cached]
@@ -280,6 +271,15 @@ interface CameraControl : MediaStream
   [Throws]
   void autoFocus(CameraAutoFocusCallback onSuccess, optional CameraErrorCallback onError);
 
+  /* if continuous autofocus is supported and focusMode is set to enable it,
+     then this function is called whenever the camera decides to start and
+     stop moving the focus position; it can be used to update a UI element to
+     indicate that the camera is still trying to focus, or has finished. Some
+     platforms do not support this event, in which case the callback is never
+     invoked. */
+  [Pref="camera.control.autofocus_moving_callback.enabled"]
+  attribute CameraAutoFocusMovingCallback? onAutoFocusMoving;
+
   /* capture an image and return it as a blob to the 'onSuccess' callback;
      if the camera supports it, this may be invoked while the camera is
      already recording video.
@@ -334,4 +334,101 @@ interface CameraControl : MediaStream
   void setConfiguration(optional CameraConfiguration configuration,
                         optional CameraSetConfigurationCallback onSuccess,
                         optional CameraErrorCallback onError);
+};
+
+/* The coordinates of a point, relative to the camera sensor, of the center of
+   detected facial features. As with CameraRegions:
+     { x: -1000, y: -1000 } is the top-left corner
+     { x:  1000, y:  1000 } is the bottom-right corner
+   x and y can range from -1000 to 1000.
+*/
+[Pref="camera.control.face_detection.enabled", Func="DOMCameraPoint::HasSupport"]
+interface CameraPoint
+{
+  attribute long x;
+  attribute long y;
+};
+
+/* The information of the each face detected by a camera device, e.g.
+     {
+       id: 1,
+       score: 80,
+       bound: { left:   -203,
+                top:    -400,
+                right:   300,
+                bottom:  250 },
+       leftEye:  { x:  -100,
+                   y:  -200 },
+       rightEye: { x:   100,
+                   y:   100 },
+       mouth:    { x:   150,
+                   y:   150 } }
+
+   'id' is an unique value per face while the face is visible to the tracker.
+   If the face leaves the viewfinder and then returns, it will be assigned
+   a new value.
+
+   'score' is the confidence level for the detection of the face.
+   This range is 1 to 100, where 100 is the highest confidence.
+
+   'bounds' is the bounds of the face. It is guaranteed left < right and
+   top < bottom. The coordinates can be smaller than -1000 or bigger than 1000.
+   But at least one vertex will be within (-1000, -1000) and (1000, 1000).
+
+   'leftEye' is the coordinates of the centre of the left eye. The coordinates
+   are in the same space as the ones for 'bounds'. This is an optional field
+   and may not be supported on all devices. If it is not supported or detected,
+   the value will be set to null.
+
+   'rightEye' is the coordinates of the detected right eye; null if not
+   supported or detected.
+
+   'mouth' is the coordinates of the detected mouth; null if not supported or
+   detected.
+*/
+[Pref="camera.control.face_detection.enabled", Func="DOMCameraDetectedFace::HasSupport"]
+interface CameraDetectedFace
+{
+  readonly attribute unsigned long id;
+
+  readonly attribute unsigned long score;
+
+  readonly attribute DOMRect bounds;
+
+  readonly attribute boolean hasLeftEye;
+  readonly attribute CameraPoint? leftEye;
+
+  readonly attribute boolean hasRightEye;
+  readonly attribute CameraPoint? rightEye;
+
+  readonly attribute boolean hasMouth;
+  readonly attribute CameraPoint? mouth;
+};
+
+callback CameraFaceDetectionCallback = void (sequence<CameraDetectedFace> faces);
+
+partial interface CameraControl
+{
+  /* Starts the face detection. This should be called after the preview is
+     started. The camera will periodically call 'onFacesDetected' with a
+     sequence of zero or one or more detected faces in the preview frame.
+
+     How often the callback is invoked is implementation dependent.
+
+     This method throws an exception if face detection fails to start.
+  */
+  [Throws, Pref="camera.control.face_detection.enabled"]
+  void startFaceDetection();
+
+  /* Stops the face detection.
+
+     This method throws an exception if face detection can't be stopped.
+  */
+  [Throws, Pref="camera.control.face_detection.enabled"]
+  void stopFaceDetection();
+
+  /* Callback for faces detected in the preview frame. If no faces are
+     detected, the callback is invoked with an empty sequence. */
+  [Pref="camera.control.face_detection.enabled"]
+  attribute CameraFaceDetectionCallback? onFacesDetected;
 };

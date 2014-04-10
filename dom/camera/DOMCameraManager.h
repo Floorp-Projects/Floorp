@@ -46,6 +46,13 @@ public:
                                                          nsIObserver)
   NS_DECL_NSIOBSERVER
 
+  // Because this header's filename doesn't match its C++ or DOM-facing
+  // classname, we can't rely on the [Func="..."] WebIDL tag to implicitly
+  // include the right header for us; instead we must explicitly include a
+  // HasSupport() method in each header. We can get rid of these with the
+  // Great Renaming proposed in bug 983177.
+  static bool HasSupport(JSContext* aCx, JSObject* aGlobal);
+
   static bool CheckPermission(nsPIDOMWindow* aWindow);
   static already_AddRefed<nsDOMCameraManager>
     CreateInstance(nsPIDOMWindow* aWindow);

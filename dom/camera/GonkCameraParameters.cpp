@@ -58,8 +58,6 @@ GonkCameraParameters::Parameters::GetTextKey(uint32_t aKey)
       return KEY_FOCUS_DISTANCES;
     case CAMERA_PARAM_EXPOSURECOMPENSATION:
       return KEY_EXPOSURE_COMPENSATION;
-    case CAMERA_PARAM_PICTURESIZE:
-      return KEY_PICTURE_SIZE;
     case CAMERA_PARAM_THUMBNAILQUALITY:
       return KEY_JPEG_THUMBNAIL_QUALITY;
     case CAMERA_PARAM_PICTURE_SIZE:
@@ -81,6 +79,8 @@ GonkCameraParameters::Parameters::GetTextKey(uint32_t aKey)
       // Not every platform defines KEY_ISO_MODE;
       // for those that don't, we use the raw string key.
       return "iso";
+    case CAMERA_PARAM_LUMINANCE:
+      return "luminance-condition";
 
     case CAMERA_PARAM_SUPPORTED_PREVIEWSIZES:
       return KEY_SUPPORTED_PREVIEW_SIZES;
@@ -114,6 +114,8 @@ GonkCameraParameters::Parameters::GetTextKey(uint32_t aKey)
       return KEY_ZOOM_SUPPORTED;
     case CAMERA_PARAM_SUPPORTED_ZOOMRATIOS:
       return KEY_ZOOM_RATIOS;
+    case CAMERA_PARAM_SUPPORTED_MAXDETECTEDFACES:
+      return KEY_MAX_NUM_DETECTED_FACES_HW;
     case CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES:
       return KEY_SUPPORTED_JPEG_THUMBNAIL_SIZES;
     case CAMERA_PARAM_SUPPORTED_ISOMODES:
@@ -264,8 +266,10 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, nsAString& aValue)
   }
   if (aKey == CAMERA_PARAM_ISOMODE) {
     rv = MapIsoFromGonk(val, aValue);
-  } else {
+  } else if(val) {
     aValue.AssignASCII(val);
+  } else {
+    aValue.Truncate(0);
   }
   return rv;
 }
@@ -545,25 +549,23 @@ GonkCameraParameters::SetTranslated(uint32_t aKey, const double& aValue)
           // mZoomRatios is sorted, so we can binary search it
           int bottom = 0;
           int top = mZoomRatios.Length() - 1;
-          int middle;
 
           while (top >= bottom) {
-            middle = (top + bottom) / 2;
-            if (value == mZoomRatios[middle]) {
+            index = (top + bottom) / 2;
+            if (value == mZoomRatios[index]) {
               // exact match
               break;
             }
-            if (value > mZoomRatios[middle] && value < mZoomRatios[middle + 1]) {
+            if (value > mZoomRatios[index] && value < mZoomRatios[index + 1]) {
               // the specified zoom value lies in this interval
               break;
             }
-            if (value > mZoomRatios[middle]) {
-              bottom = middle + 1;
+            if (value > mZoomRatios[index]) {
+              bottom = index + 1;
             } else {
-              top = middle - 1;
+              top = index - 1;
             }
           }
-          index = middle;
         }
         DOM_CAMERA_LOGI("Zoom = %fx --> index = %d\n", aValue, index);
       }
