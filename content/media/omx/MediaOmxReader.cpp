@@ -13,6 +13,7 @@
 #include "VideoUtils.h"
 #include "MediaOmxDecoder.h"
 #include "AbstractMediaDecoder.h"
+#include "AudioChannelService.h"
 #include "OmxDecoder.h"
 #include "MPAPI.h"
 #include "gfx2DGlue.h"
@@ -45,14 +46,15 @@ MediaOmxReader::MediaOmxReader(AbstractMediaDecoder *aDecoder) :
   mHasAudio(false),
   mVideoSeekTimeUs(-1),
   mAudioSeekTimeUs(-1),
-  mSkipCount(0),
-  mAudioChannelType(dom::AUDIO_CHANNEL_DEFAULT)
+  mSkipCount(0)
 {
 #ifdef PR_LOGGING
   if (!gMediaDecoderLog) {
     gMediaDecoderLog = PR_NewLogModule("MediaDecoder");
   }
 #endif
+
+  mAudioChannel = dom::AudioChannelService::GetDefaultAudioChannel();
 }
 
 MediaOmxReader::~MediaOmxReader()
@@ -437,11 +439,11 @@ void MediaOmxReader::CheckAudioOffload()
 
   // Not much benefit in trying to offload other channel types. Most of them
   // aren't supported and also duration would be less than a minute
-  bool isTypeMusic = mAudioChannelType == dom::AUDIO_CHANNEL_CONTENT;
+  bool isTypeMusic = mAudioChannel == dom::AudioChannel::Content;
 
   DECODER_LOG(PR_LOG_DEBUG, ("%s meta %p, no video %d, no streaming %d,"
       " channel type %d", __FUNCTION__, meta.get(), hasNoVideo,
-      isNotStreaming, mAudioChannelType));
+      isNotStreaming, mAudioChannel));
 
   if ((meta.get()) && hasNoVideo && isNotStreaming && isTypeMusic &&
       canOffloadStream(meta, false, false, AUDIO_STREAM_MUSIC)) {
