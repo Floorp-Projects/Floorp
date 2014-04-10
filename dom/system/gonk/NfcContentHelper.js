@@ -99,10 +99,6 @@ NfcContentHelper.prototype = {
   _requestMap: null,
   peerEventsCallbackMap: null,
 
-  /* TODO: Bug 815526: This is a limitation when a DOMString is used in sequences of Moz DOM Objects.
-   *       Strings such as 'type', 'id' 'payload' will not be acccessible to NfcWorker.
-   *       Therefore this function exists till the bug is addressed.
-   */
   encodeNDEFRecords: function encodeNDEFRecords(records) {
     let encodedRecords = [];
     for (let i = 0; i < records.length; i++) {
