@@ -85,7 +85,6 @@
 
 // CSS related includes
 #include "nsCSSRules.h"
-#include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSSRule.h"
 #include "nsICSSRuleList.h"
 #include "nsAutoPtr.h"
@@ -318,8 +317,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSNameSpaceRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSRuleList, nsCSSRuleListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(StyleSheetList, nsStyleSheetListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSStyleSheet, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -946,10 +943,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(CSSRuleList, nsIDOMCSSRuleList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRuleList)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(StyleSheetList, nsIDOMStyleSheetList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStyleSheetList)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSStyleSheet, nsIDOMCSSStyleSheet)
@@ -3677,18 +3670,6 @@ nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   return rv;
-}
-
-
-// StyleSheetList helper
-
-nsISupports*
-nsStyleSheetListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                              nsWrapperCache **aCache, nsresult *rv)
-{
-  StyleSheetList* list = StyleSheetList::FromSupports(aNative);
-  nsIDOMStyleSheet* item = list->GetItemAt(aIndex);
-  return item;
 }
 
 

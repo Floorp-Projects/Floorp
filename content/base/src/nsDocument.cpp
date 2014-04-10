@@ -723,76 +723,48 @@ nsDOMStyleSheetList::~nsDOMStyleSheetList()
   }
 }
 
-DOMCI_DATA(StyleSheetList, nsDOMStyleSheetList)
+NS_IMPL_ISUPPORTS_INHERITED2(nsDOMStyleSheetList, StyleSheetList,
+                             nsIDocumentObserver,
+                             nsIMutationObserver)
 
-// XXX couldn't we use the GetIIDs method from CSSStyleSheetList here?
-// QueryInterface implementation for nsDOMStyleSheetList
-NS_INTERFACE_TABLE_HEAD(nsDOMStyleSheetList)
-  NS_INTERFACE_TABLE3(nsDOMStyleSheetList,
-                      nsIDOMStyleSheetList,
-                      nsIDocumentObserver,
-                      nsIMutationObserver)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StyleSheetList)
-NS_INTERFACE_MAP_END
-
-
-NS_IMPL_ADDREF(nsDOMStyleSheetList)
-NS_IMPL_RELEASE(nsDOMStyleSheetList)
-
-
-NS_IMETHODIMP
-nsDOMStyleSheetList::GetLength(uint32_t* aLength)
+uint32_t
+nsDOMStyleSheetList::Length()
 {
-  if (mDocument) {
-    // XXX Find the number and then cache it. We'll use the
-    // observer notification to figure out if new ones have
-    // been added or removed.
-    if (-1 == mLength) {
-      mLength = mDocument->GetNumberOfStyleSheets();
+  if (!mDocument) {
+    return 0;
+  }
+
+  // XXX Find the number and then cache it. We'll use the
+  // observer notification to figure out if new ones have
+  // been added or removed.
+  if (-1 == mLength) {
+    mLength = mDocument->GetNumberOfStyleSheets();
 
 #ifdef DEBUG
-      int32_t i;
-      for (i = 0; i < mLength; i++) {
-        nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(i);
-        nsCOMPtr<nsIDOMStyleSheet> domss(do_QueryInterface(sheet));
-        NS_ASSERTION(domss, "All \"normal\" sheets implement nsIDOMStyleSheet");
-      }
-#endif
+    int32_t i;
+    for (i = 0; i < mLength; i++) {
+      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(i);
+      nsCOMPtr<nsIDOMStyleSheet> domss(do_QueryInterface(sheet));
+      NS_ASSERTION(domss, "All \"normal\" sheets implement nsIDOMStyleSheet");
     }
-    *aLength = mLength;
+#endif
   }
-  else {
-    *aLength = 0;
-  }
-
-  return NS_OK;
+  return mLength;
 }
 
 nsCSSStyleSheet*
-nsDOMStyleSheetList::GetItemAt(uint32_t aIndex)
+nsDOMStyleSheetList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
   if (!mDocument || aIndex >= (uint32_t)mDocument->GetNumberOfStyleSheets()) {
+    aFound = false;
     return nullptr;
   }
 
+  aFound = true;
   nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(aIndex);
   NS_ASSERTION(sheet, "Must have a sheet");
 
   return static_cast<nsCSSStyleSheet*>(sheet);
-}
-
-NS_IMETHODIMP
-nsDOMStyleSheetList::Item(uint32_t aIndex, nsIDOMStyleSheet** aReturn)
-{
-  nsIStyleSheet *sheet = GetItemAt(aIndex);
-  if (!sheet) {
-      *aReturn = nullptr;
-
-      return NS_OK;
-  }
-
-  return CallQueryInterface(sheet, aReturn);
 }
 
 void
@@ -6092,7 +6064,7 @@ nsDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
   return NS_OK;
 }
 
-nsIDOMStyleSheetList*
+StyleSheetList*
 nsDocument::StyleSheets()
 {
   if (!mDOMStyleSheets) {
