@@ -497,6 +497,62 @@ public:
   bool mSucceeded;
 };
 
+/******************************************************************************
+ * mozilla::InternalEditorInputEvent
+ ******************************************************************************/
+
+class InternalEditorInputEvent : public InternalUIEvent
+{
+private:
+  InternalEditorInputEvent()
+    : mIsComposing(false)
+  {
+  }
+
+public:
+  virtual InternalEditorInputEvent* AsEditorInputEvent() MOZ_OVERRIDE
+  {
+    return this;
+  }
+
+  InternalEditorInputEvent(bool aIsTrusted, uint32_t aMessage,
+                           nsIWidget* aWidget)
+    : InternalUIEvent(aIsTrusted, aMessage, aWidget, NS_EDITOR_INPUT_EVENT)
+    , mIsComposing(false)
+  {
+    if (!aIsTrusted) {
+      mFlags.mBubbles = false;
+      mFlags.mCancelable = false;
+      return;
+    }
+
+    mFlags.mBubbles = true;
+    mFlags.mCancelable = false;
+  }
+
+  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(eventStructType == NS_EDITOR_INPUT_EVENT,
+               "Duplicate() must be overridden by sub class");
+    // Not copying widget, it is a weak reference.
+    InternalEditorInputEvent* result =
+      new InternalEditorInputEvent(false, message, nullptr);
+    result->AssignEditorInputEventData(*this, true);
+    result->mFlags = mFlags;
+    return result;
+  }
+
+  bool mIsComposing;
+
+  void AssignEditorInputEventData(const InternalEditorInputEvent& aEvent,
+                                  bool aCopyTargets)
+  {
+    AssignUIEventData(aEvent, aCopyTargets);
+
+    mIsComposing = aEvent.mIsComposing;
+  }
+};
+
 } // namespace mozilla
 
 #endif // mozilla_TextEvents_h__

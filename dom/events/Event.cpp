@@ -668,13 +668,13 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent)
       }
     }
     break;
-  case NS_GUI_EVENT :
+  case NS_EDITOR_INPUT_EVENT :
     // For this following event only allow popups if it's triggered
     // while handling user input. See
     // nsPresShell::HandleEventInternal() for details.
     if (EventStateManager::IsHandlingUserInput()) {
       switch(aEvent->message) {
-      case NS_FORM_INPUT :
+      case NS_EDITOR_INPUT:
         if (PopupAllowedForEvent("input")) {
           abuse = openControlled;
         }

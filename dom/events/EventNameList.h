@@ -218,9 +218,9 @@ EVENT(ended,
       EventNameType_HTML,
       NS_EVENT)
 EVENT(input,
-      NS_FORM_INPUT,
+      NS_EDITOR_INPUT,
       EventNameType_HTMLXUL,
-      NS_UI_EVENT)
+      NS_EDITOR_INPUT_EVENT)
 EVENT(invalid,
       NS_FORM_INVALID,
       EventNameType_HTMLXUL,
