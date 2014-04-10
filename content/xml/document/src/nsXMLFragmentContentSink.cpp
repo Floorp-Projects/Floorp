@@ -362,6 +362,8 @@ nsXMLFragmentContentSink::FinishFragmentParsing(nsIDOMDocumentFragment** aFragme
   mContentStack.Clear();
   mDocumentURI = nullptr;
   mDocShell = nullptr;
+  mDocElement = nullptr;
+  mCurrentHead = nullptr;
   if (mParseError) {
     //XXX PARSE_ERR from DOM3 Load and Save would be more appropriate
     mRoot = nullptr;
