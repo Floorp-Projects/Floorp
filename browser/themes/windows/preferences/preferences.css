@@ -159,4 +159,8 @@ label.small {
   margin: 0;
 }
 
+#fxa-pweng-help-link > image {
+  list-style-image: url("chrome://global/skin/icons/question-16.png");
+}
+
 %endif
