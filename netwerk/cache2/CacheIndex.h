@@ -34,6 +34,7 @@ namespace net {
 
 class CacheFileMetadata;
 class FileOpenHelper;
+class CacheIndexIterator;
 
 typedef struct {
   // Version of the index. The index must be ignored and deleted when the file
@@ -248,6 +249,19 @@ public:
          this, LOGSHA1(mRec->mHash), IsFresh(), IsInitialized(), IsRemoved(),
          IsDirty(), Anonymous(), InBrowser(), AppId(), GetFrecency(),
          GetExpirationTime(), GetFileSize()));
+  }
+
+  static bool RecordMatchesLoadContextInfo(CacheIndexRecord *aRec,
+                                           nsILoadContextInfo *aInfo)
+  {
+    if (!aInfo->IsPrivate() &&
+        aInfo->AppId() == aRec->mAppId &&
+        aInfo->IsAnonymous() == !!(aRec->mFlags & kAnonymousMask) &&
+        aInfo->IsInBrowserElement() == !!(aRec->mFlags & kInBrowserMask)) {
+      return true;
+    }
+
+    return false;
   }
 
   // Memory reporting
@@ -552,6 +566,18 @@ public:
   // Asynchronously gets the disk cache size, used for display in the UI.
   static nsresult AsyncGetDiskConsumption(nsICacheStorageConsumptionObserver* aObserver);
 
+  // Returns an iterator that returns entries matching a given context that were
+  // present in the index at the time this method was called. If aAddNew is true
+  // then the iterator will also return entries created after this call.
+  // NOTE: When some entry is removed from index it is removed also from the
+  // iterator regardless what aAddNew was passed.
+  static nsresult GetIterator(nsILoadContextInfo *aInfo, bool aAddNew,
+                              CacheIndexIterator **_retval);
+
+  // Returns true if we _think_ that the index is up to date. I.e. the state is
+  // READY or WRITING and mIndexNeedsUpdate as well as mShuttingDown is false.
+  static nsresult IsUpToDate(bool *_retval);
+
   // Memory reporting
   static size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
   static size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
@@ -561,6 +587,7 @@ private:
   friend class CacheIndexAutoLock;
   friend class CacheIndexAutoUnlock;
   friend class FileOpenHelper;
+  friend class CacheIndexIterator;
 
   virtual ~CacheIndex();
 
@@ -799,6 +826,12 @@ private:
   void RemoveRecordFromFrecencyArray(CacheIndexRecord *aRecord);
   void RemoveRecordFromExpirationArray(CacheIndexRecord *aRecord);
 
+  // Methods used by CacheIndexEntryAutoManage to keep the iterators up to date.
+  void AddRecordToIterators(CacheIndexRecord *aRecord);
+  void RemoveRecordFromIterators(CacheIndexRecord *aRecord);
+  void ReplaceRecordInIterators(CacheIndexRecord *aOldRecord,
+                                CacheIndexRecord *aNewRecord);
+
   // Memory reporting (private part)
   size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -902,6 +935,8 @@ private:
   nsTArray<CacheIndexRecord *>  mFrecencyArray;
   nsTArray<CacheIndexRecord *>  mExpirationArray;
 
+  nsTArray<CacheIndexIterator *> mIterators;
+
   class DiskConsumptionObserver : public nsRunnable
   {
   public:
@@ -947,6 +982,69 @@ private:
   nsTArray<nsRefPtr<DiskConsumptionObserver> > mDiskConsumptionObservers;
 };
 
+class CacheIndexAutoLock {
+public:
+  CacheIndexAutoLock(CacheIndex *aIndex)
+    : mIndex(aIndex)
+    , mLocked(true)
+  {
+    mIndex->Lock();
+  }
+  ~CacheIndexAutoLock()
+  {
+    if (mLocked) {
+      mIndex->Unlock();
+    }
+  }
+  void Lock()
+  {
+    MOZ_ASSERT(!mLocked);
+    mIndex->Lock();
+    mLocked = true;
+  }
+  void Unlock()
+  {
+    MOZ_ASSERT(mLocked);
+    mIndex->Unlock();
+    mLocked = false;
+  }
+
+private:
+  nsRefPtr<CacheIndex> mIndex;
+  bool mLocked;
+};
+
+class CacheIndexAutoUnlock {
+public:
+  CacheIndexAutoUnlock(CacheIndex *aIndex)
+    : mIndex(aIndex)
+    , mLocked(false)
+  {
+    mIndex->Unlock();
+  }
+  ~CacheIndexAutoUnlock()
+  {
+    if (!mLocked) {
+      mIndex->Lock();
+    }
+  }
+  void Lock()
+  {
+    MOZ_ASSERT(!mLocked);
+    mIndex->Lock();
+    mLocked = true;
+  }
+  void Unlock()
+  {
+    MOZ_ASSERT(mLocked);
+    mIndex->Unlock();
+    mLocked = false;
+  }
+
+private:
+  nsRefPtr<CacheIndex> mIndex;
+  bool mLocked;
+};
 
 } // net
 } // mozilla
