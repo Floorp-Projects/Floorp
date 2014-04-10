@@ -29,7 +29,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StyleSheetList)
   NS_DECL_NSIDOMSTYLESHEETLIST
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE MOZ_FINAL;
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE MOZ_FINAL;
 
   virtual nsINode* GetParentObject() const = 0;
 

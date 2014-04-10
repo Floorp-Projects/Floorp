@@ -23,9 +23,9 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(StyleSheetList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(StyleSheetList)
 
 /* virtual */ JSObject*
-StyleSheetList::WrapObject(JSContext* aCx)
+StyleSheetList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return StyleSheetListBinding::Wrap(aCx, this);
+  return StyleSheetListBinding::Wrap(aCx, aScope, this);
 }
 
 NS_IMETHODIMP
