@@ -21,6 +21,7 @@
 class nsIFile;
 class nsITimer;
 class nsIDirectoryEnumerator;
+class nsILoadContextInfo;
 
 namespace mozilla {
 namespace net {
@@ -174,6 +175,7 @@ class CloseFileEvent;
 class ReadEvent;
 class WriteEvent;
 class MetadataWriteScheduleEvent;
+class CacheFileContextEvictor;
 
 #define CACHEFILEIOLISTENER_IID \
 { /* dcaf2ddc-17cf-4242-bca1-8c86936375a5 */       \
@@ -257,6 +259,7 @@ public:
                              CacheFileIOListener *aCallback);
   static nsresult EvictIfOverLimit();
   static nsresult EvictAll();
+  static nsresult EvictByContext(nsILoadContextInfo *aLoadContextInfo);
 
   static nsresult InitIndexEntry(CacheFileHandle *aHandle,
                                  uint32_t         aAppId,
@@ -295,6 +298,7 @@ private:
   friend class RenameFileEvent;
   friend class CacheIndex;
   friend class MetadataWriteScheduleEvent;
+  friend class CacheFileContextEvictor;
 
   virtual ~CacheFileIOManager();
 
@@ -302,6 +306,7 @@ private:
   nsresult ShutdownInternal();
 
   nsresult OpenFileInternal(const SHA1Sum::Hash *aHash,
+                            const nsACString &aKey,
                             uint32_t aFlags,
                             CacheFileHandle **_retval);
   nsresult OpenSpecialFileInternal(const nsACString &aKey,
@@ -322,6 +327,7 @@ private:
   nsresult EvictIfOverLimitInternal();
   nsresult OverLimitEvictionInternal();
   nsresult EvictAllInternal();
+  nsresult EvictByContextInternal(nsILoadContextInfo *aLoadContextInfo);
 
   nsresult TrashDirectory(nsIFile *aFile);
   static void OnTrashTimer(nsITimer *aTimer, void *aClosure);
@@ -350,6 +356,9 @@ private:
   nsresult UnscheduleMetadataWriteInternal(CacheFile * aFile);
   nsresult ShutdownMetadataWriteSchedulingInternal();
 
+  static nsresult CacheIndexStateChanged();
+  nsresult CacheIndexStateChangedInternal();
+
   // Memory reporting (private part)
   size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -370,6 +379,7 @@ private:
   nsCOMPtr<nsIFile>                    mTrashDir;
   nsCOMPtr<nsIDirectoryEnumerator>     mTrashDirEnumerator;
   nsTArray<nsCString>                  mFailedTrashDirs;
+  nsRefPtr<CacheFileContextEvictor>    mContextEvictor;
 };
 
 } // net

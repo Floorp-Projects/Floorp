@@ -7,6 +7,8 @@
 #include "CacheLog.h"
 #include "CacheFileIOManager.h"
 #include "CacheFileMetadata.h"
+#include "CacheIndexIterator.h"
+#include "CacheIndexContextIterator.h"
 #include "nsThreadUtils.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIDirectoryEnumerator.h"
@@ -73,9 +75,11 @@ public:
     if (entry && !mOldRecord) {
       mIndex->InsertRecordToFrecencyArray(entry->mRec);
       mIndex->InsertRecordToExpirationArray(entry->mRec);
+      mIndex->AddRecordToIterators(entry->mRec);
     } else if (!entry && mOldRecord) {
       mIndex->RemoveRecordFromFrecencyArray(mOldRecord);
       mIndex->RemoveRecordFromExpirationArray(mOldRecord);
+      mIndex->RemoveRecordFromIterators(mOldRecord);
     } else if (entry && mOldRecord) {
       bool replaceFrecency = false;
       bool replaceExpiration = false;
@@ -83,14 +87,14 @@ public:
       if (entry->mRec != mOldRecord) {
         // record has a different address, we have to replace it
         replaceFrecency = replaceExpiration = true;
+        mIndex->ReplaceRecordInIterators(mOldRecord, entry->mRec);
       } else {
         if (entry->mRec->mFrecency == 0 &&
             entry->mRec->mExpirationTime == nsICacheEntry::NO_EXPIRATION_TIME) {
           // This is a special case when we want to make sure that the entry is
           // placed at the end of the lists even when the values didn't change.
           replaceFrecency = replaceExpiration = true;
-        }
-        else {
+        } else {
           if (entry->mRec->mFrecency != mOldFrecency) {
             replaceFrecency = true;
           }
@@ -155,70 +159,6 @@ private:
   uint32_t             mOldExpirationTime;
   bool                 mDoNotSearchInIndex;
   bool                 mDoNotSearchInUpdates;
-};
-
-class CacheIndexAutoLock {
-public:
-  CacheIndexAutoLock(CacheIndex *aIndex)
-    : mIndex(aIndex)
-    , mLocked(true)
-  {
-    mIndex->Lock();
-  }
-  ~CacheIndexAutoLock()
-  {
-    if (mLocked) {
-      mIndex->Unlock();
-    }
-  }
-  void Lock()
-  {
-    MOZ_ASSERT(!mLocked);
-    mIndex->Lock();
-    mLocked = true;
-  }
-  void Unlock()
-  {
-    MOZ_ASSERT(mLocked);
-    mIndex->Unlock();
-    mLocked = false;
-  }
-
-private:
-  nsRefPtr<CacheIndex> mIndex;
-  bool mLocked;
-};
-
-class CacheIndexAutoUnlock {
-public:
-  CacheIndexAutoUnlock(CacheIndex *aIndex)
-    : mIndex(aIndex)
-    , mLocked(false)
-  {
-    mIndex->Unlock();
-  }
-  ~CacheIndexAutoUnlock()
-  {
-    if (!mLocked) {
-      mIndex->Lock();
-    }
-  }
-  void Lock()
-  {
-    MOZ_ASSERT(!mLocked);
-    mIndex->Lock();
-    mLocked = true;
-  }
-  void Unlock()
-  {
-    MOZ_ASSERT(mLocked);
-    mIndex->Unlock();
-    mLocked = false;
-  }
-
-private:
-  nsRefPtr<CacheIndex> mIndex;
-  bool mLocked;
 };
 
 class FileOpenHelper : public CacheFileIOListener
@@ -330,7 +270,7 @@ CacheIndex::~CacheIndex()
   ReleaseBuffer();
 }
 
-inline void
+void
 CacheIndex::Lock()
 {
   mLock.Lock();
@@ -338,7 +278,7 @@ CacheIndex::Lock()
   MOZ_ASSERT(!mIndexStats.StateLogged());
 }
 
-inline void
+void
 CacheIndex::Unlock()
 {
   MOZ_ASSERT(!mIndexStats.StateLogged());
@@ -410,6 +350,18 @@ CacheIndex::PreShutdown()
   LOG(("CacheIndex::PreShutdown() - [state=%d, indexOnDiskIsValid=%d, "
        "dontMarkIndexClean=%d]", index->mState, index->mIndexOnDiskIsValid,
        index->mDontMarkIndexClean));
+
+  LOG(("CacheIndex::PreShutdown() - Closing iterators."));
+  for (uint32_t i = 0; i < index->mIterators.Length(); ) {
+    rv = index->mIterators[i]->CloseInternal(NS_ERROR_FAILURE);
+    if (NS_FAILED(rv)) {
+      // CacheIndexIterator::CloseInternal() removes itself from mIteratos iff
+      // it returns success.
+      LOG(("CacheIndex::PreShutdown() - Failed to remove iterator %p. "
+           "[rv=0x%08x]", rv));
+      i++;
+    }
+  }
 
   index->mShuttingDown = true;
 
@@ -1288,6 +1240,64 @@ CacheIndex::AsyncGetDiskConsumption(nsICacheStorageConsumptionObserver* aObserve
   // Will be called when the index get to the READY state.
   index->mDiskConsumptionObservers.AppendElement(observer);
 
+  return NS_OK;
+}
+
+// static
+nsresult
+CacheIndex::GetIterator(nsILoadContextInfo *aInfo, bool aAddNew,
+                        CacheIndexIterator **_retval)
+{
+  LOG(("CacheIndex::GetIterator() [info=%p, addNew=%d]", aInfo, aAddNew));
+
+  nsRefPtr<CacheIndex> index = gInstance;
+
+  if (!index) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  CacheIndexAutoLock lock(index);
+
+  if (!index->IsIndexUsable()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsRefPtr<CacheIndexIterator> iter;
+  if (aInfo) {
+    iter = new CacheIndexContextIterator(index, aAddNew, aInfo);
+  } else {
+    iter = new CacheIndexIterator(index, aAddNew);
+  }
+
+  iter->AddRecords(index->mFrecencyArray);
+
+  index->mIterators.AppendElement(iter);
+  iter.swap(*_retval);
+  return NS_OK;
+}
+
+// static
+nsresult
+CacheIndex::IsUpToDate(bool *_retval)
+{
+  LOG(("CacheIndex::IsUpToDate()"));
+
+  nsRefPtr<CacheIndex> index = gInstance;
+
+  if (!index) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  CacheIndexAutoLock lock(index);
+
+  if (!index->IsIndexUsable()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *_retval = (index->mState == READY || index->mState == WRITING) &&
+             !index->mIndexNeedsUpdate && !index->mShuttingDown;
+
+  LOG(("CacheIndex::IsUpToDate() - returning %p", *_retval));
   return NS_OK;
 }
 
@@ -3012,6 +3022,10 @@ CacheIndex::ChangeState(EState aNewState)
 
   mState = aNewState;
 
+  if (mState != SHUTDOWN) {
+    CacheFileIOManager::CacheIndexStateChanged();
+  }
+
   if (mState == READY && mDiskConsumptionObservers.Length()) {
     for (uint32_t i = 0; i < mDiskConsumptionObservers.Length(); ++i) {
       DiskConsumptionObserver* o = mDiskConsumptionObservers[i];
@@ -3128,6 +3142,48 @@ CacheIndex::RemoveRecordFromExpirationArray(CacheIndexRecord *aRecord)
   DebugOnly<bool> removed;
   removed = mExpirationArray.RemoveElement(aRecord);
   MOZ_ASSERT(removed);
+}
+
+void
+CacheIndex::AddRecordToIterators(CacheIndexRecord *aRecord)
+{
+  AssertOwnsLock();
+
+  for (uint32_t i = 0; i < mIterators.Length(); ++i) {
+    // Add a new record only when iterator is supposed to be updated.
+    if (mIterators[i]->ShouldBeNewAdded()) {
+      mIterators[i]->AddRecord(aRecord);
+    }
+  }
+}
+
+void
+CacheIndex::RemoveRecordFromIterators(CacheIndexRecord *aRecord)
+{
+  AssertOwnsLock();
+
+  for (uint32_t i = 0; i < mIterators.Length(); ++i) {
+    // Remove the record from iterator always, it makes no sence to return
+    // non-existing entries. Also the pointer to the record is no longer valid
+    // once the entry is removed from index.
+    mIterators[i]->RemoveRecord(aRecord);
+  }
+}
+
+void
+CacheIndex::ReplaceRecordInIterators(CacheIndexRecord *aOldRecord,
+                                     CacheIndexRecord *aNewRecord)
+{
+  AssertOwnsLock();
+
+  for (uint32_t i = 0; i < mIterators.Length(); ++i) {
+    // We have to replace the record always since the pointer is no longer
+    // valid after this point. NOTE: Replacing the record doesn't mean that
+    // a new entry was added, it just means that the data in the entry was
+    // changed (e.g. a file size) and we had to track this change in
+    // mPendingUpdates since mIndex was read-only.
+    mIterators[i]->ReplaceRecord(aOldRecord, aNewRecord);
+  }
 }
 
 nsresult

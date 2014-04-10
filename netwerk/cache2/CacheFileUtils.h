@@ -27,6 +27,11 @@ AppendKeyPrefix(nsILoadContextInfo *aInfo, nsACString &_retval);
 void
 AppendTagWithValue(nsACString & aTarget, char const aTag, nsCSubstring const & aValue);
 
+nsresult
+KeyMatchesLoadContextInfo(const nsACString &aKey,
+                          nsILoadContextInfo *aInfo,
+                          bool *_retval);
+
 } // CacheFileUtils
 } // net
 } // mozilla

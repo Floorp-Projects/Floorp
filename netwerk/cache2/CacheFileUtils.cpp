@@ -271,6 +271,20 @@ AppendTagWithValue(nsACString & aTarget, char const aTag, nsCSubstring const & a
   aTarget.Append(',');
 }
 
+nsresult
+KeyMatchesLoadContextInfo(const nsACString &aKey, nsILoadContextInfo *aInfo,
+                          bool *_retval)
+{
+  nsCOMPtr<nsILoadContextInfo> info = ParseKey(aKey);
+
+  if (!info) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *_retval = info->Equals(aInfo);
+  return NS_OK;
+}
+
 } // CacheFileUtils
 } // net
 } // mozilla

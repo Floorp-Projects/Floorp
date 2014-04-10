@@ -163,97 +163,6 @@ void CacheStorageService::ShutdownBackground()
 
 namespace { // anon
 
-// EvictionRunnable
-// Responsible for purgin and unregistring entries (loaded) in memory
-
-class EvictionRunnable : public nsRunnable
-{
-public:
-  EvictionRunnable(nsCSubstring const & aContextKey, TCacheEntryTable* aEntries,
-                   bool aUsingDisk,
-                   nsICacheEntryDoomCallback* aCallback)
-    : mContextKey(aContextKey)
-    , mEntries(aEntries)
-    , mCallback(aCallback)
-    , mUsingDisk(aUsingDisk) { }
-
-  NS_IMETHOD Run()
-  {
-    LOG(("EvictionRunnable::Run [this=%p, disk=%d]", this, mUsingDisk));
-    if (CacheStorageService::IsOnManagementThread()) {
-      if (mUsingDisk) {
-        // TODO for non private entries:
-        // - rename/move all files to TRASH, block shutdown
-        // - start the TRASH removal process
-        // - may also be invoked from the main thread...
-      }
-
-      if (mEntries) {
-        // Process only a limited number of entries during a single loop to
-        // prevent block of the management thread.
-        mBatch = 50;
-        mEntries->Enumerate(&EvictionRunnable::EvictEntry, this);
-      }
-
-      // Anything left?  Process in a separate invokation.
-      if (mEntries && mEntries->Count())
-        NS_DispatchToCurrentThread(this);
-      else if (mCallback)
-        NS_DispatchToMainThread(this); // TODO - we may want caller thread
-    }
-    else if (NS_IsMainThread()) {
-      mCallback->OnCacheEntryDoomed(NS_OK);
-    }
-    else {
-      MOZ_ASSERT(false, "Not main or cache management thread");
-    }
-
-    return NS_OK;
-  }
-
-private:
-  virtual ~EvictionRunnable()
-  {
-    if (mCallback)
-      ProxyReleaseMainThread(mCallback);
-  }
-
-  static PLDHashOperator EvictEntry(const nsACString& aKey,
-                                    nsRefPtr<CacheEntry>& aEntry,
-                                    void* aClosure)
-  {
-    EvictionRunnable* evictor = static_cast<EvictionRunnable*>(aClosure);
-
-    LOG(("  evicting entry=%p", aEntry.get()));
-
-    // HACK ...
-    // in-mem-only should only be Purge(WHOLE)'ed
-    // on-disk may use the same technique I think, disk eviction runs independently
-    if (!evictor->mUsingDisk) {
-      // When evicting memory-only entries we have to remove them from
-      // the master table as well.  PurgeAndDoom() enters the service
-      // management lock.
-      aEntry->PurgeAndDoom();
-    }
-    else {
-      // Disk (+memory-only) entries are already removed from the master
-      // hash table, save locking here!
-      aEntry->DoomAlreadyRemoved();
-    }
-
-    if (!--evictor->mBatch)
-      return PLDHashOperator(PL_DHASH_REMOVE | PL_DHASH_STOP);
-
-    return PL_DHASH_REMOVE;
-  }
-
-  nsCString mContextKey;
-  nsAutoPtr<TCacheEntryTable> mEntries;
-  nsCOMPtr<nsICacheEntryDoomCallback> mCallback;
-  uint32_t mBatch;
-  bool mUsingDisk;
-};
-
 // WalkRunnable
 // Responsible to visit the storage and walk all entries on it asynchronously
 
@@ -402,7 +311,7 @@ void CacheStorageService::DropPrivateBrowsingEntries()
   sGlobalEntryTables->EnumerateRead(&CollectPrivateContexts, &keys);
 
   for (uint32_t i = 0; i < keys.Length(); ++i)
-    DoomStorageEntries(keys[i], true, nullptr);
+    DoomStorageEntries(keys[i], nullptr, true, nullptr);
 }
 
 // static
@@ -536,7 +445,7 @@ NS_IMETHODIMP CacheStorageService::Clear()
       sGlobalEntryTables->EnumerateRead(&CollectContexts, &keys);
 
       for (uint32_t i = 0; i < keys.Length(); ++i)
-        DoomStorageEntries(keys[i], true, nullptr);
+        DoomStorageEntries(keys[i], nullptr, true, nullptr);
     }
 
     rv = CacheFileIOManager::EvictAll();
@@ -1174,31 +1083,14 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
       aReplace = true;
     }
 
-    // Check entry that is memory-only is also in related memory-only hashtable.
-    // If not, it has been evicted and we will truncate it ; doom is pending for it,
-    // this consumer just made it sooner then the entry has actually been removed
-    // from the master hash table.
-    // (This can be bypassed when entry is about to be replaced anyway.)
-    if (entryExists && !entry->IsUsingDiskLocked() && !aReplace) {
-      nsAutoCString memoryStorageID(aContextKey);
-      AppendMemoryStorageID(memoryStorageID);
-      CacheEntryTable* memoryEntries;
-      aReplace = sGlobalEntryTables->Get(memoryStorageID, &memoryEntries) &&
-                 memoryEntries->GetWeak(entryKey) != entry;
-
-#ifdef MOZ_LOGGING
-      if (aReplace) {
-        LOG(("  memory-only entry %p for %s already doomed, replacing", entry.get(), entryKey.get()));
-      }
-#endif
-    }
-
     // If truncate is demanded, delete and doom the current entry
     if (entryExists && aReplace) {
       entries->Remove(entryKey);
 
       LOG(("  dooming entry %p for %s because of OPEN_TRUNCATE", entry.get(), entryKey.get()));
       // On purpose called under the lock to prevent races of doom and open on I/O thread
+      // No need to remove from both memory-only and all-entries tables.  The new entry
+      // will overwrite the shadow entry in its ctor.
       entry->DoomAlreadyRemoved();
 
       entry = nullptr;
@@ -1358,11 +1250,13 @@ CacheStorageService::DoomStorageEntries(CacheStorage const* aStorage,
 
   mozilla::MutexAutoLock lock(mLock);
 
-  return DoomStorageEntries(contextKey, aStorage->WriteToDisk(), aCallback);
+  return DoomStorageEntries(contextKey, aStorage->LoadInfo(),
+                            aStorage->WriteToDisk(), aCallback);
 }
 
 nsresult
 CacheStorageService::DoomStorageEntries(nsCSubstring const& aContextKey,
+                                        nsILoadContextInfo* aContext,
                                         bool aDiskStorage,
                                         nsICacheEntryDoomCallback* aCallback)
 {
@@ -1373,27 +1267,70 @@ CacheStorageService::DoomStorageEntries(nsCSubstring const& aContextKey,
   nsAutoCString memoryStorageID(aContextKey);
   AppendMemoryStorageID(memoryStorageID);
 
-  nsAutoPtr<CacheEntryTable> entries;
   if (aDiskStorage) {
     LOG(("  dooming disk+memory storage of %s", aContextKey.BeginReading()));
-    // Grab all entries in this storage
-    sGlobalEntryTables->RemoveAndForget(aContextKey, entries);
-    // Just remove the memory-only records table
+
+    // Just remove all entries, CacheFileIOManager will take care of the files.
+    sGlobalEntryTables->Remove(aContextKey);
     sGlobalEntryTables->Remove(memoryStorageID);
-  }
-  else {
+
+    if (aContext && !aContext->IsPrivate()) {
+      LOG(("  dooming disk entries"));
+      CacheFileIOManager::EvictByContext(aContext);
+    }
+  } else {
     LOG(("  dooming memory-only storage of %s", aContextKey.BeginReading()));
-    // Grab the memory-only records table, EvictionRunnable will safely remove
-    // entries one by one from the master hashtable on the background management
-    // thread.  Code at AddStorageEntry ensures a new entry will always replace
-    // memory only entries that EvictionRunnable yet didn't manage to remove.
-    sGlobalEntryTables->RemoveAndForget(memoryStorageID, entries);
+
+    class MemoryEntriesRemoval {
+    public:
+      static PLDHashOperator EvictEntry(const nsACString& aKey,
+                                        CacheEntry* aEntry,
+                                        void* aClosure)
+      {
+        CacheEntryTable* entries = static_cast<CacheEntryTable*>(aClosure);
+        nsCString key(aKey);
+        RemoveExactEntry(entries, key, aEntry, false);
+        return PL_DHASH_NEXT;
+      }
+    };
+
+    // Remove the memory entries table from the global tables.
+    // Since we store memory entries also in the disk entries table
+    // we need to remove the memory entries from the disk table one
+    // by one manually.
+    nsAutoPtr<CacheEntryTable> memoryEntries;
+    sGlobalEntryTables->RemoveAndForget(memoryStorageID, memoryEntries);
+
+    CacheEntryTable* entries;
+    sGlobalEntryTables->Get(aContextKey, &entries);
+    if (memoryEntries && entries)
+      memoryEntries->EnumerateRead(&MemoryEntriesRemoval::EvictEntry, entries);
   }
 
-  nsRefPtr<EvictionRunnable> evict = new EvictionRunnable(
-    aContextKey, entries.forget(), aDiskStorage, aCallback);
+  // An artificial callback.  This is a candidate for removal tho.  In the new
+  // cache any 'doom' or 'evict' function ensures that the entry or entries
+  // being doomed is/are not accessible after the function returns.  So there is
+  // probably no need for a callback - has no meaning.  But for compatibility
+  // with the old cache that is still in the tree we keep the API similar to be
+  // able to make tests as well as other consumers work for now.
+  class Callback : public nsRunnable
+  {
+  public:
+    Callback(nsICacheEntryDoomCallback* aCallback) : mCallback(aCallback) { }
+    NS_IMETHODIMP Run()
+    {
+      mCallback->OnCacheEntryDoomed(NS_OK);
+      return NS_OK;
+    }
+    nsCOMPtr<nsICacheEntryDoomCallback> mCallback;
+  };
 
-  return Dispatch(evict);
+  if (aCallback) {
+    nsRefPtr<nsRunnable> callback = new Callback(aCallback);
+    return NS_DispatchToCurrentThread(callback);
+  }
+
+  return NS_OK;
 }
 
 nsresult
