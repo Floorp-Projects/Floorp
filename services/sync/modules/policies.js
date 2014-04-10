@@ -94,7 +94,7 @@ SyncScheduler.prototype = {
     Svc.Obs.add("weave:engine:sync:applied", this);
     Svc.Obs.add("weave:service:setup-complete", this);
     Svc.Obs.add("weave:service:start-over", this);
-    Svc.Obs.add("tokenserver:backoff:interval", this);
+    Svc.Obs.add("FxA:hawk:backoff:interval", this);
 
     if (Status.checkSetup() == STATUS_OK) {
       Svc.Idle.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
@@ -184,7 +184,7 @@ SyncScheduler.prototype = {
         this.nextSync = 0;
         this.handleSyncError();
         break;
-      case "tokenserver:backoff:interval":
+      case "FxA:hawk:backoff:interval":
       case "weave:service:backoff:interval":
         let requested_interval = subject * 1000;
         this._log.debug("Got backoff notification: " + requested_interval + "ms");

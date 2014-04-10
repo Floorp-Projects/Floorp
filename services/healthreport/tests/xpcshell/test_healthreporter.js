@@ -110,6 +110,8 @@ add_task(function test_constructor() {
     do_check_eq(typeof(reporter._state), "object");
     do_check_eq(reporter._state.lastPingDate.getTime(), 0);
     do_check_eq(reporter._state.remoteIDs.length, 0);
+    do_check_eq(reporter._state.clientIDVersion, 1);
+    do_check_neq(reporter._state.clientID, null);
 
     let failed = false;
     try {
@@ -293,6 +295,9 @@ add_task(function test_remove_old_lastpayload() {
 add_task(function test_json_payload_simple() {
   let reporter = yield getReporter("json_payload_simple");
 
+  let clientID = reporter._state.clientID;
+  do_check_neq(clientID, null);
+
   try {
     let now = new Date();
     let payload = yield reporter.getJSONPayload();
@@ -301,6 +306,9 @@ add_task(function test_json_payload_simple() {
 
     do_check_eq(original.version, 2);
     do_check_eq(original.thisPingDate, reporter._formatDate(now));
+    do_check_eq(original.clientID, clientID);
+    do_check_eq(original.clientIDVersion, reporter._state.clientIDVersion);
+    do_check_eq(original.clientIDVersion, 1);
     do_check_eq(Object.keys(original.data.last).length, 0);
     do_check_eq(Object.keys(original.data.days).length, 0);
     do_check_false("notInitialized" in original);
@@ -310,6 +318,7 @@ add_task(function test_json_payload_simple() {
 
     original = JSON.parse(yield reporter.getJSONPayload());
     do_check_eq(original.lastPingDate, reporter._formatDate(reporter.lastPingDate));
+    do_check_eq(original.clientID, clientID);
 
     // This could fail if we cross UTC day boundaries at the exact instance the
     // test is executed. Let's tempt fate.
@@ -636,6 +645,7 @@ add_task(function test_data_submission_success() {
 
     let d = reporter.lastPingDate;
     let id = reporter.lastSubmitID;
+    let clientID = reporter._state.clientID;
 
     reporter._shutdown();
 
@@ -643,6 +653,7 @@ add_task(function test_data_submission_success() {
     reporter = yield getReporter("data_submission_success");
     do_check_eq(reporter.lastSubmitID, id);
     do_check_eq(reporter.lastPingDate.getTime(), d.getTime());
+    do_check_eq(reporter._state.clientID, clientID);
 
     reporter._shutdown();
   } finally {
@@ -703,6 +714,9 @@ add_task(function test_request_remote_data_deletion() {
     do_check_neq(id, null);
     do_check_true(server.hasDocument(reporter.serverNamespace, id));
 
+    let clientID = reporter._state.clientID;
+    do_check_neq(clientID, null);
+
     defineNow(policy, policy._futureDate(10 * 1000));
 
     let promise = reporter.requestDeleteRemoteData();
@@ -711,6 +725,16 @@ add_task(function test_request_remote_data_deletion() {
     do_check_null(reporter.lastSubmitID);
     do_check_false(reporter.haveRemoteData());
     do_check_false(server.hasDocument(reporter.serverNamespace, id));
+
+    // Client ID should be updated.
+    do_check_neq(reporter._state.clientID, null);
+    do_check_neq(reporter._state.clientID, clientID);
+    do_check_eq(reporter._state.clientIDVersion, 1);
+
+    // And it should be persisted to disk.
+    let o = yield CommonUtils.readJSON(reporter._state._filename);
+    do_check_eq(o.clientID, reporter._state.clientID);
+    do_check_eq(o.clientIDVersion, 1);
   } finally {
     reporter._shutdown();
     yield shutdownServer(server);
@@ -1092,6 +1116,81 @@ add_task(function test_state_downgrade_upgrade() {
     let o = yield CommonUtils.readJSON(reporter._state._filename);
     do_check_eq(o.remoteIDs.length, 3);
     do_check_eq(o.lastPingTime, now.getTime() + 1000);
+  } finally {
+    reporter._shutdown();
+  }
+});
+
+// Missing client ID in state should be created on state load.
+add_task(function* test_state_create_client_id() {
+  let reporter = getHealthReporter("state_create_client_id");
+
+  yield CommonUtils.writeJSON({
+    v: 1,
+    remoteIDs: ["id1", "id2"],
+    lastPingTime: Date.now(),
+    removeOutdatedLastPayload: true,
+  }, reporter._state._filename);
+
+  try {
+    yield reporter.init();
+
+    do_check_eq(reporter.lastSubmitID, "id1");
+    do_check_neq(reporter._state.clientID, null);
+    do_check_eq(reporter._state.clientID.length, 36);
+    do_check_eq(reporter._state.clientIDVersion, 1);
+
+    let clientID = reporter._state.clientID;
+
+    // The client ID should be persisted as soon as it is created.
+    reporter._shutdown();
+
+    reporter = getHealthReporter("state_create_client_id");
+    yield reporter.init();
+    do_check_eq(reporter._state.clientID, clientID);
+  } finally {
+    reporter._shutdown();
+  }
+});
+
+// Invalid stored client ID is reset automatically.
+add_task(function* test_empty_client_id() {
+  let reporter = getHealthReporter("state_empty_client_id");
+
+  yield CommonUtils.writeJSON({
+    v: 1,
+    clientID: "",
+    remoteIDs: ["id1", "id2"],
+    lastPingTime: Date.now(),
+    removeOutdatedLastPayload: true,
+  }, reporter._state._filename);
+
+  try {
+    yield reporter.init();
+
+    do_check_neq(reporter._state.clientID, null);
+    do_check_eq(reporter._state.clientID.length, 36);
+  } finally {
+    reporter._shutdown();
+  }
+});
+
+add_task(function* test_nonstring_client_id() {
+  let reporter = getHealthReporter("state_nonstring_client_id");
+
+  yield CommonUtils.writeJSON({
+    v: 1,
+    clientID: 42,
+    remoteIDs: ["id1", "id2"],
+    lastPingTime: Date.now(),
+    remoteOutdatedLastPayload: true,
+  }, reporter._state._filename);
+
+  try {
+    yield reporter.init();
+
+    do_check_neq(reporter._state.clientID, null);
+    do_check_eq(reporter._state.clientID.length, 36);
   } finally {
     reporter._shutdown();
   }

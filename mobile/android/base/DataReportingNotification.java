@@ -13,11 +13,13 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.TextUtils;
 import android.text.style.StyleSpan;
 
 public class DataReportingNotification {
@@ -28,15 +30,50 @@ public class DataReportingNotification {
 
     private static final String PREFS_POLICY_NOTIFIED_TIME = "datareporting.policy.dataSubmissionPolicyNotifiedTime";
     private static final String PREFS_POLICY_VERSION = "datareporting.policy.dataSubmissionPolicyVersion";
-    private static final int DATA_REPORTING_VERSION = 1;
+    private static final int DATA_REPORTING_VERSION = 2;
 
     public static void checkAndNotifyPolicy(Context context) {
         SharedPreferences dataPrefs = GeckoSharedPrefs.forApp(context);
+        final int currentVersion = dataPrefs.getInt(PREFS_POLICY_VERSION, -1);
 
-        // Notify if user has not been notified or if policy version has changed.
-        if ((!dataPrefs.contains(PREFS_POLICY_NOTIFIED_TIME)) ||
-            (DATA_REPORTING_VERSION != dataPrefs.getInt(PREFS_POLICY_VERSION, -1))) {
+        if (currentVersion < 1) {
+            // This is a first run, so notify user about data policy.
+            notifyDataPolicy(context, dataPrefs);
 
+            // If healthreport is enabled, set default preference value.
+            if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
+                SharedPreferences.Editor editor = dataPrefs.edit();
+                editor.putBoolean(GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true);
+                editor.commit();
+            }
+            return;
+        }
+
+        if (currentVersion == 1) {
+            // Redisplay notification only for Beta because version 2 updates Beta policy and update version.
+            if (TextUtils.equals("beta", AppConstants.MOZ_UPDATE_CHANNEL)) {
+                notifyDataPolicy(context, dataPrefs);
+            } else {
+                // Silently update the version.
+                SharedPreferences.Editor editor = dataPrefs.edit();
+                editor.putInt(PREFS_POLICY_VERSION, DATA_REPORTING_VERSION);
+                editor.commit();
+            }
+            return;
+        }
+
+        if (currentVersion >= DATA_REPORTING_VERSION) {
+            // Do nothing, we're at a current (or future) version.
+            return;
+        }
+    }
+
+    /**
+     * Launch a notification of the data policy, and record notification time and version.
+     */
+    private static void notifyDataPolicy(Context context, SharedPreferences sharedPrefs) {
+        boolean result = false;
+        try {
             // Launch main App to launch Data choices when notification is clicked.
             Intent prefIntent = new Intent(GeckoApp.ACTION_LAUNCH_SETTINGS);
             prefIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS_NAME);
@@ -45,21 +82,22 @@ public class DataReportingNotification {
             prefIntent.putExtra(ALERT_NAME_DATAREPORTING_NOTIFICATION, true);
 
             PendingIntent contentIntent = PendingIntent.getActivity(context, 0, prefIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            final Resources resources = context.getResources();
 
             // Create and send notification.
-            String notificationTitle = context.getResources().getString(R.string.datareporting_notification_title);
+            String notificationTitle = resources.getString(R.string.datareporting_notification_title);
             String notificationSummary;
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-              notificationSummary = context.getResources().getString(R.string.datareporting_notification_action);
+                notificationSummary = resources.getString(R.string.datareporting_notification_action);
             } else {
-              // Display partial version of Big Style notification for supporting devices.
-              notificationSummary = context.getResources().getString(R.string.datareporting_notification_summary);
+                // Display partial version of Big Style notification for supporting devices.
+                notificationSummary = resources.getString(R.string.datareporting_notification_summary);
             }
-            String notificationAction = context.getResources().getString(R.string.datareporting_notification_action);
-            String notificationBigSummary = context.getResources().getString(R.string.datareporting_notification_summary);
+            String notificationAction = resources.getString(R.string.datareporting_notification_action);
+            String notificationBigSummary = resources.getString(R.string.datareporting_notification_summary);
 
             // Make styled ticker text for display in notification bar.
-            String tickerString = context.getResources().getString(R.string.datareporting_notification_ticker_text);
+            String tickerString = resources.getString(R.string.datareporting_notification_ticker_text);
             SpannableString tickerText = new SpannableString(tickerString);
             // Bold the notification title of the ticker text, which is the same string as notificationTitle.
             tickerText.setSpan(new StyleSpan(Typeface.BOLD), 0, notificationTitle.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
@@ -81,17 +119,16 @@ public class DataReportingNotification {
             notificationManager.notify(notificationID, notification);
 
             // Record version and notification time.
-            SharedPreferences.Editor editor = dataPrefs.edit();
+            SharedPreferences.Editor editor = sharedPrefs.edit();
             long now = System.currentTimeMillis();
             editor.putLong(PREFS_POLICY_NOTIFIED_TIME, now);
             editor.putInt(PREFS_POLICY_VERSION, DATA_REPORTING_VERSION);
-
-            // If healthreport is enabled, set default preference value.
-            if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
-                editor.putBoolean(GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true);
-            }
-
             editor.commit();
+            result = true;
+        } finally {
+            // We want to track any errors, so record notification outcome.
+            final String notificationEvent = TelemetryContract.Event.POLICY_NOTIFICATION_SUCCESS + result;
+            Telemetry.sendUIEvent(notificationEvent);
         }
     }
 }

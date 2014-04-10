@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
 // Some tests here assume that all restored tabs are loaded without waiting for
 // the user to bring them to the foreground. We ensure this by resetting the
 // related preference (see the "firefox.js" defaults file for details).
@@ -417,4 +419,18 @@ function promiseWindowClosed(win) {
 
   win.close();
   return deferred.promise;
+}
+
+// ----------
+function waitForOnBeforeUnloadDialog(browser, callback) {
+  browser.addEventListener("DOMWillOpenModalDialog", function onModalDialog() {
+    browser.removeEventListener("DOMWillOpenModalDialog", onModalDialog, true);
+
+    executeSoon(() => {
+      let stack = browser.parentNode;
+      let dialogs = stack.getElementsByTagNameNS(XUL_NS, "tabmodalprompt");
+      let {button0, button1} = dialogs[0].ui;
+      callback(button0, button1);
+    });
+  }, true);
 }

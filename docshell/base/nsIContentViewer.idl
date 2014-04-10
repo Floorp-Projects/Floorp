@@ -27,7 +27,7 @@ class nsDOMNavigationTiming;
 [ptr] native nsViewPtr(nsView);
 [ptr] native nsDOMNavigationTimingPtr(nsDOMNavigationTiming);
 
-[scriptable, builtinclass, uuid(4fc2512b-87c7-4a37-9fac-cee0f116bfdf)]
+[scriptable, builtinclass, uuid(0cb321bd-5b38-4586-8fcd-d43b366886fb)]
 interface nsIContentViewer : nsISupports
 {
 
@@ -48,6 +48,11 @@ interface nsIContentViewer : nsISupports
    *        ignored.
    */
   boolean permitUnload([optional] in boolean aCallerClosesWindow);
+
+  /**
+   * Exposes whether we're blocked in a call to permitUnload.
+   */
+  readonly attribute boolean inPermitUnload;
 
   /**
    * As above, but this passes around the aShouldPrompt argument to keep

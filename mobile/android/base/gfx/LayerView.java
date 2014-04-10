@@ -23,7 +23,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -325,7 +324,6 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
 
             SurfaceHolder holder = mSurfaceView.getHolder();
             holder.addCallback(new SurfaceListener());
-            holder.setFormat(PixelFormat.RGB_565);
         }
     }
 

@@ -244,7 +244,6 @@ panelview:not([mainview]) .toolbarbutton-text,
 
 toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item),
 .panelUI-grid .toolbarbutton-1,
-toolbarpaletteitem[place="panel"]:not([haswideitem=true]),
 .panel-customization-placeholder-child {
   -moz-appearance: none;
   -moz-box-orient: vertical;
@@ -772,17 +771,8 @@ menuitem.panel-subview-footer@menuStateActive@,
 }
 
 #BMB_bookmarksPopup menupopup > .bookmarks-actions-menuseparator {
-  /* Hide bottom separator as the styled footer includes a top border serving the same purpose.
-   * We can't just use display: none here, otherwise scrollbox.xml will flip out and sometimes
-   * refuse to scroll for us (see bug 984156). Instead, we set it to visibility hidden, force
-   * a minimum height, and then negative-margin that single pixel into oblivion. That seems
-   * to be enough to make scrollbox happy.
-   */
-  -moz-appearance: none;
-  visibility: hidden;
-  min-height: 1px;
-  margin: -1px 0 0;
-  border: none;
+  /* Hide bottom separator as the styled footer includes a top border serving the same purpose */
+  display: none;
 }
 
 /* Popups with only one item don't have a footer */
@@ -918,8 +908,12 @@ toolbarpaletteitem[place="palette"] > #search-container {
 
 /* Make direct siblings overlap borders: */
 .toolbaritem-combined-buttons + .toolbaritem-combined-buttons@inAnyPanel@ {
-  margin-top: -1px;
   border-top-color: transparent !important;
+}
+
+.toolbaritem-combined-buttons + .toolbaritem-combined-buttons@inAnyPanel@,
+toolbarpaletteitem[haswideitem][place="panel"] + toolbarpaletteitem[haswideitem][place="panel"] {
+  margin-top: -1px;
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {

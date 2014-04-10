@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 const TEST_URL = 'data:text/html,<script>window.onbeforeunload=' +
                  'function(e){e.returnValue="?"}</script>';
 
@@ -20,7 +22,10 @@ function onTabViewShown() {
 }
 
 function testStayOnPage(contentWindow, groupItemOne, groupItemTwo) {
-  whenDialogOpened(function (dialog) {
+  // We created a new tab group with a second tab above, so let's
+  // pick that second tab here and wait for its onbeforeunload dialog.
+  let browser = gBrowser.browsers[1];
+  waitForOnBeforeUnloadDialog(browser, function (btnLeave, btnStay) {
     executeSoon(function () {
       is(gBrowser.tabs.length, 2, 
          "The total number of tab is 2 when staying on the page");
@@ -34,14 +39,17 @@ function testStayOnPage(contentWindow, groupItemOne, groupItemTwo) {
     });
 
     // stay on page
-    dialog.cancelDialog();
+    btnStay.click();
   });
 
   closeGroupItem(groupItemTwo);
 }
 
 function testLeavePage(contentWindow, groupItemOne, groupItemTwo) {
-  whenDialogOpened(function (dialog) {
+  // The second tab hasn't been closed yet because we chose to stay. Wait
+  // for the onbeforeunload dialog again and leave the page this time.
+  let browser = gBrowser.browsers[1];
+  waitForOnBeforeUnloadDialog(browser, function (btnLeave, btnStay) {
     // clean up and finish the test
     groupItemTwo.addSubscriber("close", function onClose() {
       groupItemTwo.removeSubscriber("close", onClose);
@@ -55,31 +63,8 @@ function testLeavePage(contentWindow, groupItemOne, groupItemTwo) {
     });
 
     // Leave page
-    dialog.acceptDialog();
+    btnLeave.click();
   });
 
   closeGroupItem(groupItemTwo);
-}
-
-// ----------
-function whenDialogOpened(callback) {
-  let listener = {
-    onCloseWindow: function () {},
-    onWindowTitleChange: function () {},
-
-    onOpenWindow: function (xulWin) {
-      let domWin = xulWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindow);
-
-      whenWindowLoaded(domWin, function () {
-        let dialog = domWin.document.querySelector("dialog");
-        if (dialog) {
-          Services.wm.removeListener(listener);
-          callback(dialog);
-        }
-      });
-    }
-  };
-
-  Services.wm.addListener(listener);
 }

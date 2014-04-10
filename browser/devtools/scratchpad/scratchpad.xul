@@ -184,6 +184,34 @@
     </menupopup>
   </menu>
 
+  <menu id="sp-edit-menu" label="&editMenu.label;"
+        accesskey="&editMenu.accesskey;">
+    <menupopup id="sp-menu_editpopup">
+      <menuitem id="menu_undo"/>
+      <menuitem id="menu_redo"/>
+      <menuseparator/>
+      <menuitem id="menu_cut"/>
+      <menuitem id="menu_copy"/>
+      <menuitem id="menu_paste"/>
+      <menuseparator/>
+      <menuitem id="menu_selectAll"/>
+      <menuseparator/>
+      <menuitem id="menu_find"/>
+      <menuitem id="menu_findAgain"/>
+      <menuseparator/>
+      <menuitem id="se-menu-gotoLine"
+          label="&gotoLineCmd.label;"
+          accesskey="&gotoLineCmd.accesskey;"
+          key="key_gotoLine"
+          command="cmd_gotoLine"/>
+      <menuitem id="sp-menu-pprint"
+          label="&pprint.label;"
+          accesskey="&pprint.accesskey;"
+          key="sp-key-pprint"
+          command="sp-cmd-pprint"/>
+    </menupopup>
+  </menu>
+
   <menu id="sp-view-menu" label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
     <menupopup id="sp-menu-viewpopup">
       <menuitem id="sp-menu-line-numbers"
@@ -218,34 +246,6 @@
                 key="sp-menu-normal-font"
                 accesskey="&normalSize.accesskey;"
                 command="sp-cmd-normal-font"/>
-    </menupopup>
-  </menu>
-
-  <menu id="sp-edit-menu" label="&editMenu.label;"
-        accesskey="&editMenu.accesskey;">
-    <menupopup id="sp-menu_editpopup">
-      <menuitem id="menu_undo"/>
-      <menuitem id="menu_redo"/>
-      <menuseparator/>
-      <menuitem id="menu_cut"/>
-      <menuitem id="menu_copy"/>
-      <menuitem id="menu_paste"/>
-      <menuseparator/>
-      <menuitem id="menu_selectAll"/>
-      <menuseparator/>
-      <menuitem id="menu_find"/>
-      <menuitem id="menu_findAgain"/>
-      <menuseparator/>
-      <menuitem id="se-menu-gotoLine"
-          label="&gotoLineCmd.label;"
-          accesskey="&gotoLineCmd.accesskey;"
-          key="key_gotoLine"
-          command="cmd_gotoLine"/>
-      <menuitem id="sp-menu-pprint"
-          label="&pprint.label;"
-          accesskey="&pprint.accesskey;"
-          key="sp-key-pprint"
-          command="sp-cmd-pprint"/>
     </menupopup>
   </menu>
 
