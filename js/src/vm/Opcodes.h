@@ -160,7 +160,7 @@
     macro(JSOP_SETPROP,   54, "setprop",    NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING|JOF_TMPSLOT) \
     macro(JSOP_GETELEM,   55, "getelem",    NULL,         1,  2,  1, JOF_BYTE |JOF_ELEM|JOF_TYPESET|JOF_LEFTASSOC) \
     macro(JSOP_SETELEM,   56, "setelem",    NULL,         1,  3,  1, JOF_BYTE |JOF_ELEM|JOF_SET|JOF_DETECTING) \
-    macro(JSOP_CALLNAME,  57, "callname",   NULL,         5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET) \
+    macro(JSOP_UNUSED57,  57, "unused57",   NULL,         1,  0,  0, JOF_BYTE) \
     macro(JSOP_CALL,      58, "call",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
     macro(JSOP_NAME,      59, "name",       NULL,         5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET) \
     macro(JSOP_DOUBLE,    60, "double",     NULL,         5,  0,  1, JOF_DOUBLE) \
@@ -359,10 +359,10 @@
      *  uint24 slot: the slot containing the variable in the ScopeObject (this
      *               'slot' does not include RESERVED_SLOTS).
      */ \
-    macro(JSOP_GETALIASEDVAR, 136,"getaliasedvar",NULL,   5,  0,  1, JOF_SCOPECOORD|JOF_NAME|JOF_TYPESET) \
-    macro(JSOP_CALLALIASEDVAR,137,"callaliasedvar",NULL,  5,  0,  1, JOF_SCOPECOORD|JOF_NAME|JOF_TYPESET) \
-    macro(JSOP_SETALIASEDVAR, 138,"setaliasedvar",NULL,   5,  1,  1, JOF_SCOPECOORD|JOF_NAME|JOF_SET|JOF_DETECTING) \
+    macro(JSOP_GETALIASEDVAR, 136,"getaliasedvar",NULL,      5,  0,  1,  JOF_SCOPECOORD|JOF_NAME|JOF_TYPESET) \
+    macro(JSOP_SETALIASEDVAR, 137,"setaliasedvar",NULL,      5,  1,  1,  JOF_SCOPECOORD|JOF_NAME|JOF_SET|JOF_DETECTING) \
     \
+    macro(JSOP_UNUSED138,  138, "unused138",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED139,  139, "unused139",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED140,  140, "unused140",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED141,  141, "unused141",   NULL,         1,  0,  0,  JOF_BYTE) \
@@ -376,11 +376,11 @@
      * intrinsic functions the runtime doesn't give client JS code access to.
      */ \
     macro(JSOP_GETINTRINSIC,  143, "getintrinsic",  NULL, 5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET) \
-    macro(JSOP_CALLINTRINSIC, 144, "callintrinsic", NULL, 5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET) \
-    macro(JSOP_SETINTRINSIC,  145, "setintrinsic",  NULL, 5,  2,  1, JOF_ATOM|JOF_NAME|JOF_SET|JOF_DETECTING) \
-    macro(JSOP_BINDINTRINSIC, 146, "bindintrinsic", NULL, 5,  0,  1, JOF_ATOM|JOF_NAME|JOF_SET) \
+    macro(JSOP_SETINTRINSIC,  144, "setintrinsic",  NULL, 5,  2,  1, JOF_ATOM|JOF_NAME|JOF_SET|JOF_DETECTING) \
+    macro(JSOP_BINDINTRINSIC, 145, "bindintrinsic", NULL, 5,  0,  1, JOF_ATOM|JOF_NAME|JOF_SET) \
     \
     /* Unused. */ \
+    macro(JSOP_UNUSED146,     146,"unused146", NULL,      1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED147,     147,"unused147", NULL,      1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED148,     148,"unused148", NULL,      1,  0,  0,  JOF_BYTE) \
     \
@@ -485,10 +485,9 @@
     macro(JSOP_UNUSED208,     208, "unused208",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED209,     209, "unused209",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED210,     210, "unused210",    NULL,  1,  0,  0,  JOF_BYTE) \
-    \
-    macro(JSOP_CALLGNAME,     211, "callgname",    NULL,  5,  0,  1,  JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_GNAME) \
-    macro(JSOP_CALLLOCAL,     212, "calllocal",    NULL,  4,  0,  1,  JOF_LOCAL|JOF_NAME) \
-    macro(JSOP_CALLARG,       213, "callarg",      NULL,  3,  0,  1,  JOF_QARG |JOF_NAME) \
+    macro(JSOP_UNUSED211,     211, "unused211",    NULL,  1,  0,  0,  JOF_BYTE) \
+    macro(JSOP_UNUSED212,     212, "unused212",    NULL,  1,  0,  0,  JOF_BYTE) \
+    macro(JSOP_UNUSED213,     213, "unused213",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_BINDGNAME,     214, "bindgname",    NULL,  5,  0,  1,  JOF_ATOM|JOF_NAME|JOF_SET|JOF_GNAME) \
     \
     /* Opcodes to hold 8-bit and 32-bit immediate integer operands. */ \

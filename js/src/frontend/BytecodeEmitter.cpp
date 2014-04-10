@@ -1237,7 +1237,6 @@ EmitVarOp(ExclusiveContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
     switch (op) {
       case JSOP_GETARG: case JSOP_GETLOCAL: op = JSOP_GETALIASEDVAR; break;
       case JSOP_SETARG: case JSOP_SETLOCAL: op = JSOP_SETALIASEDVAR; break;
-      case JSOP_CALLARG: case JSOP_CALLLOCAL: op = JSOP_CALLALIASEDVAR; break;
       default: MOZ_ASSUME_UNREACHABLE("unexpected var op");
     }
 
@@ -2131,37 +2130,10 @@ EmitFinishIteratorResult(ExclusiveContext *cx, BytecodeEmitter *bce, bool done)
 static bool
 EmitNameOp(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callContext)
 {
-    JSOp op;
-
     if (!BindNameToSlot(cx, bce, pn))
         return false;
-    op = pn->getOp();
 
-    if (callContext) {
-        switch (op) {
-          case JSOP_NAME:
-            op = JSOP_CALLNAME;
-            break;
-          case JSOP_GETINTRINSIC:
-            op = JSOP_CALLINTRINSIC;
-            break;
-          case JSOP_GETGNAME:
-            op = JSOP_CALLGNAME;
-            break;
-          case JSOP_GETARG:
-            op = JSOP_CALLARG;
-            break;
-          case JSOP_GETLOCAL:
-            op = JSOP_CALLLOCAL;
-            break;
-          case JSOP_GETALIASEDVAR:
-            op = JSOP_CALLALIASEDVAR;
-            break;
-          default:
-            JS_ASSERT(op == JSOP_CALLEE);
-            break;
-        }
-    }
+    JSOp op = pn->getOp();
 
     if (op == JSOP_CALLEE) {
         if (Emit1(cx, bce, op) < 0)
@@ -2179,7 +2151,7 @@ EmitNameOp(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callC
 
     /* Need to provide |this| value for call */
     if (callContext) {
-        if (op == JSOP_CALLNAME && bce->needsImplicitThis()) {
+        if (op == JSOP_NAME && bce->needsImplicitThis()) {
             if (!EmitAtomOp(cx, pn, JSOP_IMPLICITTHIS, bce))
                 return false;
         } else {
