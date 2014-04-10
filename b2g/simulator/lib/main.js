@@ -6,7 +6,7 @@
 const { Cc, Ci, Cu } = require("chrome");
 
 const { SimulatorProcess } = require("./simulator-process");
-const { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 const Self = require("sdk/self");
 const System = require("sdk/system");
 const { Simulator } = Cu.import("resource://gre/modules/devtools/Simulator.jsm");
@@ -23,12 +23,12 @@ function launch({ port }) {
   process.remoteDebuggerPort = port;
   process.run();
 
-  return Promise.resolve();
+  return promise.resolve();
 }
 
 function close() {
   if (!process) {
-    return Promise.resolve();
+    return promise.resolve();
   }
   let p = process;
   process = null;
