@@ -699,7 +699,7 @@ nsDOMCameraControl::StartRecording(const CameraStartRecordingOptions& aOptions,
     mAudioChannelAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1");
     if (mAudioChannelAgent) {
       // Camera app will stop recording when it falls to the background, so no callback is necessary.
-      mAudioChannelAgent->Init(mWindow, AUDIO_CHANNEL_CONTENT, nullptr);
+      mAudioChannelAgent->Init(mWindow, (int32_t)AudioChannel::Content, nullptr);
       // Video recording doesn't output any sound, so it's not necessary to check canPlay.
       int32_t canPlay;
       mAudioChannelAgent->StartPlaying(&canPlay);

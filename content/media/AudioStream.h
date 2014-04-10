@@ -7,11 +7,11 @@
 #define AudioStream_h_
 
 #include "AudioSampleFormat.h"
-#include "AudioChannelCommon.h"
 #include "nsAutoPtr.h"
 #include "nsAutoRef.h"
 #include "nsCOMPtr.h"
 #include "Latency.h"
+#include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/StaticMutex.h"
 
 #include "cubeb/cubeb.h"
@@ -198,7 +198,7 @@ public:
   // channels (1 for mono, 2 for stereo, etc) and aRate is the sample rate
   // (22050Hz, 44100Hz, etc).
   nsresult Init(int32_t aNumChannels, int32_t aRate,
-                const dom::AudioChannelType aAudioStreamType,
+                const dom::AudioChannel aAudioStreamChannel,
                 LatencyRequest aLatencyRequest);
 
   // Closes the stream. All future use of the stream is an error.
