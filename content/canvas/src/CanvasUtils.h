@@ -7,6 +7,7 @@
 #define _CANVASUTILS_H_
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "jsapi.h"
 
 class nsIPrincipal;
@@ -155,23 +156,13 @@ DashArrayToJSVal(FallibleTArray<T>& dashes,
                  JSContext* cx, mozilla::ErrorResult& rv)
 {
     if (dashes.IsEmpty()) {
-        return JSVAL_NULL;
+        return JS::NullValue();
     }
-    JS::Rooted<JSObject*> obj(cx,
-        JS_NewArrayObject(cx, dashes.Length()));
-    if (!obj) {
+    JS::Rooted<JS::Value> val(cx);
+    if (!mozilla::dom::ToJSValue(cx, dashes, &val)) {
         rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-        return JSVAL_NULL;
     }
-    for (uint32_t i = 0; i < dashes.Length(); ++i) {
-        double d = dashes[i];
-        JS::Value elt = DOUBLE_TO_JSVAL(d);
-        if (!JS_DefineElement(cx, obj, i, elt, nullptr, nullptr, 0)) {
-            rv.Throw(NS_ERROR_FAILURE);
-            return JSVAL_NULL;
-        }
-    }
-    return OBJECT_TO_JSVAL(obj);
+    return val;
 }
 
 }

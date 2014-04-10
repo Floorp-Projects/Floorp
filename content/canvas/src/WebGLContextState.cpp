@@ -424,11 +424,8 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         {
             realGLboolean gl_bv[4] = { 0 };
             gl->fGetBooleanv(pname, gl_bv);
-            nsAutoTArray<bool, 4> vals;
-            vals.AppendElement(gl_bv[0]);
-            vals.AppendElement(gl_bv[1]);
-            vals.AppendElement(gl_bv[2]);
-            vals.AppendElement(gl_bv[3]);
+            bool vals[4] = { bool(gl_bv[0]), bool(gl_bv[1]),
+                             bool(gl_bv[2]), bool(gl_bv[3]) };
             JS::Rooted<JS::Value> arr(cx);
             if (!ToJSValue(cx, vals, &arr)) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
