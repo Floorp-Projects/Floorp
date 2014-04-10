@@ -70,7 +70,19 @@ MacroAssemblerMIPS::convertUInt32ToDouble(const Register &src, const FloatRegist
 void
 MacroAssemblerMIPS::convertUInt32ToFloat32(const Register &src, const FloatRegister &dest)
 {
-    MOZ_ASSUME_UNREACHABLE("NYI");
+    Label positive, done;
+    ma_b(src, src, &positive, NotSigned, ShortJump);
+
+    // We cannot do the same as convertUInt32ToDouble because float32 doesn't
+    // have enough precision.
+    convertUInt32ToDouble(src, dest);
+    convertDoubleToFloat32(dest, dest);
+    ma_b(&done);
+
+    bind(&positive);
+    convertInt32ToFloat32(src, dest);
+
+    bind(&done);
 }
 
 void
@@ -2020,10 +2032,63 @@ MacroAssemblerMIPSCompat::storePtr(const Register &src, const AbsoluteAddress &d
     as_sw(src, ScratchRegister, 0);
 }
 
+// Note: this function clobbers the input register.
+void
+MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
+{
+    JS_ASSERT(input != ScratchFloatReg);
+    Label positive, done;
+
+    // <= 0 or NaN --> 0
+    zeroDouble(ScratchFloatReg);
+    branchDouble(DoubleGreaterThan, input, ScratchFloatReg, &positive);
+    {
+        move32(Imm32(0), output);
+        jump(&done);
+    }
+
+    bind(&positive);
+
+    // Add 0.5 and truncate.
+    loadConstantDouble(0.5, ScratchFloatReg);
+    addDouble(ScratchFloatReg, input);
+
+    Label outOfRange;
+
+    branchTruncateDouble(input, output, &outOfRange);
+    branch32(Assembler::Above, output, Imm32(255), &outOfRange);
+    {
+        // Check if we had a tie.
+        convertInt32ToDouble(output, ScratchFloatReg);
+        branchDouble(DoubleNotEqual, input, ScratchFloatReg, &done);
+
+        // It was a tie. Mask out the ones bit to get an even value.
+        // See also js_TypedArray_uint8_clamp_double.
+        and32(Imm32(~1), output);
+        jump(&done);
+    }
+
+    // > 255 --> 255
+    bind(&outOfRange);
+    {
+        move32(Imm32(255), output);
+    }
+
+    bind(&done);
+}
+
 void
 MacroAssemblerMIPSCompat::subPtr(Imm32 imm, const Register dest)
 {
     ma_subu(dest, dest, imm);
+}
+
+void
+MacroAssemblerMIPSCompat::subPtr(const Register &src, const Address &dest)
+{
+    loadPtr(dest, SecondScratchReg);
+    subPtr(src, SecondScratchReg);
+    storePtr(SecondScratchReg, dest);
 }
 
 void
@@ -2056,13 +2121,13 @@ MacroAssemblerMIPSCompat::branchFloat(DoubleCondition cond, const FloatRegister 
 
 // higher level tag testing code
 Operand
-ToPayload(Operand base)
+MacroAssemblerMIPS::ToPayload(Operand base)
 {
     return Operand(Register::FromCode(base.base()), base.disp() + PAYLOAD_OFFSET);
 }
 
 Operand
-ToType(Operand base)
+MacroAssemblerMIPS::ToType(Operand base)
 {
     return Operand(Register::FromCode(base.base()), base.disp() + TAG_OFFSET);
 }
@@ -2206,6 +2271,12 @@ MacroAssemblerMIPSCompat::branchTestNull(Condition cond, const BaseIndex &src, L
     ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_NULL), label, cond);
 }
 
+void
+MacroAssemblerMIPSCompat::testNullSet(Condition cond, const ValueOperand &value, Register dest)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ma_cmp_set(dest, value.typeReg(), ImmType(JSVAL_TYPE_NULL), cond);
+}
 
 void
 MacroAssemblerMIPSCompat::branchTestObject(Condition cond, const ValueOperand &value, Label *label)
@@ -2281,6 +2352,12 @@ MacroAssemblerMIPSCompat::branchTestUndefined(Condition cond, const Address &add
     ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_UNDEFINED), label, cond);
 }
 
+void
+MacroAssemblerMIPSCompat::testUndefinedSet(Condition cond, const ValueOperand &value, Register dest)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ma_cmp_set(dest, value.typeReg(), ImmType(JSVAL_TYPE_UNDEFINED), cond);
+}
 
 void
 MacroAssemblerMIPSCompat::branchTestNumber(Condition cond, const ValueOperand &value, Label *label)
