@@ -1926,11 +1926,13 @@ function WifiWorker() {
       case "DISCONNECTED":
         // wpa_supplicant may give us a "DISCONNECTED" event even if
         // we are already in "DISCONNECTED" state.
-        if (this.prevState === "INITIALIZING" ||
-          this.prevState === "DISCONNECTED" ||
-          this.prevState === "INTERFACE_DISABLED" ||
-          this.prevState === "INACTIVE" ||
-          this.prevState === "UNINITIALIZED") {
+        if ((WifiNetworkInterface.state ===
+             Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED) &&
+             (this.prevState === "INITIALIZING" ||
+              this.prevState === "DISCONNECTED" ||
+              this.prevState === "INTERFACE_DISABLED" ||
+              this.prevState === "INACTIVE" ||
+              this.prevState === "UNINITIALIZED")) {
           return;
         }
 
