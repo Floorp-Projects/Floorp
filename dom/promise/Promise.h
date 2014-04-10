@@ -17,6 +17,7 @@
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
 #include "js/TypeDecls.h"
+#include "jsapi.h"
 
 #include "mozilla/dom/workers/bindings/WorkerFeature.h"
 
@@ -265,6 +266,30 @@ private:
                     JS::MutableHandle<JS::Value> aValue)
   {
     return ArgumentToJSValue(*aArgument.get(), aCx, aValue);
+  }
+
+  // Accept arrays of other things we accept
+  template <typename T>
+  bool
+  ArgumentToJSValue(const nsTArray<T>& aArgument,
+                    JSContext* aCx,
+                    JS::MutableHandle<JS::Value> aValue)
+  {
+    JS::AutoValueVector v(aCx);
+    if (!v.resize(aArgument.Length())) {
+      return false;
+    }
+    for (uint32_t i = 0; i < aArgument.Length(); ++i) {
+      if (!ArgumentToJSValue(aArgument[i], aCx, v.handleAt(i))) {
+        return false;
+      }
+    }
+    JSObject* arrayObj = JS_NewArrayObject(aCx, v);
+    if (!arrayObj) {
+      return false;
+    }
+    aValue.setObject(*arrayObj);
+    return true;
   }
 
   template <typename T>
