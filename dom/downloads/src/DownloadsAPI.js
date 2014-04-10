@@ -7,6 +7,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -319,8 +320,46 @@ DOMDownloadImpl.prototype = {
     });
 
     if (aDownload.error) {
+      //
+      // When we get a generic error failure back from the js downloads api
+      // we will verify the status of device storage to see if we can't provide
+      // a better error result value.
+      //
+      // XXX If these checks expand further, consider moving them into their
+      // own function.
+      //
+      let result = aDownload.error.result;
+      let storage = this._window.navigator.getDeviceStorage("sdcard");
+
+      // If we don't have access to device storage we'll opt out of these
+      // extra checks as they are all dependent on the state of the storage.
+      if (result == Cr.NS_ERROR_FAILURE && storage) {
+        // We will delay sending the notification until we've inferred which
+        // error is really happening.
+        changed = false;
+        debug("Attempting to infer error via device storage sanity checks.");
+        // Get device storage and request availability status.
+        let available = storage.available();
+        available.onsuccess = (function() {
+          debug("Storage Status = '" + available.result + "'");
+          let inferredError = result;
+          switch (available.result) {
+            case "unavailable":
+              inferredError = Cr.NS_ERROR_FILE_NOT_FOUND;
+              break;
+            case "shared":
+              inferredError = Cr.NS_ERROR_FILE_ACCESS_DENIED;
+              break;
+          }
+          this._updateWithError(aDownload, inferredError);
+        }).bind(this);
+        available.onerror = (function() {
+          this._updateWithError(aDownload, result);
+        }).bind(this);
+      }
+
       this.error =
-        new this._window.DOMError("DownloadError", aDownload.error.result);
+        new this._window.DOMError("DownloadError", result);
     } else {
       this.error = null;
     }
@@ -330,6 +369,16 @@ DOMDownloadImpl.prototype = {
       return;
     }
 
+    this._sendStateChange();
+  },
+
+  _updateWithError: function(aDownload, aError) {
+    this.error =
+      new this._window.DOMError("DownloadError", aError);
+    this._sendStateChange();
+  },
+
+  _sendStateChange: function() {
     // __DOM_IMPL__ may not be available at first update.
     if (this.__DOM_IMPL__) {
       let event = new this._window.DownloadEvent("statechange", {
