@@ -107,12 +107,12 @@ static const PLDHashTableOps ObjectTableOps = {
 // helper routine for looking up an existing entry. Note that the
 // return result is NOT addreffed
 static nsISupports*
-LookupObject(PLDHashTable& table, nsIContent* aKey)
+LookupObject(PLDHashTable* table, nsIContent* aKey)
 {
   if (aKey && aKey->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
     ObjectEntry *entry =
       static_cast<ObjectEntry*>
-                 (PL_DHashTableOperate(&table, aKey, PL_DHASH_LOOKUP));
+                 (PL_DHashTableOperate(table, aKey, PL_DHASH_LOOKUP));
 
     if (PL_DHASH_ENTRY_IS_BUSY(entry))
       return entry->GetValue();
@@ -141,9 +141,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBindingManager)
   if (tmp->mLoadingDocTable)
     tmp->mLoadingDocTable->Clear();
 
-  if (tmp->mWrapperTable.ops)
-    PL_DHashTableFinish(&(tmp->mWrapperTable));
-  tmp->mWrapperTable.ops = nullptr;
+  if (tmp->mWrapperTable) {
+    PL_DHashTableFinish(tmp->mWrapperTable);
+    tmp->mWrapperTable = nullptr;
+  }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAttachedStack)
 
@@ -203,15 +204,15 @@ nsBindingManager::nsBindingManager(nsIDocument* aDocument)
     mAttachedStackSizeOnOutermost(0),
     mDocument(aDocument)
 {
-  mWrapperTable.ops = nullptr;
 }
 
 nsBindingManager::~nsBindingManager(void)
 {
   mDestroyed = true;
 
-  if (mWrapperTable.ops)
-    PL_DHashTableFinish(&mWrapperTable);
+  if (mWrapperTable) {
+    PL_DHashTableFinish(mWrapperTable);
+  }
 }
 
 nsXBLBinding*
@@ -244,7 +245,7 @@ nsBindingManager::RemoveBoundContent(nsIContent* aContent)
 nsIXPConnectWrappedJS*
 nsBindingManager::GetWrappedJS(nsIContent* aContent)
 {
-  if (mWrapperTable.ops) {
+  if (mWrapperTable) {
     return static_cast<nsIXPConnectWrappedJS*>(LookupObject(mWrapperTable, aContent));
   }
 
@@ -260,8 +261,9 @@ nsBindingManager::SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aWra
 
   if (aWrappedJS) {
     // lazily create the table, but only when adding elements
-    if (!mWrapperTable.ops) {
-      PL_DHashTableInit(&mWrapperTable, &ObjectTableOps, nullptr,
+    if (!mWrapperTable) {
+      mWrapperTable = new PLDHashTable();
+      PL_DHashTableInit(mWrapperTable, &ObjectTableOps, nullptr,
                         sizeof(ObjectEntry), 16);
     }
     aContent->SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
@@ -270,7 +272,7 @@ nsBindingManager::SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aWra
     if (!aContent) return NS_ERROR_INVALID_ARG;
 
     ObjectEntry *entry =
-      static_cast<ObjectEntry*>(PL_DHashTableOperate(&mWrapperTable, aContent, PL_DHASH_ADD));
+      static_cast<ObjectEntry*>(PL_DHashTableOperate(mWrapperTable, aContent, PL_DHASH_ADD));
 
     if (!entry)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -287,15 +289,15 @@ nsBindingManager::SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aWra
   }
 
   // no value, so remove the key from the table
-  if (mWrapperTable.ops) {
+  if (mWrapperTable) {
     ObjectEntry* entry =
       static_cast<ObjectEntry*>
-        (PL_DHashTableOperate(&mWrapperTable, aContent, PL_DHASH_LOOKUP));
+        (PL_DHashTableOperate(mWrapperTable, aContent, PL_DHASH_LOOKUP));
     if (entry && PL_DHASH_ENTRY_IS_BUSY(entry)) {
       // Keep key and value alive while removing the entry.
       nsCOMPtr<nsISupports> key = entry->GetKey();
       nsCOMPtr<nsISupports> value = entry->GetValue();
-      PL_DHashTableOperate(&mWrapperTable, aContent, PL_DHASH_REMOVE);
+      PL_DHashTableOperate(mWrapperTable, aContent, PL_DHASH_REMOVE);
     }
   }
 
@@ -1119,7 +1121,7 @@ nsBindingManager::Traverse(nsIContent *aContent,
   }
 
   nsISupports *value;
-  if (mWrapperTable.ops &&
+  if (mWrapperTable &&
       (value = LookupObject(mWrapperTable, aContent))) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mWrapperTable key");
     cb.NoteXPCOMChild(aContent);
