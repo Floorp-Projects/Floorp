@@ -36,7 +36,7 @@ public class HomePager extends ViewPager {
     private static final int LOADER_ID_CONFIG = 0;
 
     private final Context mContext;
-    private volatile boolean mLoaded;
+    private volatile boolean mVisible;
     private Decor mDecor;
     private View mTabStrip;
     private HomeBanner mHomeBanner;
@@ -157,7 +157,7 @@ public class HomePager extends ViewPager {
      * @param fm FragmentManager for the adapter
      */
     public void load(LoaderManager lm, FragmentManager fm, String panelId, PropertyAnimator animator) {
-        mLoaded = true;
+        mVisible = true;
         mInitialPanelId = panelId;
 
         // Update the home banner message each time the HomePager is loaded.
@@ -207,7 +207,7 @@ public class HomePager extends ViewPager {
      * Removes all child fragments to free memory.
      */
     public void unload() {
-        mLoaded = false;
+        mVisible = false;
         setAdapter(null);
 
         // Stop UI Telemetry sessions.
@@ -216,15 +216,15 @@ public class HomePager extends ViewPager {
     }
 
     /**
-     * Determines whether the pager is loaded.
+     * Determines whether the pager is visible.
      *
      * Unlike getVisibility(), this method does not need to be called on the UI
      * thread.
      *
      * @return Whether the pager and its fragments are loaded
      */
-    public boolean isLoaded() {
-        return mLoaded;
+    public boolean isVisible() {
+        return mVisible;
     }
 
     @Override
@@ -276,7 +276,7 @@ public class HomePager extends ViewPager {
     private void updateUiFromConfigState(HomeConfig.State configState) {
         // We only care about the adapter if HomePager is currently
         // loaded, which means it's visible in the activity.
-        if (!mLoaded) {
+        if (!mVisible) {
             return;
         }
 
