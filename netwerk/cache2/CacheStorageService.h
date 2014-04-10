@@ -205,6 +205,7 @@ private:
 
 private:
   nsresult DoomStorageEntries(nsCSubstring const& aContextKey,
+                              nsILoadContextInfo* aContext,
                               bool aDiskStorage,
                               nsICacheEntryDoomCallback* aCallback);
   nsresult AddStorageEntry(nsCSubstring const& aContextKey,
