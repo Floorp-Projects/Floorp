@@ -8,10 +8,10 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Last changed  : $Date$
+// Last changed  : $Date: 2014-04-06 10:57:21 -0500 (Sun, 06 Apr 2014) $
 // File revision : $Revision: 3 $
 //
-// $Id$
+// $Id: STTypes.h 195 2014-04-06 15:57:21Z oparviai $
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -73,6 +73,20 @@ namespace soundtouch
     //#undef SOUNDTOUCH_INTEGER_SAMPLES
     //#undef SOUNDTOUCH_FLOAT_SAMPLES
 
+    /// If following flag is defined, always uses multichannel processing 
+    /// routines also for mono and stero sound. This is for routine testing 
+    /// purposes; output should be same with either routines, yet disabling 
+    /// the dedicated mono/stereo processing routines will result in slower 
+    /// runtime performance so recommendation is to keep this off.
+    // #define USE_MULTICH_ALWAYS
+
+    #if (defined(__SOFTFP__))
+        // For Android compilation: Force use of Integer samples in case that
+        // compilation uses soft-floating point emulation - soft-fp is way too slow
+        #undef  SOUNDTOUCH_FLOAT_SAMPLES
+        #define SOUNDTOUCH_INTEGER_SAMPLES      1
+    #endif
+
     #if !(SOUNDTOUCH_INTEGER_SAMPLES || SOUNDTOUCH_FLOAT_SAMPLES)
        
         /// Choose either 32bit floating point or 16bit integer sampletype
@@ -90,7 +104,7 @@ namespace soundtouch
         ///   also in GNU environment, then please #undef the INTEGER_SAMPLE
         ///   and FLOAT_SAMPLE defines first as in comments above.
         //#define SOUNDTOUCH_INTEGER_SAMPLES     1    //< 16bit integer samples
-        #define SOUNDTOUCH_FLOAT_SAMPLES       1    //< 32bit float samples 
+        #define SOUNDTOUCH_FLOAT_SAMPLES       1    //< 32bit float samples
      
     #endif
 
@@ -152,7 +166,7 @@ namespace soundtouch
 
     #endif  // SOUNDTOUCH_INTEGER_SAMPLES
 
-}
+};
 
 // define ST_NO_EXCEPTION_HANDLING switch to disable throwing std exceptions:
 #define ST_NO_EXCEPTION_HANDLING    1
