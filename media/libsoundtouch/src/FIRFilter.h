@@ -11,10 +11,10 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Last changed  : $Date$
+// Last changed  : $Date: 2013-06-12 10:24:44 -0500 (Wed, 12 Jun 2013) $
 // File revision : $Revision: 4 $
 //
-// $Id$
+// $Id: FIRFilter.h 171 2013-06-12 15:24:44Z oparviai $
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -71,6 +71,7 @@ protected:
     virtual uint evaluateFilterMono(SAMPLETYPE *dest, 
                                     const SAMPLETYPE *src, 
                                     uint numSamples) const;
+    virtual uint evaluateFilterMulti(SAMPLETYPE *dest, const SAMPLETYPE *src, uint numSamples, uint numChannels) const;
 
 public:
     FIRFilter();

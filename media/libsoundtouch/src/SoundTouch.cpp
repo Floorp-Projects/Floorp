@@ -41,10 +41,10 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Last changed  : $Date$
+// Last changed  : $Date: 2014-04-06 10:57:21 -0500 (Sun, 06 Apr 2014) $
 // File revision : $Revision: 4 $
 //
-// $Id$
+// $Id: SoundTouch.cpp 195 2014-04-06 15:57:21Z oparviai $
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -80,6 +80,11 @@
 #include "RateTransposer.h"
 #include "cpu_detect.h"
 
+#ifdef _MSC_VER
+#include <malloc.h>
+#define alloca _alloca
+#endif
+
 using namespace soundtouch;
     
 /// test if two floating point numbers are equal
@@ -97,7 +102,7 @@ SoundTouch::SoundTouch()
 {
     // Initialize rate transposer and tempo changer instances
 
-    pRateTransposer = RateTransposer::newInstance();
+    pRateTransposer = new RateTransposer();
     pTDStretch = TDStretch::newInstance();
 
     setOutPipe(pTDStretch);
@@ -143,10 +148,11 @@ uint SoundTouch::getVersionId()
 // Sets the number of channels, 1 = mono, 2 = stereo
 void SoundTouch::setChannels(uint numChannels)
 {
-    if (numChannels != 1 && numChannels != 2) 
+    /*if (numChannels != 1 && numChannels != 2) 
     {
-        ST_THROW_RT_ERROR("Illegal number of channels");
-    }
+        //ST_THROW_RT_ERROR("Illegal number of channels");
+		return;
+    }*/
     channels = numChannels;
     pRateTransposer->setChannels((int)numChannels);
     pTDStretch->setChannels((int)numChannels);
@@ -254,7 +260,7 @@ void SoundTouch::calcEffectiveRateAndTempo()
             tempoOut = pTDStretch->getOutput();
             tempoOut->moveSamples(*output);
             // move samples in pitch transposer's store buffer to tempo changer's input
-            pTDStretch->moveSamples(*pRateTransposer->getStore());
+            // deprecated : pTDStretch->moveSamples(*pRateTransposer->getStore());
 
             output = pTDStretch;
         }
@@ -347,7 +353,7 @@ void SoundTouch::flush()
     int i;
     int nUnprocessed;
     int nOut;
-    SAMPLETYPE buff[64*2];   // note: allocate 2*64 to cater 64 sample frames of stereo sound
+    SAMPLETYPE *buff=(SAMPLETYPE*)alloca(64*channels*sizeof(SAMPLETYPE));
 
     // check how many samples still await processing, and scale
     // that by tempo & rate to get expected output sample count
