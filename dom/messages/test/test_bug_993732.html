@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Bug 993732</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+  <script type="application/javascript">
+
+  "use strict";
+
+  // The syndrome of Bug 993732 is that the running app (either foreground or background)
+  // is not able to receive system messages. Even worse, the app will be killed when the
+  // listening system message is broadcast. So this test case uses the alarm message
+  // to test if a running app can receive the system message.
+
+  function testAlarm(aMillisecondsFromNow) {
+    var at = new Date();
+    at.setTime(at.getTime() + aMillisecondsFromNow);
+
+    navigator.mozSetMessageHandler('alarm', function(message) {
+      ok(true, "We got alarm message!");
+      SimpleTest.finish();
+    });
+
+    var domRequest;
+    try {
+      domRequest = navigator.mozAlarms.add(at, "honorTimezone", {});
+    } catch (e) {
+      ok(false,
+         "Unexpected exception while adding alarm " + aMillisecondsFromNow + " ms from now.");
+      SimpleTest.finish();
+    }
+    domRequest.onsuccess = function(e) {
+      // Waiting for alarm message.
+    };
+    domRequest.onerror = function(e) {
+      ok(false, "Unable to add alarm for tomorrow`.");
+      SimpleTest.finish();
+    };
+  }
+
+  function startTests() {
+
+    SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function() {
+      // Currently applicable only on FxOS
+      if (navigator.userAgent.indexOf("Mobile") != -1 &&
+          navigator.appVersion.indexOf("Android") == -1)
+      {
+        testAlarm(10000);
+      } else {
+        ok(true, "mozAlarms on Firefox OS only.");
+        SimpleTest.finish();
+      }
+    });
+  }
+
+  SimpleTest.expectAssertions(0, 9);
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPermissions([{'type': 'alarms', 'allow': true, 'context': document}], startTests);
+
+  </script>
+</pre>
+</body>
+</html>
