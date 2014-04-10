@@ -55,8 +55,6 @@ public:
 
   size_t GetBufferSize();
 
-  already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
-
   TemporaryRef<gfx::SourceSurface> GetAsSourceSurface();
 
   bool Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);

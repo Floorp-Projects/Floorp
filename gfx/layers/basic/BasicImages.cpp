@@ -52,7 +52,6 @@ public:
   virtual void SetData(const Data& aData);
   virtual void SetDelayedConversion(bool aDelayed) { mDelayedConversion = aDelayed; }
 
-  already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
   TemporaryRef<gfx::SourceSurface> GetAsSourceSurface();
 
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
@@ -130,53 +129,6 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
   gfx::ConvertYCbCrToRGB(aData, format, size, mDecodedBuffer, mStride);
   SetOffscreenFormat(iFormat);
   mSize = size;
-}
-
-static cairo_user_data_key_t imageSurfaceDataKey;
-
-static void
-DestroyBuffer(void* aBuffer)
-{
-  delete[] static_cast<uint8_t*>(aBuffer);
-}
-
-already_AddRefed<gfxASurface>
-BasicPlanarYCbCrImage::DeprecatedGetAsSurface()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Must be main thread");
-
-  if (mDeprecatedSurface) {
-    nsRefPtr<gfxASurface> result = mDeprecatedSurface.get();
-    return result.forget();
-  }
-
-  if (!mDecodedBuffer) {
-    return PlanarYCbCrImage::DeprecatedGetAsSurface();
-  }
-
-  gfxImageFormat format = GetOffscreenFormat();
-
-  nsRefPtr<gfxImageSurface> imgSurface =
-    new gfxImageSurface(mDecodedBuffer, gfx::ThebesIntSize(mSize), mStride, format);
-  if (!imgSurface || imgSurface->CairoStatus() != 0) {
-    return nullptr;
-  }
-
-  // Pass ownership of the buffer to the surface
-  imgSurface->SetData(&imageSurfaceDataKey, mDecodedBuffer.forget(), DestroyBuffer);
-
-  nsRefPtr<gfxASurface> result = imgSurface.get();
-#if defined(XP_MACOSX)
-  nsRefPtr<gfxQuartzImageSurface> quartzSurface =
-    new gfxQuartzImageSurface(imgSurface);
-  if (quartzSurface) {
-    result = quartzSurface.forget();
-  }
-#endif
-
-  mDeprecatedSurface = result;
-
-  return result.forget();
 }
 
 TemporaryRef<gfx::SourceSurface>

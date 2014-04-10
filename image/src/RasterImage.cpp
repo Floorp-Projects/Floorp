@@ -980,7 +980,6 @@ RasterImage::GetCurrentImage()
   }
 
   CairoImage::Data cairoData;
-  cairoData.mDeprecatedSurface = imageSurface;
   GetWidth(&cairoData.mSize.width);
   GetHeight(&cairoData.mSize.height);
   cairoData.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, imageSurface);

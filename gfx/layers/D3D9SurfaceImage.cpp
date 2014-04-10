@@ -126,62 +126,6 @@ D3D9SurfaceImage::GetSize()
   return mSize;
 }
 
-already_AddRefed<gfxASurface>
-D3D9SurfaceImage::DeprecatedGetAsSurface()
-{
-  NS_ENSURE_TRUE(mTexture, nullptr);
-
-  HRESULT hr;
-  nsRefPtr<gfxImageSurface> surface =
-    new gfxImageSurface(gfx::ThebesIntSize(mSize), gfxImageFormat::RGB24);
-
-  if (!surface->CairoSurface() || surface->CairoStatus()) {
-    NS_WARNING("Failed to created Cairo image surface for D3D9SurfaceImage.");
-    return nullptr;
-  }
-
-  // Ensure that the texture is ready to be used.
-  EnsureSynchronized();
-
-  // Readback the texture from GPU memory into system memory, so that
-  // we can copy it into the Cairo image. This is expensive.
-  RefPtr<IDirect3DSurface9> textureSurface;
-  hr = mTexture->GetSurfaceLevel(0, byRef(textureSurface));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-  RefPtr<IDirect3DDevice9> device;
-  hr = mTexture->GetDevice(byRef(device));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-  RefPtr<IDirect3DSurface9> systemMemorySurface;
-  hr = device->CreateOffscreenPlainSurface(mDesc.Width,
-                                           mDesc.Height,
-                                           D3DFMT_X8R8G8B8,
-                                           D3DPOOL_SYSTEMMEM,
-                                           byRef(systemMemorySurface),
-                                           0);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-  hr = device->GetRenderTargetData(textureSurface, systemMemorySurface);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-  D3DLOCKED_RECT rect;
-  hr = systemMemorySurface->LockRect(&rect, nullptr, 0);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-  const unsigned char* src = (const unsigned char*)(rect.pBits);
-  const unsigned srcPitch = rect.Pitch;
-  for (int y = 0; y < mSize.height; y++) {
-    memcpy(surface->Data() + surface->Stride() * y,
-           (unsigned char*)(src) + srcPitch * y,
-           mSize.width * 4);
-  }
-
-  systemMemorySurface->UnlockRect();
-
-  return surface.forget();
-}
-
 TextureClient*
 D3D9SurfaceImage::GetTextureClient(CompositableClient* aClient)
 {

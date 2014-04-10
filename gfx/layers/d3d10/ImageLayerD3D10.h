@@ -58,7 +58,6 @@ class RemoteDXGITextureImage : public Image {
 public:
   RemoteDXGITextureImage() : Image(nullptr, ImageFormat::REMOTE_IMAGE_DXGI_TEXTURE) {}
 
-  already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
   virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
 
   mozilla::gfx::IntSize GetSize() { return mSize; }
