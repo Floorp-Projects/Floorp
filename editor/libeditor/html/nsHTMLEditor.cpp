@@ -69,13 +69,14 @@
 
 #include "nsIFrame.h"
 #include "nsIParserService.h"
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "nsTextFragment.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::widget;
 
 // Some utilities to handle annoying overloading of "A" tag for link and named anchor

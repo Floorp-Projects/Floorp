@@ -109,12 +109,12 @@ template<class T> class nsReadingIterator;
 namespace mozilla {
 class ErrorResult;
 class EventListenerManager;
-class Selection;
 
 namespace dom {
 class DocumentFragment;
 class Element;
 class EventTarget;
+class Selection;
 } // namespace dom
 
 namespace layers {
@@ -2086,7 +2086,7 @@ public:
    * @param aOutStartOffset Output start offset
    * @param aOutEndOffset   Output end offset
    */
-  static void GetSelectionInTextControl(mozilla::Selection* aSelection,
+  static void GetSelectionInTextControl(mozilla::dom::Selection* aSelection,
                                         Element* aRoot,
                                         int32_t& aOutStartOffset,
                                         int32_t& aOutEndOffset);

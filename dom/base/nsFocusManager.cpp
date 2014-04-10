@@ -27,7 +27,7 @@
 #include "nsIBaseWindow.h"
 #include "nsViewManager.h"
 #include "nsFrameSelection.h"
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 #include "nsXULPopupManager.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"

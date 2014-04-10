@@ -8,7 +8,7 @@
  * Implementation of selection: nsISelection,nsISelectionPrivate and nsFrameSelection
  */
 
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventStates.h"
@@ -78,6 +78,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "mozilla/dom/SelectionBinding.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //#define DEBUG_TABLE 1
 
@@ -2972,7 +2973,7 @@ nsFrameSelection::DeleteFromDocument()
     return NS_OK;
   }
 
-  nsRefPtr<mozilla::Selection> selection = mDomSelections[index];
+  nsRefPtr<Selection> selection = mDomSelections[index];
   for (int32_t rangeIdx = 0; rangeIdx < selection->GetRangeCount(); ++rangeIdx) {
     nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
     res = range->DeleteContents();
@@ -3023,7 +3024,7 @@ nsFrameSelection::DisconnectFromPresShell()
 #pragma mark -
 #endif
 
-// mozilla::Selection implementation
+// mozilla::dom::Selection implementation
 
 // note: this can return a nil anchor node
 
