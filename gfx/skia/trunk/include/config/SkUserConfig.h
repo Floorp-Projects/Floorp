@@ -188,7 +188,7 @@
  */
 //#define SK_ATOMICS_PLATFORM_H "SkAtomics_xxx.h"
 //#define SK_MUTEX_PLATFORM_H "SkMutex_xxx.h"
-#  if defined(SK_BUILD_FOR_WIN32)
+#  if defined(_MSC_VER)
 #    define SK_ATOMICS_PLATFORM_H "skia/SkAtomics_win.h"
 #  elif defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
 #    define SK_ATOMICS_PLATFORM_H "skia/SkAtomics_android.h"
