@@ -356,6 +356,7 @@ Experiments.Experiments.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback, Ci.nsIObserver]),
 
   init: function () {
+    this._shutdown = false;
     configureLogging();
 
     gExperimentsEnabled = gPrefs.get(PREF_ENABLED, false);
@@ -386,10 +387,19 @@ Experiments.Experiments.prototype = {
   },
 
   /**
+   * Uninitialize this instance.
+   *
+   * This function is susceptible to race conditions. If it is called multiple
+   * times before the previous uninit() has completed or if it is called while
+   * an init() operation is being performed, the object may get in bad state
+   * and/or deadlock could occur.
+   *
    * @return Promise<>
    *         The promise is fulfilled when all pending tasks are finished.
    */
-  uninit: function () {
+  uninit: Task.async(function* () {
+    yield this._loadTask;
+
     if (!this._shutdown) {
       this._stopWatchingAddons();
 
@@ -406,10 +416,11 @@ Experiments.Experiments.prototype = {
 
     this._shutdown = true;
     if (this._mainTask) {
-      return this._mainTask;
+      yield this._mainTask;
     }
-    return Promise.resolve();
-  },
+
+    this._log.info("Completed uninitialization.");
+  }),
 
   _startWatchingAddons: function () {
     AddonManager.addAddonListener(this);

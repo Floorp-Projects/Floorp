@@ -181,7 +181,7 @@ let gTransformation = {
 
       let deferred = Promise.defer();
       batch.push(deferred.promise);
-      let cb = function () deferred.resolve();
+      let cb = deferred.resolve;
 
       if (!cells[aIndex])
         // The site disappeared from the grid, hide it.
@@ -194,8 +194,9 @@ let gTransformation = {
         this._moveSite(aSite, aIndex, {unfreeze: unfreeze, callback: cb});
     }, this);
 
-    let wait = Promise.promised(function () callback && callback());
-    wait.apply(null, batch);
+    if (callback) {
+      Promise.all(batch).then(callback);
+    }
   },
 
   /**
