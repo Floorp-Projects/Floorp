@@ -72,55 +72,63 @@ public class DataReportingNotification {
      * Launch a notification of the data policy, and record notification time and version.
      */
     private static void notifyDataPolicy(Context context, SharedPreferences sharedPrefs) {
-        // Launch main App to launch Data choices when notification is clicked.
-        Intent prefIntent = new Intent(GeckoApp.ACTION_LAUNCH_SETTINGS);
-        prefIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS_NAME);
+        boolean result = false;
+        try {
+            // Launch main App to launch Data choices when notification is clicked.
+            Intent prefIntent = new Intent(GeckoApp.ACTION_LAUNCH_SETTINGS);
+            prefIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS_NAME);
 
-        GeckoPreferences.setResourceToOpen(prefIntent, "preferences_vendor");
-        prefIntent.putExtra(ALERT_NAME_DATAREPORTING_NOTIFICATION, true);
+            GeckoPreferences.setResourceToOpen(prefIntent, "preferences_vendor");
+            prefIntent.putExtra(ALERT_NAME_DATAREPORTING_NOTIFICATION, true);
 
-        PendingIntent contentIntent = PendingIntent.getActivity(context, 0, prefIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        final Resources resources = context.getResources();
+            PendingIntent contentIntent = PendingIntent.getActivity(context, 0, prefIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            final Resources resources = context.getResources();
 
-        // Create and send notification.
-        String notificationTitle = resources.getString(R.string.datareporting_notification_title);
-        String notificationSummary;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-            notificationSummary = resources.getString(R.string.datareporting_notification_action);
-        } else {
-            // Display partial version of Big Style notification for supporting devices.
-            notificationSummary = resources.getString(R.string.datareporting_notification_summary);
+            // Create and send notification.
+            String notificationTitle = resources.getString(R.string.datareporting_notification_title);
+            String notificationSummary;
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                notificationSummary = resources.getString(R.string.datareporting_notification_action);
+            } else {
+                // Display partial version of Big Style notification for supporting devices.
+                notificationSummary = resources.getString(R.string.datareporting_notification_summary);
+            }
+            String notificationAction = resources.getString(R.string.datareporting_notification_action);
+            String notificationBigSummary = resources.getString(R.string.datareporting_notification_summary);
+
+            // Make styled ticker text for display in notification bar.
+            String tickerString = resources.getString(R.string.datareporting_notification_ticker_text);
+            SpannableString tickerText = new SpannableString(tickerString);
+            // Bold the notification title of the ticker text, which is the same string as notificationTitle.
+            tickerText.setSpan(new StyleSpan(Typeface.BOLD), 0, notificationTitle.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+
+            Notification notification = new NotificationCompat.Builder(context)
+                                        .setContentTitle(notificationTitle)
+                                        .setContentText(notificationSummary)
+                                        .setSmallIcon(R.drawable.ic_status_logo)
+                                        .setAutoCancel(true)
+                                        .setContentIntent(contentIntent)
+                                        .setStyle(new NotificationCompat.BigTextStyle()
+                                                                        .bigText(notificationBigSummary))
+                                        .addAction(R.drawable.firefox_settings_alert, notificationAction, contentIntent)
+                                        .setTicker(tickerText)
+                                        .build();
+
+            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            int notificationID = ALERT_NAME_DATAREPORTING_NOTIFICATION.hashCode();
+            notificationManager.notify(notificationID, notification);
+
+            // Record version and notification time.
+            SharedPreferences.Editor editor = sharedPrefs.edit();
+            long now = System.currentTimeMillis();
+            editor.putLong(PREFS_POLICY_NOTIFIED_TIME, now);
+            editor.putInt(PREFS_POLICY_VERSION, DATA_REPORTING_VERSION);
+            editor.commit();
+            result = true;
+        } finally {
+            // We want to track any errors, so record notification outcome.
+            final String notificationEvent = TelemetryContract.Event.POLICY_NOTIFICATION_SUCCESS + result;
+            Telemetry.sendUIEvent(notificationEvent);
         }
-        String notificationAction = resources.getString(R.string.datareporting_notification_action);
-        String notificationBigSummary = resources.getString(R.string.datareporting_notification_summary);
-
-        // Make styled ticker text for display in notification bar.
-        String tickerString = resources.getString(R.string.datareporting_notification_ticker_text);
-        SpannableString tickerText = new SpannableString(tickerString);
-        // Bold the notification title of the ticker text, which is the same string as notificationTitle.
-        tickerText.setSpan(new StyleSpan(Typeface.BOLD), 0, notificationTitle.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
-
-        Notification notification = new NotificationCompat.Builder(context)
-                                    .setContentTitle(notificationTitle)
-                                    .setContentText(notificationSummary)
-                                    .setSmallIcon(R.drawable.ic_status_logo)
-                                    .setAutoCancel(true)
-                                    .setContentIntent(contentIntent)
-                                    .setStyle(new NotificationCompat.BigTextStyle()
-                                                                    .bigText(notificationBigSummary))
-                                    .addAction(R.drawable.firefox_settings_alert, notificationAction, contentIntent)
-                                    .setTicker(tickerText)
-                                    .build();
-
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        int notificationID = ALERT_NAME_DATAREPORTING_NOTIFICATION.hashCode();
-        notificationManager.notify(notificationID, notification);
-
-        // Record version and notification time.
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        long now = System.currentTimeMillis();
-        editor.putLong(PREFS_POLICY_NOTIFIED_TIME, now);
-        editor.putInt(PREFS_POLICY_VERSION, DATA_REPORTING_VERSION);
-        editor.commit();
     }
 }
