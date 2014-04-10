@@ -314,6 +314,32 @@ is(e.newURL, "new", "newURL should be 'new'");
 document.dispatchEvent(e);
 is(receivedEvent, e, "Wrong event!");
 
+// InputEvent
+
+e = new InputEvent("hello");
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.detail, 0, "detail should be 0");
+ok(!e.isComposing, "isComposing should be false");
+
+e = new InputEvent("hi!", { bubbles: true, detail: 5, isComposing: false });
+is(e.type, "hi!", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.detail, 5, "detail should be 5");
+ok(!e.isComposing, "isComposing should be false");
+
+e = new InputEvent("hi!", { cancelable: true, detail: 0, isComposing: true });
+is(e.type, "hi!", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.detail, 0, "detail should be 0");
+ok(e.isComposing, "isComposing should be true");
+
 // PageTransitionEvent
 
 try {

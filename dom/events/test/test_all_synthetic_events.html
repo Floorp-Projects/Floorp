@@ -183,6 +183,10 @@ const kEventConstructors = {
                                                          return new IDBVersionChangeEvent(aName, aProps);
                                                        },
                                              },
+  InputEvent:                                { create: function (aName, aProps) {
+                                                         return new InputEvent(aName, aProps);
+                                                       },
+                                             },
   KeyEvent:                                  { create: function (aName, aProps) {
                                                          var e = document.createEvent("keyboardevent");
                                                          e.initKeyEvent(aName, aProps.bubbles, aProps.cancelable,
