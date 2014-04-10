@@ -18,7 +18,7 @@
 #include "mozilla/Attributes.h"
 #include "TrackUnionStream.h"
 #include "ImageContainer.h"
-#include "AudioChannelCommon.h"
+#include "AudioChannelService.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "AudioNodeExternalInputStream.h"
@@ -811,7 +811,9 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
         audioOutputStream->mStream = new AudioStream();
         // XXX for now, allocate stereo output. But we need to fix this to
         // match the system's ideal channel configuration.
-        audioOutputStream->mStream->Init(2, tracks->GetRate(), AUDIO_CHANNEL_NORMAL, AudioStream::LowLatency);
+        audioOutputStream->mStream->Init(2, tracks->GetRate(),
+                                         AudioChannel::Normal,
+                                         AudioStream::LowLatency);
         audioOutputStream->mTrackID = tracks->GetID();
 
         LogLatency(AsyncLatencyLogger::AudioStreamCreate,

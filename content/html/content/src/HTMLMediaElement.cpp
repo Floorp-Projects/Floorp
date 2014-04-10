@@ -2004,7 +2004,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     mCORSMode(CORS_NONE),
     mHasAudio(false),
     mDownloadSuspendedByCache(false),
-    mAudioChannelType(AUDIO_CHANNEL_NORMAL),
     mAudioChannelFaded(false),
     mPlayingThroughTheAudioChannel(false)
 {
@@ -2016,6 +2015,8 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     gMediaElementEventsLog = PR_NewLogModule("nsMediaElementEvents");
   }
 #endif
+
+  mAudioChannel = AudioChannelService::GetDefaultAudioChannel();
 
   mPaused.SetOuter(this);
 
@@ -2282,18 +2283,6 @@ bool HTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
     { 0 }
   };
 
-  // Mappings from 'mozaudiochannel' attribute strings to an enumeration.
-  static const nsAttrValue::EnumTable kMozAudioChannelAttributeTable[] = {
-    { "normal",             AUDIO_CHANNEL_NORMAL },
-    { "content",            AUDIO_CHANNEL_CONTENT },
-    { "notification",       AUDIO_CHANNEL_NOTIFICATION },
-    { "alarm",              AUDIO_CHANNEL_ALARM },
-    { "telephony",          AUDIO_CHANNEL_TELEPHONY },
-    { "ringer",             AUDIO_CHANNEL_RINGER },
-    { "publicnotification", AUDIO_CHANNEL_PUBLICNOTIFICATION },
-    { 0 }
-  };
-
   if (aNamespaceID == kNameSpaceID_None) {
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       return true;
@@ -2307,18 +2296,21 @@ bool HTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
     }
 
     if (aAttribute == nsGkAtoms::mozaudiochannel) {
-      bool parsed = aResult.ParseEnumValue(aValue, kMozAudioChannelAttributeTable, false,
-                                           &kMozAudioChannelAttributeTable[0]);
+      const nsAttrValue::EnumTable* table =
+        AudioChannelService::GetAudioChannelTable();
+      MOZ_ASSERT(table);
+
+      bool parsed = aResult.ParseEnumValue(aValue, table, false, &table[0]);
       if (!parsed) {
         return false;
       }
 
-      AudioChannelType audioChannelType = static_cast<AudioChannelType>(aResult.GetEnumValue());
+      AudioChannel audioChannel = static_cast<AudioChannel>(aResult.GetEnumValue());
 
-      if (audioChannelType != mAudioChannelType &&
+      if (audioChannel != mAudioChannel &&
           !mDecoder &&
           CheckAudioChannelPermissions(aValue)) {
-        mAudioChannelType = audioChannelType;
+        mAudioChannel = audioChannel;
       }
 
       return true;
@@ -2604,7 +2596,7 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // Tell the decoder about its MediaResource now so things like principals are
   // available immediately.
   mDecoder->SetResource(aStream);
-  mDecoder->SetAudioChannelType(mAudioChannelType);
+  aDecoder->SetAudioChannel(mAudioChannel);
   mDecoder->SetAudioCaptured(mAudioCaptured);
   mDecoder->SetVolume(mMuted ? 0.0 : mVolume);
   mDecoder->SetPreservesPitch(mPreservesPitch);
@@ -3846,12 +3838,14 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
       }
       nsCOMPtr<nsIDOMHTMLVideoElement> video = do_QueryObject(this);
       // Use a weak ref so the audio channel agent can't leak |this|.
-      if (AUDIO_CHANNEL_NORMAL == mAudioChannelType && video) {
+      if (AudioChannel::Normal == mAudioChannel && video) {
         mAudioChannelAgent->InitWithVideo(OwnerDoc()->GetWindow(),
-                                          mAudioChannelType, this, true);
+                                          static_cast<int32_t>(mAudioChannel),
+                                          this, true);
       } else {
         mAudioChannelAgent->InitWithWeakCallback(OwnerDoc()->GetWindow(),
-                                                 mAudioChannelType, this);
+                                                 static_cast<int32_t>(mAudioChannel),
+                                                 this);
       }
       mAudioChannelAgent->SetVisibilityState(!OwnerDoc()->Hidden());
     }
@@ -3929,33 +3923,6 @@ HTMLMediaElement::GetOrCreateTextTrackManager()
     mTextTrackManager = new TextTrackManager(this);
   }
   return mTextTrackManager;
-}
-
-AudioChannel
-HTMLMediaElement::MozAudioChannelType() const
-{
-  switch (mAudioChannelType) {
-    case AUDIO_CHANNEL_CONTENT:
-      return AudioChannel::Content;
-
-    case AUDIO_CHANNEL_NOTIFICATION:
-      return AudioChannel::Notification;
-
-    case AUDIO_CHANNEL_ALARM:
-      return AudioChannel::Alarm;
-
-    case AUDIO_CHANNEL_TELEPHONY:
-      return AudioChannel::Telephony;
-
-    case AUDIO_CHANNEL_RINGER:
-      return AudioChannel::Ringer;
-
-    case AUDIO_CHANNEL_PUBLICNOTIFICATION:
-      return AudioChannel::Publicnotification;
-
-    default:
-      return AudioChannelService::GetDefaultAudioChannel();
-  }
 }
 
 void

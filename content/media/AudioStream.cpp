@@ -110,25 +110,25 @@ bool AudioStream::sCubebLatencyPrefSet;
 }
 
 #if defined(__ANDROID__) && defined(MOZ_B2G)
-static cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannelType aType)
+static cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel)
 {
-  switch(aType) {
-    case dom::AUDIO_CHANNEL_NORMAL:
+  switch(aChannel) {
+    case dom::AudioChannel::Normal:
       return CUBEB_STREAM_TYPE_SYSTEM;
-    case dom::AUDIO_CHANNEL_CONTENT:
+    case dom::AudioChannel::Content:
       return CUBEB_STREAM_TYPE_MUSIC;
-    case dom::AUDIO_CHANNEL_NOTIFICATION:
+    case dom::AudioChannel::Notification:
       return CUBEB_STREAM_TYPE_NOTIFICATION;
-    case dom::AUDIO_CHANNEL_ALARM:
+    case dom::AudioChannel::Alarm:
       return CUBEB_STREAM_TYPE_ALARM;
-    case dom::AUDIO_CHANNEL_TELEPHONY:
+    case dom::AudioChannel::Telephony:
       return CUBEB_STREAM_TYPE_VOICE_CALL;
-    case dom::AUDIO_CHANNEL_RINGER:
+    case dom::AudioChannel::Ringer:
       return CUBEB_STREAM_TYPE_RING;
     // Currently Android openSLES library doesn't support FORCE_AUDIBLE yet.
-    case dom::AUDIO_CHANNEL_PUBLICNOTIFICATION:
+    case dom::AudioChannel::Publicnotification:
     default:
-      NS_ERROR("The value of AudioChannelType is invalid");
+      NS_ERROR("The value of AudioChannel is invalid");
       return CUBEB_STREAM_TYPE_MAX;
   }
 }
@@ -349,7 +349,7 @@ WriteDumpFile(FILE* aDumpFile, AudioStream* aStream, uint32_t aFrames,
 
 nsresult
 AudioStream::Init(int32_t aNumChannels, int32_t aRate,
-                  const dom::AudioChannelType aAudioChannelType,
+                  const dom::AudioChannel aAudioChannel,
                   LatencyRequest aLatencyRequest)
 {
   cubeb* cubebContext = GetCubebContext();
@@ -372,7 +372,7 @@ AudioStream::Init(int32_t aNumChannels, int32_t aRate,
   params.channels = mOutChannels;
 #if defined(__ANDROID__)
 #if defined(MOZ_B2G)
-  params.stream_type = ConvertChannelToCubebType(aAudioChannelType);
+  params.stream_type = ConvertChannelToCubebType(aAudioChannel);
 #else
   params.stream_type = CUBEB_STREAM_TYPE_MUSIC;
 #endif

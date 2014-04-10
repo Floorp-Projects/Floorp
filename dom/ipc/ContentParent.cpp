@@ -1899,7 +1899,7 @@ ContentParent::RecvFirstIdle()
 }
 
 bool
-ContentParent::RecvAudioChannelGetState(const AudioChannelType& aType,
+ContentParent::RecvAudioChannelGetState(const AudioChannel& aChannel,
                                         const bool& aElementHidden,
                                         const bool& aElementWasHidden,
                                         AudioChannelState* aState)
@@ -1908,33 +1908,33 @@ ContentParent::RecvAudioChannelGetState(const AudioChannelType& aType,
         AudioChannelService::GetAudioChannelService();
     *aState = AUDIO_CHANNEL_STATE_NORMAL;
     if (service) {
-        *aState = service->GetStateInternal(aType, mChildID,
+        *aState = service->GetStateInternal(aChannel, mChildID,
                                             aElementHidden, aElementWasHidden);
     }
     return true;
 }
 
 bool
-ContentParent::RecvAudioChannelRegisterType(const AudioChannelType& aType,
+ContentParent::RecvAudioChannelRegisterType(const AudioChannel& aChannel,
                                             const bool& aWithVideo)
 {
     nsRefPtr<AudioChannelService> service =
         AudioChannelService::GetAudioChannelService();
     if (service) {
-        service->RegisterType(aType, mChildID, aWithVideo);
+        service->RegisterType(aChannel, mChildID, aWithVideo);
     }
     return true;
 }
 
 bool
-ContentParent::RecvAudioChannelUnregisterType(const AudioChannelType& aType,
+ContentParent::RecvAudioChannelUnregisterType(const AudioChannel& aChannel,
                                               const bool& aElementHidden,
                                               const bool& aWithVideo)
 {
     nsRefPtr<AudioChannelService> service =
         AudioChannelService::GetAudioChannelService();
     if (service) {
-        service->UnregisterType(aType, aElementHidden, mChildID, aWithVideo);
+        service->UnregisterType(aChannel, aElementHidden, mChildID, aWithVideo);
     }
     return true;
 }
@@ -1951,13 +1951,13 @@ ContentParent::RecvAudioChannelChangedNotification()
 }
 
 bool
-ContentParent::RecvAudioChannelChangeDefVolChannel(
-  const AudioChannelType& aType, const bool& aHidden)
+ContentParent::RecvAudioChannelChangeDefVolChannel(const int32_t& aChannel,
+                                                   const bool& aHidden)
 {
     nsRefPtr<AudioChannelService> service =
         AudioChannelService::GetAudioChannelService();
     if (service) {
-       service->SetDefaultVolumeControlChannelInternal(aType,
+       service->SetDefaultVolumeControlChannelInternal(aChannel,
                                                        aHidden, mChildID);
     }
     return true;
