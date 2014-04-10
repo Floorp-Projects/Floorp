@@ -1516,9 +1516,9 @@ nsDocShell::LoadURI(nsIURI * aURI,
     // We need an owner (a referring principal).
     //
     // If ownerIsExplicit is not set there are 4 possibilities:
-    // (1) If the system principal was passed in and we're a typeContent
-    //     docshell, inherit the principal from the current document
-    //     instead.
+    // (1) If the system principal or an expanded principal was passed
+    //     in and we're a typeContent docshell, inherit the principal
+    //     from the current document instead.
     // (2) In all other cases when the principal passed in is not null,
     //     use that principal.
     // (3) If the caller has allowed inheriting from the current document,
@@ -1530,8 +1530,8 @@ nsDocShell::LoadURI(nsIURI * aURI,
     //     created later from the channel's internal data.
     //
     // If ownerIsExplicit *is* set, there are 4 possibilities
-    // (1) If the system principal was passed in and we're a typeContent
-    //     docshell, return an error.
+    // (1) If the system principal or an expanded principal was passed in
+    //     and we're a typeContent docshell, return an error.
     // (2) In all other cases when the principal passed in is not null,
     //     use that principal.
     // (3) If the caller has allowed inheriting from the current document,
@@ -1553,8 +1553,8 @@ nsDocShell::LoadURI(nsIURI * aURI,
         bool isSystem;
         rv = secMan->IsSystemPrincipal(ownerPrincipal, &isSystem);
         NS_ENSURE_SUCCESS(rv, rv);
-
-        if (isSystem) {
+        nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(ownerPrincipal);
+        if (isSystem || ep) {
             if (ownerIsExplicit) {
                 return NS_ERROR_DOM_SECURITY_ERR;
             }
