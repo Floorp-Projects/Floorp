@@ -72,6 +72,7 @@ let touchIds = {};
 let multiLast = {};
 let lastCoordinates = null;
 let isTap = false;
+let scrolling = false;
 // whether to send mouse event
 let mouseEventsOnly = false;
 
@@ -79,6 +80,7 @@ Cu.import("resource://gre/modules/Log.jsm");
 let logger = Log.repository.getLogger("Marionette");
 logger.info("loaded marionette-listener.js");
 let modalHandler = function() {
+  // This gets called on the system app only since it receives the mozbrowserprompt event
   sendSyncMessage("Marionette:switchedToFrame", { frameValue: null, storePrevious: true });
   let isLocal = sendSyncMessage("MarionetteFrame:handleModal", {})[0].value;
   if (isLocal) {
@@ -95,14 +97,32 @@ let modalHandler = function() {
  */
 function registerSelf() {
   let msg = {value: winUtil.outerWindowID, href: content.location.href};
+  // register will have the ID and a boolean describing if this is the main process or not
   let register = sendSyncMessage("Marionette:register", msg);
 
   if (register[0]) {
-    listenerId = register[0].id;
+    listenerId = register[0][0].id;
+    // check if we're the main process
+    if (register[0][1] == true) {
+      addMessageListener("MarionetteMainListener:emitTouchEvent", emitTouchEventForIFrame);
+    }
     importedScripts = FileUtils.getDir('TmpD', [], false);
     importedScripts.append('marionetteContentScripts');
     startListeners();
   }
+}
+
+function emitTouchEventForIFrame(message) {
+  let message = message.json;
+  let frames = curFrame.document.getElementsByTagName("iframe");
+  let iframe = frames[message.index];
+  let identifier = touchId = nextTouchId++;
+  let tabParent = iframe.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.tabParent;
+  tabParent.injectTouchEvent(message.type, [identifier],
+                             [message.clientX], [message.clientY],
+                             [message.radiusX], [message.radiusY],
+                             [message.rotationAngle], [message.force],
+                             1, 0);
 }
 
 /**
@@ -663,6 +683,23 @@ function emitTouchEvent(type, touch) {
   if (!wasInterrupted()) {
     let loggingInfo = "emitting Touch event of type " + type + " to element with id: " + touch.target.id + " and tag name: " + touch.target.tagName + " at coordinates (" + touch.clientX + ", " + touch.clientY + ") relative to the viewport";
     dumpLog(loggingInfo);
+    var docShell = curFrame.document.defaultView.
+                   QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                   getInterface(Components.interfaces.nsIWebNavigation).
+                   QueryInterface(Components.interfaces.nsIDocShell);
+    if (docShell.asyncPanZoomEnabled && scrolling) {
+      // if we're in APZ and we're scrolling, we must use injectTouchEvent to dispatch our touchmove events
+      let index = sendSyncMessage("MarionetteFrame:getCurrentFrameId");
+      // only call emitTouchEventForIFrame if we're inside an iframe.
+      if (index != null) {
+        sendSyncMessage("Marionette:emitTouchEvent", {index: index, type: type, id: touch.identifier,
+                                                      clientX: touch.clientX, clientY: touch.clientY,
+                                                      radiusX: touch.radiusX, radiusY: touch.radiusY,
+                                                      rotation: touch.rotationAngle, force: touch.force});
+        return;
+      }
+    }
+    // we get here if we're not in asyncPacZoomEnabled land, or if we're the main process
     /*
     Disabled per bug 888303
     marionetteLogObj.log(loggingInfo, "TRACE");
@@ -943,6 +980,10 @@ function actions(chain, touchId, command_id, i) {
         sendError("Invalid Command: press cannot follow an active touch event", 500, null, command_id);
         return;
       }
+      // look ahead to check if we're scrolling. Needed for APZ touch dispatching.
+      if ((i != chain.length) && (chain[i][0].indexOf('move') !== -1)) {
+        scrolling = true;
+      }
       el = elementManager.getKnownElement(pack[1], curFrame);
       c = coordinates(el, pack[2], pack[3]);
       touchId = generateEvents('press', c.x, c.y, null, el);
@@ -951,6 +992,7 @@ function actions(chain, touchId, command_id, i) {
     case 'release':
       generateEvents('release', lastCoordinates[0], lastCoordinates[1], touchId);
       actions(chain, null, command_id, i);
+      scrolling =  false;
       break;
     case 'move':
       el = elementManager.getKnownElement(pack[1], curFrame);
@@ -984,6 +1026,7 @@ function actions(chain, touchId, command_id, i) {
     case 'cancel':
       generateEvents('cancel', lastCoordinates[0], lastCoordinates[1], touchId);
       actions(chain, touchId, command_id, i);
+      scrolling = false;
       break;
     case 'longPress':
       generateEvents('contextmenu', lastCoordinates[0], lastCoordinates[1], touchId);
