@@ -90,6 +90,31 @@ ToJSValue(JSContext* aCx,
   return true;
 }
 
+// accept floating point types
+inline bool
+ToJSValue(JSContext* aCx,
+          float aArgument,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  // Make sure we're called in a compartment
+  MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
+
+  aValue.setNumber(aArgument);
+  return true;
+}
+
+inline bool
+ToJSValue(JSContext* aCx,
+          double aArgument,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  // Make sure we're called in a compartment
+  MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
+
+  aValue.setNumber(aArgument);
+  return true;
+}
+
 // Accept objects that inherit from nsWrapperCache and nsISupports (e.g. most
 // DOM objects).
 template <class T>
@@ -150,10 +175,19 @@ ToJSValue(JSContext* aCx,
 }
 
 // Accept nsRefPtr/nsCOMPtr
-template <template <typename> class SmartPtr, typename T>
+template <typename T>
 bool
 ToJSValue(JSContext* aCx,
-          const SmartPtr<T>& aArgument,
+          const nsCOMPtr<T>& aArgument,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  return ToJSValue(aCx, *aArgument.get(), aValue);
+}
+
+template <typename T>
+bool
+ToJSValue(JSContext* aCx,
+          const nsRefPtr<T>& aArgument,
           JS::MutableHandle<JS::Value> aValue)
 {
   return ToJSValue(aCx, *aArgument.get(), aValue);
@@ -163,18 +197,19 @@ ToJSValue(JSContext* aCx,
 template <typename T>
 bool
 ToJSValue(JSContext* aCx,
-          const nsTArray<T>& aArgument,
+          T* aArguments,
+          size_t aLength,
           JS::MutableHandle<JS::Value> aValue)
 {
   // Make sure we're called in a compartment
   MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
 
   JS::AutoValueVector v(aCx);
-  if (!v.resize(aArgument.Length())) {
+  if (!v.resize(aLength)) {
     return false;
   }
-  for (uint32_t i = 0; i < aArgument.Length(); ++i) {
-    if (!ToJSValue(aCx, aArgument[i], v.handleAt(i))) {
+  for (size_t i = 0; i < aLength; ++i) {
+    if (!ToJSValue(aCx, aArguments[i], v.handleAt(i))) {
       return false;
     }
   }
@@ -184,6 +219,35 @@ ToJSValue(JSContext* aCx,
   }
   aValue.setObject(*arrayObj);
   return true;
+}
+
+template <typename T>
+bool
+ToJSValue(JSContext* aCx,
+          const nsTArray<T>& aArgument,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  return ToJSValue(aCx, aArgument.Elements(),
+                   aArgument.Length(), aValue);
+}
+
+template <typename T>
+bool
+ToJSValue(JSContext* aCx,
+          const FallibleTArray<T>& aArgument,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  return ToJSValue(aCx, aArgument.Elements(),
+                   aArgument.Length(), aValue);
+}
+
+template <typename T, int N>
+bool
+ToJSValue(JSContext* aCx,
+          const T(&aArgument)[N],
+          JS::MutableHandle<JS::Value> aValue)
+{
+  return ToJSValue(aCx, aArgument, N, aValue);
 }
 
 } // namespace dom

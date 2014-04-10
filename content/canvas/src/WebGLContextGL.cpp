@@ -44,6 +44,7 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ImageData.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Endian.h"
 
 using namespace mozilla;
@@ -1729,15 +1730,16 @@ WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
         if (unitSize == 1) {
             return JS::BooleanValue(iv[0] ? true : false);
         } else {
-            JS::AutoValueArray<16> uv(cx);
+            bool uv[16];
             for (int k = 0; k < unitSize; k++)
-                uv[k].setBoolean(iv[k]);
-            JSObject* obj = JS_NewArrayObject(cx, JS::HandleValueArray::subarray(uv, 0, unitSize));
-            if (!obj) {
+                uv[k] = iv[k];
+            JS::Rooted<JS::Value> val(cx);
+            // Be careful: we don't want to convert all of |uv|!
+            if (!ToJSValue(cx, uv, unitSize, &val)) {
                 ErrorOutOfMemory("getUniform: out of memory");
                 return JS::NullValue();
             }
-            return JS::ObjectOrNullValue(obj);
+            return val;
         }
     }
 
