@@ -30,6 +30,8 @@ using namespace mozilla::layers;
  * image formats.
  */
 
+namespace mozilla {
+namespace layers {
 
 // fills the surface with values betwee 0 and 100.
 void SetupSurface(gfxImageSurface* surface) {
@@ -202,6 +204,9 @@ void TestTextureClientYCbCr(TextureClient* client, PlanarYCbCrData& ycbcrData) {
   AssertYCbCrSurfacesEqual(&ycbcrData, &data);
   host->Unlock();
 }
+
+} // namespace
+} // namespace
 
 TEST(Layers, TextureSerialization) {
   // the test is run on all the following image formats

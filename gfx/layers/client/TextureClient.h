@@ -45,6 +45,7 @@ class Image;
 class PTextureChild;
 class TextureChild;
 class BufferTextureClient;
+class TextureClient;
 
 /**
  * TextureClient is the abstraction that allows us to share data between the
@@ -269,8 +270,6 @@ public:
 
   virtual bool IsAllocated() const = 0;
 
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
-
   virtual gfx::IntSize GetSize() const = 0;
 
   /**
@@ -375,6 +374,16 @@ protected:
    */
   virtual TextureClientData* DropTextureData() = 0;
 
+  /**
+   * Should only be called *once* per texture, in TextureClient::InitIPDLActor.
+   * Some texture implementations rely on the fact that the descriptor will be
+   * deserialized.
+   * Calling ToSurfaceDescriptor again after it has already returned true,
+   * or never constructing a TextureHost with aDescriptor may result in a memory
+   * leak (see CairoTextureClientD3D9 for example).
+   */
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
+
   void AddFlags(TextureFlags  aFlags)
   {
     MOZ_ASSERT(!IsSharedWithCompositor());
@@ -388,6 +397,8 @@ protected:
   FenceHandle mReleaseFenceHandle;
 
   friend class TextureChild;
+  friend void TestTextureClientSurface(TextureClient*, gfxImageSurface*);
+  friend void TestTextureClientYCbCr(TextureClient*, PlanarYCbCrData&);
 };
 
 /**
@@ -407,8 +418,6 @@ public:
   virtual ~BufferTextureClient();
 
   virtual bool IsAllocated() const = 0;
-
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
 
   virtual uint8_t* GetBuffer() const = 0;
 
