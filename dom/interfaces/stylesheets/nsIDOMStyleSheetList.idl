@@ -17,5 +17,6 @@
 interface nsIDOMStyleSheetList : nsISupports
 {
   readonly attribute unsigned long    length;
+  [binaryname(SlowItem)]
   nsIDOMStyleSheet         item(in unsigned long index);
 };
