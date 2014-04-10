@@ -1303,6 +1303,7 @@ MarionetteServerConnection.prototype = {
     let curWindow = this.getCurrentWindow();
     let checkLoad = function() {
       let errorRegex = /about:.+(error)|(blocked)\?/;
+      let curWindow = this.getCurrentWindow();
       if (curWindow.document.readyState == "complete") {
         this.sendOk(command_id);
         return;
@@ -1325,12 +1326,13 @@ MarionetteServerConnection.prototype = {
         return;
       }
       if (aRequest.parameters.element != undefined) {
-        if (this.curBrowser.elementManager.seenItems[aRequest.parameters.element] != undefined) {
+        if (this.curBrowser.elementManager.seenItems[aRequest.parameters.element]) {
           let wantedFrame = this.curBrowser.elementManager.getKnownElement(aRequest.parameters.element, curWindow); //HTMLIFrameElement
-          let numFrames = curWindow.frames.length;
+          let frames = curWindow.document.getElementsByTagName("iframe");
+          let numFrames = frames.length;
           for (let i = 0; i < numFrames; i++) {
-            if (curWindow.frames[i].frameElement == wantedFrame) {
-              curWindow = curWindow.frames[i];
+            if (XPCNativeWrapper(frames[i]) == XPCNativeWrapper(wantedFrame)) {
+              curWindow = frames[i].contentWindow;
               this.curFrame = curWindow;
               if (aRequest.parameters.focus) {
                 this.curFrame.focus();
@@ -1344,30 +1346,32 @@ MarionetteServerConnection.prototype = {
     switch(typeof(aRequest.parameters.id)) {
       case "string" :
         let foundById = null;
-        let numFrames = curWindow.frames.length;
+        let frames = curWindow.document.getElementsByTagName("iframe");
+        let numFrames = frames.length;
         for (let i = 0; i < numFrames; i++) {
           //give precedence to name
-          let frame = curWindow.frames[i];
-          let frameElement = frame.frameElement;
-          if (frame.name == aRequest.parameters.id) {
+          let frame = frames[i];
+          if (frame.getAttribute("name") == aRequest.parameters.id) {
             foundFrame = i;
+            curWindow = frame.contentWindow;
             break;
-          } else if ((foundById == null) && (frameElement.id == aRequest.parameters.id)) {
+          } else if ((foundById == null) && (frame.id == aRequest.parameters.id)) {
             foundById = i;
           }
         }
         if ((foundFrame == null) && (foundById != null)) {
           foundFrame = foundById;
+          curWindow = frames[foundById].contentWindow;
         }
         break;
       case "number":
         if (curWindow.frames[aRequest.parameters.id] != undefined) {
           foundFrame = aRequest.parameters.id;
+          curWindow = curWindow.frames[foundFrame].frameElement.contentWindow;
         }
         break;
       }
       if (foundFrame != null) {
-        curWindow = curWindow.frames[foundFrame];
         this.curFrame = curWindow;
         if (aRequest.parameters.focus) {
           this.curFrame.focus();
