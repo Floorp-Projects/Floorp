@@ -563,12 +563,12 @@ WrapNative(JSContext *cx, nsISupports *native,
     return NS_OK;
   }
 
-  JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
-  JSObject *wrapper = xpc_FastGetCachedWrapper(cache, scope, vp);
+  JSObject *wrapper = xpc_FastGetCachedWrapper(cx, cache, vp);
   if (wrapper) {
     return NS_OK;
   }
 
+  JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
   return nsDOMClassInfo::XPConnect()->WrapNativeToJSVal(cx, scope, native,
                                                         cache, aIID,
                                                         aAllowWrapping, vp);

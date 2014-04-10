@@ -1167,7 +1167,8 @@ WrapObject(JSContext* cx, JS::Handle<JSObject*> scope, T* p,
            nsWrapperCache* cache, const nsIID* iid,
            JS::MutableHandle<JS::Value> rval)
 {
-  if (xpc_FastGetCachedWrapper(cache, scope, rval))
+  MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
+  if (xpc_FastGetCachedWrapper(cx, cache, rval))
     return true;
   qsObjectHelper helper(p, cache);
   return XPCOMObjectToJsval(cx, scope, helper, iid, true, rval);
