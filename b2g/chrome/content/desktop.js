@@ -52,6 +52,10 @@ function checkDebuggerPort() {
   // DebuggerServer.openListener detects that it isn't a file path (string),
   // and starts listening on the tcp port given here as command line argument.
 
+  if (!window.arguments) {
+    return;
+  }
+
   // Get the command line arguments that were passed to the b2g client
   let args = window.arguments[0].QueryInterface(Ci.nsICommandLine);
 
