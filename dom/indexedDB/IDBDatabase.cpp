@@ -276,6 +276,14 @@ IDBDatabase::Invalidate()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  InvalidateInternal(/* aIsDead */ false);
+}
+
+void
+IDBDatabase::InvalidateInternal(bool aIsDead)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   if (IsInvalidated()) {
     return;
   }
@@ -293,7 +301,13 @@ IDBDatabase::Invalidate()
     QuotaManager::CancelPromptsForWindow(owner);
   }
 
-  DatabaseInfo::Remove(mDatabaseId);
+  // We want to forcefully remove in the child when the parent has invalidated
+  // us in IPC mode because the database might no longer exist.
+  // We don't want to forcefully remove in the parent when a child dies since
+  // other child processes may be using the referenced DatabaseInfo.
+  if (!aIsDead) {
+    DatabaseInfo::Remove(mDatabaseId);
+  }
 
   // And let the child process know as well.
   if (mActorParent) {
@@ -332,9 +346,7 @@ IDBDatabase::CloseInternal(bool aIsDead)
       mDatabaseInfo.swap(previousInfo);
 
       if (!aIsDead) {
-        nsRefPtr<DatabaseInfo> clonedInfo = previousInfo->Clone();
-
-        clonedInfo.swap(mDatabaseInfo);
+        mDatabaseInfo = previousInfo->Clone();
       }
     }
 
