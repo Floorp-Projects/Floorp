@@ -1925,10 +1925,7 @@ AndroidBridge::RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrame
 {
     ALOG_BRIDGE("AndroidBridge::RequestContentRepaint");
 
-    CSSToScreenScale resolution = aFrameMetrics.GetZoom();
-    ScreenRect dp = (aFrameMetrics.mDisplayPort + aFrameMetrics.GetScrollOffset()) * resolution;
-
-    mNativePanZoomController->RequestContentRepaintWrapper(dp.x, dp.y, dp.width, dp.height, resolution.scale);
+    // FIXME implement this
 }
 
 void
