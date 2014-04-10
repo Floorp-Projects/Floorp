@@ -8,8 +8,5 @@ CPP_UNIT_TESTS += [
     'TestAudioChannelService.cpp',
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    DEFINES['NOMINMAX'] = True
-
 FAIL_ON_WARNINGS = True
 

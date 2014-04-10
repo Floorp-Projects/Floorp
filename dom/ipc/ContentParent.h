@@ -490,20 +490,20 @@ private:
 
     virtual bool RecvFirstIdle() MOZ_OVERRIDE;
 
-    virtual bool RecvAudioChannelGetState(const AudioChannel& aChannel,
+    virtual bool RecvAudioChannelGetState(const AudioChannelType& aType,
                                           const bool& aElementHidden,
                                           const bool& aElementWasHidden,
                                           AudioChannelState* aValue) MOZ_OVERRIDE;
 
-    virtual bool RecvAudioChannelRegisterType(const AudioChannel& aChannel,
+    virtual bool RecvAudioChannelRegisterType(const AudioChannelType& aType,
                                               const bool& aWithVideo) MOZ_OVERRIDE;
-    virtual bool RecvAudioChannelUnregisterType(const AudioChannel& aChannel,
+    virtual bool RecvAudioChannelUnregisterType(const AudioChannelType& aType,
                                                 const bool& aElementHidden,
                                                 const bool& aWithVideo) MOZ_OVERRIDE;
 
     virtual bool RecvAudioChannelChangedNotification() MOZ_OVERRIDE;
 
-    virtual bool RecvAudioChannelChangeDefVolChannel(const int32_t& aChannel,
+    virtual bool RecvAudioChannelChangeDefVolChannel(const AudioChannelType& aType,
                                                      const bool& aHidden) MOZ_OVERRIDE;
 
     virtual bool RecvBroadcastVolume(const nsString& aVolumeName) MOZ_OVERRIDE;

@@ -496,11 +496,7 @@ public:
 
   double MozFragmentEnd();
 
-  AudioChannel MozAudioChannelType() const
-  {
-    return mAudioChannel;
-  }
-
+  AudioChannel MozAudioChannelType() const;
   void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
 
   TextTrackList* TextTracks();
@@ -1126,8 +1122,8 @@ protected:
   // True if the media's channel's download has been suspended.
   bool mDownloadSuspendedByCache;
 
-  // Audio Channel.
-  AudioChannel mAudioChannel;
+  // Audio Channel Type.
+  AudioChannelType mAudioChannelType;
 
   // The audio channel has been faded.
   bool mAudioChannelFaded;
