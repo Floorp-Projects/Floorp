@@ -10,7 +10,9 @@
 
 Cu.import("resource://testing-common/httpd.js");
 
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 
 // We need the profile directory so the test harness will clean up our test
 // files.
@@ -31,6 +33,8 @@ const SAFE_OUTPUT_STREAM_CONTRACT_ID = "@mozilla.org/network/safe-file-output-st
  */
 function getFileContents(aFile)
 {
+  "use strict";
+
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
                 createInstance(Ci.nsIFileInputStream);
   fstream.init(aFile, -1, 0, 0);
@@ -44,6 +48,7 @@ function getFileContents(aFile)
   cstream.close();
   return string.value;
 }
+
 
 /**
  * Tests asynchronously writing a file using NetUtil.asyncCopy.
@@ -89,6 +94,100 @@ function async_write_file(aContractId, aDeferOpen)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests
+
+// Test NetUtil.asyncCopy for all possible buffering scenarios
+function test_async_copy()
+{
+  // Create a data sample
+  function make_sample(text) {
+    let data = [];
+    for (let i = 0; i <= 100; ++i) {
+      data.push(text);
+    }
+    return data.join();
+  }
+
+  // Create an input buffer holding some data
+  function make_input(isBuffered, data) {
+    if (isBuffered) {
+      // String input streams are buffered
+      let istream = Cc["@mozilla.org/io/string-input-stream;1"].
+        createInstance(Ci.nsIStringInputStream);
+      istream.setData(data, data.length);
+      return istream;
+    }
+
+    // File input streams are not buffered, so let's create a file
+    let file = Cc["@mozilla.org/file/directory_service;1"].
+      getService(Ci.nsIProperties).
+      get("ProfD", Ci.nsIFile);
+    file.append("NetUtil-asyncFetch-test-file.tmp");
+    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+
+    let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
+      createInstance(Ci.nsIFileOutputStream);
+    ostream.init(file, -1, -1, 0);
+    ostream.write(data, data.length);
+    ostream.close();
+
+    let istream = Cc["@mozilla.org/network/file-input-stream;1"].
+      createInstance(Ci.nsIFileInputStream);
+    istream.init(file, -1, 0, 0);
+
+    return istream;
+  }
+
+  // Create an output buffer holding some data
+  function make_output(isBuffered) {
+    let file = Cc["@mozilla.org/file/directory_service;1"].
+      getService(Ci.nsIProperties).
+      get("ProfD", Ci.nsIFile);
+    file.append("NetUtil-asyncFetch-test-file.tmp");
+    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+
+    let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
+      createInstance(Ci.nsIFileOutputStream);
+    ostream.init(file, -1, -1, 0);
+
+    if (!isBuffered) {
+      return {file: file, sink: ostream};
+    }
+
+    let bstream = Cc["@mozilla.org/network/buffered-output-stream;1"].
+      createInstance(Ci.nsIBufferedOutputStream);
+    bstream.init(ostream, 256);
+    return {file: file, sink: bstream};
+  }
+  Task.spawn(function*() {
+    do_test_pending();
+    for (let bufferedInput of [true, false]) {
+      for (let bufferedOutput of [true, false]) {
+        let text = "test_async_copy with "
+          + (bufferedInput?"buffered input":"unbuffered input")
+          + ", "
+          + (bufferedOutput?"buffered output":"unbuffered output");
+        do_print(text);
+        let TEST_DATA = "[" + make_sample(text) + "]";
+        let source = make_input(bufferedInput, TEST_DATA);
+        let {file, sink} = make_output(bufferedOutput);
+        let deferred = Promise.defer();
+        NetUtil.asyncCopy(source, sink, deferred.resolve);
+        let result = yield deferred.promise;
+
+        // Make sure the copy was successful!
+        if (!Components.isSuccessCode(result)) {
+          do_throw(new Components.Exception("asyncCopy error", result));
+        }
+
+        // Check the file contents.
+        do_check_eq(TEST_DATA, getFileContents(file));
+      }
+    }
+
+    do_test_finished();
+    run_next_test();
+  });
+}
 
 function test_async_write_file() {
   async_write_file(OUTPUT_STREAM_CONTRACT_ID);
@@ -563,6 +662,7 @@ function test_readInputStreamToString_invalid_sequence()
 //// Test Runner
 
 [
+  test_async_copy,
   test_async_write_file,
   test_async_write_file_deferred,
   test_async_write_file_safe,
