@@ -131,12 +131,12 @@ public:
         APZCCallbackHelper::UpdateRootFrame(utils, mFrameMetrics);
 
 #ifdef DEBUG_CONTROLLER
-        WinUtils::Log("APZController: %I64d mDisplayPort: %0.2f %0.2f %0.2f %0.2f",
+        WinUtils::Log("APZController: %I64d mDisplayPortMargins: %0.2f %0.2f %0.2f %0.2f",
           mFrameMetrics.GetScrollId(),
-          mFrameMetrics.mDisplayPort.x,
-          mFrameMetrics.mDisplayPort.y,
-          mFrameMetrics.mDisplayPort.width,
-          mFrameMetrics.mDisplayPort.height);
+          mFrameMetrics.GetDisplayPortMargins().left,
+          mFrameMetrics.GetDisplayPortMargins().top,
+          mFrameMetrics.GetDisplayPortMargins().right,
+          mFrameMetrics.GetDisplayPortMargins().bottom);
 #endif
       }
     }
