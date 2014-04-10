@@ -72,15 +72,13 @@ AudioChannelServiceChild::GetState(AudioChannelAgent* aAgent, bool aElementHidde
   AudioChannelState state = AUDIO_CHANNEL_STATE_MUTED;
   bool oldElementHidden = data->mElementHidden;
 
-  UpdateChannelType(data->mChannel, CONTENT_PROCESS_ID_MAIN, aElementHidden,
-                    oldElementHidden);
+  UpdateChannelType(data->mType, CONTENT_PROCESS_ID_MAIN, aElementHidden, oldElementHidden);
 
   // Update visibility.
   data->mElementHidden = aElementHidden;
 
   ContentChild* cc = ContentChild::GetSingleton();
-  cc->SendAudioChannelGetState(data->mChannel, aElementHidden, oldElementHidden,
-                               &state);
+  cc->SendAudioChannelGetState(data->mType, aElementHidden, oldElementHidden, &state);
   data->mState = state;
   cc->SendAudioChannelChangedNotification();
 
@@ -89,12 +87,14 @@ AudioChannelServiceChild::GetState(AudioChannelAgent* aAgent, bool aElementHidde
 
 void
 AudioChannelServiceChild::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                                    AudioChannel aChannel,
+                                                    AudioChannelType aType,
                                                     bool aWithVideo)
 {
-  AudioChannelService::RegisterAudioChannelAgent(aAgent, aChannel, aWithVideo);
+  MOZ_ASSERT(aType != AUDIO_CHANNEL_DEFAULT);
 
-  ContentChild::GetSingleton()->SendAudioChannelRegisterType(aChannel, aWithVideo);
+  AudioChannelService::RegisterAudioChannelAgent(aAgent, aType, aWithVideo);
+
+  ContentChild::GetSingleton()->SendAudioChannelRegisterType(aType, aWithVideo);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -117,7 +117,7 @@ AudioChannelServiceChild::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
   AudioChannelService::UnregisterAudioChannelAgent(aAgent);
 
   ContentChild::GetSingleton()->SendAudioChannelUnregisterType(
-      data.mChannel, data.mElementHidden, data.mWithVideo);
+      data.mType, data.mElementHidden, data.mWithVideo);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -132,11 +132,11 @@ AudioChannelServiceChild::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
 }
 
 void
-AudioChannelServiceChild::SetDefaultVolumeControlChannel(int32_t aChannel,
-                                                         bool aHidden)
+AudioChannelServiceChild::SetDefaultVolumeControlChannel(
+  AudioChannelType aType, bool aHidden)
 {
   ContentChild *cc = ContentChild::GetSingleton();
   if (cc) {
-    cc->SendAudioChannelChangeDefVolChannel(aChannel, aHidden);
+    cc->SendAudioChannelChangeDefVolChannel(aType, aHidden);
   }
 }

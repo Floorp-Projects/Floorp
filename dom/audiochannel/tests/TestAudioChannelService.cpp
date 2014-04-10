@@ -31,8 +31,8 @@ class Agent : public nsIAudioChannelAgentCallback,
 public:
   NS_DECL_ISUPPORTS
 
-  Agent(AudioChannel aChannel)
-  : mChannel(aChannel)
+  Agent(AudioChannelType aType)
+  : mType(aType)
   , mWaitCallback(false)
   , mRegistered(false)
   , mCanPlay(AUDIO_CHANNEL_STATE_MUTED)
@@ -51,12 +51,10 @@ public:
   {
     nsresult rv = NS_OK;
     if (video) {
-      rv = mAgent->InitWithVideo(nullptr, static_cast<int32_t>(mChannel),
-                                 this, true);
+      rv = mAgent->InitWithVideo(nullptr, mType, this, true);
     }
     else {
-      rv = mAgent->InitWithWeakCallback(nullptr, static_cast<int32_t>(mChannel),
-                                        this);
+      rv = mAgent->InitWithWeakCallback(nullptr, mType, this);
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -129,7 +127,7 @@ public:
   }
 
   nsCOMPtr<nsIAudioChannelAgent> mAgent;
-  AudioChannel mChannel;
+  AudioChannelType mType;
   bool mWaitCallback;
   bool mRegistered;
   AudioChannelState mCanPlay;
@@ -141,7 +139,7 @@ NS_IMPL_ISUPPORTS2(Agent, nsIAudioChannelAgentCallback,
 nsresult
 TestDoubleStartPlaying()
 {
-  nsRefPtr<Agent> agent = new Agent(AudioChannel::Normal);
+  nsRefPtr<Agent> agent = new Agent(AUDIO_CHANNEL_NORMAL);
 
   nsresult rv = agent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -160,7 +158,7 @@ TestDoubleStartPlaying()
 nsresult
 TestOneNormalChannel()
 {
-  nsRefPtr<Agent> agent = new Agent(AudioChannel::Normal);
+  nsRefPtr<Agent> agent = new Agent(AUDIO_CHANNEL_NORMAL);
   nsresult rv = agent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -184,11 +182,11 @@ TestOneNormalChannel()
 nsresult
 TestTwoNormalChannels()
 {
-  nsRefPtr<Agent> agent1 = new Agent(AudioChannel::Normal);
+  nsRefPtr<Agent> agent1 = new Agent(AUDIO_CHANNEL_NORMAL);
   nsresult rv = agent1->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<Agent> agent2 = new Agent(AudioChannel::Normal);
+  nsRefPtr<Agent> agent2 = new Agent(AUDIO_CHANNEL_NORMAL);
   rv = agent2->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -225,11 +223,11 @@ TestTwoNormalChannels()
 nsresult
 TestContentChannels()
 {
-  nsRefPtr<Agent> agent1 = new Agent(AudioChannel::Content);
+  nsRefPtr<Agent> agent1 = new Agent(AUDIO_CHANNEL_CONTENT);
   nsresult rv = agent1->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<Agent> agent2 = new Agent(AudioChannel::Content);
+  nsRefPtr<Agent> agent2 = new Agent(AUDIO_CHANNEL_CONTENT);
   rv = agent2->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -310,15 +308,15 @@ TestContentChannels()
 nsresult
 TestFadedState()
 {
-  nsRefPtr<Agent> normalAgent = new Agent(AudioChannel::Normal);
+  nsRefPtr<Agent> normalAgent = new Agent(AUDIO_CHANNEL_NORMAL);
   nsresult rv = normalAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<Agent> contentAgent = new Agent(AudioChannel::Content);
+  nsRefPtr<Agent> contentAgent = new Agent(AUDIO_CHANNEL_CONTENT);
   rv = contentAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<Agent> notificationAgent = new Agent(AudioChannel::Notification);
+  nsRefPtr<Agent> notificationAgent = new Agent(AUDIO_CHANNEL_NOTIFICATION);
   rv = notificationAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -389,32 +387,32 @@ TestFadedState()
 nsresult
 TestPriorities()
 {
-  nsRefPtr<Agent> normalAgent = new Agent(AudioChannel::Normal);
+  nsRefPtr<Agent> normalAgent = new Agent(AUDIO_CHANNEL_NORMAL);
   nsresult rv = normalAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<Agent> contentAgent = new Agent(AudioChannel::Content);
+  nsRefPtr<Agent> contentAgent = new Agent(AUDIO_CHANNEL_CONTENT);
   rv = contentAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<Agent> notificationAgent = new Agent(AudioChannel::Notification);
+  nsRefPtr<Agent> notificationAgent = new Agent(AUDIO_CHANNEL_NOTIFICATION);
   rv = notificationAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<Agent> alarmAgent = new Agent(AudioChannel::Alarm);
+  nsRefPtr<Agent> alarmAgent = new Agent(AUDIO_CHANNEL_ALARM);
   rv = alarmAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<Agent> telephonyAgent = new Agent(AudioChannel::Telephony);
+  nsRefPtr<Agent> telephonyAgent = new Agent(AUDIO_CHANNEL_TELEPHONY);
   rv = telephonyAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<Agent> ringerAgent = new Agent(AudioChannel::Ringer);
+  nsRefPtr<Agent> ringerAgent = new Agent(AUDIO_CHANNEL_RINGER);
   rv = ringerAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<Agent> pNotificationAgent =
-    new Agent(AudioChannel::Publicnotification);
+    new Agent(AUDIO_CHANNEL_PUBLICNOTIFICATION);
   rv = pNotificationAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -546,11 +544,11 @@ TestPriorities()
 nsresult
 TestOneVideoNormalChannel()
 {
-  nsRefPtr<Agent> agent1 = new Agent(AudioChannel::Normal);
+  nsRefPtr<Agent> agent1 = new Agent(AUDIO_CHANNEL_NORMAL);
   nsresult rv = agent1->Init(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<Agent> agent2 = new Agent(AudioChannel::Content);
+  nsRefPtr<Agent> agent2 = new Agent(AUDIO_CHANNEL_CONTENT);
   rv = agent2->Init(false);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -651,11 +649,11 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  // Channel type with AudioChannel::Telephony cannot be unregistered until the
+  // Channel type with AUDIO_CHANNEL_TELEPHONY cannot be unregistered until the
   // main thread has chances to process 1500 millisecond timer. In order to
   // skip ambiguous return value of ChannelsActiveWithHigherPriorityThan(), new
   // test cases are added before any test case that registers the channel type
-  // with AudioChannel::Telephony channel.
+  // with AUDIO_CHANNEL_TELEPHONY channel.
   if (NS_FAILED(TestOneVideoNormalChannel())) {
     return 1;
   }

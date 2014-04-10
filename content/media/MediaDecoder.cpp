@@ -23,7 +23,6 @@
 #include "nsITimer.h"
 #include <algorithm>
 #include "MediaShutdownManager.h"
-#include "AudioChannelService.h"
 
 #ifdef MOZ_WMF
 #include "WMFDecoder.h"
@@ -428,6 +427,7 @@ MediaDecoder::MediaDecoder() :
   mPinnedForSeek(false),
   mShuttingDown(false),
   mPausedForPlaybackRateNull(false),
+  mAudioChannelType(AUDIO_CHANNEL_NORMAL),
   mMinimizePreroll(false)
 {
   MOZ_COUNT_CTOR(MediaDecoder);
@@ -438,8 +438,6 @@ MediaDecoder::MediaDecoder() :
     gMediaDecoderLog = PR_NewLogModule("MediaDecoder");
   }
 #endif
-
-  mAudioChannel = AudioChannelService::GetDefaultAudioChannel();
 }
 
 bool MediaDecoder::Init(MediaDecoderOwner* aOwner)

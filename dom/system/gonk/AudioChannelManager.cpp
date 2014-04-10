@@ -25,7 +25,7 @@ NS_IMPL_RELEASE_INHERITED(AudioChannelManager, DOMEventTargetHelper)
 
 AudioChannelManager::AudioChannelManager()
   : mState(SWITCH_STATE_UNKNOWN)
-  , mVolumeChannel(-1)
+  , mVolumeChannel(AUDIO_CHANNEL_DEFAULT)
 {
   RegisterSwitchObserver(SWITCH_HEADPHONES, this);
   mState = GetCurrentSwitchState(SWITCH_HEADPHONES);
@@ -80,10 +80,11 @@ AudioChannelManager::SetVolumeControlChannel(const nsAString& aChannel)
     return false;
   }
 
-  AudioChannel newChannel = AudioChannelService::GetAudioChannel(aChannel);
-
+  AudioChannelType oldVolumeChannel = mVolumeChannel;
   // Only normal channel doesn't need permission.
-  if (newChannel != AudioChannel::Normal) {
+  if (aChannel.EqualsASCII("normal")) {
+    mVolumeChannel = AUDIO_CHANNEL_NORMAL;
+  } else {
     nsCOMPtr<nsIPermissionManager> permissionManager =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
     if (!permissionManager) {
@@ -96,14 +97,23 @@ AudioChannelManager::SetVolumeControlChannel(const nsAString& aChannel)
     if (perm != nsIPermissionManager::ALLOW_ACTION) {
       return false;
     }
+
+    if (aChannel.EqualsASCII("content")) {
+      mVolumeChannel = AUDIO_CHANNEL_CONTENT;
+    } else if (aChannel.EqualsASCII("notification")) {
+      mVolumeChannel = AUDIO_CHANNEL_NOTIFICATION;
+    } else if (aChannel.EqualsASCII("alarm")) {
+      mVolumeChannel = AUDIO_CHANNEL_ALARM;
+    } else if (aChannel.EqualsASCII("telephony")) {
+      mVolumeChannel = AUDIO_CHANNEL_TELEPHONY;
+    } else if (aChannel.EqualsASCII("ringer")) {
+      mVolumeChannel = AUDIO_CHANNEL_RINGER;
+    }
   }
 
-  if (mVolumeChannel == (int32_t)newChannel) {
+  if (oldVolumeChannel == mVolumeChannel) {
     return true;
   }
-
-  mVolumeChannel = (int32_t)newChannel;
-
   NotifyVolumeControlChannelChanged();
   return true;
 }
@@ -111,10 +121,18 @@ AudioChannelManager::SetVolumeControlChannel(const nsAString& aChannel)
 bool
 AudioChannelManager::GetVolumeControlChannel(nsAString & aChannel)
 {
-  if (mVolumeChannel >= 0) {
-    AudioChannelService::GetAudioChannelString(
-                                      static_cast<AudioChannel>(mVolumeChannel),
-                                      aChannel);
+  if (mVolumeChannel == AUDIO_CHANNEL_NORMAL) {
+    aChannel.AssignASCII("normal");
+  } else if (mVolumeChannel == AUDIO_CHANNEL_CONTENT) {
+    aChannel.AssignASCII("content");
+  } else if (mVolumeChannel == AUDIO_CHANNEL_NOTIFICATION) {
+    aChannel.AssignASCII("notification");
+  } else if (mVolumeChannel == AUDIO_CHANNEL_ALARM) {
+    aChannel.AssignASCII("alarm");
+  } else if (mVolumeChannel == AUDIO_CHANNEL_TELEPHONY) {
+    aChannel.AssignASCII("telephony");
+  } else if (mVolumeChannel == AUDIO_CHANNEL_RINGER) {
+    aChannel.AssignASCII("ringer");
   } else {
     aChannel.AssignASCII("");
   }
@@ -135,7 +153,7 @@ AudioChannelManager::NotifyVolumeControlChannelChanged()
   if (isActive) {
     service->SetDefaultVolumeControlChannel(mVolumeChannel, isActive);
   } else {
-    service->SetDefaultVolumeControlChannel(-1, isActive);
+    service->SetDefaultVolumeControlChannel(AUDIO_CHANNEL_DEFAULT, isActive);
   }
 }
 

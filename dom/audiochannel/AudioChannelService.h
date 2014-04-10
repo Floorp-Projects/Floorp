@@ -14,7 +14,6 @@
 
 #include "AudioChannelCommon.h"
 #include "AudioChannelAgent.h"
-#include "nsAttrValue.h"
 #include "nsClassHashtable.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 
@@ -49,10 +48,10 @@ public:
 
   /**
    * Any audio channel agent that starts playing should register itself to
-   * this service, sharing the AudioChannel.
+   * this service, sharing the AudioChannelType.
    */
   virtual void RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                         AudioChannel aChannel,
+                                         AudioChannelType aType,
                                          bool aWithVideo);
 
   /**
@@ -82,11 +81,9 @@ public:
 
   /***
    * AudioChannelManager calls this function to notify the default channel used
-   * to adjust volume when there is no any active channel. if aChannel is -1,
-   * the default audio channel will be used. Otherwise aChannel is casted to
-   * AudioChannel enum.
+   * to adjust volume when there is no any active channel.
    */
-  virtual void SetDefaultVolumeControlChannel(int32_t aChannel,
+  virtual void SetDefaultVolumeControlChannel(AudioChannelType aType,
                                               bool aHidden);
 
   bool AnyAudioChannelIsActive();
@@ -107,11 +104,8 @@ public:
   }
 #endif
 
-  static const nsAttrValue::EnumTable* GetAudioChannelTable();
-  static AudioChannel GetAudioChannel(const nsAString& aString);
   static AudioChannel GetDefaultAudioChannel();
-  static void GetAudioChannelString(AudioChannel aChannel, nsAString& aString);
-  static void GetDefaultAudioChannelString(nsAString& aString);
+  static void GetDefaultAudioChannelString(nsString& aString);
 
 protected:
   void Notify();
@@ -123,22 +117,22 @@ protected:
   void SendAudioChannelChangedNotification(uint64_t aChildID);
 
   /* Register/Unregister IPC types: */
-  void RegisterType(AudioChannel aChannel, uint64_t aChildID, bool aWithVideo);
-  void UnregisterType(AudioChannel aChannel, bool aElementHidden,
+  void RegisterType(AudioChannelType aType, uint64_t aChildID, bool aWithVideo);
+  void UnregisterType(AudioChannelType aType, bool aElementHidden,
                       uint64_t aChildID, bool aWithVideo);
-  void UnregisterTypeInternal(AudioChannel aChannel, bool aElementHidden,
+  void UnregisterTypeInternal(AudioChannelType aType, bool aElementHidden,
                               uint64_t aChildID, bool aWithVideo);
 
-  AudioChannelState GetStateInternal(AudioChannel aChannel, uint64_t aChildID,
+  AudioChannelState GetStateInternal(AudioChannelType aType, uint64_t aChildID,
                                      bool aElementHidden,
                                      bool aElementWasHidden);
 
   /* Update the internal type value following the visibility changes */
-  void UpdateChannelType(AudioChannel aChannel, uint64_t aChildID,
+  void UpdateChannelType(AudioChannelType aType, uint64_t aChildID,
                          bool aElementHidden, bool aElementWasHidden);
 
   /* Send the default-volume-channel-changed notification */
-  void SetDefaultVolumeControlChannelInternal(int32_t aChannel,
+  void SetDefaultVolumeControlChannelInternal(AudioChannelType aType,
                                               bool aHidden, uint64_t aChildID);
 
   AudioChannelService();
@@ -167,22 +161,24 @@ protected:
   bool CheckVolumeFadedCondition(AudioChannelInternalType aType,
                                  bool aElementHidden);
 
-  AudioChannelInternalType GetInternalType(AudioChannel aChannel,
+  const char* ChannelName(AudioChannelType aType);
+
+  AudioChannelInternalType GetInternalType(AudioChannelType aType,
                                            bool aElementHidden);
 
   class AudioChannelAgentData {
   public:
-    AudioChannelAgentData(AudioChannel aChannel,
+    AudioChannelAgentData(AudioChannelType aType,
                           bool aElementHidden,
                           AudioChannelState aState,
                           bool aWithVideo)
-    : mChannel(aChannel)
+    : mType(aType)
     , mElementHidden(aElementHidden)
     , mState(aState)
     , mWithVideo(aWithVideo)
     {}
 
-    AudioChannel mChannel;
+    AudioChannelType mType;
     bool mElementHidden;
     AudioChannelState mState;
     const bool mWithVideo;
@@ -211,8 +207,8 @@ protected:
 #endif
   nsTArray<uint64_t> mChannelCounters[AUDIO_CHANNEL_INT_LAST];
 
-  int32_t mCurrentHigherChannel;
-  int32_t mCurrentVisibleHigherChannel;
+  AudioChannelType mCurrentHigherChannel;
+  AudioChannelType mCurrentVisibleHigherChannel;
 
   nsTArray<uint64_t> mWithVideoChildIDs;
 

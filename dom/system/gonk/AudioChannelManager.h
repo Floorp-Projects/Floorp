@@ -66,7 +66,7 @@ private:
   void NotifyVolumeControlChannelChanged();
 
   hal::SwitchState mState;
-  int32_t mVolumeChannel;
+  AudioChannelType mVolumeChannel;
 };
 
 } // namespace system
