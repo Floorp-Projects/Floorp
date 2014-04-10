@@ -376,7 +376,7 @@ Experiments.Experiments.prototype = {
     AsyncShutdown.profileBeforeChange.addBlocker("Experiments.jsm shutdown",
       this.uninit.bind(this));
 
-    this._startWatchingAddons();
+    this._registerWithAddonManager();
 
     this._loadTask = Task.spawn(this._loadFromCache.bind(this));
     this._loadTask.then(
@@ -406,7 +406,7 @@ Experiments.Experiments.prototype = {
     yield this._loadTask;
 
     if (!this._shutdown) {
-      this._stopWatchingAddons();
+      this._unregisterWithAddonManager();
 
       gPrefs.ignore(PREF_LOGGING, configureLogging);
       gPrefs.ignore(PREF_MANIFEST_URI, this.updateManifest, this);
@@ -427,12 +427,14 @@ Experiments.Experiments.prototype = {
     this._log.info("Completed uninitialization.");
   }),
 
-  _startWatchingAddons: function () {
+  _registerWithAddonManager: function () {
+    this._log.trace("Registering instance with Addon Manager.");
+
     AddonManager.addAddonListener(this);
     AddonManager.addInstallListener(this);
   },
 
-  _stopWatchingAddons: function () {
+  _unregisterWithAddonManager: function () {
     AddonManager.removeInstallListener(this);
     AddonManager.removeAddonListener(this);
   },
