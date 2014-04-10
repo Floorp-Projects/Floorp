@@ -39,7 +39,7 @@ child:
 
   NotifyCallStateChanged(uint32_t aClientId, IPCCallStateData aData);
 
-  NotifyCdmaCallWaiting(uint32_t aClientId, nsString aNumber);
+  NotifyCdmaCallWaiting(uint32_t aClientId, IPCCdmaWaitingCallData aData);
 
   NotifyConferenceCallStateChanged(uint16_t aCallState);
 
