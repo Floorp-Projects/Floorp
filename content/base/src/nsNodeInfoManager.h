@@ -12,6 +12,7 @@
 
 #include "mozilla/Attributes.h"           // for MOZ_FINAL
 #include "nsCOMPtr.h"                     // for member
+#include "nsAutoPtr.h"                    // for nsRefPtr
 #include "nsCycleCollectionParticipant.h" // for NS_DECL_CYCLE_*
 #include "plhash.h"                       // for typedef PLHashNumber
 
@@ -132,9 +133,7 @@ private:
   nsINodeInfo *mTextNodeInfo; // WEAK to avoid circular ownership
   nsINodeInfo *mCommentNodeInfo; // WEAK to avoid circular ownership
   nsINodeInfo *mDocumentNodeInfo; // WEAK to avoid circular ownership
-  nsBindingManager* mBindingManager; // STRONG, but not nsCOMPtr to avoid
-                                     // include hell while inlining
-                                     // GetBindingManager().
+  nsRefPtr<nsBindingManager> mBindingManager;
 };
 
 #endif /* nsNodeInfoManager_h___ */
