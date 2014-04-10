@@ -1498,26 +1498,20 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
 
     switch (op) {
       case JSOP_GETGNAME:
-      case JSOP_CALLGNAME:
       case JSOP_NAME:
-      case JSOP_CALLNAME:
       case JSOP_GETINTRINSIC:
-      case JSOP_CALLINTRINSIC:
         return write(loadAtom(pc));
-      case JSOP_GETARG:
-      case JSOP_CALLARG: {
+      case JSOP_GETARG: {
         unsigned slot = GET_ARGNO(pc);
         JSAtom *atom = getArg(slot);
         return write(atom);
       }
-      case JSOP_GETLOCAL:
-      case JSOP_CALLLOCAL: {
+      case JSOP_GETLOCAL: {
         uint32_t i = GET_LOCALNO(pc);
         if (JSAtom *atom = getLocal(i, pc))
             return write(atom);
         return write("(intermediate value)");
       }
-      case JSOP_CALLALIASEDVAR:
       case JSOP_GETALIASEDVAR: {
         JSAtom *atom = ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc);
         JS_ASSERT(atom);

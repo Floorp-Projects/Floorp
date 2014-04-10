@@ -151,7 +151,7 @@ struct BytecodeEmitter
         Normal,
 
         /*
-         * Emit JSOP_CALLINTRINSIC instead of JSOP_NAME and assert that
+         * Emit JSOP_GETINTRINSIC instead of JSOP_NAME and assert that
          * JSOP_NAME and JSOP_*GNAME don't ever get emitted. See the comment
          * for the field |selfHostingMode| in Parser.h for details.
          */

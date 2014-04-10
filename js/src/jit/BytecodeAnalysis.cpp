@@ -148,12 +148,10 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
             break;
 
           case JSOP_NAME:
-          case JSOP_CALLNAME:
           case JSOP_BINDNAME:
           case JSOP_SETNAME:
           case JSOP_DELNAME:
           case JSOP_GETALIASEDVAR:
-          case JSOP_CALLALIASEDVAR:
           case JSOP_SETALIASEDVAR:
           case JSOP_LAMBDA:
           case JSOP_LAMBDA_ARROW:
