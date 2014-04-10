@@ -1879,7 +1879,7 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
         // ahead and WrapObject() them.  We can't use WrapNewBindingObject,
         // because we don't have the concrete type.
         JS::Rooted<JS::Value> wrapped(aCx);
-        if (!dom::WrapObject(aCx, naviObj, existingObject, &wrapped)) {
+        if (!dom::WrapObject(aCx, existingObject, &wrapped)) {
           return false;
         }
         domObject = &wrapped.toObject();

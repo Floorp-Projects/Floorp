@@ -110,7 +110,7 @@ WindowNamedPropertiesHandler::getOwnPropertyDescriptor(JSContext* aCx,
       // global scope is still allowed, since |var| only looks up |own|
       // properties. But unqualified shadowing will fail, per-spec.
       JS::Rooted<JS::Value> v(aCx);
-      if (!WrapObject(aCx, aProxy, childWin, &v)) {
+      if (!WrapObject(aCx, childWin, &v)) {
         return false;
       }
       aDesc.object().set(aProxy);
@@ -130,7 +130,7 @@ WindowNamedPropertiesHandler::getOwnPropertyDescriptor(JSContext* aCx,
   Element* element = document->GetElementById(str);
   if (element) {
     JS::Rooted<JS::Value> v(aCx);
-    if (!WrapObject(aCx, aProxy, element, &v)) {
+    if (!WrapObject(aCx, element, &v)) {
       return false;
     }
     aDesc.object().set(aProxy);
@@ -146,7 +146,7 @@ WindowNamedPropertiesHandler::getOwnPropertyDescriptor(JSContext* aCx,
   }
 
   JS::Rooted<JS::Value> v(aCx);
-  if (!WrapObject(aCx, aProxy, result, cache, nullptr, &v)) {
+  if (!WrapObject(aCx, result, cache, nullptr, &v)) {
     return false;
   }
   aDesc.object().set(aProxy);
