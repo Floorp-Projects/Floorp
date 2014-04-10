@@ -456,7 +456,7 @@
         // If we have not moved to a valid new target clear the drop indicator
         // this happens when moving out of the popup.
         let target = event.relatedTarget;
-        if (!target)
+        if (!target || !this.contains(target))
           this._indicatorBar.hidden = true;
 
         // Close any folder being hovered over
