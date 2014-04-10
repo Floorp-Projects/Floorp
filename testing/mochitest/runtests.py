@@ -466,7 +466,8 @@ class MochitestUtilsMixin(object):
         info[k] = v
 
       # Bug 883858 - return all tests including disabled tests
-      tests = manifest.active_tests(disabled=True, options=options, **info)
+#      tests = manifest.active_tests(disabled=True, options=options, **info)
+      tests = manifest.active_tests(disabled=True, **info)
       paths = []
       testPath = self.getTestPath(options)
 
@@ -1512,6 +1513,11 @@ def main():
   if options is None:
     # parsing error
     sys.exit(1)
+
+  if options.subsuite:
+    print "INFO | terminating test run as subsuite is not fully supported yet"
+    print "INFO TEST-START | Shutdown"
+    return 0
 
   options.utilityPath = mochitest.getFullPath(options.utilityPath)
   options.certPath = mochitest.getFullPath(options.certPath)
