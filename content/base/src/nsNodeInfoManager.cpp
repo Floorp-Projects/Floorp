@@ -116,8 +116,7 @@ nsNodeInfoManager::nsNodeInfoManager()
     mPrincipal(nullptr),
     mTextNodeInfo(nullptr),
     mCommentNodeInfo(nullptr),
-    mDocumentNodeInfo(nullptr),
-    mBindingManager(nullptr)
+    mDocumentNodeInfo(nullptr)
 {
   nsLayoutStatics::AddRef();
 
@@ -144,7 +143,7 @@ nsNodeInfoManager::~nsNodeInfoManager()
   // Note: mPrincipal may be null here if we never got inited correctly
   NS_IF_RELEASE(mPrincipal);
 
-  NS_IF_RELEASE(mBindingManager);
+  mBindingManager = nullptr;
 
 #ifdef PR_LOGGING
   if (gNodeInfoManagerLeakPRLog)
@@ -167,7 +166,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNodeInfoManager)
   if (tmp->mNonDocumentNodeInfos) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mDocument)
   }
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mBindingManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBindingManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsNodeInfoManager, AddRef)
@@ -186,9 +185,6 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
 
   if (aDocument) {
     mBindingManager = new nsBindingManager(aDocument);
-    NS_ENSURE_TRUE(mBindingManager, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(mBindingManager);
   }
 
   mDefaultPrincipal = mPrincipal;
