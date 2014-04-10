@@ -11,6 +11,8 @@
 
 #include "mozilla/dom/DOMError.h"
 
+#include "TelephonyCallId.h"
+
 class nsPIDOMWindow;
 
 namespace mozilla {
@@ -21,9 +23,10 @@ class TelephonyCall MOZ_FINAL : public DOMEventTargetHelper
   nsRefPtr<Telephony> mTelephony;
   nsRefPtr<TelephonyCallGroup> mGroup;
 
+  nsRefPtr<TelephonyCallId> mId;
+  nsRefPtr<TelephonyCallId> mSecondId;
+
   uint32_t mServiceId;
-  nsString mNumber;
-  nsString mSecondNumber;
   nsString mState;
   bool mEmergency;
   nsRefPtr<DOMError> mError;
@@ -39,7 +42,6 @@ public:
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TelephonyCall,
                                            DOMEventTargetHelper)
-
   friend class Telephony;
 
   nsPIDOMWindow*
@@ -53,17 +55,11 @@ public:
   WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   // WebIDL
-  void
-  GetNumber(nsString& aNumber) const
-  {
-    aNumber.Assign(mNumber);
-  }
+  already_AddRefed<TelephonyCallId>
+  Id() const;
 
-  void
-  GetSecondNumber(nsString& aSecondNumber) const
-  {
-    aSecondNumber.Assign(mSecondNumber);
-  }
+  already_AddRefed<TelephonyCallId>
+  GetSecondId() const;
 
   void
   GetState(nsString& aState) const
@@ -122,7 +118,9 @@ public:
 
   static already_AddRefed<TelephonyCall>
   Create(Telephony* aTelephony, uint32_t aServiceId,
-         const nsAString& aNumber, uint16_t aCallState, uint32_t aCallIndex,
+         const nsAString& aNumber, uint16_t aNumberPresentation,
+         const nsAString& aName, uint16_t aNamePresentation,
+         uint16_t aCallState, uint32_t aCallIndex,
          bool aEmergency = false, bool aIsConference = false,
          bool aSwitchable = true, bool aMergeable = true);
 
@@ -157,12 +155,6 @@ public:
   }
 
   void
-  UpdateSecondNumber(const nsAString& aNumber)
-  {
-    mSecondNumber = aNumber;
-  }
-
-  void
   UpdateSwitchable(bool aSwitchable) {
     mSwitchable = aSwitchable;
   }
@@ -170,6 +162,11 @@ public:
   void
   UpdateMergeable(bool aMergeable) {
     mMergeable = aMergeable;
+  }
+
+  void
+  UpdateSecondId(TelephonyCallId* aId) {
+    mSecondId = aId;
   }
 
   void
