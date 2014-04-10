@@ -73,6 +73,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/PBrowserParent.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/Endian.h"
 #include "mozilla/gfx/2D.h"
@@ -1273,17 +1274,18 @@ CanvasRenderingContext2D::SetTransform(double m11, double m12,
 JSObject*
 MatrixToJSObject(JSContext* cx, const Matrix& matrix, ErrorResult& error)
 {
-  JS::AutoValueArray<6> elts(cx);
-  elts[0].setDouble(matrix._11); elts[1].setDouble(matrix._12);
-  elts[2].setDouble(matrix._21); elts[3].setDouble(matrix._22);
-  elts[4].setDouble(matrix._31); elts[5].setDouble(matrix._32);
+  double elts[6] = { matrix._11, matrix._12,
+                     matrix._21, matrix._22,
+                     matrix._31, matrix._32 };
 
   // XXX Should we enter GetWrapper()'s compartment?
-  JSObject* obj = JS_NewArrayObject(cx, elts);
-  if  (!obj) {
+  JS::Rooted<JS::Value> val(cx);
+  if (!ToJSValue(cx, elts, &val)) {
     error.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
   }
-  return obj;
+
+  return &val.toObject();
 }
 
 static bool

@@ -8,6 +8,7 @@
 #include "jsfriendapi.h" // For js_DateGetMsecSinceEpoch.
 #include "js/Utility.h"
 #include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
+#include "mozilla/dom/ToJSValue.h"
 #include "nsDOMString.h"
 #include "nsError.h"
 #include "nsIDOMClassInfo.h"
@@ -130,27 +131,10 @@ SmsFilter::GetNumbers(JSContext* aCx, JS::MutableHandle<JS::Value> aNumbers)
     return NS_OK;
   }
 
-  JS::AutoValueVector numbers(aCx);
-  if (!numbers.resize(length)) {
+  if (!ToJSValue(aCx, mData.numbers(), aNumbers)) {
     return NS_ERROR_FAILURE;
   }
 
-  for (uint32_t i = 0; i < length; ++i) {
-    JSString* str = JS_NewUCStringCopyN(aCx, mData.numbers()[i].get(),
-                                        mData.numbers()[i].Length());
-    if (!str) {
-      return NS_ERROR_FAILURE;
-    }
-
-    numbers[i].setString(str);
-  }
-
-  JSObject* obj = JS_NewArrayObject(aCx, numbers);
-  if (!obj) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aNumbers.setObject(*obj);
   return NS_OK;
 }
 
