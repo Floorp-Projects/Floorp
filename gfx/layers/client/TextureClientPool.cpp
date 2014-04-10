@@ -62,7 +62,7 @@ TextureClientPool::GetTextureClient()
     textureClient = TextureClient::CreateTextureClientForDrawing(mSurfaceAllocator,
       mFormat, TEXTURE_IMMEDIATE_UPLOAD, gfx::BackendType::NONE, mSize);
   }
-  textureClient->AllocateForSurface(mSize, ALLOC_DEFAULT);
+  textureClient->AsTextureClientDrawTarget()->AllocateForSurface(mSize, ALLOC_DEFAULT);
 
   return textureClient;
 }
