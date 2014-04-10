@@ -2425,8 +2425,8 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
 
     uint32_t mainLength = bce->offset();
     uint32_t prologLength = bce->prologOffset();
-    int32_t nsrcnotes = FinishTakingSrcNotes(cx, bce);
-    if (nsrcnotes < 0)
+    uint32_t nsrcnotes;
+    if (!FinishTakingSrcNotes(cx, bce, &nsrcnotes))
         return false;
     uint32_t natoms = bce->atomIndices->count();
     if (!partiallyInit(cx, script,

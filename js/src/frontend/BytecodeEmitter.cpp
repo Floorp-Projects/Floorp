@@ -6767,10 +6767,10 @@ SetSrcNoteOffset(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned index, uns
 
 /*
  * Finish taking source notes in cx's notePool.
- * Returns the final source note count taken, or -1 to indicate an error.
+ * If successful, the final source note count is stored in the out outparam.
  */
-int32_t
-frontend::FinishTakingSrcNotes(ExclusiveContext *cx, BytecodeEmitter *bce)
+bool
+frontend::FinishTakingSrcNotes(ExclusiveContext *cx, BytecodeEmitter *bce, uint32_t *out)
 {
     JS_ASSERT(bce->current == &bce->main);
 
@@ -6778,7 +6778,7 @@ frontend::FinishTakingSrcNotes(ExclusiveContext *cx, BytecodeEmitter *bce)
     if (prologCount && bce->prolog.currentLine != bce->firstLine) {
         bce->switchToProlog();
         if (NewSrcNote2(cx, bce, SRC_SETLINE, (ptrdiff_t)bce->firstLine) < 0)
-            return -1;
+            return false;
         bce->switchToMain();
     } else {
         /*
@@ -6800,7 +6800,7 @@ frontend::FinishTakingSrcNotes(ExclusiveContext *cx, BytecodeEmitter *bce)
                 delta = offset;
             for (;;) {
                 if (!AddToSrcNoteDelta(cx, bce, sn, delta))
-                    return -1;
+                    return false;
                 offset -= delta;
                 if (offset == 0)
                     break;
@@ -6813,11 +6813,12 @@ frontend::FinishTakingSrcNotes(ExclusiveContext *cx, BytecodeEmitter *bce)
     // The prolog count might have changed, so we can't reuse prologCount.
     // The + 1 is to account for the final SN_MAKE_TERMINATOR that is appended
     // when the notes are copied to their final destination by CopySrcNotes.
-    return bce->prolog.notes.length() + bce->main.notes.length() + 1;
+    *out = bce->prolog.notes.length() + bce->main.notes.length() + 1;
+    return true;
 }
 
 void
-frontend::CopySrcNotes(BytecodeEmitter *bce, jssrcnote *destination, int32_t nsrcnotes)
+frontend::CopySrcNotes(BytecodeEmitter *bce, jssrcnote *destination, uint32_t nsrcnotes)
 {
     unsigned prologCount = bce->prolog.notes.length();
     unsigned mainCount = bce->main.notes.length();
