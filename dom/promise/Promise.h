@@ -13,11 +13,10 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/PromiseBinding.h"
-#include "mozilla/dom/TypedArray.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
 #include "js/TypeDecls.h"
-#include "jsapi.h"
 
 #include "mozilla/dom/workers/bindings/WorkerFeature.h"
 
@@ -80,7 +79,7 @@ public:
 
   // Helpers for using Promise from C++.
   // Most DOM objects are handled already.  To add a new type T, such as ints,
-  // or dictionaries, add an ArgumentToJSValue overload below.
+  // or dictionaries, add a ToJSValue overload in ToJSValue.h.
   template <typename T>
   void MaybeResolve(T& aArg) {
     MaybeSomething(aArg, &Promise::MaybeResolve);
@@ -204,94 +203,6 @@ private:
   // Helper methods for using Promises from C++
   JSObject* GetOrCreateWrapper(JSContext* aCx);
 
-  // If ArgumentToJSValue returns false, it must set an exception on the
-  // JSContext.
-
-  // Accept strings.
-  bool
-  ArgumentToJSValue(const nsAString& aArgument,
-                    JSContext* aCx,
-                    JS::MutableHandle<JS::Value> aValue);
-
-  // Accept booleans.
-  bool
-  ArgumentToJSValue(bool aArgument,
-                    JSContext* aCx,
-                    JS::MutableHandle<JS::Value> aValue);
-
-  // Accept objects that inherit from nsWrapperCache and nsISupports (e.g. most
-  // DOM objects).
-  template <class T>
-  typename EnableIf<IsBaseOf<nsWrapperCache, T>::value &&
-                    IsBaseOf<nsISupports, T>::value, bool>::Type
-  ArgumentToJSValue(T& aArgument,
-                    JSContext* aCx,
-                    JS::MutableHandle<JS::Value> aValue)
-  {
-    return WrapNewBindingObject(aCx, aArgument, aValue);
-  }
-
-  // Accept typed arrays built from appropriate nsTArray values
-  template<typename T>
-  typename EnableIf<IsBaseOf<AllTypedArraysBase, T>::value, bool>::Type
-  ArgumentToJSValue(const TypedArrayCreator<T>& aArgument,
-                    JSContext* aCx,
-                    JS::MutableHandle<JS::Value> aValue)
-  {
-    JSObject* abv = aArgument.Create(aCx);
-    if (!abv) {
-      return false;
-    }
-    aValue.setObject(*abv);
-    return true;
-  }
-
-  // Accept objects that inherit from nsISupports but not nsWrapperCache (e.g.
-  // nsIDOMFile).
-  template <class T>
-  typename EnableIf<!IsBaseOf<nsWrapperCache, T>::value &&
-                    IsBaseOf<nsISupports, T>::value, bool>::Type
-  ArgumentToJSValue(T& aArgument,
-                    JSContext* aCx,
-                    JS::MutableHandle<JS::Value> aValue)
-  {
-    nsresult rv = nsContentUtils::WrapNative(aCx, &aArgument, aValue);
-    return NS_SUCCEEDED(rv);
-  }
-
-  template <template <typename> class SmartPtr, typename T>
-  bool
-  ArgumentToJSValue(const SmartPtr<T>& aArgument,
-                    JSContext* aCx,
-                    JS::MutableHandle<JS::Value> aValue)
-  {
-    return ArgumentToJSValue(*aArgument.get(), aCx, aValue);
-  }
-
-  // Accept arrays of other things we accept
-  template <typename T>
-  bool
-  ArgumentToJSValue(const nsTArray<T>& aArgument,
-                    JSContext* aCx,
-                    JS::MutableHandle<JS::Value> aValue)
-  {
-    JS::AutoValueVector v(aCx);
-    if (!v.resize(aArgument.Length())) {
-      return false;
-    }
-    for (uint32_t i = 0; i < aArgument.Length(); ++i) {
-      if (!ArgumentToJSValue(aArgument[i], aCx, v.handleAt(i))) {
-        return false;
-      }
-    }
-    JSObject* arrayObj = JS_NewArrayObject(aCx, v);
-    if (!arrayObj) {
-      return false;
-    }
-    aValue.setObject(*arrayObj);
-    return true;
-  }
-
   template <typename T>
   void MaybeSomething(T& aArgument, MaybeFunc aFunc) {
     ThreadsafeAutoJSContext cx;
@@ -304,7 +215,7 @@ private:
 
     JSAutoCompartment ac(cx, wrapper);
     JS::Rooted<JS::Value> val(cx);
-    if (!ArgumentToJSValue(aArgument, cx, &val)) {
+    if (!ToJSValue(cx, aArgument, &val)) {
       HandleException(cx);
       return;
     }
