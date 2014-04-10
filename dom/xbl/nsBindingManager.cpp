@@ -121,12 +121,6 @@ LookupObject(PLDHashTable& table, nsIContent* aKey)
   return nullptr;
 }
 
-inline void
-RemoveObjectEntry(PLDHashTable& table, nsISupports* aKey)
-{
-  PL_DHashTableOperate(&table, aKey, PL_DHASH_REMOVE);
-}
-
 static nsresult
 SetOrRemoveObject(PLDHashTable& table, nsIContent* aKey, nsISupports* aValue)
 {
@@ -166,7 +160,7 @@ SetOrRemoveObject(PLDHashTable& table, nsIContent* aKey, nsISupports* aValue)
       // Keep key and value alive while removing the entry.
       nsCOMPtr<nsISupports> key = entry->GetKey();
       nsCOMPtr<nsISupports> value = entry->GetValue();
-      RemoveObjectEntry(table, aKey);
+      PL_DHashTableOperate(&table, aKey, PL_DHASH_REMOVE);
     }
   }
   return NS_OK;
