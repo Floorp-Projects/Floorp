@@ -732,8 +732,15 @@ CacheFileMetadata::ParseMetadata(uint32_t aMetaOffset, uint32_t aBufOffset,
     return NS_ERROR_FILE_CORRUPTED;
   }
 
-  uint32_t elementsOffset = reinterpret_cast<CacheFileMetadataHeader *>(
-                              mBuf + hdrOffset)->mKeySize + keyOffset + 1;
+  mMetaHdr.ReadFromBuf(mBuf + hdrOffset);
+
+  if (mMetaHdr.mVersion != kCacheEntryVersion) {
+    LOG(("CacheFileMetadata::ParseMetadata() - Not a version we understand to. "
+         "[version=0x%x, this=%p]", mMetaHdr.mVersion, this));
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  uint32_t elementsOffset = mMetaHdr.mKeySize + keyOffset + 1;
 
   if (elementsOffset > metaposOffset) {
     LOG(("CacheFileMetadata::ParseMetadata() - Wrong elementsOffset %d "
@@ -748,27 +755,27 @@ CacheFileMetadata::ParseMetadata(uint32_t aMetaOffset, uint32_t aBufOffset,
     return NS_ERROR_FILE_CORRUPTED;
   }
 
-  uint32_t keySize = reinterpret_cast<CacheFileMetadataHeader *>(
-                       mBuf + hdrOffset)->mKeySize;
 
   if (!aHaveKey) {
     // get the key form metadata
-    mKey.Assign(mBuf + keyOffset, keySize);
+    mKey.Assign(mBuf + keyOffset, mMetaHdr.mKeySize);
 
     rv = ParseKey(mKey);
     if (NS_FAILED(rv))
       return rv;
   }
   else {
-    if (keySize != mKey.Length()) {
+    if (mMetaHdr.mKeySize != mKey.Length()) {
       LOG(("CacheFileMetadata::ParseMetadata() - Key collision (1), key=%s "
-           "[this=%p]", nsCString(mBuf + keyOffset, keySize).get(), this));
+           "[this=%p]", nsCString(mBuf + keyOffset, mMetaHdr.mKeySize).get(),
+           this));
       return NS_ERROR_FILE_CORRUPTED;
     }
 
     if (memcmp(mKey.get(), mBuf + keyOffset, mKey.Length()) != 0) {
       LOG(("CacheFileMetadata::ParseMetadata() - Key collision (2), key=%s "
-           "[this=%p]", nsCString(mBuf + keyOffset, keySize).get(), this));
+           "[this=%p]", nsCString(mBuf + keyOffset, mMetaHdr.mKeySize).get(),
+           this));
       return NS_ERROR_FILE_CORRUPTED;
     }
   }
@@ -797,14 +804,6 @@ CacheFileMetadata::ParseMetadata(uint32_t aMetaOffset, uint32_t aBufOffset,
     mHashArray = static_cast<CacheHash::Hash16_t *>(
                    moz_xmalloc(mHashArraySize));
     memcpy(mHashArray, mBuf + hashesOffset, mHashArraySize);
-  }
-
-  mMetaHdr.ReadFromBuf(mBuf + hdrOffset);
-
-  if (mMetaHdr.mVersion != kCacheEntryVersion) {
-    LOG(("CacheFileMetadata::ParseMetadata() - Not a version we understand to. "
-         "[version=0x%x, this=%p]", mMetaHdr.mVersion, this));
-    return NS_ERROR_UNEXPECTED;
   }
 
 
