@@ -29,7 +29,7 @@
 #include "nsTextFragment.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 #include <algorithm>
 
 // The bidi indicator hangs off the caret to one side, to show which
@@ -1101,7 +1101,7 @@ nsCaret::GetFrameSelection()
   if (!sel)
     return nullptr;
 
-  return static_cast<Selection*>(sel.get())->GetFrameSelection();
+  return static_cast<dom::Selection*>(sel.get())->GetFrameSelection();
 }
 
 void

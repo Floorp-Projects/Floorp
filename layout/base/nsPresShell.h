@@ -76,7 +76,7 @@ public:
   virtual NS_HIDDEN_(nsresult) SetPreferenceStyleRules(bool aForceReflow) MOZ_OVERRIDE;
 
   NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection);
-  virtual mozilla::Selection* GetCurrentSelection(SelectionType aType) MOZ_OVERRIDE;
+  virtual mozilla::dom::Selection* GetCurrentSelection(SelectionType aType) MOZ_OVERRIDE;
 
   NS_IMETHOD SetDisplaySelection(int16_t aToggle) MOZ_OVERRIDE;
   NS_IMETHOD GetDisplaySelection(int16_t *aToggle) MOZ_OVERRIDE;

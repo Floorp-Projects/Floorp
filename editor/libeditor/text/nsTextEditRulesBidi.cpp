@@ -12,7 +12,7 @@
 #include "nsIDOMNode.h"
 #include "nsIEditor.h"
 #include "nsIPresShell.h"
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 #include "nsISelectionPrivate.h"
 #include "nsISupportsImpl.h"
 #include "nsPlaintextEditor.h"
@@ -21,6 +21,7 @@
 #include "nscore.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // Test for distance between caret and text that will be deleted
 nsresult

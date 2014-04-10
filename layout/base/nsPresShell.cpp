@@ -62,7 +62,7 @@
 #include "nsCOMArray.h"
 #include "nsContainerFrame.h"
 #include "nsISelection.h"
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"

@@ -12,7 +12,9 @@
 
 namespace mozilla {
 
+namespace dom {
 class Selection;
+}
 
 namespace a11y {
 
@@ -367,7 +369,8 @@ private:
 class AccTextSelChangeEvent : public AccEvent
 {
 public:
-  AccTextSelChangeEvent(HyperTextAccessible* aTarget, Selection* aSelection,
+  AccTextSelChangeEvent(HyperTextAccessible* aTarget,
+                        dom::Selection* aSelection,
                         int32_t aReason);
   virtual ~AccTextSelChangeEvent();
 
@@ -386,7 +389,7 @@ public:
   bool IsCaretMoveOnly() const;
 
 private:
-  nsRefPtr<Selection> mSel;
+  nsRefPtr<dom::Selection> mSel;
   int32_t mReason;
 
   friend class EventQueue;
