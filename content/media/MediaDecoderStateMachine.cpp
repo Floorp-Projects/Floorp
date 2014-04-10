@@ -763,7 +763,7 @@ void MediaDecoderStateMachine::AudioLoop()
   bool setPlaybackRate;
   bool preservesPitch;
   bool setPreservesPitch;
-  AudioChannelType audioChannelType;
+  AudioChannel audioChannel;
 
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
@@ -773,7 +773,7 @@ void MediaDecoderStateMachine::AudioLoop()
     channels = mInfo.mAudio.mChannels;
     rate = mInfo.mAudio.mRate;
 
-    audioChannelType = mDecoder->GetAudioChannelType();
+    audioChannel = mDecoder->GetAudioChannel();
     volume = mVolume;
     preservesPitch = mPreservesPitch;
     playbackRate = mPlaybackRate;
@@ -784,7 +784,7 @@ void MediaDecoderStateMachine::AudioLoop()
     // circumstances, so we take care to drop the decoder monitor while
     // initializing.
     nsAutoPtr<AudioStream> audioStream(new AudioStream());
-    audioStream->Init(channels, rate, audioChannelType, AudioStream::HighLatency);
+    audioStream->Init(channels, rate, audioChannel, AudioStream::HighLatency);
     audioStream->SetVolume(volume);
     if (audioStream->SetPreservesPitch(preservesPitch) != NS_OK) {
       NS_WARNING("Setting the pitch preservation failed at AudioLoop start.");
