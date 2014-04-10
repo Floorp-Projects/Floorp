@@ -396,7 +396,7 @@ nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal *aPrincipal)
   }
 
   NS_ASSERTION(aPrincipal, "Must have principal by this point!");
-  
+
   NS_ADDREF(mPrincipal = aPrincipal);
 }
 
