@@ -810,6 +810,8 @@ let CustomizableUIInternal = {
 
       aWindow.addEventListener("unload", this);
       aWindow.addEventListener("command", this, true);
+
+      this.notifyListeners("onWindowOpened", aWindow);
     }
   },
 
@@ -850,6 +852,8 @@ let CustomizableUIInternal = {
         areaMap.delete(toDelete);
       }
     }
+
+    this.notifyListeners("onWindowClosed", aWindow);
   },
 
   setLocationAttributes: function(aNode, aArea) {
@@ -2477,6 +2481,18 @@ this.CustomizableUI = {
   get PANEL_COLUMN_COUNT() 3,
 
   /**
+   * An iteratable property of windows managed by CustomizableUI.
+   * Note that this can *only* be used as an iterator. ie:
+   *     for (let window of CustomizableUI.windows) { ... }
+   */
+  windows: {
+    "@@iterator": function*() {
+      for (let [window,] of gBuildWindows)
+        yield window;
+    }
+  },
+
+  /**
    * Add a listener object that will get fired for various events regarding
    * customization.
    *
@@ -2559,6 +2575,12 @@ this.CustomizableUI = {
    *   - onWidgetUnderflow(aNode, aContainer)
    *     Fired when a widget's DOM node is *not* overflowing its container, a
    *     toolbar, anymore.
+   *   - onWindowOpened(aWindow)
+   *     Fired when a window has been opened that is managed by CustomizableUI,
+   *     once all of the prerequisite setup has been done.
+   *   - onWindowClosed(aWindow)
+   *     Fired when a window that has been managed by CustomizableUI has been
+   *     closed.
    */
   addListener: function(aListener) {
     CustomizableUIInternal.addListener(aListener);
@@ -3274,7 +3296,7 @@ this.CustomizableUI = {
   }
 };
 Object.freeze(this.CustomizableUI);
-
+Object.freeze(this.CustomizableUI.windows);
 
 /**
  * All external consumers of widgets are really interacting with these wrappers
