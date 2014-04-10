@@ -230,7 +230,7 @@ toolbarbutton.bookmark-item > menupopup {
   -moz-margin-start: 3px;
 }
 
-.bookmark-item > .toolbarbutton-icon,
+.bookmark-item:not(#home-button) > .toolbarbutton-icon,
 #personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
   width: 16px;
   min-height: 16px;
@@ -1508,12 +1508,10 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 /* home button */
 
 #home-button.bookmark-item {
-  list-style-image: url("chrome://browser/skin/home.png");
-  -moz-image-region: rect(0, 12px, 12px, 0);
-}
-
-#home-button.bookmark-item:hover {
-  -moz-image-region: rect(0, 24px, 12px, 12px);
+  /* We need to use !important here, because other selectors that apply padding
+     are more specific. */
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 #home-button.bookmark-item > .toolbarbutton-icon {
@@ -2625,12 +2623,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 
-.bookmark-item {
+.bookmark-item:not(#home-button) {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 @media (min-resolution: 2dppx) {
-  .bookmark-item {
+  .bookmark-item:not(#home-button) {
     list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
   }
 
