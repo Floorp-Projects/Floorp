@@ -23,17 +23,7 @@
          JSMSG_EMPTY_ARRAY_REDUCE: false, JSMSG_CANT_CONVERT_TO: false,
 */
 
-/* Utility macros */
-#define TO_INT32(x) ((x) | 0)
-#define TO_UINT32(x) ((x) >>> 0)
-#define IS_UINT32(x) ((x) >>> 0 === (x))
-
-/* Assertions */
-#ifdef DEBUG
-#define assert(b, info) if (!(b)) AssertionFailed(info)
-#else
-#define assert(b, info)
-#endif
+#include "SelfHostingDefines.h"
 
 /* cache built-in functions before applications can change them */
 var std_isFinite = isFinite;
@@ -90,11 +80,6 @@ var std_Set_iterator = Set.prototype[std_iterator];
 var std_Map_iterator_next = Object.getPrototypeOf(Map()[std_iterator]()).next;
 var std_Set_iterator_next = Object.getPrototypeOf(Set()[std_iterator]()).next;
 
-/* Safe versions of ARRAY.push(ELEMENT) */
-#define ARRAY_PUSH(ARRAY, ELEMENT) \
-  callFunction(std_Array_push, ARRAY, ELEMENT);
-#define ARRAY_SLICE(ARRAY, ELEMENT) \
-  callFunction(std_Array_slice, ARRAY, ELEMENT);
 
 
 /********** List specification type **********/
