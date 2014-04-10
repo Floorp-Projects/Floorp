@@ -460,9 +460,26 @@ FxAccountsInternal.prototype = {
   },
 
   signOut: function signOut() {
-    this.abortExistingFlow();
-    this.currentAccountState.signedInUser = null; // clear in-memory cache
-    return this.signedInUserStorage.set(null).then(() => {
+    let currentState = this.currentAccountState;
+    let fxAccountsClient = this.fxAccountsClient;
+    let sessionToken;
+    return currentState.getUserAccountData().then(data => {
+      // Save the session token for use in the call to signOut below.
+      sessionToken = data && data.sessionToken;
+      this.abortExistingFlow();
+      this.currentAccountState.signedInUser = null; // clear in-memory cache
+      return this.signedInUserStorage.set(null);
+    }).then(() => {
+      // Wrap this in a promise so *any* errors in signOut won't
+      // block the local sign out. This is *not* returned.
+      Promise.resolve().then(() => {
+        // This can happen in the background and shouldn't block
+        // the user from signing out. The server must tolerate
+        // clients just disappearing, so this call should be best effort.
+        return fxAccountsClient.signOut(sessionToken);
+      }).then(null, err => {
+        log.error("Error during remote sign out of Firefox Accounts: " + err);
+      });
       this.notifyObservers(ONLOGOUT_NOTIFICATION);
     });
   },
@@ -497,15 +514,18 @@ FxAccountsInternal.prototype = {
       }
       if (!currentState.whenKeysReadyDeferred) {
         currentState.whenKeysReadyDeferred = Promise.defer();
-        this.fetchAndUnwrapKeys(data.keyFetchToken).then(data => {
-          if (!data.kA || !data.kB) {
-            currentState.whenKeysReadyDeferred.reject(
-              new Error("user data missing kA or kB")
-            );
-            return;
-          }
-          currentState.whenKeysReadyDeferred.resolve(data);
-        });
+        this.fetchAndUnwrapKeys(data.keyFetchToken).then(
+          data => {
+            if (!data.kA || !data.kB) {
+              currentState.whenKeysReadyDeferred.reject(
+                new Error("user data missing kA or kB")
+              );
+              return;
+            }
+            currentState.whenKeysReadyDeferred.resolve(data);
+          },
+          err => currentState.whenKeysReadyDeferred.reject(err)
+        );
       }
       return currentState.whenKeysReadyDeferred.promise;
     }).then(result => currentState.resolve(result));
