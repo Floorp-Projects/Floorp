@@ -7,7 +7,6 @@
 #define mozilla_dom_shadowroot_h__
 
 #include "mozilla/dom/DocumentFragment.h"
-#include "mozilla/dom/StyleSheetList.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTHashtable.h"
@@ -170,7 +169,7 @@ protected:
   bool mInsertionPointChanged;
 };
 
-class ShadowRootStyleSheetList : public StyleSheetList
+class ShadowRootStyleSheetList : public nsIDOMStyleSheetList
 {
 public:
   ShadowRootStyleSheetList(ShadowRoot* aShadowRoot);
@@ -181,8 +180,6 @@ public:
 
   // nsIDOMStyleSheetList
   NS_DECL_NSIDOMSTYLESHEETLIST
-
-  virtual nsCSSStyleSheet* GetItemAt(uint32_t aIndex) MOZ_OVERRIDE;
 
 protected:
   nsRefPtr<ShadowRoot> mShadowRoot;

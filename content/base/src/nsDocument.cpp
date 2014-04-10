@@ -769,7 +769,7 @@ nsDOMStyleSheetList::GetLength(uint32_t* aLength)
   return NS_OK;
 }
 
-nsCSSStyleSheet*
+nsIStyleSheet*
 nsDOMStyleSheetList::GetItemAt(uint32_t aIndex)
 {
   if (!mDocument || aIndex >= (uint32_t)mDocument->GetNumberOfStyleSheets()) {
@@ -779,7 +779,7 @@ nsDOMStyleSheetList::GetItemAt(uint32_t aIndex)
   nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(aIndex);
   NS_ASSERTION(sheet, "Must have a sheet");
 
-  return static_cast<nsCSSStyleSheet*>(sheet);
+  return sheet;
 }
 
 NS_IMETHODIMP
