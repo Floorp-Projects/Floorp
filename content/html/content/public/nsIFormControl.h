@@ -32,7 +32,6 @@ enum FormControlsTypes {
   // are not overlapping with sub-types/masks.
 
   // Elements with different types, the value is used as a mask.
-  // Adding '_ELEMENT' because NS_FORM_INPUT is used for 'oninput' event.
   // When changing the order, adding or removing elements, be sure to update
   // the static_assert checks accordingly.
   NS_FORM_BUTTON_ELEMENT = 0x40, // 0b01000000

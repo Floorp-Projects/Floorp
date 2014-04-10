@@ -2799,13 +2799,19 @@ function runIsComposingTest()
 
   function eventHandler(aEvent)
   {
-    is(aEvent.isComposing, expectedIsComposing,
-       "runIsComposingTest: " + description + " (type=" + aEvent.type + ", key=" + aEvent.key + ")");
+    if (aEvent.type == "keydown" || aEvent.type == "keyup") {
+      is(aEvent.isComposing, expectedIsComposing,
+         "runIsComposingTest: " + description + " (type=" + aEvent.type + ", key=" + aEvent.key + ")");
+    } else {
+      is(aEvent.isComposing, expectedIsComposing,
+         "runIsComposingTest: " + description + " (type=" + aEvent.type + ")");
+    }
   }
 
   textarea.addEventListener("keydown", eventHandler, true);
   textarea.addEventListener("keypress", eventHandler, true);
   textarea.addEventListener("keyup", eventHandler, true);
+  textarea.addEventListener("input", eventHandler, true);
 
   textarea.focus();
   textarea.value = "";
@@ -2848,15 +2854,18 @@ function runIsComposingTest()
       },
       "caret": { "start": 1, "length": 0 }
     });
-  synthesizeComposition({ type: "compositionend" });
 
+  // input event will be fired by synthesizing compositionend event.
+  // Then, its isComposing should be false.
   expectedIsComposing = false;
   description = "events after dispatching compositionend";
+  synthesizeComposition({ type: "compositionend" });
   synthesizeKey("VK_RETURN", { type: "keyup" });
 
   textarea.removeEventListener("keydown", eventHandler, true);
   textarea.removeEventListener("keypress", eventHandler, true);
   textarea.removeEventListener("keyup", eventHandler, true);
+  textarea.removeEventListener("input", eventHandler, true);
 
   textarea.value = "";
 }

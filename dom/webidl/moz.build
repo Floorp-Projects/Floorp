@@ -207,6 +207,7 @@ WEBIDL_FILES = [
     'IDBVersionChangeEvent.webidl',
     'ImageData.webidl',
     'ImageDocument.webidl',
+    'InputEvent.webidl',
     'InputMethod.webidl',
     'InspectorUtils.webidl',
     'InterAppConnection.webidl',
