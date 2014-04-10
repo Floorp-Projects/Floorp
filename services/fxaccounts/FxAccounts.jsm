@@ -514,15 +514,18 @@ FxAccountsInternal.prototype = {
       }
       if (!currentState.whenKeysReadyDeferred) {
         currentState.whenKeysReadyDeferred = Promise.defer();
-        this.fetchAndUnwrapKeys(data.keyFetchToken).then(data => {
-          if (!data.kA || !data.kB) {
-            currentState.whenKeysReadyDeferred.reject(
-              new Error("user data missing kA or kB")
-            );
-            return;
-          }
-          currentState.whenKeysReadyDeferred.resolve(data);
-        });
+        this.fetchAndUnwrapKeys(data.keyFetchToken).then(
+          data => {
+            if (!data.kA || !data.kB) {
+              currentState.whenKeysReadyDeferred.reject(
+                new Error("user data missing kA or kB")
+              );
+              return;
+            }
+            currentState.whenKeysReadyDeferred.resolve(data);
+          },
+          err => currentState.whenKeysReadyDeferred.reject(err)
+        );
       }
       return currentState.whenKeysReadyDeferred.promise;
     }).then(result => currentState.resolve(result));
