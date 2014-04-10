@@ -1514,14 +1514,26 @@ void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics) 
   mLastPaintRequestMetrics = aFrameMetrics;
 }
 
+/*static*/ CSSRect
+GetDisplayPortRect(const FrameMetrics& aFrameMetrics)
+{
+  // This computation is based on what happens in CalculatePendingDisplayPort. If that
+  // changes then this might need to change too
+  CSSRect baseRect(aFrameMetrics.GetScrollOffset(),
+                   CSSSize(std::min(aFrameMetrics.CalculateCompositedSizeInCssPixels().width,
+                                    aFrameMetrics.GetRootCompositionSize().width),
+                           std::min(aFrameMetrics.CalculateCompositedSizeInCssPixels().height,
+                                    aFrameMetrics.GetRootCompositionSize().height)));
+  baseRect.Inflate(aFrameMetrics.GetDisplayPortMargins() / aFrameMetrics.LayersPixelsPerCSSPixel());
+  return baseRect;
+}
+
 void
 AsyncPanZoomController::DispatchRepaintRequest(const FrameMetrics& aFrameMetrics) {
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
     APZC_LOG_FM(aFrameMetrics, "%p requesting content repaint", this);
-
-    LogRendertraceRect(GetGuid(), "requested displayport", "yellow",
-        aFrameMetrics.mDisplayPort + aFrameMetrics.GetScrollOffset());
+    LogRendertraceRect(GetGuid(), "requested displayport", "yellow", GetDisplayPortRect(aFrameMetrics));
 
     controller->RequestContentRepaint(aFrameMetrics);
     mLastDispatchedPaintMetrics = aFrameMetrics;
