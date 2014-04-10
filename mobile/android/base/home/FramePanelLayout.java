@@ -39,7 +39,11 @@ class FramePanelLayout extends PanelLayout {
 
         if (mChildView instanceof DatasetBacked) {
             final FilterDetail filter = new FilterDetail(mChildConfig.getFilter(), null);
-            final DatasetRequest request = new DatasetRequest(mChildConfig.getDatasetId(), filter);
+
+            final DatasetRequest request = new DatasetRequest(mChildConfig.getIndex(),
+                                                              mChildConfig.getDatasetId(),
+                                                              filter);
+
             Log.d(LOGTAG, "Requesting child request: " + request);
             requestDataset(request);
         }
