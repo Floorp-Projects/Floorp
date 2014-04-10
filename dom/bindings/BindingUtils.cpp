@@ -790,8 +790,8 @@ XPCOMObjectToJsval(JSContext* cx, JS::Handle<JSObject*> scope,
 }
 
 bool
-VariantToJsval(JSContext* aCx, JS::Handle<JSObject*> aScope,
-               nsIVariant* aVariant, JS::MutableHandle<JS::Value> aRetval)
+VariantToJsval(JSContext* aCx, nsIVariant* aVariant,
+               JS::MutableHandle<JS::Value> aRetval)
 {
   nsresult rv;
   if (!XPCVariant::VariantDataToJS(aVariant, &rv, aRetval)) {
@@ -857,7 +857,7 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
       return Throw(cx, rv);
     }
 
-    return WrapObject(cx, origObj, ci, &NS_GET_IID(nsIClassInfo), args.rval());
+    return WrapObject(cx, ci, &NS_GET_IID(nsIClassInfo), args.rval());
   }
 
   nsCOMPtr<nsISupports> unused;
@@ -882,9 +882,8 @@ GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
     return JS::NullValue();
   }
 
-  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   JS::Rooted<JS::Value> v(aCx, JSVAL_NULL);
-  if (!WrapObject(aCx, global, result, iid, &v)) {
+  if (!WrapObject(aCx, result, iid, &v)) {
     aError.Throw(NS_ERROR_FAILURE);
     return JS::NullValue();
   }
