@@ -81,10 +81,10 @@ var ZoomHelper = {
    */
   zoomToElement: function(aElement, aClickY = -1, aCanZoomOut = true, aCanScrollHorizontally = true) {
     let rect = ElementTouchHelper.getBoundingContentRect(aElement);
-    ZoomHelper.zoomToRect(rect, aClickY, aCanZoomOut, aCanScrollHorizontally);
+    ZoomHelper.zoomToRect(rect, aClickY, aCanZoomOut, aCanScrollHorizontally, aElement);
   },
 
-  zoomToRect: function(aRect, aClickY = -1, aCanZoomOut = true, aCanScrollHorizontally = true) {
+  zoomToRect: function(aRect, aClickY = -1, aCanZoomOut = true, aCanScrollHorizontally = true, aElement) {
     const margin = 15;
 
     if(!aRect.h || !aRect.w) {
@@ -102,22 +102,24 @@ var ZoomHelper = {
 
     // if the rect is already taking up most of the visible area and is stretching the
     // width of the page, then we want to zoom out instead.
-    if (BrowserEventHandler.mReflozPref) {
-      let zoomFactor = BrowserApp.selectedTab.getZoomToMinFontSize(aElement);
+    if (aElement) {
+      if (BrowserEventHandler.mReflozPref) {
+        let zoomFactor = BrowserApp.selectedTab.getZoomToMinFontSize(aElement);
 
-      bRect.width = zoomFactor <= 1.0 ? bRect.width : gScreenWidth / zoomFactor;
-      bRect.height = zoomFactor <= 1.0 ? bRect.height : bRect.height / zoomFactor;
-      if (zoomFactor == 1.0 || ZoomHelper.isRectZoomedIn(bRect, viewport)) {
+        bRect.width = zoomFactor <= 1.0 ? bRect.width : gScreenWidth / zoomFactor;
+        bRect.height = zoomFactor <= 1.0 ? bRect.height : bRect.height / zoomFactor;
+        if (zoomFactor == 1.0 || ZoomHelper.isRectZoomedIn(bRect, viewport)) {
+          if (aCanZoomOut) {
+            ZoomHelper.zoomOut();
+          }
+          return;
+        }
+      } else if (ZoomHelper.isRectZoomedIn(bRect, viewport)) {
         if (aCanZoomOut) {
           ZoomHelper.zoomOut();
         }
         return;
       }
-    } else if (ZoomHelper.isRectZoomedIn(bRect, viewport)) {
-      if (aCanZoomOut) {
-        ZoomHelper.zoomOut();
-      }
-      return;
     }
 
     let rect = {};
