@@ -1468,7 +1468,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private boolean isHomePagerVisible() {
-        return (mHomePager != null && mHomePager.isLoaded()
+        return (mHomePager != null && mHomePager.isVisible()
             && mHomePagerContainer != null && mHomePagerContainer.getVisibility() == View.VISIBLE);
     }
 
