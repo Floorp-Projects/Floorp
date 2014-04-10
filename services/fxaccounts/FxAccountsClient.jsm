@@ -23,6 +23,7 @@ this.FxAccountsClient = function(host = HOST) {
   // The FxA auth server expects requests to certain endpoints to be authorized
   // using Hawk.
   this.hawk = new HawkClient(host);
+  this.hawk.observerPrefix = "FxA:hawk";
 
   // Manage server backoff state. C.f.
   // https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md#backoff-protocol

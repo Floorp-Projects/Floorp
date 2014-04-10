@@ -329,7 +329,8 @@ TokenServerClient.prototype = {
       return;
     }
 
-    // Any response status can have an X-Backoff header.
+    // Any response status can have X-Backoff or X-Weave-Backoff headers.
+    this._maybeNotifyBackoff(response, "x-weave-backoff");
     this._maybeNotifyBackoff(response, "x-backoff");
 
     // The service shouldn't have any 3xx, so we don't need to handle those.
@@ -413,8 +414,20 @@ TokenServerClient.prototype = {
     });
   },
 
+  /*
+   * The prefix used for all notifications sent by this module.  This
+   * allows the handler of notifications to be sure they are handling
+   * notifications for the service they expect.
+   *
+   * If not set, no notifications will be sent.
+   */
+  observerPrefix: null,
+
   // Given an optional header value, notify that a backoff has been requested.
   _maybeNotifyBackoff: function (response, headerName) {
+    if (!this.observerPrefix) {
+      return;
+    }
     let headerVal = response.headers[headerName];
     if (!headerVal) {
       return;
@@ -427,7 +440,7 @@ TokenServerClient.prototype = {
                       headerName + "' header: " + headerVal);
       return;
     }
-    Observers.notify("tokenserver:backoff:interval", backoffInterval);
+    Observers.notify(this.observerPrefix + ":backoff:interval", backoffInterval);
   },
 
   // override points for testing.
