@@ -276,10 +276,7 @@
                   <vbox id="fxa-pweng-help">
                     <spacer flex="1"/>
                     <hbox id="fxa-pweng-help-link">
-                      <label value=" ["/>
-                      <label class="text-link" value="?"
-                             onclick="gSyncUtils.openMPInfoPage(event);"/>
-                      <label value="]"/>
+                      <image onclick="gSyncUtils.openMPInfoPage(event);" />
                     </hbox>
                     <spacer flex="1"/>
                   </vbox>
