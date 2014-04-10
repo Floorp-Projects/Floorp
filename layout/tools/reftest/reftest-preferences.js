@@ -40,4 +40,11 @@
     // can't guarantee taking both reftest snapshots at the same point
     // during the fade.
     branch.setBoolPref("layout.testing.overlay-scrollbars.always-visible", true);
-
+    // Disable interruptible reflow since (1) it's normally not going to
+    // happen, but (2) it might happen if we somehow end up with both
+    // pending user events and clock skew.  So to avoid having to change
+    // MakeProgress to deal with waiting for interruptible reflows to
+    // complete for a rare edge case, we just disable interruptible
+    // reflow so that that rare edge case doesn't lead to reftest
+    // failures.
+    branch.setBoolPref("layout.interruptible-reflow.enabled", false);
