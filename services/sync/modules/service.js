@@ -656,7 +656,7 @@ Sync11Service.prototype = {
     }
   },
 
-  verifyLogin: function verifyLogin() {
+  verifyLogin: function verifyLogin(allow40XRecovery = true) {
     // If the identity isn't ready it  might not know the username...
     if (!this.identity.readyToAuthenticate) {
       this._log.info("Not ready to authenticate in verifyLogin.");
@@ -727,8 +727,8 @@ Sync11Service.prototype = {
 
         case 404:
           // Check that we're verifying with the correct cluster
-          if (this._clusterManager.setCluster()) {
-            return this.verifyLogin();
+          if (allow40XRecovery && this._clusterManager.setCluster()) {
+            return this.verifyLogin(false);
           }
 
           // We must have the right cluster, but the server doesn't expect us
@@ -986,10 +986,9 @@ Sync11Service.prototype = {
   },
 
   logout: function logout() {
-    // No need to do anything if we're already logged out.
-    if (!this._loggedIn)
-      return;
-
+    // If we failed during login, we aren't going to have this._loggedIn set,
+    // but we still want to ask the identity to logout, so it doesn't try and
+    // reuse any old credentials next time we sync.
     this._log.info("Logging out");
     this.identity.logout();
     this._loggedIn = false;
@@ -1058,6 +1057,14 @@ Sync11Service.prototype = {
 
       // ... fetch the current record from the server, and COPY THE FLAGS.
       let newMeta = this.recordManager.get(this.metaURL);
+
+      // If we got a 401, we do not want to create a new meta/global - we
+      // should be able to get the existing meta after we get a new node.
+      if (this.recordManager.response.status == 401) {
+        this._log.debug("Fetching meta/global record on the server returned 401.");
+        this.errorHandler.checkServerError(this.recordManager.response);
+        return false;
+      }
 
       if (!this.recordManager.response.success || !newMeta) {
         this._log.debug("No meta/global record on the server. Creating one.");

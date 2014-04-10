@@ -408,14 +408,87 @@ add_task(function test_getTokenErrorWithRetry() {
   Assert.ok(Status.backoffInterval >= 200000);
 });
 
+add_task(function test_getKeysErrorWithBackoff() {
+  _("Auth server (via hawk) sends an observer notification on backoff headers.");
+
+  // Set Sync's backoffInterval to zero - after we simulated the backoff header
+  // it should reflect the value we sent.
+  Status.backoffInterval = 0;
+  _("Arrange for a 503 with a X-Backoff header.");
+
+  let config = makeIdentityConfig();
+  // We want no kA or kB so we attempt to fetch them.
+  delete config.fxaccount.user.kA;
+  delete config.fxaccount.user.kB;
+  config.fxaccount.user.keyFetchToken = "keyfetchtoken";
+  yield initializeIdentityWithHAWKResponseFactory(config, function(method, data, uri) {
+    Assert.equal(method, "get");
+    Assert.equal(uri, "http://mockedserver:9999/account/keys")
+    return {
+      status: 503,
+      headers: {"content-type": "application/json",
+                "x-backoff": "100"},
+      body: "{}",
+    }
+  });
+
+  let browseridManager = Service.identity;
+  yield Assert_rejects(browseridManager.whenReadyToAuthenticate.promise,
+                       "should reject due to 503");
+
+  // The observer should have fired - check it got the value in the response.
+  Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login was rejected");
+  // Sync will have the value in ms with some slop - so check it is at least that.
+  Assert.ok(Status.backoffInterval >= 100000);
+});
+
+add_task(function test_getKeysErrorWithRetry() {
+  _("Auth server (via hawk) sends an observer notification on retry headers.");
+
+  // Set Sync's backoffInterval to zero - after we simulated the backoff header
+  // it should reflect the value we sent.
+  Status.backoffInterval = 0;
+  _("Arrange for a 503 with a Retry-After header.");
+
+  let config = makeIdentityConfig();
+  // We want no kA or kB so we attempt to fetch them.
+  delete config.fxaccount.user.kA;
+  delete config.fxaccount.user.kB;
+  config.fxaccount.user.keyFetchToken = "keyfetchtoken";
+  yield initializeIdentityWithHAWKResponseFactory(config, function(method, data, uri) {
+    Assert.equal(method, "get");
+    Assert.equal(uri, "http://mockedserver:9999/account/keys")
+    return {
+      status: 503,
+      headers: {"content-type": "application/json",
+                "retry-after": "100"},
+      body: "{}",
+    }
+  });
+
+  let browseridManager = Service.identity;
+  yield Assert_rejects(browseridManager.whenReadyToAuthenticate.promise,
+                       "should reject due to 503");
+
+  // The observer should have fired - check it got the value in the response.
+  Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login was rejected");
+  // Sync will have the value in ms with some slop - so check it is at least that.
+  Assert.ok(Status.backoffInterval >= 100000);
+});
+
 add_task(function test_getHAWKErrors() {
   _("BrowserIDManager correctly handles various HAWK failures.");
 
   _("Arrange for a 401 - Sync should reflect an auth error.");
-  yield initializeIdentityWithHAWKFailure({
-    status: 401,
-    headers: {"content-type": "application/json"},
-    body: JSON.stringify({}),
+  let config = makeIdentityConfig();
+  yield initializeIdentityWithHAWKResponseFactory(config, function(method, data, uri) {
+    Assert.equal(method, "post");
+    Assert.equal(uri, "http://mockedserver:9999/certificate/sign")
+    return {
+      status: 401,
+      headers: {"content-type": "application/json"},
+      body: JSON.stringify({}),
+    }
   });
   Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED, "login was rejected");
 
@@ -424,16 +497,62 @@ add_task(function test_getHAWKErrors() {
   // And for good measure, some totally "unexpected" errors - we generally
   // assume these problems are going to magically go away at some point.
   _("Arrange for an empty body with a 200 response - should reflect a network error.");
-  yield initializeIdentityWithHAWKFailure({
-    status: 200,
-    headers: [],
-    body: "",
+  yield initializeIdentityWithHAWKResponseFactory(config, function(method, data, uri) {
+    Assert.equal(method, "post");
+    Assert.equal(uri, "http://mockedserver:9999/certificate/sign")
+    return {
+      status: 200,
+      headers: [],
+      body: "",
+    }
   });
   Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login state is LOGIN_FAILED_NETWORK_ERROR");
 });
 
-add_task(function test_getKeysError() {
-  _("BrowserIDManager correctly handles getKeys failures.");
+add_task(function test_getGetKeysFailing401() {
+  _("BrowserIDManager correctly handles 401 responses fetching keys.");
+
+  _("Arrange for a 401 - Sync should reflect an auth error.");
+  let config = makeIdentityConfig();
+  // We want no kA or kB so we attempt to fetch them.
+  delete config.fxaccount.user.kA;
+  delete config.fxaccount.user.kB;
+  config.fxaccount.user.keyFetchToken = "keyfetchtoken";
+  yield initializeIdentityWithHAWKResponseFactory(config, function(method, data, uri) {
+    Assert.equal(method, "get");
+    Assert.equal(uri, "http://mockedserver:9999/account/keys")
+    return {
+      status: 401,
+      headers: {"content-type": "application/json"},
+      body: "{}",
+    }
+  });
+  Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED, "login was rejected");
+});
+
+add_task(function test_getGetKeysFailing503() {
+  _("BrowserIDManager correctly handles 5XX responses fetching keys.");
+
+  _("Arrange for a 503 - Sync should reflect a network error.");
+  let config = makeIdentityConfig();
+  // We want no kA or kB so we attempt to fetch them.
+  delete config.fxaccount.user.kA;
+  delete config.fxaccount.user.kB;
+  config.fxaccount.user.keyFetchToken = "keyfetchtoken";
+  yield initializeIdentityWithHAWKResponseFactory(config, function(method, data, uri) {
+    Assert.equal(method, "get");
+    Assert.equal(uri, "http://mockedserver:9999/account/keys")
+    return {
+      status: 503,
+      headers: {"content-type": "application/json"},
+      body: "{}",
+    }
+  });
+  Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "state reflects network error");
+});
+
+add_task(function test_getKeysMissing() {
+  _("BrowserIDManager correctly handles getKeys succeeding but not returning keys.");
 
   let browseridManager = new BrowserIDManager();
   let identityConfig = makeIdentityConfig();
@@ -482,32 +601,44 @@ add_task(function test_getKeysError() {
 // Utility functions follow
 
 // Create a new browserid_identity object and initialize it with a
-// hawk mock that simulates a failure.
+// hawk mock that simulates HTTP responses.
+// The callback function will be called each time the mocked hawk server wants
+// to make a request.  The result of the callback should be the mock response
+// object that will be returned to hawk.
 // A token server mock will be used that doesn't hit a server, so we move
 // directly to a hawk request.
-function* initializeIdentityWithHAWKFailure(response) {
+function* initializeIdentityWithHAWKResponseFactory(config, cbGetResponse) {
   // A mock request object.
-  function MockRESTRequest() {};
+  function MockRESTRequest(uri, credentials, extra) {
+    this._uri = uri;
+    this._credentials = credentials;
+    this._extra = extra;
+  };
   MockRESTRequest.prototype = {
     setHeader: function() {},
     post: function(data, callback) {
-      this.response = response;
+      this.response = cbGetResponse("post", data, this._uri, this._credentials, this._extra);
+      callback.call(this);
+    },
+    get: function(callback) {
+      this.response = cbGetResponse("get", null, this._uri, this._credentials, this._extra);
       callback.call(this);
     }
   }
 
   // The hawk client.
   function MockedHawkClient() {}
-  MockedHawkClient.prototype = new HawkClient();
+  MockedHawkClient.prototype = new HawkClient("http://mockedserver:9999");
   MockedHawkClient.prototype.constructor = MockedHawkClient;
   MockedHawkClient.prototype.newHAWKAuthenticatedRESTRequest = function(uri, credentials, extra) {
-    return new MockRESTRequest();
+    return new MockRESTRequest(uri, credentials, extra);
   }
+  // Arrange for the same observerPrefix as FxAccountsClient uses
+  MockedHawkClient.prototype.observerPrefix = "FxA:hawk";
 
   // tie it all together - configureFxAccountIdentity isn't useful here :(
   let fxaClient = new MockFxAccountsClient();
   fxaClient.hawk = new MockedHawkClient();
-  let config = makeIdentityConfig();
   let internal = {
     fxAccountsClient: fxaClient,
   }
