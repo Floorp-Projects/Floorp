@@ -234,4 +234,16 @@ html|a.inline-link:-moz-focusring {
   margin: 0;
 }
 
+#fxa-pweng-help-link > image {
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://global/skin/icons/question-16.png");
+}
+
+@media (min-resolution: 2dppx) {
+  #fxa-pweng-help-link > image {
+    list-style-image: url("chrome://global/skin/icons/question-32.png");
+  }
+}
+
 %endif
