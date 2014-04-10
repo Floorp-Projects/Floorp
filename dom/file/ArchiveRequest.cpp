@@ -194,7 +194,9 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
     str = JS_NewUCStringCopyZ(aCx, filename.get());
     NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
-    if (NS_FAILED(rv) || !JS_SetElement(aCx, array, i, str)) {
+    if (NS_FAILED(rv) ||
+        !JS_DefineElement(aCx, array, i, JS::StringValue(str), nullptr, nullptr,
+                          JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -220,9 +222,8 @@ ArchiveRequest::GetFileResult(JSContext* aCx,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (filename == mFilename) {
-      JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-      return nsContentUtils::WrapNative(aCx, global, file,
-                                        &NS_GET_IID(nsIDOMFile), aValue);
+      return nsContentUtils::WrapNative(aCx, file, &NS_GET_IID(nsIDOMFile),
+                                        aValue);
     }
   }
 
@@ -243,11 +244,11 @@ ArchiveRequest::GetFilesResult(JSContext* aCx,
     nsCOMPtr<nsIDOMFile> file = aFileList[i];
 
     JS::Rooted<JS::Value> value(aCx);
-    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-    nsresult rv = nsContentUtils::WrapNative(aCx, global, file,
-                                             &NS_GET_IID(nsIDOMFile),
+    nsresult rv = nsContentUtils::WrapNative(aCx, file, &NS_GET_IID(nsIDOMFile),
                                              &value);
-    if (NS_FAILED(rv) || !JS_SetElement(aCx, array, i, value)) {
+    if (NS_FAILED(rv) ||
+        !JS_DefineElement(aCx, array, i, value, nullptr, nullptr,
+                          JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
   }

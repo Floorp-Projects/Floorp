@@ -121,12 +121,7 @@ HelperBase::WrapNative(JSContext* aCx,
   NS_ASSERTION(aResult.address(), "Null pointer!");
   NS_ASSERTION(mRequest, "Null request!");
 
-  nsRefPtr<IDBWrapperCache> wrapper = static_cast<IDBWrapperCache*>(mRequest);
-  JS::Rooted<JSObject*> global(aCx, wrapper->GetParentObject());
-  NS_ASSERTION(global, "This should never be null!");
-
-  nsresult rv =
-    nsContentUtils::WrapNative(aCx, global, aNative, aResult);
+  nsresult rv = nsContentUtils::WrapNative(aCx, aNative, aResult);
   IDB_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   return NS_OK;

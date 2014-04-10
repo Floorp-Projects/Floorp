@@ -863,7 +863,7 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   JS::Rooted<JS::Value> v(cx);
   {
     JSAutoCompartment ac(cx, wrapScope);
-    nsresult rv = nsContentUtils::WrapNative(cx, wrapScope, mTarget, &v,
+    nsresult rv = nsContentUtils::WrapNative(cx, mTarget, &v,
                                              /* aAllowWrapping = */ false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;

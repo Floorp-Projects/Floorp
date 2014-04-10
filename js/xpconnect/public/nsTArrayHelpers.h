@@ -23,16 +23,13 @@ nsTArrayToJSArray(JSContext* aCx, const nsTArray<T>& aSourceArray,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-  MOZ_ASSERT(global);
-
   for (uint32_t index = 0; index < aSourceArray.Length(); index++) {
     nsCOMPtr<nsISupports> obj;
     nsresult rv = aSourceArray[index]->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(obj));
     NS_ENSURE_SUCCESS(rv, rv);
 
     JS::RootedValue wrappedVal(aCx);
-    rv = nsContentUtils::WrapNative(aCx, global, obj, &wrappedVal);
+    rv = nsContentUtils::WrapNative(aCx, obj, &wrappedVal);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!JS_SetElement(aCx, arrayObj, index, wrappedVal)) {

@@ -1649,29 +1649,28 @@ public:
   static bool CanAccessNativeAnon();
 
   MOZ_WARN_UNUSED_RESULT
-  static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
-                             nsISupports *native, const nsIID* aIID,
-                             JS::MutableHandle<JS::Value> vp)
+  static nsresult WrapNative(JSContext *cx, nsISupports *native,
+                             const nsIID* aIID, JS::MutableHandle<JS::Value> vp)
   {
-    return WrapNative(cx, scope, native, nullptr, aIID, vp, true);
+    return WrapNative(cx, native, nullptr, aIID, vp, true);
   }
 
   // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
   MOZ_WARN_UNUSED_RESULT
-  static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
-                             nsISupports *native, JS::MutableHandle<JS::Value> vp,
-                             bool aAllowWrapping = true)
-  {
-    return WrapNative(cx, scope, native, nullptr, nullptr, vp, aAllowWrapping);
-  }
-
-  MOZ_WARN_UNUSED_RESULT
-  static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
-                             nsISupports *native, nsWrapperCache *cache,
+  static nsresult WrapNative(JSContext *cx, nsISupports *native,
                              JS::MutableHandle<JS::Value> vp,
                              bool aAllowWrapping = true)
   {
-    return WrapNative(cx, scope, native, cache, nullptr, vp, aAllowWrapping);
+    return WrapNative(cx, native, nullptr, nullptr, vp, aAllowWrapping);
+  }
+
+  MOZ_WARN_UNUSED_RESULT
+  static nsresult WrapNative(JSContext *cx, nsISupports *native,
+                             nsWrapperCache *cache,
+                             JS::MutableHandle<JS::Value> vp,
+                             bool aAllowWrapping = true)
+  {
+    return WrapNative(cx, native, cache, nullptr, vp, aAllowWrapping);
   }
 
   /**
@@ -2131,9 +2130,9 @@ private:
   static bool CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
                                 nsIPrincipal* aPrincipal);
 
-  static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
-                             nsISupports *native, nsWrapperCache *cache,
-                             const nsIID* aIID, JS::MutableHandle<JS::Value> vp,
+  static nsresult WrapNative(JSContext *cx, nsISupports *native,
+                             nsWrapperCache *cache, const nsIID* aIID,
+                             JS::MutableHandle<JS::Value> vp,
                              bool aAllowWrapping);
 
   static nsresult DispatchEvent(nsIDocument* aDoc,

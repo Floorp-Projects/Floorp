@@ -148,9 +148,9 @@ MobileMessageManager::Send(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
                                  false, msgCallback);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JS::Rooted<JSObject*> global(aCx, aGlobal);
+  js::AssertSameCompartment(aCx, aGlobal);
   JS::Rooted<JS::Value> rval(aCx);
-  rv = nsContentUtils::WrapNative(aCx, global,
+  rv = nsContentUtils::WrapNative(aCx,
                                   static_cast<nsIDOMDOMRequest*>(request.get()),
                                   &rval);
   if (NS_FAILED(rv)) {

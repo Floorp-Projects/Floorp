@@ -55,9 +55,7 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
 #endif
 
     JS::Rooted<JS::Value> wrappedFile(aCx);
-    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-    nsresult rv = nsContentUtils::WrapNative(aCx, global, file,
-                                             &NS_GET_IID(nsIDOMFile),
+    nsresult rv = nsContentUtils::WrapNative(aCx, file, &NS_GET_IID(nsIDOMFile),
                                              &wrappedFile);
     if (NS_FAILED(rv)) {
       Error(aCx, nsIDOMDOMException::DATA_CLONE_ERR);
@@ -84,9 +82,7 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
 #endif
 
     JS::Rooted<JS::Value> wrappedBlob(aCx);
-    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-    nsresult rv = nsContentUtils::WrapNative(aCx, global, blob,
-                                             &NS_GET_IID(nsIDOMBlob),
+    nsresult rv = nsContentUtils::WrapNative(aCx, blob, &NS_GET_IID(nsIDOMBlob),
                                              &wrappedBlob);
     if (NS_FAILED(rv)) {
       Error(aCx, nsIDOMDOMException::DATA_CLONE_ERR);
