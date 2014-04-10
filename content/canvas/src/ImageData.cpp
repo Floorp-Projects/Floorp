@@ -52,8 +52,8 @@ ImageData::Constructor(const GlobalObject& aGlobal,
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
   }
-  JS::Rooted<JSObject*> obj(aGlobal.GetContext(), aGlobal.Get());
-  JSObject* data = Uint8ClampedArray::Create(aGlobal.GetContext(), obj,
+  js::AssertSameCompartment(aGlobal.GetContext(), aGlobal.Get());
+  JSObject* data = Uint8ClampedArray::Create(aGlobal.GetContext(),
                                              length.value());
   if (!data) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);

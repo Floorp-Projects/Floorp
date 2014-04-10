@@ -75,7 +75,8 @@ TextEncoder::Encode(JSContext* aCx,
   JSObject* outView = nullptr;
   if (NS_SUCCEEDED(rv)) {
     buf[dstLen] = '\0';
-    outView = Uint8Array::Create(aCx, aObj, dstLen,
+    JSAutoCompartment ac(aCx, aObj);
+    outView = Uint8Array::Create(aCx, dstLen,
                                  reinterpret_cast<uint8_t*>(buf.get()));
     if (!outView) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
