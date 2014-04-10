@@ -768,8 +768,10 @@ IMEStateManager::GetTextCompositionFor(nsIWidget* aWidget)
 already_AddRefed<TextComposition>
 IMEStateManager::GetTextCompositionFor(WidgetGUIEvent* aEvent)
 {
-  MOZ_ASSERT(aEvent->AsCompositionEvent() || aEvent->AsTextEvent(),
-             "aEvent has to be WidgetCompositionEvent or WidgetTextEvent");
+  MOZ_ASSERT(aEvent->AsCompositionEvent() || aEvent->AsTextEvent() ||
+             aEvent->AsKeyboardEvent(),
+             "aEvent has to be WidgetCompositionEvent, WidgetTextEvent or "
+             "WidgetKeyboardEvent");
   return GetTextCompositionFor(aEvent->widget);
 }
 

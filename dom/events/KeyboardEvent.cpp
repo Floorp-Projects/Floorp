@@ -105,6 +105,12 @@ KeyboardEvent::GetRepeat(bool* aIsRepeat)
   return NS_OK;
 }
 
+bool
+KeyboardEvent::IsComposing()
+{
+  return mEvent->AsKeyboardEvent()->mIsComposing;
+}
+
 NS_IMETHODIMP
 KeyboardEvent::GetModifierState(const nsAString& aKey,
                                 bool* aState)
