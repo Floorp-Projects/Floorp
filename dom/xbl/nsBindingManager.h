@@ -8,7 +8,7 @@
 
 #include "nsIContent.h"
 #include "nsStubMutationObserver.h"
-#include "pldhash.h"
+#include "nsHashKeys.h"
 #include "nsInterfaceHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsURIHashKey.h"
@@ -170,7 +170,8 @@ protected:
   // its lifetime, and I prevent a re-wrap of the same script object
   // (in the case where multiple bindings in an XBL inheritance chain
   // both implement an XPIDL interface).
-  nsAutoPtr<PLDHashTable> mWrapperTable;
+  typedef nsInterfaceHashtable<nsISupportsHashKey, nsIXPConnectWrappedJS> WrapperHashtable;
+  nsAutoPtr<WrapperHashtable> mWrapperTable;
 
   // A mapping from a URL (a string) to nsXBLDocumentInfo*.  This table
   // is the cache of all binding documents that have been loaded by a

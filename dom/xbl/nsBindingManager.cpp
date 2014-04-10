@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsBindingManager.h"
+
 #include "nsCOMPtr.h"
 #include "nsXBLService.h"
 #include "nsIInputStream.h"
@@ -41,7 +43,6 @@
 #include "nsTHashtable.h"
 
 #include "nsIScriptContext.h"
-#include "nsBindingManager.h"
 #include "xpcpublic.h"
 #include "jswrapper.h"
 #include "nsCxPusher.h"
@@ -51,79 +52,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-//
-// Generic pldhash table stuff for mapping one nsISupports to another
-//
-// These values are never null - a null value implies that this
-// whole key should be removed (See SetWrappedJS)
-class ObjectEntry : public PLDHashEntryHdr
-{
-public:
-
-  // note that these are allocated within the PLDHashTable, but we
-  // want to keep track of them anyway
-  ObjectEntry() { MOZ_COUNT_CTOR(ObjectEntry); }
-  ~ObjectEntry() { MOZ_COUNT_DTOR(ObjectEntry); }
-
-  nsISupports* GetValue() { return mValue; }
-  nsISupports* GetKey() { return mKey; }
-  void SetValue(nsISupports* aValue) { mValue = aValue; }
-  void SetKey(nsISupports* aKey) { mKey = aKey; }
-
-private:
-  nsCOMPtr<nsISupports> mKey;
-  nsCOMPtr<nsISupports> mValue;
-};
-
-static void
-ClearObjectEntry(PLDHashTable* table, PLDHashEntryHdr *entry)
-{
-  ObjectEntry* objEntry = static_cast<ObjectEntry*>(entry);
-  objEntry->~ObjectEntry();
-}
-
-static bool
-InitObjectEntry(PLDHashTable* table, PLDHashEntryHdr* entry, const void* key)
-{
-  new (entry) ObjectEntry;
-  return true;
-}
-
-
-
-static const PLDHashTableOps ObjectTableOps = {
-  PL_DHashAllocTable,
-  PL_DHashFreeTable,
-  PL_DHashVoidPtrKeyStub,
-  PL_DHashMatchEntryStub,
-  PL_DHashMoveEntryStub,
-  ClearObjectEntry,
-  PL_DHashFinalizeStub,
-  InitObjectEntry
-};
-
-
-// helper routine for looking up an existing entry. Note that the
-// return result is NOT addreffed
-static nsISupports*
-LookupObject(PLDHashTable* table, nsIContent* aKey)
-{
-  if (aKey && aKey->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    ObjectEntry *entry =
-      static_cast<ObjectEntry*>
-                 (PL_DHashTableOperate(table, aKey, PL_DHASH_LOOKUP));
-
-    if (PL_DHASH_ENTRY_IS_BUSY(entry))
-      return entry->GetValue();
-  }
-
-  return nullptr;
-}
-
-// Implementation /////////////////////////////////////////////////////////////////
-
-// Static member variable initialization
 
 // Implement our nsISupports methods
 
@@ -142,7 +70,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBindingManager)
     tmp->mLoadingDocTable->Clear();
 
   if (tmp->mWrapperTable) {
-    PL_DHashTableFinish(tmp->mWrapperTable);
+    tmp->mWrapperTable->Clear();
     tmp->mWrapperTable = nullptr;
   }
 
@@ -209,10 +137,6 @@ nsBindingManager::nsBindingManager(nsIDocument* aDocument)
 nsBindingManager::~nsBindingManager(void)
 {
   mDestroyed = true;
-
-  if (mWrapperTable) {
-    PL_DHashTableFinish(mWrapperTable);
-  }
 }
 
 nsXBLBinding*
@@ -245,11 +169,15 @@ nsBindingManager::RemoveBoundContent(nsIContent* aContent)
 nsIXPConnectWrappedJS*
 nsBindingManager::GetWrappedJS(nsIContent* aContent)
 {
-  if (mWrapperTable) {
-    return static_cast<nsIXPConnectWrappedJS*>(LookupObject(mWrapperTable, aContent));
+  if (!mWrapperTable) {
+    return nullptr;
   }
 
-  return nullptr;
+  if (!aContent || !aContent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    return nullptr;
+  }
+
+  return mWrapperTable->GetWeak(aContent);
 }
 
 nsresult
@@ -262,43 +190,21 @@ nsBindingManager::SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aWra
   if (aWrappedJS) {
     // lazily create the table, but only when adding elements
     if (!mWrapperTable) {
-      mWrapperTable = new PLDHashTable();
-      PL_DHashTableInit(mWrapperTable, &ObjectTableOps, nullptr,
-                        sizeof(ObjectEntry), 16);
+      mWrapperTable = new WrapperHashtable();
     }
     aContent->SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
 
     NS_ASSERTION(aContent, "key must be non-null");
     if (!aContent) return NS_ERROR_INVALID_ARG;
 
-    ObjectEntry *entry =
-      static_cast<ObjectEntry*>(PL_DHashTableOperate(mWrapperTable, aContent, PL_DHASH_ADD));
-
-    if (!entry)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    // only add the key if the entry is new
-    if (!entry->GetKey())
-      entry->SetKey(aContent);
-
-    // now attach the new entry - note that entry->mValue could possibly
-    // have a value already, this will release that.
-    entry->SetValue(aWrappedJS);
+    mWrapperTable->Put(aContent, aWrappedJS);
 
     return NS_OK;
   }
 
   // no value, so remove the key from the table
   if (mWrapperTable) {
-    ObjectEntry* entry =
-      static_cast<ObjectEntry*>
-        (PL_DHashTableOperate(mWrapperTable, aContent, PL_DHASH_LOOKUP));
-    if (entry && PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      // Keep key and value alive while removing the entry.
-      nsCOMPtr<nsISupports> key = entry->GetKey();
-      nsCOMPtr<nsISupports> value = entry->GetValue();
-      PL_DHashTableOperate(mWrapperTable, aContent, PL_DHASH_REMOVE);
-    }
+    mWrapperTable->Remove(aContent);
   }
 
   return NS_OK;
@@ -1120,9 +1026,8 @@ nsBindingManager::Traverse(nsIContent *aContent,
     cb.NoteXPCOMChild(aContent);
   }
 
-  nsISupports *value;
-  if (mWrapperTable &&
-      (value = LookupObject(mWrapperTable, aContent))) {
+  nsIXPConnectWrappedJS *value = GetWrappedJS(aContent);
+  if (value) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mWrapperTable key");
     cb.NoteXPCOMChild(aContent);
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mWrapperTable value");
