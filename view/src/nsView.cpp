@@ -17,7 +17,6 @@
 #include "nsPresArena.h"
 #include "nsXULPopupManager.h"
 #include "nsIWidgetListener.h"
-#include "nsContentUtils.h" // for nsAutoScriptBlocker
 
 using namespace mozilla;
 
@@ -1055,16 +1054,6 @@ nsView::DidPaintWindow()
 {
   nsRefPtr<nsViewManager> vm = mViewManager;
   vm->DidPaintWindow();
-}
-
-void
-nsView::DidCompositeWindow()
-{
-  nsIPresShell* presShell = mViewManager->GetPresShell();
-  if (presShell) {
-    nsAutoScriptBlocker scriptBlocker;
-    presShell->GetPresContext()->GetDisplayRootPresContext()->GetRootPresContext()->NotifyDidPaintForSubtree(nsIPresShell::PAINT_COMPOSITE);
-  }
 }
 
 void
