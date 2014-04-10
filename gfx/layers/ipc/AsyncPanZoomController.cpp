@@ -1486,15 +1486,12 @@ void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics) 
 
   // If we're trying to paint what we already think is painted, discard this
   // request since it's a pointless paint.
-  CSSRect oldDisplayPort = mLastPaintRequestMetrics.mDisplayPort
-                         + mLastPaintRequestMetrics.GetScrollOffset();
-  CSSRect newDisplayPort = aFrameMetrics.mDisplayPort
-                         + aFrameMetrics.GetScrollOffset();
-
-  if (fabsf(oldDisplayPort.x - newDisplayPort.x) < EPSILON &&
-      fabsf(oldDisplayPort.y - newDisplayPort.y) < EPSILON &&
-      fabsf(oldDisplayPort.width - newDisplayPort.width) < EPSILON &&
-      fabsf(oldDisplayPort.height - newDisplayPort.height) < EPSILON &&
+  LayerMargin marginDelta = mLastPaintRequestMetrics.GetDisplayPortMargins()
+                          - aFrameMetrics.GetDisplayPortMargins();
+  if (fabsf(marginDelta.left) < EPSILON &&
+      fabsf(marginDelta.top) < EPSILON &&
+      fabsf(marginDelta.right) < EPSILON &&
+      fabsf(marginDelta.bottom) < EPSILON &&
       fabsf(mLastPaintRequestMetrics.GetScrollOffset().x -
             aFrameMetrics.GetScrollOffset().x) < EPSILON &&
       fabsf(mLastPaintRequestMetrics.GetScrollOffset().y -
