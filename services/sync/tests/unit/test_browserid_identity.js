@@ -408,6 +408,74 @@ add_task(function test_getTokenErrorWithRetry() {
   Assert.ok(Status.backoffInterval >= 200000);
 });
 
+add_task(function test_getKeysErrorWithBackoff() {
+  _("Auth server (via hawk) sends an observer notification on backoff headers.");
+
+  // Set Sync's backoffInterval to zero - after we simulated the backoff header
+  // it should reflect the value we sent.
+  Status.backoffInterval = 0;
+  _("Arrange for a 503 with a X-Backoff header.");
+
+  let config = makeIdentityConfig();
+  // We want no kA or kB so we attempt to fetch them.
+  delete config.fxaccount.user.kA;
+  delete config.fxaccount.user.kB;
+  config.fxaccount.user.keyFetchToken = "keyfetchtoken";
+  yield initializeIdentityWithHAWKResponseFactory(config, function(method, data, uri) {
+    Assert.equal(method, "get");
+    Assert.equal(uri, "http://mockedserver:9999/account/keys")
+    return {
+      status: 503,
+      headers: {"content-type": "application/json",
+                "x-backoff": "100"},
+      body: "{}",
+    }
+  });
+
+  let browseridManager = Service.identity;
+  yield Assert_rejects(browseridManager.whenReadyToAuthenticate.promise,
+                       "should reject due to 503");
+
+  // The observer should have fired - check it got the value in the response.
+  Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login was rejected");
+  // Sync will have the value in ms with some slop - so check it is at least that.
+  Assert.ok(Status.backoffInterval >= 100000);
+});
+
+add_task(function test_getKeysErrorWithRetry() {
+  _("Auth server (via hawk) sends an observer notification on retry headers.");
+
+  // Set Sync's backoffInterval to zero - after we simulated the backoff header
+  // it should reflect the value we sent.
+  Status.backoffInterval = 0;
+  _("Arrange for a 503 with a Retry-After header.");
+
+  let config = makeIdentityConfig();
+  // We want no kA or kB so we attempt to fetch them.
+  delete config.fxaccount.user.kA;
+  delete config.fxaccount.user.kB;
+  config.fxaccount.user.keyFetchToken = "keyfetchtoken";
+  yield initializeIdentityWithHAWKResponseFactory(config, function(method, data, uri) {
+    Assert.equal(method, "get");
+    Assert.equal(uri, "http://mockedserver:9999/account/keys")
+    return {
+      status: 503,
+      headers: {"content-type": "application/json",
+                "retry-after": "100"},
+      body: "{}",
+    }
+  });
+
+  let browseridManager = Service.identity;
+  yield Assert_rejects(browseridManager.whenReadyToAuthenticate.promise,
+                       "should reject due to 503");
+
+  // The observer should have fired - check it got the value in the response.
+  Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login was rejected");
+  // Sync will have the value in ms with some slop - so check it is at least that.
+  Assert.ok(Status.backoffInterval >= 100000);
+});
+
 add_task(function test_getHAWKErrors() {
   _("BrowserIDManager correctly handles various HAWK failures.");
 
@@ -523,6 +591,8 @@ function* initializeIdentityWithHAWKResponseFactory(config, cbGetResponse) {
   MockedHawkClient.prototype.newHAWKAuthenticatedRESTRequest = function(uri, credentials, extra) {
     return new MockRESTRequest(uri, credentials, extra);
   }
+  // Arrange for the same observerPrefix as FxAccountsClient uses
+  MockedHawkClient.prototype.observerPrefix = "FxA:hawk";
 
   // tie it all together - configureFxAccountIdentity isn't useful here :(
   let fxaClient = new MockFxAccountsClient();

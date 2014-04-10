@@ -80,6 +80,7 @@ this.BrowserIDManager = function BrowserIDManager() {
   // the test suite.
   this._fxaService = fxAccounts;
   this._tokenServerClient = new TokenServerClient();
+  this._tokenServerClient.observerPrefix = "weave:service";
   // will be a promise that resolves when we are ready to authenticate
   this.whenReadyToAuthenticate = null;
   this._log = log;
