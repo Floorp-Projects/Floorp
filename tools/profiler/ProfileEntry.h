@@ -26,7 +26,7 @@ public:
   ProfileEntry(char aTagName, const char *aTagData);
   ProfileEntry(char aTagName, void *aTagPtr);
   ProfileEntry(char aTagName, ProfilerMarker *aTagMarker);
-  ProfileEntry(char aTagName, double aTagFloat);
+  ProfileEntry(char aTagName, float aTagFloat);
   ProfileEntry(char aTagName, uintptr_t aTagOffset);
   ProfileEntry(char aTagName, Address aTagAddress);
   ProfileEntry(char aTagName, int aTagLine);
@@ -51,7 +51,7 @@ private:
     char        mTagChars[sizeof(void*)];
     void*       mTagPtr;
     ProfilerMarker* mTagMarker;
-    double      mTagFloat;
+    float       mTagFloat;
     Address     mTagAddress;
     uintptr_t   mTagOffset;
     int         mTagLine;
