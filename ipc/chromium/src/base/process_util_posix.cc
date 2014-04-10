@@ -248,12 +248,19 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
   int status;
   const int result = HANDLE_EINTR(waitpid(handle, &status, WNOHANG));
   if (result == -1) {
-    // The dead process originally spawned from Nuwa might be taken as not
-    // crashed because the above waitpid() call returns -1 and ECHILD. The
-    // caller shouldn't behave incorrectly because of this false negative.
+    // This shouldn't happen, but sometimes it does.  The error is
+    // probably ECHILD and the reason is probably that a pid was
+    // waited on again after a previous wait reclaimed its zombie.
+    // (It could also occur if the process isn't a direct child, but
+    // don't do that.)  This is bad, because it risks interfering with
+    // an unrelated child process if the pid is reused.
+    //
+    // So, lacking reliable information, we indicate that the process
+    // is dead, in the hope that the caller will give up and stop
+    // calling us.  See also bug 943174 and bug 933680.
     CHROMIUM_LOG(ERROR) << "waitpid failed pid:" << handle << " errno:" << errno;
     if (child_exited)
-      *child_exited = false;
+      *child_exited = true;
     return false;
   } else if (result == 0) {
     // the child hasn't exited yet.
