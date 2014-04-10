@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <div id="content" style="display: none"/>
+</body>
+
+<script>
+SimpleTest.waitForExplicitFinish();
+
+var seenNotification = false;
+function notify(subject, topic, data) {
+  seenNotification = true;
+  is(topic, "document-element-inserted", "Should be the right notification");
+  is(subject, otherWindow.document, "Should have been notified about the right window");
+  ok(subject.documentElement, "documentElement should be defined");
+}
+
+var obs = Components.classes["@mozilla.org/observer-service;1"].
+          getService(Components.interfaces.nsIObserverService)
+obs.addObserver(notify, "document-element-inserted", false);
+
+var otherWindow = window.open("window_documentnotification.xul", "_new", "chrome");
+otherWindow.addEventListener("load", function() {
+  ok(seenNotification, "Should have seen the document-element-inserted")
+  obs.removeObserver(notify, "document-element-inserted");
+  window.close();
+  SimpleTest.waitForFocus(function() {
+    SimpleTest.finish();
+  });
+});
+</script>
+
+</window>

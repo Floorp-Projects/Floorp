@@ -2400,20 +2400,14 @@ let CustomizableUIInternal = {
   },
 
   setToolbarVisibility: function(aToolbarId, aIsVisible) {
-    let area = gAreas.get(aToolbarId);
-    if (area.get("type") != CustomizableUI.TYPE_TOOLBAR) {
-      return;
-    }
-    let areaNodes = gBuildAreas.get(aToolbarId);
-    if (!areaNodes) {
-      return;
-    }
     // We only persist the attribute the first time.
     let isFirstChangedToolbar = true;
-    for (let areaNode of areaNodes) {
-      let window = areaNode.ownerDocument.defaultView;
-      window.setToolbarVisibility(areaNode, aIsVisible, isFirstChangedToolbar);
-      isFirstChangedToolbar = false;
+    for (let window of CustomizableUI.windows) {
+      let toolbar = window.document.getElementById(aToolbarId);
+      if (toolbar) {
+        window.setToolbarVisibility(toolbar, aIsVisible, isFirstChangedToolbar);
+        isFirstChangedToolbar = false;
+      }
     }
   },
 };

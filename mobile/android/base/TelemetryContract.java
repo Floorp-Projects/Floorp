@@ -14,7 +14,10 @@ public interface TelemetryContract {
      * Holds event names. Intended for use with
      * Telemetry.sendUIEvent() as the "action" parameter.
      */
-    public interface Event {}
+    public interface Event {
+        // Outcome of data policy notification: can be true or false.
+        public static final String POLICY_NOTIFICATION_SUCCESS = "policynotification.success.1:";
+    }
 
     /**
      * Holds event methods. Intended for use in

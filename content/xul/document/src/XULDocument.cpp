@@ -2485,6 +2485,8 @@ XULDocument::PrepareToWalk()
         // Block onload until we've finished building the complete
         // document content model.
         BlockOnload();
+
+        nsContentSink::NotifyDocElementCreated(this);
     }
 
     // There'd better not be anything on the context stack at this

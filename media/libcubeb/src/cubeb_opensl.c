@@ -392,7 +392,7 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
 
   *stream = NULL;
 
-  if (stream_params.rate < 8000 || stream_params.rate > 48000 ||
+  if (stream_params.rate < 8000 || stream_params.rate > 88200 ||
       stream_params.channels < 1 || stream_params.channels > 32 ||
       latency < 1 || latency > 2000) {
     return CUBEB_ERROR_INVALID_FORMAT;

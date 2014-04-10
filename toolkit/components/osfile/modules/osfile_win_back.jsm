@@ -99,14 +99,17 @@
            return SysFile._FindClose;
          });
 
-       Type.DWORD = Type.int32_t.withName("DWORD");
+       Type.DWORD = Type.uint32_t.withName("DWORD");
 
-       /**
-        * A C integer holding -1 in case of error or a positive integer
-        * in case of success.
+       /* A special type used to represent flags passed as DWORDs to a function.
+        * In JavaScript, bitwise manipulation of numbers, such as or-ing flags,
+        * can produce negative numbers. Since DWORD is unsigned, these negative
+        * numbers simply cannot be converted to DWORD. For this reason, whenever
+        * bit manipulation is called for, you should rather use DWORD_FLAGS,
+        * which is represented as a signed integer, hence has the correct
+        * semantics.
         */
-       Type.negative_or_DWORD =
-         Type.DWORD.withName("negative_or_DWORD");
+       Type.DWORD_FLAGS = Type.int32_t.withName("DWORD_FLAGS");
 
        /**
         * A C integer holding 0 in case of error or a positive integer
@@ -241,11 +244,11 @@
          "CreateFileW", ctypes.winapi_abi,
                     /*return*/  Type.file_HANDLE,
                     /*name*/    Type.path,
-                    /*access*/  Type.DWORD,
-                    /*share*/   Type.DWORD,
+                    /*access*/  Type.DWORD_FLAGS,
+                    /*share*/   Type.DWORD_FLAGS,
                     /*security*/Type.SECURITY_ATTRIBUTES.in_ptr,
-                    /*creation*/Type.DWORD,
-                    /*flags*/   Type.DWORD,
+                    /*creation*/Type.DWORD_FLAGS,
+                    /*flags*/   Type.DWORD_FLAGS,
                     /*template*/Type.HANDLE);
 
        libc.declareLazyFFI(SysFile, "DeleteFile",
@@ -280,10 +283,10 @@
        libc.declareLazyFFI(SysFile, "FormatMessage",
          "FormatMessageW", ctypes.winapi_abi,
                     /*return*/ Type.DWORD,
-                    /*flags*/  Type.DWORD,
+                    /*flags*/  Type.DWORD_FLAGS,
                     /*source*/ Type.void_t.in_ptr,
-                    /*msgid*/  Type.DWORD,
-                    /*langid*/ Type.DWORD,
+                    /*msgid*/  Type.DWORD_FLAGS,
+                    /*langid*/ Type.DWORD_FLAGS,
                     /*buf*/    Type.out_wstring,
                     /*size*/   Type.DWORD,
                     /*Arguments*/Type.void_t.in_ptr
@@ -346,7 +349,7 @@
 
        libc.declareLazyFFI(SysFile, "SetFilePointer",
          "SetFilePointer", ctypes.winapi_abi,
-                    /*return*/ Type.negative_or_DWORD,
+                    /*return*/ Type.DWORD,
                     /*file*/   Type.HANDLE,
                     /*distlow*/Type.long,
                     /*disthi*/ Type.long.in_ptr,
@@ -378,14 +381,14 @@
 
         libc.declareLazyFFI(SysFile, "GetFileAttributes",
           "GetFileAttributesW", ctypes.winapi_abi,
-                     /*return*/   Type.DWORD,
+                     /*return*/   Type.DWORD_FLAGS,
                      /*fileName*/ Type.path);
 
         libc.declareLazyFFI(SysFile, "SetFileAttributes",
           "SetFileAttributesW", ctypes.winapi_abi,
                      /*return*/         Type.zero_or_nothing,
                      /*fileName*/       Type.path,
-                     /*fileAttributes*/ Type.DWORD);
+                     /*fileAttributes*/ Type.DWORD_FLAGS);
 
         advapi32.declareLazyFFI(SysFile, "GetNamedSecurityInfo",
           "GetNamedSecurityInfoW", ctypes.winapi_abi,
