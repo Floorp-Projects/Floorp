@@ -132,24 +132,17 @@ struct TypedArray : public TypedArray_base<T,UnboxArray> {
       ac.construct(cx, creatorWrapper);
     }
 
-    return CreateCommon(cx, creatorWrapper, length, data);
+    return CreateCommon(cx, length, data);
   }
 
   static inline JSObject*
-  Create(JSContext* cx, JS::Handle<JSObject*> creator, uint32_t length,
-         const T* data = nullptr) {
-    Maybe<JSAutoCompartment> ac;
-    if (creator) {
-      ac.construct(cx, creator);
-    }
-
-    return CreateCommon(cx, creator, length, data);
+  Create(JSContext* cx, uint32_t length, const T* data = nullptr) {
+    return CreateCommon(cx, length, data);
   }
 
 private:
   static inline JSObject*
-  CreateCommon(JSContext* cx, JS::Handle<JSObject*> creator, uint32_t length,
-               const T* data) {
+  CreateCommon(JSContext* cx, uint32_t length, const T* data) {
     JSObject* obj = CreateNew(cx, length);
     if (!obj) {
       return nullptr;
