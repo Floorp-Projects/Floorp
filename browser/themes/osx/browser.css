@@ -9,8 +9,10 @@
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-container
 %define conditionalForwardWithUrlbarWidth 30
+%define nativeTitlebarHeight 22px
 %define spaceAboveTabbar 9px
 %define toolbarButtonPressed :hover:active:not([disabled="true"]):not([cui-areatype="menu-panel"])
+%define windowButtonMarginTop 11px
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
@@ -42,6 +44,8 @@
   background-color: #eeeeee;
 }
 
+/** Begin titlebar **/
+
 #titlebar-buttonbox > .titlebar-button {
   display: none;
 }
@@ -60,13 +64,43 @@
   }
 }
 
-#main-window[chromehidden~="toolbar"]:not(:-moz-lwtheme) > #titlebar {
-  padding-top: 22px;
-}
-
 #main-window:not(:-moz-lwtheme):not([privatebrowsingmode=temporary]) > #titlebar {
   -moz-appearance: -moz-window-titlebar;
 }
+
+#main-window:not([tabsintitlebar]) > #titlebar {
+  min-height: @nativeTitlebarHeight@;
+}
+
+/**
+ * When we hide #titlebar-content, we display the native window buttons in
+ * their default locations.
+ */
+#main-window:not([tabsintitlebar]) > #titlebar > #titlebar-content {
+  display: none;
+}
+
+/**
+ * For tabs in titlebar on OS X, we stretch the titlebar down so that the
+ * tabstrip can overlap it.
+ */
+#main-window[tabsintitlebar] > #titlebar {
+  min-height: calc(@tabHeight@ + @spaceAboveTabbar@ - @tabToolbarNavbarOverlap@);
+}
+
+/**
+ * We also vertically center the window buttons.
+ */
+#main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-buttonbox-container,
+#main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-fullscreen-button {
+  margin-top: @windowButtonMarginTop@;
+}
+
+#main-window[tabsintitlebar][customize-entered] > #titlebar {
+  -moz-appearance: none;
+}
+
+/** End titlebar **/
 
 #main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
   border-top: 1px solid rgba(0,0,0,0.65);
@@ -2757,11 +2791,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   box-shadow: @focusRingShadow@;
 }
 
-#main-window:not(:-moz-lwtheme) > #titlebar {
-  padding-top: @spaceAboveTabbar@;
-  min-height: @tabHeight@;
-}
-
 /* We want the titlebar to be unified, but we still want to be able
  * to give #TabsToolbar a background. So we can't set -moz-appearance:
  * toolbar on #TabsToolbar itself. Instead, we set it on a box of the
@@ -4274,36 +4303,11 @@ window > chatbox {
 
 %include ../shared/customizableui/customizeMode.inc.css
 
-#main-window[customize-entered] > #titlebar {
-  padding-top: 0;
-}
-
-#main-window[tabsintitlebar]:not([customizing]):not(:-moz-lwtheme) > #titlebar > #titlebar-content,
-#main-window[tabsintitlebar][customize-entering] > #titlebar > #titlebar-content,
-#main-window[tabsintitlebar][customize-exiting] > #titlebar > #titlebar-content {
-  margin-top: 2px;
-  margin-bottom: 11px;
-}
-
-#main-window[tabsintitlebar][customize-entered] > #titlebar > #titlebar-content,
-#main-window:not([tabsintitlebar]):not(:-moz-lwtheme) > #titlebar > #titlebar-content {
-  margin-top: 11px;
-  margin-bottom: 0px;
-}
-
-#main-window:not([tabsintitlebar]):-moz-lwtheme > #titlebar {
-  margin-bottom: 5px;
-}
-
-#main-window[tabsintitlebar]:-moz-lwtheme > #titlebar > #titlebar-content {
-  margin-top: 11px;
-  margin-bottom: 11px;
-}
-
 #main-window[customizing] {
   background-color: rgb(178,178,178);
 }
 
+#main-window[tabsintitlebar][customize-entered] > #titlebar,
 #main-window[customize-entered] > #tab-view-deck {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
                     url("chrome://browser/skin/customizableui/background-noise-toolbar.png"),
@@ -4326,10 +4330,6 @@ window > chatbox {
 #main-window[customize-entered] #customization-container,
 #main-window[customize-entered] #navigator-toolbox > toolbar:not(#TabsToolbar) {
   border-bottom-width: 0;
-}
-
-#main-window[tabsintitlebar][customize-entered] #TabsToolbar {
-  margin-top: 8px;
 }
 
 #main-window[customize-entered] #TabsToolbar {
