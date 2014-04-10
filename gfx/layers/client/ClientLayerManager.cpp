@@ -24,7 +24,6 @@
 #include "mozilla/layers/SimpleTextureClientPool.h" // for SimpleTextureClientPool
 #include "nsAString.h"
 #include "nsIWidget.h"                  // for nsIWidget
-#include "nsIWidgetListener.h"
 #include "nsTArray.h"                   // for AutoInfallibleTArray
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
 #include "TiledLayerBuffer.h"
@@ -269,21 +268,6 @@ ClientLayerManager::Composite()
 {
   if (LayerTransactionChild* manager = mForwarder->GetShadowManager()) {
     manager->SendForceComposite();
-  }
-}
-
-void
-ClientLayerManager::DidComposite()
-{
-  MOZ_ASSERT(mWidget);
-  nsIWidgetListener *listener = mWidget->GetWidgetListener();
-  if (listener) {
-    listener->DidCompositeWindow();
-  } else {
-    listener = mWidget->GetAttachedWidgetListener();
-    if (listener) {
-      listener->DidCompositeWindow();
-    }
   }
 }
 
