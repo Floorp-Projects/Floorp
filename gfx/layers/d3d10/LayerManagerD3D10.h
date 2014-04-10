@@ -12,6 +12,7 @@
 #include <d3d10_1.h>
 
 #include "gfxContext.h"
+#include "mozilla/gfx/UserData.h"
 #include "nsIWidget.h"
 
 #include "ReadbackManagerD3D10.h"
@@ -40,8 +41,6 @@ struct ShaderConstantRectD3D10
   operator float* () { return &mX; }
 };
 
-extern cairo_user_data_key_t gKeyD3D10Texture;
-
 /*
  * This is the LayerManager used for Direct3D 10. For now this will
  * render on the main thread.
@@ -50,6 +49,10 @@ extern cairo_user_data_key_t gKeyD3D10Texture;
  * transactions.
  */
 class LayerManagerD3D10 : public LayerManager {
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::IntSize IntSize;
+  typedef mozilla::gfx::SurfaceFormat SurfaceFormat;
+
 public:
   LayerManagerD3D10(nsIWidget *aWidget);
   virtual ~LayerManagerD3D10();
@@ -109,12 +112,12 @@ public:
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
   virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer();
 
-  virtual already_AddRefed<gfxASurface>
-    CreateOptimalSurface(const gfx::IntSize &aSize,
-                         gfxImageFormat imageFormat);
+  virtual TemporaryRef<DrawTarget>
+    CreateOptimalDrawTarget(const IntSize &aSize,
+                            SurfaceFormat aSurfaceFormat);
 
-  virtual already_AddRefed<gfxASurface>
-    CreateOptimalMaskSurface(const gfx::IntSize &aSize);
+  virtual TemporaryRef<DrawTarget>
+    CreateOptimalMaskDrawTarget(const IntSize &aSize);
 
   virtual TemporaryRef<mozilla::gfx::DrawTarget>
     CreateDrawTarget(const gfx::IntSize &aSize,
