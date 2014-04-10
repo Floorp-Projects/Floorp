@@ -277,11 +277,11 @@ NewSrcNote3(ExclusiveContext *cx, BytecodeEmitter *bce, SrcNoteType type, ptrdif
 bool
 AddToSrcNoteDelta(ExclusiveContext *cx, BytecodeEmitter *bce, jssrcnote *sn, ptrdiff_t delta);
 
-int32_t
-FinishTakingSrcNotes(ExclusiveContext *cx, BytecodeEmitter *bce);
+bool
+FinishTakingSrcNotes(ExclusiveContext *cx, BytecodeEmitter *bce, uint32_t *out);
 
 void
-CopySrcNotes(BytecodeEmitter *bce, jssrcnote *destination, int32_t nsrcnotes);
+CopySrcNotes(BytecodeEmitter *bce, jssrcnote *destination, uint32_t nsrcnotes);
 
 } /* namespace frontend */
 } /* namespace js */
