@@ -177,7 +177,7 @@ let gFxAccounts = {
 
     // If the user is signed into their Firefox account and we are not
     // currently in customization mode, show their email address.
-    fxAccounts.getSignedInUser().then(userData => {
+    let doUpdate = userData => {
       // Reset the button to its original state.
       this.button.setAttribute("label", defaultLabel);
       this.button.removeAttribute("tooltiptext");
@@ -194,6 +194,15 @@ let gFxAccounts = {
           this.button.setAttribute("tooltiptext", userData.email);
         }
       }
+    }
+    fxAccounts.getSignedInUser().then(userData => {
+      doUpdate(userData);
+    }).then(null, error => {
+      // This is most likely in tests, were we quickly log users in and out.
+      // The most likely scenario is a user logged out, so reflect that.
+      // Bug 995134 calls for better errors so we could retry if we were
+      // sure this was the failure reason.
+      doUpdate(null);
     });
   },
 

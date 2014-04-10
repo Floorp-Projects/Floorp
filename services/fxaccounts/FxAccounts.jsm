@@ -669,6 +669,13 @@ FxAccountsInternal.prototype = {
       this.pollTimeRemaining = this.POLL_SESSION;
       if (!currentState.whenVerifiedDeferred) {
         currentState.whenVerifiedDeferred = Promise.defer();
+        // This deferred might not end up with any handlers (eg, if sync
+        // is yet to start up.)  This might cause "A promise chain failed to
+        // handle a rejection" messages, so add an error handler directly
+        // on the promise to log the error.
+        currentState.whenVerifiedDeferred.promise.then(null, err => {
+          log.info("the wait for user verification was stopped: " + err);
+        });
       }
     }
 
