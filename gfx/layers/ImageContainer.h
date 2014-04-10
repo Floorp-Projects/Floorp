@@ -33,62 +33,16 @@
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**
- * We need to be able to hold a reference to a gfxASurface from Image
+ * We need to be able to hold a reference to a Moz2D SourceSurface from Image
  * subclasses. This is potentially a problem since Images can be addrefed
  * or released off the main thread. We can ensure that we never AddRef
- * a gfxASurface off the main thread, but we might want to Release due
+ * a SourceSurface off the main thread, but we might want to Release due
  * to an Image being destroyed off the main thread.
  *
- * We use nsCountedRef<nsMainThreadSurfaceRef> to reference the
- * gfxASurface. When AddRefing, we assert that we're on the main thread.
+ * We use nsCountedRef<nsMainThreadSourceSurfaceRef> to reference the
+ * SourceSurface. When AddRefing, we assert that we're on the main thread.
  * When Releasing, if we're not on the main thread, we post an event to
  * the main thread to do the actual release.
- *
- * This should be removed after after Image::DeprecatedGetAsSurface is
- * removed. It is replaced by nsMainThreadSourceSurfaceRef
- */
-class nsMainThreadSurfaceRef;
-
-template <>
-class nsAutoRefTraits<nsMainThreadSurfaceRef> {
-public:
-  typedef gfxASurface* RawRef;
-
-  /**
-   * The XPCOM event that will do the actual release on the main thread.
-   */
-  class SurfaceReleaser : public nsRunnable {
-  public:
-    SurfaceReleaser(RawRef aRef) : mRef(aRef) {}
-    NS_IMETHOD Run() {
-      mRef->Release();
-      return NS_OK;
-    }
-    RawRef mRef;
-  };
-
-  static RawRef Void() { return nullptr; }
-  static void Release(RawRef aRawRef)
-  {
-    if (NS_IsMainThread()) {
-      aRawRef->Release();
-      return;
-    }
-    nsCOMPtr<nsIRunnable> runnable = new SurfaceReleaser(aRawRef);
-    NS_DispatchToMainThread(runnable);
-  }
-  static void AddRef(RawRef aRawRef)
-  {
-    NS_ASSERTION(NS_IsMainThread(),
-                 "Can only add a reference on the main thread");
-    aRawRef->AddRef();
-  }
-};
-
-/**
- * Same purpose as nsMainThreadSurfaceRef byt holds a gfx::SourceSurface instead.
- * The specialization of nsMainThreadSurfaceRef should be removed after
- * Image::DeprecatedGetAsSurface is removed
  */
 class nsMainThreadSourceSurfaceRef;
 
@@ -194,7 +148,6 @@ public:
   ImageFormat GetFormat() { return mFormat; }
   void* GetImplData() { return mImplData; }
 
-  virtual already_AddRefed<gfxASurface> DeprecatedGetAsSurface() = 0;
   virtual gfx::IntSize GetSize() = 0;
   virtual nsIntRect GetPictureRect()
   {
@@ -504,7 +457,7 @@ public:
   void UnlockCurrentImage();
 
   /**
-   * Get the current image as a gfxASurface. This is useful for fallback
+   * Get the current image as a SourceSurface. This is useful for fallback
    * rendering.
    * This can only be called from the main thread, since cairo objects
    * can only be used from the main thread.
@@ -522,11 +475,6 @@ public:
    * a copy of the image data while holding the mRemoteDataMutex. If possible,
    * the lock methods should be used to avoid the copy, however this should be
    * avoided if the surface is required for a long period of time.
-   */
-  already_AddRefed<gfxASurface> DeprecatedGetCurrentAsSurface(gfx::IntSize* aSizeResult);
-
-  /**
-   * Same as GetCurrentAsSurface but for Moz2D
    */
   TemporaryRef<gfx::SourceSurface> GetCurrentAsSourceSurface(gfx::IntSize* aSizeResult);
 
@@ -889,7 +837,6 @@ protected:
    */
   virtual uint8_t* AllocateBuffer(uint32_t aSize);
 
-  already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
   TemporaryRef<gfx::SourceSurface> GetAsSourceSurface();
 
   void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
@@ -900,7 +847,6 @@ protected:
   Data mData;
   gfx::IntSize mSize;
   gfxImageFormat mOffscreenFormat;
-  nsCountedRef<nsMainThreadSurfaceRef> mDeprecatedSurface;
   nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
   nsRefPtr<BufferRecycleBin> mRecycleBin;
 };
@@ -914,11 +860,7 @@ class CairoImage : public Image,
                    public ISharedImage {
 public:
   struct Data {
-    gfxASurface* mDeprecatedSurface;
     gfx::IntSize mSize;
-
-    // mSourceSurface wraps mDeprrecatedSurface's data, therefore it should not
-    // outlive mDeprecatedSurface
     RefPtr<gfx::SourceSurface> mSourceSurface;
   };
 
@@ -929,7 +871,6 @@ public:
    */
   void SetData(const Data& aData)
   {
-    mDeprecatedSurface = aData.mDeprecatedSurface;
     mSize = aData.mSize;
     mSourceSurface = aData.mSourceSurface;
   }
@@ -937,12 +878,6 @@ public:
   virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface()
   {
     return mSourceSurface.get();
-  }
-
-  virtual already_AddRefed<gfxASurface> DeprecatedGetAsSurface()
-  {
-    nsRefPtr<gfxASurface> surface = mDeprecatedSurface.get();
-    return surface.forget();
   }
 
   virtual ISharedImage* AsSharedImage() { return this; }
@@ -954,11 +889,8 @@ public:
   CairoImage();
   ~CairoImage();
 
-  nsCountedRef<nsMainThreadSurfaceRef> mDeprecatedSurface;
   gfx::IntSize mSize;
 
-  // mSourceSurface wraps mDeprrecatedSurface's data, therefore it should not
-  // outlive mDeprecatedSurface
   nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
   nsDataHashtable<nsUint32HashKey, RefPtr<TextureClient> >  mTextureClients;
 };
@@ -967,7 +899,6 @@ class RemoteBitmapImage : public Image {
 public:
   RemoteBitmapImage() : Image(nullptr, ImageFormat::REMOTE_IMAGE_BITMAP) {}
 
-  already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
   TemporaryRef<gfx::SourceSurface> GetAsSourceSurface();
 
   gfx::IntSize GetSize() { return mSize; }

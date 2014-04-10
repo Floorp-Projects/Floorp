@@ -556,6 +556,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
          updatedRect.right - updatedRect.left,
          updatedRect.bottom - updatedRect.top));
 
+    // XXXjwatt rewrite to use Moz2D
     nsRefPtr<gfxASurface> surface;
     if (newSurface.type() == SurfaceDescriptor::TShmem) {
         if (!newSurface.get_Shmem().IsReadable()) {
@@ -642,7 +643,6 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
         NS_ASSERTION(image->GetFormat() == ImageFormat::CAIRO_SURFACE, "Wrong format?");
         CairoImage* cairoImage = static_cast<CairoImage*>(image.get());
         CairoImage::Data cairoData;
-        cairoData.mDeprecatedSurface = surface;
         cairoData.mSize = surface->GetSize().ToIntSize();
         cairoData.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface);
         cairoImage->SetData(cairoData);

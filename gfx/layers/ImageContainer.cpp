@@ -338,26 +338,6 @@ ImageContainer::UnlockCurrentImage()
   }
 }
 
-already_AddRefed<gfxASurface>
-ImageContainer::DeprecatedGetCurrentAsSurface(gfx::IntSize *aSize)
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-  if (mRemoteData) {
-    CrossProcessMutexAutoLock autoLock(*mRemoteDataMutex);
-    EnsureActiveImage();
-
-    if (!mActiveImage)
-      return nullptr;
-    *aSize = mRemoteData->mSize;
-  } else {
-    if (!mActiveImage)
-      return nullptr;
-    *aSize = mActiveImage->GetSize();
-  }
-  return mActiveImage->DeprecatedGetAsSurface();
-}
-
 TemporaryRef<gfx::SourceSurface>
 ImageContainer::GetCurrentAsSourceSurface(gfx::IntSize *aSize)
 {
@@ -474,7 +454,6 @@ PlanarYCbCrImage::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   // Ignoring:
   // - mData - just wraps mBuffer
   // - Surfaces should be reported under gfx-surfaces-*:
-  //   - mDeprecatedSurface
   //   - mSourceSurface
   // - Base class:
   //   - mImplData is not used
@@ -582,33 +561,6 @@ PlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
   return mBuffer;
 }
 
-already_AddRefed<gfxASurface>
-PlanarYCbCrImage::DeprecatedGetAsSurface()
-{
-  if (mDeprecatedSurface) {
-    nsRefPtr<gfxASurface> result = mDeprecatedSurface.get();
-    return result.forget();
-  }
-
-  gfx::SurfaceFormat format = gfx::ImageFormatToSurfaceFormat(GetOffscreenFormat());
-  gfx::IntSize size(mSize);
-  gfx::GetYCbCrToRGBDestFormatAndSize(mData, format, size);
-  if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
-      size.height > PlanarYCbCrImage::MAX_DIMENSION) {
-    NS_ERROR("Illegal image dest width or height");
-    return nullptr;
-  }
-
-  nsRefPtr<gfxImageSurface> imageSurface =
-    new gfxImageSurface(gfx::ThebesIntSize(mSize), gfx::SurfaceFormatToImageFormat(format));
-
-  gfx::ConvertYCbCrToRGB(mData, format, mSize, imageSurface->Data(), imageSurface->Stride());
-
-  mDeprecatedSurface = imageSurface;
-
-  return imageSurface.forget();
-}
-
 TemporaryRef<gfx::SourceSurface>
 PlanarYCbCrImage::GetAsSourceSurface()
 {
@@ -632,22 +584,6 @@ PlanarYCbCrImage::GetAsSourceSurface()
   mSourceSurface = surface;
 
   return surface.forget();
-}
-
-already_AddRefed<gfxASurface>
-RemoteBitmapImage::DeprecatedGetAsSurface()
-{
-  nsRefPtr<gfxImageSurface> newSurf =
-    new gfxImageSurface(ThebesIntSize(mSize),
-    mFormat == RemoteImageData::BGRX32 ? gfxImageFormat::RGB24 : gfxImageFormat::ARGB32);
-
-  for (int y = 0; y < mSize.height; y++) {
-    memcpy(newSurf->Data() + newSurf->Stride() * y,
-           mData + mStride * y,
-           mSize.width * 4);
-  }
-
-  return newSurf.forget();
 }
 
 TemporaryRef<gfx::SourceSurface>
