@@ -22,6 +22,9 @@ class nsCSSStyleSheet;
 class nsXBLPrototypeResources
 {
 public:
+  nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding);
+  ~nsXBLPrototypeResources();
+
   void LoadResources(bool* aResult);
   void AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
   void AddResourceListener(nsIContent* aElement);
@@ -29,13 +32,19 @@ public:
 
   nsresult Write(nsIObjectOutputStream* aStream);
 
-  nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding);
-  ~nsXBLPrototypeResources();
+  void Traverse(nsCycleCollectionTraversalCallback &cb) const;
 
-// MEMBER VARIABLES
-  nsXBLResourceLoader* mLoader; // A loader object. Exists only long enough to load resources, and then it dies.
+  void ClearLoader();
+
   typedef nsTArray<nsRefPtr<nsCSSStyleSheet> > sheet_array_type;
-  sheet_array_type mStyleSheetList; // A list of loaded stylesheets for this binding.
+
+private:
+  // A loader object. Exists only long enough to load resources, and then it dies.
+  nsXBLResourceLoader* mLoader;
+
+public:
+  // A list of loaded stylesheets for this binding.
+  sheet_array_type mStyleSheetList;
 
   // The list of stylesheets converted to a rule processor.
   nsCOMPtr<nsIStyleRuleProcessor> mRuleProcessor;
