@@ -13,6 +13,7 @@
 #include "WebGLTexture.h"
 #include "WebGLVertexArray.h"
 #include "GLContext.h"
+#include "mozilla/dom/ToJSValue.h"
 
 using namespace mozilla;
 using namespace dom;
@@ -423,16 +424,16 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         {
             realGLboolean gl_bv[4] = { 0 };
             gl->fGetBooleanv(pname, gl_bv);
-            JS::AutoValueArray<4> vals(cx);
-            vals[0].setBoolean(gl_bv[0]);
-            vals[1].setBoolean(gl_bv[1]);
-            vals[2].setBoolean(gl_bv[2]);
-            vals[3].setBoolean(gl_bv[3]);
-            JSObject* obj = JS_NewArrayObject(cx, vals);
-            if (!obj) {
+            nsAutoTArray<bool, 4> vals;
+            vals.AppendElement(gl_bv[0]);
+            vals.AppendElement(gl_bv[1]);
+            vals.AppendElement(gl_bv[2]);
+            vals.AppendElement(gl_bv[3]);
+            JS::Rooted<JS::Value> arr(cx);
+            if (!ToJSValue(cx, vals, &arr)) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
-            return JS::ObjectOrNullValue(obj);
+            return arr;
         }
 
         case LOCAL_GL_ARRAY_BUFFER_BINDING:
