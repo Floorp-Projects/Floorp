@@ -12151,14 +12151,12 @@ nsIDocument::WrapObject(JSContext *aCx)
 
   JS::Rooted<JS::Value> winVal(aCx);
   nsresult rv = nsContentUtils::WrapNative(aCx, win, &NS_GET_IID(nsIDOMWindow),
-                                           &winVal);
+                                           &winVal,
+                                           false);
   if (NS_FAILED(rv)) {
     Throw(aCx, rv);
     return nullptr;
   }
-
-  MOZ_ASSERT(&winVal.toObject() == js::UncheckedUnwrap(&winVal.toObject()),
-             "WrapNative shouldn't create a cross-compartment wrapper");
 
   NS_NAMED_LITERAL_STRING(doc_str, "document");
 
