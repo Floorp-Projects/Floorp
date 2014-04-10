@@ -51,8 +51,9 @@ class TypedArrayObject : public ArrayBufferViewObject
     AllocKindForLazyBuffer(size_t nbytes)
     {
         JS_ASSERT(nbytes <= INLINE_BUFFER_LIMIT);
-        int dataSlots = (nbytes - 1) / sizeof(Value) + 1;
-        JS_ASSERT(int(nbytes) <= dataSlots * int(sizeof(Value)));
+        /* For GGC we need at least one slot in which to store a forwarding pointer. */
+        size_t dataSlots = Max(size_t(1), AlignBytes(nbytes, sizeof(Value)) / sizeof(Value));
+        JS_ASSERT(nbytes <= dataSlots * sizeof(Value));
         return gc::GetGCObjectKind(FIXED_DATA_START + dataSlots);
     }
 
