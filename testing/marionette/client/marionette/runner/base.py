@@ -475,10 +475,6 @@ class BaseMarionetteOptions(OptionParser):
                         dest='sources',
                         action='store',
                         help='path to sources.xml (Firefox OS only)')
-        self.add_option('--server-root',
-                        dest='server_root',
-                        action='store',
-                        help='sets the web server\'s root directory to the given path')
 
     def parse_args(self, args=None, values=None):
         options, tests = OptionParser.parse_args(self, args, values)
@@ -549,8 +545,7 @@ class BaseMarionetteTestRunner(object):
                  logcat_dir=None, xml_output=None, repeat=0, gecko_path=None,
                  testvars=None, tree=None, type=None, device_serial=None,
                  symbols_path=None, timeout=None, es_servers=None, shuffle=False,
-                 sdcard=None, this_chunk=1, total_chunks=1, sources=None, server_root=None,
-                 **kwargs):
+                 sdcard=None, this_chunk=1, total_chunks=1, sources=None, **kwargs):
         self.address = address
         self.emulator = emulator
         self.emulatorBinary = emulatorBinary
@@ -586,7 +581,6 @@ class BaseMarionetteTestRunner(object):
         self.shuffle = shuffle
         self.sdcard = sdcard
         self.sources = sources
-        self.server_root = server_root
         self.this_chunk = this_chunk
         self.total_chunks = total_chunks
         self.mixin_run_tests = []
@@ -660,12 +654,9 @@ class BaseMarionetteTestRunner(object):
         host = "127.0.0.1"
         if need_external_ip:
             host = moznetwork.get_ip()
-        docroot = self.server_root or os.path.join(os.path.dirname(os.path.dirname(__file__)), 'www')
-        if not os.path.isdir(docroot):
-            raise Exception("Server root %s is not a valid path" % docroot)
         self.httpd = MozHttpd(host=host,
                               port=0,
-                              docroot=docroot)
+                              docroot=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'www'))
         self.httpd.start()
         self.marionette.baseurl = 'http://%s:%d/' % (host, self.httpd.httpd.server_port)
         self.logger.info('running webserver on %s' % self.marionette.baseurl)
