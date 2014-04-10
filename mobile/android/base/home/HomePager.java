@@ -50,6 +50,9 @@ public class HomePager extends ViewPager {
     // Cached original ViewPager background.
     private final Drawable mOriginalBackground;
 
+    // Current load state of HomePager.
+    private LoadState mLoadState;
+
     // This is mostly used by UI tests to easily fetch
     // specific list views at runtime.
     static final String LIST_TAG_HISTORY = "history";
@@ -88,6 +91,15 @@ public class HomePager extends ViewPager {
         public void setOnTitleClickListener(OnTitleClickListener onTitleClickListener);
     }
 
+    /**
+     * State of HomePager with respect to loading its configuration.
+     */
+    private enum LoadState {
+        UNLOADED,
+        LOADING,
+        LOADED
+    }
+
     static final String CAN_LOAD_ARG = "canLoad";
     static final String PANEL_CONFIG_ARG = "panelConfig";
 
@@ -124,6 +136,8 @@ public class HomePager extends ViewPager {
 
         mOriginalBackground = getBackground();
         setOnPageChangeListener(new PageChangeListener());
+
+        mLoadState = LoadState.UNLOADED;
     }
 
     @Override
@@ -152,6 +166,8 @@ public class HomePager extends ViewPager {
      * @param fm FragmentManager for the adapter
      */
     public void load(LoaderManager lm, FragmentManager fm, String panelId, PropertyAnimator animator) {
+        mLoadState = LoadState.LOADING;
+
         mVisible = true;
         mInitialPanelId = panelId;
 
@@ -203,6 +219,7 @@ public class HomePager extends ViewPager {
     public void unload() {
         mVisible = false;
         setAdapter(null);
+        mLoadState = LoadState.UNLOADED;
     }
 
     /**
@@ -343,11 +360,13 @@ public class HomePager extends ViewPager {
 
         @Override
         public void onLoadFinished(Loader<HomeConfig.State> loader, HomeConfig.State configState) {
+            mLoadState = LoadState.LOADED;
             updateUiFromConfigState(configState);
         }
 
         @Override
         public void onLoaderReset(Loader<HomeConfig.State> loader) {
+            mLoadState = LoadState.UNLOADED;
         }
     }
 
