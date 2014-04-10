@@ -170,7 +170,7 @@ imgFrame::~imgFrame()
   mPalettedImageData = nullptr;
 
   if (mInformedDiscardTracker) {
-    DiscardTracker::InformDeallocation(4 * mSize.height * mSize.width);
+    DiscardTracker::InformAllocation(-4 * mSize.height * mSize.width);
   }
 }
 
@@ -203,11 +203,6 @@ nsresult imgFrame::Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
       NS_WARNING("moz_malloc for paletted image data should succeed");
     NS_ENSURE_TRUE(mPalettedImageData, NS_ERROR_OUT_OF_MEMORY);
   } else {
-    // Inform the discard tracker that we are going to allocate some memory.
-    if (!DiscardTracker::TryAllocation(4 * mSize.width * mSize.height)) {
-      NS_WARNING("Exceed the hard limit of decode image size");
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     // For Windows, we must create the device surface first (if we're
     // going to) so that the image surface can wrap it.  Can't be done
     // the other way around.
@@ -243,20 +238,22 @@ nsresult imgFrame::Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
       } else if (!mImageSurface->CairoStatus()) {
         NS_WARNING("gfxImageSurface should have good CairoStatus");
       }
-
-      // Image surface allocation is failed, need to return
-      // the booked buffer size.
-      DiscardTracker::InformDeallocation(4 * mSize.width * mSize.height);
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    mInformedDiscardTracker = true;
 
 #ifdef XP_MACOSX
     if (!ShouldUseImageSurfaces()) {
       mQuartzSurface = new gfxQuartzImageSurface(mImageSurface);
     }
 #endif
+  }
+
+  // Inform the discard tracker that we've allocated some memory, but only if
+  // we're not a paletted image (paletted images are not usually large and are
+  // used only for animated frames, which we don't discard).
+  if (!mPalettedImageData) {
+    DiscardTracker::InformAllocation(4 * mSize.width * mSize.height);
+    mInformedDiscardTracker = true;
   }
 
   return NS_OK;
@@ -317,7 +314,7 @@ nsresult imgFrame::Optimize()
         // We just dumped most of our allocated memory, so tell the discard
         // tracker that we're not using any at all.
         if (mInformedDiscardTracker) {
-          DiscardTracker::InformDeallocation(4 * mSize.width * mSize.height);
+          DiscardTracker::InformAllocation(-4 * mSize.width * mSize.height);
           mInformedDiscardTracker = false;
         }
 
