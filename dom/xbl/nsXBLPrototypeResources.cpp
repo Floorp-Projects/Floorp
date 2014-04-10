@@ -109,3 +109,16 @@ nsXBLPrototypeResources::Write(nsIObjectOutputStream* aStream)
     return mLoader->Write(aStream);
   return NS_OK;
 }
+
+void
+nsXBLPrototypeResources::Traverse(nsCycleCollectionTraversalCallback &cb) const
+{
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "proto mResources mLoader");
+  cb.NoteXPCOMChild(mLoader);
+}
+
+void
+nsXBLPrototypeResources::ClearLoader()
+{
+  NS_RELEASE(mLoader);
+}
