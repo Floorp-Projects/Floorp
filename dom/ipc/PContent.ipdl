@@ -46,7 +46,7 @@ using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::dom::asmjscache::OpenMode from "mozilla/dom/asmjscache/AsmJSCache.h";
 using mozilla::dom::asmjscache::WriteParams from "mozilla/dom/asmjscache/AsmJSCache.h";
-using mozilla::dom::AudioChannel from "mozilla/dom/AudioChannelBinding.h";
+using mozilla::dom::AudioChannelType from "AudioChannelCommon.h";
 using mozilla::dom::AudioChannelState from "AudioChannelCommon.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
@@ -515,17 +515,18 @@ parent:
     async FirstIdle();
 
     // Get Muted from the main AudioChannelService.
-    sync AudioChannelGetState(AudioChannel aChannel, bool aElementHidden,
+    sync AudioChannelGetState(AudioChannelType aType, bool aElementHidden,
                               bool aElementWasHidden)
         returns (AudioChannelState value);
 
-    sync AudioChannelRegisterType(AudioChannel aChannel, bool aWithVideo);
-    sync AudioChannelUnregisterType(AudioChannel aChannel,
+    sync AudioChannelRegisterType(AudioChannelType aType, bool aWithVideo);
+    sync AudioChannelUnregisterType(AudioChannelType aType,
                                     bool aElementHidden,
                                     bool aWithVideo);
 
     async AudioChannelChangedNotification();
-    async AudioChannelChangeDefVolChannel(int32_t aChannel, bool aHidden);
+    async AudioChannelChangeDefVolChannel(AudioChannelType aType,
+                                          bool aHidden);
 
     async FilePathUpdateNotify(nsString aType,
                                nsString aStorageName,
