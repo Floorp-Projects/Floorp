@@ -113,7 +113,6 @@ static PLHashAllocOps allocOps =
 nsNodeInfoManager::nsNodeInfoManager()
   : mDocument(nullptr),
     mNonDocumentNodeInfos(0),
-    mPrincipal(nullptr),
     mTextNodeInfo(nullptr),
     mCommentNodeInfo(nullptr),
     mDocumentNodeInfo(nullptr)
@@ -141,7 +140,7 @@ nsNodeInfoManager::~nsNodeInfoManager()
     PL_HashTableDestroy(mNodeInfoHash);
 
   // Note: mPrincipal may be null here if we never got inited correctly
-  NS_IF_RELEASE(mPrincipal);
+  mPrincipal = nullptr;
 
   mBindingManager = nullptr;
 
@@ -179,8 +178,8 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
 
   NS_PRECONDITION(!mPrincipal,
                   "Being inited when we already have a principal?");
-  nsresult rv = CallCreateInstance("@mozilla.org/nullprincipal;1",
-                                   &mPrincipal);
+  nsresult rv;
+  mPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
   NS_ENSURE_TRUE(mPrincipal, rv);
 
   if (aDocument) {
@@ -386,14 +385,14 @@ nsNodeInfoManager::GetDocumentNodeInfo()
 void
 nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal *aPrincipal)
 {
-  NS_RELEASE(mPrincipal);
+  mPrincipal = nullptr;
   if (!aPrincipal) {
     aPrincipal = mDefaultPrincipal;
   }
 
   NS_ASSERTION(aPrincipal, "Must have principal by this point!");
 
-  NS_ADDREF(mPrincipal = aPrincipal);
+  mPrincipal = aPrincipal;
 }
 
 void
