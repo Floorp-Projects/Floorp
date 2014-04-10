@@ -159,7 +159,7 @@ protected:
   void PostProcessAttachedQueueEvent();
 
 // MEMBER VARIABLES
-protected: 
+protected:
   // A set of nsIContent that currently have a binding installed.
   nsAutoPtr<nsTHashtable<nsRefPtrHashKey<nsIContent> > > mBoundContentSet;
 
@@ -193,7 +193,7 @@ protected:
   nsRefPtr< nsRunnableMethod<nsBindingManager> > mProcessAttachedQueueEvent;
 
   // Our document.  This is a weak ref; the document owns us
-  nsIDocument* mDocument; 
+  nsIDocument* mDocument;
 };
 
 #endif
