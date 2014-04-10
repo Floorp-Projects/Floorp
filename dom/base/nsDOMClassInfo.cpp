@@ -553,7 +553,7 @@ IdToString(JSContext *cx, jsid id)
 }
 
 static inline nsresult
-WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
+WrapNative(JSContext *cx, nsISupports *native,
            nsWrapperCache *cache, const nsIID* aIID, JS::MutableHandle<JS::Value> vp,
            bool aAllowWrapping)
 {
@@ -563,6 +563,7 @@ WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
     return NS_OK;
   }
 
+  JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
   JSObject *wrapper = xpc_FastGetCachedWrapper(cache, scope, vp);
   if (wrapper) {
     return NS_OK;
@@ -574,26 +575,26 @@ WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
 }
 
 static inline nsresult
-WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
-           const nsIID* aIID, bool aAllowWrapping, JS::MutableHandle<JS::Value> vp)
+WrapNative(JSContext *cx, nsISupports *native, const nsIID* aIID,
+           bool aAllowWrapping, JS::MutableHandle<JS::Value> vp)
 {
-  return WrapNative(cx, scope, native, nullptr, aIID, vp, aAllowWrapping);
+  return WrapNative(cx, native, nullptr, aIID, vp, aAllowWrapping);
 }
 
 // Same as the WrapNative above, but use these if aIID is nsISupports' IID.
 static inline nsresult
-WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
+WrapNative(JSContext *cx, nsISupports *native,
            bool aAllowWrapping, JS::MutableHandle<JS::Value> vp)
 {
-  return WrapNative(cx, scope, native, nullptr, nullptr, vp, aAllowWrapping);
+  return WrapNative(cx, native, nullptr, nullptr, vp, aAllowWrapping);
 }
 
 static inline nsresult
-WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
+WrapNative(JSContext *cx, nsISupports *native,
            nsWrapperCache *cache, bool aAllowWrapping,
            JS::MutableHandle<JS::Value> vp)
 {
-  return WrapNative(cx, scope, native, cache, nullptr, vp, aAllowWrapping);
+  return WrapNative(cx, native, cache, nullptr, vp, aAllowWrapping);
 }
 
 // Helper to handle torn-down inner windows.
@@ -2008,10 +2009,8 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
         }
 
         nsCOMPtr<nsIDOMWindow> currentWin(do_GetInterface(currentInner));
-        rv = WrapNative(cx, obj, currentWin, &NS_GET_IID(nsIDOMWindow),
+        rv = WrapNative(cx, currentWin, &NS_GET_IID(nsIDOMWindow),
                         true, argv.handleAt(0));
-        if (!JS_WrapValue(cx, argv.handleAt(0)))
-          return NS_ERROR_FAILURE;
 
         for (size_t i = 1; i < argc; ++i) {
           argv[i] = args[i - 1];
@@ -2029,7 +2028,8 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
     }
   }
 
-  return WrapNative(cx, obj, native, true, args.rval());
+  js::AssertSameCompartment(cx, obj);
+  return WrapNative(cx, native, true, args.rval());
 }
 
 static nsresult
@@ -2582,7 +2582,8 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 
   JS::Rooted<JS::Value> v(cx);
 
-  rv = WrapNative(cx, obj, constructor, &NS_GET_IID(nsIDOMDOMConstructor),
+  js::AssertSameCompartment(cx, obj);
+  rv = WrapNative(cx, constructor, &NS_GET_IID(nsIDOMDOMConstructor),
                   false, &v);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2900,7 +2901,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     NS_ENSURE_SUCCESS(rv, rv);
 
     JS::Rooted<JS::Value> v(cx);
-    rv = WrapNative(cx, obj, constructor, &NS_GET_IID(nsIDOMDOMConstructor),
+    js::AssertSameCompartment(cx, obj);
+    rv = WrapNative(cx, constructor, &NS_GET_IID(nsIDOMDOMConstructor),
                     false, &v);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3005,7 +3007,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     NS_ENSURE_SUCCESS(rv, rv);
 
     JS::Rooted<JS::Value> val(cx);
-    rv = WrapNative(cx, obj, constructor, &NS_GET_IID(nsIDOMDOMConstructor),
+    js::AssertSameCompartment(cx, obj);
+    rv = WrapNative(cx, constructor, &NS_GET_IID(nsIDOMDOMConstructor),
                     true, &val);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3040,18 +3043,12 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     }
 
     if (JSVAL_IS_PRIMITIVE(prop_val) && !JSVAL_IS_NULL(prop_val)) {
-      JSObject *scope;
-
       if (aWin->IsOuterWindow()) {
         nsGlobalWindow *inner = aWin->GetCurrentInnerWindowInternal();
         NS_ENSURE_TRUE(inner, NS_ERROR_UNEXPECTED);
-
-        scope = inner->GetGlobalJSObject();
-      } else {
-        scope = aWin->GetGlobalJSObject();
       }
 
-      rv = WrapNative(cx, scope, native, true, &prop_val);
+      rv = WrapNative(cx, native, true, &prop_val);
     }
 
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3097,8 +3094,7 @@ LocationSetterGuts(JSContext *cx, JSObject *obj, JS::MutableHandle<JS::Value> vp
 
   // We have to wrap location into vp before null-checking location, to
   // avoid assigning the wrong thing into the slot.
-  rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), location,
-                  &NS_GET_IID(nsIDOMLocation), true, vp);
+  rv = WrapNative(cx, location, &NS_GET_IID(nsIDOMLocation), true, vp);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!location) {
@@ -3277,17 +3273,13 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     nsresult rv = win->GetLocation(getter_AddRefs(location));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Make sure we wrap the location object in the window's scope.
-    JS::Rooted<JSObject*> scope(cx, wrapper->GetJSObject());
-
     JS::Rooted<JS::Value> v(cx);
-    rv = WrapNative(cx, scope, location, &NS_GET_IID(nsIDOMLocation), true, &v);
+    rv = WrapNative(cx, location, &NS_GET_IID(nsIDOMLocation), true, &v);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool ok = JS_WrapValue(cx, &v) &&
-                JS_DefinePropertyById(cx, obj, id, v, JS_PropertyStub,
-                                      LocationSetterUnwrapper,
-                                      JSPROP_PERMANENT | JSPROP_ENUMERATE);
+    bool ok = JS_DefinePropertyById(cx, obj, id, v, JS_PropertyStub,
+                                    LocationSetterUnwrapper,
+                                    JSPROP_PERMANENT | JSPROP_ENUMERATE);
 
     if (!ok) {
       return NS_ERROR_FAILURE;
@@ -3307,7 +3299,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     NS_ENSURE_SUCCESS(rv, rv);
 
     JS::Rooted<JS::Value> v(cx);
-    rv = WrapNative(cx, obj, top, &NS_GET_IID(nsIDOMWindow), true, &v);
+    js::AssertSameCompartment(cx, obj);
+    rv = WrapNative(cx, top, &NS_GET_IID(nsIDOMWindow), true, &v);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Hold on to the top window object as a global property so we
@@ -3373,7 +3366,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   if (!(flags & JSRESOLVE_ASSIGNING) && sDocument_id == id) {
     nsCOMPtr<nsIDocument> document = win->GetDoc();
     JS::Rooted<JS::Value> v(cx);
-    nsresult rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), document, document,
+    nsresult rv = WrapNative(cx, document, document,
                              &NS_GET_IID(nsIDOMDocument), &v, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3648,8 +3641,7 @@ nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     if (array_item) {
       JS::Rooted<JS::Value> rval(cx);
-      rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), array_item, cache,
-                      true, &rval);
+      rv = WrapNative(cx, array_item, cache, true, &rval);
       NS_ENSURE_SUCCESS(rv, rv);
       *vp = rval;
 
