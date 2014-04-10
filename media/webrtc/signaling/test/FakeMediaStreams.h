@@ -90,7 +90,7 @@ class Fake_MediaStream {
  protected:
   std::set<Fake_MediaStreamListener *> mListeners;
   mozilla::Mutex mMutex;  // Lock to prevent the listener list from being modified while
-  		 	  // executing Periodic().
+                          // executing Periodic().
 };
 
 class Fake_MediaPeriodic : public nsITimerCallback {
@@ -241,6 +241,8 @@ public:
   };
   uint32_t GetHintContents() const { return mHintContents; }
   void SetHintContents(uint32_t aHintContents) { mHintContents = aHintContents; }
+
+  void SetTrackEnabled(mozilla::TrackID aTrackID, bool aEnabled) {}
 
 private:
   nsRefPtr<Fake_MediaStream> mMediaStream;
