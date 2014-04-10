@@ -35,10 +35,6 @@ public:
 
   gfx::IntSize GetSize() { return mData.mSize; }
 
-  virtual already_AddRefed<gfxASurface> DeprecatedGetAsSurface() {
-    return nullptr;
-  }
-
   virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE
   {
     return nullptr;

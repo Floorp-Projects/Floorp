@@ -37,7 +37,6 @@ public:
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
 
-  virtual already_AddRefed<gfxASurface> DeprecatedGetAsSurface() MOZ_OVERRIDE;
   virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
   virtual void SetData(const PlanarYCbCrData& aData) MOZ_OVERRIDE;
   virtual void SetDataNoCopy(const Data &aData) MOZ_OVERRIDE;
