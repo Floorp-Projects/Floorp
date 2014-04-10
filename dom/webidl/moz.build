@@ -303,7 +303,6 @@ WEBIDL_FILES = [
     'SourceBufferList.webidl',
     'StorageType.webidl',
     'StyleSheet.webidl',
-    'StyleSheetList.webidl',
     'SVGAElement.webidl',
     'SVGAltGlyphElement.webidl',
     'SVGAngle.webidl',
