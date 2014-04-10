@@ -162,7 +162,6 @@ UNIFIED_SOURCES += [
     'nsXMLHttpRequest.cpp',
     'nsXMLNameSpaceMap.cpp',
     'ShadowRoot.cpp',
-    'StyleSheetList.cpp',
     'Text.cpp',
     'ThirdPartyUtil.cpp',
     'TreeWalker.cpp',
