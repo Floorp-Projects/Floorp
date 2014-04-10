@@ -1029,37 +1029,6 @@ ScrollFrameHelper::HandleScrollbarStyleSwitching()
   }
 }
 
-static bool IsFocused(nsIContent* aContent)
-{
-  // Some content elements, like the GetContent() of a scroll frame
-  // for a text input field, are inside anonymous subtrees, but the focus
-  // manager always reports a non-anonymous element as the focused one, so
-  // walk up the tree until we reach a non-anonymous element.
-  while (aContent && aContent->IsInAnonymousSubtree()) {
-    aContent = aContent->GetParent();
-  }
-
-  return aContent ? nsContentUtils::IsFocusedContent(aContent) : false;
-}
-
-bool
-ScrollFrameHelper::WantAsyncScroll() const
-{
-  nsRect scrollRange = GetScrollRange();
-  ScrollbarStyles styles = GetScrollbarStylesFromFrame();
-  bool isFocused = IsFocused(mOuter->GetContent());
-  bool isVScrollable = (scrollRange.height > 0)
-                    && (styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN);
-  bool isHScrollable = (scrollRange.width > 0)
-                    && (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN);
-  // The check for scroll bars was added in bug 825692 to prevent layerization
-  // of text inputs for performance reasons. However, if a text input is
-  // focused we want to layerize it so we can async scroll it (bug 946408).
-  bool isVAsyncScrollable = isVScrollable && (mVScrollbarBox || isFocused);
-  bool isHAsyncScrollable = isHScrollable && (mHScrollbarBox || isFocused);
-  return isVAsyncScrollable || isHAsyncScrollable;
-}
-
 nsresult
 nsXULScrollFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
@@ -2337,6 +2306,19 @@ ScrollFrameHelper::ExpandRect(const nsRect& aRect) const
   return rect;
 }
 
+static bool IsFocused(nsIContent* aContent)
+{
+  // Some content elements, like the GetContent() of a scroll frame
+  // for a text input field, are inside anonymous subtrees, but the focus
+  // manager always reports a non-anonymous element as the focused one, so
+  // walk up the tree until we reach a non-anonymous element.
+  while (aContent && aContent->IsInAnonymousSubtree()) {
+    aContent = aContent->GetParent();
+  }
+
+  return aContent ? nsContentUtils::IsFocusedContent(aContent) : false;
+}
+
 static bool
 ShouldBeClippedByFrame(nsIFrame* aClipFrame, nsIFrame* aClippedFrame)
 {
@@ -2488,31 +2470,27 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // dirty rect here.
   nsRect dirtyRect = aDirtyRect.Intersect(mScrollPort);
 
+  // Override the dirty rectangle if the displayport has been set.
+  bool usingDisplayport =
+    nsLayoutUtils::GetDisplayPort(mOuter->GetContent()) &&
+    !aBuilder->IsForEventDelivery();
+
+  // don't set the display port base rect for root scroll frames,
+  // nsLayoutUtils::PaintFrame or nsSubDocumentFrame::BuildDisplayList
+  // does that for root scroll frames before it expands the dirty rect
+  // to the display port.
+  if (usingDisplayport && !mIsRoot) {
+    nsLayoutUtils::SetDisplayPortBase(mOuter->GetContent(), dirtyRect);
+  }
+
+  // now that we have an updated base rect we can get the display port
   nsRect displayPort;
-  bool usingDisplayport = false;
-  if (!aBuilder->IsForEventDelivery()) {
-    if (!mIsRoot) {
-      // For a non-root scroll frame, override the value of the display port
-      // base rect, and possibly create a display port if there isn't one
-      // already. For root scroll frame, nsLayoutUtils::PaintFrame or
-      // nsSubDocumentFrame::BuildDisplayList takes care of this.
-      nsRect displayportBase = dirtyRect;
-      usingDisplayport = nsLayoutUtils::GetOrMaybeCreateDisplayPort(
-          *aBuilder, mOuter, displayportBase, &displayPort);
-    } else {
-      // For a root frmae, just get the value of the existing of the display
-      // port, if any.
-      usingDisplayport = nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
-    }
-
-    if (usingDisplayport && DisplayportExceedsMaxTextureSize(mOuter->PresContext(), displayPort)) {
-      usingDisplayport = false;
-    }
-
-    // Override the dirty rectangle if the displayport has been set.
-    if (usingDisplayport) {
-      dirtyRect = displayPort;
-    }
+  nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
+  if (usingDisplayport && DisplayportExceedsMaxTextureSize(mOuter->PresContext(), displayPort)) {
+    usingDisplayport = false;
+  }
+  if (usingDisplayport) {
+    dirtyRect = displayPort;
   }
 
   if (aBuilder->IsForImageVisibility()) {
@@ -2599,9 +2577,28 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (mShouldBuildScrollableLayer) {
     shouldBuildLayer = true;
   } else {
+    nsRect scrollRange = GetScrollRange();
+    ScrollbarStyles styles = GetScrollbarStylesFromFrame();
+    bool isFocused = IsFocused(mOuter->GetContent());
+    bool isVScrollable = (scrollRange.height > 0)
+                      && (styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN);
+    bool isHScrollable = (scrollRange.width > 0)
+                      && (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN);
+    // The check for scroll bars was added in bug 825692 to prevent layerization
+    // of text inputs for performance reasons. However, if a text input is
+    // focused we want to layerize it so we can async scroll it (bug 946408).
+    bool wantLayerV = isVScrollable && (mVScrollbarBox || isFocused);
+    bool wantLayerH = isHScrollable && (mHScrollbarBox || isFocused);
+    // TODO Turn this on for inprocess OMTC on all platforms
+    bool wantSubAPZC = gfxPrefs::APZSubframeEnabled();
+#ifdef MOZ_WIDGET_GONK
+    if (XRE_GetProcessType() != GeckoProcessType_Content) {
+      wantSubAPZC = false;
+    }
+#endif
     shouldBuildLayer =
-      nsLayoutUtils::WantSubAPZC() &&
-      WantAsyncScroll() &&
+      wantSubAPZC &&
+      (wantLayerV || wantLayerH) &&
       // If we are the root scroll frame for the display root then we don't need a scroll
       // info layer to make a RecordFrameMetrics call for us as
       // nsDisplayList::PaintForFrame already calls RecordFrameMetrics for us.
