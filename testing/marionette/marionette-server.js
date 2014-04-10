@@ -136,6 +136,7 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
   this.command_id = null;
   this.mainFrame = null; //topmost chrome frame
   this.curFrame = null; // chrome iframe that currently has focus
+  this.mainContentFrameId = null;
   this.importedScripts = FileUtils.getFile('TmpD', ['marionetteChromeScripts']);
   this.importedScriptHashes = {"chrome" : [], "content": []};
   this.currentFrameElement = null;
@@ -2393,10 +2394,17 @@ MarionetteServerConnection.prototype = {
           // browserType remains undefined.
         }
         let reg = {};
+        // this will be sent to tell the content process if it is the main content
+        let mainContent = (this.curBrowser.mainContentId == null);
         if (!browserType || browserType != "content") {
           //curBrowser holds all the registered frames in knownFrames
           reg.id = this.curBrowser.register(this.generateFrameId(message.json.value),
                                             listenerWindow);
+        }
+        // set to true if we updated mainContentId
+        mainContent = ((mainContent == true) && (this.curBrowser.mainContentId != null));
+        if (mainContent) {
+          this.mainContentFrameId = this.curBrowser.curFrameId;
         }
         this.curBrowser.elementManager.seenItems[reg.id] = Cu.getWeakReference(listenerWindow);
         if (nullPrevious && (this.curBrowser.curFrameId != null)) {
@@ -2410,7 +2418,13 @@ MarionetteServerConnection.prototype = {
             this.newSessionCommandId = null;
           }
         }
-        return reg;
+        return [reg, mainContent];
+      case "Marionette:emitTouchEvent":
+        let globalMessageManager = Cc["@mozilla.org/globalmessagemanager;1"]
+                             .getService(Ci.nsIMessageBroadcaster);
+        globalMessageManager.broadcastAsyncMessage(
+          "MarionetteMainListener:emitTouchEvent", message.json);
+        return;
     }
   }
 };
