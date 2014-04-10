@@ -18,7 +18,8 @@ namespace layers {
  */
 class TextureClientX11
  : public TextureClient,
-   public TextureClientSurface
+   public TextureClientSurface,
+   public TextureClientDrawTarget
 {
  public:
   TextureClientX11(gfx::SurfaceFormat format, TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
@@ -27,6 +28,7 @@ class TextureClientX11
   // TextureClient
 
   TextureClientSurface* AsTextureClientSurface() MOZ_OVERRIDE { return this; }
+  TextureClientDrawTarget* AsTextureClientDrawTarget() MOZ_OVERRIDE { return this; }
 
   bool IsAllocated() const MOZ_OVERRIDE;
   bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
@@ -44,6 +46,8 @@ class TextureClientX11
   bool UpdateSurface(gfxASurface* aSurface) MOZ_OVERRIDE;
   already_AddRefed<gfxASurface> GetAsSurface() MOZ_OVERRIDE;
   bool AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags flags) MOZ_OVERRIDE;
+
+  // TextureClientDrawTarget
 
   TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
   gfx::SurfaceFormat GetFormat() const {
