@@ -20,7 +20,7 @@
 }
 
 #tabbrowser-tabs {
-  min-height: @tabHeight@;
+  min-height: @tabMinHeight@;
 }
 
 .tabbrowser-tab,
@@ -118,7 +118,7 @@
 .tab-background-end,
 .tab-background-end[selected=true]::after,
 .tab-background-end[selected=true]::before {
-  min-height: @tabHeight@;
+  min-height: @tabMinHeight@;
   width: @tabCurveWidth@;
 }
 
