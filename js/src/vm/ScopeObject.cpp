@@ -2254,13 +2254,11 @@ RemoveReferencedNames(JSContext *cx, HandleScript script, PropertyNameSet &remai
 
         switch (JSOp(*pc)) {
           case JSOP_NAME:
-          case JSOP_CALLNAME:
           case JSOP_SETNAME:
             name = script->getName(pc);
             break;
 
           case JSOP_GETALIASEDVAR:
-          case JSOP_CALLALIASEDVAR:
           case JSOP_SETALIASEDVAR:
             name = ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc);
             break;

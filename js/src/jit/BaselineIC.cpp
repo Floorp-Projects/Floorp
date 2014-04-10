@@ -5638,10 +5638,6 @@ TryAttachGlobalNameStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     bool isScripted;
     if (IsCacheableGetPropCall(cx, global, global, shape, &isScripted) && !isScripted)
     {
-#ifdef JS_HAS_NO_SUCH_METHOD
-        if (JSOp(*pc) == JSOP_CALLGNAME)
-            return true;
-#endif
         ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
         IonSpew(IonSpew_BaselineIC, "  Generating GetName(GlobalName/NativeGetter) stub");
         RootedFunction getter(cx, &shape->getterObject()->as<JSFunction>());
@@ -5758,7 +5754,7 @@ DoGetNameFallback(JSContext *cx, BaselineFrame *frame, ICGetName_Fallback *stub,
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetName(%s)", js_CodeName[JSOp(*pc)]);
 
-    JS_ASSERT(op == JSOP_NAME || op == JSOP_CALLNAME || op == JSOP_GETGNAME || op == JSOP_CALLGNAME);
+    JS_ASSERT(op == JSOP_NAME || op == JSOP_GETGNAME);
 
     RootedPropertyName name(cx, script->getName(pc));
 
@@ -5935,7 +5931,7 @@ DoGetIntrinsicFallback(JSContext *cx, BaselineFrame *frame, ICGetIntrinsic_Fallb
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetIntrinsic(%s)", js_CodeName[JSOp(*pc)]);
 
-    JS_ASSERT(op == JSOP_GETINTRINSIC || op == JSOP_CALLINTRINSIC);
+    JS_ASSERT(op == JSOP_GETINTRINSIC);
 
     if (!GetIntrinsicOperation(cx, pc, res))
         return false;

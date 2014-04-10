@@ -517,9 +517,7 @@ ExtendedUse(jsbytecode *pc)
         return true;
     switch ((JSOp)*pc) {
       case JSOP_GETARG:
-      case JSOP_CALLARG:
       case JSOP_GETLOCAL:
-      case JSOP_CALLLOCAL:
         return true;
       default:
         return false;
@@ -554,12 +552,10 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
     switch (JSOp(*pc)) {
 
       case JSOP_GETARG:
-      case JSOP_CALLARG:
       case JSOP_SETARG:
         return ArgSlot(GET_ARGNO(pc));
 
       case JSOP_GETLOCAL:
-      case JSOP_CALLLOCAL:
       case JSOP_SETLOCAL:
         return LocalSlot(script, GET_LOCALNO(pc));
 
@@ -928,7 +924,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           }
 
           case JSOP_GETLOCAL:
-          case JSOP_CALLLOCAL:
           case JSOP_SETLOCAL:
             JS_ASSERT(GET_LOCALNO(pc) < script_->nfixed());
             break;
@@ -1091,9 +1086,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 
         switch (op) {
           case JSOP_GETARG:
-          case JSOP_CALLARG:
           case JSOP_GETLOCAL:
-          case JSOP_CALLLOCAL:
           case JSOP_THIS: {
             uint32_t slot = GetBytecodeSlot(script_, pc);
             if (!slotEscapes(slot)) {

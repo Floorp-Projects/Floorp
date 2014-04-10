@@ -1480,7 +1480,6 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_rest();
 
       case JSOP_GETARG:
-      case JSOP_CALLARG:
         if (info().argsObjAliasesFormals()) {
             MGetArgumentsObjectArg *getArg = MGetArgumentsObjectArg::New(alloc(),
                                                                          current->argumentsObject(),
@@ -1496,7 +1495,6 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_setarg(GET_ARGNO(pc));
 
       case JSOP_GETLOCAL:
-      case JSOP_CALLLOCAL:
         current->pushLocal(GET_LOCALNO(pc));
         return true;
 
@@ -1585,7 +1583,6 @@ IonBuilder::inspectOpcode(JSOp op)
         return pushConstant(Int32Value(GET_UINT16(pc)));
 
       case JSOP_GETGNAME:
-      case JSOP_CALLGNAME:
       {
         PropertyName *name = info().getAtom(pc)->asPropertyName();
         return jsop_getgname(name);
@@ -1602,14 +1599,12 @@ IonBuilder::inspectOpcode(JSOp op)
       }
 
       case JSOP_NAME:
-      case JSOP_CALLNAME:
       {
         PropertyName *name = info().getAtom(pc)->asPropertyName();
         return jsop_getname(name);
       }
 
       case JSOP_GETINTRINSIC:
-      case JSOP_CALLINTRINSIC:
       {
         PropertyName *name = info().getAtom(pc)->asPropertyName();
         return jsop_intrinsic(name);
@@ -1634,7 +1629,6 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
       case JSOP_GETALIASEDVAR:
-      case JSOP_CALLALIASEDVAR:
         return jsop_getaliasedvar(ScopeCoordinate(pc));
 
       case JSOP_SETALIASEDVAR:

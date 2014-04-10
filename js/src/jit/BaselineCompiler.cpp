@@ -1916,12 +1916,6 @@ BaselineCompiler::emit_JSOP_GETGNAME()
 }
 
 bool
-BaselineCompiler::emit_JSOP_CALLGNAME()
-{
-    return emit_JSOP_GETGNAME();
-}
-
-bool
 BaselineCompiler::emit_JSOP_BINDGNAME()
 {
     frame.push(ObjectValue(script->global()));
@@ -2064,12 +2058,6 @@ BaselineCompiler::emit_JSOP_GETALIASEDVAR()
 }
 
 bool
-BaselineCompiler::emit_JSOP_CALLALIASEDVAR()
-{
-    return emit_JSOP_GETALIASEDVAR();
-}
-
-bool
 BaselineCompiler::emit_JSOP_SETALIASEDVAR()
 {
     JSScript *outerScript = ScopeCoordinateFunctionScript(script, pc);
@@ -2144,12 +2132,6 @@ BaselineCompiler::emit_JSOP_NAME()
 }
 
 bool
-BaselineCompiler::emit_JSOP_CALLNAME()
-{
-    return emit_JSOP_NAME();
-}
-
-bool
 BaselineCompiler::emit_JSOP_BINDNAME()
 {
     frame.syncStack(0);
@@ -2199,12 +2181,6 @@ BaselineCompiler::emit_JSOP_GETINTRINSIC()
 
     frame.push(R0);
     return true;
-}
-
-bool
-BaselineCompiler::emit_JSOP_CALLINTRINSIC()
-{
-    return emit_JSOP_GETINTRINSIC();
 }
 
 typedef bool (*DefVarOrConstFn)(JSContext *, HandlePropertyName, unsigned, HandleObject);
@@ -2375,12 +2351,6 @@ BaselineCompiler::emit_JSOP_GETLOCAL()
 }
 
 bool
-BaselineCompiler::emit_JSOP_CALLLOCAL()
-{
-    return emit_JSOP_GETLOCAL();
-}
-
-bool
 BaselineCompiler::emit_JSOP_SETLOCAL()
 {
     // Ensure no other StackValue refers to the old value, for instance i + (i = 3).
@@ -2472,12 +2442,6 @@ BaselineCompiler::emit_JSOP_GETARG()
 {
     uint32_t arg = GET_ARGNO(pc);
     return emitFormalArgAccess(arg, /* get = */ true);
-}
-
-bool
-BaselineCompiler::emit_JSOP_CALLARG()
-{
-    return emit_JSOP_GETARG();
 }
 
 bool
