@@ -434,6 +434,12 @@ nsDOMWindowUtils::SetDisplayPortMarginsForElement(float aLeftMargin,
     return NS_ERROR_INVALID_ARG;
   }
 
+  DisplayPortMarginsPropertyData* currentData =
+    static_cast<DisplayPortMarginsPropertyData*>(content->GetProperty(nsGkAtoms::DisplayPortMargins));
+  if (currentData && currentData->mPriority > aPriority) {
+    return NS_OK;
+  }
+
   // Note order change of arguments between our function signature and
   // LayerMargin constructor.
   LayerMargin displayportMargins(aTopMargin,
@@ -441,8 +447,21 @@ nsDOMWindowUtils::SetDisplayPortMarginsForElement(float aLeftMargin,
                                  aBottomMargin,
                                  aLeftMargin);
 
-  nsLayoutUtils::SetDisplayPortMargins(content, presShell, displayportMargins,
-                                       aAlignmentX, aAlignmentY, aPriority);
+  content->SetProperty(nsGkAtoms::DisplayPortMargins,
+                       new DisplayPortMarginsPropertyData(displayportMargins, aAlignmentX, aAlignmentY, aPriority),
+                       nsINode::DeleteProperty<DisplayPortMarginsPropertyData>);
+
+  nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+  if (rootScrollFrame && content == rootScrollFrame->GetContent()) {
+    // We are setting a root displayport for a document.
+    // The pres shell needs a special flag set.
+    presShell->SetIgnoreViewportScrolling(true);
+  }
+
+  nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
+  if (rootFrame) {
+    rootFrame->SchedulePaint();
+  }
 
   return NS_OK;
 }
@@ -478,7 +497,8 @@ nsDOMWindowUtils::SetDisplayPortBaseForElement(int32_t aX,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsLayoutUtils::SetDisplayPortBase(content, nsRect(aX, aY, aWidth, aHeight));
+  content->SetProperty(nsGkAtoms::DisplayPortBase, new nsRect(aX, aY, aWidth, aHeight),
+                       nsINode::DeleteProperty<nsRect>);
 
   return NS_OK;
 }

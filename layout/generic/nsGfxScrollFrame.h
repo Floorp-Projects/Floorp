@@ -308,7 +308,6 @@ public:
       mOriginOfLastScroll = nullptr;
     }
   }
-  bool WantAsyncScroll() const;
 
   // owning references to the nsIAnonymousContentCreator-built content
   nsCOMPtr<nsIContent> mHScrollbarContent;
@@ -662,9 +661,6 @@ public:
   virtual void ResetOriginIfScrollAtGeneration(uint32_t aGeneration) MOZ_OVERRIDE {
     mHelper.ResetOriginIfScrollAtGeneration(aGeneration);
   }
-  virtual bool WantAsyncScroll() const MOZ_OVERRIDE {
-    return mHelper.WantAsyncScroll();
-  }
 
   // nsIStatefulFrame
   NS_IMETHOD SaveState(nsPresState** aState) MOZ_OVERRIDE {
@@ -968,9 +964,6 @@ public:
   }
   virtual void ResetOriginIfScrollAtGeneration(uint32_t aGeneration) MOZ_OVERRIDE {
     mHelper.ResetOriginIfScrollAtGeneration(aGeneration);
-  }
-  virtual bool WantAsyncScroll() const MOZ_OVERRIDE {
-    return mHelper.WantAsyncScroll();
   }
 
   // nsIStatefulFrame
