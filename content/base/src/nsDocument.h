@@ -23,6 +23,7 @@
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsStubDocumentObserver.h"
+#include "nsIDOMStyleSheetList.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIContent.h"
 #include "nsIPrincipal.h"
@@ -64,7 +65,6 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/DOMImplementation.h"
-#include "mozilla/dom/StyleSheetList.h"
 #include "nsIDOMTouchEvent.h"
 #include "nsDataHashtable.h"
 #include "mozilla/TimeStamp.h"
@@ -78,6 +78,7 @@
 #define XML_DECLARATION_BITS_STANDALONE_YES       (1 << 3)
 
 
+class nsDOMStyleSheetList;
 class nsDOMStyleSheetSetList;
 class nsIOutputStream;
 class nsDocument;
@@ -435,7 +436,7 @@ public:
   nsDocHeaderData*  mNext;
 };
 
-class nsDOMStyleSheetList : public mozilla::dom::StyleSheetList,
+class nsDOMStyleSheetList : public nsIDOMStyleSheetList,
                             public nsStubDocumentObserver
 {
 public:
@@ -453,7 +454,7 @@ public:
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-  virtual nsCSSStyleSheet* GetItemAt(uint32_t aIndex) MOZ_OVERRIDE;
+  nsIStyleSheet* GetItemAt(uint32_t aIndex);
 
 protected:
   int32_t       mLength;

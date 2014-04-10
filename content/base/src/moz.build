@@ -72,7 +72,6 @@ EXPORTS.mozilla.dom += [
     'Link.h',
     'NodeIterator.h',
     'ShadowRoot.h',
-    'StyleSheetList.h',
     'Text.h',
     'TreeWalker.h',
 ]
