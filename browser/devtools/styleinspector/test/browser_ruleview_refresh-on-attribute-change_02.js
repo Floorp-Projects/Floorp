@@ -8,11 +8,12 @@
 
 let test = asyncTest(function*() {
   yield addTab("data:text/html;charset=utf-8,browser_ruleview_update.js");
-  let {toolbox, inspector, view} = yield openRuleView();
 
   content.document.body.innerHTML = '<div id="testid" class="testclass">Styled Node</div>';
   let testElement = getNode("#testid");
   testElement.setAttribute("style", "margin-top: 1px; padding-top: 5px;");
+
+  let {toolbox, inspector, view} = yield openRuleView();
   yield selectNode(testElement, inspector);
 
   yield testPropertyChanges(inspector, view, testElement);
