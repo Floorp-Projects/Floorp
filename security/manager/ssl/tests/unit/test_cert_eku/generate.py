@@ -81,10 +81,7 @@ def gen_int_js_output(int_string):
     # have no EKU or have the Server Auth or Netscape Server Gated Crypto
     # usage (the second of which is deprecated but currently supported for
     # compatibility purposes).
-    # TODO(bug 991209) Additionally, if it has the OCSP Signing usage, it is
-    # considered not valid as a SSL CA.
-    if (("NONE" in int_string or "SA" in int_string or "NS" in int_string) and
-        "OS" not in int_string):
+    if ("NONE" in int_string or "SA" in int_string or "NS" in int_string):
       expectedResult = "0"
     return ("  checkCertErrorGeneric(certdb, load_cert('" + int_string +
             "', ',,'), " + expectedResult + ", certificateUsageSSLCA);\n")
@@ -129,10 +126,9 @@ def gen_ee_js_output(int_string, ee_string, cert_usage, ee_name):
                                       "SEC_ERROR_INADEQUATE_CERT_TYPE")
         return single_test_output(ee_name, cert_usage, "0")
 
-    # If the usage isn't Status Responder, if either the end-entity or
-    # intermediate certificate has the OCSP Signing usage in its EKU,
-    # it is not valid for any other usage.
-    if ("OS" in ee_string or "OS" in int_string):
+    # If the usage isn't Status Responder, if the end-entity certificate has
+    # the OCSP Signing usage in its EKU, it is not valid for any other usage.
+    if "OS" in ee_string:
         return single_test_output(ee_name, cert_usage,
                                   "SEC_ERROR_INADEQUATE_CERT_TYPE")
 
