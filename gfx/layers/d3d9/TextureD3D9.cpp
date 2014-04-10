@@ -645,6 +645,7 @@ CairoTextureClientD3D9::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
     return false;
   }
 
+  mTexture->AddRef(); // Release in TextureHostD3D9::TextureHostD3D9
   aOutDescriptor = SurfaceDescriptorD3D9(reinterpret_cast<uintptr_t>(mTexture.get()));
   return true;
 }
@@ -860,6 +861,7 @@ TextureHostD3D9::TextureHostD3D9(TextureFlags aFlags,
   , mIsLocked(false)
 {
   mTexture = reinterpret_cast<IDirect3DTexture9*>(aDescriptor.texture());
+  mTexture->Release(); // see AddRef in CairoTextureClientD3D9::ToSurfaceDescriptor
   MOZ_ASSERT(mTexture);
   D3DSURFACE_DESC desc;
   HRESULT hr = mTexture->GetLevelDesc(0, &desc);
