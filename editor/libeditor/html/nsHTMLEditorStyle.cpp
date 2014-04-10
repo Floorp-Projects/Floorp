@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "TypeInState.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
@@ -52,6 +52,7 @@
 class nsISupports;
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static bool
 IsEmptyTextNode(nsHTMLEditor* aThis, nsINode* aNode)

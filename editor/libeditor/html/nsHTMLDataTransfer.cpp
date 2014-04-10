@@ -11,7 +11,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"

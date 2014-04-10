@@ -95,11 +95,11 @@ typedef short SelectionType;
 
 namespace mozilla {
 class EventStates;
-class Selection;
 
 namespace dom {
 class Element;
 class Touch;
+class Selection;
 class ShadowRoot;
 } // namespace dom
 
@@ -775,7 +775,7 @@ public:
     */
   int16_t GetSelectionFlags() const { return mSelectionFlags; }
 
-  virtual mozilla::Selection* GetCurrentSelection(SelectionType aType) = 0;
+  virtual mozilla::dom::Selection* GetCurrentSelection(SelectionType aType) = 0;
 
   /**
     * Interface to dispatch events via the presshell
