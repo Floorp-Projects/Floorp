@@ -7,7 +7,7 @@
 # Copies the needed files from a directory containing the original
 # soundtouch sources that we need for HTML5 media playback rate change.
 
-cp $1/COPYING.TXT .
+cp $1/COPYING.TXT LICENSE
 cp $1/source/SoundTouch/AAFilter.cpp src
 cp $1/source/SoundTouch/AAFilter.h src
 cp $1/source/SoundTouch/cpu_detect.h src
@@ -15,6 +15,12 @@ cp $1/source/SoundTouch/cpu_detect_x86.cpp src
 cp $1/source/SoundTouch/FIFOSampleBuffer.cpp src
 cp $1/source/SoundTouch/FIRFilter.cpp src
 cp $1/source/SoundTouch/FIRFilter.h src
+cp $1/source/SoundTouch/InterpolateLinear.cpp src
+cp $1/source/SoundTouch/InterpolateLinear.h src
+cp $1/source/SoundTouch/InterpolateCubic.cpp src
+cp $1/source/SoundTouch/InterpolateCubic.h src
+cp $1/source/SoundTouch/InterpolateShannon.cpp src
+cp $1/source/SoundTouch/InterpolateShannon.h src
 cp $1/source/SoundTouch/mmx_optimized.cpp src
 cp $1/source/SoundTouch/RateTransposer.cpp src
 cp $1/source/SoundTouch/RateTransposer.h src

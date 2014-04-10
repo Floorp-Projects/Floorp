@@ -2764,12 +2764,6 @@ void MediaDecoderStateMachine::SetPlaybackRate(double aPlaybackRate)
       "PlaybackRate == 0 should be handled before this function.");
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
-  // We don't currently support more than two channels when changing playback
-  // rate.
-  if (mAudioStream && mAudioStream->GetChannels() > 2) {
-    return;
-  }
-
   if (mPlaybackRate == aPlaybackRate) {
     return;
   }

@@ -44,7 +44,8 @@ var gPlayedTests = [
   { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
   { name:"owl.mp3", type:"audio/mpeg", duration:3.29 },
-  { name:"vbr.mp3", type:"audio/mpeg", duration:10.0 }
+  { name:"vbr.mp3", type:"audio/mpeg", duration:10.0 },
+  { name:"bug495794.ogg", type:"audio/ogg", duration:0.3 }
 ];
 
 // Used by test_mozLoadFrom.  Need one test file per decoder backend, plus

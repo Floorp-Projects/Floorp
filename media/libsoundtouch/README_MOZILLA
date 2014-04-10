@@ -1,5 +1,5 @@
 These files are from the SoundTouch library (http://www.surina.net/soundtouch/),
-and are extracted from the revision r160 of the svn repository at
+and are extracted from the revision r198 of the svn repository at
 https://soundtouch.svn.sourceforge.net/svnroot/soundtouch/trunk.
 
 The whole library is not used, only the relevant files are imported in the tree,

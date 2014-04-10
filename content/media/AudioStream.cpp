@@ -195,10 +195,6 @@ nsresult AudioStream::EnsureTimeStretcherInitializedUnlocked()
 {
   mMonitor.AssertCurrentThreadOwns();
   if (!mTimeStretcher) {
-    // SoundTouch does not support a number of channels > 2
-    if (mOutChannels > 2) {
-      return NS_ERROR_FAILURE;
-    }
     mTimeStretcher = new soundtouch::SoundTouch();
     mTimeStretcher->setSampleRate(mInRate);
     mTimeStretcher->setChannels(mOutChannels);
