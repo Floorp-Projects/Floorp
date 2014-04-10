@@ -38,7 +38,6 @@ nsNodeInfo::~nsNodeInfo()
   NS_RELEASE(mInner.mName);
   NS_IF_RELEASE(mInner.mPrefix);
   NS_IF_RELEASE(mInner.mExtraName);
-  NS_RELEASE(mOwnerManager);
 }
 
 
@@ -54,7 +53,7 @@ nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
   NS_IF_ADDREF(mInner.mPrefix = aPrefix);
   mInner.mNamespaceID = aNamespaceID;
   mInner.mNodeType = aNodeType;
-  NS_ADDREF(mOwnerManager = aOwnerManager);
+  mOwnerManager = aOwnerManager;
   NS_IF_ADDREF(mInner.mExtraName = aExtraName);
 
   mDocument = aOwnerManager->GetDocument();
@@ -147,7 +146,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsNodeInfo)
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsNodeInfo, tmp->mRefCnt.get())
   }
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mOwnerManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwnerManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsNodeInfo)
