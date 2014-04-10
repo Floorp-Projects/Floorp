@@ -1870,6 +1870,11 @@ public:
     return sCSSVariablesEnabled;
   }
 
+  static bool InterruptibleReflowEnabled()
+  {
+    return sInterruptibleReflowEnabled;
+  }
+
   /**
    * Unions the overflow areas of all non-popup children of aFrame with
    * aOverflowAreas.
@@ -2121,6 +2126,7 @@ private:
   static bool sFontSizeInflationDisabledInMasterProcess;
   static bool sInvalidationDebuggingIsEnabled;
   static bool sCSSVariablesEnabled;
+  static bool sInterruptibleReflowEnabled;
 };
 
 template<typename PointType, typename RectType, typename CoordType>
