@@ -34,6 +34,7 @@ this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
 let loaderGlobals = {
   btoa: btoa,
   console: console,
+  hasChrome: true,
   promise: promise,
   _Iterator: Iterator,
   ChromeWorker: ChromeWorker,
