@@ -105,16 +105,36 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
 
     switch (type.TagPart()) {
-    case nsXPTType::T_I8    : d.setInt32(*((int8_t*)s));             break;
-    case nsXPTType::T_I16   : d.setInt32(*((int16_t*)s));            break;
-    case nsXPTType::T_I32   : d.setInt32(*((int32_t*)s));            break;
-    case nsXPTType::T_I64   : d.setNumber(double(*((int64_t*)s)));   break;
-    case nsXPTType::T_U8    : d.setInt32(*((uint8_t*)s));            break;
-    case nsXPTType::T_U16   : d.setInt32(*((uint16_t*)s));           break;
-    case nsXPTType::T_U32   : d.setNumber(*((uint32_t*)s));          break;
-    case nsXPTType::T_U64   : d.setNumber(double(*((uint64_t*)s)));  break;
-    case nsXPTType::T_FLOAT : d.setNumber(*((float*)s));             break;
-    case nsXPTType::T_DOUBLE: d.setNumber(*((double*)s));            break;
+    case nsXPTType::T_I8    :
+        d.setInt32(*((int8_t*)s));
+        return true;
+    case nsXPTType::T_I16   :
+        d.setInt32(*((int16_t*)s));
+        return true;
+    case nsXPTType::T_I32   :
+        d.setInt32(*((int32_t*)s));
+        return true;
+    case nsXPTType::T_I64   :
+        d.setNumber(double(*((int64_t*)s)));
+        return true;
+    case nsXPTType::T_U8    :
+        d.setInt32(*((uint8_t*)s));
+        return true;
+    case nsXPTType::T_U16   :
+        d.setInt32(*((uint16_t*)s));
+        return true;
+    case nsXPTType::T_U32   :
+        d.setNumber(*((uint32_t*)s));
+        return true;
+    case nsXPTType::T_U64   :
+        d.setNumber(double(*((uint64_t*)s)));
+        return true;
+    case nsXPTType::T_FLOAT :
+        d.setNumber(*((float*)s));
+        return true;
+    case nsXPTType::T_DOUBLE:
+        d.setNumber(*((double*)s));
+        return true;
     case nsXPTType::T_BOOL  :
     {
         bool b = *((bool*)s);
@@ -122,7 +142,7 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         NS_WARN_IF_FALSE(b == 1 || b == 0,
                          "Passing a malformed bool through XPConnect");
         d.setBoolean(b);
-        break;
+        return true;
     }
     case nsXPTType::T_CHAR  :
     {
@@ -138,7 +158,7 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         if (!(str = JS_NewStringCopyN(cx, p, 1)))
             return false;
         d.setString(str);
-        break;
+        return true;
     }
     case nsXPTType::T_WCHAR :
     {
@@ -149,7 +169,7 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         if (!(str = JS_NewUCStringCopyN(cx, p, 1)))
             return false;
         d.setString(str);
-        break;
+        return true;
     }
 
     case nsXPTType::T_JSVAL :
@@ -157,15 +177,9 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         d.set(*((Value*)s));
         if (!JS_WrapValue(cx, d))
             return false;
-        break;
+        return true;
     }
 
-    default:
-
-    // set the default result
-    d.setNull();
-
-    switch (type.TagPart()) {
     case nsXPTType::T_VOID:
         XPC_LOG_ERROR(("XPCConvert::NativeData2JS : void* params not supported"));
         return false;
@@ -173,14 +187,16 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
     case nsXPTType::T_IID:
     {
         nsID* iid2 = *((nsID**)s);
-        if (!iid2)
-            break;
+        if (!iid2) {
+            d.setNull();
+            return true;
+        }
         RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
         JSObject* obj;
         if (!(obj = xpc_NewIDObject(cx, scope, *iid2)))
             return false;
         d.setObject(*obj);
-        break;
+        return true;
     }
 
     case nsXPTType::T_ASTRING:
@@ -189,28 +205,26 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
     case nsXPTType::T_DOMSTRING:
     {
         const nsAString* p = *((const nsAString**)s);
-        if (!p)
-            break;
-
-        if (!p->IsVoid()) {
-            nsStringBuffer* buf;
-            if (!XPCStringConvert::ReadableToJSVal(cx, *p, &buf, d))
-                return false;
-            if (buf)
-                buf->AddRef();
+        if (!p || p->IsVoid()) {
+            d.setNull();
+            return true;
         }
 
-        // *d is defaulted to JSVAL_NULL so no need to set it
-        // again if p is a "void" string
-        MOZ_ASSERT_IF(p->IsVoid(), d.isNull());
-        break;
+        nsStringBuffer* buf;
+        if (!XPCStringConvert::ReadableToJSVal(cx, *p, &buf, d))
+            return false;
+        if (buf)
+            buf->AddRef();
+        return true;
     }
 
     case nsXPTType::T_CHAR_STR:
     {
         char* p = *((char**)s);
-        if (!p)
-            break;
+        if (!p) {
+            d.setNull();
+            return true;
+        }
 
 #ifdef STRICT_CHECK_OF_UNICODE
         bool isAscii = true;
@@ -225,30 +239,35 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         if (!(str = JS_NewStringCopyZ(cx, p)))
             return false;
         d.setString(str);
-        break;
+        return true;
     }
 
     case nsXPTType::T_WCHAR_STR:
     {
         jschar* p = *((jschar**)s);
-        if (!p)
-            break;
+        if (!p) {
+            d.setNull();
+            return true;
+        }
+
         JSString* str;
         if (!(str = JS_NewUCStringCopyZ(cx, p)))
             return false;
         d.setString(str);
-        break;
+        return true;
     }
     case nsXPTType::T_UTF8STRING:
     {
         const nsACString* utf8String = *((const nsACString**)s);
 
-        if (!utf8String || utf8String->IsVoid())
-            break;
+        if (!utf8String || utf8String->IsVoid()) {
+            d.setNull();
+            return true;
+        }
 
         if (utf8String->IsEmpty()) {
             d.set(JS_GetEmptyStringValue(cx));
-            break;
+            return true;
         }
 
         const uint32_t len = CalcUTF8ToUnicodeLength(*utf8String);
@@ -282,14 +301,16 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         }
 
         d.setString(str);
-        break;
+        return true;
     }
     case nsXPTType::T_CSTRING:
     {
         const nsACString* cString = *((const nsACString**)s);
 
-        if (!cString || cString->IsVoid())
-            break;
+        if (!cString || cString->IsVoid()) {
+            d.setNull();
+            return true;
+        }
 
         // c-strings (binary blobs) are deliberately not converted from
         // UTF-8 to UTF-16. T_UTF8Sting is for UTF-8 encoded strings
@@ -300,42 +321,34 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
             return false;
 
         d.setString(str);
-        break;
+        return true;
     }
 
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
         nsISupports* iface = *((nsISupports**)s);
-        if (iface) {
-            if (iid->Equals(NS_GET_IID(nsIVariant))) {
-                nsCOMPtr<nsIVariant> variant = do_QueryInterface(iface);
-                if (!variant)
-                    return false;
+        if (!iface) {
+            d.setNull();
+            return true;
+        }
 
-                return XPCVariant::VariantDataToJS(variant,
-                                                   pErr, d);
-            }
-            // else...
-            xpcObjectHelper helper(iface);
-            if (!NativeInterface2JSObject(d, nullptr, helper, iid,
-                                          nullptr, true, pErr))
+        if (iid->Equals(NS_GET_IID(nsIVariant))) {
+            nsCOMPtr<nsIVariant> variant = do_QueryInterface(iface);
+            if (!variant)
                 return false;
 
-#ifdef DEBUG
-            JSObject* jsobj = d.toObjectOrNull();
-            if (jsobj && !js::GetObjectParent(jsobj))
-                MOZ_ASSERT(js::GetObjectClass(jsobj)->flags & JSCLASS_IS_GLOBAL,
-                           "Why did we recreate this wrapper?");
-#endif
+            return XPCVariant::VariantDataToJS(variant,
+                                               pErr, d);
         }
-        break;
+        // else...
+        xpcObjectHelper helper(iface);
+        return NativeInterface2JSObject(d, nullptr, helper, iid, nullptr, true, pErr);
     }
 
     default:
         NS_ERROR("bad type");
         return false;
-    }
     }
     return true;
 }
