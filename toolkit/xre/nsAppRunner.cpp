@@ -213,7 +213,9 @@ static char **gQtOnlyArgv;
 #endif
 
 #if defined(MOZ_WIDGET_GTK)
-#if defined(NS_FREE_PERMANENT_DATA)
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) \
+  || defined(NS_TRACE_MALLOC)
+#define CLEANUP_MEMORY 1
 #define PANGO_ENABLE_BACKEND
 #include <pango/pangofc-fontmap.h>
 #endif
@@ -2594,7 +2596,7 @@ static PRFuncPtr FindFunction(const char* aName)
 
 static void MOZ_gdk_display_close(GdkDisplay *display)
 {
-#ifdef NS_FREE_PERMANENT_DATA
+#if CLEANUP_MEMORY
   // XXX wallpaper for bug 417163: don't close the Display if we're using the
   // Qt theme because we crash (in Qt code) when using jemalloc.
   bool theme_is_qt = false;
@@ -2661,7 +2663,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
     if (!theme_is_qt)
       gdk_display_close(display);
   }
-#else // not NS_FREE_PERMANENT_DATA
+#else // not CLEANUP_MEMORY
   // Don't do anything to avoid running into driver bugs under XCloseDisplay().
   // See bug 973192.
   (void) display;
