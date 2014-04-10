@@ -141,7 +141,7 @@ this.DownloadsIPC = {
       case "Downloads:Resume:Return":
         if (this.downloadPromises[download.promiseId]) {
           if (!download.error) {
-          this.downloadPromises[download.promiseId].resolve(download);
+            this.downloadPromises[download.promiseId].resolve(download);
           } else {
             this.downloadPromises[download.promiseId].reject(download);
           }
