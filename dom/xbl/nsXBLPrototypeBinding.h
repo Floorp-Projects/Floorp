@@ -283,7 +283,7 @@ protected:
   bool mKeyHandlersRegistered;
   bool mChromeOnlyContent;
 
-  nsXBLPrototypeResources* mResources; // If we have any resources, this will be non-null.
+  nsAutoPtr<nsXBLPrototypeResources> mResources; // If we have any resources, this will be non-null.
 
   nsXBLDocumentInfo* mXBLDocInfoWeak; // A pointer back to our doc info.  Weak, since it owns us.
 

@@ -178,7 +178,6 @@ nsXBLPrototypeBinding::Initialize()
 
 nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
 {
-  delete mResources;
   delete mImplementation;
   MOZ_COUNT_DTOR(nsXBLPrototypeBinding);
 }
@@ -233,8 +232,6 @@ nsXBLPrototypeBinding::AddResource(nsIAtom* aResourceType, const nsAString& aSrc
 {
   if (!mResources) {
     mResources = new nsXBLPrototypeResources(this);
-    if (!mResources)
-      return NS_ERROR_OUT_OF_MEMORY;
   }
 
   mResources->AddResource(aResourceType, aSrc);
