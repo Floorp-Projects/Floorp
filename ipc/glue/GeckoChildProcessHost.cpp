@@ -385,6 +385,12 @@ GeckoChildProcessHost::Join()
 
   // If this fails, there's nothing we can do.
   base::KillProcess(mChildProcessHandle, 0, /*wait*/true);
+  SetAlreadyDead();
+}
+
+void
+GeckoChildProcessHost::SetAlreadyDead()
+{
   mChildProcessHandle = 0;
 }
 
@@ -896,6 +902,10 @@ GeckoExistingProcessHost(GeckoProcessType aProcessType,
 
 GeckoExistingProcessHost::~GeckoExistingProcessHost()
 {
+  // Bug 943174: If we don't do this, ~GeckoChildProcessHost will try
+  // to wait on a process that isn't a direct child, and bad things
+  // will happen.
+  SetAlreadyDead();
 }
 
 bool
