@@ -12,6 +12,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/Event.h"
@@ -609,6 +610,16 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       nsIContent* content = GetFocusedContent();
       if (content)
         mCurrentTargetContent = content;
+
+      // NOTE: Don't refer TextComposition::IsComposing() since DOM Level 3
+      //       Events defines that KeyboardEvent.isComposing is true when it's
+      //       dispatched after compositionstart and compositionend.
+      //       TextComposition::IsComposing() is false even before
+      //       compositionend if there is no composing string.
+      WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
+      nsRefPtr<TextComposition> composition =
+        IMEStateManager::GetTextCompositionFor(keyEvent);
+      keyEvent->mIsComposing = !!composition;
     }
     break;
   case NS_WHEEL_WHEEL:
