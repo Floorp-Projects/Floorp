@@ -815,9 +815,12 @@ function SupportedLocales(availableLocales, requestedLocales, options) {
                  : LookupSupportedLocales(availableLocales, requestedLocales);
 
     // Step 4.
-    for (var i = 0; i < subset.length; i++)
-        std_Object_defineProperty(subset, i, {value: subset[i], writable: false, enumerable: true, configurable: false});
-    std_Object_defineProperty(subset, "length", {value: subset.length, writable: false, enumerable: false, configurable: false});
+    for (var i = 0; i < subset.length; i++) {
+        _DefineValueProperty(subset, i, subset[i],
+                             ATTR_ENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE);
+    }
+    _DefineValueProperty(subset, "length", subset.length,
+                         ATTR_NONENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE);
 
     // Step 5.
     return subset;
@@ -893,7 +896,7 @@ function GetNumberOption(options, property, minimum, maximum, fallback) {
  * to avoid interference from setters on Object.prototype.
  */
 function defineProperty(o, p, v) {
-    std_Object_defineProperty(o, p, {value: v, writable: true, enumerable: true, configurable: true});
+    _DefineValueProperty(o, p, v, ATTR_ENUMERABLE | ATTR_CONFIGURABLE | ATTR_WRITABLE);
 }
 
 

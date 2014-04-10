@@ -27,4 +27,13 @@
 #define ARRAY_SLICE(ARRAY, ELEMENT) \
   callFunction(std_Array_slice, ARRAY, ELEMENT);
 
+// Property descriptor attributes.
+#define ATTR_ENUMERABLE         0x01
+#define ATTR_CONFIGURABLE       0x02
+#define ATTR_WRITABLE           0x04
+
+#define ATTR_NONENUMERABLE      0x08
+#define ATTR_NONCONFIGURABLE    0x10
+#define ATTR_NONWRITABLE        0x20
+
 #endif
