@@ -337,6 +337,13 @@ public:
    */
   virtual TemporaryRef<DataSourceSurface> GetDataSurface() = 0;
 
+  /* Tries to get this SourceSurface's native surface.  This will fail if aType
+   * is not the type of this SourceSurface's native surface.
+   */
+  virtual void *GetNativeSurface(NativeSurfaceType aType) {
+    return nullptr;
+  }
+
   void AddUserData(UserDataKey *key, void *userData, void (*destroy)(void*)) {
     mUserData.Add(key, userData, destroy);
   }

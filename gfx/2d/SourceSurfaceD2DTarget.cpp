@@ -75,6 +75,15 @@ SourceSurfaceD2DTarget::GetDataSurface()
   return dataSurf;
 }
 
+void*
+SourceSurfaceD2DTarget::GetNativeSurface(NativeSurfaceType aType)
+{
+  if (aType == NativeSurfaceType::D3D10_TEXTURE) {
+    return static_cast<void*>(mTexture.get());
+  }
+  return nullptr;
+}
+
 ID3D10ShaderResourceView*
 SourceSurfaceD2DTarget::GetSRView()
 {

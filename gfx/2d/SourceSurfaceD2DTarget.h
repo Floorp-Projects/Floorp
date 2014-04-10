@@ -28,6 +28,7 @@ public:
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const;
   virtual TemporaryRef<DataSourceSurface> GetDataSurface();
+  virtual void *GetNativeSurface(NativeSurfaceType aType);
 
   DrawTargetD2D* GetDT() { return mDrawTarget; }
   ID2D1Bitmap *GetBitmap(ID2D1RenderTarget *aRT);
