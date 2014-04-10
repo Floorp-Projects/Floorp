@@ -116,226 +116,226 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
     case nsXPTType::T_FLOAT : d.setNumber(*((float*)s));             break;
     case nsXPTType::T_DOUBLE: d.setNumber(*((double*)s));            break;
     case nsXPTType::T_BOOL  :
-    {
-        bool b = *((bool*)s);
+        {
+            bool b = *((bool*)s);
 
-        NS_WARN_IF_FALSE(b == 1 || b == 0,
-                         "Passing a malformed bool through XPConnect");
-        d.setBoolean(b);
-        break;
-    }
+            NS_WARN_IF_FALSE(b == 1 || b == 0,
+                             "Passing a malformed bool through XPConnect");
+            d.setBoolean(b);
+            break;
+        }
     case nsXPTType::T_CHAR  :
-    {
-        char* p = (char*)s;
-        if (!p)
-            return false;
+        {
+            char* p = (char*)s;
+            if (!p)
+                return false;
 
 #ifdef STRICT_CHECK_OF_UNICODE
-        MOZ_ASSERT(! ILLEGAL_CHAR_RANGE(p) , "passing non ASCII data");
+            MOZ_ASSERT(! ILLEGAL_CHAR_RANGE(p) , "passing non ASCII data");
 #endif // STRICT_CHECK_OF_UNICODE
 
-        JSString* str;
-        if (!(str = JS_NewStringCopyN(cx, p, 1)))
-            return false;
-        d.setString(str);
-        break;
-    }
+            JSString* str;
+            if (!(str = JS_NewStringCopyN(cx, p, 1)))
+                return false;
+            d.setString(str);
+            break;
+        }
     case nsXPTType::T_WCHAR :
-    {
-        jschar* p = (jschar*)s;
-        if (!p)
-            return false;
-        JSString* str;
-        if (!(str = JS_NewUCStringCopyN(cx, p, 1)))
-            return false;
-        d.setString(str);
-        break;
-    }
+        {
+            jschar* p = (jschar*)s;
+            if (!p)
+                return false;
+            JSString* str;
+            if (!(str = JS_NewUCStringCopyN(cx, p, 1)))
+                return false;
+            d.setString(str);
+            break;
+        }
 
     case nsXPTType::T_JSVAL :
-    {
-        d.set(*((Value*)s));
-        if (!JS_WrapValue(cx, d))
-            return false;
-        break;
-    }
+        {
+            d.set(*((Value*)s));
+            if (!JS_WrapValue(cx, d))
+                return false;
+            break;
+        }
 
     default:
 
-    // set the default result
-    d.setNull();
+        // set the default result
+        d.setNull();
 
-    switch (type.TagPart()) {
-    case nsXPTType::T_VOID:
-        XPC_LOG_ERROR(("XPCConvert::NativeData2JS : void* params not supported"));
-        return false;
-
-    case nsXPTType::T_IID:
-    {
-        nsID* iid2 = *((nsID**)s);
-        if (!iid2)
-            break;
-        RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
-        JSObject* obj;
-        if (!(obj = xpc_NewIDObject(cx, scope, *iid2)))
+        switch (type.TagPart()) {
+        case nsXPTType::T_VOID:
+            XPC_LOG_ERROR(("XPCConvert::NativeData2JS : void* params not supported"));
             return false;
-        d.setObject(*obj);
-        break;
-    }
 
-    case nsXPTType::T_ASTRING:
-        // Fall through to T_DOMSTRING case
+        case nsXPTType::T_IID:
+            {
+                nsID* iid2 = *((nsID**)s);
+                if (!iid2)
+                    break;
+                RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
+                JSObject* obj;
+                if (!(obj = xpc_NewIDObject(cx, scope, *iid2)))
+                    return false;
+                d.setObject(*obj);
+                break;
+            }
 
-    case nsXPTType::T_DOMSTRING:
-    {
-        const nsAString* p = *((const nsAString**)s);
-        if (!p)
-            break;
+        case nsXPTType::T_ASTRING:
+            // Fall through to T_DOMSTRING case
 
-        if (!p->IsVoid()) {
-            nsStringBuffer* buf;
-            if (!XPCStringConvert::ReadableToJSVal(cx, *p, &buf, d))
-                return false;
-            if (buf)
-                buf->AddRef();
-        }
+        case nsXPTType::T_DOMSTRING:
+            {
+                const nsAString* p = *((const nsAString**)s);
+                if (!p)
+                    break;
 
-        // *d is defaulted to JSVAL_NULL so no need to set it
-        // again if p is a "void" string
-        MOZ_ASSERT_IF(p->IsVoid(), d.isNull());
-        break;
-    }
+                if (!p->IsVoid()) {
+                    nsStringBuffer* buf;
+                    if (!XPCStringConvert::ReadableToJSVal(cx, *p, &buf, d))
+                        return false;
+                    if (buf)
+                        buf->AddRef();
+                }
 
-    case nsXPTType::T_CHAR_STR:
-    {
-        char* p = *((char**)s);
-        if (!p)
-            break;
+                // *d is defaulted to JSVAL_NULL so no need to set it
+                // again if p is a "void" string
+                MOZ_ASSERT_IF(p->IsVoid(), d.isNull());
+                break;
+            }
+
+        case nsXPTType::T_CHAR_STR:
+            {
+                char* p = *((char**)s);
+                if (!p)
+                    break;
 
 #ifdef STRICT_CHECK_OF_UNICODE
-        bool isAscii = true;
-        char* t;
-        for (t=p; *t && isAscii ; t++) {
-          if (ILLEGAL_CHAR_RANGE(*t))
-              isAscii = false;
-        }
-        MOZ_ASSERT(isAscii, "passing non ASCII data");
+                bool isAscii = true;
+                char* t;
+                for (t=p; *t && isAscii ; t++) {
+                  if (ILLEGAL_CHAR_RANGE(*t))
+                      isAscii = false;
+                }
+                MOZ_ASSERT(isAscii, "passing non ASCII data");
 #endif // STRICT_CHECK_OF_UNICODE
-        JSString* str;
-        if (!(str = JS_NewStringCopyZ(cx, p)))
-            return false;
-        d.setString(str);
-        break;
-    }
+                JSString* str;
+                if (!(str = JS_NewStringCopyZ(cx, p)))
+                    return false;
+                d.setString(str);
+                break;
+            }
 
-    case nsXPTType::T_WCHAR_STR:
-    {
-        jschar* p = *((jschar**)s);
-        if (!p)
-            break;
-        JSString* str;
-        if (!(str = JS_NewUCStringCopyZ(cx, p)))
-            return false;
-        d.setString(str);
-        break;
-    }
-    case nsXPTType::T_UTF8STRING:
-    {
-        const nsACString* utf8String = *((const nsACString**)s);
+        case nsXPTType::T_WCHAR_STR:
+            {
+                jschar* p = *((jschar**)s);
+                if (!p)
+                    break;
+                JSString* str;
+                if (!(str = JS_NewUCStringCopyZ(cx, p)))
+                    return false;
+                d.setString(str);
+                break;
+            }
+        case nsXPTType::T_UTF8STRING:
+            {
+                const nsACString* utf8String = *((const nsACString**)s);
 
-        if (!utf8String || utf8String->IsVoid())
-            break;
+                if (!utf8String || utf8String->IsVoid())
+                    break;
 
-        if (utf8String->IsEmpty()) {
-            d.set(JS_GetEmptyStringValue(cx));
-            break;
-        }
+                if (utf8String->IsEmpty()) {
+                    d.set(JS_GetEmptyStringValue(cx));
+                    break;
+                }
 
-        const uint32_t len = CalcUTF8ToUnicodeLength(*utf8String);
-        // The cString is not empty at this point, but the calculated
-        // UTF-16 length is zero, meaning no valid conversion exists.
-        if (!len)
-            return false;
-
-        const size_t buffer_size = (len + 1) * sizeof(char16_t);
-        char16_t* buffer =
-            static_cast<char16_t*>(JS_malloc(cx, buffer_size));
-        if (!buffer)
-            return false;
-
-        uint32_t copied;
-        if (!UTF8ToUnicodeBuffer(*utf8String, buffer, &copied) ||
-            len != copied) {
-            // Copy or conversion during copy failed. Did not copy the
-            // whole string.
-            JS_free(cx, buffer);
-            return false;
-        }
-
-        // JS_NewUCString takes ownership on success, i.e. a
-        // successful call will make it the responsiblity of the JS VM
-        // to free the buffer.
-        JSString* str = JS_NewUCString(cx, (jschar*)buffer, len);
-        if (!str) {
-            JS_free(cx, buffer);
-            return false;
-        }
-
-        d.setString(str);
-        break;
-    }
-    case nsXPTType::T_CSTRING:
-    {
-        const nsACString* cString = *((const nsACString**)s);
-
-        if (!cString || cString->IsVoid())
-            break;
-
-        // c-strings (binary blobs) are deliberately not converted from
-        // UTF-8 to UTF-16. T_UTF8Sting is for UTF-8 encoded strings
-        // with automatic conversion.
-        JSString* str = JS_NewStringCopyN(cx, cString->Data(),
-                                          cString->Length());
-        if (!str)
-            return false;
-
-        d.setString(str);
-        break;
-    }
-
-    case nsXPTType::T_INTERFACE:
-    case nsXPTType::T_INTERFACE_IS:
-    {
-        nsISupports* iface = *((nsISupports**)s);
-        if (iface) {
-            if (iid->Equals(NS_GET_IID(nsIVariant))) {
-                nsCOMPtr<nsIVariant> variant = do_QueryInterface(iface);
-                if (!variant)
+                const uint32_t len = CalcUTF8ToUnicodeLength(*utf8String);
+                // The cString is not empty at this point, but the calculated
+                // UTF-16 length is zero, meaning no valid conversion exists.
+                if (!len)
                     return false;
 
-                return XPCVariant::VariantDataToJS(variant,
-                                                   pErr, d);
+                const size_t buffer_size = (len + 1) * sizeof(char16_t);
+                char16_t* buffer =
+                    static_cast<char16_t*>(JS_malloc(cx, buffer_size));
+                if (!buffer)
+                    return false;
+
+                uint32_t copied;
+                if (!UTF8ToUnicodeBuffer(*utf8String, buffer, &copied) ||
+                    len != copied) {
+                    // Copy or conversion during copy failed. Did not copy the
+                    // whole string.
+                    JS_free(cx, buffer);
+                    return false;
+                }
+
+                // JS_NewUCString takes ownership on success, i.e. a
+                // successful call will make it the responsiblity of the JS VM
+                // to free the buffer.
+                JSString* str = JS_NewUCString(cx, (jschar*)buffer, len);
+                if (!str) {
+                    JS_free(cx, buffer);
+                    return false;
+                }
+
+                d.setString(str);
+                break;
             }
-            // else...
-            xpcObjectHelper helper(iface);
-            if (!NativeInterface2JSObject(d, nullptr, helper, iid,
-                                          nullptr, true, pErr))
-                return false;
+        case nsXPTType::T_CSTRING:
+            {
+                const nsACString* cString = *((const nsACString**)s);
+
+                if (!cString || cString->IsVoid())
+                    break;
+
+                // c-strings (binary blobs) are deliberately not converted from
+                // UTF-8 to UTF-16. T_UTF8Sting is for UTF-8 encoded strings
+                // with automatic conversion.
+                JSString* str = JS_NewStringCopyN(cx, cString->Data(),
+                                                  cString->Length());
+                if (!str)
+                    return false;
+
+                d.setString(str);
+                break;
+            }
+
+        case nsXPTType::T_INTERFACE:
+        case nsXPTType::T_INTERFACE_IS:
+            {
+                nsISupports* iface = *((nsISupports**)s);
+                if (iface) {
+                    if (iid->Equals(NS_GET_IID(nsIVariant))) {
+                        nsCOMPtr<nsIVariant> variant = do_QueryInterface(iface);
+                        if (!variant)
+                            return false;
+
+                        return XPCVariant::VariantDataToJS(variant,
+                                                           pErr, d);
+                    }
+                    // else...
+                    xpcObjectHelper helper(iface);
+                    if (!NativeInterface2JSObject(d, nullptr, helper, iid,
+                                                  nullptr, true, pErr))
+                        return false;
 
 #ifdef DEBUG
-            JSObject* jsobj = d.toObjectOrNull();
-            if (jsobj && !js::GetObjectParent(jsobj))
-                MOZ_ASSERT(js::GetObjectClass(jsobj)->flags & JSCLASS_IS_GLOBAL,
-                           "Why did we recreate this wrapper?");
+                    JSObject* jsobj = d.toObjectOrNull();
+                    if (jsobj && !js::GetObjectParent(jsobj))
+                        MOZ_ASSERT(js::GetObjectClass(jsobj)->flags & JSCLASS_IS_GLOBAL,
+                                   "Why did we recreate this wrapper?");
 #endif
-        }
-        break;
-    }
+                }
+                break;
+            }
 
-    default:
-        NS_ERROR("bad type");
-        return false;
-    }
+        default:
+            NS_ERROR("bad type");
+            return false;
+        }
     }
     return true;
 }
