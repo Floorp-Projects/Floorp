@@ -37,13 +37,13 @@ nsXBLPrototypeResources::~nsXBLPrototypeResources()
   }
 }
 
-void 
+void
 nsXBLPrototypeResources::AddResource(nsIAtom* aResourceType, const nsAString& aSrc)
 {
   if (mLoader)
     mLoader->AddResource(aResourceType, aSrc);
 }
- 
+
 void
 nsXBLPrototypeResources::LoadResources(bool* aResult)
 {
@@ -54,7 +54,7 @@ nsXBLPrototypeResources::LoadResources(bool* aResult)
 }
 
 void
-nsXBLPrototypeResources::AddResourceListener(nsIContent* aBoundElement) 
+nsXBLPrototypeResources::AddResourceListener(nsIContent* aBoundElement)
 {
   if (mLoader)
     mLoader->AddResourceListener(aBoundElement);
@@ -95,7 +95,7 @@ nsXBLPrototypeResources::FlushSkinSheets()
 
     mStyleSheetList.AppendElement(newSheet);
   }
-  mRuleProcessor = new nsCSSRuleProcessor(mStyleSheetList, 
+  mRuleProcessor = new nsCSSRuleProcessor(mStyleSheetList,
                                           nsStyleSet::eDocSheet,
                                           nullptr);
 
