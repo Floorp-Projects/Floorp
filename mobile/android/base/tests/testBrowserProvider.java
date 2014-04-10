@@ -82,6 +82,7 @@ public class testBrowserProvider extends ContentProviderTest {
         }
         c.close();
 
+        mAsserter.dumpLog("ensureEmptyDatabase: Favicon deletion completed."); // Bug 968951 debug.
         // assertCountIsAndClose(c, 0, "All favicons were deleted");
 
         mProvider.delete(appendUriParam(BrowserContract.Thumbnails.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"), null, null);
@@ -94,6 +95,7 @@ public class testBrowserProvider extends ContentProviderTest {
         }
         c.close();
 
+        mAsserter.dumpLog("ensureEmptyDatabase: Thumbnail deletion completed."); // Bug 968951 debug.
         // assertCountIsAndClose(c, 0, "All thumbnails were deleted");
     }
 
@@ -261,8 +263,10 @@ public class testBrowserProvider extends ContentProviderTest {
         for (int i = 0; i < mTests.size(); i++) {
             Runnable test = mTests.get(i);
 
-            setTestName(test.getClass().getSimpleName());
+            final String testName = test.getClass().getSimpleName();
+            setTestName(testName);
             ensureEmptyDatabase();
+            mAsserter.dumpLog("testBrowserProvider: Database empty - Starting " + testName + ".");
             test.run();
         }
     }
@@ -861,6 +865,8 @@ public class testBrowserProvider extends ContentProviderTest {
             folder.put(BrowserContract.Bookmarks.GUID, "folderfolder");
             long folderId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, folder));
 
+            mAsserter.dumpLog("TestPositionBookmarks: Folder inserted"); // Bug 968951 debug.
+
             // Create the children.
             String[] items = new String[NUMBER_OF_CHILDREN];
 
@@ -879,10 +885,13 @@ public class testBrowserProvider extends ContentProviderTest {
                 mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, item);
             }
 
+            mAsserter.dumpLog("TestPositionBookmarks: Bookmarks inserted"); // Bug 968951 debug.
+
             Cursor c;
 
             // Verify insertion.
             c = getBookmarksByParent(folderId);
+            mAsserter.dumpLog("TestPositionBookmarks: Got bookmarks by parent"); // Bug 968951 debug.
             compareCursorToItems(c, items, NUMBER_OF_CHILDREN);
             c.close();
 
