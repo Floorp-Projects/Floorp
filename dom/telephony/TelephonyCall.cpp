@@ -19,25 +19,29 @@ using mozilla::ErrorResult;
 // static
 already_AddRefed<TelephonyCall>
 TelephonyCall::Create(Telephony* aTelephony, uint32_t aServiceId,
-                      const nsAString& aNumber, uint16_t aCallState,
-                      uint32_t aCallIndex, bool aEmergency, bool aIsConference,
-                      bool aSwitchable, bool aMergeable)
+                      const nsAString& aNumber, uint16_t aNumberPresentation,
+                      const nsAString& aName, uint16_t aNamePresentation,
+                      uint16_t aCallState, uint32_t aCallIndex, bool aEmergency,
+                      bool aIsConference, bool aSwitchable, bool aMergeable)
 {
   NS_ASSERTION(aTelephony, "Null pointer!");
   NS_ASSERTION(!aNumber.IsEmpty(), "Empty number!");
   NS_ASSERTION(aCallIndex >= 1, "Invalid call index!");
 
   nsRefPtr<TelephonyCall> call = new TelephonyCall(aTelephony->GetOwner());
+  nsRefPtr<TelephonyCallId> id = new TelephonyCallId(aTelephony->GetOwner(),
+                                                     aNumber, aNumberPresentation,
+                                                     aName, aNamePresentation);
 
   call->mTelephony = aTelephony;
   call->mServiceId = aServiceId;
-  call->mNumber = aNumber;
   call->mCallIndex = aCallIndex;
   call->mError = nullptr;
   call->mEmergency = aEmergency;
   call->mGroup = aIsConference ? aTelephony->ConferenceGroup() : nullptr;
   call->mSwitchable = aSwitchable;
   call->mMergeable = aMergeable;
+  call->mId = id;
 
   call->ChangeStateInternal(aCallState, false);
 
@@ -187,7 +191,9 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(TelephonyCall,
                                    DOMEventTargetHelper,
                                    mTelephony,
                                    mError,
-                                   mGroup);
+                                   mGroup,
+                                   mId,
+                                   mSecondId);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TelephonyCall)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
@@ -196,6 +202,20 @@ NS_IMPL_ADDREF_INHERITED(TelephonyCall, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TelephonyCall, DOMEventTargetHelper)
 
 // TelephonyCall WebIDL
+
+already_AddRefed<TelephonyCallId>
+TelephonyCall::Id() const
+{
+  nsRefPtr<TelephonyCallId> id = mId;
+  return id.forget();
+}
+
+already_AddRefed<TelephonyCallId>
+TelephonyCall::GetSecondId() const
+{
+  nsRefPtr<TelephonyCallId> id = mSecondId;
+  return id.forget();
+}
 
 already_AddRefed<DOMError>
 TelephonyCall::GetError() const
@@ -272,7 +292,7 @@ TelephonyCall::Hold(ErrorResult& aRv)
     return;
   }
 
-  if (!mSecondNumber.IsEmpty()) {
+  if (mSecondId) {
     // No state transition when we switch two numbers within one TelephonyCall
     // object. Otherwise, the state here will be inconsistent with the backend
     // RIL and will never be right.
