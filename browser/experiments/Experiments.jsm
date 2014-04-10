@@ -252,6 +252,10 @@ Experiments.Policy = function () {
   this._log = Log.repository.getLoggerWithMessagePrefix(
     "Browser.Experiments.Policy",
     "Policy #" + gPolicyCounter++ + "::");
+
+  // Set to true to ignore hash verification on downloaded XPIs. This should
+  // not be used outside of testing.
+  this.ignoreHashes = false;
 };
 
 Experiments.Policy.prototype = {
@@ -1498,8 +1502,9 @@ Experiments.ExperimentEntry.prototype = {
   _installAddon: function* () {
     let deferred = Promise.defer();
 
-    let install = yield addonInstallForURL(this._manifestData.xpiURL,
-                                           this._manifestData.xpiHash);
+    let hash = this._policy.ignoreHashes ? null : this._manifestData.xpiHash;
+
+    let install = yield addonInstallForURL(this._manifestData.xpiURL, hash);
     gActiveInstallURLs.add(install.sourceURI.spec);
 
     let failureHandler = (install, handler) => {
