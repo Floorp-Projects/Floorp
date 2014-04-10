@@ -5,6 +5,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+/* The capabilities of a CameraControl instance. These are guaranteed
+   not to change over the lifetime of that particular instance.
+*/
+[Func="CameraCapabilities::HasSupport"]
 interface CameraCapabilities
 {
   [Constant, Cached] readonly attribute sequence<CameraSize> previewSizes;
@@ -24,6 +28,7 @@ interface CameraCapabilities
 
   [Constant, Cached] readonly attribute unsigned long maxFocusAreas;
   [Constant, Cached] readonly attribute unsigned long maxMeteringAreas;
+  [Constant, Cached] readonly attribute unsigned long maxDetectedFaces;
 
   [Constant, Cached] readonly attribute double minExposureCompensation;
   [Constant, Cached] readonly attribute double maxExposureCompensation;
