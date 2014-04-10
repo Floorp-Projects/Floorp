@@ -103,30 +103,6 @@ static const PLDHashTableOps ObjectTableOps = {
   InitObjectEntry
 };
 
-// helper routine for adding a new entry
-static nsresult
-AddObjectEntry(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
-{
-  NS_ASSERTION(aKey, "key must be non-null");
-  if (!aKey) return NS_ERROR_INVALID_ARG;
-
-  ObjectEntry *entry =
-    static_cast<ObjectEntry*>
-               (PL_DHashTableOperate(&table, aKey, PL_DHASH_ADD));
-
-  if (!entry)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // only add the key if the entry is new
-  if (!entry->GetKey())
-    entry->SetKey(aKey);
-
-  // now attach the new entry - note that entry->mValue could possibly
-  // have a value already, this will release that.
-  entry->SetValue(aValue);
-
-  return NS_OK;
-}
 
 // helper routine for looking up an existing entry. Note that the
 // return result is NOT addreffed
@@ -161,7 +137,24 @@ SetOrRemoveObject(PLDHashTable& table, nsIContent* aKey, nsISupports* aValue)
                         sizeof(ObjectEntry), 16);
     }
     aKey->SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
-    return AddObjectEntry(table, aKey, aValue);
+
+    NS_ASSERTION(aKey, "key must be non-null");
+    if (!aKey) return NS_ERROR_INVALID_ARG;
+
+    ObjectEntry *entry = static_cast<ObjectEntry*>(PL_DHashTableOperate(&table, aKey, PL_DHASH_ADD));
+
+    if (!entry)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    // only add the key if the entry is new
+    if (!entry->GetKey())
+      entry->SetKey(aKey);
+
+    // now attach the new entry - note that entry->mValue could possibly
+    // have a value already, this will release that.
+    entry->SetValue(aValue);
+
+    return NS_OK;
   }
 
   // no value, so remove the key from the table
