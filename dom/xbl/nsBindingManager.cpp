@@ -56,7 +56,7 @@ using namespace mozilla::dom;
 // Generic pldhash table stuff for mapping one nsISupports to another
 //
 // These values are never null - a null value implies that this
-// whole key should be removed (See SetOrRemoveObject)
+// whole key should be removed (See SetWrappedJS)
 class ObjectEntry : public PLDHashEntryHdr
 {
 public:
@@ -119,51 +119,6 @@ LookupObject(PLDHashTable& table, nsIContent* aKey)
   }
 
   return nullptr;
-}
-
-static nsresult
-SetOrRemoveObject(PLDHashTable& table, nsIContent* aKey, nsISupports* aValue)
-{
-  if (aValue) {
-    // lazily create the table, but only when adding elements
-    if (!table.ops) {
-      PL_DHashTableInit(&table, &ObjectTableOps, nullptr,
-                        sizeof(ObjectEntry), 16);
-    }
-    aKey->SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
-
-    NS_ASSERTION(aKey, "key must be non-null");
-    if (!aKey) return NS_ERROR_INVALID_ARG;
-
-    ObjectEntry *entry = static_cast<ObjectEntry*>(PL_DHashTableOperate(&table, aKey, PL_DHASH_ADD));
-
-    if (!entry)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    // only add the key if the entry is new
-    if (!entry->GetKey())
-      entry->SetKey(aKey);
-
-    // now attach the new entry - note that entry->mValue could possibly
-    // have a value already, this will release that.
-    entry->SetValue(aValue);
-
-    return NS_OK;
-  }
-
-  // no value, so remove the key from the table
-  if (table.ops) {
-    ObjectEntry* entry =
-      static_cast<ObjectEntry*>
-        (PL_DHashTableOperate(&table, aKey, PL_DHASH_LOOKUP));
-    if (entry && PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      // Keep key and value alive while removing the entry.
-      nsCOMPtr<nsISupports> key = entry->GetKey();
-      nsCOMPtr<nsISupports> value = entry->GetValue();
-      PL_DHashTableOperate(&table, aKey, PL_DHASH_REMOVE);
-    }
-  }
-  return NS_OK;
 }
 
 // Implementation /////////////////////////////////////////////////////////////////
@@ -303,7 +258,48 @@ nsBindingManager::SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aWra
     return NS_OK;
   }
 
-  return SetOrRemoveObject(mWrapperTable, aContent, aWrappedJS);
+  if (aWrappedJS) {
+    // lazily create the table, but only when adding elements
+    if (!mWrapperTable.ops) {
+      PL_DHashTableInit(&mWrapperTable, &ObjectTableOps, nullptr,
+                        sizeof(ObjectEntry), 16);
+    }
+    aContent->SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
+
+    NS_ASSERTION(aContent, "key must be non-null");
+    if (!aContent) return NS_ERROR_INVALID_ARG;
+
+    ObjectEntry *entry =
+      static_cast<ObjectEntry*>(PL_DHashTableOperate(&mWrapperTable, aContent, PL_DHASH_ADD));
+
+    if (!entry)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    // only add the key if the entry is new
+    if (!entry->GetKey())
+      entry->SetKey(aContent);
+
+    // now attach the new entry - note that entry->mValue could possibly
+    // have a value already, this will release that.
+    entry->SetValue(aWrappedJS);
+
+    return NS_OK;
+  }
+
+  // no value, so remove the key from the table
+  if (mWrapperTable.ops) {
+    ObjectEntry* entry =
+      static_cast<ObjectEntry*>
+        (PL_DHashTableOperate(&mWrapperTable, aContent, PL_DHASH_LOOKUP));
+    if (entry && PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      // Keep key and value alive while removing the entry.
+      nsCOMPtr<nsISupports> key = entry->GetKey();
+      nsCOMPtr<nsISupports> value = entry->GetValue();
+      PL_DHashTableOperate(&mWrapperTable, aContent, PL_DHASH_REMOVE);
+    }
+  }
+
+  return NS_OK;
 }
 
 void
