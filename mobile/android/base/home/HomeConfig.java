@@ -144,7 +144,7 @@ public final class HomeConfig {
                 final int viewCount = jsonViews.length();
                 for (int i = 0; i < viewCount; i++) {
                     final JSONObject jsonViewConfig = (JSONObject) jsonViews.get(i);
-                    final ViewConfig viewConfig = new ViewConfig(jsonViewConfig);
+                    final ViewConfig viewConfig = new ViewConfig(i, jsonViewConfig);
                     mViews.add(viewConfig);
                 }
             } else {
@@ -605,6 +605,7 @@ public final class HomeConfig {
     }
 
     public static class ViewConfig implements Parcelable {
+        private final int mIndex;
         private final ViewType mType;
         private final String mDatasetId;
         private final ItemType mItemType;
@@ -619,7 +620,8 @@ public final class HomeConfig {
         private static final String JSON_KEY_BACK_IMAGE_URL = "backImageUrl";
         private static final String JSON_KEY_FILTER = "filter";
 
-        public ViewConfig(JSONObject json) throws JSONException, IllegalArgumentException {
+        public ViewConfig(int index, JSONObject json) throws JSONException, IllegalArgumentException {
+            mIndex = index;
             mType = ViewType.fromId(json.getString(JSON_KEY_TYPE));
             mDatasetId = json.getString(JSON_KEY_DATASET);
             mItemType = ItemType.fromId(json.getString(JSON_KEY_ITEM_TYPE));
@@ -632,6 +634,7 @@ public final class HomeConfig {
 
         @SuppressWarnings("unchecked")
         public ViewConfig(Parcel in) {
+            mIndex = in.readInt();
             mType = (ViewType) in.readParcelable(getClass().getClassLoader());
             mDatasetId = in.readString();
             mItemType = (ItemType) in.readParcelable(getClass().getClassLoader());
@@ -643,6 +646,7 @@ public final class HomeConfig {
         }
 
         public ViewConfig(ViewConfig viewConfig) {
+            mIndex = viewConfig.mIndex;
             mType = viewConfig.mType;
             mDatasetId = viewConfig.mDatasetId;
             mItemType = viewConfig.mItemType;
@@ -653,8 +657,9 @@ public final class HomeConfig {
             validate();
         }
 
-        public ViewConfig(ViewType type, String datasetId, ItemType itemType,
+        public ViewConfig(int index, ViewType type, String datasetId, ItemType itemType,
                           ItemHandler itemHandler, String backImageUrl, String filter) {
+            mIndex = index;
             mType = type;
             mDatasetId = datasetId;
             mItemType = itemType;
@@ -681,6 +686,10 @@ public final class HomeConfig {
             if (mItemHandler == null) {
                 throw new IllegalArgumentException("Can't create ViewConfig with null item handler");
             }
+        }
+
+        public int getIndex() {
+            return mIndex;
         }
 
         public ViewType getType() {
@@ -733,6 +742,7 @@ public final class HomeConfig {
 
         @Override
         public void writeToParcel(Parcel dest, int flags) {
+            dest.writeInt(mIndex);
             dest.writeParcelable(mType, 0);
             dest.writeString(mDatasetId);
             dest.writeParcelable(mItemType, 0);
