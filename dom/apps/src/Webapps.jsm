@@ -553,6 +553,12 @@ this.DOMApplicationRegistry = {
           if (this.webapps[id].removable === undefined) {
             this.webapps[id].removable = false;
           }
+        } else {
+          // we fall into this case if the app is present in /system/b2g/webapps/webapps.json
+          // and in /data/local/webapps/webapps.json: this happens when updating gaia apps
+          // Confere bug 989876
+          this.webapps[id].updateTime = data[id].updateTime;
+          this.webapps[id].lastUpdateCheck = data[id].updateTime;
         }
       }
     }.bind(this)).then(null, Cu.reportError);

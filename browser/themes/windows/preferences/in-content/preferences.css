@@ -2,7 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../../../shared/in-content/preferences.css
+%include ../../../shared/incontentprefs/preferences.css
 
 menulist:not([editable="true"]) > .menulist-dropmarker {
   margin-top: 1px;
@@ -29,76 +29,4 @@ radio[selected]::before {
 
 .actionsMenu > .menulist-label-box > .menulist-icon {
   -moz-margin-end: 9px;
-}
-
-@media (min-resolution: 2dppx) {
-  checkbox:hover::before,
-  checkbox[checked]::before {
-    background-size: cover;
-    background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check@2x.png"), 0, 30, 30, 0);
-  }
-
-  checkbox[checked]::before {
-    background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check@2x.png"), 0, 60, 30, 30);
-  }
-
-  .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content/icons@2x.png");
-  }
-
-  #category-general > .category-icon {
-    -moz-image-region: rect(0, 48px, 48px, 0);
-  }
-
-  #category-general[selected] > .category-icon {
-    -moz-image-region: rect(48px, 48px, 96px, 0);
-  }
-
-  #category-content > .category-icon {
-    -moz-image-region: rect(0, 96px, 48px, 48px);
-  }
-
-  #category-content[selected] > .category-icon {
-    -moz-image-region: rect(48px, 96px, 96px, 48px);
-  }
-
-  #category-application > .category-icon {
-    -moz-image-region: rect(0, 144px, 48px, 96px);
-  }
-
-  #category-application[selected] > .category-icon {
-    -moz-image-region: rect(48px, 144px, 96px, 96px);
-  }
-
-  #category-privacy > .category-icon {
-    -moz-image-region: rect(0, 192px, 48px, 144px);
-  }
-
-  #category-privacy[selected] > .category-icon {
-    -moz-image-region: rect(48px, 192px, 96px, 144px);
-  }
-
-  #category-security > .category-icon {
-    -moz-image-region: rect(0, 240px, 48px, 192px);
-  }
-
-  #category-security[selected] > .category-icon {
-    -moz-image-region: rect(48px, 240px, 96px, 192px);
-  }
-
-  #category-sync > .category-icon {
-    -moz-image-region: rect(0, 288px, 48px, 240px);
-  }
-
-  #category-sync[selected] > .category-icon {
-    -moz-image-region: rect(48px, 288px, 96px, 240px);
-  }
-
-  #category-advanced > .category-icon {
-    -moz-image-region: rect(0, 336px, 48px, 288px);
-  }
-
-  #category-advanced[selected] > .category-icon {
-    -moz-image-region: rect(48px, 336px, 96px, 288px);
-  }
 }

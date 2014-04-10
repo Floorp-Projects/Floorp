@@ -268,6 +268,7 @@ gbjar.sources += [
     'home/PanelViewItemHandler.java',
     'home/PinSiteDialog.java',
     'home/ReadingListPanel.java',
+    'home/ReadingListRow.java',
     'home/SearchEngine.java',
     'home/SearchEngineRow.java',
     'home/SearchLoader.java',

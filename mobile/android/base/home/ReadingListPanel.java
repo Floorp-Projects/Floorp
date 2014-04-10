@@ -215,13 +215,13 @@ public class ReadingListPanel extends HomeFragment {
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            final TwoLinePageRow row = (TwoLinePageRow) view;
+            final ReadingListRow row = (ReadingListRow) view;
             row.updateFromCursor(cursor);
         }
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            return LayoutInflater.from(parent.getContext()).inflate(R.layout.bookmark_item_row, parent, false);
+            return LayoutInflater.from(parent.getContext()).inflate(R.layout.reading_list_item_row, parent, false);
         }
     }
 

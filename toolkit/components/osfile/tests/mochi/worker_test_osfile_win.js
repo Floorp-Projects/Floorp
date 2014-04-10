@@ -103,10 +103,10 @@ function test_ReadWrite()
      null);
   isnot(output, OS.Constants.Win.INVALID_HANDLE_VALUE, "test_ReadWrite: output file opened");
   let array = new (ctypes.ArrayType(ctypes.char, 4096))();
-  let bytes_read = new ctypes.int32_t(-1);
+  let bytes_read = new ctypes.uint32_t(0);
   let bytes_read_ptr = bytes_read.address();
   log("We have a pointer for bytes read: "+bytes_read_ptr);
-  let bytes_written = new ctypes.int32_t(-1);
+  let bytes_written = new ctypes.uint32_t(0);
   let bytes_written_ptr = bytes_written.address();
   log("We have a pointer for bytes written: "+bytes_written_ptr);
   log("test_ReadWrite: buffer and pointers ready");
@@ -141,7 +141,7 @@ function test_ReadWrite()
   isnot (result, OS.Constants.Win.INVALID_SET_FILE_POINTER, "test_ReadWrite: output reset");
 
   let array2 = new (ctypes.ArrayType(ctypes.char, 4096))();
-  let bytes_read2 = new ctypes.int32_t(-1);
+  let bytes_read2 = new ctypes.uint32_t(0);
   let bytes_read2_ptr = bytes_read2.address();
   let pos = 0;
   while (true) {

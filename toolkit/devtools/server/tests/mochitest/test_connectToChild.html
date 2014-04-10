@@ -23,10 +23,11 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  // Always log packets when running tests.
   SpecialPowers.pushPrefEnv({
     "set": [
-      ["devtools.debugger.log", true]
+      // Always log packets when running tests.
+      ["devtools.debugger.log", true],
+      ["dom.mozBrowserFramesEnabled", true]
     ]
   }, runTests);
 }
@@ -34,7 +35,7 @@ window.onload = function() {
 function runTests() {
   // Create a minimal iframe with a message manager
   let iframe = document.createElement("iframe");
-  iframe.setAttribute("mozbrowser", "true");
+  iframe.mozbrowser = true;
   document.body.appendChild(iframe);
 
   let mm = iframe.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;

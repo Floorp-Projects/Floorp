@@ -80,6 +80,7 @@ this.BrowserIDManager = function BrowserIDManager() {
   // the test suite.
   this._fxaService = fxAccounts;
   this._tokenServerClient = new TokenServerClient();
+  this._tokenServerClient.observerPrefix = "weave:service";
   // will be a promise that resolves when we are ready to authenticate
   this.whenReadyToAuthenticate = null;
   this._log = log;
@@ -222,8 +223,9 @@ this.BrowserIDManager.prototype = {
           }
         }
       }).then(() => {
-        return this._fetchSyncKeyBundle();
-      }).then(() => {
+        return this._fetchTokenForUser();
+      }).then(token => {
+        this._token = token;
         this._shouldHaveSyncKeyBundle = true; // and we should actually have one...
         this.whenReadyToAuthenticate.resolve();
         this._log.info("Background fetch for key bundle done");
@@ -436,20 +438,6 @@ this.BrowserIDManager.prototype = {
     return true;
   },
 
-  _fetchSyncKeyBundle: function() {
-    // Fetch a sync token for the logged in user from the token server.
-    return this._fxaService.getKeys().then(userData => {
-      this._updateSignedInUser(userData); // throws if the user changed.
-      return this._fetchTokenForUser().then(token => {
-        this._token = token;
-        // both Jelly and FxAccounts give us kA/kB as hex.
-        let kB = Utils.hexToBytes(userData.kB);
-        this._syncKeyBundle = deriveKeyBundle(kB);
-        return;
-      });
-    });
-  },
-
   // Refresh the sync token for our user.
   _fetchTokenForUser: function() {
     let tokenServerURI = Svc.Prefs.get("tokenServerURI");
@@ -458,47 +446,49 @@ this.BrowserIDManager.prototype = {
     let fxa = this._fxaService;
     let userData = this._signedInUser;
 
-    // Both Jelly and FxAccounts give us kB as hex
-    let kBbytes = CommonUtils.hexToBytes(userData.kB);
-    let headers = {"X-Client-State": this._computeXClientState(kBbytes)};
     log.info("Fetching assertion and token from: " + tokenServerURI);
 
-    function getToken(tokenServerURI, assertion) {
+    let maybeFetchKeys = () => {
+      // This is called at login time and every time we need a new token - in
+      // the latter case we already have kA and kB, so optimise that case.
+      if (userData.kA && userData.kB) {
+        return;
+      }
+      return this._fxaService.getKeys().then(
+        newUserData => {
+          userData = newUserData;
+          this._updateSignedInUser(userData); // throws if the user changed.
+        }
+      );
+    }
+
+    let getToken = (tokenServerURI, assertion) => {
       log.debug("Getting a token");
       let deferred = Promise.defer();
       let cb = function (err, token) {
         if (err) {
-          log.info("TokenServerClient.getTokenFromBrowserIDAssertion() failed with: " + err);
-          if (err.response && err.response.status === 401) {
-            err = new AuthenticationError(err);
-          }
           return deferred.reject(err);
-        } else {
-          log.debug("Successfully got a sync token");
-          return deferred.resolve(token);
         }
+        log.debug("Successfully got a sync token");
+        return deferred.resolve(token);
       };
 
+      let kBbytes = CommonUtils.hexToBytes(userData.kB);
+      let headers = {"X-Client-State": this._computeXClientState(kBbytes)};
       client.getTokenFromBrowserIDAssertion(tokenServerURI, assertion, cb, headers);
       return deferred.promise;
     }
 
-    function getAssertion() {
+    let getAssertion = () => {
       log.debug("Getting an assertion");
       let audience = Services.io.newURI(tokenServerURI, null, null).prePath;
-      return fxa.getAssertion(audience).then(null, err => {
-        log.error("fxa.getAssertion() failed with: " + err.code + " - " + err.message);
-        if (err.code === 401) {
-          throw new AuthenticationError("Unable to get assertion for user");
-        } else {
-          throw err;
-        }
-      });
+      return fxa.getAssertion(audience);
     };
 
     // wait until the account email is verified and we know that
     // getAssertion() will return a real assertion (not null).
     return fxa.whenVerified(this._signedInUser)
+      .then(() => maybeFetchKeys())
       .then(() => getAssertion())
       .then(assertion => getToken(tokenServerURI, assertion))
       .then(token => {
@@ -506,9 +496,23 @@ this.BrowserIDManager.prototype = {
         // before it actually expires. This is to avoid sync storage errors
         // otherwise, we get a nasty notification bar briefly. Bug 966568.
         token.expiration = this._now() + (token.duration * 1000) * 0.80;
+        if (!this._syncKeyBundle) {
+          // We are given kA/kB as hex.
+          this._syncKeyBundle = deriveKeyBundle(Utils.hexToBytes(userData.kB));
+        }
         return token;
       })
       .then(null, err => {
+        // TODO: unify these errors - we need to handle errors thrown by
+        // both tokenserverclient and hawkclient.
+        // A tokenserver error thrown based on a bad response.
+        if (err.response && err.response.status === 401) {
+          err = new AuthenticationError(err);
+        // A hawkclient error.
+        } else if (err.code === 401) {
+          err = new AuthenticationError(err);
+        }
+
         // TODO: write tests to make sure that different auth error cases are handled here
         // properly: auth error getting assertion, auth error getting token (invalid generation
         // and client-state error)
@@ -535,6 +539,7 @@ this.BrowserIDManager.prototype = {
   // current user stored in this._token.  When resolved, this._token is valid.
   _ensureValidToken: function() {
     if (this.hasValidToken()) {
+      this._log.debug("_ensureValidToken already has one");
       return Promise.resolve();
     }
     return this._fetchTokenForUser().then(
@@ -623,15 +628,25 @@ BrowserIDClusterManager.prototype = {
       if (!endpoint.endsWith("/")) {
         endpoint += "/";
       }
+      log.debug("_findCluster returning " + endpoint);
       return endpoint;
     }.bind(this);
 
     // Spinningly ensure we are ready to authenticate and have a valid token.
     let promiseClusterURL = function() {
       return this.identity.whenReadyToAuthenticate.promise.then(
-        () => this.identity._ensureValidToken()
-      ).then(
-        () => endPointFromIdentityToken()
+        () => {
+          // We need to handle node reassignment here.  If we are being asked
+          // for a clusterURL while the service already has a clusterURL, then
+          // it's likely a 401 was received using the existing token - in which
+          // case we just discard the existing token and fetch a new one.
+          if (this.service.clusterURL) {
+            log.debug("_findCluster found existing clusterURL, so discarding the current token");
+            this.identity._token = null;
+          }
+          return this.identity._ensureValidToken();
+        }
+      ).then(endPointFromIdentityToken
       );
     }.bind(this);
 
