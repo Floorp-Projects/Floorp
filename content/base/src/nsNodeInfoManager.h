@@ -75,7 +75,7 @@ public:
   /**
    * Returns the nodeinfo for the document node. Can return null if OOM.
    */
-  already_AddRefed<nsINodeInfo> GetDocumentNodeInfo();     
+  already_AddRefed<nsINodeInfo> GetDocumentNodeInfo();
 
   /**
    * Retrieve a pointer to the document that owns this node info
