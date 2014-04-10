@@ -735,6 +735,14 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
         nsPoint scrollPos(
           scrollableFrame ? scrollableFrame->GetScrollPosition() : nsPoint(0,0));
         if (marginsData->mAlignmentX > 0 || marginsData->mAlignmentY > 0) {
+          // Avoid division by zero.
+          if (marginsData->mAlignmentX == 0) {
+            marginsData->mAlignmentX = 1;
+          }
+          if (marginsData->mAlignmentY == 0) {
+            marginsData->mAlignmentY = 1;
+          }
+
           LayerPoint scrollPosLayer(
             res.width * NSAppUnitsToFloatPixels(scrollPos.x, auPerDevPixel),
             res.height * NSAppUnitsToFloatPixels(scrollPos.y, auPerDevPixel));
@@ -2533,7 +2541,7 @@ nsLayoutUtils::GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
       nsIPresShell* presShell = aScrollFrame->PresContext()->GetPresShell();
       gfx::IntSize alignment = gfxPrefs::LayersTilesEnabled()
           ? gfx::IntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()) :
-            gfx::IntSize(1, 1);
+            gfx::IntSize(0, 0);
       nsLayoutUtils::SetDisplayPortMargins(
           content, presShell, displayportMargins, alignment.width,
           alignment.height, 0, nsLayoutUtils::RepaintMode::DoNotRepaint);
