@@ -138,16 +138,23 @@ private:
   //   %s    - string
   //   %d,%i - integer
   //   %f    - double
-  //   %o    - a JS object.
+  //   %o,%O - a JS object.
+  //   %c    - style string.
   // The output is an array where any object is a separated item, the rest is
   // unified in a format string.
   // Example if the input is:
   //   "string: %s, integer: %d, object: %o, double: %d", 's', 1, window, 0.9
   // The output will be:
   //   [ "string: s, integer: 1, object: ", window, ", double: 0.9" ]
+  //
+  // The aStyles array is populated with the style strings that the function
+  // finds based the format string. The index of the styles matches the indexes
+  // of elements that need the custom styling from aSequence. For elements with
+  // no custom styling the array is padded with null elements.
   void
   ProcessArguments(JSContext* aCx, const nsTArray<JS::Heap<JS::Value>>& aData,
-                   Sequence<JS::Value>& aSequence);
+                   Sequence<JS::Value>& aSequence,
+                   Sequence<JS::Value>& aStyles);
 
   void
   MakeFormatString(nsCString& aFormat, int32_t aInteger, int32_t aMantissa,

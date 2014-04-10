@@ -969,7 +969,9 @@ Console::ProcessCallData(ConsoleCallData* aData)
     case MethodDebug:
     case MethodAssert:
       event.mArguments.Construct();
-      ProcessArguments(cx, aData->mArguments, event.mArguments.Value());
+      event.mStyles.Construct();
+      ProcessArguments(cx, aData->mArguments, event.mArguments.Value(),
+                       event.mStyles.Value());
       break;
 
     default:
@@ -1051,7 +1053,8 @@ Console::ProcessCallData(ConsoleCallData* aData)
 void
 Console::ProcessArguments(JSContext* aCx,
                           const nsTArray<JS::Heap<JS::Value>>& aData,
-                          Sequence<JS::Value>& aSequence)
+                          Sequence<JS::Value>& aSequence,
+                          Sequence<JS::Value>& aStyles)
 {
   if (aData.IsEmpty()) {
     return;
@@ -1061,8 +1064,6 @@ Console::ProcessArguments(JSContext* aCx,
     ArgumentsToValueList(aData, aSequence);
     return;
   }
-
-  SequenceRooter<JS::Value> rooter(aCx, &aSequence);
 
   JS::Rooted<JS::Value> format(aCx, aData[0]);
   JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, format));
@@ -1158,6 +1159,7 @@ Console::ProcessArguments(JSContext* aCx,
 
     switch (ch) {
       case 'o':
+      case 'O':
       {
         if (!output.IsEmpty()) {
           JS::Rooted<JSString*> str(aCx, JS_NewUCStringCopyN(aCx,
@@ -1177,6 +1179,38 @@ Console::ProcessArguments(JSContext* aCx,
         }
 
         aSequence.AppendElement(v);
+        break;
+      }
+
+      case 'c':
+      {
+        if (!output.IsEmpty()) {
+          JS::Rooted<JSString*> str(aCx, JS_NewUCStringCopyN(aCx,
+                                                             output.get(),
+                                                             output.Length()));
+          if (!str) {
+            return;
+          }
+
+          aSequence.AppendElement(JS::StringValue(str));
+          output.Truncate();
+        }
+
+        if (index < aData.Length()) {
+          JS::Rooted<JS::Value> v(aCx, aData[index++]);
+          JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, v));
+          if (!jsString) {
+            return;
+          }
+
+          int32_t diff = aSequence.Length() - aStyles.Length();
+          if (diff > 0) {
+            for (int32_t i = 0; i < diff; i++) {
+              aStyles.AppendElement(JS::NullValue());
+            }
+          }
+          aStyles.AppendElement(JS::StringValue(jsString));
+        }
         break;
       }
 
