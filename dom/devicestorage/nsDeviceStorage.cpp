@@ -1651,8 +1651,7 @@ InterfaceToJsval(nsPIDOMWindow* aWindow,
 
 
   JS::Rooted<JS::Value> someJsVal(cx);
-  nsresult rv =
-    nsContentUtils::WrapNative(cx, scopeObj, aObject, aIID, &someJsVal);
+  nsresult rv = nsContentUtils::WrapNative(cx, aObject, aIID, &someJsVal);
   if (NS_FAILED(rv)) {
     return JSVAL_NULL;
   }

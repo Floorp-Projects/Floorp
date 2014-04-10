@@ -1027,8 +1027,9 @@ nsScriptLoader::FillCompileOptionsForRequest(nsScriptLoadRequest *aRequest,
   // compartments with it... and in particular, it will compile in the
   // compartment of aScopeChain, so we want to wrap into that compartment as
   // well.
-  if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, aScopeChain,
-                                              aRequest->mElement, &elementVal,
+  JSAutoCompartment ac(cx, aScopeChain);
+  if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, aRequest->mElement,
+                                              &elementVal,
                                               /* aAllowWrapping = */ true))) {
     MOZ_ASSERT(elementVal.isObject());
     aOptions->setElement(&elementVal.toObject());
