@@ -307,7 +307,7 @@ RotatedContentBuffer::BufferContentType()
     SurfaceFormat format;
 
     if (mBufferProvider) {
-      format = mBufferProvider->GetFormat();
+      format = mBufferProvider->AsTextureClientDrawTarget()->GetFormat();
     } else if (mDTBuffer) {
       format = mDTBuffer->GetFormat();
     }
@@ -331,7 +331,7 @@ RotatedContentBuffer::EnsureBuffer()
   NS_ASSERTION(!mLoanedDrawTarget, "Loaned draw target must be returned");
   if (!mDTBuffer) {
     if (mBufferProvider) {
-      mDTBuffer = mBufferProvider->GetAsDrawTarget();
+      mDTBuffer = mBufferProvider->AsTextureClientDrawTarget()->GetAsDrawTarget();
     }
   }
 
@@ -346,7 +346,7 @@ RotatedContentBuffer::EnsureBufferOnWhite()
   if (!mDTBufferOnWhite) {
     if (mBufferProviderOnWhite) {
       mDTBufferOnWhite =
-        mBufferProviderOnWhite->GetAsDrawTarget();
+        mBufferProviderOnWhite->AsTextureClientDrawTarget()->GetAsDrawTarget();
     }
   }
 
