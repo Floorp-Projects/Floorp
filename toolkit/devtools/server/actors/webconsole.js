@@ -1319,6 +1319,10 @@ WebConsoleActor.prototype =
       return this.createValueGrip(dbgObj);
     });
 
+    result.styles = Array.map(aMessage.styles || [], (aString) => {
+      return this.createValueGrip(aString);
+    });
+
     return result;
   },
 
