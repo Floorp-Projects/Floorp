@@ -2189,6 +2189,11 @@ CreateNativeGlobalForInner(JSContext* aCx,
   MOZ_ASSERT(aNewInner->IsInnerWindow());
   MOZ_ASSERT(aPrincipal);
 
+  // DOMWindow with nsEP is not supported, we have to make sure
+  // no one creates one accidentally.
+  nsCOMPtr<nsIExpandedPrincipal> nsEP = do_QueryInterface(aPrincipal);
+  MOZ_RELEASE_ASSERT(!nsEP, "DOMWindow with nsEP is not supported");
+
   nsGlobalWindow *top = nullptr;
   if (aNewInner->GetOuterWindow()) {
     top = aNewInner->GetTop();
