@@ -2791,6 +2791,76 @@ function runBug811755Test()
   return queryContent.text == textContent.text;
 }
 
+function runIsComposingTest()
+{
+  var expectedIsComposing = false;
+  var descriptionBase = "runIsComposingTest: ";
+  var description = "";
+
+  function eventHandler(aEvent)
+  {
+    is(aEvent.isComposing, expectedIsComposing,
+       "runIsComposingTest: " + description + " (type=" + aEvent.type + ", key=" + aEvent.key + ")");
+  }
+
+  textarea.addEventListener("keydown", eventHandler, true);
+  textarea.addEventListener("keypress", eventHandler, true);
+  textarea.addEventListener("keyup", eventHandler, true);
+
+  textarea.focus();
+  textarea.value = "";
+
+  // XXX These cases shouldn't occur in actual native key events because we
+  //     don't dispatch key events while composition (bug 354358).
+  expectedIsComposing = false;
+  description = "events before dispatching compositionstart";
+  synthesizeKey("VK_LEFT", {});
+
+  synthesizeKey("a", { type: "keydown" });
+  synthesizeComposition({ type: "compositionstart" });
+  expectedIsComposing = true;
+  description = "events after dispatching compositionstart";
+  synthesizeComposition({ type: "compositionupdate", data: "\u3042" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  synthesizeKey("a", { type: "keyup" });
+
+  // Although, firing keypress event during composition is a bug.
+  synthesizeKey("VK_INSERT", {});
+
+  description = "events for committing composition string";
+  synthesizeKey("VK_RETURN", { type: "keydown" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  synthesizeComposition({ type: "compositionend" });
+
+  expectedIsComposing = false;
+  description = "events after dispatching compositionend";
+  synthesizeKey("VK_RETURN", { type: "keyup" });
+
+  textarea.removeEventListener("keydown", eventHandler, true);
+  textarea.removeEventListener("keypress", eventHandler, true);
+  textarea.removeEventListener("keyup", eventHandler, true);
+
+  textarea.value = "";
+}
+
 function runRemoveContentTest(aCallback)
 {
   var events = [];
@@ -3378,6 +3448,7 @@ function runTest()
   runBug722639Test();
   runForceCommitTest();
   runBug811755Test();
+  runIsComposingTest();
   runRemoveContentTest(function () {
     runFrameTest();
     runPanelTest();
