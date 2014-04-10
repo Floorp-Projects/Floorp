@@ -412,10 +412,15 @@ add_task(function test_getHAWKErrors() {
   _("BrowserIDManager correctly handles various HAWK failures.");
 
   _("Arrange for a 401 - Sync should reflect an auth error.");
-  yield initializeIdentityWithHAWKFailure({
-    status: 401,
-    headers: {"content-type": "application/json"},
-    body: JSON.stringify({}),
+  let config = makeIdentityConfig();
+  yield initializeIdentityWithHAWKResponseFactory(config, function(method, data, uri) {
+    Assert.equal(method, "post");
+    Assert.equal(uri, "http://mockedserver:9999/certificate/sign")
+    return {
+      status: 401,
+      headers: {"content-type": "application/json"},
+      body: JSON.stringify({}),
+    }
   });
   Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED, "login was rejected");
 
@@ -424,10 +429,14 @@ add_task(function test_getHAWKErrors() {
   // And for good measure, some totally "unexpected" errors - we generally
   // assume these problems are going to magically go away at some point.
   _("Arrange for an empty body with a 200 response - should reflect a network error.");
-  yield initializeIdentityWithHAWKFailure({
-    status: 200,
-    headers: [],
-    body: "",
+  yield initializeIdentityWithHAWKResponseFactory(config, function(method, data, uri) {
+    Assert.equal(method, "post");
+    Assert.equal(uri, "http://mockedserver:9999/certificate/sign")
+    return {
+      status: 200,
+      headers: [],
+      body: "",
+    }
   });
   Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login state is LOGIN_FAILED_NETWORK_ERROR");
 });
@@ -482,32 +491,42 @@ add_task(function test_getKeysError() {
 // Utility functions follow
 
 // Create a new browserid_identity object and initialize it with a
-// hawk mock that simulates a failure.
+// hawk mock that simulates HTTP responses.
+// The callback function will be called each time the mocked hawk server wants
+// to make a request.  The result of the callback should be the mock response
+// object that will be returned to hawk.
 // A token server mock will be used that doesn't hit a server, so we move
 // directly to a hawk request.
-function* initializeIdentityWithHAWKFailure(response) {
+function* initializeIdentityWithHAWKResponseFactory(config, cbGetResponse) {
   // A mock request object.
-  function MockRESTRequest() {};
+  function MockRESTRequest(uri, credentials, extra) {
+    this._uri = uri;
+    this._credentials = credentials;
+    this._extra = extra;
+  };
   MockRESTRequest.prototype = {
     setHeader: function() {},
     post: function(data, callback) {
-      this.response = response;
+      this.response = cbGetResponse("post", data, this._uri, this._credentials, this._extra);
+      callback.call(this);
+    },
+    get: function(callback) {
+      this.response = cbGetResponse("get", null, this._uri, this._credentials, this._extra);
       callback.call(this);
     }
   }
 
   // The hawk client.
   function MockedHawkClient() {}
-  MockedHawkClient.prototype = new HawkClient();
+  MockedHawkClient.prototype = new HawkClient("http://mockedserver:9999");
   MockedHawkClient.prototype.constructor = MockedHawkClient;
   MockedHawkClient.prototype.newHAWKAuthenticatedRESTRequest = function(uri, credentials, extra) {
-    return new MockRESTRequest();
+    return new MockRESTRequest(uri, credentials, extra);
   }
 
   // tie it all together - configureFxAccountIdentity isn't useful here :(
   let fxaClient = new MockFxAccountsClient();
   fxaClient.hawk = new MockedHawkClient();
-  let config = makeIdentityConfig();
   let internal = {
     fxAccountsClient: fxaClient,
   }
