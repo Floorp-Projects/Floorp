@@ -207,30 +207,30 @@ void Axis::SetVelocity(float aVelocity) {
   mVelocity = aVelocity;
 }
 
-float Axis::GetCompositionEnd() {
+float Axis::GetCompositionEnd() const {
   return GetOrigin() + GetCompositionLength();
 }
 
-float Axis::GetPageEnd() {
+float Axis::GetPageEnd() const {
   return GetPageStart() + GetPageLength();
 }
 
-float Axis::GetOrigin() {
+float Axis::GetOrigin() const {
   CSSPoint origin = mAsyncPanZoomController->GetFrameMetrics().GetScrollOffset();
   return GetPointOffset(origin);
 }
 
-float Axis::GetCompositionLength() {
+float Axis::GetCompositionLength() const {
   const FrameMetrics& metrics = mAsyncPanZoomController->GetFrameMetrics();
   return GetRectLength(metrics.CalculateCompositedRectInCssPixels());
 }
 
-float Axis::GetPageStart() {
+float Axis::GetPageStart() const {
   CSSRect pageRect = mAsyncPanZoomController->GetFrameMetrics().mScrollableRect;
   return GetRectOffset(pageRect);
 }
 
-float Axis::GetPageLength() {
+float Axis::GetPageLength() const {
   CSSRect pageRect = mAsyncPanZoomController->GetFrameMetrics().mScrollableRect;
   return GetRectLength(pageRect);
 }
@@ -250,17 +250,17 @@ AxisX::AxisX(AsyncPanZoomController* aAsyncPanZoomController)
 
 }
 
-float AxisX::GetPointOffset(const CSSPoint& aPoint)
+float AxisX::GetPointOffset(const CSSPoint& aPoint) const
 {
   return aPoint.x;
 }
 
-float AxisX::GetRectLength(const CSSRect& aRect)
+float AxisX::GetRectLength(const CSSRect& aRect) const
 {
   return aRect.width;
 }
 
-float AxisX::GetRectOffset(const CSSRect& aRect)
+float AxisX::GetRectOffset(const CSSRect& aRect) const
 {
   return aRect.x;
 }
@@ -271,17 +271,17 @@ AxisY::AxisY(AsyncPanZoomController* aAsyncPanZoomController)
 
 }
 
-float AxisY::GetPointOffset(const CSSPoint& aPoint)
+float AxisY::GetPointOffset(const CSSPoint& aPoint) const
 {
   return aPoint.y;
 }
 
-float AxisY::GetRectLength(const CSSRect& aRect)
+float AxisY::GetRectLength(const CSSRect& aRect) const
 {
   return aRect.height;
 }
 
-float AxisY::GetRectOffset(const CSSRect& aRect)
+float AxisY::GetRectOffset(const CSSRect& aRect) const
 {
   return aRect.y;
 }
