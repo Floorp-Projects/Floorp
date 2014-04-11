@@ -1035,25 +1035,12 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
     // The prototype holds a strong reference to its class struct.
     c->Hold();
 
-    // Make a new object prototyped by parent_proto and parented by global.
-    proto = ::JS_InitClass(cx,                  // context
-                           global,              // global object
-                           parent_proto,        // parent proto
-                           c,                   // JSClass
-                           nullptr,              // JSNative ctor
-                           0,                   // ctor args
-                           nullptr,              // proto props
-                           nullptr,              // proto funcs
-                           nullptr,              // ctor props (static)
-                           nullptr);             // ctor funcs (static)
-    if (!proto) {
-      // This will happen if we're OOM or if the security manager
-      // denies defining the new class...
-
+    proto = JS_NewObjectWithGivenProto(cx, c, parent_proto, global);
+    if (!proto || !JS_DefineProperty(cx, global, c->name, JS::ObjectValue(*proto),
+                                     JS_PropertyStub, JS_StrictPropertyStub, 0))
+    {
       nsXBLService::gClassTable->Remove(xblKey);
-
       c->Drop();
-
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
