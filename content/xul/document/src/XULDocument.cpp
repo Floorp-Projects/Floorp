@@ -3681,7 +3681,10 @@ XULDocument::ExecuteScript(nsIScriptContext * aContext,
     JS::ExposeObjectToActiveJS(global);
     xpc_UnmarkGrayScript(aScriptObject);
     JSAutoCompartment ac(cx, global);
-    if (!JS_ExecuteScript(cx, global, aScriptObject))
+
+    // The script is in the compilation scope. Clone it into the target scope
+    // and execute it.
+    if (!JS::CloneAndExecuteScript(cx, global, aScriptObject))
         nsJSUtils::ReportPendingException(cx);
     return NS_OK;
 }
