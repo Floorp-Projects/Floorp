@@ -33,6 +33,12 @@ WebappsUpdateTimer.prototype = {
   classID: Components.ID("{8f7002cb-e959-4f0a-a2e8-563232564385}"),
 
   notify: function(aTimer) {
+    if (Services.prefs.getIntPref("browser.webapps.checkForUpdates") == 0) {
+      // Do nothing, because updates are disabled.
+      log("Webapps update timer invoked in webapp process; ignoring.");
+      return;
+    }
+
     // If we are offline, wait to be online to start the update check.
     if (Services.io.offline) {
       log("network offline for webapp update check; waiting");
