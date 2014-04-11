@@ -20,6 +20,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserNewTabPreloader",
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizationTabPreloader",
   "resource:///modules/CustomizationTabPreloader.jsm", "CustomizationTabPreloader");
 
+const SIMPLETEST_OVERRIDES =
+  ["ok", "is", "isnot", "ise", "todo", "todo_is", "todo_isnot", "info", "expectAssertions"];
+
 window.addEventListener("load", testOnLoad, false);
 
 function testOnLoad() {
@@ -85,6 +88,11 @@ function Tester(aTests, aDumper, aCallback) {
   this.Task = Components.utils.import("resource://gre/modules/Task.jsm", null).Task;
   this.Promise = Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", null).Promise;
   this.Assert = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
+
+  this.SimpleTestOriginal = {};
+  SIMPLETEST_OVERRIDES.forEach(m => {
+    this.SimpleTestOriginal[m] = this.SimpleTest[m];
+  });
 }
 Tester.prototype = {
   EventUtils: {},
@@ -385,6 +393,11 @@ Tester.prototype = {
         this.haltTests();
       }
 
+      // Restore original SimpleTest methods to avoid leaks.
+      SIMPLETEST_OVERRIDES.forEach(m => {
+        this.SimpleTest[m] = this.SimpleTestOriginal[m];
+      });
+
       testScope.destroy();
       this.currentTest.scope = null;
     }
@@ -520,7 +533,7 @@ Tester.prototype = {
     };
 
     // Override SimpleTest methods with ours.
-    ["ok", "is", "isnot", "ise", "todo", "todo_is", "todo_isnot", "info", "expectAssertions"].forEach(function(m) {
+    SIMPLETEST_OVERRIDES.forEach(function(m) {
       this.SimpleTest[m] = this[m];
     }, this.currentTest.scope);
 
