@@ -2,6 +2,7 @@ package org.mozilla.gecko.tests;
 
 import java.util.ArrayList;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserDB;
@@ -31,7 +32,7 @@ class DatabaseHelper {
     protected Uri buildUri(BrowserDataType dataType) {
         Uri uri = null;
         if (dataType == BrowserDataType.BOOKMARKS || dataType == BrowserDataType.HISTORY) {
-            uri = Uri.parse("content://" + TestConstants.ANDROID_PACKAGE_NAME + ".db.browser/" + dataType.toString().toLowerCase());
+            uri = Uri.parse("content://" + AppConstants.ANDROID_PACKAGE_NAME + ".db.browser/" + dataType.toString().toLowerCase());
         } else {
            mAsserter.ok(false, "The wrong data type has been provided = " + dataType.toString(), "Please provide the correct data type");
         }
