@@ -82,7 +82,7 @@ this.AccessFu = {
     this._enabled = true;
 
     Cu.import('resource://gre/modules/accessibility/Utils.jsm');
-    Cu.import('resource://gre/modules/accessibility/TouchAdapter.jsm');
+    Cu.import('resource://gre/modules/accessibility/PointerAdapter.jsm');
     Cu.import('resource://gre/modules/accessibility/Presentation.jsm');
 
     Logger.info('Enabled');
@@ -115,7 +115,7 @@ this.AccessFu = {
 
     this.Input.start();
     Output.start();
-    TouchAdapter.start();
+    PointerAdapter.start();
 
     Services.obs.addObserver(this, 'remote-browser-shown', false);
     Services.obs.addObserver(this, 'inprocess-browser-shown', false);
@@ -165,7 +165,7 @@ this.AccessFu = {
 
     this.Input.stop();
     Output.stop();
-    TouchAdapter.stop();
+    PointerAdapter.stop();
 
     Utils.win.removeEventListener('TabOpen', this);
     Utils.win.removeEventListener('TabClose', this);
@@ -787,7 +787,8 @@ var Input = {
     switch (gestureName) {
       case 'dwell1':
       case 'explore1':
-        this.moveToPoint('Simple', aGesture.x, aGesture.y);
+        this.moveToPoint('Simple', aGesture.touches[0].x,
+          aGesture.touches[0].y);
         break;
       case 'doubletap1':
         this.activateCurrent();

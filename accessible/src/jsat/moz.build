@@ -11,9 +11,10 @@ EXTRA_JS_MODULES += [
     'Constants.jsm',
     'ContentControl.jsm',
     'EventManager.jsm',
+    'Gestures.jsm',
     'OutputGenerator.jsm',
+    'PointerAdapter.jsm',
     'Presentation.jsm',
-    'TouchAdapter.jsm',
     'TraversalRules.jsm',
     'Utils.jsm'
 ]

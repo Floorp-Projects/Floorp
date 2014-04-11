@@ -1,193 +1,248 @@
 [
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
-      {"type": "touchend", "delay": 50}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
     "expectedGestures": "tap"
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
-      {"type": "touchmove",
-        "target": [{"base": "button", "x": 0.03, "y": 0.02}], "delay": 25},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointermove",
+        "points": [{"x": 1.03, "y": 1.03, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1.03, "y": 1.03, "identifier": 1}]}
     ],
     "expectedGestures": "tap"
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
-      {"type": "touchend", "delay": 525}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}],
+        "removeDwellThreshold": true},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
     "expectedGestures": ["dwell", "dwellend"]
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
-      {"type": "touchmove",
-        "target": [{"base": "button", "x": 0.03, "y": 0.02}], "delay": 25},
-      {"type": "touchend", "delay": 25},
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}],
-        "delay": 25},
-      {"type": "touchmove",
-        "target": [{"base": "button", "x": -0.03, "y": 0.01}], "delay": 25},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointermove",
+        "points": [{"x": 1.03, "y": 1.02, "identifier": 1}]},
+      {"type": "pointerup",
+        "points": [{"x": 1.03, "y": 1.02, "identifier": 1}]},
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointermove",
+        "points": [{"x": 0.97, "y": 1.01, "identifier": 1}]},
+      {"type": "pointerup",
+        "points": [{"x": 0.97, "y": 1.01, "identifier": 1}]}
     ],
     "expectedGestures": ["tap", "doubletap"]
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
-      {"type": "touchend", "delay": 25},
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}],
-        "delay": 25},
-      {"type": "touchend", "delay": 25},
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}],
-        "delay": 25},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
     "expectedGestures": ["tap", "doubletap", "tripletap"]
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
-      {"type": "touchend", "delay": 25},
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}],
-        "delay": 25},
-      {"type": "touchend", "delay": 25},
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}],
-        "delay": 25},
-      {"type": "touchend", "delay": 525}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}],
+        "removeDwellThreshold": true},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": ["tap", "doubletap", "doubletaphold", "dwellend"]
+    "expectedGestures": ["tap", "doubletap", "doubletaphold",
+      "doubletapholdend"]
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
-      {"type": "touchend", "delay": 25},
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}],
-        "delay": 25},
-      {"type": "touchend", "delay": 525}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}],
+        "removeDwellThreshold": true},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": ["tap", "taphold", "dwellend"]
+    "expectedGestures": ["tap", "taphold", "tapholdend"]
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
-      {"type": "touchmove", "target": [{"base": "button", "x": 0.5, "y": 0}],
-        "delay": 25},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointermove", "points": [{"x": 1.5, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1.5, "y": 1, "identifier": 1}]}
     ],
     "expectedGestures": "swiperight"
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0.5, "y": 0}]},
-      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": 0}],
-        "delay": 25},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointermove", "points": [{"x": 1.15, "y": 1, "identifier": 1}]},
+      {"type": "pointermove", "points": [{"x": 1.3, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1.3, "y": 1, "identifier": 1}]}
+    ],
+    "expectedGestures": "swiperight"
+  },
+  {
+    "events": [
+      {"type": "pointerdown", "points": [{"x": 1.5, "y": 1, "identifier": 1}]},
+      {"type": "pointermove", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
     "expectedGestures": "swipeleft"
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
-      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": 0.5}],
-        "delay": 25},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointermove", "points": [{"x": 1, "y": 1.5, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1.5, "identifier": 1}]}
     ],
     "expectedGestures": "swipedown"
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0.5}]},
-      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": 0}],
-        "delay": 25},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1.5, "identifier": 1}]},
+      {"type": "pointermove", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
     "expectedGestures": "swipeup"
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
-      {"type": "touchmove", "target": [{"base": "button", "x": 0.5, "y": 0.1}],
-        "delay": 25},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointermove",
+        "points": [{"x": 1.5, "y": 1.1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1.5, "y": 1.1, "identifier": 1}]}
     ],
     "expectedGestures": "swiperight"
   },
   {
     "events": [
-      {"type": "touchstart",
-        "target": [{"base": "button", "x": 0.5, "y": 0.1}]},
-      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": -0.05}],
-        "delay": 25},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown",
+        "points": [{"x": 1.5, "y": 1.1, "identifier": 1}]},
+      {"type": "pointermove", "points": [{"x": 1, "y": 0.95, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1, "y": 0.95, "identifier": 1}]}
     ],
     "expectedGestures": "swipeleft"
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
-      {"type": "touchmove",
-        "target": [{"base": "button", "x": -0.1, "y": 0.5}], "delay": 25},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointermove",
+        "points": [{"x": 0.9, "y": 1.5, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 0.9, "y": 1.5, "identifier": 1}]}
     ],
     "expectedGestures": "swipedown"
   },
   {
     "events": [
-      {"type": "touchstart",
-        "target": [{"base": "button", "x": 0.1, "y": 0.5}]},
-      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": 0}],
-        "delay": 25},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown",
+        "points": [{"x": 1.1, "y": 1.5, "identifier": 1}]},
+      {"type": "pointermove", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
     "expectedGestures": "swipeup"
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0},
-        {"base": "button", "x": 0, "y": 0.5}]},
-      {"type": "touchmove", "target": [{"base": "button", "x": 0.5, "y": 0},
-        {"base": "button", "x": 0.5, "y": 0.5}], "delay": 25},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1},
+        {"x": 1, "y": 1.5, "identifier": 2}]},
+      {"type": "pointermove", "points": [{"x": 1.5, "y": 1, "identifier": 1},
+        {"x": 1.5, "y": 1.5, "identifier": 2}]},
+      {"type": "pointerup", "points": [{"x": 1.5, "y": 1, "identifier": 1},
+        {"x": 1.5, "y": 1.5, "identifier": 2}]}
     ],
     "expectedGestures": "swiperight"
   },
   {
     "events": [
-      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0},
-        {"base": "button", "x": 0, "y": 0.5},
-        {"base": "button", "x": 0, "y": 1}]},
-      {"type": "touchmove", "target": [{"base": "button", "x": 0.5, "y": 0},
-        {"base": "button", "x": 0.5, "y": 0.5},
-        {"base": "button", "x": 0.5, "y": 1}],
-        "delay": 25},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1},
+        {"x": 1, "y": 1.5, "identifier": 2}]},
+      {"type": "pointermove", "points": [{"x": 1.5, "y": 1, "identifier": 1},
+        {"x": 1.5, "y": 1.5, "identifier": 2}]},
+      {"type": "pointerup", "points": [{"x": 1.5, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1.5, "y": 1.5, "identifier": 2}]}
     ],
     "expectedGestures": "swiperight"
   },
   {
     "events": [
-      {"type": "touchstart",
-        "target": [{"base": "button", "x": 0.6, "y": 0.5}]},
-      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": 0}],
-        "delay": 525},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1},
+        {"x": 1, "y": 1.5, "identifier": 2},
+        {"x": 1, "y": 2, "identifier": 3}]},
+      {"type": "pointermove", "points": [{"x": 1.5, "y": 1, "identifier": 1},
+        {"x": 1.5, "y": 1.5, "identifier": 2},
+        {"x": 1.5, "y": 2, "identifier": 3}]},
+      {"type": "pointerup", "points": [{"x": 1.5, "y": 1, "identifier": 1},
+        {"x": 1.5, "y": 1.5, "identifier": 2},
+        {"x": 1.5, "y": 2, "identifier": 3}]}
+    ],
+    "expectedGestures": "swiperight"
+  },
+  {
+    "events": [
+      {"type": "pointerdown",
+        "points": [{"x": 1.6, "y": 1.5, "identifier": 1}],
+        "removeDwellThreshold": true},
+      {"type": "pointermove", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
     "expectedGestures": ["dwell", "explore", "exploreend"]
   },
   {
     "events": [
-      {"type": "touchstart",
-        "target": [{"base": "button", "x": 0, "y": 0.5}]},
-      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": 0}],
-        "delay": 525},
-      {"type": "touchmove", "target": [{"base": "button", "x": 0.5, "y": 0}],
-        "delay": 125},
-      {"type": "touchend", "delay": 25}
+      {"type": "pointerdown",
+        "points": [{"x": 1.6, "y": 1.5, "identifier": 1}],
+        "removeDwellThreshold": true},
+      {"type": "pointermove", "points": [{"x": 1, "y": 1, "identifier": 1}]},
+      {"type": "pointermove", "points": [{"x": 2, "y": 2, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 2, "y": 2, "identifier": 1}]}
+    ],
+    "expectedGestures": ["dwell", "explore", "explore", "exploreend"]
+  },
+  {
+    "events": [
+      {"type": "pointerdown",
+        "points": [{"x": 1.6, "y": 1.5, "identifier": 1}]},
+      {"type": "pointermove", "points": [{"x": 1, "y": 1, "identifier": 1}],
+        "removeSwipeMaxDuration": true},
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
+    ],
+    "expectedGestures": ["explore", "exploreend"]
+  },
+  {
+    "events": [
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1.5, "identifier": 1}]},
+      {"type": "pointermove", "points": [{"x": 1, "y": 1, "identifier": 1}],
+        "removeSwipeMaxDuration": true},
+      {"type": "pointermove", "points": [{"x": 1.5, "y": 1, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1.5, "y": 1, "identifier": 1}]}
+    ],
+    "expectedGestures": ["explore", "explore", "exploreend"]
+  },
+  {
+    "events": [
+      {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}],
+        "removeDwellThreshold": true},
+      {"type": "pointermove",
+        "points": [{"x": 1.5, "y": 1.5, "identifier": 1}]},
+      {"type": "pointermove",
+        "points": [{"x": 1.55, "y": 1.5, "identifier": 1}]},
+      {"type": "pointermove",
+        "points": [{"x": 1.6, "y": 1.5, "identifier": 1}]},
+      {"type": "pointermove",
+        "points": [{"x": 1.65, "y": 1.5, "identifier": 1}]},
+      {"type": "pointermove",
+        "points": [{"x": 1.7, "y": 1.5, "identifier": 1}]},
+      {"type": "pointermove",
+        "points": [{"x": 1.75, "y": 1.5, "identifier": 1}]},
+      {"type": "pointerup", "points": [{"x": 1.75, "y": 1.5, "identifier": 1}]}
     ],
     "expectedGestures": ["dwell", "explore", "explore", "exploreend"]
   }
