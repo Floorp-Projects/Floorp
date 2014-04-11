@@ -7011,10 +7011,8 @@ EstablishPreconditions(ExclusiveContext *cx, AsmJSParser &parser)
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by arrow function context");
 
 #ifdef JS_THREADSAFE
-    if (ParallelCompilationEnabled(cx)) {
-        if (!EnsureWorkerThreadsInitialized(cx))
-            return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Failed compilation thread initialization");
-    }
+    if (ParallelCompilationEnabled(cx))
+        EnsureWorkerThreadsInitialized(cx);
 #endif
 
     return true;
