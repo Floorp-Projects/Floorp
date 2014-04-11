@@ -170,18 +170,18 @@ public:
    */
   bool ScaleWillOverscrollBothSides(float aScale);
 
-  float GetOrigin();
-  float GetCompositionLength();
-  float GetPageStart();
-  float GetPageLength();
-  float GetCompositionEnd();
-  float GetPageEnd();
+  float GetOrigin() const;
+  float GetCompositionLength() const;
+  float GetPageStart() const;
+  float GetPageLength() const;
+  float GetCompositionEnd() const;
+  float GetPageEnd() const;
 
   int32_t GetPos() const { return mPos; }
 
-  virtual float GetPointOffset(const CSSPoint& aPoint) = 0;
-  virtual float GetRectLength(const CSSRect& aRect) = 0;
-  virtual float GetRectOffset(const CSSRect& aRect) = 0;
+  virtual float GetPointOffset(const CSSPoint& aPoint) const = 0;
+  virtual float GetRectLength(const CSSRect& aRect) const = 0;
+  virtual float GetRectOffset(const CSSRect& aRect) const = 0;
 
 protected:
   int32_t mPos;
@@ -195,17 +195,17 @@ protected:
 class AxisX : public Axis {
 public:
   AxisX(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual float GetPointOffset(const CSSPoint& aPoint);
-  virtual float GetRectLength(const CSSRect& aRect);
-  virtual float GetRectOffset(const CSSRect& aRect);
+  virtual float GetPointOffset(const CSSPoint& aPoint) const;
+  virtual float GetRectLength(const CSSRect& aRect) const;
+  virtual float GetRectOffset(const CSSRect& aRect) const;
 };
 
 class AxisY : public Axis {
 public:
   AxisY(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual float GetPointOffset(const CSSPoint& aPoint);
-  virtual float GetRectLength(const CSSRect& aRect);
-  virtual float GetRectOffset(const CSSRect& aRect);
+  virtual float GetPointOffset(const CSSPoint& aPoint) const;
+  virtual float GetRectLength(const CSSRect& aRect) const;
+  virtual float GetRectOffset(const CSSRect& aRect) const;
 };
 
 }
