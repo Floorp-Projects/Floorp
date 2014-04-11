@@ -293,6 +293,43 @@ WeakMapPostWriteBarrier(JSRuntime *rt, ObjectValueMap *weakMap, JSObject *key)
 }
 
 MOZ_ALWAYS_INLINE bool
+SetWeakMapEntryInternal(JSContext *cx, Handle<WeakMapObject*> mapObj,
+                        HandleObject key, HandleValue value)
+{
+    ObjectValueMap *map = mapObj->getMap();
+    if (!map) {
+        map = cx->new_<ObjectValueMap>(cx, mapObj.get());
+        if (!map)
+            return false;
+        if (!map->init()) {
+            js_delete(map);
+            JS_ReportOutOfMemory(cx);
+            return false;
+        }
+        mapObj->setPrivate(map);
+    }
+
+    // Preserve wrapped native keys to prevent wrapper optimization.
+    if (!TryPreserveReflector(cx, key))
+        return false;
+
+    if (JSWeakmapKeyDelegateOp op = key->getClass()->ext.weakmapKeyDelegateOp) {
+        RootedObject delegate(cx, op(key));
+        if (delegate && !TryPreserveReflector(cx, delegate))
+            return false;
+    }
+
+    JS_ASSERT(key->compartment() == mapObj->compartment());
+    JS_ASSERT_IF(value.isObject(), value.toObject().compartment() == mapObj->compartment());
+    if (!map->put(key, value)) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+    WeakMapPostWriteBarrier(cx->runtime(), map, key.get());
+    return true;
+}
+
+MOZ_ALWAYS_INLINE bool
 WeakMap_set_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsWeakMap(args.thisv()));
@@ -307,41 +344,11 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
         return false;
 
     RootedValue value(cx, (args.length() > 1) ? args[1] : UndefinedValue());
-
     Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
-    ObjectValueMap *map = thisObj->as<WeakMapObject>().getMap();
-    if (!map) {
-        map = cx->new_<ObjectValueMap>(cx, thisObj.get());
-        if (!map)
-            return false;
-        if (!map->init()) {
-            js_delete(map);
-            JS_ReportOutOfMemory(cx);
-            return false;
-        }
-        thisObj->setPrivate(map);
-    }
-
-    // Preserve wrapped native keys to prevent wrapper optimization.
-    if (!TryPreserveReflector(cx, key))
-        return false;
-
-    if (JSWeakmapKeyDelegateOp op = key->getClass()->ext.weakmapKeyDelegateOp) {
-        RootedObject delegate(cx, op(key));
-        if (delegate && !TryPreserveReflector(cx, delegate))
-            return false;
-    }
-
-    JS_ASSERT(key->compartment() == thisObj->compartment());
-    JS_ASSERT_IF(value.isObject(), value.toObject().compartment() == thisObj->compartment());
-    if (!map->put(key, value)) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-    WeakMapPostWriteBarrier(cx->runtime(), map, key.get());
+    Rooted<WeakMapObject*> map(cx, &thisObj->as<WeakMapObject>());
 
     args.rval().setUndefined();
-    return true;
+    return SetWeakMapEntryInternal(cx, map, key, value);
 }
 
 static bool
@@ -399,6 +406,47 @@ WeakMap_finalize(FreeOp *fop, JSObject *obj)
         fop->delete_(map);
 #endif
     }
+}
+
+JS_PUBLIC_API(JSObject*)
+JS::NewWeakMapObject(JSContext *cx)
+{
+    return NewBuiltinClassInstance(cx, &WeakMapObject::class_);
+}
+
+JS_PUBLIC_API(bool)
+JS::IsWeakMapObject(JSObject *obj)
+{
+    return obj->is<WeakMapObject>();
+}
+
+JS_PUBLIC_API(bool)
+JS::GetWeakMapEntry(JSContext *cx, HandleObject mapObj, HandleObject key,
+                    MutableHandleValue rval)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, key);
+    rval.setUndefined();
+    ObjectValueMap *map = mapObj->as<WeakMapObject>().getMap();
+    if (!map)
+        return true;
+    if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
+        // Read barrier to prevent an incorrectly gray value from escaping the
+        // weak map. See the comment before UnmarkGrayChildren in gc/Marking.cpp
+        ExposeValueToActiveJS(ptr->value().get());
+        rval.set(ptr->value());
+    }
+    return true;
+}
+
+JS_PUBLIC_API(bool)
+JS::SetWeakMapEntry(JSContext *cx, HandleObject mapObj, HandleObject key,
+                    HandleValue val)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, key, val);
+    Rooted<WeakMapObject*> rootedMap(cx, &mapObj->as<WeakMapObject>());
+    return SetWeakMapEntryInternal(cx, rootedMap, key, val);
 }
 
 static bool
