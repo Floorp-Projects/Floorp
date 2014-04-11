@@ -350,14 +350,6 @@ class MediaEngineWebRTC : public MediaEngine
 {
 public:
   MediaEngineWebRTC(MediaEnginePrefs &aPrefs);
-  ~MediaEngineWebRTC() {
-    Shutdown();
-#ifdef MOZ_B2G_CAMERA
-    AsyncLatencyLogger::Get()->Release();
-#endif
-    // XXX
-    gFarendObserver = nullptr;
-  }
 
   // Clients should ensure to clean-up sources video/audio sources
   // before invoking Shutdown on this class.
@@ -367,6 +359,15 @@ public:
   virtual void EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSource> >*);
 
 private:
+  ~MediaEngineWebRTC() {
+    Shutdown();
+#ifdef MOZ_B2G_CAMERA
+    AsyncLatencyLogger::Get()->Release();
+#endif
+    // XXX
+    gFarendObserver = nullptr;
+  }
+
   Mutex mMutex;
   // protected with mMutex:
 
