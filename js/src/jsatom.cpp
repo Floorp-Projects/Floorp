@@ -189,7 +189,7 @@ JSRuntime::finishAtoms()
 void
 js::MarkAtoms(JSTracer *trc)
 {
-    JSRuntime *rt = trc->runtime;
+    JSRuntime *rt = trc->runtime();
     for (AtomSet::Enum e(rt->atoms()); !e.empty(); e.popFront()) {
         const AtomStateEntry &entry = e.front();
         if (!entry.isTagged())
@@ -206,7 +206,7 @@ js::MarkAtoms(JSTracer *trc)
 void
 js::MarkPermanentAtoms(JSTracer *trc)
 {
-    JSRuntime *rt = trc->runtime;
+    JSRuntime *rt = trc->runtime();
 
     // Permanent atoms only need to be marked in the runtime which owns them.
     if (rt->parentRuntime)

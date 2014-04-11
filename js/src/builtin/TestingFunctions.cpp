@@ -684,20 +684,24 @@ struct JSCountHeapNode {
 
 typedef HashSet<void *, PointerHasher<void *, 3>, SystemAllocPolicy> VisitedSet;
 
-typedef struct JSCountHeapTracer {
+class CountHeapTracer
+{
+  public:
+    CountHeapTracer(JSRuntime *rt, JSTraceCallback callback) : base(rt, callback) {}
+
     JSTracer            base;
     VisitedSet          visited;
     JSCountHeapNode     *traceList;
     JSCountHeapNode     *recycleList;
     bool                ok;
-} JSCountHeapTracer;
+};
 
 static void
 CountHeapNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
     JS_ASSERT(trc->callback == CountHeapNotify);
 
-    JSCountHeapTracer *countTracer = (JSCountHeapTracer *)trc;
+    CountHeapTracer *countTracer = (CountHeapTracer *)trc;
     void *thing = *thingp;
 
     if (!countTracer->ok)
@@ -793,8 +797,7 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    JSCountHeapTracer countTracer;
-    JS_TracerInit(&countTracer.base, JS_GetRuntime(cx), CountHeapNotify);
+    CountHeapTracer countTracer(JS_GetRuntime(cx), CountHeapNotify);
     if (!countTracer.visited.init()) {
         JS_ReportOutOfMemory(cx);
         return false;

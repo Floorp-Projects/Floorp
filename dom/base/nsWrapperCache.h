@@ -11,7 +11,7 @@
 #include "js/Id.h"          // must come before js/RootingAPI.h
 #include "js/Value.h"       // must come before js/RootingAPI.h
 #include "js/RootingAPI.h"
-#include "js/Tracer.h"
+#include "js/TracingAPI.h"
 
 class XPCWrappedNativeScope;
 
