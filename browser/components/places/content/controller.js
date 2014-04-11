@@ -225,14 +225,14 @@ PlacesController.prototype = {
         PlacesUtils.transactionManager.undoTransaction();
         return;
       }
-      PlacesTransactions.undo().then(null, Cu.reportError);
+      PlacesTransactions.undo().then(null, Components.utils.reportError);
       break;
     case "cmd_redo":
       if (!PlacesUIUtils.useAsyncTransactions) {
         PlacesUtils.transactionManager.redoTransaction();
         return;
       }
-      PlacesTransactions.redo().then(null, Cu.reportError);
+      PlacesTransactions.redo().then(null, Components.utils.reportError);
       break;
     case "cmd_cut":
     case "placesCmd_cut":
@@ -279,7 +279,7 @@ PlacesController.prototype = {
       this.newItem("bookmark");
       break;
     case "placesCmd_new:separator":
-      this.newSeparator().then(null, Cu.reportError);
+      this.newSeparator().then(null, Components.utils.reportError);
       break;
     case "placesCmd_show:info":
       this.showBookmarkPropertiesForSelection();
@@ -291,7 +291,7 @@ PlacesController.prototype = {
       this.reloadSelectedLivemark();
       break;
     case "placesCmd_sortBy:name":
-      this.sortFolderByName().then(null, Cu.reportError);
+      this.sortFolderByName().then(null, Components.utils.reportError);
       break;
     case "placesCmd_createBookmark":
       let node = this._view.selectedNode;
