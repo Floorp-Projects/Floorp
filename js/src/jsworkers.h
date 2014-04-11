@@ -300,7 +300,7 @@ CancelOffThreadParses(JSRuntime *runtime);
  */
 bool
 StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &options,
-                          const jschar *chars, size_t length, HandleObject scopeChain,
+                          const jschar *chars, size_t length,
                           JS::OffThreadCompileCallback callback, void *callbackData);
 
 /*
@@ -391,11 +391,6 @@ struct ParseTask
     size_t length;
     LifoAlloc alloc;
 
-    // Rooted pointer to the scope in the target compartment which the
-    // resulting script will be merged into. This is not safe to use off the
-    // main thread.
-    PersistentRootedObject scopeChain;
-
     // Rooted pointer to the global object used by 'cx'.
     PersistentRootedObject exclusiveContextGlobal;
 
@@ -421,8 +416,8 @@ struct ParseTask
     Vector<frontend::CompileError *> errors;
     bool overRecursed;
 
-    ParseTask(ExclusiveContext *cx, JSObject *exclusiveContextGlobal, JSContext *initCx,
-              const jschar *chars, size_t length, JSObject *scopeChain,
+    ParseTask(ExclusiveContext *cx, JSObject *exclusiveContextGlobal,
+              JSContext *initCx, const jschar *chars, size_t length,
               JS::OffThreadCompileCallback callback, void *callbackData);
     bool init(JSContext *cx, const ReadOnlyCompileOptions &options);
 

@@ -3641,8 +3641,8 @@ CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options, size_t
  * for the compilation. The callback will be invoked while off the main thread,
  * so must ensure that its operations are thread safe. Afterwards,
  * FinishOffThreadScript must be invoked on the main thread to get the result
- * script or nullptr. If maybecx is specified, this method will also report
- * any error or warnings generated during the parse.
+ * script or nullptr. If maybecx is not specified, the resources will be freed,
+ * but no script will be returned.
  *
  * The characters passed in to CompileOffThread must remain live until the
  * callback is invoked, and the resulting script will be rooted until the call
@@ -3650,7 +3650,7 @@ CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options, size_t
  */
 
 extern JS_PUBLIC_API(bool)
-CompileOffThread(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
+CompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options,
                  const jschar *chars, size_t length,
                  OffThreadCompileCallback callback, void *callbackData);
 

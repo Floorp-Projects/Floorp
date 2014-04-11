@@ -14,5 +14,5 @@ dbg.onNewScript = function (s) {
 
 log = '';
 g.offThreadCompileScript('"t" + "wine"');
-assertEq(runOffThreadScript(), 'twine');
+assertEq(g.runOffThreadScript(), 'twine');
 assertEq(log, 's');
