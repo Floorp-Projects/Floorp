@@ -7,12 +7,8 @@ let {DebuggerServer, DebuggerClient} = tempScope;
 tempScope = null;
 
 const {StorageFront} = require("devtools/server/actors/storage");
-
-// Always log packets when running tests.
-Services.prefs.setBoolPref("devtools.debugger.log", true);
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.debugger.log");
-});
+let {Task} = require("resource://gre/modules/Task.jsm");
+let gWindow = null;
 
 const storeMap = {
   cookies: {
@@ -134,26 +130,245 @@ const storeMap = {
   }
 };
 
-function finishTests(client) {
-  // Forcing GC/CC to get rid of docshells and windows created by this test.
-  forceCollections();
-  client.close(() => {
-    forceCollections();
-    DebuggerServer.destroy();
-    forceCollections();
-    DebuggerClient = DebuggerServer = null;
-    finish();
-  });
+const IDBValues = {
+  listStoresResponse: {
+    "http://test1.example.org": [
+      ["idb1", "obj1"], ["idb1", "obj2"], ["idb2", "obj3"]
+    ],
+    "http://sectest1.example.org": [
+    ],
+    "https://sectest1.example.org": [
+      ["idb-s1", "obj-s1"], ["idb-s2", "obj-s2"]
+    ]
+  },
+  dbDetails : {
+    "http://test1.example.org": [
+      {
+        db: "idb1",
+        origin: "http://test1.example.org",
+        version: 1,
+        objectStores: 2
+      },
+      {
+        db: "idb2",
+        origin: "http://test1.example.org",
+        version: 1,
+        objectStores: 1
+      },
+    ],
+    "http://sectest1.example.org": [
+    ],
+    "https://sectest1.example.org": [
+      {
+        db: "idb-s1",
+        origin: "https://sectest1.example.org",
+        version: 1,
+        objectStores: 1
+      },
+      {
+        db: "idb-s2",
+        origin: "https://sectest1.example.org",
+        version: 1,
+        objectStores: 1
+      },
+    ]
+  },
+  objectStoreDetails: {
+    "http://test1.example.org": {
+      idb1: [
+        {
+          objectStore: "obj1",
+          keyPath: "id",
+          autoIncrement: false,
+          indexes: [
+            {
+              name: "name",
+              keyPath: "name",
+              "unique": false,
+              multiEntry: false,
+            },
+            {
+              name: "email",
+              keyPath: "email",
+              "unique": true,
+              multiEntry: false,
+            },
+          ]
+        },
+        {
+          objectStore: "obj2",
+          keyPath: "id2",
+          autoIncrement: false,
+          indexes: []
+        }
+      ],
+      idb2: [
+        {
+          objectStore: "obj3",
+          keyPath: "id3",
+          autoIncrement: false,
+          indexes: [
+            {
+              name: "name2",
+              keyPath: "name2",
+              "unique": true,
+              multiEntry: false,
+            }
+          ]
+        },
+      ]
+    },
+    "http://sectest1.example.org" : {},
+    "https://sectest1.example.org": {
+      "idb-s1": [
+        {
+          objectStore: "obj-s1",
+          keyPath: "id",
+          autoIncrement: false,
+          indexes: []
+        },
+      ],
+      "idb-s2": [
+        {
+          objectStore: "obj-s2",
+          keyPath: "id3",
+          autoIncrement: true,
+          indexes: [
+            {
+              name: "name2",
+              keyPath: "name2",
+              "unique": true,
+              multiEntry: false,
+            }
+          ]
+        },
+      ]
+    }
+
+  },
+  entries: {
+    "http://test1.example.org": {
+      "idb1#obj1": [
+        {
+          name: 1,
+          value: {
+            id: 1,
+            name: "foo",
+            email: "foo@bar.com",
+          }
+        },
+        {
+          name: 2,
+          value: {
+            id: 2,
+            name: "foo2",
+            email: "foo2@bar.com",
+          }
+        },
+        {
+          name: 3,
+          value: {
+            id: 3,
+            name: "foo2",
+            email: "foo3@bar.com",
+          }
+        }
+      ],
+      "idb1#obj2": [
+        {
+          name: 1,
+          value: {
+            id2: 1,
+            name: "foo",
+            email: "foo@bar.com",
+            extra: "baz"
+          }
+        }
+      ],
+      "idb2#obj3": []
+    },
+    "http://sectest1.example.org" : {},
+    "https://sectest1.example.org": {
+      "idb-s1#obj-s1": [
+        {
+          name: 6,
+          value: {
+            id: 6,
+            name: "foo",
+            email: "foo@bar.com",
+          }
+        },
+        {
+          name: 7,
+          value: {
+            id: 7,
+            name: "foo2",
+            email: "foo2@bar.com",
+          }
+        }
+      ],
+      "idb-s2#obj-s2": [
+        {
+          name: 13,
+          value: {
+            id2: 13,
+            name2: "foo",
+            email: "foo@bar.com",
+          }
+        }
+      ]
+    }
+  }
 }
 
-function testStores(data, client) {
-  ok(data.cookies, "Cookies storage actor is present");
-  ok(data.localStorage, "Local Storage storage actor is present");
-  ok(data.sessionStorage, "Session Storage storage actor is present");
-  testCookies(data.cookies).then(() =>
-  testLocalStorage(data.localStorage)).then(() =>
-  testSessionStorage(data.sessionStorage)).then(() =>
-  finishTests(client));
+function finishTests(client) {
+  // Cleanup so that indexed db created from this test do not interfere next ones
+
+  /**
+   * This method iterates over iframes in a window and clears the indexed db
+   * created by this test.
+   */
+  let clearIDB = (w, i, c) => {
+    if (w[i] && w[i].clear) {
+      w[i].clearIterator = w[i].clear(() => clearIDB(w, i + 1, c));
+      w[i].clearIterator.next();
+    }
+    else if (w[i] && w[i + 1]) {
+      clearIDB(w, i + 1, c);
+    }
+    else {
+      c();
+    }
+  };
+
+  let closeConnection = () => {
+    // Forcing GC/CC to get rid of docshells and windows created by this test.
+    forceCollections();
+    client.close(() => {
+      forceCollections();
+      DebuggerServer.destroy();
+      forceCollections();
+      gWindow = DebuggerClient = DebuggerServer = null;
+      finish();
+    });
+  }
+  gWindow.clearIterator = gWindow.clear(() => {
+    clearIDB(gWindow, 0, closeConnection);
+  });
+  gWindow.clearIterator.next();
+}
+
+function testStores(data) {
+  return Task.spawn(function*() {
+    ok(data.cookies, "Cookies storage actor is present");
+    ok(data.localStorage, "Local Storage storage actor is present");
+    ok(data.sessionStorage, "Session Storage storage actor is present");
+    ok(data.indexedDB, "Indexed DB storage actor is present");
+    yield testCookies(data.cookies);
+    yield testLocalStorage(data.localStorage);
+    yield testSessionStorage(data.sessionStorage);
+    yield testIndexedDB(data.indexedDB);
+  });
 }
 
 function testCookies(cookiesActor) {
@@ -161,7 +376,7 @@ function testCookies(cookiesActor) {
   return testCookiesObjects(0, cookiesActor.hosts, cookiesActor);
 }
 
-function testCookiesObjects(index, hosts, cookiesActor) {
+let testCookiesObjects = Task.async(function*(index, hosts, cookiesActor) {
   let host = Object.keys(hosts)[index];
   let matchItems = data => {
     is(data.total, storeMap.cookies[host].length,
@@ -188,13 +403,12 @@ function testCookiesObjects(index, hosts, cookiesActor) {
   };
 
   ok(!!storeMap.cookies[host], "Host is present in the list : " + host);
+  matchItems(yield cookiesActor.getStoreObjects(host));
   if (index == Object.keys(hosts).length - 1) {
-    return cookiesActor.getStoreObjects(host).then(matchItems);
+    return;
   }
-  return cookiesActor.getStoreObjects(host).then(matchItems).then(() => {
-    return testCookiesObjects(++index, hosts, cookiesActor);
-  });
-}
+  yield testCookiesObjects(++index, hosts, cookiesActor);
+});
 
 function testLocalStorage(localStorageActor) {
   is(Object.keys(localStorageActor.hosts).length, 3,
@@ -202,7 +416,7 @@ function testLocalStorage(localStorageActor) {
   return testLocalStorageObjects(0, localStorageActor.hosts, localStorageActor);
 }
 
-function testLocalStorageObjects(index, hosts, localStorageActor) {
+let testLocalStorageObjects = Task.async(function*(index, hosts, localStorageActor) {
   let host = Object.keys(hosts)[index];
   let matchItems = data => {
     is(data.total, storeMap.localStorage[host].length,
@@ -225,13 +439,12 @@ function testLocalStorageObjects(index, hosts, localStorageActor) {
   };
 
   ok(!!storeMap.localStorage[host], "Host is present in the list : " + host);
+  matchItems(yield localStorageActor.getStoreObjects(host));
   if (index == Object.keys(hosts).length - 1) {
-    return localStorageActor.getStoreObjects(host).then(matchItems);
+    return;
   }
-  return localStorageActor.getStoreObjects(host).then(matchItems).then(() => {
-    return testLocalStorageObjects(++index, hosts, localStorageActor);
-  });
-}
+  yield testLocalStorageObjects(++index, hosts, localStorageActor);
+});
 
 function testSessionStorage(sessionStorageActor) {
   is(Object.keys(sessionStorageActor.hosts).length, 3,
@@ -240,7 +453,7 @@ function testSessionStorage(sessionStorageActor) {
                                    sessionStorageActor);
 }
 
-function testSessionStorageObjects(index, hosts, sessionStorageActor) {
+let testSessionStorageObjects = Task.async(function*(index, hosts, sessionStorageActor) {
   let host = Object.keys(hosts)[index];
   let matchItems = data => {
     is(data.total, storeMap.sessionStorage[host].length,
@@ -263,17 +476,171 @@ function testSessionStorageObjects(index, hosts, sessionStorageActor) {
   };
 
   ok(!!storeMap.sessionStorage[host], "Host is present in the list : " + host);
+  matchItems(yield sessionStorageActor.getStoreObjects(host));
   if (index == Object.keys(hosts).length - 1) {
-    return sessionStorageActor.getStoreObjects(host).then(matchItems);
+    return;
   }
-  return sessionStorageActor.getStoreObjects(host).then(matchItems).then(() => {
-    return testSessionStorageObjects(++index, hosts, sessionStorageActor);
-  });
-}
+  yield testSessionStorageObjects(++index, hosts, sessionStorageActor);
+});
+
+let testIndexedDB = Task.async(function*(indexedDBActor) {
+  is(Object.keys(indexedDBActor.hosts).length, 3,
+     "Correct number of host entries for indexed db");
+
+  for (let host in indexedDBActor.hosts) {
+    for (let item of indexedDBActor.hosts[host]) {
+      let parsedItem = JSON.parse(item);
+      let found = false;
+      for (let toMatch of IDBValues.listStoresResponse[host]) {
+        if (toMatch[0] == parsedItem[0] && toMatch[1] == parsedItem[1]) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        ok (false, item + " should not be present in list stores response");
+      }
+      else {
+        ok (true, item + " found from indexedDB list stores response");
+      }
+    }
+  }
+
+  yield testIndexedDBs(0, indexedDBActor.hosts, indexedDBActor);
+  yield  testObjectStores(0, indexedDBActor.hosts, indexedDBActor);
+  yield  testIDBEntries(0, indexedDBActor.hosts, indexedDBActor);
+});
+
+let testIndexedDBs = Task.async(function*(index, hosts, indexedDBActor) {
+  let host = Object.keys(hosts)[index];
+  let matchItems = data => {
+    is(data.total, IDBValues.dbDetails[host].length,
+       "Number of indexed db in host " + host + " matches");
+    for (let item of data.data) {
+      let found = false;
+      for (let toMatch of IDBValues.dbDetails[host]) {
+        if (item.db == toMatch.db) {
+          found = true;
+          ok(true, "Found indexed db " + item.db + " in response");
+          is(item.origin, toMatch.origin, "The origin matches.");
+          is(item.version, toMatch.version, "The version matches.");
+          is(item.objectStores, toMatch.objectStores,
+             "The numebr of object stores matches.");
+          break;
+        }
+      }
+      if (!found) {
+        ok(false, "indexed db " + item.name + " should not exist in response");
+      }
+    }
+  };
+
+  ok(!!IDBValues.dbDetails[host], "Host is present in the list : " + host);
+  matchItems(yield indexedDBActor.getStoreObjects(host));
+  if (index == Object.keys(hosts).length - 1) {
+    return;
+  }
+  yield testIndexedDBs(++index, hosts, indexedDBActor);
+});
+
+let testObjectStores = Task.async(function*(index, hosts, indexedDBActor) {
+  let host = Object.keys(hosts)[index];
+  let matchItems = (data, db) => {
+    is(data.total, IDBValues.objectStoreDetails[host][db].length,
+       "Number of object stores in host " + host + " matches");
+    for (let item of data.data) {
+      let found = false;
+      for (let toMatch of IDBValues.objectStoreDetails[host][db]) {
+        if (item.objectStore == toMatch.objectStore) {
+          found = true;
+          ok(true, "Found object store " + item.objectStore + " in response");
+          is(item.keyPath, toMatch.keyPath, "The keyPath matches.");
+          is(item.autoIncrement, toMatch.autoIncrement, "The autoIncrement matches.");
+          item.indexes = JSON.parse(item.indexes);
+          is(item.indexes.length, toMatch.indexes.length, "Number of indexes match");
+          for (let index of item.indexes) {
+            let indexFound = false;
+            for (let toMatchIndex of toMatch.indexes) {
+              if (toMatchIndex.name == index.name) {
+                indexFound = true;
+                ok(true, "Found index " + index.name);
+                is(index.keyPath, toMatchIndex.keyPath,
+                   "The keyPath of index matches.");
+                is(index.unique, toMatchIndex.unique, "The unique matches");
+                is(index.multiEntry, toMatchIndex.multiEntry,
+                   "The multiEntry matches");
+                break;
+              }
+            }
+            if (!indexFound) {
+              ok(false, "Index " + index + " should not be present in response");
+            }
+          }
+          break;
+        }
+      }
+      if (!found) {
+        ok(false, "indexed db " + item.name + " should not exist in response");
+      }
+    }
+  };
+
+  ok(!!IDBValues.objectStoreDetails[host], "Host is present in the list : " + host);
+  for (let name of hosts[host]) {
+    let objName = JSON.parse(name).slice(0, 1);
+    matchItems((
+      yield indexedDBActor.getStoreObjects(host, [JSON.stringify(objName)])
+    ), objName[0]);
+  }
+  if (index == Object.keys(hosts).length - 1) {
+    return;
+  }
+  yield testObjectStores(++index, hosts, indexedDBActor);
+});
+
+let testIDBEntries = Task.async(function*(index, hosts, indexedDBActor) {
+  let host = Object.keys(hosts)[index];
+  let matchItems = (data, obj) => {
+    is(data.total, IDBValues.entries[host][obj].length,
+       "Number of items in object store " + obj + " matches");
+    for (let item of data.data) {
+      let found = false;
+      for (let toMatch of IDBValues.entries[host][obj]) {
+        if (item.name == toMatch.name) {
+          found = true;
+          ok(true, "Found indexed db item " + item.name + " in response");
+          let value = JSON.parse(item.value.str);
+          is(Object.keys(value).length, Object.keys(toMatch.value).length,
+             "Number of entries in the value matches");
+          for (let key in value) {
+            is(value[key], toMatch.value[key],
+               "value of " + key + " value key matches");
+          }
+          break;
+        }
+      }
+      if (!found) {
+        ok(false, "indexed db item " + item.name + " should not exist in response");
+      }
+    }
+  };
+
+  ok(!!IDBValues.entries[host], "Host is present in the list : " + host);
+  for (let name of hosts[host]) {
+    let parsed = JSON.parse(name);
+    matchItems((
+      yield indexedDBActor.getStoreObjects(host, [name])
+    ), parsed[0] + "#" + parsed[1]);
+  }
+  if (index == Object.keys(hosts).length - 1) {
+    return;
+  }
+  yield testObjectStores(++index, hosts, indexedDBActor);
+});
 
 function test() {
   waitForExplicitFinish();
-  addTab(MAIN_DOMAIN + "storage-listings.html", function() {
+  addTab(MAIN_DOMAIN + "storage-listings.html", function(doc) {
     try {
       // Sometimes debugger server does not get destroyed correctly by previous
       // tests.
@@ -282,14 +649,40 @@ function test() {
     DebuggerServer.init(function () { return true; });
     DebuggerServer.addBrowserActors();
 
-    let client = new DebuggerClient(DebuggerServer.connectPipe());
-    client.connect(function onConnect() {
-      client.listTabs(function onListTabs(aResponse) {
-        let form = aResponse.tabs[aResponse.selected];
-        let front = StorageFront(client, form);
+    let createConnection = () => {
+      let client = new DebuggerClient(DebuggerServer.connectPipe());
+      client.connect(function onConnect() {
+        client.listTabs(function onListTabs(aResponse) {
+          let form = aResponse.tabs[aResponse.selected];
+          let front = StorageFront(client, form);
 
-        front.listStores().then(data => testStores(data, client));
+          front.listStores().then(data => testStores(data))
+               .then(() => finishTests(client));
+        });
       });
+    };
+
+    /**
+     * This method iterates over iframes in a window and setups the indexed db
+     * required for this test.
+     */
+    let setupIDBInFrames = (w, i, c) => {
+      if (w[i] && w[i].idbGenerator) {
+        w[i].setupIDB = w[i].idbGenerator(() => setupIDBInFrames(w, i + 1, c));
+        w[i].setupIDB.next();
+      }
+      else if (w[i] && w[i + 1]) {
+        setupIDBInFrames(w, i + 1, c);
+      }
+      else {
+        c();
+      }
+    };
+    // Setup the indexed db in main window.
+    gWindow = doc.defaultView.wrappedJSObject;
+    gWindow.setupIDB = gWindow.idbGenerator(() => {
+      setupIDBInFrames(gWindow, 0, createConnection);
     });
-  })
+    gWindow.setupIDB.next();
+  });
 }

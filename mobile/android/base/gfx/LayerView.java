@@ -643,6 +643,21 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         }
     }
 
+    @RobocopTarget
+    public void addDrawListener(DrawListener listener) {
+        mLayerClient.addDrawListener(listener);
+    }
+
+    @RobocopTarget
+    public void removeDrawListener(DrawListener listener) {
+        mLayerClient.removeDrawListener(listener);
+    }
+
+    @RobocopTarget
+    public static interface DrawListener {
+        public void drawFinished();
+    }
+
     @Override
     public void setOverScrollMode(int overscrollMode) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
