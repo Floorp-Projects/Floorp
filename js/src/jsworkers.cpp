@@ -797,7 +797,7 @@ WorkerThread::handleIonWorkload()
 
     ionBuilder = WorkerThreadState().ionWorklist().popCopy();
 
-    TraceLogger *logger = TraceLoggerForThread(thread);
+    TraceLogger *logger = TraceLoggerForCurrentThread();
     AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, ionBuilder->script()));
     AutoTraceLog logCompile(logger, TraceLogger::IonCompilation);
 
