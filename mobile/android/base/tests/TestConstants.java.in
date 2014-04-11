@@ -6,6 +6,13 @@
 
 package org.mozilla.gecko.tests;
 
+import android.app.Activity;
+
 public class TestConstants {
-    public static final String ANDROID_PACKAGE_NAME = "@ANDROID_PACKAGE_NAME@";
+    /**
+     * The Java Class instance that launches the browser.
+     * <p>
+     * This should always agree with {@link AppConstants#BROWSER_INTENT_CLASS_NAME}.
+     */
+    public static final Class<? extends Activity> BROWSER_INTENT_CLASS = @ANDROID_PACKAGE_NAME@.App.class;
 }

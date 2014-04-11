@@ -110,6 +110,13 @@ DOMCameraCapabilities::GetMaxMeteringAreas(JSContext* cx, int32_t* aMaxMeteringA
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* [implicit_jscontext] readonly attribute long maxDetectedFaces; */
+NS_IMETHODIMP
+DOMCameraCapabilities::GetMaxDetectedFaces(JSContext* cx, int32_t* aMaxDetectedFaces)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* [implicit_jscontext] readonly attribute jsval zoomRatios; */
 NS_IMETHODIMP
 DOMCameraCapabilities::GetZoomRatios(JSContext* cx, JS::Value* aZoomRatios)

@@ -5,10 +5,14 @@
 "use strict";
 
 /* General utilities used throughout devtools. */
-const { Ci, Cu } = require("chrome");
 
-let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-let { setTimeout, clearTimeout } = Cu.import("resource://gre/modules/Timer.jsm", {});
+// hasChrome is provided as a global by the loader. It is true if we are running
+// on the main thread, and false if we are running on a worker thread.
+if (hasChrome) {
+  var { Ci, Cu } = require("chrome");
+  var Services = require("Services");
+  var setTimeout = Cu.import("resource://gre/modules/Timer.jsm", {}).setTimeout;
+}
 
 /**
  * Turn the error |aError| into a string, without fail.

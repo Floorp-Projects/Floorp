@@ -46,11 +46,11 @@ enum {
   CAMERA_PARAM_FOCUSDISTANCEOPTIMUM,
   CAMERA_PARAM_FOCUSDISTANCEFAR,
   CAMERA_PARAM_EXPOSURECOMPENSATION,
-  CAMERA_PARAM_PICTURESIZE,
   CAMERA_PARAM_THUMBNAILSIZE,
   CAMERA_PARAM_THUMBNAILQUALITY,
   CAMERA_PARAM_SENSORANGLE,
   CAMERA_PARAM_ISOMODE,
+  CAMERA_PARAM_LUMINANCE,
 
   // supported features
   CAMERA_PARAM_SUPPORTED_PREVIEWSIZES,
@@ -69,6 +69,7 @@ enum {
   CAMERA_PARAM_SUPPORTED_EXPOSURECOMPENSATIONSTEP,
   CAMERA_PARAM_SUPPORTED_ZOOM,
   CAMERA_PARAM_SUPPORTED_ZOOMRATIOS,
+  CAMERA_PARAM_SUPPORTED_MAXDETECTEDFACES,
   CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES,
   CAMERA_PARAM_SUPPORTED_ISOMODES
 };
@@ -102,16 +103,17 @@ public:
   };
 
   struct Position {
-    double latitude;
-    double longitude;
-    double altitude;
-    double timestamp;
+    double    latitude;
+    double    longitude;
+    double    altitude;
+    double    timestamp;
   };
 
   struct StartRecordingOptions {
     uint32_t  rotation;
     uint32_t  maxFileSizeBytes;
     uint32_t  maxVideoLengthMs;
+    bool      autoEnableLowLightTorch;
   };
 
   struct Configuration {
@@ -119,6 +121,25 @@ public:
     Size      mPreviewSize;
     nsString  mRecorderProfile;
   };
+
+  struct Point
+  {
+    int32_t   x;
+    int32_t   y;
+  };
+
+  struct Face {
+    uint32_t  id;
+    uint32_t  score;
+    Region    bound;
+    bool      hasLeftEye;
+    Point     leftEye;
+    bool      hasRightEye;
+    Point     rightEye;
+    bool      hasMouth;
+    Point     mouth;
+  };
+
   static already_AddRefed<ICameraControl> Create(uint32_t aCameraId);
 
   virtual nsresult Start(const Configuration* aInitialConfig = nullptr) = 0;
@@ -136,6 +157,8 @@ public:
   virtual nsresult StartRecording(DeviceStorageFileDescriptor *aFileDescriptor,
                                   const StartRecordingOptions* aOptions = nullptr) = 0;
   virtual nsresult StopRecording() = 0;
+  virtual nsresult StartFaceDetection() = 0;
+  virtual nsresult StopFaceDetection() = 0;
 
   virtual nsresult Set(uint32_t aKey, const nsAString& aValue) = 0;
   virtual nsresult Get(uint32_t aKey, nsAString& aValue) = 0;
