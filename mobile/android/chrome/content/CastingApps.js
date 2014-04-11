@@ -124,7 +124,7 @@ var CastingApps = {
       // Use the file extension to guess the mime type
       let sourceURI = this.makeURI(sourceURL, null, this.makeURI(aElement.baseURI));
       if (allowableExtension(sourceURI)) {
-        return { video: aElement, source: sourceURI.spec, poster: posterURL };
+        return { element: aElement, source: sourceURI.spec, poster: posterURL };
       }
     }
 
@@ -137,7 +137,7 @@ var CastingApps = {
       // Using the type attribute is our ideal way to guess the mime type. Otherwise,
       // fallback to using the file extension to guess the mime type
       if (sourceNode.type == "video/mp4" || allowableExtension(sourceURI)) {
-        return { video: aElement, source: sourceURI.spec, poster: posterURL };
+        return { element: aElement, source: sourceURI.spec, poster: posterURL };
       }
     }
 
@@ -201,8 +201,18 @@ var CastingApps = {
       }
 
       app.stop(function() {
-        app.start(function() {
+        app.start(function(aStarted) {
+          if (!aStarted) {
+            dump("CastingApps: Unable to start app");
+            return;
+          }
+
           app.remoteMedia(function(aRemoteMedia) {
+            if (!aRemoteMedia) {
+              dump("CastingApps: Failed to create remotemedia");
+              return;
+            }
+
             this.session = {
               service: aService,
               app: app,
