@@ -4763,6 +4763,20 @@ JS_ExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptArg)
 }
 
 JS_PUBLIC_API(bool)
+JS::CloneAndExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptArg)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+    RootedScript script(cx, scriptArg);
+    if (script->compartment() != cx->compartment()) {
+        script = CloneScript(cx, NullPtr(), NullPtr(), script);
+        if (!script)
+            return false;
+    }
+    return ExecuteScript(cx, obj, script, nullptr);
+}
+
+JS_PUBLIC_API(bool)
 JS_ExecuteScriptVersion(JSContext *cx, HandleObject obj, HandleScript script,
                         MutableHandleValue rval, JSVersion version)
 {
