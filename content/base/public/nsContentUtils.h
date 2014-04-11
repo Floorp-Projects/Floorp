@@ -1648,9 +1648,10 @@ public:
   MOZ_WARN_UNUSED_RESULT
   static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
                              nsISupports *native, const nsIID* aIID,
-                             JS::MutableHandle<JS::Value> vp)
+                             JS::MutableHandle<JS::Value> vp,
+                             bool aAllowWrapping = true)
   {
-    return WrapNative(cx, scope, native, nullptr, aIID, vp, true);
+    return WrapNative(cx, scope, native, nullptr, aIID, vp, aAllowWrapping);
   }
 
   // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
