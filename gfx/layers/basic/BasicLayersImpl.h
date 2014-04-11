@@ -93,6 +93,23 @@ PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer);
 void
 FillRectWithMask(gfx::DrawTarget* aDT,
                  const gfx::Rect& aRect,
+                 const gfx::Color& aColor,
+                 const gfx::DrawOptions& aOptions,
+                 gfx::SourceSurface* aMaskSource = nullptr,
+                 const gfx::Matrix* aMaskTransform = nullptr);
+void
+FillRectWithMask(gfx::DrawTarget* aDT,
+                 const gfx::Rect& aRect,
+                 gfx::SourceSurface* aSurface,
+                 gfx::Filter aFilter,
+                 const gfx::DrawOptions& aOptions,
+                 gfx::ExtendMode aExtendMode,
+                 gfx::SourceSurface* aMaskSource = nullptr,
+                 const gfx::Matrix* aMaskTransform = nullptr,
+                 const gfx::Matrix* aSurfaceTransform = nullptr);
+void
+FillRectWithMask(gfx::DrawTarget* aDT,
+                 const gfx::Rect& aRect,
                  gfx::SourceSurface* aSurface,
                  gfx::Filter aFilter,
                  const gfx::DrawOptions& aOptions,
