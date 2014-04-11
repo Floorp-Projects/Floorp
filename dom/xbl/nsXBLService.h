@@ -8,9 +8,7 @@
 #ifndef nsXBLService_h_
 #define nsXBLService_h_
 
-#include "mozilla/LinkedList.h"
 #include "nsString.h"
-#include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "js/Class.h"           // nsXBLJSClass derives from JSClass
 #include "nsTArray.h"
@@ -32,8 +30,7 @@ class EventTarget;
 }
 }
 
-class nsXBLService MOZ_FINAL : public nsIObserver,
-                               public nsSupportsWeakReference
+class nsXBLService MOZ_FINAL : public nsSupportsWeakReference
 {
   NS_DECL_ISUPPORTS
 
@@ -72,8 +69,6 @@ class nsXBLService MOZ_FINAL : public nsIObserver,
   static nsresult AttachGlobalKeyHandler(mozilla::dom::EventTarget* aTarget);
   static nsresult DetachGlobalKeyHandler(mozilla::dom::EventTarget* aTarget);
 
-  NS_DECL_NSIOBSERVER
-
 private:
   nsXBLService();
   virtual ~nsXBLService();
@@ -81,9 +76,6 @@ private:
 protected:
   // This function clears out the bindings on a given content node.
   nsresult FlushStyleBindings(nsIContent* aContent);
-
-  // Release any memory that we can
-  nsresult FlushMemory();
 
   // This method synchronously loads and parses an XBL file.
   nsresult FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
@@ -126,10 +118,6 @@ public:
   typedef nsDataHashtable<nsCStringHashKey, nsXBLJSClass*> ClassTable;
   static ClassTable* gClassTable;           // A table of nsXBLJSClass objects.
 
-  static mozilla::LinkedList<nsXBLJSClass>* gClassLRUList;
-                                             // LRU list of cached classes.
-  static uint32_t gClassLRUListLength;       // Number of classes on LRU list.
-  static uint32_t gClassLRUListQuota;        // Quota on class LRU list.
   static bool     gAllowDataURIs;            // Whether we should allow data
                                              // urls in -moz-binding. Needed for
                                              // testing.
@@ -138,18 +126,16 @@ public:
   static nsXBLJSClass *getClass(const nsCString &key);
 };
 
-class nsXBLJSClass : public mozilla::LinkedListElement<nsXBLJSClass>
-                   , public JSClass
+class nsXBLJSClass : public JSClass
 {
 private:
   nsrefcnt mRefCnt;
   nsCString mKey;
   static uint64_t sIdCount;
-  nsrefcnt Destroy();
 
 public:
   nsXBLJSClass(const nsAFlatCString& aClassName, const nsCString& aKey);
-  ~nsXBLJSClass() { nsMemory::Free((void*) name); }
+  ~nsXBLJSClass();
 
   static uint64_t NewId() { return ++sIdCount; }
 
@@ -157,7 +143,7 @@ public:
   void SetKey(const nsCString& aKey) { mKey = aKey; }
 
   nsrefcnt Hold() { return ++mRefCnt; }
-  nsrefcnt Drop() { return --mRefCnt ? mRefCnt : Destroy(); }
+  nsrefcnt Drop() { nsrefcnt curr = --mRefCnt; if (!curr) delete this; return curr; }
   nsrefcnt AddRef() { return Hold(); }
   nsrefcnt Release() { return Drop(); }
 

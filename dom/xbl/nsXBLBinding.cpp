@@ -94,8 +94,7 @@ uint64_t nsXBLJSClass::sIdCount = 0;
 
 nsXBLJSClass::nsXBLJSClass(const nsAFlatCString& aClassName,
                            const nsCString& aKey)
-  : LinkedListElement<nsXBLJSClass>()
-  , mRefCnt(0)
+  : mRefCnt(0)
   , mKey(aKey)
 {
   memset(static_cast<JSClass*>(this), 0, sizeof(JSClass));
@@ -120,27 +119,13 @@ nsXBLJSClass::IsXBLJSClass(const JSClass* aClass)
   return aClass->finalize == XBLFinalize;
 }
 
-nsrefcnt
-nsXBLJSClass::Destroy()
+nsXBLJSClass::~nsXBLJSClass()
 {
-  NS_ASSERTION(!isInList(),
-               "referenced nsXBLJSClass is on LRU list already!?");
-
   if (nsXBLService::gClassTable) {
     nsXBLService::gClassTable->Remove(mKey);
     mKey.Truncate();
   }
-
-  if (nsXBLService::gClassLRUListLength >= nsXBLService::gClassLRUListQuota) {
-    // Over LRU list quota, just unhash and delete this class.
-    delete this;
-  } else {
-    // Put this most-recently-used class on end of the LRU-sorted freelist.
-    nsXBLService::gClassLRUList->insertBack(this);
-    nsXBLService::gClassLRUListLength++;
-  }
-
-  return 0;
+  nsMemory::Free((void*) name);
 }
 
 nsXBLJSClass*
@@ -1005,29 +990,9 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
     if (!c) {
       c = nsXBLService::getClass(xblKey);
     }
-    if (c) {
-      // If c is on the LRU list, remove it now!
-      if (c->isInList()) {
-        c->remove();
-        nsXBLService::gClassLRUListLength--;
-      }
-    } else {
-      if (nsXBLService::gClassLRUList->isEmpty()) {
-        // We need to create a struct for this class.
-        c = new nsXBLJSClass(className, xblKey);
-      } else {
-        // Pull the least recently used class struct off the list.
-        c = nsXBLService::gClassLRUList->popFirst();
-        nsXBLService::gClassLRUListLength--;
-
-        // Remove any mapping from the old name to the class struct.
-        nsXBLService::gClassTable->Remove(c->Key());
-
-        // Change the class name and we're done.
-        nsMemory::Free((void*) c->name);
-        c->name = ToNewCString(className);
-        c->SetKey(xblKey);
-      }
+    if (!c) {
+      // We need to create a struct for this class.
+      c = new nsXBLJSClass(className, xblKey);
 
       // Add c to our table.
       nsXBLService::gClassTable->Put(xblKey, c);

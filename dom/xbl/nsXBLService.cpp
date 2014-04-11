@@ -370,47 +370,26 @@ bool nsXBLService::gAllowDataURIs = false;
 
 nsXBLService::ClassTable* nsXBLService::gClassTable = nullptr;
 
-LinkedList<nsXBLJSClass>* nsXBLService::gClassLRUList = nullptr;
-uint32_t nsXBLService::gClassLRUListLength = 0;
-uint32_t nsXBLService::gClassLRUListQuota = 64;
-
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS2(nsXBLService, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS1(nsXBLService, nsISupportsWeakReference)
 
 void
 nsXBLService::Init()
 {
   gInstance = new nsXBLService();
   NS_ADDREF(gInstance);
-
-  // Register the first (and only) nsXBLService as a memory pressure observer
-  // so it can flush the LRU list in low-memory situations.
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os)
-    os->AddObserver(gInstance, "memory-pressure", true);
 }
 
 // Constructors/Destructors
 nsXBLService::nsXBLService(void)
 {
   gClassTable = new ClassTable();
-  gClassLRUList = new LinkedList<nsXBLJSClass>();
 
   Preferences::AddBoolVarCache(&gAllowDataURIs, "layout.debug.enable_data_xbl");
 }
 
 nsXBLService::~nsXBLService(void)
 {
-  // Walk the LRU list removing and deleting the nsXBLJSClasses.
-  FlushMemory();
-
-  // Any straggling nsXBLJSClass instances held by unfinalized JS objects
-  // created for bindings will be deleted when those objects are finalized
-  // (and not put on gClassLRUList, because length >= quota).
-  gClassLRUListLength = gClassLRUListQuota = 0;
-  delete gClassLRUList;
-  gClassLRUList = nullptr;
-
   // At this point, the only hash table entries should be for referenced
   // XBL class structs held by unfinalized JS binding objects.
   delete gClassTable;
@@ -648,26 +627,6 @@ nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget)
 
   contentNode->DeleteProperty(nsGkAtoms::listener);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXBLService::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aSomeData)
-{
-  if (nsCRT::strcmp(aTopic, "memory-pressure") == 0)
-    FlushMemory();
-
-  return NS_OK;
-}
-
-nsresult
-nsXBLService::FlushMemory()
-{
-  while (!gClassLRUList->isEmpty()) {
-    nsXBLJSClass* c = gClassLRUList->popFirst();
-    delete c;
-    gClassLRUListLength--;
-  }
   return NS_OK;
 }
 
