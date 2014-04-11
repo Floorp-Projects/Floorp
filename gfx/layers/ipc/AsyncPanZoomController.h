@@ -817,6 +817,23 @@ private:
   nsRefPtr<AsyncPanZoomController> mParent;
 
 
+  /* The functions and members in this section are used in building the
+   * scroll handoff chain, so that we can have seamless scrolling continue
+   * across APZC instances.
+   */
+public:
+  void SetScrollHandoffParentId(FrameMetrics::ViewID aScrollParentId) {
+    mScrollParentId = aScrollParentId;
+  }
+
+  FrameMetrics::ViewID GetScrollHandoffParentId() const {
+    return mScrollParentId;
+  }
+
+private:
+  FrameMetrics::ViewID mScrollParentId;
+
+
   /* The functions and members in this section are used to maintain the
    * area that this APZC instance is responsible for. This is used when
    * hit-testing to see which APZC instance should handle touch events.
