@@ -59,11 +59,9 @@ private:
   SystemWorkerManager();
   ~SystemWorkerManager();
 
-  nsresult InitNetd(JSContext *cx);
   nsresult InitWifi(JSContext *cx);
   nsresult InitKeyStore(JSContext *cx);
 
-  nsCOMPtr<nsIWorkerHolder> mNetdWorker;
   nsCOMPtr<nsIWorkerHolder> mWifiWorker;
 
   nsRefPtr<ipc::KeyStore> mKeyStore;
