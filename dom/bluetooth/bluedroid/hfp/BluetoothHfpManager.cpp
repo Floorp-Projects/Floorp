@@ -811,18 +811,12 @@ BluetoothHfpManager::NotifyConnectionStateChanged(const nsAString& aType)
 void
 BluetoothHfpManager::NotifyDialer(const nsAString& aCommand)
 {
-  BluetoothValue v;
+  NS_NAMED_LITERAL_STRING(type, "bluetooth-dialer-command");
   InfallibleTArray<BluetoothNamedValue> parameters;
 
-  NS_NAMED_LITERAL_STRING(type, "bluetooth-dialer-command");
-  NS_NAMED_LITERAL_STRING(name, "command");
+  BT_APPEND_NAMED_VALUE(parameters, "command", nsString(aCommand));
 
-  v = nsString(aCommand);
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  if (!BroadcastSystemMessage(type, parameters)) {
-    BT_WARNING("Failed to broadcast system message to dialer");
-  }
+  BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(type, parameters);
 }
 
 void
