@@ -46,6 +46,7 @@ DOMCI_CLASS(CSSMozDocumentRule)
 DOMCI_CLASS(CSSSupportsRule)
 
 // other SVG classes
+DOMCI_CLASS(SVGLength)
 DOMCI_CLASS(SVGNumber)
 
 // WindowUtils

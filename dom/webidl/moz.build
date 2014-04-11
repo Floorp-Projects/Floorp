@@ -365,7 +365,6 @@ WEBIDL_FILES = [
     'SVGGradientElement.webidl',
     'SVGGraphicsElement.webidl',
     'SVGImageElement.webidl',
-    'SVGLength.webidl',
     'SVGLengthList.webidl',
     'SVGLinearGradientElement.webidl',
     'SVGLineElement.webidl',
