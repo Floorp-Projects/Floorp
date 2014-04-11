@@ -18,12 +18,6 @@ const beforeReload = {
   sessionStorage: ["http://test1.example.org", "http://sectest1.example.org"],
 };
 
-// Always log packets when running tests.
-Services.prefs.setBoolPref("devtools.debugger.log", true);
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.debugger.log");
-});
-
 function finishTests(client) {
   // Forcing GC/CC to get rid of docshells and windows created by this test.
   forceCollections();

@@ -94,8 +94,6 @@ SystemWorkerManager::Init()
 
   InitAutoMounter();
   InitializeTimeZoneSettingObserver();
-  rv = InitNetd(cx);
-  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIAudioManager> audioManager =
     do_GetService(NS_AUDIOMANAGER_CONTRACTID);
 
@@ -130,8 +128,6 @@ SystemWorkerManager::Shutdown()
 #ifdef MOZ_NFC
   NfcConsumer::Shutdown();
 #endif
-
-  mNetdWorker = nullptr;
 
   nsCOMPtr<nsIWifi> wifi(do_QueryInterface(mWifiWorker));
   if (wifi) {
@@ -184,11 +180,6 @@ SystemWorkerManager::GetInterface(const nsIID &aIID, void **aResult)
                               reinterpret_cast<nsIWifi**>(aResult));
   }
 
-  if (aIID.Equals(NS_GET_IID(nsINetworkService))) {
-    return CallQueryInterface(mNetdWorker,
-                              reinterpret_cast<nsINetworkService**>(aResult));
-  }
-
   NS_WARNING("Got nothing for the requested IID!");
   return NS_ERROR_NO_INTERFACE;
 }
@@ -236,15 +227,6 @@ SystemWorkerManager::RegisterNfcWorker(JS::Handle<JS::Value> aWorker,
 
   return NfcConsumer::Register(wctd);
 #endif // MOZ_NFC
-}
-
-nsresult
-SystemWorkerManager::InitNetd(JSContext *cx)
-{
-  nsCOMPtr<nsIWorkerHolder> worker = do_GetService("@mozilla.org/network/service;1");
-  NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
-  mNetdWorker = worker;
-  return NS_OK;
 }
 
 nsresult

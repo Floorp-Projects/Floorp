@@ -98,6 +98,19 @@ const IGNORED_SOURCE_URLS = ["debugger eval code", "self-hosted"];
 // The maximum length of strings to be displayed by the Web Console.
 const MAX_LONG_STRING_LENGTH = 200000;
 
+// Regular expression that matches the allowed CSS property names when using
+// the `window.console` API.
+const RE_ALLOWED_STYLES = /^(?:-moz-)?(?:background|border|box|clear|color|cursor|display|float|font|line|margin|padding|text|transition|outline|white-space|word|writing|(?:min-|max-)?width|(?:min-|max-)?height)/;
+
+// Regular expressions to search and replace with 'notallowed' in the styles
+// given to the `window.console` API methods.
+const RE_CLEANUP_STYLES = [
+  // url(), -moz-element()
+  /\b(?:url|(?:-moz-)?element)[\s('"]+/gi,
+
+  // various URL protocols
+  /['"(]*(?:chrome|resource|about|app|data|https?|ftp|file):+\/*/gi,
+];
 
 /**
  * The ConsoleOutput object is used to manage output of messages in the Web
@@ -120,6 +133,8 @@ function ConsoleOutput(owner)
 }
 
 ConsoleOutput.prototype = {
+  _dummyElement: null,
+
   /**
    * The output container.
    * @type DOMElement
@@ -325,6 +340,7 @@ ConsoleOutput.prototype = {
    */
   destroy: function()
   {
+    this._dummyElement = null;
     this.owner = null;
   },
 }; // ConsoleOutput.prototype
@@ -1222,13 +1238,109 @@ Messages.ConsoleGeneric = function(packet)
   }
 
   this._repeatID.consoleApiLevel = packet.level;
+  this._repeatID.styles = packet.styles;
+  this._styles = packet.styles || [];
 };
 
 Messages.ConsoleGeneric.prototype = Heritage.extend(Messages.Extended.prototype,
 {
+  _styles: null,
+
   _renderBodyPieceSeparator: function()
   {
     return this.document.createTextNode(" ");
+  },
+
+  render: function()
+  {
+    let lastStyle = null;
+    let result = this.document.createDocumentFragment();
+
+    for (let i = 0; i < this._messagePieces.length; i++) {
+      let separator = i > 0 ? this._renderBodyPieceSeparator() : null;
+      if (separator) {
+        result.appendChild(separator);
+      }
+
+      let piece = this._messagePieces[i];
+      let style = this._styles[i];
+
+      // No long string support.
+      if (style && typeof style == "string" ) {
+        lastStyle = this.cleanupStyle(style);
+      }
+
+      result.appendChild(this._renderBodyPiece(piece, lastStyle));
+    }
+
+    this._message = result;
+    this._messagePieces = null;
+    this._styles = null;
+    return Messages.Simple.prototype.render.call(this);
+  },
+
+  _renderBodyPiece: function(piece, style)
+  {
+    let elem = Messages.Extended.prototype._renderBodyPiece.call(this, piece);
+    let result = elem;
+
+    if (style) {
+      if (elem.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
+        elem.style = style;
+      } else {
+        let span = this.document.createElementNS(XHTML_NS, "span");
+        span.style = style;
+        span.appendChild(elem);
+        result = span;
+      }
+    }
+
+    return result;
+  },
+
+  /**
+   * Given a style attribute value, return a cleaned up version of the string
+   * such that:
+   *
+   * - no external URL is allowed to load. See RE_CLEANUP_STYLES.
+   * - only some of the properties are allowed, based on a whitelist. See
+   *   RE_ALLOWED_STYLES.
+   *
+   * @param string style
+   *        The style string to cleanup.
+   * @return string
+   *         The style value after cleanup.
+   */
+  cleanupStyle: function(style)
+  {
+    for (let r of RE_CLEANUP_STYLES) {
+      style = style.replace(r, "notallowed");
+    }
+
+    let dummy = this.output._dummyElement;
+    if (!dummy) {
+      dummy = this.output._dummyElement =
+        this.document.createElementNS(XHTML_NS, "div");
+    }
+    dummy.style = style;
+
+    let toRemove = [];
+    for (let i = 0; i < dummy.style.length; i++) {
+      let prop = dummy.style[i];
+      if (!RE_ALLOWED_STYLES.test(prop)) {
+        toRemove.push(prop);
+      }
+    }
+
+    for (let prop of toRemove) {
+      dummy.style.removeProperty(prop);
+    }
+
+    style = dummy.style.cssText;
+
+    dummy.style = "";
+
+    return style;
   },
 }); // Messages.ConsoleGeneric.prototype
 

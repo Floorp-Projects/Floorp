@@ -30,6 +30,9 @@ class AtomicRefCountedWithFinalize
 
     void Release() {
       MOZ_ASSERT(mRefCount > 0);
+      // Read mRecycleCallback early so that it does not get set to
+      // deleted memory, if the object is goes away.
+      RecycleCallback recycleCallback = mRecycleCallback;
       int currCount = --mRefCount;
       if (0 == currCount) {
         // Recycle listeners must call ClearRecycleCallback
@@ -41,9 +44,9 @@ class AtomicRefCountedWithFinalize
         T* derived = static_cast<T*>(this);
         derived->Finalize();
         delete derived;
-      } else if (1 == currCount && mRecycleCallback) {
+      } else if (1 == currCount && recycleCallback) {
         T* derived = static_cast<T*>(this);
-        mRecycleCallback(derived, mClosure);
+        recycleCallback(derived, mClosure);
       }
     }
 
