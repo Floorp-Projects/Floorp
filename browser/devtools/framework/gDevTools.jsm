@@ -313,13 +313,18 @@ DevTools.prototype = {
 
   /**
    * Close the toolbox for a given target
+   *
+   * @return promise
+   *         This promise will resolve to false if no toolbox was found
+   *         associated to the target. true, if the toolbox was successfuly
+   *         closed.
    */
   closeToolbox: function DT_closeToolbox(target) {
     let toolbox = this._toolboxes.get(target);
     if (toolbox == null) {
-      return promise.reject(null);
+      return promise.resolve(false);
     }
-    return toolbox.destroy();
+    return toolbox.destroy().then(() => true);
   },
 
   /**
