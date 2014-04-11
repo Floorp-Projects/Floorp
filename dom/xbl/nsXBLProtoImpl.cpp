@@ -62,9 +62,6 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   NS_ENSURE_SUCCESS(rv, rv); // kick out if we were unable to properly intialize our target objects
   MOZ_ASSERT(targetClassObject);
 
-  // Stash a strong reference to the JSClass in the binding.
-  aBinding->SetJSClass(nsXBLJSClass::fromJSClass(JS_GetClass(targetClassObject)));
-
   // If the prototype already existed, we don't need to install anything. return early.
   if (!targetObjectIsNew)
     return NS_OK;
@@ -183,6 +180,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::Rooted<JSObject*> value(cx, &v.toObject());
+  JSAutoCompartment ac2(cx, value);
 
   // All of the above code was just obtaining the bound element's script object and its immediate
   // concrete base class.  We need to alter the object so that our concrete class is interposed

@@ -198,18 +198,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
     checkMayTamper(proto, 'prop', "XBL Proto Prop");
     checkMayTamper(proto, 'primitiveField', "XBL Field Accessor");
 
-    // As above, check that content can do what it wants with the prototype's
-    // property on the global.
-    var protoName, count = 0;
-    for (var k of Object.getOwnPropertyNames(window)) {
-      if (!/testBinding/.exec(k))
-        continue;
-      count++;
-      protoName = k;
-    }
-    is(count, 1, "Should be exactly one prototype object");
-    checkMayTamper(window, protoName, "XBL prototype prop on window");
-
     // Tamper with the derived object. This doesn't affect the XBL scope thanks
     // to Xrays.
     bound.method = function() { return "heh"; };

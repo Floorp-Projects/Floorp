@@ -368,8 +368,6 @@ nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
 // Static member variable initialization
 bool nsXBLService::gAllowDataURIs = false;
 
-nsXBLService::ClassTable* nsXBLService::gClassTable = nullptr;
-
 // Implement our nsISupports methods
 NS_IMPL_ISUPPORTS1(nsXBLService, nsISupportsWeakReference)
 
@@ -383,17 +381,11 @@ nsXBLService::Init()
 // Constructors/Destructors
 nsXBLService::nsXBLService(void)
 {
-  gClassTable = new ClassTable();
-
   Preferences::AddBoolVarCache(&gAllowDataURIs, "layout.debug.enable_data_xbl");
 }
 
 nsXBLService::~nsXBLService(void)
 {
-  // At this point, the only hash table entries should be for referenced
-  // XBL class structs held by unfinalized JS binding objects.
-  delete gClassTable;
-  gClassTable = nullptr;
 }
 
 // static

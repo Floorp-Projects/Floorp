@@ -114,38 +114,16 @@ protected:
 // MEMBER VARIABLES
 public:
   static bool gDisableChromeCache;
-
-  typedef nsDataHashtable<nsCStringHashKey, nsXBLJSClass*> ClassTable;
-  static ClassTable* gClassTable;           // A table of nsXBLJSClass objects.
-
   static bool     gAllowDataURIs;            // Whether we should allow data
                                              // urls in -moz-binding. Needed for
                                              // testing.
-
-  // Look up the class by key in gClassTable.
-  static nsXBLJSClass *getClass(const nsCString &key);
 };
 
 class nsXBLJSClass : public JSClass
 {
-private:
-  nsrefcnt mRefCnt;
-  nsCString mKey;
-  static uint64_t sIdCount;
-
 public:
-  nsXBLJSClass(const nsAFlatCString& aClassName, const nsCString& aKey);
+  nsXBLJSClass(const nsAFlatCString& aClassName);
   ~nsXBLJSClass();
-
-  static uint64_t NewId() { return ++sIdCount; }
-
-  nsCString& Key() { return mKey; }
-  void SetKey(const nsCString& aKey) { mKey = aKey; }
-
-  nsrefcnt Hold() { return ++mRefCnt; }
-  nsrefcnt Drop() { nsrefcnt curr = --mRefCnt; if (!curr) delete this; return curr; }
-  nsrefcnt AddRef() { return Hold(); }
-  nsrefcnt Release() { return Drop(); }
 
   static bool IsXBLJSClass(const JSClass* aClass);
 
@@ -163,7 +141,6 @@ public:
   {
     MOZ_ASSERT(IsXBLJSClass(c));
     nsXBLJSClass* x = const_cast<nsXBLJSClass*>(static_cast<const nsXBLJSClass*>(c));
-    MOZ_ASSERT(nsXBLService::getClass(x->mKey) == x);
     return x;
   }
 };
