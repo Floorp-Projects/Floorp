@@ -133,7 +133,7 @@ function teardown(aMonitor) {
   let deferred = promise.defer();
   let tab = aMonitor.target.tab;
 
-  aMonitor.once("destroyed", deferred.resolve);
+  aMonitor.once("destroyed", () => executeSoon(deferred.resolve));
   removeTab(tab);
 
   return deferred.promise;
