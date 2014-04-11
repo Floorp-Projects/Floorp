@@ -50,7 +50,13 @@ nsMIMEInfoAndroid::GetMimeInfoForMimeType(const nsACString& aMimeType,
   }
 
   nsIHandlerApp* systemDefault = nullptr;
-  bridge->GetHandlersForMimeType(NS_ConvertUTF8toUTF16(aMimeType),
+
+  if (!IsUTF8(aMimeType, true))
+    return false;
+
+  NS_ConvertUTF8toUTF16 mimeType(aMimeType);
+
+  bridge->GetHandlersForMimeType(mimeType,
                                  info->mHandlerApps, &systemDefault);
   
   if (systemDefault)
