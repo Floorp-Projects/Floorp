@@ -2393,24 +2393,6 @@ JS_GetConstructor(JSContext *cx, HandleObject proto)
     return &cval.toObject();
 }
 
-JS_PUBLIC_API(bool)
-JS_GetObjectId(JSContext *cx, HandleObject obj, MutableHandleId idp)
-{
-    AssertHeapIsIdle(cx);
-    assertSameCompartment(cx, obj);
-
-#ifdef JSGC_GENERATIONAL
-    // Ensure that the object is tenured before returning it.
-    if (IsInsideNursery(cx->runtime(), obj)) {
-        MinorGC(cx, JS::gcreason::EVICT_NURSERY);
-        MOZ_ASSERT(!IsInsideNursery(cx->runtime(), obj));
-    }
-#endif
-
-    idp.set(OBJECT_TO_JSID(obj));
-    return true;
-}
-
 namespace {
 
 class AutoCompartmentRooter : private JS::CustomAutoRooter
