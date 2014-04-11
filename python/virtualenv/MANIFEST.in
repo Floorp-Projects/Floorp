@@ -1,7 +1,7 @@
 recursive-include bin *
 recursive-include docs *
 recursive-include scripts *
-recursive-include virtualenv_support *.egg *.tar.gz
+recursive-include virtualenv_support *.whl
 recursive-include virtualenv_embedded *
 recursive-exclude docs/_templates *
 recursive-exclude docs/_build *
