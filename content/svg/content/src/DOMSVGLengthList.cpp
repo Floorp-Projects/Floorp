@@ -172,8 +172,8 @@ DOMSVGLengthList::Clear(ErrorResult& aError)
   }
 }
 
-already_AddRefed<DOMSVGLength>
-DOMSVGLengthList::Initialize(DOMSVGLength& newItem,
+already_AddRefed<nsIDOMSVGLength>
+DOMSVGLengthList::Initialize(nsIDOMSVGLength *newItem,
                              ErrorResult& error)
 {
   if (IsAnimValList()) {
@@ -189,33 +189,33 @@ DOMSVGLengthList::Initialize(DOMSVGLength& newItem,
   // clone of newItem, it would actually insert newItem. To prevent that from
   // happening we have to do the clone here, if necessary.
 
-  nsRefPtr<DOMSVGLength> domItem = &newItem;
+  nsCOMPtr<DOMSVGLength> domItem = do_QueryInterface(newItem);
   if (!domItem) {
     error.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
     return nullptr;
   }
   if (domItem->HasOwner()) {
-    domItem = domItem->Copy();
+    newItem = domItem->Copy();
   }
 
   ErrorResult rv;
   Clear(rv);
   MOZ_ASSERT(!rv.Failed());
-  return InsertItemBefore(*domItem, 0, error);
+  return InsertItemBefore(newItem, 0, error);
 }
 
-already_AddRefed<DOMSVGLength>
+already_AddRefed<nsIDOMSVGLength>
 DOMSVGLengthList::GetItem(uint32_t index, ErrorResult& error)
 {
   bool found;
-  nsRefPtr<DOMSVGLength> item = IndexedGetter(index, found, error);
+  nsRefPtr<nsIDOMSVGLength> item = IndexedGetter(index, found, error);
   if (!found) {
     error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
   }
   return item.forget();
 }
 
-already_AddRefed<DOMSVGLength>
+already_AddRefed<nsIDOMSVGLength>
 DOMSVGLengthList::IndexedGetter(uint32_t index, bool& found, ErrorResult& error)
 {
   if (IsAnimValList()) {
@@ -228,8 +228,8 @@ DOMSVGLengthList::IndexedGetter(uint32_t index, bool& found, ErrorResult& error)
   return nullptr;
 }
 
-already_AddRefed<DOMSVGLength>
-DOMSVGLengthList::InsertItemBefore(DOMSVGLength& newItem,
+already_AddRefed<nsIDOMSVGLength>
+DOMSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem,
                                    uint32_t index,
                                    ErrorResult& error)
 {
@@ -244,7 +244,7 @@ DOMSVGLengthList::InsertItemBefore(DOMSVGLength& newItem,
     return nullptr;
   }
 
-  nsRefPtr<DOMSVGLength> domItem = &newItem;
+  nsCOMPtr<DOMSVGLength> domItem = do_QueryInterface(newItem);
   if (!domItem) {
     error.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
     return nullptr;
@@ -277,8 +277,8 @@ DOMSVGLengthList::InsertItemBefore(DOMSVGLength& newItem,
   return domItem.forget();
 }
 
-already_AddRefed<DOMSVGLength>
-DOMSVGLengthList::ReplaceItem(DOMSVGLength& newItem,
+already_AddRefed<nsIDOMSVGLength>
+DOMSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
                               uint32_t index,
                               ErrorResult& error)
 {
@@ -287,7 +287,7 @@ DOMSVGLengthList::ReplaceItem(DOMSVGLength& newItem,
     return nullptr;
   }
 
-  nsRefPtr<DOMSVGLength> domItem = &newItem;
+  nsCOMPtr<DOMSVGLength> domItem = do_QueryInterface(newItem);
   if (!domItem) {
     error.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
     return nullptr;
@@ -317,7 +317,7 @@ DOMSVGLengthList::ReplaceItem(DOMSVGLength& newItem,
   return domItem.forget();
 }
 
-already_AddRefed<DOMSVGLength>
+already_AddRefed<nsIDOMSVGLength>
 DOMSVGLengthList::RemoveItem(uint32_t index,
                              ErrorResult& error)
 {
@@ -338,7 +338,7 @@ DOMSVGLengthList::RemoveItem(uint32_t index,
   MaybeRemoveItemFromAnimValListAt(index);
 
   // We have to return the removed item, so get it, creating it if necessary:
-  nsCOMPtr<DOMSVGLength> result = GetItemAt(index);
+  nsCOMPtr<nsIDOMSVGLength> result = GetItemAt(index);
 
   // Notify the DOM item of removal *before* modifying the lists so that the
   // DOM item can copy its *old* value:
@@ -352,7 +352,7 @@ DOMSVGLengthList::RemoveItem(uint32_t index,
   return result.forget();
 }
 
-already_AddRefed<DOMSVGLength>
+already_AddRefed<nsIDOMSVGLength>
 DOMSVGLengthList::GetItemAt(uint32_t aIndex)
 {
   MOZ_ASSERT(aIndex < mItems.Length());
@@ -360,7 +360,7 @@ DOMSVGLengthList::GetItemAt(uint32_t aIndex)
   if (!mItems[aIndex]) {
     mItems[aIndex] = new DOMSVGLength(this, AttrEnum(), aIndex, IsAnimValList());
   }
-  nsRefPtr<DOMSVGLength> result = mItems[aIndex];
+  nsRefPtr<nsIDOMSVGLength> result = mItems[aIndex];
   return result.forget();
 }
 
