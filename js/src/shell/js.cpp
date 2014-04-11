@@ -3665,7 +3665,7 @@ OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    if (!JS::CompileOffThread(cx, cx->global(), options, chars, length,
+    if (!JS::CompileOffThread(cx, options, chars, length,
                               OffThreadCompileScriptCallback, nullptr))
     {
         offThreadState.abandon(cx);

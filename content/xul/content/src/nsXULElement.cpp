@@ -2662,7 +2662,7 @@ nsXULPrototypeScript::Compile(const char16_t* aText,
     }
 
     if (aOffThreadReceiver && JS::CanCompileOffThread(cx, options, aTextLength)) {
-        if (!JS::CompileOffThread(cx, scope, options,
+        if (!JS::CompileOffThread(cx, options,
                                   static_cast<const jschar*>(aText), aTextLength,
                                   OffThreadScriptReceiverCallback,
                                   static_cast<void*>(aOffThreadReceiver))) {

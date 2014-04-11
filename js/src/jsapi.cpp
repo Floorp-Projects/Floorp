@@ -4519,12 +4519,12 @@ JS::CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options, si
 }
 
 JS_PUBLIC_API(bool)
-JS::CompileOffThread(JSContext *cx, Handle<JSObject*> obj, const ReadOnlyCompileOptions &options,
+JS::CompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options,
                      const jschar *chars, size_t length,
                      OffThreadCompileCallback callback, void *callbackData)
 {
     JS_ASSERT(CanCompileOffThread(cx, options, length));
-    return StartOffThreadParseScript(cx, options, chars, length, obj, callback, callbackData);
+    return StartOffThreadParseScript(cx, options, chars, length, callback, callbackData);
 }
 
 JS_PUBLIC_API(JSScript *)
