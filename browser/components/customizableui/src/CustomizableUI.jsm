@@ -245,6 +245,18 @@ let CustomizableUIInternal = {
     }, true);
   },
 
+  get _builtinToolbars() {
+    return new Set([
+      CustomizableUI.AREA_NAVBAR,
+      CustomizableUI.AREA_BOOKMARKS,
+      CustomizableUI.AREA_TABSTRIP,
+      CustomizableUI.AREA_ADDONBAR,
+#ifndef XP_MACOSX
+      CustomizableUI.AREA_MENUBAR,
+#endif
+    ]);
+  },
+
   _defineBuiltInWidgets: function() {
     //XXXunf Need to figure out how to auto-add new builtin widgets in new
     //       app versions to already customized areas.
@@ -3294,7 +3306,15 @@ this.CustomizableUI = {
       node = node.parentNode;
     }
     return place;
-  }
+  },
+
+  /**
+   * Check if a toolbar is builtin or not.
+   * @param aToolbarId the ID of the toolbar you want to check
+   */
+  isBuiltinToolbar: function(aToolbarId) {
+    return CustomizableUIInternal._builtinToolbars.has(aToolbarId);
+  },
 };
 Object.freeze(this.CustomizableUI);
 Object.freeze(this.CustomizableUI.windows);
