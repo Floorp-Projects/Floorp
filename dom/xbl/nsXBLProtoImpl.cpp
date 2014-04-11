@@ -149,14 +149,14 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
 {
   nsresult rv = NS_OK;
 
-  if (!mClassObject) {
+  if (!mPrecompiledMemberHolder) {
     rv = CompilePrototypeMembers(aBinding); // This is the first time we've ever installed this binding on an element.
                                  // We need to go ahead and compile all methods and properties on a class
                                  // in our prototype binding.
     if (NS_FAILED(rv))
       return rv;
 
-    MOZ_ASSERT(mClassObject);
+    MOZ_ASSERT(mPrecompiledMemberHolder);
   }
 
   nsIDocument *ownerDoc = aBoundElement->OwnerDoc();
@@ -209,23 +209,17 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   NS_ENSURE_TRUE(compilationGlobal, NS_ERROR_UNEXPECTED);
   JSAutoCompartment ac(cx, compilationGlobal);
 
-  JS::Rooted<JSObject*> classObject(cx);
-  bool classObjectIsNew = false;
-  nsresult rv = aBinding->InitClass(mClassName, cx, compilationGlobal,
-                                    &classObject, &classObjectIsNew);
-  if (NS_FAILED(rv))
-    return rv;
-
-  MOZ_ASSERT(classObjectIsNew);
-  MOZ_ASSERT(classObject);
-  mClassObject = classObject;
+  mPrecompiledMemberHolder = JS_NewObjectWithGivenProto(cx, nullptr, JS::NullPtr(), compilationGlobal);
+  if (!mPrecompiledMemberHolder)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Now that we have a class object installed, we walk our member list and compile each of our
   // properties and methods in turn.
+  JS::Rooted<JSObject*> rootedHolder(cx, mPrecompiledMemberHolder);
   for (nsXBLProtoImplMember* curr = mMembers;
        curr;
        curr = curr->GetNext()) {
-    nsresult rv = curr->CompileMember(mClassName, classObject);
+    nsresult rv = curr->CompileMember(mClassName, rootedHolder);
     if (NS_FAILED(rv)) {
       DestroyMembers();
       return rv;
@@ -255,7 +249,7 @@ nsXBLProtoImpl::Trace(const TraceCallbacks& aCallbacks, void *aClosure)
   // If we don't have a class object then we either didn't compile members
   // or we only have fields, in both cases there are no cycles through our
   // members.
-  if (!mClassObject) {
+  if (!mPrecompiledMemberHolder) {
     return;
   }
 
@@ -268,7 +262,7 @@ nsXBLProtoImpl::Trace(const TraceCallbacks& aCallbacks, void *aClosure)
 void
 nsXBLProtoImpl::UnlinkJSObjects()
 {
-  if (mClassObject) {
+  if (mPrecompiledMemberHolder) {
     DestroyMembers();
   }
 }
@@ -322,7 +316,7 @@ nsXBLProtoImpl::UndefineFields(JSContext *cx, JS::Handle<JSObject*> obj) const
 void
 nsXBLProtoImpl::DestroyMembers()
 {
-  NS_ASSERTION(mClassObject, "This should never be called when there is no class object");
+  MOZ_ASSERT(mPrecompiledMemberHolder);
 
   delete mMembers;
   mMembers = nullptr;
@@ -338,23 +332,16 @@ nsXBLProtoImpl::Read(nsIObjectInputStream* aStream,
   AutoJSContext cx;
   // Set up a class object first so that deserialization is possible
   JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
-
-  JS::Rooted<JSObject*> classObject(cx);
-  bool classObjectIsNew = false;
-  nsresult rv = aBinding->InitClass(mClassName, cx, global, &classObject,
-                                    &classObjectIsNew);
-  NS_ENSURE_SUCCESS(rv, rv);
-  MOZ_ASSERT(classObject);
-  MOZ_ASSERT(classObjectIsNew);
-
-  mClassObject = classObject;
+  mPrecompiledMemberHolder = JS_NewObjectWithGivenProto(cx, nullptr, JS::NullPtr(), global);
+  if (!mPrecompiledMemberHolder)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsXBLProtoImplField* previousField = nullptr;
   nsXBLProtoImplMember* previousMember = nullptr;
 
   do {
     XBLBindingSerializeDetails type;
-    rv = aStream->Read8(&type);
+    nsresult rv = aStream->Read8(&type);
     NS_ENSURE_SUCCESS(rv, rv);
     if (type == XBLBinding_Serialize_NoMoreItems)
       break;
@@ -464,7 +451,7 @@ nsXBLProtoImpl::Write(nsIObjectOutputStream* aStream,
 {
   nsresult rv;
 
-  if (!mClassObject) {
+  if (!mPrecompiledMemberHolder) {
     rv = CompilePrototypeMembers(aBinding);
     NS_ENSURE_SUCCESS(rv, rv);
   }
