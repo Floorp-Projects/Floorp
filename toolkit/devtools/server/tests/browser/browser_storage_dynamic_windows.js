@@ -8,7 +8,7 @@ let {DebuggerServer, DebuggerClient, Promise} = tempScope;
 tempScope = null;
 
 const {StorageFront} = require("devtools/server/actors/storage");
-let gFront;
+let gFront, gWindow;
 
 const beforeReload = {
   cookies: {
@@ -22,25 +22,52 @@ const beforeReload = {
   sessionStorage: {
     "http://test1.example.org": ["ss1"],
     "http://sectest1.example.org": ["iframe-u-ss1", "iframe-u-ss2"]
+  },
+  indexedDB: {
+    "http://test1.example.org": [
+      JSON.stringify(["idb1", "obj1"]),
+      JSON.stringify(["idb1", "obj2"]),
+      JSON.stringify(["idb2", "obj3"]),
+    ],
+    "http://sectest1.example.org": []
   }
 };
 
-// Always log packets when running tests.
-Services.prefs.setBoolPref("devtools.debugger.log", true);
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.debugger.log");
-});
-
 function finishTests(client) {
-  // Forcing GC/CC to get rid of docshells and windows created by this test.
-  forceCollections();
-  client.close(() => {
+  // Cleanup so that indexed db created from this test do not interfere next ones
+
+  /**
+   * This method iterates over iframes in a window and clears the indexed db
+   * created by this test.
+   */
+  let clearIDB = (w, i, c) => {
+    if (w[i] && w[i].clear) {
+      w[i].clearIterator = w[i].clear(() => clearIDB(w, i + 1, c));
+      w[i].clearIterator.next();
+    }
+    else if (w[i] && w[i + 1]) {
+      clearIDB(w, i + 1, c);
+    }
+    else {
+      c();
+    }
+  };
+
+  let closeConnection = () => {
+    // Forcing GC/CC to get rid of docshells and windows created by this test.
     forceCollections();
-    DebuggerServer.destroy();
-    forceCollections();
-    DebuggerClient = DebuggerServer = gFront = null;
-    finish();
+    client.close(() => {
+      forceCollections();
+      DebuggerServer.destroy();
+      forceCollections();
+      gFront = gWindow = DebuggerClient = DebuggerServer = null;
+      finish();
+    });
+  }
+  gWindow.clearIterator = gWindow.clear(() => {
+    clearIDB(gWindow, 0, closeConnection);
   });
+  gWindow.clearIterator.next();
 }
 
 function testStores(data, client) {
@@ -156,6 +183,11 @@ function testAddIframe() {
     },
     cookies: {
       "sectest1.example.org": ["sc1"]
+    },
+    indexedDB: {
+      // empty because indexed db creation happens after the page load, so at
+      // the time of window-ready, there was no indexed db present.
+      "https://sectest1.example.org": []
     }
   };
 
@@ -173,6 +205,9 @@ function testAddIframe() {
     ok(!data.changed || !data.changed.sessionStorage ||
        !data.changed.sessionStorage["https://sectest1.example.org"],
        "Nothing got changed for session storage");
+    ok(!data.changed || !data.changed.indexedDB ||
+       !data.changed.indexedDB["https://sectest1.example.org"],
+       "Nothing got changed for indexed db");
 
     ok(!data.deleted || !data.deleted.cookies ||
        !data.deleted.cookies["https://sectest1.example.org"],
@@ -183,6 +218,9 @@ function testAddIframe() {
     ok(!data.deleted || !data.deleted.sessionStorage ||
        !data.deleted.sessionStorage["https://sectest1.example.org"],
        "Nothing got deleted for session storage");
+    ok(!data.deleted || !data.deleted.indexedDB ||
+       !data.deleted.indexedDB["https://sectest1.example.org"],
+       "Nothing got deleted for indexed db");
 
     if (!Object.keys(shouldBeEmpty).length) {
       info("Everything to be received is received.");
@@ -268,7 +306,7 @@ function testRemoveIframe() {
 
 function test() {
   waitForExplicitFinish();
-  addTab(MAIN_DOMAIN + "storage-dynamic-windows.html", function() {
+  addTab(MAIN_DOMAIN + "storage-dynamic-windows.html", function(doc) {
     try {
       // Sometimes debugger server does not get destroyed correctly by previous
       // tests.
@@ -277,14 +315,39 @@ function test() {
     DebuggerServer.init(function () { return true; });
     DebuggerServer.addBrowserActors();
 
-    let client = new DebuggerClient(DebuggerServer.connectPipe());
-    client.connect(function onConnect() {
-      client.listTabs(function onListTabs(aResponse) {
-        let form = aResponse.tabs[aResponse.selected];
-        gFront = StorageFront(client, form);
+    let createConnection = () => {
+      let client = new DebuggerClient(DebuggerServer.connectPipe());
+      client.connect(function onConnect() {
+        client.listTabs(function onListTabs(aResponse) {
+          let form = aResponse.tabs[aResponse.selected];
+          gFront = StorageFront(client, form);
 
-        gFront.listStores().then(data => testStores(data, client));
+          gFront.listStores().then(data => testStores(data, client));
+        });
       });
+    };
+
+    /**
+     * This method iterates over iframes in a window and setups the indexed db
+     * required for this test.
+     */
+    let setupIDBInFrames = (w, i, c) => {
+      if (w[i] && w[i].idbGenerator) {
+        w[i].setupIDB = w[i].idbGenerator(() => setupIDBInFrames(w, i + 1, c));
+        w[i].setupIDB.next();
+      }
+      else if (w[i] && w[i + 1]) {
+        setupIDBInFrames(w, i + 1, c);
+      }
+      else {
+        c();
+      }
+    };
+    // Setup the indexed db in main window.
+    gWindow = doc.defaultView.wrappedJSObject;
+    gWindow.setupIDB = gWindow.idbGenerator(() => {
+      setupIDBInFrames(gWindow, 0, createConnection);
     });
-  })
+    gWindow.setupIDB.next();
+  });
 }
