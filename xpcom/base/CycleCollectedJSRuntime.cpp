@@ -117,10 +117,13 @@ AddToCCKind(JSGCTraceKind kind)
   return kind == JSTRACE_OBJECT || kind == JSTRACE_SCRIPT;
 }
 
+static void
+TraceWeakMappingChild(JSTracer* trc, void** thingp, JSGCTraceKind kind);
+
 struct NoteWeakMapChildrenTracer : public JSTracer
 {
-  NoteWeakMapChildrenTracer(nsCycleCollectionNoteRootCallback& cb)
-  : mCb(cb)
+  NoteWeakMapChildrenTracer(JSRuntime *rt, nsCycleCollectionNoteRootCallback& cb)
+  : JSTracer(rt, TraceWeakMappingChild), mCb(cb)
   {
   }
   nsCycleCollectionNoteRootCallback& mCb;
@@ -158,9 +161,8 @@ struct NoteWeakMapsTracer : public js::WeakMapTracer
 {
   NoteWeakMapsTracer(JSRuntime* rt, js::WeakMapTraceCallback cb,
                      nsCycleCollectionNoteRootCallback& cccb)
-  : js::WeakMapTracer(rt, cb), mCb(cccb), mChildTracer(cccb)
+  : js::WeakMapTracer(rt, cb), mCb(cccb), mChildTracer(rt, cccb)
   {
-    JS_TracerInit(&mChildTracer, rt, TraceWeakMappingChild);
   }
   nsCycleCollectionNoteRootCallback& mCb;
   NoteWeakMapChildrenTracer mChildTracer;
@@ -359,9 +361,13 @@ JSZoneParticipant::Traverse(void* p, nsCycleCollectionTraversalCallback& cb)
   return NS_OK;
 }
 
+static void
+NoteJSChildTracerShim(JSTracer* aTrc, void** aThingp, JSGCTraceKind aTraceKind);
+
 struct TraversalTracer : public JSTracer
 {
-  TraversalTracer(nsCycleCollectionTraversalCallback& aCb) : mCb(aCb)
+  TraversalTracer(JSRuntime *rt, nsCycleCollectionTraversalCallback& aCb)
+    : JSTracer(rt, NoteJSChildTracerShim, DoNotTraceWeakMaps), mCb(aCb)
   {
   }
   nsCycleCollectionTraversalCallback& mCb;
@@ -385,21 +391,21 @@ NoteJSChild(JSTracer* aTrc, void* aThing, JSGCTraceKind aTraceKind)
    * shape parent pointers. The special JSTRACE_SHAPE case below handles
    * parent pointers iteratively, rather than recursively, to avoid overflow.
    */
-if (AddToCCKind(aTraceKind)) {
+  if (AddToCCKind(aTraceKind)) {
     if (MOZ_UNLIKELY(tracer->mCb.WantDebugInfo())) {
-      // based on DumpNotify in jsapi.c
-      if (tracer->debugPrinter) {
+      // based on DumpNotify in jsapi.cpp
+      if (tracer->debugPrinter()) {
         char buffer[200];
-        tracer->debugPrinter(aTrc, buffer, sizeof(buffer));
+        tracer->debugPrinter()(aTrc, buffer, sizeof(buffer));
         tracer->mCb.NoteNextEdgeName(buffer);
-      } else if (tracer->debugPrintIndex != (size_t)-1) {
+      } else if (tracer->debugPrintIndex() != (size_t)-1) {
         char buffer[200];
         JS_snprintf(buffer, sizeof(buffer), "%s[%lu]",
-                    static_cast<const char *>(tracer->debugPrintArg),
-                    tracer->debugPrintIndex);
+                    static_cast<const char *>(tracer->debugPrintArg()),
+                    tracer->debugPrintIndex());
         tracer->mCb.NoteNextEdgeName(buffer);
       } else {
-        tracer->mCb.NoteNextEdgeName(static_cast<const char*>(tracer->debugPrintArg));
+        tracer->mCb.NoteNextEdgeName(static_cast<const char*>(tracer->debugPrintArg()));
       }
     }
     tracer->mCb.NoteJSChild(aThing);
@@ -576,9 +582,7 @@ CycleCollectedJSRuntime::NoteGCThingJSChildren(void* aThing,
                                                nsCycleCollectionTraversalCallback& aCb) const
 {
   MOZ_ASSERT(mJSRuntime);
-  TraversalTracer trc(aCb);
-  JS_TracerInit(&trc, mJSRuntime, NoteJSChildTracerShim);
-  trc.eagerlyTraceWeakMaps = DoNotTraceWeakMaps;
+  TraversalTracer trc(mJSRuntime, aCb);
   JS_TraceChildren(&trc, aThing, aTraceKind);
 }
 
@@ -672,9 +676,7 @@ CycleCollectedJSRuntime::TraverseZone(JS::Zone* aZone,
    * iterate over. Edges between compartments in the same zone will add
    * unnecessary loop edges to the graph (bug 842137).
    */
-  TraversalTracer trc(aCb);
-  JS_TracerInit(&trc, mJSRuntime, NoteJSChildTracerShim);
-  trc.eagerlyTraceWeakMaps = DoNotTraceWeakMaps;
+  TraversalTracer trc(mJSRuntime, aCb);
   js::VisitGrayWrapperTargets(aZone, NoteJSChildGrayWrapperShim, &trc);
 
   /*

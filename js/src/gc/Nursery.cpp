@@ -299,7 +299,7 @@ class MinorCollectionTracer : public JSTracer
     }
 
     MinorCollectionTracer(JSRuntime *rt, Nursery *nursery)
-      : JSTracer(),
+      : JSTracer(rt, Nursery::MinorGCCallback, TraceWeakMapKeysValues),
         nursery(nursery),
         session(rt, MinorCollecting),
         tenuredSize(0),
@@ -308,8 +308,6 @@ class MinorCollectionTracer : public JSTracer
         savedRuntimeNeedBarrier(rt->needsBarrier()),
         disableStrictProxyChecking(rt)
     {
-        JS_TracerInit(this, rt, Nursery::MinorGCCallback);
-        eagerlyTraceWeakMaps = TraceWeakMapKeysValues;
         rt->gcNumber++;
 
         /*
@@ -337,8 +335,8 @@ class MinorCollectionTracer : public JSTracer
     }
 
     ~MinorCollectionTracer() {
-        runtime->setNeedsBarrier(savedRuntimeNeedBarrier);
-        if (runtime->gcIncrementalState != NO_INCREMENTAL)
+        runtime()->setNeedsBarrier(savedRuntimeNeedBarrier);
+        if (runtime()->gcIncrementalState != NO_INCREMENTAL)
             ArrayBufferObject::restoreArrayBufferLists(liveArrayBuffers);
     }
 };
@@ -536,7 +534,7 @@ void *
 js::Nursery::moveToTenured(MinorCollectionTracer *trc, JSObject *src)
 {
     Zone *zone = src->zone();
-    AllocKind dstKind = GetObjectAllocKindForCopy(trc->runtime, src);
+    AllocKind dstKind = GetObjectAllocKindForCopy(trc->runtime(), src);
     JSObject *dst = static_cast<JSObject *>(allocateFromTenured(zone, dstKind));
     if (!dst)
         CrashAtUnhandlableOOM("Failed to allocate object while tenuring.");

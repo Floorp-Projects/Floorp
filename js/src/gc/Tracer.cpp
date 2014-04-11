@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "js/Tracer.h"
+#include "gc/Tracer.h"
 
 #include "jsapi.h"
 #include "jsfun.h"
@@ -91,16 +91,10 @@ JS_CallTenuredObjectTracer(JSTracer *trc, JS::TenuredHeap<JSObject *> *objp, con
     if (!obj)
         return;
 
-    JS_SET_TRACING_LOCATION(trc, (void*)objp);
+    trc->setTracingLocation((void*)objp);
     MarkObjectUnbarriered(trc, &obj, name);
 
     objp->setPtr(obj);
-}
-
-JS_PUBLIC_API(void)
-JS_TracerInit(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback)
-{
-    InitTracer(trc, rt, callback);
 }
 
 JS_PUBLIC_API(void)
@@ -112,7 +106,7 @@ JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 JS_PUBLIC_API(void)
 JS_TraceRuntime(JSTracer *trc)
 {
-    AssertHeapIsIdle(trc->runtime);
+    AssertHeapIsIdle(trc->runtime());
     TraceRuntime(trc);
 }
 
@@ -245,20 +239,90 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
     buf[bufsize - 1] = '\0';
 }
 
-extern JS_PUBLIC_API(const char *)
-JS_GetTraceEdgeName(JSTracer *trc, char *buffer, int bufferSize)
+JSTracer::JSTracer(JSRuntime *rt, JSTraceCallback traceCallback,
+                   WeakMapTraceKind weakTraceKind /* = TraceWeakMapValues */)
+  : callback(traceCallback)
+  , runtime_(rt)
+  , debugPrinter_(nullptr)
+  , debugPrintArg_(nullptr)
+  , debugPrintIndex_(size_t(-1))
+  , eagerlyTraceWeakMaps_(weakTraceKind)
+#ifdef JS_GC_ZEAL
+  , realLocation_(nullptr)
+#endif
 {
-    if (trc->debugPrinter) {
-        trc->debugPrinter(trc, buffer, bufferSize);
-        return buffer;
-    }
-    if (trc->debugPrintIndex != (size_t) - 1) {
-        JS_snprintf(buffer, bufferSize, "%s[%lu]",
-                    (const char *)trc->debugPrintArg,
-                    trc->debugPrintIndex);
-        return buffer;
-    }
-    return (const char*)trc->debugPrintArg;
 }
 
+bool
+JSTracer::hasTracingDetails() const
+{
+    return debugPrinter_ || debugPrintArg_;
+}
 
+const char *
+JSTracer::tracingName(const char *fallback) const
+{
+    JS_ASSERT(hasTracingDetails());
+    return debugPrinter_ ? fallback : (const char *)debugPrintArg_;
+}
+
+const char *
+JSTracer::getTracingEdgeName(char *buffer, size_t bufferSize)
+{
+    if (debugPrinter_) {
+        debugPrinter_(this, buffer, bufferSize);
+        return buffer;
+    }
+    if (debugPrintIndex_ != size_t(-1)) {
+        JS_snprintf(buffer, bufferSize, "%s[%lu]",
+                    (const char *)debugPrintArg_,
+                    debugPrintIndex_);
+        return buffer;
+    }
+    return (const char*)debugPrintArg_;
+}
+
+JSTraceNamePrinter
+JSTracer::debugPrinter() const
+{
+    return debugPrinter_;
+}
+
+const void *
+JSTracer::debugPrintArg() const
+{
+    return debugPrintArg_;
+}
+
+size_t
+JSTracer::debugPrintIndex() const
+{
+    return debugPrintIndex_;
+}
+
+void
+JSTracer::setTraceCallback(JSTraceCallback traceCallback)
+{
+    callback = traceCallback;
+}
+
+#ifdef JS_GC_ZEAL
+void
+JSTracer::setTracingLocation(void *location)
+{
+    if (!realLocation_ || !location)
+        realLocation_ = location;
+}
+
+void
+JSTracer::unsetTracingLocation()
+{
+    realLocation_ = nullptr;
+}
+
+void **
+JSTracer::tracingLocation(void **thingp)
+{
+    return realLocation_ ? (void **)realLocation_ : thingp;
+}
+#endif
