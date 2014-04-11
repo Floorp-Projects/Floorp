@@ -113,7 +113,7 @@ class Registers
         return Names[code];
     }
     static const char *GetName(uint32_t i) {
-        JS_ASSERT(i < Total);
+        MOZ_ASSERT(i < Total);
         return GetName(Code(i));
     }
 
@@ -199,7 +199,7 @@ typedef uint32_t PackedRegisterMask;
 // - 64 bit floating-point coprocessor - In this case, there are 32 double
 // precision register which can also be used as single precision registers.
 
-// When using O32 ABI, floating-point coprocessor is 32 bit
+// When using O32 ABI, floating-point coprocessor is 32 bit.
 // When using N32 ABI, floating-point coprocessor is 64 bit.
 class FloatRegisters
 {
@@ -250,7 +250,7 @@ class FloatRegisters
         return Names[code];
     }
     static const char *GetName(uint32_t i) {
-        JS_ASSERT(i < Total);
+        MOZ_ASSERT(i < Total);
         return GetName(Code(i));
     }
 

@@ -30,7 +30,7 @@ uint32_t GetMIPSFlags()
 
     char buf[1024];
     memset(buf, 0, sizeof(buf));
-    fread(buf, sizeof(char), sizeof(buf)-1, fp);
+    fread(buf, sizeof(char), sizeof(buf) - 1, fp);
     fclose(fp);
     if (strstr(buf, "FPU"))
         flags |= HWCAP_FPU;
