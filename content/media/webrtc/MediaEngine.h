@@ -36,11 +36,10 @@ enum {
   kAudioTrack = 2
 };
 
-class MediaEngine : public RefCounted<MediaEngine>
+class MediaEngine
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(MediaEngine)
-  virtual ~MediaEngine() {}
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEngine)
 
   static const int DEFAULT_VIDEO_FPS = 30;
   static const int DEFAULT_VIDEO_MIN_FPS = 10;
@@ -55,6 +54,9 @@ public:
   /* Populate an array of audio sources in the nsTArray. Also include devices
    * that are currently unavailable. */
   virtual void EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSource> >*) = 0;
+
+protected:
+  virtual ~MediaEngine() {}
 };
 
 /**
