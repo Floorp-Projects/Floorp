@@ -8,6 +8,10 @@ XPCOMUtils.defineLazyGetter(this, "docShell", () => {
 });
 
 const EXPECTED_REFLOWS = [
+  // tabbrowser._handleNewTab() flushes layout to start the label+close button fade-in
+  "_handleNewTab@chrome://browser/content/tabbrowser.xml|" +
+    "onxbltransitionend@chrome://browser/content/tabbrowser.xml|",
+
   // tabbrowser.adjustTabstrip() call after tabopen animation has finished
   "adjustTabstrip@chrome://browser/content/tabbrowser.xml|" +
     "_handleNewTab@chrome://browser/content/tabbrowser.xml|" +
