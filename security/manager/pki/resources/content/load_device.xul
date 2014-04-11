@@ -18,7 +18,10 @@
         buttons="accept,cancel"
         ondialogaccept="return doLoadDevice();">
 
+<stringbundleset id="stringbundleset">
   <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
+  <stringbundle id="pipnss_bundle" src="chrome://pipnss/locale/pipnss.properties"/>
+</stringbundleset>
 
   <script type="application/javascript" src="chrome://pippki/content/device_manager.js"/>
 
