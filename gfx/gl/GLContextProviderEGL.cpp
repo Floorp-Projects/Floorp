@@ -263,6 +263,18 @@ GLContextEGL::~GLContextEGL()
 #endif
 
     sEGLLibrary.fDestroyContext(EGL_DISPLAY(), mContext);
+
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION < 17
+    if (!mIsOffscreen) {
+      // In ICS, SurfaceFlinger's DisplayHardware::fini() does not destroy the EGLSurface associated with the
+      // native framebuffer. Destroying it causes crashes in the ICS emulator
+      // EGL implementation, specifically because the egl_window_surface_t dtor
+      // calls nativeWindow->cancelBuffer and FramebufferNativeWindow does not initialize
+      // the cancelBuffer function pointer, see bug 986836
+      return;
+    }
+#endif
+
     mozilla::gl::DestroySurface(mSurface);
 }
 
