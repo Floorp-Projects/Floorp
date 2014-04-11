@@ -4726,27 +4726,8 @@ ExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptArg, jsval *rv
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-    if (cx->compartment() != obj->compartment())
-        *(volatile int *) 0 = 0xf0;
+    assertSameCompartment(cx, obj, scriptArg);
     AutoLastFrameCheck lfc(cx);
-
-    /*
-     * Mozilla caches pre-compiled scripts (e.g., in the XUL prototype cache)
-     * and runs them against multiple globals. With a compartment per global,
-     * this requires cloning the pre-compiled script into each new global.
-     * Since each script gets run once, there is no point in trying to cache
-     * this clone. Ideally, this would be handled at some pinch point in
-     * mozilla, but there doesn't seem to be one, so we handle it here.
-     */
-    if (script->compartment() != obj->compartment()) {
-        script = CloneScript(cx, NullPtr(), NullPtr(), script);
-        if (!script.get())
-            return false;
-    } else {
-        script = scriptArg;
-    }
-
     return Execute(cx, script, *obj, rval);
 }
 
