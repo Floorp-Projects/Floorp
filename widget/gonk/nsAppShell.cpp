@@ -447,7 +447,7 @@ updateHeadphoneSwitch()
         break;
     case AKEY_STATE_DOWN:
         event.status() = sMicrophoneState == AKEY_STATE_DOWN ?
-            hal::SWITCH_STATE_HEADPHONE : hal::SWITCH_STATE_HEADSET;
+            hal::SWITCH_STATE_HEADSET : hal::SWITCH_STATE_HEADPHONE;
         break;
     default:
         return;
