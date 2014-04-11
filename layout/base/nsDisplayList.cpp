@@ -505,6 +505,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mCachedOffset(0, 0),
       mGlassDisplayItem(nullptr),
       mMode(aMode),
+      mCurrentScrollParentId(FrameMetrics::NULL_SCROLL_ID),
       mBuildCaret(aBuildCaret),
       mIgnoreSuppression(false),
       mHadToIgnoreSuppression(false),
@@ -3524,7 +3525,9 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
 nsDisplaySubDocument::nsDisplaySubDocument(nsDisplayListBuilder* aBuilder,
                                            nsIFrame* aFrame, nsDisplayList* aList,
                                            uint32_t aFlags)
-    : nsDisplayOwnLayer(aBuilder, aFrame, aList, aFlags) {
+    : nsDisplayOwnLayer(aBuilder, aFrame, aList, aFlags)
+    , mScrollParentId(aBuilder->GetCurrentScrollParentId())
+{
   MOZ_COUNT_CTOR(nsDisplaySubDocument);
 }
 
@@ -3574,6 +3577,7 @@ nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
                       mFrame->GetPosition() +
                       mFrame->GetOffsetToCrossDoc(ReferenceFrame());
 
+    container->SetScrollHandoffParentId(mScrollParentId);
     RecordFrameMetrics(mFrame, rootScrollFrame, ReferenceFrame(),
                        container, mList.GetVisibleRect(), viewport,
                        (usingDisplayport ? &displayport : nullptr),
@@ -3779,6 +3783,7 @@ nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
   : nsDisplayWrapList(aBuilder, aForFrame, aList)
   , mScrollFrame(aScrollFrame)
   , mScrolledFrame(aScrolledFrame)
+  , mScrollParentId(aBuilder->GetCurrentScrollParentId())
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_CTOR(nsDisplayScrollLayer);
@@ -3796,6 +3801,7 @@ nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
   : nsDisplayWrapList(aBuilder, aForFrame, aItem)
   , mScrollFrame(aScrollFrame)
   , mScrolledFrame(aScrolledFrame)
+  , mScrollParentId(aBuilder->GetCurrentScrollParentId())
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_CTOR(nsDisplayScrollLayer);
@@ -3812,6 +3818,7 @@ nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
   : nsDisplayWrapList(aBuilder, aForFrame)
   , mScrollFrame(aScrollFrame)
   , mScrolledFrame(aScrolledFrame)
+  , mScrollParentId(aBuilder->GetCurrentScrollParentId())
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_CTOR(nsDisplayScrollLayer);
@@ -3864,6 +3871,7 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
     usingCriticalDisplayport =
       nsLayoutUtils::GetCriticalDisplayPort(content, &criticalDisplayport);
   }
+  layer->SetScrollHandoffParentId(mScrollParentId);
   RecordFrameMetrics(mScrolledFrame, mScrollFrame, ReferenceFrame(), layer,
                      mList.GetVisibleRect(), viewport,
                      (usingDisplayport ? &displayport : nullptr),
