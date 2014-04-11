@@ -1672,12 +1672,6 @@
 
                 // kick the animation off
                 t.setAttribute("fadein", "true");
-
-                // This call to adjustTabstrip is redundant but needed so that
-                // when opening a second tab, the first tab's close buttons
-                // appears immediately rather than when the transition ends.
-                if (this.tabs.length - this._removingTabs.length == 2)
-                  this.tabContainer.adjustTabstrip();
               }.bind(this));
             }
 
@@ -1862,13 +1856,6 @@
             this._blurTab(aTab);
             aTab.style.maxWidth = ""; // ensure that fade-out transition happens
             aTab.removeAttribute("fadein");
-
-            if (this.tabs.length - this._removingTabs.length == 1) {
-              // The second tab just got closed and we will end up with a single
-              // one. Remove the first tab's close button immediately (if needed)
-              // rather than after the tabclose animation ends.
-              this.tabContainer.adjustTabstrip();
-            }
 
             setTimeout(function (tab, tabbrowser) {
               if (tab.parentNode &&
