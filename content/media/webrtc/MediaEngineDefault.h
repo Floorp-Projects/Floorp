@@ -131,12 +131,13 @@ public:
   MediaEngineDefault()
   : mMutex("mozilla::MediaEngineDefault")
   {}
-  ~MediaEngineDefault() {}
 
   virtual void EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSource> >*);
   virtual void EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSource> >*);
 
 private:
+  ~MediaEngineDefault() {}
+
   Mutex mMutex;
   // protected with mMutex:
 
