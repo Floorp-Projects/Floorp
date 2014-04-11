@@ -385,11 +385,6 @@ public class GeckoPreferences
                     preferences.removePreference(pref);
                     i--;
                     continue;
-                } else if (AppConstants.RELEASE_BUILD && PREFS_GEO_REPORTING.equals(key)) {
-                    // We don't build wifi/cell tower collection in release builds, so hide the UI.
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
                 } else if (PREFS_DEVTOOLS_REMOTE_ENABLED.equals(key)) {
                     final Context thisContext = this;
                     pref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
