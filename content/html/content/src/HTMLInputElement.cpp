@@ -3230,7 +3230,7 @@ HTMLInputElement::NeedToInitializeEditorForEvent(
   // are lazily initialized.  We don't need to initialize the control for
   // certain types of events, because we know that those events are safe to be
   // handled without the editor being initialized.  These events include:
-  // mousein/move/out, and DOM mutation events.
+  // mousein/move/out, overflow/underflow, and DOM mutation events.
   if (!IsSingleLineTextControl(false) ||
       aVisitor.mEvent->eventStructType == NS_MUTATION_EVENT) {
     return false;
@@ -3242,6 +3242,8 @@ HTMLInputElement::NeedToInitializeEditorForEvent(
   case NS_MOUSE_EXIT:
   case NS_MOUSE_ENTER_SYNTH:
   case NS_MOUSE_EXIT_SYNTH:
+  case NS_SCROLLPORT_UNDERFLOW:
+  case NS_SCROLLPORT_OVERFLOW:
     return false;
   default:
     return true;
