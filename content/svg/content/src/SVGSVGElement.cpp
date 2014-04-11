@@ -387,10 +387,10 @@ SVGSVGElement::CreateSVGNumber()
   return number.forget();
 }
 
-already_AddRefed<nsIDOMSVGLength>
+already_AddRefed<DOMSVGLength>
 SVGSVGElement::CreateSVGLength()
 {
-  nsCOMPtr<nsIDOMSVGLength> length = new DOMSVGLength();
+  nsCOMPtr<DOMSVGLength> length = new DOMSVGLength();
   return length.forget();
 }
 

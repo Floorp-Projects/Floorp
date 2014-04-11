@@ -6,6 +6,7 @@
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGAnimatedLengthBinding.h"
 #include "nsSVGLength2.h"
+#include "DOMSVGLength.h"
 
 namespace mozilla {
 namespace dom {
@@ -21,18 +22,18 @@ SVGAnimatedLength::WrapObject(JSContext* aCx)
   return SVGAnimatedLengthBinding::Wrap(aCx, this);
 }
 
-already_AddRefed<nsIDOMSVGLength>
+already_AddRefed<DOMSVGLength>
 SVGAnimatedLength::BaseVal()
 {
-  nsRefPtr<nsIDOMSVGLength> angle;
+  nsRefPtr<DOMSVGLength> angle;
   mVal->ToDOMBaseVal(getter_AddRefs(angle), mSVGElement);
   return angle.forget();
 }
 
-already_AddRefed<nsIDOMSVGLength>
+already_AddRefed<DOMSVGLength>
 SVGAnimatedLength::AnimVal()
 {
-  nsRefPtr<nsIDOMSVGLength> angle;
+  nsRefPtr<DOMSVGLength> angle;
   mVal->ToDOMAnimVal(getter_AddRefs(angle), mSVGElement);
   return angle.forget();
 }
