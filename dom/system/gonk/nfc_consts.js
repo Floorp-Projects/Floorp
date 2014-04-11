@@ -63,7 +63,6 @@ this.NFC_POWER_LEVEL_ENABLED        = 2;
 
 this.TOPIC_MOZSETTINGS_CHANGED      = "mozsettings-changed";
 this.TOPIC_XPCOM_SHUTDOWN           = "xpcom-shutdown";
-this.TOPIC_HARDWARE_STATE           = "nfc-hardware-state-change";
 this.SETTING_NFC_ENABLED            = "nfc.enabled";
 
 this.NFC_PEER_EVENT_READY = 0x01;
