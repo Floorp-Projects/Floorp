@@ -745,9 +745,13 @@ NS_IMETHODIMP HTMLMediaElement::Load()
 void HTMLMediaElement::ResetState()
 {
   mMediaSize = nsIntSize(-1, -1);
-  VideoFrameContainer* container = GetVideoFrameContainer();
-  if (container) {
-    container->Reset();
+  // There might be a pending MediaDecoder::PlaybackPositionChanged() which
+  // will overwrite |mMediaSize| in UpdateMediaSize() to give staled videoWidth
+  // and videoHeight. We have to call ForgetElement() here such that the staled
+  // callbacks won't reach us.
+  if (mVideoFrameContainer) {
+    mVideoFrameContainer->ForgetElement();
+    mVideoFrameContainer = nullptr;
   }
 }
 
@@ -2866,7 +2870,10 @@ void HTMLMediaElement::MetadataLoaded(int aChannels,
   // If this element had a video track, but consists only of an audio track now,
   // delete the VideoFrameContainer. This happens when the src is changed to an
   // audio only file.
-  if (!aHasVideo) {
+  if (!aHasVideo && mVideoFrameContainer) {
+    // call ForgetElement() such that callbacks from |mVideoFrameContainer|
+    // won't reach us anymore.
+    mVideoFrameContainer->ForgetElement();
     mVideoFrameContainer = nullptr;
   }
 }
