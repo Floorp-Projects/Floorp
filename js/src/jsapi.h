@@ -2528,14 +2528,6 @@ JS_SetParent(JSContext *cx, JS::HandleObject obj, JS::HandleObject parent);
 extern JS_PUBLIC_API(JSObject *)
 JS_GetConstructor(JSContext *cx, JS::Handle<JSObject*> proto);
 
-/*
- * Get a unique identifier for obj, good for the lifetime of obj (even if it
- * is moved by a copying GC).  Return false on failure (likely out of memory),
- * and true with *idp containing the unique id on success.
- */
-extern JS_PUBLIC_API(bool)
-JS_GetObjectId(JSContext *cx, JS::HandleObject obj, JS::MutableHandleId idp);
-
 namespace JS {
 
 enum ZoneSpecifier {
