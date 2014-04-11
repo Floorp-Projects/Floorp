@@ -3,6 +3,7 @@ package org.mozilla.gecko.tests;
 import java.util.ArrayList;
 
 import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoProfile;
 
 import android.content.ContentResolver;
@@ -112,7 +113,7 @@ public class testImportFromAndroid extends AboutHomeTest {
 
         // Add a few history items in Firefox Mobile
         ContentResolver resolver = getActivity().getContentResolver();
-        Uri uri = Uri.parse("content://" + TestConstants.ANDROID_PACKAGE_NAME + ".db.browser/history");
+        Uri uri = Uri.parse("content://" + AppConstants.ANDROID_PACKAGE_NAME + ".db.browser/history");
         uri = uri.buildUpon().appendQueryParameter("profile", GeckoProfile.DEFAULT_PROFILE)
                              .appendQueryParameter("sync", "true").build();
         for (String url:androidData) {
