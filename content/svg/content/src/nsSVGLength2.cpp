@@ -15,10 +15,31 @@
 #include "nsSVGAttrTearoffTable.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsTextFormatter.h"
-#include "DOMSVGLength.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
+
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGLength2::DOMBaseVal, mSVGElement)
+
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGLength2::DOMAnimVal, mSVGElement)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGLength2::DOMBaseVal)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGLength2::DOMBaseVal)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGLength2::DOMAnimVal)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGLength2::DOMAnimVal)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGLength2::DOMBaseVal)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLength)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGLength)
+NS_INTERFACE_MAP_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGLength2::DOMAnimVal)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLength)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGLength)
+NS_INTERFACE_MAP_END
 
 static nsIAtom** const unitMap[] =
 {
@@ -37,6 +58,10 @@ static nsIAtom** const unitMap[] =
 
 static nsSVGAttrTearoffTable<nsSVGLength2, SVGAnimatedLength>
   sSVGAnimatedLengthTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGLength2, nsSVGLength2::DOMBaseVal>
+  sBaseSVGLengthTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGLength2, nsSVGLength2::DOMAnimVal>
+  sAnimSVGLengthTearoffTable;
 
 /* Helper functions */
 
@@ -320,23 +345,41 @@ nsSVGLength2::NewValueSpecifiedUnits(uint16_t unitType,
 }
 
 nsresult
-nsSVGLength2::ToDOMBaseVal(DOMSVGLength **aResult, nsSVGElement *aSVGElement)
+nsSVGLength2::ToDOMBaseVal(nsIDOMSVGLength **aResult, nsSVGElement *aSVGElement)
 {
-  nsRefPtr<DOMSVGLength> domBaseVal =
-    DOMSVGLength::GetTearOff(this, aSVGElement, false);
+  nsRefPtr<DOMBaseVal> domBaseVal =
+    sBaseSVGLengthTearoffTable.GetTearoff(this);
+  if (!domBaseVal) {
+    domBaseVal = new DOMBaseVal(this, aSVGElement);
+    sBaseSVGLengthTearoffTable.AddTearoff(this, domBaseVal);
+  }
 
   domBaseVal.forget(aResult);
   return NS_OK;
 }
 
-nsresult
-nsSVGLength2::ToDOMAnimVal(DOMSVGLength **aResult, nsSVGElement *aSVGElement)
+nsSVGLength2::DOMBaseVal::~DOMBaseVal()
 {
-  nsRefPtr<DOMSVGLength> domAnimVal =
-    DOMSVGLength::GetTearOff(this, aSVGElement, true);
+  sBaseSVGLengthTearoffTable.RemoveTearoff(mVal);
+}
+
+nsresult
+nsSVGLength2::ToDOMAnimVal(nsIDOMSVGLength **aResult, nsSVGElement *aSVGElement)
+{
+  nsRefPtr<DOMAnimVal> domAnimVal =
+    sAnimSVGLengthTearoffTable.GetTearoff(this);
+  if (!domAnimVal) {
+    domAnimVal = new DOMAnimVal(this, aSVGElement);
+    sAnimSVGLengthTearoffTable.AddTearoff(this, domAnimVal);
+  }
 
   domAnimVal.forget(aResult);
   return NS_OK;
+}
+
+nsSVGLength2::DOMAnimVal::~DOMAnimVal()
+{
+  sAnimSVGLengthTearoffTable.RemoveTearoff(mVal);
 }
 
 /* Implementation */

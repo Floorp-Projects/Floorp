@@ -30,7 +30,6 @@ class nsSVGImageFrame;
 namespace mozilla {
 class AutoSVGRenderingState;
 class DOMSVGAnimatedPreserveAspectRatio;
-class DOMSVGLength;
 class EventChainPreVisitor;
 class SVGFragmentIdentifier;
 
@@ -240,7 +239,7 @@ public:
   void SetCurrentTime(float seconds);
   void DeselectAll();
   already_AddRefed<nsIDOMSVGNumber> CreateSVGNumber();
-  already_AddRefed<DOMSVGLength> CreateSVGLength();
+  already_AddRefed<nsIDOMSVGLength> CreateSVGLength();
   already_AddRefed<SVGAngle> CreateSVGAngle();
   already_AddRefed<nsISVGPoint> CreateSVGPoint();
   already_AddRefed<SVGMatrix> CreateSVGMatrix();
