@@ -2406,12 +2406,7 @@ FlexboxAxisTracker::FlexboxAxisTracker(
   // and reversing some logic, to avoid reflowing children in bottom-to-top
   // order. (This switch can be removed eventually, but for now, it allows
   // this special-case code path to be compared against the normal code path.)
-  //
-  // XXXdholbert Initially, I'm defaulting this switch to *off*, meaning the
-  // new code isn't enabled yet. A subsequent patch will turn it on, once
-  // intermediate patches have made us react to AreAxesInternallyReversed()
-  // correctly in the appropriate places.
-  static bool sPreventBottomToTopChildOrdering = false;
+  static bool sPreventBottomToTopChildOrdering = true;
 
   if (sPreventBottomToTopChildOrdering) {
     // If either axis is bottom-to-top, we flip both axes (and set a flag
