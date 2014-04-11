@@ -13,6 +13,7 @@ import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Engaged;
 import org.mozilla.gecko.fxa.login.State;
@@ -87,12 +88,18 @@ public class FxAccountConfirmAccountActivity extends FxAccountAbstractActivity i
     FxAccountSyncStatusHelper.getInstance().startObserving(syncStatusDelegate);
 
     refresh();
+
+    fxAccount.requestSync(FirefoxAccounts.NOW);
   }
 
   @Override
   public void onPause() {
     super.onPause();
     FxAccountSyncStatusHelper.getInstance().stopObserving(syncStatusDelegate);
+
+    if (fxAccount != null) {
+      fxAccount.requestSync(FirefoxAccounts.SOON);
+    }
   }
 
   protected class SyncStatusDelegate implements FxAccountSyncStatusHelper.Delegate {
