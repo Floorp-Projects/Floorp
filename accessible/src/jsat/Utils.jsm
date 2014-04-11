@@ -247,6 +247,16 @@ this.Utils = {
       return new Rect(objX.value, objY.value, objW.value, objH.value);
   },
 
+  /**
+   * Get current display DPI.
+   */
+  get dpi() {
+    delete this.dpi;
+    this.dpi = this.win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(
+      Ci.nsIDOMWindowUtils).displayDPI;
+    return this.dpi;
+  },
+
   isInSubtree: function isInSubtree(aAccessible, aSubTreeRoot) {
     let acc = aAccessible;
     while (acc) {

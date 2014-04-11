@@ -1,0 +1,95 @@
+<html>
+
+<head>
+  <title>AccessFu tests for pointer relay.</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../common.js"></script>
+  <script type="application/javascript" src="../layout.js"></script>
+  <script type="application/javascript" src="./jsatcommon.js"></script>
+  <script type="application/javascript" src="./dom_helper.js"></script>
+  <script type="application/javascript">
+
+    Components.utils.import(
+      "resource://gre/modules/accessibility/PointerAdapter.jsm");
+
+    var tests = [
+      {
+        type: 'touchstart', target: [{base: 'button'}],
+        expected: {type: 'pointerdown', length: 1}
+      },
+      {
+        type: 'touchmove', target: [{base: 'button'}],
+        expected: {type: 'pointermove', length: 1}
+      },
+      {
+        type: 'touchend', target: [{base: 'button'}],
+        expected: {type: 'pointerup'}
+      },
+      {
+        type: 'touchstart', target: [{base: 'button'},
+          {base: 'button', x: 0.5, y: 0.3}],
+          expected: {type: 'pointerdown', length: 2}
+      },
+      {
+        type: 'touchend', target: [{base: 'button'},
+          {base: 'button', x: 0.5, y: 0.3}],
+          expected: {type: 'pointerup'}
+      },
+      {
+        type: 'touchstart', target: [{base: 'button'},
+          {base: 'button', x: 0.5, y: 0.3},
+          {base: 'button', x: 0.5, y: -0.3}],
+          expected: {type: 'pointerdown', length: 3}
+      },
+      {
+        type: 'touchend', target: [{base: 'button'},
+          {base: 'button', x: 0.5, y: 0.3},
+          {base: 'button', x: 0.5, y: -0.3}],
+          expected: {type: 'pointerup'}
+      }
+    ];
+
+    function makeTestFromSpec(test) {
+      return function runTest() {
+        PointerRelay.start(function onPointerEvent(aDetail) {
+          is(aDetail.type, test.expected.type,
+            'mozAccessFuPointerEvent is correct.');
+          if (test.expected.length) {
+            is(aDetail.points.length, test.expected.length,
+            'mozAccessFuPointerEvent points length is correct.');
+          }
+          PointerRelay.stop();
+          AccessFuTest.nextTest();
+        });
+        eventMap[test.type](test.target, test.type);
+      };
+    }
+
+    function doTest() {
+      tests.forEach(function addTest(test) {
+        AccessFuTest.addFunc(makeTestFromSpec(test));
+      });
+      AccessFuTest.waitForExplicitFinish();
+      AccessFuTest.runTests();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+<body id="root">
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=976082"
+     title="[AccessFu] Provide tests for pointer relay.">
+    Mozilla Bug 981015
+  </a>
+  <div>
+    <button id="button">I am a button</button>
+  </div>
+</body>
+</html>
