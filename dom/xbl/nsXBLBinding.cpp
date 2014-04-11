@@ -75,9 +75,6 @@ XBLFinalize(JSFreeOp *fop, JSObject *obj)
   nsXBLDocumentInfo* docInfo =
     static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(obj));
   nsContentUtils::DeferredFinalize(docInfo);
-
-  nsXBLJSClass* c = nsXBLJSClass::fromJSClass(::JS_GetClass(obj));
-  delete c;
 }
 
 static bool
@@ -90,34 +87,18 @@ XBLEnumerate(JSContext *cx, JS::Handle<JSObject*> obj)
   return protoBinding->ResolveAllFields(cx, obj);
 }
 
-nsXBLJSClass::nsXBLJSClass(const nsAFlatCString& aClassName)
-{
-  memset(static_cast<JSClass*>(this), 0, sizeof(JSClass));
-  name = ToNewCString(aClassName);
-  flags =
+static const JSClass gPrototypeJSClass = {
+    "XBL prototype JSClass",
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
     JSCLASS_NEW_RESOLVE |
     // Our one reserved slot holds the relevant nsXBLPrototypeBinding
-    JSCLASS_HAS_RESERVED_SLOTS(1);
-  addProperty = getProperty = ::JS_PropertyStub;
-  delProperty = ::JS_DeletePropertyStub;
-  setProperty = ::JS_StrictPropertyStub;
-  enumerate = XBLEnumerate;
-  resolve = JS_ResolveStub;
-  convert = ::JS_ConvertStub;
-  finalize = XBLFinalize;
-}
-
-bool
-nsXBLJSClass::IsXBLJSClass(const JSClass* aClass)
-{
-  return aClass->finalize == XBLFinalize;
-}
-
-nsXBLJSClass::~nsXBLJSClass()
-{
-  nsMemory::Free((void*) name);
-}
+    JSCLASS_HAS_RESERVED_SLOTS(1),
+    JS_PropertyStub,  JS_DeletePropertyStub,
+    JS_PropertyStub, JS_StrictPropertyStub,
+    XBLEnumerate, JS_ResolveStub,
+    JS_ConvertStub, XBLFinalize,
+    nullptr, nullptr, nullptr, nullptr
+};
 
 // Implementation /////////////////////////////////////////////////////////////////
 
@@ -786,12 +767,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
               break;
             }
 
-            const JSClass* clazz = ::JS_GetClass(proto);
-            if (!clazz ||
-                (~clazz->flags &
-                 (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) ||
-                JSCLASS_RESERVED_SLOTS(clazz) != 1 ||
-                clazz->finalize != XBLFinalize) {
+            if (JS_GetClass(proto) != &gPrototypeJSClass) {
               // Clearly not the right class
               continue;
             }
@@ -1035,16 +1011,14 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
   *aNew = !desc.object();
   if (desc.object()) {
     proto = &desc.value().toObject();
-    MOZ_ASSERT(nsXBLJSClass::IsXBLJSClass(JS_GetClass(js::UncheckedUnwrap(proto))));
+    MOZ_ASSERT(JS_GetClass(js::UncheckedUnwrap(proto)) == &gPrototypeJSClass);
   } else {
 
     // We need to create the prototype. First, enter the compartment where it's
     // going to live, and create it.
     JSAutoCompartment ac2(cx, global);
-    nsXBLJSClass* c = new nsXBLJSClass(aClassName);
-    proto = JS_NewObjectWithGivenProto(cx, c, parent_proto, global);
+    proto = JS_NewObjectWithGivenProto(cx, &gPrototypeJSClass, parent_proto, global);
     if (!proto) {
-      delete c;
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
