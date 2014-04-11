@@ -22,15 +22,15 @@ var gMainPane = {
               .getService(Components.interfaces.nsIObserverService)
               .notifyObservers(window, "main-pane-loaded", null);
 
-    //Functionality for "Show tabs in taskbar" on Win XP
-
 #ifdef XP_WIN
+    // Functionality for "Show tabs in taskbar" on Windows 7 and up.
+
     try {
       let sysInfo = Cc["@mozilla.org/system-info;1"].
                     getService(Ci.nsIPropertyBag2);
       let ver = parseFloat(sysInfo.getProperty("version"));
       let showTabsInTaskbar = document.getElementById("showTabsInTaskbar");
-      showTabsInTaskbar.hidden = ver < 6.1 || (ver >= 6.1 && history.state != "tabs");
+      showTabsInTaskbar.hidden = ver < 6.1;
     } catch (ex) {}
 
 #endif
@@ -443,8 +443,31 @@ var gMainPane = {
       startupPref.updateElements(); // select the correct index in the startup menulist
     }
   },
+
   // TABS
 
+  /*
+   * Preferences:
+   *
+   * browser.link.open_newwindow - int
+   *   Determines where links targeting new windows should open.
+   *   Values:
+   *     1 - Open in the current window or tab.
+   *     2 - Open in a new window.
+   *     3 - Open in a new tab in the most recent window.
+   * browser.tabs.loadInBackground - bool
+   *   True - Whether browser should switch to a new tab opened from a link.
+   * browser.tabs.warnOnClose - bool
+   *   True - If when closing a window with multiple tabs the user is warned and
+   *          allowed to cancel the action, false to just close the window.
+   * browser.tabs.warnOnOpen - bool
+   *   True - Whether the user should be warned when trying to open a lot of
+   *          tabs at once (e.g. a large folder of bookmarks), allowing to
+   *          cancel the action.
+   * browser.taskbar.previews.enable - bool
+   *   True - Tabs are to be shown in Windows 7 taskbar.
+   *   False - Only the window is to be shown in Windows 7 taskbar.
+   */
 
   /**
    * Determines where a link which opens a new window will open.
