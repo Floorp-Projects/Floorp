@@ -1033,13 +1033,15 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&stackFull);
     }
 
+    // spsPushFrame variant for Ion-optimized scripts.
     void spsPushFrame(SPSProfiler *p, const char *str, JSScript *s, Register temp) {
         Label stackFull;
         spsProfileEntryAddress(p, 0, temp, &stackFull);
 
         storePtr(ImmPtr(str),  Address(temp, ProfileEntry::offsetOfString()));
         storePtr(ImmGCPtr(s),  Address(temp, ProfileEntry::offsetOfScript()));
-        storePtr(ImmPtr(nullptr), Address(temp, ProfileEntry::offsetOfStackAddress()));
+        storePtr(ImmPtr((void*) ProfileEntry::SCRIPT_OPT_STACKPOINTER),
+                 Address(temp, ProfileEntry::offsetOfStackAddress()));
         store32(Imm32(ProfileEntry::NullPCIndex), Address(temp, ProfileEntry::offsetOfPCIdx()));
 
         /* Always increment the stack size, whether or not we actually pushed. */
@@ -1048,6 +1050,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         add32(Imm32(1), Address(temp, 0));
     }
 
+    // spsPushFrame variant for Baseline-optimized scripts.
     void spsPushFrame(SPSProfiler *p, const Address &str, const Address &script,
                       Register temp, Register temp2)
     {
