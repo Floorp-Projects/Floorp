@@ -40,24 +40,37 @@ class ProfileEntry
     // a JS entry, and the idx is used by both, but with different meanings.
     //
     const char * volatile string; // Descriptive string of this entry
-    void * volatile sp;           // Relevant stack pointer for the entry
-    JSScript * volatile script_;  // if js(), non-null script which is running
+    void * volatile sp;           // Relevant stack pointer for the entry,
+                                  // less than or equal to SCRIPT_OPT_STACKPOINTER for js
+                                  // script entries, greater for non-js entries.
+    JSScript * volatile script_;  // if js(), non-null script which is running - low bit
+                                  // indicates if script is optimized or not.
     int32_t volatile idx;         // if js(), idx of pc, otherwise line number
 
   public:
+    static const uintptr_t SCRIPT_OPT_STACKPOINTER = 0x1;
+
     // All of these methods are marked with the 'volatile' keyword because SPS's
     // representation of the stack is stored such that all ProfileEntry
     // instances are volatile. These methods would not be available unless they
     // were marked as volatile as well.
 
     bool js() const volatile {
-        MOZ_ASSERT_IF(sp == nullptr, script_ != nullptr);
-        return sp == nullptr;
+        MOZ_ASSERT_IF(uintptr_t(sp) <= SCRIPT_OPT_STACKPOINTER, script_ != nullptr);
+        return uintptr_t(sp) <= SCRIPT_OPT_STACKPOINTER;
     }
 
     uint32_t line() const volatile { MOZ_ASSERT(!js()); return idx; }
     JSScript *script() const volatile { MOZ_ASSERT(js()); return script_; }
-    void *stackAddress() const volatile { return sp; }
+    bool scriptIsOptimized() const volatile {
+        MOZ_ASSERT(js());
+        return uintptr_t(sp) <= SCRIPT_OPT_STACKPOINTER;
+    }
+    void *stackAddress() const volatile {
+        if (js())
+            return nullptr;
+        return sp;
+    }
     const char *label() const volatile { return string; }
 
     void setLine(uint32_t aLine) volatile { MOZ_ASSERT(!js()); idx = aLine; }
