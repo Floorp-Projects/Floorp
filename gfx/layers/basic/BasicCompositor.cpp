@@ -318,9 +318,19 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       EffectSolidColor* effectSolidColor =
         static_cast<EffectSolidColor*>(aEffectChain.mPrimaryEffect.get());
 
-      dest->FillRect(aRect,
-                     ColorPattern(effectSolidColor->mColor),
-                     DrawOptions(aOpacity));
+      if (sourceMask) {
+        dest->PushClipRect(aRect);
+        Matrix dtTransform = dest->GetTransform();
+        dest->SetTransform(maskTransform);
+        dest->MaskSurface(ColorPattern(effectSolidColor->mColor),
+                          sourceMask, Point(), DrawOptions(aOpacity));
+        dest->SetTransform(dtTransform);
+        dest->PopClip();
+      } else {
+        dest->FillRect(aRect,
+                       ColorPattern(effectSolidColor->mColor),
+                       DrawOptions(aOpacity));
+      }
       break;
     }
     case EFFECT_RGB: {
