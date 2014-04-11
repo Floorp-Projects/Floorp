@@ -75,6 +75,8 @@ private:
 #define NS_LOG_RELEASE(_p, _rc, _type) \
   NS_LogRelease((_p), (_rc), (_type))
 
+// Note that the following constructor/destructor logging macros
+// should only be used in non-refcounted objects.
 #define MOZ_COUNT_CTOR(_type)                                 \
 do {                                                          \
   NS_LogCtor((void*)this, #_type, sizeof(*this));             \
