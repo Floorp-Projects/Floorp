@@ -110,6 +110,10 @@ void
 ImageBridgeChild::UseTexture(CompositableClient* aCompositable,
                              TextureClient* aTexture)
 {
+  MOZ_ASSERT(aCompositable);
+  MOZ_ASSERT(aTexture);
+  MOZ_ASSERT(aCompositable->GetIPDLActor());
+  MOZ_ASSERT(aTexture->GetIPDLActor());
   mTxn->AddNoSwapEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
                                    nullptr, aTexture->GetIPDLActor()));
 }
@@ -119,6 +123,12 @@ ImageBridgeChild::UseComponentAlphaTextures(CompositableClient* aCompositable,
                                             TextureClient* aTextureOnBlack,
                                             TextureClient* aTextureOnWhite)
 {
+  MOZ_ASSERT(aCompositable);
+  MOZ_ASSERT(aTextureOnWhite);
+  MOZ_ASSERT(aTextureOnBlack);
+  MOZ_ASSERT(aCompositable->GetIPDLActor());
+  MOZ_ASSERT(aTextureOnWhite->GetIPDLActor());
+  MOZ_ASSERT(aTextureOnBlack->GetIPDLActor());
   MOZ_ASSERT(aTextureOnBlack->GetSize() == aTextureOnWhite->GetSize());
   mTxn->AddNoSwapEdit(OpUseComponentAlphaTextures(nullptr, aCompositable->GetIPDLActor(),
                                                   nullptr, aTextureOnBlack->GetIPDLActor(),
@@ -130,6 +140,10 @@ ImageBridgeChild::UpdatedTexture(CompositableClient* aCompositable,
                                  TextureClient* aTexture,
                                  nsIntRegion* aRegion)
 {
+  MOZ_ASSERT(aCompositable);
+  MOZ_ASSERT(aTexture);
+  MOZ_ASSERT(aCompositable->GetIPDLActor());
+  MOZ_ASSERT(aTexture->GetIPDLActor());
   MaybeRegion region = aRegion ? MaybeRegion(*aRegion)
                                : MaybeRegion(null_t());
   mTxn->AddNoSwapEdit(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
@@ -141,6 +155,8 @@ void
 ImageBridgeChild::UpdatePictureRect(CompositableClient* aCompositable,
                                     const nsIntRect& aRect)
 {
+  MOZ_ASSERT(aCompositable);
+  MOZ_ASSERT(aCompositable->GetIPDLActor());
   mTxn->AddNoSwapEdit(OpUpdatePictureRect(nullptr, aCompositable->GetIPDLActor(), aRect));
 }
 
