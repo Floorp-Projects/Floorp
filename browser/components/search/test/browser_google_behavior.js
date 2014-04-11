@@ -110,6 +110,9 @@ function test() {
       name: "home page search",
       searchURL: base + "&channel=np&source=hp",
       run: function () {
+        // Bug 992270: Ignore uncaught about:home exceptions (related to snippets from IndexedDB)
+        ignoreAllUncaughtExceptions(true);
+
         // load about:home, but remove the listener first so it doesn't
         // get in the way
         gBrowser.removeProgressListener(listener);
@@ -142,6 +145,9 @@ function test() {
   ];
 
   function nextTest() {
+    // Make sure we listen again for uncaught exceptions in the next test or cleanup.
+    ignoreAllUncaughtExceptions(false);
+
     if (gTests.length) {
       gCurrTest = gTests.shift();
       info("Running : " + gCurrTest.name);
