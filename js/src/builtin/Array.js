@@ -489,6 +489,40 @@ function ArrayFindIndex(predicate/*, thisArg*/) {
     return -1;
 }
 
+// ES6 draft 2014-04-05 22.1.3.6
+function ArrayFill(value, start = 0, end = undefined) {
+    // Steps 1-2.
+    var O = ToObject(this);
+
+    // Steps 3-5.
+    // FIXME: Array operations should use ToLength (bug 924058).
+    var len = ToInteger(O.length);
+
+    // Steps 6-7.
+    var relativeStart = ToInteger(start);
+
+    // Step 8.
+    var k = relativeStart < 0
+            ? std_Math_max(len + relativeStart, 0)
+            : std_Math_min(relativeStart, len);
+
+    // Steps 9-10.
+    var relativeEnd = end === undefined ? len : ToInteger(end);
+
+    // Step 11.
+    var final = relativeEnd < 0
+                ? std_Math_max(len + relativeEnd, 0)
+                : std_Math_min(relativeEnd, len);
+
+    // Step 12.
+    for (; k < final; k++) {
+        O[k] = value;
+    }
+
+    // Step 13.
+    return O;
+}
+
 #define ARRAY_ITERATOR_SLOT_ITERATED_OBJECT 0
 #define ARRAY_ITERATOR_SLOT_NEXT_INDEX 1
 #define ARRAY_ITERATOR_SLOT_ITEM_KIND 2
