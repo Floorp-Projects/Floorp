@@ -1020,6 +1020,9 @@ qcms_profile* qcms_profile_from_memory(const void *mem, size_t size)
 	source.size = size;
 	source.valid = true;
 
+	if (size < 4)
+		return INVALID_PROFILE;
+
 	length = read_u32(src, 0);
 	if (length <= size) {
 		// shrink the area that we can read if appropriate
