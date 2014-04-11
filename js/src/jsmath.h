@@ -248,9 +248,6 @@ extern double
 math_ceil_impl(double x);
 
 extern bool
-math_clz32(JSContext *cx, unsigned argc, Value *vp);
-
-extern bool
 math_floor(JSContext *cx, unsigned argc, Value *vp);
 
 extern double
