@@ -2556,7 +2556,7 @@ GCHelperThread::threadLoop()
 {
     AutoLockGC lock(rt);
 
-    TraceLogger *logger = TraceLoggerForThread(PR_GetCurrentThread());
+    TraceLogger *logger = TraceLoggerForCurrentThread();
 
     /*
      * Even on the first iteration the state can be SHUTDOWN or SWEEPING if
