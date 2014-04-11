@@ -39,6 +39,8 @@ let WebappRT = {
     pref("toolkit.telemetry.notifiedOptOut", 999),
     pref("media.useAudioChannelService", true),
     pref("dom.mozTCPSocket.enabled", true),
+    // Don't check for updates in webapp processes to avoid duplicate notifications.
+    pref("browser.webapps.checkForUpdates", 0),
   ],
 
   init: function(aStatus, aUrl, aCallback) {
