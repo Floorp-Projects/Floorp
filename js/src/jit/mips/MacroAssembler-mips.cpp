@@ -3106,7 +3106,8 @@ MacroAssemblerMIPSCompat::passABIArg(const FloatRegister &freg, MoveOp::Type typ
     passABIArg(MoveOperand(freg), type);
 }
 
-void MacroAssemblerMIPSCompat::checkStackAlignment()
+void
+MacroAssemblerMIPSCompat::checkStackAlignment()
 {
 #ifdef DEBUG
     Label aligned;
