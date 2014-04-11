@@ -21,7 +21,6 @@
     <xul:description>&newtab.panel.message;</xul:description>
     <xul:label class="text-link"
                href="https://support.mozilla.org/kb/how-do-sponsored-tiles-work"
-               onclick="this.parentNode.hidePopup();"
                value="&newtab.panel.link.text;" />
   </xul:panel>
 

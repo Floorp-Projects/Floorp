@@ -654,9 +654,7 @@ MediaEngineWebRTCVideoSource::OnTakePictureComplete(uint8_t* aData, uint32_t aLe
 void
 MediaEngineWebRTCVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight) {
   layers::GrallocImage *nativeImage = static_cast<layers::GrallocImage*>(aImage);
-  layers::GrallocTextureClientOGL* client =
-    static_cast<layers::GrallocTextureClientOGL*>(nativeImage->GetTextureClient(nullptr));
-  android::sp<android::GraphicBuffer> graphicBuffer = client->GetGraphicBuffer();
+  android::sp<android::GraphicBuffer> graphicBuffer = nativeImage->GetGraphicBuffer();
   void *pMem = nullptr;
   uint32_t size = aWidth * aHeight * 3 / 2;
 

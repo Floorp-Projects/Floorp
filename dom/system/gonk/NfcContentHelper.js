@@ -99,10 +99,6 @@ NfcContentHelper.prototype = {
   _requestMap: null,
   peerEventsCallbackMap: null,
 
-  /* TODO: Bug 815526: This is a limitation when a DOMString is used in sequences of Moz DOM Objects.
-   *       Strings such as 'type', 'id' 'payload' will not be acccessible to NfcWorker.
-   *       Therefore this function exists till the bug is addressed.
-   */
   encodeNDEFRecords: function encodeNDEFRecords(records) {
     let encodedRecords = [];
     for (let i = 0; i < records.length; i++) {
@@ -372,7 +368,11 @@ NfcContentHelper.prototype = {
       case "NFC:MakeReadOnlyNDEFResponse":
       case "NFC:CheckP2PRegistrationResponse":
       case "NFC:NotifySendFileStatusResponse":
-        this.fireRequestSuccess(atob(result.requestId), result);
+        if (result.status !== NFC.GECKO_NFC_ERROR_SUCCESS) {
+          this.fireRequestError(atob(result.requestId), result.status);
+        } else {
+          this.fireRequestSuccess(atob(result.requestId), result);
+        }
         break;
       case "NFC:PeerEvent":
         let callback = this.peerEventsCallbackMap[result.event];

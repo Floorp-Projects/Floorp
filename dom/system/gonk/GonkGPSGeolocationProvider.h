@@ -23,8 +23,8 @@
 #include "nsIObserver.h"
 #ifdef MOZ_B2G_RIL
 #include "nsIRadioInterfaceLayer.h"
-#include "nsISettingsService.h"
 #endif
+#include "nsISettingsService.h"
 
 class nsIThread;
 
@@ -36,17 +36,13 @@ class nsIThread;
 
 class GonkGPSGeolocationProvider : public nsIGeolocationProvider
                                  , public nsIObserver
-#ifdef MOZ_B2G_RIL
                                  , public nsISettingsServiceCallback
-#endif
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIGEOLOCATIONPROVIDER
   NS_DECL_NSIOBSERVER
-#ifdef MOZ_B2G_RIL
   NS_DECL_NSISETTINGSSERVICECALLBACK
-#endif
 
   static already_AddRefed<GonkGPSGeolocationProvider> GetSingleton();
 
@@ -83,13 +79,13 @@ private:
   void StartGPS();
   void ShutdownGPS();
   void InjectLocation(double latitude, double longitude, float accuracy);
+  void RequestSettingValue(char* aKey);
 #ifdef MOZ_B2G_RIL
   void SetupAGPS();
   int32_t GetDataConnectionState();
   void SetAGpsDataConn(nsAString& aApn);
   void RequestDataConnection();
   void ReleaseDataConnection();
-  void RequestSettingValue(char* aKey);
   void RequestSetID(uint32_t flags);
   void SetReferenceLocation();
 #endif
