@@ -21,6 +21,7 @@ class nsIFrame;
 class nsSMILValue;
 
 namespace mozilla {
+class DOMSVGLength;
 namespace dom {
 class SVGAnimatedLength;
 class SVGAnimationElement;
@@ -31,6 +32,7 @@ class SVGSVGElement;
 class nsSVGLength2
 {
   friend class mozilla::dom::SVGAnimatedLength;
+  friend class mozilla::DOMSVGLength;
 public:
   void Init(uint8_t aCtxType = SVGContentUtils::XY,
             uint8_t aAttrEnum = 0xff,
@@ -131,118 +133,10 @@ private:
   nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
                                   nsSVGElement *aSVGElement);
   nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, nsSVGElement *aSVGElement);
-  nsresult ToDOMBaseVal(nsIDOMSVGLength **aResult, nsSVGElement* aSVGElement);
-  nsresult ToDOMAnimVal(nsIDOMSVGLength **aResult, nsSVGElement* aSVGElement);
+  nsresult ToDOMBaseVal(mozilla::DOMSVGLength **aResult, nsSVGElement* aSVGElement);
+  nsresult ToDOMAnimVal(mozilla::DOMSVGLength **aResult, nsSVGElement* aSVGElement);
 
 public:
-  struct DOMBaseVal : public nsIDOMSVGLength
-  {
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(DOMBaseVal)
-
-    DOMBaseVal(nsSVGLength2* aVal, nsSVGElement *aSVGElement)
-      : mVal(aVal), mSVGElement(aSVGElement) {}
-    virtual ~DOMBaseVal();
-    
-    nsSVGLength2* mVal; // kept alive because it belongs to mSVGElement
-    nsRefPtr<nsSVGElement> mSVGElement;
-    
-    NS_IMETHOD GetUnitType(uint16_t* aResult) MOZ_OVERRIDE
-      { *aResult = mVal->mSpecifiedUnitType; return NS_OK; }
-
-    NS_IMETHOD GetValue(float* aResult) MOZ_OVERRIDE
-      { *aResult = mVal->GetBaseValue(mSVGElement); return NS_OK; }
-    NS_IMETHOD SetValue(float aValue) MOZ_OVERRIDE
-      {
-        if (!NS_finite(aValue)) {
-          return NS_ERROR_ILLEGAL_VALUE;
-        }
-        mVal->SetBaseValue(aValue, mSVGElement, true);
-        return NS_OK;
-      }
-
-    NS_IMETHOD GetValueInSpecifiedUnits(float* aResult) MOZ_OVERRIDE
-      { *aResult = mVal->mBaseVal; return NS_OK; }
-    NS_IMETHOD SetValueInSpecifiedUnits(float aValue) MOZ_OVERRIDE
-      {
-        if (!NS_finite(aValue)) {
-          return NS_ERROR_ILLEGAL_VALUE;
-        }
-        mVal->SetBaseValueInSpecifiedUnits(aValue, mSVGElement, true);
-        return NS_OK;
-      }
-
-    NS_IMETHOD SetValueAsString(const nsAString& aValue) MOZ_OVERRIDE
-      { return mVal->SetBaseValueString(aValue, mSVGElement, true); }
-    NS_IMETHOD GetValueAsString(nsAString& aValue) MOZ_OVERRIDE
-      { mVal->GetBaseValueString(aValue); return NS_OK; }
-
-    NS_IMETHOD NewValueSpecifiedUnits(uint16_t unitType,
-                                      float valueInSpecifiedUnits) MOZ_OVERRIDE
-      {
-        return mVal->NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits,
-                                            mSVGElement); }
-
-    NS_IMETHOD ConvertToSpecifiedUnits(uint16_t unitType) MOZ_OVERRIDE
-      { return mVal->ConvertToSpecifiedUnits(unitType, mSVGElement); }
-  };
-
-  struct DOMAnimVal : public nsIDOMSVGLength
-  {
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimVal)
-
-    DOMAnimVal(nsSVGLength2* aVal, nsSVGElement *aSVGElement)
-      : mVal(aVal), mSVGElement(aSVGElement) {}
-    virtual ~DOMAnimVal();
-    
-    nsSVGLength2* mVal; // kept alive because it belongs to mSVGElement
-    nsRefPtr<nsSVGElement> mSVGElement;
-    
-    // Script may have modified animation parameters or timeline -- DOM getters
-    // need to flush any resample requests to reflect these modifications.
-    NS_IMETHOD GetUnitType(uint16_t* aResult) MOZ_OVERRIDE
-    {
-      mSVGElement->FlushAnimations();
-      *aResult = mVal->mSpecifiedUnitType;
-      return NS_OK;
-    }
-
-    NS_IMETHOD GetValue(float* aResult) MOZ_OVERRIDE
-    {
-      mSVGElement->FlushAnimations();
-      *aResult = mVal->GetAnimValue(mSVGElement);
-      return NS_OK;
-    }
-    NS_IMETHOD SetValue(float aValue) MOZ_OVERRIDE
-      { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
-
-    NS_IMETHOD GetValueInSpecifiedUnits(float* aResult) MOZ_OVERRIDE
-    {
-      mSVGElement->FlushAnimations();
-      *aResult = mVal->mAnimVal;
-      return NS_OK;
-    }
-    NS_IMETHOD SetValueInSpecifiedUnits(float aValue) MOZ_OVERRIDE
-      { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
-
-    NS_IMETHOD SetValueAsString(const nsAString& aValue) MOZ_OVERRIDE
-      { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
-    NS_IMETHOD GetValueAsString(nsAString& aValue) MOZ_OVERRIDE
-    {
-      mSVGElement->FlushAnimations();
-      mVal->GetAnimValueString(aValue);
-      return NS_OK;
-    }
-
-    NS_IMETHOD NewValueSpecifiedUnits(uint16_t unitType,
-                                      float valueInSpecifiedUnits) MOZ_OVERRIDE
-      { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
-
-    NS_IMETHOD ConvertToSpecifiedUnits(uint16_t unitType) MOZ_OVERRIDE
-      { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
-  };
-
   struct SMILLength : public nsISMILAttr
   {
   public:
