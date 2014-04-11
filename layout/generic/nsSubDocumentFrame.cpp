@@ -436,6 +436,12 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
 
     if (subdocRootFrame) {
+      nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(
+          aBuilder,
+          ignoreViewportScrolling && subdocRootFrame->GetContent()
+              ? nsLayoutUtils::FindOrCreateIDFor(subdocRootFrame->GetContent())
+              : aBuilder->GetCurrentScrollParentId());
+
       aBuilder->SetAncestorHasTouchEventHandler(false);
       subdocRootFrame->
         BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);

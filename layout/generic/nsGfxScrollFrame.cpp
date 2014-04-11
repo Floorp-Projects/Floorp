@@ -2523,8 +2523,41 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     dirtyRect = ExpandRect(dirtyRect);
   }
 
+  // Since making new layers is expensive, only use nsDisplayScrollLayer
+  // if the area is scrollable and we're the content process (unless we're on
+  // B2G, where we support async scrolling for scrollable elements in the
+  // parent process as well).
+  // When a displayport is being used, force building of a layer so that
+  // CompositorParent can always find the scrollable layer for the root content
+  // document.
+  // If the element is marked 'scrollgrab', also force building of a layer
+  // so that APZ can implement scroll grabbing.
+  mShouldBuildScrollableLayer = usingDisplayport || nsContentUtils::HasScrollgrab(mOuter->GetContent());
+  bool shouldBuildLayer = false;
+  if (mShouldBuildScrollableLayer) {
+    shouldBuildLayer = true;
+  } else {
+    shouldBuildLayer =
+      nsLayoutUtils::WantSubAPZC() &&
+      WantAsyncScroll() &&
+      // If we are the root scroll frame for the display root then we don't need a scroll
+      // info layer to make a RecordFrameMetrics call for us as
+      // nsDisplayList::PaintForFrame already calls RecordFrameMetrics for us.
+      (!mIsRoot || aBuilder->RootReferenceFrame()->PresContext() != mOuter->PresContext());
+  }
+
   nsDisplayListCollection scrolledContent;
   {
+    // Note that setting the current scroll parent id here means that positioned children
+    // of this scroll info layer will pick up the scroll info layer as their scroll handoff
+    // parent. This is intentional because that is what happens for positioned children
+    // of scroll layers, and we want to maintain consistent behaviour between scroll layers
+    // and scroll info layers.
+    nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(
+        aBuilder,
+        shouldBuildLayer && mScrolledFrame->GetContent()
+            ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
+            : aBuilder->GetCurrentScrollParentId());
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
     if (usingDisplayport) {
@@ -2583,29 +2616,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       clip.SetTo(clipRect);
       ::ClipListsExceptCaret(&scrolledContent, aBuilder, mScrolledFrame, clip);
     }
-  }
-
-  // Since making new layers is expensive, only use nsDisplayScrollLayer
-  // if the area is scrollable and we're the content process (unless we're on
-  // B2G, where we support async scrolling for scrollable elements in the
-  // parent process as well).
-  // When a displayport is being used, force building of a layer so that
-  // CompositorParent can always find the scrollable layer for the root content
-  // document.
-  // If the element is marked 'scrollgrab', also force building of a layer
-  // so that APZ can implement scroll grabbing.
-  mShouldBuildScrollableLayer = usingDisplayport || nsContentUtils::HasScrollgrab(mOuter->GetContent());
-  bool shouldBuildLayer = false;
-  if (mShouldBuildScrollableLayer) {
-    shouldBuildLayer = true;
-  } else {
-    shouldBuildLayer =
-      nsLayoutUtils::WantSubAPZC() &&
-      WantAsyncScroll() &&
-      // If we are the root scroll frame for the display root then we don't need a scroll
-      // info layer to make a RecordFrameMetrics call for us as
-      // nsDisplayList::PaintForFrame already calls RecordFrameMetrics for us.
-      (!mIsRoot || aBuilder->RootReferenceFrame()->PresContext() != mOuter->PresContext());
   }
 
   if (shouldBuildLayer) {
