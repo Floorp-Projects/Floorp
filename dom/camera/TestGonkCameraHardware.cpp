@@ -27,7 +27,7 @@ TestGonkCameraHardware::TestGonkCameraHardware(nsGonkCameraControl* aTarget,
                                                const sp<Camera>& aCamera)
   : GonkCameraHardware(aTarget, aCameraId, aCamera)
 {
-  DOM_CAMERA_LOGA("+===== Created TestGonkCameraHardware =====+\n");
+  DOM_CAMERA_LOGA("v===== Created TestGonkCameraHardware =====v\n");
   DOM_CAMERA_LOGT("%s:%d : this=%p (aTarget=%p)\n",
     __func__, __LINE__, this, aTarget);
   MOZ_COUNT_CTOR(TestGonkCameraHardware);
@@ -36,7 +36,7 @@ TestGonkCameraHardware::TestGonkCameraHardware(nsGonkCameraControl* aTarget,
 TestGonkCameraHardware::~TestGonkCameraHardware()
 {
   MOZ_COUNT_DTOR(TestGonkCameraHardware);
-  DOM_CAMERA_LOGA("+===== Destroyed TestGonkCameraHardware =====+\n");
+  DOM_CAMERA_LOGA("^===== Destroyed TestGonkCameraHardware =====^\n");
 }
 
 nsresult
@@ -138,6 +138,213 @@ TestGonkCameraHardware::AutoFocus()
   return GonkCameraHardware::AutoFocus();
 }
 
+// These classes have to be external to StartFaceDetection(), at least
+// until we pick up gcc 4.5, which supports local classes as template
+// arguments.
+class FaceDetected : public nsRunnable
+{
+public:
+  FaceDetected(nsGonkCameraControl* aTarget)
+    : mTarget(aTarget)
+  { }
+
+  ~FaceDetected()
+  {
+    ReleaseFacesArray();
+  }
+
+  NS_IMETHODIMP
+  Run()
+  {
+    InitMetaData();
+    OnFacesDetected(mTarget, &mMetaData);
+    return NS_OK;
+  }
+
+protected:
+  virtual nsresult InitMetaData() = 0;
+
+  nsresult
+  AllocateFacesArray(uint32_t num)
+  {
+    mMetaData.faces = new camera_face_t[num];
+    return NS_OK;
+  }
+
+  nsresult
+  ReleaseFacesArray()
+  {
+    delete [] mMetaData.faces;
+    mMetaData.faces = nullptr;
+    return NS_OK;
+  }
+
+  nsRefPtr<nsGonkCameraControl> mTarget;
+  camera_frame_metadata_t mMetaData;
+};
+
+class OneFaceDetected : public FaceDetected
+{
+public:
+  OneFaceDetected(nsGonkCameraControl* aTarget)
+    : FaceDetected(aTarget)
+  { }
+
+  nsresult
+  InitMetaData() MOZ_OVERRIDE
+  {
+    mMetaData.number_of_faces = 1;
+    AllocateFacesArray(1);
+    mMetaData.faces[0].id = 1;
+    mMetaData.faces[0].score = 2;
+    mMetaData.faces[0].rect[0] = 3;
+    mMetaData.faces[0].rect[1] = 4;
+    mMetaData.faces[0].rect[2] = 5;
+    mMetaData.faces[0].rect[3] = 6;
+    mMetaData.faces[0].left_eye[0] = 7;
+    mMetaData.faces[0].left_eye[1] = 8;
+    mMetaData.faces[0].right_eye[0] = 9;
+    mMetaData.faces[0].right_eye[1] = 10;
+    mMetaData.faces[0].mouth[0] = 11;
+    mMetaData.faces[0].mouth[1] = 12;
+
+    return NS_OK;
+  }
+};
+
+class TwoFacesDetected : public FaceDetected
+{
+public:
+  TwoFacesDetected(nsGonkCameraControl* aTarget)
+    : FaceDetected(aTarget)
+  { }
+
+  nsresult
+  InitMetaData() MOZ_OVERRIDE
+  {
+    mMetaData.number_of_faces = 2;
+    AllocateFacesArray(2);
+    mMetaData.faces[0].id = 1;
+    mMetaData.faces[0].score = 2;
+    mMetaData.faces[0].rect[0] = 3;
+    mMetaData.faces[0].rect[1] = 4;
+    mMetaData.faces[0].rect[2] = 5;
+    mMetaData.faces[0].rect[3] = 6;
+    mMetaData.faces[0].left_eye[0] = 7;
+    mMetaData.faces[0].left_eye[1] = 8;
+    mMetaData.faces[0].right_eye[0] = 9;
+    mMetaData.faces[0].right_eye[1] = 10;
+    mMetaData.faces[0].mouth[0] = 11;
+    mMetaData.faces[0].mouth[1] = 12;
+    mMetaData.faces[1].id = 13;
+    mMetaData.faces[1].score = 14;
+    mMetaData.faces[1].rect[0] = 15;
+    mMetaData.faces[1].rect[1] = 16;
+    mMetaData.faces[1].rect[2] = 17;
+    mMetaData.faces[1].rect[3] = 18;
+    mMetaData.faces[1].left_eye[0] = 19;
+    mMetaData.faces[1].left_eye[1] = 20;
+    mMetaData.faces[1].right_eye[0] = 21;
+    mMetaData.faces[1].right_eye[1] = 22;
+    mMetaData.faces[1].mouth[0] = 23;
+    mMetaData.faces[1].mouth[1] = 24;
+
+    return NS_OK;
+  }
+};
+
+class OneFaceNoFeaturesDetected : public FaceDetected
+{
+public:
+  OneFaceNoFeaturesDetected(nsGonkCameraControl* aTarget)
+    : FaceDetected(aTarget)
+  { }
+
+  nsresult
+  InitMetaData() MOZ_OVERRIDE
+  {
+    mMetaData.number_of_faces = 1;
+    AllocateFacesArray(1);
+    mMetaData.faces[0].id = 1;
+    // Test clamping 'score' to 100.
+    mMetaData.faces[0].score = 1000;
+    mMetaData.faces[0].rect[0] = 3;
+    mMetaData.faces[0].rect[1] = 4;
+    mMetaData.faces[0].rect[2] = 5;
+    mMetaData.faces[0].rect[3] = 6;
+    // Nullable values set to 'not-supported' specific values
+    mMetaData.faces[0].left_eye[0] = -2000;
+    mMetaData.faces[0].left_eye[1] = -2000;
+    // Test other 'not-supported' values as well. We treat
+    // anything outside the range [-1000, 1000] as invalid.
+    mMetaData.faces[0].right_eye[0] = 1001;
+    mMetaData.faces[0].right_eye[1] = -1001;
+    mMetaData.faces[0].mouth[0] = -2000;
+    mMetaData.faces[0].mouth[1] = 2000;
+
+    return NS_OK;
+  }
+};
+
+class NoFacesDetected : public FaceDetected
+{
+public:
+  NoFacesDetected(nsGonkCameraControl* aTarget)
+    : FaceDetected(aTarget)
+  { }
+
+  nsresult
+  InitMetaData() MOZ_OVERRIDE
+  {
+    mMetaData.number_of_faces = 0;
+    mMetaData.faces = nullptr;
+
+    return NS_OK;
+  }
+};
+
+int
+TestGonkCameraHardware::StartFaceDetection()
+{
+  nsRefPtr<FaceDetected> faceDetected;
+
+  if (IsTestCase("face-detection-detected-one-face")) {
+    faceDetected = new OneFaceDetected(mTarget);
+  } else if (IsTestCase("face-detection-detected-two-faces")) {
+    faceDetected = new TwoFacesDetected(mTarget);
+  } else if (IsTestCase("face-detection-detected-one-face-no-features")) {
+    faceDetected = new OneFaceNoFeaturesDetected(mTarget);
+  } else if (IsTestCase("face-detection-no-faces-detected")) {
+    faceDetected = new NoFacesDetected(mTarget);
+  }
+
+  if (!faceDetected) {
+    return GonkCameraHardware::StartFaceDetection();
+  }
+
+  nsresult rv = NS_DispatchToCurrentThread(faceDetected);
+  if (NS_FAILED(rv)) {
+    DOM_CAMERA_LOGE("Failed to dispatch FaceDetected runnable (0x%08x)\n", rv);
+    return UNKNOWN_ERROR;
+  }
+
+  return OK;
+}
+
+int
+TestGonkCameraHardware::StopFaceDetection()
+{
+  if (IsTestCase("face-detection-detected-one-face") ||
+      IsTestCase("face-detection-detected-two-faces") ||
+      IsTestCase("face-detection-detected-one-face-no-features") ||
+      IsTestCase("face-detection-no-faces-detected"))
+  {
+    return OK;
+  }
+
+  return GonkCameraHardware::StopFaceDetection();
+}
+
 int
 TestGonkCameraHardware::TakePicture()
 {
@@ -185,10 +392,54 @@ TestGonkCameraHardware::StartPreview()
 }
 
 int
+TestGonkCameraHardware::StartAutoFocusMoving(bool aIsMoving)
+{
+  class AutoFocusMoving : public nsRunnable
+  {
+  public:
+    AutoFocusMoving(nsGonkCameraControl* aTarget, bool aIsMoving)
+      : mTarget(aTarget)
+      , mIsMoving(aIsMoving)
+    { }
+
+    NS_IMETHODIMP
+    Run()
+    {
+      OnAutoFocusMoving(mTarget, mIsMoving);
+      return NS_OK;
+    }
+
+  protected:
+    nsGonkCameraControl* mTarget;
+    bool mIsMoving;
+  };
+
+  nsresult rv = NS_DispatchToCurrentThread(new AutoFocusMoving(mTarget, aIsMoving));
+  if (NS_SUCCEEDED(rv)) {
+    return OK;
+  }
+  DOM_CAMERA_LOGE("Failed to dispatch AutoFocusMoving runnable (0x%08x)\n", rv);
+  return UNKNOWN_ERROR;
+}
+
+int
 TestGonkCameraHardware::PushParameters(const GonkCameraParameters& aParams)
 {
   if (IsTestCase("push-parameters-failure")) {
     return TestCaseError(UNKNOWN_ERROR);
+  }
+
+  nsString focusMode;
+  GonkCameraParameters& params = const_cast<GonkCameraParameters&>(aParams);
+  params.Get(CAMERA_PARAM_FOCUSMODE, focusMode);
+  if (focusMode.EqualsASCII("continuous-picture") ||
+      focusMode.EqualsASCII("continuous-video"))
+  {
+    if (IsTestCase("autofocus-moving-true")) {
+      return StartAutoFocusMoving(true);
+    } else if (IsTestCase("autofocus-moving-false")) {
+      return StartAutoFocusMoving(false);
+    }
   }
 
   return GonkCameraHardware::PushParameters(aParams);
