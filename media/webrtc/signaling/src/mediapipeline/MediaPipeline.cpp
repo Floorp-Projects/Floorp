@@ -1113,10 +1113,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
 #ifdef MOZ_WIDGET_GONK
   if (format == ImageFormat::GRALLOC_PLANAR_YCBCR) {
     layers::GrallocImage *nativeImage = static_cast<layers::GrallocImage*>(img);
-    layers::GrallocTextureClientOGL* client =
-      static_cast<layers::GrallocTextureClientOGL*>(nativeImage->GetTextureClient(nullptr));
-
-    android::sp<android::GraphicBuffer> graphicBuffer = client->GetGraphicBuffer();
+    android::sp<android::GraphicBuffer> graphicBuffer = nativeImage->GetGraphicBuffer();
     void *basePtr;
     graphicBuffer->lock(android::GraphicBuffer::USAGE_SW_READ_MASK, &basePtr);
     conduit->SendVideoFrame(static_cast<unsigned char*>(basePtr),
