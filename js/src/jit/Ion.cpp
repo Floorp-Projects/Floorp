@@ -1257,7 +1257,7 @@ OptimizeMIR(MIRGenerator *mir)
     if (GetIonContext()->runtime->onMainThread())
         logger = TraceLoggerForMainThread(GetIonContext()->runtime);
     else
-        logger = TraceLoggerForThread(PR_GetCurrentThread());
+        logger = TraceLoggerForCurrentThread();
 
     if (!mir->compilingAsmJS()) {
         if (!MakeMRegExpHoistable(graph))
