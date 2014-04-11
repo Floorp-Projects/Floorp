@@ -479,7 +479,7 @@ def setcopyright():
     elif _is_pypy:
         builtins.credits = _Printer(
             "credits",
-            "PyPy is maintained by the PyPy developers: http://codespeak.net/pypy")
+            "PyPy is maintained by the PyPy developers: http://pypy.org/")
     else:
         builtins.credits = _Printer("credits", """\
     Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
