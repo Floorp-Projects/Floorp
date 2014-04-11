@@ -1831,7 +1831,7 @@ public abstract class GeckoApp
         } else if (mCameraView instanceof TextureView) {
             mCameraView.setAlpha(0.0f);
         }
-        RelativeLayout mCameraLayout = (RelativeLayout) findViewById(R.id.camera_layout);
+        ViewGroup mCameraLayout = (ViewGroup) findViewById(R.id.camera_layout);
         // Some phones (eg. nexus S) need at least a 8x16 preview size
         mCameraLayout.addView(mCameraView,
                               new AbsoluteLayout.LayoutParams(8, 16, 0, 0));
@@ -1842,7 +1842,7 @@ public abstract class GeckoApp
             mCameraOrientationEventListener.disable();
             mCameraOrientationEventListener = null;
         }
-        RelativeLayout mCameraLayout = (RelativeLayout) findViewById(R.id.camera_layout);
+        ViewGroup mCameraLayout = (ViewGroup) findViewById(R.id.camera_layout);
         mCameraLayout.removeView(mCameraView);
     }
 
