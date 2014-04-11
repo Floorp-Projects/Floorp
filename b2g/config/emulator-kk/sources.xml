@@ -29,6 +29,7 @@
   <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.7" path="prebuilts/gcc/linux-x86/arm/arm-eabi-4.7" revision="1950e4760fa14688b83cdbb5acaa1af9f82ef434"/>
   <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.7" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.7" revision="ac6eb97a37035c09fb5ede0852f0881e9aadf9ad"/>
   <project groups="linux,x86" name="platform/prebuilts/gcc/linux-x86/x86/i686-linux-android-4.7" path="prebuilts/gcc/linux-x86/x86/i686-linux-android-4.7" revision="737f591c5f95477148d26602c7be56cbea0cdeb9"/>
+  <project groups="linux,x86" name="platform/prebuilts/python/linux-x86/2.7.5" path="prebuilts/python/linux-x86/2.7.5" revision="51da9b1981be481b92a59a826d4d78dc73d0989a"/>
   <project name="device/common" path="device/common" revision="798a3664597e6041985feab9aef42e98d458bc3d"/>
   <project name="device/sample" path="device/sample" revision="9aebb4ac5b6c1b2552599651a0e51b01e720eea6"/>
   <project name="platform/abi/cpp" path="abi/cpp" revision="77d97588f8ca4ea280d4e6b6225fc72853078778"/>
