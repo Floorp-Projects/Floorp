@@ -19,7 +19,9 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(AudioNode)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(AudioNode, DOMEventTargetHelper)
   tmp->DisconnectFromGraph();
-  tmp->mContext->UpdateNodeCount(-1);
+  if (tmp->mContext) {
+    tmp->mContext->UpdateNodeCount(-1);
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputNodes)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputParams)
