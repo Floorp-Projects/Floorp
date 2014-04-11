@@ -25,6 +25,8 @@ let gPage = {
 
     // Initialize sponsored panel
     this._sponsoredPanel = document.getElementById("sponsored-panel");
+    let link = this._sponsoredPanel.querySelector(".text-link");
+    link.addEventListener("click", () => this._sponsoredPanel.hidePopup());
 
     // Check if the new tab feature is enabled.
     let enabled = gAllPages.enabled;

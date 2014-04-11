@@ -83,11 +83,11 @@ public:
 
   virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
 
+  android::sp<android::GraphicBuffer> GetGraphicBuffer() const;
+
   void* GetNativeBuffer();
 
-  virtual bool IsValid() { return GetSurfaceDescriptor().type() != SurfaceDescriptor::T__None; }
-
-  SurfaceDescriptor GetSurfaceDescriptor();
+  virtual bool IsValid() { return !!mTextureClient; }
 
   virtual ISharedImage* AsSharedImage() MOZ_OVERRIDE { return this; }
 
