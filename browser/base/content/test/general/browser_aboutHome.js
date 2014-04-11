@@ -90,11 +90,15 @@ let gTests = [
 },
 
 // Disabled on Linux for intermittent issues with FHR, see Bug 945667.
+// Disabled always due to bug 992485
 {
   desc: "Check that performing a search fires a search event and records to " +
         "Firefox Health Report.",
   setup: function () { },
   run: function () {
+    // Skip this test always for now since it loads google.com and that causes bug 992485
+    return;
+
     // Skip this test on Linux.
     if (navigator.platform.indexOf("Linux") == 0) { return; }
 
