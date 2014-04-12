@@ -701,4 +701,15 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
             setIsRTL(tab.getIsRTL());
         }
     }
+
+    // Public hooks for listening to metrics changing
+
+    public interface OnMetricsChangedListener {
+        public void onMetricsChanged(ImmutableViewportMetrics viewport);
+        public void onPanZoomStopped();
+    }
+
+    public void setOnMetricsChangedListener(OnMetricsChangedListener listener) {
+        mLayerClient.setOnMetricsChangedListener(listener);
+    }
 }
