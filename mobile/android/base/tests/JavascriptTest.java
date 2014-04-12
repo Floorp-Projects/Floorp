@@ -1,5 +1,6 @@
 package org.mozilla.gecko.tests;
 
+import org.mozilla.gecko.tests.helpers.JavascriptBridge;
 import org.mozilla.gecko.tests.helpers.JavascriptMessageParser;
 
 import android.util.Log;
@@ -12,7 +13,7 @@ import org.mozilla.gecko.Assert;
 
 public class JavascriptTest extends BaseTest {
     private static final String LOGTAG = "JavascriptTest";
-    private static final String EVENT_TYPE = "Robocop:JS";
+    private static final String EVENT_TYPE = JavascriptBridge.EVENT_TYPE;
 
     private final String javascriptUrl;
 
