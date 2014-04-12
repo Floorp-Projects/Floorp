@@ -912,7 +912,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                 // try to get filename, lineno from the first
                                 // stack frame location.
                                 int32_t lineNumber = 0;
-                                nsCString sourceName;
+                                nsString sourceName;
 
                                 nsCOMPtr<nsIStackFrame> location;
                                 xpc_exception->
@@ -926,7 +926,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                 }
 
                                 rv = scriptError->InitWithWindowID(NS_ConvertUTF8toUTF16(newMessage),
-                                                                   NS_ConvertUTF8toUTF16(sourceName),
+                                                                   sourceName,
                                                                    EmptyString(),
                                                                    lineNumber, 0, 0,
                                                                    "XPConnect JavaScript",

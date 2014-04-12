@@ -2599,7 +2599,7 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext *cx)
     nsXPConnect *xpc = nsXPConnect::XPConnect();
     xpc->GetCurrentJSStack(getter_AddRefs(frame));
 
-    nsCString fileName;
+    nsString fileName;
     int32_t lineNo = 0;
     if (frame) {
         frame->GetFilename(fileName);
@@ -2612,7 +2612,7 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext *cx)
 
     nsresult rv = scripterr->InitWithWindowID(
             nsDependentString(static_cast<const char16_t *>(msgchars)),
-            NS_ConvertUTF8toUTF16(fileName), EmptyString(), lineNo, 0, 0,
+            fileName, EmptyString(), lineNo, 0, 0,
             "XPConnect JavaScript", innerWindowID);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
@@ -2672,7 +2672,9 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
         nsCOMPtr<nsIStackFrame> frame;
         xpc->GetCurrentJSStack(getter_AddRefs(frame));
         if (frame) {
-            frame->GetFilename(filename);
+            nsString frameFile;
+            frame->GetFilename(frameFile);
+            CopyUTF16toUTF8(frameFile, filename);
             frame->GetLineNumber(&lineNo);
         }
     }
