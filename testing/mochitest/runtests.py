@@ -890,8 +890,7 @@ class Mochitest(MochitestUtilsMixin):
              timeout=-1,
              onLaunch=None,
              webapprtChrome=False,
-             hide_subtests=False,
-             screenshotOnFail=False):
+             hide_subtests=False):
     """
     Run the app, log the duration it took to execute, return the status code.
     Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing for |timeout| seconds.
@@ -981,7 +980,6 @@ class Mochitest(MochitestUtilsMixin):
                                          utilityPath=utilityPath,
                                          symbolsPath=symbolsPath,
                                          dump_screen_on_timeout=not debuggerInfo,
-                                         dump_screen_on_fail=screenshotOnFail,
                                          hide_subtests=hide_subtests,
                                          shutdownLeaks=shutdownLeaks,
         )
@@ -1153,7 +1151,6 @@ class Mochitest(MochitestUtilsMixin):
                                options.app,
                                profile=self.profile,
                                extraArgs=options.browserArgs,
-                               screenshotOnFail=options.screenshotOnFail,
                                utilityPath=options.utilityPath,
                                xrePath=options.xrePath,
                                certPath=options.certPath,
@@ -1215,7 +1212,7 @@ class Mochitest(MochitestUtilsMixin):
 
   class OutputHandler(object):
     """line output handler for mozrunner"""
-    def __init__(self, harness, utilityPath, symbolsPath=None, dump_screen_on_timeout=True, dump_screen_on_fail=False,
+    def __init__(self, harness, utilityPath, symbolsPath=None, dump_screen_on_timeout=True,
                  hide_subtests=False, shutdownLeaks=None):
       """
       harness -- harness instance
@@ -1227,7 +1224,6 @@ class Mochitest(MochitestUtilsMixin):
       self.utilityPath = utilityPath
       self.symbolsPath = symbolsPath
       self.dump_screen_on_timeout = dump_screen_on_timeout
-      self.dump_screen_on_fail = dump_screen_on_fail
       self.hide_subtests = hide_subtests
       self.shutdownLeaks = shutdownLeaks
 
@@ -1253,7 +1249,6 @@ class Mochitest(MochitestUtilsMixin):
       return [self.fix_stack,
               self.format,
               self.dumpScreenOnTimeout,
-              self.dumpScreenOnFail,
               self.metro_subprocess_id,
               self.trackShutdownLeaks,
               self.check_test_failure,
@@ -1326,13 +1321,7 @@ class Mochitest(MochitestUtilsMixin):
       return line.rstrip().decode("UTF-8", "ignore")
 
     def dumpScreenOnTimeout(self, line):
-      if not self.dump_screen_on_fail and self.dump_screen_on_timeout and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
-        self.log_output_buffer()
-        self.harness.dumpScreen(self.utilityPath)
-      return line
-
-    def dumpScreenOnFail(self, line):
-      if self.dump_screen_on_fail and "TEST-UNEXPECTED-FAIL" in line:
+      if self.dump_screen_on_timeout and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
         self.log_output_buffer()
         self.harness.dumpScreen(self.utilityPath)
       return line
