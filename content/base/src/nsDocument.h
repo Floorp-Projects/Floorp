@@ -442,9 +442,7 @@ public:
   nsDOMStyleSheetList(nsIDocument *aDocument);
   virtual ~nsDOMStyleSheetList();
 
-  NS_DECL_ISUPPORTS
-
-  NS_DECL_NSIDOMSTYLESHEETLIST
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED
@@ -453,7 +451,13 @@ public:
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-  virtual nsCSSStyleSheet* GetItemAt(uint32_t aIndex) MOZ_OVERRIDE;
+  virtual nsINode* GetParentObject() const MOZ_OVERRIDE
+  {
+    return mDocument;
+  }
+
+  virtual uint32_t Length() MOZ_OVERRIDE;
+  virtual nsCSSStyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) MOZ_OVERRIDE;
 
 protected:
   int32_t       mLength;
@@ -1224,7 +1228,7 @@ public:
     RegisterElement(JSContext* aCx, const nsAString& aName,
                     const mozilla::dom::ElementRegistrationOptions& aOptions,
                     mozilla::ErrorResult& rv) MOZ_OVERRIDE;
-  virtual nsIDOMStyleSheetList* StyleSheets() MOZ_OVERRIDE;
+  virtual mozilla::dom::StyleSheetList* StyleSheets() MOZ_OVERRIDE;
   virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet) MOZ_OVERRIDE;
   virtual void GetLastStyleSheetSet(nsString& aSheetSet) MOZ_OVERRIDE;
   virtual mozilla::dom::DOMStringList* StyleSheetSets() MOZ_OVERRIDE;
@@ -1429,7 +1433,7 @@ public:
   nsRefPtr<mozilla::dom::Registry> mRegistry;
 
   nsRefPtr<mozilla::EventListenerManager> mListenerManager;
-  nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
+  nsRefPtr<mozilla::dom::StyleSheetList> mDOMStyleSheets;
   nsRefPtr<nsDOMStyleSheetSetList> mStyleSheetSetList;
   nsRefPtr<nsScriptLoader> mScriptLoader;
   nsDocHeaderData* mHeaderData;

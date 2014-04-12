@@ -112,6 +112,7 @@ class GlobalObject;
 class NodeFilter;
 class NodeIterator;
 class ProcessingInstruction;
+class StyleSheetList;
 class Touch;
 class TouchList;
 class TreeWalker;
@@ -2169,7 +2170,7 @@ public:
     WarnOnceAbout(ePrefixedVisibilityAPI);
     return VisibilityState();
   }
-  virtual nsIDOMStyleSheetList* StyleSheets() = 0;
+  virtual mozilla::dom::StyleSheetList* StyleSheets() = 0;
   void GetSelectedStyleSheetSet(nsAString& aSheetSet);
   virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet) = 0;
   virtual void GetLastStyleSheetSet(nsString& aSheetSet) = 0;
