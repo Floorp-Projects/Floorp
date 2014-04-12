@@ -18,7 +18,7 @@ LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/html/document/src',
     '/content/svg/content/src',
-    '/content/xml/document/src',
+    '/dom/xml',
     '/layout/style',
 ]
 
