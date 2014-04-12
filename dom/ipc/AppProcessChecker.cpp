@@ -115,7 +115,11 @@ AssertAppProcess(PContentParent* aActor,
     }
   }
 
-  printf_stderr("Security problem: Content process does not have `%s'.  It will be killed.\n", aCapability);
+  NS_ERROR(
+    nsPrintfCString(
+      "Security problem: Content process does not have `%s'.  It will be killed.\n",
+      aCapability).get());
+
   static_cast<ContentParent*>(aActor)->KillHard();
 
   return false;
@@ -133,7 +137,11 @@ AssertAppStatus(PContentParent* aActor,
     }
   }
 
-  printf_stderr("Security problem: Content process does not have `%d' status.  It will be killed.\n", aStatus);
+  NS_ERROR(
+    nsPrintfCString(
+      "Security problem: Content process does not have `%d' status.  It will be killed.",
+      aStatus).get());
+
   static_cast<ContentParent*>(aActor)->KillHard();
 
   return false;
