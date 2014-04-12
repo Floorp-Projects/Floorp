@@ -34,7 +34,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.mozglue.GeckoLoader;
@@ -192,7 +191,7 @@ public class GeckoAppShell
 
     // helper methods
     //    public static native void setSurfaceView(GeckoSurfaceView sv);
-    public static native void setLayerClient(GeckoLayerClient client);
+    public static native void setLayerClient(Object client);
     public static native void onResume();
     public static void callObserver(String observerKey, String topic, String data) {
         sendEventToGecko(GeckoEvent.createCallObserverEvent(observerKey, topic, data));
@@ -320,7 +319,7 @@ public class GeckoAppShell
         GeckoAppShell.nativeInit();
 
         if (sLayerView != null)
-            GeckoAppShell.setLayerClient(sLayerView.getLayerClient());
+            GeckoAppShell.setLayerClient(sLayerView.getLayerClientObject());
 
         // First argument is the .apk path
         String combinedArgs = apkPath + " -greomni " + apkPath;

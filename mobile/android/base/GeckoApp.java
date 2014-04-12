@@ -1671,7 +1671,7 @@ public abstract class GeckoApp
             if (selectedTab != null)
                 Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
             geckoConnected();
-            GeckoAppShell.setLayerClient(mLayerView.getLayerClient());
+            GeckoAppShell.setLayerClient(mLayerView.getLayerClientObject());
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
         }
 

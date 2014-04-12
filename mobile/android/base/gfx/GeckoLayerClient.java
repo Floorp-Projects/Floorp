@@ -26,7 +26,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
+class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 {
     private static final String LOGTAG = "GeckoLayerClient";
 
