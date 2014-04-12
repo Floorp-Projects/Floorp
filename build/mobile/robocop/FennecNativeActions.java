@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.json.JSONObject;
 import org.mozilla.gecko.FennecNativeDriver.LogLevel;
-import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.LayerView.DrawListener;
 import org.mozilla.gecko.mozglue.GeckoLoader;
