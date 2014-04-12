@@ -226,14 +226,14 @@ toolbar[customizing] > .overflow-button {
 }
 
 /* Fullscreen and caption buttons don't move with RTL on OS X so override the automatic ordering. */
-#titlebar-fullscreen-button:-moz-locale-dir(ltr),
+#titlebar-secondary-buttonbox:-moz-locale-dir(ltr),
 #titlebar-buttonbox-container:-moz-locale-dir(rtl),
 .titlebar-placeholder[type="fullscreen-button"]:-moz-locale-dir(ltr),
 .titlebar-placeholder[type="caption-buttons"]:-moz-locale-dir(rtl) {
   -moz-box-ordinal-group: 1000;
 }
 
-#titlebar-fullscreen-button:-moz-locale-dir(rtl),
+#titlebar-secondary-buttonbox:-moz-locale-dir(rtl),
 #titlebar-buttonbox-container:-moz-locale-dir(ltr),
 .titlebar-placeholder[type="caption-buttons"]:-moz-locale-dir(ltr),
 .titlebar-placeholder[type="fullscreen-button"]:-moz-locale-dir(rtl) {
@@ -243,6 +243,12 @@ toolbar[customizing] > .overflow-button {
 /* On non-OSX, these should be start-aligned */
 #titlebar-buttonbox-container {
   -moz-box-align: start;
+}
+%endif
+
+%if !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_QT)
+#TabsToolbar > .private-browsing-indicator {
+  -moz-box-ordinal-group: 1000;
 }
 %endif
 
