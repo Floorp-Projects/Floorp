@@ -605,7 +605,9 @@ import_signature(const char *src, uint32_t sigIndex,
                  const char *base64SigFile, const char *dest)
 {
   int rv = -1;
-  FILE *fpSrc, *fpDest, *fpSigFile;
+  FILE *fpSrc = NULL;
+  FILE *fpDest = NULL;
+  FILE *fpSigFile = NULL;
   uint32_t i;
   uint32_t signatureCount, signatureLen, signatureAlgorithmID,
            numChunks, leftOver;
