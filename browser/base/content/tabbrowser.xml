@@ -3570,18 +3570,10 @@
           // 3 - close button at the end of the tabstrip
           switch (this.mCloseButtons) {
           case 0:
-            if (numTabs == 1 && this._closeWindowWithLastTab)
-              this.setAttribute("closebuttons", "hidden");
-            else
-              this.setAttribute("closebuttons", "activetab");
+            this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
-            if (numTabs == 1) {
-              if (this._closeWindowWithLastTab)
-                this.setAttribute("closebuttons", "hidden");
-              else
-                this.setAttribute("closebuttons", "alltabs");
-            } else if (numTabs == 2) {
+            if (numTabs <= 2) {
               // This is an optimization to avoid layout flushes by calling
               // getBoundingClientRect() when we just opened a second tab. In
               // this case it's highly unlikely that the tab width is smaller
