@@ -15,7 +15,6 @@
  * http://mxr.mozilla.org/mozilla-central/source/dom/interfaces/core/nsIDOMDocument.idl
  */
 
-interface StyleSheetList;
 interface WindowProxy;
 interface nsISupports;
 interface URI;
