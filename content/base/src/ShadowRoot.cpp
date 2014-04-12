@@ -677,18 +677,23 @@ ShadowRootStyleSheetList::~ShadowRootStyleSheetList()
   MOZ_COUNT_DTOR(ShadowRootStyleSheetList);
 }
 
+nsCSSStyleSheet*
+ShadowRootStyleSheetList::GetItemAt(uint32_t aIndex)
+{
+  nsTArray<nsRefPtr<nsCSSStyleSheet>>* sheets =
+    mShadowRoot->mProtoBinding->GetStyleSheets();
+
+  if (!sheets) {
+    return nullptr;
+  }
+
+  return sheets->SafeElementAt(aIndex);
+}
+
 NS_IMETHODIMP
 ShadowRootStyleSheetList::Item(uint32_t aIndex, nsIDOMStyleSheet** aReturn)
 {
-  nsTArray<nsRefPtr<nsCSSStyleSheet> >* sheets =
-    mShadowRoot->mProtoBinding->GetStyleSheets();
-
-  if (sheets) {
-    NS_IF_ADDREF(*aReturn = sheets->SafeElementAt(aIndex));
-  } else {
-    *aReturn = nullptr;
-  }
-
+  NS_IF_ADDREF(*aReturn = GetItemAt(aIndex));
   return NS_OK;
 }
 
