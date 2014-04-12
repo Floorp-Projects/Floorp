@@ -498,7 +498,12 @@
       </hbox>
     </hbox>
 #ifdef XP_MACOSX
-    <hbox id="titlebar-fullscreen-button"/>
+    <!-- OS X does not natively support RTL for its titlebar items, so we prevent this secondary
+         buttonbox from reversing order in RTL by forcing an LTR direction. -->
+    <hbox id="titlebar-secondary-buttonbox" dir="ltr">
+      <hbox class="private-browsing-indicator"/>
+      <hbox id="titlebar-fullscreen-button"/>
+    </hbox>
 #endif
   </hbox>
 </vbox>
@@ -602,8 +607,8 @@
                      cui-areatype="toolbar"
                      tooltiptext="&closeTab.label;"/>
 
-#ifdef XP_WIN
-      <hbox class="private-browsing-indicator" skipintoolbarset="true" ordinal="1000"/>
+#if !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_QT)
+      <hbox class="private-browsing-indicator" skipintoolbarset="true"/>
 #endif
 #ifdef CAN_DRAW_IN_TITLEBAR
       <hbox class="titlebar-placeholder" type="caption-buttons"
