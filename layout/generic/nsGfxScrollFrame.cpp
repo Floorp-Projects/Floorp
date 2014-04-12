@@ -2448,15 +2448,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
-  if (aBuilder->GetIgnoreScrollFrame() == mOuter || IsIgnoringViewportClipping()) {
-    // Don't clip the scrolled child, and don't paint scrollbars/scrollcorner.
-    // The scrolled frame shouldn't have its own background/border, so we
-    // can just pass aLists directly.
-    mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame,
-                                     aDirtyRect, aLists);
-    return;
-  }
-
   // We put scrollbars in their own layers when this is the root scroll
   // frame and we are a toplevel content document. In this situation, the
   // scrollbar(s) would normally be assigned their own layer anyway, since
@@ -2467,6 +2458,47 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // scrollbar works around the problem.
   bool createLayersForScrollbars = mIsRoot &&
     mOuter->PresContext()->IsRootContentDocument();
+
+  if (aBuilder->GetIgnoreScrollFrame() == mOuter || IsIgnoringViewportClipping()) {
+
+    // If we are a root scroll frame that has a display port we want to add
+    // scrollbars, they will be children of the scrollable layer, but they get
+    // adjusted by the APZC automatically.
+    bool addScrollBars = mIsRoot &&
+      nsLayoutUtils::GetDisplayPort(mOuter->GetContent()) &&
+      !aBuilder->IsForEventDelivery();
+    // For now, don't add them for display root documents, cause we've never
+    // had them there.
+    if (aBuilder->RootReferenceFrame()->PresContext() == mOuter->PresContext()) {
+      addScrollBars = false;
+    }
+
+    if (addScrollBars) {
+      // Add classic scrollbars.
+      AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, createLayersForScrollbars,
+                          false);
+    }
+
+    // Don't clip the scrolled child, and don't paint scrollbars/scrollcorner.
+    // The scrolled frame shouldn't have its own background/border, so we
+    // can just pass aLists directly.
+    mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame,
+                                     aDirtyRect, aLists);
+
+#ifdef MOZ_WIDGET_GONK
+    // TODO: only layerize the overlay scrollbars if this scrollframe can be
+    // panned asynchronously. For now just always layerize on B2G because.
+    // that's where we want the layerized scrollbars
+    createLayersForScrollbars = true;
+#endif
+    if (addScrollBars) {
+      // Add overlay scrollbars.
+      AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, createLayersForScrollbars,
+                          true);
+    }
+
+    return;
+  }
 
   // Now display the scrollbars and scrollcorner. These parts are drawn
   // in the border-background layer, on top of our own background and
