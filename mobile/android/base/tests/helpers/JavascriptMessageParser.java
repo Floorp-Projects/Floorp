@@ -24,9 +24,10 @@ public final class JavascriptMessageParser {
     public static final String EVENT_TYPE = "Robocop:JS";
 
     // Messages matching this pattern are handled specially.  Messages not
-    // matching this pattern are still printed.
+    // matching this pattern are still printed. This pattern should be able
+    // to handle having multiple lines in a message.
     private static final Pattern testMessagePattern =
-        Pattern.compile("\n+TEST-(.*) \\| (.*) \\| (.*)\n*");
+        Pattern.compile("TEST-([A-Z\\-]+) \\| (.*?) \\| (.*)", Pattern.DOTALL);
 
     private final Assert asserter;
     // Used to help print stack traces neatly.
@@ -43,7 +44,7 @@ public final class JavascriptMessageParser {
     }
 
     public void logMessage(final String str) {
-        final Matcher m = testMessagePattern.matcher(str);
+        final Matcher m = testMessagePattern.matcher(str.trim());
 
         if (m.matches()) {
             final String type = m.group(1);
