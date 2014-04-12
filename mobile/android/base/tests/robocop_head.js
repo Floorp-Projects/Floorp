@@ -1139,3 +1139,93 @@ function run_next_test()
     do_test_finished();
   }
 }
+
+/**
+ * End of code adapted from xpcshell head.js
+ */
+
+
+/**
+ * JavaBridge facilitates communication between Java and JS. See
+ * JavascriptBridge.java for the corresponding JavascriptBridge and docs.
+ */
+
+function JavaBridge(obj) {
+
+  this._EVENT_TYPE = "Robocop:JS";
+  this._target = obj;
+  // The number of replies needed to answer all outstanding sync calls.
+  this._repliesNeeded = 0;
+  this._Services.obs.addObserver(this, this._EVENT_TYPE, false);
+};
+
+JavaBridge.prototype = {
+
+  _Services: Components.utils.import(
+    "resource://gre/modules/Services.jsm", {}).Services,
+
+  _sendMessageToJava: Components.utils.import(
+    "resource://gre/modules/Messaging.jsm", {}).sendMessageToJava,
+
+  _sendMessage: function (innerType, args) {
+    this._sendMessageToJava({
+      type: this._EVENT_TYPE,
+      innerType: innerType,
+      method: args[0],
+      args: Array.prototype.slice.call(args, 1),
+    });
+  },
+
+  observe: function(subject, topic, data) {
+    let message = JSON.parse(data);
+    if (message.innerType === "sync-reply") {
+      // Reply to our Javascript-to-Java sync call
+      this._repliesNeeded--;
+      return;
+    }
+    // Call the corresponding method on the target
+    try {
+      this._target[message.method].apply(this._target, message.args);
+    } catch (e) {
+      do_report_unexpected_exception(e, "Failed to call " + message.method);
+    }
+    if (message.innerType === "sync-call") {
+      // Reply for sync message
+      this._sendMessage("sync-reply", [message.method]);
+    }
+  },
+
+  /**
+   * Synchronously call a method in Java,
+   * given the method name followed by a list of arguments.
+   */
+  syncCall: function (methodName /*, ... */) {
+    this._sendMessage("sync-call", arguments);
+    let thread = this._Services.tm.currentThread;
+    let initialReplies = this._repliesNeeded;
+    // Need one more reply to answer the current sync call.
+    this._repliesNeeded++;
+    // Wait for the reply to arrive. Normally we would not want to
+    // spin the event loop, but here we're in a test and our API
+    // specifies a synchronous call, so we spin the loop to wait for
+    // the call to finish.
+    while (this._repliesNeeded > initialReplies) {
+      thread.processNextEvent(true);
+    }
+  },
+
+  /**
+   * Asynchronously call a method in Java,
+   * given the method name followed by a list of arguments.
+   */
+  asyncCall: function (methodName /*, ... */) {
+    this._sendMessage("async-call", arguments);
+  },
+
+  /**
+   * Disconnect with Java.
+   */
+  disconnect: function () {
+    this._Services.obs.removeObserver(this, this._EVENT_TYPE);
+  },
+};
