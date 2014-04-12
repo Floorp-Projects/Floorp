@@ -86,6 +86,8 @@ browser.jar:
   skin/classic/browser/Privacy-48.png
   skin/classic/browser/privatebrowsing-mask.png
   skin/classic/browser/privatebrowsing-mask@2x.png
+  skin/classic/browser/privatebrowsing-mask-short.png
+  skin/classic/browser/privatebrowsing-mask-short@2x.png
   skin/classic/browser/reload-stop-go.png
   skin/classic/browser/reload-stop-go@2x.png
   skin/classic/browser/searchbar-dropmarker.png
