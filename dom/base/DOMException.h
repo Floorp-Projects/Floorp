@@ -69,7 +69,7 @@ public:
 
   void GetName(nsString& retval);
 
-  void GetFilename(nsString& retval);
+  // The XPCOM GetFilename does the right thing.
 
   uint32_t LineNumber() const;
 
@@ -100,7 +100,7 @@ protected:
   nsCString       mName;
   nsCOMPtr<nsIStackFrame> mLocation;
   nsCOMPtr<nsISupports> mData;
-  nsCString       mFilename;
+  nsString        mFilename;
   int             mLineNumber;
   nsCOMPtr<nsIException> mInner;
   bool            mInitialized;
