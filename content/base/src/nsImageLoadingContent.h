@@ -234,21 +234,6 @@ private:
   void UpdateImageState(bool aNotify);
 
   /**
-   * CancelImageRequests can be called when we want to cancel the
-   * image requests, generally due to our src changing and us wanting
-   * to start a new load.  The "current" request will be canceled only
-   * if it has not progressed far enough to know the image size yet
-   * unless aEvenIfSizeAvailable is true.
-   *
-   * @param aReason the reason the requests are being canceled
-   * @param aEvenIfSizeAvailable cancels the current load even if its size is
-   *                             available
-   * @param aNewImageStatus the nsIContentPolicy status of the new image load
-   */
-  void CancelImageRequests(nsresult aReason, bool aEvenIfSizeAvailable,
-                           int16_t aNewImageStatus);
-
-  /**
    * Method to fire an event once we know what's going on with the image load.
    *
    * @param aEventType "load" or "error" depending on how things went
