@@ -10,14 +10,14 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(60abee59-717e-477d-8bbb-a1c3e7067126)]
+[scriptable, uuid(3bc4793f-e6be-44d6-b839-d6b9e85e5346)]
 interface nsIStackFrame : nsISupports
 {
     // see nsIProgrammingLanguage for list of language consts
     readonly attribute uint32_t                language;
     readonly attribute AUTF8String             languageName;
-    readonly attribute AUTF8String             filename;
-    readonly attribute AUTF8String             name;
+    readonly attribute AString                 filename;
+    readonly attribute AString                 name;
     // Valid line numbers begin at '1'. '0' indicates unknown.
     readonly attribute int32_t                 lineNumber;
     readonly attribute AUTF8String             sourceLine;
@@ -26,7 +26,7 @@ interface nsIStackFrame : nsISupports
     AUTF8String toString();
 };
 
-[scriptable, uuid(6738090a-ba6f-4f3f-8aa0-b9f6311262a5)]
+[scriptable, uuid(1caf1461-be1d-4b79-a552-5292b6bf3c35)]
 interface nsIException : nsISupports
 {
     // A custom message set by the thrower.
@@ -44,7 +44,7 @@ interface nsIException : nsISupports
     // etc.
 
     // null indicates "no data"
-    readonly attribute AUTF8String             filename;
+    readonly attribute AString                 filename;
     // Valid line numbers begin at '1'. '0' indicates unknown.
     readonly attribute uint32_t                lineNumber;
     // Valid column numbers begin at 0. 
