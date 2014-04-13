@@ -1,40 +1,28 @@
-/* -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ ];
-
-Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
-const { devtools } = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
-const gcli = devtools.require("gcli/index");
+const gcli = require("gcli/index");
 
 // Fetch TiltManager using the current loader, but don't save a
 // reference to it, because it might change with a tool reload.
 // We can clean this up once the command line is loadered.
 Object.defineProperty(this, "TiltManager", {
   get: function() {
-    return devtools.require("devtools/tilt/tilt").TiltManager;
+    return require("devtools/tilt/tilt").TiltManager;
   },
   enumerable: true
 });
 
-/**
- * 'tilt' command
- */
-gcli.addCommand({
+exports.items = [
+{
   name: 'tilt',
   description: gcli.lookup("tiltDesc"),
   manual: gcli.lookup("tiltManual")
-});
-
-
-/**
- * 'tilt open' command
- */
-gcli.addCommand({
+},
+{
   name: 'tilt open',
   description: gcli.lookup("tiltOpenDesc"),
   manual: gcli.lookup("tiltOpenManual"),
@@ -45,13 +33,8 @@ gcli.addCommand({
       Tilt.toggle();
     }
   }
-});
-
-
-/**
- * 'tilt toggle' command
- */
-gcli.addCommand({
+},
+{
   name: "tilt toggle",
   buttonId: "command-button-tilt",
   buttonClass: "command-button command-button-invertable",
@@ -80,13 +63,8 @@ gcli.addCommand({
     let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
     Tilt.toggle();
   }
-});
-
-
-/**
- * 'tilt translate' command
- */
-gcli.addCommand({
+},
+{
   name: 'tilt translate',
   description: gcli.lookup("tiltTranslateDesc"),
   manual: gcli.lookup("tiltTranslateManual"),
@@ -113,13 +91,8 @@ gcli.addCommand({
       Tilt.currentInstance.controller.arcball.translate([args.x, args.y]);
     }
   }
-});
-
-
-/**
- * 'tilt rotate' command
- */
-gcli.addCommand({
+},
+{
   name: 'tilt rotate',
   description: gcli.lookup("tiltRotateDesc"),
   manual: gcli.lookup("tiltRotateManual"),
@@ -153,13 +126,8 @@ gcli.addCommand({
       Tilt.currentInstance.controller.arcball.rotate([args.x, args.y, args.z]);
     }
   }
-});
-
-
-/**
- * 'tilt zoom' command
- */
-gcli.addCommand({
+},
+{
   name: 'tilt zoom',
   description: gcli.lookup("tiltZoomDesc"),
   manual: gcli.lookup("tiltZoomManual"),
@@ -179,13 +147,8 @@ gcli.addCommand({
       Tilt.currentInstance.controller.arcball.zoom(-args.zoom);
     }
   }
-});
-
-
-/**
- * 'tilt reset' command
- */
-gcli.addCommand({
+},
+{
   name: 'tilt reset',
   description: gcli.lookup("tiltResetDesc"),
   manual: gcli.lookup("tiltResetManual"),
@@ -197,13 +160,8 @@ gcli.addCommand({
       Tilt.currentInstance.controller.arcball.reset();
     }
   }
-});
-
-
-/**
- * 'tilt close' command
- */
-gcli.addCommand({
+},
+{
   name: 'tilt close',
   description: gcli.lookup("tiltCloseDesc"),
   manual: gcli.lookup("tiltCloseManual"),
@@ -213,4 +171,5 @@ gcli.addCommand({
 
     Tilt.destroy(Tilt.currentWindowId);
   }
-});
+}
+];
