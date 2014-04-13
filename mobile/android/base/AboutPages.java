@@ -22,6 +22,8 @@ public class AboutPages {
 
     public static final String URL_FILTER = "about:%";
 
+    public static final String PANEL_PARAM = "panel";
+
     public static final boolean isAboutPage(final String url) {
         return url != null && url.startsWith("about:");
     }
@@ -41,8 +43,8 @@ public class AboutPages {
         return HOME.equals(url.split("\\?")[0]);
     }
 
-    public static final String getPageIdFromAboutHomeUrl(final String aboutHomeUrl) {
-        return StringUtils.getQueryParameter(aboutHomeUrl, "page");
+    public static final String getPanelIdFromAboutHomeUrl(String aboutHomeUrl) {
+        return StringUtils.getQueryParameter(aboutHomeUrl, PANEL_PARAM);
     }
 
     public static final boolean isAboutReader(final String url) {

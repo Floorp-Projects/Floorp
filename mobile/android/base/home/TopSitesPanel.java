@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
@@ -327,6 +329,7 @@ public class TopSitesPanel extends HomeFragment {
                 }
             });
 
+            Telemetry.sendUIEvent(TelemetryContract.Event.TOP_SITES_PIN);
             return true;
         }
 
@@ -341,12 +344,15 @@ public class TopSitesPanel extends HomeFragment {
                 }
             });
 
+            Telemetry.sendUIEvent(TelemetryContract.Event.TOP_SITES_UNPIN);
             return true;
         }
 
         if (itemId == R.id.top_sites_edit) {
             // Decode "user-entered" URLs before showing them.
             mEditPinnedSiteListener.onEditPinnedSite(info.position, decodeUserEnteredUrl(info.url));
+
+            Telemetry.sendUIEvent(TelemetryContract.Event.TOP_SITES_EDIT);
             return true;
         }
 

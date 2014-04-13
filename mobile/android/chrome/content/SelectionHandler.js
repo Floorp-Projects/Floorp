@@ -188,7 +188,7 @@ var SelectionHandler = {
   _startDraggingHandles: function sh_startDraggingHandles() {
     if (!this._draggingHandles) {
       this._draggingHandles = true;
-      sendMessageToJava({ type: "TextSelection:IMECompositions", suppress: true });
+      sendMessageToJava({ type: "TextSelection:DraggingHandle", dragging: true });
     }
   },
 
@@ -197,7 +197,7 @@ var SelectionHandler = {
   _stopDraggingHandles: function sh_stopDraggingHandles() {
     if (this._draggingHandles) {
       this._draggingHandles = false;
-      sendMessageToJava({ type: "TextSelection:IMECompositions", suppress: false });
+      sendMessageToJava({ type: "TextSelection:DraggingHandle", dragging: false });
     }
   },
 

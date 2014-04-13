@@ -66,9 +66,9 @@ td:last-child {
 <script type="application/javascript;version=1.8" src="chrome://global/content/crashes.js"/>
 
 <title>&crashes.title;</title>
-</head><body onload="init()" dir="&locale.dir;">
+</head><body onload="populateReportList()" dir="&locale.dir;">
 <button chromedir="&locale.dir;" id="clear-reports"
-        onclick="clearReports()">&clearAllReports.label;</button>
+        onclick="clearReports().then(null, Cu.reportError)">&clearAllReports.label;</button>
 <h1>&crashes.title;</h1>
 <div id="reportList">
   <table>
