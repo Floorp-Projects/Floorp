@@ -8,7 +8,6 @@ XPIDL_SOURCES += [
     'nsIDOMStorage.idl',
     'nsIDOMStorageEvent.idl',
     'nsIDOMStorageManager.idl',
-    'nsIDOMToString.idl',
 ]
 
 XPIDL_MODULE = 'dom_storage'
