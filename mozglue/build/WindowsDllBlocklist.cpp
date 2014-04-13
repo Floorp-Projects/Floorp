@@ -51,7 +51,8 @@ struct DllBlockInfo {
 
   enum {
     FLAGS_DEFAULT = 0,
-    BLOCK_WIN8PLUS_ONLY = 1
+    BLOCK_WIN8PLUS_ONLY = 1,
+    BLOCK_XP_ONLY = 2
   } flags;
 };
 
@@ -139,6 +140,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
 
   // Topcrash with Conduit SearchProtect, bug 944542
   { "spvc32.dll", ALL_VERSIONS },
+
+  // XP topcrash with F-Secure, bug 970362
+  { "fs_ccf_ni_umh32.dll", MAKE_VERSION(1, 42, 101, 0), DllBlockInfo::BLOCK_XP_ONLY },
 
   { nullptr, 0 }
 };
@@ -526,6 +530,11 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
 
     if ((info->flags == DllBlockInfo::BLOCK_WIN8PLUS_ONLY) &&
         !IsWin8OrLater()) {
+      goto continue_loading;
+    }
+
+    if ((info->flags == DllBlockInfo::BLOCK_XP_ONLY) &&
+        IsWin2003OrLater()) {
       goto continue_loading;
     }
 
