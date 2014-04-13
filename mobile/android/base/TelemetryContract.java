@@ -17,6 +17,18 @@ public interface TelemetryContract {
     public interface Event {
         // Outcome of data policy notification: can be true or false.
         public static final String POLICY_NOTIFICATION_SUCCESS = "policynotification.success.1:";
+
+        // Top site pinned.
+        public static final String TOP_SITES_PIN = "pin.1";
+
+        // Top site un-pinned.
+        public static final String TOP_SITES_UNPIN = "unpin.1";
+
+        // Top site edited.
+        public static final String TOP_SITES_EDIT = "edit.1";
+
+        // Set default panel.
+        public static final String PANEL_SET_DEFAULT = "setdefault.1";
     }
 
     /**
