@@ -1809,6 +1809,39 @@ toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
 
 %include ../shared/tabs.inc.css
 
+@media (min-resolution: 1.25dppx) {
+  /* image preloading hack from shared/tabs.inc.css */
+  #tabbrowser-tabs::before {
+    background-image:
+      url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png),
+      url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png),
+      url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png);
+  }
+
+  .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]),
+  .tabs-newtab-button:hover {
+    background-image: url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png),
+                      url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png),
+                      url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png);
+  }
+
+  .tab-background-middle[selected=true] {
+    background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle@2x.png),
+                      @fgTabTexture@,
+                      none;
+  }
+
+  .tab-background-start[selected=true]:-moz-locale-dir(ltr)::after,
+  .tab-background-end[selected=true]:-moz-locale-dir(rtl)::after {
+    background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-start@2x.png);
+  }
+
+  .tab-background-end[selected=true]:-moz-locale-dir(ltr)::after,
+  .tab-background-start[selected=true]:-moz-locale-dir(rtl)::after {
+    background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end@2x.png);
+  }
+}
+
 %ifndef WINDOWS_AERO
 /* Use lighter colors of buttons and text in the titlebar on luna-blue */
 @media (-moz-windows-theme: luna-blue) {
