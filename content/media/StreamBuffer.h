@@ -163,6 +163,15 @@ public:
       mSegment->ForgetUpTo(aTime);
     }
 
+    size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+    {
+      size_t amount = aMallocSizeOf(this);
+      if (mSegment) {
+        amount += mSegment->SizeOfIncludingThis(aMallocSizeOf);
+      }
+      return amount;
+    }
+
   protected:
     friend class StreamBuffer;
 
@@ -196,6 +205,16 @@ public:
   ~StreamBuffer()
   {
     MOZ_COUNT_DTOR(StreamBuffer);
+  }
+
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    size_t amount = 0;
+    amount += mTracks.SizeOfExcludingThis(aMallocSizeOf);
+    for (size_t i = 0; i < mTracks.Length(); i++) {
+      amount += mTracks[i]->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    return amount;
   }
 
   /**

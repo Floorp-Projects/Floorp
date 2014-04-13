@@ -31,6 +31,14 @@ public:
 
   virtual uint16_t NumberOfInputs() const MOZ_OVERRIDE { return 0; }
 
+  virtual const char* NodeType() const
+  {
+    return "MediaStreamAudioSourceNode";
+  }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
 private:
   nsRefPtr<MediaInputPort> mInputPort;
   nsRefPtr<DOMMediaStream> mInputStream;

@@ -56,6 +56,14 @@ public:
                             const Float32Array& aMagResponse,
                             const Float32Array& aPhaseResponse);
 
+  virtual const char* NodeType() const
+  {
+    return "BiquadFilterNode";
+  }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
 private:
   static void SendFrequencyToStream(AudioNode* aNode);
   static void SendDetuneToStream(AudioNode* aNode);
