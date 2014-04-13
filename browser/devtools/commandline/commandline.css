@@ -17,15 +17,35 @@
   content: '\bb';
 }
 
-.gcli-menu-option {
-  overflow: hidden;
+.gcli-menu-template {
   white-space: nowrap;
-  cursor: pointer;
+  width: 290px;
+  display: flex;
 }
 
-.gcli-menu-template {
-  border-collapse: collapse;
-  width: 100%;
+.gcli-menu-names {
+  white-space: nowrap;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.gcli-menu-descs {
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.gcli-menu-name,
+.gcli-menu-desc {
+  white-space: nowrap;
+}
+
+.gcli-menu-name {
+  -moz-padding-end: 10px;
+}
+
+.gcli-menu-desc {
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .gcli-menu-name,
