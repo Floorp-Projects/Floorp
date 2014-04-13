@@ -11,7 +11,6 @@ function test() {
 }
 
 function spawnTest() {
-  // Setup
   let options = yield helpers.openTab(TEST_URI);
   yield helpers.openToolbar(options);
 
@@ -31,12 +30,13 @@ function spawnTest() {
 
   yield helpers.audit(options, [
     {
-      setup: 'export html',
+      setup:    'export html',
+      skipIf: true,
       check: {
         input:  'export html',
-        hints:             '',
+        hints:             ' [destination]',
         markup: 'VVVVVVVVVVV',
-        status: 'VALID'
+        status: 'VALID',
       },
       exec: {
         output: ''
@@ -45,11 +45,31 @@ function spawnTest() {
         isnot(openURL.indexOf('<html lang="en">'), -1, "export html works: <html>");
         isnot(openURL.indexOf("<title>GCLI"), -1, "export html works: <title>");
         isnot(openURL.indexOf('<p id="someid">#'), -1, "export html works: <p>");
-
-         options.window.open = oldOpen;
+      }
+    },
+    {
+      setup:    'export html stdout',
+      check: {
+        input:  'export html stdout',
+        hints:                    '',
+        markup: 'VVVVVVVVVVVVVVVVVV',
+        status: 'VALID',
+        args: {
+          destination: { value: "stdout" }
+        },
+      },
+      exec: {
+        output: [
+          /<html lang="en">/,
+          /<title>GCLI/,
+          /<p id="someid">#/
+        ]
       }
     }
   ]);
+
+  options.window.open = oldOpen;
+  oldOpen = undefined;
 
   // Test 'pagemod replace'
   yield helpers.audit(options, [
