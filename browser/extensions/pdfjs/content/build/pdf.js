@@ -21,8 +21,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.0.2';
-PDFJS.build = '2909225';
+PDFJS.version = '0.8.1334';
+PDFJS.build = 'b97127a';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -182,7 +182,7 @@ var OPS = PDFJS.OPS = {
   paintInlineImageXObjectGroup: 87,
   paintImageXObjectRepeat: 88,
   paintImageMaskXObjectRepeat: 89,
-  paintSolidColorImageMask: 90
+  paintSolidColorImageMask: 90,
 };
 
 // A notice for devs. These are good for things that are helpful to devs, such
@@ -267,10 +267,9 @@ function combineUrl(baseUrl, url) {
   if (/^[a-z][a-z0-9+\-.]*:/i.test(url)) {
     return url;
   }
-  var i;
   if (url.charAt(0) == '/') {
     // absolute path
-    i = baseUrl.indexOf('://');
+    var i = baseUrl.indexOf('://');
     if (url.charAt(1) === '/') {
       ++i;
     } else {
@@ -279,7 +278,7 @@ function combineUrl(baseUrl, url) {
     return baseUrl.substring(0, i) + url;
   } else {
     // relative path
-    var pathLength = baseUrl.length;
+    var pathLength = baseUrl.length, i;
     i = baseUrl.lastIndexOf('#');
     pathLength = i >= 0 ? i : pathLength;
     i = baseUrl.lastIndexOf('?', pathLength);
@@ -424,41 +423,21 @@ var XRefParseException = (function XRefParseExceptionClosure() {
 
 
 function bytesToString(bytes) {
-  var length = bytes.length;
-  var MAX_ARGUMENT_COUNT = 8192;
-  if (length < MAX_ARGUMENT_COUNT) {
-    return String.fromCharCode.apply(null, bytes);
-  }
   var strBuf = [];
-  for (var i = 0; i < length; i += MAX_ARGUMENT_COUNT) {
-    var chunkEnd = Math.min(i + MAX_ARGUMENT_COUNT, length);
-    var chunk = bytes.subarray(i, chunkEnd);
-    strBuf.push(String.fromCharCode.apply(null, chunk));
+  var length = bytes.length;
+  for (var n = 0; n < length; ++n) {
+    strBuf.push(String.fromCharCode(bytes[n]));
   }
   return strBuf.join('');
-}
-
-function stringToArray(str) {
-  var length = str.length;
-  var array = [];
-  for (var i = 0; i < length; ++i) {
-    array[i] = str.charCodeAt(i);
-  }
-  return array;
 }
 
 function stringToBytes(str) {
   var length = str.length;
   var bytes = new Uint8Array(length);
-  for (var i = 0; i < length; ++i) {
-    bytes[i] = str.charCodeAt(i) & 0xFF;
+  for (var n = 0; n < length; ++n) {
+    bytes[n] = str.charCodeAt(n) & 0xFF;
   }
   return bytes;
-}
-
-function string32(value) {
-  return String.fromCharCode((value >> 24) & 0xff, (value >> 16) & 0xff,
-                             (value >> 8) & 0xff, value & 0xff);
 }
 
 // Lazy test the endianness of the platform
@@ -992,18 +971,17 @@ var StatTimer = (function StatTimerClosure() {
       delete this.started[name];
     },
     toString: function StatTimer_toString() {
-      var i, ii;
       var times = this.times;
       var out = '';
       // Find the longest name for padding purposes.
       var longest = 0;
-      for (i = 0, ii = times.length; i < ii; ++i) {
+      for (var i = 0, ii = times.length; i < ii; ++i) {
         var name = times[i]['name'];
         if (name.length > longest) {
           longest = name.length;
         }
       }
-      for (i = 0, ii = times.length; i < ii; ++i) {
+      for (var i = 0, ii = times.length; i < ii; ++i) {
         var span = times[i];
         var duration = span.end - span.start;
         out += rpad(span['name'], ' ', longest) + ' ' + duration + 'ms\n';
@@ -1213,10 +1191,10 @@ var ColorSpace = (function ColorSpaceClosure() {
       var rgbBuf = null;
       var numComponentColors = 1 << bpc;
       var needsResizing = originalHeight != height || originalWidth != width;
-      var i, ii;
 
       if (this.isPassthrough(bpc)) {
         rgbBuf = comps;
+
       } else if (this.numComps === 1 && count > numComponentColors &&
           this.name !== 'DeviceGray' && this.name !== 'DeviceRGB') {
         // Optimization: create a color map when there is just one component and
@@ -1230,20 +1208,18 @@ var ColorSpace = (function ColorSpaceClosure() {
         // we are reparsing colorspaces too much?).
         var allColors = bpc <= 8 ? new Uint8Array(numComponentColors) :
                                    new Uint16Array(numComponentColors);
-        var key;
-        for (i = 0; i < numComponentColors; i++) {
+        for (var i = 0; i < numComponentColors; i++) {
           allColors[i] = i;
         }
         var colorMap = new Uint8Array(numComponentColors * 3);
         this.getRgbBuffer(allColors, 0, numComponentColors, colorMap, 0, bpc,
                           /* alpha01 = */ 0);
 
-        var destPos, rgbPos;
         if (!needsResizing) {
           // Fill in the RGB values directly into |dest|.
-          destPos = 0;
-          for (i = 0; i < count; ++i) {
-            key = comps[i] * 3;
+          var destPos = 0;
+          for (var i = 0; i < count; ++i) {
+            var key = comps[i] * 3;
             dest[destPos++] = colorMap[key];
             dest[destPos++] = colorMap[key + 1];
             dest[destPos++] = colorMap[key + 2];
@@ -1251,9 +1227,9 @@ var ColorSpace = (function ColorSpaceClosure() {
           }
         } else {
           rgbBuf = new Uint8Array(count * 3);
-          rgbPos = 0;
-          for (i = 0; i < count; ++i) {
-            key = comps[i] * 3;
+          var rgbPos = 0;
+          for (var i = 0; i < count; ++i) {
+            var key = comps[i] * 3;
             rgbBuf[rgbPos++] = colorMap[key];
             rgbBuf[rgbPos++] = colorMap[key + 1];
             rgbBuf[rgbPos++] = colorMap[key + 2];
@@ -1276,9 +1252,9 @@ var ColorSpace = (function ColorSpaceClosure() {
           rgbBuf = PDFImage.resize(rgbBuf, bpc, 3, originalWidth,
                                    originalHeight, width, height);
         }
-        rgbPos = 0;
-        destPos = 0;
-        for (i = 0, ii = width * actualHeight; i < ii; i++) {
+        var rgbPos = 0;
+        var destPos = 0;
+        for (var i = 0, ii = width * actualHeight; i < ii; i++) {
           dest[destPos++] = rgbBuf[rgbPos++];
           dest[destPos++] = rgbBuf[rgbPos++];
           dest[destPos++] = rgbBuf[rgbPos++];
@@ -1304,7 +1280,6 @@ var ColorSpace = (function ColorSpaceClosure() {
 
   ColorSpace.fromIR = function ColorSpace_fromIR(IR) {
     var name = isArray(IR) ? IR[0] : IR;
-    var whitePoint, blackPoint;
 
     switch (name) {
       case 'DeviceGrayCS':
@@ -1314,8 +1289,8 @@ var ColorSpace = (function ColorSpaceClosure() {
       case 'DeviceCmykCS':
         return this.singletons.cmyk;
       case 'CalGrayCS':
-        whitePoint = IR[1].WhitePoint;
-        blackPoint = IR[1].BlackPoint;
+        var whitePoint = IR[1].WhitePoint;
+        var blackPoint = IR[1].BlackPoint;
         var gamma = IR[1].Gamma;
         return new CalGrayCS(whitePoint, blackPoint, gamma);
       case 'PatternCS':
@@ -1337,8 +1312,8 @@ var ColorSpace = (function ColorSpaceClosure() {
         return new AlternateCS(numComps, ColorSpace.fromIR(alt),
                                 PDFFunction.fromIR(tintFnIR));
       case 'LabCS':
-        whitePoint = IR[1].WhitePoint;
-        blackPoint = IR[1].BlackPoint;
+        var whitePoint = IR[1].WhitePoint;
+        var blackPoint = IR[1].BlackPoint;
         var range = IR[1].Range;
         return new LabCS(whitePoint, blackPoint, range);
       default:
@@ -1383,7 +1358,6 @@ var ColorSpace = (function ColorSpaceClosure() {
     } else if (isArray(cs)) {
       mode = cs[0].name;
       this.mode = mode;
-      var numComps, params;
 
       switch (mode) {
         case 'DeviceGray':
@@ -1396,14 +1370,14 @@ var ColorSpace = (function ColorSpaceClosure() {
         case 'CMYK':
           return 'DeviceCmykCS';
         case 'CalGray':
-          params = cs[1].getAll();
+          var params = cs[1].getAll();
           return ['CalGrayCS', params];
         case 'CalRGB':
           return 'DeviceRgbCS';
         case 'ICCBased':
           var stream = xref.fetchIfRef(cs[1]);
           var dict = stream.dict;
-          numComps = dict.get('N');
+          var numComps = dict.get('N');
           if (numComps == 1) {
             return 'DeviceGrayCS';
           } else if (numComps == 3) {
@@ -1430,7 +1404,7 @@ var ColorSpace = (function ColorSpaceClosure() {
         case 'Separation':
         case 'DeviceN':
           var name = cs[1];
-          numComps = 1;
+          var numComps = 1;
           if (isName(name)) {
             numComps = 1;
           } else if (isArray(name)) {
@@ -1440,7 +1414,7 @@ var ColorSpace = (function ColorSpaceClosure() {
           var tintFnIR = PDFFunction.getIR(xref, xref.fetchIfRef(cs[3]));
           return ['AlternateCS', numComps, alt, tintFnIR];
         case 'Lab':
-          params = cs[1].getAll();
+          var params = cs[1].getAll();
           return ['LabCS', params];
         default:
           error('unimplemented color space object "' + mode + '"');
@@ -1535,14 +1509,13 @@ var AlternateCS = (function AlternateCSClosure() {
       var numComps = this.numComps;
 
       var scaled = new Float32Array(numComps);
-      var i, j;
-      for (i = 0; i < count; i++) {
-        for (j = 0; j < numComps; j++) {
+      for (var i = 0; i < count; i++) {
+        for (var j = 0; j < numComps; j++) {
           scaled[j] = src[srcOffset++] * scale;
         }
         var tinted = tintFn(scaled);
         if (usesZeroToOneRange) {
-          for (j = 0; j < baseNumComps; j++) {
+          for (var j = 0; j < baseNumComps; j++) {
             baseBuf[pos++] = tinted[j] * 255;
           }
         } else {
@@ -2077,9 +2050,8 @@ var PDFFunction = (function PDFFunctionClosure() {
   return {
     getSampleArray: function PDFFunction_getSampleArray(size, outputSize, bps,
                                                        str) {
-      var i, ii;
       var length = 1;
-      for (i = 0, ii = size.length; i < ii; i++) {
+      for (var i = 0, ii = size.length; i < ii; i++) {
         length *= size[i];
       }
       length *= outputSize;
@@ -2092,7 +2064,7 @@ var PDFFunction = (function PDFFunctionClosure() {
 
       var strBytes = str.getBytes((length * bps + 7) / 8);
       var strIdx = 0;
-      for (i = 0; i < length; i++) {
+      for (var i = 0; i < length; i++) {
         while (codeSize < bps) {
           codeBuf <<= 8;
           codeBuf |= strBytes[strIdx++];
@@ -2235,14 +2207,13 @@ var PDFFunction = (function PDFFunctionClosure() {
         var cubeVertices = 1 << m;
         var cubeN = new Float64Array(cubeVertices);
         var cubeVertex = new Uint32Array(cubeVertices);
-        var i, j;
-        for (j = 0; j < cubeVertices; j++) {
+        for (var j = 0; j < cubeVertices; j++) {
           cubeN[j] = 1;
         }
 
         var k = n, pos = 1;
         // Map x_i to y_j for 0 <= i < m using the sampled function.
-        for (i = 0; i < m; ++i) {
+        for (var i = 0; i < m; ++i) {
           // x_i' = min(max(x_i, Domain_2i), Domain_2i+1)
           var domain_2i = domain[i][0];
           var domain_2i_1 = domain[i][1];
@@ -2263,7 +2234,7 @@ var PDFFunction = (function PDFFunctionClosure() {
           var n1 = e - e0; // (e - e0) / (e1 - e0);
           var offset0 = e0 * k;
           var offset1 = offset0 + k; // e1 * k
-          for (j = 0; j < cubeVertices; j++) {
+          for (var j = 0; j < cubeVertices; j++) {
             if (j & pos) {
               cubeN[j] *= n1;
               cubeVertex[j] += offset1;
@@ -2278,10 +2249,10 @@ var PDFFunction = (function PDFFunctionClosure() {
         }
 
         var y = new Float64Array(n);
-        for (j = 0; j < n; ++j) {
+        for (var j = 0; j < n; ++j) {
           // Sum all cube vertices' samples portions
           var rj = 0;
-          for (i = 0; i < cubeVertices; i++) {
+          for (var i = 0; i < cubeVertices; i++) {
             rj += samples[cubeVertex[i] + j] * cubeN[i];
           }
 
@@ -2842,7 +2813,7 @@ var Annotation = (function AnnotationClosure() {
     var data = this.data = {};
 
     data.subtype = dict.get('Subtype').name;
-    var rect = dict.get('Rect') || [0, 0, 0, 0];
+    var rect = dict.get('Rect');
     data.rect = Util.normalizeRect(rect);
     data.annotationFlags = dict.get('F');
 
@@ -2874,8 +2845,7 @@ var Annotation = (function AnnotationClosure() {
           var isInvalid = false;
           var numPositive = 0;
           for (var i = 0; i < dashArrayLength; i++) {
-            var validNumber = (+dashArray[i] >= 0);
-            if (!validNumber) {
+            if (!(+dashArray[i] >= 0)) {
               isInvalid = true;
               break;
             } else if (dashArray[i] > 0) {
@@ -3141,7 +3111,7 @@ var WidgetAnnotation = (function WidgetAnnotationClosure() {
     var fieldType = Util.getInheritableProperty(dict, 'FT');
     data.fieldType = isName(fieldType) ? fieldType.name : '';
     data.fieldFlags = Util.getInheritableProperty(dict, 'Ff') || 0;
-    this.fieldResources = Util.getInheritableProperty(dict, 'DR') || Dict.empty;
+    this.fieldResources = Util.getInheritableProperty(dict, 'DR') || new Dict();
 
     // Building the full field name by collecting the field and
     // its ancestors 'T' data and joining them using '.'.
@@ -3436,12 +3406,10 @@ var TextAnnotation = (function TextAnnotationClosure() {
       var content = document.createElement('div');
       content.className = 'annotTextContent';
       content.setAttribute('hidden', true);
-
-      var i, ii;
       if (item.hasBgColor) {
         var color = item.color;
         var rgb = [];
-        for (i = 0; i < 3; ++i) {
+        for (var i = 0; i < 3; ++i) {
           // Enlighten the color (70%)
           var c = Math.round(color[i] * 255);
           rgb[i] = Math.round((255 - c) * 0.7) + c;
@@ -3458,7 +3426,7 @@ var TextAnnotation = (function TextAnnotationClosure() {
       } else {
         var e = document.createElement('span');
         var lines = item.content.split(/(?:\r\n?|\n)/);
-        for (i = 0, ii = lines.length; i < ii; ++i) {
+        for (var i = 0, ii = lines.length; i < ii; ++i) {
           var line = lines[i];
           e.appendChild(document.createTextNode(line));
           if (i < (ii - 1)) {
@@ -3714,13 +3682,6 @@ PDFJS.disableCreateObjectURL = (PDFJS.disableCreateObjectURL === undefined ?
                                 false : PDFJS.disableCreateObjectURL);
 
 /**
- * Disables WebGL usage.
- * @var {boolean}
- */
-PDFJS.disableWebGL = (PDFJS.disableWebGL === undefined ?
-                      true : PDFJS.disableWebGL);
-
-/**
  * Controls the logging level.
  * The constants from PDFJS.VERBOSITY_LEVELS should be used:
  * - errors
@@ -3938,51 +3899,15 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
 })();
 
 /**
- * Page text content.
- *
- * @typedef {Object} TextContent
- * @property {array} items - array of {@link TextItem}
- * @property {Object} styles - {@link TextStyles} objects, indexed by font
- *                    name.
- */
-
-/**
  * Page text content part.
  *
- * @typedef {Object} TextItem
+ * @typedef {Object} BidiText
  * @property {string} str - text content.
  * @property {string} dir - text direction: 'ttb', 'ltr' or 'rtl'.
- * @property {array} transform - transformation matrix.
- * @property {number} width - width in device space.
- * @property {number} height - height in device space.
- * @property {string} fontName - font name used by pdf.js for converted font.
- */
-
-/**
- * Text style.
- *
- * @typedef {Object} TextStyle
- * @property {number} ascent - font ascent.
- * @property {number} descent - font descent.
- * @property {boolean} vertical - text is in vertical mode.
- * @property {string} fontFamily - possible font family
- */
-
-/**
- * Page render parameters.
- *
- * @typedef {Object} RenderParameters
- * @property {Object} canvasContext - A 2D context of a DOM Canvas object.
- * @property {PageViewport} viewport - Rendering viewport obtained by
- *                          calling of PDFPage.getViewport method.
- * @property {string} intent - Rendering intent, can be 'display' or 'print'
- *                    (default value is 'display').
- * @property {Object} imageLayer - (optional) An object that has beginLayout,
- *                    endLayout and appendImage functions.
- * @property {function} continueCallback - (optional) A function that will be
- *                      called each time the rendering is paused.  To continue
- *                      rendering call the function that is the first argument
- *                      to the callback.
+ * @property {number} x - x position of the text on the page.
+ * @property {number} y - y position of the text on the page.
+ * @property {number} angle - text rotation.
+ * @property {number} size - font size.
  */
 
 /**
@@ -4057,9 +3982,20 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
     },
     /**
      * Begins the process of rendering a page to the desired context.
-     * @param {RenderParameters} params Page render parameters.
-     * @return {RenderTask} An object that contains the promise, which
-     *                      is resolved when the page finishes rendering.
+     * @param {Object} params A parameter object that supports:
+     * {
+     *   canvasContext(required): A 2D context of a DOM Canvas object.,
+     *   textLayer(optional): An object that has beginLayout, endLayout, and
+     *                        appendText functions.,
+     *   imageLayer(optional): An object that has beginLayout, endLayout and
+     *                         appendImage functions.,
+     *   continueCallback(optional): A function that will be called each time
+     *                               the rendering is paused.  To continue
+     *                               rendering call the function that is the
+     *                               first argument to the callback.
+     * }.
+     * @return {RenderTask} An extended promise that is resolved when the page
+     * finishes rendering (see RenderTask).
      */
     render: function PDFPageProxy_render(params) {
       var stats = this.stats;
@@ -4145,8 +4081,8 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       return renderTask;
     },
     /**
-     * @return {Promise} That is resolved a {@link TextContent}
-     * object that represent the page text content.
+     * @return {Promise} That is resolved with the array of {@link BidiText}
+     * objects that represent the page text content.
      */
     getTextContent: function PDFPageProxy_getTextContent() {
       var promise = new PDFJS.LegacyPromise();
@@ -4203,9 +4139,8 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
     _renderPageChunk: function PDFPageProxy_renderPageChunk(operatorListChunk,
                                                             intent) {
       var intentState = this.intentStates[intent];
-      var i, ii;
       // Add the new chunk to the current operator list.
-      for (i = 0, ii = operatorListChunk.length; i < ii; i++) {
+      for (var i = 0, ii = operatorListChunk.length; i < ii; i++) {
         intentState.operatorList.fnArray.push(operatorListChunk.fnArray[i]);
         intentState.operatorList.argsArray.push(
           operatorListChunk.argsArray[i]);
@@ -4213,7 +4148,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       intentState.operatorList.lastChunk = operatorListChunk.lastChunk;
 
       // Notify all the rendering tasks there are more operators to be consumed.
-      for (i = 0; i < intentState.renderTasks.length; i++) {
+      for (var i = 0; i < intentState.renderTasks.length; i++) {
         intentState.renderTasks[i].operatorListChanged();
       }
 
@@ -4484,18 +4419,17 @@ var WorkerTransport = (function WorkerTransportClosure() {
         var pageIndex = data[1];
         var type = data[2];
         var pageProxy = this.pageCache[pageIndex];
-        var imageData;
         if (pageProxy.objs.hasData(id)) {
           return;
         }
 
         switch (type) {
           case 'JpegStream':
-            imageData = data[3];
+            var imageData = data[3];
             loadJpegStream(id, imageData, pageProxy.objs);
             break;
           case 'Image':
-            imageData = data[3];
+            var imageData = data[3];
             pageProxy.objs.resolve(id, imageData);
 
             // heuristics that will allow not to store large data
@@ -4551,16 +4485,15 @@ var WorkerTransport = (function WorkerTransportClosure() {
           var tmpCtx = tmpCanvas.getContext('2d');
           tmpCtx.drawImage(img, 0, 0);
           var data = tmpCtx.getImageData(0, 0, width, height).data;
-          var i, j;
 
           if (components == 3) {
-            for (i = 0, j = 0; i < rgbaLength; i += 4, j += 3) {
+            for (var i = 0, j = 0; i < rgbaLength; i += 4, j += 3) {
               buf[j] = data[i];
               buf[j + 1] = data[i + 1];
               buf[j + 2] = data[i + 2];
             }
           } else if (components == 1) {
-            for (i = 0, j = 0; i < rgbaLength; i += 4, j++) {
+            for (var i = 0, j = 0; i < rgbaLength; i += 4, j++) {
               buf[j] = data[i];
             }
           }
@@ -4603,7 +4536,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
       if (pageIndex in this.pagePromises) {
         return this.pagePromises[pageIndex];
       }
-      promise = new PDFJS.LegacyPromise();
+      var promise = new PDFJS.LegacyPromise();
       this.pagePromises[pageIndex] = promise;
       this.messageHandler.send('GetPageRequest', { pageIndex: pageIndex });
       return promise;
@@ -4782,18 +4715,6 @@ var RenderTask = (function RenderTaskClosure() {
     cancel: function RenderTask_cancel() {
       this.internalRenderTask.cancel();
       this.promise.reject(new Error('Rendering is cancelled'));
-    },
-
-    /**
-     * Registers callback to indicate the rendering task completion.
-     *
-     * @param {function} onFulfilled The callback for the rendering completion.
-     * @param {function} onRejected The callback for the rendering failure.
-     * @return {Promise} A promise that is resolved after the onFulfilled or
-     *                   onRejected callback.
-     */
-    then: function RenderTask_then(onFulfilled, onRejected) {
-      return this.promise.then(onFulfilled, onRejected);
     }
   };
 
@@ -4838,7 +4759,8 @@ var InternalRenderTask = (function InternalRenderTaskClosure() {
 
       var params = this.params;
       this.gfx = new CanvasGraphics(params.canvasContext, this.commonObjs,
-                                    this.objs, params.imageLayer);
+                                    this.objs, params.textLayer,
+                                    params.imageLayer);
 
       this.gfx.beginDrawing(params.viewport, transparency);
       this.operatorListIdx = 0;
@@ -4993,7 +4915,6 @@ var Metadata = PDFJS.Metadata = (function MetadataClosure() {
 
 // Minimal font size that would be used during canvas fillText operations.
 var MIN_FONT_SIZE = 16;
-var MAX_GROUP_SIZE = 4096;
 
 var COMPILE_TYPE3_GLYPHS = true;
 
@@ -5368,7 +5289,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
   // before it stops and shedules a continue of execution.
   var EXECUTION_TIME = 15;
 
-  function CanvasGraphics(canvasCtx, commonObjs, objs, imageLayer) {
+  function CanvasGraphics(canvasCtx, commonObjs, objs, textLayer, imageLayer) {
     this.ctx = canvasCtx;
     this.current = new CanvasExtraState();
     this.stateStack = [];
@@ -5378,6 +5299,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     this.xobjs = null;
     this.commonObjs = commonObjs;
     this.objs = objs;
+    this.textLayer = textLayer;
     this.imageLayer = imageLayer;
     this.groupStack = [];
     this.processingType3 = null;
@@ -5419,13 +5341,13 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     var partialChunkHeight = height - fullChunks * fullChunkHeight;
 
     var chunkImgData = ctx.createImageData(width, fullChunkHeight);
-    var srcPos = 0, destPos;
+    var srcPos = 0;
     var src = imgData.data;
     var dest = chunkImgData.data;
-    var i, j, thisChunkHeight, elemsInThisChunk;
 
     // There are multiple forms in which the pixel data can be passed, and
     // imgData.kind tells us which one this is.
+
     if (imgData.kind === ImageKind.GRAYSCALE_1BPP) {
       // Grayscale, 1 bit per pixel (i.e. black-and-white).
       var destDataLength = dest.length;
@@ -5437,11 +5359,11 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var white = 0xFFFFFFFF;
       var black = (PDFJS.isLittleEndian || !PDFJS.hasCanvasTypedArrays) ?
         0xFF000000 : 0x000000FF;
-      for (i = 0; i < totalChunks; i++) {
-        thisChunkHeight =
+      for (var i = 0; i < totalChunks; i++) {
+        var thisChunkHeight =
           (i < fullChunks) ? fullChunkHeight : partialChunkHeight;
-        destPos = 0;
-        for (j = 0; j < thisChunkHeight; j++) {
+        var destPos = 0;
+        for (var j = 0; j < thisChunkHeight; j++) {
           var srcDiff = srcLength - srcPos;
           var k = 0;
           var kEnd = (srcDiff > fullSrcDiff) ? width : srcDiff * 8 - 7;
@@ -5476,27 +5398,29 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
         ctx.putImageData(chunkImgData, 0, i * fullChunkHeight);
       }
+
     } else if (imgData.kind === ImageKind.RGBA_32BPP) {
       // RGBA, 32-bits per pixel.
 
-      for (i = 0; i < totalChunks; i++) {
-        thisChunkHeight =
+      for (var i = 0; i < totalChunks; i++) {
+        var thisChunkHeight =
           (i < fullChunks) ? fullChunkHeight : partialChunkHeight;
-        elemsInThisChunk = imgData.width * thisChunkHeight * 4;
+        var elemsInThisChunk = imgData.width * thisChunkHeight * 4;
 
         dest.set(src.subarray(srcPos, srcPos + elemsInThisChunk));
         srcPos += elemsInThisChunk;
 
         ctx.putImageData(chunkImgData, 0, i * fullChunkHeight);
       }
+
     } else if (imgData.kind === ImageKind.RGB_24BPP) {
       // RGB, 24-bits per pixel.
-      for (i = 0; i < totalChunks; i++) {
-        thisChunkHeight =
+      for (var i = 0; i < totalChunks; i++) {
+        var thisChunkHeight =
           (i < fullChunks) ? fullChunkHeight : partialChunkHeight;
-        elemsInThisChunk = imgData.width * thisChunkHeight * 3;
-        destPos = 0;
-        for (j = 0; j < elemsInThisChunk; j += 3) {
+        var elemsInThisChunk = imgData.width * thisChunkHeight * 3;
+        var destPos = 0;
+        for (var j = 0; j < elemsInThisChunk; j += 3) {
           dest[destPos++] = src[srcPos++];
           dest[destPos++] = src[srcPos++];
           dest[destPos++] = src[srcPos++];
@@ -5504,8 +5428,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         }
         ctx.putImageData(chunkImgData, 0, i * fullChunkHeight);
       }
+
     } else {
-      error('bad image kind: ' + imgData.kind);
+        error('bad image kind: ' + imgData.kind);
     }
   }
 
@@ -5564,10 +5489,15 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     }
   }
 
-  function genericComposeSMask(maskCtx, layerCtx, width, height,
-                               subtype, backdrop) {
+  function composeSMask(ctx, smask, layerCtx) {
+    var mask = smask.canvas;
+    var maskCtx = smask.context;
+    var width = mask.width, height = mask.height;
+
     var addBackdropFn;
-    if (backdrop) {
+    if (smask.backdrop) {
+      var cs = smask.colorSpace || ColorSpace.singletons.rgb;
+      var backdrop = cs.getRgb(smask.backdrop, 0);
       addBackdropFn = function (r0, g0, b0, bytes) {
         var length = bytes.length;
         for (var i = 3; i < length; i += 4) {
@@ -5589,7 +5519,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     }
 
     var composeFn;
-    if (subtype === 'Luminosity') {
+    if (smask.subtype === 'Luminosity') {
       composeFn = function (maskDataBytes, layerDataBytes) {
         var length = maskDataBytes.length;
         for (var i = 3; i < length; i += 4) {
@@ -5610,8 +5540,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     }
 
     // processing image in chunks to save memory
-    var PIXELS_TO_PROCESS = 65536;
-    var chunkSize = Math.min(height, Math.ceil(PIXELS_TO_PROCESS / width));
+    var chunkSize = 16;
     for (var row = 0; row < height; row += chunkSize) {
       var chunkHeight = Math.min(chunkSize, height - row);
       var maskData = maskCtx.getImageData(0, row, width, chunkHeight);
@@ -5622,30 +5551,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       maskCtx.putImageData(layerData, 0, row);
     }
-  }
 
-  function composeSMask(ctx, smask, layerCtx) {
-    var mask = smask.canvas;
-    var maskCtx = smask.context;
-
-    ctx.setTransform(smask.scaleX, 0, 0, smask.scaleY,
-                     smask.offsetX, smask.offsetY);
-
-    var backdrop;
-    if (smask.backdrop) {
-      var cs = smask.colorSpace || ColorSpace.singletons.rgb;
-      backdrop = cs.getRgb(smask.backdrop, 0);
-    }
-    if (WebGLUtils.isEnabled) {
-      var composed = WebGLUtils.composeSMask(layerCtx.canvas, mask,
-        {subtype: smask.subtype, backdrop: backdrop});
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.drawImage(composed, smask.offsetX, smask.offsetY);
-      return;
-    }
-    genericComposeSMask(maskCtx, layerCtx, mask.width, mask.height,
-                        smask.subtype, backdrop);
-    ctx.drawImage(mask, 0, 0);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(mask, smask.offsetX, smask.offsetY);
   }
 
   var LINE_CAP_STYLES = ['butt', 'round', 'square'];
@@ -5680,6 +5588,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       this.baseTransform = this.ctx.mozCurrentTransform.slice();
 
+      if (this.textLayer) {
+        this.textLayer.beginLayout();
+      }
       if (this.imageLayer) {
         this.imageLayer.beginLayout();
       }
@@ -5759,8 +5670,10 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     endDrawing: function CanvasGraphics_endDrawing() {
       this.ctx.restore();
       CachedCanvases.clear();
-      WebGLUtils.clear();
 
+      if (this.textLayer) {
+        this.textLayer.endLayout();
+      }
       if (this.imageLayer) {
         this.imageLayer.endLayout();
       }
@@ -5880,7 +5793,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.ctx.save();
 
       var groupCtx = scratchCanvas.context;
-      groupCtx.scale(1 / activeSMask.scaleX, 1 / activeSMask.scaleY);
       groupCtx.translate(-activeSMask.offsetX, -activeSMask.offsetY);
       groupCtx.transform.apply(groupCtx, currentTransform);
 
@@ -6190,6 +6102,33 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         ctx.scale(-current.textHScale, 1);
       }
     },
+    createTextGeometry: function CanvasGraphics_createTextGeometry() {
+      var geometry = {};
+      var ctx = this.ctx;
+      var font = this.current.font;
+      var ctxMatrix = ctx.mozCurrentTransform;
+      var a = ctxMatrix[0], b = ctxMatrix[1], c = ctxMatrix[2];
+      var d = ctxMatrix[3], e = ctxMatrix[4], f = ctxMatrix[5];
+      var sx = (a >= 0) ?
+          Math.sqrt((a * a) + (b * b)) : -Math.sqrt((a * a) + (b * b));
+      var sy = (d >= 0) ?
+          Math.sqrt((c * c) + (d * d)) : -Math.sqrt((c * c) + (d * d));
+      var angle = Math.atan2(b, a);
+      var x = e;
+      var y = f;
+      geometry.x = x;
+      geometry.y = y;
+      geometry.hScale = sx;
+      geometry.vScale = sy;
+      geometry.angle = angle;
+      geometry.spaceWidth = font.spaceWidth;
+      geometry.fontName = font.loadedName;
+      geometry.fontFamily = font.fallbackName;
+      geometry.fontSize = this.current.fontSize;
+      geometry.ascent = font.ascent;
+      geometry.descent = font.descent;
+      return geometry;
+    },
 
     paintChar: function (character, x, y) {
       var ctx = this.ctx;
@@ -6261,7 +6200,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       return shadow(this, 'isFontSubpixelAAEnabled', enabled);
     },
 
-    showText: function CanvasGraphics_showText(glyphs) {
+    showText: function CanvasGraphics_showText(glyphs, skipTextSelection) {
       var ctx = this.ctx;
       var current = this.current;
       var font = current.font;
@@ -6272,14 +6211,12 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var textHScale = current.textHScale * current.fontDirection;
       var fontMatrix = current.fontMatrix || FONT_IDENTITY_MATRIX;
       var glyphsLength = glyphs.length;
+      var textLayer = this.textLayer;
+      var geom;
+      var textSelection = textLayer && !skipTextSelection ? true : false;
+      var canvasWidth = 0.0;
       var vertical = font.vertical;
       var defaultVMetrics = font.defaultVMetrics;
-      var i, glyph, width;
-      var VERTICAL_TEXT_ROTATION = Math.PI / 2;
-
-      if (fontSize === 0) {
-        return;
-      }
 
       // Type3 fonts - each glyph is a "mini-PDF"
       if (font.coded) {
@@ -6289,8 +6226,15 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
         ctx.scale(textHScale, 1);
 
-        for (i = 0; i < glyphsLength; ++i) {
-          glyph = glyphs[i];
+        if (textSelection) {
+          this.save();
+          ctx.scale(1, -1);
+          geom = this.createTextGeometry();
+          this.restore();
+        }
+        for (var i = 0; i < glyphsLength; ++i) {
+
+          var glyph = glyphs[i];
           if (glyph === null) {
             // word break
             this.ctx.translate(wordSpacing, 0);
@@ -6306,11 +6250,13 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           this.restore();
 
           var transformed = Util.applyTransform([glyph.width, 0], fontMatrix);
-          width = ((transformed[0] * fontSize + charSpacing) *
-                   current.fontDirection);
+          var width = (transformed[0] * fontSize + charSpacing) *
+                      current.fontDirection;
 
           ctx.translate(width, 0);
           current.x += width * textHScale;
+
+          canvasWidth += width;
         }
         ctx.restore();
         this.processingType3 = null;
@@ -6327,6 +6273,10 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           lineWidth /= scale;
         }
 
+        if (textSelection) {
+          geom = this.createTextGeometry();
+        }
+
         if (fontSizeScale != 1.0) {
           ctx.scale(fontSizeScale, fontSizeScale);
           lineWidth /= fontSizeScale;
@@ -6335,8 +6285,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         ctx.lineWidth = lineWidth;
 
         var x = 0;
-        for (i = 0; i < glyphsLength; ++i) {
-          glyph = glyphs[i];
+        for (var i = 0; i < glyphsLength; ++i) {
+          var glyph = glyphs[i];
           if (glyph === null) {
             // word break
             x += current.fontDirection * wordSpacing;
@@ -6351,7 +6301,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
             vx = -vx * fontSize * current.fontMatrix[0];
             var vy = vmetric[2] * fontSize * current.fontMatrix[0];
           }
-          width = vmetric ? -vmetric[0] : glyph.width;
+          var width = vmetric ? -vmetric[0] : glyph.width;
           var charWidth = width * fontSize * current.fontMatrix[0] +
                           charSpacing * current.fontDirection;
           var accent = glyph.accent;
@@ -6390,6 +6340,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
           x += charWidth;
 
+          canvasWidth += charWidth;
+
           if (restoreNeeded) {
             ctx.restore();
           }
@@ -6401,6 +6353,17 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         }
         ctx.restore();
       }
+
+      if (textSelection) {
+        geom.canvasWidth = canvasWidth;
+        if (vertical) {
+          var VERTICAL_TEXT_ROTATION = Math.PI / 2;
+          geom.angle += VERTICAL_TEXT_ROTATION;
+        }
+        this.textLayer.appendText(geom);
+      }
+
+      return canvasWidth;
     },
     showSpacedText: function CanvasGraphics_showSpacedText(arr) {
       var ctx = this.ctx;
@@ -6410,7 +6373,19 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       // TJ array's number is independent from fontMatrix
       var textHScale = current.textHScale * 0.001 * current.fontDirection;
       var arrLength = arr.length;
+      var textLayer = this.textLayer;
+      var geom;
+      var canvasWidth = 0.0;
+      var textSelection = textLayer ? true : false;
       var vertical = font.vertical;
+      var spacingAccumulator = 0;
+
+      if (textSelection) {
+        ctx.save();
+        this.applyTextTransforms();
+        geom = this.createTextGeometry();
+        ctx.restore();
+      }
 
       for (var i = 0; i < arrLength; ++i) {
         var e = arr[i];
@@ -6422,9 +6397,26 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
             current.x += spacingLength;
           }
 
+          if (textSelection) {
+            spacingAccumulator += spacingLength;
+          }
         } else {
-          this.showText(e);
+          var shownCanvasWidth = this.showText(e, true);
+
+          if (textSelection) {
+            canvasWidth += spacingAccumulator + shownCanvasWidth;
+            spacingAccumulator = 0;
+          }
         }
+      }
+
+      if (textSelection) {
+        geom.canvasWidth = canvasWidth;
+        if (vertical) {
+          var VERTICAL_TEXT_ROTATION = Math.PI / 2;
+          geom.angle += VERTICAL_TEXT_ROTATION;
+        }
+        this.textLayer.appendText(geom);
       }
     },
     nextLineShowText: function CanvasGraphics_nextLineShowText(text) {
@@ -6473,7 +6465,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.current.strokeColor = color;
     },
     getColorN_Pattern: function CanvasGraphics_getColorN_Pattern(IR, cs) {
-      var pattern;
       if (IR[0] == 'TilingPattern') {
         var args = IR[1];
         var base = cs.base;
@@ -6483,10 +6474,10 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
           color = base.getRgb(args, 0);
         }
-        pattern = new TilingPattern(IR, color, this.ctx, this.objs,
-                                    this.commonObjs, this.baseTransform);
+        var pattern = new TilingPattern(IR, color, this.ctx, this.objs,
+                                        this.commonObjs, this.baseTransform);
       } else {
-        pattern = getShadingPatternFromIR(IR);
+        var pattern = getShadingPatternFromIR(IR);
       }
       return pattern;
     },
@@ -6677,19 +6668,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       bounds = Util.intersect(bounds, canvasBounds) || [0, 0, 0, 0];
       // Use ceil in case we're between sizes so we don't create canvas that is
       // too small and make the canvas at least 1x1 pixels.
-      var offsetX = Math.floor(bounds[0]);
-      var offsetY = Math.floor(bounds[1]);
-      var drawnWidth = Math.max(Math.ceil(bounds[2]) - offsetX, 1);
-      var drawnHeight = Math.max(Math.ceil(bounds[3]) - offsetY, 1);
-      var scaleX = 1, scaleY = 1;
-      if (drawnWidth > MAX_GROUP_SIZE) {
-        scaleX = drawnWidth / MAX_GROUP_SIZE;
-        drawnWidth = MAX_GROUP_SIZE;
-      }
-      if (drawnHeight > MAX_GROUP_SIZE) {
-        scaleY = drawnHeight / MAX_GROUP_SIZE;
-        drawnHeight = MAX_GROUP_SIZE;
-      }
+      var drawnWidth = Math.max(Math.ceil(bounds[2] - bounds[0]), 1);
+      var drawnHeight = Math.max(Math.ceil(bounds[3] - bounds[1]), 1);
 
       var cacheId = 'groupAt' + this.groupLevel;
       if (group.smask) {
@@ -6702,7 +6682,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       // Since we created a new canvas that is just the size of the bounding box
       // we have to translate the group ctx.
-      groupCtx.scale(1 / scaleX, 1 / scaleY);
+      var offsetX = bounds[0];
+      var offsetY = bounds[1];
       groupCtx.translate(-offsetX, -offsetY);
       groupCtx.transform.apply(groupCtx, currentTransform);
 
@@ -6713,8 +6694,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           context: groupCtx,
           offsetX: offsetX,
           offsetY: offsetY,
-          scaleX: scaleX,
-          scaleY: scaleY,
           subtype: group.smask.subtype,
           backdrop: group.smask.backdrop,
           colorSpace: group.colorSpace && ColorSpace.fromIR(group.colorSpace)
@@ -6724,7 +6703,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         // right location.
         currentCtx.setTransform(1, 0, 0, 1, 0, 0);
         currentCtx.translate(offsetX, offsetY);
-        currentCtx.scale(scaleX, scaleY);
       }
       // The transparency group inherits all off the current graphics state
       // except the blend mode, soft mask, and alpha constants.
@@ -6964,12 +6942,12 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var c = currentTransform[2], d = currentTransform[3];
       var heightScale = Math.max(Math.sqrt(c * c + d * d), 1);
 
-      var imgToPaint, tmpCanvas;
+      var imgToPaint;
       // instanceof HTMLElement does not work in jsdom node.js module
       if (imgData instanceof HTMLElement || !imgData.data) {
         imgToPaint = imgData;
       } else {
-        tmpCanvas = CachedCanvases.getCanvas('inlineImage', width, height);
+        var tmpCanvas = CachedCanvases.getCanvas('inlineImage', width, height);
         var tmpCtx = tmpCanvas.context;
         putBinaryImageData(tmpCtx, imgData);
         imgToPaint = tmpCanvas.canvas;
@@ -6991,7 +6969,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           newHeight = Math.ceil(paintHeight / 2);
           heightScale /= paintHeight / newHeight;
         }
-        tmpCanvas = CachedCanvases.getCanvas(tmpCanvasId, newWidth, newHeight);
+        var tmpCanvas = CachedCanvases.getCanvas(tmpCanvasId,
+                                                 newWidth, newHeight);
         tmpCtx = tmpCanvas.context;
         tmpCtx.clearRect(0, 0, newWidth, newHeight);
         tmpCtx.drawImage(imgToPaint, 0, 0, paintWidth, paintHeight,
@@ -7130,416 +7109,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
 
 
-var WebGLUtils = (function WebGLUtilsClosure() {
-  function loadShader(gl, code, shaderType) {
-    var shader = gl.createShader(shaderType);
-    gl.shaderSource(shader, code);
-    gl.compileShader(shader);
-    var compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-    if (!compiled) {
-      var errorMsg = gl.getShaderInfoLog(shader);
-      throw new Error('Error during shader compilation: ' + errorMsg);
-    }
-    return shader;
-  }
-  function createVertexShader(gl, code) {
-    return loadShader(gl, code, gl.VERTEX_SHADER);
-  }
-  function createFragmentShader(gl, code) {
-    return loadShader(gl, code, gl.FRAGMENT_SHADER);
-  }
-  function createProgram(gl, shaders) {
-    var program = gl.createProgram();
-    for (var i = 0, ii = shaders.length; i < ii; ++i) {
-      gl.attachShader(program, shaders[i]);
-    }
-    gl.linkProgram(program);
-    var linked = gl.getProgramParameter(program, gl.LINK_STATUS);
-    if (!linked) {
-      var errorMsg = gl.getProgramInfoLog(program);
-      throw new Error('Error during program linking: ' + errorMsg);
-    }
-    return program;
-  }
-  function createTexture(gl, image, textureId) {
-    gl.activeTexture(textureId);
-    var texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-
-    // Set the parameters so we can render any size image.
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
-    // Upload the image into the texture.
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-    return texture;
-  }
-
-  var currentGL, currentCanvas;
-  function generageGL() {
-    if (currentGL) {
-      return;
-    }
-    currentCanvas = document.createElement('canvas');
-    currentGL = currentCanvas.getContext('webgl',
-      { premultipliedalpha: false });
-  }
-
-  var smaskVertexShaderCode = '\
-  attribute vec2 a_position;                                    \
-  attribute vec2 a_texCoord;                                    \
-                                                                \
-  uniform vec2 u_resolution;                                    \
-                                                                \
-  varying vec2 v_texCoord;                                      \
-                                                                \
-  void main() {                                                 \
-    vec2 clipSpace = (a_position / u_resolution) * 2.0 - 1.0;   \
-    gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);          \
-                                                                \
-    v_texCoord = a_texCoord;                                    \
-  }                                                             ';
-
-  var smaskFragmentShaderCode = '\
-  precision mediump float;                                      \
-                                                                \
-  uniform vec4 u_backdrop;                                      \
-  uniform int u_subtype;                                        \
-  uniform sampler2D u_image;                                    \
-  uniform sampler2D u_mask;                                     \
-                                                                \
-  varying vec2 v_texCoord;                                      \
-                                                                \
-  void main() {                                                 \
-    vec4 imageColor = texture2D(u_image, v_texCoord);           \
-    vec4 maskColor = texture2D(u_mask, v_texCoord);             \
-    if (u_backdrop.a > 0.0) {                                   \
-      maskColor.rgb = maskColor.rgb * maskColor.a +             \
-                      u_backdrop.rgb * (1.0 - maskColor.a);     \
-    }                                                           \
-    float lum;                                                  \
-    if (u_subtype == 0) {                                       \
-      lum = maskColor.a;                                        \
-    } else {                                                    \
-      lum = maskColor.r * 0.3 + maskColor.g * 0.59 +            \
-            maskColor.b * 0.11;                                 \
-    }                                                           \
-    imageColor.a *= lum;                                        \
-    imageColor.rgb *= imageColor.a;                             \
-    gl_FragColor = imageColor;                                  \
-  }                                                             ';
-
-  var smaskCache = null;
-
-  function initSmaskGL() {
-    var canvas, gl;
-
-    generageGL();
-    canvas = currentCanvas;
-    currentCanvas = null;
-    gl = currentGL;
-    currentGL = null;
-
-    // setup a GLSL program
-    var vertexShader = createVertexShader(gl, smaskVertexShaderCode);
-    var fragmentShader = createFragmentShader(gl, smaskFragmentShaderCode);
-    var program = createProgram(gl, [vertexShader, fragmentShader]);
-    gl.useProgram(program);
-
-    var cache = {};
-    cache.gl = gl;
-    cache.canvas = canvas;
-    cache.resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
-    cache.positionLocation = gl.getAttribLocation(program, 'a_position');
-    cache.backdropLocation = gl.getUniformLocation(program, 'u_backdrop');
-    cache.subtypeLocation = gl.getUniformLocation(program, 'u_subtype');
-
-    var texCoordLocation = gl.getAttribLocation(program, 'a_texCoord');
-    var texLayerLocation = gl.getUniformLocation(program, 'u_image');
-    var texMaskLocation = gl.getUniformLocation(program, 'u_mask');
-
-    // provide texture coordinates for the rectangle.
-    var texCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      0.0,  0.0,
-      1.0,  0.0,
-      0.0,  1.0,
-      0.0,  1.0,
-      1.0,  0.0,
-      1.0,  1.0]), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(texCoordLocation);
-    gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
-
-    gl.uniform1i(texLayerLocation, 0);
-    gl.uniform1i(texMaskLocation, 1);
-
-    smaskCache = cache;
-  }
-
-  function composeSMask(layer, mask, properties) {
-    var width = layer.width, height = layer.height;
-
-    if (!smaskCache) {
-      initSmaskGL();
-    }
-    var cache = smaskCache,canvas = cache.canvas, gl = cache.gl;
-    canvas.width = width;
-    canvas.height = height;
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    gl.uniform2f(cache.resolutionLocation, width, height);
-
-    if (properties.backdrop) {
-      gl.uniform4f(cache.resolutionLocation, properties.backdrop[0],
-                   properties.backdrop[1], properties.backdrop[2], 1);
-    } else {
-      gl.uniform4f(cache.resolutionLocation, 0, 0, 0, 0);
-    }
-    gl.uniform1i(cache.subtypeLocation,
-                 properties.subtype === 'Luminosity' ? 1 : 0);
-
-    // Create a textures
-    var texture = createTexture(gl, layer, gl.TEXTURE0);
-    var maskTexture = createTexture(gl, mask, gl.TEXTURE1);
-
-
-    // Create a buffer and put a single clipspace rectangle in
-    // it (2 triangles)
-    var buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      0, 0,
-      width, 0,
-      0, height,
-      0, height,
-      width, 0,
-      width, height]), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(cache.positionLocation);
-    gl.vertexAttribPointer(cache.positionLocation, 2, gl.FLOAT, false, 0, 0);
-
-    // draw
-    gl.clearColor(0, 0, 0, 0);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-    gl.flush();
-
-    gl.deleteTexture(texture);
-    gl.deleteTexture(maskTexture);
-    gl.deleteBuffer(buffer);
-
-    return canvas;
-  }
-
-  var figuresVertexShaderCode = '\
-  attribute vec2 a_position;                                    \
-  attribute vec3 a_color;                                       \
-                                                                \
-  uniform vec2 u_resolution;                                    \
-  uniform vec2 u_scale;                                         \
-  uniform vec2 u_offset;                                        \
-                                                                \
-  varying vec4 v_color;                                         \
-                                                                \
-  void main() {                                                 \
-    vec2 position = (a_position + u_offset) * u_scale;          \
-    vec2 clipSpace = (position / u_resolution) * 2.0 - 1.0;     \
-    gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);          \
-                                                                \
-    v_color = vec4(a_color / 255.0, 1.0);                       \
-  }                                                             ';
-
-  var figuresFragmentShaderCode = '\
-  precision mediump float;                                      \
-                                                                \
-  varying vec4 v_color;                                         \
-                                                                \
-  void main() {                                                 \
-    gl_FragColor = v_color;                                     \
-  }                                                             ';
-
-  var figuresCache = null;
-
-  function initFiguresGL() {
-    var canvas, gl;
-
-    generageGL();
-    canvas = currentCanvas;
-    currentCanvas = null;
-    gl = currentGL;
-    currentGL = null;
-
-    // setup a GLSL program
-    var vertexShader = createVertexShader(gl, figuresVertexShaderCode);
-    var fragmentShader = createFragmentShader(gl, figuresFragmentShaderCode);
-    var program = createProgram(gl, [vertexShader, fragmentShader]);
-    gl.useProgram(program);
-
-    var cache = {};
-    cache.gl = gl;
-    cache.canvas = canvas;
-    cache.resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
-    cache.scaleLocation = gl.getUniformLocation(program, 'u_scale');
-    cache.offsetLocation = gl.getUniformLocation(program, 'u_offset');
-    cache.positionLocation = gl.getAttribLocation(program, 'a_position');
-    cache.colorLocation = gl.getAttribLocation(program, 'a_color');
-
-    figuresCache = cache;
-  }
-
-  function drawFigures(width, height, backgroundColor, figures, context) {
-    if (!figuresCache) {
-      initFiguresGL();
-    }
-    var cache = figuresCache, canvas = cache.canvas, gl = cache.gl;
-
-    canvas.width = width;
-    canvas.height = height;
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    gl.uniform2f(cache.resolutionLocation, width, height);
-
-    // count triangle points
-    var count = 0;
-    var i, ii, rows;
-    for (i = 0, ii = figures.length; i < ii; i++) {
-      switch (figures[i].type) {
-        case 'lattice':
-          rows = (figures[i].coords.length / figures[i].verticesPerRow) | 0;
-          count += (rows - 1) * (figures[i].verticesPerRow - 1) * 6;
-          break;
-        case 'triangles':
-          count += figures[i].coords.length;
-          break;
-      }
-    }
-    // transfer data
-    var coords = new Float32Array(count * 2);
-    var colors = new Uint8Array(count * 3);
-    var coordsMap = context.coords, colorsMap = context.colors;
-    var pIndex = 0, cIndex = 0;
-    for (i = 0, ii = figures.length; i < ii; i++) {
-      var figure = figures[i], ps = figure.coords, cs = figure.colors;
-      switch (figure.type) {
-        case 'lattice':
-          var cols = figure.verticesPerRow;
-          rows = (ps.length / cols) | 0;
-          for (var row = 1; row < rows; row++) {
-            var offset = row * cols + 1;
-            for (var col = 1; col < cols; col++, offset++) {
-              coords[pIndex] = coordsMap[ps[offset - cols - 1]];
-              coords[pIndex + 1] = coordsMap[ps[offset - cols - 1] + 1];
-              coords[pIndex + 2] = coordsMap[ps[offset - cols]];
-              coords[pIndex + 3] = coordsMap[ps[offset - cols] + 1];
-              coords[pIndex + 4] = coordsMap[ps[offset - 1]];
-              coords[pIndex + 5] = coordsMap[ps[offset - 1] + 1];
-              colors[cIndex] = colorsMap[cs[offset - cols - 1]];
-              colors[cIndex + 1] = colorsMap[cs[offset - cols - 1] + 1];
-              colors[cIndex + 2] = colorsMap[cs[offset - cols - 1] + 2];
-              colors[cIndex + 3] = colorsMap[cs[offset - cols]];
-              colors[cIndex + 4] = colorsMap[cs[offset - cols] + 1];
-              colors[cIndex + 5] = colorsMap[cs[offset - cols] + 2];
-              colors[cIndex + 6] = colorsMap[cs[offset - 1]];
-              colors[cIndex + 7] = colorsMap[cs[offset - 1] + 1];
-              colors[cIndex + 8] = colorsMap[cs[offset - 1] + 2];
-
-              coords[pIndex + 6] = coords[pIndex + 2];
-              coords[pIndex + 7] = coords[pIndex + 3];
-              coords[pIndex + 8] = coords[pIndex + 4];
-              coords[pIndex + 9] = coords[pIndex + 5];
-              coords[pIndex + 10] = coordsMap[ps[offset]];
-              coords[pIndex + 11] = coordsMap[ps[offset] + 1];
-              colors[cIndex + 9] = colors[cIndex + 3];
-              colors[cIndex + 10] = colors[cIndex + 4];
-              colors[cIndex + 11] = colors[cIndex + 5];
-              colors[cIndex + 12] = colors[cIndex + 6];
-              colors[cIndex + 13] = colors[cIndex + 7];
-              colors[cIndex + 14] = colors[cIndex + 8];
-              colors[cIndex + 15] = colorsMap[cs[offset]];
-              colors[cIndex + 16] = colorsMap[cs[offset] + 1];
-              colors[cIndex + 17] = colorsMap[cs[offset] + 2];
-              pIndex += 12;
-              cIndex += 18;
-            }
-          }
-          break;
-        case 'triangles':
-          for (var j = 0, jj = ps.length; j < jj; j++) {
-            coords[pIndex] = coordsMap[ps[j]];
-            coords[pIndex + 1] = coordsMap[ps[j] + 1];
-            colors[cIndex] = colorsMap[cs[i]];
-            colors[cIndex + 1] = colorsMap[cs[j] + 1];
-            colors[cIndex + 2] = colorsMap[cs[j] + 2];
-            pIndex += 2;
-            cIndex += 3;
-          }
-          break;
-      }
-    }
-
-    // draw
-    if (backgroundColor) {
-      gl.clearColor(backgroundColor[0] / 255, backgroundColor[1] / 255,
-                    backgroundColor[2] / 255, 1.0);
-    } else {
-      gl.clearColor(0, 0, 0, 0);
-    }
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    var coordsBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, coordsBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, coords, gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(cache.positionLocation);
-    gl.vertexAttribPointer(cache.positionLocation, 2, gl.FLOAT, false, 0, 0);
-
-    var colorsBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(cache.colorLocation);
-    gl.vertexAttribPointer(cache.colorLocation, 3, gl.UNSIGNED_BYTE, false,
-                           0, 0);
-
-    gl.uniform2f(cache.scaleLocation, context.scaleX, context.scaleY);
-    gl.uniform2f(cache.offsetLocation, context.offsetX, context.offsetY);
-
-    gl.drawArrays(gl.TRIANGLES, 0, count);
-
-    gl.flush();
-
-    gl.deleteBuffer(coordsBuffer);
-    gl.deleteBuffer(colorsBuffer);
-
-    return canvas;
-  }
-
-  function cleanup() {
-    smaskCache = null;
-    figuresCache = null;
-  }
-
-  return {
-    get isEnabled() {
-      if (PDFJS.disableWebGL) {
-        return false;
-      }
-      var enabled = false;
-      try {
-        generageGL();
-        enabled = !!currentGL;
-      } catch (e) { }
-      return shadow(this, 'isEnabled', enabled);
-    },
-    composeSMask: composeSMask,
-    drawFigures: drawFigures,
-    clear: cleanup
-  };
-})();
-
-
 var ShadingIRs = {};
 
 ShadingIRs.RadialAxial = {
@@ -7576,27 +7145,28 @@ var createMeshCanvas = (function createMeshCanvasClosure() {
     var coords = context.coords, colors = context.colors;
     var bytes = data.data, rowSize = data.width * 4;
     var tmp;
-    if (coords[p1 + 1] > coords[p2 + 1]) {
+    if (coords[p1 * 2 + 1] > coords[p2 * 2 + 1]) {
       tmp = p1; p1 = p2; p2 = tmp; tmp = c1; c1 = c2; c2 = tmp;
     }
-    if (coords[p2 + 1] > coords[p3 + 1]) {
+    if (coords[p2 * 2 + 1] > coords[p3 * 2 + 1]) {
       tmp = p2; p2 = p3; p3 = tmp; tmp = c2; c2 = c3; c3 = tmp;
     }
-    if (coords[p1 + 1] > coords[p2 + 1]) {
+    if (coords[p1 * 2 + 1] > coords[p2 * 2 + 1]) {
       tmp = p1; p1 = p2; p2 = tmp; tmp = c1; c1 = c2; c2 = tmp;
     }
-    var x1 = (coords[p1] + context.offsetX) * context.scaleX;
-    var y1 = (coords[p1 + 1] + context.offsetY) * context.scaleY;
-    var x2 = (coords[p2] + context.offsetX) * context.scaleX;
-    var y2 = (coords[p2 + 1] + context.offsetY) * context.scaleY;
-    var x3 = (coords[p3] + context.offsetX) * context.scaleX;
-    var y3 = (coords[p3 + 1] + context.offsetY) * context.scaleY;
+    var x1 = (coords[p1 * 2] + context.offsetX) * context.scaleX;
+    var y1 = (coords[p1 * 2 + 1] + context.offsetY) * context.scaleY;
+    var x2 = (coords[p2 * 2] + context.offsetX) * context.scaleX;
+    var y2 = (coords[p2 * 2 + 1] + context.offsetY) * context.scaleY;
+    var x3 = (coords[p3 * 2] + context.offsetX) * context.scaleX;
+    var y3 = (coords[p3 * 2 + 1] + context.offsetY) * context.scaleY;
     if (y1 >= y3) {
       return;
     }
-    var c1r = colors[c1], c1g = colors[c1 + 1], c1b = colors[c1 + 2];
-    var c2r = colors[c2], c2g = colors[c2 + 1], c2b = colors[c2 + 2];
-    var c3r = colors[c3], c3g = colors[c3 + 1], c3b = colors[c3 + 2];
+    var c1i = c1 * 3, c2i = c2 * 3, c3i = c3 * 3;
+    var c1r = colors[c1i], c1g = colors[c1i + 1], c1b = colors[c1i + 2];
+    var c2r = colors[c2i], c2g = colors[c2i + 1], c2b = colors[c2i + 2];
+    var c3r = colors[c3i], c3g = colors[c3i + 1], c3b = colors[c3i + 2];
 
     var minY = Math.round(y1), maxY = Math.round(y3);
     var xa, car, cag, cab;
@@ -7638,13 +7208,12 @@ var createMeshCanvas = (function createMeshCanvasClosure() {
   function drawFigure(data, figure, context) {
     var ps = figure.coords;
     var cs = figure.colors;
-    var i, ii;
     switch (figure.type) {
       case 'lattice':
         var verticesPerRow = figure.verticesPerRow;
         var rows = Math.floor(ps.length / verticesPerRow) - 1;
         var cols = verticesPerRow - 1;
-        for (i = 0; i < rows; i++) {
+        for (var i = 0; i < rows; i++) {
           var q = i * verticesPerRow;
           for (var j = 0; j < cols; j++, q++) {
             drawTriangle(data, context,
@@ -7657,7 +7226,7 @@ var createMeshCanvas = (function createMeshCanvasClosure() {
         }
         break;
       case 'triangles':
-        for (i = 0, ii = ps.length; i < ii; i += 3) {
+        for (var i = 0, ii = ps.length; i < ii; i += 3) {
           drawTriangle(data, context,
             ps[i], ps[i + 1], ps[i + 2],
             cs[i], cs[i + 1], cs[i + 2]);
@@ -7677,59 +7246,39 @@ var createMeshCanvas = (function createMeshCanvasClosure() {
     // MAX_PATTERN_SIZE is used to avoid OOM situation.
     var MAX_PATTERN_SIZE = 3000; // 10in @ 300dpi shall be enough
 
-    var offsetX = Math.floor(bounds[0]);
-    var offsetY = Math.floor(bounds[1]);
-    var boundsWidth = Math.ceil(bounds[2]) - offsetX;
-    var boundsHeight = Math.ceil(bounds[3]) - offsetY;
+    var boundsWidth = bounds[2] - bounds[0];
+    var boundsHeight = bounds[3] - bounds[1];
 
     var width = Math.min(Math.ceil(Math.abs(boundsWidth * combinesScale[0] *
       EXPECTED_SCALE)), MAX_PATTERN_SIZE);
     var height = Math.min(Math.ceil(Math.abs(boundsHeight * combinesScale[1] *
       EXPECTED_SCALE)), MAX_PATTERN_SIZE);
-    var scaleX = boundsWidth / width;
-    var scaleY = boundsHeight / height;
+    var scaleX = width / boundsWidth;
+    var scaleY = height / boundsHeight;
+
+    var tmpCanvas = CachedCanvases.getCanvas('mesh', width, height, false);
+    var tmpCtx = tmpCanvas.context;
+    if (backgroundColor) {
+      tmpCtx.fillStyle = makeCssRgb(backgroundColor);
+      tmpCtx.fillRect(0, 0, width, height);
+    }
 
     var context = {
       coords: coords,
       colors: colors,
-      offsetX: -offsetX,
-      offsetY: -offsetY,
-      scaleX: 1 / scaleX,
-      scaleY: 1 / scaleY
+      offsetX: -bounds[0],
+      offsetY: -bounds[1],
+      scaleX: scaleX,
+      scaleY: scaleY
     };
 
-    var canvas, tmpCanvas, i, ii;
-    if (WebGLUtils.isEnabled) {
-      canvas = WebGLUtils.drawFigures(width, height, backgroundColor,
-                                      figures, context);
-
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=972126
-      tmpCanvas = CachedCanvases.getCanvas('mesh', width, height, false);
-      tmpCanvas.context.drawImage(canvas, 0, 0);
-      canvas = tmpCanvas.canvas;
-    } else {
-      tmpCanvas = CachedCanvases.getCanvas('mesh', width, height, false);
-      var tmpCtx = tmpCanvas.context;
-
-      var data = tmpCtx.createImageData(width, height);
-      if (backgroundColor) {
-        var bytes = data.data;
-        for (i = 0, ii = bytes.length; i < ii; i += 4) {
-          bytes[i] = backgroundColor[0];
-          bytes[i + 1] = backgroundColor[1];
-          bytes[i + 2] = backgroundColor[2];
-          bytes[i + 3] = 255;
-        }
-      }
-      for (i = 0; i < figures.length; i++) {
-        drawFigure(data, figures[i], context);
-      }
-      tmpCtx.putImageData(data, 0, 0);
-      canvas = tmpCanvas.canvas;
+    var data = tmpCtx.getImageData(0, 0, width, height);
+    for (var i = 0; i < figures.length; i++) {
+      drawFigure(data, figures[i], context);
     }
+    tmpCtx.putImageData(data, 0, 0);
 
-    return {canvas: canvas, offsetX: offsetX, offsetY: offsetY,
-            scaleX: scaleX, scaleY: scaleY};
+    return {canvas: tmpCanvas.canvas, scaleX: 1 / scaleX, scaleY: 1 / scaleY};
   }
   return createMeshCanvas;
 })();
@@ -7763,6 +7312,7 @@ ShadingIRs.Mesh = {
 
         // Rasterizing on the main thread since sending/queue large canvases
         // might cause OOM.
+        // TODO consider using WebGL or asm.js to perform rasterization
         var temporaryPatternCanvas = createMeshCanvas(bounds, combinedScale,
           coords, colors, figures, shadingFill ? null : background);
 
@@ -7773,8 +7323,7 @@ ShadingIRs.Mesh = {
           }
         }
 
-        ctx.translate(temporaryPatternCanvas.offsetX,
-                      temporaryPatternCanvas.offsetY);
+        ctx.translate(bounds[0], bounds[1]);
         ctx.scale(temporaryPatternCanvas.scaleX,
                   temporaryPatternCanvas.scaleY);
 
@@ -7936,7 +7485,7 @@ var TilingPattern = (function TilingPatternClosure() {
     getPattern: function TilingPattern_getPattern(ctx, owner) {
       var temporaryPatternCanvas = this.createPatternCanvas(owner);
 
-      ctx = this.ctx;
+      var ctx = this.ctx;
       ctx.setTransform.apply(ctx, this.baseTransform);
       ctx.transform.apply(ctx, this.matrix);
       this.scaleToContext();
@@ -8011,7 +7560,7 @@ var FontFace = (function FontFaceClosure() {
         return null;
       }
 
-      var data = bytesToString(new Uint8Array(this.data));
+      var data = bytesToString(this.data);
       var fontName = this.loadedName;
 
       // Add the font-face rule to the document
