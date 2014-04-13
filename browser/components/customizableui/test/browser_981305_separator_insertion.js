@@ -5,43 +5,65 @@
 "use strict";
 
 let tempElements = [];
-// Shouldn't insert multiple separators into the developer tools subview
-add_task(function testMultipleDevtoolsSeparators() {
-  let devtoolsSubMenu = document.getElementById("menuWebDeveloperPopup");
+
+function insertTempItemsIntoMenu(parentMenu) {
   // Last element is null to insert at the end:
-  let beforeEls = [devtoolsSubMenu.firstChild, devtoolsSubMenu.lastChild, null];
+  let beforeEls = [parentMenu.firstChild, parentMenu.lastChild, null];
   for (let i = 0; i < beforeEls.length; i++) {
     let sep = document.createElement("menuseparator");
     tempElements.push(sep);
-    devtoolsSubMenu.insertBefore(sep, beforeEls[i]);
+    parentMenu.insertBefore(sep, beforeEls[i]);
     let menu = document.createElement("menu");
     tempElements.push(menu);
-    devtoolsSubMenu.insertBefore(menu, beforeEls[i]);
+    parentMenu.insertBefore(menu, beforeEls[i]);
     // And another separator for good measure:
     sep = document.createElement("menuseparator");
     tempElements.push(sep);
-    devtoolsSubMenu.insertBefore(sep, beforeEls[i]);
+    parentMenu.insertBefore(sep, beforeEls[i]);
   }
-  yield PanelUI.show();
+}
 
-  let devtoolsButton = document.getElementById("developer-button");
-  devtoolsButton.click();
-  yield waitForCondition(() => !PanelUI.multiView.hasAttribute("transitioning"));
-  let subview = document.getElementById("PanelUI-developerItems");
-  ok(subview.firstChild, "Subview should have a kid");
-  is(subview.firstChild.localName, "toolbarbutton", "There should be no separators to start with");
+function checkSeparatorInsertion(menuId, buttonId, subviewId) {
+  return function() {
+    info("Checking for duplicate separators in " + buttonId + " widget");
+    let menu = document.getElementById(menuId);
+    insertTempItemsIntoMenu(menu);
 
-  for (let kid of subview.children) {
-    if (kid.localName == "menuseparator") {
-      ok(kid.previousSibling && kid.previousSibling.localName != "menuseparator",
-         "Separators should never have another separator next to them, and should never be the first node.");
+    let placement = CustomizableUI.getPlacementOfWidget(buttonId);
+    let changedPlacement = false;
+    if (!placement || placement.area != CustomizableUI.AREA_PANEL) {
+      CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_PANEL);
+      changedPlacement = true;
     }
-  }
+    yield PanelUI.show();
 
-  let panelHiddenPromise = promisePanelHidden(window);
-  PanelUI.hide();
-  yield panelHiddenPromise;
-});
+    let button = document.getElementById(buttonId);
+    button.click();
+
+    yield waitForCondition(() => !PanelUI.multiView.hasAttribute("transitioning"));
+    let subview = document.getElementById(subviewId);
+    ok(subview.firstChild, "Subview should have a kid");
+    is(subview.firstChild.localName, "toolbarbutton", "There should be no separators to start with");
+
+    for (let kid of subview.children) {
+      if (kid.localName == "menuseparator") {
+        ok(kid.previousSibling && kid.previousSibling.localName != "menuseparator",
+           "Separators should never have another separator next to them, and should never be the first node.");
+      }
+    }
+
+    let panelHiddenPromise = promisePanelHidden(window);
+    PanelUI.hide();
+    yield panelHiddenPromise;
+
+    if (changedPlacement) {
+      CustomizableUI.reset();
+    }
+  };
+}
+
+add_task(checkSeparatorInsertion("menuWebDeveloperPopup", "developer-button", "PanelUI-developerItems"));
+add_task(checkSeparatorInsertion("viewSidebarMenu", "sidebar-button", "PanelUI-sidebarItems"));
 
 registerCleanupFunction(function() {
   for (let el of tempElements) {
