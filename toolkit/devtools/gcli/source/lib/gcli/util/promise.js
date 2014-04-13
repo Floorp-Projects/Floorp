@@ -19,3 +19,7 @@
 var Cu = require('chrome').Cu;
 module.exports = exports =
     Cu.import('resource://gre/modules/commonjs/sdk/core/promise.js', {}).Promise;
+
+// When we've solved the debugger/sdk/promise/gcli/helpers/overlap problem then
+// we should use this instead:
+// module.exports = exports = require('resource://gre/modules/Promise.jsm').Promise;
