@@ -5,6 +5,7 @@
 
 #include "MediaStreamGraphImpl.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/unused.h"
 
 #include "AudioSegment.h"
@@ -903,7 +904,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
     if (audioOutput.mLastTickWritten != offset) {
       // If there is a global underrun of the MSG, this property won't hold, and
       // we reset the sample count tracking.
-      if (std::abs(audioOutput.mLastTickWritten - offset) != 1) {
+      if (mozilla::Abs(audioOutput.mLastTickWritten - offset) != 1) {
         audioOutput.mLastTickWritten = offset;
       } else {
         offset = audioOutput.mLastTickWritten;
