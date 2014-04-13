@@ -393,6 +393,22 @@ let DragPositionManager = {
     }
   },
 
+  add: function(aWindow, aArea, aContainer) {
+    if (CustomizableUI.getAreaType(aArea) != "toolbar") {
+      return;
+    }
+
+    gManagers.set(aContainer, new AreaPositionManager(aContainer));
+  },
+
+  remove: function(aWindow, aArea, aContainer) {
+    if (CustomizableUI.getAreaType(aArea) != "toolbar") {
+      return;
+    }
+
+    gManagers.delete(aContainer);
+  },
+
   stop: function() {
     gManagers.clear();
   },
