@@ -98,8 +98,8 @@ SVGEllipseElement::ConstructPath(gfxContext *aCtx)
   if (!aCtx->IsCairo()) {
     RefPtr<Path> path = BuildPath();
     if (path) {
-      gfxPath gfxpath(path);
-      aCtx->SetPath(&gfxpath);
+      nsRefPtr<gfxPath> gfxpath = new gfxPath(path);
+      aCtx->SetPath(gfxpath);
     }
     return;
   }
