@@ -18,10 +18,6 @@ const PREF_GETADDONS_BYIDS_PERFORMANCE   = "extensions.getAddons.getWithPerforma
 // Forcibly end the test if it runs longer than 15 minutes
 const TIMEOUT_MS = 900000;
 
-// Get the profile directory for tests to use.
-// Do this before importing AddonManager.jsm (which logs to profile dir)
-const gProfD = do_get_profile();
-
 Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
@@ -1250,6 +1246,9 @@ if ("nsIWindowsRegKey" in AM_Ci) {
                             "Mock Windows Registry Implementation",
                             "@mozilla.org/windows-registry-key;1", WinRegFactory);
 }
+
+// Get the profile directory for tests to use.
+const gProfD = do_get_profile();
 
 const EXTENSIONS_DB = "extensions.json";
 let gExtensionsJSON = gProfD.clone();
