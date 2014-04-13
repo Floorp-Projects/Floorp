@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.preferences;
 
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomeConfig.State;
@@ -170,6 +172,8 @@ public class PanelsPreferenceCategory extends CustomListCategory {
 
         mConfigEditor.setDefault(id);
         mConfigEditor.apply();
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.PANEL_SET_DEFAULT, null, id);
     }
 
     @Override
