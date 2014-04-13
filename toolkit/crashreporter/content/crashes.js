@@ -2,14 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+const { classes: Cc, utils: Cu, interfaces: Ci } = Components;
 
 var reportURL;
 
-Components.utils.import("resource://gre/modules/CrashReports.jsm");
-Components.utils.import("resource://gre/modules/CrashSubmit.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/CrashReports.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "CrashSubmit",
+  "resource://gre/modules/CrashSubmit.jsm");
 
 const buildID = Services.appinfo.appBuildID;
 
@@ -127,46 +131,53 @@ function populateReportList() {
   }
 }
 
-function clearReports() {
-  var bundles = Cc["@mozilla.org/intl/stringbundle;1"].
-                getService(Ci.nsIStringBundleService);
-  var bundle = bundles.createBundle("chrome://global/locale/crashes.properties");
-  var prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                getService(Ci.nsIPromptService);
-  if (!prompts.confirm(window,
-                       bundle.GetStringFromName("deleteconfirm.title"),
-                       bundle.GetStringFromName("deleteconfirm.description")))
-    return;
+let clearReports = Task.async(function*() {
+  let bundle = Services.strings.createBundle("chrome://global/locale/crashes.properties");
 
-  var entries = CrashReports.submittedDir.directoryEntries;
-  while (entries.hasMoreElements()) {
-    var file = entries.getNext().QueryInterface(Ci.nsIFile);
-    var leaf = file.leafName;
-    if (leaf.substr(0, 3) == "bp-" &&
-        leaf.substr(-4) == ".txt") {
-      file.remove(false);
+  if (!Services.
+         prompt.confirm(window,
+                        bundle.GetStringFromName("deleteconfirm.title"),
+                        bundle.GetStringFromName("deleteconfirm.description"))) {
+    return;
+  }
+
+  let cleanupFolder = Task.async(function*(path, filter) {
+    let iterator = new OS.File.DirectoryIterator(path);
+    try {
+      yield iterator.forEach(Task.async(function*(aEntry) {
+        if (!filter || (yield filter(aEntry))) {
+          yield OS.File.remove(aEntry.path);
+        }
+      }));
+    } catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
+    } finally {
+      iterator.close();
     }
-  }
-  entries = CrashReports.reportsDir.directoryEntries;
-  var oneYearAgo = Date.now() - 31586000000;
-  while (entries.hasMoreElements()) {
-    var file = entries.getNext().QueryInterface(Ci.nsIFile);
-    var leaf = file.leafName;
-    if (leaf.substr(0, 11) == "InstallTime" &&
-        file.lastModifiedTime < oneYearAgo &&
-        leaf != "InstallTime" + buildID) {
-      file.remove(false);
+  });
+
+  yield cleanupFolder(CrashReports.submittedDir.path, function*(aEntry) {
+    return aEntry.name.startsWith("bp-") && aEntry.name.endsWith(".txt");
+  });
+
+  let oneYearAgo = Date.now() - 31586000000;
+  yield cleanupFolder(CrashReports.reportsDir.path, function*(aEntry) {
+    if (!aEntry.name.startsWith("InstallTime") ||
+        aEntry.name == "InstallTime" + buildID) {
+      return false;
     }
-  }
-  entries = CrashReports.pendingDir.directoryEntries;
-  while (entries.hasMoreElements()) {
-    entries.getNext().QueryInterface(Ci.nsIFile).remove(false);
-  }
+
+    let date = aEntry.winLastWriteDate;
+    if (!date) {
+      let stat = yield OS.File.stat(aEntry.path);
+      date = stat.lastModificationDate;
+    }
+
+    return (date < oneYearAgo);
+  });
+
+  yield cleanupFolder(CrashReports.pendingDir.path);
+
   document.getElementById("clear-reports").style.display = "none";
   document.getElementById("reportList").style.display = "none";
   document.getElementById("noReports").style.display = "block";
-}
-
-function init() {
-  populateReportList();
-}
+});
