@@ -75,6 +75,8 @@ public:
 
   int MaxDelayTicks() const { return mMaxDelayTicks; }
 
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+
 private:
   void ReadChannels(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
                     const AudioChunk* aOutputChunk,

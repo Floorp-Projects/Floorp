@@ -19,11 +19,28 @@ namespace mozilla {
 template<typename T>
 class SharedChannelArrayBuffer : public ThreadSharedObject {
 public:
-  SharedChannelArrayBuffer(nsTArray<nsTArray<T>>* aBuffers)
+  SharedChannelArrayBuffer(nsTArray<nsTArray<T> >* aBuffers)
   {
     mBuffers.SwapElements(*aBuffers);
   }
-  nsTArray<nsTArray<T>> mBuffers;
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    size_t amount = 0;
+    amount += mBuffers.SizeOfExcludingThis(aMallocSizeOf);
+    for (size_t i = 0; i < mBuffers.Length(); i++) {
+      amount += mBuffers[i].SizeOfExcludingThis(aMallocSizeOf);
+    }
+
+    return amount;
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  nsTArray<nsTArray<T> > mBuffers;
 };
 
 class AudioStream;
@@ -113,6 +130,27 @@ struct AudioChunk {
     mBufferFormat = AUDIO_FORMAT_SILENCE;
   }
   int ChannelCount() const { return mChannelData.Length(); }
+
+  size_t SizeOfExcludingThisIfUnshared(MallocSizeOf aMallocSizeOf) const
+  {
+    return SizeOfExcludingThis(aMallocSizeOf, true);
+  }
+
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf, bool aUnshared) const
+  {
+    size_t amount = 0;
+
+    // Possibly owned:
+    // - mBuffer - Can hold data that is also in the decoded audio queue. If it
+    //             is not shared, or unshared == false it gets counted.
+    if (mBuffer && (!aUnshared || !mBuffer->IsShared())) {
+      amount += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
+    }
+
+    // Memory in the array is owned by mBuffer.
+    amount += mChannelData.SizeOfExcludingThis(aMallocSizeOf);
+    return amount;
+  }
 
   TrackTicks mDuration; // in frames within the buffer
   nsRefPtr<ThreadSharedObject> mBuffer; // the buffer object whose lifetime is managed; null means data is all zeroes
@@ -231,6 +269,11 @@ public:
   }
 
   static Type StaticType() { return AUDIO; }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
 };
 
 }

@@ -73,6 +73,17 @@ DynamicsCompressorKernel::DynamicsCompressorKernel(float sampleRate, unsigned nu
         static_cast<float>(WebAudioUtils::DiscreteTimeConstantForSampleRate(meteringReleaseTimeConstant, sampleRate));
 }
 
+size_t DynamicsCompressorKernel::sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+    size_t amount = 0;
+    amount += m_preDelayBuffers.SizeOfExcludingThis(aMallocSizeOf);
+    for (size_t i = 0; i < m_preDelayBuffers.Length(); i++) {
+        amount += m_preDelayBuffers[i].SizeOfExcludingThis(aMallocSizeOf);
+    }
+
+    return amount;
+}
+
 void DynamicsCompressorKernel::setNumberOfChannels(unsigned numberOfChannels)
 {
     if (m_preDelayBuffers.Length() == numberOfChannels)
