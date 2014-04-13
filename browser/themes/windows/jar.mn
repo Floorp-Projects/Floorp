@@ -358,6 +358,7 @@ browser.jar:
         skin/classic/aero/browser/aboutSyncTabs.css
 #endif
         skin/classic/aero/browser/aboutTabCrashed.css
+        skin/classic/aero/browser/aboutWelcomeBack.css               (../shared/aboutWelcomeBack.css)
         skin/classic/aero/browser/actionicon-tab.png
 *       skin/classic/aero/browser/browser.css                        (browser-aero.css)
 *       skin/classic/aero/browser/browser-lightweightTheme.css
