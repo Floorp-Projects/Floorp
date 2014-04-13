@@ -7,13 +7,14 @@
 const kTestBarID = "testBar";
 const kWidgetID = "characterencoding-button";
 
-function createTestBar() {
+function createTestBar(aLegacy) {
   let testBar = document.createElement("toolbar");
   testBar.id = kTestBarID;
   testBar.setAttribute("customizable", "true");
-  CustomizableUI.registerArea(kTestBarID,
-    { type: CustomizableUI.TYPE_TOOLBAR, legacy: false }
-  );
+  CustomizableUI.registerArea(kTestBarID, {
+    type: CustomizableUI.TYPE_TOOLBAR,
+    legacy: aLegacy,
+  });
   gNavToolbox.appendChild(testBar);
   return testBar;
 }
@@ -22,7 +23,8 @@ function createTestBar() {
  * Helper function that does the following:
  *
  * 1) Creates a custom toolbar and registers it
- *    with CustomizableUI.
+ *    with CustomizableUI. Sets the legacy attribute
+ *    of the object passed to registerArea to aLegacy.
  * 2) Adds the widget with ID aWidgetID to that new
  *    toolbar.
  * 3) Enters customize mode and makes sure that the
@@ -31,15 +33,15 @@ function createTestBar() {
  *    the custom toolbar.
  * 5) Checks that the widget has no placement.
  * 6) Re-adds and re-registers a custom toolbar with the same
- *    ID as the first one.
+ *    ID and options as the first one.
  * 7) Enters customize mode and checks that the widget is
  *    properly back in the toolbar.
  * 8) Exits customize mode, removes and de-registers the
  *    toolbar, and resets the toolbars to default.
  */
-function checkRestoredPresence(aWidgetID) {
+function checkRestoredPresence(aWidgetID, aLegacy) {
   return Task.spawn(function* () {
-    let testBar = createTestBar();
+    let testBar = createTestBar(aLegacy);
     CustomizableUI.addWidgetToArea(aWidgetID, kTestBarID);
     let placement = CustomizableUI.getPlacementOfWidget(aWidgetID);
     is(placement.area, kTestBarID,
@@ -51,7 +53,7 @@ function checkRestoredPresence(aWidgetID) {
     let placement = CustomizableUI.getPlacementOfWidget(aWidgetID);
     is(placement, null, "Expected " + aWidgetID + " to be in the palette");
 
-    testBar = createTestBar();
+    testBar = createTestBar(aLegacy);
 
     yield startCustomizing();
     let placement = CustomizableUI.getPlacementOfWidget(aWidgetID);
@@ -67,9 +69,11 @@ function checkRestoredPresence(aWidgetID) {
 }
 
 add_task(function* () {
-  yield checkRestoredPresence("downloads-button")
+  yield checkRestoredPresence("downloads-button", false);
+  yield checkRestoredPresence("downloads-button", true);
 });
 
 add_task(function* () {
-  yield checkRestoredPresence("characterencoding-button")
+  yield checkRestoredPresence("characterencoding-button", false);
+  yield checkRestoredPresence("characterencoding-button", true);
 });
