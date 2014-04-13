@@ -13,8 +13,10 @@
 #include "nsContentUtils.h"
 #include "nsIAppShell.h"
 #include "nsIObserver.h"
+#include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWidgetsCID.h"
+#include "prerror.h"
 #include "prlog.h"
 #include "mozilla/Attributes.h"
 #include "TrackUnionStream.h"
@@ -1238,6 +1240,25 @@ MediaStreamGraphImpl::RunThread()
   AutoProfilerUnregisterThread autoUnregister;
 
   for (;;) {
+    // Check if a memory report has been requested.
+    {
+      MonitorAutoLock lock(mMemoryReportMonitor);
+      if (mNeedsMemoryReport) {
+        mNeedsMemoryReport = false;
+
+        for (uint32_t i = 0; i < mStreams.Length(); ++i) {
+          AudioNodeStream* stream = mStreams[i]->AsAudioNodeStream();
+          if (stream) {
+            AudioNodeSizes usage;
+            stream->SizeOfAudioNodesIncludingThis(MallocSizeOf, usage);
+            mAudioStreamSizes.AppendElement(usage);
+          }
+        }
+
+        lock.Notify();
+      }
+    }
+
     // Update mCurrentTime to the min of the playing audio times, or using the
     // wall-clock time change if no audio is playing.
     UpdateCurrentTime();
@@ -1519,7 +1540,7 @@ public:
     // mGraph's thread is not running so it's OK to do whatever here
     if (mGraph->IsEmpty()) {
       // mGraph is no longer needed, so delete it.
-      delete mGraph;
+      mGraph->Destroy();
     } else {
       // The graph is not empty.  We must be in a forced shutdown, or a
       // non-realtime graph that has finished processing.  Some later
@@ -1749,7 +1770,7 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
       if (gGraph == this) {
         gGraph = nullptr;
       }
-      delete this;
+      Destroy();
     }
     return;
   }
@@ -1780,6 +1801,45 @@ MediaStream::MediaStream(DOMMediaStream* aWrapper)
   // being created now, aWrapper must not be connected to anything.
   NS_ASSERTION(!aWrapper || !aWrapper->GetStream(),
                "Wrapper already has another media stream hooked up to it!");
+}
+
+size_t
+MediaStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t amount = 0;
+
+  // Not owned:
+  // - mGraph - Not reported here
+  // - mConsumers - elements
+  // Future:
+  // - mWrapper
+  // - mVideoOutputs - elements
+  // - mLastPlayedVideoFrame
+  // - mListeners - elements
+  // - mAudioOutputStreams - elements
+
+  amount += mBuffer.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mAudioOutputs.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mVideoOutputs.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mExplicitBlockerCount.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mListeners.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mMainThreadListeners.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mDisabledTrackIDs.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mBlocked.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mGraphUpdateIndices.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mConsumers.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mAudioOutputStreams.SizeOfExcludingThis(aMallocSizeOf);
+  for (size_t i = 0; i < mAudioOutputStreams.Length(); i++) {
+    amount += mAudioOutputStreams[i].SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  return amount;
+}
+
+size_t
+MediaStream::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
 void
@@ -2594,6 +2654,10 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime)
   , mStreamOrderDirty(false)
   , mLatencyLog(AsyncLatencyLogger::Get())
   , mMixer(nullptr)
+  , mMemoryReportMonitor("MSGIMemory")
+  , mSelfRef(MOZ_THIS_IN_INITIALIZER_LIST())
+  , mAudioStreamSizes()
+  , mNeedsMemoryReport(false)
 {
 #ifdef PR_LOGGING
   if (!gMediaStreamGraphLog) {
@@ -2602,6 +2666,18 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime)
 #endif
 
   mCurrentTimeStamp = mInitialTimeStamp = mLastMainThreadUpdate = TimeStamp::Now();
+
+  RegisterWeakMemoryReporter(this);
+}
+
+void
+MediaStreamGraphImpl::Destroy()
+{
+  // First unregister from memory reporting.
+  UnregisterWeakMemoryReporter(this);
+
+  // Clear the self reference which will destroy this instance.
+  mSelfRef = nullptr;
 }
 
 NS_IMPL_ISUPPORTS1(MediaStreamGraphShutdownObserver, nsIObserver)
@@ -2635,6 +2711,7 @@ MediaStreamGraph::GetInstance()
     }
 
     gGraph = new MediaStreamGraphImpl(true);
+
     STREAM_LOG(PR_LOG_DEBUG, ("Starting up MediaStreamGraph %p", gGraph));
 
     AudioStream::InitPreferredSampleRate();
@@ -2649,6 +2726,7 @@ MediaStreamGraph::CreateNonRealtimeInstance()
   NS_ASSERTION(NS_IsMainThread(), "Main thread only");
 
   MediaStreamGraphImpl* graph = new MediaStreamGraphImpl(false);
+
   return graph;
 }
 
@@ -2667,6 +2745,76 @@ MediaStreamGraph::DestroyNonRealtimeInstance(MediaStreamGraph* aGraph)
     graph->StartNonRealtimeProcessing(1, 0);
   }
   graph->ForceShutDown();
+}
+
+NS_IMPL_ISUPPORTS1(MediaStreamGraphImpl, nsIMemoryReporter)
+
+struct ArrayClearer
+{
+  ArrayClearer(nsTArray<AudioNodeSizes>& aArray) : mArray(aArray) {}
+  ~ArrayClearer() { mArray.Clear(); }
+  nsTArray<AudioNodeSizes>& mArray;
+};
+
+NS_IMETHODIMP
+MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                     nsISupports* aData)
+{
+  // Clears out the report array after we're done with it.
+  ArrayClearer reportCleanup(mAudioStreamSizes);
+
+  {
+    MonitorAutoLock memoryReportLock(mMemoryReportMonitor);
+    mNeedsMemoryReport = true;
+
+    {
+      // Wake up the MSG thread.
+      MonitorAutoLock monitorLock(mMonitor);
+      EnsureImmediateWakeUpLocked(monitorLock);
+    }
+
+    // Wait for the report to complete.
+    nsresult rv;
+    while ((rv = memoryReportLock.Wait()) != NS_OK) {
+      if (PR_GetError() != PR_PENDING_INTERRUPT_ERROR) {
+        return rv;
+      }
+    }
+  }
+
+#define REPORT(_path, _amount, _desc)                                       \
+  do {                                                                      \
+    nsresult rv;                                                            \
+    rv = aHandleReport->Callback(EmptyCString(), _path,                     \
+                                 KIND_HEAP, UNITS_BYTES, _amount,           \
+                                 NS_LITERAL_CSTRING(_desc), aData);         \
+    NS_ENSURE_SUCCESS(rv, rv);                                              \
+  } while (0)
+
+  for (size_t i = 0; i < mAudioStreamSizes.Length(); i++) {
+    const AudioNodeSizes& usage = mAudioStreamSizes[i];
+    const char* const nodeType =  usage.mNodeType.get();
+
+    nsPrintfCString domNodePath("explicit/webaudio/audio-node/%s/dom-nodes",
+                                  nodeType);
+    REPORT(domNodePath, usage.mDomNode,
+           "Memory used by AudioNode DOM objects (Web Audio).");
+
+    nsPrintfCString enginePath("explicit/webaudio/audio-node/%s/engine-objects",
+                                nodeType);
+    REPORT(enginePath, usage.mEngine,
+           "Memory used by AudioNode engine objects (Web Audio).");
+
+    nsPrintfCString streamPath("explicit/webaudio/audio-node/%s/stream-objects",
+                                nodeType);
+    REPORT(streamPath, usage.mStream,
+           "Memory used by AudioNode stream objects (Web Audio).");
+
+  }
+
+#undef REPORT
+
+  return NS_OK;
 }
 
 SourceMediaStream*

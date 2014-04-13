@@ -32,6 +32,7 @@
 #include "ReverbAccumulationBuffer.h"
 #include "ReverbInputBuffer.h"
 #include "nsAutoPtr.h"
+#include "mozilla/MemoryReporting.h"
 #ifdef LOG
 #undef LOG
 #endif
@@ -65,6 +66,8 @@ public:
     void backgroundThreadEntry();
 
     size_t latencyFrames() const;
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 private:
     nsTArray<nsAutoPtr<ReverbConvolverStage> > m_stages;
     nsTArray<nsAutoPtr<ReverbConvolverStage> > m_backgroundStages;

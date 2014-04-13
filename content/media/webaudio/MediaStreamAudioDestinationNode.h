@@ -34,6 +34,14 @@ public:
     return mDOMStream;
   }
 
+  virtual const char* NodeType() const
+  {
+    return "MediaStreamAudioDestinationNode";
+  }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
 private:
   nsRefPtr<DOMMediaStream> mDOMStream;
   nsRefPtr<MediaInputPort> mPort;

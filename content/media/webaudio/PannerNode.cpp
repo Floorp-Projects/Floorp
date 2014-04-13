@@ -188,6 +188,21 @@ public:
   float InverseGainFunction(float aDistance);
   float ExponentialGainFunction(float aDistance);
 
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
+    if (mHRTFPanner) {
+      amount += mHRTFPanner->sizeOfIncludingThis(aMallocSizeOf);
+    }
+
+    return amount;
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
   nsAutoPtr<HRTFPanner> mHRTFPanner;
   typedef void (PannerNodeEngine::*PanningModelFunction)(const AudioChunk& aInput, AudioChunk* aOutput);
   PanningModelFunction mPanningModelFunction;
@@ -240,6 +255,20 @@ PannerNode::~PannerNode()
   if (Context()) {
     Context()->UnregisterPannerNode(this);
   }
+}
+
+size_t
+PannerNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
+  amount += mSources.SizeOfExcludingThis(aMallocSizeOf);
+  return amount;
+}
+
+size_t
+PannerNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
 JSObject*

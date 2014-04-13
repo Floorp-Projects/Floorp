@@ -21,6 +21,17 @@ class ThreadSharedObject {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ThreadSharedObject)
 
+  bool IsShared() { return mRefCnt.get() > 1; }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return 0;
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~ThreadSharedObject() {}
@@ -52,8 +63,9 @@ public:
     return p.forget();
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
-    return aMallocSizeOf(this);
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
 private:

@@ -482,6 +482,31 @@ public:
     }
   }
 
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    // Not owned:
+    // - mBuffer - shared w/ AudioNode
+    // - mPlaybackRateTimeline - shared w/ AudioNode
+
+    size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
+
+    // NB: We need to modify speex if we want the full memory picture, internal
+    //     fields that need measuring noted below.
+    // - mResampler->mem
+    // - mResampler->sinc_table
+    // - mResampler->last_sample
+    // - mResampler->magic_samples
+    // - mResampler->samp_frac_num
+    amount += aMallocSizeOf(mResampler);
+
+    return amount;
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
   double mStart; // including the fractional position between ticks
   // Low pass filter effects from the resampler mean that samples before the
   // start time are influenced by resampling the buffer.  mBeginProcessing
@@ -532,6 +557,24 @@ AudioBufferSourceNode::~AudioBufferSourceNode()
   if (Context()) {
     Context()->UnregisterAudioBufferSourceNode(this);
   }
+}
+
+size_t
+AudioBufferSourceNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
+  if (mBuffer) {
+    amount += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  amount += mPlaybackRate->SizeOfIncludingThis(aMallocSizeOf);
+  return amount;
+}
+
+size_t
+AudioBufferSourceNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
 JSObject*

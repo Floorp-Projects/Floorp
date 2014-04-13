@@ -155,6 +155,12 @@ public:
   double DestinationTimeFromTicks(AudioNodeStream* aDestination,
                                   TrackTicks aPosition);
 
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
+  void SizeOfAudioNodesIncludingThis(MallocSizeOf aMallocSizeOf,
+                                     AudioNodeSizes& aUsage) const;
+
 protected:
   void AdvanceOutputSegment();
   void FinishOutput();

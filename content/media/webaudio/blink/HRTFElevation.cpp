@@ -50,6 +50,18 @@ const int rawSampleRate = irc_composite_c_r0195_sample_rate;
 // Number of frames in an individual impulse response.
 const size_t ResponseFrameSize = 256;
 
+size_t HRTFElevation::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+    size_t amount = aMallocSizeOf(this);
+
+    amount += m_kernelListL.SizeOfExcludingThis(aMallocSizeOf);
+    for (size_t i = 0; i < m_kernelListL.Length(); i++) {
+        amount += m_kernelListL[i]->sizeOfIncludingThis(aMallocSizeOf);
+    }
+
+    return amount;
+}
+
 size_t HRTFElevation::fftSizeForSampleRate(float sampleRate)
 {
     // The IRCAM HRTF impulse responses were 512 sample-frames @44.1KHz,

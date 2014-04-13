@@ -130,6 +130,23 @@ public:
                                    mCompressor->parameterValue(DynamicsCompressor::ParamReduction));
   }
 
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    // Not owned:
+    // - mSource (probably)
+    // - mDestination (probably)
+    // - Don't count the AudioParamTimelines, their inner refs are owned by the
+    // AudioNode.
+    size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
+    amount += mCompressor->sizeOfIncludingThis(aMallocSizeOf);
+    return amount;
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 private:
   void SendReductionParamToMainThread(AudioNodeStream* aStream, float aReduction)
   {
@@ -203,6 +220,24 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
   DynamicsCompressorNodeEngine* engine = new DynamicsCompressorNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
+}
+
+size_t
+DynamicsCompressorNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
+  amount += mThreshold->SizeOfIncludingThis(aMallocSizeOf);
+  amount += mKnee->SizeOfIncludingThis(aMallocSizeOf);
+  amount += mRatio->SizeOfIncludingThis(aMallocSizeOf);
+  amount += mAttack->SizeOfIncludingThis(aMallocSizeOf);
+  amount += mRelease->SizeOfIncludingThis(aMallocSizeOf);
+  return amount;
+}
+
+size_t
+DynamicsCompressorNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
 JSObject*
