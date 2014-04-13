@@ -185,11 +185,15 @@ browser.jar:
         skin/classic/browser/tabbrowser/loading.png                  (tabbrowser/loading.png)
         skin/classic/browser/tabbrowser/tab.png                      (tabbrowser/tab.png)
         skin/classic/browser/tabbrowser/tab-active-middle.png        (tabbrowser/tab-active-middle.png)
+        skin/classic/browser/tabbrowser/tab-active-middle@2x.png     (tabbrowser/tab-active-middle@2x.png)
         skin/classic/browser/tabbrowser/tab-arrow-left.png           (tabbrowser/tab-arrow-left.png)
         skin/classic/browser/tabbrowser/tab-arrow-left-inverted.png  (tabbrowser/tab-arrow-left-inverted.png)
         skin/classic/browser/tabbrowser/tab-background-start.png     (tabbrowser/tab-background-start.png)
+        skin/classic/browser/tabbrowser/tab-background-start@2x.png  (tabbrowser/tab-background-start@2x.png)
         skin/classic/browser/tabbrowser/tab-background-middle.png    (tabbrowser/tab-background-middle.png)
+        skin/classic/browser/tabbrowser/tab-background-middle@2x.png (tabbrowser/tab-background-middle@2x.png)
         skin/classic/browser/tabbrowser/tab-background-end.png       (tabbrowser/tab-background-end.png)
+        skin/classic/browser/tabbrowser/tab-background-end@2x.png    (tabbrowser/tab-background-end@2x.png)
         skin/classic/browser/tabbrowser/tab-overflow-border.png      (tabbrowser/tab-overflow-border.png)
 
 # NOTE: The following two files (tab-selected-end.svg, tab-selected-start.svg) get pre-processed in
@@ -198,7 +202,9 @@ browser.jar:
         skin/classic/browser/tabbrowser/tab-selected-start.svg       (tab-selected-start.svg)
 
         skin/classic/browser/tabbrowser/tab-stroke-end.png           (tabbrowser/tab-stroke-end.png)
+        skin/classic/browser/tabbrowser/tab-stroke-end@2x.png        (tabbrowser/tab-stroke-end@2x.png)
         skin/classic/browser/tabbrowser/tab-stroke-start.png         (tabbrowser/tab-stroke-start.png)
+        skin/classic/browser/tabbrowser/tab-stroke-start@2x.png      (tabbrowser/tab-stroke-start@2x.png)
         skin/classic/browser/tabbrowser/tabDragIndicator.png         (tabbrowser/tabDragIndicator.png)
         skin/classic/browser/tabbrowser/tab-separator-luna-blue.png  (tabbrowser/tab-separator-luna-blue.png)
         skin/classic/browser/tabbrowser/tab-separator.png            (tabbrowser/tab-separator.png)
@@ -543,11 +549,15 @@ browser.jar:
         skin/classic/aero/browser/tabbrowser/loading.png             (tabbrowser/loading.png)
         skin/classic/aero/browser/tabbrowser/tab.png                 (tabbrowser/tab.png)
         skin/classic/aero/browser/tabbrowser/tab-active-middle.png   (tabbrowser/tab-active-middle.png)
+        skin/classic/aero/browser/tabbrowser/tab-active-middle@2x.png (tabbrowser/tab-active-middle@2x.png)
         skin/classic/aero/browser/tabbrowser/tab-arrow-left.png      (tabbrowser/tab-arrow-left.png)
         skin/classic/aero/browser/tabbrowser/tab-arrow-left-inverted.png (tabbrowser/tab-arrow-left-inverted.png)
         skin/classic/aero/browser/tabbrowser/tab-background-start.png    (tabbrowser/tab-background-start.png)
+        skin/classic/aero/browser/tabbrowser/tab-background-start@2x.png (tabbrowser/tab-background-start@2x.png)
         skin/classic/aero/browser/tabbrowser/tab-background-middle.png   (tabbrowser/tab-background-middle.png)
+        skin/classic/aero/browser/tabbrowser/tab-background-middle@2x.png (tabbrowser/tab-background-middle@2x.png)
         skin/classic/aero/browser/tabbrowser/tab-background-end.png      (tabbrowser/tab-background-end.png)
+        skin/classic/aero/browser/tabbrowser/tab-background-end@2x.png   (tabbrowser/tab-background-end@2x.png)
         skin/classic/aero/browser/tabbrowser/tab-overflow-border.png (tabbrowser/tab-overflow-border.png)
 
 # NOTE: The following two files (tab-selected-end.svg, tab-selected-start.svg) get pre-processed in
@@ -556,7 +566,9 @@ browser.jar:
         skin/classic/aero/browser/tabbrowser/tab-selected-start.svg  (tab-selected-start-aero.svg)
 
         skin/classic/aero/browser/tabbrowser/tab-stroke-end.png      (tabbrowser/tab-stroke-end.png)
+        skin/classic/aero/browser/tabbrowser/tab-stroke-end@2x.png   (tabbrowser/tab-stroke-end@2x.png)
         skin/classic/aero/browser/tabbrowser/tab-stroke-start.png    (tabbrowser/tab-stroke-start.png)
+        skin/classic/aero/browser/tabbrowser/tab-stroke-start@2x.png (tabbrowser/tab-stroke-start@2x.png)
         skin/classic/aero/browser/tabbrowser/tabDragIndicator.png    (tabbrowser/tabDragIndicator.png)
         skin/classic/aero/browser/tabbrowser/tab-separator.png       (tabbrowser/tab-separator-aero.png)
         skin/classic/aero/browser/tabview/close.png                  (tabview/close.png)
