@@ -64,9 +64,7 @@ function initializeDefaultPreferences() {
 var DEFAULT_PREFERENCES = {
   showPreviousViewOnLoad: true,
   defaultZoomValue: '',
-  ifAvailableShowOutlineOnLoad: false,
-  enableHandToolOnLoad: false,
-  enableWebGL: false
+  ifAvailableShowOutlineOnLoad: false
 };
 
 
@@ -136,18 +134,14 @@ let PdfJs = {
   },
 
   _migrate: function migrate() {
-    const VERSION = 2;
+    const VERSION = 1;
     var currentVersion = getIntPref(PREF_MIGRATION_VERSION, 0);
     if (currentVersion >= VERSION) {
       return;
     }
     // Make pdf.js the default pdf viewer on the first migration.
-    if (currentVersion < 1) {
-      this._becomeHandler();
-    }
     if (currentVersion < 2) {
-      // cleaning up of unused database preference (see #3994)
-      Services.prefs.clearUserPref(PREF_PREFIX + '.database');
+      this._becomeHandler();
     }
     Services.prefs.setIntPref(PREF_MIGRATION_VERSION, VERSION);
   },
