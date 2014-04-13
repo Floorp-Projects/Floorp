@@ -1862,7 +1862,6 @@
             this._blurTab(aTab);
             aTab.style.maxWidth = ""; // ensure that fade-out transition happens
             aTab.removeAttribute("fadein");
-            aTab._fullyOpen = false;
 
             if (this.tabs.length - this._removingTabs.length == 1) {
               // The second tab just got closed and we will end up with a single
@@ -3044,7 +3043,6 @@
           this.mCurrentTab.linkedPanel = uniqueId;
           this.mCurrentTab._tPos = 0;
           this.mCurrentTab._fullyOpen = true;
-          this.mCurrentTab.setAttribute("fadeinlabel", "true");
           this.mCurrentTab.linkedBrowser = this.mCurrentBrowser;
 
           // set up the shared autoscroll popup
@@ -4057,8 +4055,6 @@
           if (tab.parentNode != this)
             return;
           tab._fullyOpen = true;
-          tab.scrollTop; // force a layout flush as part of the fadeinlabel transition
-          tab.setAttribute("fadeinlabel", "true");
 
           this.adjustTabstrip();
 
@@ -4698,11 +4694,11 @@
                      role="presentation"/>
           <xul:label flex="1"
                      anonid="tab-label"
-                     xbl:inherits="value=visibleLabel,crop,accesskey,fadein,fadeinlabel,pinned,selected,fullyopen"
+                     xbl:inherits="value=visibleLabel,crop,accesskey,fadein,pinned,selected"
                      class="tab-text tab-label"
                      role="presentation"/>
           <xul:toolbarbutton anonid="close-button"
-                             xbl:inherits="fadein,fadeinlabel,pinned,selected,fullyopen"
+                             xbl:inherits="fadein,pinned,selected"
                              class="tab-close-button close-icon"/>
         </xul:hbox>
       </xul:stack>
@@ -4756,18 +4752,6 @@
       </property>
       <field name="_lastAccessed">0</field>
 
-      <property name="_fullyOpen">
-        <getter>
-          return this.getAttribute("fullyopen") == "true";
-        </getter>
-        <setter>
-          if (val) {
-            this.setAttribute("fullyopen", "true");
-          } else {
-            this.removeAttribute("fullyopen");
-          }
-        </setter>
-      </property>
       <field name="mOverCloseButton">false</field>
       <field name="mCorrespondingMenuitem">null</field>
       <field name="closing">false</field>
