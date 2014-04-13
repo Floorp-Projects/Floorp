@@ -4,62 +4,57 @@
   font-size: 90%;
 }
 
-.gcli-menu-template {
-  column-width: 20em;
-  column-rule-style: solid;
-  column-rule-width: 1px;
-  -moz-column-width: 20em;
-  -moz-column-rule-style: solid;
-  -moz-column-rule-width: 1px;
-  -webkit-column-width: 20em;
-  -webkit-column-rule-style: solid;
-  -webkit-column-rule-width: 1px;
-  position: relative;
-  height: 5em;
+.gcli-menu:not(:first-of-type) {
+  padding-top: 5px;
 }
 
-.dark .gcli-menu-template {
-  column-rule-color: #000;
-  -moz-column-rule-color: #000;
-  -webkit-column--rule-color: #000;
-}
-
-.light .gcli-menu-template {
-  column-rule-color: #FFF;
-  -moz-column-rule-color: #FFF;
-  -webkit-column-rule-color: #FFF;
-}
-
-.gcli-menu-option {
-  overflow: hidden;
+.gcli-menu-vert {
   white-space: nowrap;
-  cursor: pointer;
+  max-width: 22em;
+  display: inline-flex;
+  -moz-padding-end: 20px;
+  -webkit-padding-end: 20px;
+}
+
+.gcli-menu-names {
+  white-space: nowrap;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.gcli-menu-descs {
+  flex-grow: 1;
+  flex-shrink: 1;
 }
 
 .gcli-menu-name,
 .gcli-menu-desc {
-  display: inline-block;
-  padding: 1px 3px;
-  -moz-padding-start: 8px;
-  -webkit-padding-start: 8px;
+  white-space: nowrap;
 }
 
 .gcli-menu-name {
-  width: 5em;
+  -moz-padding-start: 2px;
+  -webkit-padding-start: 2px;
+  -moz-padding-end: 8px;
+  -webkit-padding-end: 8px;
 }
 
 .gcli-menu-desc {
-  width: 15em;
+  -moz-padding-end: 2px;
+  -webkit-padding-end: 2px;
   color: #777;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
-.gcli-menu-option:hover {
-  background-color: rgba(0, 0, 0, 0.2);
+.gcli-menu-name:hover,
+.gcli-menu-desc:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .gcli-menu-highlight,
 .gcli-menu-highlight.gcli-menu-option:hover {
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .gcli-menu-typed {
@@ -68,9 +63,7 @@
 
 .gcli-menu-more {
   font-size: 80%;
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  -moz-padding-end: 8px;
-  -webkit-padding-end: 8px;
+  width: 8em;
+  display: inline-flex;
+  vertical-align: bottom;
 }
