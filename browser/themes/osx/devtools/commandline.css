@@ -122,12 +122,13 @@
   color: hsl(210,30%,75%);
 }
 
-.gcli-menu-option:hover {
+.gcli-menu-name:hover,
+.gcli-menu-desc:hover {
   background-color: hsla(0,0%,0%,.3);
 }
 
 .gcli-menu-highlight,
-.gcli-menu-highlight.gcli-menu-option:hover {
+.gcli-menu-highlight:hover {
   background-color: hsla(0,100%,100%,.1);
 }
 
