@@ -1861,7 +1861,7 @@ nsLayoutUtils::ChangeMatrixBasis(const gfxPoint3D &aOrigin,
 
 static void ConstrainToCoordValues(float& aStart, float& aSize)
 {
-  MOZ_ASSERT(aSize > 0);
+  MOZ_ASSERT(aSize >= 0);
 
   // Here we try to make sure that the resulting nsRect will continue to cover
   // as much of the area that was covered by the original gfx Rect as possible.
