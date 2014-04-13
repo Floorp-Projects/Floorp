@@ -31,4 +31,6 @@ add_task(function*() {
 
   CustomizableUI.destroyWidget(BUTTONID);
   CustomizableUI.unregisterArea(TOOLBARID, true);
+  toolbar.remove();
+  gAddedToolbars.clear();
 });
