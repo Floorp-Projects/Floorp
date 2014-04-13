@@ -7,6 +7,7 @@
 JS_MODULES_PATH = 'modules/addons'
 
 EXTRA_JS_MODULES += [
+    'AddonLogging.jsm',
     'AddonRepository.jsm',
     'AddonRepository_SQLiteMigrator.jsm',
     'AddonUpdateChecker.jsm',
