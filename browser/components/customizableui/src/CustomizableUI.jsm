@@ -338,7 +338,7 @@ let CustomizableUIInternal = {
     if (!areaIsKnown) {
       gAreas.set(aName, props);
 
-      if (props.get("legacy")) {
+      if (props.get("legacy") && !gPlacements.has(aName)) {
         // Guarantee this area exists in gFuturePlacements, to avoid checking it in
         // various places elsewhere.
         gFuturePlacements.set(aName, new Set());
