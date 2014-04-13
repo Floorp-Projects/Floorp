@@ -1450,6 +1450,12 @@ this.OS.Shared = {
 Object.freeze(this.OS.Shared);
 this.OS.Path = Path;
 
+// Returns a resolved promise when all the queued operation have been completed.
+Object.defineProperty(OS.File, "queue", {
+  get: function() {
+    return Scheduler.queue;
+  }
+});
 
 // Auto-flush OS.File during profile-before-change. This ensures that any I/O
 // that has been queued *before* profile-before-change is properly completed.
