@@ -287,6 +287,19 @@ var steps = [
     };
   },
   function () {
+    // Test getAvailableServiceTypes
+    req = netStats.getAvailableServiceTypes();
+    req.onsuccess = function () {
+      ok(true, "getAvailableServiceTypes request ok");
+      ok(Array.isArray(req.result) && req.result.length == 0,
+         "getAvailableServiceTypes returns an empty array");
+      next();
+    };
+    req.onerror = function () {
+      ok(false, "getAvailableServiceTypes failure!");
+    }
+  },
+  function () {
     ok(true, "all done!\n");
     SpecialPowers.removePermission("networkstats-manage", document);
     SimpleTest.finish();

@@ -375,7 +375,7 @@ private:
   void checkUsbRndisState(NetworkParams& aOptions);
   void dumpParams(NetworkParams& aOptions, const char* aType);
 
-  static void escapeQuote(const char* src, char* dst);
+  static void escapeQuote(nsCString& aString);
   inline uint32_t netdResponseType(uint32_t code);
   inline bool isBroadcastMessage(uint32_t code);
   inline bool isError(uint32_t code);
