@@ -60,8 +60,6 @@ public:
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
 
-  virtual bool UpdateSurface(gfxASurface* aSurface) MOZ_OVERRIDE;
-
   virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
 
   virtual void SetReleaseFenceHandle(FenceHandle aReleaseFenceHandle) MOZ_OVERRIDE;
@@ -87,8 +85,6 @@ public:
   virtual uint8_t* GetBuffer() const MOZ_OVERRIDE;
 
   virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
-
-  virtual already_AddRefed<gfxASurface> GetAsSurface() MOZ_OVERRIDE;
 
   virtual bool AllocateForSurface(gfx::IntSize aSize,
                                   TextureAllocationFlags aFlags = ALLOC_DEFAULT) MOZ_OVERRIDE;
