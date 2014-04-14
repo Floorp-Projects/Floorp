@@ -4256,3 +4256,6 @@ pref("dom.fetch.enabled", false);
 // platforms; and set to 0 to disable the low-memory check altogether.
 pref("camera.control.low_memory_thresholdMB", 404);
 #endif
+
+// UDPSocket API
+pref("dom.udpsocket.enabled", false);
