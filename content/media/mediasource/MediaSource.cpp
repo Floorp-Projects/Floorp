@@ -165,6 +165,10 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
     return nullptr;
   }
   nsRefPtr<SourceBuffer> sourceBuffer = new SourceBuffer(this, NS_ConvertUTF16toUTF8(mimeType));
+  if (!sourceBuffer->Init()) {
+    aRv.Throw(NS_ERROR_FAILURE); // XXX need a better error here
+    return nullptr;
+  }
   mSourceBuffers->Append(sourceBuffer);
   MSE_DEBUG("%p AddSourceBuffer(Type=%s) -> %p", this,
             NS_ConvertUTF16toUTF8(mimeType).get(), sourceBuffer.get());
