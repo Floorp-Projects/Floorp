@@ -1283,7 +1283,7 @@ pref("devtools.eyedropper.zoom", 6);
 // - keymap: which keymap to use (can be 'default', 'emacs' or 'vim')
 // - autoclosebrackets: whether to permit automatic bracket/quote closing.
 // - detectindentation: whether to detect the indentation from the file
-pref("devtools.editor.tabsize", 4);
+pref("devtools.editor.tabsize", 2);
 pref("devtools.editor.expandtab", true);
 pref("devtools.editor.keymap", "default");
 pref("devtools.editor.autoclosebrackets", true);
