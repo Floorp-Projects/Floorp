@@ -51,10 +51,6 @@ class TextureClientX11
 
   virtual gfx::SurfaceFormat GetFormat() const { return mFormat; }
 
-  virtual bool UpdateSurface(gfxASurface* aSurface) MOZ_OVERRIDE;
-
-  virtual already_AddRefed<gfxASurface> GetAsSurface() MOZ_OVERRIDE;
-
   virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return false; }
 
  private:

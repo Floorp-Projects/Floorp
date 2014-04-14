@@ -84,22 +84,22 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
   MOZ_ASSERT(aWindow || XRE_GetProcessType() == GeckoProcessType_Default);
 
   // We syncd the enum of channel type between nsIAudioChannelAgent.idl and
-  // AudioChannelCommon.h the same.
-  static_assert(static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_NORMAL) ==
-                AUDIO_CHANNEL_NORMAL &&
-                static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_CONTENT) ==
-                AUDIO_CHANNEL_CONTENT &&
-                static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_NOTIFICATION) ==
-                AUDIO_CHANNEL_NOTIFICATION &&
-                static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_ALARM) ==
-                AUDIO_CHANNEL_ALARM &&
-                static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_TELEPHONY) ==
-                AUDIO_CHANNEL_TELEPHONY &&
-                static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_RINGER) ==
-                AUDIO_CHANNEL_RINGER &&
-                static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_PUBLICNOTIFICATION) ==
-                AUDIO_CHANNEL_PUBLICNOTIFICATION,
-                "Enum of channel on nsIAudioChannelAgent.idl should be the same with AudioChannelCommon.h");
+  // AudioChannelBinding.h the same.
+  MOZ_ASSERT(static_cast<AudioChannel>(AUDIO_AGENT_CHANNEL_NORMAL) ==
+             AudioChannel::Normal &&
+             static_cast<AudioChannel>(AUDIO_AGENT_CHANNEL_CONTENT) ==
+             AudioChannel::Content &&
+             static_cast<AudioChannel>(AUDIO_AGENT_CHANNEL_NOTIFICATION) ==
+             AudioChannel::Notification &&
+             static_cast<AudioChannel>(AUDIO_AGENT_CHANNEL_ALARM) ==
+             AudioChannel::Alarm &&
+             static_cast<AudioChannel>(AUDIO_AGENT_CHANNEL_TELEPHONY) ==
+             AudioChannel::Telephony &&
+             static_cast<AudioChannel>(AUDIO_AGENT_CHANNEL_RINGER) ==
+             AudioChannel::Ringer &&
+             static_cast<AudioChannel>(AUDIO_AGENT_CHANNEL_PUBLICNOTIFICATION) ==
+             AudioChannel::Publicnotification,
+             "Enum of channel on nsIAudioChannelAgent.idl should be the same with AudioChannelBinding.h");
 
   if (mAudioChannelType != AUDIO_AGENT_CHANNEL_ERROR ||
       aChannelType > AUDIO_AGENT_CHANNEL_PUBLICNOTIFICATION ||
@@ -131,7 +131,7 @@ NS_IMETHODIMP AudioChannelAgent::StartPlaying(int32_t *_retval)
   }
 
   service->RegisterAudioChannelAgent(this,
-    static_cast<AudioChannelType>(mAudioChannelType), mWithVideo);
+    static_cast<AudioChannel>(mAudioChannelType), mWithVideo);
   *_retval = service->GetState(this, !mVisible);
   mIsRegToService = true;
   return NS_OK;

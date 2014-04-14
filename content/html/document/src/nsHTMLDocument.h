@@ -233,7 +233,7 @@ public:
   {
     // Deprecated
   }
-  already_AddRefed<mozilla::Selection> GetSelection(mozilla::ErrorResult& rv);
+  mozilla::Selection* GetSelection(mozilla::ErrorResult& aRv);
   // The XPCOM CaptureEvents works fine for us.
   // The XPCOM ReleaseEvents works fine for us.
   // We're picking up GetLocation from Document

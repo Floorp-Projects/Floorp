@@ -129,14 +129,17 @@ public:
 
     int32_t volIndex = JSVAL_TO_INT(aResult);
     if (aName.EqualsLiteral("audio.volume.content")) {
-      audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_CONTENT, volIndex);
+      audioManager->SetAudioChannelVolume((int32_t)AudioChannel::Content,
+                                          volIndex);
     } else if (aName.EqualsLiteral("audio.volume.notification")) {
-      audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_NOTIFICATION,
+      audioManager->SetAudioChannelVolume((int32_t)AudioChannel::Notification,
                                           volIndex);
     } else if (aName.EqualsLiteral("audio.volume.alarm")) {
-      audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_ALARM, volIndex);
+      audioManager->SetAudioChannelVolume((int32_t)AudioChannel::Alarm,
+                                          volIndex);
     } else if (aName.EqualsLiteral("audio.volume.telephony")) {
-      audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_TELEPHONY, volIndex);
+      audioManager->SetAudioChannelVolume((int32_t)AudioChannel::Telephony,
+                                          volIndex);
     } else if (aName.EqualsLiteral("audio.volume.bt_sco")) {
       static_cast<AudioManager *>(audioManager.get())->SetStreamVolumeIndex(
         AUDIO_STREAM_BLUETOOTH_SCO, volIndex);
@@ -531,9 +534,9 @@ AudioManager::SetPhoneState(int32_t aState)
     MOZ_ASSERT(mPhoneAudioAgent);
     if (aState == PHONE_STATE_IN_CALL) {
       // Telephony doesn't be paused by any other channels.
-      mPhoneAudioAgent->Init(nullptr, AUDIO_CHANNEL_TELEPHONY, nullptr);
+      mPhoneAudioAgent->Init(nullptr, (int32_t)AudioChannel::Telephony, nullptr);
     } else {
-      mPhoneAudioAgent->Init(nullptr, AUDIO_CHANNEL_RINGER, nullptr);
+      mPhoneAudioAgent->Init(nullptr, (int32_t)AudioChannel::Ringer, nullptr);
     }
 
     // Telephony can always play.
@@ -608,8 +611,8 @@ NS_IMETHODIMP
 AudioManager::SetAudioChannelVolume(int32_t aChannel, int32_t aIndex) {
   nsresult status;
 
-  switch (aChannel) {
-    case AUDIO_CHANNEL_CONTENT:
+  switch (static_cast<AudioChannel>(aChannel)) {
+    case AudioChannel::Content:
       // sync FMRadio's volume with content channel.
       if (IsDeviceOn(AUDIO_DEVICE_OUT_FM)) {
         status = SetStreamVolumeIndex(AUDIO_STREAM_FM, aIndex);
@@ -619,15 +622,15 @@ AudioManager::SetAudioChannelVolume(int32_t aChannel, int32_t aIndex) {
       NS_ENSURE_SUCCESS(status, status);
       status = SetStreamVolumeIndex(AUDIO_STREAM_SYSTEM, aIndex);
       break;
-    case AUDIO_CHANNEL_NOTIFICATION:
+    case AudioChannel::Notification:
       status = SetStreamVolumeIndex(AUDIO_STREAM_NOTIFICATION, aIndex);
       NS_ENSURE_SUCCESS(status, status);
       status = SetStreamVolumeIndex(AUDIO_STREAM_RING, aIndex);
       break;
-    case AUDIO_CHANNEL_ALARM:
+    case AudioChannel::Alarm:
       status = SetStreamVolumeIndex(AUDIO_STREAM_ALARM, aIndex);
       break;
-    case AUDIO_CHANNEL_TELEPHONY:
+    case AudioChannel::Telephony:
       status = SetStreamVolumeIndex(AUDIO_STREAM_VOICE_CALL, aIndex);
       break;
     default:
@@ -643,21 +646,21 @@ AudioManager::GetAudioChannelVolume(int32_t aChannel, int32_t* aIndex) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  switch (aChannel) {
-    case AUDIO_CHANNEL_CONTENT:
+  switch (static_cast<AudioChannel>(aChannel)) {
+    case AudioChannel::Content:
       MOZ_ASSERT(mCurrentStreamVolumeTbl[AUDIO_STREAM_MUSIC] ==
                  mCurrentStreamVolumeTbl[AUDIO_STREAM_SYSTEM]);
       *aIndex = mCurrentStreamVolumeTbl[AUDIO_STREAM_MUSIC];
       break;
-    case AUDIO_CHANNEL_NOTIFICATION:
+    case AudioChannel::Notification:
       MOZ_ASSERT(mCurrentStreamVolumeTbl[AUDIO_STREAM_NOTIFICATION] ==
                  mCurrentStreamVolumeTbl[AUDIO_STREAM_RING]);
       *aIndex = mCurrentStreamVolumeTbl[AUDIO_STREAM_NOTIFICATION];
       break;
-    case AUDIO_CHANNEL_ALARM:
+    case AudioChannel::Alarm:
       *aIndex = mCurrentStreamVolumeTbl[AUDIO_STREAM_ALARM];
       break;
-    case AUDIO_CHANNEL_TELEPHONY:
+    case AudioChannel::Telephony:
       *aIndex = mCurrentStreamVolumeTbl[AUDIO_STREAM_VOICE_CALL];
       break;
     default:
@@ -674,21 +677,21 @@ AudioManager::GetMaxAudioChannelVolume(int32_t aChannel, int32_t* aMaxIndex) {
   }
 
   int32_t stream;
-  switch (aChannel) {
-    case AUDIO_CHANNEL_CONTENT:
+  switch (static_cast<AudioChannel>(aChannel)) {
+    case AudioChannel::Content:
       MOZ_ASSERT(sMaxStreamVolumeTbl[AUDIO_STREAM_MUSIC] ==
                  sMaxStreamVolumeTbl[AUDIO_STREAM_SYSTEM]);
       stream = AUDIO_STREAM_MUSIC;
       break;
-    case AUDIO_CHANNEL_NOTIFICATION:
+    case AudioChannel::Notification:
       MOZ_ASSERT(sMaxStreamVolumeTbl[AUDIO_STREAM_NOTIFICATION] ==
                  sMaxStreamVolumeTbl[AUDIO_STREAM_RING]);
       stream = AUDIO_STREAM_NOTIFICATION;
       break;
-    case AUDIO_CHANNEL_ALARM:
+    case AudioChannel::Alarm:
       stream = AUDIO_STREAM_ALARM;
       break;
-    case AUDIO_CHANNEL_TELEPHONY:
+    case AudioChannel::Telephony:
       stream = AUDIO_STREAM_VOICE_CALL;
       break;
     default:
