@@ -1049,6 +1049,16 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   -moz-image-region: rect(1px, 71px, 17px, 55px);
 }
 
+/* zoom control text (reset) button special case: */
+
+#nav-bar #zoom-reset-button > .toolbarbutton-text {
+  /* To make this line up with the icons, it needs the same height (18px) +
+   * padding (2 * 2px) + border (2 * 1px), but as a minimum because otherwise
+   * increase in text sizes would break things...
+   */
+  min-height: 24px;
+}
+
 /* ::::: fullscreen window controls ::::: */
 
 #window-controls {
