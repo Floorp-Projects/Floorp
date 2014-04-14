@@ -4,22 +4,42 @@
 
 #include "nsISupports.idl"
 
-[scriptable, function, uuid(7a16feb4-5a78-4589-9174-b728f26942e2)]
+[scriptable, function, uuid(674b6e69-05f0-41da-aabd-4184ea85c9d8)]
 interface nsIActivityUIGlueCallback : nsISupports
 {
-    void handleEvent(in long choice);
+    /**
+     * The activity service should start the activity at the specified index.
+     */
+    const short WEBAPPS_ACTIVITY = 0;
+
+    /**
+     * The activity service should deliver the specified result to the MozActivity callback.
+     */
+    const short NATIVE_ACTIVITY  = 1;
+
+    /**
+      * Called if the user picked an activitiy to launch.
+      * @param resultType Inidcates that {@code result} is an index or a native activity result.
+      * @param result     If WEBAPPS_ACTIVITY, the index of the chosen activity. Send '-1' if no choice is made.
+                          If NATIVE_ACTIVITY, the return value to be sent to the MozActivity.
+      */
+    void handleEvent(in short resultType, in jsval result);
 };
 
 /**
   * To be implemented by @mozilla.org/dom/activities/ui-glue;1
   */
-[scriptable, uuid(03e6743c-2fc3-43fa-bcb3-0476947c8ac5)]
+[scriptable, uuid(3caef69f-3569-4b19-bcea-1cfb0fee4466)]
 interface nsIActivityUIGlue : nsISupports
 {
     /**
+      * This method is called even if the size of {@code activities} is 0 so that the callee can
+      * decide whether or not to defer the request to an alternate activity system.
+      *
       * @param options     The ActivityOptions object in the form of { name: "send", data: { ... } }
       * @param activities  A json blob which is an array of { "title":"...", "icon":"..." }.
-      * @param onresult    The callback to send the index of the choosen activity. Send -1 if no choice is made.
+      * @param callback    The callback to send the index of the choosen activity, or the result.
       */
-    void chooseActivity(in jsval options, in jsval activities, in nsIActivityUIGlueCallback onresult);
+    void chooseActivity(in jsval options, in jsval activities,
+        in nsIActivityUIGlueCallback callback);
 };
