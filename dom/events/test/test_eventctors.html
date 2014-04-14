@@ -340,6 +340,88 @@ ok(e.cancelable, "Event should be cancelable!");
 is(e.detail, 0, "detail should be 0");
 ok(e.isComposing, "isComposing should be true");
 
+// KeyboardEvent
+
+try {
+  e = new KeyboardEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "KeyboardEvent: First parameter is required!");
+ex = false;
+
+e = new KeyboardEvent("hello");
+ok(e.type, "hello", "KeyboardEvent: Wrong event type!");
+ok(!e.isTrusted, "KeyboardEvent: Event shouldn't be trusted!");
+ok(!e.bubbles, "KeyboardEvent: Event shouldn't bubble!");
+ok(!e.cancelable, "KeyboardEvent: Event shouldn't be cancelable!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "KeyboardEvent: Wrong event!");
+
+var keyboardEventProps =
+[
+  { bubbles: false },
+  { cancelable: false },
+  { view: null },
+  { detail: 0 },
+  { key: "" },
+  { location: 0 },
+  { ctrlKey: false },
+  { shiftKey: false },
+  { altKey: false },
+  { metaKey: false },
+  { repeat: false },
+  { isComposing: false },
+  { charCode: 0 },
+  { keyCode: 0 },
+  { which: 0 },
+];
+
+var testKeyboardProps =
+[
+  { bubbles: true },
+  { cancelable: true },
+  { view: window },
+  { detail: 1 },
+  { key: "CustomKey" },
+  { location: 1 },
+  { ctrlKey: true },
+  { shiftKey: true },
+  { altKey: true },
+  { metaKey: true },
+  { repeat: true },
+  { isComposing: true },
+  { charCode: 2 },
+  { keyCode: 3 },
+  { which: 4 },
+  { charCode: 5, which: 6 },
+  { keyCode: 7, which: 8 },
+  { keyCode: 9, charCode: 10 },
+  { keyCode: 11, charCode: 12, which: 13 },
+];
+
+var defaultKeyboardEventValues = {};
+for (var i = 0; i < keyboardEventProps.length; ++i) {
+  for (prop in keyboardEventProps[i]) {
+    ok(prop in e, "keyboardEvent: KeyboardEvent doesn't have property " + prop + "!");
+    defaultKeyboardEventValues[prop] = keyboardEventProps[i][prop]; 
+  }
+}
+
+while (testKeyboardProps.length) {
+  var p = testKeyboardProps.shift();
+  e = new KeyboardEvent("foo", p);
+  for (var def in defaultKeyboardEventValues) {
+    if (!(def in p)) {
+      is(e[def], defaultKeyboardEventValues[def],
+         "KeyboardEvent: Wrong default value for " + def + "!");
+    } else {
+      is(e[def], p[def],
+         "KeyboardEvent: Wrong event init value for " + def + "!");
+    }
+  }
+}
+
 // PageTransitionEvent
 
 try {
