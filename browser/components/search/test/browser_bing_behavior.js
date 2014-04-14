@@ -9,9 +9,6 @@
 
 const BROWSER_SEARCH_PREF = "browser.search.";
 
-let runtime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-// Custom search parameters
-const PC_PARAM_VALUE = runtime.isOfficialBranding ? "MOZI" : null;
 
 function test() {
   let engine = Services.search.getEngineByName("Bing");
@@ -20,10 +17,7 @@ function test() {
   let previouslySelectedEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
 
-  let base = "http://www.bing.com/search?q=foo";
-  if (typeof(PC_PARAM_VALUE) == "string")
-    base += "&pc=" + PC_PARAM_VALUE;
-
+  let base = "http://www.bing.com/search?q=foo&pc=MOZI";
   let url;
 
   // Test search URLs (including purposes).
