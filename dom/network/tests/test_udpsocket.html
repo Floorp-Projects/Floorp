@@ -1,0 +1,409 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test UDPSocket API</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<iframe id="iframe"></iframe>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+'use strict';
+SimpleTest.waitForExplicitFinish();
+
+const HELLO_WORLD = 'hlo wrld. ';
+const DATA_ARRAY = [0, 255, 254, 0, 1, 2, 3, 0, 255, 255, 254, 0];
+const DATA_ARRAY_BUFFER = new ArrayBuffer(DATA_ARRAY.length);
+const TYPED_DATA_ARRAY = new Uint8Array(DATA_ARRAY_BUFFER);
+const BIG_ARRAY = new Array(4096);
+const BIG_ARRAY_BUFFER = new ArrayBuffer(BIG_ARRAY.length);
+const BIG_TYPED_ARRAY = new Uint8Array(BIG_ARRAY_BUFFER);
+
+for (let i = 0; i < BIG_ARRAY.length; i++) {
+  BIG_ARRAY[i] = Math.floor(Math.random() * 256);
+}
+
+TYPED_DATA_ARRAY.set(DATA_ARRAY);
+BIG_TYPED_ARRAY.set(BIG_ARRAY);
+
+function is_same_buffer(recv_data, expect_data) {
+  let recv_dataview = new Uint8Array(recv_data);
+  let expected_dataview = new Uint8Array(expect_data);
+
+  if (recv_dataview.length !== expected_dataview.length) {
+    return false;
+  }
+
+  for (let i = 0; i < recv_dataview.length; i++) {
+    if (recv_dataview[i] != expected_dataview[i]) {
+      info('discover byte differenct at ' + i);
+      return false;
+    }
+  }
+  return true;
+}
+
+function testOpen() {
+  info('test for creating an UDP Socket');
+  let socket = new UDPSocket();
+  is(socket.localPort, null, 'expect no local port before socket opened');
+  is(socket.localAddress, null, 'expect no local address before socket opened');
+  is(socket.remotePort, null, 'expected no default remote port');
+  is(socket.remoteAddress, null, 'expected no default remote address');
+  is(socket.readyState, 'opening', 'expected ready state = opening');
+  is(socket.loopback, false, 'expected no loopback');
+  is(socket.addressReuse, true, 'expect to reuse address');
+
+  return socket.opened.then(function() {
+    ok(true, 'expect openedPromise to be resolved after successful socket binding');
+    ok(!(socket.localPort === 0), 'expect allocated a local port');
+    is(socket.localAddress, '0.0.0.0', 'expect assigned to default address');
+    is(socket.readyState, 'open', 'expected ready state = open');
+
+    return socket;
+  });
+}
+
+function testSendString(socket) {
+  info('test for sending string data');
+
+  socket.send(HELLO_WORLD, '127.0.0.1', socket.localPort);
+
+  return new Promise(function(resolve, reject) {
+    socket.addEventListener('message', function recv_callback(msg) {
+      socket.removeEventListener('message', recv_callback);
+      let recvData= String.fromCharCode.apply(null, new Uint8Array(msg.data));
+      is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
+      is(recvData, HELLO_WORLD, 'expected same string data');
+      resolve(socket);
+    });
+  });
+}
+
+function testSendArrayBuffer(socket) {
+  info('test for sending ArrayBuffer');
+
+  socket.send(DATA_ARRAY_BUFFER, '127.0.0.1', socket.localPort);
+
+  return new Promise(function(resolve, reject) {
+    socket.addEventListener('message', function recv_callback(msg) {
+      socket.removeEventListener('message', recv_callback);
+      is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
+      ok(is_same_buffer(msg.data, DATA_ARRAY_BUFFER), 'expected same buffer data');
+      resolve(socket);
+    });
+  });
+}
+
+function testSendArrayBufferView(socket) {
+  info('test for sending ArrayBufferView');
+
+  socket.send(TYPED_DATA_ARRAY, '127.0.0.1', socket.localPort);
+
+  return new Promise(function(resolve, reject) {
+    socket.addEventListener('message', function recv_callback(msg) {
+      socket.removeEventListener('message', recv_callback);
+      is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
+      ok(is_same_buffer(msg.data, TYPED_DATA_ARRAY), 'expected same buffer data');
+      resolve(socket);
+    });
+  });
+}
+
+function testSendBlob(socket) {
+  info('test for sending Blob');
+
+  let blob = new Blob([HELLO_WORLD], {type : 'text/plain'});
+  socket.send(blob, '127.0.0.1', socket.localPort);
+
+  return new Promise(function(resolve, reject) {
+    socket.addEventListener('message', function recv_callback(msg) {
+      socket.removeEventListener('message', recv_callback);
+      let recvData= String.fromCharCode.apply(null, new Uint8Array(msg.data));
+      is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
+      is(recvData, HELLO_WORLD, 'expected same string data');
+      resolve(socket);
+    });
+  });
+}
+
+function testSendBigArray(socket) {
+  info('test for sending Big ArrayBuffer');
+
+  socket.send(BIG_TYPED_ARRAY, '127.0.0.1', socket.localPort);
+
+  return new Promise(function(resolve, reject) {
+    let byteReceived = 0;
+    socket.addEventListener('message', function recv_callback(msg) {
+      let byteBegin = byteReceived;
+      byteReceived += msg.data.byteLength;
+      is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
+      ok(is_same_buffer(msg.data, BIG_TYPED_ARRAY.subarray(byteBegin, byteReceived)), 'expected same buffer data [' + byteBegin+ '-' + byteReceived + ']');
+      if (byteReceived >= BIG_TYPED_ARRAY.length) {
+        socket.removeEventListener('message', recv_callback);
+        clearTimeout(timeout);
+        resolve(socket);
+      }
+    });
+
+    let timeout = setTimeout(function() {
+      ok(false, 'timeout for sending big array');
+      resolve(socket);
+    }, 5000);
+  });
+}
+
+function testSendBigBlob(socket) {
+  info('test for sending Big Blob');
+
+  let blob = new Blob([BIG_TYPED_ARRAY]);
+  socket.send(blob, '127.0.0.1', socket.localPort);
+
+  return new Promise(function(resolve, reject) {
+    let byteReceived = 0;
+    socket.addEventListener('message', function recv_callback(msg) {
+      let byteBegin = byteReceived;
+      byteReceived += msg.data.byteLength;
+      is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
+      ok(is_same_buffer(msg.data, BIG_TYPED_ARRAY.subarray(byteBegin, byteReceived)), 'expected same buffer data [' + byteBegin+ '-' + byteReceived + ']');
+      if (byteReceived >= BIG_TYPED_ARRAY.length) {
+        socket.removeEventListener('message', recv_callback);
+        clearTimeout(timeout);
+        resolve(socket);
+      }
+    });
+
+    let timeout = setTimeout(function() {
+      ok(false, 'timeout for sending big blob');
+      resolve(socket);
+    }, 5000);
+  });
+}
+
+function testUDPOptions(socket) {
+  info('test for UDP init options');
+
+  let remoteSocket = new UDPSocket({addressReuse: false,
+                                    loopback: true,
+                                    localAddress: '127.0.0.1',
+                                    remoteAddress: '127.0.0.1',
+                                    remotePort: socket.localPort});
+  is(remoteSocket.localAddress, '127.0.0.1', 'expected local address');
+  is(remoteSocket.remoteAddress, '127.0.0.1', 'expected remote address');
+  is(remoteSocket.remotePort, socket.localPort, 'expected remote port');
+  is(remoteSocket.addressReuse, false, 'expected address not reusable');
+  is(remoteSocket.loopback, true, 'expected loopback mode is on');
+
+  return remoteSocket.opened.then(function() {
+    remoteSocket.send(HELLO_WORLD);
+    return new Promise(function(resolve, reject) {
+      socket.addEventListener('message', function recv_callback(msg) {
+        socket.removeEventListener('message', recv_callback);
+        let recvData= String.fromCharCode.apply(null, new Uint8Array(msg.data));
+        is(msg.remotePort, remoteSocket.localPort, 'expected packet from ' + remoteSocket.localPort);
+        is(recvData, HELLO_WORLD, 'expected same string data');
+        resolve(socket);
+      });
+    });
+  });
+}
+
+function testClose(socket) {
+  info('test for close');
+
+  socket.close();
+  is(socket.readyState, 'closed', 'expect ready state to be "closed"');
+  try {
+    socket.send(HELLO_WORLD, '127.0.0.1', socket.localPort);
+    ok(false, 'unexpect to send successfully');
+  } catch (e) {
+    ok(true, 'expected send fail after socket closed');
+  }
+
+  return socket.closed.then(function() {
+    ok(true, 'expected closedPromise is resolved after socket.close()');
+  });
+}
+
+function testMulticast() {
+  info('test for multicast');
+
+  let socket = new UDPSocket({loopback: true});
+
+  const MCAST_ADDRESS = '224.0.0.255';
+  socket.joinMulticastGroup(MCAST_ADDRESS);
+
+  return socket.opened.then(function() {
+    socket.send(HELLO_WORLD, MCAST_ADDRESS, socket.localPort);
+
+    return new Promise(function(resolve, reject) {
+      socket.addEventListener('message', function recv_callback(msg) {
+        socket.removeEventListener('message', recv_callback);
+        let recvData= String.fromCharCode.apply(null, new Uint8Array(msg.data));
+        is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
+        is(recvData, HELLO_WORLD, 'expected same string data');
+        socket.leaveMulticastGroup(MCAST_ADDRESS);
+        resolve();
+      });
+    });
+  });
+}
+
+function testInvalidUDPOptions() {
+  info('test for invalid UDPOptions');
+  try {
+    let socket = new UDPSocket({localAddress: 'not-a-valid-address'});
+    ok(false, 'should not create an UDPSocket with an invalid localAddress');
+  } catch (e) {
+    is(e.name, 'InvalidAccessError', 'expected InvalidAccessError will be thrown if localAddress is not a valid IPv4/6 address');
+  }
+
+  try {
+    let socket = new UDPSocket({localPort: 0});
+    ok(false, 'should not create an UDPSocket with an invalid localPort');
+  } catch (e) {
+    is(e.name, 'InvalidAccessError', 'expected InvalidAccessError will be thrown if localPort is not a valid port number');
+  }
+
+  try {
+    let socket = new UDPSocket({remotePort: 0});
+    ok(false, 'should not create an UDPSocket with an invalid remotePort');
+  } catch (e) {
+    is(e.name, 'InvalidAccessError', 'expected InvalidAccessError will be thrown if localPort is not a valid port number');
+  }
+}
+
+function testOpenFailed() {
+  info('test for falied on open');
+
+  //according to RFC5737, address block 192.0.2.0/24 should not be used in both local and public contexts
+  let socket = new UDPSocket({localAddress: '192.0.2.0'});
+
+  return socket.opened.then(function() {
+    ok(false, 'should not resolve openedPromise while fail to bind socket');
+  }).catch(function(reason) {
+    is(reason.name, 'NetworkError', 'expected openedPromise to be rejected while fail to bind socket');
+  });
+}
+
+function testSendBeforeOpen() {
+  info('test for send before open');
+
+  let socket = new UDPSocket();
+
+  try {
+    socket.send(HELLO_WORLD, '127.0.0.1', 9);
+    ok(false, 'unexpect to send successfully');
+  } catch (e) {
+    ok(true, 'expected send fail before openedPromise is resolved');
+  }
+
+  return socket.opened;
+}
+
+function testCloseBeforeOpened() {
+  info('test for close socket before opened');
+
+  let socket = new UDPSocket();
+  socket.opened.then(function() {
+    ok(false, 'should not resolve openedPromise if it has already been closed');
+  }).catch(function(reason) {
+    is(reason.name, 'AbortError', 'expected openedPromise to be rejected while socket is closed during opening');
+  });
+
+  return socket.close().then(function() {
+    ok(true, 'expected closedPromise to be resolved');
+  }).then(socket.opened);
+}
+
+function testOpenWithoutClose() {
+  info('test for open without close');
+
+  let opened = [];
+  for (let i = 0; i < 50; i++) {
+    let socket = new UDPSocket();
+    opened.push(socket.opened);
+  }
+
+  return Promise.all(opened);
+}
+
+function testBFCache() {
+  info('test for bfcache behavior');
+
+  let socket = new UDPSocket();
+
+  return socket.opened.then(function() {
+    let iframe = document.getElementById('iframe');
+    SpecialPowers.wrap(iframe).mozbrowser = true;
+    iframe.src = 'file_udpsocket_iframe.html?' + socket.localPort;
+
+    return new Promise(function(resolve, reject) {
+      socket.addEventListener('message', function recv_callback(msg) {
+        socket.removeEventListener('message', recv_callback);
+        iframe.src = 'about:blank';
+        iframe.addEventListener('load', function onload() {
+          iframe.removeEventListener('load', onload);
+          socket.send(HELLO_WORLD, '127.0.0.1', msg.remotePort);
+
+          function recv_again_callback(msg) {
+            socket.removeEventListener('message', recv_again_callback);
+            ok(false, 'should not receive packet after page unload');
+          }
+
+          socket.addEventListener('message', recv_again_callback);
+
+          let timeout = setTimeout(function() {
+            socket.removeEventListener('message', recv_again_callback);
+            socket.close();
+            resolve();
+          }, 5000);
+        });
+      });
+    });
+  });
+}
+
+function runTest() {
+  testOpen()
+  .then(testSendString)
+  .then(testSendArrayBuffer)
+  .then(testSendArrayBufferView)
+  .then(testSendBlob)
+  .then(testSendBigArray)
+  .then(testSendBigBlob)
+  .then(testUDPOptions)
+  .then(testClose)
+  .then(testMulticast)
+  .then(testInvalidUDPOptions)
+  .then(testOpenFailed)
+  .then(testSendBeforeOpen)
+  .then(testCloseBeforeOpened)
+  .then(testOpenWithoutClose)
+  .then(testBFCache)
+  .then(function() {
+    info('test finished');
+    SimpleTest.finish();
+  });
+}
+
+window.addEventListener('load', function () {
+  SpecialPowers.pushPermissions([
+    {type: 'udp-socket', allow: true, context: document}], function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.udpsocket.enabled', true],
+        ['browser.sessionhistory.max_total_viewers', 10]
+      ]
+    }, runTest);
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
