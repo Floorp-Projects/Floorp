@@ -6,10 +6,9 @@
 #ifndef nsEditRules_h__
 #define nsEditRules_h__
 
-// FB45AC36-E8F1-44ae-8FB7-466E1BE119B0
 #define NS_IEDITRULES_IID \
-{ 0x2cc50d11, 0x9909, 0x433f, \
-  { 0xb6, 0xfb, 0x4c, 0xf2, 0x56, 0xe5, 0xe5, 0x71 } }
+{ 0x3836386d, 0x806a, 0x488d, \
+  { 0x8b, 0xab, 0xaf, 0x42, 0xbb, 0x4c, 0x90, 0x66 } }
 
 #include "nsEditor.h"
 
@@ -43,6 +42,7 @@ public:
 //NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsIEditRules
 
   NS_IMETHOD Init(nsPlaintextEditor *aEditor)=0;
+  NS_IMETHOD SetInitialValue(const nsAString& aValue) = 0;
   NS_IMETHOD DetachEditor()=0;
   NS_IMETHOD BeforeEdit(EditAction action,
                         nsIEditor::EDirection aDirection) = 0;

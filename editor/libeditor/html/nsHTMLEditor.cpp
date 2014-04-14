@@ -225,10 +225,12 @@ NS_IMETHODIMP
 nsHTMLEditor::Init(nsIDOMDocument *aDoc,
                    nsIContent *aRoot,
                    nsISelectionController *aSelCon,
-                   uint32_t aFlags)
+                   uint32_t aFlags,
+                   const nsAString& aInitialValue)
 {
   NS_PRECONDITION(aDoc && !aSelCon, "bad arg");
   NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(aInitialValue.IsEmpty(), "Non-empty initial values not supported");
 
   nsresult result = NS_OK, rulesRes = NS_OK;
    
@@ -238,7 +240,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     nsAutoEditInitRulesTrigger rulesTrigger(static_cast<nsPlaintextEditor*>(this), rulesRes);
 
     // Init the plaintext editor
-    result = nsPlaintextEditor::Init(aDoc, aRoot, nullptr, aFlags);
+    result = nsPlaintextEditor::Init(aDoc, aRoot, nullptr, aFlags, aInitialValue);
     if (NS_FAILED(result)) { return result; }
 
     // Init mutation observer
