@@ -69,6 +69,7 @@ gujar.sources += [
     'util/StringUtils.java',
     'util/ThreadUtils.java',
     'util/UiAsyncTask.java',
+    'util/WebActivityMapper.java',
 ]
 gujar.extra_jars = [
     'gecko-mozglue.jar'
