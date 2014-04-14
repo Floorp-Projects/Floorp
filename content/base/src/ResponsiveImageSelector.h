@@ -68,6 +68,7 @@ public:
 
   // Set this candidate as a by-density candidate with specified density.
   void SetParameterAsDensity(double aDensity);
+  void SetParameterAsComputedWidth(int32_t aWidth);
 
   // Fill from a valid candidate descriptor. Returns false descriptor is
   // invalid.
@@ -85,6 +86,7 @@ public:
     // Treated as 1.0 density, but a separate type so we can update the
     // responsive candidates and default separately
     eCandidateType_Default,
+    eCandidateType_ComputedFromWidth
   };
 
   eCandidateType Type() const { return mType; }
@@ -95,6 +97,7 @@ private:
   eCandidateType mType;
   union {
     double mDensity;
+    int32_t mWidth;
   } mValue;
 };
 
