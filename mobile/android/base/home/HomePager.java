@@ -36,7 +36,7 @@ public class HomePager extends ViewPager {
     private static final int LOADER_ID_CONFIG = 0;
 
     private final Context mContext;
-    private volatile boolean mLoaded;
+    private volatile boolean mVisible;
     private Decor mDecor;
     private View mTabStrip;
     private HomeBanner mHomeBanner;
@@ -54,6 +54,12 @@ public class HomePager extends ViewPager {
 
     // Telemetry session for current panel.
     private String mCurrentPanelSession;
+
+    // Current load state of HomePager.
+    private LoadState mLoadState;
+
+    // Listens for when the current panel changes.
+    private OnPanelChangeListener mPanelChangedListener;
 
     // This is mostly used by UI tests to easily fetch
     // specific list views at runtime.
@@ -78,6 +84,18 @@ public class HomePager extends ViewPager {
         public void onNewTabs(String[] urls);
     }
 
+    /**
+     * Interface for listening into ViewPager panel changes
+     */
+    public interface OnPanelChangeListener {
+        /**
+         * Called when a new panel is selected.
+         *
+         * @param panelId of the newly selected panel
+         */
+        public void onPanelSelected(String panelId);
+    }
+
     interface OnTitleClickListener {
         public void onTitleClicked(int index);
     }
@@ -91,6 +109,15 @@ public class HomePager extends ViewPager {
         public void onPageSelected(int position);
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels);
         public void setOnTitleClickListener(OnTitleClickListener onTitleClickListener);
+    }
+
+    /**
+     * State of HomePager with respect to loading its configuration.
+     */
+    private enum LoadState {
+        UNLOADED,
+        LOADING,
+        LOADED
     }
 
     static final String CAN_LOAD_ARG = "canLoad";
@@ -129,6 +156,8 @@ public class HomePager extends ViewPager {
 
         mOriginalBackground = getBackground();
         setOnPageChangeListener(new PageChangeListener());
+
+        mLoadState = LoadState.UNLOADED;
     }
 
     @Override
@@ -157,7 +186,9 @@ public class HomePager extends ViewPager {
      * @param fm FragmentManager for the adapter
      */
     public void load(LoaderManager lm, FragmentManager fm, String panelId, PropertyAnimator animator) {
-        mLoaded = true;
+        mLoadState = LoadState.LOADING;
+
+        mVisible = true;
         mInitialPanelId = panelId;
 
         // Update the home banner message each time the HomePager is loaded.
@@ -207,8 +238,9 @@ public class HomePager extends ViewPager {
      * Removes all child fragments to free memory.
      */
     public void unload() {
-        mLoaded = false;
+        mVisible = false;
         setAdapter(null);
+        mLoadState = LoadState.UNLOADED;
 
         // Stop UI Telemetry sessions.
         stopCurrentPanelTelemetrySession();
@@ -216,15 +248,15 @@ public class HomePager extends ViewPager {
     }
 
     /**
-     * Determines whether the pager is loaded.
+     * Determines whether the pager is visible.
      *
      * Unlike getVisibility(), this method does not need to be called on the UI
      * thread.
      *
      * @return Whether the pager and its fragments are loaded
      */
-    public boolean isLoaded() {
-        return mLoaded;
+    public boolean isVisible() {
+        return mVisible;
     }
 
     @Override
@@ -237,6 +269,40 @@ public class HomePager extends ViewPager {
 
         if (mHomeBanner != null) {
             mHomeBanner.setActive(item == mDefaultPageIndex);
+        }
+    }
+
+    /**
+     * Shows a home panel. If the given panelId is null,
+     * the default panel will be shown. No action will be taken if:
+     *  * HomePager has not loaded yet
+     *  * Panel with the given panelId cannot be found
+     *
+     * @param panelId of the home panel to be shown.
+     */
+    public void showPanel(String panelId) {
+        if (!mVisible) {
+            return;
+        }
+
+        switch (mLoadState) {
+            case LOADING:
+                mInitialPanelId = panelId;
+                break;
+
+            case LOADED:
+                int position = mDefaultPageIndex;
+                if (panelId != null) {
+                    position = ((HomeAdapter) getAdapter()).getItemPosition(panelId);
+                }
+
+                if (position > -1) {
+                    setCurrentItem(position);
+                }
+                break;
+
+            default:
+                // Do nothing.
         }
     }
 
@@ -276,7 +342,7 @@ public class HomePager extends ViewPager {
     private void updateUiFromConfigState(HomeConfig.State configState) {
         // We only care about the adapter if HomePager is currently
         // loaded, which means it's visible in the activity.
-        if (!mLoaded) {
+        if (!mVisible) {
             return;
         }
 
@@ -365,6 +431,26 @@ public class HomePager extends ViewPager {
         }
     }
 
+    public void setOnPanelChangeListener(OnPanelChangeListener listener) {
+       mPanelChangedListener = listener;
+    }
+
+    /**
+     * Notify listeners of newly selected panel.
+     *
+     * @param position of the newly selected panel
+     */
+    private void notifyPanelSelected(int position) {
+        if (mDecor != null) {
+            mDecor.onPageSelected(position);
+        }
+
+        if (mPanelChangedListener != null) {
+            final String panelId = ((HomeAdapter) getAdapter()).getPanelIdAtPosition(position);
+            mPanelChangedListener.onPanelSelected(panelId);
+        }
+    }
+
     private class ConfigLoaderCallbacks implements LoaderCallbacks<HomeConfig.State> {
         @Override
         public Loader<HomeConfig.State> onCreateLoader(int id, Bundle args) {
@@ -373,20 +459,20 @@ public class HomePager extends ViewPager {
 
         @Override
         public void onLoadFinished(Loader<HomeConfig.State> loader, HomeConfig.State configState) {
+            mLoadState = LoadState.LOADED;
             updateUiFromConfigState(configState);
         }
 
         @Override
         public void onLoaderReset(Loader<HomeConfig.State> loader) {
+            mLoadState = LoadState.UNLOADED;
         }
     }
 
     private class PageChangeListener implements ViewPager.OnPageChangeListener {
         @Override
         public void onPageSelected(int position) {
-            if (mDecor != null) {
-                mDecor.onPageSelected(position);
-            }
+            notifyPanelSelected(position);
 
             if (mHomeBanner != null) {
                 mHomeBanner.setActive(position == mDefaultPageIndex);

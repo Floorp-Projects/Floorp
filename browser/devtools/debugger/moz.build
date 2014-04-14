@@ -6,6 +6,7 @@
 JS_MODULES_PATH = 'modules/devtools/debugger'
 
 EXTRA_JS_MODULES += [
+    'debugger-commands.js',
     'panel.js'
 ]
 
