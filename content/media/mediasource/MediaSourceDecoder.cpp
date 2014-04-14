@@ -1,9 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
+#include "MediaSourceResource.h"
 #include "MediaSourceDecoder.h"
 
 #include "AbstractMediaDecoder.h"
@@ -176,6 +176,13 @@ MediaSourceDecoder::GetSeekable(dom::TimeRanges* aSeekable)
     aSeekable->Add(0, duration);
   }
   return NS_OK;
+}
+
+/*static*/
+already_AddRefed<MediaResource>
+MediaSourceDecoder::CreateResource()
+{
+  return nsRefPtr<MediaResource>(new MediaSourceResource()).forget();
 }
 
 void
