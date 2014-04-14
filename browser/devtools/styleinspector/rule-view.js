@@ -1997,7 +1997,8 @@ TextPropertyEditor.prototype = {
    */
   get editing() {
     return !!(this.nameSpan.inplaceEditor || this.valueSpan.inplaceEditor ||
-      this.ruleEditor.ruleView.colorPicker.tooltip.isShown());
+      this.ruleEditor.ruleView.colorPicker.tooltip.isShown() ||
+      this.ruleEditor.ruleView.colorPicker.eyedropperOpen);
   },
 
   /**

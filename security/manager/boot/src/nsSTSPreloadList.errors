@@ -11,7 +11,6 @@ betnet.fr: could not connect to host
 bigshinylock.minazo.net: could not connect to host
 blacklane.com: did not receive HSTS header
 braintreegateway.com: did not receive HSTS header
-braintreepayments.com: did not receive HSTS header
 browserid.org: did not receive HSTS header
 business.medbank.com.mt: did not receive HSTS header
 calyxinstitute.org: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
@@ -26,7 +25,7 @@ codereview.chromium.org: did not receive HSTS header (error ignored - included r
 crate.io: did not receive HSTS header
 crowdcurity.com: did not receive HSTS header
 crypto.is: did not receive HSTS header
-csawctf.poly.edu: did not receive HSTS header
+csawctf.poly.edu: could not connect to host
 dl.google.com: did not receive HSTS header (error ignored - included regardless)
 docs.google.com: did not receive HSTS header (error ignored - included regardless)
 drive.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -34,6 +33,7 @@ dropcam.com: did not receive HSTS header
 email.lookout.com: could not connect to host
 emailprivacytester.com: did not receive HSTS header
 encrypted.google.com: did not receive HSTS header (error ignored - included regardless)
+errors.zenpayroll.com: could not connect to host
 espra.com: could not connect to host
 fatzebra.com.au: did not receive HSTS header
 fj.simple.com: did not receive HSTS header
@@ -47,6 +47,7 @@ googleplex.com: could not connect to host (error ignored - included regardless)
 goto.google.com: did not receive HSTS header (error ignored - included regardless)
 greplin.com: did not receive HSTS header
 groups.google.com: did not receive HSTS header (error ignored - included regardless)
+haste.ch: could not connect to host
 history.google.com: did not receive HSTS header (error ignored - included regardless)
 hostedtalkgadget.google.com: did not receive HSTS header (error ignored - included regardless)
 id.atlassian.com: did not receive HSTS header
@@ -69,7 +70,7 @@ mydigipass.com: did not receive HSTS header
 mykolab.com: did not receive HSTS header
 neonisi.com: could not connect to host
 nexth.de: could not connect to host
-nexth.net: could not connect to host
+nexth.net: did not receive HSTS header
 nexth.us: could not connect to host
 openshift.redhat.com: did not receive HSTS header
 ottospora.nl: could not connect to host
@@ -87,6 +88,7 @@ prodpad.com: did not receive HSTS header
 profiles.google.com: did not receive HSTS header (error ignored - included regardless)
 rapidresearch.me: did not receive HSTS header
 sah3.net: could not connect to host
+sandbox.mydigipass.com: could not connect to host
 saturngames.co.uk: did not receive HSTS header
 script.google.com: did not receive HSTS header (error ignored - included regardless)
 security.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -97,7 +99,7 @@ simon.butcher.name: max-age too low: 2629743
 sites.google.com: did not receive HSTS header (error ignored - included regardless)
 sol.io: could not connect to host
 souyar.de: could not connect to host
-souyar.net: could not connect to host
+souyar.net: did not receive HSTS header
 souyar.us: could not connect to host
 spreadsheets.google.com: did not receive HSTS header (error ignored - included regardless)
 square.com: did not receive HSTS header
