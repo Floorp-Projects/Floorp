@@ -85,7 +85,6 @@
 
 // CSS related includes
 #include "nsCSSRules.h"
-#include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSSRule.h"
 #include "nsICSSRuleList.h"
 #include "nsAutoPtr.h"
@@ -122,7 +121,6 @@
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMXPathResult.h"
 
-#include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGNumber.h"
 
 // Storage includes
@@ -319,8 +317,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSRuleList, nsCSSRuleListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(StyleSheetList, nsStyleSheetListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSStyleSheet, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -365,8 +361,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // other SVG classes
-  NS_DEFINE_CLASSINFO_DATA(SVGLength, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGNumber, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -948,10 +942,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRuleList)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(StyleSheetList, nsIDOMStyleSheetList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStyleSheetList)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(CSSStyleSheet, nsIDOMCSSStyleSheet)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleSheet)
   DOM_CLASSINFO_MAP_END
@@ -1018,10 +1008,6 @@ nsDOMClassInfo::Init()
   // The SVG document
 
   // other SVG classes
-  DOM_CLASSINFO_MAP_BEGIN(SVGLength, nsIDOMSVGLength)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLength)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(SVGNumber, nsIDOMSVGNumber)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGNumber)
   DOM_CLASSINFO_MAP_END
@@ -3677,19 +3663,6 @@ nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   return rv;
-}
-
-
-// StyleSheetList helper
-
-nsISupports*
-nsStyleSheetListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                              nsWrapperCache **aCache, nsresult *rv)
-{
-  nsIDOMStyleSheetList* list = static_cast<nsIDOMStyleSheetList*>(aNative);
-  nsCOMPtr<nsIDOMStyleSheet> sheet;
-  list->Item(aIndex, getter_AddRefs(sheet));
-  return sheet;
 }
 
 

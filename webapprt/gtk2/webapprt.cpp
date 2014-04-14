@@ -23,6 +23,7 @@
 const char kAPP_INI[] = "application.ini";
 const char kWEBAPP_INI[] = "webapp.ini";
 const char kWEBAPP_JSON[] = "webapp.json";
+const char kWEBAPP_PACKAGE[] = "application.zip";
 const char kWEBAPPRT_INI[] = "webapprt.ini";
 const char kWEBAPPRT_PATH[] = "webapprt";
 const char kAPP_ENV_VAR[] = "XUL_APP_FILE";
@@ -263,6 +264,10 @@ void RemoveApplication(nsINIParser& parser, const char* curExeDir, const char* p
   char iconPath[MAXPATHLEN];
   snprintf(iconPath, MAXPATHLEN, "%s/icon.png", curExeDir);
   unlink(iconPath);
+
+  char packagePath[MAXPATHLEN];
+  snprintf(packagePath, MAXPATHLEN, "%s/%s", curExeDir, kWEBAPP_PACKAGE);
+  unlink(packagePath);
 
   char appName[MAXPATHLEN];
   if (NS_FAILED(parser.GetString("Webapp", "Name", appName, MAXPATHLEN))) {

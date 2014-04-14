@@ -4364,7 +4364,7 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes)
             CompilerOutput output = (*compilerOutputs)[i];
             if (output.isValid()) {
                 JS_ASSERT(sweepIndex == output.sweepIndex());
-                output.setSweepIndex(0);
+                output.invalidateSweepIndex();
                 (*compilerOutputs)[sweepIndex++] = output;
             }
         }

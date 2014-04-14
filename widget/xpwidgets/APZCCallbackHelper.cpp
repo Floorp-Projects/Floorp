@@ -230,7 +230,7 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
     } else {
         gfx::IntSize alignment = gfxPrefs::LayersTilesEnabled()
             ? gfx::IntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()) :
-              gfx::IntSize(1, 1);
+              gfx::IntSize(0, 0);
         LayerMargin margins = aMetrics.GetDisplayPortMargins();
         aUtils->SetDisplayPortMarginsForElement(margins.left,
                                                 margins.top,
@@ -285,7 +285,7 @@ APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
         } else {
             gfx::IntSize alignment = gfxPrefs::LayersTilesEnabled()
                 ? gfx::IntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()) :
-                  gfx::IntSize(1, 1);
+                  gfx::IntSize(0, 0);
             LayerMargin margins = aMetrics.GetDisplayPortMargins();
             utils->SetDisplayPortMarginsForElement(margins.left,
                                                    margins.top,

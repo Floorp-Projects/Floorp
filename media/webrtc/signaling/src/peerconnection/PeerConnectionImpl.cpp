@@ -1770,7 +1770,13 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState)
 bool
 PeerConnectionImpl::IsClosed() const
 {
-  return !mMedia;
+  return mSignalingState == PCImplSignalingState::SignalingClosed;
+}
+
+bool
+PeerConnectionImpl::HasMedia() const
+{
+  return mMedia;
 }
 
 PeerConnectionWrapper::PeerConnectionWrapper(const std::string& handle)
@@ -1952,7 +1958,7 @@ PeerConnectionImpl::BuildStatsQuery_m(
     mozilla::dom::MediaStreamTrack *aSelector,
     RTCStatsQuery *query) {
 
-  if (IsClosed()) {
+  if (!HasMedia()) {
     return NS_OK;
   }
 

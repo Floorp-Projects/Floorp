@@ -80,7 +80,7 @@ VorbisTrackEncoder::Init(int aChannels, int aSamplingRate)
 
 void VorbisTrackEncoder::WriteLacing(nsTArray<uint8_t> *aOutput, int32_t aLacing)
 {
-  while (aLacing > 255) {
+  while (aLacing >= 255) {
     aLacing -= 255;
     aOutput->AppendElement(255);
   }

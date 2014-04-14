@@ -422,18 +422,23 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
 
   // pkixocsp.cpp depends on the following additional checks.
 
-  if (foundOCSPSigning) {
+  if (endEntityOrCA == MustBeEndEntity) {
     // When validating anything other than an delegated OCSP signing cert,
     // reject any cert that also claims to be an OCSP responder, because such
     // a cert does not make sense. For example, if an SSL certificate were to
     // assert id-kp-OCSPSigning then it could sign OCSP responses for itself,
     // if not for this check.
-    if (requiredEKU != SEC_OID_OCSP_RESPONDER) {
+    // That said, we accept CA certificates with id-kp-OCSPSigning because
+    // some CAs in Mozilla's CA program have issued such intermediate
+    // certificates, and because some CAs have reported some Microsoft server
+    // software wrongly requires CA certificates to have id-kp-OCSPSigning.
+    // Allowing this exception does not cause any security issues because we
+    // require delegated OCSP response signing certificates to be end-entity
+    // certificates.
+    if (foundOCSPSigning && requiredEKU != SEC_OID_OCSP_RESPONDER) {
       PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
       return RecoverableError;
     }
-  } else if (requiredEKU == SEC_OID_OCSP_RESPONDER &&
-             endEntityOrCA == MustBeEndEntity) {
     // http://tools.ietf.org/html/rfc6960#section-4.2.2.2:
     // "OCSP signing delegation SHALL be designated by the inclusion of
     // id-kp-OCSPSigning in an extended key usage certificate extension
@@ -443,8 +448,10 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
     // EKU extension is missing from an end-entity certificate. However, any CA
     // certificate can issue a delegated OCSP response signing certificate, so
     // we can't require the EKU be explicitly included for CA certificates.
-    PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
-    return RecoverableError;
+    if (!foundOCSPSigning && requiredEKU == SEC_OID_OCSP_RESPONDER) {
+      PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
+      return RecoverableError;
+    }
   }
 
   return Success;

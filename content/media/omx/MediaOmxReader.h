@@ -9,7 +9,7 @@
 #include "MediaResource.h"
 #include "MediaDecoderReader.h"
 #include "nsRect.h"
-#include "AudioChannelCommon.h"
+#include "mozilla/dom/AudioChannelBinding.h"
 #include <ui/GraphicBuffer.h>
 #include <stagefright/MediaSource.h>
 
@@ -36,7 +36,7 @@ class MediaOmxReader : public MediaDecoderReader
   int64_t mVideoSeekTimeUs;
   int64_t mAudioSeekTimeUs;
   int32_t mSkipCount;
-  dom::AudioChannelType mAudioChannelType;
+  dom::AudioChannel mAudioChannel;
   android::sp<android::MediaSource> mAudioOffloadTrack;
 
 protected:
@@ -85,8 +85,8 @@ public:
   virtual void SetIdle() MOZ_OVERRIDE;
   virtual void SetActive() MOZ_OVERRIDE;
 
-  void SetAudioChannelType(dom::AudioChannelType aAudioChannelType) {
-    mAudioChannelType = aAudioChannelType;
+  void SetAudioChannel(dom::AudioChannel aAudioChannel) {
+    mAudioChannel = aAudioChannel;
   }
 
   android::sp<android::MediaSource> GetAudioOffloadTrack() {

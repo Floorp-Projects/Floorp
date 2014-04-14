@@ -112,6 +112,7 @@ class GlobalObject;
 class NodeFilter;
 class NodeIterator;
 class ProcessingInstruction;
+class StyleSheetList;
 class Touch;
 class TouchList;
 class TreeWalker;
@@ -126,8 +127,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0xa7679e4a, 0xa5ec, 0x45bf, \
-  { 0x8f, 0xe4, 0xad, 0x4a, 0xb8, 0xc7, 0x7f, 0xc7 } }
+{ 0x906d05e7, 0x39af, 0x4ff0, \
+  { 0xbc, 0xcd, 0x30, 0x0c, 0x7f, 0xeb, 0x86, 0x21 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1335,6 +1336,13 @@ public:
    */
   virtual void UnblockOnload(bool aFireSync) = 0;
 
+  void BlockDOMContentLoaded()
+  {
+    ++mBlockDOMContentLoaded;
+  }
+
+  virtual void UnblockDOMContentLoaded() = 0;
+
   /**
    * Notification that the page has been shown, for documents which are loaded
    * into a DOM window.  This corresponds to the completion of document load,
@@ -2169,7 +2177,7 @@ public:
     WarnOnceAbout(ePrefixedVisibilityAPI);
     return VisibilityState();
   }
-  virtual nsIDOMStyleSheetList* StyleSheets() = 0;
+  virtual mozilla::dom::StyleSheetList* StyleSheets() = 0;
   void GetSelectedStyleSheetSet(nsAString& aSheetSet);
   virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet) = 0;
   virtual void GetLastStyleSheetSet(nsString& aSheetSet) = 0;
@@ -2553,6 +2561,9 @@ protected:
   uint32_t mInSyncOperationCount;
 
   nsRefPtr<mozilla::dom::XPathEvaluator> mXPathEvaluator;
+
+  uint32_t mBlockDOMContentLoaded;
+  bool mDidFireDOMContentLoaded:1;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
