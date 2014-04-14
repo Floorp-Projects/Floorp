@@ -17,9 +17,10 @@ namespace IPC {
 
 template <>
 struct ParamTraits<mozilla::dom::quota::PersistenceType> :
-  public EnumSerializer<mozilla::dom::quota::PersistenceType,
-                        mozilla::dom::quota::PERSISTENCE_TYPE_PERSISTENT,
-                        mozilla::dom::quota::PERSISTENCE_TYPE_INVALID>
+  public ContiguousEnumSerializer<
+           mozilla::dom::quota::PersistenceType,
+           mozilla::dom::quota::PERSISTENCE_TYPE_PERSISTENT,
+           mozilla::dom::quota::PERSISTENCE_TYPE_INVALID>
 { };
 
 template <>
@@ -45,9 +46,10 @@ struct ParamTraits<mozilla::dom::indexedDB::Key>
 
 template <>
 struct ParamTraits<mozilla::dom::indexedDB::KeyPath::KeyPathType> :
-  public EnumSerializer<mozilla::dom::indexedDB::KeyPath::KeyPathType,
-                        mozilla::dom::indexedDB::KeyPath::NONEXISTENT,
-                        mozilla::dom::indexedDB::KeyPath::ENDGUARD>
+  public ContiguousEnumSerializer<
+           mozilla::dom::indexedDB::KeyPath::KeyPathType,
+           mozilla::dom::indexedDB::KeyPath::NONEXISTENT,
+           mozilla::dom::indexedDB::KeyPath::ENDGUARD>
 { };
 
 template <>
@@ -75,16 +77,18 @@ struct ParamTraits<mozilla::dom::indexedDB::KeyPath>
 
 template <>
 struct ParamTraits<mozilla::dom::indexedDB::IDBCursor::Direction> :
-  public EnumSerializer<mozilla::dom::indexedDB::IDBCursor::Direction,
-                        mozilla::dom::indexedDB::IDBCursor::NEXT,
-                        mozilla::dom::indexedDB::IDBCursor::DIRECTION_INVALID>
+  public ContiguousEnumSerializer<
+           mozilla::dom::indexedDB::IDBCursor::Direction,
+           mozilla::dom::indexedDB::IDBCursor::NEXT,
+           mozilla::dom::indexedDB::IDBCursor::DIRECTION_INVALID>
 { };
 
 template <>
 struct ParamTraits<mozilla::dom::indexedDB::IDBTransaction::Mode> :
-  public EnumSerializer<mozilla::dom::indexedDB::IDBTransaction::Mode,
-                        mozilla::dom::indexedDB::IDBTransaction::READ_ONLY,
-                        mozilla::dom::indexedDB::IDBTransaction::MODE_INVALID>
+  public ContiguousEnumSerializer<
+           mozilla::dom::indexedDB::IDBTransaction::Mode,
+           mozilla::dom::indexedDB::IDBTransaction::READ_ONLY,
+           mozilla::dom::indexedDB::IDBTransaction::MODE_INVALID>
 { };
 
 template <>

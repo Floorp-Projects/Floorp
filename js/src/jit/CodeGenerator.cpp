@@ -1826,20 +1826,21 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
         return false;
 
     const Nursery &nursery = GetIonContext()->runtime->gcNursery();
+    Register temp = ToRegister(lir->temp());
 
     if (lir->object()->isConstant()) {
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
     } else {
-        Label tenured;
         Register objreg = ToRegister(lir->object());
-        masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.start()), &tenured);
-        masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.heapEnd()), ool->rejoin());
-        masm.bind(&tenured);
+        masm.movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
+        masm.addPtr(objreg, temp);
+        masm.branchPtr(Assembler::Below, temp, Imm32(Nursery::NurserySize), ool->rejoin());
     }
 
     Register valuereg = ToRegister(lir->value());
-    masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.start()), ool->rejoin());
-    masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.heapEnd()), ool->entry());
+    masm.movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
+    masm.addPtr(valuereg, temp);
+    masm.branchPtr(Assembler::Below, temp, Imm32(Nursery::NurserySize), ool->entry());
 
     masm.bind(ool->rejoin());
 #endif
@@ -1862,16 +1863,19 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
     if (lir->object()->isConstant()) {
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
     } else {
-        Label tenured;
+        Register temp = ToRegister(lir->temp());
         Register objreg = ToRegister(lir->object());
-        masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.start()), &tenured);
-        masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.heapEnd()), ool->rejoin());
-        masm.bind(&tenured);
+        masm.movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
+        masm.addPtr(objreg, temp);
+        masm.branchPtr(Assembler::Below, temp, Imm32(Nursery::NurserySize), ool->rejoin());
     }
 
-    Register valuereg = masm.extractObject(value, ToTempUnboxRegister(lir->temp()));
-    masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.start()), ool->rejoin());
-    masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.heapEnd()), ool->entry());
+    // This section is a little different because we mustn't trash the temp
+    // register before we use its contents.
+    Register temp = ToRegister(lir->temp());
+    masm.unboxObject(value, temp);
+    masm.addPtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
+    masm.branchPtr(Assembler::Below, temp, Imm32(Nursery::NurserySize), ool->entry());
 
     masm.bind(ool->rejoin());
 #endif
@@ -6500,7 +6504,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     for (uint32_t i = 0; i < patchableTLScripts_.length(); i++) {
         patchableTLScripts_[i].fixup(&masm);
         Assembler::patchDataWithValueCheck(CodeLocationLabel(code, patchableTLScripts_[i]),
-                                           ImmPtr((void *)scriptId),
+                                           ImmPtr((void *) uintptr_t(scriptId)),
                                            ImmPtr((void *)0));
     }
 #endif

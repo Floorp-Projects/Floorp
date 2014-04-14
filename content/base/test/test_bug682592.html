@@ -39,6 +39,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=682592
 */
 
 SimpleTest.waitForExplicitFinish();
+if (navigator.platform.startsWith("Linux arm")) {
+  SimpleTest.expectAssertions(0, 2);
+}
+
 var refFrame = document.getElementById("iframe-ref")
 var testFrame = document.getElementById("iframe-test");
 
