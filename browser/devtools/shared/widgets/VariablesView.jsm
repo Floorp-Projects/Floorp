@@ -24,7 +24,7 @@ Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/event-emitter.js");
 Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
+let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
   "resource://gre/modules/devtools/Loader.jsm");

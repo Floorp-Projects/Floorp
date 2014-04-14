@@ -5,7 +5,7 @@
 "use strict";
 
 const {Cc, Cu, Ci} = require("chrome");
-const promise = require("sdk/core/promise");
+const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const IOService = Cc["@mozilla.org/network/io-service;1"]
   .getService(Ci.nsIIOService);
 const {Spectrum} = require("devtools/shared/widgets/Spectrum");

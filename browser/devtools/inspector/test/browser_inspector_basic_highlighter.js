@@ -6,7 +6,7 @@ function test() {
   let inspector, doc, toolbox;
   let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
   let {require} = devtools;
-  let promise = require("sdk/core/promise");
+  let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
   let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 
   waitForExplicitFinish();
