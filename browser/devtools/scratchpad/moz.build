@@ -9,5 +9,6 @@ TEST_DIRS += ['test']
 JS_MODULES_PATH = 'modules/devtools/scratchpad'
 
 EXTRA_JS_MODULES += [
+    'scratchpad-commands.js',
     'scratchpad-panel.js'
 ]

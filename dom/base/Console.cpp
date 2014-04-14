@@ -791,8 +791,8 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
     loadContext->GetUsePrivateBrowsing(&callData->mPrivate);
   }
 
-  uint32_t maxDepth = aMethodName == MethodTrace ?
-                       DEFAULT_MAX_STACKTRACE_DEPTH : 1;
+  uint32_t maxDepth = ShouldIncludeStackrace(aMethodName) ?
+                      DEFAULT_MAX_STACKTRACE_DEPTH : 1;
   nsCOMPtr<nsIStackFrame> stack = CreateStack(aCx, maxDepth);
 
   if (!stack) {
@@ -974,7 +974,7 @@ Console::ProcessCallData(ConsoleCallData* aData)
       ArgumentsToValueList(aData->mArguments, event.mArguments.Value());
   }
 
-  if (aData->mMethodName == MethodTrace) {
+  if (ShouldIncludeStackrace(aData->mMethodName)) {
     event.mStacktrace.Construct();
     event.mStacktrace.Value().SwapElements(aData->mStack);
   }
@@ -1471,6 +1471,20 @@ Console::ClearConsoleData()
 {
   while (ConsoleCallData* data = mQueuedCalls.popFirst()) {
     delete data;
+  }
+}
+
+bool
+Console::ShouldIncludeStackrace(MethodName aMethodName)
+{
+  switch (aMethodName) {
+    case MethodError:
+    case MethodException:
+    case MethodAssert:
+    case MethodTrace:
+      return true;
+    default:
+      return false;
   }
 }
 
