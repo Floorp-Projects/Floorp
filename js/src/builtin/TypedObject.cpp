@@ -2261,8 +2261,8 @@ const Class TransparentTypedObject::class_ = {
     JS_ConvertStub,
     nullptr,        /* finalize    */
     nullptr,        /* call        */
-    nullptr,        /* construct   */
     nullptr,        /* hasInstance */
+    nullptr,        /* construct   */
     TypedObject::obj_trace,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,

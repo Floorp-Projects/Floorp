@@ -45,7 +45,7 @@ MediaDecoder* MediaOmxDecoder::Clone()
 MediaDecoderStateMachine* MediaOmxDecoder::CreateStateMachine()
 {
   mReader = new MediaOmxReader(this);
-  mReader->SetAudioChannelType(GetAudioChannelType());
+  mReader->SetAudioChannel(GetAudioChannel());
   return new MediaDecoderStateMachine(this, mReader);
 }
 

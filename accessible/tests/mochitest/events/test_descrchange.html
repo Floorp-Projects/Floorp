@@ -1,0 +1,85 @@
+<html>
+
+<head>
+  <title>Accessible description change event testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function setAttr(aID, aAttr, aValue, aChecker)
+    {
+      this.eventSeq = [ aChecker ];
+      this.invoke = function setAttr_invoke()
+      {
+        getNode(aID).setAttribute(aAttr, aValue);
+      }
+
+      this.getID = function setAttr_getID()
+      {
+        return "set attr '" + aAttr + "', value '" + aValue + "'";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    //gA11yEventDumpToConsole = true; // debuggin
+
+    var gQueue = null;
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new setAttr("tst1", "aria-describedby", "display",
+                              new invokerChecker(EVENT_DESCRIPTION_CHANGE, "tst1")));
+      gQueue.push(new setAttr("tst1", "title", "title",
+                              new unexpectedInvokerChecker(EVENT_DESCRIPTION_CHANGE, "tst1")));
+
+      gQueue.push(new setAttr("tst2", "title", "title",
+                              new invokerChecker(EVENT_NAME_CHANGE, "tst2")));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=991969"
+     title="Event not fired when description changes">
+    Bug 991969
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <button id="tst1">btn1</button>
+  <button id="tst2">btn2</button>
+
+  <div id="eventdump"></div>
+</body>
+</html>

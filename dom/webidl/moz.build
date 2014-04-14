@@ -303,6 +303,7 @@ WEBIDL_FILES = [
     'SourceBufferList.webidl',
     'StorageType.webidl',
     'StyleSheet.webidl',
+    'StyleSheetList.webidl',
     'SVGAElement.webidl',
     'SVGAltGlyphElement.webidl',
     'SVGAngle.webidl',
@@ -365,6 +366,7 @@ WEBIDL_FILES = [
     'SVGGradientElement.webidl',
     'SVGGraphicsElement.webidl',
     'SVGImageElement.webidl',
+    'SVGLength.webidl',
     'SVGLengthList.webidl',
     'SVGLinearGradientElement.webidl',
     'SVGLineElement.webidl',
@@ -558,6 +560,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     WEBIDL_FILES += [
         'MozSpeakerManager.webidl',
         'MozWifiConnectionInfoEvent.webidl',
+        'MozWifiManager.webidl',
         'MozWifiP2pManager.webidl',
         'MozWifiP2pStatusChangeEvent.webidl',
         'MozWifiStatusChangeEvent.webidl',

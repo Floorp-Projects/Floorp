@@ -31,7 +31,7 @@ public:
   static void Shutdown();
 
   virtual void RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                         AudioChannelType aType,
+                                         AudioChannel aChannel,
                                          bool aWithVideo);
   virtual void UnregisterAudioChannelAgent(AudioChannelAgent* aAgent);
 
@@ -42,7 +42,8 @@ public:
   virtual AudioChannelState GetState(AudioChannelAgent* aAgent,
                                      bool aElementHidden);
 
-  virtual void SetDefaultVolumeControlChannel(AudioChannelType aType, bool aHidden);
+  virtual void SetDefaultVolumeControlChannel(int32_t aChannel,
+                                              bool aHidden);
 
 protected:
   AudioChannelServiceChild();

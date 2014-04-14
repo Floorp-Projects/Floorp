@@ -194,7 +194,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     if (cx->isJSContext())
         logger = TraceLoggerForMainThread(cx->asJSContext()->runtime());
     else
-        logger = TraceLoggerForThread(PR_GetCurrentThread());
+        logger = TraceLoggerForCurrentThread();
     uint32_t logId = js::TraceLogCreateTextId(logger, options);
     js::AutoTraceLog scriptLogger(logger, logId);
     js::AutoTraceLog typeLogger(logger, TraceLogger::ParserCompileScript);

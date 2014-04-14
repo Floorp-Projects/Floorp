@@ -24,6 +24,8 @@ enum AudioSampleFormat
   AUDIO_FORMAT_S16,
   // Signed 32-bit float samples
   AUDIO_FORMAT_FLOAT32,
+  // Silence: format will be chosen later
+  AUDIO_FORMAT_SILENCE,
   // The format used for output by AudioStream.
 #ifdef MOZ_SAMPLE_TYPE_S16
   AUDIO_OUTPUT_FORMAT = AUDIO_FORMAT_S16

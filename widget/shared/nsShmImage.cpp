@@ -76,6 +76,14 @@ nsShmImage::Create(const gfxIntSize& aSize,
     shm->mXAttached = true;
     shm->mSize = aSize;
     switch (shm->mImage->depth) {
+    case 32:
+        if ((shm->mImage->red_mask == 0xff0000) &&
+            (shm->mImage->green_mask == 0xff00) &&
+            (shm->mImage->blue_mask == 0xff)) {
+            shm->mFormat = gfxImageFormat::ARGB32;
+            break;
+        }
+        goto unsupported;
     case 24:
         // Only xRGB is supported.
         if ((shm->mImage->red_mask == 0xff0000) &&

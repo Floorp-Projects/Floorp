@@ -12,12 +12,17 @@
  * hash-entry for each CSS property that is to be set.  In these per-property
  * entries, the key is the property-name, and the value can be either of the
  * following:
- *  (a) the property's specified value
- *  ...or...
- *  (b) an array with 2 entries: [specifiedValue, expectedComputedValue] if the
- *      property's computed value is intended to be checked. The first entry
- *      (for the specified value) may be null; this means that no value should
- *      be explicitly specified for this property.
+ *  (a) the property's specified value (which indicates that we don't need to
+ *      bother checking the computed value of this particular property)
+ *  ...OR...
+ *  (b) an array with 2-3 entries...
+ *        [specifiedValue, expectedComputedValue (, epsilon) ]
+ *      ...which indicates that the property's computed value should be
+ *      checked.  The array's first entry (for the specified value) may be
+ *      null; this means that no value should be explicitly specified for this
+ *      property. The second entry is the property's expected computed
+ *      value. The third (optional) entry is an epsilon value, which allows for
+ *      fuzzy equality when testing the computed value.
  *
  * To allow these testcases to be re-used in both horizontal and vertical
  * flex containers, we specify "width"/"min-width"/etc. using the aliases
@@ -385,7 +390,7 @@ var gFlexboxTestcases =
        },
        {
          "flex": "1",
-         "_main-size": [ null,  "1px" ]
+         "_main-size": [ null,  "1px", 0.2 ]
        },
      ]
  },
@@ -416,15 +421,15 @@ var gFlexboxTestcases =
        },
        {
          "flex": "1",
-         "_main-size": [ null,  "1px" ]
+         "_main-size": [ null,  "1px", 0.2 ]
        },
        {
          "flex": "1",
-         "_main-size": [ null,  "1px" ]
+         "_main-size": [ null,  "1px", 0.2 ]
        },
        {
          "flex": "1",
-         "_main-size": [ null,  "1px" ]
+         "_main-size": [ null,  "1px", 0.2 ]
        },
      ]
  },
@@ -441,19 +446,19 @@ var gFlexboxTestcases =
          "flex": "1",
          // NOTE: Expected value is off slightly, from float error when
          // resolving flexible lengths:
-         "_main-size": [ null,  "0.966667px" ]
+         "_main-size": [ null,  "1px", 0.2 ]
        },
        {
          "flex": "1",
          // NOTE: Expected value is off slightly, from float error when
          // resolving flexible lengths:
-         "_main-size": [ null,  "0.983333px" ]
+         "_main-size": [ null,  "1px", 0.2 ]
        },
        {
          "flex": "1",
          // NOTE: Expected value is off slightly, from float error when
          // resolving flexible lengths:
-         "_main-size": [ null,  "0.983333px" ]
+         "_main-size": [ null,  "1px", 0.2 ]
        },
        {
          "flex": "3000000",
