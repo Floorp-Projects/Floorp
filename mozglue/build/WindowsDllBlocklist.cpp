@@ -512,6 +512,17 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
   printf_stderr("LdrLoadDll: dll name '%s'\n", dllName);
 #endif
 
+  // Block a suspicious binary that uses various 12-digit hex strings
+  // e.g. MovieMode.48CA2AEFA22D.dll (bug 973138)
+  char * dot = strchr(dllName, '.');
+  if (dot && (strchr(dot+1, '.') == dot+13)) {
+    char * end = nullptr;
+    _strtoui64(dot+1, &end, 16);
+    if (end == dot+13) {
+      return STATUS_DLL_NOT_FOUND;
+    }
+  }
+
   // then compare to everything on the blocklist
   info = &sWindowsDllBlocklist[0];
   while (info->name) {
