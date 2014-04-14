@@ -137,18 +137,12 @@ enum SurfaceInitMode
 /**
  * A base class for a platform-dependent helper for use by TextureHost.
  */
-class CompositorBackendSpecificData : public RefCounted<CompositorBackendSpecificData>
+class CompositorBackendSpecificData
 {
-public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(CompositorBackendSpecificData)
-  CompositorBackendSpecificData()
-  {
-    MOZ_COUNT_CTOR(CompositorBackendSpecificData);
-  }
-  virtual ~CompositorBackendSpecificData()
-  {
-    MOZ_COUNT_DTOR(CompositorBackendSpecificData);
-  }
+  NS_INLINE_DECL_REFCOUNTING(CompositorBackendSpecificData)
+
+protected:
+  virtual ~CompositorBackendSpecificData() {}
 };
 
 /**
@@ -195,21 +189,20 @@ public:
  * The target and viewport methods can be called before any DrawQuad call and
  * affect any subsequent DrawQuad calls.
  */
-class Compositor : public RefCounted<Compositor>
+class Compositor
 {
+protected:
+  virtual ~Compositor() {}
+
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(Compositor)
+  NS_INLINE_DECL_REFCOUNTING(Compositor)
+
   Compositor(PCompositorParent* aParent = nullptr)
     : mCompositorID(0)
     , mDiagnosticTypes(DIAGNOSTIC_NONE)
     , mParent(aParent)
     , mScreenRotation(ROTATION_0)
   {
-    MOZ_COUNT_CTOR(Compositor);
-  }
-  virtual ~Compositor()
-  {
-    MOZ_COUNT_DTOR(Compositor);
   }
 
   virtual TemporaryRef<DataTextureSource> CreateDataTextureSource(TextureFlags aFlags = 0) = 0;
