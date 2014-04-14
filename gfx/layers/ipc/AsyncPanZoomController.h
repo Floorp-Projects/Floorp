@@ -315,6 +315,8 @@ public:
    * Sets allowed touch behavior for current touch session.
    * This method is invoked by the APZCTreeManager which in its turn invoked by
    * the widget after performing touch-action values retrieving.
+   * Must be called after receiving the TOUCH_START even that started the
+   * touch session.
    */
   void SetAllowedTouchBehavior(const nsTArray<TouchBehaviorFlags>& aBehaviors);
 
