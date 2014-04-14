@@ -80,13 +80,21 @@ TimeRanges::Add(double aStart, double aEnd)
 }
 
 double
-TimeRanges::GetFinalEndTime()
+TimeRanges::GetStartTime()
 {
   if (mRanges.IsEmpty()) {
     return -1.0;
   }
-  uint32_t finalIndex = mRanges.Length() - 1;
-  return mRanges[finalIndex].mEnd;
+  return mRanges[0].mStart;
+}
+
+double
+TimeRanges::GetEndTime()
+{
+  if (mRanges.IsEmpty()) {
+    return -1.0;
+  }
+  return mRanges[mRanges.Length() - 1].mEnd;
 }
 
 void
