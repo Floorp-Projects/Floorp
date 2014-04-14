@@ -126,6 +126,8 @@ public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef FrameMetrics::ViewID ViewID;
   typedef mozilla::CSSPoint CSSPoint;
+  typedef mozilla::CSSSize CSSSize;
+  typedef mozilla::LayerMargin LayerMargin;
 
   /**
    * Finds previously assigned ViewID for the given content element, if any.
@@ -154,11 +156,38 @@ public:
    */
   static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult = nullptr);
 
- /**
-  * Set the display port base rect for given element to be used with display
-  * port margins.
-  */
- static void SetDisplayPortBase(nsIContent* aContent, const nsRect& aBase);
+  MOZ_BEGIN_NESTED_ENUM_CLASS(RepaintMode, uint8_t)
+    Repaint,
+    DoNotRepaint
+  MOZ_END_NESTED_ENUM_CLASS(RepaintMode)
+
+  /**
+   * Set the display port margins for a content element to be used with a
+   * display port base (see SetDisplayPortBase()).
+   * See also nsIDOMWindowUtils.setDisplayPortMargins.
+   * @param aContent the content element for which to set the margins
+   * @param aPresShell the pres shell for the document containing the element
+   * @param aMargins the margins to set
+   * @param aAlignmentX, alignmentY the amount of pixels to which to align the
+   *                                displayport built by combining the base
+   *                                rect with the margins, in either direction
+   * @param aPriority a priority value to determine which margins take effect
+   *                  when multiple callers specify margins
+   * @param aRepaintMode whether to schedule a paint after setting the margins
+   */
+  static void SetDisplayPortMargins(nsIContent* aContent,
+                                    nsIPresShell* aPresShell,
+                                    const LayerMargin& aMargins,
+                                    uint32_t aAlignmentX,
+                                    uint32_t aAlignmentY,
+                                    uint32_t aPriority = 0,
+                                    RepaintMode aRepaintMode = RepaintMode::Repaint);
+
+  /**
+   * Set the display port base rect for given element to be used with display
+   * port margins.
+   */
+  static void SetDisplayPortBase(nsIContent* aContent, const nsRect& aBase);
 
   /**
    * Get the critical display port for the given element.
@@ -2101,6 +2130,22 @@ public:
   CalculateCompositionSizeForFrame(nsIFrame* aFrame);
 
  /**
+  * Calculate the composition size for the root scroll frame of the root
+  * content document.
+  * @param aFrame A frame in the root content document (or a descendant of it).
+  * @param aIsRootContentDocRootScrollFrame Whether aFrame is already the root
+  *          scroll frame of the root content document. In this case we just
+  *          use aFrame's own composition size.
+  * @param aMetrics A partially populated FrameMetrics for aFrame. Must have at
+  *          least mCompositionBounds, mCumulativeResolution, and
+  *          mDevPixelsPerCSSPixel set.
+  */
+  static CSSSize
+  CalculateRootCompositionSize(nsIFrame* aFrame,
+                               bool aIsRootContentDocRootScrollFrame,
+                               const FrameMetrics& aMetrics);
+
+ /**
   * Calculate the scrollable rect for a frame. See FrameMetrics.h for
   * defintion of scrollable rect. aScrollableFrame is the scroll frame to calculate
   * the scrollable rect for. If it's null then we calculate the scrollable rect
@@ -2116,6 +2161,32 @@ public:
   static nsRect
   CalculateExpandedScrollableRect(nsIFrame* aFrame);
 
+  /**
+   * Return whether we want to use APZ for subframes in this process.
+   * Currently we don't support APZ for the parent process on B2G.
+   */
+  static bool WantSubAPZC();
+
+ /**
+   * Get the display port for |aScrollFrame|'s content. If |aScrollFrame|
+   * WantsAsyncScroll() and we don't have a scrollable displayport yet (as
+   * tracked by |aBuilder|), calculate and set a display port. Returns true if
+   * there is (now) a displayport, and if so the displayport is returned in
+   * |aOutDisplayport|.
+   *
+   * Note that a displayport can either be stored as a rect, or as a base
+   * rect + margins. If it is stored as a base rect + margins, the base rect
+   * is updated to |aDisplayPortBase|, and the rect assembled from the
+   * base rect and margins is returned. If this function creates a displayport,
+   * it computes margins and stores |aDisplayPortBase| as the base rect.
+   *
+   * This is intended to be called during display list building.
+   */
+  static bool GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
+                                          nsIFrame* aScrollFrame,
+                                          nsRect aDisplayPortBase,
+                                          nsRect* aOutDisplayport);
+
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;
@@ -2128,6 +2199,8 @@ private:
   static bool sCSSVariablesEnabled;
   static bool sInterruptibleReflowEnabled;
 };
+
+MOZ_FINISH_NESTED_ENUM_CLASS(nsLayoutUtils::RepaintMode)
 
 template<typename PointType, typename RectType, typename CoordType>
 /* static */ bool

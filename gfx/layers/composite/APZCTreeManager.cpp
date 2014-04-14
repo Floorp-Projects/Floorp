@@ -215,6 +215,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
 
         apzc->NotifyLayersUpdated(metrics,
                                   aIsFirstPaint && (aLayersId == aFirstPaintLayersId));
+        apzc->SetScrollHandoffParentId(container->GetScrollHandoffParentId());
 
         // Use the composition bounds as the hit test region.
         // Optionally, the GeckoContentController can provide a touch-sensitive
@@ -868,13 +869,46 @@ APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomControll
 
   mOverscrollHandoffChain.clear();
 
-  // Start with the child -> parent chain.
-  for (AsyncPanZoomController* apzc = aInitialTarget; apzc; apzc = apzc->GetParent()) {
+  // Build the chain. If there is a scroll parent link, we use that. This is
+  // needed to deal with scroll info layers, because they participate in handoff
+  // but do not follow the expected layer tree structure. If there are no
+  // scroll parent links we just walk up the tree to find the scroll parent.
+  AsyncPanZoomController* apzc = aInitialTarget;
+  while (apzc != nullptr) {
     if (!mOverscrollHandoffChain.append(apzc)) {
       NS_WARNING("Vector::append failed");
       mOverscrollHandoffChain.clear();
       return;
     }
+    if (apzc->GetScrollHandoffParentId() == FrameMetrics::NULL_SCROLL_ID) {
+      if (!apzc->IsRootForLayersId()) {
+        // This probably indicates a bug or missed case in layout code
+        NS_WARNING("Found a non-root APZ with no handoff parent");
+      }
+      apzc = apzc->GetParent();
+      continue;
+    }
+
+    // Find the AsyncPanZoomController instance with a matching layersId and
+    // the scroll id that matches apzc->GetScrollHandoffParentId(). To do this
+    // search the subtree with the same layersId for the apzc with the specified
+    // scroll id.
+    AsyncPanZoomController* scrollParent = nullptr;
+    AsyncPanZoomController* parent = apzc;
+    while (!parent->IsRootForLayersId()) {
+      parent = parent->GetParent();
+      // While walking up to find the root of the subtree, if we encounter the
+      // handoff parent, we don't actually need to do the search so we can
+      // just abort here.
+      if (parent->GetGuid().mScrollId == apzc->GetScrollHandoffParentId()) {
+        scrollParent = parent;
+        break;
+      }
+    }
+    if (!scrollParent) {
+      scrollParent = FindTargetAPZC(parent, apzc->GetScrollHandoffParentId());
+    }
+    apzc = scrollParent;
   }
 
   // Now adjust the chain to account for scroll grabbing. Sorting is a bit
@@ -887,6 +921,30 @@ APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomControll
   // and users of 'scrollgrab' should not rely on this.)
   std::stable_sort(mOverscrollHandoffChain.begin(), mOverscrollHandoffChain.end(),
                    CompareByScrollPriority());
+}
+
+/* Find the apzc in the subtree rooted at aApzc that has the same layers id as
+   aApzc, and that has the given scroll id. Generally this function should be called
+   with aApzc being the root of its layers id subtree. */
+AsyncPanZoomController*
+APZCTreeManager::FindTargetAPZC(AsyncPanZoomController* aApzc, FrameMetrics::ViewID aScrollId)
+{
+  mTreeLock.AssertCurrentThreadOwns();
+
+  if (aApzc->GetGuid().mScrollId == aScrollId) {
+    return aApzc;
+  }
+  for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
+    if (child->GetGuid().mLayersId != aApzc->GetGuid().mLayersId) {
+      continue;
+    }
+    AsyncPanZoomController* match = FindTargetAPZC(child, aScrollId);
+    if (match) {
+      return match;
+    }
+  }
+
+  return nullptr;
 }
 
 void

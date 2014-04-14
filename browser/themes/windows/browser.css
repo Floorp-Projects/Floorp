@@ -109,11 +109,23 @@
 %endif
 
 /* Make the menu inherit the toolbar's color. On non-compositor (Aero Basic, XP modern, classic)
- * this is defined above. Otherwise (Aero Glass, Windows 8 inactive windows), this is hardcoded
- * to black in browser-aero.css. */
-#main-menubar > menu:not(:-moz-lwtheme) {
-  color: inherit;
+ * this is defined above, but only for tabsintitlebar. Otherwise (Aero Glass, Windows 8),
+ * this is hardcoded to black in browser-aero.css, even without tabsintitlebar. */
+%ifdef WINDOWS_AERO
+@media not all and (-moz-windows-compositor) {
+%endif
+  #main-window[tabsintitlebar] #main-menubar > menu:not(:-moz-lwtheme) {
+    color: inherit;
+  }
+%ifdef WINDOWS_AERO
 }
+
+@media (-moz-windows-compositor) {
+  #main-menubar > menu:not(:-moz-lwtheme) {
+    color: inherit;
+  }
+}
+%endif
 
 /**
  * In the classic themes, the titlebar has a horizontal gradient, which is
@@ -591,7 +603,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:-moz-lwtheme-bri
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   padding: 8px 2px;
   -moz-box-pack: center;
-  -moz-box-align: stretch;
 }
 
 #nav-bar #PanelUI-menu-button {
@@ -1049,6 +1060,16 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 
 #menu_tabview[groups="3"] {
   -moz-image-region: rect(1px, 71px, 17px, 55px);
+}
+
+/* zoom control text (reset) button special case: */
+
+#nav-bar #zoom-reset-button > .toolbarbutton-text {
+  /* To make this line up with the icons, it needs the same height (18px) +
+   * padding (2 * 2px) + border (2 * 1px), but as a minimum because otherwise
+   * increase in text sizes would break things...
+   */
+  min-height: 24px;
 }
 
 /* ::::: fullscreen window controls ::::: */

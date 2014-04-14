@@ -110,6 +110,7 @@ struct AudioChunk {
     mChannelData.Clear();
     mDuration = aDuration;
     mVolume = 1.0f;
+    mBufferFormat = AUDIO_FORMAT_SILENCE;
   }
   int ChannelCount() const { return mChannelData.Length(); }
 
@@ -144,6 +145,11 @@ public:
       nsAutoTArray<nsTArray<T>, GUESS_AUDIO_CHANNELS> output;
       nsAutoTArray<const T*, GUESS_AUDIO_CHANNELS> bufferPtrs;
       AudioChunk& c = *ci;
+      // If this chunk is null, don't bother resampling, just alter its duration
+      if (c.IsNull()) {
+        c.mDuration *= aOutRate / aInRate;
+        mDuration += c.mDuration;
+      }
       uint32_t channels = c.mChannelData.Length();
       output.SetLength(channels);
       bufferPtrs.SetLength(channels);

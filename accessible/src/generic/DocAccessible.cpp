@@ -970,17 +970,50 @@ DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
     }
   }
 
-  if (aAttribute == nsGkAtoms::alt ||
-      aAttribute == nsGkAtoms::title ||
-      aAttribute == nsGkAtoms::aria_label ||
-      aAttribute == nsGkAtoms::aria_labelledby) {
+  // Fire name change and description change events. XXX: it's not complete and
+  // dupes the code logic of accessible name and description calculation, we do
+  // that for performance reasons.
+  if (aAttribute == nsGkAtoms::aria_label) {
     FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, aAccessible);
     return;
   }
 
+  if (aAttribute == nsGkAtoms::aria_describedby) {
+    FireDelayedEvent(nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE, aAccessible);
+    return;
+  }
+
+  nsIContent* elm = aAccessible->GetContent();
+  if (aAttribute == nsGkAtoms::aria_labelledby &&
+      !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label)) {
+    FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, aAccessible);
+    return;
+  }
+
+  if (aAttribute == nsGkAtoms::alt &&
+      !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label) &&
+      !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_labelledby)) {
+    FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, aAccessible);
+    return;
+  }
+
+  if (aAttribute == nsGkAtoms::title) {
+    if (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label) &&
+        !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_labelledby) &&
+        !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::alt)) {
+      FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, aAccessible);
+      return;
+    }
+
+    if (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_describedby))
+      FireDelayedEvent(nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE, aAccessible);
+
+    return;
+  }
+
   if (aAttribute == nsGkAtoms::aria_busy) {
-    bool isOn = aAccessible->GetContent()->
-      AttrValueIs(aNameSpaceID, aAttribute, nsGkAtoms::_true, eCaseMatters);
+    bool isOn = elm->AttrValueIs(aNameSpaceID, aAttribute, nsGkAtoms::_true,
+                                 eCaseMatters);
     nsRefPtr<AccEvent> event =
       new AccStateChangeEvent(aAccessible, states::BUSY, isOn);
     FireDelayedEvent(event);
@@ -993,7 +1026,6 @@ DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
     Accessible* widget =
       nsAccUtils::GetSelectableContainer(aAccessible, aAccessible->State());
     if (widget) {
-      nsIContent* elm = aAccessible->GetContent();
       AccSelChangeEvent::SelChangeType selChangeType =
         elm->AttrValueIs(aNameSpaceID, aAttribute, nsGkAtoms::_true, eCaseMatters) ?
           AccSelChangeEvent::eSelectionAdd : AccSelChangeEvent::eSelectionRemove;
