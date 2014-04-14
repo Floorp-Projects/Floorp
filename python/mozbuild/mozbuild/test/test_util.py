@@ -128,9 +128,9 @@ class TestFileAvoidWrite(unittest.TestCase):
             faw.write('new')
             faw.close()
 
-            self.assertIsInstance(faw.diff, unicode)
-            self.assertIn('-old', faw.diff)
-            self.assertIn('+new', faw.diff)
+            diff = '\n'.join(faw.diff)
+            self.assertIn('-old', diff)
+            self.assertIn('+new', diff)
 
     def test_diff_create(self):
         """Diffs are produced when files are created."""
@@ -142,8 +142,8 @@ class TestFileAvoidWrite(unittest.TestCase):
             faw.write('new')
             faw.close()
 
-            self.assertIsInstance(faw.diff, unicode)
-            self.assertIn('+new', faw.diff)
+            diff = '\n'.join(faw.diff)
+            self.assertIn('+new', diff)
         finally:
             shutil.rmtree(tmpdir)
 
