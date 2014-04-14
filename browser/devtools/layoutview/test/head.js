@@ -4,7 +4,7 @@
 Cu.import("resource://gre/modules/Task.jsm");
 
 let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const promise = devtools.require("sdk/core/promise");
+const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 let TargetFactory = devtools.TargetFactory;
 
 Services.prefs.setBoolPref("devtools.inspector.sidebarOpen", true);

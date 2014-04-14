@@ -5,7 +5,7 @@
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
 const events = require("sdk/event/core");
-const promise = require("sdk/core/promise");
+const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const protocol = require("devtools/server/protocol");
 const {CallWatcherActor, CallWatcherFront} = require("devtools/server/actors/call-watcher");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
