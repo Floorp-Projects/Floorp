@@ -127,6 +127,10 @@ public:
      * |aArg| is 1 if touch can be a pan, 0 otherwise.
      */
     StartTouch,
+    /**
+     * APZ started a pan.
+     */
+    StartPanning,
     APZStateChangeSentinel
   MOZ_END_NESTED_ENUM_CLASS(APZStateChange)
 
