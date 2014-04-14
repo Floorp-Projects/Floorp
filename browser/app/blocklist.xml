@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1396046918000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1396993434000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -1038,8 +1038,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i67" id="youtube2@youtube2.com">
-                        <versionRange  minVersion="0" maxVersion="*">
+      <emItem  blockID="i570" id="jid1-vW9nopuIAJiRHw@jetpack">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1414,6 +1414,12 @@
     </emItem>
       <emItem  blockID="i372" id="5nc3QHFgcb@r06Ws9gvNNVRfH.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i67" id="youtube2@youtube2.com">
+                        <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2068,6 +2074,12 @@
                   </pluginItem>
       <pluginItem  blockID="p558">
             <match name="description" exp="^($|Unity Web Player version ([0-3]|(4\.([0-2]|3(\.[0-4])?[^0-9.]))))" />      <match name="filename" exp="Unity Web Player\.plugin" />                      <versionRange  severity="0" vulnerabilitystatus="1"></versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p572">
+                  <match name="filename" exp="npdjvu\.dll" />                      <versionRange  minVersion="0" maxVersion="6.1.4.27993" severity="0" vulnerabilitystatus="1"></versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p574">
+                  <match name="filename" exp="NPDjVu\.plugin" />                      <versionRange  minVersion="0" maxVersion="6.1.1" severity="0" vulnerabilitystatus="1"></versionRange>
                   </pluginItem>
     </pluginItems>
 
