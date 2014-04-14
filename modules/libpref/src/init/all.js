@@ -3086,7 +3086,7 @@ pref("font.single-face-list", "Osaka-Mono");
 
 // optimization hint for fonts with localized names to be read in at startup, otherwise read in at lookup miss
 // names are canonical family names (typically English names)
-pref("font.preload-names-list", "Hiragino Kaku Gothic Pro,Hiragino Mincho Pro,STSong");
+pref("font.preload-names-list", "Hiragino Kaku Gothic ProN,Hiragino Mincho ProN,STSong");
 
 // Override font-weight values for some problematic families Apple ships
 // (see bug 931426).
