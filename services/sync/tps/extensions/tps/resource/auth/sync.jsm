@@ -68,9 +68,16 @@ var Authentication = {
     Weave.Service.identity.basicPassword = account["password"];
     Weave.Service.identity.syncKey = account["passphrase"];
 
-    // Fake the login
-    Weave.Service.login();
-    Weave.Svc.Obs.notify("weave:service:setup-complete");
+    if (Weave.Status.login !== Weave.LOGIN_SUCCEEDED) {
+      Logger.logInfo("Logging into Weave.");
+      Weave.Service.login();
+      Logger.AssertEqual(Weave.Status.login, Weave.LOGIN_SUCCEEDED,
+                         "Weave logged in");
+
+      // Bug 997279: Temporary workaround until we can ensure that Sync itself
+      // sends this notification for the first login attempt by TPS
+      Weave.Svc.Obs.notify("weave:service:setup-complete");
+    }
 
     return true;
   }
