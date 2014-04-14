@@ -18,6 +18,17 @@ namespace dom {
 
 NS_IMPL_ISUPPORTS0(ResponsiveImageSelector);
 
+static bool
+ParseInteger(const nsAString& aString, int32_t& aInt)
+{
+  nsContentUtils::ParseHTMLIntegerResultFlags parseResult;
+  aInt = nsContentUtils::ParseHTMLInteger(aString, &parseResult);
+  return !(parseResult &
+           ( nsContentUtils::eParseHTMLInteger_Error |
+             nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput |
+             nsContentUtils::eParseHTMLInteger_IsPercent ));
+}
+
 ResponsiveImageSelector::ResponsiveImageSelector(nsIContent *aContent)
   : mContent(aContent),
     mBestCandidateIndex(-1)
@@ -273,6 +284,13 @@ ResponsiveImageCandidate::SetURL(nsIURI *aURL)
 }
 
 void
+ResponsiveImageCandidate::SetParameterAsComputedWidth(int32_t aWidth)
+{
+  mType = eCandidateType_ComputedFromWidth;
+  mValue.mWidth = aWidth;
+}
+
+void
 ResponsiveImageCandidate::SetParameterDefault()
 {
   MOZ_ASSERT(mType == eCandidateType_Invalid, "double setting candidate type");
@@ -297,6 +315,7 @@ ResponsiveImageCandidate::SetParamaterFromDescriptor(const nsAString & aDescript
 {
   // Valid input values must be positive, using -1 for not-set
   double density = -1.0;
+  int32_t width = -1;
 
   nsAString::const_iterator iter, end;
   aDescriptor.BeginReading(iter);
@@ -329,23 +348,37 @@ ResponsiveImageCandidate::SetParamaterFromDescriptor(const nsAString & aDescript
     ++iter;
 
     const nsDependentSubstring& valStr = Substring(start, type);
-    if (*type == char16_t('x')) {
-      nsresult rv;
-      double possibleDensity = PromiseFlatString(valStr).ToDouble(&rv);
-      if (density == -1.0 && NS_SUCCEEDED(rv) && possibleDensity > 0.0) {
-        density = possibleDensity;
+    if (*type == char16_t('w')) {
+      int32_t possibleWidth;
+      if (width == -1 && density == -1.0) {
+        if (ParseInteger(valStr, possibleWidth) && possibleWidth > 0) {
+          width = possibleWidth;
+        }
+      } else {
+        return false;
+      }
+    } else if (*type == char16_t('x')) {
+      if (width == -1 && density == -1.0) {
+        nsresult rv;
+        double possibleDensity = PromiseFlatString(valStr).ToDouble(&rv);
+        if (NS_SUCCEEDED(rv) && possibleDensity > 0.0) {
+          density = possibleDensity;
+        }
       } else {
         return false;
       }
     }
   }
 
-  // Not explicitly set -> 1.0
-  if (density == -1.0) {
-    density = 1.0;
+  if (width != -1) {
+    SetParameterAsComputedWidth(width);
+  } else if (density != -1.0) {
+    SetParameterAsDensity(density);
+  } else {
+    // No valid descriptors -> 1.0 density
+    SetParameterAsDensity(1.0);
   }
 
-  SetParameterAsDensity(density);
   return true;
 }
 
@@ -367,6 +400,8 @@ ResponsiveImageCandidate::HasSameParameter(const ResponsiveImageCandidate & aOth
   if (mType == eCandidateType_Invalid) {
     MOZ_ASSERT(false, "Comparing invalid candidates?");
     return true;
+  } else if (mType == eCandidateType_ComputedFromWidth) {
+    return aOther.mValue.mWidth == mValue.mWidth;
   }
 
   MOZ_ASSERT(false, "Somebody forgot to check for all uses of this enum");
