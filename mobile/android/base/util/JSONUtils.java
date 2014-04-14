@@ -57,11 +57,11 @@ public final class JSONUtils {
     }
 
     public static JSONObject bundleToJSON(Bundle bundle) {
-        JSONObject json = new JSONObject();
-        if (bundle == null) {
-            return json;
+        if (bundle == null || bundle.isEmpty()) {
+            return null;
         }
 
+        JSONObject json = new JSONObject();
         for (String key : bundle.keySet()) {
             try {
                 json.put(key, bundle.get(key));
