@@ -88,7 +88,7 @@
   margin-top: @windowButtonMarginTop@;
 }
 
-#main-window[customizing] > #titlebar {
+#main-window[customize-entered] > #titlebar {
   -moz-appearance: none;
 }
 
