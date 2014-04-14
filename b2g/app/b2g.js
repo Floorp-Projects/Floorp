@@ -1013,3 +1013,6 @@ pref("services.mobileid.server.uri", "https://msisdn.services.mozilla.com");
 #ifndef XP_WIN
 pref("dom.mapped_arraybuffer.enabled", true);
 #endif
+
+// UDPSocket API
+pref("dom.udpsocket.enabled", true);
