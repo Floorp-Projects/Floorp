@@ -52,8 +52,14 @@ public class UninstallListener extends BroadcastReceiver {
         ArrayList<String> installedPackages = allocator.getInstalledPackageNames();
 
         if (installedPackages.contains(packageName)) {
+            int index = allocator.getIndexForApp(packageName);
+            if (index != -1) {
+                allocator.releaseIndex(index);
+            }
+
             JSONObject message = new JSONObject();
             JSONArray packageNames = new JSONArray();
+
             try {
                 packageNames.put(packageName);
                 message.put("apkPackageNames", packageNames);
@@ -87,6 +93,13 @@ public class UninstallListener extends BroadcastReceiver {
         }
 
         if (uninstalledPackages.size() > 0) {
+            for (String packageName : uninstalledPackages) {
+                int index = allocator.getIndexForApp(packageName);
+                if (index != -1) {
+                    allocator.releaseIndex(index);
+                }
+            }
+
             JSONObject message = new JSONObject();
             JSONArray packageNames = new JSONArray();
             try {
