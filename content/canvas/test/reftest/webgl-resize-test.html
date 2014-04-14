@@ -42,7 +42,7 @@ function runTest() {
   else
     renderFailure(canvas);
 
-  testComplete();
+  waitForComposite(testComplete);
 }
 
 function testComplete() {
