@@ -6,7 +6,6 @@
 #define mozilla_system_volumecommand_h__
 
 #include "nsString.h"
-#include "nsISupportsImpl.h"
 #include "mozilla/RefPtr.h"
 #include <algorithm>
 #include <vold/ResponseCode.h>
@@ -33,15 +32,14 @@ class VolumeCommand;
 *
 ***************************************************************************/
 
-class VolumeResponseCallback
+class VolumeResponseCallback : public RefCounted<VolumeResponseCallback>
 {
-protected:
-  virtual ~VolumeResponseCallback() {}
-
 public:
-  NS_INLINE_DECL_REFCOUNTED(VolumeResponseCallback)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(VolumeResponseCallback)
   VolumeResponseCallback()
     : mResponseCode(0), mPending(false) {}
+
+  virtual ~VolumeResponseCallback() {}
 
   bool Done() const
   {
@@ -108,14 +106,10 @@ private:
 *
 ***************************************************************************/
 
-class VolumeCommand
+class VolumeCommand : public RefCounted<VolumeCommand>
 {
-protected:
-  virtual ~VolumeCommand() {}
-
 public:
-  NS_INLINE_DECL_REFCOUNTED(VolumeCommand)
-
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(VolumeCommand)
   VolumeCommand(VolumeResponseCallback* aCallback)
     : mBytesConsumed(0),
       mCallback(aCallback)
@@ -129,6 +123,8 @@ public:
   {
     SetCmd(aCommand);
   }
+
+  virtual ~VolumeCommand() {}
 
   void SetCmd(const nsACString& aCommand)
   {

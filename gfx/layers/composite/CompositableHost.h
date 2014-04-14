@@ -56,18 +56,18 @@ struct EffectChain;
 /**
  * A base class for doing CompositableHost and platform dependent task on TextureHost.
  */
-class CompositableBackendSpecificData
+class CompositableBackendSpecificData : public RefCounted<CompositableBackendSpecificData>
 {
-protected:
-  virtual ~CompositableBackendSpecificData() { }
-
 public:
-  NS_INLINE_DECL_REFCOUNTING(CompositableBackendSpecificData)
-
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(CompositableBackendSpecificData)
   CompositableBackendSpecificData()
   {
+    MOZ_COUNT_CTOR(CompositableBackendSpecificData);
   }
-
+  virtual ~CompositableBackendSpecificData()
+  {
+    MOZ_COUNT_DTOR(CompositableBackendSpecificData);
+  }
   virtual void SetCompositor(Compositor* aCompositor) {}
   virtual void ClearData()
   {
@@ -124,14 +124,13 @@ protected:
  * will use its TextureHost(s) and call Compositor::DrawQuad to do the actual
  * rendering.
  */
-class CompositableHost
+class CompositableHost : public RefCounted<CompositableHost>
 {
-protected:
-  virtual ~CompositableHost();
-
 public:
-  NS_INLINE_DECL_REFCOUNTING(CompositableHost)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(CompositableHost)
   CompositableHost(const TextureInfo& aTextureInfo);
+
+  virtual ~CompositableHost();
 
   static TemporaryRef<CompositableHost> Create(const TextureInfo& aTextureInfo);
 

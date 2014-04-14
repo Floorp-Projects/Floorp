@@ -29,6 +29,7 @@ class nsPIDOMWindow;
 #include "prtime.h"
 #include "DeviceStorage.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 
 namespace mozilla {
@@ -79,7 +80,7 @@ public:
 
       NS_IMETHOD Run() MOZ_OVERRIDE
       {
-        nsRefPtr<DeviceStorageUsedSpaceCache::CacheEntry> cacheEntry;
+        mozilla::RefPtr<DeviceStorageUsedSpaceCache::CacheEntry> cacheEntry;
         cacheEntry = mCache->GetCacheEntry(mStorageName);
         if (cacheEntry) {
           cacheEntry->mDirty = true;
@@ -119,10 +120,10 @@ public:
 private:
   friend class InvalidateRunnable;
 
-  struct CacheEntry
+  class CacheEntry : public mozilla::RefCounted<CacheEntry> 
   {
-    NS_INLINE_DECL_REFCOUNTING(DeviceStorageUsedSpaceCache::CacheEntry)
-
+  public:
+    MOZ_DECLARE_REFCOUNTED_TYPENAME(DeviceStorageUsedSpaceCache::CacheEntry)
     bool mDirty;
     nsString mStorageName;
     int64_t  mFreeBytes;
@@ -131,9 +132,9 @@ private:
     uint64_t mMusicUsedSize;
     uint64_t mTotalUsedSize;
   };
-  already_AddRefed<CacheEntry> GetCacheEntry(const nsAString& aStorageName);
+  mozilla::TemporaryRef<CacheEntry> GetCacheEntry(const nsAString& aStorageName);
 
-  nsTArray<nsRefPtr<CacheEntry>> mCacheEntries;
+  nsTArray<mozilla::RefPtr<CacheEntry> > mCacheEntries;
 
   nsCOMPtr<nsIThread> mIOThread;
 

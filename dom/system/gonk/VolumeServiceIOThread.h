@@ -19,14 +19,13 @@ class nsVolumeService;
 * class, but whose methods are called from IOThread.
 */
 class VolumeServiceIOThread : public VolumeManager::StateObserver,
-                              public Volume::EventObserver
+                              public Volume::EventObserver,
+                              public RefCounted<VolumeServiceIOThread>
 {
-  ~VolumeServiceIOThread();
-
 public:
-  NS_INLINE_DECL_REFCOUNTING(VolumeServiceIOThread)
-
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(VolumeServiceIOThread)
   VolumeServiceIOThread(nsVolumeService* aVolumeService);
+  ~VolumeServiceIOThread();
 
 private:
   void  UpdateAllVolumes();
