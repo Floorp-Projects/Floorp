@@ -7,7 +7,7 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const events = require("sdk/event/core");
-const promise = require("sdk/core/promise");
+const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 /**
  * Handles adding an observer for the creation of content document globals,
