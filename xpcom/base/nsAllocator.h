@@ -10,7 +10,6 @@
 #ifndef nsAllocator_h__
 #define nsAllocator_h__
 
-#include "nsIAllocator.h"
 #include "nsAgg.h"
 #include "nsIFactory.h"
 
