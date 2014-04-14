@@ -90,9 +90,9 @@ struct ParamTraits<mozilla::dom::AudioChannel>
 
 template <>
 struct ParamTraits<mozilla::dom::AudioChannelState>
-  : public EnumSerializer<mozilla::dom::AudioChannelState,
-                          mozilla::dom::AUDIO_CHANNEL_STATE_NORMAL,
-                          mozilla::dom::AUDIO_CHANNEL_STATE_LAST>
+  : public ContiguousEnumSerializer<mozilla::dom::AudioChannelState,
+                                    mozilla::dom::AUDIO_CHANNEL_STATE_NORMAL,
+                                    mozilla::dom::AUDIO_CHANNEL_STATE_LAST>
 { };
 
 }
