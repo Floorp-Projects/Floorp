@@ -4,7 +4,7 @@
 
 Components.utils.import("resource://gre/modules/Task.jsm");
 let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let promise = devtools.require("sdk/core/promise");
+let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 const TESTCASE_URI_HTML = TEST_BASE + "sourcemaps.html";
 const TESTCASE_URI_CSS = TEST_BASE + "sourcemap-css/sourcemaps.css";
