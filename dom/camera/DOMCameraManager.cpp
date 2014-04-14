@@ -9,7 +9,7 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/Services.h"
 #include "nsContentPermissionHelper.h"
-#include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIPermissionManager.h"
 #include "DOMCameraControl.h"
 #include "nsDOMClassInfo.h"

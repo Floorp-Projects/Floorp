@@ -13,7 +13,7 @@
 #include "nsIThread.h"
 #include "mozilla/Monitor.h"
 #include "nsISupportsImpl.h"
-#include "nsIObserver.h"
+#include "nsObserverService.h"
 
 class AsyncLatencyLogger;
 class LogEvent;

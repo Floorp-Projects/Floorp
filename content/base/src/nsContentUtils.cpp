@@ -124,7 +124,6 @@
 #include "nsILineBreaker.h"
 #include "nsILoadContext.h"
 #include "nsILoadGroup.h"
-#include "nsIMemoryReporter.h"
 #include "nsIMIMEService.h"
 #include "nsINode.h"
 #include "nsINodeInfo.h"
