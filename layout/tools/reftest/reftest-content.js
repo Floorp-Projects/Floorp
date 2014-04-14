@@ -915,7 +915,7 @@ function SendUpdateCanvasForEvent(event, contentRootElement)
     var scale = markupDocumentViewer().fullZoom;
 
     var rects = [ ];
-    if (shouldSnapshotWholePage) {
+    if (shouldSnapshotWholePage(contentRootElement)) {
       // See comments in SendInitCanvasWithSnapshot() re: the split
       // logic here.
       if (!gBrowserIsRemote) {
