@@ -8,16 +8,6 @@ let connection;
 let number = "112";
 let outgoing;
 
-function receivedPending(received, pending, nextAction) {
-  let index = pending.indexOf(received);
-  if (index != -1) {
-    pending.splice(index, 1);
-  }
-  if (pending.length === 0) {
-    nextAction();
-  }
-}
-
 function setRadioEnabled(enabled, callback) {
   let request  = connection.setRadioEnabled(enabled);
   let desiredRadioState = enabled ? 'enabled' : 'disabled';
@@ -30,12 +20,12 @@ function setRadioEnabled(enabled, callback) {
     log("Received 'radiostatechange' event, radioState: " + state);
 
     if (state == desiredRadioState) {
-      receivedPending('onradiostatechange', pending, done);
+      gReceivedPending('onradiostatechange', pending, done);
     }
   };
 
   request.onsuccess = function onsuccess() {
-    receivedPending('onsuccess', pending, done);
+    gReceivedPending('onsuccess', pending, done);
   };
 
   request.onerror = function onerror() {
