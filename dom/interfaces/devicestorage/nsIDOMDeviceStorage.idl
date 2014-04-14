@@ -12,7 +12,7 @@ interface nsIDOMEventListener;
 interface nsIFile;
 
 %{C++
-class DeviceStorageFileDescriptor;
+struct DeviceStorageFileDescriptor;
 %}
 [ptr] native DeviceStorageFdPtr(DeviceStorageFileDescriptor);
 
