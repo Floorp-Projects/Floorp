@@ -6500,7 +6500,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     for (uint32_t i = 0; i < patchableTLScripts_.length(); i++) {
         patchableTLScripts_[i].fixup(&masm);
         Assembler::patchDataWithValueCheck(CodeLocationLabel(code, patchableTLScripts_[i]),
-                                           ImmPtr((void *)scriptId),
+                                           ImmPtr((void *) uintptr_t(scriptId)),
                                            ImmPtr((void *)0));
     }
 #endif
