@@ -159,7 +159,7 @@ void StopAllOffThreadCompilations(JSCompartment *comp);
 static inline bool
 IsIonEnabled(JSContext *cx)
 {
-    return cx->runtime()->options().ion() &&
+    return false && cx->runtime()->options().ion() &&
            cx->runtime()->options().baseline() &&
            cx->runtime()->jitSupportsFloatingPoint;
 }
