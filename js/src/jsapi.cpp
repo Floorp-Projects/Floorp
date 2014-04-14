@@ -1923,12 +1923,15 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
         break;
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
         rt->gcHighFrequencyHeapGrowthMax = value / 100.0;
+        MOZ_ASSERT(rt->gcHighFrequencyHeapGrowthMax / 0.85 > 1.0);
         break;
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
         rt->gcHighFrequencyHeapGrowthMin = value / 100.0;
+        MOZ_ASSERT(rt->gcHighFrequencyHeapGrowthMin / 0.85 > 1.0);
         break;
       case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
         rt->gcLowFrequencyHeapGrowth = value / 100.0;
+        MOZ_ASSERT(rt->gcLowFrequencyHeapGrowth / 0.9 > 1.0);
         break;
       case JSGC_DYNAMIC_HEAP_GROWTH:
         rt->gcDynamicHeapGrowth = value;
