@@ -48,7 +48,8 @@ ActivitiesDialog.prototype = {
         return;
 
       SystemAppProxy.removeEventListener("mozContentEvent", act_getChoice);
-      activity.callback.handleEvent(evt.detail.value !== undefined
+      activity.callback.handleEvent(Ci.nsIActivityUIGlueCallback.WEBAPPS_ACTIVITY,
+                                    evt.detail.value !== undefined
                                       ? evt.detail.value
                                       : -1);
     });
@@ -57,6 +58,12 @@ ActivitiesDialog.prototype = {
   },
 
   chooseActivity: function ap_chooseActivity(aOptions, aActivities, aCallback) {
+    // B2G does not have an alternate activity system, make no choice and return.
+    if (aActivities.length === 0) {
+      aCallback(Ci.nsIActivityUIGlueCallback.WEBAPPS_ACTIVITY, -1);
+      return;
+    }
+
     this.activities.push({
       name: aOptions.name,
       list: aActivities,
