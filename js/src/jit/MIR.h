@@ -5748,6 +5748,12 @@ class MLoadElement
         needsHoleCheck_(needsHoleCheck),
         loadDoubles_(loadDoubles)
     {
+        if (needsHoleCheck) {
+            // Uses may be optimized away based on this instruction's result
+            // type. This means it's invalid to DCE this instruction, as we
+            // have to invalidate when we read a hole.
+            setGuard();
+        }
         setResultType(MIRType_Value);
         setMovable();
         JS_ASSERT(elements->type() == MIRType_Elements);
