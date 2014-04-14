@@ -1254,13 +1254,14 @@ LayoutModuleDtor()
 {
   Shutdown();
   nsContentUtils::XPCOMShutdown();
-  nsScriptSecurityManager::Shutdown();
-  xpcModuleDtor();
 
   // Layout depends heavily on gfx and imagelib, so we want to make sure that
   // these modules are shut down after all the layout cleanup runs.
   mozilla::image::ShutdownModule();
   gfxPlatform::Shutdown();
+
+  nsScriptSecurityManager::Shutdown();
+  xpcModuleDtor();
 }
 
 static const mozilla::Module kLayoutModule = {
