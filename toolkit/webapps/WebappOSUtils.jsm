@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu, Constructor: CC } = Components;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const CC = Components.Constructor;
+const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -116,8 +119,8 @@ this.WebappOSUtils = {
 #elifdef XP_MACOSX
     let uniqueName = this.getUniqueName(aApp);
 
-    let mwaUtils = Cc["@mozilla.org/widget/mac-web-app-utils;1"].
-                   createInstance(Ci.nsIMacWebAppUtils);
+    let mwaUtils = Cc["@mozilla.org/widget/mac-web-app-utils;1"]
+                     .createInstance(Ci.nsIMacWebAppUtils);
 
     try {
       let path;
@@ -262,8 +265,8 @@ this.WebappOSUtils = {
       return false;
     }
 
-    let mwaUtils = Cc["@mozilla.org/widget/mac-web-app-utils;1"].
-                   createInstance(Ci.nsIMacWebAppUtils);
+    let mwaUtils = Cc["@mozilla.org/widget/mac-web-app-utils;1"]
+                     .createInstance(Ci.nsIMacWebAppUtils);
 
     try {
       mwaUtils.launchAppWithIdentifier(launchIdentifier);
@@ -328,25 +331,7 @@ this.WebappOSUtils = {
 
     return deferred.promise;
 #elifdef XP_MACOSX
-    let [ , path ] = this.getLaunchTarget(aApp);
-    if (!path) {
-      return Promise.reject("App not found");
-    }
-
-    let deferred = Promise.defer();
-
-    let mwaUtils = Cc["@mozilla.org/widget/mac-web-app-utils;1"].
-                   createInstance(Ci.nsIMacWebAppUtils);
-
-    mwaUtils.trashApp(path, (aResult) => {
-      if (aResult == Cr.NS_OK) {
-        deferred.resolve(true);
-      } else {
-        deferred.resolve("Error moving the app to the Trash: " + aResult);
-      }
-    });
-
-    return deferred.promise;
+    return Promise.reject("Uninstallation not yet implemented");
 #elifdef XP_UNIX
     let exeFile = this.getLaunchTarget(aApp);
     if (!exeFile) {
