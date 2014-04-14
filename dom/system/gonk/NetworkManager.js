@@ -115,7 +115,13 @@ const CONNECTION_TYPE_WIFI      = 3;
 const CONNECTION_TYPE_OTHER     = 4;
 const CONNECTION_TYPE_NONE      = 5;
 
-const DEBUG = false;
+let DEBUG = false;
+
+// Read debug setting from pref.
+try {
+  let debugPref = Services.prefs.getBoolPref("network.debugging.enabled");
+  DEBUG = DEBUG || debugPref;
+} catch (e) {}
 
 function defineLazyRegExp(obj, name, pattern) {
   obj.__defineGetter__(name, function() {
@@ -483,7 +489,14 @@ NetworkManager.prototype = {
       debug("Network '" + network.name + "' registered, " +
             "adding mmsproxy and/or mmsc route");
 
-      let mmsHosts = this.resolveHostname([network.mmsProxy, network.mmsc]);
+      let hostToResolve = network.mmsProxy;
+      // Workaround an xpconnect issue with undefined string objects.
+      // See bug 808220
+      if (!hostToResolve || hostToResolve === "undefined") {
+        hostToResolve = network.mmsc;
+      }
+
+      let mmsHosts = this.resolveHostname([hostToResolve]);
       if (mmsHosts.length == 0) {
         debug("No valid hostnames can be added. Stop adding host route.");
         return;
@@ -505,7 +518,14 @@ NetworkManager.prototype = {
       debug("Network '" + network.name + "' unregistered, " +
             "removing mmsproxy and/or mmsc route");
 
-      let mmsHosts = this.resolveHostname([network.mmsProxy, network.mmsc]);
+      let hostToResolve = network.mmsProxy;
+      // Workaround an xpconnect issue with undefined string objects.
+      // See bug 808220
+      if (!hostToResolve || hostToResolve === "undefined") {
+        hostToResolve = network.mmsc;
+      }
+
+      let mmsHosts = this.resolveHostname([hostToResolve]);
       if (mmsHosts.length == 0) {
         debug("No valid hostnames can be removed. Stop removing host route.");
         return;

@@ -1353,13 +1353,18 @@ class JavaPanZoomController
     }
 
     @Override
-    public boolean onSingleTapUp(MotionEvent motionEvent) {
+    public boolean onSingleTapUp(final MotionEvent motionEvent) {
         // When double-tapping is allowed, we have to wait to see if this is
         // going to be a double-tap.
         // However, if mMediumPress is true then we know there will be no
         // double-tap so we treat this as a click.
         if (mMediumPress || !mTarget.getZoomConstraints().getAllowDoubleTapZoom()) {
-            sendPointToGecko("Gesture:SingleTap", motionEvent);
+            mTarget.post(new Runnable() {
+                @Override
+                public void run() {
+                    sendPointToGecko("Gesture:SingleTap", motionEvent);
+                }
+            });
         }
         // return false because we still want to get the ACTION_UP event that triggers this
         return false;

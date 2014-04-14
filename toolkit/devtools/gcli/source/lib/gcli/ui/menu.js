@@ -97,16 +97,37 @@ Menu.prototype.destroy = function() {
  * @param ev The click event from the browser
  */
 Menu.prototype.onItemClickInternal = function(ev) {
-  var name = ev.currentTarget.querySelector('.gcli-menu-name').textContent;
+  var name = ev.currentTarget.getAttribute('data-name');
+  if (!name) {
+    var named = ev.currentTarget.querySelector('[data-name]');
+    name = named.getAttribute('data-name');
+  }
   this.onItemClick({ name: name });
 };
+
+/**
+ * Act as though someone clicked on the selected item
+ */
+Menu.prototype.clickSelected = function() {
+  this.onItemClick({ name: this.selected });
+};
+
+/**
+ * What is the currently selected item?
+ */
+Object.defineProperty(Menu.prototype, 'isSelected', {
+  get: function() {
+    return this.selected != null;
+  },
+  enumerable: true
+});
 
 /**
  * What is the currently selected item?
  */
 Object.defineProperty(Menu.prototype, 'selected', {
   get: function() {
-    var item = this.element.querySelector('.gcli-menu-highlight .gcli-menu-name');
+    var item = this.element.querySelector('.gcli-menu-name.gcli-menu-highlight');
     if (!item) {
       return null;
     }
@@ -131,11 +152,9 @@ Menu.prototype.show = function(items, match) {
     return item.hidden === undefined || item.hidden !== true;
   }.bind(this));
 
-  if (match) {
-    this.items = this.items.map(function(item) {
-      return getHighlightingProxy(item, match, this.template.ownerDocument);
-    }.bind(this));
-  }
+  this.items = this.items.map(function(item) {
+    return getHighlightingProxy(item, match, this.template.ownerDocument);
+  }.bind(this));
 
   if (this.items.length === 0) {
     this.element.style.display = 'none';
@@ -159,37 +178,77 @@ Menu.prototype.show = function(items, match) {
   this.element.style.display = 'block';
 };
 
+var MAX_ITEMS = 3;
+
+/**
+ * Takes an array of items and cuts it into an array of arrays to help us
+ * to place the items into columns.
+ * The inner arrays will have at most MAX_ITEMS in them, with the number of
+ * outer arrays expanding to accommodate.
+ */
+Object.defineProperty(Menu.prototype, 'itemsSubdivided', {
+  get: function() {
+    var reply = [];
+
+    var taken = 0;
+    while (taken < this.items.length) {
+      reply.push(this.items.slice(taken, taken + MAX_ITEMS));
+      taken += MAX_ITEMS;
+    }
+
+    return reply;
+  },
+  enumerable: true
+});
+
 /**
  * Create a proxy around an item that highlights matching text
  */
 function getHighlightingProxy(item, match, document) {
-  if (typeof Proxy === 'undefined') {
-    return item;
-  }
-  return Proxy.create({
-    get: function(rcvr, name) {
-      var value = item[name];
-      if (name !== 'name') {
-        return value;
-      }
+  var proxy = {};
+  Object.defineProperties(proxy, {
+    highlight: {
+      get: function() {
+        if (!match) {
+          return item.name;
+        }
 
-      var startMatch = value.indexOf(match);
-      if (startMatch === -1) {
-        return value;
-      }
+        var value = item.name;
+        var startMatch = value.indexOf(match);
+        if (startMatch === -1) {
+          return value;
+        }
 
-      var before = value.substr(0, startMatch);
-      var after = value.substr(startMatch + match.length);
-      var parent = util.createElement(document, 'span');
-      parent.appendChild(document.createTextNode(before));
-      var highlight = util.createElement(document, 'span');
-      highlight.classList.add('gcli-menu-typed');
-      highlight.appendChild(document.createTextNode(match));
-      parent.appendChild(highlight);
-      parent.appendChild(document.createTextNode(after));
-      return parent;
+        var before = value.substr(0, startMatch);
+        var after = value.substr(startMatch + match.length);
+        var parent = util.createElement(document, 'span');
+        parent.appendChild(document.createTextNode(before));
+        var highlight = util.createElement(document, 'span');
+        highlight.classList.add('gcli-menu-typed');
+        highlight.appendChild(document.createTextNode(match));
+        parent.appendChild(highlight);
+        parent.appendChild(document.createTextNode(after));
+        return parent;
+      },
+      enumerable: true
+    },
+
+    name: {
+      value: item.name,
+      enumerable: true
+    },
+
+    manual: {
+      value: item.manual,
+      enumerable: true
+    },
+
+    description: {
+      value: item.description,
+      enumerable: true
     }
   });
+  return proxy;
 }
 
 /**
@@ -239,21 +298,26 @@ Menu.prototype.unsetChoice = function() {
  * Internal option to update the currently highlighted option
  */
 Menu.prototype._updateHighlight = function() {
-  var nodes = this.element.querySelectorAll('.gcli-menu-option');
-  for (var i = 0; i < nodes.length; i++) {
-    nodes[i].classList.remove('gcli-menu-highlight');
+  var names = this.element.querySelectorAll('.gcli-menu-name');
+  var descs = this.element.querySelectorAll('.gcli-menu-desc');
+  for (var i = 0; i < names.length; i++) {
+    names[i].classList.remove('gcli-menu-highlight');
+  }
+  for (i = 0; i < descs.length; i++) {
+    descs[i].classList.remove('gcli-menu-highlight');
   }
 
-  if (this._choice == null || nodes.length === 0) {
+  if (this._choice == null || names.length === 0) {
     return;
   }
 
-  var index = this._choice % nodes.length;
+  var index = this._choice % names.length;
   if (index < 0) {
-    index = nodes.length + index;
+    index = names.length + index;
   }
 
-  nodes.item(index).classList.add('gcli-menu-highlight');
+  names.item(index).classList.add('gcli-menu-highlight');
+  descs.item(index).classList.add('gcli-menu-highlight');
 };
 
 /**
