@@ -175,7 +175,7 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
 .panelUI-grid:not([customize-transitioning]) .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
 .panelUI-grid:not([customize-transitioning]) .toolbarbutton-1 > .toolbarbutton-multiline-text {
   position: absolute;
-  clip: rect(auto, auto, 2.2em, auto);
+  clip: rect(auto, auto, 2.3em, auto);
 }
 
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-text,
