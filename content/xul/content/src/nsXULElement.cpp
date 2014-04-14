@@ -2392,6 +2392,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
                                 nsXULPrototypeDocument* aProtoDoc,
                                 const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
+    NS_ENSURE_TRUE(aProtoDoc, NS_ERROR_UNEXPECTED);
     AutoSafeJSContext cx;
     JS::Rooted<JSObject*> global(cx, aProtoDoc->GetCompilationGlobal());
     NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
