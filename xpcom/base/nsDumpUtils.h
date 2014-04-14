@@ -128,7 +128,6 @@ private:
     : mDirPath(aPath)
   {}
 
-  static void RegisterCallbackRunnable(const nsCString& aCommand, const FifoCallback& aCallback);
   FifoInfoArray mFifoInfo;
 };
 
@@ -144,9 +143,9 @@ class SignalPipeWatcher : public FdWatcher
 public:
   static SignalPipeWatcher* GetSingleton();
 
-  void RegisterCallback(uint8_t aSignal, PipeCallback aCallback);
+  void RegisterCallback(const uint8_t aSignal, PipeCallback aCallback);
 
-  void RegisterSignalHandler(uint8_t aSignal = 0);
+  void RegisterSignalHandler(const uint8_t aSignal = 0);
 
   virtual ~SignalPipeWatcher();
 
@@ -163,9 +162,6 @@ private:
   {
     MOZ_ASSERT(NS_IsMainThread());
   }
-
-  static void RegisterCallbackRunnable(const uint8_t& aSignal, const PipeCallback& aCallback);
-  static void RegisterSignalHandlerRunnable(const uint8_t& aSignal);
 
   SignalInfoArray mSignalInfo;
 };
