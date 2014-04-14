@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");
 
-const promise = devtools.require("sdk/core/promise");
+const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {InplaceEditor, editableItem} = devtools.require("devtools/shared/inplace-editor");
 const {parseDeclarations} = devtools.require("devtools/styleinspector/css-parsing-utils");
 

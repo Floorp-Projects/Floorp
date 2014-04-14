@@ -29,7 +29,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 let { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 let { Services }   = Cu.import("resource://gre/modules/Services.jsm", {});
-let { Promise: promise }    = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
+let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 this.EXPORTED_SYMBOLS = ["AppCacheUtils"];
 
