@@ -4,22 +4,5 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS.mozilla.dom += [
-    'SVGDocument.h',
-]
-
-SOURCES += [
-    'SVGDocument.cpp',
-]
-
-FAIL_ON_WARNINGS = True
-
-LOCAL_INCLUDES += [
-    '/content/base/src',
-    '/content/html/document/src',
-    '/content/svg/content/src',
-    '/content/xml/document/src',
-    '/layout/style',
-]
-
-FINAL_LIBRARY = 'gklayout'
+PARALLEL_DIRS += ['public', 'resources', 'src']
+TEST_DIRS += ['test']
