@@ -23,11 +23,9 @@ pref("app.update.url.details", "https://nightly.mozilla.org");
 // app.update.checkInstallTime is true.
 pref("app.update.checkInstallTime.days", 2);
 
-// Search codes belong only in builds with official branding
-pref("browser.search.param.yahoo-fr", "");
-pref("browser.search.param.yahoo-fr-cjkt", ""); // now unused
-pref("browser.search.param.yahoo-fr-ja", "");
-pref("browser.search.param.yahoo-f-CN", "");
+// code usage depends on contracts, please contact the Firefox module owner if you have questions
+pref("browser.search.param.yahoo-fr", "moz35");
+pref("browser.search.param.yahoo-fr-ja", "mozff");
 #ifdef MOZ_METRO
 pref("browser.search.param.yahoo-fr-metro", "");
 #endif

@@ -23,9 +23,8 @@ pref("app.update.url.details", "https://www.mozilla.org/%LOCALE%/firefox/notes")
 // app.update.checkInstallTime is true.
 pref("app.update.checkInstallTime.days", 63);
 
-pref("browser.search.param.ms-pc", "MOZI");
+// code usage depends on contracts, please contact the Firefox module owner if you have questions
 pref("browser.search.param.yahoo-fr", "moz35");
-pref("browser.search.param.yahoo-fr-cjkt", "moz35"); // now unused
 pref("browser.search.param.yahoo-fr-ja", "mozff");
 #ifdef MOZ_METRO
 pref("browser.search.param.ms-pc-metro", "MOZW");
