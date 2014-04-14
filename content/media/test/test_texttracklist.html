@@ -11,27 +11,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=882703
   <script type="application/javascript">
 
   SimpleTest.waitForExplicitFinish();
-  video = document.createElement("video");
+  SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
+    function() {
 
-  isnot(video.textTracks, null, "Video should have a list of TextTracks.");
+      video = document.createElement("video");
 
-  video.addTextTrack("subtitles", "", "");
+      isnot(video.textTracks, null, "Video should have a list of TextTracks.");
 
-  track = video.textTracks[0];
-  video.textTracks.addEventListener("change", changed);
+      video.addTextTrack("subtitles", "", "");
 
-  is(track.mode, "hidden", "New TextTrack's mode should be hidden.");
-  track.mode = "showing";
+      track = video.textTracks[0];
+      video.textTracks.addEventListener("change", changed);
 
-  function changed(event) {
-    is(event.target, video.textTracks, "change event's target should be video.textTracks.");
-    ok(event instanceof window.Event, "change event should be a simple event.");
-    ok(!event.bubbles, "change event should not bubble.");
-    ok(event.isTrusted, "change event should be trusted.");
-    ok(!event.cancelable, "change event should not be cancelable.");
+      is(track.mode, "hidden", "New TextTrack's mode should be hidden.");
+      track.mode = "showing";
 
-    SimpleTest.finish();
-  }
+      function changed(event) {
+        is(event.target, video.textTracks, "change event's target should be video.textTracks.");
+        ok(event instanceof window.Event, "change event should be a simple event.");
+        ok(!event.bubbles, "change event should not bubble.");
+        ok(event.isTrusted, "change event should be trusted.");
+        ok(!event.cancelable, "change event should not be cancelable.");
+
+        SimpleTest.finish();
+      }
+
+  }); // end pushPrefEnv.
   </script>
 </head>
 <body>
