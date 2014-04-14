@@ -503,9 +503,12 @@ FxAccountsInternal.prototype = {
       }
       if (!currentState.whenKeysReadyPromise) {
         currentState.whenKeysReadyPromise = Promise.defer();
-        this.fetchAndUnwrapKeys(data.keyFetchToken).then(data => {
-          currentState.whenKeysReadyPromise.resolve(data);
-        });
+        this.fetchAndUnwrapKeys(data.keyFetchToken).then(
+          data => {
+            currentState.whenKeysReadyPromise.resolve(data);
+          },
+          err => currentState.whenKeysReadyPromise.reject(err)
+        );
       }
       return currentState.whenKeysReadyPromise.promise;
     }).then(result => currentState.resolve(result));

@@ -509,6 +509,48 @@ add_task(function test_getHAWKErrors() {
   Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login state is LOGIN_FAILED_NETWORK_ERROR");
 });
 
+add_task(function test_getGetKeysFailing401() {
+  _("BrowserIDManager correctly handles 401 responses fetching keys.");
+
+  _("Arrange for a 401 - Sync should reflect an auth error.");
+  let config = makeIdentityConfig();
+  // We want no kA or kB so we attempt to fetch them.
+  delete config.fxaccount.user.kA;
+  delete config.fxaccount.user.kB;
+  config.fxaccount.user.keyFetchToken = "keyfetchtoken";
+  yield initializeIdentityWithHAWKResponseFactory(config, function(method, data, uri) {
+    Assert.equal(method, "get");
+    Assert.equal(uri, "http://mockedserver:9999/account/keys")
+    return {
+      status: 401,
+      headers: {"content-type": "application/json"},
+      body: "{}",
+    }
+  });
+  Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED, "login was rejected");
+});
+
+add_task(function test_getGetKeysFailing503() {
+  _("BrowserIDManager correctly handles 5XX responses fetching keys.");
+
+  _("Arrange for a 503 - Sync should reflect a network error.");
+  let config = makeIdentityConfig();
+  // We want no kA or kB so we attempt to fetch them.
+  delete config.fxaccount.user.kA;
+  delete config.fxaccount.user.kB;
+  config.fxaccount.user.keyFetchToken = "keyfetchtoken";
+  yield initializeIdentityWithHAWKResponseFactory(config, function(method, data, uri) {
+    Assert.equal(method, "get");
+    Assert.equal(uri, "http://mockedserver:9999/account/keys")
+    return {
+      status: 503,
+      headers: {"content-type": "application/json"},
+      body: "{}",
+    }
+  });
+  Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "state reflects network error");
+});
+
 // End of tests
 // Utility functions follow
 
