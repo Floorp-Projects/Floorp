@@ -53,6 +53,8 @@ EXPORTS += [
     'nsHashPropertyBag.h',
     'nsHashtable.h',
     'nsMathUtils.h',
+    'nsObserverList.h',
+    'nsObserverService.h',
     'nsStaticAtom.h',
     'nsStaticNameTable.h',
     'nsStringEnumerator.h',

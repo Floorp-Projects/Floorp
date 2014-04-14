@@ -229,7 +229,6 @@ LOCAL_INCLUDES += [
     '/layout/svg',
     '/layout/xul',
     '/netwerk/base/src',
-    '/xpcom/ds',
 ]
 
 if CONFIG['GNU_CC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':

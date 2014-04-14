@@ -12,7 +12,7 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIPropertyBag2.h"
-#include "nsIObserverService.h"
+#include "nsObserverService.h"
 
 using namespace mozilla;
 using namespace mozilla::hal;
