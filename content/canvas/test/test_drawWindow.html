@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for canvas drawWindow</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="file_drawWindow_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+  window.addEventListener("load", openSourceWindow, false);
+
+  var sourceWindow;
+
+  function openSourceWindow(event) {
+    if (event.target != document) {
+      return;
+    }
+
+    sourceWindow = window.open("file_drawWindow_source.html", "",
+                               "width=200,height=100");
+    sourceWindow.addEventListener("load", runTests, false);
+  }
+
+  function runTests(event) {
+    if (event.target != sourceWindow.document) {
+      return;
+    }
+
+    // Run the tests with the source document in an <iframe> within this
+    // page, which we expect to have transparency.
+    runDrawWindowTests(document.getElementById("source").contentWindow,
+                       0, true);
+
+    // Run the tests on the same source document, but in a window opened
+    // by window.open.  We do not expect this to have transparency...
+    // except on B2G.  (This is *probably* a bug in B2G.)
+    var isB2G = /Mobile|Tablet/.test(navigator.userAgent) &&
+                !navigator.userAgent.contains("Android");
+    runDrawWindowTests(sourceWindow, 0, isB2G);
+
+    sourceWindow.close();
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<iframe id="source" src="file_drawWindow_source.html" width="200" height="100"></iframe>
+</body>
+</html>
