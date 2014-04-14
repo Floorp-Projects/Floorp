@@ -561,7 +561,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
   }
 
   if (container->GetScrollbarDirection() != Layer::NONE) {
-    ApplyAsyncTransformToScrollbar(container);
+    ApplyAsyncTransformToScrollbar(aCurrentFrame, container);
   }
   return appliedTransform;
 }
@@ -580,13 +580,108 @@ LayerHasNonContainerDescendants(ContainerLayer* aContainer)
   return false;
 }
 
-void
-AsyncCompositionManager::ApplyAsyncTransformToScrollbar(ContainerLayer* aLayer)
+static bool
+LayerIsContainerForScrollbarTarget(Layer* aTarget, ContainerLayer* aScrollbar)
 {
-  // If this layer corresponds to a scrollbar, then search backwards through the
-  // siblings until we find the container layer with the right ViewID; this is
-  // the content that this scrollbar is for. Pick up the transient async transform
-  // from that layer and use it to update the scrollbar position.
+  if (!aTarget->AsContainerLayer()) {
+    return false;
+  }
+  AsyncPanZoomController* apzc = aTarget->AsContainerLayer()->GetAsyncPanZoomController();
+  if (!apzc) {
+    return false;
+  }
+  const FrameMetrics& metrics = aTarget->AsContainerLayer()->GetFrameMetrics();
+  if (metrics.GetScrollId() != aScrollbar->GetScrollbarTargetContainerId()) {
+    return false;
+  }
+  return true;
+}
+
+static void
+ApplyAsyncTransformToScrollbarForContent(TimeStamp aCurrentFrame, ContainerLayer* aScrollbar,
+                                         Layer* aContent, bool aScrollbarIsChild)
+{
+  ContainerLayer* content = aContent->AsContainerLayer();
+  if (!LayerHasNonContainerDescendants(content)) {
+    return;
+  }
+
+  const FrameMetrics& metrics = content->GetFrameMetrics();
+  AsyncPanZoomController* apzc = content->GetAsyncPanZoomController();
+
+  if (aScrollbarIsChild) {
+    // Because we try to apply the scrollbar transform before we apply the async transform on
+    // the actual content, we need to ensure that the APZC has updated any pending animations
+    // to the current frame timestamp before we extract the transforms from it. The code in this
+    // block accomplishes that and throws away the temp variables.
+    // TODO: it might be cleaner to do a pass through the layer tree to advance all the APZC
+    // transforms before updating the layer shadow transforms. That will allow removal of this code.
+    ViewTransform treeTransform;
+    ScreenPoint scrollOffset;
+    apzc->SampleContentTransformForFrame(aCurrentFrame, &treeTransform, scrollOffset);
+  }
+
+  gfx3DMatrix asyncTransform = gfx3DMatrix(apzc->GetCurrentAsyncTransform());
+  gfx3DMatrix nontransientTransform = apzc->GetNontransientAsyncTransform();
+  gfx3DMatrix transientTransform = asyncTransform * nontransientTransform.Inverse();
+
+  // |transientTransform| represents the amount by which we have scrolled and
+  // zoomed since the last paint. Because the scrollbar was sized and positioned based
+  // on the painted content, we need to adjust it based on transientTransform so that
+  // it reflects what the user is actually seeing now.
+  // - The scroll thumb needs to be scaled in the direction of scrolling by the inverse
+  //   of the transientTransform scale (representing the zoom). This is because zooming
+  //   in decreases the fraction of the whole scrollable rect that is in view.
+  // - It needs to be translated in opposite direction of the transientTransform
+  //   translation (representing the scroll). This is because scrolling down, which
+  //   translates the layer content up, should result in moving the scroll thumb down.
+  //   The amount of the translation to the scroll thumb should be such that the ratio
+  //   of the translation to the size of the scroll port is the same as the ratio
+  //   of the scroll amount to the size of the scrollable rect.
+  Matrix4x4 scrollbarTransform;
+  if (aScrollbar->GetScrollbarDirection() == Layer::VERTICAL) {
+    float scale = metrics.CalculateCompositedSizeInCssPixels().height / metrics.mScrollableRect.height;
+    scrollbarTransform = scrollbarTransform * Matrix4x4().Scale(1.f, 1.f / transientTransform.GetYScale(), 1.f);
+    scrollbarTransform = scrollbarTransform * Matrix4x4().Translate(0, -transientTransform._42 * scale, 0);
+  }
+  if (aScrollbar->GetScrollbarDirection() == Layer::HORIZONTAL) {
+    float scale = metrics.CalculateCompositedSizeInCssPixels().width / metrics.mScrollableRect.width;
+    scrollbarTransform = scrollbarTransform * Matrix4x4().Scale(1.f / transientTransform.GetXScale(), 1.f, 1.f);
+    scrollbarTransform = scrollbarTransform * Matrix4x4().Translate(-transientTransform._41 * scale, 0, 0);
+  }
+
+  Matrix4x4 transform = scrollbarTransform * aScrollbar->GetTransform();
+
+  if (aScrollbarIsChild) {
+    // If the scrollbar layer is a child of the content it is a scrollbar for, then we
+    // need to do an extra untransform to cancel out the transient async transform on
+    // the content. This is needed because otherwise that transient async transform is
+    // part of the effective transform of this scrollbar, and the scrollbar will jitter
+    // as the content scrolls.
+    Matrix4x4 targetUntransform;
+    ToMatrix4x4(transientTransform.Inverse(), targetUntransform);
+    transform = transform * targetUntransform;
+  }
+
+  // GetTransform already takes the pre- and post-scale into account.  Since we
+  // will apply the pre- and post-scale again when computing the effective
+  // transform, we must apply the inverses here.
+  transform.Scale(1.0f/aScrollbar->GetPreXScale(),
+                  1.0f/aScrollbar->GetPreYScale(),
+                  1);
+  transform = transform * Matrix4x4().Scale(1.0f/aScrollbar->GetPostXScale(),
+                                            1.0f/aScrollbar->GetPostYScale(),
+                                            1);
+  aScrollbar->AsLayerComposite()->SetShadowTransform(transform);
+}
+
+void
+AsyncCompositionManager::ApplyAsyncTransformToScrollbar(TimeStamp aCurrentFrame, ContainerLayer* aLayer)
+{
+  // If this layer corresponds to a scrollbar, then there should be a layer that
+  // is a previous sibling or a parent that has a matching ViewID on its FrameMetrics.
+  // That is the content that this scrollbar is for. We pick up the transient
+  // async transform from that layer and use it to update the scrollbar position.
   // Note that it is possible that the content layer is no longer there; in
   // this case we don't need to do anything because there can't be an async
   // transform on the content.
@@ -598,50 +693,17 @@ AsyncCompositionManager::ApplyAsyncTransformToScrollbar(ContainerLayer* aLayer)
   for (Layer* scrollTarget = aLayer->GetPrevSibling();
        scrollTarget;
        scrollTarget = scrollTarget->GetPrevSibling()) {
-    if (!scrollTarget->AsContainerLayer()) {
-      continue;
-    }
-    AsyncPanZoomController* apzc = scrollTarget->AsContainerLayer()->GetAsyncPanZoomController();
-    if (!apzc) {
-      continue;
-    }
-    const FrameMetrics& metrics = scrollTarget->AsContainerLayer()->GetFrameMetrics();
-    if (metrics.GetScrollId() != aLayer->GetScrollbarTargetContainerId()) {
-      continue;
-    }
-    if (!LayerHasNonContainerDescendants(scrollTarget->AsContainerLayer())) {
+    if (LayerIsContainerForScrollbarTarget(scrollTarget, aLayer)) {
+      // Found a sibling that matches our criteria
+      ApplyAsyncTransformToScrollbarForContent(aCurrentFrame, aLayer, scrollTarget, false);
       return;
     }
+  }
 
-    gfx3DMatrix asyncTransform = gfx3DMatrix(apzc->GetCurrentAsyncTransform());
-    gfx3DMatrix nontransientTransform = apzc->GetNontransientAsyncTransform();
-    gfx3DMatrix transientTransform = asyncTransform * nontransientTransform.Inverse();
-
-    Matrix4x4 scrollbarTransform;
-    if (aLayer->GetScrollbarDirection() == Layer::VERTICAL) {
-      float scale = metrics.CalculateCompositedSizeInCssPixels().height / metrics.mScrollableRect.height;
-      scrollbarTransform = scrollbarTransform * Matrix4x4().Scale(1.f, 1.f / transientTransform.GetYScale(), 1.f);
-      scrollbarTransform = scrollbarTransform * Matrix4x4().Translate(0, -transientTransform._42 * scale, 0);
-    }
-    if (aLayer->GetScrollbarDirection() == Layer::HORIZONTAL) {
-      float scale = metrics.CalculateCompositedSizeInCssPixels().width / metrics.mScrollableRect.width;
-      scrollbarTransform = scrollbarTransform * Matrix4x4().Scale(1.f / transientTransform.GetXScale(), 1.f, 1.f);
-      scrollbarTransform = scrollbarTransform * Matrix4x4().Translate(-transientTransform._41 * scale, 0, 0);
-    }
-
-    Matrix4x4 transform = scrollbarTransform * aLayer->GetTransform();
-    // GetTransform already takes the pre- and post-scale into account.  Since we
-    // will apply the pre- and post-scale again when computing the effective
-    // transform, we must apply the inverses here.
-    transform.Scale(1.0f/aLayer->GetPreXScale(),
-                    1.0f/aLayer->GetPreYScale(),
-                    1);
-    transform = transform * Matrix4x4().Scale(1.0f/aLayer->GetPostXScale(),
-                                              1.0f/aLayer->GetPostYScale(),
-                                              1);
-    aLayer->AsLayerComposite()->SetShadowTransform(transform);
-
-    return;
+  // If we didn't find a sibling, look for a parent
+  Layer* scrollTarget = aLayer->GetParent();
+  if (scrollTarget && LayerIsContainerForScrollbarTarget(scrollTarget, aLayer)) {
+    ApplyAsyncTransformToScrollbarForContent(aCurrentFrame, aLayer, scrollTarget, true);
   }
 }
 

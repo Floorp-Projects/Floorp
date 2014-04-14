@@ -147,7 +147,7 @@ WebrtcGlobalInformation::GetAllStats(
          ++p) {
       MOZ_ASSERT(p->second);
 
-      if (!p->second->IsClosed()) {
+      if (p->second->HasMedia()) {
         queries->append(nsAutoPtr<RTCStatsQuery>(new RTCStatsQuery(true)));
         p->second->BuildStatsQuery_m(nullptr, // all tracks
                                      queries->back());

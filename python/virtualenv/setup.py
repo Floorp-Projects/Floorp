@@ -85,5 +85,5 @@ setup(
     license='MIT',
     py_modules=['virtualenv'],
     packages=['virtualenv_support'],
-    package_data={'virtualenv_support': ['*-py%s.egg' % sys.version[:3], '*.tar.gz']},
+    package_data={'virtualenv_support': ['*.whl']},
     **setup_params)

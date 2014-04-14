@@ -686,8 +686,8 @@ public:
     return mBaselineOffset;
   }
 
-  // Runs the "resolve the flexible lengths" algorithm, distributing
-  // |aFlexContainerMainSize| among the |aItems| and freezing them.
+  // Runs the "Resolving Flexible Lengths" algorithm from section 9.7 of the
+  // CSS flexbox spec to distribute aFlexContainerMainSize among our flex items.
   void ResolveFlexibleLengths(nscoord aFlexContainerMainSize);
 
   void PositionItemsInMainAxis(uint8_t aJustifyContent,
@@ -698,7 +698,7 @@ public:
                                 const FlexboxAxisTracker& aAxisTracker);
 
   friend class AutoFlexLineListClearer; // (needs access to mItems)
- 
+
 private:
   // Helper for ResolveFlexibleLengths():
   void FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
@@ -1617,12 +1617,6 @@ FlexLine::FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
   }
 }
 
-// Implementation of flexbox spec's "resolve the flexible lengths" algorithm.
-// NOTE: aTotalFreeSpace should already have the flex items' margin, border,
-// & padding values subtracted out, so that all we need to do is distribute the
-// remaining free space among content-box sizes.  (The spec deals with
-// margin-box sizes, but we can have fewer values in play & a simpler algorithm
-// if we subtract margin/border/padding up front.)
 void
 FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
 {
@@ -2412,12 +2406,7 @@ FlexboxAxisTracker::FlexboxAxisTracker(
   // and reversing some logic, to avoid reflowing children in bottom-to-top
   // order. (This switch can be removed eventually, but for now, it allows
   // this special-case code path to be compared against the normal code path.)
-  //
-  // XXXdholbert Initially, I'm defaulting this switch to *off*, meaning the
-  // new code isn't enabled yet. A subsequent patch will turn it on, once
-  // intermediate patches have made us react to AreAxesInternallyReversed()
-  // correctly in the appropriate places.
-  static bool sPreventBottomToTopChildOrdering = false;
+  static bool sPreventBottomToTopChildOrdering = true;
 
   if (sPreventBottomToTopChildOrdering) {
     // If either axis is bottom-to-top, we flip both axes (and set a flag

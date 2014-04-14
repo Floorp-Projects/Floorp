@@ -108,24 +108,6 @@ GrallocTextureClientOGL::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
   return true;
 }
 
- bool
-GrallocTextureClientOGL::UpdateSurface(gfxASurface* aSurface)
-{
-  MOZ_ASSERT(aSurface);
-  MOZ_ASSERT(!IsImmutable());
-  MOZ_ASSERT(IsValid());
-  if (!IsValid() || !IsAllocated()) {
-    return false;
-  }
-
-  RefPtr<DrawTarget> dt = GetAsDrawTarget();
-  RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, aSurface);
-
-  dt->CopySurface(source, IntRect(IntPoint(), GetSize()), IntPoint());
-
-  return true;
-}
-
 void
 GrallocTextureClientOGL::SetReleaseFenceHandle(FenceHandle aReleaseFenceHandle)
 {
@@ -235,23 +217,6 @@ GrallocTextureClientOGL::GetAsDrawTarget()
                                                                     byteStride,
                                                                     mFormat);
   return mDrawTarget;
-}
-
-already_AddRefed<gfxASurface>
-GrallocTextureClientOGL::GetAsSurface()
-{
-  MOZ_ASSERT(IsValid());
-  MOZ_ASSERT(mMappedBuffer, "Calling TextureClient::GetAsSurface without locking :(");
-
-  gfx::SurfaceFormat format = SurfaceFormatForPixelFormat(mGraphicBuffer->getPixelFormat());
-  long pixelStride = mGraphicBuffer->getStride();
-  long byteStride = pixelStride * BytesPerPixel(format);
-  nsRefPtr<gfxImageSurface> surface =
-                     new gfxImageSurface(GetBuffer(),
-                                         gfxIntSize(mSize.width, mSize.height),
-                                         byteStride,
-                                         SurfaceFormatToImageFormat(mFormat));
-  return surface.forget();
 }
 
 bool

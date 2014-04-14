@@ -514,6 +514,8 @@ public:
 
   bool IsClosed() const;
 
+  bool HasMedia() const;
+
 #ifdef MOZILLA_INTERNAL_API
   // initialize telemetry for when calls start
   void startCallTelem();

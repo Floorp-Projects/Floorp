@@ -183,11 +183,11 @@ destroying the MediaDecoder object.
 #include "nsIObserver.h"
 #include "nsAutoPtr.h"
 #include "MediaResource.h"
+#include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
 #include "MediaStreamGraph.h"
-#include "AudioChannelCommon.h"
 #include "AbstractMediaDecoder.h"
 #include "necko-config.h"
 
@@ -739,8 +739,8 @@ public:
   // held.
   void UpdatePlaybackPosition(int64_t aTime) MOZ_FINAL MOZ_OVERRIDE;
 
-  void SetAudioChannelType(dom::AudioChannelType aType) { mAudioChannelType = aType; }
-  dom::AudioChannelType GetAudioChannelType() { return mAudioChannelType; }
+  void SetAudioChannel(dom::AudioChannel aChannel) { mAudioChannel = aChannel; }
+  dom::AudioChannel GetAudioChannel() { return mAudioChannel; }
 
   // Send a new set of metadata to the state machine, to be dispatched to the
   // main thread to be presented when the |currentTime| of the media is greater
@@ -1205,7 +1205,7 @@ protected:
 
   // Be assigned from media element during the initialization and pass to
   // AudioStream Class.
-  dom::AudioChannelType mAudioChannelType;
+  dom::AudioChannel mAudioChannel;
 
   // True if the decoder has been directed to minimize its preroll before
   // playback starts. After the first time playback starts, we don't attempt

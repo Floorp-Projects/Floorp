@@ -212,17 +212,6 @@ public:
   void UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
                            const SurfaceDescriptorTiles& aTiledDescriptor);
 
-  // Renders a single given tile.
-  void RenderTile(const TileHost& aTile,
-                  EffectChain& aEffectChain,
-                  float aOpacity,
-                  const gfx::Matrix4x4& aTransform,
-                  const gfx::Filter& aFilter,
-                  const gfx::Rect& aClipRect,
-                  const nsIntRegion& aScreenRegion,
-                  const nsIntPoint& aTextureOffset,
-                  const nsIntSize& aTextureBounds);
-
   void Composite(EffectChain& aEffectChain,
                  float aOpacity,
                  const gfx::Matrix4x4& aTransform,
@@ -260,6 +249,7 @@ public:
 #endif
 
 private:
+
   void RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
                          EffectChain& aEffectChain,
                          float aOpacity,
@@ -267,6 +257,17 @@ private:
                          const gfx::Rect& aClipRect,
                          nsIntRegion aMaskRegion,
                          gfx::Matrix4x4 aTransform);
+
+  // Renders a single given tile.
+  void RenderTile(const TileHost& aTile,
+                  EffectChain& aEffectChain,
+                  float aOpacity,
+                  const gfx::Matrix4x4& aTransform,
+                  const gfx::Filter& aFilter,
+                  const gfx::Rect& aClipRect,
+                  const nsIntRegion& aScreenRegion,
+                  const nsIntPoint& aTextureOffset,
+                  const nsIntSize& aTextureBounds);
 
   void EnsureTileStore() {}
 

@@ -477,40 +477,10 @@ AudioDestinationNode::CreateAudioChannelAgent()
     mAudioChannelAgent->StopPlaying();
   }
 
-  AudioChannelType type = AUDIO_CHANNEL_NORMAL;
-  switch(mAudioChannel) {
-    case AudioChannel::Normal:
-      type = AUDIO_CHANNEL_NORMAL;
-      break;
-
-    case AudioChannel::Content:
-      type = AUDIO_CHANNEL_CONTENT;
-      break;
-
-    case AudioChannel::Notification:
-      type = AUDIO_CHANNEL_NOTIFICATION;
-      break;
-
-    case AudioChannel::Alarm:
-      type = AUDIO_CHANNEL_ALARM;
-      break;
-
-    case AudioChannel::Telephony:
-      type = AUDIO_CHANNEL_TELEPHONY;
-      break;
-
-    case AudioChannel::Ringer:
-      type = AUDIO_CHANNEL_RINGER;
-      break;
-
-    case AudioChannel::Publicnotification:
-      type = AUDIO_CHANNEL_PUBLICNOTIFICATION;
-      break;
-
-  }
-
   mAudioChannelAgent = new AudioChannelAgent();
-  mAudioChannelAgent->InitWithWeakCallback(GetOwner(), type, this);
+  mAudioChannelAgent->InitWithWeakCallback(GetOwner(),
+                                           static_cast<int32_t>(mAudioChannel),
+                                           this);
 
   nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
   if (docshell) {

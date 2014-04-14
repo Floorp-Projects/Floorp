@@ -52,6 +52,19 @@ function setPossiblyAliasedProperty(aElem, aPropertyName, aPropertyValue,
   }
 }
 
+// Helper function to strip "px" off the end of a string
+// (so that we can compare two lengths using "isfuzzy()" with an epsilon)
+function stripPx(aLengthInPx)
+{
+  let pxOffset = aLengthInPx.length - 2; // subtract off length of "px"
+
+  // Sanity-check the arg:
+  ok(pxOffset > 0 && aLengthInPx.substr(pxOffset) == "px",
+     "expecting value with 'px' units");
+
+  return aLengthInPx.substr(0, pxOffset);
+}
+
 // The main test function.
 // aFlexboxTestcase is an entry from the list in flexbox_layout_testcases.js
 function testFlexboxTestcase(aFlexboxTestcase, aFlexDirection, aPropertyMapping)
@@ -90,7 +103,8 @@ function testFlexboxTestcase(aFlexboxTestcase, aFlexDirection, aPropertyMapping)
 
       // SANITY CHECK:
       if (Array.isArray(aChildSpec[propName])) {
-        is(aChildSpec[propName].length, 2,
+        ok(aChildSpec[propName].length >= 2 &&
+           aChildSpec[propName].length <= 3,
            "unexpected number of elements in array within child spec");
       }
 
@@ -120,8 +134,20 @@ function testFlexboxTestcase(aFlexboxTestcase, aFlexDirection, aPropertyMapping)
         let expectedVal = childSpec[propName][1];
         let actualPropName = (propName in aPropertyMapping ?
                               aPropertyMapping[propName] : propName);
-        is(getComputedStyleWrapper(child, actualPropName), expectedVal,
-           "computed value of '" + actualPropName + "' should match expected");
+        let actualVal = getComputedStyleWrapper(child, actualPropName);
+        let message = "computed value of '" + actualPropName +
+                      "' should match expected";
+
+        if (childSpec[propName].length > 2) {
+          // 3rd entry in array is epsilon
+          // Need to strip off "px" units in order to use epsilon:
+          let actualValNoPx = stripPx(actualVal);
+          let expectedValNoPx = stripPx(expectedVal);
+          isfuzzy(actualValNoPx, expectedValNoPx,
+                  childSpec[propName][2], message);
+        } else {
+          is(actualVal, expectedVal, message);
+        }
       }
     }
 
