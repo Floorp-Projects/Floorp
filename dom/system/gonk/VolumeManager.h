@@ -11,7 +11,7 @@
 #include "base/message_loop.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Observer.h"
-#include "nsISupportsImpl.h"
+#include "mozilla/RefPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -73,16 +73,16 @@ namespace system {
 *
 ***************************************************************************/
 
-class VolumeManager MOZ_FINAL : public MessageLoopForIO::LineWatcher
+class VolumeManager : public MessageLoopForIO::LineWatcher,
+                      public RefCounted<VolumeManager>
 {
-  virtual ~VolumeManager();
-
 public:
-  NS_INLINE_DECL_REFCOUNTING(VolumeManager)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(VolumeManager)
 
-  typedef nsTArray<RefPtr<Volume>> VolumeArray;
+  typedef nsTArray<RefPtr<Volume> > VolumeArray;
 
   VolumeManager();
+  virtual ~VolumeManager();
 
   //-----------------------------------------------------------------------
   //

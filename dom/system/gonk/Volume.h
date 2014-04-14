@@ -9,7 +9,7 @@
 #include "nsIVolume.h"
 #include "nsString.h"
 #include "mozilla/Observer.h"
-#include "nsISupportsImpl.h"
+#include "mozilla/RefPtr.h"
 #include "nsWhitespaceTokenizer.h"
 
 namespace mozilla {
@@ -24,11 +24,10 @@ namespace system {
 *
 ***************************************************************************/
 
-class Volume MOZ_FINAL
+class Volume : public RefCounted<Volume>
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(Volume)
-
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(Volume)
   Volume(const nsCSubstring& aVolumeName);
 
   typedef long STATE; // States are now defined in nsIVolume.idl

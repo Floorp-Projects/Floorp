@@ -135,15 +135,13 @@ enum SocketConnectionStatus {
   SOCKET_CONNECTED = 3
 };
 
-class UnixSocketConsumer
+class UnixSocketConsumer : public AtomicRefCounted<UnixSocketConsumer>
 {
-protected:
-  virtual ~UnixSocketConsumer();
-
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UnixSocketConsumer)
-
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(UnixSocketConsumer)
   UnixSocketConsumer();
+
+  virtual ~UnixSocketConsumer();
 
   SocketConnectionStatus GetConnectionStatus() const
   {

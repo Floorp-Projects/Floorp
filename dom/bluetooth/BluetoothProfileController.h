@@ -8,7 +8,7 @@
 #define mozilla_dom_bluetooth_bluetoothprofilecontroller_h__
 
 #include "BluetoothUuid.h"
-#include "nsISupportsImpl.h"
+#include "mozilla/RefPtr.h"
 #include "nsAutoPtr.h"
 #include "nsITimer.h"
 
@@ -57,12 +57,10 @@ class BluetoothProfileManagerBase;
 class BluetoothReplyRunnable;
 typedef void (*BluetoothProfileControllerCallback)();
 
-class BluetoothProfileController MOZ_FINAL
+class BluetoothProfileController : public RefCounted<BluetoothProfileController>
 {
-  ~BluetoothProfileController();
-
 public:
-  NS_INLINE_DECL_REFCOUNTING(BluetoothProfileController)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(BluetoothProfileController)
   /**
    * @param aConnect:       If it's a connect request, the value should be set
    *                        to true. For disconnect request, set it to false.
@@ -85,6 +83,7 @@ public:
                              BluetoothProfileControllerCallback aCallback,
                              uint16_t aServiceUuid,
                              uint32_t aCod = 0);
+  ~BluetoothProfileController();
 
   /**
    * The controller starts connecting/disconnecting profiles one by one

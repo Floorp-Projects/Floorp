@@ -51,11 +51,10 @@ namespace hal_impl {
  *    SWITCH_STATE=0
  *    SEQNUM=5038
  */
-class SwitchHandler
+class SwitchHandler : public RefCounted<SwitchHandler>
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(SwitchHandler)
-
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(SwitchHandler)
   SwitchHandler(const char* aDevPath, SwitchDevice aDevice)
     : mDevPath(aDevPath),
       mState(SWITCH_STATE_UNKNOWN),
@@ -231,18 +230,19 @@ private:
   SwitchEvent mEvent;
 };
 
-class SwitchEventObserver MOZ_FINAL : public IUeventObserver
+class SwitchEventObserver : public IUeventObserver,
+                            public RefCounted<SwitchEventObserver>
 {
-  ~SwitchEventObserver()
-  {
-    mHandler.Clear();
-  }
-
 public:
-  NS_INLINE_DECL_REFCOUNTING(SwitchEventObserver)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(SwitchEventObserver)
   SwitchEventObserver() : mEnableCount(0)
   {
     Init();
+  }
+
+  ~SwitchEventObserver()
+  {
+    mHandler.Clear();
   }
 
   int GetEnableCount()

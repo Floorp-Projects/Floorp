@@ -75,17 +75,23 @@ namespace layers {
  * TextureClient's data until the compositor side confirmed that it is safe to
  * deallocte or recycle the it.
  */
-class TextureChild MOZ_FINAL : public PTextureChild
+class TextureChild : public PTextureChild
+                   , public AtomicRefCounted<TextureChild>
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureChild)
-
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(TextureChild)
   TextureChild()
   : mForwarder(nullptr)
   , mTextureData(nullptr)
   , mTextureClient(nullptr)
   , mIPCOpen(false)
   {
+    MOZ_COUNT_CTOR(TextureChild);
+  }
+
+  ~TextureChild()
+  {
+    MOZ_COUNT_DTOR(TextureChild);
   }
 
   bool Recv__delete__() MOZ_OVERRIDE;

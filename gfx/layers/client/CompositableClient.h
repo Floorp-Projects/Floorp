@@ -68,15 +68,13 @@ class TextureClientData;
  * where we have a different way of interfacing with the textures - in terms of
  * drawing into the compositable and/or passing its contents to the compostior.
  */
-class CompositableClient
+class CompositableClient : public AtomicRefCounted<CompositableClient>
 {
-protected:
-  virtual ~CompositableClient();
-
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositableClient)
-
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(CompositableClient)
   CompositableClient(CompositableForwarder* aForwarder, TextureFlags aFlags = 0);
+
+  virtual ~CompositableClient();
 
   virtual TextureInfo GetTextureInfo() const = 0;
 

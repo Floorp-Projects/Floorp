@@ -37,18 +37,15 @@ namespace layers {
  * to the compositor by the compositable host as a parameter to DrawQuad.
  */
 
-struct Effect
+struct Effect : public RefCounted<Effect>
 {
-  NS_INLINE_DECL_REFCOUNTING(Effect)
-
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(Effect)
   Effect(EffectTypes aType) : mType(aType) {}
 
   EffectTypes mType;
 
-  virtual void PrintInfo(nsACString& aTo, const char* aPrefix) = 0;
-
-protected:
   virtual ~Effect() {}
+  virtual void PrintInfo(nsACString& aTo, const char* aPrefix) =0;
 };
 
 // Render from a texture
