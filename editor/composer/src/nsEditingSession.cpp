@@ -448,7 +448,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = editor->Init(domDoc, nullptr /* root content */,
-                    nullptr, mEditorFlags);
+                    nullptr, mEditorFlags, EmptyString());
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISelection> selection;
