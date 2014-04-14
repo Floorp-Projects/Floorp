@@ -155,7 +155,20 @@ SourceBuffer::GetBuffered(ErrorResult& aRv)
     return nullptr;
   }
   nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  mDecoder->GetBuffered(ranges);
+  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+    nsRefPtr<TimeRanges> r = new TimeRanges();
+    mDecoders[i]->GetBuffered(r);
+    if (r->Length() > 0) {
+      MSE_DEBUG("%p GetBuffered decoder=%u Length=%u Start=%f End=%f", this, i, r->Length(),
+                r->GetStartTime(), r->GetEndTime());
+      ranges->Add(r->GetStartTime(), r->GetEndTime());
+    } else {
+      MSE_DEBUG("%p GetBuffered decoder=%u Length=%u", this, i, r->Length());
+    }
+  }
+  ranges->Normalize();
+  MSE_DEBUG("%p GetBuffered Length=%u Start=%f End=%f", this, ranges->Length(),
+            ranges->GetStartTime(), ranges->GetEndTime());
   return ranges.forget();
 }
 
@@ -203,6 +216,7 @@ SourceBuffer::AppendBuffer(const ArrayBufferView& aData, ErrorResult& aRv)
 void
 SourceBuffer::Abort(ErrorResult& aRv)
 {
+  MSE_DEBUG("%p Abort()", this);
   if (!IsAttached()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -218,11 +232,18 @@ SourceBuffer::Abort(ErrorResult& aRv)
   // TODO: Run reset parser algorithm.
   mAppendWindowStart = 0;
   mAppendWindowEnd = PositiveInfinity<double>();
+
+  MSE_DEBUG("%p Abort: Switching decoders.", this);
+  mCurrentDecoder->GetResource()->Ended();
+  if (!InitNewDecoder()) {
+    aRv.Throw(NS_ERROR_FAILURE); // XXX: Review error handling.
+  }
 }
 
 void
 SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
 {
+  MSE_DEBUG("%p Remove(Start=%f End=%f)", this, aStart, aEnd);
   if (!IsAttached() || mUpdating ||
       mMediaSource->ReadyState() != MediaSourceReadyState::Open) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -242,19 +263,23 @@ void
 SourceBuffer::Detach()
 {
   Ended();
-  mDecoder = nullptr;
+  mDecoders.Clear();
+  mCurrentDecoder = nullptr;
   mMediaSource = nullptr;
 }
 
 void
 SourceBuffer::Ended()
 {
-  mDecoder->GetResource()->Ended();
+  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+    mDecoders[i]->GetResource()->Ended();
+  }
 }
 
 SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   : DOMEventTargetHelper(aMediaSource->GetParentObject())
   , mMediaSource(aMediaSource)
+  , mType(aType)
   , mAppendWindowStart(0)
   , mAppendWindowEnd(PositiveInfinity<double>())
   , mTimestampOffset(0)
@@ -262,15 +287,12 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   , mUpdating(false)
 {
   MOZ_ASSERT(aMediaSource);
-  MediaSourceDecoder* parentDecoder = aMediaSource->GetDecoder();
-  mDecoder = parentDecoder->CreateSubDecoder(aType);
-  MOZ_ASSERT(mDecoder);
 }
 
 SourceBuffer::~SourceBuffer()
 {
-  if (mDecoder) {
-    mDecoder->GetResource()->Ended();
+  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+    mDecoders[i]->GetResource()->Ended();
   }
 }
 
@@ -299,6 +321,22 @@ SourceBuffer::QueueAsyncSimpleEvent(const char* aName)
   MSE_DEBUG("%p Queuing event %s to SourceBuffer", this, aName);
   nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<SourceBuffer>(this, aName);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+}
+
+bool
+SourceBuffer::InitNewDecoder()
+{
+  MediaSourceDecoder* parentDecoder = mMediaSource->GetDecoder();
+  nsRefPtr<SubBufferDecoder> decoder = parentDecoder->CreateSubDecoder(mType);
+  if (!decoder) {
+    return false;
+  }
+  mDecoders.AppendElement(decoder);
+  // XXX: At this point, we really want to push through any remaining
+  // processing for the old decoder and discard it, rather than hanging on
+  // to all of them in mDecoders.
+  mCurrentDecoder = decoder;
+  return true;
 }
 
 void
@@ -330,6 +368,7 @@ SourceBuffer::AbortUpdating()
 void
 SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv)
 {
+  MSE_DEBUG("%p AppendBuffer(Data=%u bytes)", this, aLength);
   if (!IsAttached() || mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -339,14 +378,13 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   }
   // TODO: Run coded frame eviction algorithm.
   // TODO: Test buffer full flag.
-  MSE_DEBUG("%p Append(ArrayBuffer=%u)", this, aLength);
   StartUpdating();
   // XXX: For future reference: NDA call must run on the main thread.
-  mDecoder->NotifyDataArrived(reinterpret_cast<const char*>(aData),
-                              aLength,
-                              mDecoder->GetResource()->GetLength());
+  mCurrentDecoder->NotifyDataArrived(reinterpret_cast<const char*>(aData),
+                                     aLength,
+                                     mCurrentDecoder->GetResource()->GetLength());
   // TODO: Run buffer append algorithm asynchronously (would call StopUpdating()).
-  mDecoder->GetResource()->AppendData(aData, aLength);
+  mCurrentDecoder->GetResource()->AppendData(aData, aLength);
 
   // Eviction uses a byte threshold. If the buffer is greater than the
   // number of bytes then data is evicted. The time range for this
@@ -354,7 +392,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   // evict data before that range across all SourceBuffer's it knows
   // about.
   const int evict_threshold = 1000000;
-  bool evicted = mDecoder->GetResource()->EvictData(evict_threshold);
+  bool evicted = mCurrentDecoder->GetResource()->EvictData(evict_threshold);
   if (evicted) {
     double start = 0.0;
     double end = 0.0;
@@ -374,28 +412,27 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
 void
 SourceBuffer::GetBufferedStartEndTime(double* aStart, double* aEnd)
 {
-  nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  mDecoder->GetBuffered(ranges);
-  ranges->Normalize();
-  int length = ranges->Length();
-  ErrorResult rv;
-
-  if (aStart) {
-    *aStart = length > 0 ? ranges->Start(0, rv) : 0.0;
+  ErrorResult dummy;
+  nsRefPtr<TimeRanges> ranges = GetBuffered(dummy);
+  if (!ranges || ranges->Length() == 0) {
+    *aStart = *aEnd = 0.0;
+    return;
   }
-
-  if (aEnd) {
-    *aEnd = length > 0 ? ranges->End(length - 1, rv) : 0.0;
-  }
+  *aStart = ranges->Start(0, dummy);
+  *aEnd = ranges->End(ranges->Length() - 1, dummy);
 }
 
 void
 SourceBuffer::Evict(double aStart, double aEnd)
 {
-  // Need to map time to byte offset then evict
-  int64_t end = mDecoder->ConvertToByteOffset(aEnd);
-  if (end > 0) {
-    mDecoder->GetResource()->EvictBefore(end);
+  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+    // Need to map time to byte offset then evict
+    int64_t end = mDecoders[i]->ConvertToByteOffset(aEnd);
+    if (end <= 0) {
+      NS_WARNING("SourceBuffer::Evict failed");
+      continue;
+    }
+    mDecoders[i]->GetResource()->EvictBefore(end);
   }
 }
 

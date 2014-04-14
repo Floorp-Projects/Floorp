@@ -108,10 +108,20 @@ public:
   // Evict data in the source buffer in the given time range.
   void Evict(double aStart, double aEnd);
 
+  // Initialize this SourceBuffer.  Must be called before use.
+  bool Init()
+  {
+    MOZ_ASSERT(!mCurrentDecoder);
+    return InitNewDecoder();
+  }
+
 private:
   friend class AsyncEventRunner<SourceBuffer>;
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
+
+  // Create a new decoder for mType, add it to mDecoders and update mCurrentDecoder.
+  bool InitNewDecoder();
 
   // Update mUpdating and fire the appropriate events.
   void StartUpdating();
@@ -127,7 +137,12 @@ private:
 
   nsRefPtr<MediaSource> mMediaSource;
 
-  nsRefPtr<SubBufferDecoder> mDecoder;
+  const nsAutoCString mType;
+
+  // XXX: We only want to keep the current decoder alive, but need a way to
+  // query @buffered for everything this SourceBuffer is responsible for.
+  nsTArray<nsRefPtr<SubBufferDecoder>> mDecoders;
+  nsRefPtr<SubBufferDecoder> mCurrentDecoder;
 
   double mAppendWindowStart;
   double mAppendWindowEnd;
