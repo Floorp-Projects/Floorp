@@ -118,26 +118,60 @@ SignalPipeWatcher::GetSingleton()
   return sSingleton;
 }
 
-/* static */ void
-SignalPipeWatcher::RegisterCallback(const uint8_t aSignal,
+// static
+void
+SignalPipeWatcher::RegisterCallbackRunnable(const uint8_t& aSignal,
+                                            const PipeCallback& aCallback)
+{
+  MOZ_ASSERT(XRE_GetIOMessageLoop() == MessageLoopForIO::current());
+  if (sSingleton) {
+    sSingleton->RegisterCallback(aSignal, aCallback);
+  }
+}
+
+void
+SignalPipeWatcher::RegisterCallback(uint8_t aSignal,
                                     PipeCallback aCallback)
 {
-  for (SignalInfoArray::index_type i = 0; 
-       i < SignalPipeWatcher::mSignalInfo.Length(); i++)
+  if (XRE_GetIOMessageLoop() != MessageLoopForIO::current()) {
+    XRE_GetIOMessageLoop()->PostTask(
+        FROM_HERE,
+        NewRunnableFunction(RegisterCallbackRunnable, aSignal, aCallback));
+    return;
+  }
+
+  for (SignalInfoArray::index_type i = 0; i < mSignalInfo.Length(); i++)
   {
-    if (SignalPipeWatcher::mSignalInfo[i].mSignal == aSignal) {
+    if (mSignalInfo[i].mSignal == aSignal) {
       LOG("Register Signal(%d) callback failed! (DUPLICATE)", aSignal);
       return;
     }
   }
-  SignalInfo aSignalInfo = { aSignal, aCallback };
-  SignalPipeWatcher::mSignalInfo.AppendElement(aSignalInfo);
-  SignalPipeWatcher::RegisterSignalHandler(aSignalInfo.mSignal);
+  SignalInfo signalInfo = { aSignal, aCallback };
+  mSignalInfo.AppendElement(signalInfo);
+  RegisterSignalHandler(signalInfo.mSignal);
 }
 
-/* static */ void
-SignalPipeWatcher::RegisterSignalHandler(const uint8_t aSignal)
+// static
+void
+SignalPipeWatcher::RegisterSignalHandlerRunnable(const uint8_t& aSignal)
 {
+  MOZ_ASSERT(XRE_GetIOMessageLoop() == MessageLoopForIO::current());
+  if (sSingleton) {
+    sSingleton->RegisterSignalHandler(aSignal);
+  }
+}
+
+void
+SignalPipeWatcher::RegisterSignalHandler(uint8_t aSignal)
+{
+  if (XRE_GetIOMessageLoop() != MessageLoopForIO::current()) {
+    XRE_GetIOMessageLoop()->PostTask(
+        FROM_HERE,
+        NewRunnableFunction(RegisterSignalHandlerRunnable, aSignal));
+    return;
+  }
+
   struct sigaction action;
   memset(&action, 0, sizeof(action));
   sigemptyset(&action.sa_mask);
@@ -148,10 +182,10 @@ SignalPipeWatcher::RegisterSignalHandler(const uint8_t aSignal)
       LOG("SignalPipeWatcher failed to register sig %d.", aSignal);
     }
   } else {
-    for (SignalInfoArray::index_type i = 0; i < SignalPipeWatcher::mSignalInfo.Length(); i++) {
-      if (sigaction(SignalPipeWatcher::mSignalInfo[i].mSignal, &action, nullptr)) {
+    for (SignalInfoArray::index_type i = 0; i < mSignalInfo.Length(); i++) {
+      if (sigaction(mSignalInfo[i].mSignal, &action, nullptr)) {
         LOG("SignalPipeWatcher failed to register signal(%d) "
-            "dump signal handler.",SignalPipeWatcher::mSignalInfo[i].mSignal);
+            "dump signal handler.", mSignalInfo[i].mSignal);
       }
     }
   }
@@ -159,8 +193,9 @@ SignalPipeWatcher::RegisterSignalHandler(const uint8_t aSignal)
 
 SignalPipeWatcher::~SignalPipeWatcher()
 {
-  if (sDumpPipeWriteFd != -1)
-    SignalPipeWatcher::StopWatching();
+  if (sDumpPipeWriteFd != -1) {
+    StopWatching();
+  }
 }
 
 int SignalPipeWatcher::OpenFd()
@@ -182,7 +217,7 @@ int SignalPipeWatcher::OpenFd()
   int readFd = pipeFds[0];
   sDumpPipeWriteFd = pipeFds[1];
 
-  SignalPipeWatcher::RegisterSignalHandler();
+  RegisterSignalHandler();
   return readFd;
 }
 
@@ -215,9 +250,9 @@ void SignalPipeWatcher::OnFileCanReadWithoutBlocking(int aFd)
     return;
   }
 
-  for (SignalInfoArray::index_type i = 0; i < SignalPipeWatcher::mSignalInfo.Length(); i++) {
-    if(signum == SignalPipeWatcher::mSignalInfo[i].mSignal) {
-      SignalPipeWatcher::mSignalInfo[i].mCallback(signum);
+  for (SignalInfoArray::index_type i = 0; i < mSignalInfo.Length(); i++) {
+    if(signum == mSignalInfo[i].mSignal) {
+      mSignalInfo[i].mCallback(signum);
       return;
     }
   }
@@ -257,25 +292,42 @@ FifoWatcher::MaybeCreate()
   }
 
   // The FifoWatcher is held alive by the observer service.
-  if (!FifoWatcher::sSingleton) {
-    FifoWatcher::GetSingleton();
+  if (!sSingleton) {
+    GetSingleton();
   }
   return true;
 }
 
+//static
 void
-FifoWatcher::RegisterCallback(const nsCString& aCommand,FifoCallback aCallback)
+FifoWatcher::RegisterCallbackRunnable(const nsCString& aCommand,
+                                      const FifoCallback& aCallback)
 {
-  for (FifoInfoArray::index_type i = 0;
-       i < FifoWatcher::mFifoInfo.Length(); i++)
+  MOZ_ASSERT(XRE_GetIOMessageLoop() == MessageLoopForIO::current());
+  if (sSingleton) {
+    sSingleton->RegisterCallback(aCommand, aCallback);
+  }
+}
+
+void
+FifoWatcher::RegisterCallback(const nsCString& aCommand, FifoCallback aCallback)
+{
+  if (XRE_GetIOMessageLoop() != MessageLoopForIO::current()) {
+    XRE_GetIOMessageLoop()->PostTask(
+        FROM_HERE,
+        NewRunnableFunction(RegisterCallbackRunnable, aCommand, aCallback));
+    return;
+  }
+
+  for (FifoInfoArray::index_type i = 0; i < mFifoInfo.Length(); i++)
   {
-    if (FifoWatcher::mFifoInfo[i].mCommand.Equals(aCommand)) {
+    if (mFifoInfo[i].mCommand.Equals(aCommand)) {
       LOG("Register command(%s) callback failed! (DUPLICATE)", aCommand.get());
       return;
     }
   }
   FifoInfo aFifoInfo = { aCommand, aCallback };
-  FifoWatcher::mFifoInfo.AppendElement(aFifoInfo);
+  mFifoInfo.AppendElement(aFifoInfo);
 }
 
 FifoWatcher::~FifoWatcher()
@@ -392,10 +444,10 @@ void FifoWatcher::OnFileCanReadWithoutBlocking(int aFd)
   // it'll actually write "foo\n" to the fifo.
   inputStr.Trim("\b\t\r\n");
 
-  for (FifoInfoArray::index_type i = 0; i < FifoWatcher::mFifoInfo.Length(); i++) {
-    const nsCString commandStr = FifoWatcher::mFifoInfo[i].mCommand;
+  for (FifoInfoArray::index_type i = 0; i < mFifoInfo.Length(); i++) {
+    const nsCString commandStr = mFifoInfo[i].mCommand;
     if(inputStr == commandStr.get()) {
-      FifoWatcher::mFifoInfo[i].mCallback(inputStr);
+      mFifoInfo[i].mCallback(inputStr);
       return;
     }
   }
