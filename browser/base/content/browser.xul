@@ -793,6 +793,12 @@
                       oncommand="toggleSidebar('viewBookmarksSidebar');">
               <observes element="viewBookmarksSidebar" attribute="checked"/>
             </menuitem>
+            <!-- NB: temporary solution for bug 985024, this should go away soon. -->
+            <menuitem id="BMB_bookmarksShowAllTop"
+                      class="menuitem-iconic subviewbutton"
+                      label="&showAllBookmarks2.label;"
+                      command="Browser:ShowAllBookmarks"
+                      key="manBookmarkKb"/>
             <menuseparator/>
             <menuitem id="BMB_subscribeToPageMenuitem"
 #ifndef XP_MACOSX
