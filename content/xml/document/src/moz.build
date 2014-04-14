@@ -5,20 +5,26 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    'SVGDocument.h',
+    'XMLDocument.h',
 ]
 
-SOURCES += [
-    'SVGDocument.cpp',
+UNIFIED_SOURCES += [
+    'nsXMLContentSink.cpp',
+    'nsXMLFragmentContentSink.cpp',
+    'nsXMLPrettyPrinter.cpp',
+    'XMLDocument.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
 
+MSVC_ENABLE_PGO = True
+
 LOCAL_INCLUDES += [
+    '/caps/include',
     '/content/base/src',
     '/content/html/document/src',
-    '/content/svg/content/src',
-    '/content/xml/document/src',
+    '/content/xul/content/src',
+    '/dom/base',
     '/layout/style',
 ]
 
