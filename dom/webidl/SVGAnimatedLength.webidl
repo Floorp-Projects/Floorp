@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGLength;
-
 interface SVGAnimatedLength {
   [Constant]
   readonly attribute SVGLength baseVal;

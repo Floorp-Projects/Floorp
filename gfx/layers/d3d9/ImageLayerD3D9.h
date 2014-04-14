@@ -36,12 +36,6 @@ private:
   IDirect3DTexture9* GetTexture(Image *aImage, bool& aHasAlpha);
 };
 
-class ImageD3D9
-{
-public:
-  virtual already_AddRefed<gfxASurface> GetAsSurface() = 0;
-};
-
 
 struct TextureD3D9BackendData : public ImageBackendData
 {

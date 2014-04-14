@@ -87,6 +87,10 @@ if (outOfProcess) {
 
 
 if (onDevice) {
+  var cpuLock = Cc["@mozilla.org/power/powermanagerservice;1"]
+                      .getService(Ci.nsIPowerManagerService)
+                      .newWakeLock("cpu");
+
   let manager = navigator.mozWifiManager;
   let con = manager.connection;
   manager.setPowerSavingMode(false);

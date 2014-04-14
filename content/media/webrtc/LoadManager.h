@@ -42,7 +42,6 @@ private:
     void LoadHasChanged();
 
     nsRefPtr<LoadMonitor> mLoadMonitor;
-    float mLastSystemLoad;
     float mLoadSum;
     int   mLoadSumMeasurements;
     // Set when overuse was signaled to us, and hasn't been un-signaled yet.
