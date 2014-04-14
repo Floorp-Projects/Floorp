@@ -7,11 +7,8 @@
 #ifndef NetworkActivityMonitor_h___
 #define NetworkActivityMonitor_h___
 
-#include "nsCOMPtr.h"
 #include "prio.h"
 #include "prinrval.h"
-
-class nsIObserverService;
 
 namespace mozilla { namespace net {
 
@@ -41,7 +38,6 @@ private:
   PRIOMethods                     mLayerMethods;
   PRIntervalTime                  mBlipInterval;
   PRIntervalTime                  mLastNotificationTime[2];
-  nsCOMPtr<nsIObserverService>    mObserverService;
 };
 
 }} // namespace mozilla::net

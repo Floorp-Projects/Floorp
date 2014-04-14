@@ -151,18 +151,22 @@ nsNetMon_AcceptRead(PRFileDesc *listenSock,
 
 class NotifyNetworkActivity : public nsRunnable {
 public:
-  NotifyNetworkActivity(nsIObserverService* aObs,
-                        NetworkActivityMonitor::Direction aDirection)
-    : mObs(aObs)
-    , mDirection(aDirection)
+  NotifyNetworkActivity(NetworkActivityMonitor::Direction aDirection)
+    : mDirection(aDirection)
   {}
   NS_IMETHOD Run()
   {
-    mObs->NotifyObservers(nullptr,
-                          mDirection == NetworkActivityMonitor::kUpload
-                            ? NS_NETWORK_ACTIVITY_BLIP_UPLOAD_TOPIC
-                            : NS_NETWORK_ACTIVITY_BLIP_DOWNLOAD_TOPIC,
-                          nullptr);
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (!obs)
+      return NS_ERROR_FAILURE;
+
+    obs->NotifyObservers(nullptr,
+                         mDirection == NetworkActivityMonitor::kUpload
+                           ? NS_NETWORK_ACTIVITY_BLIP_UPLOAD_TOPIC
+                           : NS_NETWORK_ACTIVITY_BLIP_DOWNLOAD_TOPIC,
+                         nullptr);
     return NS_OK;
   }
 private:
@@ -176,12 +180,15 @@ NetworkActivityMonitor::NetworkActivityMonitor()
   : mLayerIdentity(PR_INVALID_IO_LAYER)
   , mBlipInterval(PR_INTERVAL_NO_TIMEOUT)
 {
+  MOZ_COUNT_CTOR(NetworkActivityMonitor);
+
   NS_ASSERTION(gInstance==nullptr,
                "multiple NetworkActivityMonitor instances!");
 }
 
 NetworkActivityMonitor::~NetworkActivityMonitor()
 {
+  MOZ_COUNT_DTOR(NetworkActivityMonitor);
   gInstance = nullptr;
 }
 
@@ -228,10 +235,6 @@ NetworkActivityMonitor::Init_Internal(int32_t blipInterval)
   mLayerMethods.recvfrom   = nsNetMon_RecvFrom;
   mLayerMethods.sendto     = nsNetMon_SendTo;
   mLayerMethods.acceptread = nsNetMon_AcceptRead;
-
-  mObserverService = mozilla::services::GetObserverService();
-  if (!mObserverService)
-    return NS_ERROR_FAILURE;
 
   mBlipInterval = PR_MillisecondsToInterval(blipInterval);
   // Set the last notification times to time that has just expired, so any
@@ -287,7 +290,6 @@ NetworkActivityMonitor::DataInOut(Direction direction)
 void
 NetworkActivityMonitor::PostNotification(Direction direction)
 {
-  nsRefPtr<nsIRunnable> ev = new NotifyNetworkActivity(mObserverService,
-                                                       direction);
+  nsRefPtr<nsIRunnable> ev = new NotifyNetworkActivity(direction);
   NS_DispatchToMainThread(ev);
 }
