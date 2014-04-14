@@ -11,7 +11,7 @@ function run_test() {
 add_task(function* search_engine_match() {
   let engine = yield promiseDefaultSearchEngine();
   let token = engine.getResultDomain();
-  let match = yield PriorityUrlProvider.getMatchingSpec(token.substr(0, 1));
+  let match = yield PriorityUrlProvider.getMatch(token.substr(0, 1));
   do_check_eq(match.url, engine.searchForm);
   do_check_eq(match.title, engine.name);
   do_check_eq(match.iconUrl, engine.iconURI ? engine.iconURI.spec : null);
@@ -19,7 +19,7 @@ add_task(function* search_engine_match() {
 });
 
 add_task(function* no_match() {
-  do_check_eq(null, yield PriorityUrlProvider.getMatchingSpec("test"));
+  do_check_eq(null, yield PriorityUrlProvider.getMatch("test"));
 });
 
 add_task(function* hide_search_engine_nomatch() {
@@ -29,16 +29,16 @@ add_task(function* hide_search_engine_nomatch() {
   Services.search.removeEngine(engine);
   yield promiseTopic;
   do_check_true(engine.hidden);
-  do_check_eq(null, yield PriorityUrlProvider.getMatchingSpec(token.substr(0, 1)));
+  do_check_eq(null, yield PriorityUrlProvider.getMatch(token.substr(0, 1)));
 });
 
 add_task(function* add_search_engine_match() {
   let promiseTopic = promiseSearchTopic("engine-added");
-  do_check_eq(null, yield PriorityUrlProvider.getMatchingSpec("bacon"));
+  do_check_eq(null, yield PriorityUrlProvider.getMatch("bacon"));
   Services.search.addEngineWithDetails("bacon", "", "bacon", "Search Bacon",
                                        "GET", "http://www.bacon.moz/?search={searchTerms}");
   yield promiseSearchTopic;
-  let match = yield PriorityUrlProvider.getMatchingSpec("bacon");
+  let match = yield PriorityUrlProvider.getMatch("bacon");
   do_check_eq(match.url, "http://www.bacon.moz");
   do_check_eq(match.title, "bacon");
   do_check_eq(match.iconUrl, null);
@@ -50,7 +50,7 @@ add_task(function* remove_search_engine_nomatch() {
   let promiseTopic = promiseSearchTopic("engine-removed");
   Services.search.removeEngine(engine);
   yield promiseTopic;
-  do_check_eq(null, yield PriorityUrlProvider.getMatchingSpec("bacon"));
+  do_check_eq(null, yield PriorityUrlProvider.getMatch("bacon"));
 });
 
 function promiseDefaultSearchEngine() {
