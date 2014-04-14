@@ -491,6 +491,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void cmpPtr(Register lhs, const ImmGCPtr rhs) {
         cmpl(lhs, rhs);
     }
+    void cmpPtr(Register lhs, const Imm32 rhs) {
+        cmpl(lhs, rhs);
+    }
     void cmpPtr(const Operand &lhs, const ImmWord rhs) {
         cmpl(lhs, rhs);
     }

@@ -529,7 +529,9 @@ stage-steeplechase: make-stage-dir
 MARIONETTE_DIR=$(PKG_STAGE)/marionette
 stage-marionette: make-stage-dir
 	$(NSINSTALL) -D $(MARIONETTE_DIR)/tests
-	@(cd $(topsrcdir)/testing/marionette/client && tar --exclude marionette/tests $(TAR_CREATE_FLAGS) - *) | (cd $(MARIONETTE_DIR) && tar -xf -)
+	$(NSINSTALL) -D $(MARIONETTE_DIR)/transport
+	@(cd $(topsrcdir)/testing/marionette/client && tar --exclude marionette/tests $(TAR_CREATE_FLAGS) - *) | (cd $(MARIONETTE_DIR)/ && tar -xf -)
+	@(cd $(topsrcdir)/testing/marionette/transport && tar $(TAR_CREATE_FLAGS) - *) | (cd $(MARIONETTE_DIR)/transport && tar -xf -)
 	$(PYTHON) $(topsrcdir)/testing/marionette/client/marionette/tests/print-manifest-dirs.py \
           $(topsrcdir) \
           $(topsrcdir)/testing/marionette/client/marionette/tests/unit-tests.ini \

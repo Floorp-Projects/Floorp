@@ -14,9 +14,10 @@ namespace IPC {
 
 template <>
 struct ParamTraits<mozilla::dom::bluetooth::BluetoothObjectType>
-  : public EnumSerializer<mozilla::dom::bluetooth::BluetoothObjectType,
-                          mozilla::dom::bluetooth::TYPE_MANAGER,
-                          mozilla::dom::bluetooth::TYPE_INVALID>
+  : public ContiguousEnumSerializer<
+             mozilla::dom::bluetooth::BluetoothObjectType,
+             mozilla::dom::bluetooth::TYPE_MANAGER,
+             mozilla::dom::bluetooth::TYPE_INVALID>
 { };
 
 } // namespace IPC

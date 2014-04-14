@@ -1923,12 +1923,15 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
         break;
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
         rt->gcHighFrequencyHeapGrowthMax = value / 100.0;
+        MOZ_ASSERT(rt->gcHighFrequencyHeapGrowthMax / 0.85 > 1.0);
         break;
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
         rt->gcHighFrequencyHeapGrowthMin = value / 100.0;
+        MOZ_ASSERT(rt->gcHighFrequencyHeapGrowthMin / 0.85 > 1.0);
         break;
       case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
         rt->gcLowFrequencyHeapGrowth = value / 100.0;
+        MOZ_ASSERT(rt->gcLowFrequencyHeapGrowth / 0.9 > 1.0);
         break;
       case JSGC_DYNAMIC_HEAP_GROWTH:
         rt->gcDynamicHeapGrowth = value;
@@ -2041,10 +2044,8 @@ JS_SetGCParametersBasedOnAvailableMemory(JSRuntime *rt, uint32_t availMem)
             {JSGC_MAX_MALLOC_BYTES, 6 * 1024 * 1024},
             {JSGC_SLICE_TIME_BUDGET, 30},
             {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1000},
-            // This are the current default settings but this is likely inverted as
-            // explained for the computation of Next_GC in Bug 863398 comment 21.
-            {JSGC_HIGH_FREQUENCY_HIGH_LIMIT, 100},
-            {JSGC_HIGH_FREQUENCY_LOW_LIMIT, 500},
+            {JSGC_HIGH_FREQUENCY_HIGH_LIMIT, 500},
+            {JSGC_HIGH_FREQUENCY_LOW_LIMIT, 100},
             {JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX, 300},
             {JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN, 150},
             {JSGC_LOW_FREQUENCY_HEAP_GROWTH, 150},
