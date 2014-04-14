@@ -281,6 +281,7 @@ gbjar.sources += [
     'home/TopSitesThumbnailView.java',
     'home/TwoLinePageRow.java',
     'InputMethods.java',
+    'IntentHelper.java',
     'JavaAddonManager.java',
     'LightweightTheme.java',
     'LightweightThemeDrawable.java',
