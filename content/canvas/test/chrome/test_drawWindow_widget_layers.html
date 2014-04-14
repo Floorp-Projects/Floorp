@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for canvas drawWindow</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="file_drawWindow_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+  window.addEventListener("load", openSourceWindow, false);
+
+  var sourceWindow;
+
+  function openSourceWindow(event) {
+    if (event.target != document) {
+      return;
+    }
+
+    // Need to open as a toplevel chrome window so that
+    // DRAWWINDOW_USE_WIDGET_LAYERS is honored.
+    sourceWindow = window.open("file_drawWindow_source.html", "",
+                               "chrome,width=200,height=100");
+    sourceWindow.addEventListener("load", runTests, false);
+  }
+
+  function runTests(event) {
+    if (event.target != sourceWindow.document) {
+      return;
+    }
+
+    var cxInterfaceWrap = SpecialPowers.wrap(CanvasRenderingContext2D);
+    var flags = cxInterfaceWrap.DRAWWINDOW_USE_WIDGET_LAYERS |
+                cxInterfaceWrap.DRAWWINDOW_DRAW_CARET |
+                cxInterfaceWrap.DRAWWINDOW_DRAW_VIEW;
+    runDrawWindowTests(sourceWindow, flags, true);
+
+    sourceWindow.close();
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+</body>
+</html>
