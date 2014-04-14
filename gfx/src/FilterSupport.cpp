@@ -230,10 +230,10 @@ namespace FilterWrappers {
 // Internally, this is achieved by wrapping the original FilterNode with
 // conversion FilterNodes. These filter nodes are cached in such a way that no
 // repeated or back-and-forth conversions happen.
-class FilterCachedColorModels : public RefCounted<FilterCachedColorModels>
+class FilterCachedColorModels
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(FilterCachedColorModels)
+  NS_INLINE_DECL_REFCOUNTING(FilterCachedColorModels)
   // aFilter can be null. In that case, ForColorModel will return a non-null
   // completely transparent filter for all color models.
   FilterCachedColorModels(DrawTarget* aDT,
