@@ -9,6 +9,11 @@
 #include "GeckoProfilerImpl.h"
 #include "ProfileEntry.h"
 
+#include "PlatformMacros.h"
+#if defined(SPS_OS_android) || defined(SPS_OS_linux)
+# include "LulMain.h"
+#endif
+
 /* Top level exports of UnwinderThread.cpp. */
 
 // Abstract type.  A buffer which is used to transfer information between
@@ -88,5 +93,12 @@ void utb__release_sync_buffer(LinkedUWTBuffer* utb);
 
 // This typedef must match uwt__release_full_buffer and uwt__finish_sync_buffer
 typedef void (*UTB_RELEASE_FUNC)(ThreadProfile*,UnwinderThreadBuffer*,void*);
+
+#if defined(SPS_OS_android) || defined(SPS_OS_linux)
+// Notify |aLUL| of the objects in the current process, so as to get
+// it to read unwind data for them.  This has to be externally visible
+// so it can be used in LUL unit tests, tools/profiler/tests/gtest/LulTest.cpp.
+void read_procmaps(lul::LUL* aLUL);
+#endif
 
 #endif /* ndef MOZ_UNWINDER_THREAD_2_H */

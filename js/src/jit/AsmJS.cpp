@@ -603,16 +603,6 @@ class VarType
         }
         MOZ_ASSUME_UNREACHABLE("VarType can only be Int, Double or Float");
     }
-    static VarType FromMIRType(MIRType type) {
-        JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double || type == MIRType_Float32);
-        switch(type) {
-          case MIRType_Int32:   return Int;
-          case MIRType_Float32: return Float;
-          case MIRType_Double:  return Double;
-          default:;
-        }
-        MOZ_ASSUME_UNREACHABLE("FromMIRType MIR type not handled");
-    }
     static VarType FromCheckedType(Type type) {
         JS_ASSERT(type.isInt() || type.isMaybeDouble() || type.isFloatish());
         if (type.isMaybeDouble())

@@ -2331,13 +2331,15 @@ LIRGenerator::visitPostWriteBarrier(MPostWriteBarrier *ins)
 #ifdef JSGC_GENERATIONAL
     switch (ins->value()->type()) {
       case MIRType_Object: {
-        LPostWriteBarrierO *lir = new(alloc()) LPostWriteBarrierO(useRegisterOrConstant(ins->object()),
-                                                         useRegister(ins->value()));
+        LPostWriteBarrierO *lir =
+            new(alloc()) LPostWriteBarrierO(useRegisterOrConstant(ins->object()),
+                                            useRegister(ins->value()),
+                                            temp());
         return add(lir, ins) && assignSafepoint(lir, ins);
       }
       case MIRType_Value: {
         LPostWriteBarrierV *lir =
-            new(alloc()) LPostWriteBarrierV(useRegisterOrConstant(ins->object()), tempToUnbox());
+            new(alloc()) LPostWriteBarrierV(useRegisterOrConstant(ins->object()), temp());
         if (!useBox(lir, LPostWriteBarrierV::Input, ins->value()))
             return false;
         return add(lir, ins) && assignSafepoint(lir, ins);

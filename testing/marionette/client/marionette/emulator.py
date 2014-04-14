@@ -293,7 +293,7 @@ waitFor(
             # older emulators.  45s *should* be enough of a delay
             # to allow telephony API's to work.
             pass
-        except InvalidResponseException:
+        except (InvalidResponseException, IOError):
             self.check_for_minidumps()
             raise
         print '...done'

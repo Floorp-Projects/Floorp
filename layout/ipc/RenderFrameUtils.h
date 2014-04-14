@@ -35,9 +35,10 @@ namespace IPC {
 
 template <>
 struct ParamTraits<mozilla::layout::ScrollingBehavior>
-  : public EnumSerializer<mozilla::layout::ScrollingBehavior,
-                          mozilla::layout::DEFAULT_SCROLLING,
-                          mozilla::layout::SCROLLING_BEHAVIOR_SENTINEL>
+  : public ContiguousEnumSerializer<
+             mozilla::layout::ScrollingBehavior,
+             mozilla::layout::DEFAULT_SCROLLING,
+             mozilla::layout::SCROLLING_BEHAVIOR_SENTINEL>
 {};
 
 } // namespace IPC
