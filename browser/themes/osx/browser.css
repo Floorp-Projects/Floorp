@@ -142,6 +142,8 @@ toolbarseparator {
 
 #PersonalToolbar {
   padding: 0 4px 4px;
+  /* 4px padding ^  plus 19px personal-bookmarks (see below) */
+  min-height: 23px;
 }
 
 #navigator-toolbox > toolbar:not(#TabsToolbar):-moz-lwtheme {
@@ -157,7 +159,7 @@ toolbarseparator {
 /* ----- BOOKMARK TOOLBAR ----- */
 
 #personal-bookmarks {
-  min-height: 17px; /* 16px button height + 1px margin-bottom */
+  min-height: 19px; /* 16px button height + 2px padding + 1px margin-bottom */
 }
 
 toolbarbutton.chevron {
