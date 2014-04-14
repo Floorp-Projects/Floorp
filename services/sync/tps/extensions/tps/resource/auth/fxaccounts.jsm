@@ -79,9 +79,18 @@ var Authentication = {
     });
 
     try {
-      return cb.wait();
+      cb.wait();
+
+      if (Weave.Status.login !== Weave.LOGIN_SUCCEEDED) {
+        Logger.logInfo("Logging into Weave.");
+        Weave.Service.login();
+        Logger.AssertEqual(Weave.Status.login, Weave.LOGIN_SUCCEEDED,
+                           "Weave logged in");
+      }
+
+      return true;
     } catch (error) {
-      throw new Error("signIn() failed with: " + JSON.stringify(error));
+      throw new Error("signIn() failed with: " + error.message);
     }
   }
 };

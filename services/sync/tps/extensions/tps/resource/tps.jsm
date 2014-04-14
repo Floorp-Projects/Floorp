@@ -837,7 +837,6 @@ let TPS = {
     let account = this.fxaccounts_enabled ? this.config.fx_account
                                           : this.config.sync_account;
     Authentication.signIn(account);
-
     this.waitForSetupComplete();
     Logger.AssertEqual(Weave.Status.service, Weave.STATUS_OK, "Weave status OK");
     this.waitForTracking();
