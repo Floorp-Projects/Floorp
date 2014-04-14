@@ -86,9 +86,10 @@ struct ParamTraits<mozilla::layers::MagicGrallocBufferHandle> {
 
 template <>
 struct ParamTraits<mozilla::ScreenRotation>
-  : public EnumSerializer<mozilla::ScreenRotation,
-                          mozilla::ROTATION_0,
-                          mozilla::ROTATION_COUNT>
+  : public ContiguousEnumSerializer<
+             mozilla::ScreenRotation,
+             mozilla::ROTATION_0,
+             mozilla::ROTATION_COUNT>
 {};
 
 } // namespace IPC
