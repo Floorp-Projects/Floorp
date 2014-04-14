@@ -147,9 +147,8 @@ void AssertYCbCrSurfacesEqual(PlanarYCbCrData* surface1,
 void TestTextureClientSurface(TextureClient* texture, gfxImageSurface* surface) {
 
   // client allocation
-  ASSERT_TRUE(texture->AsTextureClientSurface() != nullptr);
-  TextureClientSurface* client = texture->AsTextureClientSurface();
-  client->AllocateForSurface(ToIntSize(surface->GetSize()));
+  ASSERT_TRUE(texture->CanExposeDrawTarget());
+  texture->AllocateForSurface(ToIntSize(surface->GetSize()));
   ASSERT_TRUE(texture->IsAllocated());
 
   ASSERT_TRUE(texture->Lock(OPEN_READ_WRITE));
