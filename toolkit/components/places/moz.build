@@ -87,8 +87,6 @@ if CONFIG['MOZ_PLACES']:
         EXTRA_COMPONENTS += [
             'nsPlacesAutoComplete.js',
             'nsPlacesAutoComplete.manifest',
-            'UnifiedComplete.js',
-            'UnifiedComplete.manifest',
         ]
     FINAL_LIBRARY = 'xul'
 
