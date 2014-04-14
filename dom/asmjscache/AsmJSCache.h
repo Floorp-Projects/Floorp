@@ -157,9 +157,9 @@ namespace IPC {
 
 template <>
 struct ParamTraits<mozilla::dom::asmjscache::OpenMode> :
-  public EnumSerializer<mozilla::dom::asmjscache::OpenMode,
-                        mozilla::dom::asmjscache::eOpenForRead,
-                        mozilla::dom::asmjscache::NUM_OPEN_MODES>
+  public ContiguousEnumSerializer<mozilla::dom::asmjscache::OpenMode,
+                                  mozilla::dom::asmjscache::eOpenForRead,
+                                  mozilla::dom::asmjscache::NUM_OPEN_MODES>
 { };
 
 template <>

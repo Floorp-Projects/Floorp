@@ -16,6 +16,7 @@
 #include "mozilla/TimeStamp_windows.h"
 #endif
 #include "mozilla/TypedEnum.h"
+#include "mozilla/IntegerTypeTraits.h"
 
 #include <stdint.h>
 
@@ -91,43 +92,31 @@ namespace IPC {
 /**
  * Generic enum serializer.
  *
+ * Consider using the specializations below, such as ContiguousEnumSerializer.
+ *
  * This is a generic serializer for any enum type used in IPDL.
  * Programmers can define ParamTraits<E> for enum type E by deriving
- * EnumSerializer<E, smallestLegal, highGuard>.
- *
- * The serializer would check value againts a range specified by
- * smallestLegal and highGuard.  Only values from smallestLegal to
- * highGuard are valid, include smallestLegal but highGuard.
- *
- * For example, following is definition of serializer for enum type FOO.
- * \code
- * enum FOO { FOO_FIRST, FOO_SECOND, FOO_LAST, NUM_FOO };
- *
- * template <>
- * struct ParamTraits<FOO>:
- *     public EnumSerializer<FOO, FOO_FIRST, NUM_FOO> {};
- * \endcode
- * FOO_FIRST, FOO_SECOND, and FOO_LAST are valid value.
+ * EnumSerializer<E, MyEnumValidator> where MyEnumValidator is a struct
+ * that has to define a static IsLegalValue function returning whether
+ * a given value is a legal value of the enum type at hand.
  *
  * \sa https://developer.mozilla.org/en/IPDL/Type_Serialization
  */
-template <typename E, E smallestLegal, E highBound>
+template <typename E, typename EnumValidator>
 struct EnumSerializer {
   typedef E paramType;
-
-  static bool IsLegalValue(const paramType &aValue) {
-    return smallestLegal <= aValue && aValue < highBound;
-  }
+  typedef typename mozilla::UnsignedStdintTypeForSize<sizeof(paramType)>::Type
+          uintParamType;
 
   static void Write(Message* aMsg, const paramType& aValue) {
-    MOZ_ASSERT(IsLegalValue(aValue));
-    WriteParam(aMsg, (int32_t)aValue);
+    MOZ_ASSERT(EnumValidator::IsLegalValue(aValue));
+    WriteParam(aMsg, uintParamType(aValue));
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult) {
-    int32_t value;
+    uintParamType value;
     if(!ReadParam(aMsg, aIter, &value) ||
-       !IsLegalValue(paramType(value))) {
+       !EnumValidator::IsLegalValue(paramType(value))) {
       return false;
     }
     *aResult = paramType(value);
@@ -135,48 +124,79 @@ struct EnumSerializer {
   }
 };
 
-/**
- * Variant of EnumSerializer for MFBT's typed enums
- * defined by MOZ_BEGIN_ENUM_CLASS in mfbt/TypedEnum.h
- *
- * This is only needed on non-C++11 compilers such as B2G's GCC 4.4,
- * where MOZ_BEGIN_ENUM_CLASS is implemented using a nested enum, T::Enum,
- * in a wrapper class T. In this case, the "typed enum" type T cannot be
- * used as an integer template parameter type. MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(T)
- * is how we get at the integer enum type.
- */
 template <typename E,
-          MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(E) smallestLegal,
-          MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(E) highBound>
-struct TypedEnumSerializer {
-  typedef E paramType;
-  typedef MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(E) intParamType;
-
-  static bool IsLegalValue(const paramType &aValue) {
-    return smallestLegal <= intParamType(aValue) && intParamType(aValue) < highBound;
-  }
-
-  static void Write(Message* aMsg, const paramType& aValue) {
-    MOZ_ASSERT(IsLegalValue(aValue));
-    WriteParam(aMsg, int32_t(intParamType(aValue)));
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult) {
-    int32_t value;
-    if(!ReadParam(aMsg, aIter, &value) ||
-       !IsLegalValue(intParamType(value))) {
-      return false;
-    }
-    *aResult = intParamType(value);
-    return true;
+          E MinLegal,
+          E HighBound>
+struct ContiguousEnumValidator
+{
+  static bool IsLegalValue(E e)
+  {
+    return MinLegal <= e && e < HighBound;
   }
 };
 
+template <typename E,
+          MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(E) MinLegal,
+          MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(E) HighBound>
+class ContiguousTypedEnumValidator
+{
+  // Silence overzealous -Wtype-limits bug in GCC fixed in GCC 4.8:
+  // "comparison of unsigned expression >= 0 is always true"
+  // http://gcc.gnu.org/bugzilla/show_bug.cgi?id=11856
+  template <typename T>
+  static bool IsLessThanOrEqual(T a, T b) { return a <= b; }
+
+public:
+  static bool IsLegalValue(E e)
+  {
+    typedef MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(E) ActualEnumType;
+    return IsLessThanOrEqual(MinLegal, ActualEnumType(e)) &&
+           ActualEnumType(e) < HighBound;
+  }
+};
+
+/**
+ * Specialization of EnumSerializer for enums with contiguous enum values.
+ *
+ * Provide two values: MinLegal, HighBound. An enum value x will be
+ * considered legal if MinLegal <= x < HighBound.
+ *
+ * For example, following is definition of serializer for enum type FOO.
+ * \code
+ * enum FOO { FOO_FIRST, FOO_SECOND, FOO_LAST, NUM_FOO };
+ *
+ * template <>
+ * struct ParamTraits<FOO>:
+ *     public ContiguousEnumSerializer<FOO, FOO_FIRST, NUM_FOO> {};
+ * \endcode
+ * FOO_FIRST, FOO_SECOND, and FOO_LAST are valid value.
+ */
+template <typename E,
+          E MinLegal,
+          E HighBound>
+struct ContiguousEnumSerializer
+  : EnumSerializer<E,
+                   ContiguousEnumValidator<E, MinLegal, HighBound>>
+{};
+
+/**
+ * Similar to ContiguousEnumSerializer, but for MFBT typed enums
+ * as constructed by MOZ_BEGIN_ENUM_CLASS. This can go away when
+ * we drop MOZ_BEGIN_ENUM_CLASS and use C++11 enum classes directly.
+ */
+template <typename E,
+          MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(E) MinLegal,
+          MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(E) HighBound>
+struct ContiguousTypedEnumSerializer
+  : EnumSerializer<E,
+                   ContiguousTypedEnumValidator<E, MinLegal, HighBound>>
+{};
+
 template <>
 struct ParamTraits<base::ChildPrivileges>
-  : public EnumSerializer<base::ChildPrivileges,
-                          base::PRIVILEGES_DEFAULT,
-                          base::PRIVILEGES_LAST>
+  : public ContiguousEnumSerializer<base::ChildPrivileges,
+                                    base::PRIVILEGES_DEFAULT,
+                                    base::PRIVILEGES_LAST>
 { };
 
 template<>
@@ -477,9 +497,9 @@ struct ParamTraits<float>
 
 template <>
 struct ParamTraits<nsCSSProperty>
-  : public EnumSerializer<nsCSSProperty,
-                          eCSSProperty_UNKNOWN,
-                          eCSSProperty_COUNT>
+  : public ContiguousEnumSerializer<nsCSSProperty,
+                                    eCSSProperty_UNKNOWN,
+                                    eCSSProperty_COUNT>
 {};
 
 template<>
