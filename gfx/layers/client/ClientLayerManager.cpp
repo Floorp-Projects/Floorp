@@ -281,8 +281,9 @@ ClientLayerManager::MakeSnapshotIfRequired()
     if (CompositorChild* remoteRenderer = GetRemoteRenderer()) {
       nsIntRect bounds;
       mWidget->GetBounds(bounds);
+      IntSize widgetSize = bounds.Size().ToIntSize();
       SurfaceDescriptor inSnapshot, snapshot;
-      if (mForwarder->AllocSurfaceDescriptor(bounds.Size().ToIntSize(),
+      if (mForwarder->AllocSurfaceDescriptor(widgetSize,
                                              gfxContentType::COLOR_ALPHA,
                                              &inSnapshot) &&
           // The compositor will usually reuse |snapshot| and return
@@ -290,9 +291,11 @@ ClientLayerManager::MakeSnapshotIfRequired()
           // responsible for freeing |snapshot|.
           remoteRenderer->SendMakeSnapshot(inSnapshot, &snapshot)) {
         RefPtr<DataSourceSurface> surf = GetSurfaceForDescriptor(snapshot);
-        mShadowTarget->GetDrawTarget()->CopySurface(surf,
-                                                    IntRect(0, 0, bounds.Size().width, bounds.Size().height),
-                                                    IntPoint(0, 0));
+        DrawTarget* dt = mShadowTarget->GetDrawTarget();
+        Rect widgetRect(Point(0, 0), Size(widgetSize.width, widgetSize.height));
+        dt->DrawSurface(surf, widgetRect, widgetRect,
+                        DrawSurfaceOptions(),
+                        DrawOptions(1.0f, CompositionOp::OP_OVER));
       }
       if (IsSurfaceDescriptorValid(snapshot)) {
         mForwarder->DestroySharedSurface(&snapshot);
