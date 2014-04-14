@@ -12,7 +12,7 @@
 let gLeftPaneFolderIdGetter;
 let gAllBookmarksFolderIdGetter;
 // Used to store the original left Pane status as a JSON string.
-let gReferenceJSON;
+let gReferenceHierarchy;
 let gLeftPaneFolderId;
 // Third party annotated folder.
 let gFolderId;
@@ -104,15 +104,9 @@ function run_test() {
   // Create the left pane, and store its current status, it will be used
   // as reference value.
   gLeftPaneFolderId = PlacesUIUtils.leftPaneFolderId;
-
+  gReferenceHierarchy = folderIdToHierarchy(gLeftPaneFolderId);
   do_test_pending();
-
-  Task.spawn(function() {
-    gReferenceJSON = yield folderToJSON(gLeftPaneFolderId);
-
-    // Kick-off tests.
-    do_timeout(0, run_next_test);
-  });
+  run_next_test();
 }
 
 function run_next_test() {
@@ -126,11 +120,14 @@ function run_next_test() {
     PlacesUIUtils.__defineGetter__("allBookmarksFolderId", gAllBookmarksFolderIdGetter);
     // Check the new left pane folder.
     Task.spawn(function() {
-      let leftPaneJSON = yield folderToJSON(gLeftPaneFolderId);
-      do_check_true(compareJSON(gReferenceJSON, leftPaneJSON));
+      let leftPaneHierarchy = folderIdToHierarchy(gLeftPaneFolderId)
+      if (gReferenceHierarchy != leftPaneHierarchy) {
+        do_throw("hierarchies differ!\n" + gReferenceHierarchy +
+                                    "\n" + leftPaneHierarchy);
+      }
       do_check_eq(PlacesUtils.bookmarks.getItemTitle(gFolderId), "test");
       // Go to next test.
-      do_timeout(0, run_next_test);
+      run_next_test();
     });
   }
   else {
@@ -143,56 +140,27 @@ function run_next_test() {
 /**
  * Convert a folder item id to a JSON representation of it and its contents.
  */
-function folderToJSON(aItemId) {
-  return Task.spawn(function() {
-    let query = PlacesUtils.history.getNewQuery();
-    query.setFolders([aItemId], 1);
-    let options = PlacesUtils.history.getNewQueryOptions();
-    options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-    let root = PlacesUtils.history.executeQuery(query, options).root;
-    let writer = {
-      value: "",
-      write: function PU_wrapNode__write(aStr, aLen) {
-        this.value += aStr;
-      }
-    };
-    yield BookmarkJSONUtils.serializeNodeAsJSONToOutputStream(root, writer,
-                                                              false, false);
-    do_check_true(writer.value.length > 0);
-    throw new Task.Result(writer.value);
-  });
+function folderIdToHierarchy(aFolderId) {
+  let root = PlacesUtils.getFolderContents(aFolderId).root;
+  let hier = JSON.stringify(hierarchyToObj(root));
+  root.containerOpen = false;
+  return hier;
 }
 
-/**
- * Compare the JSON representation of 2 nodes, skipping everchanging properties
- * like dates.
- */
-function compareJSON(aNodeJSON_1, aNodeJSON_2) {
-  let node1 = JSON.parse(aNodeJSON_1);
-  let node2 = JSON.parse(aNodeJSON_2);
-
-  // List of properties we should not compare (expected to be different).
-  const SKIP_PROPS = ["dateAdded", "lastModified", "id"];
-
-  function compareObjects(obj1, obj2) {
-    function count(o) { var n = 0; for (let p in o) n++; return n; }
-    do_check_eq(count(obj1), count(obj2));
-    for (let prop in obj1) {
-      // Skip everchanging values.
-      if (SKIP_PROPS.indexOf(prop) != -1)
-        continue;
-      // Skip undefined objects, otherwise we hang on them.
-      if (!obj1[prop])
-        continue;
-      if (typeof(obj1[prop]) == "object")
-        return compareObjects(obj1[prop], obj2[prop]);
-      if (obj1[prop] !== obj2[prop]) {
-        print(prop + ": " + obj1[prop] + "!=" + obj2[prop]);
-        return false;
-      }
-    }
-    return true;
+function hierarchyToObj(aNode) {
+  let o = {}
+  o.title = aNode.title;
+  o.annos = PlacesUtils.getAnnotationsForItem(aNode.itemId)
+  if (PlacesUtils.nodeIsURI(aNode)) {
+    o.uri = aNode.uri;
   }
-
-  return compareObjects(node1, node2);
+  else if (PlacesUtils.nodeIsFolder(aNode)) {
+    o.children = [];
+    PlacesUtils.asContainer(aNode).containerOpen = true;
+    for (let i = 0; i < aNode.childCount; ++i) {
+      o.children.push(hierarchyToObj(aNode.getChild(i)));
+    }
+    aNode.containerOpen = false;
+  }
+  return o;
 }
