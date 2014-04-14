@@ -163,12 +163,12 @@ private:
 
 /***************************************************************************/
 
-class AutoMounter : public RefCounted<AutoMounter>
+class AutoMounter
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(AutoMounter)
+  NS_INLINE_DECL_REFCOUNTING(AutoMounter)
 
-  typedef nsTArray<RefPtr<Volume> > VolumeArray;
+  typedef nsTArray<nsRefPtr<Volume>> VolumeArray;
 
   AutoMounter()
     : mResponseCallback(new AutoMounterResponseCallback),
@@ -180,7 +180,7 @@ public:
     VolumeManager::VolumeArray::size_type numVolumes = VolumeManager::NumVolumes();
     VolumeManager::VolumeArray::index_type i;
     for (i = 0; i < numVolumes; i++) {
-      RefPtr<Volume> vol = VolumeManager::GetVolume(i);
+      nsRefPtr<Volume> vol = VolumeManager::GetVolume(i);
       if (vol) {
         vol->RegisterObserver(&mVolumeEventObserver);
         // We need to pick up the intial value of the
@@ -198,7 +198,7 @@ public:
     VolumeManager::VolumeArray::size_type numVolumes = VolumeManager::NumVolumes();
     VolumeManager::VolumeArray::index_type volIndex;
     for (volIndex = 0; volIndex < numVolumes; volIndex++) {
-      RefPtr<Volume> vol = VolumeManager::GetVolume(volIndex);
+      nsRefPtr<Volume> vol = VolumeManager::GetVolume(volIndex);
       if (vol) {
         vol->UnregisterObserver(&mVolumeEventObserver);
       }
@@ -252,7 +252,7 @@ public:
 
   void SetSharingMode(const nsACString& aVolumeName, bool aAllowSharing)
   {
-    RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
+    nsRefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
     if (!vol) {
       return;
     }
@@ -269,7 +269,7 @@ public:
 
   void FormatVolume(const nsACString& aVolumeName)
   {
-    RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
+    nsRefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
     if (!vol) {
       return;
     }
@@ -286,7 +286,7 @@ public:
 
   void MountVolume(const nsACString& aVolumeName)
   {
-    RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
+    nsRefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
     if (!vol) {
       return;
     }
@@ -302,7 +302,7 @@ public:
 
   void UnmountVolume(const nsACString& aVolumeName)
   {
-    RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
+    nsRefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
     if (!vol) {
       return;
     }
@@ -449,7 +449,7 @@ AutoMounter::UpdateState()
   VolumeArray::index_type volIndex;
   VolumeArray::size_type  numVolumes = VolumeManager::NumVolumes();
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
-    RefPtr<Volume>  vol = VolumeManager::GetVolume(volIndex);
+    nsRefPtr<Volume>  vol = VolumeManager::GetVolume(volIndex);
     Volume::STATE   volState = vol->State();
 
     if (vol->State() == nsIVolume::STATE_MOUNTED) {
@@ -692,19 +692,19 @@ UsbCableEventIOThread()
 *
 **************************************************************************/
 
-class UsbCableObserver : public SwitchObserver,
-                         public RefCounted<UsbCableObserver>
+class UsbCableObserver MOZ_FINAL : public SwitchObserver
 {
-public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(UsbCableObserver)
-  UsbCableObserver()
-  {
-    RegisterSwitchObserver(SWITCH_USB, this);
-  }
-
   ~UsbCableObserver()
   {
     UnregisterSwitchObserver(SWITCH_USB, this);
+  }
+
+public:
+  NS_INLINE_DECL_REFCOUNTING(UsbCableObserver)
+
+  UsbCableObserver()
+  {
+    RegisterSwitchObserver(SWITCH_USB, this);
   }
 
   virtual void Notify(const SwitchEvent& aEvent)

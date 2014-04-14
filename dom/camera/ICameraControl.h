@@ -10,7 +10,7 @@
 #include "nsAutoPtr.h"
 #include "nsISupportsImpl.h"
 
-class DeviceStorageFileDescriptor;
+struct DeviceStorageFileDescriptor;
 
 class nsIFile;
 
