@@ -30,6 +30,12 @@ public:
   // Forward to base class
   NS_FORWARD_TO_UIEVENT
 
+  static already_AddRefed<KeyboardEvent> Constructor(
+                                           const GlobalObject& aGlobal,
+                                           const nsAString& aType,
+                                           const KeyboardEventInit& aParam,
+                                           ErrorResult& aRv);
+
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
   {
     return KeyboardEventBinding::Wrap(aCx, this);
@@ -62,6 +68,14 @@ public:
                        aCtrlKey, aAltKey, aShiftKey,aMetaKey,
                        aKeyCode, aCharCode);
   }
+
+private:
+  // True, if the instance is created with Constructor().
+  bool mInitializedByCtor;
+  // If the instance is created with Constructor(), which may have independent
+  // value.  mInitializedWhichValue stores it.  I.e., this is invalid when
+  // mInitializedByCtor is false.
+  uint32_t mInitialzedWhichValue;
 };
 
 } // namespace dom
