@@ -115,16 +115,15 @@ DeviceStorageUsedSpaceCache::CreateOrGet()
   return sDeviceStorageUsedSpaceCache;
 }
 
-already_AddRefed<DeviceStorageUsedSpaceCache::CacheEntry>
+TemporaryRef<DeviceStorageUsedSpaceCache::CacheEntry>
 DeviceStorageUsedSpaceCache::GetCacheEntry(const nsAString& aStorageName)
 {
-  nsTArray<nsRefPtr<CacheEntry>>::size_type numEntries = mCacheEntries.Length();
-  nsTArray<nsRefPtr<CacheEntry>>::index_type i;
+  nsTArray<RefPtr<CacheEntry> >::size_type numEntries = mCacheEntries.Length();
+  nsTArray<RefPtr<CacheEntry> >::index_type i;
   for (i = 0; i < numEntries; i++) {
-    nsRefPtr<CacheEntry>& cacheEntry = mCacheEntries[i];
+    RefPtr<CacheEntry> cacheEntry = mCacheEntries[i];
     if (cacheEntry->mStorageName.Equals(aStorageName)) {
-      nsRefPtr<CacheEntry> addRefedCacheEntry = cacheEntry;
-      return addRefedCacheEntry.forget();
+      return cacheEntry;
     }
   }
   return nullptr;
@@ -150,7 +149,7 @@ DeviceStorageUsedSpaceCache::AccumUsedSizes(const nsAString& aStorageName,
                                             uint64_t* aMusicSoFar,
                                             uint64_t* aTotalSoFar)
 {
-  nsRefPtr<CacheEntry> cacheEntry = GetCacheEntry(aStorageName);
+  RefPtr<CacheEntry> cacheEntry = GetCacheEntry(aStorageName);
   if (!cacheEntry || cacheEntry->mDirty) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -175,7 +174,7 @@ DeviceStorageUsedSpaceCache::SetUsedSizes(const nsAString& aStorageName,
                                           uint64_t aMusicSize,
                                           uint64_t aTotalUsedSize)
 {
-  nsRefPtr<CacheEntry> cacheEntry = GetCacheEntry(aStorageName);
+  RefPtr<CacheEntry> cacheEntry = GetCacheEntry(aStorageName);
   if (!cacheEntry) {
     cacheEntry = new CacheEntry;
     cacheEntry->mStorageName = aStorageName;
@@ -190,10 +189,10 @@ DeviceStorageUsedSpaceCache::SetUsedSizes(const nsAString& aStorageName,
   cacheEntry->mDirty = false;
 }
 
-class GlobalDirs
+class GlobalDirs : public RefCounted<GlobalDirs>
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(GlobalDirs)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(GlobalDirs)
 #if !defined(MOZ_WIDGET_GONK)
   nsCOMPtr<nsIFile> pictures;
   nsCOMPtr<nsIFile> videos;
@@ -3180,15 +3179,16 @@ nsDOMDeviceStorage::Shutdown()
   obs->RemoveObserver(this, "disk-space-watcher");
 }
 
-StaticAutoPtr<nsTArray<nsString>> nsDOMDeviceStorage::sVolumeNameCache;
+StaticRefPtr<nsDOMDeviceStorage::VolumeNameCache>
+  nsDOMDeviceStorage::sVolumeNameCache;
 
 // static
 void
 nsDOMDeviceStorage::GetOrderedVolumeNames(
   nsDOMDeviceStorage::VolumeNameArray &aVolumeNames)
 {
-  if (sVolumeNameCache && sVolumeNameCache->Length() > 0) {
-    aVolumeNames.AppendElements(*sVolumeNameCache);
+  if (sVolumeNameCache && sVolumeNameCache->mVolumeNames.Length() > 0) {
+    aVolumeNames.AppendElements(sVolumeNameCache->mVolumeNames);
     return;
   }
 #ifdef MOZ_WIDGET_GONK
@@ -3209,8 +3209,8 @@ nsDOMDeviceStorage::GetOrderedVolumeNames(
   if (aVolumeNames.IsEmpty()) {
     aVolumeNames.AppendElement(EmptyString());
   }
-  sVolumeNameCache = new nsTArray<nsString>;
-  sVolumeNameCache->AppendElements(aVolumeNames);
+  sVolumeNameCache = new VolumeNameCache;
+  sVolumeNameCache->mVolumeNames.AppendElements(aVolumeNames);
 }
 
 // static

@@ -7,7 +7,6 @@
 #define GFX_TextRenderer_H
 
 #include "mozilla/gfx/2D.h"
-#include "nsISupportsImpl.h"
 #include <string>
 
 namespace mozilla {
@@ -15,11 +14,10 @@ namespace layers {
 
 class Compositor;
 
-class TextRenderer
+class TextRenderer : public RefCounted<TextRenderer>
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(TextRenderer)
-
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(TextRenderer)
   TextRenderer(Compositor *aCompositor)
     : mCompositor(aCompositor)
   {

@@ -143,12 +143,10 @@ public:
 // MediaTaskQueue passed into the PlatformDecoderModules's Create*Decoder()
 // function. This may not be necessary for platforms with async APIs
 // for decoding.
-class MediaDataDecoder {
-protected:
-  virtual ~MediaDataDecoder() {};
-
+class MediaDataDecoder : public AtomicRefCounted<MediaDataDecoder> {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDataDecoder)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(MediaDataDecoder)
+  virtual ~MediaDataDecoder() {};
 
   // Initialize the decoder. The decoder should be ready to decode after
   // this returns. The decoder should do any initialization here, rather

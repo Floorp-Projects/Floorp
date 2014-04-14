@@ -28,7 +28,7 @@ namespace mozilla {
  * BackgroundHangManager is the global object that
  * manages all instances of BackgroundHangThread.
  */
-class BackgroundHangManager
+class BackgroundHangManager : public AtomicRefCounted<BackgroundHangManager>
 {
 private:
   // Background hang monitor thread function
@@ -62,7 +62,7 @@ private:
   void RunMonitorThread();
 
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BackgroundHangManager)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(BackgroundHangManager)
   static StaticRefPtr<BackgroundHangManager> sInstance;
 
   // Lock for access to members of this class

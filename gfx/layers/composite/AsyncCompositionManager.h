@@ -61,21 +61,22 @@ struct ViewTransform {
  * short circuit that stuff to directly affect layers as they are composited,
  * for example, off-main thread animation, async video, async pan/zoom.
  */
-class AsyncCompositionManager MOZ_FINAL
+class AsyncCompositionManager MOZ_FINAL : public RefCounted<AsyncCompositionManager>
 {
   friend class AutoResolveRefLayers;
 public:
-  NS_INLINE_DECL_REFCOUNTING(AsyncCompositionManager)
-
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(AsyncCompositionManager)
   AsyncCompositionManager(LayerManagerComposite* aManager)
     : mLayerManager(aManager)
     , mIsFirstPaint(false)
     , mLayersUpdated(false)
     , mReadyForCompose(true)
   {
+    MOZ_COUNT_CTOR(AsyncCompositionManager);
   }
   ~AsyncCompositionManager()
   {
+    MOZ_COUNT_DTOR(AsyncCompositionManager);
   }
 
   /**
