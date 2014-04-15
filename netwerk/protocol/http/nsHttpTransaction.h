@@ -123,6 +123,8 @@ public:
     void DispatchedAsBlocking();
     void RemoveDispatchedAsBlocking();
 
+    nsHttpTransaction *QueryHttpTransaction() MOZ_OVERRIDE { return this; }
+
 private:
     nsresult Restart();
     nsresult RestartInProgress();
