@@ -8,12 +8,13 @@ module.metadata = {
   'stability': 'unstable'
 };
 
-const { Cc, Ci } = require('chrome');
+const { Cc, Ci, Cu } = require('chrome');
 const { Unknown } = require('../platform/xpcom');
 const { Class } = require('../core/heritage');
 const { ns } = require('../core/namespace');
 const { addObserver, removeObserver, notifyObservers } = 
   Cc['@mozilla.org/observer-service;1'].getService(Ci.nsIObserverService);
+const unloadSubject = require('@loader/unload');
 
 const Subject = Class({
   extends: Unknown,
@@ -94,6 +95,10 @@ function on(type, listener, strong) {
     let observer = Observer(listener);
     observers[type] = observer;
     addObserver(observer, type, weak);
+    // WeakRef gymnastics to remove all alive observers on unload
+    let ref = Cu.getWeakReference(observer);
+    weakRefs.set(observer, ref);
+    stillAlive.set(ref, type);
   }
 }
 exports.on = on;
@@ -120,6 +125,31 @@ function off(type, listener) {
     let observer = observers[type];
     delete observers[type];
     removeObserver(observer, type);
+    stillAlive.delete(weakRefs.get(observer));
   }
 }
 exports.off = off;
+
+// must use WeakMap to keep reference to all the WeakRefs (!), see bug 986115
+let weakRefs = new WeakMap();
+
+// and we're out of beta, we're releasing on time!
+let stillAlive = new Map();   
+
+on('sdk:loader:destroy', function onunload({ subject, data: reason }) {
+  // using logic from ./unload, to avoid a circular module reference
+  if (subject.wrappedJSObject === unloadSubject) {
+    off('sdk:loader:destroy', onunload);
+
+    // don't bother
+    if (reason === 'shutdown') 
+      return;
+
+    stillAlive.forEach( (type, ref) => {
+      let observer = ref.get();
+      if (observer) 
+        removeObserver(observer, type);
+    })
+  }
+  // a strong reference
+}, true);
