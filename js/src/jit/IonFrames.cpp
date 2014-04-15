@@ -1594,6 +1594,7 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
     // Read the initial frame out of the C stack.
     callee_ = frame_->maybeCallee();
     script_ = frame_->script();
+    MOZ_ASSERT(script_->hasBaselineScript());
 
     // Settle on the outermost frame without evaluating any instructions before
     // looking for a pc.
@@ -1652,6 +1653,7 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
         // for the executed script, if they are clones. The actual script
         // exists though, just make sure the function points to it.
         script_ = callee_->existingScript();
+        MOZ_ASSERT(script_->hasBaselineScript());
 
         pc_ = script_->offsetToPC(si_.pcOffset());
     }

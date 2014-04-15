@@ -114,7 +114,7 @@ MacroAssemblerMIPS::convertDoubleToInt32(const FloatRegister &src, const Registe
         // Test and bail for -0.0, when integer result is 0
         // Move the top word of the double into the output reg, if it is
         // non-zero, then the original value was -0.0
-        as_mfc1_Odd(dest, src);
+        moveFromDoubleHi(src, dest);
         ma_b(dest, Imm32(INT32_MIN), fail, Assembler::Equal);
         bind(&notZero);
     }
@@ -141,7 +141,7 @@ MacroAssemblerMIPS::convertFloat32ToInt32(const FloatRegister &src, const Regist
         // Test and bail for -0.0, when integer result is 0
         // Move the top word of the double into the output reg,
         // if it is non-zero, then the original value was -0.0
-        as_mfc1_Odd(dest, src);
+        moveFromDoubleHi(src, dest);
         ma_b(dest, Imm32(INT32_MIN), fail, Assembler::Equal);
         bind(&notZero);
     }
@@ -1296,7 +1296,7 @@ MacroAssemblerMIPS::ma_lis(FloatRegister dest, float value)
     Imm32 imm(mozilla::BitwiseCast<uint32_t>(value));
 
     ma_li(ScratchRegister, imm);
-    as_mtc1(ScratchRegister, dest);
+    moveToFloat32(ScratchRegister, dest);
 }
 
 void
@@ -1310,41 +1310,41 @@ MacroAssemblerMIPS::ma_lid(FloatRegister dest, double value)
 
     // put hi part of 64 bit value into the odd register
     if (intStruct.hi == 0) {
-        as_mtc1_Odd(zero, dest);
+        moveToDoubleHi(zero, dest);
     } else {
         ma_li(ScratchRegister, Imm32(intStruct.hi));
-        as_mtc1_Odd(ScratchRegister, dest);
+        moveToDoubleHi(ScratchRegister, dest);
     }
 
     // put low part of 64 bit value into the even register
     if (intStruct.lo == 0) {
-        as_mtc1(zero, dest);
+        moveToDoubleLo(zero, dest);
     } else {
         ma_li(ScratchRegister, Imm32(intStruct.lo));
-        as_mtc1(ScratchRegister, dest);
+        moveToDoubleLo(ScratchRegister, dest);
     }
 }
 
 void
 MacroAssemblerMIPS::ma_liNegZero(FloatRegister dest)
 {
-    as_mtc1(zero, dest);
+    moveToDoubleLo(zero, dest);
     ma_li(ScratchRegister, Imm32(INT_MIN));
-    as_mtc1_Odd(ScratchRegister, dest);
+    moveToDoubleHi(ScratchRegister, dest);
 }
 
 void
 MacroAssemblerMIPS::ma_mv(FloatRegister src, ValueOperand dest)
 {
-    as_mfc1(dest.payloadReg(), src);
-    as_mfc1_Odd(dest.typeReg(), src);
+    moveFromDoubleLo(src, dest.payloadReg());
+    moveFromDoubleHi(src, dest.typeReg());
 }
 
 void
 MacroAssemblerMIPS::ma_mv(ValueOperand src, FloatRegister dest)
 {
-    as_mtc1(src.payloadReg(), dest);
-    as_mtc1_Odd(src.typeReg(), dest);
+    moveToDoubleLo(src.payloadReg(), dest);
+    moveToDoubleHi(src.typeReg(), dest);
 }
 
 void
@@ -1369,12 +1369,12 @@ MacroAssemblerMIPS::ma_ld(FloatRegister ft, Address address)
     int32_t off2 = address.offset + TAG_OFFSET;
     if (Imm16::isInSignedRange(address.offset) && Imm16::isInSignedRange(off2)) {
         as_ls(ft, address.base, Imm16(address.offset).encode());
-        as_ls_Odd(ft, address.base, Imm16(off2).encode());
+        as_ls(getOddPair(ft), address.base, Imm16(off2).encode());
     } else {
         ma_li(ScratchRegister, Imm32(address.offset));
         as_addu(ScratchRegister, address.base, ScratchRegister);
         as_ls(ft, ScratchRegister, PAYLOAD_OFFSET);
-        as_ls_Odd(ft, ScratchRegister, TAG_OFFSET);
+        as_ls(getOddPair(ft), ScratchRegister, TAG_OFFSET);
     }
 }
 
@@ -1384,12 +1384,12 @@ MacroAssemblerMIPS::ma_sd(FloatRegister ft, Address address)
     int32_t off2 = address.offset + TAG_OFFSET;
     if (Imm16::isInSignedRange(address.offset) && Imm16::isInSignedRange(off2)) {
         as_ss(ft, address.base, Imm16(address.offset).encode());
-        as_ss_Odd(ft, address.base, Imm16(off2).encode());
+        as_ss(getOddPair(ft), address.base, Imm16(off2).encode());
     } else {
         ma_li(ScratchRegister, Imm32(address.offset));
         as_addu(ScratchRegister, address.base, ScratchRegister);
         as_ss(ft, ScratchRegister, PAYLOAD_OFFSET);
-        as_ss_Odd(ft, ScratchRegister, TAG_OFFSET);
+        as_ss(getOddPair(ft), ScratchRegister, TAG_OFFSET);
     }
 }
 
@@ -1538,6 +1538,72 @@ void
 MacroAssemblerMIPSCompat::freeStack(Register amount)
 {
     as_addu(StackPointer, StackPointer, amount);
+}
+
+void
+MacroAssembler::PushRegsInMask(RegisterSet set)
+{
+    int32_t diffF = set.fpus().size() * sizeof(double);
+    int32_t diffG = set.gprs().size() * sizeof(intptr_t);
+
+    reserveStack(diffG);
+    for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        diffG -= sizeof(intptr_t);
+        storePtr(*iter, Address(StackPointer, diffG));
+    }
+    MOZ_ASSERT(diffG == 0);
+
+    // Double values have to be aligned. We reserve extra space so that we can
+    // start writing from the first aligned location.
+    // We reserve a whole extra double so that the buffer has even size.
+    ma_and(SecondScratchReg, sp, Imm32(~(StackAlignment - 1)));
+    reserveStack(diffF + sizeof(double));
+
+    for (FloatRegisterForwardIterator iter(set.fpus()); iter.more(); iter++) {
+        // Use assembly s.d because we have alligned the stack.
+        // :TODO: (Bug 972836) Fix this once odd regs can be used as
+        // float32 only. For now we skip saving odd regs for O32 ABI.
+
+        // :TODO: (Bug 985881) Make a switch for N32 ABI.
+        if ((*iter).code() % 2 == 0)
+            as_sd(*iter, SecondScratchReg, -diffF);
+        diffF -= sizeof(double);
+    }
+    MOZ_ASSERT(diffF == 0);
+}
+
+void
+MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
+{
+    int32_t diffG = set.gprs().size() * sizeof(intptr_t);
+    int32_t diffF = set.fpus().size() * sizeof(double);
+    const int32_t reservedG = diffG;
+    const int32_t reservedF = diffF;
+
+    // Read the buffer form the first aligned location.
+    ma_addu(SecondScratchReg, sp, Imm32(reservedF + sizeof(double)));
+    ma_and(SecondScratchReg, SecondScratchReg, Imm32(~(StackAlignment - 1)));
+
+    for (FloatRegisterForwardIterator iter(set.fpus()); iter.more(); iter++) {
+        // :TODO: (Bug 972836) Fix this once odd regs can be used as
+        // float32 only. For now we skip loading odd regs for O32 ABI.
+
+        // :TODO: (Bug 985881) Make a switch for N32 ABI.
+        if (!ignore.has(*iter) && ((*iter).code() % 2 == 0))
+            // Use assembly l.d because we have alligned the stack.
+            as_ld(*iter, SecondScratchReg, -diffF);
+        diffF -= sizeof(double);
+    }
+    freeStack(reservedF + sizeof(double));
+    MOZ_ASSERT(diffF == 0);
+
+    for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        diffG -= sizeof(intptr_t);
+        if (!ignore.has(*iter))
+            loadPtr(Address(StackPointer, diffG), *iter);
+    }
+    freeStack(reservedG);
+    MOZ_ASSERT(diffG == 0);
 }
 
 void
@@ -2324,17 +2390,17 @@ void
 MacroAssemblerMIPSCompat::unboxDouble(const ValueOperand &operand, const FloatRegister &dest)
 {
     MOZ_ASSERT(dest != ScratchFloatReg);
-    as_mtc1(operand.payloadReg(), dest);
-    as_mtc1_Odd(operand.typeReg(), dest);
+    moveToDoubleLo(operand.payloadReg(), dest);
+    moveToDoubleHi(operand.typeReg(), dest);
 }
 
 void
 MacroAssemblerMIPSCompat::unboxDouble(const Address &src, const FloatRegister &dest)
 {
     ma_lw(ScratchRegister, Address(src.base, src.offset + PAYLOAD_OFFSET));
-    as_mtc1(ScratchRegister, dest);
+    moveToDoubleLo(ScratchRegister, dest);
     ma_lw(ScratchRegister, Address(src.base, src.offset + TAG_OFFSET));
-    as_mtc1_Odd(ScratchRegister, dest);
+    moveToDoubleHi(ScratchRegister, dest);
 }
 
 void
@@ -2380,8 +2446,8 @@ MacroAssemblerMIPSCompat::unboxPrivate(const ValueOperand &src, Register dest)
 void
 MacroAssemblerMIPSCompat::boxDouble(const FloatRegister &src, const ValueOperand &dest)
 {
-    as_mfc1(dest.payloadReg(), src);
-    as_mfc1_Odd(dest.typeReg(), src);
+    moveFromDoubleLo(src, dest.payloadReg());
+    moveFromDoubleHi(src, dest.typeReg());
 }
 
 void
