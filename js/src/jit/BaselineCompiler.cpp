@@ -442,6 +442,8 @@ BaselineCompiler::emitOutOfLinePostBarrierSlot()
     // On ARM, save the link register before calling.  It contains the return
     // address.  The |masm.ret()| later will pop this into |pc| to return.
     masm.push(lr);
+#elif defined(JS_CODEGEN_MIPS)
+    masm.push(ra);
 #endif
 
     masm.setupUnalignedABICall(2, scratch);
