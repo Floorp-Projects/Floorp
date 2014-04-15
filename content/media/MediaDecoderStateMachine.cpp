@@ -1556,6 +1556,7 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
              (!needToDecodeAudio && !needToDecodeVideo));
 
   bool needIdle = !mDecoder->IsLogicallyPlaying() &&
+                  mState != DECODER_STATE_SEEKING &&
                   !needToDecodeAudio &&
                   !needToDecodeVideo &&
                   !IsPlaying();
