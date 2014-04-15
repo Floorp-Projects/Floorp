@@ -575,10 +575,8 @@ SpdyStream31::AdjustInitialWindow()
     return;
   toack = PR_htonl(toack);
 
-  SpdySession31::EnsureBuffer(mTxInlineFrame,
-                              mTxInlineFrameUsed + 16,
-                              mTxInlineFrameUsed,
-                              mTxInlineFrameSize);
+  EnsureBuffer(mTxInlineFrame, mTxInlineFrameUsed + 16,
+               mTxInlineFrameUsed, mTxInlineFrameSize);
 
   unsigned char *packet = mTxInlineFrame.get() + mTxInlineFrameUsed;
   mTxInlineFrameUsed += 16;
@@ -1055,10 +1053,8 @@ SpdyStream31::Uncompress(z_stream *context,
         !context->avail_out && context->avail_in) {
       LOG3(("SpdyStream31::Uncompress %p Large Headers - so far %d",
             this, mDecompressBufferSize));
-      SpdySession31::EnsureBuffer(mDecompressBuffer,
-                                  mDecompressBufferSize + 4096,
-                                  mDecompressBufferUsed,
-                                  mDecompressBufferSize);
+      EnsureBuffer(mDecompressBuffer, mDecompressBufferSize + 4096,
+                   mDecompressBufferUsed, mDecompressBufferSize);
     }
   }
   while (context->avail_in);
@@ -1279,10 +1275,8 @@ SpdyStream31::ExecuteCompress(uint32_t flushMode)
   {
     uint32_t avail = mTxInlineFrameSize - mTxInlineFrameUsed;
     if (avail < 1) {
-      SpdySession31::EnsureBuffer(mTxInlineFrame,
-                                  mTxInlineFrameSize + 2000,
-                                  mTxInlineFrameUsed,
-                                  mTxInlineFrameSize);
+      EnsureBuffer(mTxInlineFrame, mTxInlineFrameSize + 2000,
+                   mTxInlineFrameUsed, mTxInlineFrameSize);
       avail = mTxInlineFrameSize - mTxInlineFrameUsed;
     }
 

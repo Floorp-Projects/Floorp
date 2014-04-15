@@ -166,9 +166,6 @@ public:
   static nsresult RecvAltSvc(Http2Session *);
   static nsresult RecvBlocked(Http2Session *);
 
-  template<typename T>
-  static void EnsureBuffer(nsAutoArrayPtr<T> &,
-                           uint32_t, uint32_t, uint32_t &);
   char       *EnsureOutputBuffer(uint32_t needed);
 
   template<typename charType>
