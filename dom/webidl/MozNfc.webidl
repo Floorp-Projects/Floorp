@@ -25,6 +25,21 @@ interface MozNfcManager {
     * Notify the status of sendFile operation
     */
    void notifySendFileStatus(octet status, DOMString requestId);
+
+   /**
+    * Power on the NFC hardware and start polling for NFC tags or devices.
+    */
+   DOMRequest startPoll();
+
+   /**
+    * Stop polling for NFC tags or devices. i.e. enter low power mode.
+    */
+   DOMRequest stopPoll();
+
+   /**
+    * Power off the NFC hardware.
+    */
+   DOMRequest powerOff();
 };
 
 [JSImplementation="@mozilla.org/navigatorNfc;1",

@@ -176,10 +176,8 @@ DispatchStatusChangedEvent(const nsAString& aType,
   MOZ_ASSERT(NS_IsMainThread());
 
   InfallibleTArray<BluetoothNamedValue> data;
-  data.AppendElement(
-    BluetoothNamedValue(NS_LITERAL_STRING("address"), nsString(aAddress)));
-  data.AppendElement(
-    BluetoothNamedValue(NS_LITERAL_STRING("status"), aStatus));
+  BT_APPEND_NAMED_VALUE(data, "address", nsString(aAddress));
+  BT_APPEND_NAMED_VALUE(data, "status", aStatus);
 
   BluetoothSignal signal(nsString(aType), NS_LITERAL_STRING(KEY_ADAPTER), data);
 
