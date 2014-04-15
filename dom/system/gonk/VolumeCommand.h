@@ -114,7 +114,7 @@ protected:
   virtual ~VolumeCommand() {}
 
 public:
-  NS_INLINE_DECL_REFCOUNTED(VolumeCommand)
+  NS_INLINE_DECL_REFCOUNTING(VolumeCommand)
 
   VolumeCommand(VolumeResponseCallback* aCallback)
     : mBytesConsumed(0),
