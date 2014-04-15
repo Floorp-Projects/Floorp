@@ -141,7 +141,7 @@ public class testMasterPassword extends PixelTest {
         // Look for the 'Settings' menu if this device/OS uses it
         selectSettingsItem("Privacy", "Clear private data");
 
-        waitForText("Browsing & download history"); // Make sure the Clear private data pop-up is displayed
+        waitForText("Browsing history"); // Make sure the Clear private data pop-up is displayed
         Actions.EventExpecter clearPrivateDataEventExpecter = mActions.expectGeckoEvent("Sanitize:Finished");
         if (mSolo.searchText("Clear data") && !mSolo.searchText("Cookies")) {
             mSolo.clickOnText("^Clear data$");
@@ -149,7 +149,7 @@ public class testMasterPassword extends PixelTest {
         } else { // For some reason the pop-up was not opened
             if (mSolo.searchText("Cookies")) {
                 mSolo.clickOnText("^Clear private data$");
-                waitForText("Browsing & download history"); // Make sure the Clear private data pop-up is displayed
+                waitForText("Browsing history"); // Make sure the Clear private data pop-up is displayed
                 mSolo.clickOnText("^Clear data$");
                 clearPrivateDataEventExpecter.blockForEvent();
             } else {

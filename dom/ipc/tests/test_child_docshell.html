@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.addPermission("browser", true, document);
+SpecialPowers.pushPrefEnv({'set':[
+  ["dom.mozBrowserFramesEnabled", true],
+  ["dom.ipc.tabs.disabled", false]
+]}, function () {
+
+  var iframe =  document.createElementNS('http://www.w3.org/1999/xhtml', 'iframe');
+  iframe.setAttribute("remote", "true");
+  SpecialPowers.wrap(iframe).mozbrowser = true;
+  document.documentElement.appendChild(iframe);
+
+  var mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+  mm.addMessageListener("chromeEventHandler", function (msg) {
+    msg = SpecialPowers.wrap(msg);
+    var result = msg.json;
+    is(result.processType, SpecialPowers.Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT,
+       "The frame script is running in a real distinct child process");
+    ok(result.hasCorrectInterface,
+       "docshell.chromeEventHandler has nsIDOMEventTarget interface");
+  });
+
+
+  mm.addMessageListener("DOMWindowCreatedReceived", function (msg) {
+    msg = SpecialPowers.wrap(msg);
+    ok(true, "the chrome event handler looks functional");
+    var result = msg.json;
+    ok(result.stableChromeEventHandler, "docShell.chromeEventHandler is stable");
+    ok(result.iframeHasNewDocShell, "iframe spawns a new docShell");
+    ok(result.iframeHasSameChromeEventHandler, "but iframe has the same chrome event handler");
+    SimpleTest.finish();
+  });
+  // Inject a frame script in the child process:
+  mm.loadFrameScript('data:,new ' + function ContentScriptScope() {
+    var processType = Components.classes["@mozilla.org/xre/runtime;1"]
+                                .getService(Components.interfaces.nsIXULRuntime)
+                                .processType;
+    var chromeEventHandler = docShell.chromeEventHandler;
+    sendAsyncMessage("chromeEventHandler", {
+      processType: Services.appinfo.processType,
+      hasCorrectInterface: chromeEventHandler instanceof Components.interfaces.nsIDOMEventTarget
+    });
+
+    /*
+      Ensure that this chromeEventHandler actually works,
+      by creating a new window and listening for its DOMWindowCreated event
+    */
+    chromeEventHandler.addEventListener("DOMWindowCreated", function listener(evt) {
+      if (evt.target == content.document) {
+        return;
+      }
+      chromeEventHandler.removeEventListener("DOMWindowCreated", listener);
+      let new_win = evt.target.defaultView;
+      let new_docShell = new_win.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIWebNavigation)
+                                .QueryInterface(Ci.nsIDocShell);
+      sendAsyncMessage("DOMWindowCreatedReceived", {
+        stableChromeEventHandler: chromeEventHandler === docShell.chromeEventHandler,
+        iframeHasNewDocShell: new_docShell !== docShell,
+        iframeHasSameChromeEventHandler: new_docShell.chromeEventHandler === chromeEventHandler
+      });
+    });
+
+    let i = content.document.createElement("iframe");
+    i.setAttribute("src", "data:text/html,foo");
+    content.document.documentElement.appendChild(i);
+  }, false);
+});
+
+</script>
+</body>
+</html>

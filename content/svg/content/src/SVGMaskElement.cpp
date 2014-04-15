@@ -127,7 +127,9 @@ NS_IMETHODIMP_(bool)
 SVGMaskElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
+    sColorMap,
     sFEFloodMap,
+    sFillStrokeMap,
     sFiltersMap,
     sFontSpecificationMap,
     sGradientStopMap,
