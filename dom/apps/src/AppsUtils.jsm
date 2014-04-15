@@ -9,17 +9,17 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "NetworkUtil",
-                                   "@mozilla.org/network/util;1",
-                                   "nsINetUtil");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+  "resource://gre/modules/FileUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "WebappOSUtils",
+  "resource://gre/modules/WebappOSUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
@@ -342,7 +342,8 @@ this.AppsUtils = {
      checkManifestContentType(aInstallOrigin, aWebappOrigin, aContentType) {
     let hadCharset = { };
     let charset = { };
-    let contentType = NetworkUtil.parseContentType(aContentType, charset, hadCharset);
+    let netutil = Cc["@mozilla.org/network/util;1"].getService(Ci.nsINetUtil);
+    let contentType = netutil.parseContentType(aContentType, charset, hadCharset);
     if (aInstallOrigin != aWebappOrigin &&
         contentType != "application/x-web-app-manifest+json") {
       return false;
