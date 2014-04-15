@@ -7,6 +7,7 @@ package org.mozilla.gecko.fxa.activities;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.sync.setup.activities.LocaleAware.LocaleAwareFragmentActivity;
 
 import android.accounts.Account;
 import android.annotation.TargetApi;
@@ -14,13 +15,12 @@ import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.view.MenuItem;
 
 /**
  * Activity which displays account status.
  */
-public class FxAccountStatusActivity extends FragmentActivity {
+public class FxAccountStatusActivity extends LocaleAwareFragmentActivity {
   private static final String LOG_TAG = FxAccountStatusActivity.class.getSimpleName();
 
   protected FxAccountStatusFragment statusFragment;
