@@ -28,15 +28,13 @@ caption {
 }
 
 .main-content {
-  max-width: 800px;
-}
-
-prefpane > .content-box {
+  padding: 40px 48px 48px;
   overflow: auto;
 }
 
 prefpane {
-  padding: 40px 48px 48px;
+  max-width: 800px;
+  padding: 0;
   font-family: "Clear Sans", sans-serif;
   font-size: 1.25rem;
   line-height: 22px;
@@ -44,7 +42,7 @@ prefpane {
 }
 
 prefpane > .content-box {
-  overflow: auto;
+  overflow: visible;
 }
 
 /* groupboxes */

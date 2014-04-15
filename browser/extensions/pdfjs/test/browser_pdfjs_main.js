@@ -31,9 +31,9 @@ function test() {
         window = newTabBrowser.contentWindow;
 
     // Runs tests after all 'load' event handlers have fired off
-    setTimeout(function() {
+    window.addEventListener("documentload", function() {
       runTests(document, window, finish);
-    }, 0);
+    }, false, true);
   }, true);
 }
 

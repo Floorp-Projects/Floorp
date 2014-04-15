@@ -1,0 +1,120 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Reload and waiting notices */
+.notice-container {
+  margin-top: -50vh;
+}
+
+.theme-dark .notice-container {
+  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-light .notice-container {
+  background: url(background-noise-toolbar.png), #f0f1f2; /* Toolbars */
+  color: #585959; /* Grey foreground text */
+}
+
+#reload-notice {
+  font-size: 120%;
+}
+
+#waiting-notice {
+  font-size: 110%;
+}
+
+#waiting-notice::before {
+  display: inline-block;
+  content: "";
+  background: url("chrome://global/skin/icons/loading_16.png") center no-repeat;
+  width: 16px;
+  height: 16px;
+  -moz-margin-end: 6px;
+}
+
+#requests-menu-reload-notice-button {
+  min-height: 2em;
+}
+
+/* Context Graph */
+svg {
+  position: fixed;
+  overflow: hidden;
+}
+
+/* Edges in graph */
+.edgePath path {
+  stroke-width: 1.5px;
+  fill: none;
+}
+
+.theme-dark .edgePath path { stroke: #f5f7fa; }
+.theme-light .edgePath path { stroke: #585959; }
+
+/* Audio Nodes */
+.nodes rect {
+  stroke-width: 2px;
+  cursor: pointer;
+}
+
+.theme-dark .nodes rect {
+  stroke: #585959;
+  fill: #f5f7fa;
+}
+
+.theme-light .nodes rect {
+  fill: #585959;
+  stroke: #f5f7fa;
+}
+
+.nodes g.selected rect {
+  stroke-width: 1.5px;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  animation-direction: alternate;
+}
+
+.theme-dark .nodes g.selected rect { animation-name: dark-selected-glow; }
+.theme-light .nodes g.selected rect { animation-name: light-selected-glow; }
+
+/* Text in nodes */
+text {
+  cursor: pointer;
+  font-weight: 300;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+  font-size: 14px;
+}
+
+.theme-dark text {
+  fill: #333;
+  /* text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff; */
+}
+.theme-light text {
+  fill: #111;
+}
+
+/**
+ * Animations for graphs
+ */
+@keyframes dark-selected-glow {
+  0% { fill: #1d4f73; }
+  100% { fill: #3CA3ED; }
+}
+@keyframes light-selected-glow {
+  0% { fill: #4c9ed9; }
+  100% { fill: #59BAFF; }
+}
+
+/**
+ * Inspector Styles
+ */
+
+.web-audio-inspector .error {
+  background-image: url(chrome://browser/skin/devtools/alerticon-warning.png);
+  -moz-appearance: none;
+  opacity: 0;
+  transition: opacity .5s ease-out 0s;
+}

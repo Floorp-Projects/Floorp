@@ -10,6 +10,7 @@
 #include "nsChangeHint.h"
 #include "nsAutoPtr.h"
 #include "nsFrameList.h"
+#include "mozilla/layout/FrameChildList.h"
 #include "nsThreadUtils.h"
 #include "nsIPrincipal.h"
 #include "GraphicsFilter.h"
@@ -474,27 +475,21 @@ public:
                                            nsRect* aDisplayPort = nullptr);
 
   /**
-   * Finds the nearest ancestor frame that is considered to have (or will have)
-   * "animated geometry". For example the scrolled frames of scrollframes which
-   * are actively being scrolled fall into this category. Frames with certain
-   * CSS properties that are being animated (e.g. 'left'/'top' etc) are also
-   * placed in this category. Frames with animated CSS transforms are not
-   * put in this category because they can be handled directly by
-   * nsDisplayTransform.
-   * Stop searching at aStopAtAncestor if there is no such ancestor before it
-   * in the ancestor chain.
+   * Finds the nearest ancestor frame to aItem that is considered to have (or
+   * will have) "animated geometry". For example the scrolled frames of
+   * scrollframes which are actively being scrolled fall into this category.
+   * Frames with certain CSS properties that are being animated (e.g.
+   * 'left'/'top' etc) are also placed in this category.
    * Frames with different active geometry roots are in different ThebesLayers,
    * so that we can animate the geometry root by changing its transform (either
    * on the main thread or in the compositor).
-   * This function is idempotent: a frame returned by GetAnimatedGeometryRootFor
-   * is always returned again if you pass it to GetAnimatedGeometryRootFor.
+   * The animated geometry root is required to be a descendant (or equal to)
+   * aItem's ReferenceFrame(), which means that we will fall back to
+   * returning aItem->ReferenceFrame() when we can't find another animated
+   * geometry root.
    */
-  static nsIFrame* GetAnimatedGeometryRootFor(nsIFrame* aFrame,
-                                              const nsIFrame* aStopAtAncestor = nullptr);
-
   static nsIFrame* GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
                                               nsDisplayListBuilder* aBuilder);
-
 
   /**
     * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
@@ -1905,11 +1900,14 @@ public:
   }
 
   /**
-   * Unions the overflow areas of all non-popup children of aFrame with
-   * aOverflowAreas.
+   * Unions the overflow areas of the children of aFrame with aOverflowAreas.
+   * aSkipChildLists specifies any child lists that should be skipped.
+   * kSelectPopupList and kPopupList are always skipped.
    */
   static void UnionChildOverflow(nsIFrame* aFrame,
-                                 nsOverflowAreas& aOverflowAreas);
+                                 nsOverflowAreas& aOverflowAreas,
+                                 mozilla::layout::FrameChildListIDs aSkipChildLists =
+                                     mozilla::layout::FrameChildListIDs());
 
   /**
    * Return the font size inflation *ratio* for a given frame.  This is
