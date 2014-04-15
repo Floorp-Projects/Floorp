@@ -46,7 +46,7 @@ public:
         return static_cast<GLContextEGL*>(gl);
     }
 
-    bool Init();
+    bool Init() MOZ_OVERRIDE;
 
     virtual bool IsDoubleBuffered() const MOZ_OVERRIDE {
         return mIsDoubleBuffered;
@@ -117,6 +117,7 @@ protected:
 #ifdef MOZ_WIDGET_GONK
     nsRefPtr<HwcComposer2D> mHwc;
 #endif
+    bool mOwnsContext;
 
     static EGLSurface CreatePBufferSurfaceTryingPowerOfTwo(EGLConfig config,
                                                            EGLenum bindToTextureFormat,
