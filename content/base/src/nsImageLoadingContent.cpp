@@ -482,7 +482,7 @@ nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame)
   UntrackImage(mCurrentRequest);
   UntrackImage(mPendingRequest);
 
-  nsIPresShell* presShell = presContext ? presContext->PresShell() : nullptr;
+  nsIPresShell* presShell = presContext ? presContext->GetPresShell() : nullptr;
   if (presShell) {
     presShell->RemoveImageFromVisibleList(this);
   }
