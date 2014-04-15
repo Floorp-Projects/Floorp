@@ -23,7 +23,7 @@ namespace dom {
 class ScriptSettingsStack;
 static mozilla::ThreadLocal<ScriptSettingsStack*> sScriptSettingsTLS;
 
-ScriptSettingsStackEntry ScriptSettingsStackEntry::SystemSingleton;
+ScriptSettingsStackEntry ScriptSettingsStackEntry::NoJSAPISingleton;
 
 class ScriptSettingsStack {
 public:
@@ -34,13 +34,13 @@ public:
 
   void Push(ScriptSettingsStackEntry* aSettings) {
     // The bottom-most entry must always be a candidate entry point.
-    MOZ_ASSERT_IF(mStack.Length() == 0 || mStack.LastElement()->IsSystemSingleton(),
+    MOZ_ASSERT_IF(mStack.Length() == 0 || mStack.LastElement()->NoJSAPI(),
                   aSettings->mIsCandidateEntryPoint);
     mStack.AppendElement(aSettings);
   }
 
-  void PushSystem() {
-    mStack.AppendElement(&ScriptSettingsStackEntry::SystemSingleton);
+  void PushNoJSAPI() {
+    mStack.AppendElement(&ScriptSettingsStackEntry::NoJSAPISingleton);
   }
 
   void Pop() {
@@ -158,9 +158,9 @@ GetWebIDLCallerPrincipal()
   MOZ_ASSERT(NS_IsMainThread());
   ScriptSettingsStackEntry *entry = ScriptSettingsStack::Ref().EntryPoint();
 
-  // If we have an entry point that is not the system singleton, we know it
+  // If we have an entry point that is not the NoJSAPI singleton, we know it
   // must be an AutoEntryScript.
-  if (!entry || entry->IsSystemSingleton()) {
+  if (!entry || entry->NoJSAPI()) {
     return nullptr;
   }
   AutoEntryScript* aes = static_cast<AutoEntryScript*>(entry);
@@ -271,17 +271,19 @@ AutoIncumbentScript::~AutoIncumbentScript()
   mStack.Pop();
 }
 
-AutoSystemCaller::AutoSystemCaller(bool aIsMainThread)
+AutoNoJSAPI::AutoNoJSAPI(bool aIsMainThread)
   : mStack(ScriptSettingsStack::Ref())
 {
+  MOZ_ASSERT_IF(nsContentUtils::GetCurrentJSContextForThread(),
+                !JS_IsExceptionPending(nsContentUtils::GetCurrentJSContextForThread()));
   if (aIsMainThread) {
     mCxPusher.construct(static_cast<JSContext*>(nullptr),
                         /* aAllowNull = */ true);
   }
-  mStack.PushSystem();
+  mStack.PushNoJSAPI();
 }
 
-AutoSystemCaller::~AutoSystemCaller()
+AutoNoJSAPI::~AutoNoJSAPI()
 {
   mStack.Pop();
 }
