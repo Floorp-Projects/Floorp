@@ -197,15 +197,18 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
         return;
     }
 
+    mSpdySession = ASpdySession::NewSpdySession(spdyVersion, mSocketTransport);
     if (NS_FAILED(rv)) { // includes NS_ERROR_NOT_IMPLEMENTED
         MOZ_ASSERT(list.IsEmpty(), "sub transaction list not empty");
 
         // This is ok - treat mTransaction as a single real request.
         // Wrap the old http transaction into the new spdy session
         // as the first stream.
-        mSpdySession = ASpdySession::NewSpdySession(spdyVersion,
-                                                    mTransaction, mSocketTransport,
-                                                    mPriority);
+        if (!mSpdySession->AddStream(mTransaction, mPriority)) {
+            MOZ_ASSERT(false); // this cannot happen!
+            mTransaction->Close(NS_ERROR_ABORT);
+            return;
+        }
         LOG(("nsHttpConnection::StartSpdy moves single transaction %p "
              "into SpdySession %p\n", mTransaction.get(), mSpdySession.get()));
     }
@@ -221,19 +224,12 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
         }
 
         for (int32_t index = 0; index < count; ++index) {
-            if (!mSpdySession) {
-                mSpdySession = ASpdySession::NewSpdySession(spdyVersion,
-                                                            list[index], mSocketTransport,
-                                                            mPriority);
-            }
-            else {
-                // AddStream() cannot fail
-                if (!mSpdySession->AddStream(list[index], mPriority)) {
-                    MOZ_ASSERT(false, "SpdySession::AddStream failed");
-                    LOG(("SpdySession::AddStream failed\n"));
-                    mTransaction->Close(NS_ERROR_ABORT);
-                    return;
-                }
+            // AddStream() cannot fail
+            if (!mSpdySession->AddStream(list[index], mPriority)) {
+                MOZ_ASSERT(false, "SpdySession::AddStream failed");
+                LOG(("SpdySession::AddStream failed\n"));
+                mTransaction->Close(NS_ERROR_ABORT);
+                return;
             }
         }
     }
