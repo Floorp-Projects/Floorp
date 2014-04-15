@@ -61,6 +61,8 @@ let {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 Telemetry.prototype = {
   _histograms: {
     toolbox: {
+      histogram: "DEVTOOLS_TOOLBOX_OPENED_BOOLEAN",
+      userHistogram: "DEVTOOLS_TOOLBOX_OPENED_PER_USER_FLAG",
       timerHistogram: "DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS"
     },
     options: {
@@ -212,8 +214,6 @@ Telemetry.prototype = {
    */
   log: function(histogramId, value) {
     if (histogramId) {
-      let histogram;
-
       try {
         let histogram = Services.telemetry.getHistogramById(histogramId);
         histogram.add(value);
