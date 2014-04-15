@@ -24,7 +24,7 @@ interface nsINfcPeerCallback : nsISupports
                          in DOMString sessionToken);
 };
 
-[scriptable, uuid(70cac000-7e3c-11e3-baa7-0800200c9a66)]
+[scriptable, uuid(10b2eb1b-3fe0-4c98-9c67-9e4c2274cd78)]
 interface nsINfcContentHelper : nsISupports
 {
   const long NFC_EVENT_PEER_READY = 0x01;
@@ -135,4 +135,19 @@ interface nsINfcContentHelper : nsISupports
   void notifySendFileStatus(in nsIDOMWindow window,
                             in octet status,
                             in DOMString requestId);
+
+  /**
+   * Power on the NFC hardware and start polling for NFC tags or devices.
+   */
+  nsIDOMDOMRequest startPoll(in nsIDOMWindow window);
+
+  /**
+   * Stop polling for NFC tags or devices. i.e. enter low power mode.
+   */
+  nsIDOMDOMRequest stopPoll(in nsIDOMWindow window);
+
+  /**
+   * Power off the NFC hardware.
+   */
+  nsIDOMDOMRequest powerOff(in nsIDOMWindow window);
 };
