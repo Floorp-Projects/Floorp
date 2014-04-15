@@ -100,6 +100,11 @@ public:
   void CheckAudioOffload();
 #endif
 
+private:
+  // This flag is true when SetActive() has been called without a matching
+  // SetIdle(). This is used to sanity check the SetIdle/SetActive calls, to
+  // ensure SetActive has been called before a decode call.
+  DebugOnly<bool> mIsActive;
 };
 
 } // namespace mozilla
