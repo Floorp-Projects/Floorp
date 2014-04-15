@@ -131,11 +131,6 @@ public:
      * APZ started a pan.
      */
     StartPanning,
-    /**
-     * APZ finished processing a touch.
-     * |aArg| is 1 if touch was a click, 0 otherwise.
-     */
-    EndTouch,
     APZStateChangeSentinel
   MOZ_END_NESTED_ENUM_CLASS(APZStateChange)
 
