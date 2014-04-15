@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/webaudioeditor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/devtools/widgets.css" type="text/css"?>
+<!DOCTYPE window [
+  <!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/webaudioeditor.dtd">
+  %debuggerDTD;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript;version=1.8"
+          src="chrome://browser/content/devtools/theme-switching.js"/>
+
+  <script type="application/javascript" src="d3.js"/>
+  <script type="application/javascript" src="dagre-d3.js"/>
+  <script type="application/javascript" src="webaudioeditor-controller.js"/>
+  <script type="application/javascript" src="webaudioeditor-view.js"/>
+
+  <vbox class="theme-body" flex="1">
+    <hbox id="reload-notice"
+          class="notice-container"
+          align="center"
+          pack="center"
+          flex="1">
+      <button id="requests-menu-reload-notice-button"
+              class="devtools-toolbarbutton"
+              label="&webAudioEditorUI.reloadNotice1;"
+              oncommand="gFront.setup({ reload: true });"/>
+      <label id="requests-menu-reload-notice-label"
+             class="plain"
+             value="&webAudioEditorUI.reloadNotice2;"/>
+    </hbox>
+    <hbox id="waiting-notice"
+          class="notice-container"
+          align="center"
+          pack="center"
+          flex="1"
+          hidden="true">
+      <label id="requests-menu-waiting-notice-label"
+             class="plain"
+             value="&webAudioEditorUI.emptyNotice;"/>
+    </hbox>
+
+    <box id="content"
+         class="devtools-responsive-container"
+         flex="1"
+         hidden="true">
+      <vbox id="web-audio-inspector">
+        <vbox id="web-audio-inspector-content" flex="1"></vbox>
+      </vbox>
+      <splitter class="devtools-side-splitter"/>
+      <box id="web-audio-graph" class="devtools-responsive-container" flex="1">
+        <vbox flex="1">
+          <svg id="graph-svg" flex="1" viewBox="0 0 1000 500"
+              xmlns="http://www.w3.org/2000/svg"
+              xmlns:xlink="http://www.w3.org/1999/xlink">
+            <g id="graph-target" transform="translate(20,20)"/>
+          </svg>
+        </vbox>
+      </box>
+    </box>
+  </vbox>
+
+</window>
