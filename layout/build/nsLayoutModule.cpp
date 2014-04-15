@@ -1084,7 +1084,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/inspector/deep-tree-walker;1", &kIN_DEEPTREEWALKER_CID },
   { "@mozilla.org/inspector/flasher;1", &kIN_FLASHER_CID },
   { "@mozilla.org/inspector/search;1?type=cssvalue", &kIN_CSSVALUESEARCH_CID },
-  { IN_DOMUTILS_CONTRACTID, &kIN_DOMUTILS_CID },
+  { "@mozilla.org/inspector/dom-utils;1", &kIN_DOMUTILS_CID },
   { "@mozilla.org/xml/xml-document;1", &kNS_XMLDOCUMENT_CID },
   { "@mozilla.org/svg/svg-document;1", &kNS_SVGDOCUMENT_CID },
   { NS_DOMMULTIPARTBLOB_CONTRACTID, &kNS_DOMMULTIPARTBLOB_CID },
