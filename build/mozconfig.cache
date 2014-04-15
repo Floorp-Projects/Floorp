@@ -11,6 +11,10 @@ EOF
 bucket=
 if test -z "$SCCACHE_DISABLE" -a -z "$no_tooltool"; then
     case "${branch}_${master}" in
+    try_*scl1.mozilla.com*|try_*.scl3.mozilla.com*)
+        bucket=mozilla-releng-ceph-cache-scl3-try
+        mk_add_options "export SCCACHE_NO_HTTPS=1"
+        ;;
     try_*use1.mozilla.com*)
         bucket=mozilla-releng-s3-cache-us-east-1-try
         ;;
