@@ -2618,17 +2618,6 @@ public:
     return nullptr;
   }
 
-  /**
-   * Returns true if all descendant display items can be placed in the same
-   * ThebesLayer --- GetLayerState returns LAYER_INACTIVE or LAYER_NONE,
-   * and they all have the given aAnimatedGeometryRoot.
-   */
-  static LayerState RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
-                                                  LayerManager* aManager,
-                                                  const ContainerLayerParameters& aParameters,
-                                                  const nsDisplayList& aList,
-                                                  nsIFrame* aItemFrame);
-
 protected:
   nsDisplayWrapList() {}
 

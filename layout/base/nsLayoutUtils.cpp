@@ -577,11 +577,12 @@ nsLayoutUtils::IsTextAlignTrueValueEnabled()
 
 void
 nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
-                                  nsOverflowAreas& aOverflowAreas)
+                                  nsOverflowAreas& aOverflowAreas,
+                                  FrameChildListIDs aSkipChildLists)
 {
   // Iterate over all children except pop-ups.
-  const nsIFrame::ChildListIDs skip(nsIFrame::kPopupList |
-                                    nsIFrame::kSelectPopupList);
+  FrameChildListIDs skip = aSkipChildLists |
+      nsIFrame::kSelectPopupList | nsIFrame::kPopupList;
   for (nsIFrame::ChildListIterator childLists(aFrame);
        !childLists.IsDone(); childLists.Next()) {
     if (skip.Contains(childLists.CurrentID())) {
@@ -1529,23 +1530,24 @@ nsLayoutUtils::IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame, nsRect* aDis
   return ViewportHasDisplayPort(aFrame->PresContext(), aDisplayPort);
 }
 
-nsIFrame*
-nsLayoutUtils::GetAnimatedGeometryRootFor(nsIFrame* aFrame,
-                                          const nsIFrame* aStopAtAncestor)
+static nsIFrame*
+GetAnimatedGeometryRootForFrame(nsIFrame* aFrame,
+                                const nsIFrame* aStopAtAncestor)
 {
   nsIFrame* f = aFrame;
   nsIFrame* stickyFrame = nullptr;
   while (f != aStopAtAncestor) {
-    if (IsPopup(f))
+    if (nsLayoutUtils::IsPopup(f))
       break;
     if (ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(f))
       break;
-    if (!f->GetParent() && ViewportHasDisplayPort(f->PresContext())) {
+    if (!f->GetParent() &&
+        nsLayoutUtils::ViewportHasDisplayPort(f->PresContext())) {
       // Viewport frames in a display port need to be animated geometry roots
       // for background-attachment:fixed elements.
       break;
     }
-    nsIFrame* parent = GetCrossDocParentFrame(f);
+    nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(f);
     if (!parent)
       break;
     nsIAtom* parentType = parent->GetType();
@@ -1576,7 +1578,7 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsIFrame* aFrame,
       }
     }
     // Fixed-pos frames are parented by the viewport frame, which has no parent
-    if (IsFixedPosFrameInDisplayPort(f)) {
+    if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(f)) {
       return f;
     }
     f = parent;
@@ -1593,7 +1595,7 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
     nsDisplayScrollLayer* scrollLayerItem =
       static_cast<nsDisplayScrollLayer*>(aItem);
     nsIFrame* scrolledFrame = scrollLayerItem->GetScrolledFrame();
-    return nsLayoutUtils::GetAnimatedGeometryRootFor(scrolledFrame,
+    return GetAnimatedGeometryRootForFrame(scrolledFrame,
         aBuilder->FindReferenceFrameFor(scrolledFrame));
   }
   if (aItem->ShouldFixToViewport(aBuilder)) {
@@ -1604,10 +1606,10 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
     nsIFrame* viewportFrame =
       nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame);
     NS_ASSERTION(viewportFrame, "no viewport???");
-    return nsLayoutUtils::GetAnimatedGeometryRootFor(viewportFrame,
+    return GetAnimatedGeometryRootForFrame(viewportFrame,
         aBuilder->FindReferenceFrameFor(viewportFrame));
   }
-  return nsLayoutUtils::GetAnimatedGeometryRootFor(f, aItem->ReferenceFrame());
+  return GetAnimatedGeometryRootForFrame(f, aItem->ReferenceFrame());
 }
 
 // static
@@ -5406,20 +5408,9 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
       return result;
 
     if (wantImageSurface) {
-      IntSize size(imgWidth, imgHeight);
-      RefPtr<DataSourceSurface> output = Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
-      RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                                               output->GetData(),
-                                                               size,
-                                                               output->Stride(),
-                                                               SurfaceFormat::B8G8R8A8);
-      RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, gfxsurf);
-
-      dt->CopySurface(source, IntRect(0, 0, imgWidth, imgHeight), IntPoint());
-      dt->Flush();
-
-      result.mSourceSurface = output;
-    } else {
+      result.mSourceSurface = gfxPlatform::GetPlatform()->GetWrappedDataSourceSurface(gfxsurf);
+    }
+    if (!result.mSourceSurface) {
       result.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(aTarget, gfxsurf);
     }
   } else {

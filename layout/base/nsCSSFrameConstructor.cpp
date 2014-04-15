@@ -1425,6 +1425,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mCountersDirty(false)
   , mIsDestroyingFrameTree(false)
   , mHasRootAbsPosContainingBlock(false)
+  , mAlwaysCreateFramesForIgnorableWhitespace(false)
 {
 #ifdef DEBUG
   static bool gFirstTime = true;
@@ -5552,16 +5553,13 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
     // due to dynamic changes.
     // We don't do it for SVG text, since we might need to position and
     // measure the white space glyphs due to x/y/dx/dy attributes.
-    // We check that NS_CREATE_FRAME_FOR_IGNORABLE_WHITESPACE is not set on
-    // the node. This lets us disable this optimization for specific nodes
-    // (e.g. nodes whose geometry is being queried via DOM APIs).
     if (AtLineBoundary(aIter) &&
         !styleContext->StyleText()->WhiteSpaceOrNewlineIsSignificant() &&
         aIter.List()->ParentHasNoXBLChildren() &&
         !(aState.mAdditionalStateBits & NS_FRAME_GENERATED_CONTENT) &&
         (item.mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) &&
         !(item.mFCData->mBits & FCDATA_IS_SVG_TEXT) &&
-        !item.mContent->HasFlag(NS_CREATE_FRAME_FOR_IGNORABLE_WHITESPACE) &&
+        !mAlwaysCreateFramesForIgnorableWhitespace &&
         item.IsWhitespace(aState))
       return;
 
@@ -7784,13 +7782,15 @@ nsIFrame*
 nsCSSFrameConstructor::EnsureFrameForTextNode(nsGenericDOMDataNode* aContent)
 {
   if (aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE) &&
-      !aContent->HasFlag(NS_CREATE_FRAME_FOR_IGNORABLE_WHITESPACE)) {
+      !mAlwaysCreateFramesForIgnorableWhitespace) {
     // Text frame may have been suppressed. Disable suppression and signal
-    // that a flush should be performed.
-    aContent->SetFlags(NS_CREATE_FRAME_FOR_IGNORABLE_WHITESPACE);
+    // that a flush should be performed. We do this on a document-wide
+    // basis so that pages that repeatedly query metrics for
+    // collapsed-whitespace text nodes don't trigger pathological behavior.
+    mAlwaysCreateFramesForIgnorableWhitespace = true;
     nsAutoScriptBlocker blocker;
     BeginUpdate();
-    RecreateFramesForContent(aContent, false);
+    ReconstructDocElementHierarchy();
     EndUpdate();
   }
   return aContent->GetPrimaryFrame();
