@@ -2,16 +2,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "nsID.h"
 #include "prprf.h"
 #include "nsMemory.h"
-
-static const char gIDFormat[] = 
-  "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
-
-static const char gIDFormat2[] = 
-  "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x";
-
 
 /**
  * Multiplies the_int_var with 16 (0x10) and adds the value of the
@@ -51,8 +45,8 @@ static const char gIDFormat2[] =
  */
 
  #define PARSE_HYPHEN(char_pointer)   if(*(char_pointer++) != '-') return false
-    
-/* 
+
+/*
  * Turns a {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} string into
  * an nsID. It can also handle the old format without the { and }.
  */
@@ -81,11 +75,14 @@ bool nsID::Parse(const char *aIDStr)
     PARSE_CHARS_TO_NUM(aIDStr, m3[i], 2);
     i++;
   }
-  
+
   return expectFormat1 ? *aIDStr == '}' : true;
 }
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
+
+static const char gIDFormat[] =
+  "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
 
 /*
  * Returns an allocated string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
@@ -93,7 +90,7 @@ bool nsID::Parse(const char *aIDStr)
  * the caller.
  */
 
-char *nsID::ToString() const 
+char *nsID::ToString() const
 {
   char *res = (char*)NS_Alloc(NSID_LENGTH);
 
