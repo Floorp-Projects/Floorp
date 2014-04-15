@@ -21,11 +21,6 @@ public:
   DeviceRotationRate(DeviceMotionEvent* aOwner,
                      Nullable<double> aAlpha, Nullable<double> aBeta,
                      Nullable<double> aGamma);
-  DeviceRotationRate(double aAlpha, double aBeta, double aGamma)
-  {
-    DeviceRotationRate(nullptr, Nullable<double>(aAlpha),
-                       Nullable<double>(aBeta), Nullable<double>(aGamma));
-  }
 
   DeviceMotionEvent* GetParentObject() const
   {
@@ -58,11 +53,6 @@ public:
   DeviceAcceleration(DeviceMotionEvent* aOwner,
                      Nullable<double> aX, Nullable<double> aY,
                      Nullable<double> aZ);
-  DeviceAcceleration(double aX, double aY, double aZ)
-  {
-    DeviceAcceleration(nullptr, Nullable<double>(aX),
-                       Nullable<double>(aY), Nullable<double>(aZ));
-  }
 
   DeviceMotionEvent* GetParentObject() const
   {
