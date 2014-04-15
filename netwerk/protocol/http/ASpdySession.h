@@ -25,10 +25,7 @@ public:
   virtual uint32_t ReadTimeoutTick(PRIntervalTime now) = 0;
   virtual void DontReuse() = 0;
 
-  static ASpdySession *NewSpdySession(uint32_t version,
-                                      nsAHttpTransaction *,
-                                      nsISocketTransport *,
-                                      int32_t);
+  static ASpdySession *NewSpdySession(uint32_t version, nsISocketTransport *);
 
   virtual void PrintDiagnostics (nsCString &log) = 0;
 
