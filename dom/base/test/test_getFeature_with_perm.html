@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=979109
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 979109</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=983502">Mozilla Bug 983502</a>
+<script type="application/javascript">
+
+function testSupported() {
+  var mem;
+  navigator.getFeature("hardware.memory").then(function(mem) {
+
+    var isLinux = (navigator.platform.indexOf('Linux') != -1);
+    var isAndroid = !!navigator.userAgent.contains("Android");
+    var isB2G = !isAndroid && /Mobile|Tablet/.test(navigator.userAgent);
+
+    if (isLinux) {
+      info("It is Linux version:");
+    }
+    if (isAndroid) {
+      info("It is Android version");
+    }
+    if (isB2G) {
+      info("It is B2G version");
+    }
+
+    if (isLinux || isAndroid || isB2G) {
+      ok(typeof mem === 'number' && (mem) % 1 === 0, "We should receive an integer on this platform");
+      ok(mem > 0, "hardware.memory is supported on this platform. mem=" + mem + "MiB");
+    } else {
+      ok(typeof mem === 'undefined', "hardware.memory is not support on this platform");
+    }
+
+    SimpleTest.finish();
+
+  },function(mem) {
+    ok(false, "The Promise should not be rejected");
+  });
+}
+
+function testNotSupported() {
+  var tv;
+  navigator.getFeature("hardware.tv").then(function(tv) {
+    ok(typeof tv === 'undefined', "Resolve the Promise with undefined value (hardware.tv)");
+    testSupported();
+  },function(tv) {
+    ok(false, "The Promise should not be rejected")
+  });
+}
+
+SpecialPowers.pushPermissions([
+  {type: "feature-detection", allow: 1, context: document}
+], function() {
+  ok('getFeature' in navigator, "navigator.getFeature should exist");
+  testNotSupported();
+  ok(true, "Test DONE");
+});
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>
