@@ -54,7 +54,7 @@ const NFC_IPC_MSG_NAMES = [
   "NFC:CheckP2PRegistrationResponse",
   "NFC:PeerEvent",
   "NFC:NotifySendFileStatusResponse",
-  "NFC:SendFileResponse"
+  "NFC:ConfigResponse"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -314,6 +314,51 @@ NfcContentHelper.prototype = {
     });
   },
 
+  startPoll: function startPoll(window) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = btoa(this.getRequestId(request));
+    this._requestMap[requestId] = window;
+
+    cpmm.sendAsyncMessage("NFC:StartPoll",
+                          {requestId: requestId});
+    return request;
+  },
+
+  stopPoll: function stopPoll(window) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = btoa(this.getRequestId(request));
+    this._requestMap[requestId] = window;
+
+    cpmm.sendAsyncMessage("NFC:StopPoll",
+                          {requestId: requestId});
+    return request;
+  },
+
+  powerOff: function powerOff(window) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = btoa(this.getRequestId(request));
+    this._requestMap[requestId] = window;
+
+    cpmm.sendAsyncMessage("NFC:PowerOff",
+                          {requestId: requestId});
+    return request;
+  },
+
   // nsIObserver
   observe: function observe(subject, topic, data) {
     if (topic == "xpcom-shutdown") {
@@ -368,6 +413,7 @@ NfcContentHelper.prototype = {
       case "NFC:MakeReadOnlyNDEFResponse":
       case "NFC:CheckP2PRegistrationResponse":
       case "NFC:NotifySendFileStatusResponse":
+      case "NFC:ConfigResponse":
         if (result.status !== NFC.GECKO_NFC_ERROR_SUCCESS) {
           this.fireRequestError(atob(result.requestId), result.status);
         } else {
