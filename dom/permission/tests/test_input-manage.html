@@ -29,18 +29,35 @@ function verifier(success, failure) {
 
   try {
     this.getObj().removeFocus();
-    failure("Should receive exception when accessing system only method.!");
   } catch (e) {
-    success(this.perm);
+    failure("Received exception!: " + e);
+    return;
   }
+
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", true);
+  iframe.src = "http://example.org/";
+  iframe.addEventListener("load", function() {
+    iframe.removeEventListener("load", arguments.callee);
+    if (iframe.setInputMethodActive &&
+        typeof iframe.setInputMethodActive == "function") {
+      success("Got setInputMethodActive");
+    } else {
+      failure("Didn't get setInputMethodActive") ;
+    }
+  });
+
+  document.getElementById('content').appendChild(iframe);
 }
 
 var gData = [
   {
-    perm: ["input"],
+    perm: ["input-manage", "browser"],
+    needParentPerm: true,
     obj: "mozInputMethod",
     webidl: "MozInputMethod",
-    settings: [["dom.mozInputMethod.enabled", true]],
+    settings: [["dom.mozInputMethod.enabled", true],
+               ["dom.mozBrowserFramesEnabled", true]],
     verifier: verifier.toSource()
   }
 ]

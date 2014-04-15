@@ -27,7 +27,6 @@ this.Keyboard = {
   ],
 
   _messageNames: [
-    'SetValue', 'RemoveFocus', 'SetSelectedOption', 'SetSelectedOptions',
     'SetSelectionRange', 'ReplaceSurroundingText', 'ShowInputMethodPicker',
     'SwitchToNextInputMethod', 'HideInputMethod',
     'GetText', 'SendKey', 'GetContext',
@@ -170,7 +169,6 @@ this.Keyboard = {
         this.forwardEvent(name, msg);
         break;
 
-      case 'Keyboard:SetValue':
       case 'System:SetValue':
         this.setValue(msg);
         break;
@@ -178,11 +176,9 @@ this.Keyboard = {
       case 'System:RemoveFocus':
         this.removeFocus();
         break;
-      case 'Keyboard:SetSelectedOption':
       case 'System:SetSelectedOption':
         this.setSelectedOption(msg);
         break;
-      case 'Keyboard:SetSelectedOptions':
       case 'System:SetSelectedOptions':
         this.setSelectedOption(msg);
         break;
