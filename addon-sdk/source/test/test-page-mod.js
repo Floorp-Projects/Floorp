@@ -957,7 +957,7 @@ exports.testPageModCss = function(assert, done) {
     'data:text/html;charset=utf-8,<div style="background: silver">css test</div>', [{
       include: ["*", "data:*"],
       contentStyle: "div { height: 100px; }",
-      contentStyleFile: data.url("pagemod-css-include-file.css")
+      contentStyleFile: data.url("css-include-file.css")
     }],
     function(win, done) {
       let div = win.document.querySelector("div");
@@ -1530,5 +1530,33 @@ exports.testDetachOnUnload = function(assert, done) {
     onOpen: t => tab = t
   })
 }
+
+exports.testSyntaxErrorInContentScript = function(assert, done) {
+  const url = "data:text/html;charset=utf-8,testSyntaxErrorInContentScript";
+  let hitError = null;
+  let attached = false;
+
+  testPageMod(assert, done, url, [{
+      include: url,
+      contentScript: 'console.log(23',
+
+      onAttach: function() {
+        attached = true;
+      },
+
+      onError: function(e) {
+        hitError = e;
+      }
+    }],
+
+    function(win, done) {
+      assert.ok(attached, "The worker was attached.");
+      assert.notStrictEqual(hitError, null, "The syntax error was reported.");
+      if (hitError)
+        assert.equal(hitError.name, "SyntaxError", "The error thrown should be a SyntaxError");
+      done();
+    }
+  );
+};
 
 require('sdk/test').run(exports);

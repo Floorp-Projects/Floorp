@@ -253,9 +253,11 @@ const Sidebar = Class({
     remove(sidebars, this);
 
     // stop tracking windows
-    internals.tracker.unload();
-    internals.tracker = null;
+    if (internals.tracker) {
+      internals.tracker.unload();
+    }
 
+    internals.tracker = null;
     internals.windowNS = null;
 
     views.delete(this);
