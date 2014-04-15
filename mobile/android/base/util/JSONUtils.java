@@ -7,7 +7,6 @@ package org.mozilla.gecko.util;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.os.Bundle;
 import android.util.Log;
 
 import java.net.MalformedURLException;
@@ -54,22 +53,5 @@ public final class JSONUtils {
         } catch (JSONException e) {
             throw new IllegalArgumentException(name + "=" + uuidString, e);
         }
-    }
-
-    public static JSONObject bundleToJSON(Bundle bundle) {
-        JSONObject json = new JSONObject();
-        if (bundle == null) {
-            return json;
-        }
-
-        for (String key : bundle.keySet()) {
-            try {
-                json.put(key, bundle.get(key));
-            } catch (JSONException e) {
-                Log.w(LOGTAG, "Error building JSON response.", e);
-            }
-        }
-
-        return json;
     }
 }
