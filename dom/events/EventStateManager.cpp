@@ -2872,6 +2872,9 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     if (pointerEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
       mPointersEnterLeaveHelper.Remove(pointerEvent->pointerId);
     }
+    if (pointerEvent->inputSource != nsIDOMMouseEvent::MOZ_SOURCE_MOUSE) {
+      GenerateMouseEnterExit(pointerEvent);
+    }
     break;
   }
   case NS_MOUSE_BUTTON_UP:
@@ -3925,6 +3928,25 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
       }
       if (targetElement) {
         NotifyMouseOver(aMouseEvent, targetElement);
+      }
+    }
+    break;
+  case NS_POINTER_UP:
+    {
+      // Get the target content target (mousemove target == mouseover target)
+      nsCOMPtr<nsIContent> targetElement = GetEventTargetContent(aMouseEvent);
+      if (!targetElement) {
+        // We're always over the document root, even if we're only
+        // over dead space in a page (whose frame is not associated with
+        // any content) or in print preview dead space
+        targetElement = mDocument->GetRootElement();
+      }
+      if (targetElement) {
+        OverOutElementsWrapper* helper = GetWrapperByEventID(aMouseEvent);
+        if (helper) {
+          helper->mLastOverElement = targetElement;
+        }
+        NotifyMouseOut(aMouseEvent, nullptr);
       }
     }
     break;
