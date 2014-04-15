@@ -13,7 +13,6 @@
 #include "frontend/SourceNotes.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineInspector.h"
-#include "jit/ExecutionModeInlines.h"
 #include "jit/Ion.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonSpewer.h"
@@ -29,6 +28,7 @@
 #include "jsscriptinlines.h"
 
 #include "jit/CompileInfo-inl.h"
+#include "jit/ExecutionMode-inl.h"
 
 using namespace js;
 using namespace js::jit;

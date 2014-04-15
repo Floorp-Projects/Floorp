@@ -37,7 +37,7 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
-#include "jit/ExecutionModeInlines.h"
+#include "jit/ExecutionMode-inl.h"
 
 using namespace js;
 using namespace js::gc;
