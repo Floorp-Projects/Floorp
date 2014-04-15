@@ -172,3 +172,12 @@ user_pref("browser.snippets.syncPromo.enabled", false);
 
 // Do not turn HTTP cache v2 for our infra tests (some tests are failing)
 user_pref("browser.cache.use_new_backend_temp", false);
+
+// Don't connect to Yahoo! for RSS feed tests.
+// en-US only uses .types.0.uri, but set all of them just to be sure.
+user_pref('browser.contentHandlers.types.0.uri', 'http://test1.example.org/rss?url=%%s')
+user_pref('browser.contentHandlers.types.1.uri', 'http://test1.example.org/rss?url=%%s')
+user_pref('browser.contentHandlers.types.2.uri', 'http://test1.example.org/rss?url=%%s')
+user_pref('browser.contentHandlers.types.3.uri', 'http://test1.example.org/rss?url=%%s')
+user_pref('browser.contentHandlers.types.4.uri', 'http://test1.example.org/rss?url=%%s')
+user_pref('browser.contentHandlers.types.5.uri', 'http://test1.example.org/rss?url=%%s')
