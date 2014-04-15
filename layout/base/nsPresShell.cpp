@@ -2899,7 +2899,7 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
 }
 
 already_AddRefed<nsRenderingContext>
-PresShell::GetReferenceRenderingContext()
+PresShell::CreateReferenceRenderingContext()
 {
   nsDeviceContext* devCtx = mPresContext->DeviceContext();
   nsRefPtr<nsRenderingContext> rc;
@@ -2909,6 +2909,8 @@ PresShell::GetReferenceRenderingContext()
   } else {
     rc = devCtx->CreateRenderingContext();
   }
+
+  MOZ_ASSERT(rc, "shouldn't break promise to return non-null");
   return rc.forget();
 }
 
@@ -8346,11 +8348,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
 
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
 
-  nsRefPtr<nsRenderingContext> rcx = GetReferenceRenderingContext();
-  if (!rcx) {
-    NS_NOTREACHED("CreateRenderingContext failure");
-    return false;
-  }
+  nsRefPtr<nsRenderingContext> rcx = CreateReferenceRenderingContext();
 
 #ifdef DEBUG
   mCurrentReflowRoot = target;

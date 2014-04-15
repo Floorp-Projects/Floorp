@@ -274,7 +274,7 @@ static nsSize CalcViewportUnitsScale(nsPresContext* aPresContext)
         styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
       // Gather scrollbar size information.
       nsRefPtr<nsRenderingContext> context =
-        aPresContext->PresShell()->GetReferenceRenderingContext();
+        aPresContext->PresShell()->CreateReferenceRenderingContext();
       nsMargin sizes(scrollFrame->GetDesiredScrollbarSizes(aPresContext, context));
 
       if (styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL) {

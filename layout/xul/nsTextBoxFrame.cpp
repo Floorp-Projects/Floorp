@@ -499,7 +499,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
     }
 
     nsRefPtr<nsRenderingContext> refContext =
-        PresContext()->PresShell()->GetReferenceRenderingContext();
+        PresContext()->PresShell()->CreateReferenceRenderingContext();
 
     aRenderingContext.SetFont(fontMet);
     refContext->SetFont(fontMet);
