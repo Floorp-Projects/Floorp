@@ -296,8 +296,9 @@ public:
                                    const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
     virtual bool RecvHandleLongTapUp(const CSSPoint& aPoint,
                                      const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
-    virtual bool RecvNotifyTransformBegin(const ViewID& aViewId) MOZ_OVERRIDE;
-    virtual bool RecvNotifyTransformEnd(const ViewID& aViewId) MOZ_OVERRIDE;
+    virtual bool RecvNotifyAPZStateChange(const ViewID& aViewId,
+                                          const APZStateChange& aChange,
+                                          const int& aArg) MOZ_OVERRIDE;
     virtual bool RecvActivate() MOZ_OVERRIDE;
     virtual bool RecvDeactivate() MOZ_OVERRIDE;
     virtual bool RecvMouseEvent(const nsString& aType,
