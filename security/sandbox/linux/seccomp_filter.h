@@ -33,6 +33,7 @@
 #define SECCOMP_WHITELIST_ARCH_LOW \
   ALLOW_SYSCALL(_newselect), \
   ALLOW_SYSCALL(_llseek), \
+  ALLOW_SYSCALL(ftruncate64), \
   ALLOW_SYSCALL(getuid32), \
   ALLOW_SYSCALL(geteuid32), \
   ALLOW_SYSCALL(sigreturn), \
@@ -41,6 +42,7 @@
 #define SECCOMP_WHITELIST_ARCH_LOW \
   ALLOW_SYSCALL(_newselect), \
   ALLOW_SYSCALL(_llseek), \
+  ALLOW_SYSCALL(ftruncate64), \
   ALLOW_SYSCALL(getuid32), \
   ALLOW_SYSCALL(geteuid32), \
   ALLOW_SYSCALL(sigreturn), \
@@ -263,6 +265,7 @@
   ALLOW_SYSCALL(madvise), \
   ALLOW_SYSCALL(dup), \
   ALLOW_SYSCALL(nanosleep), \
+  ALLOW_SYSCALL(ftruncate), \
   SECCOMP_WHITELIST_ARCH_LOW \
   /* Must remove all of the following in the future, when no longer used */ \
   /* open() is for some legacy APIs such as font loading. */ \
