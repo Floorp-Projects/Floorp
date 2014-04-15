@@ -156,7 +156,7 @@ public:
 
   virtual void *GetNativeSurface(NativeSurfaceType aType);
 
-  bool Init(cairo_surface_t* aSurface, const IntSize& aSize);
+  bool Init(cairo_surface_t* aSurface, const IntSize& aSize, SurfaceFormat* aFormat = nullptr);
   bool Init(const IntSize& aSize, SurfaceFormat aFormat);
   bool Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat);
 
@@ -175,8 +175,7 @@ public:
 
 private: // methods
   // Init cairo surface without doing a cairo_surface_reference() call.
-  bool InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize& aSize);
-
+  bool InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize& aSize, SurfaceFormat* aFormat = nullptr);
   enum DrawPatternType { DRAW_FILL, DRAW_STROKE };
   void DrawPattern(const Pattern& aPattern,
                    const StrokeOptions& aStrokeOptions,

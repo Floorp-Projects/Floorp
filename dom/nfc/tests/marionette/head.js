@@ -3,40 +3,35 @@
 
 let pendingEmulatorCmdCount = 0;
 
+SpecialPowers.addPermission("nfc-manager", true, document);
+
 function toggleNFC(enabled, callback) {
   isnot(callback, null);
-  var settings = window.navigator.mozSettings;
-  isnot(settings, null);
-  ok(settings instanceof SettingsManager,
-     'settings instanceof ' + settings.constructor +
-     ', expected SettingsManager');
 
-  let req = settings.createLock().get('nfc.enabled');
+  let nfc = window.navigator.mozNfc;
+  let req;
+  if (enabled) {
+    req = nfc.startPoll();
+  } else {
+    req = nfc.powerOff();
+  }
+
   req.onsuccess = function() {
-    if (req.result['nfc.enabled'] === enabled) {
-      callback();
-    } else {
-      let req = settings.createLock().set({'nfc.enabled': enabled});
-      req.onsuccess = function() {
-        window.setTimeout(callback, 5000); // give emulator time to toggle NFC
-      };
-      req.onerror = function() {
-        ok(false,
-           'Setting \'nfc.enabled\' to \'' + enabled +
-           '\' failed, error ' + req.error.name);
-        finish();
-      };
-    }
+    callback();
   };
+
   req.onerror = function() {
-    ok(false, 'Getting \'nfc.enabled\' failed, error ' + req.error.name);
+    ok(false, 'operation failed, error ' + req.error.name);
     finish();
   };
 }
 
 function cleanUp() {
   log('Cleaning up');
-  waitFor(finish(),
+  waitFor(function() {
+            SpecialPowers.removePermission("nfc-manager", document);
+            finish()
+          },
           function() {
             return pendingEmulatorCmdCount === 0;
           });
