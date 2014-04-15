@@ -7,6 +7,7 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.home.HomeConfig.EmptyViewConfig;
 import org.mozilla.gecko.home.HomeConfig.ItemHandler;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomeConfig.ViewConfig;
@@ -20,14 +21,21 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import java.lang.ref.SoftReference;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.WeakHashMap;
+
+import com.squareup.picasso.Picasso;
 
 /**
  * {@code PanelLayout} is the base class for custom layouts to be
@@ -264,9 +272,24 @@ abstract class PanelLayout extends FrameLayout {
                 break;
         }
 
-        final View view = viewState.getView();
-        if (view != null) {
-            maybeSetDataset(view, cursor);
+        final View activeView = viewState.getActiveView();
+        if (activeView == null) {
+            throw new IllegalStateException("No active view for view state: " + viewState.getIndex());
+        }
+
+        final ViewConfig viewConfig = viewState.getViewConfig();
+
+        final View newView;
+        if (cursor == null || cursor.getCount() == 0) {
+            newView = createEmptyView(viewConfig);
+            maybeSetDataset(activeView, null);
+        } else {
+            newView = createPanelView(viewConfig);
+            maybeSetDataset(newView, cursor);
+        }
+
+        if (activeView != newView) {
+            replacePanelView(activeView, newView);
         }
     }
 
@@ -383,6 +406,55 @@ abstract class PanelLayout extends FrameLayout {
         }
     }
 
+    private View createEmptyView(ViewConfig viewConfig) {
+        Log.d(LOGTAG, "Creating empty view: " + viewConfig.getType());
+
+        ViewState viewState = mViewStates.get(viewConfig.getIndex());
+        if (viewState == null) {
+            throw new IllegalStateException("No view state found for view index: " + viewConfig.getIndex());
+        }
+
+        View view = viewState.getEmptyView();
+        if (view == null) {
+            view = LayoutInflater.from(getContext()).inflate(R.layout.home_empty_panel, null);
+
+            final EmptyViewConfig emptyViewConfig = viewConfig.getEmptyViewConfig();
+
+            // XXX: Refactor this into a custom view (bug 985134)
+            final String text = (emptyViewConfig == null) ? null : emptyViewConfig.getText();
+            final TextView textView = (TextView) view.findViewById(R.id.home_empty_text);
+            if (TextUtils.isEmpty(text)) {
+                textView.setText(R.string.home_default_empty);
+            } else {
+                textView.setText(text);
+            }
+
+            final String imageUrl = (emptyViewConfig == null) ? null : emptyViewConfig.getImageUrl();
+            final ImageView imageView = (ImageView) view.findViewById(R.id.home_empty_image);
+
+            if (imageUrl == null) {
+                Picasso.with(getContext())
+                       .load(R.drawable.icon_home_empty_firefox)
+                       .into(imageView);
+            } else {
+                Picasso.with(getContext())
+                       .load(imageUrl)
+                       .error(R.drawable.icon_home_empty_firefox)
+                       .into(imageView);
+            }
+
+            viewState.setEmptyView(view);
+        }
+
+        return view;
+    }
+
+    private void replacePanelView(View currentView, View newView) {
+        final ViewGroup parent = (ViewGroup) currentView.getParent();
+        parent.addView(newView, parent.indexOfChild(currentView), currentView.getLayoutParams());
+        parent.removeView(currentView);
+    }
+
     /**
      * Must be implemented by {@code PanelLayout} subclasses to define
      * what happens then the layout is first loaded. Should set initial
@@ -397,11 +469,17 @@ abstract class PanelLayout extends FrameLayout {
     protected class ViewState {
         private final ViewConfig mViewConfig;
         private SoftReference<View> mView;
+        private SoftReference<View> mEmptyView;
         private LinkedList<FilterDetail> mFilterStack;
 
         public ViewState(ViewConfig viewConfig) {
             mViewConfig = viewConfig;
             mView = new SoftReference<View>(null);
+            mEmptyView = new SoftReference<View>(null);
+        }
+
+        public ViewConfig getViewConfig() {
+            return mViewConfig;
         }
 
         public int getIndex() {
@@ -414,6 +492,28 @@ abstract class PanelLayout extends FrameLayout {
 
         public void setView(View view) {
             mView = new SoftReference<View>(view);
+        }
+
+        public View getEmptyView() {
+            return mEmptyView.get();
+        }
+
+        public void setEmptyView(View view) {
+            mEmptyView = new SoftReference<View>(view);
+        }
+
+        public View getActiveView() {
+            final View view = getView();
+            if (view != null && view.getParent() != null) {
+                return view;
+            }
+
+            final View emptyView = getEmptyView();
+            if (emptyView != null && emptyView.getParent() != null) {
+                return emptyView;
+            }
+
+            return null;
         }
 
         public String getDatasetId() {
