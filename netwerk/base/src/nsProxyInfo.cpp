@@ -75,6 +75,7 @@ nsProxyInfo::SetFailoverProxy(nsIProxyInfo *proxy)
 // comparison of mType by string pointer is valid within necko
 namespace mozilla {
   extern const char kProxyType_HTTP[];
+  extern const char kProxyType_HTTPS[];
   extern const char kProxyType_SOCKS[];
   extern const char kProxyType_SOCKS4[];
   extern const char kProxyType_SOCKS5[];
@@ -93,6 +94,12 @@ bool
 nsProxyInfo::IsHTTP()
 {
   return mType == kProxyType_HTTP;
+}
+
+bool
+nsProxyInfo::IsHTTPS()
+{
+  return mType == kProxyType_HTTPS;
 }
 
 bool

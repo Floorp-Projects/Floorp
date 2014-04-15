@@ -34,6 +34,7 @@
 
 namespace mozilla {
   extern const char kProxyType_HTTP[];
+  extern const char kProxyType_HTTPS[];
   extern const char kProxyType_SOCKS[];
   extern const char kProxyType_SOCKS4[];
   extern const char kProxyType_SOCKS5[];
@@ -658,6 +659,7 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, int32_t defaultPort)
 // nsProxyInfo in order to compare by string pointer
 namespace mozilla {
 const char kProxyType_HTTP[]    = "http";
+const char kProxyType_HTTPS[]   = "https";
 const char kProxyType_PROXY[]   = "proxy";
 const char kProxyType_SOCKS[]   = "socks";
 const char kProxyType_SOCKS4[]  = "socks4";
@@ -686,11 +688,19 @@ nsProtocolProxyService::ExtractProxyInfo(const char *start,
     uint32_t len = sp - start;
     const char *type = nullptr;
     switch (len) {
-    case 5:
-        if (PL_strncasecmp(start, kProxyType_PROXY, 5) == 0)
+    case 4:
+        if (PL_strncasecmp(start, kProxyType_HTTP, 5) == 0) {
             type = kProxyType_HTTP;
-        else if (PL_strncasecmp(start, kProxyType_SOCKS, 5) == 0)
+        }
+        break;
+    case 5:
+        if (PL_strncasecmp(start, kProxyType_PROXY, 5) == 0) {
+            type = kProxyType_HTTP;
+        } else if (PL_strncasecmp(start, kProxyType_SOCKS, 5) == 0) {
             type = kProxyType_SOCKS4; // assume v4 for 4x compat
+        } else if (PL_strncasecmp(start, kProxyType_HTTPS, 5) == 0) {
+            type = kProxyType_HTTPS;
+        }
         break;
     case 6:
         if (PL_strncasecmp(start, kProxyType_DIRECT, 6) == 0)
@@ -719,10 +729,13 @@ nsProtocolProxyService::ExtractProxyInfo(const char *start,
             start++;
 
         // port defaults
-        if (type == kProxyType_HTTP)
+        if (type == kProxyType_HTTP) {
             port = 80;
-        else
+        } else if (type == kProxyType_HTTPS) {
+            port = 443;
+        } else {
             port = 1080;
+        }
 
         nsProxyInfo *pi = new nsProxyInfo();
         pi->mType = type;
@@ -1162,6 +1175,7 @@ nsProtocolProxyService::NewProxyInfo(const nsACString &aType,
 {
     static const char *types[] = {
         kProxyType_HTTP,
+        kProxyType_HTTPS,
         kProxyType_SOCKS,
         kProxyType_SOCKS4,
         kProxyType_DIRECT
@@ -1170,7 +1184,7 @@ nsProtocolProxyService::NewProxyInfo(const nsACString &aType,
     // resolve type; this allows us to avoid copying the type string into each
     // proxy info instance.  we just reference the string literals directly :)
     const char *type = nullptr;
-    for (uint32_t i=0; i<ArrayLength(types); ++i) {
+    for (uint32_t i = 0; i < ArrayLength(types); ++i) {
         if (aType.LowerCaseEqualsASCII(types[i])) {
             type = types[i];
             break;
@@ -1725,7 +1739,8 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
     if (!(info.flags & nsIProtocolHandler::ALLOWS_PROXY_HTTP)) {
         nsProxyInfo *last = nullptr, *iter = head;
         while (iter) {
-            if (iter->Type() == kProxyType_HTTP) {
+            if ((iter->Type() == kProxyType_HTTP) ||
+                (iter->Type() == kProxyType_HTTPS)) {
                 // reject!
                 if (last)
                     last->mNext = iter->mNext;
