@@ -322,7 +322,7 @@ browser.jar:
   skin/classic/browser/devtools/command-console.png           (../shared/devtools/images/command-console.png)
   skin/classic/browser/devtools/command-console@2x.png        (../shared/devtools/images/command-console@2x.png)
   skin/classic/browser/devtools/alerticon-warning.png       (devtools/alerticon-warning.png)
-  skin/classic/browser/devtools/ruleview.css                (../shared/devtools/ruleview.css)
+  skin/classic/browser/devtools/ruleview.css                (devtools/ruleview.css)
   skin/classic/browser/devtools/commandline.css             (devtools/commandline.css)
   skin/classic/browser/devtools/markup-view.css             (../shared/devtools/markup-view.css)
   skin/classic/browser/devtools/editor-error.png             (devtools/editor-error.png)
