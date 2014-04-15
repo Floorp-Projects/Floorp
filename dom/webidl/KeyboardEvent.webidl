@@ -6,6 +6,7 @@
 
 interface WindowProxy;
 
+[Constructor(DOMString typeArg, optional KeyboardEventInit keyboardEventInitDict)]
 interface KeyboardEvent : UIEvent
 {
   readonly attribute unsigned long    charCode;
@@ -30,6 +31,34 @@ interface KeyboardEvent : UIEvent
   readonly attribute boolean       isComposing;
 
   readonly attribute DOMString key;
+
+  [Throws]
+  void initKeyboardEvent(DOMString typeArg,
+                         boolean bubblesArg,
+                         boolean cancelableArg,
+                         WindowProxy? viewArg,
+                         long detailArg,
+                         DOMString keyArg,
+                         unsigned long locationArg,
+                         DOMString modifiersListArg,
+                         boolean repeatArg);
+};
+
+dictionary KeyboardEventInit : UIEventInit
+{
+  DOMString      key           = "";
+  unsigned long  location      = 0;
+  boolean        ctrlKey       = false;
+  boolean        shiftKey      = false;
+  boolean        altKey        = false;
+  boolean        metaKey       = false;
+  boolean        repeat        = false;
+  boolean        isComposing   = false;
+
+  // legacy attributes
+  unsigned long  charCode      = 0;
+  unsigned long  keyCode       = 0;
+  unsigned long  which         = 0;
 };
 
 // Mozilla extensions

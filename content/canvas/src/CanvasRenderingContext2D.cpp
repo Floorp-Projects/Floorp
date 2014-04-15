@@ -3635,7 +3635,6 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
     return;
   }
   nsRefPtr<gfxContext> thebes;
-  nsRefPtr<gfxASurface> drawSurf;
   RefPtr<DrawTarget> drawDT;
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForDrawTarget(mTarget)) {
     thebes = new gfxContext(mTarget);
@@ -3656,34 +3655,15 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
 
   nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
   unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
-  if (drawSurf || drawDT) {
-    RefPtr<SourceSurface> source;
+  if (drawDT) {
+    RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
+    RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
 
-    if (drawSurf) {
-      gfxIntSize size = drawSurf->GetSize();
-
-      drawSurf->SetDeviceOffset(gfxPoint(0, 0));
-      nsRefPtr<gfxImageSurface> img = drawSurf->GetAsReadableARGB32ImageSurface();
-      if (!img || !img->Data()) {
-        error.Throw(NS_ERROR_FAILURE);
-        return;
-      }
-
-      source =
-        mTarget->CreateSourceSurfaceFromData(img->Data(),
-                                             IntSize(size.width, size.height),
-                                             img->Stride(),
-                                             SurfaceFormat::B8G8R8A8);
-    } else {
-      RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
-      RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
-
-      source =
-        mTarget->CreateSourceSurfaceFromData(data->GetData(),
-                                             data->GetSize(),
-                                             data->Stride(),
-                                             data->GetFormat());
-    }
+    RefPtr<SourceSurface> source =
+      mTarget->CreateSourceSurfaceFromData(data->GetData(),
+                                           data->GetSize(),
+                                           data->Stride(),
+                                           data->GetFormat());
 
     if (!source) {
       error.Throw(NS_ERROR_FAILURE);
@@ -3694,7 +3674,8 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
     mgfx::Rect sourceRect(0, 0, sw, sh);
     mTarget->DrawSurface(source, destRect, sourceRect,
                          DrawSurfaceOptions(mgfx::Filter::POINT),
-                         DrawOptions(1.0f, CompositionOp::OP_SOURCE, AntialiasMode::NONE));
+                         DrawOptions(1.0f, CompositionOp::OP_OVER,
+                                     AntialiasMode::NONE));
     mTarget->Flush();
   } else {
     mTarget->SetTransform(matrix);

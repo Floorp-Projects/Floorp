@@ -1265,39 +1265,17 @@ BluetoothOppManager::FileTransferComplete()
     return;
   }
 
-  nsString type, name;
-  BluetoothValue v;
+  NS_NAMED_LITERAL_STRING(type, "bluetooth-opp-transfer-complete");
   InfallibleTArray<BluetoothNamedValue> parameters;
-  type.AssignLiteral("bluetooth-opp-transfer-complete");
 
-  name.AssignLiteral("address");
-  v = mDeviceAddress;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
+  BT_APPEND_NAMED_VALUE(parameters, "address", mDeviceAddress);
+  BT_APPEND_NAMED_VALUE(parameters, "success", mSuccessFlag);
+  BT_APPEND_NAMED_VALUE(parameters, "received", mIsServer);
+  BT_APPEND_NAMED_VALUE(parameters, "fileName", mFileName);
+  BT_APPEND_NAMED_VALUE(parameters, "fileLength", mSentFileLength);
+  BT_APPEND_NAMED_VALUE(parameters, "contentType", mContentType);
 
-  name.AssignLiteral("success");
-  v = mSuccessFlag;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  name.AssignLiteral("received");
-  v = mIsServer;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  name.AssignLiteral("fileName");
-  v = mFileName;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  name.AssignLiteral("fileLength");
-  v = mSentFileLength;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  name.AssignLiteral("contentType");
-  v = mContentType;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  if (!BroadcastSystemMessage(type, parameters)) {
-    BT_WARNING("Failed to broadcast [bluetooth-opp-transfer-complete]");
-    return;
-  }
+  BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(type, parameters);
 
   mSendTransferCompleteFlag = true;
 }
@@ -1305,35 +1283,16 @@ BluetoothOppManager::FileTransferComplete()
 void
 BluetoothOppManager::StartFileTransfer()
 {
-  nsString type, name;
-  BluetoothValue v;
+  NS_NAMED_LITERAL_STRING(type, "bluetooth-opp-transfer-start");
   InfallibleTArray<BluetoothNamedValue> parameters;
-  type.AssignLiteral("bluetooth-opp-transfer-start");
 
-  name.AssignLiteral("address");
-  v = mDeviceAddress;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
+  BT_APPEND_NAMED_VALUE(parameters, "address", mDeviceAddress);
+  BT_APPEND_NAMED_VALUE(parameters, "received", mIsServer);
+  BT_APPEND_NAMED_VALUE(parameters, "fileName", mFileName);
+  BT_APPEND_NAMED_VALUE(parameters, "fileLength", mFileLength);
+  BT_APPEND_NAMED_VALUE(parameters, "contentType", mContentType);
 
-  name.AssignLiteral("received");
-  v = mIsServer;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  name.AssignLiteral("fileName");
-  v = mFileName;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  name.AssignLiteral("fileLength");
-  v = mFileLength;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  name.AssignLiteral("contentType");
-  v = mContentType;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  if (!BroadcastSystemMessage(type, parameters)) {
-    BT_WARNING("Failed to broadcast [bluetooth-opp-transfer-start]");
-    return;
-  }
+  BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(type, parameters);
 
   mSendTransferCompleteFlag = false;
 }
@@ -1341,61 +1300,29 @@ BluetoothOppManager::StartFileTransfer()
 void
 BluetoothOppManager::UpdateProgress()
 {
-  nsString type, name;
-  BluetoothValue v;
+  NS_NAMED_LITERAL_STRING(type, "bluetooth-opp-update-progress");
   InfallibleTArray<BluetoothNamedValue> parameters;
-  type.AssignLiteral("bluetooth-opp-update-progress");
 
-  name.AssignLiteral("address");
-  v = mDeviceAddress;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
+  BT_APPEND_NAMED_VALUE(parameters, "address", mDeviceAddress);
+  BT_APPEND_NAMED_VALUE(parameters, "received", mIsServer);
+  BT_APPEND_NAMED_VALUE(parameters, "processedLength", mSentFileLength);
+  BT_APPEND_NAMED_VALUE(parameters, "fileLength", mFileLength);
 
-  name.AssignLiteral("received");
-  v = mIsServer;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  name.AssignLiteral("processedLength");
-  v = mSentFileLength;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  name.AssignLiteral("fileLength");
-  v = mFileLength;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  if (!BroadcastSystemMessage(type, parameters)) {
-    BT_WARNING("Failed to broadcast [bluetooth-opp-update-progress]");
-    return;
-  }
+  BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(type, parameters);
 }
 
 void
 BluetoothOppManager::ReceivingFileConfirmation()
 {
-  nsString type, name;
-  BluetoothValue v;
+  NS_NAMED_LITERAL_STRING(type, "bluetooth-opp-receiving-file-confirmation");
   InfallibleTArray<BluetoothNamedValue> parameters;
-  type.AssignLiteral("bluetooth-opp-receiving-file-confirmation");
 
-  name.AssignLiteral("address");
-  v = mDeviceAddress;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
+  BT_APPEND_NAMED_VALUE(parameters, "address", mDeviceAddress);
+  BT_APPEND_NAMED_VALUE(parameters, "fileName", mFileName);
+  BT_APPEND_NAMED_VALUE(parameters, "fileLength", mFileLength);
+  BT_APPEND_NAMED_VALUE(parameters, "contentType", mContentType);
 
-  name.AssignLiteral("fileName");
-  v = mFileName;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  name.AssignLiteral("fileLength");
-  v = mFileLength;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  name.AssignLiteral("contentType");
-  v = mContentType;
-  parameters.AppendElement(BluetoothNamedValue(name, v));
-
-  if (!BroadcastSystemMessage(type, parameters)) {
-    BT_WARNING("Failed to send [bluetooth-opp-receiving-file-confirmation]");
-    return;
-  }
+  BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(type, parameters);
 }
 
 void

@@ -731,7 +731,7 @@ private:
   // This is created and destroyed on the audio thread, while holding the
   // decoder monitor, so if this is used off the audio thread, you must
   // first acquire the decoder monitor and check that it is non-null.
-  nsAutoPtr<AudioStream> mAudioStream;
+  RefPtr<AudioStream> mAudioStream;
 
   // The reader, don't call its methods with the decoder monitor held.
   // This is created in the play state machine's constructor, and destroyed

@@ -188,20 +188,11 @@ const kEventConstructors = {
                                                        },
                                              },
   KeyEvent:                                  { create: function (aName, aProps) {
-                                                         var e = document.createEvent("keyboardevent");
-                                                         e.initKeyEvent(aName, aProps.bubbles, aProps.cancelable,
-                                                                        aProps.view,
-                                                                        aProps.ctrlKey, aProps.altKey, aProps.shiftKey, aProps.metaKey,
-                                                                        aProps.keyCode, aProps.charCode);
-                                                         return e;
+                                                         return new KeyboardEvent(aName, aProps);
                                                        },
                                              },
   KeyboardEvent:                             { create: function (aName, aProps) {
-                                                         var e = document.createEvent("keyboardevent");
-                                                         e.initKeyEvent(aName, aProps.bubbles, aProps.cancelable,
-                                                                        aProps.view, aProps.ctrlKey, aProps.altKey, aProps.shiftKey, aProps.metaKey,
-                                                                        aProps.keyCode, aProps.charCode);
-                                                         return e;
+                                                         return new KeyboardEvent(aName, aProps);
                                                        },
                                              },
   MediaStreamEvent:                          { create: function (aName, aProps) {

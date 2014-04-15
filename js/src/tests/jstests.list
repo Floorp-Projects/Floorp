@@ -2,6 +2,7 @@
 # we don't want to change.
 
 skip-if(!this.hasOwnProperty("Intl")) include test262/intl402/jstests.list # Intl is not enabled in all builds
+skip script ecma_6/String/normalize-generateddata-input.js # input data for other test
 
 ##################################################
 # Test262 tests skipped due to SpiderMonkey bugs #

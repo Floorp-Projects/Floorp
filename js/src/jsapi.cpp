@@ -984,6 +984,19 @@ JSAutoCompartment::~JSAutoCompartment()
     cx_->leaveCompartment(oldCompartment_);
 }
 
+JSAutoNullCompartment::JSAutoNullCompartment(JSContext *cx)
+  : cx_(cx),
+    oldCompartment_(cx->compartment())
+{
+    AssertHeapIsIdleOrIterating(cx_);
+    cx_->enterNullCompartment();
+}
+
+JSAutoNullCompartment::~JSAutoNullCompartment()
+{
+    cx_->leaveCompartment(oldCompartment_);
+}
+
 JS_PUBLIC_API(void)
 JS_SetCompartmentPrivate(JSCompartment *compartment, void *data)
 {

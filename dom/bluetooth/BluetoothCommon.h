@@ -57,6 +57,25 @@ extern bool gBluetoothDebugFlag;
 #define BT_WARNING(msg, ...) printf("%s: " msg, __FUNCTION__, ##__VA_ARGS__))
 #endif
 
+/**
+ * Wrap literal name and value into a BluetoothNamedValue
+ * and append it to the array.
+ */
+#define BT_APPEND_NAMED_VALUE(array, name, value)                    \
+  array.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING(name), value))
+
+/**
+ * Ensure success of system message broadcast with void return.
+ */
+#define BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(type, parameters)       \
+  do {                                                               \
+    if (!BroadcastSystemMessage(type, parameters)) {                 \
+      BT_WARNING("Failed to broadcast [%s]",                         \
+                 NS_ConvertUTF16toUTF8(type).get());                 \
+      return;                                                        \
+    }                                                                \
+  } while(0)
+
 #define BEGIN_BLUETOOTH_NAMESPACE \
   namespace mozilla { namespace dom { namespace bluetooth {
 #define END_BLUETOOTH_NAMESPACE \

@@ -241,18 +241,10 @@ BluetoothHidManager::NotifyStatusChanged()
   NS_NAMED_LITERAL_STRING(type, BLUETOOTH_HID_STATUS_CHANGED_ID);
   InfallibleTArray<BluetoothNamedValue> parameters;
 
-  BluetoothValue v = mConnected;
-  parameters.AppendElement(
-    BluetoothNamedValue(NS_LITERAL_STRING("connected"), v));
+  BT_APPEND_NAMED_VALUE(parameters, "connected", mConnected);
+  BT_APPEND_NAMED_VALUE(parameters, "address", mDeviceAddress);
 
-  v = mDeviceAddress;
-  parameters.AppendElement(
-    BluetoothNamedValue(NS_LITERAL_STRING("address"), v));
-
-  if (!BroadcastSystemMessage(type, parameters)) {
-    BT_WARNING("Failed to broadcast system message to settings");
-    return;
-  }
+  BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(type, parameters);
 }
 
 void
