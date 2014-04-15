@@ -13,21 +13,21 @@ scrollbar {
   pointer-events: auto;
 }
 
-scrollbar[root="true"] {
-  position: relative;
-  z-index: 2147483647; /* largest positive value of a signed 32-bit integer */
+@media all and (-moz-overlay-scrollbars) {
+  scrollbar[root="true"] {
+    position: relative;
+    z-index: 2147483647; /* largest positive value of a signed 32-bit integer */
+  }
+
+  scrollbar:not([active="true"]),
+  scrollbar[disabled="true"] {
+    visibility: hidden;
+  }
 }
 
 html|select[size]:not([size="0"]):not([size="1"]) > scrollbar,
 html|select[multiple] > scrollbar {
   -moz-appearance: scrollbar-small;
-}
-
-@media all and (-moz-overlay-scrollbars) {
-  scrollbar:not([active="true"]),
-  scrollbar[disabled="true"] {
-    visibility: hidden;
-  }
 }
 
 /* ..... track ..... */

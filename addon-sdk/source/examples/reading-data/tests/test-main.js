@@ -3,9 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// Disable tests below for now.
-// See https://bugzilla.mozilla.org/show_bug.cgi?id=987348
-/*
 var m = require("main");
 var self = require("sdk/self");
 
@@ -26,4 +23,3 @@ exports.testID = function(test) {
   test.assertEqual(self.data.url("sample.html"),
                    "resource://reading-data-example-at-jetpack-dot-mozillalabs-dot-com/reading-data/data/sample.html");
 };
-*/

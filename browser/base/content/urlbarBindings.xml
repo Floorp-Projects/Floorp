@@ -68,6 +68,12 @@
         this.inputField.addEventListener("overflow", this, false);
         this.inputField.addEventListener("underflow", this, false);
 
+        try {
+          if (this._prefs.getBoolPref("unifiedcomplete")) {
+            this.setAttribute("autocompletesearch", "unifiedcomplete");
+          }
+        } catch (ex) {}
+
         const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
         var textBox = document.getAnonymousElementByAttribute(this,
                                                 "anonid", "textbox-input-box");
@@ -599,6 +605,14 @@
               case "trimURLs":
                 this._mayTrimURLs = this._prefs.getBoolPref(aData);
                 break;
+              case "unifiedcomplete":
+                let useUnifiedComplete = false;
+                try {
+                  useUnifiedComplete = this._prefs.getBoolPref(aData);
+                } catch (ex) {}
+                this.setAttribute("autocompletesearch",
+                                  useUnifiedComplete ? "unifiedcomplete"
+                                                     : "urlinline history");
             }
           }
         ]]></body>
