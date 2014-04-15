@@ -82,6 +82,7 @@ included_inclnames_to_ignore = set([
     'unicode/udat.h',           # ICU
     'unicode/udatpg.h',         # ICU
     'unicode/uenum.h',          # ICU
+    'unicode/unorm.h',          # ICU
     'unicode/unum.h',           # ICU
     'unicode/ustring.h',        # ICU
     'unicode/utypes.h',         # ICU
@@ -200,7 +201,7 @@ class FileKind(object):
         if filename.endswith('.cpp'):
             return FileKind.CPP
 
-        if filename.endswith(('inlines.h', '-inl.h', 'Inlines.h')):
+        if filename.endswith(('inlines.h', '-inl.h')):
             return FileKind.INL_H
 
         if filename.endswith('.h'):

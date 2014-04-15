@@ -3978,7 +3978,22 @@ BeginSweepingZoneGroup(JSRuntime *rt)
 
         for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
             gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
-            zone->sweep(&fop, releaseTypes && !zone->isPreservingCode());
+
+            // If there is an OOM while sweeping types, the type information
+            // will be deoptimized so that it is still correct (i.e.
+            // overapproximates the possible types in the zone), but the
+            // constraints might not have been triggered on the deoptimization
+            // or even copied over completely. In this case, destroy all JIT
+            // code and new script addendums in the zone, the only things whose
+            // correctness depends on the type constraints.
+            bool oom = false;
+            zone->sweep(&fop, releaseTypes && !zone->isPreservingCode(), &oom);
+
+            if (oom) {
+                zone->setPreservingCode(false);
+                zone->discardJitCode(&fop);
+                zone->types.clearAllNewScriptAddendumsOnOOM();
+            }
         }
     }
 

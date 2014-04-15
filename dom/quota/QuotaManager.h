@@ -198,23 +198,25 @@ public:
   nsresult
   AcquireExclusiveAccess(nsIOfflineStorage* aStorage,
                          const nsACString& aOrigin,
+                         Nullable<PersistenceType> aPersistenceType,
                          AcquireListener* aListener,
                          WaitingOnStoragesCallback aCallback,
                          void* aClosure)
   {
     NS_ASSERTION(aStorage, "Need a storage here!");
-    return AcquireExclusiveAccess(aOrigin, aStorage, aListener, aCallback,
-                                  aClosure);
+    return AcquireExclusiveAccess(aOrigin, aPersistenceType, aStorage,
+                                  aListener, aCallback, aClosure);
   }
 
   nsresult
   AcquireExclusiveAccess(const nsACString& aOrigin,
+                         Nullable<PersistenceType> aPersistenceType,
                          AcquireListener* aListener,
                          WaitingOnStoragesCallback aCallback,
                          void* aClosure)
   {
-    return AcquireExclusiveAccess(aOrigin, nullptr, aListener, aCallback,
-                                  aClosure);
+    return AcquireExclusiveAccess(aOrigin, aPersistenceType, nullptr,
+                                  aListener, aCallback, aClosure);
   }
 
   void
@@ -223,10 +225,10 @@ public:
                           const nsACString& aId);
 
   bool
-  IsClearOriginPending(const nsACString& aPattern)
+  IsClearOriginPending(const nsACString& aPattern,
+                       Nullable<PersistenceType> aPersistenceType)
   {
-    return !!FindSynchronizedOp(aPattern, Nullable<PersistenceType>(),
-                                EmptyCString());
+    return !!FindSynchronizedOp(aPattern, aPersistenceType, EmptyCString());
   }
 
   nsresult
@@ -369,6 +371,7 @@ private:
 
   nsresult
   AcquireExclusiveAccess(const nsACString& aOrigin,
+                         Nullable<PersistenceType> aPersistenceType,
                          nsIOfflineStorage* aStorage,
                          AcquireListener* aListener,
                          WaitingOnStoragesCallback aCallback,

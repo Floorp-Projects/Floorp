@@ -377,8 +377,8 @@ nsDeviceContext::Init(nsIWidget *aWidget)
     return NS_OK;
 }
 
-nsresult
-nsDeviceContext::CreateRenderingContext(nsRenderingContext *&aContext)
+already_AddRefed<nsRenderingContext>
+nsDeviceContext::CreateRenderingContext()
 {
     nsRefPtr<gfxASurface> printingSurface = mPrintingSurface;
 #ifdef XP_MACOSX
@@ -400,10 +400,8 @@ nsDeviceContext::CreateRenderingContext(nsRenderingContext *&aContext)
 
     pContext->Init(this, dt);
     pContext->Scale(mPrintingScale, mPrintingScale);
-    aContext = pContext;
-    NS_ADDREF(aContext);
 
-    return NS_OK;
+    return pContext.forget();
 }
 
 nsresult

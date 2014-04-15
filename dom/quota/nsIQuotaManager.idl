@@ -10,7 +10,7 @@ interface nsIQuotaRequest;
 interface nsIURI;
 interface nsIUsageCallback;
 
-[scriptable, builtinclass, uuid(f19a03ae-e97d-41e9-95dd-681b910c4093)]
+[scriptable, builtinclass, uuid(2968fcd5-1872-4ddc-8c16-62b27e357f31)]
 interface nsIQuotaManager : nsISupports
 {
   /**
@@ -51,7 +51,8 @@ interface nsIQuotaManager : nsISupports
   void
   clearStoragesForURI(in nsIURI aURI,
                       [optional] in unsigned long aAppId,
-                      [optional] in boolean aInMozBrowserOnly);
+                      [optional] in boolean aInMozBrowserOnly,
+                      [optional] in ACString aPersistenceType);
 
   /**
    * Resets quota and storage management. This can be used to force

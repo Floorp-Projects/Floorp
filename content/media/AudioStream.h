@@ -10,9 +10,11 @@
 #include "nsAutoPtr.h"
 #include "nsAutoRef.h"
 #include "nsCOMPtr.h"
+#include "nsThreadUtils.h"
 #include "Latency.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/RefPtr.h"
 
 #include "cubeb/cubeb.h"
 
@@ -154,12 +156,27 @@ public:
     mStart %= mCapacity;
   }
 
+  // Throw away all but aSize bytes from the buffer.  Returns new size, which
+  // may be less than aSize
+  uint32_t ContractTo(uint32_t aSize) {
+    NS_ABORT_IF_FALSE(mBuffer && mCapacity, "Buffer not initialized.");
+    if (aSize >= mCount) {
+      return mCount;
+    }
+    mStart += (mCount - aSize);
+    mCount = aSize;
+    mStart %= mCapacity;
+    return mCount;
+  }
+
 private:
   nsAutoArrayPtr<uint8_t> mBuffer;
   uint32_t mCapacity;
   uint32_t mStart;
   uint32_t mCount;
 };
+
+class AudioInitTask;
 
 // Access to a single instance of this class must be synchronized by
 // callers, or made from a single thread.  One exception is that access to
@@ -186,8 +203,9 @@ public:
   // Get the aformentionned sample rate. Does not lock.
   static int PreferredSampleRate();
 
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioStream)
   AudioStream();
-  ~AudioStream();
+  virtual ~AudioStream();
 
   enum LatencyRequest {
     HighLatency,
@@ -263,6 +281,14 @@ public:
   nsresult SetPreservesPitch(bool aPreservesPitch);
 
 private:
+  friend class AudioInitTask;
+
+  // So we can call it asynchronously from AudioInitTask
+  nsresult OpenCubeb(cubeb_stream_params &aParams,
+                     LatencyRequest aLatencyRequest);
+
+  void CheckForStart();
+
   static void PrefChanged(const char* aPref, void* aClosure);
   static double GetVolumeScale();
   static cubeb* GetCubebContext();
@@ -366,17 +392,20 @@ private:
 
   enum StreamState {
     INITIALIZED, // Initialized, playback has not begun.
-    STARTED,     // Started by a call to Write() (iff INITIALIZED) or Resume().
+    STARTED,     // cubeb started, but callbacks haven't started
+    RUNNING,     // DataCallbacks have started after STARTED, or after Resume().
     STOPPED,     // Stopped by a call to Pause().
     DRAINING,    // Drain requested.  DataCallback will indicate end of stream
                  // once the remaining contents of mBuffer are requested by
                  // cubeb, after which StateCallback will indicate drain
                  // completion.
     DRAINED,     // StateCallback has indicated that the drain is complete.
-    ERRORED      // Stream disabled due to an internal error.
+    ERRORED,     // Stream disabled due to an internal error.
+    SHUTDOWN     // Shutdown has been called
   };
 
   StreamState mState;
+  bool mNeedsStart; // needed in case Start() is called before cubeb is open
 
   // This mutex protects the static members below.
   static StaticMutex sMutex;
@@ -389,6 +418,35 @@ private:
   static double sVolumeScale;
   static uint32_t sCubebLatency;
   static bool sCubebLatencyPrefSet;
+};
+
+class AudioInitTask : public nsRunnable
+{
+public:
+  AudioInitTask(AudioStream *aStream,
+                AudioStream::LatencyRequest aLatencyRequest,
+                const cubeb_stream_params &aParams)
+    : mAudioStream(aStream)
+    , mLatencyRequest(aLatencyRequest)
+    , mParams(aParams)
+  {}
+
+  nsresult Dispatch()
+  {
+    return NS_NewNamedThread("CubebInit", getter_AddRefs(mThread), this);
+  }
+
+protected:
+  virtual ~AudioInitTask() {};
+
+private:
+  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL;
+
+  RefPtr<AudioStream> mAudioStream;
+  AudioStream::LatencyRequest mLatencyRequest;
+  cubeb_stream_params mParams;
+
+  nsCOMPtr<nsIThread> mThread;
 };
 
 } // namespace mozilla

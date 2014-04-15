@@ -55,6 +55,28 @@ PersistenceTypeFromText(const nsACString& aText)
   MOZ_ASSUME_UNREACHABLE("Should never get here!");
 }
 
+inline nsresult
+NullablePersistenceTypeFromText(const nsACString& aText,
+                                Nullable<PersistenceType> *aPersistenceType)
+{
+  if (aText.IsVoid()) {
+    *aPersistenceType = Nullable<PersistenceType>();
+    return NS_OK;
+  }
+
+  if (aText.EqualsLiteral("persistent")) {
+    *aPersistenceType = Nullable<PersistenceType>(PERSISTENCE_TYPE_PERSISTENT);
+    return NS_OK;
+  }
+
+  if (aText.EqualsLiteral("temporary")) {
+    *aPersistenceType = Nullable<PersistenceType>(PERSISTENCE_TYPE_TEMPORARY);
+    return NS_OK;
+  }
+
+  return NS_ERROR_UNEXPECTED;
+}
+
 inline mozilla::dom::StorageType
 PersistenceTypeToStorage(PersistenceType aPersistenceType)
 {

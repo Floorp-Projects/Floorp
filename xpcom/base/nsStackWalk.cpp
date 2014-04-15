@@ -869,10 +869,10 @@ void DemangleSymbol(const char * aSymbol,
 #if defined(MOZ_DEMANGLE_SYMBOLS)
     /* See demangle.h in the gcc source for the voodoo */
     char * demangled = abi::__cxa_demangle(aSymbol,0,0,0);
-    
+
     if (demangled)
     {
-        strncpy(aBuffer,demangled,aBufLen);
+        PL_strncpyz(aBuffer,demangled,aBufLen);
         free(demangled);
     }
 #endif // MOZ_DEMANGLE_SYMBOLS
@@ -1317,21 +1317,17 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
   aDetails->loffset = (char*)aPC - (char*)info.dli_fbase;
 
   const char * symbol = info.dli_sname;
-  int len;
-  if (!symbol || !(len = strlen(symbol))) {
+  if (!symbol || symbol[0] == '\0') {
     return NS_OK;
   }
 
-  char demangled[4096] = "\0";
+  DemangleSymbol(symbol, aDetails->function, sizeof(aDetails->function));
 
-  DemangleSymbol(symbol, demangled, sizeof(demangled));
-
-  if (strlen(demangled)) {
-    symbol = demangled;
-    len = strlen(symbol);
+  if (aDetails->function[0] == '\0') {
+    // Just use the mangled symbol if demangling failed.
+    PL_strncpyz(aDetails->function, symbol, sizeof(aDetails->function));
   }
 
-  PL_strncpyz(aDetails->function, symbol, sizeof(aDetails->function));
   aDetails->foffset = (char*)aPC - (char*)info.dli_saddr;
   return NS_OK;
 }

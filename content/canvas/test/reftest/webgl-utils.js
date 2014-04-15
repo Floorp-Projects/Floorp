@@ -66,3 +66,18 @@ function rAF(func) {
   var raf = window.requestAnimationFrame || window.mozRequestAnimationFrame;
   raf(func);
 }
+
+var MAX_WAIT_FOR_COMPOSITE_DELAY_MS = 500;
+
+function waitForComposite(func) {
+  var isDone = false;
+  var doneFunc = function () {
+    if (isDone)
+      return;
+    isDone = true;
+    func();
+  };
+
+  rAF(doneFunc);
+  setTimeout(doneFunc, MAX_WAIT_FOR_COMPOSITE_DELAY_MS);
+}

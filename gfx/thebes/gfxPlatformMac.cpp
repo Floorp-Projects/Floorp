@@ -239,14 +239,30 @@ gfxPlatformMac::UpdateFontList()
 
 static const char kFontArialUnicodeMS[] = "Arial Unicode MS";
 static const char kFontAppleBraille[] = "Apple Braille";
+static const char kFontAppleColorEmoji[] = "Apple Color Emoji";
 static const char kFontAppleSymbols[] = "Apple Symbols";
+static const char kFontDevanagariSangamMN[] = "Devanagari Sangam MN";
+static const char kFontEuphemiaUCAS[] = "Euphemia UCAS";
 static const char kFontGeneva[] = "Geneva";
 static const char kFontGeezaPro[] = "Geeza Pro";
+static const char kFontGujaratiSangamMN[] = "Gujarati Sangam MN";
+static const char kFontGurmukhiMN[] = "Gurmukhi MN";
 static const char kFontHiraginoKakuGothic[] = "Hiragino Kaku Gothic ProN";
+static const char kFontHiraginoSansGB[] = "Hiragino Sans GB";
+static const char kFontKefa[] = "Kefa";
+static const char kFontKhmerMN[] = "Khmer MN";
+static const char kFontLaoMN[] = "Lao MN";
 static const char kFontLucidaGrande[] = "Lucida Grande";
 static const char kFontMenlo[] = "Menlo";
+static const char kFontMicrosoftTaiLe[] = "Microsoft Tai Le";
+static const char kFontMingLiUExtB[] = "MingLiU-ExtB";
+static const char kFontMyanmarMN[] = "Myanmar MN";
 static const char kFontPlantagenetCherokee[] = "Plantagenet Cherokee";
+static const char kFontSimSunExtB[] = "SimSun-ExtB";
+static const char kFontSongtiSC[] = "Songti SC";
 static const char kFontSTHeiti[] = "STHeiti";
+static const char kFontSTIXGeneral[] = "STIXGeneral";
+static const char kFontTamilMN[] = "Tamil MN";
 
 void
 gfxPlatformMac::GetCommonFallbackFonts(const uint32_t aCh,
@@ -257,9 +273,19 @@ gfxPlatformMac::GetCommonFallbackFonts(const uint32_t aCh,
 
     if (!IS_IN_BMP(aCh)) {
         uint32_t p = aCh >> 16;
+        uint32_t b = aCh >> 8;
         if (p == 1) {
-            aFontList.AppendElement(kFontAppleSymbols);
-            aFontList.AppendElement(kFontGeneva);
+            if (b >= 0x1f0 && b < 0x1f7) {
+                aFontList.AppendElement(kFontAppleColorEmoji);
+            } else {
+                aFontList.AppendElement(kFontAppleSymbols);
+                aFontList.AppendElement(kFontSTIXGeneral);
+                aFontList.AppendElement(kFontGeneva);
+            }
+        } else if (p == 2) {
+            // OSX installations with MS Office may have these fonts
+            aFontList.AppendElement(kFontMingLiUExtB);
+            aFontList.AppendElement(kFontSimSunExtB);
         }
     } else {
         uint32_t b = (aCh >> 8) & 0xff;
@@ -272,14 +298,43 @@ gfxPlatformMac::GetCommonFallbackFonts(const uint32_t aCh,
         case 0x07:
             aFontList.AppendElement(kFontGeezaPro);
             break;
+        case 0x09:
+            aFontList.AppendElement(kFontDevanagariSangamMN);
+            break;
+        case 0x0a:
+            aFontList.AppendElement(kFontGurmukhiMN);
+            aFontList.AppendElement(kFontGujaratiSangamMN);
+            break;
+        case 0x0b:
+            aFontList.AppendElement(kFontTamilMN);
+            break;
+        case 0x0e:
+            aFontList.AppendElement(kFontLaoMN);
+            break;
+        case 0x0f:
+            aFontList.AppendElement(kFontSongtiSC);
+            break;
         case 0x10:
             aFontList.AppendElement(kFontMenlo);
+            aFontList.AppendElement(kFontMyanmarMN);
             break;
         case 0x13:  // Cherokee
             aFontList.AppendElement(kFontPlantagenetCherokee);
+            aFontList.AppendElement(kFontKefa);
             break;
-        case 0x18:  // Mongolian
+        case 0x14:  // Unified Canadian Aboriginal Syllabics
+        case 0x15:
+        case 0x16:
+            aFontList.AppendElement(kFontEuphemiaUCAS);
+            aFontList.AppendElement(kFontGeneva);
+            break;
+        case 0x18:  // Mongolian, UCAS
             aFontList.AppendElement(kFontSTHeiti);
+            aFontList.AppendElement(kFontEuphemiaUCAS);
+            break;
+        case 0x19:  // Khmer
+            aFontList.AppendElement(kFontKhmerMN);
+            aFontList.AppendElement(kFontMicrosoftTaiLe);
             break;
         case 0x1d:
         case 0x1e:
@@ -299,15 +354,23 @@ gfxPlatformMac::GetCommonFallbackFonts(const uint32_t aCh,
         case 0x2e:
             aFontList.AppendElement(kFontAppleSymbols);
             aFontList.AppendElement(kFontMenlo);
+            aFontList.AppendElement(kFontSTIXGeneral);
             aFontList.AppendElement(kFontGeneva);
             aFontList.AppendElement(kFontHiraginoKakuGothic);
+            aFontList.AppendElement(kFontAppleColorEmoji);
             break;
         case 0x2c:
+            aFontList.AppendElement(kFontGeneva);
+            break;
         case 0x2d:
+            aFontList.AppendElement(kFontKefa);
             aFontList.AppendElement(kFontGeneva);
             break;
         case 0x28:  // Braille
             aFontList.AppendElement(kFontAppleBraille);
+            break;
+        case 0x31:
+            aFontList.AppendElement(kFontHiraginoSansGB);
             break;
         case 0x4d:
             aFontList.AppendElement(kFontAppleSymbols);
@@ -323,6 +386,9 @@ gfxPlatformMac::GetCommonFallbackFonts(const uint32_t aCh,
         case 0xa7:
             aFontList.AppendElement(kFontGeneva);
             aFontList.AppendElement(kFontAppleSymbols);
+            break;
+        case 0xab:
+            aFontList.AppendElement(kFontKefa);
             break;
         case 0xfc:
         case 0xff:

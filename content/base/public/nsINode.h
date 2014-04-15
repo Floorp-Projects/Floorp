@@ -415,7 +415,7 @@ protected:
     mozilla::dom::ParentObject p(aNativeParent);
     // Note that mUseXBLScope is a no-op for chrome, and other places where we
     // don't use XBL scopes.
-    p.mUseXBLScope = IsInAnonymousSubtree();
+    p.mUseXBLScope = IsInAnonymousSubtree() && !IsAnonymousContentInSVGUseSubtree();
     return p;
   }
 
@@ -1011,6 +1011,9 @@ public:
   }
 
   bool IsInAnonymousSubtree() const;
+
+  // Note: This asserts |IsInAnonymousSubtree()|.
+  bool IsAnonymousContentInSVGUseSubtree() const;
 
   // True for native anonymous content and for XBL content if the binging
   // has chromeOnlyContent="true".

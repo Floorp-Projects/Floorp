@@ -74,13 +74,14 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     mBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format),
                                         flags,
                                         gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
-    MOZ_ASSERT(mBuffer->AsTextureClientSurface());
-    mBuffer->AsTextureClientSurface()->AllocateForSurface(aSize);
+    MOZ_ASSERT(mBuffer->CanExposeDrawTarget());
+    mBuffer->AllocateForSurface(aSize);
 
     bufferCreated = true;
   }
 
   if (!mBuffer->Lock(OPEN_WRITE_ONLY)) {
+    mBuffer = nullptr;
     return;
   }
 
