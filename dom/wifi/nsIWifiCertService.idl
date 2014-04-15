@@ -7,7 +7,7 @@
 interface nsIDOMBlob;
 interface nsIWifiEventListener;
 
-[scriptable, uuid(49e8e04e-eb05-4c92-84a6-7af32310f0c3)]
+[scriptable, uuid(2712a791-f720-484d-8820-c4085629f657)]
 interface nsIWifiCertService : nsISupports
 {
   const unsigned short WIFI_CERT_USAGE_FLAG_SERVER = 0x01;
@@ -31,5 +31,16 @@ interface nsIWifiCertService : nsISupports
   void importCert(in long id,
                   in nsIDOMBlob certBlob,
                   in DOMString certPassword,
+                  in DOMString certNickname);
+
+  /**
+   * Delete an imported certificate file
+   *
+   * @param id
+   *        Request ID.
+   * @param certNickname
+   *        Certificate nickname to delete.
+   */
+  void deleteCert(in long id,
                   in DOMString certNickname);
 };
