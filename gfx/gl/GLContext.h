@@ -2523,6 +2523,8 @@ public:
         return MakeCurrentImpl(aForce);
     }
 
+    virtual bool Init() = 0;
+
     virtual bool SetupLookupFunction() = 0;
 
     virtual void ReleaseSurface() {}
