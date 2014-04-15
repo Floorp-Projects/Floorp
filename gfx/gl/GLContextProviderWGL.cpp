@@ -399,6 +399,12 @@ GetGlobalContextWGL()
 }
 
 already_AddRefed<GLContext>
+GLContextProviderWGL::CreateWrappingExisting(void*, void*)
+{
+    return nullptr;
+}
+
+already_AddRefed<GLContext>
 GLContextProviderWGL::CreateForWindow(nsIWidget *aWidget)
 {
     if (!sWGLLib.EnsureInitialized()) {
