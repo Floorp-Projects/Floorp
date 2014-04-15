@@ -267,6 +267,7 @@ gbjar.sources += [
     'home/PanelLayout.java',
     'home/PanelListView.java',
     'home/PanelManager.java',
+    'home/PanelRefreshLayout.java',
     'home/PanelViewAdapter.java',
     'home/PanelViewItemHandler.java',
     'home/PinSiteDialog.java',
