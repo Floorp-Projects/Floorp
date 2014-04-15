@@ -462,21 +462,6 @@ public:
   }
 };
 
-class SocketSetUpIOTask : public Task
-{
-  virtual void Run()
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-    mImpl->SetUpIO(mWrite);
-  }
-
-  DroidSocketImpl* mImpl;
-  bool mWrite;
-public:
-  SocketSetUpIOTask(DroidSocketImpl* aImpl, bool aWrite)
-  : mImpl(aImpl), mWrite(aWrite) { }
-};
-
 class SocketConnectClientFdTask : public Task
 {
   virtual void Run()
@@ -743,19 +728,6 @@ BluetoothSocket::CloseDroidSocket()
   mImpl = nullptr;
 
   OnDisconnect();
-}
-
-bool
-BluetoothSocket::CreateDroidSocket(int aFd)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_FALSE(mImpl, false);
-
-  mImpl = new DroidSocketImpl(this, aFd);
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                   new SocketSetUpIOTask(mImpl, !mIsServer));
-
-  return true;
 }
 
 bool
