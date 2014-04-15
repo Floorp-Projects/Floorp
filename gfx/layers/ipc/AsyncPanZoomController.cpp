@@ -132,7 +132,6 @@ namespace mozilla {
 namespace layers {
 
 typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
-typedef GeckoContentController::APZStateChange APZStateChange;
 
 /*
  * The following prefs are used to control the behaviour of the APZC.
@@ -1993,11 +1992,11 @@ void AsyncPanZoomController::SetState(PanZoomState aNewState) {
 
   if (mGeckoContentController) {
     if (!IsTransformingState(oldState) && IsTransformingState(aNewState)) {
-      mGeckoContentController->NotifyAPZStateChange(
-        GetGuid(), APZStateChange::TransformBegin);
+      mGeckoContentController->NotifyTransformBegin(
+        ScrollableLayerGuid(mLayersId, mFrameMetrics.mPresShellId, mFrameMetrics.GetScrollId()));
     } else if (IsTransformingState(oldState) && !IsTransformingState(aNewState)) {
-      mGeckoContentController->NotifyAPZStateChange(
-        GetGuid(), APZStateChange::TransformEnd);
+      mGeckoContentController->NotifyTransformEnd(
+        ScrollableLayerGuid(mLayersId, mFrameMetrics.mPresShellId, mFrameMetrics.GetScrollId()));
     }
   }
 }

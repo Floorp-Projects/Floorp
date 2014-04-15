@@ -212,9 +212,8 @@ public:
     void HandleLongTapUp(const CSSPoint& aPoint,
                          int32_t aModifiers,
                          const ScrollableLayerGuid& aGuid);
-    void NotifyAPZStateChange(ViewID aViewId,
-                              APZStateChange aChange,
-                              int aArg);
+    void NotifyTransformBegin(ViewID aViewId);
+    void NotifyTransformEnd(ViewID aViewId);
     void Activate();
     void Deactivate();
 
