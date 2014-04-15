@@ -126,6 +126,9 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SystemMemoryReporter.h"
 
+#include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/CompositorParent.h"
+
 #ifdef MOZ_VISUAL_EVENT_TRACER
 #include "mozilla/VisualEventTracer.h"
 #endif
@@ -875,6 +878,11 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
                                     nullptr);
             }
         }
+
+        // This must happen after the shutdown of media and widgets, which
+        // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
+        mozilla::layers::ImageBridgeChild::ShutDown();
+        mozilla::layers::CompositorParent::ShutDown();
 
         NS_ProcessPendingEvents(thread);
         mozilla::scache::StartupCache::DeleteSingleton();
