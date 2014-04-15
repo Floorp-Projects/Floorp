@@ -4374,6 +4374,7 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler &masm)
             // Load function in scratchReg and ensure that it has a jit script.
             masm.loadPtr(Address(BaselineStubReg, ICGetElemNativeGetterStub::offsetOfGetter()),
                          scratchReg);
+            masm.branchIfFunctionHasNoScript(scratchReg, popR1 ? &failurePopR1 : &failure);
             masm.loadPtr(Address(scratchReg, JSFunction::offsetOfNativeOrScript()), scratchReg);
             masm.loadBaselineOrIonRaw(scratchReg, scratchReg, SequentialExecution,
                                       popR1 ? &failurePopR1 : &failure);
