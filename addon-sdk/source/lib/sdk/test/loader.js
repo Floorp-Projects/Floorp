@@ -62,9 +62,11 @@ exports.LoaderWithHookedConsole = function (module, callback) {
         error: hook.bind("error"),
         debug: hook.bind("debug"),
         exception: hook.bind("exception"),
+        time: hook.bind("time"),
+        timeEnd: hook.bind("timeEnd"),
         __exposedProps__: {
           log: "rw", info: "rw", warn: "rw", error: "rw", debug: "rw",
-          exception: "rw"
+          exception: "rw", time: "rw", timeEnd: "rw"
         }
       }
     }),
@@ -105,9 +107,11 @@ exports.LoaderWithFilteredConsole = function (module, callback) {
       error: hook.bind("error"),
       debug: hook.bind("debug"),
       exception: hook.bind("exception"),
+      time: hook.bind("time"),
+      timeEnd: hook.bind("timeEnd"),
       __exposedProps__: {
         log: "rw", info: "rw", warn: "rw", error: "rw", debug: "rw",
-        exception: "rw"
+        exception: "rw", time: "rw", timeEnd: "rw"
       }
     }
   });

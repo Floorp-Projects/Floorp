@@ -201,6 +201,10 @@ function createWorker (mod, window) {
     contentScript: mod.contentScript,
     contentScriptFile: mod.contentScriptFile,
     contentScriptOptions: mod.contentScriptOptions,
+    // Bug 980468: Syntax errors from scripts can happen before the worker
+    // can set up an error handler. They are per-mod rather than per-worker
+    // so are best handled at the mod level.
+    onError: (e) => emit(mod, 'error', e)
   });
   workers.set(mod, worker);
   pipe(worker, mod);
