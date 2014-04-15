@@ -51,6 +51,5 @@ let tests = [
 ];
 
 SpecialPowers.pushPermissions(
-  [{'type': 'settings', 'allow': true, 'context': document},
-   {'type': 'nfc-manager', 'allow': true, 'context': document}],
+  [{'type': 'nfc-manager', 'allow': true, 'context': document}],
   runTests);
