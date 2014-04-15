@@ -386,9 +386,7 @@ public:
                                                      tableInterpolationFactor);
       // mPhase runs 0..periodicWaveSize here instead of 0..2*M_PI.
       mPhase += periodicWaveSize * mFinalFrequency * rate;
-      if (mPhase >= periodicWaveSize) {
-        mPhase -= periodicWaveSize;
-      }
+      mPhase = fmod(mPhase, periodicWaveSize);
       // Bilinear interpolation between adjacent samples in each table.
       uint32_t j1 = floor(mPhase);
       uint32_t j2 = j1 + 1;
