@@ -844,6 +844,44 @@ exports['test button state are snapshot'] = function(assert) {
   loader.unload();
 }
 
+exports['test button icon object is a snapshot'] = function(assert) {
+  let loader = Loader(module);
+  let { ToggleButton } = loader.require('sdk/ui');
+
+  let icon = {
+    '16': './foo.png'
+  };
+
+  let button = ToggleButton({
+    id: 'my-button-17',
+    label: 'my button',
+    icon: icon
+  });
+
+  assert.deepEqual(button.icon, icon,
+    'button.icon has the same properties of the object set in the constructor');
+
+  assert.notEqual(button.icon, icon,
+    'button.icon is not the same object of the object set in the constructor');
+
+  assert.throws(
+    () => button.icon[16] = './bar.png',
+    /16 is read-only/,
+    'properties of button.icon are ready-only'
+  );
+
+  let newIcon = {'16': './bar.png'};
+  button.icon = newIcon;
+
+  assert.deepEqual(button.icon, newIcon,
+    'button.icon has the same properties of the object set');
+
+  assert.notEqual(button.icon, newIcon,
+    'button.icon is not the same object of the object set');
+
+  loader.unload();
+}
+
 exports['test button after destroy'] = function(assert) {
   let loader = Loader(module);
   let { ToggleButton } = loader.require('sdk/ui');

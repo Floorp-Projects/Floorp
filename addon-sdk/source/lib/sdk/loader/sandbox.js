@@ -67,3 +67,8 @@ function load(sandbox, uri) {
   }
 }
 exports.load = load;
+
+/**
+ * Forces the given `sandbox` to be freed immediately.
+ */
+exports.nuke = Cu.nukeSandbox
