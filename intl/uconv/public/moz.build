@@ -9,6 +9,7 @@ EXPORTS += [
     'nsIUnicodeDecoder.h',
     'nsIUnicodeEncoder.h',
     'nsUConvCID.h',
+    'nsUCSupport.h',
     'uconvutil.h',
 ]
 
