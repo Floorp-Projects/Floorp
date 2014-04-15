@@ -8,4 +8,4 @@ EXTRA_JS_MODULES += [
     'resize-commands.js'
 ]
 
-TEST_DIRS += ['test']
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

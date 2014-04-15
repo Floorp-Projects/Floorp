@@ -482,6 +482,8 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                 AutoValueVector &startFrameFormals, MutableHandleFunction nextCallee,
                 jsbytecode **callPC, const ExceptionBailoutInfo *excInfo)
 {
+    MOZ_ASSERT(script->hasBaselineScript());
+
     // If excInfo is non-nullptr, we are bailing out to a catch or finally block
     // and this is the frame where we will resume. Usually the expression stack
     // should be empty in this case but there can be iterators on the stack.
@@ -1544,6 +1546,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
 
         if (iter.isBaselineJS()) {
             BaselineFrame *frame = iter.baselineFrame();
+            MOZ_ASSERT(frame->script()->hasBaselineScript());
 
             // If the frame doesn't even have a scope chain set yet, then it's resuming
             // into the the prologue before the scope chain is initialized.  Any

@@ -120,7 +120,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
       app.ondownloadapplied = app.ondownloadavailable = null;
       continueTest();
     };
-    app.checkForUpdate();
+    request = app.checkForUpdate();
+    request.onerror = mozAppsError;
+    request.onsuccess = function() {
+      ok(true, "Got onsuccess");
+      continueTest();
+    };
+    yield undefined;
     yield undefined;
 
     icons = app.manifest.icons;

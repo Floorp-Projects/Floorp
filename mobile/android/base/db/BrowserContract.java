@@ -402,7 +402,7 @@ public class BrowserContract {
         public static final String EXCERPT = "excerpt";
         public static final String READ = "read";
         public static final String LENGTH = "length";
-        public static final String DEFAULT_SORT_ORDER = _ID + " DESC";
+        public static final String DEFAULT_SORT_ORDER = DATE_MODIFIED + " DESC";
         public static final String[] DEFAULT_PROJECTION = new String[] { _ID, URL, TITLE, EXCERPT, LENGTH };
 
         // Minimum fields required to create a reading list item.

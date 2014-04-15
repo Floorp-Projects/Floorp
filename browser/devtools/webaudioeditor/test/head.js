@@ -16,11 +16,9 @@ let { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
-let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 
 let { WebAudioFront } = devtools.require("devtools/server/actors/webaudio");
 let TargetFactory = devtools.TargetFactory;
-let Toolbox = devtools.Toolbox;
 
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/webaudioeditor/test/";
 const SIMPLE_CONTEXT_URL = EXAMPLE_URL + "doc_simple-context.html";
@@ -104,6 +102,11 @@ function once(aTarget, aEventName, aUseCapture = false) {
   return deferred.promise;
 }
 
+function reload(aTarget, aWaitForTargetEvent = "navigate") {
+  aTarget.activeTab.reload();
+  return once(aTarget, aWaitForTargetEvent);
+}
+
 function test () {
   Task.spawn(spawnTest).then(finish, handleError);
 }
@@ -125,6 +128,38 @@ function initBackend(aUrl) {
 
     let front = new WebAudioFront(target.client, target.form);
     return [target, debuggee, front];
+  });
+}
+
+function initWebAudioEditor(aUrl) {
+  info("Initializing a web audio editor pane.");
+
+  return Task.spawn(function*() {
+    let tab = yield addTab(aUrl);
+    let target = TargetFactory.forTab(tab);
+    let debuggee = target.window.wrappedJSObject;
+
+    yield target.makeRemote();
+
+    Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", true);
+    let toolbox = yield gDevTools.showToolbox(target, "webaudioeditor");
+    let panel = toolbox.getCurrentPanel();
+    return [target, debuggee, panel];
+  });
+}
+
+function teardown(aPanel) {
+  info("Destroying the web audio editor.");
+
+  return Promise.all([
+    once(aPanel, "destroyed"),
+    removeTab(aPanel.target.tab)
+  ]).then(() => {
+    let gBrowser = window.gBrowser;
+    while (gBrowser.tabs.length > 1) {
+      gBrowser.removeCurrentTab();
+    }
+    gBrowser = null;
   });
 }
 
@@ -158,3 +193,116 @@ function getSpread (front, eventName) { return getN(front, eventName, 1, true); 
 function get2Spread (front, eventName) { return getN(front, eventName, 2, true); }
 function get3Spread (front, eventName) { return getN(front, eventName, 3, true); }
 function getNSpread (front, eventName, count) { return getN(front, eventName, count, true); }
+
+/**
+ * Waits for the UI_GRAPH_RENDERED event to fire, but only
+ * resolves when the graph was rendered with the correct count of
+ * nodes and edges.
+ */
+function waitForGraphRendered (front, nodeCount, edgeCount) {
+  let deferred = Promise.defer();
+  let eventName = front.EVENTS.UI_GRAPH_RENDERED;
+  front.on(eventName, function onGraphRendered (_, nodes, edges) {
+    if (nodes === nodeCount && edges === edgeCount) {
+      front.off(eventName, onGraphRendered);
+      deferred.resolve();
+    }
+  });
+  return deferred.promise;
+}
+
+function checkVariableView (view, index, hash) {
+  let scope = view.getScopeAtIndex(index);
+  let variables = Object.keys(hash);
+  variables.forEach(variable => {
+    let aVar = scope.get(variable);
+    is(aVar.target.querySelector(".name").getAttribute("value"), variable,
+      "Correct property name for " + variable);
+    is(aVar.target.querySelector(".value").getAttribute("value"), hash[variable],
+      "Correct property value of " + hash[variable] + " for " + variable);
+  });
+}
+
+function modifyVariableView (win, view, index, prop, value) {
+  let deferred = Promise.defer();
+  let scope = view.getScopeAtIndex(index);
+  let aVar = scope.get(prop);
+  scope.expand();
+
+  // Must wait for the scope DOM to be available to receive
+  // events
+  executeSoon(() => {
+    let varValue = aVar.target.querySelector(".title > .value");
+    EventUtils.sendMouseEvent({ type: "mousedown" }, varValue, win);
+
+    win.on(win.EVENTS.UI_SET_PARAM, handleSetting);
+    win.on(win.EVENTS.UI_SET_PARAM_ERROR, handleSetting);
+
+    info("Setting " + value + " for " + prop + "....");
+    let varInput = aVar.target.querySelector(".title > .element-value-input");
+    setText(varInput, value);
+    EventUtils.sendKey("RETURN", win);
+  });
+
+  function handleSetting (eventName) {
+    win.off(win.EVENTS.UI_SET_PARAM, handleSetting);
+    win.off(win.EVENTS.UI_SET_PARAM_ERROR, handleSetting);
+    if (eventName === win.EVENTS.UI_SET_PARAM)
+      deferred.resolve();
+    if (eventName === win.EVENTS.UI_SET_PARAM_ERROR)
+      deferred.reject();
+  }
+
+  return deferred.promise;
+}
+
+function clearText (aElement) {
+  info("Clearing text...");
+  aElement.focus();
+  aElement.value = "";
+}
+
+function setText (aElement, aText) {
+  clearText(aElement);
+  info("Setting text: " + aText);
+  aElement.value = aText;
+}
+
+function findGraphEdge (win, source, target) {
+  let selector = ".edgePaths .edgePath[data-source='" + source + "'][data-target='" + target + "']";
+  return win.document.querySelector(selector);
+}
+
+function findGraphNode (win, node) {
+  let selector = ".nodes > g[data-id='" + node + "']";
+  return win.document.querySelector(selector);
+}
+
+function click (win, element) {
+  EventUtils.sendMouseEvent({ type: "click" }, element, win);
+}
+
+function mouseOver (win, element) {
+  EventUtils.sendMouseEvent({ type: "mouseover" }, element, win);
+}
+
+/**
+ * List of audio node properties to test against expectations of the AudioNode actor
+ */
+
+const NODE_PROPERTIES = {
+  "OscillatorNode": ["type", "frequency", "detune"],
+  "GainNode": ["gain"],
+  "DelayNode": ["delayTime"],
+  "AudioBufferSourceNode": ["buffer", "playbackRate", "loop", "loopStart", "loopEnd"],
+  "ScriptProcessorNode": ["bufferSize"],
+  "PannerNode": ["panningModel", "distanceModel", "refDistance", "maxDistance", "rolloffFactor", "coneInnerAngle", "coneOuterAngle", "coneOuterGain"],
+  "ConvolverNode": ["buffer", "normalize"],
+  "DynamicsCompressorNode": ["threshold", "knee", "ratio", "reduction", "attack", "release"],
+  "BiquadFilterNode": ["type", "frequency", "Q", "detune", "gain"],
+  "WaveShaperNode": ["curve", "oversample"],
+  "AnalyserNode": ["fftSize", "minDecibels", "maxDecibels", "smoothingTimeConstraint", "frequencyBinCount"],
+  "AudioDestinationNode": [],
+  "ChannelSplitterNode": [],
+  "ChannelMergerNode": []
+};

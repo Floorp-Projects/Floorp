@@ -61,7 +61,7 @@ public class testSettingsMenuItems extends PixelTest {
         { "Cookies", "Enabled", "Enabled, excluding 3rd party", "Disabled" },
         { "Remember passwords" },
         { "Use master password" },
-        { "Clear private data", "", "Browsing & download history", "Downloaded files", "Form & search history", "Cookies & active logins", "Saved passwords", "Cache", "Offline website data", "Site settings", "Clear data" },
+        { "Clear private data", "", "Browsing history", "Downloads", "Form & search history", "Cookies & active logins", "Saved passwords", "Cache", "Offline website data", "Site settings", "Clear data" },
     };
 
     // Mozilla/vendor menu items.
