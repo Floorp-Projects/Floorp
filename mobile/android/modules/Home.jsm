@@ -316,6 +316,10 @@ let HomePanels = (function () {
       if (!view.dataset) {
         throw "Home.panels: No dataset provided for view: panel.id = " + this.id + ", view.type = " + view.type;
       }
+
+      if (view.onrefresh) {
+        view.refreshEnabled = true;
+      }
     }
 
     if (options.auth) {
