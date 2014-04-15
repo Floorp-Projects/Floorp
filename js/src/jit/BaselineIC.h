@@ -3555,6 +3555,7 @@ class ICSetElem_DenseAdd : public ICUpdatedStub
         return type_;
     }
     size_t protoChainDepth() const {
+        MOZ_ASSERT(extra_ < MAX_PROTO_CHAIN_DEPTH);
         return extra_;
     }
 
