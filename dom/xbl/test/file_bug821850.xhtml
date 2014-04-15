@@ -54,10 +54,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
              "Unexposed property should not be defined in content");
 
           // Check that here document.QueryInterface works
-          ok("QueryInterface" in document,
-             "Should have a document.QueryInterface here");
-          is(document.QueryInterface(Components.interfaces.nsIDOMDocument),
-             document, "Should be able to QI the document");
+          var img = document.querySelector("img");
+          ok("QueryInterface" in img,
+             "Should have a img.QueryInterface here");
+          is(img.QueryInterface(Components.interfaces.nsIImageLoadingContent),
+             img, "Should be able to QI the document");
 
           // Make sure standard constructors work right in the presence of
           // sandboxPrototype and Xray-resolved constructors.
@@ -289,6 +290,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
 <div id="content">
   <div id="bound">Bound element</div>
   <div id="bound2">Bound element</div>
+  <img/>
 </div>
 <pre id="test">
 </pre>
