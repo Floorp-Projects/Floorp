@@ -25,6 +25,8 @@ const { URL } = require('sdk/url');
 const fixtures = require('./fixtures')
 
 const SVG_URL = fixtures.url('mofo_logo.SVG');
+const CSS_URL = fixtures.url('css-include-file.css');
+
 const Isolate = fn => '(' + fn + ')()';
 
 function ignorePassingDOMNodeWarning(type, message) {
@@ -973,6 +975,88 @@ exports['test panel can be constructed without any arguments'] = function (asser
   let panel = Panel();
   assert.ok(true, "Creating a panel with no arguments does not throw");
 };
+
+exports['test panel CSS'] = function(assert, done) {
+  const loader = Loader(module);
+  const { Panel } = loader.require('sdk/panel');
+
+  const { getActiveView } = loader.require('sdk/view/core');
+
+  const getContentWindow = panel =>
+    getActiveView(panel).querySelector('iframe').contentWindow;
+
+  let panel = Panel({
+    contentURL: 'data:text/html;charset=utf-8,' + 
+                '<div style="background: silver">css test</div>',
+    contentStyle: 'div { height: 100px; }',
+    contentStyleFile: CSS_URL,
+    onShow: () => {
+      ready(getContentWindow(panel)).then(({ document }) => {
+        let div = document.querySelector('div');
+
+        assert.equal(div.clientHeight, 100, 'Panel contentStyle worked');
+        assert.equal(div.offsetHeight, 120, 'Panel contentStyleFile worked');
+
+        loader.unload();
+        done();
+      }).then(null, assert.fail); 
+    }
+  });
+
+  panel.show();
+};
+
+exports['test panel CSS list'] = function(assert, done) {
+  const loader = Loader(module);
+  const { Panel } = loader.require('sdk/panel');
+
+  const { getActiveView } = loader.require('sdk/view/core');
+
+  const getContentWindow = panel =>
+    getActiveView(panel).querySelector('iframe').contentWindow;
+
+  let panel = Panel({
+    contentURL: 'data:text/html;charset=utf-8,' + 
+                '<div style="width:320px; max-width: 480px!important">css test</div>',
+    contentStyleFile: [
+      // Highlight evaluation order in this list
+      "data:text/css;charset=utf-8,div { border: 1px solid black; }",
+      "data:text/css;charset=utf-8,div { border: 10px solid black; }",
+      // Highlight evaluation order between contentStylesheet & contentStylesheetFile
+      "data:text/css;charset=utf-8s,div { height: 1000px; }",
+      // Highlight precedence between the author and user style sheet
+      "data:text/css;charset=utf-8,div { width: 200px; max-width: 640px!important}",
+    ],
+    contentStyle: [
+      "div { height: 10px; }",
+      "div { height: 100px; }"
+    ],
+    onShow: () => {
+      ready(getContentWindow(panel)).then(({ window, document }) => {
+        let div = document.querySelector('div');
+        let style = window.getComputedStyle(div);
+
+        assert.equal(div.clientHeight, 100,
+          'Panel contentStyle list is evaluated after contentStyleFile');
+
+        assert.equal(div.offsetHeight, 120,
+          'Panel contentStyleFile list works');
+
+        assert.equal(style.width, '320px',
+          'add-on author/page author stylesheet precedence works');
+
+        assert.equal(style.maxWidth, '480px',
+          'add-on author/page author stylesheet !important precedence works');
+
+        loader.unload();
+        done();
+      }).then(null, assert.fail); 
+    }
+  });
+
+  panel.show();
+};
+
 
 if (isWindowPBSupported) {
   exports.testGetWindow = function(assert, done) {
