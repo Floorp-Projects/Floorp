@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { sandbox, load, evaluate } = require('sdk/loader/sandbox');
+const { sandbox, load, evaluate, nuke } = require('sdk/loader/sandbox');
 const xulApp = require("sdk/system/xul-app");
 const fixturesURI = module.uri.split('test-sandbox.js')[0] + 'fixtures/';
 
@@ -135,6 +135,32 @@ exports['test metadata']  = function(assert) {
 
   let fixture = sandbox();
   let self = require('sdk/self');
+}
+
+exports['test nuke sandbox'] = function(assert) {
+
+  let fixture = sandbox('http://example.com');
+  fixture.foo = 'foo';
+
+  let ref = evaluate(fixture, 'let a = {bar: "bar"}; a');
+
+  nuke(fixture);
+
+  assert.ok(Cu.isDeadWrapper(fixture), 'sandbox should be dead');
+
+  assert.throws(
+    () => fixture.foo,
+    /can't access dead object/,
+    'property of nuked sandbox should not be accessible'
+  );
+
+  assert.ok(Cu.isDeadWrapper(ref), 'ref to object from sandbox should be dead');
+
+  assert.throws(
+    () => ref.bar,
+    /can't access dead object/,
+    'object from nuked sandbox should not be alive'
+  );
 }
 
 require('test').run(exports);

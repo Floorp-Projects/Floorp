@@ -226,20 +226,6 @@
 
 /* End selected tab */
 
-/* Background tabs */
-
-/* Decrease the height of the hoverable region of background tabs whenever the tabs are at the top
-   of the window (e.g. no menubar, tabs in titlebar, etc.) to make it easier to drag the window by
-   the titlebar. We don't need this in fullscreen since window dragging is not an issue there. */
-%ifdef XP_MACOSX
-#main-window[tabsintitlebar][sizemode="maximized"] .tab-background-middle:not([selected=true]),
-%endif
-#main-window[tabsintitlebar]:not([sizemode="maximized"]):not([inFullscreen]) #toolbar-menubar:-moz-any([autohide="true"][inactive], :not([autohide])) + #TabsToolbar .tab-background-middle:not([selected=true]) {
-  clip-path: url(chrome://browser/content/browser.xul#tab-hover-clip-path);
-}
-
-/* End background tabs */
-
 /* new tab button border and gradient on hover */
 .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]),
 .tabs-newtab-button:hover {

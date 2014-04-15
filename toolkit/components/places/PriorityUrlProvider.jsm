@@ -126,7 +126,7 @@ this.PriorityUrlProvider = Object.freeze({
     matches.delete(token);
   },
 
-  getMatchingSpec: function (searchToken) {
+  getMatch: function (searchToken) {
     return Task.spawn(function* () {
       yield promiseInitialized();
       for (let [token, match] of matches.entries()) {

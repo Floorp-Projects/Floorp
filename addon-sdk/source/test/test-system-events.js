@@ -119,6 +119,30 @@ exports["test listeners are GC-ed"] = function(assert, done) {
   });
 };
 
+exports["test alive listeners are removed on unload"] = function(assert) {
+  let receivedFromWeak = [];
+  let receivedFromStrong = [];
+  let loader = Loader(module);
+  let events = loader.require('sdk/system/events');
+
+  let type = 'test-alive-listeners-are-removed';
+  const handler = (event) => receivedFromStrong.push(event);
+  const weakHandler = (event) => receivedFromWeak.push(event); 
+
+  events.on(type, handler, true);
+  events.on(type, weakHandler);
+
+  events.emit(type, { data: 1 });
+  assert.equal(receivedFromStrong.length, 1, "strong listener invoked");
+  assert.equal(receivedFromWeak.length, 1, "weak listener invoked");
+
+  loader.unload();
+  events.emit(type, { data: 2 });
+
+  assert.equal(receivedFromWeak.length, 1, "weak listener was removed");
+  assert.equal(receivedFromStrong.length, 1, "strong listener was removed");
+};
+
 exports["test handle nsIObserverService notifications"] = function(assert) {
   let ios = Cc['@mozilla.org/network/io-service;1']
             .getService(Ci.nsIIOService);
