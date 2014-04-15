@@ -124,6 +124,11 @@ public:
     // its IO functions all the time.
     virtual bool IsNullTransaction() { return false; }
 
+    // If we used rtti this would be the result of doing
+    // dynamic_cast<nsHttpTransaction *>(this).. i.e. it can be nullptr for
+    // non nsHttpTransaction implementations of nsAHttpTransaction
+    virtual nsHttpTransaction *QueryHttpTransaction() { return nullptr; }
+
     // return the load group connection information associated with the transaction
     virtual nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() { return nullptr; }
 
