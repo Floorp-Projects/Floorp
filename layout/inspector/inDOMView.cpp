@@ -24,7 +24,6 @@
 #include "nsITreeColumns.h"
 #include "nsITreeBoxObject.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/Services.h"
 
 #ifdef ACCESSIBILITY
 #include "nsIAccessible.h"
@@ -791,7 +790,7 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
   nsCOMPtr<nsIDOMNode> childDOMNode(do_QueryInterface(aChild));
   nsCOMPtr<nsIDOMNode> parent;
   if (!mDOMUtils) {
-    mDOMUtils = services::GetInDOMUtils();
+    mDOMUtils = do_GetService("@mozilla.org/inspector/dom-utils;1");
     if (!mDOMUtils) {
       return;
     }
@@ -1190,7 +1189,7 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult)
   if (mWhatToShow & nsIDOMNodeFilter::SHOW_ELEMENT) {
     nsCOMPtr<nsIDOMNodeList> kids;
     if (!mDOMUtils) {
-      mDOMUtils = services::GetInDOMUtils();
+      mDOMUtils = do_GetService("@mozilla.org/inspector/dom-utils;1");
       if (!mDOMUtils) {
         return NS_ERROR_FAILURE;
       }
@@ -1235,7 +1234,7 @@ inDOMView::AppendKidsToArray(nsIDOMNodeList* aKids,
 
   // Try and get DOM Utils in case we don't have one yet.
   if (!mShowWhitespaceNodes && !mDOMUtils) {
-    mDOMUtils = services::GetInDOMUtils();
+    mDOMUtils = do_CreateInstance("@mozilla.org/inspector/dom-utils;1");
   }
 
   for (uint32_t i = 0; i < l; ++i) {

@@ -20,7 +20,6 @@
 #include "nsIXULOverlayProvider.h"
 #include "IHistory.h"
 #include "nsIXPConnect.h"
-#include "inIDOMUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::services;
