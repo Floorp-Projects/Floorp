@@ -126,7 +126,7 @@
 }
 
 .ruleview-property {
-  border-left: 2px solid transparent;
+  border-left: 3px solid transparent;
   clear: right;
 }
 
@@ -134,8 +134,12 @@
   vertical-align: middle;
 }
 
-.ruleview-property[dirty] {
-  border-left-color: #68E268;
+.theme-dark .ruleview-property[dirty] {
+  border-left-color: #70bf53; /* Green */
+}
+
+.theme-light .ruleview-property[dirty] {
+  border-left-color: #2cbb0f; /* Green */
 }
 
 .ruleview-namecontainer > .ruleview-propertyname,
