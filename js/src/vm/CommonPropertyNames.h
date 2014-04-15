@@ -103,7 +103,6 @@
     macro(int8, int8, "int8") \
     macro(int16, int16, "int16") \
     macro(int32, int32, "int32") \
-    macro(isExtensible, isExtensible, "isExtensible") \
     macro(iterator, iterator, "iterator") \
     macro(iteratorIntrinsic, iteratorIntrinsic, "__iterator__") \
     macro(join, join, "join") \
