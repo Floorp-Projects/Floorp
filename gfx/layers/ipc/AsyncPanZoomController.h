@@ -568,8 +568,7 @@ private:
     TouchBlockState()
       :  mAllowedTouchBehaviorSet(false),
          mPreventDefault(false),
-         mPreventDefaultSet(false),
-         mSingleTapOccurred(false)
+         mPreventDefaultSet(false)
     {}
 
     // Values of allowed touch behavior for touch points of this touch block.
@@ -587,9 +586,6 @@ private:
 
     // Specifies whether mPreventDefault property is set for this touch events block.
     bool mPreventDefaultSet;
-
-    // Specifies whether a single tap event was generated during this touch block.
-    bool mSingleTapOccurred;
   };
 
   /*
@@ -654,9 +650,6 @@ private:
 
   // Helper function for OnSingleTapUp() and OnSingleTapConfirmed().
   nsEventStatus GenerateSingleTap(const ScreenIntPoint& aPoint, mozilla::Modifiers aModifiers);
-
-  // Common processing at the end of a touch block.
-  void OnTouchEndOrCancel();
 
   uint64_t mLayersId;
   nsRefPtr<CompositorParent> mCompositorParent;
