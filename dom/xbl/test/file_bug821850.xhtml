@@ -58,7 +58,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           ok("QueryInterface" in img,
              "Should have a img.QueryInterface here");
           is(img.QueryInterface(Components.interfaces.nsIImageLoadingContent),
-             img, "Should be able to QI the document");
+             img, "Should be able to QI the image");
 
           // Make sure standard constructors work right in the presence of
           // sandboxPrototype and Xray-resolved constructors.
