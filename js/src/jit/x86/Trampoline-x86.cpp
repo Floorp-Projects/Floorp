@@ -9,7 +9,6 @@
 #include "assembler/assembler/MacroAssembler.h"
 #include "jit/Bailouts.h"
 #include "jit/BaselineJIT.h"
-#include "jit/ExecutionModeInlines.h"
 #include "jit/IonFrames.h"
 #include "jit/IonLinker.h"
 #include "jit/IonSpewer.h"
@@ -21,6 +20,8 @@
 #include "jit/x86/BaselineHelpers-x86.h"
 
 #include "jsscriptinlines.h"
+
+#include "jit/ExecutionMode-inl.h"
 
 using namespace js;
 using namespace js::jit;

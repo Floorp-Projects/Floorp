@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=993423
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 993423</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 993423 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var sCallbackInvocations = 0;
+  function callback(handlerIsInXBLScope) {
+    ok(!handlerIsInXBLScope, "Event handler should not be in XBL scope");
+    if (++sCallbackInvocations == 2)
+      SimpleTest.finish();
+  }
+
+  function go() {
+    document.querySelector('use').setAttributeNS('http://www.w3.org/1999/xlink',
+                                                 'href', location.href + '#a');
+  }
+
+  </script>
+</head>
+<body onload="go()";>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=993423">Mozilla Bug 993423</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<svg>
+  <symbol id="a">
+    <foreignObject>
+    <img src="about:logo" onload="var isInXBL = (function() { return this; })() != window; if (isInXBL) callback = window.wrappedJSObject.callback; callback(isInXBL);">
+    </foreignObject>
+  </symbol>
+  <use />
+</svg>
+</body>
+</html>
