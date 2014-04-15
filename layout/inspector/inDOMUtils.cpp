@@ -370,6 +370,15 @@ inDOMUtils::SelectorMatchesElement(nsIDOMElement* aElement,
   // We want just the one list item, not the whole list tail
   nsAutoPtr<nsCSSSelectorList> sel(tail->Clone(false));
 
+  // SelectorListMatches does not handle selectors that begin with a
+  // pseudo-element, which you can get from selectors like
+  // |input::-moz-placeholder:hover|.  This function doesn't take
+  // a pseudo-element nsIAtom*, so we know we can't match.
+  if (sel->mSelectors->IsPseudoElement()) {
+    *aMatches = false;
+    return NS_OK;
+  }
+
   element->OwnerDoc()->FlushPendingLinkUpdates();
   // XXXbz what exactly should we do with visited state here?
   TreeMatchContext matchingContext(false,
