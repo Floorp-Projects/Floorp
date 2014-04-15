@@ -57,12 +57,19 @@ window.addEventListener('ContentStart', function() {
   };
 
   // Get the command line arguments that were passed to the b2g client
-  let args = window.arguments[0].QueryInterface(Ci.nsICommandLine);
-  let screenarg;
+  let args;
+  try {
+    // On Firefox Mulet, we don't always have a command line argument
+    args = window.arguments[0].QueryInterface(Ci.nsICommandLine);
+  } catch(e) {}
+
+  let screenarg = null;
 
   // Get the --screen argument from the command line
   try {
-    screenarg = args.handleFlagWithParam('screen', false);
+    if (args) {
+      screenarg = args.handleFlagWithParam('screen', false);
+    }
 
     // If there isn't one, use the default screen
     if (screenarg === null)
