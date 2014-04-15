@@ -554,12 +554,17 @@ void TabParent::HandleLongTapUp(const CSSPoint& aPoint,
   }
 }
 
-void TabParent::NotifyAPZStateChange(ViewID aViewId,
-                                     APZStateChange aChange,
-                                     int aArg)
+void TabParent::NotifyTransformBegin(ViewID aViewId)
 {
   if (!mIsDestroyed) {
-    unused << SendNotifyAPZStateChange(aViewId, aChange, aArg);
+    unused << SendNotifyTransformBegin(aViewId);
+  }
+}
+
+void TabParent::NotifyTransformEnd(ViewID aViewId)
+{
+  if (!mIsDestroyed) {
+    unused << SendNotifyTransformEnd(aViewId);
   }
 }
 

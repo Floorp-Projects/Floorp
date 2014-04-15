@@ -113,28 +113,13 @@ public:
     return false;
   }
 
-  MOZ_BEGIN_NESTED_ENUM_CLASS(APZStateChange, int8_t)
-    /**
-     * APZ started modifying the view (including panning, zooming, and fling).
-     */
-    TransformBegin,
-    /**
-     * APZ finished modifying the view.
-     */
-    TransformEnd,
-    APZStateChangeSentinel
-  MOZ_END_NESTED_ENUM_CLASS(APZStateChange)
-
   /**
-   * General notices of APZ state changes for consumers.
-   * |aGuid| identifies the APZC originating the state change.
-   * |aChange| identifies the type of state change
-   * |aArg| is used by some state changes to pass extra information (see
-   *        the documentation for each state change above)
+   * General tranformation notices for consumers. These fire any time
+   * the apzc is modifying the view, including panning, zooming, and
+   * fling.
    */
-  virtual void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
-                                    APZStateChange aChange,
-                                    int aArg = 0) {}
+  virtual void NotifyTransformBegin(const ScrollableLayerGuid& aGuid) {}
+  virtual void NotifyTransformEnd(const ScrollableLayerGuid& aGuid) {}
 
   GeckoContentController() {}
 
@@ -142,8 +127,6 @@ protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~GeckoContentController() {}
 };
-
-MOZ_FINISH_NESTED_ENUM_CLASS(GeckoContentController::APZStateChange)
 
 }
 }
