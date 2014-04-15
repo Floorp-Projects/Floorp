@@ -1157,6 +1157,8 @@ function JavaBridge(obj) {
   // The number of replies needed to answer all outstanding sync calls.
   this._repliesNeeded = 0;
   this._Services.obs.addObserver(this, this._EVENT_TYPE, false);
+
+  this._sendMessage("notify-loaded", []);
 };
 
 JavaBridge.prototype = {
