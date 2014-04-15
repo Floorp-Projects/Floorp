@@ -184,7 +184,7 @@ GetWebIDLCallerPrincipal()
   // that we should return a non-null WebIDL Caller.
   //
   // Once we fix bug 951991, this can all be simplified.
-  if (!aes->mCxPusher.ref().IsStackTop()) {
+  if (!aes->CxPusherIsStackTop()) {
     return nullptr;
   }
 
@@ -206,28 +206,43 @@ FindJSContext(nsIGlobalObject* aGlobalObject)
   return cx;
 }
 
-AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
-                                 bool aIsMainThread,
-                                 JSContext* aCx)
-  : ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ true)
-  , mStack(ScriptSettingsStack::Ref())
-  , mCx(aCx)
+AutoJSAPI::AutoJSAPI()
+  : mCx(nsContentUtils::GetDefaultJSContextForThread())
 {
-  MOZ_ASSERT(aGlobalObject);
-  MOZ_ASSERT_IF(!mCx, aIsMainThread); // cx is mandatory off-main-thread.
-  MOZ_ASSERT_IF(mCx && aIsMainThread, mCx == FindJSContext(aGlobalObject));
-  if (!mCx) {
-    // If the caller didn't provide a cx, hunt one down. This isn't exactly
-    // fast, but the callers that care about performance can pass an explicit
-    // cx for now. Eventually, the whole cx pushing thing will go away
-    // entirely.
-    mCx = FindJSContext(aGlobalObject);
-    MOZ_ASSERT(mCx);
+  if (NS_IsMainThread()) {
+    mCxPusher.construct(mCx);
   }
+
+  // Leave the cx in a null compartment.
+  mNullAc.construct(mCx);
+}
+
+AutoJSAPI::AutoJSAPI(JSContext *aCx, bool aIsMainThread, bool aSkipNullAc)
+  : mCx(aCx)
+{
+  MOZ_ASSERT_IF(aIsMainThread, NS_IsMainThread());
   if (aIsMainThread) {
     mCxPusher.construct(mCx);
   }
-  mAc.construct(mCx, aGlobalObject->GetGlobalJSObject());
+
+  // In general we want to leave the cx in a null compartment, but we let
+  // subclasses skip this if they plan to immediately enter a compartment.
+  if (!aSkipNullAc) {
+    mNullAc.construct(mCx);
+  }
+}
+
+AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
+                                 bool aIsMainThread,
+                                 JSContext* aCx)
+  : AutoJSAPI(aCx ? aCx : FindJSContext(aGlobalObject), aIsMainThread, /* aSkipNullAc = */ true)
+  , ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ true)
+  , mAc(cx(), aGlobalObject->GetGlobalJSObject())
+  , mStack(ScriptSettingsStack::Ref())
+{
+  MOZ_ASSERT(aGlobalObject);
+  MOZ_ASSERT_IF(!aCx, aIsMainThread); // cx is mandatory off-main-thread.
+  MOZ_ASSERT_IF(aCx && aIsMainThread, aCx == FindJSContext(aGlobalObject));
   mStack.Push(this);
 }
 
