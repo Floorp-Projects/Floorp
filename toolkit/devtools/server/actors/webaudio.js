@@ -7,6 +7,7 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 
 const Services = require("Services");
 
+const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 const events = require("sdk/event/core");
 const protocol = require("devtools/server/protocol");
 const { CallWatcherActor, CallWatcherFront } = require("devtools/server/actors/call-watcher");
@@ -38,6 +39,75 @@ const NODE_ROUTING_METHODS = [
   "connect", "disconnect"
 ];
 
+const NODE_PROPERTIES = {
+  "OscillatorNode": {
+    "type": {},
+    "frequency": {},
+    "detune": {}
+  },
+  "GainNode": {
+    "gain": {}
+  },
+  "DelayNode": {
+    "delayTime": {}
+  },
+  "AudioBufferSourceNode": {
+    "buffer": { "Buffer": true },
+    "playbackRate": {},
+    "loop": {},
+    "loopStart": {},
+    "loopEnd": {}
+  },
+  "ScriptProcessorNode": {
+    "bufferSize": { "readonly": true }
+  },
+  "PannerNode": {
+    "panningModel": {},
+    "distanceModel": {},
+    "refDistance": {},
+    "maxDistance": {},
+    "rolloffFactor": {},
+    "coneInnerAngle": {},
+    "coneOuterAngle": {},
+    "coneOuterGain": {}
+  },
+  "ConvolverNode": {
+    "buffer": { "Buffer": true },
+    "normalize": {},
+  },
+  "DynamicsCompressorNode": {
+    "threshold": {},
+    "knee": {},
+    "ratio": {},
+    "reduction": {},
+    "attack": {},
+    "release": {}
+  },
+  "BiquadFilterNode": {
+    "type": {},
+    "frequency": {},
+    "Q": {},
+    "detune": {},
+    "gain": {}
+  },
+  "WaveShaperNode": {
+    "curve": { "Float32Array": true },
+    "oversample": {}
+  },
+  "AnalyserNode": {
+    "fftSize": {},
+    "minDecibels": {},
+    "maxDecibels": {},
+    "smoothingTimeConstraint": {},
+    "frequencyBinCount": { "readonly": true },
+  },
+  "AudioDestinationNode": {},
+  "ChannelSplitterNode": {},
+  "ChannelMergerNode": {}
+};
+
+/**
+ * Track an array of audio nodes
 
 /**
  * An Audio Node actor allowing communication to a specific audio node in the
@@ -127,15 +197,40 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
     if (!this.node[param])
       return undefined;
     let value = isAudioParam(this.node, param) ? this.node[param].value : this.node[param];
-    let type = typeof type;
     return value;
-    return { type: type, value: value };
   }, {
     request: {
       param: Arg(0, "string")
     },
     response: { text: RetVal("nullable:primitive") }
   }),
+
+  /**
+   * Get an object containing key-value pairs of additional attributes
+   * to be consumed by a front end, like if a property should be read only,
+   * or is a special type (Float32Array, Buffer, etc.)
+   *
+   * @param String param
+   *        Name of the AudioParam whose flags are desired.
+   */
+  getParamFlags: method(function (param) {
+    return (NODE_PROPERTIES[this.type] || {})[param];
+  }, {
+    request: { param: Arg(0, "string") },
+    response: { flags: RetVal("nullable:primitive") }
+  }),
+
+  /**
+   * Get an array of objects each containing a `param` and `value` property,
+   * corresponding to a property name and current value of the audio node.
+   */
+  getParams: method(function (param) {
+    let props = Object.keys(NODE_PROPERTIES[this.type]);
+    return props.map(prop =>
+      ({ param: prop, value: this.getParam(prop), flags: this.getParamFlags(prop) }));
+  }, {
+    response: { params: RetVal("json") }
+  })
 });
 
 /**
