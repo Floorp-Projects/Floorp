@@ -375,7 +375,8 @@ abstract class PanelLayout extends FrameLayout {
                 datasetBacked.setFilterManager(new PanelFilterManager(viewState));
 
                 if (viewConfig.isRefreshEnabled()) {
-                    view = new PanelRefreshLayout(getContext(), view);
+                    view = new PanelRefreshLayout(getContext(), view,
+                                                  mPanelConfig.getId(), viewConfig.getIndex());
                 }
             }
 
