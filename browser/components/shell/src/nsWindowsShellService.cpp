@@ -753,17 +753,19 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
 {
   nsresult rv;
 
-  nsRefPtr<gfxASurface> thebesSurface =
+  RefPtr<SourceSurface> surface =
     aImage->GetFrame(imgIContainer::FRAME_FIRST,
                      imgIContainer::FLAG_SYNC_DECODE);
-  NS_ENSURE_TRUE(thebesSurface, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
 
-  nsRefPtr<gfxImageSurface> thebesImageSurface =
-    thebesSurface->GetAsReadableARGB32ImageSurface();
-  NS_ENSURE_TRUE(thebesImageSurface, NS_ERROR_FAILURE);
+  // For either of the following formats we want to set the biBitCount member
+  // of the BITMAPINFOHEADER struct to 32, below. For that value the bitmap
+  // format defines that the A8/X8 WORDs in the bitmap byte stream be ignored
+  // for the BI_RGB value we use for the biCompression member.
+  MOZ_ASSERT(surface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+             surface->GetFormat() == SurfaceFormat::B8G8R8X8);
 
-  RefPtr<DataSourceSurface> dataSurface =
-    thebesImageSurface->CopyToB8G8R8A8DataSourceSurface();
+  RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
   NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
 
   int32_t width = dataSurface->GetSize().width;
