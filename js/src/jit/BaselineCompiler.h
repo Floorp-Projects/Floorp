@@ -14,8 +14,12 @@
 # include "jit/x86/BaselineCompiler-x86.h"
 #elif defined(JS_CODEGEN_X64)
 # include "jit/x64/BaselineCompiler-x64.h"
-#else
+#elif defined(JS_CODEGEN_ARM)
 # include "jit/arm/BaselineCompiler-arm.h"
+#elif defined(JS_CODEGEN_MIPS)
+# include "jit/mips/BaselineCompiler-mips.h"
+#else
+# error "Unknown architecture!"
 #endif
 
 namespace js {

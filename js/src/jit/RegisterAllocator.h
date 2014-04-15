@@ -311,7 +311,7 @@ class RegisterAllocator
 #if defined(JS_CODEGEN_X64)
         if (mir->compilingAsmJS())
             allRegisters_.take(AnyRegister(HeapReg));
-#elif defined(JS_CODEGEN_ARM)
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
         if (mir->compilingAsmJS()) {
             allRegisters_.take(AnyRegister(HeapReg));
             allRegisters_.take(AnyRegister(GlobalReg));
