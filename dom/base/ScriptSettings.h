@@ -148,6 +148,18 @@ private:
   JSContext *mCx;
 };
 
+// Note - the ideal way to implement this is with an accessor on AutoJSAPI
+// that lets us select the error reporting target. But at present,
+// implementing it that way would require us to destroy and reconstruct
+// mCxPusher, which is pretty wasteful. So we do this for now, since it should
+// be pretty easy to switch things over later.
+//
+// This should only be used on the main thread.
+class AutoJSAPIWithErrorsReportedToWindow : public AutoJSAPI {
+  public:
+    AutoJSAPIWithErrorsReportedToWindow(nsIScriptContext* aScx);
+};
+
 /*
  * A class that represents a new script entry point.
  */
