@@ -30,7 +30,6 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsNetAddr.h"
 #include "nsProxyRelease.h"
-#include "nsIObserverService.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/VisualEventTracer.h"
@@ -41,13 +40,14 @@
 using namespace mozilla;
 using namespace mozilla::net;
 
-static const char kPrefDnsCacheEntries[]    = "network.dnsCacheEntries";
-static const char kPrefDnsCacheExpiration[] = "network.dnsCacheExpiration";
-static const char kPrefDnsCacheGrace[]      = "network.dnsCacheExpirationGracePeriod";
-static const char kPrefIPv4OnlyDomains[]    = "network.dns.ipv4OnlyDomains";
-static const char kPrefDisableIPv6[]        = "network.dns.disableIPv6";
-static const char kPrefDisablePrefetch[]    = "network.dns.disablePrefetch";
-static const char kPrefDnsLocalDomains[]    = "network.dns.localDomains";
+static const char kPrefDnsCacheEntries[]     = "network.dnsCacheEntries";
+static const char kPrefDnsCacheExpiration[]  = "network.dnsCacheExpiration";
+static const char kPrefDnsCacheGrace[]       = "network.dnsCacheExpirationGracePeriod";
+static const char kPrefIPv4OnlyDomains[]     = "network.dns.ipv4OnlyDomains";
+static const char kPrefDisableIPv6[]         = "network.dns.disableIPv6";
+static const char kPrefDisablePrefetch[]     = "network.dns.disablePrefetch";
+static const char kPrefDnsLocalDomains[]     = "network.dns.localDomains";
+static const char kPrefDnsNotifyResolution[] = "network.dns.notifyResolution";
 
 //-----------------------------------------------------------------------------
 
@@ -395,6 +395,31 @@ nsDNSSyncRequest::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
     return n;
 }
 
+class NotifyDNSResolution: public nsRunnable
+{
+public:
+    NotifyDNSResolution(nsMainThreadPtrHandle<nsIObserverService> &aObs,
+                        const nsACString &aHostname)
+        : mObs(aObs)
+        , mHostname(aHostname)
+    {
+        MOZ_ASSERT(mObs);
+    }
+
+    NS_IMETHOD Run()
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+        mObs->NotifyObservers(nullptr,
+                              "dns-resolution-request",
+                              NS_ConvertUTF8toUTF16(mHostname).get());
+        return NS_OK;
+    }
+
+private:
+    nsMainThreadPtrHandle<nsIObserverService> mObs;
+    nsCString                                 mHostname;
+};
+
 //-----------------------------------------------------------------------------
 
 nsDNSService::nsDNSService()
@@ -462,6 +487,7 @@ nsDNSService::Init()
     bool     disableIPv6      = false;
     bool     disablePrefetch  = false;
     int      proxyType        = nsIProtocolProxyService::PROXYCONFIG_DIRECT;
+    bool     notifyResolution = false;
 
     nsAdoptingCString ipv4OnlyDomains;
     nsAdoptingCString localDomains;
@@ -485,6 +511,7 @@ nsDNSService::Init()
 
         // If a manual proxy is in use, disable prefetch implicitly
         prefs->GetIntPref("network.proxy.type", &proxyType);
+        prefs->GetBoolPref(kPrefDnsNotifyResolution, &notifyResolution);
     }
 
     if (mFirstTime) {
@@ -499,6 +526,7 @@ nsDNSService::Init()
             prefs->AddObserver(kPrefDnsLocalDomains, this, false);
             prefs->AddObserver(kPrefDisableIPv6, this, false);
             prefs->AddObserver(kPrefDisablePrefetch, this, false);
+            prefs->AddObserver(kPrefDnsNotifyResolution, this, false);
 
             // Monitor these to see if there is a change in proxy configuration
             // If a manual proxy is in use, disable prefetch implicitly
@@ -521,6 +549,9 @@ nsDNSService::Init()
         return NS_OK;
 
     nsCOMPtr<nsIIDNService> idn = do_GetService(NS_IDNSERVICE_CONTRACTID);
+
+    nsCOMPtr<nsIObserverService> obs =
+        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
 
     nsRefPtr<nsHostResolver> res;
     nsresult rv = nsHostResolver::Create(maxCacheEntries,
@@ -549,6 +580,11 @@ nsDNSService::Init()
                 const nsSubstring& domain = tokenizer.nextToken();
                 mLocalDomains.PutEntry(nsDependentCString(NS_ConvertUTF16toUTF8(domain).get()));
             }
+        }
+        mNotifyResolution = notifyResolution;
+        if (mNotifyResolution) {
+            mObserverService =
+              new nsMainThreadPtrHolder<nsIObserverService>(obs);
         }
     }
 
@@ -625,6 +661,12 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
         idn = mIDN;
         localDomain = mLocalDomains.GetEntry(hostname);
     }
+
+    if (mNotifyResolution) {
+        NS_DispatchToMainThread(new NotifyDNSResolution(mObserverService,
+                                                        hostname));
+    }
+
     if (!res)
         return NS_ERROR_OFFLINE;
 
@@ -729,6 +771,12 @@ nsDNSService::Resolve(const nsACString &hostname,
         idn = mIDN;
         localDomain = mLocalDomains.GetEntry(hostname);
     }
+
+    if (mNotifyResolution) {
+        NS_DispatchToMainThread(new NotifyDNSResolution(mObserverService,
+                                                        hostname));
+    }
+
     NS_ENSURE_TRUE(res, NS_ERROR_OFFLINE);
 
     if (mOffline)
