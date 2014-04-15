@@ -15,7 +15,6 @@
 
 #include "jsanalyze.h"
 
-#include "jit/ExecutionModeInlines.h"
 #include "vm/ArrayObject.h"
 #include "vm/BooleanObject.h"
 #include "vm/NumberObject.h"
@@ -24,6 +23,8 @@
 #include "vm/TypedArrayObject.h"
 
 #include "jscntxtinlines.h"
+
+#include "jit/ExecutionMode-inl.h"
 
 namespace js {
 namespace types {

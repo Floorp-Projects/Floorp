@@ -23,7 +23,6 @@
 #include "jit/CodeGenerator.h"
 #include "jit/EdgeCaseAnalysis.h"
 #include "jit/EffectiveAddressAnalysis.h"
-#include "jit/ExecutionModeInlines.h"
 #include "jit/IonAnalysis.h"
 #include "jit/IonBuilder.h"
 #include "jit/IonOptimizationLevels.h"
@@ -47,6 +46,8 @@
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
+
+#include "jit/ExecutionMode-inl.h"
 
 using namespace js;
 using namespace js::jit;
