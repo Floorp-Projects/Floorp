@@ -1349,7 +1349,7 @@ ConsoleAPIListener.prototype =
 
     let apiMessage = aMessage.wrappedJSObject;
     if (this.window) {
-      let msgWindow = Services.wm.getOuterWindowWithId(apiMessage.ID);
+      let msgWindow = Services.wm.getCurrentInnerWindowWithId(apiMessage.innerID);
       if (!msgWindow || !this.layoutHelpers.isIncludedInTopLevelWindow(msgWindow)) {
         // Not the same window!
         return;
