@@ -56,16 +56,16 @@ ActivitiesDialog.prototype = {
     SystemAppProxy.dispatchEvent(detail);
   },
 
-  chooseActivity: function ap_chooseActivity(aOptions, aActivities, aCallback) {
+  chooseActivity: function ap_chooseActivity(aName, aActivities, aCallback) {
     this.activities.push({
-      name: aOptions.name,
+      name: aName,
       list: aActivities,
       callback: aCallback
     });
     Services.tm.currentThread.dispatch(this, Ci.nsIEventTarget.DISPATCH_NORMAL);
   },
 
-  classID: Components.ID("{3a54788b-48cc-4ab4-93d6-0d6a8ef74f8e}"),
+  classID: Components.ID("{70a83123-7467-4389-a309-3e81c74ad002}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIActivityUIGlue, Ci.nsIRunnable])
 }

@@ -264,7 +264,7 @@ let Activities = {
 
       let glue = Cc["@mozilla.org/dom/activities/ui-glue;1"]
                    .createInstance(Ci.nsIActivityUIGlue);
-      glue.chooseActivity(aMsg.options, aResults.options, getActivityChoice);
+      glue.chooseActivity(aResults.name, aResults.options, getActivityChoice);
     };
 
     let errorCb = function errorCb(aError) {
