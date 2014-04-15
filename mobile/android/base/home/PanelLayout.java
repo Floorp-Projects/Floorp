@@ -373,6 +373,10 @@ abstract class PanelLayout extends FrameLayout {
             if (view instanceof DatasetBacked) {
                 DatasetBacked datasetBacked = (DatasetBacked) view;
                 datasetBacked.setFilterManager(new PanelFilterManager(viewState));
+
+                if (viewConfig.isRefreshEnabled()) {
+                    view = new PanelRefreshLayout(getContext(), view);
+                }
             }
 
             viewState.setView(view);
