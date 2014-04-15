@@ -18,9 +18,41 @@ import org.mozilla.gecko.Actions.EventExpecter;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.tests.UITestContext;
 
-
 /**
- * Javascript bridge allows calls to and from Javascript.
+ * Javascript bridge allows calls to and from JavaScript.
+ *
+ * To establish communication, create an instance of JavascriptBridge in Java and pass in
+ * an object that will receive calls from JavaScript. For example:
+ *
+ *  {@code final JavascriptBridge js = new JavascriptBridge(javaObj);}
+ *
+ * Next, create an instance of JavaBridge in JavaScript and pass in another object
+ * that will receive calls from Java. For example:
+ *
+ *  {@code let java = new JavaBridge(jsObj);}
+ *
+ * Once a link is established, calls can be made using the methods syncCall and asyncCall.
+ * syncCall waits for the call to finish before returning. For example:
+ *
+ *  {@code js.syncCall("abc", 1, 2, 3);} will synchronously call the JavaScript method
+ *    jsObj.abc and pass in arguments 1, 2, and 3.
+ *
+ *  {@code java.asyncCall("def", 4, 5, 6);} will asynchronously call the Java method
+ *    javaObj.def and pass in arguments 4, 5, and 6.
+ *
+ * Supported argument types include int, double, boolean, String, and JSONObject. Note
+ * that only implicit conversion is done, meaning if a floating point argument is passed
+ * from JavaScript to Java, the call will fail if the Java method has an int argument.
+ *
+ * Because JavascriptBridge and JavaBridge use one underlying communication channel,
+ * creating multiple instances of them will not create independent links.
+ *
+ * Note also that because Robocop tests finish as soon as the Java test method returns,
+ * the last call to JavaScript from Java must be a synchronous call. Otherwise, the test
+ * will finish before the JavaScript method is run. Calls to Java from JavaScript do not
+ * have this requirement. Because of these considerations, calls from Java to JavaScript
+ * are usually synchronous and calls from JavaScript to Java are usually asynchronous.
+ * See testJavascriptBridge.java for examples.
  */
 public final class JavascriptBridge {
 
