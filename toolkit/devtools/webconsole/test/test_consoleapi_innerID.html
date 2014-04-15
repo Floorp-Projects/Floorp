@@ -1,0 +1,164 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the innerID property of the Console API</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the Console API</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+let expectedConsoleCalls = [];
+
+function doConsoleCalls(aState)
+{
+  let { ConsoleAPI } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+  let console = new ConsoleAPI({
+    innerID: window.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindowUtils)
+                   .currentInnerWindowID
+  });
+
+  let longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 2)).join("a");
+
+  console.log("foobarBaz-log", undefined);
+  console.info("foobarBaz-info", null);
+  console.warn("foobarBaz-warn", top.document.documentElement);
+  console.debug(null);
+  console.trace();
+  console.dir(top.document, top.location);
+  console.log("foo", longString);
+
+  expectedConsoleCalls = [
+    {
+      level: "log",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-log", { type: "undefined" }],
+    },
+    {
+      level: "info",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-info", { type: "null" }],
+    },
+    {
+      level: "warn",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-warn", { type: "object", actor: /[a-z]/ }],
+    },
+    {
+      level: "debug",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: [{ type: "null" }],
+    },
+    {
+      level: "trace",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      stacktrace: [
+        {
+          filename: /test_consoleapi/,
+          functionName: "doConsoleCalls",
+        },
+        {
+          filename: /test_consoleapi/,
+          functionName: "onAttach",
+        },
+      ],
+    },
+    {
+      level: "dir",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: [
+        {
+          type: "object",
+          actor: /[a-z]/,
+          class: "XULDocument",
+        },
+        {
+          type: "object",
+          actor: /[a-z]/,
+          class: "Location",
+        }
+      ],
+    },
+    {
+      level: "log",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: [
+        "foo",
+        {
+          type: "longString",
+          initial: longString.substring(0,
+            DebuggerServer.LONG_STRING_INITIAL_LENGTH),
+          length: longString.length,
+          actor: /[a-z]/,
+        },
+      ],
+    },
+  ];
+}
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+
+  attachConsole(["ConsoleAPI"], onAttach, true);
+}
+
+function onAttach(aState, aResponse)
+{
+  onConsoleAPICall = onConsoleAPICall.bind(null, aState);
+  aState.dbgClient.addListener("consoleAPICall", onConsoleAPICall);
+  doConsoleCalls(aState.actor);
+}
+
+let consoleCalls = [];
+
+function onConsoleAPICall(aState, aType, aPacket)
+{
+  info("received message level: " + aPacket.message.level);
+  is(aPacket.from, aState.actor, "console API call actor");
+
+  consoleCalls.push(aPacket.message);
+  if (consoleCalls.length != expectedConsoleCalls.length) {
+    return;
+  }
+
+  aState.dbgClient.removeListener("consoleAPICall", onConsoleAPICall);
+
+  expectedConsoleCalls.forEach(function(aMessage, aIndex) {
+    info("checking received console call #" + aIndex);
+    checkConsoleAPICall(consoleCalls[aIndex], expectedConsoleCalls[aIndex]);
+  });
+
+
+  consoleCalls = [];
+
+  closeDebugger(aState, function() {
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>
