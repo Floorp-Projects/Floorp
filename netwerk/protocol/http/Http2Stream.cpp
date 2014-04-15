@@ -421,10 +421,8 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
   messageSize += 13; // frame header + priority overhead in HEADERS frame
   messageSize += (numFrames - 1) * 8; // frame header overhead in CONTINUATION frames
 
-  Http2Session::EnsureBuffer(mTxInlineFrame,
-                             dataLength + messageSize,
-                             mTxInlineFrameUsed,
-                             mTxInlineFrameSize);
+  EnsureBuffer(mTxInlineFrame, dataLength + messageSize,
+               mTxInlineFrameUsed, mTxInlineFrameSize);
 
   mTxInlineFrameUsed += messageSize;
   LOG3(("%p Generating %d bytes of HEADERS for stream 0x%X with priority weight %u frames %u\n",
@@ -546,10 +544,8 @@ Http2Stream::AdjustInitialWindow()
   }
 
   uint8_t *packet = mTxInlineFrame.get() + mTxInlineFrameUsed;
-  Http2Session::EnsureBuffer(mTxInlineFrame,
-                             mTxInlineFrameUsed + 12,
-                             mTxInlineFrameUsed,
-                             mTxInlineFrameSize);
+  EnsureBuffer(mTxInlineFrame, mTxInlineFrameUsed + 12,
+               mTxInlineFrameUsed, mTxInlineFrameSize);
   mTxInlineFrameUsed += 12;
 
   mSession->CreateFrameHeader(packet, 4,
@@ -582,10 +578,8 @@ Http2Stream::AdjustPushedPriority()
     return;
 
   uint8_t *packet = mTxInlineFrame.get() + mTxInlineFrameUsed;
-  Http2Session::EnsureBuffer(mTxInlineFrame,
-                             mTxInlineFrameUsed + 13,
-                             mTxInlineFrameUsed,
-                             mTxInlineFrameSize);
+  EnsureBuffer(mTxInlineFrame, mTxInlineFrameUsed + 13,
+               mTxInlineFrameUsed, mTxInlineFrameSize);
   mTxInlineFrameUsed += 13;
 
   mSession->CreateFrameHeader(packet, 5,

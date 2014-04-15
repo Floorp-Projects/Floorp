@@ -157,10 +157,6 @@ public:
   static nsresult HandleWindowUpdate(SpdySession31 *);
   static nsresult HandleCredential(SpdySession31 *);
 
-  template<typename T>
-    static void EnsureBuffer(nsAutoArrayPtr<T> &,
-                             uint32_t, uint32_t, uint32_t &);
-
   // For writing the SPDY data stream to LOG4
   static void LogIO(SpdySession31 *, SpdyStream31 *, const char *,
                     const char *, uint32_t);
