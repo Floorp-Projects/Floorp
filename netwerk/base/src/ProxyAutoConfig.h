@@ -44,7 +44,7 @@ public:
    *   result      = proxy-spec *( proxy-sep proxy-spec )
    *   proxy-spec  = direct-type | proxy-type LWS proxy-host [":" proxy-port]
    *   direct-type = "DIRECT"
-   *   proxy-type  = "PROXY" | "SOCKS" | "SOCKS4" | "SOCKS5"
+   *   proxy-type  = "PROXY" | "HTTP" | "HTTPS" | "SOCKS" | "SOCKS4" | "SOCKS5"
    *   proxy-sep   = ";" LWS
    *   proxy-host  = hostname | ipv4-address-literal
    *   proxy-port  = <any 16-bit unsigned integer>
