@@ -113,7 +113,7 @@ class Registers
         return Names[code];
     }
     static const char *GetName(uint32_t i) {
-        MOZ_ASSERT(i < Total);
+        JS_ASSERT(i < Total);
         return GetName(Code(i));
     }
 
@@ -191,38 +191,62 @@ class Registers
 typedef uint32_t PackedRegisterMask;
 
 
-// MIPS32 uses pairs of even and odd float registers as double precision
-// registers. Example: f0 (double) is composed of f0 and f1 (single).
-// This port only uses even registers to avoid allocation problems.
+// MIPS32 can have two types of floating-point coprocessors:
+// - 32 bit floating-point coprocessor - In this case, there are 32 single
+// precision registers and pairs of even and odd float registers are used as
+// double precision registers. Example: f0 (double) is composed of
+// f0 and f1 (single).
+// - 64 bit floating-point coprocessor - In this case, there are 32 double
+// precision register which can also be used as single precision registers.
+
+// When using O32 ABI, floating-point coprocessor is 32 bit
+// When using N32 ABI, floating-point coprocessor is 64 bit.
 class FloatRegisters
 {
   public:
     enum FPRegisterID {
-        f0 = 0, // f0, f2 - Return values
+        f0 = 0,
+        f1,
         f2,
-        f4, // f4 - f10, f16, f18 - Temporaries
+        f3,
+        f4,
+        f5,
         f6,
+        f7,
         f8,
+        f9,
         f10,
-        f12, // f12, f14 - Arguments
+        f11,
+        f12,
+        f13,
         f14,
+        f15,
         f16,
+        f17,
         f18,
-        f20, // f20 - f30 - Saved registers
+        f19,
+        f20,
+        f21,
         f22,
+        f23,
         f24,
+        f25,
         f26,
+        f27,
         f28,
+        f29,
         f30,
+        f31,
         invalid_freg
     };
     typedef FPRegisterID Code;
 
     static const char *GetName(Code code) {
-        static const char * const Names[] = { "f0",  "f2",  "f4",  "f6",
-                                              "f8",  "f10", "f12", "f14",
-                                              "f16", "f18", "f20", "f22",
-                                              "f24", "f26", "f28", "f30"};
+        static const char * const Names[] = { "f0", "f1", "f2", "f3",  "f4", "f5",  "f6", "f7",
+                                              "f8", "f9",  "f10", "f11", "f12", "f13",
+                                              "f14", "f15", "f16", "f17", "f18", "f19",
+                                              "f20", "f21", "f22", "f23", "f24", "f25",
+                                              "f26", "f27", "f28", "f29", "f30", "f31"};
         return Names[code];
     }
     static const char *GetName(uint32_t i) {
@@ -234,10 +258,12 @@ class FloatRegisters
 
     static const Code Invalid = invalid_freg;
 
-    static const uint32_t Total = 16;
+    static const uint32_t Total = 32;
+    // :TODO: (Bug 972836) // Fix this once odd regs can be used as float32
+    // only. For now we don't allocate odd regs for O32 ABI.
     static const uint32_t Allocatable = 14;
 
-    static const uint32_t AllMask = 0xffff;
+    static const uint32_t AllMask = 0xffffffff;
 
     static const uint32_t VolatileMask =
         (1 << FloatRegisters::f0) |
@@ -260,10 +286,28 @@ class FloatRegisters
 
     static const uint32_t WrapperMask = VolatileMask;
 
-    // f18 and f16 are MIPS scratch float registers.
+    // :TODO: (Bug 972836) // Fix this once odd regs can be used as float32
+    // only. For now we don't allocate odd regs for O32 ABI.
     static const uint32_t NonAllocatableMask =
-        (1 << f16) |
-        (1 << f18);
+        (1 << FloatRegisters::f1) |
+        (1 << FloatRegisters::f3) |
+        (1 << FloatRegisters::f5) |
+        (1 << FloatRegisters::f7) |
+        (1 << FloatRegisters::f9) |
+        (1 << FloatRegisters::f11) |
+        (1 << FloatRegisters::f13) |
+        (1 << FloatRegisters::f15) |
+        (1 << FloatRegisters::f17) |
+        (1 << FloatRegisters::f19) |
+        (1 << FloatRegisters::f21) |
+        (1 << FloatRegisters::f23) |
+        (1 << FloatRegisters::f25) |
+        (1 << FloatRegisters::f27) |
+        (1 << FloatRegisters::f29) |
+        (1 << FloatRegisters::f31) |
+        // f18 and f16 are MIPS scratch float registers.
+        (1 << FloatRegisters::f16) |
+        (1 << FloatRegisters::f18);
 
     // Registers that can be allocated without being saved, generally.
     static const uint32_t TempMask = VolatileMask & ~NonAllocatableMask;

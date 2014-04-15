@@ -126,6 +126,9 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SystemMemoryReporter.h"
 
+#include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/CompositorParent.h"
+
 #ifdef MOZ_VISUAL_EVENT_TRACER
 #include "mozilla/VisualEventTracer.h"
 #endif
@@ -338,215 +341,81 @@ NS_InitXPCOM(nsIServiceManager* *result,
     return NS_InitXPCOM2(result, binDirectory, nullptr);
 }
 
-class ICUReporter MOZ_FINAL : public nsIMemoryReporter
+class ICUReporter MOZ_FINAL : public nsIMemoryReporter,
+                              public CountingAllocatorBase<ICUReporter>
 {
 public:
     NS_DECL_ISUPPORTS
 
-    ICUReporter()
-    {
-#ifdef DEBUG
-        // There must be only one instance of this class, due to |sAmount|
-        // being static.
-        static bool hasRun = false;
-        MOZ_ASSERT(!hasRun);
-        hasRun = true;
-#endif
-        sAmount = 0;
-    }
-
     static void* Alloc(const void*, size_t size)
     {
-        void* p = malloc(size);
-        sAmount += MallocSizeOfOnAlloc(p);
-        return p;
+        return CountingMalloc(size);
     }
 
     static void* Realloc(const void*, void* p, size_t size)
     {
-        sAmount -= MallocSizeOfOnFree(p);
-        void *pnew = realloc(p, size);
-        if (pnew) {
-            sAmount += MallocSizeOfOnAlloc(pnew);
-        } else {
-            // realloc failed;  undo the decrement from above
-            sAmount += MallocSizeOfOnAlloc(p);
-        }
-        return pnew;
+        return CountingRealloc(p, size);
     }
 
     static void Free(const void*, void* p)
     {
-        sAmount -= MallocSizeOfOnFree(p);
-        free(p);
+        return CountingFree(p);
     }
 
 private:
-    // |sAmount| can be (implicitly) accessed by multiple JSRuntimes, so it
-    // must be thread-safe.
-    static Atomic<size_t> sAmount;
-
-    MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
-    MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(MallocSizeOfOnAlloc)
-    MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(MallocSizeOfOnFree)
-
     NS_IMETHODIMP
     CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
     {
         return MOZ_COLLECT_REPORT(
-            "explicit/icu", KIND_HEAP, UNITS_BYTES, sAmount,
+            "explicit/icu", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
             "Memory used by ICU, a Unicode and globalization support library.");
     }
 };
 
 NS_IMPL_ISUPPORTS1(ICUReporter, nsIMemoryReporter)
 
-/* static */ Atomic<size_t> ICUReporter::sAmount;
+/* static */ template<> Atomic<size_t> CountingAllocatorBase<ICUReporter>::sAmount(0);
 
-class OggReporter MOZ_FINAL : public nsIMemoryReporter
+class OggReporter MOZ_FINAL : public nsIMemoryReporter,
+                              public CountingAllocatorBase<OggReporter>
 {
 public:
     NS_DECL_ISUPPORTS
 
-    OggReporter()
-    {
-#ifdef DEBUG
-        // There must be only one instance of this class, due to |sAmount|
-        // being static.
-        static bool hasRun = false;
-        MOZ_ASSERT(!hasRun);
-        hasRun = true;
-#endif
-        sAmount = 0;
-    }
-
-    static void* Alloc(size_t size)
-    {
-        void* p = malloc(size);
-        sAmount += MallocSizeOfOnAlloc(p);
-        return p;
-    }
-
-    static void* Realloc(void* p, size_t size)
-    {
-        sAmount -= MallocSizeOfOnFree(p);
-        void *pnew = realloc(p, size);
-        if (pnew) {
-            sAmount += MallocSizeOfOnAlloc(pnew);
-        } else {
-            // realloc failed;  undo the decrement from above
-            sAmount += MallocSizeOfOnAlloc(p);
-        }
-        return pnew;
-    }
-
-    static void* Calloc(size_t nmemb, size_t size)
-    {
-        void* p = calloc(nmemb, size);
-        sAmount += MallocSizeOfOnAlloc(p);
-        return p;
-    }
-
-    static void Free(void* p)
-    {
-        sAmount -= MallocSizeOfOnFree(p);
-        free(p);
-    }
-
 private:
-    // |sAmount| can be (implicitly) accessed by multiple threads, so it
-    // must be thread-safe.
-    static Atomic<size_t> sAmount;
-
-    MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
-    MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(MallocSizeOfOnAlloc)
-    MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(MallocSizeOfOnFree)
-
     NS_IMETHODIMP
     CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
     {
         return MOZ_COLLECT_REPORT(
-            "explicit/media/libogg", KIND_HEAP, UNITS_BYTES, sAmount,
+            "explicit/media/libogg", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
             "Memory allocated through libogg for Ogg, Theora, and related media files.");
     }
 };
 
 NS_IMPL_ISUPPORTS1(OggReporter, nsIMemoryReporter)
 
-/* static */ Atomic<size_t> OggReporter::sAmount;
+/* static */ template<> Atomic<size_t> CountingAllocatorBase<OggReporter>::sAmount(0);
 
 #ifdef MOZ_VPX
-class VPXReporter MOZ_FINAL : public nsIMemoryReporter
+class VPXReporter MOZ_FINAL : public nsIMemoryReporter,
+                              public CountingAllocatorBase<VPXReporter>
 {
 public:
     NS_DECL_ISUPPORTS
 
-    VPXReporter()
-    {
-#ifdef DEBUG
-        // There must be only one instance of this class, due to |sAmount|
-        // being static.
-        static bool hasRun = false;
-        MOZ_ASSERT(!hasRun);
-        hasRun = true;
-#endif
-        sAmount = 0;
-    }
-
-    static void* Alloc(size_t size)
-    {
-        void* p = malloc(size);
-        sAmount += MallocSizeOfOnAlloc(p);
-        return p;
-    }
-
-    static void* Realloc(void* p, size_t size)
-    {
-        sAmount -= MallocSizeOfOnFree(p);
-        void *pnew = realloc(p, size);
-        if (pnew) {
-            sAmount += MallocSizeOfOnAlloc(pnew);
-        } else {
-            // realloc failed;  undo the decrement from above
-            sAmount += MallocSizeOfOnAlloc(p);
-        }
-        return pnew;
-    }
-
-    static void* Calloc(size_t nmemb, size_t size)
-    {
-        void* p = calloc(nmemb, size);
-        sAmount += MallocSizeOfOnAlloc(p);
-        return p;
-    }
-
-    static void Free(void* p)
-    {
-        sAmount -= MallocSizeOfOnFree(p);
-        free(p);
-    }
-
 private:
-    // |sAmount| can be (implicitly) accessed by multiple threads, so it
-    // must be thread-safe.
-    static Atomic<size_t> sAmount;
-
-    MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
-    MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(MallocSizeOfOnAlloc)
-    MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(MallocSizeOfOnFree)
-
     NS_IMETHODIMP
     CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
     {
         return MOZ_COLLECT_REPORT(
-            "explicit/media/libvpx", KIND_HEAP, UNITS_BYTES, sAmount,
+            "explicit/media/libvpx", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
             "Memory allocated through libvpx for WebM media files.");
     }
 };
 
 NS_IMPL_ISUPPORTS1(VPXReporter, nsIMemoryReporter)
 
-/* static */ Atomic<size_t> VPXReporter::sAmount;
+/* static */ template<> Atomic<size_t> CountingAllocatorBase<VPXReporter>::sAmount(0);
 #endif /* MOZ_VPX */
 
 EXPORT_XPCOM_API(nsresult)
@@ -703,17 +572,17 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     mozilla::SetICUMemoryFunctions();
 
     // Do the same for libogg.
-    ogg_set_mem_functions(OggReporter::Alloc,
-                          OggReporter::Calloc,
-                          OggReporter::Realloc,
-                          OggReporter::Free);
+    ogg_set_mem_functions(OggReporter::CountingMalloc,
+                          OggReporter::CountingCalloc,
+                          OggReporter::CountingRealloc,
+                          OggReporter::CountingFree);
 
 #ifdef MOZ_VPX
     // And for VPX.
-    vpx_mem_set_functions(VPXReporter::Alloc,
-                          VPXReporter::Calloc,
-                          VPXReporter::Realloc,
-                          VPXReporter::Free,
+    vpx_mem_set_functions(VPXReporter::CountingMalloc,
+                          VPXReporter::CountingCalloc,
+                          VPXReporter::CountingRealloc,
+                          VPXReporter::CountingFree,
                           memcpy,
                           memset,
                           memmove);
@@ -875,6 +744,11 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
                                     nullptr);
             }
         }
+
+        // This must happen after the shutdown of media and widgets, which
+        // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
+        mozilla::layers::ImageBridgeChild::ShutDown();
+        mozilla::layers::CompositorParent::ShutDown();
 
         NS_ProcessPendingEvents(thread);
         mozilla::scache::StartupCache::DeleteSingleton();

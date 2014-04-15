@@ -14,7 +14,7 @@ log = mozlog.getLogger('cppunittests')
 
 class CPPUnitTests(object):
     # Time (seconds) to wait for test process to complete
-    TEST_PROC_TIMEOUT = 1200
+    TEST_PROC_TIMEOUT = 900
     # Time (seconds) in which process will be killed if it produces no output.
     TEST_PROC_NO_OUTPUT_TIMEOUT = 300
 
