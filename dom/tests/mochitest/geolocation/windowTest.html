@@ -18,8 +18,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493615
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+var finished = false;
 
 function successCallback(position) {
+  // watchPosition can notify more than once.
+  if (finished) {
+    return;
+  }
+  finished = true;
+
   var opener = window.opener;
   window.close();
   opener.done();
