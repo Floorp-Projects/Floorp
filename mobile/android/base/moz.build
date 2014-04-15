@@ -66,6 +66,7 @@ gujar.sources += [
     'util/NativeJSObject.java',
     'util/NonEvictingLruCache.java',
     'util/ProxySelector.java',
+    'util/RawResource.java',
     'util/StringUtils.java',
     'util/ThreadUtils.java',
     'util/UiAsyncTask.java',
