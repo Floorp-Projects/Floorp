@@ -533,10 +533,6 @@ public abstract class GeckoApp
 
     public void showPrivateTabs() { }
 
-    public void showRemoteTabs() { }
-
-    private void showTabs(TabsPanel.Panel panel) { }
-
     public void hideTabs() { }
 
     /**
