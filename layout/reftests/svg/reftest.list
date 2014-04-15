@@ -197,6 +197,7 @@ pref(svg.marker-improvements.enabled,true) == marker-orientation-02.svg marker-o
 == mask-basic-01.svg pass.svg
 == mask-basic-02.svg mask-basic-02-ref.svg
 == mask-basic-03.svg pass.svg
+== mask-basic-04.svg pass.svg
 == mask-extref-dataURI-01.svg pass.svg
 == mask-containing-masked-content-01.svg pass.svg
 == mask-transformed-01.svg mask-transformed-01-ref.svg
@@ -246,6 +247,7 @@ fuzzy-if(azureQuartz,6,47) == path-01.svg path-01-ref.svg
 == path-08.svg pass.svg
 == pathLength-01.svg pass.svg
 == pathLength-02.svg pass.svg
+== pattern-basic-01.svg pass.svg
 == pattern-invalid-01.svg pattern-invalid-01-ref.svg
 == pattern-live-01a.svg pattern-live-01-ref.svg
 == pattern-live-01b.svg pattern-live-01-ref.svg
