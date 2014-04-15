@@ -29,27 +29,6 @@ const ContentPanning = {
   hybridEvents: false,
 
   init: function cp_init() {
-    // If APZ is enabled, we do active element handling in C++
-    // (see widget/xpwidgets/ActiveElementManager.h), and panning
-    // itself in APZ, so we don't need to handle any touch events here.
-    if (docShell.asyncPanZoomEnabled === false) {
-      this._setupListenersForPanning();
-    }
-
-    addEventListener("unload",
-		     this._unloadHandler.bind(this),
-		     /* useCapture = */ false,
-		     /* wantsUntrusted = */ false);
-
-    addMessageListener("Viewport:Change", this._recvViewportChange.bind(this));
-    addMessageListener("Gesture:DoubleTap", this._recvDoubleTap.bind(this));
-    addEventListener("visibilitychange", this._handleVisibilityChange.bind(this));
-    kObservedEvents.forEach((topic) => {
-      Services.obs.addObserver(this, topic, false);
-    });
-  },
-
-  _setupListenersForPanning: function cp_setupListenersForPanning() {
     var events;
     try {
       content.document.createEvent('TouchEvent');
@@ -81,6 +60,18 @@ const ContentPanning = {
                                  this.handleEvent.bind(this),
                                  /* useCapture = */ false);
     }.bind(this));
+
+    addEventListener("unload",
+		     this._unloadHandler.bind(this),
+		     /* useCapture = */ false,
+		     /* wantsUntrusted = */ false);
+
+    addMessageListener("Viewport:Change", this._recvViewportChange.bind(this));
+    addMessageListener("Gesture:DoubleTap", this._recvDoubleTap.bind(this));
+    addEventListener("visibilitychange", this._handleVisibilityChange.bind(this));
+    kObservedEvents.forEach((topic) => {
+      Services.obs.addObserver(this, topic, false);
+    });
   },
 
   handleEvent: function cp_handleEvent(evt) {
@@ -204,7 +195,8 @@ const ContentPanning = {
 
     // We prevent start events to avoid sending a focus event at the end of this
     // touch series. See bug 889717.
-    if ((this.panning || this.preventNextClick)) {
+    if (docShell.asyncPanZoomEnabled === false &&
+        (this.panning || this.preventNextClick)) {
       evt.preventDefault();
     }
   },
@@ -243,7 +235,7 @@ const ContentPanning = {
         let view = target.ownerDocument ? target.ownerDocument.defaultView
                                         : target;
         view.addEventListener('click', this, true, true);
-      } else {
+      } else if (docShell.asyncPanZoomEnabled === false) {
         // We prevent end events to avoid sending a focus event. See bug 889717.
         evt.preventDefault();
       }
@@ -292,15 +284,18 @@ const ContentPanning = {
       return;
     }
 
-    // Scroll manually.
-    this.scrollCallback(delta.scale(-1));
+    // If the application is not managed by the AsyncPanZoomController, then
+    // scroll manually.
+    if (docShell.asyncPanZoomEnabled === false) {
+      this.scrollCallback(delta.scale(-1));
+    }
 
     if (!this.panning && isPan) {
       this.panning = true;
       this._activationTimer.cancel();
     }
 
-    if (this.panning) {
+    if (this.panning && docShell.asyncPanZoomEnabled === false) {
       // Only do this when we're actually executing a pan gesture.
       // Otherwise synthetic mouse events will be canceled.
       evt.stopPropagation();
@@ -597,8 +592,9 @@ const ContentPanning = {
     delete this.primaryPointerId;
     this._activationTimer.cancel();
 
-    // If there is a scroll action, let's do a manual kinetic panning action.
-    if (this.panning) {
+    // If there is a scroll action but the application is not managed by
+    // the AsyncPanZoom controller, let's do a manual kinetic panning action.
+    if (this.panning && docShell.asyncPanZoomEnabled === false) {
       KineticPanning.start(this);
     }
   },
