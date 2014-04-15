@@ -1047,48 +1047,46 @@ IonBuilder::addOsrValueTypeBarrier(uint32_t slot, MInstruction **def_,
         def = barrier;
     }
 
-    if (type != def->type()) {
-        switch (type) {
-          case MIRType_Boolean:
-          case MIRType_Int32:
-          case MIRType_Double:
-          case MIRType_String:
-          case MIRType_Object:
-          {
+    switch (type) {
+      case MIRType_Boolean:
+      case MIRType_Int32:
+      case MIRType_Double:
+      case MIRType_String:
+      case MIRType_Object:
+        if (type != def->type()) {
             MUnbox *unbox = MUnbox::New(alloc(), def, type, MUnbox::Fallible);
             osrBlock->insertBefore(osrBlock->lastIns(), unbox);
             osrBlock->rewriteSlot(slot, unbox);
             def = unbox;
-            break;
-          }
-
-          case MIRType_Null:
-          {
-            MConstant *c = MConstant::New(alloc(), NullValue());
-            osrBlock->insertBefore(osrBlock->lastIns(), c);
-            osrBlock->rewriteSlot(slot, c);
-            def = c;
-            break;
-          }
-
-          case MIRType_Undefined:
-          {
-            MConstant *c = MConstant::New(alloc(), UndefinedValue());
-            osrBlock->insertBefore(osrBlock->lastIns(), c);
-            osrBlock->rewriteSlot(slot, c);
-            def = c;
-            break;
-          }
-
-          case MIRType_Magic:
-            JS_ASSERT(lazyArguments_);
-            osrBlock->rewriteSlot(slot, lazyArguments_);
-            def = lazyArguments_;
-            break;
-
-          default:
-            break;
         }
+        break;
+
+      case MIRType_Null:
+      {
+        MConstant *c = MConstant::New(alloc(), NullValue());
+        osrBlock->insertBefore(osrBlock->lastIns(), c);
+        osrBlock->rewriteSlot(slot, c);
+        def = c;
+        break;
+      }
+
+      case MIRType_Undefined:
+      {
+        MConstant *c = MConstant::New(alloc(), UndefinedValue());
+        osrBlock->insertBefore(osrBlock->lastIns(), c);
+        osrBlock->rewriteSlot(slot, c);
+        def = c;
+        break;
+      }
+
+      case MIRType_Magic:
+        JS_ASSERT(lazyArguments_);
+        osrBlock->rewriteSlot(slot, lazyArguments_);
+        def = lazyArguments_;
+        break;
+
+      default:
+        break;
     }
 
     JS_ASSERT(def == osrBlock->getSlot(slot));
