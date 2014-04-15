@@ -53,7 +53,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           is(typeof bound.wrappedJSObject.unexposedProperty, 'undefined',
              "Unexposed property should not be defined in content");
 
-          // Check that here document.QueryInterface works
+          // Check that here HTMLImageElement.QueryInterface works
           var img = document.querySelector("img");
           ok("QueryInterface" in img,
              "Should have a img.QueryInterface here");
