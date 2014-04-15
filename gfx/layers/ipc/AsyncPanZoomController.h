@@ -643,9 +643,7 @@ protected:
   // monitor should be held. When setting |mState|, either the SetState()
   // function can be used, or the monitor can be held and then |mState| updated.
   // IMPORTANT: See the note about lock ordering at the top of APZCTreeManager.h.
-  // This is mutable to allow entering it from 'const' methods; doing otherwise
-  // would significantly limit what methods could be 'const'.
-  mutable ReentrantMonitor mMonitor;
+  ReentrantMonitor mMonitor;
 
   // Specifies whether we should use touch-action css property. Initialized from
   // the preferences. This property (in comparison with the global one) simplifies
