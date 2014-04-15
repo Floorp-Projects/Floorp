@@ -389,8 +389,8 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
   // the frame, and then get the offsets and size from it. If the frame's size
   // doesn't need to change, we can simply update the frame position. Otherwise
   // we fall back to a reflow.
-  nsRefPtr<nsRenderingContext> rc = aFrame->PresContext()->GetPresShell()->
-    GetReferenceRenderingContext();
+  nsRefPtr<nsRenderingContext> rc =
+    aFrame->PresContext()->PresShell()->CreateReferenceRenderingContext();
 
   // Construct a bogus parent reflow state so that there's a usable
   // containing block reflow state.

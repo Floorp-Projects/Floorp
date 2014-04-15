@@ -263,7 +263,7 @@ nsTextControlFrame::EnsureEditorInitialized()
 
     // Time to mess with our security context... See comments in GetValue()
     // for why this is needed.
-    mozilla::dom::AutoSystemCaller asc;
+    mozilla::dom::AutoNoJSAPI nojsapi;
 
     // Make sure that we try to focus the content even if the method fails
     class EnsureSetFocus {

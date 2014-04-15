@@ -575,7 +575,8 @@ cairo_user_data_key_t kDrawTarget;
 RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface, const IntSize& aSize)
 {
-  RefPtr<DrawTarget> drawTarget = Factory::CreateDrawTargetForCairoSurface(aSurface->CairoSurface(), aSize);
+  SurfaceFormat format = Optimal2DFormatForContent(aSurface->GetContentType());
+  RefPtr<DrawTarget> drawTarget = Factory::CreateDrawTargetForCairoSurface(aSurface->CairoSurface(), aSize, &format);
   aSurface->SetData(&kDrawTarget, drawTarget, nullptr);
   return drawTarget;
 }

@@ -166,8 +166,9 @@ mozNfc.prototype = {
     this._window = aWindow;
   },
 
-  // Only System Process can call the following interfaces
-  // 'checkP2PRegistration' , 'notifyUserAcceptedP2P' , 'notifySendFileStatus'
+  // Only apps which have nfc-manager permission can call the following interfaces
+  // 'checkP2PRegistration' , 'notifyUserAcceptedP2P' , 'notifySendFileStatus',
+  // 'startPoll', 'stopPoll', and 'powerOff'.
   checkP2PRegistration: function checkP2PRegistration(manifestUrl) {
     // Get the AppID and pass it to ContentHelper
     let appID = appsService.getAppLocalIdByManifestURL(manifestUrl);
@@ -183,6 +184,18 @@ mozNfc.prototype = {
   notifySendFileStatus: function notifySendFileStatus(status, requestId) {
     this._nfcContentHelper.notifySendFileStatus(this._window,
                                                 status, requestId);
+  },
+
+  startPoll: function startPoll() {
+    return this._nfcContentHelper.startPoll(this._window);
+  },
+
+  stopPoll: function stopPoll() {
+    return this._nfcContentHelper.stopPoll(this._window);
+  },
+
+  powerOff: function powerOff() {
+    return this._nfcContentHelper.powerOff(this._window);
   },
 
   getNFCTag: function getNFCTag(sessionToken) {

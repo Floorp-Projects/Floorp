@@ -266,8 +266,7 @@ A2dpConnectionStateCallback(btav_connection_state_t aState,
   AvStatusToSinkString(aState, a2dpState);
 
   InfallibleTArray<BluetoothNamedValue> props;
-  props.AppendElement(
-    BluetoothNamedValue(NS_LITERAL_STRING("State"), a2dpState));
+  BT_APPEND_NAMED_VALUE(props, "State", a2dpState);
 
   BluetoothSignal signal(NS_LITERAL_STRING("AudioSink"),
                          remoteDeviceBdAddress, props);
@@ -296,8 +295,7 @@ A2dpAudioStateCallback(btav_audio_state_t aState,
   }
 
   InfallibleTArray<BluetoothNamedValue> props;
-  props.AppendElement(
-    BluetoothNamedValue(NS_LITERAL_STRING("State"), a2dpState));
+  BT_APPEND_NAMED_VALUE(props, "State", a2dpState);
 
   BluetoothSignal signal(NS_LITERAL_STRING("AudioSink"),
                          remoteDeviceBdAddress, props);

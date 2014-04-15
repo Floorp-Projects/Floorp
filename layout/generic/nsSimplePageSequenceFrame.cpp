@@ -591,9 +591,8 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
 
       mCalledBeginPage = true;
       
-      nsRefPtr<nsRenderingContext> renderingContext;
-      dc->CreateRenderingContext(*getter_AddRefs(renderingContext));
-      NS_ENSURE_TRUE(renderingContext, NS_ERROR_OUT_OF_MEMORY);
+      nsRefPtr<nsRenderingContext> renderingContext =
+        dc->CreateRenderingContext();
 
       nsRefPtr<gfxASurface> renderingSurface =
           renderingContext->ThebesContext()->CurrentSurface();
@@ -722,9 +721,8 @@ nsSimplePageSequenceFrame::PrintNextPage()
 
       PR_PL(("SeqFr::PrintNextPage -> %p PageNo: %d", pf, mPageNum));
 
-      nsRefPtr<nsRenderingContext> renderingContext;
-      dc->CreateRenderingContext(*getter_AddRefs(renderingContext));
-      NS_ENSURE_TRUE(renderingContext, NS_ERROR_OUT_OF_MEMORY);
+      nsRefPtr<nsRenderingContext> renderingContext =
+        dc->CreateRenderingContext();
 
       nsRect drawingRect(nsPoint(0, 0), currentPage->GetSize());
       nsRegion drawingRegion(drawingRect);

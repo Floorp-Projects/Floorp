@@ -16,17 +16,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=920977
 <pre id="test">
 <script type="application/javascript;version=1.8" src="file_framework.js"></script>
 <script type="application/javascript;version=1.8">
+function verifier(success, failure) {
+  try {
+    if (!this.getObj()) {
+      failure("Did not receive proper object");
+      return;
+    }
+  } catch (e) {
+    failure("Received exception!: " + e);
+    return;
+  }
+
+  try {
+    this.getObj().removeFocus();
+    failure("Should receive exception when accessing system only method.!");
+  } catch (e) {
+    success(this.perm);
+  }
+}
+
 var gData = [
   {
     perm: ["input"],
     obj: "mozInputMethod",
     webidl: "MozInputMethod",
     settings: [["dom.mozInputMethod.enabled", true]],
-  },
-  {
-    perm: ["input-manage"],
-    obj: "mozKeyboard",
-    idl: "nsIB2GKeyboard",
+    verifier: verifier.toSource()
   }
 ]
 </script>

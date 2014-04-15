@@ -1157,7 +1157,7 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
     }
 
 
-    // If the image in question is loaded and decoded, draw it
+    // If the icon in question is loaded and decoded, draw it
     uint32_t imageStatus = 0;
     if (aRequest)
       aRequest->GetImageStatus(&imageStatus);

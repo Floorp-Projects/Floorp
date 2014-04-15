@@ -43,7 +43,7 @@ ProfileEntry::ProfileEntry(char aTagName, void *aTagPtr)
   , mTagName(aTagName)
 { }
 
-ProfileEntry::ProfileEntry(char aTagName, double aTagFloat)
+ProfileEntry::ProfileEntry(char aTagName, float aTagFloat)
   : mTagFloat(aTagFloat)
   , mTagName(aTagName)
 { }
@@ -473,7 +473,7 @@ void ThreadProfile::DuplicateLastSample() {
         switch (mEntries[readPos].mTagName) {
           // Copy with new time
           case 't':
-            addTag(ProfileEntry('t', (mozilla::TimeStamp::Now() - sStartTime).ToMilliseconds()));
+            addTag(ProfileEntry('t', static_cast<float>((mozilla::TimeStamp::Now() - sStartTime).ToMilliseconds())));
             break;
           // Don't copy markers
           case 'm':

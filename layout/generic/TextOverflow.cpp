@@ -34,7 +34,7 @@ public:
   virtual already_AddRefed<gfxContext> GetRefContext() MOZ_OVERRIDE
   {
     nsRefPtr<nsRenderingContext> rc =
-      mFrame->PresContext()->PresShell()->GetReferenceRenderingContext();
+      mFrame->PresContext()->PresShell()->CreateReferenceRenderingContext();
     nsRefPtr<gfxContext> ctx = rc->ThebesContext();
     return ctx.forget();
   }
@@ -758,7 +758,7 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
     }
   } else {
     nsRefPtr<nsRenderingContext> rc =
-      aFrame->PresContext()->PresShell()->GetReferenceRenderingContext();
+      aFrame->PresContext()->PresShell()->CreateReferenceRenderingContext();
     nsRefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
       nsLayoutUtils::FontSizeInflationFor(aFrame));

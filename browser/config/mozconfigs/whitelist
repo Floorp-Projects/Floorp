@@ -60,6 +60,7 @@ whitelist['nightly']['macosx-universal'] += [
 whitelist['nightly']['win32'] += [
     '. $topsrcdir/configs/mozilla2/win32/include/choose-make-flags',
     'mk_add_options MOZ_MAKE_FLAGS=-j1',
+    '. "$topsrcdir/build/mozconfig.cache"',
     'if test "$IS_NIGHTLY" != ""; then',
     'ac_add_options --disable-auto-deps',
     'fi',
