@@ -382,8 +382,8 @@ exports["test:ensure console.xxx works in cs"] = WorkerTest(
     let calls = [];
     function onMessage(type, msg) {
       assert.equal(type, msg,
-                       "console.xxx(\"xxx\"), i.e. message is equal to the " +
-                       "console method name we are calling");
+        "console.xxx(\"xxx\"), i.e. message is equal to the " +
+        "console method name we are calling");
       calls.push(msg);
     }
 
@@ -391,19 +391,23 @@ exports["test:ensure console.xxx works in cs"] = WorkerTest(
     let worker =  loader.require("sdk/content/worker").Worker({
       window: browser.contentWindow,
       contentScript: "new " + function WorkerScope() {
+        console.time("time");
         console.log("log");
         console.info("info");
         console.warn("warn");
         console.error("error");
         console.debug("debug");
         console.exception("exception");
+        console.timeEnd("timeEnd");
         self.postMessage();
       },
       onMessage: function() {
         // Ensure that console methods are called in the same execution order
+        const EXPECTED_CALLS = ["time", "log", "info", "warn", "error",
+          "debug", "exception", "timeEnd"];
         assert.equal(JSON.stringify(calls),
-                         JSON.stringify(["log", "info", "warn", "error", "debug", "exception"]),
-                         "console has been called successfully, in the expected order");
+          JSON.stringify(EXPECTED_CALLS),
+          "console methods have been called successfully, in expected order");
         done();
       }
     });
