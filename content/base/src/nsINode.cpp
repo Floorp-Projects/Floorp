@@ -375,6 +375,15 @@ nsINode::IsInAnonymousSubtree() const
   return AsContent()->IsInAnonymousSubtree();
 }
 
+bool
+nsINode::IsAnonymousContentInSVGUseSubtree() const
+{
+  MOZ_ASSERT(IsInAnonymousSubtree());
+  nsIContent* parent = AsContent()->GetBindingParent();
+  // Watch out for parentless native-anonymous subtrees.
+  return parent && parent->IsSVG(nsGkAtoms::use);
+}
+
 nsresult
 nsINode::GetParentNode(nsIDOMNode** aParentNode)
 {
