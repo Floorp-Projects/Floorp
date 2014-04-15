@@ -13,12 +13,12 @@ import org.mozilla.gecko.db.BrowserDB.URLColumns;
  */
 public class TopSitesCursorWrapper extends CursorWrapper {
     public static class PinnedSite {
-        public String title = "";
-        public String url = "";
+        public final String title;
+        public final String url;
 
         public PinnedSite(String aTitle, String aUrl) {
-            title = aTitle;
-            url = aUrl;
+            title = (aTitle == null ? "" : aTitle);
+            url = (aUrl == null ? "" : aUrl);
         }
     }
 
