@@ -36,6 +36,10 @@
 #include <media/stagefright/OMXCodec.h>
 #endif
 
+#include "mozilla/NullPtr.h"
+#include "prnetdb.h"
+#include "prerr.h"
+
 namespace android {
 
 #define TRACK_SUFFIX    "trackid=1"
@@ -80,8 +84,8 @@ struct MyTransmitter : public AHandler {
           mConn(new ARTSPConnection),
           mConnected(false),
           mAuthType(NONE),
-          mRTPSocket(-1),
-          mRTCPSocket(-1),
+          mRTPSocket(nullptr),
+          mRTCPSocket(nullptr),
           mSourceID(rand()),
           mSeqNo(uniformRand(65536)),
           mRTPTimeBase(rand()),
@@ -422,19 +426,17 @@ struct MyTransmitter : public AHandler {
 #if 0
             case 'poll':
             {
-                fd_set rs;
-                FD_ZERO(&rs);
-                FD_SET(mRTCPSocket, &rs);
+                PRPollDesc readPollDesc;
+                readPollDesc.fd = mRTCPSocket;
+                readPollDesc.in_flags = PR_POLL_READ;
 
-                struct timeval tv;
-                tv.tv_sec = 0;
-                tv.tv_usec = 0;
+                int numSocketsReadyToRead = PR_Poll(&readPollDesc, 1,
+                                                    PR_INTERVAL_NO_WAIT);
 
-                int res = select(mRTCPSocket + 1, &rs, NULL, NULL, &tv);
-
-                if (res == 1) {
+                if (numSocketsReadyToRead == 1) {
                     sp<ABuffer> buffer = new ABuffer(65536);
-                    ssize_t n = recv(mRTCPSocket, buffer->data(), buffer->size(), 0);
+                    ssize_t n = PR_Recv(mRTCPSocket, buffer->data(), buffer->size(),
+                                        0, PR_INTERVAL_NO_WAIT);
 
                     if (n <= 0) {
                         LOG(ERROR) << "recv returned " << n;
@@ -495,23 +497,22 @@ struct MyTransmitter : public AHandler {
 
                 CHECK(GetAttribute(transport.c_str(), "source", &value));
 
-                memset(mRemoteAddr.sin_zero, 0, sizeof(mRemoteAddr.sin_zero));
-                mRemoteAddr.sin_family = AF_INET;
-                mRemoteAddr.sin_addr.s_addr = inet_addr(value.c_str());
-                mRemoteAddr.sin_port = htons(rtpPort);
+                mRemoteAddr.inet.family = PR_AF_INET;
+                mRemoteAddr.inet.port = PR_htons(rtpPort);
+                PR_StringToNetAddr(value.c_str(), &mRemoteAddr);
 
                 mRemoteRTCPAddr = mRemoteAddr;
-                mRemoteRTCPAddr.sin_port = htons(rtpPort + 1);
+                mRemoteRTCPAddr.inet.port = PR_htons(rtpPort + 1);
 
-                CHECK_EQ(0, connect(mRTPSocket,
-                                    (const struct sockaddr *)&mRemoteAddr,
-                                    sizeof(mRemoteAddr)));
+                CHECK_EQ(PR_SUCCESS, PR_Connect(mRTPSocket,
+                                                &mRemoteAddr,
+                                                PR_INTERVAL_NO_TIMEOUT));
 
-                CHECK_EQ(0, connect(mRTCPSocket,
-                                    (const struct sockaddr *)&mRemoteRTCPAddr,
-                                    sizeof(mRemoteRTCPAddr)));
+                CHECK_EQ(PR_SUCCESS, PR_Connect(mRTCPSocket,
+                                                &mRemoteRTCPAddr,
+                                                PR_INTERVAL_NO_TIMEOUT));
 
-                uint32_t x = ntohl(mRemoteAddr.sin_addr.s_addr);
+                uint32_t x = PR_ntohl(mRemoteAddr.inet.ip);
                 LOG(INFO) << "sending data to "
                      << (x >> 24)
                      << "."
@@ -665,8 +666,8 @@ struct MyTransmitter : public AHandler {
                 data[6] = (rtpTime >> 8) & 0xff;
                 data[7] = rtpTime & 0xff;
 
-                ssize_t n = send(
-                        mRTPSocket, data, buffer->size(), 0);
+                ssize_t n = PR_Send(
+                        mRTPSocket, data, buffer->size(), 0, PR_INTERVAL_NO_WAIT);
                 if (n < 0) {
                     LOG(ERROR) << "send failed (" << strerror(errno) << ")";
                 }
@@ -841,12 +842,12 @@ private:
     AuthType mAuthType;
     AString mNonce;
     AString mSessionID;
-    int mRTPSocket, mRTCPSocket;
+    PRFileDesc *mRTPSocket, *mRTCPSocket;
     uint32_t mSourceID;
     uint32_t mSeqNo;
     uint32_t mRTPTimeBase;
-    struct sockaddr_in mRemoteAddr;
-    struct sockaddr_in mRemoteRTCPAddr;
+    PRNetAddr mRemoteAddr;
+    PRNetAddr mRemoteRTCPAddr;
     size_t mNumSamplesSent;
     uint32_t mNumRTPSent;
     uint32_t mNumRTPOctetsSent;
