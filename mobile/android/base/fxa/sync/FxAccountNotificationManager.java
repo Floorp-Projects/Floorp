@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.fxa.sync;
 
+import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.FxAccountConstants;
@@ -34,6 +35,9 @@ public class FxAccountNotificationManager {
 
   protected final int notificationId;
 
+  // We're lazy about updating our locale info, because most syncs don't notify.
+  private volatile boolean localeUpdated;
+
   public FxAccountNotificationManager(int notificationId) {
     this.notificationId = notificationId;
   }
@@ -56,6 +60,11 @@ public class FxAccountNotificationManager {
       Logger.info(LOG_TAG, "State " + state.getStateLabel() + " needs no action; cancelling any existing notification.");
       notificationManager.cancel(notificationId);
       return;
+    }
+
+    if (!localeUpdated) {
+      localeUpdated = true;
+      BrowserLocaleManager.getInstance().getAndApplyPersistedLocale(context);
     }
 
     final String title = context.getResources().getString(R.string.fxaccount_sync_sign_in_error_notification_title);
