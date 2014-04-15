@@ -10,4 +10,3 @@ EXTRA_JS_MODULES += [
 ]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-
