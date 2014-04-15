@@ -86,8 +86,8 @@ struct ScriptSettingsStackEntry {
     MOZ_ASSERT_IF(mGlobalObject, mGlobalObject->GetGlobalJSObject());
   }
 
-  bool IsSystemSingleton() { return this == &SystemSingleton; }
-  static ScriptSettingsStackEntry SystemSingleton;
+  bool NoJSAPI() { return this == &NoJSAPISingleton; }
+  static ScriptSettingsStackEntry NoJSAPISingleton;
 
 private:
   ScriptSettingsStackEntry() : mGlobalObject(nullptr)
@@ -196,14 +196,17 @@ private:
 };
 
 /*
- * A class used for C++ to indicate that existing entry and incumbent scripts
- * should not apply to anything in scope, and that callees should act as if
- * they were invoked "from C++".
+ * A class to put the JS engine in an unusable state. The subject principal
+ * will become System, the information on the script settings stack is
+ * rendered inaccessible, and JSAPI may not be manipulated until the class is
+ * either popped or an AutoJSAPI instance is subsequently pushed.
+ *
+ * This class may not be instantiated if an exception is pending.
  */
-class AutoSystemCaller {
+class AutoNoJSAPI {
 public:
-  AutoSystemCaller(bool aIsMainThread = NS_IsMainThread());
-  ~AutoSystemCaller();
+  AutoNoJSAPI(bool aIsMainThread = NS_IsMainThread());
+  ~AutoNoJSAPI();
 private:
   dom::ScriptSettingsStack& mStack;
   mozilla::Maybe<AutoCxPusher> mCxPusher;

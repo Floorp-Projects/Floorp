@@ -946,7 +946,7 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
   *aWindowIsNew = (containerPref != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW);
 
   {
-    dom::AutoSystemCaller asc;
+    dom::AutoNoJSAPI nojsapi;
 
     // Get a new rendering area from the browserDOMWin.  We don't want
     // to be starting any loads here, so get it with a null URI.
