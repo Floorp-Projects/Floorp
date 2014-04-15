@@ -505,27 +505,31 @@ FxAccountsInternal.prototype = {
    */
   getKeys: function() {
     let currentState = this.currentAccountState;
-    return currentState.getUserAccountData().then((data) => {
-      if (!data) {
+    return currentState.getUserAccountData().then((userData) => {
+      if (!userData) {
         throw new Error("Can't get keys; User is not signed in");
       }
-      if (data.kA && data.kB) {
-        return data;
+      if (userData.kA && userData.kB) {
+        return userData;
       }
       if (!currentState.whenKeysReadyDeferred) {
         currentState.whenKeysReadyDeferred = Promise.defer();
-        this.fetchAndUnwrapKeys(data.keyFetchToken).then(
-          data => {
-            if (!data.kA || !data.kB) {
-              currentState.whenKeysReadyDeferred.reject(
-                new Error("user data missing kA or kB")
-              );
-              return;
+        if (userData.keyFetchToken) {
+          this.fetchAndUnwrapKeys(userData.keyFetchToken).then(
+            (dataWithKeys) => {
+              if (!dataWithKeys.kA || !dataWithKeys.kB) {
+                currentState.whenKeysReadyDeferred.reject(
+                  new Error("user data missing kA or kB")
+                );
+                return;
+              }
+              currentState.whenKeysReadyDeferred.resolve(dataWithKeys);
+            },
+            (err) => {
+              currentState.whenKeysReadyDeferred.reject(err);
             }
-            currentState.whenKeysReadyDeferred.resolve(data);
-          },
-          err => currentState.whenKeysReadyDeferred.reject(err)
-        );
+          );
+        }
       }
       return currentState.whenKeysReadyDeferred.promise;
     }).then(result => currentState.resolve(result));
@@ -537,6 +541,7 @@ FxAccountsInternal.prototype = {
     return Task.spawn(function* task() {
       // Sign out if we don't have a key fetch token.
       if (!keyFetchToken) {
+        log.warn("improper fetchAndUnwrapKeys() call: token missing");
         yield this.signOut();
         return null;
       }
