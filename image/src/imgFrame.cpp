@@ -966,6 +966,10 @@ imgFrame::SizeOfExcludingThisWithComputedFallbackIfHeap(gfxMemoryLocation aLocat
     n += mVBuf->HeapSizeOfExcludingThis(aMallocSizeOf);
   }
 
+  if (mVBuf && aLocation == gfxMemoryLocation::IN_PROCESS_NONHEAP) {
+    n += mVBuf->NonHeapSizeOfExcludingThis();
+  }
+
   if (mOptSurface && aLocation == mOptSurface->GetMemoryLocation()) {
     size_t n2 = 0;
     if (aLocation == gfxMemoryLocation::IN_PROCESS_HEAP &&
