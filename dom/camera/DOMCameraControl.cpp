@@ -844,6 +844,29 @@ nsDOMCameraControl::SetConfiguration(const CameraConfiguration& aConfiguration,
   aRv = mCameraControl->SetConfiguration(config);
 }
 
+class ImmediateErrorCallback : public nsRunnable
+{
+public:
+  ImmediateErrorCallback(CameraErrorCallback* aCallback, const nsAString& aMessage)
+    : mCallback(aCallback)
+    , mMessage(aMessage)
+  { }
+  
+  NS_IMETHODIMP
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    ErrorResult ignored;
+    mCallback->Call(mMessage, ignored);
+    return NS_OK;
+  }
+
+protected:
+  nsRefPtr<CameraErrorCallback> mCallback;
+  nsString mMessage;
+};
+
+
 void
 nsDOMCameraControl::AutoFocus(CameraAutoFocusCallback& aOnSuccess,
                               const Optional<OwningNonNull<CameraErrorCallback> >& aOnError,
@@ -851,17 +874,16 @@ nsDOMCameraControl::AutoFocus(CameraAutoFocusCallback& aOnSuccess,
 {
   MOZ_ASSERT(mCameraControl);
 
-  nsRefPtr<CameraAutoFocusCallback> cb = mAutoFocusOnSuccessCb.forget();
-  bool cancel = false;
+  nsRefPtr<CameraAutoFocusCallback> cb = mAutoFocusOnSuccessCb;
   if (cb) {
-    // we have a callback, which means we're already in the process of
-    // auto-focusing--cancel the old callback
-    nsRefPtr<CameraErrorCallback> ecb = mAutoFocusOnErrorCb.forget();
-    if (ecb) {
-      ErrorResult ignored;
-      ecb->Call(NS_LITERAL_STRING("Interrupted"), ignored);
+    if (aOnError.WasPassed()) {
+      // There is already a call to AutoFocus() in progress, abort this new one
+      // and invoke the error callback (if one was passed in).
+      NS_DispatchToMainThread(new ImmediateErrorCallback(&aOnError.Value(),
+                              NS_LITERAL_STRING("AutoFocusAlreadyInProgress")));
     }
-    cancel = true;
+    aRv = NS_ERROR_FAILURE;
+    return;
   }
 
   mAutoFocusOnSuccessCb = &aOnSuccess;
@@ -870,7 +892,7 @@ nsDOMCameraControl::AutoFocus(CameraAutoFocusCallback& aOnSuccess,
     mAutoFocusOnErrorCb = &aOnError.Value();
   }
 
-  aRv = mCameraControl->AutoFocus(cancel);
+  aRv = mCameraControl->AutoFocus();
 }
 
 void
@@ -897,11 +919,11 @@ nsDOMCameraControl::TakePicture(const CameraPictureOptions& aOptions,
 
   nsRefPtr<CameraTakePictureCallback> cb = mTakePictureOnSuccessCb;
   if (cb) {
-    // There is already a call to TakePicture() in progress, abort this one and
-    //  invoke the error callback (if one was passed in).
     if (aOnError.WasPassed()) {
-      ErrorResult ignored;
-      aOnError.Value().Call(NS_LITERAL_STRING("TakePictureAlreadyInProgress"), ignored);
+      // There is already a call to TakePicture() in progress, abort this new
+      // one and invoke the error callback (if one was passed in).
+      NS_DispatchToMainThread(new ImmediateErrorCallback(&aOnError.Value(),
+                              NS_LITERAL_STRING("TakePictureAlreadyInProgress")));
     }
     aRv = NS_ERROR_FAILURE;
     return;
@@ -956,6 +978,13 @@ nsDOMCameraControl::ReleaseHardware(const Optional<OwningNonNull<CameraReleaseCa
   }
 
   aRv = mCameraControl->Stop();
+}
+
+void
+nsDOMCameraControl::ResumeContinuousFocus(ErrorResult& aRv)
+{
+  MOZ_ASSERT(mCameraControl);
+  aRv = mCameraControl->ResumeContinuousFocus();
 }
 
 void
