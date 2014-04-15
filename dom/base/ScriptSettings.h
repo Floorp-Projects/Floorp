@@ -96,9 +96,63 @@ private:
 };
 
 /*
+ * For any interaction with JSAPI, an AutoJSAPI (or one of its subclasses)
+ * must be on the stack.
+ *
+ * This base class should be instantiated as-is when the caller wants to use
+ * JSAPI but doesn't expect to run script. Its current duties are as-follows:
+ *
+ * * Grabbing an appropriate JSContext, and, on the main thread, pushing it onto
+ *   the JSContext stack.
+ * * Entering a null compartment, so that the consumer is forced to select a
+ *   compartment to enter before manipulating objects.
+ *
+ * Additionally, the following duties are planned, but not yet implemented:
+ *
+ * * De-poisoning the JSRuntime to allow manipulation of JSAPI. We can't
+ *   actually implement this poisoning until all the JSContext pushing in the
+ *   system goes through AutoJSAPI (see bug 951991). For now, this de-poisoning
+ *   effectively corresponds to having a non-null cx on the stack.
+ * * Reporting any exceptions left on the JSRuntime, unless the caller steals
+ *   or silences them.
+ * * Entering a JSAutoRequest. At present, this is handled by the cx pushing
+ *   on the main thread, and by other code on workers. Depending on the order
+ *   in which various cleanup lands, this may never be necessary, because
+ *   JSAutoRequests may go away.
+ *
+ * In situations where the consumer expects to run script, AutoEntryScript
+ * should be used, which does additional manipulation of the script settings
+ * stack. In bug 991758, we'll add hard invariants to SpiderMonkey, such that
+ * any attempt to run script without an AutoEntryScript on the stack will
+ * fail. This prevents system code from accidentally triggering script
+ * execution at inopportune moments via surreptitious getters and proxies.
+ */
+class AutoJSAPI {
+public:
+  // Public constructor for use when the base class is constructed as-is. It
+  // uses the SafeJSContext (or worker equivalent), and enters a null
+  // compartment.
+  AutoJSAPI();
+  JSContext* cx() const { return mCx; }
+
+  bool CxPusherIsStackTop() { return mCxPusher.ref().IsStackTop(); }
+
+protected:
+  // Protected constructor, allowing subclasses to specify a particular cx to
+  // be used.
+  AutoJSAPI(JSContext *aCx, bool aIsMainThread, bool aSkipNullAC = false);
+
+private:
+  mozilla::Maybe<AutoCxPusher> mCxPusher;
+  mozilla::Maybe<JSAutoNullCompartment> mNullAc;
+  JSContext *mCx;
+};
+
+/*
  * A class that represents a new script entry point.
  */
-class AutoEntryScript : protected ScriptSettingsStackEntry {
+class AutoEntryScript : public AutoJSAPI,
+                        protected ScriptSettingsStackEntry {
 public:
   AutoEntryScript(nsIGlobalObject* aGlobalObject,
                   bool aIsMainThread = NS_IsMainThread(),
@@ -110,15 +164,10 @@ public:
     mWebIDLCallerPrincipal = aPrincipal;
   }
 
-  JSContext* cx() const { return mCx; }
-
 private:
+  JSAutoCompartment mAc;
   dom::ScriptSettingsStack& mStack;
   nsCOMPtr<nsIPrincipal> mWebIDLCallerPrincipal;
-  JSContext *mCx;
-  mozilla::Maybe<AutoCxPusher> mCxPusher;
-  mozilla::Maybe<JSAutoCompartment> mAc; // This can de-Maybe-fy when mCxPusher
-                                         // goes away.
   friend nsIPrincipal* GetWebIDLCallerPrincipal();
 };
 
