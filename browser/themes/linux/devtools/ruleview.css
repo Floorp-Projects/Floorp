@@ -20,16 +20,9 @@
   border-top-style: solid;
   border-bottom-style: solid;
   padding: 1px 4px;
-%ifndef XP_MACOSX
   margin-top: 4px;
-%endif
   -moz-user-select: none;
   word-wrap: break-word;
-}
-
-.ruleview-rule-pseudo-element {
-  padding-left:20px;
-  border-left: solid 10px;
 }
 
 .ruleview-rule-source:hover {
@@ -126,7 +119,7 @@
 }
 
 .ruleview-property {
-  border-left: 3px solid transparent;
+  border-left: 2px solid transparent;
   clear: right;
 }
 
@@ -134,12 +127,8 @@
   vertical-align: middle;
 }
 
-.theme-dark .ruleview-property[dirty] {
-  border-left-color: #70bf53; /* Green */
-}
-
-.theme-light .ruleview-property[dirty] {
-  border-left-color: #2cbb0f; /* Green */
+.ruleview-property[dirty] {
+  border-left-color: #68E268;
 }
 
 .ruleview-namecontainer > .ruleview-propertyname,
