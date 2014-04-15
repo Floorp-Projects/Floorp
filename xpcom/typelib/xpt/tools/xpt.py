@@ -69,6 +69,7 @@ from __future__ import with_statement
 import os, sys
 import struct
 import operator
+import itertools
 
 # header magic
 XPT_MAGIC = "XPCOM\nTypeLib\r\n\x1a"
@@ -1254,7 +1255,8 @@ def xpt_link(inputs):
     """
     Link all of the xpt files in |inputs| together and return the result
     as a Typelib object. All entries in inputs may be filenames or
-    file-like objects.
+    file-like objects. Non-scriptable interfaces that are unreferenced
+    from scriptable interfaces will be removed during linking.
 
     """
     def read_input(i):
@@ -1367,6 +1369,35 @@ def xpt_link(inputs):
             checkType(m.result.type)
             for p in m.params:
                 checkType(p.type)
+
+    # There's no need to have non-scriptable interfaces in a typelib, and
+    # removing them saves memory when typelibs are loaded.  But we can't
+    # just blindly remove all non-scriptable interfaces, since we still
+    # need to know about non-scriptable interfaces referenced from
+    # scriptable interfaces.
+    worklist = set(i for i in interfaces if i.scriptable)
+    required_interfaces = set()
+    def maybe_add_to_worklist(iface):
+        if iface in required_interfaces or iface in worklist:
+            return
+        worklist.add(iface)
+
+    while worklist:
+        i = worklist.pop()
+        required_interfaces.add(i)
+        if i.parent:
+            maybe_add_to_worklist(i.parent)
+        for m in i.methods:
+            if isinstance(m.result.type, InterfaceType):
+                maybe_add_to_worklist(m.result.type.iface)
+            for p in m.params:
+                if isinstance(p.type, InterfaceType):
+                    maybe_add_to_worklist(p.type.iface)
+                elif isinstance(p.type, ArrayType) and isinstance(p.type.element_type, InterfaceType):
+                    maybe_add_to_worklist(p.type.element_type.iface)
+
+    interfaces = list(required_interfaces)
+
     # Re-sort interfaces (by IID)
     interfaces.sort()
     return Typelib(interfaces=interfaces)
