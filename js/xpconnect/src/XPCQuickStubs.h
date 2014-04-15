@@ -312,8 +312,8 @@ class xpc_qsACString : public xpc_qsBasicString<nsACString, nsCString>
 public:
     xpc_qsACString(JSContext *cx, JS::HandleValue v,
                    JS::MutableHandleValue pval, bool notpassed,
-                   StringificationBehavior nullBehavior,
-                   StringificationBehavior undefinedBehavior);
+                   StringificationBehavior nullBehavior = eNull,
+                   StringificationBehavior undefinedBehavior = eNull);
 };
 
 /**

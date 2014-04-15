@@ -2037,7 +2037,7 @@ ConstructJSImplementation(JSContext* aCx, const char* aContractId,
   // initializing the object, so exceptions from that will get reported
   // properly, since those are never exceptions that a spec wants to be thrown.
   {
-    AutoSystemCaller asc;
+    AutoNoJSAPI nojsapi;
 
     // Get the XPCOM component containing the JS implementation.
     nsCOMPtr<nsISupports> implISupports = do_CreateInstance(aContractId);

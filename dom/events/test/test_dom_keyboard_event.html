@@ -20,55 +20,126 @@ SimpleTest.waitForFocus(runTests, window);
 function testInitializingUntrustedEvent()
 {
   const kTests = [
-    { createEventArg: "KeyboardEvent",
+    // initKeyEvent
+    { createEventArg: "KeyboardEvent", useInitKeyboardEvent: false,
       type: "keydown", bubbles: true, cancelable: true, view: null,
       ctrlKey: false, altKey: false, shiftKey: false, metaKey: false,
-      keyCode: 0x00, charCode: 0x00 },
+      keyCode: 0x00, charCode: 0x00,
+      detail: 0, key: "", location: 0,  modifiersList: "", repeat: false,
+    }, // 0
 
-    { createEventArg: "keyboardevent",
+    { createEventArg: "keyboardevent", useInitKeyboardEvent: false,
       type: "keyup", bubbles: false, cancelable: true, view: window,
       ctrlKey: true, altKey: false, shiftKey: false, metaKey: false,
-      keyCode: 0x10, charCode: 0x00 },
+      keyCode: 0x10, charCode: 0x00,
+      detail: 0, key: "", location: 0,  modifiersList: "", repeat: false,
+    }, // 1
 
-    { createEventArg: "Keyboardevent",
+    { createEventArg: "Keyboardevent", useInitKeyboardEvent: false,
       type: "keypess", bubbles: true, cancelable: false, view: null,
       ctrlKey: false, altKey: true, shiftKey: false, metaKey: false,
-      keyCode: 0x11, charCode: 0x30 },
+      keyCode: 0x11, charCode: 0x30,
+      detail: 0, key: "", location: 0,  modifiersList: "", repeat: false,
+    }, // 2
 
-    { createEventArg: "keyboardEvent",
+    { createEventArg: "keyboardEvent", useInitKeyboardEvent: false,
       type: "boo", bubbles: false, cancelable: false, view: window,
       ctrlKey: false, altKey: false, shiftKey: true, metaKey: false,
-      keyCode: 0x30, charCode: 0x40 },
+      keyCode: 0x30, charCode: 0x40,
+      detail: 0, key: "", location: 0,  modifiersList: "", repeat: false,
+    }, // 3
 
-    { createEventArg: "KeyEvents",
+    { createEventArg: "KeyEvents", useInitKeyboardEvent: false,
       type: "foo", bubbles: true, cancelable: true, view: null,
       ctrlKey: false, altKey: false, shiftKey: false, metaKey: true,
-      keyCode: 0x00, charCode: 0x50 },
+      keyCode: 0x00, charCode: 0x50,
+      detail: 0, key: "", location: 0,  modifiersList: "", repeat: false,
+    }, // 4
 
-    { createEventArg: "keyevents",
+    { createEventArg: "keyevents", useInitKeyboardEvent: false,
       type: "bar", bubbles: false, cancelable: true, view: window,
       ctrlKey: true, altKey: true, shiftKey: false, metaKey: false,
-      keyCode: 0x00, charCode: 0x60 },
+      keyCode: 0x00, charCode: 0x60,
+      detail: 0, key: "", location: 0,  modifiersList: "", repeat: false,
+    }, // 5
 
-    { createEventArg: "Keyevents",
+    { createEventArg: "Keyevents", useInitKeyboardEvent: false,
       type: "keydown", bubbles: true, cancelable: false, view: null,
       ctrlKey: false, altKey: true, shiftKey: false, metaKey: true,
-      keyCode: 0x30, charCode: 0x00 },
+      keyCode: 0x30, charCode: 0x00,
+      detail: 0, key: "", location: 0,  modifiersList: "", repeat: false,
+    }, // 6
 
-    { createEventArg: "keyEvents",
+    { createEventArg: "keyEvents", useInitKeyboardEvent: false,
       type: "keyup", bubbles: false, cancelable: false, view: window,
       ctrlKey: true, altKey: false, shiftKey: true, metaKey: false,
-      keyCode: 0x10, charCode: 0x80 },
+      keyCode: 0x10, charCode: 0x80,
+      detail: 0, key: "", location: 0,  modifiersList: "", repeat: false,
+    }, // 7
 
-    { createEventArg: "KeyboardEvent",
+    { createEventArg: "KeyboardEvent", useInitKeyboardEvent: false,
       type: "keypress", bubbles: false, cancelable: false, view: window,
       ctrlKey: true, altKey: false, shiftKey: true, metaKey: true,
-      keyCode: 0x10, charCode: 0x80 },
+      keyCode: 0x10, charCode: 0x80,
+      detail: 0, key: "", location: 0,  modifiersList: "", repeat: false,
+    }, // 8
 
-    { createEventArg: "KeyboardEvent",
+    { createEventArg: "KeyboardEvent", useInitKeyboardEvent: false,
       type: "foo", bubbles: false, cancelable: false, view: window,
       ctrlKey: true, altKey: true, shiftKey: true, metaKey: true,
-      keyCode: 0x10, charCode: 0x80 },
+      keyCode: 0x10, charCode: 0x80,
+      detail: 0, key: "", location: 0,  modifiersList: "", repeat: false,
+    }, // 9
+
+    // initKeyboardEvent
+    { createEventArg: "KeyboardEvent", useInitKeyboardEvent: true,
+      type: "keydown", bubbles: true, cancelable: true, view: null,
+      ctrlKey: false, altKey: false, shiftKey: false, metaKey: false,
+      keyCode: 0x00, charCode: 0x00,
+      detail: 0, key: "", location: 0,  modifiersList: "", repeat: false,
+    }, // 10
+
+    { createEventArg: "keyboardevent", useInitKeyboardEvent: true,
+      type: "keyup", bubbles: false, cancelable: true, view: window,
+      ctrlKey: true, altKey: false, shiftKey: false, metaKey: false,
+      keyCode: 0x00, charCode: 0x00,
+      detail: 2, key: "Unidentified", location: 1,  modifiersList: "Control", repeat: false,
+    }, // 11
+
+    { createEventArg: "Keyboardevent", useInitKeyboardEvent: true,
+      type: "keypess", bubbles: true, cancelable: false, view: null,
+      ctrlKey: false, altKey: true, shiftKey: false, metaKey: false,
+      keyCode: 0x00, charCode: 0x00,
+      detail: 0, key: "FooBar", location: 2,  modifiersList: "Alt", repeat: true,
+    }, // 12
+
+    { createEventArg: "keyboardevent", useInitKeyboardEvent: true,
+      type: "foo", bubbles: true, cancelable: true, view: null,
+      ctrlKey: false, altKey: false, shiftKey: false, metaKey: true,
+      keyCode: 0x00, charCode: 0x00,
+      detail: 0, key: "a", location: 0,  modifiersList: "Meta", repeat: false,
+    }, // 13
+
+    { createEventArg: "Keyevents", useInitKeyboardEvent: true,
+      type: "", bubbles: false, cancelable: false, view: null,
+      ctrlKey: true, altKey: true, shiftKey: true, metaKey: true,
+      keyCode: 0x00, charCode: 0x00,
+      detail: 0, key: "3", location: 0,  modifiersList: "Control Alt Meta Shift", repeat: true,
+    }, // 14
+
+    { createEventArg: "keyevents", useInitKeyboardEvent: true,
+      type: "", bubbles: false, cancelable: false, view: null,
+      ctrlKey: false, altKey: false, shiftKey: true, metaKey: false,
+      keyCode: 0x00, charCode: 0x00,
+      detail: 0, key: "3", location: 6,  modifiersList: "Shift", repeat: true,
+    }, // 15
+
+    { createEventArg: "keyevents", useInitKeyboardEvent: true,
+      type: "", bubbles: false, cancelable: false, view: null,
+      ctrlKey: false, altKey: true, shiftKey: false, metaKey: false,
+      keyCode: 0x00, charCode: 0x00,
+      detail: 0, key: "", location: 4,  modifiersList: "Shift, Alt", repeat: false,
+    }, // 16
   ];
 
   const kOtherModifierName = [
@@ -85,17 +156,23 @@ function testInitializingUntrustedEvent()
     var description = "testInitializingUntrustedEvent, Index: " + i + ", ";
     const kTest = kTests[i];
     var e = document.createEvent(kTest.createEventArg);
-    e.initKeyEvent(kTest.type, kTest.bubbles, kTest.cancelable, kTest.view,
-                   kTest.ctrlKey, kTest.altKey, kTest.shiftKey, kTest.metaKey,
-                   kTest.keyCode, kTest.charCode);
+    if (kTest.useInitKeyboardEvent) {
+      // IE has extra argument for |.locale|.  Calling with it shouldn't cause error for compatibility with IE.
+      e.initKeyboardEvent(kTest.type, kTest.bubbles, kTest.cancelable, kTest.view, kTest.detail,
+                          kTest.key, kTest.location, kTest.modifiersList, kTest.repeat, "locale");
+    } else {
+      e.initKeyEvent(kTest.type, kTest.bubbles, kTest.cancelable, kTest.view,
+                     kTest.ctrlKey, kTest.altKey, kTest.shiftKey, kTest.metaKey,
+                     kTest.keyCode, kTest.charCode);
+    }
     is(e.toString(), "[object KeyboardEvent]",
        description + 'class string should be "KeyboardEvent"');
 
     for (var attr in kTest) {
-      if (attr == "createEventArg") {
+      if (attr == "createEventArg" || attr == "useInitKeyboardEvent" || attr == "modifiersList") {
         continue;
       }
-      if (attr == "keyCode") {
+      if (!kTest.useInitKeyboardEvent && attr == "keyCode") {
         // If this is keydown, keyup of keypress event, keycod must be correct.
         if (kTest.type == "keydown" || kTest.type == "keyup" || kTest.type == "keypress") {
           is(e[attr], kTest[attr], description + attr + " returns wrong value");
@@ -103,7 +180,7 @@ function testInitializingUntrustedEvent()
         } else {
           is(e[attr], 0, description + attr + " returns non-zero for invalid event");
         }
-      } else if (attr == "charCode") {
+      } else if (!kTest.useInitKeyboardEvent && attr == "charCode") {
         // If this is keydown or keyup event, charCode always 0.
         if (kTest.type == "keydown" || kTest.type == "keyup") {
           is(e[attr], 0, description + attr + " returns non-zero for keydown or keyup event");
@@ -121,9 +198,6 @@ function testInitializingUntrustedEvent()
       }
     }
     is(e.isTrusted, false, description + "isTrusted returns wrong value");
-
-    // Currently, there is no way to initialize char and key attribute values.
-    ok(e.key === "", description + "key must return empty string - got " + e.key);
 
     // getModifierState() tests
     is(e.getModifierState("Shift"), kTest.shiftKey,

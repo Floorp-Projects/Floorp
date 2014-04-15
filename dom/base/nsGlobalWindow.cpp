@@ -11472,9 +11472,9 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
       // that we don't force a system caller here, because that screws it up
       // when it tries to compute the caller principal to associate with dialog
       // arguments. That whole setup just really needs to be rewritten. :-(
-      Maybe<AutoSystemCaller> asc;
+      Maybe<AutoNoJSAPI> nojsapi;
       if (!aContentModal) {
-        asc.construct();
+        nojsapi.construct();
       }
 
 

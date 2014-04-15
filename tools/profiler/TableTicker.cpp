@@ -117,7 +117,7 @@ typename Builder::Object TableTicker::GetMetaJSCustomObject(Builder& b)
   b.DefineProperty(meta, "processType", XRE_GetProcessType());
 
   TimeDuration delta = TimeStamp::Now() - sStartTime;
-  b.DefineProperty(meta, "startTime", PR_Now()/1000.0 - delta.ToMilliseconds());
+  b.DefineProperty(meta, "startTime", static_cast<float>(PR_Now()/1000.0 - delta.ToMilliseconds()));
 
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler> http = do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &res);
@@ -639,17 +639,17 @@ void TableTicker::InplaceTick(TickSample* sample)
 
   if (!sLastTracerEvent.IsNull() && sample && currThreadProfile.IsMainThread()) {
     TimeDuration delta = sample->timestamp - sLastTracerEvent;
-    currThreadProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
+    currThreadProfile.addTag(ProfileEntry('r', static_cast<float>(delta.ToMilliseconds())));
   }
 
   if (sample) {
     TimeDuration delta = sample->timestamp - sStartTime;
-    currThreadProfile.addTag(ProfileEntry('t', delta.ToMilliseconds()));
+    currThreadProfile.addTag(ProfileEntry('t', static_cast<float>(delta.ToMilliseconds())));
   }
 
 #if defined(XP_WIN)
   if (powerSample) {
-    currThreadProfile.addTag(ProfileEntry('p', mIntelPowerGadget->GetTotalPackagePowerInWatts()));
+    currThreadProfile.addTag(ProfileEntry('p', static_cast<float>(mIntelPowerGadget->GetTotalPackagePowerInWatts())));
   }
 #endif
 

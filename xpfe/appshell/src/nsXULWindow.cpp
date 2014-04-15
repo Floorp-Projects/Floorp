@@ -62,7 +62,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla;
-using dom::AutoSystemCaller;
+using dom::AutoNoJSAPI;
 
 #define SIZEMODE_NORMAL     NS_LITERAL_STRING("normal")
 #define SIZEMODE_MAXIMIZED  NS_LITERAL_STRING("maximized")
@@ -360,7 +360,7 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
   EnableParent(false);
 
   {
-    AutoSystemCaller asc;
+    AutoNoJSAPI nojsapi;
     nsIThread *thread = NS_GetCurrentThread();
     while (mContinueModalLoop) {
       if (!NS_ProcessNextEvent(thread))
@@ -1776,7 +1776,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
   // comment 13 for a description of what happens when we don't.
   nsCOMPtr<nsIXULWindow> newWindow;
   {
-    AutoSystemCaller asc;
+    AutoNoJSAPI nojsapi;
     appShell->CreateTopLevelWindow(this, uri,
                                    aChromeFlags, 615, 480,
                                    getter_AddRefs(newWindow));
@@ -1791,7 +1791,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
   xulWin->LockUntilChromeLoad();
 
   {
-    AutoSystemCaller asc;
+    AutoNoJSAPI nojsapi;
     nsIThread *thread = NS_GetCurrentThread();
     while (xulWin->IsLocked()) {
       if (!NS_ProcessNextEvent(thread))

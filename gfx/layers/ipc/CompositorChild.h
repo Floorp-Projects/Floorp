@@ -56,6 +56,8 @@ public:
 
   virtual bool RecvInvalidateAll() MOZ_OVERRIDE;
 
+  virtual bool RecvDidComposite(const uint64_t& aId) MOZ_OVERRIDE;
+
 private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CompositorChild();

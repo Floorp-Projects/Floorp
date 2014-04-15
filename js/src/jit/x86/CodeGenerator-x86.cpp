@@ -10,7 +10,6 @@
 
 #include "jsnum.h"
 
-#include "jit/ExecutionModeInlines.h"
 #include "jit/IonCaches.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
@@ -18,6 +17,7 @@
 
 #include "jsscriptinlines.h"
 
+#include "jit/ExecutionMode-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"
 
 using namespace js;
