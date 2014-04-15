@@ -118,6 +118,7 @@ gbjar.sources += [
     'AppNotificationClient.java',
     'BaseGeckoInterface.java',
     'BrowserApp.java',
+    'BrowserLocaleManager.java',
     'ContactService.java',
     'ContextGetter.java',
     'CustomEditText.java',
