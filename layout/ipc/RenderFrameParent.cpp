@@ -658,20 +658,33 @@ public:
     return true;
   }
 
-  virtual void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
-                                    APZStateChange aChange,
-                                    int aArg)
+  virtual void NotifyTransformBegin(const ScrollableLayerGuid& aGuid)
   {
     if (MessageLoop::current() != mUILoop) {
       mUILoop->PostTask(
         FROM_HERE,
-        NewRunnableMethod(this, &RemoteContentController::NotifyAPZStateChange,
-                          aGuid, aChange, aArg));
+        NewRunnableMethod(this, &RemoteContentController::NotifyTransformBegin,
+                          aGuid));
       return;
     }
     if (mRenderFrame) {
       TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
-      browser->NotifyAPZStateChange(aGuid.mScrollId, aChange, aArg);
+      browser->NotifyTransformBegin(aGuid.mScrollId);
+    }
+  }
+
+  virtual void NotifyTransformEnd(const ScrollableLayerGuid& aGuid)
+  {
+    if (MessageLoop::current() != mUILoop) {
+      mUILoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &RemoteContentController::NotifyTransformEnd,
+                          aGuid));
+      return;
+    }
+    if (mRenderFrame) {
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
+      browser->NotifyTransformEnd(aGuid.mScrollId);
     }
   }
 

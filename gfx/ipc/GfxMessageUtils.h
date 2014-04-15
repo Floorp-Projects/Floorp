@@ -26,7 +26,6 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "FrameMetrics.h"
 #include "FilterSupport.h"
-#include "mozilla/layers/GeckoContentController.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -1069,15 +1068,6 @@ struct ParamTraits<mozilla::gfx::FilterDescription>
             ReadParam(aMsg, aIter, &aResult->mPrimitives));
   }
 };
-
-typedef mozilla::layers::GeckoContentController::APZStateChange APZStateChange;
-
-template <>
-struct ParamTraits<APZStateChange>
-  : public TypedEnumSerializer<APZStateChange,
-                               APZStateChange::TransformBegin,
-                               APZStateChange::APZStateChangeSentinel>
-{};
 
 } /* namespace IPC */
 

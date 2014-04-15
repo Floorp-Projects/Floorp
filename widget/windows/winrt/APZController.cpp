@@ -303,37 +303,25 @@ class TransformedEndEvent : public nsRunnable
 };
 
 void
-APZController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
-                                    APZStateChange aChange,
-                                    int aArg)
+APZController::NotifyTransformBegin(const ScrollableLayerGuid& aGuid)
 {
-  switch (aChange) {
-    case APZStateChange::TransformBegin:
-    {
-      if (NS_IsMainThread()) {
-        MetroUtils::FireObserver("apzc-transform-begin", L"");
-        return;
-      }
-      nsCOMPtr<nsIRunnable> runnable = new TransformedStartEvent();
-      NS_DispatchToMainThread(runnable);
-      break;
-    }
-    case APZStateChange::TransformEnd:
-    {
-      if (NS_IsMainThread()) {
-        MetroUtils::FireObserver("apzc-transform-end", L"");
-        return;
-      }
-      nsCOMPtr<nsIRunnable> runnable = new TransformedEndEvent();
-      NS_DispatchToMainThread(runnable);
-      break;
-    }
-    default:
-    {
-      // We don't currently care about other state changes.
-      break;
-    }
+  if (NS_IsMainThread()) {
+    MetroUtils::FireObserver("apzc-transform-begin", L"");
+    return;
   }
+  nsCOMPtr<nsIRunnable> runnable = new TransformedStartEvent();
+  NS_DispatchToMainThread(runnable);
+}
+
+void
+APZController::NotifyTransformEnd(const ScrollableLayerGuid& aGuid)
+{
+  if (NS_IsMainThread()) {
+    MetroUtils::FireObserver("apzc-transform-end", L"");
+    return;
+  }
+  nsCOMPtr<nsIRunnable> runnable = new TransformedEndEvent();
+  NS_DispatchToMainThread(runnable);
 }
 
 } } }

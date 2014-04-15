@@ -1730,34 +1730,23 @@ TabChild::RecvHandleLongTapUp(const CSSPoint& aPoint, const ScrollableLayerGuid&
 }
 
 bool
-TabChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
-                                   const APZStateChange& aChange,
-                                   const int& aArg)
+TabChild::RecvNotifyTransformBegin(const ViewID& aViewId)
 {
-  switch (aChange)
-  {
-  case APZStateChange::TransformBegin:
-  {
-    nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
-    nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sf);
-    if (scrollbarOwner) {
-      scrollbarOwner->ScrollbarActivityStarted();
-    }
-    break;
+  nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
+  nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sf);
+  if (scrollbarOwner) {
+    scrollbarOwner->ScrollbarActivityStarted();
   }
-  case APZStateChange::TransformEnd:
-  {
-    nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
-    nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sf);
-    if (scrollbarOwner) {
-      scrollbarOwner->ScrollbarActivityStopped();
-    }
-    break;
-  }
-  default:
-    // APZStateChange has a 'sentinel' value, and the compiler complains
-    // if an enumerator is not handled and there is no 'default' case.
-    break;
+  return true;
+}
+
+bool
+TabChild::RecvNotifyTransformEnd(const ViewID& aViewId)
+{
+  nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
+  nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sf);
+  if (scrollbarOwner) {
+    scrollbarOwner->ScrollbarActivityStopped();
   }
   return true;
 }
