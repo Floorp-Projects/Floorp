@@ -332,11 +332,6 @@ public:
     mTestAsyncScrollOffset = aPoint;
   }
 
-  /**
-   * Returns whether this APZC has room to be panned (in any direction).
-   */
-  bool IsPannable() const;
-
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   ~AsyncPanZoomController();
