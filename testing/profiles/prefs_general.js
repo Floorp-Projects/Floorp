@@ -163,3 +163,12 @@ user_pref("browser.webapps.testing", true);
 // Disable android snippets
 user_pref("browser.snippets.enabled", false);
 user_pref("browser.snippets.syncPromo.enabled", false);
+
+// Don't connect to Yahoo! for RSS feed tests.
+// en-US only uses .types.0.uri, but set all of them just to be sure.
+user_pref('browser.contentHandlers.types.0.uri', 'http://test1.example.org/rss?url=%%s')
+user_pref('browser.contentHandlers.types.1.uri', 'http://test1.example.org/rss?url=%%s')
+user_pref('browser.contentHandlers.types.2.uri', 'http://test1.example.org/rss?url=%%s')
+user_pref('browser.contentHandlers.types.3.uri', 'http://test1.example.org/rss?url=%%s')
+user_pref('browser.contentHandlers.types.4.uri', 'http://test1.example.org/rss?url=%%s')
+user_pref('browser.contentHandlers.types.5.uri', 'http://test1.example.org/rss?url=%%s')
