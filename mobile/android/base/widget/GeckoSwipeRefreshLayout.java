@@ -40,7 +40,11 @@ import android.view.animation.Transformation;
 import android.widget.AbsListView;
 
 /**
- * SwipeRefreshLayout is lifted from Android's support library (v4).
+ * GeckoSwipeRefreshLayout is mostly lifted from Android's support library (v4) with these
+ * modfications:
+ *  - Removes elastic "rubber banding" effect when overscrolling the child view.
+ *  - Changes the height of the progress bar to match the height of HomePager's page indicator.
+ *  - Uses a rectangle rather than a circle for the SwipeProgressBar indicator.
  *
  * This class also embeds package-access dependent classes SwipeProgressBar and
  * BakedBezierInterpolator.
@@ -48,11 +52,12 @@ import android.widget.AbsListView;
  * Original source: https://android.googlesource.com/platform/frameworks/support/+/
  * android-support-lib-19.1.0/v4/java/android/support/v4/widget/SwipeRefreshLayout.java
  */
-public class SwipeRefreshLayout extends ViewGroup {
+public class GeckoSwipeRefreshLayout extends ViewGroup {
     private static final long RETURN_TO_ORIGINAL_POSITION_TIMEOUT = 300;
     private static final float ACCELERATE_INTERPOLATION_FACTOR = 1.5f;
     private static final float DECELERATE_INTERPOLATION_FACTOR = 2f;
-    private static final float PROGRESS_BAR_HEIGHT = 4;
+    // Reduce the height (from 4 to 3) of the progress bar to match HomePager's page indicator.
+    private static final float PROGRESS_BAR_HEIGHT = 3;
     private static final float MAX_SWIPE_DISTANCE_FACTOR = .6f;
     private static final int REFRESH_TRIGGER_DISTANCE = 120;
 
@@ -154,19 +159,19 @@ public class SwipeRefreshLayout extends ViewGroup {
     };
 
     /**
-     * Simple constructor to use when creating a SwipeRefreshLayout from code.
+     * Simple constructor to use when creating a GeckoSwipeRefreshLayout from code.
      * @param context
      */
-    public SwipeRefreshLayout(Context context) {
+    public GeckoSwipeRefreshLayout(Context context) {
         this(context, null);
     }
 
     /**
-     * Constructor that is called when inflating SwipeRefreshLayout from XML.
+     * Constructor that is called when inflating GeckoSwipeRefreshLayout from XML.
      * @param context
      * @param attrs
      */
-    public SwipeRefreshLayout(Context context, AttributeSet attrs) {
+    public GeckoSwipeRefreshLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
@@ -280,7 +285,7 @@ public class SwipeRefreshLayout extends ViewGroup {
         if (mTarget == null) {
             if (getChildCount() > 1 && !isInEditMode()) {
                 throw new IllegalStateException(
-                        "SwipeRefreshLayout can host only one direct child");
+                        "GeckoSwipeRefreshLayout can host only one direct child");
             }
             mTarget = getChildAt(0);
             mOriginalOffsetTop = mTarget.getTop() + getPaddingTop();
@@ -321,7 +326,7 @@ public class SwipeRefreshLayout extends ViewGroup {
     public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         if (getChildCount() > 1 && !isInEditMode()) {
-            throw new IllegalStateException("SwipeRefreshLayout can host only one direct child");
+            throw new IllegalStateException("GeckoSwipeRefreshLayout can host only one direct child");
         }
         if (getChildCount() > 0) {
             getChildAt(0).measure(
@@ -401,7 +406,8 @@ public class SwipeRefreshLayout extends ViewGroup {
                             if (mPrevY > eventY) {
                                 offsetTop = yDiff - mTouchSlop;
                             }
-                            updateContentOffsetTop((int) (offsetTop));
+                            // Removed this call to disable "rubber-band" overscroll effect.
+                            // updateContentOffsetTop((int) offsetTop);
                             if (mPrevY > eventY && (mTarget.getTop() < mTouchSlop)) {
                                 // If the user puts the view back at the top, we
                                 // don't need to. This shouldn't be considered
@@ -689,7 +695,10 @@ public class SwipeRefreshLayout extends ViewGroup {
 
         private void drawTrigger(Canvas canvas, int cx, int cy) {
             mPaint.setColor(mColor1);
-            canvas.drawCircle(cx, cy, cx * mTriggerPercentage, mPaint);
+            // Use a rectangle to instead of a circle as per UX.
+            // canvas.drawCircle(cx, cy, cx * mTriggerPercentage, mPaint);
+            canvas.drawRect(cx - cx * mTriggerPercentage, 0, cx + cx * mTriggerPercentage,
+                mBounds.bottom, mPaint);
         }
 
         /**
