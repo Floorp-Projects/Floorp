@@ -247,6 +247,14 @@ interface MozWifiManager : EventTarget {
   DOMRequest getImportedCerts();
 
   /**
+   * Delete an imported certificate.
+   * @param certNickname Nickname of imported to be deleted.
+   * onsuccess: We have successfully deleted certificate.
+   * onerror: We have failed to delete certificate.
+   */
+  DOMRequest deleteCert(DOMString certNickname);
+
+  /**
    * Returns whether or not wifi is currently enabled.
    */
   readonly attribute boolean enabled;
