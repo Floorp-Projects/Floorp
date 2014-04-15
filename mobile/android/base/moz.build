@@ -139,6 +139,7 @@ gbjar.sources += [
     'db/SharedBrowserDatabaseProvider.java',
     'db/SQLiteBridgeContentProvider.java',
     'db/TabsProvider.java',
+    'db/TopSitesCursorWrapper.java',
     'Distribution.java',
     'DoorHangerPopup.java',
     'DynamicToolbar.java',
