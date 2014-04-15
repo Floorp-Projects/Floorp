@@ -2920,8 +2920,6 @@ END_CASE(JSOP_SETALIASEDVAR)
 CASE(JSOP_GETARG)
 {
     unsigned i = GET_ARGNO(REGS.pc);
-    if (script->lineno() == 39)
-        printf("break here");
     if (script->argsObjAliasesFormals())
         PUSH_COPY(REGS.fp()->argsObj().arg(i));
     else
