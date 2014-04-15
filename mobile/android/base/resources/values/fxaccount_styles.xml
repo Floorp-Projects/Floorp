@@ -130,4 +130,14 @@
         <item name="android:textColor">@drawable/fxaccount_checkbox_textcolor</item>
     </style>
 
+    <style name="FxAccountShowHidePasswordButton" parent="@android:style/Widget.Button">
+        <item name="android:background">@drawable/fxaccount_password_button_show_background</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingLeft">@dimen/fxaccount_show_password_padding_horizontal</item>
+        <item name="android:paddingRight">@dimen/fxaccount_show_password_padding_horizontal</item>
+        <item name="android:textColor">@color/fxaccount_input_textColor</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+
 </resources>
