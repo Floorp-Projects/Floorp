@@ -575,34 +575,6 @@ Http2Session::ResetDownstreamState()
   mInputFrameDataStream = nullptr;
 }
 
-template<typename T> void
-Http2Session::EnsureBuffer(nsAutoArrayPtr<T> &buf, uint32_t newSize,
-                           uint32_t preserve, uint32_t &objSize)
-{
-  if (objSize >= newSize)
-    return;
-
-  // Leave a little slop on the new allocation - add 2KB to
-  // what we need and then round the result up to a 4KB (page)
-  // boundary.
-
-  objSize = (newSize + 2048 + 4095) & ~4095;
-
-  static_assert(sizeof(T) == 1, "sizeof(T) must be 1");
-  nsAutoArrayPtr<T> tmp(new T[objSize]);
-  memcpy(tmp, buf, preserve);
-  buf = tmp;
-}
-
-// Instantiate supported templates explicitly.
-template void
-Http2Session::EnsureBuffer(nsAutoArrayPtr<char> &buf, uint32_t newSize,
-                                  uint32_t preserve, uint32_t &objSize);
-
-template void
-Http2Session::EnsureBuffer(nsAutoArrayPtr<uint8_t> &buf, uint32_t newSize,
-                                  uint32_t preserve, uint32_t &objSize);
-
 // call with data length (i.e. 0 for 0 data bytes - ignore 8 byte header)
 // dest must have 8 bytes of allocated space
 template<typename charType> void

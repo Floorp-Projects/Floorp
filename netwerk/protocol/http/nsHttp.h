@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "prtime.h"
+#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsError.h"
 
@@ -189,6 +190,11 @@ PRTimeToSeconds(PRTime t_usec)
 
 #define HTTP_LWS " \t"
 #define HTTP_HEADER_VALUE_SEPS HTTP_LWS ","
+
+void EnsureBuffer(nsAutoArrayPtr<char> &buf, uint32_t newSize,
+                  uint32_t preserve, uint32_t &objSize);
+void EnsureBuffer(nsAutoArrayPtr<uint8_t> &buf, uint32_t newSize,
+                  uint32_t preserve, uint32_t &objSize);
 
 } // namespace mozilla::net
 } // namespace mozilla
