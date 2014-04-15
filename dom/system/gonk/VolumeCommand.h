@@ -39,7 +39,7 @@ protected:
   virtual ~VolumeResponseCallback() {}
 
 public:
-  NS_INLINE_DECL_REFCOUNTED(VolumeResponseCallback)
+  NS_INLINE_DECL_REFCOUNTING(VolumeResponseCallback)
   VolumeResponseCallback()
     : mResponseCode(0), mPending(false) {}
 
