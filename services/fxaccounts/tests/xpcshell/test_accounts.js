@@ -305,8 +305,8 @@ add_test(function test_getKeys() {
   });
 });
 
-// getKeys with no keyFetchToken should trigger signOut
-add_test(function test_getKeys_no_token() {
+//  fetchAndUnwrapKeys with no keyFetchToken should trigger signOut
+add_test(function test_fetchAndUnwrapKeys_no_token() {
   do_test_pending();
 
   let fxa = new MockFxAccounts();
@@ -314,7 +314,7 @@ add_test(function test_getKeys_no_token() {
   delete user.keyFetchToken
 
   makeObserver(ONLOGOUT_NOTIFICATION, function() {
-    log.debug("test_getKeys_no_token observed logout");
+    log.debug("test_fetchAndUnwrapKeys_no_token observed logout");
     fxa.internal.getUserAccountData().then(user => {
       do_test_finished();
       run_next_test();
@@ -322,7 +322,7 @@ add_test(function test_getKeys_no_token() {
   });
 
   fxa.setSignedInUser(user).then((user) => {
-    fxa.internal.getKeys();
+    fxa.internal.fetchAndUnwrapKeys();
   });
 });
 
