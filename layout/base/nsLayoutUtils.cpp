@@ -5408,20 +5408,9 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
       return result;
 
     if (wantImageSurface) {
-      IntSize size(imgWidth, imgHeight);
-      RefPtr<DataSourceSurface> output = Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
-      RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                                               output->GetData(),
-                                                               size,
-                                                               output->Stride(),
-                                                               SurfaceFormat::B8G8R8A8);
-      RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, gfxsurf);
-
-      dt->CopySurface(source, IntRect(0, 0, imgWidth, imgHeight), IntPoint());
-      dt->Flush();
-
-      result.mSourceSurface = output;
-    } else {
+      result.mSourceSurface = gfxPlatform::GetPlatform()->GetWrappedDataSourceSurface(gfxsurf);
+    }
+    if (!result.mSourceSurface) {
       result.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(aTarget, gfxsurf);
     }
   } else {
