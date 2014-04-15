@@ -14,7 +14,6 @@
 #include "prlog.h"
 
 #include <sys/types.h>
-#include <sys/socket.h>
 
 PRLogModuleInfo* gRtspLog;
 #undef LOG

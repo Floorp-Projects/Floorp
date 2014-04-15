@@ -26,11 +26,13 @@
 
 #include <ctype.h>
 #include <arpa/inet.h>
-#include <sys/socket.h>
 
 #include "APacketSource.h"
 #include "ARTPConnection.h"
 #include "ASessionDescription.h"
+
+#include "prnetdb.h"
+#include "prerr.h"
 
 namespace android {
 
@@ -73,19 +75,17 @@ status_t ARTPSession::setup(const sp<ASessionDescription> &desc) {
             return mInitCheck;
         }
 
-        int rtpSocket = MakeUDPSocket(port);
-        int rtcpSocket = MakeUDPSocket(port + 1);
-
         mTracks.push(TrackInfo());
         TrackInfo *info = &mTracks.editItemAt(mTracks.size() - 1);
-        info->mRTPSocket = rtpSocket;
-        info->mRTCPSocket = rtcpSocket;
+        MakeUDPSocket(&info->mRTPSocket, port);
+        MakeUDPSocket(&info->mRTCPSocket, port + 1);
 
         sp<AMessage> notify = new AMessage(kWhatAccessUnitComplete, id());
         notify->setSize("track-index", mTracks.size() - 1);
 
         mRTPConn->addStream(
-                rtpSocket, rtcpSocket, mDesc, i, notify, false /* injected */);
+                info->mRTPSocket, info->mRTCPSocket,
+                0, 0, mDesc, i, notify, false /* injected */);
 
         info->mPacketSource = source;
     }
@@ -96,19 +96,20 @@ status_t ARTPSession::setup(const sp<ASessionDescription> &desc) {
 }
 
 // static
-int ARTPSession::MakeUDPSocket(unsigned port) {
-    int s = socket(AF_INET, SOCK_DGRAM, 0);
-    CHECK_GE(s, 0);
+void ARTPSession::MakeUDPSocket(PRFileDesc **s, unsigned port) {
+    *s = PR_OpenUDPSocket(PR_AF_INET);
+    if (!*s) {
+        TRESPASS();
+    }
 
-    struct sockaddr_in addr;
-    memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(port);
+    PRNetAddr addr;
+    addr.inet.family = PR_AF_INET;
+    addr.inet.ip = PR_htonl(PR_INADDR_ANY);
+    addr.inet.port = PR_htons(port);
 
-    CHECK_EQ(0, bind(s, (const struct sockaddr *)&addr, sizeof(addr)));
-
-    return s;
+    if (PR_Bind(*s, &addr) == PR_FAILURE) {
+        TRESPASS();
+    }
 }
 
 ARTPSession::~ARTPSession() {
@@ -117,8 +118,13 @@ ARTPSession::~ARTPSession() {
 
         info->mPacketSource->signalEOS(UNKNOWN_ERROR);
 
-        close(info->mRTPSocket);
-        close(info->mRTCPSocket);
+        if (info->mRTPSocket) {
+            PR_Close(info->mRTPSocket);
+        }
+
+        if (info->mRTCPSocket) {
+            PR_Close(info->mRTCPSocket);
+        }
     }
 }
 
