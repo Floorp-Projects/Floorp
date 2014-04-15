@@ -491,12 +491,6 @@ gfxPlatform::Shutdown()
     mozilla::gl::GLContextProviderEGL::Shutdown();
 #endif
 
-    // This will block this thread untill the ImageBridge protocol is completely
-    // deleted.
-    ImageBridgeChild::ShutDown();
-
-    CompositorParent::ShutDown();
-
     delete gGfxPlatformPrefsLock;
 
     gfxPrefs::DestroySingleton();
@@ -749,7 +743,6 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
     }
   }
 
-  bool dependsOnData = false;
   if (!srcBuffer) {
     nsRefPtr<gfxImageSurface> imgSurface = aSurface->GetAsImageSurface();
 
@@ -803,10 +796,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
       if (copy) {
         srcBuffer = copy;
       } else {
-        srcBuffer = Factory::CreateWrappingDataSourceSurface(imgSurface->Data(),
-                                                             imgSurface->Stride(),
-                                                             size, format);
-        dependsOnData = true;
+        return GetWrappedDataSourceSurface(aSurface);
       }
     }
 
@@ -814,37 +804,53 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
       return nullptr;
     }
 
-    if (!dependsOnData) {
 #if MOZ_TREE_CAIRO
-      cairo_surface_t *nullSurf =
-      cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
-      cairo_surface_set_user_data(nullSurf,
-                                  &kSourceSurface,
-                                  imgSurface,
-                                  nullptr);
-      cairo_surface_attach_snapshot(imgSurface->CairoSurface(), nullSurf, SourceSnapshotDetached);
-      cairo_surface_destroy(nullSurf);
+    cairo_surface_t *nullSurf =
+    cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
+    cairo_surface_set_user_data(nullSurf,
+                                &kSourceSurface,
+                                imgSurface,
+                                nullptr);
+    cairo_surface_attach_snapshot(imgSurface->CairoSurface(), nullSurf, SourceSnapshotDetached);
+    cairo_surface_destroy(nullSurf);
 #else
-      cairo_surface_set_mime_data(imgSurface->CairoSurface(), "mozilla/magic", (const unsigned char*) "data", 4, SourceSnapshotDetached, imgSurface.get());
+    cairo_surface_set_mime_data(imgSurface->CairoSurface(), "mozilla/magic", (const unsigned char*) "data", 4, SourceSnapshotDetached, imgSurface.get());
 #endif
-    }
   }
 
-  if (dependsOnData) {
-    // If we wrapped the underlying data of aSurface, then we need to add user data
-    // to make sure aSurface stays alive until we are done with the data.
-    DependentSourceSurfaceUserData *srcSurfUD = new DependentSourceSurfaceUserData;
-    srcSurfUD->mSurface = aSurface;
-    srcBuffer->AddUserData(&kThebesSurface, srcSurfUD, SourceSurfaceDestroyed);
-  } else {
-    // Otherwise add user data to aSurface so we can cache lookups in the future.
-    SourceSurfaceUserData *srcSurfUD = new SourceSurfaceUserData;
-    srcSurfUD->mBackendType = aTarget->GetType();
-    srcSurfUD->mSrcSurface = srcBuffer;
-    aSurface->SetData(&kSourceSurface, srcSurfUD, SourceBufferDestroy);
-  }
+  // Add user data to aSurface so we can cache lookups in the future.
+  SourceSurfaceUserData *srcSurfUD = new SourceSurfaceUserData;
+  srcSurfUD->mBackendType = aTarget->GetType();
+  srcSurfUD->mSrcSurface = srcBuffer;
+  aSurface->SetData(&kSourceSurface, srcSurfUD, SourceBufferDestroy);
 
   return srcBuffer;
+}
+
+RefPtr<DataSourceSurface>
+gfxPlatform::GetWrappedDataSourceSurface(gfxASurface* aSurface)
+{
+  nsRefPtr<gfxImageSurface> image = aSurface->GetAsImageSurface();
+  if (!image) {
+    return nullptr;
+  }
+  RefPtr<DataSourceSurface> result =
+    Factory::CreateWrappingDataSourceSurface(image->Data(),
+                                             image->Stride(),
+                                             ToIntSize(image->GetSize()),
+                                             ImageFormatToSurfaceFormat(image->Format()));
+
+  if (!result) {
+    return nullptr;
+  }
+
+  // If we wrapped the underlying data of aSurface, then we need to add user data
+  // to make sure aSurface stays alive until we are done with the data.
+  DependentSourceSurfaceUserData *srcSurfUD = new DependentSourceSurfaceUserData;
+  srcSurfUD->mSurface = aSurface;
+  result->AddUserData(&kThebesSurface, srcSurfUD, SourceSurfaceDestroyed);
+
+  return result;
 }
 
 TemporaryRef<ScaledFont>

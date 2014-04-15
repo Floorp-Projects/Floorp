@@ -861,16 +861,14 @@ class Assembler
     BufferOffset as_mfc1(Register rt, FloatRegister fs);
 
   protected:
-    // These instructions should only be used to access the odd part of
-    // 64-bit register pair. Do not use odd registers as 32-bit registers.
-    // :TODO: Bug 972836, Remove _Odd functions once we can use odd regs.
-    BufferOffset as_ls_Odd(FloatRegister fd, Register base, int32_t off);
-    BufferOffset as_ss_Odd(FloatRegister fd, Register base, int32_t off);
-    BufferOffset as_mtc1_Odd(Register rt, FloatRegister fs);
-  public:
-    // Made public because CodeGenerator uses it to check for -0
-    BufferOffset as_mfc1_Odd(Register rt, FloatRegister fs);
+    // This is used to access the odd regiter form the pair of single
+    // precision registers that make one double register.
+    FloatRegister getOddPair(FloatRegister reg) {
+        JS_ASSERT(reg.code() % 2 == 0);
+        return FloatRegister::FromCode(reg.code() + 1);
+    }
 
+  public:
     // FP convert instructions
     BufferOffset as_ceilws(FloatRegister fd, FloatRegister fs);
     BufferOffset as_floorws(FloatRegister fd, FloatRegister fs);

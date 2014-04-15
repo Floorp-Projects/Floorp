@@ -8,7 +8,7 @@
 #include "nsWebBrowser.h"
 #include "nsDocShellTreeOwner.h"
 
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsPIDOMWindow.h"
 
 nsCommandHandler::nsCommandHandler() :
@@ -118,7 +118,7 @@ NS_IMETHODIMP nsCommandHandler::Exec(const char *aCommand, const char *aStatus, 
 
     // Return an empty string
     const char szEmpty[] = "";
-    *aResult = (char *) nsAllocator::Clone(szEmpty, sizeof(szEmpty));
+    *aResult = (char *) nsMemory::Clone(szEmpty, sizeof(szEmpty));
 
     return NS_OK;
 }
@@ -141,7 +141,7 @@ NS_IMETHODIMP nsCommandHandler::Query(const char *aCommand, const char *aStatus,
 
     // Return an empty string
     const char szEmpty[] = "";
-    *aResult = (char *) nsAllocator::Clone(szEmpty, sizeof(szEmpty));
+    *aResult = (char *) nsMemory::Clone(szEmpty, sizeof(szEmpty));
 
     return NS_OK;
 }
