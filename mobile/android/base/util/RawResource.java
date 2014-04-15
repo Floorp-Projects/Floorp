@@ -5,21 +5,39 @@
 package org.mozilla.gecko.util;
 
 import android.content.Context;
+import android.content.res.Resources;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 
 public final class RawResource {
     public static String get(Context context, int id) throws IOException {
-        final InputStream inputStream = context.getResources().openRawResource(id);
-        final byte[] buffer = new byte[1024];
-        StringBuilder s = new StringBuilder();
-        int count;
+        InputStreamReader reader = null;
 
-        while ((count = inputStream.read(buffer)) != -1) {
-            s.append(new String(buffer, 0, count));
+        try {
+            final Resources res = context.getResources();
+            final InputStream is = res.openRawResource(id);
+            if (is == null) {
+                return null;
+            }
+
+            reader = new InputStreamReader(is);
+
+            final char[] buffer = new char[1024];
+            final StringWriter s = new StringWriter();
+
+            int n;
+            while ((n = reader.read(buffer, 0, buffer.length)) != -1) {
+                s.write(buffer, 0, n);
+            }
+
+            return s.toString();
+        } finally {
+            if (reader != null) {
+                reader.close();
+            }
         }
-
-        return s.toString();
     }
 }
