@@ -8,7 +8,6 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.JSONUtils;
-import org.mozilla.gecko.util.WebActivityMapper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -27,8 +26,7 @@ public final class IntentHelper implements GeckoEventListener {
     private static final String[] EVENTS = {
         "Intent:GetHandlers",
         "Intent:Open",
-        "Intent:OpenForResult",
-        "WebActivity:Open"
+        "Intent:OpenForResult"
     };
     private static IntentHelper instance;
 
@@ -70,8 +68,6 @@ public final class IntentHelper implements GeckoEventListener {
                 open(message);
             } else if (event.equals("Intent:OpenForResult")) {
                 openForResult(message);
-            } else if (event.equals("WebActivity:Open")) {
-                openWebActivity(message);
             }
         } catch (JSONException e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -108,11 +104,7 @@ public final class IntentHelper implements GeckoEventListener {
                                                        message.optString("title"));
         intent.setClassName(message.optString("packageName"), message.optString("className"));
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        ActivityHandlerHelper.startIntentForActivity(activity, intent, new ResultHandler(message));
-    }
 
-    private void openWebActivity(JSONObject message) throws JSONException {
-        final Intent intent = WebActivityMapper.getIntentForWebActivity(message.getJSONObject("activity"));
         ActivityHandlerHelper.startIntentForActivity(activity, intent, new ResultHandler(message));
     }
 
@@ -124,15 +116,13 @@ public final class IntentHelper implements GeckoEventListener {
         }
 
         @Override
-        public void onActivityResult(int resultCode, Intent data) {
+        public void onActivityResult (int resultCode, Intent data) {
             JSONObject response = new JSONObject();
 
             try {
                 if (data != null) {
                     response.put("extras", JSONUtils.bundleToJSON(data.getExtras()));
-                    response.put("uri", data.getData().toString());
                 }
-
                 response.put("resultCode", resultCode);
             } catch (JSONException e) {
                 Log.w(LOGTAG, "Error building JSON response.", e);
