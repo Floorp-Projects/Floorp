@@ -46,12 +46,6 @@ public:
     return TextEncoderBinding::Wrap(aCx, this, aTookOwnership);
   }
 
-  nsISupports*
-  GetParentObject()
-  {
-    return nullptr;
-  }
-
   JSObject* Encode(JSContext* aCx,
                    JS::Handle<JSObject*> aObj,
                    const nsAString& aString,

@@ -36,7 +36,6 @@
 #endif
 #endif
 
-class gfxImageSurface;
 class gfxReusableSurfaceWrapper;
 class nsIntRegion;
 struct nsIntPoint;

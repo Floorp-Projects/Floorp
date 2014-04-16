@@ -6,7 +6,6 @@
 #include "CanvasLayerD3D10.h"
 
 #include "../d3d9/Nv3DVUtils.h"
-#include "gfxImageSurface.h"
 #include "gfxWindowsSurface.h"
 #include "gfxWindowsPlatform.h"
 #include "SurfaceStream.h"

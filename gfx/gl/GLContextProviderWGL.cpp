@@ -8,8 +8,6 @@
 #include "GLLibraryLoader.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
-#include "gfxASurface.h"
-#include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "gfxWindowsSurface.h"
 
@@ -398,6 +396,12 @@ static GLContextWGL *
 GetGlobalContextWGL()
 {
     return static_cast<GLContextWGL*>(GLContextProviderWGL::GetGlobalContext());
+}
+
+already_AddRefed<GLContext>
+GLContextProviderWGL::CreateWrappingExisting(void*, void*)
+{
+    return nullptr;
 }
 
 already_AddRefed<GLContext>

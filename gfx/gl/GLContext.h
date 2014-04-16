@@ -27,7 +27,6 @@
 
 #include "GLDefs.h"
 #include "GLLibraryLoader.h"
-#include "gfxImageSurface.h"
 #include "gfx3DMatrix.h"
 #include "nsISupportsImpl.h"
 #include "plstr.h"
@@ -2523,6 +2522,8 @@ public:
 #endif
         return MakeCurrentImpl(aForce);
     }
+
+    virtual bool Init() = 0;
 
     virtual bool SetupLookupFunction() = 0;
 

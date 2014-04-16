@@ -18,8 +18,6 @@
 #define MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
 #define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
 
-class gfxASurface;
-
 namespace mozilla {
 namespace layers {
 

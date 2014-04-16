@@ -37,17 +37,23 @@ static void print_usage() {
   printf("usage:\n");
   printf("Create a MAR file:\n");
   printf("  mar [-H MARChannelID] [-V ProductVersion] [-C workingDir] "
-         "{-c|-x|-t|-T} archive.mar [files...]\n");
+         "-c archive.mar [files...]\n");
+
+  printf("Extract a MAR file:\n");
+  printf("  mar [-C workingDir] -x archive.mar\n");
 #ifndef NO_SIGN_VERIFY
   printf("Sign a MAR file:\n");
   printf("  mar [-C workingDir] -d NSSConfigDir -n certname -s "
          "archive.mar out_signed_archive.mar\n");
+
   printf("Strip a MAR signature:\n");
   printf("  mar [-C workingDir] -r "
          "signed_input_archive.mar output_archive.mar\n");
+
   printf("Extract a MAR signature:\n");
   printf("  mar [-C workingDir] -n(i) -X "
          "signed_input_archive.mar base_64_encoded_signature_file\n");
+
   printf("Import a MAR signature:\n");
   printf("  mar [-C workingDir] -n(i) -I "
          "signed_input_archive.mar base_64_encoded_signature_file "
@@ -77,8 +83,15 @@ static void print_usage() {
          "-n0 certName -n1 certName2, ...\n", MAX_SIGNATURES);
 #endif
   printf("Print information on a MAR file:\n");
+  printf("  mar -t archive.mar\n");
+
+  printf("Print detailed information on a MAR file including signatures:\n");
+  printf("  mar -T archive.mar\n");
+
+  printf("Refresh the product information block of a MAR file:\n");
   printf("  mar [-H MARChannelID] [-V ProductVersion] [-C workingDir] "
          "-i unsigned_archive_to_refresh.mar\n");
+
   printf("Print executable version:\n");
   printf("  mar --version\n");
   printf("This program does not handle unicode file paths properly\n");
@@ -188,7 +201,7 @@ int main(int argc, char **argv) {
         with the import and export command line arguments. */
     } else if (argv[1][0] == '-' &&
                argv[1][1] == 'n' &&
-               (argv[1][2] == '0' + certCount ||
+               (argv[1][2] == (char)('0' + certCount) ||
                 argv[1][2] == '\0' ||
                 !strcmp(argv[2], "-X") ||
                 !strcmp(argv[2], "-I"))) {

@@ -168,9 +168,10 @@ WindowNamedPropertiesHandler::defineProperty(JSContext* aCx,
 }
 
 bool
-WindowNamedPropertiesHandler::getOwnPropertyNames(JSContext* aCx,
-                                                  JS::Handle<JSObject*> aProxy,
-                                                  JS::AutoIdVector& aProps)
+WindowNamedPropertiesHandler::ownPropNames(JSContext* aCx,
+                                           JS::Handle<JSObject*> aProxy,
+                                           unsigned flags,
+                                           JS::AutoIdVector& aProps)
 {
   // Grab the DOM window.
   nsGlobalWindow* win = GetWindowFromGlobal(JS_GetGlobalForObject(aCx, aProxy));
@@ -186,7 +187,7 @@ WindowNamedPropertiesHandler::getOwnPropertyNames(JSContext* aCx,
     return true;
   }
   nsHTMLDocument* document = static_cast<nsHTMLDocument*>(htmlDoc.get());
-  document->GetSupportedNames(names);
+  document->GetSupportedNames(flags, names);
 
   JS::AutoIdVector docProps(aCx);
   if (!AppendNamedPropertyIds(aCx, aProxy, names, false, docProps)) {

@@ -2264,6 +2264,12 @@ nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
   return &val.toObject();
 }
 
+bool
+nsHTMLDocument::NameIsEnumerable(const nsAString& aName)
+{
+  return true;
+}
+
 static PLDHashOperator
 IdentifierMapEntryAddNames(nsIdentifierMapEntry* aEntry, void* aArg)
 {
@@ -2276,7 +2282,7 @@ IdentifierMapEntryAddNames(nsIdentifierMapEntry* aEntry, void* aArg)
 }
 
 void
-nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames)
+nsHTMLDocument::GetSupportedNames(unsigned, nsTArray<nsString>& aNames)
 {
   mIdentifierMap.EnumerateEntries(IdentifierMapEntryAddNames, &aNames);
 }
