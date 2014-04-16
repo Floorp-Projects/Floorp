@@ -41,7 +41,7 @@ extern const JSClass sNPObjectJSWrapperClass;
 class nsJSObjWrapper : public NPObject
 {
 public:
-  JSObject *mJSObj;  /* Added as a GC root. */
+  JS::PersistentRooted<JSObject *> mJSObj;
   const NPP mNpp;
 
   static NPObject *GetNewOrUsed(NPP npp, JSContext *cx,
