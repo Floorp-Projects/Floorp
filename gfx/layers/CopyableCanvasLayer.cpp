@@ -10,7 +10,6 @@
 #include "SharedSurface.h"              // for SharedSurface
 #include "SharedSurfaceGL.h"            // for SharedSurface_GL, etc
 #include "SurfaceTypes.h"               // for APITypeT, APITypeT::OpenGL, etc
-#include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxMatrix.h"                  // for gfxMatrix
 #include "gfxPattern.h"                 // for gfxPattern, etc
 #include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat

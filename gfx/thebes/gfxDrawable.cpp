@@ -6,6 +6,7 @@
 #include "gfxDrawable.h"
 #include "gfxASurface.h"
 #include "gfxContext.h"
+#include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "gfxColor.h"
 #ifdef MOZ_X11

@@ -7,7 +7,6 @@
 #include "nsSVGFilterFrame.h"
 
 // Keep others in (case-insensitive) order:
-#include "gfxASurface.h"
 #include "gfxUtils.h"
 #include "nsGkAtoms.h"
 #include "nsRenderingContext.h"

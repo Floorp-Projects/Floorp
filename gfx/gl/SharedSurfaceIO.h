@@ -6,6 +6,7 @@
 #ifndef SHARED_SURFACEIO_H_
 #define SHARED_SURFACEIO_H_
 
+#include "gfxImageSurface.h"
 #include "SharedSurfaceGL.h"
 #include "mozilla/RefPtr.h"
 

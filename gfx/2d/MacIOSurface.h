@@ -43,7 +43,6 @@ typedef IOSurfacePtr (*IOSurfaceContextGetSurfaceFunc)(CGContextRef ref);
 #include "2D.h"
 #include "mozilla/RefPtr.h"
 
-class gfxASurface;
 struct _CGLContextObject;
 
 typedef _CGLContextObject* CGLContextObj;

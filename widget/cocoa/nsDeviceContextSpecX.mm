@@ -13,7 +13,6 @@
 #include "nsPrintSettingsX.h"
 
 #include "gfxQuartzSurface.h"
-#include "gfxImageSurface.h"
 
 // This must be the last include:
 #include "nsObjCExceptions.h"
