@@ -2014,18 +2014,15 @@ nsGlobalWindow::SetInitialPrincipalToSubject()
 {
   FORWARD_TO_OUTER_VOID(SetInitialPrincipalToSubject, ());
 
-  // First, grab the subject principal. These methods never fail.
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  nsCOMPtr<nsIPrincipal> newWindowPrincipal, systemPrincipal;
-  ssm->GetSubjectPrincipal(getter_AddRefs(newWindowPrincipal));
-  ssm->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+  // First, grab the subject principal.
+  nsCOMPtr<nsIPrincipal> newWindowPrincipal = nsContentUtils::GetSubjectPrincipal();
   if (!newWindowPrincipal) {
-    newWindowPrincipal = systemPrincipal;
+    newWindowPrincipal = nsContentUtils::GetSystemPrincipal();
   }
 
-  // Now, if we're about to use the system principal, make sure we're not using
-  // it for a content docshell.
-  if (newWindowPrincipal == systemPrincipal &&
+  // Now, if we're about to use the system principal or an nsExpandedPrincipal,
+  // make sure we're not using it for a content docshell.
+  if (nsContentUtils::IsSystemOrExpandedPrincipal(newWindowPrincipal) &&
       GetDocShell()->ItemType() != nsIDocShellTreeItem::typeChrome) {
     newWindowPrincipal = nullptr;
   }
