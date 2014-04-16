@@ -8,6 +8,7 @@
 #include "nsCRT.h"
 #include <unistd.h>
 
+#include "nsAutoPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"
 #include "nsPrintSettingsX.h"
