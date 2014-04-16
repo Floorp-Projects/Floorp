@@ -203,22 +203,6 @@ ToJSValue(JSContext* aCx,
   return aArgument.ToObject(aCx, aValue);
 }
 
-// Accept existing JS values (which may not be same-compartment with us
-inline bool
-ToJSValue(JSContext* aCx, JS::Handle<JS::Value> aArgument,
-          JS::MutableHandle<JS::Value> aValue)
-{
-  aValue.set(aArgument);
-  return MaybeWrapValue(aCx, aValue);
-}
-
-// Accept nsresult, for use in rejections, and create an XPCOM
-// exception object representing that nsresult.
-bool
-ToJSValue(JSContext* aCx,
-          nsresult aArgument,
-          JS::MutableHandle<JS::Value> aValue);
-
 // Accept arrays of other things we accept
 template <typename T>
 bool
