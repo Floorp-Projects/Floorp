@@ -4071,13 +4071,32 @@ class MDiv : public MBinaryArithInstruction
     bool canBeNegativeDividend_;
     bool unsigned_;
 
+    // A Division can be truncated in 4 differents ways:
+    //   1. Ignore Infinities (x / 0 --> 0).
+    //   2. Ignore overflow (INT_MIN / -1 == (INT_MAX + 1) --> INT_MIN)
+    //   3. Ignore negative zeros. (-0 --> 0)
+    //   4. Ignore remainder. (3 / 4 --> 0)
+    //
+    // isTruncatedIndirectly is used to represent that we are interested in the
+    // truncated result, but only if they it can safely flow in operations which
+    // are computed modulo 2^32, such as (2) and (3).
+    //
+    // A division can return either Infinities (1) or a remainder (4) when both
+    // operands are integers. Infinities are not safe, as they would have
+    // absorbed other math operations. Remainders are not safe, as multiple can
+    // add up to integers. This implies that we need to distinguish between a
+    // division which is truncated directly (isTruncated) or which flow into
+    // truncated operations (isTruncatedIndirectly).
+    bool isTruncatedIndirectly_;
+
     MDiv(MDefinition *left, MDefinition *right, MIRType type)
       : MBinaryArithInstruction(left, right),
         canBeNegativeZero_(true),
         canBeNegativeOverflow_(true),
         canBeDivideByZero_(true),
         canBeNegativeDividend_(true),
-        unsigned_(false)
+        unsigned_(false),
+        isTruncatedIndirectly_(false)
     {
         if (type != MIRType_Value)
             specialization_ = type;
@@ -4131,6 +4150,26 @@ class MDiv : public MBinaryArithInstruction
 
     bool isUnsigned() const {
         return unsigned_;
+    }
+
+    bool isTruncatedIndirectly() const {
+        return isTruncatedIndirectly_;
+    }
+    void setTruncatedIndirectly(bool truncate) {
+        isTruncatedIndirectly_ = truncate;
+    }
+
+    bool canTruncateInfinities() const {
+        return isTruncated();
+    }
+    bool canTruncateRemainder() const {
+        return isTruncated();
+    }
+    bool canTruncateOverflow() const {
+        return isTruncated() || isTruncatedIndirectly();
+    }
+    bool canTruncateNegativeZero() const {
+        return isTruncated() || isTruncatedIndirectly();
     }
 
     bool isFloat32Commutative() const { return true; }

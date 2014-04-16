@@ -2217,7 +2217,28 @@ bool
 MDiv::truncate()
 {
     // Remember analysis, needed to remove negative zero checks.
-    setTruncated(true);
+    setTruncatedIndirectly(true);
+
+    // Check if this division only flows in bitwise instructions.
+    if (!isTruncated()) {
+        bool allUsesExplictlyTruncate = true;
+        for (MUseDefIterator use(this); allUsesExplictlyTruncate && use; use++) {
+            switch (use.def()->op()) {
+              case MDefinition::Op_BitAnd:
+              case MDefinition::Op_BitOr:
+              case MDefinition::Op_BitXor:
+              case MDefinition::Op_Lsh:
+              case MDefinition::Op_Rsh:
+              case MDefinition::Op_Ursh:
+                break;
+              default:
+                allUsesExplictlyTruncate = false;
+            }
+        }
+
+        if (allUsesExplictlyTruncate)
+            setTruncated(true);
+    }
 
     // Divisions where the lhs and rhs are unsigned and the result is
     // truncated can be lowered more efficiently.
