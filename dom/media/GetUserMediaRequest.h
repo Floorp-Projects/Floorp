@@ -22,7 +22,8 @@ class GetUserMediaRequest : public nsISupports, public nsWrapperCache
 public:
   GetUserMediaRequest(nsPIDOMWindow* aInnerWindow,
                       const nsAString& aCallID,
-                      const MediaStreamConstraintsInternal& aConstraints);
+                      const MediaStreamConstraintsInternal& aConstraints,
+                      bool aIsSecure);
   virtual ~GetUserMediaRequest() {};
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -34,6 +35,7 @@ public:
 
   uint64_t WindowID();
   uint64_t InnerWindowID();
+  bool IsSecure();
   void GetCallID(nsString& retval);
   void GetConstraints(MediaStreamConstraintsInternal &result);
 
@@ -41,6 +43,7 @@ private:
   uint64_t mInnerWindowID, mOuterWindowID;
   const nsString mCallID;
   MediaStreamConstraintsInternal mConstraints;
+  bool mIsSecure;
 };
 
 } // namespace dom
