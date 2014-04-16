@@ -157,6 +157,7 @@ public:
   nsTreeColumn* IndexedGetter(uint32_t aIndex, bool& aFound);
   nsTreeColumn* GetColumnAt(uint32_t aIndex);
   nsTreeColumn* NamedGetter(const nsAString& aId, bool& aFound);
+  bool NameIsEnumerable(const nsAString& aName);
   nsTreeColumn* GetNamedColumn(const nsAString& aId);
   void GetSupportedNames(nsTArray<nsString>& aNames);
 

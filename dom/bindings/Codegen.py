@@ -8847,8 +8847,17 @@ MOZ_ASSERT_IF(desc.object(), desc.object() == ${holder});"""
             setOrIndexedGet += getUnforgeable
 
         if self.descriptor.supportsNamedProperties():
-            readonly = toStringBool(self.descriptor.operations['NamedSetter'] is None)
-            fillDescriptor = "FillPropertyDescriptor(desc, proxy, %s);\nreturn true;" % readonly
+            operations = self.descriptor.operations
+            readonly = toStringBool(operations['NamedSetter'] is None)
+            enumerable = (
+                "self->NameIsEnumerable(Constify(%s))" %
+                # First [0] means first (and only) signature, [1] means
+                # "arguments" as opposed to return type, [0] means first (and
+                # only) argument.
+                operations['NamedGetter'].signatures()[0][1][0].identifier.name)
+            fillDescriptor = (
+                "FillPropertyDescriptor(desc, proxy, %s, %s);\n"
+                "return true;" % (readonly, enumerable))
             templateValues = {'jsvalRef': 'desc.value()', 'jsvalHandle': 'desc.value()',
                               'obj': 'proxy', 'successCode': fillDescriptor}
             condition = "!HasPropertyOnPrototype(cx, proxy, id)"
@@ -11121,7 +11130,7 @@ class CGBindingImplClass(CGClass):
                                     []),
                                    {"infallible": True}))
         # And if we support named properties we need to be able to
-        # enumerate the supported names.
+        # enumerate the supported names and test whether they're enumerable.
         if descriptor.supportsNamedProperties():
             self.methodDecls.append(
                 CGNativeMember(
@@ -11131,6 +11140,15 @@ class CGBindingImplClass(CGClass):
                                      BuiltinTypes[IDLBuiltinType.Types.domstring]),
                      []),
                     {"infallible": True}))
+            self.methodDecls.append(
+                CGNativeMember(
+                    descriptor, FakeMember(),
+                    "NameIsEnumerable",
+                    (BuiltinTypes[IDLBuiltinType.Types.boolean],
+                     [FakeArgument(BuiltinTypes[IDLBuiltinType.Types.domstring],
+                                   FakeMember(),
+                                   name="aName")]),
+                    { "infallible": True }))
 
         wrapArgs = [Argument('JSContext*', 'aCx')]
         self.methodDecls.insert(0,
