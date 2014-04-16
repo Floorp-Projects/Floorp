@@ -368,9 +368,8 @@ SIMDObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
     RootedValue SIMDValue(cx, ObjectValue(*SIMD));
 
     // Everything is set up, install SIMD on the global object.
-    if (!JSObject::defineProperty(cx, global, cx->names().SIMD,  SIMDValue, nullptr, nullptr, 0)) {
+    if (!JSObject::defineProperty(cx, global, cx->names().SIMD, SIMDValue, nullptr, nullptr, 0))
         return nullptr;
-    }
 
     global->setConstructor(JSProto_SIMD, SIMDValue);
 
@@ -393,12 +392,19 @@ js_InitSIMDClass(JSContext *cx, HandleObject obj)
 
 template<typename V>
 static bool
-ObjectIsVector(JSObject &obj) {
+IsVectorObject(HandleValue v)
+{
+    if (!v.isObject())
+        return false;
+
+    JSObject &obj = v.toObject();
     if (!obj.is<TypedObject>())
         return false;
+
     TypeDescr &typeRepr = obj.as<TypedObject>().typeDescr();
     if (typeRepr.kind() != TypeDescr::X4)
         return false;
+
     return typeRepr.as<X4TypeDescr>().type() == V::type;
 }
 
@@ -564,7 +570,7 @@ Func(JSContext *cx, unsigned argc, Value *vp)
 
     RetElem result[Vret::lanes];
     if (args.length() == 1) {
-        if (!args[0].isObject() || !ObjectIsVector<V>(args[0].toObject())) {
+        if (!IsVectorObject<V>(args[0])) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return false;
         }
@@ -574,8 +580,7 @@ Func(JSContext *cx, unsigned argc, Value *vp)
             result[i] = Op::apply(val[i], 0);
     } else {
         JS_ASSERT(args.length() == 2);
-        if(!args[0].isObject() || !ObjectIsVector<V>(args[0].toObject()) ||
-           !args[1].isObject() || !ObjectIsVector<V>(args[1].toObject()))
+        if(!IsVectorObject<V>(args[0]) || !IsVectorObject<V>(args[1]))
         {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return false;
@@ -603,8 +608,7 @@ FuncWith(JSContext *cx, unsigned argc, Value *vp)
     typedef typename Vret::Elem RetElem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 2 ||
-        !args[0].isObject() || !ObjectIsVector<V>(args[0].toObject()) ||
+    if (args.length() != 2 || !IsVectorObject<V>(args[0]) ||
         (!args[1].isNumber() && !args[1].isBoolean()))
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
@@ -649,8 +653,7 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
 
     RetElem result[Vret::lanes];
     if (args.length() == 2) {
-        if (!args[0].isObject() || !ObjectIsVector<V>(args[0].toObject()) ||
-            !args[1].isNumber())
+        if (!IsVectorObject<V>(args[0]) || !args[1].isNumber())
         {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return false;
@@ -665,9 +668,7 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
             result[i] = val[OpShuffle::apply(i * 2, arg1)];
     } else {
         JS_ASSERT(args.length() == 3);
-        if (!args[0].isObject() || !ObjectIsVector<V>(args[0].toObject()) ||
-            !args[1].isObject() || !ObjectIsVector<V>(args[1].toObject()) ||
-            !args[2].isNumber())
+        if (!IsVectorObject<V>(args[0]) || !IsVectorObject<V>(args[1]) || !args[2].isNumber())
         {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return false;
@@ -704,8 +705,7 @@ FuncConvert(JSContext *cx, unsigned argc, Value *vp)
     typedef typename Vret::Elem RetElem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 1 ||
-        !args[0].isObject() || !ObjectIsVector<V>(args[0].toObject()))
+    if (args.length() != 1 || !IsVectorObject<V>(args[0]))
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
         return false;
@@ -731,8 +731,7 @@ FuncConvertBits(JSContext *cx, unsigned argc, Value *vp)
     typedef typename Vret::Elem RetElem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 1 ||
-        !args[0].isObject() || !ObjectIsVector<V>(args[0].toObject()))
+    if (args.length() != 1 || !IsVectorObject<V>(args[0]))
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
         return false;
@@ -828,10 +827,8 @@ static bool
 Float32x4Clamp(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 3 ||
-        !args[0].isObject() || !ObjectIsVector<Float32x4>(args[0].toObject()) ||
-        !args[1].isObject() || !ObjectIsVector<Float32x4>(args[1].toObject()) ||
-        !args[2].isObject() || !ObjectIsVector<Float32x4>(args[2].toObject()))
+    if (args.length() != 3 || !IsVectorObject<Float32x4>(args[0]) ||
+        !IsVectorObject<Float32x4>(args[1]) || !IsVectorObject<Float32x4>(args[2]))
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
         return false;
@@ -859,10 +856,8 @@ static bool
 Int32x4Select(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 3 ||
-        !args[0].isObject() || !ObjectIsVector<Int32x4>(args[0].toObject()) ||
-        !args[1].isObject() || !ObjectIsVector<Float32x4>(args[1].toObject()) ||
-        !args[2].isObject() || !ObjectIsVector<Float32x4>(args[2].toObject()))
+    if (args.length() != 3 || !IsVectorObject<Int32x4>(args[0]) ||
+        !IsVectorObject<Float32x4>(args[1]) || !IsVectorObject<Float32x4>(args[2]))
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
         return false;
