@@ -262,17 +262,16 @@ StyleSheetEditor.prototype = {
       readOnly: false,
       autoCloseBrackets: "{}()[]",
       extraKeys: this._getKeyBindings(),
-      contextMenu: "sourceEditorContextMenu"
+      contextMenu: "sourceEditorContextMenu",
+      autocomplete: Services.prefs.getBoolPref(AUTOCOMPLETION_PREF)
     };
     let sourceEditor = new Editor(config);
 
     sourceEditor.on("dirty-change", this._onPropertyChange);
 
     return sourceEditor.appendTo(inputElement).then(() => {
-      if (Services.prefs.getBoolPref(AUTOCOMPLETION_PREF)) {
-        sourceEditor.extend(AutoCompleter);
-        sourceEditor.setupAutoCompletion(this.walker);
-      }
+      sourceEditor.setupAutoCompletion({ walker: this.walker });
+
       sourceEditor.on("save", () => {
         this.saveToFile();
       });
