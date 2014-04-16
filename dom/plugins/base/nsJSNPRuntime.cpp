@@ -161,8 +161,9 @@ static bool
 NPObjWrapper_Construct(JSContext *cx, unsigned argc, JS::Value *vp);
 
 static bool
-CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject *npobj,
-                     JS::Handle<jsid> id, NPVariant* getPropertyResult, JS::Value *vp);
+CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
+                     JS::Handle<jsid> id,  NPVariant* getPropertyResult,
+                     JS::MutableHandle<JS::Value> vp);
 
 const JSClass sNPObjectJSWrapperClass =
   {
@@ -496,7 +497,7 @@ ReportExceptionIfPending(JSContext *cx)
 }
 
 nsJSObjWrapper::nsJSObjWrapper(NPP npp)
-  : mNpp(npp)
+  : mJSObj(GetJSContext(npp), nullptr), mNpp(npp)
 {
   MOZ_COUNT_CTOR(nsJSObjWrapper);
   OnWrapperCreated();
@@ -514,9 +515,6 @@ nsJSObjWrapper::~nsJSObjWrapper()
 
 void
 nsJSObjWrapper::ClearJSObject() {
-  // Unroot the object's JSObject
-  JS_RemoveObjectRootRT(sJSRuntime, &mJSObj);
-
   // Forget our reference to the JSObject.
   mJSObj = nullptr;
 }
@@ -1022,25 +1020,14 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
     return nullptr;
   }
 
+  // Assign mJSObj, rooting the JSObject. Its lifetime is now tied to that of
+  // the NPObject.
   wrapper->mJSObj = obj;
 
   nsJSObjWrapperKey key(obj, npp);
   if (!sJSObjWrappers.putNew(key, wrapper)) {
     // Out of memory, free the wrapper we created.
     _releaseobject(wrapper);
-    return nullptr;
-  }
-
-  NS_ASSERTION(wrapper->mNpp == npp, "nsJSObjWrapper::mNpp not initialized!");
-
-  // Root the JSObject, its lifetime is now tied to that of the
-  // NPObject.
-  if (!::JS_AddNamedObjectRoot(cx, &wrapper->mJSObj, "nsJSObjWrapper::mJSObject")) {
-    NS_ERROR("Failed to root JSObject!");
-
-    sJSObjWrappers.remove(key);
-    _releaseobject(wrapper);
-
     return nullptr;
   }
 
@@ -1271,7 +1258,7 @@ NPObjWrapper_GetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
     if (success) {
       // We return NPObject Member class here to support ambiguous members.
       if (hasProperty && hasMethod)
-        return CreateNPObjectMember(npp, cx, obj, npobj, id, &npv, vp.address());
+        return CreateNPObjectMember(npp, cx, obj, npobj, id, &npv, vp);
 
       if (hasProperty) {
         vp.set(NPVariantToJSVal(npp, cx, &npv));
@@ -1294,7 +1281,7 @@ NPObjWrapper_GetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
 
   // We return NPObject Member class here to support ambiguous members.
   if (hasProperty && hasMethod)
-    return CreateNPObjectMember(npp, cx, obj, npobj, id, nullptr, vp.address());
+    return CreateNPObjectMember(npp, cx, obj, npobj, id, nullptr, vp);
 
   if (hasProperty) {
     if (npobj->_class->getProperty(npobj, identifier, &npv))
@@ -1906,12 +1893,11 @@ LookupNPP(NPObject *npobj)
   return entry->mNpp;
 }
 
-bool
+static bool
 CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
-                     JS::Handle<jsid> id,  NPVariant* getPropertyResult, JS::Value *vp)
+                     JS::Handle<jsid> id,  NPVariant* getPropertyResult,
+                     JS::MutableHandle<JS::Value> vp)
 {
-  NS_ENSURE_TRUE(vp, false);
-
   if (!npobj || !npobj->_class || !npobj->_class->getProperty ||
       !npobj->_class->invoke) {
     ThrowJSException(cx, "Bad NPObject");
@@ -1934,8 +1920,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
     return false;
   }
 
-  *vp = OBJECT_TO_JSVAL(memobj);
-  ::JS_AddValueRoot(cx, vp);
+  vp.setObject(*memobj);
 
   ::JS_SetPrivate(memobj, (void *)memberPrivate);
 
@@ -1953,13 +1938,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
 
     NPBool hasProperty = npobj->_class->getProperty(npobj, identifier,
                                                     &npv);
-    if (!ReportExceptionIfPending(cx)) {
-      ::JS_RemoveValueRoot(cx, vp);
-      return false;
-    }
-
-    if (!hasProperty) {
-      ::JS_RemoveValueRoot(cx, vp);
+    if (!ReportExceptionIfPending(cx) || !hasProperty) {
       return false;
     }
   }
@@ -1976,8 +1955,6 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
   memberPrivate->fieldValue = fieldValue;
   memberPrivate->methodName = id;
   memberPrivate->npp = npp;
-
-  ::JS_RemoveValueRoot(cx, vp);
 
   return true;
 }

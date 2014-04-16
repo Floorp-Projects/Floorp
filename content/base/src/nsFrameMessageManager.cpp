@@ -1363,17 +1363,10 @@ nsFrameScriptExecutor::DidCreateGlobal()
 }
 
 static PLDHashOperator
-CachedScriptUnrooter(const nsAString& aKey,
-                     nsFrameScriptObjectExecutorHolder*& aData,
-                     void* aUserArg)
+RemoveCachedScriptEntry(const nsAString& aKey,
+                        nsFrameScriptObjectExecutorHolder*& aData,
+                        void* aUserArg)
 {
-  JSContext* cx = static_cast<JSContext*>(aUserArg);
-  if (aData->mScript) {
-    JS_RemoveScriptRoot(cx, &aData->mScript);
-  }
-  if (aData->mFunction) {
-    JS_RemoveObjectRoot(cx, &aData->mFunction);
-  }
   delete aData;
   return PL_DHASH_REMOVE;
 }
@@ -1385,7 +1378,7 @@ nsFrameScriptExecutor::Shutdown()
   if (sCachedScripts) {
     AutoSafeJSContext cx;
     NS_ASSERTION(sCachedScripts != nullptr, "Need cached scripts");
-    sCachedScripts->Enumerate(CachedScriptUnrooter, cx);
+    sCachedScripts->Enumerate(RemoveCachedScriptEntry, nullptr);
 
     delete sCachedScripts;
     sCachedScripts = nullptr;
@@ -1528,13 +1521,9 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
 
         // Root the object also for caching.
         if (script) {
-          holder = new nsFrameScriptObjectExecutorHolder(script);
-          JS_AddNamedScriptRoot(cx, &holder->mScript,
-                                "Cached message manager script");
+          holder = new nsFrameScriptObjectExecutorHolder(cx, script);
         } else {
-          holder = new nsFrameScriptObjectExecutorHolder(funobj);
-          JS_AddNamedObjectRoot(cx, &holder->mFunction,
-                                "Cached message manager function");
+          holder = new nsFrameScriptObjectExecutorHolder(cx, funobj);
         }
         sCachedScripts->Put(aURL, holder);
       }
@@ -1922,23 +1911,13 @@ nsSameProcessAsyncMessageBase::nsSameProcessAsyncMessageBase(JSContext* aCx,
                                                              nsIPrincipal* aPrincipal)
   : mRuntime(js::GetRuntime(aCx)),
     mMessage(aMessage),
-    mCpows(aCpows),
+    mCpows(aCx, aCpows),
     mPrincipal(aPrincipal)
 {
   if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
     NS_RUNTIMEABORT("OOM");
   }
-  if (mCpows && !js_AddObjectRoot(mRuntime, &mCpows)) {
-    NS_RUNTIMEABORT("OOM");
-  }
   mClosure = aData.mClosure;
-}
-
-nsSameProcessAsyncMessageBase::~nsSameProcessAsyncMessageBase()
-{
-  if (mCpows) {
-    JS_RemoveObjectRootRT(mRuntime, &mCpows);
-  }
 }
 
 void
@@ -1951,7 +1930,7 @@ nsSameProcessAsyncMessageBase::ReceiveMessage(nsISupports* aTarget,
     data.mDataLength = mData.nbytes();
     data.mClosure = mClosure;
 
-    SameProcessCpowHolder cpows(mRuntime, JS::Handle<JSObject*>::fromMarkedLocation(&mCpows));
+    SameProcessCpowHolder cpows(mRuntime, mCpows);
 
     nsRefPtr<nsFrameMessageManager> mm = aManager;
     mm->ReceiveMessage(aTarget, mMessage, false, &data, &cpows,

@@ -113,7 +113,7 @@ static size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
 static double MAX_TIMEOUT_INTERVAL = 1800.0;
 static double gTimeoutInterval = -1.0;
 static volatile bool gTimedOut = false;
-static JS::Value gTimeoutFunc;
+static Maybe<JS::PersistentRootedValue> gTimeoutFunc;
 
 static bool enableDisassemblyDumps = false;
 
@@ -362,11 +362,11 @@ ShellInterruptCallback(JSContext *cx)
         return true;
 
     bool result;
-    if (!gTimeoutFunc.isNull()) {
+    RootedValue timeoutFunc(cx, gTimeoutFunc.ref());
+    if (!timeoutFunc.isNull()) {
         JS::AutoSaveExceptionState savedExc(cx);
-        JSAutoCompartment ac(cx, &gTimeoutFunc.toObject());
+        JSAutoCompartment ac(cx, &timeoutFunc.toObject());
         RootedValue rval(cx);
-        HandleValue timeoutFunc = HandleValue::fromMarkedLocation(&gTimeoutFunc);
         if (!JS_CallFunctionValue(cx, JS::NullPtr(), timeoutFunc,
                                   JS::HandleValueArray::empty(), &rval))
         {
@@ -3303,7 +3303,7 @@ CancelExecution(JSRuntime *rt)
     gTimedOut = true;
     JS_RequestInterruptCallback(rt);
 
-    if (!gTimeoutFunc.isNull()) {
+    if (!gTimeoutFunc.ref().get().isNull()) {
         static const char msg[] = "Script runs for too long, terminating.\n";
 #if defined(XP_UNIX) && !defined(JS_THREADSAFE)
         /* It is not safe to call fputs from signals. */
@@ -3357,7 +3357,7 @@ Timeout(JSContext *cx, unsigned argc, Value *vp)
             JS_ReportError(cx, "Second argument must be a timeout function");
             return false;
         }
-        gTimeoutFunc = value;
+        gTimeoutFunc.ref() = value;
     }
 
     args.rval().setUndefined();
@@ -3538,11 +3538,8 @@ class OffThreadState {
             return false;
 
         JS_ASSERT(!token);
-        JS_ASSERT(!source);
 
-        source = newSource;
-        if (!JS_AddStringRoot(cx, &source))
-            return false;
+        source.construct(cx, newSource);
 
         state = COMPILING;
         return true;
@@ -3552,10 +3549,9 @@ class OffThreadState {
         AutoLockMonitor alm(monitor);
         JS_ASSERT(state == COMPILING);
         JS_ASSERT(!token);
-        JS_ASSERT(source);
+        JS_ASSERT(source.ref());
 
-        JS_RemoveStringRoot(cx, &source);
-        source = nullptr;
+        source.destroy();
 
         state = IDLE;
     }
@@ -3564,7 +3560,7 @@ class OffThreadState {
         AutoLockMonitor alm(monitor);
         JS_ASSERT(state == COMPILING);
         JS_ASSERT(!token);
-        JS_ASSERT(source);
+        JS_ASSERT(source.ref());
         JS_ASSERT(newToken);
 
         token = newToken;
@@ -3582,9 +3578,8 @@ class OffThreadState {
                 alm.wait();
         }
 
-        JS_ASSERT(source);
-        JS_RemoveStringRoot(cx, &source);
-        source = nullptr;
+        JS_ASSERT(source.ref());
+        source.destroy();
 
         JS_ASSERT(token);
         void *holdToken = token;
@@ -3597,7 +3592,7 @@ class OffThreadState {
     Monitor monitor;
     State state;
     void *token;
-    JSString *source;
+    Maybe<PersistentRootedString> source;
 };
 
 static OffThreadState offThreadState;
@@ -6162,9 +6157,7 @@ main(int argc, char **argv, char **envp)
     if (!SetRuntimeOptions(rt, op))
         return 1;
 
-    gTimeoutFunc = NullValue();
-    if (!JS_AddNamedValueRootRT(rt, &gTimeoutFunc, "gTimeoutFunc"))
-        return 1;
+    gTimeoutFunc.construct(rt, NullValue());
 
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
 #ifdef JSGC_GENERATIONAL
@@ -6210,12 +6203,11 @@ main(int argc, char **argv, char **envp)
         printf("OOM max count: %u\n", OOM_counter);
 #endif
 
-    gTimeoutFunc = NullValue();
-    JS_RemoveValueRootRT(rt, &gTimeoutFunc);
-
     DestroyContext(cx, true);
 
     KillWatchdog();
+
+    gTimeoutFunc.destroy();
 
 #ifdef JS_THREADSAFE
     for (size_t i = 0; i < workerThreads.length(); i++)
