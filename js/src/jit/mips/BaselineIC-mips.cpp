@@ -90,10 +90,12 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
       case JSOP_ADD:
         // We know R0.typeReg() already contains the integer tag. No boxing
         // required.
-        masm.ma_addTestOverflow(R0.payloadReg(), R0.payloadReg(), R1.payloadReg(), &failure);
+        masm.ma_addTestOverflow(scratchReg, R0.payloadReg(), R1.payloadReg(), &failure);
+        masm.move32(scratchReg, R0.payloadReg());
         break;
       case JSOP_SUB:
-        masm.ma_subTestOverflow(R0.payloadReg(), R0.payloadReg(), R1.payloadReg(), &failure);
+        masm.ma_subTestOverflow(scratchReg, R0.payloadReg(), R1.payloadReg(), &failure);
+        masm.move32(scratchReg, R0.payloadReg());
         break;
       case JSOP_MUL: {
         masm.ma_mul_branch_overflow(scratchReg, R0.payloadReg(), R1.payloadReg(), &failure);
