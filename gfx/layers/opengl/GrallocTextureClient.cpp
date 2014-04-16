@@ -11,8 +11,6 @@
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
 #include "gfx2DGlue.h"
-#include "gfxASurface.h"
-#include "gfxImageSurface.h"            // for gfxImageSurface
 
 namespace mozilla {
 namespace layers {

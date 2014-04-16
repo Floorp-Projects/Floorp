@@ -13,7 +13,6 @@
 #include "cairo-xlib.h"
 #include <stdint.h>                     // for uint32_t
 #include "GLDefs.h"                     // for GLenum
-#include "gfxASurface.h"                // for gfxASurface, etc
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxXlibSurface.h"             // for gfxXlibSurface
 #include "gfx2DGlue.h"                  // for Moz2D transistion helpers

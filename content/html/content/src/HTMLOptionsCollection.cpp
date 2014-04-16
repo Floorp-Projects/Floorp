@@ -28,6 +28,7 @@
 #include "nsRuleData.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleConsts.h"
+#include "jsfriendapi.h"
 
 namespace mozilla {
 namespace dom {
@@ -280,8 +281,13 @@ HTMLOptionsCollection::NamedItem(const nsAString& aName,
 }
 
 void
-HTMLOptionsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
+HTMLOptionsCollection::GetSupportedNames(unsigned aFlags,
+                                         nsTArray<nsString>& aNames)
 {
+  if (!(aFlags & JSITER_HIDDEN)) {
+    return;
+  }
+
   nsAutoTArray<nsIAtom*, 8> atoms;
   for (uint32_t i = 0; i < mElements.Length(); ++i) {
     HTMLOptionElement* content = mElements.ElementAt(i);

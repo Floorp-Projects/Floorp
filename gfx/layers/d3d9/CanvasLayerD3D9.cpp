@@ -6,7 +6,6 @@
 
 #include "mozilla/layers/PLayerTransaction.h"
 
-#include "gfxImageSurface.h"
 #include "gfxWindowsSurface.h"
 #include "gfxWindowsPlatform.h"
 #include "SurfaceStream.h"

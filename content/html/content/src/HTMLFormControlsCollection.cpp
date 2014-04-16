@@ -17,6 +17,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIFormControl.h"
+#include "jsfriendapi.h"
 
 namespace mozilla {
 namespace dom {
@@ -395,8 +396,13 @@ CollectNames(const nsAString& aName,
 }
 
 void
-HTMLFormControlsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
+HTMLFormControlsCollection::GetSupportedNames(unsigned aFlags,
+                                              nsTArray<nsString>& aNames)
 {
+  if (!(aFlags & JSITER_HIDDEN)) {
+    return;
+  }
+
   FlushPendingNotifications();
   // Just enumerate mNameLookupTable.  This won't guarantee order, but
   // that's OK, because the HTML5 spec doesn't define an order for

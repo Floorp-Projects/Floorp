@@ -146,6 +146,7 @@ public:
   // WebIDL
   Attr* GetNamedItem(const nsAString& aAttrName);
   Attr* NamedGetter(const nsAString& aAttrName, bool& aFound);
+  bool NameIsEnumerable(const nsAString& aName);
   already_AddRefed<Attr>
   SetNamedItem(Attr& aAttr, ErrorResult& aError)
   {
@@ -170,7 +171,7 @@ public:
   RemoveNamedItemNS(const nsAString& aNamespaceURI, const nsAString& aLocalName,
                     ErrorResult& aError);
 
-  void GetSupportedNames(nsTArray<nsString>& aNames)
+  void GetSupportedNames(unsigned, nsTArray<nsString>& aNames)
   {
     // No supported names we want to show up in iteration.
   }

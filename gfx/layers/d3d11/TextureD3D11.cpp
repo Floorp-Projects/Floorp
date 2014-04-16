@@ -6,7 +6,6 @@
 #include "TextureD3D11.h"
 #include "CompositorD3D11.h"
 #include "gfxContext.h"
-#include "gfxImageSurface.h"
 #include "Effects.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "gfxWindowsPlatform.h"
