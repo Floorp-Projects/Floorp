@@ -10,7 +10,8 @@
   <Param name="form" value="OSDJAS"/>
   <Param name="language" value="{moz:locale}"/>
 </Url>
-<Url type="application/x-moz-phonesearch" method="GET" template="http://www.bing.com/search">
+<!-- this is effectively x-moz-phonesearch, but search service expects a text/html entry -->
+<Url type="text/html" method="GET" template="http://www.bing.com/search">
   <Param name="q" value="{searchTerms}" />
   <MozParam name="pc" value="MOZB" />
   <MozParam name="form" value="MOZMBA" />
