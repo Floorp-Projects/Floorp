@@ -135,8 +135,8 @@ for (let [constProp, dirKey] of [
  */
 let clone = SharedAll.clone;
 
-let worker = null;
 let Scheduler = {
+
   /**
    * |true| once we have sent at least one message to the worker.
    * This field is unaffected by resetting the worker.
@@ -177,6 +177,25 @@ let Scheduler = {
   resetTimer: null,
 
   /**
+   * The worker to which to send requests.
+   *
+   * If the worker has never been created or has been reset, this is a
+   * fresh worker, initialized with osfile_async_worker.js.
+   *
+   * @type {PromiseWorker}
+   */
+  get worker() {
+    if (!this._worker) {
+      // Either the worker has never been created or it has been reset
+      this._worker = new PromiseWorker(
+	"resource://gre/modules/osfile/osfile_async_worker.js", LOG);
+    }
+    return this._worker;
+  },
+
+  _worker: null,
+
+  /**
    * Prepare to kill the OS.File worker after a few seconds.
    */
   restartTimer: function(arg) {
@@ -212,10 +231,14 @@ let Scheduler = {
 
       yield this.queue;
 
-      if (!this.launched || this.shutdown || !worker) {
+      // Enter critical section: no yield in this block
+      // (we want to make sure that we remain the only
+      // request in the queue).
+
+      if (!this.launched || this.shutdown || !this._worker) {
         // Nothing to kill
         this.shutdown = this.shutdown || shutdown;
-        worker = null;
+        this._worker = null;
         return null;
       }
 
@@ -224,12 +247,15 @@ let Scheduler = {
       let deferred = Promise.defer();
       this.queue = deferred.promise;
 
+
+      // Exit critical section
+
       let message = ["Meta_shutdown", [reset]];
 
       try {
         Scheduler.latestReceived = [];
         Scheduler.latestSent = [Date.now(), ...message];
-        let promise = worker.post(...message);
+        let promise = this._worker.post(...message);
 
         // Wait for result
         let resources;
@@ -268,7 +294,7 @@ let Scheduler = {
 
         // Make sure that we do not leave an invalid |worker| around.
         if (killed || shutdown) {
-          worker = null;
+          this._worker = null;
         }
 
         this.shutdown = shutdown;
@@ -315,19 +341,14 @@ let Scheduler = {
     if (this.shutdown) {
       LOG("OS.File is not available anymore. The following request has been rejected.",
         method, args);
-      return Promise.reject(new Error("OS.File has been shut down."));
-    }
-    if (!worker) {
-      // Either the worker has never been created or it has been reset
-      worker = new PromiseWorker(
-        "resource://gre/modules/osfile/osfile_async_worker.js", LOG);
+      return Promise.reject(new Error("OS.File has been shut down. Rejecting post to " + method));
     }
     let firstLaunch = !this.launched;
     this.launched = true;
 
     if (firstLaunch && SharedAll.Config.DEBUG) {
       // If we have delayed sending SET_DEBUG, do it now.
-      worker.post("SET_DEBUG", [true]);
+      this.worker.post("SET_DEBUG", [true]);
     }
 
     // By convention, the last argument of any message may be an |options| object.
@@ -336,7 +357,13 @@ let Scheduler = {
     if (methodArgs) {
       options = methodArgs[methodArgs.length - 1];
     }
-    return this.push(() => Task.spawn(function*() {
+    return this.push(Task.async(function*() {
+      if (this.shutdown) {
+	LOG("OS.File is not available anymore. The following request has been rejected.",
+	  method, args);
+	throw new Error("OS.File has been shut down. Rejecting request to " + method);
+      }
+
       Scheduler.latestReceived = null;
       if (OS.Constants.Sys.DEBUG) {
         // Update possibly memory-expensive debugging information
@@ -352,7 +379,7 @@ let Scheduler = {
       let reply;
       let isError = false;
       try {
-        data = yield worker.post(method, ...args);
+        data = yield this.worker.post(method, ...args);
         reply = data;
       } catch (error if error instanceof PromiseWorker.WorkerError) {
         reply = error;
@@ -409,7 +436,7 @@ let Scheduler = {
         options.outExecutionDuration = durationMs;
       }
       return data.ok;
-    }));
+    }.bind(this)));
   },
 
   /**
@@ -418,6 +445,7 @@ let Scheduler = {
    * This is only useful on first launch.
    */
   _updateTelemetry: function() {
+    let worker = this.worker;
     let workerTimeStamps = worker.workerTimeStamps;
     if (!workerTimeStamps) {
       // If the first call to OS.File results in an uncaught errors,
@@ -1381,7 +1409,7 @@ AsyncShutdown.profileBeforeChange.addBlocker(
     let result = {
       launched: Scheduler.launched,
       shutdown: Scheduler.shutdown,
-      worker: !!worker,
+      worker: !!Scheduler._worker,
       pendingReset: !!Scheduler.resetTimer,
       latestSent: Scheduler.latestSent,
       latestReceived: Scheduler.latestReceived
