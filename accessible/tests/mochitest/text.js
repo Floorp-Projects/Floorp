@@ -457,6 +457,19 @@ function testTextGetSelection(aID, aStartOffset, aEndOffset, aSelectionIndex)
      aSelectionIndex + "'");
 }
 
+function testTextRange(aRange, aStartContainer, aStartOffset,
+                       aEndContainer, aEndOffset)
+{
+  is(aRange.startContainer, getAccessible(aStartContainer),
+     "Wrong start container");
+  is(aRange.startOffset, aStartOffset,
+     "Wrong start offset");
+  is(aRange.endContainer, getAccessible(aEndContainer),
+     "Wrong end container");
+  is(aRange.endOffset, aEndOffset,
+     "Wrong end offset");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Private
 

@@ -11,6 +11,7 @@
 #include "TextRange.h"
 
 #include "mozilla/Move.h"
+#include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {
 namespace a11y {
@@ -20,7 +21,8 @@ class TextRange;
 class xpcAccessibleTextRange MOZ_FINAL : public nsIAccessibleTextRange
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(xpcAccessibleTextRange)
 
   NS_IMETHOD GetStartContainer(nsIAccessible** aAnchor) MOZ_FINAL MOZ_OVERRIDE;
   NS_IMETHOD GetStartOffset(int32_t* aOffset) MOZ_FINAL MOZ_OVERRIDE;
