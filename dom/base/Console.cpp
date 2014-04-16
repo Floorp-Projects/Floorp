@@ -7,8 +7,6 @@
 #include "mozilla/dom/ConsoleBinding.h"
 
 #include "mozilla/dom/Exceptions.h"
-#include "mozilla/dom/ToJSValue.h"
-#include "mozilla/Maybe.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDocument.h"
 #include "nsDOMNavigationTiming.h"
@@ -18,7 +16,6 @@
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "xpcprivate.h"
-#include "nsContentUtils.h"
 
 #include "nsIConsoleAPIStorage.h"
 #include "nsIDOMWindowUtils.h"
@@ -174,16 +171,7 @@ public:
 
   nsString mMethodString;
   nsTArray<JS::Heap<JS::Value>> mArguments;
-
-  // Stack management is complicated, because we want to do it as
-  // lazily as possible.  Therefore, we have the following behavior:
-  // 1)  mTopStackFrame is initialized whenever we have any JS on the stack
-  // 2)  mReifiedStack is initialized if we're created in a worker.
-  // 3)  mStack is set (possibly to null if there is no JS on the stack) if
-  //     we're created on main thread.
-  Maybe<ConsoleStackEntry> mTopStackFrame;
-  Maybe<nsTArray<ConsoleStackEntry>> mReifiedStack;
-  nsCOMPtr<nsIStackFrame> mStack;
+  Sequence<ConsoleStackEntry> mStack;
 };
 
 // This class is used to clear any exception at the end of this method.
@@ -746,58 +734,6 @@ Console::__noSuchMethod__()
   // Nothing to do.
 }
 
-static
-nsresult
-StackFrameToStackEntry(nsIStackFrame* aStackFrame,
-                       ConsoleStackEntry& aStackEntry,
-                       uint32_t aLanguage)
-{
-  MOZ_ASSERT(aStackFrame);
-
-  nsresult rv = aStackFrame->GetFilename(aStackEntry.mFilename);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  int32_t lineNumber;
-  rv = aStackFrame->GetLineNumber(&lineNumber);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aStackEntry.mLineNumber = lineNumber;
-
-  rv = aStackFrame->GetName(aStackEntry.mFunctionName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aStackEntry.mLanguage = aLanguage;
-  return NS_OK;
-}
-
-static
-nsresult
-ReifyStack(nsIStackFrame* aStack, nsTArray<ConsoleStackEntry>& aRefiedStack)
-{
-  nsCOMPtr<nsIStackFrame> stack(aStack);
-
-  while (stack) {
-    uint32_t language;
-    nsresult rv = stack->GetLanguage(&language);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (language == nsIProgrammingLanguage::JAVASCRIPT ||
-        language == nsIProgrammingLanguage::JAVASCRIPT2) {
-      ConsoleStackEntry& data = *aRefiedStack.AppendElement();
-      nsresult rv = StackFrameToStackEntry(stack, data, language);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    nsCOMPtr<nsIStackFrame> caller;
-    rv = stack->GetCaller(getter_AddRefs(caller));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    stack.swap(caller);
-  }
-
-  return NS_OK;
-}
-
 // Queue a call to a console method. See the CALL_DELAY constant.
 void
 Console::Method(JSContext* aCx, MethodName aMethodName,
@@ -862,7 +798,8 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
     return;
   }
 
-  // Walk up to the first JS stack frame and save it if we find it.
+  // nsIStackFrame is not thread-safe so we take what we need and we store in
+  // an array of ConsoleStackEntry objects.
   do {
     uint32_t language;
     nsresult rv = stack->GetLanguage(&language);
@@ -873,16 +810,30 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
 
     if (language == nsIProgrammingLanguage::JAVASCRIPT ||
         language == nsIProgrammingLanguage::JAVASCRIPT2) {
-      callData->mTopStackFrame.construct();
-      nsresult rv = StackFrameToStackEntry(stack,
-                                           callData->mTopStackFrame.ref(),
-                                           language);
+      ConsoleStackEntry& data = *callData->mStack.AppendElement();
+
+      rv = stack->GetFilename(data.mFilename);
       if (NS_FAILED(rv)) {
         Throw(aCx, rv);
         return;
       }
 
-      break;
+      int32_t lineNumber;
+      rv = stack->GetLineNumber(&lineNumber);
+      if (NS_FAILED(rv)) {
+        Throw(aCx, rv);
+        return;
+      }
+
+      data.mLineNumber = lineNumber;
+
+      rv = stack->GetName(data.mFunctionName);
+      if (NS_FAILED(rv)) {
+        Throw(aCx, rv);
+        return;
+      }
+
+      data.mLanguage = language;
     }
 
     nsCOMPtr<nsIStackFrame> caller;
@@ -894,19 +845,6 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
 
     stack.swap(caller);
   } while (stack);
-
-  if (NS_IsMainThread()) {
-    callData->mStack = stack;
-  } else {
-    // nsIStackFrame is not threadsafe, so we need to snapshot it now,
-    // before we post our runnable to the main thread.
-    callData->mReifiedStack.construct();
-    nsresult rv = ReifyStack(stack, callData->mReifiedStack.ref());
-    if (NS_FAILED(rv)) {
-      Throw(aCx, rv);
-      return;
-    }
-  }
 
   // Monotonic timer for 'time' and 'timeEnd'
   if ((aMethodName == MethodTime || aMethodName == MethodTimeEnd) && mWindow) {
@@ -981,60 +919,14 @@ Console::Notify(nsITimer *timer)
   return NS_OK;
 }
 
-// We store information to lazily compute the stack in the reserved slots of
-// LazyStackGetter.  The first slot always stores a JS object: it's either the
-// JS wrapper of the nsIStackFrame or the actual reified stack representation.
-// The second slot is a PrivateValue() holding an nsIStackFrame* when we haven't
-// reified the stack yet, or an UndefinedValue() otherwise.
-enum {
-  SLOT_STACKOBJ,
-  SLOT_RAW_STACK
-};
-
-bool
-LazyStackGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
-{
-  JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
-  JS::Rooted<JSObject*> callee(aCx, &args.callee());
-
-  JS::Value v = js::GetFunctionNativeReserved(&args.callee(), SLOT_RAW_STACK);
-  if (v.isUndefined()) {
-    // Already reified.
-    args.rval().set(js::GetFunctionNativeReserved(callee, SLOT_STACKOBJ));
-    return true;
-  }
-
-  nsIStackFrame* stack = reinterpret_cast<nsIStackFrame*>(v.toPrivate());
-  nsTArray<ConsoleStackEntry> reifiedStack;
-  nsresult rv = ReifyStack(stack, reifiedStack);
-  if (NS_FAILED(rv)) {
-    Throw(aCx, rv);
-    return false;
-  }
-
-  JS::Rooted<JS::Value> stackVal(aCx);
-  if (!ToJSValue(aCx, reifiedStack, &stackVal)) {
-    return false;
-  }
-
-  MOZ_ASSERT(stackVal.isObject());
-
-  js::SetFunctionNativeReserved(callee, SLOT_STACKOBJ, stackVal);
-  js::SetFunctionNativeReserved(callee, SLOT_RAW_STACK, JS::UndefinedValue());
-
-  args.rval().set(stackVal);
-  return true;
-}
-
 void
 Console::ProcessCallData(ConsoleCallData* aData)
 {
   MOZ_ASSERT(aData);
-  MOZ_ASSERT(NS_IsMainThread());
 
   ConsoleStackEntry frame;
-  if (!aData->mTopStackFrame.empty()) {
-    frame = aData->mTopStackFrame.ref();
+  if (!aData->mStack.IsEmpty()) {
+    frame = aData->mStack[0];
   }
 
   AutoSafeJSContext cx;
@@ -1080,9 +972,14 @@ Console::ProcessCallData(ConsoleCallData* aData)
       ArgumentsToValueList(aData->mArguments, event.mArguments.Value());
   }
 
-  if (aData->mMethodName == MethodGroup ||
-      aData->mMethodName == MethodGroupCollapsed ||
-      aData->mMethodName == MethodGroupEnd) {
+  if (ShouldIncludeStackrace(aData->mMethodName)) {
+    event.mStacktrace.Construct();
+    event.mStacktrace.Value().SwapElements(aData->mStack);
+  }
+
+  else if (aData->mMethodName == MethodGroup ||
+           aData->mMethodName == MethodGroupCollapsed ||
+           aData->mMethodName == MethodGroupEnd) {
     ComposeGroupName(cx, aData->mArguments, event.mGroupName);
   }
 
@@ -1110,50 +1007,6 @@ Console::ProcessCallData(ConsoleCallData* aData)
   if (!JS_DefineProperty(cx, eventObj, "wrappedJSObject", eventValue,
                          nullptr, nullptr, JSPROP_ENUMERATE)) {
     return;
-  }
-
-  if (ShouldIncludeStackrace(aData->mMethodName)) {
-    // Now define the "stacktrace" property on eventObj.  There are two cases
-    // here.  Either we came from a worker and have a reified stack, or we want
-    // to define a getter that will lazily reify the stack.
-    if (!aData->mReifiedStack.empty()) {
-      JS::Rooted<JS::Value> stacktrace(cx);
-      if (!ToJSValue(cx, aData->mReifiedStack.ref(), &stacktrace) ||
-          !JS_DefineProperty(cx, eventObj, "stacktrace", stacktrace,
-                             nullptr, nullptr, JSPROP_ENUMERATE)) {
-        return;
-      }
-    } else {
-      JSFunction* fun = js::NewFunctionWithReserved(cx, LazyStackGetter, 0, 0,
-                                                    eventObj, "stacktrace");
-      if (!fun) {
-        return;
-      }
-
-      JS::Rooted<JSObject*> funObj(cx, JS_GetFunctionObject(fun));
-
-      // We want to store our stack in the function and have it stay alive.  But
-      // we also need sane access to the C++ nsIStackFrame.  So store both a JS
-      // wrapper and the raw pointer: the former will keep the latter alive.
-      JS::Rooted<JS::Value> stackVal(cx);
-      nsresult rv = nsContentUtils::WrapNative(cx, aData->mStack,
-                                               &stackVal);
-      if (NS_FAILED(rv)) {
-        return;
-      }
-
-      js::SetFunctionNativeReserved(funObj, SLOT_STACKOBJ, stackVal);
-      js::SetFunctionNativeReserved(funObj, SLOT_RAW_STACK,
-                                    JS::PrivateValue(aData->mStack.get()));
-
-      if (!JS_DefineProperty(cx, eventObj, "stacktrace", JS::UndefinedValue(),
-                             JS_DATA_TO_FUNC_PTR(JSPropertyOp, funObj.get()),
-                             nullptr,
-                             JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER |
-                             JSPROP_SETTER)) {
-        return;
-      }
-    }
   }
 
   if (!mStorage) {
