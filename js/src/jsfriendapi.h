@@ -1339,6 +1339,14 @@ extern JS_FRIEND_API(uint32_t)
 JS_GetArrayBufferByteLength(JSObject *obj);
 
 /*
+ * Check whether the obj is ArrayBufferObject and memory mapped. Note that this
+ * may return false if a security wrapper is encountered that denies the
+ * unwrapping.
+ */
+extern JS_FRIEND_API(bool)
+JS_IsMappedArrayBufferObject(JSObject *obj);
+
+/*
  * Return the number of elements in a typed array.
  *
  * |obj| must have passed a JS_IsTypedArrayObject/JS_Is*Array test, or somehow
