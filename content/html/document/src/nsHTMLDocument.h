@@ -175,7 +175,7 @@ public:
   JSObject* NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
                         mozilla::ErrorResult& rv);
   bool NameIsEnumerable(const nsAString& aName);
-  void GetSupportedNames(nsTArray<nsString>& aNames);
+  void GetSupportedNames(unsigned, nsTArray<nsString>& aNames);
   nsGenericHTMLElement *GetBody();
   void SetBody(nsGenericHTMLElement* aBody, mozilla::ErrorResult& rv);
   mozilla::dom::HTMLSharedElement *GetHead() {

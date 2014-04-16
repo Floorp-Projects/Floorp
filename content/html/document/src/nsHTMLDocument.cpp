@@ -2282,7 +2282,7 @@ IdentifierMapEntryAddNames(nsIdentifierMapEntry* aEntry, void* aArg)
 }
 
 void
-nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames)
+nsHTMLDocument::GetSupportedNames(unsigned, nsTArray<nsString>& aNames)
 {
   mIdentifierMap.EnumerateEntries(IdentifierMapEntryAddNames, &aNames);
 }

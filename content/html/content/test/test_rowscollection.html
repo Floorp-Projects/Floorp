@@ -34,11 +34,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772869
 /** Test for Bug 772869 **/
 var x = $("f").rows;
 x.something = "another";
-names = [];
+var names = [];
 for (var name in x) {
   names.push(name);
 }
-is(names.length, 15, "Should have 15 items");
+is(names.length, 11, "Should have 11 enumerated names");
+is(names[0], "0", "Enum entry 1")
+is(names[1], "1", "Enum entry 2")
+is(names[2], "2", "Enum entry 3")
+is(names[3], "3", "Enum entry 4")
+is(names[4], "4", "Enum entry 5")
+is(names[5], "5", "Enum entry 6")
+is(names[6], "something", "Enum entry 7")
+is(names[7], "item", "Enum entry 8")
+is(names[8], "namedItem", "Enum entry 9")
+is(names[9], "@@iterator", "Enum entry 10")
+is(names[10], "length", "Enum entry 11")
+
+names = Object.getOwnPropertyNames(x);
+is(names.length, 11, "Should have 11 items");
 is(names[0], "0", "Entry 1")
 is(names[1], "1", "Entry 2")
 is(names[2], "2", "Entry 3")
@@ -50,10 +64,6 @@ is(names[7], "y", "Entry 8")
 is(names[8], "z", "Entry 9")
 is(names[9], "w", "Entry 10")
 is(names[10], "something", "Entry 11")
-is(names[11], "item", "Entry 12")
-is(names[12], "namedItem", "Entry 13")
-is(names[13], "@@iterator", "Entry 14")
-is(names[14], "length", "Entry 15")
 </script>
 </pre>
 </body>

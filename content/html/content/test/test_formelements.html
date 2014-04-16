@@ -32,14 +32,27 @@ names = [];
 for (var name in x) {
   names.push(name);
 }
-is(names.length, 14, "Should have 14 items");
+is(names.length, 10, "Should have 10 enumerated names");
+is(names[0], "0", "Enum entry 1");
+is(names[1], "1", "Enum entry 2");
+is(names[2], "2", "Enum entry 3");
+is(names[3], "3", "Enum entry 4");
+is(names[4], "4", "Enum entry 5");
+is(names[5], "something", "Enum entry 6");
+is(names[6], "namedItem", "Enum entry 7");
+is(names[7], "item", "Enum entry 8");
+is(names[8], "@@iterator", "Enum entry 9");
+is(names[9], "length", "Enum entry 10");
+
+names = Object.getOwnPropertyNames(x);
+is(names.length, 10, "Should have 10 items");
 // Now sort entries 5 through 8, for comparison purposes.  We don't sort the
 // whole array, because we want to make sure the ordering between the parts
 // is correct
 temp = names.slice(5, 9);
 temp.sort();
 names.splice.bind(names, 5, 4).apply(null, temp);
-is(names.length, 14, "Should have still have 14 items");
+is(names.length, 10, "Should still have 10 items");
 is(names[0], "0", "Entry 1")
 is(names[1], "1", "Entry 2")
 is(names[2], "2", "Entry 3")
@@ -50,10 +63,6 @@ is(names[6], "x", "Entry 7")
 is(names[7], "y", "Entry 8")
 is(names[8], "z", "Entry 9")
 is(names[9], "something", "Entry 10")
-is(names[10], "namedItem", "Entry 11")
-is(names[11], "item", "Entry 12")
-is(names[12], "@@iterator", "Entry 13")
-is(names[13], "length", "Entry 14")
 </script>
 </pre>
 </body>

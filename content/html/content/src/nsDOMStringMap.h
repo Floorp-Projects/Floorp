@@ -43,7 +43,7 @@ public:
                    mozilla::ErrorResult& rv);
   void NamedDeleter(const nsAString& aProp, bool &found);
   bool NameIsEnumerable(const nsAString& aName);
-  void GetSupportedNames(nsTArray<nsString>& aNames);
+  void GetSupportedNames(unsigned, nsTArray<nsString>& aNames);
 
   js::ExpandoAndGeneration mExpandoAndGeneration;
 

@@ -95,7 +95,8 @@ public:
     EnsureFresh();
     return mNames;
   }
-  virtual void GetSupportedNames(nsTArray<nsString>& aNames) MOZ_OVERRIDE;
+  virtual void GetSupportedNames(unsigned,
+                                 nsTArray<nsString>& aNames) MOZ_OVERRIDE;
 
   NS_DECL_NSIDOMHTMLCOLLECTION
 

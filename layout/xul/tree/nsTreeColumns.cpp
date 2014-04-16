@@ -580,7 +580,7 @@ nsTreeColumns::GetNamedColumn(const nsAString& aId, nsITreeColumn** _retval)
 }
 
 void
-nsTreeColumns::GetSupportedNames(nsTArray<nsString>& aNames)
+nsTreeColumns::GetSupportedNames(unsigned, nsTArray<nsString>& aNames)
 {
   for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
     aNames.AppendElement(currCol->GetId());

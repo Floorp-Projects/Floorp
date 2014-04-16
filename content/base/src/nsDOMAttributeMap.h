@@ -171,7 +171,7 @@ public:
   RemoveNamedItemNS(const nsAString& aNamespaceURI, const nsAString& aLocalName,
                     ErrorResult& aError);
 
-  void GetSupportedNames(nsTArray<nsString>& aNames)
+  void GetSupportedNames(unsigned, nsTArray<nsString>& aNames)
   {
     // No supported names we want to show up in iteration.
   }

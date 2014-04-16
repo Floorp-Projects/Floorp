@@ -280,7 +280,8 @@ public:
     aFound = !!item;
     return item;
   }
-  virtual void GetSupportedNames(nsTArray<nsString>& aNames) MOZ_OVERRIDE;
+  virtual void GetSupportedNames(unsigned aFlags,
+                                 nsTArray<nsString>& aNames) MOZ_OVERRIDE;
 
   // nsContentList public methods
   NS_HIDDEN_(uint32_t) Length(bool aDoFlush);
