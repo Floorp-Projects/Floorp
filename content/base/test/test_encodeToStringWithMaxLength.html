@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=995321
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 995321 - encodeToStringWithMaxLength</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  function getEncoder() {
+    const de = SpecialPowers.Ci.nsIDocumentEncoder;
+    const Cc = SpecialPowers.Cc;
+
+    // Create a plaintext encoder without flags.
+    var encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/plain"]
+                  .createInstance(de);
+    encoder.init(document, "text/plain", 0);
+    return encoder;
+  }
+
+  function testPlaintextSerializerWithMaxLength() {
+    var string = getEncoder().encodeToString();
+
+    var shorterString = getEncoder().encodeToStringWithMaxLength(1);
+    ok(shorterString.length < 1 + 72,
+       "test length is in the expected range after limiting the length to 1");
+    ok(string.startsWith(shorterString.trimRight()),
+       "the shorter string has the expected content");
+
+    shorterString = getEncoder().encodeToStringWithMaxLength(300);
+    ok(shorterString.length < 300 + 72,
+       "test length is in the expected range after limiting the length to 300");
+    ok(string.startsWith(shorterString.trimRight()),
+       "the shorter string has the expected content");
+
+    is(getEncoder().encodeToStringWithMaxLength(0), string,
+       "limiting the length to 0 should be ignored");
+
+    is(getEncoder().encodeToStringWithMaxLength(10000), string,
+       "limiting the length to a huge value should return the whole page");
+
+    SimpleTest.finish();
+  }
+
+  addLoadEvent(testPlaintextSerializerWithMaxLength);
+  SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=995321">Mozilla Bug 995321</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+The <em>Mozilla</em> project is a global community of <strong>people</strong> who believe that openness, innovation, and opportunity are key to the continued health of the Internet. We have worked together since 1998 to ensure that the Internet is developed in a way that benefits everyone. We are best known for creating the Mozilla Firefox web browser.
+
+The Mozilla project uses a community-based approach to create world-class open source software and to develop new types of collaborative activities. We create communities of people involved in making the Internet experience better for all of us.
+
+As a result of these efforts, we have distilled a set of principles that we believe are critical for the Internet to continue to benefit the public good as well as commercial aspects of life. We set out these principles below.
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
