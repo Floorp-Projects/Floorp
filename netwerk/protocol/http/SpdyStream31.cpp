@@ -288,7 +288,7 @@ SpdyStream31::ParseHttpRequestHeaders(const char *buf,
   nsAutoCString hashkey;
   mTransaction->RequestHead()->GetHeader(nsHttp::Host, hostHeader);
 
-  CreatePushHashKey(NS_LITERAL_CSTRING("https"),
+  CreatePushHashKey(nsDependentCString(mTransaction->RequestHead()->IsHTTPS() ? "https" : "http"),
                     hostHeader, mSession->Serial(),
                     mTransaction->RequestHead()->RequestURI(),
                     mOrigin, hashkey);
@@ -481,7 +481,7 @@ SpdyStream31::ParseHttpRequestHeaders(const char *buf,
   CompressToFrame(NS_LITERAL_CSTRING(":host"));
   CompressToFrame(hostHeader);
   CompressToFrame(NS_LITERAL_CSTRING(":scheme"));
-  CompressToFrame(NS_LITERAL_CSTRING("https"));
+  CompressToFrame(nsDependentCString(mTransaction->RequestHead()->IsHTTPS() ? "https" : "http"));
 
   hdrHash.Enumerate(hdrHashEnumerate, this);
   CompressFlushFrame();
