@@ -13,11 +13,12 @@ const Cc = Components.classes;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BookmarkJSONUtils",
+  "resource://gre/modules/BookmarkJSONUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
   "resource://gre/modules/Deprecated.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
