@@ -202,7 +202,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
     }
 
     jsdval->string = JSVAL_TO_STRING(stringval);
-    if(!JS_AddNamedStringRoot(cx, &jsdval->string, "ValueString"))
+    if(!JS::AddNamedStringRoot(cx, &jsdval->string, "ValueString"))
         jsdval->string = nullptr;
 
     return jsdval->string;
@@ -252,7 +252,7 @@ jsd_NewValue(JSDContext* jsdc, jsval value)
         bool ok;
         JSAutoCompartment ac(cx, jsdc->glob);
 
-        ok = JS_AddNamedValueRoot(cx, &jsdval->val, "JSDValue");
+        ok = JS::AddNamedValueRoot(cx, &jsdval->val, "JSDValue");
         if(ok && JSVAL_IS_STRING(val)) {
             if(!JS_WrapValue(cx, &val)) {
                 ok = false;
@@ -283,7 +283,7 @@ jsd_DropValue(JSDContext* jsdc, JSDValue* jsdval)
         {
             AutoSafeJSContext cx;
             JSAutoCompartment ac(cx, jsdc->glob);
-            JS_RemoveValueRoot(cx, &jsdval->val);
+            JS::RemoveValueRoot(cx, &jsdval->val);
         }
         free(jsdval);
     }
@@ -412,7 +412,7 @@ jsd_RefreshValue(JSDContext* jsdc, JSDValue* jsdval)
         if(!JSVAL_IS_STRING(jsdval->val))
         {
             JSAutoCompartment ac(cx, jsdc->glob);
-            JS_RemoveStringRoot(cx, &jsdval->string);
+            JS::RemoveStringRoot(cx, &jsdval->string);
         }
         jsdval->string = nullptr;
     }
