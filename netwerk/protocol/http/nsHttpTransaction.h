@@ -102,6 +102,14 @@ public:
 
     bool      ProxyConnectFailed() { return mProxyConnectFailed; }
 
+    // setting mDontRouteViaWildCard to true means the transaction should only
+    // be dispatched on a specific ConnectionInfo Hash Key (as opposed to a
+    // generic wild card one). That means in the specific case of carrying this
+    // transaction on an HTTP/2 tunnel it will only be dispatched onto an
+    // existing tunnel instead of triggering creation of a new one.
+    void SetDontRouteViaWildCard(bool var) { mDontRouteViaWildCard = var; }
+    bool DontRouteViaWildCard() { return mDontRouteViaWildCard; }
+
     // SetPriority() may only be used by the connection manager.
     void    SetPriority(int32_t priority) { mPriority = priority; }
     int32_t    Priority()                 { return mPriority; }
@@ -247,6 +255,7 @@ private:
     bool                            mPreserveStream;
     bool                            mDispatchedAsBlocking;
     bool                            mResponseTimeoutEnabled;
+    bool                            mDontRouteViaWildCard;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted
