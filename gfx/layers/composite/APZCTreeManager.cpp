@@ -779,7 +779,6 @@ APZCTreeManager::HandOffFling(AsyncPanZoomController* aPrev, ScreenPoint aVeloci
   next->TakeOverFling(transformedVelocity);
 }
 
-
 bool
 APZCTreeManager::FlushRepaintsForOverscrollHandoffChain()
 {
@@ -794,6 +793,30 @@ APZCTreeManager::FlushRepaintsForOverscrollHandoffChain()
     }
   }
   return true;
+}
+
+bool
+APZCTreeManager::CanBePanned(AsyncPanZoomController* aApzc)
+{
+  MonitorAutoLock lock(mTreeLock);  // to access mOverscrollHandoffChain
+
+  // Find |aApzc| in the handoff chain.
+  uint32_t i;
+  for (i = 0; i < mOverscrollHandoffChain.length(); ++i) {
+    if (mOverscrollHandoffChain[i] == aApzc) {
+      break;
+    }
+  }
+
+  // See whether any APZC in the handoff chain starting from |aApzc|
+  // has room to be panned.
+  for (uint32_t j = i; j < mOverscrollHandoffChain.length(); ++j) {
+    if (mOverscrollHandoffChain[j]->IsPannable()) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 bool

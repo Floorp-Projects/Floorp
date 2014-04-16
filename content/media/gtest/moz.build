@@ -11,6 +11,10 @@ UNIFIED_SOURCES += [
     'TestTrackEncoder.cpp',
 ]
 
+if CONFIG['MOZ_WEBM_ENCODER']:
+    UNIFIED_SOURCES += ['TestVideoTrackEncoder.cpp',
+]
+
 EXPORT_LIBRARY = True
 
 include('/ipc/chromium/chromium-config.mozbuild')

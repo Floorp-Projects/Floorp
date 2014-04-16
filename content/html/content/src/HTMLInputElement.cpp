@@ -4674,24 +4674,15 @@ HTMLInputElement::GetValueAsDate(const nsAString& aValue,
     return false;
   }
 
-  uint32_t endOfYearOffset = 0;
-  for (; NS_IsAsciiDigit(aValue[endOfYearOffset]); ++endOfYearOffset);
-
-  // The year must be at least 4 digits long.
-  if (aValue[endOfYearOffset] != '-' || endOfYearOffset < 4) {
+  uint32_t endOfYearOffset = aValue.Length() - 6;
+  
+  if (aValue[endOfYearOffset]     != '-' ||
+      aValue[endOfYearOffset + 3] != '-') {
     return false;
   }
 
-  // Now, we know where is the next '-' and what should be the size of the
-  // string.
-  if (aValue[endOfYearOffset + 3] != '-' ||
-      aValue.Length() != 10 + (endOfYearOffset - 4)) {
-    return false;
-  }
-
-  nsresult ec;
-  *aYear = PromiseFlatString(StringHead(aValue, endOfYearOffset)).ToInteger(&ec);
-  if (NS_FAILED(ec) || *aYear == 0) {
+  if (!DigitSubStringToNumber(aValue, 0, endOfYearOffset, aYear) ||
+      *aYear < 1) {
     return false;
   }
 

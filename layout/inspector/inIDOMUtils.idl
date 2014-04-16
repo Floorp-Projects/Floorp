@@ -104,3 +104,7 @@ interface inIDOMUtils : nsISupports
    */
   void parseStyleSheet(in nsIDOMCSSStyleSheet aSheet, in DOMString aInput);
 };
+
+%{ C++
+#define IN_DOMUTILS_CONTRACTID "@mozilla.org/inspector/dom-utils;1"
+%}

@@ -466,7 +466,7 @@ function createDumper(aLevel) {
     }
     let args = Array.prototype.slice.call(arguments, 0);
     let frame = getStack(Components.stack.caller, 1)[0];
-    sendConsoleAPIMessage(aLevel, frame, args);
+    sendConsoleAPIMessage(this, aLevel, frame, args);
     let data = args.map(function(arg) {
       return stringify(arg, true);
     });
@@ -493,7 +493,7 @@ function createMultiLineDumper(aLevel) {
     dumpMessage(this, aLevel, "");
     let args = Array.prototype.slice.call(arguments, 0);
     let frame = getStack(Components.stack.caller, 1)[0];
-    sendConsoleAPIMessage(aLevel, frame, args);
+    sendConsoleAPIMessage(this, aLevel, frame, args);
     args.forEach(function(arg) {
       this.dump(log(arg));
     }, this);
@@ -504,6 +504,8 @@ function createMultiLineDumper(aLevel) {
  * Send a Console API message. This function will send a console-api-log-event
  * notification through the nsIObserverService.
  *
+ * @param {object} aConsole
+ *        The instance of ConsoleAPI performing the logging.
  * @param {string} aLevel
  *        Message severity level. This is usually the name of the console method
  *        that was called.
@@ -519,11 +521,11 @@ function createMultiLineDumper(aLevel) {
  *        - stacktrace: for trace(). Holds the array of stack frames as given by
  *        getStack().
  */
-function sendConsoleAPIMessage(aLevel, aFrame, aArgs, aOptions = {})
+function sendConsoleAPIMessage(aConsole, aLevel, aFrame, aArgs, aOptions = {})
 {
   let consoleEvent = {
     ID: "jsm",
-    innerID: aFrame.filename,
+    innerID: aConsole.innerID || aFrame.filename,
     level: aLevel,
     filename: aFrame.filename,
     lineNumber: aFrame.lineNumber,
@@ -578,6 +580,8 @@ function sendConsoleAPIMessage(aLevel, aFrame, aArgs, aOptions = {})
  *                            LOG_LEVELS, no message will be logged
  *        - dump {function} : An optional function to intercept all strings
  *                            written to stdout
+ *        - innerID {string}: An ID representing the source of the message.
+ *                            Normally the inner ID of a DOM window.
  * @return {object}
  *        A console API instance object
  */
@@ -587,6 +591,7 @@ function ConsoleAPI(aConsoleOptions = {}) {
   this.dump = aConsoleOptions.dump || dump;
   this.prefix = aConsoleOptions.prefix || "";
   this.maxLogLevel = aConsoleOptions.maxLogLevel || "all";
+  this.innerID = aConsoleOptions.innerID || null;
 
   // Bind all the functions to this object.
   for (let prop in this) {
@@ -610,7 +615,7 @@ ConsoleAPI.prototype = {
     }
     let args = Array.prototype.slice.call(arguments, 0);
     let trace = getStack(Components.stack.caller);
-    sendConsoleAPIMessage("trace", trace[0], args,
+    sendConsoleAPIMessage(this, "trace", trace[0], args,
                           { stacktrace: trace });
     dumpMessage(this, "trace", "\n" + formatTrace(trace));
   },
@@ -628,7 +633,7 @@ ConsoleAPI.prototype = {
     let args = Array.prototype.slice.call(arguments, 0);
     let frame = getStack(Components.stack.caller, 1)[0];
     let timer = startTimer(args[0]);
-    sendConsoleAPIMessage("time", frame, args, { timer: timer });
+    sendConsoleAPIMessage(this, "time", frame, args, { timer: timer });
     dumpMessage(this, "time",
                 "'" + timer.name + "' @ " + (new Date()));
   },
@@ -640,7 +645,7 @@ ConsoleAPI.prototype = {
     let args = Array.prototype.slice.call(arguments, 0);
     let frame = getStack(Components.stack.caller, 1)[0];
     let timer = stopTimer(args[0]);
-    sendConsoleAPIMessage("timeEnd", frame, args, { timer: timer });
+    sendConsoleAPIMessage(this, "timeEnd", frame, args, { timer: timer });
     dumpMessage(this, "timeEnd",
                 "'" + timer.name + "' " + timer.duration + "ms");
   },
