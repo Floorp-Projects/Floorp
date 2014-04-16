@@ -450,6 +450,29 @@ TelephonyProvider.prototype = {
       return;
     }
 
+    // All calls in the conference is regarded as one conference call.
+    function numCallsOnLine(aClientId) {
+      let numCalls = 0;
+      let hasConference = false;
+
+      for (let cid in this._currentCalls[aClientId]) {
+        let call = this._currentCalls[aClientId][cid];
+        if (call.isConference) {
+          hasConference = true;
+        } else {
+          numCalls++;
+        }
+      }
+
+      return hasConference ? numCalls + 1 : numCalls;
+    }
+
+    if (numCallsOnLine.call(this, aClientId) >= 2) {
+      if (DEBUG) debug("Has more than 2 calls on line. Drop.");
+      aTelephonyCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+      return;
+    }
+
     // we don't try to be too clever here, as the phone is probably in the
     // locked state. Let's just check if it's a number without normalizing
     if (!aIsEmergency) {
