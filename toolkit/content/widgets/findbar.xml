@@ -174,13 +174,6 @@
                            disabled="true"
                            xbl:inherits="accesskey=findnextaccesskey"/>
       </xul:hbox>
-      <xul:image anonid="find-status-icon" class="findbar-find-fast find-status-icon"/>
-      <xul:description anonid="find-status"
-                       control="findbar-textbox"
-                       class="findbar-find-fast findbar-find-status">
-      <!-- Do not use value, first child is used because it provides a11y with text change events -->
-      </xul:description>
-      <xul:spacer flex="1"/>
       <xul:toolbarbutton anonid="highlight"
                          class="findbar-highlight tabbable"
                          label="&highlightAll.label;"
@@ -198,6 +191,12 @@
                          type="checkbox"
                          xbl:inherits="accesskey=matchcaseaccesskey"/>
       <xul:label anonid="match-case-status" class="findbar-find-fast"/>
+      <xul:image anonid="find-status-icon" class="findbar-find-fast find-status-icon"/>
+      <xul:description anonid="find-status"
+                       control="findbar-textbox"
+                       class="findbar-find-fast findbar-find-status">
+      <!-- Do not use value, first child is used because it provides a11y with text change events -->
+      </xul:description>
     </xul:hbox>
     <xul:toolbarbutton anonid="find-closebutton"
                        class="findbar-closebutton close-icon"

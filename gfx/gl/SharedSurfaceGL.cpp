@@ -24,6 +24,8 @@ SharedSurface_GL::ProdCopy(SharedSurface_GL* src, SharedSurface_GL* dest,
 {
     GLContext* gl = src->GL();
 
+    gl->MakeCurrent();
+
     if (src->AttachType() == AttachmentType::Screen &&
         dest->AttachType() == AttachmentType::Screen)
     {

@@ -597,7 +597,7 @@ PivotContext.prototype = {
       while (parent && (parent = parent.parent)) {
        ancestry.push(parent);
       }
-    } catch (e) {
+    } catch (x) {
       // A defunct accessible will raise an exception geting parent.
       Logger.debug('Failed to get parent:', x);
     }

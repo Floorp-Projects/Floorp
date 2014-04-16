@@ -215,7 +215,7 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
   nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
 
-  nsRenderingContext context;
+  nsRefPtr<nsRenderingContext> context;
   nsRefPtr<gfxContext> dest = aCtx->ThebesContext();
   nsRefPtr<gfxASurface> surf;
   RefPtr<DrawTarget> dt;
@@ -254,13 +254,14 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
         ctx = new gfxContext(dt);
       }
       ctx->Translate(-gfxPoint(destRect.x, destRect.y));
-      context.Init(aCtx->DeviceContext(), ctx);
+      context = new nsRenderingContext();
+      context->Init(aCtx->DeviceContext(), ctx);
     }
   }
 #endif
 
   PaintInternal(aBuilder,
-                (surf || dt) ? &context : aCtx,
+                (surf || dt) ? context.get() : aCtx,
                 (surf || dt) ? bgClipRect: mVisibleRect,
                 &bgClipRect);
 

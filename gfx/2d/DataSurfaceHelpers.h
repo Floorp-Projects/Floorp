@@ -25,19 +25,21 @@ CopySurfaceDataToPackedArray(uint8_t* aSrc, uint8_t* aDst, IntSize aSrcSize,
 
 /**
  * Convert aSurface to a packed buffer in BGRA format. The pixel data is
- * returned in a buffer allocated with new uint8_t[].
+ * returned in a buffer allocated with new uint8_t[]. The caller then has
+ * ownership of the buffer and is responsible for delete[]'ing it.
  */
 uint8_t*
 SurfaceToPackedBGRA(DataSourceSurface *aSurface);
 
 /**
  * Convert aSurface to a packed buffer in BGR format. The pixel data is
- * returned in a buffer allocated with new uint8_t[].
+ * returned in a buffer allocated with new uint8_t[]. The caller then has
+ * ownership of the buffer and is responsible for delete[]'ing it.
  *
  * This function is currently only intended for use with surfaces of format
- * SurfaceFormat::B8G8R8X8 since the X components of the pixel data are simply
- * dropped (no attempt is made to un-pre-multiply alpha from the color
- * components).
+ * SurfaceFormat::B8G8R8X8 since the X components of the pixel data (if any)
+ * are simply dropped (no attempt is made to un-pre-multiply alpha from the
+ * color components).
  */
 uint8_t*
 SurfaceToPackedBGR(DataSourceSurface *aSurface);

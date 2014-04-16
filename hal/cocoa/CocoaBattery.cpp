@@ -12,7 +12,8 @@
 #include <mozilla/dom/battery/Constants.h>
 #include <mozilla/Services.h>
 
-#include <nsObserverService.h>
+#include <nsIObserverService.h>
+#include <nsIObserver.h>
 
 #include <dlfcn.h>
 

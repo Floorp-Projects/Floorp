@@ -14,11 +14,13 @@
 
 namespace mozilla {
 
-class MFTDecoder : public AtomicRefCounted<MFTDecoder> {
-public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(MTFDecoder)
-  MFTDecoder();
+class MFTDecoder MOZ_FINAL {
   ~MFTDecoder();
+
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFTDecoder)
+
+  MFTDecoder();
 
   // Creates the MFT. First thing to do as part of setup.
   //

@@ -334,6 +334,20 @@ interface CameraControl : MediaStream
   void setConfiguration(optional CameraConfiguration configuration,
                         optional CameraSetConfigurationCallback onSuccess,
                         optional CameraErrorCallback onError);
+
+  /* if focusMode is set to either 'continuous-picture' or 'continuous-video',
+     then calling autoFocus() will trigger its onSuccess callback immediately
+     if the camera was either successfully focused, or if no focus could be
+     acquired; if the focus acquisition is still in progress, the onSuccess
+     callback will be invoked later, its argument indicating success or
+     failure.
+
+     once autoFocus() is called with a continuous autofocus mode set, the
+     continuous autofocus process is stopped and focus is locked in the
+     current state until this method is called.
+  */
+  [Throws]
+  void resumeContinuousFocus();
 };
 
 /* The coordinates of a point, relative to the camera sensor, of the center of
