@@ -24,6 +24,7 @@
 #include "SpdyStream3.h"
 #include "PSpdyPush.h"
 #include "SpdyZlibReporter.h"
+#include "TunnelUtils.h"
 
 #include <algorithm>
 
@@ -334,7 +335,9 @@ SpdySession3::RegisterStreamID(SpdyStream3 *stream, uint32_t aNewID)
 
 bool
 SpdySession3::AddStream(nsAHttpTransaction *aHttpTransaction,
-                        int32_t aPriority)
+                        int32_t aPriority,
+                        bool aUseTunnel,
+                        nsIInterfaceRequestor *aCallbacks)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -345,23 +348,23 @@ SpdySession3::AddStream(nsAHttpTransaction *aHttpTransaction,
     return false;
   }
 
-  // assert that
-  // a] in the case we have a connection, that the new transaction connection
-  //    is either undefined or on the same connection
-  // b] in the case we don't have a connection, that the new transaction
-  //    connection is defined so we can adopt it
-  MOZ_ASSERT((mConnection && (!aHttpTransaction->Connection() ||
-                              mConnection == aHttpTransaction->Connection())) ||
-             (!mConnection && aHttpTransaction->Connection()));
-
   if (!mConnection) {
     mConnection = aHttpTransaction->Connection();
   }
+
   aHttpTransaction->SetConnection(this);
+
+  if (aUseTunnel) {
+    LOG3(("SpdySession3::AddStream session=%p trans=%p OnTunnel",
+          this, aHttpTransaction));
+    DispatchOnTunnel(aHttpTransaction, aCallbacks);
+    return true;
+  }
+
   SpdyStream3 *stream = new SpdyStream3(aHttpTransaction, this, aPriority);
 
-  LOG3(("SpdySession3::AddStream session=%p stream=%p NextID=0x%X (tentative)",
-        this, stream, mNextStreamID));
+  LOG3(("SpdySession3::AddStream session=%p stream=%p serial=%u "
+        "NextID=0x%X (tentative)", this, stream, mSerial, mNextStreamID));
 
   mStreamTransactionHash.Put(aHttpTransaction, stream);
 
@@ -907,6 +910,10 @@ SpdySession3::CloseStream(SpdyStream3 *aStream, nsresult aResult)
 
   RemoveStreamFromQueues(aStream);
 
+  if (aStream->IsTunnel()) {
+    UnRegisterTunnel(aStream);
+  }
+
   // Send the stream the close() indication
   aStream->Close(aResult);
 }
@@ -1028,7 +1035,13 @@ SpdySession3::HandleSynStream(SpdySession3 *self)
   self->mPushedStreams.AppendElement(pushedStream);
 
   // The pushed stream is unidirectional so it is fully open immediately
-  pushedStream->SetFullyOpen();
+  rv = pushedStream->SetFullyOpen();
+  if (NS_FAILED(rv)) {
+    LOG(("SpdySession3::HandleSynStream pushedstream fully open failed\n"));
+    self->CleanupStream(pushedStream, rv, RST_CANCEL);
+    self->ResetDownstreamState();
+    return NS_OK;
+  }
 
   // Uncompress the response headers into a stream specific buffer, leaving them
   // in spdy format for the time being.
@@ -1101,10 +1114,10 @@ SpdySession3::HandleSynReply(SpdySession3 *self)
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  LOG3(("SpdySession3::HandleSynReply %p lookup via streamID in syn_reply.\n",
-        self));
   uint32_t streamID =
     NetworkEndian::readUint32(self->mInputFrameBuffer + 2 * sizeof(uint32_t));
+  LOG3(("SpdySession3::HandleSynReply %p lookup via streamID 0x%X in syn_reply.\n",
+        self, streamID));
   nsresult rv = self->SetInputFrameDataStream(streamID);
   if (NS_FAILED(rv))
     return rv;
@@ -1167,7 +1180,19 @@ SpdySession3::HandleSynReply(SpdySession3 *self)
     self->ResetDownstreamState();
     return NS_OK;
   }
-  self->mInputFrameDataStream->SetFullyOpen();
+
+  rv = self->mInputFrameDataStream->SetFullyOpen();
+  if (NS_FAILED(rv)) {
+    LOG(("SpdySession3::HandleSynReply SetFullyOpen failed\n"));
+    if (self->mInputFrameDataStream->IsTunnel()) {
+      gHttpHandler->ConnMgr()->CancelTransactions(
+        self->mInputFrameDataStream->Transaction()->ConnectionInfo(),
+        NS_ERROR_CONNECTION_REFUSED);
+    }
+    self->CleanupStream(self->mInputFrameDataStream, rv, RST_CANCEL);
+    self->ResetDownstreamState();
+    return NS_OK;
+  }
 
   self->mInputFrameDataLast = self->mInputFrameBuffer[4] & kFlag_Data_FIN;
   self->mInputFrameDataStream->UpdateTransportReadEvents(self->mInputFrameDataSize);
@@ -1996,6 +2021,7 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
     MOZ_ASSERT(!mNeedsCleanup, "cleanup stream set unexpectedly");
     mNeedsCleanup = nullptr;                     /* just in case */
 
+    SpdyStream3 *stream = mInputFrameDataStream;
     mSegmentWriter = writer;
     rv = mInputFrameDataStream->WriteSegments(this, count, countWritten);
     mSegmentWriter = nullptr;
@@ -2006,7 +2032,6 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
       // This will happen when the transaction figures out it is EOF, generally
       // due to a content-length match being made. Return OK from this function
       // otherwise the whole session would be torn down.
-      SpdyStream3 *stream = mInputFrameDataStream;
 
       // if we were doing PROCESSING_COMPLETE_HEADERS need to pop the state
       // back to PROCESSING_DATA_FRAME where we came from
@@ -2020,8 +2045,8 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
             this, stream, stream ? stream->StreamID() : 0,
             mNeedsCleanup, rv));
       CleanupStream(stream, NS_OK, RST_CANCEL);
-      MOZ_ASSERT(!mNeedsCleanup, "double cleanup out of data frame");
-      mNeedsCleanup = nullptr;                     /* just in case */
+      MOZ_ASSERT(!mNeedsCleanup || mNeedsCleanup == stream);
+      mNeedsCleanup = nullptr;
       return NS_OK;
     }
 
@@ -2444,6 +2469,78 @@ SpdySession3::ConnectPushedStream(SpdyStream3 *stream)
   ForceRecv();
 }
 
+uint32_t
+SpdySession3::FindTunnelCount(nsHttpConnectionInfo *aConnInfo)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  uint32_t rv = 0;
+  mTunnelHash.Get(aConnInfo->HashKey(), &rv);
+  return rv;
+}
+
+void
+SpdySession3::RegisterTunnel(SpdyStream3 *aTunnel)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  nsHttpConnectionInfo *ci = aTunnel->Transaction()->ConnectionInfo();
+  uint32_t newcount = FindTunnelCount(ci) + 1;
+  mTunnelHash.Remove(ci->HashKey());
+  mTunnelHash.Put(ci->HashKey(), newcount);
+  LOG3(("SpdySession3::RegisterTunnel %p stream=%p tunnels=%d [%s]",
+        this, aTunnel, newcount, ci->HashKey().get()));
+}
+
+void
+SpdySession3::UnRegisterTunnel(SpdyStream3 *aTunnel)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  nsHttpConnectionInfo *ci = aTunnel->Transaction()->ConnectionInfo();
+  MOZ_ASSERT(FindTunnelCount(ci));
+  uint32_t newcount = FindTunnelCount(ci) - 1;
+  mTunnelHash.Remove(ci->HashKey());
+  if (newcount) {
+    mTunnelHash.Put(ci->HashKey(), newcount);
+  }
+  LOG3(("SpdySession3::UnRegisterTunnel %p stream=%p tunnels=%d [%s]",
+        this, aTunnel, newcount, ci->HashKey().get()));
+}
+
+void
+SpdySession3::DispatchOnTunnel(nsAHttpTransaction *aHttpTransaction,
+                               nsIInterfaceRequestor *aCallbacks)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  nsHttpTransaction *trans = aHttpTransaction->QueryHttpTransaction();
+  nsHttpConnectionInfo *ci = aHttpTransaction->ConnectionInfo();
+  MOZ_ASSERT(trans);
+
+  LOG3(("SpdySession3::DispatchOnTunnel %p trans=%p", this, trans));
+
+  aHttpTransaction->SetConnection(nullptr);
+
+  // this transaction has done its work of setting up a tunnel, let
+  // the connection manager queue it if necessary
+  trans->SetDontRouteViaWildCard(true);
+
+  if (FindTunnelCount(ci) < gHttpHandler->MaxConnectionsPerOrigin()) {
+    LOG3(("SpdySession3::DispatchOnTunnel %p create on new tunnel %s",
+          this, ci->HashKey().get()));
+    nsRefPtr<SpdyConnectTransaction> connectTrans =
+      new SpdyConnectTransaction(ci, aCallbacks,
+                                 trans->Caps(), trans, this);
+    AddStream(connectTrans, trans->Priority(),
+              false, nullptr);
+    SpdyStream3 *tunnel = mStreamTransactionHash.Get(connectTrans);
+    MOZ_ASSERT(tunnel);
+    RegisterTunnel(tunnel);
+  }
+
+  // requeue it. The connection manager is responsible for actually putting
+  // this on the tunnel connection with the specific ci now that it
+  // has DontRouteViaWildCard set.
+  gHttpHandler->InitiateTransaction(trans, trans->Priority());
+}
+
 //-----------------------------------------------------------------------------
 // Modified methods of nsAHttpConnection
 //-----------------------------------------------------------------------------
@@ -2468,6 +2565,12 @@ SpdySession3::TransactionHasDataToWrite(nsAHttpTransaction *caller)
         this, stream->StreamID()));
 
   mReadyForWrite.Push(stream);
+  SetWriteCallbacks();
+
+  // NSPR poll will not poll the network if there are non system PR_FileDesc's
+  // that are ready - so we can get into a deadlock waiting for the system IO
+  // to come back here if we don't force the send loop manually.
+  ForceSend();
 }
 
 void
@@ -2479,6 +2582,7 @@ SpdySession3::TransactionHasDataToWrite(SpdyStream3 *stream)
 
   mReadyForWrite.Push(stream);
   SetWriteCallbacks();
+  ForceSend();
 }
 
 bool
@@ -2518,10 +2622,17 @@ SpdySession3::Classification()
   return mConnection->Classification();
 }
 
+void
+SpdySession3::GetSecurityCallbacks(nsIInterfaceRequestor **aOut)
+{
+  *aOut = nullptr;
+}
+
 //-----------------------------------------------------------------------------
 // unused methods of nsAHttpTransaction
 // We can be sure of this because SpdySession3 is only constructed in
-// nsHttpConnection and is never passed out of that object
+// nsHttpConnection and is never passed out of that object or a TLSFilterTransaction
+// TLS tunnel
 //-----------------------------------------------------------------------------
 
 void
@@ -2529,13 +2640,6 @@ SpdySession3::SetConnection(nsAHttpConnection *)
 {
   // This is unexpected
   MOZ_ASSERT(false, "SpdySession3::SetConnection()");
-}
-
-void
-SpdySession3::GetSecurityCallbacks(nsIInterfaceRequestor **)
-{
-  // This is unexpected
-  MOZ_ASSERT(false, "SpdySession3::GetSecurityCallbacks()");
 }
 
 void

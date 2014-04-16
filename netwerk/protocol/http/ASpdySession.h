@@ -15,10 +15,16 @@ class nsISocketTransport;
 
 namespace mozilla { namespace net {
 
+class nsHttpConnectionInfo;
+
 class ASpdySession : public nsAHttpTransaction
 {
 public:
-  virtual bool AddStream(nsAHttpTransaction *, int32_t) = 0;
+  ASpdySession();
+  virtual ~ASpdySession();
+
+  virtual bool AddStream(nsAHttpTransaction *, int32_t,
+                         bool, nsIInterfaceRequestor *) = 0;
   virtual bool CanReuse() = 0;
   virtual bool RoomForMoreStreams() = 0;
   virtual PRIntervalTime IdleTime() = 0;

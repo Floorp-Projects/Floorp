@@ -360,7 +360,9 @@ Http2Session::RegisterStreamID(Http2Stream *stream, uint32_t aNewID)
 
 bool
 Http2Session::AddStream(nsAHttpTransaction *aHttpTransaction,
-                        int32_t aPriority)
+                        int32_t aPriority,
+                        bool aUseTunnel,
+                        nsIInterfaceRequestor *aCallbacks)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -2879,6 +2881,7 @@ Http2Session::TransactionHasDataToWrite(nsAHttpTransaction *caller)
         this, stream->StreamID()));
 
   mReadyForWrite.Push(stream);
+  SetWriteCallbacks();
 }
 
 void
@@ -2928,10 +2931,17 @@ Http2Session::Classification()
   return mConnection->Classification();
 }
 
+void
+Http2Session::GetSecurityCallbacks(nsIInterfaceRequestor **aOut)
+{
+  *aOut = nullptr;
+}
+
 //-----------------------------------------------------------------------------
 // unused methods of nsAHttpTransaction
 // We can be sure of this because Http2Session is only constructed in
-// nsHttpConnection and is never passed out of that object
+// nsHttpConnection and is never passed out of that object or a TLSFilterTransaction
+// TLS tunnel
 //-----------------------------------------------------------------------------
 
 void
@@ -2939,13 +2949,6 @@ Http2Session::SetConnection(nsAHttpConnection *)
 {
   // This is unexpected
   MOZ_ASSERT(false, "Http2Session::SetConnection()");
-}
-
-void
-Http2Session::GetSecurityCallbacks(nsIInterfaceRequestor **)
-{
-  // This is unexpected
-  MOZ_ASSERT(false, "Http2Session::GetSecurityCallbacks()");
 }
 
 void

@@ -24,6 +24,7 @@ namespace mozilla { namespace net {
 
 class SpdyPushedStream3;
 class SpdyStream3;
+class nsHttpTransaction;
 
 class SpdySession3 MOZ_FINAL : public ASpdySession
                              , public nsAHttpConnection
@@ -40,7 +41,8 @@ public:
   SpdySession3(nsISocketTransport *);
   ~SpdySession3();
 
-  bool AddStream(nsAHttpTransaction *, int32_t);
+  bool AddStream(nsAHttpTransaction *, int32_t,
+                 bool, nsIInterfaceRequestor *);
   bool CanReuse() { return !mShouldGoAway && !mClosed; }
   bool RoomForMoreStreams();
 
@@ -382,6 +384,15 @@ private:
   // by the load group and the serial number can be used as part of the cache key
   // to make sure streams aren't shared across sessions.
   uint64_t        mSerial;
+
+private:
+/// connect tunnels
+  void DispatchOnTunnel(nsAHttpTransaction *, nsIInterfaceRequestor *);
+  void RegisterTunnel(SpdyStream3 *);
+  void UnRegisterTunnel(SpdyStream3 *);
+  uint32_t FindTunnelCount(nsHttpConnectionInfo *);
+
+  nsDataHashtable<nsCStringHashKey, uint32_t> mTunnelHash;
 };
 
 }} // namespace mozilla::net

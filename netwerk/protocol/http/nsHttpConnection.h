@@ -12,6 +12,7 @@
 #include "nsAutoPtr.h"
 #include "nsProxyRelease.h"
 #include "prinrval.h"
+#include "TunnelUtils.h"
 
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
@@ -19,6 +20,7 @@
 #include "nsITimer.h"
 
 class nsISocketTransport;
+class nsISSLSocketControl;
 
 namespace mozilla {
 namespace net {
@@ -39,6 +41,7 @@ class nsHttpConnection : public nsAHttpSegmentReader
                        , public nsIOutputStreamCallback
                        , public nsITransportEventSink
                        , public nsIInterfaceRequestor
+                       , public NudgeTunnelCallback
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -48,6 +51,7 @@ public:
     NS_DECL_NSIOUTPUTSTREAMCALLBACK
     NS_DECL_NSITRANSPORTEVENTSINK
     NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NUDGETUNNELCALLBACK
 
     nsHttpConnection();
     virtual ~nsHttpConnection();
@@ -101,6 +105,11 @@ public:
         mLastTransactionExpectedNoContent = val;
     }
 
+    bool NeedSpdyTunnel()
+    {
+        return mConnInfo->UsingHttpsProxy() && !mTLSFilter && mConnInfo->UsingConnect();
+    }
+
     nsISocketTransport   *Transport()      { return mSocketTransport; }
     nsAHttpTransaction   *Transaction()    { return mTransaction; }
     nsHttpConnectionInfo *ConnectionInfo() { return mConnInfo; }
@@ -122,7 +131,8 @@ public:
     int64_t  MaxBytesRead() {return mMaxBytesRead;}
     uint8_t GetLastHttpResponseVersion() { return mLastHttpResponseVersion; }
 
-    friend class nsHttpConnectionForceRecv;
+    friend class nsHttpConnectionForceIO;
+    nsresult ForceSend();
     nsresult ForceRecv();
 
     static NS_METHOD ReadFromStream(nsIInputStream *, void *, const char *,
@@ -164,7 +174,8 @@ public:
     // When the connection is active this is called every second
     void  ReadTimeoutTick();
 
-    int64_t BytesWritten() { return mTotalBytesWritten; }
+    int64_t BytesWritten() { return mTotalBytesWritten; } // includes TLS
+    int64_t ContentBytesWritten() { return mContentBytesWritten; }
 
     void    SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks);
     void    PrintDiagnostics(nsCString &log);
@@ -178,6 +189,8 @@ public:
     static nsresult MakeConnectString(nsAHttpTransaction *trans,
                                       nsHttpRequestHead *request,
                                       nsACString &result);
+    void    SetupSecondaryTLS();
+    void    SetInSpdyTunnel(bool arg);
 
 private:
     // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
@@ -188,7 +201,8 @@ private:
     };
 
     // called to cause the underlying socket to start speaking SSL
-    nsresult ProxyStartSSL();
+    nsresult InitSSLParams(bool connectingToProxy, bool ProxyStartSSL);
+    nsresult SetupNPNList(nsISSLSocketControl *ssl, uint32_t caps);
 
     nsresult OnTransactionDone(nsresult reason);
     nsresult OnSocketWritable();
@@ -203,7 +217,7 @@ private:
     // Makes certain the SSL handshake is complete and NPN negotiation
     // has had a chance to happen
     bool     EnsureNPNComplete();
-    void     SetupSSL(uint32_t caps);
+    void     SetupSSL();
 
     // Start the Spdy transaction handler when NPN indicates spdy/*
     void     StartSpdy(uint8_t versionLevel);
@@ -231,6 +245,7 @@ private:
     // mTransaction only points to the HTTP Transaction callbacks if the
     // transaction is open, otherwise it is null.
     nsRefPtr<nsAHttpTransaction>    mTransaction;
+    nsRefPtr<TLSFilterTransaction>  mTLSFilter;
 
     nsRefPtr<nsHttpHandler>         mHttpHandler; // keep gHttpHandler alive
 
@@ -249,6 +264,7 @@ private:
     int64_t                         mMaxBytesRead;       // max read in 1 activation
     int64_t                         mTotalBytesRead;     // total data read
     int64_t                         mTotalBytesWritten;  // does not include CONNECT tunnel
+    int64_t                         mContentBytesWritten;  // does not include CONNECT tunnel or TLS
 
     nsRefPtr<nsIAsyncInputStream>   mInputOverflow;
 
@@ -265,6 +281,7 @@ private:
     bool                            mIdleMonitoring;
     bool                            mProxyConnectInProgress;
     bool                            mExperienced;
+    bool                            mInSpdyTunnel;
 
     // The number of <= HTTP/1.1 transactions performed on this connection. This
     // excludes spdy transactions.
