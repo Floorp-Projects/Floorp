@@ -4010,7 +4010,7 @@ for (var i = 0; i < 288; ++i)
   bitLengths[i] = i < 144 || i > 279 ? 8 : i < 256 ? 9 : 7;
 var fixedLiteralTable = makeHuffmanTable(bitLengths);
 function makeHuffmanTable(bitLengths) {
-  var maxBits = max.apply(null, bitLengths);
+  var maxBits = Math.max.apply(null, bitLengths);
   var numLengths = bitLengths.length;
   var size = 1 << maxBits;
   var codes = new Uint32Array(size);
@@ -4042,7 +4042,14 @@ function createInflatedStream(bytes, outputLength) {
       available: 0,
       completed: false
     };
-  var state = {};
+  var state = {
+      header: null,
+      distanceTable: null,
+      literalTable: null,
+      sym: null,
+      len: null,
+      sym2: null
+    };
   do {
     inflateBlock(stream, output, state);
   } while (!output.completed && stream.pos < stream.end);
@@ -4050,7 +4057,7 @@ function createInflatedStream(bytes, outputLength) {
 }
 var InflateNoDataError = {};
 function inflateBlock(stream, output, state) {
-  var header = state.header !== undefined ? state.header : state.header = readBits(stream.bytes, stream, 3);
+  var header = state.header !== null ? state.header : state.header = readBits(stream.bytes, stream, 3);
   switch (header >> 1) {
   case 0:
     stream.align();
@@ -4066,10 +4073,7 @@ function inflateBlock(stream, output, state) {
     var begin = pos + 4;
     var end = stream.pos = begin + len;
     var sbytes = stream.bytes, dbytes = output.data;
-    splice.apply(dbytes, [
-      output.available,
-      len
-    ].concat(slice.call(sbytes, begin, end)));
+    dbytes.set(sbytes.subarray(begin, end), output.available);
     output.available += len;
     break;
   case 1:
@@ -4077,7 +4081,7 @@ function inflateBlock(stream, output, state) {
     break;
   case 2:
     var distanceTable, literalTable;
-    if (state.distanceTable !== undefined) {
+    if (state.distanceTable !== null) {
       distanceTable = state.distanceTable;
       literalTable = state.literalTable;
     } else {
@@ -4130,13 +4134,13 @@ function inflateBlock(stream, output, state) {
       literalTable = state.literalTable = makeHuffmanTable(bitLengths);
     }
     inflate(stream, output, literalTable, distanceTable, state);
-    delete state.distanceTable;
-    delete state.literalTable;
+    state.distanceTable = null;
+    state.literalTable = null;
     break;
   default:
     fail('unknown block type', 'inflate');
   }
-  delete state.header;
+  state.header = null;
   output.completed = !(!(header & 1));
 }
 function readBits(bytes, stream, size) {
@@ -4165,22 +4169,22 @@ function inflate(stream, output, literalTable, distanceTable, state) {
   var pos = output.available;
   var dbytes = output.data;
   var sbytes = stream.bytes;
-  var sym = state.sym !== undefined ? state.sym : readCode(sbytes, stream, literalTable);
+  var sym = state.sym !== null ? state.sym : readCode(sbytes, stream, literalTable);
   while (sym !== 256) {
     if (sym < 256) {
       dbytes[pos++] = sym;
     } else {
       state.sym = sym;
       sym -= 257;
-      var len = state.len !== undefined ? state.len : state.len = lengthCodes[sym] + readBits(sbytes, stream, lengthExtraBits[sym]);
-      var sym2 = state.sym2 !== undefined ? state.sym2 : state.sym2 = readCode(sbytes, stream, distanceTable);
+      var len = state.len !== null ? state.len : state.len = lengthCodes[sym] + readBits(sbytes, stream, lengthExtraBits[sym]);
+      var sym2 = state.sym2 !== null ? state.sym2 : state.sym2 = readCode(sbytes, stream, distanceTable);
       var distance = distanceCodes[sym2] + readBits(sbytes, stream, distanceExtraBits[sym2]);
       var i = pos - distance;
       while (len--)
         dbytes[pos++] = dbytes[i++];
-      delete state.sym2;
-      delete state.len;
-      delete state.sym;
+      state.sym2 = null;
+      state.len = null;
+      state.sym = null;
     }
     output.available = pos;
     sym = readCode(sbytes, stream, literalTable);
@@ -5827,7 +5831,7 @@ function readTags(context, stream, swfVersion, final, onprogress, onexception) {
   var tag = null;
   if (context._readTag) {
     tag = context._readTag;
-    delete context._readTag;
+    context._readTag = null;
   }
   try {
     while (stream.pos < stream.end) {
@@ -5951,7 +5955,14 @@ function CompressedPipe(target, length) {
   this.state = {
     bitBuffer: 0,
     bitLength: 0,
-    compression: {}
+    compression: {
+      header: null,
+      distanceTable: null,
+      literalTable: null,
+      sym: null,
+      len: null,
+      sym2: null
+    }
   };
   this.output = {
     data: new Uint8Array(length),
