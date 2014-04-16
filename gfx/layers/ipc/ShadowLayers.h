@@ -23,7 +23,6 @@
  
 struct nsIntPoint;
 struct nsIntRect;
-class gfxASurface;
 
 namespace mozilla {
 namespace layers {

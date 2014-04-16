@@ -10,7 +10,6 @@
 #include "ReadbackProcessor.h"          // for ReadbackProcessor::Update, etc
 #include "RenderTrace.h"                // for RenderTraceInvalidateEnd, etc
 #include "BasicLayersImpl.h"            // for AutoMaskData, etc
-#include "gfxASurface.h"                // for gfxASurface, etc
 #include "gfxContext.h"                 // for gfxContext, etc
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxUtils.h"                   // for gfxUtils

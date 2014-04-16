@@ -9,9 +9,6 @@
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include <OpenGL/gl.h>
-#include "gfxASurface.h"
-#include "gfxImageSurface.h"
-#include "gfxQuartzSurface.h"
 #include "gfxPrefs.h"
 #include "gfxFailure.h"
 #include "prenv.h"
