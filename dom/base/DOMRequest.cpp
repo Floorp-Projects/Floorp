@@ -233,23 +233,15 @@ DOMRequestService::FireDetailedError(nsIDOMDOMRequest* aRequest,
 class FireSuccessAsyncTask : public nsRunnable
 {
 
-  FireSuccessAsyncTask(DOMRequest* aRequest,
+  FireSuccessAsyncTask(JSContext* aCx,
+                       DOMRequest* aRequest,
                        const JS::Value& aResult) :
     mReq(aRequest),
-    mResult(aResult),
-    mIsSetup(false)
+    mResult(aCx, aResult)
   {
   }
 
 public:
-
-  void
-  Setup()
-  {
-    AutoSafeJSContext cx;
-    JS_AddValueRoot(cx, &mResult);
-    mIsSetup = true;
-  }
 
   // Due to the fact that initialization can fail during shutdown (since we
   // can't fetch a js context), set up an initiatization function to make sure
@@ -259,8 +251,8 @@ public:
            const JS::Value& aResult)
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    nsRefPtr<FireSuccessAsyncTask> asyncTask = new FireSuccessAsyncTask(aRequest, aResult);
-    asyncTask->Setup();
+    AutoSafeJSContext cx;
+    nsRefPtr<FireSuccessAsyncTask> asyncTask = new FireSuccessAsyncTask(cx, aRequest, aResult);
     if (NS_FAILED(NS_DispatchToMainThread(asyncTask))) {
       NS_WARNING("Failed to dispatch to main thread!");
       return NS_ERROR_FAILURE;
@@ -271,25 +263,18 @@ public:
   NS_IMETHODIMP
   Run()
   {
-    mReq->FireSuccess(JS::Handle<JS::Value>::fromMarkedLocation(&mResult));
+    mReq->FireSuccess(JS::Handle<JS::Value>::fromMarkedLocation(mResult.address()));
     return NS_OK;
   }
 
   ~FireSuccessAsyncTask()
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    if(!mIsSetup) {
-      // If we never set up, no reason to unroot
-      return;
-    }
-
-    AutoSafeJSContext cx;
-    JS_RemoveValueRoot(cx, &mResult);
   }
+
 private:
   nsRefPtr<DOMRequest> mReq;
-  JS::Value mResult;
-  bool mIsSetup;
+  JS::PersistentRooted<JS::Value> mResult;
 };
 
 class FireErrorAsyncTask : public nsRunnable
