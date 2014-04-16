@@ -454,7 +454,7 @@ var ByteArray = ByteArray || function (undefined) {
         var numCodes = numLiteralCodes + numDistanceCodes;
         var numLengthCodes = readBits(input, 4) + 4;
         for (var i = 0; i < 19; ++i) {
-          bitLengths[codeLengthOrder[i]] = i < numLengthCodes ? readBits(sbytes, sstream, 3) : 0;
+          bitLengths[codeLengthOrder[i]] = i < numLengthCodes ? readBits(input, 3) : 0;
         }
         var codeLengthTable = makeHuffmanTable(bitLengths);
         bitLengths = [];
@@ -603,158 +603,169 @@ var ByteArray = ByteArray || function (undefined) {
     };
     return ByteArrayClass;
   }();
-(function (exports) {
-  var ArgumentParser = function () {
-      var Argument = function () {
-          function argument(shortName, longName, type, options) {
-            this.shortName = shortName;
-            this.longName = longName;
-            this.type = type;
-            options = options || {};
-            this.positional = options.positional;
-            this.parseFn = options.parse;
-            this.value = options.defaultValue;
-          }
-          argument.prototype.parse = function parse(value) {
-            if (this.type === 'boolean') {
-              true;
-              this.value = value;
-            } else if (this.type === 'number') {
-              true;
-              this.value = parseInt(value, 10);
-            } else {
-              this.value = value;
-            }
-            if (this.parseFn) {
-              this.parseFn(this.value);
-            }
-          };
-          return argument;
-        }();
-      function argumentParser() {
-        this.args = [];
-      }
-      argumentParser.prototype.addArgument = function addArgument(shortName, longName, type, options) {
-        var argument = new Argument(shortName, longName, type, options);
-        this.args.push(argument);
-        return argument;
-      };
-      argumentParser.prototype.addBoundOption = function addBoundOption(option) {
-        var options = {
-            parse: function (x) {
-              option.value = x;
-            }
-          };
-        this.args.push(new Argument(option.shortName, option.longName, option.type, options));
-      };
-      argumentParser.prototype.addBoundOptionSet = function addBoundOptionSet(optionSet) {
-        var self = this;
-        optionSet.options.forEach(function (x) {
-          if (x instanceof OptionSet) {
-            self.addBoundOptionSet(x);
-          } else {
-            true;
-            self.addBoundOption(x);
-          }
-        });
-      };
-      argumentParser.prototype.getUsage = function getUsage() {
-        var str = '';
-        this.args.forEach(function (x) {
-          if (!x.positional) {
-            str += '[-' + x.shortName + '|--' + x.longName + (x.type === 'boolean' ? '' : ' ' + x.type[0].toUpperCase()) + ']';
-          } else {
-            str += x.longName;
-          }
-          str += ' ';
-        });
-        return str;
-      };
-      argumentParser.prototype.parse = function parse(args) {
-        var nonPositionalArgumentMap = {};
-        var positionalArgumentList = [];
-        this.args.forEach(function (x) {
-          if (x.positional) {
-            positionalArgumentList.push(x);
-          } else {
-            nonPositionalArgumentMap['-' + x.shortName] = x;
-            nonPositionalArgumentMap['--' + x.longName] = x;
-          }
-        });
-        var leftoverArguments = [];
-        while (args.length) {
-          var argString = args.shift();
-          var argument = null, value = argString;
-          if (argString == '--') {
-            leftoverArguments = leftoverArguments.concat(args);
-            break;
-          } else if (argString.slice(0, 1) == '-' || argString.slice(0, 2) == '--') {
-            argument = nonPositionalArgumentMap[argString];
-            true;
-            if (!argument) {
-              continue;
-            }
-            if (argument.type !== 'boolean') {
-              value = args.shift();
-              true;
-            } else {
-              value = true;
-            }
-          } else if (positionalArgumentList.length) {
-            argument = positionalArgumentList.shift();
-          } else {
-            leftoverArguments.push(value);
-          }
-          if (argument) {
-            argument.parse(value);
-          }
+var Shumway;
+(function (Shumway) {
+  (function (Options) {
+    var Argument = function () {
+        function Argument(shortName, longName, type, options) {
+          this.shortName = shortName;
+          this.longName = longName;
+          this.type = type;
+          options = options || {};
+          this.positional = options.positional;
+          this.parseFn = options.parse;
+          this.value = options.defaultValue;
         }
-        true;
-        return leftoverArguments;
-      };
-      return argumentParser;
-    }();
-  var OptionSet = function () {
-      function optionSet(name) {
-        this.name = name;
-        this.options = [];
-      }
-      optionSet.prototype.register = function register(option) {
-        this.options.push(option);
-        return option;
-      };
-      optionSet.prototype.trace = function trace(writer) {
-        writer.enter(this.name + ' {');
-        this.options.forEach(function (option) {
-          option.trace(writer);
-        });
-        writer.leave('}');
-      };
-      return optionSet;
-    }();
-  var Option = function () {
-      function option(shortName, longName, type, defaultValue, description) {
-        this.longName = longName;
-        this.shortName = shortName;
-        this.type = type;
-        this.defaultValue = defaultValue;
-        this.value = defaultValue;
-        this.description = description;
-      }
-      option.prototype.parse = function parse(value) {
-        this.value = value;
-      };
-      option.prototype.trace = function trace(writer) {
-        writer.writeLn(('-' + this.shortName + '|--' + this.longName).padRight(' ', 30) + ' = ' + this.type + ' ' + this.value + ' [' + this.defaultValue + ']' + ' (' + this.description + ')');
-      };
-      return option;
-    }();
-  exports.Option = Option;
-  exports.OptionSet = OptionSet;
-  exports.ArgumentParser = ArgumentParser;
-}(typeof exports === 'undefined' ? options = {} : exports));
-var Option = options.Option;
-var OptionSet = options.OptionSet;
+        Argument.prototype.parse = function (value) {
+          if (this.type === 'boolean') {
+            true;
+            this.value = value;
+          } else if (this.type === 'number') {
+            true;
+            this.value = parseInt(value, 10);
+          } else {
+            this.value = value;
+          }
+          if (this.parseFn) {
+            this.parseFn(this.value);
+          }
+        };
+        return Argument;
+      }();
+    Options.Argument = Argument;
+    var ArgumentParser = function () {
+        function ArgumentParser() {
+          this.args = [];
+        }
+        ArgumentParser.prototype.addArgument = function (shortName, longName, type, options) {
+          var argument = new Argument(shortName, longName, type, options);
+          this.args.push(argument);
+          return argument;
+        };
+        ArgumentParser.prototype.addBoundOption = function (option) {
+          var options = {
+              parse: function (x) {
+                option.value = x;
+              }
+            };
+          this.args.push(new Argument(option.shortName, option.longName, option.type, options));
+        };
+        ArgumentParser.prototype.addBoundOptionSet = function (optionSet) {
+          var self = this;
+          optionSet.options.forEach(function (x) {
+            if (x instanceof OptionSet) {
+              self.addBoundOptionSet(x);
+            } else {
+              true;
+              self.addBoundOption(x);
+            }
+          });
+        };
+        ArgumentParser.prototype.getUsage = function () {
+          var str = '';
+          this.args.forEach(function (x) {
+            if (!x.positional) {
+              str += '[-' + x.shortName + '|--' + x.longName + (x.type === 'boolean' ? '' : ' ' + x.type[0].toUpperCase()) + ']';
+            } else {
+              str += x.longName;
+            }
+            str += ' ';
+          });
+          return str;
+        };
+        ArgumentParser.prototype.parse = function (args) {
+          var nonPositionalArgumentMap = {};
+          var positionalArgumentList = [];
+          this.args.forEach(function (x) {
+            if (x.positional) {
+              positionalArgumentList.push(x);
+            } else {
+              nonPositionalArgumentMap['-' + x.shortName] = x;
+              nonPositionalArgumentMap['--' + x.longName] = x;
+            }
+          });
+          var leftoverArguments = [];
+          while (args.length) {
+            var argString = args.shift();
+            var argument = null, value = argString;
+            if (argString == '--') {
+              leftoverArguments = leftoverArguments.concat(args);
+              break;
+            } else if (argString.slice(0, 1) == '-' || argString.slice(0, 2) == '--') {
+              argument = nonPositionalArgumentMap[argString];
+              true;
+              if (!argument) {
+                continue;
+              }
+              if (argument.type !== 'boolean') {
+                value = args.shift();
+                true;
+              } else {
+                value = true;
+              }
+            } else if (positionalArgumentList.length) {
+              argument = positionalArgumentList.shift();
+            } else {
+              leftoverArguments.push(value);
+            }
+            if (argument) {
+              argument.parse(value);
+            }
+          }
+          true;
+          return leftoverArguments;
+        };
+        return ArgumentParser;
+      }();
+    Options.ArgumentParser = ArgumentParser;
+    var OptionSet = function () {
+        function OptionSet(name) {
+          this.name = name;
+          this.options = [];
+        }
+        OptionSet.prototype.register = function (option) {
+          this.options.push(option);
+          return option;
+        };
+        OptionSet.prototype.trace = function (writer) {
+          writer.enter(this.name + ' {');
+          this.options.forEach(function (option) {
+            option.trace(writer);
+          });
+          writer.leave('}');
+        };
+        return OptionSet;
+      }();
+    Options.OptionSet = OptionSet;
+    var Option = function () {
+        function Option(shortName, longName, type, defaultValue, description) {
+          this.longName = longName;
+          this.shortName = shortName;
+          this.type = type;
+          this.defaultValue = defaultValue;
+          this.value = defaultValue;
+          this.description = description;
+        }
+        Option.prototype.parse = function (value) {
+          this.value = value;
+        };
+        Option.prototype.trace = function (writer) {
+          writer.writeLn(('-' + this.shortName + '|--' + this.longName).padRight(' ', 30) + ' = ' + this.type + ' ' + this.value + ' [' + this.defaultValue + ']' + ' (' + this.description + ')');
+        };
+        return Option;
+      }();
+    Options.Option = Option;
+  }(Shumway.Options || (Shumway.Options = {})));
+  var Options = Shumway.Options;
+}(Shumway || (Shumway = {})));
+if (typeof exports !== 'undefined') {
+  exports['Shumway'] = Shumway;
+}
+var ArgumentParser = Shumway.Options.ArgumentParser;
+var Option = Shumway.Options.Option;
+var OptionSet = Shumway.Options.OptionSet;
+var Option = Shumway.Options.Option;
+var OptionSet = Shumway.Options.OptionSet;
 var coreOptions = new OptionSet('Core Options');
 var Timeline = function () {
     var barColor = 'rgba(255,255,255, 0.075)';
@@ -766,8 +777,8 @@ var Timeline = function () {
       this.depth = 0;
       this.start = 0;
       this.index = 0;
-      this.marks = new CircularBuffer(Int32Array);
-      this.times = new CircularBuffer(Float64Array);
+      this.marks = new Shumway.CircularBuffer(Int32Array);
+      this.times = new Shumway.CircularBuffer(Float64Array);
       this.frameRate = 12;
       this.maxFrameTime = 1000 * 2 / this.frameRate;
       this.refreshFrequency = 10;
@@ -1757,7 +1768,7 @@ for (var i = 0; i < 288; ++i)
   bitLengths[i] = i < 144 || i > 279 ? 8 : i < 256 ? 9 : 7;
 var fixedLiteralTable = makeHuffmanTable(bitLengths);
 function makeHuffmanTable(bitLengths) {
-  var maxBits = max.apply(null, bitLengths);
+  var maxBits = Math.max.apply(null, bitLengths);
   var numLengths = bitLengths.length;
   var size = 1 << maxBits;
   var codes = new Uint32Array(size);
@@ -1789,7 +1800,14 @@ function createInflatedStream(bytes, outputLength) {
       available: 0,
       completed: false
     };
-  var state = {};
+  var state = {
+      header: null,
+      distanceTable: null,
+      literalTable: null,
+      sym: null,
+      len: null,
+      sym2: null
+    };
   do {
     inflateBlock(stream, output, state);
   } while (!output.completed && stream.pos < stream.end);
@@ -1797,7 +1815,7 @@ function createInflatedStream(bytes, outputLength) {
 }
 var InflateNoDataError = {};
 function inflateBlock(stream, output, state) {
-  var header = state.header !== undefined ? state.header : state.header = readBits(stream.bytes, stream, 3);
+  var header = state.header !== null ? state.header : state.header = readBits(stream.bytes, stream, 3);
   switch (header >> 1) {
   case 0:
     stream.align();
@@ -1813,10 +1831,7 @@ function inflateBlock(stream, output, state) {
     var begin = pos + 4;
     var end = stream.pos = begin + len;
     var sbytes = stream.bytes, dbytes = output.data;
-    splice.apply(dbytes, [
-      output.available,
-      len
-    ].concat(slice.call(sbytes, begin, end)));
+    dbytes.set(sbytes.subarray(begin, end), output.available);
     output.available += len;
     break;
   case 1:
@@ -1824,7 +1839,7 @@ function inflateBlock(stream, output, state) {
     break;
   case 2:
     var distanceTable, literalTable;
-    if (state.distanceTable !== undefined) {
+    if (state.distanceTable !== null) {
       distanceTable = state.distanceTable;
       literalTable = state.literalTable;
     } else {
@@ -1877,13 +1892,13 @@ function inflateBlock(stream, output, state) {
       literalTable = state.literalTable = makeHuffmanTable(bitLengths);
     }
     inflate(stream, output, literalTable, distanceTable, state);
-    delete state.distanceTable;
-    delete state.literalTable;
+    state.distanceTable = null;
+    state.literalTable = null;
     break;
   default:
     fail('unknown block type', 'inflate');
   }
-  delete state.header;
+  state.header = null;
   output.completed = !(!(header & 1));
 }
 function readBits(bytes, stream, size) {
@@ -1912,22 +1927,22 @@ function inflate(stream, output, literalTable, distanceTable, state) {
   var pos = output.available;
   var dbytes = output.data;
   var sbytes = stream.bytes;
-  var sym = state.sym !== undefined ? state.sym : readCode(sbytes, stream, literalTable);
+  var sym = state.sym !== null ? state.sym : readCode(sbytes, stream, literalTable);
   while (sym !== 256) {
     if (sym < 256) {
       dbytes[pos++] = sym;
     } else {
       state.sym = sym;
       sym -= 257;
-      var len = state.len !== undefined ? state.len : state.len = lengthCodes[sym] + readBits(sbytes, stream, lengthExtraBits[sym]);
-      var sym2 = state.sym2 !== undefined ? state.sym2 : state.sym2 = readCode(sbytes, stream, distanceTable);
+      var len = state.len !== null ? state.len : state.len = lengthCodes[sym] + readBits(sbytes, stream, lengthExtraBits[sym]);
+      var sym2 = state.sym2 !== null ? state.sym2 : state.sym2 = readCode(sbytes, stream, distanceTable);
       var distance = distanceCodes[sym2] + readBits(sbytes, stream, distanceExtraBits[sym2]);
       var i = pos - distance;
       while (len--)
         dbytes[pos++] = dbytes[i++];
-      delete state.sym2;
-      delete state.len;
-      delete state.sym;
+      state.sym2 = null;
+      state.len = null;
+      state.sym = null;
     }
     output.available = pos;
     sym = readCode(sbytes, stream, literalTable);
@@ -4680,7 +4695,7 @@ if (isWorker) {
         var session = sessions[sessionId];
         if (session) {
           session.close();
-          delete sessions[sessionId];
+          sessions[sessionId] = null;
         }
         break;
       case 'decode':
@@ -5000,8 +5015,16 @@ SWF.embed = function (file, doc, container, options) {
     if (options.onStageInitialized) {
       options.onStageInitialized(stage);
     }
-    renderStage(stage, ctx, options);
+    var startPromise = options.startPromise || Promise.resolve();
+    startPromise.then(function () {
+      renderStage(stage, ctx, options);
+    });
   });
+  if (options.onParsed) {
+    loaderInfo._addEventListener('parsed', function () {
+      options.onParsed();
+    });
+  }
   if (options.onComplete) {
     loaderInfo._addEventListener('complete', function () {
       options.onComplete();
@@ -5019,7 +5042,7 @@ var renderAsWireframe = rendererOptions.register(new Option('raw', 'renderAsWire
 var showQuadTree = rendererOptions.register(new Option('qt', 'showQuadTree', 'boolean', false, 'show quad tree'));
 var turboMode = rendererOptions.register(new Option('', 'turbo', 'boolean', false, 'turbo mode'));
 var forceHidpi = rendererOptions.register(new Option('', 'forceHidpi', 'boolean', false, 'force hidpi'));
-var skipFrameDraw = rendererOptions.register(new Option('', 'skipFrameDraw', 'boolean', true, 'skip frame when not on time'));
+var skipFrameDraw = rendererOptions.register(new Option('', 'skipFrameDraw', 'boolean', false, 'skip frame when not on time'));
 var hud = rendererOptions.register(new Option('', 'hud', 'boolean', false, 'show hud mode'));
 var dummyAnimation = rendererOptions.register(new Option('', 'dummy', 'boolean', false, 'show test balls animation'));
 var enableConstructChildren = rendererOptions.register(new Option('', 'constructChildren', 'boolean', true, 'Construct Children'));
@@ -5643,7 +5666,7 @@ function renderStage(stage, ctx, events) {
   console.timeEnd('Total');
   var firstRun = true;
   var frameCount = 0;
-  var frameFPSAverage = new metrics.Average(120);
+  var frameFPSAverage = new Shumway.Metrics.Average(120);
   var frameRequested = true;
   function drawFrame(renderFrame, repaint) {
     sampleStart();
@@ -7316,7 +7339,7 @@ function readTags(context, stream, swfVersion, final, onprogress, onexception) {
   var tag = null;
   if (context._readTag) {
     tag = context._readTag;
-    delete context._readTag;
+    context._readTag = null;
   }
   try {
     while (stream.pos < stream.end) {
@@ -7440,7 +7463,14 @@ function CompressedPipe(target, length) {
   this.state = {
     bitBuffer: 0,
     bitLength: 0,
-    compression: {}
+    compression: {
+      header: null,
+      distanceTable: null,
+      literalTable: null,
+      sym: null,
+      len: null,
+      sym2: null
+    }
   };
   this.output = {
     data: new Uint8Array(length),
@@ -8190,7 +8220,7 @@ if (typeof GLOBAL !== 'undefined') {
 }
 var AVM1_TRACE_ENABLED = false;
 var AVM1_ERRORS_IGNORED = true;
-var MAX_AVM1_INSTRUCTIONS_LIMIT = 100000;
+var MAX_AVM1_HANG_TIMEOUT = 1000;
 var MAX_AVM1_ERRORS_LIMIT = 1000;
 var MAX_AVM1_STACK_LIMIT = 256;
 function AS2ScopeListItem(scope, next) {
@@ -8207,7 +8237,9 @@ function AS2Context(swfVersion) {
   this.globals = new avm1lib.AS2Globals(this);
   this.initialScope = new AS2ScopeListItem(this.globals, null);
   this.assets = {};
-  this.instructionsExecuted = 0;
+  this.isActive = false;
+  this.executionProhibited = false;
+  this.abortExecutionAt = 0;
   this.stackDepth = 0;
   this.isTryCatchListening = false;
   this.errorsIgnored = 0;
@@ -8382,7 +8414,7 @@ function as2ResolveProperty(obj, name) {
   var lowerCaseName = avm2PublicName.toLowerCase();
   for (var i in obj) {
     if (i.toLowerCase() === lowerCaseName) {
-      return i.substr(Multiname.PUBLIC_QUALIFIED_NAME_PREFIX.length);
+      notImplemented('FIX THIS');
     }
   }
   return null;
@@ -8443,19 +8475,30 @@ function as2CreatePrototypeProxy(obj) {
   });
 }
 function executeActions(actionsData, context, scope) {
+  if (context.executionProhibited) {
+    return;
+  }
   var actionTracer = ActionTracerFactory.get();
   var scopeContainer = context.initialScope.create(scope);
   var savedContext = AS2Context.instance;
   try {
     AS2Context.instance = context;
+    context.isActive = true;
+    context.abortExecutionAt = Date.now() + MAX_AVM1_HANG_TIMEOUT;
+    context.errorsIgnored = 0;
     context.defaultTarget = scope;
     context.globals.asSetPublicProperty('this', scope);
     actionTracer.message('ActionScript Execution Starts');
     actionTracer.indent();
     interpretActions(actionsData, scopeContainer, null, []);
+  } catch (e) {
+    if (e instanceof AS2CriticalError) {
+      console.error('Disabling AVM1 execution');
+      context.executionProhibited = true;
+    }
+    throw e;
   } finally {
-    context.instructionsExecuted = 0;
-    context.errorsIgnored = 0;
+    context.isActive = false;
     actionTracer.unindent();
     actionTracer.message('ActionScript Execution Stops');
     AS2Context.instance = savedContext;
@@ -8569,10 +8612,14 @@ function interpretActions(actionsData, scopeContainer, constantPool, registers) 
         }
       }
       var savedContext = AS2Context.instance;
-      var resetCounters;
+      var savedIsActive = currentContext.isActive;
       try {
         AS2Context.instance = currentContext;
-        resetCounters = currentContext.instructionsExecuted === 0;
+        if (!savedIsActive) {
+          currentContext.abortExecutionAt = Date.now() + MAX_AVM1_HANG_TIMEOUT;
+          currentContext.errorsIgnored = 0;
+          currentContext.isActive = true;
+        }
         currentContext.defaultTarget = scope;
         actionTracer.indent();
         currentContext.stackDepth++;
@@ -8581,10 +8628,7 @@ function interpretActions(actionsData, scopeContainer, constantPool, registers) 
         }
         return interpretActions(actionsData, newScopeContainer, constantPool, registers);
       } finally {
-        if (resetCounters) {
-          currentContext.instructionsExecuted = 0;
-          currentContext.errorsIgnored = 0;
-        }
+        currentContext.isActive = savedIsActive;
         currentContext.stackDepth--;
         actionTracer.unindent();
         currentContext.defaultTarget = defaultTarget;
@@ -8784,9 +8828,11 @@ function interpretActions(actionsData, scopeContainer, constantPool, registers) 
   var stackItemsExpected;
   while (stream.position < stream.end) {
     try {
+      var instructionsExecuted = 0;
+      var abortExecutionAt = currentContext.abortExecutionAt;
       while (stream.position < stream.end) {
-        if (currentContext.instructionsExecuted++ >= MAX_AVM1_INSTRUCTIONS_LIMIT) {
-          throw new AS2CriticalError('long running script -- AVM1 instruction limit is reached');
+        if (instructionsExecuted++ % 100 === 0 && Date.now() >= abortExecutionAt) {
+          throw new AS2CriticalError('long running script -- AVM1 instruction hang timeout');
         }
         var actionCode = stream.readUI8();
         var length = actionCode >= 128 ? stream.readUI16() : 0;
@@ -9012,19 +9058,25 @@ function interpretActions(actionsData, scopeContainer, constantPool, registers) 
           break;
         case 154:
           flags = stream.readUI8();
-          var httpMethod;
-          switch (flags >> 6 & 3) {
-          case 1:
-            httpMethod = 'GET';
-            break;
-          case 2:
-            httpMethod = 'POST';
-            break;
-          }
-          var loadMethod = !(!(flags & 2)) ? !(!(flags & 1)) ? _global.loadVariables : _global.loadMovie : !(!(flags & 1)) ? _global.loadVariablesNum : _global.loadMovieNum;
           target = stack.pop();
           var url = stack.pop();
-          loadMethod.call(_global, url, target, httpMethod);
+          var sendVarsMethod;
+          if (flags & 1) {
+            sendVarsMethod = 'GET';
+          } else if (flags & 2) {
+            sendVarsMethod = 'POST';
+          }
+          var loadTargetFlag = flags & 1 << 6;
+          if (!loadTargetFlag) {
+            _global.getURL(url, target, sendVarsMethod);
+            break;
+          }
+          var loadVariablesFlag = flags & 1 << 7;
+          if (loadVariablesFlag) {
+            _global.loadVariables(url, target, sendVarsMethod);
+          } else {
+            _global.loadMovie(url, target, sendVarsMethod);
+          }
           break;
         case 159:
           flags = stream.readUI8();
@@ -9693,199 +9745,1093 @@ if (typeof GLOBAL !== 'undefined') {
   GLOBAL.executeActions = executeActions;
   GLOBAL.AS2Context = AS2Context;
 }
+var jsGlobal = function () {
+    return this || (1, eval)('this');
+  }();
+var inBrowser = typeof console != 'undefined';
+var release = true;
+var debug = !true;
+if (!jsGlobal.performance) {
+  jsGlobal.performance = {};
+}
+if (!jsGlobal.performance.now) {
+  jsGlobal.performance.now = dateNow;
+}
+function log(message) {
+  var optionalParams = [];
+  for (var _i = 0; _i < arguments.length - 1; _i++) {
+    optionalParams[_i] = arguments[_i + 1];
+  }
+  jsGlobal.print(message);
+}
+function warn(message) {
+  var optionalParams = [];
+  for (var _i = 0; _i < arguments.length - 1; _i++) {
+    optionalParams[_i] = arguments[_i + 1];
+  }
+  if (inBrowser) {
+    console.warn(message);
+  } else {
+    jsGlobal.print(message);
+  }
+}
+var Shumway;
+(function (Shumway) {
+  (function (CharacterCodes) {
+    CharacterCodes[CharacterCodes['_0'] = 48] = '_0';
+    CharacterCodes[CharacterCodes['_1'] = 49] = '_1';
+    CharacterCodes[CharacterCodes['_2'] = 50] = '_2';
+    CharacterCodes[CharacterCodes['_3'] = 51] = '_3';
+    CharacterCodes[CharacterCodes['_4'] = 52] = '_4';
+    CharacterCodes[CharacterCodes['_5'] = 53] = '_5';
+    CharacterCodes[CharacterCodes['_6'] = 54] = '_6';
+    CharacterCodes[CharacterCodes['_7'] = 55] = '_7';
+    CharacterCodes[CharacterCodes['_8'] = 56] = '_8';
+    CharacterCodes[CharacterCodes['_9'] = 57] = '_9';
+  }(Shumway.CharacterCodes || (Shumway.CharacterCodes = {})));
+  var CharacterCodes = Shumway.CharacterCodes;
+  Shumway.UINT32_CHAR_BUFFER_LENGTH = 10;
+  Shumway.UINT32_MAX = 4294967295;
+  Shumway.UINT32_MAX_DIV_10 = 429496729;
+  Shumway.UINT32_MAX_MOD_10 = 5;
+  function isString(value) {
+    return typeof value === 'string';
+  }
+  Shumway.isString = isString;
+  function isFunction(value) {
+    return typeof value === 'function';
+  }
+  Shumway.isFunction = isFunction;
+  function isNumber(value) {
+    return typeof value === 'number';
+  }
+  Shumway.isNumber = isNumber;
+  function isNumberOrString(value) {
+    return typeof value === 'number' || typeof value === 'string';
+  }
+  Shumway.isNumberOrString = isNumberOrString;
+  function isObject(value) {
+    return typeof value === 'object' || typeof value === 'function';
+  }
+  Shumway.isObject = isObject;
+  function toNumber(x) {
+    return +x;
+  }
+  Shumway.toNumber = toNumber;
+  function isNumericString(value) {
+    return String(Number(value)) === value;
+  }
+  Shumway.isNumericString = isNumericString;
+  function isNumeric(value) {
+    if (typeof value === 'number') {
+      return true;
+    } else if (typeof value === 'string') {
+      return isIndex(value) || isNumericString(value);
+    } else {
+      Debug.notImplemented(typeof value);
+    }
+  }
+  Shumway.isNumeric = isNumeric;
+  function isIndex(value) {
+    var index = 0;
+    if (typeof value === 'number') {
+      index = value | 0;
+      if (value === index && index >= 0) {
+        return true;
+      }
+      return value >>> 0 === value;
+    }
+    if (typeof value !== 'string') {
+      return false;
+    }
+    var length = value.length;
+    if (length === 0) {
+      return false;
+    }
+    if (value === '0') {
+      return true;
+    }
+    if (length > Shumway.UINT32_CHAR_BUFFER_LENGTH) {
+      return false;
+    }
+    var i = 0;
+    index = value.charCodeAt(i++) - 48;
+    if (index < 1 || index > 9) {
+      return false;
+    }
+    var oldIndex = 0;
+    var c = 0;
+    while (i < length) {
+      c = value.charCodeAt(i++) - 48;
+      if (c < 0 || c > 9) {
+        return false;
+      }
+      oldIndex = index;
+      index = 10 * index + c;
+    }
+    if (oldIndex < Shumway.UINT32_MAX_DIV_10 || oldIndex === Shumway.UINT32_MAX_DIV_10 && c <= Shumway.UINT32_MAX_MOD_10) {
+      return true;
+    }
+    return false;
+  }
+  Shumway.isIndex = isIndex;
+  function isNullOrUndefined(value) {
+    return value == undefined;
+  }
+  Shumway.isNullOrUndefined = isNullOrUndefined;
+  (function (Debug) {
+    function backtrace() {
+      try {
+        throw new Error();
+      } catch (e) {
+        return e.stack ? e.stack.split('\n').slice(2).join('\n') : '';
+      }
+    }
+    Debug.backtrace = backtrace;
+    function error(message) {
+      if (!inBrowser) {
+        warn(Debug.backtrace());
+      }
+      throw new Error(message);
+    }
+    Debug.error = error;
+    function assert(condition) {
+      var args = [];
+      for (var _i = 0; _i < arguments.length - 1; _i++) {
+        args[_i] = arguments[_i + 1];
+      }
+      if (condition === '') {
+        condition = true;
+      }
+      if (!condition) {
+        var message = Array.prototype.slice.call(arguments);
+        message.shift();
+        Debug.error(message.join(''));
+      }
+    }
+    Debug.assert = assert;
+    function assertNotImplemented(condition, message) {
+      if (!condition) {
+        Debug.error('NotImplemented: ' + message);
+      }
+    }
+    Debug.assertNotImplemented = assertNotImplemented;
+    function warning(message) {
+      true;
+    }
+    Debug.warning = warning;
+    function notUsed(message) {
+      true;
+    }
+    Debug.notUsed = notUsed;
+    function notImplemented(message) {
+      true;
+    }
+    Debug.notImplemented = notImplemented;
+    function somewhatImplemented(message) {
+      Debug.warning('somewhatImplemented: ' + message);
+    }
+    Debug.somewhatImplemented = somewhatImplemented;
+    function unexpected(message) {
+      Debug.assert(false, 'Unexpected: ' + message);
+    }
+    Debug.unexpected = unexpected;
+  }(Shumway.Debug || (Shumway.Debug = {})));
+  var Debug = Shumway.Debug;
+  function getTicks() {
+    return performance.now();
+  }
+  Shumway.getTicks = getTicks;
+  (function (ArrayUtilities) {
+    function popManyInto(src, count, dst) {
+      true;
+      for (var i = count - 1; i >= 0; i--) {
+        dst[i] = src.pop();
+      }
+      dst.length = count;
+    }
+    ArrayUtilities.popManyInto = popManyInto;
+  }(Shumway.ArrayUtilities || (Shumway.ArrayUtilities = {})));
+  var ArrayUtilities = Shumway.ArrayUtilities;
+  (function (ObjectUtilities) {
+    function boxValue(value) {
+      if (Shumway.isNullOrUndefined(value) || Shumway.isObject(value)) {
+        return value;
+      }
+      return Object(value);
+    }
+    ObjectUtilities.boxValue = boxValue;
+    function toKeyValueArray(object) {
+      var hasOwnProperty = Object.prototype.hasOwnProperty;
+      var array = [];
+      for (var k in object) {
+        if (hasOwnProperty.call(object, k)) {
+          array.push([
+            k,
+            object[k]
+          ]);
+        }
+      }
+      return array;
+    }
+    ObjectUtilities.toKeyValueArray = toKeyValueArray;
+    function hasOwnProperty(object, name) {
+      return Object.prototype.hasOwnProperty.call(object, name);
+    }
+    ObjectUtilities.hasOwnProperty = hasOwnProperty;
+    function createEmptyObject() {
+      return Object.create(null);
+    }
+    ObjectUtilities.createEmptyObject = createEmptyObject;
+    function createMap() {
+      return Object.create(null);
+    }
+    ObjectUtilities.createMap = createMap;
+    function createArrayMap() {
+      return [];
+    }
+    ObjectUtilities.createArrayMap = createArrayMap;
+    function defineReadOnlyProperty(object, name, value) {
+      Object.defineProperty(object, name, {
+        value: value,
+        writable: false,
+        configurable: true,
+        enumerable: false
+      });
+    }
+    ObjectUtilities.defineReadOnlyProperty = defineReadOnlyProperty;
+    function getOwnPropertyDescriptors(object) {
+      var o = ObjectUtilities.createMap();
+      var properties = Object.getOwnPropertyNames(object);
+      for (var i = 0; i < properties.length; i++) {
+        o[properties[i]] = Object.getOwnPropertyDescriptor(object, properties[i]);
+      }
+      return o;
+    }
+    ObjectUtilities.getOwnPropertyDescriptors = getOwnPropertyDescriptors;
+    function cloneObject(object) {
+      var clone = ObjectUtilities.createEmptyObject();
+      for (var property in object) {
+        clone[property] = object[property];
+      }
+      return clone;
+    }
+    ObjectUtilities.cloneObject = cloneObject;
+    function copyProperties(object, template) {
+      for (var property in template) {
+        object[property] = template[property];
+      }
+    }
+    ObjectUtilities.copyProperties = copyProperties;
+    function getLatestGetterOrSetterPropertyDescriptor(object, name) {
+      var descriptor = {};
+      while (object) {
+        var tmp = Object.getOwnPropertyDescriptor(object, name);
+        if (tmp) {
+          descriptor.get = descriptor.get || tmp.get;
+          descriptor.set = descriptor.set || tmp.set;
+        }
+        if (descriptor.get && descriptor.set) {
+          break;
+        }
+        object = Object.getPrototypeOf(object);
+      }
+      return descriptor;
+    }
+    ObjectUtilities.getLatestGetterOrSetterPropertyDescriptor = getLatestGetterOrSetterPropertyDescriptor;
+    function defineNonEnumerableGetterOrSetter(obj, name, value, isGetter) {
+      var descriptor = ObjectUtilities.getLatestGetterOrSetterPropertyDescriptor(obj, name);
+      descriptor.configurable = true;
+      descriptor.enumerable = false;
+      if (isGetter) {
+        descriptor.get = value;
+      } else {
+        descriptor.set = value;
+      }
+      Object.defineProperty(obj, name, descriptor);
+    }
+    ObjectUtilities.defineNonEnumerableGetterOrSetter = defineNonEnumerableGetterOrSetter;
+    function defineNonEnumerableGetter(obj, name, getter) {
+      Object.defineProperty(obj, name, {
+        get: getter,
+        configurable: true,
+        enumerable: false
+      });
+    }
+    ObjectUtilities.defineNonEnumerableGetter = defineNonEnumerableGetter;
+    function defineNonEnumerableSetter(obj, name, setter) {
+      Object.defineProperty(obj, name, {
+        set: setter,
+        configurable: true,
+        enumerable: false
+      });
+    }
+    ObjectUtilities.defineNonEnumerableSetter = defineNonEnumerableSetter;
+    function defineNonEnumerableProperty(obj, name, value) {
+      Object.defineProperty(obj, name, {
+        value: value,
+        writable: true,
+        configurable: true,
+        enumerable: false
+      });
+    }
+    ObjectUtilities.defineNonEnumerableProperty = defineNonEnumerableProperty;
+    function defineNonEnumerableForwardingProperty(obj, name, otherName) {
+      Object.defineProperty(obj, name, {
+        get: FunctionUtilities.makeForwardingGetter(otherName),
+        set: FunctionUtilities.makeForwardingSetter(otherName),
+        writable: true,
+        configurable: true,
+        enumerable: false
+      });
+    }
+    ObjectUtilities.defineNonEnumerableForwardingProperty = defineNonEnumerableForwardingProperty;
+    function defineNewNonEnumerableProperty(obj, name, value) {
+      true;
+      ObjectUtilities.defineNonEnumerableProperty(obj, name, value);
+    }
+    ObjectUtilities.defineNewNonEnumerableProperty = defineNewNonEnumerableProperty;
+  }(Shumway.ObjectUtilities || (Shumway.ObjectUtilities = {})));
+  var ObjectUtilities = Shumway.ObjectUtilities;
+  (function (FunctionUtilities) {
+    function makeForwardingGetter(target) {
+      return new Function('return this["' + target + '"]');
+    }
+    FunctionUtilities.makeForwardingGetter = makeForwardingGetter;
+    function makeForwardingSetter(target) {
+      return new Function('value', 'this["' + target + '"] = value;');
+    }
+    FunctionUtilities.makeForwardingSetter = makeForwardingSetter;
+    function bindSafely(fn, object) {
+      true;
+      var f = fn.bind(object);
+      f.boundTo = object;
+      return f;
+    }
+    FunctionUtilities.bindSafely = bindSafely;
+  }(Shumway.FunctionUtilities || (Shumway.FunctionUtilities = {})));
+  var FunctionUtilities = Shumway.FunctionUtilities;
+  (function (StringUtilities) {
+    function toSafeString(value) {
+      if (typeof value === 'string') {
+        return '"' + value + '"';
+      }
+      if (typeof value === 'number' || typeof value === 'boolean') {
+        return String(value);
+      }
+      return typeof value;
+    }
+    StringUtilities.toSafeString = toSafeString;
+    function toSafeArrayString(array) {
+      var str = [];
+      for (var i = 0; i < array.length; i++) {
+        str.push(toSafeString(array[i]));
+      }
+      return str.join(', ');
+    }
+    StringUtilities.toSafeArrayString = toSafeArrayString;
+    function utf8decode(str) {
+      var bytes = new Uint8Array(str.length * 4);
+      var b = 0;
+      for (var i = 0, j = str.length; i < j; i++) {
+        var code = str.charCodeAt(i);
+        if (code <= 127) {
+          bytes[b++] = code;
+          continue;
+        }
+        if (55296 <= code && code <= 56319) {
+          var codeLow = str.charCodeAt(i + 1);
+          if (56320 <= codeLow && codeLow <= 57343) {
+            code = ((code & 1023) << 10) + (codeLow & 1023) + 65536;
+            ++i;
+          }
+        }
+        if ((code & 4292870144) !== 0) {
+          bytes[b++] = 248 | code >>> 24 & 3;
+          bytes[b++] = 128 | code >>> 18 & 63;
+          bytes[b++] = 128 | code >>> 12 & 63;
+          bytes[b++] = 128 | code >>> 6 & 63;
+          bytes[b++] = 128 | code & 63;
+        } else if ((code & 4294901760) !== 0) {
+          bytes[b++] = 240 | code >>> 18 & 7;
+          bytes[b++] = 128 | code >>> 12 & 63;
+          bytes[b++] = 128 | code >>> 6 & 63;
+          bytes[b++] = 128 | code & 63;
+        } else if ((code & 4294965248) !== 0) {
+          bytes[b++] = 224 | code >>> 12 & 15;
+          bytes[b++] = 128 | code >>> 6 & 63;
+          bytes[b++] = 128 | code & 63;
+        } else {
+          bytes[b++] = 192 | code >>> 6 & 31;
+          bytes[b++] = 128 | code & 63;
+        }
+      }
+      return bytes.subarray(0, b);
+    }
+    StringUtilities.utf8decode = utf8decode;
+    function utf8encode(bytes) {
+      var j = 0, str = '';
+      while (j < bytes.length) {
+        var b1 = bytes[j++] & 255;
+        if (b1 <= 127) {
+          str += String.fromCharCode(b1);
+        } else {
+          var currentPrefix = 192;
+          var validBits = 5;
+          do {
+            var mask = currentPrefix >> 1 | 128;
+            if ((b1 & mask) === currentPrefix)
+              break;
+            currentPrefix = currentPrefix >> 1 | 128;
+            --validBits;
+          } while (validBits >= 0);
+          if (validBits <= 0) {
+            str += String.fromCharCode(b1);
+            continue;
+          }
+          var code = b1 & (1 << validBits) - 1;
+          var invalid = false;
+          for (var i = 5; i >= validBits; --i) {
+            var bi = bytes[j++];
+            if ((bi & 192) != 128) {
+              invalid = true;
+              break;
+            }
+            code = code << 6 | bi & 63;
+          }
+          if (invalid) {
+            for (var k = j - (7 - i); k < j; ++k) {
+              str += String.fromCharCode(bytes[k] & 255);
+            }
+            continue;
+          }
+          if (code >= 65536) {
+            str += String.fromCharCode(code - 65536 >> 10 & 1023 | 55296, code & 1023 | 56320);
+          } else {
+            str += String.fromCharCode(code);
+          }
+        }
+      }
+      return str;
+    }
+    StringUtilities.utf8encode = utf8encode;
+    function base64ArrayBuffer(arrayBuffer) {
+      var base64 = '';
+      var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+      var bytes = new Uint8Array(arrayBuffer);
+      var byteLength = bytes.byteLength;
+      var byteRemainder = byteLength % 3;
+      var mainLength = byteLength - byteRemainder;
+      var a, b, c, d;
+      var chunk;
+      for (var i = 0; i < mainLength; i = i + 3) {
+        chunk = bytes[i] << 16 | bytes[i + 1] << 8 | bytes[i + 2];
+        a = (chunk & 16515072) >> 18;
+        b = (chunk & 258048) >> 12;
+        c = (chunk & 4032) >> 6;
+        d = chunk & 63;
+        base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d];
+      }
+      if (byteRemainder == 1) {
+        chunk = bytes[mainLength];
+        a = (chunk & 252) >> 2;
+        b = (chunk & 3) << 4;
+        base64 += encodings[a] + encodings[b] + '==';
+      } else if (byteRemainder == 2) {
+        chunk = bytes[mainLength] << 8 | bytes[mainLength + 1];
+        a = (chunk & 64512) >> 10;
+        b = (chunk & 1008) >> 4;
+        c = (chunk & 15) << 2;
+        base64 += encodings[a] + encodings[b] + encodings[c] + '=';
+      }
+      return base64;
+    }
+    StringUtilities.base64ArrayBuffer = base64ArrayBuffer;
+    function escapeString(str) {
+      if (str !== undefined) {
+        str = str.replace(/[^\w$]/gi, '$');
+        if (/^\d/.test(str)) {
+          str = '$' + str;
+        }
+      }
+      return str;
+    }
+    StringUtilities.escapeString = escapeString;
+    function fromCharCodeArray(buffer) {
+      var str = '', SLICE = 1024 * 16;
+      for (var i = 0; i < buffer.length; i += SLICE) {
+        var chunk = Math.min(buffer.length - i, SLICE);
+        str += String.fromCharCode.apply(null, buffer.subarray(i, i + chunk));
+      }
+      return str;
+    }
+    StringUtilities.fromCharCodeArray = fromCharCodeArray;
+    var _encoding = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789$_';
+    function variableLengthEncodeInt32(n) {
+      var e = _encoding;
+      var bitCount = 32 - IntegerUtilities.leadingZeros(n);
+      var l = Math.ceil(bitCount / 6);
+      var s = e[l];
+      for (var i = l - 1; i >= 0; i--) {
+        var offset = i * 6;
+        s += e[n >> offset & 63];
+      }
+      true;
+      return s;
+    }
+    StringUtilities.variableLengthEncodeInt32 = variableLengthEncodeInt32;
+    function toEncoding(n) {
+      return _encoding[n];
+    }
+    StringUtilities.toEncoding = toEncoding;
+    function fromEncoding(s) {
+      var c = s.charCodeAt(0);
+      var e = 0;
+      if (c >= 65 && c <= 90) {
+        return c - 65;
+      } else if (c >= 97 && c <= 122) {
+        return c - 71;
+      } else if (c >= 48 && c <= 57) {
+        return c + 4;
+      } else if (c === 36) {
+        return 62;
+      } else if (c === 95) {
+        return 63;
+      }
+    }
+    StringUtilities.fromEncoding = fromEncoding;
+    function variableLengthDecodeInt32(s) {
+      var l = StringUtilities.fromEncoding(s[0]);
+      var n = 0;
+      for (var i = 0; i < l; i++) {
+        var offset = (l - i - 1) * 6;
+        n |= StringUtilities.fromEncoding(s[1 + i]) << offset;
+      }
+      return n;
+    }
+    StringUtilities.variableLengthDecodeInt32 = variableLengthDecodeInt32;
+  }(Shumway.StringUtilities || (Shumway.StringUtilities = {})));
+  var StringUtilities = Shumway.StringUtilities;
+  (function (HashUtilities) {
+    var _md5R = new Uint8Array([
+        7,
+        12,
+        17,
+        22,
+        7,
+        12,
+        17,
+        22,
+        7,
+        12,
+        17,
+        22,
+        7,
+        12,
+        17,
+        22,
+        5,
+        9,
+        14,
+        20,
+        5,
+        9,
+        14,
+        20,
+        5,
+        9,
+        14,
+        20,
+        5,
+        9,
+        14,
+        20,
+        4,
+        11,
+        16,
+        23,
+        4,
+        11,
+        16,
+        23,
+        4,
+        11,
+        16,
+        23,
+        4,
+        11,
+        16,
+        23,
+        6,
+        10,
+        15,
+        21,
+        6,
+        10,
+        15,
+        21,
+        6,
+        10,
+        15,
+        21,
+        6,
+        10,
+        15,
+        21
+      ]);
+    var _md5K = new Int32Array([
+        -680876936,
+        -389564586,
+        606105819,
+        -1044525330,
+        -176418897,
+        1200080426,
+        -1473231341,
+        -45705983,
+        1770035416,
+        -1958414417,
+        -42063,
+        -1990404162,
+        1804603682,
+        -40341101,
+        -1502002290,
+        1236535329,
+        -165796510,
+        -1069501632,
+        643717713,
+        -373897302,
+        -701558691,
+        38016083,
+        -660478335,
+        -405537848,
+        568446438,
+        -1019803690,
+        -187363961,
+        1163531501,
+        -1444681467,
+        -51403784,
+        1735328473,
+        -1926607734,
+        -378558,
+        -2022574463,
+        1839030562,
+        -35309556,
+        -1530992060,
+        1272893353,
+        -155497632,
+        -1094730640,
+        681279174,
+        -358537222,
+        -722521979,
+        76029189,
+        -640364487,
+        -421815835,
+        530742520,
+        -995338651,
+        -198630844,
+        1126891415,
+        -1416354905,
+        -57434055,
+        1700485571,
+        -1894986606,
+        -1051523,
+        -2054922799,
+        1873313359,
+        -30611744,
+        -1560198380,
+        1309151649,
+        -145523070,
+        -1120210379,
+        718787259,
+        -343485551
+      ]);
+    function hashBytesTo32BitsMD5(data, offset, length) {
+      var r = _md5R;
+      var k = _md5K;
+      var h0 = 1732584193, h1 = -271733879, h2 = -1732584194, h3 = 271733878;
+      var paddedLength = length + 72 & ~63;
+      var padded = new Uint8Array(paddedLength);
+      var i, j, n;
+      for (i = 0; i < length; ++i) {
+        padded[i] = data[offset++];
+      }
+      padded[i++] = 128;
+      n = paddedLength - 8;
+      while (i < n) {
+        padded[i++] = 0;
+      }
+      padded[i++] = length << 3 & 255;
+      padded[i++] = length >> 5 & 255;
+      padded[i++] = length >> 13 & 255;
+      padded[i++] = length >> 21 & 255;
+      padded[i++] = length >>> 29 & 255;
+      padded[i++] = 0;
+      padded[i++] = 0;
+      padded[i++] = 0;
+      var w = new Int32Array(16);
+      for (i = 0; i < paddedLength;) {
+        for (j = 0; j < 16; ++j, i += 4) {
+          w[j] = padded[i] | padded[i + 1] << 8 | padded[i + 2] << 16 | padded[i + 3] << 24;
+        }
+        var a = h0, b = h1, c = h2, d = h3, f, g;
+        for (j = 0; j < 64; ++j) {
+          if (j < 16) {
+            f = b & c | ~b & d;
+            g = j;
+          } else if (j < 32) {
+            f = d & b | ~d & c;
+            g = 5 * j + 1 & 15;
+          } else if (j < 48) {
+            f = b ^ c ^ d;
+            g = 3 * j + 5 & 15;
+          } else {
+            f = c ^ (b | ~d);
+            g = 7 * j & 15;
+          }
+          var tmp = d, rotateArg = a + f + k[j] + w[g] | 0, rotate = r[j];
+          d = c;
+          c = b;
+          b = b + (rotateArg << rotate | rotateArg >>> 32 - rotate) | 0;
+          a = tmp;
+        }
+        h0 = h0 + a | 0;
+        h1 = h1 + b | 0;
+        h2 = h2 + c | 0;
+        h3 = h3 + d | 0;
+      }
+      return h0;
+    }
+    HashUtilities.hashBytesTo32BitsMD5 = hashBytesTo32BitsMD5;
+    function hashBytesTo32BitsAdler(data, offset, length) {
+      var a = 1;
+      var b = 0;
+      var end = offset + length;
+      for (var i = offset; i < end; ++i) {
+        a = (a + (data[i] & 255)) % 65521;
+        b = (b + a) % 65521;
+      }
+      return b << 16 | a;
+    }
+    HashUtilities.hashBytesTo32BitsAdler = hashBytesTo32BitsAdler;
+  }(Shumway.HashUtilities || (Shumway.HashUtilities = {})));
+  var HashUtilities = Shumway.HashUtilities;
+  (function (IntegerUtilities) {
+    function bitCount(i) {
+      i = i - (i >> 1 & 1431655765);
+      i = (i & 858993459) + (i >> 2 & 858993459);
+      return (i + (i >> 4) & 252645135) * 16843009 >> 24;
+    }
+    IntegerUtilities.bitCount = bitCount;
+    function ones(i) {
+      i = i - (i >> 1 & 1431655765);
+      i = (i & 858993459) + (i >> 2 & 858993459);
+      return (i + (i >> 4) & 252645135) * 16843009 >> 24;
+    }
+    IntegerUtilities.ones = ones;
+    function leadingZeros(i) {
+      i |= i >> 1;
+      i |= i >> 2;
+      i |= i >> 4;
+      i |= i >> 8;
+      i |= i >> 16;
+      return 32 - IntegerUtilities.ones(i);
+    }
+    IntegerUtilities.leadingZeros = leadingZeros;
+    function trailingZeros(i) {
+      return IntegerUtilities.ones((i & -i) - 1);
+    }
+    IntegerUtilities.trailingZeros = trailingZeros;
+    function getFlags(i, flags) {
+      var str = '';
+      for (var i = 0; i < flags.length; i++) {
+        if (i & 1 << i) {
+          str += flags[i] + ' ';
+        }
+      }
+      if (str.length === 0) {
+        return '';
+      }
+      return str.trim();
+    }
+    IntegerUtilities.getFlags = getFlags;
+    function isPowerOfTwo(x) {
+      return x && (x & x - 1) === 0;
+    }
+    IntegerUtilities.isPowerOfTwo = isPowerOfTwo;
+  }(Shumway.IntegerUtilities || (Shumway.IntegerUtilities = {})));
+  var IntegerUtilities = Shumway.IntegerUtilities;
+  var IndentingWriter = function () {
+      function IndentingWriter(suppressOutput, outFn) {
+        if (typeof suppressOutput === 'undefined') {
+          suppressOutput = false;
+        }
+        this._tab = '  ';
+        this._padding = '';
+        this._suppressOutput = suppressOutput;
+        this._out = outFn || IndentingWriter._consoleOutFn;
+      }
+      IndentingWriter.prototype.writeLn = function (str) {
+        if (!this._suppressOutput) {
+          this._out(this._padding + str);
+        }
+      };
+      IndentingWriter.prototype.writeLns = function (str) {
+        var lines = str.split('\n');
+        for (var i = 0; i < lines.length; i++) {
+          this.writeLn(lines[i]);
+        }
+      };
+      IndentingWriter.prototype.debugLn = function (str) {
+        this.colorLn(IndentingWriter.PURPLE, str);
+      };
+      IndentingWriter.prototype.yellowLn = function (str) {
+        this.colorLn(IndentingWriter.YELLOW, str);
+      };
+      IndentingWriter.prototype.greenLn = function (str) {
+        this.colorLn(IndentingWriter.GREEN, str);
+      };
+      IndentingWriter.prototype.redLn = function (str) {
+        this.colorLn(IndentingWriter.RED, str);
+      };
+      IndentingWriter.prototype.colorLn = function (color, str) {
+        if (!this._suppressOutput) {
+          if (!inBrowser) {
+            this._out(this._padding + color + str + IndentingWriter.ENDC);
+          } else {
+            this._out(this._padding + str);
+          }
+        }
+      };
+      IndentingWriter.prototype.enter = function (str) {
+        if (!this._suppressOutput) {
+          this._out(this._padding + str);
+        }
+        this.indent();
+      };
+      IndentingWriter.prototype.leaveAndEnter = function (str) {
+        this.leave(str);
+        this.indent();
+      };
+      IndentingWriter.prototype.leave = function (str) {
+        this.outdent();
+        if (!this._suppressOutput) {
+          this._out(this._padding + str);
+        }
+      };
+      IndentingWriter.prototype.indent = function () {
+        this._padding += this._tab;
+      };
+      IndentingWriter.prototype.outdent = function () {
+        if (this._padding.length > 0) {
+          this._padding = this._padding.substring(0, this._padding.length - this._tab.length);
+        }
+      };
+      IndentingWriter.prototype.writeArray = function (arr, detailed, noNumbers) {
+        if (typeof detailed === 'undefined') {
+          detailed = false;
+        }
+        if (typeof noNumbers === 'undefined') {
+          noNumbers = false;
+        }
+        detailed = detailed || false;
+        for (var i = 0, j = arr.length; i < j; i++) {
+          var prefix = '';
+          if (detailed) {
+            if (arr[i] === null) {
+              prefix = 'null';
+            } else if (arr[i] === undefined) {
+              prefix = 'undefined';
+            } else {
+              prefix = arr[i].constructor.name;
+            }
+            prefix += ' ';
+          }
+          var number = noNumbers ? '' : ('' + i).padRight(' ', 4);
+          this.writeLn(number + prefix + arr[i]);
+        }
+      };
+      IndentingWriter.PURPLE = '\x1b[94m';
+      IndentingWriter.YELLOW = '\x1b[93m';
+      IndentingWriter.GREEN = '\x1b[92m';
+      IndentingWriter.RED = '\x1b[91m';
+      IndentingWriter.ENDC = '\x1b[0m';
+      IndentingWriter._consoleOutFn = inBrowser ? console.info.bind(console) : print;
+      return IndentingWriter;
+    }();
+  Shumway.IndentingWriter = IndentingWriter;
+  var SortedListNode = function () {
+      function SortedListNode(value, next) {
+        this.value = value;
+        this.next = next;
+      }
+      return SortedListNode;
+    }();
+  var SortedList = function () {
+      function SortedList(compare) {
+        true;
+        this._compare = compare;
+        this._head = null;
+        this._length = 0;
+      }
+      SortedList.prototype.push = function (value) {
+        true;
+        this._length++;
+        if (!this._head) {
+          this._head = new SortedListNode(value, null);
+          return;
+        }
+        var curr = this._head;
+        var prev = null;
+        var node = new SortedListNode(value, null);
+        var compare = this._compare;
+        while (curr) {
+          if (compare(curr.value, node.value) > 0) {
+            if (prev) {
+              node.next = curr;
+              prev.next = node;
+            } else {
+              node.next = this._head;
+              this._head = node;
+            }
+            return;
+          }
+          prev = curr;
+          curr = curr.next;
+        }
+        prev.next = node;
+      };
+      SortedList.prototype.forEach = function (visitor) {
+        var curr = this._head;
+        var last = null;
+        while (curr) {
+          var result = visitor(curr.value);
+          if (result === SortedList.RETURN) {
+            return;
+          } else if (result === SortedList.DELETE) {
+            if (!last) {
+              curr = this._head = this._head.next;
+            } else {
+              curr = last.next = curr.next;
+            }
+          } else {
+            last = curr;
+            curr = curr.next;
+          }
+        }
+      };
+      SortedList.prototype.isEmpty = function () {
+        return !this._head;
+      };
+      SortedList.prototype.pop = function () {
+        if (!this._head) {
+          return undefined;
+        }
+        this._length--;
+        var ret = this._head;
+        this._head = this._head.next;
+        return ret.value;
+      };
+      SortedList.prototype.contains = function (value) {
+        var curr = this._head;
+        while (curr) {
+          if (curr.value === value) {
+            return true;
+          }
+          curr = curr.next;
+        }
+        return false;
+      };
+      SortedList.prototype.toString = function () {
+        var str = '[';
+        var curr = this._head;
+        while (curr) {
+          str += curr.value.toString();
+          curr = curr.next;
+          if (curr) {
+            str += ',';
+          }
+        }
+        str += ']';
+        return str;
+      };
+      SortedList.RETURN = 1;
+      SortedList.DELETE = 2;
+      return SortedList;
+    }();
+  Shumway.SortedList = SortedList;
+  var CIRCULAR_BUFFER_MASK = 4095;
+  var CIRCULAR_BUFFER_SIZE = 4096;
+  var CircularBuffer = function () {
+      function CircularBuffer(Type) {
+        this.index = 0;
+        this.start = 0;
+        this.array = new Type(CIRCULAR_BUFFER_SIZE);
+      }
+      CircularBuffer.prototype.get = function (i) {
+        return this.array[i];
+      };
+      CircularBuffer.prototype.forEachInReverse = function (visitor) {
+        if (this.isEmpty()) {
+          return;
+        }
+        var i = this.index === 0 ? CIRCULAR_BUFFER_SIZE - 1 : this.index - 1;
+        while (i !== this.start) {
+          if (visitor(this.array[i], i)) {
+            break;
+          }
+          i = i === 0 ? CIRCULAR_BUFFER_SIZE - 1 : i - 1;
+        }
+      };
+      CircularBuffer.prototype.write = function (value) {
+        this.array[this.index] = value;
+        this.index = this.index + 1 & CIRCULAR_BUFFER_MASK;
+        if (this.index === this.start) {
+          this.start = this.start + 1 & CIRCULAR_BUFFER_MASK;
+        }
+      };
+      CircularBuffer.prototype.isFull = function () {
+        return (this.index + 1 & CIRCULAR_BUFFER_MASK) === this.start;
+      };
+      CircularBuffer.prototype.isEmpty = function () {
+        return this.index === this.start;
+      };
+      return CircularBuffer;
+    }();
+  Shumway.CircularBuffer = CircularBuffer;
+}(Shumway || (Shumway = {})));
+var assert = Shumway.Debug.assert;
+var IndentingWriter = Shumway.IndentingWriter;
+var assert = Shumway.Debug.assert;
 var $DEBUG;
 var release = true;
-var checkArguments = true;
-var useSurrogates = true;
-var useAsAdd = true;
-var sealConstTraits = false;
 var c4CoerceNonPrimitiveParameters = false;
 var c4CoerceNonPrimitive = false;
 var c4AsTypeLate = true;
-var inBrowser = typeof console != 'undefined';
-if (!this.performance) {
-  this.performance = {};
-}
-if (!this.performance.now) {
-  this.performance.now = dateNow;
-}
-function backtrace() {
-  try {
-    throw new Error();
-  } catch (e) {
-    return e.stack ? e.stack.split('\n').slice(2).join('\n') : '';
-  }
-}
-function error(message) {
-  if (!inBrowser) {
-    console.warn(backtrace());
-  }
-  throw new Error(message);
-}
-function assert(condition) {
-  if (condition === '') {
-    condition = true;
-  }
-  if (!condition) {
-    var message = Array.prototype.slice.call(arguments);
-    message.shift();
-    error(message.join(''));
-  }
-}
-function assertNotImplemented(condition, message) {
-  if (!condition) {
-    error('NotImplemented: ' + message);
-  }
-}
-function warning(message) {
-  true;
-}
-function notUsed(message) {
-  true;
-}
-function notImplemented(message) {
-  true;
-}
-function somewhatImplemented(message) {
-  warning('somewhatImplemented: ' + message);
-}
-function unexpected(message) {
-}
-function makeForwardingGetter(target) {
-  return new Function('return this["' + target + '"]');
-}
-function makeForwardingSetter(target) {
-  return new Function('value', 'this["' + target + '"] = value;');
-}
-function defineReadOnlyProperty(obj, name, value) {
-  Object.defineProperty(obj, name, {
-    value: value,
-    writable: false,
-    configurable: true,
-    enumerable: false
-  });
-}
-function bindSafely(fn, obj) {
-  true;
-  var f = fn.bind(obj);
-  f.boundTo = obj;
-  return f;
-}
-function createEmptyObject() {
-  return Object.create(null);
-}
-function getOwnPropertyDescriptors(object) {
-  var o = createEmptyObject();
-  var properties = Object.getOwnPropertyNames(object);
-  for (var i = 0; i < properties.length; i++) {
-    o[properties[i]] = Object.getOwnPropertyDescriptor(object, properties[i]);
-  }
-  return o;
-}
-function cloneObject(object) {
-  var clone = Object.create(null);
-  for (var property in object) {
-    clone[property] = object[property];
-  }
-  return clone;
-}
-function extendObject(object, properties) {
-  var extended = Object.create(object);
-  if (properties) {
-    for (var key in properties) {
-      extended[key] = properties[key];
-    }
-  }
-  return extended;
-}
-function copyProperties(object, template) {
-  for (var property in template) {
-    object[property] = template[property];
-  }
-}
-function toSafeString(value) {
-  if (typeof value === 'string') {
-    return '"' + value + '"';
-  }
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-  return typeof value;
-}
-function toSafeArrayString(array) {
-  var str = [];
-  for (var i = 0; i < array.length; i++) {
-    str.push(toSafeString(array[i]));
-  }
-  return str.join(', ');
-}
-function getLatestGetterOrSetterPropertyDescriptor(obj, name) {
-  var descriptor = {};
-  while (obj) {
-    var tmp = Object.getOwnPropertyDescriptor(obj, name);
-    if (tmp) {
-      descriptor.get = descriptor.get || tmp.get;
-      descriptor.set = descriptor.set || tmp.set;
-    }
-    if (descriptor.get && descriptor.set) {
-      break;
-    }
-    obj = Object.getPrototypeOf(obj);
-  }
-  return descriptor;
-}
-function defineNonEnumerableGetterOrSetter(obj, name, value, isGetter) {
-  var descriptor = getLatestGetterOrSetterPropertyDescriptor(obj, name);
-  descriptor.configurable = true;
-  descriptor.enumerable = false;
-  if (isGetter) {
-    descriptor.get = value;
-  } else {
-    descriptor.set = value;
-  }
-  Object.defineProperty(obj, name, descriptor);
-}
-function defineNonEnumerableGetter(obj, name, getter) {
-  Object.defineProperty(obj, name, {
-    get: getter,
-    configurable: true,
-    enumerable: false
-  });
-}
-function defineNonEnumerableSetter(obj, name, setter) {
-  Object.defineProperty(obj, name, {
-    set: setter,
-    configurable: true,
-    enumerable: false
-  });
-}
-function defineNonEnumerableProperty(obj, name, value) {
-  Object.defineProperty(obj, name, {
-    value: value,
-    writable: true,
-    configurable: true,
-    enumerable: false
-  });
-}
-function defineNonEnumerableForwardingProperty(obj, name, otherName) {
-  Object.defineProperty(obj, name, {
-    get: makeForwardingGetter(otherName),
-    set: makeForwardingSetter(otherName),
-    writable: true,
-    configurable: true,
-    enumerable: false
-  });
-}
-function defineNewNonEnumerableProperty(obj, name, value) {
-  true;
-  defineNonEnumerableProperty(obj, name, value);
-}
-function isNullOrUndefined(value) {
-  return value == undefined;
-}
-function isPowerOfTwo(x) {
-  return x && (x & x - 1) === 0;
-}
+var error = Shumway.Debug.error;
+var assertNotImplemented = Shumway.Debug.assertNotImplemented;
+var warning = Shumway.Debug.warning;
+var notImplemented = Shumway.Debug.notImplemented;
+var somewhatImplemented = Shumway.Debug.somewhatImplemented;
+var unexpected = Shumway.Debug.unexpected;
+var defineReadOnlyProperty = Shumway.ObjectUtilities.defineReadOnlyProperty;
+var createEmptyObject = Shumway.ObjectUtilities.createEmptyObject;
+var makeForwardingGetter = Shumway.FunctionUtilities.makeForwardingGetter;
+var makeForwardingSetter = Shumway.FunctionUtilities.makeForwardingSetter;
+var bindSafely = Shumway.FunctionUtilities.bindSafely;
+var cloneObject = Shumway.ObjectUtilities.cloneObject;
+var copyProperties = Shumway.ObjectUtilities.copyProperties;
+var toSafeString = Shumway.StringUtilities.toSafeString;
+var toSafeArrayString = Shumway.StringUtilities.toSafeArrayString;
+var getLatestGetterOrSetterPropertyDescriptor = Shumway.ObjectUtilities.getLatestGetterOrSetterPropertyDescriptor;
+var defineNonEnumerableGetterOrSetter = Shumway.ObjectUtilities.defineNonEnumerableGetterOrSetter;
+var defineNonEnumerableGetter = Shumway.ObjectUtilities.defineNonEnumerableGetter;
+var defineNonEnumerableSetter = Shumway.ObjectUtilities.defineNonEnumerableSetter;
+var defineNonEnumerableProperty = Shumway.ObjectUtilities.defineNonEnumerableProperty;
+var defineNonEnumerableForwardingProperty = Shumway.ObjectUtilities.defineNonEnumerableForwardingProperty;
+var defineNewNonEnumerableProperty = Shumway.ObjectUtilities.defineNewNonEnumerableProperty;
+var isNumeric = Shumway.isNumeric;
+var isNullOrUndefined = Shumway.isNullOrUndefined;
+var isPowerOfTwo = Shumway.IntegerUtilities.isPowerOfTwo;
 function time(fn, count) {
   var start = performance.now();
   for (var i = 0; i < count; i++) {
@@ -9903,58 +10849,12 @@ function clamp(x, min, max) {
   }
   return x;
 }
-function fromCharCodeArray(buffer) {
-  var str = '', SLICE = 1024 * 16;
-  for (var i = 0; i < buffer.length; i += SLICE) {
-    var chunk = Math.min(buffer.length - i, SLICE);
-    str += String.fromCharCode.apply(null, buffer.subarray(i, i + chunk));
-  }
-  return str;
-}
+var fromCharCodeArray = Shumway.StringUtilities.fromCharCodeArray;
 function hasOwnProperty(object, name) {
   return Object.prototype.hasOwnProperty.call(object, name);
 }
-function toKeyValueArray(o) {
-  var hasOwnProperty = Object.prototype.hasOwnProperty;
-  var a = [];
-  for (var k in o) {
-    if (hasOwnProperty.call(o, k)) {
-      a.push([
-        k,
-        o[k]
-      ]);
-    }
-  }
-  return a;
-}
-function isNumeric(x) {
-  if (typeof x === 'number') {
-    return x === (x | 0);
-  }
-  if (typeof x !== 'string' || x.length === 0) {
-    return false;
-  }
-  if (x === '0') {
-    return true;
-  }
-  var c = x.charCodeAt(0);
-  if (c >= 49 && c <= 57) {
-    for (var i = 1, j = x.length; i < j; i++) {
-      c = x.charCodeAt(i);
-      if (!(c >= 48 && c <= 57)) {
-        return false;
-      }
-    }
-    return true;
-  }
-  return false;
-}
-function boxValue(value) {
-  if (isNullOrUndefined(value) || isObject(value)) {
-    return value;
-  }
-  return Object(value);
-}
+var toKeyValueArray = Shumway.ObjectUtilities.toKeyValueArray;
+var boxValue = Shumway.ObjectUtilities.boxValue;
 function isObject(value) {
   return typeof value === 'object' || typeof value === 'function';
 }
@@ -9975,13 +10875,6 @@ function setBitFlags(flags, flag, value) {
 }
 function getBitFlags(flags, flag) {
   return !(!(flags & flag));
-}
-function popManyInto(src, count, dst) {
-  true;
-  for (var i = count - 1; i >= 0; i--) {
-    dst[i] = src.pop();
-  }
-  dst.length = count;
 }
 (function () {
   function extendBuiltin(proto, prop, f) {
@@ -10129,115 +11022,14 @@ function popManyInto(src, count, dst) {
     return arr;
   });
 }());
-function utf8decode(str) {
-  var bytes = new Uint8Array(str.length * 4);
-  var b = 0;
-  for (var i = 0, j = str.length; i < j; i++) {
-    var code = str.charCodeAt(i);
-    if (code <= 127) {
-      bytes[b++] = code;
-      continue;
-    }
-    if (55296 <= code && code <= 56319) {
-      var codeLow = str.charCodeAt(i + 1);
-      if (56320 <= codeLow && codeLow <= 57343) {
-        code = ((code & 1023) << 10) + (codeLow & 1023) + 65536;
-        ++i;
-      }
-    }
-    if ((code & 4292870144) !== 0) {
-      bytes[b++] = 248 | code >>> 24 & 3;
-      bytes[b++] = 128 | code >>> 18 & 63;
-      bytes[b++] = 128 | code >>> 12 & 63;
-      bytes[b++] = 128 | code >>> 6 & 63;
-      bytes[b++] = 128 | code & 63;
-    } else if ((code & 4294901760) !== 0) {
-      bytes[b++] = 240 | code >>> 18 & 7;
-      bytes[b++] = 128 | code >>> 12 & 63;
-      bytes[b++] = 128 | code >>> 6 & 63;
-      bytes[b++] = 128 | code & 63;
-    } else if ((code & 4294965248) !== 0) {
-      bytes[b++] = 224 | code >>> 12 & 15;
-      bytes[b++] = 128 | code >>> 6 & 63;
-      bytes[b++] = 128 | code & 63;
-    } else {
-      bytes[b++] = 192 | code >>> 6 & 31;
-      bytes[b++] = 128 | code & 63;
-    }
-  }
-  return bytes.subarray(0, b);
-}
-function utf8encode(bytes) {
-  var j = 0, str = '';
-  while (j < bytes.length) {
-    var b1 = bytes[j++] & 255;
-    if (b1 <= 127) {
-      str += String.fromCharCode(b1);
-    } else {
-      var currentPrefix = 192;
-      var validBits = 5;
-      do {
-        var mask = currentPrefix >> 1 | 128;
-        if ((b1 & mask) === currentPrefix)
-          break;
-        currentPrefix = currentPrefix >> 1 | 128;
-        --validBits;
-      } while (validBits >= 0);
-      if (validBits <= 0) {
-        str += String.fromCharCode(b1);
-        continue;
-      }
-      var code = b1 & (1 << validBits) - 1;
-      var invalid = false;
-      for (var i = 5; i >= validBits; --i) {
-        var bi = bytes[j++];
-        if ((bi & 192) != 128) {
-          invalid = true;
-          break;
-        }
-        code = code << 6 | bi & 63;
-      }
-      if (invalid) {
-        for (var k = j - (7 - i); k < j; ++k) {
-          str += String.fromCharCode(bytes[k] & 255);
-        }
-        continue;
-      }
-      if (code >= 65536) {
-        str += String.fromCharCode(code - 65536 >> 10 & 1023 | 55296, code & 1023 | 56320);
-      } else {
-        str += String.fromCharCode(code);
-      }
-    }
-  }
-  return str;
-}
-function getFlags(value, flags) {
-  var str = '';
-  for (var i = 0; i < flags.length; i++) {
-    if (value & 1 << i) {
-      str += flags[i] + ' ';
-    }
-  }
-  if (str.length === 0) {
-    return '';
-  }
-  return str.trim();
-}
-function bitCount(i) {
-  i = i - (i >> 1 & 1431655765);
-  i = (i & 858993459) + (i >> 2 & 858993459);
-  return (i + (i >> 4) & 252645135) * 16843009 >> 24;
-}
-function escapeString(str) {
-  if (str !== undefined) {
-    str = str.replace(/[^\w$]/gi, '$');
-    if (/^\d/.test(str)) {
-      str = '$' + str;
-    }
-  }
-  return str;
-}
+var utf8decode = Shumway.StringUtilities.utf8decode;
+var utf8encode = Shumway.StringUtilities.utf8encode;
+var escapeString = Shumway.StringUtilities.escapeString;
+var bitCount = Shumway.IntegerUtilities.bitCount;
+var ones = Shumway.IntegerUtilities.ones;
+var leadingZeros = Shumway.IntegerUtilities.leadingZeros;
+var trailingZeros = Shumway.IntegerUtilities.trailingZeros;
+var getFlags = Shumway.IntegerUtilities.getFlags;
 function BitSetFunctor(length) {
   var ADDRESS_BITS_PER_WORD = 5;
   var BITS_PER_WORD = 1 << ADDRESS_BITS_PER_WORD;
@@ -10261,22 +11053,6 @@ function BitSetFunctor(length) {
   Ctor.BITS_PER_WORD = BITS_PER_WORD;
   Ctor.BIT_INDEX_MASK = BIT_INDEX_MASK;
   Ctor.singleword = singleword;
-  function ones(v) {
-    v = v - (v >> 1 & 1431655765);
-    v = (v & 858993459) + (v >> 2 & 858993459);
-    return (v + (v >> 4) & 252645135) * 16843009 >> 24;
-  }
-  function leadingZeros(v) {
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-    return 32 - ones(v);
-  }
-  function trailingZeros(v) {
-    return ones((v & -v) - 1);
-  }
   BitSet.prototype = {
     recount: function recount() {
       if (!this.dirty) {
@@ -10579,126 +11355,6 @@ function BitSetFunctor(length) {
   };
   return Ctor;
 }
-function base64ArrayBuffer(arrayBuffer) {
-  var base64 = '';
-  var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  var bytes = new Uint8Array(arrayBuffer);
-  var byteLength = bytes.byteLength;
-  var byteRemainder = byteLength % 3;
-  var mainLength = byteLength - byteRemainder;
-  var a, b, c, d;
-  var chunk;
-  for (var i = 0; i < mainLength; i = i + 3) {
-    chunk = bytes[i] << 16 | bytes[i + 1] << 8 | bytes[i + 2];
-    a = (chunk & 16515072) >> 18;
-    b = (chunk & 258048) >> 12;
-    c = (chunk & 4032) >> 6;
-    d = chunk & 63;
-    base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d];
-  }
-  if (byteRemainder == 1) {
-    chunk = bytes[mainLength];
-    a = (chunk & 252) >> 2;
-    b = (chunk & 3) << 4;
-    base64 += encodings[a] + encodings[b] + '==';
-  } else if (byteRemainder == 2) {
-    chunk = bytes[mainLength] << 8 | bytes[mainLength + 1];
-    a = (chunk & 64512) >> 10;
-    b = (chunk & 1008) >> 4;
-    c = (chunk & 15) << 2;
-    base64 += encodings[a] + encodings[b] + encodings[c] + '=';
-  }
-  return base64;
-}
-var PURPLE = '\x1b[94m';
-var YELLOW = '\x1b[93m';
-var GREEN = '\x1b[92m';
-var RED = '\x1b[91m';
-var ENDC = '\x1b[0m';
-var IndentingWriter = function () {
-    var consoleOutFn = inBrowser ? console.info.bind(console) : print;
-    function indentingWriter(suppressOutput, outFn) {
-      this.tab = '  ';
-      this.padding = '';
-      this.suppressOutput = suppressOutput;
-      this.out = outFn || consoleOutFn;
-    }
-    indentingWriter.prototype.writeLn = function writeLn(str) {
-      if (!this.suppressOutput) {
-        this.out(this.padding + str);
-      }
-    };
-    indentingWriter.prototype.writeLns = function writeLns(str) {
-      var lines = str.split('\n');
-      for (var i = 0; i < lines.length; i++) {
-        this.writeLn(lines[i]);
-      }
-    };
-    indentingWriter.prototype.debugLn = function debugLn(str) {
-      this.colorLn(PURPLE, str);
-    };
-    indentingWriter.prototype.yellowLn = function yellowLn(str) {
-      this.colorLn(YELLOW, str);
-    };
-    indentingWriter.prototype.greenLn = function greenLn(str) {
-      this.colorLn(GREEN, str);
-    };
-    indentingWriter.prototype.redLn = function redLn(str) {
-      this.colorLn(RED, str);
-    };
-    indentingWriter.prototype.colorLn = function writeLn(color, str) {
-      if (!this.suppressOutput) {
-        if (!inBrowser) {
-          this.out(this.padding + color + str + ENDC);
-        } else {
-          this.out(this.padding + str);
-        }
-      }
-    };
-    indentingWriter.prototype.enter = function enter(str) {
-      if (!this.suppressOutput) {
-        this.out(this.padding + str);
-      }
-      this.indent();
-    };
-    indentingWriter.prototype.leaveAndEnter = function leaveAndEnter(str) {
-      this.leave(str);
-      this.indent();
-    };
-    indentingWriter.prototype.leave = function leave(str) {
-      this.outdent();
-      if (!this.suppressOutput) {
-        this.out(this.padding + str);
-      }
-    };
-    indentingWriter.prototype.indent = function indent() {
-      this.padding += this.tab;
-    };
-    indentingWriter.prototype.outdent = function outdent() {
-      if (this.padding.length > 0) {
-        this.padding = this.padding.substring(0, this.padding.length - this.tab.length);
-      }
-    };
-    indentingWriter.prototype.writeArray = function writeArray(arr, detailed, noNumbers) {
-      detailed = detailed || false;
-      for (var i = 0, j = arr.length; i < j; i++) {
-        var prefix = '';
-        if (detailed) {
-          if (arr[i] === null) {
-            prefix = 'null';
-          } else if (arr[i] === undefined) {
-            prefix = 'undefined';
-          } else {
-            prefix = arr[i].constructor.name;
-          }
-          prefix += ' ';
-        }
-        var number = noNumbers ? '' : ('' + i).padRight(' ', 4);
-        this.writeLn(number + prefix + arr[i]);
-      }
-    };
-    return indentingWriter;
-  }();
 var Map = function () {
     function map() {
       this.elements = {};
@@ -10721,104 +11377,6 @@ var Map = function () {
       }
     };
     return map;
-  }();
-var SortedList = function () {
-    function sortedList(compare) {
-      true;
-      this.compare = compare;
-      this.head = null;
-      this.length = 0;
-    }
-    sortedList.RETURN = 1;
-    sortedList.DELETE = 2;
-    sortedList.prototype.push = function push(value) {
-      true;
-      this.length++;
-      if (!this.head) {
-        this.head = {
-          value: value,
-          next: null
-        };
-        return;
-      }
-      var curr = this.head;
-      var prev = null;
-      var node = {
-          value: value,
-          next: null
-        };
-      var compare = this.compare;
-      while (curr) {
-        if (compare(curr.value, node.value) > 0) {
-          if (prev) {
-            node.next = curr;
-            prev.next = node;
-          } else {
-            node.next = this.head;
-            this.head = node;
-          }
-          return;
-        }
-        prev = curr;
-        curr = curr.next;
-      }
-      prev.next = node;
-    };
-    sortedList.prototype.forEach = function forEach(visitor) {
-      var curr = this.head;
-      var last = null;
-      while (curr) {
-        var result = visitor(curr.value);
-        if (result === sortedList.RETURN) {
-          return;
-        } else if (result === sortedList.DELETE) {
-          if (!last) {
-            curr = this.head = this.head.next;
-          } else {
-            curr = last.next = curr.next;
-          }
-        } else {
-          last = curr;
-          curr = curr.next;
-        }
-      }
-    };
-    sortedList.prototype.pop = function pop() {
-      if (!this.head) {
-        return undefined;
-      }
-      this.length--;
-      var ret = this.head;
-      this.head = this.head.next;
-      return ret.value;
-    };
-    sortedList.prototype.peek = function peek() {
-      return this.head;
-    };
-    sortedList.prototype.contains = function contains(value) {
-      var curr = this.head;
-      while (curr) {
-        if (curr.value === value) {
-          return true;
-        }
-        curr = curr.next;
-      }
-      return false;
-    };
-    sortedList.prototype.toString = function () {
-      var str = '[';
-      var curr = this.head;
-      while (curr) {
-        str += curr.value.toString();
-        curr = curr.next;
-        if (curr) {
-          str += ',';
-        }
-      }
-      str += ']';
-      return str;
-    };
-    return sortedList;
   }();
 (function checkWeakMap() {
   if (typeof this.WeakMap === 'function')
@@ -10904,43 +11462,6 @@ var Callback = function () {
     };
     return callback;
   }();
-var CircularBuffer = function () {
-    var mask = 4095, size = 4096;
-    function circularBuffer(Type) {
-      this.index = 0;
-      this.start = 0;
-      this.array = new Type(size);
-    }
-    circularBuffer.prototype.get = function (i) {
-      return this.array[i];
-    };
-    circularBuffer.prototype.forEachInReverse = function (visitor) {
-      if (this.isEmpty()) {
-        return;
-      }
-      var i = this.index === 0 ? size - 1 : this.index - 1;
-      while (i !== this.start) {
-        if (visitor(this.array[i], i)) {
-          break;
-        }
-        i = i === 0 ? size - 1 : i - 1;
-      }
-    };
-    circularBuffer.prototype.write = function (value) {
-      this.array[this.index] = value;
-      this.index = this.index + 1 & mask;
-      if (this.index === this.start) {
-        this.start = this.start + 1 & mask;
-      }
-    };
-    circularBuffer.prototype.isFull = function () {
-      return this.index + 1 & mask === this.start;
-    };
-    circularBuffer.prototype.isEmpty = function () {
-      return this.index === this.start;
-    };
-    return circularBuffer;
-  }();
 function lazyClass(holder, name, initialize) {
   Object.defineProperty(holder, name, {
     get: function () {
@@ -10956,164 +11477,326 @@ function lazyClass(holder, name, initialize) {
     configurable: true
   });
 }
-function createNewCompartment() {
-  return newGlobal('new-compartment');
+var hashBytesTo32BitsAdler = Shumway.HashUtilities.hashBytesTo32BitsAdler;
+var hashBytesTo32BitsMD5 = Shumway.HashUtilities.hashBytesTo32BitsMD5;
+var variableLengthEncodeInt32 = Shumway.StringUtilities.variableLengthEncodeInt32;
+var fromEncoding = Shumway.StringUtilities.fromEncoding;
+var variableLengthDecodeIdentifier = Shumway.StringUtilities.variableLengthDecodeInt32;
+var toEncoding = Shumway.StringUtilities.toEncoding;
+var Shumway;
+(function (Shumway) {
+  (function (Options) {
+    var Argument = function () {
+        function Argument(shortName, longName, type, options) {
+          this.shortName = shortName;
+          this.longName = longName;
+          this.type = type;
+          options = options || {};
+          this.positional = options.positional;
+          this.parseFn = options.parse;
+          this.value = options.defaultValue;
+        }
+        Argument.prototype.parse = function (value) {
+          if (this.type === 'boolean') {
+            true;
+            this.value = value;
+          } else if (this.type === 'number') {
+            true;
+            this.value = parseInt(value, 10);
+          } else {
+            this.value = value;
+          }
+          if (this.parseFn) {
+            this.parseFn(this.value);
+          }
+        };
+        return Argument;
+      }();
+    Options.Argument = Argument;
+    var ArgumentParser = function () {
+        function ArgumentParser() {
+          this.args = [];
+        }
+        ArgumentParser.prototype.addArgument = function (shortName, longName, type, options) {
+          var argument = new Argument(shortName, longName, type, options);
+          this.args.push(argument);
+          return argument;
+        };
+        ArgumentParser.prototype.addBoundOption = function (option) {
+          var options = {
+              parse: function (x) {
+                option.value = x;
+              }
+            };
+          this.args.push(new Argument(option.shortName, option.longName, option.type, options));
+        };
+        ArgumentParser.prototype.addBoundOptionSet = function (optionSet) {
+          var self = this;
+          optionSet.options.forEach(function (x) {
+            if (x instanceof OptionSet) {
+              self.addBoundOptionSet(x);
+            } else {
+              true;
+              self.addBoundOption(x);
+            }
+          });
+        };
+        ArgumentParser.prototype.getUsage = function () {
+          var str = '';
+          this.args.forEach(function (x) {
+            if (!x.positional) {
+              str += '[-' + x.shortName + '|--' + x.longName + (x.type === 'boolean' ? '' : ' ' + x.type[0].toUpperCase()) + ']';
+            } else {
+              str += x.longName;
+            }
+            str += ' ';
+          });
+          return str;
+        };
+        ArgumentParser.prototype.parse = function (args) {
+          var nonPositionalArgumentMap = {};
+          var positionalArgumentList = [];
+          this.args.forEach(function (x) {
+            if (x.positional) {
+              positionalArgumentList.push(x);
+            } else {
+              nonPositionalArgumentMap['-' + x.shortName] = x;
+              nonPositionalArgumentMap['--' + x.longName] = x;
+            }
+          });
+          var leftoverArguments = [];
+          while (args.length) {
+            var argString = args.shift();
+            var argument = null, value = argString;
+            if (argString == '--') {
+              leftoverArguments = leftoverArguments.concat(args);
+              break;
+            } else if (argString.slice(0, 1) == '-' || argString.slice(0, 2) == '--') {
+              argument = nonPositionalArgumentMap[argString];
+              true;
+              if (!argument) {
+                continue;
+              }
+              if (argument.type !== 'boolean') {
+                value = args.shift();
+                true;
+              } else {
+                value = true;
+              }
+            } else if (positionalArgumentList.length) {
+              argument = positionalArgumentList.shift();
+            } else {
+              leftoverArguments.push(value);
+            }
+            if (argument) {
+              argument.parse(value);
+            }
+          }
+          true;
+          return leftoverArguments;
+        };
+        return ArgumentParser;
+      }();
+    Options.ArgumentParser = ArgumentParser;
+    var OptionSet = function () {
+        function OptionSet(name) {
+          this.name = name;
+          this.options = [];
+        }
+        OptionSet.prototype.register = function (option) {
+          this.options.push(option);
+          return option;
+        };
+        OptionSet.prototype.trace = function (writer) {
+          writer.enter(this.name + ' {');
+          this.options.forEach(function (option) {
+            option.trace(writer);
+          });
+          writer.leave('}');
+        };
+        return OptionSet;
+      }();
+    Options.OptionSet = OptionSet;
+    var Option = function () {
+        function Option(shortName, longName, type, defaultValue, description) {
+          this.longName = longName;
+          this.shortName = shortName;
+          this.type = type;
+          this.defaultValue = defaultValue;
+          this.value = defaultValue;
+          this.description = description;
+        }
+        Option.prototype.parse = function (value) {
+          this.value = value;
+        };
+        Option.prototype.trace = function (writer) {
+          writer.writeLn(('-' + this.shortName + '|--' + this.longName).padRight(' ', 30) + ' = ' + this.type + ' ' + this.value + ' [' + this.defaultValue + ']' + ' (' + this.description + ')');
+        };
+        return Option;
+      }();
+    Options.Option = Option;
+  }(Shumway.Options || (Shumway.Options = {})));
+  var Options = Shumway.Options;
+}(Shumway || (Shumway = {})));
+if (typeof exports !== 'undefined') {
+  exports['Shumway'] = Shumway;
 }
-(function (exports) {
-  var Timer = function () {
-      var base = new timer(null, 'Total'), top = base;
-      var flat = new timer(null, 'Flat'), flatStack = [];
-      function timer(parent, name) {
-        this.parent = parent;
-        this.timers = {};
-        this.name = name;
-        this.begin = 0;
-        this.last = 0;
-        this.total = 0;
-        this.count = 0;
-      }
-      timer.flat = flat;
-      function getTicks() {
-        return performance.now();
-      }
-      timer.prototype.start = function () {
-        this.begin = getTicks();
-      };
-      timer.prototype.stop = function () {
-        this.last = getTicks() - this.begin;
-        this.total += this.last;
-        this.count += 1;
-      };
-      timer.time = function (name, fn) {
-        timer.start(name);
-        fn();
-        timer.stop();
-      };
-      timer.start = function (name) {
-        top = top.timers[name] || (top.timers[name] = new timer(top, name));
-        top.start();
-        var tmp = flat.timers[name] || (flat.timers[name] = new timer(flat, name));
-        tmp.start();
-        flatStack.push(tmp);
-      };
-      timer.stop = function () {
-        top.stop();
-        top = top.parent;
-        flatStack.pop().stop();
-      };
-      timer.stopStart = function (name) {
-        Timer.stop();
-        Timer.start(name);
-      }, timer.prototype.toJSON = function () {
-        return {
-          name: this.name,
-          total: this.total,
-          timers: this.timers
+var ArgumentParser = Shumway.Options.ArgumentParser;
+var Option = Shumway.Options.Option;
+var OptionSet = Shumway.Options.OptionSet;
+var ArgumentParser = Shumway.Options.ArgumentParser;
+var Option = Shumway.Options.Option;
+var OptionSet = Shumway.Options.OptionSet;
+var Shumway;
+(function (Shumway) {
+  (function (Metrics) {
+    var Timer = function () {
+        function Timer(parent, name) {
+          this._parent = parent;
+          this._timers = Shumway.ObjectUtilities.createMap();
+          this._name = name;
+          this._begin = 0;
+          this._last = 0;
+          this._total = 0;
+          this._count = 0;
+        }
+        Timer.time = function (name, fn) {
+          Timer.start(name);
+          fn();
+          Timer.stop();
         };
-      };
-      timer.prototype.trace = function (writer, json) {
-        if (json) {
-          writer.writeLn('SHUMWAY$JSON ' + JSON.stringify({
-            timer: this
-          }));
-          return;
-        }
-        writer.enter(this.name + ': ' + this.total.toFixed(2) + ' ms' + ', count: ' + this.count + ', average: ' + (this.total / this.count).toFixed(2) + ' ms');
-        for (var name in this.timers) {
-          this.timers[name].trace(writer);
-        }
-        writer.outdent();
-      };
-      timer.trace = function (writer, json) {
-        base.trace(writer, json);
-        flat.trace(writer, json);
-      };
-      return timer;
-    }();
-  var Counter = function () {
-      function counter(enabled) {
-        this.enabled = !(!enabled);
-        this.counts = createEmptyObject();
-      }
-      counter.prototype.setEnabled = function (enabled) {
-        this.enabled = enabled;
-      };
-      counter.prototype.clear = function () {
-        this.counts = {};
-      };
-      counter.prototype.toJSON = function () {
-        return {
-          counts: this.counts
+        Timer.start = function (name) {
+          Timer._top = Timer._top._timers[name] || (Timer._top._timers[name] = new Timer(Timer._top, name));
+          Timer._top.start();
+          var tmp = Timer._flat._timers[name] || (Timer._flat._timers[name] = new Timer(Timer._flat, name));
+          tmp.start();
+          Timer._flatStack.push(tmp);
         };
-      };
-      counter.prototype.count = function (name, increment) {
-        if (!this.enabled) {
-          return;
+        Timer.stop = function () {
+          Timer._top.stop();
+          Timer._top = Timer._top._parent;
+          Timer._flatStack.pop().stop();
+        };
+        Timer.stopStart = function (name) {
+          Timer.stop();
+          Timer.start(name);
+        };
+        Timer.prototype.start = function () {
+          this._begin = Shumway.getTicks();
+        };
+        Timer.prototype.stop = function () {
+          this._last = Shumway.getTicks() - this._begin;
+          this._total += this._last;
+          this._count += 1;
+        };
+        Timer.prototype.toJSON = function () {
+          return {
+            name: this._name,
+            total: this._total,
+            timers: this._timers
+          };
+        };
+        Timer.prototype.trace = function (writer) {
+          writer.enter(this._name + ': ' + this._total.toFixed(2) + ' ms' + ', count: ' + this._count + ', average: ' + (this._total / this._count).toFixed(2) + ' ms');
+          for (var name in this._timers) {
+            this._timers[name].trace(writer);
+          }
+          writer.outdent();
+        };
+        Timer.trace = function (writer) {
+          Timer._base.trace(writer);
+          Timer._flat.trace(writer);
+        };
+        Timer._base = new Timer(null, 'Total');
+        Timer._top = Timer._base;
+        Timer._flat = new Timer(null, 'Flat');
+        Timer._flatStack = [];
+        return Timer;
+      }();
+    Metrics.Timer = Timer;
+    var Counter = function () {
+        function Counter(enabled) {
+          this._enabled = enabled;
+          this.clear();
         }
-        increment = increment !== undefined ? increment : 1;
-        if (this.counts[name] === undefined) {
-          this.counts[name] = 0;
+        Counter.prototype.setEnabled = function (enabled) {
+          this._enabled = enabled;
+        };
+        Counter.prototype.clear = function () {
+          this._counts = Shumway.ObjectUtilities.createMap();
+        };
+        Counter.prototype.toJSON = function () {
+          return {
+            counts: this._counts
+          };
+        };
+        Counter.prototype.count = function (name, increment) {
+          if (typeof increment === 'undefined') {
+            increment = 1;
+          }
+          if (!this._enabled) {
+            return;
+          }
+          if (this._counts[name] === undefined) {
+            this._counts[name] = 0;
+          }
+          this._counts[name] += increment;
+          return this._counts[name];
+        };
+        Counter.prototype.trace = function (writer) {
+          for (var name in this._counts) {
+            writer.writeLn(name + ': ' + this._counts[name]);
+          }
+        };
+        Counter.prototype.traceSorted = function (writer) {
+          var pairs = [];
+          for (var name in this._counts) {
+            pairs.push([
+              name,
+              this._counts[name]
+            ]);
+          }
+          pairs.sort(function (a, b) {
+            return b[1] - a[1];
+          });
+          pairs.forEach(function (pair) {
+            writer.writeLn(pair[0] + ': ' + pair[1]);
+          });
+        };
+        return Counter;
+      }();
+    Metrics.Counter = Counter;
+    var Average = function () {
+        function Average(max) {
+          this._samples = new Float64Array(max);
+          this._count = 0;
+          this._index = 0;
         }
-        this.counts[name] += increment;
-        return this.counts[name];
-      };
-      counter.prototype.trace = function (writer, json) {
-        if (json) {
-          writer.writeLn('SHUMWAY$JSON ' + JSON.stringify({
-            counter: this
-          }));
-          return;
-        }
-        for (var name in this.counts) {
-          writer.writeLn(name + ': ' + this.counts[name]);
-        }
-      };
-      counter.prototype.traceSorted = function (writer) {
-        var pairs = [];
-        for (var name in this.counts) {
-          pairs.push([
-            name,
-            this.counts[name]
-          ]);
-        }
-        pairs.sort(function (a, b) {
-          return b[1] - a[1];
-        });
-        pairs.forEach(function (pair) {
-          writer.writeLn(pair[0] + ': ' + pair[1]);
-        });
-      };
-      return counter;
-    }();
-  var Average = function () {
-      function average(max) {
-        this.samples = new Float64Array(max);
-        this.count = 0;
-        this.index = 0;
-      }
-      average.prototype.push = function push(sample) {
-        if (this.count < this.samples.length) {
-          this.count++;
-        }
-        this.index++;
-        this.samples[this.index % this.samples.length] = sample;
-      };
-      average.prototype.average = function average() {
-        var sum = 0;
-        for (var i = 0; i < this.count; i++) {
-          sum += this.samples[i];
-        }
-        return sum / this.count;
-      };
-      return average;
-    }();
-  exports.Timer = Timer;
-  exports.Counter = Counter;
-  exports.Average = Average;
-}(typeof exports === 'undefined' ? metrics = {} : exports));
-var Counter = new metrics.Counter(true);
-var FrameCounter = new metrics.Counter(true);
-var Timer = metrics.Timer;
+        Average.prototype.push = function (sample) {
+          if (this._count < this._samples.length) {
+            this._count++;
+          }
+          this._index++;
+          this._samples[this._index % this._samples.length] = sample;
+        };
+        Average.prototype.average = function () {
+          var sum = 0;
+          for (var i = 0; i < this._count; i++) {
+            sum += this._samples[i];
+          }
+          return sum / this._count;
+        };
+        return Average;
+      }();
+    Metrics.Average = Average;
+  }(Shumway.Metrics || (Shumway.Metrics = {})));
+  var Metrics = Shumway.Metrics;
+}(Shumway || (Shumway = {})));
+var Timer = Shumway.Metrics.Timer;
+var Counter = new Shumway.Metrics.Counter(true);
+var Timer = Shumway.Metrics.Timer;
+var Counter = new Shumway.Metrics.Counter(true);
+var FrameCounter = new Shumway.Metrics.Counter(true);
 var systemOptions = new OptionSet('System Options');
 var disassemble = systemOptions.register(new Option('d', 'disassemble', 'boolean', false, 'disassemble'));
 var traceLevel = systemOptions.register(new Option('t', 'traceLevel', 'number', 0, 'trace level'));
@@ -11366,2527 +12049,3174 @@ var SORT_DESCENDING = 2;
 var SORT_UNIQUESORT = 4;
 var SORT_RETURNINDEXEDARRAY = 8;
 var SORT_NUMERIC = 16;
-var Errors = {
-    CallOfNonFunctionError: {
-      code: 1006,
-      message: '%1 is not a function.'
-    },
-    ConvertNullToObjectError: {
-      code: 1009,
-      message: 'Cannot access a property or method of a null object reference.'
-    },
-    ConvertUndefinedToObjectError: {
-      code: 1010,
-      message: 'A term is undefined and has no properties.'
-    },
-    ClassNotFoundError: {
-      code: 1014,
-      message: 'Class %1 could not be found.'
-    },
-    CheckTypeFailedError: {
-      code: 1034,
-      message: 'Type Coercion failed: cannot convert %1 to %2.'
-    },
-    WrongArgumentCountError: {
-      code: 1063,
-      message: 'Argument count mismatch on %1. Expected %2, got %3.'
-    },
-    XMLMarkupMustBeWellFormed: {
-      code: 1088,
-      message: 'The markup in the document following the root element must be well-formed.'
-    },
-    OutOfRangeError: {
-      code: 1125,
-      message: 'The index %1 is out of range %2.'
-    },
-    VectorFixedError: {
-      code: 1126,
-      message: 'Cannot change the length of a fixed Vector.'
-    },
-    InvalidParamError: {
-      code: 2004,
-      message: 'One of the parameters is invalid.'
-    },
-    ParamRangeError: {
-      code: 2006,
-      message: 'The supplied index is out of bounds.'
-    },
-    NullPointerError: {
-      code: 2007,
-      message: 'Parameter %1 must be non-null.'
-    },
-    InvalidEnumError: {
-      code: 2008,
-      message: 'Parameter %1 must be one of the accepted values.'
-    },
-    ArgumentError: {
-      code: 2015,
-      message: 'Invalid BitmapData.'
-    },
-    CompressedDataError: {
-      code: 2058,
-      message: 'There was an error decompressing the data.'
-    },
-    SocketConnectError: {
-      code: 2011,
-      message: 'Socket connection failed to %1:%2.'
-    },
-    CantAddSelfError: {
-      code: 2024,
-      message: 'An object cannot be added as a child of itself.'
-    },
-    NotAChildError: {
-      code: 2025,
-      message: 'The supplied DisplayObject must be a child of the caller.'
-    },
-    ExternalInterfaceNotAvailableError: {
-      code: 2067,
-      message: 'The ExternalInterface is not available in this container. ExternalInterface requires Internet Explorer ActiveX, Firefox, Mozilla 1.7.5 and greater, or other browsers that support NPRuntime.'
-    }
-  };
-function getErrorMessage(index) {
-  if (!debuggerMode.value) {
-    return 'Error #' + index;
-  }
-  for (var k in Errors) {
-    if (Errors[k].code == index) {
-      return 'Error #' + index + ': ' + Errors[k].message;
-    }
-  }
-  return 'Error #' + index + ': (unknown)';
-}
-function formatErrorMessage(error) {
-  var message = error.message;
-  Array.prototype.slice.call(arguments, 1).forEach(function (x, i) {
-    message = message.replace('%' + (i + 1), x);
-  });
-  return 'Error #' + error.code + ': ' + message;
-}
-function translateErrorMessage(error) {
-  if (error.type) {
-    switch (error.type) {
-    case 'undefined_method':
-      return formatErrorMessage(Errors.CallOfNonFunctionError, 'value');
-    default:
-      throw notImplemented(error.type);
-    }
-  } else {
-    if (error.message.indexOf('is not a function') >= 0) {
-      return formatErrorMessage(Errors.CallOfNonFunctionError, 'value');
-    }
-    return error.message;
-  }
-}
-var opcodeTable = [
-    null,
-    {
-      name: 'bkpt',
-      operands: '',
-      canThrow: false,
-      stackDelta: 0
-    },
-    {
-      name: 'nop',
-      operands: '',
-      canThrow: false,
-      stackDelta: 0
-    },
-    {
-      name: 'throw',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'getsuper',
-      operands: 'index:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'setsuper',
-      operands: 'index:u30',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'dxns',
-      operands: 'index:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'dxnslate',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'kill',
-      operands: 'index:u30',
-      canThrow: false,
-      stackDelta: 0
-    },
-    {
-      name: 'label',
-      operands: '',
-      canThrow: false,
-      stackDelta: 0
-    },
-    {
-      name: 'lf32x4',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'sf32x4',
-      operands: '',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'ifnlt',
-      operands: 'offset:s24',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'ifnle',
-      operands: 'offset:s24',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'ifngt',
-      operands: 'offset:s24',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'ifnge',
-      operands: 'offset:s24',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'jump',
-      operands: 'offset:s24',
-      canThrow: false,
-      stackDelta: 0
-    },
-    {
-      name: 'iftrue',
-      operands: 'offset:s24',
-      canThrow: false,
-      stackDelta: -1
-    },
-    {
-      name: 'iffalse',
-      operands: 'offset:s24',
-      canThrow: false,
-      stackDelta: -1
-    },
-    {
-      name: 'ifeq',
-      operands: 'offset:s24',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'ifne',
-      operands: 'offset:s24',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'iflt',
-      operands: 'offset:s24',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'ifle',
-      operands: 'offset:s24',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'ifgt',
-      operands: 'offset:s24',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'ifge',
-      operands: 'offset:s24',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'ifstricteq',
-      operands: 'offset:s24',
-      canThrow: false,
-      stackDelta: -2
-    },
-    {
-      name: 'ifstrictne',
-      operands: 'offset:s24',
-      canThrow: false,
-      stackDelta: -2
-    },
-    {
-      name: 'lookupswitch',
-      operands: null,
-      canThrow: false,
-      stackDelta: -1
-    },
-    {
-      name: 'pushwith',
-      operands: '',
-      canThrow: false,
-      stackDelta: -1
-    },
-    {
-      name: 'popscope',
-      operands: '',
-      canThrow: false,
-      stackDelta: 0
-    },
-    {
-      name: 'nextname',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'hasnext',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'pushnull',
-      operands: '',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'pushundefined',
-      operands: '',
-      canThrow: false,
-      stackDelta: 1
-    },
-    null,
-    {
-      name: 'nextvalue',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'pushbyte',
-      operands: 'value:s08',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'pushshort',
-      operands: 'value:s16',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'pushtrue',
-      operands: '',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'pushfalse',
-      operands: '',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'pushnan',
-      operands: '',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'pop',
-      operands: '',
-      canThrow: false,
-      stackDelta: -1
-    },
-    {
-      name: 'dup',
-      operands: '',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'swap',
-      operands: '',
-      canThrow: false,
-      stackDelta: 0
-    },
-    {
-      name: 'pushstring',
-      operands: 'index:u30S',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'pushint',
-      operands: 'index:u30I',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'pushuint',
-      operands: 'index:u30U',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'pushdouble',
-      operands: 'index:u30D',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'pushscope',
-      operands: '',
-      canThrow: false,
-      stackDelta: -1
-    },
-    {
-      name: 'pushnamespace',
-      operands: 'index:u30N',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'hasnext2',
-      operands: 'object:u30,index:u30',
-      canThrow: true,
-      stackDelta: 1
-    },
-    {
-      name: 'lix8',
-      operands: null,
-      canThrow: true,
-      stackDelta: 0,
-      internal: true
-    },
-    {
-      name: 'lix16',
-      operands: null,
-      canThrow: true,
-      stackDelta: 0,
-      internal: true
-    },
-    {
-      name: 'li8',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'li16',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'li32',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'lf32',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'lf64',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'si8',
-      operands: '',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'si16',
-      operands: '',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'si32',
-      operands: '',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'sf32',
-      operands: '',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'sf64',
-      operands: '',
-      canThrow: true,
-      stackDelta: -2
-    },
-    null,
-    {
-      name: 'newfunction',
-      operands: 'index:u30MI',
-      canThrow: true,
-      stackDelta: 1
-    },
-    {
-      name: 'call',
-      operands: 'argCount:u30',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'construct',
-      operands: 'argCount:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'callmethod',
-      operands: 'index:u30,argCount:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'callstatic',
-      operands: 'index:u30MI,argCount:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'callsuper',
-      operands: 'index:u30M,argCount:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'callproperty',
-      operands: 'index:u30M,argCount:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'returnvoid',
-      operands: '',
-      canThrow: false,
-      stackDelta: 0
-    },
-    {
-      name: 'returnvalue',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'constructsuper',
-      operands: 'argCount:u30',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'constructprop',
-      operands: 'index:u30M,argCount:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'callsuperid',
-      operands: null,
-      canThrow: true,
-      stackDelta: 0,
-      internal: true
-    },
-    {
-      name: 'callproplex',
-      operands: 'index:u30M,argCount:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'callinterface',
-      operands: null,
-      canThrow: true,
-      stackDelta: 0,
-      internal: true
-    },
-    {
-      name: 'callsupervoid',
-      operands: 'index:u30M,argCount:u30',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'callpropvoid',
-      operands: 'index:u30M,argCount:u30',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'sxi1',
-      operands: '',
-      canThrow: false,
-      stackDelta: 0
-    },
-    {
-      name: 'sxi8',
-      operands: '',
-      canThrow: false,
-      stackDelta: 0
-    },
-    {
-      name: 'sxi16',
-      operands: '',
-      canThrow: false,
-      stackDelta: 0
-    },
-    {
-      name: 'applytype',
-      operands: 'argCount:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'pushfloat4',
-      operands: null,
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'newobject',
-      operands: 'argCount:u30',
-      canThrow: true,
-      stackDelta: 1
-    },
-    {
-      name: 'newarray',
-      operands: 'argCount:u30',
-      canThrow: true,
-      stackDelta: 1
-    },
-    {
-      name: 'newactivation',
-      operands: '',
-      canThrow: true,
-      stackDelta: 1
-    },
-    {
-      name: 'newclass',
-      operands: 'index:u30CI',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'getdescendants',
-      operands: 'index:u30M',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'newcatch',
-      operands: 'index:u30EI',
-      canThrow: true,
-      stackDelta: 1
-    },
-    {
-      name: 'findpropglobalstrict',
-      operands: null,
-      canThrow: true,
-      stackDelta: 0,
-      internal: true
-    },
-    {
-      name: 'findpropglobal',
-      operands: null,
-      canThrow: true,
-      stackDelta: 0,
-      internal: true
-    },
-    {
-      name: 'findpropstrict',
-      operands: 'index:u30M',
-      canThrow: true,
-      stackDelta: 1
-    },
-    {
-      name: 'findproperty',
-      operands: 'index:u30M',
-      canThrow: true,
-      stackDelta: 1
-    },
-    {
-      name: 'finddef',
-      operands: null,
-      canThrow: true,
-      stackDelta: 1
-    },
-    {
-      name: 'getlex',
-      operands: 'index:u30M',
-      canThrow: true,
-      stackDelta: 1
-    },
-    {
-      name: 'setproperty',
-      operands: 'index:u30M',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'getlocal',
-      operands: 'index:u30',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'setlocal',
-      operands: 'index:u30',
-      canThrow: false,
-      stackDelta: -1
-    },
-    {
-      name: 'getglobalscope',
-      operands: '',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'getscopeobject',
-      operands: 'index:u30',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'getproperty',
-      operands: 'index:u30M',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'getouterscope',
-      operands: null,
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'initproperty',
-      operands: 'index:u30M',
-      canThrow: true,
-      stackDelta: -2
-    },
-    null,
-    {
-      name: 'deleteproperty',
-      operands: 'index:u30M',
-      canThrow: true,
-      stackDelta: 0
-    },
-    null,
-    {
-      name: 'getslot',
-      operands: 'index:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'setslot',
-      operands: 'index:u30',
-      canThrow: true,
-      stackDelta: -2
-    },
-    {
-      name: 'getglobalslot',
-      operands: 'index:u30',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'setglobalslot',
-      operands: 'index:u30',
-      canThrow: false,
-      stackDelta: -1
-    },
-    {
-      name: 'convert_s',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'esc_xelem',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'esc_xattr',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'convert_i',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'convert_u',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'convert_d',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'convert_b',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'convert_o',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'checkfilter',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'convert_f',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'unplus',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'convert_f4',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    null,
-    null,
-    null,
-    null,
-    {
-      name: 'coerce',
-      operands: 'index:u30M',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'coerce_b',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'coerce_a',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'coerce_i',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'coerce_d',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'coerce_s',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'astype',
-      operands: 'index:u30M',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'astypelate',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'coerce_u',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'coerce_o',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    {
-      name: 'negate',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'increment',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'inclocal',
-      operands: 'index:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'decrement',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'declocal',
-      operands: 'index:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'typeof',
-      operands: '',
-      canThrow: false,
-      stackDelta: 0
-    },
-    {
-      name: 'not',
-      operands: '',
-      canThrow: false,
-      stackDelta: 0
-    },
-    {
-      name: 'bitnot',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    {
-      name: 'add',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'subtract',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'multiply',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'divide',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'modulo',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'lshift',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'rshift',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'urshift',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'bitand',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'bitor',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'bitxor',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'equals',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'strictequals',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'lessthan',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'lessequals',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'greaterthan',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'greaterequals',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'instanceof',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'istype',
-      operands: 'index:u30M',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'istypelate',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'in',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    {
-      name: 'increment_i',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'decrement_i',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'inclocal_i',
-      operands: 'index:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'declocal_i',
-      operands: 'index:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'negate_i',
-      operands: '',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'add_i',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'subtract_i',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    {
-      name: 'multiply_i',
-      operands: '',
-      canThrow: true,
-      stackDelta: -1
-    },
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    {
-      name: 'getlocal0',
-      operands: '',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'getlocal1',
-      operands: '',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'getlocal2',
-      operands: '',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'getlocal3',
-      operands: '',
-      canThrow: false,
-      stackDelta: 1
-    },
-    {
-      name: 'setlocal0',
-      operands: '',
-      canThrow: false,
-      stackDelta: -1
-    },
-    {
-      name: 'setlocal1',
-      operands: '',
-      canThrow: false,
-      stackDelta: -1
-    },
-    {
-      name: 'setlocal2',
-      operands: '',
-      canThrow: false,
-      stackDelta: -1
-    },
-    {
-      name: 'setlocal3',
-      operands: '',
-      canThrow: false,
-      stackDelta: -1
-    },
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    {
-      name: 'invalid',
-      operands: '',
-      canThrow: false,
-      stackDelta: 0
-    },
-    null,
-    {
-      name: 'debug',
-      operands: 'debugType:u08,index:u30S,reg:u08,extra:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'debugline',
-      operands: 'lineNumber:u30',
-      canThrow: true,
-      stackDelta: 0
-    },
-    {
-      name: 'debugfile',
-      operands: 'index:u30S',
-      canThrow: true,
-      stackDelta: 0
-    },
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null
-  ];
-(function processOpcodeTable() {
-  for (var i = 0; i < opcodeTable.length; i++) {
-    var entry = opcodeTable[i];
-    if (entry && entry.operands !== null) {
-      var result = [];
-      if (entry.operands !== '') {
-        var operands = entry.operands.split(',');
-        for (var j = 0; j < operands.length; j++) {
-          var list = operands[j].split(':');
-          result.push({
-            name: list[0],
-            size: list[1].substring(0, 3),
-            type: list[1].substring(3)
-          });
+var Shumway;
+(function (Shumway) {
+  (function (AVM2) {
+    AVM2.Errors = {
+      CallOfNonFunctionError: {
+        code: 1006,
+        message: '%1 is not a function.'
+      },
+      ConvertNullToObjectError: {
+        code: 1009,
+        message: 'Cannot access a property or method of a null object reference.'
+      },
+      ConvertUndefinedToObjectError: {
+        code: 1010,
+        message: 'A term is undefined and has no properties.'
+      },
+      ClassNotFoundError: {
+        code: 1014,
+        message: 'Class %1 could not be found.'
+      },
+      CheckTypeFailedError: {
+        code: 1034,
+        message: 'Type Coercion failed: cannot convert %1 to %2.'
+      },
+      WrongArgumentCountError: {
+        code: 1063,
+        message: 'Argument count mismatch on %1. Expected %2, got %3.'
+      },
+      XMLMarkupMustBeWellFormed: {
+        code: 1088,
+        message: 'The markup in the document following the root element must be well-formed.'
+      },
+      OutOfRangeError: {
+        code: 1125,
+        message: 'The index %1 is out of range %2.'
+      },
+      VectorFixedError: {
+        code: 1126,
+        message: 'Cannot change the length of a fixed Vector.'
+      },
+      InvalidParamError: {
+        code: 2004,
+        message: 'One of the parameters is invalid.'
+      },
+      ParamRangeError: {
+        code: 2006,
+        message: 'The supplied index is out of bounds.'
+      },
+      NullPointerError: {
+        code: 2007,
+        message: 'Parameter %1 must be non-null.'
+      },
+      InvalidEnumError: {
+        code: 2008,
+        message: 'Parameter %1 must be one of the accepted values.'
+      },
+      ArgumentError: {
+        code: 2015,
+        message: 'Invalid BitmapData.'
+      },
+      CompressedDataError: {
+        code: 2058,
+        message: 'There was an error decompressing the data.'
+      },
+      SocketConnectError: {
+        code: 2011,
+        message: 'Socket connection failed to %1:%2.'
+      },
+      CantAddSelfError: {
+        code: 2024,
+        message: 'An object cannot be added as a child of itself.'
+      },
+      NotAChildError: {
+        code: 2025,
+        message: 'The supplied DisplayObject must be a child of the caller.'
+      },
+      ExternalInterfaceNotAvailableError: {
+        code: 2067,
+        message: 'The ExternalInterface is not available in this container. ExternalInterface requires Internet Explorer ActiveX, Firefox, Mozilla 1.7.5 and greater, or other browsers that support NPRuntime.'
+      }
+    };
+    function getErrorMessage(index) {
+      if (!Shumway.AVM2.Runtime.debuggerMode.value) {
+        return 'Error #' + index;
+      }
+      for (var k in AVM2.Errors) {
+        if (AVM2.Errors[k].code == index) {
+          return 'Error #' + index + ': ' + AVM2.Errors[k].message;
         }
       }
-      entry.operands = result;
+      return 'Error #' + index + ': (unknown)';
     }
-  }
-}());
-function opcodeName(op) {
-  return opcodeTable[op].name;
-}
-var AbcStream = function () {
-    function abcStream(bytes) {
-      this.bytes = bytes;
-      this.view = new DataView(bytes.buffer, bytes.byteOffset);
-      this.pos = 0;
+    AVM2.getErrorMessage = getErrorMessage;
+    function formatErrorMessage(error) {
+      var args = [];
+      for (var _i = 0; _i < arguments.length - 1; _i++) {
+        args[_i] = arguments[_i + 1];
+      }
+      var message = error.message;
+      Array.prototype.slice.call(arguments, 1).forEach(function (x, i) {
+        message = message.replace('%' + (i + 1), x);
+      });
+      return 'Error #' + error.code + ': ' + message;
     }
-    var resultBuffer = new Int32Array(256);
-    abcStream.prototype = {
-      get position() {
-        return this.pos;
-      },
-      remaining: function () {
-        return this.bytes.length - this.pos;
-      },
-      seek: function (pos) {
-        this.pos = pos;
-      },
-      readU8: function () {
-        return this.bytes[this.pos++];
-      },
-      readU8s: function (count) {
-        var b = new Uint8Array(count);
-        b.set(this.bytes.subarray(this.pos, this.pos + count), 0);
-        this.pos += count;
-        return b;
-      },
-      readS8: function () {
-        return this.bytes[this.pos++] << 24 >> 24;
-      },
-      readU32: function () {
-        return this.readS32() >>> 0;
-      },
-      readU30: function () {
-        var result = this.readU32();
-        if (result & 3221225472) {
-          return result;
+    AVM2.formatErrorMessage = formatErrorMessage;
+    function translateErrorMessage(error) {
+      if (error.type) {
+        switch (error.type) {
+        case 'undefined_method':
+          return formatErrorMessage(AVM2.Errors.CallOfNonFunctionError, 'value');
+        default:
+          throw Shumway.Debug.notImplemented(error.type);
         }
-        return result;
+      } else {
+        if (error.message.indexOf('is not a function') >= 0) {
+          return formatErrorMessage(AVM2.Errors.CallOfNonFunctionError, 'value');
+        }
+        return error.message;
+      }
+    }
+    AVM2.translateErrorMessage = translateErrorMessage;
+  }(Shumway.AVM2 || (Shumway.AVM2 = {})));
+  var AVM2 = Shumway.AVM2;
+}(Shumway || (Shumway = {})));
+var Errors = Shumway.AVM2.Errors;
+var getErrorMessage = Shumway.AVM2.getErrorMessage;
+var formatErrorMessage = Shumway.AVM2.formatErrorMessage;
+var translateErrorMessage = Shumway.AVM2.translateErrorMessage;
+var Errors = Shumway.AVM2.Errors;
+var getErrorMessage = Shumway.AVM2.getErrorMessage;
+var formatErrorMessage = Shumway.AVM2.formatErrorMessage;
+var translateErrorMessage = Shumway.AVM2.translateErrorMessage;
+var Shumway;
+(function (Shumway) {
+  (function (AVM2) {
+    AVM2.opcodeTable = [
+      null,
+      {
+        name: 'bkpt',
+        canThrow: false,
+        operands: []
       },
-      readU30Unsafe: function () {
-        return this.readU32();
+      {
+        name: 'nop',
+        canThrow: false,
+        operands: []
       },
-      readS16: function () {
-        return this.readU30Unsafe() << 16 >> 16;
+      {
+        name: 'throw',
+        canThrow: true,
+        operands: []
       },
-      readS32: function () {
-        var result = this.readU8();
-        if (result & 128) {
-          result = result & 127 | this.readU8() << 7;
-          if (result & 16384) {
-            result = result & 16383 | this.readU8() << 14;
-            if (result & 2097152) {
-              result = result & 2097151 | this.readU8() << 21;
-              if (result & 268435456) {
-                result = result & 268435455 | this.readU8() << 28;
-                result = result & 4294967295;
+      {
+        name: 'getsuper',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'setsuper',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'dxns',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'dxnslate',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'kill',
+        canThrow: false,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'label',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'lf32x4',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'sf32x4',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'ifnlt',
+        canThrow: true,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'ifnle',
+        canThrow: true,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'ifngt',
+        canThrow: true,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'ifnge',
+        canThrow: true,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'jump',
+        canThrow: false,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'iftrue',
+        canThrow: false,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'iffalse',
+        canThrow: false,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'ifeq',
+        canThrow: true,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'ifne',
+        canThrow: true,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'iflt',
+        canThrow: true,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'ifle',
+        canThrow: true,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'ifgt',
+        canThrow: true,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'ifge',
+        canThrow: true,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'ifstricteq',
+        canThrow: false,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'ifstrictne',
+        canThrow: false,
+        operands: [
+          {
+            name: 'offset',
+            size: 's24',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'lookupswitch',
+        canThrow: false,
+        operands: null
+      },
+      {
+        name: 'pushwith',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'popscope',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'nextname',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'hasnext',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'pushnull',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'pushundefined',
+        canThrow: false,
+        operands: []
+      },
+      null,
+      {
+        name: 'nextvalue',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'pushbyte',
+        canThrow: false,
+        operands: [
+          {
+            name: 'value',
+            size: 's08',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'pushshort',
+        canThrow: false,
+        operands: [
+          {
+            name: 'value',
+            size: 's16',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'pushtrue',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'pushfalse',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'pushnan',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'pop',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'dup',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'swap',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'pushstring',
+        canThrow: false,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'S'
+          }
+        ]
+      },
+      {
+        name: 'pushint',
+        canThrow: false,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'I'
+          }
+        ]
+      },
+      {
+        name: 'pushuint',
+        canThrow: false,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'U'
+          }
+        ]
+      },
+      {
+        name: 'pushdouble',
+        canThrow: false,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'D'
+          }
+        ]
+      },
+      {
+        name: 'pushscope',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'pushnamespace',
+        canThrow: false,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'N'
+          }
+        ]
+      },
+      {
+        name: 'hasnext2',
+        canThrow: true,
+        operands: [
+          {
+            name: 'object',
+            size: 'u30',
+            type: ''
+          },
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'lix8',
+        canThrow: true,
+        operands: null
+      },
+      {
+        name: 'lix16',
+        canThrow: true,
+        operands: null
+      },
+      {
+        name: 'li8',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'li16',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'li32',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'lf32',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'lf64',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'si8',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'si16',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'si32',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'sf32',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'sf64',
+        canThrow: true,
+        operands: []
+      },
+      null,
+      {
+        name: 'newfunction',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'MI'
+          }
+        ]
+      },
+      {
+        name: 'call',
+        canThrow: true,
+        operands: [
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'construct',
+        canThrow: true,
+        operands: [
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'callmethod',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          },
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'callstatic',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'MI'
+          },
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'callsuper',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          },
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'callproperty',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          },
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'returnvoid',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'returnvalue',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'constructsuper',
+        canThrow: true,
+        operands: [
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'constructprop',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          },
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'callsuperid',
+        canThrow: true,
+        operands: null
+      },
+      {
+        name: 'callproplex',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          },
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'callinterface',
+        canThrow: true,
+        operands: null
+      },
+      {
+        name: 'callsupervoid',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          },
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'callpropvoid',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          },
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'sxi1',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'sxi8',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'sxi16',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'applytype',
+        canThrow: true,
+        operands: [
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'pushfloat4',
+        canThrow: false,
+        operands: null
+      },
+      {
+        name: 'newobject',
+        canThrow: true,
+        operands: [
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'newarray',
+        canThrow: true,
+        operands: [
+          {
+            name: 'argCount',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'newactivation',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'newclass',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'CI'
+          }
+        ]
+      },
+      {
+        name: 'getdescendants',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          }
+        ]
+      },
+      {
+        name: 'newcatch',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'EI'
+          }
+        ]
+      },
+      {
+        name: 'findpropglobalstrict',
+        canThrow: true,
+        operands: null
+      },
+      {
+        name: 'findpropglobal',
+        canThrow: true,
+        operands: null
+      },
+      {
+        name: 'findpropstrict',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          }
+        ]
+      },
+      {
+        name: 'findproperty',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          }
+        ]
+      },
+      {
+        name: 'finddef',
+        canThrow: true,
+        operands: null
+      },
+      {
+        name: 'getlex',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          }
+        ]
+      },
+      {
+        name: 'setproperty',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          }
+        ]
+      },
+      {
+        name: 'getlocal',
+        canThrow: false,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'setlocal',
+        canThrow: false,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'getglobalscope',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'getscopeobject',
+        canThrow: false,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'getproperty',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          }
+        ]
+      },
+      {
+        name: 'getouterscope',
+        canThrow: false,
+        operands: null
+      },
+      {
+        name: 'initproperty',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          }
+        ]
+      },
+      null,
+      {
+        name: 'deleteproperty',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          }
+        ]
+      },
+      null,
+      {
+        name: 'getslot',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'setslot',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'getglobalslot',
+        canThrow: false,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'setglobalslot',
+        canThrow: false,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'convert_s',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'esc_xelem',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'esc_xattr',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'convert_i',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'convert_u',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'convert_d',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'convert_b',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'convert_o',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'checkfilter',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'convert_f',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'unplus',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'convert_f4',
+        canThrow: true,
+        operands: []
+      },
+      null,
+      null,
+      null,
+      null,
+      {
+        name: 'coerce',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          }
+        ]
+      },
+      {
+        name: 'coerce_b',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'coerce_a',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'coerce_i',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'coerce_d',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'coerce_s',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'astype',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          }
+        ]
+      },
+      {
+        name: 'astypelate',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'coerce_u',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'coerce_o',
+        canThrow: true,
+        operands: []
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        name: 'negate',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'increment',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'inclocal',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'decrement',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'declocal',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'typeof',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'not',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'bitnot',
+        canThrow: true,
+        operands: []
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        name: 'add',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'subtract',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'multiply',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'divide',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'modulo',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'lshift',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'rshift',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'urshift',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'bitand',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'bitor',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'bitxor',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'equals',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'strictequals',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'lessthan',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'lessequals',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'greaterthan',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'greaterequals',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'instanceof',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'istype',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'M'
+          }
+        ]
+      },
+      {
+        name: 'istypelate',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'in',
+        canThrow: true,
+        operands: []
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        name: 'increment_i',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'decrement_i',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'inclocal_i',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'declocal_i',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'negate_i',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'add_i',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'subtract_i',
+        canThrow: true,
+        operands: []
+      },
+      {
+        name: 'multiply_i',
+        canThrow: true,
+        operands: []
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        name: 'getlocal0',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'getlocal1',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'getlocal2',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'getlocal3',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'setlocal0',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'setlocal1',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'setlocal2',
+        canThrow: false,
+        operands: []
+      },
+      {
+        name: 'setlocal3',
+        canThrow: false,
+        operands: []
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        name: 'invalid',
+        canThrow: false,
+        operands: []
+      },
+      null,
+      {
+        name: 'debug',
+        canThrow: true,
+        operands: [
+          {
+            name: 'debugType',
+            size: 'u08',
+            type: ''
+          },
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'S'
+          },
+          {
+            name: 'reg',
+            size: 'u08',
+            type: ''
+          },
+          {
+            name: 'extra',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'debugline',
+        canThrow: true,
+        operands: [
+          {
+            name: 'lineNumber',
+            size: 'u30',
+            type: ''
+          }
+        ]
+      },
+      {
+        name: 'debugfile',
+        canThrow: true,
+        operands: [
+          {
+            name: 'index',
+            size: 'u30',
+            type: 'S'
+          }
+        ]
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ];
+    function opcodeName(op) {
+      return AVM2.opcodeTable[op].name;
+    }
+    AVM2.opcodeName = opcodeName;
+  }(Shumway.AVM2 || (Shumway.AVM2 = {})));
+  var AVM2 = Shumway.AVM2;
+}(Shumway || (Shumway = {})));
+var opcodeTable = Shumway.AVM2.opcodeTable;
+var opcodeName = Shumway.AVM2.opcodeName;
+var opcodeTable = Shumway.AVM2.opcodeTable;
+var opcodeName = Shumway.AVM2.opcodeName;
+var __extends = this.__extends || function (d, b) {
+    for (var p in b)
+      if (b.hasOwnProperty(p))
+        d[p] = b[p];
+    function __() {
+      this.constructor = d;
+    }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+  };
+var Shumway;
+(function (Shumway) {
+  (function (AVM2) {
+    (function (ABC) {
+      var Timer = Shumway.Metrics.Timer;
+      var isString = Shumway.isString;
+      var isNumber = Shumway.isNumber;
+      var isNumeric = Shumway.isNumeric;
+      var isObject = Shumway.isObject;
+      var textDecoder = null;
+      if (typeof TextDecoder !== 'undefined') {
+        textDecoder = new TextDecoder();
+      }
+      var AbcStream = function () {
+          function AbcStream(bytes) {
+            this._bytes = bytes;
+            this._view = new DataView(bytes.buffer, bytes.byteOffset);
+            this._position = 0;
+          }
+          AbcStream._getResultBuffer = function (length) {
+            if (!AbcStream._resultBuffer || AbcStream._resultBuffer.length < length) {
+              AbcStream._resultBuffer = new Int32Array(length * 2);
+            }
+            return AbcStream._resultBuffer;
+          };
+          Object.defineProperty(AbcStream.prototype, 'position', {
+            get: function () {
+              return this._position;
+            },
+            enumerable: true,
+            configurable: true
+          });
+          AbcStream.prototype.remaining = function () {
+            return this._bytes.length - this._position;
+          };
+          AbcStream.prototype.seek = function (position) {
+            this._position = position;
+          };
+          AbcStream.prototype.readU8 = function () {
+            return this._bytes[this._position++];
+          };
+          AbcStream.prototype.readU8s = function (count) {
+            var b = new Uint8Array(count);
+            b.set(this._bytes.subarray(this._position, this._position + count), 0);
+            this._position += count;
+            return b;
+          };
+          AbcStream.prototype.readS8 = function () {
+            return this._bytes[this._position++] << 24 >> 24;
+          };
+          AbcStream.prototype.readU32 = function () {
+            return this.readS32() >>> 0;
+          };
+          AbcStream.prototype.readU30 = function () {
+            var result = this.readU32();
+            if (result & 3221225472) {
+              return result;
+            }
+            return result;
+          };
+          AbcStream.prototype.readU30Unsafe = function () {
+            return this.readU32();
+          };
+          AbcStream.prototype.readS16 = function () {
+            return this.readU30Unsafe() << 16 >> 16;
+          };
+          AbcStream.prototype.readS32 = function () {
+            var result = this.readU8();
+            if (result & 128) {
+              result = result & 127 | this.readU8() << 7;
+              if (result & 16384) {
+                result = result & 16383 | this.readU8() << 14;
+                if (result & 2097152) {
+                  result = result & 2097151 | this.readU8() << 21;
+                  if (result & 268435456) {
+                    result = result & 268435455 | this.readU8() << 28;
+                    result = result & 4294967295;
+                  }
+                }
+              }
+            }
+            return result;
+          };
+          AbcStream.prototype.readWord = function () {
+            var result = this._view.getUint32(this._position, true);
+            this._position += 4;
+            return result;
+          };
+          AbcStream.prototype.readS24 = function () {
+            var u = this.readU8() | this.readU8() << 8 | this.readU8() << 16;
+            return u << 8 >> 8;
+          };
+          AbcStream.prototype.readDouble = function () {
+            var result = this._view.getFloat64(this._position, true);
+            this._position += 8;
+            return result;
+          };
+          AbcStream.prototype.readUTFString = function (length) {
+            if (textDecoder) {
+              var position = this._position;
+              this._position += length;
+              return textDecoder.decode(this._bytes.subarray(position, position + length));
+            }
+            var pos = this._position;
+            var end = pos + length;
+            var bytes = this._bytes;
+            var i = 0;
+            var result = AbcStream._getResultBuffer(length * 2);
+            while (pos < end) {
+              var c = bytes[pos++];
+              if (c <= 127) {
+                result[i++] = c;
+              } else if (c >= 192) {
+                var code = 0;
+                if (c < 224) {
+                  code = (c & 31) << 6 | bytes[pos++] & 63;
+                } else if (c < 240) {
+                  code = (c & 15) << 12 | (bytes[pos++] & 63) << 6 | bytes[pos++] & 63;
+                } else {
+                  code = ((c & 7) << 18 | (bytes[pos++] & 63) << 12 | (bytes[pos++] & 63) << 6 | bytes[pos++] & 63) - 65536;
+                  result[i++] = ((code & 1047552) >>> 10) + 55296;
+                  code = (code & 1023) + 56320;
+                }
+                result[i++] = code;
+              }
+            }
+            this._position = pos;
+            return Shumway.StringUtilities.fromCharCodeArray(result.subarray(0, i));
+          };
+          AbcStream._resultBuffer = new Int32Array(256);
+          return AbcStream;
+        }();
+      ABC.AbcStream = AbcStream;
+      var Parameter = function () {
+          function Parameter(name, type, value) {
+            this.name = name;
+            this.type = type;
+            this.value = value;
+          }
+          return Parameter;
+        }();
+      ABC.Parameter = Parameter;
+      var Trait = function () {
+          function Trait(abc, stream, holder) {
+            var constantPool = abc.constantPool;
+            var methods = abc.methods;
+            var classes = abc.classes;
+            var metadata = abc.metadata;
+            this.holder = holder;
+            this.name = constantPool.multinames[stream.readU30()];
+            var tag = stream.readU8();
+            this.kind = tag & 15;
+            this.attributes = tag >> 4 & 15;
+            true;
+            switch (this.kind) {
+            case 0:
+            case 6:
+              this.slotId = stream.readU30();
+              this.typeName = constantPool.multinames[stream.readU30()];
+              var valueIndex = stream.readU30();
+              this.value = undefined;
+              if (valueIndex !== 0) {
+                this.hasDefaultValue = true;
+                this.value = constantPool.getValue(stream.readU8(), valueIndex);
+              }
+              break;
+            case 1:
+            case 3:
+            case 2:
+              this.dispId = stream.readU30();
+              this.methodInfo = methods[stream.readU30()];
+              this.methodInfo.name = this.name;
+              AbcFile.attachHolder(this.methodInfo, this.holder);
+              this.methodInfo.abc = abc;
+              break;
+            case 4:
+              this.slotId = stream.readU30();
+              true;
+              this.classInfo = classes[stream.readU30()];
+              break;
+            case 5:
+              true;
+              break;
+            }
+            if (this.attributes & 4) {
+              var traitMetadata;
+              for (var i = 0, j = stream.readU30(); i < j; i++) {
+                var md = metadata[stream.readU30()];
+                if (md.name === '__go_to_definition_help' || md.name === '__go_to_ctor_definition_help') {
+                  continue;
+                }
+                if (!traitMetadata) {
+                  traitMetadata = {};
+                }
+                traitMetadata[md.name] = md;
+              }
+              if (traitMetadata) {
+                if (this.isClass()) {
+                  this.classInfo.metadata = traitMetadata;
+                }
+                this.metadata = traitMetadata;
               }
             }
           }
-        }
-        return result;
-      },
-      readWord: function () {
-        var result = this.view.getUint32(this.pos, true);
-        this.pos += 4;
-        return result;
-      },
-      readS24: function () {
-        var u = this.readU8() | this.readU8() << 8 | this.readU8() << 16;
-        return u << 8 >> 8;
-      },
-      readDouble: function () {
-        var result = this.view.getFloat64(this.pos, true);
-        this.pos += 8;
-        return result;
-      },
-      readUTFString: function (length) {
-        var pos = this.pos;
-        var end = pos + length;
-        var bytes = this.bytes;
-        var i = 0;
-        if (!resultBuffer || resultBuffer.length < length) {
-          resultBuffer = new Int32Array(length * 2);
-        }
-        var result = resultBuffer;
-        while (pos < end) {
-          var c = bytes[pos++];
-          if (c <= 127) {
-            result[i++] = c;
-          } else if (c >= 192) {
-            var code = 0;
-            if (c < 224) {
-              code = (c & 31) << 6 | bytes[pos++] & 63;
-            } else if (c < 240) {
-              code = (c & 15) << 12 | (bytes[pos++] & 63) << 6 | bytes[pos++] & 63;
-            } else {
-              code = ((c & 7) << 18 | (bytes[pos++] & 63) << 12 | (bytes[pos++] & 63) << 6 | bytes[pos++] & 63) - 65536;
-              result[i++] = ((code & 1047552) >>> 10) + 55296;
-              code = (code & 1023) + 56320;
+          Trait.prototype.isSlot = function () {
+            return this.kind === 0;
+          };
+          Trait.prototype.isConst = function () {
+            return this.kind === 6;
+          };
+          Trait.prototype.isMethod = function () {
+            return this.kind === 1;
+          };
+          Trait.prototype.isClass = function () {
+            return this.kind === 4;
+          };
+          Trait.prototype.isGetter = function () {
+            return this.kind === 2;
+          };
+          Trait.prototype.isSetter = function () {
+            return this.kind === 3;
+          };
+          Trait.prototype.isProtected = function () {
+            true;
+            return this.name.namespaces[0].isProtected();
+          };
+          Trait.prototype.kindName = function () {
+            switch (this.kind) {
+            case 0:
+              return 'Slot';
+            case 6:
+              return 'Const';
+            case 1:
+              return 'Method';
+            case 3:
+              return 'Setter';
+            case 2:
+              return 'Getter';
+            case 4:
+              return 'Class';
+            case 5:
+              return 'Function';
             }
-            result[i++] = code;
+            Shumway.Debug.unexpected();
+          };
+          Trait.prototype.isOverride = function () {
+            return this.attributes & 2;
+          };
+          Trait.prototype.isFinal = function () {
+            return this.attributes & 1;
+          };
+          Trait.prototype.toString = function () {
+            var str = Shumway.IntegerUtilities.getFlags(this.attributes, 'final|override|metadata'.split('|'));
+            if (str) {
+              str += ' ';
+            }
+            str += Multiname.getQualifiedName(this.name);
+            switch (this.kind) {
+            case 0:
+            case 6:
+              return str + ', typeName: ' + this.typeName + ', slotId: ' + this.slotId + ', value: ' + this.value;
+            case 1:
+            case 3:
+            case 2:
+              return str + ', ' + this.kindName() + ': ' + this.methodInfo.name;
+            case 4:
+              return str + ', slotId: ' + this.slotId + ', class: ' + this.classInfo;
+            case 5:
+              break;
+            }
+          };
+          Trait.parseTraits = function (abc, stream, holder) {
+            var count = stream.readU30();
+            var traits = [];
+            for (var i = 0; i < count; i++) {
+              traits.push(new Trait(abc, stream, holder));
+            }
+            return traits;
+          };
+          return Trait;
+        }();
+      ABC.Trait = Trait;
+      var Info = function () {
+          function Info(abc, index) {
+            this.abc = abc;
+            this.index = index;
           }
-        }
-        this.pos = pos;
-        return fromCharCodeArray(result.subarray(0, i));
-      }
-    };
-    if (typeof TextDecoder !== 'undefined') {
-      var decoder = new TextDecoder();
-      abcStream.prototype.readUTFString = function (length) {
-        var pos = this.pos;
-        this.pos += length;
-        return decoder.decode(this.bytes.subarray(pos, pos + length));
-      };
-    }
-    return abcStream;
-  }();
-function parseTraits(abc, stream, holder) {
-  var count = stream.readU30();
-  var traits = [];
-  for (var i = 0; i < count; i++) {
-    traits.push(new Trait(abc, stream, holder));
-  }
-  return traits;
-}
-var Trait = function () {
-    function trait(abc, stream, holder) {
-      var constantPool = abc.constantPool;
-      var methods = abc.methods;
-      var classes = abc.classes;
-      var metadata = abc.metadata;
-      this.holder = holder;
-      this.name = constantPool.multinames[stream.readU30()];
-      var tag = stream.readU8();
-      this.kind = tag & 15;
-      this.attributes = tag >> 4 & 15;
-      true;
-      switch (this.kind) {
-      case TRAIT_Slot:
-      case TRAIT_Const:
-        this.slotId = stream.readU30();
-        this.typeName = constantPool.multinames[stream.readU30()];
-        var valueIndex = stream.readU30();
-        this.value = undefined;
-        if (valueIndex !== 0) {
-          this.hasDefaultValue = true;
-          this.value = constantPool.getValue(stream.readU8(), valueIndex);
-        }
-        break;
-      case TRAIT_Method:
-      case TRAIT_Setter:
-      case TRAIT_Getter:
-        this.dispId = stream.readU30();
-        this.methodInfo = methods[stream.readU30()];
-        this.methodInfo.name = this.name;
-        attachHolder(this.methodInfo, this.holder);
-        this.methodInfo.abc = abc;
-        break;
-      case TRAIT_Class:
-        this.slotId = stream.readU30();
-        true;
-        this.classInfo = classes[stream.readU30()];
-        break;
-      case TRAIT_Function:
-        true;
-        break;
-      }
-      if (this.attributes & ATTR_Metadata) {
-        var traitMetadata;
-        for (var i = 0, j = stream.readU30(); i < j; i++) {
-          var md = metadata[stream.readU30()];
-          if (md.name === '__go_to_definition_help' || md.name === '__go_to_ctor_definition_help') {
-            continue;
+          return Info;
+        }();
+      ABC.Info = Info;
+      var MethodInfo = function (_super) {
+          __extends(MethodInfo, _super);
+          function MethodInfo(abc, index, stream) {
+            _super.call(this, abc, index);
+            var constantPool = abc.constantPool;
+            var parameterCount = stream.readU30();
+            this.returnType = constantPool.multinames[stream.readU30()];
+            this.parameters = [];
+            for (var i = 0; i < parameterCount; i++) {
+              this.parameters.push(new Parameter(undefined, constantPool.multinames[stream.readU30()], undefined));
+            }
+            this.debugName = constantPool.strings[stream.readU30()];
+            this.flags = stream.readU8();
+            var optionalCount = 0;
+            if (this.flags & 8) {
+              optionalCount = stream.readU30();
+              true;
+              for (var i = parameterCount - optionalCount; i < parameterCount; i++) {
+                var valueIndex = stream.readU30();
+                this.parameters[i].value = constantPool.getValue(stream.readU8(), valueIndex);
+              }
+            }
+            if (this.flags & 128) {
+              for (var i = 0; i < parameterCount; i++) {
+                if (false) {
+                  this.parameters[i].name = constantPool.strings[stream.readU30()];
+                } else {
+                  stream.readU30();
+                  this.parameters[i].name = MethodInfo._getParameterName(i);
+                }
+              }
+            } else {
+              for (var i = 0; i < parameterCount; i++) {
+                this.parameters[i].name = MethodInfo._getParameterName(i);
+              }
+            }
           }
-          if (!traitMetadata) {
-            traitMetadata = {};
+          MethodInfo._getParameterName = function (i) {
+            true;
+            return String.fromCharCode('A'.charCodeAt(0) + i);
+          };
+          MethodInfo.prototype.toString = function () {
+            var flags = Shumway.IntegerUtilities.getFlags(this.flags, 'NEED_ARGUMENTS|NEED_ACTIVATION|NEED_REST|HAS_OPTIONAL|||SET_DXN|HAS_PARAM_NAMES'.split('|'));
+            return (flags ? flags + ' ' : '') + this.name;
+          };
+          MethodInfo.prototype.hasOptional = function () {
+            return !(!(this.flags & 8));
+          };
+          MethodInfo.prototype.needsActivation = function () {
+            return !(!(this.flags & 2));
+          };
+          MethodInfo.prototype.needsRest = function () {
+            return !(!(this.flags & 4));
+          };
+          MethodInfo.prototype.needsArguments = function () {
+            return !(!(this.flags & 1));
+          };
+          MethodInfo.prototype.isNative = function () {
+            return !(!(this.flags & 32));
+          };
+          MethodInfo.prototype.isClassMember = function () {
+            return this.holder instanceof ClassInfo;
+          };
+          MethodInfo.prototype.isInstanceMember = function () {
+            return this.holder instanceof InstanceInfo;
+          };
+          MethodInfo.prototype.isScriptMember = function () {
+            return this.holder instanceof ScriptInfo;
+          };
+          MethodInfo.parseException = function (abc, stream) {
+            var multinames = abc.constantPool.multinames;
+            var ex = {
+                start: stream.readU30(),
+                end: stream.readU30(),
+                target: stream.readU30(),
+                typeName: multinames[stream.readU30()],
+                varName: multinames[stream.readU30()]
+              };
+            true;
+            true;
+            return ex;
+          };
+          MethodInfo.parseBody = function (abc, stream) {
+            var constantPool = abc.constantPool;
+            var methods = abc.methods;
+            var index = stream.readU30();
+            var mi = methods[index];
+            mi.index = index;
+            mi.hasBody = true;
+            mi.hash = abc.hash + 196608 + index;
+            true;
+            mi.maxStack = stream.readU30();
+            mi.localCount = stream.readU30();
+            mi.initScopeDepth = stream.readU30();
+            mi.maxScopeDepth = stream.readU30();
+            mi.code = stream.readU8s(stream.readU30());
+            var exceptions = [];
+            var exceptionCount = stream.readU30();
+            for (var i = 0; i < exceptionCount; ++i) {
+              exceptions.push(MethodInfo.parseException(abc, stream));
+            }
+            mi.exceptions = exceptions;
+            mi.traits = Trait.parseTraits(abc, stream, mi);
+          };
+          MethodInfo.prototype.hasExceptions = function () {
+            return this.exceptions.length > 0;
+          };
+          return MethodInfo;
+        }(Info);
+      ABC.MethodInfo = MethodInfo;
+      var InstanceInfo = function (_super) {
+          __extends(InstanceInfo, _super);
+          function InstanceInfo(abc, index, stream) {
+            _super.call(this, abc, index);
+            this.runtimeId = InstanceInfo.nextID++;
+            var constantPool = abc.constantPool;
+            var methods = abc.methods;
+            this.name = constantPool.multinames[stream.readU30()];
+            true;
+            this.superName = constantPool.multinames[stream.readU30()];
+            this.flags = stream.readU8();
+            this.protectedNs = undefined;
+            if (this.flags & 8) {
+              this.protectedNs = constantPool.namespaces[stream.readU30()];
+            }
+            var interfaceCount = stream.readU30();
+            this.interfaces = [];
+            for (var i = 0; i < interfaceCount; i++) {
+              this.interfaces[i] = constantPool.multinames[stream.readU30()];
+            }
+            this.init = methods[stream.readU30()];
+            this.init.isInstanceInitializer = true;
+            this.init.name = this.name;
+            AbcFile.attachHolder(this.init, this);
+            this.traits = Trait.parseTraits(abc, stream, this);
           }
-          traitMetadata[md.name] = md;
-        }
-        if (traitMetadata) {
-          if (this.isClass()) {
-            this.classInfo.metadata = traitMetadata;
+          InstanceInfo.prototype.toString = function () {
+            var flags = Shumway.IntegerUtilities.getFlags(this.flags & 8, 'sealed|final|interface|protected'.split('|'));
+            var str = (flags ? flags + ' ' : '') + this.name;
+            if (this.superName) {
+              str += ' extends ' + this.superName;
+            }
+            return str;
+          };
+          InstanceInfo.prototype.isFinal = function () {
+            return !(!(this.flags & 2));
+          };
+          InstanceInfo.prototype.isSealed = function () {
+            return !(!(this.flags & 1));
+          };
+          InstanceInfo.prototype.isInterface = function () {
+            return !(!(this.flags & 4));
+          };
+          InstanceInfo.nextID = 1;
+          return InstanceInfo;
+        }(Info);
+      ABC.InstanceInfo = InstanceInfo;
+      var ClassInfo = function (_super) {
+          __extends(ClassInfo, _super);
+          function ClassInfo(abc, index, stream) {
+            _super.call(this, abc, index);
+            this.runtimeId = ClassInfo.nextID++;
+            this.abc = abc;
+            this.hash = abc.hash + 65536 + index;
+            this.index = index;
+            this.init = abc.methods[stream.readU30()];
+            this.init.isClassInitializer = true;
+            AbcFile.attachHolder(this.init, this);
+            this.traits = Trait.parseTraits(abc, stream, this);
+            this.instanceInfo = abc.instances[index];
+            this.instanceInfo.classInfo = this;
+            this.defaultValue = ClassInfo._getDefaultValue(this.instanceInfo.name);
           }
-          this.metadata = traitMetadata;
-        }
-      }
-    }
-    trait.prototype.isSlot = function isSlot() {
-      return this.kind === TRAIT_Slot;
-    };
-    trait.prototype.isConst = function isConst() {
-      return this.kind === TRAIT_Const;
-    };
-    trait.prototype.isMethod = function isMethod() {
-      return this.kind === TRAIT_Method;
-    };
-    trait.prototype.isClass = function isClass() {
-      return this.kind === TRAIT_Class;
-    };
-    trait.prototype.isGetter = function isGetter() {
-      return this.kind === TRAIT_Getter;
-    };
-    trait.prototype.isSetter = function isSetter() {
-      return this.kind === TRAIT_Setter;
-    };
-    trait.prototype.isProtected = function isProtected() {
-      true;
-      return this.name.namespaces[0].isProtected();
-    };
-    trait.prototype.kindName = function kindName() {
-      switch (this.kind) {
-      case TRAIT_Slot:
-        return 'Slot';
-      case TRAIT_Const:
-        return 'Const';
-      case TRAIT_Method:
-        return 'Method';
-      case TRAIT_Setter:
-        return 'Setter';
-      case TRAIT_Getter:
-        return 'Getter';
-      case TRAIT_Class:
-        return 'Class';
-      case TRAIT_Function:
-        return 'Function';
-      }
-      unexpected();
-    };
-    trait.prototype.isOverride = function isOverride() {
-      return this.attributes & ATTR_Override;
-    };
-    trait.prototype.isFinal = function isFinal() {
-      return this.attributes & ATTR_Final;
-    };
-    trait.prototype.toString = function toString() {
-      var str = getFlags(this.attributes, 'final|override|metadata'.split('|'));
-      if (str) {
-        str += ' ';
-      }
-      str += Multiname.getQualifiedName(this.name);
-      switch (this.kind) {
-      case TRAIT_Slot:
-      case TRAIT_Const:
-        return str + ', typeName: ' + this.typeName + ', slotId: ' + this.slotId + ', value: ' + this.value;
-      case TRAIT_Method:
-      case TRAIT_Setter:
-      case TRAIT_Getter:
-        return str + ', ' + this.kindName() + ': ' + this.methodInfo.name;
-      case TRAIT_Class:
-        return str + ', slotId: ' + this.slotId + ', class: ' + this.classInfo;
-      case TRAIT_Function:
-        break;
-      }
-    };
-    return trait;
-  }();
-var ShumwayNamespace = function () {
-    var kinds = {};
-    kinds[CONSTANT_Namespace] = 'public';
-    kinds[CONSTANT_PackageNamespace] = 'public';
-    kinds[CONSTANT_PackageInternalNs] = 'packageInternal';
-    kinds[CONSTANT_PrivateNs] = 'private';
-    kinds[CONSTANT_ProtectedNamespace] = 'protected';
-    kinds[CONSTANT_ExplicitNamespace] = 'explicit';
-    kinds[CONSTANT_StaticProtectedNs] = 'staticProtected';
-    var prefixes = {};
-    for (var k in kinds) {
-      prefixes[kinds[k]] = true;
-    }
-    var MIN_API_MARK = 58004;
-    var MAX_API_MARK = 63743;
-    function namespace(kind, uri, prefix, dontMangle) {
-      if (kind !== undefined) {
-        if (uri === undefined) {
-          uri = '';
-        }
-        if (prefix !== undefined) {
-          this.prefix = prefix;
-        }
-        this.kind = kind;
-        this.originalURI = this.uri = uri;
-        buildNamespace.call(this, dontMangle);
-      }
-    }
-    namespace.PREFIXES = prefixes;
-    var uniqueNamespaceCounter = 0;
-    function buildNamespace(dontMangle) {
-      if (this.isPublic() && this.uri) {
-        var n = this.uri.length - 1;
-        var mark = this.uri.charCodeAt(n);
-        if (mark > MIN_API_MARK) {
-          this.uri = this.uri.substring(0, n - 1);
-        }
-      } else if (this.isUnique()) {
-        this.uri = String(this.uri + uniqueNamespaceCounter++);
-      }
-      this.uri = dontMangle ? this.uri : mangleNamespaceURI(this.uri);
-      true;
-      this.qualifiedName = kinds[this.kind] + '$' + this.uri;
-    }
-    function escapeUri(uri) {
-      if (uri !== undefined) {
-        uri = uri.replace(/[^\w]/g, '_');
-      }
-      return uri;
-    }
-    var uriToMangledNameMap = createEmptyObject();
-    var mangledNameToURIMap = createEmptyObject();
-    var mangledNameList = [];
-    var MANGLE_NAMESPACES = true;
-    function mangleNamespaceURI(uri) {
-      if (uri === '') {
-        return '';
-      }
-      var name = uriToMangledNameMap[uri];
-      if (name) {
-        return name;
-      }
-      if (!MANGLE_NAMESPACES) {
-        name = escapeUri(uri);
-        mangledNameToURIMap[name] = uri;
-      } else {
-        name = String(mangledNameList.length);
-        mangledNameList.push(name);
-      }
-      uriToMangledNameMap[uri] = name;
-      return name;
-    }
-    namespace.fromQualifiedName = function fromQualifiedName(qn) {
-      var a = qn.indexOf('$');
-      var b = qn.indexOf('$', a + 1);
-      var str = qn.substring(0, a);
-      var kind = namespace.kindFromString(str);
-      str = qn.substring(a + 1, b);
-      var uri = str === '' ? str : MANGLE_NAMESPACES ? mangledNameList[Number(str)] : mangledNameToURIMap[str];
-      true;
-      true;
-      return new namespace(kind, uri, undefined, true);
-    };
-    namespace.kindFromString = function kindFromString(str) {
-      for (var kind in kinds) {
-        if (kinds[kind] === str) {
-          return kind;
-        }
-      }
-      return true;
-    };
-    namespace.createNamespace = function createNamespace(uri, prefix) {
-      return new namespace(CONSTANT_Namespace, uri, prefix);
-    };
-    namespace.prototype = Object.create({
-      parse: function parse(constantPool, stream) {
-        this.kind = stream.readU8();
-        this.originalURI = this.uri = constantPool.strings[stream.readU30()];
-        buildNamespace.call(this);
-      },
-      isPublic: function isPublic() {
-        return this.kind === CONSTANT_Namespace || this.kind === CONSTANT_PackageNamespace;
-      },
-      isProtected: function isProtected() {
-        return this.kind === CONSTANT_ProtectedNamespace;
-      },
-      isUnique: function isUnique() {
-        return this.kind === CONSTANT_PrivateNs && !this.originalURI;
-      },
-      isDynamic: function isDynamic() {
-        return this.isPublic() && !this.uri;
-      },
-      getURI: function getURI() {
-        return this.uri;
-      },
-      toString: function toString() {
-        return kinds[this.kind] + (this.originalURI ? ' ' + this.originalURI : '');
-      },
-      clone: function clone() {
-        var c = new namespace();
-        c.kind = this.kind;
-        c.uri = this.uri;
-        c.originalURI = this.originalURI;
-        c.qualifiedName = this.qualifiedName;
-        return c;
-      },
-      isEqualTo: function isEqualTo(o) {
-        return this.qualifiedName === o.qualifiedName;
-      },
-      inNamespaceSet: function inNamespaceSet(set) {
-        for (var i = 0; i < set.length; i++) {
-          if (set[i].qualifiedName === this.qualifiedName) {
-            return true;
+          ClassInfo._getDefaultValue = function (qn) {
+            if (Multiname.getQualifiedName(qn) === Multiname.Int || Multiname.getQualifiedName(qn) === Multiname.Uint) {
+              return 0;
+            } else if (Multiname.getQualifiedName(qn) === Multiname.Number) {
+              return NaN;
+            } else if (Multiname.getQualifiedName(qn) === Multiname.Boolean) {
+              return false;
+            } else {
+              return null;
+            }
+          };
+          ClassInfo.prototype.toString = function () {
+            return this.instanceInfo.name.toString();
+          };
+          ClassInfo.nextID = 1;
+          return ClassInfo;
+        }(Info);
+      ABC.ClassInfo = ClassInfo;
+      var ScriptInfo = function (_super) {
+          __extends(ScriptInfo, _super);
+          function ScriptInfo(abc, index, stream) {
+            _super.call(this, abc, index);
+            this.runtimeId = ClassInfo.nextID++;
+            this.hash = abc.hash + 131072 + index;
+            this.name = abc.name + '$script' + index;
+            this.init = abc.methods[stream.readU30()];
+            this.init.isScriptInitializer = true;
+            AbcFile.attachHolder(this.init, this);
+            this.traits = Trait.parseTraits(abc, stream, this);
           }
-        }
-        return false;
-      },
-      getAccessModifier: function getAccessModifier() {
-        return kinds[this.kind];
-      },
-      getQualifiedName: function getQualifiedName() {
-        return this.qualifiedName;
-      }
-    });
-    namespace.PUBLIC = new namespace(CONSTANT_Namespace);
-    namespace.PROTECTED = new namespace(CONSTANT_ProtectedNamespace);
-    namespace.PROXY = new namespace(CONSTANT_Namespace, 'http://www.adobe.com/2006/actionscript/flash/proxy');
-    var simpleNameCache = {};
-    namespace.fromSimpleName = function fromSimpleName(simpleName) {
-      if (simpleName in simpleNameCache) {
-        return simpleNameCache[simpleName];
-      }
-      var namespaceNames;
-      if (simpleName.indexOf('[') === 0) {
-        true;
-        namespaceNames = simpleName.substring(1, simpleName.length - 1).split(',');
-      } else {
-        namespaceNames = [
-          simpleName
-        ];
-      }
-      return simpleNameCache[simpleName] = namespaceNames.map(function (name) {
-        name = name.trim();
-        var kindName, uri;
-        if (name.indexOf(' ') > 0) {
-          kindName = name.substring(0, name.indexOf(' ')).trim();
-          uri = name.substring(name.indexOf(' ') + 1).trim();
-        } else {
-          if (name === kinds[CONSTANT_Namespace] || name === kinds[CONSTANT_PackageInternalNs] || name === kinds[CONSTANT_PrivateNs] || name === kinds[CONSTANT_ProtectedNamespace] || name === kinds[CONSTANT_ExplicitNamespace] || name === kinds[CONSTANT_StaticProtectedNs]) {
-            kindName = name;
-            uri = '';
-          } else {
-            kindName = 'public';
-            uri = name;
-          }
-        }
-        return new namespace(namespace.kindFromString(kindName), uri);
-      });
-    };
-    return namespace;
-  }();
-var Multiname = function () {
-    var ATTRIBUTE = 1;
-    var RUNTIME_NAMESPACE = 2;
-    var RUNTIME_NAME = 4;
-    var nextID = 0;
-    var PUBLIC_QUALIFIED_NAME_PREFIX = 'public$$';
-    function multiname(namespaces, name, flags) {
-      if (name !== undefined) {
-        true;
-      }
-      this.id = nextID++;
-      this.namespaces = namespaces;
-      this.name = name;
-      this.flags = flags || 0;
-    }
-    multiname.TEMPORARY = new multiname();
-    true;
-    multiname.RUNTIME_NAME = RUNTIME_NAME;
-    multiname.ATTRIBUTE = ATTRIBUTE;
-    multiname.parse = function parse(constantPool, stream, multinames, patchFactoryTypes) {
-      var index = 0;
-      var kind = stream.readU8();
-      var name, namespaces = [], flags = 0;
-      switch (kind) {
-      case CONSTANT_QName:
-      case CONSTANT_QNameA:
-        index = stream.readU30();
-        if (index) {
-          namespaces = [
-            constantPool.namespaces[index]
-          ];
-        } else {
-          flags &= ~RUNTIME_NAME;
-        }
-        index = stream.readU30();
-        if (index) {
-          name = constantPool.strings[index];
-        }
-        break;
-      case CONSTANT_RTQName:
-      case CONSTANT_RTQNameA:
-        index = stream.readU30();
-        if (index) {
-          name = constantPool.strings[index];
-        } else {
-          flags &= ~RUNTIME_NAME;
-        }
-        flags |= RUNTIME_NAMESPACE;
-        break;
-      case CONSTANT_RTQNameL:
-      case CONSTANT_RTQNameLA:
-        flags |= RUNTIME_NAMESPACE;
-        flags |= RUNTIME_NAME;
-        break;
-      case CONSTANT_Multiname:
-      case CONSTANT_MultinameA:
-        index = stream.readU30();
-        if (index) {
-          name = constantPool.strings[index];
-        } else {
-          flags &= ~RUNTIME_NAME;
-        }
-        index = stream.readU30();
-        true;
-        namespaces = constantPool.namespaceSets[index];
-        break;
-      case CONSTANT_MultinameL:
-      case CONSTANT_MultinameLA:
-        flags |= RUNTIME_NAME;
-        index = stream.readU30();
-        true;
-        namespaces = constantPool.namespaceSets[index];
-        break;
-      case CONSTANT_TypeName:
-        var factoryTypeIndex = stream.readU32();
-        if (multinames[factoryTypeIndex]) {
-          namespaces = multinames[factoryTypeIndex].namespaces;
-          name = multinames[factoryTypeIndex].name;
-        }
-        var typeParameterCount = stream.readU32();
-        true;
-        var typeParameterIndex = stream.readU32();
-        var mn = new Multiname(namespaces, name, flags);
-        mn.typeParameter = multinames[typeParameterIndex];
-        if (!multinames[factoryTypeIndex]) {
-          patchFactoryTypes.push({
-            multiname: mn,
-            index: factoryTypeIndex
+          Object.defineProperty(ScriptInfo.prototype, 'entryPoint', {
+            get: function () {
+              return this.init;
+            },
+            enumerable: true,
+            configurable: true
           });
-        }
-        return mn;
-      default:
-        unexpected();
-        break;
-      }
-      switch (kind) {
-      case CONSTANT_QNameA:
-      case CONSTANT_RTQNameA:
-      case CONSTANT_RTQNameLA:
-      case CONSTANT_MultinameA:
-      case CONSTANT_MultinameLA:
-        flags |= ATTRIBUTE;
-        break;
-      }
-      return new Multiname(namespaces, name, flags);
-    };
-    multiname.isMultiname = function (mn) {
-      return typeof mn === 'number' || typeof mn === 'string' || mn instanceof Multiname || mn instanceof Number;
-    };
-    multiname.needsResolution = function (mn) {
-      return mn instanceof multiname && mn.namespaces.length > 1;
-    };
-    multiname.isQName = function (mn) {
-      if (mn instanceof multiname) {
-        return mn.namespaces && mn.namespaces.length === 1;
-      }
-      return true;
-    };
-    multiname.isRuntimeName = function isRuntimeName(mn) {
-      return mn instanceof Multiname && mn.isRuntimeName();
-    };
-    multiname.isRuntimeNamespace = function isRuntimeNamespace(mn) {
-      return mn instanceof Multiname && mn.isRuntimeNamespace();
-    };
-    multiname.isRuntime = function (mn) {
-      return mn instanceof Multiname && mn.isRuntimeName() || mn.isRuntimeNamespace();
-    };
-    function qualifyNameInternal(qualifier, name) {
-      true;
-      return qualifier ? qualifier + '$' + name : name;
-    }
-    multiname.getQualifiedName = function getQualifiedName(mn) {
-      true;
-      if (mn instanceof Multiname) {
-        if (mn.qualifiedName !== undefined) {
-          return mn.qualifiedName;
-        }
-        var name = String(mn.name);
-        if (isNumeric(name)) {
-          true;
-          return mn.qualifiedName = name;
-        }
-        mn = mn.qualifiedName = qualifyNameInternal(mn.namespaces[0].qualifiedName, name);
-      }
-      return mn;
-    };
-    multiname.qualifyName = function qualifyName(namespace, name) {
-      return qualifyNameInternal(namespace.qualifiedName, name);
-    };
-    multiname.stripPublicQualifier = function stripPublicQualifier(qn) {
-      var index = qn.indexOf(PUBLIC_QUALIFIED_NAME_PREFIX);
-      if (index !== 0) {
-        return undefined;
-      }
-      return qn.substring(PUBLIC_QUALIFIED_NAME_PREFIX.length);
-    };
-    multiname.fromQualifiedName = function fromQualifiedName(qn) {
-      if (qn instanceof Multiname) {
-        return qn;
-      }
-      true;
-      var a = qn.indexOf('$');
-      if (a < 0 || !ShumwayNamespace.PREFIXES[qn.substring(0, a)]) {
-        return undefined;
-      }
-      var ns = ShumwayNamespace.fromQualifiedName(qn);
-      var b = qn.indexOf('$', a + 1);
-      return new Multiname([
-        ns
-      ], qn.substring(b + 1));
-    };
-    multiname.getFullQualifiedName = function getFullQualifiedName(mn) {
-      var qn = multiname.getQualifiedName(mn);
-      if (mn instanceof Multiname && mn.typeParameter) {
-        qn += '$' + multiname.getFullQualifiedName(mn.typeParameter);
-      }
-      return qn;
-    };
-    multiname.PUBLIC_QUALIFIED_NAME_PREFIX = PUBLIC_QUALIFIED_NAME_PREFIX;
-    multiname.getPublicQualifiedName = function getPublicQualifiedName(name) {
-      if (isNumeric(name)) {
-        return toNumber(name);
-      } else if (name !== null && isObject(name)) {
-        return name;
-      }
-      return PUBLIC_QUALIFIED_NAME_PREFIX + name;
-    };
-    multiname.isPublicQualifiedName = function isPublicQualifiedName(qn) {
-      return typeof qn === 'number' || isNumeric(qn) || qn.indexOf(PUBLIC_QUALIFIED_NAME_PREFIX) === 0;
-    };
-    multiname.getAccessModifier = function getAccessModifier(mn) {
-      true;
-      if (typeof mn === 'number' || typeof mn === 'string' || mn instanceof Number) {
-        return 'public';
-      }
-      true;
-      return mn.namespaces[0].getAccessModifier();
-    };
-    multiname.isNumeric = function (mn) {
-      if (typeof mn === 'number') {
-        return true;
-      } else if (typeof mn === 'string') {
-        return isNumeric(mn);
-      }
-      true;
-      return !isNaN(parseInt(multiname.getName(mn), 10));
-    };
-    multiname.getName = function getName(mn) {
-      true;
-      true;
-      return mn.getName();
-    };
-    multiname.isAnyName = function isAnyName(mn) {
-      return typeof mn === 'object' && !mn.isRuntimeName() && !mn.name;
-    };
-    var simpleNameCache = {};
-    multiname.fromSimpleName = function fromSimpleName(simpleName) {
-      true;
-      if (simpleName in simpleNameCache) {
-        return simpleNameCache[simpleName];
-      }
-      var nameIndex, namespaceIndex, name, namespace;
-      nameIndex = simpleName.lastIndexOf('.');
-      if (nameIndex <= 0) {
-        nameIndex = simpleName.lastIndexOf(' ');
-      }
-      if (nameIndex > 0 && nameIndex < simpleName.length - 1) {
-        name = simpleName.substring(nameIndex + 1).trim();
-        namespace = simpleName.substring(0, nameIndex).trim();
-      } else {
-        name = simpleName;
-        namespace = '';
-      }
-      return simpleNameCache[simpleName] = new Multiname(ShumwayNamespace.fromSimpleName(namespace), name);
-    };
-    multiname.prototype.getQName = function getQName(index) {
-      true;
-      true;
-      if (!this.cache) {
-        this.cache = [];
-      }
-      var name = this.cache[index];
-      if (!name) {
-        name = this.cache[index] = new Multiname([
-          this.namespaces[index]
-        ], this.name, this.flags);
-      }
-      return name;
-    };
-    multiname.prototype.hasQName = function hasQName(qn) {
-      true;
-      if (this.name !== qn.name) {
-        return false;
-      }
-      for (var i = 0; i < this.namespaces.length; i++) {
-        if (this.namespaces[i].isEqualTo(qn.namespaces[0])) {
-          return true;
-        }
-      }
-      return false;
-    };
-    multiname.prototype.isAttribute = function isAttribute() {
-      return this.flags & ATTRIBUTE;
-    };
-    multiname.prototype.isAnyName = function isAnyName() {
-      return Multiname.isAnyName(this);
-    };
-    multiname.prototype.isAnyNamespace = function isAnyNamespace() {
-      return !this.isRuntimeNamespace() && (this.namespaces.length === 0 || this.isAnyName() && this.namespaces.length !== 1);
-    };
-    multiname.prototype.isRuntimeName = function isRuntimeName() {
-      return this.flags & RUNTIME_NAME;
-    };
-    multiname.prototype.isRuntimeNamespace = function isRuntimeNamespace() {
-      return this.flags & RUNTIME_NAMESPACE;
-    };
-    multiname.prototype.isRuntime = function isRuntime() {
-      return this.flags & (RUNTIME_NAME | RUNTIME_NAMESPACE);
-    };
-    multiname.prototype.isQName = function isQName() {
-      return this.namespaces.length === 1 && !this.isAnyName();
-    };
-    multiname.prototype.hasTypeParameter = function hasTypeParameter() {
-      return !(!this.typeParameter);
-    };
-    multiname.prototype.getName = function getName() {
-      return this.name;
-    };
-    multiname.prototype.getOriginalName = function getOriginalName() {
-      true;
-      var name = this.namespaces[0].originalURI;
-      if (name) {
-        name += '.';
-      }
-      return name + this.name;
-    };
-    multiname.prototype.getNamespace = function getNamespace() {
-      true;
-      true;
-      return this.namespaces[0];
-    };
-    multiname.prototype.nameToString = function nameToString() {
-      if (this.isAnyName()) {
-        return '*';
-      } else {
-        var name = this.getName();
-        return this.isRuntimeName() ? '[]' : name;
-      }
-    };
-    multiname.prototype.hasObjectName = function hasObjectName() {
-      return typeof this.name === 'object';
-    };
-    multiname.prototype.toString = function toString() {
-      var str = this.isAttribute() ? '@' : '';
-      if (this.isAnyNamespace()) {
-        str += '*::' + this.nameToString();
-      } else if (this.isRuntimeNamespace()) {
-        str += '[]::' + this.nameToString();
-      } else if (this.namespaces.length === 1 && this.isQName()) {
-        str += this.namespaces[0].toString() + '::';
-        str += this.nameToString();
-      } else {
-        str += '{';
-        for (var i = 0, count = this.namespaces.length; i < count; i++) {
-          str += this.namespaces[i].toString();
-          if (i + 1 < count) {
-            str += ',';
+          ScriptInfo.prototype.toString = function () {
+            return this.name;
+          };
+          ScriptInfo.nextID = 1;
+          return ScriptInfo;
+        }(Info);
+      ABC.ScriptInfo = ScriptInfo;
+      var AbcFile = function () {
+          function AbcFile(bytes, name, hash) {
+            if (typeof hash === 'undefined') {
+              hash = 0;
+            }
+            Timer.start('Parse ABC');
+            this.name = name;
+            this.env = {};
+            var computedHash;
+            if (!hash || !true) {
+              Timer.start('Adler');
+              computedHash = Shumway.HashUtilities.hashBytesTo32BitsAdler(bytes, 0, bytes.length);
+              Timer.stop();
+            }
+            if (hash) {
+              this.hash = hash;
+              true;
+            } else {
+              this.hash = computedHash;
+            }
+            var n, i;
+            var stream = new AbcStream(bytes);
+            AbcFile._checkMagic(stream);
+            Timer.start('Parse constantPool');
+            this.constantPool = new ConstantPool(stream, this);
+            Timer.stop();
+            Timer.start('Parse Method Infos');
+            this.methods = [];
+            n = stream.readU30();
+            for (i = 0; i < n; ++i) {
+              this.methods.push(new MethodInfo(this, i, stream));
+            }
+            Timer.stop();
+            Timer.start('Parse MetaData Infos');
+            this.metadata = [];
+            n = stream.readU30();
+            for (i = 0; i < n; ++i) {
+              this.metadata.push(new MetaDataInfo(this, stream));
+            }
+            Timer.stop();
+            Timer.start('Parse Instance Infos');
+            this.instances = [];
+            n = stream.readU30();
+            for (i = 0; i < n; ++i) {
+              this.instances.push(new InstanceInfo(this, i, stream));
+            }
+            Timer.stop();
+            Timer.start('Parse Class Infos');
+            this.classes = [];
+            for (i = 0; i < n; ++i) {
+              this.classes.push(new ClassInfo(this, i, stream));
+            }
+            Timer.stop();
+            Timer.start('Parse Script Infos');
+            this.scripts = [];
+            n = stream.readU30();
+            for (i = 0; i < n; ++i) {
+              this.scripts.push(new ScriptInfo(this, i, stream));
+            }
+            Timer.stop();
+            Timer.start('Parse Method Body Info');
+            n = stream.readU30();
+            for (i = 0; i < n; ++i) {
+              MethodInfo.parseBody(this, stream);
+            }
+            Timer.stop();
+            Timer.stop();
           }
-        }
-        str += '}::' + this.nameToString();
-      }
-      if (this.hasTypeParameter()) {
-        str += '<' + this.typeParameter.toString() + '>';
-      }
-      return str;
-    };
-    multiname.Int = multiname.getPublicQualifiedName('int');
-    multiname.Uint = multiname.getPublicQualifiedName('uint');
-    multiname.Class = multiname.getPublicQualifiedName('Class');
-    multiname.Array = multiname.getPublicQualifiedName('Array');
-    multiname.Object = multiname.getPublicQualifiedName('Object');
-    multiname.String = multiname.getPublicQualifiedName('String');
-    multiname.Number = multiname.getPublicQualifiedName('Number');
-    multiname.Boolean = multiname.getPublicQualifiedName('Boolean');
-    multiname.Function = multiname.getPublicQualifiedName('Function');
-    multiname.XML = multiname.getPublicQualifiedName('XML');
-    multiname.XMLList = multiname.getPublicQualifiedName('XMLList');
-    return multiname;
-  }();
-var ConstantPool = function constantPool() {
-    var nextNamespaceSetID = 1;
-    function constantPool(stream, name) {
-      var i, n;
-      var ints = [
-          0
-        ];
-      n = stream.readU30();
-      for (i = 1; i < n; ++i) {
-        ints.push(stream.readS32());
-      }
-      var uints = [
-          0
-        ];
-      n = stream.readU30();
-      for (i = 1; i < n; ++i) {
-        uints.push(stream.readU32());
-      }
-      var doubles = [
-          NaN
-        ];
-      n = stream.readU30();
-      for (i = 1; i < n; ++i) {
-        doubles.push(stream.readDouble());
-      }
-      Timer.start('Parse Strings');
-      var strings = [
-          ''
-        ];
-      n = stream.readU30();
-      for (i = 1; i < n; ++i) {
-        strings.push(stream.readUTFString(stream.readU30()));
-      }
-      this.positionAfterUTFStrings = stream.pos;
-      Timer.stop();
-      this.ints = ints;
-      this.uints = uints;
-      this.doubles = doubles;
-      this.strings = strings;
-      Timer.start('Parse Namespaces');
-      var namespaces = [
-          undefined
-        ];
-      n = stream.readU30();
-      for (i = 1; i < n; ++i) {
-        var namespace = new ShumwayNamespace();
-        namespace.parse(this, stream);
-        namespaces.push(namespace);
-      }
-      Timer.stop();
-      Timer.start('Parse Namespace Sets');
-      var namespaceSets = [
-          undefined
-        ];
-      n = stream.readU30();
-      for (i = 1; i < n; ++i) {
-        var count = stream.readU30();
-        var set = [];
-        set.id = nextNamespaceSetID++;
-        for (var j = 0; j < count; ++j) {
-          set.push(namespaces[stream.readU30()]);
-        }
-        namespaceSets.push(set);
-      }
-      Timer.stop();
-      this.namespaces = namespaces;
-      this.namespaceSets = namespaceSets;
-      Timer.start('Parse Multinames');
-      var multinames = [
-          undefined
-        ];
-      var patchFactoryTypes = [];
-      n = stream.readU30();
-      for (i = 1; i < n; ++i) {
-        multinames.push(Multiname.parse(this, stream, multinames, patchFactoryTypes));
-      }
-      Timer.stop();
-      this.multinames = multinames;
-    }
-    constantPool.prototype.getValue = function getValue(kind, index) {
-      switch (kind) {
-      case CONSTANT_Int:
-        return this.ints[index];
-      case CONSTANT_UInt:
-        return this.uints[index];
-      case CONSTANT_Double:
-        return this.doubles[index];
-      case CONSTANT_Utf8:
-        return this.strings[index];
-      case CONSTANT_True:
-        return true;
-      case CONSTANT_False:
-        return false;
-      case CONSTANT_Null:
-        return null;
-      case CONSTANT_Undefined:
-        return undefined;
-      case CONSTANT_Namespace:
-      case CONSTANT_PackageInternalNs:
-        return this.namespaces[index];
-      case CONSTANT_QName:
-      case CONSTANT_MultinameA:
-      case CONSTANT_RTQName:
-      case CONSTANT_RTQNameA:
-      case CONSTANT_RTQNameL:
-      case CONSTANT_RTQNameLA:
-      case CONSTANT_NameL:
-      case CONSTANT_NameLA:
-        return this.multinames[index];
-      case CONSTANT_Float:
-        warning('TODO: CONSTANT_Float may be deprecated?');
-        break;
-      default:
-        true;
-      }
-    };
-    return constantPool;
-  }();
-var MethodInfo = function () {
-    function getParameterName(i) {
-      true;
-      return 'p' + String.fromCharCode('A'.charCodeAt(0) + i);
-    }
-    function methodInfo(abc, stream) {
-      var constantPool = abc.constantPool;
-      var parameterCount = stream.readU30();
-      var returnType = constantPool.multinames[stream.readU30()];
-      var parameters = [];
-      for (var i = 0; i < parameterCount; i++) {
-        parameters.push({
-          type: constantPool.multinames[stream.readU30()]
-        });
-      }
-      var debugName = constantPool.strings[stream.readU30()];
-      var flags = stream.readU8();
-      var optionalCount = 0;
-      var optionals = null;
-      if (flags & METHOD_HasOptional) {
-        optionalCount = stream.readU30();
-        true;
-        for (var i = parameterCount - optionalCount; i < parameterCount; i++) {
-          var valueIndex = stream.readU30();
-          parameters[i].value = constantPool.getValue(stream.readU8(), valueIndex);
-        }
-      }
-      var paramnames = null;
-      if (flags & METHOD_HasParamNames) {
-        for (var i = 0; i < parameterCount; i++) {
-          if (false) {
-            parameters[i].name = constantPool.strings[stream.readU30()];
-          } else {
-            stream.readU30();
-            parameters[i].name = getParameterName(i);
+          AbcFile._checkMagic = function (stream) {
+            var magic = stream.readWord();
+            var flashPlayerBrannan = 46 << 16 | 15;
+            if (magic < flashPlayerBrannan) {
+              throw new Error('Invalid ABC File (magic = ' + Number(magic).toString(16) + ')');
+            }
+          };
+          Object.defineProperty(AbcFile.prototype, 'lastScript', {
+            get: function () {
+              true;
+              return this.scripts[this.scripts.length - 1];
+            },
+            enumerable: true,
+            configurable: true
+          });
+          AbcFile.attachHolder = function (mi, holder) {
+            true;
+            mi.holder = holder;
+          };
+          AbcFile.prototype.toString = function () {
+            return this.name;
+          };
+          return AbcFile;
+        }();
+      ABC.AbcFile = AbcFile;
+      var Namespace = function () {
+          function Namespace(kind, uri, prefix, uniqueURIHash) {
+            if (typeof uri === 'undefined') {
+              uri = '';
+            }
+            if (uri === undefined) {
+              uri = '';
+            }
+            if (prefix !== undefined) {
+              this.prefix = prefix;
+            }
+            this.kind = kind;
+            this.uri = uri;
+            this._buildNamespace(uniqueURIHash);
           }
-        }
-      } else {
-        for (var i = 0; i < parameterCount; i++) {
-          parameters[i].name = getParameterName(i);
-        }
-      }
-      this.abc = abc;
-      this.flags = flags;
-      this.optionals = optionals;
-      this.debugName = debugName;
-      this.parameters = parameters;
-      this.returnType = returnType;
-    }
-    methodInfo.prototype = {
-      toString: function toString() {
-        var flags = getFlags(this.flags, 'NEED_ARGUMENTS|NEED_ACTIVATION|NEED_REST|HAS_OPTIONAL|||SET_DXN|HAS_PARAM_NAMES'.split('|'));
-        return (flags ? flags + ' ' : '') + this.name;
-      },
-      hasOptional: function hasOptional() {
-        return !(!(this.flags & METHOD_HasOptional));
-      },
-      needsActivation: function needsActivation() {
-        return !(!(this.flags & METHOD_Activation));
-      },
-      needsRest: function needsRest() {
-        return !(!(this.flags & METHOD_Needrest));
-      },
-      needsArguments: function needsArguments() {
-        return !(!(this.flags & METHOD_Arguments));
-      },
-      isNative: function isNative() {
-        return !(!(this.flags & METHOD_Native));
-      },
-      isClassMember: function isClassMember() {
-        return this.holder instanceof ClassInfo;
-      },
-      isInstanceMember: function isInstanceMember() {
-        return this.holder instanceof InstanceInfo;
-      },
-      isScriptMember: function isScriptMember() {
-        return this.holder instanceof ScriptInfo;
-      }
-    };
-    function parseException(abc, stream) {
-      var multinames = abc.constantPool.multinames;
-      var ex = {
-          start: stream.readU30(),
-          end: stream.readU30(),
-          target: stream.readU30(),
-          typeName: multinames[stream.readU30()],
-          varName: multinames[stream.readU30()]
-        };
-      true;
-      true;
-      return ex;
-    }
-    methodInfo.parseBody = function parseBody(abc, stream) {
-      var constantPool = abc.constantPool;
-      var methods = abc.methods;
-      var info = methods[stream.readU30()];
-      info.hasBody = true;
-      true;
-      info.maxStack = stream.readU30();
-      info.localCount = stream.readU30();
-      info.initScopeDepth = stream.readU30();
-      info.maxScopeDepth = stream.readU30();
-      info.code = stream.readU8s(stream.readU30());
-      var exceptions = [];
-      var exceptionCount = stream.readU30();
-      for (var i = 0; i < exceptionCount; ++i) {
-        exceptions.push(parseException(abc, stream));
-      }
-      info.exceptions = exceptions;
-      info.traits = parseTraits(abc, stream, info);
-    };
-    methodInfo.prototype.hasExceptions = function hasExceptions() {
-      return this.exceptions.length > 0;
-    };
-    return methodInfo;
-  }();
-var MetaDataInfo = function () {
-    function metaDataInfo(abc, stream) {
-      var strings = abc.constantPool.strings;
-      var name = this.name = strings[stream.readU30()];
-      var itemCount = stream.readU30();
-      var keys = [];
-      var items = [];
-      for (var i = 0; i < itemCount; i++) {
-        keys[i] = strings[stream.readU30()];
-      }
-      for (var i = 0; i < itemCount; i++) {
-        var key = keys[i];
-        items[i] = {
-          key: key,
-          value: strings[stream.readU30()]
-        };
-        if (key && name === 'native') {
-          true;
-          this[key] = items[i].value;
-        }
-      }
-      this.value = items;
-    }
-    metaDataInfo.prototype = {
-      toString: function toString() {
-        return '[' + this.name + ']';
-      }
-    };
-    return metaDataInfo;
-  }();
-function attachHolder(mi, holder) {
-  true;
-  mi.holder = holder;
-}
-var InstanceInfo = function () {
-    var nextID = 1;
-    function instanceInfo(abc, stream) {
-      this.id = nextID++;
-      this.abc = abc;
-      var constantPool = abc.constantPool;
-      var methods = abc.methods;
-      this.name = constantPool.multinames[stream.readU30()];
-      true;
-      this.superName = constantPool.multinames[stream.readU30()];
-      this.flags = stream.readU8();
-      this.protectedNs = undefined;
-      if (this.flags & 8) {
-        this.protectedNs = constantPool.namespaces[stream.readU30()];
-      }
-      var interfaceCount = stream.readU30();
-      this.interfaces = [];
-      for (var i = 0; i < interfaceCount; i++) {
-        this.interfaces[i] = constantPool.multinames[stream.readU30()];
-      }
-      this.init = methods[stream.readU30()];
-      this.init.isInstanceInitializer = true;
-      this.init.name = this.name;
-      attachHolder(this.init, this);
-      this.traits = parseTraits(abc, stream, this);
-    }
-    instanceInfo.prototype = {
-      toString: function toString() {
-        var flags = getFlags(this.flags & 8, 'sealed|final|interface|protected'.split('|'));
-        var str = (flags ? flags + ' ' : '') + this.name;
-        if (this.superName) {
-          str += ' extends ' + this.superName;
-        }
-        return str;
-      },
-      isFinal: function isFinal() {
-        return this.flags & CONSTANT_ClassFinal;
-      },
-      isSealed: function isSealed() {
-        return this.flags & CONSTANT_ClassSealed;
-      },
-      isInterface: function isInterface() {
-        return this.flags & CONSTANT_ClassInterface;
-      }
-    };
-    return instanceInfo;
-  }();
-var ClassInfo = function () {
-    var nextID = 1;
-    function classInfo(abc, instanceInfo, stream) {
-      this.id = nextID++;
-      this.abc = abc;
-      this.init = abc.methods[stream.readU30()];
-      this.init.isClassInitializer = true;
-      attachHolder(this.init, this);
-      this.traits = parseTraits(abc, stream, this);
-      this.instanceInfo = instanceInfo;
-      this.instanceInfo.classInfo = this;
-      this.defaultValue = getDefaultValue(this.instanceInfo.name);
-    }
-    function getDefaultValue(qn) {
-      if (Multiname.getQualifiedName(qn) === Multiname.Int || Multiname.getQualifiedName(qn) === Multiname.Uint) {
-        return 0;
-      } else if (Multiname.getQualifiedName(qn) === Multiname.Number) {
-        return NaN;
-      } else if (Multiname.getQualifiedName(qn) === Multiname.Boolean) {
-        return false;
-      } else {
-        return null;
-      }
-    }
-    classInfo.prototype.toString = function () {
-      return this.instanceInfo.name.toString();
-    };
-    return classInfo;
-  }();
-function isClassOrInstanceInfo(x) {
-  return x instanceof ClassInfo || x instanceof InstanceInfo;
-}
-var ScriptInfo = function scriptInfo() {
-    var nextID = 1;
-    function scriptInfo(abc, index, stream) {
-      this.id = nextID++;
-      this.abc = abc;
-      this.name = abc.name + '$script' + index;
-      this.init = abc.methods[stream.readU30()];
-      this.init.isScriptInitializer = true;
-      this.index = index;
-      attachHolder(this.init, this);
-      this.traits = parseTraits(abc, stream, this);
-      this.traits.verified = true;
-    }
-    scriptInfo.prototype = {
-      get entryPoint() {
-        return this.init;
-      },
-      toString: function () {
-        return this.name;
-      }
-    };
-    return scriptInfo;
-  }();
-var AbcFile = function () {
-    function abcFile(bytes, name) {
-      Timer.start('Parse ABC');
-      this.name = name;
-      this.env = {};
-      var n, i;
-      var stream = new AbcStream(bytes);
-      checkMagic(stream);
-      Timer.start('Parse constantPool');
-      this.constantPool = new ConstantPool(stream, name);
-      Timer.stop();
-      Timer.start('Parse Method Infos');
-      this.methods = [];
-      n = stream.readU30();
-      for (i = 0; i < n; ++i) {
-        this.methods.push(new MethodInfo(this, stream));
-      }
-      Timer.stop();
-      Timer.start('Parse MetaData Infos');
-      this.metadata = [];
-      n = stream.readU30();
-      for (i = 0; i < n; ++i) {
-        this.metadata.push(new MetaDataInfo(this, stream));
-      }
-      Timer.stop();
-      Timer.start('Parse Instance Infos');
-      this.instances = [];
-      n = stream.readU30();
-      for (i = 0; i < n; ++i) {
-        this.instances.push(new InstanceInfo(this, stream));
-      }
-      Timer.stop();
-      Timer.start('Parse Class Infos');
-      this.classes = [];
-      for (i = 0; i < n; ++i) {
-        this.classes.push(new ClassInfo(this, this.instances[i], stream));
-      }
-      Timer.stop();
-      Timer.start('Parse Script Infos');
-      this.scripts = [];
-      n = stream.readU30();
-      for (i = 0; i < n; ++i) {
-        this.scripts.push(new ScriptInfo(this, i, stream));
-      }
-      Timer.stop();
-      Timer.start('Parse Method Body Info');
-      n = stream.readU30();
-      for (i = 0; i < n; ++i) {
-        MethodInfo.parseBody(this, stream);
-      }
-      Timer.stop();
-      Timer.stop();
-    }
-    function checkMagic(stream) {
-      var magic = stream.readWord();
-      var flashPlayerBrannan = 46 << 16 | 15;
-      if (magic < flashPlayerBrannan) {
-        throw new Error('Invalid ABC File (magic = ' + Number(magic).toString(16) + ')');
-      }
-    }
-    abcFile.prototype = {
-      get lastScript() {
-        true;
-        return this.scripts[this.scripts.length - 1];
-      },
-      toString: function () {
-        return this.name;
-      }
-    };
-    return abcFile;
-  }();
+          Namespace.prototype._buildNamespace = function (uniqueURIHash) {
+            if (this.kind === 22) {
+              this.kind = 8;
+            }
+            if (this.isPublic() && this.uri) {
+              var n = this.uri.length - 1;
+              var mark = this.uri.charCodeAt(n);
+              if (mark > Namespace._MIN_API_MARK) {
+                this.uri = this.uri.substring(0, n - 1);
+              }
+            } else if (this.isUnique()) {
+              this.uri = 'private ' + uniqueURIHash;
+            }
+            this.qualifiedName = Namespace._qualifyNamespace(this.kind, this.uri, this.prefix ? this.prefix : '');
+          };
+          Namespace._hashNamespace = function (kind, uri, prefix) {
+            var data = new Int32Array(1 + uri.length + prefix.length);
+            var j = 0;
+            data[j++] = kind;
+            var index = Namespace._knownURIs.indexOf(uri);
+            if (index >= 0) {
+              return kind << 2 | index;
+            } else {
+              for (var i = 0; i < uri.length; i++) {
+                data[j++] = uri.charCodeAt(i);
+              }
+            }
+            for (var i = 0; i < prefix.length; i++) {
+              data[j++] = prefix.charCodeAt(i);
+            }
+            return Shumway.HashUtilities.hashBytesTo32BitsMD5(data, 0, j);
+          };
+          Namespace._qualifyNamespace = function (kind, uri, prefix) {
+            var key = kind + uri;
+            var mangledNamespace = Namespace._mangledNamespaceCache[key];
+            if (mangledNamespace) {
+              return mangledNamespace;
+            }
+            mangledNamespace = Shumway.StringUtilities.variableLengthEncodeInt32(Namespace._hashNamespace(kind, uri, prefix));
+            Namespace._mangledNamespaceMap[mangledNamespace] = {
+              kind: kind,
+              uri: uri,
+              prefix: prefix
+            };
+            Namespace._mangledNamespaceCache[key] = mangledNamespace;
+            return mangledNamespace;
+          };
+          Namespace.fromQualifiedName = function (qn) {
+            var length = Shumway.StringUtilities.fromEncoding(qn[0]);
+            var mangledNamespace = qn.substring(0, length + 1);
+            var ns = Namespace._mangledNamespaceMap[mangledNamespace];
+            return new Namespace(ns.kind, ns.uri, ns.prefix);
+          };
+          Namespace.kindFromString = function (str) {
+            for (var kind in Namespace._kinds) {
+              if (Namespace._kinds[kind] === str) {
+                return kind;
+              }
+            }
+            return true;
+          };
+          Namespace.createNamespace = function (uri, prefix) {
+            return new Namespace(8, uri, prefix);
+          };
+          Namespace.parse = function (constantPool, stream, hash) {
+            var kind = stream.readU8();
+            var uri = constantPool.strings[stream.readU30()];
+            return new Namespace(kind, uri, undefined, hash);
+          };
+          Namespace.prototype.isPublic = function () {
+            return this.kind === 8 || this.kind === 22;
+          };
+          Namespace.prototype.isProtected = function () {
+            return this.kind === 24;
+          };
+          Namespace.prototype.isUnique = function () {
+            return this.kind === 5 && !this.uri;
+          };
+          Namespace.prototype.isDynamic = function () {
+            return this.isPublic() && !this.uri;
+          };
+          Namespace.prototype.getURI = function () {
+            return this.uri;
+          };
+          Namespace.prototype.toString = function () {
+            return Namespace._kinds[this.kind] + (this.uri ? ' ' + this.uri : '');
+          };
+          Namespace.prototype.clone = function () {
+            var ns = Object.create(Namespace.prototype);
+            ns.kind = this.kind;
+            ns.uri = this.uri;
+            ns.prefix = this.prefix;
+            ns.qualifiedName = this.qualifiedName;
+            return ns;
+          };
+          Namespace.prototype.isEqualTo = function (other) {
+            return this.qualifiedName === other.qualifiedName;
+          };
+          Namespace.prototype.inNamespaceSet = function (set) {
+            for (var i = 0; i < set.length; i++) {
+              if (set[i].qualifiedName === this.qualifiedName) {
+                return true;
+              }
+            }
+            return false;
+          };
+          Namespace.prototype.getAccessModifier = function () {
+            return Namespace._kinds[this.kind];
+          };
+          Namespace.prototype.getQualifiedName = function () {
+            return this.qualifiedName;
+          };
+          Namespace.fromSimpleName = function (simpleName) {
+            if (simpleName in Namespace._simpleNameCache) {
+              return Namespace._simpleNameCache[simpleName];
+            }
+            var namespaceNames;
+            if (simpleName.indexOf('[') === 0) {
+              true;
+              namespaceNames = simpleName.substring(1, simpleName.length - 1).split(',');
+            } else {
+              namespaceNames = [
+                simpleName
+              ];
+            }
+            return Namespace._simpleNameCache[simpleName] = namespaceNames.map(function (name) {
+              name = name.trim();
+              var kindName, uri;
+              if (name.indexOf(' ') > 0) {
+                kindName = name.substring(0, name.indexOf(' ')).trim();
+                uri = name.substring(name.indexOf(' ') + 1).trim();
+              } else {
+                var kinds = Namespace._kinds;
+                if (name === kinds[8] || name === kinds[23] || name === kinds[5] || name === kinds[24] || name === kinds[25] || name === kinds[26]) {
+                  kindName = name;
+                  uri = '';
+                } else {
+                  kindName = Namespace._publicPrefix;
+                  uri = name;
+                }
+              }
+              return new Namespace(Namespace.kindFromString(kindName), uri);
+            });
+          };
+          Namespace._publicPrefix = 'public';
+          Namespace._kinds = function () {
+            var map = Shumway.ObjectUtilities.createMap();
+            map[8] = Namespace._publicPrefix;
+            map[23] = 'packageInternal';
+            map[5] = 'private';
+            map[24] = 'protected';
+            map[25] = 'explicit';
+            map[26] = 'staticProtected';
+            return map;
+          }();
+          Namespace._MIN_API_MARK = 58004;
+          Namespace._MAX_API_MARK = 63743;
+          Namespace._knownURIs = [
+            ''
+          ];
+          Namespace._mangledNamespaceCache = Shumway.ObjectUtilities.createMap();
+          Namespace._mangledNamespaceMap = Shumway.ObjectUtilities.createMap();
+          Namespace.PUBLIC = new Namespace(8);
+          Namespace.PROTECTED = new Namespace(24);
+          Namespace.PROXY = new Namespace(8, 'http://www.adobe.com/2006/actionscript/flash/proxy');
+          Namespace._simpleNameCache = Shumway.ObjectUtilities.createMap();
+          return Namespace;
+        }();
+      ABC.Namespace = Namespace;
+      var Multiname = function () {
+          function Multiname(namespaces, name, flags) {
+            if (typeof flags === 'undefined') {
+              flags = 0;
+            }
+            if (name !== undefined) {
+              true;
+            }
+            this.runtimeId = Multiname._nextID++;
+            this.namespaces = namespaces;
+            this.name = name;
+            this.flags = flags;
+          }
+          Multiname.parse = function (constantPool, stream, multinames, patchFactoryTypes) {
+            var index = 0;
+            var kind = stream.readU8();
+            var name, namespaces = [], flags = 0;
+            switch (kind) {
+            case 7:
+            case 13:
+              index = stream.readU30();
+              if (index) {
+                namespaces = [
+                  constantPool.namespaces[index]
+                ];
+              } else {
+                flags &= ~Multiname.RUNTIME_NAME;
+              }
+              index = stream.readU30();
+              if (index) {
+                name = constantPool.strings[index];
+              }
+              break;
+            case 15:
+            case 16:
+              index = stream.readU30();
+              if (index) {
+                name = constantPool.strings[index];
+              } else {
+                flags &= ~Multiname.RUNTIME_NAME;
+              }
+              flags |= Multiname.RUNTIME_NAMESPACE;
+              break;
+            case 17:
+            case 18:
+              flags |= Multiname.RUNTIME_NAMESPACE;
+              flags |= Multiname.RUNTIME_NAME;
+              break;
+            case 9:
+            case 14:
+              index = stream.readU30();
+              if (index) {
+                name = constantPool.strings[index];
+              } else {
+                flags &= ~Multiname.RUNTIME_NAME;
+              }
+              index = stream.readU30();
+              true;
+              namespaces = constantPool.namespaceSets[index];
+              break;
+            case 27:
+            case 28:
+              flags |= Multiname.RUNTIME_NAME;
+              index = stream.readU30();
+              true;
+              namespaces = constantPool.namespaceSets[index];
+              break;
+            case 29:
+              var factoryTypeIndex = stream.readU32();
+              if (multinames[factoryTypeIndex]) {
+                namespaces = multinames[factoryTypeIndex].namespaces;
+                name = multinames[factoryTypeIndex].name;
+              }
+              var typeParameterCount = stream.readU32();
+              true;
+              var typeParameterIndex = stream.readU32();
+              true;
+              var mn = new Multiname(namespaces, name, flags);
+              mn.typeParameter = multinames[typeParameterIndex];
+              if (!multinames[factoryTypeIndex]) {
+                patchFactoryTypes.push({
+                  multiname: mn,
+                  index: factoryTypeIndex
+                });
+              }
+              return mn;
+            default:
+              Shumway.Debug.unexpected();
+              break;
+            }
+            switch (kind) {
+            case 13:
+            case 16:
+            case 18:
+            case 14:
+            case 28:
+              flags |= Multiname.ATTRIBUTE;
+              break;
+            }
+            return new Multiname(namespaces, name, flags);
+          };
+          Multiname.isMultiname = function (mn) {
+            return typeof mn === 'number' || typeof mn === 'string' || mn instanceof Multiname || mn instanceof Number;
+          };
+          Multiname.needsResolution = function (mn) {
+            return mn instanceof Multiname && mn.namespaces.length > 1;
+          };
+          Multiname.isQName = function (mn) {
+            if (mn instanceof Multiname) {
+              return mn.namespaces && mn.namespaces.length === 1;
+            }
+            return true;
+          };
+          Multiname.isRuntimeName = function (mn) {
+            return mn instanceof Multiname && mn.isRuntimeName();
+          };
+          Multiname.isRuntimeNamespace = function (mn) {
+            return mn instanceof Multiname && mn.isRuntimeNamespace();
+          };
+          Multiname.isRuntime = function (mn) {
+            return mn instanceof Multiname && mn.isRuntimeName() || mn.isRuntimeNamespace();
+          };
+          Multiname.getQualifiedName = function (mn) {
+            true;
+            if (mn instanceof Multiname) {
+              if (mn.qualifiedName !== undefined) {
+                return mn.qualifiedName;
+              }
+              var name = String(mn.name);
+              if (isNumeric(name) && mn.namespaces[0].isPublic()) {
+                return mn.qualifiedName = name;
+              }
+              mn = mn.qualifiedName = Multiname.qualifyName(mn.namespaces[0], name);
+            }
+            return mn;
+          };
+          Multiname.qualifyName = function (namespace, name) {
+            return '$' + namespace.qualifiedName + name;
+          };
+          Multiname.stripPublicQualifier = function (qn) {
+            var publicQualifier = '$' + Namespace.PUBLIC.qualifiedName;
+            var index = qn.indexOf(publicQualifier);
+            if (index !== 0) {
+              return undefined;
+            }
+            return qn.substring(publicQualifier.length);
+          };
+          Multiname.fromQualifiedName = function (qn) {
+            if (qn instanceof Multiname) {
+              return qn;
+            }
+            if (isNumeric(qn)) {
+              return new Multiname([
+                Namespace.PUBLIC
+              ], qn);
+            }
+            if (qn[0] !== '$') {
+              return;
+            }
+            var ns = Namespace.fromQualifiedName(qn.substring(1));
+            return new Multiname([
+              ns
+            ], qn.substring(1 + ns.qualifiedName.length));
+          };
+          Multiname.getNameFromPublicQualifiedName = function (qn) {
+            var mn = Multiname.fromQualifiedName(qn);
+            true;
+            return mn.name;
+          };
+          Multiname.getFullQualifiedName = function (mn) {
+            var qn = Multiname.getQualifiedName(mn);
+            if (mn instanceof Multiname && mn.typeParameter) {
+              qn += '$' + Multiname.getFullQualifiedName(mn.typeParameter);
+            }
+            return qn;
+          };
+          Multiname.getPublicQualifiedName = function (name) {
+            if (isNumeric(name)) {
+              return Shumway.toNumber(name);
+            } else if (name !== null && isObject(name)) {
+              return name;
+            }
+            return Multiname.qualifyName(Namespace.PUBLIC, name);
+          };
+          Multiname.isPublicQualifiedName = function (qn) {
+            return typeof qn === 'number' || isNumeric(qn) || qn.indexOf(Namespace.PUBLIC.qualifiedName) === 1;
+          };
+          Multiname.getAccessModifier = function (mn) {
+            true;
+            if (typeof mn === 'number' || typeof mn === 'string' || mn instanceof Number) {
+              return 'public';
+            }
+            true;
+            return mn.namespaces[0].getAccessModifier();
+          };
+          Multiname.isNumeric = function (mn) {
+            if (typeof mn === 'number') {
+              return true;
+            } else if (typeof mn === 'string') {
+              return isNumeric(mn);
+            }
+            return !isNaN(parseInt(Multiname.getName(mn), 10));
+          };
+          Multiname.getName = function (mn) {
+            true;
+            true;
+            return mn.getName();
+          };
+          Multiname.isAnyName = function (mn) {
+            return typeof mn === 'object' && !mn.isRuntimeName() && !mn.name;
+          };
+          Multiname.fromSimpleName = function (simpleName) {
+            true;
+            if (simpleName in Multiname._simpleNameCache) {
+              return Multiname._simpleNameCache[simpleName];
+            }
+            var nameIndex, namespaceIndex, name, namespace;
+            nameIndex = simpleName.lastIndexOf('.');
+            if (nameIndex <= 0) {
+              nameIndex = simpleName.lastIndexOf(' ');
+            }
+            if (nameIndex > 0 && nameIndex < simpleName.length - 1) {
+              name = simpleName.substring(nameIndex + 1).trim();
+              namespace = simpleName.substring(0, nameIndex).trim();
+            } else {
+              name = simpleName;
+              namespace = '';
+            }
+            return Multiname._simpleNameCache[simpleName] = new Multiname(Namespace.fromSimpleName(namespace), name);
+          };
+          Multiname.prototype.getQName = function (index) {
+            true;
+            if (!this._qualifiedNameCache) {
+              this._qualifiedNameCache = Shumway.ObjectUtilities.createArrayMap();
+            }
+            var name = this._qualifiedNameCache[index];
+            if (!name) {
+              name = this._qualifiedNameCache[index] = new Multiname([
+                this.namespaces[index]
+              ], this.name, this.flags);
+            }
+            return name;
+          };
+          Multiname.prototype.hasQName = function (qn) {
+            true;
+            if (this.name !== qn.name) {
+              return false;
+            }
+            for (var i = 0; i < this.namespaces.length; i++) {
+              if (this.namespaces[i].isEqualTo(qn.namespaces[0])) {
+                return true;
+              }
+            }
+            return false;
+          };
+          Multiname.prototype.isAttribute = function () {
+            return this.flags & Multiname.ATTRIBUTE;
+          };
+          Multiname.prototype.isAnyName = function () {
+            return Multiname.isAnyName(this);
+          };
+          Multiname.prototype.isAnyNamespace = function () {
+            return !this.isRuntimeNamespace() && (this.namespaces.length === 0 || this.isAnyName() && this.namespaces.length !== 1);
+          };
+          Multiname.prototype.isRuntimeName = function () {
+            return !(!(this.flags & Multiname.RUNTIME_NAME));
+          };
+          Multiname.prototype.isRuntimeNamespace = function () {
+            return !(!(this.flags & Multiname.RUNTIME_NAMESPACE));
+          };
+          Multiname.prototype.isRuntime = function () {
+            return !(!(this.flags & (Multiname.RUNTIME_NAME | Multiname.RUNTIME_NAMESPACE)));
+          };
+          Multiname.prototype.isQName = function () {
+            return this.namespaces.length === 1 && !this.isAnyName();
+          };
+          Multiname.prototype.hasTypeParameter = function () {
+            return !(!this.typeParameter);
+          };
+          Multiname.prototype.getName = function () {
+            return this.name;
+          };
+          Multiname.prototype.getOriginalName = function () {
+            true;
+            var name = this.namespaces[0].uri;
+            if (name) {
+              name += '.';
+            }
+            return name + this.name;
+          };
+          Multiname.prototype.getNamespace = function () {
+            true;
+            true;
+            return this.namespaces[0];
+          };
+          Multiname.prototype.nameToString = function () {
+            if (this.isAnyName()) {
+              return '*';
+            } else {
+              var name = this.getName();
+              return this.isRuntimeName() ? '[]' : name;
+            }
+          };
+          Multiname.prototype.hasObjectName = function () {
+            return typeof this.name === 'object';
+          };
+          Multiname.prototype.toString = function () {
+            var str = this.isAttribute() ? '@' : '';
+            if (this.isAnyNamespace()) {
+              str += '*::' + this.nameToString();
+            } else if (this.isRuntimeNamespace()) {
+              str += '[]::' + this.nameToString();
+            } else if (this.namespaces.length === 1 && this.isQName()) {
+              str += this.namespaces[0].toString() + '::';
+              str += this.nameToString();
+            } else {
+              str += '{';
+              for (var i = 0, count = this.namespaces.length; i < count; i++) {
+                str += this.namespaces[i].toString();
+                if (i + 1 < count) {
+                  str += ',';
+                }
+              }
+              str += '}::' + this.nameToString();
+            }
+            if (this.hasTypeParameter()) {
+              str += '<' + this.typeParameter.toString() + '>';
+            }
+            return str;
+          };
+          Multiname.ATTRIBUTE = 1;
+          Multiname.RUNTIME_NAMESPACE = 2;
+          Multiname.RUNTIME_NAME = 4;
+          Multiname._nextID = 0;
+          Multiname._simpleNameCache = Shumway.ObjectUtilities.createMap();
+          Multiname.Int = Multiname.getPublicQualifiedName('int');
+          Multiname.Uint = Multiname.getPublicQualifiedName('uint');
+          Multiname.Class = Multiname.getPublicQualifiedName('Class');
+          Multiname.Array = Multiname.getPublicQualifiedName('Array');
+          Multiname.Object = Multiname.getPublicQualifiedName('Object');
+          Multiname.String = Multiname.getPublicQualifiedName('String');
+          Multiname.Number = Multiname.getPublicQualifiedName('Number');
+          Multiname.Boolean = Multiname.getPublicQualifiedName('Boolean');
+          Multiname.Function = Multiname.getPublicQualifiedName('Function');
+          Multiname.XML = Multiname.getPublicQualifiedName('XML');
+          Multiname.XMLList = Multiname.getPublicQualifiedName('XMLList');
+          Multiname.TEMPORARY = new Multiname([], '');
+          return Multiname;
+        }();
+      ABC.Multiname = Multiname;
+      var MetaDataInfo = function () {
+          function MetaDataInfo(abc, stream) {
+            var strings = abc.constantPool.strings;
+            var name = this.name = strings[stream.readU30()];
+            var itemCount = stream.readU30();
+            var keys = [];
+            var items = [];
+            for (var i = 0; i < itemCount; i++) {
+              keys[i] = strings[stream.readU30()];
+            }
+            for (var i = 0; i < itemCount; i++) {
+              var key = keys[i];
+              items[i] = {
+                key: key,
+                value: strings[stream.readU30()]
+              };
+              if (key && name === 'native') {
+                true;
+                this[key] = items[i].value;
+              }
+            }
+            this.value = items;
+          }
+          MetaDataInfo.prototype.toString = function () {
+            return '[' + this.name + ']';
+          };
+          return MetaDataInfo;
+        }();
+      ABC.MetaDataInfo = MetaDataInfo;
+      (function (CONSTANT) {
+        CONSTANT[CONSTANT['Undefined'] = 0] = 'Undefined';
+        CONSTANT[CONSTANT['Utf8'] = 1] = 'Utf8';
+        CONSTANT[CONSTANT['Float'] = 2] = 'Float';
+        CONSTANT[CONSTANT['Int'] = 3] = 'Int';
+        CONSTANT[CONSTANT['UInt'] = 4] = 'UInt';
+        CONSTANT[CONSTANT['PrivateNs'] = 5] = 'PrivateNs';
+        CONSTANT[CONSTANT['Double'] = 6] = 'Double';
+        CONSTANT[CONSTANT['QName'] = 7] = 'QName';
+        CONSTANT[CONSTANT['Namespace'] = 8] = 'Namespace';
+        CONSTANT[CONSTANT['Multiname'] = 9] = 'Multiname';
+        CONSTANT[CONSTANT['False'] = 10] = 'False';
+        CONSTANT[CONSTANT['True'] = 11] = 'True';
+        CONSTANT[CONSTANT['Null'] = 12] = 'Null';
+        CONSTANT[CONSTANT['QNameA'] = 13] = 'QNameA';
+        CONSTANT[CONSTANT['MultinameA'] = 14] = 'MultinameA';
+        CONSTANT[CONSTANT['RTQName'] = 15] = 'RTQName';
+        CONSTANT[CONSTANT['RTQNameA'] = 16] = 'RTQNameA';
+        CONSTANT[CONSTANT['RTQNameL'] = 17] = 'RTQNameL';
+        CONSTANT[CONSTANT['RTQNameLA'] = 18] = 'RTQNameLA';
+        CONSTANT[CONSTANT['NameL'] = 19] = 'NameL';
+        CONSTANT[CONSTANT['NameLA'] = 20] = 'NameLA';
+        CONSTANT[CONSTANT['NamespaceSet'] = 21] = 'NamespaceSet';
+        CONSTANT[CONSTANT['PackageNamespace'] = 22] = 'PackageNamespace';
+        CONSTANT[CONSTANT['PackageInternalNs'] = 23] = 'PackageInternalNs';
+        CONSTANT[CONSTANT['ProtectedNamespace'] = 24] = 'ProtectedNamespace';
+        CONSTANT[CONSTANT['ExplicitNamespace'] = 25] = 'ExplicitNamespace';
+        CONSTANT[CONSTANT['StaticProtectedNs'] = 26] = 'StaticProtectedNs';
+        CONSTANT[CONSTANT['MultinameL'] = 27] = 'MultinameL';
+        CONSTANT[CONSTANT['MultinameLA'] = 28] = 'MultinameLA';
+        CONSTANT[CONSTANT['TypeName'] = 29] = 'TypeName';
+        CONSTANT[CONSTANT['ClassSealed'] = 1] = 'ClassSealed';
+        CONSTANT[CONSTANT['ClassFinal'] = 2] = 'ClassFinal';
+        CONSTANT[CONSTANT['ClassInterface'] = 4] = 'ClassInterface';
+        CONSTANT[CONSTANT['ClassProtectedNs'] = 8] = 'ClassProtectedNs';
+      }(ABC.CONSTANT || (ABC.CONSTANT = {})));
+      var CONSTANT = ABC.CONSTANT;
+      (function (METHOD) {
+        METHOD[METHOD['Arguments'] = 1] = 'Arguments';
+        METHOD[METHOD['Activation'] = 2] = 'Activation';
+        METHOD[METHOD['Needrest'] = 4] = 'Needrest';
+        METHOD[METHOD['HasOptional'] = 8] = 'HasOptional';
+        METHOD[METHOD['IgnoreRest'] = 16] = 'IgnoreRest';
+        METHOD[METHOD['Native'] = 32] = 'Native';
+        METHOD[METHOD['Setsdxns'] = 64] = 'Setsdxns';
+        METHOD[METHOD['HasParamNames'] = 128] = 'HasParamNames';
+      }(ABC.METHOD || (ABC.METHOD = {})));
+      var METHOD = ABC.METHOD;
+      (function (TRAIT) {
+        TRAIT[TRAIT['Slot'] = 0] = 'Slot';
+        TRAIT[TRAIT['Method'] = 1] = 'Method';
+        TRAIT[TRAIT['Getter'] = 2] = 'Getter';
+        TRAIT[TRAIT['Setter'] = 3] = 'Setter';
+        TRAIT[TRAIT['Class'] = 4] = 'Class';
+        TRAIT[TRAIT['Function'] = 5] = 'Function';
+        TRAIT[TRAIT['Const'] = 6] = 'Const';
+      }(ABC.TRAIT || (ABC.TRAIT = {})));
+      var TRAIT = ABC.TRAIT;
+      (function (ATTR) {
+        ATTR[ATTR['Final'] = 1] = 'Final';
+        ATTR[ATTR['Override'] = 2] = 'Override';
+        ATTR[ATTR['Metadata'] = 4] = 'Metadata';
+      }(ABC.ATTR || (ABC.ATTR = {})));
+      var ATTR = ABC.ATTR;
+      (function (SORT) {
+        SORT[SORT['CASEINSENSITIVE'] = 1] = 'CASEINSENSITIVE';
+        SORT[SORT['DESCENDING'] = 2] = 'DESCENDING';
+        SORT[SORT['UNIQUESORT'] = 4] = 'UNIQUESORT';
+        SORT[SORT['RETURNINDEXEDARRAY'] = 8] = 'RETURNINDEXEDARRAY';
+        SORT[SORT['NUMERIC'] = 16] = 'NUMERIC';
+      }(ABC.SORT || (ABC.SORT = {})));
+      var SORT = ABC.SORT;
+      (function (OP) {
+        OP[OP['bkpt'] = 1] = 'bkpt';
+        OP[OP['nop'] = 2] = 'nop';
+        OP[OP['throw'] = 3] = 'throw';
+        OP[OP['getsuper'] = 4] = 'getsuper';
+        OP[OP['setsuper'] = 5] = 'setsuper';
+        OP[OP['dxns'] = 6] = 'dxns';
+        OP[OP['dxnslate'] = 7] = 'dxnslate';
+        OP[OP['kill'] = 8] = 'kill';
+        OP[OP['label'] = 9] = 'label';
+        OP[OP['lf32x4'] = 10] = 'lf32x4';
+        OP[OP['sf32x4'] = 11] = 'sf32x4';
+        OP[OP['ifnlt'] = 12] = 'ifnlt';
+        OP[OP['ifnle'] = 13] = 'ifnle';
+        OP[OP['ifngt'] = 14] = 'ifngt';
+        OP[OP['ifnge'] = 15] = 'ifnge';
+        OP[OP['jump'] = 16] = 'jump';
+        OP[OP['iftrue'] = 17] = 'iftrue';
+        OP[OP['iffalse'] = 18] = 'iffalse';
+        OP[OP['ifeq'] = 19] = 'ifeq';
+        OP[OP['ifne'] = 20] = 'ifne';
+        OP[OP['iflt'] = 21] = 'iflt';
+        OP[OP['ifle'] = 22] = 'ifle';
+        OP[OP['ifgt'] = 23] = 'ifgt';
+        OP[OP['ifge'] = 24] = 'ifge';
+        OP[OP['ifstricteq'] = 25] = 'ifstricteq';
+        OP[OP['ifstrictne'] = 26] = 'ifstrictne';
+        OP[OP['lookupswitch'] = 27] = 'lookupswitch';
+        OP[OP['pushwith'] = 28] = 'pushwith';
+        OP[OP['popscope'] = 29] = 'popscope';
+        OP[OP['nextname'] = 30] = 'nextname';
+        OP[OP['hasnext'] = 31] = 'hasnext';
+        OP[OP['pushnull'] = 32] = 'pushnull';
+        OP[OP['c'] = 33] = 'c';
+        OP[OP['pushundefined'] = 33] = 'pushundefined';
+        OP[OP['pushfloat'] = 34] = 'pushfloat';
+        OP[OP['nextvalue'] = 35] = 'nextvalue';
+        OP[OP['pushbyte'] = 36] = 'pushbyte';
+        OP[OP['pushshort'] = 37] = 'pushshort';
+        OP[OP['pushtrue'] = 38] = 'pushtrue';
+        OP[OP['pushfalse'] = 39] = 'pushfalse';
+        OP[OP['pushnan'] = 40] = 'pushnan';
+        OP[OP['pop'] = 41] = 'pop';
+        OP[OP['dup'] = 42] = 'dup';
+        OP[OP['swap'] = 43] = 'swap';
+        OP[OP['pushstring'] = 44] = 'pushstring';
+        OP[OP['pushint'] = 45] = 'pushint';
+        OP[OP['pushuint'] = 46] = 'pushuint';
+        OP[OP['pushdouble'] = 47] = 'pushdouble';
+        OP[OP['pushscope'] = 48] = 'pushscope';
+        OP[OP['pushnamespace'] = 49] = 'pushnamespace';
+        OP[OP['hasnext2'] = 50] = 'hasnext2';
+        OP[OP['li8'] = 53] = 'li8';
+        OP[OP['li16'] = 54] = 'li16';
+        OP[OP['li32'] = 55] = 'li32';
+        OP[OP['lf32'] = 56] = 'lf32';
+        OP[OP['lf64'] = 57] = 'lf64';
+        OP[OP['si8'] = 58] = 'si8';
+        OP[OP['si16'] = 59] = 'si16';
+        OP[OP['si32'] = 60] = 'si32';
+        OP[OP['sf32'] = 61] = 'sf32';
+        OP[OP['sf64'] = 62] = 'sf64';
+        OP[OP['newfunction'] = 64] = 'newfunction';
+        OP[OP['call'] = 65] = 'call';
+        OP[OP['construct'] = 66] = 'construct';
+        OP[OP['callmethod'] = 67] = 'callmethod';
+        OP[OP['callstatic'] = 68] = 'callstatic';
+        OP[OP['callsuper'] = 69] = 'callsuper';
+        OP[OP['callproperty'] = 70] = 'callproperty';
+        OP[OP['returnvoid'] = 71] = 'returnvoid';
+        OP[OP['returnvalue'] = 72] = 'returnvalue';
+        OP[OP['constructsuper'] = 73] = 'constructsuper';
+        OP[OP['constructprop'] = 74] = 'constructprop';
+        OP[OP['callsuperid'] = 75] = 'callsuperid';
+        OP[OP['callproplex'] = 76] = 'callproplex';
+        OP[OP['callinterface'] = 77] = 'callinterface';
+        OP[OP['callsupervoid'] = 78] = 'callsupervoid';
+        OP[OP['callpropvoid'] = 79] = 'callpropvoid';
+        OP[OP['sxi1'] = 80] = 'sxi1';
+        OP[OP['sxi8'] = 81] = 'sxi8';
+        OP[OP['sxi16'] = 82] = 'sxi16';
+        OP[OP['applytype'] = 83] = 'applytype';
+        OP[OP['pushfloat4'] = 84] = 'pushfloat4';
+        OP[OP['newobject'] = 85] = 'newobject';
+        OP[OP['newarray'] = 86] = 'newarray';
+        OP[OP['newactivation'] = 87] = 'newactivation';
+        OP[OP['newclass'] = 88] = 'newclass';
+        OP[OP['getdescendants'] = 89] = 'getdescendants';
+        OP[OP['newcatch'] = 90] = 'newcatch';
+        OP[OP['findpropstrict'] = 93] = 'findpropstrict';
+        OP[OP['findproperty'] = 94] = 'findproperty';
+        OP[OP['finddef'] = 95] = 'finddef';
+        OP[OP['getlex'] = 96] = 'getlex';
+        OP[OP['setproperty'] = 97] = 'setproperty';
+        OP[OP['getlocal'] = 98] = 'getlocal';
+        OP[OP['setlocal'] = 99] = 'setlocal';
+        OP[OP['getglobalscope'] = 100] = 'getglobalscope';
+        OP[OP['getscopeobject'] = 101] = 'getscopeobject';
+        OP[OP['getproperty'] = 102] = 'getproperty';
+        OP[OP['getouterscope'] = 103] = 'getouterscope';
+        OP[OP['initproperty'] = 104] = 'initproperty';
+        OP[OP['setpropertylate'] = 105] = 'setpropertylate';
+        OP[OP['deleteproperty'] = 106] = 'deleteproperty';
+        OP[OP['deletepropertylate'] = 107] = 'deletepropertylate';
+        OP[OP['getslot'] = 108] = 'getslot';
+        OP[OP['setslot'] = 109] = 'setslot';
+        OP[OP['getglobalslot'] = 110] = 'getglobalslot';
+        OP[OP['setglobalslot'] = 111] = 'setglobalslot';
+        OP[OP['convert_s'] = 112] = 'convert_s';
+        OP[OP['esc_xelem'] = 113] = 'esc_xelem';
+        OP[OP['esc_xattr'] = 114] = 'esc_xattr';
+        OP[OP['convert_i'] = 115] = 'convert_i';
+        OP[OP['convert_u'] = 116] = 'convert_u';
+        OP[OP['convert_d'] = 117] = 'convert_d';
+        OP[OP['convert_b'] = 118] = 'convert_b';
+        OP[OP['convert_o'] = 119] = 'convert_o';
+        OP[OP['checkfilter'] = 120] = 'checkfilter';
+        OP[OP['convert_f'] = 121] = 'convert_f';
+        OP[OP['unplus'] = 122] = 'unplus';
+        OP[OP['convert_f4'] = 123] = 'convert_f4';
+        OP[OP['coerce'] = 128] = 'coerce';
+        OP[OP['coerce_b'] = 129] = 'coerce_b';
+        OP[OP['coerce_a'] = 130] = 'coerce_a';
+        OP[OP['coerce_i'] = 131] = 'coerce_i';
+        OP[OP['coerce_d'] = 132] = 'coerce_d';
+        OP[OP['coerce_s'] = 133] = 'coerce_s';
+        OP[OP['astype'] = 134] = 'astype';
+        OP[OP['astypelate'] = 135] = 'astypelate';
+        OP[OP['coerce_u'] = 136] = 'coerce_u';
+        OP[OP['coerce_o'] = 137] = 'coerce_o';
+        OP[OP['negate'] = 144] = 'negate';
+        OP[OP['increment'] = 145] = 'increment';
+        OP[OP['inclocal'] = 146] = 'inclocal';
+        OP[OP['decrement'] = 147] = 'decrement';
+        OP[OP['declocal'] = 148] = 'declocal';
+        OP[OP['typeof'] = 149] = 'typeof';
+        OP[OP['not'] = 150] = 'not';
+        OP[OP['bitnot'] = 151] = 'bitnot';
+        OP[OP['add'] = 160] = 'add';
+        OP[OP['subtract'] = 161] = 'subtract';
+        OP[OP['multiply'] = 162] = 'multiply';
+        OP[OP['divide'] = 163] = 'divide';
+        OP[OP['modulo'] = 164] = 'modulo';
+        OP[OP['lshift'] = 165] = 'lshift';
+        OP[OP['rshift'] = 166] = 'rshift';
+        OP[OP['urshift'] = 167] = 'urshift';
+        OP[OP['bitand'] = 168] = 'bitand';
+        OP[OP['bitor'] = 169] = 'bitor';
+        OP[OP['bitxor'] = 170] = 'bitxor';
+        OP[OP['equals'] = 171] = 'equals';
+        OP[OP['strictequals'] = 172] = 'strictequals';
+        OP[OP['lessthan'] = 173] = 'lessthan';
+        OP[OP['lessequals'] = 174] = 'lessequals';
+        OP[OP['greaterthan'] = 175] = 'greaterthan';
+        OP[OP['greaterequals'] = 176] = 'greaterequals';
+        OP[OP['instanceof'] = 177] = 'instanceof';
+        OP[OP['istype'] = 178] = 'istype';
+        OP[OP['istypelate'] = 179] = 'istypelate';
+        OP[OP['in'] = 180] = 'in';
+        OP[OP['increment_i'] = 192] = 'increment_i';
+        OP[OP['decrement_i'] = 193] = 'decrement_i';
+        OP[OP['inclocal_i'] = 194] = 'inclocal_i';
+        OP[OP['declocal_i'] = 195] = 'declocal_i';
+        OP[OP['negate_i'] = 196] = 'negate_i';
+        OP[OP['add_i'] = 197] = 'add_i';
+        OP[OP['subtract_i'] = 198] = 'subtract_i';
+        OP[OP['multiply_i'] = 199] = 'multiply_i';
+        OP[OP['getlocal0'] = 208] = 'getlocal0';
+        OP[OP['getlocal1'] = 209] = 'getlocal1';
+        OP[OP['getlocal2'] = 210] = 'getlocal2';
+        OP[OP['getlocal3'] = 211] = 'getlocal3';
+        OP[OP['setlocal0'] = 212] = 'setlocal0';
+        OP[OP['setlocal1'] = 213] = 'setlocal1';
+        OP[OP['setlocal2'] = 214] = 'setlocal2';
+        OP[OP['setlocal3'] = 215] = 'setlocal3';
+        OP[OP['invalid'] = 237] = 'invalid';
+        OP[OP['debug'] = 239] = 'debug';
+        OP[OP['debugline'] = 240] = 'debugline';
+        OP[OP['debugfile'] = 241] = 'debugfile';
+        OP[OP['bkptline'] = 242] = 'bkptline';
+        OP[OP['timestamp'] = 243] = 'timestamp';
+      }(ABC.OP || (ABC.OP = {})));
+      var OP = ABC.OP;
+      var ConstantPool = function () {
+          function ConstantPool(stream, abc) {
+            var n;
+            var ints = [
+                0
+              ];
+            n = stream.readU30();
+            for (var i = 1; i < n; ++i) {
+              ints.push(stream.readS32());
+            }
+            var uints = [
+                0
+              ];
+            n = stream.readU30();
+            for (var i = 1; i < n; ++i) {
+              uints.push(stream.readU32());
+            }
+            var doubles = [
+                NaN
+              ];
+            n = stream.readU30();
+            for (var i = 1; i < n; ++i) {
+              doubles.push(stream.readDouble());
+            }
+            Timer.start('Parse Strings');
+            var strings = [
+                ''
+              ];
+            n = stream.readU30();
+            for (var i = 1; i < n; ++i) {
+              strings.push(stream.readUTFString(stream.readU30()));
+            }
+            this.positionAfterUTFStrings = stream.position;
+            Timer.stop();
+            this.ints = ints;
+            this.uints = uints;
+            this.doubles = doubles;
+            this.strings = strings;
+            Timer.start('Parse Namespaces');
+            var namespaces = [
+                undefined
+              ];
+            n = stream.readU30();
+            for (var i = 1; i < n; ++i) {
+              namespaces.push(Namespace.parse(this, stream, abc.hash + i));
+            }
+            Timer.stop();
+            Timer.start('Parse Namespace Sets');
+            var namespaceSets = [
+                undefined
+              ];
+            n = stream.readU30();
+            for (var i = 1; i < n; ++i) {
+              var count = stream.readU30();
+              var set = [];
+              set.runtimeId = ConstantPool._nextNamespaceSetID++;
+              for (var j = 0; j < count; ++j) {
+                set.push(namespaces[stream.readU30()]);
+              }
+              namespaceSets.push(set);
+            }
+            Timer.stop();
+            this.namespaces = namespaces;
+            this.namespaceSets = namespaceSets;
+            Timer.start('Parse Multinames');
+            var multinames = [
+                undefined
+              ];
+            var patchFactoryTypes = [];
+            n = stream.readU30();
+            for (var i = 1; i < n; ++i) {
+              multinames.push(Multiname.parse(this, stream, multinames, patchFactoryTypes));
+            }
+            Timer.stop();
+            this.multinames = multinames;
+          }
+          ConstantPool.prototype.getValue = function (kind, index) {
+            switch (kind) {
+            case 3:
+              return this.ints[index];
+            case 4:
+              return this.uints[index];
+            case 6:
+              return this.doubles[index];
+            case 1:
+              return this.strings[index];
+            case 11:
+              return true;
+            case 10:
+              return false;
+            case 12:
+              return null;
+            case 0:
+              return undefined;
+            case 8:
+            case 23:
+              return this.namespaces[index];
+            case 7:
+            case 14:
+            case 15:
+            case 16:
+            case 17:
+            case 18:
+            case 19:
+            case 20:
+              return this.multinames[index];
+            case 2:
+              Shumway.Debug.warning('TODO: CONSTANT.Float may be deprecated?');
+              break;
+            default:
+              true;
+            }
+          };
+          ConstantPool._nextNamespaceSetID = 1;
+          return ConstantPool;
+        }();
+      ABC.ConstantPool = ConstantPool;
+    }(AVM2.ABC || (AVM2.ABC = {})));
+    var ABC = AVM2.ABC;
+  }(Shumway.AVM2 || (Shumway.AVM2 = {})));
+  var AVM2 = Shumway.AVM2;
+}(Shumway || (Shumway = {})));
+var AbcFile = Shumway.AVM2.ABC.AbcFile;
+var AbcStream = Shumway.AVM2.ABC.AbcStream;
+var ConstantPool = Shumway.AVM2.ABC.ConstantPool;
+var ClassInfo = Shumway.AVM2.ABC.ClassInfo;
+var MetaDataInfo = Shumway.AVM2.ABC.MetaDataInfo;
+var InstanceInfo = Shumway.AVM2.ABC.InstanceInfo;
+var ScriptInfo = Shumway.AVM2.ABC.ScriptInfo;
+var Trait = Shumway.AVM2.ABC.Trait;
+var MethodInfo = Shumway.AVM2.ABC.MethodInfo;
+var Multiname = Shumway.AVM2.ABC.Multiname;
+var ASNamespace = Shumway.AVM2.ABC.Namespace;
+var AbcFile = Shumway.AVM2.ABC.AbcFile;
+var AbcStream = Shumway.AVM2.ABC.AbcStream;
+var ConstantPool = Shumway.AVM2.ABC.ConstantPool;
+var ClassInfo = Shumway.AVM2.ABC.ClassInfo;
+var MetaDataInfo = Shumway.AVM2.ABC.MetaDataInfo;
+var InstanceInfo = Shumway.AVM2.ABC.InstanceInfo;
+var ScriptInfo = Shumway.AVM2.ABC.ScriptInfo;
+var Trait = Shumway.AVM2.ABC.Trait;
+var MethodInfo = Shumway.AVM2.ABC.MethodInfo;
+var Multiname = Shumway.AVM2.ABC.Multiname;
+var ASNamespace = Shumway.AVM2.ABC.Namespace;
 var Bytecode = function () {
     function Bytecode(code) {
       var op = code.readU8();
       this.op = op;
       this.originalPosition = code.position;
-      var opdesc = opcodeTable[op];
+      var opdesc = Shumway.AVM2.opcodeTable[op];
       if (!opdesc) {
         unexpected('Unknown Op ' + op);
       }
@@ -13948,7 +15278,7 @@ var Bytecode = function () {
         writer.writeLn('#' + this.bid);
       },
       toString: function toString(abc) {
-        var opDescription = opcodeTable[this.op];
+        var opDescription = Shumway.AVM2.opcodeTable[this.op];
         var str = opDescription.name.padRight(' ', 20);
         var i, j;
         if (this.op === OP_lookupswitch) {
@@ -16933,9 +18263,9 @@ var Type = function () {
         traitsTypeCache = type.cache.scriptInfo;
       }
       if (traitsTypeCache) {
-        return traitsTypeCache[x.id] || (traitsTypeCache[x.id] = new TraitsType(x, domain));
+        return traitsTypeCache[x.runtimeId] || (traitsTypeCache[x.runtimeId] = new TraitsType(x, domain));
       }
-      if (x instanceof Activation) {
+      if (x instanceof ActivationInfo) {
         return new TraitsType(x.methodInfo);
       } else if (x instanceof Global) {
         return new TraitsType(x.scriptInfo);
@@ -17108,7 +18438,7 @@ var TraitsType = function () {
         return 'II:' + x.name.name;
       } else if (x instanceof MethodInfo) {
         return 'MI';
-      } else if (x instanceof Activation) {
+      } else if (x instanceof ActivationInfo) {
         return 'AC';
       }
       true;
@@ -17221,6 +18551,9 @@ var TraitsType = function () {
         return result;
       }
       return null;
+    };
+    traitsType.prototype.isScriptInfo = function () {
+      return this.object instanceof ScriptInfo;
     };
     traitsType.prototype.isClassInfo = function () {
       return this.object instanceof ClassInfo;
@@ -17388,10 +18721,10 @@ var Verifier = function () {
         return state;
       }();
     var Verification = function () {
-        function verification(methodInfo, scope) {
-          this.scope = scope;
+        function verification(methodInfo, domain, savedScope) {
+          this.savedScope = savedScope;
           this.methodInfo = methodInfo;
-          this.domain = methodInfo.abc.applicationDomain;
+          this.domain = domain;
           this.writer = new IndentingWriter();
           this.returnType = Type.Undefined;
         }
@@ -17427,12 +18760,12 @@ var Verifier = function () {
           for (var bi = 0, len = blocks.length; bi < len; bi++) {
             blocks[bi].bdo = bi;
           }
-          var worklist = new SortedList(function compare(blockA, blockB) {
+          var worklist = new Shumway.SortedList(function compare(blockA, blockB) {
               return blockA.bdo - blockB.bdo;
             });
           blocks[0].entryState = entryState;
           worklist.push(blocks[0]);
-          while (worklist.peek()) {
+          while (!worklist.isEmpty()) {
             var block = worklist.pop();
             var exitState = block.exitState = block.entryState.clone();
             this.verifyBlock(block, exitState);
@@ -17473,13 +18806,14 @@ var Verifier = function () {
           this.methodInfo.inferredReturnType = this.returnType;
         };
         verification.prototype.verifyBlock = function verifyBlock(block, state) {
-          var savedScope = this.scope;
+          var savedScope = this.savedScope;
+          var globalScope = savedScope[0];
           var local = state.local;
           var stack = state.stack;
           var scope = state.scope;
           var writer = verifierTraceLevel.value ? this.writer : null;
           var bytecodes = this.methodInfo.analysis.bytecodes;
-          var domain = this.methodInfo.abc.applicationDomain;
+          var domain = this.domain;
           var multinames = this.methodInfo.abc.constantPool.multinames;
           var mi = this.methodInfo;
           var bc, obj, fn, mn, l, r, val, type, returnType;
@@ -17509,47 +18843,36 @@ var Verifier = function () {
           }
           function findProperty(mn, strict) {
             if (mn instanceof MultinameType) {
+              if (mn.name === 'Array') {
+                debugger;
+              }
               return Type.Any;
             }
-            for (var i = scope.length - 1; i >= 0; i--) {
-              if (scope[i] instanceof TraitsType) {
-                var trait = scope[i].getTrait(mn, false, true);
+            for (var i = scope.length - 1; i >= -savedScope.length; i--) {
+              var s = i >= 0 ? scope[i] : savedScope[savedScope.length + i];
+              if (s instanceof TraitsType) {
+                var trait = s.getTrait(mn, false, true);
                 if (trait) {
                   ti().scopeDepth = scope.length - i - 1;
-                  return scope[i];
+                  if (s.isClassInfo() || s.isScriptInfo()) {
+                    ti().object = LazyInitializer.create(s.object);
+                  }
+                  return s;
                 }
               } else {
-                return Type.Any;
-              }
-            }
-            if (isClassOrInstanceInfo(mi.holder)) {
-              var classType;
-              if (mi.holder instanceof ClassInfo) {
-                classType = Type.from(mi.holder, domain);
-              } else if (mi.holder instanceof InstanceInfo) {
-                classType = Type.from(mi.holder, domain).classType();
-              }
-              var trait = classType.getTrait(mn, false, true);
-              if (trait) {
-                if (!mi.isInstanceInitializer) {
-                  ti().object = LazyInitializer.create(classType.object);
+                if (mn.name === 'Array') {
+                  debugger;
                 }
-                return classType;
-              }
-            }
-            if (savedScope && savedScope.object && mn instanceof Multiname) {
-              var obj = savedScope.findScopeProperty(mn.namespaces, mn.name, mn.flags, domain, strict, true);
-              if (obj) {
-                var savedScopeDepth = savedScope.findDepth(obj);
-                true;
-                ti().scopeDepth = savedScopeDepth + scope.length;
-                return Type.from(obj, domain);
+                return Type.Any;
               }
             }
             var resolved = domain.findDefiningScript(mn, false);
             if (resolved) {
               ti().object = LazyInitializer.create(resolved.script);
               return Type.from(resolved.script, domain);
+            }
+            if (mn.name === 'Array') {
+              debugger;
             }
             return Type.Any;
           }
@@ -17586,7 +18909,7 @@ var Verifier = function () {
             return Type.Any;
           }
           function isNumericMultiname(mn) {
-            return mn instanceof Multiname && isNumeric(mn.name) || mn instanceof MultinameType && (mn.name instanceof TraitsType && mn.name.isNumeric() || isNumeric(mn.name));
+            return mn instanceof Multiname && Multiname.isNumeric(mn) || mn instanceof MultinameType && (mn.name instanceof TraitsType && mn.name.isNumeric());
           }
           function getProperty(obj, mn) {
             if (obj instanceof TraitsType || obj instanceof ParameterizedType) {
@@ -17641,7 +18964,7 @@ var Verifier = function () {
             bc = bytecodes[bci];
             var op = bc.op;
             if (writer && verifierTraceLevel.value > 1) {
-              writer.writeLn(('stateBefore: ' + state.toString()).padRight(' ', 100) + ' : ' + bci + ', ' + bc.toString(mi.abc));
+              writer.writeLn(('stateBefore: ' + state.toString() + ' $$[' + savedScope.join(', ') + ']').padRight(' ', 100) + ' : ' + bci + ', ' + bc.toString(mi.abc));
             }
             switch (op) {
             case 1:
@@ -17852,6 +19175,8 @@ var Verifier = function () {
               stack.pop();
               if (this.thisType.isInstanceInfo() && this.thisType.super() === Type.Object) {
                 ti().noCallSuperNeeded = true;
+              } else {
+                ti().baseClass = LazyInitializer.create(this.thisType.super().classType().object);
               }
               break;
             case 66:
@@ -17877,7 +19202,11 @@ var Verifier = function () {
               true;
               val = pop();
               obj = pop();
-              push(obj.applyType(val));
+              if (obj === Type.Any) {
+                push(Type.Any);
+              } else {
+                push(obj.applyType(val));
+              }
               break;
             case 84:
               notImplemented(bc);
@@ -17891,7 +19220,7 @@ var Verifier = function () {
               push(Type.Array);
               break;
             case 87:
-              push(Type.from(new Activation(this.methodInfo)));
+              push(Type.from(new ActivationInfo(this.methodInfo)));
               break;
             case 88:
               push(Type.Any);
@@ -17931,7 +19260,8 @@ var Verifier = function () {
               local[bc.index] = pop();
               break;
             case 100:
-              push(Type.from(savedScope.global.object));
+              push(globalScope);
+              ti().object = LazyInitializer.create(globalScope.object);
               break;
             case 101:
               push(scope[bc.index]);
@@ -18177,7 +19507,22 @@ var Verifier = function () {
     }
     verifier.prototype.verifyMethod = function (methodInfo, scope) {
       try {
-        new Verification(methodInfo, scope).verify();
+        var domain = methodInfo.abc.applicationDomain;
+        var scopeObjects = scope.getScopeObjects();
+        if (!scopeObjects[scopeObjects.length - 1]) {
+          if (methodInfo.holder instanceof InstanceInfo) {
+            scopeObjects[scopeObjects.length - 1] = methodInfo.holder.classInfo;
+          } else if (methodInfo.holder instanceof ClassInfo) {
+            scopeObjects[scopeObjects.length - 1] = methodInfo.holder;
+          }
+        }
+        var savedScope = scopeObjects.map(function (object) {
+            if (object instanceof MethodInfo) {
+              return Type.from(new ActivationInfo(object));
+            }
+            return Type.from(object, domain);
+          });
+        new Verification(methodInfo, methodInfo.abc.applicationDomain, savedScope).verify();
         methodInfo.verified = true;
         Counter.count('Verifier: Methods');
       } catch (e) {
@@ -19794,6 +21139,9 @@ var Verifier = function () {
       operator.NEG = new operator('-', function (a) {
         return -a;
       }, false);
+      operator.TYPE_OF = new operator('typeof', function (a) {
+        return typeof a;
+      }, false);
       operator.TRUE = new operator('!!', function (a) {
         return !(!a);
       }, false);
@@ -20609,7 +21957,7 @@ var Verifier = function () {
             return;
           }
           if (node instanceof Value) {
-            node.variable = new Variable('l' + node.id);
+            node.variable = new Variable('v' + node.id);
             debug && writer.writeLn('Allocated: ' + node.variable + ' to ' + node);
           }
         }
@@ -20998,6 +22346,7 @@ var createName = function createName(namespaces, name) {
   var CFG = IR.CFG;
   var writer = new IndentingWriter();
   var peepholeOptimizer = new IR.PeepholeOptimizer();
+  var USE_TYPE_OF_DEFAULT_ARGUMENT_CHECKING = false;
   var State = function () {
       var nextID = 0;
       function constructor(index) {
@@ -21141,8 +22490,7 @@ var createName = function createName(namespaces, name) {
     node.mustFloat = true;
     return node;
   }
-  function info(message) {
-    console.info(message);
+  function warn(message) {
   }
   function unary(operator, argument) {
     var node = new Unary(operator, argument);
@@ -21209,7 +22557,14 @@ var createName = function createName(namespaces, name) {
       value
     ]);
   }
-  var coerceString = callGlobalProperty.bind(null, 'asCoerceString');
+  function coerceString(value) {
+    if (isStringConstant(value)) {
+      return value;
+    }
+    return callPure(globalProperty('asCoerceString'), null, [
+      value
+    ]);
+  }
   var coerceObject = callGlobalProperty.bind(null, 'asCoerceObject');
   var coercers = createEmptyObject();
   coercers[Multiname.Int] = coerceInt;
@@ -21248,7 +22603,7 @@ var createName = function createName(namespaces, name) {
         var parameterIndexOffset = this.hasDynamicScope ? 1 : 0;
         var parameterCount = mi.parameters.length;
         for (var i = 0; i < parameterCount; i++) {
-          state.local.push(new Parameter(start, parameterIndexOffset + i, PARAMETER_PREFIX + mi.parameters[i].name));
+          state.local.push(new Parameter(start, parameterIndexOffset + i, mi.parameters[i].name));
         }
         for (var i = parameterCount; i < mi.localCount; i++) {
           state.local.push(Undefined);
@@ -21275,7 +22630,12 @@ var createName = function createName(namespaces, name) {
           var index = i + 1;
           var local = state.local[index];
           if (parameter.value !== undefined) {
-            var condition = new IR.Binary(Operator.LT, argumentsLength, constant(parameterIndexOffset + i + 1));
+            var condition;
+            if (USE_TYPE_OF_DEFAULT_ARGUMENT_CHECKING) {
+              condition = new IR.Binary(Operator.SEQ, new IR.Unary(Operator.TYPE_OF, local), constant('undefined'));
+            } else {
+              condition = new IR.Binary(Operator.LT, argumentsLength, constant(parameterIndexOffset + i + 1));
+            }
             local = new IR.Latch(null, condition, constant(parameter.value), local);
           }
           if (parameter.type && !parameter.type.isAnyName()) {
@@ -21312,7 +22672,7 @@ var createName = function createName(namespaces, name) {
         for (var i = 0; i < blocks.length; i++) {
           blocks[i].blockDominatorOrder = i;
         }
-        var worklist = new SortedList(function compare(a, b) {
+        var worklist = new Shumway.SortedList(function compare(a, b) {
             return a.block.blockDominatorOrder - b.block.blockDominatorOrder;
           });
         var start = new Start(null);
@@ -21442,12 +22802,18 @@ var createName = function createName(namespaces, name) {
             }
             return name;
           }
+          function getGlobalScope(ti) {
+            if (ti && ti.object) {
+              return constant(ti.object);
+            }
+            return new IR.ASGlobal(null, savedScope());
+          }
           function findProperty(multiname, strict, ti) {
             var slowPath = new IR.ASFindProperty(region, state.store, topScope(), multiname, domain, strict);
             if (ti) {
               if (ti.object) {
                 if (ti.object instanceof Global && !ti.object.isExecuting()) {
-                  info('Can\'t optimize findProperty ' + multiname + ', global object is not yet executed or executing.');
+                  warn('Can\'t optimize findProperty ' + multiname + ', global object is not yet executed or executing.');
                   return slowPath;
                 }
                 return constant(ti.object);
@@ -21455,7 +22821,7 @@ var createName = function createName(namespaces, name) {
                 return getScopeObject(topScope(ti.scopeDepth));
               }
             }
-            info('Can\'t optimize findProperty ' + multiname);
+            warn('Can\'t optimize findProperty ' + multiname);
             return slowPath;
           }
           function getJSProperty(object, path) {
@@ -21498,7 +22864,7 @@ var createName = function createName(namespaces, name) {
           function resolveMultinameGlobally(multiname) {
             var namespaces = multiname.namespaces;
             var name = multiname.name;
-            if (!globalMultinameAnalysis.value) {
+            if (!Shumway.AVM2.Runtime.globalMultinameAnalysis.value) {
               return;
             }
             if (!isConstant(namespaces) || !isConstant(name) || multiname.isAttribute()) {
@@ -21537,6 +22903,20 @@ var createName = function createName(namespaces, name) {
             }
             return store(new IR.ASSetSuper(region, state.store, object, multiname, value, scope));
           }
+          function constructSuper(scope, object, args, ti) {
+            if (ti) {
+              if (ti.noCallSuperNeeded) {
+                return;
+              } else if (ti.baseClass) {
+                var callee = getJSProperty(constant(ti.baseClass), 'instanceConstructorNoInitialize');
+                call(callee, object, args);
+                return;
+              }
+            }
+            callee = getJSProperty(scope, 'object.baseClass.instanceConstructorNoInitialize');
+            call(callee, object, args);
+            return;
+          }
           function callProperty(object, multiname, args, isLex, ti) {
             if (ti && ti.trait) {
               if (ti.trait.isMethod()) {
@@ -21565,7 +22945,7 @@ var createName = function createName(namespaces, name) {
             }
             return store(new IR.ASCallProperty(region, state.store, object, multiname, args, IR.Flags.PRISTINE, isLex));
           }
-          function getProperty(object, multiname, ti, getOpenMethod, ic) {
+          function getProperty(object, multiname, ti, getOpenMethod) {
             true;
             getOpenMethod = !(!getOpenMethod);
             if (ti) {
@@ -21584,7 +22964,7 @@ var createName = function createName(namespaces, name) {
                 return store(new IR.ASGetProperty(region, state.store, object, multiname, IR.Flags.INDEXED | (getOpenMethod ? IR.Flagas.IS_METHOD : 0)));
               }
             }
-            info('Can\'t optimize getProperty ' + multiname);
+            warn('Can\'t optimize getProperty ' + multiname);
             var qn = resolveMultinameGlobally(multiname);
             if (qn) {
               return store(new IR.ASGetProperty(region, state.store, object, constant(Multiname.getQualifiedName(qn)), IR.Flags.RESOLVED | (getOpenMethod ? IR.Flagas.IS_METHOD : 0)));
@@ -21592,7 +22972,7 @@ var createName = function createName(namespaces, name) {
             Counter.count('Compiler: Slow ASGetProperty');
             return store(new IR.ASGetProperty(region, state.store, object, multiname, getOpenMethod ? IR.Flagas.IS_METHOD : 0));
           }
-          function setProperty(object, multiname, value, ti, ic) {
+          function setProperty(object, multiname, value, ti) {
             true;
             if (ti) {
               if (ti.trait) {
@@ -21611,7 +22991,7 @@ var createName = function createName(namespaces, name) {
                 return store(new IR.ASSetProperty(region, state.store, object, multiname, value, IR.Flags.INDEXED));
               }
             }
-            info('Can\'t optimize setProperty ' + multiname);
+            warn('Can\'t optimize setProperty ' + multiname);
             var qn = resolveMultinameGlobally(multiname);
             if (qn) {
             }
@@ -21632,7 +23012,7 @@ var createName = function createName(namespaces, name) {
                 return store(new IR.GetProperty(region, state.store, object, constant(slotQn)));
               }
             }
-            info('Can\'t optimize getSlot ' + index);
+            warn('Can\'t optimize getSlot ' + index);
             return store(new IR.ASGetSlot(null, state.store, object, index));
           }
           function setSlot(object, index, value, ti) {
@@ -21644,7 +23024,7 @@ var createName = function createName(namespaces, name) {
                 return;
               }
             }
-            info('Can\'t optimize setSlot ' + index);
+            warn('Can\'t optimize setSlot ' + index);
             store(new IR.ASSetSlot(region, state.store, object, index, value));
           }
           function call(callee, object, args) {
@@ -21808,7 +23188,7 @@ var createName = function createName(namespaces, name) {
               scope.pop();
               break;
             case 100:
-              push(new IR.ASGlobal(null, savedScope()));
+              push(getGlobalScope(bc.ti));
               break;
             case 101:
               push(getScopeObject(state.scope[bc.index]));
@@ -21822,7 +23202,7 @@ var createName = function createName(namespaces, name) {
             case 102:
               multiname = buildMultiname(bc.index);
               object = pop();
-              push(getProperty(object, multiname, bc.ti, false, ic(bc)));
+              push(getProperty(object, multiname, bc.ti, false));
               break;
             case 89:
               multiname = buildMultiname(bc.index);
@@ -21831,14 +23211,14 @@ var createName = function createName(namespaces, name) {
               break;
             case 96:
               multiname = buildMultiname(bc.index);
-              push(getProperty(findProperty(multiname, true, bc.ti), multiname, bc.ti, false, ic(bc)));
+              push(getProperty(findProperty(multiname, true, bc.ti), multiname, bc.ti, false));
               break;
             case 104:
             case 97:
               value = pop();
               multiname = buildMultiname(bc.index);
               object = pop();
-              setProperty(object, multiname, value, bc.ti, ic(bc));
+              setProperty(object, multiname, value, bc.ti);
               break;
             case 106:
               multiname = buildMultiname(bc.index);
@@ -21910,16 +23290,13 @@ var createName = function createName(namespaces, name) {
             case 73:
               args = popMany(bc.argCount);
               object = pop();
-              if (!(bc.ti && bc.ti.noCallSuperNeeded)) {
-                callee = getJSProperty(savedScope(), 'object.baseClass.instanceConstructorNoInitialize');
-                call(callee, object, args);
-              }
+              constructSuper(savedScope(), object, args, bc.ti);
               break;
             case 74:
               args = popMany(bc.argCount);
               multiname = buildMultiname(bc.index);
               object = pop();
-              callee = getProperty(object, multiname, bc.ti, false, ic(bc));
+              callee = getProperty(object, multiname, bc.ti, false);
               push(store(new IR.ASNew(region, state.store, callee, args)));
               break;
             case 128:
@@ -22115,7 +23492,7 @@ var createName = function createName(namespaces, name) {
               left = pop();
               if (typesAreEqual(left, right)) {
                 operator = Operator.ADD;
-              } else if (useAsAdd) {
+              } else if (Shumway.AVM2.Runtime.useAsAdd) {
                 operator = Operator.AS_ADD;
               } else {
                 operator = Operator.ADD;
@@ -22345,7 +23722,7 @@ var createName = function createName(namespaces, name) {
     Timer.start('Mark Loops');
     methodInfo.analysis.markLoops();
     Timer.stop();
-    if (enableVerifier.value) {
+    if (Shumway.AVM2.Runtime.enableVerifier.value) {
       Timer.start('Verify');
       verifier.verifyMethod(methodInfo, scope);
       Timer.stop();
@@ -24270,7 +25647,7 @@ var Compiler = new (function () {
   };
   IR.ASNewActivation.prototype.compile = function (cx) {
     var methodInfo = compileValue(this.methodInfo, cx);
-    return call(id('createActivation'), [
+    return call(id('asCreateActivation'), [
       methodInfo
     ]);
   };
@@ -24303,7 +25680,7 @@ var Compiler = new (function () {
     Timer.stop();
     var parameters = [];
     for (var i = 0; i < cx.parameters.length; i++) {
-      var name = cx.parameters[i] ? cx.parameters[i].name : '_';
+      var name = cx.parameters[i] ? cx.parameters[i].name : '_' + i;
       parameters.push(id(name));
     }
     if (cx.variables.length) {
@@ -24346,1164 +25723,1521 @@ var Compiler = new (function () {
   }
   Backend.generate = generate;
 }(typeof exports === 'undefined' ? Backend = {} : exports));
-var domainOptions = systemOptions.register(new OptionSet('ApplicationDomain Options'));
-var traceClasses = domainOptions.register(new Option('tc', 'traceClasses', 'boolean', false, 'trace class creation'));
-var traceDomain = domainOptions.register(new Option('td', 'traceDomain', 'boolean', false, 'trace domain property access'));
-var EXECUTION_MODE = {
-    INTERPRET: 1,
-    COMPILE: 2
-  };
-function executeScript(script) {
-  var abc = script.abc;
-  true;
-  var global = new Global(script);
-  if (abc.applicationDomain.allowNatives) {
-    global[Multiname.getPublicQualifiedName('unsafeJSNative')] = getNative;
-  }
-  script.executing = true;
-  var scope = new Scope(null, script.global);
-  createFunction(script.init, scope).call(script.global, false);
-  script.executed = true;
-}
-function ensureScriptIsExecuted(script, reason) {
-  if (!script.executed && !script.executing) {
-    if (traceExecution.value >= 2) {
-      print('Executing Script For: ' + reason);
-    }
-    executeScript(script);
-  }
-}
-var Glue = createEmptyObject();
-Glue.PUBLIC_PROPERTIES = 1;
-Glue.PUBLIC_METHODS = 2;
-Glue.ALL = Glue.PUBLIC_PROPERTIES | Glue.PUBLIC_METHODS;
-var ApplicationDomain = function () {
-    function applicationDomain(vm, base, mode, allowNatives) {
-      true;
-      true;
-      this.vm = vm;
-      this.abcs = [];
-      this.loadedAbcs = {};
-      this.loadedClasses = [];
-      this.classCache = createEmptyObject();
-      this.scriptCache = createEmptyObject();
-      this.classInfoCache = createEmptyObject();
-      this.base = base;
-      this.allowNatives = allowNatives;
-      this.mode = mode;
-      this.onMessage = new Callback();
-      if (base) {
-        this.system = base.system;
-      } else {
-        this.system = this;
+var Shumway;
+(function (Shumway) {
+  (function (AVM2) {
+    (function (Runtime) {
+      var Multiname = Shumway.AVM2.ABC.Multiname;
+      var Namespace = Shumway.AVM2.ABC.Namespace;
+      var ClassInfo = Shumway.AVM2.ABC.ClassInfo;
+      var InstanceInfo = Shumway.AVM2.ABC.InstanceInfo;
+      var Trait = Shumway.AVM2.ABC.Trait;
+      var IndentingWriter = Shumway.IndentingWriter;
+      var createMap = Shumway.ObjectUtilities.createMap;
+      var defineNonEnumerableGetterOrSetter = Shumway.ObjectUtilities.defineNonEnumerableGetterOrSetter;
+      var defineNonEnumerableProperty = Shumway.ObjectUtilities.defineNonEnumerableProperty;
+      var defineReadOnlyProperty = Shumway.ObjectUtilities.defineReadOnlyProperty;
+      var bindSafely = Shumway.FunctionUtilities.bindSafely;
+      var vmNextTrampolineId = 1;
+      var vmNextMemoizerId = 1;
+      function getMethodOverrideKey(methodInfo) {
+        var key;
+        if (methodInfo.holder instanceof ClassInfo) {
+          key = 'static ' + methodInfo.holder.instanceInfo.name.getOriginalName() + '::' + methodInfo.name.getOriginalName();
+        } else if (methodInfo.holder instanceof InstanceInfo) {
+          key = methodInfo.holder.name.getOriginalName() + '::' + methodInfo.name.getOriginalName();
+        } else {
+          key = methodInfo.name.getOriginalName();
+        }
+        return key;
       }
-    }
-    applicationDomain.passthroughCallable = function passthroughCallable(f) {
-      return {
-        call: function ($this) {
-          Array.prototype.shift.call(arguments);
-          return f.apply($this, arguments);
-        },
-        apply: function ($this, args) {
-          return f.apply($this, args);
-        }
-      };
-    };
-    applicationDomain.coerceCallable = function coerceCallable(type) {
-      return {
-        call: function ($this, value) {
-          return asCoerce(type, value);
-        },
-        apply: function ($this, args) {
-          return asCoerce(type, args[0]);
-        }
-      };
-    };
-    applicationDomain.constructingCallable = function constructingCallable(instanceConstructor) {
-      return {
-        call: function ($this) {
-          return new Function.bind.apply(instanceConstructor, arguments);
-        },
-        apply: function ($this, args) {
-          return new Function.bind.apply(instanceConstructor, [
-            $this
-          ].concat(args));
-        }
-      };
-    };
-    applicationDomain.prototype = {
-      getType: function getType(multiname) {
-        return this.getProperty(multiname, true, true);
-      },
-      getProperty: function getProperty(multiname, strict, execute) {
-        var resolved = this.findDefiningScript(multiname, execute);
-        if (resolved) {
-          if (!resolved.script.executing) {
-            return undefined;
+      Runtime.getMethodOverrideKey = getMethodOverrideKey;
+      function checkMethodOverrides(methodInfo) {
+        if (methodInfo.name) {
+          var key = getMethodOverrideKey(methodInfo);
+          if (key in Shumway.AVM2.Runtime.VM_METHOD_OVERRIDES) {
+            Shumway.Debug.warning('Overriding Method: ' + key);
+            return Shumway.AVM2.Runtime.VM_METHOD_OVERRIDES[key];
           }
-          return resolved.script.global[Multiname.getQualifiedName(resolved.trait.name)];
         }
-        if (strict) {
-          return unexpected('Cannot find property ' + multiname);
+      }
+      Runtime.checkMethodOverrides = checkMethodOverrides;
+      function makeTrampoline(forward, parameterLength, description) {
+        true;
+        return function trampolineContext() {
+          var target = null;
+          var trampoline = function execute() {
+            if (Shumway.AVM2.Runtime.traceExecution.value >= 3) {
+              log('Trampolining');
+            }
+            Counter.count('Executing Trampoline');
+            Shumway.AVM2.Runtime.traceCallExecution.value > 1 && callWriter.writeLn('Trampoline: ' + description);
+            if (!target) {
+              target = forward(trampoline);
+              true;
+            }
+            return target.apply(this, arguments);
+          };
+          trampoline.trigger = function trigger() {
+            Counter.count('Triggering Trampoline');
+            if (!target) {
+              target = forward(trampoline);
+              true;
+            }
+          };
+          trampoline.isTrampoline = true;
+          trampoline.debugName = 'Trampoline #' + vmNextTrampolineId++;
+          defineReadOnlyProperty(trampoline, Shumway.AVM2.Runtime.VM_LENGTH, parameterLength);
+          return trampoline;
+        }();
+      }
+      Runtime.makeTrampoline = makeTrampoline;
+      function makeMemoizer(qn, target) {
+        function memoizer() {
+          Counter.count('Runtime: Memoizing');
+          if (Shumway.AVM2.Runtime.traceExecution.value >= 3) {
+            log('Memoizing: ' + qn);
+          }
+          Shumway.AVM2.Runtime.traceCallExecution.value > 1 && callWriter.writeLn('Memoizing: ' + qn);
+          if (Shumway.AVM2.Runtime.isNativePrototype(this)) {
+            Counter.count('Runtime: Method Closures');
+            return bindSafely(target.value, this);
+          }
+          if (isTrampoline(target.value)) {
+            target.value.trigger();
+          }
+          true;
+          var mc = null;
+          if (Shumway.AVM2.Runtime.isClass(this)) {
+            Counter.count('Runtime: Static Method Closures');
+            mc = bindSafely(target.value, this);
+            defineReadOnlyProperty(this, qn, mc);
+            return mc;
+          }
+          if (Object.prototype.hasOwnProperty.call(this, qn)) {
+            var pd = Object.getOwnPropertyDescriptor(this, qn);
+            if (pd.get) {
+              Counter.count('Runtime: Method Closures');
+              return bindSafely(target.value, this);
+            }
+            Counter.count('Runtime: Unpatched Memoizer');
+            return this[qn];
+          }
+          mc = bindSafely(target.value, this);
+          mc.methodInfo = target.value.methodInfo;
+          defineReadOnlyProperty(mc, Multiname.getPublicQualifiedName('prototype'), null);
+          defineReadOnlyProperty(this, qn, mc);
+          return mc;
         }
-        return undefined;
-      },
-      getClass: function getClass(simpleName) {
-        var cache = this.classCache;
-        var c = cache[simpleName];
-        if (!c) {
-          c = cache[simpleName] = this.getProperty(Multiname.fromSimpleName(simpleName), true, true);
+        var m = memoizer;
+        Counter.count('Runtime: Memoizers');
+        m.isMemoizer = true;
+        m.debugName = 'Memoizer #' + vmNextMemoizerId++;
+        return m;
+      }
+      Runtime.makeMemoizer = makeMemoizer;
+      function isTrampoline(fn) {
+        true;
+        return fn.isTrampoline;
+      }
+      Runtime.isTrampoline = isTrampoline;
+      function isMemoizer(fn) {
+        true;
+        return fn.isMemoizer;
+      }
+      Runtime.isMemoizer = isMemoizer;
+    }(AVM2.Runtime || (AVM2.Runtime = {})));
+    var Runtime = AVM2.Runtime;
+  }(Shumway.AVM2 || (Shumway.AVM2 = {})));
+  var AVM2 = Shumway.AVM2;
+}(Shumway || (Shumway = {})));
+var __extends = this.__extends || function (d, b) {
+    for (var p in b)
+      if (b.hasOwnProperty(p))
+        d[p] = b[p];
+    function __() {
+      this.constructor = d;
+    }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+  };
+var Shumway;
+(function (Shumway) {
+  (function (AVM2) {
+    (function (Runtime) {
+      var Multiname = Shumway.AVM2.ABC.Multiname;
+      var Namespace = Shumway.AVM2.ABC.Namespace;
+      var MethodInfo = Shumway.AVM2.ABC.MethodInfo;
+      var ClassInfo = Shumway.AVM2.ABC.ClassInfo;
+      var InstanceInfo = Shumway.AVM2.ABC.InstanceInfo;
+      var ScriptInfo = Shumway.AVM2.ABC.ScriptInfo;
+      var Trait = Shumway.AVM2.ABC.Trait;
+      var IndentingWriter = Shumway.IndentingWriter;
+      var hasOwnProperty = Shumway.ObjectUtilities.hasOwnProperty;
+      var createMap = Shumway.ObjectUtilities.createMap;
+      var cloneObject = Shumway.ObjectUtilities.cloneObject;
+      var copyProperties = Shumway.ObjectUtilities.copyProperties;
+      var createEmptyObject = Shumway.ObjectUtilities.createEmptyObject;
+      var bindSafely = Shumway.FunctionUtilities.bindSafely;
+      var defineNonEnumerableGetterOrSetter = Shumway.ObjectUtilities.defineNonEnumerableGetterOrSetter;
+      var defineNonEnumerableProperty = Shumway.ObjectUtilities.defineNonEnumerableProperty;
+      var defineReadOnlyProperty = Shumway.ObjectUtilities.defineReadOnlyProperty;
+      var defineNonEnumerableGetter = Shumway.ObjectUtilities.defineNonEnumerableGetter;
+      var makeForwardingGetter = Shumway.FunctionUtilities.makeForwardingGetter;
+      var makeForwardingSetter = Shumway.FunctionUtilities.makeForwardingSetter;
+      var Binding = function () {
+          function Binding(trait) {
+            this.trait = trait;
+          }
+          Binding.getKey = function (qn, trait) {
+            var key = qn;
+            if (trait.isGetter()) {
+              key = Binding.GET_PREFIX + qn;
+            } else if (trait.isSetter()) {
+              key = Binding.SET_PREFIX + qn;
+            }
+            return key;
+          };
+          Binding.prototype.toString = function () {
+            return String(this.trait);
+          };
+          Binding.SET_PREFIX = 'set ';
+          Binding.GET_PREFIX = 'get ';
+          Binding.KEY_PREFIX_LENGTH = 4;
+          return Binding;
+        }();
+      Runtime.Binding = Binding;
+      var SlotInfo = function () {
+          function SlotInfo(name, isConst, type, trait) {
+            this.name = name;
+            this.isConst = isConst;
+            this.type = type;
+            this.trait = trait;
+          }
+          return SlotInfo;
+        }();
+      Runtime.SlotInfo = SlotInfo;
+      var SlotInfoMap = function () {
+          function SlotInfoMap() {
+            this.byID = createMap();
+            this.byQN = createMap();
+          }
+          return SlotInfoMap;
+        }();
+      Runtime.SlotInfoMap = SlotInfoMap;
+      var Bindings = function () {
+          function Bindings() {
+            this.map = createMap();
+            this.slots = [];
+            this.nextSlotId = 1;
+          }
+          Bindings.prototype.assignNextSlot = function (trait) {
+            true;
+            true;
+            if (!trait.slotId) {
+              trait.slotId = this.nextSlotId++;
+            } else {
+              this.nextSlotId = trait.slotId + 1;
+            }
+            true;
+            this.slots[trait.slotId] = trait;
+          };
+          Bindings.prototype.trace = function (writer) {
+            writer.enter('Bindings');
+            for (var key in this.map) {
+              var binding = this.map[key];
+              writer.writeLn(binding.trait.kindName() + ': ' + key + ' -> ' + binding);
+            }
+            writer.leaveAndEnter('Slots');
+            writer.writeArray(this.slots);
+            writer.outdent();
+          };
+          Bindings.prototype.applyTo = function (domain, object) {
+            true;
+            true;
+            true;
+            defineNonEnumerableProperty(object, Shumway.AVM2.Runtime.VM_SLOTS, new SlotInfoMap());
+            defineNonEnumerableProperty(object, Shumway.AVM2.Runtime.VM_BINDINGS, []);
+            defineNonEnumerableProperty(object, Shumway.AVM2.Runtime.VM_OPEN_METHODS, createMap());
+            defineNonEnumerableProperty(object, 'bindings', this);
+            defineNonEnumerableProperty(object, 'resolutionMap', []);
+            traitsWriter && traitsWriter.greenLn('Applying Traits');
+            for (var key in this.map) {
+              var binding = this.map[key];
+              var trait = binding.trait;
+              var qn = Multiname.getQualifiedName(trait.name);
+              if (trait.isSlot() || trait.isConst() || trait.isClass()) {
+                var defaultValue = undefined;
+                if (trait.isSlot() || trait.isConst()) {
+                  if (trait.hasDefaultValue) {
+                    defaultValue = trait.value;
+                  } else if (trait.typeName) {
+                    defaultValue = domain.findClassInfo(trait.typeName).defaultValue;
+                  }
+                }
+                if (key !== qn) {
+                  traitsWriter && traitsWriter.yellowLn('Binding Trait: ' + key + ' -> ' + qn);
+                  defineNonEnumerableGetter(object, key, makeForwardingGetter(qn));
+                  object.asBindings.pushUnique(key);
+                } else {
+                  traitsWriter && traitsWriter.greenLn('Applying Trait ' + trait.kindName() + ': ' + trait);
+                  defineNonEnumerableProperty(object, qn, defaultValue);
+                  object.asBindings.pushUnique(qn);
+                  var slotInfo = new SlotInfo(qn, trait.isConst(), trait.typeName ? domain.getProperty(trait.typeName, false, false) : null, trait);
+                  object.asSlots.byID[trait.slotId] = slotInfo;
+                  object.asSlots.byQN[qn] = slotInfo;
+                }
+              } else if (trait.isMethod() || trait.isGetter() || trait.isSetter()) {
+                if (trait.isGetter() || trait.isSetter()) {
+                  key = key.substring(Binding.KEY_PREFIX_LENGTH);
+                }
+                if (key !== qn) {
+                  traitsWriter && traitsWriter.yellowLn('Binding Trait: ' + key + ' -> ' + qn);
+                } else {
+                  traitsWriter && traitsWriter.greenLn('Applying Trait ' + trait.kindName() + ': ' + trait);
+                }
+                object.asBindings.pushUnique(key);
+                if (this instanceof ScriptBindings) {
+                  Shumway.AVM2.Runtime.applyNonMemoizedMethodTrait(key, trait, object, binding.scope, binding.natives);
+                } else {
+                  Shumway.AVM2.Runtime.applyMemoizedMethodTrait(key, trait, object, binding.scope, binding.natives);
+                }
+              }
+            }
+          };
+          return Bindings;
+        }();
+      Runtime.Bindings = Bindings;
+      var ActivationBindings = function (_super) {
+          __extends(ActivationBindings, _super);
+          function ActivationBindings(methodInfo) {
+            _super.call(this);
+            true;
+            this.methodInfo = methodInfo;
+            var traits = methodInfo.traits;
+            for (var i = 0; i < traits.length; i++) {
+              var trait = traits[i];
+              true;
+              var key = Multiname.getQualifiedName(trait.name);
+              this.map[key] = new Binding(trait);
+              this.assignNextSlot(trait);
+            }
+          }
+          return ActivationBindings;
+        }(Bindings);
+      Runtime.ActivationBindings = ActivationBindings;
+      var CatchBindings = function (_super) {
+          __extends(CatchBindings, _super);
+          function CatchBindings(scope, trait) {
+            _super.call(this);
+            var key = Multiname.getQualifiedName(trait.name);
+            this.map[key] = new Binding(trait);
+            true;
+            this.assignNextSlot(trait);
+          }
+          return CatchBindings;
+        }(Bindings);
+      Runtime.CatchBindings = CatchBindings;
+      var ScriptBindings = function (_super) {
+          __extends(ScriptBindings, _super);
+          function ScriptBindings(scriptInfo, scope) {
+            _super.call(this);
+            this.scope = scope;
+            this.scriptInfo = scriptInfo;
+            var traits = scriptInfo.traits;
+            for (var i = 0; i < traits.length; i++) {
+              var trait = traits[i];
+              var name = Multiname.getQualifiedName(trait.name);
+              var key = Binding.getKey(name, trait);
+              var binding = this.map[key] = new Binding(trait);
+              if (trait.isSlot() || trait.isConst() || trait.isClass()) {
+                this.assignNextSlot(trait);
+              }
+              if (trait.isClass()) {
+                if (trait.metadata && trait.metadata.native) {
+                  trait.classInfo.native = trait.metadata.native;
+                }
+              }
+              if (trait.isMethod() || trait.isGetter() || trait.isSetter()) {
+                binding.scope = this.scope;
+              }
+            }
+          }
+          return ScriptBindings;
+        }(Bindings);
+      Runtime.ScriptBindings = ScriptBindings;
+      var ClassBindings = function (_super) {
+          __extends(ClassBindings, _super);
+          function ClassBindings(classInfo, scope, natives) {
+            _super.call(this);
+            this.scope = scope;
+            this.natives = natives;
+            this.classInfo = classInfo;
+            var traits = classInfo.traits;
+            for (var i = 0; i < traits.length; i++) {
+              var trait = traits[i];
+              var name = Multiname.getQualifiedName(trait.name);
+              var key = Binding.getKey(name, trait);
+              var binding = this.map[key] = new Binding(trait);
+              if (trait.isSlot() || trait.isConst()) {
+                this.assignNextSlot(trait);
+              }
+              if (trait.isMethod() || trait.isGetter() || trait.isSetter()) {
+                binding.scope = this.scope;
+                binding.natives = this.natives;
+              }
+            }
+          }
+          return ClassBindings;
+        }(Bindings);
+      Runtime.ClassBindings = ClassBindings;
+      var InstanceBindings = function (_super) {
+          __extends(InstanceBindings, _super);
+          function InstanceBindings(parent, instanceInfo, scope, natives) {
+            _super.call(this);
+            this.scope = scope;
+            this.natives = natives;
+            this.parent = parent;
+            this.instanceInfo = instanceInfo;
+            this.implementedInterfaces = parent ? cloneObject(parent.implementedInterfaces) : createEmptyObject();
+            if (parent) {
+              this.slots = parent.slots.slice();
+              this.nextSlotId = parent.nextSlotId;
+            }
+            this.extend(parent);
+          }
+          InstanceBindings.prototype.extend = function (parent) {
+            var ii = this.instanceInfo, ib;
+            var map = this.map;
+            var name, key, trait, binding, protectedName, protectedKey;
+            if (parent) {
+              for (key in parent.map) {
+                binding = parent.map[key];
+                trait = binding.trait;
+                map[key] = binding;
+                if (trait.isProtected()) {
+                  protectedName = Multiname.getQualifiedName(new Multiname([
+                    ii.protectedNs
+                  ], trait.name.getName()));
+                  protectedKey = Binding.getKey(protectedName, trait);
+                  map[protectedKey] = binding;
+                }
+              }
+            }
+            function writeOrOverwriteBinding(object, key, binding) {
+              var trait = binding.trait;
+              var oldBinding = object[key];
+              if (oldBinding) {
+                var oldTrait = oldBinding.trait;
+                true;
+                true;
+              } else {
+                true;
+              }
+              object[key] = binding;
+            }
+            function overwriteProtectedBinding(object, key, binding) {
+              if (key in object) {
+                object[key] = binding;
+              }
+            }
+            var traits = ii.traits;
+            for (var i = 0; i < traits.length; i++) {
+              trait = traits[i];
+              name = Multiname.getQualifiedName(trait.name);
+              key = Binding.getKey(name, trait);
+              binding = new Binding(trait);
+              writeOrOverwriteBinding(map, key, binding);
+              if (trait.isProtected()) {
+                ib = this.parent;
+                while (ib) {
+                  protectedName = Multiname.getQualifiedName(new Multiname([
+                    ib.instanceInfo.protectedNs
+                  ], trait.name.getName()));
+                  protectedKey = Binding.getKey(protectedName, trait);
+                  overwriteProtectedBinding(map, protectedKey, binding);
+                  ib = ib.parent;
+                }
+              }
+              if (trait.isSlot() || trait.isConst()) {
+                this.assignNextSlot(trait);
+              }
+              if (trait.isMethod() || trait.isGetter() || trait.isSetter()) {
+                binding.scope = this.scope;
+                binding.natives = this.natives;
+              }
+            }
+            var domain = ii.abc.applicationDomain;
+            var interfaces = ii.interfaces;
+            for (var i = 0; i < interfaces.length; i++) {
+              var interface = domain.getProperty(interfaces[i], true, true);
+              true;
+              copyProperties(this.implementedInterfaces, interface.interfaceBindings.implementedInterfaces);
+              this.implementedInterfaces[Multiname.getQualifiedName(interface.name)] = interface;
+            }
+            for (var interfaceName in this.implementedInterfaces) {
+              var interface = this.implementedInterfaces[interfaceName];
+              ib = interface.interfaceBindings;
+              for (var interfaceKey in ib.map) {
+                var interfaceBinding = ib.map[interfaceKey];
+                if (ii.isInterface()) {
+                  map[interfaceKey] = interfaceBinding;
+                } else {
+                  name = Multiname.getPublicQualifiedName(interfaceBinding.trait.name.getName());
+                  key = Binding.getKey(name, interfaceBinding.trait);
+                  map[interfaceKey] = map[key];
+                }
+              }
+            }
+          };
+          InstanceBindings.prototype.toString = function () {
+            return this.instanceInfo.toString();
+          };
+          return InstanceBindings;
+        }(Bindings);
+      Runtime.InstanceBindings = InstanceBindings;
+      var traitsWriter = null;
+    }(AVM2.Runtime || (AVM2.Runtime = {})));
+    var Runtime = AVM2.Runtime;
+  }(Shumway.AVM2 || (Shumway.AVM2 = {})));
+  var AVM2 = Shumway.AVM2;
+}(Shumway || (Shumway = {})));
+var Binding = Shumway.AVM2.Runtime.Binding;
+var Bindings = Shumway.AVM2.Runtime.Bindings;
+var ActivationBindings = Shumway.AVM2.Runtime.ActivationBindings;
+var CatchBindings = Shumway.AVM2.Runtime.CatchBindings;
+var ScriptBindings = Shumway.AVM2.Runtime.ScriptBindings;
+var ClassBindings = Shumway.AVM2.Runtime.ClassBindings;
+var InstanceBindings = Shumway.AVM2.Runtime.InstanceBindings;
+var Shumway;
+(function (Shumway) {
+  (function (AVM2) {
+    (function (Runtime) {
+      var Multiname = Shumway.AVM2.ABC.Multiname;
+      var Namespace = Shumway.AVM2.ABC.Namespace;
+      var MethodInfo = Shumway.AVM2.ABC.MethodInfo;
+      var ClassInfo = Shumway.AVM2.ABC.ClassInfo;
+      var InstanceInfo = Shumway.AVM2.ABC.InstanceInfo;
+      var InstanceBindings = Shumway.AVM2.Runtime.InstanceBindings;
+      var ClassBindings = Shumway.AVM2.Runtime.ClassBindings;
+      var defineNonEnumerableGetterOrSetter = Shumway.ObjectUtilities.defineNonEnumerableGetterOrSetter;
+      var defineNonEnumerableProperty = Shumway.ObjectUtilities.defineNonEnumerableProperty;
+      var defineReadOnlyProperty = Shumway.ObjectUtilities.defineReadOnlyProperty;
+      var defineNonEnumerableGetter = Shumway.ObjectUtilities.defineNonEnumerableGetter;
+      var createEmptyObject = Shumway.ObjectUtilities.createEmptyObject;
+      var toKeyValueArray = Shumway.ObjectUtilities.toKeyValueArray;
+      var boxValue = Shumway.ObjectUtilities.boxValue;
+      function makeCacheKey(namespaces, name, flags) {
+        if (!namespaces) {
+          return name;
+        } else if (namespaces.length > 1) {
+          return namespaces.runtimeId + '$' + name;
+        } else {
+          return namespaces[0].qualifiedName + '$' + name;
+        }
+      }
+      var Scope = function () {
+          function Scope(parent, object, isWith) {
+            if (typeof isWith === 'undefined') {
+              isWith = false;
+            }
+            this.parent = parent;
+            this.object = boxValue(object);
+            true;
+            this.global = parent ? parent.global : this;
+            this.isWith = isWith;
+            this.cache = createEmptyObject();
+          }
+          Scope.prototype.findDepth = function (object) {
+            var current = this;
+            var depth = 0;
+            while (current) {
+              if (current.object === object) {
+                return depth;
+              }
+              depth++;
+              current = current.parent;
+            }
+            return -1;
+          };
+          Scope.prototype.getScopeObjects = function () {
+            var objects = [];
+            var current = this;
+            while (current) {
+              objects.unshift(current.object);
+              current = current.parent;
+            }
+            return objects;
+          };
+          Scope.prototype.findScopeProperty = function (namespaces, name, flags, domain, strict, scopeOnly) {
+            Counter.count('findScopeProperty');
+            var object;
+            var key = makeCacheKey(namespaces, name, flags);
+            if (!scopeOnly && (object = this.cache[key])) {
+              return object;
+            }
+            if (this.object.asHasProperty(namespaces, name, flags, true)) {
+              return this.isWith ? this.object : this.cache[key] = this.object;
+            }
+            if (this.parent) {
+              return this.cache[key] = this.parent.findScopeProperty(namespaces, name, flags, domain, strict, scopeOnly);
+            }
+            if (scopeOnly)
+              return null;
+            if (object = domain.findDomainProperty(new Multiname(namespaces, name, flags), strict, true)) {
+              return object;
+            }
+            if (strict) {
+              Shumway.Debug.unexpected('Cannot find property ' + name);
+            }
+            return this.global.object;
+          };
+          return Scope;
+        }();
+      Runtime.Scope = Scope;
+      function bindFreeMethodScope(methodInfo, scope) {
+        var fn = methodInfo.freeMethod;
+        if (methodInfo.lastBoundMethod && methodInfo.lastBoundMethod.scope === scope) {
+          return methodInfo.lastBoundMethod.boundMethod;
         }
         true;
-        return c;
-      },
-      findClass: function findClass(simpleName) {
-        if (simpleName in this.classCache) {
-          return true;
-        }
-        return this.findDomainProperty(Multiname.fromSimpleName(simpleName), false, true);
-      },
-      findDomainProperty: function findDomainProperty(multiname, strict, execute) {
-        if (traceDomain.value) {
-          print('ApplicationDomain.findDomainProperty: ' + multiname);
-        }
-        var resolved = this.findDefiningScript(multiname, execute);
-        if (resolved) {
-          return resolved.script.global;
-        }
-        if (strict) {
-          return unexpected('Cannot find property ' + multiname);
-        } else {
-          return undefined;
-        }
-        return undefined;
-      },
-      findClassInfo: function findClassInfo(mn) {
-        var originalQn;
-        if (Multiname.isQName(mn)) {
-          originalQn = Multiname.getQualifiedName(mn);
-          var ci = this.classInfoCache[originalQn];
-          if (ci) {
-            return ci;
-          }
-        } else {
-          var ci = this.classInfoCache[mn.id];
-          if (ci) {
-            return ci;
+        var boundMethod;
+        var asGlobal = scope.global.object;
+        if (!methodInfo.hasOptional() && !methodInfo.needsArguments() && !methodInfo.needsRest()) {
+          switch (methodInfo.parameters.length) {
+          case 0:
+            boundMethod = function () {
+              return fn.call(this === jsGlobal ? asGlobal : this, scope);
+            };
+            break;
+          case 1:
+            boundMethod = function (x) {
+              return fn.call(this === jsGlobal ? asGlobal : this, scope, x);
+            };
+            break;
+          case 2:
+            boundMethod = function (x, y) {
+              return fn.call(this === jsGlobal ? asGlobal : this, scope, x, y);
+            };
+            break;
+          case 3:
+            boundMethod = function (x, y, z) {
+              return fn.call(this === jsGlobal ? asGlobal : this, scope, x, y, z);
+            };
+            break;
+          default:
+            break;
           }
         }
-        if (this.base) {
-          ci = this.base.findClassInfo(mn);
-          if (ci) {
-            return ci;
+        if (!boundMethod) {
+          Counter.count('Bind Scope - Slow Path');
+          boundMethod = function () {
+            Array.prototype.unshift.call(arguments, scope);
+            var global = this === jsGlobal ? scope.global.object : this;
+            return fn.apply(global, arguments);
+          };
+        }
+        boundMethod.methodInfo = methodInfo;
+        boundMethod.instanceConstructor = boundMethod;
+        methodInfo.lastBoundMethod = {
+          scope: scope,
+          boundMethod: boundMethod
+        };
+        return boundMethod;
+      }
+      Runtime.bindFreeMethodScope = bindFreeMethodScope;
+    }(AVM2.Runtime || (AVM2.Runtime = {})));
+    var Runtime = AVM2.Runtime;
+  }(Shumway.AVM2 || (Shumway.AVM2 = {})));
+  var AVM2 = Shumway.AVM2;
+}(Shumway || (Shumway = {})));
+var playerglobalLoadedPromise;
+var playerglobal;
+var Shumway;
+(function (Shumway) {
+  (function (AVM2) {
+    (function (Runtime) {
+      var AbcFile = Shumway.AVM2.ABC.AbcFile;
+      var Multiname = Shumway.AVM2.ABC.Multiname;
+      var Namespace = Shumway.AVM2.ABC.Namespace;
+      var MethodInfo = Shumway.AVM2.ABC.MethodInfo;
+      var ClassInfo = Shumway.AVM2.ABC.ClassInfo;
+      var InstanceInfo = Shumway.AVM2.ABC.InstanceInfo;
+      var ScriptInfo = Shumway.AVM2.ABC.ScriptInfo;
+      var createEmptyObject = Shumway.ObjectUtilities.createEmptyObject;
+      var IndentingWriter = Shumway.IndentingWriter;
+      (function (EXECUTION_MODE) {
+        EXECUTION_MODE[EXECUTION_MODE['INTERPRET'] = 1] = 'INTERPRET';
+        EXECUTION_MODE[EXECUTION_MODE['COMPILE'] = 2] = 'COMPILE';
+      }(Runtime.EXECUTION_MODE || (Runtime.EXECUTION_MODE = {})));
+      var EXECUTION_MODE = Runtime.EXECUTION_MODE;
+      function createNewCompartment() {
+        return newGlobal('new-compartment');
+      }
+      function executeScript(script) {
+        var abc = script.abc;
+        true;
+        var global = new Shumway.AVM2.Runtime.Global(script);
+        if (abc.applicationDomain.allowNatives) {
+          global[Multiname.getPublicQualifiedName('unsafeJSNative')] = getNative;
+        }
+        script.executing = true;
+        var scope = new Shumway.AVM2.Runtime.Scope(null, script.global);
+        createFunction(script.init, scope).call(script.global, false);
+        script.executed = true;
+      }
+      Runtime.executeScript = executeScript;
+      function ensureScriptIsExecuted(script, reason) {
+        if (typeof reason === 'undefined') {
+          reason = '';
+        }
+        if (!script.executed && !script.executing) {
+          if (Shumway.AVM2.Runtime.traceExecution.value >= 2) {
+            log('Executing Script For: ' + reason);
+          }
+          executeScript(script);
+        }
+      }
+      Runtime.ensureScriptIsExecuted = ensureScriptIsExecuted;
+      (function (Glue) {
+        Glue[Glue['PUBLIC_PROPERTIES'] = 1] = 'PUBLIC_PROPERTIES';
+        Glue[Glue['PUBLIC_METHODS'] = 2] = 'PUBLIC_METHODS';
+        Glue[Glue['ALL'] = 1 | 2] = 'ALL';
+      }(Runtime.Glue || (Runtime.Glue = {})));
+      var Glue = Runtime.Glue;
+      function grabAbc(abcName) {
+        var entry = playerglobal.scripts[abcName];
+        if (!entry) {
+          return null;
+        }
+        var offset = entry.offset;
+        var length = entry.length;
+        return new AbcFile(new Uint8Array(playerglobal.abcs, offset, length), abcName);
+      }
+      function findDefiningAbc(mn) {
+        if (!playerglobal) {
+          return null;
+        }
+        for (var i = 0; i < mn.namespaces.length; i++) {
+          var name = mn.namespaces[i].uri + ':' + mn.name;
+          var abcName = playerglobal.map[name];
+          if (abcName) {
+            break;
           }
         }
-        var abcs = this.abcs;
-        for (var i = 0; i < abcs.length; i++) {
-          var abc = abcs[i];
-          var scripts = abc.scripts;
-          for (var j = 0; j < scripts.length; j++) {
-            var script = scripts[j];
-            var traits = script.traits;
-            for (var k = 0; k < traits.length; k++) {
-              var trait = traits[k];
-              if (trait.isClass()) {
-                var traitName = Multiname.getQualifiedName(trait.name);
-                if (originalQn) {
-                  if (traitName === originalQn) {
-                    return this.classInfoCache[originalQn] = trait.classInfo;
-                  }
+        if (abcName) {
+          return grabAbc(abcName);
+        }
+        return null;
+      }
+      function promiseFile(path, responseType) {
+        return new Promise(function (resolve, reject) {
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', path);
+          xhr.responseType = responseType;
+          xhr.onload = function () {
+            if (xhr.response) {
+              resolve(xhr.response);
+            } else {
+              reject('Unable to load ' + path + ': ' + xhr.statusText);
+            }
+          };
+          xhr.send();
+        });
+      }
+      var AVM2 = function () {
+          function AVM2(sysMode, appMode, loadAVM1) {
+            this.systemDomain = new ApplicationDomain(this, null, sysMode, true);
+            this.applicationDomain = new ApplicationDomain(this, this.systemDomain, appMode, false);
+            this.findDefiningAbc = findDefiningAbc;
+            this.loadAVM1 = loadAVM1;
+            this.isAVM1Loaded = false;
+            this.exception = {
+              value: undefined
+            };
+            this.exceptions = [];
+          }
+          AVM2.initialize = function (sysMode, appMode, loadAVM1) {
+            AVM2.instance = new AVM2(sysMode, appMode, loadAVM1);
+          };
+          AVM2.currentAbc = function () {
+            var caller = arguments.callee;
+            var maxDepth = 20;
+            var abc = null;
+            for (var i = 0; i < maxDepth && caller; i++) {
+              var mi = caller.methodInfo;
+              if (mi) {
+                abc = mi.abc;
+                break;
+              }
+              caller = caller.caller;
+            }
+            return abc;
+          };
+          AVM2.currentDomain = function () {
+            var abc = AVM2.currentAbc();
+            return abc.applicationDomain;
+          };
+          AVM2.isPlayerglobalLoaded = function () {
+            return !(!playerglobal);
+          };
+          AVM2.loadPlayerglobal = function (abcsPath, catalogPath) {
+            if (playerglobalLoadedPromise) {
+              return Promise.reject('Playerglobal is already loaded');
+            }
+            playerglobalLoadedPromise = Promise.all([
+              promiseFile(abcsPath, 'arraybuffer'),
+              promiseFile(catalogPath, 'json')
+            ]).then(function (result) {
+              playerglobal = {
+                abcs: result[0],
+                map: Object.create(null),
+                scripts: Object.create(null)
+              };
+              var catalog = result[1];
+              for (var i = 0; i < catalog.length; i++) {
+                var abc = catalog[i];
+                playerglobal.scripts[abc.name] = abc;
+                if (typeof abc.defs === 'string') {
+                  playerglobal.map[abc.defs] = abc.name;
                 } else {
-                  for (var m = 0, n = mn.namespaces.length; m < n; m++) {
-                    var qn = mn.getQName(m);
-                    if (traitName === Multiname.getQualifiedName(qn)) {
-                      return this.classInfoCache[qn] = trait.classInfo;
+                  for (var j = 0; j < abc.defs.length; j++) {
+                    var def = abc.defs[j];
+                    playerglobal.map[def] = abc.name;
+                  }
+                }
+              }
+            }, function (e) {
+              console.error(e);
+            });
+            return playerglobalLoadedPromise;
+          };
+          AVM2.prototype.notifyConstruct = function (instanceConstructor, args) {
+          };
+          AVM2.getStackTrace = function () {
+            Shumway.Debug.notImplemented('getStackTrace');
+          };
+          return AVM2;
+        }();
+      Runtime.AVM2 = AVM2;
+      var ApplicationDomain = function () {
+          function ApplicationDomain(vm, base, mode, allowNatives) {
+            true;
+            true;
+            this.vm = vm;
+            this.abcs = [];
+            this.loadedAbcs = {};
+            this.loadedClasses = [];
+            this.classCache = createEmptyObject();
+            this.scriptCache = createEmptyObject();
+            this.classInfoCache = createEmptyObject();
+            this.base = base;
+            this.allowNatives = allowNatives;
+            this.mode = mode;
+            this.onMessage = new Callback();
+            if (base) {
+              this.system = base.system;
+            } else {
+              this.system = this;
+            }
+          }
+          ApplicationDomain.passthroughCallable = function (f) {
+            return {
+              call: function ($this) {
+                Array.prototype.shift.call(arguments);
+                return f.apply($this, arguments);
+              },
+              apply: function ($this, args) {
+                return f.apply($this, args);
+              }
+            };
+          };
+          ApplicationDomain.coerceCallable = function (type) {
+            return {
+              call: function ($this, value) {
+                return Shumway.AVM2.Runtime.asCoerce(type, value);
+              },
+              apply: function ($this, args) {
+                return Shumway.AVM2.Runtime.asCoerce(type, args[0]);
+              }
+            };
+          };
+          ApplicationDomain.constructingCallable = function (instanceConstructor) {
+            return {
+              call: function (self) {
+                return new (Function.bind.apply(instanceConstructor, arguments))();
+              },
+              apply: function (self, args) {
+                return new (Function.bind.apply(instanceConstructor, [
+                  self
+                ].concat(args)))();
+              }
+            };
+          };
+          ApplicationDomain.prototype.getType = function (multiname) {
+            return this.getProperty(multiname, true, true);
+          };
+          ApplicationDomain.prototype.getProperty = function (multiname, strict, execute) {
+            var resolved = this.findDefiningScript(multiname, execute);
+            if (resolved) {
+              if (!resolved.script.executing) {
+                return undefined;
+              }
+              return resolved.script.global[Multiname.getQualifiedName(resolved.trait.name)];
+            }
+            if (strict) {
+              return Shumway.Debug.unexpected('Cannot find property ' + multiname);
+            }
+            return undefined;
+          };
+          ApplicationDomain.prototype.getClass = function (simpleName) {
+            var cache = this.classCache;
+            var c = cache[simpleName];
+            if (!c) {
+              c = cache[simpleName] = this.getProperty(Multiname.fromSimpleName(simpleName), true, true);
+            }
+            true;
+            return c;
+          };
+          ApplicationDomain.prototype.findClass = function (simpleName) {
+            if (simpleName in this.classCache) {
+              return true;
+            }
+            return this.findDomainProperty(Multiname.fromSimpleName(simpleName), false, true);
+          };
+          ApplicationDomain.prototype.findDomainProperty = function (multiname, strict, execute) {
+            if (Shumway.AVM2.Runtime.traceDomain.value) {
+              log('ApplicationDomain.findDomainProperty: ' + multiname);
+            }
+            var resolved = this.findDefiningScript(multiname, execute);
+            if (resolved) {
+              return resolved.script.global;
+            }
+            if (strict) {
+              return Shumway.Debug.unexpected('Cannot find property ' + multiname);
+            } else {
+              return undefined;
+            }
+            return undefined;
+          };
+          ApplicationDomain.prototype.findClassInfo = function (mn) {
+            var originalQn;
+            if (Multiname.isQName(mn)) {
+              originalQn = Multiname.getQualifiedName(mn);
+              var ci = this.classInfoCache[originalQn];
+              if (ci) {
+                return ci;
+              }
+            } else {
+              var ci = this.classInfoCache[mn.runtimeId];
+              if (ci) {
+                return ci;
+              }
+            }
+            if (this.base) {
+              ci = this.base.findClassInfo(mn);
+              if (ci) {
+                return ci;
+              }
+            }
+            var abcs = this.abcs;
+            for (var i = 0; i < abcs.length; i++) {
+              var abc = abcs[i];
+              var scripts = abc.scripts;
+              for (var j = 0; j < scripts.length; j++) {
+                var script = scripts[j];
+                var traits = script.traits;
+                for (var k = 0; k < traits.length; k++) {
+                  var trait = traits[k];
+                  if (trait.isClass()) {
+                    var traitName = Multiname.getQualifiedName(trait.name);
+                    if (originalQn) {
+                      if (traitName === originalQn) {
+                        return this.classInfoCache[originalQn] = trait.classInfo;
+                      }
+                    } else {
+                      for (var m = 0, n = mn.namespaces.length; m < n; m++) {
+                        var qn = mn.getQName(m);
+                        if (traitName === Multiname.getQualifiedName(qn)) {
+                          return this.classInfoCache[qn] = trait.classInfo;
+                        }
+                      }
                     }
                   }
                 }
               }
             }
-          }
-        }
-        if (!this.base && this.vm.findDefiningAbc) {
-          var abc = this.vm.findDefiningAbc(mn);
-          if (abc !== null && !this.loadedAbcs[abc.name]) {
-            this.loadedAbcs[abc.name] = true;
-            this.loadAbc(abc);
-            return this.findClassInfo(mn);
-          }
-        }
-        return undefined;
-      },
-      installNative: function (name, func) {
-        natives[name] = function () {
-          return func;
-        };
-      },
-      findDefiningScript: function findDefiningScript(mn, execute) {
-        var resolved = this.scriptCache[mn.id];
-        if (resolved && (resolved.script.executed || !execute)) {
-          return resolved;
-        }
-        if (this.base) {
-          resolved = this.base.findDefiningScript(mn, execute);
-          if (resolved) {
-            return resolved;
-          }
-        }
-        Counter.count('ApplicationDomain: findDefiningScript');
-        var abcs = this.abcs;
-        for (var i = 0; i < abcs.length; i++) {
-          var abc = abcs[i];
-          var scripts = abc.scripts;
-          for (var j = 0; j < scripts.length; j++) {
-            var script = scripts[j];
-            var traits = script.traits;
-            if (mn instanceof Multiname) {
-              for (var k = 0; k < traits.length; k++) {
-                var trait = traits[k];
-                if (mn.hasQName(trait.name)) {
-                  if (execute) {
-                    ensureScriptIsExecuted(script, trait.name);
+            if (!this.base && this.vm.findDefiningAbc) {
+              var abc = this.vm.findDefiningAbc(mn);
+              if (abc !== null && !this.loadedAbcs[abc.name]) {
+                this.loadedAbcs[abc.name] = true;
+                this.loadAbc(abc);
+                return this.findClassInfo(mn);
+              }
+            }
+            return undefined;
+          };
+          ApplicationDomain.prototype.installNative = function (name, func) {
+            natives[name] = function () {
+              return func;
+            };
+          };
+          ApplicationDomain.prototype.findDefiningScript = function (mn, execute) {
+            var resolved = this.scriptCache[mn.runtimeId];
+            if (resolved && (resolved.script.executed || !execute)) {
+              return resolved;
+            }
+            if (this.base) {
+              resolved = this.base.findDefiningScript(mn, execute);
+              if (resolved) {
+                return resolved;
+              }
+            }
+            Counter.count('ApplicationDomain: findDefiningScript');
+            var abcs = this.abcs;
+            for (var i = 0; i < abcs.length; i++) {
+              var abc = abcs[i];
+              var scripts = abc.scripts;
+              for (var j = 0; j < scripts.length; j++) {
+                var script = scripts[j];
+                var traits = script.traits;
+                if (mn instanceof Multiname) {
+                  for (var k = 0; k < traits.length; k++) {
+                    var trait = traits[k];
+                    if (mn.hasQName(trait.name)) {
+                      if (execute) {
+                        ensureScriptIsExecuted(script, String(trait.name));
+                      }
+                      return this.scriptCache[mn.runtimeId] = {
+                        script: script,
+                        trait: trait
+                      };
+                    }
                   }
-                  return this.scriptCache[mn.id] = {
-                    script: script,
-                    trait: trait
-                  };
+                } else {
+                  Shumway.Debug.unexpected();
                 }
               }
-            } else {
-              unexpected();
             }
-          }
-        }
-        if (!this.base && this.vm.findDefiningAbc) {
-          var abc = this.vm.findDefiningAbc(mn);
-          if (abc !== null && !this.loadedAbcs[abc.name]) {
-            this.loadedAbcs[abc.name] = true;
+            if (!this.base && this.vm.findDefiningAbc) {
+              var abc = this.vm.findDefiningAbc(mn);
+              if (abc !== null && !this.loadedAbcs[abc.name]) {
+                this.loadedAbcs[abc.name] = true;
+                this.loadAbc(abc);
+                return this.findDefiningScript(mn, execute);
+              }
+            }
+            return undefined;
+          };
+          ApplicationDomain.prototype.compileAbc = function (abc, writer) {
+            compileAbc(abc, writer);
+          };
+          ApplicationDomain.prototype.executeAbc = function (abc) {
             this.loadAbc(abc);
-            return this.findDefiningScript(mn, execute);
-          }
-        }
-        return undefined;
-      },
-      compileAbc: function compileAbc(abc) {
-        this.loadAbc(abc);
-        var writer = new IndentingWriter();
-        writer.enter('var classes = {');
-        for (var i = 0; i < abc.scripts.length; i++) {
-          compileScript(abc.scripts[i], writer);
-        }
-        writer.leave('}');
-      },
-      executeAbc: function executeAbc(abc) {
-        this.loadAbc(abc);
-        executeScript(abc.lastScript);
-      },
-      loadAbc: function loadAbc(abc) {
-        if (traceExecution.value) {
-          print('Loading: ' + abc.name);
-        }
-        abc.applicationDomain = this;
-        GlobalMultinameResolver.loadAbc(abc);
-        this.abcs.push(abc);
-        if (!this.base) {
-          Type.initializeTypes(this);
-        }
-      },
-      broadcastMessage: function (type, message, origin) {
-        if (false) {
-          Timer.start('broadcast: ' + type);
-        }
-        try {
-          this.onMessage.notify1(type, {
-            data: message,
-            origin: origin,
-            source: this
-          });
-        } catch (e) {
-          avm2.exceptions.push({
-            source: type,
-            message: e.message,
-            stack: e.stack
-          });
-          throw e;
-        }
-        if (false) {
-          Timer.stop();
-        }
-      },
-      traceLoadedClasses: function (lastOnly) {
-        var writer = new IndentingWriter();
-        lastOnly || writer.enter('Loaded Classes And Interfaces');
-        var classes = lastOnly ? [
-            this.loadedClasses.last()
-          ] : this.loadedClasses;
-        classes.forEach(function (cls) {
-          if (cls !== Class) {
-            cls.trace(writer);
-          }
-        });
-        lastOnly || writer.leave('');
-      }
-    };
-    return applicationDomain;
-  }();
-var SecurityDomain = function () {
-    function securityDomain() {
-      this.compartment = createNewCompartment();
-      this.compartment.environment = environment;
-      this.compartment.homePath = homePath;
-      this.compartment.eval(snarf('compartment.js'));
-      this.compartment.release = true;
-    }
-    securityDomain.prototype.initializeShell = function (sysMode, appMode) {
-      var compartment = this.compartment;
-      compartment.avm2 = new compartment.AVM2(sysMode, appMode);
-      compartment.avm2.systemDomain.executeAbc(compartment.grabAbc(homePath + 'src/avm2/generated/builtin/builtin.abc'));
-      compartment.avm2.systemDomain.executeAbc(compartment.grabAbc(homePath + 'src/avm2/generated/shell/shell.abc'));
-      this.systemDomain = compartment.avm2.systemDomain;
-      this.applicationDomain = compartment.avm2.applicationDomain;
-    };
-    return securityDomain;
-  }();
-var traitsWriter = null;
-var Binding = function () {
-    function binding(trait) {
-      true;
-      this.trait = trait;
-    }
-    var SET_PREFIX = 'set ';
-    var GET_PREFIX = 'get ';
-    binding.KEY_PREFIX_LENGTH = SET_PREFIX.length;
-    binding.getKey = function getKey(qn, trait) {
-      var key = qn;
-      if (trait.isGetter()) {
-        key = GET_PREFIX + qn;
-      } else if (trait.isSetter()) {
-        key = SET_PREFIX + qn;
-      }
-      return key;
-    };
-    binding.prototype.toString = function toString() {
-      return String(this.trait);
-    };
-    return binding;
-  }();
-var Bindings = function () {
-    function bindings() {
-      this.map = createEmptyObject();
-      this.slots = [];
-      this.nextSlotId = 1;
-    }
-    bindings.prototype.assignNextSlot = function assignNextSlot(trait) {
-      true;
-      true;
-      if (!trait.slotId) {
-        trait.slotId = this.nextSlotId++;
-      } else {
-        this.nextSlotId = trait.slotId + 1;
-      }
-      true;
-      this.slots[trait.slotId] = trait;
-    };
-    bindings.prototype.trace = function trace(writer) {
-      writer.enter('Bindings');
-      for (var key in this.map) {
-        var binding = this.map[key];
-        writer.writeLn(binding.trait.kindName() + ': ' + key + ' -> ' + binding);
-      }
-      writer.leaveAndEnter('Slots');
-      writer.writeArray(this.slots);
-      writer.outdent();
-    };
-    function SlotInfo(name, isConst, type, trait) {
-      this.name = name;
-      this.isConst = isConst;
-      this.type = type;
-      this.trait = trait;
-    }
-    function SlotInfoMap() {
-      this.byID = [];
-      this.byQN = createEmptyObject();
-    }
-    function patch(patchTargets, value) {
-      true;
-      for (var i = 0; i < patchTargets.length; i++) {
-        var patchTarget = patchTargets[i];
-        if (traceExecution.value >= 3) {
-          var str = 'Patching: ';
-          if (patchTarget.name) {
-            str += patchTarget.name;
-          } else if (patchTarget.get) {
-            str += 'get ' + patchTarget.get;
-          } else if (patchTarget.set) {
-            str += 'set ' + patchTarget.set;
-          }
-          traitsWriter && traitsWriter.redLn(str);
-        }
-        if (patchTarget.get) {
-          defineNonEnumerableGetterOrSetter(patchTarget.object, patchTarget.get, value, true);
-        } else if (patchTarget.set) {
-          defineNonEnumerableGetterOrSetter(patchTarget.object, patchTarget.set, value, false);
-        } else {
-          defineNonEnumerableProperty(patchTarget.object, patchTarget.name, value);
-        }
-      }
-    }
-    function applyNonMemoizedMethodTrait(qn, trait, object, scope, natives) {
-      true;
-      if (trait.isMethod()) {
-        var trampoline = makeTrampoline(function (self) {
-            var fn = getTraitFunction(trait, scope, natives);
-            patch(self.patchTargets, fn);
-            return fn;
-          }, trait.methodInfo.parameters.length);
-        trampoline.patchTargets = [
-          {
-            object: object,
-            name: qn
-          },
-          {
-            object: object,
-            name: VM_OPEN_METHOD_PREFIX + qn
-          }
-        ];
-        var closure = bindSafely(trampoline, object);
-        defineReadOnlyProperty(closure, VM_LENGTH, trampoline[VM_LENGTH]);
-        defineReadOnlyProperty(closure, Multiname.getPublicQualifiedName('prototype'), null);
-        defineNonEnumerableProperty(object, qn, closure);
-        defineNonEnumerableProperty(object, VM_OPEN_METHOD_PREFIX + qn, closure);
-      } else if (trait.isGetter() || trait.isSetter()) {
-        var trampoline = makeTrampoline(function (self) {
-            var fn = getTraitFunction(trait, scope, natives);
-            patch(self.patchTargets, fn);
-            return fn;
-          });
-        if (trait.isGetter()) {
-          trampoline.patchTargets = [
-            {
-              object: object,
-              get: qn
-            }
-          ];
-        } else {
-          trampoline.patchTargets = [
-            {
-              object: object,
-              set: qn
-            }
-          ];
-        }
-        defineNonEnumerableGetterOrSetter(object, qn, trampoline, trait.isGetter());
-      } else {
-        unexpected(trait);
-      }
-    }
-    function applyMemoizedMethodTrait(qn, trait, object, scope, natives) {
-      true;
-      if (trait.isMethod()) {
-        var memoizerTarget = {
-            value: null
+            executeScript(abc.lastScript);
           };
-        var trampoline = makeTrampoline(function (self) {
-            var fn = getTraitFunction(trait, scope, natives);
-            patch(self.patchTargets, fn);
-            return fn;
-          }, trait.methodInfo.parameters.length, String(trait.name));
-        memoizerTarget.value = trampoline;
-        var openMethods = object[VM_OPEN_METHODS];
-        openMethods[qn] = trampoline;
-        defineNonEnumerableProperty(object, VM_OPEN_METHOD_PREFIX + qn, trampoline);
-        defineNonEnumerableGetter(object, qn, makeMemoizer(qn, memoizerTarget));
-        trampoline.patchTargets = [
-          {
-            object: memoizerTarget,
-            name: 'value'
-          },
-          {
-            object: openMethods,
-            name: qn
-          },
-          {
-            object: object,
-            name: VM_OPEN_METHOD_PREFIX + qn
-          }
-        ];
-      } else if (trait.isGetter() || trait.isSetter()) {
-        var trampoline = makeTrampoline(function (self) {
-            var fn = getTraitFunction(trait, scope, natives);
-            patch(self.patchTargets, fn);
-            return fn;
-          }, 0, String(trait.name));
-        if (trait.isGetter()) {
-          defineNonEnumerableProperty(object, VM_OPEN_GET_METHOD_PREFIX + qn, trampoline);
-          trampoline.patchTargets = [
-            {
-              object: object,
-              get: qn
-            },
-            {
-              object: object,
-              name: VM_OPEN_GET_METHOD_PREFIX + qn
+          ApplicationDomain.prototype.loadAbc = function (abc) {
+            if (Shumway.AVM2.Runtime.traceExecution.value) {
+              log('Loading: ' + abc.name);
             }
-          ];
-        } else {
-          defineNonEnumerableProperty(object, VM_OPEN_SET_METHOD_PREFIX + qn, trampoline);
-          trampoline.patchTargets = [
-            {
-              object: object,
-              set: qn
-            },
-            {
-              object: object,
-              name: VM_OPEN_SET_METHOD_PREFIX + qn
+            abc.applicationDomain = this;
+            GlobalMultinameResolver.loadAbc(abc);
+            this.abcs.push(abc);
+            if (!this.base) {
+              Type.initializeTypes(this);
             }
-          ];
-        }
-        defineNonEnumerableGetterOrSetter(object, qn, trampoline, trait.isGetter());
-      }
-    }
-    bindings.prototype.applyTo = function applyTo(domain, object) {
-      true;
-      true;
-      true;
-      defineNonEnumerableProperty(object, VM_SLOTS, new SlotInfoMap());
-      defineNonEnumerableProperty(object, VM_BINDINGS, []);
-      defineNonEnumerableProperty(object, VM_OPEN_METHODS, createEmptyObject());
-      defineNonEnumerableProperty(object, 'bindings', this);
-      defineNonEnumerableProperty(object, 'resolutionMap', []);
-      traitsWriter && traitsWriter.greenLn('Applying Traits');
-      for (var key in this.map) {
-        var binding = this.map[key];
-        var trait = binding.trait;
-        var qn = Multiname.getQualifiedName(trait.name);
-        if (trait.isSlot() || trait.isConst() || trait.isClass()) {
-          var defaultValue = undefined;
-          if (trait.isSlot() || trait.isConst()) {
-            if (trait.hasDefaultValue) {
-              defaultValue = trait.value;
-            } else if (trait.typeName) {
-              defaultValue = domain.findClassInfo(trait.typeName).defaultValue;
-            }
-          }
-          if (key !== qn) {
-            traitsWriter && traitsWriter.yellowLn('Binding Trait: ' + key + ' -> ' + qn);
-            defineNonEnumerableGetter(object, key, makeForwardingGetter(qn));
-            object[VM_BINDINGS].pushUnique(key);
-          } else {
-            traitsWriter && traitsWriter.greenLn('Applying Trait ' + trait.kindName() + ': ' + trait);
-            defineNonEnumerableProperty(object, qn, defaultValue);
-            object[VM_BINDINGS].pushUnique(qn);
-            var slotInfo = new SlotInfo(qn, trait.isConst(), trait.typeName ? domain.getProperty(trait.typeName, false, false) : null, trait);
-            object[VM_SLOTS].byID[trait.slotId] = slotInfo;
-            object[VM_SLOTS].byQN[qn] = slotInfo;
-          }
-        } else if (trait.isMethod() || trait.isGetter() || trait.isSetter()) {
-          if (trait.isGetter() || trait.isSetter()) {
-            key = key.substring(Binding.KEY_PREFIX_LENGTH);
-          }
-          if (key !== qn) {
-            traitsWriter && traitsWriter.yellowLn('Binding Trait: ' + key + ' -> ' + qn);
-          } else {
-            traitsWriter && traitsWriter.greenLn('Applying Trait ' + trait.kindName() + ': ' + trait);
-          }
-          object[VM_BINDINGS].pushUnique(key);
-          if (this instanceof ScriptBindings) {
-            applyNonMemoizedMethodTrait(key, trait, object, binding.scope, binding.natives);
-          } else {
-            applyMemoizedMethodTrait(key, trait, object, binding.scope, binding.natives);
-          }
-        }
-      }
-    };
-    return bindings;
-  }();
-var ActivationBindings = function () {
-    function activationBindings(methodInfo) {
-      Bindings.call(this);
-      true;
-      this.methodInfo = methodInfo;
-      var traits = methodInfo.traits;
-      for (var i = 0; i < traits.length; i++) {
-        var trait = traits[i];
-        true;
-        var key = Multiname.getQualifiedName(trait.name);
-        this.map[key] = new Binding(trait);
-        this.assignNextSlot(trait);
-      }
-    }
-    activationBindings.prototype = Object.create(Bindings.prototype);
-    return activationBindings;
-  }();
-var CatchBindings = function () {
-    function catchBindings(scope, trait) {
-      Bindings.call(this);
-      var key = Multiname.getQualifiedName(trait.name);
-      this.map[key] = new Binding(trait);
-      true;
-      this.assignNextSlot(trait);
-    }
-    catchBindings.prototype = Object.create(Bindings.prototype);
-    return catchBindings;
-  }();
-var ScriptBindings = function () {
-    function scriptBindings(scriptInfo, scope) {
-      Bindings.call(this);
-      this.scope = scope;
-      this.scriptInfo = scriptInfo;
-      var traits = scriptInfo.traits;
-      for (var i = 0; i < traits.length; i++) {
-        var trait = traits[i];
-        var name = Multiname.getQualifiedName(trait.name);
-        var key = Binding.getKey(name, trait);
-        var binding = this.map[key] = new Binding(trait);
-        if (trait.isSlot() || trait.isConst() || trait.isClass()) {
-          this.assignNextSlot(trait);
-        }
-        if (trait.isClass()) {
-          if (trait.metadata && trait.metadata.native) {
-            trait.classInfo.native = trait.metadata.native;
-          }
-        }
-        if (trait.isMethod() || trait.isGetter() || trait.isSetter()) {
-          binding.scope = this.scope;
-        }
-      }
-    }
-    scriptBindings.prototype = Object.create(Bindings.prototype);
-    return scriptBindings;
-  }();
-var ClassBindings = function () {
-    function classBindings(classInfo, scope, natives) {
-      Bindings.call(this);
-      this.scope = scope;
-      this.natives = natives;
-      this.classInfo = classInfo;
-      var traits = classInfo.traits;
-      for (var i = 0; i < traits.length; i++) {
-        var trait = traits[i];
-        var name = Multiname.getQualifiedName(trait.name);
-        var key = Binding.getKey(name, trait);
-        var binding = this.map[key] = new Binding(trait);
-        if (trait.isSlot() || trait.isConst()) {
-          this.assignNextSlot(trait);
-        }
-        if (trait.isMethod() || trait.isGetter() || trait.isSetter()) {
-          binding.scope = this.scope;
-          binding.natives = this.natives;
-        }
-      }
-    }
-    classBindings.prototype = Object.create(Bindings.prototype);
-    return classBindings;
-  }();
-var InstanceBindings = function () {
-    function instanceBindings(parent, instanceInfo, scope, natives) {
-      Bindings.call(this);
-      this.scope = scope;
-      this.natives = natives;
-      this.parent = parent;
-      this.instanceInfo = instanceInfo;
-      this.implementedInterfaces = parent ? cloneObject(parent.implementedInterfaces) : createEmptyObject();
-      if (parent) {
-        this.slots = parent.slots.slice();
-        this.nextSlotId = parent.nextSlotId;
-      }
-      extend.call(this, parent);
-    }
-    function extend(parent) {
-      var ii = this.instanceInfo, ib;
-      var map = this.map;
-      var name, key, trait, binding, protectedName, protectedKey;
-      if (parent) {
-        for (key in parent.map) {
-          binding = parent.map[key];
-          trait = binding.trait;
-          map[key] = binding;
-          if (trait.isProtected()) {
-            protectedName = Multiname.getQualifiedName(new Multiname([
-              ii.protectedNs
-            ], trait.name.getName()));
-            protectedKey = Binding.getKey(protectedName, trait);
-            map[protectedKey] = binding;
-          }
-        }
-      }
-      function writeOrOverwriteBinding(object, key, binding) {
-        var trait = binding.trait;
-        var oldBinding = object[key];
-        if (oldBinding) {
-          var oldTrait = oldBinding.trait;
-          true;
-          true;
-        } else {
-          true;
-        }
-        object[key] = binding;
-      }
-      function overwriteProtectedBinding(object, key, binding) {
-        if (key in object) {
-          object[key] = binding;
-        }
-      }
-      var traits = ii.traits;
-      for (var i = 0; i < traits.length; i++) {
-        trait = traits[i];
-        name = Multiname.getQualifiedName(trait.name);
-        key = Binding.getKey(name, trait);
-        binding = new Binding(trait);
-        writeOrOverwriteBinding(map, key, binding);
-        if (trait.isProtected()) {
-          ib = this.parent;
-          while (ib) {
-            protectedName = Multiname.getQualifiedName(new Multiname([
-              ib.instanceInfo.protectedNs
-            ], trait.name.getName()));
-            protectedKey = Binding.getKey(protectedName, trait);
-            overwriteProtectedBinding(map, protectedKey, binding);
-            ib = ib.parent;
-          }
-        }
-        if (trait.isSlot() || trait.isConst()) {
-          this.assignNextSlot(trait);
-        }
-        if (trait.isMethod() || trait.isGetter() || trait.isSetter()) {
-          binding.scope = this.scope;
-          binding.natives = this.natives;
-        }
-      }
-      var domain = ii.abc.applicationDomain;
-      var interfaces = ii.interfaces;
-      for (var i = 0; i < interfaces.length; i++) {
-        var interface = domain.getProperty(interfaces[i], true, true);
-        true;
-        copyProperties(this.implementedInterfaces, interface.interfaceBindings.implementedInterfaces);
-        this.implementedInterfaces[Multiname.getQualifiedName(interface.name)] = interface;
-      }
-      for (var interfaceName in this.implementedInterfaces) {
-        var interface = this.implementedInterfaces[interfaceName];
-        ib = interface.interfaceBindings;
-        for (var interfaceKey in ib.map) {
-          var interfaceBinding = ib.map[interfaceKey];
-          if (ii.isInterface()) {
-            map[interfaceKey] = interfaceBinding;
-          } else {
-            name = Multiname.getPublicQualifiedName(interfaceBinding.trait.name.getName());
-            key = Binding.getKey(name, interfaceBinding.trait);
-            map[interfaceKey] = map[key];
-          }
-        }
-      }
-    }
-    instanceBindings.prototype = Object.create(Bindings.prototype);
-    instanceBindings.prototype.toString = function toString() {
-      return this.instanceInfo.toString();
-    };
-    return instanceBindings;
-  }();
-var Interface = function () {
-    function Interface(classInfo) {
-      var ii = classInfo.instanceInfo;
-      true;
-      this.name = ii.name;
-      this.classInfo = classInfo;
-    }
-    Interface.createInterface = function createInterface(classInfo) {
-      var ii = classInfo.instanceInfo;
-      true;
-      if (traceExecution.value) {
-        var str = 'Creating Interface ' + ii.name;
-        if (ii.interfaces.length) {
-          str += ' implements ' + ii.interfaces.map(function (name) {
-            return name.getName();
-          }).join(', ');
-        }
-        print(str);
-      }
-      var cls = new Interface(classInfo);
-      cls.interfaceBindings = new InstanceBindings(null, ii);
-      return cls;
-    };
-    Interface.prototype = {
-      toString: function () {
-        return '[interface ' + this.name + ']';
-      },
-      isInstance: function (value) {
-        if (value === null || typeof value !== 'object') {
-          return false;
-        }
-        true;
-        var qualifiedName = Multiname.getQualifiedName(this.name);
-        return value.class.implementedInterfaces[qualifiedName] !== undefined;
-      },
-      trace: function trace(writer) {
-        writer.enter('interface ' + this.name.getName());
-        writer.enter('interfaceBindings: ');
-        this.interfaceBindings.trace(writer);
-        writer.outdent();
-        writer.outdent();
-        writer.leave('}');
-      },
-      call: function ($this, x) {
-        return x;
-      },
-      apply: function ($this, args) {
-        return args[0];
-      }
-    };
-    return Interface;
-  }();
-var Class = function () {
-    var OWN_INITIALIZE = 1;
-    var SUPER_INITIALIZE = 2;
-    function Class(name, instanceConstructor, callable) {
-      this.debugName = name;
-      if (instanceConstructor) {
-        true;
-        this.instanceConstructor = instanceConstructor;
-        this.instanceConstructorNoInitialize = instanceConstructor;
-        this.hasInitialize = 0;
-        this.instanceConstructor.class = this;
-      }
-      if (!callable) {
-        callable = ApplicationDomain.coerceCallable(this);
-      } else if (callable === ApplicationDomain.coerceCallable) {
-        callable = ApplicationDomain.coerceCallable(this);
-      }
-      defineNonEnumerableProperty(this, 'call', callable.call);
-      defineNonEnumerableProperty(this, 'apply', callable.apply);
-    }
-    Class.createClass = function createClass(classInfo, baseClass, scope) {
-      var ci = classInfo;
-      var ii = ci.instanceInfo;
-      var domain = ci.abc.applicationDomain;
-      var className = Multiname.getName(ii.name);
-      var isNativeClass = ci.native;
-      if (isNativeClass) {
-        var buildClass = getNative(ci.native.cls);
-        if (!buildClass) {
-          unexpected('No native for ' + ci.native.cls);
-        }
-        if (!baseClass) {
-          scope = new Scope(scope, Class);
-        }
-      }
-      var classScope = new Scope(scope, null);
-      var instanceConstructor = createFunction(ii.init, classScope, false);
-      var cls;
-      if (isNativeClass) {
-        cls = buildClass(domain, classScope, instanceConstructor, baseClass);
-      } else {
-        cls = new Class(className, instanceConstructor);
-      }
-      cls.className = className;
-      cls.classInfo = classInfo;
-      cls.scope = classScope;
-      classScope.object = cls;
-      var classNatives;
-      var instanceNatives;
-      if (isNativeClass) {
-        if (cls.native) {
-          classNatives = cls.native.static;
-          instanceNatives = cls.native.instance;
-        }
-      } else {
-        cls.extend(baseClass);
-      }
-      cls.classBindings = new ClassBindings(classInfo, classScope, classNatives);
-      cls.classBindings.applyTo(domain, cls);
-      defineReadOnlyProperty(cls, VM_IS_CLASS, true);
-      cls.instanceBindings = new InstanceBindings(baseClass ? baseClass.instanceBindings : null, ii, classScope, instanceNatives);
-      if (cls.instanceConstructor) {
-        cls.instanceBindings.applyTo(domain, cls.traitsPrototype);
-      }
-      cls.implementedInterfaces = cls.instanceBindings.implementedInterfaces;
-      return cls;
-    };
-    function setDefaultProperties(cls) {
-      defineNonEnumerableProperty(cls.dynamicPrototype, Multiname.getPublicQualifiedName('constructor'), cls);
-      defineReadOnlyProperty(cls.traitsPrototype, 'class', cls);
-      defineReadOnlyProperty(cls.instanceConstructor, 'class', cls);
-    }
-    Class.prototype = {
-      setSymbol: function setSymbol(props) {
-        this.instanceConstructor.prototype.symbol = props;
-      },
-      getSymbol: function getSymbol() {
-        return this.instanceConstructor.prototype.symbol;
-      },
-      initializeInstance: function initializeInstance(obj) {
-        var c = this;
-        var initializes = [];
-        while (c) {
-          if (c.hasInitialize & OWN_INITIALIZE) {
-            initializes.push(c.instanceConstructor.prototype.initialize);
-          }
-          c = c.baseClass;
-        }
-        var s;
-        while (s = initializes.pop()) {
-          s.call(obj);
-        }
-        Counter.count('Initialize Instance ' + obj.class);
-      },
-      createInstance: function createInstance(args) {
-        var o = Object.create(this.instanceConstructor.prototype);
-        this.instanceConstructor.apply(o, args);
-        return o;
-      },
-      createAsSymbol: function createAsSymbol(props) {
-        var o = Object.create(this.instanceConstructor.prototype);
-        if (o.symbol) {
-          var symbol = Object.create(o.symbol);
-          for (var prop in props) {
-            symbol[prop] = props[prop];
-          }
-          o.symbol = symbol;
-        } else {
-          o.symbol = props;
-        }
-        return o;
-      },
-      extendNative: function (baseClass, native) {
-        this.baseClass = baseClass;
-        this.dynamicPrototype = Object.getPrototypeOf(native.prototype);
-        this.instanceConstructor.prototype = this.traitsPrototype = native.prototype;
-        setDefaultProperties(this);
-      },
-      extendWrapper: function (baseClass, wrapper) {
-        true;
-        this.baseClass = baseClass;
-        this.dynamicPrototype = Object.create(baseClass.dynamicPrototype);
-        var traitsPrototype = Object.create(this.dynamicPrototype, getOwnPropertyDescriptors(wrapper.prototype));
-        this.instanceConstructor.prototype = this.traitsPrototype = traitsPrototype;
-        setDefaultProperties(this);
-      },
-      extendBuiltin: function (baseClass) {
-        true;
-        this.baseClass = baseClass;
-        this.dynamicPrototype = this.traitsPrototype = this.instanceConstructor.prototype;
-        setDefaultProperties(this);
-      },
-      extend: function (baseClass) {
-        true;
-        this.baseClass = baseClass;
-        this.dynamicPrototype = Object.create(baseClass.dynamicPrototype);
-        if (baseClass.hasInitialize) {
-          var instanceConstructorNoInitialize = this.instanceConstructor;
-          var self = this;
-          this.instanceConstructor = function () {
-            self.initializeInstance(this);
-            instanceConstructorNoInitialize.apply(this, arguments);
           };
-          defineReadOnlyProperty(this.instanceConstructor, 'class', instanceConstructorNoInitialize.class);
-          this.hasInitialize |= SUPER_INITIALIZE;
-        }
-        this.instanceConstructor.prototype = this.traitsPrototype = Object.create(this.dynamicPrototype);
-        setDefaultProperties(this);
-      },
-      setDefaultProperties: function () {
-        setDefaultProperties(this);
-      },
-      link: function (definition) {
-        true;
-        true;
-        if (definition.initialize) {
-          if (!this.hasInitialize) {
-            var instanceConstructorNoInitialize = this.instanceConstructor;
-            var self = this;
-            this.instanceConstructor = function () {
-              self.initializeInstance(this);
-              instanceConstructorNoInitialize.apply(this, arguments);
-            };
-            defineReadOnlyProperty(this.instanceConstructor, 'class', instanceConstructorNoInitialize.class);
-            this.instanceConstructor.prototype = instanceConstructorNoInitialize.prototype;
-          }
-          this.hasInitialize |= OWN_INITIALIZE;
-        }
-        var dynamicPrototype = this.dynamicPrototype;
-        var keys = Object.keys(definition);
-        for (var i = 0; i < keys.length; i++) {
-          var propertyName = keys[i];
-          Object.defineProperty(dynamicPrototype, propertyName, Object.getOwnPropertyDescriptor(definition, propertyName));
-        }
-        function glueProperties(obj, properties) {
-          var keys = Object.keys(properties);
-          for (var i = 0; i < keys.length; i++) {
-            var propertyName = keys[i];
-            var propertyGlue = properties[propertyName];
-            var propertySimpleName;
-            var glueOpenMethod = false;
-            if (propertyGlue.indexOf('open ') >= 0) {
-              propertySimpleName = propertyGlue.substring(5);
-              glueOpenMethod = true;
-            } else {
-              propertySimpleName = propertyGlue;
+          ApplicationDomain.prototype.broadcastMessage = function (type, message, origin) {
+            if (debug) {
+              Timer.start('broadcast: ' + type);
             }
-            true;
-            var qn = Multiname.getQualifiedName(Multiname.fromSimpleName(propertySimpleName));
-            if (glueOpenMethod) {
-              qn = VM_OPEN_METHOD_PREFIX + qn;
-            }
-            true;
-            var descriptor = Object.getOwnPropertyDescriptor(obj, qn);
-            if (descriptor && descriptor.get) {
-              Object.defineProperty(obj, propertyName, descriptor);
-            } else {
-              Object.defineProperty(obj, propertyName, {
-                get: new Function('', 'return this.' + qn),
-                set: new Function('v', 'this.' + qn + ' = v')
+            try {
+              this.onMessage.notify1(type, {
+                data: message,
+                origin: origin,
+                source: this
               });
+            } catch (e) {
+              avm2.exceptions.push({
+                source: type,
+                message: e.message,
+                stack: e.stack
+              });
+              throw e;
             }
+            if (debug) {
+              Timer.stop();
+            }
+          };
+          ApplicationDomain.prototype.traceLoadedClasses = function (lastOnly) {
+            var writer = new IndentingWriter();
+            lastOnly || writer.enter('Loaded Classes And Interfaces');
+            var classes = lastOnly ? [
+                this.loadedClasses.last()
+              ] : this.loadedClasses;
+            classes.forEach(function (cls) {
+              if (cls !== Shumway.AVM2.Runtime.Class) {
+                cls.trace(writer);
+              }
+            });
+            lastOnly || writer.leave('');
+          };
+          return ApplicationDomain;
+        }();
+      Runtime.ApplicationDomain = ApplicationDomain;
+      var SecurityDomain = function () {
+          function SecurityDomain() {
+            this.compartment = createNewCompartment();
+            this.compartment.homePath = homePath;
+            this.compartment.release = true;
+            this.compartment.eval(snarf('compartment.js'));
           }
-        }
-        function generatePropertiesFromTraits(traits) {
-          var properties = createEmptyObject();
-          traits.forEach(function (trait) {
-            var ns = trait.name.getNamespace();
-            if (!ns.isPublic()) {
+          SecurityDomain.prototype.initializeShell = function (sysMode, appMode) {
+            var compartment = this.compartment;
+            compartment.AVM2.initialize(sysMode, appMode);
+            compartment.AVM2.instance.systemDomain.executeAbc(compartment.grabAbc(homePath + 'src/avm2/generated/builtin/builtin.abc'));
+            compartment.AVM2.instance.systemDomain.executeAbc(compartment.grabAbc(homePath + 'src/avm2/generated/shell/shell.abc'));
+            this.systemDomain = compartment.AVM2.instance.systemDomain;
+            this.applicationDomain = compartment.AVM2.instance.applicationDomain;
+          };
+          return SecurityDomain;
+        }();
+      Runtime.SecurityDomain = SecurityDomain;
+    }(AVM2.Runtime || (AVM2.Runtime = {})));
+    var Runtime = AVM2.Runtime;
+  }(Shumway.AVM2 || (Shumway.AVM2 = {})));
+  var AVM2 = Shumway.AVM2;
+}(Shumway || (Shumway = {})));
+var Glue = Shumway.AVM2.Runtime.Glue;
+var ApplicationDomain = Shumway.AVM2.Runtime.ApplicationDomain;
+var AVM2 = Shumway.AVM2.Runtime.AVM2;
+var EXECUTION_MODE = Shumway.AVM2.Runtime.EXECUTION_MODE;
+var ApplicationDomain = Shumway.AVM2.Runtime.ApplicationDomain;
+var AVM2 = Shumway.AVM2.Runtime.AVM2;
+var EXECUTION_MODE = Shumway.AVM2.Runtime.EXECUTION_MODE;
+var Shumway;
+(function (Shumway) {
+  (function (AVM2) {
+    (function (Runtime) {
+      var Multiname = Shumway.AVM2.ABC.Multiname;
+      var Namespace = Shumway.AVM2.ABC.Namespace;
+      var ClassInfo = Shumway.AVM2.ABC.ClassInfo;
+      var InstanceInfo = Shumway.AVM2.ABC.InstanceInfo;
+      var InstanceBindings = Shumway.AVM2.Runtime.InstanceBindings;
+      var ClassBindings = Shumway.AVM2.Runtime.ClassBindings;
+      var defineNonEnumerableGetterOrSetter = Shumway.ObjectUtilities.defineNonEnumerableGetterOrSetter;
+      var defineNonEnumerableProperty = Shumway.ObjectUtilities.defineNonEnumerableProperty;
+      var defineReadOnlyProperty = Shumway.ObjectUtilities.defineReadOnlyProperty;
+      var defineNonEnumerableGetter = Shumway.ObjectUtilities.defineNonEnumerableGetter;
+      var createEmptyObject = Shumway.ObjectUtilities.createEmptyObject;
+      var toKeyValueArray = Shumway.ObjectUtilities.toKeyValueArray;
+      var Interface = function () {
+          function Interface(classInfo) {
+            var ii = classInfo.instanceInfo;
+            true;
+            this.name = ii.name;
+            this.classInfo = classInfo;
+          }
+          Interface.createInterface = function (classInfo) {
+            var ii = classInfo.instanceInfo;
+            true;
+            if (Shumway.AVM2.Runtime.traceExecution.value) {
+              var str = 'Creating Interface ' + ii.name;
+              if (ii.interfaces.length) {
+                str += ' implements ' + ii.interfaces.map(function (name) {
+                  return name.getName();
+                }).join(', ');
+              }
+              log(str);
+            }
+            var cls = new Interface(classInfo);
+            cls.interfaceBindings = new InstanceBindings(null, ii, null, null);
+            return cls;
+          };
+          Interface.prototype.toString = function () {
+            return '[interface ' + this.name + ']';
+          };
+          Interface.prototype.isInstance = function (value) {
+            if (value === null || typeof value !== 'object') {
+              return false;
+            }
+            true;
+            var qualifiedName = Multiname.getQualifiedName(this.name);
+            return value.class.implementedInterfaces[qualifiedName] !== undefined;
+          };
+          Interface.prototype.trace = function (writer) {
+            writer.enter('interface ' + this.name.getName());
+            writer.enter('interfaceBindings: ');
+            this.interfaceBindings.trace(writer);
+            writer.outdent();
+            writer.outdent();
+            writer.leave('}');
+          };
+          Interface.prototype.call = function (self, x) {
+            return x;
+          };
+          Interface.prototype.apply = function (self, args) {
+            return args[0];
+          };
+          return Interface;
+        }();
+      Runtime.Interface = Interface;
+      function setDefaultProperties(cls) {
+        defineNonEnumerableProperty(cls.dynamicPrototype, Multiname.getPublicQualifiedName('constructor'), cls);
+        defineReadOnlyProperty(cls.traitsPrototype, 'class', cls);
+        defineReadOnlyProperty(cls.instanceConstructor, 'class', cls);
+      }
+      Runtime.setDefaultProperties = setDefaultProperties;
+      var Class = function () {
+          function Class(name, instanceConstructor, callable) {
+            this.debugName = name;
+            if (instanceConstructor) {
+              true;
+              this.instanceConstructor = instanceConstructor;
+              this.instanceConstructorNoInitialize = instanceConstructor;
+              this.hasInitialize = 0;
+              this.instanceConstructor.class = this;
+            }
+            if (!callable) {
+              callable = Shumway.AVM2.Runtime.ApplicationDomain.coerceCallable(this);
+            } else if (callable === Shumway.AVM2.Runtime.ApplicationDomain.coerceCallable) {
+              callable = Shumway.AVM2.Runtime.ApplicationDomain.coerceCallable(this);
+            }
+            defineNonEnumerableProperty(this, 'call', callable.call);
+            defineNonEnumerableProperty(this, 'apply', callable.apply);
+          }
+          Class.createClass = function (classInfo, baseClass, scope) {
+            var ci = classInfo;
+            var ii = ci.instanceInfo;
+            var domain = ci.abc.applicationDomain;
+            var className = Multiname.getName(ii.name);
+            var isNativeClass = ci.native;
+            if (isNativeClass) {
+              var buildClass = getNative(ci.native.cls);
+              if (!buildClass) {
+                Shumway.Debug.unexpected('No native for ' + ci.native.cls);
+              }
+              if (!baseClass) {
+                scope = new Scope(scope, Class);
+              }
+            }
+            var classScope = new Scope(scope, null);
+            var instanceConstructor = createFunction(ii.init, classScope, false);
+            var cls;
+            if (isNativeClass) {
+              cls = buildClass(domain, classScope, instanceConstructor, baseClass);
+            } else {
+              cls = new Class(className, instanceConstructor);
+            }
+            cls.className = className;
+            cls.classInfo = classInfo;
+            cls.scope = classScope;
+            classScope.object = cls;
+            var classNatives;
+            var instanceNatives;
+            if (isNativeClass) {
+              if (cls.native) {
+                classNatives = cls.native.static;
+                instanceNatives = cls.native.instance;
+              }
+            } else {
+              cls.extend(baseClass);
+            }
+            cls.classBindings = new ClassBindings(classInfo, classScope, classNatives);
+            cls.classBindings.applyTo(domain, cls);
+            defineReadOnlyProperty(cls, Shumway.AVM2.Runtime.VM_IS_CLASS, true);
+            cls.instanceBindings = new InstanceBindings(baseClass ? baseClass.instanceBindings : null, ii, classScope, instanceNatives);
+            if (cls.instanceConstructor) {
+              cls.instanceBindings.applyTo(domain, cls.traitsPrototype);
+            }
+            cls.implementedInterfaces = cls.instanceBindings.implementedInterfaces;
+            return cls;
+          };
+          Class.prototype.setSymbol = function (props) {
+            this.instanceConstructor.prototype.symbol = props;
+          };
+          Class.prototype.getSymbol = function () {
+            return this.instanceConstructor.prototype.symbol;
+          };
+          Class.prototype.initializeInstance = function (obj) {
+            var c = this;
+            var initializes = [];
+            while (c) {
+              if (c.hasInitialize & Class.OWN_INITIALIZE) {
+                initializes.push(c.instanceConstructor.prototype.initialize);
+              }
+              c = c.baseClass;
+            }
+            var s;
+            while (s = initializes.pop()) {
+              s.call(obj);
+            }
+            Counter.count('Initialize Instance ' + obj.class);
+          };
+          Class.prototype.createInstance = function (args) {
+            var o = Object.create(this.instanceConstructor.prototype);
+            this.instanceConstructor.apply(o, args);
+            return o;
+          };
+          Class.prototype.createAsSymbol = function (props) {
+            var o = Object.create(this.instanceConstructor.prototype);
+            if (o.symbol) {
+              var symbol = Object.create(o.symbol);
+              for (var prop in props) {
+                symbol[prop] = props[prop];
+              }
+              o.symbol = symbol;
+            } else {
+              o.symbol = props;
+            }
+            return o;
+          };
+          Class.prototype.extendNative = function (baseClass, native) {
+            this.baseClass = baseClass;
+            this.dynamicPrototype = Object.getPrototypeOf(native.prototype);
+            this.instanceConstructor.prototype = this.traitsPrototype = native.prototype;
+            setDefaultProperties(this);
+          };
+          Class.prototype.extendWrapper = function (baseClass, wrapper) {
+            true;
+            this.baseClass = baseClass;
+            this.dynamicPrototype = Object.create(baseClass.dynamicPrototype);
+            var traitsPrototype = Object.create(this.dynamicPrototype, Shumway.ObjectUtilities.getOwnPropertyDescriptors(wrapper.prototype));
+            this.instanceConstructor.prototype = this.traitsPrototype = traitsPrototype;
+            setDefaultProperties(this);
+          };
+          Class.prototype.extendBuiltin = function (baseClass) {
+            true;
+            this.baseClass = baseClass;
+            this.dynamicPrototype = this.traitsPrototype = this.instanceConstructor.prototype;
+            setDefaultProperties(this);
+          };
+          Class.prototype.extend = function (baseClass) {
+            true;
+            this.baseClass = baseClass;
+            this.dynamicPrototype = Object.create(baseClass.dynamicPrototype);
+            if (baseClass.hasInitialize) {
+              var instanceConstructorNoInitialize = this.instanceConstructor;
+              var self = this;
+              this.instanceConstructor = function () {
+                self.initializeInstance(this);
+                instanceConstructorNoInitialize.apply(this, arguments);
+              };
+              defineReadOnlyProperty(this.instanceConstructor, 'class', instanceConstructorNoInitialize.class);
+              this.hasInitialize |= Class.SUPER_INITIALIZE;
+            }
+            this.instanceConstructor.prototype = this.traitsPrototype = Object.create(this.dynamicPrototype);
+            setDefaultProperties(this);
+          };
+          Class.prototype.setDefaultProperties = function () {
+            setDefaultProperties(this);
+          };
+          Class.prototype.link = function (definition) {
+            true;
+            true;
+            if (definition.initialize) {
+              if (!this.hasInitialize) {
+                var instanceConstructorNoInitialize = this.instanceConstructor;
+                var self = this;
+                this.instanceConstructor = function () {
+                  self.initializeInstance(this);
+                  instanceConstructorNoInitialize.apply(this, arguments);
+                };
+                defineReadOnlyProperty(this.instanceConstructor, 'class', instanceConstructorNoInitialize.class);
+                this.instanceConstructor.prototype = instanceConstructorNoInitialize.prototype;
+              }
+              this.hasInitialize |= Class.OWN_INITIALIZE;
+            }
+            var dynamicPrototype = this.dynamicPrototype;
+            var keys = Object.keys(definition);
+            for (var i = 0; i < keys.length; i++) {
+              var propertyName = keys[i];
+              Object.defineProperty(dynamicPrototype, propertyName, Object.getOwnPropertyDescriptor(definition, propertyName));
+            }
+            function glueProperties(obj, properties) {
+              var keys = Object.keys(properties);
+              for (var i = 0; i < keys.length; i++) {
+                var propertyName = keys[i];
+                var propertyGlue = properties[propertyName];
+                var propertySimpleName;
+                var glueOpenMethod = false;
+                if (propertyGlue.indexOf('open ') >= 0) {
+                  propertySimpleName = propertyGlue.substring(5);
+                  glueOpenMethod = true;
+                } else {
+                  propertySimpleName = propertyGlue;
+                }
+                true;
+                var qn = Multiname.getQualifiedName(Multiname.fromSimpleName(propertySimpleName));
+                if (glueOpenMethod) {
+                  qn = Shumway.AVM2.Runtime.VM_OPEN_METHOD_PREFIX + qn;
+                }
+                true;
+                var descriptor = Object.getOwnPropertyDescriptor(obj, qn);
+                if (descriptor && descriptor.get) {
+                  Object.defineProperty(obj, propertyName, descriptor);
+                } else {
+                  Object.defineProperty(obj, propertyName, {
+                    get: new Function('', 'return this.' + qn),
+                    set: new Function('v', 'this.' + qn + ' = v')
+                  });
+                }
+              }
+            }
+            function generatePropertiesFromTraits(traits) {
+              var properties = createEmptyObject();
+              traits.forEach(function (trait) {
+                var ns = trait.name.getNamespace();
+                if (!ns.isPublic()) {
+                  return;
+                }
+                properties[trait.name.getName()] = (trait.isMethod() ? 'open ' : '') + 'public ' + trait.name.getName();
+              });
+              return properties;
+            }
+            var glue = definition.__glue__;
+            if (!glue) {
               return;
             }
-            properties[trait.name.getName()] = (trait.isMethod() ? 'open ' : '') + 'public ' + trait.name.getName();
-          });
-          return properties;
-        }
-        var glue = definition.__glue__;
-        if (!glue) {
-          return;
-        }
-        if (glue.script) {
-          if (glue.script.instance) {
-            if (isNumber(glue.script.instance)) {
-              true;
-              glueProperties(dynamicPrototype, generatePropertiesFromTraits(this.classInfo.instanceInfo.traits));
-            } else {
-              glueProperties(dynamicPrototype, glue.script.instance);
-            }
-          }
-          if (glue.script.static) {
-            if (isNumber(glue.script.static)) {
-              true;
-              glueProperties(this, generatePropertiesFromTraits(this.classInfo.traits));
-            } else {
-              glueProperties(this, glue.script.static);
-            }
-          }
-        }
-      },
-      linkNatives: function (definition) {
-        var glue = definition.__glue__;
-        this.native = glue.native;
-      },
-      verify: function () {
-        var instanceConstructor = this.instanceConstructor;
-        var tP = this.traitsPrototype;
-        var dP = this.dynamicPrototype;
-        true;
-        true;
-        true;
-        true;
-        if (tP !== Object.prototype) {
-        }
-        true;
-      },
-      coerce: function (value) {
-        return value;
-      },
-      isInstanceOf: function (value) {
-        return this.isInstance(value);
-      },
-      isInstance: function (value) {
-        if (value === null || typeof value !== 'object') {
-          return false;
-        }
-        return this.dynamicPrototype.isPrototypeOf(value);
-      },
-      trace: function trace(writer) {
-        var description = this.debugName + (this.baseClass ? ' extends ' + this.baseClass.debugName : '');
-        writer.enter('class ' + description + ' {');
-        writer.writeLn('scope: ' + this.scope);
-        writer.writeLn('baseClass: ' + this.baseClass);
-        writer.writeLn('classInfo: ' + this.classInfo);
-        writer.writeLn('dynamicPrototype: ' + this.dynamicPrototype);
-        writer.writeLn('traitsPrototype: ' + this.traitsPrototype);
-        writer.writeLn('dynamicPrototype === traitsPrototype: ' + (this.dynamicPrototype === this.traitsPrototype));
-        writer.writeLn('instanceConstructor: ' + this.instanceConstructor);
-        writer.writeLn('instanceConstructorNoInitialize: ' + this.instanceConstructorNoInitialize);
-        writer.writeLn('instanceConstructor === instanceConstructorNoInitialize: ' + (this.instanceConstructor === this.instanceConstructorNoInitialize));
-        var traitsPrototype = this.traitsPrototype;
-        writer.enter('traitsPrototype: ');
-        if (traitsPrototype) {
-          writer.enter('VM_SLOTS: ');
-          writer.writeArray(traitsPrototype[VM_SLOTS].byID.map(function (slot) {
-            return slot.trait;
-          }));
-          writer.outdent();
-          writer.enter('VM_BINDINGS: ');
-          writer.writeArray(traitsPrototype[VM_BINDINGS].map(function (binding) {
-            var pd = Object.getOwnPropertyDescriptor(traitsPrototype, binding);
-            var str = binding;
-            if (pd.get || pd.set) {
-              if (pd.get) {
-                str += ' getter: ' + debugName(pd.get);
+            if (glue.script) {
+              if (glue.script.instance) {
+                if (Shumway.isNumber(glue.script.instance)) {
+                  true;
+                  glueProperties(dynamicPrototype, generatePropertiesFromTraits(this.classInfo.instanceInfo.traits));
+                } else {
+                  glueProperties(dynamicPrototype, glue.script.instance);
+                }
               }
-              if (pd.set) {
-                str += ' setter: ' + debugName(pd.set);
+              if (glue.script.static) {
+                if (Shumway.isNumber(glue.script.static)) {
+                  true;
+                  glueProperties(this, generatePropertiesFromTraits(this.classInfo.traits));
+                } else {
+                  glueProperties(this, glue.script.static);
+                }
               }
-            } else {
-              str += ' value: ' + debugName(pd.value);
             }
-            return str;
-          }));
-          writer.outdent();
-          writer.enter('VM_OPEN_METHODS: ');
-          writer.writeArray(toKeyValueArray(traitsPrototype[VM_OPEN_METHODS]).map(function (pair) {
-            return pair[0] + ': ' + debugName(pair[1]);
-          }));
-          writer.outdent();
-        }
-        writer.enter('classBindings: ');
-        this.classBindings.trace(writer);
-        writer.outdent();
-        writer.enter('instanceBindings: ');
-        this.instanceBindings.trace(writer);
-        writer.outdent();
-        writer.outdent();
-        writer.writeLn('call: ' + this.call);
-        writer.writeLn('apply: ' + this.apply);
-        writer.leave('}');
-      },
-      toString: function () {
-        return '[class ' + this.classInfo.instanceInfo.name.name + ']';
-      }
-    };
-    var callable = ApplicationDomain.coerceCallable(Class);
-    defineNonEnumerableProperty(Class, 'call', callable.call);
-    defineNonEnumerableProperty(Class, 'apply', callable.apply);
-    Class.instanceConstructor = Class;
-    Class.toString = Class.prototype.toString;
-    Class.native = {
-      instance: {
-        prototype: {
-          get: function () {
-            return this.dynamicPrototype;
+          };
+          Class.prototype.linkNatives = function (definition) {
+            var glue = definition.__glue__;
+            this.native = glue.native;
+          };
+          Class.prototype.verify = function () {
+            var instanceConstructor = this.instanceConstructor;
+            var tP = this.traitsPrototype;
+            var dP = this.dynamicPrototype;
+            true;
+            true;
+            true;
+            true;
+            if (tP !== Object.prototype) {
+            }
+            true;
+          };
+          Class.prototype.coerce = function (value) {
+            return value;
+          };
+          Class.prototype.isInstanceOf = function (value) {
+            return this.isInstance(value);
+          };
+          Class.prototype.isInstance = function (value) {
+            if (value === null || typeof value !== 'object') {
+              return false;
+            }
+            return this.dynamicPrototype.isPrototypeOf(value);
+          };
+          Class.prototype.trace = function (writer) {
+            var description = this.debugName + (this.baseClass ? ' extends ' + this.baseClass.debugName : '');
+            writer.enter('class ' + description + ' {');
+            writer.writeLn('scope: ' + this.scope);
+            writer.writeLn('baseClass: ' + this.baseClass);
+            writer.writeLn('classInfo: ' + this.classInfo);
+            writer.writeLn('dynamicPrototype: ' + this.dynamicPrototype);
+            writer.writeLn('traitsPrototype: ' + this.traitsPrototype);
+            writer.writeLn('dynamicPrototype === traitsPrototype: ' + (this.dynamicPrototype === this.traitsPrototype));
+            writer.writeLn('instanceConstructor: ' + this.instanceConstructor);
+            writer.writeLn('instanceConstructorNoInitialize: ' + this.instanceConstructorNoInitialize);
+            writer.writeLn('instanceConstructor === instanceConstructorNoInitialize: ' + (this.instanceConstructor === this.instanceConstructorNoInitialize));
+            var traitsPrototype = this.traitsPrototype;
+            writer.enter('traitsPrototype: ');
+            if (traitsPrototype) {
+              writer.enter('VM_SLOTS: ');
+              writer.writeArray(traitsPrototype.asSlots.byID.map(function (slot) {
+                return slot.trait;
+              }));
+              writer.outdent();
+              writer.enter('VM_BINDINGS: ');
+              writer.writeArray(traitsPrototype.asBindings.map(function (binding) {
+                var pd = Object.getOwnPropertyDescriptor(traitsPrototype, binding);
+                var str = binding;
+                if (pd.get || pd.set) {
+                  if (pd.get) {
+                    str += ' getter: ' + debugName(pd.get);
+                  }
+                  if (pd.set) {
+                    str += ' setter: ' + debugName(pd.set);
+                  }
+                } else {
+                  str += ' value: ' + debugName(pd.value);
+                }
+                return str;
+              }));
+              writer.outdent();
+              writer.enter('VM_OPEN_METHODS: ');
+              writer.writeArray(toKeyValueArray(traitsPrototype.asOpenMethods).map(function (pair) {
+                return pair[0] + ': ' + debugName(pair[1]);
+              }));
+              writer.outdent();
+            }
+            writer.enter('classBindings: ');
+            this.classBindings.trace(writer);
+            writer.outdent();
+            writer.enter('instanceBindings: ');
+            this.instanceBindings.trace(writer);
+            writer.outdent();
+            writer.outdent();
+            writer.writeLn('call: ' + this.call);
+            writer.writeLn('apply: ' + this.apply);
+            writer.leave('}');
+          };
+          Class.prototype.toString = function () {
+            return '[class ' + this.classInfo.instanceInfo.name.name + ']';
+          };
+          Class.OWN_INITIALIZE = 1;
+          Class.SUPER_INITIALIZE = 2;
+          return Class;
+        }();
+      Runtime.Class = Class;
+      var callable = Shumway.AVM2.Runtime.ApplicationDomain.coerceCallable(Class);
+      defineNonEnumerableProperty(Class, 'call', callable.call);
+      defineNonEnumerableProperty(Class, 'apply', callable.apply);
+      Class.instanceConstructor = Class;
+      Class.toString = Class.prototype.toString;
+      Class.native = {
+        instance: {
+          prototype: {
+            get: function () {
+              return this.dynamicPrototype;
+            }
           }
         }
-      }
-    };
-    return Class;
-  }();
-function MethodClosure($this, fn) {
-  var bound = bindSafely(fn, $this);
-  defineNonEnumerableProperty(this, 'call', bound.call.bind(bound));
-  defineNonEnumerableProperty(this, 'apply', bound.apply.bind(bound));
-}
-MethodClosure.prototype = {
-  toString: function () {
-    return 'function Function() {}';
-  }
-};
+      };
+    }(AVM2.Runtime || (AVM2.Runtime = {})));
+    var Runtime = AVM2.Runtime;
+  }(Shumway.AVM2 || (Shumway.AVM2 = {})));
+  var AVM2 = Shumway.AVM2;
+}(Shumway || (Shumway = {})));
+var Interface = Shumway.AVM2.Runtime.Interface;
+var Class = Shumway.AVM2.Runtime.Class;
+var Binding = Shumway.AVM2.Runtime.Binding;
+var Bindings = Shumway.AVM2.Runtime.Bindings;
+var ActivationBindings = Shumway.AVM2.Runtime.ActivationBindings;
+var CatchBindings = Shumway.AVM2.Runtime.CatchBindings;
+var ScriptBindings = Shumway.AVM2.Runtime.ScriptBindings;
+var ClassBindings = Shumway.AVM2.Runtime.ClassBindings;
+var InstanceBindings = Shumway.AVM2.Runtime.InstanceBindings;
+var Interface = Shumway.AVM2.Runtime.Interface;
+var Class = Shumway.AVM2.Runtime.Class;
 var XRegExp = function (undefined) {
     var REGEX_DATA = 'xregexp', self, features = {
         astral: false,
@@ -26109,95 +27843,1532 @@ var XRegExp = function (undefined) {
     });
     return self;
   }();
-var runtimeOptions = systemOptions.register(new OptionSet('Runtime Options'));
-var traceScope = runtimeOptions.register(new Option('ts', 'traceScope', 'boolean', false, 'trace scope execution'));
-var traceExecution = runtimeOptions.register(new Option('tx', 'traceExecution', 'number', 0, 'trace script execution'));
-var traceCallExecution = runtimeOptions.register(new Option('txc', 'traceCallExecution', 'number', 0, 'trace call execution'));
-var functionBreak = runtimeOptions.register(new Option('fb', 'functionBreak', 'number', -1, 'Inserts a debugBreak at function index #.'));
-var compileOnly = runtimeOptions.register(new Option('co', 'compileOnly', 'number', -1, 'Compiles only function number.'));
-var compileUntil = runtimeOptions.register(new Option('cu', 'compileUntil', 'number', -1, 'Compiles only until a function number.'));
-var debuggerMode = runtimeOptions.register(new Option('dm', 'debuggerMode', 'boolean', false, 'matches avm2 debugger build semantics'));
-var enableVerifier = runtimeOptions.register(new Option('verify', 'verify', 'boolean', false, 'Enable verifier.'));
-var globalMultinameAnalysis = runtimeOptions.register(new Option('ga', 'globalMultinameAnalysis', 'boolean', false, 'Global multiname analysis.'));
-var traceInlineCaching = runtimeOptions.register(new Option('tic', 'traceInlineCaching', 'boolean', false, 'Trace inline caching execution.'));
-var compilerEnableExceptions = runtimeOptions.register(new Option('cex', 'exceptions', 'boolean', false, 'Compile functions with catch blocks.'));
-var compilerMaximumMethodSize = runtimeOptions.register(new Option('cmms', 'maximumMethodSize', 'number', 4 * 1024, 'Compiler maximum method size.'));
-var jsGlobal = function () {
-    return this || (1, eval)('this');
-  }();
-var VM_SLOTS = 'vm slots';
-var VM_LENGTH = 'vm length';
-var VM_BINDINGS = 'vm bindings';
-var VM_NATIVE_PROTOTYPE_FLAG = 'vm native prototype';
-var VM_OPEN_METHODS = 'vm open methods';
-var VM_IS_CLASS = 'vm is class';
-var VM_OPEN_METHOD_PREFIX = 'method_';
-var VM_OPEN_SET_METHOD_PREFIX = 'set_';
-var VM_OPEN_GET_METHOD_PREFIX = 'get_';
-var VM_NATIVE_BUILTIN_SURROGATES = [
-    {
-      object: Object,
-      methods: [
-        'toString',
-        'valueOf'
-      ]
-    },
-    {
-      object: Function,
-      methods: [
-        'toString',
-        'valueOf'
-      ]
-    }
-  ];
-var VM_NATIVE_BUILTIN_ORIGINALS = 'vm originals';
+var Namespace = Shumway.AVM2.ABC.Namespace;
+var Shumway;
+(function (Shumway) {
+  (function (AVM2) {
+    (function (Runtime) {
+      var Option = Shumway.Options.Option;
+      var OptionSet = Shumway.Options.OptionSet;
+      var runtimeOptions = systemOptions.register(new OptionSet('Runtime Options'));
+      var traceScope = runtimeOptions.register(new Option('ts', 'traceScope', 'boolean', false, 'trace scope execution'));
+      Runtime.traceExecution = runtimeOptions.register(new Option('tx', 'traceExecution', 'number', 0, 'trace script execution'));
+      Runtime.traceCallExecution = runtimeOptions.register(new Option('txc', 'traceCallExecution', 'number', 0, 'trace call execution'));
+      var functionBreak = runtimeOptions.register(new Option('fb', 'functionBreak', 'number', -1, 'Inserts a debugBreak at function index #.'));
+      var compileOnly = runtimeOptions.register(new Option('co', 'compileOnly', 'number', -1, 'Compiles only function number.'));
+      var compileUntil = runtimeOptions.register(new Option('cu', 'compileUntil', 'number', -1, 'Compiles only until a function number.'));
+      Runtime.debuggerMode = runtimeOptions.register(new Option('dm', 'debuggerMode', 'boolean', false, 'matches avm2 debugger build semantics'));
+      Runtime.enableVerifier = runtimeOptions.register(new Option('verify', 'verify', 'boolean', false, 'Enable verifier.'));
+      Runtime.globalMultinameAnalysis = runtimeOptions.register(new Option('ga', 'globalMultinameAnalysis', 'boolean', false, 'Global multiname analysis.'));
+      var traceInlineCaching = runtimeOptions.register(new Option('tic', 'traceInlineCaching', 'boolean', false, 'Trace inline caching execution.'));
+      Runtime.codeCaching = runtimeOptions.register(new Option('cc', 'codeCaching', 'boolean', false, 'Enable code caching.'));
+      var compilerEnableExceptions = runtimeOptions.register(new Option('cex', 'exceptions', 'boolean', false, 'Compile functions with catch blocks.'));
+      var compilerMaximumMethodSize = runtimeOptions.register(new Option('cmms', 'maximumMethodSize', 'number', 4 * 1024, 'Compiler maximum method size.'));
+      Runtime.traceClasses = runtimeOptions.register(new Option('tc', 'traceClasses', 'boolean', false, 'trace class creation'));
+      Runtime.traceDomain = runtimeOptions.register(new Option('td', 'traceDomain', 'boolean', false, 'trace domain property access'));
+      Runtime.sealConstTraits = false;
+      Runtime.useAsAdd = true;
+      var useSurrogates = true;
+      var callCounter = new Shumway.Metrics.Counter(true);
+      var Multiname = Shumway.AVM2.ABC.Multiname;
+      var Namespace = Shumway.AVM2.ABC.Namespace;
+      var MethodInfo = Shumway.AVM2.ABC.MethodInfo;
+      var ClassInfo = Shumway.AVM2.ABC.ClassInfo;
+      var InstanceInfo = Shumway.AVM2.ABC.InstanceInfo;
+      var ScriptInfo = Shumway.AVM2.ABC.ScriptInfo;
+      var SORT = Shumway.AVM2.ABC.SORT;
+      var Trait = Shumway.AVM2.ABC.Trait;
+      var IndentingWriter = Shumway.IndentingWriter;
+      var hasOwnProperty = Shumway.ObjectUtilities.hasOwnProperty;
+      var createMap = Shumway.ObjectUtilities.createMap;
+      var cloneObject = Shumway.ObjectUtilities.cloneObject;
+      var copyProperties = Shumway.ObjectUtilities.copyProperties;
+      var createEmptyObject = Shumway.ObjectUtilities.createEmptyObject;
+      var boxValue = Shumway.ObjectUtilities.boxValue;
+      var bindSafely = Shumway.FunctionUtilities.bindSafely;
+      var defineNonEnumerableGetterOrSetter = Shumway.ObjectUtilities.defineNonEnumerableGetterOrSetter;
+      var defineNonEnumerableProperty = Shumway.ObjectUtilities.defineNonEnumerableProperty;
+      var defineReadOnlyProperty = Shumway.ObjectUtilities.defineReadOnlyProperty;
+      var defineNonEnumerableGetter = Shumway.ObjectUtilities.defineNonEnumerableGetter;
+      var makeForwardingGetter = Shumway.FunctionUtilities.makeForwardingGetter;
+      var makeForwardingSetter = Shumway.FunctionUtilities.makeForwardingSetter;
+      var toSafeString = Shumway.StringUtilities.toSafeString;
+      var toSafeArrayString = Shumway.StringUtilities.toSafeArrayString;
+      var TRAIT = Shumway.AVM2.ABC.TRAIT;
+      Runtime.VM_SLOTS = 'asSlots';
+      Runtime.VM_LENGTH = 'asLength';
+      Runtime.VM_BINDINGS = 'asBindings';
+      Runtime.VM_NATIVE_PROTOTYPE_FLAG = 'asIsNative';
+      Runtime.VM_OPEN_METHODS = 'asOpenMethods';
+      Runtime.VM_IS_CLASS = 'asIsClass';
+      Runtime.VM_IS_PROXY = 'asIsProxy';
+      Runtime.VM_CALL_PROXY = 'asCallProxy';
+      Runtime.VM_OPEN_METHOD_PREFIX = 'm';
+      Runtime.VM_MEMOIZER_PREFIX = 'z';
+      Runtime.VM_OPEN_SET_METHOD_PREFIX = 's';
+      Runtime.VM_OPEN_GET_METHOD_PREFIX = 'g';
+      Runtime.VM_NATIVE_BUILTIN_ORIGINALS = 'asOriginals';
+      Runtime.VM_METHOD_OVERRIDES = createEmptyObject();
+      var vmNextInterpreterFunctionId = 1;
+      var vmNextCompiledFunctionId = 1;
+      var totalFunctionCount = 0;
+      var compiledFunctionCount = 0;
+      var compilationCount = 0;
+      function isClass(object) {
+        true;
+        return Object.hasOwnProperty.call(object, Runtime.VM_IS_CLASS);
+      }
+      Runtime.isClass = isClass;
+      function isNativePrototype(object) {
+        return Object.prototype.hasOwnProperty.call(object, Runtime.VM_NATIVE_PROTOTYPE_FLAG);
+      }
+      Runtime.isNativePrototype = isNativePrototype;
+      var traitsWriter = null;
+      var callWriter = null;
+      function patch(patchTargets, value) {
+        true;
+        for (var i = 0; i < patchTargets.length; i++) {
+          var patchTarget = patchTargets[i];
+          if (Runtime.traceExecution.value >= 3) {
+            var str = 'Patching: ';
+            if (patchTarget.name) {
+              str += patchTarget.name;
+            } else if (patchTarget.get) {
+              str += 'get ' + patchTarget.get;
+            } else if (patchTarget.set) {
+              str += 'set ' + patchTarget.set;
+            }
+            traitsWriter && traitsWriter.redLn(str);
+          }
+          if (patchTarget.get) {
+            defineNonEnumerableGetterOrSetter(patchTarget.object, patchTarget.get, value, true);
+          } else if (patchTarget.set) {
+            defineNonEnumerableGetterOrSetter(patchTarget.object, patchTarget.set, value, false);
+          } else {
+            defineNonEnumerableProperty(patchTarget.object, patchTarget.name, value);
+          }
+        }
+      }
+      Runtime.patch = patch;
+      function applyNonMemoizedMethodTrait(qn, trait, object, scope, natives) {
+        true;
+        if (trait.isMethod()) {
+          var trampoline = Shumway.AVM2.Runtime.makeTrampoline(function (self) {
+              var fn = getTraitFunction(trait, scope, natives);
+              patch(self.patchTargets, fn);
+              return fn;
+            }, trait.methodInfo.parameters.length);
+          trampoline.patchTargets = [
+            {
+              object: object,
+              name: qn
+            },
+            {
+              object: object,
+              name: Runtime.VM_OPEN_METHOD_PREFIX + qn
+            }
+          ];
+          var closure = bindSafely(trampoline, object);
+          defineReadOnlyProperty(closure, Runtime.VM_LENGTH, trampoline.asLength);
+          defineReadOnlyProperty(closure, Multiname.getPublicQualifiedName('prototype'), null);
+          defineNonEnumerableProperty(object, qn, closure);
+          defineNonEnumerableProperty(object, Runtime.VM_OPEN_METHOD_PREFIX + qn, closure);
+        } else if (trait.isGetter() || trait.isSetter()) {
+          var trampoline = Shumway.AVM2.Runtime.makeTrampoline(function (self) {
+              var fn = getTraitFunction(trait, scope, natives);
+              patch(self.patchTargets, fn);
+              return fn;
+            }, trait.isSetter() ? 1 : 0);
+          if (trait.isGetter()) {
+            trampoline.patchTargets = [
+              {
+                object: object,
+                get: qn
+              }
+            ];
+          } else {
+            trampoline.patchTargets = [
+              {
+                object: object,
+                set: qn
+              }
+            ];
+          }
+          defineNonEnumerableGetterOrSetter(object, qn, trampoline, trait.isGetter());
+        } else {
+          Shumway.Debug.unexpected(trait);
+        }
+      }
+      Runtime.applyNonMemoizedMethodTrait = applyNonMemoizedMethodTrait;
+      function applyMemoizedMethodTrait(qn, trait, object, scope, natives) {
+        true;
+        if (trait.isMethod()) {
+          var memoizerTarget = {
+              value: null
+            };
+          var trampoline = Shumway.AVM2.Runtime.makeTrampoline(function (self) {
+              var fn = getTraitFunction(trait, scope, natives);
+              patch(self.patchTargets, fn);
+              return fn;
+            }, trait.methodInfo.parameters.length, String(trait.name));
+          memoizerTarget.value = trampoline;
+          var openMethods = object.asOpenMethods;
+          openMethods[qn] = trampoline;
+          defineNonEnumerableProperty(object, Runtime.VM_OPEN_METHOD_PREFIX + qn, trampoline);
+          defineNonEnumerableGetter(object, qn, Shumway.AVM2.Runtime.makeMemoizer(qn, memoizerTarget));
+          trampoline.patchTargets = [
+            {
+              object: memoizerTarget,
+              name: 'value'
+            },
+            {
+              object: openMethods,
+              name: qn
+            },
+            {
+              object: object,
+              name: Runtime.VM_OPEN_METHOD_PREFIX + qn
+            }
+          ];
+        } else if (trait.isGetter() || trait.isSetter()) {
+          var trampoline = Shumway.AVM2.Runtime.makeTrampoline(function (self) {
+              var fn = getTraitFunction(trait, scope, natives);
+              patch(self.patchTargets, fn);
+              return fn;
+            }, 0, String(trait.name));
+          if (trait.isGetter()) {
+            defineNonEnumerableProperty(object, Runtime.VM_OPEN_GET_METHOD_PREFIX + qn, trampoline);
+            trampoline.patchTargets = [
+              {
+                object: object,
+                get: qn
+              },
+              {
+                object: object,
+                name: Runtime.VM_OPEN_GET_METHOD_PREFIX + qn
+              }
+            ];
+          } else {
+            defineNonEnumerableProperty(object, Runtime.VM_OPEN_SET_METHOD_PREFIX + qn, trampoline);
+            trampoline.patchTargets = [
+              {
+                object: object,
+                set: qn
+              },
+              {
+                object: object,
+                name: Runtime.VM_OPEN_SET_METHOD_PREFIX + qn
+              }
+            ];
+          }
+          defineNonEnumerableGetterOrSetter(object, qn, trampoline, trait.isGetter());
+        }
+      }
+      Runtime.applyMemoizedMethodTrait = applyMemoizedMethodTrait;
+      function getNamespaceResolutionMap(namespaces) {
+        var self = this;
+        var map = self.resolutionMap[namespaces.runtimeId];
+        if (map)
+          return map;
+        map = self.resolutionMap[namespaces.runtimeId] = Shumway.ObjectUtilities.createMap();
+        var bindings = self.bindings;
+        for (var key in bindings.map) {
+          var multiname = key;
+          var trait = bindings.map[key].trait;
+          if (trait.isGetter() || trait.isSetter()) {
+            multiname = multiname.substring(Shumway.AVM2.Runtime.Binding.KEY_PREFIX_LENGTH);
+          }
+          multiname = Multiname.fromQualifiedName(multiname);
+          if (multiname.getNamespace().inNamespaceSet(namespaces)) {
+            map[multiname.getName()] = Multiname.getQualifiedName(trait.name);
+          }
+        }
+        return map;
+      }
+      Runtime.getNamespaceResolutionMap = getNamespaceResolutionMap;
+      function resolveMultinameProperty(namespaces, name, flags) {
+        var self = this;
+        if (typeof name === 'object') {
+          name = String(name);
+        }
+        if (Shumway.isNumeric(name)) {
+          return Shumway.toNumber(name);
+        }
+        if (!namespaces) {
+          return Multiname.getPublicQualifiedName(name);
+        }
+        if (namespaces.length > 1) {
+          var resolved = self.getNamespaceResolutionMap(namespaces)[name];
+          if (resolved)
+            return resolved;
+          return Multiname.getPublicQualifiedName(name);
+        } else {
+          return Multiname.qualifyName(namespaces[0], name);
+        }
+      }
+      Runtime.resolveMultinameProperty = resolveMultinameProperty;
+      function asGetPublicProperty(name) {
+        var self = this;
+        return self.asGetProperty(undefined, name, 0);
+      }
+      Runtime.asGetPublicProperty = asGetPublicProperty;
+      function asGetProperty(namespaces, name, flags) {
+        var self = this;
+        var resolved = self.resolveMultinameProperty(namespaces, name, flags);
+        if (self.asGetNumericProperty && Multiname.isNumeric(resolved)) {
+          return self.asGetNumericProperty(resolved);
+        }
+        return self[resolved];
+      }
+      Runtime.asGetProperty = asGetProperty;
+      function asGetPropertyLikelyNumeric(namespaces, name, flags) {
+        var self = this;
+        if (typeof name === 'number') {
+          return self.asGetNumericProperty(name);
+        }
+        return asGetProperty.call(self, namespaces, name, flags);
+      }
+      Runtime.asGetPropertyLikelyNumeric = asGetPropertyLikelyNumeric;
+      function asGetResolvedStringProperty(resolved) {
+        true;
+        return this[resolved];
+      }
+      Runtime.asGetResolvedStringProperty = asGetResolvedStringProperty;
+      function asCallResolvedStringProperty(resolved, isLex, args) {
+        var self = this;
+        var receiver = isLex ? null : this;
+        var openMethods = self.asOpenMethods;
+        var method;
+        if (receiver && openMethods && openMethods[resolved]) {
+          method = openMethods[resolved];
+        } else {
+          method = self[resolved];
+        }
+        return method.apply(receiver, args);
+      }
+      Runtime.asCallResolvedStringProperty = asCallResolvedStringProperty;
+      function asGetResolvedStringPropertyFallback(resolved) {
+        var self = this;
+        var name = Multiname.getNameFromPublicQualifiedName(resolved);
+        return self.asGetProperty([
+          Namespace.PUBLIC
+        ], name, 0);
+      }
+      Runtime.asGetResolvedStringPropertyFallback = asGetResolvedStringPropertyFallback;
+      function asSetPublicProperty(name, value) {
+        var self = this;
+        return self.asSetProperty(undefined, name, 0, value);
+      }
+      Runtime.asSetPublicProperty = asSetPublicProperty;
+      function asSetProperty(namespaces, name, flags, value) {
+        var self = this;
+        if (typeof name === 'object') {
+          name = String(name);
+        }
+        var resolved = self.resolveMultinameProperty(namespaces, name, flags);
+        if (self.asSetNumericProperty && Multiname.isNumeric(resolved)) {
+          return self.asSetNumericProperty(resolved, value);
+        }
+        var slotInfo = self.asSlots.byQN[resolved];
+        if (slotInfo) {
+          if (slotInfo.isConst) {
+          }
+          var type = slotInfo.type;
+          if (type && type.coerce) {
+            value = type.coerce(value);
+          }
+        }
+        self[resolved] = value;
+      }
+      Runtime.asSetProperty = asSetProperty;
+      function asSetPropertyLikelyNumeric(namespaces, name, flags, value) {
+        var self = this;
+        if (typeof name === 'number') {
+          self.asSetNumericProperty(name, value);
+          return;
+        }
+        return asSetProperty.call(self, namespaces, name, flags, value);
+      }
+      Runtime.asSetPropertyLikelyNumeric = asSetPropertyLikelyNumeric;
+      function asDefinePublicProperty(name, descriptor) {
+        var self = this;
+        return self.asDefineProperty(undefined, name, 0, descriptor);
+      }
+      Runtime.asDefinePublicProperty = asDefinePublicProperty;
+      function asDefineProperty(namespaces, name, flags, descriptor) {
+        var self = this;
+        if (typeof name === 'object') {
+          name = String(name);
+        }
+        var resolved = self.resolveMultinameProperty(namespaces, name, flags);
+        Object.defineProperty(self, resolved, descriptor);
+      }
+      Runtime.asDefineProperty = asDefineProperty;
+      function asCallPublicProperty(name, args) {
+        var self = this;
+        return self.asCallProperty(undefined, name, 0, false, args);
+      }
+      Runtime.asCallPublicProperty = asCallPublicProperty;
+      function asCallProperty(namespaces, name, flags, isLex, args) {
+        var self = this;
+        if (Runtime.traceCallExecution.value) {
+          var receiverClassName = self.class ? self.class.className + ' ' : '';
+          callWriter.enter('call ' + receiverClassName + name + '(' + toSafeArrayString(args) + ') #' + callCounter.count(name));
+        }
+        var receiver = isLex ? null : self;
+        var result;
+        if (isProxyObject(self)) {
+          result = self[Runtime.VM_CALL_PROXY](new Multiname(namespaces, name, flags), receiver, args);
+        } else {
+          var method;
+          var resolved = self.resolveMultinameProperty(namespaces, name, flags);
+          if (self.asGetNumericProperty && Multiname.isNumeric(resolved)) {
+            method = self.asGetNumericProperty(resolved);
+          } else {
+            var openMethods = self.asOpenMethods;
+            if (receiver && openMethods && openMethods[resolved]) {
+              method = openMethods[resolved];
+            } else {
+              method = self[resolved];
+            }
+          }
+          result = method.apply(receiver, args);
+        }
+        Runtime.traceCallExecution.value > 0 && callWriter.leave('return ' + toSafeString(result));
+        return result;
+      }
+      Runtime.asCallProperty = asCallProperty;
+      function asCallSuper(scope, namespaces, name, flags, args) {
+        var self = this;
+        if (Runtime.traceCallExecution.value) {
+          var receiverClassName = self.class ? self.class.className + ' ' : '';
+          callWriter.enter('call super ' + receiverClassName + name + '(' + toSafeArrayString(args) + ') #' + callCounter.count(name));
+        }
+        var baseClass = scope.object.baseClass;
+        var resolved = baseClass.traitsPrototype.resolveMultinameProperty(namespaces, name, flags);
+        var openMethods = baseClass.traitsPrototype.asOpenMethods;
+        var method = openMethods[resolved];
+        var result = method.apply(this, args);
+        Runtime.traceCallExecution.value > 0 && callWriter.leave('return ' + toSafeString(result));
+        return result;
+      }
+      Runtime.asCallSuper = asCallSuper;
+      function asSetSuper(scope, namespaces, name, flags, value) {
+        var self = this;
+        if (Runtime.traceCallExecution.value) {
+          var receiverClassName = self.class ? self.class.className + ' ' : '';
+          callWriter.enter('set super ' + receiverClassName + name + '(' + toSafeString(value) + ') #' + callCounter.count(name));
+        }
+        var baseClass = scope.object.baseClass;
+        var resolved = baseClass.traitsPrototype.resolveMultinameProperty(namespaces, name, flags);
+        if (self.asSlots.byQN[resolved]) {
+          this.asSetProperty(namespaces, name, flags, value);
+        } else {
+          baseClass.traitsPrototype[Runtime.VM_OPEN_SET_METHOD_PREFIX + resolved].call(this, value);
+        }
+        Runtime.traceCallExecution.value > 0 && callWriter.leave('');
+      }
+      Runtime.asSetSuper = asSetSuper;
+      function asGetSuper(scope, namespaces, name, flags) {
+        var self = this;
+        if (Runtime.traceCallExecution.value) {
+          var receiver = self.class ? self.class.className + ' ' : '';
+          callWriter.enter('get super ' + receiver + name + ' #' + callCounter.count(name));
+        }
+        var baseClass = scope.object.baseClass;
+        var resolved = baseClass.traitsPrototype.resolveMultinameProperty(namespaces, name, flags);
+        var result;
+        if (self.asSlots.byQN[resolved]) {
+          result = this.asGetProperty(namespaces, name, flags);
+        } else {
+          result = baseClass.traitsPrototype[Runtime.VM_OPEN_GET_METHOD_PREFIX + resolved].call(this);
+        }
+        Runtime.traceCallExecution.value > 0 && callWriter.leave('return ' + toSafeString(result));
+        return result;
+      }
+      Runtime.asGetSuper = asGetSuper;
+      function construct(cls, args) {
+        if (cls.classInfo) {
+          var qn = Multiname.getQualifiedName(cls.classInfo.instanceInfo.name);
+          if (qn === Multiname.String) {
+            return String.apply(null, args);
+          }
+          if (qn === Multiname.Boolean) {
+            return Boolean.apply(null, args);
+          }
+          if (qn === Multiname.Number) {
+            return Number.apply(null, args);
+          }
+        }
+        var c = cls.instanceConstructor;
+        var a = args;
+        switch (args.length) {
+        case 0:
+          return new c();
+        case 1:
+          return new c(a[0]);
+        case 2:
+          return new c(a[0], a[1]);
+        case 3:
+          return new c(a[0], a[1], a[2]);
+        case 4:
+          return new c(a[0], a[1], a[2], a[3]);
+        case 5:
+          return new c(a[0], a[1], a[2], a[3], a[4]);
+        case 6:
+          return new c(a[0], a[1], a[2], a[3], a[4], a[5]);
+        case 7:
+          return new c(a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
+        case 8:
+          return new c(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]);
+        case 9:
+          return new c(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]);
+        case 10:
+          return new c(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]);
+        }
+        var applyArguments = [];
+        for (var i = 0; i < args.length; i++) {
+          applyArguments[i + 1] = args[i];
+        }
+        return new (Function.bind.apply(c, applyArguments))();
+      }
+      Runtime.construct = construct;
+      function asConstructProperty(namespaces, name, flags, args) {
+        var self = this;
+        var constructor = self.asGetProperty(namespaces, name, flags);
+        if (Runtime.traceCallExecution.value) {
+          callWriter.enter('construct ' + name + '(' + toSafeArrayString(args) + ') #' + callCounter.count(name));
+        }
+        var result = construct(constructor, args);
+        Runtime.traceCallExecution.value > 0 && callWriter.leave('return ' + toSafeString(result));
+        return result;
+      }
+      Runtime.asConstructProperty = asConstructProperty;
+      function nonProxyingHasProperty(object, name) {
+        return name in object;
+      }
+      Runtime.nonProxyingHasProperty = nonProxyingHasProperty;
+      function asHasProperty(namespaces, name, flags, nonProxy) {
+        var self = this;
+        if (self.hasProperty) {
+          return self.hasProperty(namespaces, name, flags);
+        }
+        if (nonProxy) {
+          return nonProxyingHasProperty(self, self.resolveMultinameProperty(namespaces, name, flags));
+        } else {
+          return self.resolveMultinameProperty(namespaces, name, flags) in this;
+        }
+      }
+      Runtime.asHasProperty = asHasProperty;
+      function asDeleteProperty(namespaces, name, flags) {
+        var self = this;
+        if (self.asHasTraitProperty(namespaces, name, flags)) {
+          return false;
+        }
+        var resolved = self.resolveMultinameProperty(namespaces, name, flags);
+        return delete self[resolved];
+      }
+      Runtime.asDeleteProperty = asDeleteProperty;
+      function asHasTraitProperty(namespaces, name, flags) {
+        var self = this;
+        var resolved = self.resolveMultinameProperty(namespaces, name, flags);
+        return self.asBindings.indexOf(resolved) >= 0;
+      }
+      Runtime.asHasTraitProperty = asHasTraitProperty;
+      function asGetNumericProperty(i) {
+        return this[i];
+      }
+      Runtime.asGetNumericProperty = asGetNumericProperty;
+      function asSetNumericProperty(i, v) {
+        this[i] = v;
+      }
+      Runtime.asSetNumericProperty = asSetNumericProperty;
+      function asGetDescendants(namespaces, name, flags) {
+        Shumway.Debug.notImplemented('asGetDescendants');
+      }
+      Runtime.asGetDescendants = asGetDescendants;
+      function asNextNameIndex(index) {
+        var self = this;
+        if (index === 0) {
+          defineNonEnumerableProperty(self, 'asEnumerableKeys', self.asGetEnumerableKeys());
+        }
+        var asEnumerableKeys = self.asEnumerableKeys;
+        while (index < asEnumerableKeys.length) {
+          if (self.asHasProperty(undefined, asEnumerableKeys[index], 0)) {
+            return index + 1;
+          }
+          index++;
+        }
+        return 0;
+      }
+      Runtime.asNextNameIndex = asNextNameIndex;
+      function asNextName(index) {
+        var self = this;
+        var asEnumerableKeys = self.asEnumerableKeys;
+        true;
+        return asEnumerableKeys[index - 1];
+      }
+      Runtime.asNextName = asNextName;
+      function asNextValue(index) {
+        return this.asGetPublicProperty(this.asNextName(index));
+      }
+      Runtime.asNextValue = asNextValue;
+      function asGetEnumerableKeys() {
+        var self = this;
+        var boxedValue = self.valueOf();
+        if (typeof boxedValue === 'string' || typeof boxedValue === 'number') {
+          return [];
+        }
+        var keys = Object.keys(this);
+        var result = [];
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
+          if (Shumway.isNumeric(key)) {
+            result.push(key);
+          } else {
+            var name = Multiname.stripPublicQualifier(key);
+            if (name !== undefined) {
+              result.push(name);
+            }
+          }
+        }
+        return result;
+      }
+      Runtime.asGetEnumerableKeys = asGetEnumerableKeys;
+      function asTypeOf(x) {
+        if (x) {
+          if (x.constructor === String) {
+            return 'string';
+          } else if (x.constructor === Number) {
+            return 'number';
+          } else if (x.constructor === Boolean) {
+            return 'boolean';
+          } else if (x instanceof XML || x instanceof XMLList) {
+            return 'xml';
+          }
+        }
+        return typeof x;
+      }
+      Runtime.asTypeOf = asTypeOf;
+      function publicizeProperties(object) {
+        var keys = Object.keys(object);
+        for (var i = 0; i < keys.length; i++) {
+          var k = keys[i];
+          if (!Multiname.isPublicQualifiedName(k)) {
+            var v = object[k];
+            object[Multiname.getPublicQualifiedName(k)] = v;
+            delete object[k];
+          }
+        }
+      }
+      Runtime.publicizeProperties = publicizeProperties;
+      function asGetSlot(object, index) {
+        return object[object.asSlots.byID[index].name];
+      }
+      Runtime.asGetSlot = asGetSlot;
+      function asSetSlot(object, index, value) {
+        var slotInfo = object.asSlots.byID[index];
+        if (slotInfo.const) {
+          return;
+        }
+        var name = slotInfo.name;
+        var type = slotInfo.type;
+        if (type && type.coerce) {
+          object[name] = type.coerce(value);
+        } else {
+          object[name] = value;
+        }
+      }
+      Runtime.asSetSlot = asSetSlot;
+      function throwError(name, error) {
+        if (true) {
+          var message = Shumway.AVM2.formatErrorMessage.apply(null, Array.prototype.slice.call(arguments, 1));
+          throwErrorFromVM(Shumway.AVM2.Runtime.AVM2.currentDomain(), name, message, error.code);
+        } else {
+          throwErrorFromVM(Shumway.AVM2.Runtime.AVM2.currentDomain(), name, Shumway.AVM2.getErrorMessage(error.code), error.code);
+        }
+      }
+      Runtime.throwError = throwError;
+      function throwErrorFromVM(domain, errorClass, message, id) {
+        var error = new (domain.getClass(errorClass)).instanceConstructor(message, id);
+        throw error;
+      }
+      Runtime.throwErrorFromVM = throwErrorFromVM;
+      function translateError(domain, error) {
+        if (error instanceof Error) {
+          var type = domain.getClass(error.name);
+          if (type) {
+            return new type.instanceConstructor(Shumway.AVM2.translateErrorMessage(error));
+          }
+          Shumway.Debug.unexpected('Can\'t translate error: ' + error);
+        }
+        return error;
+      }
+      Runtime.translateError = translateError;
+      function asIsInstanceOf(type, value) {
+        return type.isInstanceOf(value);
+      }
+      Runtime.asIsInstanceOf = asIsInstanceOf;
+      function asIsType(type, value) {
+        return type.isInstance(value);
+      }
+      Runtime.asIsType = asIsType;
+      function asAsType(type, value) {
+        return asIsType(type, value) ? value : null;
+      }
+      Runtime.asAsType = asAsType;
+      function asCoerceByMultiname(domain, multiname, value) {
+        true;
+        switch (Multiname.getQualifiedName(multiname)) {
+        case Multiname.Int:
+          return asCoerceInt(value);
+        case Multiname.Uint:
+          return asCoerceUint(value);
+        case Multiname.String:
+          return asCoerceString(value);
+        case Multiname.Number:
+          return asCoerceNumber(value);
+        case Multiname.Boolean:
+          return asCoerceBoolean(value);
+        case Multiname.Object:
+          return asCoerceObject(value);
+        }
+        return asCoerce(domain.getType(multiname), value);
+      }
+      Runtime.asCoerceByMultiname = asCoerceByMultiname;
+      function asCoerce(type, value) {
+        if (type.coerce) {
+          return type.coerce(value);
+        }
+        if (Shumway.isNullOrUndefined(value)) {
+          return null;
+        }
+        if (type.isInstance(value)) {
+          return value;
+        } else {
+          true;
+        }
+      }
+      Runtime.asCoerce = asCoerce;
+      function asCoerceString(x) {
+        if (typeof x === 'string') {
+          return x;
+        } else if (x == undefined) {
+          return null;
+        }
+        return x + '';
+      }
+      Runtime.asCoerceString = asCoerceString;
+      function asCoerceInt(x) {
+        return x | 0;
+      }
+      Runtime.asCoerceInt = asCoerceInt;
+      function asCoerceUint(x) {
+        return x >>> 0;
+      }
+      Runtime.asCoerceUint = asCoerceUint;
+      function asCoerceNumber(x) {
+        return +x;
+      }
+      Runtime.asCoerceNumber = asCoerceNumber;
+      function asCoerceBoolean(x) {
+        return !(!x);
+      }
+      Runtime.asCoerceBoolean = asCoerceBoolean;
+      function asCoerceObject(x) {
+        if (x == undefined) {
+          return null;
+        }
+        if (typeof x === 'string' || typeof x === 'number') {
+          return x;
+        }
+        return Object(x);
+      }
+      Runtime.asCoerceObject = asCoerceObject;
+      function asDefaultCompareFunction(a, b) {
+        return String(a).localeCompare(String(b));
+      }
+      Runtime.asDefaultCompareFunction = asDefaultCompareFunction;
+      function asCompare(a, b, options, compareFunction) {
+        true;
+        true;
+        var result = 0;
+        if (!compareFunction) {
+          compareFunction = asDefaultCompareFunction;
+        }
+        if (options & 1) {
+          a = String(a).toLowerCase();
+          b = String(b).toLowerCase();
+        }
+        if (options & 16) {
+          a = Shumway.toNumber(a);
+          b = Shumway.toNumber(b);
+          result = a < b ? -1 : a > b ? 1 : 0;
+        } else {
+          result = compareFunction(a, b);
+        }
+        if (options & 2) {
+          result *= -1;
+        }
+        return result;
+      }
+      Runtime.asCompare = asCompare;
+      function asAdd(l, r) {
+        if (typeof l === 'string' || typeof r === 'string') {
+          return String(l) + String(r);
+        }
+        return l + r;
+      }
+      Runtime.asAdd = asAdd;
+      function asHasNext2(object, index) {
+        if (Shumway.isNullOrUndefined(object)) {
+          return {
+            index: 0,
+            object: null
+          };
+        }
+        object = boxValue(object);
+        var nextIndex = object.asNextNameIndex(index);
+        if (nextIndex > 0) {
+          return {
+            index: nextIndex,
+            object: object
+          };
+        }
+        while (true) {
+          var object = Object.getPrototypeOf(object);
+          if (!object) {
+            return {
+              index: 0,
+              object: null
+            };
+          }
+          nextIndex = object.asNextNameIndex(0);
+          if (nextIndex > 0) {
+            return {
+              index: nextIndex,
+              object: object
+            };
+          }
+        }
+        return {
+          index: 0,
+          object: null
+        };
+      }
+      Runtime.asHasNext2 = asHasNext2;
+      function getDescendants(object, mn) {
+        if (!isXMLType(object)) {
+          throw 'Not XML object in getDescendants';
+        }
+        return object.descendants(mn);
+      }
+      Runtime.getDescendants = getDescendants;
+      function checkFilter(value) {
+        if (!value.class || !isXMLType(value)) {
+          throw 'TypeError operand of childFilter not of XML type';
+        }
+        return value;
+      }
+      Runtime.checkFilter = checkFilter;
+      function initializeGlobalObject(global) {
+        var VM_NATIVE_BUILTIN_SURROGATES = [
+            {
+              name: 'Object',
+              methods: [
+                'toString',
+                'valueOf'
+              ]
+            },
+            {
+              name: 'Function',
+              methods: [
+                'toString',
+                'valueOf'
+              ]
+            }
+          ];
+        var originals = global[Runtime.VM_NATIVE_BUILTIN_ORIGINALS] = createEmptyObject();
+        VM_NATIVE_BUILTIN_SURROGATES.forEach(function (surrogate) {
+          var object = global[surrogate.name];
+          originals[surrogate.name] = createEmptyObject();
+          surrogate.methods.forEach(function (originalFunctionName) {
+            var originalFunction;
+            if (object.prototype.hasOwnProperty(originalFunctionName)) {
+              originalFunction = object.prototype[originalFunctionName];
+            } else {
+              originalFunction = originals['Object'][originalFunctionName];
+            }
+            originals[surrogate.name][originalFunctionName] = originalFunction;
+            var overrideFunctionName = Multiname.getPublicQualifiedName(originalFunctionName);
+            if (useSurrogates) {
+              global[surrogate.name].prototype[originalFunctionName] = function surrogate() {
+                if (this[overrideFunctionName]) {
+                  return this[overrideFunctionName]();
+                }
+                return originalFunction.call(this);
+              };
+            }
+          });
+        });
+        [
+          'Object',
+          'Number',
+          'Boolean',
+          'String',
+          'Array',
+          'Date',
+          'RegExp'
+        ].forEach(function (name) {
+          defineReadOnlyProperty(global[name].prototype, Runtime.VM_NATIVE_PROTOTYPE_FLAG, true);
+        });
+        defineNonEnumerableProperty(global.Object.prototype, 'getNamespaceResolutionMap', getNamespaceResolutionMap);
+        defineNonEnumerableProperty(global.Object.prototype, 'resolveMultinameProperty', resolveMultinameProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asGetProperty', asGetProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asGetPublicProperty', asGetPublicProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asGetResolvedStringProperty', asGetResolvedStringProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asSetProperty', asSetProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asSetPublicProperty', asSetPublicProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asDefineProperty', asDefineProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asDefinePublicProperty', asDefinePublicProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asCallProperty', asCallProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asCallSuper', asCallSuper);
+        defineNonEnumerableProperty(global.Object.prototype, 'asGetSuper', asGetSuper);
+        defineNonEnumerableProperty(global.Object.prototype, 'asSetSuper', asSetSuper);
+        defineNonEnumerableProperty(global.Object.prototype, 'asCallPublicProperty', asCallPublicProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asCallResolvedStringProperty', asCallResolvedStringProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asConstructProperty', asConstructProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asHasProperty', asHasProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asHasTraitProperty', asHasTraitProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asDeleteProperty', asDeleteProperty);
+        defineNonEnumerableProperty(global.Object.prototype, 'asNextName', asNextName);
+        defineNonEnumerableProperty(global.Object.prototype, 'asNextValue', asNextValue);
+        defineNonEnumerableProperty(global.Object.prototype, 'asNextNameIndex', asNextNameIndex);
+        defineNonEnumerableProperty(global.Object.prototype, 'asGetEnumerableKeys', asGetEnumerableKeys);
+        [
+          'Array',
+          'Int8Array',
+          'Uint8Array',
+          'Uint8ClampedArray',
+          'Int16Array',
+          'Uint16Array',
+          'Int32Array',
+          'Uint32Array',
+          'Float32Array',
+          'Float64Array'
+        ].forEach(function (name) {
+          if (!(name in global)) {
+            log(name + ' was not found in globals');
+            return;
+          }
+          defineNonEnumerableProperty(global[name].prototype, 'asGetNumericProperty', asGetNumericProperty);
+          defineNonEnumerableProperty(global[name].prototype, 'asSetNumericProperty', asSetNumericProperty);
+          defineNonEnumerableProperty(global[name].prototype, 'asGetProperty', asGetPropertyLikelyNumeric);
+          defineNonEnumerableProperty(global[name].prototype, 'asSetProperty', asSetPropertyLikelyNumeric);
+        });
+        global.Array.prototype.asGetProperty = function (namespaces, name, flags) {
+          if (typeof name === 'number') {
+            return this[name];
+          }
+          return asGetProperty.call(this, namespaces, name, flags);
+        };
+        global.Array.prototype.asSetProperty = function (namespaces, name, flags, value) {
+          if (typeof name === 'number') {
+            this[name] = value;
+            return;
+          }
+          return asSetProperty.call(this, namespaces, name, flags, value);
+        };
+      }
+      Runtime.initializeGlobalObject = initializeGlobalObject;
+      function nameInTraits(object, qn) {
+        if (object.hasOwnProperty(Runtime.VM_BINDINGS) && object.hasOwnProperty(qn)) {
+          return true;
+        }
+        var proto = Object.getPrototypeOf(object);
+        return proto.hasOwnProperty(Runtime.VM_BINDINGS) && proto.hasOwnProperty(qn);
+      }
+      Runtime.nameInTraits = nameInTraits;
+      function CatchScopeObject(domain, trait) {
+        if (trait) {
+          new Shumway.AVM2.Runtime.CatchBindings(new Shumway.AVM2.Runtime.Scope(null, this), trait).applyTo(domain, this);
+        }
+      }
+      Runtime.CatchScopeObject = CatchScopeObject;
+      var Global = function () {
+          function Global(script) {
+            this.scriptInfo = script;
+            script.global = this;
+            this.scriptBindings = new Shumway.AVM2.Runtime.ScriptBindings(script, new Shumway.AVM2.Runtime.Scope(null, this, false));
+            this.scriptBindings.applyTo(script.abc.applicationDomain, this);
+            script.loaded = true;
+          }
+          Global.prototype.toString = function () {
+            return '[object global]';
+          };
+          Global.prototype.isExecuted = function () {
+            return this.scriptInfo.executed;
+          };
+          Global.prototype.isExecuting = function () {
+            return this.scriptInfo.executing;
+          };
+          Global.prototype.ensureExecuted = function () {
+            Shumway.AVM2.Runtime.ensureScriptIsExecuted(this.scriptInfo);
+          };
+          return Global;
+        }();
+      Runtime.Global = Global;
+      defineNonEnumerableProperty(Global.prototype, Multiname.getPublicQualifiedName('toString'), function () {
+        return this.toString();
+      });
+      var LazyInitializer = function () {
+          function LazyInitializer(target) {
+            this.target = target;
+          }
+          LazyInitializer.create = function (target) {
+            if (target.asLazyInitializer) {
+              return target.asLazyInitializer;
+            }
+            return target.asLazyInitializer = new LazyInitializer(target);
+          };
+          LazyInitializer.prototype.getName = function () {
+            if (this.name) {
+              return this.name;
+            }
+            var target = this.target, initialize;
+            if (this.target instanceof ScriptInfo) {
+              var scriptInfo = target;
+              this.name = '$' + Shumway.StringUtilities.variableLengthEncodeInt32(scriptInfo.hash);
+              initialize = function () {
+                Shumway.AVM2.Runtime.ensureScriptIsExecuted(target, 'Lazy Initializer');
+                return scriptInfo.global;
+              };
+            } else if (this.target instanceof ClassInfo) {
+              var classInfo = target;
+              this.name = '$' + Shumway.StringUtilities.variableLengthEncodeInt32(classInfo.hash);
+              initialize = function () {
+                if (classInfo.classObject) {
+                  return classInfo.classObject;
+                }
+                return classInfo.abc.applicationDomain.getProperty(classInfo.instanceInfo.name);
+              };
+            } else {
+              Shumway.Debug.notImplemented(String(target));
+            }
+            var name = this.name;
+            Object.defineProperty(LazyInitializer._holder, name, {
+              get: function () {
+                var value = initialize();
+                Object.defineProperty(LazyInitializer._holder, name, {
+                  value: value,
+                  writable: true
+                });
+                return value;
+              },
+              configurable: true
+            });
+            return name;
+          };
+          LazyInitializer._holder = jsGlobal;
+          return LazyInitializer;
+        }();
+      Runtime.LazyInitializer = LazyInitializer;
+      function forEachPublicProperty(object, fn, self) {
+        if (!object.asBindings) {
+          for (var key in object) {
+            fn.call(self, key, object[key]);
+          }
+          return;
+        }
+        for (var key in object) {
+          if (Shumway.isNumeric(key)) {
+            fn.call(self, key, object[key]);
+          } else if (Multiname.isPublicQualifiedName(key) && object.asBindings.indexOf(key) < 0) {
+            var name = Multiname.stripPublicQualifier(key);
+            fn.call(self, name, object[key]);
+          }
+        }
+      }
+      Runtime.forEachPublicProperty = forEachPublicProperty;
+      function wrapJSObject(object) {
+        var wrapper = Object.create(object);
+        for (var i in object) {
+          Object.defineProperty(wrapper, Multiname.getPublicQualifiedName(i), function (object, i) {
+            return {
+              get: function () {
+                return object[i];
+              },
+              set: function (value) {
+                object[i] = value;
+              },
+              enumerable: true
+            };
+          }(object, i));
+        }
+        return wrapper;
+      }
+      Runtime.wrapJSObject = wrapJSObject;
+      function asCreateActivation(methodInfo) {
+        return Object.create(methodInfo.activationPrototype);
+      }
+      Runtime.asCreateActivation = asCreateActivation;
+      var GlobalMultinameResolver = function () {
+          function GlobalMultinameResolver() {
+          }
+          GlobalMultinameResolver.updateTraits = function (traits) {
+            for (var i = 0; i < traits.length; i++) {
+              var trait = traits[i];
+              var name = trait.name.name;
+              var namespace = trait.name.getNamespace();
+              if (!namespace.isDynamic()) {
+                GlobalMultinameResolver.hasNonDynamicNamespaces[name] = true;
+                if (GlobalMultinameResolver.wasResolved[name]) {
+                  Shumway.Debug.notImplemented('We have to the undo the optimization, ' + name + ' can now bind to ' + namespace);
+                }
+              }
+            }
+          };
+          GlobalMultinameResolver.loadAbc = function (abc) {
+            if (!Runtime.globalMultinameAnalysis.value) {
+              return;
+            }
+            var scripts = abc.scripts;
+            var classes = abc.classes;
+            var methods = abc.methods;
+            for (var i = 0; i < scripts.length; i++) {
+              GlobalMultinameResolver.updateTraits(scripts[i].traits);
+            }
+            for (var i = 0; i < classes.length; i++) {
+              GlobalMultinameResolver.updateTraits(classes[i].traits);
+              GlobalMultinameResolver.updateTraits(classes[i].instanceInfo.traits);
+            }
+            for (var i = 0; i < methods.length; i++) {
+              if (methods[i].traits) {
+                GlobalMultinameResolver.updateTraits(methods[i].traits);
+              }
+            }
+          };
+          GlobalMultinameResolver.resolveMultiname = function (multiname) {
+            var name = multiname.name;
+            if (GlobalMultinameResolver.hasNonDynamicNamespaces[name]) {
+              return;
+            }
+            GlobalMultinameResolver.wasResolved[name] = true;
+            return new Multiname([
+              Namespace.PUBLIC
+            ], multiname.name);
+          };
+          GlobalMultinameResolver.hasNonDynamicNamespaces = createEmptyObject();
+          GlobalMultinameResolver.wasResolved = createEmptyObject();
+          return GlobalMultinameResolver;
+        }();
+      Runtime.GlobalMultinameResolver = GlobalMultinameResolver;
+      var ActivationInfo = function () {
+          function ActivationInfo(methodInfo) {
+            this.methodInfo = methodInfo;
+          }
+          return ActivationInfo;
+        }();
+      Runtime.ActivationInfo = ActivationInfo;
+      function sliceArguments(args, offset) {
+        if (typeof offset === 'undefined') {
+          offset = 0;
+        }
+        return Array.prototype.slice.call(args, offset);
+      }
+      Runtime.sliceArguments = sliceArguments;
+      function canCompile(mi) {
+        if (!mi.hasBody) {
+          return false;
+        }
+        if (mi.hasExceptions() && !compilerEnableExceptions.value) {
+          return false;
+        } else if (mi.code.length > compilerMaximumMethodSize.value) {
+          return false;
+        }
+        return true;
+      }
+      Runtime.canCompile = canCompile;
+      function shouldCompile(mi) {
+        if (!canCompile(mi)) {
+          return false;
+        }
+        if (mi.isClassInitializer || mi.isScriptInitializer) {
+          return false;
+        }
+        return true;
+      }
+      Runtime.shouldCompile = shouldCompile;
+      function forceCompile(mi) {
+        if (mi.hasExceptions()) {
+          return false;
+        }
+        var holder = mi.holder;
+        if (holder instanceof ClassInfo) {
+          holder = holder.instanceInfo;
+        }
+        if (holder instanceof InstanceInfo) {
+          var packageName = holder.name.namespaces[0].uri;
+          switch (packageName) {
+          case 'flash.geom':
+          case 'flash.events':
+            return true;
+          default:
+            break;
+          }
+          var className = holder.name.getOriginalName();
+          switch (className) {
+          case 'com.google.youtube.model.VideoData':
+            return true;
+          }
+        }
+        return false;
+      }
+      Runtime.forceCompile = forceCompile;
+      Runtime.CODE_CACHE = createEmptyObject();
+      function searchCodeCache(methodInfo) {
+        if (!Runtime.codeCaching.value) {
+          return;
+        }
+        var cacheInfo = Runtime.CODE_CACHE[methodInfo.abc.hash];
+        if (!cacheInfo) {
+          warn('Cannot Find Code Cache For ABC, name: ' + methodInfo.abc.name + ', hash: ' + methodInfo.abc.hash);
+          Counter.count('Code Cache ABC Miss');
+          return;
+        }
+        if (!cacheInfo.isInitialized) {
+          methodInfo.abc.scripts.forEach(function (scriptInfo) {
+            LazyInitializer.create(scriptInfo).getName();
+          });
+          methodInfo.abc.classes.forEach(function (classInfo) {
+            LazyInitializer.create(classInfo).getName();
+          });
+          cacheInfo.isInitialized = true;
+        }
+        var method = cacheInfo.methods[methodInfo.index];
+        if (!method) {
+          if (methodInfo.isInstanceInitializer || methodInfo.isClassInitializer) {
+            Counter.count('Code Cache Query On Initializer');
+          } else {
+            Counter.count('Code Cache MISS ON OTHER');
+            warn('Shouldn\'t MISS: ' + methodInfo + ' ' + methodInfo.debugName);
+          }
+          Counter.count('Code Cache Miss');
+          return;
+        }
+        log('Linking CC: ' + methodInfo);
+        Counter.count('Code Cache Hit');
+        return method;
+      }
+      Runtime.searchCodeCache = searchCodeCache;
+      function createInterpretedFunction(methodInfo, scope, hasDynamicScope) {
+        var mi = methodInfo;
+        var hasDefaults = false;
+        var defaults = mi.parameters.map(function (p) {
+            if (p.value !== undefined) {
+              hasDefaults = true;
+            }
+            return p.value;
+          });
+        var fn;
+        if (hasDynamicScope) {
+          fn = function (scope) {
+            var global = this === jsGlobal ? scope.global.object : this;
+            var args = sliceArguments(arguments, 1);
+            if (hasDefaults && args.length < defaults.length) {
+              args = args.concat(defaults.slice(args.length - defaults.length));
+            }
+            return Shumway.AVM2.Interpreter.interpretMethod(global, methodInfo, scope, args);
+          };
+        } else {
+          fn = function () {
+            var global = this === jsGlobal ? scope.global.object : this;
+            var args = sliceArguments(arguments);
+            if (hasDefaults && args.length < defaults.length) {
+              args = args.concat(defaults.slice(arguments.length - defaults.length));
+            }
+            return Shumway.AVM2.Interpreter.interpretMethod(global, methodInfo, scope, args);
+          };
+        }
+        fn.instanceConstructor = fn;
+        fn.debugName = 'Interpreter Function #' + vmNextInterpreterFunctionId++;
+        return fn;
+      }
+      Runtime.createInterpretedFunction = createInterpretedFunction;
+      function debugName(value) {
+        if (Shumway.isFunction(value)) {
+          return value.debugName;
+        }
+        return value;
+      }
+      Runtime.debugName = debugName;
+      function createCompiledFunction(methodInfo, scope, hasDynamicScope, breakpoint, deferCompilation) {
+        var mi = methodInfo;
+        var cached = searchCodeCache(mi);
+        if (!cached) {
+          var result = Compiler.compileMethod(mi, scope, hasDynamicScope);
+          var parameters = result.parameters;
+          var body = result.body;
+        }
+        var fnName = mi.name ? Multiname.getQualifiedName(mi.name) : 'fn' + compiledFunctionCount;
+        if (mi.holder) {
+          var fnNamePrefix = '';
+          if (mi.holder instanceof ClassInfo) {
+            fnNamePrefix = 'static$' + mi.holder.instanceInfo.name.getName();
+          } else if (mi.holder instanceof InstanceInfo) {
+            fnNamePrefix = mi.holder.name.getName();
+          } else if (mi.holder instanceof ScriptInfo) {
+            fnNamePrefix = 'script';
+          }
+          fnName = fnNamePrefix + '$' + fnName;
+        }
+        fnName = Shumway.StringUtilities.escapeString(fnName);
+        if (mi.verified) {
+          fnName += '$V';
+        }
+        if (compiledFunctionCount == functionBreak.value || breakpoint) {
+          body = '{ debugger; \n' + body + '}';
+        }
+        if (!cached) {
+          var fnSource = 'function ' + fnName + ' (' + parameters.join(', ') + ') ' + body;
+        }
+        if (traceLevel.value > 1) {
+          mi.trace(new IndentingWriter(), mi.abc);
+        }
+        mi.debugTrace = function () {
+          mi.trace(new IndentingWriter(), mi.abc);
+        };
+        if (traceLevel.value > 0) {
+          log(fnSource);
+        }
+        var fn = cached || new Function('return ' + fnSource)();
+        fn.debugName = 'Compiled Function #' + vmNextCompiledFunctionId++;
+        return fn;
+      }
+      Runtime.createCompiledFunction = createCompiledFunction;
+      function createFunction(mi, scope, hasDynamicScope, breakpoint) {
+        if (typeof breakpoint === 'undefined') {
+          breakpoint = false;
+        }
+        true;
+        if (mi.freeMethod) {
+          if (hasDynamicScope) {
+            return Shumway.AVM2.Runtime.bindFreeMethodScope(mi, scope);
+          }
+          return mi.freeMethod;
+        }
+        var fn;
+        if (fn = Shumway.AVM2.Runtime.checkMethodOverrides(mi)) {
+          true;
+          return fn;
+        }
+        ensureFunctionIsInitialized(mi);
+        totalFunctionCount++;
+        var useInterpreter = false;
+        if ((mi.abc.applicationDomain.mode === 1 || !shouldCompile(mi)) && !forceCompile(mi)) {
+          useInterpreter = true;
+        }
+        if (compileOnly.value >= 0) {
+          if (Number(compileOnly.value) !== totalFunctionCount) {
+            log('Compile Only Skipping ' + totalFunctionCount);
+            useInterpreter = true;
+          }
+        }
+        if (compileUntil.value >= 0) {
+          if (totalFunctionCount > 1000) {
+            log(Shumway.Debug.backtrace());
+            log(Shumway.AVM2.Runtime.AVM2.getStackTrace());
+          }
+          if (totalFunctionCount > compileUntil.value) {
+            log('Compile Until Skipping ' + totalFunctionCount);
+            useInterpreter = true;
+          }
+        }
+        if (useInterpreter) {
+          mi.freeMethod = createInterpretedFunction(mi, scope, hasDynamicScope);
+        } else {
+          compiledFunctionCount++;
+          if (compileOnly.value >= 0 || compileUntil.value >= 0) {
+            log('Compiling ' + totalFunctionCount);
+          }
+          mi.freeMethod = createCompiledFunction(mi, scope, hasDynamicScope, breakpoint, mi.isInstanceInitializer);
+        }
+        mi.freeMethod.methodInfo = mi;
+        if (hasDynamicScope) {
+          return Shumway.AVM2.Runtime.bindFreeMethodScope(mi, scope);
+        }
+        return mi.freeMethod;
+      }
+      Runtime.createFunction = createFunction;
+      function ensureFunctionIsInitialized(methodInfo) {
+        var mi = methodInfo;
+        if (!mi.analysis) {
+          mi.analysis = new Analysis(mi);
+          if (mi.needsActivation()) {
+            mi.activationPrototype = new ActivationInfo(mi);
+            new Shumway.AVM2.Runtime.ActivationBindings(mi).applyTo(mi.abc.applicationDomain, mi.activationPrototype);
+          }
+          var exceptions = mi.exceptions;
+          for (var i = 0, j = exceptions.length; i < j; i++) {
+            var handler = exceptions[i];
+            if (handler.varName) {
+              var varTrait = Object.create(Trait.prototype);
+              varTrait.kind = 0;
+              varTrait.name = handler.varName;
+              varTrait.typeName = handler.typeName;
+              varTrait.holder = mi;
+              handler.scopeObject = new CatchScopeObject(mi.abc.applicationDomain, varTrait);
+            } else {
+              handler.scopeObject = new CatchScopeObject(undefined, undefined);
+            }
+          }
+        }
+      }
+      Runtime.ensureFunctionIsInitialized = ensureFunctionIsInitialized;
+      function getTraitFunction(trait, scope, natives) {
+        true;
+        true;
+        var mi = trait.methodInfo;
+        var fn;
+        if (mi.isNative()) {
+          var md = trait.metadata;
+          if (md && md.native) {
+            var nativeName = md.native.value[0].value;
+            var makeNativeFunction = getNative(nativeName);
+            fn = makeNativeFunction && makeNativeFunction(null, scope);
+          } else if (md && md.unsafeJSNative) {
+            fn = getNative(md.unsafeJSNative.value[0].value);
+          } else if (natives) {
+            var k = Multiname.getName(mi.name);
+            if (trait.isGetter()) {
+              fn = natives[k] ? natives[k].get : undefined;
+            } else if (trait.isSetter()) {
+              fn = natives[k] ? natives[k].set : undefined;
+            } else {
+              fn = natives[k];
+            }
+          }
+          if (!fn) {
+            Shumway.Debug.warning('No native method for: ' + trait.kindName() + ' ' + mi.holder.name + '::' + Multiname.getQualifiedName(mi.name));
+            return function (mi) {
+              return function () {
+                Shumway.Debug.warning('Calling undefined native method: ' + trait.kindName() + ' ' + mi.holder.name + '::' + Multiname.getQualifiedName(mi.name));
+              };
+            }(mi);
+          }
+        } else {
+          if (Runtime.traceExecution.value >= 2) {
+            log('Creating Function For Trait: ' + trait.holder + ' ' + trait);
+          }
+          fn = createFunction(mi, scope, false, false);
+          true;
+        }
+        if (Runtime.traceExecution.value >= 3) {
+          log('Made Function: ' + Multiname.getQualifiedName(mi.name));
+        }
+        return fn;
+      }
+      Runtime.getTraitFunction = getTraitFunction;
+      function createClass(classInfo, baseClass, scope) {
+        true;
+        var ci = classInfo;
+        var ii = ci.instanceInfo;
+        var domain = ci.abc.applicationDomain;
+        var className = Multiname.getName(ii.name);
+        if (Runtime.traceExecution.value) {
+          log('Creating ' + (ii.isInterface() ? 'Interface' : 'Class') + ': ' + className + (ci.native ? ' replaced with native ' + ci.native.cls : ''));
+        }
+        var cls;
+        if (ii.isInterface()) {
+          cls = Shumway.AVM2.Runtime.Interface.createInterface(classInfo);
+        } else {
+          cls = Shumway.AVM2.Runtime.Class.createClass(classInfo, baseClass, scope);
+        }
+        if (Runtime.traceClasses.value) {
+          domain.loadedClasses.push(cls);
+          domain.traceLoadedClasses(true);
+        }
+        if (ii.isInterface()) {
+          return cls;
+        }
+        domain.onMessage.notify1('classCreated', cls);
+        if (cls.instanceConstructor && cls !== Shumway.AVM2.Runtime.Class) {
+          cls.verify();
+        }
+        if (baseClass && (Multiname.getQualifiedName(baseClass.classInfo.instanceInfo.name.name) === 'Proxy' || baseClass.isProxy)) {
+          installProxyClassWrapper(cls);
+          cls.isProxy = true;
+        }
+        classInfo.classObject = cls;
+        createFunction(classInfo.init, scope, false, false).call(cls);
+        if (Runtime.sealConstTraits) {
+          this.sealConstantTraits(cls, ci.traits);
+        }
+        return cls;
+      }
+      Runtime.createClass = createClass;
+      function sealConstantTraits(object, traits) {
+        for (var i = 0, j = traits.length; i < j; i++) {
+          var trait = traits[i];
+          if (trait.isConst()) {
+            var qn = Multiname.getQualifiedName(trait.name);
+            var value = object[qn];
+            (function (qn, value) {
+              Object.defineProperty(object, qn, {
+                configurable: false,
+                enumerable: false,
+                get: function () {
+                  return value;
+                },
+                set: function () {
+                  throwErrorFromVM(Shumway.AVM2.Runtime.AVM2.currentDomain(), 'ReferenceError', 'Illegal write to read-only property ' + qn + '.', 0);
+                }
+              });
+            }(qn, value));
+          }
+        }
+      }
+      Runtime.sealConstantTraits = sealConstantTraits;
+      function applyType(domain, factory, types) {
+        var factoryClassName = factory.classInfo.instanceInfo.name.name;
+        if (factoryClassName === 'Vector') {
+          true;
+          var type = types[0];
+          var typeClassName;
+          if (!Shumway.isNullOrUndefined(type)) {
+            typeClassName = type.classInfo.instanceInfo.name.name.toLowerCase();
+            switch (typeClassName) {
+            case 'int':
+            case 'uint':
+            case 'double':
+            case 'object':
+              return domain.getClass('packageInternal __AS3__.vec.Vector$' + typeClassName);
+            }
+          }
+          return domain.getClass('packageInternal __AS3__.vec.Vector$object').applyType(type);
+        } else {
+          return Shumway.Debug.notImplemented(factoryClassName);
+        }
+      }
+      Runtime.applyType = applyType;
+    }(AVM2.Runtime || (AVM2.Runtime = {})));
+    var Runtime = AVM2.Runtime;
+  }(Shumway.AVM2 || (Shumway.AVM2 = {})));
+  var AVM2 = Shumway.AVM2;
+}(Shumway || (Shumway = {})));
+var CC = Shumway.AVM2.Runtime.CODE_CACHE;
+var VM_LENGTH = Shumway.AVM2.Runtime.VM_LENGTH;
+var VM_IS_PROXY = Shumway.AVM2.Runtime.VM_IS_PROXY;
+var VM_CALL_PROXY = Shumway.AVM2.Runtime.VM_CALL_PROXY;
+var VM_NATIVE_BUILTIN_ORIGINALS = Shumway.AVM2.Runtime.VM_NATIVE_BUILTIN_ORIGINALS;
+var VM_OPEN_METHOD_PREFIX = 'm';
+var VM_OPEN_SET_METHOD_PREFIX = 's';
+var VM_OPEN_GET_METHOD_PREFIX = 'g';
 var SAVED_SCOPE_NAME = '$SS';
-var PARAMETER_PREFIX = 'p';
-var $M = [];
+var originalStringReplace = String.prototype.replace;
 XRegExp.install({
   natives: true
 });
-var VM_METHOD_OVERRIDES = createEmptyObject();
-var vmNextShapeId = 1;
-function defineObjectShape(object) {
-  defineReadOnlyProperty(object, 'shape', vmNextShapeId++);
-}
-var vmNextInterpreterFunctionId = 1;
-var vmNextCompiledFunctionId = 1;
-var vmNextTrampolineId = 1;
-var vmNextMemoizerId = 1;
-var InlineCache = function () {
-    function inlineCache() {
-      this.key = undefined;
-      this.value = undefined;
-    }
-    inlineCache.prototype.update = function (key, value) {
-      this.key = key;
-      this.value = value;
-      return value;
-    };
-    return inlineCache;
-  }();
-function ic(object) {
-  return object.ic || (object.ic = new InlineCache());
-}
-var AS = 1, JS = 2;
-var RUNTIME_ENTER_LEAVE_STACK = [
-    AS
-  ];
-function enter(mode) {
-  RUNTIME_ENTER_LEAVE_STACK.push(mode);
-}
-function leave(mode) {
-  var top = RUNTIME_ENTER_LEAVE_STACK.pop();
-  true;
-}
-function inJS() {
-  return RUNTIME_ENTER_LEAVE_STACK.top() === JS;
-}
-function inAS() {
-  return RUNTIME_ENTER_LEAVE_STACK.top() === AS;
-}
 var callWriter = new IndentingWriter(false, function (str) {
     print(str);
   });
@@ -26229,1412 +29400,129 @@ function objectConstantName(object) {
   jsGlobal[name] = object;
   return name;
 }
-var LazyInitializer = function () {
-    var holder = jsGlobal;
-    lazyInitializer.create = function (target) {
-      if (target.lazyInitializer) {
-        return target.lazyInitializer;
-      }
-      return target.lazyInitializer = new LazyInitializer(target);
-    };
-    function lazyInitializer(target) {
-      this.target = target;
-    }
-    lazyInitializer.prototype.getName = function getName() {
-      if (this.name) {
-        return this.name;
-      }
-      var target = this.target, initialize;
-      if (this.target instanceof ScriptInfo) {
-        this.name = '$S' + objectIDs++;
-        initialize = function () {
-          ensureScriptIsExecuted(target, 'Lazy Initializer');
-          return target.global;
-        };
-      } else if (this.target instanceof ClassInfo) {
-        this.name = Multiname.getQualifiedName(target.instanceInfo.name);
-        initialize = function () {
-          return target.abc.applicationDomain.getProperty(target.instanceInfo.name);
-        };
-      } else {
-        notImplemented(target);
-      }
-      var name = this.name;
-      Object.defineProperty(holder, name, {
-        get: function () {
-          var value = initialize();
-          Object.defineProperty(holder, name, {
-            value: value,
-            writable: true
-          });
-          return value;
-        },
-        configurable: true
-      });
-      return name;
-    };
-    return lazyInitializer;
-  }();
-function getNamespaceResolutionMap(namespaces) {
-  var map = this.resolutionMap[namespaces.id];
-  if (map)
-    return map;
-  map = this.resolutionMap[namespaces.id] = createEmptyObject();
-  var bindings = this.bindings;
-  for (var key in bindings.map) {
-    var multiname = key;
-    var trait = bindings.map[key].trait;
-    if (trait.isGetter() || trait.isSetter()) {
-      multiname = multiname.substring(Binding.KEY_PREFIX_LENGTH);
-    }
-    var k = multiname;
-    multiname = Multiname.fromQualifiedName(multiname);
-    if (multiname.getNamespace().inNamespaceSet(namespaces)) {
-      map[multiname.getName()] = Multiname.getQualifiedName(trait.name);
-    }
-  }
-  return map;
-}
-function resolveMultinameProperty(namespaces, name, flags) {
-  if (typeof name === 'object') {
-    name = String(name);
-  }
-  if (isNumeric(name)) {
-    return toNumber(name);
-  }
-  if (!namespaces) {
-    return Multiname.getPublicQualifiedName(name);
-  }
-  if (namespaces.length > 1) {
-    var resolved = this.getNamespaceResolutionMap(namespaces)[name];
-    if (resolved)
-      return resolved;
-    return Multiname.getPublicQualifiedName(name);
-  } else {
-    return namespaces[0].qualifiedName + '$' + name;
-  }
-}
-function asGetPublicProperty(name) {
-  return this.asGetProperty(undefined, name, 0);
-}
-function asGetProperty(namespaces, name, flags) {
-  var resolved = this.resolveMultinameProperty(namespaces, name, flags);
-  if (this.asGetNumericProperty && Multiname.isNumeric(resolved)) {
-    return this.asGetNumericProperty(resolved);
-  }
-  return this[resolved];
-}
-function asGetPropertyLikelyNumeric(namespaces, name, flags) {
-  if (typeof name === 'number') {
-    return this.asGetNumericProperty(name);
-  }
-  return asGetProperty.call(this, namespaces, name, flags);
-}
-function asGetResolvedStringProperty(resolved) {
-  true;
-  return this[resolved];
-}
-function asCallResolvedStringProperty(resolved, isLex, args) {
-  var receiver = isLex ? null : this;
-  var openMethods = this[VM_OPEN_METHODS];
-  var method;
-  if (receiver && openMethods && openMethods[resolved]) {
-    method = openMethods[resolved];
-  } else {
-    method = this[resolved];
-  }
-  return method.apply(receiver, args);
-}
-function fromResolvedName(resolved) {
-  true;
-  return resolved.substring(Multiname.PUBLIC_QUALIFIED_NAME_PREFIX.length);
-}
-function asGetResolvedStringPropertyFallback(resolved) {
-  var name = fromResolvedName(resolved);
-  return this.asGetProperty([
-    ShumwayNamespace.PUBLIC
-  ], name, 0);
-}
-function asSetPublicProperty(name, value) {
-  return this.asSetProperty(undefined, name, 0, value);
-}
-function asSetProperty(namespaces, name, flags, value) {
-  if (typeof name === 'object') {
-    name = String(name);
-  }
-  var resolved = this.resolveMultinameProperty(namespaces, name, flags);
-  if (this.asSetNumericProperty && Multiname.isNumeric(resolved)) {
-    return this.asSetNumericProperty(resolved, value);
-  }
-  var slotInfo = this[VM_SLOTS].byQN[resolved];
-  if (slotInfo) {
-    if (slotInfo.const) {
-      return;
-    }
-    var type = slotInfo.type;
-    if (type && type.coerce) {
-      value = type.coerce(value);
-    }
-  }
-  this[resolved] = value;
-}
-function asSetPropertyLikelyNumeric(namespaces, name, flags, value) {
-  if (typeof name === 'number') {
-    this.asSetNumericProperty(name, value);
-    return;
-  }
-  return asSetProperty.call(this, namespaces, name, flags, value);
-}
-function asDefinePublicProperty(name, descriptor) {
-  return this.asDefineProperty(undefined, name, 0, descriptor);
-}
-function asDefineProperty(namespaces, name, flags, descriptor) {
-  if (typeof name === 'object') {
-    name = String(name);
-  }
-  var resolved = this.resolveMultinameProperty(namespaces, name, flags);
-  Object.defineProperty(this, resolved, descriptor);
-}
-function asCallPublicProperty(name, args) {
-  return this.asCallProperty(undefined, name, 0, false, args);
-}
-var callCounter = new metrics.Counter(true);
-function asCallProperty(namespaces, name, flags, isLex, args) {
-  if (traceCallExecution.value) {
-    var receiver = this.class ? this.class.className + ' ' : '';
-    callWriter.enter('call ' + receiver + name + '(' + toSafeArrayString(args) + ') #' + callCounter.count(name));
-  }
-  var receiver = isLex ? null : this;
-  var result;
-  if (isProxyObject(this)) {
-    result = this[VM_CALL_PROXY](new Multiname(namespaces, name, flags), receiver, args);
-  } else {
-    var method;
-    var resolved = this.resolveMultinameProperty(namespaces, name, flags);
-    if (this.asGetNumericProperty && Multiname.isNumeric(resolved)) {
-      method = this.asGetNumericProperty(resolved);
-    } else {
-      var openMethods = this[VM_OPEN_METHODS];
-      if (receiver && openMethods && openMethods[resolved]) {
-        method = openMethods[resolved];
-      } else {
-        method = this[resolved];
-      }
-    }
-    result = method.apply(receiver, args);
-  }
-  traceCallExecution.value > 0 && callWriter.leave('return ' + toSafeString(result));
-  return result;
-}
-function asCallSuper(scope, namespaces, name, flags, args) {
-  if (traceCallExecution.value) {
-    var receiver = this.class ? this.class.className + ' ' : '';
-    callWriter.enter('call super ' + receiver + name + '(' + toSafeArrayString(args) + ') #' + callCounter.count(name));
-  }
-  var baseClass = scope.object.baseClass;
-  var resolved = baseClass.traitsPrototype.resolveMultinameProperty(namespaces, name, flags);
-  var openMethods = baseClass.traitsPrototype[VM_OPEN_METHODS];
-  var method = openMethods[resolved];
-  var result = method.apply(this, args);
-  traceCallExecution.value > 0 && callWriter.leave('return ' + toSafeString(result));
-  return result;
-}
-function asSetSuper(scope, namespaces, name, flags, value) {
-  if (traceCallExecution.value) {
-    var receiver = this.class ? this.class.className + ' ' : '';
-    callWriter.enter('set super ' + receiver + name + '(' + toSafeString(value) + ') #' + callCounter.count(name));
-  }
-  var baseClass = scope.object.baseClass;
-  var resolved = baseClass.traitsPrototype.resolveMultinameProperty(namespaces, name, flags);
-  if (this[VM_SLOTS].byQN[resolved]) {
-    this.asSetProperty(namespaces, name, flags, value);
-  } else {
-    baseClass.traitsPrototype[VM_OPEN_SET_METHOD_PREFIX + resolved].call(this, value);
-  }
-  traceCallExecution.value > 0 && callWriter.leave('');
-}
-function asGetSuper(scope, namespaces, name, flags) {
-  if (traceCallExecution.value) {
-    var receiver = this.class ? this.class.className + ' ' : '';
-    callWriter.enter('get super ' + receiver + name + ' #' + callCounter.count(name));
-  }
-  var baseClass = scope.object.baseClass;
-  var resolved = baseClass.traitsPrototype.resolveMultinameProperty(namespaces, name, flags);
-  var result;
-  if (this[VM_SLOTS].byQN[resolved]) {
-    result = this.asGetProperty(namespaces, name, flags);
-  } else {
-    result = baseClass.traitsPrototype[VM_OPEN_GET_METHOD_PREFIX + resolved].call(this);
-  }
-  traceCallExecution.value > 0 && callWriter.leave('return ' + toSafeString(result));
-  return result;
-}
-function construct(constructor, args) {
-  if (constructor.classInfo) {
-    var qn = constructor.classInfo.instanceInfo.name.qualifiedName;
-    if (qn === Multiname.String) {
-      return String.apply(null, args);
-    }
-    if (qn === Multiname.Boolean) {
-      return Boolean.apply(null, args);
-    }
-    if (qn === Multiname.Number) {
-      return Number.apply(null, args);
-    }
-  }
-  return new (Function.bind.apply(constructor.instanceConstructor, [
-    ,
-  ].concat(args)))();
-}
-function asConstructProperty(namespaces, name, flags, args) {
-  var constructor = this.asGetProperty(namespaces, name, flags);
-  if (traceCallExecution.value) {
-    callWriter.enter('construct ' + name + '(' + toSafeArrayString(args) + ') #' + callCounter.count(name));
-  }
-  var result = construct(constructor, args);
-  traceCallExecution.value > 0 && callWriter.leave('return ' + toSafeString(result));
-  return result;
-}
-function asHasProperty(namespaces, name, flags, nonProxy) {
-  if (this.hasProperty) {
-    return this.hasProperty(namespaces, name, flags);
-  }
-  if (nonProxy) {
-    return nonProxyingHasProperty(this, this.resolveMultinameProperty(namespaces, name, flags));
-  } else {
-    return this.resolveMultinameProperty(namespaces, name, flags) in this;
-  }
-}
-function asDeleteProperty(namespaces, name, flags) {
-  var resolved = this.resolveMultinameProperty(namespaces, name, flags);
-  return delete this[resolved];
-}
-function asGetNumericProperty(i) {
-  return this[i];
-}
-function asSetNumericProperty(i, v) {
-  this[i] = v;
-}
-function asGetDescendants(namespaces, name, flags) {
-  notImplemented('asGetDescendants');
-}
-function asNextNameIndex(index) {
-  if (index === 0) {
-    defineNonEnumerableProperty(this, 'enumerableKeys', this.asGetEnumerableKeys());
-  }
-  var enumerableKeys = this.enumerableKeys;
-  while (index < enumerableKeys.length) {
-    if (this.asHasProperty(undefined, enumerableKeys[index], 0)) {
-      return index + 1;
-    }
-    index++;
-  }
-  return 0;
-}
-function asNextName(index) {
-  var enumerableKeys = this.enumerableKeys;
-  true;
-  return enumerableKeys[index - 1];
-}
-function asNextValue(index) {
-  return this.asGetPublicProperty(this.asNextName(index));
-}
-function asGetEnumerableKeys() {
-  var boxedValue = this.valueOf();
-  if (typeof boxedValue === 'string' || typeof boxedValue === 'number') {
-    return [];
-  }
-  var keys = Object.keys(this);
-  var result = [];
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    if (isNumeric(key)) {
-      result.push(key);
-    } else {
-      var name = Multiname.stripPublicQualifier(key);
-      if (name !== undefined) {
-        result.push(name);
-      }
-    }
-  }
-  return result;
-}
-function initializeGlobalObject(global) {
-  var originals = global[VM_NATIVE_BUILTIN_ORIGINALS] = createEmptyObject();
-  VM_NATIVE_BUILTIN_SURROGATES.forEach(function (surrogate) {
-    var object = surrogate.object;
-    originals[object.name] = createEmptyObject();
-    surrogate.methods.forEach(function (originalFunctionName) {
-      var originalFunction = object.prototype[originalFunctionName];
-      originals[object.name][originalFunctionName] = originalFunction;
-      var overrideFunctionName = Multiname.getPublicQualifiedName(originalFunctionName);
-      if (useSurrogates) {
-        global[object.name].prototype[originalFunctionName] = function surrogate() {
-          if (this[overrideFunctionName]) {
-            return this[overrideFunctionName]();
-          }
-          return originalFunction.call(this);
-        };
-      }
-    });
-  });
-  [
-    'Object',
-    'Number',
-    'Boolean',
-    'String',
-    'Array',
-    'Date',
-    'RegExp'
-  ].forEach(function (name) {
-    defineReadOnlyProperty(global[name].prototype, VM_NATIVE_PROTOTYPE_FLAG, true);
-  });
-  defineNonEnumerableProperty(global.Object.prototype, 'getNamespaceResolutionMap', getNamespaceResolutionMap);
-  defineNonEnumerableProperty(global.Object.prototype, 'resolveMultinameProperty', resolveMultinameProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asGetProperty', asGetProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asGetPublicProperty', asGetPublicProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asGetResolvedStringProperty', asGetResolvedStringProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asSetProperty', asSetProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asSetPublicProperty', asSetPublicProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asDefineProperty', asDefineProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asDefinePublicProperty', asDefinePublicProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asCallProperty', asCallProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asCallSuper', asCallSuper);
-  defineNonEnumerableProperty(global.Object.prototype, 'asGetSuper', asGetSuper);
-  defineNonEnumerableProperty(global.Object.prototype, 'asSetSuper', asSetSuper);
-  defineNonEnumerableProperty(global.Object.prototype, 'asCallPublicProperty', asCallPublicProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asCallResolvedStringProperty', asCallResolvedStringProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asConstructProperty', asConstructProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asHasProperty', asHasProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asDeleteProperty', asDeleteProperty);
-  defineNonEnumerableProperty(global.Object.prototype, 'asNextName', asNextName);
-  defineNonEnumerableProperty(global.Object.prototype, 'asNextValue', asNextValue);
-  defineNonEnumerableProperty(global.Object.prototype, 'asNextNameIndex', asNextNameIndex);
-  defineNonEnumerableProperty(global.Object.prototype, 'asGetEnumerableKeys', asGetEnumerableKeys);
-  [
-    'Array',
-    'Int8Array',
-    'Uint8Array',
-    'Uint8ClampedArray',
-    'Int16Array',
-    'Uint16Array',
-    'Int32Array',
-    'Uint32Array',
-    'Float32Array',
-    'Float64Array'
-  ].forEach(function (name) {
-    if (!(name in global)) {
-      print(name + ' was not found in globals');
-      return;
-    }
-    defineNonEnumerableProperty(global[name].prototype, 'asGetNumericProperty', asGetNumericProperty);
-    defineNonEnumerableProperty(global[name].prototype, 'asSetNumericProperty', asSetNumericProperty);
-    defineNonEnumerableProperty(global[name].prototype, 'asGetProperty', asGetPropertyLikelyNumeric);
-    defineNonEnumerableProperty(global[name].prototype, 'asSetProperty', asSetPropertyLikelyNumeric);
-  });
-  global.Array.prototype.asGetProperty = function (namespaces, name, flags) {
-    if (typeof name === 'number') {
-      return this[name];
-    }
-    return asGetProperty.call(this, namespaces, name, flags);
-  };
-  global.Array.prototype.asSetProperty = function (namespaces, name, flags, value) {
-    if (typeof name === 'number') {
-      this[name] = value;
-      return;
-    }
-    return asSetProperty.call(this, namespaces, name, flags, value);
-  };
-}
+var isClass = Shumway.AVM2.Runtime.isClass;
+var isTrampoline = Shumway.AVM2.Runtime.isTrampoline;
+var isMemoizer = Shumway.AVM2.Runtime.isMemoizer;
+var LazyInitializer = Shumway.AVM2.Runtime.LazyInitializer;
+var getNamespaceResolutionMap = Shumway.AVM2.Runtime.getNamespaceResolutionMap;
+var resolveMultinameProperty = Shumway.AVM2.Runtime.resolveMultinameProperty;
+var asGetPublicProperty = Shumway.AVM2.Runtime.asGetPublicProperty;
+var asGetProperty = Shumway.AVM2.Runtime.asGetProperty;
+var asGetPropertyLikelyNumeric = Shumway.AVM2.Runtime.asGetPropertyLikelyNumeric;
+var asGetResolvedStringProperty = Shumway.AVM2.Runtime.asGetResolvedStringProperty;
+var asCallResolvedStringProperty = Shumway.AVM2.Runtime.asCallResolvedStringProperty;
+var asGetResolvedStringPropertyFallback = Shumway.AVM2.Runtime.asGetResolvedStringPropertyFallback;
+var asSetPublicProperty = Shumway.AVM2.Runtime.asSetPublicProperty;
+var asSetProperty = Shumway.AVM2.Runtime.asSetProperty;
+var asSetPropertyLikelyNumeric = Shumway.AVM2.Runtime.asSetPropertyLikelyNumeric;
+var asDefinePublicProperty = Shumway.AVM2.Runtime.asDefinePublicProperty;
+var asDefineProperty = Shumway.AVM2.Runtime.asDefineProperty;
+var asCallPublicProperty = Shumway.AVM2.Runtime.asCallPublicProperty;
+var asCallProperty = Shumway.AVM2.Runtime.asCallProperty;
+var asCallSuper = Shumway.AVM2.Runtime.asCallSuper;
+var asSetSuper = Shumway.AVM2.Runtime.asSetSuper;
+var asGetSuper = Shumway.AVM2.Runtime.asGetSuper;
+var construct = Shumway.AVM2.Runtime.construct;
+var asConstructProperty = Shumway.AVM2.Runtime.asConstructProperty;
+var asHasProperty = Shumway.AVM2.Runtime.asHasProperty;
+var asDeleteProperty = Shumway.AVM2.Runtime.asDeleteProperty;
+var asGetNumericProperty = Shumway.AVM2.Runtime.asGetNumericProperty;
+var asSetNumericProperty = Shumway.AVM2.Runtime.asSetNumericProperty;
+var asGetDescendants = Shumway.AVM2.Runtime.asGetDescendants;
+var asNextNameIndex = Shumway.AVM2.Runtime.asNextNameIndex;
+var asNextName = Shumway.AVM2.Runtime.asNextName;
+var asNextValue = Shumway.AVM2.Runtime.asNextValue;
+var asGetEnumerableKeys = Shumway.AVM2.Runtime.asGetEnumerableKeys;
+var initializeGlobalObject = Shumway.AVM2.Runtime.initializeGlobalObject;
 initializeGlobalObject(jsGlobal);
-function isNativePrototype(object) {
-  return Object.prototype.hasOwnProperty.call(object, VM_NATIVE_PROTOTYPE_FLAG);
-}
-function asTypeOf(x) {
-  if (x) {
-    if (x.constructor === String) {
-      return 'string';
-    } else if (x.constructor === Number) {
-      return 'number';
-    } else if (x.constructor === Boolean) {
-      return 'boolean';
-    } else if (x instanceof XML || x instanceof XMLList) {
-      return 'xml';
-    }
-  }
-  return typeof x;
-}
-function publicizeProperties(object) {
-  var keys = Object.keys(object);
-  for (var i = 0; i < keys.length; i++) {
-    var k = keys[i];
-    if (!Multiname.isPublicQualifiedName(k)) {
-      var v = object[k];
-      object[Multiname.getPublicQualifiedName(k)] = v;
-      delete object[k];
-    }
-  }
-}
-function asGetSlot(object, index) {
-  return object[object[VM_SLOTS].byID[index].name];
-}
-function asSetSlot(object, index, value) {
-  var slotInfo = object[VM_SLOTS].byID[index];
-  if (slotInfo.const) {
-    return;
-  }
-  var name = slotInfo.name;
-  var type = slotInfo.type;
-  if (type && type.coerce) {
-    object[name] = type.coerce(value);
-  } else {
-    object[name] = value;
-  }
-}
-function asHasNext2(object, index) {
-  if (isNullOrUndefined(object)) {
-    return {
-      index: 0,
-      object: null
-    };
-  }
-  object = boxValue(object);
-  var nextIndex = object.asNextNameIndex(index);
-  if (nextIndex > 0) {
-    return {
-      index: nextIndex,
-      object: object
-    };
-  }
-  while (true) {
-    var object = Object.getPrototypeOf(object);
-    if (!object) {
-      return {
-        index: 0,
-        object: null
-      };
-    }
-    nextIndex = object.asNextNameIndex(0);
-    if (nextIndex > 0) {
-      return {
-        index: nextIndex,
-        object: object
-      };
-    }
-  }
-  return {
-    index: 0,
-    object: null
-  };
-}
-function getDescendants(object, mn) {
-  if (!isXMLType(object)) {
-    throw 'Not XML object in getDescendants';
-  }
-  return object.descendants(mn);
-}
-function checkFilter(value) {
-  if (!value.class || !isXMLType(value)) {
-    throw 'TypeError operand of childFilter not of XML type';
-  }
-  return value;
-}
-function Activation(methodInfo) {
-  this.methodInfo = methodInfo;
-}
-var ScopeStack = function () {
-    function scopeStack(parent) {
-      this.parent = parent;
-      this.stack = [];
-      this.isWith = [];
-    }
-    scopeStack.prototype.push = function push(object, isWith) {
-      this.stack.push(object);
-      this.isWith.push(!(!isWith));
-    };
-    scopeStack.prototype.get = function get(index) {
-      return this.stack[index];
-    };
-    scopeStack.prototype.clear = function clear() {
-      this.stack.length = 0;
-      this.isWith.length = 0;
-    };
-    scopeStack.prototype.pop = function pop() {
-      this.isWith.pop();
-      this.stack.pop();
-    };
-    scopeStack.prototype.topScope = function topScope() {
-      if (!this.scopes) {
-        this.scopes = [];
-      }
-      var parent = this.parent;
-      for (var i = 0; i < this.stack.length; i++) {
-        var object = this.stack[i], isWith = this.isWith[i], scope = this.scopes[i];
-        if (!scope || scope.parent !== parent || scope.object !== object || scope.isWith !== isWith) {
-          scope = this.scopes[i] = new Scope(parent, object, isWith);
-        }
-        parent = scope;
-      }
-      return parent;
-    };
-    return scopeStack;
-  }();
-var Scope = function () {
-    function scope(parent, object, isWith) {
-      this.parent = parent;
-      this.object = boxValue(object);
-      true;
-      this.global = parent ? parent.global : this;
-      this.isWith = isWith;
-      this.cache = createEmptyObject();
-    }
-    scope.prototype.findDepth = function findDepth(object) {
-      var current = this;
-      var depth = 0;
-      while (current) {
-        if (current.object === object) {
-          return depth;
-        }
-        depth++;
-        current = current.parent;
-      }
-      return -1;
-    };
-    function makeCacheKey(namespaces, name, flags) {
-      if (!namespaces) {
-        return name;
-      } else if (namespaces.length > 1) {
-        return namespaces.id + '$' + name;
-      } else {
-        return namespaces[0].qualifiedName + '$' + name;
-      }
-    }
-    scope.prototype.findScopeProperty = function findScopeProperty(namespaces, name, flags, domain, strict, scopeOnly) {
-      var object;
-      var key = makeCacheKey(namespaces, name, flags);
-      if (!scopeOnly && (object = this.cache[key])) {
-        return object;
-      }
-      if (this.object.asHasProperty(namespaces, name, flags, true)) {
-        return this.isWith ? this.object : this.cache[key] = this.object;
-      }
-      if (this.parent) {
-        return this.cache[key] = this.parent.findScopeProperty(namespaces, name, flags, domain, strict, scopeOnly);
-      }
-      if (scopeOnly)
-        return null;
-      if (object = domain.findDomainProperty(new Multiname(namespaces, name, flags), strict, true)) {
-        return object;
-      }
-      if (strict) {
-        unexpected('Cannot find property ' + name);
-      }
-      return this.global.object;
-    };
-    scope.prototype.trace = function () {
-      var current = this;
-      while (current) {
-        print(current.object + (current.object ? ' - ' + current.object.debugName : ''));
-        current = current.parent;
-      }
-    };
-    return scope;
-  }();
-function bindFreeMethodScope(methodInfo, scope) {
-  var fn = methodInfo.freeMethod;
-  if (methodInfo.lastBoundMethod && methodInfo.lastBoundMethod.scope === scope) {
-    return methodInfo.lastBoundMethod.boundMethod;
-  }
-  true;
-  var boundMethod;
-  var asGlobal = scope.global.object;
-  if (!methodInfo.hasOptional() && !methodInfo.needsArguments() && !methodInfo.needsRest()) {
-    switch (methodInfo.parameters.length) {
-    case 0:
-      boundMethod = function () {
-        return fn.call(this === jsGlobal ? asGlobal : this, scope);
-      };
-      break;
-    case 1:
-      boundMethod = function (x) {
-        return fn.call(this === jsGlobal ? asGlobal : this, scope, x);
-      };
-      break;
-    case 2:
-      boundMethod = function (x, y) {
-        return fn.call(this === jsGlobal ? asGlobal : this, scope, x, y);
-      };
-      break;
-    case 3:
-      boundMethod = function (x, y, z) {
-        return fn.call(this === jsGlobal ? asGlobal : this, scope, x, y, z);
-      };
-      break;
-    default:
-      break;
-    }
-  }
-  if (!boundMethod) {
-    Counter.count('Bind Scope - Slow Path');
-    boundMethod = function () {
-      Array.prototype.unshift.call(arguments, scope);
-      var global = this === jsGlobal ? scope.global.object : this;
-      return fn.apply(global, arguments);
-    };
-  }
-  boundMethod.methodInfo = methodInfo;
-  boundMethod.instanceConstructor = boundMethod;
-  methodInfo.lastBoundMethod = {
-    scope: scope,
-    boundMethod: boundMethod
-  };
-  return boundMethod;
-}
-function nameInTraits(object, qn) {
-  if (object.hasOwnProperty(VM_BINDINGS) && object.hasOwnProperty(qn)) {
-    return true;
-  }
-  var proto = Object.getPrototypeOf(object);
-  return proto.hasOwnProperty(VM_BINDINGS) && proto.hasOwnProperty(qn);
-}
-function resolveMultinameUnguarded(object, mn, traitsOnly) {
-  true;
-  true;
-  object = boxValue(object);
-  var publicQn;
-  var isNative = isNativePrototype(object);
-  for (var i = 0, j = mn.namespaces.length; i < j; i++) {
-    var qn = mn.getQName(i);
-    if (traitsOnly) {
-      if (nameInTraits(object, Multiname.getQualifiedName(qn))) {
-        return qn;
-      }
-      continue;
-    }
-    if (mn.namespaces[i].isDynamic()) {
-      publicQn = qn;
-      if (isNative) {
-        break;
-      }
-    } else if (!isNative) {
-      if (Multiname.getQualifiedName(qn) in object) {
-        return qn;
-      }
-    }
-  }
-  if (publicQn && !traitsOnly && Multiname.getQualifiedName(publicQn) in object) {
-    return publicQn;
-  }
-  return undefined;
-}
+var asTypeOf = Shumway.AVM2.Runtime.asTypeOf;
+var publicizeProperties = Shumway.AVM2.Runtime.publicizeProperties;
+var asGetSlot = Shumway.AVM2.Runtime.asGetSlot;
+var asSetSlot = Shumway.AVM2.Runtime.asSetSlot;
+var asHasNext2 = Shumway.AVM2.Runtime.asHasNext2;
+var getDescendants = Shumway.AVM2.Runtime.getDescendants;
+var checkFilter = Shumway.AVM2.Runtime.checkFilter;
+var ActivationInfo = Shumway.AVM2.Runtime.ActivationInfo;
+var ScopeStack = Shumway.AVM2.Runtime.ScopeStack;
+var Scope = Shumway.AVM2.Runtime.Scope;
+var bindFreeMethodScope = Shumway.AVM2.Runtime.bindFreeMethodScope;
+var nameInTraits = Shumway.AVM2.Runtime.nameInTraits;
 function resolveMultiname(object, mn, traitsOnly) {
-  enter(JS);
-  var result = resolveMultinameUnguarded(object, mn, traitsOnly);
-  leave(JS);
-  return result;
+  return object.resolveMultinameProperty(mn.namespaces, mn.name, mn.flags);
 }
-function sliceArguments(args, offset) {
-  return Array.prototype.slice.call(args, offset);
-}
-function nonProxyingHasProperty(object, name) {
-  return name in object;
-}
-function forEachPublicProperty(object, fn, self) {
-  if (!object[VM_BINDINGS]) {
-    for (var key in object) {
-      fn.call(self, key, object[key]);
-    }
-    return;
-  }
-  for (var key in object) {
-    if (isNumeric(key)) {
-      fn.call(self, key, object[key]);
-    } else if (Multiname.isPublicQualifiedName(key) && object[VM_BINDINGS].indexOf(key) < 0) {
-      var name = key.substr(Multiname.PUBLIC_QUALIFIED_NAME_PREFIX.length);
-      fn.call(self, name, object[key]);
-    }
-  }
-}
-function wrapJSObject(object) {
-  var wrapper = Object.create(object);
-  for (var i in object) {
-    Object.defineProperty(wrapper, Multiname.getPublicQualifiedName(i), function (object, i) {
-      return {
-        get: function () {
-          return object[i];
-        },
-        set: function (value) {
-          object[i] = value;
-        },
-        enumerable: true
+var sliceArguments = Shumway.AVM2.Runtime.sliceArguments;
+var nonProxyingHasProperty = Shumway.AVM2.Runtime.nonProxyingHasProperty;
+var forEachPublicProperty = Shumway.AVM2.Runtime.forEachPublicProperty;
+var wrapJSObject = Shumway.AVM2.Runtime.wrapJSObject;
+var asCreateActivation = Shumway.AVM2.Runtime.asCreateActivation;
+var CatchScopeObject = Shumway.AVM2.Runtime.CatchScopeObject;
+var Global = Shumway.AVM2.Runtime.Global;
+var canCompile = Shumway.AVM2.Runtime.canCompile;
+var shouldCompile = Shumway.AVM2.Runtime.shouldCompile;
+var forceCompile = Shumway.AVM2.Runtime.forceCompile;
+var createInterpretedFunction = Shumway.AVM2.Runtime.createInterpretedFunction;
+var debugName = Shumway.AVM2.Runtime.debugName;
+var createCompiledFunction = Shumway.AVM2.Runtime.createCompiledFunction;
+var getMethodOverrideKey = Shumway.AVM2.Runtime.getMethodOverrideKey;
+var checkMethodOverrides = Shumway.AVM2.Runtime.checkMethodOverrides;
+var makeTrampoline = Shumway.AVM2.Runtime.makeTrampoline;
+var makeMemoizer = Shumway.AVM2.Runtime.makeMemoizer;
+var createFunction = Shumway.AVM2.Runtime.createFunction;
+var ensureFunctionIsInitialized = Shumway.AVM2.Runtime.ensureFunctionIsInitialized;
+var getTraitFunction = Shumway.AVM2.Runtime.getTraitFunction;
+var createClass = Shumway.AVM2.Runtime.createClass;
+var sealConstantTraits = Shumway.AVM2.Runtime.sealConstantTraits;
+var applyType = Shumway.AVM2.Runtime.applyType;
+var throwError = Shumway.AVM2.Runtime.throwError;
+var throwErrorFromVM = Shumway.AVM2.Runtime.throwErrorFromVM;
+var translateError = Shumway.AVM2.Runtime.translateError;
+var asIsInstanceOf = Shumway.AVM2.Runtime.asIsInstanceOf;
+var asIsType = Shumway.AVM2.Runtime.asIsType;
+var asAsType = Shumway.AVM2.Runtime.asAsType;
+var asCoerceByMultiname = Shumway.AVM2.Runtime.asCoerceByMultiname;
+var asCoerce = Shumway.AVM2.Runtime.asCoerce;
+var asCoerceString = Shumway.AVM2.Runtime.asCoerceString;
+var asCoerceInt = Shumway.AVM2.Runtime.asCoerceInt;
+var asCoerceUint = Shumway.AVM2.Runtime.asCoerceUint;
+var asCoerceNumber = Shumway.AVM2.Runtime.asCoerceNumber;
+var asCoerceBoolean = Shumway.AVM2.Runtime.asCoerceBoolean;
+var asCoerceObject = Shumway.AVM2.Runtime.asCoerceObject;
+var asDefaultCompareFunction = Shumway.AVM2.Runtime.asDefaultCompareFunction;
+var asCompare = Shumway.AVM2.Runtime.asCompare;
+var asAdd = Shumway.AVM2.Runtime.asAdd;
+var GlobalMultinameResolver = Shumway.AVM2.Runtime.GlobalMultinameResolver;
+var Shumway;
+(function (Shumway) {
+  (function (AVM2) {
+    (function (Runtime) {
+      Shumway.AVM2.Runtime.VM_METHOD_OVERRIDES['static mochi.as3.MochiServices::connect'] = function () {
+        return;
       };
-    }(object, i));
-  }
-  return wrapper;
-}
-function createActivation(methodInfo) {
-  return Object.create(methodInfo.activationPrototype);
-}
-function isClass(object) {
-  true;
-  return Object.hasOwnProperty.call(object, VM_IS_CLASS);
-}
-function isTrampoline(fn) {
-  true;
-  return fn.isTrampoline;
-}
-function isMemoizer(fn) {
-  true;
-  return fn.isMemoizer;
-}
-function CatchScopeObject(domain, trait) {
-  if (trait) {
-    new CatchBindings(new Scope(null, this), trait).applyTo(domain, this);
-  }
-}
-var Global = function () {
-    function global(script) {
-      this.scriptInfo = script;
-      script.global = this;
-      script.scriptBindings = new ScriptBindings(script, new Scope(null, this));
-      script.scriptBindings.applyTo(script.abc.applicationDomain, this);
-      script.loaded = true;
-    }
-    global.prototype.toString = function () {
-      return '[object global]';
-    };
-    global.prototype.isExecuted = function () {
-      return this.scriptInfo.executed;
-    };
-    global.prototype.isExecuting = function () {
-      return this.scriptInfo.executing;
-    };
-    global.prototype.ensureExecuted = function () {
-      ensureScriptIsExecuted(this.scriptInfo);
-    };
-    defineNonEnumerableProperty(global.prototype, Multiname.getPublicQualifiedName('toString'), function () {
-      return this.toString();
-    });
-    return global;
-  }();
-function canCompile(mi) {
-  if (!mi.hasBody) {
-    return false;
-  }
-  if (mi.hasExceptions() && !compilerEnableExceptions.value) {
-    return false;
-  } else if (mi.code.length > compilerMaximumMethodSize.value) {
-    return false;
-  }
-  return true;
-}
-function shouldCompile(mi) {
-  if (!canCompile(mi)) {
-    return false;
-  }
-  if (mi.isClassInitializer || mi.isScriptInitializer) {
-    return false;
-  }
-  return true;
-}
-function forceCompile(mi) {
-  if (mi.hasExceptions()) {
-    return false;
-  }
-  var holder = mi.holder;
-  if (holder instanceof ClassInfo) {
-    holder = holder.instanceInfo;
-  }
-  if (holder instanceof InstanceInfo) {
-    var packageName = holder.name.namespaces[0].originalURI;
-    switch (packageName) {
-    case 'flash.geom':
-    case 'flash.events':
-      return true;
-    default:
-      break;
-    }
-    var className = holder.name.getOriginalName();
-    switch (className) {
-    case 'com.google.youtube.model.VideoData':
-      return true;
-    }
-  }
-  return false;
-}
-function createInterpretedFunction(methodInfo, scope, hasDynamicScope) {
-  var mi = methodInfo;
-  var hasDefaults = false;
-  var defaults = mi.parameters.map(function (p) {
-      if (p.value !== undefined) {
-        hasDefaults = true;
-      }
-      return p.value;
-    });
-  var fn;
-  if (hasDynamicScope) {
-    fn = function (scope) {
-      var global = this === jsGlobal ? scope.global.object : this;
-      var args = sliceArguments(arguments, 1);
-      if (hasDefaults && args.length < defaults.length) {
-        args = args.concat(defaults.slice(args.length - defaults.length));
-      }
-      return Interpreter.interpretMethod(global, methodInfo, scope, args);
-    };
-  } else {
-    fn = function () {
-      var global = this === jsGlobal ? scope.global.object : this;
-      var args = sliceArguments(arguments);
-      if (hasDefaults && args.length < defaults.length) {
-        args = args.concat(defaults.slice(arguments.length - defaults.length));
-      }
-      return Interpreter.interpretMethod(global, methodInfo, scope, args);
-    };
-  }
-  fn.instanceConstructor = fn;
-  fn.debugName = 'Interpreter Function #' + vmNextInterpreterFunctionId++;
-  return fn;
-}
-var totalFunctionCount = 0;
-var compiledFunctionCount = 0;
-function debugName(value) {
-  if (isFunction(value)) {
-    return value.debugName;
-  }
-  return value;
-}
-function createCompiledFunction(methodInfo, scope, hasDynamicScope, breakpoint, deferCompilation) {
-  var mi = methodInfo;
-  $M.push(mi);
-  var result = Compiler.compileMethod(mi, scope, hasDynamicScope);
-  var parameters = result.parameters;
-  var body = result.body;
-  var fnName = mi.name ? Multiname.getQualifiedName(mi.name) : 'fn' + compiledFunctionCount;
-  if (mi.holder) {
-    var fnNamePrefix = '';
-    if (mi.holder instanceof ClassInfo) {
-      fnNamePrefix = 'static$' + mi.holder.instanceInfo.name.getName();
-    } else if (mi.holder instanceof InstanceInfo) {
-      fnNamePrefix = mi.holder.name.getName();
-    } else if (mi.holder instanceof ScriptInfo) {
-      fnNamePrefix = 'script';
-    }
-    fnName = fnNamePrefix + '$' + fnName;
-  }
-  fnName = escapeString(fnName);
-  if (mi.verified) {
-    fnName += '$V';
-  }
-  if (compiledFunctionCount == functionBreak.value || breakpoint) {
-    body = '{ debugger; \n' + body + '}';
-  }
-  var fnSource = 'function ' + fnName + ' (' + parameters.join(', ') + ') ' + body;
-  if (traceLevel.value > 1) {
-    mi.trace(new IndentingWriter(), mi.abc);
-  }
-  mi.debugTrace = function () {
-    mi.trace(new IndentingWriter(), mi.abc);
-  };
-  if (traceLevel.value > 0) {
-    print(fnSource);
-  }
-  var fn = new Function('return ' + fnSource)();
-  fn.debugName = 'Compiled Function #' + vmNextCompiledFunctionId++;
-  return fn;
-}
-function getMethodOverrideKey(methodInfo) {
-  var key;
-  if (methodInfo.holder instanceof ClassInfo) {
-    key = 'static ' + methodInfo.holder.instanceInfo.name.getOriginalName() + '::' + methodInfo.name.getOriginalName();
-  } else if (methodInfo.holder instanceof InstanceInfo) {
-    key = methodInfo.holder.name.getOriginalName() + '::' + methodInfo.name.getOriginalName();
-  } else {
-    key = methodInfo.name.getOriginalName();
-  }
-  return key;
-}
-function checkMethodOverrides(methodInfo) {
-  if (methodInfo.name) {
-    var key = getMethodOverrideKey(methodInfo);
-    if (key in VM_METHOD_OVERRIDES) {
-      warning('Overriding Method: ' + key);
-      return VM_METHOD_OVERRIDES[key];
-    }
-  }
-}
-function makeTrampoline(forward, parameterLength, description) {
-  true;
-  return function trampolineContext() {
-    var target = null;
-    var trampoline = function execute() {
-      if (traceExecution.value >= 3) {
-        print('Trampolining');
-      }
-      Counter.count('Executing Trampoline');
-      traceCallExecution.value > 1 && callWriter.writeLn('Trampoline: ' + description);
-      if (!target) {
-        target = forward(trampoline);
-        true;
-      }
-      return target.apply(this, arguments);
-    };
-    trampoline.trigger = function trigger() {
-      Counter.count('Triggering Trampoline');
-      if (!target) {
-        target = forward(trampoline);
-        true;
-      }
-    };
-    trampoline.isTrampoline = true;
-    trampoline.debugName = 'Trampoline #' + vmNextTrampolineId++;
-    defineReadOnlyProperty(trampoline, VM_LENGTH, parameterLength);
-    return trampoline;
-  }();
-}
-function makeMemoizer(qn, target) {
-  function memoizer() {
-    Counter.count('Runtime: Memoizing');
-    if (traceExecution.value >= 3) {
-      print('Memoizing: ' + qn);
-    }
-    traceCallExecution.value > 1 && callWriter.writeLn('Memoizing: ' + qn);
-    if (isNativePrototype(this)) {
-      Counter.count('Runtime: Method Closures');
-      return bindSafely(target.value, this);
-    }
-    if (isTrampoline(target.value)) {
-      target.value.trigger();
-    }
-    true;
-    var mc = null;
-    if (isClass(this)) {
-      Counter.count('Runtime: Static Method Closures');
-      mc = bindSafely(target.value, this);
-      defineReadOnlyProperty(this, qn, mc);
-      return mc;
-    }
-    if (Object.prototype.hasOwnProperty.call(this, qn)) {
-      var pd = Object.getOwnPropertyDescriptor(this, qn);
-      if (pd.get) {
-        Counter.count('Runtime: Method Closures');
-        return bindSafely(target.value, this);
-      }
-      Counter.count('Runtime: Unpatched Memoizer');
-      return this[qn];
-    }
-    mc = bindSafely(target.value, this);
-    mc.methodInfo = target.value.methodInfo;
-    defineReadOnlyProperty(mc, Multiname.getPublicQualifiedName('prototype'), null);
-    defineReadOnlyProperty(this, qn, mc);
-    return mc;
-  }
-  Counter.count('Runtime: Memoizers');
-  memoizer.isMemoizer = true;
-  memoizer.debugName = 'Memoizer #' + vmNextMemoizerId++;
-  return memoizer;
-}
-function createFunction(mi, scope, hasDynamicScope, breakpoint) {
-  true;
-  if (mi.freeMethod) {
-    if (hasDynamicScope) {
-      return bindFreeMethodScope(mi, scope);
-    }
-    return mi.freeMethod;
-  }
-  var fn;
-  if (fn = checkMethodOverrides(mi)) {
-    true;
-    return fn;
-  }
-  ensureFunctionIsInitialized(mi);
-  totalFunctionCount++;
-  var useInterpreter = false;
-  if ((mi.abc.applicationDomain.mode === EXECUTION_MODE.INTERPRET || !shouldCompile(mi)) && !forceCompile(mi)) {
-    useInterpreter = true;
-  }
-  if (compileOnly.value >= 0) {
-    if (Number(compileOnly.value) !== totalFunctionCount) {
-      print('Compile Only Skipping ' + totalFunctionCount);
-      useInterpreter = true;
-    }
-  }
-  if (compileUntil.value >= 0) {
-    if (totalFunctionCount > 1000) {
-      print(backtrace());
-      print(AVM2.getStackTrace());
-    }
-    if (totalFunctionCount > compileUntil.value) {
-      print('Compile Until Skipping ' + totalFunctionCount);
-      useInterpreter = true;
-    }
-  }
-  if (useInterpreter) {
-    mi.freeMethod = createInterpretedFunction(mi, scope, hasDynamicScope);
-  } else {
-    compiledFunctionCount++;
-    console.info('Compiling: ' + mi + ' count: ' + compiledFunctionCount);
-    if (compileOnly.value >= 0 || compileUntil.value >= 0) {
-      print('Compiling ' + totalFunctionCount);
-    }
-    mi.freeMethod = createCompiledFunction(mi, scope, hasDynamicScope, breakpoint, mi.isInstanceInitializer);
-  }
-  mi.freeMethod.methodInfo = mi;
-  if (hasDynamicScope) {
-    return bindFreeMethodScope(mi, scope);
-  }
-  return mi.freeMethod;
-}
-function ensureFunctionIsInitialized(methodInfo) {
-  var mi = methodInfo;
-  if (!mi.analysis) {
-    mi.analysis = new Analysis(mi);
-    if (mi.needsActivation()) {
-      mi.activationPrototype = new Activation(mi);
-      new ActivationBindings(mi).applyTo(mi.abc.applicationDomain, mi.activationPrototype);
-    }
-    var exceptions = mi.exceptions;
-    for (var i = 0, j = exceptions.length; i < j; i++) {
-      var handler = exceptions[i];
-      if (handler.varName) {
-        var varTrait = Object.create(Trait.prototype);
-        varTrait.kind = TRAIT_Slot;
-        varTrait.name = handler.varName;
-        varTrait.typeName = handler.typeName;
-        varTrait.holder = mi;
-        handler.scopeObject = new CatchScopeObject(mi.abc.applicationDomain, varTrait);
-      } else {
-        handler.scopeObject = new CatchScopeObject();
-      }
-    }
-  }
-}
-function getTraitFunction(trait, scope, natives) {
-  true;
-  true;
-  var mi = trait.methodInfo;
-  var fn;
-  if (mi.isNative()) {
-    var md = trait.metadata;
-    if (md && md.native) {
-      var nativeName = md.native.value[0].value;
-      var makeNativeFunction = getNative(nativeName);
-      fn = makeNativeFunction && makeNativeFunction(null, scope);
-    } else if (md && md.unsafeJSNative) {
-      fn = getNative(md.unsafeJSNative.value[0].value);
-    } else if (natives) {
-      var k = Multiname.getName(mi.name);
-      if (trait.isGetter()) {
-        fn = natives[k] ? natives[k].get : undefined;
-      } else if (trait.isSetter()) {
-        fn = natives[k] ? natives[k].set : undefined;
-      } else {
-        fn = natives[k];
-      }
-    }
-    if (!fn) {
-      warning('No native method for: ' + trait.kindName() + ' ' + mi.holder.name + '::' + Multiname.getQualifiedName(mi.name));
-      return function (mi) {
-        return function () {
-          warning('Calling undefined native method: ' + trait.kindName() + ' ' + mi.holder.name + '::' + Multiname.getQualifiedName(mi.name));
-        };
-      }(mi);
-    }
-  } else {
-    if (traceExecution.value >= 2) {
-      print('Creating Function For Trait: ' + trait.holder + ' ' + trait);
-    }
-    fn = createFunction(mi, scope, false);
-    true;
-  }
-  if (traceExecution.value >= 3) {
-    print('Made Function: ' + Multiname.getQualifiedName(mi.name));
-  }
-  return fn;
-}
-function makeQualifiedNameTraitMap(traits) {
-  var map = createEmptyObject();
-  for (var i = 0; i < traits.length; i++) {
-    map[Multiname.getQualifiedName(traits[i].name)] = traits[i];
-  }
-  return map;
-}
-function createClass(classInfo, baseClass, scope) {
-  true;
-  var ci = classInfo;
-  var ii = ci.instanceInfo;
-  var domain = ci.abc.applicationDomain;
-  var className = Multiname.getName(ii.name);
-  if (traceExecution.value) {
-    print('Creating ' + (ii.isInterface() ? 'Interface' : 'Class') + ': ' + className + (ci.native ? ' replaced with native ' + ci.native.cls : ''));
-  }
-  var cls;
-  if (ii.isInterface()) {
-    cls = Interface.createInterface(classInfo);
-  } else {
-    cls = Class.createClass(classInfo, baseClass, scope);
-  }
-  if (traceClasses.value) {
-    domain.loadedClasses.push(cls);
-    domain.traceLoadedClasses(true);
-  }
-  if (ii.isInterface()) {
-    return cls;
-  }
-  domain.onMessage.notify1('classCreated', cls);
-  if (cls.instanceConstructor && cls !== Class) {
-    cls.verify();
-  }
-  if (baseClass && (Multiname.getQualifiedName(baseClass.classInfo.instanceInfo.name.name) === 'Proxy' || baseClass.isProxy)) {
-    installProxyClassWrapper(cls);
-    cls.isProxy = true;
-  }
-  createFunction(classInfo.init, scope, false).call(cls);
-  if (sealConstTraits) {
-    this.sealConstantTraits(cls, ci.traits);
-  }
-  return cls;
-}
-function sealConstantTraits(object, traits) {
-  for (var i = 0, j = traits.length; i < j; i++) {
-    var trait = traits[i];
-    if (trait.isConst()) {
-      var qn = Multiname.getQualifiedName(trait.name);
-      var value = object[qn];
-      (function (qn, value) {
-        Object.defineProperty(object, qn, {
-          configurable: false,
-          enumerable: false,
-          get: function () {
-            return value;
-          },
-          set: function () {
-            throwErrorFromVM(AVM2.currentDomain(), 'ReferenceError', 'Illegal write to read-only property ' + qn + '.');
-          }
-        });
-      }(qn, value));
-    }
-  }
-}
-function applyType(domain, factory, types) {
-  var factoryClassName = factory.classInfo.instanceInfo.name.name;
-  if (factoryClassName === 'Vector') {
-    true;
-    var type = types[0];
-    var typeClassName;
-    if (!isNullOrUndefined(type)) {
-      typeClassName = type.classInfo.instanceInfo.name.name.toLowerCase();
-      switch (typeClassName) {
-      case 'int':
-      case 'uint':
-      case 'double':
-      case 'object':
-        return domain.getClass('packageInternal __AS3__.vec.Vector$' + typeClassName);
-      }
-    }
-    return domain.getClass('packageInternal __AS3__.vec.Vector$object').applyType(type);
-  } else {
-    return notImplemented(factoryClassName);
-  }
-}
-function checkArgumentCount(name, expected, got) {
-  if (got !== expected) {
-    throwError('ArgumentError', Errors.WrongArgumentCountError, name, expected, got);
-  }
-}
-function throwError(name, error) {
-  if (true) {
-    var message = formatErrorMessage.apply(null, Array.prototype.slice.call(arguments, 1));
-    throwErrorFromVM(AVM2.currentDomain(), name, message, error.code);
-  } else {
-    throwErrorFromVM(AVM2.currentDomain(), name, getErrorMessage(error.code), error.code);
-  }
-}
-function throwErrorFromVM(domain, errorClass, message, id) {
-  var error = new (domain.getClass(errorClass)).instanceConstructor(message, id);
-  throw error;
-}
-function translateError(domain, error) {
-  if (error instanceof Error) {
-    var type = domain.getClass(error.name);
-    if (type) {
-      return new type.instanceConstructor(translateErrorMessage(error));
-    }
-    unexpected('Can\'t translate error: ' + error);
-  }
-  return error;
-}
-function asIsInstanceOf(type, value) {
-  return type.isInstanceOf(value);
-}
-function asIsType(type, value) {
-  return type.isInstance(value);
-}
-function asAsType(type, value) {
-  return asIsType(type, value) ? value : null;
-}
-function asCoerceByMultiname(domain, multiname, value) {
-  true;
-  switch (Multiname.getQualifiedName(multiname)) {
-  case Multiname.Int:
-    return asCoerceInt(value);
-  case Multiname.Uint:
-    return asCoerceUint(value);
-  case Multiname.String:
-    return asCoerceString(value);
-  case Multiname.Number:
-    return asCoerceNumber(value);
-  case Multiname.Boolean:
-    return asCoerceBoolean(value);
-  case Multiname.Object:
-    return asCoerceObject(value);
-  }
-  return asCoerce(domain.getType(multiname), value);
-}
-function asCoerce(type, value) {
-  if (type.coerce) {
-    return type.coerce(value);
-  }
-  if (isNullOrUndefined(value)) {
-    return null;
-  }
-  if (type.isInstance(value)) {
-    return value;
-  } else {
-    true;
-  }
-}
-function asCoerceString(x) {
-  if (typeof x === 'string') {
-    return x;
-  } else if (x == undefined) {
-    return null;
-  }
-  return x + '';
-}
-function asCoerceInt(x) {
-  return x | 0;
-}
-function asCoerceUint(x) {
-  return x >>> 0;
-}
-function asCoerceNumber(x) {
-  return +x;
-}
-function asCoerceBoolean(x) {
-  return !(!x);
-}
-function asCoerceObject(x) {
-  if (x == undefined) {
-    return null;
-  }
-  if (typeof x === 'string' || typeof x === 'number') {
-    return x;
-  }
-  return Object(x);
-}
-function asDefaultCompareFunction(a, b) {
-  return String(a).localeCompare(String(b));
-}
-function asCompare(a, b, options, compareFunction) {
-  true;
-  true;
-  var result = 0;
-  if (!compareFunction) {
-    compareFunction = asDefaultCompareFunction;
-  }
-  if (options & SORT_CASEINSENSITIVE) {
-    a = String(a).toLowerCase();
-    b = String(b).toLowerCase();
-  }
-  if (options & SORT_NUMERIC) {
-    a = toNumber(a);
-    b = toNumber(b);
-    result = a < b ? -1 : a > b ? 1 : 0;
-  } else {
-    result = compareFunction(a, b);
-  }
-  if (options & SORT_DESCENDING) {
-    result *= -1;
-  }
-  return result;
-}
-function asAdd(l, r) {
-  if (typeof l === 'string' || typeof r === 'string') {
-    return String(l) + String(r);
-  }
-  return l + r;
-}
-var GlobalMultinameResolver = function () {
-    var hasNonDynamicNamespaces = createEmptyObject();
-    var wasResolved = createEmptyObject();
-    function updateTraits(traits) {
-      for (var i = 0; i < traits.length; i++) {
-        var trait = traits[i];
-        var name = trait.name.name;
-        var namespace = trait.name.getNamespace();
-        if (!namespace.isDynamic()) {
-          hasNonDynamicNamespaces[name] = true;
-          if (wasResolved[name]) {
-            notImplemented('We have to the undo the optimization, ' + name + ' can now bind to ' + namespace);
-          }
-        }
-      }
-    }
-    return {
-      loadAbc: function loadAbc(abc) {
-        if (!globalMultinameAnalysis.value) {
-          return;
-        }
-        var scripts = abc.scripts;
-        var classes = abc.classes;
-        var methods = abc.methods;
-        for (var i = 0; i < scripts.length; i++) {
-          updateTraits(scripts[i].traits);
-        }
-        for (var i = 0; i < classes.length; i++) {
-          updateTraits(classes[i].traits);
-          updateTraits(classes[i].instanceInfo.traits);
-        }
-        for (var i = 0; i < methods.length; i++) {
-          if (methods[i].traits) {
-            updateTraits(methods[i].traits);
-          }
-        }
-      },
-      resolveMultiname: function resolveMultiname(multiname) {
-        var name = multiname.name;
-        if (hasNonDynamicNamespaces[name]) {
-          return;
-        }
-        wasResolved[name] = true;
-        return new Multiname([
-          ShumwayNamespace.PUBLIC
-        ], multiname.name);
-      }
-    };
-  }();
-VM_METHOD_OVERRIDES['static mochi.as3.MochiServices::connect'] = function () {
-  return;
-};
-VM_METHOD_OVERRIDES['static MochiBot::track'] = function () {
-  return;
-};
-VM_METHOD_OVERRIDES['com.midasplayer.debug.DebugLog::trace'] = function (msg) {
-  console.log(msg);
-};
-VM_METHOD_OVERRIDES['com.midasplayer.engine.comm.DebugGameComm::getGameData'] = function () {
-  return '<gamedata randomseed="554884453" version="1">\n<musicOn>true</musicOn>\n<soundOn>true</soundOn>\n<isShortGame>false</isShortGame>\n<booster_1>0</booster_1>\n<booster_2>0</booster_2>\n<booster_3>0</booster_3>\n<booster_4>0</booster_4>\n<booster_5>0</booster_5>\n<bestScore>0</bestScore>\n<bestChain>0</bestChain>\n<bestLevel>0</bestLevel>\n<bestCrushed>0</bestCrushed>\n<bestMixed>0</bestMixed>\n<text id="outro.crushed">Candy crushed</text>\n<text id="outro.bestever">best ever</text>\n<text id="outro.trophy.two">scored {0} in one game</text>\n<text id="outro.combo_color_color">All Clear Created</text>\n<text id="outro.trophy.one">crushed {0} candy in one game</text>\n<text id="outro.score">Score</text>\n<text id="outro.opengame">Please register to play the full game</text>\n<text id="outro.chain">Longest chain</text>\n<text id="outro.time">Game ends in {0} seconds</text>\n<text id="outro.combo_color_line">Super Stripes Created</text>\n<text id="game.nomoves">No more moves!</text>\n<text id="outro.combo_wrapper_line">Mega-Candy Created</text>\n<text id="intro.time">Game starts in {0} seconds</text>\n<text id="outro.now">now</text>\n<text id="outro.level">Level reached</text>\n<text id="outro.title">Game Over</text>\n<text id="intro.info1">Match 3 Candy of the same colour to crush them. Matching 4 or 5 in different formations generates special sweets that are extra tasty.</text>\n<text id="intro.info2">You can also combine the special sweets for additional effects by switching them with each other. Try these combinations for a taste you will not forget: </text>\n<text id="outro.combo_color_wrapper">Double Colour Bombs Created</text>\n<text id="outro.trophy.three">made {0} combined candy in one game</text>\n<text id="intro.title">Play like this:</text>\n</gamedata>';
-};
-VM_METHOD_OVERRIDES['com.antkarlov.Preloader::com.antkarlov:Preloader.isUrl'] = function () {
-  return true;
-};
-VM_METHOD_OVERRIDES['static com.demonsters.debugger.MonsterDebugger::initialize'] = function () {
-};
-VM_METHOD_OVERRIDES['com.spilgames.api.core.tracking.TrackConfig::getTrackers'] = function () {
-  return [];
-};
-VM_METHOD_OVERRIDES['com.spilgames.api.components.TextFields.AutoFitTextFieldEx::com.spilgames.api.components.TextFields:AutoFitTextFieldEx.updateProperties'] = VM_METHOD_OVERRIDES['com.spilgames.api.components.TextFields.AutoFitTextFieldEx::com.spilgames.api.components.TextFields:AutoFitTextFieldEx.updateTextSize'] = function () {
-};
+      Shumway.AVM2.Runtime.VM_METHOD_OVERRIDES['static MochiBot::track'] = function () {
+        return;
+      };
+      Shumway.AVM2.Runtime.VM_METHOD_OVERRIDES['com.midasplayer.debug.DebugLog::trace'] = function (msg) {
+        log(msg);
+      };
+      Shumway.AVM2.Runtime.VM_METHOD_OVERRIDES['com.midasplayer.engine.comm.DebugGameComm::getGameData'] = function () {
+        return '<gamedata randomseed="554884453" version="1">\n<musicOn>true</musicOn>\n<soundOn>true</soundOn>\n<isShortGame>false</isShortGame>\n<booster_1>0</booster_1>\n<booster_2>0</booster_2>\n<booster_3>0</booster_3>\n<booster_4>0</booster_4>\n<booster_5>0</booster_5>\n<bestScore>0</bestScore>\n<bestChain>0</bestChain>\n<bestLevel>0</bestLevel>\n<bestCrushed>0</bestCrushed>\n<bestMixed>0</bestMixed>\n<text id="outro.crushed">Candy crushed</text>\n<text id="outro.bestever">best ever</text>\n<text id="outro.trophy.two">scored {0} in one game</text>\n<text id="outro.combo_color_color">All Clear Created</text>\n<text id="outro.trophy.one">crushed {0} candy in one game</text>\n<text id="outro.score">Score</text>\n<text id="outro.opengame">Please register to play the full game</text>\n<text id="outro.chain">Longest chain</text>\n<text id="outro.time">Game ends in {0} seconds</text>\n<text id="outro.combo_color_line">Super Stripes Created</text>\n<text id="game.nomoves">No more moves!</text>\n<text id="outro.combo_wrapper_line">Mega-Candy Created</text>\n<text id="intro.time">Game starts in {0} seconds</text>\n<text id="outro.now">now</text>\n<text id="outro.level">Level reached</text>\n<text id="outro.title">Game Over</text>\n<text id="intro.info1">Match 3 Candy of the same colour to crush them. Matching 4 or 5 in different formations generates special sweets that are extra tasty.</text>\n<text id="intro.info2">You can also combine the special sweets for additional effects by switching them with each other. Try these combinations for a taste you will not forget: </text>\n<text id="outro.combo_color_wrapper">Double Colour Bombs Created</text>\n<text id="outro.trophy.three">made {0} combined candy in one game</text>\n<text id="intro.title">Play like this:</text>\n</gamedata>';
+      };
+      Shumway.AVM2.Runtime.VM_METHOD_OVERRIDES['com.antkarlov.Preloader::com.antkarlov:Preloader.isUrl'] = function () {
+        return true;
+      };
+      Shumway.AVM2.Runtime.VM_METHOD_OVERRIDES['static com.demonsters.debugger.MonsterDebugger::initialize'] = function () {
+      };
+      Shumway.AVM2.Runtime.VM_METHOD_OVERRIDES['com.spilgames.api.core.tracking.TrackConfig::getTrackers'] = function () {
+        return [];
+      };
+      Shumway.AVM2.Runtime.VM_METHOD_OVERRIDES['com.spilgames.api.components.TextFields.AutoFitTextFieldEx::com.spilgames.api.components.TextFields:AutoFitTextFieldEx.updateProperties'] = Shumway.AVM2.Runtime.VM_METHOD_OVERRIDES['com.spilgames.api.components.TextFields.AutoFitTextFieldEx::com.spilgames.api.components.TextFields:AutoFitTextFieldEx.updateTextSize'] = function () {
+      };
+    }(AVM2.Runtime || (AVM2.Runtime = {})));
+    var Runtime = AVM2.Runtime;
+  }(Shumway.AVM2 || (Shumway.AVM2 = {})));
+  var AVM2 = Shumway.AVM2;
+}(Shumway || (Shumway = {})));
+var checkArguments = true;
 function asCheckVectorSetNumericProperty(i, length, fixed) {
   if (i < 0 || i > length || i === length && fixed || !isNumeric(i)) {
     throwError('RangeError', Errors.OutOfRangeError, i, length);
@@ -28034,10 +29922,9 @@ var TypedArrayVector = function () {
     return vector;
   }();
 var typedArrayVectorTemplate = 'var EXTRA_CAPACITY=4,INITIAL_CAPACITY=10,DEFAULT_VALUE=0;function vector(a,b){a|=0;this._fixed=!!b;this._buffer=new Int32Array(Math.max(INITIAL_CAPACITY,a+EXTRA_CAPACITY));this._offset=0;this._length=a}vector.callable=function(a){if(a instanceof vector)return a;var b=a.asGetProperty(void 0,"length");if(void 0!==b){for(var c=new vector(b,!1),d=0;d<b;d++)c.asSetNumericProperty(d,a.asGetPublicProperty(d));return c}unexpected()}; vector.prototype.internalToString=function(){for(var a="",b=this._offset,c=b+this._length,d=0;d<this._buffer.length;d++)d===b&&(a+="["),d===c&&(a+="]"),a+=this._buffer[d],d<this._buffer.length-1&&(a+=",");this._offset+this._length===this._buffer.length&&(a+="]");return a+": offset: "+this._offset+", length: "+this._length+", capacity: "+this._buffer.length};vector.prototype.toString=function(){for(var a="",b=0;b<this._length;b++)a+=this._buffer[this._offset+b],b<this._length-1&&(a+=",");return a}; vector.prototype._view=function(){return this._buffer.subarray(this._offset,this._offset+this._length)};vector.prototype._ensureCapacity=function(a){var b=this._offset+a;b<this._buffer.length||(a<=this._buffer.length?(b=this._buffer.length-a>>2,this._buffer.set(this._view(),b),this._offset=b):(a=3*this._buffer.length>>2,a<b&&(a=b),b=new Int32Array(a),b.set(this._buffer,0),this._buffer=b))}; vector.prototype.every=function(a,b){for(var c=0;c<this._length;c++)if(!a.call(b,this.asGetNumericProperty(c),c,this))return!1;return!0};vector.prototype.filter=function(a,b){for(var c=new vector,d=0;d<this._length;d++)a.call(b,this.asGetNumericProperty(d),d,this)&&c.push(this.asGetNumericProperty(d));return c}; vector.prototype.some=function(a,b){2!==arguments.length?throwError("ArgumentError",Errors.WrongArgumentCountError):isFunction(a)||throwError("ArgumentError",Errors.CheckTypeFailedError);for(var c=0;c<this._length;c++)if(a.call(b,this.asGetNumericProperty(c),c,this))return!0;return!1};vector.prototype.forEach=function(a,b){for(var c=0;c<this._length;c++)a.call(b,this.asGetNumericProperty(c),c,this)};vector.prototype.join=function(a){notImplemented("TypedArrayVector.join")}; vector.prototype.indexOf=function(a,b){notImplemented("TypedArrayVector.indexOf")};vector.prototype.lastIndexOf=function(a,b){notImplemented("TypedArrayVector.lastIndexOf")};vector.prototype.map=function(a,b){isFunction(a)||throwError("ArgumentError",Errors.CheckTypeFailedError);for(var c=new vector,d=0;d<this._length;d++)c.push(a.call(b,this.asGetNumericProperty(d),d,this));return c}; vector.prototype.push=function(){this._checkFixed();this._ensureCapacity(this._length+arguments.length);for(var a=0;a<arguments.length;a++)this._buffer[this._offset+this._length++]=arguments[a]};vector.prototype.pop=function(){this._checkFixed();if(0===this._length)return DEFAULT_VALUE;this._length--;return this._buffer[this._offset+this._length]};vector.prototype.reverse=function(){for(var a=this._offset,b=this._offset+this._length-1,c=this._buffer;a<b;){var d=c[a];c[a]=c[b];c[b]=d;a++;b--}}; vector.CASEINSENSITIVE=1;vector.DESCENDING=2;vector.UNIQUESORT=4;vector.RETURNINDEXEDARRAY=8;vector.NUMERIC=16;function defaultCompareFunction(a,b){return String(a).localeCompare(String(b))} function compare(a,b,c,d){assertNotImplemented(!(c&vector.CASEINSENSITIVE),"CASEINSENSITIVE");assertNotImplemented(!(c&vector.UNIQUESORT),"UNIQUESORT");assertNotImplemented(!(c&vector.RETURNINDEXEDARRAY),"RETURNINDEXEDARRAY");var f=0;d||(d=defaultCompareFunction);c&vector.NUMERIC?(a=toNumber(a),b=toNumber(b),f=a<b?-1:a>b?1:0):f=d(a,b);c&vector.DESCENDING&&(f*=-1);return f} function _sort(a){for(var b=[],c=-1,d=0,f=a.length-1,e,g,h,k;;)if(100>=f-d){for(g=d+1;g<=f;g++){h=a[g];for(e=g-1;e>=d&&a[e]>h;)a[e+1]=a[e--];a[e+1]=h}if(-1==c)break;f=b[c--];d=b[c--]}else{k=d+f>>1;e=d+1;g=f;h=a[k];a[k]=a[e];a[e]=h;a[d]>a[f]&&(h=a[d],a[d]=a[f],a[f]=h);a[e]>a[f]&&(h=a[e],a[e]=a[f],a[f]=h);a[d]>a[e]&&(h=a[d],a[d]=a[e],a[e]=h);for(k=a[e];;){do e++;while(a[e]<k);do g--;while(a[g]>k);if(g<e)break;h=a[e];a[e]=a[g];a[g]=h}a[d+1]=a[g];a[g]=k;f-e+1>=g-d?(b[++c]=e,b[++c]=f,f=g-1):(b[++c]=d, b[++c]=g-1,d=e)}return a}vector.prototype._sortNumeric=function(a){_sort(this._view());a&&this.reverse()};vector.prototype.sort=function(){if(0===arguments.length)return Array.prototype.sort.call(this._view());var a,b=0;arguments[0]instanceof Function?a=arguments[0]:isNumber(arguments[0])&&(b=arguments[0]);isNumber(arguments[1])&&(b=arguments[1]);if(b&TypedArrayVector.NUMERIC)return this._sortNumeric(b&vector.DESCENDING);Array.prototype.sort.call(this._view(),function(c,d){return compare(c,d,b,a)})}; vector.prototype.asGetNumericProperty=function(a){checkArguments&&asCheckVectorGetNumericProperty(a,this._length);return this._buffer[this._offset+a]};vector.prototype.asSetNumericProperty=function(a,b){checkArguments&&asCheckVectorSetNumericProperty(a,this._length,this._fixed);a===this._length&&(this._ensureCapacity(this._length+1),this._length++);this._buffer[this._offset+a]=b};vector.prototype.shift=function(){this._checkFixed();if(0===this._length)return 0;this._length--;return this._buffer[this._offset++]}; vector.prototype._checkFixed=function(){this._fixed&&throwError("RangeError",Errors.VectorFixedError)};vector.prototype._slide=function(a){this._buffer.set(this._view(),this._offset+a);this._offset+=a};vector.prototype.unshift=function(){this._checkFixed();if(arguments.length){this._ensureCapacity(this._length+arguments.length);this._slide(arguments.length);this._offset-=arguments.length;this._length+=arguments.length;for(var a=0;a<arguments.length;a++)this._buffer[this._offset+a]=arguments[a]}}; vector.prototype.asGetEnumerableKeys=function(){if(vector.prototype===this)return Object.prototype.asGetEnumerableKeys.call(this);for(var a=[],b=0;b<this._length;b++)a.push(b);return a};vector.prototype.asHasProperty=function(a,b,c){if(vector.prototype===this||!isNumeric(b))return Object.prototype.asHasProperty.call(this,a,b,c);a=toNumber(b);return 0<=a&&a<this._length}; Object.defineProperty(vector.prototype,"length",{get:function(){return this._length},set:function(a){a>>>=0;if(a>this._length){this._ensureCapacity(a);for(var b=this._offset+this._length,c=this._offset+a;b<c;b++)this._buffer[b]=DEFAULT_VALUE}this._length=a}}); vector.prototype._spliceHelper=function(a,b,c,d,f){debugger;b=clamp(b,0,d.length-f);c=clamp(c,0,this._length-a);this._ensureCapacity(this._length-c+b);var e=this._offset+a+c,e=this._buffer.subarray(e,e+this._length-a-c);this._buffer.set(e,this._offset+a+b);this._length+=b-c;for(c=0;c<b;c++)this._buffer[this._offset+a+c]=d.asGetNumericProperty(f+c)}; vector.prototype.asGetEnumerableKeys=function(){if(vector.prototype===this)return Object.prototype.asGetEnumerableKeys.call(this);for(var a=[],b=0;b<this._length;b++)a.push(b);return a};';
-var Int32Vector = new Function(typedArrayVectorTemplate.replace(/Int32Array/g, 'Int32Array') + ' return vector;')();
-var Uint32Vector = new Function(typedArrayVectorTemplate.replace(/Int32Array/g, 'Uint32Array') + ' return vector;')();
-var Float64Vector = new Function(typedArrayVectorTemplate.replace(/Int32Array/g, 'Float64Array') + ' return vector;')();
-Int32Vector = TypedArrayVector;
+var Int32Vector = TypedArrayVector;
+var Uint32Vector = new Function(originalStringReplace.call(typedArrayVectorTemplate, /Int32Array/g, 'Uint32Array') + ' return vector;')();
+var Float64Vector = new Function(originalStringReplace.call(typedArrayVectorTemplate, /Int32Array/g, 'Float64Array') + ' return vector;')();
 Int32Vector.prototype.asGetProperty = function (namespaces, name, flags) {
   if (typeof name === 'number') {
     return this.asGetNumericProperty(name);
@@ -28473,7 +30360,6 @@ var XMLClass, XMLListClass, QNameClass, ASXML, XML, ASXMLList, XMLList;
 var isXMLType, isXMLName, XMLParser;
 (function () {
   function XMLEncoder(ancestorNamespaces, indentLevel, prettyPrinting) {
-    var indent = '\n  ';
     function visit(node, encode) {
       if (node.isXML) {
         switch (node.kind) {
@@ -28504,7 +30390,7 @@ var isXMLType, isXMLName, XMLParser;
           var prefix = ns.prefix ? ns.prefix + ':' : '';
           s = '<' + prefix + n.name.localName;
           var namespaceDeclarations = [];
-          if (ns.prefix || ns.originalURI) {
+          if (ns.prefix || ns.uri) {
             namespaceDeclarations.push(ns);
           }
           if (prefix) {
@@ -28524,9 +30410,9 @@ var isXMLType, isXMLName, XMLParser;
           for (var i = 0; i < namespaceDeclarations.length; i++) {
             a = namespaceDeclarations[i];
             if (a.prefix) {
-              s += ' xmlns:' + a.prefix + '="' + a.originalURI + '"';
+              s += ' xmlns:' + a.prefix + '="' + a.uri + '"';
             } else {
-              s += ' xmlns="' + a.originalURI + '"';
+              s += ' xmlns="' + a.uri + '"';
             }
           }
           for (var i = 0; i < n.attributes.length; i++) {
@@ -28548,7 +30434,7 @@ var isXMLType, isXMLName, XMLParser;
           return s;
         },
         text: function (text) {
-          return text.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          return escapeAttributeValue(text.value);
         },
         attribute: function (n) {
           return escapeAttributeValue(n.value);
@@ -28576,7 +30462,7 @@ var isXMLType, isXMLName, XMLParser;
     this.encode = encode;
   }
   function escapeAttributeValue(v) {
-    return v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return v.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;');
   }
   XMLParser = function XMLParser() {
     function parseXml(s, sink) {
@@ -28662,9 +30548,14 @@ var isXMLType, isXMLName, XMLParser;
           };
         }
       }
+      var whitespaceMap = {
+          '10': true,
+          '13': true,
+          '9': true,
+          '32': true
+        };
       function isWhitespace(s, index) {
-        var ch = s.charCodeAt(index);
-        return ch == 10 || ch == 13 || ch == 9 || ch == 32;
+        return s.charCodeAt(index) in whitespaceMap;
       }
       function parseContent(s, start) {
         var pos = start, name, attributes = [];
@@ -28783,39 +30674,42 @@ var isXMLType, isXMLName, XMLParser;
             var scope = {
                 namespaces: []
               };
-            for (q = 0; q < content.attributes.length; ++q) {
-              if (content.attributes[q].name.substring(0, 6) === 'xmlns:') {
-                var prefix = content.attributes[q].name.substring(6);
-                var uri = content.attributes[q].value;
+            var contentAttributes = content.attributes;
+            for (q = 0; q < contentAttributes.length; ++q) {
+              var attribute = contentAttributes[q];
+              var attributeName = attribute.name;
+              if (attributeName.substring(0, 6) === 'xmlns:') {
+                var prefix = attributeName.substring(6);
+                var uri = attribute.value;
                 scope.namespaces[prefix] = trim(uri);
                 scope.namespaces.push({
                   uri: uri,
                   prefix: prefix
                 });
-                delete content.attributes[q];
-              } else if (content.attributes[q].name === 'xmlns') {
-                var prefix = '';
-                var uri = content.attributes[q].value;
+                delete contentAttributes[q];
+              } else if (attributeName === 'xmlns') {
+                var uri = attribute.value;
                 scope.namespaces['xmlns'] = trim(uri);
                 scope.namespaces.push({
                   uri: uri,
-                  prefix: prefix
+                  prefix: ''
                 });
-                delete content.attributes[q];
-              } else if (content.attributes[q].name.substring(0, 4) === 'xml:') {
-                scope[content.attributes[q].name.substring(4)] = trim(content.attributes[q].value);
-              } else if (content.attributes[q].name.substring(0, 3) === 'xml') {
+                delete contentAttributes[q];
+              } else if (attributeName.substring(0, 4) === 'xml:') {
+                scope[attributeName.substring(4)] = trim(attribute.value);
+              } else if (attributeName.substring(0, 3) === 'xml') {
                 throw 'Invalid xml attribute';
               } else {
               }
             }
             scopes.push(scope);
             var attributes = [];
-            for (q = 0; q < content.attributes.length; ++q) {
-              if (content.attributes[q]) {
+            for (q = 0; q < contentAttributes.length; ++q) {
+              attribute = contentAttributes[q];
+              if (attribute) {
                 attributes.push({
-                  name: getName(content.attributes[q].name, false),
-                  value: content.attributes[q].value
+                  name: getName(attribute.name, false),
+                  value: attribute.value
                 });
               }
             }
@@ -28848,13 +30742,15 @@ var isXMLType, isXMLName, XMLParser;
           elementsStack.push(parent);
           currentElement = createNode('element', name.namespace, name.localName, name.prefix);
           for (var i = 0; i < attrs.length; ++i) {
-            var attr = createNode('attribute', attrs[i].name.namespace, attrs[i].name.localName, attrs[i].name.prefix);
-            attr.value = attrs[i].value;
+            var rawAttr = attrs[i];
+            var attr = createNode('attribute', rawAttr.name.namespace, rawAttr.name.localName, rawAttr.name.prefix);
+            attr.value = rawAttr.value;
             currentElement.attributes.push(attr);
           }
           var namespaces = scope.namespaces;
           for (var i = 0; i < namespaces.length; ++i) {
-            var ns = ShumwayNamespace.createNamespace(namespaces[i].uri, namespaces[i].prefix);
+            var rawNs = namespaces[i];
+            var ns = ASNamespace.createNamespace(rawNs.uri, rawNs.prefix);
             currentElement.inScopeNamespaces.push(ns);
           }
           parent.insert(parent.length(), currentElement);
@@ -28992,7 +30888,7 @@ var isXMLType, isXMLName, XMLParser;
       }
       scope = scope.parent;
     }
-    var ns = ShumwayNamespace.createNamespace('', '');
+    var ns = ASNamespace.createNamespace('', '');
     return ns;
   }
   isXMLName = function isXMLName(v) {
@@ -29005,19 +30901,19 @@ var isXMLType, isXMLName, XMLParser;
   };
   function asGetProperty(namespaces, name, flags, isMethod) {
     var mn = isNumeric(name) ? toNumber(name) : name instanceof QName ? name.mn : new Multiname(namespaces ? namespaces : [
-        ShumwayNamespace.PUBLIC
+        ASNamespace.PUBLIC
       ], name, flags);
     return this.getProperty(mn, isMethod);
   }
   function asSetProperty(namespaces, name, flags, value) {
     var mn = isNumeric(name) ? toNumber(name) : name instanceof QName ? name.mn : new Multiname(namespaces ? namespaces : [
-        ShumwayNamespace.PUBLIC
+        ASNamespace.PUBLIC
       ], name, flags);
     this.setProperty(mn, value);
   }
   function asHasProperty(namespaces, name, flags) {
     var mn = isNumeric(name) ? toNumber(name) : name instanceof QName ? name.mn : new Multiname(namespaces ? namespaces : [
-        ShumwayNamespace.PUBLIC
+        ASNamespace.PUBLIC
       ], name, flags);
     return this.hasProperty(mn);
   }
@@ -29026,7 +30922,7 @@ var isXMLType, isXMLName, XMLParser;
     var property = this.asGetProperty(namespaces, name, flags, true);
     if (!property) {
       return this.toString().asCallProperty(namespaces ? namespaces : [
-        ShumwayNamespace.PUBLIC
+        ASNamespace.PUBLIC
       ], name, flags, isLex, args);
     }
     return property.apply(receiver, args);
@@ -29232,10 +31128,10 @@ var isXMLType, isXMLName, XMLParser;
     Xp.asCallProperty = asCallProperty;
     Xp.getProperty = function (mn, isMethod) {
       if (isMethod) {
-        var resolved = Multiname.isQName(mn) ? mn : resolveMultiname(this, mn);
+        var resolved = Multiname.isQName(mn) ? mn : this.resolveMultinameProperty(mn.namespaces, mn.name, mn.flags);
         return this[Multiname.getQualifiedName(resolved)];
       }
-      if (isNumeric(mn)) {
+      if (!Multiname.isQName(mn) && isNumeric(mn)) {
         if (Number(0) === 0) {
           return this;
         }
@@ -29266,10 +31162,10 @@ var isXMLType, isXMLName, XMLParser;
     };
     Xp.hasProperty = function (mn, isMethod) {
       if (isMethod) {
-        var resolved = Multiname.isQName(mn) ? mn : resolveMultiname(this, mn);
+        var resolved = Multiname.isQName(mn) ? mn : this.resolveMultinameProperty(mn.namespaces, mn.name, mn.flags);
         return !(!this[Multiname.getQualifiedName(resolved)]);
       }
-      if (isNumeric(mn)) {
+      if (!Multiname.isQName(mn) && isNumeric(mn)) {
         if (Number(0) === 0) {
           return true;
         }
@@ -29300,7 +31196,7 @@ var isXMLType, isXMLName, XMLParser;
           })) {
           return true;
         }
-        var resolved = Multiname.isQName(mn) ? mn : resolveMultiname(this, mn);
+        var resolved = Multiname.isQName(mn) ? mn : this.resolveMultinameProperty(mn.namespaces, mn.name, mn.flags);
         return !(!this[Multiname.getQualifiedName(resolved)]);
       }
     };
@@ -29889,7 +31785,7 @@ var isXMLType, isXMLName, XMLParser;
     };
     XLp.getProperty = function (mn, isMethod) {
       if (isMethod) {
-        var resolved = Multiname.isQName(mn) ? mn : resolveMultiname(this, mn);
+        var resolved = Multiname.isQName(mn) ? mn : this.resolveMultinameProperty(mn.namespaces, mn.name, mn.flags);
         return this[Multiname.getQualifiedName(resolved)];
       }
       var x = this;
@@ -29912,7 +31808,7 @@ var isXMLType, isXMLName, XMLParser;
     };
     XLp.hasProperty = function (mn, isMethod) {
       if (isMethod) {
-        var resolved = Multiname.isQName(mn) ? mn : resolveMultiname(this, mn);
+        var resolved = Multiname.isQName(mn) ? mn : this.resolveMultinameProperty(mn.namespaces, mn.name, mn.flags);
         return !(!this[Multiname.getQualifiedName(resolved)]);
       }
       var x = this;
@@ -30252,7 +32148,7 @@ var isXMLType, isXMLName, XMLParser;
     defineNonEnumerableGetter(QNp, 'uri', function () {
       if (!this._uri) {
         var ns = this.mn.namespaces[0];
-        this._uri = ns && ns.originalURI ? ns.originalURI : this.isAny || this.isAnyNamespace ? null : '';
+        this._uri = ns && ns.uri ? ns.uri : this.isAny || this.isAnyNamespace ? null : '';
       }
       return this._uri;
     });
@@ -30276,7 +32172,7 @@ var isXMLType, isXMLName, XMLParser;
         }
       }
       if (!ns) {
-        ns = ShumwayNamespace.createNamespace(this.uri);
+        ns = ASNamespace.createNamespace(this.uri);
       }
       return ns;
     };
@@ -30297,107 +32193,6 @@ var isXMLType, isXMLName, XMLParser;
     };
     return c;
   };
-}());
-var JSON;
-JSON || (JSON = {});
-(function () {
-  function k(a) {
-    return a < 10 ? '0' + a : a;
-  }
-  function o(a) {
-    p.lastIndex = 0;
-    return p.test(a) ? '"' + a.replace(p, function (a) {
-      var c = r[a];
-      return typeof c === 'string' ? c : '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-    }) + '"' : '"' + a + '"';
-  }
-  function l(a, j) {
-    var c, d, h, m, g = e, f, b = j[a];
-    b && typeof b === 'object' && typeof b.toJSON === 'function' && (b = b.toJSON(a));
-    typeof i === 'function' && (b = i.call(j, a, b));
-    switch (typeof b) {
-    case 'string':
-      return o(b);
-    case 'number':
-      return isFinite(b) ? String(b) : 'null';
-    case 'boolean':
-    case 'null':
-      return String(b);
-    case 'object':
-      if (!b)
-        return 'null';
-      e += n;
-      f = [];
-      if (Object.prototype.toString.apply(b) === '[object Array]') {
-        m = b.length;
-        for (c = 0; c < m; c += 1)
-          f[c] = l(c, b) || 'null';
-        h = f.length === 0 ? '[]' : e ? '[\n' + e + f.join(',\n' + e) + '\n' + g + ']' : '[' + f.join(',') + ']';
-        e = g;
-        return h;
-      }
-      if (i && typeof i === 'object') {
-        m = i.length;
-        for (c = 0; c < m; c += 1)
-          typeof i[c] === 'string' && (d = i[c], (h = l(d, b)) && f.push(o(d) + (e ? ': ' : ':') + h));
-      } else
-        for (d in b)
-          Object.prototype.hasOwnProperty.call(b, d) && (h = l(d, b)) && f.push(o(d) + (e ? ': ' : ':') + h);
-      h = f.length === 0 ? '{}' : e ? '{\n' + e + f.join(',\n' + e) + '\n' + g + '}' : '{' + f.join(',') + '}';
-      e = g;
-      return h;
-    }
-  }
-  if (typeof Date.prototype.toJSON !== 'function')
-    Date.prototype.toJSON = function () {
-      return isFinite(this.valueOf()) ? this.getUTCFullYear() + '-' + k(this.getUTCMonth() + 1) + '-' + k(this.getUTCDate()) + 'T' + k(this.getUTCHours()) + ':' + k(this.getUTCMinutes()) + ':' + k(this.getUTCSeconds()) + 'Z' : null;
-    }, String.prototype.toJSON = Number.prototype.toJSON = Boolean.prototype.toJSON = function () {
-      return this.valueOf();
-    };
-  var q = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g, p = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g, e, n, r = {
-      '\b': '\\b',
-      '\t': '\\t',
-      '\n': '\\n',
-      '\f': '\\f',
-      '\r': '\\r',
-      '"': '\\"',
-      '\\': '\\\\'
-    }, i;
-  if (typeof JSON.stringify !== 'function')
-    JSON.stringify = function (a, j, c) {
-      var d;
-      n = e = '';
-      if (typeof c === 'number')
-        for (d = 0; d < c; d += 1)
-          n += ' ';
-      else
-        typeof c === 'string' && (n = c);
-      if ((i = j) && typeof j !== 'function' && (typeof j !== 'object' || typeof j.length !== 'number'))
-        throw Error('JSON.stringify');
-      return l('', {
-        '': a
-      });
-    };
-  if (typeof JSON.parse !== 'function')
-    JSON.parse = function (a, e) {
-      function c(a, d) {
-        var g, f, b = a[d];
-        if (b && typeof b === 'object')
-          for (g in b)
-            Object.prototype.hasOwnProperty.call(b, g) && (f = c(b, g), f !== void 0 ? b[g] = f : delete b[g]);
-        return e.call(a, d, b);
-      }
-      var d, a = String(a);
-      q.lastIndex = 0;
-      q.test(a) && (a = a.replace(q, function (a) {
-        return '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-      }));
-      if (/^[\],:{}\s]*$/.test(a.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, '')))
-        return d = eval('(' + a + ')'), typeof e === 'function' ? c({
-          '': d
-        }, '') : d;
-      throw new SyntaxError('JSON.parse');
-    };
 }());
 var AMFUtils = function AMFUtilsClosure() {
     var AMF0_NUMBER_MARKER = 0;
@@ -30896,11 +32691,9 @@ var proxyTrapQns = {
   };
 for (var name in proxyTrapQns) {
   proxyTrapQns[name] = VM_OPEN_METHOD_PREFIX + Multiname.getQualifiedName(new Multiname([
-    ShumwayNamespace.PROXY
+    ASNamespace.PROXY
   ], name));
 }
-var VM_IS_PROXY = 'vm is proxy';
-var VM_CALL_PROXY = 'vm call proxy';
 function isProxyObject(obj) {
   return obj[VM_IS_PROXY];
 }
@@ -30950,7 +32743,7 @@ function installProxyClassWrapper(cls) {
               if (TRACE_PROXY) {
                 print('proxy call, class: ' + target.class + ', mn: ' + mn + 'hasNonProxyingCallerr: ' + hasNonProxyingCaller());
               }
-              var resolved = Multiname.isQName(mn) ? mn : resolveMultiname(target, mn);
+              var resolved = Multiname.isQName(mn) ? mn : target.resolveMultinameProperty(mn.namespaces, mn.name, mn.flags);
               var qn = resolved ? Multiname.getQualifiedName(resolved) : Multiname.getPublicQualifiedName(mn.name);
               if (!nameInTraits(target, qn)) {
                 return target[proxyTrapQns.callProperty](mn.name, args);
@@ -30958,8 +32751,8 @@ function installProxyClassWrapper(cls) {
               if (TRACE_PROXY) {
                 TRACE_PROXY && print('> proxy pass through ' + resolved);
               }
-              if (target[VM_OPEN_METHODS] && target[VM_OPEN_METHODS][qn]) {
-                return target[VM_OPEN_METHODS][qn].apply(o, args);
+              if (target.asOpenMethods && target.asOpenMethods[qn]) {
+                return target.asOpenMethods[qn].apply(o, args);
               }
               return undefined;
             };
@@ -30973,8 +32766,8 @@ function installProxyClassWrapper(cls) {
               return target[proxyTrapQns.getProperty](name);
             }
           }
-          if (target[VM_OPEN_METHODS] && target[VM_OPEN_METHODS][qn]) {
-            return bindSafely(target[VM_OPEN_METHODS][qn], o);
+          if (target.asOpenMethods && target.asOpenMethods[qn]) {
+            return bindSafely(target.asOpenMethods[qn], o);
           }
           TRACE_PROXY && print('> proxy pass through ' + qn);
           return target[qn];
@@ -31114,7 +32907,7 @@ function debugBreak(message) {
   debugger;
   print('\x1b[91mdebugBreak: ' + message + '\x1b[0m');
 }
-var ASNamespace;
+var NativeASNamespace;
 var natives = function () {
     var C = ApplicationDomain.passthroughCallable;
     var CC = ApplicationDomain.constructingCallable;
@@ -31122,14 +32915,6 @@ var natives = function () {
       var c = new Class('Object', Object, C(Object));
       c.native = {
         instance: {
-          length: {
-            get: function () {
-              return this.length;
-            },
-            set: function (l) {
-              this.length = l;
-            }
-          },
           isPrototypeOf: Object.prototype.isPrototypeOf,
           hasOwnProperty: function (name) {
             if (name === undefined) {
@@ -31230,7 +33015,7 @@ var natives = function () {
           length: {
             get: function () {
               if (this.hasOwnProperty(VM_LENGTH)) {
-                return this[VM_LENGTH];
+                return this.asLength;
               }
               return this.length;
             }
@@ -31250,6 +33035,16 @@ var natives = function () {
       };
       return c;
     }
+    function MethodClosure($this, fn) {
+      var bound = bindSafely(fn, $this);
+      defineNonEnumerableProperty(this, 'call', bound.call.bind(bound));
+      defineNonEnumerableProperty(this, 'apply', bound.apply.bind(bound));
+    }
+    MethodClosure.prototype = {
+      toString: function () {
+        return 'function Function() {}';
+      }
+    };
     function MethodClosureClass(runtime, scope, instanceConstructor, baseClass) {
       var c = new Class('MethodClosure', MethodClosure);
       c.extendBuiltin(baseClass);
@@ -31626,7 +33421,7 @@ var natives = function () {
       return c;
     }
     function NamespaceClass(runtime, scope, instanceConstructor, baseClass) {
-      ASNamespace = function ASNamespace(prefixValue, uriValue) {
+      NativeASNamespace = function NativeASNamespace(prefixValue, uriValue) {
         if (uriValue === undefined) {
           uriValue = prefixValue;
           prefixValue = undefined;
@@ -31638,8 +33433,8 @@ var natives = function () {
             uri = '';
           } else if (typeof uriValue === 'object') {
             prefix = uriValue.prefix;
-            if (uriValue instanceof ShumwayNamespace) {
-              uri = uriValue.originalURI;
+            if (uriValue instanceof ASNamespace) {
+              uri = uriValue.uri;
             } else if (uriValue instanceof QName) {
               uri = uriValue.uri;
             }
@@ -31671,11 +33466,11 @@ var natives = function () {
             prefix = prefixValue + '';
           }
         }
-        return ShumwayNamespace.createNamespace(uri, prefix);
+        return ASNamespace.createNamespace(uri, prefix);
       };
-      var c = new Class('Namespace', ASNamespace, C(ASNamespace));
-      c.extendNative(baseClass, ShumwayNamespace);
-      var Np = ShumwayNamespace.prototype;
+      var c = new Class('Namespace', NativeASNamespace, C(NativeASNamespace));
+      c.extendNative(baseClass, ASNamespace);
+      var Np = ASNamespace.prototype;
       c.native = {
         instance: {
           prefix: {
@@ -31710,7 +33505,7 @@ var natives = function () {
           var key = keys[i];
           var jsKey = key;
           if (!isNumeric(key)) {
-            jsKey = fromResolvedName(key);
+            jsKey = Multiname.getNameFromPublicQualifiedName(key);
           }
           result[jsKey] = transformASValueToJS(value[key]);
         }
@@ -31951,7 +33746,7 @@ var natives = function () {
         instance: {
           init: function (base) {
             this.base = base;
-            this.nativeObject = new ApplicationDomain(avm2, base ? base.nativeObject : null);
+            this.nativeObject = new ApplicationDomain(AVM2.instance, base ? base.nativeObject : null);
           },
           loadBytes: function (byteArray, swfVersion) {
             this.nativeObject.executeAbc(new AbcFile(byteArray.readRawBytes()));
@@ -32104,9 +33899,9 @@ var natives = function () {
           }
           if (cls) {
             var name = cls.classInfo.instanceInfo.name;
-            var originalURI = name.namespaces[0].originalURI;
-            if (originalURI) {
-              return originalURI + '::' + name.name;
+            var uri = name.namespaces[0].uri;
+            if (uri) {
+              return uri + '::' + name.name;
             }
             return name.name;
           }
@@ -32134,9 +33929,9 @@ var natives = function () {
           }
           if (cls && cls.baseClass) {
             var name = cls.baseClass.classInfo.instanceInfo.name;
-            var originalURI = name.namespaces[0].originalURI;
-            if (originalURI) {
-              return originalURI + '::' + name.name;
+            var uri = name.namespaces[0].uri;
+            if (uri) {
+              return uri + '::' + name.name;
             }
             return name.name;
           }
@@ -32201,8 +33996,8 @@ var natives = function () {
       function unmangledQualifiedName(mn) {
         var name = mn.name;
         var namespace = mn.namespaces[0];
-        if (namespace && namespace.originalURI) {
-          return namespace.originalURI + '::' + name;
+        if (namespace && namespace.uri) {
+          return namespace.uri + '::' + name;
         }
         return name;
       }
@@ -32592,7 +34387,7 @@ var SourceTracer = function () {
         traits.forEach(function (trait) {
           var str;
           var accessModifier = Multiname.getAccessModifier(trait.name);
-          var namespaceName = trait.name.namespaces[0].originalURI;
+          var namespaceName = trait.name.namespaces[0].uri;
           if (namespaceName) {
             if (namespaceName === 'http://adobe.com/AS3/2006/builtin') {
               namespaceName = 'AS3';
@@ -32642,15 +34437,15 @@ var SourceTracer = function () {
               var prefix = '';
               if (trait.holder instanceof ClassInfo) {
                 className = trait.holder.instanceInfo.name;
-                if (className.namespaces[0].originalURI) {
-                  prefix += className.namespaces[0].originalURI + '::';
+                if (className.namespaces[0].uri) {
+                  prefix += className.namespaces[0].uri + '::';
                 }
                 prefix += className.getName();
                 prefix += '$/';
               } else if (trait.holder instanceof InstanceInfo) {
                 className = trait.holder.name;
-                if (className.namespaces[0].originalURI) {
-                  prefix += className.namespaces[0].originalURI + '::';
+                if (className.namespaces[0].uri) {
+                  prefix += className.namespaces[0].uri + '::';
                 }
                 prefix += className.getName();
                 prefix += '/';
@@ -32672,7 +34467,7 @@ var SourceTracer = function () {
             }
           } else if (trait.isClass()) {
             var className = trait.classInfo.instanceInfo.name;
-            writer.enter('package ' + className.namespaces[0].originalURI + ' {\n');
+            writer.enter('package ' + className.namespaces[0].uri + ' {\n');
             tracer.traceMetadata(trait.metadata);
             tracer.traceClass(trait.classInfo);
             writer.leave('\n}');
@@ -32742,7 +34537,7 @@ var SourceTracer = function () {
         writer.writeLn('Cut and paste the following glue and edit accordingly.');
         writer.writeLn('Class ' + ii);
         writer.writeLn('8< --------------------------------------------------------------');
-        var originalURI = ii.name.namespaces[0].originalURI;
+        var uri = ii.name.namespaces[0].uri;
         writer.enter('var ' + className + 'Definition = (function () {');
         function maxTraitNameLength(traits) {
           var length = 0;
@@ -32825,7 +34620,7 @@ var SourceTracer = function () {
         }
         writer.enter('return {');
         writer.writeLn('// (' + getSignature(ii.init, false) + ')');
-        writer.writeLn('__class__: "' + originalURI + '.' + className + '",');
+        writer.writeLn('__class__: "' + uri + '.' + className + '",');
         writer.enter('initialize: function () {');
         writer.leave('},');
         writer.enter('__glue__: {');
@@ -32873,7 +34668,7 @@ var SourceTracer = function () {
         }
         var interfaceNamespace;
         if (ii.isInterface()) {
-          interfaceNamespace = name.namespaces[0].originalURI + ':' + name.name;
+          interfaceNamespace = name.namespaces[0].uri + ':' + name.name;
         }
         this.traceTraits(ci.traits, true, interfaceNamespace);
         this.traceTraits(ii.traits, false, interfaceNamespace);
@@ -32903,10 +34698,10 @@ function traceSource(writer, abc) {
   });
 }
 function traceStatistics(writer, abc) {
-  var libraryClassCounter = new metrics.Counter(true);
-  var librarySuperClassCounter = new metrics.Counter(true);
-  var libraryMethodCounter = new metrics.Counter(true);
-  var libraryProperties = new metrics.Counter(true);
+  var libraryClassCounter = new Shumway.Metrics.Counter(true);
+  var librarySuperClassCounter = new Shumway.Metrics.Counter(true);
+  var libraryMethodCounter = new Shumway.Metrics.Counter(true);
+  var libraryProperties = new Shumway.Metrics.Counter(true);
   var definedClasses = {};
   var definedMethods = {};
   var definedProperties = {};
@@ -32938,7 +34733,7 @@ function traceStatistics(writer, abc) {
       }
     });
   });
-  var opCounter = new metrics.Counter(true);
+  var opCounter = new Shumway.Metrics.Counter(true);
   abc.methods.forEach(function (m) {
     if (!m.code) {
       return;
@@ -33049,9 +34844,71 @@ function traceStatistics(writer, abc) {
     operations: opCounter.counts
   }, null, 2));
 }
-var Interpreter = new (function () {
-    function Interpreter() {
-    }
+var Shumway;
+(function (Shumway) {
+  (function (AVM2) {
+    var OP = Shumway.AVM2.ABC.OP;
+    var Scope = Shumway.AVM2.Runtime.Scope;
+    var asCoerceByMultiname = Shumway.AVM2.Runtime.asCoerceByMultiname;
+    var asGetSlot = Shumway.AVM2.Runtime.asGetSlot;
+    var asSetSlot = Shumway.AVM2.Runtime.asSetSlot;
+    var asHasNext2 = Shumway.AVM2.Runtime.asHasNext2;
+    var asCoerce = Shumway.AVM2.Runtime.asCoerce;
+    var asCoerceString = Shumway.AVM2.Runtime.asCoerceString;
+    var asAsType = Shumway.AVM2.Runtime.asAsType;
+    var asTypeOf = Shumway.AVM2.Runtime.asTypeOf;
+    var asIsInstanceOf = Shumway.AVM2.Runtime.asIsInstanceOf;
+    var asIsType = Shumway.AVM2.Runtime.asIsType;
+    var applyType = Shumway.AVM2.Runtime.applyType;
+    var createFunction = Shumway.AVM2.Runtime.createFunction;
+    var createClass = Shumway.AVM2.Runtime.createClass;
+    var getDescendants = Shumway.AVM2.Runtime.getDescendants;
+    var checkFilter = Shumway.AVM2.Runtime.checkFilter;
+    var asAdd = Shumway.AVM2.Runtime.asAdd;
+    var translateError = Shumway.AVM2.Runtime.translateError;
+    var asCreateActivation = Shumway.AVM2.Runtime.asCreateActivation;
+    var sliceArguments = Shumway.AVM2.Runtime.sliceArguments;
+    var boxValue = Shumway.ObjectUtilities.boxValue;
+    var popManyInto = Shumway.ArrayUtilities.popManyInto;
+    var construct = Shumway.AVM2.Runtime.construct;
+    var Multiname = Shumway.AVM2.ABC.Multiname;
+    var ScopeStack = function () {
+        function ScopeStack(parent) {
+          this.parent = parent;
+          this.stack = [];
+          this.isWith = [];
+        }
+        ScopeStack.prototype.push = function (object, isWith) {
+          this.stack.push(object);
+          this.isWith.push(!(!isWith));
+        };
+        ScopeStack.prototype.get = function (index) {
+          return this.stack[index];
+        };
+        ScopeStack.prototype.clear = function () {
+          this.stack.length = 0;
+          this.isWith.length = 0;
+        };
+        ScopeStack.prototype.pop = function () {
+          this.isWith.pop();
+          this.stack.pop();
+        };
+        ScopeStack.prototype.topScope = function () {
+          if (!this.scopes) {
+            this.scopes = [];
+          }
+          var parent = this.parent;
+          for (var i = 0; i < this.stack.length; i++) {
+            var object = this.stack[i], isWith = this.isWith[i], scope = this.scopes[i];
+            if (!scope || scope.parent !== parent || scope.object !== object || scope.isWith !== isWith) {
+              scope = this.scopes[i] = new Scope(parent, object, isWith);
+            }
+            parent = scope;
+          }
+          return parent;
+        };
+        return ScopeStack;
+      }();
     function popNameInto(stack, mn, out) {
       out.flags = mn.flags;
       if (mn.isRuntimeName()) {
@@ -33067,3888 +34924,536 @@ var Interpreter = new (function () {
         out.namespaces = mn.namespaces;
       }
     }
-    Interpreter.prototype = {
-      interpretMethod: function interpretMethod($this, method, savedScope, methodArgs) {
-        true;
-        Counter.count('Interpret Method');
-        var abc = method.abc;
-        var ints = abc.constantPool.ints;
-        var uints = abc.constantPool.uints;
-        var doubles = abc.constantPool.doubles;
-        var strings = abc.constantPool.strings;
-        var methods = abc.methods;
-        var multinames = abc.constantPool.multinames;
-        var domain = abc.applicationDomain;
-        var exceptions = method.exceptions;
-        var locals = [
-            $this
-          ];
-        var stack = [], scopeStack = new ScopeStack(savedScope);
-        var parameterCount = method.parameters.length;
-        var argCount = methodArgs.length;
-        var value;
-        for (var i = 0; i < parameterCount; i++) {
-          var parameter = method.parameters[i];
-          if (i < argCount) {
-            value = methodArgs[i];
-          } else {
-            value = parameter.value;
-          }
-          if (parameter.type && !parameter.type.isAnyName()) {
-            value = asCoerceByMultiname(domain, parameter.type, value);
-          }
-          locals.push(value);
+    var Interpreter = function () {
+        function Interpreter() {
         }
-        if (method.needsRest()) {
-          locals.push(sliceArguments(methodArgs, parameterCount));
-        } else if (method.needsArguments()) {
-          locals.push(sliceArguments(methodArgs, 0));
-        }
-        var bytecodes = method.analysis.bytecodes;
-        var object, index, multiname, result, a, b, args = [], mn = Multiname.TEMPORARY;
-        interpret:
-          for (var pc = 0, end = bytecodes.length; pc < end;) {
-            try {
-              var bc = bytecodes[pc];
-              var op = bc.op;
-              switch (op | 0) {
-              case 3:
-                throw stack.pop();
-              case 4:
-                popNameInto(stack, multinames[bc.index], mn);
-                stack.push(stack.pop().asGetSuper(savedScope, mn.namespaces, mn.name, mn.flags));
-                break;
-              case 5:
-                value = stack.pop();
-                popNameInto(stack, multinames[bc.index], mn);
-                stack.pop().asSetSuper(savedScope, mn.namespaces, mn.name, mn.flags, value);
-                break;
-              case 8:
-                locals[bc.index] = undefined;
-                break;
-              case 12:
-                b = stack.pop();
-                a = stack.pop();
-                pc = !(a < b) ? bc.offset : pc + 1;
-                continue;
-              case 24:
-                b = stack.pop();
-                a = stack.pop();
-                pc = a >= b ? bc.offset : pc + 1;
-                continue;
-              case 13:
-                b = stack.pop();
-                a = stack.pop();
-                pc = !(a <= b) ? bc.offset : pc + 1;
-                continue;
-              case 23:
-                b = stack.pop();
-                a = stack.pop();
-                pc = a > b ? bc.offset : pc + 1;
-                continue;
-              case 14:
-                b = stack.pop();
-                a = stack.pop();
-                pc = !(a > b) ? bc.offset : pc + 1;
-                continue;
-              case 22:
-                b = stack.pop();
-                a = stack.pop();
-                pc = a <= b ? bc.offset : pc + 1;
-                continue;
-              case 15:
-                b = stack.pop();
-                a = stack.pop();
-                pc = !(a >= b) ? bc.offset : pc + 1;
-                continue;
-              case 21:
-                b = stack.pop();
-                a = stack.pop();
-                pc = a < b ? bc.offset : pc + 1;
-                continue;
-              case 16:
-                pc = bc.offset;
-                continue;
-              case 17:
-                pc = !(!stack.pop()) ? bc.offset : pc + 1;
-                continue;
-              case 18:
-                pc = !stack.pop() ? bc.offset : pc + 1;
-                continue;
-              case 19:
-                b = stack.pop();
-                a = stack.pop();
-                pc = a == b ? bc.offset : pc + 1;
-                continue;
-              case 20:
-                b = stack.pop();
-                a = stack.pop();
-                pc = a != b ? bc.offset : pc + 1;
-                continue;
-              case 25:
-                b = stack.pop();
-                a = stack.pop();
-                pc = a === b ? bc.offset : pc + 1;
-                continue;
-              case 26:
-                b = stack.pop();
-                a = stack.pop();
-                pc = a !== b ? bc.offset : pc + 1;
-                continue;
-              case 27:
-                index = stack.pop();
-                if (index < 0 || index >= bc.offsets.length) {
-                  index = bc.offsets.length - 1;
-                }
-                pc = bc.offsets[index];
-                continue;
-              case 28:
-                scopeStack.push(boxValue(stack.pop()), true);
-                break;
-              case 29:
-                scopeStack.pop();
-                break;
-              case 30:
-                index = stack.pop();
-                stack[stack.length - 1] = boxValue(stack[stack.length - 1]).asNextName(index);
-                break;
-              case 35:
-                index = stack.pop();
-                stack[stack.length - 1] = boxValue(stack[stack.length - 1]).asNextValue(index);
-                break;
-              case 50:
-                result = asHasNext2(locals[bc.object], locals[bc.index]);
-                locals[bc.object] = result.object;
-                locals[bc.index] = result.index;
-                stack.push(!(!result.index));
-                break;
-              case 32:
-                stack.push(null);
-                break;
-              case 33:
-                stack.push(undefined);
-                break;
-              case 36:
-              case 37:
-                stack.push(bc.value);
-                break;
-              case 44:
-                stack.push(strings[bc.index]);
-                break;
-              case 45:
-                stack.push(ints[bc.index]);
-                break;
-              case 46:
-                stack.push(uints[bc.index]);
-                break;
-              case 47:
-                stack.push(doubles[bc.index]);
-                break;
-              case 38:
-                stack.push(true);
-                break;
-              case 39:
-                stack.push(false);
-                break;
-              case 40:
-                stack.push(NaN);
-                break;
-              case 41:
-                stack.pop();
-                break;
-              case 42:
-                stack.push(stack[stack.length - 1]);
-                break;
-              case 43:
-                object = stack[stack.length - 1];
-                stack[stack.length - 1] = stack[stack.length - 2];
-                stack[stack.length - 2] = object;
-                break;
-              case 48:
-                scopeStack.push(boxValue(stack.pop()));
-                break;
-              case 64:
-                stack.push(createFunction(methods[bc.index], scopeStack.topScope(), true));
-                break;
-              case 65:
-                popManyInto(stack, bc.argCount, args);
-                object = stack.pop();
-                stack[stack.length - 1] = stack[stack.length - 1].apply(object, args);
-                break;
-              case 66:
-                popManyInto(stack, bc.argCount, args);
-                stack[stack.length - 1] = construct(stack[stack.length - 1], args);
-                break;
-              case 71:
-                return;
-              case 72:
-                if (method.returnType) {
-                  return asCoerceByMultiname(domain, method.returnType, stack.pop());
-                }
-                return stack.pop();
-              case 73:
-                popManyInto(stack, bc.argCount, args);
-                object = stack.pop();
-                savedScope.object.baseClass.instanceConstructorNoInitialize.apply(object, args);
-                break;
-              case 74:
-                popManyInto(stack, bc.argCount, args);
-                popNameInto(stack, multinames[bc.index], mn);
-                object = boxValue(stack[stack.length - 1]);
-                object = object.asConstructProperty(mn.namespaces, mn.name, mn.flags, args);
-                stack[stack.length - 1] = object;
-                break;
-              case 75:
-                notImplemented();
-                break;
-              case 76:
-              case 70:
-              case 79:
-                popManyInto(stack, bc.argCount, args);
-                popNameInto(stack, multinames[bc.index], mn);
-                result = boxValue(stack.pop()).asCallProperty(mn.namespaces, mn.name, mn.flags, op === OP_callproplex, args);
-                if (op !== OP_callpropvoid) {
-                  stack.push(result);
-                }
-                break;
-              case 69:
-              case 78:
-                popManyInto(stack, bc.argCount, args);
-                popNameInto(stack, multinames[bc.index], mn);
-                result = stack.pop().asCallSuper(savedScope, mn.namespaces, mn.name, mn.flags, args);
-                if (op !== OP_callsupervoid) {
-                  stack.push(result);
-                }
-                break;
-              case 83:
-                popManyInto(stack, bc.argCount, args);
-                stack[stack.length - 1] = applyType(domain, stack[stack.length - 1], args);
-                break;
-              case 85:
-                object = {};
-                for (var i = 0; i < bc.argCount; i++) {
+        Interpreter.interpretMethod = function ($this, method, savedScope, methodArgs) {
+          true;
+          Counter.count('Interpret Method');
+          var abc = method.abc;
+          var ints = abc.constantPool.ints;
+          var uints = abc.constantPool.uints;
+          var doubles = abc.constantPool.doubles;
+          var strings = abc.constantPool.strings;
+          var methods = abc.methods;
+          var multinames = abc.constantPool.multinames;
+          var domain = abc.applicationDomain;
+          var exceptions = method.exceptions;
+          var locals = [
+              $this
+            ];
+          var stack = [], scopeStack = new ScopeStack(savedScope);
+          var parameterCount = method.parameters.length;
+          var argCount = methodArgs.length;
+          var value;
+          for (var i = 0; i < parameterCount; i++) {
+            var parameter = method.parameters[i];
+            if (i < argCount) {
+              value = methodArgs[i];
+            } else {
+              value = parameter.value;
+            }
+            if (parameter.type && !parameter.type.isAnyName()) {
+              value = asCoerceByMultiname(domain, parameter.type, value);
+            }
+            locals.push(value);
+          }
+          if (method.needsRest()) {
+            locals.push(sliceArguments(methodArgs, parameterCount));
+          } else if (method.needsArguments()) {
+            locals.push(sliceArguments(methodArgs, 0));
+          }
+          var bytecodes = method.analysis.bytecodes;
+          var object, index, multiname, result, a, b, args = [], mn = Multiname.TEMPORARY;
+          interpretLabel:
+            for (var pc = 0, end = bytecodes.length; pc < end;) {
+              try {
+                var bc = bytecodes[pc];
+                var op = bc.op;
+                switch (op | 0) {
+                case 3:
+                  throw stack.pop();
+                case 4:
+                  popNameInto(stack, multinames[bc.index], mn);
+                  stack.push(stack.pop().asGetSuper(savedScope, mn.namespaces, mn.name, mn.flags));
+                  break;
+                case 5:
                   value = stack.pop();
-                  object[Multiname.getPublicQualifiedName(stack.pop())] = value;
+                  popNameInto(stack, multinames[bc.index], mn);
+                  stack.pop().asSetSuper(savedScope, mn.namespaces, mn.name, mn.flags, value);
+                  break;
+                case 8:
+                  locals[bc.index] = undefined;
+                  break;
+                case 12:
+                  b = stack.pop();
+                  a = stack.pop();
+                  pc = !(a < b) ? bc.offset : pc + 1;
+                  continue;
+                case 24:
+                  b = stack.pop();
+                  a = stack.pop();
+                  pc = a >= b ? bc.offset : pc + 1;
+                  continue;
+                case 13:
+                  b = stack.pop();
+                  a = stack.pop();
+                  pc = !(a <= b) ? bc.offset : pc + 1;
+                  continue;
+                case 23:
+                  b = stack.pop();
+                  a = stack.pop();
+                  pc = a > b ? bc.offset : pc + 1;
+                  continue;
+                case 14:
+                  b = stack.pop();
+                  a = stack.pop();
+                  pc = !(a > b) ? bc.offset : pc + 1;
+                  continue;
+                case 22:
+                  b = stack.pop();
+                  a = stack.pop();
+                  pc = a <= b ? bc.offset : pc + 1;
+                  continue;
+                case 15:
+                  b = stack.pop();
+                  a = stack.pop();
+                  pc = !(a >= b) ? bc.offset : pc + 1;
+                  continue;
+                case 21:
+                  b = stack.pop();
+                  a = stack.pop();
+                  pc = a < b ? bc.offset : pc + 1;
+                  continue;
+                case 16:
+                  pc = bc.offset;
+                  continue;
+                case 17:
+                  pc = !(!stack.pop()) ? bc.offset : pc + 1;
+                  continue;
+                case 18:
+                  pc = !stack.pop() ? bc.offset : pc + 1;
+                  continue;
+                case 19:
+                  b = stack.pop();
+                  a = stack.pop();
+                  pc = a == b ? bc.offset : pc + 1;
+                  continue;
+                case 20:
+                  b = stack.pop();
+                  a = stack.pop();
+                  pc = a != b ? bc.offset : pc + 1;
+                  continue;
+                case 25:
+                  b = stack.pop();
+                  a = stack.pop();
+                  pc = a === b ? bc.offset : pc + 1;
+                  continue;
+                case 26:
+                  b = stack.pop();
+                  a = stack.pop();
+                  pc = a !== b ? bc.offset : pc + 1;
+                  continue;
+                case 27:
+                  index = stack.pop();
+                  if (index < 0 || index >= bc.offsets.length) {
+                    index = bc.offsets.length - 1;
+                  }
+                  pc = bc.offsets[index];
+                  continue;
+                case 28:
+                  scopeStack.push(boxValue(stack.pop()), true);
+                  break;
+                case 29:
+                  scopeStack.pop();
+                  break;
+                case 30:
+                  index = stack.pop();
+                  stack[stack.length - 1] = boxValue(stack[stack.length - 1]).asNextName(index);
+                  break;
+                case 35:
+                  index = stack.pop();
+                  stack[stack.length - 1] = boxValue(stack[stack.length - 1]).asNextValue(index);
+                  break;
+                case 50:
+                  result = asHasNext2(locals[bc.object], locals[bc.index]);
+                  locals[bc.object] = result.object;
+                  locals[bc.index] = result.index;
+                  stack.push(!(!result.index));
+                  break;
+                case 32:
+                  stack.push(null);
+                  break;
+                case 33:
+                  stack.push(undefined);
+                  break;
+                case 36:
+                case 37:
+                  stack.push(bc.value);
+                  break;
+                case 44:
+                  stack.push(strings[bc.index]);
+                  break;
+                case 45:
+                  stack.push(ints[bc.index]);
+                  break;
+                case 46:
+                  stack.push(uints[bc.index]);
+                  break;
+                case 47:
+                  stack.push(doubles[bc.index]);
+                  break;
+                case 38:
+                  stack.push(true);
+                  break;
+                case 39:
+                  stack.push(false);
+                  break;
+                case 40:
+                  stack.push(NaN);
+                  break;
+                case 41:
+                  stack.pop();
+                  break;
+                case 42:
+                  stack.push(stack[stack.length - 1]);
+                  break;
+                case 43:
+                  object = stack[stack.length - 1];
+                  stack[stack.length - 1] = stack[stack.length - 2];
+                  stack[stack.length - 2] = object;
+                  break;
+                case 48:
+                  scopeStack.push(boxValue(stack.pop()), false);
+                  break;
+                case 64:
+                  stack.push(createFunction(methods[bc.index], scopeStack.topScope(), true));
+                  break;
+                case 65:
+                  popManyInto(stack, bc.argCount, args);
+                  object = stack.pop();
+                  stack[stack.length - 1] = stack[stack.length - 1].apply(object, args);
+                  break;
+                case 66:
+                  popManyInto(stack, bc.argCount, args);
+                  stack[stack.length - 1] = construct(stack[stack.length - 1], args);
+                  break;
+                case 71:
+                  return;
+                case 72:
+                  if (method.returnType) {
+                    return asCoerceByMultiname(domain, method.returnType, stack.pop());
+                  }
+                  return stack.pop();
+                case 73:
+                  popManyInto(stack, bc.argCount, args);
+                  object = stack.pop();
+                  savedScope.object.baseClass.instanceConstructorNoInitialize.apply(object, args);
+                  break;
+                case 74:
+                  popManyInto(stack, bc.argCount, args);
+                  popNameInto(stack, multinames[bc.index], mn);
+                  object = boxValue(stack[stack.length - 1]);
+                  object = object.asConstructProperty(mn.namespaces, mn.name, mn.flags, args);
+                  stack[stack.length - 1] = object;
+                  break;
+                case 75:
+                  Shumway.Debug.notImplemented('OP.callsuperid');
+                  break;
+                case 76:
+                case 70:
+                case 79:
+                  popManyInto(stack, bc.argCount, args);
+                  popNameInto(stack, multinames[bc.index], mn);
+                  result = boxValue(stack.pop()).asCallProperty(mn.namespaces, mn.name, mn.flags, op === 76, args);
+                  if (op !== 79) {
+                    stack.push(result);
+                  }
+                  break;
+                case 69:
+                case 78:
+                  popManyInto(stack, bc.argCount, args);
+                  popNameInto(stack, multinames[bc.index], mn);
+                  result = stack.pop().asCallSuper(savedScope, mn.namespaces, mn.name, mn.flags, args);
+                  if (op !== 78) {
+                    stack.push(result);
+                  }
+                  break;
+                case 83:
+                  popManyInto(stack, bc.argCount, args);
+                  stack[stack.length - 1] = applyType(domain, stack[stack.length - 1], args);
+                  break;
+                case 85:
+                  object = {};
+                  for (var i = 0; i < bc.argCount; i++) {
+                    value = stack.pop();
+                    object[Multiname.getPublicQualifiedName(stack.pop())] = value;
+                  }
+                  stack.push(object);
+                  break;
+                case 86:
+                  object = [];
+                  popManyInto(stack, bc.argCount, args);
+                  object.push.apply(object, args);
+                  stack.push(object);
+                  break;
+                case 87:
+                  true;
+                  stack.push(asCreateActivation(method));
+                  break;
+                case 88:
+                  stack[stack.length - 1] = createClass(abc.classes[bc.index], stack[stack.length - 1], scopeStack.topScope());
+                  break;
+                case 89:
+                  popNameInto(stack, multinames[bc.index], mn);
+                  stack.push(getDescendants(stack.pop(), mn));
+                  break;
+                case 90:
+                  true;
+                  stack.push(exceptions[bc.index].scopeObject);
+                  break;
+                case 94:
+                case 93:
+                  popNameInto(stack, multinames[bc.index], mn);
+                  stack.push(scopeStack.topScope().findScopeProperty(mn.namespaces, mn.name, mn.flags, domain, op === 93, false));
+                  break;
+                case 96:
+                  multiname = multinames[bc.index];
+                  object = scopeStack.topScope().findScopeProperty(multiname.namespaces, multiname.name, multiname.flags, domain, true, false);
+                  stack.push(object.asGetProperty(multiname.namespaces, multiname.name, multiname.flags));
+                  break;
+                case 104:
+                case 97:
+                  value = stack.pop();
+                  popNameInto(stack, multinames[bc.index], mn);
+                  boxValue(stack.pop()).asSetProperty(mn.namespaces, mn.name, mn.flags, value);
+                  break;
+                case 98:
+                  stack.push(locals[bc.index]);
+                  break;
+                case 99:
+                  locals[bc.index] = stack.pop();
+                  break;
+                case 100:
+                  stack.push(savedScope.global.object);
+                  break;
+                case 101:
+                  stack.push(scopeStack.get(bc.index));
+                  break;
+                case 102:
+                  popNameInto(stack, multinames[bc.index], mn);
+                  stack[stack.length - 1] = boxValue(stack[stack.length - 1]).asGetProperty(mn.namespaces, mn.name, mn.flags);
+                  break;
+                case 106:
+                  popNameInto(stack, multinames[bc.index], mn);
+                  stack[stack.length - 1] = boxValue(stack[stack.length - 1]).asDeleteProperty(mn.namespaces, mn.name, mn.flags);
+                  break;
+                case 108:
+                  stack[stack.length - 1] = asGetSlot(stack[stack.length - 1], bc.index);
+                  break;
+                case 109:
+                  value = stack.pop();
+                  object = stack.pop();
+                  asSetSlot(object, bc.index, value);
+                  break;
+                case 112:
+                  stack[stack.length - 1] = stack[stack.length - 1] + '';
+                  break;
+                case 131:
+                case 115:
+                  stack[stack.length - 1] |= 0;
+                  break;
+                case 136:
+                case 116:
+                  stack[stack.length - 1] >>>= 0;
+                  break;
+                case 132:
+                case 117:
+                  stack[stack.length - 1] = +stack[stack.length - 1];
+                  break;
+                case 129:
+                case 118:
+                  stack[stack.length - 1] = !(!stack[stack.length - 1]);
+                  break;
+                case 120:
+                  stack[stack.length - 1] = checkFilter(stack[stack.length - 1]);
+                  break;
+                case 128:
+                  stack[stack.length - 1] = asCoerce(domain.getType(multinames[bc.index]), stack[stack.length - 1]);
+                  break;
+                case 130:
+                  break;
+                case 133:
+                  stack[stack.length - 1] = asCoerceString(stack[stack.length - 1]);
+                  break;
+                case 135:
+                  stack[stack.length - 2] = asAsType(stack.pop(), stack[stack.length - 1]);
+                  break;
+                case 137:
+                  object = stack[stack.length - 1];
+                  stack[stack.length - 1] = object == undefined ? null : object;
+                  break;
+                case 144:
+                  stack[stack.length - 1] = -stack[stack.length - 1];
+                  break;
+                case 145:
+                  ++stack[stack.length - 1];
+                  break;
+                case 146:
+                  ++locals[bc.index];
+                  break;
+                case 147:
+                  --stack[stack.length - 1];
+                  break;
+                case 148:
+                  --locals[bc.index];
+                  break;
+                case 149:
+                  stack[stack.length - 1] = asTypeOf(stack[stack.length - 1]);
+                  break;
+                case 150:
+                  stack[stack.length - 1] = !stack[stack.length - 1];
+                  break;
+                case 151:
+                  stack[stack.length - 1] = ~stack[stack.length - 1];
+                  break;
+                case 160:
+                  stack[stack.length - 2] = asAdd(stack[stack.length - 2], stack.pop());
+                  break;
+                case 161:
+                  stack[stack.length - 2] -= stack.pop();
+                  break;
+                case 162:
+                  stack[stack.length - 2] *= stack.pop();
+                  break;
+                case 163:
+                  stack[stack.length - 2] /= stack.pop();
+                  break;
+                case 164:
+                  stack[stack.length - 2] %= stack.pop();
+                  break;
+                case 165:
+                  stack[stack.length - 2] <<= stack.pop();
+                  break;
+                case 166:
+                  stack[stack.length - 2] >>= stack.pop();
+                  break;
+                case 167:
+                  stack[stack.length - 2] >>>= stack.pop();
+                  break;
+                case 168:
+                  stack[stack.length - 2] &= stack.pop();
+                  break;
+                case 169:
+                  stack[stack.length - 2] |= stack.pop();
+                  break;
+                case 170:
+                  stack[stack.length - 2] ^= stack.pop();
+                  break;
+                case 171:
+                  stack[stack.length - 2] = stack[stack.length - 2] == stack.pop();
+                  break;
+                case 172:
+                  stack[stack.length - 2] = stack[stack.length - 2] === stack.pop();
+                  break;
+                case 173:
+                  stack[stack.length - 2] = stack[stack.length - 2] < stack.pop();
+                  break;
+                case 174:
+                  stack[stack.length - 2] = stack[stack.length - 2] <= stack.pop();
+                  break;
+                case 175:
+                  stack[stack.length - 2] = stack[stack.length - 2] > stack.pop();
+                  break;
+                case 176:
+                  stack[stack.length - 2] = stack[stack.length - 2] >= stack.pop();
+                  break;
+                case 177:
+                  stack[stack.length - 2] = asIsInstanceOf(stack.pop(), stack[stack.length - 1]);
+                  break;
+                case 178:
+                  stack[stack.length - 1] = asIsType(domain.getType(multinames[bc.index]), stack[stack.length - 1]);
+                  break;
+                case 179:
+                  stack[stack.length - 2] = asIsType(stack.pop(), stack[stack.length - 1]);
+                  break;
+                case 180:
+                  stack[stack.length - 2] = boxValue(stack.pop()).asHasProperty(null, stack[stack.length - 1]);
+                  break;
+                case 192:
+                  stack[stack.length - 1] = (stack[stack.length - 1] | 0) + 1;
+                  break;
+                case 193:
+                  stack[stack.length - 1] = (stack[stack.length - 1] | 0) - 1;
+                  break;
+                case 194:
+                  locals[bc.index] = (locals[bc.index] | 0) + 1;
+                  break;
+                case 195:
+                  locals[bc.index] = (locals[bc.index] | 0) - 1;
+                  break;
+                case 196:
+                  stack[stack.length - 1] = ~stack[stack.length - 1];
+                  break;
+                case 197:
+                  stack[stack.length - 2] = stack[stack.length - 2] + stack.pop() | 0;
+                  break;
+                case 198:
+                  stack[stack.length - 2] = stack[stack.length - 2] - stack.pop() | 0;
+                  break;
+                case 199:
+                  stack[stack.length - 2] = stack[stack.length - 2] * stack.pop() | 0;
+                  break;
+                case 208:
+                case 209:
+                case 210:
+                case 211:
+                  stack.push(locals[op - 208]);
+                  break;
+                case 212:
+                case 213:
+                case 214:
+                case 215:
+                  locals[op - 212] = stack.pop();
+                  break;
+                case 239:
+                case 240:
+                case 241:
+                  break;
+                default:
+                  Shumway.Debug.notImplemented(Shumway.AVM2.opcodeName(op));
                 }
-                stack.push(object);
-                break;
-              case 86:
-                object = [];
-                popManyInto(stack, bc.argCount, args);
-                object.push.apply(object, args);
-                stack.push(object);
-                break;
-              case 87:
-                true;
-                stack.push(createActivation(method));
-                break;
-              case 88:
-                stack[stack.length - 1] = createClass(abc.classes[bc.index], stack[stack.length - 1], scopeStack.topScope());
-                break;
-              case 89:
-                popNameInto(stack, multinames[bc.index], mn);
-                stack.push(getDescendants(stack.pop(), mn));
-                break;
-              case 90:
-                true;
-                stack.push(exceptions[bc.index].scopeObject);
-                break;
-              case 94:
-              case 93:
-                popNameInto(stack, multinames[bc.index], mn);
-                stack.push(scopeStack.topScope().findScopeProperty(mn.namespaces, mn.name, mn.flags, domain, op === OP_findpropstrict));
-                break;
-              case 96:
-                multiname = multinames[bc.index];
-                object = scopeStack.topScope().findScopeProperty(multiname.namespaces, multiname.name, multiname.flags, domain, true);
-                stack.push(object.asGetProperty(multiname.namespaces, multiname.name, multiname.flags));
-                break;
-              case 104:
-              case 97:
-                value = stack.pop();
-                popNameInto(stack, multinames[bc.index], mn);
-                boxValue(stack.pop()).asSetProperty(mn.namespaces, mn.name, mn.flags, value);
-                break;
-              case 98:
-                stack.push(locals[bc.index]);
-                break;
-              case 99:
-                locals[bc.index] = stack.pop();
-                break;
-              case 100:
-                stack.push(savedScope.global.object);
-                break;
-              case 101:
-                stack.push(scopeStack.get(bc.index));
-                break;
-              case 102:
-                popNameInto(stack, multinames[bc.index], mn);
-                stack[stack.length - 1] = boxValue(stack[stack.length - 1]).asGetProperty(mn.namespaces, mn.name, mn.flags);
-                break;
-              case 106:
-                popNameInto(stack, multinames[bc.index], mn);
-                stack[stack.length - 1] = boxValue(stack[stack.length - 1]).asDeleteProperty(mn.namespaces, mn.name, mn.flags);
-                break;
-              case 108:
-                stack[stack.length - 1] = asGetSlot(stack[stack.length - 1], bc.index);
-                break;
-              case 109:
-                value = stack.pop();
-                object = stack.pop();
-                asSetSlot(object, bc.index, value);
-                break;
-              case 112:
-                stack[stack.length - 1] = stack[stack.length - 1] + '';
-                break;
-              case 131:
-              case 115:
-                stack[stack.length - 1] |= 0;
-                break;
-              case 136:
-              case 116:
-                stack[stack.length - 1] >>>= 0;
-                break;
-              case 132:
-              case 117:
-                stack[stack.length - 1] = +stack[stack.length - 1];
-                break;
-              case 129:
-              case 118:
-                stack[stack.length - 1] = !(!stack[stack.length - 1]);
-                break;
-              case 120:
-                stack[stack.length - 1] = checkFilter(stack[stack.length - 1]);
-                break;
-              case 128:
-                stack[stack.length - 1] = asCoerce(domain.getType(multinames[bc.index]), stack[stack.length - 1]);
-                break;
-              case 130:
-                break;
-              case 133:
-                stack[stack.length - 1] = asCoerceString(stack[stack.length - 1]);
-                break;
-              case 135:
-                stack[stack.length - 2] = asAsType(stack.pop(), stack[stack.length - 1]);
-                break;
-              case 137:
-                object = stack[stack.length - 1];
-                stack[stack.length - 1] = object == undefined ? null : object;
-                break;
-              case 144:
-                stack[stack.length - 1] = -stack[stack.length - 1];
-                break;
-              case 145:
-                ++stack[stack.length - 1];
-                break;
-              case 146:
-                ++locals[bc.index];
-                break;
-              case 147:
-                --stack[stack.length - 1];
-                break;
-              case 148:
-                --locals[bc.index];
-                break;
-              case 149:
-                stack[stack.length - 1] = asTypeOf(stack[stack.length - 1]);
-                break;
-              case 150:
-                stack[stack.length - 1] = !stack[stack.length - 1];
-                break;
-              case 151:
-                stack[stack.length - 1] = ~stack[stack.length - 1];
-                break;
-              case 160:
-                stack[stack.length - 2] = asAdd(stack[stack.length - 2], stack.pop());
-                break;
-              case 161:
-                stack[stack.length - 2] -= stack.pop();
-                break;
-              case 162:
-                stack[stack.length - 2] *= stack.pop();
-                break;
-              case 163:
-                stack[stack.length - 2] /= stack.pop();
-                break;
-              case 164:
-                stack[stack.length - 2] %= stack.pop();
-                break;
-              case 165:
-                stack[stack.length - 2] <<= stack.pop();
-                break;
-              case 166:
-                stack[stack.length - 2] >>= stack.pop();
-                break;
-              case 167:
-                stack[stack.length - 2] >>>= stack.pop();
-                break;
-              case 168:
-                stack[stack.length - 2] &= stack.pop();
-                break;
-              case 169:
-                stack[stack.length - 2] |= stack.pop();
-                break;
-              case 170:
-                stack[stack.length - 2] ^= stack.pop();
-                break;
-              case 171:
-                stack[stack.length - 2] = stack[stack.length - 2] == stack.pop();
-                break;
-              case 172:
-                stack[stack.length - 2] = stack[stack.length - 2] === stack.pop();
-                break;
-              case 173:
-                stack[stack.length - 2] = stack[stack.length - 2] < stack.pop();
-                break;
-              case 174:
-                stack[stack.length - 2] = stack[stack.length - 2] <= stack.pop();
-                break;
-              case 175:
-                stack[stack.length - 2] = stack[stack.length - 2] > stack.pop();
-                break;
-              case 176:
-                stack[stack.length - 2] = stack[stack.length - 2] >= stack.pop();
-                break;
-              case 177:
-                stack[stack.length - 2] = asIsInstanceOf(stack.pop(), stack[stack.length - 1]);
-                break;
-              case 178:
-                stack[stack.length - 1] = asIsType(domain.getType(multinames[bc.index]), stack[stack.length - 1]);
-                break;
-              case 179:
-                stack[stack.length - 2] = asIsType(stack.pop(), stack[stack.length - 1]);
-                break;
-              case 180:
-                stack[stack.length - 2] = boxValue(stack.pop()).asHasProperty(null, stack[stack.length - 1]);
-                break;
-              case 192:
-                stack[stack.length - 1] = (stack[stack.length - 1] | 0) + 1;
-                break;
-              case 193:
-                stack[stack.length - 1] = (stack[stack.length - 1] | 0) - 1;
-                break;
-              case 194:
-                locals[bc.index] = (locals[bc.index] | 0) + 1;
-                break;
-              case 195:
-                locals[bc.index] = (locals[bc.index] | 0) - 1;
-                break;
-              case 196:
-                stack[stack.length - 1] = ~stack[stack.length - 1];
-                break;
-              case 197:
-                stack[stack.length - 2] = stack[stack.length - 2] + stack.pop() | 0;
-                break;
-              case 198:
-                stack[stack.length - 2] = stack[stack.length - 2] - stack.pop() | 0;
-                break;
-              case 199:
-                stack[stack.length - 2] = stack[stack.length - 2] * stack.pop() | 0;
-                break;
-              case 208:
-              case 209:
-              case 210:
-              case 211:
-                stack.push(locals[op - OP_getlocal0]);
-                break;
-              case 212:
-              case 213:
-              case 214:
-              case 215:
-                locals[op - OP_setlocal0] = stack.pop();
-                break;
-              case 239:
-              case 240:
-              case 241:
-                break;
-              default:
-                notImplemented(opcodeName(op));
-              }
-              pc++;
-            } catch (e) {
-              if (exceptions.length < 1) {
+                pc++;
+              } catch (e) {
+                if (exceptions.length < 1) {
+                  throw e;
+                }
+                e = translateError(domain, e);
+                for (var i = 0, j = exceptions.length; i < j; i++) {
+                  var handler = exceptions[i];
+                  if (pc >= handler.start && pc <= handler.end && (!handler.typeName || domain.getType(handler.typeName).isInstance(e))) {
+                    stack.length = 0;
+                    stack.push(e);
+                    scopeStack.clear();
+                    pc = handler.offset;
+                    continue interpretLabel;
+                  }
+                }
                 throw e;
               }
-              e = translateError(domain, e);
-              for (var i = 0, j = exceptions.length; i < j; i++) {
-                var handler = exceptions[i];
-                if (pc >= handler.start && pc <= handler.end && (!handler.typeName || domain.getType(handler.typeName).isInstance(e))) {
-                  stack.length = 0;
-                  stack.push(e);
-                  scopeStack.clear();
-                  pc = handler.offset;
-                  continue interpret;
-                }
-              }
-              throw e;
             }
-          }
-      }
-    };
-    return Interpreter;
-  }())();
-var AVM2 = function () {
-    function findDefiningAbc(mn) {
-      if (!avm2.builtinsLoaded) {
-        return null;
-      }
-      for (var i = 0; i < mn.namespaces.length; i++) {
-        var name = mn.namespaces[i].originalURI + ':' + mn.name;
-        var abcName = playerGlobalNames[name];
-        if (abcName) {
-          break;
-        }
-      }
-      if (abcName) {
-        return grabAbc(abcName);
-      }
-      return null;
-    }
-    function avm2Ctor(sysMode, appMode, loadAVM1) {
-      this.systemDomain = new ApplicationDomain(this, null, sysMode, true);
-      this.applicationDomain = new ApplicationDomain(this, this.systemDomain, appMode, false);
-      this.findDefiningAbc = findDefiningAbc;
-      this.loadAVM1 = loadAVM1;
-      this.isAVM1Loaded = false;
-      this.exception = {
-        value: undefined
-      };
-      this.exceptions = [];
-    }
-    avm2Ctor.currentAbc = function () {
-      var caller = arguments.callee;
-      var maxDepth = 20;
-      var abc = null;
-      for (var i = 0; i < maxDepth && caller; i++) {
-        var mi = caller.methodInfo;
-        if (mi) {
-          abc = mi.abc;
-          break;
-        }
-        caller = caller.caller;
-      }
-      return abc;
-    };
-    avm2Ctor.currentDomain = function () {
-      var abc = this.currentAbc();
-      return abc.applicationDomain;
-    };
-    avm2Ctor.prototype = {
-      notifyConstruct: function notifyConstruct(instanceConstructor, args) {
-      }
-    };
-    return avm2Ctor;
-  }();
-var playerGlobalNames = {};
-var playerGlobalScripts = {};
-(function () {
-  var index = [
-      {
-        'name': 'Object',
-        'offset': 0,
-        'length': 53432,
-        'defs': [
-          'Object',
-          'Class',
-          'Function',
-          'Namespace',
-          'Boolean',
-          'Number',
-          'int',
-          'uint',
-          'String',
-          'Array',
-          'AS3',
-          'bugzilla',
-          'decodeURI',
-          'decodeURIComponent',
-          'encodeURI',
-          'encodeURIComponent',
-          'isNaN',
-          'isFinite',
-          'parseInt',
-          'parseFloat',
-          'escape',
-          'unescape',
-          'isXMLName',
-          'NaN',
-          'Infinity',
-          'undefined',
-          '__AS3__.vec:Vector',
-          '__AS3__.vec:Vector$object',
-          '__AS3__.vec:Vector$int',
-          '__AS3__.vec:Vector$uint',
-          '__AS3__.vec:Vector$double',
-          'avmplus:describeTypeJSON',
-          'avmplus:extendsXml',
-          'avmplus:implementsXml',
-          'avmplus:constructorXml',
-          'avmplus:constantXml',
-          'avmplus:variableXml',
-          'avmplus:accessorXml',
-          'avmplus:methodXml',
-          'avmplus:parameterXml',
-          'avmplus:metadataXml',
-          'avmplus:argXml',
-          'avmplus:typeXml',
-          'avmplus:factoryXml',
-          'avmplus:describeParams',
-          'avmplus:describeMetadata',
-          'avmplus:finish',
-          'avmplus:describeTraits',
-          'avmplus:HIDE_NSURI_METHODS',
-          'avmplus:INCLUDE_BASES',
-          'avmplus:INCLUDE_INTERFACES',
-          'avmplus:INCLUDE_VARIABLES',
-          'avmplus:INCLUDE_ACCESSORS',
-          'avmplus:INCLUDE_METHODS',
-          'avmplus:INCLUDE_METADATA',
-          'avmplus:INCLUDE_CONSTRUCTOR',
-          'avmplus:INCLUDE_TRAITS',
-          'avmplus:USE_ITRAITS',
-          'avmplus:HIDE_OBJECT',
-          'avmplus:FLASH10_FLAGS',
-          'avmplus:describeType',
-          'avmplus:getQualifiedClassName',
-          'avmplus:getQualifiedSuperclassName'
-        ]
-      },
-      {
-        'name': 'flash/xml/XMLTag',
-        'offset': 53432,
-        'length': 859,
-        'defs': [
-          'flash.xml:XMLTag'
-        ]
-      },
-      {
-        'name': 'flash/net/NetStreamInfo',
-        'offset': 54291,
-        'length': 5307,
-        'defs': [
-          'flash.net:NetStreamInfo'
-        ]
-      },
-      {
-        'name': 'flash/sampler/StackFrame',
-        'offset': 59598,
-        'length': 4475,
-        'defs': [
-          'flash.sampler:StackFrame',
-          'flash.sampler:Sample',
-          'flash.sampler:NewObjectSample',
-          'flash.sampler:DeleteObjectSample',
-          'flash.sampler:clearSamples',
-          'flash.sampler:startSampling',
-          'flash.sampler:stopSampling',
-          'flash.sampler:pauseSampling',
-          'flash.sampler:sampleInternalAllocs',
-          'flash.sampler:setSamplerCallback',
-          'flash.sampler:_setSamplerCallback',
-          'flash.sampler:getSize',
-          'flash.sampler:getMemberNames',
-          'flash.sampler:getSamples',
-          'flash.sampler:_getSamples',
-          'flash.sampler:getSampleCount',
-          'flash.sampler:getInvocationCount',
-          'flash.sampler:getSetterInvocationCount',
-          'flash.sampler:getGetterInvocationCount',
-          'flash.sampler:_getInvocationCount',
-          'flash.sampler:isGetterSetter',
-          'flash.sampler:getLexicalScopes',
-          'flash.sampler:getSavedThis',
-          'flash.sampler:getMasterString',
-          'flash.sampler:ClassFactory'
-        ]
-      },
-      {
-        'name': 'flash/display3D/Context3DBlendFactor',
-        'offset': 64073,
-        'length': 1101,
-        'defs': [
-          'flash.display3D:Context3DBlendFactor'
-        ]
-      },
-      {
-        'name': 'flash/net/registerClassAlias',
-        'offset': 65174,
-        'length': 429,
-        'defs': [
-          'flash.net:registerClassAlias',
-          'flash.net:getClassByAlias'
-        ]
-      },
-      {
-        'name': 'flash/display3D/Context3DStencilAction',
-        'offset': 65603,
-        'length': 896,
-        'defs': [
-          'flash.display3D:Context3DStencilAction'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/CFFHinting',
-        'offset': 66499,
-        'length': 504,
-        'defs': [
-          'flash.text.engine:CFFHinting'
-        ]
-      },
-      {
-        'name': 'flash/display/IDrawCommand',
-        'offset': 67003,
-        'length': 280,
-        'defs': [
-          'flash.display:IDrawCommand'
-        ]
-      },
-      {
-        'name': 'flash/net/Responder',
-        'offset': 67283,
-        'length': 600,
-        'defs': [
-          'flash.net:Responder'
-        ]
-      },
-      {
-        'name': 'flash/utils/IDataInput',
-        'offset': 67883,
-        'length': 2232,
-        'defs': [
-          'flash.utils:IDataInput'
-        ]
-      },
-      {
-        'name': 'flash/utils/ObjectInput',
-        'offset': 70115,
-        'length': 1952,
-        'defs': [
-          'flash.utils:ObjectInput'
-        ]
-      },
-      {
-        'name': 'flash/events/EventPhase',
-        'offset': 72067,
-        'length': 504,
-        'defs': [
-          'flash.events:EventPhase'
-        ]
-      },
-      {
-        'name': 'flash/net/URLLoaderDataFormat',
-        'offset': 72571,
-        'length': 551,
-        'defs': [
-          'flash.net:URLLoaderDataFormat'
-        ]
-      },
-      {
-        'name': 'flash/net/IDynamicPropertyWriter',
-        'offset': 73122,
-        'length': 537,
-        'defs': [
-          'flash.net:IDynamicPropertyWriter'
-        ]
-      },
-      {
-        'name': 'flash/geom/PerspectiveProjection',
-        'offset': 73659,
-        'length': 1312,
-        'defs': [
-          'flash.geom:PerspectiveProjection'
-        ]
-      },
-      {
-        'name': 'flash/events/IEventDispatcher',
-        'offset': 74971,
-        'length': 1046,
-        'defs': [
-          'flash.events:IEventDispatcher'
-        ]
-      },
-      {
-        'name': 'flash/events/EventDispatcher',
-        'offset': 76017,
-        'length': 3072,
-        'defs': [
-          'flash.events:EventDispatcher'
-        ]
-      },
-      {
-        'name': 'flash/display/Stage3D',
-        'offset': 79089,
-        'length': 1225,
-        'defs': [
-          'flash.display:Stage3D'
-        ]
-      },
-      {
-        'name': 'flash/sensors/Geolocation',
-        'offset': 80314,
-        'length': 932,
-        'defs': [
-          'flash.sensors:Geolocation'
-        ]
-      },
-      {
-        'name': 'Error',
-        'offset': 81246,
-        'length': 5961,
-        'defs': [
-          'Error',
-          'DefinitionError',
-          'EvalError',
-          'RangeError',
-          'ReferenceError',
-          'SecurityError',
-          'SyntaxError',
-          'TypeError',
-          'URIError',
-          'VerifyError',
-          'UninitializedError',
-          'ArgumentError',
-          'flash.errors:IOError',
-          'flash.errors:EOFError',
-          'flash.errors:MemoryError',
-          'flash.errors:IllegalOperationError'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/ContentElement',
-        'offset': 87207,
-        'length': 1868,
-        'defs': [
-          'flash.text.engine:ContentElement'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/TextElement',
-        'offset': 89075,
-        'length': 954,
-        'defs': [
-          'flash.text.engine:TextElement'
-        ]
-      },
-      {
-        'name': 'flash/concurrent/Mutex',
-        'offset': 90029,
-        'length': 2484,
-        'defs': [
-          'flash.concurrent:Mutex',
-          'flash.concurrent:Condition',
-          'avm2.intrinsics.memory:mfence',
-          'avm2.intrinsics.memory:casi32'
-        ]
-      },
-      {
-        'name': 'flash/display/NativeMenu',
-        'offset': 92513,
-        'length': 604,
-        'defs': [
-          'flash.display:NativeMenu'
-        ]
-      },
-      {
-        'name': 'flash/ui/ContextMenu',
-        'offset': 93117,
-        'length': 2359,
-        'defs': [
-          'flash.ui:ContextMenu'
-        ]
-      },
-      {
-        'name': 'flash/net/drm/DRMManagerSession',
-        'offset': 95476,
-        'length': 20509,
-        'defs': [
-          'flash.net.drm:DRMManagerSession',
-          'flash.net.drm:DRMAuthenticationContext',
-          'flash.net.drm:DRMPlaybackTimeWindow',
-          'flash.net.drm:DRMVoucher',
-          'flash.net.drm:DRMVoucherDownloadContext',
-          'flash.net.drm:DRMVoucherStoreContext',
-          'flash.net.drm:DRMManager',
-          'flash.net.drm:DRMModuleCycleProvider',
-          'flash.net.drm:DRMURLDownloadContext'
-        ]
-      },
-      {
-        'name': 'flash/display/IBitmapDrawable',
-        'offset': 115985,
-        'length': 281,
-        'defs': [
-          'flash.display:IBitmapDrawable'
-        ]
-      },
-      {
-        'name': 'flash/display/DisplayObject',
-        'offset': 116266,
-        'length': 5912,
-        'defs': [
-          'flash.display:DisplayObject'
-        ]
-      },
-      {
-        'name': 'flash/display/Bitmap',
-        'offset': 122178,
-        'length': 1149,
-        'defs': [
-          'flash.display:Bitmap'
-        ]
-      },
-      {
-        'name': 'flash/globalization/DateTimeFormatter',
-        'offset': 123327,
-        'length': 2422,
-        'defs': [
-          'flash.globalization:DateTimeFormatter'
-        ]
-      },
-      {
-        'name': 'flash/media/VideoStatus',
-        'offset': 125749,
-        'length': 545,
-        'defs': [
-          'flash.media:VideoStatus'
-        ]
-      },
-      {
-        'name': 'flash/system/fscommand',
-        'offset': 126294,
-        'length': 632,
-        'defs': [
-          'flash.system:fscommand',
-          'flash.system:FSCommand'
-        ]
-      },
-      {
-        'name': 'adobe/utils/MMExecute',
-        'offset': 126926,
-        'length': 436,
-        'defs': [
-          'adobe.utils:MMExecute',
-          'adobe.utils:MMEndCommand'
-        ]
-      },
-      {
-        'name': 'flash/external/ExternalInterface',
-        'offset': 127362,
-        'length': 7206,
-        'defs': [
-          'flash.external:ExternalInterface'
-        ]
-      },
-      {
-        'name': 'flash/security/CertificateStatus',
-        'offset': 134568,
-        'length': 939,
-        'defs': [
-          'flash.security:CertificateStatus'
-        ]
-      },
-      {
-        'name': 'flash/system/Security',
-        'offset': 135507,
-        'length': 2365,
-        'defs': [
-          'flash.system:Security'
-        ]
-      },
-      {
-        'name': 'flash/events/Event',
-        'offset': 137872,
-        'length': 4511,
-        'defs': [
-          'flash.events:Event'
-        ]
-      },
-      {
-        'name': 'flash/events/KeyboardEvent',
-        'offset': 142383,
-        'length': 2329,
-        'defs': [
-          'flash.events:KeyboardEvent'
-        ]
-      },
-      {
-        'name': 'flash/net/navigateToURL',
-        'offset': 144712,
-        'length': 392,
-        'defs': [
-          'flash.net:navigateToURL',
-          'flash.net:sendToURL'
-        ]
-      },
-      {
-        'name': 'flash/events/SoftKeyboardTrigger',
-        'offset': 145104,
-        'length': 562,
-        'defs': [
-          'flash.events:SoftKeyboardTrigger'
-        ]
-      },
-      {
-        'name': 'flash/display3D/Context3DRenderMode',
-        'offset': 145666,
-        'length': 534,
-        'defs': [
-          'flash.display3D:Context3DRenderMode'
-        ]
-      },
-      {
-        'name': 'flash/ui/GameInputControl',
-        'offset': 146200,
-        'length': 1234,
-        'defs': [
-          'flash.ui:GameInputControl'
-        ]
-      },
-      {
-        'name': 'flash/geom/Matrix',
-        'offset': 147434,
-        'length': 4980,
-        'defs': [
-          'flash.geom:Matrix'
-        ]
-      },
-      {
-        'name': 'flash/events/ThrottleType',
-        'offset': 152414,
-        'length': 534,
-        'defs': [
-          'flash.events:ThrottleType'
-        ]
-      },
-      {
-        'name': 'flash/text/TextInteractionMode',
-        'offset': 152948,
-        'length': 526,
-        'defs': [
-          'flash.text:TextInteractionMode'
-        ]
-      },
-      {
-        'name': 'flash/filters/DisplacementMapFilterMode',
-        'offset': 153474,
-        'length': 636,
-        'defs': [
-          'flash.filters:DisplacementMapFilterMode'
-        ]
-      },
-      {
-        'name': 'flash/geom/Rectangle',
-        'offset': 154110,
-        'length': 5057,
-        'defs': [
-          'flash.geom:Rectangle'
-        ]
-      },
-      {
-        'name': 'flash/net/drm/AuthenticationMethod',
-        'offset': 159167,
-        'length': 1246,
-        'defs': [
-          'flash.net.drm:AuthenticationMethod',
-          'flash.net.drm:LoadVoucherSetting',
-          'flash.net.drm:AddToDeviceGroupSetting'
-        ]
-      },
-      {
-        'name': 'flash/utils/Timer',
-        'offset': 160413,
-        'length': 2134,
-        'defs': [
-          'flash.utils:Timer'
-        ]
-      },
-      {
-        'name': 'flash/utils/SetIntervalTimer',
-        'offset': 162547,
-        'length': 1758,
-        'defs': [
-          'flash.utils:SetIntervalTimer',
-          'flash.utils:setInterval',
-          'flash.utils:setTimeout',
-          'flash.utils:clearInterval',
-          'flash.utils:clearTimeout'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/TextJustifier',
-        'offset': 164305,
-        'length': 1512,
-        'defs': [
-          'flash.text.engine:TextJustifier'
-        ]
-      },
-      {
-        'name': 'flash/media/Microphone',
-        'offset': 165817,
-        'length': 3070,
-        'defs': [
-          'flash.media:Microphone'
-        ]
-      },
-      {
-        'name': 'flash/sensors/Accelerometer',
-        'offset': 168887,
-        'length': 958,
-        'defs': [
-          'flash.sensors:Accelerometer'
-        ]
-      },
-      {
-        'name': 'flash/display3D/textures/TextureBase',
-        'offset': 169845,
-        'length': 622,
-        'defs': [
-          'flash.display3D.textures:TextureBase'
-        ]
-      },
-      {
-        'name': 'flash/display3D/textures/Texture',
-        'offset': 170467,
-        'length': 1061,
-        'defs': [
-          'flash.display3D.textures:Texture'
-        ]
-      },
-      {
-        'name': 'flash/net/drm/DRMDeviceGroup',
-        'offset': 171528,
-        'length': 1200,
-        'defs': [
-          'flash.net.drm:DRMDeviceGroup'
-        ]
-      },
-      {
-        'name': 'flash/display/InteractiveObject',
-        'offset': 172728,
-        'length': 4152,
-        'defs': [
-          'flash.display:InteractiveObject'
-        ]
-      },
-      {
-        'name': 'flash/display/DisplayObjectContainer',
-        'offset': 176880,
-        'length': 2730,
-        'defs': [
-          'flash.display:DisplayObjectContainer'
-        ]
-      },
-      {
-        'name': 'flash/display/FocusDirection',
-        'offset': 179610,
-        'length': 11058,
-        'defs': [
-          'flash.display:FocusDirection',
-          'flash.display:Stage'
-        ]
-      },
-      {
-        'name': 'flash/events/UncaughtErrorEvents',
-        'offset': 190668,
-        'length': 573,
-        'defs': [
-          'flash.events:UncaughtErrorEvents'
-        ]
-      },
-      {
-        'name': 'flash/display/IGraphicsData',
-        'offset': 191241,
-        'length': 289,
-        'defs': [
-          'flash.display:IGraphicsData'
-        ]
-      },
-      {
-        'name': 'flash/display/IGraphicsFill',
-        'offset': 191530,
-        'length': 289,
-        'defs': [
-          'flash.display:IGraphicsFill'
-        ]
-      },
-      {
-        'name': 'flash/display/GraphicsEndFill',
-        'offset': 191819,
-        'length': 485,
-        'defs': [
-          'flash.display:GraphicsEndFill'
-        ]
-      },
-      {
-        'name': 'flash/accessibility/Accessibility',
-        'offset': 192304,
-        'length': 842,
-        'defs': [
-          'flash.accessibility:Accessibility'
-        ]
-      },
-      {
-        'name': 'flash/text/GridFitType',
-        'offset': 193146,
-        'length': 503,
-        'defs': [
-          'flash.text:GridFitType'
-        ]
-      },
-      {
-        'name': 'flash/globalization/CollatorMode',
-        'offset': 193649,
-        'length': 517,
-        'defs': [
-          'flash.globalization:CollatorMode'
-        ]
-      },
-      {
-        'name': 'adobe/utils/CustomActions',
-        'offset': 194166,
-        'length': 799,
-        'defs': [
-          'adobe.utils:CustomActions'
-        ]
-      },
-      {
-        'name': 'flash/errors/StackOverflowError',
-        'offset': 194965,
-        'length': 1011,
-        'defs': [
-          'flash.errors:StackOverflowError',
-          'flash.errors:ScriptTimeoutError',
-          'flash.errors:InvalidSWFError'
-        ]
-      },
-      {
-        'name': 'flash/media/VideoCodec',
-        'offset': 195976,
-        'length': 510,
-        'defs': [
-          'flash.media:VideoCodec'
-        ]
-      },
-      {
-        'name': 'flash/geom/Point',
-        'offset': 196486,
-        'length': 2138,
-        'defs': [
-          'flash.geom:Point'
-        ]
-      },
-      {
-        'name': 'flash/ui/Mouse',
-        'offset': 198624,
-        'length': 996,
-        'defs': [
-          'flash.ui:Mouse'
-        ]
-      },
-      {
-        'name': 'flash/xml/XMLParser',
-        'offset': 199620,
-        'length': 619,
-        'defs': [
-          'flash.xml:XMLParser'
-        ]
-      },
-      {
-        'name': 'flash/net/NetGroupInfo',
-        'offset': 200239,
-        'length': 2622,
-        'defs': [
-          'flash.net:NetGroupInfo'
-        ]
-      },
-      {
-        'name': 'flash/display/ShaderJob',
-        'offset': 202861,
-        'length': 1486,
-        'defs': [
-          'flash.display:ShaderJob'
-        ]
-      },
-      {
-        'name': 'flash/text/FontStyle',
-        'offset': 204347,
-        'length': 547,
-        'defs': [
-          'flash.text:FontStyle'
-        ]
-      },
-      {
-        'name': 'flash/accessibility/ISearchableText',
-        'offset': 204894,
-        'length': 479,
-        'defs': [
-          'flash.accessibility:ISearchableText'
-        ]
-      },
-      {
-        'name': 'flash/display/GraphicsShaderFill',
-        'offset': 205373,
-        'length': 648,
-        'defs': [
-          'flash.display:GraphicsShaderFill'
-        ]
-      },
-      {
-        'name': 'flash/net/NetStream',
-        'offset': 206021,
-        'length': 12820,
-        'defs': [
-          'flash.net:NetStream'
-        ]
-      },
-      {
-        'name': 'flash/printing/PrintJobOptions',
-        'offset': 218841,
-        'length': 520,
-        'defs': [
-          'flash.printing:PrintJobOptions'
-        ]
-      },
-      {
-        'name': 'flash/net/FileReference',
-        'offset': 219361,
-        'length': 3031,
-        'defs': [
-          'flash.net:FileReference'
-        ]
-      },
-      {
-        'name': 'flash/display/StageQuality',
-        'offset': 222392,
-        'length': 777,
-        'defs': [
-          'flash.display:StageQuality'
-        ]
-      },
-      {
-        'name': 'flash/geom/Transform',
-        'offset': 223169,
-        'length': 1655,
-        'defs': [
-          'flash.geom:Transform'
-        ]
-      },
-      {
-        'name': 'flash/accessibility/AccessibilityProperties',
-        'offset': 224824,
-        'length': 783,
-        'defs': [
-          'flash.accessibility:AccessibilityProperties'
-        ]
-      },
-      {
-        'name': 'flash/filters/BitmapFilter',
-        'offset': 225607,
-        'length': 554,
-        'defs': [
-          'flash.filters:BitmapFilter'
-        ]
-      },
-      {
-        'name': 'flash/filters/DropShadowFilter',
-        'offset': 226161,
-        'length': 2578,
-        'defs': [
-          'flash.filters:DropShadowFilter'
-        ]
-      },
-      {
-        'name': 'flash/system/ApplicationInstaller',
-        'offset': 228739,
-        'length': 1092,
-        'defs': [
-          'flash.system:ApplicationInstaller'
-        ]
-      },
-      {
-        'name': 'flash/display3D/Context3DVertexBufferFormat',
-        'offset': 229831,
-        'length': 725,
-        'defs': [
-          'flash.display3D:Context3DVertexBufferFormat'
-        ]
-      },
-      {
-        'name': 'flash/globalization/DateTimeNameContext',
-        'offset': 230556,
-        'length': 561,
-        'defs': [
-          'flash.globalization:DateTimeNameContext'
-        ]
-      },
-      {
-        'name': 'flash/display/GraphicsSolidFill',
-        'offset': 231117,
-        'length': 635,
-        'defs': [
-          'flash.display:GraphicsSolidFill'
-        ]
-      },
-      {
-        'name': 'flash/display/ShaderParameterType',
-        'offset': 231752,
-        'length': 1144,
-        'defs': [
-          'flash.display:ShaderParameterType'
-        ]
-      },
-      {
-        'name': 'flash/filters/GradientGlowFilter',
-        'offset': 232896,
-        'length': 2661,
-        'defs': [
-          'flash.filters:GradientGlowFilter'
-        ]
-      },
-      {
-        'name': 'JSON',
-        'offset': 235557,
-        'length': 2655,
-        'defs': [
-          'JSON',
-          'Walker'
-        ]
-      },
-      {
-        'name': 'flash/system/SecurityDomain',
-        'offset': 238212,
-        'length': 813,
-        'defs': [
-          'flash.system:SecurityDomain'
-        ]
-      },
-      {
-        'name': 'flash/net/IDynamicPropertyOutput',
-        'offset': 239025,
-        'length': 507,
-        'defs': [
-          'flash.net:IDynamicPropertyOutput'
-        ]
-      },
-      {
-        'name': 'flash/net/DynamicPropertyOutput',
-        'offset': 239532,
-        'length': 695,
-        'defs': [
-          'flash.net:DynamicPropertyOutput'
-        ]
-      },
-      {
-        'name': 'flash/media/SoundTransform',
-        'offset': 240227,
-        'length': 1599,
-        'defs': [
-          'flash.media:SoundTransform'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/FontLookup',
-        'offset': 241826,
-        'length': 501,
-        'defs': [
-          'flash.text.engine:FontLookup'
-        ]
-      },
-      {
-        'name': 'flash/display/MorphShape',
-        'offset': 242327,
-        'length': 526,
-        'defs': [
-          'flash.display:MorphShape'
-        ]
-      },
-      {
-        'name': 'flash/net/LocalConnection',
-        'offset': 242853,
-        'length': 1613,
-        'defs': [
-          'flash.net:LocalConnection'
-        ]
-      },
-      {
-        'name': 'flash/display3D/Program3D',
-        'offset': 244466,
-        'length': 707,
-        'defs': [
-          'flash.display3D:Program3D'
-        ]
-      },
-      {
-        'name': 'flash/ui/MouseCursor',
-        'offset': 245173,
-        'length': 596,
-        'defs': [
-          'flash.ui:MouseCursor'
-        ]
-      },
-      {
-        'name': 'flash/events/TextEvent',
-        'offset': 245769,
-        'length': 1293,
-        'defs': [
-          'flash.events:TextEvent'
-        ]
-      },
-      {
-        'name': 'flash/net/URLRequestHeader',
-        'offset': 247062,
-        'length': 542,
-        'defs': [
-          'flash.net:URLRequestHeader'
-        ]
-      },
-      {
-        'name': 'flash/display/TriangleCulling',
-        'offset': 247604,
-        'length': 561,
-        'defs': [
-          'flash.display:TriangleCulling'
-        ]
-      },
-      {
-        'name': 'flash/display/JPEGEncoderOptions',
-        'offset': 248165,
-        'length': 624,
-        'defs': [
-          'flash.display:JPEGEncoderOptions'
-        ]
-      },
-      {
-        'name': 'flash/net/URLLoader',
-        'offset': 248789,
-        'length': 2592,
-        'defs': [
-          'flash.net:URLLoader'
-        ]
-      },
-      {
-        'name': 'flash/accessibility/ISimpleTextSelection',
-        'offset': 251381,
-        'length': 685,
-        'defs': [
-          'flash.accessibility:ISimpleTextSelection'
-        ]
-      },
-      {
-        'name': 'flash/display/Sprite',
-        'offset': 252066,
-        'length': 1976,
-        'defs': [
-          'flash.display:Sprite'
-        ]
-      },
-      {
-        'name': '_3fa260287b70f9c2758634de100a49d54c3f5d3f6359cd77d07fc7f4a8ccecbd_flash_display_Sprite',
-        'offset': 254042,
-        'length': 1433,
-        'defs': [
-          '_3fa260287b70f9c2758634de100a49d54c3f5d3f6359cd77d07fc7f4a8ccecbd_flash_display_Sprite'
-        ]
-      },
-      {
-        'name': 'flash/utils/IDataOutput',
-        'offset': 255475,
-        'length': 1976,
-        'defs': [
-          'flash.utils:IDataOutput'
-        ]
-      },
-      {
-        'name': 'flash/net/Socket',
-        'offset': 257451,
-        'length': 4914,
-        'defs': [
-          'flash.net:Socket'
-        ]
-      },
-      {
-        'name': 'flash/net/SecureSocket',
-        'offset': 262365,
-        'length': 3247,
-        'defs': [
-          'flash.net:SecureSocket'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/TypographicCase',
-        'offset': 265612,
-        'length': 793,
-        'defs': [
-          'flash.text.engine:TypographicCase'
-        ]
-      },
-      {
-        'name': 'flash/display/IGraphicsPath',
-        'offset': 266405,
-        'length': 289,
-        'defs': [
-          'flash.display:IGraphicsPath'
-        ]
-      },
-      {
-        'name': 'flash/display/GraphicsTrianglePath',
-        'offset': 266694,
-        'length': 1240,
-        'defs': [
-          'flash.display:GraphicsTrianglePath'
-        ]
-      },
-      {
-        'name': 'flash/display/PixelSnapping',
-        'offset': 267934,
-        'length': 521,
-        'defs': [
-          'flash.display:PixelSnapping'
-        ]
-      },
-      {
-        'name': 'flash/display3D/Context3DProgramType',
-        'offset': 268455,
-        'length': 543,
-        'defs': [
-          'flash.display3D:Context3DProgramType'
-        ]
-      },
-      {
-        'name': 'flash/display/Shape',
-        'offset': 268998,
-        'length': 590,
-        'defs': [
-          'flash.display:Shape'
-        ]
-      },
-      {
-        'name': 'flash/media/SoundMixer',
-        'offset': 269588,
-        'length': 1436,
-        'defs': [
-          'flash.media:SoundMixer'
-        ]
-      },
-      {
-        'name': 'flash/filters/ConvolutionFilter',
-        'offset': 271024,
-        'length': 2284,
-        'defs': [
-          'flash.filters:ConvolutionFilter'
-        ]
-      },
-      {
-        'name': 'flash/net/NetGroupReceiveMode',
-        'offset': 273308,
-        'length': 523,
-        'defs': [
-          'flash.net:NetGroupReceiveMode'
-        ]
-      },
-      {
-        'name': 'flash/events/DRMDeviceGroupEvent',
-        'offset': 273831,
-        'length': 1334,
-        'defs': [
-          'flash.events:DRMDeviceGroupEvent'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/TextLineCreationResult',
-        'offset': 275165,
-        'length': 689,
-        'defs': [
-          'flash.text.engine:TextLineCreationResult'
-        ]
-      },
-      {
-        'name': 'flash/events/StatusEvent',
-        'offset': 275854,
-        'length': 1267,
-        'defs': [
-          'flash.events:StatusEvent'
-        ]
-      },
-      {
-        'name': 'flash/display/ShaderData',
-        'offset': 277121,
-        'length': 672,
-        'defs': [
-          'flash.display:ShaderData'
-        ]
-      },
-      {
-        'name': 'flash/system/WorkerState',
-        'offset': 277793,
-        'length': 2870,
-        'defs': [
-          'flash.system:WorkerState',
-          'flash.system:Worker'
-        ]
-      },
-      {
-        'name': 'flash/system/LoaderContext',
-        'offset': 280663,
-        'length': 1320,
-        'defs': [
-          'flash.system:LoaderContext'
-        ]
-      },
-      {
-        'name': 'flash/system/JPEGLoaderContext',
-        'offset': 281983,
-        'length': 735,
-        'defs': [
-          'flash.system:JPEGLoaderContext'
-        ]
-      },
-      {
-        'name': 'flash/debugger/enterDebugger',
-        'offset': 282718,
-        'length': 279,
-        'defs': [
-          'flash.debugger:enterDebugger'
-        ]
-      },
-      {
-        'name': 'flash/ui/Multitouch',
-        'offset': 282997,
-        'length': 1121,
-        'defs': [
-          'flash.ui:Multitouch'
-        ]
-      },
-      {
-        'name': 'Date',
-        'offset': 284118,
-        'length': 10379,
-        'defs': [
-          'Date'
-        ]
-      },
-      {
-        'name': 'flash/display/SWFVersion',
-        'offset': 294497,
-        'length': 864,
-        'defs': [
-          'flash.display:SWFVersion'
-        ]
-      },
-      {
-        'name': 'flash/events/ProgressEvent',
-        'offset': 295361,
-        'length': 1435,
-        'defs': [
-          'flash.events:ProgressEvent'
-        ]
-      },
-      {
-        'name': 'flash/media/scanHardware',
-        'offset': 296796,
-        'length': 2968,
-        'defs': [
-          'flash.media:scanHardware',
-          'flash.media:Camera'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/TextBaseline',
-        'offset': 299764,
-        'length': 832,
-        'defs': [
-          'flash.text.engine:TextBaseline'
-        ]
-      },
-      {
-        'name': 'flash/text/AntiAliasType',
-        'offset': 300596,
-        'length': 474,
-        'defs': [
-          'flash.text:AntiAliasType'
-        ]
-      },
-      {
-        'name': 'flash/net/NetGroup',
-        'offset': 301070,
-        'length': 5049,
-        'defs': [
-          'flash.net:NetGroup'
-        ]
-      },
-      {
-        'name': 'flash/events/ErrorEvent',
-        'offset': 306119,
-        'length': 1052,
-        'defs': [
-          'flash.events:ErrorEvent'
-        ]
-      },
-      {
-        'name': 'flash/events/IOErrorEvent',
-        'offset': 307171,
-        'length': 1204,
-        'defs': [
-          'flash.events:IOErrorEvent'
-        ]
-      },
-      {
-        'name': 'flash/utils/describeType',
-        'offset': 308375,
-        'length': 1393,
-        'defs': [
-          'flash.utils:describeType',
-          'flash.utils:getAliasName',
-          'flash.utils:getQualifiedClassName',
-          'flash.utils:getDefinitionByName',
-          'flash.utils:getQualifiedSuperclassName',
-          'flash.utils:getTimer',
-          'flash.utils:escapeMultiByte',
-          'flash.utils:unescapeMultiByte',
-          'trace',
-          'watson'
-        ]
-      },
-      {
-        'name': 'flash/display/ColorCorrectionSupport',
-        'offset': 309768,
-        'length': 621,
-        'defs': [
-          'flash.display:ColorCorrectionSupport'
-        ]
-      },
-      {
-        'name': 'flash/ui/MultitouchInputMode',
-        'offset': 310389,
-        'length': 573,
-        'defs': [
-          'flash.ui:MultitouchInputMode'
-        ]
-      },
-      {
-        'name': 'flash/text/TextFormatAlign',
-        'offset': 310962,
-        'length': 658,
-        'defs': [
-          'flash.text:TextFormatAlign'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/Kerning',
-        'offset': 311620,
-        'length': 500,
-        'defs': [
-          'flash.text.engine:Kerning'
-        ]
-      },
-      {
-        'name': 'flash/net/NetStreamAppendBytesAction',
-        'offset': 312120,
-        'length': 639,
-        'defs': [
-          'flash.net:NetStreamAppendBytesAction'
-        ]
-      },
-      {
-        'name': 'flash/display/IGraphicsStroke',
-        'offset': 312759,
-        'length': 297,
-        'defs': [
-          'flash.display:IGraphicsStroke'
-        ]
-      },
-      {
-        'name': 'flash/net/NetGroupSendResult',
-        'offset': 313056,
-        'length': 560,
-        'defs': [
-          'flash.net:NetGroupSendResult'
-        ]
-      },
-      {
-        'name': 'flash/display/LineScaleMode',
-        'offset': 313616,
-        'length': 582,
-        'defs': [
-          'flash.display:LineScaleMode'
-        ]
-      },
-      {
-        'name': 'flash/events/AsyncErrorEvent',
-        'offset': 314198,
-        'length': 1076,
-        'defs': [
-          'flash.events:AsyncErrorEvent'
-        ]
-      },
-      {
-        'name': 'flash/display/StageScaleMode',
-        'offset': 315274,
-        'length': 595,
-        'defs': [
-          'flash.display:StageScaleMode'
-        ]
-      },
-      {
-        'name': 'flash/ui/GameInput',
-        'offset': 315869,
-        'length': 835,
-        'defs': [
-          'flash.ui:GameInput'
-        ]
-      },
-      {
-        'name': 'flash/filters/BitmapFilterQuality',
-        'offset': 316704,
-        'length': 535,
-        'defs': [
-          'flash.filters:BitmapFilterQuality'
-        ]
-      },
-      {
-        'name': 'flash/profiler/profile',
-        'offset': 317239,
-        'length': 454,
-        'defs': [
-          'flash.profiler:profile',
-          'flash.profiler:showRedrawRegions'
-        ]
-      },
-      {
-        'name': 'flash/display/BitmapData',
-        'offset': 317693,
-        'length': 4790,
-        'defs': [
-          'flash.display:BitmapData'
-        ]
-      },
-      {
-        'name': 'flash/events/ShaderEvent',
-        'offset': 322483,
-        'length': 1669,
-        'defs': [
-          'flash.events:ShaderEvent'
-        ]
-      },
-      {
-        'name': 'flash/events/TimerEvent',
-        'offset': 324152,
-        'length': 1048,
-        'defs': [
-          'flash.events:TimerEvent'
-        ]
-      },
-      {
-        'name': 'XML',
-        'offset': 325200,
-        'length': 12638,
-        'defs': [
-          'XML',
-          'XMLList',
-          'QName'
-        ]
-      },
-      {
-        'name': 'flash/ui/GameInputHand',
-        'offset': 337838,
-        'length': 523,
-        'defs': [
-          'flash.ui:GameInputHand'
-        ]
-      },
-      {
-        'name': 'Math',
-        'offset': 338361,
-        'length': 1672,
-        'defs': [
-          'Math'
-        ]
-      },
-      {
-        'name': 'flash/events/DRMAuthenticateEvent',
-        'offset': 340033,
-        'length': 2108,
-        'defs': [
-          'flash.events:DRMAuthenticateEvent'
-        ]
-      },
-      {
-        'name': 'flash/media/H264Level',
-        'offset': 342141,
-        'length': 1104,
-        'defs': [
-          'flash.media:H264Level'
-        ]
-      },
-      {
-        'name': 'flash/text/FontType',
-        'offset': 343245,
-        'length': 504,
-        'defs': [
-          'flash.text:FontType'
-        ]
-      },
-      {
-        'name': 'flash/display/NativeMenuItem',
-        'offset': 343749,
-        'length': 787,
-        'defs': [
-          'flash.display:NativeMenuItem'
-        ]
-      },
-      {
-        'name': 'flash/net/FileFilter',
-        'offset': 344536,
-        'length': 937,
-        'defs': [
-          'flash.net:FileFilter'
-        ]
-      },
-      {
-        'name': 'flash/text/Font',
-        'offset': 345473,
-        'length': 845,
-        'defs': [
-          'flash.text:Font'
-        ]
-      },
-      {
-        'name': 'flash/events/SampleDataEvent',
-        'offset': 346318,
-        'length': 1415,
-        'defs': [
-          'flash.events:SampleDataEvent'
-        ]
-      },
-      {
-        'name': 'flash/utils/Endian',
-        'offset': 347733,
-        'length': 454,
-        'defs': [
-          'flash.utils:Endian'
-        ]
-      },
-      {
-        'name': 'flash/filters/BevelFilter',
-        'offset': 348187,
-        'length': 2674,
-        'defs': [
-          'flash.filters:BevelFilter'
-        ]
-      },
-      {
-        'name': 'flash/net/SharedObject',
-        'offset': 350861,
-        'length': 3383,
-        'defs': [
-          'flash.net:SharedObject'
-        ]
-      },
-      {
-        'name': 'flash/media/SoundLoaderContext',
-        'offset': 354244,
-        'length': 596,
-        'defs': [
-          'flash.media:SoundLoaderContext'
-        ]
-      },
-      {
-        'name': 'flash/events/AccelerometerEvent',
-        'offset': 354840,
-        'length': 1946,
-        'defs': [
-          'flash.events:AccelerometerEvent'
-        ]
-      },
-      {
-        'name': 'flash/display/ShaderParameter',
-        'offset': 356786,
-        'length': 845,
-        'defs': [
-          'flash.display:ShaderParameter'
-        ]
-      },
-      {
-        'name': 'flash/ui/ContextMenuClipboardItems',
-        'offset': 357631,
-        'length': 1879,
-        'defs': [
-          'flash.ui:ContextMenuClipboardItems'
-        ]
-      },
-      {
-        'name': 'flash/media/SoundCodec',
-        'offset': 359510,
-        'length': 563,
-        'defs': [
-          'flash.media:SoundCodec'
-        ]
-      },
-      {
-        'name': 'flash/events/DRMCustomProperties',
-        'offset': 360073,
-        'length': 2540,
-        'defs': [
-          'flash.events:DRMCustomProperties',
-          'flash.events:DRMStatusEvent'
-        ]
-      },
-      {
-        'name': 'flash/automation/ActionGenerator',
-        'offset': 362613,
-        'length': 801,
-        'defs': [
-          'flash.automation:ActionGenerator'
-        ]
-      },
-      {
-        'name': 'flash/text/TextFormat',
-        'offset': 363414,
-        'length': 3332,
-        'defs': [
-          'flash.text:TextFormat'
-        ]
-      },
-      {
-        'name': 'flash/events/NetStatusEvent',
-        'offset': 366746,
-        'length': 1085,
-        'defs': [
-          'flash.events:NetStatusEvent'
-        ]
-      },
-      {
-        'name': 'flash/display/GraphicsBitmapFill',
-        'offset': 367831,
-        'length': 760,
-        'defs': [
-          'flash.display:GraphicsBitmapFill'
-        ]
-      },
-      {
-        'name': 'flash/system/DomainMemoryWithStage3D',
-        'offset': 368591,
-        'length': 1743,
-        'defs': [
-          'flash.system:DomainMemoryWithStage3D'
-        ]
-      },
-      {
-        'name': 'flash/system/MessageChannelState',
-        'offset': 370334,
-        'length': 2210,
-        'defs': [
-          'flash.system:MessageChannelState',
-          'flash.system:MessageChannel'
-        ]
-      },
-      {
-        'name': 'RegExp',
-        'offset': 372544,
-        'length': 1471,
-        'defs': [
-          'RegExp'
-        ]
-      },
-      {
-        'name': 'flash/display/LoaderInfo',
-        'offset': 374015,
-        'length': 3881,
-        'defs': [
-          'flash.display:LoaderInfo'
-        ]
-      },
-      {
-        'name': 'flash/text/TextDisplayMode',
-        'offset': 377896,
-        'length': 518,
-        'defs': [
-          'flash.text:TextDisplayMode'
-        ]
-      },
-      {
-        'name': 'flash/net/URLRequestMethod',
-        'offset': 378414,
-        'length': 624,
-        'defs': [
-          'flash.net:URLRequestMethod'
-        ]
-      },
-      {
-        'name': 'flash/display/Shader',
-        'offset': 379038,
-        'length': 961,
-        'defs': [
-          'flash.display:Shader'
-        ]
-      },
-      {
-        'name': 'flash/events/NetDataEvent',
-        'offset': 379999,
-        'length': 1149,
-        'defs': [
-          'flash.events:NetDataEvent'
-        ]
-      },
-      {
-        'name': 'flash/system/ImageDecodingPolicy',
-        'offset': 381148,
-        'length': 539,
-        'defs': [
-          'flash.system:ImageDecodingPolicy'
-        ]
-      },
-      {
-        'name': 'flash/display/GraphicsGradientFill',
-        'offset': 381687,
-        'length': 2224,
-        'defs': [
-          'flash.display:GraphicsGradientFill'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/TextLineMirrorRegion',
-        'offset': 383911,
-        'length': 1170,
-        'defs': [
-          'flash.text.engine:TextLineMirrorRegion'
-        ]
-      },
-      {
-        'name': 'flash/display3D/IndexBuffer3D',
-        'offset': 385081,
-        'length': 921,
-        'defs': [
-          'flash.display3D:IndexBuffer3D'
-        ]
-      },
-      {
-        'name': 'flash/events/IMEEvent',
-        'offset': 386002,
-        'length': 1303,
-        'defs': [
-          'flash.events:IMEEvent'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/TextLine',
-        'offset': 387305,
-        'length': 5029,
-        'defs': [
-          'flash.text.engine:TextLine'
-        ]
-      },
-      {
-        'name': 'flash/display3D/VertexBuffer3D',
-        'offset': 392334,
-        'length': 940,
-        'defs': [
-          'flash.display3D:VertexBuffer3D'
-        ]
-      },
-      {
-        'name': 'flash/utils/CompressionAlgorithm',
-        'offset': 393274,
-        'length': 5295,
-        'defs': [
-          'flash.utils:CompressionAlgorithm',
-          'flash.utils:IDataInput2',
-          'flash.utils:IDataOutput2',
-          'flash.utils:ByteArray'
-        ]
-      },
-      {
-        'name': 'flash/display/FrameLabel',
-        'offset': 398569,
-        'length': 871,
-        'defs': [
-          'flash.display:FrameLabel'
-        ]
-      },
-      {
-        'name': 'adobe/utils/ProductManager',
-        'offset': 399440,
-        'length': 2071,
-        'defs': [
-          'adobe.utils:ProductManager'
-        ]
-      },
-      {
-        'name': 'flash/events/GameInputEvent',
-        'offset': 401511,
-        'length': 849,
-        'defs': [
-          'flash.events:GameInputEvent'
-        ]
-      },
-      {
-        'name': 'flash/net/ObjectEncoding',
-        'offset': 402360,
-        'length': 794,
-        'defs': [
-          'flash.net:ObjectEncoding'
-        ]
-      },
-      {
-        'name': 'flash/geom/Matrix3D',
-        'offset': 403154,
-        'length': 3313,
-        'defs': [
-          'flash.geom:Matrix3D'
-        ]
-      },
-      {
-        'name': 'flash/media/H264Profile',
-        'offset': 406467,
-        'length': 474,
-        'defs': [
-          'flash.media:H264Profile'
-        ]
-      },
-      {
-        'name': 'flash/display/Scene',
-        'offset': 406941,
-        'length': 802,
-        'defs': [
-          'flash.display:Scene'
-        ]
-      },
-      {
-        'name': 'flash/display3D/Context3DClearMask',
-        'offset': 407743,
-        'length': 611,
-        'defs': [
-          'flash.display3D:Context3DClearMask'
-        ]
-      },
-      {
-        'name': 'flash/net/NetStreamMulticastInfo',
-        'offset': 408354,
-        'length': 5325,
-        'defs': [
-          'flash.net:NetStreamMulticastInfo'
-        ]
-      },
-      {
-        'name': 'flash/globalization/LastOperationStatus',
-        'offset': 413679,
-        'length': 1671,
-        'defs': [
-          'flash.globalization:LastOperationStatus'
-        ]
-      },
-      {
-        'name': 'flash/events/ActivityEvent',
-        'offset': 415350,
-        'length': 1099,
-        'defs': [
-          'flash.events:ActivityEvent'
-        ]
-      },
-      {
-        'name': 'flash/net/NetConnection',
-        'offset': 416449,
-        'length': 3692,
-        'defs': [
-          'flash.net:NetConnection'
-        ]
-      },
-      {
-        'name': 'flash/events/VideoEvent',
-        'offset': 420141,
-        'length': 968,
-        'defs': [
-          'flash.events:VideoEvent'
-        ]
-      },
-      {
-        'name': 'flash/filters/BitmapFilterType',
-        'offset': 421109,
-        'length': 535,
-        'defs': [
-          'flash.filters:BitmapFilterType'
-        ]
-      },
-      {
-        'name': 'flash/display/SpreadMethod',
-        'offset': 421644,
-        'length': 519,
-        'defs': [
-          'flash.display:SpreadMethod'
-        ]
-      },
-      {
-        'name': 'flash/text/TextField',
-        'offset': 422163,
-        'length': 10471,
-        'defs': [
-          'flash.text:TextField'
-        ]
-      },
-      {
-        'name': 'flash/events/GestureEvent',
-        'offset': 432634,
-        'length': 2768,
-        'defs': [
-          'flash.events:GestureEvent'
-        ]
-      },
-      {
-        'name': 'flash/events/PressAndTapGestureEvent',
-        'offset': 435402,
-        'length': 2208,
-        'defs': [
-          'flash.events:PressAndTapGestureEvent'
-        ]
-      },
-      {
-        'name': 'flash/media/SoundChannel',
-        'offset': 437610,
-        'length': 1031,
-        'defs': [
-          'flash.media:SoundChannel'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/EastAsianJustifier',
-        'offset': 438641,
-        'length': 1350,
-        'defs': [
-          'flash.text.engine:EastAsianJustifier'
-        ]
-      },
-      {
-        'name': 'flash/accessibility/AccessibilityImplementation',
-        'offset': 439991,
-        'length': 2663,
-        'defs': [
-          'flash.accessibility:AccessibilityImplementation'
-        ]
-      },
-      {
-        'name': 'flash/text/CSMSettings',
-        'offset': 442654,
-        'length': 648,
-        'defs': [
-          'flash.text:CSMSettings'
-        ]
-      },
-      {
-        'name': 'flash/net/drm/DRMContentData',
-        'offset': 443302,
-        'length': 2300,
-        'defs': [
-          'flash.net.drm:DRMContentData'
-        ]
-      },
-      {
-        'name': 'flash/events/StageVideoAvailabilityEvent',
-        'offset': 445602,
-        'length': 890,
-        'defs': [
-          'flash.events:StageVideoAvailabilityEvent'
-        ]
-      },
-      {
-        'name': 'flash/net/NetGroupSendMode',
-        'offset': 446492,
-        'length': 538,
-        'defs': [
-          'flash.net:NetGroupSendMode'
-        ]
-      },
-      {
-        'name': 'flash/text/TextRun',
-        'offset': 447030,
-        'length': 569,
-        'defs': [
-          'flash.text:TextRun'
-        ]
-      },
-      {
-        'name': 'flash/net/XMLSocket',
-        'offset': 447599,
-        'length': 2766,
-        'defs': [
-          'flash.net:XMLSocket'
-        ]
-      },
-      {
-        'name': 'flash/utils/Dictionary',
-        'offset': 450365,
-        'length': 722,
-        'defs': [
-          'flash.utils:Dictionary'
-        ]
-      },
-      {
-        'name': 'flash/display3D/Context3DCompareMode',
-        'offset': 451087,
-        'length': 827,
-        'defs': [
-          'flash.display3D:Context3DCompareMode'
-        ]
-      },
-      {
-        'name': 'flash/text/TextFieldAutoSize',
-        'offset': 451914,
-        'length': 578,
-        'defs': [
-          'flash.text:TextFieldAutoSize'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/GroupElement',
-        'offset': 452492,
-        'length': 1911,
-        'defs': [
-          'flash.text.engine:GroupElement'
-        ]
-      },
-      {
-        'name': 'flash/automation/AutomationAction',
-        'offset': 454403,
-        'length': 669,
-        'defs': [
-          'flash.automation:AutomationAction'
-        ]
-      },
-      {
-        'name': 'flash/automation/KeyboardAutomationAction',
-        'offset': 455072,
-        'length': 992,
-        'defs': [
-          'flash.automation:KeyboardAutomationAction'
-        ]
-      },
-      {
-        'name': 'flash/net/NetStreamPlayOptions',
-        'offset': 456064,
-        'length': 891,
-        'defs': [
-          'flash.net:NetStreamPlayOptions'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/ElementFormat',
-        'offset': 456955,
-        'length': 4281,
-        'defs': [
-          'flash.text.engine:ElementFormat'
-        ]
-      },
-      {
-        'name': 'flash/filters/DisplacementMapFilter',
-        'offset': 461236,
-        'length': 2454,
-        'defs': [
-          'flash.filters:DisplacementMapFilter'
-        ]
-      },
-      {
-        'name': 'flash/globalization/CurrencyParseResult',
-        'offset': 463690,
-        'length': 936,
-        'defs': [
-          'flash.globalization:CurrencyParseResult'
-        ]
-      },
-      {
-        'name': 'flash/display3D/Context3D',
-        'offset': 464626,
-        'length': 5441,
-        'defs': [
-          'flash.display3D:Context3D'
-        ]
-      },
-      {
-        'name': 'flash/printing/PrintJob',
-        'offset': 470067,
-        'length': 2693,
-        'defs': [
-          'flash.printing:PrintJob'
-        ]
-      },
-      {
-        'name': 'flash/xml/XMLNodeType',
-        'offset': 472760,
-        'length': 746,
-        'defs': [
-          'flash.xml:XMLNodeType'
-        ]
-      },
-      {
-        'name': 'flash/events/TransformGestureEvent',
-        'offset': 473506,
-        'length': 2762,
-        'defs': [
-          'flash.events:TransformGestureEvent'
-        ]
-      },
-      {
-        'name': 'flash/net/GroupSpecifier',
-        'offset': 476268,
-        'length': 9817,
-        'defs': [
-          'flash.net:GroupSpecifier'
-        ]
-      },
-      {
-        'name': 'flash/system/SecurityPanel',
-        'offset': 486085,
-        'length': 760,
-        'defs': [
-          'flash.system:SecurityPanel'
-        ]
-      },
-      {
-        'name': 'flash/globalization/Collator',
-        'offset': 486845,
-        'length': 2251,
-        'defs': [
-          'flash.globalization:Collator'
-        ]
-      },
-      {
-        'name': 'flash/display/Graphics',
-        'offset': 489096,
-        'length': 5565,
-        'defs': [
-          'flash.display:Graphics'
-        ]
-      },
-      {
-        'name': 'flash/ui/ContextMenuItem',
-        'offset': 494661,
-        'length': 1400,
-        'defs': [
-          'flash.ui:ContextMenuItem'
-        ]
-      },
-      {
-        'name': 'flash/net/FileReferenceList',
-        'offset': 496061,
-        'length': 805,
-        'defs': [
-          'flash.net:FileReferenceList'
-        ]
-      },
-      {
-        'name': 'flash/events/DataEvent',
-        'offset': 496866,
-        'length': 1126,
-        'defs': [
-          'flash.events:DataEvent'
-        ]
-      },
-      {
-        'name': 'flash/ui/GameInputFinger',
-        'offset': 497992,
-        'length': 584,
-        'defs': [
-          'flash.ui:GameInputFinger'
-        ]
-      },
-      {
-        'name': 'flash/geom/Utils3D',
-        'offset': 498576,
-        'length': 768,
-        'defs': [
-          'flash.geom:Utils3D'
-        ]
-      },
-      {
-        'name': 'flash/text/TextColorType',
-        'offset': 499344,
-        'length': 476,
-        'defs': [
-          'flash.text:TextColorType'
-        ]
-      },
-      {
-        'name': 'flash/ui/KeyLocation',
-        'offset': 499820,
-        'length': 574,
-        'defs': [
-          'flash.ui:KeyLocation'
-        ]
-      },
-      {
-        'name': 'flash/display/BitmapDataChannel',
-        'offset': 500394,
-        'length': 566,
-        'defs': [
-          'flash.display:BitmapDataChannel'
-        ]
-      },
-      {
-        'name': 'flash/text/StaticText',
-        'offset': 500960,
-        'length': 616,
-        'defs': [
-          'flash.text:StaticText'
-        ]
-      },
-      {
-        'name': 'flash/events/FocusEvent',
-        'offset': 501576,
-        'length': 2097,
-        'defs': [
-          'flash.events:FocusEvent'
-        ]
-      },
-      {
-        'name': 'flash/display/BlendMode',
-        'offset': 503673,
-        'length': 1090,
-        'defs': [
-          'flash.display:BlendMode'
-        ]
-      },
-      {
-        'name': 'flash/net/SharedObjectFlushStatus',
-        'offset': 504763,
-        'length': 531,
-        'defs': [
-          'flash.net:SharedObjectFlushStatus'
-        ]
-      },
-      {
-        'name': 'flash/display/GraphicsPath',
-        'offset': 505294,
-        'length': 2513,
-        'defs': [
-          'flash.display:GraphicsPath'
-        ]
-      },
-      {
-        'name': 'flash/events/HTTPStatusEvent',
-        'offset': 507807,
-        'length': 1677,
-        'defs': [
-          'flash.events:HTTPStatusEvent'
-        ]
-      },
-      {
-        'name': 'flash/geom/Orientation3D',
-        'offset': 509484,
-        'length': 560,
-        'defs': [
-          'flash.geom:Orientation3D'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/TextBlock',
-        'offset': 510044,
-        'length': 5617,
-        'defs': [
-          'flash.text.engine:TextBlock'
-        ]
-      },
-      {
-        'name': 'flash/system/System',
-        'offset': 515661,
-        'length': 1753,
-        'defs': [
-          'flash.system:System'
-        ]
-      },
-      {
-        'name': 'flash/filters/BlurFilter',
-        'offset': 517414,
-        'length': 1123,
-        'defs': [
-          'flash.filters:BlurFilter'
-        ]
-      },
-      {
-        'name': 'flash/media/StageVideoAvailability',
-        'offset': 518537,
-        'length': 556,
-        'defs': [
-          'flash.media:StageVideoAvailability'
-        ]
-      },
-      {
-        'name': 'flash/system/Capabilities',
-        'offset': 519093,
-        'length': 3483,
-        'defs': [
-          'flash.system:Capabilities'
-        ]
-      },
-      {
-        'name': 'flash/system/ApplicationDomain',
-        'offset': 522576,
-        'length': 1494,
-        'defs': [
-          'flash.system:ApplicationDomain'
-        ]
-      },
-      {
-        'name': 'flash/display/StageAlign',
-        'offset': 524070,
-        'length': 716,
-        'defs': [
-          'flash.display:StageAlign'
-        ]
-      },
-      {
-        'name': 'flash/text/TextFieldType',
-        'offset': 524786,
-        'length': 470,
-        'defs': [
-          'flash.text:TextFieldType'
-        ]
-      },
-      {
-        'name': 'flash/display/GraphicsStroke',
-        'offset': 525256,
-        'length': 2213,
-        'defs': [
-          'flash.display:GraphicsStroke'
-        ]
-      },
-      {
-        'name': 'flash/utils/flash_proxy',
-        'offset': 527469,
-        'length': 1800,
-        'defs': [
-          'flash.utils:flash_proxy',
-          'flash.utils:Proxy'
-        ]
-      },
-      {
-        'name': 'flash/globalization/DateTimeStyle',
-        'offset': 529269,
-        'length': 647,
-        'defs': [
-          'flash.globalization:DateTimeStyle'
-        ]
-      },
-      {
-        'name': 'flash/events/DRMAuthenticationErrorEvent',
-        'offset': 529916,
-        'length': 1895,
-        'defs': [
-          'flash.events:DRMAuthenticationErrorEvent'
-        ]
-      },
-      {
-        'name': 'flash/net/NetGroupReplicationStrategy',
-        'offset': 531811,
-        'length': 591,
-        'defs': [
-          'flash.net:NetGroupReplicationStrategy'
-        ]
-      },
-      {
-        'name': 'flash/events/NetFilterEvent',
-        'offset': 532402,
-        'length': 950,
-        'defs': [
-          'flash.events:NetFilterEvent'
-        ]
-      },
-      {
-        'name': 'flash/geom/Vector3D',
-        'offset': 533352,
-        'length': 3920,
-        'defs': [
-          'flash.geom:Vector3D'
-        ]
-      },
-      {
-        'name': 'flash/events/ThrottleEvent',
-        'offset': 537272,
-        'length': 1278,
-        'defs': [
-          'flash.events:ThrottleEvent'
-        ]
-      },
-      {
-        'name': 'flash/globalization/LocaleID',
-        'offset': 538550,
-        'length': 1487,
-        'defs': [
-          'flash.globalization:LocaleID'
-        ]
-      },
-      {
-        'name': 'flash/events/GesturePhase',
-        'offset': 540037,
-        'length': 570,
-        'defs': [
-          'flash.events:GesturePhase'
-        ]
-      },
-      {
-        'name': 'flash/globalization/DateTimeNameStyle',
-        'offset': 540607,
-        'length': 627,
-        'defs': [
-          'flash.globalization:DateTimeNameStyle'
-        ]
-      },
-      {
-        'name': 'flash/automation/MouseAutomationAction',
-        'offset': 541234,
-        'length': 1829,
-        'defs': [
-          'flash.automation:MouseAutomationAction'
-        ]
-      },
-      {
-        'name': 'flash/ui/GameInputControlType',
-        'offset': 543063,
-        'length': 738,
-        'defs': [
-          'flash.ui:GameInputControlType'
-        ]
-      },
-      {
-        'name': 'flash/display3D/Context3DTextureFormat',
-        'offset': 543801,
-        'length': 631,
-        'defs': [
-          'flash.display3D:Context3DTextureFormat'
-        ]
-      },
-      {
-        'name': 'flash/ui/MouseCursorData',
-        'offset': 544432,
-        'length': 1004,
-        'defs': [
-          'flash.ui:MouseCursorData'
-        ]
-      },
-      {
-        'name': 'flash/display/StageDisplayState',
-        'offset': 545436,
-        'length': 592,
-        'defs': [
-          'flash.display:StageDisplayState'
-        ]
-      },
-      {
-        'name': 'flash/net/NetMonitor',
-        'offset': 546028,
-        'length': 655,
-        'defs': [
-          'flash.net:NetMonitor'
-        ]
-      },
-      {
-        'name': 'flash/events/SyncEvent',
-        'offset': 546683,
-        'length': 1055,
-        'defs': [
-          'flash.events:SyncEvent'
-        ]
-      },
-      {
-        'name': 'flash/globalization/NumberFormatter',
-        'offset': 547738,
-        'length': 3379,
-        'defs': [
-          'flash.globalization:NumberFormatter'
-        ]
-      },
-      {
-        'name': 'flash/media/MicrophoneEnhancedOptions',
-        'offset': 551117,
-        'length': 2019,
-        'defs': [
-          'flash.media:MicrophoneEnhancedOptions'
-        ]
-      },
-      {
-        'name': 'flash/xml/XMLNode',
-        'offset': 553136,
-        'length': 4338,
-        'defs': [
-          'flash.xml:XMLNode'
-        ]
-      },
-      {
-        'name': 'flash/trace/Trace',
-        'offset': 557474,
-        'length': 1014,
-        'defs': [
-          'flash.trace:Trace'
-        ]
-      },
-      {
-        'name': 'flash/system/IMEConversionMode',
-        'offset': 558488,
-        'length': 793,
-        'defs': [
-          'flash.system:IMEConversionMode'
-        ]
-      },
-      {
-        'name': 'flash/text/TextFormatDisplay',
-        'offset': 559281,
-        'length': 508,
-        'defs': [
-          'flash.text:TextFormatDisplay'
-        ]
-      },
-      {
-        'name': 'flash/events/DRMErrorEvent',
-        'offset': 559789,
-        'length': 2017,
-        'defs': [
-          'flash.events:DRMErrorEvent'
-        ]
-      },
-      {
-        'name': 'flash/filters/ColorMatrixFilter',
-        'offset': 561806,
-        'length': 895,
-        'defs': [
-          'flash.filters:ColorMatrixFilter'
-        ]
-      },
-      {
-        'name': 'flash/system/SystemUpdater',
-        'offset': 562701,
-        'length': 2410,
-        'defs': [
-          'flash.system:SystemUpdater',
-          'flash.system:SystemUpdaterType'
-        ]
-      },
-      {
-        'name': 'flash/display/ActionScriptVersion',
-        'offset': 565111,
-        'length': 515,
-        'defs': [
-          'flash.display:ActionScriptVersion'
-        ]
-      },
-      {
-        'name': 'flash/media/Video',
-        'offset': 565626,
-        'length': 1376,
-        'defs': [
-          'flash.media:Video'
-        ]
-      },
-      {
-        'name': 'flash/desktop/ClipboardFormats',
-        'offset': 567002,
-        'length': 8298,
-        'defs': [
-          'flash.desktop:ClipboardFormats',
-          'flash.desktop:ClipboardTransferMode',
-          'flash.desktop:Clipboard'
-        ]
-      },
-      {
-        'name': 'flash/display/AVM1Movie',
-        'offset': 575300,
-        'length': 1865,
-        'defs': [
-          'flash.display:AVM1Movie'
-        ]
-      },
-      {
-        'name': 'flash/filters/GradientBevelFilter',
-        'offset': 577165,
-        'length': 2694,
-        'defs': [
-          'flash.filters:GradientBevelFilter'
-        ]
-      },
-      {
-        'name': 'flash/ui/ContextMenuBuiltInItems',
-        'offset': 579859,
-        'length': 2547,
-        'defs': [
-          'flash.ui:ContextMenuBuiltInItems'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/BreakOpportunity',
-        'offset': 582406,
-        'length': 601,
-        'defs': [
-          'flash.text.engine:BreakOpportunity'
-        ]
-      },
-      {
-        'name': 'flash/display/PNGEncoderOptions',
-        'offset': 583007,
-        'length': 627,
-        'defs': [
-          'flash.display:PNGEncoderOptions'
-        ]
-      },
-      {
-        'name': 'flash/globalization/NationalDigitsType',
-        'offset': 583634,
-        'length': 1896,
-        'defs': [
-          'flash.globalization:NationalDigitsType'
-        ]
-      },
-      {
-        'name': 'flash/text/TextExtent',
-        'offset': 585530,
-        'length': 695,
-        'defs': [
-          'flash.text:TextExtent'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/GraphicElement',
-        'offset': 586225,
-        'length': 1341,
-        'defs': [
-          'flash.text.engine:GraphicElement'
-        ]
-      },
-      {
-        'name': 'flash/system/IME',
-        'offset': 587566,
-        'length': 1381,
-        'defs': [
-          'flash.system:IME'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/FontMetrics',
-        'offset': 588947,
-        'length': 1075,
-        'defs': [
-          'flash.text.engine:FontMetrics'
-        ]
-      },
-      {
-        'name': 'flash/security/X509Certificate',
-        'offset': 590022,
-        'length': 1735,
-        'defs': [
-          'flash.security:X509Certificate'
-        ]
-      },
-      {
-        'name': 'flash/events/TouchEvent',
-        'offset': 591757,
-        'length': 5240,
-        'defs': [
-          'flash.events:TouchEvent'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/TextRotation',
-        'offset': 596997,
-        'length': 661,
-        'defs': [
-          'flash.text.engine:TextRotation'
-        ]
-      },
-      {
-        'name': 'flash/display3D/Context3DProfile',
-        'offset': 597658,
-        'length': 547,
-        'defs': [
-          'flash.display3D:Context3DProfile'
-        ]
-      },
-      {
-        'name': 'flash/text/ime/IIMEClient',
-        'offset': 598205,
-        'length': 1802,
-        'defs': [
-          'flash.text.ime:IIMEClient'
-        ]
-      },
-      {
-        'name': 'flash/display3D/Context3DTriangleFace',
-        'offset': 600007,
-        'length': 641,
-        'defs': [
-          'flash.display3D:Context3DTriangleFace'
-        ]
-      },
-      {
-        'name': 'flash/events/MouseEvent',
-        'offset': 600648,
-        'length': 4905,
-        'defs': [
-          'flash.events:MouseEvent'
-        ]
-      },
-      {
-        'name': 'flash/xml/XMLDocument',
-        'offset': 605553,
-        'length': 3522,
-        'defs': [
-          'flash.xml:XMLDocument'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/RenderingMode',
-        'offset': 609075,
-        'length': 502,
-        'defs': [
-          'flash.text.engine:RenderingMode'
-        ]
-      },
-      {
-        'name': 'flash/net/URLRequest',
-        'offset': 609577,
-        'length': 2169,
-        'defs': [
-          'flash.net:URLRequest'
-        ]
-      },
-      {
-        'name': 'flash/automation/StageCapture',
-        'offset': 611746,
-        'length': 1555,
-        'defs': [
-          'flash.automation:StageCapture'
-        ]
-      },
-      {
-        'name': 'flash/media/StageVideo',
-        'offset': 613301,
-        'length': 1641,
-        'defs': [
-          'flash.media:StageVideo'
-        ]
-      },
-      {
-        'name': 'flash/events/DRMDeviceGroupErrorEvent',
-        'offset': 614942,
-        'length': 2201,
-        'defs': [
-          'flash.events:DRMDeviceGroupErrorEvent'
-        ]
-      },
-      {
-        'name': 'flash/events/SoftKeyboardEvent',
-        'offset': 617143,
-        'length': 1653,
-        'defs': [
-          'flash.events:SoftKeyboardEvent'
-        ]
-      },
-      {
-        'name': 'flash/errors/DRMManagerError',
-        'offset': 618796,
-        'length': 874,
-        'defs': [
-          'flash.errors:DRMManagerError'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/FontPosture',
-        'offset': 619670,
-        'length': 494,
-        'defs': [
-          'flash.text.engine:FontPosture'
-        ]
-      },
-      {
-        'name': 'flash/display/JointStyle',
-        'offset': 620164,
-        'length': 502,
-        'defs': [
-          'flash.display:JointStyle'
-        ]
-      },
-      {
-        'name': 'flash/display/ShaderPrecision',
-        'offset': 620666,
-        'length': 502,
-        'defs': [
-          'flash.display:ShaderPrecision'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/LineJustification',
-        'offset': 621168,
-        'length': 710,
-        'defs': [
-          'flash.text.engine:LineJustification'
-        ]
-      },
-      {
-        'name': 'flash/globalization/StringTools',
-        'offset': 621878,
-        'length': 1250,
-        'defs': [
-          'flash.globalization:StringTools'
-        ]
-      },
-      {
-        'name': 'flash/text/StyleSheet',
-        'offset': 623128,
-        'length': 3305,
-        'defs': [
-          'flash.text:StyleSheet'
-        ]
-      },
-      {
-        'name': 'flash/display/ShaderInput',
-        'offset': 626433,
-        'length': 1038,
-        'defs': [
-          'flash.display:ShaderInput'
-        ]
-      },
-      {
-        'name': 'flash/net/NetStreamPlayTransitions',
-        'offset': 627471,
-        'length': 848,
-        'defs': [
-          'flash.net:NetStreamPlayTransitions'
-        ]
-      },
-      {
-        'name': 'flash/display/BitmapEncodingColorSpace',
-        'offset': 628319,
-        'length': 688,
-        'defs': [
-          'flash.display:BitmapEncodingColorSpace'
-        ]
-      },
-      {
-        'name': 'flash/display/InterpolationMethod',
-        'offset': 629007,
-        'length': 518,
-        'defs': [
-          'flash.display:InterpolationMethod'
-        ]
-      },
-      {
-        'name': 'flash/media/ID3Info',
-        'offset': 629525,
-        'length': 541,
-        'defs': [
-          'flash.media:ID3Info'
-        ]
-      },
-      {
-        'name': 'flash/system/TouchscreenType',
-        'offset': 630066,
-        'length': 549,
-        'defs': [
-          'flash.system:TouchscreenType'
-        ]
-      },
-      {
-        'name': 'flash/events/DRMAuthenticationCompleteEvent',
-        'offset': 630615,
-        'length': 1774,
-        'defs': [
-          'flash.events:DRMAuthenticationCompleteEvent'
-        ]
-      },
-      {
-        'name': 'flash/events/SecurityErrorEvent',
-        'offset': 632389,
-        'length': 1045,
-        'defs': [
-          'flash.events:SecurityErrorEvent'
-        ]
-      },
-      {
-        'name': 'flash/system/AuthorizedFeatures',
-        'offset': 633434,
-        'length': 1104,
-        'defs': [
-          'flash.system:AuthorizedFeatures'
-        ]
-      },
-      {
-        'name': 'flash/media/Sound',
-        'offset': 634538,
-        'length': 2359,
-        'defs': [
-          'flash.media:Sound'
-        ]
-      },
-      {
-        'name': 'flash/system/WorkerDomain',
-        'offset': 636897,
-        'length': 996,
-        'defs': [
-          'flash.system:WorkerDomain'
-        ]
-      },
-      {
-        'name': 'flash/net/URLStream',
-        'offset': 637893,
-        'length': 2721,
-        'defs': [
-          'flash.net:URLStream'
-        ]
-      },
-      {
-        'name': 'flash/events/OutputProgressEvent',
-        'offset': 640614,
-        'length': 1459,
-        'defs': [
-          'flash.events:OutputProgressEvent'
-        ]
-      },
-      {
-        'name': 'flash/display/SimpleButton',
-        'offset': 642073,
-        'length': 2124,
-        'defs': [
-          'flash.display:SimpleButton'
-        ]
-      },
-      {
-        'name': 'flash/display/JPEGXREncoderOptions',
-        'offset': 644197,
-        'length': 760,
-        'defs': [
-          'flash.display:JPEGXREncoderOptions'
-        ]
-      },
-      {
-        'name': 'flash/display/GradientType',
-        'offset': 644957,
-        'length': 472,
-        'defs': [
-          'flash.display:GradientType'
-        ]
-      },
-      {
-        'name': 'flash/net/URLVariables',
-        'offset': 645429,
-        'length': 1584,
-        'defs': [
-          'flash.net:URLVariables'
-        ]
-      },
-      {
-        'name': 'flash/globalization/CurrencyFormatter',
-        'offset': 647013,
-        'length': 4010,
-        'defs': [
-          'flash.globalization:CurrencyFormatter'
-        ]
-      },
-      {
-        'name': 'flash/printing/PrintJobOrientation',
-        'offset': 651023,
-        'length': 529,
-        'defs': [
-          'flash.printing:PrintJobOrientation'
-        ]
-      },
-      {
-        'name': 'flash/crypto/generateRandomBytes',
-        'offset': 651552,
-        'length': 347,
-        'defs': [
-          'flash.crypto:generateRandomBytes'
-        ]
-      },
-      {
-        'name': 'flash/events/NetMonitorEvent',
-        'offset': 651899,
-        'length': 1060,
-        'defs': [
-          'flash.events:NetMonitorEvent'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/TextLineValidity',
-        'offset': 652959,
-        'length': 638,
-        'defs': [
-          'flash.text.engine:TextLineValidity'
-        ]
-      },
-      {
-        'name': 'flash/text/TextSnapshot',
-        'offset': 653597,
-        'length': 1344,
-        'defs': [
-          'flash.text:TextSnapshot'
-        ]
-      },
-      {
-        'name': 'flash/display/Loader',
-        'offset': 654941,
-        'length': 4198,
-        'defs': [
-          'flash.display:Loader'
-        ]
-      },
-      {
-        'name': 'flash/events/FullScreenEvent',
-        'offset': 659139,
-        'length': 1328,
-        'defs': [
-          'flash.events:FullScreenEvent'
-        ]
-      },
-      {
-        'name': 'flash/utils/ObjectOutput',
-        'offset': 660467,
-        'length': 1784,
-        'defs': [
-          'flash.utils:ObjectOutput'
-        ]
-      },
-      {
-        'name': 'flash/utils/IExternalizable',
-        'offset': 662251,
-        'length': 577,
-        'defs': [
-          'flash.utils:IExternalizable'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/FontDescription',
-        'offset': 662828,
-        'length': 2196,
-        'defs': [
-          'flash.text.engine:FontDescription'
-        ]
-      },
-      {
-        'name': 'flash/globalization/NumberParseResult',
-        'offset': 665024,
-        'length': 1000,
-        'defs': [
-          'flash.globalization:NumberParseResult'
-        ]
-      },
-      {
-        'name': 'flash/automation/StageCaptureEvent',
-        'offset': 666024,
-        'length': 1310,
-        'defs': [
-          'flash.automation:StageCaptureEvent'
-        ]
-      },
-      {
-        'name': 'flash/security/X500DistinguishedName',
-        'offset': 667334,
-        'length': 1215,
-        'defs': [
-          'flash.security:X500DistinguishedName'
-        ]
-      },
-      {
-        'name': 'adobe/utils/XMLUI',
-        'offset': 668549,
-        'length': 662,
-        'defs': [
-          'adobe.utils:XMLUI'
-        ]
-      },
-      {
-        'name': 'flash/display/ColorCorrection',
-        'offset': 669211,
-        'length': 542,
-        'defs': [
-          'flash.display:ColorCorrection'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/LigatureLevel',
-        'offset': 669753,
-        'length': 652,
-        'defs': [
-          'flash.text.engine:LigatureLevel'
-        ]
-      },
-      {
-        'name': 'flash/media/VideoStreamSettings',
-        'offset': 670405,
-        'length': 2164,
-        'defs': [
-          'flash.media:VideoStreamSettings'
-        ]
-      },
-      {
-        'name': 'flash/media/H264VideoStreamSettings',
-        'offset': 672569,
-        'length': 1813,
-        'defs': [
-          'flash.media:H264VideoStreamSettings'
-        ]
-      },
-      {
-        'name': 'flash/automation/Configuration',
-        'offset': 674382,
-        'length': 786,
-        'defs': [
-          'flash.automation:Configuration'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/JustificationStyle',
-        'offset': 675168,
-        'length': 652,
-        'defs': [
-          'flash.text.engine:JustificationStyle'
-        ]
-      },
-      {
-        'name': 'flash/ui/KeyboardType',
-        'offset': 675820,
-        'length': 532,
-        'defs': [
-          'flash.ui:KeyboardType'
-        ]
-      },
-      {
-        'name': 'flash/display/CapsStyle',
-        'offset': 676352,
-        'length': 497,
-        'defs': [
-          'flash.display:CapsStyle'
-        ]
-      },
-      {
-        'name': 'flash/text/ime/CompositionAttributeRange',
-        'offset': 676849,
-        'length': 753,
-        'defs': [
-          'flash.text.ime:CompositionAttributeRange'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/TabStop',
-        'offset': 677602,
-        'length': 1048,
-        'defs': [
-          'flash.text.engine:TabStop'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/FontWeight',
-        'offset': 678650,
-        'length': 485,
-        'defs': [
-          'flash.text.engine:FontWeight'
-        ]
-      },
-      {
-        'name': 'flash/ui/GameInputDevice',
-        'offset': 679135,
-        'length': 1552,
-        'defs': [
-          'flash.ui:GameInputDevice'
-        ]
-      },
-      {
-        'name': 'flash/media/AudioDecoder',
-        'offset': 680687,
-        'length': 768,
-        'defs': [
-          'flash.media:AudioDecoder'
-        ]
-      },
-      {
-        'name': 'flash/text/TextRenderer',
-        'offset': 681455,
-        'length': 1074,
-        'defs': [
-          'flash.text:TextRenderer'
-        ]
-      },
-      {
-        'name': 'flash/events/StageVideoEvent',
-        'offset': 682529,
-        'length': 1341,
-        'defs': [
-          'flash.events:StageVideoEvent'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/DigitWidth',
-        'offset': 683870,
-        'length': 553,
-        'defs': [
-          'flash.text.engine:DigitWidth'
-        ]
-      },
-      {
-        'name': 'flash/geom/ColorTransform',
-        'offset': 684423,
-        'length': 1790,
-        'defs': [
-          'flash.geom:ColorTransform'
-        ]
-      },
-      {
-        'name': 'flash/system/AuthorizedFeaturesLoader',
-        'offset': 686213,
-        'length': 969,
-        'defs': [
-          'flash.system:AuthorizedFeaturesLoader'
-        ]
-      },
-      {
-        'name': 'flash/display/GraphicsPathWinding',
-        'offset': 687182,
-        'length': 539,
-        'defs': [
-          'flash.display:GraphicsPathWinding'
-        ]
-      },
-      {
-        'name': 'flash/display/GraphicsPathCommand',
-        'offset': 687721,
-        'length': 744,
-        'defs': [
-          'flash.display:GraphicsPathCommand'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/TabAlignment',
-        'offset': 688465,
-        'length': 588,
-        'defs': [
-          'flash.text.engine:TabAlignment'
-        ]
-      },
-      {
-        'name': 'flash/profiler/Telemetry',
-        'offset': 689053,
-        'length': 1062,
-        'defs': [
-          'flash.profiler:Telemetry'
-        ]
-      },
-      {
-        'name': 'flash/events/UncaughtErrorEvent',
-        'offset': 690115,
-        'length': 1159,
-        'defs': [
-          'flash.events:UncaughtErrorEvent'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/DigitCase',
-        'offset': 691274,
-        'length': 538,
-        'defs': [
-          'flash.text.engine:DigitCase'
-        ]
-      },
-      {
-        'name': 'flash/filters/ShaderFilter',
-        'offset': 691812,
-        'length': 1919,
-        'defs': [
-          'flash.filters:ShaderFilter'
-        ]
-      },
-      {
-        'name': 'flash/events/GeolocationEvent',
-        'offset': 693731,
-        'length': 2920,
-        'defs': [
-          'flash.events:GeolocationEvent'
-        ]
-      },
-      {
-        'name': 'flash/ui/Keyboard',
-        'offset': 696651,
-        'length': 17797,
-        'defs': [
-          'flash.ui:Keyboard'
-        ]
-      },
-      {
-        'name': 'flash/media/MicrophoneEnhancedMode',
-        'offset': 714448,
-        'length': 708,
-        'defs': [
-          'flash.media:MicrophoneEnhancedMode'
-        ]
-      },
-      {
-        'name': 'flash/filters/GlowFilter',
-        'offset': 715156,
-        'length': 1920,
-        'defs': [
-          'flash.filters:GlowFilter'
-        ]
-      },
-      {
-        'name': 'flash/display/MovieClip',
-        'offset': 717076,
-        'length': 2591,
-        'defs': [
-          'flash.display:MovieClip'
-        ]
-      },
-      {
-        'name': 'flash/text/engine/SpaceJustifier',
-        'offset': 719667,
-        'length': 1661,
-        'defs': [
-          'flash.text.engine:SpaceJustifier'
-        ]
-      },
-      {
-        'name': 'flash/net/drm/VoucherAccessInfo',
-        'offset': 721328,
-        'length': 1113,
-        'defs': [
-          'flash.net.drm:VoucherAccessInfo'
-        ]
-      },
-      {
-        'name': 'flash/events/ContextMenuEvent',
-        'offset': 722441,
-        'length': 1822,
-        'defs': [
-          'flash.events:ContextMenuEvent'
-        ]
-      },
-      {
-        'name': 'flash/display3D/textures/CubeTexture',
-        'offset': 724263,
-        'length': 1114,
-        'defs': [
-          'flash.display3D.textures:CubeTexture'
-        ]
-      },
-      {
-        'name': 'flash/text/TextLineMetrics',
-        'offset': 725377,
-        'length': 732,
-        'defs': [
-          'flash.text:TextLineMetrics'
-        ]
-      }
-    ];
-  for (var i = 0; i < index.length; i++) {
-    var abc = index[i];
-    playerGlobalScripts[abc.name] = abc;
-    if (typeof abc.defs === 'string') {
-      playerGlobalNames[abc.defs] = abc.name;
-    } else {
-      for (var j = 0; j < abc.defs.length; j++) {
-        var def = abc.defs[j];
-        playerGlobalNames[def] = abc.name;
-      }
-    }
-  }
-}());
-enableVerifier.value = true;
-enableC4.value = true;
+        };
+        return Interpreter;
+      }();
+    AVM2.Interpreter = Interpreter;
+  }(Shumway.AVM2 || (Shumway.AVM2 = {})));
+  var AVM2 = Shumway.AVM2;
+}(Shumway || (Shumway = {})));
+Shumway.AVM2.Runtime.enableVerifier.value = true;
 release = true;
 var avm2Root = SHUMWAY_ROOT + 'avm2/';
 var builtinPath = avm2Root + 'generated/builtin/builtin.abc';
 var avm1Path = avm2Root + 'generated/avm1lib/avm1lib.abc';
-var playerGlobalPath = SHUMWAY_ROOT + 'flash/playerglobal.abc';
 var BinaryFileReader = function binaryFileReader() {
     function constructor(url, responseType) {
       this.url = url;
@@ -37040,13 +35545,10 @@ function grabAbc(abcName) {
   return null;
 }
 var avm2;
-var libraryScripts = playerGlobalScripts;
-var libraryNames = playerGlobalNames;
 function createAVM2(builtinPath, libraryPath, avm1Path, sysMode, appMode, next) {
   avm2 = new AVM2(sysMode, appMode, loadAVM1);
-  var builtinAbc, libraryAbc, avm1Abc;
-  new BinaryFileReader(libraryPath).readAll(null, function (buffer) {
-    libraryAbcs = buffer;
+  var builtinAbc, avm1Abc;
+  AVM2.loadPlayerglobal(libraryPath.abcs, libraryPath.catalog).then(function () {
     new BinaryFileReader(builtinPath).readAll(null, function (buffer) {
       builtinAbc = new AbcFile(new Uint8Array(buffer), 'builtin.abc');
       executeAbc();
@@ -38852,14 +37354,11 @@ var GraphicsDefinition = function () {
           this._currentPath.curveTo(cpx * 20 | 0, cpy * 20 | 0, x * 20 | 0, y * 20 | 0);
         },
         drawCircle: function (x, y, radius) {
-          this._invalidate();
-          this._currentPath.circle(x * 20 | 0, y * 20 | 0, radius * 20 | 0);
+          var radius2 = radius * 2;
+          this.drawRoundRect(x - radius, y - radius, radius2, radius2, radius2, radius2);
         },
         drawEllipse: function (x, y, width, height) {
-          this._invalidate();
-          var radiusX = width / 2 * 20 | 0;
-          var radiusY = height / 2 * 20 | 0;
-          this._currentPath.ellipse(x * 20 | 0 + radiusX, y * 20 | 0 + radiusY, radiusX, radiusY);
+          this.drawRoundRect(x, y, width, height, width, height);
         },
         drawPath: function (commands, data, winding) {
           this._invalidate();
@@ -38953,7 +37452,45 @@ var GraphicsDefinition = function () {
           this._currentPath.curveTo(right, y, right, y + topRightRadius);
           this._currentPath.lineTo(right, bottom - bottomRightRadius);
         },
-        drawTriangles: function (vertices, indices, uvtData, culling) {
+        drawTriangles: function (vertices, indices, uvtData, cullingStr) {
+          if (vertices === null || vertices.length === 0) {
+            return;
+          }
+          var numVertices = vertices.length / 2;
+          var numTriangles = 0;
+          if (indices) {
+            if (indices.length % 3) {
+              throwError('ArgumentError', Errors.InvalidParamError);
+            } else {
+              numTriangles = indices.length / 3;
+            }
+          } else {
+            if (vertices.length % 6) {
+              throwError('ArgumentError', Errors.InvalidParamError);
+            } else {
+              numTriangles = vertices.length / 6;
+            }
+          }
+          var numStrides = 0;
+          if (uvtData) {
+            if (uvtData.length == numVertices * 2) {
+              numStrides = 2;
+            } else if (uvtData.length == numVertices * 3) {
+              numStrides = 3;
+            } else {
+              throwError('ArgumentError', Errors.InvalidParamError);
+            }
+          }
+          var culling = 0;
+          if (cullingStr === 'none') {
+            culling = 0;
+          } else if (cullingStr === 'negative') {
+            culling = -1;
+          } else if (cullingStr === 'positive') {
+            culling = 1;
+          } else {
+            throwError('ArgumentError', Errors.InvalidEnumError, 'culling');
+          }
           notImplemented('Graphics#drawTriangles');
         },
         endFill: function () {
@@ -39130,6 +37667,21 @@ function createGradientStyle(type, colors, alphas, ratios, matrix, spreadMethod,
     transform: transform
   };
 }
+function drawGraphicsData(data) {
+  if (data === null) {
+    return;
+  }
+  for (var i = 0; i < data.length; i++) {
+    var item = data[i];
+    if (flash.display.IGraphicsPath.class.isInstanceOf(item)) {
+      this._drawPathObject(item);
+    } else if (flash.display.IGraphicsStroke.class.isInstanceOf(item)) {
+      this.beginStrokeObject(item);
+    } else if (flash.display.IGraphicsFill.class.isInstanceOf(item)) {
+      this.beginFillObject(item);
+    }
+  }
+}
 var InteractiveObjectDefinition = function () {
     var def = {
         initialize: function () {
@@ -39244,7 +37796,7 @@ var LoaderDefinition = function () {
           this._uncaughtErrorEvents = null;
           this._worker = null;
           var abc = AVM2.currentAbc();
-          if (abc) {
+          if (abc && abc.env.loader) {
             this._contentLoaderInfo._loaderURL = abc.env.loader._contentLoaderInfo._url;
           }
         },
@@ -39265,6 +37817,7 @@ var LoaderDefinition = function () {
                   }
                 });
               });
+            this._contentLoaderInfo._dispatchEvent('parsed');
             Promise.all([
               frameConstructed,
               this._lastPromise
@@ -39629,7 +38182,7 @@ var LoaderDefinition = function () {
             loaderInfo._dispatchEvent('init');
           };
           img.src = URL.createObjectURL(imageInfo.data);
-          delete imageInfo.data;
+          imageInfo.data = null;
         },
         _commitSymbol: function (symbol) {
           var dictionary = this._dictionary;
@@ -39917,7 +38470,7 @@ var LoaderDefinition = function () {
           loader._isAvm2Enabled = info.fileAttributes.doAbc;
           this._setup();
         },
-        _load: function (request, checkPolicyFile, applicationDomain, securityDomain, deblockingFilter) {
+        _load: function (request, checkPolicyFile, applicationDomain, securityDomain, requestedContentParent, parameters, deblockingFilter, allowCodeImport, imageDecodingPolicy) {
           if (flash.net.URLRequest.class.isInstanceOf(request)) {
             this._contentLoaderInfo._url = request._url;
           }
@@ -39991,7 +38544,12 @@ var LoaderDefinition = function () {
             loader._vmPromise.resolve();
           };
           if (avm2.isAVM1Loaded) {
-            loaded();
+            if (AS2Context.instance) {
+              loader._avm1Context = AS2Context.instance;
+              loader._vmPromise.resolve();
+            } else {
+              loaded();
+            }
           } else {
             avm2.isAVM1Loaded = true;
             avm2.loadAVM1(loaded);
@@ -40015,7 +38573,7 @@ var LoaderDefinition = function () {
           },
           _load: def._load,
           _loadBytes: function _loadBytes(bytes, checkPolicyFile, applicationDomain, securityDomain, requestedContentParent, parameters, deblockingFilter, allowLoadBytesCodeExecution, imageDecodingPolicy) {
-            this._load(bytes.a, checkPolicyFile, applicationDomain, securityDomain);
+            this._load(bytes.a, checkPolicyFile, applicationDomain, securityDomain, requestedContentParent, parameters, deblockingFilter, allowLoadBytesCodeExecution, imageDecodingPolicy);
           },
           _unload: function _unload(halt, gc) {
             somewhatImplemented('Loader._unload, do we even need to do anything here?');
@@ -40057,6 +38615,7 @@ var LoaderInfoDefinition = function () {
         this._swfVersion = null;
         this._url = null;
         this._width = null;
+        this._uncaughtErrorEvents = null;
       },
       __glue__: {
         native: {
@@ -40075,10 +38634,12 @@ var LoaderInfoDefinition = function () {
               return mangled;
             },
             _getUncaughtErrorEvents: function _getUncaughtErrorEvents() {
-              notImplemented('LoaderInfo._getUncaughtErrorEvents');
+              somewhatImplemented('Loader._getUncaughtErrorEvents');
+              return this._uncaughtErrorEvents;
             },
             _setUncaughtErrorEvents: function _setUncaughtErrorEvents(value) {
-              notImplemented('LoaderInfo._setUncaughtErrorEvents');
+              somewhatImplemented('Loader._setUncaughtErrorEvents');
+              this._uncaughtErrorEvents = value;
             },
             loaderURL: {
               get: function loaderURL() {
@@ -40366,7 +38927,7 @@ var MovieClipDefinition = function () {
                   currentChild.name = nextCmd.name;
                 }
                 if (nextCmd.blend) {
-                  currentChild.blendMode = this._resolveBlendMode(nextCmd.blendMode);
+                  currentChild._blendMode = this._resolveBlendMode(nextCmd.blendMode);
                 }
               }
               currentDisplayListItem.cmd = nextCmd;
@@ -40568,7 +39129,7 @@ var MovieClipDefinition = function () {
               }
               if (sound.channel) {
                 sound.channel.stop();
-                delete sound.channel;
+                sound.channel = null;
               }
               if (!info.stop) {
                 var loops = info.hasLoops ? info.loopCount : 0;
@@ -41519,7 +40080,7 @@ var SpriteDefinition = function () {
           for (var i = 0; i < children.length; i++) {
             var instance = children[i];
             if (instance._needLoadEvent) {
-              delete instance._needLoadEvent;
+              instance._needLoadEvent = false;
               instance._dispatchEvent('load');
             }
           }
@@ -42103,6 +40664,9 @@ var StageDefinition = function () {
             displayState: {
               get: function displayState() {
                 return this._displayState;
+              },
+              set: function displayState(value) {
+                this._displayState = value;
               }
             },
             simulatedDisplayState: {
@@ -42349,7 +40913,7 @@ var EventDispatcherDefinition = function () {
                 if (eventClass) {
                   event = new eventClass(event);
                 } else {
-                  if (event in mouseEvents) {
+                  if (mouseEvents[event]) {
                     event = new flash.events.MouseEvent(event, mouseEvents[event]);
                     if (target._stage) {
                       event._localX = target.mouseX;
@@ -42434,7 +40998,7 @@ var EventDispatcherDefinition = function () {
             if (item.handleEvent === listener) {
               queue.splice(i, 1);
               if (!queue.length) {
-                delete listeners[type];
+                listeners[type] = null;
               }
               return;
             }
@@ -42445,7 +41009,7 @@ var EventDispatcherDefinition = function () {
         this._removeEventListenerImpl(type, listener, useCapture);
       },
       _hasEventListener: function hasEventListener(type) {
-        return type in this._listeners || type in this._captureListeners;
+        return this._listeners[type] || this._captureListeners[type];
       },
       _dispatchEvent: function dispatchEvent(event, eventClass, bubbles) {
         doDispatchEvent(this, event, eventClass, bubbles);
@@ -42475,7 +41039,7 @@ var EventDispatcherDefinition = function () {
               return false;
             },
             dispatchEventFunction: function dispatchEventFunction(event) {
-              doDispatchEvent(this, event);
+              return doDispatchEvent(this, event);
             }
           }
         }
@@ -44910,6 +43474,12 @@ var NetStreamDefinition = function () {
                 videoElement.play();
               }
               videoElement.currentTime = args[4] / 1000;
+            }
+            break;
+          case 'seek':
+            simulated = true;
+            if (videoElement && !videoElement.paused) {
+              videoElement.currentTime = args[3] / 1000;
             }
             break;
           }
@@ -52217,7 +50787,7 @@ var TimerDefinition = function () {
             this._running = false;
             clearInterval(this.interval);
           },
-          _timerDispatch: function () {
+          _tick: function () {
             if (!this._running) {
               return;
             }
@@ -52405,7 +50975,7 @@ var AS2MovieClipLoaderDefinition = function () {
         initialize: function () {
         },
         get _bytesLoaded() {
-          return this.$nativeObject._bytesLoaded;
+          return this.$nativeObject._contentLoaderInfo._bytesLoaded;
         }
       };
     var desc = Object.getOwnPropertyDescriptor;
@@ -52540,11 +51110,11 @@ var AS2UtilsDefinition = function () {
           getAS2Object: function (nativeObject) {
             return nativeObject && nativeObject._getAS2Object ? nativeObject._getAS2Object() : null;
           },
-          addProperty: function (obj, propertyName, getter, setter) {
+          addProperty: function (obj, propertyName, getter, setter, enumerable) {
             obj.asDefinePublicProperty(propertyName, {
               get: getter,
               set: setter || undefined,
-              enumerable: true,
+              enumerable: enumerable,
               configurable: true
             });
           },

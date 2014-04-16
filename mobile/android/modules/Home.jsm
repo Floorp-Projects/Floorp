@@ -218,6 +218,25 @@ let HomePanels = (function () {
       options.auth.authenticate();
     },
 
+    "HomePanels:RefreshView": function handlePanelsRefreshView(data) {
+      data = JSON.parse(data);
+
+      let options = _registeredPanels[data.panelId]();
+      let view = options.views[data.viewIndex];
+
+      if (!view) {
+        throw "Home.panels: Invalid view for panel.id = " + data.panelId
+            + ", view.index = " + data.viewIndex;
+      }
+
+      if (!view.onrefresh || typeof view.onrefresh !== "function") {
+        throw "Home.panels: Invalid onrefresh for panel.id = " + data.panelId
+            + ", view.index = " + data.viewIndex;
+      }
+
+      view.onrefresh();
+    },
+
     "HomePanels:Installed": function handlePanelsInstalled(id) {
       let options = _registeredPanels[id]();
       if (!options.oninstall) {
@@ -315,6 +334,10 @@ let HomePanels = (function () {
 
       if (!view.dataset) {
         throw "Home.panels: No dataset provided for view: panel.id = " + this.id + ", view.type = " + view.type;
+      }
+
+      if (view.onrefresh) {
+        view.refreshEnabled = true;
       }
     }
 

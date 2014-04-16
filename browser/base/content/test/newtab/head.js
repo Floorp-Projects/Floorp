@@ -14,7 +14,8 @@ Cu.import("resource://gre/modules/NewTabUtils.jsm", tmp);
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
   .loadSubScript("chrome://browser/content/sanitize.js", tmp);
-let {Promise, NewTabUtils, Sanitizer} = tmp;
+Cu.import("resource://gre/modules/Timer.jsm", tmp);
+let {Promise, NewTabUtils, Sanitizer, clearTimeout} = tmp;
 
 let uri = Services.io.newURI("about:newtab", null, null);
 let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
@@ -30,6 +31,13 @@ registerCleanupFunction(function () {
 
   Services.prefs.clearUserPref(PREF_NEWTAB_ENABLED);
   Services.prefs.clearUserPref(PREF_NEWTAB_DIRECTORYSOURCE);
+
+  // Stop any update timers to prevent unexpected updates in later tests
+  let timer = NewTabUtils.allPages._scheduleUpdateTimeout;
+  if (timer) {
+    clearTimeout(timer);
+    delete NewTabUtils.allPages._scheduleUpdateTimeout;
+  }
 });
 
 /**
