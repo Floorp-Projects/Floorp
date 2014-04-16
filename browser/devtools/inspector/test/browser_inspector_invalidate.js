@@ -13,9 +13,7 @@ function test() {
 
     openInspector(aInspector => {
       inspector = aInspector;
-      inspector.once("inspector-updated", () => {
-        inspector.toolbox.highlighter.showBoxModel(getNodeFront(div)).then(runTest);
-      });
+      inspector.toolbox.highlighter.showBoxModel(getNodeFront(div)).then(runTest);
     });
   }
 
