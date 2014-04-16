@@ -18,13 +18,15 @@ namespace layers {
 
 class ISurfaceAllocator;
 
-class TextureClientPool : public RefCounted<TextureClientPool>
+class TextureClientPool MOZ_FINAL
 {
+  ~TextureClientPool();
+
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(TextureClientPool)
+  NS_INLINE_DECL_REFCOUNTING(TextureClientPool)
+
   TextureClientPool(gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
                     ISurfaceAllocator *aAllocator);
-  ~TextureClientPool();
 
   /**
    * Gets an allocated TextureClient of size and format that are determined

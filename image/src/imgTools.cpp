@@ -6,6 +6,7 @@
 
 #include "imgTools.h"
 
+#include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
@@ -97,20 +98,6 @@ NS_IMETHODIMP imgTools::DecodeImage(nsIInputStream* aInStr,
   return NS_OK;
 }
 
-static TemporaryRef<SourceSurface>
-GetFirstImageFrame(imgIContainer *aContainer)
-{
-  nsRefPtr<gfxASurface> frame =
-    aContainer->GetFrame(imgIContainer::FRAME_FIRST,
-                         imgIContainer::FLAG_SYNC_DECODE);
-  NS_ENSURE_TRUE(frame, nullptr);
-
-  nsRefPtr<gfxImageSurface> imageSurface = frame->CopyToARGB32ImageSurface();
-  NS_ENSURE_TRUE(imageSurface, nullptr);
-
-  return imageSurface->CopyToB8G8R8A8DataSourceSurface();
-}
-
 /**
  * This takes a DataSourceSurface rather than a SourceSurface because some
  * of the callers have a DataSourceSurface and we don't want to call
@@ -161,10 +148,22 @@ NS_IMETHODIMP imgTools::EncodeImage(imgIContainer *aContainer,
                                     nsIInputStream **aStream)
 {
   // Use frame 0 from the image container.
-  RefPtr<SourceSurface> frame = GetFirstImageFrame(aContainer);
+  RefPtr<SourceSurface> frame =
+    aContainer->GetFrame(imgIContainer::FRAME_FIRST,
+                         imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  RefPtr<DataSourceSurface> dataSurface = frame->GetDataSurface();
+  RefPtr<DataSourceSurface> dataSurface;
+
+  if (frame->GetFormat() == SurfaceFormat::B8G8R8A8) {
+    dataSurface = frame->GetDataSurface();
+  } else {
+    // Convert format to SurfaceFormat::B8G8R8A8
+    dataSurface = gfxUtils::
+      CopySurfaceToDataSourceSurfaceWithFormat(frame,
+                                               SurfaceFormat::B8G8R8A8);
+  }
+
   NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
 
   return EncodeImageData(dataSurface, aMimeType, aOutputOptions, aStream);
@@ -186,7 +185,9 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
   }
 
   // Use frame 0 from the image container.
-  RefPtr<SourceSurface> frame = GetFirstImageFrame(aContainer);
+  RefPtr<SourceSurface> frame =
+    aContainer->GetFrame(imgIContainer::FRAME_FIRST,
+                         imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   int32_t frameWidth = frame->GetSize().width;
@@ -247,7 +248,9 @@ NS_IMETHODIMP imgTools::EncodeCroppedImage(imgIContainer *aContainer,
   }
 
   // Use frame 0 from the image container.
-  RefPtr<SourceSurface> frame = GetFirstImageFrame(aContainer);
+  RefPtr<SourceSurface> frame =
+    aContainer->GetFrame(imgIContainer::FRAME_FIRST,
+                         imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   int32_t frameWidth = frame->GetSize().width;

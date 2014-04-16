@@ -439,6 +439,8 @@ JavaScriptChild::AnswerIsExtensible(const ObjectId &objId, ReturnStatus *rs, boo
     if (!obj)
         return false;
 
+    JSAutoCompartment comp(cx, obj);
+
     bool extensible;
     if (!JS_IsExtensible(cx, obj, &extensible))
         return fail(cx, rs);
