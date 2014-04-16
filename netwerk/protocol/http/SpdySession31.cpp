@@ -338,7 +338,9 @@ SpdySession31::RegisterStreamID(SpdyStream31 *stream, uint32_t aNewID)
 
 bool
 SpdySession31::AddStream(nsAHttpTransaction *aHttpTransaction,
-                           int32_t aPriority)
+                         int32_t aPriority,
+                         bool aUseTunnel,
+                         nsIInterfaceRequestor *aCallbacks)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -2613,6 +2615,7 @@ SpdySession31::TransactionHasDataToWrite(nsAHttpTransaction *caller)
         this, stream->StreamID()));
 
   mReadyForWrite.Push(stream);
+  SetWriteCallbacks();
 }
 
 void
@@ -2663,10 +2666,17 @@ SpdySession31::Classification()
   return mConnection->Classification();
 }
 
+void
+SpdySession31::GetSecurityCallbacks(nsIInterfaceRequestor **aOut)
+{
+  *aOut = nullptr;
+}
+
 //-----------------------------------------------------------------------------
 // unused methods of nsAHttpTransaction
 // We can be sure of this because SpdySession31 is only constructed in
-// nsHttpConnection and is never passed out of that object
+// nsHttpConnection and is never passed out of that object or a TLSFilterTransaction
+// TLS tunnel
 //-----------------------------------------------------------------------------
 
 void
@@ -2674,13 +2684,6 @@ SpdySession31::SetConnection(nsAHttpConnection *)
 {
   // This is unexpected
   MOZ_ASSERT(false, "SpdySession31::SetConnection()");
-}
-
-void
-SpdySession31::GetSecurityCallbacks(nsIInterfaceRequestor **)
-{
-  // This is unexpected
-  MOZ_ASSERT(false, "SpdySession31::GetSecurityCallbacks()");
 }
 
 void

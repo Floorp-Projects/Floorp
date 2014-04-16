@@ -68,8 +68,7 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, int32_t port)
     if (mUsingHttpProxy && !mUsingConnect) {
         keyHost = ProxyHost();
         keyPort = ProxyPort();
-    }
-    else {
+    } else {
         keyHost = Host();
         keyPort = Port();
     }
@@ -129,8 +128,29 @@ nsHttpConnectionInfo::Clone() const
     // Make sure the anonymous and private flags are transferred!
     clone->SetAnonymous(GetAnonymous());
     clone->SetPrivate(GetPrivate());
-
+    MOZ_ASSERT(clone->Equals(this));
     return clone;
+}
+
+nsresult
+nsHttpConnectionInfo::CreateWildCard(nsHttpConnectionInfo **outParam)
+{
+    // T???mozilla.org:443 (https:proxy.ducksong.com:3128) [specifc form]
+    // TS??*:0 (https:proxy.ducksong.com:3128)   [wildcard form]
+
+    if (!mUsingHttpsProxy) {
+        MOZ_ASSERT(false);
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    nsRefPtr<nsHttpConnectionInfo> clone;
+    clone = new nsHttpConnectionInfo(NS_LITERAL_CSTRING("*"), 0,
+                                     mUsername, mProxyInfo, true);
+    // Make sure the anonymous and private flags are transferred!
+    clone->SetAnonymous(GetAnonymous());
+    clone->SetPrivate(GetPrivate());
+    clone.forget(outParam);
+    return NS_OK;
 }
 
 bool
