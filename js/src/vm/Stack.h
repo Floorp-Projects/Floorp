@@ -1335,6 +1335,16 @@ class JitActivation : public Activation
     bool firstFrameIsConstructing() const {
         return firstFrameIsConstructing_;
     }
+    static size_t offsetOfPrevIonTop() {
+        return offsetof(JitActivation, prevIonTop_);
+    }
+    static size_t offsetOfPrevJitJSContext() {
+        return offsetof(JitActivation, prevJitJSContext_);
+    }
+    static size_t offsetOfActiveUint8() {
+        JS_ASSERT(sizeof(bool) == 1);
+        return offsetof(JitActivation, active_);
+    }
 
 #ifdef CHECK_OSIPOINT_REGISTERS
     void setCheckRegs(bool check) {

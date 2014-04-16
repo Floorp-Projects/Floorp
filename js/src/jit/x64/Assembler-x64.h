@@ -136,6 +136,20 @@ static MOZ_CONSTEXPR_VAR Register ForkJoinGetSliceReg_temp0 = rbx;
 static MOZ_CONSTEXPR_VAR Register ForkJoinGetSliceReg_temp1 = rcx;
 static MOZ_CONSTEXPR_VAR Register ForkJoinGetSliceReg_output = rsi;
 
+// Registers used in the GenerateFFIIonExit Enable Activation block.
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = r10;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = rax;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE1 = rdi;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE2 = rbx;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE3 = rsi;
+
+// Registers used in the GenerateFFIIonExit Disable Activation block.
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnData = ecx;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnType = ecx;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = rax;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = rdi;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = rbx;
+
 class ABIArgGenerator
 {
 #if defined(XP_WIN)
