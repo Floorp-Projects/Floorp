@@ -1310,7 +1310,7 @@ nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent,
     // don't create any new ssl connections until the result of the
     // negotiation is known.
 
-    bool doRestrict = ent->mConnInfo->UsingSSL() &&
+    bool doRestrict = ent->mConnInfo->FirstHopSSL() &&
         gHttpHandler->IsSpdyEnabled() &&
         ((!ent->mTestedSpdy && !ignorePossibleSpdyConnections) ||
          ent->mUsingSpdy) &&
@@ -1893,10 +1893,12 @@ nsHttpConnectionMgr::BuildPipeline(nsConnectionEntry *ent,
 void
 nsHttpConnectionMgr::ReportProxyTelemetry(nsConnectionEntry *ent)
 {
-    enum { PROXY_NONE = 1, PROXY_HTTP = 2, PROXY_SOCKS = 3 };
+    enum { PROXY_NONE = 1, PROXY_HTTP = 2, PROXY_SOCKS = 3, PROXY_HTTPS = 4 };
 
     if (!ent->mConnInfo->UsingProxy())
         Telemetry::Accumulate(Telemetry::HTTP_PROXY_TYPE, PROXY_NONE);
+    else if (ent->mConnInfo->UsingHttpsProxy())
+        Telemetry::Accumulate(Telemetry::HTTP_PROXY_TYPE, PROXY_HTTPS);
     else if (ent->mConnInfo->UsingHttpProxy())
         Telemetry::Accumulate(Telemetry::HTTP_PROXY_TYPE, PROXY_HTTP);
     else
@@ -2735,8 +2737,8 @@ nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
     , mBackupConnectedOK(false)
 {
     MOZ_ASSERT(ent && trans, "constructor with null arguments");
-    LOG(("Creating nsHalfOpenSocket [this=%p trans=%p ent=%s]\n",
-         this, trans, ent->mConnInfo->Host()));
+    LOG(("Creating nsHalfOpenSocket [this=%p trans=%p ent=%s key=%s]\n",
+         this, trans, ent->mConnInfo->Host(), ent->mConnInfo->HashKey().get()));
 }
 
 nsHttpConnectionMgr::nsHalfOpenSocket::~nsHalfOpenSocket()
@@ -2760,7 +2762,7 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
     nsresult rv;
 
     const char* types[1];
-    types[0] = (mEnt->mConnInfo->UsingSSL()) ?
+    types[0] = (mEnt->mConnInfo->EndToEndSSL()) ?
         "ssl" : gHttpHandler->DefaultSocketType();
     uint32_t typeCount = (types[0] != nullptr);
 
@@ -3086,10 +3088,10 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         // if we are using ssl and no other transactions are waiting right now,
         // then form a null transaction to drive the SSL handshake to
         // completion. Afterwards the connection will be 100% ready for the next
-        // transaction to use it. Make an exception for SSL over HTTP proxy as the
-        // NullHttpTransaction does not know how to drive CONNECT.
-        if (mEnt->mConnInfo->UsingSSL() && !mEnt->mPendingQ.Length() &&
-            !mEnt->mConnInfo->UsingHttpProxy()) {
+        // transaction to use it. Make an exception for SSL tunneled HTTP proxy as the
+        // NullHttpTransaction does not know how to drive Connect
+        if (mEnt->mConnInfo->FirstHopSSL() && !mEnt->mPendingQ.Length() &&
+            !mEnt->mConnInfo->UsingConnect()) {
             LOG(("nsHalfOpenSocket::OnOutputStreamReady null transaction will "
                  "be used to finish SSL handshake on conn %p\n", conn.get()));
             nsRefPtr<NullHttpTransaction>  trans =
@@ -3150,7 +3152,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
     if (status == NS_NET_STATUS_CONNECTED_TO &&
         gHttpHandler->IsSpdyEnabled() &&
         gHttpHandler->CoalesceSpdy() &&
-        mEnt && mEnt->mConnInfo && mEnt->mConnInfo->UsingSSL() &&
+        mEnt && mEnt->mConnInfo && mEnt->mConnInfo->EndToEndSSL() &&
         !mEnt->mConnInfo->UsingProxy() &&
         mEnt->mCoalescingKey.IsEmpty()) {
 
@@ -3544,7 +3546,7 @@ nsHttpConnectionMgr::ReadConnectionEntry(const nsACString &key,
         data.halfOpens.AppendElement(hSocket);
     }
     data.spdy = ent->mUsingSpdy;
-    data.ssl = ent->mConnInfo->UsingSSL();
+    data.ssl = ent->mConnInfo->EndToEndSSL();
     args->AppendElement(data);
     return PL_DHASH_NEXT;
 }
