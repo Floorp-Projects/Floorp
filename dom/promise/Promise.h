@@ -78,17 +78,15 @@ public:
                    JS::Handle<JS::Value> aValue);
 
   // Helpers for using Promise from C++.
-  // Most DOM objects are handled already.  To add a new type T, add a
-  // ToJSValue overload in ToJSValue.h.
-  // aArg is a const reference so we can pass rvalues like integer constants
+  // Most DOM objects are handled already.  To add a new type T, such as ints,
+  // or dictionaries, add a ToJSValue overload in ToJSValue.h.
   template <typename T>
-  void MaybeResolve(const T& aArg) {
+  void MaybeResolve(T& aArg) {
     MaybeSomething(aArg, &Promise::MaybeResolve);
   }
 
-  // aArg is a const reference so we can pass rvalues like NS_ERROR_*
   template <typename T>
-  void MaybeReject(const T& aArg) {
+  void MaybeReject(T& aArg) {
     MaybeSomething(aArg, &Promise::MaybeReject);
   }
 
