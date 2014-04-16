@@ -81,7 +81,7 @@ const EXCEPTION_NAMES = {
      LOG("Method", method, "succeeded");
    } catch (ex) {
      exn = ex;
-     LOG("Error while calling agent method", exn, exn.stack || "");
+     LOG("Error while calling agent method", exn, exn.moduleStack || exn.stack || "");
    }
 
    if (start) {
