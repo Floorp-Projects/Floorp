@@ -764,18 +764,19 @@ class AsmJSModule
         return pc >= code_ && pc < (code_ + functionBytes());
     }
 
-    bool addHeapAccesses(const jit::AsmJSHeapAccessVector &accesses) {
-        return heapAccesses_.appendAll(accesses);
+    void assignHeapAccesses(jit::AsmJSHeapAccessVector &&accesses) {
+        heapAccesses_ = Move(accesses);
     }
     unsigned numHeapAccesses() const {
         return heapAccesses_.length();
     }
-    jit::AsmJSHeapAccess &heapAccess(unsigned i) {
-        return heapAccesses_[i];
-    }
     const jit::AsmJSHeapAccess &heapAccess(unsigned i) const {
         return heapAccesses_[i];
     }
+    jit::AsmJSHeapAccess &heapAccess(unsigned i) {
+        return heapAccesses_[i];
+    }
+
     void initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx);
 
     void requireHeapLengthToBeAtLeast(uint32_t len) {

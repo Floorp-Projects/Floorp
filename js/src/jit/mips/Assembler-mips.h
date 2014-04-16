@@ -565,7 +565,7 @@ PatchJump(CodeLocationJump &jump_, CodeLocationLabel label);
 class Assembler;
 typedef js::jit::AssemblerBuffer<1024, Instruction> MIPSBuffer;
 
-class Assembler
+class Assembler : public AssemblerShared
 {
   public:
 
@@ -670,7 +670,6 @@ class Assembler
     js::Vector<CodeLabel, 0, SystemAllocPolicy> codeLabels_;
     js::Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
     js::Vector<uint32_t, 8, SystemAllocPolicy> longJumps_;
-    AsmJSAbsoluteLinkVector asmJSAbsoluteLinks_;
 
     CompactBufferWriter jumpRelocations_;
     CompactBufferWriter dataRelocations_;
@@ -730,13 +729,6 @@ class Assembler
     }
     CodeLabel codeLabel(size_t i) {
         return codeLabels_[i];
-    }
-
-    size_t numAsmJSAbsoluteLinks() const {
-        return asmJSAbsoluteLinks_.length();
-    }
-    AsmJSAbsoluteLink asmJSAbsoluteLink(size_t i) const {
-        return asmJSAbsoluteLinks_[i];
     }
 
     // Size of the instruction stream, in bytes.

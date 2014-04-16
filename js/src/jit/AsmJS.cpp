@@ -1036,7 +1036,6 @@ class MOZ_STACK_CLASS ModuleCompiler
     FuncPtrTableVector             funcPtrTables_;
     ExitMap                        exits_;
     MathNameMap                    standardLibraryMathNames_;
-    GlobalAccessVector             globalAccesses_;
     Label                          stackOverflowLabel_;
     Label                          interruptLabel_;
 
@@ -1077,7 +1076,6 @@ class MOZ_STACK_CLASS ModuleCompiler
         funcPtrTables_(cx),
         exits_(cx),
         standardLibraryMathNames_(cx),
-        globalAccesses_(cx),
         errorString_(nullptr),
         errorOffset_(UINT32_MAX),
         errorOverRecursed_(false),
@@ -1414,9 +1412,6 @@ class MOZ_STACK_CLASS ModuleCompiler
             return false;
         return exits_.add(p, Move(exitDescriptor), *exitIndex);
     }
-    bool addGlobalAccess(AsmJSGlobalAccess access) {
-        return globalAccesses_.append(access);
-    }
 
     // Note a constraint on the minimum size of the heap.  The heap size is
     // constrained when linking to be at least the maximum of all such constraints.
@@ -1428,14 +1423,6 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
     LifoAlloc &lifo() {
         return moduleLifo_;
-    }
-
-    bool collectAccesses(MIRGenerator &gen) {
-        if (!module_->addHeapAccesses(gen.heapAccesses()))
-            return false;
-        if (!globalAccesses_.appendAll(gen.globalAccesses()))
-            return false;
-        return true;
     }
 
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
@@ -1524,6 +1511,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         if (masm_.oom())
             return false;
 
+        module_->assignHeapAccesses(masm_.extractAsmJSHeapAccesses());
+
 #if defined(JS_CODEGEN_ARM)
         // Now that compilation has finished, we need to update offsets to
         // reflect actual offsets (an ARM distinction).
@@ -1605,8 +1594,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         // Global data accesses in x86 need to be patched with the absolute
         // address of the global. Globals are allocated sequentially after the
         // code section so we can just use an RelativeLink.
-        for (unsigned i = 0; i < globalAccesses_.length(); i++) {
-            AsmJSGlobalAccess a = globalAccesses_[i];
+        for (unsigned i = 0; i < masm_.numAsmJSGlobalAccesses(); i++) {
+            AsmJSGlobalAccess a = masm_.asmJSGlobalAccesses(i);
             AsmJSModule::RelativeLink link;
             link.patchAtOffset = masm_.labelOffsetToPatchOffset(a.patchAt.offset());
             link.targetOffset = module_->offsetOfGlobalData() + a.globalDataOffset;
@@ -1619,8 +1608,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         // Global data accesses on x64 use rip-relative addressing and thus do
         // not need patching after deserialization.
         uint8_t *code = module_->codeBase();
-        for (unsigned i = 0; i < globalAccesses_.length(); i++) {
-            AsmJSGlobalAccess a = globalAccesses_[i];
+        for (unsigned i = 0; i < masm_.numAsmJSGlobalAccesses(); i++) {
+            AsmJSGlobalAccess a = masm_.asmJSGlobalAccess(i);
             masm_.patchAsmJSGlobalAccess(a.patchAt, code, module_->globalData(), a.globalDataOffset);
         }
 #endif
@@ -5472,9 +5461,6 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
     if (!codegen || !codegen->generateAsmJS(&m.stackOverflowLabel()))
         return m.fail(nullptr, "internal codegen failure (probably out of memory)");
 
-    if (!m.collectAccesses(mir))
-        return false;
-
     jit::IonScriptCounts *counts = codegen->extractUnassociatedScriptCounts();
     if (counts && !m.addFunctionCounts(counts)) {
         js_delete(counts);
@@ -6529,10 +6515,10 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     unsigned globalDataOffset = m.module().exitIndexToGlobalDataOffset(exitIndex);
 #if defined(JS_CODEGEN_X64)
     CodeOffsetLabel label2 = masm.leaRipRelative(callee);
-    m.addGlobalAccess(AsmJSGlobalAccess(label2.offset(), globalDataOffset));
+    m.masm().append(AsmJSGlobalAccess(label2.offset(), globalDataOffset));
 #elif defined(JS_CODEGEN_X86)
     CodeOffsetLabel label2 = masm.movlWithPatch(Imm32(0), callee);
-    m.addGlobalAccess(AsmJSGlobalAccess(label2.offset(), globalDataOffset));
+    m.masm().append(AsmJSGlobalAccess(label2.offset(), globalDataOffset));
 #else
     masm.lea(Operand(GlobalReg, globalDataOffset), callee);
 #endif
