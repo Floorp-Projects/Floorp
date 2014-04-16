@@ -33,6 +33,9 @@ public:
     nsHttpVersion       Version()    const { return mVersion; }
     const nsCSubstring &RequestURI() const { return mRequestURI; }
 
+    void SetHTTPS(bool val) { mHTTPS = val; }
+    bool IsHTTPS() const { return mHTTPS; }
+
     const char *PeekHeader(nsHttpAtom h) const
     {
         return mHeaders.PeekHeader(h);
@@ -95,6 +98,7 @@ private:
     nsHttpVersion     mVersion;
     nsCString         mRequestURI;
     ParsedMethodType  mParsedMethod;
+    bool              mHTTPS;
 };
 
 }} // namespace mozilla::net
