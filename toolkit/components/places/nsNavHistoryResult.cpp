@@ -1300,17 +1300,23 @@ nsNavHistoryContainerResultNode::FindChildURI(const nsACString& aSpec,
  * This does the work of adding a child to the container.  The child can be
  * either a container or or a single item that may even be collapsed with the
  * adjacent ones.
+ *
+ * Some inserts are "temporary" meaning that they are happening immediately
+ * after a temporary remove.  We do this when movings elements when they
+ * change to keep them in the proper sorting position.  In these cases, we
+ * don't need to recompute any statistics.
  */
 nsresult
 nsNavHistoryContainerResultNode::InsertChildAt(nsNavHistoryResultNode* aNode,
-                                               int32_t aIndex)
+                                               int32_t aIndex,
+                                               bool aIsTemporary)
 {
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
 
   aNode->mParent = this;
   aNode->mIndentLevel = mIndentLevel + 1;
-  if (aNode->IsContainer()) {
+  if (!aIsTemporary && aNode->IsContainer()) {
     // need to update all the new item's children
     nsNavHistoryContainerResultNode* container = aNode->GetAsContainer();
     container->mResult = result;
@@ -1321,18 +1327,20 @@ nsNavHistoryContainerResultNode::InsertChildAt(nsNavHistoryResultNode* aNode,
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Update our stats and notify the result's observers.
-  mAccessCount += aNode->mAccessCount;
-  if (mTime < aNode->mTime)
-    mTime = aNode->mTime;
-  if (!mParent || mParent->AreChildrenVisible()) {
-    NOTIFY_RESULT_OBSERVERS(result,
-                            NodeHistoryDetailsChanged(TO_ICONTAINER(this),
-                                                      mTime,
-                                                      mAccessCount));
-  }
+  if (!aIsTemporary) {
+    mAccessCount += aNode->mAccessCount;
+    if (mTime < aNode->mTime)
+      mTime = aNode->mTime;
+    if (!mParent || mParent->AreChildrenVisible()) {
+      NOTIFY_RESULT_OBSERVERS(result,
+                              NodeHistoryDetailsChanged(TO_ICONTAINER(this),
+                                                        mTime,
+                                                        mAccessCount));
+    }
 
-  nsresult rv = ReverseUpdateStats(aNode->mAccessCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = ReverseUpdateStats(aNode->mAccessCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Update tree if we are visible.  Note that we could be here and not
   // expanded, like when there is a bookmark folder being updated because its
@@ -1350,12 +1358,12 @@ nsNavHistoryContainerResultNode::InsertChildAt(nsNavHistoryResultNode* aNode,
  */
 nsresult
 nsNavHistoryContainerResultNode::InsertSortedChild(
-    nsNavHistoryResultNode* aNode,
-    bool aIgnoreDuplicates)
+    nsNavHistoryResultNode* aNode, 
+    bool aIsTemporary, bool aIgnoreDuplicates)
 {
 
   if (mChildren.Count() == 0)
-    return InsertChildAt(aNode, 0);
+    return InsertChildAt(aNode, 0, aIsTemporary);
 
   SortComparator comparator = GetSortingComparator(GetSortType());
   if (comparator) {
@@ -1365,7 +1373,7 @@ nsNavHistoryContainerResultNode::InsertSortedChild(
     // level.  Doing this twice shouldn't be a large performance penalty because
     // when we are inserting new containers, they typically contain only one
     // item (because we've browsed a new page).
-    if (aNode->IsContainer()) {
+    if (!aIsTemporary && aNode->IsContainer()) {
       // need to update all the new item's children
       nsNavHistoryContainerResultNode* container = aNode->GetAsContainer();
       container->mResult = mResult;
@@ -1381,9 +1389,9 @@ nsNavHistoryContainerResultNode::InsertSortedChild(
     if (aIgnoreDuplicates && itemExists)
       return NS_OK;
 
-    return InsertChildAt(aNode, position);
+    return InsertChildAt(aNode, position, aIsTemporary);
   }
-  return InsertChildAt(aNode, mChildren.Count());
+  return InsertChildAt(aNode, mChildren.Count(), aIsTemporary);
 }
 
 /**
@@ -1429,9 +1437,15 @@ nsNavHistoryContainerResultNode::EnsureItemPosition(uint32_t aIndex) {
  * This does all the work of removing a child from this container, including
  * updating the tree if necessary.  Note that we do not need to be open for
  * this to work.
+ *
+ * Some removes are "temporary" meaning that they'll just get inserted again.
+ * We do this for resorting.  In these cases, we don't need to recompute any
+ * statistics, and we shouldn't notify those container that they are being
+ * removed.
  */
 nsresult
-nsNavHistoryContainerResultNode::RemoveChildAt(int32_t aIndex)
+nsNavHistoryContainerResultNode::RemoveChildAt(int32_t aIndex,
+                                               bool aIsTemporary)
 {
   NS_ASSERTION(aIndex >= 0 && aIndex < mChildren.Count(), "Invalid index");
 
@@ -1439,10 +1453,12 @@ nsNavHistoryContainerResultNode::RemoveChildAt(int32_t aIndex)
   nsRefPtr<nsNavHistoryResultNode> oldNode = mChildren[aIndex];
 
   // Update stats.
-  MOZ_ASSERT(mAccessCount >= mChildren[aIndex]->mAccessCount,
-             "Invalid access count while updating!");
-  uint32_t oldAccessCount = mAccessCount;
-  mAccessCount -= mChildren[aIndex]->mAccessCount;
+  uint32_t oldAccessCount = 0;
+  if (!aIsTemporary) {
+    oldAccessCount = mAccessCount;
+    mAccessCount -= mChildren[aIndex]->mAccessCount;
+    NS_ASSERTION(mAccessCount >= 0, "Invalid access count while updating!");
+  }
 
   // Remove it from our list and notify the result's observers.
   mChildren.RemoveObjectAt(aIndex);
@@ -1452,9 +1468,11 @@ nsNavHistoryContainerResultNode::RemoveChildAt(int32_t aIndex)
                             NodeRemoved(this, oldNode, aIndex));
   }
 
-  nsresult rv = ReverseUpdateStats(mAccessCount - oldAccessCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-  oldNode->OnRemoving();
+  if (!aIsTemporary) {
+    nsresult rv = ReverseUpdateStats(mAccessCount - oldAccessCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+    oldNode->OnRemoving();
+  }
   return NS_OK;
 }
 
@@ -2567,7 +2585,7 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
       rv = history->URIToResultNode(aURI, mOptions, getter_AddRefs(node));
       NS_ENSURE_SUCCESS(rv, rv);
       if (history->EvaluateQueryForNode(mQueries, mOptions, node)) {
-        rv = InsertSortedChild(node);
+        rv = InsertSortedChild(node, true);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
@@ -2780,7 +2798,7 @@ nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI)
     rv = history->URIToResultNode(aURI, mOptions, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
     if (history->EvaluateQueryForNode(mQueries, mOptions, node)) {
-      rv = InsertSortedChild(node);
+      rv = InsertSortedChild(node, true);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -3615,7 +3633,7 @@ nsNavHistoryFolderResultNode::OnItemAdded(int64_t aItemId,
   }
 
   // insert at sorted position
-  return InsertSortedChild(node);
+  return InsertSortedChild(node, false);
 }
 
 
