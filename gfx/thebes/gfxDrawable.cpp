@@ -196,14 +196,18 @@ gfxCallbackDrawable::gfxCallbackDrawable(gfxDrawingCallback* aCallback,
 already_AddRefed<gfxSurfaceDrawable>
 gfxCallbackDrawable::MakeSurfaceDrawable(const GraphicsFilter aFilter)
 {
-    nsRefPtr<gfxASurface> surface =
-        gfxPlatform::GetPlatform()->CreateOffscreenSurface(mSize.ToIntSize(),
-                                                           gfxContentType::COLOR_ALPHA);
-    if (!surface || surface->CairoStatus() != 0)
+    SurfaceFormat format =
+        gfxPlatform::GetPlatform()->Optimal2DFormatForContent(gfxContentType::COLOR_ALPHA);
+    RefPtr<DrawTarget> dt =
+        gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(mSize.ToIntSize(),
+                                                                     format);
+    if (!dt)
         return nullptr;
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(surface);
+    nsRefPtr<gfxContext> ctx = new gfxContext(dt);
     Draw(ctx, gfxRect(0, 0, mSize.width, mSize.height), false, aFilter);
+
+    RefPtr<SourceSurface> surface = dt->Snapshot();
     nsRefPtr<gfxSurfaceDrawable> drawable = new gfxSurfaceDrawable(surface, mSize);
     return drawable.forget();
 }
