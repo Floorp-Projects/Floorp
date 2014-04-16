@@ -430,19 +430,21 @@ TelephonyProvider.prototype = {
       return;
     }
 
-    // For DSDS, if there is aleady a call on SIM X, we cannot place any new
-    // call on other SIM.
-    let callOnOtherSim = false;
-    for (let cid = 0; cid < this._numClients; ++cid) {
-      if (cid === aClientId) {
-        continue;
+    function hasCallsOnOtherClient(aClientId) {
+      for (let cid = 0; cid < this._numClients; ++cid) {
+        if (cid === aClientId) {
+          continue;
+        }
+        if (Object.keys(this._currentCalls[cid]).length !== 0) {
+          return true;
+        }
       }
-      if (Object.keys(this._currentCalls[cid]).length !== 0) {
-        callOnOtherSim = true;
-        break;
-      }
+      return false;
     }
-    if (callOnOtherSim) {
+
+    // For DSDS, if there is aleady a call on SIM 'aClientId', we cannot place
+    // any new call on other SIM.
+    if (hasCallsOnOtherClient.call(this, aClientId)) {
       if (DEBUG) debug("Already has a call on other sim. Drop.");
       aTelephonyCallback.notifyDialError(DIAL_ERROR_OTHER_CONNECTION_IN_USE);
       return;
