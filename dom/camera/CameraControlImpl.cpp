@@ -284,12 +284,15 @@ CameraControlImpl::OnError(CameraControlListener::CameraErrorContext aContext,
     "StartCamera",
     "StopCamera",
     "AutoFocus",
+    "StartFaceDetection",
+    "StopFaceDetection",
     "TakePicture",
     "StartRecording",
     "StopRecording",
     "SetConfiguration",
     "StartPreview",
     "StopPreview",
+    "ResumeContinuousFocus",
     "Unspecified"
   };
   if (static_cast<unsigned int>(aError) < sizeof(error) / sizeof(error[0]) &&
@@ -414,30 +417,25 @@ CameraControlImpl::SetConfiguration(const Configuration& aConfig)
 }
 
 nsresult
-CameraControlImpl::AutoFocus(bool aCancelExistingCall)
+CameraControlImpl::AutoFocus()
 {
   class Message : public ControlMessage
   {
   public:
     Message(CameraControlImpl* aCameraControl,
-            CameraControlListener::CameraErrorContext aContext,
-            bool aCancelExistingCall)
+            CameraControlListener::CameraErrorContext aContext)
       : ControlMessage(aCameraControl, aContext)
-      , mCancelExistingCall(aCancelExistingCall)
     { }
 
     nsresult
     RunImpl() MOZ_OVERRIDE
     {
-      return mCameraControl->AutoFocusImpl(mCancelExistingCall);
+      return mCameraControl->AutoFocusImpl();
     }
-
-  protected:
-    bool mCancelExistingCall;
   };
 
   return mCameraThread->Dispatch(
-    new Message(this, CameraControlListener::kInAutoFocus, aCancelExistingCall), NS_DISPATCH_NORMAL);
+    new Message(this, CameraControlListener::kInAutoFocus), NS_DISPATCH_NORMAL);
 }
 
 nsresult
@@ -609,6 +607,28 @@ CameraControlImpl::StopPreview()
 
   return mCameraThread->Dispatch(
     new Message(this, CameraControlListener::kInStopPreview), NS_DISPATCH_NORMAL);
+}
+
+nsresult
+CameraControlImpl::ResumeContinuousFocus()
+{
+  class Message : public ControlMessage
+  {
+  public:
+    Message(CameraControlImpl* aCameraControl,
+            CameraControlListener::CameraErrorContext aContext)
+      : ControlMessage(aCameraControl, aContext)
+    { }
+
+    nsresult
+    RunImpl() MOZ_OVERRIDE
+    {
+      return mCameraControl->ResumeContinuousFocusImpl();
+    }
+  };
+
+  return mCameraThread->Dispatch(
+    new Message(this, CameraControlListener::kInResumeContinuousFocus), NS_DISPATCH_NORMAL);
 }
 
 nsresult
