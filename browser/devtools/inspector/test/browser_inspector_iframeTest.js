@@ -35,9 +35,7 @@ function createDocument() {
       // Open the inspector, start the picker mode, and start the tests
       openInspector(aInspector => {
         inspector = aInspector;
-        inspector.once("inspector-updated", () => {
-          inspector.toolbox.highlighterUtils.startPicker().then(runTests);
-        });
+        inspector.toolbox.highlighterUtils.startPicker().then(runTests);
       });
     }, false);
 
