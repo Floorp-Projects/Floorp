@@ -677,6 +677,9 @@ JSString *RegExpReplace(JSContext *cx, HandleString string, HandleObject regexp,
 JSString *StringReplace(JSContext *cx, HandleString string, HandleString pattern,
                         HandleString repl);
 
+bool SetDenseElement(JSContext *cx, HandleObject obj, int32_t index, HandleValue value,
+                     bool strict);
+
 #ifdef DEBUG
 void AssertValidObjectPtr(JSContext *cx, JSObject *obj);
 void AssertValidStringPtr(JSContext *cx, JSString *str);
