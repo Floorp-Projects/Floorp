@@ -21,7 +21,6 @@
 #include "MediaPipelineFilter.h"
 #include "AudioSegment.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "mozilla/Atomics.h"
 #include "SrtpFlow.h"
 #include "databuffer.h"
 #include "runnable_utils.h"
@@ -34,8 +33,6 @@
 #include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
 
 namespace mozilla {
-
-class PeerIdentity;
 
 // A class that represents the pipeline of audio and video
 // The dataflow looks like:
@@ -357,7 +354,7 @@ private:
 // A specialization of pipeline for reading from an input device
 // and transmitting to the network.
 class MediaPipelineTransmit : public MediaPipeline {
-public:
+ public:
   // Set rtcp_transport to nullptr to use rtcp-mux
   MediaPipelineTransmit(const std::string& pc,
                         nsCOMPtr<nsIEventTarget> main_thread,
@@ -376,14 +373,7 @@ public:
   {}
 
   // Initialize (stuff here may fail)
-  virtual nsresult Init() MOZ_OVERRIDE;
-
-#ifdef MOZILLA_INTERNAL_API
-  // when the principal of the PeerConnection changes, it calls through to here
-  // so that we can determine whether to enable stream transmission
-  virtual void UpdateSinkIdentity_m(nsIPrincipal* principal,
-                                    const PeerIdentity* sinkIdentity);
-#endif
+  virtual nsresult Init();
 
   // Called on the main thread.
   virtual void DetachMediaStream() {
@@ -405,7 +395,6 @@ public:
     PipelineListener(const RefPtr<MediaSessionConduit>& conduit)
       : conduit_(conduit),
         active_(false),
-        enabled_(false),
         direct_connect_(false),
         samples_10ms_buffer_(nullptr),
         buffer_current_(0),
@@ -427,8 +416,11 @@ public:
       }
     }
 
+
+    // XXX. This is not thread-safe but the hazard is just
+    // that active_ = true takes a while to propagate. Revisit
+    // when 823600 lands.
     void SetActive(bool active) { active_ = active; }
-    void SetEnabled(bool enabled) { enabled_ = enabled; }
 
     // Implement MediaStreamListener
     virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
@@ -459,15 +451,8 @@ public:
                                    TrackRate rate, VideoChunk& chunk);
 #endif
     RefPtr<MediaSessionConduit> conduit_;
-
-    // active is true if there is a transport to send on
-    mozilla::Atomic<bool> active_;
-    // enabled is true if the media access control permits sending
-    // actual content; when false you get black/silence
-    mozilla::Atomic<bool> enabled_;
-
+    volatile bool active_;
     bool direct_connect_;
-
 
     // These vars handle breaking audio samples into exact 10ms chunks:
     // The buffer of 10ms audio samples that we will send once full
@@ -564,7 +549,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
     stream_ = nullptr;
   }
 
-  virtual nsresult Init() MOZ_OVERRIDE;
+  virtual nsresult Init();
 
  private:
   // Separate class to allow ref counting
@@ -638,7 +623,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
     stream_ = nullptr;
   }
 
-  virtual nsresult Init() MOZ_OVERRIDE;
+  virtual nsresult Init();
 
  private:
   class PipelineRenderer : public VideoRenderer {
