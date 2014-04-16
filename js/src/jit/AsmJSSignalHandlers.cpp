@@ -6,6 +6,8 @@
 
 #include "jit/AsmJSSignalHandlers.h"
 
+#include "mozilla/BinarySearch.h"
+
 #include "assembler/assembler/MacroAssembler.h"
 #include "jit/AsmJSModule.h"
 
@@ -207,35 +209,29 @@ SetXMMRegToNaN(bool isFloat32, T *xmm_reg)
     }
 }
 
+struct GetHeapAccessOffset
+{
+    const AsmJSModule &module;
+    explicit GetHeapAccessOffset(const AsmJSModule &module) : module(module) {}
+    uintptr_t operator[](size_t index) const {
+        return module.heapAccess(index).offset();
+    }
+};
+
 // Perform a binary search on the projected offsets of the known heap accesses
 // in the module.
 static const AsmJSHeapAccess *
 LookupHeapAccess(const AsmJSModule &module, uint8_t *pc)
 {
     JS_ASSERT(module.containsPC(pc));
-    size_t targetOffset = pc - module.codeBase();
 
-    if (module.numHeapAccesses() == 0)
+    uintptr_t pcOff = pc - module.codeBase();
+
+    size_t match;
+    if (!BinarySearch(GetHeapAccessOffset(module), 0, module.numHeapAccesses(), pcOff, &match))
         return nullptr;
 
-    size_t low = 0;
-    size_t high = module.numHeapAccesses() - 1;
-    while (high - low >= 2) {
-        size_t mid = low + (high - low) / 2;
-        uint32_t midOffset = module.heapAccess(mid).offset();
-        if (targetOffset == midOffset)
-            return &module.heapAccess(mid);
-        if (targetOffset < midOffset)
-            high = mid;
-        else
-            low = mid;
-    }
-    if (targetOffset == module.heapAccess(low).offset())
-        return &module.heapAccess(low);
-    if (targetOffset == module.heapAccess(high).offset())
-        return &module.heapAccess(high);
-
-    return nullptr;
+    return &module.heapAccess(match);
 }
 #endif
 
