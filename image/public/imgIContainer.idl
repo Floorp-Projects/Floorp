@@ -13,6 +13,8 @@
 #include "gfxRect.h"
 #include "GraphicsFilter.h"
 #include "gfxASurface.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 #include "nsRect.h"
 #include "nsSize.h"
 #include "limits.h"
@@ -55,7 +57,7 @@ native nsSize(nsSize);
 native Orientation(mozilla::image::Orientation);
 [ref] native TimeStamp(mozilla::TimeStamp);
 [ptr] native SVGImageContext(mozilla::SVGImageContext);
-native already_AddRefed_gfxASurface(already_AddRefed<gfxASurface>);
+native TempRefSourceSurface(mozilla::TemporaryRef<mozilla::gfx::SourceSurface>);
 
 
 /**
@@ -65,7 +67,7 @@ native already_AddRefed_gfxASurface(already_AddRefed<gfxASurface>);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(8b7db7dd-bfe9-40d3-9114-3a79c0658afd)]
+[scriptable, builtinclass, uuid(503a830c-734d-4362-91f6-73f83ac59646)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -150,6 +152,7 @@ interface imgIContainer : nsISupports
   const long FLAG_DECODE_NO_COLORSPACE_CONVERSION = 0x4;
   const long FLAG_CLAMP           = 0x8;
   const long FLAG_HIGH_QUALITY_SCALING = 0x10;
+  const long FLAG_WANT_DATA_SURFACE = 0x20;
 
   /**
     * Constants for specifying various "special" frames.
@@ -173,9 +176,8 @@ interface imgIContainer : nsISupports
    * @param aWhichFrame Frame specifier of the FRAME_* variety.
    * @param aFlags Flags of the FLAG_* variety
    */
-  [noscript, notxpcom] already_AddRefed_gfxASurface
-                         getFrame(in uint32_t aWhichFrame,
-                                  in uint32_t aFlags);
+  [noscript, notxpcom] TempRefSourceSurface getFrame(in uint32_t aWhichFrame,
+                                                     in uint32_t aFlags);
 
   /**
    * Whether the given frame is opaque; that is, needs the background painted

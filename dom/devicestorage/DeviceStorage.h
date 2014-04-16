@@ -321,13 +321,7 @@ private:
   friend class WatchFileEvent;
   friend class DeviceStorageRequest;
 
-  class VolumeNameCache : public mozilla::RefCounted<VolumeNameCache>
-  {
-  public:
-    MOZ_DECLARE_REFCOUNTED_TYPENAME(VolumeNameCache)
-    nsTArray<nsString>  mVolumeNames;
-  };
-  static mozilla::StaticRefPtr<VolumeNameCache> sVolumeNameCache;
+  static mozilla::StaticAutoPtr<nsTArray<nsString>> sVolumeNameCache;
 
 #ifdef MOZ_WIDGET_GONK
   nsString mLastStatus;

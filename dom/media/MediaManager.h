@@ -11,7 +11,7 @@
 #include "nsGlobalWindow.h"
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
-#include "nsObserverService.h"
+#include "nsIObserver.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 

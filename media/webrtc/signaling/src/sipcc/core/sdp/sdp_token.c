@@ -1578,7 +1578,7 @@ sdp_result_e sdp_build_media (sdp_t *sdp_p, u16 level, flex_string *fs)
         }
     } else {
         /* Add port to SDP if transport is DTLS/SCTP */
-    	flex_string_sprintf(fs, " %u ", (u32)mca_p->sctpport);
+    	flex_string_sprintf(fs, " %u", (u32)mca_p->sctpport);
     }
 
     flex_string_sprintf(fs, "\r\n");
