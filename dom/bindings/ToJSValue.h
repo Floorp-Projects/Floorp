@@ -54,6 +54,14 @@ ToJSValue(JSContext* aCx,
   return true;
 }
 
+// The uint32_t version is disabled for now because on the super-old b2g
+// compiler nsresult and uint32_t are the same type.  If someone needs this at
+// some point we'll need to figure out how to make it work (e.g. by switching to
+// traits structs and using the trick IPC's ParamTraits uses, where a traits
+// struct templated on the type inherits from a base traits struct of some sort,
+// templated on the same type, or something).  Maybe b2g will update to a modern
+// compiler before that happens....
+#if 0
 inline bool
 ToJSValue(JSContext* aCx,
           uint32_t aArgument,
@@ -65,6 +73,7 @@ ToJSValue(JSContext* aCx,
   aValue.setNumber(aArgument);
   return true;
 }
+#endif
 
 inline bool
 ToJSValue(JSContext* aCx,
@@ -211,6 +220,13 @@ ToJSValue(JSContext* aCx, JS::Handle<JS::Value> aArgument,
   aValue.set(aArgument);
   return MaybeWrapValue(aCx, aValue);
 }
+
+// Accept nsresult, for use in rejections, and create an XPCOM
+// exception object representing that nsresult.
+bool
+ToJSValue(JSContext* aCx,
+          nsresult aArgument,
+          JS::MutableHandle<JS::Value> aValue);
 
 // Accept arrays of other things we accept
 template <typename T>
