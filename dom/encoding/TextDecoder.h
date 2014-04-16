@@ -51,12 +51,6 @@ public:
     return TextDecoderBinding::Wrap(aCx, this, aTookOwnership);
   }
 
-  nsISupports*
-  GetParentObject()
-  {
-    return nullptr;
-  }
-
   /**
    * Validates provided label and throws an exception if invalid label.
    *
