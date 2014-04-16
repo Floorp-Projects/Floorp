@@ -100,7 +100,6 @@ public:
 #include "gfxUtils.h"
 #include "gfxFailure.h"
 #include "gfxASurface.h"
-#include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "GLContextProvider.h"
 #include "GLLibraryEGL.h"

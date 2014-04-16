@@ -46,7 +46,6 @@
 
 #ifdef MOZ_ANDROID_OMTC
 #  include "gfxReusableImageSurfaceWrapper.h"
-#  include "gfxImageSurface.h"
 #else
 #  include "gfxReusableSharedImageSurfaceWrapper.h"
 #  include "gfxSharedImageSurface.h"

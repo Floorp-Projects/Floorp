@@ -8,8 +8,6 @@
 #include "GLLibraryLoader.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
-#include "gfxASurface.h"
-#include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "gfxWindowsSurface.h"
 

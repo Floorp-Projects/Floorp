@@ -9,13 +9,6 @@
 #include "Layers.h"                     // for Layer (ptr only), etc
 #include "basic/BasicImplData.h"        // for BasicImplData
 #include "basic/BasicLayers.h"          // for BasicLayerManager
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxContext.h"                 // for gfxContext
-#include "gfxPattern.h"                 // for gfxPattern, etc
-#include "gfxUtils.h"                   // for gfxUtils
-#ifdef MOZ_X11
-#include "gfxXlibSurface.h"             // for gfxXlibSurface
-#endif
 #include "mozilla/mozalloc.h"           // for operator new
 #include "nsAutoPtr.h"                  // for nsRefPtr, getter_AddRefs, etc
 #include "nsCOMPtr.h"                   // for already_AddRefed

@@ -18,7 +18,6 @@
 #include <queue>
 
 // Forwards:
-class gfxImageSurface;
 namespace mozilla {
     namespace gl {
         class GLContext;

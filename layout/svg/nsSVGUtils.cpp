@@ -11,7 +11,6 @@
 // Keep others in (case-insensitive) order:
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
-#include "gfxImageSurface.h"
 #include "gfxMatrix.h"
 #include "gfxPlatform.h"
 #include "gfxRect.h"

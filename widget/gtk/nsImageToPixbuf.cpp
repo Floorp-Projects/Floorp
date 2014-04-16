@@ -5,18 +5,12 @@
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-#include "gfxASurface.h"
-#include "gfxImageSurface.h"
-#include "gfxContext.h"
-#include "gfxPlatform.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
+#include "nsImageToPixbuf.h"
 
 #include "imgIContainer.h"
-
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 #include "nsAutoPtr.h"
-
-#include "nsImageToPixbuf.h"
 
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SurfaceFormat;

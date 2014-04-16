@@ -8,7 +8,6 @@
 #include <string.h>                     // for memcpy, memset
 #include "SharedTextureImage.h"         // for SharedTextureImage
 #include "gfx2DGlue.h"
-#include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxUtils.h"                   // for gfxUtils
 #include "mozilla/RefPtr.h"             // for TemporaryRef
