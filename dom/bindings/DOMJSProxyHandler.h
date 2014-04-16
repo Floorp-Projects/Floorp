@@ -57,6 +57,22 @@ public:
              JS::Handle<JSObject*> callable) MOZ_OVERRIDE;
   bool unwatch(JSContext* cx, JS::Handle<JSObject*> proxy,
                JS::Handle<jsid> id) MOZ_OVERRIDE;
+  virtual bool getOwnPropertyNames(JSContext* cx, JS::Handle<JSObject*> proxy,
+                                   JS::AutoIdVector &props) MOZ_OVERRIDE;
+  // We override keys() and implement it directly instead of using the
+  // default implementation, which would getOwnPropertyNames and then
+  // filter out the non-enumerable ones.  This avoids doing
+  // unnecessary work during enumeration.
+  virtual bool keys(JSContext* cx, JS::Handle<JSObject*> proxy,
+                    JS::AutoIdVector &props) MOZ_OVERRIDE;
+
+protected:
+  // Hook for subclasses to implement shared getOwnPropertyNames()/keys()
+  // functionality.  The "flags" argument is either JSITER_OWNONLY (for keys())
+  // or JSITER_OWNONLY | JSITER_HIDDEN (for getOwnPropertyNames()).
+  virtual bool ownPropNames(JSContext* cx, JS::Handle<JSObject*> proxy,
+                            unsigned flags,
+                            JS::AutoIdVector& props) = 0;
 };
 
 class DOMProxyHandler : public BaseDOMProxyHandler

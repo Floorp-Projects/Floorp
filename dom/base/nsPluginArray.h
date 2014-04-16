@@ -54,7 +54,7 @@ public:
   nsPluginElement* NamedGetter(const nsAString& aName, bool &aFound);
   bool NameIsEnumerable(const nsAString& aName);
   uint32_t Length();
-  void GetSupportedNames(nsTArray< nsString >& aRetval);
+  void GetSupportedNames(unsigned, nsTArray<nsString>& aRetval);
 
 private:
   bool AllowPlugins() const;
@@ -104,7 +104,7 @@ public:
   nsMimeType* NamedGetter(const nsAString& name, bool &found);
   bool NameIsEnumerable(const nsAString& aName);
   uint32_t Length();
-  void GetSupportedNames(nsTArray< nsString >& retval);
+  void GetSupportedNames(unsigned, nsTArray<nsString>& retval);
 
   nsTArray<nsRefPtr<nsMimeType> >& MimeTypes();
 

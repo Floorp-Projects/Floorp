@@ -1441,7 +1441,7 @@ HTMLFormElement::NameIsEnumerable(const nsAString& aName)
 }
 
 void
-HTMLFormElement::GetSupportedNames(nsTArray<nsString >& aRetval)
+HTMLFormElement::GetSupportedNames(unsigned, nsTArray<nsString >& aRetval)
 {
   // TODO https://www.w3.org/Bugs/Public/show_bug.cgi?id=22320
 }

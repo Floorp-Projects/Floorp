@@ -20,6 +20,8 @@ test(function() {
       result.push(p);
     }
   }
+  assert_array_equals(result, ['0', '1', '2']);
+  result = Object.getOwnPropertyNames(list);
   assert_array_equals(result, ['0', '1', '2', 'foo']);
 });
 </script>

@@ -234,7 +234,7 @@ BaseDOMProxyHandler::enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
   if (!JS_GetPrototype(cx, proxy, &proto))  {
     return false;
   }
-  return getOwnPropertyNames(cx, proxy, props) &&
+  return keys(cx, proxy, props) &&
          (!proto || js::GetPropertyNames(cx, proto, 0, &props));
 }
 
@@ -249,6 +249,22 @@ bool
 BaseDOMProxyHandler::unwatch(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id)
 {
   return js::UnwatchGuts(cx, proxy, id);
+}
+
+bool
+BaseDOMProxyHandler::getOwnPropertyNames(JSContext* cx,
+                                         JS::Handle<JSObject*> proxy,
+                                         JS::AutoIdVector& props)
+{
+  return ownPropNames(cx, proxy, JSITER_OWNONLY | JSITER_HIDDEN, props);
+}
+
+bool
+BaseDOMProxyHandler::keys(JSContext* cx,
+                          JS::Handle<JSObject*> proxy,
+                          JS::AutoIdVector& props)
+{
+  return ownPropNames(cx, proxy, JSITER_OWNONLY, props);
 }
 
 bool
