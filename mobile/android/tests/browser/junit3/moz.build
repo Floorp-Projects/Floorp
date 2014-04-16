@@ -13,6 +13,7 @@ jar.sources += [
     'src/tests/BrowserTestCase.java',
     'src/tests/TestGeckoSharedPrefs.java',
     'src/tests/TestJarReader.java',
+    'src/tests/TestTopSitesCursorWrapper.java',
 ]
 jar.generated_sources = [] # None yet -- try to keep it this way.
 jar.javac_flags += ['-Xlint:all,-unchecked']

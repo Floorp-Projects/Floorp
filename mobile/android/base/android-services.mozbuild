@@ -774,6 +774,7 @@ sync_java_files = [
     'sync/setup/activities/AccountActivity.java',
     'sync/setup/activities/ActivityUtils.java',
     'sync/setup/activities/ClientRecordArrayAdapter.java',
+    'sync/setup/activities/LocaleAware.java',
     'sync/setup/activities/RedirectToSetupActivity.java',
     'sync/setup/activities/SendTabActivity.java',
     'sync/setup/activities/SendTabData.java',

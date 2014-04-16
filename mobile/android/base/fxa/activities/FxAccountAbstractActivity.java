@@ -9,6 +9,7 @@ import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
+import org.mozilla.gecko.sync.setup.activities.LocaleAware.LocaleAwareActivity;
 
 import android.accounts.Account;
 import android.app.Activity;
@@ -18,7 +19,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 
-public abstract class FxAccountAbstractActivity extends Activity {
+public abstract class FxAccountAbstractActivity extends LocaleAwareActivity {
   private static final String LOG_TAG = FxAccountAbstractActivity.class.getSimpleName();
 
   protected final boolean cannotResumeWhenAccountsExist;

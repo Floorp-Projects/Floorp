@@ -14,6 +14,7 @@ import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
+import org.mozilla.gecko.sync.setup.activities.LocaleAware;
 
 import android.accounts.AccountAuthenticatorActivity;
 import android.content.Intent;
@@ -39,7 +40,10 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
     Logger.setThreadLogTag(FxAccountConstants.GLOBAL_LOG_TAG);
     Logger.debug(LOG_TAG, "onCreate(" + icicle + ")");
 
+    LocaleAware.initializeLocale(getApplicationContext());
+
     super.onCreate(icicle);
+
     setContentView(R.layout.fxaccount_get_started);
 
     linkifyOldFirefoxLink();
@@ -107,7 +111,7 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
     String text = getResources().getString(R.string.fxaccount_getting_started_old_firefox);
     String VERSION = AppConstants.MOZ_APP_VERSION;
     String OS = AppConstants.OS_TARGET;
-    // We'll need to adjust this when we have active locale switching.
+
     String LOCALE = Utils.getLanguageTag(Locale.getDefault());
     String url = getResources().getString(R.string.fxaccount_link_old_firefox, VERSION, OS, LOCALE);
     FxAccountConstants.pii(LOG_TAG, "Old Firefox url is: " + url); // Don't want to leak locale in particular.
