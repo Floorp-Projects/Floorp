@@ -41,12 +41,152 @@ SimpleTest.registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
 });
 
-function openInspector(callback)
-{
+/**
+ * Simple DOM node accesor function that takes either a node or a string css
+ * selector as argument and returns the corresponding node
+ * @param {String|DOMNode} nodeOrSelector
+ * @return {DOMNode}
+ */
+function getNode(nodeOrSelector) {
+  return typeof nodeOrSelector === "string" ?
+    content.document.querySelector(nodeOrSelector) :
+    nodeOrSelector;
+}
+
+/**
+ * Set the inspector's current selection to a node or to the first match of the
+ * given css selector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @param {String} reason Defaults to "test" which instructs the inspector not
+ * to highlight the node upon selection
+ * @param {String} reason Defaults to "test" which instructs the inspector not to highlight the node upon selection
+ * @return a promise that resolves when the inspector is updated with the new
+ * node
+ */
+function selectNode(nodeOrSelector, inspector, reason="test") {
+  info("Selecting the node " + nodeOrSelector);
+  let node = getNode(nodeOrSelector);
+  let updated = inspector.once("inspector-updated");
+  inspector.selection.setNode(node, reason);
+  return updated;
+}
+
+/**
+ * Open the toolbox, with the inspector tool visible.
+ * @param {Function} cb Optional callback, if you don't want to use the returned
+ * promise
+ * @return a promise that resolves when the inspector is ready
+ */
+let openInspector = Task.async(function*(cb) {
+  info("Opening the inspector");
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-    callback(toolbox.getCurrentPanel(), toolbox);
-  }).then(null, console.error);
+
+  let inspector, toolbox;
+
+  // Checking if the toolbox and the inspector are already loaded
+  // The inspector-updated event should only be waited for if the inspector
+  // isn't loaded yet
+  toolbox = gDevTools.getToolbox(target);
+  if (toolbox) {
+    inspector = toolbox.getPanel("inspector");
+    if (inspector) {
+      info("Toolbox and inspector already open");
+      if (cb) {
+        return cb(inspector, toolbox);
+      } else {
+        return {
+          toolbox: toolbox,
+          inspector: inspector
+        };
+      }
+    }
+  }
+
+  info("Opening the toolbox");
+  toolbox = yield gDevTools.showToolbox(target, "inspector");
+  yield waitForToolboxFrameFocus(toolbox);
+  inspector = toolbox.getPanel("inspector");
+
+  info("Waiting for the inspector to update");
+  yield inspector.once("inspector-updated");
+
+  if (cb) {
+    return cb(inspector, toolbox);
+  } else {
+    return {
+      toolbox: toolbox,
+      inspector: inspector
+    };
+  }
+});
+
+/**
+ * Wait for the toolbox frame to receive focus after it loads
+ * @param {Toolbox} toolbox
+ * @return a promise that resolves when focus has been received
+ */
+function waitForToolboxFrameFocus(toolbox) {
+  info("Making sure that the toolbox's frame is focused");
+  let def = promise.defer();
+  let win = toolbox.frame.contentWindow;
+  waitForFocus(def.resolve, win);
+  return def.promise;
+}
+
+/**
+ * Open the toolbox, with the inspector tool visible, and the sidebar that
+ * corresponds to the given id selected
+ * @return a promise that resolves when the inspector is ready and the sidebar
+ * view is visible and ready
+ */
+let openInspectorSideBar = Task.async(function*(id) {
+  let {toolbox, inspector} = yield openInspector();
+
+  if (!hasSideBarTab(inspector, id)) {
+    info("Waiting for the " + id + " sidebar to be ready");
+    yield inspector.sidebar.once(id + "-ready");
+  }
+
+  info("Selecting the " + id + " sidebar");
+  inspector.sidebar.select(id);
+
+  return {
+    toolbox: toolbox,
+    inspector: inspector,
+    view: inspector.sidebar.getWindowForTab(id)[id].view
+  };
+});
+
+/**
+ * Open the toolbox, with the inspector tool visible, and the computed-view
+ * sidebar tab selected.
+ * @return a promise that resolves when the inspector is ready and the computed
+ * view is visible and ready
+ */
+function openComputedView() {
+  return openInspectorSideBar("computedview");
+}
+
+/**
+ * Open the toolbox, with the inspector tool visible, and the rule-view
+ * sidebar tab selected.
+ * @return a promise that resolves when the inspector is ready and the rule
+ * view is visible and ready
+ */
+function openRuleView() {
+  return openInspectorSideBar("ruleview");
+}
+
+/**
+ * Checks whether the inspector's sidebar corresponding to the given id already
+ * exists
+ * @param {InspectorPanel}
+ * @param {String}
+ * @return {Boolean}
+ */
+function hasSideBarTab(inspector, id) {
+  return !!inspector.sidebar.getWindowForTab(id);
 }
 
 function getActiveInspector()

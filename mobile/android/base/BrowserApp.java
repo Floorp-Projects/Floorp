@@ -1286,16 +1286,10 @@ abstract public class BrowserApp extends GeckoApp
     public void showPrivateTabs() {
         showTabs(TabsPanel.Panel.PRIVATE_TABS);
     }
-
-    @Override
-    public void showRemoteTabs() {
-        showTabs(TabsPanel.Panel.REMOTE_TABS);
-    }
-
     /**
-     * Ensure the TabsPanel view is properly inflated and returns
-     * true when the view has been inflated, false otherwise.
-     */
+    * Ensure the TabsPanel view is properly inflated and returns
+    * true when the view has been inflated, false otherwise.
+    */
     private boolean ensureTabsPanelExists() {
         if (mTabsPanel != null) {
             return false;
