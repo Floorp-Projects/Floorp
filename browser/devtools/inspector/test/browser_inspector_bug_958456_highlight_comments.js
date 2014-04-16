@@ -25,7 +25,7 @@ function test() {
       openInspector((aInspector, aToolbox) => {
         inspector = aInspector;
         markupView = inspector.markup;
-        inspector.once("inspector-updated", startTests);
+        startTests();
       });
     }, content);
   }, true);
