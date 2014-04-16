@@ -297,7 +297,7 @@ HTMLPropertiesCollection::CrawlSubtree(Element* aElement)
 }
 
 void
-HTMLPropertiesCollection::GetSupportedNames(nsTArray<nsString>& aNames)
+HTMLPropertiesCollection::GetSupportedNames(unsigned, nsTArray<nsString>& aNames)
 {
   EnsureFresh();
   mNames->CopyList(aNames);

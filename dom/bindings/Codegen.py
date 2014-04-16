@@ -779,7 +779,7 @@ class CGTemplatedType(CGWrapper):
         const = "const " if isConst else ""
         pre = "%s%s<" % (const, templateName)
         ref = "&" if isReference else ""
-        post = " >%s" % ref
+        post = ">%s" % ref
         CGWrapper.__init__(self, child, pre=pre, post=post)
 
 
@@ -8768,7 +8768,8 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc'),
                 Argument('unsigned', 'flags')]
-        ClassMethod.__init__(self, "getOwnPropertyDescriptor", "bool", args)
+        ClassMethod.__init__(self, "getOwnPropertyDescriptor", "bool", args,
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -8955,7 +8956,8 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
         args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('bool*', 'bp')]
-        ClassMethod.__init__(self, "delete_", "bool", args)
+        ClassMethod.__init__(self, "delete_", "bool", args,
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -9034,12 +9036,14 @@ return dom::DOMProxyHandler::delete_(cx, proxy, id, bp);"""
         return delete
 
 
-class CGDOMJSProxyHandler_getOwnPropertyNames(ClassMethod):
-    def __init__(self, descriptor):
+class CGDOMJSProxyHandler_ownPropNames(ClassMethod):
+    def __init__(self, descriptor, ):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'proxy'),
+                Argument('unsigned', 'flags'),
                 Argument('JS::AutoIdVector&', 'props')]
-        ClassMethod.__init__(self, "getOwnPropertyNames", "bool", args)
+        ClassMethod.__init__(self, "ownPropNames", "bool", args,
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -9064,7 +9068,7 @@ for (int32_t i = 0; i < int32_t(length); ++i) {
                 shadow = "false"
             addNames = """
 nsTArray<nsString> names;
-UnwrapProxy(proxy)->GetSupportedNames(names);
+UnwrapProxy(proxy)->GetSupportedNames(flags, names);
 if (!AppendNamedPropertyIds(cx, proxy, names, %s, props)) {
   return false;
 }
@@ -9074,7 +9078,7 @@ if (!AppendNamedPropertyIds(cx, proxy, names, %s, props)) {
 
         if UseHolderForUnforgeable(self.descriptor):
             addUnforgeable = (
-                "if (!js::GetPropertyNames(cx, ${holder}, JSITER_OWNONLY | JSITER_HIDDEN, &props)) {\n"
+                "if (!js::GetPropertyNames(cx, ${holder}, flags, &props)) {\n"
                 "  return false;\n"
                 "}")
             addUnforgeable = CallOnUnforgeableHolder(self.descriptor,
@@ -9086,7 +9090,7 @@ if (!AppendNamedPropertyIds(cx, proxy, names, %s, props)) {
 """ + addIndices + addUnforgeable + addNames + """
 JS::Rooted<JSObject*> expando(cx);
 if (!isXray && (expando = DOMProxyHandler::GetExpandoObject(proxy)) &&
-    !js::GetPropertyNames(cx, expando, JSITER_OWNONLY | JSITER_HIDDEN, &props)) {
+    !js::GetPropertyNames(cx, expando, flags, &props)) {
   return false;
 }
 
@@ -9099,7 +9103,8 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
                 Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('bool*', 'bp')]
-        ClassMethod.__init__(self, "hasOwn", "bool", args)
+        ClassMethod.__init__(self, "hasOwn", "bool", args,
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -9162,7 +9167,8 @@ class CGDOMJSProxyHandler_get(ClassMethod):
                 Argument('JS::Handle<JSObject*>', 'receiver'),
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::MutableHandle<JS::Value>', 'vp')]
-        ClassMethod.__init__(self, "get", "bool", args)
+        ClassMethod.__init__(self, "get", "bool", args,
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -9257,7 +9263,8 @@ class CGDOMJSProxyHandler_className(ClassMethod):
 class CGDOMJSProxyHandler_finalizeInBackground(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JS::Value', 'priv')]
-        ClassMethod.__init__(self, "finalizeInBackground", "bool", args)
+        ClassMethod.__init__(self, "finalizeInBackground", "bool", args,
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -9267,7 +9274,8 @@ class CGDOMJSProxyHandler_finalizeInBackground(ClassMethod):
 class CGDOMJSProxyHandler_finalize(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSFreeOp*', 'fop'), Argument('JSObject*', 'proxy')]
-        ClassMethod.__init__(self, "finalize", "void", args)
+        ClassMethod.__init__(self, "finalize", "void", args,
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -9343,7 +9351,7 @@ class CGDOMJSProxyHandler(CGClass):
                    CGDOMJSProxyHandler_defineProperty(descriptor),
                    ClassUsingDeclaration("mozilla::dom::DOMProxyHandler",
                                          "defineProperty"),
-                   CGDOMJSProxyHandler_getOwnPropertyNames(descriptor),
+                   CGDOMJSProxyHandler_ownPropNames(descriptor),
                    CGDOMJSProxyHandler_hasOwn(descriptor),
                    CGDOMJSProxyHandler_get(descriptor),
                    CGDOMJSProxyHandler_className(descriptor),
@@ -11138,7 +11146,11 @@ class CGBindingImplClass(CGClass):
                     "GetSupportedNames",
                     (IDLSequenceType(None,
                                      BuiltinTypes[IDLBuiltinType.Types.domstring]),
-                     []),
+                     # Let's use unsigned long for the type here, though really
+                     # it's just a C++ "unsigned"...
+                     [FakeArgument(BuiltinTypes[IDLBuiltinType.Types.unsigned_long],
+                                   FakeMember(),
+                                   name="aFlags")]),
                     {"infallible": True}))
             self.methodDecls.append(
                 CGNativeMember(

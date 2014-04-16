@@ -149,7 +149,7 @@ nsDOMStringMap::NamedDeleter(const nsAString& aProp, bool& found)
 }
 
 void
-nsDOMStringMap::GetSupportedNames(nsTArray<nsString>& aNames)
+nsDOMStringMap::GetSupportedNames(unsigned, nsTArray<nsString>& aNames)
 {
   uint32_t attrCount = mElement->GetAttrCount();
 

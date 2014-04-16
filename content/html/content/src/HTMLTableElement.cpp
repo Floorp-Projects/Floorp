@@ -12,6 +12,7 @@
 #include "mozilla/dom/HTMLCollectionBinding.h"
 #include "mozilla/dom/HTMLTableElementBinding.h"
 #include "nsContentUtils.h"
+#include "jsfriendapi.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Table)
 
@@ -41,7 +42,8 @@ public:
 
   virtual Element*
   GetFirstNamedElement(const nsAString& aName, bool& aFound) MOZ_OVERRIDE;
-  virtual void GetSupportedNames(nsTArray<nsString>& aNames);
+  virtual void GetSupportedNames(unsigned aFlags,
+                                 nsTArray<nsString>& aNames) MOZ_OVERRIDE;
 
   NS_IMETHOD    ParentDestroyed();
 
@@ -234,13 +236,18 @@ TableRowsCollection::GetFirstNamedElement(const nsAString& aName, bool& aFound)
 }
 
 void
-TableRowsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
+TableRowsCollection::GetSupportedNames(unsigned aFlags,
+                                       nsTArray<nsString>& aNames)
 {
+  if (!(aFlags & JSITER_HIDDEN)) {
+    return;
+  }
+
   DO_FOR_EACH_ROWGROUP(
     nsTArray<nsString> names;
     nsCOMPtr<nsIHTMLCollection> coll = do_QueryInterface(rows);
     if (coll) {
-      coll->GetSupportedNames(names);
+      coll->GetSupportedNames(aFlags, names);
       for (uint32_t i = 0; i < names.Length(); ++i) {
         if (!aNames.Contains(names[i])) {
           aNames.AppendElement(names[i]);

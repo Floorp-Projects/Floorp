@@ -54,7 +54,8 @@ public:
     bool dummy;
     NamedGetter(aName, dummy, aResult);
   }
-  virtual void GetSupportedNames(nsTArray<nsString>& aNames);
+  virtual void GetSupportedNames(unsigned aFlags,
+                                 nsTArray<nsString>& aNames) MOZ_OVERRIDE;
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
                              const nsAString& aName);
