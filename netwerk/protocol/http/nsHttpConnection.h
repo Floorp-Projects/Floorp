@@ -114,7 +114,6 @@ public:
     bool     IsPersistent() { return IsKeepAlive(); }
     bool     IsReused();
     void     SetIsReusedAfter(uint32_t afterMilliseconds);
-    void     SetIdleTimeout(PRIntervalTime val) {mIdleTimeout = val;}
     nsresult PushBack(const char *data, uint32_t length);
     nsresult ResumeSend();
     nsresult ResumeRecv();
