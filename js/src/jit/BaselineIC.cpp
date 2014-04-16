@@ -4374,6 +4374,7 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler &masm)
             // Load function in scratchReg and ensure that it has a jit script.
             masm.loadPtr(Address(BaselineStubReg, ICGetElemNativeGetterStub::offsetOfGetter()),
                          scratchReg);
+            masm.branchIfFunctionHasNoScript(scratchReg, popR1 ? &failurePopR1 : &failure);
             masm.loadPtr(Address(scratchReg, JSFunction::offsetOfNativeOrScript()), scratchReg);
             masm.loadBaselineOrIonRaw(scratchReg, scratchReg, SequentialExecution,
                                       popR1 ? &failurePopR1 : &failure);
@@ -4806,6 +4807,22 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
+SetElemDenseAddHasSameShapes(ICSetElem_DenseAdd *stub, JSObject *obj)
+{
+    size_t numShapes = stub->protoChainDepth() + 1;
+    for (size_t i = 0; i < numShapes; i++) {
+        static const size_t MAX_DEPTH = ICSetElem_DenseAdd::MAX_PROTO_CHAIN_DEPTH;
+        if (obj->lastProperty() != stub->toImplUnchecked<MAX_DEPTH>()->shape(i))
+            return false;
+        obj = obj->getProto();
+        if (!obj && i != numShapes - 1)
+            return false;
+    }
+
+    return true;
+}
+
+static bool
 DenseSetElemStubExists(JSContext *cx, ICStub::Kind kind, ICSetElem_Fallback *stub, HandleObject obj)
 {
     JS_ASSERT(kind == ICStub::SetElem_Dense || kind == ICStub::SetElem_DenseAdd);
@@ -4819,11 +4836,8 @@ DenseSetElemStubExists(JSContext *cx, ICStub::Kind kind, ICSetElem_Fallback *stu
 
         if (kind == ICStub::SetElem_DenseAdd && iter->isSetElem_DenseAdd()) {
             ICSetElem_DenseAdd *dense = iter->toSetElem_DenseAdd();
-            if (obj->lastProperty() == dense->toImplUnchecked<0>()->shape(0) &&
-                obj->getType(cx) == dense->type())
-            {
+            if (obj->getType(cx) == dense->type() && SetElemDenseAddHasSameShapes(dense, obj))
                 return true;
-            }
         }
     }
     return false;

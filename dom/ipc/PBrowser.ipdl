@@ -50,6 +50,7 @@ using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/Comp
 using mozilla::CSSPoint from "Units.h";
 using mozilla::CSSToScreenScale from "Units.h";
 using mozilla::CommandInt from "mozilla/EventForwards.h";
+using mozilla::layers::GeckoContentController::APZStateChange from "mozilla/layers/GeckoContentController.h";
 
 namespace mozilla {
 namespace dom {
@@ -410,11 +411,10 @@ child:
     HandleLongTapUp(CSSPoint point, ScrollableLayerGuid aGuid);
 
     /**
-     * Notifies the child that the parent has begun or finished transforming
-     * the visible child content area. Useful for showing/hiding scrollbars.
+     * Notifies the child about various APZ state changes.
+     * See GeckoContentController::NotifyAPZStateChange() for details.
      */
-    NotifyTransformBegin(ViewID aViewId);
-    NotifyTransformEnd(ViewID aViewId);
+    NotifyAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
 
     /**
      * Sending an activate message moves focus to the child.
