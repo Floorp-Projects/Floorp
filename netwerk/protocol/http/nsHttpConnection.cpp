@@ -419,7 +419,7 @@ nsHttpConnection::SetupSSL(uint32_t caps)
     // of this function
     mNPNComplete = true;
 
-    if (!mConnInfo->UsingSSL())
+    if (!mConnInfo->EndToEndSSL())
         return;
 
     LOG(("nsHttpConnection::SetupSSL Setting up "
@@ -894,11 +894,11 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
                    "SPDY NPN Complete while using proxy connect stream");
         mProxyConnectStream = 0;
         if (responseStatus == 200) {
-            LOG(("proxy CONNECT succeeded! ssl=%s\n",
-                 mConnInfo->UsingSSL() ? "true" :"false"));
+            LOG(("proxy CONNECT succeeded! endtoendssl=%s\n",
+                 mConnInfo->EndToEndSSL() ? "true" :"false"));
             *reset = true;
             nsresult rv;
-            if (mConnInfo->UsingSSL()) {
+            if (mConnInfo->EndToEndSSL()) {
                 rv = ProxyStartSSL();
                 if (NS_FAILED(rv)) // XXX need to handle this for real
                     LOG(("ProxyStartSSL failed [rv=%x]\n", rv));
@@ -910,8 +910,8 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             MOZ_ASSERT(NS_SUCCEEDED(rv), "mSocketOut->AsyncWait failed");
         }
         else {
-            LOG(("proxy CONNECT failed! ssl=%s\n",
-                 mConnInfo->UsingSSL() ? "true" :"false"));
+            LOG(("proxy CONNECT failed! endtoendssl=%s\n",
+                 mConnInfo->EndToEndSSL() ? "true" :"false"));
             mTransaction->SetProxyConnectFailed();
         }
     }
