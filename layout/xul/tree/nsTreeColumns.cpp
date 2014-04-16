@@ -559,6 +559,12 @@ nsTreeColumns::NamedGetter(const nsAString& aId, bool& aFound)
   return nullptr;
 }
 
+bool
+nsTreeColumns::NameIsEnumerable(const nsAString& aName)
+{
+  return true;
+}
+
 nsTreeColumn*
 nsTreeColumns::GetNamedColumn(const nsAString& aId)
 {

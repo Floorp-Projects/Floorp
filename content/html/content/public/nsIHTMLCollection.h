@@ -69,6 +69,10 @@ public:
   {
     return GetFirstNamedElement(aName, aFound);
   }
+  bool NameIsEnumerable(const nsAString& aName)
+  {
+    return false;
+  }
   virtual mozilla::dom::Element*
   GetFirstNamedElement(const nsAString& aName, bool& aFound) = 0;
 

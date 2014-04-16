@@ -52,6 +52,7 @@ public:
   void Refresh(bool aReloadDocuments);
   nsPluginElement* IndexedGetter(uint32_t aIndex, bool &aFound);
   nsPluginElement* NamedGetter(const nsAString& aName, bool &aFound);
+  bool NameIsEnumerable(const nsAString& aName);
   uint32_t Length();
   void GetSupportedNames(nsTArray< nsString >& aRetval);
 
@@ -101,6 +102,7 @@ public:
   nsMimeType* NamedItem(const nsAString& name);
   nsMimeType* IndexedGetter(uint32_t index, bool &found);
   nsMimeType* NamedGetter(const nsAString& name, bool &found);
+  bool NameIsEnumerable(const nsAString& aName);
   uint32_t Length();
   void GetSupportedNames(nsTArray< nsString >& retval);
 

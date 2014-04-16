@@ -91,6 +91,12 @@ nsDOMStringMap::NamedGetter(const nsAString& aProp, bool& found,
   found = mElement->GetAttr(attr, aResult);
 }
 
+bool
+nsDOMStringMap::NameIsEnumerable(const nsAString& aName)
+{
+  return true;
+}
+
 void
 nsDOMStringMap::NamedSetter(const nsAString& aProp,
                             const nsAString& aValue,

@@ -174,6 +174,7 @@ public:
   void SetCookie(const nsAString& aCookie, mozilla::ErrorResult& rv);
   JSObject* NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
                         mozilla::ErrorResult& rv);
+  bool NameIsEnumerable(const nsAString& aName);
   void GetSupportedNames(nsTArray<nsString>& aNames);
   nsGenericHTMLElement *GetBody();
   void SetBody(nsGenericHTMLElement* aBody, mozilla::ErrorResult& rv);

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for named getter enumerability</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function() {
+  var list = document.getElementsByTagName("div");
+  var desc = Object.getOwnPropertyDescriptor(list, "0");
+  assert_equals(typeof desc, "object", "Should have a '0' property");
+  assert_true(desc.enumerable, "'0' property should be enumerable");
+  desc = Object.getOwnPropertyDescriptor(list, "log");
+  assert_equals(typeof desc, "object", "Should have a 'log' property");
+  assert_false(desc.enumerable, "'log' property should not be enumerable");
+}, "Correct getOwnPropertyDescriptor behavior");
+</script>
