@@ -13,6 +13,7 @@
 #include "jsgc.h"
 #include "jsprf.h"
 #include "jsscript.h"
+#include "jsutil.h"
 #include "NamespaceImports.h"
 
 #include "gc/GCInternals.h"
@@ -333,6 +334,100 @@ JSTracer::tracingLocation(void **thingp)
 }
 #endif
 
+bool
+MarkStack::init(JSGCMode gcMode)
+{
+    setBaseCapacity(gcMode);
+
+    JS_ASSERT(!stack_);
+    uintptr_t *newStack = js_pod_malloc<uintptr_t>(baseCapacity_);
+    if (!newStack)
+        return false;
+
+    setStack(newStack, 0, baseCapacity_);
+    return true;
+}
+
+void
+MarkStack::setBaseCapacity(JSGCMode mode)
+{
+    switch (mode) {
+      case JSGC_MODE_GLOBAL:
+      case JSGC_MODE_COMPARTMENT:
+        baseCapacity_ = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
+        break;
+      case JSGC_MODE_INCREMENTAL:
+        baseCapacity_ = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("bad gc mode");
+    }
+
+    if (baseCapacity_ > maxCapacity_)
+        baseCapacity_ = maxCapacity_;
+}
+
+void
+MarkStack::setMaxCapacity(size_t maxCapacity)
+{
+    JS_ASSERT(isEmpty());
+    maxCapacity_ = maxCapacity;
+    if (baseCapacity_ > maxCapacity_)
+        baseCapacity_ = maxCapacity_;
+
+    reset();
+}
+
+void
+MarkStack::reset()
+{
+    if (capacity() == baseCapacity_) {
+        // No size change; keep the current stack.
+        setStack(stack_, 0, baseCapacity_);
+        return;
+    }
+
+    uintptr_t *newStack = (uintptr_t *)js_realloc(stack_, sizeof(uintptr_t) * baseCapacity_);
+    if (!newStack) {
+        // If the realloc fails, just keep using the existing stack; it's
+        // not ideal but better than failing.
+        newStack = stack_;
+        baseCapacity_ = capacity();
+    }
+    setStack(newStack, 0, baseCapacity_);
+}
+
+bool
+MarkStack::enlarge(unsigned count)
+{
+    size_t newCapacity = Min(maxCapacity_, capacity() * 2);
+    if (newCapacity < capacity() + count)
+        return false;
+
+    size_t tosIndex = position();
+
+    uintptr_t *newStack = (uintptr_t *)js_realloc(stack_, sizeof(uintptr_t) * newCapacity);
+    if (!newStack)
+        return false;
+
+    setStack(newStack, tosIndex, newCapacity);
+    return true;
+}
+
+void
+MarkStack::setGCMode(JSGCMode gcMode)
+{
+    // The mark stack won't be resized until the next call to reset(), but
+    // that will happen at the end of the next GC.
+    setBaseCapacity(gcMode);
+}
+
+size_t
+MarkStack::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    return mallocSizeOf(stack_);
+}
+
 /*
  * DoNotTraceWeakMaps: the GC is recomputing the liveness of WeakMap entries,
  * so we delay visting entries.
@@ -341,10 +436,10 @@ GCMarker::GCMarker(JSRuntime *rt)
   : JSTracer(rt, nullptr, DoNotTraceWeakMaps),
     stack(size_t(-1)),
     color(BLACK),
-    started(false),
     unmarkedArenaStackTop(nullptr),
     markLaterArenas(0),
-    grayBufferState(GRAY_BUFFER_UNUSED)
+    grayBufferState(GRAY_BUFFER_UNUSED),
+    started(false)
 {
 }
 
