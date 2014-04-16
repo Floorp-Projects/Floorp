@@ -8,6 +8,8 @@ const ADDON_URL = EXAMPLE_URL + "addon5.xpi";
 function test() {
   Task.spawn(function () {
     let addon = yield addAddon(ADDON_URL);
+    let tab1 = yield addTab("chrome://browser_dbg_addon5/content/test.xul");
+
     let addonDebugger = yield initAddonDebugger(ADDON_URL);
 
     is(addonDebugger.title, "Debugger - Test unpacked add-on with JS Modules", "Saw the right toolbox title.");
@@ -15,33 +17,44 @@ function test() {
     // Check the inital list of sources is correct
     let groups = yield addonDebugger.getSourceGroups();
     is(groups[0].name, "browser_dbg_addon5@tests.mozilla.org", "Add-on code should be the first group");
-    is(groups.length, 1, "Should be only one group.");
+    is(groups[1].name, "chrome://global", "XUL code should be the second group");
+    is(groups.length, 2, "Should be only two groups.");
 
     let sources = groups[0].sources;
-    is(sources.length, 2, "Should be two sources");
-    ok(sources[0].url.endsWith("/browser_dbg_addon5@tests.mozilla.org/bootstrap.js"), "correct url for bootstrap code")
-    is(sources[0].label, "bootstrap.js", "correct label for bootstrap code")
-    is(sources[1].url, "resource://browser_dbg_addon5/test.jsm", "correct url for addon code")
-    is(sources[1].label, "test.jsm", "correct label for addon code")
-
-    // Load a new module and check it appears in the list of sources
-    Cu.import("resource://browser_dbg_addon5/test2.jsm", {});
-
-    groups = yield addonDebugger.getSourceGroups();
-    is(groups[0].name, "browser_dbg_addon5@tests.mozilla.org", "Add-on code should be the first group");
-    is(groups.length, 1, "Should be only one group.");
-
-    sources = groups[0].sources;
     is(sources.length, 3, "Should be three sources");
     ok(sources[0].url.endsWith("/browser_dbg_addon5@tests.mozilla.org/bootstrap.js"), "correct url for bootstrap code")
     is(sources[0].label, "bootstrap.js", "correct label for bootstrap code")
     is(sources[1].url, "resource://browser_dbg_addon5/test.jsm", "correct url for addon code")
     is(sources[1].label, "test.jsm", "correct label for addon code")
-    is(sources[2].url, "resource://browser_dbg_addon5/test2.jsm", "correct url for addon code")
-    is(sources[2].label, "test2.jsm", "correct label for addon code")
+    is(sources[2].url, "chrome://browser_dbg_addon5/content/testxul.js", "correct url for addon tab code")
+    is(sources[2].label, "testxul.js", "correct label for addon tab code")
+
+    // Load a new module and tab and check they appear in the list of sources
+    Cu.import("resource://browser_dbg_addon5/test2.jsm", {});
+    let tab2 = yield addTab("chrome://browser_dbg_addon5/content/test2.xul");
+
+    groups = yield addonDebugger.getSourceGroups();
+    is(groups[0].name, "browser_dbg_addon5@tests.mozilla.org", "Add-on code should be the first group");
+    is(groups[1].name, "chrome://global", "XUL code should be the second group");
+    is(groups.length, 2, "Should be only two groups.");
+
+    sources = groups[0].sources;
+    is(sources.length, 5, "Should be five sources");
+    ok(sources[0].url.endsWith("/browser_dbg_addon5@tests.mozilla.org/bootstrap.js"), "correct url for bootstrap code")
+    is(sources[0].label, "bootstrap.js", "correct label for bootstrap code")
+    is(sources[1].url, "resource://browser_dbg_addon5/test.jsm", "correct url for addon code")
+    is(sources[1].label, "test.jsm", "correct label for addon code")
+    is(sources[2].url, "chrome://browser_dbg_addon5/content/testxul.js", "correct url for addon tab code")
+    is(sources[2].label, "testxul.js", "correct label for addon tab code")
+    is(sources[3].url, "resource://browser_dbg_addon5/test2.jsm", "correct url for addon code")
+    is(sources[3].label, "test2.jsm", "correct label for addon code")
+    is(sources[4].url, "chrome://browser_dbg_addon5/content/testxul2.js", "correct url for addon tab code")
+    is(sources[4].label, "testxul2.js", "correct label for addon tab code")
 
     Cu.unload("resource://browser_dbg_addon5/test2.jsm");
     yield addonDebugger.destroy();
+    yield removeTab(tab1);
+    yield removeTab(tab2);
     yield removeAddon(addon);
     finish();
   });
