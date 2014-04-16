@@ -149,8 +149,8 @@ class CodeGenerator;
 
 bool OptimizeMIR(MIRGenerator *mir);
 LIRGraph *GenerateLIR(MIRGenerator *mir);
-CodeGenerator *GenerateCode(MIRGenerator *mir, LIRGraph *lir, MacroAssembler *maybeMasm = nullptr);
-CodeGenerator *CompileBackEnd(MIRGenerator *mir, MacroAssembler *maybeMasm = nullptr);
+CodeGenerator *GenerateCode(MIRGenerator *mir, LIRGraph *lir);
+CodeGenerator *CompileBackEnd(MIRGenerator *mir);
 
 void AttachFinishedCompilations(JSContext *cx);
 void FinishOffThreadBuilder(IonBuilder *builder);

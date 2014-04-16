@@ -39,9 +39,31 @@ CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph *grap
 bool
 CodeGeneratorX86Shared::generatePrologue()
 {
+    JS_ASSERT(!gen->compilingAsmJS());
+
     // Note that this automatically sets MacroAssembler::framePushed().
     masm.reserveStack(frameSize());
 
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::generateAsmJSPrologue(Label *stackOverflowLabel)
+{
+    JS_ASSERT(gen->compilingAsmJS());
+
+    // The asm.js over-recursed handler wants to be able to assume that SP
+    // points to the return address, so perform the check before pushing
+    // frameDepth.
+    if (!omitOverRecursedCheck()) {
+        masm.branchPtr(Assembler::AboveOrEqual,
+                       AsmJSAbsoluteAddress(AsmJSImm_StackLimit),
+                       StackPointer,
+                       stackOverflowLabel);
+    }
+
+    // Note that this automatically sets MacroAssembler::framePushed().
+    masm.reserveStack(frameSize());
     return true;
 }
 
