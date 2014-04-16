@@ -72,18 +72,15 @@ SVGMotionSMILAnimationFunction::SetAttr(nsIAtom* aAttribute,
     }
   } else if (aAttribute == nsGkAtoms::path) {
     aResult.SetTo(aValue);
-    MarkStaleIfAttributeAffectsPath(aAttribute);
     if (aParseResult) {
       *aParseResult = NS_OK;
     }
+    MarkStaleIfAttributeAffectsPath(aAttribute);
   } else if (aAttribute == nsGkAtoms::by ||
              aAttribute == nsGkAtoms::from ||
              aAttribute == nsGkAtoms::to ||
              aAttribute == nsGkAtoms::values) {
     MarkStaleIfAttributeAffectsPath(aAttribute);
-    if (aParseResult) {
-      *aParseResult = NS_OK;
-    }
   } else {
     // Defer to superclass method
     return nsSMILAnimationFunction::SetAttr(aAttribute, aValue,
