@@ -408,6 +408,13 @@ IsVectorObject(HandleValue v)
     return typeRepr.as<X4TypeDescr>().type() == V::type;
 }
 
+template<typename Elem>
+static Elem
+TypedObjectMemory(HandleValue v)
+{
+    return reinterpret_cast<Elem>(v.toObject().as<TypedObject>().typedMem());
+}
+
 template<typename V>
 JSObject *
 js::Create(JSContext *cx, typename V::Elem *data)
@@ -575,7 +582,7 @@ Func(JSContext *cx, unsigned argc, Value *vp)
             return false;
         }
 
-        Elem *val = reinterpret_cast<Elem *>(args[0].toObject().as<TypedObject>().typedMem());
+        Elem *val = TypedObjectMemory<Elem *>(args[0]);
         for (int32_t i = 0; i < Vret::lanes; i++)
             result[i] = Op::apply(val[i], 0);
     } else {
@@ -586,8 +593,8 @@ Func(JSContext *cx, unsigned argc, Value *vp)
             return false;
         }
 
-        Elem *left = reinterpret_cast<Elem *>(args[0].toObject().as<TypedObject>().typedMem());
-        Elem *right = reinterpret_cast<Elem *>(args[1].toObject().as<TypedObject>().typedMem());
+        Elem *left = TypedObjectMemory<Elem *>(args[0]);
+        Elem *right = TypedObjectMemory<Elem *>(args[1]);
         for (int32_t i = 0; i < Vret::lanes; i++)
             result[i] = Op::apply(left[i], right[i]);
     }
@@ -615,7 +622,7 @@ FuncWith(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    Elem *val = reinterpret_cast<Elem *>(args[0].toObject().as<TypedObject>().typedMem());
+    Elem *val = TypedObjectMemory<Elem *>(args[0]);
     RetElem result[Vret::lanes];
 
     if (args[1].isNumber()) {
@@ -659,7 +666,7 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
             return false;
         }
 
-        Elem *val = reinterpret_cast<Elem *>(args[0].toObject().as<TypedObject>().typedMem());
+        Elem *val = TypedObjectMemory<Elem *>(args[0]);;
         Elem arg1;
         if (!Vret::toType(cx, args[1], &arg1))
             return false;
@@ -674,9 +681,8 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
             return false;
         }
 
-        Elem *val1 = reinterpret_cast<Elem *>(args[0].toObject().as<TypedObject>().typedMem());
-        Elem *val2 = reinterpret_cast<Elem *>(args[1].toObject().as<TypedObject>().typedMem());
-
+        Elem *val1 = TypedObjectMemory<Elem *>(args[0]);
+        Elem *val2 = TypedObjectMemory<Elem *>(args[1]);
         Elem arg2;
         if (!Vret::toType(cx, args[2], &arg2))
             return false;
@@ -711,7 +717,7 @@ FuncConvert(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    Elem *val = reinterpret_cast<Elem *>(args[0].toObject().as<TypedObject>().typedMem());
+    Elem *val = TypedObjectMemory<Elem *>(args[0]);
     RetElem result[Vret::lanes];
     for (int32_t i = 0; i < Vret::lanes; i++)
         result[i] = RetElem(val[i]);
@@ -737,8 +743,7 @@ FuncConvertBits(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    RetElem *val = reinterpret_cast<RetElem *>(args[0].toObject().as<TypedObject>().typedMem());
-
+    RetElem *val = TypedObjectMemory<RetElem *>(args[0]);
     RootedObject obj(cx, Create<Vret>(cx, val));
     if (!obj)
         return false;
@@ -834,9 +839,9 @@ Float32x4Clamp(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    float *val = reinterpret_cast<float *>(args[0].toObject().as<TypedObject>().typedMem());
-    float *lowerLimit = reinterpret_cast<float *>(args[1].toObject().as<TypedObject>().typedMem());
-    float *upperLimit = reinterpret_cast<float *>(args[2].toObject().as<TypedObject>().typedMem());
+    float *val = TypedObjectMemory<float *>(args[0]);
+    float *lowerLimit = TypedObjectMemory<float *>(args[1]);
+    float *upperLimit = TypedObjectMemory<float *>(args[2]);
 
     float result[Float32x4::lanes];
     for (int32_t i = 0; i < Float32x4::lanes; i++) {
@@ -863,9 +868,9 @@ Int32x4Select(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    int32_t *val = reinterpret_cast<int32_t *>(args[0].toObject().as<TypedObject>().typedMem());
-    int32_t *tv = reinterpret_cast<int32_t *>(args[1].toObject().as<TypedObject>().typedMem());
-    int32_t *fv = reinterpret_cast<int32_t *>(args[2].toObject().as<TypedObject>().typedMem());
+    int32_t *val = TypedObjectMemory<int32_t *>(args[0]);
+    int32_t *tv = TypedObjectMemory<int32_t *>(args[1]);
+    int32_t *fv = TypedObjectMemory<int32_t *>(args[2]);
 
     int32_t tr[Int32x4::lanes];
     for (int32_t i = 0; i < Int32x4::lanes; i++)
