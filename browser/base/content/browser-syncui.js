@@ -237,10 +237,6 @@ let gSyncUI = {
   },
 
   _getAppName: function () {
-    try {
-      let syncStrings = new StringBundle("chrome://browser/locale/sync.properties");
-      return syncStrings.getFormattedString("sync.defaultAccountApplication", [brandName]);
-    } catch (ex) {}
     let brand = new StringBundle("chrome://branding/locale/brand.properties");
     return brand.get("brandShortName");
   },
