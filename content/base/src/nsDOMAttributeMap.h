@@ -146,6 +146,7 @@ public:
   // WebIDL
   Attr* GetNamedItem(const nsAString& aAttrName);
   Attr* NamedGetter(const nsAString& aAttrName, bool& aFound);
+  bool NameIsEnumerable(const nsAString& aName);
   already_AddRefed<Attr>
   SetNamedItem(Attr& aAttr, ErrorResult& aError)
   {

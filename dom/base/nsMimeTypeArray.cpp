@@ -173,6 +173,12 @@ nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound)
   return mt;
 }
 
+bool
+nsMimeTypeArray::NameIsEnumerable(const nsAString& aName)
+{
+  return true;
+}
+
 uint32_t
 nsMimeTypeArray::Length()
 {
