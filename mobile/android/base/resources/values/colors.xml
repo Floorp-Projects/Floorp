@@ -91,5 +91,9 @@
   <color name="home_last_tab_bar_bg">#FFF5F7F9</color>
 
   <color name="panel_image_item_background">#D1D9E1</color>
+
+  <!-- Swipe to refresh colors -->
+  <color name="swipe_refresh_orange">#FFFFC26C</color>
+  <color name="swipe_refresh_white">#FFFFFFFF</color>
 </resources>
 
