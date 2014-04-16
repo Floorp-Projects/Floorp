@@ -5404,6 +5404,17 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
     if (!result.mSourceSurface) {
       return result;
     }
+    // The surface we return is likely to be cached. We don't want to have to
+    // convert to a surface that's compatible with aTarget each time it's used
+    // (that would result in terrible performance), so we convert once here
+    // upfront if aTarget is specified.
+    if (aTarget) {
+      RefPtr<SourceSurface> optSurface =
+        aTarget->OptimizeSourceSurface(result.mSourceSurface);
+      if (optSurface) {
+        result.mSourceSurface = optSurface;
+      }
+    }
   } else {
     result.mDrawInfo.mImgContainer = imgContainer;
     result.mDrawInfo.mWhichFrame = whichFrame;
