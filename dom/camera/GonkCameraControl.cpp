@@ -564,15 +564,12 @@ nsGonkCameraControl::PausePreview()
 }
 
 nsresult
-nsGonkCameraControl::AutoFocusImpl(bool aCancelExistingCall)
+nsGonkCameraControl::AutoFocusImpl()
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mCameraThread);
   RETURN_IF_NO_CAMERA_HW();
-  if (aCancelExistingCall) {
-    if (mCameraHw.get()) {
-      mCameraHw->CancelAutoFocus();
-    }
-  }
+
+  DOM_CAMERA_LOGI("Starting auto focus\n");
 
   if (mCameraHw->AutoFocus() != OK) {
     return NS_ERROR_FAILURE;
@@ -1043,6 +1040,23 @@ nsGonkCameraControl::StopRecordingImpl()
 
   // notify DeviceStorage that the new video file is closed and ready
   return NS_DispatchToMainThread(new RecordingComplete(mVideoFile), NS_DISPATCH_NORMAL);
+}
+
+nsresult
+nsGonkCameraControl::ResumeContinuousFocusImpl()
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mCameraThread);
+  RETURN_IF_NO_CAMERA_HW();
+
+  DOM_CAMERA_LOGI("Resuming continuous autofocus\n");
+
+  // see
+  // http://developer.android.com/reference/android/hardware/Camera.Parameters.html#FOCUS_MODE_CONTINUOUS_PICTURE
+  if (NS_WARN_IF(mCameraHw->CancelAutoFocus() != OK)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 void

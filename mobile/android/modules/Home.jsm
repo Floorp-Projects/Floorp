@@ -51,14 +51,33 @@ function BannerMessage(options) {
     this.ondismiss = options.ondismiss;
 }
 
+// We need this object to have access to the HomeBanner
+// private members without leaking it outside Home.jsm.
+let HomeBannerMessageHandlers;
+
 let HomeBanner = (function () {
+  // Whether there is a "HomeBanner:Get" request we couldn't fulfill.
+  let _pendingRequest = false;
+
+  // Functions used to handle messages sent from Java.
+  HomeBannerMessageHandlers = {
+    "HomeBanner:Get": function handleBannerGet(data) {
+      if (!_sendBannerData()) {
+        _pendingRequest = true;
+      }
+    }
+  };
+
   // Holds the messages that will rotate through the banner.
   let _messages = {};
 
-
-  let _handleGet = function() {
-    // Choose a message at random.
+  let _sendBannerData = function() {
     let keys = Object.keys(_messages);
+    if (!keys.length) {
+      return false;
+    }
+
+    // Choose a message at random.
     let randomId = keys[Math.floor(Math.random() * keys.length)];
     let message = _messages[randomId];
 
@@ -68,6 +87,7 @@ let HomeBanner = (function () {
       text: message.text,
       iconURI: message.iconURI
     });
+    return true;
   };
 
   let _handleShown = function(id) {
@@ -91,10 +111,6 @@ let HomeBanner = (function () {
   return Object.freeze({
     observe: function(subject, topic, data) {
       switch(topic) {
-        case "HomeBanner:Get":
-          _handleGet();
-          break;
-
         case "HomeBanner:Shown":
           _handleShown(data);
           break;
@@ -121,14 +137,15 @@ let HomeBanner = (function () {
       // If this is the first message we're adding, add
       // observers to listen for requests from the Java UI.
       if (Object.keys(_messages).length == 1) {
-        Services.obs.addObserver(this, "HomeBanner:Get", false);
         Services.obs.addObserver(this, "HomeBanner:Shown", false);
         Services.obs.addObserver(this, "HomeBanner:Click", false);
         Services.obs.addObserver(this, "HomeBanner:Dismiss", false);
 
-        // Send a message to Java, in case there's an active HomeBanner
-        // waiting for a response.
-        _handleGet();
+        // Send a message to Java if there's a pending "HomeBanner:Get" request.
+        if (_pendingRequest) {
+          _pendingRequest = false;
+          _sendBannerData();
+        }
       }
 
       return message.id;
@@ -148,7 +165,6 @@ let HomeBanner = (function () {
 
       // If there are no more messages, remove the observers.
       if (Object.keys(_messages).length == 0) {
-        Services.obs.removeObserver(this, "HomeBanner:Get");
         Services.obs.removeObserver(this, "HomeBanner:Shown");
         Services.obs.removeObserver(this, "HomeBanner:Click");
         Services.obs.removeObserver(this, "HomeBanner:Dismiss");
@@ -412,7 +428,9 @@ this.Home = Object.freeze({
 
   // Lazy notification observer registered in browser.js
   observe: function(subject, topic, data) {
-    if (topic in HomePanelsMessageHandlers) {
+    if (topic in HomeBannerMessageHandlers) {
+      HomeBannerMessageHandlers[topic](data);
+    } else if (topic in HomePanelsMessageHandlers) {
       HomePanelsMessageHandlers[topic](data);
     } else {
       Cu.reportError("Home.observe: message handler not found for topic: " + topic);

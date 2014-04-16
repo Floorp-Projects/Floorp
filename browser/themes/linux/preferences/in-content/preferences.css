@@ -21,15 +21,11 @@ menulist:not([editable="true"]) > .menulist-dropmarker {
 
 checkbox {
   -moz-binding: url("chrome://global/content/bindings/checkbox.xml#checkbox");
-}
-
-.checkbox-check {
-  max-height: 23px;
+  -moz-box-align: center;
 }
 
 checkbox:hover::before,
 checkbox[checked]::before {
-  max-height: 10px;
   margin-top: 7px;
   margin-bottom: 6px;
   -moz-margin-end: -19px;
@@ -39,11 +35,8 @@ checkbox[checked]::before {
 
 radio {
   -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
+  -moz-box-align: center;
   margin: 7px 0;
-}
-
-.radio-check {
-  max-height: 23px;
 }
 
 .radio-label-box {
@@ -52,7 +45,6 @@ radio {
 
 radio:hover::before,
 radio[selected]::before {
-  max-height: 11px;
   margin-top: 6px;
   margin-bottom: 6px;
   -moz-margin-end: -17px;

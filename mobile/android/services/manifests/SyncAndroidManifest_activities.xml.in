@@ -77,7 +77,6 @@
         <activity
             android:theme="@style/SyncTheme"
             android:excludeFromRecents="true"
-            android:exported="true"
             android:icon="@drawable/icon"
             android:label="@string/sync_app_name"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -85,11 +84,9 @@
             android:taskAffinity="org.mozilla.gecko.sync.setup"
             android:name="org.mozilla.gecko.sync.setup.activities.SendTabActivity" >
 
-#ifndef RELEASE_BUILD
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
-#endif
         </activity>

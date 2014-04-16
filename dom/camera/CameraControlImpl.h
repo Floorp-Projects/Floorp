@@ -40,13 +40,14 @@ public:
   virtual nsresult SetConfiguration(const Configuration& aConfig) MOZ_OVERRIDE;
   virtual nsresult StartPreview() MOZ_OVERRIDE;
   virtual nsresult StopPreview() MOZ_OVERRIDE;
-  virtual nsresult AutoFocus(bool aCancelExistingCall) MOZ_OVERRIDE;
+  virtual nsresult AutoFocus() MOZ_OVERRIDE;
   virtual nsresult StartFaceDetection() MOZ_OVERRIDE;
   virtual nsresult StopFaceDetection() MOZ_OVERRIDE;
   virtual nsresult TakePicture() MOZ_OVERRIDE;
   virtual nsresult StartRecording(DeviceStorageFileDescriptor* aFileDescriptor,
                                   const StartRecordingOptions* aOptions) MOZ_OVERRIDE;
   virtual nsresult StopRecording() MOZ_OVERRIDE;
+  virtual nsresult ResumeContinuousFocus() MOZ_OVERRIDE;
 
   already_AddRefed<RecorderProfileManager> GetRecorderProfileManager();
   uint32_t GetCameraId() { return mCameraId; }
@@ -100,13 +101,14 @@ protected:
   virtual nsresult SetConfigurationImpl(const Configuration& aConfig) = 0;
   virtual nsresult StartPreviewImpl() = 0;
   virtual nsresult StopPreviewImpl() = 0;
-  virtual nsresult AutoFocusImpl(bool aCancelExistingCall) = 0;
+  virtual nsresult AutoFocusImpl() = 0;
   virtual nsresult StartFaceDetectionImpl() = 0;
   virtual nsresult StopFaceDetectionImpl() = 0;
   virtual nsresult TakePictureImpl() = 0;
   virtual nsresult StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescriptor,
                                       const StartRecordingOptions* aOptions) = 0;
   virtual nsresult StopRecordingImpl() = 0;
+  virtual nsresult ResumeContinuousFocusImpl() = 0;
   virtual nsresult PushParametersImpl() = 0;
   virtual nsresult PullParametersImpl() = 0;
   virtual already_AddRefed<RecorderProfileManager> GetRecorderProfileManagerImpl() = 0;
