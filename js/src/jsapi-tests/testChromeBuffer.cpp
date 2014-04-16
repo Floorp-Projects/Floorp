@@ -25,8 +25,8 @@ static const JSClass global_class = {
     JS_GlobalObjectTraceHook
 };
 
-static JSObject *trusted_glob = nullptr;
-static JSObject *trusted_fun = nullptr;
+static JS::Heap<JSObject *> trusted_glob;
+static JS::Heap<JSObject *> trusted_fun;
 
 static bool
 CallTrusted(JSContext *cx, unsigned argc, jsval *vp)
@@ -53,7 +53,7 @@ BEGIN_TEST(testChromeBuffer)
     trusted_glob = JS_NewGlobalObject(cx, &global_class, &system_principals, JS::FireOnNewGlobalHook);
     CHECK(trusted_glob);
 
-    if (!JS_AddNamedObjectRoot(cx, &trusted_glob, "trusted-global"))
+    if (!JS::AddNamedObjectRoot(cx, &trusted_glob, "trusted-global"))
         return false;
 
     JS::RootedFunction fun(cx);
@@ -68,13 +68,13 @@ BEGIN_TEST(testChromeBuffer)
             JSAutoCompartment ac(cx, trusted_glob);
             const char *paramName = "x";
             const char *bytes = "return x ? 1 + trusted(x-1) : 0";
-            JS::HandleObject global = JS::HandleObject::fromMarkedLocation(&trusted_glob);
+            JS::HandleObject global = JS::HandleObject::fromMarkedLocation(trusted_glob.unsafeGet());
             JS::CompileOptions options(cx);
             options.setFileAndLine("", 0);
             CHECK(fun = JS_CompileFunction(cx, global, "trusted", 1, &paramName,
                                            bytes, strlen(bytes), options));
             trusted_fun = JS_GetFunctionObject(fun);
-            if (!JS_AddNamedObjectRoot(cx, &trusted_fun, "trusted-function"))
+            if (!JS::AddNamedObjectRoot(cx, &trusted_fun, "trusted-function"))
                 return false;
         }
 
@@ -114,7 +114,7 @@ BEGIN_TEST(testChromeBuffer)
                                 "} catch (e) {                          "
                                 "  return 'From trusted: ' + e;         "
                                 "}                                      ";
-            JS::HandleObject global = JS::HandleObject::fromMarkedLocation(&trusted_glob);
+            JS::HandleObject global = JS::HandleObject::fromMarkedLocation(trusted_glob.unsafeGet());
             JS::CompileOptions options(cx);
             options.setFileAndLine("", 0);
             CHECK(fun = JS_CompileFunction(cx, global, "trusted", 1, &paramName,
@@ -151,7 +151,7 @@ BEGIN_TEST(testChromeBuffer)
         {
             JSAutoCompartment ac(cx, trusted_glob);
             const char *bytes = "return 42";
-            JS::HandleObject global = JS::HandleObject::fromMarkedLocation(&trusted_glob);
+            JS::HandleObject global = JS::HandleObject::fromMarkedLocation(trusted_glob.unsafeGet());
             JS::CompileOptions options(cx);
             options.setFileAndLine("", 0);
             CHECK(fun = JS_CompileFunction(cx, global, "trusted", 0, nullptr,
@@ -182,8 +182,10 @@ BEGIN_TEST(testChromeBuffer)
     return true;
 }
 virtual void uninit() {
-    JS_RemoveObjectRoot(cx, &trusted_glob);
-    JS_RemoveObjectRoot(cx, &trusted_fun);
+    trusted_glob = nullptr;
+    trusted_fun = nullptr;
+    JS::RemoveObjectRoot(cx, &trusted_glob);
+    JS::RemoveObjectRoot(cx, &trusted_fun);
     JSAPITest::uninit();
 }
 END_TEST(testChromeBuffer)

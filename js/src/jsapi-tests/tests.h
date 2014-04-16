@@ -54,7 +54,7 @@ class JSAPITest
 
     JSRuntime *rt;
     JSContext *cx;
-    JSObject *global;
+    JS::Heap<JSObject *> global;
     bool knownFail;
     JSAPITestString msgs;
     JSCompartment *oldCompartment;
@@ -74,8 +74,9 @@ class JSAPITest
             JS_LeaveCompartment(cx, oldCompartment);
             oldCompartment = nullptr;
         }
+        global = nullptr;
         if (cx) {
-            JS_RemoveObjectRoot(cx, &global);
+            JS::RemoveObjectRoot(cx, &global);
             JS_LeaveCompartment(cx, nullptr);
             JS_EndRequest(cx);
             JS_DestroyContext(cx);

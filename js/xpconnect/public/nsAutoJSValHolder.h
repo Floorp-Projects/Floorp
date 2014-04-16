@@ -62,13 +62,9 @@ public:
    * Note that mVal may be JSVAL_NULL, which is not a problem.
    */
   bool Hold(JSRuntime* aRt) {
-    // Do we really care about different runtimes?
-    if (mRt && aRt != mRt) {
-      JS_RemoveValueRootRT(mRt, &mVal);
-      mRt = nullptr;
-    }
+    MOZ_ASSERT_IF(mRt, mRt == aRt);
 
-    if (!mRt && JS_AddNamedValueRootRT(aRt, &mVal, "nsAutoJSValHolder")) {
+    if (!mRt && JS::AddNamedValueRootRT(aRt, &mVal, "nsAutoJSValHolder")) {
       mRt = aRt;
     }
 
@@ -83,7 +79,7 @@ public:
     JS::Value oldval = mVal;
 
     if (mRt) {
-      JS_RemoveValueRootRT(mRt, &mVal); // infallible
+      JS::RemoveValueRootRT(mRt, &mVal); // infallible
       mRt = nullptr;
     }
 
@@ -108,14 +104,11 @@ public:
          : nullptr;
   }
 
-  JS::Value* ToJSValPtr() {
-    return &mVal;
-  }
-
   /**
    * Pretend to be a JS::Value.
    */
   operator JS::Value() const { return mVal; }
+  JS::Value get() const { return mVal; }
 
   nsAutoJSValHolder &operator=(JSObject* aOther) {
     return *this = OBJECT_TO_JSVAL(aOther);
@@ -132,7 +125,7 @@ public:
   }
 
 private:
-  JS::Value mVal;
+  JS::Heap<JS::Value> mVal;
   JSRuntime* mRt;
 };
 
