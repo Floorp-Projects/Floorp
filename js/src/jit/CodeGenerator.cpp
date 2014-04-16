@@ -8218,6 +8218,7 @@ CodeGenerator::visitAsmJSCall(LAsmJSCall *ins)
         }
     }
 #endif
+
    if (mir->spIncrement())
         masm.freeStack(mir->spIncrement());
 
@@ -8234,13 +8235,13 @@ CodeGenerator::visitAsmJSCall(LAsmJSCall *ins)
     MAsmJSCall::Callee callee = mir->callee();
     switch (callee.which()) {
       case MAsmJSCall::Callee::Internal:
-        masm.call(callee.internal());
+        masm.call(mir->desc(), callee.internal());
         break;
       case MAsmJSCall::Callee::Dynamic:
-        masm.call(ToRegister(ins->getOperand(mir->dynamicCalleeOperandIndex())));
+        masm.call(mir->desc(), ToRegister(ins->getOperand(mir->dynamicCalleeOperandIndex())));
         break;
       case MAsmJSCall::Callee::Builtin:
-        masm.call(callee.builtin());
+        masm.call(mir->desc(), callee.builtin());
         break;
     }
 
