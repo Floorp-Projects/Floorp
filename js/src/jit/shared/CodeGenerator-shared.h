@@ -248,6 +248,8 @@ class CodeGeneratorShared : public LInstructionVisitor
     template <typename T>
     inline size_t allocateCache(const T &cache) {
         size_t index = allocateCache(cache, sizeof(mozilla::AlignedStorage2<T>));
+        if (masm.oom())
+            return SIZE_MAX;
         // Use the copy constructor on the allocated space.
         JS_ASSERT(index == cacheList_.back());
         new (&runtimeData_[index]) T(cache);
