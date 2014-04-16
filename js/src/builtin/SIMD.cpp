@@ -867,9 +867,8 @@ Int32x4Select(JSContext *cx, unsigned argc, Value *vp)
     for (int32_t i = 0; i < Int32x4::lanes; i++)
         orInt[i] = Or<int32_t, Int32x4>::apply(tr[i], fr[i]);
 
-    float *result[Float32x4::lanes];
-    *result = reinterpret_cast<float *>(&orInt);
-    RootedObject obj(cx, Create<Float32x4>(cx, *result));
+    float *result = reinterpret_cast<float *>(orInt);
+    RootedObject obj(cx, Create<Float32x4>(cx, result));
     if (!obj)
         return false;
 
