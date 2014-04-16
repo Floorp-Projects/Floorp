@@ -115,25 +115,27 @@ function test_3() {
               is(curState.selectedWindow, 4, "Last window opened is the one selected");
 
               waitForWindowClose(normalWindow, function() {
-                // Load another tab before checking the written state so that
+                // Pin and unpin a tab before checking the written state so that
                 // the list of restoring windows gets cleared. Otherwise the
                 // window we just closed would be marked as not closed.
-                waitForTabLoad(aWindow, "http://www.example.com/", function() {
-                  forceWriteState(function(state) {
-                    is(state.windows.length, 2,
-                       "sessionstore state: 2 windows in data being written to disk");
-                    is(state.selectedWindow, 2,
-                       "Selected window is updated to match one of the saved windows");
-                    state.windows.forEach(function(win) {
-                      is(!win.isPrivate, true, "Saved window is not private");
-                    });
-                    is(state._closedWindows.length, 1,
-                       "sessionstore state: 1 closed window in data being written to disk");
-                    state._closedWindows.forEach(function(win) {
-                      is(!win.isPrivate, true, "Closed window is not private");
-                    });
-                    runNextTest();
+                let tab = aWindow.gBrowser.tabs[0];
+                aWindow.gBrowser.pinTab(tab);
+                aWindow.gBrowser.unpinTab(tab);
+
+                forceWriteState(function(state) {
+                  is(state.windows.length, 2,
+                     "sessionstore state: 2 windows in data being written to disk");
+                  is(state.selectedWindow, 2,
+                     "Selected window is updated to match one of the saved windows");
+                  state.windows.forEach(function(win) {
+                    is(!win.isPrivate, true, "Saved window is not private");
                   });
+                  is(state._closedWindows.length, 1,
+                     "sessionstore state: 1 closed window in data being written to disk");
+                  state._closedWindows.forEach(function(win) {
+                    is(!win.isPrivate, true, "Closed window is not private");
+                  });
+                  runNextTest();
                 });
               });
             });
