@@ -1455,9 +1455,10 @@ nsNavHistoryContainerResultNode::RemoveChildAt(int32_t aIndex,
   // Update stats.
   uint32_t oldAccessCount = 0;
   if (!aIsTemporary) {
+    MOZ_ASSERT(mAccessCount >= mChildren[aIndex]->mAccessCount,
+               "Invalid access count while updating!");
     oldAccessCount = mAccessCount;
     mAccessCount -= mChildren[aIndex]->mAccessCount;
-    NS_ASSERTION(mAccessCount >= 0, "Invalid access count while updating!");
   }
 
   // Remove it from our list and notify the result's observers.
