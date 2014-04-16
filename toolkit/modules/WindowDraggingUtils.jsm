@@ -73,7 +73,7 @@ WindowDraggingElement.prototype = {
         if (!this.shouldDrag(aEvent))
           return;
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
         // On GTK, there is a toolkit-level function which handles
         // window dragging, which must be used.
         this._window.beginWindowMove(aEvent, isPanel ? this._elem : null);
