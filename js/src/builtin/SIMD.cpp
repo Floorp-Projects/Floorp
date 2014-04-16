@@ -609,7 +609,8 @@ FuncWith(JSContext *cx, unsigned argc, Value *vp)
     for (int32_t i = 0; i < Vret::lanes; i++) {
         if(args[1].isNumber()) {
             typename Vret::Elem arg1;
-            Vret::toType2(cx, args[1], &arg1);
+            if (!Vret::toType(cx, args[1], &arg1))
+                return false;
             result[i] = OpWith::apply(i, arg1, val[i]);
         } else if (args[1].isBoolean()) {
             result[i] = OpWith::apply(i, args[1].toBoolean(), val[i]);
@@ -643,7 +644,8 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
         typename Vret::Elem result[Vret::lanes];
         for (int32_t i = 0; i < Vret::lanes; i++) {
             typename Vret::Elem arg1;
-            Vret::toType2(cx, args[1], &arg1);
+            if (!Vret::toType(cx, args[1], &arg1))
+                return false;
             result[i] = val[OpShuffle::apply(i * 2, arg1)];
         }
         RootedObject obj(cx, Create<Vret>(cx, result));
@@ -669,7 +671,8 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
         typename Vret::Elem result[Vret::lanes];
         for (int32_t i = 0; i < Vret::lanes; i++) {
             typename Vret::Elem arg2;
-            Vret::toType2(cx, args[2], &arg2);
+            if (!Vret::toType(cx, args[2], &arg2))
+                return false;
             if(i < Vret::lanes / 2) {
                 result[i] = val1[OpShuffle::apply(i * 2, arg2)];
             } else {
@@ -774,7 +777,8 @@ FuncSplat(JSContext *cx, unsigned argc, Value *vp)
     typename Vret::Elem result[Vret::lanes];
     for (int32_t i = 0; i < Vret::lanes; i++) {
         typename Vret::Elem arg0;
-        Vret::toType2(cx, args[0], &arg0);
+        if (!Vret::toType(cx, args[0], &arg0))
+            return false;
         result[i] = static_cast<typename Vret::Elem>(arg0);
     }
 
