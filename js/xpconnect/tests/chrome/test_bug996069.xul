@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=996069
+-->
+<window title="Mozilla Bug 996069"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=996069"
+     target="_blank">Mozilla Bug 996069</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  const Cu = Components.utils;
+  /** Test for Bug 996069 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function loaded() {
+    var ifr = document.getElementById("ifr").contentWindow;
+    var sb = new Cu.Sandbox([ifr],
+                            { sandboxPrototype: ifr });
+
+    ifr.wrappedJSObject.finishTest = function() {
+      // If we got here we did not hit the NS_ReleaseAssert...
+      ok(true, "nsExpandedPrincipal should not be inherited by content windows");
+
+      // But let's be sure that the new window does not have nsEP
+      newWin.wrappedJSObject.obj = Cu.evalInSandbox("var obj = { foo: 'bar' }; obj", sb);
+      try {
+        newWin.eval("obj.foo");
+        ok(false, "newWin should not have access to object from a scope with nsExpandedPrincipal");
+      } catch (e) {
+        ok(/Permission denied/.exec(e.message), "newWin should not have access to object from a scope with nsExpandedPrincipal");
+      }
+      newWin.close();
+      SimpleTest.finish();
+    };
+
+    var newWin = Cu.evalInSandbox(
+      "window.open('http://example.org/chrome/js/xpconnect/tests/chrome/file_bug996069.html');",
+      sb);
+  }
+
+  ]]>
+  </script>
+  <iframe id="ifr" onload="loaded();" type="content" src="http://example.org/chrome/js/xpconnect/tests/chrome/file_bug996069.html" />
+</window>
