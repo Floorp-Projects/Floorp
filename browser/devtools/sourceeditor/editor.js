@@ -150,7 +150,8 @@ function Editor(config) {
     styleActiveLine:   true,
     autoCloseBrackets: "()[]{}''\"\"",
     autoCloseEnabled:  useAutoClose,
-    theme:             "mozilla"
+    theme:             "mozilla",
+    autocomplete:      false
   };
 
   // Additional shortcuts.
@@ -334,6 +335,17 @@ Editor.prototype = {
    */
   getMode: function () {
     return this.getOption("mode");
+  },
+
+  /**
+   * Load a script into editor's containing window.
+   */
+  loadScript: function (url) {
+    if (!this.container) {
+      throw new Error("Can't load a script until the editor is loaded.")
+    }
+    let win = this.container.contentWindow.wrappedJSObject;
+    Services.scriptloader.loadSubScript(url, win, "utf8");
   },
 
   /**
@@ -820,6 +832,19 @@ Editor.prototype = {
     let cm = editors.get(this);
     cm.getWrapperElement().style.fontSize = parseInt(size, 10) + "px";
     cm.refresh();
+  },
+
+  /**
+   * Sets up autocompletion for the editor. Lazily imports the required
+   * dependencies because they vary by editor mode.
+   */
+  setupAutoCompletion: function (options = {}) {
+    if (this.config.autocomplete) {
+      this.extend(require("./autocomplete"));
+      // The autocomplete module will overwrite this.setupAutoCompletion with
+      // a mode specific autocompletion handler.
+      this.setupAutoCompletion(options);
+    }
   },
 
   /**

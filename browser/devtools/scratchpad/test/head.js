@@ -7,6 +7,8 @@
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 
 let gScratchpadWindow; // Reference to the Scratchpad chrome window object
 
@@ -36,10 +38,8 @@ SimpleTest.registerCleanupFunction(() => {
  *         gScratchpadWindow global is also updated to reference the new window
  *         object.
  */
-function openScratchpad(aReadyCallback, aOptions)
+function openScratchpad(aReadyCallback, aOptions = {})
 {
-  aOptions = aOptions || {};
-
   let win = aOptions.window ||
             Scratchpad.ScratchpadManager.openScratchpad(aOptions.state);
   if (!win) {
@@ -68,6 +68,30 @@ function openScratchpad(aReadyCallback, aOptions)
 
   gScratchpadWindow = win;
   return gScratchpadWindow;
+}
+
+/**
+ * Open a new tab and then open a scratchpad.
+ * @param object aOptions
+ *        Optional. Options for opening the tab and scratchpad. In addition
+ *        to the options supported by openScratchpad, the following options
+ *        are supported:
+ *        - tabContent
+ *          A string providing the html content of the tab.
+ * @return Promise
+ */
+function openTabAndScratchpad(aOptions = {})
+{
+  waitForExplicitFinish();
+  return new promise(resolve => {
+    gBrowser.selectedTab = gBrowser.addTab();
+    let {selectedBrowser} = gBrowser;
+    selectedBrowser.addEventListener("load", function onLoad() {
+      selectedBrowser.removeEventListener("load", onLoad, true);
+      openScratchpad((win, sp) => resolve([win, sp]), aOptions);
+    }, true);
+    content.location = "data:text/html;charset=utf8," + (aOptions.tabContent || "");
+  });
 }
 
 /**
@@ -179,7 +203,6 @@ function runAsyncCallbackTests(aScratchpad, aTests)
 
   return deferred.promise;
 }
-
 
 function cleanup()
 {

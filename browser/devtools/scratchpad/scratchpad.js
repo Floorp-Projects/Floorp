@@ -35,6 +35,7 @@ const DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 const PREF_RECENT_FILES_MAX = "devtools.scratchpad.recentFilesMax";
 const SHOW_TRAILING_SPACE = "devtools.scratchpad.showTrailingSpace";
 const ENABLE_CODE_FOLDING = "devtools.scratchpad.enableCodeFolding";
+const ENABLE_AUTOCOMPLETION = "devtools.scratchpad.enableAutocompletion";
 
 const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesView.xul";
 
@@ -1605,15 +1606,17 @@ var Scratchpad = {
       mode: Editor.modes.js,
       value: initialText,
       lineNumbers: true,
+      contextMenu: "scratchpad-text-popup",
       showTrailingSpace: Services.prefs.getBoolPref(SHOW_TRAILING_SPACE),
       enableCodeFolding: Services.prefs.getBoolPref(ENABLE_CODE_FOLDING),
-      contextMenu: "scratchpad-text-popup"
+      autocomplete: Services.prefs.getBoolPref(ENABLE_AUTOCOMPLETION),
     };
 
     this.editor = new Editor(config);
     this.editor.appendTo(document.querySelector("#scratchpad-editor")).then(() => {
       var lines = initialText.split("\n");
 
+      this.editor.setupAutoCompletion();
       this.editor.on("change", this._onChanged);
       this.editor.on("save", () => this.saveFile());
       this.editor.focus();
@@ -1627,7 +1630,7 @@ var Scratchpad = {
       this.populateRecentFilesMenu();
       PreferenceObserver.init();
       CloseObserver.init();
-    }).then(null, (err) => console.log(err.message));
+    }).then(null, (err) => console.error(err));
     this._setupCommandListeners();
     this._setupPopupShowingListeners();
   },
