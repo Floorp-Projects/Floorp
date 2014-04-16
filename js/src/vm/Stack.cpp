@@ -586,17 +586,22 @@ FrameIter::settleOnActivation()
             return;
         }
 
+        if (activation->isAsmJS()) {
+            data_.asmJSFrames_ = AsmJSFrameIterator(data_.activations_->asAsmJS());
+
+            if (data_.asmJSFrames_.done()) {
+                ++data_.activations_;
+                continue;
+            }
+
+            data_.state_ = ASMJS;
+            return;
+        }
+
         // ForkJoin activations don't contain iterable frames, so skip them.
         if (activation->isForkJoin()) {
             ++data_.activations_;
             continue;
-        }
-
-        // Until asm.js has real stack-walking, we have each AsmJSActivation
-        // expose a single function (the entry function).
-        if (activation->isAsmJS()) {
-            data_.state_ = ASMJS;
-            return;
         }
 #endif
 
@@ -634,6 +639,7 @@ FrameIter::Data::Data(JSContext *cx, SavedOption savedOption, ContextOption cont
 #ifdef JS_ION
   , jitFrames_((uint8_t *)nullptr, SequentialExecution)
   , ionInlineFrameNo_(0)
+  , asmJSFrames_(nullptr)
 #endif
 {
 }
@@ -650,6 +656,7 @@ FrameIter::Data::Data(const FrameIter::Data &other)
 #ifdef JS_ION
   , jitFrames_(other.jitFrames_)
   , ionInlineFrameNo_(other.ionInlineFrameNo_)
+  , asmJSFrames_(other.asmJSFrames_)
 #endif
 {
 }
@@ -731,6 +738,16 @@ FrameIter::popJitFrame()
 
     popActivation();
 }
+
+void
+FrameIter::popAsmJSFrame()
+{
+    JS_ASSERT(data_.state_ == ASMJS);
+
+    ++data_.asmJSFrames_;
+    if (data_.asmJSFrames_.done())
+        popActivation();
+}
 #endif
 
 FrameIter &
@@ -780,11 +797,7 @@ FrameIter::operator++()
         MOZ_ASSUME_UNREACHABLE("Unexpected state");
 #endif
       case ASMJS:
-        // As described in settleOnActivation, an AsmJSActivation currently only
-        // represents a single asm.js function, so, if the FrameIter is
-        // currently stopped on an ASMJS frame, then we can pop the entire
-        // AsmJSActivation.
-        popActivation();
+        popAsmJSFrame();
         break;
     }
     return *this;
@@ -940,8 +953,7 @@ FrameIter::functionDisplayAtom() const
         return callee()->displayAtom();
       case ASMJS: {
 #ifdef JS_ION
-        AsmJSActivation &act = *data_.activations_->asAsmJS();
-        return act.module().exportedFunction(act.exportIndex()).name();
+        return data_.asmJSFrames_.functionDisplayAtom();
 #else
         break;
 #endif
@@ -1000,17 +1012,12 @@ FrameIter::computeLine(uint32_t *column) const
       case INTERP:
       case JIT:
         return PCToLineNumber(script(), pc(), column);
-      case ASMJS: {
+      case ASMJS:
 #ifdef JS_ION
-        AsmJSActivation &act = *data_.activations_->asAsmJS();
-        AsmJSModule::ExportedFunction &func = act.module().exportedFunction(act.exportIndex());
-        if (column)
-            *column = func.column();
-        return func.line();
+        return data_.asmJSFrames_.computeLine(column);
 #else
         break;
 #endif
-      }
     }
 
     MOZ_ASSUME_UNREACHABLE("Unexpected state");
@@ -1654,13 +1661,13 @@ jit::JitActivation::markRematerializedFrames(JSTracer *trc)
 
 #endif // JS_ION
 
-AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module, unsigned exportIndex)
+AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
   : Activation(cx, AsmJS),
     module_(module),
     errorRejoinSP_(nullptr),
     profiler_(nullptr),
     resumePC_(nullptr),
-    exportIndex_(exportIndex)
+    exitSP_(nullptr)
 {
     if (cx->runtime()->spsProfiler.enabled()) {
         // Use a profiler string that matches jsMatch regex in
