@@ -839,6 +839,24 @@ public:
             mMargin.right == 0 && mMargin.bottom == 0);
   }
 
+  LogicalMargin operator+(const LogicalMargin& aMargin) {
+    CHECK_WRITING_MODE(aMargin.GetWritingMode());
+    return LogicalMargin(GetWritingMode(),
+                         BStart() + aMargin.BStart(),
+                         IEnd() + aMargin.IEnd(),
+                         BEnd() + aMargin.BEnd(),
+                         IStart() + aMargin.IStart());
+  }
+
+  LogicalMargin operator-(const LogicalMargin& aMargin) {
+    CHECK_WRITING_MODE(aMargin.GetWritingMode());
+    return LogicalMargin(GetWritingMode(),
+                         BStart() - aMargin.BStart(),
+                         IEnd() - aMargin.IEnd(),
+                         BEnd() - aMargin.BEnd(),
+                         IStart() - aMargin.IStart());
+  }
+
 private:
   friend class LogicalRect;
 
