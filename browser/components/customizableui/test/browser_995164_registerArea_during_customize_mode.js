@@ -58,7 +58,19 @@ add_task(function*() {
   let otherTB = otherWin.document.createElementNS(kNSXUL, "toolbar");
   otherTB.id = TOOLBARID;
   otherTB.setAttribute("customizable", "true");
+  let wasInformedCorrectlyOfAreaAppearing = false;
+  let listener = {
+    onAreaNodeRegistered: function(aArea, aNode) {
+      if (aNode == otherTB) {
+        wasInformedCorrectlyOfAreaAppearing = true;
+      }
+    }
+  };
+  CustomizableUI.addListener(listener);
   otherWin.gNavToolbox.appendChild(otherTB);
+  ok(wasInformedCorrectlyOfAreaAppearing, "Should have been told area was registered.");
+  CustomizableUI.removeListener(listener);
+
   ok(otherTB.querySelector("#sync-button"), "Sync button is on other toolbar, too.");
 
   simulateItemDrag(syncButton, gNavToolbox.palette);
@@ -73,18 +85,25 @@ add_task(function*() {
   ok(otherTB.querySelector("#sync-button"), "Sync button is on other toolbar, too.");
 
   let wasInformedCorrectlyOfAreaDisappearing = false;
-  let listener = {
+  let windowClosed = null;
+  listener = {
     onAreaNodeUnregistered: function(aArea, aNode, aReason) {
       if (aArea == TOOLBARID) {
         is(aNode, otherTB, "Should be informed about other toolbar");
         is(aReason, CustomizableUI.REASON_WINDOW_CLOSED, "Reason should be correct.");
         wasInformedCorrectlyOfAreaDisappearing = (aReason === CustomizableUI.REASON_WINDOW_CLOSED);
       }
-    }
+    },
+    onWindowClosed: function(aWindow) {
+      if (aWindow == otherWin) {
+        windowClosed = aWindow;
+      }
+    },
   };
   CustomizableUI.addListener(listener);
   yield promiseWindowClosed(otherWin);
 
+  is(windowClosed, otherWin, "Window should have sent onWindowClosed notification.");
   ok(wasInformedCorrectlyOfAreaDisappearing, "Should be told about window closing.");
   CustomizableUI.removeListener(listener);
   // Closing the other window should not be counted against this window's customize mode:
