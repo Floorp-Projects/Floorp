@@ -242,10 +242,6 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
 
     if (ContainerLayer* container = aLayer->AsContainerLayer()) {
-        if (container->UseIntermediateSurface()) {
-            LOGD("Container layer needs intermediate surface");
-            return false;
-        }
         nsAutoTArray<Layer*, 12> children;
         container->SortChildrenBy3DZOrder(children);
 
@@ -330,12 +326,24 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     }
 
     HwcLayer& hwcLayer = mList->hwLayers[current];
+    hwcLayer.flags = 0;
+
+    if (ContainerLayer* parent = aLayer->GetParent()) {
+        if (parent->UseIntermediateSurface()) {
+            LOGD("Parent container needs intermediate surface");
+            hwcLayer.flags = HWC_SKIP_LAYER;
+#if ANDROID_VERSION < 18
+            // No partial HWC Composition on older versions
+            return false;
+#endif
+        }
+    }
+
     hwcLayer.displayFrame = displayFrame;
     setCrop(&hwcLayer, sourceCrop);
     buffer_handle_t handle = fillColor ? nullptr : state.mSurface->getNativeBuffer()->handle;
     hwcLayer.handle = handle;
 
-    hwcLayer.flags = 0;
     hwcLayer.hints = 0;
     hwcLayer.blending = isOpaque ? HWC_BLENDING_NONE : HWC_BLENDING_PREMULT;
 #if ANDROID_VERSION >= 17
