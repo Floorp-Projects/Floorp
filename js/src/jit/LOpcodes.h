@@ -292,7 +292,6 @@
     _(AsmJSVoidReturn)              \
     _(AsmJSPassStackArg)            \
     _(AsmJSCall)                    \
-    _(AsmJSCheckOverRecursed)       \
     _(InterruptCheckPar)            \
     _(RecompileCheck)               \
     _(AssertRangeI)                 \

@@ -2749,17 +2749,6 @@ class CheckOverRecursedFailure : public OutOfLineCodeBase<CodeGenerator>
 };
 
 bool
-CodeGenerator::omitOverRecursedCheck() const
-{
-    // If the current function makes no calls (which means it isn't recursive)
-    // and it uses only a small amount of stack space, it doesn't need a
-    // stack overflow check. Note that the actual number here is somewhat
-    // arbitrary, and codegen actually uses small bounded amounts of
-    // additional stack space in some cases too.
-    return frameSize() < 64 && !gen->performsCall();
-}
-
-bool
 CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
 {
     // If we don't push anything on the stack, skip the check.
@@ -6202,7 +6191,7 @@ CodeGenerator::visitRestPar(LRestPar *lir)
 }
 
 bool
-CodeGenerator::generateAsmJS()
+CodeGenerator::generateAsmJS(Label *stackOverflowLabel)
 {
     IonSpew(IonSpew_Codegen, "# Emitting asm.js code");
 
@@ -6215,7 +6204,7 @@ CodeGenerator::generateAsmJS()
     // parameters have been useFixed()ed to these ABI-specified positions.
     // Thus, there is nothing special to do in the prologue except (possibly)
     // bump the stack.
-    if (!generatePrologue())
+    if (!generateAsmJSPrologue(stackOverflowLabel))
         return false;
     if (!generateBody())
         return false;
@@ -8294,20 +8283,6 @@ CodeGenerator::visitAsmJSVoidReturn(LAsmJSVoidReturn *lir)
     // Don't emit a jump to the return label if this is the last block.
     if (current->mir() != *gen->graph().poBegin())
         masm.jump(&returnLabel_);
-    return true;
-}
-
-bool
-CodeGenerator::visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir)
-{
-    // If we don't push anything on the stack, skip the check.
-    if (omitOverRecursedCheck())
-        return true;
-
-    masm.branchPtr(Assembler::AboveOrEqual,
-                   AsmJSAbsoluteAddress(AsmJSImm_StackLimit),
-                   StackPointer,
-                   lir->mir()->onError());
     return true;
 }
 

@@ -10040,20 +10040,6 @@ class MAsmJSCall MOZ_FINAL : public MInstruction
     }
 };
 
-// The asm.js version doesn't use the bail mechanism: instead it throws and
-// exception by jumping to the given label.
-class MAsmJSCheckOverRecursed : public MNullaryInstruction
-{
-    Label *onError_;
-    MAsmJSCheckOverRecursed(Label *onError) : onError_(onError) {}
-  public:
-    INSTRUCTION_HEADER(AsmJSCheckOverRecursed);
-    static MAsmJSCheckOverRecursed *New(TempAllocator &alloc, Label *onError) {
-        return new(alloc) MAsmJSCheckOverRecursed(onError);
-    }
-    Label *onError() const { return onError_; }
-};
-
 #undef INSTRUCTION_HEADER
 
 // Implement opcode casts now that the compiler can see the inheritance.
