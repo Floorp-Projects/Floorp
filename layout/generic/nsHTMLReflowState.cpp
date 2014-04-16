@@ -1186,7 +1186,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
       if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
         // Use the top of the inline box which the placeholder lives in
         // as the hypothetical box's top.
-        aHypotheticalBox.mTop = lineBox->mBounds.y + blockYOffset;
+        aHypotheticalBox.mTop = lineBox->GetPhysicalBounds().y + blockYOffset;
       } else {
         // The element would have been block-level which means it would
         // be below the line containing the placeholder frame, unless
@@ -1211,11 +1211,11 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
             // The top of the hypothetical box is the top of the line
             // containing the placeholder, since there is nothing in the
             // line before our placeholder except empty frames.
-            aHypotheticalBox.mTop = lineBox->mBounds.y + blockYOffset;
+            aHypotheticalBox.mTop = lineBox->GetPhysicalBounds().y + blockYOffset;
           } else {
             // The top of the hypothetical box is just below the line
             // containing the placeholder.
-            aHypotheticalBox.mTop = lineBox->mBounds.YMost() + blockYOffset;
+            aHypotheticalBox.mTop = lineBox->GetPhysicalBounds().YMost() + blockYOffset;
           }
         } else {
           // Just use the placeholder's y-offset wrt the containing block

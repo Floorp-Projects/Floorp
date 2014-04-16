@@ -188,6 +188,7 @@ public:
   // mContentArea.height is not NS_UNCONSTRAINEDSIZE; otherwise
   // coordinate overflow may occur.
   nsRect mContentArea;
+  nscoord mContainerWidth;
 
   // Continuation out-of-flow float frames that need to move to our
   // next in flow are placed here during reflow.  It's a pointer to
