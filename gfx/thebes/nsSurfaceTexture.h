@@ -13,8 +13,6 @@
 #include "gfxPlatform.h"
 #include "GLDefs.h"
 
-class gfxASurface;
-
 namespace mozilla {
 namespace gfx {
 class Matrix4x4;

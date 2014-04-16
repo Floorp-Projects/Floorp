@@ -57,6 +57,22 @@ public:
              JS::Handle<JSObject*> callable) MOZ_OVERRIDE;
   bool unwatch(JSContext* cx, JS::Handle<JSObject*> proxy,
                JS::Handle<jsid> id) MOZ_OVERRIDE;
+  virtual bool getOwnPropertyNames(JSContext* cx, JS::Handle<JSObject*> proxy,
+                                   JS::AutoIdVector &props) MOZ_OVERRIDE;
+  // We override keys() and implement it directly instead of using the
+  // default implementation, which would getOwnPropertyNames and then
+  // filter out the non-enumerable ones.  This avoids doing
+  // unnecessary work during enumeration.
+  virtual bool keys(JSContext* cx, JS::Handle<JSObject*> proxy,
+                    JS::AutoIdVector &props) MOZ_OVERRIDE;
+
+protected:
+  // Hook for subclasses to implement shared getOwnPropertyNames()/keys()
+  // functionality.  The "flags" argument is either JSITER_OWNONLY (for keys())
+  // or JSITER_OWNONLY | JSITER_HIDDEN (for getOwnPropertyNames()).
+  virtual bool ownPropNames(JSContext* cx, JS::Handle<JSObject*> proxy,
+                            unsigned flags,
+                            JS::AutoIdVector& props) = 0;
 };
 
 class DOMProxyHandler : public BaseDOMProxyHandler
@@ -139,20 +155,23 @@ IsArrayIndex(int32_t index)
 }
 
 inline void
-FillPropertyDescriptor(JS::MutableHandle<JSPropertyDescriptor> desc, JSObject* obj, bool readonly)
+FillPropertyDescriptor(JS::MutableHandle<JSPropertyDescriptor> desc,
+                       JSObject* obj, bool readonly, bool enumerable = true)
 {
   desc.object().set(obj);
-  desc.setAttributes((readonly ? JSPROP_READONLY : 0) | JSPROP_ENUMERATE);
+  desc.setAttributes((readonly ? JSPROP_READONLY : 0) |
+                     (enumerable ? JSPROP_ENUMERATE : 0));
   desc.setGetter(nullptr);
   desc.setSetter(nullptr);
 }
 
 inline void
-FillPropertyDescriptor(JS::MutableHandle<JSPropertyDescriptor> desc, JSObject* obj, JS::Value v,
-                       bool readonly)
+FillPropertyDescriptor(JS::MutableHandle<JSPropertyDescriptor> desc,
+                       JSObject* obj, JS::Value v,
+                       bool readonly, bool enumerable = true)
 {
   desc.value().set(v);
-  FillPropertyDescriptor(desc, obj, readonly);
+  FillPropertyDescriptor(desc, obj, readonly, enumerable);
 }
 
 inline void

@@ -8,8 +8,8 @@
 
 #include <stdint.h>                     // for uint32_t, uint8_t, uint64_t
 #include <sys/types.h>                  // for int32_t
+#include "gfxTypes.h"
 #include "ImageTypes.h"                 // for ImageFormat, etc
-#include "gfxASurface.h"                // for gfxASurface, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/Mutex.h"              // for Mutex
 #include "mozilla/ReentrantMonitor.h"   // for ReentrantMonitorAutoEnter, etc

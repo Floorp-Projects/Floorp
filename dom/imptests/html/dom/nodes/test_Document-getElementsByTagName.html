@@ -64,9 +64,14 @@ test(function() {
 
   assert_array_equals(Object.getOwnPropertyNames(list).sort(), ["0", "x"]);
 
-  var desc = Object.getOwnPropertyDescriptor(list, 'x');
+  var desc = Object.getOwnPropertyDescriptor(list, '0');
   assert_equals(typeof desc, "object", "descriptor should be an object");
   assert_true(desc.enumerable, "desc.enumerable");
+  assert_true(desc.configurable, "desc.configurable");
+
+  desc = Object.getOwnPropertyDescriptor(list, 'x');
+  assert_equals(typeof desc, "object", "descriptor should be an object");
+  assert_false(desc.enumerable, "desc.enumerable");
   assert_true(desc.configurable, "desc.configurable");
 }, "hasOwnProperty, getOwnPropertyDescriptor, getOwnPropertyNames")
 

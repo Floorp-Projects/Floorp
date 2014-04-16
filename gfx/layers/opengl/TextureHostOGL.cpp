@@ -14,7 +14,6 @@
 #include "SurfaceStream.h"              // for SurfaceStream
 #include "SurfaceTypes.h"               // for SharedSurfaceType, etc
 #include "gfx2DGlue.h"                  // for ContentForFormat, etc
-#include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxReusableSurfaceWrapper.h"  // for gfxReusableSurfaceWrapper
 #include "mozilla/gfx/2D.h"             // for DataSourceSurface
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize

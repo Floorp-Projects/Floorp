@@ -23,7 +23,6 @@
 #include "nsLayoutUtils.h"
 
 #include "GLContextProvider.h"
-#include "gfxImageSurface.h"
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/CheckedInt.h"

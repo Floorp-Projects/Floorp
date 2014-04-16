@@ -29,7 +29,6 @@
 #include "nsISupportsImpl.h"            // for TextureImage::AddRef, etc
 
 class gfxReusableSurfaceWrapper;
-class gfxASurface;
 class gfxImageSurface;
 
 namespace mozilla {

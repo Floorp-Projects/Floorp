@@ -479,6 +479,10 @@ struct Class
         return flags & JSCLASS_IS_PROXY;
     }
 
+    bool isDOMClass() const {
+        return flags & JSCLASS_IS_DOMJSCLASS;
+    }
+
     static size_t offsetOfFlags() { return offsetof(Class, flags); }
 };
 

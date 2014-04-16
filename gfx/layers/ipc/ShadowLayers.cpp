@@ -14,7 +14,6 @@
 #include "RenderTrace.h"                // for RenderTraceScope
 #include "ShadowLayerChild.h"           // for ShadowLayerChild
 #include "gfx2DGlue.h"                  // for Moz2D transition helpers
-#include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxPlatform.h"                // for gfxImageFormat, gfxPlatform
 #include "gfxSharedImageSurface.h"      // for gfxSharedImageSurface
 #include "ipc/IPCMessageUtils.h"        // for gfxContentType, null_t

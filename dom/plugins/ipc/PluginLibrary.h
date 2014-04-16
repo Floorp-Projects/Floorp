@@ -15,7 +15,6 @@
 #include "nsError.h"
 #include "mozilla/EventForwards.h"
 
-class gfxASurface;
 class gfxContext;
 class nsCString;
 struct nsIntRect;

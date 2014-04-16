@@ -6,7 +6,6 @@
 #ifndef GFX_AUTOMASKDATA_H_
 #define GFX_AUTOMASKDATA_H_
 
-#include "gfxASurface.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 
 namespace mozilla {
@@ -15,8 +14,7 @@ namespace layers {
 /**
  * Drawing with a mask requires a mask surface and a transform.
  *
- * This helper class manages the gfxASurface
- * logic.
+ * This helper class manages the SourceSurface logic.
  */
 class MOZ_STACK_CLASS AutoMoz2DMaskData {
 public:

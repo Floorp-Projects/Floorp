@@ -5,7 +5,6 @@
 
 #include "ImageDataSerializer.h"
 #include "gfx2DGlue.h"                  // for SurfaceFormatToImageFormat
-#include "gfxASurface.h"                // for gfxASurface
 #include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc

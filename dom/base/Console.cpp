@@ -507,9 +507,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Console)
     }
 
     for (uint32_t i = 0; i < data->mArguments.Length(); ++i) {
-      if (JSVAL_IS_TRACEABLE(data->mArguments[i])) {
-        aCallbacks.Trace(&data->mArguments[i], "data->mArguments[i]", aClosure);
-      }
+      aCallbacks.Trace(&data->mArguments[i], "data->mArguments[i]", aClosure);
     }
   }
 

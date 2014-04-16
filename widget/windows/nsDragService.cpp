@@ -35,7 +35,6 @@
 #include "nsCRT.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsUnicharUtils.h"
-#include "gfxASurface.h"
 #include "gfxContext.h"
 #include "nsRect.h"
 #include "nsMathUtils.h"
