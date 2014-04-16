@@ -1008,7 +1008,7 @@ struct MarkStack {
 
     bool push(T item) {
         if (tos_ == end_) {
-            if (!enlarge())
+            if (!enlarge(1))
                 return false;
         }
         JS_ASSERT(tos_ < end_);
@@ -1019,7 +1019,7 @@ struct MarkStack {
     bool push(T item1, T item2, T item3) {
         T *nextTos = tos_ + 3;
         if (nextTos > end_) {
-            if (!enlarge())
+            if (!enlarge(3))
                 return false;
             nextTos = tos_ + 3;
         }
@@ -1057,13 +1057,11 @@ struct MarkStack {
         setStack(newStack, 0, baseCapacity_);
     }
 
-    bool enlarge() {
-        if (capacity() == maxCapacity_)
+    /* Grow the stack, ensuring there is space for at least count elements. */
+    bool enlarge(unsigned count) {
+        size_t newCapacity = Min(maxCapacity_, capacity() * 2);
+        if (newCapacity < capacity() + count)
             return false;
-
-        size_t newCapacity = capacity() * 2;
-        if (newCapacity > maxCapacity_)
-            newCapacity = maxCapacity_;
 
         size_t tosIndex = position();
 
