@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(cd83030f-31eb-40c0-8f0e-0edef3527eec)]
+[scriptable, uuid(464d4cf8-454a-4cdb-9329-bfe7ede97103)]
 interface nsITelephonyListener : nsISupports
 {
   /**
@@ -18,6 +18,14 @@ interface nsITelephonyListener : nsISupports
    *        One of the nsITelephonyService::CALL_STATE_* values.
    * @param number
    *        Number of the other party.
+   * @param numberPresentation
+   *        Presentation of the call number.
+   *        One of the nsITelephonyProvider::CALL_PRESENTATION_* values.
+   * @param name
+   *        Name of the other party.
+   * @param namePresentation
+   *        Presentation of the call name.
+   *        One of the nsITelephonyProvider::CALL_PRESENTATION_* values.
    * @param isOutgoing
    *        Indicates whether this call is outgoing or incoming.
    * @param isEmergency
@@ -35,6 +43,9 @@ interface nsITelephonyListener : nsISupports
                         in unsigned long callIndex,
                         in unsigned short callState,
                         in AString number,
+                        in unsigned short numberPresentation,
+                        in AString name,
+                        in unsigned short namePresentation,
                         in boolean isOutgoing,
                         in boolean isEmergency,
                         in boolean isConference,
@@ -71,6 +82,14 @@ interface nsITelephonyListener : nsISupports
    *        One of the nsITelephonyService::CALL_STATE_* values.
    * @param number
    *        Number of the other party.
+   * @param numberPresentation
+   *        Presentation of the call number.
+   *        One of the nsITelephonyProvider::CALL_PRESENTATION_* values.
+   * @param name
+   *        Name of the other party.
+   * @param namePresentation
+   *        Presentation of the call name.
+   *        One of the nsITelephonyProvider::CALL_PRESENTATION_* values.
    * @param isOutgoing
    *        Indicates whether this call is outgoing or incoming.
    * @param isConference
@@ -86,6 +105,9 @@ interface nsITelephonyListener : nsISupports
                           in unsigned long callIndex,
                           in unsigned short callState,
                           in AString number,
+                          in unsigned short numberPresentation,
+                          in AString name,
+                          in unsigned short namePresentation,
                           in boolean isOutgoing,
                           in boolean isEmergency,
                           in boolean isConference,
@@ -127,8 +149,20 @@ interface nsITelephonyListener : nsISupports
             Indicate the RIL client, 0 ~ (number of client - 1).
    * @param number
    *        Number of the other party.
+   * @param numberPresentation
+   *        Presentation of the call number.
+   *        One of the nsITelephonyProvider::CALL_PRESENTATION_* values.
+   * @param name
+   *        Name of the other party.
+   * @param namePresentation
+   *        Presentation of the call name.
+   *        One of the nsITelephonyProvider::CALL_PRESENTATION_* values.
    */
-  void notifyCdmaCallWaiting(in unsigned long clientId, in AString number);
+  void notifyCdmaCallWaiting(in unsigned long clientId,
+                             in AString number,
+                             in unsigned short numberPresentation,
+                             in AString name,
+                             in unsigned short namePresentation);
 
   /**
    * Called when RIL error occurs to creating or separating a conference call.
@@ -186,6 +220,11 @@ interface nsITelephonyService : nsISupports
 
   const unsigned short NOTIFICATION_REMOTE_HELD = 0;
   const unsigned short NOTIFICATION_REMOTE_RESUMED = 1;
+
+  const unsigned short CALL_PRESENTATION_ALLOWED = 0;
+  const unsigned short CALL_PRESENTATION_RESTRICTED = 1;
+  const unsigned short CALL_PRESENTATION_UNKNOWN = 2;
+  const unsigned short CALL_PRESENTATION_PAYPHONE = 3;
 
   readonly attribute unsigned long defaultServiceId;
 
