@@ -212,6 +212,13 @@ ToJSValue(JSContext* aCx, JS::Handle<JS::Value> aArgument,
   return MaybeWrapValue(aCx, aValue);
 }
 
+// Accept nsresult, for use in rejections, and create an XPCOM
+// exception object representing that nsresult.
+bool
+ToJSValue(JSContext* aCx,
+          nsresult aArgument,
+          JS::MutableHandle<JS::Value> aValue);
+
 // Accept arrays of other things we accept
 template <typename T>
 bool
