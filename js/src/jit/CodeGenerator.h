@@ -53,7 +53,7 @@ class CodeGenerator : public CodeGeneratorSpecific
 
   public:
     bool generate();
-    bool generateAsmJS();
+    bool generateAsmJS(Label *stackOverflowLabel);
     bool link(JSContext *cx, types::CompilerConstraintList *constraints);
 
     bool visitLabel(LLabel *lir);
@@ -294,7 +294,6 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);
-    bool visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir);
 
     bool visitCheckOverRecursedPar(LCheckOverRecursedPar *lir);
     bool visitCheckOverRecursedFailurePar(CheckOverRecursedFailurePar *ool);
@@ -446,8 +445,6 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     bool emitAssertRangeI(const Range *r, Register input);
     bool emitAssertRangeD(const Range *r, FloatRegister input, FloatRegister temp);
-
-    bool omitOverRecursedCheck() const;
 
     Vector<CodeOffsetLabel, 0, IonAllocPolicy> ionScriptLabels_;
 #ifdef DEBUG

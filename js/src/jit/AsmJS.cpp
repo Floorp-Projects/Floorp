@@ -2029,8 +2029,6 @@ class FunctionCompiler
         if (!newBlock(/* pred = */ nullptr, &curBlock_, fn_))
             return false;
 
-        curBlock_->add(MAsmJSCheckOverRecursed::New(alloc(), &m_.stackOverflowLabel()));
-
         for (ABIArgTypeIter i = argTypes; !i.done(); i++) {
             MAsmJSParameter *ins = MAsmJSParameter::New(alloc(), *i, i.mirType());
             curBlock_->add(ins);
@@ -5470,8 +5468,8 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
 
     m.masm().bind(func.code());
 
-    ScopedJSDeletePtr<CodeGenerator> codegen(jit::GenerateCode(&mir, &lir, &m.masm()));
-    if (!codegen)
+    ScopedJSDeletePtr<CodeGenerator> codegen(js_new<CodeGenerator>(&mir, &lir, &m.masm()));
+    if (!codegen || !codegen->generateAsmJS(&m.stackOverflowLabel()))
         return m.fail(nullptr, "internal codegen failure (probably out of memory)");
 
     if (!m.collectAccesses(mir))
@@ -6739,30 +6737,37 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     masm.align(CodeAlignment);
     masm.bind(&m.stackOverflowLabel());
 
-#if defined(JS_CODEGEN_X86)
-    // Ensure that at least one slot is pushed for passing 'cx' below.
-    masm.push(Imm32(0));
-#endif
+    // The overflow check always occurs before the initial function-specific
+    // stack-size adjustment. See CodeGenerator::generateAsmJSPrologue.
+    masm.setFramePushed(AlignmentMidPrologue - AlignmentAtPrologue);
 
-    // We know that StackPointer is word-aligned, but nothing past that. Thus,
-    // we must align StackPointer dynamically. Don't worry about restoring
-    // StackPointer since throwLabel will clobber StackPointer immediately.
-    masm.andPtr(Imm32(~(StackAlignment - 1)), StackPointer);
-    if (ShadowStackSpace)
-        masm.subPtr(Imm32(ShadowStackSpace), StackPointer);
+    MIRTypeVector argTypes(m.cx());
+    argTypes.infallibleAppend(MIRType_Pointer); // cx
 
-    // Prepare the arguments for the call to js_ReportOverRecursed.
-#if defined(JS_CODEGEN_X86)
-    LoadAsmJSActivationIntoRegister(masm, eax);
-    LoadJSContextFromActivation(masm, eax, eax);
-    masm.storePtr(eax, Address(StackPointer, 0));
-#else
-    LoadAsmJSActivationIntoRegister(masm, IntArgReg0);
-    LoadJSContextFromActivation(masm, IntArgReg0, IntArgReg0);
-#endif
+    unsigned stackDec = StackDecrementForCall(masm, argTypes);
+    masm.reserveStack(stackDec);
+
+    ABIArgMIRTypeIter i(argTypes);
+
+    Register scratch = ABIArgGenerator::NonArgReturnVolatileReg0;
+    LoadAsmJSActivationIntoRegister(masm, scratch);
+
+    // argument 0: cx
+    if (i->kind() == ABIArg::GPR) {
+        LoadJSContextFromActivation(masm, scratch, i->gpr());
+    } else {
+        LoadJSContextFromActivation(masm, scratch, scratch);
+        masm.storePtr(scratch, Address(StackPointer, i->offsetFromArgBase()));
+    }
+    i++;
+
+    JS_ASSERT(i.done());
+
+    AssertStackAlignment(masm);
     masm.call(AsmJSImm_ReportOverRecursed);
-    masm.jump(throwLabel);
 
+    // Don't worry about restoring the stack; throwLabel will pop everything.
+    masm.jump(throwLabel);
     return !masm.oom();
 }
 
