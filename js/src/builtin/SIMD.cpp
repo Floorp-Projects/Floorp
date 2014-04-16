@@ -35,68 +35,85 @@ extern const JSFunctionSpec Int32x4Methods[];
 ///////////////////////////////////////////////////////////////////////////
 // X4
 
-#define LANE_ACCESSOR(Type32x4, lane) \
-    bool Type32x4##Lane##lane(JSContext *cx, unsigned argc, Value *vp) { \
-        static const char *laneNames[] = {"lane 0", "lane 1", "lane 2", "lane3"}; \
-        CallArgs args = CallArgsFromVp(argc, vp); \
-        if(!args.thisv().isObject() || !args.thisv().toObject().is<TypedObject>()) {        \
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
-                                 X4TypeDescr::class_.name, laneNames[lane], \
-                                 InformalValueTypeName(args.thisv())); \
-            return false; \
-        } \
-        TypedObject &typedObj = args.thisv().toObject().as<TypedObject>(); \
-        TypeDescr &descr = typedObj.typeDescr(); \
-        if (descr.kind() != TypeDescr::X4 || \
-            descr.as<X4TypeDescr>().type() != Type32x4::type) \
-        {  \
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
-                                 X4TypeDescr::class_.name, laneNames[lane], \
-                                 InformalValueTypeName(args.thisv())); \
-            return false; \
-        } \
-        Type32x4::Elem *data = reinterpret_cast<Type32x4::Elem *>(typedObj.typedMem()); \
-        Type32x4::setReturn(args, data[lane]); \
-        return true; \
+static const char *laneNames[] = {"lane 0", "lane 1", "lane 2", "lane3"};
+
+template<typename Type32x4, int lane>
+static bool GetX4Lane(JSContext *cx, unsigned argc, Value *vp) {
+    typedef typename Type32x4::Elem Elem;
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if(!args.thisv().isObject() || !args.thisv().toObject().is<TypedObject>()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                             X4TypeDescr::class_.name, laneNames[lane],
+                             InformalValueTypeName(args.thisv()));
+        return false;
     }
-    LANE_ACCESSOR(Float32x4, 0);
-    LANE_ACCESSOR(Float32x4, 1);
-    LANE_ACCESSOR(Float32x4, 2);
-    LANE_ACCESSOR(Float32x4, 3);
-    LANE_ACCESSOR(Int32x4, 0);
-    LANE_ACCESSOR(Int32x4, 1);
-    LANE_ACCESSOR(Int32x4, 2);
-    LANE_ACCESSOR(Int32x4, 3);
+
+    TypedObject &typedObj = args.thisv().toObject().as<TypedObject>();
+    TypeDescr &descr = typedObj.typeDescr();
+    if (descr.kind() != TypeDescr::X4 || descr.as<X4TypeDescr>().type() != Type32x4::type) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                             X4TypeDescr::class_.name, laneNames[lane],
+                             InformalValueTypeName(args.thisv()));
+        return false;
+    }
+
+    Elem *data = reinterpret_cast<Elem *>(typedObj.typedMem());
+    Type32x4::setReturn(args, data[lane]);
+    return true;
+}
+
+#define LANE_ACCESSOR(type, lane) \
+static bool type##Lane##lane(JSContext *cx, unsigned argc, Value *vp) { \
+    return GetX4Lane<type, lane>(cx, argc, vp);\
+}
+
+#define FOUR_LANES_ACCESSOR(type) \
+    LANE_ACCESSOR(type, 0); \
+    LANE_ACCESSOR(type, 1); \
+    LANE_ACCESSOR(type, 2); \
+    LANE_ACCESSOR(type, 3);
+
+    FOUR_LANES_ACCESSOR(Int32x4);
+    FOUR_LANES_ACCESSOR(Float32x4);
+#undef FOUR_LANES_ACCESSOR
 #undef LANE_ACCESSOR
 
-#define SIGN_MASK(Type32x4) \
-    bool Type32x4##SignMask(JSContext *cx, unsigned argc, Value *vp) { \
-        CallArgs args = CallArgsFromVp(argc, vp); \
-        if(!args.thisv().isObject() || !args.thisv().toObject().is<TypedObject>()) {        \
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
-                                 X4TypeDescr::class_.name, "signMask", \
-                                 InformalValueTypeName(args.thisv())); \
-            return false; \
-        } \
-        TypedObject &typedObj = args.thisv().toObject().as<TypedObject>(); \
-        TypeDescr &descr = typedObj.typeDescr(); \
-        if (descr.kind() != TypeDescr::X4 || \
-            descr.as<X4TypeDescr>().type() != Type32x4::type) \
-        { \
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
-                                 X4TypeDescr::class_.name, "signMask", \
-                                 InformalValueTypeName(args.thisv())); \
-            return false; \
-        } \
-        Type32x4::Elem *data = reinterpret_cast<Type32x4::Elem *>(typedObj.typedMem()); \
-        int32_t mx = data[0] < 0.0 ? 1 : 0; \
-        int32_t my = data[1] < 0.0 ? 1 : 0; \
-        int32_t mz = data[2] < 0.0 ? 1 : 0; \
-        int32_t mw = data[3] < 0.0 ? 1 : 0; \
-        int32_t result = mx | my << 1 | mz << 2 | mw << 3; \
-        args.rval().setInt32(result); \
-        return true; \
+template<typename Type32x4>
+static bool SignMask(JSContext *cx, unsigned argc, Value *vp) {
+    typedef typename Type32x4::Elem Elem;
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if(!args.thisv().isObject() || !args.thisv().toObject().is<TypedObject>()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                             X4TypeDescr::class_.name, "signMask",
+                             InformalValueTypeName(args.thisv()));
+        return false;
     }
+
+    TypedObject &typedObj = args.thisv().toObject().as<TypedObject>();
+    TypeDescr &descr = typedObj.typeDescr();
+    if (descr.kind() != TypeDescr::X4 || descr.as<X4TypeDescr>().type() != Type32x4::type) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                             X4TypeDescr::class_.name, "signMask",
+                             InformalValueTypeName(args.thisv()));
+        return false;
+    }
+
+    Elem *data = reinterpret_cast<Elem *>(typedObj.typedMem());
+    int32_t mx = data[0] < 0.0 ? 1 : 0;
+    int32_t my = data[1] < 0.0 ? 1 : 0;
+    int32_t mz = data[2] < 0.0 ? 1 : 0;
+    int32_t mw = data[3] < 0.0 ? 1 : 0;
+    int32_t result = mx | my << 1 | mz << 2 | mw << 3;
+    args.rval().setInt32(result);
+    return true;
+}
+
+#define SIGN_MASK(type) \
+static bool type##SignMask(JSContext *cx, unsigned argc, Value *vp) { \
+    return SignMask<Int32x4>(cx, argc, vp); \
+}
     SIGN_MASK(Float32x4);
     SIGN_MASK(Int32x4);
 #undef SIGN_MASK
