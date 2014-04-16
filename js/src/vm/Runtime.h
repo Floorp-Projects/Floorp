@@ -34,6 +34,7 @@
 #ifdef JSGC_GENERATIONAL
 # include "gc/StoreBuffer.h"
 #endif
+#include "gc/Tracer.h"
 #ifdef XP_MACOSX
 # include "jit/AsmJSSignalHandlers.h"
 #endif
