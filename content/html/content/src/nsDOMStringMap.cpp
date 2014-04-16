@@ -91,6 +91,12 @@ nsDOMStringMap::NamedGetter(const nsAString& aProp, bool& found,
   found = mElement->GetAttr(attr, aResult);
 }
 
+bool
+nsDOMStringMap::NameIsEnumerable(const nsAString& aName)
+{
+  return true;
+}
+
 void
 nsDOMStringMap::NamedSetter(const nsAString& aProp,
                             const nsAString& aValue,
@@ -143,7 +149,7 @@ nsDOMStringMap::NamedDeleter(const nsAString& aProp, bool& found)
 }
 
 void
-nsDOMStringMap::GetSupportedNames(nsTArray<nsString>& aNames)
+nsDOMStringMap::GetSupportedNames(unsigned, nsTArray<nsString>& aNames)
 {
   uint32_t attrCount = mElement->GetAttrCount();
 

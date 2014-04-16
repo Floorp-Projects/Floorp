@@ -36,7 +36,6 @@ interface nsIDOMWindow;
 interface nsIDOMBlob;
 interface nsIDOMFile;
 interface nsIFile;
-interface nsIDOMTouch;
 interface nsIDOMClientRect;
 interface nsIURI;
 interface nsIDOMEventTarget;

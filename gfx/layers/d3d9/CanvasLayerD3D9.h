@@ -9,8 +9,6 @@
 #include "LayerManagerD3D9.h"
 #include "GLContextTypes.h"
 
-class gfxASurface;
-
 namespace mozilla {
 namespace layers {
 

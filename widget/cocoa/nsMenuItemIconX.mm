@@ -36,7 +36,6 @@
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
 #include "nsMenuItemX.h"
-#include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "imgIContainer.h"
 #include "nsCocoaUtils.h"

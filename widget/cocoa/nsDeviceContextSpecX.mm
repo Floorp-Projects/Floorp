@@ -8,12 +8,12 @@
 #include "nsCRT.h"
 #include <unistd.h>
 
+#include "nsAutoPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"
 #include "nsPrintSettingsX.h"
 
 #include "gfxQuartzSurface.h"
-#include "gfxImageSurface.h"
 
 // This must be the last include:
 #include "nsObjCExceptions.h"

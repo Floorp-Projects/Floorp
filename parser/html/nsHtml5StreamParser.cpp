@@ -73,10 +73,8 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsHtml5StreamParser)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsHtml5StreamParser)
 
 NS_INTERFACE_TABLE_HEAD(nsHtml5StreamParser)
-  NS_INTERFACE_TABLE3(nsHtml5StreamParser,
-                      nsIStreamListener, 
-                      nsICharsetDetectionObserver,
-                      nsIThreadRetargetableStreamListener)
+  NS_INTERFACE_TABLE1(nsHtml5StreamParser,
+                      nsICharsetDetectionObserver)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsHtml5StreamParser)
 NS_INTERFACE_MAP_END
 
@@ -110,7 +108,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
   // hack: count self if held by mChardet
   if (tmp->mChardet) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChardet->mObserver");
-    cb.NoteXPCOMChild(static_cast<nsIStreamListener*>(tmp));
+    cb.NoteXPCOMChild(static_cast<nsICharsetDetectionObserver*>(tmp));
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -852,7 +850,6 @@ nsHtml5StreamParser::WriteStreamBytes(const uint8_t* aFromSegment,
   }
 }
 
-// nsIRequestObserver methods:
 nsresult
 nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
@@ -974,7 +971,7 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHtml5StreamParser::CheckListenerChain()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread!");
@@ -1125,13 +1122,12 @@ class nsHtml5DataAvailable : public nsRunnable
     }
 };
 
-// nsIStreamListener method:
 nsresult
 nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
-                               nsISupports* aContext,
-                               nsIInputStream* aInStream,
-                               uint64_t aSourceOffset,
-                               uint32_t aLength)
+                                     nsISupports* aContext,
+                                     nsIInputStream* aInStream,
+                                     uint64_t aSourceOffset,
+                                     uint32_t aLength)
 {
   nsresult rv;
   if (NS_FAILED(rv = mExecutor->IsBroken())) {

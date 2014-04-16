@@ -1875,7 +1875,6 @@ ClientAuthDataRunnable::RunOnTargetThread()
   mozilla::pkix::ScopedCERTCertList certList;
   CERTCertListNode* node;
   ScopedCERTCertNicknames nicknames;
-  char* extracted = nullptr;
   int keyError = 0; // used for private key retrieval error
   SSM_UserCertChoice certChoice;
   int32_t NumberOfCerts = 0;
@@ -2213,9 +2212,6 @@ loser:
 done:
   int error = PR_GetError();
 
-  if (extracted) {
-    PR_Free(extracted);
-  }
   if (arena) {
     PORT_FreeArena(arena, false);
   }

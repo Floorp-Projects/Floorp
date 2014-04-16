@@ -69,7 +69,9 @@ CycleCollectionNoteEdgeNameImpl(nsCycleCollectionTraversalCallback& aCallback,
 void
 TraceCallbackFunc::Trace(JS::Heap<JS::Value>* p, const char* name, void* closure) const
 {
-  mCallback(JSVAL_TO_TRACEABLE(p->get()), name, closure);
+  if (p->isMarkable()) {
+    mCallback(p->toGCThing(), name, closure);
+  }
 }
 
 void
