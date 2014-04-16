@@ -56,10 +56,8 @@
 
 .devtools-autocomplete-popup {
   -moz-appearance: none !important;
-  border: 1px solid hsl(210,11%,10%);
   box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
   background-color: transparent;
-  background-image: linear-gradient(to bottom, hsla(209,18%,18%,0.9), hsl(210,11%,16%));
   border-radius: 3px;
   overflow-x: hidden;
 %if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
@@ -110,12 +108,24 @@
   text-align: right;
 }
 
-/* Rest of the light theme */
+/* Rest of the dark and light theme */
+
+.devtools-autocomplete-popup,
+.theme-dark .CodeMirror-hints,
+.theme-dark .CodeMirror-Tern-tooltip {
+  border: 1px solid hsl(210,11%,10%);
+  background-image: linear-gradient(to bottom, hsla(209,18%,18%,0.9), hsl(210,11%,16%));
+}
+
+.devtools-autocomplete-popup.light-theme,
+.light-theme .CodeMirror-hints,
+.light-theme .CodeMirror-Tern-tooltip {
+  border: 1px solid hsl(210,24%,90%);
+  background-image: linear-gradient(to bottom, hsla(209,18%,100%,0.9), hsl(210,24%,95%));
+}
 
 .devtools-autocomplete-popup.light-theme {
-  border: 1px solid hsl(210,24%,90%);
   box-shadow: 0 1px 0 hsla(209,29%,90%,.25) inset;
-  background-image: linear-gradient(to bottom, hsla(209,18%,100%,0.9), hsl(210,24%,95%));
 }
 
 .devtools-autocomplete-listbox.light-theme > richlistitem[selected],
