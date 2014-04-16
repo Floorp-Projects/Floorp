@@ -127,6 +127,21 @@ function add_tests_in_mode(useMozillaPKIX, certDB, otherTestCA) {
                 true);
   add_ocsp_test("ocsp-stapling-noncritical-extension.example.com", Cr.NS_OK, true);
 
+  add_ocsp_test("ocsp-stapling-delegated-included.example.com", Cr.NS_OK, true);
+  add_ocsp_test("ocsp-stapling-delegated-included-last.example.com", Cr.NS_OK, true);
+  add_ocsp_test("ocsp-stapling-delegated-missing.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_INVALID_SIGNING_CERT), true);
+  add_ocsp_test("ocsp-stapling-delegated-missing-multiple.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_INVALID_SIGNING_CERT), true);
+  add_ocsp_test("ocsp-stapling-delegated-no-extKeyUsage.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_INVALID_SIGNING_CERT), true);
+  add_ocsp_test("ocsp-stapling-delegated-from-intermediate.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_INVALID_SIGNING_CERT), true);
+  add_ocsp_test("ocsp-stapling-delegated-keyUsage-crlSigning.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_INVALID_SIGNING_CERT), true);
+  add_ocsp_test("ocsp-stapling-delegated-wrong-extKeyUsage.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_INVALID_SIGNING_CERT), true);
+
   // ocsp-stapling-expired.example.com and
   // ocsp-stapling-expired-fresh-ca.example.com are handled in
   // test_ocsp_stapling_expired.js
@@ -138,10 +153,10 @@ function check_ocsp_stapling_telemetry() {
                     .getHistogramById("SSL_OCSP_STAPLING")
                     .snapshot();
   do_check_eq(histogram.counts[0], 2 * 0); // histogram bucket 0 is unused
-  do_check_eq(histogram.counts[1], 2 + 3); // 2 or 3 connections with a good response (bug 987426)
+  do_check_eq(histogram.counts[1], 4 + 5); // 4 or 5 connections with a good response (bug 987426)
   do_check_eq(histogram.counts[2], 2 * 17); // 17 connections with no stapled resp.
   do_check_eq(histogram.counts[3], 2 * 0); // 0 connections with an expired response
-  do_check_eq(histogram.counts[4], 13 + 11); // 13 or 11 connections with bad responses (bug 979070, bug 987426)
+  do_check_eq(histogram.counts[4], 19 + 17); // 19 or 17 connections with bad responses (bug 979070, bug 987426)
   run_next_test();
 }
 
