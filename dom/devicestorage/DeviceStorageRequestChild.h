@@ -9,7 +9,7 @@
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
 
 class DeviceStorageFile;
-class DeviceStorageFileDescriptor;
+struct DeviceStorageFileDescriptor;
 
 namespace mozilla {
 namespace dom {

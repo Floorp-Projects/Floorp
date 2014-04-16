@@ -372,9 +372,9 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   if (!tmpSurface || tmpSurface->CairoStatus())
     return NS_ERROR_FAILURE;
 
-  nsRenderingContext context;
-  context.Init(aSource->PresContext()->DeviceContext(), tmpSurface);
-  gfxContext* gfx = context.ThebesContext();
+  nsRefPtr<nsRenderingContext> context(new nsRenderingContext());
+  context->Init(aSource->PresContext()->DeviceContext(), tmpSurface);
+  gfxContext* gfx = context->ThebesContext();
 
   // Fill with transparent black
   gfx->SetOperator(gfxContext::OPERATOR_CLEAR);
@@ -406,7 +406,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
       if (SVGFrame) {
         SVGFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
       }
-      nsSVGUtils::PaintFrameWithEffects(&context, nullptr, kid);
+      nsSVGUtils::PaintFrameWithEffects(context, nullptr, kid);
     }
     patternFrame->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
   }

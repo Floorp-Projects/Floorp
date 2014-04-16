@@ -19,8 +19,6 @@
 #include "DeviceStorageFileDescriptor.h"
 #include "CameraControlListener.h"
 
-class DeviceStorageFileDescriptor;
-
 namespace mozilla {
 
 namespace layers {

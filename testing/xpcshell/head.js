@@ -19,6 +19,8 @@ var _cleanupFunctions = [];
 var _pendingTimers = [];
 var _profileInitialized = false;
 
+let _Promise = Components.utils.import("resource://gre/modules/Promise.jsm", this).Promise;
+
 let _log = function (action, params) {
   if (typeof _XPCSHELL_PROCESS != "undefined") {
     params.process = _XPCSHELL_PROCESS;
@@ -180,7 +182,7 @@ function _do_main() {
 function _do_quit() {
   _log("test_info",
        {_message: "TEST-INFO | (xpcshell/head.js) | exiting test\n"});
-
+  _Promise.Debugging.flushUncaughtErrors();
   _quit = true;
 }
 
@@ -347,6 +349,15 @@ function _execute_test() {
   // Override idle service by default.
   // Call do_get_idle() to restore the factory and get the service.
   _fakeIdleService.activate();
+
+  _Promise.Debugging.clearUncaughtErrorObservers();
+  _Promise.Debugging.addUncaughtErrorObserver(function observer({message, date, fileName, stack, lineNumber}) {
+    let text = "Once bug 976205 has landed, THIS ERROR WILL CAUSE A TEST FAILURE.\n" +
+        " A promise chain failed to handle a rejection: " +
+        message + " - rejection date: " + date;
+    _log_message_with_stack("test_known_fail",
+                            text, stack, fileName);
+  });
 
   // _HEAD_FILES is dynamically defined by <runxpcshelltests.py>.
   _load_files(_HEAD_FILES);
@@ -1428,10 +1439,12 @@ function run_next_test()
                     "run_next_test() should not be called from inside add_task() " +
                     "under any circumstances!");
   }
-
+ 
   function _run_next_test()
   {
     if (_gTestIndex < _gTests.length) {
+      // Flush uncaught errors as early and often as possible.
+      _Promise.Debugging.flushUncaughtErrors();
       let _isTask;
       [_isTask, _gRunningTest] = _gTests[_gTestIndex++];
       print("TEST-INFO | " + _TEST_FILE + " | Starting " + _gRunningTest.name);
