@@ -11168,7 +11168,9 @@ class CGExampleClass(CGBindingImplClass):
     Codegen for the actual example class implementation for this descriptor
     """
     def __init__(self, descriptor):
-        CGBindingImplClass.__init__(self, descriptor, CGExampleMethod, CGExampleGetter, CGExampleSetter)
+        CGBindingImplClass.__init__(self, descriptor,
+                                    CGExampleMethod, CGExampleGetter, CGExampleSetter,
+                                    wantGetParent=descriptor.wrapperCache)
 
         self.refcounted = descriptor.nativeOwnership == "refcounted"
 
