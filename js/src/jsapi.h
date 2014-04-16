@@ -3140,6 +3140,29 @@ JS_AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes);
 extern JS_PUBLIC_API(void *)
 JS_ReallocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void *oldContents, uint32_t oldNbytes);
 
+/*
+ * Create a new mapped array buffer with the given memory mapped contents.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_NewMappedArrayBufferWithContents(JSContext *cx, size_t nbytes, void *contents);
+
+/*
+ * Create memory mapped array buffer contents.
+ * Caller must take care of closing fd after calling this function.
+ */
+extern JS_PUBLIC_API(void *)
+JS_CreateMappedArrayBufferContents(int fd, size_t offset, size_t length);
+
+/*
+ * Release the allocated resource of mapped array buffer contents before the
+ * object is created.
+ * If a new object has been created by JS_NewMappedArrayBufferWithContents()
+ * with this content, then JS_NeuterArrayBuffer() should be used instead to
+ * release the resource used by the object.
+ */
+extern JS_PUBLIC_API(void)
+JS_ReleaseMappedArrayBufferContents(void *contents, size_t length);
+
 extern JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JS::HandleObject obj);
 

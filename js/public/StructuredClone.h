@@ -40,10 +40,13 @@ enum TransferableOwnership {
     // Data is a SharedArrayBufferObject's buffer
     SCTAG_TMO_SHARED_BUFFER = 3,
 
+    // Data is a memory mapped pointer
+    SCTAG_TMO_MAPPED_DATA = 4,
+
     // Data is embedding-specific. The engine can free it by calling the
     // freeTransfer op. The embedding can also use SCTAG_TMO_USER_MIN and
     // greater, up to 32 bits, to distinguish specific ownership variants.
-    SCTAG_TMO_CUSTOM = 4,
+    SCTAG_TMO_CUSTOM = 5,
 
     SCTAG_TMO_USER_MIN
 };

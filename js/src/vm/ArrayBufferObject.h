@@ -60,6 +60,8 @@ class ArrayBufferObject : public JSObject
 
     static const uint8_t RESERVED_SLOTS = 4;
 
+    static const size_t ARRAY_BUFFER_ALIGNMENT = 8;
+
     static const Class class_;
 
     static const Class protoClass;
@@ -75,7 +77,7 @@ class ArrayBufferObject : public JSObject
     static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
 
     static ArrayBufferObject *create(JSContext *cx, uint32_t nbytes, void *contents = nullptr,
-                                     NewObjectKind newKind = GenericObject);
+                                     NewObjectKind newKind = GenericObject, bool mapped = false);
 
     static JSObject *createSlice(JSContext *cx, Handle<ArrayBufferObject*> arrayBuffer,
                                  uint32_t begin, uint32_t end);
@@ -150,12 +152,15 @@ class ArrayBufferObject : public JSObject
 
     bool isAsmJSArrayBuffer() const { return flags() & ASMJS_BUFFER; }
     bool isSharedArrayBuffer() const { return flags() & SHARED_BUFFER; }
+    bool isMappedArrayBuffer() const { return flags() & MAPPED_BUFFER; }
     bool isNeutered() const { return flags() & NEUTERED_BUFFER; }
 
     static bool prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer);
     static bool canNeuterAsmJSArrayBuffer(JSContext *cx, ArrayBufferObject &buffer);
 
     static void finalize(FreeOp *fop, JSObject *obj);
+
+    static void *createMappedArrayBuffer(int fd, size_t offset, size_t length);
 
     static size_t flagsOffset() {
         return getFixedSlotOffset(FLAGS_SLOT);
@@ -188,7 +193,8 @@ class ArrayBufferObject : public JSObject
 
         ASMJS_BUFFER       =  0x4,
         SHARED_BUFFER      =  0x8,
-        NEUTERED_BUFFER    = 0x10
+        MAPPED_BUFFER      = 0x10,
+        NEUTERED_BUFFER    = 0x20
     };
 
     uint32_t flags() const;
@@ -206,6 +212,7 @@ class ArrayBufferObject : public JSObject
 
     void setIsAsmJSArrayBuffer() { setFlags(flags() | ASMJS_BUFFER); }
     void setIsSharedArrayBuffer() { setFlags(flags() | SHARED_BUFFER); }
+    void setIsMappedArrayBuffer() { setFlags(flags() | MAPPED_BUFFER); }
     void setIsNeutered() { setFlags(flags() | NEUTERED_BUFFER); }
 
     void initialize(size_t byteLength, void *data, OwnsState ownsState) {
@@ -216,6 +223,7 @@ class ArrayBufferObject : public JSObject
     }
 
     void releaseAsmJSArray(FreeOp *fop);
+    void releaseMappedArray();
 };
 
 /*
