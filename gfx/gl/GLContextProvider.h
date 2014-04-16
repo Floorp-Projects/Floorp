@@ -7,13 +7,12 @@
 #define GLCONTEXTPROVIDER_H_
 
 #include "GLContextTypes.h"
-#include "gfxTypes.h"
-#include "gfxPoint.h"
 #include "nsAutoPtr.h"
 #include "SurfaceTypes.h"
 
+#include "nsSize.h" // for gfxIntSize (needed by GLContextProviderImpl.h below)
+
 class nsIWidget;
-class gfxASurface;
 
 namespace mozilla {
 namespace gl {

@@ -322,6 +322,8 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
     {
       const SurfacePattern& pattern = static_cast<const SurfacePattern&>(aPattern);
       cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(pattern.mSurface);
+      if (!surf)
+        return nullptr;
 
       pat = cairo_pattern_create_for_surface(surf);
 
@@ -331,7 +333,6 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
       cairo_pattern_set_extend(pat, GfxExtendToCairoExtend(pattern.mExtendMode));
 
       cairo_surface_destroy(surf);
-
       break;
     }
     case PatternType::LINEAR_GRADIENT:
@@ -578,7 +579,7 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
   if (aSurface->GetType() != SurfaceType::CAIRO) {
     return;
   }
-  
+
   AutoClearDeviceOffset clear(aSurface);
 
   Float width = Float(aSurface->GetSize().width);
@@ -650,10 +651,13 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
   if (!PatternIsCompatible(aPattern)) {
     return;
   }
-  
+
   AutoClearDeviceOffset clear(aPattern);
 
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha);
+  if (!pat)
+    return;
+
   cairo_set_source(mContext, pat);
 
   cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
@@ -883,6 +887,9 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
   cairo_set_scaled_font(mContext, scaledFont->GetCairoScaledFont());
 
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha);
+  if (!pat)
+    return;
+
   cairo_set_source(mContext, pat);
   cairo_pattern_destroy(pat);
 
@@ -911,9 +918,16 @@ DrawTargetCairo::Mask(const Pattern &aSource,
   cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
   cairo_pattern_t* source = GfxPatternToCairoPattern(aSource, aOptions.mAlpha);
-  cairo_set_source(mContext, source);
+  if (!source)
+    return;
 
   cairo_pattern_t* mask = GfxPatternToCairoPattern(aMask, aOptions.mAlpha);
+  if (!mask) {
+    cairo_pattern_destroy(source);
+    return;
+  }
+
+  cairo_set_source(mContext, source);
   cairo_mask(mContext, mask);
 
   cairo_pattern_destroy(mask);
@@ -937,6 +951,9 @@ DrawTargetCairo::MaskSurface(const Pattern &aSource,
   cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aSource, aOptions.mAlpha);
+  if (!pat)
+    return;
+
   cairo_set_source(mContext, pat);
 
   if (NeedIntermediateSurface(aSource, aOptions)) {
@@ -1011,7 +1028,7 @@ DrawTargetCairo::PopClip()
 
   cairo_set_matrix(mContext, &mat);
 
-  MOZ_ASSERT(GetTransform() == Matrix(mat.xx, mat.yx, mat.xy, mat.yy, mat.x0, mat.y0),
+  MOZ_ASSERT(cairo_status(mContext) || GetTransform() == Matrix(mat.xx, mat.yx, mat.xy, mat.yy, mat.x0, mat.y0),
              "Transforms are out of sync");
 }
 

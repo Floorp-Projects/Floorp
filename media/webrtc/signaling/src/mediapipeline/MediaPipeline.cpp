@@ -38,7 +38,6 @@
 #include "transportlayerdtls.h"
 #include "transportlayerice.h"
 #include "runnable_utils.h"
-#include "gfxImageSurface.h"
 #include "libyuv/convert.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Types.h"

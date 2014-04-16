@@ -217,6 +217,12 @@ nsDOMAttributeMap::NamedGetter(const nsAString& aAttrName, bool& aFound)
   return GetAttribute(ni, false);
 }
 
+bool
+nsDOMAttributeMap::NameIsEnumerable(const nsAString& aName)
+{
+  return true;
+}
+
 Attr*
 nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName)
 {

@@ -100,7 +100,6 @@ public:
 #include "gfxUtils.h"
 #include "gfxFailure.h"
 #include "gfxASurface.h"
-#include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "GLContextProvider.h"
 #include "GLLibraryEGL.h"
@@ -234,6 +233,7 @@ GLContextEGL::GLContextEGL(
     , mIsDoubleBuffered(false)
     , mCanBindToTexture(false)
     , mShareWithEGLImage(false)
+    , mOwnsContext(true)
 {
     // any EGL contexts will always be GLESv2
     SetProfileVersion(ContextProfile::OpenGLES, 200);
@@ -257,6 +257,11 @@ GLContextEGL::GLContextEGL(
 GLContextEGL::~GLContextEGL()
 {
     MarkDestroyed();
+
+    // Wrapped context should not destroy eglContext/Surface
+    if (!mOwnsContext) {
+        return;
+    }
 
 #ifdef DEBUG
     printf_stderr("Destroying context %p surface %p on display %p\n", mContext, mSurface, EGL_DISPLAY());
@@ -410,6 +415,9 @@ GLContextEGL::IsCurrent() {
 
 bool
 GLContextEGL::RenewSurface() {
+    if (!mOwnsContext) {
+        return false;
+    }
 #ifndef MOZ_WIDGET_ANDROID
     MOZ_CRASH("unimplemented");
     // to support this on non-Android platforms, need to keep track of the nsIWidget that
@@ -430,7 +438,9 @@ GLContextEGL::RenewSurface() {
 
 void
 GLContextEGL::ReleaseSurface() {
-    DestroySurface(mSurface);
+    if (mOwnsContext) {
+        DestroySurface(mSurface);
+    }
     mSurface = EGL_NO_SURFACE;
 }
 
@@ -680,6 +690,31 @@ CreateConfig(EGLConfig* aConfig)
     } else {
         return true;
     }
+}
+
+already_AddRefed<GLContext>
+GLContextProviderEGL::CreateWrappingExisting(void* aContext, void* aSurface)
+{
+    if (!sEGLLibrary.EnsureInitialized()) {
+        MOZ_CRASH("Failed to load EGL library!\n");
+        return nullptr;
+    }
+
+    if (aContext && aSurface) {
+        SurfaceCaps caps = SurfaceCaps::Any();
+        EGLConfig config = EGL_NO_CONFIG;
+        nsRefPtr<GLContextEGL> glContext =
+            new GLContextEGL(caps,
+                             nullptr, false,
+                             config, (EGLSurface)aSurface, (EGLContext)aContext);
+
+        glContext->SetIsDoubleBuffered(true);
+        glContext->mOwnsContext = false;
+
+        return glContext.forget();
+    }
+
+    return nullptr;
 }
 
 already_AddRefed<GLContext>

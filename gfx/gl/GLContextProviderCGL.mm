@@ -9,9 +9,6 @@
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include <OpenGL/gl.h>
-#include "gfxASurface.h"
-#include "gfxImageSurface.h"
-#include "gfxQuartzSurface.h"
 #include "gfxPrefs.h"
 #include "gfxFailure.h"
 #include "prenv.h"
@@ -190,12 +187,14 @@ GetGlobalContextCGL()
 }
 
 already_AddRefed<GLContext>
+GLContextProviderCGL::CreateWrappingExisting(void*, void*)
+{
+    return nullptr;
+}
+
+already_AddRefed<GLContext>
 GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget)
 {
-    if (!sCGLLibrary.EnsureInitialized()) {
-        return nullptr;
-    }
-
     GLContextCGL *shareContext = GetGlobalContextCGL();
 
     NSOpenGLContext *context = [[NSOpenGLContext alloc]

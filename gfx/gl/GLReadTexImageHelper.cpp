@@ -9,6 +9,7 @@
 #include "OGLShaderProgram.h"
 #include "gfxTypes.h"
 #include "gfxContext.h"
+#include "gfxImageSurface.h"
 #include "ScopedGLHelpers.h"
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"

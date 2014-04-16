@@ -11,7 +11,6 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/GrallocTextureClient.h"
 #include "gfx2DGlue.h"
-#include "gfxImageSurface.h"
 #include "YCbCrUtils.h"                 // for YCbCr conversions
 
 #include <ColorConverter.h>

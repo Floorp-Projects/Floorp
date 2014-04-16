@@ -10,26 +10,6 @@
 %}
 interface nsIVariant;
 
-/**
- * @see http://dvcs.w3.org/hg/webevents/raw-file/tip/touchevents.html
- */
-
-[scriptable, builtinclass, uuid(2311671f-ff7e-43d2-adfb-d9e07006955e)]
-interface nsIDOMTouch : nsISupports {
-  readonly attribute long              identifier;
-  readonly attribute nsIDOMEventTarget target;
-  readonly attribute long              pageX;
-  readonly attribute long              pageY;
-  readonly attribute long              screenX;
-  readonly attribute long              screenY;
-  readonly attribute long              clientX;
-  readonly attribute long              clientY;
-  readonly attribute long              radiusX;
-  readonly attribute long              radiusY;
-  readonly attribute float             rotationAngle;
-  readonly attribute float             force;
-};
-
 [scriptable, uuid(6d5484f7-92ac-45f8-9388-39b5bad055ce)]
 interface nsITouchEventReceiver : nsISupports {
   [implicit_jscontext] attribute jsval           ontouchstart;
