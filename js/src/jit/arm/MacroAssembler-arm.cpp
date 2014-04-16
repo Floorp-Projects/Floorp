@@ -2041,8 +2041,7 @@ MacroAssemblerARMCompat::movePtr(const AsmJSImmPtr &imm, const Register &dest)
     else
         rs = L_LDR;
 
-    AsmJSAbsoluteLink link(nextOffset().getOffset(), imm.kind());
-    enoughMemory_ &= asmJSAbsoluteLinks_.append(link);
+    enoughMemory_ &= append(AsmJSAbsoluteLink(nextOffset().getOffset(), imm.kind()));
     ma_movPatchable(Imm32(-1), dest, Always, rs);
 }
 void
