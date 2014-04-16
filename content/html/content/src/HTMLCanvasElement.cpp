@@ -8,7 +8,6 @@
 #include "ImageEncoder.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "gfxImageSurface.h"
 #include "Layers.h"
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"

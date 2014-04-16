@@ -6,6 +6,9 @@
 #include <initguid.h>
 #include "DrawTargetD2D.h"
 #include "SourceSurfaceD2D.h"
+#ifdef USE_D2D1_1
+#include "SourceSurfaceD2D1.h"
+#endif
 #include "SourceSurfaceD2DTarget.h"
 #include "ShadersD2D.h"
 #include "PathD2D.h"
@@ -317,6 +320,24 @@ DrawTargetD2D::GetBitmapForSurface(SourceSurface *aSurface,
 
   return bitmap;
 }
+
+#ifdef USE_D2D1_1
+TemporaryRef<ID2D1Image>
+DrawTargetD2D::GetImageForSurface(SourceSurface *aSurface)
+{
+  RefPtr<ID2D1Image> image;
+
+  if (aSurface->GetType() == SurfaceType::D2D1_1_IMAGE) {
+    image = static_cast<SourceSurfaceD2D1*>(aSurface)->GetImage();
+    static_cast<SourceSurfaceD2D1*>(aSurface)->EnsureIndependent();
+  } else {
+    Rect r(Point(), Size(aSurface->GetSize()));
+    image = GetBitmapForSurface(aSurface, r);
+  }
+
+  return image;
+}
+#endif
 
 void
 DrawTargetD2D::DrawSurface(SourceSurface *aSurface,

@@ -42,7 +42,8 @@ public:
   void NamedSetter(const nsAString& aProp, const nsAString& aValue,
                    mozilla::ErrorResult& rv);
   void NamedDeleter(const nsAString& aProp, bool &found);
-  void GetSupportedNames(nsTArray<nsString>& aNames);
+  bool NameIsEnumerable(const nsAString& aName);
+  void GetSupportedNames(unsigned, nsTArray<nsString>& aNames);
 
   js::ExpandoAndGeneration mExpandoAndGeneration;
 

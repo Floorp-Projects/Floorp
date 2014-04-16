@@ -20,7 +20,6 @@
 namespace mozilla {
 namespace layers {
 
-class Matrix4x4;
 class Compositor;
 
 CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)

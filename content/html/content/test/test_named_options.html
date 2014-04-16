@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772869
 var opt = $("s").options;
 opt.loopy = "something"
 var names = Object.getOwnPropertyNames(opt);
-is(names.length, 9, "Should have eight entries");
+is(names.length, 9, "Should have nine entries");
 is(names[0], "0", "Entry 1")
 is(names[1], "1", "Entry 2")
 is(names[2], "2", "Entry 3")
@@ -42,9 +42,19 @@ var names2 = [];
 for (var name in opt) {
   names2.push(name);
 }
-for (var i = 0; i < names.length; ++i) {
-  is(names2[i], names[i], "Correct entry at " + i);
-}
+is(names2.length, 12, "Should have twelve enumerated names");
+is(names2[0], "0", "Enum entry 1")
+is(names2[1], "1", "Enum entry 2")
+is(names2[2], "2", "Enum entry 3")
+is(names2[3], "3", "Enum entry 4")
+is(names2[4], "loopy", "Enum entry 5")
+is(names2[5], "add", "Enum entrry 6")
+is(names2[6], "remove", "Enum entry 7")
+is(names2[7], "length", "Enum entry 8")
+is(names2[8], "selectedIndex", "Enum entry 9")
+is(names2[9], "item", "Enum entry 10")
+is(names2[10], "namedItem", "Enum entry 11")
+is(names2[11], "@@iterator", "Enum entry 12")
 
 </script>
 </pre>

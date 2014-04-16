@@ -53,7 +53,6 @@
 #include "GeckoProfiler.h"
 #include "TextRenderer.h"               // for TextRenderer
 
-class gfxASurface;
 class gfxContext;
 struct nsIntSize;
 

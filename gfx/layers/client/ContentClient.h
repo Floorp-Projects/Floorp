@@ -28,7 +28,6 @@
 #include "nsTArray.h"                   // for nsTArray
 
 class gfxContext;
-class gfxASurface;
 
 namespace mozilla {
 namespace gfx {

@@ -36,8 +36,6 @@
 #include "pratom.h"                     // For PR_ATOMIC_INCREMENT/DECREMENT
 #include "gfxPrefs.h"
 
-class gfxImageSurface;
-
 namespace mozilla {
 namespace layers {
 

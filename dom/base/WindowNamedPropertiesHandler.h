@@ -37,8 +37,8 @@ public:
                  JS::Handle<jsid> aId,
                  JS::MutableHandle<JSPropertyDescriptor> aDesc) MOZ_OVERRIDE;
   virtual bool
-  getOwnPropertyNames(JSContext* aCx, JS::Handle<JSObject*> aProxy,
-                      JS::AutoIdVector& aProps) MOZ_OVERRIDE;
+  ownPropNames(JSContext* aCx, JS::Handle<JSObject*> aProxy, unsigned flags,
+               JS::AutoIdVector& aProps) MOZ_OVERRIDE;
   virtual bool
   delete_(JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
           bool* aBp) MOZ_OVERRIDE;

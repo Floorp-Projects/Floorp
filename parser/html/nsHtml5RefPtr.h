@@ -6,7 +6,7 @@
 #ifndef nsHtml5RefPtr_h
 #define nsHtml5RefPtr_h
 
-#include "nsIThread.h"
+#include "nsThreadUtils.h"
 
 template <class T>
 class nsHtml5RefPtrReleaser : public nsRunnable

@@ -9,7 +9,6 @@
 #include "ImageTypes.h"                 // for ImageFormat, etc
 #include "cairo.h"                      // for cairo_user_data_key_t
 #include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat
 #include "gfxUtils.h"                   // for gfxUtils
 #include "mozilla/mozalloc.h"           // for operator delete[], etc
