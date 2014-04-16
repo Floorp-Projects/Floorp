@@ -206,8 +206,7 @@ class TypedArrayCreator
 
     JSObject* Create(JSContext* aCx) const
     {
-      return TypedArrayType::Create(aCx, JS::NullPtr(), mArray.Length(),
-                                    mArray.Elements());
+      return TypedArrayType::Create(aCx, mArray.Length(), mArray.Elements());
     }
 
   private:
