@@ -408,6 +408,10 @@ struct JSContext : public js::ExclusiveContext,
     JSRuntime *runtime() const { return runtime_; }
     js::PerThreadData &mainThread() const { return runtime()->mainThread; }
 
+    static size_t offsetOfRuntime() {
+        return offsetof(JSContext, runtime_);
+    }
+
     friend class js::ExclusiveContext;
     friend class JS::AutoSaveExceptionState;
 
