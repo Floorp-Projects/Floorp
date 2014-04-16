@@ -767,7 +767,7 @@ FrameIter::operator++()
 
             data_.contextOption_ = prevContextOption;
             data_.savedOption_ = prevSavedOption;
-            data_.cx_ = data_.activations_.activation()->cx();
+            data_.cx_ = data_.activations_->cx();
             break;
         }
         popInterpreterFrame();
@@ -820,7 +820,7 @@ FrameIter::compartment() const
       case INTERP:
       case JIT:
       case ASMJS:
-        return data_.activations_.activation()->compartment();
+        return data_.activations_->compartment();
     }
     MOZ_ASSUME_UNREACHABLE("Unexpected state");
 }
@@ -940,7 +940,7 @@ FrameIter::functionDisplayAtom() const
         return callee()->displayAtom();
       case ASMJS: {
 #ifdef JS_ION
-        AsmJSActivation &act = *data_.activations_.activation()->asAsmJS();
+        AsmJSActivation &act = *data_.activations_->asAsmJS();
         return act.module().exportedFunction(act.exportIndex()).name();
 #else
         break;
@@ -962,7 +962,7 @@ FrameIter::scriptSource() const
         return script()->scriptSource();
       case ASMJS:
 #ifdef JS_ION
-        return data_.activations_.activation()->asAsmJS()->module().scriptSource();
+        return data_.activations_->asAsmJS()->module().scriptSource();
 #else
         break;
 #endif
@@ -982,7 +982,7 @@ FrameIter::scriptFilename() const
         return script()->filename();
       case ASMJS:
 #ifdef JS_ION
-        return data_.activations_.activation()->asAsmJS()->module().scriptSource()->filename();
+        return data_.activations_->asAsmJS()->module().scriptSource()->filename();
 #else
         break;
 #endif
@@ -1002,7 +1002,7 @@ FrameIter::computeLine(uint32_t *column) const
         return PCToLineNumber(script(), pc(), column);
       case ASMJS: {
 #ifdef JS_ION
-        AsmJSActivation &act = *data_.activations_.activation()->asAsmJS();
+        AsmJSActivation &act = *data_.activations_->asAsmJS();
         AsmJSModule::ExportedFunction &func = act.module().exportedFunction(act.exportIndex());
         if (column)
             *column = func.column();
@@ -1027,7 +1027,7 @@ FrameIter::originPrincipals() const
         return script()->originPrincipals();
       case ASMJS: {
 #ifdef JS_ION
-        return data_.activations_.activation()->asAsmJS()->module().scriptSource()->originPrincipals();
+        return data_.activations_->asAsmJS()->module().scriptSource()->originPrincipals();
 #else
         break;
 #endif
@@ -1128,7 +1128,7 @@ FrameIter::updatePcQuadratic()
         break;
       case INTERP: {
         InterpreterFrame *frame = interpFrame();
-        InterpreterActivation *activation = data_.activations_.activation()->asInterpreter();
+        InterpreterActivation *activation = data_.activations_->asInterpreter();
 
         // Look for the current frame.
         data_.interpFrames_ = InterpreterFrameIterator(activation);
@@ -1144,7 +1144,7 @@ FrameIter::updatePcQuadratic()
 #ifdef JS_ION
         if (data_.jitFrames_.isBaselineJS()) {
             jit::BaselineFrame *frame = data_.jitFrames_.baselineFrame();
-            jit::JitActivation *activation = data_.activations_.activation()->asJit();
+            jit::JitActivation *activation = data_.activations_->asJit();
 
             // ActivationIterator::ionTop_ may be invalid, so create a new
             // activation iterator.
