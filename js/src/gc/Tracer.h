@@ -9,13 +9,12 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jsutil.h"
-
 #include "js/GCAPI.h"
 #include "js/SliceBudget.h"
 #include "js/TracingAPI.h"
 
 namespace js {
+class GCMarker;
 class ObjectImpl;
 namespace gc {
 class ArenaHeader;
@@ -42,16 +41,19 @@ static const size_t INCREMENTAL_MARK_STACK_BASE_CAPACITY = 32768;
  * GCMarker::delayMarkingChildren adds arenas to the stack as necessary while
  * markDelayedChildren pops the arenas from the stack until it empties.
  */
-template<class T>
-struct MarkStack {
-    T *stack_;
-    T *tos_;
-    T *end_;
+class MarkStack
+{
+    friend class GCMarker;
+
+    uintptr_t *stack_;
+    uintptr_t *tos_;
+    uintptr_t *end_;
 
     // The capacity we start with and reset() to.
     size_t baseCapacity_;
     size_t maxCapacity_;
 
+  public:
     MarkStack(size_t maxCapacity)
       : stack_(nullptr),
         tos_(nullptr),
@@ -68,51 +70,19 @@ struct MarkStack {
 
     ptrdiff_t position() const { return tos_ - stack_; }
 
-    void setStack(T *stack, size_t tosIndex, size_t capacity) {
+    void setStack(uintptr_t *stack, size_t tosIndex, size_t capacity) {
         stack_ = stack;
         tos_ = stack + tosIndex;
         end_ = stack + capacity;
     }
 
-    void setBaseCapacity(JSGCMode mode) {
-        switch (mode) {
-          case JSGC_MODE_GLOBAL:
-          case JSGC_MODE_COMPARTMENT:
-            baseCapacity_ = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
-            break;
-          case JSGC_MODE_INCREMENTAL:
-            baseCapacity_ = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
-            break;
-          default:
-            MOZ_ASSUME_UNREACHABLE("bad gc mode");
-        }
+    bool init(JSGCMode gcMode);
 
-        if (baseCapacity_ > maxCapacity_)
-            baseCapacity_ = maxCapacity_;
-    }
+    void setBaseCapacity(JSGCMode mode);
+    size_t maxCapacity() const { return maxCapacity_; }
+    void setMaxCapacity(size_t maxCapacity);
 
-    bool init(JSGCMode gcMode) {
-        setBaseCapacity(gcMode);
-
-        JS_ASSERT(!stack_);
-        T *newStack = js_pod_malloc<T>(baseCapacity_);
-        if (!newStack)
-            return false;
-
-        setStack(newStack, 0, baseCapacity_);
-        return true;
-    }
-
-    void setMaxCapacity(size_t maxCapacity) {
-        JS_ASSERT(isEmpty());
-        maxCapacity_ = maxCapacity;
-        if (baseCapacity_ > maxCapacity_)
-            baseCapacity_ = maxCapacity_;
-
-        reset();
-    }
-
-    bool push(T item) {
+    bool push(uintptr_t item) {
         if (tos_ == end_) {
             if (!enlarge(1))
                 return false;
@@ -122,8 +92,8 @@ struct MarkStack {
         return true;
     }
 
-    bool push(T item1, T item2, T item3) {
-        T *nextTos = tos_ + 3;
+    bool push(uintptr_t item1, uintptr_t item2, uintptr_t item3) {
+        uintptr_t *nextTos = tos_ + 3;
         if (nextTos > end_) {
             if (!enlarge(3))
                 return false;
@@ -141,85 +111,29 @@ struct MarkStack {
         return tos_ == stack_;
     }
 
-    T pop() {
+    uintptr_t pop() {
         JS_ASSERT(!isEmpty());
         return *--tos_;
     }
 
-    void reset() {
-        if (capacity() == baseCapacity_) {
-            // No size change; keep the current stack.
-            setStack(stack_, 0, baseCapacity_);
-            return;
-        }
-
-        T *newStack = (T *)js_realloc(stack_, sizeof(T) * baseCapacity_);
-        if (!newStack) {
-            // If the realloc fails, just keep using the existing stack; it's
-            // not ideal but better than failing.
-            newStack = stack_;
-            baseCapacity_ = capacity();
-        }
-        setStack(newStack, 0, baseCapacity_);
-    }
+    void reset();
 
     /* Grow the stack, ensuring there is space for at least count elements. */
-    bool enlarge(unsigned count) {
-        size_t newCapacity = Min(maxCapacity_, capacity() * 2);
-        if (newCapacity < capacity() + count)
-            return false;
+    bool enlarge(unsigned count);
 
-        size_t tosIndex = position();
+    void setGCMode(JSGCMode gcMode);
 
-        T *newStack = (T *)js_realloc(stack_, sizeof(T) * newCapacity);
-        if (!newStack)
-            return false;
-
-        setStack(newStack, tosIndex, newCapacity);
-        return true;
-    }
-
-    void setGCMode(JSGCMode gcMode) {
-        // The mark stack won't be resized until the next call to reset(), but
-        // that will happen at the end of the next GC.
-        setBaseCapacity(gcMode);
-    }
-
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return mallocSizeOf(stack_);
-    }
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
-struct GCMarker : public JSTracer {
-  private:
-    /*
-     * We use a common mark stack to mark GC things of different types and use
-     * the explicit tags to distinguish them when it cannot be deduced from
-     * the context of push or pop operation.
-     */
-    enum StackTag {
-        ValueArrayTag,
-        ObjectTag,
-        TypeTag,
-        XmlTag,
-        SavedValueArrayTag,
-        JitCodeTag,
-        LastTag = JitCodeTag
-    };
-
-    static const uintptr_t StackTagMask = 7;
-
-    static void staticAsserts() {
-        JS_STATIC_ASSERT(StackTagMask >= uintptr_t(LastTag));
-        JS_STATIC_ASSERT(StackTagMask <= gc::CellMask);
-    }
-
+class GCMarker : public JSTracer
+{
   public:
     explicit GCMarker(JSRuntime *rt);
     bool init(JSGCMode gcMode);
 
     void setMaxCapacity(size_t maxCap) { stack.setMaxCapacity(maxCap); }
-    size_t maxCapacity() const { return stack.maxCapacity_; }
+    size_t maxCapacity() const { return stack.maxCapacity(); }
 
     void start();
     void stop();
@@ -295,7 +209,8 @@ struct GCMarker : public JSTracer {
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-    MarkStack<uintptr_t> stack;
+    /* This is public exclusively for ScanRope. */
+    MarkStack stack;
 
   private:
 #ifdef DEBUG
@@ -303,6 +218,25 @@ struct GCMarker : public JSTracer {
 #else
     void checkZone(void *p) {}
 #endif
+
+    /*
+     * We use a common mark stack to mark GC things of different types and use
+     * the explicit tags to distinguish them when it cannot be deduced from
+     * the context of push or pop operation.
+     */
+    enum StackTag {
+        ValueArrayTag,
+        ObjectTag,
+        TypeTag,
+        XmlTag,
+        SavedValueArrayTag,
+        JitCodeTag,
+        LastTag = JitCodeTag
+    };
+
+    static const uintptr_t StackTagMask = 7;
+    static_assert(StackTagMask >= uintptr_t(LastTag), "The tag mask must subsume the tags.");
+    static_assert(StackTagMask <= gc::CellMask, "The tag mask must be embeddable in a Cell*.");
 
     void pushTaggedPtr(StackTag tag, void *ptr) {
         checkZone(ptr);
@@ -342,21 +276,21 @@ struct GCMarker : public JSTracer {
     /* The color is only applied to objects and functions. */
     uint32_t color;
 
-    mozilla::DebugOnly<bool> started;
-
     /* Pointer to the top of the stack of arenas we are delaying marking on. */
     js::gc::ArenaHeader *unmarkedArenaStackTop;
+
     /* Count of arenas that are currently in the stack. */
     mozilla::DebugOnly<size_t> markLaterArenas;
 
-    enum GrayBufferState
-    {
+    enum GrayBufferState {
         GRAY_BUFFER_UNUSED,
         GRAY_BUFFER_OK,
         GRAY_BUFFER_FAILED
     };
-
     GrayBufferState grayBufferState;
+
+    /* Assert that start and stop are called with correct ordering. */
+    mozilla::DebugOnly<bool> started;
 };
 
 void
