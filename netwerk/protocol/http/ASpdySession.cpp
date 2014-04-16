@@ -28,6 +28,14 @@
 namespace mozilla {
 namespace net {
 
+ASpdySession::ASpdySession()
+{
+}
+
+ASpdySession::~ASpdySession()
+{
+}
+
 ASpdySession *
 ASpdySession::NewSpdySession(uint32_t version,
                              nsISocketTransport *aTransport)
@@ -185,7 +193,6 @@ SpdyPushCache::RemovePushedStreamHttp2(nsCString key)
     mHashHttp2.Remove(key);
   return rv;
 }
-
 } // namespace mozilla::net
 } // namespace mozilla
 

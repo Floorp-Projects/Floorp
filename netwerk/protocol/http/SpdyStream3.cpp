@@ -26,6 +26,7 @@
 #include "SpdyStream3.h"
 #include "PSpdyPush.h"
 #include "SpdyZlibReporter.h"
+#include "TunnelUtils.h"
 
 #include <algorithm>
 
@@ -70,6 +71,7 @@ SpdyStream3::SpdyStream3(nsAHttpTransaction *httpTransaction,
   , mTotalSent(0)
   , mTotalRead(0)
   , mPushSource(nullptr)
+  , mIsTunnel(false)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -84,6 +86,7 @@ SpdyStream3::SpdyStream3(nsAHttpTransaction *httpTransaction,
 
 SpdyStream3::~SpdyStream3()
 {
+  ClearTransactionsBlockedOnTunnel();
   mStreamID = SpdySession3::kDeadStreamID;
 }
 
@@ -114,7 +117,8 @@ SpdyStream3::ReadSegments(nsAHttpSegmentReader *reader,
     mSegmentReader = reader;
     rv = mTransaction->ReadSegments(this, count, countRead);
     mSegmentReader = nullptr;
-
+    LOG3(("SpdyStream3::ReadSegments %p trans readsegments rv %x read=%d\n",
+          this, rv, *countRead));
     // Check to see if the transaction's request could be written out now.
     // If not, mark the stream for callback when writing can proceed.
     if (NS_SUCCEEDED(rv) &&
@@ -139,7 +143,8 @@ SpdyStream3::ReadSegments(nsAHttpSegmentReader *reader,
     if (!mBlockedOnRwin &&
         !mTxInlineFrameUsed && NS_SUCCEEDED(rv) && (!*countRead)) {
       LOG3(("SpdyStream3::ReadSegments %p 0x%X: Sending request data complete, "
-            "mUpstreamState=%x",this, mStreamID, mUpstreamState));
+            "mUpstreamState=%x finondata=%d",this, mStreamID,
+            mUpstreamState, mSentFinOnData));
       if (mSentFinOnData) {
         ChangeState(UPSTREAM_COMPLETE);
       }
@@ -283,7 +288,7 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
   nsAutoCString hashkey;
   mTransaction->RequestHead()->GetHeader(nsHttp::Host, hostHeader);
 
-  CreatePushHashKey(NS_LITERAL_CSTRING("https"),
+  CreatePushHashKey(nsDependentCString(mTransaction->RequestHead()->IsHTTPS() ? "https" : "http"),
                     hostHeader, mSession->Serial(),
                     mTransaction->RequestHead()->RequestURI(),
                     mOrigin, hashkey);
@@ -458,24 +463,54 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
   // headers at this same level so it is not necessary to do so here.
 
   const char *methodHeader = mTransaction->RequestHead()->Method().get();
+  LOG3(("Stream method %p 0x%X %s\n", this, mStreamID, methodHeader));
 
   // The header block length
-  uint16_t count = hdrHash.Count() + 5; /* method, path, version, host, scheme */
+  uint16_t count = hdrHash.Count() + 4; /* :method, :path, :version, :host */
+  if (mTransaction->RequestHead()->IsConnect()) {
+    mRequestBodyLenRemaining = 0x0fffffffffffffffULL;
+  } else {
+    ++count; // :scheme used if not connect
+  }
   CompressToFrame(count);
 
   // :method, :path, :version comprise a HTTP/1 request line, so send those first
   // to make life easy for any gateways
   CompressToFrame(NS_LITERAL_CSTRING(":method"));
   CompressToFrame(methodHeader, strlen(methodHeader));
+
   CompressToFrame(NS_LITERAL_CSTRING(":path"));
-  CompressToFrame(mTransaction->RequestHead()->RequestURI());
+  if (!mTransaction->RequestHead()->IsConnect()) {
+    CompressToFrame(mTransaction->RequestHead()->RequestURI());
+  } else {
+#ifdef DEBUG
+    nsRefPtr<SpdyConnectTransaction> qiTrans(do_QueryObject(mTransaction));
+    MOZ_ASSERT(qiTrans);
+#endif
+    mIsTunnel = true;
+    // Connect places host:port in :path. Don't use default port.
+    nsHttpConnectionInfo *ci = mTransaction->ConnectionInfo();
+    if (!ci) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    nsAutoCString route;
+    route = ci->GetHost();
+    route.AppendLiteral(":");
+    route.AppendInt(ci->Port());
+    CompressToFrame(route);
+  }
+
   CompressToFrame(NS_LITERAL_CSTRING(":version"));
   CompressToFrame(versionHeader);
 
   CompressToFrame(NS_LITERAL_CSTRING(":host"));
   CompressToFrame(hostHeader);
-  CompressToFrame(NS_LITERAL_CSTRING(":scheme"));
-  CompressToFrame(NS_LITERAL_CSTRING("https"));
+
+  if (!mTransaction->RequestHead()->IsConnect()) {
+    // no :scheme with connect
+    CompressToFrame(NS_LITERAL_CSTRING(":scheme"));
+    CompressToFrame(nsDependentCString(mTransaction->RequestHead()->IsHTTPS() ? "https" : "http"));
+  }
 
   hdrHash.Enumerate(hdrHashEnumerate, this);
   CompressFlushFrame();
@@ -490,9 +525,8 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
   // to wait for a data packet to put it on.
 
   if (mTransaction->RequestHead()->IsGet() ||
-      mTransaction->RequestHead()->IsConnect() ||
       mTransaction->RequestHead()->IsHead()) {
-    // for GET, CONNECT, and HEAD place the fin bit right on the
+    // for GET and HEAD place the fin bit right on the
     // syn stream packet
 
     mSentFinOnData = 1;
@@ -500,6 +534,7 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
   }
   else if (mTransaction->RequestHead()->IsPost() ||
            mTransaction->RequestHead()->IsPut() ||
+           mTransaction->RequestHead()->IsConnect() ||
            mTransaction->RequestHead()->IsOptions()) {
     // place fin in a data frame even for 0 length messages, I've seen
     // the google gateway be unhappy with fin-on-syn for 0 length POST
@@ -594,6 +629,9 @@ void
 SpdyStream3::UpdateTransportReadEvents(uint32_t count)
 {
   mTotalRead += count;
+  if (!mSocketTransport) {
+    return;
+  }
 
   mTransaction->OnTransportStatus(mSocketTransport,
                                   NS_NET_STATUS_RECEIVING_FROM,
@@ -1246,6 +1284,12 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
   mDecompressBufferSize = 0;
   mDecompressBufferUsed = 0;
 
+  if (mIsTunnel) {
+    aHeadersOut.Truncate();
+    LOG(("SpdyStream3::ConvertHeaders %p 0x%X headers removed for tunnel\n",
+         this, mStreamID));
+  }
+
   return NS_OK;
 }
 
@@ -1311,6 +1355,38 @@ SpdyStream3::CompressFlushFrame()
   mZlib->next_in = (unsigned char *) "";
   mZlib->avail_in = 0;
   ExecuteCompress(Z_SYNC_FLUSH);
+}
+
+bool
+SpdyStream3::GetFullyOpen()
+{
+  return mFullyOpen;
+}
+
+nsresult
+SpdyStream3::SetFullyOpen()
+{
+  MOZ_ASSERT(!mFullyOpen);
+  mFullyOpen = 1;
+  if (mIsTunnel) {
+    nsDependentCSubstring statusSubstring;
+    nsresult rv = FindHeader(NS_LITERAL_CSTRING(":status"),
+                             statusSubstring);
+    if (NS_SUCCEEDED(rv)) {
+      nsCString status(statusSubstring);
+      nsresult errcode;
+
+      if (status.ToInteger(&errcode) != 200) {
+        LOG3(("SpdyStream3::SetFullyOpen %p Tunnel not 200", this));
+        return NS_ERROR_FAILURE;
+      }
+      LOG3(("SpdyStream3::SetFullyOpen %p Tunnel 200 OK", this));
+    }
+
+    MapStreamToHttpConnection();
+    ClearTransactionsBlockedOnTunnel();
+  }
+  return NS_OK;
 }
 
 void
@@ -1396,11 +1472,15 @@ SpdyStream3::OnReadSegment(const char *buf,
           this, mStreamID, mRemoteWindow, dataLength));
     mRemoteWindow -= dataLength;
 
-    LOG3(("SpdyStream3 %p id %x request len remaining %d, "
-          "count avail %d, chunk used %d",
+    LOG3(("SpdyStream3 %p id %x request len remaining %u, "
+          "count avail %u, chunk used %u",
           this, mStreamID, mRequestBodyLenRemaining, count, dataLength));
-    if (dataLength > mRequestBodyLenRemaining)
+    if (!dataLength && mRequestBodyLenRemaining) {
+      return NS_BASE_STREAM_WOULD_BLOCK;
+    }
+    if (dataLength > mRequestBodyLenRemaining) {
       return NS_ERROR_UNEXPECTED;
+    }
     mRequestBodyLenRemaining -= dataLength;
     GenerateDataFrameHeader(dataLength, !mRequestBodyLenRemaining);
     ChangeState(SENDING_REQUEST_BODY);
@@ -1466,6 +1546,27 @@ SpdyStream3::OnWriteSegment(char *buf,
   return NS_OK;
 }
 
+/// connect tunnels
+
+void
+SpdyStream3::ClearTransactionsBlockedOnTunnel()
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+  if (!mIsTunnel) {
+    return;
+  }
+  gHttpHandler->ConnMgr()->ProcessPendingQ(mTransaction->ConnectionInfo());
+}
+
+void
+SpdyStream3::MapStreamToHttpConnection()
+{
+  nsRefPtr<SpdyConnectTransaction> qiTrans(do_QueryObject(mTransaction));
+  MOZ_ASSERT(qiTrans);
+  qiTrans->MapStreamToHttpConnection(mSocketTransport,
+                                     mTransaction->ConnectionInfo());
+}
+
 } // namespace mozilla::net
 } // namespace mozilla
-

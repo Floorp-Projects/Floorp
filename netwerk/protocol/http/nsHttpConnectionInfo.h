@@ -18,6 +18,15 @@ extern PRLogModuleInfo *gHttpLog;
 // nsHttpConnectionInfo - holds the properties of a connection
 //-----------------------------------------------------------------------------
 
+// http:// uris through a proxy will all share the same CI, because they can
+// all use the same connection. (modulo pb and anonymous flags). They just use
+// the proxy as the origin host name.
+// however, https:// uris tunnel through the proxy so they will have different
+// CIs - the CI reflects both the proxy and the origin.
+// however, proxy conenctions made with http/2 (or spdy) can tunnel to the origin
+// and multiplex non tunneled transactions at the same time, so they have a
+// special wildcard CI that accepts all origins through that proxy.
+
 namespace mozilla { namespace net {
 
 class nsHttpConnectionInfo
@@ -42,8 +51,9 @@ public:
         SetOriginServer(nsDependentCString(host), port);
     }
 
-    // OK to treat this as an infalible allocation
+    // OK to treat these as an infalible allocation
     nsHttpConnectionInfo* Clone() const;
+    nsresult CreateWildCard(nsHttpConnectionInfo **outParam);
 
     const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host().get() : nullptr; }
     int32_t     ProxyPort() const { return mProxyInfo ? mProxyInfo->Port() : -1; }
