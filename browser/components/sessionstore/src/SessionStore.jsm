@@ -678,8 +678,6 @@ let SessionStoreInternal = {
         debug("received unknown message '" + aMessage.name + "'");
         break;
     }
-
-    this._clearRestoringWindows();
   },
 
   /**
@@ -3363,6 +3361,15 @@ let SessionStoreInternal = {
     this._closedWindows.splice(spliceTo, this._closedWindows.length);
   },
 
+  /**
+   * Clears the set of windows that are "resurrected" before writing to disk to
+   * make closing windows one after the other until shutdown work as expected.
+   *
+   * This function should only be called when we are sure that there has been
+   * a user action that indicates the browser is actively being used and all
+   * windows that have been closed before are not part of a series of closing
+   * windows.
+   */
   _clearRestoringWindows: function ssi_clearRestoringWindows() {
     for (let i = 0; i < this._closedWindows.length; i++) {
       delete this._closedWindows[i]._shouldRestore;
