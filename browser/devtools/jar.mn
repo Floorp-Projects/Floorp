@@ -53,6 +53,8 @@ browser.jar:
     content/browser/devtools/codemirror/comment-fold.js                (sourceeditor/codemirror/fold/comment-fold.js)
     content/browser/devtools/codemirror/xml-fold.js                    (sourceeditor/codemirror/fold/xml-fold.js)
     content/browser/devtools/codemirror/foldgutter.js                  (sourceeditor/codemirror/fold/foldgutter.js)
+    content/browser/devtools/codemirror/tern.js                        (sourceeditor/codemirror/tern.js)
+    content/browser/devtools/codemirror/show-hint.js                   (sourceeditor/codemirror/show-hint.js)
     content/browser/devtools/codemirror/mozilla.css                    (sourceeditor/codemirror/mozilla.css)
     content/browser/devtools/debugger.xul                              (debugger/debugger.xul)
     content/browser/devtools/debugger.css                              (debugger/debugger.css)
