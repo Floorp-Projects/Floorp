@@ -29,6 +29,13 @@ test_data_path = mozpath.join(test_data_path, 'data')
 
 
 CONFIGS = DefaultOnReadDict({
+    'android_eclipse': {
+        'defines': [],
+        'non_global_defines': [],
+        'substs': [
+            ('ANDROID_TARGET_SDK', '16'),
+        ],
+    },
     'stub0': {
         'defines': [
             ('MOZ_TRUE_1', '1'),
