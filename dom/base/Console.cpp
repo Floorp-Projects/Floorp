@@ -994,6 +994,18 @@ Console::ProcessCallData(ConsoleCallData* aData)
     event.mCounter = IncreaseCounter(cx, frame, aData->mArguments);
   }
 
+  // We want to create a console event object and pass it to our
+  // nsIConsoleAPIStorage implementation.  We want to define some accessor
+  // properties on this object, and those will need to keep an nsIStackFrame
+  // alive.  But nsIStackFrame cannot be wrapped in an untrusted scope.  And
+  // further, passing untrusted objects to system code is likely to run afoul of
+  // Object Xrays.  So we want to wrap in a system-principal scope here.  But
+  // which one?  We could cheat and try to get the underlying JSObject* of
+  // mStorage, but that's a bit fragile.  Instead, we just use the junk scope,
+  // with explicit permission from the XPConnect module owner.  If you're
+  // tempted to do that anywhere else, talk to said module owner first.
+  JSAutoCompartment ac2(cx, xpc::GetJunkScope());
+
   JS::Rooted<JS::Value> eventValue(cx);
   if (!event.ToObject(cx, &eventValue)) {
     Throw(cx, NS_ERROR_FAILURE);
