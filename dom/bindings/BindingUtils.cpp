@@ -187,7 +187,7 @@ ErrorResult::ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn)
   // don't set it to exn yet, because we don't want to do that until after we
   // root.
   mJSException = JS::UndefinedValue();
-  if (!JS_AddNamedValueRoot(cx, &mJSException, "ErrorResult::mJSException")) {
+  if (!js::AddRawValueRoot(cx, &mJSException, "ErrorResult::mJSException")) {
     // Don't use NS_ERROR_DOM_JS_EXCEPTION, because that indicates we have
     // in fact rooted mJSException.
     mResult = NS_ERROR_OUT_OF_MEMORY;
@@ -210,7 +210,7 @@ ErrorResult::ReportJSException(JSContext* cx)
   mJSException = exception;
   // If JS_WrapValue failed, not much we can do about it...  No matter
   // what, go ahead and unroot mJSException.
-  JS_RemoveValueRoot(cx, &mJSException);
+  js::RemoveRawValueRoot(cx, &mJSException);
 }
 
 void
@@ -235,7 +235,7 @@ ErrorResult::ReportJSExceptionFromJSImplementation(JSContext* aCx)
   domError->GetMessage(message);
 
   JS_ReportError(aCx, "%hs", message.get());
-  JS_RemoveValueRoot(aCx, &mJSException);
+  js::RemoveRawValueRoot(aCx, &mJSException);
 
   // We no longer have a useful exception but we do want to signal that an error
   // occured.
@@ -251,7 +251,7 @@ ErrorResult::StealJSException(JSContext* cx,
   MOZ_ASSERT(IsJSException(), "No exception to steal");
 
   value.set(mJSException);
-  JS_RemoveValueRoot(cx, &mJSException);
+  js::RemoveRawValueRoot(cx, &mJSException);
   mResult = NS_OK;
 }
 
