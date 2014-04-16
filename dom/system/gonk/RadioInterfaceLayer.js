@@ -2075,7 +2075,7 @@ RadioInterface.prototype = {
         gTelephonyService.notifyConferenceCallStateChanged(message.state);
         break;
       case "cdmaCallWaiting":
-        gTelephonyService.notifyCdmaCallWaiting(this.clientId, message.number);
+        gTelephonyService.notifyCdmaCallWaiting(this.clientId, message.waitingCall);
         break;
       case "suppSvcNotification":
         gTelephonyService.notifySupplementaryService(this.clientId,
