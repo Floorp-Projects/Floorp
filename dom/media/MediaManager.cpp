@@ -1459,6 +1459,12 @@ MediaManager::GetUserMedia(JSContext* aCx, bool aPrivileged,
       (c.mFake && !Preferences::GetBool("media.navigator.permission.fake"))) {
     mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   } else {
+    bool isHTTPS = false;
+    nsIURI* docURI = aWindow->GetDocumentURI();
+    if (docURI) {
+      docURI->SchemeIs("https", &isHTTPS);
+    }
+
     // Check if this site has persistent permissions.
     nsresult rv;
     nsCOMPtr<nsIPermissionManager> permManager =
@@ -1473,6 +1479,11 @@ MediaManager::GetUserMedia(JSContext* aCx, bool aPrivileged,
       if (audioPerm == nsIPermissionManager::PROMPT_ACTION) {
         audioPerm = nsIPermissionManager::UNKNOWN_ACTION;
       }
+      if (audioPerm == nsIPermissionManager::ALLOW_ACTION) {
+        if (!isHTTPS) {
+          audioPerm = nsIPermissionManager::UNKNOWN_ACTION;
+        }
+      }
     }
 
     uint32_t videoPerm = nsIPermissionManager::UNKNOWN_ACTION;
@@ -1483,9 +1494,15 @@ MediaManager::GetUserMedia(JSContext* aCx, bool aPrivileged,
       if (videoPerm == nsIPermissionManager::PROMPT_ACTION) {
         videoPerm = nsIPermissionManager::UNKNOWN_ACTION;
       }
+      if (videoPerm == nsIPermissionManager::ALLOW_ACTION) {
+        if (!isHTTPS) {
+          videoPerm = nsIPermissionManager::UNKNOWN_ACTION;
+        }
+      }
     }
 
-    if ((!IsOn(c.mAudio) || audioPerm) && (!IsOn(c.mVideo) || videoPerm)) {
+    if ((!IsOn(c.mAudio) || audioPerm != nsIPermissionManager::UNKNOWN_ACTION) &&
+        (!IsOn(c.mVideo) || videoPerm != nsIPermissionManager::UNKNOWN_ACTION)) {
       // All permissions we were about to request already have a saved value.
       if (IsOn(c.mAudio) && audioPerm == nsIPermissionManager::DENY_ACTION) {
         c.mAudio.SetAsBoolean() = false;
@@ -1533,7 +1550,7 @@ MediaManager::GetUserMedia(JSContext* aCx, bool aPrivileged,
     }
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     nsRefPtr<GetUserMediaRequest> req = new GetUserMediaRequest(aWindow,
-                                                                callID, c);
+                                                                callID, c, isHTTPS);
     obs->NotifyObservers(req, "getUserMedia:request", nullptr);
   }
 
