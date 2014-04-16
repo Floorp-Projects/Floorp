@@ -71,7 +71,11 @@ let HighlighterActor = protocol.ActorClass({
    * XUL node to attach itself.
    */
   _supportsBoxModelHighlighter: function() {
-    return this._tabActor.browser && !!this._tabActor.browser.parentNode;
+    // Note that <browser>s on Fennec also have a XUL parentNode but the box
+    // model highlighter doesn't display correctly on Fennec (bug 993190)
+    return this._tabActor.browser &&
+           !!this._tabActor.browser.parentNode &&
+           Services.appinfo.ID !== "{aa3c5121-dab2-40e2-81ca-7ea25febc110}";
   },
 
   destroy: function() {
