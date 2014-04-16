@@ -1304,6 +1304,9 @@ class ActivationIterator
 
     ActivationIterator &operator++();
 
+    Activation *operator->() const {
+        return activation_;
+    }
     Activation *activation() const {
         return activation_;
     }

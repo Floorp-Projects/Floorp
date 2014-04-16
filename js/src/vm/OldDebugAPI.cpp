@@ -270,8 +270,8 @@ JS_SetInterrupt(JSRuntime *rt, JSInterruptHook hook, void *closure)
     rt->debugHooks.interruptHookData = closure;
 
     for (ActivationIterator iter(rt); !iter.done(); ++iter) {
-        if (iter.activation()->isInterpreter())
-            iter.activation()->asInterpreter()->enableInterruptsUnconditionally();
+        if (iter->isInterpreter())
+            iter->asInterpreter()->enableInterruptsUnconditionally();
     }
 
     return true;
