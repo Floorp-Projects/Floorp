@@ -105,13 +105,14 @@ protected:
 
   virtual nsresult StartPreviewImpl() MOZ_OVERRIDE;
   virtual nsresult StopPreviewImpl() MOZ_OVERRIDE;
-  virtual nsresult AutoFocusImpl(bool aCancelExistingCall) MOZ_OVERRIDE;
+  virtual nsresult AutoFocusImpl() MOZ_OVERRIDE;
   virtual nsresult StartFaceDetectionImpl() MOZ_OVERRIDE;
   virtual nsresult StopFaceDetectionImpl() MOZ_OVERRIDE;
   virtual nsresult TakePictureImpl() MOZ_OVERRIDE;
   virtual nsresult StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescriptor,
                                       const StartRecordingOptions* aOptions = nullptr) MOZ_OVERRIDE;
   virtual nsresult StopRecordingImpl() MOZ_OVERRIDE;
+  virtual nsresult ResumeContinuousFocusImpl() MOZ_OVERRIDE;
   virtual nsresult PushParametersImpl() MOZ_OVERRIDE;
   virtual nsresult PullParametersImpl() MOZ_OVERRIDE;
   virtual already_AddRefed<RecorderProfileManager> GetRecorderProfileManagerImpl() MOZ_OVERRIDE;
