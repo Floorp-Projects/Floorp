@@ -131,6 +131,9 @@ OCSPResponseContext::OCSPResponseContext(PLArenaPool* arena,
   , responderIDType(ByKeyHash)
   , extensions(nullptr)
 {
+  for (size_t i = 0; i < MaxIncludedCertificates; i++) {
+    includedCertificates[i] = nullptr;
+  }
 }
 
 static SECItem* ResponseBytes(OCSPResponseContext& context);
@@ -141,6 +144,7 @@ static SECItem* KeyHash(OCSPResponseContext& context);
 static SECItem* SingleResponse(OCSPResponseContext& context);
 static SECItem* CertID(OCSPResponseContext& context);
 static SECItem* CertStatus(OCSPResponseContext& context);
+static SECItem* Certificates(OCSPResponseContext& context);
 
 static SECItem*
 EncodeNested(PLArenaPool* arena, uint8_t tag, SECItem* inner)
@@ -385,8 +389,22 @@ BasicOCSPResponse(OCSPResponseContext& context)
   if (!signatureNested) {
     return nullptr;
   }
+  SECItem* certificatesNested = nullptr;
+  if (context.includedCertificates[0]) {
+    SECItem* certificates = Certificates(context);
+    if (!certificates) {
+      return nullptr;
+    }
+    certificatesNested = EncodeNested(context.arena,
+                                      der::CONSTRUCTED |
+                                      der::CONTEXT_SPECIFIC |
+                                      0,
+                                      certificates);
+    if (!certificatesNested) {
+      return nullptr;
+    }
+  }
 
-  // TODO(bug 980538): certificates
   Output output;
   if (output.Add(tbsResponseData) != der::Success) {
     return nullptr;
@@ -396,6 +414,11 @@ BasicOCSPResponse(OCSPResponseContext& context)
   }
   if (output.Add(signatureNested) != der::Success) {
     return nullptr;
+  }
+  if (certificatesNested) {
+    if (output.Add(certificatesNested) != der::Success) {
+      return nullptr;
+    }
   }
   return output.Squash(context.arena, der::SEQUENCE);
 }
@@ -702,6 +725,21 @@ CertStatus(OCSPResponseContext& context)
       PR_Abort();
   }
   return nullptr;
+}
+
+// SEQUENCE OF Certificate
+SECItem*
+Certificates(OCSPResponseContext& context)
+{
+  Output output;
+  for (size_t i = 0; i < context.MaxIncludedCertificates; i++) {
+    CERTCertificate* cert = context.includedCertificates[i].get();
+    if (!cert) {
+      break;
+    }
+    output.Add(&cert->derCert);
+  }
+  return output.Squash(context.arena, der::SEQUENCE);
 }
 
 } } } // namespace mozilla::pkix::test

@@ -114,6 +114,24 @@ function make_EE {
   SERIALNO=$(($SERIALNO + 1))
 }
 
+function make_delegated {
+  CERT_RESPONSES="n\n\ny\n"
+  NICKNAME="${1}"
+  SUBJECT="${2}"
+  CA="${3}"
+  EXTRA_ARGS="${4}"
+
+  echo -e "$CERT_RESPONSES" | $RUN_MOZILLA $CERTUTIL -d $OUTPUT_DIR -S \
+                                                     -n $NICKNAME \
+                                                     -s "$SUBJECT" \
+                                                     -c $CA \
+                                                     -t ",," \
+                                                     -m $SERIALNO \
+                                                     $COMMON_ARGS \
+                                                     $EXTRA_ARGS
+  SERIALNO=$(($SERIALNO + 1))
+}
+
 make_CA testCA 'CN=Test CA' test-ca.der
 make_CA otherCA 'CN=Other test CA' other-test-ca.der
 make_EE localhostAndExampleCom 'CN=Test End-entity' testCA "localhost,*.example.com"
@@ -146,6 +164,12 @@ NSS_ALLOW_WEAK_SIGNATURE_ALG=1 make_EE md5signature-expired 'CN=Test MD5Signatur
 
 make_EE inadequatekeyusage 'CN=Inadequate Key Usage Test End-entity' testCA "inadequatekeyusage.example.com" "--keyUsage crlSigning"
 make_EE selfsigned-inadequateEKU 'CN=Self-signed Inadequate EKU Test End-entity' unused "selfsigned-inadequateEKU.example.com" "--keyUsage keyEncipherment,dataEncipherment --extKeyUsage serverAuth" "-x"
+
+make_delegated delegatedSigner 'CN=Test Delegated Responder' testCA "--extKeyUsage ocspResponder"
+make_delegated invalidDelegatedSignerNoExtKeyUsage 'CN=Test Invalid Delegated Responder No extKeyUsage' testCA
+make_delegated invalidDelegatedSignerFromIntermediate 'CN=Test Invalid Delegated Responder From Intermediate' testINT "--extKeyUsage ocspResponder"
+make_delegated invalidDelegatedSignerKeyUsageCrlSigning 'CN=Test Invalid Delegated Responder keyUsage crlSigning' testCA "--keyUsage crlSigning"
+make_delegated invalidDelegatedSignerWrongExtKeyUsage 'CN=Test Invalid Delegated Responder Wrong extKeyUsage' testCA "--extKeyUsage codeSigning"
 
 make_INT self-signed-EE-with-cA-true 'CN=Test Self-signed End-entity with CA true' unused "-x -8 self-signed-end-entity-with-cA-true.example.com"
 
