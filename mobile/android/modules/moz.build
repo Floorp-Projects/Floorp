@@ -7,6 +7,7 @@
 EXTRA_JS_MODULES += [
     'Accounts.jsm',
     'ContactService.jsm',
+    'DownloadNotifications.jsm',
     'HelperApps.jsm',
     'Home.jsm',
     'HomeProvider.jsm',

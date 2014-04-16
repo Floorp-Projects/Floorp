@@ -533,10 +533,6 @@ public abstract class GeckoApp
 
     public void showPrivateTabs() { }
 
-    public void showRemoteTabs() { }
-
-    private void showTabs(TabsPanel.Panel panel) { }
-
     public void hideTabs() { }
 
     /**
@@ -1394,6 +1390,13 @@ public abstract class GeckoApp
      * aware of the locale.
      *
      * Now we can display strings!
+     *
+     * You can think of this as being something like a second phase of onCreate,
+     * where you can do string-related operations. Use this in place of embedding
+     * strings in view XML.
+     *
+     * By contrast, onConfigurationChanged does some locale operations, but is in
+     * response to device changes.
      */
     @Override
     public void onLocaleReady(final String locale) {
@@ -1403,11 +1406,12 @@ public abstract class GeckoApp
 
         // The URL bar hint needs to be populated.
         TextView urlBar = (TextView) findViewById(R.id.url_bar_title);
-        if (urlBar == null) {
-            return;
+        if (urlBar != null) {
+            final String hint = getResources().getString(R.string.url_bar_default_text);
+            urlBar.setHint(hint);
+        } else {
+            Log.d(LOGTAG, "No URL bar in GeckoApp. Not loading localized hint string.");
         }
-        final String hint = getResources().getString(R.string.url_bar_default_text);
-        urlBar.setHint(hint);
 
         // Allow onConfigurationChanged to take care of the rest.
         onConfigurationChanged(getResources().getConfiguration());
