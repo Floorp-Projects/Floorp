@@ -776,6 +776,8 @@ ArrayBufferObject::addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf m
 #else
         sizes->mallocHeapElementsAsmJS += mallocSizeOf(buffer.dataPointer());
 #endif
+    } else if (MOZ_UNLIKELY(buffer.isMappedArrayBuffer())) {
+        sizes->nonHeapElementsMapped += buffer.byteLength();
     } else if (buffer.dataPointer()) {
         sizes->mallocHeapElementsNonAsmJS += mallocSizeOf(buffer.dataPointer());
     }
