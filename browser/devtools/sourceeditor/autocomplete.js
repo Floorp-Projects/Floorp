@@ -6,64 +6,20 @@
 const cssAutoCompleter = require("devtools/sourceeditor/css-autocompleter");
 const { AutocompletePopup } = require("devtools/shared/autocomplete-popup");
 
-const CM_TERN_SCRIPTS = [
-  "chrome://browser/content/devtools/codemirror/tern.js",
-  "chrome://browser/content/devtools/codemirror/show-hint.js"
-];
-
 const privates = new WeakMap();
 
 /**
- * Prepares an editor instance for autocompletion.
+ * Prepares an editor instance for autocompletion, setting up the popup and the
+ * CSS completer instance.
  */
-function setupAutoCompletion(ctx, options = {}) {
+function setupAutoCompletion(ctx, walker) {
   let { cm, ed, Editor } = ctx;
 
-  if (!ed.config.autocomplete) {
-    return;
-  }
-
   let win = ed.container.contentWindow.wrappedJSObject;
-  let {CodeMirror} = win;
 
   let completer = null;
-  if (ed.config.mode == Editor.modes.js) {
-    let defs = [
-      "tern/browser",
-      "tern/ecma5",
-    ].map(require);
-
-    CM_TERN_SCRIPTS.forEach(ed.loadScript, ed);
-    win.tern = require("tern/tern");
-    cm.tern = new CodeMirror.TernServer({ defs: defs });
-    cm.on("cursorActivity", (cm) => {
-      cm.tern.updateArgHints(cm);
-    });
-
-    let keyMap = {};
-
-    keyMap[Editor.keyFor("autocompletion")] = (cm) => {
-      cm.tern.getHint(cm, (data) => {
-        CodeMirror.on(data, "shown", () => ed.emit("before-suggest"));
-        CodeMirror.on(data, "close", () => ed.emit("after-suggest"));
-        CodeMirror.on(data, "select", () => ed.emit("suggestion-entered"));
-        CodeMirror.showHint(cm, (cm, cb) => cb(data), { async: true });
-      });
-    };
-
-    keyMap[Editor.keyFor("showInformation", { noaccel: true })] = (cm) => {
-      cm.tern.showType(cm, null, () => {
-        ed.emit("show-information");
-      });
-    };
-
-    cm.addKeyMap(keyMap);
-
-    // TODO: Integrate tern autocompletion with this autocomplete API.
-    return;
-  } else if (ed.config.mode == Editor.modes.css) {
-    completer = new cssAutoCompleter({walker: options.walker});
-  }
+  if (ed.config.mode == Editor.modes.css)
+    completer = new cssAutoCompleter({walker: walker});
 
   let popup = new AutocompletePopup(win.parent.document, {
     position: "after_start",
@@ -78,7 +34,7 @@ function setupAutoCompletion(ctx, options = {}) {
       return;
     }
 
-    return CodeMirror.Pass;
+    return win.CodeMirror.Pass;
   };
 
   let keyMap = {
@@ -100,10 +56,10 @@ function setupAutoCompletion(ctx, options = {}) {
         return;
       }
 
-      return CodeMirror.Pass;
+      return win.CodeMirror.Pass;
     }
   };
-  keyMap[Editor.keyFor("autocompletion")] = cm => autoComplete(ctx);
+  keyMap[Editor.accel("Space")] = cm => autoComplete(ctx);
   cm.addKeyMap(keyMap);
 
   cm.on("keydown", (cm, e) => onEditorKeypress(ctx, e));

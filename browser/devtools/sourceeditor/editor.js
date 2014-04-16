@@ -150,8 +150,7 @@ function Editor(config) {
     styleActiveLine:   true,
     autoCloseBrackets: "()[]{}''\"\"",
     autoCloseEnabled:  useAutoClose,
-    theme:             "mozilla",
-    autocomplete:      false
+    theme:             "mozilla"
   };
 
   // Additional shortcuts.
@@ -318,10 +317,6 @@ Editor.prototype = {
 
       this.resetIndentUnit();
 
-      if (this.config.autocomplete) {
-        this.extend(require("./autocomplete"));
-      }
-
       def.resolve();
     };
 
@@ -339,17 +334,6 @@ Editor.prototype = {
    */
   getMode: function () {
     return this.getOption("mode");
-  },
-
-  /**
-   * Load a script into editor's containing window.
-   */
-  loadScript: function (url) {
-    if (!this.container) {
-      throw new Error("Can't load a script until the editor is loaded.")
-    }
-    let win = this.container.contentWindow.wrappedJSObject;
-    Services.scriptloader.loadSubScript(url, win, "utf8");
   },
 
   /**
