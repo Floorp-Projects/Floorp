@@ -1,3 +1,4 @@
+marionette_transport.pth:testing/marionette/transport
 marionette.pth:testing/marionette/client
 blessings.pth:python/blessings
 configobj.pth:python/configobj
