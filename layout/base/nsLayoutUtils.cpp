@@ -5397,21 +5397,12 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
     return result;
 
   if (!noRasterize || imgContainer->GetType() == imgIContainer::TYPE_RASTER) {
-    bool wantImageSurface = (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) != 0;
-    if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) {
-      wantImageSurface = true;
+    if (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) {
+      frameFlags |= imgIContainer::FLAG_WANT_DATA_SURFACE;
     }
-    
-    nsRefPtr<gfxASurface> gfxsurf =
-      imgContainer->GetFrame(whichFrame, frameFlags);
-    if (!gfxsurf)
-      return result;
-
-    if (wantImageSurface) {
-      result.mSourceSurface = gfxPlatform::GetPlatform()->GetWrappedDataSourceSurface(gfxsurf);
-    }
+    result.mSourceSurface = imgContainer->GetFrame(whichFrame, frameFlags);
     if (!result.mSourceSurface) {
-      result.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(aTarget, gfxsurf);
+      return result;
     }
   } else {
     result.mDrawInfo.mImgContainer = imgContainer;

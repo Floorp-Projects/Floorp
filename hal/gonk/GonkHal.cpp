@@ -294,11 +294,11 @@ public:
 
 } // anonymous namespace
 
-class BatteryObserver : public IUeventObserver,
-                        public RefCounted<BatteryObserver>
+class BatteryObserver : public IUeventObserver
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(BatteryObserver)
+  NS_INLINE_DECL_REFCOUNTING(BatteryObserver)
+
   BatteryObserver()
     :mUpdater(new BatteryUpdater())
   {

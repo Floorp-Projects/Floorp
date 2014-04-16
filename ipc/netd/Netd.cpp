@@ -16,6 +16,7 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
+#include "mozilla/RefPtr.h"
 
 
 #define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)

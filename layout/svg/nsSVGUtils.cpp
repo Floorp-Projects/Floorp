@@ -1471,11 +1471,12 @@ nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
   if (!svgFrame) {
     return false;
   }
-  nsRenderingContext context;
-  context.Init(frame->PresContext()->DeviceContext(), aContext);
-  context.AddUserData(&gfxTextContextPaint::sUserDataKey, aContextPaint, nullptr);
+  nsRefPtr<nsRenderingContext> context(new nsRenderingContext());
+  context->Init(frame->PresContext()->DeviceContext(), aContext);
+  context->AddUserData(&gfxTextContextPaint::sUserDataKey, aContextPaint,
+                       nullptr);
   svgFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
-  nsresult rv = svgFrame->PaintSVG(&context, nullptr, frame);
+  nsresult rv = svgFrame->PaintSVG(context, nullptr, frame);
   return NS_SUCCEEDED(rv);
 }
 

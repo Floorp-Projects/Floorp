@@ -46,9 +46,10 @@ enum LayerState {
   LAYER_SVG_EFFECTS
 };
 
-class RefCountedRegion : public RefCounted<RefCountedRegion> {
+class RefCountedRegion {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(RefCountedRegion)
+  NS_INLINE_DECL_REFCOUNTING(RefCountedRegion)
+
   RefCountedRegion() : mIsInfinite(false) {}
   nsRegion mRegion;
   bool mIsInfinite;

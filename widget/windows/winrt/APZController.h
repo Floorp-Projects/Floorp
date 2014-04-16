@@ -49,8 +49,9 @@ public:
   virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect, const mozilla::CSSSize &aScrollableSize);
   virtual void PostDelayedTask(Task* aTask, int aDelayMs);
   virtual bool GetRootZoomConstraints(ZoomConstraints* aOutConstraints);
-  virtual void NotifyTransformBegin(const ScrollableLayerGuid& aGuid);
-  virtual void NotifyTransformEnd(const ScrollableLayerGuid& aGuid);
+  virtual void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
+                                    APZStateChange aChange,
+                                    int aArg);
   
   void SetWidgetListener(nsIWidgetListener* aWidgetListener);
 

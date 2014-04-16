@@ -315,6 +315,8 @@ public:
    * Sets allowed touch behavior for current touch session.
    * This method is invoked by the APZCTreeManager which in its turn invoked by
    * the widget after performing touch-action values retrieving.
+   * Must be called after receiving the TOUCH_START even that started the
+   * touch session.
    */
   void SetAllowedTouchBehavior(const nsTArray<TouchBehaviorFlags>& aBehaviors);
 
@@ -331,6 +333,11 @@ public:
   {
     mTestAsyncScrollOffset = aPoint;
   }
+
+  /**
+   * Returns whether this APZC has room to be panned (in any direction).
+   */
+  bool IsPannable() const;
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
@@ -557,6 +564,36 @@ private:
                                  was not set yet. we still need to abort animations. */
   };
 
+  // State related to a single touch block. Does not persist across touch blocks.
+  struct TouchBlockState {
+
+    TouchBlockState()
+      :  mAllowedTouchBehaviorSet(false),
+         mPreventDefault(false),
+         mPreventDefaultSet(false),
+         mSingleTapOccurred(false)
+    {}
+
+    // Values of allowed touch behavior for touch points of this touch block.
+    // Since there are maybe a few current active touch points per time (multitouch case)
+    // and each touch point should have its own value of allowed touch behavior- we're
+    // keeping an array of allowed touch behavior values, not the single value.
+    nsTArray<TouchBehaviorFlags> mAllowedTouchBehaviors;
+
+    // Specifies whether mAllowedTouchBehaviors is set for this touch events block.
+    bool mAllowedTouchBehaviorSet;
+
+    // Flag used to specify that content prevented the default behavior of this
+    // touch events block.
+    bool mPreventDefault;
+
+    // Specifies whether mPreventDefault property is set for this touch events block.
+    bool mPreventDefaultSet;
+
+    // Specifies whether a single tap event was generated during this touch block.
+    bool mSingleTapOccurred;
+  };
+
   /*
    * Returns whether current touch behavior values allow zooming.
    */
@@ -617,6 +654,12 @@ private:
   // changes, as it corresponds to the scale portion of those transforms.
   void UpdateTransformScale();
 
+  // Helper function for OnSingleTapUp() and OnSingleTapConfirmed().
+  nsEventStatus GenerateSingleTap(const ScreenIntPoint& aPoint, mozilla::Modifiers aModifiers);
+
+  // Common processing at the end of a touch block.
+  void OnTouchEndOrCancel();
+
   uint64_t mLayersId;
   nsRefPtr<CompositorParent> mCompositorParent;
   PCompositorParent* mCrossProcessCompositorParent;
@@ -643,7 +686,9 @@ protected:
   // monitor should be held. When setting |mState|, either the SetState()
   // function can be used, or the monitor can be held and then |mState| updated.
   // IMPORTANT: See the note about lock ordering at the top of APZCTreeManager.h.
-  ReentrantMonitor mMonitor;
+  // This is mutable to allow entering it from 'const' methods; doing otherwise
+  // would significantly limit what methods could be 'const'.
+  mutable ReentrantMonitor mMonitor;
 
   // Specifies whether we should use touch-action css property. Initialized from
   // the preferences. This property (in comparison with the global one) simplifies
@@ -718,21 +763,8 @@ private:
   // and we don't want to queue the events back up again.
   bool mHandlingTouchQueue;
 
-  // Values of allowed touch behavior for current touch points.
-  // Since there are maybe a few current active touch points per time (multitouch case)
-  // and each touch point should have its own value of allowed touch behavior- we're
-  // keeping an array of allowed touch behavior values, not the single value.
-  nsTArray<TouchBehaviorFlags> mAllowedTouchBehaviors;
-
-  // Specifies whether mAllowedTouchBehaviors is set for current touch events block.
-  bool mAllowedTouchBehaviorSet;
-
-  // Flag used to specify that content prevented the default behavior of the current
-  // touch events block.
-  bool mPreventDefault;
-
-  // Specifies whether mPreventDefault property is set for current touch events block.
-  bool mPreventDefaultSet;
+  // Stores information about the current touch block.
+  TouchBlockState mTouchBlockState;
 
   // Extra offset to add in SampleContentTransformForFrame for testing
   CSSPoint mTestAsyncScrollOffset;

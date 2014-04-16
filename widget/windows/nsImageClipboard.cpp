@@ -3,10 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
+#include "nsImageClipboard.h"
+
+#include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/RefPtr.h"
 #include "nsITransferable.h"
-#include "nsImageClipboard.h"
 #include "nsGfxCIID.h"
 #include "nsMemory.h"
 #include "prmem.h"
@@ -120,22 +123,24 @@ nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap 
     nsresult rv;
     *outBitmap = nullptr;
 
-    nsRefPtr<gfxASurface> thebesSurface =
+    RefPtr<SourceSurface> surface =
       inImage->GetFrame(imgIContainer::FRAME_CURRENT,
                         imgIContainer::FLAG_SYNC_DECODE);
-    NS_ENSURE_TRUE(thebesSurface, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
 
-    nsRefPtr<gfxImageSurface> thebesImageSurface =
-      thebesSurface->GetAsReadableARGB32ImageSurface();
-    NS_ENSURE_TRUE(thebesImageSurface, NS_ERROR_FAILURE);
+    MOZ_ASSERT(surface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+               surface->GetFormat() == SurfaceFormat::B8G8R8X8);
 
-    IntSize surfaceSize(thebesImageSurface->GetSize().width,
-                        thebesImageSurface->GetSize().height);
-    RefPtr<DataSourceSurface> dataSurface =
-      Factory::CreateWrappingDataSourceSurface(thebesImageSurface->Data(),
-                                               thebesImageSurface->Stride(),
-                                               surfaceSize,
-                                               SurfaceFormat::B8G8R8A8);
+    RefPtr<DataSourceSurface> dataSurface;
+    if (surface->GetFormat() == SurfaceFormat::B8G8R8A8) {
+      dataSurface = surface->GetDataSurface();
+    } else {
+      // XXXjwatt Bug 995923 - get rid of this copy and handle B8G8R8X8
+      // directly below once bug 995807 is fixed.
+      dataSurface = gfxUtils::
+        CopySurfaceToDataSourceSurfaceWithFormat(surface,
+                                                 SurfaceFormat::B8G8R8A8);
+    }
     NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
 
     nsCOMPtr<imgIEncoder> encoder = do_CreateInstance("@mozilla.org/image/encoder;2?type=image/bmp", &rv);
@@ -153,11 +158,15 @@ nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap 
         format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
         options.AppendInt(32);
         break;
+#if 0
+    // XXXjwatt Bug 995923 - fix |format| and reenable once bug 995807 is fixed.
     case SurfaceFormat::B8G8R8X8:
         format = imgIEncoder::INPUT_FORMAT_RGB;
         options.AppendInt(24);
         break;
+#endif
     default:
+        NS_NOTREACHED("Unexpected surface format");
         return NS_ERROR_INVALID_ARG;  
     }
 

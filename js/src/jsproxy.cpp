@@ -1077,12 +1077,6 @@ ScriptedIndirectProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, un
 
 ScriptedIndirectProxyHandler ScriptedIndirectProxyHandler::singleton;
 
-static JSObject *
-GetDirectProxyHandlerObject(JSObject *proxy)
-{
-    return proxy->as<ProxyObject>().extra(0).toObjectOrNull();
-}
-
 /* Derived class for all scripted direct proxy handlers. */
 class ScriptedDirectProxyHandler : public DirectProxyHandler {
   public:
@@ -1113,6 +1107,9 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
     virtual bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, HandleObject proxy, unsigned flags,
                          MutableHandleValue vp) MOZ_OVERRIDE;
+
+    /* ES6 Harmony traps */
+    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) MOZ_OVERRIDE;
 
     /* Spidermonkey extensions. */
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
@@ -1363,6 +1360,16 @@ IdToValue(JSContext *cx, HandleId id, MutableHandleValue value)
         return false;
     value.set(StringValue(name));
     return true;
+}
+
+// Get the [[ProxyHandler]] of a scripted direct proxy.
+//
+// NB: This *must* stay synched with proxy().
+static JSObject *
+GetDirectProxyHandlerObject(JSObject *proxy)
+{
+    JS_ASSERT(proxy->as<ProxyObject>().handler() == &ScriptedDirectProxyHandler::singleton);
+    return proxy->as<ProxyObject>().extra(0).toObjectOrNull();
 }
 
 // TrapGetOwnProperty(O, P)
@@ -2225,6 +2232,42 @@ ScriptedDirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector
     return ArrayToIdVector(cx, proxy, target, trapResult, props, JSITER_OWNONLY, cx->names().keys);
 }
 
+// ES6 (5 April, 2014) 9.5.3 Proxy.[[IsExtensible]](P)
+bool
+ScriptedDirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
+{
+    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+
+    RootedValue trap(cx);
+    if (!JSObject::getProperty(cx, handler, handler, cx->names().isExtensible, &trap))
+        return false;
+
+    if (trap.isUndefined())
+        return DirectProxyHandler::isExtensible(cx, proxy, extensible);
+
+    Value argv[] = {
+        ObjectValue(*target)
+    };
+    RootedValue trapResult(cx);
+    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
+        return false;
+
+    bool booleanTrapResult = ToBoolean(trapResult);
+    bool targetResult;
+    if (!JSObject::isExtensible(cx, target, &targetResult))
+        return false;
+
+    if (targetResult != booleanTrapResult) {
+       JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_EXTENSIBILITY);
+       return false;
+    }
+
+    *extensible = booleanTrapResult;
+    return true;
+}
+
 bool
 ScriptedDirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
                                     MutableHandleValue vp)
@@ -2305,7 +2348,13 @@ ScriptedDirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const C
         ObjectValue(*argsArray)
     };
     RootedValue thisValue(cx, ObjectValue(*handler));
-    return Invoke(cx, thisValue, trap, ArrayLength(constructArgv), constructArgv, args.rval());
+    if (!Invoke(cx, thisValue, trap, ArrayLength(constructArgv), constructArgv, args.rval()))
+        return false;
+    if (!args.rval().isObject()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_CONSTRUCT_OBJECT);
+        return false;
+    }
+    return true;
 }
 
 ScriptedDirectProxyHandler ScriptedDirectProxyHandler::singleton;

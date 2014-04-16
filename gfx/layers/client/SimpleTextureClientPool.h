@@ -19,20 +19,20 @@ namespace layers {
 
 class ISurfaceAllocator;
 
-class SimpleTextureClientPool : public RefCounted<SimpleTextureClientPool>
+class SimpleTextureClientPool
 {
-public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(SimpleTextureClientPool)
-
-  SimpleTextureClientPool(gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
-                          ISurfaceAllocator *aAllocator);
-
   ~SimpleTextureClientPool()
   {
     for (auto it = mOutstandingTextureClients.begin(); it != mOutstandingTextureClients.end(); ++it) {
       (*it)->ClearRecycleCallback();
     }
   }
+
+public:
+  NS_INLINE_DECL_REFCOUNTING(SimpleTextureClientPool)
+
+  SimpleTextureClientPool(gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
+                          ISurfaceAllocator *aAllocator);
 
   /**
    * If a TextureClient is AutoRecycled, when the last reference is

@@ -416,7 +416,7 @@ public:
    */
   virtual TemporaryRef<DataSourceSurface> GetDataSurface();
 
-  DebugOnly<bool> mIsMapped;
+  bool mIsMapped;
 };
 
 /* This is an abstract object that accepts path segments. */
