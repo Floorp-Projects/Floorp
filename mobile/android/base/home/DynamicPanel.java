@@ -413,8 +413,11 @@ public class DynamicPanel extends HomeFragment
             // XXX: You can use CONTENT_FAKE_URI for development to pull items from fake_home_items.json.
             final Cursor c = cr.query(HomeItems.CONTENT_URI, null, selection, selectionArgs, null);
 
-            final Uri notificationUri = getDatasetNotificationUri(mRequest.getDatasetId());
-            c.setNotificationUri(cr, notificationUri);
+            // SQLiteBridgeContentProvider may return a null Cursor if the database hasn't been created yet.
+            if (c != null) {
+                final Uri notificationUri = getDatasetNotificationUri(mRequest.getDatasetId());
+                c.setNotificationUri(cr, notificationUri);
+            }
 
             return c;
         }

@@ -67,9 +67,9 @@ public class GeckoApplication extends Application
         // Otherwise, correct the locale. This catches some cases that GeckoApp
         // doesn't get a chance to.
         try {
-            LocaleManager.correctLocale(this, getResources(), config);
+            BrowserLocaleManager.getInstance().correctLocale(this, getResources(), config);
         } catch (IllegalStateException ex) {
-            // GeckoApp hasn't started, so we have no ContextGetter in LocaleManager.
+            // GeckoApp hasn't started, so we have no ContextGetter in BrowserLocaleManager.
             Log.w(LOG_TAG, "Couldn't correct locale.", ex);
         }
 

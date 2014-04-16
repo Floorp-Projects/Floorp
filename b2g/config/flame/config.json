@@ -1,8 +1,8 @@
 {
     "config_version": 2,
     "tooltool_manifest": "releng-flame.tt",
-    "mock_target": "mozilla-centos6-i386",
-    "mock_packages": ["ccache", "make", "bison", "flex", "gcc", "g++", "mpfr", "zlib-devel", "ncurses-devel", "zip", "autoconf213", "glibc-static", "perl-Digest-SHA", "wget", "alsa-lib", "atk", "cairo", "dbus-glib", "fontconfig", "freetype", "glib2", "gtk2", "libXRender", "libXt", "pango", "mozilla-python27-mercurial", "openssh-clients", "nss-devel", "java-1.6.0-openjdk-devel", "git"],
+    "mock_target": "mozilla-centos6-x86_64",
+    "mock_packages": ["ccache", "make", "bison", "flex", "gcc", "g++", "mpfr", "zlib-devel", "ncurses-devel", "zip", "autoconf213", "glibc-static", "perl-Digest-SHA", "wget", "alsa-lib", "atk", "cairo", "dbus-glib", "fontconfig", "freetype", "glib2", "gtk2", "libXRender", "libXt", "pango", "mozilla-python27-mercurial", "openssh-clients", "nss-devel", "glibc-devel.i686", "libstdc++.i686", "zlib-devel.i686", "ncurses-devel.i686", "libX11-devel.i686", "mesa-libGL-devel.i686", "mesa-libGL-devel", "libX11-devel", "git", "libxml2"],
     "mock_files": [["/home/cltbld/.ssh", "/home/mock_mozilla/.ssh"]],
     "build_targets": [],
     "upload_files": [
@@ -30,7 +30,7 @@
     "b2g_manifest": "flame.xml",
     "b2g_manifest_branch": "master",
     "b2g_manifest_intree": true,
-    "additional_source_tarballs": [],
+    "additional_source_tarballs": ["backup-flame.tar.xz"],
     "gecko_l10n_root": "https://hg.mozilla.org/l10n-central",
     "gaia": {
         "l10n": {
