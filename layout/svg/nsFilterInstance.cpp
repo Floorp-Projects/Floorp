@@ -318,11 +318,11 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
 
   ctx->Translate(-neededRect.TopLeft());
 
-  nsRenderingContext tmpCtx;
-  tmpCtx.Init(mTargetFrame->PresContext()->DeviceContext(), ctx);
+  nsRefPtr<nsRenderingContext> tmpCtx(new nsRenderingContext());
+  tmpCtx->Init(mTargetFrame->PresContext()->DeviceContext(), ctx);
 
   gfxMatrix deviceToFilterSpace = GetFilterSpaceToDeviceSpaceTransform().Invert();
-  gfxContext *gfx = tmpCtx.ThebesContext();
+  gfxContext *gfx = tmpCtx->ThebesContext();
   gfx->Multiply(deviceToFilterSpace);
 
   gfx->Save();
@@ -401,8 +401,8 @@ nsFilterInstance::BuildSourceImage(gfxASurface* aTargetSurface,
 
   ctx->Translate(-neededRect.TopLeft());
 
-  nsRenderingContext tmpCtx;
-  tmpCtx.Init(mTargetFrame->PresContext()->DeviceContext(), ctx);
+  nsRefPtr<nsRenderingContext> tmpCtx(new nsRenderingContext());
+  tmpCtx->Init(mTargetFrame->PresContext()->DeviceContext(), ctx);
 
   gfxRect r = FilterSpaceToUserSpace(neededRect);
   r.RoundOut();
@@ -422,8 +422,8 @@ nsFilterInstance::BuildSourceImage(gfxASurface* aTargetSurface,
   // code more complex while being hard to get right without introducing
   // subtle bugs, and in practice it probably makes no real difference.)
   gfxMatrix deviceToFilterSpace = GetFilterSpaceToDeviceSpaceTransform().Invert();
-  tmpCtx.ThebesContext()->Multiply(deviceToFilterSpace);
-  mPaintCallback->Paint(&tmpCtx, mTargetFrame, &dirty, mTransformRoot);
+  tmpCtx->ThebesContext()->Multiply(deviceToFilterSpace);
+  mPaintCallback->Paint(tmpCtx, mTargetFrame, &dirty, mTransformRoot);
 
   RefPtr<SourceSurface> sourceGraphicSource;
 

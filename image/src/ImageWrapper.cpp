@@ -4,10 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageWrapper.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 #include "Orientation.h"
 
 #include "mozilla/MemoryReporting.h"
 
+using mozilla::gfx::DataSourceSurface;
+using mozilla::gfx::SourceSurface;
 using mozilla::layers::LayerManager;
 using mozilla::layers::ImageContainer;
 
@@ -196,7 +200,7 @@ ImageWrapper::GetAnimated(bool* aAnimated)
   return mInnerImage->GetAnimated(aAnimated);
 }
 
-NS_IMETHODIMP_(already_AddRefed<gfxASurface>)
+NS_IMETHODIMP_(TemporaryRef<SourceSurface>)
 ImageWrapper::GetFrame(uint32_t aWhichFrame,
                        uint32_t aFlags)
 {

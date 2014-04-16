@@ -27,10 +27,16 @@ add_test(function setup() {
   do_get_profile();
   initTestLogging();
 
+  Services.prefs.setBoolPref(PREF_EXPERIMENTS_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_HEALTHREPORT_ENABLED, true);
+
   run_next_test();
 });
 
 add_task(function test_constructor() {
+  Experiments.instance();
+  yield Experiments._mainTask;
   let provider = new ExperimentsProvider();
 });
 
