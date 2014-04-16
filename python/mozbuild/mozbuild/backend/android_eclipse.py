@@ -238,6 +238,7 @@ class AndroidEclipseBackend(CommonBackend):
             defines['IDE_PROJECT_FILTERED_RESOURCES'] = pretty_print(filteredResources).strip()
         else:
             defines['IDE_PROJECT_FILTERED_RESOURCES'] = ''
+        defines['ANDROID_TARGET_SDK'] = self.environment.substs['ANDROID_TARGET_SDK']
 
         copier = FileCopier()
         finder = FileFinder(template_directory)
