@@ -1548,7 +1548,7 @@ Navigator::GetMozVoicemail(ErrorResult& aRv)
   return mVoicemail;
 }
 
-nsIDOMMozIccManager*
+IccManager*
 Navigator::GetMozIccManager(ErrorResult& aRv)
 {
   if (!mIccManager) {
