@@ -349,12 +349,6 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     bool visitRecompileCheck(LRecompileCheck *ins);
 
-    IonScriptCounts *extractUnassociatedScriptCounts() {
-        IonScriptCounts *counts = unassociatedScriptCounts_;
-        unassociatedScriptCounts_ = nullptr;  // prevent delete in dtor
-        return counts;
-    }
-
   private:
     bool addGetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Register objReg,
                              PropertyName *name, TypedOrValueRegister output,
@@ -454,9 +448,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mir);
     bool emitValueResultChecks(LInstruction *lir, MDefinition *mir);
 #endif
-
-    // Script counts created when compiling code with no associated JSScript.
-    IonScriptCounts *unassociatedScriptCounts_;
 
 #if defined(JS_ION_PERF)
     PerfSpewer perfSpewer_;
