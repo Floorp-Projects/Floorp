@@ -102,7 +102,7 @@
             // Fill the lists of supported source languages.
             let detectedLanguage = this._getAnonElt("detectedLanguage");
             let fromLanguage = this._getAnonElt("fromLanguage");
-            for (let code of this.translation.supportedSourceLanguages) {
+            for (let code of Translation.supportedSourceLanguages) {
               let name = bundle.GetStringFromName(code);
               detectedLanguage.appendItem(name, code);
               fromLanguage.appendItem(name, code);
@@ -115,7 +115,7 @@
 
             // Fill the list of supporter target languages.
             let toLanguage = this._getAnonElt("toLanguage");
-            for (let code of this.translation.supportedTargetLanguages)
+            for (let code of Translation.supportedTargetLanguages)
               toLanguage.appendItem(bundle.GetStringFromName(code), code);
 
             if (aTranslation.translatedTo)
@@ -143,7 +143,7 @@
               this._getAnonElt("fromLanguage").value =
                 this._getAnonElt("detectedLanguage").value;
               this._getAnonElt("toLanguage").value =
-                this.translation.defaultTargetLanguage;
+                Translation.defaultTargetLanguage;
             }
 
             this._handleButtonHiding(false);
