@@ -9,7 +9,6 @@
 #include "nsCOMPtr.h"
 #include "nsIIDNService.h"
 #include "nsNetCID.h"
-#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 
@@ -37,7 +36,7 @@ PeerIdentity::Equals(const nsAString& aOtherString) const
 
   nsresult rv;
   nsCOMPtr<nsIIDNService> idnService
-    = do_GetService("@mozilla.org/network/idn-service;1", &rv);
+    = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return host == otherHost;
   }

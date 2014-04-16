@@ -36,8 +36,6 @@
 #include "VideoSegment.h"
 #include "nsNSSShutDown.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
-#include "nsIPrincipal.h"
-#include "mozilla/PeerIdentity.h"
 #endif
 
 namespace test {
@@ -116,9 +114,6 @@ using mozilla::DtlsIdentity;
 using mozilla::ErrorResult;
 using mozilla::NrIceStunServer;
 using mozilla::NrIceTurnServer;
-#ifdef MOZILLA_INTERNAL_API
-using mozilla::PeerIdentity;
-#endif
 
 class PeerConnectionWrapper;
 class PeerConnectionMedia;
@@ -231,7 +226,8 @@ public:
   static PeerConnectionImpl* CreatePeerConnection();
   static nsresult ConvertRTCConfiguration(const RTCConfiguration& aSrc,
                                           IceConfiguration *aDst);
-  already_AddRefed<DOMMediaStream> MakeMediaStream(uint32_t aHint);
+  static already_AddRefed<DOMMediaStream> MakeMediaStream(nsPIDOMWindow* aWindow,
+                                                          uint32_t aHint);
 
   nsresult CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo>* aInfo);
 
@@ -281,7 +277,7 @@ public:
     return mSTSThread;
   }
 
-  // Get the DTLS identity (local side)
+  // Get the DTLS identity
   mozilla::RefPtr<DtlsIdentity> const GetIdentity() const;
   std::string GetFingerprint() const;
   std::string GetFingerprintAlgorithm() const;
@@ -375,36 +371,14 @@ public:
     rv = AddStream(aMediaStream, aConstraints);
   }
 
-  nsresult AddStream(DOMMediaStream &aMediaStream,
-                     const MediaConstraintsExternal& aConstraints);
+  NS_IMETHODIMP AddStream(DOMMediaStream & aMediaStream,
+                          const MediaConstraintsExternal& aConstraints);
 
   NS_IMETHODIMP_TO_ERRORRESULT(RemoveStream, ErrorResult &rv,
                                DOMMediaStream& aMediaStream)
   {
     rv = RemoveStream(aMediaStream);
   }
-
-
-  nsresult GetPeerIdentity(nsAString& peerIdentity)
-  {
-#ifdef MOZILLA_INTERNAL_API
-    if (mPeerIdentity) {
-      peerIdentity = mPeerIdentity->ToString();
-      return NS_OK;
-    }
-#endif
-
-    peerIdentity.SetIsVoid(true);
-    return NS_OK;
-  }
-
-#ifdef MOZILLA_INTERNAL_API
-  const PeerIdentity* GetPeerIdentity() const { return mPeerIdentity; }
-  nsresult SetPeerIdentity(const nsAString& peerIdentity);
-#endif
-
-  // this method checks to see if we've made a promise to protect media.
-  bool PrivacyRequested() const { return mPrivacyRequested; }
 
   NS_IMETHODIMP GetFingerprint(char** fingerprint);
   void GetFingerprint(nsAString& fingerprint)
@@ -539,8 +513,6 @@ public:
   void SetSignalingState_m(mozilla::dom::PCImplSignalingState aSignalingState);
 
   bool IsClosed() const;
-  // called when DTLS connects; we only need this once
-  nsresult SetDtlsConnected(bool aPrivacyRequested);
 
   bool HasMedia() const;
 
@@ -629,10 +601,6 @@ private:
   mozilla::dom::PCImplIceConnectionState mIceConnectionState;
   mozilla::dom::PCImplIceGatheringState mIceGatheringState;
 
-  // DTLS
-  // this is true if we have been connected ever, see SetDtlsConnected
-  bool mDtlsConnected;
-
   nsCOMPtr<nsIThread> mThread;
   // TODO: Remove if we ever properly wire PeerConnection for cycle-collection.
   nsWeakPtr mPCObserver;
@@ -650,20 +618,8 @@ private:
   std::string mFingerprint;
   std::string mRemoteFingerprint;
 
-  // identity-related fields
+  // The DTLS identity
   mozilla::RefPtr<DtlsIdentity> mIdentity;
-#ifdef MOZILLA_INTERNAL_API
-  // The entity on the other end of the peer-to-peer connection;
-  // void if they are not yet identified, and no constraint has been set
-  nsAutoPtr<PeerIdentity> mPeerIdentity;
-#endif
-  // Whether an app should be prevented from accessing media produced by the PC
-  // If this is true, then media will not be sent until mPeerIdentity matches
-  // local streams PeerIdentity; and remote streams are protected from content
-  //
-  // This can be false if mPeerIdentity is set, in the case where identity is
-  // provided, but the media is not protected from the app on either side
-  bool mPrivacyRequested;
 
   // A handle to refer to this PC with
   std::string mHandle;
@@ -679,7 +635,7 @@ private:
 
 #ifdef MOZILLA_INTERNAL_API
   // DataConnection that's used to get all the DataChannels
-  nsRefPtr<mozilla::DataChannelConnection> mDataConnection;
+	nsRefPtr<mozilla::DataChannelConnection> mDataConnection;
 #endif
 
   nsRefPtr<PeerConnectionMedia> mMedia;
