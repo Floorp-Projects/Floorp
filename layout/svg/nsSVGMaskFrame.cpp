@@ -226,9 +226,9 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
   gfxMatrix matrix =
     gfx->CurrentMatrix() * gfxMatrix().Translate(-clipExtents.TopLeft());
 
-  nsRenderingContext tmpCtx;
-  tmpCtx.Init(this->PresContext()->DeviceContext(), image);
-  tmpCtx.ThebesContext()->SetMatrix(matrix);
+  nsRefPtr<nsRenderingContext> tmpCtx(new nsRenderingContext);
+  tmpCtx->Init(this->PresContext()->DeviceContext(), image);
+  tmpCtx->ThebesContext()->SetMatrix(matrix);
 
   mMaskParent = aParent;
   if (mMaskParentMatrix) {
@@ -244,7 +244,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
     if (SVGFrame) {
       SVGFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
     }
-    nsSVGUtils::PaintFrameWithEffects(&tmpCtx, nullptr, kid);
+    nsSVGUtils::PaintFrameWithEffects(tmpCtx, nullptr, kid);
   }
 
   uint8_t *data   = image->Data();

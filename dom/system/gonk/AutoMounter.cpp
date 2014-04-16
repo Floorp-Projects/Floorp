@@ -163,12 +163,12 @@ private:
 
 /***************************************************************************/
 
-class AutoMounter : public RefCounted<AutoMounter>
+class AutoMounter
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(AutoMounter)
+  NS_INLINE_DECL_REFCOUNTING(AutoMounter)
 
-  typedef nsTArray<RefPtr<Volume> > VolumeArray;
+  typedef nsTArray<RefPtr<Volume>> VolumeArray;
 
   AutoMounter()
     : mResponseCallback(new AutoMounterResponseCallback),
@@ -692,19 +692,19 @@ UsbCableEventIOThread()
 *
 **************************************************************************/
 
-class UsbCableObserver : public SwitchObserver,
-                         public RefCounted<UsbCableObserver>
+class UsbCableObserver MOZ_FINAL : public SwitchObserver
 {
-public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(UsbCableObserver)
-  UsbCableObserver()
-  {
-    RegisterSwitchObserver(SWITCH_USB, this);
-  }
-
   ~UsbCableObserver()
   {
     UnregisterSwitchObserver(SWITCH_USB, this);
+  }
+
+public:
+  NS_INLINE_DECL_REFCOUNTING(UsbCableObserver)
+
+  UsbCableObserver()
+  {
+    RegisterSwitchObserver(SWITCH_USB, this);
   }
 
   virtual void Notify(const SwitchEvent& aEvent)

@@ -139,8 +139,12 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
   }
 
   SECItemArray* arr = SECITEM_AllocArray(aArena, nullptr, 1);
-  arr->items[0].data = response ? response->data : nullptr;
-  arr->items[0].len = response ? response->len : 0;
+  if (!arr) {
+    PrintPRError("SECITEM_AllocArray failed");
+    return nullptr;
+  }
+  arr->items[0].data = response->data;
+  arr->items[0].len = response->len;
 
   return arr;
 }

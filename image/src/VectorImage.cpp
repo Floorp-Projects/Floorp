@@ -649,9 +649,9 @@ VectorImage::FrameIsOpaque(uint32_t aWhichFrame)
 }
 
 //******************************************************************************
-/* [noscript] gfxASurface getFrame(in uint32_t aWhichFrame,
- *                                 in uint32_t aFlags; */
-NS_IMETHODIMP_(already_AddRefed<gfxASurface>)
+/* [noscript] SourceSurface getFrame(in uint32_t aWhichFrame,
+ *                                   in uint32_t aFlags; */
+NS_IMETHODIMP_(TemporaryRef<SourceSurface>)
 VectorImage::GetFrame(uint32_t aWhichFrame,
                       uint32_t aFlags)
 {
@@ -674,27 +674,14 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
     return nullptr;
   }
 
-  // Create a surface that we'll ultimately return
-  // ---------------------------------------------
   // Make our surface the size of what will ultimately be drawn to it.
   // (either the full image size, or the restricted region)
-  gfxIntSize surfaceSize(imageIntSize.width, imageIntSize.height);
-
-  nsRefPtr<gfxImageSurface> surface =
-    new gfxImageSurface(surfaceSize, gfxImageFormat::ARGB32);
-
-  RefPtr<DrawTarget> drawTarget =
-    Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                     surface->Data(),
-                                     IntSize(imageIntSize.width,
+  RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
+    CreateOffscreenContentDrawTarget(IntSize(imageIntSize.width,
                                              imageIntSize.height),
-                                     surface->Stride(),
                                      SurfaceFormat::B8G8R8A8);
+  nsRefPtr<gfxContext> context = new gfxContext(dt);
 
-  nsRefPtr<gfxContext> context = new gfxContext(drawTarget);
-
-  // Draw to our surface!
-  // --------------------
   nsresult rv = Draw(context, GraphicsFilter::FILTER_NEAREST, gfxMatrix(),
                      gfxRect(gfxPoint(0,0), gfxIntSize(imageIntSize.width,
                                                        imageIntSize.height)),
@@ -702,7 +689,7 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
                      imageIntSize, nullptr, aWhichFrame, aFlags);
 
   NS_ENSURE_SUCCESS(rv, nullptr);
-  return surface.forget();
+  return dt->Snapshot();
 }
 
 //******************************************************************************
