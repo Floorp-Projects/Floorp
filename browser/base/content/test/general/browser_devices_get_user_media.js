@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 const kObservedTopics = [
   "getUserMedia:response:allow",
   "getUserMedia:revoke",
@@ -735,6 +739,50 @@ let gTests = [
     yield stopAndCheckPerm(true, false);
     info("request video, stop sharing resets video only");
     yield stopAndCheckPerm(false, true);
+  }
+},
+
+{
+  desc: "'Always Allow' ignored and not shown on http pages",
+  run: function checkNoAlwaysOnHttp() {
+    // Load an http page instead of the https version.
+    let deferred = Promise.defer();
+    let browser = gBrowser.selectedTab.linkedBrowser;
+    browser.addEventListener("load", function onload() {
+      browser.removeEventListener("load", onload, true);
+      deferred.resolve();
+    }, true);
+    content.location = content.location.href.replace("https://", "http://");
+    yield deferred.promise;
+
+    // Initially set both permissions to 'allow'.
+    let Perms = Services.perms;
+    let uri = content.document.documentURIObject;
+    Perms.add(uri, "microphone", Perms.ALLOW_ACTION);
+    Perms.add(uri, "camera", Perms.ALLOW_ACTION);
+
+    // Request devices and expect a prompt despite the saved 'Allow' permission,
+    // because the connection isn't secure.
+    yield promisePopupNotificationShown("webRTC-shareDevices", () => {
+      content.wrappedJSObject.requestDevice(true, true);
+    });
+    expectObserverCalled("getUserMedia:request");
+
+    // Ensure that the 'Always Allow' action isn't shown.
+    let alwaysLabel = gNavigatorBundle.getString("getUserMedia.always.label");
+    ok(!!alwaysLabel, "found the 'Always Allow' localized label");
+    let labels = [];
+    let notification = PopupNotifications.panel.firstChild;
+    for (let node of notification.childNodes) {
+      if (node.localName == "menuitem")
+        labels.push(node.getAttribute("label"));
+    }
+    is(labels.indexOf(alwaysLabel), -1, "The 'Always Allow' item isn't shown");
+
+    // Cleanup.
+    yield closeStream(true);
+    Perms.remove(uri.host, "camera");
+    Perms.remove(uri.host, "microphone");
   }
 }
 
