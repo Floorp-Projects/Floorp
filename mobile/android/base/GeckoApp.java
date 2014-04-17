@@ -154,7 +154,6 @@ public abstract class GeckoApp
     public static final String EXTRA_STATE_BUNDLE          = "stateBundle";
 
     public static final String PREFS_ALLOW_STATE_BUNDLE    = "allowStateBundle";
-    public static final String PREFS_CRASHED               = "crashed";
     public static final String PREFS_OOM_EXCEPTION         = "OOMException";
     public static final String PREFS_VERSION_CODE          = "versionCode";
     public static final String PREFS_WAS_STOPPED           = "wasStopped";
@@ -1772,9 +1771,12 @@ public abstract class GeckoApp
             });
 
             shouldRestore = true;
-        } else if (savedInstanceState != null || getSessionRestorePreference().equals("always") || getRestartFromIntent()) {
+        } else if (savedInstanceState != null ||
+                   getSessionRestorePreference().equals("always") ||
+                   getRestartFromIntent() ||
+                   prefs.getBoolean(GeckoApp.PREFS_WAS_STOPPED, false)) {
             // We're coming back from a background kill by the OS, the user
-            // has chosen to always restore, or we just restarted.
+            // has chosen to always restore, we restarted, or we crashed.
             shouldRestore = true;
         }
 
