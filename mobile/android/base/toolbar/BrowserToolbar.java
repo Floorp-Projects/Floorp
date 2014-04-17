@@ -20,6 +20,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.PropertyAnimator.Property;
 import org.mozilla.gecko.animation.PropertyAnimator.PropertyAnimationListener;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.menu.GeckoMenu;
@@ -34,6 +35,7 @@ import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.widget.ThemedImageButton;
 import org.mozilla.gecko.widget.ThemedImageView;
 import org.mozilla.gecko.widget.ThemedRelativeLayout;
+import org.mozilla.gecko.widget.ThemedView;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -132,6 +134,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
     private MenuPopup mMenuPopup;
     private List<View> mFocusOrder;
 
+    private final ThemedView editSeparator;
+    private final View editCancel;
+
     private OnActivateListener mActivateListener;
     private OnCommitListener mCommitListener;
     private OnDismissListener mDismissListener;
@@ -206,6 +211,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
         mMenuIcon = (ThemedImageView) findViewById(R.id.menu_icon);
         mActionItemBar = (LinearLayout) findViewById(R.id.menu_items);
         mHasSoftMenuButton = !HardwareUtils.hasMenuButton();
+
+        editSeparator = (ThemedView) findViewById(R.id.edit_separator);
+        editCancel = findViewById(R.id.edit_cancel);
 
         // We use different layouts on phones and tablets, so adjust the focus
         // order appropriately.
@@ -350,6 +358,13 @@ public class BrowserToolbar extends ThemedRelativeLayout
             @Override
             public boolean onLongClick(View view) {
                 return Tabs.getInstance().getSelectedTab().showForwardHistory();
+            }
+        });
+
+        editCancel.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cancelEdit();
             }
         });
 
@@ -575,7 +590,10 @@ public class BrowserToolbar extends ThemedRelativeLayout
     }
 
     private int getUrlBarEntryTranslation() {
-        return getWidth() - mUrlBarEntry.getRight();
+        // We would ideally use the right-most point of the edit layout instead of the
+        // edit separator and its margin, but it is not inflated when this code initially runs.
+        final LayoutParams lp = (LayoutParams) editSeparator.getLayoutParams();
+        return editSeparator.getLeft() - lp.leftMargin - mUrlBarEntry.getRight();
     }
 
     private int getUrlBarCurveTranslation() {
@@ -820,16 +838,17 @@ public class BrowserToolbar extends ThemedRelativeLayout
     }
 
     private void setUrlEditLayoutVisibility(final boolean showEditLayout, PropertyAnimator animator) {
+        mUrlEditLayout.prepareAnimation(showEditLayout, animator);
+
         final View viewToShow = (showEditLayout ? mUrlEditLayout : mUrlDisplayLayout);
         final View viewToHide = (showEditLayout ? mUrlDisplayLayout : mUrlEditLayout);
-
-        if (showEditLayout) {
-            mUrlEditLayout.prepareShowAnimation(animator);
-        }
 
         if (animator == null) {
             viewToHide.setVisibility(View.GONE);
             viewToShow.setVisibility(View.VISIBLE);
+
+            final int cancelVisibility = (showEditLayout ? View.VISIBLE : View.INVISIBLE);
+            setCancelVisibility(cancelVisibility);
             return;
         }
 
@@ -846,14 +865,25 @@ public class BrowserToolbar extends ThemedRelativeLayout
             @Override
             public void onPropertyAnimationStart() {
                 viewToShow.setVisibility(View.VISIBLE);
+                if (!showEditLayout) {
+                    setCancelVisibility(View.INVISIBLE);
+                }
             }
 
             @Override
             public void onPropertyAnimationEnd() {
                 viewToHide.setVisibility(View.GONE);
                 ViewHelper.setAlpha(viewToHide, 1.0f);
+                if (showEditLayout) {
+                    setCancelVisibility(View.VISIBLE);
+                }
             }
         });
+    }
+
+    private void setCancelVisibility(final int visibility) {
+        editSeparator.setVisibility(visibility);
+        editCancel.setVisibility(visibility);
     }
 
     /**
@@ -1270,6 +1300,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
         mMenu.setPrivateMode(isPrivate);
         mMenuIcon.setPrivateMode(isPrivate);
         mUrlEditLayout.setPrivateMode(isPrivate);
+        editSeparator.setPrivateMode(isPrivate);
 
         if (mBack instanceof BackButton) {
             ((BackButton) mBack).setPrivateMode(isPrivate);
