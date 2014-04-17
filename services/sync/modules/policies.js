@@ -500,6 +500,13 @@ ErrorHandler.prototype = {
    */
   dontIgnoreErrors: false,
 
+  /**
+   * Flag that indicates if we have already reported a prolonged failure.
+   * Once set, we don't report it again, meaning this error is only reported
+   * one per run.
+   */
+  didReportProlongedError: false,
+
   init: function init() {
     Svc.Obs.add("weave:engine:sync:applied", this);
     Svc.Obs.add("weave:engine:sync:error", this);
@@ -770,7 +777,13 @@ ErrorHandler.prototype = {
     if (lastSync && ((Date.now() - Date.parse(lastSync)) >
         Svc.Prefs.get("errorhandler.networkFailureReportTimeout") * 1000)) {
       Status.sync = PROLONGED_SYNC_FAILURE;
-      this._log.trace("shouldReportError: true (prolonged sync failure).");
+      if (this.didReportProlongedError) {
+        this._log.trace("shouldReportError: false (prolonged sync failure, but" +
+                        " we've already reported it).");
+        return false;
+      }
+      this._log.trace("shouldReportError: true (first prolonged sync failure).");
+      this.didReportProlongedError = true;
       return true;
     }
 
