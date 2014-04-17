@@ -617,7 +617,11 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
     // need to use nextEventMatchingMask and sendEvent -- otherwise (in
     // Minefield) the modal window (or non-main event loop) won't receive key
     // events or most mouse events.
-    if ([NSApp _isRunningModal] || !InGeckoMainEventLoop()) {
+    //
+    // Add aMayWait to minimize the number of calls to -[NSApp sendEvent:]
+    // made from nsAppShell::ProcessNextNativeEvent() (and indirectly from
+    // nsBaseAppShell::OnProcessNextEvent()), to work around bug 959281.
+    if ([NSApp _isRunningModal] || (aMayWait && !InGeckoMainEventLoop())) {
       if ((nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
                                           untilDate:waitUntil
                                              inMode:currentMode
