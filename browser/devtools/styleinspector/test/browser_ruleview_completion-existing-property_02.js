@@ -57,6 +57,8 @@ let test = asyncTest(function*() {
     editor = inplaceEditor(view.doc.activeElement);
     yield testCompletion(testData[i], editor, view);
   }
+
+  yield inspector.once("inspector-updated");
 });
 
 function* testCompletion([key, modifiers, completion, index, total], editor, view) {
