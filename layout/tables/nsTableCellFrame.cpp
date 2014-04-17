@@ -1103,7 +1103,10 @@ nsBCTableCellFrame::GetUsedBorder() const
 }
 
 /* virtual */ bool
-nsBCTableCellFrame::GetBorderRadii(nscoord aRadii[8]) const
+nsBCTableCellFrame::GetBorderRadii(const nsSize& aFrameSize,
+                                   const nsSize& aBorderArea,
+                                   int aSkipSides,
+                                   nscoord aRadii[8]) const
 {
   NS_FOR_CSS_HALF_CORNERS(corner) {
     aRadii[corner] = 0;
