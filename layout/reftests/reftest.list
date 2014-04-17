@@ -168,7 +168,7 @@ include font-face/reftest.list
 include font-features/reftest.list
 
 # mobile font size inflation
-include font-inflation/reftest.list
+skip-if(B2G) include font-inflation/reftest.list # Bug 972697
 
 # font matching
 include font-matching/reftest.list
