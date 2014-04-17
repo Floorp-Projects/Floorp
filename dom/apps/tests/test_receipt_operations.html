@@ -52,7 +52,7 @@ function cbError(aError) {
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  launchableValue = SpecialPowers.setAllAppsLaunchable(true);
+  SpecialPowers.setAllAppsLaunchable(true);
 
   SpecialPowers.autoConfirmAppInstall(continueTest);
   yield undefined;
