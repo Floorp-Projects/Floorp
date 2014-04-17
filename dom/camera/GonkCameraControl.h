@@ -136,7 +136,6 @@ protected:
   Size                      mLastRecorderSize;
   uint32_t                  mPreviewFps;
   bool                      mResumePreviewAfterTakingPicture;
-
   Atomic<uint32_t>          mDeferConfigUpdate;
   GonkCameraParameters      mParams;
 
