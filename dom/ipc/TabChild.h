@@ -42,7 +42,7 @@ namespace layout {
 class RenderFrameChild;
 }
 
-namespace widget {
+namespace layers {
 class ActiveElementManager;
 }
 
@@ -232,7 +232,7 @@ class TabChild : public PBrowserChild,
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
     typedef mozilla::layout::RenderFrameChild RenderFrameChild;
     typedef mozilla::layout::ScrollingBehavior ScrollingBehavior;
-    typedef mozilla::widget::ActiveElementManager ActiveElementManager;
+    typedef mozilla::layers::ActiveElementManager ActiveElementManager;
 
 public:
     /** 

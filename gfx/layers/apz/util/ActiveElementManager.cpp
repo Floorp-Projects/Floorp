@@ -15,7 +15,7 @@
 #include "base/task.h"
 
 namespace mozilla {
-namespace widget {
+namespace layers {
 
 static int32_t sActivationDelayMs = 100;
 static bool sActivationDelayMsSet = false;

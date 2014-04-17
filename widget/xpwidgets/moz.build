@@ -5,8 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'ActiveElementManager.h',
-    'APZCCallbackHelper.h',
     'ContentHelper.h',
     'GfxDriverInfo.h',
     'GfxInfoBase.h',
@@ -14,8 +12,6 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
-    'ActiveElementManager.cpp',
-    'APZCCallbackHelper.cpp',
     'ContentHelper.cpp',
     'GfxDriverInfo.cpp',
     'GfxInfoBase.cpp',

@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "APZCTreeManager.h"
-#include "AsyncCompositionManager.h"    // for ViewTransform
 #include "Compositor.h"                 // for Compositor
 #include "CompositorParent.h"           // for CompositorParent, etc
 #include "InputData.h"                  // for InputData, etc
@@ -12,6 +11,7 @@
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "mozilla/dom/Touch.h"          // for Touch
 #include "mozilla/gfx/Point.h"          // for Point
+#include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
 #include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/mozalloc.h"           // for operator new
