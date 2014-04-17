@@ -419,6 +419,24 @@ function sendMMI(aMmi) {
 }
 
 /**
+ * Set roaming preference.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'.
+ *
+ * @param aMode
+ *        'home', 'affiliated', or 'any'.
+ *
+ * @return A deferred promise.
+ */
+ function setRoamingPreference(aMode) {
+  let request = mobileConnection.setRoamingPreference(aMode);
+  return wrapDomRequestAsPromise(request)
+    .then(null, () => { throw request.error });
+}
+
+/**
  * Set data connection enabling state and wait for "datachange" event.
  *
  * Resolve if data connection state changed to the expected one.  Never reject.
