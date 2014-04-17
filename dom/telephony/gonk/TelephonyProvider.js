@@ -430,21 +430,46 @@ TelephonyProvider.prototype = {
       return;
     }
 
-    // For DSDS, if there is aleady a call on SIM X, we cannot place any new
-    // call on other SIM.
-    let callOnOtherSim = false;
-    for (let cid = 0; cid < this._numClients; ++cid) {
-      if (cid === aClientId) {
-        continue;
+    function hasCallsOnOtherClient(aClientId) {
+      for (let cid = 0; cid < this._numClients; ++cid) {
+        if (cid === aClientId) {
+          continue;
+        }
+        if (Object.keys(this._currentCalls[cid]).length !== 0) {
+          return true;
+        }
       }
-      if (Object.keys(this._currentCalls[cid]).length !== 0) {
-        callOnOtherSim = true;
-        break;
-      }
+      return false;
     }
-    if (callOnOtherSim) {
+
+    // For DSDS, if there is aleady a call on SIM 'aClientId', we cannot place
+    // any new call on other SIM.
+    if (hasCallsOnOtherClient.call(this, aClientId)) {
       if (DEBUG) debug("Already has a call on other sim. Drop.");
       aTelephonyCallback.notifyDialError(DIAL_ERROR_OTHER_CONNECTION_IN_USE);
+      return;
+    }
+
+    // All calls in the conference is regarded as one conference call.
+    function numCallsOnLine(aClientId) {
+      let numCalls = 0;
+      let hasConference = false;
+
+      for (let cid in this._currentCalls[aClientId]) {
+        let call = this._currentCalls[aClientId][cid];
+        if (call.isConference) {
+          hasConference = true;
+        } else {
+          numCalls++;
+        }
+      }
+
+      return hasConference ? numCalls + 1 : numCalls;
+    }
+
+    if (numCallsOnLine.call(this, aClientId) >= 2) {
+      if (DEBUG) debug("Has more than 2 calls on line. Drop.");
+      aTelephonyCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
       return;
     }
 
