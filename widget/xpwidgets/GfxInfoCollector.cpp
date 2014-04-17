@@ -18,8 +18,7 @@ InfoObject::DefineProperty(const char *name, int value)
   if (!mOk)
     return;
 
-  mOk = JS_DefineProperty(mCx, mObj, name, INT_TO_JSVAL(value),
-                          nullptr, nullptr, JSPROP_ENUMERATE);
+  mOk = JS_DefineProperty(mCx, mObj, name, value, JSPROP_ENUMERATE);
 }
 
 void
@@ -29,15 +28,15 @@ InfoObject::DefineProperty(const char *name, nsAString &value)
     return;
 
   const nsString &flat = PromiseFlatString(value);
-  JSString *string = JS_NewUCStringCopyN(mCx, static_cast<const jschar*>(flat.get()), flat.Length());
+  JS::Rooted<JSString*> string(mCx, JS_NewUCStringCopyN(mCx, static_cast<const jschar*>(flat.get()),
+                                                        flat.Length()));
   if (!string)
     mOk = false;
 
   if (!mOk)
     return;
 
-  mOk = JS_DefineProperty(mCx, mObj, name, STRING_TO_JSVAL(string),
-                          nullptr, nullptr, JSPROP_ENUMERATE);
+  mOk = JS_DefineProperty(mCx, mObj, name, string, JSPROP_ENUMERATE);
 }
 
 void

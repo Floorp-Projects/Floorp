@@ -6,8 +6,8 @@
 
 #include "nsIDOMXULElement.idl"
 
-[scriptable, uuid(7a3be943-dfc0-4b7f-8b5e-692bbce0ce47)]
-interface nsIDOMXULDescriptionElement : nsIDOMXULElement {
+[scriptable, uuid(64c3500e-e258-4d49-b7ca-c93ab0931ce4)]
+interface nsIDOMXULDescriptionElement : nsISupports {
   attribute boolean disabled;
   attribute boolean crop;
   attribute DOMString value;

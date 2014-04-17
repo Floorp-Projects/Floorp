@@ -1508,11 +1508,45 @@ HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
 void
 HyperTextAccessible::EnclosingRange(a11y::TextRange& aRange) const
 {
+  if (IsTextField()) {
+    aRange.Set(mDoc, const_cast<HyperTextAccessible*>(this), 0,
+               const_cast<HyperTextAccessible*>(this), ChildCount());
+  } else {
+    aRange.Set(mDoc, mDoc, 0, mDoc, mDoc->ChildCount());
+  }
 }
 
 void
 HyperTextAccessible::SelectionRanges(nsTArray<a11y::TextRange>* aRanges) const
 {
+  NS_ASSERTION(aRanges->Length() != 0, "TextRange array supposed to be empty");
+
+  Selection* sel = DOMSelection();
+  if (!sel)
+    return;
+
+  aRanges->SetCapacity(sel->RangeCount());
+
+  for (uint32_t idx = 0; idx < sel->RangeCount(); idx++) {
+    nsRange* DOMRange = sel->GetRangeAt(idx);
+    HyperTextAccessible* startParent =
+      nsAccUtils::GetTextContainer(DOMRange->GetStartParent());
+    HyperTextAccessible* endParent =
+      nsAccUtils::GetTextContainer(DOMRange->GetEndParent());
+    if (!startParent || !endParent)
+      continue;
+
+    int32_t startOffset =
+      startParent->DOMPointToOffset(DOMRange->GetStartParent(),
+                                    DOMRange->StartOffset(), false);
+    int32_t endOffset =
+      endParent->DOMPointToOffset(DOMRange->GetEndParent(),
+                                  DOMRange->EndOffset(), true);
+
+    TextRange tr(IsTextField() ? const_cast<HyperTextAccessible*>(this) : mDoc,
+                    startParent, startOffset, endParent, endOffset);
+    *(aRanges->AppendElement()) = Move(tr);
+  }
 }
 
 void
@@ -1524,12 +1558,16 @@ void
 HyperTextAccessible::RangeByChild(Accessible* aChild,
                                   a11y::TextRange& aRange) const
 {
+  aRange.Set(mDoc, aChild, 0, aChild, aChild->ChildCount());
 }
 
 void
 HyperTextAccessible::RangeAtPoint(int32_t aX, int32_t aY,
                                   a11y::TextRange& aRange) const
 {
+  Accessible* child = mDoc->ChildAtPoint(aX, aY, eDeepestChild);
+  if (child)
+    aRange.Set(mDoc, child, 0, child, child->ChildCount());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

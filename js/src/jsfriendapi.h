@@ -152,11 +152,15 @@ js_ObjectClassIs(JSContext *cx, JS::HandleObject obj, js::ESClassValue classValu
 JS_FRIEND_API(const char *)
 js_ObjectClassName(JSContext *cx, JS::HandleObject obj);
 
+namespace js {
+
 JS_FRIEND_API(bool)
-js_AddObjectRoot(JSRuntime *rt, JSObject **objp);
+AddRawValueRoot(JSContext *cx, JS::Value *vp, const char *name);
 
 JS_FRIEND_API(void)
-js_RemoveObjectRoot(JSRuntime *rt, JSObject **objp);
+RemoveRawValueRoot(JSContext *cx, JS::Value *vp);
+
+} /* namespace js */
 
 #ifdef JS_DEBUG
 
@@ -1333,6 +1337,14 @@ JS_IsArrayBufferObject(JSObject *obj);
  */
 extern JS_FRIEND_API(uint32_t)
 JS_GetArrayBufferByteLength(JSObject *obj);
+
+/*
+ * Check whether the obj is ArrayBufferObject and memory mapped. Note that this
+ * may return false if a security wrapper is encountered that denies the
+ * unwrapping.
+ */
+extern JS_FRIEND_API(bool)
+JS_IsMappedArrayBufferObject(JSObject *obj);
 
 /*
  * Return the number of elements in a typed array.

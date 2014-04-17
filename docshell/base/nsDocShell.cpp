@@ -1325,7 +1325,6 @@ nsDocShell::LoadURI(nsIURI * aURI,
     if (IsPrintingOrPP()) {
       return NS_OK; // JS may not handle returning of an error code
     }
-    nsresult rv;
     nsCOMPtr<nsIURI> referrer;
     nsCOMPtr<nsIInputStream> postStream;
     nsCOMPtr<nsIInputStream> headersStream;
@@ -1544,17 +1543,9 @@ nsDocShell::LoadURI(nsIURI * aURI,
     //       for in InternalLoad is data:, javascript:, and about:blank
     //       URIs.  For other URIs this would all be dead wrong!
 
-    nsCOMPtr<nsIScriptSecurityManager> secMan =
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     if (owner && mItemType != typeChrome) {
         nsCOMPtr<nsIPrincipal> ownerPrincipal = do_QueryInterface(owner);
-        bool isSystem;
-        rv = secMan->IsSystemPrincipal(ownerPrincipal, &isSystem);
-        NS_ENSURE_SUCCESS(rv, rv);
-        nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(ownerPrincipal);
-        if (isSystem || ep) {
+        if (nsContentUtils::IsSystemOrExpandedPrincipal(ownerPrincipal)) {
             if (ownerIsExplicit) {
                 return NS_ERROR_DOM_SECURITY_ERR;
             }
@@ -1564,11 +1555,8 @@ nsDocShell::LoadURI(nsIURI * aURI,
     }
     if (!owner && !inheritOwner && !ownerIsExplicit) {
         // See if there's system or chrome JS code running
-        rv = secMan->SubjectPrincipalIsSystem(&inheritOwner);
-        if (NS_FAILED(rv)) {
-            // Set it back to false
-            inheritOwner = false;
-        }
+        inheritOwner = nsContentUtils::IsSystemPrincipal(
+          nsContentUtils::GetSubjectPrincipal());
     }
 
     if (aLoadFlags & LOAD_FLAGS_DISALLOW_INHERIT_OWNER) {

@@ -412,7 +412,8 @@ AudioStream::Init(int32_t aNumChannels, int32_t aRate,
     // When this is done, it will start callbacks from Cubeb.  Those will
     // cause us to move from INITIALIZED to RUNNING.  Until then, we
     // can't access any cubeb functions.
-    AudioInitTask *init = new AudioInitTask(this, aLatencyRequest, params);
+    // Use a RefPtr to avoid leaks if Dispatch fails
+    RefPtr<AudioInitTask> init = new AudioInitTask(this, aLatencyRequest, params);
     init->Dispatch();
     return NS_OK;
   }

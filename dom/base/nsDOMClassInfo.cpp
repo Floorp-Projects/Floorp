@@ -147,7 +147,6 @@
 #include "nsIDOMMozMobileMessageThread.h"
 
 #ifdef MOZ_B2G_RIL
-#include "nsIDOMIccManager.h"
 #include "nsIDOMMobileConnection.h"
 #endif // MOZ_B2G_RIL
 
@@ -443,11 +442,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(CSSPageRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-#ifdef MOZ_B2G_RIL
-  NS_DEFINE_CLASSINFO_DATA(MozIccManager, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-#endif
 
   NS_DEFINE_CLASSINFO_DATA(CSSFontFeatureValuesRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1118,14 +1112,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(CSSPageRule, nsIDOMCSSPageRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSPageRule)
   DOM_CLASSINFO_MAP_END
-
-#ifdef MOZ_B2G_RIL
-  DOM_CLASSINFO_MAP_BEGIN(MozIccManager, nsIDOMMozIccManager)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozIccManager)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-#endif
 
   DOM_CLASSINFO_MAP_BEGIN(CSSFontFeatureValuesRule, nsIDOMCSSFontFeatureValuesRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSFontFeatureValuesRule)
@@ -2047,6 +2033,7 @@ DefineInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsIID *
   uint16_t parent_constant_count, i;
   parent_if_info->GetConstantCount(&parent_constant_count);
 
+  JS::Rooted<JS::Value> v(cx);
   for (i = parent_constant_count; i < constant_count; i++) {
     const nsXPTConstant *c = nullptr;
 
@@ -2055,18 +2042,18 @@ DefineInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsIID *
 
     uint16_t type = c->GetType().TagPart();
 
-    jsval v;
+    v.setUndefined();
     switch (type) {
       case nsXPTType::T_I8:
       case nsXPTType::T_U8:
       {
-        v = INT_TO_JSVAL(c->GetValue()->val.u8);
+        v.setInt32(c->GetValue()->val.u8);
         break;
       }
       case nsXPTType::T_I16:
       case nsXPTType::T_U16:
       {
-        v = INT_TO_JSVAL(c->GetValue()->val.u16);
+        v.setInt32(c->GetValue()->val.u16);
         break;
       }
       case nsXPTType::T_I32:
@@ -2089,9 +2076,9 @@ DefineInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsIID *
     }
 
     if (!::JS_DefineProperty(cx, obj, c->GetName(), v,
-                             JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_READONLY |
-                             JSPROP_PERMANENT)) {
+                             JSPROP_PERMANENT,
+                             JS_PropertyStub, JS_StrictPropertyStub)) {
       return NS_ERROR_UNEXPECTED;
     }
   }
@@ -2703,8 +2690,8 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
   // Per ECMA, the prototype property is {DontEnum, DontDelete, ReadOnly}
   if (!JS_WrapValue(cx, &v) ||
       !JS_DefineProperty(cx, class_obj, "prototype", v,
-                         JS_PropertyStub, JS_StrictPropertyStub,
-                         JSPROP_PERMANENT | JSPROP_READONLY)) {
+                         JSPROP_PERMANENT | JSPROP_READONLY,
+                         JS_PropertyStub, JS_StrictPropertyStub)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -3204,9 +3191,9 @@ LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
   JS::Rooted<JSObject*> interfaces(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), global));
   NS_ENSURE_TRUE(interfaces, NS_ERROR_OUT_OF_MEMORY);
   bool ok =
-    JS_DefineProperty(cx, components, "interfaces", JS::ObjectValue(*interfaces),
-                      JS_PropertyStub, JS_StrictPropertyStub,
-                      JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
+    JS_DefineProperty(cx, components, "interfaces", interfaces,
+                      JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY,
+                      JS_PropertyStub, JS_StrictPropertyStub);
   NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
 
   // Define a bunch of shims from the Ci.nsIDOMFoo to window.Foo for DOM
@@ -3228,8 +3215,8 @@ LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
 
     // Define the shim on the interfaces object.
     ok = JS_DefineProperty(cx, interfaces, geckoName, v,
-                           JS_PropertyStub, JS_StrictPropertyStub,
-                           JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
+                           JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY,
+                           JS_PropertyStub, JS_StrictPropertyStub);
     NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
   }
 
@@ -3390,8 +3377,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
       *_retval = JS_WrapValue(cx, &v) &&
                  JS_DefineProperty(cx, obj, "document", v,
-                                   JS_PropertyStub, JS_StrictPropertyStub,
-                                   JSPROP_READONLY | JSPROP_ENUMERATE);
+                                   JSPROP_READONLY | JSPROP_ENUMERATE,
+                                   JS_PropertyStub, JS_StrictPropertyStub);
       if (!*_retval) {
         return NS_ERROR_UNEXPECTED;
       }

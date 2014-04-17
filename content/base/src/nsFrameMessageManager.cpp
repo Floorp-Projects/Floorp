@@ -958,19 +958,17 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                             static_cast<const jschar*>(aMessage.BeginReading()),
                             aMessage.Length()));
       NS_ENSURE_TRUE(jsMessage, NS_ERROR_OUT_OF_MEMORY);
-      JS_DefineProperty(cx, param, "target", targetv, nullptr, nullptr, JSPROP_ENUMERATE);
-      JS_DefineProperty(cx, param, "name",
-                        STRING_TO_JSVAL(jsMessage), nullptr, nullptr, JSPROP_ENUMERATE);
-      JS_DefineProperty(cx, param, "sync",
-                        BOOLEAN_TO_JSVAL(aIsSync), nullptr, nullptr, JSPROP_ENUMERATE);
-      JS_DefineProperty(cx, param, "json", json, nullptr, nullptr, JSPROP_ENUMERATE); // deprecated
-      JS_DefineProperty(cx, param, "data", json, nullptr, nullptr, JSPROP_ENUMERATE);
-      JS_DefineProperty(cx, param, "objects", cpowsv, nullptr, nullptr, JSPROP_ENUMERATE);
+      JS::Rooted<JS::Value> syncv(cx, JS::BooleanValue(aIsSync));
+      JS_DefineProperty(cx, param, "target", targetv, JSPROP_ENUMERATE);
+      JS_DefineProperty(cx, param, "name", jsMessage, JSPROP_ENUMERATE);
+      JS_DefineProperty(cx, param, "sync", syncv, JSPROP_ENUMERATE);
+      JS_DefineProperty(cx, param, "json", json, JSPROP_ENUMERATE); // deprecated
+      JS_DefineProperty(cx, param, "data", json, JSPROP_ENUMERATE);
+      JS_DefineProperty(cx, param, "objects", cpowsv, JSPROP_ENUMERATE);
 
       // message.principal == null
       if (!aPrincipal) {
-        JS::Rooted<JS::Value> nullValue(cx);
-        JS_DefineProperty(cx, param, "principal", nullValue, nullptr, nullptr, JSPROP_ENUMERATE);
+        JS_DefineProperty(cx, param, "principal", JS::UndefinedHandleValue, JSPROP_ENUMERATE);
       }
 
       // message.principal = { appId: <id>, origin: <origin>, isInBrowserElement: <something> }
@@ -982,25 +980,24 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         nsresult rv = aPrincipal->GetAppId(&appId);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        JS::Rooted<JS::Value> appIdValue(cx, INT_TO_JSVAL(appId));
-        JS_DefineProperty(cx, principalObj, "appId", appIdValue, nullptr, nullptr, JSPROP_ENUMERATE);
+        JS_DefineProperty(cx, principalObj, "appId", appId, JSPROP_ENUMERATE);
 
         nsCString origin;
         rv = aPrincipal->GetOrigin(getter_Copies(origin));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        JS::Rooted<JSString*> originValue(cx, JS_NewStringCopyN(cx, origin.get(), origin.Length()));
-        JS_DefineProperty(cx, principalObj, "origin", STRING_TO_JSVAL(originValue), nullptr, nullptr, JSPROP_ENUMERATE);
+        JS::Rooted<JSString*> originStr(cx, JS_NewStringCopyN(cx, origin.get(), origin.Length()));
+        NS_ENSURE_TRUE(originStr, NS_ERROR_OUT_OF_MEMORY);
+        JS_DefineProperty(cx, principalObj, "origin", originStr, JSPROP_ENUMERATE);
 
         bool browser;
         rv = aPrincipal->GetIsInBrowserElement(&browser);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        JS::Rooted<JS::Value> browserValue(cx, BOOLEAN_TO_JSVAL(browser));
-        JS_DefineProperty(cx, principalObj, "isInBrowserElement", browserValue, nullptr, nullptr, JSPROP_ENUMERATE);
+        JS::Rooted<JS::Value> browserValue(cx, JS::BooleanValue(browser));
+        JS_DefineProperty(cx, principalObj, "isInBrowserElement", browserValue, JSPROP_ENUMERATE);
 
-        JS::Rooted<JS::Value> principalValue(cx, JS::ObjectValue(*principalObj));
-        JS_DefineProperty(cx, param, "principal", principalValue, nullptr, nullptr, JSPROP_ENUMERATE);
+        JS_DefineProperty(cx, param, "principal", principalObj, JSPROP_ENUMERATE);
       }
 
       JS::Rooted<JS::Value> thisValue(cx, JS::UndefinedValue());
@@ -1363,17 +1360,10 @@ nsFrameScriptExecutor::DidCreateGlobal()
 }
 
 static PLDHashOperator
-CachedScriptUnrooter(const nsAString& aKey,
-                     nsFrameScriptObjectExecutorHolder*& aData,
-                     void* aUserArg)
+RemoveCachedScriptEntry(const nsAString& aKey,
+                        nsFrameScriptObjectExecutorHolder*& aData,
+                        void* aUserArg)
 {
-  JSContext* cx = static_cast<JSContext*>(aUserArg);
-  if (aData->mScript) {
-    JS_RemoveScriptRoot(cx, &aData->mScript);
-  }
-  if (aData->mFunction) {
-    JS_RemoveObjectRoot(cx, &aData->mFunction);
-  }
   delete aData;
   return PL_DHASH_REMOVE;
 }
@@ -1385,7 +1375,7 @@ nsFrameScriptExecutor::Shutdown()
   if (sCachedScripts) {
     AutoSafeJSContext cx;
     NS_ASSERTION(sCachedScripts != nullptr, "Need cached scripts");
-    sCachedScripts->Enumerate(CachedScriptUnrooter, cx);
+    sCachedScripts->Enumerate(RemoveCachedScriptEntry, nullptr);
 
     delete sCachedScripts;
     sCachedScripts = nullptr;
@@ -1528,13 +1518,9 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
 
         // Root the object also for caching.
         if (script) {
-          holder = new nsFrameScriptObjectExecutorHolder(script);
-          JS_AddNamedScriptRoot(cx, &holder->mScript,
-                                "Cached message manager script");
+          holder = new nsFrameScriptObjectExecutorHolder(cx, script);
         } else {
-          holder = new nsFrameScriptObjectExecutorHolder(funobj);
-          JS_AddNamedObjectRoot(cx, &holder->mFunction,
-                                "Cached message manager function");
+          holder = new nsFrameScriptObjectExecutorHolder(cx, funobj);
         }
         sCachedScripts->Put(aURL, holder);
       }
@@ -1922,23 +1908,13 @@ nsSameProcessAsyncMessageBase::nsSameProcessAsyncMessageBase(JSContext* aCx,
                                                              nsIPrincipal* aPrincipal)
   : mRuntime(js::GetRuntime(aCx)),
     mMessage(aMessage),
-    mCpows(aCpows),
+    mCpows(aCx, aCpows),
     mPrincipal(aPrincipal)
 {
   if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
     NS_RUNTIMEABORT("OOM");
   }
-  if (mCpows && !js_AddObjectRoot(mRuntime, &mCpows)) {
-    NS_RUNTIMEABORT("OOM");
-  }
   mClosure = aData.mClosure;
-}
-
-nsSameProcessAsyncMessageBase::~nsSameProcessAsyncMessageBase()
-{
-  if (mCpows) {
-    JS_RemoveObjectRootRT(mRuntime, &mCpows);
-  }
 }
 
 void
@@ -1951,7 +1927,7 @@ nsSameProcessAsyncMessageBase::ReceiveMessage(nsISupports* aTarget,
     data.mDataLength = mData.nbytes();
     data.mClosure = mClosure;
 
-    SameProcessCpowHolder cpows(mRuntime, JS::Handle<JSObject*>::fromMarkedLocation(&mCpows));
+    SameProcessCpowHolder cpows(mRuntime, mCpows);
 
     nsRefPtr<nsFrameMessageManager> mm = aManager;
     mm->ReceiveMessage(aTarget, mMessage, false, &data, &cpows,

@@ -33,6 +33,8 @@ bool SetPropertyPar(ForkJoinContext *cx, HandleObject obj, HandlePropertyName na
                     HandleValue value, bool strict, jsbytecode *pc);
 bool SetElementPar(ForkJoinContext *cx, HandleObject obj, HandleValue index,
                    HandleValue value, bool strict);
+bool SetDenseElementPar(ForkJoinContext *cx, HandleObject obj, int32_t index,
+                        HandleValue value, bool strict);
 
 // String related parallel functions. These tend to call existing VM functions
 // that take a ThreadSafeContext.
