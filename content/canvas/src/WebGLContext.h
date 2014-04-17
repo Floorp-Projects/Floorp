@@ -239,6 +239,7 @@ public:
 
     // Calls ForceClearFramebufferWithDefaultValues() for the Context's 'screen'.
     void ClearScreen();
+    void ClearBackbufferIfNeeded();
 
     bool MinCapabilityMode() const { return mMinCapability; }
 
@@ -837,7 +838,7 @@ protected:
     bool mLoseContextOnHeapMinimize;
     bool mCanLoseContextInForeground;
     bool mShouldPresent;
-    bool mIsScreenCleared;
+    bool mBackbufferNeedsClear;
     bool mDisableFragHighP;
 
     template<typename WebGLObjectType>

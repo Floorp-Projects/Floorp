@@ -473,6 +473,8 @@ WebGLContext::CopyTexImage2D(GLenum target,
             return ErrorInvalidOperation("copyTexImage2D: Read source attachment doesn't have the"
                                          " correct color/depth/stencil type.");
         }
+    } else {
+      ClearBackbufferIfNeeded();
     }
 
     bool texFormatRequiresAlpha = internalformat == LOCAL_GL_RGBA ||
@@ -585,6 +587,8 @@ WebGLContext::CopyTexSubImage2D(GLenum target,
             return ErrorInvalidOperation("copyTexSubImage2D: Read source attachment doesn't have the"
                                          " correct color/depth/stencil type.");
         }
+    } else {
+        ClearBackbufferIfNeeded();
     }
 
     bool texFormatRequiresAlpha = (internalFormat == LOCAL_GL_RGBA ||
@@ -2195,6 +2199,8 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
             return ErrorInvalidOperation("readPixels: Read source attachment doesn't have the"
                                          " correct color/depth/stencil type.");
         }
+    } else {
+      ClearBackbufferIfNeeded();
     }
     // Now that the errors are out of the way, on to actually reading
 

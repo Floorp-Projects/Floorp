@@ -35,43 +35,13 @@ WebGLContext::Clear(GLbitfield mask)
 
         gl->fClear(mask);
         return;
+    } else {
+        ClearBackbufferIfNeeded();
     }
 
     // Ok, we're clearing the default framebuffer/screen.
 
-    bool needsClear = true;
-    if (mIsScreenCleared) {
-        bool isClearRedundant = true;
-        if (mask & LOCAL_GL_COLOR_BUFFER_BIT) {
-            if (mColorClearValue[0] != 0.0f ||
-                mColorClearValue[1] != 0.0f ||
-                mColorClearValue[2] != 0.0f ||
-                mColorClearValue[3] != 0.0f)
-            {
-                isClearRedundant = false;
-            }
-        }
-
-        if (mask & LOCAL_GL_DEPTH_BUFFER_BIT) {
-            if (mDepthClearValue != 1.0f) {
-                isClearRedundant = false;
-            }
-        }
-
-        if (mask & LOCAL_GL_DEPTH_BUFFER_BIT) {
-            if (mStencilClearValue != 0) {
-                isClearRedundant = false;
-            }
-        }
-
-        if (isClearRedundant)
-            needsClear = false;
-    }
-
-    if (needsClear) {
-        gl->fClear(mask);
-        mIsScreenCleared = false;
-    }
+    gl->fClear(mask);
 
     Invalidate();
     mShouldPresent = true;

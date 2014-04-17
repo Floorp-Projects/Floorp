@@ -136,25 +136,6 @@ WebGLContext::WebGLContext()
     mFakeVertexAttrib0BufferObject = 0;
     mFakeVertexAttrib0BufferStatus = WebGLVertexAttrib0Status::Default;
 
-    // these are de default values, see 6.2 State tables in the OpenGL ES 2.0.25 spec
-    mColorWriteMask[0] = 1;
-    mColorWriteMask[1] = 1;
-    mColorWriteMask[2] = 1;
-    mColorWriteMask[3] = 1;
-    mDepthWriteMask = 1;
-    mColorClearValue[0] = 0.f;
-    mColorClearValue[1] = 0.f;
-    mColorClearValue[2] = 0.f;
-    mColorClearValue[3] = 0.f;
-    mDepthClearValue = 1.f;
-    mStencilClearValue = 0;
-    mStencilRefFront = 0;
-    mStencilRefBack = 0;
-    mStencilValueMaskFront = 0xffffffff;
-    mStencilValueMaskBack  = 0xffffffff;
-    mStencilWriteMaskFront = 0xffffffff;
-    mStencilWriteMaskBack  = 0xffffffff;
-
     mViewportX = 0;
     mViewportY = 0;
     mViewportWidth = 0;
@@ -209,7 +190,7 @@ WebGLContext::WebGLContext()
 
     InvalidateBufferFetching();
 
-    mIsScreenCleared = false;
+    mBackbufferNeedsClear = true;
 
     mDisableFragHighP = false;
 
@@ -423,7 +404,7 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
         mHeight = gl->OffscreenSize().height;
         mResetLayer = true;
 
-        ClearScreen();
+        mBackbufferNeedsClear = true;
 
         return NS_OK;
     }
@@ -610,7 +591,11 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     gl->fClearDepth(1.0f);
     gl->fClearStencil(0);
 
-    gl->ClearSafely();
+    mBackbufferNeedsClear = true;
+
+    // Clear immediately, because we need to present the cleared initial
+    // buffer.
+    ClearBackbufferIfNeeded();
 
     mShouldPresent = true;
 
@@ -623,6 +608,25 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 
     reporter.SetSuccessful();
     return NS_OK;
+}
+
+void
+WebGLContext::ClearBackbufferIfNeeded()
+{
+    if (!mBackbufferNeedsClear)
+        return;
+
+#ifdef DEBUG
+    gl->MakeCurrent();
+
+    GLuint fb = 0;
+    gl->GetUIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &fb);
+    MOZ_ASSERT(fb == 0);
+#endif
+
+    ClearScreen();
+
+    mBackbufferNeedsClear = false;
 }
 
 void WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
@@ -965,7 +969,6 @@ WebGLContext::ClearScreen()
     colorAttachmentsMask[0] = true;
 
     ForceClearFramebufferWithDefaultValues(clearMask, colorAttachmentsMask);
-    mIsScreenCleared = true;
 }
 
 #ifdef DEBUG
@@ -1153,13 +1156,14 @@ WebGLContext::PresentScreenBuffer()
     }
 
     gl->MakeCurrent();
+    MOZ_ASSERT(!mBackbufferNeedsClear);
     if (!gl->PublishFrame()) {
         this->ForceLoseContext();
         return false;
     }
 
     if (!mOptions.preserveDrawingBuffer) {
-        ClearScreen();
+        mBackbufferNeedsClear = true;
     }
 
     mShouldPresent = false;
@@ -1340,7 +1344,11 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
     }
 
     gl->MakeCurrent();
-    ReadScreenIntoImageSurface(gl, surf);
+    {
+        ScopedBindFramebuffer autoFB(gl, 0);
+        ClearBackbufferIfNeeded();
+        ReadPixelsIntoImageSurface(gl, surf);
+    }
 
     if (aPremultAlpha) {
         *aPremultAlpha = true;
