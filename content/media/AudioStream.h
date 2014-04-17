@@ -433,7 +433,12 @@ public:
 
   nsresult Dispatch()
   {
-    return NS_NewNamedThread("CubebInit", getter_AddRefs(mThread), this);
+    // Can't add 'this' as the event to run, since mThread may not be set yet
+    nsresult rv = NS_NewNamedThread("CubebInit", getter_AddRefs(mThread));
+    if (NS_SUCCEEDED(rv)) {
+      rv = mThread->Dispatch(this, NS_DISPATCH_NORMAL);
+    }
+    return rv;
   }
 
 protected:
