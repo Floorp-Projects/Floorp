@@ -10,6 +10,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 
 this.EXPORTED_SYMBOLS = ["WebappOSUtils"];
 
@@ -43,6 +44,38 @@ this.WebappOSUtils = {
            computeHash(aApp.manifestURL);
   },
 
+#ifdef XP_WIN
+  /**
+   * Returns the registry key associated to the given app and a boolean that
+   * specifies whether we're using the old naming scheme or the new one.
+   */
+  getAppRegKey: function(aApp) {
+    let regKey = Cc["@mozilla.org/windows-registry-key;1"].
+                 createInstance(Ci.nsIWindowsRegKey);
+
+    try {
+      regKey.open(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" +
+                  this.getUniqueName(aApp), Ci.nsIWindowsRegKey.ACCESS_READ);
+
+      return { value: regKey,
+               namingSchemeVersion: 2};
+    } catch (ex) {}
+
+    // Fall back to the old installation naming scheme
+    try {
+      regKey.open(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" +
+                  aApp.origin, Ci.nsIWindowsRegKey.ACCESS_READ);
+
+      return { value: regKey,
+               namingSchemeVersion: 1 };
+    } catch (ex) {}
+
+    return null;
+  },
+#endif
+
   /**
    * Returns the executable of the given app, identifying it by its unique name,
    * which is in either the new format or the old format.
@@ -53,42 +86,26 @@ this.WebappOSUtils = {
    * which is only unique until we support multiple apps per origin.
    */
   getLaunchTarget: function(aApp) {
-    let uniqueName = this.getUniqueName(aApp);
-
 #ifdef XP_WIN
-    let isOldNamingScheme = false;
-    let appRegKey;
-    try {
-      let open = CC("@mozilla.org/windows-registry-key;1",
-                    "nsIWindowsRegKey", "open");
-      appRegKey = open(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                       "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" +
-                       uniqueName, Ci.nsIWindowsRegKey.ACCESS_READ);
-    } catch (ex) {
-      // Fall back to the old installation naming scheme
-      try {
-        appRegKey = open(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                         "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" +
-                         aApp.origin, Ci.nsIWindowsRegKey.ACCESS_READ);
-        isOldNamingScheme = true;
-      } catch (ex) {
-        return null;
-      }
+    let appRegKey = this.getAppRegKey(aApp);
+
+    if (!appRegKey) {
+      return null;
     }
 
     let appFilename, installLocation;
     try {
-      appFilename = appRegKey.readStringValue("AppFilename");
-      installLocation = appRegKey.readStringValue("InstallLocation");
+      appFilename = appRegKey.value.readStringValue("AppFilename");
+      installLocation = appRegKey.value.readStringValue("InstallLocation");
     } catch (ex) {
       return null;
     } finally {
-      appRegKey.close();
+      appRegKey.value.close();
     }
 
     installLocation = installLocation.substring(1, installLocation.length - 1);
 
-    if (isOldNamingScheme &&
+    if (appRegKey.namingSchemeVersion == 1 &&
         !this.isOldInstallPathValid(aApp, installLocation)) {
       return null;
     }
@@ -100,6 +117,8 @@ this.WebappOSUtils = {
 
     return launchTarget;
 #elifdef XP_MACOSX
+    let uniqueName = this.getUniqueName(aApp);
+
     let mwaUtils = Cc["@mozilla.org/widget/mac-web-app-utils;1"]
                      .createInstance(Ci.nsIMacWebAppUtils);
 
@@ -121,6 +140,8 @@ this.WebappOSUtils = {
 
     return [ null, null ];
 #elifdef XP_UNIX
+    let uniqueName = this.getUniqueName(aApp);
+
     let exeFile = Services.dirsvc.get("Home", Ci.nsIFile);
     exeFile.append("." + uniqueName);
     exeFile.append("webapprt-stub");
@@ -222,16 +243,16 @@ this.WebappOSUtils = {
     let uniqueName = this.getUniqueName(aApp);
 
 #ifdef XP_WIN
-    let initProcess = CC("@mozilla.org/process/util;1",
-                         "nsIProcess", "init");
-
     let launchTarget = this.getLaunchTarget(aApp);
     if (!launchTarget) {
       return false;
     }
 
     try {
-      let process = initProcess(launchTarget);
+      let process = Cc["@mozilla.org/process/util;1"].
+                    createInstance(Ci.nsIProcess);
+
+      process.init(launchTarget);
       process.runwAsync([], 0);
     } catch (e) {
       return false;
@@ -275,27 +296,67 @@ this.WebappOSUtils = {
   },
 
   uninstall: function(aApp) {
-    let uniqueName = this.getUniqueName(aApp);
+#ifdef XP_WIN
+    let appRegKey = this.getAppRegKey(aApp);
 
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
+    if (!appRegKey) {
+      return Promise.reject("App registry key not found");
+    }
+
+    let deferred = Promise.defer();
+
+    try {
+      let uninstallerPath = appRegKey.value.readStringValue("UninstallString");
+      uninstallerPath = uninstallerPath.substring(1, uninstallerPath.length - 1);
+
+      let uninstaller = Cc["@mozilla.org/file/local;1"].
+                        createInstance(Ci.nsIFile);
+      uninstaller.initWithPath(uninstallerPath);
+
+      let process = Cc["@mozilla.org/process/util;1"].
+                    createInstance(Ci.nsIProcess);
+      process.init(uninstaller);
+      process.runwAsync(["/S"], 1, (aSubject, aTopic) => {
+        if (aTopic == "process-finished") {
+          deferred.resolve(true);
+        } else {
+          deferred.reject("Uninstaller failed with exit code: " + aSubject.exitValue);
+        }
+      });
+    } catch (e) {
+      deferred.reject(e);
+    } finally {
+      appRegKey.value.close();
+    }
+
+    return deferred.promise;
+#elifdef XP_MACOSX
+    return Promise.reject("Uninstallation not yet implemented");
+#elifdef XP_UNIX
     let exeFile = this.getLaunchTarget(aApp);
     if (!exeFile) {
-      return false;
+      return Promise.reject("App executable file not found");
     }
+
+    let deferred = Promise.defer();
 
     try {
       let process = Cc["@mozilla.org/process/util;1"]
                       .createInstance(Ci.nsIProcess);
 
       process.init(exeFile);
-      process.runAsync(["-remove"], 1);
+      process.runAsync(["-remove"], 1, (aSubject, aTopic) => {
+        if (aTopic == "process-finished") {
+          deferred.resolve(true);
+        } else {
+          deferred.reject("Uninstaller failed with exit code: " + aSubject.exitValue);
+        }
+      });
     } catch (e) {
-      return false;
+      deferred.reject(e);
     }
 
-    return true;
-#endif
+    return deferred.promise;
 #endif
   },
 
