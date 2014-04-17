@@ -970,6 +970,11 @@ BluetoothHfpManager::SendCLCC(Call& aCall, int aIndex)
                                                BTHF_CALL_STATE_ACTIVE;
   }
 
+  if (callState == BTHF_CALL_STATE_INCOMING &&
+      FindFirstCall(nsITelephonyProvider::CALL_STATE_CONNECTED)) {
+    callState = BTHF_CALL_STATE_WAITING;
+  }
+
   bt_status_t status = sBluetoothHfpInterface->clcc_response(
                           aIndex,
                           aCall.mDirection,
@@ -1073,9 +1078,7 @@ BluetoothHfpManager::ConvertToBthfCallState(int aCallState)
 
   // Refer to AOSP BluetoothPhoneService.convertCallState
   if (aCallState == nsITelephonyProvider::CALL_STATE_INCOMING) {
-    state = (FindFirstCall(nsITelephonyProvider::CALL_STATE_CONNECTED)) ?
-              BTHF_CALL_STATE_WAITING :
-              BTHF_CALL_STATE_INCOMING;
+    state = BTHF_CALL_STATE_INCOMING;
   } else if (aCallState == nsITelephonyProvider::CALL_STATE_DIALING) {
     state = BTHF_CALL_STATE_DIALING;
   } else if (aCallState == nsITelephonyProvider::CALL_STATE_ALERTING) {
