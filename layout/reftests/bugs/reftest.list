@@ -1383,7 +1383,7 @@ skip-if(B2G&&browserIsRemote) == 498228-1.xul 498228-1-ref.xul # bug 974780
 == 501257-1a.html 501257-1-ref.html
 == 501257-1b.html 501257-1-ref.html
 == 501257-1.xhtml 501257-1-ref.xhtml
-== 501627-1.html 501627-1-ref.html
+skip-if(B2G) == 501627-1.html 501627-1-ref.html # Bug 989165
 == 502288-1.html 502288-1-ref.html
 skip-if(B2G) == 502447-1.html 502447-1-ref.html
 == 502795-1.html 502795-1-ref.html
@@ -1608,7 +1608,7 @@ fuzzy-if(Android&&AndroidVersion>=15,8,20) == 602200-3.html 602200-3-ref.html
 == 602200-4.html 602200-4-ref.html
 == 603423-1.html 603423-1-ref.html
 == 604737.html 604737-ref.html
-== 605138-1.html 605138-1-ref.html
+random-if(B2G) == 605138-1.html 605138-1-ref.html # Bug 988758
 == 605157-1.xhtml 605157-1-ref.xhtml
 == 607267-1.html 607267-1-ref.html
 == 608636-1.html 608636-1-ref.html
