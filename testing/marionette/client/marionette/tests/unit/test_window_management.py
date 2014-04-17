@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
+import time
 from marionette_test import MarionetteTestCase
 
 class TestSwitchWindow(MarionetteTestCase):
@@ -60,9 +60,17 @@ if (win != null)
         self.marionette.navigate(test_html)
         current = self.marionette.current_window_handle
 
-        self.marionette.find_element('link text',"Open new window").click()
-        window_handles = self.marionette.window_handles
-        window_handles.remove(current)
+        self.marionette.find_element('link text', "Open new window").click()
+        count = 0
+        while True:
+            window_handles = self.marionette.window_handles
+            window_handles.remove(current)
+            if len(window_handles) > 0:
+                break
+            elif count > 10:
+                self.fail("There were no windows that appeared when we clicked earlier")
+            else:
+                time.sleep(1)
 
         self.marionette.switch_to_window(window_handles[0])
         self.assertEqual(self.marionette.title, "We Arrive Here")
