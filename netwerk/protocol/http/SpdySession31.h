@@ -25,9 +25,9 @@ class SpdyPushedStream31;
 class SpdyStream31;
 
 class SpdySession31 MOZ_FINAL : public ASpdySession
-  , public nsAHttpConnection
-  , public nsAHttpSegmentReader
-  , public nsAHttpSegmentWriter
+                              , public nsAHttpConnection
+                              , public nsAHttpSegmentReader
+                              , public nsAHttpSegmentWriter
 {
 public:
   NS_DECL_ISUPPORTS

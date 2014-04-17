@@ -38,36 +38,36 @@ namespace net {
 SpdyStream31::SpdyStream31(nsAHttpTransaction *httpTransaction,
                            SpdySession31 *spdySession,
                            int32_t priority)
-  : mStreamID(0),
-  mSession(spdySession),
-  mUpstreamState(GENERATING_SYN_STREAM),
-  mSynFrameComplete(0),
-  mSentFinOnData(0),
-  mTransaction(httpTransaction),
-  mSocketTransport(spdySession->SocketTransport()),
-  mSegmentReader(nullptr),
-  mSegmentWriter(nullptr),
-  mChunkSize(spdySession->SendingChunkSize()),
-  mRequestBlockedOnRead(0),
-  mRecvdFin(0),
-  mFullyOpen(0),
-  mSentWaitingFor(0),
-  mReceivedData(0),
-  mSetTCPSocketBuffer(0),
-  mTxInlineFrameSize(SpdySession31::kDefaultBufferSize),
-  mTxInlineFrameUsed(0),
-  mTxStreamFrameSize(0),
-  mZlib(spdySession->UpstreamZlib()),
-  mDecompressBufferSize(SpdySession31::kDefaultBufferSize),
-  mDecompressBufferUsed(0),
-  mDecompressedBytes(0),
-  mRequestBodyLenRemaining(0),
-  mPriority(priority),
-  mLocalUnacked(0),
-  mBlockedOnRwin(false),
-  mTotalSent(0),
-  mTotalRead(0),
-  mPushSource(nullptr)
+  : mStreamID(0)
+  , mSession(spdySession)
+  , mUpstreamState(GENERATING_SYN_STREAM)
+  , mSynFrameComplete(0)
+  , mSentFinOnData(0)
+  , mTransaction(httpTransaction)
+  , mSocketTransport(spdySession->SocketTransport())
+  , mSegmentReader(nullptr)
+  , mSegmentWriter(nullptr)
+  , mChunkSize(spdySession->SendingChunkSize())
+  , mRequestBlockedOnRead(0)
+  , mRecvdFin(0)
+  , mFullyOpen(0)
+  , mSentWaitingFor(0)
+  , mReceivedData(0)
+  , mSetTCPSocketBuffer(0)
+  , mTxInlineFrameSize(SpdySession31::kDefaultBufferSize)
+  , mTxInlineFrameUsed(0)
+  , mTxStreamFrameSize(0)
+  , mZlib(spdySession->UpstreamZlib())
+  , mDecompressBufferSize(SpdySession31::kDefaultBufferSize)
+  , mDecompressBufferUsed(0)
+  , mDecompressedBytes(0)
+  , mRequestBodyLenRemaining(0)
+  , mPriority(priority)
+  , mLocalUnacked(0)
+  , mBlockedOnRwin(false)
+  , mTotalSent(0)
+  , mTotalRead(0)
+  , mPushSource(nullptr)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -194,9 +194,8 @@ SpdyStream31::ReadSegments(nsAHttpSegmentReader *reader,
 }
 
 // WriteSegments() is used to read data off the socket. Generally this is
-// just the SPDY frame header and from there the appropriate SPDYStream
-// is identified from the Stream-ID. The http transaction associated with
-// that read then pulls in the data directly.
+// just a call through to the associate nsHttpTransaciton for this stream
+// for the remaining data bytes indicated by the current DATA frame.
 
 nsresult
 SpdyStream31::WriteSegments(nsAHttpSegmentWriter *writer,
