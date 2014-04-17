@@ -27,7 +27,7 @@
                android:src="@drawable/url_bar_entry"
                android:scaleType="fitXY"/>
 
-    <ImageView android:id="@+id/url_bar_right_edge"
+    <ImageView android:id="@+id/url_bar_translating_edge"
                style="@style/UrlBar.Button"
                android:layout_alignLeft="@id/url_bar_entry"
                android:layout_alignRight="@id/url_bar_entry"
@@ -38,7 +38,7 @@
                android:clickable="false"
                android:focusable="false"
                android:visibility="invisible"
-               android:src="@drawable/url_bar_right_edge"
+               android:src="@drawable/url_bar_translating_edge"
                android:scaleType="fitXY"/>
 
     <LinearLayout android:id="@+id/menu_items"
