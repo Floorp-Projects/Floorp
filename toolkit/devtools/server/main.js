@@ -223,6 +223,8 @@ var DebuggerServer = {
     this._initialized = true;
   },
 
+  protocol: require("devtools/server/protocol"),
+
   /**
    * Initialize the debugger server's transport variables.  This can be
    * in place of init() for cases where the jsdebugger isn't needed.
