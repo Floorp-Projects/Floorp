@@ -625,48 +625,6 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-WebGLContext::Render(gfxContext *ctx, GraphicsFilter f, uint32_t aFlags)
-{
-    if (!gl)
-        return NS_OK;
-
-    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(gfxIntSize(mWidth, mHeight),
-                                                         gfxImageFormat::ARGB32);
-    if (surf->CairoStatus() != 0)
-        return NS_ERROR_FAILURE;
-
-    gl->MakeCurrent();
-    ReadScreenIntoImageSurface(gl, surf);
-
-    bool srcPremultAlpha = mOptions.premultipliedAlpha;
-    bool dstPremultAlpha = aFlags & RenderFlagPremultAlpha;
-
-    if (!srcPremultAlpha && dstPremultAlpha) {
-        gfxUtils::PremultiplyImageSurface(surf);
-    } else if (srcPremultAlpha && !dstPremultAlpha) {
-        gfxUtils::UnpremultiplyImageSurface(surf);
-    }
-    surf->MarkDirty();
-
-    nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
-    pat->SetFilter(f);
-
-    // Pixels from ReadPixels will be "upside down" compared to
-    // what cairo wants, so draw with a y-flip and a translte to
-    // flip them.
-    gfxMatrix m;
-    m.Translate(gfxPoint(0.0, mHeight));
-    m.Scale(1.0, -1.0);
-    pat->SetMatrix(m);
-
-    ctx->NewPath();
-    ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWidth, mHeight), pat);
-    ctx->Fill();
-
-    return NS_OK;
-}
-
 void WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
 {
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
@@ -758,25 +716,31 @@ WebGLContext::GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat)
     *aImageBuffer = nullptr;
     *aFormat = 0;
 
-    nsRefPtr<gfxImageSurface> imgsurf =
-        new gfxImageSurface(gfxIntSize(mWidth, mHeight),
-                            gfxImageFormat::ARGB32);
+    // Use GetSurfaceSnapshot() to make sure that appropriate y-flip gets applied
+    bool premult;
+    RefPtr<SourceSurface> snapshot =
+      GetSurfaceSnapshot(mOptions.premultipliedAlpha ? nullptr : &premult);
+    if (!snapshot) {
+        return;
+    }
+    MOZ_ASSERT(mOptions.premultipliedAlpha || !premult, "We must get unpremult when we ask for it!");
 
-    if (!imgsurf || imgsurf->CairoStatus()) {
+    RefPtr<DataSourceSurface> dataSurface = snapshot->GetDataSurface();
+
+    DataSourceSurface::MappedSurface map;
+    if (!dataSurface->Map(DataSourceSurface::MapType::READ, &map)) {
         return;
     }
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(imgsurf);
-    if (!ctx || ctx->HasError()) {
+    static const fallible_t fallible = fallible_t();
+    uint8_t* imageBuffer = new (fallible) uint8_t[mWidth * mHeight * 4];
+    if (!imageBuffer) {
+        dataSurface->Unmap();
         return;
     }
+    memcpy(imageBuffer, map.mData, mWidth * mHeight * 4);
 
-    // Use Render() to make sure that appropriate y-flip gets applied
-    uint32_t flags = mOptions.premultipliedAlpha ? RenderFlagPremultAlpha : 0;
-    nsresult rv = Render(ctx, GraphicsFilter::FILTER_NEAREST, flags);
-    if (NS_FAILED(rv)) {
-        return;
-    }
+    dataSurface->Unmap();
 
     int32_t format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
     if (!mOptions.premultipliedAlpha) {
@@ -785,16 +749,9 @@ WebGLContext::GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat)
         // Yes, it is THAT silly.
         // Except for different lossy conversions by color,
         // we could probably just change the label, and not change the data.
-        gfxUtils::ConvertBGRAtoRGBA(imgsurf);
+        gfxUtils::ConvertBGRAtoRGBA(imageBuffer, mWidth * mHeight * 4);
         format = imgIEncoder::INPUT_FORMAT_RGBA;
     }
-
-    static const fallible_t fallible = fallible_t();
-    uint8_t* imageBuffer = new (fallible) uint8_t[mWidth * mHeight * 4];
-    if (!imageBuffer) {
-        return;
-    }
-    memcpy(imageBuffer, imgsurf->Data(), mWidth * mHeight * 4);
 
     *aImageBuffer = imageBuffer;
     *aFormat = format;
@@ -1382,7 +1339,8 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
         return nullptr;
 
     nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(gfxIntSize(mWidth, mHeight),
-                                                         gfxImageFormat::ARGB32);
+                                                         gfxImageFormat::ARGB32,
+                                                         mWidth * 4, 0, false);
     if (surf->CairoStatus() != 0) {
         return nullptr;
     }
