@@ -4398,8 +4398,8 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
 			other_values: [ "upright", "sideways" ],
 			invalid_values: [ "none", "3em" ]
 		},
-		"text-combine-horizontal": {
-			domProp: "textCombineHorizontal",
+		"text-combine-upright": {
+			domProp: "textCombineUpright",
 			inherited: true,
 			type: CSS_TYPE_LONGHAND,
 			initial_values: [ "none" ],
