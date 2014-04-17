@@ -44,7 +44,6 @@ public:
                                         gfxImageSurface *aDestSurface = nullptr);
     static void UnpremultiplyImageSurface(gfxImageSurface *aSurface,
                                           gfxImageSurface *aDestSurface = nullptr);
-    static mozilla::TemporaryRef<DataSourceSurface> UnpremultiplyDataSurface(DataSourceSurface* aSurface);
 
     static void ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
                                   gfxImageSurface *aDestSurface = nullptr);
