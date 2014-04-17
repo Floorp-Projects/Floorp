@@ -18,6 +18,8 @@
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
 #include "mozilla/ipc/DocumentRendererChild.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
+#include "mozilla/layers/ActiveElementManager.h"
+#include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -68,13 +70,11 @@
 #include "StructuredCloneUtils.h"
 #include "nsViewportInfo.h"
 #include "JavaScriptChild.h"
-#include "APZCCallbackHelper.h"
 #include "nsILoadContext.h"
 #include "ipc/nsGUIEventIPC.h"
 #include "mozilla/gfx/Matrix.h"
 #include "UnitTransforms.h"
 #include "ClientLayerManager.h"
-#include "ActiveElementManager.h"
 
 #include "nsColorPickerProxy.h"
 

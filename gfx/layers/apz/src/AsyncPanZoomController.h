@@ -8,7 +8,7 @@
 #define mozilla_layers_AsyncPanZoomController_h
 
 #include "CrossProcessMutex.h"
-#include "GeckoContentController.h"
+#include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Monitor.h"
