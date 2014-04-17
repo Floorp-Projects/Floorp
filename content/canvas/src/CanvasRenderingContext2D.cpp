@@ -1054,51 +1054,6 @@ CanvasRenderingContext2D::SetIsIPC(bool isIPC)
 }
 
 NS_IMETHODIMP
-CanvasRenderingContext2D::Render(gfxContext *ctx, GraphicsFilter aFilter, uint32_t aFlags)
-{
-  nsresult rv = NS_OK;
-
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRefPtr<gfxASurface> surface;
-
-  if (NS_FAILED(GetThebesSurface(getter_AddRefs(surface)))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
-
-  pat->SetFilter(aFilter);
-  pat->SetExtend(gfxPattern::EXTEND_PAD);
-
-  gfxContext::GraphicsOperator op = ctx->CurrentOperator();
-  if (mOpaque)
-      ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-
-  // XXX I don't want to use PixelSnapped here, but layout doesn't guarantee
-  // pixel alignment for this stuff!
-  ctx->NewPath();
-  ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWidth, mHeight), pat);
-  ctx->Fill();
-
-  if (mOpaque)
-      ctx->SetOperator(op);
-
-  if (!(aFlags & RenderFlagPremultAlpha)) {
-      nsRefPtr<gfxASurface> curSurface = ctx->CurrentSurface();
-      nsRefPtr<gfxImageSurface> gis = curSurface->GetAsImageSurface();
-      MOZ_ASSERT(gis, "If non-premult alpha, must be able to get image surface!");
-
-      gfxUtils::UnpremultiplyImageSurface(gis);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
 CanvasRenderingContext2D::SetContextOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions)
 {
   if (aOptions.isNullOrUndefined()) {
