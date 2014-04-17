@@ -79,14 +79,12 @@ StartupCache::CollectReports(nsIHandleReportCallback* aHandleReport,
          "mapping.");
 
   return NS_OK;
-};
+}
 
 static const char sStartupCacheName[] = "startupCache." SC_WORDSIZE "." SC_ENDIAN;
 #if defined(XP_WIN) && defined(MOZ_METRO)
 static const char sMetroStartupCacheName[] = "metroStartupCache." SC_WORDSIZE "." SC_ENDIAN;
 #endif
-
-static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
 StartupCache*
 StartupCache::GetSingleton()

@@ -3,7 +3,8 @@ const Cu = Components.utils;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
-this.EXPORTED_SYMBOLS = ['Roles', 'Events', 'Relations', 'Filters', 'States'];
+this.EXPORTED_SYMBOLS = ['Roles', 'Events', 'Relations',
+                         'Filters', 'States', 'Prefilters'];
 
 function ConstantsMap (aObject, aPrefix, aMap = {}, aModifier = null) {
   let offset = aPrefix.length;
@@ -33,6 +34,12 @@ XPCOMUtils.defineLazyGetter(
   this, 'Relations',
   function() {
     return ConstantsMap(Ci.nsIAccessibleRelation, 'RELATION_');
+  });
+
+XPCOMUtils.defineLazyGetter(
+  this, 'Prefilters',
+  function() {
+    return ConstantsMap(Ci.nsIAccessibleTraversalRule, 'PREFILTER_');
   });
 
 XPCOMUtils.defineLazyGetter(

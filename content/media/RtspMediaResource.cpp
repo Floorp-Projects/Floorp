@@ -37,7 +37,7 @@ namespace mozilla {
  * Even though the ring buffer is divided into fixed size slots, it still can
  * store the data which size is larger than one slot size.
  * */
-#define BUFFER_SLOT_NUM 8192
+#define BUFFER_SLOT_NUM 512
 #define BUFFER_SLOT_DEFAULT_SIZE 256
 #define BUFFER_SLOT_MAX_SIZE 8192
 #define BUFFER_SLOT_INVALID -1
