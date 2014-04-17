@@ -23,6 +23,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/ProxyObject.h"
+#include "vm/TraceLogging.h"
 
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
@@ -1488,6 +1489,26 @@ TimesAccessed(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static bool
+EnableTraceLogger(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    args.rval().setBoolean(TraceLoggerEnable(logger));
+
+    return true;
+}
+
+static bool
+DisableTraceLogger(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    args.rval().setBoolean(TraceLoggerDisable(logger));
+
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -1723,6 +1744,15 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "workerThreadCount()",
 "  Returns the number of worker threads available for off-main-thread tasks."),
 
+    JS_FN_HELP("startTraceLogger", EnableTraceLogger, 0, 0,
+"startTraceLogger()",
+"  Start logging the mainThread.\n"
+"  Note: tracelogging starts automatically. Disable it by setting environment variable\n"
+"  TLOPTIONS=disableMainThread"),
+
+    JS_FN_HELP("stopTraceLogger", DisableTraceLogger, 0, 0,
+"startTraceLogger()",
+"  Stop logging the mainThread."),
     JS_FS_HELP_END
 };
 
