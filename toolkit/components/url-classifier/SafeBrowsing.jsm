@@ -10,12 +10,19 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-const phishingList = Services.prefs.getCharPref("urlclassifier.phish_table");
-const malwareList = Services.prefs.getCharPref("urlclassifier.malware_table");
-const downloadBlockList =
-  Services.prefs.getCharPref("urlclassifier.downloadBlockTable");
-const downloadAllowList =
-  Services.prefs.getCharPref("urlclassifier.downloadAllowTable");
+// Skip all the ones containining "test", because we never need to ask for
+// updates for them.
+function getLists(prefName) {
+  return Services.prefs.getCharPref(prefName).split(",")
+    .filter(function(value) { return value.indexOf("test-") == -1; })
+    .map(function(value) { return value.trim(); });
+}
+
+// These may be a comma-separated lists of tables.
+const phishingLists = getLists("urlclassifier.phish_table");
+const malwareLists = getLists("urlclassifier.malware_table");
+const downloadBlockLists = getLists("urlclassifier.downloadBlockTable");
+const downloadAllowLists = getLists("urlclassifier.downloadAllowTable");
 
 var debug = false;
 function log(...stuff) {
@@ -41,10 +48,18 @@ this.SafeBrowsing = {
     // Register our two types of tables, and add custom Mozilla entries
     let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
                       getService(Ci.nsIUrlListManager);
-    listManager.registerTable(phishingList, false);
-    listManager.registerTable(malwareList, false);
-    listManager.registerTable(downloadBlockList, false);
-    listManager.registerTable(downloadAllowList, false);
+    for (let i = 0; i < phishingLists.length; ++i) {
+      listManager.registerTable(phishingLists[i], false);
+    }
+    for (let i = 0; i < malwareLists.length; ++i) {
+      listManager.registerTable(malwareLists[i], false);
+    }
+    for (let i = 0; i < downloadBlockLists.length; ++i) {
+      listManager.registerTable(downloadBlockLists[i], false);
+    }
+    for (let i = 0; i < downloadAllowLists.length; ++i) {
+      listManager.registerTable(downloadAllowLists[i], false);
+    }
     this.addMozEntries();
 
     this.controlUpdateChecking();
@@ -129,19 +144,33 @@ this.SafeBrowsing = {
     let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
                       getService(Ci.nsIUrlListManager);
 
-    if (this.phishingEnabled)
-      listManager.enableUpdate(phishingList);
-    else
-      listManager.disableUpdate(phishingList);
-
-    if (this.malwareEnabled) {
-      listManager.enableUpdate(malwareList);
-      listManager.enableUpdate(downloadBlockList);
-      listManager.enableUpdate(downloadAllowList);
-    } else {
-      listManager.disableUpdate(malwareList);
-      listManager.disableUpdate(downloadBlockList);
-      listManager.disableUpdate(downloadAllowList);
+    for (let i = 0; i < phishingLists.length; ++i) {
+      if (this.phishingEnabled) {
+        listManager.enableUpdate(phishingLists[i]);
+      } else {
+        listManager.disableUpdate(phishingLists[i]);
+      }
+    }
+    for (let i = 0; i < malwareLists.length; ++i) {
+      if (this.malwareEnabled) {
+        listManager.enableUpdate(malwareLists[i]);
+      } else {
+        listManager.disableUpdate(malwareLists[i]);
+      }
+    }
+    for (let i = 0; i < downloadBlockLists.length; ++i) {
+      if (this.malwareEnabled) {
+        listManager.enableUpdate(downloadBlockLists[i]);
+      } else {
+        listManager.disableUpdate(downloadBlockLists[i]);
+      }
+    }
+    for (let i = 0; i < downloadAllowLists.length; ++i) {
+      if (this.malwareEnabled) {
+        listManager.enableUpdate(downloadAllowLists[i]);
+      } else {
+        listManager.disableUpdate(downloadAllowLists[i]);
+      }
     }
   },
 
