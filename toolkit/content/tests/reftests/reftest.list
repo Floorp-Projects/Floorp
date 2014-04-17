@@ -1,2 +1,2 @@
-skip-if(B2G&&browserIsRemote) random-if(cocoaWidget) == bug-442419-progressmeter-max.xul bug-442419-progressmeter-max-ref.xul # fails most of the time on Mac because progress meter animates # Bug 974780
-skip-if(B2G&&browserIsRemote) != textbox-multiline-default-value.xul textbox-multiline-empty.xul # Bug 974780
+random-if(cocoaWidget) == bug-442419-progressmeter-max.xul bug-442419-progressmeter-max-ref.xul # fails most of the time on Mac because progress meter animates
+!= textbox-multiline-default-value.xul textbox-multiline-empty.xul
