@@ -1147,7 +1147,8 @@ BrowserAddonActor.prototype = {
       actor: this.actorID,
       id: this.id,
       name: this._addon.name,
-      url: this.url
+      url: this.url,
+      debuggable: this._addon.isDebuggable,
     };
   },
 
