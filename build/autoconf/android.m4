@@ -293,12 +293,21 @@ case "$target" in
     if test ! -d "$android_platform_tools" ; then
         android_platform_tools="$android_sdk"/tools # SDK Tools < r8
     fi
-    # The build tools got moved around to different directories in
-    # SDK Tools r22.  Try to locate them.
+
+    dnl The build tools got moved around to different directories in SDK
+    dnl Tools r22. Try to locate them. This is awful, but, from
+    dnl http://stackoverflow.com/a/4495368, the following sorts versions
+    dnl of the form x.y.z.a.b from newest to oldest:
+    dnl sort -t. -k 1,1nr -k 2,2nr -k 3,3nr -k 4,4nr -k 5,5nr
+    dnl We want to favour the newer versions that start with 'android-';
+    dnl that's what the sed is about.
+    dnl We might iterate over directories that aren't build-tools at all;
+    dnl we use the presence of aapt as a marker.
+    AC_MSG_CHECKING([for android build-tools directory])
     android_build_tools=""
-    for suffix in android-4.4 android-4.3 android-4.2.2 19.0.3 19.0.2 19.0.0 18.1.0 18.0.1 18.0.0 17.0.0; do
-        tools_directory="$android_sdk_root/build-tools/$suffix"
-        if test -d "$tools_directory" ; then
+    for suffix in `ls "$android_sdk_root/build-tools" | sed -e "s,android-,999.," | sort -t. -k 1,1nr -k 2,2nr -k 3,3nr -k 4,4nr -k 5,5nr`; do
+        tools_directory=`echo "$android_sdk_root/build-tools/$suffix" | sed -e "s,999.,android-,"`
+        if test -d "$tools_directory" -a -f "$tools_directory/aapt"; then
             android_build_tools="$tools_directory"
             break
         fi
@@ -306,6 +315,13 @@ case "$target" in
     if test -z "$android_build_tools" ; then
         android_build_tools="$android_platform_tools" # SDK Tools < r22
     fi
+
+    if test -d "$android_build_tools" -a -f "$android_build_tools/aapt"; then
+        AC_MSG_RESULT([$android_build_tools])
+    else
+        AC_MSG_ERROR([not found. Please check your SDK for the subdirectory of build-tools. With the current configuration, it should be in $android_sdk_root/build_tools])
+    fi
+
     ANDROID_SDK="${android_sdk}"
     ANDROID_SDK_ROOT="${android_sdk_root}"
     if test -e "${ANDROID_SDK_ROOT}/extras/android/compatibility/v4/android-support-v4.jar" ; then
