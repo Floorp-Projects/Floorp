@@ -10,6 +10,7 @@ const SETTINGS_KEY_DATA_APN_SETTINGS = "ril.data.apnSettings";
 let Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
 
 let _pendingEmulatorCmdCount = 0;
+let _pendingEmulatorShellCmdCount = 0;
 
 /**
  * Send emulator command with safe guard.
@@ -42,6 +43,35 @@ function runEmulatorCmdSafe(aCommand) {
     } else {
       deferred.reject(aResult);
     }
+  });
+
+  return deferred.promise;
+}
+
+/**
+ * Send emulator shell command with safe guard.
+ *
+ * We should only call |finish()| after all emulator shell command transactions
+ * end, so here comes with the pending counter.  Resolve when the emulator
+ * shell gives response. Never reject.
+ *
+ * Fulfill params:
+ *   result -- an array of emulator shell response lines.
+ *
+ * @param aCommands
+ *        A string array commands to be passed to emulator through adb shell.
+ *
+ * @return A deferred promise.
+ */
+function runEmulatorShellCmdSafe(aCommands) {
+  let deferred = Promise.defer();
+
+  ++_pendingEmulatorShellCmdCount;
+  runEmulatorShell(aCommands, function(aResult) {
+    --_pendingEmulatorShellCmdCount;
+
+    log("Emulator shell response: " + JSON.stringify(aResult));
+    deferred.resolve(aResult);
   });
 
   return deferred.promise;
@@ -434,6 +464,45 @@ function sendMMI(aMmi) {
   let request = mobileConnection.setRoamingPreference(aMode);
   return wrapDomRequestAsPromise(request)
     .then(null, () => { throw request.error });
+}
+
+/**
+ * Set preferred network type.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', 'ModeNotSupported' or
+ *   'GenericFailure'.
+ *
+ * @param aType
+ *        'wcdma/gsm', 'gsm', 'wcdma', 'wcdma/gsm-auto', 'cdma/evdo', 'cdma',
+ *        'evdo', 'wcdma/gsm/cdma/evdo', 'lte/cdma/evdo', 'lte/wcdma/gsm',
+ *        'lte/wcdma/gsm/cdma/evdo' or 'lte'.
+ *
+ * @return A deferred promise.
+ */
+ function setPreferredNetworkType(aType) {
+  let request = mobileConnection.setPreferredNetworkType(aType);
+  return wrapDomRequestAsPromise(request)
+    .then(null, () => { throw request.error });
+}
+
+/**
+ * Query current preferred network type.
+ *
+ * Fulfill params:
+ *   'wcdma/gsm', 'gsm', 'wcdma', 'wcdma/gsm-auto', 'cdma/evdo', 'cdma',
+ *   'evdo', 'wcdma/gsm/cdma/evdo', 'lte/cdma/evdo', 'lte/wcdma/gsm',
+ *   'lte/wcdma/gsm/cdma/evdo' or 'lte'.
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'.
+ *
+ * @return A deferred promise.
+ */
+ function getPreferredNetworkType() {
+  let request = mobileConnection.getPreferredNetworkType();
+  return wrapDomRequestAsPromise(request)
+    .then(() => request.result, () => { throw request.error });
 }
 
 /**
@@ -859,7 +928,8 @@ function cleanUp() {
       finish();
     });
   }, function() {
-    return _pendingEmulatorCmdCount === 0;
+    return _pendingEmulatorCmdCount === 0 &&
+           _pendingEmulatorShellCmdCount === 0;
   });
 }
 
