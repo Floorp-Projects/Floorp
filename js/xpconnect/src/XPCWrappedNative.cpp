@@ -377,19 +377,6 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
 
         if (parent != plannedParent) {
             XPCWrappedNativeScope* betterScope = GetObjectScope(parent);
-            if (MOZ_UNLIKELY(!betterScope)) {
-                printf_stderr("Uh oh, hit an object without a scope! Crashing shortly.\n");
-                printf_stderr("IsMainThread: %u\n", (uint32_t) NS_IsMainThread());
-                char* className = nullptr;
-                sciWrapper.GetCallback()->GetClassName(&className);
-                printf_stderr("SH Class Name: %s\n", className);
-                nsMemory::Free(className);
-                printf_stderr("plannedParent object class: %s\n", js::GetObjectClass(plannedParent)->name);
-                printf_stderr("plannedParent Global class: %s\n", js::GetObjectClass(js::GetGlobalForObjectCrossCompartment(plannedParent))->name);
-                printf_stderr("parent Object class: %s\n", js::GetObjectClass(parent)->name);
-                printf_stderr("parent Global class: %s\n", js::GetObjectClass(js::GetGlobalForObjectCrossCompartment(parent))->name);
-                MOZ_CRASH();
-            }
             if (betterScope != Scope)
                 return GetNewOrUsed(helper, betterScope, Interface, resultWrapper);
 
