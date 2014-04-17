@@ -32,9 +32,17 @@ dictionary MediaTrackConstraintSet {
     ConstrainVideoFacingMode facingMode;
 };
 
+dictionary MobileLegacyMediaTrackConstraintSet {
+    VideoFacingModeEnum facingMode;
+};
+
 dictionary MediaTrackConstraints : MediaTrackConstraintSet {
     sequence<DOMString> require;
     sequence<MediaTrackConstraintSet> advanced;
+
+    // mobile-only backwards-compatibility for facingMode
+    MobileLegacyMediaTrackConstraintSet mandatory;
+    sequence<MobileLegacyMediaTrackConstraintSet> _optional;
 };
 
 typedef VideoFacingModeEnum ConstrainVideoFacingMode;
