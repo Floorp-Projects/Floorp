@@ -29,7 +29,6 @@
 #include "nsLayoutUtils.h"
 
 #include "CanvasUtils.h"
-#include "gfxUtils.h"
 
 #include "jsfriendapi.h"
 
@@ -2520,10 +2519,6 @@ WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromE
     if (!data) {
         // SurfaceFromElement lied!
         return NS_OK;
-    }
-
-    if (!mPixelStorePremultiplyAlpha && res.mIsPremultiplied) {
-      data = gfxUtils::UnpremultiplyDataSurface(data);
     }
 
     // We disallow loading cross-domain images and videos that have not been validated
