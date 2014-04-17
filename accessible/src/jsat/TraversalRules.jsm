@@ -19,8 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, 'Filters',
   'resource://gre/modules/accessibility/Constants.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'States',
   'resource://gre/modules/accessibility/Constants.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Prefilters',
-  'resource://gre/modules/accessibility/Constants.jsm');
 
 let gSkipEmptyImages = new PrefCache('accessibility.accessfu.skip_empty_images');
 
@@ -148,18 +146,21 @@ var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
   }
 };
 
-var gSimplePreFilter = Prefilters.DEFUNCT |
-  Prefilters.INVISIBLE |
-  Prefilters.ARIA_HIDDEN |
-  Prefilters.TRANSPARENT;
+var gSimplePreFilter = Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
+  Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE |
+  Ci.nsIAccessibleTraversalRule.PREFILTER_ARIA_HIDDEN |
+  Ci.nsIAccessibleTraversalRule.PREFILTER_TRANSPARENT;
 
 this.TraversalRules = {
   Simple: new BaseTraversalRule(gSimpleTraversalRoles, gSimpleMatchFunc),
 
   SimpleOnScreen: new BaseTraversalRule(
     gSimpleTraversalRoles, gSimpleMatchFunc,
-    Prefilters.DEFUNCT | Prefilters.INVISIBLE | Prefilters.ARIA_HIDDEN |
-    Prefilters.TRANSPARENT | Prefilters.OFFSCREEN),
+    Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
+      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE |
+      Ci.nsIAccessibleTraversalRule.PREFILTER_ARIA_HIDDEN |
+      Ci.nsIAccessibleTraversalRule.PREFILTER_TRANSPARENT |
+      Ci.nsIAccessibleTraversalRule.PREFILTER_OFFSCREEN),
 
   Anchor: new BaseTraversalRule(
     [Roles.LINK],
