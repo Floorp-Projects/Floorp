@@ -603,6 +603,7 @@ BluetoothHfpManager::ProcessAtChld(bthf_chld_type_t aChld)
   message.AppendInt((int)aChld);
   BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
                       NS_ConvertUTF8toUTF16(message));
+  SendResponse(BTHF_AT_RESPONSE_OK);
 }
 
 void BluetoothHfpManager::ProcessDialCall(char *aNumber)
@@ -699,6 +700,8 @@ BluetoothHfpManager::ProcessAtClcc()
 
     SendCLCC(mCdmaSecondCall, 2);
   }
+
+  SendResponse(BTHF_AT_RESPONSE_OK);
 }
 
 void
