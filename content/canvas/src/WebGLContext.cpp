@@ -1376,9 +1376,56 @@ void
 WebGLContext::MakeContextCurrent() const { gl->MakeCurrent(); }
 
 mozilla::TemporaryRef<mozilla::gfx::SourceSurface>
-WebGLContext::GetSurfaceSnapshot()
+WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
 {
-  return nullptr;
+    if (!gl)
+        return nullptr;
+
+    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(gfxIntSize(mWidth, mHeight),
+                                                         gfxImageFormat::ARGB32);
+    if (surf->CairoStatus() != 0) {
+        return nullptr;
+    }
+
+    gl->MakeCurrent();
+    ReadScreenIntoImageSurface(gl, surf);
+
+    if (aPremultAlpha) {
+        *aPremultAlpha = true;
+    }
+    bool srcPremultAlpha = mOptions.premultipliedAlpha;
+    if (!srcPremultAlpha) {
+        if (aPremultAlpha) {
+            *aPremultAlpha = false;
+        } else {
+            gfxUtils::PremultiplyImageSurface(surf);
+            surf->MarkDirty();
+        }
+    }
+
+    RefPtr<DrawTarget> dt =
+        Factory::CreateDrawTarget(BackendType::CAIRO,
+                                  IntSize(mWidth, mHeight),
+                                  SurfaceFormat::B8G8R8A8);
+
+    if (!dt) {
+        return nullptr;
+    }
+
+    RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, surf);
+
+    Matrix m;
+    m.Translate(0.0, mHeight);
+    m.Scale(1.0, -1.0);
+    dt->SetTransform(m);
+
+    dt->DrawSurface(source,
+                    Rect(0, 0, mWidth, mHeight),
+                    Rect(0, 0, mWidth, mHeight),
+                    DrawSurfaceOptions(),
+                    DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+
+    return dt->Snapshot();
 }
 
 //
