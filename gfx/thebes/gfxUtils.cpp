@@ -246,24 +246,6 @@ gfxUtils::ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
     }
 }
 
-void
-gfxUtils::ConvertBGRAtoRGBA(uint8_t* aData, uint32_t aLength)
-{
-    uint8_t *src = aData;
-    uint8_t *srcEnd = src + aLength;
-
-    uint8_t buffer[4];
-    for (; src != srcEnd; src += 4) {
-        buffer[0] = src[2];
-        buffer[1] = src[1];
-        buffer[2] = src[0];
-
-        src[0] = buffer[0];
-        src[1] = buffer[1];
-        src[2] = buffer[2];
-    }
-}
-
 static bool
 IsSafeImageTransformComponent(gfxFloat aValue)
 {
