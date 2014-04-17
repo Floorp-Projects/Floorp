@@ -715,8 +715,8 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
     DisplayListClipState::AutoSaveRestore clipState(mBuilder);
 
     nsRect markerRect = nsRect(aInsideMarkersArea.x - mLeft.mIntrinsicWidth,
-                               aLine->mBounds.y,
-                               mLeft.mIntrinsicWidth, aLine->mBounds.height);
+                               aLine->BStart(),
+                               mLeft.mIntrinsicWidth, aLine->BSize());
     markerRect += mBuilder->ToReferenceFrame(mBlock);
     ClipMarker(mContentArea + mBuilder->ToReferenceFrame(mBlock),
                markerRect, clipState);
@@ -730,8 +730,8 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
     DisplayListClipState::AutoSaveRestore clipState(mBuilder);
 
     nsRect markerRect = nsRect(aInsideMarkersArea.XMost(),
-                               aLine->mBounds.y,
-                               mRight.mIntrinsicWidth, aLine->mBounds.height);
+                               aLine->BStart(),
+                               mRight.mIntrinsicWidth, aLine->BSize());
     markerRect += mBuilder->ToReferenceFrame(mBlock);
     ClipMarker(mContentArea + mBuilder->ToReferenceFrame(mBlock),
                markerRect, clipState);

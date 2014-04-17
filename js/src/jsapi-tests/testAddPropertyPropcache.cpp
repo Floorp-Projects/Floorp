@@ -46,9 +46,8 @@ BEGIN_TEST(testAddPropertyHook)
     CHECK(obj);
     JS::RootedValue arr(cx, OBJECT_TO_JSVAL(obj));
 
-    CHECK(JS_DefineProperty(cx, global, "arr", arr,
-                            JS_PropertyStub, JS_StrictPropertyStub,
-                            JSPROP_ENUMERATE));
+    CHECK(JS_DefineProperty(cx, global, "arr", arr, JSPROP_ENUMERATE,
+                            JS_PropertyStub, JS_StrictPropertyStub));
 
     for (int i = 0; i < ExpectedCount; ++i) {
         obj = JS_NewObject(cx, &AddPropertyClass, JS::NullPtr(), JS::NullPtr());

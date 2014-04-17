@@ -46,6 +46,9 @@ public:
   uint8_t responseStatus; // See the OCSPResponseStatus enum in rfc 6960
   bool skipResponseBytes; // If true, don't include responseBytes
 
+  static const uint32_t MaxIncludedCertificates = 4;
+  pkix::ScopedCERTCertificate includedCertificates[MaxIncludedCertificates];
+
   // The following fields are on a per-SingleResponse basis. In the future we
   // may support including multiple SingleResponses per response.
   PRTime producedAt;

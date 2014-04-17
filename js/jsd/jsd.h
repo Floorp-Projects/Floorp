@@ -98,7 +98,7 @@ struct JSDContext
     void*                   functionHookData;
     JSD_CallHookProc        toplevelHook;
     void*                   toplevelHookData;
-    JSObject*               glob;
+    JS::Heap<JSObject*>     glob;
     JSD_UserCallbacks       userCallbacks;
     void*                   user;
     JSCList                 scripts;
@@ -206,16 +206,16 @@ struct JSDStackFrameInfo
 
 struct JSDValue
 {
-    jsval       val;
-    int        nref;
-    JSCList     props;
-    JSString*   string;
-    JSString*   funName;
-    const char* className;
-    JSDValue*   proto;
-    JSDValue*   parent;
-    JSDValue*   ctor;
-    unsigned       flags;
+    JS::Heap<JS::Value> val;
+    int                 nref;
+    JSCList             props;
+    JS::Heap<JSString*> string;
+    JS::Heap<JSString*> funName;
+    const char*         className;
+    JSDValue*           proto;
+    JSDValue*           parent;
+    JSDValue*           ctor;
+    unsigned            flags;
 };
 
 struct JSDProperty

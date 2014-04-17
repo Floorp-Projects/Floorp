@@ -491,65 +491,7 @@ abstract public class BrowserApp extends GeckoApp
             mBrowserSearch.setUserVisibleHint(false);
         }
 
-        mBrowserToolbar.setOnActivateListener(new BrowserToolbar.OnActivateListener() {
-            public void onActivate() {
-                enterEditingMode();
-            }
-        });
-
-        mBrowserToolbar.setOnCommitListener(new BrowserToolbar.OnCommitListener() {
-            public void onCommit() {
-                commitEditingMode();
-            }
-        });
-
-        mBrowserToolbar.setOnDismissListener(new BrowserToolbar.OnDismissListener() {
-            public void onDismiss() {
-                mBrowserToolbar.cancelEdit();
-            }
-        });
-
-        mBrowserToolbar.setOnFilterListener(new BrowserToolbar.OnFilterListener() {
-            public void onFilter(String searchText, AutocompleteHandler handler) {
-                filterEditingMode(searchText, handler);
-            }
-        });
-
-        mBrowserToolbar.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (isHomePagerVisible()) {
-                    mHomePager.onToolbarFocusChange(hasFocus);
-                }
-            }
-        });
-
-        mBrowserToolbar.setOnStartEditingListener(new BrowserToolbar.OnStartEditingListener() {
-            public void onStartEditing() {
-                // Temporarily disable doorhanger notifications.
-                mDoorHangerPopup.disable();
-            }
-        });
-
-        mBrowserToolbar.setOnStopEditingListener(new BrowserToolbar.OnStopEditingListener() {
-            public void onStopEditing() {
-                selectTargetTabForEditingMode();
-
-                // Since the underlying LayerView is set visible in hideHomePager, we would
-                // ordinarily want to call it first. However, hideBrowserSearch changes the
-                // visibility of the HomePager and hideHomePager will take no action if the
-                // HomePager is hidden, so we want to call hideBrowserSearch to restore the
-                // HomePager visibility first.
-                hideBrowserSearch();
-                hideHomePager();
-
-                // Re-enable doorhanger notifications. They may trigger on the selected tab above.
-                mDoorHangerPopup.enable();
-            }
-        });
-
-        // Intercept key events for gamepad shortcuts
-        mBrowserToolbar.setOnKeyListener(this);
+        setBrowserToolbarListeners();
 
         mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
         mMediaCastingBar = (MediaCastingBar) findViewById(R.id.media_casting);
@@ -637,6 +579,68 @@ abstract public class BrowserApp extends GeckoApp
         super.onPause();
         // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
         registerEventListener("Prompt:ShowTop");
+    }
+
+    private void setBrowserToolbarListeners() {
+        mBrowserToolbar.setOnActivateListener(new BrowserToolbar.OnActivateListener() {
+            public void onActivate() {
+                enterEditingMode();
+            }
+        });
+
+        mBrowserToolbar.setOnCommitListener(new BrowserToolbar.OnCommitListener() {
+            public void onCommit() {
+                commitEditingMode();
+            }
+        });
+
+        mBrowserToolbar.setOnDismissListener(new BrowserToolbar.OnDismissListener() {
+            public void onDismiss() {
+                mBrowserToolbar.cancelEdit();
+            }
+        });
+
+        mBrowserToolbar.setOnFilterListener(new BrowserToolbar.OnFilterListener() {
+            public void onFilter(String searchText, AutocompleteHandler handler) {
+                filterEditingMode(searchText, handler);
+            }
+        });
+
+        mBrowserToolbar.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (isHomePagerVisible()) {
+                    mHomePager.onToolbarFocusChange(hasFocus);
+                }
+            }
+        });
+
+        mBrowserToolbar.setOnStartEditingListener(new BrowserToolbar.OnStartEditingListener() {
+            public void onStartEditing() {
+                // Temporarily disable doorhanger notifications.
+                mDoorHangerPopup.disable();
+            }
+        });
+
+        mBrowserToolbar.setOnStopEditingListener(new BrowserToolbar.OnStopEditingListener() {
+            public void onStopEditing() {
+                selectTargetTabForEditingMode();
+
+                // Since the underlying LayerView is set visible in hideHomePager, we would
+                // ordinarily want to call it first. However, hideBrowserSearch changes the
+                // visibility of the HomePager and hideHomePager will take no action if the
+                // HomePager is hidden, so we want to call hideBrowserSearch to restore the
+                // HomePager visibility first.
+                hideBrowserSearch();
+                hideHomePager();
+
+                // Re-enable doorhanger notifications. They may trigger on the selected tab above.
+                mDoorHangerPopup.enable();
+            }
+        });
+
+        // Intercept key events for gamepad shortcuts
+        mBrowserToolbar.setOnKeyListener(this);
     }
 
     private void showBookmarkDialog() {

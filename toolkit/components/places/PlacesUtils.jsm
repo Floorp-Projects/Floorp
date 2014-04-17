@@ -156,6 +156,9 @@ this.PlacesUtils = {
    * @returns true if the node is a Bookmark folder, false otherwise
    */
   nodeIsFolder: function PU_nodeIsFolder(aNode) {
+    if (!(aNode instanceof Ci.nsINavHistoryResultNode)) {
+      throw new Error("Invalid Places node");
+    }
     return (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
             aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT);
   },
@@ -167,6 +170,9 @@ this.PlacesUtils = {
    * @returns true if the node represents a bookmarked URI, false otherwise
    */
   nodeIsBookmark: function PU_nodeIsBookmark(aNode) {
+    if (!(aNode instanceof Ci.nsINavHistoryResultNode)) {
+      throw new Error("Invalid Places node");
+    }
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_URI &&
            aNode.itemId != -1;
   },
@@ -178,6 +184,9 @@ this.PlacesUtils = {
    * @returns true if the node is a Bookmark separator, false otherwise
    */
   nodeIsSeparator: function PU_nodeIsSeparator(aNode) {
+    if (!(aNode instanceof Ci.nsINavHistoryResultNode)) {
+      throw new Error("Invalid Places node");
+    }
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR;
   },
 
@@ -188,6 +197,9 @@ this.PlacesUtils = {
    * @returns true if the node is a URL item, false otherwise
    */
   nodeIsURI: function PU_nodeIsURI(aNode) {
+    if (!(aNode instanceof Ci.nsINavHistoryResultNode)) {
+      throw new Error("Invalid Places node");
+    }
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_URI;
   },
 
@@ -198,6 +210,9 @@ this.PlacesUtils = {
    * @returns true if the node is a Query item, false otherwise
    */
   nodeIsQuery: function PU_nodeIsQuery(aNode) {
+    if (!(aNode instanceof Ci.nsINavHistoryResultNode)) {
+      throw new Error("Invalid Places node");
+    }
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
   },
 
@@ -357,6 +372,9 @@ this.PlacesUtils = {
    * @returns true if the node is readonly, false otherwise
    */
   nodeIsReadOnly: function PU_nodeIsReadOnly(aNode) {
+    if (!(aNode instanceof Ci.nsINavHistoryResultNode)) {
+      throw new Error("Invalid Places node");
+    }
     let itemId = aNode.itemId;
     if (itemId != -1) {
       return this._readOnly.indexOf(itemId) != -1;
@@ -376,6 +394,9 @@ this.PlacesUtils = {
    * @returns true if the node is a host container, false otherwise
    */
   nodeIsHost: function PU_nodeIsHost(aNode) {
+    if (!(aNode instanceof Ci.nsINavHistoryResultNode)) {
+      throw new Error("Invalid Places node");
+    }
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY &&
            aNode.parent &&
            asQuery(aNode.parent).queryOptions.resultType ==
@@ -389,6 +410,9 @@ this.PlacesUtils = {
    * @returns true if the node is a day container, false otherwise
    */
   nodeIsDay: function PU_nodeIsDay(aNode) {
+    if (!(aNode instanceof Ci.nsINavHistoryResultNode)) {
+      throw new Error("Invalid Places node");
+    }
     var resultType;
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY &&
            aNode.parent &&
@@ -404,6 +428,9 @@ this.PlacesUtils = {
    * @returns true if the node is a tag container, false otherwise
    */
   nodeIsTagQuery: function PU_nodeIsTagQuery(aNode) {
+    if (!(aNode instanceof Ci.nsINavHistoryResultNode)) {
+      throw new Error("Invalid Places node");
+    }
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY &&
            asQuery(aNode).queryOptions.resultType ==
              Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS;
@@ -419,6 +446,9 @@ this.PlacesUtils = {
                    Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT,
                    Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY],
   nodeIsContainer: function PU_nodeIsContainer(aNode) {
+    if (!(aNode instanceof Ci.nsINavHistoryResultNode)) {
+      throw new Error("Invalid Places node");
+    }
     return this.containerTypes.indexOf(aNode.type) != -1;
   },
 

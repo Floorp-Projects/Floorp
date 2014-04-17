@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Text Range tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+  <script type="application/javascript">
+
+    function doTest()
+    {
+      var input = getAccessible("input", [ nsIAccessibleText ]);
+      testTextRange(input.enclosingRange, input, 0, input, 1);
+
+      var ta = getAccessible("textarea", [ nsIAccessibleText ]);
+      testTextRange(ta.enclosingRange, ta, 0, ta, 1);
+
+      var iframeDoc = getAccessible(getNode("iframe").contentDocument,
+                                    [ nsIAccessibleText ]);
+      testTextRange(iframeDoc.enclosingRange, iframeDoc, 0, iframeDoc, 1);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Implement Text accessible text range methods"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=975065">Bug 975065</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="input" value="hello">
+  <textarea id="textarea">hello</textarea>
+  <iframe id="iframe" src="data:text/html,<p>hello</p>"></iframe>
+
+</body>
+</html>

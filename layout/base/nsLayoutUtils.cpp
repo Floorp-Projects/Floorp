@@ -4466,11 +4466,11 @@ nsLayoutUtils::GetFirstLinePosition(const nsIFrame* aFrame,
     } else {
       // XXX Is this the right test?  We have some bogus empty lines
       // floating around, but IsEmpty is perhaps too weak.
-      if (line->GetHeight() != 0 || !line->IsEmpty()) {
-        nscoord top = line->mBounds.y;
+      if (line->BSize() != 0 || !line->IsEmpty()) {
+        nscoord top = line->BStart();
         aResult->mTop = top;
         aResult->mBaseline = top + line->GetAscent();
-        aResult->mBottom = top + line->GetHeight();
+        aResult->mBottom = top + line->BSize();
         return true;
       }
     }
@@ -4505,8 +4505,8 @@ nsLayoutUtils::GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
     } else {
       // XXX Is this the right test?  We have some bogus empty lines
       // floating around, but IsEmpty is perhaps too weak.
-      if (line->GetHeight() != 0 || !line->IsEmpty()) {
-        *aResult = line->mBounds.y + line->GetAscent();
+      if (line->BSize() != 0 || !line->IsEmpty()) {
+        *aResult = line->BStart() + line->GetAscent();
         return true;
       }
     }
@@ -4531,7 +4531,7 @@ CalculateBlockContentBottom(nsBlockFrame* aFrame)
                         nsLayoutUtils::CalculateContentBottom(child) + offset);
     }
     else {
-      contentBottom = std::max(contentBottom, line->mBounds.YMost());
+      contentBottom = std::max(contentBottom, line->BEnd());
     }
   }
   return contentBottom;

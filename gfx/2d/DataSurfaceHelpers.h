@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#pragma once
+#ifndef _MOZILLA_GFX_DATASURFACEHELPERS_H
+#define _MOZILLA_GFX_DATASURFACEHELPERS_H
 
 #include "2D.h"
 
@@ -46,3 +47,5 @@ SurfaceToPackedBGR(DataSourceSurface *aSurface);
 
 }
 }
+
+#endif // _MOZILLA_GFX_DATASURFACEHELPERS_H

@@ -811,6 +811,13 @@ public:
    * Return frame's position without relative positioning
    */
   nsPoint GetNormalPosition() const;
+  mozilla::LogicalPoint
+  GetLogicalNormalPosition(mozilla::WritingMode aWritingMode,
+                           nscoord aContainerWidth) const
+  {
+    return mozilla::LogicalPoint(aWritingMode,
+                                 GetNormalPosition(), aContainerWidth);
+  }
 
   virtual nsPoint GetPositionOfChildIgnoringScrolling(nsIFrame* aChild)
   { return aChild->GetPosition(); }
@@ -877,9 +884,16 @@ public:
                             DestroyOverflowAreas)
 
   // The initial overflow area passed to FinishAndStoreOverflow. This is only set
-  // on frames that Preserve3D(), and when at least one of the overflow areas
-  // differs from the frame bound rect.
+  // on frames that Preserve3D() or HasPerspective() or IsTransformed(), and
+  // when at least one of the overflow areas differs from the frame bound rect.
   NS_DECLARE_FRAME_PROPERTY(InitialOverflowProperty, DestroyOverflowAreas)
+
+#ifdef DEBUG
+  // InitialOverflowPropertyDebug is added to the frame to indicate that either
+  // the InitialOverflowProperty has been stored or the InitialOverflowProperty
+  // has been suppressed due to being set to the default value (frame bounds)
+  NS_DECLARE_FRAME_PROPERTY(DebugInitialOverflowPropertyApplied, nullptr)
+#endif
 
   NS_DECLARE_FRAME_PROPERTY(UsedMarginProperty, DestroyMargin)
   NS_DECLARE_FRAME_PROPERTY(UsedPaddingProperty, DestroyMargin)
@@ -908,6 +922,10 @@ public:
    * having their original values.
    */
   virtual nsMargin GetUsedMargin() const;
+  virtual mozilla::LogicalMargin
+  GetLogicalUsedMargin(mozilla::WritingMode aWritingMode) const {
+    return mozilla::LogicalMargin(aWritingMode, GetUsedMargin());
+  }
 
   /**
    * Return the distance between the border edge of the frame (which is
@@ -920,6 +938,10 @@ public:
    * for tables, particularly border-collapse tables.
    */
   virtual nsMargin GetUsedBorder() const;
+  virtual mozilla::LogicalMargin
+  GetLogicalUsedBorder(mozilla::WritingMode aWritingMode) const {
+    return mozilla::LogicalMargin(aWritingMode, GetUsedBorder());
+  }
 
   /**
    * Return the distance between the padding edge of the frame and the
@@ -927,9 +949,17 @@ public:
    * as of the most recent reflow.
    */
   virtual nsMargin GetUsedPadding() const;
+  virtual mozilla::LogicalMargin
+  GetLogicalUsedPadding(mozilla::WritingMode aWritingMode) const {
+    return mozilla::LogicalMargin(aWritingMode, GetUsedPadding());
+  }
 
   nsMargin GetUsedBorderAndPadding() const {
     return GetUsedBorder() + GetUsedPadding();
+  }
+  mozilla::LogicalMargin
+  GetLogicalUsedBorderAndPadding(mozilla::WritingMode aWritingMode) const {
+    return mozilla::LogicalMargin(aWritingMode, GetUsedBorderAndPadding());
   }
 
   /**
