@@ -2328,12 +2328,6 @@ MToDouble::foldsTo(TempAllocator &alloc, bool useValueNumbers)
         }
     }
 
-    // Fold unnecessary numeric conversions.
-    if (input()->isToInt32()) {
-        replaceOperand(0, input()->getOperand(0));
-        conversion_ = NonStringPrimitives;
-    }
-
     return this;
 }
 
