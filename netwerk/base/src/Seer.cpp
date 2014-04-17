@@ -2736,6 +2736,10 @@ nsresult
 SeerPredict(nsIURI *targetURI, nsIURI *sourceURI, SeerPredictReason reason,
             nsILoadContext *loadContext, nsINetworkSeerVerifier *verifier)
 {
+  if (!IsNullOrHttp(targetURI) || !IsNullOrHttp(sourceURI)) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsINetworkSeer> seer;
   nsresult rv = EnsureGlobalSeer(getter_AddRefs(seer));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2747,6 +2751,10 @@ nsresult
 SeerLearn(nsIURI *targetURI, nsIURI *sourceURI, SeerLearnReason reason,
           nsILoadContext *loadContext)
 {
+  if (!IsNullOrHttp(targetURI) || !IsNullOrHttp(sourceURI)) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsINetworkSeer> seer;
   nsresult rv = EnsureGlobalSeer(getter_AddRefs(seer));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2758,6 +2766,10 @@ nsresult
 SeerLearn(nsIURI *targetURI, nsIURI *sourceURI, SeerLearnReason reason,
           nsILoadGroup *loadGroup)
 {
+  if (!IsNullOrHttp(targetURI) || !IsNullOrHttp(sourceURI)) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsINetworkSeer> seer;
   nsresult rv = EnsureGlobalSeer(getter_AddRefs(seer));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2779,6 +2791,10 @@ nsresult
 SeerLearn(nsIURI *targetURI, nsIURI *sourceURI, SeerLearnReason reason,
           nsIDocument *document)
 {
+  if (!IsNullOrHttp(targetURI) || !IsNullOrHttp(sourceURI)) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsINetworkSeer> seer;
   nsresult rv = EnsureGlobalSeer(getter_AddRefs(seer));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2796,12 +2812,8 @@ nsresult
 SeerLearnRedirect(nsIURI *targetURI, nsIChannel *channel,
                   nsILoadContext *loadContext)
 {
-  nsCOMPtr<nsINetworkSeer> seer;
-  nsresult rv = EnsureGlobalSeer(getter_AddRefs(seer));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIURI> sourceURI;
-  rv = channel->GetOriginalURI(getter_AddRefs(sourceURI));
+  nsresult rv = channel->GetOriginalURI(getter_AddRefs(sourceURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool sameUri;
@@ -2811,6 +2823,14 @@ SeerLearnRedirect(nsIURI *targetURI, nsIChannel *channel,
   if (sameUri) {
     return NS_OK;
   }
+
+  if (!IsNullOrHttp(targetURI) || !IsNullOrHttp(sourceURI)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsINetworkSeer> seer;
+  rv = EnsureGlobalSeer(getter_AddRefs(seer));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return seer->Learn(targetURI, sourceURI,
                      nsINetworkSeer::LEARN_LOAD_REDIRECT, loadContext);
