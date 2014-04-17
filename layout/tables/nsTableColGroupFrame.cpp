@@ -343,11 +343,6 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
 int
 nsTableColGroupFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
-  if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
-                     NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
-    return 0;
-  }
-
   int skip = 0;
   if (nullptr != GetPrevInFlow()) {
     skip |= 1 << LOGICAL_SIDE_B_START;

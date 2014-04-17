@@ -115,11 +115,7 @@ nsInlineFrame::IsSelfEmpty()
     !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetLeft()) ||
     !IsMarginZero(margin->mMargin.GetLeft());
   if (haveLeft || haveRight) {
-    // We skip this block and return false for box-decoration-break:clone since
-    // in that case all the continuations will have the border/padding/margin.
-    if ((GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
-        StyleBorder()->mBoxDecorationBreak ==
-          NS_STYLE_BOX_DECORATION_BREAK_SLICE) {
+    if (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
       bool haveStart, haveEnd;
       if (NS_STYLE_DIRECTION_LTR == StyleVisibility()->mDirection) {
         haveStart = haveLeft;
@@ -495,15 +491,9 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   RestyleManager* restyleManager = aPresContext->RestyleManager();
   WritingMode wm = aReflowState.GetWritingMode();
   nscoord startEdge = 0;
-  const bool boxDecorationBreakClone =
-    MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
-                   NS_STYLE_BOX_DECORATION_BREAK_CLONE);
   // Don't offset by our start borderpadding if we have a prev continuation or
-  // if we're in a part of an {ib} split other than the first one. For
-  // box-decoration-break:clone we always offset our start since all
-  // continuations have border/padding.
-  if ((!GetPrevContinuation() && !FrameIsNonFirstInIBSplit()) ||
-      boxDecorationBreakClone) {
+  // if we're in a part of an {ib} split other than the first one.
+  if (!GetPrevContinuation() && !FrameIsNonFirstInIBSplit()) {
     startEdge = aReflowState.ComputedLogicalBorderPadding().IStart(wm);
   }
   nscoord availableISize = aReflowState.AvailableISize();
@@ -664,10 +654,8 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 
   // Make sure to not include our start border and padding if we have a prev
   // continuation or if we're in a part of an {ib} split other than the first
-  // one.  For box-decoration-break:clone we always include our start border
-  // and padding since all continuations have them.
-  if ((!GetPrevContinuation() && !FrameIsNonFirstInIBSplit()) ||
-      boxDecorationBreakClone) {
+  // one.
+  if (!GetPrevContinuation() && !FrameIsNonFirstInIBSplit()) {
     aMetrics.ISize() += aReflowState.ComputedLogicalBorderPadding().IStart(wm);
   }
 
@@ -676,13 +664,11 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
    * continuation and either not in an {ib} split or the last part of it.  To
    * be the last continuation we have to be complete (so that we won't get a
    * next-in-flow) and have no non-fluid continuations on our continuation
-   * chain.  For box-decoration-break:clone we always apply the end border and
-   * padding since all continuations have them.
+   * chain.
    */
-  if ((NS_FRAME_IS_COMPLETE(aStatus) &&
-       !LastInFlow()->GetNextContinuation() &&
-       !FrameIsNonLastInIBSplit()) ||
-      boxDecorationBreakClone) {
+  if (NS_FRAME_IS_COMPLETE(aStatus) &&
+      !LastInFlow()->GetNextContinuation() &&
+      !FrameIsNonLastInIBSplit()) {
     aMetrics.Width() += aReflowState.ComputedLogicalBorderPadding().IEnd(wm);
   }
 
@@ -886,11 +872,6 @@ nsInlineFrame::PushFrames(nsPresContext* aPresContext,
 int
 nsInlineFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
-  if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
-                     NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
-    return 0;
-  }
-
   int skip = 0;
   if (!IsFirst()) {
     nsInlineFrame* prev = (nsInlineFrame*) GetPrevContinuation();
