@@ -48,34 +48,34 @@ NS_INTERFACE_MAP_END
 SpdySession31::SpdySession31(nsAHttpTransaction *aHttpTransaction,
                              nsISocketTransport *aSocketTransport,
                              int32_t firstPriority)
-  : mSocketTransport(aSocketTransport),
-  mSegmentReader(nullptr),
-  mSegmentWriter(nullptr),
-  mNextStreamID(1),
-  mConcurrentHighWater(0),
-  mDownstreamState(BUFFERING_FRAME_HEADER),
-  mInputFrameBufferSize(kDefaultBufferSize),
-  mInputFrameBufferUsed(0),
-  mInputFrameDataLast(false),
-  mInputFrameDataStream(nullptr),
-  mNeedsCleanup(nullptr),
-  mShouldGoAway(false),
-  mClosed(false),
-  mCleanShutdown(false),
-  mDataPending(false),
-  mGoAwayID(0),
-  mMaxConcurrent(kDefaultMaxConcurrent),
-  mConcurrent(0),
-  mServerPushedResources(0),
-  mServerInitialStreamWindow(kDefaultRwin),
-  mLocalSessionWindow(kDefaultRwin),
-  mRemoteSessionWindow(kDefaultRwin),
-  mOutputQueueSize(kDefaultQueueSize),
-  mOutputQueueUsed(0),
-  mOutputQueueSent(0),
-  mLastReadEpoch(PR_IntervalNow()),
-  mPingSentEpoch(0),
-  mNextPingID(1)
+  : mSocketTransport(aSocketTransport)
+  , mSegmentReader(nullptr)
+  , mSegmentWriter(nullptr)
+  , mNextStreamID(1)
+  , mConcurrentHighWater(0)
+  , mDownstreamState(BUFFERING_FRAME_HEADER)
+  , mInputFrameBufferSize(kDefaultBufferSize)
+  , mInputFrameBufferUsed(0)
+  , mInputFrameDataLast(false)
+  , mInputFrameDataStream(nullptr)
+  , mNeedsCleanup(nullptr)
+  , mShouldGoAway(false)
+  , mClosed(false)
+  , mCleanShutdown(false)
+  , mDataPending(false)
+  , mGoAwayID(0)
+  , mMaxConcurrent(kDefaultMaxConcurrent)
+  , mConcurrent(0)
+  , mServerPushedResources(0)
+  , mServerInitialStreamWindow(kDefaultRwin)
+  , mLocalSessionWindow(kDefaultRwin)
+  , mRemoteSessionWindow(kDefaultRwin)
+  , mOutputQueueSize(kDefaultQueueSize)
+  , mOutputQueueUsed(0)
+  , mOutputQueueSent(0)
+  , mLastReadEpoch(PR_IntervalNow())
+  , mPingSentEpoch(0)
+  , mNextPingID(1)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -103,9 +103,9 @@ SpdySession31::SpdySession31(nsAHttpTransaction *aHttpTransaction,
 }
 
 PLDHashOperator
-  SpdySession31::ShutdownEnumerator(nsAHttpTransaction *key,
-                                    nsAutoPtr<SpdyStream31> &stream,
-                                    void *closure)
+SpdySession31::ShutdownEnumerator(nsAHttpTransaction *key,
+                                  nsAutoPtr<SpdyStream31> &stream,
+                                  void *closure)
 {
   SpdySession31 *self = static_cast<SpdySession31 *>(closure);
 
@@ -515,7 +515,7 @@ SpdySession31::ChangeDownstreamState(enum stateType newState)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-  LOG3(("SpdyStream31::ChangeDownstreamState() %p from %X to %X",
+  LOG3(("SpdySession31::ChangeDownstreamState() %p from %X to %X",
         this, mDownstreamState, newState));
   mDownstreamState = newState;
 }
@@ -525,7 +525,7 @@ SpdySession31::ResetDownstreamState()
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-  LOG3(("SpdyStream31::ResetDownstreamState() %p", this));
+  LOG3(("SpdySession31::ResetDownstreamState() %p", this));
   ChangeDownstreamState(BUFFERING_FRAME_HEADER);
 
   if (mInputFrameDataLast && mInputFrameDataStream) {
