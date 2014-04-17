@@ -819,6 +819,8 @@ InterAppCommService.prototype = {
     // To prevent the hacked child process from sending commands to parent
     // to do illegal connections, we need to check its manifest URL.
     if (aMessage.name !== "child-process-shutdown" &&
+        // TODO: fix bug 988142 to re-enable "InterAppMessagePort:Unregister".
+        aMessage.name !== "InterAppMessagePort:Unregister" &&
         kMessages.indexOf(aMessage.name) != -1) {
       if (!target.assertContainApp(message.manifestURL)) {
         if (DEBUG) {
