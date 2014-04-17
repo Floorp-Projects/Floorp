@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>CSS Test: Testing box-decoration-break:clone</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=613659">
+  <link rel="help" href="http://dev.w3.org/csswg/css-break/#break-decoration">
+  <link rel="match" href="box-decoration-break-1-ref.html">
+  <meta charset="utf-8">
+<style>
+
+span {
+  box-decoration-break:clone;
+
+  line-height:4em;
+  font-family:monospace;
+  padding: 3px 5px 7px 11px;
+  background-color: #0F0;
+  margin: 13px 17px 19px 23px;
+  border-left:13px dashed pink;
+  border-top:7px dashed blue;
+  border-right:3px dashed black;
+  border-bottom:1px dashed blue;
+}
+.o0 {
+  border-radius: 17px;
+}
+.o10 {
+  border-radius: 17px;
+  margin-left:0;
+}
+.o10x {
+  border-radius: 17px;
+  padding-right:0;
+}
+.so0 {
+  border-radius: 0px;
+}
+.so10 {
+  border-radius: 0px;
+  margin-right:0;
+}
+.so10x {
+  border-radius: 0px;
+  padding-left:0;
+}
+</style>
+</head>
+<body style="margin:10px">
+
+<table border=1 cellpadding=10><tr>
+<td><span class="o0"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span></td>
+<td><span class="o10"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span></td>
+<td><span class="o10x"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span></td>
+</tr>
+</table>
+
+<br>
+
+<table border=1 cellpadding=10><tr>
+<td><span class="so0"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br></td>
+<td><span class="so10"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br></td>
+<td><span class="so10x"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br></td>
+</tr>
+</table>
+
+</body>
+</html>
