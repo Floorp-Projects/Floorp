@@ -1,29 +1,29 @@
-fails-if(Android||B2G) == empty-1.xul empty-ref.xul # bug 783658
-!= empty-2.xul empty-ref.xul
+fails-if(Android||B2G) skip-if(B2G&&browserIsRemote) == empty-1.xul empty-ref.xul # bug 783658
+skip-if(B2G&&browserIsRemote) != empty-2.xul empty-ref.xul
 # There is no way to simulate an autocomplete textbox in windows XP/Vista/7 default theme using CSS.
 # Therefore, the equlity tests below should be marked as failing.
-fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) == autocomplete-1.xul autocomplete-ref.xul # bug 783658
-fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) == emptyautocomplete-1.xul emptyautocomplete-ref.xul # bug 783658
-!= emptymultiline-1.xul emptymultiline-ref.xul
-fails-if(Android||B2G) == emptymultiline-2.xul emptymultiline-ref.xul # bug 783658
-fails-if(Android||B2G) == emptytextbox-1.xul emptytextbox-ref.xul # bug 783658
-fails-if(Android||B2G) == emptytextbox-2.xul emptytextbox-ref.xul # bug 783658
-!= emptytextbox-3.xul emptytextbox-ref.xul
-!= emptytextbox-4.xul emptytextbox-ref.xul
-fails-if(Android||B2G) == emptytextbox-5.xul emptytextbox-ref.xul # bug 783658
+fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) skip-if(B2G&&browserIsRemote) == autocomplete-1.xul autocomplete-ref.xul # bug 783658
+fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) skip-if(B2G&&browserIsRemote) == emptyautocomplete-1.xul emptyautocomplete-ref.xul # bug 783658
+skip-if(B2G&&browserIsRemote) != emptymultiline-1.xul emptymultiline-ref.xul
+fails-if(Android||B2G) skip-if(B2G&&browserIsRemote) == emptymultiline-2.xul emptymultiline-ref.xul # bug 783658
+fails-if(Android||B2G) skip-if(B2G&&browserIsRemote) == emptytextbox-1.xul emptytextbox-ref.xul # bug 783658
+fails-if(Android||B2G) skip-if(B2G&&browserIsRemote) == emptytextbox-2.xul emptytextbox-ref.xul # bug 783658
+skip-if(B2G&&browserIsRemote) != emptytextbox-3.xul emptytextbox-ref.xul
+skip-if(B2G&&browserIsRemote) != emptytextbox-4.xul emptytextbox-ref.xul
+fails-if(Android||B2G) skip-if(B2G&&browserIsRemote) == emptytextbox-5.xul emptytextbox-ref.xul # bug 783658
 # There is no way to simulate a number textbox in windows XP/Vista/7 default theme using CSS.
 # Therefore, the equlity tests below should be marked as failing.
-!= number-1.xul number-ref.xul
-!= number-2.xul number-ref.xul
-fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) == number-3.xul number-ref.xul # bug 783658
-!= number-4.xul number-ref.xul
-fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) == number-5.xul number-ref.xul # bug 783658
-fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) == numberwithvalue-1.xul numberwithvalue-ref.xul # bug 783658
-fails-if(Android||B2G) == passwd-1.xul passwd-ref.xul # bug 783658
-fails-if(Android||B2G) == passwd-2.xul passwd-ref.xul # bug 783658
-!= passwd-3.xul passwd-ref.xul
-fails-if(Android||B2G) == plain-1.xul plain-ref.xul # bug 783658
-fails-if(Android||B2G) == textbox-1.xul textbox-ref.xul
-!= textbox-disabled.xul textbox-ref.xul
+skip-if(B2G&&browserIsRemote) != number-1.xul number-ref.xul
+skip-if(B2G&&browserIsRemote) != number-2.xul number-ref.xul
+fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) skip-if(B2G&&browserIsRemote) == number-3.xul number-ref.xul # bug 783658
+skip-if(B2G&&browserIsRemote) != number-4.xul number-ref.xul
+fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) skip-if(B2G&&browserIsRemote) == number-5.xul number-ref.xul # bug 783658
+fails-if(Android||B2G) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012])/.test(http.oscpu)) skip-if(B2G&&browserIsRemote) == numberwithvalue-1.xul numberwithvalue-ref.xul # bug 783658
+fails-if(Android||B2G) skip-if(B2G&&browserIsRemote) == passwd-1.xul passwd-ref.xul # bug 783658
+fails-if(Android||B2G) skip-if(B2G&&browserIsRemote) == passwd-2.xul passwd-ref.xul # bug 783658
+skip-if(B2G&&browserIsRemote) != passwd-3.xul passwd-ref.xul
+fails-if(Android||B2G) skip-if(B2G&&browserIsRemote) == plain-1.xul plain-ref.xul # bug 783658
+fails-if(Android||B2G) skip-if(B2G&&browserIsRemote) == textbox-1.xul textbox-ref.xul
+skip-if(B2G&&browserIsRemote) != textbox-disabled.xul textbox-ref.xul
 # Read-only textboxes look like normal textboxes in windows Vista/7 default theme
-fails-if(windowsDefaultTheme&&/^Windows\x20NT\x206\.[012]/.test(http.oscpu)) != textbox-readonly.xul textbox-ref.xul
+fails-if(windowsDefaultTheme&&/^Windows\x20NT\x206\.[012]/.test(http.oscpu)) skip-if(B2G&&browserIsRemote) != textbox-readonly.xul textbox-ref.xul

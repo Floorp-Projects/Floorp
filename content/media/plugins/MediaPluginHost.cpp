@@ -323,10 +323,8 @@ MediaPluginHost *GetMediaPluginHost()
 
 void MediaPluginHost::Shutdown()
 {
-  if (sMediaPluginHost) {
-    delete sMediaPluginHost;
-    sMediaPluginHost = nullptr;
-  }
+  delete sMediaPluginHost;
+  sMediaPluginHost = nullptr;
 }
 
 } // namespace mozilla

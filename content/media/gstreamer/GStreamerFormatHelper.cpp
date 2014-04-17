@@ -30,10 +30,8 @@ GStreamerFormatHelper* GStreamerFormatHelper::Instance() {
 }
 
 void GStreamerFormatHelper::Shutdown() {
-  if (gInstance) {
-    delete gInstance;
-    gInstance = nullptr;
-  }
+  delete gInstance;
+  gInstance = nullptr;
 }
 
 static char const *const sContainers[6][2] = {
