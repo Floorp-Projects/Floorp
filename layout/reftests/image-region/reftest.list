@@ -1,1 +1,1 @@
-skip-if(B2G&&browserIsRemote) == image-region.xul image-region-ref.xul
+== image-region.xul image-region-ref.xul
