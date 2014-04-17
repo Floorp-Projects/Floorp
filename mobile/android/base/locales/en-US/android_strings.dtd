@@ -54,6 +54,7 @@
 <!ENTITY back "Back">
 <!ENTITY stop "Stop">
 <!ENTITY site_security "Site Security">
+<!ENTITY edit_mode_cancel "Cancel">
 
 <!ENTITY close_tab "Close Tab">
 <!ENTITY one_tab "1 tab">
