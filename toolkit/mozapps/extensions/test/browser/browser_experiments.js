@@ -39,6 +39,7 @@ add_task(function* initializeState() {
     // this test running. We have to initialize the instance first, then
     // uninitialize it to prevent this.
     gExperiments = tmp.Experiments.instance();
+    yield gExperiments._mainTask;
     yield gExperiments.uninit();
   }
 });
