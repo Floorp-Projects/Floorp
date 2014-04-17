@@ -139,6 +139,8 @@ nsGonkCameraControl::Initialize()
 
   // Set preferred preview frame format.
   mParams.Set(CAMERA_PARAM_PREVIEWFORMAT, NS_LITERAL_STRING("yuv420sp"));
+  // Turn off any normal pictures returned by the HDR scene mode
+  mParams.Set(CAMERA_PARAM_SCENEMODE_HDR_RETURNNORMALPICTURE, false);
   PushParametersImpl();
 
   // Grab any other settings we'll need later.
