@@ -12,6 +12,7 @@
 #include "SerializedLoadContext.h"
 #include "nsIOService.h"
 #include "mozilla/net/NeckoCommon.h"
+#include "mozilla/net/WebSocketChannel.h"
 
 using namespace mozilla::ipc;
 
@@ -189,11 +190,20 @@ WebSocketChannelParent::OnStart(nsISupports *aContext)
 {
   LOG(("WebSocketChannelParent::OnStart() %p\n", this));
   nsAutoCString protocol, extensions;
+  nsString effectiveURL;
+  bool encrypted = false;
   if (mChannel) {
     mChannel->GetProtocol(protocol);
     mChannel->GetExtensions(extensions);
+
+    nsRefPtr<WebSocketChannel> channel;
+    channel = static_cast<WebSocketChannel*>(mChannel.get());
+    MOZ_ASSERT(channel);
+
+    channel->GetEffectiveURL(effectiveURL);
+    encrypted = channel->IsEncrypted();
   }
-  if (!mIPCOpen || !SendOnStart(protocol, extensions)) {
+  if (!mIPCOpen || !SendOnStart(protocol, extensions, effectiveURL, encrypted)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

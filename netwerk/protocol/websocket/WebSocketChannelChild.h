@@ -40,17 +40,23 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   void AddIPDLReference();
   void ReleaseIPDLReference();
 
+  // Off main thread URI access.
+  void GetEffectiveURL(nsAString& aEffectiveURL) const MOZ_OVERRIDE;
+  bool IsEncrypted() const MOZ_OVERRIDE;
+
  private:
   ~WebSocketChannelChild();
 
-  bool RecvOnStart(const nsCString& aProtocol, const nsCString& aExtensions) MOZ_OVERRIDE;
+  bool RecvOnStart(const nsCString& aProtocol, const nsCString& aExtensions,
+                   const nsString& aEffectiveURL, const bool& aSecure) MOZ_OVERRIDE;
   bool RecvOnStop(const nsresult& aStatusCode) MOZ_OVERRIDE;
   bool RecvOnMessageAvailable(const nsCString& aMsg) MOZ_OVERRIDE;
   bool RecvOnBinaryMessageAvailable(const nsCString& aMsg) MOZ_OVERRIDE;
   bool RecvOnAcknowledge(const uint32_t& aSize) MOZ_OVERRIDE;
   bool RecvOnServerClose(const uint16_t& aCode, const nsCString &aReason) MOZ_OVERRIDE;
 
-  void OnStart(const nsCString& aProtocol, const nsCString& aExtensions);
+  void OnStart(const nsCString& aProtocol, const nsCString& aExtensions,
+               const nsString& aEffectiveURL, const bool& aSecure);
   void OnStop(const nsresult& aStatusCode);
   void OnMessageAvailable(const nsCString& aMsg);
   void OnBinaryMessageAvailable(const nsCString& aMsg);
@@ -62,6 +68,7 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   bool IsOnTargetThread();
 
   nsRefPtr<ChannelEventQueue> mEventQ;
+  nsString mEffectiveURL;
   bool mIPCOpen;
 
   friend class StartEvent;

@@ -6,6 +6,7 @@
 
 #include "WebSocket.h"
 #include "mozilla/dom/WebSocketBinding.h"
+#include "mozilla/net/WebSocketChannel.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -41,7 +42,8 @@
 #include "nsContentPolicyUtils.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsIObserverService.h"
-#include "nsIWebSocketChannel.h"
+
+using namespace mozilla::net;
 
 namespace mozilla {
 namespace dom {
@@ -1124,19 +1126,12 @@ nsresult
 WebSocket::UpdateURI()
 {
   // Check for Redirections
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = mChannel->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<BaseWebSocketChannel> channel;
+  channel = static_cast<BaseWebSocketChannel*>(mChannel.get());
+  MOZ_ASSERT(channel);
 
-  nsAutoCString spec;
-  rv = uri->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-  CopyUTF8toUTF16(spec, mEffectiveURL);
-
-  bool isWSS = false;
-  rv = uri->SchemeIs("wss", &isWSS);
-  NS_ENSURE_SUCCESS(rv, rv);
-  mSecure = isWSS ? true : false;
+  channel->GetEffectiveURL(mEffectiveURL);
+  mSecure = channel->IsEncrypted();
 
   return NS_OK;
 }
