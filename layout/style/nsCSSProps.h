@@ -520,6 +520,7 @@ public:
   static const KTableValue kBorderStyleKTable[];
   static const KTableValue kBorderWidthKTable[];
   static const KTableValue kBoxAlignKTable[];
+  static const KTableValue kBoxDecorationBreakKTable[];
   static const KTableValue kBoxDirectionKTable[];
   static const KTableValue kBoxOrientKTable[];
   static const KTableValue kBoxPackKTable[];
