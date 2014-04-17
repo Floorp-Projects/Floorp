@@ -57,3 +57,26 @@ NS_IMETHODIMP nsMacWebAppUtils::LaunchAppWithIdentifier(const nsAString& bundleI
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
+
+NS_IMETHODIMP nsMacWebAppUtils::TrashApp(const nsAString& path, nsITrashAppCallback* aCallback) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if (NS_WARN_IF(!aCallback)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsITrashAppCallback> callback = aCallback;
+
+  NSString* tempString = [NSString stringWithCharacters:reinterpret_cast<const unichar*>(((nsString)path).get())
+                                   length:path.Length()];
+
+  [[NSWorkspace sharedWorkspace] recycleURLs: [NSArray arrayWithObject:[NSURL fileURLWithPath:tempString]]
+    completionHandler: ^(NSDictionary *newURLs, NSError *error) {
+      nsresult rv = (error == nil) ? NS_OK : NS_ERROR_FAILURE;
+      callback->TrashAppFinished(rv);
+    }];
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
