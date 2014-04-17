@@ -1425,6 +1425,8 @@ pref("browser.cache.auto_delete_cache_version", 1);
 // -1 means no experiment is run and we use the preferred value for frecency (6h)
 pref("browser.cache.frecency_experiment", 0);
 
+pref("browser.translation.detectLanguage", false);
+
 // Telemetry experiments settings.
 pref("experiments.enabled", false);
 pref("experiments.manifest.fetchIntervalSeconds", 86400);
