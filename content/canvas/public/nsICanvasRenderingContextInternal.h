@@ -14,8 +14,8 @@
 #include "mozilla/RefPtr.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
-{ 0xf74397d9, 0x25d9, 0x43ed, \
-  { 0xb4, 0x6a, 0xf5, 0x4e, 0xa1, 0x17, 0xae, 0x6e } }
+{ 0x9a6a5bdf, 0x1261, 0x4057, \
+  { 0x85, 0xcc, 0xaf, 0x97, 0x6c, 0x36, 0x99, 0xa9 } }
 
 class gfxContext;
 class gfxASurface;
@@ -90,10 +90,7 @@ public:
   
   // This gets an Azure SourceSurface for the canvas, this will be a snapshot
   // of the canvas at the time it was called.
-  // If aPremultAlpha is provided, then it assumed the callee can handle
-  // un-premultiplied surfaces, and *aPremultAlpha will be set to false
-  // if one is returned.
-  virtual mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr) = 0;
+  virtual mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot() = 0;
 
   // If this context is opaque, the backing store of the canvas should
   // be created as opaque; all compositing operators should assume the
