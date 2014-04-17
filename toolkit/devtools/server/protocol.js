@@ -178,6 +178,7 @@ types.addArrayType = function(subtype) {
     return types.addType(name);
   }
   return types.addType(name, {
+    category: "array",
     read: (v, ctx) => [subtype.read(i, ctx) for (i of v)],
     write: (v, ctx) => [subtype.write(i, ctx) for (i of v)]
   });
@@ -195,6 +196,8 @@ types.addArrayType = function(subtype) {
  */
 types.addDictType = function(name, specializations) {
   return types.addType(name, {
+    category: "dict",
+    specializations: specializations,
     read: (v, ctx) => {
       let ret = {};
       for (let prop in v) {
@@ -241,6 +244,7 @@ types.addDictType = function(name, specializations) {
 types.addActorType = function(name) {
   let type = types.addType(name, {
     _actor: true,
+    category: "actor",
     read: (v, ctx, detail) => {
       // If we're reading a request on the server side, just
       // find the actor registered with this actorID.
@@ -286,6 +290,7 @@ types.addActorType = function(name) {
 types.addNullableType = function(subtype) {
   subtype = types.getType(subtype);
   return types.addType("nullable:" + subtype.name, {
+    category: "nullable",
     read: (value, ctx) => {
       if (value == null) {
         return value;
@@ -322,6 +327,7 @@ types.addActorDetail = function(name, actorType, detail) {
   }
   return types.addType(name, {
     _actor: true,
+    category: "detail",
     read: (v, ctx) => actorType.read(v, ctx, detail),
     write: (v, ctx) => actorType.write(v, ctx, detail)
   });
@@ -362,6 +368,7 @@ types.addLifetimeType = function(lifetime, subtype) {
   }
   let prop = registeredLifetimes.get(lifetime);
   return types.addType(lifetime + ":" + subtype.name, {
+    category: "lifetime",
     read: (value, ctx) => subtype.read(value, ctx[prop]),
     write: (value, ctx) => subtype.write(value, ctx[prop])
   })
@@ -407,6 +414,13 @@ let Arg = Class({
 
   read: function(v, ctx, outArgs) {
     outArgs[this.index] = this.type.read(v, ctx);
+  },
+
+  describe: function() {
+    return {
+      _arg: this.index,
+      type: this.type.name,
+    }
   }
 });
 exports.Arg = Arg;
@@ -452,6 +466,13 @@ let Option = Class({
       return;
     }
     outArgs[this.index][name] = this.type.read(v, ctx);
+  },
+
+  describe: function() {
+    return {
+      _option: this.index,
+      type: this.type.name,
+    }
   }
 });
 
@@ -474,6 +495,12 @@ let RetVal = Class({
 
   read: function(v, ctx) {
     return this.type.read(v, ctx);
+  },
+
+  describe: function() {
+    return {
+      _retval: this.type.name
+    }
   }
 });
 
@@ -517,6 +544,15 @@ function findPlaceholders(template, constructor, path=[], placeholders=[]) {
   return placeholders;
 }
 
+
+function describeTemplate(template) {
+  return JSON.parse(JSON.stringify(template, (key, value) => {
+    if (value.describe) {
+      return value.describe();
+    }
+    return value;
+  }));
+}
 
 /**
  * Manages a request template.
@@ -570,6 +606,8 @@ let Request = Class({
     }
     return fnArgs;
   },
+
+  describe: function() { return describeTemplate(this.template); }
 });
 
 /**
@@ -624,7 +662,9 @@ let Response = Class({
     }
     let v = getPath(packet, this.path);
     return this.retVal.read(v, ctx);
-  }
+  },
+
+  describe: function() { return describeTemplate(this.template); }
 });
 
 /**
@@ -958,7 +998,10 @@ exports.ActorClass = function(proto) {
   if (!registeredTypes.has(proto.typeName)) {
     types.addActorType(proto.typeName);
   }
-  return Class(actorProto(proto));
+  let cls = Class(actorProto(proto));
+
+  registeredTypes.get(proto.typeName).actorSpec = proto._actorSpec;
+  return cls;
 };
 
 /**
@@ -1238,4 +1281,58 @@ exports.FrontClass = function(actorType, proto) {
   let cls = Class(frontProto(proto));
   registeredTypes.get(cls.prototype.typeName).frontClass = cls;
   return cls;
+}
+
+
+exports.dumpActorSpec = function(type) {
+  let actorSpec = type.actorSpec;
+  let ret = {
+    category: "actor",
+    typeName: type.name,
+    methods: [],
+    events: {}
+  };
+
+  for (let method of actorSpec.methods) {
+    ret.methods.push({
+      name: method.name,
+      release: method.release || undefined,
+      oneway: method.oneway || undefined,
+      request: method.request.describe(),
+      response: method.response.describe()
+    });
+  }
+
+  if (actorSpec.events) {
+    for (let [name, request] of actorSpec.events) {
+      ret.events[name] = request.describe();
+    }
+  }
+
+
+  JSON.stringify(ret);
+
+  return ret;
+}
+
+exports.dumpProtocolSpec = function() {
+  let ret = {
+    types: {},
+  };
+
+  for (let [name, type] of registeredTypes) {
+    // Force lazy instantiation if needed.
+    type = types.getType(name);
+    if (type.category === "dict") {
+      ret.types[name] = {
+        category: "dict",
+        typeName: name,
+        specializations: type.specializations
+      }
+    } else if (type.category === "actor") {
+      ret.types[name] = exports.dumpActorSpec(type);
+    }
+  }
+
+  return ret;
 }
