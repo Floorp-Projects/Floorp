@@ -1520,9 +1520,9 @@ GetDisplayPortRect(const FrameMetrics& aFrameMetrics)
   // This computation is based on what happens in CalculatePendingDisplayPort. If that
   // changes then this might need to change too
   CSSRect baseRect(aFrameMetrics.GetScrollOffset(),
-                   CSSSize(std::min(aFrameMetrics.CalculateCompositedSizeInCssPixels().width,
+                   CSSSize(std::min(aFrameMetrics.CalculateCompositedRectInCssPixels().width,
                                     aFrameMetrics.GetRootCompositionSize().width),
-                           std::min(aFrameMetrics.CalculateCompositedSizeInCssPixels().height,
+                           std::min(aFrameMetrics.CalculateCompositedRectInCssPixels().height,
                                     aFrameMetrics.GetRootCompositionSize().height)));
   baseRect.Inflate(aFrameMetrics.GetDisplayPortMargins() / aFrameMetrics.LayersPixelsPerCSSPixel());
   return baseRect;
