@@ -17,7 +17,6 @@
  */
 static const int32_t kMinGrowArrayBy = 8;
 static const int32_t kMaxGrowArrayBy = 1024;
-static const int32_t kAutoClearCompactSizeFactor = 4;
 
 /**
  * This is the threshold (in bytes) of the mImpl struct, past which
@@ -30,7 +29,6 @@ static const int32_t kLinearThreshold = 24 * sizeof(void *);
  * hold |n| elements.
  */
 #define SIZEOF_IMPL(n_) (sizeof(Impl) + sizeof(void *) * ((n_) - 1))
-
 
 /**
  * Compute the number of elements that an mImpl struct of |n| bytes

@@ -29,6 +29,15 @@
       testRole("aside", ROLE_NOTE);
       testRole("section", ROLE_SECTION);
 
+      // Bug 996821
+      // Check that landmark elements get accessibles with styled overflow.
+      testRole("section_overflow", ROLE_SECTION);
+      testRole("nav_overflow", ROLE_SECTION);
+      testRole("header_overflow", ROLE_HEADER);
+      testRole("aside_overflow", ROLE_NOTE);
+      testRole("footer_overflow", ROLE_FOOTER);
+      testRole("article_overflow", ROLE_DOCUMENT);
+
       // test html:div
       testRole("sec", ROLE_SECTION);
 
@@ -126,6 +135,19 @@
   <article id="article">an article</article>
   <aside id="aside">by the way I am an aside</aside>
   <section id="section">a section</section>
+
+  <section style="overflow: hidden;" id="section_overflow">
+    <nav style="overflow: hidden;"
+         id="nav_overflow">overflow nav</nav>
+    <header style="overflow: hidden;"
+            id="header_overflow">overflow header</header>
+    <aside style="overflow: hidden;"
+           id="aside_overflow">overflow aside</aside>
+    <footer style="overflow: hidden;"
+            id="footer_overflow">overflow footer</footer>
+  </section>
+  <article style="overflow: hidden;"
+           id="article_overflow">overflow article</article>
 
   <p id="p">A paragraph for comparison.</p>
   <div id="sec">A normal div</div>

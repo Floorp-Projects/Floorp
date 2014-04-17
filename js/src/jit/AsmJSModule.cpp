@@ -149,24 +149,6 @@ CoerceInPlace_ToNumber(JSContext *cx, MutableHandleValue val)
     return true;
 }
 
-static void
-EnableActivationFromAsmJS(AsmJSActivation *activation)
-{
-    JSContext *cx = activation->cx();
-    Activation *act = cx->mainThread().activation();
-    JS_ASSERT(act->isJit());
-    act->asJit()->setActive(cx);
-}
-
-static void
-DisableActivationFromAsmJS(AsmJSActivation *activation)
-{
-    JSContext *cx = activation->cx();
-    Activation *act = cx->mainThread().activation();
-    JS_ASSERT(act->isJit());
-    act->asJit()->setActive(cx, false);
-}
-
 namespace js {
 
 // Defined in AsmJS.cpp:
@@ -242,10 +224,6 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         return RedirectCall(FuncCast(CoerceInPlace_ToNumber), Args_General2);
       case AsmJSImm_ToInt32:
         return RedirectCall(FuncCast<int32_t (double)>(js::ToInt32), Args_Int_Double);
-      case AsmJSImm_EnableActivationFromAsmJS:
-        return RedirectCall(FuncCast(EnableActivationFromAsmJS), Args_General1);
-      case AsmJSImm_DisableActivationFromAsmJS:
-        return RedirectCall(FuncCast(DisableActivationFromAsmJS), Args_General1);
 #if defined(JS_CODEGEN_ARM)
       case AsmJSImm_aeabi_idivmod:
         return RedirectCall(FuncCast(__aeabi_idivmod), Args_General2);
