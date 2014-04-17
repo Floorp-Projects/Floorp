@@ -3011,15 +3011,15 @@ CSS_PROP_SHORTHAND(
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
 CSS_PROP_TEXT(
-    text-combine-horizontal,
-    text_combine_horizontal,
-    TextCombineHorizontal,
+    text-combine-upright,
+    text_combine_upright,
+    TextCombineUpright,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_PARSER_FUNCTION,
     "layout.css.vertical-text.enabled",
     0,
-    kTextCombineHorizontalKTable,
-    offsetof(nsStyleText, mTextCombineHorizontal),
+    kTextCombineUprightKTable,
+    offsetof(nsStyleText, mTextCombineUpright),
     eStyleAnimType_EnumU8)
 CSS_PROP_TEXTRESET(
     -moz-text-decoration-color,
