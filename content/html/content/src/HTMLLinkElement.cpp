@@ -196,10 +196,16 @@ HTMLLinkElement::ParseAttribute(int32_t aNamespaceID,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult)
 {
-  if (aNamespaceID == kNameSpaceID_None &&
-      aAttribute == nsGkAtoms::crossorigin) {
-    ParseCORSValue(aValue, aResult);
-    return true;
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::crossorigin) {
+      ParseCORSValue(aValue, aResult);
+      return true;
+    }
+
+    if (aAttribute == nsGkAtoms::sizes) {
+      aResult.ParseAtomArray(aValue);
+      return true;
+    }
   }
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
