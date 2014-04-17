@@ -3216,33 +3216,6 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
   if (image.IsHTMLCanvasElement()) {
     HTMLCanvasElement* canvas = &image.GetAsHTMLCanvasElement();
     element = canvas;
-    nsIntSize size = canvas->GetSize();
-    if (size.width == 0 || size.height == 0) {
-      error.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-      return;
-    }
-
-    // Special case for Canvas, which could be an Azure canvas!
-    nsICanvasRenderingContextInternal *srcCanvas = canvas->GetContextAtIndex(0);
-    if (srcCanvas == this) {
-      // Self-copy.
-      srcSurf = mTarget->Snapshot();
-      imgSize = gfxIntSize(mWidth, mHeight);
-    } else if (srcCanvas) {
-      // This might not be an Azure canvas!
-      srcSurf = srcCanvas->GetSurfaceSnapshot();
-
-      if (srcSurf) {
-        if (mCanvasElement) {
-          // Do security check here.
-          CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement,
-                                                element->NodePrincipal(),
-                                                canvas->IsWriteOnly(),
-                                                false);
-        }
-        imgSize = gfxIntSize(srcSurf->GetSize().width, srcSurf->GetSize().height);
-      }
-    }
   } else {
     if (image.IsHTMLImageElement()) {
       HTMLImageElement* img = &image.GetAsHTMLImageElement();
