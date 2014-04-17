@@ -90,6 +90,7 @@ const char* const text[] = {
     "YarrCompile",
     "YarrInterpret",
     "YarrJIT",
+    "VM",
     "SplitCriticalEdges",
     "RenumberBlocks",
     "DominatorTree",
@@ -866,4 +867,10 @@ TraceLogging::create()
     }
 
     return logger;
+}
+
+bool
+js::TraceLogTextIdEnabled(uint32_t textId)
+{
+    return traceLoggers.isTextIdEnabled(textId);
 }

@@ -227,6 +227,7 @@ class TraceLogger
       YarrCompile,
       YarrInterpret,
       YarrJIT,
+      VM,
 
       // Specific passes during ion compilation:
       SplitCriticalEdges,
@@ -470,6 +471,13 @@ inline uint32_t TraceLogCreateTextId(TraceLogger *logger, const char *text) {
 #endif
     return TraceLogger::TL_Error;
 }
+#ifdef JS_TRACE_LOGGING
+bool TraceLogTextIdEnabled(uint32_t textId);
+#else
+inline bool TraceLogTextIdEnabled(uint32_t textId) {
+    return false;
+}
+#endif
 inline void TraceLogTimestamp(TraceLogger *logger, uint32_t textId) {
 #ifdef JS_TRACE_LOGGING
     if (logger)

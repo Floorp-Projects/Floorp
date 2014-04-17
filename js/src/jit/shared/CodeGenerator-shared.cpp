@@ -14,6 +14,7 @@
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/ParallelFunctions.h"
+#include "vm/TraceLogging.h"
 
 #include "jit/IonFrames-inl.h"
 
@@ -628,6 +629,11 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
     }
 #endif
 
+#ifdef JS_TRACE_LOGGING
+    if (!emitTracelogStartEvent(TraceLogger::VM))
+        return false;
+#endif
+
     // Stack is:
     //    ... frame ...
     //    [args]
@@ -667,6 +673,12 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
     masm.implicitPop(fun.explicitStackSlots() * sizeof(void *) + framePop);
     // Stack is:
     //    ... frame ...
+
+#ifdef JS_TRACE_LOGGING
+    if (!emitTracelogStopEvent(TraceLogger::VM))
+        return false;
+#endif
+
     return true;
 }
 
@@ -1028,6 +1040,9 @@ CodeGeneratorShared::emitTracelogScript(bool isStart)
 bool
 CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId)
 {
+    if (!TraceLogTextIdEnabled(textId))
+        return true;
+
     RegisterSet regs = RegisterSet::Volatile();
     Register logger = regs.takeGeneral();
 
@@ -1037,28 +1052,15 @@ CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId)
     if (!patchableTraceLoggers_.append(patchLocation))
         return false;
 
-    if (isStart)
+    if (isStart) {
         masm.tracelogStart(logger, textId);
-    else
+    } else {
+#ifdef DEBUG
         masm.tracelogStop(logger, textId);
-
-    masm.Pop(logger);
-    return true;
-}
-
-bool
-CodeGeneratorShared::emitTracelogStopEvent()
-{
-    RegisterSet regs = RegisterSet::Volatile();
-    Register logger = regs.takeGeneral();
-
-    masm.Push(logger);
-
-    CodeOffsetLabel patchLocation = masm.movWithPatch(ImmPtr(nullptr), logger);
-    if (!patchableTraceLoggers_.append(patchLocation))
-        return false;
-
-    masm.tracelogStop(logger);
+#else
+        masm.tracelogStop(logger);
+#endif
+    }
 
     masm.Pop(logger);
     return true;
