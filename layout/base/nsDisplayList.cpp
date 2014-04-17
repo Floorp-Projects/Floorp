@@ -2839,11 +2839,8 @@ nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
 
   PROFILER_LABEL("nsDisplayBoxShadowOuter", "Paint");
   for (uint32_t i = 0; i < rects.Length(); ++i) {
-    aCtx->PushState();
-    aCtx->IntersectClip(rects[i]);
     nsCSSRendering::PaintBoxShadowOuter(presContext, *aCtx, mFrame,
                                         borderRect, rects[i], mOpacity);
-    aCtx->PopState();
   }
 }
 
