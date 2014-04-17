@@ -12,8 +12,7 @@ EXTRA_JS_MODULES += [
   'Credentials.jsm',
   'FxAccounts.jsm',
   'FxAccountsClient.jsm',
-  'FxAccountsCommon.js',
-  'FxAccountsUtils.jsm'
+  'FxAccountsCommon.js'
 ]
 
 # For now, we will only be using the FxA manager in B2G.

@@ -432,7 +432,7 @@ public:
     template<size_t N>
     static void InitializeExtensionsBitSet(std::bitset<N>& extensionsBitset, const char* extStr, const char** extList, bool verbose = false)
     {
-        char* exts = strdup(extStr);
+        char* exts = ::strdup(extStr);
 
         if (verbose)
             printf_stderr("Extensions: %s\n", exts);

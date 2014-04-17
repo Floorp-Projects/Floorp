@@ -1687,6 +1687,11 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
 function LoadFailed(why)
 {
     ++gTestResults.FailedLoad;
+    // Once bug 896840 is fixed, this can go away, but for now it will give log
+    // output that is TBPL starable for bug 789751 and bug 720452.
+    if (!why) {
+        gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | load failed with unknown reason\n");
+    }
     gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | " +
          gURLs[0]["url" + gState].spec + " | load failed: " + why + "\n");
     FlushTestLog();
