@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1296046918000">
+  <emItems>
+    <emItem  blockID="i454" id="old@tests.mozilla.org">
+      <versionRange  minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+  </emItems>
+</blocklist>
