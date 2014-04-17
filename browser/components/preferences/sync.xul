@@ -208,12 +208,11 @@
               <!-- logged in and verified and all is good -->
               <hbox>
                 <label id="fxaEmailAddress1"/>
-                <vbox>
+                <vbox flex="1">
                   <label class="text-link"
                          onclick="gSyncPane.manageFirefoxAccount();"
                          value="&manage.label;"/>
                 </vbox>
-                <spacer flex="1"/>
                 <vbox>
                   <button id="fxaUnlinkButton"
                           oncommand="gSyncPane.unlinkFirefoxAccount(true);"
@@ -223,12 +222,11 @@
 
               <!-- logged in to an unverified account -->
               <hbox flex="1">
-                <description>
+                <description flex="1">
                   &signedInUnverified.beforename.label;
                   <span id="fxaEmailAddress2"></span>
                   &signedInUnverified.aftername.label;
                 </description>
-                <spacer flex="1"/>
                 <vbox align="end">
                   <button oncommand="gSyncPane.verifyFirefoxAccount();"
                           label="&verify.label;"/>
@@ -240,12 +238,11 @@
 
               <!-- logged in locally but server rejected credentials -->
               <hbox flex="1">
-                <description>
+                <description flex="1">
                   &signedInLoginFailure.beforename.label;
                   <span id="fxaEmailAddress3"></span>
                   &signedInLoginFailure.aftername.label;
                 </description>
-                <spacer flex="1"/>
                 <vbox align="end">
                   <button oncommand="gSyncPane.reSignIn();"
                          label="&signIn.label;"/>
