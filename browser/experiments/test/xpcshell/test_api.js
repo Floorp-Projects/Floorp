@@ -1366,9 +1366,9 @@ add_task(function* testUnknownExperimentsUninstalled() {
   Assert.equal(addons.length, 0, "Precondition: No experiment add-ons are present.");
 
   // Simulate us not listening.
-  experiments._unregisterWithAddonManager();
+  experiments._stopWatchingAddons();
   yield AddonTestUtils.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
-  experiments._registerWithAddonManager();
+  experiments._startWatchingAddons();
 
   addons = yield getExperimentAddons();
   Assert.equal(addons.length, 1, "Experiment 1 installed via AddonManager");
@@ -1452,9 +1452,9 @@ add_task(function* testEnabledAfterRestart() {
   Assert.ok(addons[0].isActive, "That experiment is active.");
 
   dump("Restarting Addon Manager\n");
-  experiments._unregisterWithAddonManager();
+  experiments._stopWatchingAddons();
   restartManager();
-  experiments._registerWithAddonManager();
+  experiments._startWatchingAddons();
 
   addons = yield getExperimentAddons();
   Assert.equal(addons.length, 1, "The experiment is still there after restart.");
