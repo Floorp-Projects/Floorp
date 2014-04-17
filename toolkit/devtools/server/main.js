@@ -13,6 +13,7 @@ let { Ci, Cc, CC, Cu, Cr } = require("chrome");
 let Debugger = require("Debugger");
 let Services = require("Services");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
+let { dumpn, dbg_assert } = DevToolsUtils;
 let Services = require("Services");
 let EventEmitter = require("devtools/toolkit/event-emitter");
 
@@ -30,6 +31,8 @@ this.Cr = Cr;
 this.Debugger = Debugger;
 this.Services = Services;
 this.DevToolsUtils = DevToolsUtils;
+this.dumpn = dumpn;
+this.dbg_assert = dbg_assert;
 
 // Overload `Components` to prevent SDK loader exception on Components
 // object usage
@@ -42,7 +45,7 @@ const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
 const nsFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 Cu.import("resource://gre/modules/reflect.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+dumpn.wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
@@ -78,20 +81,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
 XPCOMUtils.defineLazyGetter(this, "NetworkMonitorManager", () => {
   return require("devtools/toolkit/webconsole/network-monitor").NetworkMonitorManager;
 });
-
-function dumpn(str) {
-  if (wantLogging) {
-    dump("DBG-SERVER: " + str + "\n");
-  }
-}
-this.dumpn = dumpn;
-
-function dbg_assert(cond, e) {
-  if (!cond) {
-    return e;
-  }
-}
-this.dbg_assert = dbg_assert;
 
 loadSubScript.call(this, "resource://gre/modules/devtools/server/transport.js");
 
