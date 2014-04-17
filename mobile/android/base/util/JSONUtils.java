@@ -4,42 +4,13 @@
 
 package org.mozilla.gecko.util;
 
+import java.util.UUID;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.util.Log;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.UUID;
-
 public final class JSONUtils {
-    private static final String LOGTAG = "JSONUtils";
-
     private JSONUtils() {}
-
-    public static URL getURL(String name, JSONObject json) {
-        String url = json.optString(name, null);
-        if (url == null) {
-            return null;
-        }
-
-        try {
-            return new URL(url);
-        } catch (MalformedURLException e) {
-            Log.e(LOGTAG, "", new IllegalStateException(name + "=" + url, e));
-            return null;
-        }
-    }
-
-    public static void putURL(String name, URL url, JSONObject json) {
-        String urlString = url.toString();
-        try {
-            json.put(name, urlString);
-        } catch (JSONException e) {
-            throw new IllegalArgumentException(name + "=" + urlString, e);
-        }
-    }
 
     public static UUID getUUID(String name, JSONObject json) {
         String uuid = json.optString(name, null);

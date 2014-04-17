@@ -16,7 +16,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Stack;
 
 /* Reads out of a multiple level deep jar file such as
@@ -46,6 +47,8 @@ public final class GeckoJarReader {
                 bitmap = new BitmapDrawable(resources, inputStream);
             }
         } catch (IOException ex) {
+            Log.e(LOGTAG, "Exception ", ex);
+        } catch (URISyntaxException ex) {
             Log.e(LOGTAG, "Exception ", ex);
         } finally {
             if (inputStream != null) {
@@ -78,6 +81,8 @@ public final class GeckoJarReader {
             }
         } catch (IOException ex) {
             Log.e(LOGTAG, "Exception ", ex);
+        } catch (URISyntaxException ex) {
+            Log.e(LOGTAG, "Exception ", ex);
         } finally {
             if (reader != null) {
                 try {
@@ -94,8 +99,8 @@ public final class GeckoJarReader {
         return text;
     }
 
-    private static NativeZip getZipFile(String url) throws IOException {
-        URL fileUrl = new URL(url);
+    private static NativeZip getZipFile(String url) throws IOException, URISyntaxException {
+        URI fileUrl = new URI(url);
         return new NativeZip(fileUrl.getPath());
     }
 
