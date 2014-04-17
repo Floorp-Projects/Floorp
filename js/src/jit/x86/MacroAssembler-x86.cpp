@@ -396,16 +396,27 @@ MacroAssemblerX86::testNegativeZero(const FloatRegister &reg, const Register &sc
 
     // Compare to zero. Lets through {0, -0}.
     xorpd(ScratchFloatReg, ScratchFloatReg);
-    // If reg is non-zero, then a test of Zero is false.
+
+    // If reg is non-zero, jump to nonZero.
+    // Sets ZF=0 and PF=0.
     branchDouble(DoubleNotEqual, reg, ScratchFloatReg, &nonZero);
 
-    // Input register is either zero or negative zero. Test sign bit.
+    // Input register is either zero or negative zero. Retrieve sign of input.
     movmskpd(reg, scratch);
-    // If reg is -0, then a test of Zero is true.
-    cmpl(scratch, Imm32(1));
+
+    // If reg is 1 or 3, input is negative zero.
+    // If reg is 0 or 2, input is a normal zero.
+    // So the following test will set PF=1 for negative zero.
+    orl(Imm32(2), scratch);
 
     bind(&nonZero);
-    return Zero;
+
+    // Here we need to be able to test if the input is a negative zero.
+    // - branchDouble joins here for non-zero values in which case it sets
+    //   ZF=0 and PF=0. In that case the test should fail.
+    // - orl sets PF=1 on negative zero and PF=0 otherwise
+    // => So testing PF=1 will return if input is negative zero or not.
+    return Parity;
 }
 
 Assembler::Condition
