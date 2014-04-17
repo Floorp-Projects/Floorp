@@ -1,4 +1,0 @@
-pref(layout.css.box-decoration-break.enabled,true) == box-decoration-break-1.html box-decoration-break-1-ref.html
-
-fuzzy(1,20) pref(layout.css.box-decoration-break.enabled,true) == box-decoration-break-with-inset-box-shadow-1.html box-decoration-break-with-inset-box-shadow-1-ref.html
-fuzzy(16,460) pref(layout.css.box-decoration-break.enabled,true) == box-decoration-break-with-outset-box-shadow-1.html box-decoration-break-with-outset-box-shadow-1-ref.html
