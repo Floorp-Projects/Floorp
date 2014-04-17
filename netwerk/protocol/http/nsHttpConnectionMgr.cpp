@@ -86,12 +86,12 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
     , mTimeoutTickArmed(false)
     , mTimeoutTickNext(1)
 {
-    LOG(("Creating nsHttpConnectionMgr @%x\n", this));
+    LOG(("Creating nsHttpConnectionMgr @%p\n", this));
 }
 
 nsHttpConnectionMgr::~nsHttpConnectionMgr()
 {
-    LOG(("Destroying nsHttpConnectionMgr @%x\n", this));
+    LOG(("Destroying nsHttpConnectionMgr @%p\n", this));
     if (mTimeoutTick)
         mTimeoutTick->Cancel();
 }
@@ -286,7 +286,7 @@ nsHttpConnectionMgr::Observe(nsISupports *subject,
 nsresult
 nsHttpConnectionMgr::AddTransaction(nsHttpTransaction *trans, int32_t priority)
 {
-    LOG(("nsHttpConnectionMgr::AddTransaction [trans=%x %d]\n", trans, priority));
+    LOG(("nsHttpConnectionMgr::AddTransaction [trans=%p %d]\n", trans, priority));
 
     NS_ADDREF(trans);
     nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgNewTransaction, priority, trans);
@@ -298,7 +298,7 @@ nsHttpConnectionMgr::AddTransaction(nsHttpTransaction *trans, int32_t priority)
 nsresult
 nsHttpConnectionMgr::RescheduleTransaction(nsHttpTransaction *trans, int32_t priority)
 {
-    LOG(("nsHttpConnectionMgr::RescheduleTransaction [trans=%x %d]\n", trans, priority));
+    LOG(("nsHttpConnectionMgr::RescheduleTransaction [trans=%p %d]\n", trans, priority));
 
     NS_ADDREF(trans);
     nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgReschedTransaction, priority, trans);
@@ -310,7 +310,7 @@ nsHttpConnectionMgr::RescheduleTransaction(nsHttpTransaction *trans, int32_t pri
 nsresult
 nsHttpConnectionMgr::CancelTransaction(nsHttpTransaction *trans, nsresult reason)
 {
-    LOG(("nsHttpConnectionMgr::CancelTransaction [trans=%x reason=%x]\n", trans, reason));
+    LOG(("nsHttpConnectionMgr::CancelTransaction [trans=%p reason=%x]\n", trans, reason));
 
     NS_ADDREF(trans);
     nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgCancelTransaction,
@@ -426,7 +426,7 @@ nsHttpConnectionMgr::GetSocketThreadTarget(nsIEventTarget **target)
 nsresult
 nsHttpConnectionMgr::ReclaimConnection(nsHttpConnection *conn)
 {
-    LOG(("nsHttpConnectionMgr::ReclaimConnection [conn=%x]\n", conn));
+    LOG(("nsHttpConnectionMgr::ReclaimConnection [conn=%p]\n", conn));
 
     NS_ADDREF(conn);
     nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgReclaimConnection, 0, conn);
@@ -1601,7 +1601,7 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
         nsRefPtr<nsHttpConnection> conn = GetSpdyPreferredConn(ent);
         if (conn) {
             if ((caps & NS_HTTP_ALLOW_KEEPALIVE) || !conn->IsExperienced()) {
-                LOG(("   dispatch to spdy: [conn=%x]\n", conn.get()));
+                LOG(("   dispatch to spdy: [conn=%p]\n", conn.get()));
                 trans->RemoveDispatchedAsBlocking();  /* just in case */
                 DispatchTransaction(ent, trans, conn);
                 return NS_OK;
@@ -1676,12 +1676,12 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
             // we check if the connection can be reused before even checking if
             // it is a "matching" connection.
             if (!conn->CanReuse()) {
-                LOG(("   dropping stale connection: [conn=%x]\n", conn.get()));
+                LOG(("   dropping stale connection: [conn=%p]\n", conn.get()));
                 conn->Close(NS_ERROR_ABORT);
                 conn = nullptr;
             }
             else {
-                LOG(("   reusing connection [conn=%x]\n", conn.get()));
+                LOG(("   reusing connection [conn=%p]\n", conn.get()));
                 conn->EndIdleMonitoring();
             }
 
@@ -1756,7 +1756,7 @@ nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry *ent,
     nsresult rv;
 
     LOG(("nsHttpConnectionMgr::DispatchTransaction "
-         "[ci=%s trans=%x caps=%x conn=%x priority=%d]\n",
+         "[ci=%s trans=%p caps=%x conn=%p priority=%d]\n",
          ent->mConnInfo->HashKey().get(), trans, caps, conn, priority));
 
     // It is possible for a rate-paced transaction to be dispatched independent
@@ -1816,7 +1816,7 @@ nsHttpConnectionMgr::DispatchAbstractTransaction(nsConnectionEntry *ent,
     MOZ_ASSERT(!conn->UsingSpdy(),
                "Spdy Must Not Use DispatchAbstractTransaction");
     LOG(("nsHttpConnectionMgr::DispatchAbstractTransaction "
-         "[ci=%s trans=%x caps=%x conn=%x]\n",
+         "[ci=%s trans=%p caps=%x conn=%p]\n",
          ent->mConnInfo->HashKey().get(), aTrans, caps, conn));
 
     /* Use pipeline datastructure even if connection does not currently qualify

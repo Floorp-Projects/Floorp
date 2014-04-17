@@ -66,39 +66,39 @@ do {                             \
 Http2Session::Http2Session(nsAHttpTransaction *aHttpTransaction,
                            nsISocketTransport *aSocketTransport,
                            int32_t firstPriority)
-  : mSocketTransport(aSocketTransport),
-  mSegmentReader(nullptr),
-  mSegmentWriter(nullptr),
-  mNextStreamID(3), // 1 is reserved for Updgrade handshakes
-  mConcurrentHighWater(0),
-  mDownstreamState(BUFFERING_OPENING_SETTINGS),
-  mInputFrameBufferSize(kDefaultBufferSize),
-  mInputFrameBufferUsed(0),
-  mInputFrameFinal(false),
-  mInputFrameDataStream(nullptr),
-  mNeedsCleanup(nullptr),
-  mDownstreamRstReason(NO_HTTP_ERROR),
-  mExpectedHeaderID(0),
-  mExpectedPushPromiseID(0),
-  mContinuedPromiseStream(0),
-  mShouldGoAway(false),
-  mClosed(false),
-  mCleanShutdown(false),
-  mTLSProfileConfirmed(false),
-  mGoAwayReason(NO_HTTP_ERROR),
-  mGoAwayID(0),
-  mOutgoingGoAwayID(0),
-  mMaxConcurrent(kDefaultMaxConcurrent),
-  mConcurrent(0),
-  mServerPushedResources(0),
-  mServerInitialStreamWindow(kDefaultRwin),
-  mLocalSessionWindow(kDefaultRwin),
-  mServerSessionWindow(kDefaultRwin),
-  mOutputQueueSize(kDefaultQueueSize),
-  mOutputQueueUsed(0),
-  mOutputQueueSent(0),
-  mLastReadEpoch(PR_IntervalNow()),
-  mPingSentEpoch(0)
+  : mSocketTransport(aSocketTransport)
+  , mSegmentReader(nullptr)
+  , mSegmentWriter(nullptr)
+  , mNextStreamID(3) // 1 is reserved for Updgrade handshakes
+  , mConcurrentHighWater(0)
+  , mDownstreamState(BUFFERING_OPENING_SETTINGS)
+  , mInputFrameBufferSize(kDefaultBufferSize)
+  , mInputFrameBufferUsed(0)
+  , mInputFrameFinal(false)
+  , mInputFrameDataStream(nullptr)
+  , mNeedsCleanup(nullptr)
+  , mDownstreamRstReason(NO_HTTP_ERROR)
+  , mExpectedHeaderID(0)
+  , mExpectedPushPromiseID(0)
+  , mContinuedPromiseStream(0)
+  , mShouldGoAway(false)
+  , mClosed(false)
+  , mCleanShutdown(false)
+  , mTLSProfileConfirmed(false)
+  , mGoAwayReason(NO_HTTP_ERROR)
+  , mGoAwayID(0)
+  , mOutgoingGoAwayID(0)
+  , mMaxConcurrent(kDefaultMaxConcurrent)
+  , mConcurrent(0)
+  , mServerPushedResources(0)
+  , mServerInitialStreamWindow(kDefaultRwin)
+  , mLocalSessionWindow(kDefaultRwin)
+  , mServerSessionWindow(kDefaultRwin)
+  , mOutputQueueSize(kDefaultQueueSize)
+  , mOutputQueueUsed(0)
+  , mOutputQueueSent(0)
+  , mLastReadEpoch(PR_IntervalNow())
+  , mPingSentEpoch(0)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -552,7 +552,7 @@ Http2Session::ChangeDownstreamState(enum internalStateType newState)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-  LOG3(("Http2Stream::ChangeDownstreamState() %p from %X to %X",
+  LOG3(("Http2Session::ChangeDownstreamState() %p from %X to %X",
         this, mDownstreamState, newState));
   mDownstreamState = newState;
 }
@@ -562,7 +562,7 @@ Http2Session::ResetDownstreamState()
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-  LOG3(("Http2Stream::ResetDownstreamState() %p", this));
+  LOG3(("Http2Session::ResetDownstreamState() %p", this));
   ChangeDownstreamState(BUFFERING_FRAME_HEADER);
 
   if (mInputFrameFinal && mInputFrameDataStream) {
