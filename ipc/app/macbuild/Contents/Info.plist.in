@@ -27,9 +27,7 @@
 	</dict>
 	<key>LSUIElement</key>
 	<string>1</string>
-	<key>NSSupportsAutomaticGraphicsSwitching</key>
-	<true/>
-	<key>NSPrincipalClass</key>
-	<string>NSApplication</string>
+  <key>NSSupportsAutomaticGraphicsSwitching</key>
+  <true/>
 </dict>
 </plist>
