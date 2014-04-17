@@ -80,7 +80,6 @@ class ABIArgGenerator
     uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
     static const Register NonArgReturnVolatileReg0;
     static const Register NonArgReturnVolatileReg1;
-
 };
 
 static MOZ_CONSTEXPR_VAR Register PreBarrierReg = r1;
@@ -97,6 +96,22 @@ static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloatReg = { FloatRegisters::d0 };
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloatReg = { FloatRegisters::d15 };
 
 static MOZ_CONSTEXPR_VAR FloatRegister NANReg = { FloatRegisters::d14 };
+
+// Registers used in the GenerateFFIIonExit Enable Activation block.
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = r4;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = r0;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE1 = r1;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE2 = r2;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE3 = r3;
+
+// Registers used in the GenerateFFIIonExit Disable Activation block.
+// None of these may be the second scratch register (lr).
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnData = r2;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnType = r3;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = r0;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = r1;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = r4;
+
 
 static MOZ_CONSTEXPR_VAR FloatRegister d0  = {FloatRegisters::d0};
 static MOZ_CONSTEXPR_VAR FloatRegister d1  = {FloatRegisters::d1};

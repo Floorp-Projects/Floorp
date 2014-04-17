@@ -34,14 +34,14 @@
     <preference id="browser.download.useDownloadDir"
                 name="browser.download.useDownloadDir"
                 type="bool"/>
+
+    <preference id="browser.download.folderList"
+                name="browser.download.folderList"
+                type="int"/>
     <preference id="browser.download.dir"
                 name="browser.download.dir"
                 type="file"
                 onchange="gMainPane.displayDownloadDirPref();"/>
-    <preference id="browser.download.folderList"
-                name="browser.download.folderList"
-                type="int"/>
-
     <!-- Tab preferences 
     Preferences:
 

@@ -1,7 +1,7 @@
 // this will take strings_to_send.length*500 ms = 5 sec
 
 var timer = null;
-var strings_to_send = ["data\r\n\nda", "ta", ":", "de", "layed1\n\n",
+var strings_to_send = ["retry:999999999\ndata\r\n\nda", "ta", ":", "de", "layed1\n\n",
                        "",
                        "",
                        "data:delayed2\n\n", "", ""];

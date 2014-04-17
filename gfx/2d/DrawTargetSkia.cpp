@@ -602,16 +602,7 @@ DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
     return aSurface;
   }
 
-  if (aSurface->GetType() != SurfaceType::DATA) {
-    return nullptr;
-  }
-
-  RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
-  RefPtr<SourceSurface> surface = CreateSourceSurfaceFromData(data->GetData(),
-                                                              data->GetSize(),
-                                                              data->Stride(),
-                                                              data->GetFormat());
-  return data.forget();
+  return aSurface->GetDataSurface();
 }
 
 TemporaryRef<SourceSurface>
