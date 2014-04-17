@@ -73,12 +73,14 @@
 #include "TexturePoolOGL.h"
 #endif
 
-#ifdef USE_SKIA
 #include "mozilla/Hal.h"
+#ifdef USE_SKIA
 #include "skia/SkGraphics.h"
 
 #include "SkiaGLGlue.h"
-
+#else
+class mozilla::gl::SkiaGLGlue : public GenericAtomicRefCounted {
+};
 #endif
 
 #include "mozilla/Preferences.h"
@@ -924,7 +926,9 @@ gfxPlatform::InitializeSkiaCacheLimits()
     printf_stderr("Determined SkiaGL cache limits: Size %i, Items: %i\n", cacheSizeLimit, cacheItemLimit);
   #endif
 
+#ifdef USE_SKIA_GPU
     mSkiaGlue->GetGrContext()->setTextureCacheLimits(cacheItemLimit, cacheSizeLimit);
+#endif
   }
 }
 
