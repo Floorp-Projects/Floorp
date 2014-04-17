@@ -1516,6 +1516,9 @@ jit::JitActivation::~JitActivation()
     }
 }
 
+// setActive() is inlined in GenerateFFIIonExit() with explicit masm instructions so
+// changes to the logic here need to be reflected in GenerateFFIIonExit() in the enable
+// and disable activation instruction sequences.
 void
 jit::JitActivation::setActive(JSContext *cx, bool active)
 {
