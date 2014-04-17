@@ -1570,10 +1570,10 @@ KTableValue nsCSSProps::kTextAlignLastKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-const KTableValue nsCSSProps::kTextCombineHorizontalKTable[] = {
-  eCSSKeyword_none, NS_STYLE_TEXT_COMBINE_HORIZ_NONE,
-  eCSSKeyword_all, NS_STYLE_TEXT_COMBINE_HORIZ_ALL,
-  eCSSKeyword_digits, NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_2,  // w/o number ==> 2
+const KTableValue nsCSSProps::kTextCombineUprightKTable[] = {
+  eCSSKeyword_none, NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE,
+  eCSSKeyword_all, NS_STYLE_TEXT_COMBINE_UPRIGHT_ALL,
+  eCSSKeyword_digits, NS_STYLE_TEXT_COMBINE_UPRIGHT_DIGITS_2,  // w/o number ==> 2
   eCSSKeyword_UNKNOWN,-1
 };
 

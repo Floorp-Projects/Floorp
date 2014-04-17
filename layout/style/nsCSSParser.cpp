@@ -738,7 +738,7 @@ protected:
   bool ParseTextAlignLast(nsCSSValue& aValue);
   bool ParseTextDecoration();
   bool ParseTextDecorationLine(nsCSSValue& aValue);
-  bool ParseTextCombineHorizontal(nsCSSValue& aValue);
+  bool ParseTextCombineUpright(nsCSSValue& aValue);
   bool ParseTextOverflow(nsCSSValue& aValue);
   bool ParseTouchAction(nsCSSValue& aValue);
 
@@ -9322,8 +9322,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
         return ParseTextAlignLast(aValue);
       case eCSSProperty_text_decoration_line:
         return ParseTextDecorationLine(aValue);
-      case eCSSProperty_text_combine_horizontal:
-        return ParseTextCombineHorizontal(aValue);
+      case eCSSProperty_text_combine_upright:
+        return ParseTextCombineUpright(aValue);
       case eCSSProperty_text_overflow:
         return ParseTextOverflow(aValue);
       case eCSSProperty_touch_action:
@@ -12433,16 +12433,16 @@ CSSParserImpl::ParseTouchAction(nsCSSValue& aValue)
 }
 
 bool
-CSSParserImpl::ParseTextCombineHorizontal(nsCSSValue& aValue)
+CSSParserImpl::ParseTextCombineUpright(nsCSSValue& aValue)
 {
   if (!ParseVariant(aValue, VARIANT_HK,
-                    nsCSSProps::kTextCombineHorizontalKTable)) {
+                    nsCSSProps::kTextCombineUprightKTable)) {
     return false;
   }
 
   // if 'digits', need to check for an explicit number [2, 3, 4]
   if (eCSSUnit_Enumerated == aValue.GetUnit() &&
-      aValue.GetIntValue() == NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_2) {
+      aValue.GetIntValue() == NS_STYLE_TEXT_COMBINE_UPRIGHT_DIGITS_2) {
     if (!GetToken(true)) {
       return true;
     }
@@ -12451,11 +12451,11 @@ CSSParserImpl::ParseTextCombineHorizontal(nsCSSValue& aValue)
         case 2:  // already set, nothing to do
           break;
         case 3:
-          aValue.SetIntValue(NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_3,
+          aValue.SetIntValue(NS_STYLE_TEXT_COMBINE_UPRIGHT_DIGITS_3,
                              eCSSUnit_Enumerated);
           break;
         case 4:
-          aValue.SetIntValue(NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_4,
+          aValue.SetIntValue(NS_STYLE_TEXT_COMBINE_UPRIGHT_DIGITS_4,
                              eCSSUnit_Enumerated);
           break;
         default:
