@@ -1366,6 +1366,16 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mOffset),
     eStyleAnimType_Sides_Bottom)
 CSS_PROP_BORDER(
+    box-decoration-break,
+    box_decoration_break,
+    BoxDecorationBreak,
+    CSS_PROPERTY_PARSE_VALUE,
+    "layout.css.box-decoration-break.enabled",
+    VARIANT_HK,
+    kBoxDecorationBreakKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_BORDER(
     box-shadow,
     box_shadow,
     BoxShadow,
