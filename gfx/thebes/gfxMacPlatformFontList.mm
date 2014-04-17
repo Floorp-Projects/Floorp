@@ -830,13 +830,13 @@ gfxMacPlatformFontList::RegisteredFontsChangedNotificationCallback(CFNotificatio
         return;
     }
 
+    gfxMacPlatformFontList* fl = static_cast<gfxMacPlatformFontList*>(observer);
+
     // xxx - should be carefully pruning the list of fonts, not rebuilding it from scratch
-    static_cast<gfxMacPlatformFontList*>(observer)->UpdateFontList();
+    fl->UpdateFontList();
 
     // modify a preference that will trigger reflow everywhere
-    static const char kPrefName[] = "font.internaluseonly.changed";
-    bool fontInternalChange = Preferences::GetBool(kPrefName, false);
-    Preferences::SetBool(kPrefName, !fontInternalChange);
+    fl->ForceGlobalReflow();
 }
 
 gfxFontEntry*
