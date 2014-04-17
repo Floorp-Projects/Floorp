@@ -191,9 +191,6 @@ exports["test postMessage"] = createProxyTest(html, function (helper, assert) {
 
   helper.createWorker(
     'new ' + function ContentScriptScope() {
-      assert(postMessage === postMessage,
-          "verify that we doesn't generate multiple functions for the same method");
-
       var json = JSON.stringify({foo : "bar\n \"escaped\"."});
 
       document.getElementById("iframe").contentWindow.postMessage(json, "*");
