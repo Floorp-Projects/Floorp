@@ -39,34 +39,34 @@ namespace net {
 Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
                          Http2Session *session,
                          int32_t priority)
-  : mStreamID(0),
-    mSession(session),
-    mUpstreamState(GENERATING_HEADERS),
-    mState(IDLE),
-    mAllHeadersSent(0),
-    mAllHeadersReceived(0),
-    mTransaction(httpTransaction),
-    mSocketTransport(session->SocketTransport()),
-    mSegmentReader(nullptr),
-    mSegmentWriter(nullptr),
-    mChunkSize(session->SendingChunkSize()),
-    mRequestBlockedOnRead(0),
-    mRecvdFin(0),
-    mRecvdReset(0),
-    mSentReset(0),
-    mCountAsActive(0),
-    mSentFin(0),
-    mSentWaitingFor(0),
-    mSetTCPSocketBuffer(0),
-    mTxInlineFrameSize(Http2Session::kDefaultBufferSize),
-    mTxInlineFrameUsed(0),
-    mTxStreamFrameSize(0),
-    mRequestBodyLenRemaining(0),
-    mLocalUnacked(0),
-    mBlockedOnRwin(false),
-    mTotalSent(0),
-    mTotalRead(0),
-    mPushSource(nullptr)
+  : mStreamID(0)
+  , mSession(session)
+  , mUpstreamState(GENERATING_HEADERS)
+  , mState(IDLE)
+  , mAllHeadersSent(0)
+  , mAllHeadersReceived(0)
+  , mTransaction(httpTransaction)
+  , mSocketTransport(session->SocketTransport())
+  , mSegmentReader(nullptr)
+  , mSegmentWriter(nullptr)
+  , mChunkSize(session->SendingChunkSize())
+  , mRequestBlockedOnRead(0)
+  , mRecvdFin(0)
+  , mRecvdReset(0)
+  , mSentReset(0)
+  , mCountAsActive(0)
+  , mSentFin(0)
+  , mSentWaitingFor(0)
+  , mSetTCPSocketBuffer(0)
+  , mTxInlineFrameSize(Http2Session::kDefaultBufferSize)
+  , mTxInlineFrameUsed(0)
+  , mTxStreamFrameSize(0)
+  , mRequestBodyLenRemaining(0)
+  , mLocalUnacked(0)
+  , mBlockedOnRwin(false)
+  , mTotalSent(0)
+  , mTotalRead(0)
+  , mPushSource(nullptr)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 

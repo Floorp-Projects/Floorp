@@ -73,28 +73,30 @@ public:
     //-------------------------------------------------------------------------
     // XXX document when these are ok to call
 
-    bool     SupportsPipelining();
-    bool     IsKeepAlive() { return mUsingSpdyVersion ||
-                                    (mKeepAliveMask && mKeepAlive); }
-    bool     CanReuse();   // can this connection be reused?
-    bool     CanDirectlyActivate();
+    bool SupportsPipelining();
+    bool IsKeepAlive()
+    {
+        return mUsingSpdyVersion || (mKeepAliveMask && mKeepAlive);
+    }
+    bool CanReuse();   // can this connection be reused?
+    bool CanDirectlyActivate();
 
     // Returns time in seconds for how long connection can be reused.
     uint32_t TimeToLive();
 
-    void     DontReuse();
+    void DontReuse();
 
-    bool     IsProxyConnectInProgress()
+    bool IsProxyConnectInProgress()
     {
         return mProxyConnectInProgress;
     }
 
-    bool     LastTransactionExpectedNoContent()
+    bool LastTransactionExpectedNoContent()
     {
         return mLastTransactionExpectedNoContent;
     }
 
-    void     SetLastTransactionExpectedNoContent(bool val)
+    void SetLastTransactionExpectedNoContent(bool val)
     {
         mLastTransactionExpectedNoContent = val;
     }
