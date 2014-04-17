@@ -4080,27 +4080,6 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
   return NS_OK;
 }
 
-NS_IMETHODIMP
-CanvasRenderingContext2D::GetThebesSurface(gfxASurface **surface)
-{
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRefPtr<gfxASurface> thebesSurface =
-      gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);
-
-  if (!thebesSurface) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *surface = thebesSurface;
-  NS_ADDREF(*surface);
-
-  return NS_OK;
-}
-
 static already_AddRefed<ImageData>
 CreateImageData(JSContext* cx, CanvasRenderingContext2D* context,
                 uint32_t w, uint32_t h, ErrorResult& error)
