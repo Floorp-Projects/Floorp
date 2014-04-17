@@ -208,8 +208,6 @@ public:
 
   void Add(nsCString &address, int32_t port)
   {
-    NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
-
     if (mDelaysDisabled)
       return;
 
@@ -222,8 +220,6 @@ public:
   FailDelay* Lookup(nsCString &address, int32_t port,
                     uint32_t *outIndex = nullptr)
   {
-    NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
-
     if (mDelaysDisabled)
       return nullptr;
 
@@ -293,8 +289,6 @@ public:
   // battery life than using a periodic timer.
   void Remove(nsCString &address, int32_t port)
   {
-    NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
-
     TimeStamp rightNow = TimeStamp::Now();
 
     // iterate from end, to make deletion indexing easier
@@ -343,7 +337,6 @@ public:
   // delay/queue the connection (returns false)
   static void ConditionallyConnect(WebSocketChannel *ws)
   {
-    NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
     NS_ABORT_IF_FALSE(ws->mConnecting == NOT_CONNECTING, "opening state");
 
     StaticMutexAutoLock lock(sLock);
@@ -368,7 +361,6 @@ public:
 
   static void OnConnected(WebSocketChannel *aChannel)
   {
-    NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
     NS_ABORT_IF_FALSE(aChannel->mConnecting == CONNECTING_IN_PROGRESS,
                       "Channel completed connect, but not connecting?");
 
@@ -395,8 +387,6 @@ public:
   // w/o ever successfully creating a connection)
   static void OnStopSession(WebSocketChannel *aChannel, nsresult aReason)
   {
-    NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
-
     StaticMutexAutoLock lock(sLock);
     if (!sManager) {
       return;
@@ -573,7 +563,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    MOZ_ASSERT(NS_GetCurrentThread() == mChannel->mTargetThread);
+    MOZ_ASSERT(mChannel->IsOnTargetThread());
 
     if (mLen < 0)
       mChannel->mListener->OnMessageAvailable(mChannel->mContext, mData);
@@ -607,7 +597,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    MOZ_ASSERT(NS_GetCurrentThread() == mChannel->mTargetThread);
+    MOZ_ASSERT(mChannel->IsOnTargetThread());
 
     nsWSAdmissionManager::OnStopSession(mChannel, mReason);
 
@@ -645,7 +635,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    MOZ_ASSERT(NS_GetCurrentThread() == mChannel->mTargetThread);
+    MOZ_ASSERT(mChannel->IsOnTargetThread());
 
     mChannel->mListener->OnServerClose(mChannel->mContext, mCode, mReason);
     return NS_OK;
@@ -676,7 +666,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    MOZ_ASSERT(NS_GetCurrentThread() == mChannel->mTargetThread);
+    MOZ_ASSERT(mChannel->IsOnTargetThread());
 
     LOG(("WebSocketChannel::CallAcknowledge: Size %u\n", mSize));
     mChannel->mListener->OnAcknowledge(mChannel->mContext, mSize);
@@ -1176,6 +1166,28 @@ void
 WebSocketChannel::Shutdown()
 {
   nsWSAdmissionManager::Shutdown();
+}
+
+bool
+WebSocketChannel::IsOnTargetThread()
+{
+  MOZ_ASSERT(mTargetThread);
+  bool isOnTargetThread = false;
+  nsresult rv = mTargetThread->IsOnCurrentThread(&isOnTargetThread);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  return NS_FAILED(rv) ? false : isOnTargetThread;
+}
+
+void
+WebSocketChannel::GetEffectiveURL(nsAString& aEffectiveURL) const
+{
+  aEffectiveURL = mEffectiveURL;
+}
+
+bool
+WebSocketChannel::IsEncrypted() const
+{
+  return mEncrypted;
 }
 
 void
@@ -2372,6 +2384,12 @@ WebSocketChannel::ApplyForAdmission()
 nsresult
 WebSocketChannel::StartWebsocketData()
 {
+  if (!IsOnTargetThread()) {
+    return mTargetThread->Dispatch(
+      NS_NewRunnableMethod(this, &WebSocketChannel::StartWebsocketData),
+      NS_DISPATCH_NORMAL);
+  }
+
   LOG(("WebSocketChannel::StartWebsocketData() %p", this));
   NS_ABORT_IF_FALSE(!mDataStarted, "StartWebsocketData twice");
   mDataStarted = 1;
@@ -2384,8 +2402,9 @@ WebSocketChannel::StartWebsocketData()
   LOG(("WebSocketChannel::StartWebsocketData Notifying Listener %p\n",
        mListener.get()));
 
-  if (mListener)
+  if (mListener) {
     mListener->OnStart(mContext);
+  }
 
   // Start keepalive ping timer, if we're using keepalive.
   if (mPingInterval) {
@@ -2974,7 +2993,7 @@ nsresult
 WebSocketChannel::SendMsgCommon(const nsACString *aMsg, bool aIsBinary,
                                 uint32_t aLength, nsIInputStream *aStream)
 {
-  NS_ABORT_IF_FALSE(NS_GetCurrentThread() == mTargetThread, "not target thread");
+  NS_ABORT_IF_FALSE(IsOnTargetThread(), "not target thread");
 
   if (mRequestedClose) {
     LOG(("WebSocketChannel:: Error: send when closed\n"));
@@ -3189,6 +3208,13 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
   rv = HandleExtensions();
   if (NS_FAILED(rv))
     return rv;
+
+  // Update mEffectiveURL for off main thread URI access.
+  nsCOMPtr<nsIURI> uri = mURI ? mURI : mOriginalURI;
+  nsAutoCString spec;
+  rv = uri->GetSpec(spec);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  CopyUTF8toUTF16(spec, mEffectiveURL);
 
   mGotUpgradeOK = 1;
   if (mRecvdHttpUpgradeTransport)

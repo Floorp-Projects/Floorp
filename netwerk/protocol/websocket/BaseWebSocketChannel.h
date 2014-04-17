@@ -53,6 +53,10 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   NS_IMETHOD GetPingTimeout(uint32_t *aSeconds);
   NS_IMETHOD SetPingTimeout(uint32_t aSeconds);
 
+  // Off main thread URI access.
+  virtual void GetEffectiveURL(nsAString& aEffectiveURL) const = 0;
+  virtual bool IsEncrypted() const = 0;
+
  protected:
   nsCOMPtr<nsIURI>                mOriginalURI;
   nsCOMPtr<nsIURI>                mURI;
