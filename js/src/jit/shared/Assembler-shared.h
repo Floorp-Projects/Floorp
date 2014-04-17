@@ -690,8 +690,6 @@ enum AsmJSImmKind
     AsmJSImm_CoerceInPlace_ToInt32,
     AsmJSImm_CoerceInPlace_ToNumber,
     AsmJSImm_ToInt32,
-    AsmJSImm_EnableActivationFromAsmJS,
-    AsmJSImm_DisableActivationFromAsmJS,
 #if defined(JS_CODEGEN_ARM)
     AsmJSImm_aeabi_idivmod,
     AsmJSImm_aeabi_uidivmod,
