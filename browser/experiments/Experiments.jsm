@@ -327,6 +327,14 @@ Experiments.Policy.prototype = {
   },
 };
 
+function AlreadyShutdownError(message="already shut down") {
+  this.name = "AlreadyShutdownError";
+  this.message = message;
+}
+
+AlreadyShutdownError.prototype = new Error();
+AlreadyShutdownError.prototype.constructor = AlreadyShutdownError;
+
 /**
  * Manages the experiments and provides an interface to control them.
  */
@@ -434,7 +442,11 @@ Experiments.Experiments.prototype = {
 
     this._shutdown = true;
     if (this._mainTask) {
-      yield this._mainTask;
+      try {
+        yield this._mainTask;
+      } catch (e if e instanceof AlreadyShutdownError) {
+        // We error out of tasks after shutdown via that exception.
+      }
     }
 
     this._log.info("Completed uninitialization.");
@@ -457,7 +469,7 @@ Experiments.Experiments.prototype = {
    */
   _checkForShutdown: function() {
     if (this._shutdown) {
-      throw Error("uninit() already called");
+      throw new AlreadyShutdownError("uninit() already called");
     }
   },
 
