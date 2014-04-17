@@ -242,10 +242,16 @@ int APIENTRY WinMain(
 
   /* BEGIN Mozilla customizations */
   bool showProgress = true;
+  bool extractOnly = false;
   if (switches.Left(3).CompareNoCase(UString(L"-ms")) == 0 ||
-	  switches.Left(4).CompareNoCase(UString(L"/INI")) == 0 ||
-	  switches.Left(2).CompareNoCase(UString(L"/S")) == 0)
+      switches.Left(4).CompareNoCase(UString(L"/ini")) == 0 ||
+      switches.Left(2).CompareNoCase(UString(L"/s")) == 0) {
     showProgress = false;
+  } else if (switches.Left(12).CompareNoCase(UString(L"/extractdir=")) == 0) {
+    assumeYes = true;
+    showProgress = false;
+    extractOnly = true;
+  }
   /* END Mozilla customizations */
 
   AString config;
@@ -290,16 +296,20 @@ int APIENTRY WinMain(
   }
 
   NFile::NDirectory::CTempDirectory tempDir;
-  if (!tempDir.Create(kTempDirPrefix))
+  /* Mozilla customizations - Added !extractOnly */
+  if (!extractOnly && !tempDir.Create(kTempDirPrefix))
   {
     if (!assumeYes)
       MyMessageBox(L"Can not create temp folder archive");
     return 1;
   }
 
+  /* BEGIN Mozilla customizations */
+  UString tempDirPath = (extractOnly ? switches.Mid(12) : GetUnicodeString(tempDir.GetPath()));
+  /* END Mozilla customizations */
+
   COpenCallbackGUI openCallback;
 
-  UString tempDirPath = GetUnicodeString(tempDir.GetPath());
   bool isCorrupt = false;
   UString errorMessage;
   HRESULT result = ExtractArchive(fullPath, tempDirPath, &openCallback, showProgress, 
@@ -319,6 +329,13 @@ int APIENTRY WinMain(
     }
     return 1;
   }
+
+  /* BEGIN Mozilla customizations */
+  // The code immediately above handles the error case for extraction.
+  if (extractOnly) {
+    return 0;
+  }
+  /* END Mozilla customizations */
 
   CCurrentDirRestorer currentDirRestorer;
 

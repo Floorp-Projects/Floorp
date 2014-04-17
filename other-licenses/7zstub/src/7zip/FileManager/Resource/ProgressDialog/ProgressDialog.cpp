@@ -164,9 +164,9 @@ bool CProgressDialog::OnButtonClicked(int buttonID, HWND buttonHWND)
       ProgressSynch.SetPaused(true);
       int res = ::MessageBoxW(HWND(*this), 
           L"Are you sure you want to cancel?", 
-          _title, MB_YESNOCANCEL);
+          _title, MB_YESNO);
       ProgressSynch.SetPaused(paused);
-      if (res == IDCANCEL || res == IDNO)
+      if (res == IDNO)
         return true;
       break;
     }
