@@ -365,12 +365,14 @@ public class BrowserToolbar extends ThemedRelativeLayout
             }
         });
 
-        editCancel.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                cancelEdit();
-            }
-        });
+        if (editCancel != null) {
+            editCancel.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    cancelEdit();
+                }
+            });
+        }
 
         if (hasSoftMenuButton) {
             menuButton.setVisibility(View.VISIBLE);
@@ -594,6 +596,11 @@ public class BrowserToolbar extends ThemedRelativeLayout
     }
 
     private int getUrlBarEntryTranslation() {
+        if (editSeparator == null) {
+            // We are on tablet, and there is no animation so return a translation of 0.
+            return 0;
+        }
+
         // We would ideally use the right-most point of the edit layout instead of the
         // edit separator and its margin, but it is not inflated when this code initially runs.
         final LayoutParams lp = (LayoutParams) editSeparator.getLayoutParams();
@@ -883,8 +890,10 @@ public class BrowserToolbar extends ThemedRelativeLayout
     }
 
     private void setCancelVisibility(final int visibility) {
-        editSeparator.setVisibility(visibility);
-        editCancel.setVisibility(visibility);
+        if (editSeparator != null && editCancel != null) {
+            editSeparator.setVisibility(visibility);
+            editCancel.setVisibility(visibility);
+        }
     }
 
     /**
@@ -1325,7 +1334,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
         menuButton.setPrivateMode(isPrivate);
         menuIcon.setPrivateMode(isPrivate);
         urlEditLayout.setPrivateMode(isPrivate);
-        editSeparator.setPrivateMode(isPrivate);
+        if (editSeparator != null) {
+            editSeparator.setPrivateMode(isPrivate);
+        }
 
         if (backButton instanceof BackButton) {
             ((BackButton) backButton).setPrivateMode(isPrivate);
