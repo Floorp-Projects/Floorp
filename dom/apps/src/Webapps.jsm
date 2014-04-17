@@ -737,7 +737,6 @@ this.DOMApplicationRegistry = {
                            handlerPageURI,
                            manifestURI,
                            connection.description,
-                           AppsUtils.getAppManifestStatus(manifest),
                            connection.rules);
     }
   },
