@@ -12462,9 +12462,8 @@ nsresult
 nsGlobalWindow::SecurityCheckURL(const char *aURL)
 {
   nsCOMPtr<nsPIDOMWindow> sourceWindow;
-  nsCOMPtr<nsIDOMChromeWindow> asChrome = do_QueryObject(this);
-  JSContext *topCx = nsContentUtils::GetCurrentJSContext();
-  if (nsContentUtils::IsCallerChrome() && !asChrome && topCx) {
+  JSContext* topCx = nsContentUtils::GetCurrentJSContext();
+  if (topCx) {
     sourceWindow = do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(topCx));
   }
   if (!sourceWindow) {
