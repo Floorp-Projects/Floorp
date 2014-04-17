@@ -173,7 +173,7 @@ public:
                               const char16_t* aEncoderOptions,
                               nsIInputStream **aStream) MOZ_OVERRIDE;
     NS_IMETHOD GetThebesSurface(gfxASurface **surface) MOZ_OVERRIDE;
-    mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot() MOZ_OVERRIDE;
+    mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha) MOZ_OVERRIDE;
 
     NS_IMETHOD SetIsOpaque(bool b) MOZ_OVERRIDE { return NS_OK; };
     bool GetIsOpaque() MOZ_OVERRIDE { return false; }
