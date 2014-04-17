@@ -7,7 +7,7 @@
 
 @font-face {
   font-family: "Clear Sans";
-  src: url("chrome://browser/skin/fonts/ClearSans-Regular.ttf");
+  src: url("chrome://browser/content/fonts/ClearSans-Regular.woff") format('woff');
 }
 
 page {
