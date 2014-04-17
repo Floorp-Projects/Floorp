@@ -524,7 +524,7 @@ CodeGeneratorARM::divICommon(MDiv *mir, Register lhs, Register rhs, Register out
         // The integer division will give INT32_MIN, but we want -(double)INT32_MIN.
         masm.ma_cmp(lhs, Imm32(INT32_MIN)); // sets EQ if lhs == INT32_MIN
         masm.ma_cmp(rhs, Imm32(-1), Assembler::Equal); // if EQ (LHS == INT32_MIN), sets EQ if rhs == -1
-        if (mir->isTruncated()) {
+        if (mir->canTruncateOverflow()) {
             // (-INT32_MIN)|0 = INT32_MIN
             Label skip;
             masm.ma_b(&skip, Assembler::NotEqual);
@@ -538,24 +538,11 @@ CodeGeneratorARM::divICommon(MDiv *mir, Register lhs, Register rhs, Register out
         }
     }
 
-    // 0/X (with X < 0) is bad because both of these values *should* be doubles, and
-    // the result should be -0.0, which cannot be represented in integers.
-    // X/0 is bad because it will give garbage (or abort), when it should give
-    // either \infty, -\infty or NAN.
-
-    // Prevent 0 / X (with X < 0) and X / 0
-    // testing X / Y.  Compare Y with 0.
-    // There are three cases: (Y < 0), (Y == 0) and (Y > 0)
-    // If (Y < 0), then we compare X with 0, and bail if X == 0
-    // If (Y == 0), then we simply want to bail.  Since this does not set
-    // the flags necessary for LT to trigger, we don't test X, and take the
-    // bailout because the EQ flag is set.
-    // if (Y > 0), we don't set EQ, and we don't trigger LT, so we don't take the bailout.
-    if (mir->canBeDivideByZero() || mir->canBeNegativeZero()) {
+    // Handle divide by zero.
+    if (mir->canBeDivideByZero()) {
         masm.ma_cmp(rhs, Imm32(0));
-        masm.ma_cmp(lhs, Imm32(0), Assembler::LessThan);
-        if (mir->isTruncated()) {
-            // Infinity|0 == 0 and -0|0 == 0
+        if (mir->canTruncateInfinities()) {
+            // Infinity|0 == 0
             Label skip;
             masm.ma_b(&skip, Assembler::NotEqual);
             masm.ma_mov(Imm32(0), output);
@@ -566,6 +553,18 @@ CodeGeneratorARM::divICommon(MDiv *mir, Register lhs, Register rhs, Register out
             if (!bailoutIf(Assembler::Equal, snapshot))
                 return false;
         }
+    }
+
+    // Handle negative 0.
+    if (!mir->canTruncateNegativeZero() && mir->canBeNegativeZero()) {
+        Label nonzero;
+        masm.ma_cmp(lhs, Imm32(0));
+        masm.ma_b(&nonzero, Assembler::NotEqual);
+        masm.ma_cmp(rhs, Imm32(0));
+        JS_ASSERT(mir->fallible());
+        if (!bailoutIf(Assembler::LessThan, snapshot))
+            return false;
+        masm.bind(&nonzero);
     }
 
     return true;
@@ -585,7 +584,7 @@ CodeGeneratorARM::visitDivI(LDivI *ins)
     if (!divICommon(mir, lhs, rhs, output, ins->snapshot(), done))
         return false;
 
-    if (mir->isTruncated()) {
+    if (mir->canTruncateRemainder()) {
         masm.ma_sdiv(lhs, rhs, output);
     } else {
         masm.ma_sdiv(lhs, rhs, ScratchRegister);
@@ -627,7 +626,7 @@ CodeGeneratorARM::visitSoftDivI(LSoftDivI *ins)
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
     // idivmod returns the quotient in r0, and the remainder in r1.
-    if (!mir->isTruncated()) {
+    if (!mir->canTruncateRemainder()) {
         JS_ASSERT(mir->fallible());
         masm.ma_cmp(r1, Imm32(0));
         if (!bailoutIf(Assembler::NonZero, ins->snapshot()))

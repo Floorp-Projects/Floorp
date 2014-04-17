@@ -1055,14 +1055,14 @@ ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
     static int createdIndex = 0;
     createdIndex++;
 
-    if (!JS_DefineProperty(cx, obj, "index", Int32Value(createdIndex),
-                           JS_PropertyStub, JS_StrictPropertyStub, 0))
+    if (!JS_DefineProperty(cx, obj, "index", createdIndex, 0,
+                           JS_PropertyStub, JS_StrictPropertyStub))
     {
         return false;
     }
 
-    if (!JS_DefineProperty(cx, obj, "stack", ObjectValue(*stack),
-                           JS_PropertyStub, JS_StrictPropertyStub, 0))
+    if (!JS_DefineProperty(cx, obj, "stack", stack, 0,
+                           JS_PropertyStub, JS_StrictPropertyStub))
     {
         return false;
     }

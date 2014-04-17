@@ -105,6 +105,9 @@ class OutOfLineUpdateCache :
 bool
 CodeGeneratorShared::addCache(LInstruction *lir, size_t cacheIndex)
 {
+    if (cacheIndex == SIZE_MAX)
+        return false;
+
     DataPtr<IonCache> cache(this, cacheIndex);
     MInstruction *mir = lir->mirRaw()->toInstruction();
     if (mir->resumePoint())
@@ -5512,12 +5515,12 @@ CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV *lir)
     return true;
 }
 
-typedef bool (*SetObjectElementFn)(JSContext *, HandleObject, HandleValue, HandleValue,
-                                   bool strict);
-typedef bool (*SetElementParFn)(ForkJoinContext *, HandleObject, HandleValue, HandleValue, bool);
-static const VMFunctionsModal SetObjectElementInfo = VMFunctionsModal(
-    FunctionInfo<SetObjectElementFn>(SetObjectElement),
-    FunctionInfo<SetElementParFn>(SetElementPar));
+typedef bool (*SetDenseElementFn)(JSContext *, HandleObject, int32_t, HandleValue,
+                                  bool strict);
+typedef bool (*SetDenseElementParFn)(ForkJoinContext *, HandleObject, int32_t, HandleValue, bool);
+static const VMFunctionsModal SetDenseElementInfo = VMFunctionsModal(
+    FunctionInfo<SetDenseElementFn>(SetDenseElement),
+    FunctionInfo<SetDenseElementParFn>(SetDenseElementPar));
 
 bool
 CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
@@ -5597,11 +5600,11 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
     pushArg(Imm32(current->mir()->strict()));
     pushArg(value);
     if (index->isConstant())
-        pushArg(*index->toConstant());
+        pushArg(Imm32(ToInt32(index)));
     else
-        pushArg(TypedOrValueRegister(MIRType_Int32, ToAnyRegister(index)));
+        pushArg(ToRegister(index));
     pushArg(object);
-    if (!callVM(SetObjectElementInfo, ins))
+    if (!callVM(SetDenseElementInfo, ins))
         return false;
 
     restoreLive(ins);
@@ -6619,6 +6622,13 @@ CodeGenerator::visitCallGetElement(LCallGetElement *lir)
         return callVM(CallElementInfo, lir);
     }
 }
+
+typedef bool (*SetObjectElementFn)(JSContext *, HandleObject, HandleValue, HandleValue,
+                                   bool strict);
+typedef bool (*SetElementParFn)(ForkJoinContext *, HandleObject, HandleValue, HandleValue, bool);
+static const VMFunctionsModal SetObjectElementInfo = VMFunctionsModal(
+    FunctionInfo<SetObjectElementFn>(SetObjectElement),
+    FunctionInfo<SetElementParFn>(SetElementPar));
 
 bool
 CodeGenerator::visitCallSetElement(LCallSetElement *lir)

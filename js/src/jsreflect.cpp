@@ -3338,8 +3338,8 @@ JS_InitReflect(JSContext *cx, HandleObject obj)
     if (!Reflect)
         return nullptr;
 
-    if (!JS_DefineProperty(cx, obj, "Reflect", OBJECT_TO_JSVAL(Reflect),
-                           JS_PropertyStub, JS_StrictPropertyStub, 0)) {
+    if (!JS_DefineProperty(cx, obj, "Reflect", Reflect, 0,
+                           JS_PropertyStub, JS_StrictPropertyStub)) {
         return nullptr;
     }
 

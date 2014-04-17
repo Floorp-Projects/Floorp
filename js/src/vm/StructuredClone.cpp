@@ -388,6 +388,8 @@ Discard(uint64_t *buffer, size_t nbytes, const JSStructuredCloneCallbacks *cb, v
 
         if (ownership == JS::SCTAG_TMO_ALLOC_DATA) {
             js_free(content);
+        } else if (ownership == JS::SCTAG_TMO_MAPPED_DATA) {
+            JS_ReleaseMappedArrayBufferContents(content, extraData);
         } else if (ownership == JS::SCTAG_TMO_SHARED_BUFFER) {
             SharedArrayRawBuffer *raw = static_cast<SharedArrayRawBuffer*>(content);
             if (raw)
@@ -848,6 +850,7 @@ bool
 JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj)
 {
     ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
+
     return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, buffer.byteLength()) &&
            out.writeBytes(buffer.dataPointer(), buffer.byteLength());
 }
@@ -1036,7 +1039,10 @@ JSStructuredCloneWriter::transferOwnership()
             if (!content)
                 return false; // Destructor will clean up the already-transferred data
             tag = SCTAG_TRANSFER_MAP_ARRAY_BUFFER;
-            ownership = JS::SCTAG_TMO_ALLOC_DATA;
+            if (obj->as<ArrayBufferObject>().isMappedArrayBuffer())
+                ownership = JS::SCTAG_TMO_MAPPED_DATA;
+            else
+                ownership = JS::SCTAG_TMO_ALLOC_DATA;
             extraData = nbytes;
         } else if (obj->is<SharedArrayBufferObject>()) {
             SharedArrayRawBuffer *rawbuf = obj->as<SharedArrayBufferObject>().rawBufferObject();
@@ -1547,8 +1553,12 @@ JSStructuredCloneReader::readTransferMap()
 
         if (tag == SCTAG_TRANSFER_MAP_ARRAY_BUFFER) {
             size_t nbytes = extraData;
-            JS_ASSERT(data == JS::SCTAG_TMO_ALLOC_DATA);
-            obj = JS_NewArrayBufferWithContents(cx, nbytes, content);
+            JS_ASSERT(data == JS::SCTAG_TMO_ALLOC_DATA ||
+                      data == JS::SCTAG_TMO_MAPPED_DATA);
+            if (data == JS::SCTAG_TMO_ALLOC_DATA)
+                obj = JS_NewArrayBufferWithContents(cx, nbytes, content);
+            else if (data == JS::SCTAG_TMO_MAPPED_DATA)
+                obj = JS_NewMappedArrayBufferWithContents(cx, nbytes, content);
         } else if (tag == SCTAG_TRANSFER_MAP_SHARED_BUFFER) {
             JS_ASSERT(data == JS::SCTAG_TMO_SHARED_BUFFER);
             obj = SharedArrayBufferObject::New(context(), (SharedArrayRawBuffer *)content);

@@ -3285,8 +3285,8 @@ js_InitProxyClass(JSContext *cx, HandleObject obj)
 
     if (!JS_DefineFunctions(cx, ctor, static_methods))
         return nullptr;
-    if (!JS_DefineProperty(cx, obj, "Proxy", OBJECT_TO_JSVAL(ctor),
-                           JS_PropertyStub, JS_StrictPropertyStub, 0)) {
+    if (!JS_DefineProperty(cx, obj, "Proxy", ctor, 0,
+                           JS_PropertyStub, JS_StrictPropertyStub)) {
         return nullptr;
     }
 

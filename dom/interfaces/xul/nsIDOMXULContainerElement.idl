@@ -6,8 +6,8 @@
 #include "nsIDOMXULElement.idl"
 interface nsIDOMXULContainerElement;
 
-[scriptable, uuid(6f59f65f-afc9-4076-a80f-7b25d5a42fe4)]
-interface nsIDOMXULContainerItemElement : nsIDOMXULElement
+[scriptable, uuid(800a68c7-b854-4597-a436-3055ce5c5c96)]
+interface nsIDOMXULContainerItemElement : nsISupports
 {
   /**
    * Returns the parent container if any.
