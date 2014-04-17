@@ -78,7 +78,7 @@ nsHttpConnection::nsHttpConnection()
     , mResponseTimeoutEnabled(false)
     , mTCPKeepaliveConfig(kTCPKeepaliveDisabled)
 {
-    LOG(("Creating nsHttpConnection @%x\n", this));
+    LOG(("Creating nsHttpConnection @%p\n", this));
 
     // the default timeout is for when this connection has not yet processed a
     // transaction
@@ -89,7 +89,7 @@ nsHttpConnection::nsHttpConnection()
 
 nsHttpConnection::~nsHttpConnection()
 {
-    LOG(("Destroying nsHttpConnection @%x\n", this));
+    LOG(("Destroying nsHttpConnection @%p\n", this));
 
     if (!mEverUsedSpdy) {
         LOG(("nsHttpConnection %p performed %d HTTP/1.x transactions\n",
@@ -1247,7 +1247,7 @@ nsHttpConnection::EndIdleMonitoring()
 void
 nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
 {
-    LOG(("nsHttpConnection::CloseTransaction[this=%p trans=%x reason=%x]\n",
+    LOG(("nsHttpConnection::CloseTransaction[this=%p trans=%p reason=%x]\n",
         this, trans, reason));
 
     MOZ_ASSERT(trans == mTransaction, "wrong transaction");

@@ -45,34 +45,34 @@ NS_INTERFACE_MAP_BEGIN(SpdySession3)
 NS_INTERFACE_MAP_END
 
 SpdySession3::SpdySession3(nsAHttpTransaction *aHttpTransaction,
-                         nsISocketTransport *aSocketTransport,
-                         int32_t firstPriority)
-  : mSocketTransport(aSocketTransport),
-    mSegmentReader(nullptr),
-    mSegmentWriter(nullptr),
-    mNextStreamID(1),
-    mConcurrentHighWater(0),
-    mDownstreamState(BUFFERING_FRAME_HEADER),
-    mInputFrameBufferSize(kDefaultBufferSize),
-    mInputFrameBufferUsed(0),
-    mInputFrameDataLast(false),
-    mInputFrameDataStream(nullptr),
-    mNeedsCleanup(nullptr),
-    mShouldGoAway(false),
-    mClosed(false),
-    mCleanShutdown(false),
-    mDataPending(false),
-    mGoAwayID(0),
-    mMaxConcurrent(kDefaultMaxConcurrent),
-    mConcurrent(0),
-    mServerPushedResources(0),
-    mServerInitialWindow(kDefaultServerRwin),
-    mOutputQueueSize(kDefaultQueueSize),
-    mOutputQueueUsed(0),
-    mOutputQueueSent(0),
-    mLastReadEpoch(PR_IntervalNow()),
-    mPingSentEpoch(0),
-    mNextPingID(1)
+                           nsISocketTransport *aSocketTransport,
+                           int32_t firstPriority)
+  : mSocketTransport(aSocketTransport)
+  , mSegmentReader(nullptr)
+  , mSegmentWriter(nullptr)
+  , mNextStreamID(1)
+  , mConcurrentHighWater(0)
+  , mDownstreamState(BUFFERING_FRAME_HEADER)
+  , mInputFrameBufferSize(kDefaultBufferSize)
+  , mInputFrameBufferUsed(0)
+  , mInputFrameDataLast(false)
+  , mInputFrameDataStream(nullptr)
+  , mNeedsCleanup(nullptr)
+  , mShouldGoAway(false)
+  , mClosed(false)
+  , mCleanShutdown(false)
+  , mDataPending(false)
+  , mGoAwayID(0)
+  , mMaxConcurrent(kDefaultMaxConcurrent)
+  , mConcurrent(0)
+  , mServerPushedResources(0)
+  , mServerInitialWindow(kDefaultServerRwin)
+  , mOutputQueueSize(kDefaultQueueSize)
+  , mOutputQueueUsed(0)
+  , mOutputQueueSent(0)
+  , mLastReadEpoch(PR_IntervalNow())
+  , mPingSentEpoch(0)
+  , mNextPingID(1)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -100,8 +100,8 @@ SpdySession3::SpdySession3(nsAHttpTransaction *aHttpTransaction,
 
 PLDHashOperator
 SpdySession3::ShutdownEnumerator(nsAHttpTransaction *key,
-                                nsAutoPtr<SpdyStream3> &stream,
-                                void *closure)
+                                 nsAutoPtr<SpdyStream3> &stream,
+                                 void *closure)
 {
   SpdySession3 *self = static_cast<SpdySession3 *>(closure);
 
@@ -156,7 +156,7 @@ SpdySession3::~SpdySession3()
 
 void
 SpdySession3::LogIO(SpdySession3 *self, SpdyStream3 *stream, const char *label,
-                   const char *data, uint32_t datalen)
+                    const char *data, uint32_t datalen)
 {
   if (!LOG4_ENABLED())
     return;
@@ -340,7 +340,7 @@ SpdySession3::RegisterStreamID(SpdyStream3 *stream, uint32_t aNewID)
 
 bool
 SpdySession3::AddStream(nsAHttpTransaction *aHttpTransaction,
-                       int32_t aPriority)
+                        int32_t aPriority)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -420,7 +420,7 @@ SpdySession3::ProcessPending()
 
 nsresult
 SpdySession3::NetworkRead(nsAHttpSegmentWriter *writer, char *buf,
-                         uint32_t count, uint32_t *countWritten)
+                          uint32_t count, uint32_t *countWritten)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -510,7 +510,7 @@ SpdySession3::ChangeDownstreamState(enum stateType newState)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-  LOG3(("SpdyStream3::ChangeDownstreamState() %p from %X to %X",
+  LOG3(("SpdySession3::ChangeDownstreamState() %p from %X to %X",
         this, mDownstreamState, newState));
   mDownstreamState = newState;
 }
@@ -520,7 +520,7 @@ SpdySession3::ResetDownstreamState()
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-  LOG3(("SpdyStream3::ResetDownstreamState() %p", this));
+  LOG3(("SpdySession3::ResetDownstreamState() %p", this));
   ChangeDownstreamState(BUFFERING_FRAME_HEADER);
 
   if (mInputFrameDataLast && mInputFrameDataStream) {
@@ -844,7 +844,7 @@ SpdySession3::VerifyStream(SpdyStream3 *aStream, uint32_t aOptionalID = 0)
 
 void
 SpdySession3::CleanupStream(SpdyStream3 *aStream, nsresult aResult,
-                           rstReason aResetCode)
+                            rstReason aResetCode)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   LOG3(("SpdySession3::CleanupStream %p %p 0x%X %X\n",
@@ -1640,8 +1640,8 @@ SpdySession3::HandleCredential(SpdySession3 *self)
 
 void
 SpdySession3::OnTransportStatus(nsITransport* aTransport,
-                               nsresult aStatus,
-                               uint64_t aProgress)
+                                nsresult aStatus,
+                                uint64_t aProgress)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -1696,8 +1696,8 @@ SpdySession3::OnTransportStatus(nsITransport* aTransport,
 
 nsresult
 SpdySession3::ReadSegments(nsAHttpSegmentReader *reader,
-                          uint32_t count,
-                          uint32_t *countRead)
+                           uint32_t count,
+                           uint32_t *countRead)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -1802,8 +1802,8 @@ SpdySession3::ReadSegments(nsAHttpSegmentReader *reader,
 
 nsresult
 SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
-                           uint32_t count,
-                           uint32_t *countWritten)
+                            uint32_t count,
+                            uint32_t *countWritten)
 {
   typedef nsresult  (*Control_FX) (SpdySession3 *self);
   static const Control_FX sControlFunctions[] =
@@ -2240,7 +2240,7 @@ SpdySession3::Close(nsresult aReason)
 
 void
 SpdySession3::CloseTransaction(nsAHttpTransaction *aTransaction,
-                              nsresult aResult)
+                               nsresult aResult)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   LOG3(("SpdySession3::CloseTransaction %p %p %x", this, aTransaction, aResult));
@@ -2268,8 +2268,8 @@ SpdySession3::CloseTransaction(nsAHttpTransaction *aTransaction,
 
 nsresult
 SpdySession3::OnReadSegment(const char *buf,
-                           uint32_t count,
-                           uint32_t *countRead)
+                            uint32_t count,
+                            uint32_t *countRead)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -2365,8 +2365,8 @@ SpdySession3::CommitToSegmentSize(uint32_t count, bool forceCommitment)
 
 nsresult
 SpdySession3::OnWriteSegment(char *buf,
-                            uint32_t count,
-                            uint32_t *countWritten)
+                             uint32_t count,
+                             uint32_t *countWritten)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   nsresult rv;
@@ -2509,8 +2509,8 @@ SpdySession3::IsPersistent()
 
 nsresult
 SpdySession3::TakeTransport(nsISocketTransport **,
-                           nsIAsyncInputStream **,
-                           nsIAsyncOutputStream **)
+                            nsIAsyncInputStream **,
+                            nsIAsyncOutputStream **)
 {
   MOZ_ASSERT(false, "TakeTransport of SpdySession3");
   return NS_ERROR_UNEXPECTED;
@@ -2695,9 +2695,9 @@ SpdySession3::Connection()
 
 nsresult
 SpdySession3::OnHeadersAvailable(nsAHttpTransaction *transaction,
-                                nsHttpRequestHead *requestHead,
-                                nsHttpResponseHead *responseHead,
-                                bool *reset)
+                                 nsHttpRequestHead *requestHead,
+                                 nsHttpResponseHead *responseHead,
+                                 bool *reset)
 {
   return mConnection->OnHeadersAvailable(transaction,
                                          requestHead,
