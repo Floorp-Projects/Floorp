@@ -16,7 +16,7 @@ interface nsIURI;
  *
  * [1] https://wiki.mozilla.org/WebAPI/Inter_App_Communication_Alt_proposal
  */
-[scriptable, uuid(7fdd8b68-0b0a-11e3-9b4c-afbc236da250)]
+[scriptable, uuid(b3d711a4-c6a4-11e3-8fd3-738e7fbcb6d6)]
 interface nsIInterAppCommService : nsISupports
 {
   /*
@@ -27,14 +27,11 @@ interface nsIInterAppCommService : nsISupports
    * @param handlerPageURI The URI of the handler's page.
    * @param manifestURI    The webapp's manifest URI.
    * @param description    The connection's description.
-   * @param appStatus      The app status can be Ci.nsIPrincipal.APP_STATUS_[
-   *                       NOT_INSTALLED, INSTALLED, PRIVILEGED, CERTIFIED].
    * @param rules          The connection's rules.
    */
   void registerConnection(in DOMString      keyword,
                           in nsIURI         handlerPageURI,
                           in nsIURI         manifestURI,
                           in DOMString      description,
-                          in unsigned short appStatus,
                           in jsval          rules);
 };
