@@ -703,8 +703,8 @@ TraceLogger::stopEvent(uint32_t id)
 {
 #ifdef DEBUG
     TreeEntry entry;
-    MOZ_ASSERT(getTreeEntry(stack.current().treeId(), &entry));
-    MOZ_ASSERT(entry.textId() == id);
+    MOZ_ASSERT_IF(stack.current().active(), getTreeEntry(stack.current().treeId(), &entry));
+    MOZ_ASSERT_IF(stack.current().active(), entry.textId() == id);
 #endif
     stopEvent();
 }
