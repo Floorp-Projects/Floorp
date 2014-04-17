@@ -45,6 +45,12 @@ const UNKNOWN_XPCOM_ABI               = "unknownABI";
 const UPDATE_REQUEST_VERSION          = 2;
 const CATEGORY_UPDATE_PARAMS          = "extension-update-params";
 
+const XMLURI_BLOCKLIST                = "http://www.mozilla.org/2006/addons-blocklist";
+
+const KEY_PROFILEDIR                  = "ProfD";
+const KEY_APPDIR                      = "XCurProcD";
+const FILE_BLOCKLIST                  = "blocklist.xml";
+
 const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 const PREF_EM_CHECK_COMPATIBILITY_BASE = "extensions.checkCompatibility";
 #ifdef MOZ_COMPATIBILITY_NIGHTLY
@@ -65,6 +71,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
                                   "resource://gre/modules/addons/AddonRepository.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "CertUtils", function certUtilsLazyGetter() {
   let certUtils = {};
@@ -521,6 +529,88 @@ var AddonManagerInternal = {
     this.TelemetryTimestamps.add(name, value);
   },
 
+  validateBlocklist: function AMI_validateBlocklist() {
+    let appBlocklist = FileUtils.getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
+
+    // If there is no application shipped blocklist then there is nothing to do
+    if (!appBlocklist.exists())
+      return;
+
+    let profileBlocklist = FileUtils.getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
+
+    // If there is no blocklist in the profile then copy the application shipped
+    // one there
+    if (!profileBlocklist.exists()) {
+      try {
+        appBlocklist.copyTo(profileBlocklist.parent, FILE_BLOCKLIST);
+      }
+      catch (e) {
+        logger.warn("Failed to copy the application shipped blocklist to the profile", e);
+      }
+      return;
+    }
+
+    let fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
+                     createInstance(Ci.nsIFileInputStream);
+    try {
+      let cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
+                    createInstance(Ci.nsIConverterInputStream);
+      fileStream.init(appBlocklist, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
+      cstream.init(fileStream, "UTF-8", 0, 0);
+
+      let data = "";
+      let str = {};
+      let read = 0;
+      do {
+        read = cstream.readString(0xffffffff, str);
+        data += str.value;
+      } while (read != 0);
+
+      let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
+                   createInstance(Ci.nsIDOMParser);
+      var doc = parser.parseFromString(data, "text/xml");
+    }
+    catch (e) {
+      logger.warn("Application shipped blocklist could not be loaded", e);
+      return;
+    }
+    finally {
+      try {
+        fileStream.close();
+      }
+      catch (e) {
+        logger.warn("Unable to close blocklist file stream", e);
+      }
+    }
+
+    // If the namespace is incorrect then ignore the application shipped
+    // blocklist
+    if (doc.documentElement.namespaceURI != XMLURI_BLOCKLIST) {
+      logger.warn("Application shipped blocklist has an unexpected namespace (" +
+                  doc.documentElement.namespaceURI + ")");
+      return;
+    }
+
+    // If there is no lastupdate information then ignore the application shipped
+    // blocklist
+    if (!doc.documentElement.hasAttribute("lastupdate"))
+      return;
+
+    // If the application shipped blocklist is older than the profile blocklist
+    // then do nothing
+    if (doc.documentElement.getAttribute("lastupdate") <=
+        profileBlocklist.lastModifiedTime)
+      return;
+
+    // Otherwise copy the application shipped blocklist to the profile
+    try {
+      appBlocklist.copyTo(profileBlocklist.parent, FILE_BLOCKLIST);
+    }
+    catch (e) {
+      logger.warn("Failed to copy the application shipped blocklist to the profile", e);
+    }
+  },
+
   /**
    * Initializes the AddonManager, loading any known providers and initializing
    * them.
@@ -559,6 +649,7 @@ var AddonManagerInternal = {
                                    Services.appinfo.platformVersion);
         Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNTVERSION,
                                   (appChanged === undefined ? 0 : -1));
+        this.validateBlocklist();
       }
 
 #ifndef MOZ_COMPATIBILITY_NIGHTLY
