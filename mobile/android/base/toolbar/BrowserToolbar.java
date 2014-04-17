@@ -59,6 +59,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 
 /**
 * {@code BrowserToolbar} is single entry point for users of the toolbar
@@ -120,6 +121,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
     private ToolbarDisplayLayout mUrlDisplayLayout;
     private ToolbarEditLayout mUrlEditLayout;
     private View mUrlBarEntry;
+    private RelativeLayout.LayoutParams urlBarEntryDefaultLayoutParams;
+    private RelativeLayout.LayoutParams urlBarEntryShrunkenLayoutParams;
     private ImageView urlBarTranslatingEdge;
     private boolean mSwitchingTabs;
     private ShapedButton mTabs;
@@ -136,6 +139,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
     private final ThemedView editSeparator;
     private final View editCancel;
+
+    private boolean shouldShrinkURLBar = false;
 
     private OnActivateListener mActivateListener;
     private OnCommitListener mCommitListener;
@@ -189,6 +194,11 @@ public class BrowserToolbar extends ThemedRelativeLayout
         mUrlDisplayLayout = (ToolbarDisplayLayout) findViewById(R.id.display_layout);
         mUrlBarEntry = findViewById(R.id.url_bar_entry);
         mUrlEditLayout = (ToolbarEditLayout) findViewById(R.id.edit_layout);
+
+        urlBarEntryDefaultLayoutParams = (RelativeLayout.LayoutParams) mUrlBarEntry.getLayoutParams();
+        urlBarEntryShrunkenLayoutParams = new RelativeLayout.LayoutParams(urlBarEntryDefaultLayoutParams);
+        urlBarEntryShrunkenLayoutParams.addRule(RelativeLayout.ALIGN_RIGHT, R.id.edit_layout);
+        urlBarEntryShrunkenLayoutParams.rightMargin = 0;
 
         // This will clip the translating edge's image at 60% of its width
         urlBarTranslatingEdge = (ImageView) findViewById(R.id.url_bar_translating_edge);
@@ -963,12 +973,16 @@ public class BrowserToolbar extends ThemedRelativeLayout
             mStartEditingListener.onStartEditing();
         }
 
+        final int curveTranslation = getUrlBarCurveTranslation();
+        final int entryTranslation = getUrlBarEntryTranslation();
+        shouldShrinkURLBar = (entryTranslation < 0);
+
         if (urlBarTranslatingEdge != null) {
             urlBarTranslatingEdge.setVisibility(View.VISIBLE);
+            if (shouldShrinkURLBar) {
+                mUrlBarEntry.setLayoutParams(urlBarEntryShrunkenLayoutParams);
+            }
         }
-
-        final int entryTranslation = getUrlBarEntryTranslation();
-        final int curveTranslation = getUrlBarCurveTranslation();
 
         // This animation doesn't make much sense in a sidebar UI
         if (HardwareUtils.isTablet() || Build.VERSION.SDK_INT < 11) {
@@ -1088,7 +1102,11 @@ public class BrowserToolbar extends ThemedRelativeLayout
                 updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
 
                 if (urlBarTranslatingEdge != null) {
+                    urlBarTranslatingEdge.setVisibility(View.INVISIBLE);
                     ViewHelper.setTranslationX(urlBarTranslatingEdge, 0);
+                    if (shouldShrinkURLBar) {
+                        mUrlBarEntry.setLayoutParams(urlBarEntryDefaultLayoutParams);
+                    }
                 }
 
                 ViewHelper.setTranslationX(mTabs, 0);
@@ -1146,6 +1164,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
             public void onPropertyAnimationEnd() {
                 if (urlBarTranslatingEdge != null) {
                     urlBarTranslatingEdge.setVisibility(View.INVISIBLE);
+                    if (shouldShrinkURLBar) {
+                        mUrlBarEntry.setLayoutParams(urlBarEntryDefaultLayoutParams);
+                    }
                 }
 
                 PropertyAnimator buttonsAnimator = new PropertyAnimator(300);
