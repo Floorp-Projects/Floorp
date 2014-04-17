@@ -103,13 +103,18 @@ protected:
   {
   public:
     using android::CameraParameters::set;
+    using android::CameraParameters::get;
+    using android::CameraParameters::TRUE;
+    using android::CameraParameters::FALSE;
 
     void set(const char* aKey, float aValue)      { setFloat(aKey, aValue); }
     void set(const char* aKey, double aValue)     { setFloat(aKey, aValue); }
+    void set(const char* aKey, bool aValue)       { set(aKey, aValue ? TRUE : FALSE); }
     void get(const char* aKey, float& aRet)       { aRet = getFloat(aKey); }
     void get(const char* aKey, double& aRet)      { aRet = getFloat(aKey); }
-    void get(const char* aKey, const char*& aRet) { aRet = android::CameraParameters::get(aKey); }
+    void get(const char* aKey, const char*& aRet) { aRet = get(aKey); }
     void get(const char* aKey, int& aRet)         { aRet = getInt(aKey); }
+    void get(const char* aKey, bool& aRet)        { aRet = strcmp(get(aKey), FALSE); }
 
     static const char* GetTextKey(uint32_t aKey);
   };
@@ -173,6 +178,8 @@ protected:
   nsresult GetTranslated(uint32_t aKey, int& aValue);
   nsresult SetTranslated(uint32_t aKey, const uint32_t& aValue);
   nsresult GetTranslated(uint32_t aKey, uint32_t& aValue);
+  nsresult SetTranslated(uint32_t aKey, const bool& aValue);
+  nsresult GetTranslated(uint32_t aKey, bool& aValue);
   nsresult GetTranslated(uint32_t aKey, nsTArray<nsString>& aValues);
   nsresult GetTranslated(uint32_t aKey, nsTArray<double>& aValues);
 
