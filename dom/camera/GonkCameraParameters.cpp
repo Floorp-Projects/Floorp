@@ -81,6 +81,10 @@ GonkCameraParameters::Parameters::GetTextKey(uint32_t aKey)
       return "iso";
     case CAMERA_PARAM_LUMINANCE:
       return "luminance-condition";
+    case CAMERA_PARAM_SCENEMODE_HDR_RETURNNORMALPICTURE:
+      // Not every platform defines KEY_QC_HDR_NEED_1X;
+      // for those that don't, we use the raw string key.
+      return "hdr-need-1x";
 
     case CAMERA_PARAM_SUPPORTED_PREVIEWSIZES:
       return KEY_SUPPORTED_PREVIEW_SIZES;
@@ -683,6 +687,19 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, uint32_t& aValue)
 
   aValue = val;
   return NS_OK;
+}
+
+// Handle bools
+nsresult
+GonkCameraParameters::SetTranslated(uint32_t aKey, const bool& aValue)
+{
+  return SetImpl(aKey, aValue);
+}
+
+nsresult
+GonkCameraParameters::GetTranslated(uint32_t aKey, bool& aValue)
+{
+  return GetImpl(aKey, aValue);
 }
 
 nsresult
