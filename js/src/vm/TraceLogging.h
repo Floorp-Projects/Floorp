@@ -306,7 +306,7 @@ class TraceLogger
             stop_ = stop;
         }
         void setTextId(uint32_t textId) {
-            MOZ_ASSERT(textId < (1<<31) );
+            MOZ_ASSERT(textId < uint32_t(1<<31) );
             u.s.textId_ = textId;
         }
         void setHasChildren(bool hasChildren) {
@@ -352,7 +352,7 @@ class TraceLogger
             lastChildId_ = lastChildId;
         }
         void setTextId(uint32_t textId) {
-            MOZ_ASSERT(textId < (1<<31) );
+            MOZ_ASSERT(textId < uint32_t(1<<31) );
             s.textId_ = textId;
         }
         void setActive(bool active) {
