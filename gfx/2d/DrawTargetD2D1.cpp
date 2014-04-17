@@ -921,6 +921,34 @@ DrawTargetD2D1::GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTrans
   return image;
 }
 
+TemporaryRef<SourceSurface>
+DrawTargetD2D1::OptimizeSourceSurface(SourceSurface* aSurface) const
+{
+  if (aSurface->GetType() == SurfaceType::D2D1_1_IMAGE) {
+    return aSurface;
+  }
+
+  RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+
+  DataSourceSurface::MappedSurface map;
+  if (!data->Map(DataSourceSurface::MapType::READ, &map)) {
+    return nullptr;
+  }
+
+  RefPtr<ID2D1Bitmap1> bitmap;
+  HRESULT hr = mDC->CreateBitmap(D2DIntSize(data->GetSize()), map.mData, map.mStride,
+                                 D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_NONE, D2DPixelFormat(data->GetFormat())),
+                                 byRef(bitmap));
+
+  data->Unmap();
+
+  if (!bitmap) {
+    return nullptr;
+  }
+
+  return new SourceSurfaceD2D1(bitmap.get(), mDC, data->GetFormat(), data->GetSize());
+}
+
 void
 DrawTargetD2D1::PushD2DLayer(ID2D1DeviceContext *aDC, ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform)
 {
