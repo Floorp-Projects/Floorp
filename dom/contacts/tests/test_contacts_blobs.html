@@ -94,12 +94,15 @@ var findResult1;
 function verifyBlob(blob1, blob2, isLast)
 {
   is(blob1 instanceof SpecialPowers.Ci.nsIDOMBlob, true,
-     "Instance of nsIDOMBlob");
-  is(blob1 instanceof SpecialPowers.Ci.nsIDOMFile,
-     blob2 instanceof SpecialPowers.Ci.nsIDOMFile,
-     "Instance of nsIDOMFile");
-  is(blob1.size, blob2.size, "Correct size");
-  is(blob1.type, blob2.type, "Correct type");
+     "blob1 is an instance of nsIDOMBlob");
+  is(blob2 instanceof SpecialPowers.Ci.nsIDOMBlob, true,
+     "blob2 is an instance of nsIDOMBlob");
+  isnot(blob1 instanceof SpecialPowers.Ci.nsIDOMFile, true,
+     "blob1 is an instance of nsIDOMFile");
+  isnot(blob2 instanceof SpecialPowers.Ci.nsIDOMFile, true,
+     "blob2 is an instance of nsIDOMFile");
+  ise(blob1.size, blob2.size, "Same size");
+  ise(blob1.type, blob2.type, "Same type");
 
   var buffer1;
   var buffer2;
@@ -125,16 +128,18 @@ function verifyBlob(blob1, blob2, isLast)
 
 function verifyBlobArray(blobs1, blobs2)
 {
-  is(blobs1 instanceof Array, true, "Got an array object");
-  is(blobs1.length, blobs2.length, "Correct length");
+  is(blobs1 instanceof Array, true, "blobs1 is an array object");
+  is(blobs2 instanceof Array, true, "blobs2 is an array object");
+  ise(blobs1.length, blobs2.length, "Same length");
 
   if (!blobs1.length) {
     next();
     return;
   }
 
-  for (var i = 0; i < blobs1.length; i++)
+  for (var i = 0; i < blobs1.length; i++) {
     verifyBlob(blobs1[i], blobs2[i], i == blobs1.length - 1);
+  }
 }
 
 var req;
@@ -170,7 +175,7 @@ var steps = [
       ok(req.result.length == 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
       ok(findResult1.id == sample_id1, "Same ID");
-      verifyBlobArray(createResult1.photo, properties1.photo);
+      verifyBlobArray(findResult1.photo, properties1.photo);
     };
     req.onerror = onFailure;
   },
@@ -195,7 +200,7 @@ var steps = [
       ok(req.result.length == 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
       ok(findResult1.id == sample_id1, "Same ID");
-      verifyBlobArray(createResult1.photo, properties2.photo);
+      verifyBlobArray(findResult1.photo, properties2.photo);
     };
     req.onerror = onFailure;
   },
