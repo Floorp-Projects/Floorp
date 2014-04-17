@@ -15,7 +15,6 @@
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/dom/HTMLCanvasElement.h"
 
 // translucency level for drag images
 #define DRAG_TRANSLUCENCY 0.65
@@ -95,7 +94,7 @@ protected:
    */
   nsresult DrawDragForImage(nsPresContext* aPresContext,
                             nsIImageLoadingContent* aImageLoader,
-                            mozilla::dom::HTMLCanvasElement* aCanvas,
+                            nsICanvasElementExternal* aCanvas,
                             int32_t aScreenX, int32_t aScreenY,
                             nsIntRect* aScreenDragRect,
                             mozilla::RefPtr<SourceSurface>* aSurface);
