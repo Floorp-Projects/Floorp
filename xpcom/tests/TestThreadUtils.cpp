@@ -37,7 +37,7 @@ class nsFoo : public nsISupports {
 NS_IMPL_ISUPPORTS0(nsFoo)
 
 class TestSuicide : public nsRunnable {
-  nsresult Run() {
+  NS_IMETHOD Run() {
     // Runs first time on thread "Suicide", then dies on MainThread
     if (!NS_IsMainThread()) {
       mThread = do_GetCurrentThread();
