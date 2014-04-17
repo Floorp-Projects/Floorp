@@ -386,17 +386,22 @@ Experiments.Experiments.prototype = {
 
     this._registerWithAddonManager();
 
-    this._loadTask = Task.spawn(this._loadFromCache.bind(this));
+    let deferred = Promise.defer();
+
+    this._loadTask = this._loadFromCache();
     this._loadTask.then(
       () => {
         this._log.trace("_loadTask finished ok");
         this._loadTask = null;
-        this._run();
+        this._run().then(deferred.resolve, deferred.reject);
       },
       (e) => {
         this._log.error("_loadFromCache caught error: " + e);
+        deferred.reject(e);
       }
     );
+
+    return deferred.promise;
   },
 
   /**
@@ -815,7 +820,7 @@ Experiments.Experiments.prototype = {
   /*
    * Task function, load the cached experiments manifest file from disk.
    */
-  _loadFromCache: function*() {
+  _loadFromCache: Task.async(function* () {
     this._log.trace("_loadFromCache");
     let path = this._cacheFilePath;
     try {
@@ -825,7 +830,7 @@ Experiments.Experiments.prototype = {
       // No cached manifest yet.
       this._experiments = new Map();
     }
-  },
+  }),
 
   _populateFromCache: function (data) {
     this._log.trace("populateFromCache() - data: " + JSON.stringify(data));
