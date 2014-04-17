@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>box-decoration-break: clone</title>
+  <title>background-break: bounding-box</title>
   <style type="text/css">
 @font-face
 {
@@ -21,14 +21,14 @@
   white-space: pre;
   background-image: url(blue-8x20-green-8x20.png);
   background-repeat: no-repeat;
-  box-decoration-break: clone;
+  -moz-background-inline-policy: bounding-box;
 }
 </style>
 </head>
 <body>
 <div id="outer">
 <span id="ahem-lines">      <!-- EOL -->
-        <!-- mix it up for clone --><!-- EOL -->
+        <!-- mix it up for each-box and bounding-box --><!-- EOL -->
       <!-- EOL -->
       <!-- EOL -->
       </span></div>

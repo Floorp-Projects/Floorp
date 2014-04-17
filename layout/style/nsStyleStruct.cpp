@@ -388,7 +388,6 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
     mBorderImageRepeatH(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH),
     mBorderImageRepeatV(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH),
     mFloatEdge(NS_STYLE_FLOAT_EDGE_CONTENT),
-    mBoxDecorationBreak(NS_STYLE_BOX_DECORATION_BREAK_SLICE),
     mComputedBorder(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStyleBorder);
@@ -440,7 +439,6 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
     mBorderImageRepeatH(aSrc.mBorderImageRepeatH),
     mBorderImageRepeatV(aSrc.mBorderImageRepeatV),
     mFloatEdge(aSrc.mFloatEdge),
-    mBoxDecorationBreak(aSrc.mBoxDecorationBreak),
     mComputedBorder(aSrc.mComputedBorder),
     mBorder(aSrc.mBorder),
     mTwipsPerPixel(aSrc.mTwipsPerPixel)
@@ -530,8 +528,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
       GetComputedBorder() != aOther.GetComputedBorder() ||
       mFloatEdge != aOther.mFloatEdge ||
       mBorderImageOutset != aOther.mBorderImageOutset ||
-      (shadowDifference & nsChangeHint_NeedReflow) ||
-      mBoxDecorationBreak != aOther.mBoxDecorationBreak)
+      (shadowDifference & nsChangeHint_NeedReflow))
     return NS_STYLE_HINT_REFLOW;
 
   NS_FOR_CSS_SIDES(ix) {
@@ -1971,6 +1968,7 @@ nsStyleBackground::nsStyleBackground()
   , mSizeCount(1)
   , mBlendModeCount(1)
   , mBackgroundColor(NS_RGBA(0, 0, 0, 0))
+  , mBackgroundInlinePolicy(NS_STYLE_BG_INLINE_POLICY_CONTINUOUS)
 {
   MOZ_COUNT_CTOR(nsStyleBackground);
   Layer *onlyLayer = mLayers.AppendElement();
@@ -1989,6 +1987,7 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
   , mBlendModeCount(aSource.mBlendModeCount)
   , mLayers(aSource.mLayers) // deep copy
   , mBackgroundColor(aSource.mBackgroundColor)
+  , mBackgroundInlinePolicy(aSource.mBackgroundInlinePolicy)
 {
   MOZ_COUNT_CTOR(nsStyleBackground);
   // If the deep copy of mLayers failed, truncate the counts.
@@ -2046,7 +2045,9 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
     }
   }
 
-  if (hasVisualDifference || mBackgroundColor != aOther.mBackgroundColor)
+  if (hasVisualDifference ||
+      mBackgroundColor != aOther.mBackgroundColor ||
+      mBackgroundInlinePolicy != aOther.mBackgroundInlinePolicy)
     return NS_STYLE_HINT_VISUAL;
 
   return NS_STYLE_HINT_NONE;

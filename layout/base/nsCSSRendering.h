@@ -456,6 +456,7 @@ struct nsCSSRendering {
   ComputeBackgroundPositioningArea(nsPresContext* aPresContext,
                                    nsIFrame* aForFrame,
                                    const nsRect& aBorderArea,
+                                   const nsStyleBackground& aBackground,
                                    const nsStyleBackground::Layer& aLayer,
                                    nsIFrame** aAttachedToFrame);
 
@@ -465,6 +466,7 @@ struct nsCSSRendering {
                          uint32_t aFlags,
                          const nsRect& aBorderArea,
                          const nsRect& aBGClipRect,
+                         const nsStyleBackground& aBackground,
                          const nsStyleBackground::Layer& aLayer);
 
   /**
@@ -540,6 +542,7 @@ struct nsCSSRendering {
                                        nsIFrame* aForFrame,
                                        const nsRect& aBorderArea,
                                        const nsRect& aClipRect,
+                                       const nsStyleBackground& aBackground,
                                        const nsStyleBackground::Layer& aLayer,
                                        uint32_t aFlags);
 

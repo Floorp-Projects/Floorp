@@ -849,31 +849,12 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsRenderingContext *aRenderingContext,
   // This frame is a first-in-flow, but it might have a previous bidi
   // continuation, in which case that continuation should handle the startSide
   // border.
-  // For box-decoration-break:clone we setup clonePBM = startPBM + endPBM and
-  // add that to each line.  For box-decoration-break:slice clonePBM is zero.
-  nscoord clonePBM = 0; // PBM = PaddingBorderMargin
-  const bool sliceBreak =
-    styleBorder->mBoxDecorationBreak == NS_STYLE_BOX_DECORATION_BREAK_SLICE;
   if (!GetPrevContinuation()) {
-    nscoord startPBM =
+    aData->currentLine +=
       // clamp negative calc() to 0
       std::max(GetCoord(stylePadding->mPadding.Get(startSide), 0), 0) +
       styleBorder->GetComputedBorderWidth(startSide) +
       GetCoord(styleMargin->mMargin.Get(startSide), 0);
-    if (MOZ_LIKELY(sliceBreak)) {
-      aData->currentLine += startPBM;
-    } else {
-      clonePBM = startPBM;
-    }
-  }
-
-  nscoord endPBM =
-    // clamp negative calc() to 0
-    std::max(GetCoord(stylePadding->mPadding.Get(endSide), 0), 0) +
-    styleBorder->GetComputedBorderWidth(endSide) +
-    GetCoord(styleMargin->mMargin.Get(endSide), 0);
-  if (MOZ_UNLIKELY(!sliceBreak)) {
-    clonePBM += endPBM;
   }
 
   const nsLineList_iterator* savedLine = aData->line;
@@ -882,9 +863,6 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsRenderingContext *aRenderingContext,
   nsContainerFrame *lastInFlow;
   for (nsContainerFrame *nif = this; nif;
        nif = static_cast<nsContainerFrame*>(nif->GetNextInFlow())) {
-    if (aData->currentLine == 0) {
-      aData->currentLine = clonePBM;
-    }
     for (nsIFrame *kid = nif->mFrames.FirstChild(); kid;
          kid = kid->GetNextSibling()) {
       if (aType == nsLayoutUtils::MIN_WIDTH)
@@ -913,8 +891,12 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsRenderingContext *aRenderingContext,
   // We reached the last-in-flow, but it might have a next bidi
   // continuation, in which case that continuation should handle
   // the endSide border.
-  if (MOZ_LIKELY(!lastInFlow->GetNextContinuation() && sliceBreak)) {
-    aData->currentLine += endPBM;
+  if (!lastInFlow->GetNextContinuation()) {
+    aData->currentLine +=
+      // clamp negative calc() to 0
+      std::max(GetCoord(stylePadding->mPadding.Get(endSide), 0), 0) +
+      styleBorder->GetComputedBorderWidth(endSide) +
+      GetCoord(styleMargin->mMargin.Get(endSide), 0);
   }
 }
 
