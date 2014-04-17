@@ -93,7 +93,7 @@ public:
     return Success;
   }
 
-  Result Expect(const uint8_t* expected, size_t expectedLen)
+  Result Expect(const uint8_t* expected, uint16_t expectedLen)
   {
     if (EnsureLength(expectedLen) != Success) {
       return Fail(SEC_ERROR_BAD_DER);
@@ -464,7 +464,7 @@ Null(Input& input)
   return ExpectTagAndLength(input, NULLTag, 0);
 }
 
-template <size_t Len>
+template <uint16_t Len>
 Result
 OID(Input& input, const uint8_t (&expectedOid)[Len])
 {
