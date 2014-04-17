@@ -1,8 +1,8 @@
-== basic.xul basic-ref.xul
-random-if(Android) == basic-negcoord.xul basic-negcoord-ref.xul
-!= blur.xul blur-notref.xul
-== color-inherit.xul color-inherit-ref.xul
-== multiple-noblur.xul multiple-noblur-ref.xul
+skip-if(B2G&&browserIsRemote) == basic.xul basic-ref.xul
+random-if(Android) skip-if(B2G&&browserIsRemote) == basic-negcoord.xul basic-negcoord-ref.xul
+skip-if(B2G&&browserIsRemote) != blur.xul blur-notref.xul
+skip-if(B2G&&browserIsRemote) == color-inherit.xul color-inherit-ref.xul
+skip-if(B2G&&browserIsRemote) == multiple-noblur.xul multiple-noblur-ref.xul
 HTTP(..) == blur-opacity.html blur-opacity-ref.html
 
 == basic.html basic-ref.html
