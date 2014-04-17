@@ -38,6 +38,7 @@
 #endif
 
 using namespace mozilla::layers;
+using namespace mozilla::gfx;
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Canvas)
 
@@ -947,6 +948,15 @@ HTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, GraphicsFilter a
     return NS_OK;
 
   return mCurrentContext->Render(aContext, aFilter, aFlags);
+}
+
+TemporaryRef<SourceSurface>
+HTMLCanvasElement::GetSurfaceSnapshot(bool* aPremultAlpha)
+{
+  if (!mCurrentContext)
+    return nullptr;
+
+  return mCurrentContext->GetSurfaceSnapshot(aPremultAlpha);
 }
 
 } // namespace dom
