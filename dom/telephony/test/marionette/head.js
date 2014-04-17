@@ -384,6 +384,8 @@ let emulator = (function() {
         checkEventCallState(event, call, "alerting");
         deferred.resolve(call);
       };
+    }, cause => {
+      deferred.reject(cause);
     });
 
     return deferred.promise;
@@ -439,6 +441,38 @@ let emulator = (function() {
       receive("call.onconnected");
     };
     call.answer();
+
+    return deferred.promise;
+  }
+
+  /**
+   * Hold a call.
+   *
+   * @param call
+   *        A TelephonyCall object.
+   * @return A deferred promise.
+   */
+  function hold(call) {
+    log("Putting the call on hold.");
+
+    let deferred = Promise.defer();
+
+    let gotHolding = false;
+    call.onholding = function onholding(event) {
+      log("Received 'holding' call event");
+      call.onholding = null;
+      checkEventCallState(event, call, "holding");
+      gotHolding = true;
+    };
+
+    call.onheld = function onheld(event) {
+      log("Received 'held' call event");
+      call.onheld = null;
+      checkEventCallState(event, call, "held");
+      ok(gotHolding);
+      deferred.resolve(call);
+    };
+    call.hold();
 
     return deferred.promise;
   }
@@ -1038,6 +1072,7 @@ let emulator = (function() {
   this.gCheckAll = checkAll;
   this.gDial = dial;
   this.gAnswer = answer;
+  this.gHold = hold;
   this.gRemoteDial = remoteDial;
   this.gRemoteAnswer = remoteAnswer;
   this.gRemoteHangUp = remoteHangUp;

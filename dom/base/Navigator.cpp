@@ -1179,7 +1179,7 @@ Navigator::SendBeacon(const nsAString& aUrl,
   nsCString mimeType;
   if (!aData.IsNull()) {
     nsCOMPtr<nsIInputStream> in;
-  
+
     if (aData.Value().IsString()) {
       nsCString stringData = NS_ConvertUTF16toUTF8(aData.Value().GetAsString());
       nsCOMPtr<nsIStringInputStream> strStream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
@@ -1194,25 +1194,25 @@ Navigator::SendBeacon(const nsAString& aUrl,
       }
       mimeType.AssignLiteral("text/plain;charset=UTF-8");
       in = strStream;
-  
+
     } else if (aData.Value().IsArrayBufferView()) {
-  
+
       nsCOMPtr<nsIStringInputStream> strStream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
       if (NS_FAILED(rv)) {
         aRv.Throw(NS_ERROR_FAILURE);
         return false;
       }
-  
+
       rv = strStream->SetData(reinterpret_cast<char*>(aData.Value().GetAsArrayBufferView().Data()),
                               aData.Value().GetAsArrayBufferView().Length());
-  
+
       if (NS_FAILED(rv)) {
         aRv.Throw(NS_ERROR_FAILURE);
         return false;
       }
       mimeType.AssignLiteral("application/octet-stream");
       in = strStream;
-  
+
     } else if (aData.Value().IsBlob()) {
       nsCOMPtr<nsIDOMBlob> blob = aData.Value().GetAsBlob();
       rv = blob->GetInternalStream(getter_AddRefs(in));
@@ -1227,7 +1227,7 @@ Navigator::SendBeacon(const nsAString& aUrl,
         return false;
       }
       mimeType = NS_ConvertUTF16toUTF8(type);
-  
+
     } else if (aData.Value().IsFormData()) {
       nsFormData& form = aData.Value().GetAsFormData();
       uint64_t len;
@@ -1241,7 +1241,7 @@ Navigator::SendBeacon(const nsAString& aUrl,
       aRv.Throw(NS_ERROR_FAILURE);
       return false;
     }
-  
+
     nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(channel);
     if (!uploadChannel) {
       aRv.Throw(NS_ERROR_FAILURE);
@@ -1268,7 +1268,7 @@ Navigator::SendBeacon(const nsAString& aUrl,
   bool crossOrigin = NS_FAILED(rv);
   nsAutoCString contentType, parsedCharset;
   rv = NS_ParseContentType(mimeType, contentType, parsedCharset);
-  if (crossOrigin && 
+  if (crossOrigin &&
       contentType.Length() > 0 &&
       !contentType.Equals(APPLICATION_WWW_FORM_URLENCODED) &&
       !contentType.Equals(MULTIPART_FORM_DATA) &&
@@ -1548,7 +1548,7 @@ Navigator::GetMozVoicemail(ErrorResult& aRv)
   return mVoicemail;
 }
 
-nsIDOMMozIccManager*
+IccManager*
 Navigator::GetMozIccManager(ErrorResult& aRv)
 {
   if (!mIccManager) {
