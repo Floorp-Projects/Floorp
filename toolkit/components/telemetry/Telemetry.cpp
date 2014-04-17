@@ -817,16 +817,16 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
     return REFLECT_CORRUPT;
   }
 
-  if (!(JS_DefineProperty(cx, obj, "min", INT_TO_JSVAL(h->declared_min()), nullptr, nullptr, JSPROP_ENUMERATE)
-        && JS_DefineProperty(cx, obj, "max", INT_TO_JSVAL(h->declared_max()), nullptr, nullptr, JSPROP_ENUMERATE)
-        && JS_DefineProperty(cx, obj, "histogram_type", INT_TO_JSVAL(h->histogram_type()), nullptr, nullptr, JSPROP_ENUMERATE)
-        && JS_DefineProperty(cx, obj, "sum", DOUBLE_TO_JSVAL(ss.sum()), nullptr, nullptr, JSPROP_ENUMERATE))) {
+  if (!(JS_DefineProperty(cx, obj, "min", h->declared_min(), JSPROP_ENUMERATE)
+        && JS_DefineProperty(cx, obj, "max", h->declared_max(), JSPROP_ENUMERATE)
+        && JS_DefineProperty(cx, obj, "histogram_type", h->histogram_type(), JSPROP_ENUMERATE)
+        && JS_DefineProperty(cx, obj, "sum", double(ss.sum()), JSPROP_ENUMERATE))) {
     return REFLECT_FAILURE;
   }
 
   if (h->histogram_type() == Histogram::HISTOGRAM) {
-    if (!(JS_DefineProperty(cx, obj, "log_sum", DOUBLE_TO_JSVAL(ss.log_sum()), nullptr, nullptr, JSPROP_ENUMERATE)
-          && JS_DefineProperty(cx, obj, "log_sum_squares", DOUBLE_TO_JSVAL(ss.log_sum_squares()), nullptr, nullptr, JSPROP_ENUMERATE))) {
+    if (!(JS_DefineProperty(cx, obj, "log_sum", ss.log_sum(), JSPROP_ENUMERATE)
+          && JS_DefineProperty(cx, obj, "log_sum_squares", ss.log_sum_squares(), JSPROP_ENUMERATE))) {
       return REFLECT_FAILURE;
     }
   } else {
@@ -836,8 +836,8 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
     // Cast to avoid implicit truncation warnings.
     uint32_t lo = static_cast<uint32_t>(sum_squares);
     uint32_t hi = static_cast<uint32_t>(sum_squares >> 32);
-    if (!(JS_DefineProperty(cx, obj, "sum_squares_lo", INT_TO_JSVAL(lo), nullptr, nullptr, JSPROP_ENUMERATE)
-          && JS_DefineProperty(cx, obj, "sum_squares_hi", INT_TO_JSVAL(hi), nullptr, nullptr, JSPROP_ENUMERATE))) {
+    if (!(JS_DefineProperty(cx, obj, "sum_squares_lo", lo, JSPROP_ENUMERATE)
+          && JS_DefineProperty(cx, obj, "sum_squares_hi", hi, JSPROP_ENUMERATE))) {
       return REFLECT_FAILURE;
     }
   }
@@ -848,8 +848,7 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
     return REFLECT_FAILURE;
   }
   if (!(FillRanges(cx, rarray, h)
-        && JS_DefineProperty(cx, obj, "ranges", OBJECT_TO_JSVAL(rarray),
-                             nullptr, nullptr, JSPROP_ENUMERATE))) {
+        && JS_DefineProperty(cx, obj, "ranges", rarray, JSPROP_ENUMERATE))) {
     return REFLECT_FAILURE;
   }
 
@@ -857,8 +856,7 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
   if (!counts_array) {
     return REFLECT_FAILURE;
   }
-  if (!JS_DefineProperty(cx, obj, "counts", OBJECT_TO_JSVAL(counts_array),
-                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(cx, obj, "counts", counts_array, JSPROP_ENUMERATE)) {
     return REFLECT_FAILURE;
   }
   for (size_t i = 0; i < count; i++) {
@@ -1291,10 +1289,8 @@ TelemetryImpl::ReflectSQL(const SlowSQLEntryType *entry,
   }
   return (JS_SetElement(cx, arrayObj, 0, stat->hitCount)
           && JS_SetElement(cx, arrayObj, 1, stat->totalTime)
-          && JS_DefineProperty(cx, obj,
-                               sql.BeginReading(),
-                               OBJECT_TO_JSVAL(arrayObj),
-                               nullptr, nullptr, JSPROP_ENUMERATE));
+          && JS_DefineProperty(cx, obj, sql.BeginReading(), arrayObj,
+                               JSPROP_ENUMERATE));
 }
 
 bool
@@ -1329,8 +1325,7 @@ TelemetryImpl::AddSQLInfo(JSContext *cx, JS::Handle<JSObject*> rootObj, bool mai
 
   return JS_DefineProperty(cx, rootObj,
                            mainThread ? "mainThread" : "otherThreads",
-                           OBJECT_TO_JSVAL(statsObj),
-                           nullptr, nullptr, JSPROP_ENUMERATE);
+                           statsObj, JSPROP_ENUMERATE);
 }
 
 nsresult
@@ -1615,8 +1610,8 @@ TelemetryImpl::GetHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value>
     case REFLECT_FAILURE:
       return NS_ERROR_FAILURE;
     case REFLECT_OK:
-      if (!JS_DefineProperty(cx, root_obj, h->histogram_name().c_str(),
-                             OBJECT_TO_JSVAL(hobj), nullptr, nullptr, JSPROP_ENUMERATE)) {
+      if (!JS_DefineProperty(cx, root_obj, h->histogram_name().c_str(), hobj,
+                             JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -1675,10 +1670,8 @@ TelemetryImpl::AddonHistogramReflector(AddonHistogramEntryType *entry,
     return false;
   case REFLECT_OK:
     const nsACString &histogramName = entry->GetKey();
-    if (!JS_DefineProperty(cx, obj,
-                           PromiseFlatCString(histogramName).get(),
-                           OBJECT_TO_JSVAL(snapshot), nullptr, nullptr,
-                           JSPROP_ENUMERATE)) {
+    if (!JS_DefineProperty(cx, obj, PromiseFlatCString(histogramName).get(),
+                           snapshot, JSPROP_ENUMERATE)) {
       return false;
     }
     break;
@@ -1698,10 +1691,8 @@ TelemetryImpl::AddonReflector(AddonEntryType *entry,
 
   AddonHistogramMapType *map = entry->mData;
   if (!(map->ReflectIntoJS(AddonHistogramReflector, cx, subobj)
-        && JS_DefineProperty(cx, obj,
-                             PromiseFlatCString(addonId).get(),
-                             OBJECT_TO_JSVAL(subobj), nullptr, nullptr,
-                             JSPROP_ENUMERATE))) {
+        && JS_DefineProperty(cx, obj, PromiseFlatCString(addonId).get(),
+                             subobj, JSPROP_ENUMERATE))) {
     return false;
   }
   return true;
@@ -1787,22 +1778,19 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::MutableHandle<JS::Value> ret)
   }
 
   bool ok = JS_DefineProperty(cx, fullReportObj, "durations",
-                              OBJECT_TO_JSVAL(durationArray),
-                              nullptr, nullptr, JSPROP_ENUMERATE);
+                              durationArray, JSPROP_ENUMERATE);
   if (!ok) {
     return NS_ERROR_FAILURE;
   }
 
   ok = JS_DefineProperty(cx, fullReportObj, "systemUptime",
-                         OBJECT_TO_JSVAL(systemUptimeArray),
-                         nullptr, nullptr, JSPROP_ENUMERATE);
+                         systemUptimeArray, JSPROP_ENUMERATE);
   if (!ok) {
     return NS_ERROR_FAILURE;
   }
 
   ok = JS_DefineProperty(cx, fullReportObj, "firefoxUptime",
-                         OBJECT_TO_JSVAL(firefoxUptimeArray),
-                         nullptr, nullptr, JSPROP_ENUMERATE);
+                         firefoxUptimeArray, JSPROP_ENUMERATE);
   if (!ok) {
     return NS_ERROR_FAILURE;
   }
@@ -1834,9 +1822,8 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
   if (!moduleArray) {
     return nullptr;
   }
-  bool ok = JS_DefineProperty(cx, ret, "memoryMap",
-                              OBJECT_TO_JSVAL(moduleArray),
-                              nullptr, nullptr, JSPROP_ENUMERATE);
+  bool ok = JS_DefineProperty(cx, ret, "memoryMap", moduleArray,
+                              JSPROP_ENUMERATE);
   if (!ok) {
     return nullptr;
   }
@@ -1880,9 +1867,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
   if (!reportArray) {
     return nullptr;
   }
-  ok = JS_DefineProperty(cx, ret, "stacks",
-                         OBJECT_TO_JSVAL(reportArray),
-                         nullptr, nullptr, JSPROP_ENUMERATE);
+  ok = JS_DefineProperty(cx, ret, "stacks", reportArray, JSPROP_ENUMERATE);
   if (!ok) {
     return nullptr;
   }
@@ -2022,25 +2007,20 @@ CreateJSTimeHistogram(JSContext* cx, const Telemetry::TimeHistogram& time)
     return nullptr;
   }
 
-  if (!JS_DefineProperty(cx, ret, "min",
-                         UINT_TO_JSVAL(time.GetBucketMin(0)),
-                         nullptr, nullptr, JSPROP_ENUMERATE) ||
+  if (!JS_DefineProperty(cx, ret, "min", time.GetBucketMin(0),
+                         JSPROP_ENUMERATE) ||
       !JS_DefineProperty(cx, ret, "max",
-                         UINT_TO_JSVAL(time.GetBucketMax(
-                           ArrayLength(time) - 1)),
-                         nullptr, nullptr, JSPROP_ENUMERATE) ||
+                         time.GetBucketMax(ArrayLength(time) - 1),
+                         JSPROP_ENUMERATE) ||
       !JS_DefineProperty(cx, ret, "histogram_type",
-                         INT_TO_JSVAL(nsITelemetry::HISTOGRAM_EXPONENTIAL),
-                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+                         nsITelemetry::HISTOGRAM_EXPONENTIAL,
+                         JSPROP_ENUMERATE)) {
     return nullptr;
   }
   // TODO: calculate "sum", "log_sum", and "log_sum_squares"
-  if (!JS_DefineProperty(cx, ret, "sum", INT_TO_JSVAL(0),
-                         nullptr, nullptr, JSPROP_ENUMERATE) ||
-      !JS_DefineProperty(cx, ret, "log_sum", DOUBLE_TO_JSVAL(0.0),
-                         nullptr, nullptr, JSPROP_ENUMERATE) ||
-      !JS_DefineProperty(cx, ret, "log_sum_squares", DOUBLE_TO_JSVAL(0.0),
-                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(cx, ret, "sum", 0, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(cx, ret, "log_sum", 0.0, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(cx, ret, "log_sum_squares", 0.0, JSPROP_ENUMERATE)) {
     return nullptr;
   }
 
@@ -2063,10 +2043,8 @@ CreateJSTimeHistogram(JSContext* cx, const Telemetry::TimeHistogram& time)
       return nullptr;
     }
   }
-  if (!JS_DefineProperty(cx, ret, "ranges", OBJECT_TO_JSVAL(ranges),
-                         nullptr, nullptr, JSPROP_ENUMERATE) ||
-      !JS_DefineProperty(cx, ret, "counts", OBJECT_TO_JSVAL(counts),
-                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(cx, ret, "ranges", ranges, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(cx, ret, "counts", counts, JSPROP_ENUMERATE)) {
     return nullptr;
   }
   return ret;
@@ -2095,10 +2073,8 @@ CreateJSHangHistogram(JSContext* cx, const Telemetry::HangHistogram& hang)
 
   JS::RootedObject time(cx, CreateJSTimeHistogram(cx, hang));
   if (!time ||
-      !JS_DefineProperty(cx, ret, "stack", OBJECT_TO_JSVAL(stack),
-                         nullptr, nullptr, JSPROP_ENUMERATE) ||
-      !JS_DefineProperty(cx, ret, "histogram", OBJECT_TO_JSVAL(time),
-                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+      !JS_DefineProperty(cx, ret, "stack", stack, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(cx, ret, "histogram", time, JSPROP_ENUMERATE)) {
     return nullptr;
   }
   return ret;
@@ -2113,15 +2089,13 @@ CreateJSThreadHangStats(JSContext* cx, const Telemetry::ThreadHangStats& thread)
   }
   JS::RootedString name(cx, JS_NewStringCopyZ(cx, thread.GetName()));
   if (!name ||
-      !JS_DefineProperty(cx, ret, "name", STRING_TO_JSVAL(name),
-                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+      !JS_DefineProperty(cx, ret, "name", name, JSPROP_ENUMERATE)) {
     return nullptr;
   }
 
   JS::RootedObject activity(cx, CreateJSTimeHistogram(cx, thread.mActivity));
   if (!activity ||
-      !JS_DefineProperty(cx, ret, "activity", OBJECT_TO_JSVAL(activity),
-                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+      !JS_DefineProperty(cx, ret, "activity", activity, JSPROP_ENUMERATE)) {
     return nullptr;
   }
 
@@ -2135,8 +2109,7 @@ CreateJSThreadHangStats(JSContext* cx, const Telemetry::ThreadHangStats& thread)
       return nullptr;
     }
   }
-  if (!JS_DefineProperty(cx, ret, "hangs", OBJECT_TO_JSVAL(hangs),
-                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(cx, ret, "hangs", hangs, JSPROP_ENUMERATE)) {
     return nullptr;
   }
   return ret;

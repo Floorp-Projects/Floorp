@@ -28,6 +28,26 @@ class RestyleManager;
 class OverflowChangedTracker
 {
 public:
+  enum ChangeKind {
+    /**
+     * The frame was explicitly added as a result of
+     * nsChangeHint_UpdatePostTransformOverflow and hence may have had a style
+     * change that changes its geometry relative to parent, without reflowing.
+     */
+    TRANSFORM_CHANGED,
+    /**
+     * The overflow areas of children have changed
+     * and we need to call UpdateOverflow on the frame.
+     */
+    CHILDREN_CHANGED,
+    /**
+     * The overflow areas of children have changed
+     * and we need to call UpdateOverflow on the frame.
+     * Also call UpdateOverflow on the parent even if the
+     * overflow areas of the frame does not change.
+     */
+    CHILDREN_AND_PARENT_CHANGED
+  };
 
   OverflowChangedTracker() :
     mSubtreeRoot(nullptr)
@@ -49,14 +69,18 @@ public:
    * If the overflow area changes, then UpdateOverflow will also
    * be called on the parent.
    */
-  void AddFrame(nsIFrame* aFrame) {
+  void AddFrame(nsIFrame* aFrame, ChangeKind aChangeKind) {
     uint32_t depth = aFrame->GetDepthInFrameTree();
-    if (mEntryList.empty() ||
-        !mEntryList.find(Entry(aFrame, depth))) {
-      // All frames in mEntryList at this stage have STYLE_CHANGED so we don't
-      // need to worry about setting the STYLE_CHANGED flag if 'find'
-      // returns true.
-      mEntryList.insert(new Entry(aFrame, depth, STYLE_CHANGED));
+    Entry *entry = nullptr;
+    if (!mEntryList.empty()) {
+      entry = mEntryList.find(Entry(aFrame, depth));
+    }
+    if (entry == nullptr) {
+      // Add new entry.
+      mEntryList.insert(new Entry(aFrame, depth, aChangeKind));
+    } else {
+      // Update the existing entry if the new value is stronger.
+      entry->mChangeKind = std::max(entry->mChangeKind, aChangeKind);
     }
   }
 
@@ -94,38 +118,55 @@ public:
       Entry *entry = mEntryList.removeMin();
       nsIFrame *frame = entry->mFrame;
 
-      bool overflowChanged;
-      if (entry->mFlags & CHILDREN_CHANGED) {
+      bool overflowChanged = false;
+      if (entry->mChangeKind == CHILDREN_AND_PARENT_CHANGED) {
         // Need to union the overflow areas of the children.
+        // Always update the parent, even if the overflow does not change.
+        frame->UpdateOverflow();
+        overflowChanged = true;
+      } else if (entry->mChangeKind == CHILDREN_CHANGED) {
+        // Need to union the overflow areas of the children.
+        // Only update the parent if the overflow changes.
         overflowChanged = frame->UpdateOverflow();
       } else {
-        nsOverflowAreas* pre = static_cast<nsOverflowAreas*>
-          (frame->Properties().Get(frame->PreTransformOverflowAreasProperty()));
-        if (pre) {
-          // Since we have the pre-transform-overflow-areas, we can take a
-          // faster path that doesn't require unioning the overflow areas
-          // of our children.
+        // Take a faster path that doesn't require unioning the overflow areas
+        // of our children.
+
+#ifdef DEBUG
+        bool hasInitialOverflowPropertyApplied = false;
+        frame->Properties().Get(nsIFrame::DebugInitialOverflowPropertyApplied(),
+                                 &hasInitialOverflowPropertyApplied);
+        NS_ASSERTION(hasInitialOverflowPropertyApplied,
+                     "InitialOverflowProperty must be set first.");
+#endif
+
+        nsOverflowAreas* overflow = 
+          static_cast<nsOverflowAreas*>(frame->Properties().Get(nsIFrame::InitialOverflowProperty()));
+        if (overflow) {
           // FinishAndStoreOverflow will change the overflow areas passed in,
           // so make a copy.
-          nsOverflowAreas overflowAreas = *pre;
-          frame->FinishAndStoreOverflow(overflowAreas, frame->GetSize());
-          // We can't tell if the overflow changed, so be conservative
-          overflowChanged = true;
+          nsOverflowAreas overflowCopy = *overflow;
+          frame->FinishAndStoreOverflow(overflowCopy, frame->GetSize());
         } else {
-          // We can't take the faster path here. Do it the hard way.
-          overflowChanged = frame->UpdateOverflow();
+          nsRect bounds(nsPoint(0, 0), frame->GetSize());
+          nsOverflowAreas boundsOverflow;
+          boundsOverflow.SetAllTo(bounds);
+          frame->FinishAndStoreOverflow(boundsOverflow, bounds.Size());
         }
+
+        // We can't tell if the overflow changed, so be conservative
+        overflowChanged = true;
       }
 
       // If the frame style changed (e.g. positioning offsets)
       // then we need to update the parent with the overflow areas of its
       // children.
-      if (overflowChanged || (entry->mFlags & STYLE_CHANGED)) {
+      if (overflowChanged) {
         nsIFrame *parent = frame->GetParent();
         if (parent && parent != mSubtreeRoot) {
           Entry* parentEntry = mEntryList.find(Entry(parent, entry->mDepth - 1));
           if (parentEntry) {
-            parentEntry->mFlags |= CHILDREN_CHANGED;
+            parentEntry->mChangeKind = CHILDREN_CHANGED;
           } else {
             mEntryList.insert(new Entry(parent, entry->mDepth - 1, CHILDREN_CHANGED));
           }
@@ -136,26 +177,12 @@ public:
   }
   
 private:
-  enum {
-    /**
-     * Set if the overflow areas of children have changed so we need to call
-     * UpdateOverflow on the frame.
-     */
-    CHILDREN_CHANGED = 0x01,
-    /**
-     * True if the frame was explicitly added and hence may have had a style
-     * change that changes its geometry relative to parent, without reflowing.
-     * In this case we must update overflow on the frame's parent even if
-     * this frame's overflow did not change.
-     */
-    STYLE_CHANGED = 0x02
-  };
   struct Entry : SplayTreeNode<Entry>
   {
-    Entry(nsIFrame* aFrame, uint32_t aDepth, uint8_t aFlags = 0)
+    Entry(nsIFrame* aFrame, uint32_t aDepth, ChangeKind aChangeKind = CHILDREN_CHANGED)
       : mFrame(aFrame)
       , mDepth(aDepth)
-      , mFlags(aFlags)
+      , mChangeKind(aChangeKind)
     {}
 
     bool operator==(const Entry& aOther) const
@@ -189,7 +216,7 @@ private:
     nsIFrame* mFrame;
     /* Depth in the frame tree */
     uint32_t mDepth;
-    uint8_t mFlags;
+    ChangeKind mChangeKind;
   };
 
   /* A list of frames to process, sorted by their depth in the frame tree */

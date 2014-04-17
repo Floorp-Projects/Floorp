@@ -2161,6 +2161,12 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
             "the GC heap.");
     }
 
+    if (cStats.objectsExtra.nonHeapElementsMapped > 0) {
+        REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/non-heap/elements/mapped"),
+            KIND_NONHEAP, cStats.objectsExtra.nonHeapElementsMapped,
+            "Memory-mapped array buffer elements.");
+    }
+
     REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/non-heap/code/asm.js"),
         KIND_NONHEAP, cStats.objectsExtra.nonHeapCodeAsmJS,
         "AOT-compiled asm.js code.");
@@ -3038,7 +3044,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mWrappedJSRoots(nullptr),
    mObjectHolderRoots(nullptr),
    mWatchdogManager(new WatchdogManager(MOZ_THIS_IN_INITIALIZER_LIST())),
-   mJunkScope(nullptr),
+   mJunkScope(MOZ_THIS_IN_INITIALIZER_LIST()->Runtime(), nullptr),
    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite())
 {
     DOM_InitInterfaces();
@@ -3476,7 +3482,6 @@ XPCJSRuntime::GetJunkScope()
         NS_ENSURE_SUCCESS(rv, nullptr);
 
         mJunkScope = js::UncheckedUnwrap(&v.toObject());
-        JS_AddNamedObjectRoot(cx, &mJunkScope, "XPConnect Junk Compartment");
     }
     return mJunkScope;
 }
@@ -3484,10 +3489,5 @@ XPCJSRuntime::GetJunkScope()
 void
 XPCJSRuntime::DeleteJunkScope()
 {
-    if(!mJunkScope)
-        return;
-
-    AutoSafeJSContext cx;
-    JS_RemoveObjectRoot(cx, &mJunkScope);
     mJunkScope = nullptr;
 }

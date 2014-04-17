@@ -1,3 +1,4 @@
+#filter substitution
 /* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +20,9 @@ import java.util.Locale;
 
 public final class GeckoLoader {
     private static final String LOGTAG = "GeckoLoader";
+
+    // This matches AppConstants, but we're built earlier.
+    private static final String ANDROID_PACKAGE_NAME = "@ANDROID_PACKAGE_NAME@";
 
     private static volatile Intent sIntent;
     private static File sCacheFile;
@@ -259,6 +263,25 @@ public final class GeckoLoader {
         loadNSSLibsNative(apkName, false);
     }
 
+    public static void doLoadLibrary(final String lib) {
+        try {
+            System.loadLibrary(lib);
+        } catch (UnsatisfiedLinkError e) {
+            Log.wtf(LOGTAG, "Couldn't load " + lib + ". Trying /data/app-lib path.");
+            try {
+                System.load("/data/app-lib/" + ANDROID_PACKAGE_NAME + "/lib" + lib + ".so");
+            } catch (Throwable ee) {
+                try {
+                    Log.wtf(LOGTAG, "Couldn't load " + lib + ": " + ee + ". Trying /data/data path.");
+                    System.load("/data/data/" + ANDROID_PACKAGE_NAME + "/lib/lib" + lib + ".so");
+                } catch (Throwable eee) {
+                    Log.wtf(LOGTAG, "Failed every attempt to load " + lib + ". Giving up.");
+                    throw new RuntimeException("Unable to load " + lib, eee);
+                }
+            }
+        }
+    }
+
     public static void loadMozGlue() {
         synchronized (sLibLoadingLock) {
             if (sMozGlueLoaded) {
@@ -267,7 +290,7 @@ public final class GeckoLoader {
             sMozGlueLoaded = true;
         }
 
-        System.loadLibrary("mozglue");
+        doLoadLibrary("mozglue");
     }
 
     public static void loadGeckoLibs(Context context, String apkName) {

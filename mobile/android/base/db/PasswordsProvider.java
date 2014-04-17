@@ -4,19 +4,19 @@
 
 package org.mozilla.gecko.db;
 
-import java.lang.IllegalArgumentException;
 import java.util.HashMap;
+
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.NSSBridge;
-import org.mozilla.gecko.db.DBUtils;
-import org.mozilla.gecko.db.BrowserContract.Passwords;
 import org.mozilla.gecko.db.BrowserContract.DeletedPasswords;
-import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserContract.Passwords;
+import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.MatrixBlobCursor;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.sync.Utils;
+
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.UriMatcher;
@@ -76,7 +76,10 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
         DELETED_PASSWORDS_PROJECTION_MAP.put(DeletedPasswords.ID, DeletedPasswords.ID);
         DELETED_PASSWORDS_PROJECTION_MAP.put(DeletedPasswords.GUID, DeletedPasswords.GUID);
         DELETED_PASSWORDS_PROJECTION_MAP.put(DeletedPasswords.TIME_DELETED, DeletedPasswords.TIME_DELETED);
-        System.loadLibrary("mozglue");
+
+        // We don't use .loadMozGlue because we're in a different process,
+        // and we just want to reuse code rather than use the loader lock etc.
+        GeckoLoader.doLoadLibrary("mozglue");
     }
 
     public PasswordsProvider() {

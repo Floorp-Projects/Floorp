@@ -7,7 +7,7 @@
 const DEVELOPER_HUD_LOG_PREFIX = 'DeveloperHUD';
 
 XPCOMUtils.defineLazyGetter(this, 'devtools', function() {
-  const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+  const {devtools} = Cu.import('resource://gre/modules/devtools/Loader.jsm', {});
   return devtools;
 });
 
@@ -16,15 +16,15 @@ XPCOMUtils.defineLazyGetter(this, 'DebuggerClient', function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, 'WebConsoleUtils', function() {
-  return devtools.require("devtools/toolkit/webconsole/utils").Utils;
+  return devtools.require('devtools/toolkit/webconsole/utils').Utils;
 });
 
 XPCOMUtils.defineLazyGetter(this, 'EventLoopLagFront', function() {
-  return devtools.require("devtools/server/actors/eventlooplag").EventLoopLagFront;
+  return devtools.require('devtools/server/actors/eventlooplag').EventLoopLagFront;
 });
 
 XPCOMUtils.defineLazyGetter(this, 'MemoryFront', function() {
-  return devtools.require("devtools/server/actors/memory").MemoryFront;
+  return devtools.require('devtools/server/actors/memory').MemoryFront;
 });
 
 
@@ -47,7 +47,7 @@ let developerHUD = {
    * on app frames that are being tracked. A watcher must implement the
    * `trackTarget(target)` and `untrackTarget(target)` methods, register
    * observed metrics with `target.register(metric)`, and keep them up-to-date
-   * with `target.update(metric, value, message)` when necessary.
+   * with `target.update(metric, message)` when necessary.
    */
   registerWatcher: function dwp_registerWatcher(watcher) {
     this._watchers.unshift(watcher);
@@ -210,15 +210,24 @@ Target.prototype = {
    * Modify one of a target's metrics, and send out an event to notify relevant
    * parties (e.g. the developer HUD, automated tests, etc).
    */
-  update: function target_update(metric, value = 0, message) {
+  update: function target_update(metric, message) {
+    if (!metric.name) {
+      throw new Error('Missing metric.name');
+    }
+
+    if (!metric.value) {
+      metric.value = 0;
+    }
+
     let metrics = this.metrics;
-    metrics.set(metric, value);
+    if (metrics) {
+      metrics.set(metric.name, metric.value);
+    }
 
     let data = {
       metrics: [], // FIXME(Bug 982066) Remove this field.
       manifest: this.frame.appManifestURL,
       metric: metric,
-      value: value,
       message: message
     };
 
@@ -240,7 +249,8 @@ Target.prototype = {
    * to be incremented.
    */
   bump: function target_bump(metric, message) {
-    this.update(metric, this.metrics.get(metric) + 1, message);
+    metric.value = (this.metrics.get(metric.name) || 0) + 1;
+    this.update(metric, message);
   },
 
   /**
@@ -248,7 +258,8 @@ Target.prototype = {
    * anymore.
    */
   clear: function target_clear(metric) {
-    this.update(metric, 0);
+    metric.value = 0;
+    this.update(metric);
   },
 
   /**
@@ -307,7 +318,7 @@ let consoleWatcher = {
 
         // If unwatched, remove any existing widgets for that metric.
         for (let target of this._targets.values()) {
-          target.clear(metric);
+          target.clear({name: metric});
         }
       });
     }
@@ -345,7 +356,7 @@ let consoleWatcher = {
 
   consoleListener: function cw_consoleListener(type, packet) {
     let target = this._targets.get(packet.from);
-    let metric;
+    let metric = {};
     let output = '';
 
     switch (packet.type) {
@@ -354,15 +365,15 @@ let consoleWatcher = {
         let pageError = packet.pageError;
 
         if (pageError.warning || pageError.strict) {
-          metric = 'warnings';
+          metric.name = 'warnings';
           output += 'warning (';
         } else {
-          metric = 'errors';
+          metric.name = 'errors';
           output += 'error (';
         }
 
         if (this._security.indexOf(pageError.category) > -1) {
-          metric = 'security';
+          metric.name = 'security';
         }
 
         let {errorMessage, sourceName, category, lineNumber, columnNumber} = pageError;
@@ -374,12 +385,12 @@ let consoleWatcher = {
         switch (packet.message.level) {
 
           case 'error':
-            metric = 'errors';
+            metric.name = 'errors';
             output += 'error (console)';
             break;
 
           case 'warn':
-            metric = 'warnings';
+            metric.name = 'warnings';
             output += 'warning (console)';
             break;
 
@@ -389,18 +400,22 @@ let consoleWatcher = {
         break;
 
       case 'reflowActivity':
-        metric = 'reflows';
+        metric.name = 'reflows';
 
-        let {start, end, sourceURL} = packet;
+        let {start, end, sourceURL, interruptible} = packet;
+        metric.interruptible = interruptible;
         let duration = Math.round((end - start) * 100) / 100;
         output += 'reflow: ' + duration + 'ms';
         if (sourceURL) {
           output += ' ' + this.formatSourceURL(packet);
         }
         break;
+
+      default:
+        return;
     }
 
-    if (!this._watching[metric]) {
+    if (!this._watching[metric.name]) {
       return;
     }
 
@@ -446,7 +461,7 @@ let eventLoopLagWatcher = {
         fronts.get(target).start();
       } else {
         fronts.get(target).stop();
-        target.clear('jank');
+        target.clear({name: 'jank'});
       }
     }
   },
@@ -458,7 +473,7 @@ let eventLoopLagWatcher = {
     this._fronts.set(target, front);
 
     front.on('event-loop-lag', time => {
-      target.update('jank', time, 'jank: ' + time + 'ms');
+      target.update({name: 'jank', value: time}, 'jank: ' + time + 'ms');
     });
 
     if (this._active) {
@@ -514,7 +529,7 @@ let memoryWatcher = {
       } else {
         for (let target of this._fronts.keys()) {
           clearTimeout(this._timers.get(target));
-          target.clear('memory');
+          target.clear({name: 'memory'});
         }
       }
     });
@@ -550,7 +565,7 @@ let memoryWatcher = {
       }
       // TODO Also count images size (bug #976007).
 
-      target.update('memory', total);
+      target.update({name: 'memory', value: total});
       let duration = parseInt(data.jsMilliseconds) + parseInt(data.nonJSMilliseconds);
       let timer = setTimeout(() => this.measure(target), 100 * duration);
       this._timers.set(target, timer);

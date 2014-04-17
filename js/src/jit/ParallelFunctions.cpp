@@ -276,6 +276,14 @@ jit::SetElementPar(ForkJoinContext *cx, HandleObject obj, HandleValue index, Han
     return baseops::SetPropertyHelper<ParallelExecution>(cx, obj, obj, id, 0, &v, strict);
 }
 
+bool
+jit::SetDenseElementPar(ForkJoinContext *cx, HandleObject obj, int32_t index, HandleValue value,
+                        bool strict)
+{
+    RootedValue indexVal(cx, Int32Value(index));
+    return SetElementPar(cx, obj, indexVal, value, strict);
+}
+
 JSString *
 jit::ConcatStringsPar(ForkJoinContext *cx, HandleString left, HandleString right)
 {
