@@ -365,12 +365,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           // global session.
           final SkewHandler storageServerSkewHandler = SkewHandler.getSkewHandlerForHostname(storageHostname);
           final long storageServerSkew = storageServerSkewHandler.getSkewInSeconds();
-          // We expect Sync to upload large sets of records. Calculating the
-          // payload verification hash for these record sets could be expensive,
-          // so we explicitly do not send payload verification hashes to the
-          // Sync storage endpoint.
-          final boolean includePayloadVerificationHash = false;
-          final AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), includePayloadVerificationHash, storageServerSkew);
+          final AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), false, storageServerSkew);
 
           final Context context = getContext();
           final SyncConfiguration syncConfig = new SyncConfiguration(token.uid, authHeaderProvider, sharedPrefs, syncKeyBundle);
