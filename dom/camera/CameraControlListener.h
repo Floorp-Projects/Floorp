@@ -88,6 +88,7 @@ public:
     kInSetConfiguration,
     kInStartPreview,
     kInStopPreview,
+    kInResumeContinuousFocus,
     kInUnspecified
   };
   enum CameraError
