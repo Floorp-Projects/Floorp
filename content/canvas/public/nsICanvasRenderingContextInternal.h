@@ -14,8 +14,8 @@
 #include "mozilla/RefPtr.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
-{ 0xf74397d9, 0x25d9, 0x43ed, \
-  { 0xb4, 0x6a, 0xf5, 0x4e, 0xa1, 0x17, 0xae, 0x6e } }
+{ 0x06166dd1, 0xd540, 0x4f29, \
+  { 0x91, 0x5c, 0x08, 0x7d, 0xce, 0x1f, 0x79, 0x59 } }
 
 class gfxContext;
 class gfxASurface;
@@ -41,10 +41,6 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
 
-  enum {
-    RenderFlagPremultAlpha = 0x1
-  };
-
   void SetCanvasElement(mozilla::dom::HTMLCanvasElement* aParentCanvas)
   {
     mCanvasElement = aParentCanvas;
@@ -65,11 +61,6 @@ public:
   NS_IMETHOD SetDimensions(int32_t width, int32_t height) = 0;
 
   NS_IMETHOD InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, int32_t width, int32_t height) = 0;
-
-  // Render the canvas at the origin of the given gfxContext
-  NS_IMETHOD Render(gfxContext *ctx,
-                    GraphicsFilter aFilter,
-                    uint32_t aFlags = RenderFlagPremultAlpha) = 0;
 
   // Creates an image buffer. Returns null on failure.
   virtual void GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat) = 0;
