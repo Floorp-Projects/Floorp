@@ -147,6 +147,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "gCustomizationTabPreloader",
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Translation",
+  "resource:///modules/translation/Translation.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "SitePermissions",
   "resource:///modules/SitePermissions.jsm");
 
@@ -1033,6 +1036,7 @@ var gBrowserInit = {
     gFormSubmitObserver.init();
     gRemoteTabsUI.init();
     gPageStyleMenu.init();
+    LanguageDetectionListener.init();
 
     // Initialize the full zoom setting.
     // We do this before the session restore service gets initialized so we can
@@ -4464,9 +4468,6 @@ var TabsInTitlebar = {
     let titlebar = $("titlebar");
     let titlebarContent = $("titlebar-content");
     let menubar = $("toolbar-menubar");
-#ifdef XP_MACOSX
-    let secondaryButtonsWidth = rect($("titlebar-secondary-buttonbox")).width;
-#endif
 
     if (allowed) {
       // We set the tabsintitlebar attribute first so that our CSS for
@@ -4484,6 +4485,7 @@ var TabsInTitlebar = {
       let captionButtonsBoxWidth = rect($("titlebar-buttonbox-container")).width;
 
 #ifdef XP_MACOSX
+      let secondaryButtonsWidth = rect($("titlebar-secondary-buttonbox")).width;
       // No need to look up the menubar stuff on OS X:
       let menuHeight = 0;
       let fullMenuHeight = 0;
@@ -4558,6 +4560,9 @@ var TabsInTitlebar = {
 
 
       // Finally, size the placeholders:
+#ifdef XP_MACOSX
+      this._sizePlaceholder("fullscreen-button", secondaryButtonsWidth);
+#endif
       this._sizePlaceholder("caption-buttons", captionButtonsBoxWidth);
 
       if (!this._draghandles) {
@@ -4579,16 +4584,16 @@ var TabsInTitlebar = {
       document.documentElement.removeAttribute("tabsintitlebar");
       updateTitlebarDisplay();
 
+#ifdef XP_MACOSX
+      let secondaryButtonsWidth = rect($("titlebar-secondary-buttonbox")).width;
+      this._sizePlaceholder("fullscreen-button", secondaryButtonsWidth);
+#endif
       // Reset the margins and padding that might have been modified:
       titlebarContent.style.marginTop = "";
       titlebarContent.style.marginBottom = "";
       titlebar.style.marginBottom = "";
       menubar.style.paddingBottom = "";
     }
-
-#ifdef XP_MACOSX
-    this._sizePlaceholder("fullscreen-button", secondaryButtonsWidth);
-#endif
   },
 
   _sizePlaceholder: function (type, width) {
@@ -5340,6 +5345,15 @@ function setStyleDisabled(disabled) {
   if (disabled)
     gPageStyleMenu.disableStyle();
 }
+
+
+var LanguageDetectionListener = {
+  init: function() {
+    window.messageManager.addMessageListener("LanguageDetection:Result", msg => {
+      Translation.languageDetected(msg.target, msg.data);
+    });
+  }
+};
 
 
 var BrowserOffline = {

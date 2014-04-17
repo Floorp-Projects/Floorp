@@ -2102,6 +2102,11 @@ var NativeWindow = {
       else this._targetRef = null;
     },
 
+    get defaultContext() {
+      delete this.defaultContext;
+      return this.defaultContext = Strings.browser.GetStringFromName("browser.menu.context.default");
+    },
+
     /* Gets menuitems for an arbitrary node
      * Parameters:
      *   element - The element to look at. If this element has a contextmenu attribute, the
@@ -2183,7 +2188,7 @@ var NativeWindow = {
       } catch(ex) { }
 
       // Fallback to the default
-      return Strings.browser.GetStringFromName("browser.menu.context.default");
+      return this.defaultContext;
     },
 
     // Adds context menu items added through the add-on api
@@ -2338,7 +2343,8 @@ var NativeWindow = {
      */
     _reformatList: function(target) {
       let contexts = Object.keys(this.menus);
-      if (contexts.length == 1) {
+
+      if (contexts.length === 1) {
         // If there's only one context, we'll only show a single flat single select list
         return this._reformatMenuItems(target, this.menus[contexts[0]]);
       }
@@ -2357,12 +2363,24 @@ var NativeWindow = {
      */
     _reformatListAsTabs: function(target, menus) {
       let itemArray = [];
-      for (let context in menus) {
+
+      // Sort the keys so that "link" is always first
+      let contexts = Object.keys(this.menus);
+      contexts.sort((context1, context2) => {
+        if (context1 === this.defaultContext) {
+          return -1;
+        } else if (context2 === this.defaultContext) {
+          return 1;
+        }
+        return 0;
+      });
+
+      contexts.forEach(context => {
         itemArray.push({
           label: context,
           items: this._reformatMenuItems(target, menus[context])
         });
-      }
+      });
 
       return itemArray;
     },
@@ -8386,8 +8404,10 @@ HTMLContextMenuItem.prototype = Object.create(ContextMenuItem.prototype, {
           }
 
           var items = NativeWindow.contextmenus._getHTMLContextMenuItemsForMenu(elt, target);
+          // This menu will always only have one context, but we still make sure its the "right" one.
+          var context = NativeWindow.contextmenus._getContextType(target);
           if (items.length > 0) {
-            NativeWindow.contextmenus._addMenuItems(items, "link");
+            NativeWindow.contextmenus._addMenuItems(items, context);
           }
 
         } catch(ex) {
