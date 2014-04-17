@@ -1143,7 +1143,13 @@ class MOZ_STACK_CLASS ModuleCompiler
 
         uint32_t funcStart = parser_.pc->maybeFunction->pn_body->pn_pos.begin;
         uint32_t offsetToEndOfUseAsm = parser_.tokenStream.currentToken().pos.end;
-        module_ = cx_->new_<AsmJSModule>(parser_.ss, funcStart, offsetToEndOfUseAsm);
+
+        // "use strict" should be added to the source if we are in an implicit
+        // strict context, see also comment above addUseStrict in
+        // js::FunctionToString.
+        bool strict = parser_.pc->sc->strict && !parser_.pc->sc->hasExplicitUseStrict();
+
+        module_ = cx_->new_<AsmJSModule>(parser_.ss, funcStart, offsetToEndOfUseAsm, strict);
         if (!module_)
             return false;
 
@@ -1514,7 +1520,6 @@ class MOZ_STACK_CLASS ModuleCompiler
     {
         module_->initFuncEnd(parser_.tokenStream.currentToken().pos.end,
                              parser_.tokenStream.peekTokenPos().end);
-
         masm_.finish();
         if (masm_.oom())
             return false;
