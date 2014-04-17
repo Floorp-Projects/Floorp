@@ -33,20 +33,23 @@
                     "iframe with mozFrameType='content' in chrome document is typeContent");
 
       SimpleTest.executeSoon(function () {
-        // Wait for the window to be closed before finishing the test
-        let ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                     .getService(Components.interfaces.nsIWindowWatcher);
-        ww.registerNotification(function windowObs(subject, topic, data) {
-          if (topic == "domwindowclosed") {
-            ww.unregisterNotification(windowObs);
+        // First focus the parent window and then close this one.
+        SimpleTest.waitForFocus(function() {
+          let ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                       .getService(Components.interfaces.nsIWindowWatcher);
+          ww.registerNotification(function windowObs(subject, topic, data) {
+            if (topic == "domwindowclosed") {
+              ww.unregisterNotification(windowObs);
 
-            SimpleTest.waitForFocus(function() {
-              SimpleTest.finish();
-            }, opener);
-          }
-        });
+              // Don't start the next test synchronously!
+              SimpleTest.executeSoon(function() {
+                SimpleTest.finish();
+              });
+            }
+          });
 
-        window.close();
+          window.close();
+        }, opener);
       });
     }
   ]]></script>
