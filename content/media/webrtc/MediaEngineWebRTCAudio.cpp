@@ -468,10 +468,7 @@ MediaEngineWebRTCAudioSource::Shutdown()
       mVoENetwork->DeRegisterExternalTransport(mChannel);
     }
 
-    if (mNullTransport) {
-      delete mNullTransport;
-    }
-
+    delete mNullTransport;
     return;
   }
 
@@ -491,9 +488,7 @@ MediaEngineWebRTCAudioSource::Shutdown()
     mVoENetwork->DeRegisterExternalTransport(mChannel);
   }
 
-  if (mNullTransport) {
-    delete mNullTransport;
-  }
+  delete mNullTransport;
 
   mVoEProcessing = nullptr;
   mVoENetwork = nullptr;
