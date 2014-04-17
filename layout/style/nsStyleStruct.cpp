@@ -1971,7 +1971,6 @@ nsStyleBackground::nsStyleBackground()
   , mSizeCount(1)
   , mBlendModeCount(1)
   , mBackgroundColor(NS_RGBA(0, 0, 0, 0))
-  , mBackgroundInlinePolicy(NS_STYLE_BG_INLINE_POLICY_CONTINUOUS)
 {
   MOZ_COUNT_CTOR(nsStyleBackground);
   Layer *onlyLayer = mLayers.AppendElement();
@@ -1990,7 +1989,6 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
   , mBlendModeCount(aSource.mBlendModeCount)
   , mLayers(aSource.mLayers) // deep copy
   , mBackgroundColor(aSource.mBackgroundColor)
-  , mBackgroundInlinePolicy(aSource.mBackgroundInlinePolicy)
 {
   MOZ_COUNT_CTOR(nsStyleBackground);
   // If the deep copy of mLayers failed, truncate the counts.
@@ -2048,9 +2046,7 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
     }
   }
 
-  if (hasVisualDifference ||
-      mBackgroundColor != aOther.mBackgroundColor ||
-      mBackgroundInlinePolicy != aOther.mBackgroundInlinePolicy)
+  if (hasVisualDifference || mBackgroundColor != aOther.mBackgroundColor)
     return NS_STYLE_HINT_VISUAL;
 
   return NS_STYLE_HINT_NONE;
