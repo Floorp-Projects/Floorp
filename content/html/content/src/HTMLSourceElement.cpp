@@ -7,6 +7,9 @@
 #include "mozilla/dom/HTMLSourceElement.h"
 #include "mozilla/dom/HTMLSourceElementBinding.h"
 
+#include "nsIMediaList.h"
+#include "nsCSSParser.h"
+
 NS_IMPL_NS_NEW_HTML_ELEMENT(Source)
 
 namespace mozilla {
@@ -26,12 +29,44 @@ NS_IMPL_ISUPPORTS_INHERITED(HTMLSourceElement, nsGenericHTMLElement,
 
 NS_IMPL_ELEMENT_CLONE(HTMLSourceElement)
 
-
 NS_IMPL_URI_ATTR(HTMLSourceElement, Src, src)
 NS_IMPL_STRING_ATTR(HTMLSourceElement, Type, type)
 NS_IMPL_STRING_ATTR(HTMLSourceElement, Srcset, srcset)
 NS_IMPL_STRING_ATTR(HTMLSourceElement, Sizes, sizes)
 NS_IMPL_STRING_ATTR(HTMLSourceElement, Media, media)
+
+bool
+HTMLSourceElement::MatchesCurrentMedia()
+{
+  if (mMediaList) {
+    nsIPresShell* presShell = OwnerDoc()->GetShell();
+    nsPresContext* pctx = presShell ? presShell->GetPresContext() : nullptr;
+    return pctx && mMediaList->Matches(pctx, nullptr);
+  }
+
+  // No media specified
+  return true;
+}
+
+nsresult
+HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                const nsAttrValue* aValue, bool aNotify)
+{
+  if (aName == nsGkAtoms::media) {
+    mMediaList = nullptr;
+    if (aValue) {
+      nsString mediaStr = aValue->GetStringValue();
+      if (!mediaStr.IsEmpty()) {
+        nsCSSParser cssParser;
+        mMediaList = new nsMediaList();
+        cssParser.ParseMediaList(mediaStr, nullptr, 0, mMediaList, false);
+      }
+    }
+  }
+
+  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName,
+                                            aValue, aNotify);
+}
 
 void
 HTMLSourceElement::GetItemValueText(nsAString& aValue)
