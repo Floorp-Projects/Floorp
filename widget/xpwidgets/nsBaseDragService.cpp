@@ -25,7 +25,6 @@
 #include "nsISelectionPrivate.h"
 #include "nsPresContext.h"
 #include "nsIDOMDataTransfer.h"
-#include "nsICanvasElementExternal.h"
 #include "nsIImageLoadingContent.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
@@ -42,6 +41,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using namespace mozilla::dom;
 
 #define DRAGIMAGES_PREF "nglayout.enable_drag_images"
 
@@ -507,7 +507,8 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   // using the source rather than the displayed image. But if mImage isn't
   // an image or canvas, fall through to RenderNode below.
   if (mImage) {
-    nsCOMPtr<nsICanvasElementExternal> canvas = do_QueryInterface(dragNode);
+    nsCOMPtr<nsIContent> content = do_QueryInterface(dragNode);
+    HTMLCanvasElement *canvas = HTMLCanvasElement::FromContentOrNull(content);
     if (canvas) {
       return DrawDragForImage(*aPresContext, nullptr, canvas, sx, sy,
                               aScreenDragRect, aSurface);
@@ -525,7 +526,6 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     // default image handling won't occur.
     // XXXndeakin this should be chrome-only
 
-    nsCOMPtr<nsIContent> content = do_QueryInterface(dragNode);
     nsIFrame* frame = content->GetPrimaryFrame();
     if (frame && frame->GetType() == nsGkAtoms::menuPopupFrame) {
       mDragPopup = content;
@@ -557,7 +557,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 nsresult
 nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
                                     nsIImageLoadingContent* aImageLoader,
-                                    nsICanvasElementExternal* aCanvas,
+                                    HTMLCanvasElement* aCanvas,
                                     int32_t aScreenX, int32_t aScreenY,
                                     nsIntRect* aScreenDragRect,
                                     RefPtr<SourceSurface>* aSurface)
@@ -582,7 +582,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
   }
   else {
     NS_ASSERTION(aCanvas, "both image and canvas are null");
-    nsIntSize sz = aCanvas->GetSizeExternal();
+    nsIntSize sz = aCanvas->GetSize();
     aScreenDragRect->width = sz.width;
     aScreenDragRect->height = sz.height;
   }
@@ -616,19 +616,19 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     aScreenDragRect->height = destSize.height;
   }
 
-  RefPtr<DrawTarget> dt =
-    gfxPlatform::GetPlatform()->
-      CreateOffscreenContentDrawTarget(destSize.ToIntSize(),
-                                       SurfaceFormat::B8G8R8A8);
-  if (!dt)
-    return NS_ERROR_FAILURE;
-
-  nsRefPtr<gfxContext> ctx = new gfxContext(dt);
-  if (!ctx)
-    return NS_ERROR_FAILURE;
-
   nsresult result = NS_OK;
   if (aImageLoader) {
+    RefPtr<DrawTarget> dt =
+      gfxPlatform::GetPlatform()->
+        CreateOffscreenContentDrawTarget(destSize.ToIntSize(),
+                                         SurfaceFormat::B8G8R8A8);
+    if (!dt)
+      return NS_ERROR_FAILURE;
+
+    nsRefPtr<gfxContext> ctx = new gfxContext(dt);
+    if (!ctx)
+      return NS_ERROR_FAILURE;
+
     gfxRect outRect(0, 0, destSize.width, destSize.height);
     gfxMatrix scale =
       gfxMatrix().Scale(srcSize.width/outRect.Width(), srcSize.height/outRect.Height());
@@ -636,11 +636,11 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     imgContainer->Draw(ctx, GraphicsFilter::FILTER_GOOD, scale, outRect, imgSize,
                        destSize, nullptr, imgIContainer::FRAME_CURRENT,
                        imgIContainer::FLAG_SYNC_DECODE);
+    *aSurface = dt->Snapshot();
   } else {
-    result = aCanvas->RenderContextsExternal(ctx, GraphicsFilter::FILTER_GOOD);
+    *aSurface = aCanvas->GetSurfaceSnapshot();
   }
 
-  *aSurface = dt->Snapshot();
   return result;
 }
 
