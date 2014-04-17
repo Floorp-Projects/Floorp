@@ -72,17 +72,23 @@ enum nsChangeHint {
   nsChangeHint_ReconstructFrame = 0x400,
 
   /**
-   * The frame's effect on its ancestors' overflow areas has changed,
-   * either through a change in its transform or a change in its position.
-   * Does not update any descendant frames.
+   * The frame's overflow area has changed, either through a change in its
+   * transform or a change in its position. Does not update any descendant
+   * frames.
    */
   nsChangeHint_UpdateOverflow = 0x800,
+
+  /**
+   * The frame's overflow area has changed, through a change in its transform.
+   * Does not update any descendant frames.
+   */
+  nsChangeHint_UpdatePostTransformOverflow = 0x1000,
 
   /**
    * The children-only transform of an SVG frame changed, requiring the
    * overflow rects of the frame's immediate children to be updated.
    */
-  nsChangeHint_ChildrenOnlyTransform = 0x1000,
+  nsChangeHint_ChildrenOnlyTransform = 0x2000,
 
   /**
    * The frame's offsets have changed, while its dimensions might have
@@ -94,7 +100,7 @@ enum nsChangeHint {
    * nsChangeHint_UpdateOverflow in order to get the overflow areas of
    * the ancestors updated as well.
    */
-  nsChangeHint_RecomputePosition = 0x2000,
+  nsChangeHint_RecomputePosition = 0x4000,
 
   /**
    * Behaves like ReconstructFrame, but only if the frame has descendants
@@ -102,7 +108,7 @@ enum nsChangeHint {
    * has changed whether the frame is a container for fixed-pos or abs-pos
    * elements, but reframing is otherwise not needed.
    */
-  nsChangeHint_AddOrRemoveTransform = 0x4000,
+  nsChangeHint_AddOrRemoveTransform = 0x8000,
 
   /**
    * This change hint has *no* change handling behavior.  However, it
@@ -110,13 +116,13 @@ enum nsChangeHint {
    * changes, and it's inherited by a child, that might require a reflow
    * due to the border-width change on the child.
    */
-  nsChangeHint_BorderStyleNoneChange = 0x8000,
+  nsChangeHint_BorderStyleNoneChange = 0x10000,
 
   /**
    * SVG textPath needs to be recomputed because the path has changed.
    * This means that the glyph positions of the text need to be recomputed.
    */
-  nsChangeHint_UpdateTextPath = 0x10000
+  nsChangeHint_UpdateTextPath = 0x20000
 
   // IMPORTANT NOTE: When adding new hints, consider whether you need to
   // add them to NS_HintsNotHandledForDescendantsIn() below.
@@ -172,6 +178,7 @@ inline bool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
           nsChangeHint_UpdateEffects | \
           nsChangeHint_UpdateOpacityLayer | \
           nsChangeHint_UpdateOverflow | \
+          nsChangeHint_UpdatePostTransformOverflow | \
           nsChangeHint_ChildrenOnlyTransform | \
           nsChangeHint_RecomputePosition | \
           nsChangeHint_AddOrRemoveTransform | \
@@ -185,6 +192,7 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
     nsChangeHint_UpdateEffects |
     nsChangeHint_UpdateOpacityLayer |
     nsChangeHint_UpdateOverflow |
+    nsChangeHint_UpdatePostTransformOverflow |
     nsChangeHint_ChildrenOnlyTransform |
     nsChangeHint_RecomputePosition |
     nsChangeHint_AddOrRemoveTransform |

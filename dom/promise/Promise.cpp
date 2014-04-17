@@ -92,31 +92,18 @@ public:
                        JS::Handle<JS::Value> aValue,
                        Promise::PromiseState aState)
     : mPromise(aPromise)
-    , mValue(aValue)
+    , mValue(CycleCollectedJSRuntime::Get()->Runtime(), aValue)
     , mState(aState)
   {
     MOZ_ASSERT(aPromise);
     MOZ_ASSERT(mState != Promise::Pending);
     MOZ_COUNT_CTOR(PromiseResolverMixin);
-
-    /* It's safe to use unsafeGet() here: the unsafeness comes from the
-     * possibility of updating the value of mJSObject without triggering the
-     * barriers.  However if the value will always be marked, post barriers
-     * unnecessary. */
-    JS_AddNamedValueRootRT(CycleCollectedJSRuntime::Get()->Runtime(), mValue.unsafeGet(),
-                           "PromiseResolverMixin.mValue");
   }
 
   virtual ~PromiseResolverMixin()
   {
     NS_ASSERT_OWNINGTHREAD(PromiseResolverMixin);
     MOZ_COUNT_DTOR(PromiseResolverMixin);
-
-    /* It's safe to use unsafeGet() here: the unsafeness comes from the
-     * possibility of updating the value of mJSObject without triggering the
-     * barriers.  However if the value will always be marked, post barriers
-     * unnecessary. */
-    JS_RemoveValueRootRT(CycleCollectedJSRuntime::Get()->Runtime(), mValue.unsafeGet());
   }
 
 protected:
@@ -131,7 +118,7 @@ protected:
 
 private:
   nsRefPtr<Promise> mPromise;
-  JS::Heap<JS::Value> mValue;
+  JS::PersistentRooted<JS::Value> mValue;
   Promise::PromiseState mState;
   NS_DECL_OWNINGTHREAD;
 };

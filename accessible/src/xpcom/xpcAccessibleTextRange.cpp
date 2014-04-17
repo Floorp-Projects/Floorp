@@ -12,8 +12,20 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-// nsISupports
-NS_IMPL_ISUPPORTS1(xpcAccessibleTextRange, nsIAccessibleTextRange)
+// nsISupports and cycle collection
+
+NS_IMPL_CYCLE_COLLECTION_3(xpcAccessibleTextRange,
+                           mRange.mRoot,
+                           mRange.mStartContainer,
+                           mRange.mEndContainer)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(xpcAccessibleTextRange)
+  NS_INTERFACE_MAP_ENTRY(nsIAccessibleTextRange)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessibleTextRange)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(xpcAccessibleTextRange)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(xpcAccessibleTextRange)
 
 // nsIAccessibleTextRange
 
@@ -21,7 +33,7 @@ NS_IMETHODIMP
 xpcAccessibleTextRange::GetStartContainer(nsIAccessible** aAnchor)
 {
   NS_ENSURE_ARG_POINTER(aAnchor);
-  *aAnchor = static_cast<nsIAccessible*>(mRange.StartContainer());
+  NS_IF_ADDREF(*aAnchor = static_cast<nsIAccessible*>(mRange.StartContainer()));
   return NS_OK;
 }
 
@@ -37,7 +49,7 @@ NS_IMETHODIMP
 xpcAccessibleTextRange::GetEndContainer(nsIAccessible** aAnchor)
 {
   NS_ENSURE_ARG_POINTER(aAnchor);
-  *aAnchor = static_cast<nsIAccessible*>(mRange.EndContainer());
+  NS_IF_ADDREF(*aAnchor = static_cast<nsIAccessible*>(mRange.EndContainer()));
   return NS_OK;
 }
 

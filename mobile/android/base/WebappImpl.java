@@ -23,13 +23,13 @@ import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.view.Display;
 
-import java.net.URL;
 import java.io.File;
+import java.net.URI;
 
 public class WebappImpl extends GeckoApp {
     private static final String LOGTAG = "GeckoWebappImpl";
 
-    private URL mOrigin;
+    private URI mOrigin;
     private TextView mTitlebarText = null;
     private View mTitlebar = null;
 
@@ -69,8 +69,8 @@ public class WebappImpl extends GeckoApp {
         // Try to use the origin stored in the WebappAllocator first
         String origin = WebappAllocator.getInstance(this).getAppForIndex(getIndex());
         try {
-            mOrigin = new URL(origin);
-        } catch (java.net.MalformedURLException ex) {
+            mOrigin = new URI(origin);
+        } catch (java.net.URISyntaxException ex) {
             // If we can't parse the this is an app protocol, just settle for not having an origin
             if (!origin.startsWith("app://")) {
                 return;
@@ -79,8 +79,8 @@ public class WebappImpl extends GeckoApp {
             // If that failed fall back to the origin stored in the shortcut
             Log.i(LOGTAG, "Webapp is not registered with allocator");
             try {
-                mOrigin = new URL(getIntent().getData().toString());
-            } catch (java.net.MalformedURLException ex2) {
+                mOrigin = new URI(getIntent().getData().toString());
+            } catch (java.net.URISyntaxException ex2) {
                 Log.e(LOGTAG, "Unable to parse intent url: ", ex);
             }
         }
@@ -164,11 +164,11 @@ public class WebappImpl extends GeckoApp {
             case LOCATION_CHANGE:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     final String urlString = tab.getURL();
-                    final URL url;
+                    final URI uri;
 
                     try {
-                        url = new URL(urlString);
-                    } catch (java.net.MalformedURLException ex) {
+                        uri = new URI(urlString);
+                    } catch (java.net.URISyntaxException ex) {
                         mTitlebarText.setText(urlString);
 
                         // If we can't parse the url, and its an app protocol hide
@@ -182,10 +182,10 @@ public class WebappImpl extends GeckoApp {
                         return;
                     }
 
-                    if (mOrigin != null && mOrigin.getHost().equals(url.getHost())) {
+                    if (mOrigin != null && mOrigin.getHost().equals(uri.getHost())) {
                         mTitlebar.setVisibility(View.GONE);
                     } else {
-                        mTitlebarText.setText(url.getProtocol() + "://" + url.getHost());
+                        mTitlebarText.setText(uri.getScheme() + "://" + uri.getHost());
                         mTitlebar.setVisibility(View.VISIBLE);
                     }
                 }
