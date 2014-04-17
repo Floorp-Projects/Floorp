@@ -237,6 +237,33 @@ if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
 
 })();
 
+/* Implicit "use strict" context */
+(function() {
+
+var funcHeader =  'function (glob, ffi, heap) {',
+    funcBody = '\n"use asm";\n\
+    function g() {}\n\
+    return g;\n\n'
+    funcFooter = '}',
+    funcSource = funcHeader + funcBody + funcFooter
+    useStrict = '\n"use strict";\n';
+
+var f4 = eval("\"use strict\";\n(" + funcSource + ")");
+
+var expectedToString = funcHeader + useStrict + funcBody + funcFooter
+var expectedToSource = '(' + expectedToString + ')'
+
+assertEq(f4.toString(), expectedToString);
+assertEq(f4.toSource(), expectedToSource);
+
+if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
+    var f5 = eval("\"use strict\";\n(" + funcSource + ")");
+    assertEq(isAsmJSModuleLoadedFromCache(f5), true);
+    assertEq(f5.toString(), expectedToString);
+    assertEq(f5.toSource(), expectedToSource);
+}
+})();
+
 /* Functions */
 (function() {
 

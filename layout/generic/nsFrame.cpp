@@ -6690,8 +6690,8 @@ nsFrame::BreakWordBetweenPunctuation(const PeekWordState* aState,
   }
   if (!Preferences::GetBool("layout.word_select.stop_at_punctuation")) {
     // When this pref is false, we never stop at a punctuation boundary unless
-    // it's after whitespace
-    return false;
+    // it's followed by whitespace (in the relevant direction).
+    return aWhitespaceAfter;
   }
   if (!aIsKeyboardSelect) {
     // mouse caret movement (e.g. word selection) always stops at every punctuation boundary
