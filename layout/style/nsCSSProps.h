@@ -618,7 +618,7 @@ public:
   // "layout.css.text-align-true-value.enabled" changes:
   static KTableValue kTextAlignKTable[];
   static KTableValue kTextAlignLastKTable[];
-  static const KTableValue kTextCombineHorizontalKTable[];
+  static const KTableValue kTextCombineUprightKTable[];
   static const KTableValue kTextDecorationLineKTable[];
   static const KTableValue kTextDecorationStyleKTable[];
   static const KTableValue kTextOrientationKTable[];
