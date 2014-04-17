@@ -295,6 +295,7 @@ TypeBarrierPolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
 
         // We can't unbox a value to null/undefined. So keep output also a value.
         if (IsNullOrUndefined(outputType) || outputType == MIRType_Magic) {
+            JS_ASSERT(ins->defUseCount() == 0);
             ins->setResultType(MIRType_Value);
             return true;
         }
