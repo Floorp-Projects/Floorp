@@ -109,6 +109,10 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::hreflang, aHreflang, aRv);
   }
+  nsDOMSettableTokenList* Sizes()
+  {
+    return GetTokenList(nsGkAtoms::sizes);
+  }
   // XPCOM GetType is fine.
   void SetType(const nsAString& aType, ErrorResult& aRv)
   {
