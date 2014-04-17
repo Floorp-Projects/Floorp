@@ -609,35 +609,33 @@ BluetoothHfpManager::ProcessAtChld(bthf_chld_type_t aChld)
 void BluetoothHfpManager::ProcessDialCall(char *aNumber)
 {
   nsAutoCString message(aNumber);
+
+  // There are three cases based on aNumber,
+  // 1) Empty value:    Redial, BLDN
+  // 2) >xxx:           Memory dial, ATD>xxx
+  // 3) xxx:            Normal dial, ATDxxx
+  // We need to respond OK/Error for dial requests for every case listed above,
+  // 1) and 2):         Respond in either RespondToBLDNTask or
+  //                    HandleCallStateChanged()
+  // 3):                Respond here
   if (message.IsEmpty()) {
-    // Redial: BLDN
     mDialingRequestProcessed = false;
     BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
                         NS_LITERAL_STRING("BLDN"));
-  } else {
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::POST_TASK_RESPOND_TO_BLDN);
+  } else if (message[0] == '>') {
+    mDialingRequestProcessed = false;
     nsAutoCString newMsg("ATD");
-
-    if (message[0] == '>') {
-      // Memory dial: ATD>xxx
-      mDialingRequestProcessed = false;
-      newMsg += message;
-    } else {
-      // Dial number: ATDxxx
-      int end = message.FindChar(';');
-      if (end < 0) {
-        BT_WARNING("Couldn't get the number to dial");
-        SendResponse(BTHF_AT_RESPONSE_OK);
-        return;
-      }
-      newMsg += nsDependentCSubstring(message, 0, end);
-    }
-
+    newMsg += StringHead(message, message.Length() - 1);
     BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
                         NS_ConvertUTF8toUTF16(newMsg));
-  }
-
-  if (!mDialingRequestProcessed) {
     BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::POST_TASK_RESPOND_TO_BLDN);
+  } else {
+    nsAutoCString newMsg("ATD");
+    newMsg += StringHead(message, message.Length() - 1);
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
+                        NS_ConvertUTF8toUTF16(newMsg));
+    SendResponse(BTHF_AT_RESPONSE_OK);
   }
 }
 
