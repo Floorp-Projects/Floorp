@@ -359,6 +359,10 @@ RootActor.prototype = {
     return JSON.parse(JSON.stringify(aRequest));
   },
 
+  onProtocolDescription: function (aRequest) {
+    return protocol.dumpProtocolSpec()
+  },
+
   /* Support for DebuggerServer.addGlobalActor. */
   _createExtraActors: CommonCreateExtraActors,
   _appendExtraActors: CommonAppendExtraActors,
@@ -399,5 +403,6 @@ RootActor.prototype = {
 RootActor.prototype.requestTypes = {
   "listTabs": RootActor.prototype.onListTabs,
   "listAddons": RootActor.prototype.onListAddons,
-  "echo": RootActor.prototype.onEcho
+  "echo": RootActor.prototype.onEcho,
+  "protocolDescription": RootActor.prototype.onProtocolDescription
 };
