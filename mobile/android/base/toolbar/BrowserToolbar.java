@@ -984,28 +984,36 @@ public class BrowserToolbar extends ThemedRelativeLayout
             }
         }
 
-        // This animation doesn't make much sense in a sidebar UI
-        if (HardwareUtils.isTablet() || Build.VERSION.SDK_INT < 11) {
+        if (Build.VERSION.SDK_INT < 11) {
+            showEditingWithoutAnimation(entryTranslation, curveTranslation);
+        } else if (HardwareUtils.isTablet()) {
+            // No animation.
             showUrlEditLayout();
+        } else {
+            showEditingWithPhoneAnimation(animator, entryTranslation, curveTranslation);
+        }
+    }
 
-            if (!HardwareUtils.isTablet()) {
-                if (urlBarTranslatingEdge != null) {
-                    ViewHelper.setTranslationX(urlBarTranslatingEdge, entryTranslation);
-                }
+    private void showEditingWithoutAnimation(final int entryTranslation,
+            final int curveTranslation) {
+        showUrlEditLayout();
 
-                ViewHelper.setTranslationX(mTabs, curveTranslation);
-                ViewHelper.setTranslationX(mTabsCounter, curveTranslation);
-                ViewHelper.setTranslationX(mActionItemBar, curveTranslation);
-
-                if (mHasSoftMenuButton) {
-                    ViewHelper.setTranslationX(mMenu, curveTranslation);
-                    ViewHelper.setTranslationX(mMenuIcon, curveTranslation);
-                }
-            }
-
-            return;
+        if (urlBarTranslatingEdge != null) {
+            ViewHelper.setTranslationX(urlBarTranslatingEdge, entryTranslation);
         }
 
+        ViewHelper.setTranslationX(mTabs, curveTranslation);
+        ViewHelper.setTranslationX(mTabsCounter, curveTranslation);
+        ViewHelper.setTranslationX(mActionItemBar, curveTranslation);
+
+        if (mHasSoftMenuButton) {
+            ViewHelper.setTranslationX(mMenu, curveTranslation);
+            ViewHelper.setTranslationX(mMenuIcon, curveTranslation);
+        }
+    }
+
+    private void showEditingWithPhoneAnimation(final PropertyAnimator animator,
+            final int entryTranslation, final int curveTranslation) {
         if (mAnimatingEntry)
             return;
 
@@ -1014,8 +1022,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         mUrlDisplayLayout.prepareStartEditingAnimation();
 
-        // Slide the right side elements of the toolbar
-
+        // Slide toolbar elements.
         if (urlBarTranslatingEdge != null) {
             animator.attach(urlBarTranslatingEdge,
                             PropertyAnimator.Property.TRANSLATION_X,
@@ -1095,38 +1102,46 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         updateProgressVisibility();
 
-        if (HardwareUtils.isTablet() || Build.VERSION.SDK_INT < 11) {
+        if (Build.VERSION.SDK_INT < 11) {
+            stopEditingWithoutAnimation();
+        } else if (HardwareUtils.isTablet()) {
+            // No animation.
             hideUrlEditLayout();
-
-            if (!HardwareUtils.isTablet()) {
-                updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
-
-                if (urlBarTranslatingEdge != null) {
-                    urlBarTranslatingEdge.setVisibility(View.INVISIBLE);
-                    ViewHelper.setTranslationX(urlBarTranslatingEdge, 0);
-                    if (shouldShrinkURLBar) {
-                        mUrlBarEntry.setLayoutParams(urlBarEntryDefaultLayoutParams);
-                    }
-                }
-
-                ViewHelper.setTranslationX(mTabs, 0);
-                ViewHelper.setTranslationX(mTabsCounter, 0);
-                ViewHelper.setTranslationX(mActionItemBar, 0);
-
-                if (mHasSoftMenuButton) {
-                    ViewHelper.setTranslationX(mMenu, 0);
-                    ViewHelper.setTranslationX(mMenuIcon, 0);
-                }
-            }
-
-            return url;
+        } else {
+            stopEditingWithPhoneAnimation();
         }
 
+        return url;
+    }
+
+    private void stopEditingWithoutAnimation() {
+        hideUrlEditLayout();
+
+        updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
+
+        if (urlBarTranslatingEdge != null) {
+            urlBarTranslatingEdge.setVisibility(View.INVISIBLE);
+            ViewHelper.setTranslationX(urlBarTranslatingEdge, 0);
+            if (shouldShrinkURLBar) {
+                mUrlBarEntry.setLayoutParams(urlBarEntryDefaultLayoutParams);
+            }
+        }
+
+        ViewHelper.setTranslationX(mTabs, 0);
+        ViewHelper.setTranslationX(mTabsCounter, 0);
+        ViewHelper.setTranslationX(mActionItemBar, 0);
+
+        if (mHasSoftMenuButton) {
+            ViewHelper.setTranslationX(mMenu, 0);
+            ViewHelper.setTranslationX(mMenuIcon, 0);
+        }
+    }
+
+    private void stopEditingWithPhoneAnimation() {
         final PropertyAnimator contentAnimator = new PropertyAnimator(250);
         contentAnimator.setUseHardwareLayer(false);
 
-        // Shrink the urlbar entry back to its original size
-
+        // Slide the toolbar back to its original size.
         if (urlBarTranslatingEdge != null) {
             contentAnimator.attach(urlBarTranslatingEdge,
                                    PropertyAnimator.Property.TRANSLATION_X,
@@ -1183,8 +1198,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         mAnimatingEntry = true;
         contentAnimator.start();
-
-        return url;
     }
 
     public void setButtonEnabled(ImageButton button, boolean enabled) {
