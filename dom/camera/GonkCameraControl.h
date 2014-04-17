@@ -147,7 +147,6 @@ protected:
   bool                      mFlashSupported;
   bool                      mLuminanceSupported;
   bool                      mAutoFlashModeOverridden;
-
   Atomic<uint32_t>          mDeferConfigUpdate;
   GonkCameraParameters      mParams;
 
