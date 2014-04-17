@@ -150,6 +150,7 @@ function clean() {
   Service.startOver();
   Status.resetSync();
   Status.resetBackoff();
+  errorHandler.didReportProlongedError = false;
 }
 
 add_identity_test(this, function test_401_logout() {
@@ -297,18 +298,32 @@ add_identity_test(this, function test_shouldReportError() {
   do_check_true(errorHandler.shouldReportError());
 
   // Test non-network, prolonged, login error reported
+  do_check_false(errorHandler.didReportProlongedError);
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
   errorHandler.dontIgnoreErrors = false;
   Status.login = LOGIN_FAILED_NO_PASSWORD;
   do_check_true(errorHandler.shouldReportError());
+  do_check_true(errorHandler.didReportProlongedError);
+
+  // Second time with prolonged error and without resetting
+  // didReportProlongedError, sync error should not be reported.
+  Status.resetSync();
+  setLastSync(PROLONGED_ERROR_DURATION);
+  errorHandler.dontIgnoreErrors = false;
+  Status.login = LOGIN_FAILED_NO_PASSWORD;
+  do_check_false(errorHandler.shouldReportError());
+  do_check_true(errorHandler.didReportProlongedError);
 
   // Test non-network, prolonged, sync error reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
   errorHandler.dontIgnoreErrors = false;
+  errorHandler.didReportProlongedError = false;
   Status.sync = CREDENTIALS_CHANGED;
   do_check_true(errorHandler.shouldReportError());
+  do_check_true(errorHandler.didReportProlongedError);
+  errorHandler.didReportProlongedError = false;
 
   // Test network, prolonged, login error reported
   Status.resetSync();
@@ -316,6 +331,8 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = false;
   Status.login = LOGIN_FAILED_NETWORK_ERROR;
   do_check_true(errorHandler.shouldReportError());
+  do_check_true(errorHandler.didReportProlongedError);
+  errorHandler.didReportProlongedError = false;
 
   // Test network, prolonged, sync error reported
   Status.resetSync();
@@ -323,6 +340,8 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = false;
   Status.sync = LOGIN_FAILED_NETWORK_ERROR;
   do_check_true(errorHandler.shouldReportError());
+  do_check_true(errorHandler.didReportProlongedError);
+  errorHandler.didReportProlongedError = false;
 
   // Test non-network, non-prolonged, login error reported
   Status.resetSync();
@@ -330,6 +349,7 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = false;
   Status.login = LOGIN_FAILED_NO_PASSWORD;
   do_check_true(errorHandler.shouldReportError());
+  do_check_false(errorHandler.didReportProlongedError);
 
   // Test non-network, non-prolonged, sync error reported
   Status.resetSync();
@@ -337,6 +357,7 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = false;
   Status.sync = CREDENTIALS_CHANGED;
   do_check_true(errorHandler.shouldReportError());
+  do_check_false(errorHandler.didReportProlongedError);
 
   // Test network, non-prolonged, login error reported
   Status.resetSync();
@@ -344,6 +365,7 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = false;
   Status.login = LOGIN_FAILED_NETWORK_ERROR;
   do_check_false(errorHandler.shouldReportError());
+  do_check_false(errorHandler.didReportProlongedError);
 
   // Test network, non-prolonged, sync error reported
   Status.resetSync();
@@ -351,6 +373,7 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = false;
   Status.sync = LOGIN_FAILED_NETWORK_ERROR;
   do_check_false(errorHandler.shouldReportError());
+  do_check_false(errorHandler.didReportProlongedError);
 
   // Test server maintenance, sync errors are not reported
   Status.resetSync();
@@ -358,6 +381,7 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = false;
   Status.sync = SERVER_MAINTENANCE;
   do_check_false(errorHandler.shouldReportError());
+  do_check_false(errorHandler.didReportProlongedError);
 
   // Test server maintenance, login errors are not reported
   Status.resetSync();
@@ -365,6 +389,7 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = false;
   Status.login = SERVER_MAINTENANCE;
   do_check_false(errorHandler.shouldReportError());
+  do_check_false(errorHandler.didReportProlongedError);
 
   // Test prolonged, server maintenance, sync errors are reported
   Status.resetSync();
@@ -372,6 +397,8 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = false;
   Status.sync = SERVER_MAINTENANCE;
   do_check_true(errorHandler.shouldReportError());
+  do_check_true(errorHandler.didReportProlongedError);
+  errorHandler.didReportProlongedError = false;
 
   // Test prolonged, server maintenance, login errors are reported
   Status.resetSync();
@@ -379,6 +406,8 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = false;
   Status.login = SERVER_MAINTENANCE;
   do_check_true(errorHandler.shouldReportError());
+  do_check_true(errorHandler.didReportProlongedError);
+  errorHandler.didReportProlongedError = false;
 
   // Test dontIgnoreErrors, server maintenance, sync errors are reported
   Status.resetSync();
@@ -386,6 +415,8 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = true;
   Status.sync = SERVER_MAINTENANCE;
   do_check_true(errorHandler.shouldReportError());
+  // dontIgnoreErrors means we don't set didReportProlongedError
+  do_check_false(errorHandler.didReportProlongedError);
 
   // Test dontIgnoreErrors, server maintenance, login errors are reported
   Status.resetSync();
@@ -393,6 +424,7 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = true;
   Status.login = SERVER_MAINTENANCE;
   do_check_true(errorHandler.shouldReportError());
+  do_check_false(errorHandler.didReportProlongedError);
 
   // Test dontIgnoreErrors, prolonged, server maintenance,
   // sync errors are reported
@@ -401,6 +433,7 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = true;
   Status.sync = SERVER_MAINTENANCE;
   do_check_true(errorHandler.shouldReportError());
+  do_check_false(errorHandler.didReportProlongedError);
 
   // Test dontIgnoreErrors, prolonged, server maintenance,
   // login errors are reported
@@ -409,7 +442,7 @@ add_identity_test(this, function test_shouldReportError() {
   errorHandler.dontIgnoreErrors = true;
   Status.login = SERVER_MAINTENANCE;
   do_check_true(errorHandler.shouldReportError());
-
+  do_check_false(errorHandler.didReportProlongedError);
 });
 
 add_identity_test(this, function test_shouldReportError_master_password() {
@@ -625,6 +658,7 @@ add_task(function test_login_prolonged_non_network_error() {
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:login:error", onSyncError);
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_true(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -651,6 +685,7 @@ add_task(function test_sync_prolonged_non_network_error() {
   Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:sync:error", onSyncError);
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_true(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -671,6 +706,7 @@ add_identity_test(this, function test_login_prolonged_network_error() {
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:login:error", onSyncError);
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_true(errorHandler.didReportProlongedError);
 
     clean();
     deferred.resolve();
@@ -688,6 +724,7 @@ add_test(function test_sync_prolonged_network_error() {
   Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:sync:error", onSyncError);
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_true(errorHandler.didReportProlongedError);
 
     Services.io.offline = false;
     clean();
@@ -708,6 +745,7 @@ add_task(function test_login_non_network_error() {
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:login:error", onSyncError);
     do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -734,6 +772,7 @@ add_task(function test_sync_non_network_error() {
   Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:sync:error", onSyncError);
     do_check_eq(Status.sync, CREDENTIALS_CHANGED);
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -755,6 +794,7 @@ add_identity_test(this, function test_login_network_error() {
     Svc.Obs.remove("weave:ui:clear-error", onClearError);
 
     do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_false(errorHandler.didReportProlongedError);
 
     Services.io.offline = false;
     clean();
@@ -773,6 +813,7 @@ add_test(function test_sync_network_error() {
   Svc.Obs.add("weave:ui:sync:finish", function onUIUpdate() {
     Svc.Obs.remove("weave:ui:sync:finish", onUIUpdate);
     do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_false(errorHandler.didReportProlongedError);
 
     Services.io.offline = false;
     clean();
@@ -807,6 +848,7 @@ add_identity_test(this, function test_sync_server_maintenance_error() {
 
     do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
     do_check_eq(Status.sync, SERVER_MAINTENANCE);
+    do_check_false(errorHandler.didReportProlongedError);
 
     Svc.Obs.remove("weave:ui:sync:error", onSyncError);
     clean();
@@ -850,6 +892,7 @@ add_identity_test(this, function test_info_collections_login_server_maintenance_
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, SERVER_MAINTENANCE);
+    do_check_false(errorHandler.didReportProlongedError);
 
     Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
     clean();
@@ -892,6 +935,7 @@ add_identity_test(this, function test_meta_global_login_server_maintenance_error
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, SERVER_MAINTENANCE);
+    do_check_false(errorHandler.didReportProlongedError);
 
     Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
     clean();
@@ -937,6 +981,7 @@ add_identity_test(this, function test_crypto_keys_login_server_maintenance_error
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, SERVER_MAINTENANCE);
+    do_check_false(errorHandler.didReportProlongedError);
 
     Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
     clean();
@@ -964,6 +1009,7 @@ add_task(function test_sync_prolonged_server_maintenance_error() {
     Svc.Obs.remove("weave:ui:sync:error", onUIUpdate);
     do_check_eq(Status.service, SYNC_FAILED);
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_true(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -998,6 +1044,7 @@ add_identity_test(this, function test_info_collections_login_prolonged_server_ma
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, SYNC_FAILED);
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_true(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1033,6 +1080,7 @@ add_identity_test(this, function test_meta_global_login_prolonged_server_mainten
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, SYNC_FAILED);
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_true(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1070,6 +1118,7 @@ add_identity_test(this, function test_download_crypto_keys_login_prolonged_serve
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, SYNC_FAILED);
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_true(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1105,6 +1154,7 @@ add_identity_test(this, function test_upload_crypto_keys_login_prolonged_server_
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, SYNC_FAILED);
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_true(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1141,6 +1191,7 @@ add_identity_test(this, function test_wipeServer_login_prolonged_server_maintena
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, SYNC_FAILED);
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_true(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1183,6 +1234,7 @@ add_identity_test(this, function test_wipeRemote_prolonged_server_maintenance_er
     do_check_eq(Status.service, SYNC_FAILED);
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
     do_check_eq(Svc.Prefs.get("firstSync"), "wipeRemote");
+    do_check_true(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1214,6 +1266,7 @@ add_task(function test_sync_syncAndReportErrors_server_maintenance_error() {
     Svc.Obs.remove("weave:ui:sync:error", onUIUpdate);
     do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
     do_check_eq(Status.sync, SERVER_MAINTENANCE);
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1249,6 +1302,7 @@ add_identity_test(this, function test_info_collections_login_syncAndReportErrors
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, SERVER_MAINTENANCE);
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1285,6 +1339,7 @@ add_identity_test(this, function test_meta_global_login_syncAndReportErrors_serv
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, SERVER_MAINTENANCE);
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1323,6 +1378,7 @@ add_identity_test(this, function test_download_crypto_keys_login_syncAndReportEr
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, SERVER_MAINTENANCE);
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1359,6 +1415,7 @@ add_identity_test(this, function test_upload_crypto_keys_login_syncAndReportErro
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, SERVER_MAINTENANCE);
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1395,6 +1452,7 @@ add_identity_test(this, function test_wipeServer_login_syncAndReportErrors_serve
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, SERVER_MAINTENANCE);
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1436,6 +1494,7 @@ add_identity_test(this, function test_wipeRemote_syncAndReportErrors_server_main
     do_check_eq(Status.service, SYNC_FAILED);
     do_check_eq(Status.sync, SERVER_MAINTENANCE);
     do_check_eq(Svc.Prefs.get("firstSync"), "wipeRemote");
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1467,6 +1526,9 @@ add_task(function test_sync_syncAndReportErrors_prolonged_server_maintenance_err
     Svc.Obs.remove("weave:ui:sync:error", onUIUpdate);
     do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
     do_check_eq(Status.sync, SERVER_MAINTENANCE);
+    // syncAndReportErrors means dontIgnoreErrors, which means
+    // didReportProlongedError not touched.
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1502,6 +1564,9 @@ add_identity_test(this, function test_info_collections_login_syncAndReportErrors
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, SERVER_MAINTENANCE);
+    // syncAndReportErrors means dontIgnoreErrors, which means
+    // didReportProlongedError not touched.
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1538,6 +1603,9 @@ add_identity_test(this, function test_meta_global_login_syncAndReportErrors_prol
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, SERVER_MAINTENANCE);
+    // syncAndReportErrors means dontIgnoreErrors, which means
+    // didReportProlongedError not touched.
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1576,6 +1644,9 @@ add_identity_test(this, function test_download_crypto_keys_login_syncAndReportEr
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, SERVER_MAINTENANCE);
+    // syncAndReportErrors means dontIgnoreErrors, which means
+    // didReportProlongedError not touched.
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1612,6 +1683,9 @@ add_identity_test(this, function test_upload_crypto_keys_login_syncAndReportErro
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, SERVER_MAINTENANCE);
+    // syncAndReportErrors means dontIgnoreErrors, which means
+    // didReportProlongedError not touched.
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);
@@ -1648,6 +1722,9 @@ add_identity_test(this, function test_wipeServer_login_syncAndReportErrors_prolo
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, SERVER_MAINTENANCE);
+    // syncAndReportErrors means dontIgnoreErrors, which means
+    // didReportProlongedError not touched.
+    do_check_false(errorHandler.didReportProlongedError);
 
     clean();
     server.stop(deferred.resolve);

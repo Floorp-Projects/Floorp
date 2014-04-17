@@ -55,7 +55,7 @@
 }
 @keyframes moveY {
   /* These values are adjusted for the padding and height of the panel. */
-  from { margin-top: -6px; } to { margin-top: 58px; }
+  from { margin-top: -.5em; } to { margin-top: calc(64px - .5em); }
 }
 
 #PanelUI-button {

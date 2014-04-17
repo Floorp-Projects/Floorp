@@ -74,6 +74,8 @@ function wrapDomRequestAsPromise(aRequest) {
   return deferred.promise;
 }
 
+let workingFrame;
+
 /**
  * Get mozSettings value specified by @aKey.
  *
@@ -93,7 +95,8 @@ function wrapDomRequestAsPromise(aRequest) {
  * @return A deferred promise.
  */
 function getSettings(aKey, aAllowError) {
-  let request = navigator.mozSettings.createLock().get(aKey);
+  let request =
+    workingFrame.contentWindow.navigator.mozSettings.createLock().get(aKey);
   return wrapDomRequestAsPromise(request)
     .then(function resolve(aEvent) {
       ok(true, "getSettings(" + aKey + ") - success");
@@ -120,7 +123,8 @@ function getSettings(aKey, aAllowError) {
  * @return A deferred promise.
  */
 function setSettings(aSettings, aAllowError) {
-  let request = navigator.mozSettings.createLock().set(aSettings);
+  let request =
+    workingFrame.contentWindow.navigator.mozSettings.createLock().set(aSettings);
   return wrapDomRequestAsPromise(request)
     .then(function resolve() {
       ok(true, "setSettings(" + JSON.stringify(aSettings) + ")");
@@ -195,7 +199,6 @@ function setDataApnSettings(aApnSettings, aAllowError) {
   return setSettings1(SETTINGS_KEY_DATA_APN_SETTINGS, aApnSettings, aAllowError);
 }
 
-let workingFrame;
 let mobileConnection;
 
 /**
@@ -282,7 +285,8 @@ function waitForManagerEvent(aEventName, aServiceId) {
 
   let mobileConn = mobileConnection;
   if (aServiceId !== undefined) {
-    mobileConn = navigator.mozMobileConnections[aServiceId];
+    mobileConn =
+      workingFrame.contentWindow.navigator.mozMobileConnections[aServiceId];
   }
 
   mobileConn.addEventListener(aEventName, function onevent(aEvent) {
@@ -407,7 +411,8 @@ function setDataEnabledAndWait(aEnabled, aServiceId) {
   Promise.all(promises).then(function keepWaiting() {
     let mobileConn = mobileConnection;
     if (aServiceId !== undefined) {
-      mobileConn = navigator.mozMobileConnections[aServiceId];
+      mobileConn =
+        workingFrame.contentWindow.navigator.mozMobileConnections[aServiceId];
     }
     // To ignore some transient states, we only resolve that deferred promise
     // when the |connected| state equals to the expected one and never rejects.
@@ -467,7 +472,8 @@ function setEmulatorRoamingAndWait(aRoaming, aServiceId) {
       .then(() => {
         let mobileConn = mobileConnection;
         if (aServiceId !== undefined) {
-          mobileConn = navigator.mozMobileConnections[aServiceId];
+          mobileConn =
+            workingFrame.contentWindow.navigator.mozMobileConnections[aServiceId];
         }
         is(mobileConn[aWhich].roaming, aRoaming,
                      aWhich + ".roaming")
