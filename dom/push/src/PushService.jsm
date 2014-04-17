@@ -369,6 +369,11 @@ this.PushService = {
           return;
         }
 
+        // Only remove push registrations for apps.
+        if (data.browserOnly) {
+          return;
+        }
+
         let appsService = Cc["@mozilla.org/AppsService;1"]
                             .getService(Ci.nsIAppsService);
         let manifestURL = appsService.getManifestURLByLocalId(data.appId);

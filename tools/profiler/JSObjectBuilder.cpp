@@ -16,7 +16,7 @@ JSObjectBuilder::DefineProperty(JS::HandleObject aObject, const char *name, JS::
   if (!mOk)
     return;
 
-  mOk = JS_DefineProperty(mCx, aObject, name, OBJECT_TO_JSVAL(aValue), nullptr, nullptr, JSPROP_ENUMERATE);
+  mOk = JS_DefineProperty(mCx, aObject, name, aValue, JSPROP_ENUMERATE);
 }
 
 void
@@ -25,7 +25,7 @@ JSObjectBuilder::DefineProperty(JS::HandleObject aObject, const char *name, int 
   if (!mOk)
     return;
 
-  mOk = JS_DefineProperty(mCx, aObject, name, INT_TO_JSVAL(value), nullptr, nullptr, JSPROP_ENUMERATE);
+  mOk = JS_DefineProperty(mCx, aObject, name, value, JSPROP_ENUMERATE);
 }
 
 void
@@ -34,7 +34,7 @@ JSObjectBuilder::DefineProperty(JS::HandleObject aObject, const char *name, doub
   if (!mOk)
     return;
 
-  mOk = JS_DefineProperty(mCx, aObject, name, DOUBLE_TO_JSVAL(value), nullptr, nullptr, JSPROP_ENUMERATE);
+  mOk = JS_DefineProperty(mCx, aObject, name, value, JSPROP_ENUMERATE);
 }
 
 void
@@ -44,14 +44,14 @@ JSObjectBuilder::DefineProperty(JS::HandleObject aObject, const char *name, nsAS
     return;
 
   const nsString &flat = PromiseFlatString(value);
-  JSString *string = JS_NewUCStringCopyN(mCx, static_cast<const jschar*>(flat.get()), flat.Length());
+  JS::RootedString string(mCx, JS_NewUCStringCopyN(mCx, static_cast<const jschar*>(flat.get()), flat.Length()));
   if (!string)
     mOk = false;
 
   if (!mOk)
     return;
 
-  mOk = JS_DefineProperty(mCx, aObject, name, STRING_TO_JSVAL(string), nullptr, nullptr, JSPROP_ENUMERATE);
+  mOk = JS_DefineProperty(mCx, aObject, name, string, JSPROP_ENUMERATE);
 }
 
 void
@@ -60,13 +60,13 @@ JSObjectBuilder::DefineProperty(JS::HandleObject aObject, const char *name, cons
   if (!mOk)
     return;
 
-  JSString *string = JS_InternStringN(mCx, value, valueLength);
+  JS::RootedString string(mCx, JS_InternStringN(mCx, value, valueLength));
   if (!string) {
     mOk = false;
     return;
   }
 
-  mOk = JS_DefineProperty(mCx, (JSObject*)aObject, name, STRING_TO_JSVAL(string), nullptr, nullptr, JSPROP_ENUMERATE); }
+  mOk = JS_DefineProperty(mCx, aObject, name, string, JSPROP_ENUMERATE); }
 
 void
 JSObjectBuilder::DefineProperty(JS::HandleObject aObject, const char *name, const char *value)

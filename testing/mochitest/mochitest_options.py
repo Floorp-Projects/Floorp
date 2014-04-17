@@ -494,7 +494,7 @@ class MochitestOptions(optparse.OptionParser):
             self.error("Please use --test-manifest only and not --run-only-tests")
 
         if options.runOnlyTests:
-            if not os.path.exists(os.path.abspath(options.runOnlyTests)):
+            if not os.path.exists(os.path.abspath(os.path.join(here, options.runOnlyTests))):
                 self.error("unable to find --run-only-tests file '%s'" % options.runOnlyTests)
             options.runOnly = True
             options.testManifest = options.runOnlyTests
@@ -525,7 +525,7 @@ class MochitestOptions(optparse.OptionParser):
         # should always set the flag that populates this variable. If buildbot ever
         # passes this argument, this code can be deleted.
         if options.testingModulesDir is None:
-            possible = os.path.join(os.getcwd(), os.path.pardir, 'modules')
+            possible = os.path.join(here, os.path.pardir, 'modules')
 
             if os.path.isdir(possible):
                 options.testingModulesDir = possible

@@ -6,8 +6,8 @@
 #include "nsIDOMElement.idl"
 #include "nsIDOMXULElement.idl"
 
-[scriptable, uuid(84fcce86-79de-4e22-8b9a-2c014ebde3e5)]
-interface nsIDOMXULPopupElement : nsIDOMXULElement {
+[scriptable, uuid(cb7eaa79-45d5-4ea3-ae17-b65fdcfe5e30)]
+interface nsIDOMXULPopupElement : nsISupports {
   const unsigned short      BEFORE_START                   = 1;
   const unsigned short      BEFORE_END                     = 2;
   const unsigned short      AFTER_START                    = 3;

@@ -40,6 +40,14 @@ const OCSPHost sOCSPHosts[] =
   { "ocsp-stapling-skip-responseBytes.example.com", ORTSkipResponseBytes, nullptr },
   { "ocsp-stapling-critical-extension.example.com", ORTCriticalExtension, nullptr },
   { "ocsp-stapling-noncritical-extension.example.com", ORTNoncriticalExtension, nullptr },
+  { "ocsp-stapling-delegated-included.example.com", ORTDelegatedIncluded, "delegatedSigner" },
+  { "ocsp-stapling-delegated-included-last.example.com", ORTDelegatedIncludedLast, "delegatedSigner" },
+  { "ocsp-stapling-delegated-missing.example.com", ORTDelegatedMissing, "delegatedSigner" },
+  { "ocsp-stapling-delegated-missing-multiple.example.com", ORTDelegatedMissingMultiple, "delegatedSigner" },
+  { "ocsp-stapling-delegated-no-extKeyUsage.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerNoExtKeyUsage" },
+  { "ocsp-stapling-delegated-from-intermediate.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerFromIntermediate" },
+  { "ocsp-stapling-delegated-keyUsage-crlSigning.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerKeyUsageCrlSigning" },
+  { "ocsp-stapling-delegated-wrong-extKeyUsage.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerWrongExtKeyUsage" },
   { nullptr, ORTNull, nullptr }
 };
 

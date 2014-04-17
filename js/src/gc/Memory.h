@@ -41,6 +41,15 @@ MarkPagesInUse(JSRuntime *rt, void *p, size_t size);
 size_t
 GetPageFaultCount();
 
+// Allocate memory mapped content.
+// The offset must be aligned according to alignment requirement.
+void *
+AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment);
+
+// Deallocate memory mapped content.
+void
+DeallocateMappedContent(void *p, size_t length);
+
 } // namespace gc
 } // namespace js
 
