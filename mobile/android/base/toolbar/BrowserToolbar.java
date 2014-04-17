@@ -120,7 +120,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
     private ToolbarDisplayLayout mUrlDisplayLayout;
     private ToolbarEditLayout mUrlEditLayout;
     private View mUrlBarEntry;
-    private ImageView mUrlBarRightEdge;
+    private ImageView urlBarTranslatingEdge;
     private boolean mSwitchingTabs;
     private ShapedButton mTabs;
     private ImageButton mBack;
@@ -190,10 +190,10 @@ public class BrowserToolbar extends ThemedRelativeLayout
         mUrlBarEntry = findViewById(R.id.url_bar_entry);
         mUrlEditLayout = (ToolbarEditLayout) findViewById(R.id.edit_layout);
 
-        // This will clip the right edge's image at 60% of its width
-        mUrlBarRightEdge = (ImageView) findViewById(R.id.url_bar_right_edge);
-        if (mUrlBarRightEdge != null) {
-            mUrlBarRightEdge.getDrawable().setLevel(6000);
+        // This will clip the translating edge's image at 60% of its width
+        urlBarTranslatingEdge = (ImageView) findViewById(R.id.url_bar_translating_edge);
+        if (urlBarTranslatingEdge != null) {
+            urlBarTranslatingEdge.getDrawable().setLevel(6000);
         }
 
         mTabs = (ShapedButton) findViewById(R.id.tabs);
@@ -963,8 +963,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
             mStartEditingListener.onStartEditing();
         }
 
-        if (mUrlBarRightEdge != null) {
-            mUrlBarRightEdge.setVisibility(View.VISIBLE);
+        if (urlBarTranslatingEdge != null) {
+            urlBarTranslatingEdge.setVisibility(View.VISIBLE);
         }
 
         final int entryTranslation = getUrlBarEntryTranslation();
@@ -975,8 +975,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
             showUrlEditLayout();
 
             if (!HardwareUtils.isTablet()) {
-                if (mUrlBarRightEdge != null) {
-                    ViewHelper.setTranslationX(mUrlBarRightEdge, entryTranslation);
+                if (urlBarTranslatingEdge != null) {
+                    ViewHelper.setTranslationX(urlBarTranslatingEdge, entryTranslation);
                 }
 
                 ViewHelper.setTranslationX(mTabs, curveTranslation);
@@ -1002,8 +1002,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         // Slide the right side elements of the toolbar
 
-        if (mUrlBarRightEdge != null) {
-            animator.attach(mUrlBarRightEdge,
+        if (urlBarTranslatingEdge != null) {
+            animator.attach(urlBarTranslatingEdge,
                             PropertyAnimator.Property.TRANSLATION_X,
                             entryTranslation);
         }
@@ -1087,8 +1087,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
             if (!HardwareUtils.isTablet()) {
                 updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
 
-                if (mUrlBarRightEdge != null) {
-                    ViewHelper.setTranslationX(mUrlBarRightEdge, 0);
+                if (urlBarTranslatingEdge != null) {
+                    ViewHelper.setTranslationX(urlBarTranslatingEdge, 0);
                 }
 
                 ViewHelper.setTranslationX(mTabs, 0);
@@ -1109,8 +1109,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         // Shrink the urlbar entry back to its original size
 
-        if (mUrlBarRightEdge != null) {
-            contentAnimator.attach(mUrlBarRightEdge,
+        if (urlBarTranslatingEdge != null) {
+            contentAnimator.attach(urlBarTranslatingEdge,
                                    PropertyAnimator.Property.TRANSLATION_X,
                                    0);
         }
@@ -1144,8 +1144,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
             @Override
             public void onPropertyAnimationEnd() {
-                if (mUrlBarRightEdge != null) {
-                    mUrlBarRightEdge.setVisibility(View.INVISIBLE);
+                if (urlBarTranslatingEdge != null) {
+                    urlBarTranslatingEdge.setVisibility(View.INVISIBLE);
                 }
 
                 PropertyAnimator buttonsAnimator = new PropertyAnimator(300);
