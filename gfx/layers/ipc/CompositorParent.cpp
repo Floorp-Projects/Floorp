@@ -241,9 +241,7 @@ CompositorParent::Destroy()
 
   // Ensure that the layer manager is destructed on the compositor thread.
   mLayerManager = nullptr;
-  mCompositor->Destroy();
   mCompositor = nullptr;
-
   mCompositionManager = nullptr;
   mApzcTreeManager->ClearTree();
   mApzcTreeManager = nullptr;
@@ -275,6 +273,7 @@ CompositorParent::RecvWillStop()
     }
     mLayerManager->Destroy();
     mLayerManager = nullptr;
+    mCompositor = nullptr;
     mCompositionManager = nullptr;
   }
 
