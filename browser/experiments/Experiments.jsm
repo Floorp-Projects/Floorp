@@ -252,10 +252,6 @@ Experiments.Policy = function () {
   this._log = Log.repository.getLoggerWithMessagePrefix(
     "Browser.Experiments.Policy",
     "Policy #" + gPolicyCounter++ + "::");
-
-  // Set to true to ignore hash verification on downloaded XPIs. This should
-  // not be used outside of testing.
-  this.ignoreHashes = false;
 };
 
 Experiments.Policy.prototype = {
@@ -376,24 +372,19 @@ Experiments.Experiments.prototype = {
     AsyncShutdown.profileBeforeChange.addBlocker("Experiments.jsm shutdown",
       this.uninit.bind(this));
 
-    this._registerWithAddonManager();
+    this._startWatchingAddons();
 
-    let deferred = Promise.defer();
-
-    this._loadTask = this._loadFromCache();
+    this._loadTask = Task.spawn(this._loadFromCache.bind(this));
     this._loadTask.then(
       () => {
         this._log.trace("_loadTask finished ok");
         this._loadTask = null;
-        this._run().then(deferred.resolve, deferred.reject);
+        this._run();
       },
       (e) => {
         this._log.error("_loadFromCache caught error: " + e);
-        deferred.reject(e);
       }
     );
-
-    return deferred.promise;
   },
 
   /**
@@ -411,7 +402,7 @@ Experiments.Experiments.prototype = {
     yield this._loadTask;
 
     if (!this._shutdown) {
-      this._unregisterWithAddonManager();
+      this._stopWatchingAddons();
 
       gPrefs.ignore(PREF_LOGGING, configureLogging);
       gPrefs.ignore(PREF_MANIFEST_URI, this.updateManifest, this);
@@ -432,14 +423,12 @@ Experiments.Experiments.prototype = {
     this._log.info("Completed uninitialization.");
   }),
 
-  _registerWithAddonManager: function () {
-    this._log.trace("Registering instance with Addon Manager.");
-
+  _startWatchingAddons: function () {
     AddonManager.addAddonListener(this);
     AddonManager.addInstallListener(this);
   },
 
-  _unregisterWithAddonManager: function () {
+  _stopWatchingAddons: function () {
     AddonManager.removeInstallListener(this);
     AddonManager.removeAddonListener(this);
   },
@@ -823,7 +812,7 @@ Experiments.Experiments.prototype = {
   /*
    * Task function, load the cached experiments manifest file from disk.
    */
-  _loadFromCache: Task.async(function* () {
+  _loadFromCache: function*() {
     this._log.trace("_loadFromCache");
     let path = this._cacheFilePath;
     try {
@@ -833,7 +822,7 @@ Experiments.Experiments.prototype = {
       // No cached manifest yet.
       this._experiments = new Map();
     }
-  }),
+  },
 
   _populateFromCache: function (data) {
     this._log.trace("populateFromCache() - data: " + JSON.stringify(data));
@@ -1509,9 +1498,8 @@ Experiments.ExperimentEntry.prototype = {
   _installAddon: function* () {
     let deferred = Promise.defer();
 
-    let hash = this._policy.ignoreHashes ? null : this._manifestData.xpiHash;
-
-    let install = yield addonInstallForURL(this._manifestData.xpiURL, hash);
+    let install = yield addonInstallForURL(this._manifestData.xpiURL,
+                                           this._manifestData.xpiHash);
     gActiveInstallURLs.add(install.sourceURI.spec);
 
     let failureHandler = (install, handler) => {

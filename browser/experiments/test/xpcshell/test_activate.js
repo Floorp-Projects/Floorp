@@ -140,23 +140,4 @@ add_task(function* test_startStop() {
   Assert.equal(experiment.enabled, false, "Experiment should be disabled.");
   addons = yield getExperimentAddons();
   Assert.equal(addons.length, 0, "Experiment add-on is uninstalled.");
-
-  // Ensure hash validation works.
-  // We set an incorrect hash and expect the install to fail.
-  experiment._manifestData.xpiHash = "sha1:41014dcc66b4dcedcd973491a1530a32f0517d8a";
-  let errored = false;
-  try {
-    yield experiment.start();
-  } catch (ex) {
-    errored = true;
-  }
-  Assert.ok(experiment._failedStart, "Experiment failed to start.");
-  Assert.ok(errored, "start() threw an exception.");
-
-  // Make sure "ignore hashes" mode works.
-  gPolicy.ignoreHashes = true;
-  let changes = yield experiment.start();
-  Assert.equal(changes, experiment.ADDON_CHANGE_INSTALL);
-  yield experiment.stop();
-  gPolicy.ignoreHashes = false;
 });
