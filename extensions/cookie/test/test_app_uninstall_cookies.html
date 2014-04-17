@@ -50,35 +50,6 @@ var cookies = [
 ];
 var counter = 0;
 
-function confirmNextInstall() {
-  var panel = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocShell)
-                        .chromeEventHandler.ownerDocument.defaultView
-                        .PopupNotifications.panel
-
-  panel.addEventListener("popupshown", function() {
-    panel.removeEventListener("popupshown", arguments.callee, false);
-    this.childNodes[0].button.doCommand();
-  }, false);
-}
-
-// If aAppId = -1, returns permissions count, regardless of app.
-function getPermissionCountForApp(aAppId) {
-  var nbPermissions = 0;
-  var enumerator = permManager.enumerator;
-
-  while (enumerator.hasMoreElements()) {
-    var permission = enumerator.getNext().QueryInterface(Ci.nsIPermission);
-
-    if (permission.appId == aAppId || aAppId == -1) {
-      nbPermissions++;
-    }
-  }
-
-  return nbPermissions;
-}
-
 function getCookiesCountForApp(aAppId) {
   var nbCookies = 0;
   var enumerator = cookieMng.getCookiesForApp(aAppId, false);
@@ -145,29 +116,20 @@ function setNextCookie(request, data, context) {
   }
 }
 
-var previousDryRunValue = null;
-try {
-  previousDryRunValue = SpecialPowers.getBoolPref('browser.mozApps.installer.dry_run');
-} catch(e) {
-}
-
-SpecialPowers.setBoolPref('browser.mozApps.installer.dry_run', true);
-
-var previousCookiePrefValue = SpecialPowers.getIntPref('network.cookie.cookieBehavior');
-
-SpecialPowers.setIntPref('network.cookie.cookieBehavior', 0);
-
 permManager.addFromPrincipal(window.document.nodePrincipal, "webapps-manage",
                              Ci.nsIPermissionManager.ALLOW_ACTION);
 
-var gManifestURL = "http://www.example.com/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
+SimpleTest.registerCleanupFunction(() =>
+  permManager.removeFromPrincipal(window.document.nodePrincipal, "webapps-manage",
+                                  Ci.nsIPermissionManager.ALLOW_ACTION)
+);
 
-confirmNextInstall();
+var gManifestURL = "http://www.example.com/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
 
 var gTestAppId = 0;
 var gCurrentCookiesCount = 0;
 
-navigator.mozApps.install(gManifestURL, null).onsuccess = function() {
+function onInstall() {
   gTestAppId = appsService.getAppLocalIdByManifestURL(gManifestURL);
 
   cookies[0].loadContext = new LoadContextCallback(gTestAppId, false, false, 1);
@@ -180,7 +142,7 @@ navigator.mozApps.install(gManifestURL, null).onsuccess = function() {
   httpserver.start(4444);
 
   setCookie();
-};
+}
 
 function checkCookie() {
   var appCookiesCount = getCookiesCountForApp(gTestAppId);
@@ -199,22 +161,20 @@ function checkCookie() {
           is(getCookiesCount(), gCurrentCookiesCount,
              "Number of cookies should not have changed");
 
-          SpecialPowers.setBoolPref('browser.mozApps.installer.dry_run', previousDryRunValue);
-          SpecialPowers.setIntPref('network.cookie.cookieBehavior', previousCookiePrefValue);
-          permManager.removeFromPrincipal(window.document.nodePrincipal, "webapps-manage",
-                                       Ci.nsIPermissionManager.ALLOW_ACTION);
-
           httpserver.stop(function() {
             SimpleTest.finish();
           });
-
-          return;
         };
       }
     }
   };
 }
 
+SpecialPowers.pushPrefEnv({set: [['network.cookie.cookieBehavior', 0]]}, () =>
+  SpecialPowers.autoConfirmAppInstall(() =>
+    navigator.mozApps.install(gManifestURL, null).onsuccess = onInstall
+  )
+);
 </script>
 </pre>
 </body>
