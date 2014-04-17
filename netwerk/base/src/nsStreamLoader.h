@@ -30,6 +30,10 @@ protected:
   static NS_METHOD WriteSegmentFun(nsIInputStream *, void *, const char *,
                                    uint32_t, uint32_t, uint32_t *);
 
+  // Utility method to free mData, if present, and update other state to
+  // reflect that no data has been allocated.
+  void ReleaseData();
+
   nsCOMPtr<nsIStreamLoaderObserver> mObserver;
   nsCOMPtr<nsISupports>             mContext;  // the observer's context
   nsCOMPtr<nsIRequest>              mRequest;
