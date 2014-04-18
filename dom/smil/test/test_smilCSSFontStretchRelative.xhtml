@@ -80,12 +80,6 @@ function testFontStretchValue(baseValue, narrowerStep, widerStep)
 
 function main()
 {
-  if (!SMILUtil.isSMILEnabled()) {
-    ok(false, "SMIL dosn't seem to be enabled");
-    SimpleTest.finish();
-    return;
-  }
-
   var valuesList = gFontStretchValues;
   for (var baseIdx in valuesList) {
     // 'narrower' and 'wider' are expected to shift us by one slot, but not
