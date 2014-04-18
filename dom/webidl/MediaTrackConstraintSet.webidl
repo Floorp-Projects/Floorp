@@ -8,14 +8,15 @@
  */
 
 enum SupportedVideoConstraints {
+    "other",
     "facingMode",
     "width",
     "height",
-    "frameRate"
+    "frameRate",
 };
 
 enum SupportedAudioConstraints {
-    "dummy"
+    "other"
 };
 
 dictionary MediaTrackConstraintSet {

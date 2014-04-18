@@ -9,6 +9,7 @@ XPIDL_MODULE = 'content_webrtc'
 EXPORTS += [
     'MediaEngine.h',
     'MediaEngineDefault.h',
+    'MediaTrackConstraints.h',
 ]
 
 if CONFIG['MOZ_WEBRTC']:
