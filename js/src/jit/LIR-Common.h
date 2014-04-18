@@ -5587,13 +5587,11 @@ class MPhi;
 // corresponding to the predecessor taken in the control flow graph.
 class LPhi MOZ_FINAL : public LInstruction
 {
-    uint32_t numInputs_;
     LAllocation *inputs_;
     LDefinition def_;
 
-    bool init(MIRGenerator *gen);
-
-    LPhi(MPhi *mir);
+    LPhi()
+    { }
 
   public:
     LIR_HEADER(Phi)
@@ -5612,7 +5610,7 @@ class LPhi MOZ_FINAL : public LInstruction
         def_ = def;
     }
     size_t numOperands() const {
-        return numInputs_;
+        return mir_->toPhi()->numOperands();
     }
     LAllocation *getOperand(size_t index) {
         JS_ASSERT(index < numOperands());
