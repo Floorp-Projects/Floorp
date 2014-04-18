@@ -33,6 +33,7 @@ namespace dom {
 class Geolocation;
 class systemMessageCallback;
 class MediaStreamConstraints;
+class MediaStreamConstraintsInternal;
 class WakeLock;
 class ArrayBufferViewOrBlobOrStringOrFormData;
 }
@@ -230,11 +231,12 @@ public:
                   ErrorResult& aRv);
 
 #ifdef MOZ_MEDIA_NAVIGATOR
-  void MozGetUserMedia(const MediaStreamConstraints& aConstraints,
+  void MozGetUserMedia(JSContext* aCx,
+                       const MediaStreamConstraints& aConstraints,
                        NavigatorUserMediaSuccessCallback& aOnSuccess,
                        NavigatorUserMediaErrorCallback& aOnError,
                        ErrorResult& aRv);
-  void MozGetUserMediaDevices(const MediaStreamConstraints& aConstraints,
+  void MozGetUserMediaDevices(const MediaStreamConstraintsInternal& aConstraints,
                               MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
                               NavigatorUserMediaErrorCallback& aOnError,
                               uint64_t aInnerWindowID,

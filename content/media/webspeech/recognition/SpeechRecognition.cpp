@@ -711,12 +711,14 @@ SpeechRecognition::Start(ErrorResult& aRv)
   rv = mRecognitionService->Initialize(this->asWeakPtr());
   NS_ENSURE_SUCCESS_VOID(rv);
 
+  AutoSafeJSContext cx;
   MediaStreamConstraints constraints;
   constraints.mAudio.SetAsBoolean() = true;
 
   if (!mTestConfig.mFakeFSMEvents) {
     MediaManager* manager = MediaManager::Get();
-    manager->GetUserMedia(false,
+    manager->GetUserMedia(cx,
+                          false,
                           GetOwner(),
                           constraints,
                           new GetUserMediaSuccessCallback(this),
