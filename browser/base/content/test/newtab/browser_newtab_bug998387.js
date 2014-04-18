@@ -6,9 +6,11 @@ function runTests() {
   yield addNewTabPageTab();
 
   // Remember if the click handler was triggered
-  let cell = getCell(0);
+  let {site} = getCell(0);
+  let origOnClick = site.onClick;
   let clicked = false;
-  cell.site.onClick = e => {
+  site.onClick = e => {
+    origOnClick.call(site, e);
     clicked = true;
     executeSoon(TestRunner.next);
   };
