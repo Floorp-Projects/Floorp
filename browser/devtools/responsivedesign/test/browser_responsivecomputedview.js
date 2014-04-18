@@ -15,7 +15,7 @@ function test() {
     waitForFocus(startTest, content);
   }, true);
 
-  content.location = "data:text/html,<html><style>" +
+  content.location = "data:text/html;charset=utf-8,<html><style>" +
     "div {" +
     "  width: 500px;" +
     "  height: 10px;" +
@@ -53,24 +53,21 @@ function test() {
 
     instance.setSize(500, 500);
 
-    openView("computedview", onInspectorUIOpen);
+    openComputedView().then(onInspectorUIOpen);
   }
 
-  function onInspectorUIOpen(aInspector, aComputedView) {
-    inspector = aInspector;
+  function onInspectorUIOpen(args) {
+    inspector = args.inspector;
+    computedView = args.view;
     ok(inspector, "Got inspector instance");
 
     let div = content.document.getElementsByTagName("div")[0];
 
     inspector.selection.setNode(div);
     inspector.once("inspector-updated", testShrink);
-
   }
 
   function testShrink() {
-    computedView = inspector.sidebar.getWindowForTab("computedview").computedview.view;
-    ok(computedView, "We have access to the Computed View object");
-
     is(computedWidth(), "500px", "Should show 500px initially.");
 
     inspector.once("computed-view-refreshed", function onShrink() {
