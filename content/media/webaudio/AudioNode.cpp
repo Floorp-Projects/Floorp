@@ -77,6 +77,37 @@ AudioNode::~AudioNode()
   }
 }
 
+size_t
+AudioNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  // Not owned:
+  // - mContext
+  // - mStream
+  size_t amount = 0;
+
+  amount += mInputNodes.SizeOfExcludingThis(aMallocSizeOf);
+  for (size_t i = 0; i < mInputNodes.Length(); i++) {
+    amount += mInputNodes[i].SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  // Just measure the array. The entire audio node graph is measured via the
+  // MediaStreamGraph's streams, so we don't want to double-count the elements.
+  amount += mOutputNodes.SizeOfExcludingThis(aMallocSizeOf);
+
+  amount += mOutputParams.SizeOfExcludingThis(aMallocSizeOf);
+  for (size_t i = 0; i < mOutputParams.Length(); i++) {
+    amount += mOutputParams[i]->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  return amount;
+}
+
+size_t
+AudioNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}
+
 template <class InputNode>
 static uint32_t
 FindIndexOfNode(const nsTArray<InputNode>& aInputNodes, const AudioNode* aNode)

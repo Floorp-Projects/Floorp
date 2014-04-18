@@ -45,6 +45,21 @@ FFTConvolver::FFTConvolver(size_t fftSize)
   PodZero(m_lastOverlapBuffer.Elements(), fftSize / 2);
 }
 
+size_t FFTConvolver::sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+    size_t amount = 0;
+    amount += m_frame.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_inputBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_outputBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_lastOverlapBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    return amount;
+}
+
+size_t FFTConvolver::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + sizeOfExcludingThis(aMallocSizeOf);
+}
+
 void FFTConvolver::process(FFTBlock* fftKernel, const float* sourceP, float* destP, size_t framesToProcess)
 {
     size_t halfSize = fftSize() / 2;

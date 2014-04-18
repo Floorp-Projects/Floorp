@@ -34,19 +34,6 @@ var secMan = Cc['@mozilla.org/scriptsecuritymanager;1']
 var ioService = Cc["@mozilla.org/network/io-service;1"]
                   .getService(Components.interfaces.nsIIOService);
 
-function confirmNextInstall() {
-  var panel = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocShell)
-                        .chromeEventHandler.ownerDocument.defaultView
-                        .PopupNotifications.panel
-
-  panel.addEventListener("popupshown", function() {
-    panel.removeEventListener("popupshown", arguments.callee, false);
-    this.childNodes[0].button.doCommand();
-  }, false);
-}
-
 // If aAppId = -1, returns permissions count, regardless of app.
 function getPermissionCountForApp(aAppId) {
   var nbPermissions = 0;
@@ -63,21 +50,17 @@ function getPermissionCountForApp(aAppId) {
   return nbPermissions;
 }
 
-var previousDryRunValue = null;
-try {
-  previousDryRunValue = SpecialPowers.getBoolPref('browser.mozApps.installer.dry_run');
-} catch(e) {
-}
-
-SpecialPowers.setBoolPref('browser.mozApps.installer.dry_run', true);
 permManager.addFromPrincipal(window.document.nodePrincipal, "webapps-manage",
                              Ci.nsIPermissionManager.ALLOW_ACTION);
 
+SimpleTest.registerCleanupFunction(() =>
+  permManager.removeFromPrincipal(window.document.nodePrincipal, "webapps-manage",
+                                  Ci.nsIPermissionManager.ALLOW_ACTION)
+);
+
 var gManifestURL = "http://www.example.com/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
 
-confirmNextInstall();
-
-navigator.mozApps.install(gManifestURL, null).onsuccess = function() {
+function onInstall() {
   var testAppId = appsService.getAppLocalIdByManifestURL(gManifestURL);
 
   is(getPermissionCountForApp(testAppId), 0, "App should have no permission");
@@ -112,16 +95,16 @@ navigator.mozApps.install(gManifestURL, null).onsuccess = function() {
           is(getPermissionCountForApp(-1), currentPermissionCount,
              "Number of permissions should not have changed");
 
-          SpecialPowers.setBoolPref('browser.mozApps.installer.dry_run', previousDryRunValue);
-          permManager.removeFromPrincipal(window.document.nodePrincipal, "webapps-manage",
-                                       Ci.nsIPermissionManager.ALLOW_ACTION);
           SimpleTest.finish();
-          return;
         };
       }
     }
   };
-};
+}
+
+SpecialPowers.autoConfirmAppInstall(() =>
+  navigator.mozApps.install(gManifestURL, null).onsuccess = onInstall
+);
 
 </script>
 </pre>

@@ -40,6 +40,7 @@ const OCSPHost sOCSPHosts[] =
   { "ocsp-stapling-skip-responseBytes.example.com", ORTSkipResponseBytes, nullptr },
   { "ocsp-stapling-critical-extension.example.com", ORTCriticalExtension, nullptr },
   { "ocsp-stapling-noncritical-extension.example.com", ORTNoncriticalExtension, nullptr },
+  { "ocsp-stapling-empty-extensions.example.com", ORTEmptyExtensions, nullptr },
   { "ocsp-stapling-delegated-included.example.com", ORTDelegatedIncluded, "delegatedSigner" },
   { "ocsp-stapling-delegated-included-last.example.com", ORTDelegatedIncludedLast, "delegatedSigner" },
   { "ocsp-stapling-delegated-missing.example.com", ORTDelegatedMissing, "delegatedSigner" },

@@ -87,6 +87,29 @@ ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t,
     PodZero(m_preDelayBuffer.Elements(), m_preDelayBuffer.Length());
 }
 
+size_t ReverbConvolverStage::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+    size_t amount = aMallocSizeOf(this);
+
+    if (m_fftKernel) {
+        amount += m_fftKernel->SizeOfIncludingThis(aMallocSizeOf);
+    }
+
+    if (m_fftConvolver) {
+        amount += m_fftConvolver->sizeOfIncludingThis(aMallocSizeOf);
+    }
+
+    amount += m_preDelayBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_temporaryBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_directKernel.SizeOfExcludingThis(aMallocSizeOf);
+
+    if (m_directConvolver) {
+        amount += m_directConvolver->sizeOfIncludingThis(aMallocSizeOf);
+    }
+
+    return amount;
+}
+
 void ReverbConvolverStage::processInBackground(ReverbConvolver* convolver, size_t framesToProcess)
 {
     ReverbInputBuffer* inputBuffer = convolver->inputBuffer();

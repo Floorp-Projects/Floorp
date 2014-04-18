@@ -70,6 +70,27 @@ HRTFPanner::~HRTFPanner()
     MOZ_COUNT_DTOR(HRTFPanner);
 }
 
+size_t HRTFPanner::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+    size_t amount = aMallocSizeOf(this);
+
+    if (m_databaseLoader) {
+        m_databaseLoader->sizeOfIncludingThis(aMallocSizeOf);
+    }
+
+    amount += m_convolverL1.sizeOfExcludingThis(aMallocSizeOf);
+    amount += m_convolverR1.sizeOfExcludingThis(aMallocSizeOf);
+    amount += m_convolverL2.sizeOfExcludingThis(aMallocSizeOf);
+    amount += m_convolverR2.sizeOfExcludingThis(aMallocSizeOf);
+    amount += m_delayLine.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_tempL1.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_tempL2.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_tempR1.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_tempR2.SizeOfExcludingThis(aMallocSizeOf);
+
+    return amount;
+}
+
 void HRTFPanner::reset()
 {
     m_azimuthIndex1 = UninitializedAzimuth;

@@ -27,6 +27,7 @@
 
 #include "FFTConvolver.h"
 #include "DelayBuffer.h"
+#include "mozilla/MemoryReporting.h"
 
 namespace mozilla {
 struct AudioChunk;
@@ -52,6 +53,8 @@ public:
     float sampleRate() const { return m_sampleRate; }
 
     int maxTailFrames() const;
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
     // Given an azimuth angle in the range -180 -> +180, returns the corresponding azimuth index for the database,
