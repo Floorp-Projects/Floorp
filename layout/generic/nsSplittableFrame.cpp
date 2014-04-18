@@ -253,8 +253,12 @@ nsSplittableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) co
     return LOGICAL_SIDES_B_BOTH;
   }
 
-  int skip = 0;
+  if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
+                     NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
+    return 0;
+  }
 
+  int skip = 0;
   if (GetPrevInFlow()) {
     skip |= LOGICAL_SIDE_B_START;
   }
