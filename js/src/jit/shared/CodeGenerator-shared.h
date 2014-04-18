@@ -304,7 +304,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     void emitPreBarrier(Address address, MIRType type);
 
     inline bool isNextBlock(LBlock *block) {
-        return (current->mir()->id() + 1 == block->mir()->id());
+        return current->mir()->id() + 1 == block->mir()->id();
     }
 
   public:

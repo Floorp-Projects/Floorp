@@ -21,7 +21,7 @@ bool
 C1Spewer::init(const char *path)
 {
     spewout_ = fopen(path, "w");
-    return (spewout_ != nullptr);
+    return spewout_ != nullptr;
 }
 
 void

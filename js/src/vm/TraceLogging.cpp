@@ -61,7 +61,7 @@ rdtsc(void)
     result = result<<32;
     result = result|lower;
 
-    return(result);
+    return result;
 }
 #endif
 
