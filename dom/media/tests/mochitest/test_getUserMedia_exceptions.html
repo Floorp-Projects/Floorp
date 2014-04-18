@@ -49,7 +49,7 @@ var exceptionTests = [
     message: "wrong object type as third parameter" },
 
   // Each test here verifies constraint syntax as defined in webidl
-  { params: [{ fake: true, video: { optional: [{ facingMode:'foo' }] } },
+  { params: [{ fake: true, video: { advanced: [{ facingMode:'foo' }] } },
              unexpectedCall, unexpectedCall],
     error: "'facingMode' member of MediaTrackConstraintSet 'foo' is not a valid value for enumeration VideoFacingModeEnum.",
     message: "invalid facingMode enum value" }
