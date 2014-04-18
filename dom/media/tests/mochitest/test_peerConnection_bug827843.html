@@ -56,6 +56,11 @@
         var description;
         var exception = null;
 
+        // handle the event which the close() triggers
+        test.pcLocal.onsignalingstatechange = function (state) {
+          is(state, "closed", "Received expected onsignalingstatechange event 'closed'");
+        }
+
         test.pcLocal.close();
 
         try { description = test.pcLocal.localDescription; } catch (e) { exception = e; }
@@ -65,6 +70,11 @@
         try { description = test.pcLocal.remoteDescription; } catch (e) { exception = e; }
         ok(exception, "Attempt to access remoteDescription of pcLocal after close throws exception");
         exception = null;
+
+        // handle the event which the close() triggers
+        test.pcRemote.onsignalingstatechange = function (state) {
+          is(state, "closed", "Received expected onsignalingstatechange event 'closed'");
+        }
 
         test.pcRemote.close();
 

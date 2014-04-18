@@ -41,7 +41,7 @@
 #include "GeckoProfiler.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
-#include "AsyncPanZoomController.h"
+#include "mozilla/layers/AsyncPanZoomController.h"
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 

@@ -5,7 +5,10 @@
 package org.mozilla.gecko.fxa.activities;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
@@ -24,8 +27,11 @@ import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
+import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
@@ -35,6 +41,8 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -54,7 +62,7 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
 
   protected int minimumPasswordLength = 8;
 
-  protected EditText emailEdit;
+  protected AutoCompleteTextView emailEdit;
   protected EditText passwordEdit;
   protected Button showPasswordButton;
   protected TextView remoteErrorTextView;
@@ -311,5 +319,55 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
    */
   protected PasswordStretcher makePasswordStretcher(String password) {
     return new QuickPasswordStretcher(password);
+  }
+
+  protected abstract static class GetAccountsAsyncTask extends AsyncTask<Void, Void, Account[]> {
+    protected final Context context;
+
+    public GetAccountsAsyncTask(Context context) {
+      super();
+      this.context = context;
+    }
+
+    @Override
+    protected Account[] doInBackground(Void... params) {
+      return AccountManager.get(context).getAccounts();
+    }
+  }
+
+  /**
+   * This updates UI, so needs to be done on the foreground thread.
+   */
+  protected void populateEmailAddressAutocomplete(Account[] accounts) {
+    // First a set, since we don't want repeats.
+    final Set<String> emails = new HashSet<String>();
+    for (Account account : accounts) {
+      if (!Patterns.EMAIL_ADDRESS.matcher(account.name).matches()) {
+        continue;
+      }
+      emails.add(account.name);
+    }
+
+    // And then sorted in alphabetical order.
+    final String[] sortedEmails = emails.toArray(new String[0]);
+    Arrays.sort(sortedEmails);
+
+    final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, sortedEmails);
+    emailEdit.setAdapter(adapter);
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
+
+    // Getting Accounts accesses databases on disk, so needs to be done on a
+    // background thread.
+    final GetAccountsAsyncTask task = new GetAccountsAsyncTask(this) {
+      @Override
+      public void onPostExecute(Account[] accounts) {
+        populateEmailAddressAutocomplete(accounts);
+      }
+    };
+    task.execute();
   }
 }

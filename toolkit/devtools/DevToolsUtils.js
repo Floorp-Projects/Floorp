@@ -8,11 +8,9 @@
 
 // hasChrome is provided as a global by the loader. It is true if we are running
 // on the main thread, and false if we are running on a worker thread.
-if (hasChrome) {
-  var { Ci, Cu } = require("chrome");
-  var Services = require("Services");
-  var setTimeout = Cu.import("resource://gre/modules/Timer.jsm", {}).setTimeout;
-}
+var { Ci, Cu } = require("chrome");
+var Services = require("Services");
+var setTimeout = Cu.import("resource://gre/modules/Timer.jsm", {}).setTimeout;
 
 /**
  * Turn the error |aError| into a string, without fail.
@@ -304,3 +302,19 @@ exports.isSafeJSObject = function isSafeJSObject(aObj) {
 
   return Cu.isXrayWrapper(aObj);
 };
+
+exports.dumpn = function dumpn(str) {
+  if (exports.dumpn.wantLogging) {
+    dump("DBG-SERVER: " + str + "\n");
+  }
+}
+
+// We want wantLogging to be writable. The exports object is frozen by the
+// loader, so define it on dumpn instead.
+exports.dumpn.wantLogging = false;
+
+exports.dbg_assert = function dbg_assert(cond, e) {
+  if (!cond) {
+    return e;
+  }
+}

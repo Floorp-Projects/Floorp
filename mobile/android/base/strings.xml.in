@@ -237,6 +237,7 @@
   <string name="tabs_normal">&tabs_normal;</string>
   <string name="tabs_private">&tabs_private;</string>
   <string name="tabs_synced">&tabs_synced;</string>
+  <string name="edit_mode_cancel">&edit_mode_cancel;</string>
 
   <string name="site_settings_title">&site_settings_title3;</string>
   <string name="site_settings_cancel">&site_settings_cancel;</string>

@@ -26,7 +26,13 @@ const DEPRECATE_PREF = "devtools.errorconsole.deprecation_warnings";
 
 const DEFAULT_CONTENT_URL = "data:text/html;charset=utf-8,foo";
 
-function makeWindow(contentURL) {
+const WINDOW_SCRIPT_URL = "data:text/html;charset=utf-8," +
+                          "<script>window.addEventListener('message', function (e) {" +
+                          "  if (e.data === 'from -> content-script')" +
+                          "    window.postMessage('from -> window', '*');" +
+                          "});</script>";
+
+function makeWindow() {
   let content =
     "<?xml version=\"1.0\"?>" +
     "<window " +
@@ -782,50 +788,6 @@ exports["test:check worker API with page history"] = WorkerTest(
   }
 );
 
-exports["test:global postMessage"] = WorkerTest(
-  DEFAULT_CONTENT_URL,
-  function(assert, browser, done) {
-    let { loader } = LoaderWithHookedConsole(module, onMessage);
-    setPref(DEPRECATE_PREF, true);
-
-    // Intercept all console method calls
-    let seenMessages = 0;
-    function onMessage(type, message) {
-      seenMessages++;
-      assert.equal(type, "error", "Should be an error");
-      assert.equal(message, "DEPRECATED: The global `postMessage()` function in " +
-                            "content scripts is deprecated in favor of the " +
-                            "`self.postMessage()` function, which works the same. " +
-                            "Replace calls to `postMessage()` with calls to " +
-                            "`self.postMessage()`." +
-                            "For more info on `self.on`, see " +
-                            "<https://addons.mozilla.org/en-US/developers/docs/sdk/latest/dev-guide/addon-development/web-content.html>.",
-                            "Should have seen the deprecation message")
-    }
-
-    assert.notEqual(browser.contentWindow.location.href, "about:blank",
-                        "window is now on the right document");
-
-    let window = browser.contentWindow
-    let worker = loader.require("sdk/content/worker").Worker({
-      window: window,
-      contentScript: "new " + function WorkerScope() {
-        postMessage("success");
-      },
-      contentScriptWhen: "ready",
-      onMessage: function(msg) {
-        assert.equal("success", msg, "Should have seen the right postMessage call");
-        assert.equal(1, seenMessages, "Should have seen the deprecation message");
-        done();
-      }
-    });
-
-    assert.equal(worker.url, window.location.href,
-                     "worker.url works");
-    worker.postMessage("hi!");
-  }
-);
-
 exports['test:conentScriptFile as URL instance'] = WorkerTest(
   DEFAULT_CONTENT_URL,
   function(assert, browser, done) {
@@ -889,8 +851,8 @@ exports["test:onDetach in contentScript on destroy"] = WorkerTest(
         })
       },
     });
-    browser.contentWindow.addEventListener('hashchange', _ => { 
-      assert.equal(browser.contentWindow.location.hash, '#detach!', 
+    browser.contentWindow.addEventListener('hashchange', _ => {
+      assert.equal(browser.contentWindow.location.hash, '#detach!',
                    "location.href is as expected");
       done();
     })
@@ -910,8 +872,8 @@ exports["test:onDetach in contentScript on unload"] = WorkerTest(
         })
       },
     });
-    browser.contentWindow.addEventListener('hashchange', _ => { 
-      assert.equal(browser.contentWindow.location.hash, '#detach!shutdown', 
+    browser.contentWindow.addEventListener('hashchange', _ => {
+      assert.equal(browser.contentWindow.location.hash, '#detach!shutdown',
                    "location.href is as expected");
       done();
     })
@@ -953,5 +915,26 @@ exports["test:console method log functions properly"] = WorkerTest(
     });
   }
 );
+
+exports["test:global postMessage"] = WorkerTest(
+  WINDOW_SCRIPT_URL,
+  function(assert, browser, done) {
+    let contentScript = "window.addEventListener('message', function (e) {" +
+                        "  if (e.data === 'from -> window')" +
+                        "    self.port.emit('response', e.data, e.origin);" +
+                        "});" +
+                        "postMessage('from -> content-script', '*');";
+    let { loader } = LoaderWithHookedConsole(module);
+    let worker =  loader.require("sdk/content/worker").Worker({
+      window: browser.contentWindow,
+      contentScriptWhen: "ready",
+      contentScript: contentScript
+    });
+
+    worker.port.on("response", (data, origin) => {
+      assert.equal(data, "from -> window", "Communication from content-script to window completed");
+      done();
+    });
+});
 
 require("test").run(exports);

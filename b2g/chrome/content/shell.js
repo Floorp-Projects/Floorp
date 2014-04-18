@@ -1167,9 +1167,9 @@ let RemoteDebugger = {
       };
 
 #ifdef MOZ_WIDGET_GONK
-      DebuggerServer.onConnectionChange = function(what) {
+      DebuggerServer.on("connectionchange", function() {
         AdbController.updateState();
-      }
+      });
 #endif
     }
 
