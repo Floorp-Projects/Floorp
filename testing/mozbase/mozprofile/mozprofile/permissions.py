@@ -308,6 +308,9 @@ class Permissions(object):
         # to (\\\\d+) makes this code work. Not sure why there would be this
         # difference between automation.py.in and this file.
         pacURL = """data:text/plain,
+var knownOrigins = (function () {
+  return [%(origins)s].reduce(function(t, h) { t[h] = true; return t; }, {})
+})();
 var uriRegex = new RegExp('^([a-z][-a-z0-9+.]*)' +
                           '://' +
                           '(?:[^/@]*@)?' +
@@ -316,7 +319,6 @@ var uriRegex = new RegExp('^([a-z][-a-z0-9+.]*)' +
 
 function FindProxyForURL(url, host)
 {
-  var origins = [%(origins)s];
   var matches = uriRegex.exec(url);
   if (!matches)
     return 'DIRECT';
@@ -335,7 +337,7 @@ function FindProxyForURL(url, host)
     matches[1] = 'https';
 
   var origin = matches[1] + '://' + matches[2] + ':' + matches[3];
-  if (origins.indexOf(origin) < 0)
+  if (!(origin in knownOrigins))
     return 'DIRECT';
   if (isHttp) return 'PROXY %(remote)s:%(http)s';
   if (isHttps) return 'PROXY %(remote)s:%(https)s';
