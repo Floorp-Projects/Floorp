@@ -32,6 +32,7 @@ GetUserMediaLog()
 #include "nsIComponentRegistrar.h"
 #include "MediaEngineTabVideoSource.h"
 #include "nsITabSource.h"
+#include "MediaTrackConstraints.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidJNIWrapper.h"

@@ -142,7 +142,8 @@ public:
 
   virtual void GetName(nsAString&);
   virtual void GetUUID(nsAString&);
-  virtual nsresult Allocate(const MediaEnginePrefs &aPrefs);
+  virtual nsresult Allocate(const VideoTrackConstraintsN &aConstraints,
+                            const MediaEnginePrefs &aPrefs);
   virtual nsresult Deallocate();
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop(SourceMediaStream*, TrackID);
@@ -247,7 +248,8 @@ private:
   nsString mDeviceName;
   nsString mUniqueId;
 
-  void ChooseCapability(const MediaEnginePrefs &aPrefs);
+  void ChooseCapability(const VideoTrackConstraintsN &aConstraints,
+                        const MediaEnginePrefs &aPrefs);
 };
 
 class MediaEngineWebRTCAudioSource : public MediaEngineAudioSource,
@@ -280,7 +282,8 @@ public:
   virtual void GetName(nsAString&);
   virtual void GetUUID(nsAString&);
 
-  virtual nsresult Allocate(const MediaEnginePrefs &aPrefs);
+  virtual nsresult Allocate(const AudioTrackConstraintsN &aConstraints,
+                            const MediaEnginePrefs &aPrefs);
   virtual nsresult Deallocate();
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop(SourceMediaStream*, TrackID);

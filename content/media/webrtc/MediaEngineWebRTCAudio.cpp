@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <algorithm>
 #include "mozilla/Assertions.h"
+#include "MediaTrackConstraints.h"
 
 // scoped_ptr.h uses FF
 #ifdef FF
@@ -242,7 +243,8 @@ MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
 }
 
 nsresult
-MediaEngineWebRTCAudioSource::Allocate(const MediaEnginePrefs &aPrefs)
+MediaEngineWebRTCAudioSource::Allocate(const AudioTrackConstraintsN &aConstraints,
+                                       const MediaEnginePrefs &aPrefs)
 {
   if (mState == kReleased) {
     if (mInitDone) {

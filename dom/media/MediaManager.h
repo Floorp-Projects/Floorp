@@ -441,18 +441,33 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEDIADEVICE
 
-  MediaDevice(MediaEngineVideoSource* aSource);
-  MediaDevice(MediaEngineAudioSource* aSource);
-  virtual ~MediaDevice() {}
+  static MediaDevice* Create(MediaEngineVideoSource* source);
+  static MediaDevice* Create(MediaEngineAudioSource* source);
 
-  MediaEngineSource* GetSource();
-private:
+  virtual ~MediaDevice() {}
+protected:
+  MediaDevice(MediaEngineSource* aSource);
   nsString mName;
-  nsString mType;
   nsString mID;
   bool mHasFacingMode;
   dom::VideoFacingModeEnum mFacingMode;
   nsRefPtr<MediaEngineSource> mSource;
+};
+
+class VideoDevice : public MediaDevice
+{
+public:
+  VideoDevice(MediaEngineVideoSource* aSource);
+  NS_IMETHOD GetType(nsAString& aType);
+  MediaEngineVideoSource* GetSource();
+};
+
+class AudioDevice : public MediaDevice
+{
+public:
+  AudioDevice(MediaEngineAudioSource* aSource);
+  NS_IMETHOD GetType(nsAString& aType);
+  MediaEngineAudioSource* GetSource();
 };
 
 class MediaManager MOZ_FINAL : public nsIMediaManagerService,
