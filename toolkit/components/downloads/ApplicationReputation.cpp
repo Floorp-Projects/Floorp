@@ -42,8 +42,8 @@ using mozilla::Telemetry::Accumulate;
 #define PREF_SB_APP_REP_URL "browser.safebrowsing.appRepURL"
 #define PREF_SB_MALWARE_ENABLED "browser.safebrowsing.malware.enabled"
 #define PREF_GENERAL_LOCALE "general.useragent.locale"
-#define PREF_DOWNLOAD_BLOCK_TABLE "urlclassifier.downloadBlockTable"
-#define PREF_DOWNLOAD_ALLOW_TABLE "urlclassifier.downloadAllowTable"
+#define PREF_DOWNLOAD_BLOCK_TABLE "urlclassifier.download_block_table"
+#define PREF_DOWNLOAD_ALLOW_TABLE "urlclassifier.download_allow_table"
 
 /**
  * Keep track of pending lookups. Once the ApplicationReputationService creates
@@ -438,17 +438,5 @@ nsresult ApplicationReputationService::QueryReputationInternal(
 
   // Check local lists to see if the URI has already been whitelisted or
   // blacklisted.
-  nsAutoCString tables;
-  nsAutoCString allowlist;
-  Preferences::GetCString(PREF_DOWNLOAD_ALLOW_TABLE, &allowlist);
-  if (!allowlist.IsEmpty()) {
-    tables.Append(allowlist);
-  }
-  nsAutoCString blocklist;
-  Preferences::GetCString(PREF_DOWNLOAD_BLOCK_TABLE, &blocklist);
-  if (!blocklist.IsEmpty()) {
-    tables.Append(",");
-    tables.Append(blocklist);
-  }
-  return mDBService->Lookup(principal, tables, lookup);
+  return mDBService->Lookup(principal, lookup);
 }
