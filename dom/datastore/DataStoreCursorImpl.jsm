@@ -77,13 +77,14 @@ function createDOMError(aWindow, aEvent) {
 
 /* DataStoreCursor object */
 this.DataStoreCursor = function(aWindow, aDataStore, aRevisionId) {
+  debug("DataStoreCursor created");
   this.init(aWindow, aDataStore, aRevisionId);
 }
 
 this.DataStoreCursor.prototype = {
   classDescription: 'DataStoreCursor XPCOM Component',
   classID: Components.ID('{b6d14349-1eab-46b8-8513-584a7328a26b}'),
-  contractID: '@mozilla.org/dom/datastore-cursor;1',
+  contractID: '@mozilla.org/dom/datastore-cursor-impl;1',
   QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsISupports]),
 
   _window: null,

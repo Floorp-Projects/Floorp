@@ -23,7 +23,7 @@ const REVISION_VOID = "void";
 // and yet we don't know if it's too low or too high.
 const MAX_REQUESTS = 25;
 
-Cu.import("resource://gre/modules/DataStoreCursor.jsm");
+Cu.import("resource://gre/modules/DataStoreCursorImpl.jsm");
 Cu.import("resource://gre/modules/DataStoreDB.jsm");
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
@@ -67,7 +67,7 @@ this.DataStore = function(aWindow, aName, aOwner, aReadOnly) {
 this.DataStore.prototype = {
   classDescription: "DataStore XPCOM Component",
   classID: Components.ID("{db5c9602-030f-4bff-a3de-881a8de370f2}"),
-  contractID: "@mozilla.org/dom/datastore;1",
+  contractID: "@mozilla.org/dom/datastore-impl;1",
   QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsISupports,
                                          Components.interfaces.nsIObserver]),
 
@@ -81,6 +81,7 @@ this.DataStore.prototype = {
   _exposedObject: null,
   _cursor: null,
   _shuttingdown: false,
+  _eventTarget: null,
 
   init: function(aWindow, aName, aOwner, aReadOnly) {
     debug("DataStore init");
@@ -114,6 +115,10 @@ this.DataStore.prototype = {
       this._shuttingdown = true;
       this._db.close();
     }
+  },
+
+  setEventTarget: function(aEventTarget) {
+    this._eventTarget = aEventTarget;
   },
 
   newDBPromise: function(aTxnType, aFunction) {
@@ -365,7 +370,7 @@ this.DataStore.prototype = {
 
         let event = new self._window.DataStoreChangeEvent('change',
                                                           aMessage.data.message);
-        self.__DOM_IMPL__.dispatchEvent(event);
+        self._eventTarget.dispatchEvent(event);
       }
     );
   },
@@ -519,19 +524,15 @@ this.DataStore.prototype = {
     );
   },
 
-  set onchange(aCallback) {
-    debug("Set OnChange");
-    this.__DOM_IMPL__.setEventHandler("onchange", aCallback);
-  },
-
-  get onchange() {
-    debug("Get OnChange");
-    return this.__DOM_IMPL__.getEventHandler("onchange");
-  },
-
   sync: function(aRevisionId) {
     debug("Sync");
     this._cursor = new DataStoreCursor(this._window, this, aRevisionId);
-    return this._window.DataStoreCursor._create(this._window, this._cursor);
+
+    let cursorImpl = this._window.DataStoreCursorImpl.
+                                  _create(this._window, this._cursor);
+
+    let exposedCursor = new this._window.DataStoreCursor();
+    exposedCursor.setDataStoreCursorImpl(cursorImpl);
+    return exposedCursor;
   }
 };
