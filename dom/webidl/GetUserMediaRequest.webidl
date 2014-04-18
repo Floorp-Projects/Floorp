@@ -11,6 +11,6 @@ interface GetUserMediaRequest {
   readonly attribute unsigned long long windowID;
   readonly attribute unsigned long long innerWindowID;
   readonly attribute DOMString callID;
-  MediaStreamConstraints getConstraints();
+  MediaStreamConstraintsInternal getConstraints();
   readonly attribute boolean isSecure;
 };
