@@ -760,6 +760,10 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
                     IonSpew(IonSpew_Pools, "[%d]***Offset was still out of range!***", id, codeOffset - magicAlign);
                     IonSpew(IonSpew_Pools, "[%d] Too complicated; bailingp", id);
                     this->fail_bail();
+                    // only free up to the current offset
+                    for (int pi = poolIdx; pi < numPoolKinds; pi++)
+                        delete[] outcastEntries[pi];
+                    delete[] preservedEntries;
                     return;
                 } else {
                     preservedEntries[idx] = true;
@@ -783,12 +787,15 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             }
             poolOffset += p->numEntries * p->immSize;
             delete[] preservedEntries;
+            preservedEntries = nullptr;
         }
         // bind the current pool to the perforation point.
         Pool **tmp = &perforatedNode->data;
         *tmp = static_cast<Pool*>(this->LifoAlloc_.alloc(sizeof(Pool) * numPoolKinds));
         if (tmp == nullptr) {
             this->fail_oom();
+            for (int pi = 0; pi < numPoolKinds; pi++)
+                delete[] outcastEntries[pi];
             return;
         }
         // The above operations may have changed the size of pools!
@@ -804,6 +811,8 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         for (int poolIdx = 0; poolIdx < numPoolKinds; poolIdx++) {
             if (!pools[poolIdx].reset(this->LifoAlloc_)) {
                 this->fail_oom();
+                for (int pi = 0; pi < numPoolKinds; pi++)
+                    delete[] outcastEntries[pi];
                 return;
             }
         }

@@ -554,6 +554,11 @@ CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
                     gc::AllocKind kind = JSFunction::FinalizeKind,
                     NewObjectKind newKindArg = GenericObject);
 
+
+extern bool
+FindBody(JSContext *cx, HandleFunction fun, ConstTwoByteChars chars, size_t length,
+         size_t *bodyStart, size_t *bodyEnd);
+
 } // namespace js
 
 inline js::FunctionExtended *

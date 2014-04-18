@@ -141,6 +141,66 @@ gfxUtils::UnpremultiplyImageSurface(gfxImageSurface *aSourceSurface,
     }
 }
 
+TemporaryRef<DataSourceSurface>
+gfxUtils::UnpremultiplyDataSurface(DataSourceSurface* aSurface)
+{
+    // Only premultiply ARGB32
+    if (aSurface->GetFormat() != SurfaceFormat::B8G8R8A8) {
+        return aSurface;
+    }
+
+    DataSourceSurface::MappedSurface map;
+    if (!aSurface->Map(DataSourceSurface::MapType::READ, &map)) {
+        return nullptr;
+    }
+
+    RefPtr<DataSourceSurface> dest = Factory::CreateDataSourceSurfaceWithStride(aSurface->GetSize(),
+                                                                                aSurface->GetFormat(),
+                                                                                map.mStride);
+
+    DataSourceSurface::MappedSurface destMap;
+    if (!dest->Map(DataSourceSurface::MapType::WRITE, &destMap)) {
+        aSurface->Unmap();
+        return nullptr;
+    }
+
+    uint8_t *src = map.mData;
+    uint8_t *dst = destMap.mData;
+
+    for (int32_t i = 0; i < aSurface->GetSize().height; ++i) {
+        uint8_t *srcRow = src + (i * map.mStride);
+        uint8_t *dstRow = dst + (i * destMap.mStride);
+
+        for (int32_t j = 0; j < aSurface->GetSize().width; ++j) {
+#ifdef IS_LITTLE_ENDIAN
+          uint8_t b = *srcRow++;
+          uint8_t g = *srcRow++;
+          uint8_t r = *srcRow++;
+          uint8_t a = *srcRow++;
+
+          *dstRow++ = UnpremultiplyValue(a, b);
+          *dstRow++ = UnpremultiplyValue(a, g);
+          *dstRow++ = UnpremultiplyValue(a, r);
+          *dstRow++ = a;
+#else
+          uint8_t a = *srcRow++;
+          uint8_t r = *srcRow++;
+          uint8_t g = *srcRow++;
+          uint8_t b = *srcRow++;
+
+          *dstRow++ = a;
+          *dstRow++ = UnpremultiplyValue(a, r);
+          *dstRow++ = UnpremultiplyValue(a, g);
+          *dstRow++ = UnpremultiplyValue(a, b);
+#endif
+        }
+    }
+
+    aSurface->Unmap();
+    dest->Unmap();
+    return dest;
+}
+
 void
 gfxUtils::ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
                             gfxImageSurface *aDestSurface) {
@@ -183,6 +243,24 @@ gfxUtils::ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
             dst[2] = src[0];
             dst[3] = src[3];
         }
+    }
+}
+
+void
+gfxUtils::ConvertBGRAtoRGBA(uint8_t* aData, uint32_t aLength)
+{
+    uint8_t *src = aData;
+    uint8_t *srcEnd = src + aLength;
+
+    uint8_t buffer[4];
+    for (; src != srcEnd; src += 4) {
+        buffer[0] = src[2];
+        buffer[1] = src[1];
+        buffer[2] = src[0];
+
+        src[0] = buffer[0];
+        src[1] = buffer[1];
+        src[2] = buffer[2];
     }
 }
 

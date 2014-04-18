@@ -40,6 +40,7 @@
 #include "nsXULAppAPI.h"
 #include "ScopedNSSTypes.h"
 #include "nsProxyRelease.h"
+#include "mozilla/Base64.h"
 
 #include "nspr.h"
 #include "certdb.h"
@@ -1073,6 +1074,31 @@ nsNSSCertificate::GetTokenName(nsAString& aTokenName)
       if (NS_SUCCEEDED(rv))
         aTokenName = tok;
     }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::GetSha256SubjectPublicKeyInfoDigest(nsACString& aSha256SPKIDigest)
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  aSha256SPKIDigest.Truncate();
+  Digest digest;
+  nsresult rv = digest.DigestBuf(SEC_OID_SHA256, mCert->derPublicKey.data,
+                                 mCert->derPublicKey.len);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  rv = Base64Encode(nsDependentCSubstring(
+                      reinterpret_cast<const char*> (digest.get().data),
+                      digest.get().len),
+                    aSha256SPKIDigest);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
   return NS_OK;
 }

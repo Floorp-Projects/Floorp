@@ -152,7 +152,7 @@ def config_status(topobjdir='.', topsrcdir='.',
 
     if options.diff:
         for path, diff in sorted(summary.file_diffs.items()):
-            print(diff)
+            print('\n'.join(diff))
 
     # Advertise Visual Studio if appropriate.
     if os.name == 'nt' and options.backend == 'RecursiveMake':

@@ -586,13 +586,6 @@ IonBuilder::inlineMathAbs(CallInfo &callInfo)
     MInstruction *ins = MAbs::New(alloc(), callInfo.getArg(0), absType);
     current->add(ins);
 
-    if (IsFloatingPointType(argType) && returnType == MIRType_Int32) {
-        MToInt32 *toInt = MToInt32::New(alloc(), ins);
-        toInt->setCanBeNegativeZero(false);
-        current->add(toInt);
-        ins = toInt;
-    }
-
     current->push(ins);
     return InliningStatus_Inlined;
 }

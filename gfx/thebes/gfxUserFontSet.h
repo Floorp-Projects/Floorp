@@ -242,6 +242,9 @@ public:
     // increment the generation on font load
     void IncrementGeneration();
 
+    // rebuild if local rules have been used
+    void RebuildLocalRules();
+
     class UserFontCache {
     public:
         // Record a loaded user-font in the cache. This requires that the
@@ -418,10 +421,16 @@ protected:
 
     static bool OTSMessage(void *aUserData, const char *format, ...);
 
+    // helper method for performing the actual userfont set rebuild
+    virtual void DoRebuildUserFontSet() = 0;
+
     // font families defined by @font-face rules
     nsRefPtrHashtable<nsStringHashKey, gfxMixedFontFamily> mFontFamilies;
 
     uint64_t        mGeneration;
+
+    // true when local names have been looked up, false otherwise
+    bool mLocalRulesUsed;
 
     static PRLogModuleInfo* GetUserFontsLog();
 

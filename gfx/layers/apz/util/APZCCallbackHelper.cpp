@@ -12,7 +12,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 
 namespace mozilla {
-namespace widget {
+namespace layers {
 
 bool
 APZCCallbackHelper::HasValidPresShellId(nsIDOMWindowUtils* aUtils,

@@ -800,8 +800,31 @@ js::AsmJSModuleToString(JSContext *cx, HandleFunction fun, bool addParenToLambda
     if (!src)
         return nullptr;
 
-    if (!out.append(src->chars(), src->length()))
-        return nullptr;
+    if (module.strict()) {
+        // We need to add "use strict" in the body right after the opening
+        // brace.
+        size_t bodyStart = 0, bodyEnd;
+
+        // No need to test for functions created with the Function ctor as
+        // these doesn't implicitly inherit the "use strict" context. Strict mode is
+        // enabled for functions created with the Function ctor only if they begin with
+        // the "use strict" directive, but these functions won't validate as asm.js
+        // modules.
+
+        ConstTwoByteChars chars(src->chars(), src->length());
+        if (!FindBody(cx, fun, chars, src->length(), &bodyStart, &bodyEnd))
+            return nullptr;
+
+        if (!out.append(chars, bodyStart) ||
+            !out.append("\n\"use strict\";\n") ||
+            !out.append(chars + bodyStart, src->length() - bodyStart))
+        {
+            return nullptr;
+        }
+    } else {
+        if (!out.append(src->chars(), src->length()))
+            return nullptr;
+    }
 
     if (funCtor && !out.append("\n}"))
         return nullptr;
