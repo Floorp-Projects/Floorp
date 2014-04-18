@@ -126,10 +126,10 @@ http://127.0.0.1:8888           privileged
         origins_decl = "var knownOrigins = (function () {  return ['http://mochi.test:8888', 'http://127.0.0.1:80', 'http://127.0.0.1:8888'].reduce"
         self.assertTrue(origins_decl in user_prefs[1][1])
 
-        proxy_check = ("if (isHttp) return 'PROXY mochi.test:8888';",
-                       "if (isHttps) return 'PROXY mochi.test:4443';",
-                       "if (isWebSocket) return 'PROXY mochi.test:4443';",
-                       "if (isWebSocketSSL) return 'PROXY mochi.test:4443';")
+        proxy_check = ("'http': 'PROXY mochi.test:8888'",
+                       "'https': 'PROXY mochi.test:4443'",
+                       "'ws': 'PROXY mochi.test:4443'",
+                       "'wss': 'PROXY mochi.test:4443'")
         self.assertTrue(all(c in user_prefs[1][1] for c in proxy_check))
 
     def verify_user_version(self, version):
