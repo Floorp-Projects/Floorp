@@ -1411,10 +1411,16 @@
                       }
                     }
 
-                    if ((this._overlayPlayButtonHeight + this._controlBarHeight) > videoHeight || this._overlayPlayButtonWidth > videoWidth)
+                    if ((this._overlayPlayButtonHeight + this._controlBarHeight) > videoHeight ||
+                        this._overlayPlayButtonWidth > videoWidth) {
                         this.clickToPlay.hidden = true;
-                    else if (this.clickToPlay.hidden && !this.video.played.length)
+                    } else if (this.clickToPlay.hidden &&
+                               !this.video.played.length &&
+                               this.video.paused) {
+                        // Check this.video.paused to handle when a video is
+                        // playing but hasn't processed any frames yet
                         this.clickToPlay.hidden = false;
+                    }
 
                     let size = "normal";
                     if (videoHeight < minHeightForControlBar)
