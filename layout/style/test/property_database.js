@@ -3684,7 +3684,7 @@ var gCSSProperties = {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none", "context-value" ],
-    other_values: [ "5px,3px,2px", "5px 3px 2px", "  5px ,3px  , 2px ", "1px", "5%", "3em" ],
+    other_values: [ "5px,3px,2px", "5px 3px 2px", "  5px ,3px\t, 2px ", "1px", "5%", "3em" ],
     invalid_values: [ "-5px,3px,2px", "5px,3px,-2px" ]
   },
   "stroke-dashoffset": {
@@ -5334,15 +5334,15 @@ if (SpecialPowers.getBoolPref("layout.css.sticky.enabled")) {
 }
 
 if (SpecialPowers.getBoolPref("layout.css.mix-blend-mode.enabled")) {
-        gCSSProperties["mix-blend-mode"] = {
-        domProp: "mixBlendMode",
-        inherited: false,
-        type: CSS_TYPE_LONGHAND,
-        initial_values: [ "normal" ],
-        other_values: ["multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
-            "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"],
-        invalid_values: []
-    };
+  gCSSProperties["mix-blend-mode"] = {
+    domProp: "mixBlendMode",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "normal" ],
+    other_values: ["multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
+        "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"],
+    invalid_values: []
+  };
 }
 
 if (SpecialPowers.getBoolPref("layout.css.background-blend-mode.enabled")) {
