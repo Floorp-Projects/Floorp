@@ -304,9 +304,13 @@ class Permissions(object):
             proxy.update(user_proxy)
 
         # TODO: this should live in a template!
-        # TODO: So changing the 5th line of the regex below from (\\\\\\\\d+)
-        # to (\\\\d+) makes this code work. Not sure why there would be this
-        # difference between automation.py.in and this file.
+        # If you must escape things in this string with backslashes, be aware
+        # of the multiple layers of escaping at work:
+        #
+        # - Python will unescape backslashes;
+        # - Writing out the prefs will escape things via JSON serialization;
+        # - The prefs file reader will unescape backslashes;
+        # - The JS engine parser will unescape backslashes.
         pacURL = """data:text/plain,
 var knownOrigins = (function () {
   return [%(origins)s].reduce(function(t, h) { t[h] = true; return t; }, {})
