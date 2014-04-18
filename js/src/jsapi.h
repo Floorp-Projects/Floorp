@@ -1980,38 +1980,6 @@ JS_AddExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 extern JS_PUBLIC_API(void)
 JS_RemoveExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 
-/*
- * JS_CallTracer API and related macros for implementors of JSTraceOp, to
- * enumerate all references to traceable things reachable via a property or
- * other strong ref identified for debugging purposes by name or index or
- * a naming callback.
- *
- * See the JSTraceOp typedef.
- */
-
-/*
- * Use the following macros to check if a particular jsval is a traceable
- * thing and to extract the thing and its kind to pass to JS_CallTracer.
- */
-static MOZ_ALWAYS_INLINE bool
-JSVAL_IS_TRACEABLE(jsval v)
-{
-    return JSVAL_IS_TRACEABLE_IMPL(JSVAL_TO_IMPL(v));
-}
-
-static MOZ_ALWAYS_INLINE void *
-JSVAL_TO_TRACEABLE(jsval v)
-{
-    return JSVAL_TO_GCTHING(v);
-}
-
-static MOZ_ALWAYS_INLINE JSGCTraceKind
-JSVAL_TRACE_KIND(jsval v)
-{
-    JS_ASSERT(JSVAL_IS_GCTHING(v));
-    return (JSGCTraceKind) JSVAL_TRACE_KIND_IMPL(JSVAL_TO_IMPL(v));
-}
-
 #ifdef JS_DEBUG
 
 /*

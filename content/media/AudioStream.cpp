@@ -502,6 +502,7 @@ AudioStream::CheckForStart()
 NS_IMETHODIMP
 AudioInitTask::Run()
 {
+  MOZ_ASSERT(mThread);
   if (NS_IsMainThread()) {
     mThread->Shutdown(); // can't Shutdown from the thread itself, darn
     mThread = nullptr;

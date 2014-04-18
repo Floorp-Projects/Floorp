@@ -5,6 +5,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/Exceptions.h"
 #include "nsAString.h"
 #include "nsContentUtils.h"
 #include "nsStringBuffer.h"
@@ -48,6 +50,15 @@ ISupportsToJSValue(JSContext* aCx,
 }
 
 } // namespace tojsvalue_detail
+
+bool
+ToJSValue(JSContext* aCx,
+          nsresult aArgument,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  nsRefPtr<Exception> exception = CreateException(aCx, aArgument);
+  return ToJSValue(aCx, exception, aValue);
+}
 
 } // namespace dom
 } // namespace mozilla

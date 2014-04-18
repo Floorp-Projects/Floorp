@@ -1600,7 +1600,11 @@ PeerConnectionImpl::Close()
   CSFLogDebug(logTag, "%s: for %s", __FUNCTION__, mHandle.c_str());
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  return CloseInt();
+  nsresult res = CloseInt();
+
+  SetSignalingState_m(PCImplSignalingState::SignalingClosed);
+
+  return res;
 }
 
 

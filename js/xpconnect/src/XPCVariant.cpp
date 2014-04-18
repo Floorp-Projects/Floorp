@@ -69,7 +69,7 @@ XPCTraceableVariant::~XPCTraceableVariant()
 
 void XPCTraceableVariant::TraceJS(JSTracer* trc)
 {
-    MOZ_ASSERT(JSVAL_IS_TRACEABLE(mJSVal));
+    MOZ_ASSERT(mJSVal.isMarkable());
     JS_SET_TRACING_DETAILS(trc, GetTraceName, this, 0);
     JS_CallHeapValueTracer(trc, &mJSVal, "XPCTraceableVariant::mJSVal");
 }
@@ -115,7 +115,7 @@ XPCVariant::newVariant(JSContext* cx, jsval aJSVal)
 {
     nsRefPtr<XPCVariant> variant;
 
-    if (!JSVAL_IS_TRACEABLE(aJSVal))
+    if (!aJSVal.isMarkable())
         variant = new XPCVariant(cx, aJSVal);
     else
         variant = new XPCTraceableVariant(cx, aJSVal);

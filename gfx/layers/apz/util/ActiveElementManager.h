@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __mozilla_widget_ActiveElementManager_h__
-#define __mozilla_widget_ActiveElementManager_h__
+#ifndef mozilla_layers_ActiveElementManager_h
+#define mozilla_layers_ActiveElementManager_h
 
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
@@ -15,7 +15,7 @@ class nsIDOMElement;
 class CancelableTask;
 
 namespace mozilla {
-namespace widget {
+namespace layers {
 
 /**
  * Manages setting and clearing the ':active' CSS pseudostate in the presence
@@ -82,4 +82,4 @@ private:
 }
 }
 
-#endif /*__mozilla_widget_ActiveElementManager_h__ */
+#endif /* mozilla_layers_ActiveElementManager_h */

@@ -49,7 +49,7 @@ public:
   uint16_t mHttpResponseCode;
   nsCString mHttpResponseContentType;
 
-  const uint8_t* mResultData; // not owned, refers to mLoader
+  const uint8_t* mResultData; // allocated in loader, but owned by listener
   uint32_t mResultLen;
   
   mozilla::Mutex mLock;

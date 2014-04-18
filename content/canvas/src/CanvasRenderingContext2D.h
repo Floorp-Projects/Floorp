@@ -457,16 +457,18 @@ public:
   NS_IMETHOD SetDimensions(int32_t width, int32_t height) MOZ_OVERRIDE;
   NS_IMETHOD InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, int32_t width, int32_t height) MOZ_OVERRIDE;
 
-  NS_IMETHOD Render(gfxContext *ctx,
-                    GraphicsFilter aFilter,
-                    uint32_t aFlags = RenderFlagPremultAlpha) MOZ_OVERRIDE;
   NS_IMETHOD GetInputStream(const char* aMimeType,
                             const char16_t* aEncoderOptions,
                             nsIInputStream **aStream) MOZ_OVERRIDE;
-  NS_IMETHOD GetThebesSurface(gfxASurface **surface) MOZ_OVERRIDE;
 
-  mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot() MOZ_OVERRIDE
-  { EnsureTarget(); return mTarget->Snapshot(); }
+  mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr) MOZ_OVERRIDE
+  {
+    EnsureTarget();
+    if (aPremultAlpha) {
+      *aPremultAlpha = true;
+    }
+    return mTarget->Snapshot();
+  }
 
   NS_IMETHOD SetIsOpaque(bool isOpaque) MOZ_OVERRIDE;
   bool GetIsOpaque() MOZ_OVERRIDE { return mOpaque; }

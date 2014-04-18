@@ -152,7 +152,7 @@ class ContinuousSpace {
     }
 
     uint32_t currentId() {
-        JS_ASSERT(next_ > 0);
+        MOZ_ASSERT(next_ > 0);
         return next_ - 1;
     }
 
@@ -160,11 +160,13 @@ class ContinuousSpace {
         return data()[currentId()];
     }
 
-    bool ensureSpaceBeforeAdd() {
-        if (next_ < capacity_)
+    bool ensureSpaceBeforeAdd(uint32_t count = 1) {
+        if (next_ + count <= capacity_)
             return true;
 
         uint32_t nCapacity = capacity_ * 2;
+        if (next_ + count > nCapacity)
+            nCapacity = next_ + count;
         T *entries = (T *) js_realloc(data_, nCapacity * sizeof(T));
 
         if (!entries)
@@ -187,11 +189,12 @@ class ContinuousSpace {
     }
 
     T &pushUninitialized() {
+        MOZ_ASSERT(next_ < capacity_);
         return data()[next_++];
     }
 
     void pop() {
-        JS_ASSERT(next_ > 0);
+        MOZ_ASSERT(next_ > 0);
         next_--;
     }
 
@@ -227,6 +230,7 @@ class TraceLogger
       YarrCompile,
       YarrInterpret,
       YarrJIT,
+      VM,
 
       // Specific passes during ion compilation:
       SplitCriticalEdges,
@@ -258,40 +262,102 @@ class TraceLogger
     // The layout of the tree in memory and in the log file. Readable by JS
     // using TypedArrays.
     struct TreeEntry {
-        uint64_t start;
-        uint64_t stop;
+        uint64_t start_;
+        uint64_t stop_;
         union {
             struct {
-                uint32_t textId: 31;
-                uint32_t hasChildren: 1;
+                uint32_t textId_: 31;
+                uint32_t hasChildren_: 1;
             } s;
-            uint32_t value;
+            uint32_t value_;
         } u;
-        uint32_t nextId;
+        uint32_t nextId_;
 
         TreeEntry(uint64_t start, uint64_t stop, uint32_t textId, bool hasChildren,
                   uint32_t nextId)
         {
-            this->start = start;
-            this->stop = stop;
-            this->u.s.textId = textId;
-            this->u.s.hasChildren = hasChildren;
-            this->nextId = nextId;
+            start_ = start;
+            stop_ = stop;
+            u.s.textId_ = textId;
+            u.s.hasChildren_ = hasChildren;
+            nextId_ = nextId;
         }
         TreeEntry()
         { }
+        uint64_t start() {
+            return start_;
+        }
+        uint64_t stop() {
+            return stop_;
+        }
+        uint32_t textId() {
+            return u.s.textId_;
+        }
+        bool hasChildren() {
+            return u.s.hasChildren_;
+        }
+        uint32_t nextId() {
+            return nextId_;
+        }
+        void setStart(uint64_t start) {
+            start_ = start;
+        }
+        void setStop(uint64_t stop) {
+            stop_ = stop;
+        }
+        void setTextId(uint32_t textId) {
+            MOZ_ASSERT(textId < uint32_t(1<<31) );
+            u.s.textId_ = textId;
+        }
+        void setHasChildren(bool hasChildren) {
+            u.s.hasChildren_ = hasChildren;
+        }
+        void setNextId(uint32_t nextId) {
+            nextId_ = nextId;
+        }
     };
 
     // Helper structure for keeping track of the current entries in
     // the tree. Pushed by `start(id)`, popped by `stop(id)`. The active flag
     // is used to know if a subtree doesn't need to get logged.
     struct StackEntry {
-        uint32_t treeId;
-        uint32_t lastChildId;
-        bool active;
+        uint32_t treeId_;
+        uint32_t lastChildId_;
+        struct {
+            uint32_t textId_: 31;
+            uint32_t active_: 1;
+        } s;
         StackEntry(uint32_t treeId, uint32_t lastChildId, bool active = true)
-          : treeId(treeId), lastChildId(lastChildId), active(active)
-        { }
+          : treeId_(treeId), lastChildId_(lastChildId)
+        {
+            s.textId_ = 0;
+            s.active_ = active;
+        }
+        uint32_t treeId() {
+            return treeId_;
+        }
+        uint32_t lastChildId() {
+            return lastChildId_;
+        }
+        uint32_t textId() {
+            return s.textId_;
+        }
+        bool active() {
+            return s.active_;
+        }
+        void setTreeId(uint32_t treeId) {
+            treeId_ = treeId;
+        }
+        void setLastChildId(uint32_t lastChildId) {
+            lastChildId_ = lastChildId;
+        }
+        void setTextId(uint32_t textId) {
+            MOZ_ASSERT(textId < uint32_t(1<<31) );
+            s.textId_ = textId;
+        }
+        void setActive(bool active) {
+            s.active_ = active;
+        }
     };
 
     // The layout of the event log in memory and in the log file.
@@ -309,6 +375,7 @@ class TraceLogger
     FILE *eventFile;
 
     bool enabled;
+    uint32_t enabledTimes;
     bool failed;
     uint32_t nextTextId;
 
@@ -355,6 +422,9 @@ class TraceLogger
 
     bool init(uint32_t loggerId);
 
+    bool enable();
+    bool disable();
+
     // The createTextId functions map a unique input to a logger ID.
     // This ID can be used to log something. Calls to these functions should be
     // limited if possible, because of the overhead.
@@ -396,6 +466,8 @@ class TraceLogging
     bool initialized;
     bool enabled;
     bool enabledTextIds[TraceLogger::LAST];
+    bool mainThreadEnabled;
+    bool offThreadEnabled;
 #ifdef JS_THREADSAFE
     ThreadLoggerHashMap threadLoggers;
 #endif // JS_THREADSAFE
@@ -447,6 +519,21 @@ inline TraceLogger *TraceLoggerForCurrentThread() {
 };
 #endif
 
+inline bool TraceLoggerEnable(TraceLogger *logger) {
+#ifdef JS_TRACE_LOGGING
+    if (logger)
+        return logger->enable();
+#endif
+    return false;
+}
+inline bool TraceLoggerDisable(TraceLogger *logger) {
+#ifdef JS_TRACE_LOGGING
+    if (logger)
+        return logger->disable();
+#endif
+    return false;
+}
+
 inline uint32_t TraceLogCreateTextId(TraceLogger *logger, JSScript *script) {
 #ifdef JS_TRACE_LOGGING
     if (logger)
@@ -470,6 +557,13 @@ inline uint32_t TraceLogCreateTextId(TraceLogger *logger, const char *text) {
 #endif
     return TraceLogger::TL_Error;
 }
+#ifdef JS_TRACE_LOGGING
+bool TraceLogTextIdEnabled(uint32_t textId);
+#else
+inline bool TraceLogTextIdEnabled(uint32_t textId) {
+    return false;
+}
+#endif
 inline void TraceLogTimestamp(TraceLogger *logger, uint32_t textId) {
 #ifdef JS_TRACE_LOGGING
     if (logger)

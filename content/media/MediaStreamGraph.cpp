@@ -1259,8 +1259,8 @@ MediaStreamGraphImpl::RunThread()
       UpdateStreamOrder();
     }
 
+    TrackRate sampleRate;
     // Find the sampling rate that we need to use for non-realtime graphs.
-    TrackRate sampleRate = IdealAudioRate();
     if (!mRealtime) {
       for (uint32_t i = 0; i < mStreams.Length(); ++i) {
         AudioNodeStream* n = mStreams[i]->AsAudioNodeStream();
@@ -1270,6 +1270,8 @@ MediaStreamGraphImpl::RunThread()
           break;
         }
       }
+    } else {
+      sampleRate = IdealAudioRate();
     }
 
     GraphTime endBlockingDecisions =
