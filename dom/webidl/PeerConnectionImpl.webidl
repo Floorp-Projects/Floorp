@@ -72,9 +72,6 @@ interface PeerConnectionImpl  {
   readonly attribute PCImplSignalingState signalingState;
   readonly attribute PCImplSipccState sipccState;
 
-  attribute DOMString peerIdentity;
-  readonly attribute boolean privacyRequested;
-
   /* Data channels */
   [Throws]
   DataChannel createDataChannel(DOMString label, DOMString protocol,
