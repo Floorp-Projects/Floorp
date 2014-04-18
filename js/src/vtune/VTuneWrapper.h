@@ -12,7 +12,7 @@
 inline bool
 IsVTuneProfilingActive()
 {
-    return (iJIT_IsProfilingActive() == iJIT_SAMPLING_ON);
+    return iJIT_IsProfilingActive() == iJIT_SAMPLING_ON;
 }
 
 #endif // vtunewrapper_h

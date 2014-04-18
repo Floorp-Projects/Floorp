@@ -363,7 +363,7 @@ InstMovWT::extractImm(Imm16 *imm)
 bool
 InstMovWT::checkImm(Imm16 imm)
 {
-    return (imm.decode() == Imm16(*this).decode());
+    return imm.decode() == Imm16(*this).decode();
 }
 
 void
@@ -374,7 +374,7 @@ InstMovWT::extractDest(Register *dest)
 bool
 InstMovWT::checkDest(Register dest)
 {
-    return (dest == toRD(*this));
+    return dest == toRD(*this);
 }
 
 bool

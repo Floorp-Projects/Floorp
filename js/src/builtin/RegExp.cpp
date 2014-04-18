@@ -665,7 +665,7 @@ regexp_test_impl(JSContext *cx, CallArgs args)
     MatchConduit conduit(&match);
     RegExpRunStatus status = ExecuteRegExp(cx, args, conduit);
     args.rval().setBoolean(status == RegExpRunStatus_Success);
-    return (status != RegExpRunStatus_Error);
+    return status != RegExpRunStatus_Error;
 }
 
 /* Separate interface for use by IonMonkey. */
@@ -676,7 +676,7 @@ js::regexp_test_raw(JSContext *cx, HandleObject regexp, HandleString input, bool
     MatchConduit conduit(&match);
     RegExpRunStatus status = ExecuteRegExp(cx, regexp, input, conduit, UpdateRegExpStatics);
     *result = (status == RegExpRunStatus_Success);
-    return (status != RegExpRunStatus_Error);
+    return status != RegExpRunStatus_Error;
 }
 
 bool
@@ -701,5 +701,5 @@ js::regexp_test_no_statics(JSContext *cx, unsigned argc, Value *vp)
     MatchConduit conduit(&match);
     RegExpRunStatus status = ExecuteRegExp(cx, regexp, string, conduit, DontUpdateRegExpStatics);
     args.rval().setBoolean(status == RegExpRunStatus_Success);
-    return (status != RegExpRunStatus_Error);
+    return status != RegExpRunStatus_Error;
 }
