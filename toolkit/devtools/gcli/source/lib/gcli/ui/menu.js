@@ -60,7 +60,7 @@ function Menu(options) {
     if (menuCss != null) {
       util.importCss(menuCss, this.document, 'gcli-menu');
     }
-  }.bind(this));
+  }.bind(this), console.error);
 
   this.templateOptions = { blankNullUndefined: true, stack: 'menu.html' };
   if (menuHtmlPromise == null) {
@@ -68,7 +68,7 @@ function Menu(options) {
   }
   menuHtmlPromise.then(function(menuHtml) {
     this.template = util.toDom(this.document, menuHtml);
-  }.bind(this));
+  }.bind(this), console.error);
 
   // Contains the items that should be displayed
   this.items = [];
