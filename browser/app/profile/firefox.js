@@ -829,13 +829,8 @@ pref("urlclassifier.gethashnoise", 4);
 // the database.
 pref("urlclassifier.max-complete-age", 2700);
 // Tables for application reputation.
-pref("urlclassifier.downloadBlockTable", "goog-badbinurl-shavar");
-// Only download the whitelist on Windows, since the whitelist is
-// only useful for suppressing remote lookups for signed binaries which we can
-// only verify on Windows (Bug 974579).
-#ifdef XP_WIN
-pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-digest256");
-#endif
+pref("urlclassifier.download_block_table", "");
+pref("urlclassifier.download_allow_table", "");
 #endif
 
 pref("browser.geolocation.warning.infoURL", "https://www.mozilla.org/%LOCALE%/firefox/geolocation/");
