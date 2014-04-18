@@ -2981,6 +2981,16 @@ nsComputedDOMStyle::GetCSSShadowArray(nsCSSShadowArray* aArray,
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetBoxDecorationBreak()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StyleBorder()->mBoxDecorationBreak,
+                                   nsCSSProps::kBoxDecorationBreakKTable));
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetBoxShadow()
 {
   return GetCSSShadowArray(StyleBorder()->mBoxShadow,
