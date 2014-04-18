@@ -388,6 +388,7 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
     mBorderImageRepeatH(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH),
     mBorderImageRepeatV(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH),
     mFloatEdge(NS_STYLE_FLOAT_EDGE_CONTENT),
+    mBoxDecorationBreak(NS_STYLE_BOX_DECORATION_BREAK_SLICE),
     mComputedBorder(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStyleBorder);
@@ -439,6 +440,7 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
     mBorderImageRepeatH(aSrc.mBorderImageRepeatH),
     mBorderImageRepeatV(aSrc.mBorderImageRepeatV),
     mFloatEdge(aSrc.mFloatEdge),
+    mBoxDecorationBreak(aSrc.mBoxDecorationBreak),
     mComputedBorder(aSrc.mComputedBorder),
     mBorder(aSrc.mBorder),
     mTwipsPerPixel(aSrc.mTwipsPerPixel)
@@ -528,7 +530,8 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
       GetComputedBorder() != aOther.GetComputedBorder() ||
       mFloatEdge != aOther.mFloatEdge ||
       mBorderImageOutset != aOther.mBorderImageOutset ||
-      (shadowDifference & nsChangeHint_NeedReflow))
+      (shadowDifference & nsChangeHint_NeedReflow) ||
+      mBoxDecorationBreak != aOther.mBoxDecorationBreak)
     return NS_STYLE_HINT_REFLOW;
 
   NS_FOR_CSS_SIDES(ix) {
