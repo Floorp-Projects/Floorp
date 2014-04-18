@@ -11,7 +11,7 @@
  */
 
 // Important! Do not ever add members that might need tracing (e.g. object)
-// to MediaTrackConstraintSet or any dictionary marked XxxInternal here
+// to MediaTrackConstraintSet
 
 enum VideoFacingModeEnum {
     "user",
@@ -20,26 +20,26 @@ enum VideoFacingModeEnum {
     "right"
 };
 
+enum SupportedVideoConstraints {
+    "facingMode"
+};
+
+enum SupportedAudioConstraints {
+    "dummy"
+};
+
 dictionary MediaTrackConstraintSet {
-    VideoFacingModeEnum facingMode;
+    ConstrainVideoFacingMode facingMode;
 };
 
-// MediaTrackConstraint = single-property-subset of MediaTrackConstraintSet
-// Implemented as full set. Test Object.keys(pair).length == 1
-
-// typedef MediaTrackConstraintSet MediaTrackConstraint; // TODO: Bug 913053
-
-dictionary MediaTrackConstraints {
-    object mandatory; // so we can see unknown + unsupported constraints
-    sequence<MediaTrackConstraintSet> _optional; // a.k.a. MediaTrackConstraint
+dictionary MediaTrackConstraints : MediaTrackConstraintSet {
+    sequence<DOMString> require;
+    sequence<MediaTrackConstraintSet> advanced;
 };
 
-// Internal dictionary holds result of processing raw MediaTrackConstraints above
-
-dictionary MediaTrackConstraintsInternal {
-    MediaTrackConstraintSet mandatory; // holds only supported constraints
-    sequence<MediaTrackConstraintSet> _optional; // a.k.a. MediaTrackConstraint
-};
+typedef VideoFacingModeEnum ConstrainVideoFacingMode;
+// TODO: Bug 767924 sequences in unions
+//typedef (VideoFacingModeEnum or sequence<VideoFacingModeEnum>) ConstrainVideoFacingMode;
 
 interface MediaStreamTrack {
     readonly    attribute DOMString             kind;
