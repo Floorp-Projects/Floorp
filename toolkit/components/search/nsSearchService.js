@@ -1810,6 +1810,15 @@ Engine.prototype = {
                  this._isDefault) {
         var value;
         let condition = param.getAttribute("condition");
+
+        // MozParams must have a condition to be valid
+        if (!condition) {
+          let engineLoc = this._location;
+          let paramName = param.getAttribute("name");
+          LOG("_parseURL: MozParam (" + paramName + ") without a condition attribute found parsing engine: " + engineLoc);
+          continue;
+        }
+
         switch (condition) {
           case "purpose":
             url.addParam(param.getAttribute("name"),

@@ -96,6 +96,28 @@ function Tester(aTests, aDumper, aCallback) {
   SIMPLETEST_OVERRIDES.forEach(m => {
     this.SimpleTestOriginal[m] = this.SimpleTest[m];
   });
+
+  this._uncaughtErrorObserver = function({message, date, fileName, stack, lineNumber}) {
+    let text = "Once bug 991040 has landed, THIS ERROR WILL CAUSE A TEST FAILURE.\n" + message;
+    let error = text;
+    if (fileName || lineNumber) {
+      error = {
+        fileName: fileName,
+        lineNumber: lineNumber,
+        message: text,
+        toString: function() {
+          return text;
+        }
+      };
+    }
+    this.currentTest.addResult(
+      new testResult(
+	/*success*/ true,
+        /*name*/"A promise chain failed to handle a rejection",
+        /*error*/error,
+        /*known*/true,
+        /*stack*/stack));
+    }.bind(this);
 }
 Tester.prototype = {
   EventUtils: {},
@@ -151,6 +173,9 @@ Tester.prototype = {
       "webConsoleCommandController",
     ];
 
+    this.Promise.Debugging.clearUncaughtErrorObservers();
+    this.Promise.Debugging.addUncaughtErrorObserver(this._uncaughtErrorObserver);
+
     if (this.tests.length)
       this.nextTest();
     else
@@ -203,6 +228,8 @@ Tester.prototype = {
   },
 
   finish: function Tester_finish(aSkipSummary) {
+    this.Promise.Debugging.flushUncaughtErrors();
+
     var passCount = this.tests.reduce(function(a, f) a + f.passCount, 0);
     var failCount = this.tests.reduce(function(a, f) a + f.failCount, 0);
     var todoCount = this.tests.reduce(function(a, f) a + f.todoCount, 0);
@@ -216,8 +243,9 @@ Tester.prototype = {
       Services.console.unregisterListener(this);
       Services.obs.removeObserver(this, "chrome-document-global-created");
       Services.obs.removeObserver(this, "content-document-global-created");
-  
+      this.Promise.Debugging.clearUncaughtErrorObservers();
       this.dumper.dump("\nINFO TEST-START | Shutdown\n");
+
       if (this.tests.length) {
         this.dumper.dump("Browser Chrome Test Summary\n");
   
@@ -228,7 +256,6 @@ Tester.prototype = {
         this.dumper.dump("TEST-UNEXPECTED-FAIL | (browser-test.js) | " +
                          "No tests to run. Did you pass an invalid --test-path?\n");
       }
-  
       this.dumper.dump("\n*** End BrowserChrome Test Results ***\n");
   
       this.dumper.done();
@@ -301,6 +328,8 @@ Tester.prototype = {
           this.currentTest.addResult(new testResult(false, "Cleanup function threw an exception", ex, false));
         }
       };
+
+      this.Promise.Debugging.flushUncaughtErrors();
 
       let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
@@ -566,7 +595,7 @@ Tester.prototype = {
     try {
       this._scriptLoader.loadSubScript(this.currentTest.path,
                                        this.currentTest.scope);
-
+      this.Promise.Debugging.flushUncaughtErrors();
       // Run the test
       this.lastStartTime = Date.now();
       if (this.currentTest.scope.__tasks) {
@@ -587,6 +616,7 @@ Tester.prototype = {
               let result = new testResult(isExpected, name, ex, false, stack);
               currentTest.addResult(result);
             }
+            this.Promise.Debugging.flushUncaughtErrors();
             this.SimpleTest.info("Leaving test " + task.name);
           }
           this.finish();

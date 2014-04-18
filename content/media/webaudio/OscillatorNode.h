@@ -117,6 +117,14 @@ public:
 
   virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
 
+  virtual const char* NodeType() const
+  {
+    return "OscillatorNode";
+  }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
 private:
   static void SendFrequencyToStream(AudioNode* aNode);
   static void SendDetuneToStream(AudioNode* aNode);

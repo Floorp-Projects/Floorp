@@ -21,8 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={821589}
 
 "use strict";
 
-var launchableValue = undefined;
-
 var index = -1;
 
 function debug(aMsg) {
@@ -47,7 +45,6 @@ function start() {
 }
 
 function finish() {
-  SpecialPowers.setAllAppsLaunchable(launchableValue);
   SpecialPowers.removePermission("webapps-manage", document);
   SimpleTest.finish();
 }
@@ -73,7 +70,7 @@ var steps = [
   function() {
     info("== SETUP ==");
     // Set up
-    launchableValue = SpecialPowers.setAllAppsLaunchable(true);
+    SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.addPermission("webapps-manage", true, document);
     SpecialPowers.addPermission("browser", true, document);
     SpecialPowers.addPermission("embed-apps", true, document);

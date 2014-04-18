@@ -26,6 +26,16 @@ public:
 
   virtual uint16_t NumberOfInputs() const MOZ_OVERRIDE { return mInputCount; }
 
+  virtual const char* NodeType() const
+  {
+    return "ChannelMergerNode";
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 private:
   const uint16_t mInputCount;
 };

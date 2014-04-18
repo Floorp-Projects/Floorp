@@ -27,7 +27,6 @@ const Ci = SpecialPowers.Ci;
 const Cc = SpecialPowers.Cc;
 const Cu = SpecialPowers.Cu;
 
-var launchableValue;
 var index = -1;
 var gDebug = false;
 var gApp = null;
@@ -95,7 +94,7 @@ var steps = [
       var url = SimpleTest.getTestFileURL("chromeAddCert.js");
       var script = SpecialPowers.loadChromeScript(url);
       script.addMessageListener("addCertCompleted", function() {
-        launchableValue = SpecialPowers.setAllAppsLaunchable(true);
+        SpecialPowers.setAllAppsLaunchable(true);
         SpecialPowers.addPermission("webapps-manage", true, document);
         info("Test CA Certificate Selected");
         PackagedTestHelper.next();

@@ -30,6 +30,14 @@ public:
     return mGain;
   }
 
+  virtual const char* NodeType() const
+  {
+    return "GainNode";
+  }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
 private:
   static void SendGainToStream(AudioNode* aNode);
 

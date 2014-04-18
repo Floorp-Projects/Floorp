@@ -39,6 +39,23 @@ public:
   }
   void SetOversample(OverSampleType aType);
 
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    // Possibly track in the future:
+    // - mCurve
+    return AudioNode::SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  virtual const char* NodeType() const
+  {
+    return "WaveShaperNode";
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 private:
   void ClearCurve();
 

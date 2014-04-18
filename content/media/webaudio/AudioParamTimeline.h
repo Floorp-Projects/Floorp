@@ -52,6 +52,17 @@ public:
   template<class TimeType>
   float GetValueAtTime(TimeType aTime, size_t aCounter = 0);
 
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return mStream ? mStream->SizeOfIncludingThis(aMallocSizeOf) : 0;
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+
 private:
   float AudioNodeInputValue(size_t aCounter) const;
 

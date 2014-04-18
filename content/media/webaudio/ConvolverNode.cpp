@@ -154,6 +154,25 @@ public:
     mReverb->process(&input, aOutput, WEBAUDIO_BLOCK_SIZE);
   }
 
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
+    if (mBuffer && !mBuffer->IsShared()) {
+      amount += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
+    }
+
+    if (mReverb) {
+      amount += mReverb->sizeOfIncludingThis(aMallocSizeOf);
+    }
+
+    return amount;
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 private:
   nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   nsAutoPtr<WebCore::Reverb> mReverb;
@@ -173,6 +192,24 @@ ConvolverNode::ConvolverNode(AudioContext* aContext)
 {
   ConvolverNodeEngine* engine = new ConvolverNodeEngine(this, mNormalize);
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
+}
+
+size_t
+ConvolverNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
+  if (mBuffer) {
+    // NB: mBuffer might be shared with the associated engine, by convention
+    //     the AudioNode will report.
+    amount += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  return amount;
+}
+
+size_t
+ConvolverNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
 JSObject*

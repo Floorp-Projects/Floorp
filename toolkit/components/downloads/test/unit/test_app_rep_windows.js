@@ -205,6 +205,7 @@ add_task(function test_setup()
   });
 
   gHttpServer.registerPathHandler("/download", function(request, response) {
+    do_print("Querying remote server for verdict");
     response.setHeader("Content-Type", "application/octet-stream", false);
     let buf = NetUtil.readInputStreamToString(
       request.bodyInputStream,
@@ -215,10 +216,10 @@ add_task(function test_setup()
     let blob = "this is not a serialized protocol buffer";
     // We can't actually parse the protocol buffer here, so just switch on the
     // length instead of inspecting the contents.
-    if (buf.length == 35) {
+    if (buf.length == 45) {
       // evil.com
       blob = createVerdict(true);
-    } else if (buf.length == 38) {
+    } else if (buf.length == 48) {
       // mozilla.com
       blob = createVerdict(false);
     }
@@ -294,13 +295,17 @@ function promiseQueryReputation(query, expectedShouldBlock) {
   return deferred.promise;
 }
 
+add_task(function()
+{
+  // Wait for Safebrowsing local list updates to complete.
+  yield waitForUpdates();
+});
+
 add_task(function test_signature_whitelists()
 {
   // We should never get to the remote server.
   Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
                              "http://localhost:4444/throw");
-  // Wait for Safebrowsing local list updates to complete.
-  yield waitForUpdates();
 
   // Use BackgroundFileSaver to extract the signature on Windows.
   let destFile = getTempFile(TEST_FILE_NAME_1);
@@ -322,6 +327,38 @@ add_task(function test_signature_whitelists()
   // whose certificate information is on the allowlist.
   yield promiseQueryReputation({sourceURI: createURI("http://evil.com"),
                                 signatureInfo: saver.signatureInfo,
+                                fileSize: 12}, false);
+});
+
+add_task(function test_blocked_binary()
+{
+  // We should reach the remote server for a verdict.
+  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
+                             "http://localhost:4444/download");
+  // evil.com should return a malware verdict from the remote server.
+  yield promiseQueryReputation({sourceURI: createURI("http://evil.com"),
+                                suggestedFileName: "noop.bat",
+                                fileSize: 12}, true);
+});
+
+add_task(function test_non_binary()
+{
+  // We should not reach the remote server for a verdict for non-binary files.
+  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
+                             "http://localhost:4444/throw");
+  yield promiseQueryReputation({sourceURI: createURI("http://evil.com"),
+                                suggestedFileName: "noop.txt",
+                                fileSize: 12}, false);
+});
+
+add_task(function test_good_binary()
+{
+  // We should reach the remote server for a verdict.
+  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
+                             "http://localhost:4444/download");
+  // mozilla.com should return a not-guilty verdict from the remote server.
+  yield promiseQueryReputation({sourceURI: createURI("http://mozilla.com"),
+                                suggestedFileName: "noop.bat",
                                 fileSize: 12}, false);
 });
 

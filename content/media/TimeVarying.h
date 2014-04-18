@@ -215,6 +215,11 @@ public:
     }
   }
 
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return mChanges.SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 private:
   struct Entry {
     Entry(Time aTime, const T& aValue) : mTime(aTime), mValue(aValue) {}
