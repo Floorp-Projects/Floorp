@@ -61,7 +61,7 @@ function runTest()
   // Ensure that the preallocated process initially gets BACKGROUND priority.
   // That's it.
   expectProcessCreated().then(function(childID) {
-    return expectPriorityChange(childID, 'PREALLOC');
+    return expectPriorityChange(childID, 'PREALLOC', 'CPU_LOW');
   }).then(function() {
     // We need to set the pref asynchoronously or the preallocated process won't
     // be shut down.

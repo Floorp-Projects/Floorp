@@ -130,6 +130,7 @@ OCSPResponseContext::OCSPResponseContext(PLArenaPool* arena,
   , badSignature(false)
   , responderIDType(ByKeyHash)
   , extensions(nullptr)
+  , includeEmptyExtensions(false)
 {
   for (size_t i = 0; i < MaxIncludedCertificates; i++) {
     includedCertificates[i] = nullptr;
@@ -513,7 +514,7 @@ ResponseData(OCSPResponseContext& context)
     return nullptr;
   }
   SECItem* responseExtensions = nullptr;
-  if (context.extensions) {
+  if (context.extensions || context.includeEmptyExtensions) {
     responseExtensions = Extensions(context);
   }
 

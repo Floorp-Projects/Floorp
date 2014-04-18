@@ -121,7 +121,7 @@ function start()
                                                  isInBrowserElement: false });
   SpecialPowers.addPermission("embed-apps", true, document);
 
-  let originalAllAppsLaunchable = SpecialPowers.setAllAppsLaunchable(true);
+  SpecialPowers.setAllAppsLaunchable(true);
 
   window.addEventListener("unload", function cleanup(event) {
     if (event.target == document) {
@@ -131,7 +131,6 @@ function start()
       SpecialPowers.removePermission("browser",
                                      location.protocol + "//" + appDomain);
       SpecialPowers.removePermission("embed-apps", location.href);
-      SpecialPowers.setAllAppsLaunchable(originalAllAppsLaunchable);
     }
   }, false);
 

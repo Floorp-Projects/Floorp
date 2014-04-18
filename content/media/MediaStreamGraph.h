@@ -226,6 +226,17 @@ public:
   virtual void NotifyMainThreadStateChanged() = 0;
 };
 
+/**
+ * Helper struct used to keep track of memory usage by AudioNodes.
+ */
+struct AudioNodeSizes
+{
+  size_t mDomNode;
+  size_t mStream;
+  size_t mEngine;
+  nsCString mNodeType;
+};
+
 class MediaStreamGraphImpl;
 class SourceMediaStream;
 class ProcessedMediaStream;
@@ -510,6 +521,9 @@ public:
     return true;
   }
 
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+
 protected:
   virtual void AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime, GraphTime aBlockedTime)
   {
@@ -577,6 +591,13 @@ protected:
     TrackTicks mLastTickWritten;
     RefPtr<AudioStream> mStream;
     TrackID mTrackID;
+
+    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+    {
+      size_t amount = 0;
+      amount += mStream->SizeOfIncludingThis(aMallocSizeOf);
+      return amount;
+    }
   };
   nsTArray<AudioOutputStream> mAudioOutputStreams;
 
@@ -920,6 +941,22 @@ public:
    */
   void SetGraphImpl(MediaStreamGraphImpl* aGraph);
 
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    size_t amount = 0;
+
+    // Not owned:
+    // - mSource
+    // - mDest
+    // - mGraph
+    return amount;
+  }
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 private:
   friend class MediaStreamGraphImpl;
   friend class MediaStream;
@@ -1016,6 +1053,19 @@ public:
 
   bool InCycle() const { return mInCycle; }
 
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    size_t amount = MediaStream::SizeOfExcludingThis(aMallocSizeOf);
+    // Not owned:
+    // - mInputs elements
+    amount += mInputs.SizeOfExcludingThis(aMallocSizeOf);
+    return amount;
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
 
 protected:
   // This state is all accessed only on the media graph thread.

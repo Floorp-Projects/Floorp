@@ -53,6 +53,14 @@ public:
   }
   void SetSmoothingTimeConstant(double aValue, ErrorResult& aRv);
 
+  virtual const char* NodeType() const
+  {
+    return "AnalyserNode";
+  }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
 private:
   friend class AnalyserNodeEngine;
   void AppendChunk(const AudioChunk& aChunk);

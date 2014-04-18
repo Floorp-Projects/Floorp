@@ -66,6 +66,22 @@ exports.exec = function(execSpec) {
 };
 
 /**
+ * When dealing with module paths on windows we want to use the unix
+ * directory separator rather than the windows one, so we avoid using
+ * OS.Path.dirname, and use unix version on all platforms.
+ */
+let resourceDirName = function(path) {
+  let index = path.lastIndexOf("/");
+  if (index == -1) {
+    return ".";
+  }
+  while (index >= 0 && path[index] == "/") {
+    --index;
+  }
+  return path.slice(0, index + 1);
+};
+
+/**
  * Asynchronously load a text resource
  * @see lib/gcli/util/host.js
  */
@@ -76,7 +92,7 @@ exports.staticRequire = function(requistingModule, name) {
     deferred.resolve('');
   }
   else {
-    var filename = OS.Path.dirname(requistingModule.id) + '/' + name;
+    var filename = resourceDirName(requistingModule.id) + '/' + name;
     filename = filename.replace(/\/\.\//g, '/');
     filename = 'resource://gre/modules/devtools/' + filename;
 

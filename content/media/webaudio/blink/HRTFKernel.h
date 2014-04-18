@@ -33,6 +33,7 @@
 #include "nsAutoRef.h"
 #include "nsTArray.h"
 #include "mozilla/FFTBlock.h"
+#include "mozilla/MemoryReporting.h"
 
 namespace WebCore {
 
@@ -63,6 +64,13 @@ public:
 
     float sampleRate() const { return m_sampleRate; }
     double nyquist() const { return 0.5 * sampleRate(); }
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+    {
+        size_t amount = aMallocSizeOf(this);
+        amount += m_fftFrame->SizeOfIncludingThis(aMallocSizeOf);
+        return amount;
+    }
 
 private:
     HRTFKernel(const HRTFKernel& other) MOZ_DELETE;

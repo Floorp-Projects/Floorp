@@ -169,6 +169,13 @@ public:
     return mCount;
   }
 
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    size_t amount = 0;
+    amount += mBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    return amount;
+  }
+
 private:
   nsAutoArrayPtr<uint8_t> mBuffer;
   uint32_t mCapacity;
@@ -279,6 +286,8 @@ public:
   nsresult SetPlaybackRate(double aPlaybackRate);
   // Switch between resampling (if false) and time stretching (if true, default).
   nsresult SetPreservesPitch(bool aPreservesPitch);
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
 private:
   friend class AudioInitTask;

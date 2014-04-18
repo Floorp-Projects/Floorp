@@ -54,6 +54,14 @@ public:
     AudioNode::SetChannelCountModeValue(aMode, aRv);
   }
 
+  virtual const char* NodeType() const
+  {
+    return "ConvolverNode";
+  }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
 private:
   nsRefPtr<AudioBuffer> mBuffer;
   bool mNormalize;

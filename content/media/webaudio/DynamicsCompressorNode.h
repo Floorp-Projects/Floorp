@@ -56,6 +56,14 @@ public:
     return mRelease;
   }
 
+  virtual const char* NodeType() const
+  {
+    return "DynamicsCompressorNode";
+  }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
 private:
   static void SendThresholdToStream(AudioNode* aNode);
   static void SendKneeToStream(AudioNode* aNode);

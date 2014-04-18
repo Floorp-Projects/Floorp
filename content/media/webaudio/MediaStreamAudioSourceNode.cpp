@@ -49,6 +49,22 @@ MediaStreamAudioSourceNode::~MediaStreamAudioSourceNode()
 {
 }
 
+size_t
+MediaStreamAudioSourceNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  // Future:
+  // - mInputStream
+  size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
+  amount += mInputPort->SizeOfIncludingThis(aMallocSizeOf);
+  return amount;
+}
+
+size_t
+MediaStreamAudioSourceNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}
+
 void
 MediaStreamAudioSourceNode::DestroyMediaStream()
 {

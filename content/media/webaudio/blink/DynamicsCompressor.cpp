@@ -52,6 +52,29 @@ DynamicsCompressor::DynamicsCompressor(float sampleRate, unsigned numberOfChanne
     initializeParameters();
 }
 
+size_t DynamicsCompressor::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+    size_t amount = aMallocSizeOf(this);
+    amount += m_preFilterPacks.SizeOfExcludingThis(aMallocSizeOf);
+    for (size_t i = 0; i < m_preFilterPacks.Length(); i++) {
+        if (m_preFilterPacks[i]) {
+            amount += m_preFilterPacks[i]->sizeOfIncludingThis(aMallocSizeOf);
+        }
+    }
+
+    amount += m_postFilterPacks.SizeOfExcludingThis(aMallocSizeOf);
+    for (size_t i = 0; i < m_postFilterPacks.Length(); i++) {
+        if (m_postFilterPacks[i]) {
+            amount += m_postFilterPacks[i]->sizeOfIncludingThis(aMallocSizeOf);
+        }
+    }
+
+    amount += m_sourceChannels.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_destinationChannels.SizeOfExcludingThis(aMallocSizeOf);
+    amount += m_compressor.sizeOfExcludingThis(aMallocSizeOf);
+    return amount;
+}
+
 void DynamicsCompressor::setParameterValue(unsigned parameterID, float value)
 {
     MOZ_ASSERT(parameterID < ParamLast);

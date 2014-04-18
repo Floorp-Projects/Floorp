@@ -35,6 +35,14 @@ public:
     return this;
   }
 
+  virtual const char* NodeType() const
+  {
+    return "DelayNode";
+  }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
 private:
   static void SendDelayToStream(AudioNode* aNode);
   friend class DelayNodeEngine;

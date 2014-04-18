@@ -130,6 +130,16 @@ public:
     MOZ_ASSERT(inSamples == WEBAUDIO_BLOCK_SIZE*aBlocks && outSamples == WEBAUDIO_BLOCK_SIZE);
   }
 
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    size_t amount = 0;
+    // Future: properly measure speex memory
+    amount += aMallocSizeOf(mUpSampler);
+    amount += aMallocSizeOf(mDownSampler);
+    amount += mBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    return amount;
+  }
+
 private:
   void Destroy()
   {
@@ -242,6 +252,19 @@ public:
         NS_NOTREACHED("We should never reach here");
       }
     }
+  }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
+    amount += mCurve.SizeOfExcludingThis(aMallocSizeOf);
+    amount += mResampler.SizeOfExcludingThis(aMallocSizeOf);
+    return amount;
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
 private:

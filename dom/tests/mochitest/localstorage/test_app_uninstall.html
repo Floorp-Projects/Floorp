@@ -49,24 +49,6 @@ var appsService = Cc['@mozilla.org/AppsService;1']
                     .getService(Ci.nsIAppsService);
 
 /**
- * This function will make sure that the next applications we try to install
- * will be installed. That means it will behave like if the user allowed the app
- * to be installed in the door hanger.
- */
-function confirmNextInstall() {
-  var panel = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocShell)
-                        .chromeEventHandler.ownerDocument.defaultView
-                        .PopupNotifications.panel
-
-  panel.addEventListener("popupshown", function() {
-    panel.removeEventListener("popupshown", arguments.callee, false);
-    this.childNodes[0].button.doCommand();
-  }, false);
-}
-
-/**
  * Initialize the |storage| that has been given with "foo" => "bar".
  * Checks that the storage wasn't initialized and checks that the initialization
  * was successful.
@@ -83,25 +65,15 @@ permManager.addFromPrincipal(window.document.nodePrincipal, "webapps-manage",
 permManager.addFromPrincipal(window.document.nodePrincipal, "browser",
                              Ci.nsIPermissionManager.ALLOW_ACTION);
 
-var previousPrefs = {
-  mozBrowserFramesEnabled: null,
-  installerDryRun: null,
-};
+SimpleTest.registerCleanupFunction(() => {
+  gWitnessStorage.localStorage.clear();
+  gWitnessStorage.sessionStorage.clear();
 
-// Save the prefs we want to change (so we can re-set them later) and set them
-// to the needed value.
-try {
-  previousPrefs.mozBrowserFramesEnabled = SpecialPowers.getBoolPref('dom.mozBrowserFramesEnabled');
-} catch(e)
-{
-}
-SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
-
-try {
-  previousPrefs.installerDryRun = SpecialPowers.getBoolPref('browser.mozApps.installer.dry_run');
-} catch(e) {
-}
-SpecialPowers.setBoolPref('browser.mozApps.installer.dry_run', true);
+  permManager.removeFromPrincipal(window.document.nodePrincipal, "webapps-manage",
+                                  Ci.nsIPermissionManager.ALLOW_ACTION);
+  permManager.removeFromPrincipal(window.document.nodePrincipal, "browser",
+                                  Ci.nsIPermissionManager.ALLOW_ACTION);
+});
 
 // URL of the manifest of the app we want to install.
 const gManifestURL = "http://www.example.com/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
@@ -116,15 +88,13 @@ var gAppStorage = {};
 // Storage for a mozbrowser inside the app.
 var gBrowserStorage = {};
 
-addLoadEvent(function() {
+function runTest() {
   /*
    * We are setuping the witness storage (non-app) and will install the
    * application.
    * When the application is installed, we will insert it in an iframe and wait
    * for the load event. to be fired.
    */
-
-  confirmNextInstall();
 
   gWitnessStorage.localStorage = window.frames[0].localStorage;
   gWitnessStorage.sessionStorage = window.frames[0].sessionStorage;
@@ -145,7 +115,7 @@ addLoadEvent(function() {
 
     document.body.appendChild(frame);
   };
-});
+}
 
 function appFrameLoadEvent() {
   /*
@@ -202,7 +172,7 @@ function browserLoadEvent() {
           is(gWitnessStorage.localStorage.getItem("foo"), "bar", "data are still there");
           is(gWitnessStorage.sessionStorage.getItem("foo"), "bar", "data are still there");
 
-          finish();
+          SimpleTest.finish();
 
           return;
         };
@@ -211,24 +181,11 @@ function browserLoadEvent() {
   };
 }
 
-/**
- * This method will be called when the test will be done. It is going to clear
- * all storage data, permissions, etc.
- */
-function finish() {
-  gWitnessStorage.localStorage.clear();
-  gWitnessStorage.sessionStorage.clear();
-
-  permManager.removeFromPrincipal(window.document.nodePrincipal, "webapps-manage",
-                                  Ci.nsIPermissionManager.ALLOW_ACTION);
-  permManager.removeFromPrincipal(window.document.nodePrincipal, "browser",
-                                  Ci.nsIPermissionManager.ALLOW_ACTION);
-
-  SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', previousPrefs.mozBrowserFramesEnabled);
-  SpecialPowers.setBoolPref('browser.mozApps.installer.dry_run', previousPrefs.installerDryRun);
-
-  SimpleTest.finish();
-}
+addLoadEvent(() =>
+  SpecialPowers.pushPrefEnv({set: [['dom.mozBrowserFramesEnabled', true]]}, () =>
+    SpecialPowers.autoConfirmAppInstall(runTest)
+  )
+);
 
 </script>
 </pre>

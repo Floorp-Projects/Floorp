@@ -34,6 +34,7 @@
 
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "mozilla/MemoryReporting.h"
 
 namespace mozilla {
 struct AudioChunk;
@@ -86,6 +87,8 @@ public:
     double tailTime() const { return 0; }
     double latencyTime() const { return m_compressor.latencyFrames() / static_cast<double>(sampleRate()); }
 
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
 protected:
     unsigned m_numberOfChannels;
 
@@ -102,6 +105,10 @@ protected:
 
     typedef struct {
         ZeroPole filters[4];
+        size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+        {
+            return aMallocSizeOf(this);
+        }
     } ZeroPoleFilterPack4;
 
     // Per-channel emphasis filters.
