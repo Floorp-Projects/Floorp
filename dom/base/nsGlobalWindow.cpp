@@ -7875,11 +7875,8 @@ PostMessageEvent::Run()
   NS_ABORT_IF_FALSE(!mSource || mSource->IsOuterWindow(),
                     "should have been passed an outer window!");
 
-  // Get the JSContext for the target window
-  nsIScriptContext* scriptContext = mTargetWindow->GetContext();
-  AutoPushJSContext cx(scriptContext ? scriptContext->GetNativeContext()
-                                     : nsContentUtils::GetSafeJSContext());
-  MOZ_ASSERT(cx);
+  AutoJSAPI jsapi;
+  JSContext* cx = jsapi.cx();
 
   // If we bailed before this point we're going to leak mMessage, but
   // that's probably better than crashing.
@@ -7892,6 +7889,7 @@ PostMessageEvent::Run()
 
   NS_ABORT_IF_FALSE(targetWindow->IsInnerWindow(),
                     "we ordered an inner window!");
+  JSAutoCompartment ac(cx, targetWindow->GetWrapperPreserveColor());
 
   // Ensure that any origin which might have been provided is the origin of this
   // window's document.  Note that we do this *now* instead of when postMessage
