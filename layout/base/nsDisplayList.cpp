@@ -1934,14 +1934,8 @@ nsDisplayBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuil
     return false;
 
   nsBackgroundLayerState state =
-    nsCSSRendering::PrepareBackgroundLayer(presContext,
-                                           mFrame,
-                                           flags,
-                                           borderArea,
-                                           aClipRect,
-                                           *mBackgroundStyle,
-                                           layer);
-
+    nsCSSRendering::PrepareBackgroundLayer(presContext, mFrame, flags,
+                                           borderArea, aClipRect, layer);
   nsImageRenderer* imageRenderer = &state.mImageRenderer;
   // We only care about images here, not gradients.
   if (!imageRenderer->IsRasterImage())
@@ -1974,14 +1968,8 @@ nsDisplayBackgroundImage::TryOptimizeToImageLayer(LayerManager* aManager,
   }
 
   nsBackgroundLayerState state =
-    nsCSSRendering::PrepareBackgroundLayer(presContext,
-                                           mFrame,
-                                           flags,
-                                           borderArea,
-                                           borderArea,
-                                           *mBackgroundStyle,
-                                           layer);
-
+    nsCSSRendering::PrepareBackgroundLayer(presContext, mFrame, flags,
+                                           borderArea, borderArea, layer);
   nsImageRenderer* imageRenderer = &state.mImageRenderer;
   // We only care about images here, not gradients.
   if (!imageRenderer->IsRasterImage())
@@ -2247,7 +2235,7 @@ nsDisplayBackgroundImage::GetPositioningArea()
   return nsCSSRendering::ComputeBackgroundPositioningArea(
       mFrame->PresContext(), mFrame,
       nsRect(ToReferenceFrame(), mFrame->GetSize()),
-      *mBackgroundStyle, mBackgroundStyle->mLayers[mLayer],
+      mBackgroundStyle->mLayers[mLayer],
       &attachedToFrame) + ToReferenceFrame();
 }
 
@@ -2361,8 +2349,7 @@ nsDisplayBackgroundImage::GetBoundsInternal(nsDisplayListBuilder* aBuilder) {
   }
   const nsStyleBackground::Layer& layer = mBackgroundStyle->mLayers[mLayer];
   return nsCSSRendering::GetBackgroundLayerRect(presContext, mFrame,
-                                                borderBox, clipRect,
-                                                *mBackgroundStyle, layer,
+                                                borderBox, clipRect, layer,
                                                 aBuilder->GetBackgroundPaintFlags());
 }
 
