@@ -50,12 +50,6 @@ function createAnim() {
 
 // Main Functions
 function main() {
-  if (!SMILUtil.isSMILEnabled()) {
-    ok(false, "SMIL dosn't seem to be enabled");
-    SimpleTest.finish();
-    return;
-  }
-
   // In unpatched Firefox builds, we'll only trigger Bug 699143 if we insert
   // an animation and call beginElement() **after** the document start-time.
   // Hence, we use executeSoon here to allow some time to pass.  (And then
