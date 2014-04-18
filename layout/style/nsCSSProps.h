@@ -506,7 +506,6 @@ public:
   static const KTableValue kBackfaceVisibilityKTable[];
   static const KTableValue kTransformStyleKTable[];
   static const KTableValue kBackgroundAttachmentKTable[];
-  static const KTableValue kBackgroundInlinePolicyKTable[];
   static const KTableValue kBackgroundOriginKTable[];
   static const KTableValue kBackgroundPositionKTable[];
   static const KTableValue kBackgroundRepeatKTable[];
