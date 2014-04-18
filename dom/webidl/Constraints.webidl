@@ -15,11 +15,11 @@ enum VideoFacingModeEnum {
 };
 
 dictionary ConstrainLongRange {
-    long min;
-    long max;
+    long min = -2147483647; // +1 works around windows compiler bug
+    long max = 2147483647;
 };
 
 dictionary ConstrainDoubleRange {
-    double min;
-    double max;
+    unrestricted double min = -Infinity;
+    unrestricted double max = Infinity;
 };
