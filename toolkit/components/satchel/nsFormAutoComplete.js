@@ -476,6 +476,10 @@ FormAutoCompleteResult.prototype = {
         return "";
     },
 
+    getFinalCompleteValueAt : function (index) {
+        return this.getValueAt(index);
+    },
+
     removeValueAt : function (index, removeFromDB) {
         this._checkIndexBounds(index);
 

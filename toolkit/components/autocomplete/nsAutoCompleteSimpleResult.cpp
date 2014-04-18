@@ -90,7 +90,8 @@ NS_IMETHODIMP
 nsAutoCompleteSimpleResult::AppendMatch(const nsAString& aValue,
                                         const nsAString& aComment,
                                         const nsAString& aImage,
-                                        const nsAString& aStyle)
+                                        const nsAString& aStyle,
+                                        const nsAString& aFinalCompleteValue)
 {
   CheckInvariants();
 
@@ -109,6 +110,13 @@ nsAutoCompleteSimpleResult::AppendMatch(const nsAString& aValue,
     mValues.RemoveElementAt(mValues.Length() - 1);
     mComments.RemoveElementAt(mComments.Length() - 1);
     mImages.RemoveElementAt(mImages.Length() - 1);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  if (!mFinalCompleteValues.AppendElement(aFinalCompleteValue)) {
+    mValues.RemoveElementAt(mValues.Length() - 1);
+    mComments.RemoveElementAt(mComments.Length() - 1);
+    mImages.RemoveElementAt(mImages.Length() - 1);
+    mStyles.RemoveElementAt(mStyles.Length() - 1);
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
@@ -171,6 +179,19 @@ nsAutoCompleteSimpleResult::GetStyleAt(int32_t aIndex, nsAString& _retval)
 }
 
 NS_IMETHODIMP
+nsAutoCompleteSimpleResult::GetFinalCompleteValueAt(int32_t aIndex,
+                                                    nsAString& _retval)
+{
+  NS_ENSURE_TRUE(aIndex >= 0 && aIndex < int32_t(mFinalCompleteValues.Length()),
+                 NS_ERROR_ILLEGAL_VALUE);
+  CheckInvariants();
+  _retval = mFinalCompleteValues[aIndex];
+  if (_retval.Length() == 0)
+    _retval = mValues[aIndex];
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAutoCompleteSimpleResult::SetListener(nsIAutoCompleteSimpleResultListener* aListener)
 {
   mListener = aListener;
@@ -189,6 +210,7 @@ nsAutoCompleteSimpleResult::RemoveValueAt(int32_t aRowIndex,
   mComments.RemoveElementAt(aRowIndex);
   mImages.RemoveElementAt(aRowIndex);
   mStyles.RemoveElementAt(aRowIndex);
+  mFinalCompleteValues.RemoveElementAt(aRowIndex);
 
   if (mListener)
     mListener->OnValueRemoved(this, removedValue, aRemoveFromDb);
