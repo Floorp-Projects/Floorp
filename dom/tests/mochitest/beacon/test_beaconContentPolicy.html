@@ -30,26 +30,32 @@ var policy = setupPolicy();
 SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
 
 function setupPolicy() {
+  info("creating the policy");
   var policyID = SpecialPowers.wrap(SpecialPowers.Components).ID("{b80e19d0-878f-d41b-2654-194714a4115c}");
   var policyName = "@mozilla.org/testpolicy;1";
   var policy = {
     // nsISupports implementation
     QueryInterface: function(iid) {
+      info("QueryInterface called " + iid);
       iid = SpecialPowers.wrap(iid);
       if (iid.equals(Ci.nsISupports) ||
         iid.equals(Ci.nsIFactory) ||
         iid.equals(Ci.nsIContentPolicy))
         return this;
+      info("unknown interface!");
       throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
     },
     
     // nsIFactory implementation
     createInstance: function(outer, iid) {
+      info("createInstance called " + iid);
       return this.QueryInterface(iid);
     },
 
     // nsIContentPolicy implementation
     shouldLoad: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
+      info("shouldLoad");
+      info("url: " + SpecialPowers.wrap(contentLocation).spec);
       // Remember last content type seen for the test url
 
       if (SpecialPowers.wrap(contentLocation).spec == beaconUrl) {
@@ -62,18 +68,22 @@ function setupPolicy() {
     },
 
     shouldProcess: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
+      info("shouldProcess");
+      info("url: " + SpecialPowers.wrap(contentLocation).spec);
       return Ci.nsIContentPolicy.ACCEPT;
     }
   }
   policy = SpecialPowers.wrapCallbackObject(policy);
 
   // Register content policy
+  info("registering the policy");
   var componentManager = SpecialPowers.wrap(SpecialPowers.Components).manager.QueryInterface(Ci.nsIComponentRegistrar);
   componentManager.registerFactory(policyID, "Test content policy", policyName, policy);
 
   var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
   categoryManager.addCategoryEntry("content-policy", policyName, policyName, false, true);
 
+  info("returning the policy");
   return { 'policy': policy, 'policyID': policyID, 'policyName': policyName };
 }
 
@@ -88,6 +98,7 @@ function teardownPolicy() {
 }
 
 function beginTest() {
+  info("sending the beacon");
   navigator.sendBeacon(beaconUrl, "bacon would have been a better name than beacon");
 }
 

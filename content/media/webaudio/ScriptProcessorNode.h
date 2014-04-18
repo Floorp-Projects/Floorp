@@ -89,6 +89,14 @@ public:
 
   using DOMEventTargetHelper::DispatchTrustedEvent;
 
+  virtual const char* NodeType() const
+  {
+    return "ScriptProcessorNode";
+  }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
 private:
   nsAutoPtr<SharedBuffers> mSharedBuffers;
   const uint32_t mBufferSize;

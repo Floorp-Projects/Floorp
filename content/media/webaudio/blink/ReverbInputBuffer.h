@@ -30,6 +30,7 @@
 #define ReverbInputBuffer_h
 
 #include "nsTArray.h"
+#include "mozilla/MemoryReporting.h"
 
 namespace WebCore {
 
@@ -53,6 +54,12 @@ public:
     float* directReadFrom(int* readIndex, size_t numberOfFrames);
 
     void reset();
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+    {
+        return m_buffer.SizeOfExcludingThis(aMallocSizeOf);
+    }
+
 
 private:
     nsTArray<float> m_buffer;

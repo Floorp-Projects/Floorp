@@ -19,22 +19,6 @@ function extend(child, supertype)
 // General Utility Methods
 var SMILUtil =
 {
-  // Returns true if SMIL is enabled, false otherwise
-  // XXXdholbert There should be a "nicer" way to do this - right now this will
-  // trigger a 'NotYetImplemented' assertion on STDOUT, if SMIL is disabled.
-  isSMILEnabled : function()
-  {
-    var svg = SMILUtil.getSVGRoot();
-    try {
-      SMILUtil.getSVGRoot().animationsPaused();
-    } catch(e) {
-      // Exception --> SMIL disabled
-      return false;
-    }
-    // No exceptions --> SMIL enabled
-    return true;
-  },
-
   // Returns the first matched <svg> node in the document
   getSVGRoot : function()
   {

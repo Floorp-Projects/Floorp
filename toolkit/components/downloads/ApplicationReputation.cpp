@@ -49,9 +49,7 @@ using safe_browsing::ClientDownloadRequest;
 using safe_browsing::ClientDownloadRequest_SignatureInfo;
 using safe_browsing::ClientDownloadRequest_CertificateChain;
 
-// Preferences that we need to initialize the query. We may need another
-// preference than browser.safebrowsing.malware.enabled, or simply use
-// browser.safebrowsing.appRepURL. See bug 887041.
+// Preferences that we need to initialize the query.
 #define PREF_SB_APP_REP_URL "browser.safebrowsing.appRepURL"
 #define PREF_SB_MALWARE_ENABLED "browser.safebrowsing.malware.enabled"
 #define PREF_GENERAL_LOCALE "general.useragent.locale"
@@ -127,6 +125,9 @@ private:
   // as part of our nsIStreamListener implementation and may contain embedded
   // NULLs.
   nsCString mResponse;
+
+  // Returns true if the file is likely to be binary on Windows.
+  bool IsBinaryFile();
 
   // Clean up and call the callback. PendingLookup must not be used after this
   // function is called.
@@ -333,6 +334,34 @@ PendingLookup::~PendingLookup()
   LOG(("Destroying pending lookup [this = %p]", this));
 }
 
+bool
+PendingLookup::IsBinaryFile()
+{
+  nsString fileName;
+  nsresult rv = mQuery->GetSuggestedFileName(fileName);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  return
+    // Executable extensions for MS Windows, from
+    // https://code.google.com/p/chromium/codesearch#chromium/src/chrome/common/safe_browsing/download_protection_util.cc&l=14
+    StringEndsWith(fileName, NS_LITERAL_STRING(".apk")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".bas")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".bat")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".cab")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".cmd")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".com")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".exe")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".hta")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".msi")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".pif")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".reg")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".scr")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".vb")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".vbs")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".zip"));
+}
+
 nsresult
 PendingLookup::LookupNext()
 {
@@ -359,10 +388,14 @@ PendingLookup::LookupNext()
     nsRefPtr<PendingDBLookup> lookup(new PendingDBLookup(this));
     return lookup->LookupSpec(spec, allowlistOnly);
   }
-  // There are no more URIs to check against local list, so send the remote
-  // query if we can.
-  // Revert to just ifdef XP_WIN when remote lookups are enabled (bug 933432)
-#if 0
+#ifdef XP_WIN
+  // There are no more URIs to check against local list. If the file is not
+  // eligible for remote lookup, bail.
+  if (!IsBinaryFile()) {
+    LOG(("Not eligible for remote lookups [this=%x]", this));
+    return OnComplete(false, NS_OK);
+  }
+  // Send the remote query if we are on Windows.
   nsresult rv = SendRemoteQuery();
   if (NS_FAILED(rv)) {
     return OnComplete(false, rv);

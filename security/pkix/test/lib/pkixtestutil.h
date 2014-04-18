@@ -67,6 +67,9 @@ public:
   ResponderIDType responderIDType;
 
   OCSPResponseExtension* extensions;
+  bool includeEmptyExtensions; // If true, include the extension wrapper
+                               // regardless of if there are any actual
+                               // extensions.
 };
 
 // The return value, if non-null, is owned by the arena in the context

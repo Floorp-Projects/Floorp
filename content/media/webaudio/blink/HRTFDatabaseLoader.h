@@ -31,6 +31,7 @@
 
 #include "nsHashKeys.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "HRTFDatabase.h"
 
@@ -92,6 +93,8 @@ public:
     
     // Called in asynchronous loading thread.
     void load();
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
     // Both constructor and destructor must be called from the main thread.

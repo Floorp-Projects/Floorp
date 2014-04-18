@@ -31,6 +31,7 @@
 
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "mozilla/MemoryReporting.h"
 
 namespace WebCore {
 
@@ -68,6 +69,8 @@ public:
     float sampleRate() const { return m_sampleRate; }
 
     float meteringGain() const { return m_meteringGain; }
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 protected:
     float m_sampleRate;
