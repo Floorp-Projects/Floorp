@@ -30,20 +30,13 @@ exports.items = [
       }
     ],
     exec: function(args, context) {
-      if (!DebuggerServer.initialized) {
-        DebuggerServer.init();
-        DebuggerServer.addBrowserActors();
-      }
-      var reply = DebuggerServer.openListener(args.port);
-      if (!reply) {
-        throw new Error(gcli.lookup("listenDisabledOutput"));
+      DebuggerServer.controller.start(args.port);
+
+      if (!DebuggerServer._listener) {
+        return gcli.lookup("listenFailed");
       }
 
-      if (DebuggerServer.initialized) {
-        return gcli.lookupFormat("listenInitOutput", [ "" + args.port ]);
-      }
-
-      return gcli.lookup("listenNoInitOutput");
+      return gcli.lookupFormat("listenInitOutput", [ '' + args.port ]);
     },
   }
 ];

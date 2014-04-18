@@ -13,6 +13,10 @@ let promise = tempScope.Promise;
 let {devtools} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
 let TargetFactory = devtools.TargetFactory;
 
+let {Services} = Components.utils.import("resource://gre/modules/Services.jsm", {});
+// Disable notifications (to avoid "unknown window" errors)
+Services.prefs.setBoolPref("devtools.debugger.show-server-notifications", false);
+
 gDevTools.testing = true;
 SimpleTest.registerCleanupFunction(() => {
   gDevTools.testing = false;
@@ -54,6 +58,7 @@ registerCleanupFunction(function tearDown() {
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }
+  Services.prefs.clearUserPref("devtools.debugger.show-server-notifications");
 });
 
 function synthesizeKeyFromKeyTag(aKeyId, document) {
