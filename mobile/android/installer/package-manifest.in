@@ -420,6 +420,11 @@
 @BINPATH@/components/captivedetect.js
 #endif
 
+; DevTools
+@BINPATH@/components/DevToolsComponents.manifest
+@BINPATH@/components/DevToolsAppStartup.js
+@BINPATH@/components/DebuggerServerController.js
+
 #ifdef MOZ_WEBSPEECH
 @BINPATH@/components/dom_webspeechsynth.xpt
 #endif
