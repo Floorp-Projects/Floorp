@@ -82,18 +82,16 @@ MacroAssemblerX64::loadConstantFloat32(float f, const FloatRegister &dest)
 void
 MacroAssemblerX64::finish()
 {
-    JS_STATIC_ASSERT(CodeAlignment >= sizeof(double));
-
-    if (!doubles_.empty() || !floats_.empty())
+    if (!doubles_.empty())
         masm.align(sizeof(double));
-
     for (size_t i = 0; i < doubles_.length(); i++) {
         Double &dbl = doubles_[i];
         bind(&dbl.uses);
         masm.doubleConstant(dbl.value);
     }
 
-    // No need to align on sizeof(float) as we are aligned on sizeof(double);
+    if (!floats_.empty())
+        masm.align(sizeof(float));
     for (size_t i = 0; i < floats_.length(); i++) {
         Float &flt = floats_[i];
         bind(&flt.uses);
