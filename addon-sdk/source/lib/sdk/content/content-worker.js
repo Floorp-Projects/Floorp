@@ -286,17 +286,6 @@ const ContentWorker = Object.freeze({
       value: self
     });
 
-    // Deprecated use of on/postMessage from globals
-    exports.postMessage = function deprecatedPostMessage() {
-      console.error("DEPRECATED: The global `postMessage()` function in " +
-                    "content scripts is deprecated in favor of the " +
-                    "`self.postMessage()` function, which works the same. " +
-                    "Replace calls to `postMessage()` with calls to " +
-                    "`self.postMessage()`." +
-                    "For more info on `self.on`, see " +
-                    "<https://addons.mozilla.org/en-US/developers/docs/sdk/latest/dev-guide/addon-development/web-content.html>.");
-      return self.postMessage.apply(null, arguments);
-    };
     exports.on = function deprecatedOn() {
       console.error("DEPRECATED: The global `on()` function in content " +
                     "scripts is deprecated in favor of the `self.on()` " +

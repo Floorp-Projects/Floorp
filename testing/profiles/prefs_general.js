@@ -55,6 +55,9 @@ user_pref("font.size.inflation.minTwips", 0);
 user_pref("experiments.enabled", true);
 user_pref("experiments.supported", true);
 user_pref("experiments.logging.level", "Trace");
+// Point the manifest at something local so we don't risk it hitting production
+// data and installing experiments that may vary over time.
+user_pref("experiments.manifest.uri", "http://%(server)s/experiments-dummy/manifest");
 
 // Only load extensions from the application and user profile
 // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
