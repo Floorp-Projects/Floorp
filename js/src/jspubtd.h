@@ -135,7 +135,7 @@ struct JSSecurityCallbacks;
 struct JSStructuredCloneCallbacks;
 struct JSStructuredCloneReader;
 struct JSStructuredCloneWriter;
-class JSTracer;
+class JS_PUBLIC_API(JSTracer);
 
 class JSFlatString;
 
