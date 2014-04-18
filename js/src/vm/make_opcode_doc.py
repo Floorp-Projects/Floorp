@@ -285,7 +285,7 @@ def format_flags(flags):
     return ' ({flags})'.format(flags=flags)
 
 def print_opcode(opcode):
-    names_template = '{name} [-{nuses}, +{ndefs}] ({flags})'
+    names_template = '{name} [-{nuses}, +{ndefs}]{flags}'
     names = map(lambda code: names_template.format(name=escape(code.name),
                                                    nuses=override(code.nuses,
                                                                   opcode.nuses_override),

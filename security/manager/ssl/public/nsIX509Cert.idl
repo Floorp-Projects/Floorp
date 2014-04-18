@@ -13,7 +13,7 @@ interface nsIASN1Object;
 /**
  * This represents a X.509 certificate.
  */
-[scriptable, uuid(45b24b0a-6189-4b05-af0b-8d4d66d57c59)]
+[scriptable, uuid(6286dd8c-c1a1-11e3-941d-180373d97f24)]
 interface nsIX509Cert : nsISupports {
 
   /**
@@ -230,4 +230,10 @@ interface nsIX509Cert : nsISupports {
    *  @return Whether the certificates are equal
    */
   boolean equals(in nsIX509Cert other);
+
+  /**
+   * The base64 encoding of the DER encoded public key info using the specified
+   * digest.
+   */
+  readonly attribute ACString sha256SubjectPublicKeyInfoDigest;
 };

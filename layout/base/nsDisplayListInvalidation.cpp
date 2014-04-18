@@ -5,6 +5,7 @@
 
 #include "nsDisplayListInvalidation.h"
 #include "nsDisplayList.h"
+#include "nsIFrame.h"
 
 nsDisplayItemGeometry::nsDisplayItemGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
 {

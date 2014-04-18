@@ -20,8 +20,6 @@ import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.SkewHandler;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
-import org.mozilla.gecko.browserid.verifier.BrowserIDRemoteVerifierClient;
-import org.mozilla.gecko.browserid.verifier.BrowserIDVerifierDelegate;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AccountPickler;
@@ -35,7 +33,6 @@ import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.login.StateFactory;
 import org.mozilla.gecko.sync.BackoffHandler;
-import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.PrefsBackoffHandler;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
@@ -368,15 +365,21 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           // global session.
           final SkewHandler storageServerSkewHandler = SkewHandler.getSkewHandlerForHostname(storageHostname);
           final long storageServerSkew = storageServerSkewHandler.getSkewInSeconds();
-          final AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), false, storageServerSkew);
+          // We expect Sync to upload large sets of records. Calculating the
+          // payload verification hash for these record sets could be expensive,
+          // so we explicitly do not send payload verification hashes to the
+          // Sync storage endpoint.
+          final boolean includePayloadVerificationHash = false;
+          final AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), includePayloadVerificationHash, storageServerSkew);
 
           final Context context = getContext();
           final SyncConfiguration syncConfig = new SyncConfiguration(token.uid, authHeaderProvider, sharedPrefs, syncKeyBundle);
 
           Collection<String> knownStageNames = SyncConfiguration.validEngineNames();
           syncConfig.stagesToSync = Utils.getStagesToSyncFromBundle(knownStageNames, extras);
+          syncConfig.setClusterURL(storageServerURI);
 
-          globalSession = new FxAccountGlobalSession(token.endpoint, syncConfig, callback, context, clientsDataDelegate);
+          globalSession = new FxAccountGlobalSession(syncConfig, callback, context, clientsDataDelegate);
           globalSession.start();
         } catch (Exception e) {
           callback.handleError(globalSession, e);
@@ -386,7 +389,6 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
       @Override
       public void handleFailure(TokenServerException e) {
-        debugAssertion(audience, assertion);
         handleError(e);
       }
 
@@ -610,35 +612,5 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     Logger.info(LOG_TAG, "Syncing done.");
     lastSyncRealtimeMillis = SystemClock.elapsedRealtime();
-  }
-
-  protected void debugAssertion(String audience, String assertion) {
-    final CountDownLatch verifierLatch = new CountDownLatch(1);
-    BrowserIDRemoteVerifierClient client = new BrowserIDRemoteVerifierClient(URI.create(BrowserIDRemoteVerifierClient.DEFAULT_VERIFIER_URL));
-    client.verify(audience, assertion, new BrowserIDVerifierDelegate() {
-      @Override
-      public void handleSuccess(ExtendedJSONObject response) {
-        Logger.info(LOG_TAG, "Remote verifier returned success: " + response.toJSONString());
-        verifierLatch.countDown();
-      }
-
-      @Override
-      public void handleFailure(ExtendedJSONObject response) {
-        Logger.warn(LOG_TAG, "Remote verifier returned failure: " + response.toJSONString());
-        verifierLatch.countDown();
-      }
-
-      @Override
-      public void handleError(Exception e) {
-        Logger.error(LOG_TAG, "Remote verifier returned error.", e);
-        verifierLatch.countDown();
-      }
-    });
-
-    try {
-      verifierLatch.await();
-    } catch (InterruptedException e) {
-      Logger.error(LOG_TAG, "Got error.", e);
-    }
   }
 }

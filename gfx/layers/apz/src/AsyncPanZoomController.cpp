@@ -14,7 +14,6 @@
 #include "FrameMetrics.h"               // for FrameMetrics, etc
 #include "GestureEventListener.h"       // for GestureEventListener
 #include "InputData.h"                  // for MultiTouchInput, etc
-#include "LayerTransactionParent.h"     // for LayerTransactionParent
 #include "Units.h"                      // for CSSRect, CSSPoint, etc
 #include "UnitTransforms.h"             // for TransformTo
 #include "base/message_loop.h"          // for MessageLoop
@@ -40,7 +39,7 @@
 #include "mozilla/layers/APZCTreeManager.h"  // for ScrollableLayerGuid
 #include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform
 #include "mozilla/layers/Axis.h"        // for AxisX, AxisY, Axis, etc
-#include "mozilla/layers/GeckoContentController.h"
+#include "mozilla/layers/LayerTransactionParent.h" // for LayerTransactionParent
 #include "mozilla/layers/PCompositorParent.h" // for PCompositorParent
 #include "mozilla/layers/TaskThrottler.h"  // for TaskThrottler
 #include "mozilla/mozalloc.h"           // for operator new, etc
@@ -619,9 +618,10 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
       mX.StartTouch(point.x);
       mY.StartTouch(point.y);
       APZCTreeManager* treeManagerLocal = mTreeManager;
-      if (treeManagerLocal) {
+      nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+      if (treeManagerLocal && controller) {
         bool touchCanBePan = treeManagerLocal->CanBePanned(this);
-        mGeckoContentController->NotifyAPZStateChange(
+        controller->NotifyAPZStateChange(
             GetGuid(), APZStateChange::StartTouch, touchCanBePan);
       }
       SetState(TOUCHING);
@@ -962,8 +962,10 @@ nsEventStatus AsyncPanZoomController::GenerateSingleTap(const ScreenIntPoint& aP
 }
 
 void AsyncPanZoomController::OnTouchEndOrCancel() {
-  mGeckoContentController->NotifyAPZStateChange(
-      GetGuid(), APZStateChange::EndTouch, mTouchBlockState.mSingleTapOccurred);
+  if (nsRefPtr<GeckoContentController> controller = GetGeckoContentController()) {
+    controller->NotifyAPZStateChange(
+        GetGuid(), APZStateChange::EndTouch, mTouchBlockState.mSingleTapOccurred);
+  }
 }
 
 nsEventStatus AsyncPanZoomController::OnSingleTapUp(const TapGestureInput& aEvent) {
@@ -1108,7 +1110,9 @@ nsEventStatus AsyncPanZoomController::StartPanning(const MultiTouchInput& aEvent
   }
 
   if (IsPanningState(mState)) {
-    mGeckoContentController->NotifyAPZStateChange(GetGuid(), APZStateChange::StartPanning);
+    if (nsRefPtr<GeckoContentController> controller = GetGeckoContentController()) {
+      controller->NotifyAPZStateChange(GetGuid(), APZStateChange::StartPanning);
+    }
     return nsEventStatus_eConsumeNoDefault;
   }
   // Don't consume an event that didn't trigger a panning.
@@ -2007,12 +2011,12 @@ void AsyncPanZoomController::SetState(PanZoomState aNewState) {
     mState = aNewState;
   }
 
-  if (mGeckoContentController) {
+  if (nsRefPtr<GeckoContentController> controller = GetGeckoContentController()) {
     if (!IsTransformingState(oldState) && IsTransformingState(aNewState)) {
-      mGeckoContentController->NotifyAPZStateChange(
+      controller->NotifyAPZStateChange(
           GetGuid(), APZStateChange::TransformBegin);
     } else if (IsTransformingState(oldState) && !IsTransformingState(aNewState)) {
-      mGeckoContentController->NotifyAPZStateChange(
+      controller->NotifyAPZStateChange(
           GetGuid(), APZStateChange::TransformEnd);
     }
   }

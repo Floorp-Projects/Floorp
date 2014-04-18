@@ -55,7 +55,7 @@ RunTest(JSRuntime* rt, JSContext* cx, ArrayT* array)
   RootedValue value(cx);
   const char* property = "foo";
   JS::shadow::Runtime* srt = reinterpret_cast<JS::shadow::Runtime*>(rt);
-  for (int i = 0; i < ElementCount; ++i) {
+  for (size_t i = 0; i < ElementCount; ++i) {
     RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
 #ifdef JSGC_GENERATIONAL
     ASSERT_TRUE(js::gc::IsInsideNursery(srt, obj));
@@ -76,12 +76,12 @@ RunTest(JSRuntime* rt, JSContext* cx, ArrayT* array)
   /*
    * Sanity check that our array contains what we expect.
    */
-  for (int i = 0; i < ElementCount; ++i) {
+  for (size_t i = 0; i < ElementCount; ++i) {
     RootedObject obj(cx, array->ElementAt(i));
     ASSERT_FALSE(js::gc::IsInsideNursery(srt, obj));
     ASSERT_TRUE(JS_GetProperty(cx, obj, property, &value));
     ASSERT_TRUE(value.isInt32());
-    ASSERT_EQ(i, value.toInt32());
+    ASSERT_EQ(static_cast<int32_t>(i), value.toInt32());
   }
 
   JS_RemoveExtraGCRootsTracer(rt, TraceArray<ArrayT>, array);

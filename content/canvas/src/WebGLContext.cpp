@@ -136,25 +136,6 @@ WebGLContext::WebGLContext()
     mFakeVertexAttrib0BufferObject = 0;
     mFakeVertexAttrib0BufferStatus = WebGLVertexAttrib0Status::Default;
 
-    // these are de default values, see 6.2 State tables in the OpenGL ES 2.0.25 spec
-    mColorWriteMask[0] = 1;
-    mColorWriteMask[1] = 1;
-    mColorWriteMask[2] = 1;
-    mColorWriteMask[3] = 1;
-    mDepthWriteMask = 1;
-    mColorClearValue[0] = 0.f;
-    mColorClearValue[1] = 0.f;
-    mColorClearValue[2] = 0.f;
-    mColorClearValue[3] = 0.f;
-    mDepthClearValue = 1.f;
-    mStencilClearValue = 0;
-    mStencilRefFront = 0;
-    mStencilRefBack = 0;
-    mStencilValueMaskFront = 0xffffffff;
-    mStencilValueMaskBack  = 0xffffffff;
-    mStencilWriteMaskFront = 0xffffffff;
-    mStencilWriteMaskBack  = 0xffffffff;
-
     mViewportX = 0;
     mViewportY = 0;
     mViewportWidth = 0;
@@ -209,7 +190,7 @@ WebGLContext::WebGLContext()
 
     InvalidateBufferFetching();
 
-    mIsScreenCleared = false;
+    mBackbufferNeedsClear = true;
 
     mDisableFragHighP = false;
 
@@ -423,7 +404,7 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
         mHeight = gl->OffscreenSize().height;
         mResetLayer = true;
 
-        ClearScreen();
+        mBackbufferNeedsClear = true;
 
         return NS_OK;
     }
@@ -610,7 +591,11 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     gl->fClearDepth(1.0f);
     gl->fClearStencil(0);
 
-    gl->ClearSafely();
+    mBackbufferNeedsClear = true;
+
+    // Clear immediately, because we need to present the cleared initial
+    // buffer.
+    ClearBackbufferIfNeeded();
 
     mShouldPresent = true;
 
@@ -625,46 +610,23 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-WebGLContext::Render(gfxContext *ctx, GraphicsFilter f, uint32_t aFlags)
+void
+WebGLContext::ClearBackbufferIfNeeded()
 {
-    if (!gl)
-        return NS_OK;
+    if (!mBackbufferNeedsClear)
+        return;
 
-    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(gfxIntSize(mWidth, mHeight),
-                                                         gfxImageFormat::ARGB32);
-    if (surf->CairoStatus() != 0)
-        return NS_ERROR_FAILURE;
-
+#ifdef DEBUG
     gl->MakeCurrent();
-    ReadScreenIntoImageSurface(gl, surf);
 
-    bool srcPremultAlpha = mOptions.premultipliedAlpha;
-    bool dstPremultAlpha = aFlags & RenderFlagPremultAlpha;
+    GLuint fb = 0;
+    gl->GetUIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &fb);
+    MOZ_ASSERT(fb == 0);
+#endif
 
-    if (!srcPremultAlpha && dstPremultAlpha) {
-        gfxUtils::PremultiplyImageSurface(surf);
-    } else if (srcPremultAlpha && !dstPremultAlpha) {
-        gfxUtils::UnpremultiplyImageSurface(surf);
-    }
-    surf->MarkDirty();
+    ClearScreen();
 
-    nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
-    pat->SetFilter(f);
-
-    // Pixels from ReadPixels will be "upside down" compared to
-    // what cairo wants, so draw with a y-flip and a translte to
-    // flip them.
-    gfxMatrix m;
-    m.Translate(gfxPoint(0.0, mHeight));
-    m.Scale(1.0, -1.0);
-    pat->SetMatrix(m);
-
-    ctx->NewPath();
-    ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWidth, mHeight), pat);
-    ctx->Fill();
-
-    return NS_OK;
+    mBackbufferNeedsClear = false;
 }
 
 void WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
@@ -758,25 +720,31 @@ WebGLContext::GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat)
     *aImageBuffer = nullptr;
     *aFormat = 0;
 
-    nsRefPtr<gfxImageSurface> imgsurf =
-        new gfxImageSurface(gfxIntSize(mWidth, mHeight),
-                            gfxImageFormat::ARGB32);
+    // Use GetSurfaceSnapshot() to make sure that appropriate y-flip gets applied
+    bool premult;
+    RefPtr<SourceSurface> snapshot =
+      GetSurfaceSnapshot(mOptions.premultipliedAlpha ? nullptr : &premult);
+    if (!snapshot) {
+        return;
+    }
+    MOZ_ASSERT(mOptions.premultipliedAlpha || !premult, "We must get unpremult when we ask for it!");
 
-    if (!imgsurf || imgsurf->CairoStatus()) {
+    RefPtr<DataSourceSurface> dataSurface = snapshot->GetDataSurface();
+
+    DataSourceSurface::MappedSurface map;
+    if (!dataSurface->Map(DataSourceSurface::MapType::READ, &map)) {
         return;
     }
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(imgsurf);
-    if (!ctx || ctx->HasError()) {
+    static const fallible_t fallible = fallible_t();
+    uint8_t* imageBuffer = new (fallible) uint8_t[mWidth * mHeight * 4];
+    if (!imageBuffer) {
+        dataSurface->Unmap();
         return;
     }
+    memcpy(imageBuffer, map.mData, mWidth * mHeight * 4);
 
-    // Use Render() to make sure that appropriate y-flip gets applied
-    uint32_t flags = mOptions.premultipliedAlpha ? RenderFlagPremultAlpha : 0;
-    nsresult rv = Render(ctx, GraphicsFilter::FILTER_NEAREST, flags);
-    if (NS_FAILED(rv)) {
-        return;
-    }
+    dataSurface->Unmap();
 
     int32_t format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
     if (!mOptions.premultipliedAlpha) {
@@ -785,16 +753,9 @@ WebGLContext::GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat)
         // Yes, it is THAT silly.
         // Except for different lossy conversions by color,
         // we could probably just change the label, and not change the data.
-        gfxUtils::ConvertBGRAtoRGBA(imgsurf);
+        gfxUtils::ConvertBGRAtoRGBA(imageBuffer, mWidth * mHeight * 4);
         format = imgIEncoder::INPUT_FORMAT_RGBA;
     }
-
-    static const fallible_t fallible = fallible_t();
-    uint8_t* imageBuffer = new (fallible) uint8_t[mWidth * mHeight * 4];
-    if (!imageBuffer) {
-        return;
-    }
-    memcpy(imageBuffer, imgsurf->Data(), mWidth * mHeight * 4);
 
     *aImageBuffer = imageBuffer;
     *aFormat = format;
@@ -825,12 +786,6 @@ WebGLContext::GetInputStream(const char* aMimeType,
 
     return ImageEncoder::GetInputStream(mWidth, mHeight, imageBuffer, format,
                                         encoder, aEncoderOptions, aStream);
-}
-
-NS_IMETHODIMP
-WebGLContext::GetThebesSurface(gfxASurface **surface)
-{
-    return NS_ERROR_NOT_AVAILABLE;
 }
 
 void WebGLContext::UpdateLastUseIndex()
@@ -1014,7 +969,6 @@ WebGLContext::ClearScreen()
     colorAttachmentsMask[0] = true;
 
     ForceClearFramebufferWithDefaultValues(clearMask, colorAttachmentsMask);
-    mIsScreenCleared = true;
 }
 
 #ifdef DEBUG
@@ -1202,13 +1156,14 @@ WebGLContext::PresentScreenBuffer()
     }
 
     gl->MakeCurrent();
+    MOZ_ASSERT(!mBackbufferNeedsClear);
     if (!gl->PublishFrame()) {
         this->ForceLoseContext();
         return false;
     }
 
     if (!mOptions.preserveDrawingBuffer) {
-        ClearScreen();
+        mBackbufferNeedsClear = true;
     }
 
     mShouldPresent = false;
@@ -1376,9 +1331,61 @@ void
 WebGLContext::MakeContextCurrent() const { gl->MakeCurrent(); }
 
 mozilla::TemporaryRef<mozilla::gfx::SourceSurface>
-WebGLContext::GetSurfaceSnapshot()
+WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
 {
-  return nullptr;
+    if (!gl)
+        return nullptr;
+
+    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(gfxIntSize(mWidth, mHeight),
+                                                         gfxImageFormat::ARGB32,
+                                                         mWidth * 4, 0, false);
+    if (surf->CairoStatus() != 0) {
+        return nullptr;
+    }
+
+    gl->MakeCurrent();
+    {
+        ScopedBindFramebuffer autoFB(gl, 0);
+        ClearBackbufferIfNeeded();
+        ReadPixelsIntoImageSurface(gl, surf);
+    }
+
+    if (aPremultAlpha) {
+        *aPremultAlpha = true;
+    }
+    bool srcPremultAlpha = mOptions.premultipliedAlpha;
+    if (!srcPremultAlpha) {
+        if (aPremultAlpha) {
+            *aPremultAlpha = false;
+        } else {
+            gfxUtils::PremultiplyImageSurface(surf);
+            surf->MarkDirty();
+        }
+    }
+
+    RefPtr<DrawTarget> dt =
+        Factory::CreateDrawTarget(BackendType::CAIRO,
+                                  IntSize(mWidth, mHeight),
+                                  SurfaceFormat::B8G8R8A8);
+
+    if (!dt) {
+        return nullptr;
+    }
+
+    RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, surf);
+
+    Matrix m;
+    m.Translate(0.0, mHeight);
+    m.Scale(1.0, -1.0);
+    dt->SetTransform(m);
+
+    dt->DrawSurface(source,
+                    Rect(0, 0, mWidth, mHeight),
+                    Rect(0, 0, mWidth, mHeight),
+                    DrawSurfaceOptions(),
+                    DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+
+    return dt->Snapshot();
 }
 
 //

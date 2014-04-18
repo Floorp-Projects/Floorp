@@ -38,6 +38,7 @@
 #endif
 
 using namespace mozilla::layers;
+using namespace mozilla::gfx;
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Canvas)
 
@@ -130,9 +131,7 @@ NS_IMPL_ADDREF_INHERITED(HTMLCanvasElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLCanvasElement, Element)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLCanvasElement)
-  NS_INTERFACE_TABLE_INHERITED2(HTMLCanvasElement,
-                                nsIDOMHTMLCanvasElement,
-                                nsICanvasElementExternal)
+  NS_INTERFACE_TABLE_INHERITED1(HTMLCanvasElement, nsIDOMHTMLCanvasElement)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLCanvasElement)
@@ -934,19 +933,13 @@ HTMLCanvasElement::MarkContextClean()
   mCurrentContext->MarkContextClean();
 }
 
-NS_IMETHODIMP_(nsIntSize)
-HTMLCanvasElement::GetSizeExternal()
-{
-  return GetWidthHeight();
-}
-
-NS_IMETHODIMP
-HTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, GraphicsFilter aFilter, uint32_t aFlags)
+TemporaryRef<SourceSurface>
+HTMLCanvasElement::GetSurfaceSnapshot(bool* aPremultAlpha)
 {
   if (!mCurrentContext)
-    return NS_OK;
+    return nullptr;
 
-  return mCurrentContext->Render(aContext, aFilter, aFlags);
+  return mCurrentContext->GetSurfaceSnapshot(aPremultAlpha);
 }
 
 } // namespace dom

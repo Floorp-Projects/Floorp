@@ -180,10 +180,8 @@ void AudioOutput::Close()
   AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("%s", __PRETTY_FUNCTION__));
   mTrack.clear();
 
-  if (mCallbackData) {
-    delete mCallbackData;
-    mCallbackData = NULL;
-  }
+  delete mCallbackData;
+  mCallbackData = nullptr;
 }
 
 // static

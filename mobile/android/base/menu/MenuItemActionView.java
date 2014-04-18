@@ -61,7 +61,9 @@ public class MenuItemActionView extends LinearLayout
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         View parent = (View) getParent();
-        if ((right - left) < parent.getMeasuredWidth() || mActionButtons.size() != 0) {
+        final int padding = getPaddingLeft() + getPaddingRight();
+        final int parentPadding = parent.getPaddingLeft() + parent.getPaddingRight();
+        if ((right - left - padding) < (parent.getMeasuredWidth() - parentPadding) || mActionButtons.size() != 0) {
             // Use the icon.
             mMenuItem.setVisibility(View.GONE);
             mMenuButton.setVisibility(View.VISIBLE);

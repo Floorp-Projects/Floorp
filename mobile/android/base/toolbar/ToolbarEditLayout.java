@@ -125,7 +125,15 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
         imm.showSoftInput(mEditText, InputMethodManager.SHOW_IMPLICIT);
     }
 
-    void prepareShowAnimation(PropertyAnimator animator) {
+    void prepareAnimation(final boolean showing, final PropertyAnimator animator) {
+        if (showing) {
+            prepareShowAnimation(animator);
+        } else {
+            prepareHideAnimation(animator);
+        }
+    }
+
+    private void prepareShowAnimation(final PropertyAnimator animator) {
         if (animator == null) {
             mEditText.requestFocus();
             showSoftInput();
@@ -143,6 +151,25 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
             public void onPropertyAnimationEnd() {
                 ViewHelper.setAlpha(mGo, 1.0f);
                 showSoftInput();
+            }
+        });
+    }
+
+    private void prepareHideAnimation(final PropertyAnimator animator) {
+        if (animator == null) {
+            return;
+        }
+
+        animator.addPropertyAnimationListener(new PropertyAnimationListener() {
+            @Override
+            public void onPropertyAnimationStart() {
+                ViewHelper.setAlpha(mGo, 0.0f);
+            }
+
+            @Override
+            public void onPropertyAnimationEnd() {
+                // The enclosing view is invisible, so unhide the go button.
+                ViewHelper.setAlpha(mGo, 1.0f);
             }
         });
     }

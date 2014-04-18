@@ -167,8 +167,8 @@ class FileAvoidWrite(StringIO):
                 old_lines = old_content.splitlines() if old_content else []
                 new_lines = buf.splitlines()
 
-                self.diff = '\n'.join(difflib.unified_diff(old_lines, new_lines,
-                    self.name, self.name, n=4, lineterm=''))
+                self.diff = difflib.unified_diff(old_lines, new_lines,
+                    self.name, self.name, n=4, lineterm='')
             # FileAvoidWrite isn't unicode/bytes safe. So, files with non-ascii
             # content or opened and written in different modes may involve
             # implicit conversion and this will make Python unhappy. Since

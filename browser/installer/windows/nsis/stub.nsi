@@ -230,6 +230,9 @@ Var ControlRightPX
 
 !include "defines.nsi"
 
+; Must be included after defines.nsi
+!include "locale-fonts.nsh"
+
 ; The OFFICIAL define is a workaround to support different urls for Release and
 ; Beta since they share the same branding when building with other branches that
 ; set the update channel to beta.
@@ -416,9 +419,27 @@ Function .onInit
 !endif
   StrCpy $WasOptionsButtonClicked "0"
 
-  CreateFont $FontBlurb "$(^Font)" "12" "500"
-  CreateFont $FontNormal "$(^Font)" "11" "500"
-  CreateFont $FontItalic "$(^Font)" "11" "500" /ITALIC
+  StrCpy $0 ""
+!ifdef FONT_FILE1
+  ${If} ${FileExists} "$FONTS\${FONT_FILE1}"
+    StrCpy $0 "${FONT_NAME1}"
+  ${EndIf}
+!endif
+
+!ifdef FONT_FILE2
+  ${If} $0 == ""
+  ${AndIf} ${FileExists} "$FONTS\${FONT_FILE2}"
+    StrCpy $0 "${FONT_NAME2}"
+  ${EndIf}
+!endif
+
+  ${If} $0 == ""
+    StrCpy $0 "$(^Font)"
+  ${EndIf}
+
+  CreateFont $FontBlurb "$0" "12" "500"
+  CreateFont $FontNormal "$0" "11" "500"
+  CreateFont $FontItalic "$0" "11" "500" /ITALIC
 
   InitPluginsDir
   File /oname=$PLUGINSDIR\bgintro.bmp "bgintro.bmp"

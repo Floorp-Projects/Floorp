@@ -1054,51 +1054,6 @@ CanvasRenderingContext2D::SetIsIPC(bool isIPC)
 }
 
 NS_IMETHODIMP
-CanvasRenderingContext2D::Render(gfxContext *ctx, GraphicsFilter aFilter, uint32_t aFlags)
-{
-  nsresult rv = NS_OK;
-
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRefPtr<gfxASurface> surface;
-
-  if (NS_FAILED(GetThebesSurface(getter_AddRefs(surface)))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
-
-  pat->SetFilter(aFilter);
-  pat->SetExtend(gfxPattern::EXTEND_PAD);
-
-  gfxContext::GraphicsOperator op = ctx->CurrentOperator();
-  if (mOpaque)
-      ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-
-  // XXX I don't want to use PixelSnapped here, but layout doesn't guarantee
-  // pixel alignment for this stuff!
-  ctx->NewPath();
-  ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWidth, mHeight), pat);
-  ctx->Fill();
-
-  if (mOpaque)
-      ctx->SetOperator(op);
-
-  if (!(aFlags & RenderFlagPremultAlpha)) {
-      nsRefPtr<gfxASurface> curSurface = ctx->CurrentSurface();
-      nsRefPtr<gfxImageSurface> gis = curSurface->GetAsImageSurface();
-      MOZ_ASSERT(gis, "If non-premult alpha, must be able to get image surface!");
-
-      gfxUtils::UnpremultiplyImageSurface(gis);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
 CanvasRenderingContext2D::SetContextOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions)
 {
   if (aOptions.isNullOrUndefined()) {
@@ -3266,28 +3221,6 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
       error.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return;
     }
-
-    // Special case for Canvas, which could be an Azure canvas!
-    nsICanvasRenderingContextInternal *srcCanvas = canvas->GetContextAtIndex(0);
-    if (srcCanvas == this) {
-      // Self-copy.
-      srcSurf = mTarget->Snapshot();
-      imgSize = gfxIntSize(mWidth, mHeight);
-    } else if (srcCanvas) {
-      // This might not be an Azure canvas!
-      srcSurf = srcCanvas->GetSurfaceSnapshot();
-
-      if (srcSurf) {
-        if (mCanvasElement) {
-          // Do security check here.
-          CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement,
-                                                element->NodePrincipal(),
-                                                canvas->IsWriteOnly(),
-                                                false);
-        }
-        imgSize = gfxIntSize(srcSurf->GetSize().width, srcSurf->GetSize().height);
-      }
-    }
   } else {
     if (image.IsHTMLImageElement()) {
       HTMLImageElement* img = &image.GetAsHTMLImageElement();
@@ -4143,27 +4076,6 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
                        IntPoint(dirtyRect.x, dirtyRect.y));
 
   Redraw(mgfx::Rect(dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CanvasRenderingContext2D::GetThebesSurface(gfxASurface **surface)
-{
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRefPtr<gfxASurface> thebesSurface =
-      gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);
-
-  if (!thebesSurface) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *surface = thebesSurface;
-  NS_ADDREF(*surface);
 
   return NS_OK;
 }
