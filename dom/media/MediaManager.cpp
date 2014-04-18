@@ -262,13 +262,23 @@ protected:
  */
 NS_IMPL_ISUPPORTS1(MediaDevice, nsIMediaDevice)
 
-MediaDevice::MediaDevice(MediaEngineVideoSource* aSource)
+MediaDevice* MediaDevice::Create(MediaEngineVideoSource* source) {
+  return new VideoDevice(source);
+}
+
+MediaDevice* MediaDevice::Create(MediaEngineAudioSource* source) {
+  return new AudioDevice(source);
+}
+
+MediaDevice::MediaDevice(MediaEngineSource* aSource)
   : mHasFacingMode(false)
   , mSource(aSource) {
-  mType.Assign(NS_LITERAL_STRING("video"));
   mSource->GetName(mName);
   mSource->GetUUID(mID);
+}
 
+VideoDevice::VideoDevice(MediaEngineVideoSource* aSource)
+  : MediaDevice(aSource) {
 #ifdef MOZ_B2G_CAMERA
   if (mName.EqualsLiteral("back")) {
     mHasFacingMode = true;
@@ -286,13 +296,8 @@ MediaDevice::MediaDevice(MediaEngineVideoSource* aSource)
   }
 }
 
-MediaDevice::MediaDevice(MediaEngineAudioSource* aSource)
-  : mHasFacingMode(false)
-  , mSource(aSource) {
-  mType.Assign(NS_LITERAL_STRING("audio"));
-  mSource->GetName(mName);
-  mSource->GetUUID(mID);
-}
+AudioDevice::AudioDevice(MediaEngineAudioSource* aSource)
+  : MediaDevice(aSource) {}
 
 NS_IMETHODIMP
 MediaDevice::GetName(nsAString& aName)
@@ -304,7 +309,20 @@ MediaDevice::GetName(nsAString& aName)
 NS_IMETHODIMP
 MediaDevice::GetType(nsAString& aType)
 {
-  aType.Assign(mType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+VideoDevice::GetType(nsAString& aType)
+{
+  aType.Assign(NS_LITERAL_STRING("video"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AudioDevice::GetType(nsAString& aType)
+{
+  aType.Assign(NS_LITERAL_STRING("audio"));
   return NS_OK;
 }
 
@@ -327,10 +345,16 @@ MediaDevice::GetFacingMode(nsAString& aFacingMode)
   return NS_OK;
 }
 
-MediaEngineSource*
-MediaDevice::GetSource()
+MediaEngineVideoSource*
+VideoDevice::GetSource()
 {
-  return mSource;
+  return static_cast<MediaEngineVideoSource*>(&*mSource);
+}
+
+MediaEngineAudioSource*
+AudioDevice::GetSource()
+{
+  return static_cast<MediaEngineAudioSource*>(&*mSource);
 }
 
 /**
@@ -715,12 +739,12 @@ static SourceSet *
       sources[i]->GetName(deviceName);
       if (media_device_name && strlen(media_device_name) > 0)  {
         if (deviceName.EqualsASCII(media_device_name)) {
-          candidateSet.AppendElement(new MediaDevice(sources[i]));
+          candidateSet.AppendElement(MediaDevice::Create(sources[i]));
           break;
         }
       } else {
 #endif
-        candidateSet.AppendElement(new MediaDevice(sources[i]));
+        candidateSet.AppendElement(MediaDevice::Create(sources[i]));
 #ifdef DEBUG
       }
 #endif
@@ -950,7 +974,7 @@ public:
   }
 
   nsresult
-  SetAudioDevice(MediaDevice* aAudioDevice)
+  SetAudioDevice(AudioDevice* aAudioDevice)
   {
     mAudioDevice = aAudioDevice;
     mDeviceChosen = true;
@@ -958,7 +982,7 @@ public:
   }
 
   nsresult
-  SetVideoDevice(MediaDevice* aVideoDevice)
+  SetVideoDevice(VideoDevice* aVideoDevice)
   {
     mVideoDevice = aVideoDevice;
     mDeviceChosen = true;
@@ -1006,13 +1030,14 @@ public:
    * a GetUserMediaStreamRunnable. Runs off the main thread.
    */
   void
-  ProcessGetUserMedia(MediaEngineSource* aAudioSource, MediaEngineSource* aVideoSource)
+  ProcessGetUserMedia(MediaEngineAudioSource* aAudioSource,
+                      MediaEngineVideoSource* aVideoSource)
   {
     MOZ_ASSERT(mSuccess);
     MOZ_ASSERT(mError);
     nsresult rv;
     if (aAudioSource) {
-      rv = aAudioSource->Allocate(mPrefs);
+      rv = aAudioSource->Allocate(GetInvariant(mConstraints.mAudio), mPrefs);
       if (NS_FAILED(rv)) {
         LOG(("Failed to allocate audiosource %d",rv));
         Fail(NS_LITERAL_STRING("HARDWARE_UNAVAILABLE"));
@@ -1020,7 +1045,7 @@ public:
       }
     }
     if (aVideoSource) {
-      rv = aVideoSource->Allocate(mPrefs);
+      rv = aVideoSource->Allocate(GetInvariant(mConstraints.mVideo), mPrefs);
       if (NS_FAILED(rv)) {
         LOG(("Failed to allocate videosource %d\n",rv));
         if (aAudioSource) {
@@ -1046,11 +1071,11 @@ public:
    * a SuccessRunnable or an error via the ErrorRunnable. Off the main thread.
    */
   void
-  ProcessGetUserMediaSnapshot(MediaEngineSource* aSource, int aDuration)
+  ProcessGetUserMediaSnapshot(MediaEngineVideoSource* aSource, int aDuration)
   {
     MOZ_ASSERT(mSuccess);
     MOZ_ASSERT(mError);
-    nsresult rv = aSource->Allocate(mPrefs);
+    nsresult rv = aSource->Allocate(GetInvariant(mConstraints.mVideo), mPrefs);
     if (NS_FAILED(rv)) {
       Fail(NS_LITERAL_STRING("HARDWARE_UNAVAILABLE"));
       return;
@@ -1080,8 +1105,8 @@ private:
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
   uint64_t mWindowID;
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener;
-  nsRefPtr<MediaDevice> mAudioDevice;
-  nsRefPtr<MediaDevice> mVideoDevice;
+  nsRefPtr<AudioDevice> mAudioDevice;
+  nsRefPtr<VideoDevice> mVideoDevice;
   MediaEnginePrefs mPrefs;
 
   bool mDeviceChosen;
@@ -1770,9 +1795,9 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
           nsString type;
           device->GetType(type);
           if (type.EqualsLiteral("video")) {
-            runnable->SetVideoDevice(static_cast<MediaDevice*>(device.get()));
+            runnable->SetVideoDevice(static_cast<VideoDevice*>(device.get()));
           } else if (type.EqualsLiteral("audio")) {
-            runnable->SetAudioDevice(static_cast<MediaDevice*>(device.get()));
+            runnable->SetAudioDevice(static_cast<AudioDevice*>(device.get()));
           } else {
             NS_WARNING("Unknown device type in getUserMedia");
           }

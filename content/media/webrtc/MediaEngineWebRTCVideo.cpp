@@ -9,6 +9,7 @@
 #include "mozilla/layers/GrallocTextureClient.h"
 #include "nsMemory.h"
 #include "mtransport/runnable_utils.h"
+#include "MediaTrackConstraints.h"
 
 #ifdef MOZ_B2G_CAMERA
 #include "GrallocImages.h"
@@ -167,7 +168,9 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 }
 
 void
-MediaEngineWebRTCVideoSource::ChooseCapability(const MediaEnginePrefs &aPrefs)
+MediaEngineWebRTCVideoSource::ChooseCapability(
+    const VideoTrackConstraintsN &aConstraints,
+    const MediaEnginePrefs &aPrefs)
 {
 #ifdef MOZ_B2G_CAMERA
   mCapability.width  = aPrefs.mWidth;
@@ -234,13 +237,14 @@ MediaEngineWebRTCVideoSource::GetUUID(nsAString& aUUID)
 }
 
 nsresult
-MediaEngineWebRTCVideoSource::Allocate(const MediaEnginePrefs &aPrefs)
+MediaEngineWebRTCVideoSource::Allocate(const VideoTrackConstraintsN &aConstraints,
+                                       const MediaEnginePrefs &aPrefs)
 {
   LOG((__FUNCTION__));
 #ifdef MOZ_B2G_CAMERA
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
   if (mState == kReleased && mInitDone) {
-    ChooseCapability(aPrefs);
+    ChooseCapability(aConstraints, aPrefs);
     NS_DispatchToMainThread(WrapRunnable(this,
                                          &MediaEngineWebRTCVideoSource::AllocImpl));
     mCallbackMonitor.Wait();
@@ -253,7 +257,7 @@ MediaEngineWebRTCVideoSource::Allocate(const MediaEnginePrefs &aPrefs)
     // Note: if shared, we don't allow a later opener to affect the resolution.
     // (This may change depending on spec changes for Constraints/settings)
 
-    ChooseCapability(aPrefs);
+    ChooseCapability(aConstraints, aPrefs);
 
     if (mViECapture->AllocateCaptureDevice(NS_ConvertUTF16toUTF8(mUniqueId).get(),
                                            KMaxUniqueIdLength, mCaptureIndex)) {
