@@ -986,6 +986,7 @@ public:
   uint8_t        mBorderImageRepeatH; // [reset] see nsStyleConsts.h
   uint8_t        mBorderImageRepeatV; // [reset]
   uint8_t        mFloatEdge;          // [reset]
+  uint8_t        mBoxDecorationBreak; // [reset] see nsStyleConsts.h
 
 protected:
   // mComputedBorder holds the CSS2.1 computed border-width values.

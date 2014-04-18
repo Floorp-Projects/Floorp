@@ -796,6 +796,12 @@ const KTableValue nsCSSProps::kBoxPropSourceKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const KTableValue nsCSSProps::kBoxDecorationBreakKTable[] = {
+  eCSSKeyword_slice, NS_STYLE_BOX_DECORATION_BREAK_SLICE,
+  eCSSKeyword_clone, NS_STYLE_BOX_DECORATION_BREAK_CLONE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const KTableValue nsCSSProps::kBoxShadowTypeKTable[] = {
   eCSSKeyword_inset, NS_STYLE_BOX_SHADOW_INSET,
   eCSSKeyword_UNKNOWN,-1

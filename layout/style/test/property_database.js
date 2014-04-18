@@ -5387,6 +5387,17 @@ if (SpecialPowers.getBoolPref("layout.css.overflow-clip-box.enabled")) {
 	};
 }
 
+if (SpecialPowers.getBoolPref("layout.css.box-decoration-break.enabled")) {
+	gCSSProperties["box-decoration-break"] = {
+		domProp: "boxDecorationBreak",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "slice" ],
+		other_values: [ "clone" ],
+		invalid_values: [ "auto",  "none",  "1px" ]
+	};
+}
+
 if (SpecialPowers.getBoolPref("layout.css.unset-value.enabled")) {
   gCSSProperties["animation-direction"].invalid_values.push("normal, unset");
   gCSSProperties["animation-name"].invalid_values.push("bounce, unset", "unset, bounce");
