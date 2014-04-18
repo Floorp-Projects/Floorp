@@ -1405,7 +1405,7 @@
                         this.controlBar.style.width = width + "px";
                       } else {
                         this.controlsOverlay.removeAttribute("scaled");
-                        this.controlsOverlaystyle.style.width = "";
+                        this.controlsOverlay.style.width = "";
                         this.controlsSpacer.style.width = "";
                         this.controlBar.style.width = "";
                       }
