@@ -690,7 +690,6 @@ sync_java_files = [
     'sync/NullClusterURLException.java',
     'sync/PersistedMetaGlobal.java',
     'sync/PrefsBackoffHandler.java',
-    'sync/PrefsSource.java',
     'sync/receivers/SyncAccountDeletedReceiver.java',
     'sync/receivers/SyncAccountDeletedService.java',
     'sync/receivers/UpgradeReceiver.java',

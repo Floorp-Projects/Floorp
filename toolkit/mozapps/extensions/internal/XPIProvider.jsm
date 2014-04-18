@@ -35,6 +35,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserToolboxProcess",
+                                  "resource:///modules/devtools/ToolboxProcess.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "ChromeRegistry",
@@ -1869,6 +1871,14 @@ this.XPIProvider = {
       Services.prefs.addObserver(PREF_EM_MIN_COMPAT_APP_VERSION, this, false);
       Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this, false);
       Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS, false);
+
+      try {
+        BrowserToolboxProcess.on("connectionchange",
+                                 this.onDebugConnectionChange.bind(this));
+      }
+      catch (e) {
+        // BrowserToolboxProcess is not available in all applications
+      }
 
       let flushCaches = this.checkForChanges(aAppChanged, aOldAppVersion,
                                              aOldPlatformVersion);
@@ -3855,6 +3865,15 @@ this.XPIProvider = {
     }
   },
 
+  onDebugConnectionChange: function(aEvent, aWhat, aConnection) {
+    if (aWhat != "opened")
+      return;
+
+    for (let id of Object.keys(this.bootstrapScopes)) {
+      aConnection.setAddonOptions(id, { global: this.bootstrapScopes[id] });
+    }
+  },
+
   /**
    * Notified when a preference we're interested in has changed.
    *
@@ -4119,6 +4138,13 @@ this.XPIProvider = {
     catch (e) {
       logger.warn("Error loading bootstrap.js for " + aId, e);
     }
+
+    try {
+      BrowserToolboxProcess.setAddonOptions(aId, { global: this.bootstrapScopes[aId] });
+    }
+    catch (e) {
+      // BrowserToolboxProcess is not available in all applications
+    }
   },
 
   /**
@@ -4133,6 +4159,13 @@ this.XPIProvider = {
     delete this.bootstrappedAddons[aId];
     this.persistBootstrappedAddons();
     this.addAddonsToCrashReporter();
+
+    try {
+      BrowserToolboxProcess.setAddonOptions(aId, { global: null });
+    }
+    catch (e) {
+      // BrowserToolboxProcess is not available in all applications
+    }
   },
 
   /**

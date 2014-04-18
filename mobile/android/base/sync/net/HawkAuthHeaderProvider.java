@@ -18,6 +18,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.mozilla.apache.commons.codec.binary.Base64;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.Utils;
 
 import ch.boye.httpclientandroidlib.Header;
@@ -55,6 +56,12 @@ public class HawkAuthHeaderProvider implements AuthHeaderProvider {
    * <p>
    * Hawk specifies no mechanism by which a client receives an
    * identifier-and-key pair from the server.
+   * <p>
+   * Hawk requests can include a payload verification hash with requests that
+   * enclose an entity (PATCH, POST, and PUT requests).  <b>You should default
+   * to including the payload verification hash<b> unless you have a good reason
+   * not to -- the server can always ignore payload verification hashes provided
+   * by the client.
    *
    * @param id
    *          to name requests with.
@@ -62,7 +69,7 @@ public class HawkAuthHeaderProvider implements AuthHeaderProvider {
    *          to sign request with.
    *
    * @param includePayloadHash
-   *          true if message integrity hash should be included in signed
+   *          true if payload verification hash should be included in signed
    *          request header. See <a href="https://github.com/hueniverse/hawk#payload-validation">https://github.com/hueniverse/hawk#payload-validation</a>.
    *
    * @param skewSeconds
@@ -81,11 +88,6 @@ public class HawkAuthHeaderProvider implements AuthHeaderProvider {
     this.includePayloadHash = includePayloadHash;
     this.skewSeconds = skewSeconds;
   }
-
-  public HawkAuthHeaderProvider(String id, byte[] key, boolean includePayloadHash) {
-    this(id, key, includePayloadHash, 0L);
-  }
-
 
   /**
    * @return the current time in milliseconds.
@@ -141,14 +143,9 @@ public class HawkAuthHeaderProvider implements AuthHeaderProvider {
 
     String payloadHash = null;
     if (includePayloadHash) {
-      if (!(request instanceof HttpEntityEnclosingRequest)) {
-        throw new IllegalArgumentException("cannot specify payload for request without an entity");
-      }
-      HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
-      if (entity == null) {
-        throw new IllegalArgumentException("cannot specify payload for request with a null entity");
-      }
-      payloadHash = Base64.encodeBase64String(getPayloadHash(entity));
+      payloadHash = getPayloadHashString(request);
+    } else {
+      Logger.debug(LOG_TAG, "Configured to not include payload hash for this request.");
     }
 
     String app = null;
@@ -181,6 +178,38 @@ public class HawkAuthHeaderProvider implements AuthHeaderProvider {
     sb.append("\"");
 
     return new BasicHeader("Authorization", sb.toString());
+  }
+
+  /**
+   * Get the payload verification hash for the given request, if possible.
+   * <p>
+   * Returns null if the request does not enclose an entity (is not an HTTP
+   * PATCH, POST, or PUT). Throws if the payload verification hash cannot be
+   * computed.
+   *
+   * @param request
+   *          to compute hash for.
+   * @return verification hash, or null if the request does not enclose an entity.
+   * @throws IllegalArgumentException if the request does not enclose a valid non-null entity.
+   * @throws UnsupportedEncodingException
+   * @throws NoSuchAlgorithmException
+   * @throws IOException
+   */
+  protected static String getPayloadHashString(HttpRequestBase request)
+      throws UnsupportedEncodingException, NoSuchAlgorithmException, IOException, IllegalArgumentException {
+    final boolean shouldComputePayloadHash = request instanceof HttpEntityEnclosingRequest;
+    if (!shouldComputePayloadHash) {
+      Logger.debug(LOG_TAG, "Not computing payload verification hash for non-enclosing request.");
+      return null;
+    }
+    if (!(request instanceof HttpEntityEnclosingRequest)) {
+      throw new IllegalArgumentException("Cannot compute payload verification hash for enclosing request without an entity");
+    }
+    final HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
+    if (entity == null) {
+      throw new IllegalArgumentException("Cannot compute payload verification hash for enclosing request with a null entity");
+    }
+    return Base64.encodeBase64String(getPayloadHash(entity));
   }
 
   /**

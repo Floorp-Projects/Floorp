@@ -243,7 +243,7 @@ add_task(function* test_cache() {
 
   // Cleanup.
 
-  yield experiments.disableExperiment();
+  yield experiments._toggleExperimentsEnabled(false);
   yield experiments.uninit();
   yield removeCacheFile();
 });
