@@ -4341,6 +4341,8 @@ JS::ReadOnlyCompileOptions::copyPODOptions(const ReadOnlyCompileOptions &rhs)
     extraWarningsOption = rhs.extraWarningsOption;
     werrorOption = rhs.werrorOption;
     asmJSOption = rhs.asmJSOption;
+    forceAsync = rhs.forceAsync;
+    installedFile = rhs.installedFile;
     sourcePolicy = rhs.sourcePolicy;
     introductionType = rhs.introductionType;
     introductionLineno = rhs.introductionLineno;
