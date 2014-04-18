@@ -250,6 +250,9 @@ private:
 
   void ChooseCapability(const VideoTrackConstraintsN &aConstraints,
                         const MediaEnginePrefs &aPrefs);
+
+  void GuessCapability(const VideoTrackConstraintsN &aConstraints,
+                       const MediaEnginePrefs &aPrefs);
 };
 
 class MediaEngineWebRTCAudioSource : public MediaEngineAudioSource,
