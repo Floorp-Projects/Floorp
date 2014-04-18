@@ -132,11 +132,36 @@ protected:
 /**
  * Video source and friends.
  */
-struct MediaEnginePrefs {
+class MediaEnginePrefs {
+public:
   int32_t mWidth;
   int32_t mHeight;
   int32_t mFPS;
   int32_t mMinFPS;
+
+  // mWidth and/or mHeight may be zero (=adaptive default), so use functions.
+
+  int32_t GetWidth(bool aHD = false) const {
+    return mWidth? mWidth : (mHeight?
+                             (mHeight * GetDefWidth(aHD)) / GetDefHeight(aHD) :
+                             GetDefWidth(aHD));
+  }
+
+  int32_t GetHeight(bool aHD = false) const {
+    return mHeight? mHeight : (mWidth?
+                               (mWidth * GetDefHeight(aHD)) / GetDefWidth(aHD) :
+                               GetDefHeight(aHD));
+  }
+private:
+  static int32_t GetDefWidth(bool aHD = false) {
+    return aHD ? MediaEngine::DEFAULT_169_VIDEO_WIDTH :
+                 MediaEngine::DEFAULT_43_VIDEO_WIDTH;
+  }
+
+  static int32_t GetDefHeight(bool aHD = false) {
+    return aHD ? MediaEngine::DEFAULT_169_VIDEO_HEIGHT :
+                 MediaEngine::DEFAULT_43_VIDEO_HEIGHT;
+  }
 };
 
 class MediaEngineVideoSource : public MediaEngineSource
