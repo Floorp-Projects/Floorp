@@ -16,15 +16,8 @@
 dictionary MediaStreamConstraints {
     (boolean or MediaTrackConstraints) audio = false;
     (boolean or MediaTrackConstraints) video = false;
-    boolean picture = false;
-    boolean fake = false;
-};
-
-dictionary MediaStreamConstraintsInternal {
-    (boolean or MediaTrackConstraintsInternal) audio;
-    (boolean or MediaTrackConstraintsInternal) video;
-    boolean picture = false;
-    boolean fake = false;
+    boolean picture = false; // Mozilla legacy
+    boolean fake = false;    // for testing
 };
 
 interface MediaStream {

@@ -1294,8 +1294,7 @@ Navigator::SendBeacon(const nsAString& aUrl,
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 void
-Navigator::MozGetUserMedia(JSContext* aCx,
-                           const MediaStreamConstraints& aConstraints,
+Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
                            NavigatorUserMediaSuccessCallback& aOnSuccess,
                            NavigatorUserMediaErrorCallback& aOnError,
                            ErrorResult& aRv)
@@ -1318,12 +1317,12 @@ Navigator::MozGetUserMedia(JSContext* aCx,
   bool privileged = nsContentUtils::IsChromeDoc(mWindow->GetExtantDoc());
 
   MediaManager* manager = MediaManager::Get();
-  aRv = manager->GetUserMedia(aCx, privileged, mWindow, aConstraints,
+  aRv = manager->GetUserMedia(privileged, mWindow, aConstraints,
                               onsuccess, onerror);
 }
 
 void
-Navigator::MozGetUserMediaDevices(const MediaStreamConstraintsInternal& aConstraints,
+Navigator::MozGetUserMediaDevices(const MediaStreamConstraints& aConstraints,
                                   MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
                                   NavigatorUserMediaErrorCallback& aOnError,
                                   uint64_t aInnerWindowID,

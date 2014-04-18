@@ -495,14 +495,14 @@ public:
   void RemoveFromWindowList(uint64_t aWindowID,
     GetUserMediaCallbackMediaStreamListener *aListener);
 
-  nsresult GetUserMedia(JSContext* aCx, bool aPrivileged,
+  nsresult GetUserMedia(bool aPrivileged,
     nsPIDOMWindow* aWindow,
     const dom::MediaStreamConstraints& aRawConstraints,
     nsIDOMGetUserMediaSuccessCallback* onSuccess,
     nsIDOMGetUserMediaErrorCallback* onError);
 
   nsresult GetUserMediaDevices(nsPIDOMWindow* aWindow,
-    const dom::MediaStreamConstraintsInternal& aConstraints,
+    const dom::MediaStreamConstraints& aConstraints,
     nsIGetUserMediaDevicesSuccessCallback* onSuccess,
     nsIDOMGetUserMediaErrorCallback* onError,
     uint64_t aInnerWindowID = 0);
