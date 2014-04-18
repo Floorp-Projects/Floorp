@@ -7,7 +7,7 @@ function test() {
   let originalTab = gBrowser.tabs[0];
 
   popup(originalTab);
-  ok(document.getElementById("context_closeTab").disabled, "The 'Close tab' menu item is disabled");
+  ok(!document.getElementById("context_closeTab").disabled, "The 'Close tab' menu item is enabled");
   ok(document.getElementById("context_openTabInWindow").disabled, "The 'Move to New Window' menu item is disabled");
 
   let newTabOne = gBrowser.addTab("about:blank", {skipAnimation: true});

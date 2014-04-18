@@ -14,6 +14,11 @@
        fields. -->
   <dimen name="fxaccount_input_padding_vertical">10dp</dimen>
 
+  <!-- The amount of horizontal padding that appears around the show/hide
+       password button.  Vertical padding is provided by the adjacent input
+       field. -->
+  <dimen name="fxaccount_show_password_padding_horizontal">8dp</dimen>
+
   <!-- Preference fragment padding, bottom -->
   <dimen name="preference_fragment_padding_bottom">0dp</dimen>
   <!-- Preference fragment padding, sides -->

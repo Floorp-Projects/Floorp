@@ -44,11 +44,14 @@ public:
                      int aTimeout, DBusMessage* aMessage);
 
   bool SendWithReply(DBusReplyCallback aCallback, void* aData,
-                     int aTimeout, const char* aPath, const char* aIntf,
+                     int aTimeout,
+                     const char* aDestination,
+                     const char* aPath, const char* aIntf,
                      const char *aFunc, int aFirstArgType, ...);
 
 protected:
-  DBusMessage* BuildDBusMessage(const char* aPath, const char* aIntf,
+  DBusMessage* BuildDBusMessage(const char* aDestination,
+                                const char* aPath, const char* aIntf,
                                 const char* aFunc, int aFirstArgType,
                                 va_list args);
 

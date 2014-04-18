@@ -1154,8 +1154,8 @@ AppendDeviceName(BluetoothSignal& aSignal)
 
   bool success = sDBusConnection->SendWithReply(
     AppendDeviceNameReplyHandler::Callback, handler.get(), 1000,
-    NS_ConvertUTF16toUTF8(devicePath).get(), DBUS_DEVICE_IFACE,
-    "GetProperties", DBUS_TYPE_INVALID);
+    BLUEZ_DBUS_BASE_IFC, NS_ConvertUTF16toUTF8(devicePath).get(),
+    DBUS_DEVICE_IFACE, "GetProperties", DBUS_TYPE_INVALID);
 
   NS_ENSURE_TRUE_VOID(success);
 
@@ -1488,6 +1488,7 @@ private:
 
     bool success = sDBusConnection->SendWithReply(
       RegisterAgentReplyHandler::Callback, handler.get(), -1,
+      BLUEZ_DBUS_BASE_IFC,
       NS_ConvertUTF16toUTF8(sAdapterPath).get(),
       DBUS_ADAPTER_IFACE, "RegisterAgent",
       DBUS_TYPE_OBJECT_PATH, &agentPath,
@@ -1527,6 +1528,7 @@ public:
 
     bool success = sDBusConnection->SendWithReply(
       DBusReplyHandler::Callback, handler.get(), -1,
+      BLUEZ_DBUS_BASE_IFC,
       NS_ConvertUTF16toUTF8(sAdapterPath).get(),
       DBUS_ADAPTER_IFACE, "AddReservedServiceRecords",
       DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32,
@@ -1939,7 +1941,7 @@ public:
      */
     if (sAdapterPath.IsEmpty()) {
       bool success = sDBusConnection->SendWithReply(OnDefaultAdapterReply, nullptr,
-                                                    1000, "/",
+                                                    1000, BLUEZ_DBUS_BASE_IFC, "/",
                                                     DBUS_MANAGER_IFACE,
                                                     "DefaultAdapter",
                                                     DBUS_TYPE_INVALID);
@@ -2211,6 +2213,7 @@ protected:
 
     bool success = sDBusConnection->SendWithReply(
       DefaultAdapterPathReplyHandler::Callback, handler.get(), 1000,
+      BLUEZ_DBUS_BASE_IFC,
       NS_ConvertUTF16toUTF8(mAdapterPath).get(),
       DBUS_ADAPTER_IFACE, "GetProperties", DBUS_TYPE_INVALID);
 
@@ -2274,7 +2277,7 @@ public:
 
     bool success = sDBusConnection->SendWithReply(
       DefaultAdapterPathReplyHandler::Callback,
-      handler.get(), 1000,
+      handler.get(), 1000, BLUEZ_DBUS_BASE_IFC,
       "/", DBUS_MANAGER_IFACE, "DefaultAdapter",
       DBUS_TYPE_INVALID);
     NS_ENSURE_TRUE_VOID(success);
@@ -2342,6 +2345,7 @@ public:
     bool success = sDBusConnection->SendWithReply(
       OnSendDiscoveryMessageReply,
       static_cast<void*>(mRunnable.get()), -1,
+      BLUEZ_DBUS_BASE_IFC,
       NS_ConvertUTF16toUTF8(sAdapterPath).get(),
       DBUS_ADAPTER_IFACE, mMessageName.get(),
       DBUS_TYPE_INVALID);
@@ -2420,8 +2424,8 @@ public:
 
     bool success = sDBusConnection->SendWithReply(
       mCallback, static_cast<void*>(mServiceClass), -1,
-      mObjectPath.get(), mInterface.get(), mMessage.get(),
-      DBUS_TYPE_INVALID);
+      BLUEZ_DBUS_BASE_IFC, mObjectPath.get(), mInterface.get(),
+      mMessage.get(), DBUS_TYPE_INVALID);
     NS_ENSURE_TRUE_VOID(success);
 
     mServiceClass.forget();
@@ -2607,7 +2611,7 @@ protected:
 
     bool success = sDBusConnection->SendWithReply(
       BluetoothArrayOfDevicePropertiesReplyHandler::Callback,
-      handler.get(), 1000,
+      handler.get(), 1000, BLUEZ_DBUS_BASE_IFC,
       NS_ConvertUTF16toUTF8(mObjectPath).get(),
       DBUS_DEVICE_IFACE, "GetProperties",
       DBUS_TYPE_INVALID);
@@ -2735,7 +2739,7 @@ public:
     MOZ_ASSERT(!sAdapterPath.IsEmpty());
 
     DBusMessage* msg =
-      dbus_message_new_method_call("org.bluez",
+      dbus_message_new_method_call(BLUEZ_DBUS_BASE_IFC,
                                    NS_ConvertUTF16toUTF8(sAdapterPath).get(),
                                    sBluetoothDBusIfaces[mType],
                                    "SetProperty");
@@ -2905,6 +2909,7 @@ public:
     // unregister it after pairing process is over
     bool success = sDBusConnection->SendWithReply(
       GetObjectPathCallback, static_cast<void*>(mRunnable), mTimeout,
+      BLUEZ_DBUS_BASE_IFC,
       NS_ConvertUTF16toUTF8(sAdapterPath).get(),
       DBUS_ADAPTER_IFACE,
       "CreatePairedDevice",
@@ -2976,6 +2981,7 @@ public:
 
     bool success = sDBusConnection->SendWithReply(
       OnRemoveDeviceReply, static_cast<void*>(mRunnable.get()), -1,
+      BLUEZ_DBUS_BASE_IFC,
       NS_ConvertUTF16toUTF8(sAdapterPath).get(),
       DBUS_ADAPTER_IFACE, "RemoveDevice",
       DBUS_TYPE_OBJECT_PATH, &cstrDeviceObjectPath,
@@ -3498,6 +3504,7 @@ public:
 
     bool success = sDBusConnection->SendWithReply(
       OnGetServiceChannelReplyHandler::Callback, handler, -1,
+      BLUEZ_DBUS_BASE_IFC,
       NS_ConvertUTF16toUTF8(objectPath).get(),
       DBUS_DEVICE_IFACE, "GetServiceAttributeValue",
       DBUS_TYPE_STRING, &cstrServiceUUID,
@@ -3578,6 +3585,7 @@ public:
 
     sDBusConnection->SendWithReply(DiscoverServicesCallback,
                                    (void*)callbackRunnable, -1,
+                                   BLUEZ_DBUS_BASE_IFC,
                                    NS_ConvertUTF16toUTF8(objectPath).get(),
                                    DBUS_DEVICE_IFACE,
                                    "DiscoverServices",
@@ -3796,6 +3804,7 @@ public:
 
     bool success = sDBusConnection->SendWithReply(
       GetVoidCallback, static_cast<void*>(mRunnable.get()), -1,
+      BLUEZ_DBUS_BASE_IFC,
       objectPath.get(),
       DBUS_CTL_IFACE, "UpdateMetaData",
       DBUS_TYPE_STRING, &title,
@@ -3932,6 +3941,7 @@ public:
 
     bool success = sDBusConnection->SendWithReply(
       GetVoidCallback, static_cast<void*>(mRunnable.get()), -1,
+      BLUEZ_DBUS_BASE_IFC,
       objectPath.get(),
       DBUS_CTL_IFACE, "UpdatePlayStatus",
       DBUS_TYPE_UINT32, &mDuration,
@@ -4055,6 +4065,7 @@ public:
 
     bool success = sDBusConnection->SendWithReply(
       ControlCallback, nullptr, -1,
+      BLUEZ_DBUS_BASE_IFC,
       objectPath.get(),
       DBUS_CTL_IFACE, "UpdatePlayStatus",
       DBUS_TYPE_UINT32, &mDuration,
@@ -4121,6 +4132,7 @@ public:
 
     bool success = sDBusConnection->SendWithReply(
       ControlCallback, nullptr, -1,
+      BLUEZ_DBUS_BASE_IFC,
       objectPath.get(),
       DBUS_CTL_IFACE, "UpdateNotification",
       DBUS_TYPE_UINT16, &eventId,

@@ -28,6 +28,7 @@ import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -59,7 +60,7 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_update_credentials);
 
-    emailEdit = (EditText) ensureFindViewById(null, R.id.email, "email edit");
+    emailEdit = (AutoCompleteTextView) ensureFindViewById(null, R.id.email, "email edit");
     passwordEdit = (EditText) ensureFindViewById(null, R.id.password, "password edit");
     showPasswordButton = (Button) ensureFindViewById(null, R.id.show_password, "show password button");
     remoteErrorTextView = (TextView) ensureFindViewById(null, R.id.remote_error, "remote error text view");
