@@ -916,7 +916,7 @@ JS::IsIncrementalGCEnabled(JSRuntime *rt)
 JS_FRIEND_API(bool)
 JS::IsIncrementalGCInProgress(JSRuntime *rt)
 {
-    return (rt->gcIncrementalState != gc::NO_INCREMENTAL && !rt->gcVerifyPreData);
+    return rt->gcIncrementalState != gc::NO_INCREMENTAL && !rt->gcVerifyPreData;
 }
 
 JS_FRIEND_API(void)
@@ -970,7 +970,7 @@ JS::IsGenerationalGCEnabled(JSRuntime *rt)
 JS_FRIEND_API(bool)
 JS::IsIncrementalBarrierNeeded(JSRuntime *rt)
 {
-    return (rt->gcIncrementalState == gc::MARK && !rt->isHeapBusy());
+    return rt->gcIncrementalState == gc::MARK && !rt->isHeapBusy();
 }
 
 JS_FRIEND_API(bool)

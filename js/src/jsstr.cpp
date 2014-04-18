@@ -3174,7 +3174,7 @@ class SplitMatchResult {
         endIndex_ = SIZE_MAX;
     }
     bool isFailure() const {
-        return (endIndex_ == SIZE_MAX);
+        return endIndex_ == SIZE_MAX;
     }
     size_t endIndex() const {
         JS_ASSERT(!isFailure());
