@@ -195,7 +195,7 @@ gc::StartVerifyPreBarriers(JSRuntime *rt)
 
     rt->gcNumber++;
 
-    VerifyPreTracer *trc = js_new<VerifyPreTracer>(rt, nullptr);
+    VerifyPreTracer *trc = js_new<VerifyPreTracer>(rt, JSTraceCallback(nullptr));
     if (!trc)
         return;
 
@@ -412,7 +412,7 @@ gc::StartVerifyPostBarriers(JSRuntime *rt)
 
     rt->gcNumber++;
 
-    VerifyPostTracer *trc = js_new<VerifyPostTracer>(rt, nullptr);
+    VerifyPostTracer *trc = js_new<VerifyPostTracer>(rt, JSTraceCallback(nullptr));
     if (!trc)
         return;
 
