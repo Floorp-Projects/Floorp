@@ -42,7 +42,7 @@ AllocationIntegrityState::record()
             virtualRegisters[vreg] = phi->getDef(0);
             if (!info.outputs.append(*phi->getDef(0)))
                 return false;
-            for (size_t k = 0; k < phi->numOperands(); k++) {
+            for (size_t k = 0, kend = phi->numOperands(); k < kend; k++) {
                 if (!info.inputs.append(*phi->getOperand(k)))
                     return false;
             }
@@ -232,7 +232,7 @@ AllocationIntegrityState::checkIntegrity(LBlock *block, LInstruction *ins,
         const InstructionInfo &info = blocks[block->mir()->id()].phis[i];
         LPhi *phi = block->getPhi(i);
         if (info.outputs[0].virtualRegister() == vreg) {
-            for (size_t j = 0; j < phi->numOperands(); j++) {
+            for (size_t j = 0, jend = phi->numOperands(); j < jend; j++) {
                 uint32_t newvreg = info.inputs[j].toUse()->virtualRegister();
                 LBlock *predecessor = graph.getBlock(block->mir()->getPredecessor(j)->id());
                 if (!addPredecessor(predecessor, newvreg, alloc))
@@ -244,7 +244,7 @@ AllocationIntegrityState::checkIntegrity(LBlock *block, LInstruction *ins,
 
     // No phi which defined the vreg we are tracking, follow back through all
     // predecessors with the existing vreg.
-    for (size_t i = 0; i < block->mir()->numPredecessors(); i++) {
+    for (size_t i = 0, iend = block->mir()->numPredecessors(); i < iend; i++) {
         LBlock *predecessor = graph.getBlock(block->mir()->getPredecessor(i)->id());
         if (!addPredecessor(predecessor, vreg, alloc))
             return false;
