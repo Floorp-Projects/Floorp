@@ -35,6 +35,7 @@ import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -66,7 +67,7 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_create_account);
 
-    emailEdit = (EditText) ensureFindViewById(null, R.id.email, "email edit");
+    emailEdit = (AutoCompleteTextView) ensureFindViewById(null, R.id.email, "email edit");
     passwordEdit = (EditText) ensureFindViewById(null, R.id.password, "password edit");
     showPasswordButton = (Button) ensureFindViewById(null, R.id.show_password, "show password button");
     yearEdit = (EditText) ensureFindViewById(null, R.id.year_edit, "year edit");

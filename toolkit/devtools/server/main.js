@@ -9,8 +9,13 @@
  * Toolkit glue for the remote debugging protocol, loaded into the
  * debugging global.
  */
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
+let { Ci, Cc, CC, Cu, Cr } = require("chrome");
+let Debugger = require("Debugger");
 let Services = require("Services");
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
+let { dumpn, dbg_assert } = DevToolsUtils;
+let Services = require("Services");
+let EventEmitter = require("devtools/toolkit/event-emitter");
 
 // Until all Debugger server code is converted to SDK modules,
 // imports Components.* alias from chrome module.
@@ -23,8 +28,11 @@ this.Cc = Cc;
 this.CC = CC;
 this.Cu = Cu;
 this.Cr = Cr;
-this.DevToolsUtils = DevToolsUtils;
+this.Debugger = Debugger;
 this.Services = Services;
+this.DevToolsUtils = DevToolsUtils;
+this.dumpn = dumpn;
+this.dbg_assert = dbg_assert;
 
 // Overload `Components` to prevent SDK loader exception on Components
 // object usage
@@ -37,11 +45,9 @@ const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
 const nsFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 Cu.import("resource://gre/modules/reflect.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+dumpn.wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
-Cu.import("resource://gre/modules/jsdebugger.jsm");
-addDebuggerToGlobal(this);
 
 function loadSubScript(aURL)
 {
@@ -75,20 +81,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
 XPCOMUtils.defineLazyGetter(this, "NetworkMonitorManager", () => {
   return require("devtools/toolkit/webconsole/network-monitor").NetworkMonitorManager;
 });
-
-function dumpn(str) {
-  if (wantLogging) {
-    dump("DBG-SERVER: " + str + "\n");
-  }
-}
-this.dumpn = dumpn;
-
-function dbg_assert(cond, e) {
-  if (!cond) {
-    return e;
-  }
-}
-this.dbg_assert = dbg_assert;
 
 loadSubScript.call(this, "resource://gre/modules/devtools/server/transport.js");
 
@@ -185,19 +177,6 @@ var DebuggerServer = {
   chromeWindowType: null,
 
   /**
-   * Set that to a function that will be called anytime a new connection
-   * is opened or one is closed.
-   */
-  onConnectionChange: null,
-
-  _fireConnectionChange: function(aWhat) {
-    if (this.onConnectionChange &&
-        typeof this.onConnectionChange === "function") {
-      this.onConnectionChange(aWhat);
-    }
-  },
-
-  /**
    * Prompt the user to accept or decline the incoming connection. This is the
    * default implementation that products embedding the debugger server may
    * choose to override.
@@ -243,6 +222,8 @@ var DebuggerServer = {
 
     this._initialized = true;
   },
+
+  protocol: require("devtools/server/protocol"),
 
   /**
    * Initialize the debugger server's transport variables.  This can be
@@ -295,8 +276,6 @@ var DebuggerServer = {
     this._allowConnection = null;
     this._transportInitialized = false;
     this._initialized = false;
-
-    this._fireConnectionChange("closed");
 
     dumpn("Debugger server is shut down.");
   },
@@ -414,6 +393,30 @@ var DebuggerServer = {
     if ("nsIProfiler" in Ci) {
       this.addActors("resource://gre/modules/devtools/server/actors/profiler.js");
     }
+  },
+
+  /**
+   * Passes a set of options to the BrowserAddonActors for the given ID.
+   *
+   * @param aId string
+   *        The ID of the add-on to pass the options to
+   * @param aOptions object
+   *        The options.
+   * @return a promise that will be resolved when complete.
+   */
+  setAddonOptions: function DS_setAddonOptions(aId, aOptions) {
+    if (!this._initialized) {
+      return;
+    }
+
+    let promises = [];
+
+    // Pass to all connections
+    for (let connID of Object.getOwnPropertyNames(this._connections)) {
+      promises.push(this._connections[connID].setAddonOptions(aId, aOptions));
+    }
+
+    return all(promises);
   },
 
   /**
@@ -708,7 +711,7 @@ var DebuggerServer = {
     }
     aTransport.ready();
 
-    this._fireConnectionChange("opened");
+    this.emit("connectionchange", "opened", conn);
     return conn;
   },
 
@@ -717,7 +720,7 @@ var DebuggerServer = {
    */
   _connectionClosed: function DS_connectionClosed(aConnection) {
     delete this._connections[aConnection.prefix];
-    this._fireConnectionChange("closed");
+    this.emit("connectionchange", "closed", aConnection);
   },
 
   // DebuggerServer extension API.
@@ -811,6 +814,8 @@ var DebuggerServer = {
     }
   }
 };
+
+EventEmitter.decorate(DebuggerServer);
 
 if (this.exports) {
   exports.DebuggerServer = DebuggerServer;
@@ -1059,6 +1064,31 @@ DebuggerServerConnection.prototype = {
       error: "unknownError",
       message: errorString
     };
+  },
+
+  /**
+   * Passes a set of options to the BrowserAddonActors for the given ID.
+   *
+   * @param aId string
+   *        The ID of the add-on to pass the options to
+   * @param aOptions object
+   *        The options.
+   * @return a promise that will be resolved when complete.
+   */
+  setAddonOptions: function DSC_setAddonOptions(aId, aOptions) {
+    let addonList = this.rootActor._parameters.addonList;
+    if (!addonList) {
+      return resolve();
+    }
+    return addonList.getList().then((addonActors) => {
+      for (let actor of addonActors) {
+        if (actor.id != aId) {
+          continue;
+        }
+        actor.setOptions(aOptions);
+        return;
+      }
+    });
   },
 
   /* Forwarding packets to other transports based on actor name prefixes. */

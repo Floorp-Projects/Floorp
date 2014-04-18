@@ -1,12 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 const { Loader } = require('sdk/test/loader');
-const Pages = require("sdk/page-worker");
-const Page = Pages.Page;
+const { Page } = require("sdk/page-worker");
 const { URL } = require("sdk/url");
 const fixtures = require("./fixtures");
 const testURI = fixtures.url("test.html");
@@ -93,17 +91,17 @@ exports.testPageProperties = function(assert) {
 
 exports.testConstructorAndDestructor = function(assert, done) {
   let loader = Loader(module);
-  let Pages = loader.require("sdk/page-worker");
+  let { Page } = loader.require("sdk/page-worker");
   let global = loader.sandbox("sdk/page-worker");
 
   let pagesReady = 0;
 
-  let page1 = Pages.Page({
+  let page1 = Page({
     contentScript:      "self.postMessage('')",
     contentScriptWhen:  "end",
     onMessage:          pageReady
   });
-  let page2 = Pages.Page({
+  let page2 = Page({
     contentScript:      "self.postMessage('')",
     contentScriptWhen:  "end",
     onMessage:          pageReady
@@ -128,9 +126,9 @@ exports.testConstructorAndDestructor = function(assert, done) {
 
 exports.testAutoDestructor = function(assert, done) {
   let loader = Loader(module);
-  let Pages = loader.require("sdk/page-worker");
+  let { Page } = loader.require("sdk/page-worker");
 
-  let page = Pages.Page({
+  let page = Page({
     contentScript: "self.postMessage('')",
     contentScriptWhen: "end",
     onMessage: function() {
@@ -316,12 +314,12 @@ exports.testPingPong = function(assert, done) {
 exports.testRedirect = function (assert, done) {
   let page = Page({
     contentURL: 'data:text/html;charset=utf-8,first-page',
-    contentScript: '(function () {' +
+    contentScriptWhen: "end",
+    contentScript: '' +
       'if (/first-page/.test(document.location.href)) ' +
       '  document.location.href = "data:text/html;charset=utf-8,redirect";' +
       'else ' +
-      '  self.port.emit("redirect", document.location.href);' +
-      '})();'
+      '  self.port.emit("redirect", document.location.href);'
   });
 
   page.port.on('redirect', function (url) {
