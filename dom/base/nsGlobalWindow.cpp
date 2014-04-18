@@ -7607,23 +7607,11 @@ nsGlobalWindow::CallerInnerWindow()
     }
   }
   JSAutoCompartment ac(cx, scope);
-
-  // We don't use xpc::WindowOrNull here because we want to be able to tell
-  // apart the cases of "scope is not an nsISupports at all" and "scope is an
-  // nsISupports that's not a window". It's not clear whether that's desirable,
-  // see bug 984467.
-  nsISupports* native =
-    nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, scope);
-  if (!native)
-    return nullptr;
-
-  // The calling window must be holding a reference, so we can just return a
-  // raw pointer here and let the QI's addref be balanced by the nsCOMPtr
-  // destructor's release.
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(native);
+  nsGlobalWindow* win = xpc::WindowOrNull(scope);
+     
   if (!win)
     return GetCurrentInnerWindowInternal();
-  return static_cast<nsGlobalWindow*>(win.get());
+  return win;
 }
 
 /**
