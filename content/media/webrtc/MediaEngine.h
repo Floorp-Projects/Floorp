@@ -12,6 +12,9 @@
 
 namespace mozilla {
 
+class VideoTrackConstraintsN;
+class AudioTrackConstraintsN;
+
 /**
  * Abstract interface for managing audio and video devices. Each platform
  * must implement a concrete class that will map these classes and methods
@@ -72,9 +75,6 @@ public:
 
   /* Populate the UUID of this device in the nsAString */
   virtual void GetUUID(nsAString&) = 0;
-
-  /* This call reserves but does not start the device. */
-  virtual nsresult Allocate(const MediaEnginePrefs &aPrefs) = 0;
 
   /* Release the device back to the system. */
   virtual nsresult Deallocate() = 0;
@@ -141,6 +141,10 @@ class MediaEngineVideoSource : public MediaEngineSource
 {
 public:
   virtual ~MediaEngineVideoSource() {}
+
+  /* This call reserves but does not start the device. */
+  virtual nsresult Allocate(const VideoTrackConstraintsN &aConstraints,
+                            const MediaEnginePrefs &aPrefs) = 0;
 };
 
 /**
@@ -150,6 +154,11 @@ class MediaEngineAudioSource : public MediaEngineSource
 {
 public:
   virtual ~MediaEngineAudioSource() {}
+
+  /* This call reserves but does not start the device. */
+  virtual nsresult Allocate(const AudioTrackConstraintsN &aConstraints,
+                            const MediaEnginePrefs &aPrefs) = 0;
+
 };
 
 }
