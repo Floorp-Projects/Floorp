@@ -316,34 +316,40 @@ var uriRegex = new RegExp('^([a-z][-a-z0-9+.]*)' +
                           '(?:[^/@]*@)?' +
                           '(.*?)' +
                           '(?::(\\\\d+))?/');
+var defaultPortsForScheme = {
+  'http': 80,
+  'ws': 80,
+  'https': 443,
+  'wss': 443
+};
+var originSchemesRemap = {
+  'ws': 'http',
+  'wss': 'https'
+};
+var proxyForScheme = {
+  'http': 'PROXY %(remote)s:%(http)s',
+  'https': 'PROXY %(remote)s:%(https)s',
+  'ws': 'PROXY %(remote)s:%(ws)s',
+  'wss': 'PROXY %(remote)s:%(wss)s'
+};
 
 function FindProxyForURL(url, host)
 {
   var matches = uriRegex.exec(url);
   if (!matches)
     return 'DIRECT';
-  var isHttp = matches[1] == 'http';
-  var isHttps = matches[1] == 'https';
-  var isWebSocket = matches[1] == 'ws';
-  var isWebSocketSSL = matches[1] == 'wss';
-  if (!matches[3])
-  {
-    if (isHttp | isWebSocket) matches[3] = '80';
-    if (isHttps | isWebSocketSSL) matches[3] = '443';
+  var originalScheme = matches[1];
+  var host = matches[2];
+  var port = matches[3];
+  if (!port && originalScheme in defaultPortsForScheme) {
+    port = defaultPortsForScheme[originalScheme];
   }
-  if (isWebSocket)
-    matches[1] = 'http';
-  if (isWebSocketSSL)
-    matches[1] = 'https';
+  var schemeForOriginChecking = originSchemesRemap[originalScheme] || originalScheme;
 
-  var origin = matches[1] + '://' + matches[2] + ':' + matches[3];
+  var origin = schemeForOriginChecking + '://' + host + ':' + port;
   if (!(origin in knownOrigins))
     return 'DIRECT';
-  if (isHttp) return 'PROXY %(remote)s:%(http)s';
-  if (isHttps) return 'PROXY %(remote)s:%(https)s';
-  if (isWebSocket) return 'PROXY %(remote)s:%(ws)s';
-  if (isWebSocketSSL) return 'PROXY %(remote)s:%(wss)s';
-  return 'DIRECT';
+  return proxyForScheme[originalScheme] || 'DIRECT';
 }""" % proxy
         pacURL = "".join(pacURL.splitlines())
 
