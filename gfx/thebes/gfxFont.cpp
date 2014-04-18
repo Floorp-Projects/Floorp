@@ -1123,7 +1123,7 @@ gfxFontFamily::FindFontForChar(GlobalFontMatch *aMatchData)
 #ifdef PR_LOGGING
             PRLogModuleInfo *log = gfxPlatform::GetLog(eGfxLog_textrun);
 
-            if (MOZ_UNLIKELY(log)) {
+            if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_DEBUG))) {
                 uint32_t unicodeRange = FindCharUnicodeRange(aMatchData->mCh);
                 uint32_t script = GetScriptCode(aMatchData->mCh);
                 PR_LOG(log, PR_LOG_DEBUG,\
@@ -5017,7 +5017,7 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
     if (sizeof(T) == sizeof(uint8_t) && !transformedString) {
 
 #ifdef PR_LOGGING
-        if (MOZ_UNLIKELY(log)) {
+        if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_WARNING))) {
             nsAutoCString lang;
             mStyle.language->ToUTF8String(lang);
             nsAutoCString str((const char*)aString, aLength);
@@ -5061,7 +5061,7 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
         while (scriptRuns.Next(runStart, runLimit, runScript)) {
 
 #ifdef PR_LOGGING
-            if (MOZ_UNLIKELY(log)) {
+            if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_WARNING))) {
                 nsAutoCString lang;
                 mStyle.language->ToUTF8String(lang);
                 uint32_t runLen = runLimit - runStart;
