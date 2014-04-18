@@ -46,7 +46,7 @@ function removeElem(aElem)
   aElem.parentNode.removeChild(aElem);
 }
 
-function testAttr(aAttrName, aAttrValueArray, aIsValid, aIsTodo)
+function testAttr(aAttrName, aAttrValueArray, aIsValid)
 {
   var componentsToCheck;
 
@@ -78,12 +78,12 @@ function testAttr(aAttrName, aAttrValueArray, aIsValid, aIsTodo)
       var errMsg = "CTM should have changed when applying animateMotion " +
         "with '" + aAttrName + "' set to valid value '" + curVal + "'";
       CTMUtil.assertCTMNotEqual(curCTM, gUnAnimatedCTM, componentsToCheck,
-                                errMsg, aIsTodo);
+                                errMsg, false);
     } else {
       var errMsg = "CTM should not have changed when applying animateMotion " +
         "with '" + aAttrName + "' set to invalid value '" + curVal + "'";
       CTMUtil.assertCTMEqual(curCTM, gUnAnimatedCTM, componentsToCheck,
-                             errMsg, aIsTodo);
+                             errMsg, false);
     }
     removeElem(anim);
   }
@@ -104,7 +104,7 @@ function createMpath(aAnimElement)
   return aAnimElement.appendChild(mpath);
 }
 
-function testMpathElem(aPathValueArray, aIsValid, aIsTodo)
+function testMpathElem(aPathValueArray, aIsValid)
 {
   for (var i in aPathValueArray) {
     var curVal = aPathValueArray[i];
@@ -122,12 +122,12 @@ function testMpathElem(aPathValueArray, aIsValid, aIsTodo)
         "with mpath linking to a path with valid value '" + curVal + "'";
 
       CTMUtil.assertCTMNotEqual(gRect.getCTM(), gUnAnimatedCTM,
-                                componentsToCheck, errMsg, aIsTodo);
+                                componentsToCheck, errMsg, false);
     } else {
       var errMsg = "CTM should not have changed when applying animateMotion " +
         "with mpath linking to a path with invalid value '" + curVal + "'";
       CTMUtil.assertCTMEqual(gRect.getCTM(), gUnAnimatedCTM,
-                             componentsToCheck, errMsg, aIsTodo);
+                             componentsToCheck, errMsg, false);
     }
     removeElem(anim);
     removeElem(path);
@@ -138,38 +138,32 @@ function testMpathElem(aPathValueArray, aIsValid, aIsTodo)
 // Main Function
 function main()
 {
-  if (!SMILUtil.isSMILEnabled()) {
-    ok(false, "SMIL dosn't seem to be enabled");
-    SimpleTest.finish();
-    return;
-  }
-
   // Start out with document paused
   var svg = SMILUtil.getSVGRoot();
   ok(svg.animationsPaused(), "should be paused by <svg> load handler");
   is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
 
-  testAttr("values", gValidValues, true, false);
-  testAttr("values", gInvalidValues, false, false);
+  testAttr("values", gValidValues, true);
+  testAttr("values", gInvalidValues, false);
 
-  testAttr("rotate", gValidRotate, true, false);
-  testAttr("rotate", gInvalidRotate, false, false);
+  testAttr("rotate", gValidRotate, true);
+  testAttr("rotate", gInvalidRotate, false);
 
-  testAttr("to", gValidToBy, true, false);
-  testAttr("to", gInvalidToBy, false, false);
+  testAttr("to", gValidToBy, true);
+  testAttr("to", gInvalidToBy, false);
 
-  testAttr("by", gValidToBy, true, false);
-  testAttr("by", gInvalidToBy, false, false);
+  testAttr("by", gValidToBy, true);
+  testAttr("by", gInvalidToBy, false);
 
-  testAttr("path", gValidPath, true, false);
-  testAttr("path", gInvalidPath, false, false);
-  testAttr("path", gValidPathWithErrors, true, false);
+  testAttr("path", gValidPath, true);
+  testAttr("path", gInvalidPath, false);
+  testAttr("path", gValidPathWithErrors, true);
 
-  testAttr("keyPoints", gValidKeyPoints, true, false);
-  testAttr("keyPoints", gInvalidKeyPoints, false, false);
+  testAttr("keyPoints", gValidKeyPoints, true);
+  testAttr("keyPoints", gInvalidKeyPoints, false);
 
-  testMpathElem(gValidPath, true, false);
-  testMpathElem(gInvalidPath, false, false);
+  testMpathElem(gValidPath, true);
+  testMpathElem(gInvalidPath, false);
 
   SimpleTest.finish();
 }

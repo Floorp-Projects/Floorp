@@ -858,11 +858,15 @@ CheckExtensionForCriticality(der::Input& input)
   return input.Skip(toSkip);
 }
 
+// Extensions ::= SEQUENCE SIZE (1..MAX) OF Extension
 static der::Result
 CheckExtensionsForCriticality(der::Input& input)
 {
+  // TODO(bug 997994): some responders include an empty SEQUENCE OF
+  // Extension, which is invalid (der::MayBeEmpty should really be
+  // der::MustNotBeEmpty).
   return der::NestedOf(input, der::SEQUENCE, der::SEQUENCE,
-                       der::MustNotBeEmpty, CheckExtensionForCriticality);
+                       der::MayBeEmpty, CheckExtensionForCriticality);
 }
 
 //   1. The certificate identified in a received response corresponds to

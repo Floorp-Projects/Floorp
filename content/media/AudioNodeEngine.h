@@ -44,6 +44,12 @@ public:
       mSampleData = nullptr;
     }
     ~Storage() { free(mDataToFree); }
+    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+    {
+      // NB: mSampleData might not be owned, if it is it just points to
+      //     mDataToFree.
+      return aMallocSizeOf(mDataToFree);
+    }
     void* mDataToFree;
     const float* mSampleData;
   };
@@ -74,9 +80,15 @@ public:
    */
   void Clear() { mContents.Clear(); }
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
   {
-    return mContents.SizeOfExcludingThis(aMallocSizeOf);
+    size_t amount = ThreadSharedObject::SizeOfExcludingThis(aMallocSizeOf);
+    amount += mContents.SizeOfExcludingThis(aMallocSizeOf);
+    for (size_t i = 0; i < mContents.Length(); i++) {
+      amount += mContents[i].SizeOfExcludingThis(aMallocSizeOf);
+    }
+
+    return amount;
   }
 
 private:
@@ -327,6 +339,25 @@ public:
 
   uint16_t InputCount() const { return mInputCount; }
   uint16_t OutputCount() const { return mOutputCount; }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    // NB: |mNode| is tracked separately so it is excluded here.
+    return 0;
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  void SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
+                           AudioNodeSizes& aUsage) const
+  {
+    aUsage.mEngine = SizeOfIncludingThis(aMallocSizeOf);
+    aUsage.mDomNode = mNode->SizeOfIncludingThis(aMallocSizeOf);
+    aUsage.mNodeType = mNode->NodeType();
+  }
 
 private:
   dom::AudioNode* mNode;

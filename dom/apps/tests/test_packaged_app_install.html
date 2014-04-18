@@ -81,8 +81,7 @@ SimpleTest.waitForExplicitFinish();
 var steps = [
   function() {
     // Set up
-    PackagedTestHelper.launchableValue =
-      SpecialPowers.setAllAppsLaunchable(true);
+    SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.addPermission("webapps-manage", true, document);
     ok(true, "Set up");
     PackagedTestHelper.next();

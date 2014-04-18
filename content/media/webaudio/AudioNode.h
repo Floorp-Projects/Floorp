@@ -15,6 +15,7 @@
 #include "AudioContext.h"
 #include "MediaStreamGraph.h"
 #include "WebAudioUtils.h"
+#include "mozilla/MemoryReporting.h"
 
 namespace mozilla {
 
@@ -170,6 +171,16 @@ public:
       }
     }
 
+    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+    {
+      size_t amount = 0;
+      if (mStreamPort) {
+        amount += mStreamPort->SizeOfIncludingThis(aMallocSizeOf);
+      }
+
+      return amount;
+    }
+
     // Weak reference.
     AudioNode* mInputNode;
     nsRefPtr<MediaInputPort> mStreamPort;
@@ -207,6 +218,11 @@ public:
   // called, then the node is already inactive.
   // MarkInactive() may delete |this|.
   void MarkInactive() { Context()->UnregisterActiveNode(this); }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+
+  virtual const char* NodeType() const = 0;
 
 private:
   friend class AudioBufferSourceNode;

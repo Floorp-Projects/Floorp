@@ -891,6 +891,7 @@ SimpleTest.finish = function () {
         /* We're running in an iframe, and the parent has a TestRunner */
         parentRunner.testFinished(SimpleTest._tests);
     } else {
+        SpecialPowers.flushAllAppsLaunchable();
         SpecialPowers.flushPermissions(function () {
           SpecialPowers.flushPrefEnv(function() {
             SimpleTest.showReport();

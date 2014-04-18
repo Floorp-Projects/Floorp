@@ -118,6 +118,16 @@ public:
    */
   virtual void Clear() = 0;
 
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return 0;
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 protected:
   MediaSegment(Type aType) : mDuration(0), mType(aType)
   {
@@ -244,6 +254,20 @@ public:
     aTime = mChunks[0].mTimeStamp;
   }
 #endif
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    size_t amount = mChunks.SizeOfExcludingThis(aMallocSizeOf);
+    for (size_t i = 0; i < mChunks.Length(); i++) {
+      amount += mChunks[i].SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    }
+    return amount;
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
 
 protected:
   MediaSegmentBase(Type aType) : MediaSegment(aType) {}

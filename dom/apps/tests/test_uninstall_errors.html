@@ -18,7 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830258
   var url2 = 'http://test2.example.com/tests/dom/apps/tests/file_app.sjs?apptype=hosted&getmanifest=true';
 
   var gGenerator = runTest();
-  var launchableValue = undefined;
 
   function go() {
     SpecialPowers.pushPermissions(
@@ -30,18 +29,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830258
     try {
       gGenerator.next();
     } catch (e if e instanceof StopIteration) {
-      finish();
+      SimpleTest.finish();
     }
   }
 
   function mozAppsError() {
     ok(false, "mozApps error: " + this.error.name);
-    finish();
+    SimpleTest.finish();
   }
 
   function runTest() {
     // Set up.
-    launchableValue = SpecialPowers.setAllAppsLaunchable(true);
+    SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.autoConfirmAppInstall(continueTest);
     yield undefined;
 
@@ -91,11 +90,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830258
       continueTest();
     };
     yield undefined;
-  }
-
-  function finish() {
-    SpecialPowers.setAllAppsLaunchable(launchableValue);
-    SimpleTest.finish();
   }
   </script>
 </head>

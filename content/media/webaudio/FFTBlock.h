@@ -128,6 +128,20 @@ public:
     return mOutputBuffer[aIndex].i;
   }
 
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    size_t amount = 0;
+    amount += aMallocSizeOf(mFFT);
+    amount += aMallocSizeOf(mIFFT);
+    amount += mOutputBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    return amount;
+  }
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 private:
   FFTBlock(const FFTBlock& other) MOZ_DELETE;
   void operator=(const FFTBlock& other) MOZ_DELETE;
