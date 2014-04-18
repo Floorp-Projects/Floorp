@@ -95,5 +95,5 @@
   <!-- Swipe to refresh colors -->
   <color name="swipe_refresh_orange">#FFFFC26C</color>
   <color name="swipe_refresh_white">#FFFFFFFF</color>
+  <color name="swipe_refresh_orange_dark">#FF9500</color>
 </resources>
-
