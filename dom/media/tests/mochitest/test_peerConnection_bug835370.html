@@ -49,6 +49,8 @@
     exception = null;
     try { pconnects.createOffer(step1, failed, { mandatory: { OfferToReceiveVideo: false, OfferToReceiveAudio: true, MozDontOfferDataChannel: true}, optional: [{ VoiceActivityDetection: true }, { FooBar: "42"  }] }); } catch (e) { exception = e; }
     ok(!exception, "createOffer(step1, failed, { mandatory: { OfferToReceiveVideo: false, OfferToReceiveAudio: true, MozDontOfferDataChannel: true}, optional: [{ VoiceActivityDetection: true }, { FooBar: \"42\"  }] }) succeeds");
+    pconnect.close();
+    pconnects.close();
     pconnect = null;
     pconnects = null;
     SimpleTest.finish();

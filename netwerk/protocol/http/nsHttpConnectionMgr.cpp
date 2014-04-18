@@ -3067,14 +3067,6 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         // this transaction was dispatched off the pending q before all the
         // sockets established themselves.
 
-        // We need to establish a small non-zero idle timeout so the connection
-        // mgr perceives this socket as suitable for persistent connection reuse
-        const PRIntervalTime k5Sec = PR_SecondsToInterval(5);
-        if (k5Sec < gHttpHandler->IdleTimeout())
-            conn->SetIdleTimeout(k5Sec);
-        else
-            conn->SetIdleTimeout(gHttpHandler->IdleTimeout());
-
         // After about 1 second allow for the possibility of restarting a
         // transaction due to server close. Keep at sub 1 second as that is the
         // minimum granularity we can expect a server to be timing out with.

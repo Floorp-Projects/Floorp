@@ -44,9 +44,11 @@ public:
                                         gfxImageSurface *aDestSurface = nullptr);
     static void UnpremultiplyImageSurface(gfxImageSurface *aSurface,
                                           gfxImageSurface *aDestSurface = nullptr);
+    static mozilla::TemporaryRef<DataSourceSurface> UnpremultiplyDataSurface(DataSourceSurface* aSurface);
 
     static void ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
                                   gfxImageSurface *aDestSurface = nullptr);
+    static void ConvertBGRAtoRGBA(uint8_t* aData, uint32_t aLength);
 
     /**
      * Draw something drawable while working around limitations like bad support

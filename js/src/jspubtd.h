@@ -97,7 +97,7 @@ enum JSIterateOp {
     JSENUMERATE_DESTROY
 };
 
-/* See JSVAL_TRACE_KIND and JSTraceCallback in jsapi.h. */
+/* See Value::gcKind() and JSTraceCallback in Tracer.h. */
 enum JSGCTraceKind {
     JSTRACE_OBJECT,
     JSTRACE_STRING,
