@@ -439,6 +439,7 @@ gbjar.generated_sources += [
     'org/mozilla/gecko/widget/ThemedRelativeLayout.java',
     'org/mozilla/gecko/widget/ThemedTextSwitcher.java',
     'org/mozilla/gecko/widget/ThemedTextView.java',
+    'org/mozilla/gecko/widget/ThemedView.java',
 ]
 if CONFIG['MOZ_CRASHREPORTER']:
     gbjar.sources += [ 'CrashReporter.java' ]

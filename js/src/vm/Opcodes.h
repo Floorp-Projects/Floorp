@@ -91,16 +91,43 @@
     macro(JSOP_NOP,       0,  "nop",        NULL,         1,  0,  0, JOF_BYTE) \
     \
     /* Long-standing JavaScript bytecodes. */ \
+    /*
+     * Pushes 'undefined' onto the stack.
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands:
+     *   Stack: => undefined
+     */ \
     macro(JSOP_UNDEFINED, 1,  js_undefined_str, "",       1,  0,  1, JOF_BYTE) \
     macro(JSOP_UNUSED2,   2,  "unused2",    NULL,         1,  1,  0, JOF_BYTE) \
     macro(JSOP_ENTERWITH, 3,  "enterwith",  NULL,         5,  1,  0, JOF_OBJECT) \
     macro(JSOP_LEAVEWITH, 4,  "leavewith",  NULL,         1,  0,  0, JOF_BYTE) \
+    /*
+     * Pops the top of stack value as 'rval', stops interpretation of current
+     * script and returns 'rval'.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands:
+     *   Stack: rval =>
+     */ \
     macro(JSOP_RETURN,    5,  "return",     NULL,         1,  1,  0, JOF_BYTE) \
     macro(JSOP_GOTO,      6,  "goto",       NULL,         5,  0,  0, JOF_JUMP) \
     macro(JSOP_IFEQ,      7,  "ifeq",       NULL,         5,  1,  0, JOF_JUMP|JOF_DETECTING) \
     macro(JSOP_IFNE,      8,  "ifne",       NULL,         5,  1,  0, JOF_JUMP) \
     \
-    /* Get the arguments object for the current, lightweight function activation. */ \
+    /*
+     * Pushes the 'arguments' object for the current function activation.
+     *
+     * If 'JSScript' is not marked 'needsArgsObj', then a
+     * JS_OPTIMIZED_ARGUMENTS magic value is pushed. Otherwise, a proper
+     * arguments object is constructed and pushed.
+     *
+     * This opcode requires that the function does not have rest parameter.
+     *   Category: Variables and Scopes
+     *   Type: Arguments
+     *   Operands:
+     *   Stack: => arguments
+     */ \
     macro(JSOP_ARGUMENTS, 9,  "arguments",  NULL,         1,  0,  1, JOF_BYTE) \
     \
     /*
@@ -139,6 +166,14 @@
      *   Stack: v1, v2 => v1, v2, v1, v2
      */ \
     macro(JSOP_DUP2,      13, "dup2",       NULL,         1,  2,  4, JOF_BYTE) \
+    /*
+     * Defines a readonly property on the frame's current variables-object (the
+     * scope object on the scope chain designated to receive new variables).
+     *   Category: Variables and Scopes
+     *   Type: Variables
+     *   Operands: uint32_t nameIndex
+     *   Stack: val => val
+     */ \
     macro(JSOP_SETCONST,  14, "setconst",   NULL,         5,  1,  1, JOF_ATOM|JOF_NAME|JOF_SET) \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes
@@ -239,8 +274,36 @@
      *   Stack: val => (+val)
      */ \
     macro(JSOP_POS,       35, "pos",        "+ ",         1,  1,  1, JOF_BYTE|JOF_ARITH) \
+    /*
+     * Looks up name on the scope chain and deletes it, pushes 'true' onto the
+     * stack if succeeded (if the property was present and deleted or if the
+     * property wasn't present in the first place), 'false' if not.
+     *
+     * Strict mode code should never contain this opcode.
+     *   Category: Variables and Scopes
+     *   Type: Variables
+     *   Operands: uint32_t nameIndex
+     *   Stack: => succeeded
+     */ \
     macro(JSOP_DELNAME,   36, "delname",    NULL,         5,  0,  1, JOF_ATOM|JOF_NAME) \
+    /*
+     * Pops the top of stack value, deletes property from it, pushes 'true' onto
+     * the stack if succeeded, 'false' if not.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj => succeeded
+     */ \
     macro(JSOP_DELPROP,   37, "delprop",    NULL,         5,  1,  1, JOF_ATOM|JOF_PROP) \
+    /*
+     * Pops the top two values on the stack as 'propval' and 'obj',
+     * deletes 'propval' property from 'obj', pushes 'true'  onto the stack if
+     * succeeded, 'false' if not.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, propval => succeeded
+     */ \
     macro(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, JOF_BYTE |JOF_ELEM) \
     /*
      * Pops the value 'val' from the stack, then pushes 'typeof val'.
@@ -259,11 +322,42 @@
      */ \
     macro(JSOP_VOID,      40, js_void_str,  NULL,         1,  1,  1, JOF_BYTE) \
     \
-    /* spreadcall variant of JSOP_CALL */ \
+    /*
+     * spreadcall variant of JSOP_CALL.
+     *
+     * Invokes 'callee' with 'this' and 'args', pushes the return value onto
+     * the stack.
+     *
+     * 'args' is an Array object which contains actual arguments.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands:
+     *   Stack: callee, this, args => rval
+     */ \
     macro(JSOP_SPREADCALL,41, "spreadcall", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET) \
-    /* spreadcall variant of JSOP_NEW */ \
+    /*
+     * spreadcall variant of JSOP_NEW
+     *
+     * Invokes 'callee' as a constructor with 'this' and 'args', pushes the
+     * return value onto the stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands:
+     *   Stack: callee, this, args => rval
+     */ \
     macro(JSOP_SPREADNEW, 42, "spreadnew",  NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET) \
-    /* spreadcall variant of JSOP_EVAL */ \
+    /*
+     * spreadcall variant of JSOP_EVAL
+     *
+     * Invokes 'eval' with 'args' and pushes the return value onto the stack.
+     *
+     * If 'eval' in global scope is not original one, invokes the function
+     * with 'this' and 'args', and pushes return value onto the stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands:
+     *   Stack: callee, this, args => rval
+     */ \
     macro(JSOP_SPREADEVAL,43, "spreadeval", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET) \
     \
     /*
@@ -285,19 +379,116 @@
     macro(JSOP_UNUSED51,  51, "unused51",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED52,  52, "unused52",   NULL,         1,  0,  0,  JOF_BYTE) \
     \
+    /*
+     * Pops the top of stack value, pushes property of it onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj => obj[name]
+     */ \
     macro(JSOP_GETPROP,   53, "getprop",    NULL,         5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_TMPSLOT3) \
+    /*
+     * Pops the top two values on the stack as 'val' and 'obj', sets property of
+     * 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj, val => val
+     */ \
     macro(JSOP_SETPROP,   54, "setprop",    NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
+    /*
+     * Pops the top two values on the stack as 'propval' and 'obj', pushes
+     * 'propval' property of 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, propval => obj[propval]
+     */ \
     macro(JSOP_GETELEM,   55, "getelem",    NULL,         1,  2,  1, JOF_BYTE |JOF_ELEM|JOF_TYPESET|JOF_LEFTASSOC) \
+    /*
+     * Pops the top three values on the stack as 'val', 'propval' and 'obj',
+     * sets 'propval' property of 'obj' as 'val', pushes 'obj' onto the
+     * stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, propval, val => val
+     */ \
     macro(JSOP_SETELEM,   56, "setelem",    NULL,         1,  3,  1, JOF_BYTE |JOF_ELEM|JOF_SET|JOF_DETECTING) \
     macro(JSOP_UNUSED57,  57, "unused57",   NULL,         1,  0,  0, JOF_BYTE) \
+    /*
+     * Invokes 'callee' with 'this' and 'args', pushes return value onto the
+     * stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands: uint16_t argc
+     *   Stack: callee, this, args[0], ..., args[argc-1] => rval
+     *   nuses: (argc+2)
+     */ \
     macro(JSOP_CALL,      58, "call",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
+    /*
+     * Looks up name on the scope chain and pushes its value onto the stack.
+     *   Category: Variables and Scopes
+     *   Type: Variables
+     *   Operands: uint32_t nameIndex
+     *   Stack: => val
+     */ \
     macro(JSOP_NAME,      59, "name",       NULL,         5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET) \
+    /*
+     * Pushes numeric constant onto the stack.
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands: uint32_t constIndex
+     *   Stack: => val
+     */ \
     macro(JSOP_DOUBLE,    60, "double",     NULL,         5,  0,  1, JOF_DOUBLE) \
+    /*
+     * Pushes string constant onto the stack.
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands: uint32_t atomIndex
+     *   Stack: => string
+     */ \
     macro(JSOP_STRING,    61, "string",     NULL,         5,  0,  1, JOF_ATOM) \
+    /*
+     * Pushes '0' onto the stack.
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands:
+     *   Stack: => 0
+     */ \
     macro(JSOP_ZERO,      62, "zero",       "0",          1,  0,  1, JOF_BYTE) \
+    /*
+     * Pushes '1' onto the stack.
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands:
+     *   Stack: => 1
+     */ \
     macro(JSOP_ONE,       63, "one",        "1",          1,  0,  1, JOF_BYTE) \
+    /*
+     * Pushes 'null' onto the stack.
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands:
+     *   Stack: => null
+     */ \
     macro(JSOP_NULL,      64, js_null_str,  js_null_str,  1,  0,  1, JOF_BYTE) \
+    /*
+     * Pushes 'this' value for current stack frame onto the stack.
+     *   Category: Variables and Scopes
+     *   Type: This
+     *   Operands:
+     *   Stack: => this
+     */ \
     macro(JSOP_THIS,      65, js_this_str,  js_this_str,  1,  0,  1, JOF_BYTE) \
+    /*
+     * Pushes boolean value onto the stack.
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands:
+     *   Stack: => true/false
+     */ \
     macro(JSOP_FALSE,     66, js_false_str, js_false_str, 1,  0,  1, JOF_BYTE) \
     macro(JSOP_TRUE,      67, js_true_str,  js_true_str,  1,  0,  1, JOF_BYTE) \
     macro(JSOP_OR,        68, "or",         NULL,         5,  1,  1, JOF_JUMP|JOF_DETECTING|JOF_LEFTASSOC) \
@@ -307,8 +498,12 @@
     macro(JSOP_TABLESWITCH, 70, "tableswitch", NULL,     -1,  1,  0,  JOF_TABLESWITCH|JOF_DETECTING) \
     \
     /*
-     * Prologue emitted in scripts expected to run once, which deoptimizes code if
-     * it executes multiple times.
+     * Prologue emitted in scripts expected to run once, which deoptimizes code
+     * if it executes multiple times.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands:
+     *   Stack: =>
      */ \
     macro(JSOP_RUNONCE,   71, "runonce",    NULL,         1,  0,  0,  JOF_BYTE) \
     \
@@ -326,8 +521,12 @@
     \
     /*
      * Sometimes web pages do 'o.Item(i) = j'. This is not an early SyntaxError,
-     * for web compatibility. Instead we emit JSOP_SETCALL after the function call,
-     * an opcode that always throws.
+     * for web compatibility. Instead we emit JSOP_SETCALL after the function
+     * call, an opcode that always throws.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands:
+     *   Stack: =>
      */ \
     macro(JSOP_SETCALL,   74, "setcall",    NULL,         1,  0,  0, JOF_BYTE) \
     \
@@ -348,9 +547,26 @@
     macro(JSOP_ITERNEXT,  77, "iternext",   "<next>",     1,  0,  1,  JOF_BYTE) \
     macro(JSOP_ENDITER,   78, "enditer",    NULL,         1,  1,  0,  JOF_BYTE) \
     \
+    /*
+     * Invokes 'callee' with 'this' and 'args', pushes return value onto the
+     * stack.
+     *
+     * This is for 'f.apply'.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands: uint16_t argc
+     *   Stack: callee, this, args[0], ..., args[argc-1] => rval
+     *   nuses: (argc+2)
+     */ \
     macro(JSOP_FUNAPPLY,  79, "funapply",   NULL,         3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
     \
-    /* Push object initializer literal. */ \
+    /*
+     * Pushes deep-cloned object literal or singleton onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t objectIndex
+     *   Stack: => obj
+     */ \
     macro(JSOP_OBJECT,    80, "object",     NULL,         5,  0,  1,  JOF_OBJECT) \
     \
     /*
@@ -362,50 +578,219 @@
      */ \
     macro(JSOP_POP,       81, "pop",        NULL,         1,  1,  0,  JOF_BYTE) \
     \
-    /* Call a function as a constructor; operand is argc. */ \
+    /*
+     * Invokes 'callee' as a constructor with 'this' and 'args', pushes return
+     * value onto the stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands: uint16_t argc
+     *   Stack: callee, this, args[0], ..., args[argc-1] => rval
+     *   nuses: (argc+2)
+     */ \
     macro(JSOP_NEW,       82, js_new_str,   NULL,         3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
-    \
+    /*
+     * Pops the top three values on the stack as 'iterable', 'index' and 'obj',
+     * iterates over 'iterable' and stores the iteration values as 'index + i'
+     * elements of 'obj', pushes 'obj' and 'index + iteration count' onto the
+     * stack.
+     *
+     * This opcode is used in Array literals with spread and spreadcall
+     * arguments.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands:
+     *   Stack: obj, index, iterable => obj, (index + iteration count)
+     */ \
     macro(JSOP_SPREAD,    83, "spread",     NULL,         1,  3,  2,  JOF_BYTE|JOF_ELEM|JOF_SET) \
     \
-    /* Fast get/set ops for function arguments and local variables. */ \
+    /*
+     * Fast get op for function arguments and local variables.
+     *
+     * Pushes 'arguments[argno]' onto the stack.
+     *   Category: Variables and Scopes
+     *   Type: Arguments
+     *   Operands: uint16_t argno
+     *   Stack: => arguments[argno]
+     */ \
     macro(JSOP_GETARG,    84, "getarg",     NULL,         3,  0,  1,  JOF_QARG |JOF_NAME) \
+    /*
+     * Fast set op for function arguments and local variables.
+     *
+     * Sets 'arguments[argno]' as the top of stack value.
+     *   Category: Variables and Scopes
+     *   Type: Arguments
+     *   Operands: uint16_t argno
+     *   Stack: v => v
+     */ \
     macro(JSOP_SETARG,    85, "setarg",     NULL,         3,  1,  1,  JOF_QARG |JOF_NAME|JOF_SET) \
+    /*
+     * Pushes the value of local variable onto the stack.
+     *   Category: Variables and Scopes
+     *   Type: Local Variables
+     *   Operands: uint32_t localno
+     *   Stack: => val
+     */ \
     macro(JSOP_GETLOCAL,  86,"getlocal",    NULL,         4,  0,  1,  JOF_LOCAL|JOF_NAME) \
+    /*
+     * Stores the top stack value to the given local.
+     *   Category: Variables and Scopes
+     *   Type: Local Variables
+     *   Operands: uint32_t localno
+     *   Stack: v => v
+     */ \
     macro(JSOP_SETLOCAL,  87,"setlocal",    NULL,         4,  1,  1,  JOF_LOCAL|JOF_NAME|JOF_SET|JOF_DETECTING) \
     \
-    /* Push unsigned 16-bit int constant. */ \
+    /*
+     * Pushes unsigned 16-bit int immediate integer operand onto the stack.
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands: uint16_t val
+     *   Stack: => val
+     */ \
     macro(JSOP_UINT16,    88, "uint16",     NULL,         3,  0,  1,  JOF_UINT16) \
     \
+    /* Object and array literal support. */ \
     /*
-     * Object and array literal support.  NEWINIT takes the kind of initializer
-     * (JSProto_Array or JSProto_Object).  NEWARRAY is an array initializer
-     * taking the final length, which can be filled in at the start and initialized
-     * directly.  NEWOBJECT is an object initializer taking an object with the final
-     * shape, which can be set at the start and slots then filled in directly.
-     * NEWINIT has an extra byte so it can be exchanged with NEWOBJECT during emit.
+     * Pushes newly created object onto the stack.
+     *
+     * This opcode takes the kind of initializer (JSProto_Array or
+     * JSProto_Object).
+     *
+     * This opcode has an extra byte so it can be exchanged with JSOP_NEWOBJECT
+     * during emit.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint8_t kind (, uint24_t extra)
+     *   Stack: => obj
      */ \
     macro(JSOP_NEWINIT,   89, "newinit",    NULL,         5,  0,  1, JOF_UINT8) \
+    /*
+     * Pushes newly created array onto the stack.
+     *
+     * This opcode takes the final length, which is preallocated.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands: uint24_t length
+     *   Stack: => obj
+     */ \
     macro(JSOP_NEWARRAY,  90, "newarray",   NULL,         4,  0,  1, JOF_UINT24) \
+    /*
+     * Pushes newly created object onto the stack.
+     *
+     * This opcode takes an object with the final shape, which can be set at
+     * the start and slots then filled in directly.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t baseobjIndex
+     *   Stack: => obj
+     */ \
     macro(JSOP_NEWOBJECT, 91, "newobject",  NULL,         5,  0,  1, JOF_OBJECT) \
+    /*
+     * A no-operation bytecode.
+     *
+     * Indicates the end of object/array initialization, and used for
+     * Type-Inference, decompile, etc.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: =>
+     */ \
     macro(JSOP_ENDINIT,   92, "endinit",    NULL,         1,  0,  0, JOF_BYTE) \
+    /*
+     * Initialize a named property in an object literal, like '{a: x}'.
+     *
+     * Pops the top two values on the stack as 'val' and 'obj', defines
+     * 'nameIndex' property of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj, val => obj
+     */ \
     macro(JSOP_INITPROP,  93, "initprop",   NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
     \
-    /* Initialize a numeric property in an object literal, like {1: x}. */ \
+    /*
+     * Initialize a numeric property in an object literal, like '{1: x}'.
+     *
+     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
+     * 'id' property of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, id, val => obj
+     */ \
     macro(JSOP_INITELEM,  94, "initelem",   NULL,         1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_SET|JOF_DETECTING) \
     \
-    /* Used in array literals with spread. */ \
+    /*
+     * Pops the top three values on the stack as 'val', 'index' and 'obj', sets
+     * 'index' property of 'obj' as 'val', pushes 'obj' and 'index + 1' onto
+     * the stack.
+     *
+     * This opcode is used in Array literals with spread and spreadcall
+     * arguments.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands:
+     *   Stack: obj, index, val => obj, (index + 1)
+     */ \
     macro(JSOP_INITELEM_INC,95, "initelem_inc", NULL,     1,  3,  2, JOF_BYTE|JOF_ELEM|JOF_SET) \
     \
-    /* Initialize an array element. */ \
+    /*
+     * Initialize an array element.
+     *
+     * Pops the top two values on the stack as 'val' and 'obj', sets 'index'
+     * property of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands: uint24_t index
+     *   Stack: obj, val => obj
+     */ \
     macro(JSOP_INITELEM_ARRAY,96, "initelem_array", NULL, 4,  2,  1,  JOF_UINT24|JOF_ELEM|JOF_SET|JOF_DETECTING) \
     \
     /*
-     * Initialize a getter/setter in an object literal. The INITELEM* ops are used
-     * for numeric properties like {get 2() {}}.
+     * Initialize a getter in an object literal.
+     *
+     * Pops the top two values on the stack as 'val' and 'obj', defines getter
+     * of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj, val => obj
      */ \
     macro(JSOP_INITPROP_GETTER,  97, "initprop_getter",   NULL, 5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
+    /*
+     * Initialize a setter in an object literal.
+     *
+     * Pops the top two values on the stack as 'val' and 'obj', defines setter
+     * of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj, val => obj
+     */ \
     macro(JSOP_INITPROP_SETTER,  98, "initprop_setter",   NULL, 5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
+    /*
+     * Initialize a numeric getter in an object literal like
+     * '{get 2() {}}'.
+     *
+     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
+     * 'id' getter of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, id, val => obj
+     */ \
     macro(JSOP_INITELEM_GETTER,  99, "initelem_getter",   NULL, 1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_SET|JOF_DETECTING) \
+    /*
+     * Initialize a numeric setter in an object literal like
+     * '{set 2(v) {}}'.
+     *
+     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
+     * 'id' setter of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, id, val => obj
+     */ \
     macro(JSOP_INITELEM_SETTER, 100, "initelem_setter",   NULL, 1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_SET|JOF_DETECTING) \
     \
     macro(JSOP_UNUSED101,  101, "unused101",   NULL,         1,  0,  0,  JOF_BYTE) \
@@ -419,14 +804,46 @@
     \
     macro(JSOP_UNUSED107, 107,"unused107",  NULL,         1,  0,  0,  JOF_BYTE) \
     \
-    /* Like JSOP_FUNAPPLY but for f.call instead of f.apply. */ \
+    /*
+     * Invokes 'callee' with 'this' and 'args', pushes return value onto the
+     * stack.
+     *
+     * If 'callee' is determined to be the canonical 'Function.prototype.call'
+     * function, then this operation is optimized to directly call 'callee'
+     * with 'args[0]' as 'this', and the remaining arguments as formal args
+     * to 'callee'.
+     *
+     * Like JSOP_FUNAPPLY but for 'f.call' instead of 'f.apply'.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands: uint16_t argc
+     *   Stack: callee, this, args[0], ..., args[argc-1] => rval
+     *   nuses: (argc+2)
+     */ \
     macro(JSOP_FUNCALL,   108,"funcall",    NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
     \
     /* This opcode is the target of the backwards jump for some loop. */ \
     macro(JSOP_LOOPHEAD,  109,"loophead",   NULL,         1,  0,  0,  JOF_BYTE) \
     \
     /* ECMA-compliant assignment ops. */ \
+    /*
+     * Looks up name on the scope chain and pushes the scope which contains
+     * the name onto the stack. If not found, pushes global scope onto the
+     * stack.
+     *   Category: Variables and Scopes
+     *   Type: Variables
+     *   Operands: uint32_t nameIndex
+     *   Stack: => scope
+     */ \
     macro(JSOP_BINDNAME,  110,"bindname",   NULL,         5,  0,  1,  JOF_ATOM|JOF_NAME|JOF_SET) \
+    /*
+     * Pops a scope and value from the stack, assigns value to the given name,
+     * and pushes the value back on the stack
+     *   Category: Variables and Scopes
+     *   Type: Variables
+     *   Operands: uint32_t nameIndex
+     *   Stack: scope, val => val
+     */ \
     macro(JSOP_SETNAME,   111,"setname",    NULL,         5,  2,  1,  JOF_ATOM|JOF_NAME|JOF_SET|JOF_DETECTING) \
     \
     /* Exception handling ops. */ \
@@ -454,7 +871,13 @@
      */ \
     macro(JSOP_INSTANCEOF,114,js_instanceof_str,js_instanceof_str,1,2,1,JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT) \
     \
-    /* debugger op */ \
+    /*
+     * Invokes debugger.
+     *   Category: Statements
+     *   Type: Debugger
+     *   Operands:
+     *   Stack: =>
+     */ \
     macro(JSOP_DEBUGGER,  115,"debugger",   NULL,         1,  0,  0, JOF_BYTE) \
     \
     /* gosub/retsub for finally handling */ \
@@ -464,7 +887,12 @@
     /* More exception handling ops. */ \
     macro(JSOP_EXCEPTION, 118,"exception",  NULL,         1,  0,  1,  JOF_BYTE) \
     \
-    /* Embedded lineno to speedup pc->line mapping. */ \
+    /*
+     * Embedded lineno to speedup 'pc->line' mapping.
+     *   Category: Other
+     *   Operands: uint32_t lineno
+     *   Stack: =>
+     */ \
     macro(JSOP_LINENO,    119,"lineno",     NULL,         3,  0,  0,  JOF_UINT16) \
     \
     /*
@@ -476,8 +904,17 @@
     macro(JSOP_CASE,      121,"case",       NULL,         5,  2,  1,  JOF_JUMP) \
     macro(JSOP_DEFAULT,   122,"default",    NULL,         5,  1,  0,  JOF_JUMP) \
     \
+    /* ECMA-compliant call to eval op. */ \
     /*
-     * ECMA-compliant call to eval op
+     * Invokes 'eval' with 'args' and pushes return value onto the stack.
+     *
+     * If 'eval' in global scope is not original one, invokes the function
+     * with 'this' and 'args', and pushes return value onto the stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands: uint16_t argc
+     *   Stack: callee, this, args[0], ..., args[argc-1] => rval
+     *   nuses: (argc+2)
      */ \
     macro(JSOP_EVAL,      123,"eval",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
     \
@@ -485,16 +922,71 @@
     macro(JSOP_UNUSED125,  125, "unused125", NULL,      1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED126,  126, "unused126", NULL,      1,  0,  0,  JOF_BYTE) \
     \
-    /* Prolog bytecodes for defining function, var, and const names. */ \
+    /*
+     * Defines the given function on the current scope.
+     *
+     * This is used for global scripts and also in some cases for function
+     * scripts where use of dynamic scoping inhibits optimization.
+     *   Category: Variables and Scopes
+     *   Type: Variables
+     *   Operands: uint32_t funcIndex
+     *   Stack: =>
+     */ \
     macro(JSOP_DEFFUN,    127,"deffun",     NULL,         5,  0,  0,  JOF_OBJECT) \
+    /*
+     * Defines the new binding on the frame's current variables-object (the
+     * scope object on the scope chain designated to receive new variables)
+     * with 'READONLY' attribute.
+     *
+     * This is used for global scripts and also in some cases for function
+     * scripts where use of dynamic scoping inhibits optimization.
+     *   Category: Variables and Scopes
+     *   Type: Variables
+     *   Operands: uint32_t nameIndex
+     *   Stack: =>
+     */ \
     macro(JSOP_DEFCONST,  128,"defconst",   NULL,         5,  0,  0,  JOF_ATOM) \
+    /*
+     * Defines the new binding on the frame's current variables-object (the
+     * scope object on the scope chain designated to receive new variables).
+     *
+     * This is used for global scripts and also in some cases for function
+     * scripts where use of dynamic scoping inhibits optimization.
+     *   Category: Variables and Scopes
+     *   Type: Variables
+     *   Operands: uint32_t nameIndex
+     *   Stack: =>
+     */ \
     macro(JSOP_DEFVAR,    129,"defvar",     NULL,         5,  0,  0,  JOF_ATOM) \
     \
-    /* Push a closure for a named or anonymous function expression. */ \
+    /*
+     * Pushes a closure for a named or anonymous function expression onto the
+     * stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands: uint32_t funcIndex
+     *   Stack: => obj
+     */ \
     macro(JSOP_LAMBDA,    130, "lambda",    NULL,         5,  0,  1, JOF_OBJECT) \
+    /*
+     * Pops the top of stack value as 'this', pushes an arrow function with
+     * 'this' onto the stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands: uint32_t funcIndex
+     *   Stack: this => obj
+     */ \
     macro(JSOP_LAMBDA_ARROW, 131, "lambda_arrow", NULL,   5,  1,  1, JOF_OBJECT) \
     \
-    /* Used for named function expression self-naming, if lightweight. */ \
+    /*
+     * Pushes current callee onto the stack.
+     *
+     * Used for named function expression self-naming, if lightweight.
+     *   Category: Variables and Scopes
+     *   Type: Arguments
+     *   Operands:
+     *   Stack: => callee
+     */ \
     macro(JSOP_CALLEE,    132, "callee",    NULL,         1,  0,  1, JOF_BYTE) \
     \
     /*
@@ -515,19 +1007,32 @@
     macro(JSOP_FINALLY,     135,"finally",    NULL,       1,  0,  2,  JOF_BYTE) \
     \
     /*
-     * An "aliased variable" is a var, let, or formal arg that is aliased. Sources
-     * of aliasing include: nested functions accessing the vars of an enclosing
-     * function, function statements that are conditionally executed, 'eval',
-     * 'with', and 'arguments'. All of these cases require creating a CallObject to
-     * own the aliased variable.
+     * Pushes aliased variable onto the stack.
+     *
+     * An "aliased variable" is a var, let, or formal arg that is aliased.
+     * Sources of aliasing include: nested functions accessing the vars of an
+     * enclosing function, function statements that are conditionally executed,
+     * 'eval', 'with', and 'arguments'. All of these cases require creating a
+     * CallObject to own the aliased variable.
      *
      * An ALIASEDVAR opcode contains the following immediates:
      *  uint8 hops:  the number of scope objects to skip to find the ScopeObject
      *               containing the variable being accessed
      *  uint24 slot: the slot containing the variable in the ScopeObject (this
      *               'slot' does not include RESERVED_SLOTS).
+     *   Category: Variables and Scopes
+     *   Type: Aliased Variables
+     *   Operands: uint8_t hops, uint24_t slot
+     *   Stack: => aliasedVar
      */ \
     macro(JSOP_GETALIASEDVAR, 136,"getaliasedvar",NULL,      5,  0,  1,  JOF_SCOPECOORD|JOF_NAME|JOF_TYPESET) \
+    /*
+     * Sets aliased variable as the top of stack value.
+     *   Category: Variables and Scopes
+     *   Type: Aliased Variables
+     *   Operands: uint8_t hops, uint24_t slot
+     *   Stack: v => v
+     */ \
     macro(JSOP_SETALIASEDVAR, 137,"setaliasedvar",NULL,      5,  1,  1,  JOF_SCOPECOORD|JOF_NAME|JOF_SET|JOF_DETECTING) \
     \
     macro(JSOP_UNUSED138,  138, "unused138",   NULL,         1,  0,  0,  JOF_BYTE) \
@@ -537,14 +1042,37 @@
     macro(JSOP_UNUSED142,  142, "unused142",   NULL,         1,  0,  0,  JOF_BYTE) \
     \
     /*
+     * Pushes the value of the intrinsic onto the stack.
+     *
      * Intrinsic names are emitted instead of JSOP_*NAME ops when the
-     * CompileOptions flag "selfHostingMode" is set.
+     * 'CompileOptions' flag 'selfHostingMode' is set.
      *
      * They are used in self-hosted code to access other self-hosted values and
      * intrinsic functions the runtime doesn't give client JS code access to.
+     *   Category: Variables and Scopes
+     *   Type: Intrinsics
+     *   Operands: uint32_t nameIndex
+     *   Stack: => intrinsic[name]
      */ \
     macro(JSOP_GETINTRINSIC,  143, "getintrinsic",  NULL, 5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET) \
+    /*
+     * Pops the top two values on the stack as 'val' and 'scope', sets intrinsic
+     * as 'val', and pushes 'val' onto the stack.
+     *
+     * 'scope' is not used.
+     *   Category: Variables and Scopes
+     *   Type: Intrinsics
+     *   Operands: uint32_t nameIndex
+     *   Stack: scope, val => val
+     */ \
     macro(JSOP_SETINTRINSIC,  144, "setintrinsic",  NULL, 5,  2,  1, JOF_ATOM|JOF_NAME|JOF_SET|JOF_DETECTING) \
+    /*
+     * Pushes 'intrinsicHolder' onto the stack.
+     *   Category: Variables and Scopes
+     *   Type: Intrinsics
+     *   Operands: uint32_t nameIndex
+     *   Stack: => intrinsicHolder
+     */ \
     macro(JSOP_BINDINTRINSIC, 145, "bindintrinsic", NULL, 5,  0,  1, JOF_ATOM|JOF_NAME|JOF_SET) \
     \
     /* Unused. */ \
@@ -559,17 +1087,49 @@
     /* Set pending exception from the stack, to trigger rethrow. */ \
     macro(JSOP_THROWING,      151,"throwing", NULL,       1,  1,  0,  JOF_BYTE) \
     \
-    /* Set the return value pseudo-register in stack frame. */ \
+    /*
+     * Pops the top of stack value as 'rval', sets the return value in stack
+     * frame as 'rval'.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands:
+     *   Stack: rval =>
+     */ \
     macro(JSOP_SETRVAL,       152,"setrval",    NULL,       1,  1,  0,  JOF_BYTE) \
     /*
-     * Stop interpretation and return value set by JSOP_SETRVAL. When not set,
-     * returns UndefinedValue. Also emitted at end of script so interpreter
-     * don't need to check if opcode is still in script range.
+     * Stops interpretation and returns value set by JSOP_SETRVAL. When not set,
+     * returns 'undefined'.
+     *
+     * Also emitted at end of script so interpreter don't need to check if
+     * opcode is still in script range.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands:
+     *   Stack: =>
      */ \
     macro(JSOP_RETRVAL,       153,"retrval",    NULL,       1,  0,  0,  JOF_BYTE) \
     \
-    /* Free variable references that must either be found on the global or a ReferenceError */ \
+    /*
+     * Looks up name on global scope and pushes its value onto the stack.
+     *
+     * Free variable references that must either be found on the global or a
+     * ReferenceError.
+     *   Category: Variables and Scopes
+     *   Type: Free Variables
+     *   Operands: uint32_t nameIndex
+     *   Stack: => val
+     */ \
     macro(JSOP_GETGNAME,      154,"getgname",  NULL,       5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_GNAME) \
+    /*
+     * Pops the top two values on the stack as 'val' and 'scope', sets property
+     * of 'scope' as 'val' and pushes 'val' back on the stack.
+     *
+     * 'scope' should be the global scope.
+     *   Category: Variables and Scopes
+     *   Type: Free Variables
+     *   Operands: uint32_t nameIndex
+     *   Stack: scope, val => val
+     */ \
     macro(JSOP_SETGNAME,      155,"setgname",  NULL,       5,  2,  1, JOF_ATOM|JOF_NAME|JOF_SET|JOF_DETECTING|JOF_GNAME) \
     \
     macro(JSOP_UNUSED156,  156, "unused156",   NULL,         1,  0,  0,  JOF_BYTE) \
@@ -577,7 +1137,14 @@
     macro(JSOP_UNUSED158,  158, "unused158",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED159,  159, "unused159",   NULL,         1,  0,  0,  JOF_BYTE) \
     \
-    /* Regular expression literal requiring special "fork on exec" handling. */ \
+    /*
+     * Pushes a regular expression literal onto the stack.
+     * It requires special "clone on exec" handling.
+     *   Category: Literals
+     *   Type: RegExp
+     *   Operands: uint32_t regexpIndex
+     *   Stack: => regexp
+     */ \
     macro(JSOP_REGEXP,        160,"regexp",   NULL,       5,  0,  1, JOF_REGEXP) \
     \
     macro(JSOP_UNUSED161,     161,"unused161",  NULL,     1,  0,  0,  JOF_BYTE) \
@@ -604,13 +1171,28 @@
     macro(JSOP_UNUSED182,     182,"unused182",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED183,     183,"unused183",  NULL,     1,  0,  0,  JOF_BYTE) \
     \
+    /*
+     * Pops the top of stack value, pushes property of it onto the stack.
+     *
+     * Like JSOP_GETPROP but for call context.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj => obj[name]
+     */ \
     macro(JSOP_CALLPROP,      184,"callprop",   NULL,     5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_TMPSLOT3) \
     \
     macro(JSOP_UNUSED185,     185,"unused185",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED186,     186,"unused186",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED187,     187,"unused187",  NULL,     1,  0,  0,  JOF_BYTE) \
     \
-    /* Opcode to hold 24-bit immediate integer operands. */ \
+    /*
+     * Pushes unsigned 24-bit int immediate integer operand onto the stack.
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands: uint24_t val
+     *   Stack: => val
+     */ \
     macro(JSOP_UINT24,        188,"uint24",     NULL,     4,  0,  1, JOF_UINT24) \
     \
     macro(JSOP_UNUSED189,     189,"unused189",   NULL,    1,  0,  0,  JOF_BYTE) \
@@ -618,14 +1200,38 @@
     macro(JSOP_UNUSED191,     191,"unused191",   NULL,    1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED192,     192,"unused192",   NULL,    1,  0,  0,  JOF_BYTE) \
     \
+    /*
+     * Pops the top two values on the stack as 'propval' and 'obj', pushes
+     * 'propval' property of 'obj' onto the stack.
+     *
+     * Like JSOP_GETELEM but for call context.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, propval => obj[propval]
+     */ \
     macro(JSOP_CALLELEM,      193, "callelem",   NULL,    1,  2,  1, JOF_BYTE |JOF_ELEM|JOF_TYPESET|JOF_LEFTASSOC) \
     \
-    /* __proto__: v inside an object initializer. */ \
+    /*
+     * '__proto__: v' inside an object initializer.
+     *
+     * Pops the top two values on the stack as 'newProto' and 'obj', sets
+     * prototype of 'obj' as 'newProto', pushes 'true' onto the stack if
+     * succeeded, 'false' if not.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, newProto => succeeded
+     */ \
     macro(JSOP_MUTATEPROTO,   194, "mutateproto",NULL,    1,  2,  1, JOF_BYTE) \
     \
     /*
-     * Get an extant property value, throwing ReferenceError if the identified
-     * property does not exist.
+     * Pops the top of stack value, gets an extant property value of it,
+     * throwing ReferenceError if the identified property does not exist.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj => obj[name]
      */ \
     macro(JSOP_GETXPROP,      195,"getxprop",    NULL,    5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET) \
     \
@@ -644,15 +1250,62 @@
     macro(JSOP_TYPEOFEXPR,    197,"typeofexpr",  NULL,    1,  1,  1, JOF_BYTE|JOF_DETECTING) \
     \
     /* Block-local scope support. */ \
+    /*
+     * Pushes block onto the scope chain.
+     *   Category: Variables and Scopes
+     *   Type: Block-local Scope
+     *   Operands: uint32_t staticBlockObjectIndex
+     *   Stack: =>
+     */ \
     macro(JSOP_PUSHBLOCKSCOPE,198,"pushblockscope", NULL, 5,  0,  0,  JOF_OBJECT) \
+    /*
+     * Pops block from the scope chain.
+     *   Category: Variables and Scopes
+     *   Type: Block-local Scope
+     *   Operands:
+     *   Stack: =>
+     */ \
     macro(JSOP_POPBLOCKSCOPE, 199,"popblockscope", NULL,  1,  0,  0,  JOF_BYTE) \
+    /*
+     * The opcode to assist the debugger.
+     *   Category: Statements
+     *   Type: Debugger
+     *   Operands:
+     *   Stack: =>
+     */ \
     macro(JSOP_DEBUGLEAVEBLOCK, 200,"debugleaveblock", NULL, 1,  0,  0,  JOF_BYTE) \
     \
     macro(JSOP_UNUSED201,     201,"unused201",  NULL,     1,  0,  0,  JOF_BYTE) \
     \
-    /* Generator and array comprehension support. */ \
+    /*
+     * Initializes generator frame, creates a generator, sets 'YIELDING' flag,
+     * stops interpretation and returns the generator.
+     *   Category: Statements
+     *   Type: Generator
+     *   Operands:
+     *   Stack: =>
+     */ \
     macro(JSOP_GENERATOR,     202,"generator",   NULL,    1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pops the top of stack value as 'rval1', sets 'YIELDING' flag,
+     * stops interpretation and returns 'rval1', pushes sent value from
+     * 'send()' onto the stack.
+     *   Category: Statements
+     *   Type: Generator
+     *   Operands:
+     *   Stack: rval1 => rval2
+     */ \
     macro(JSOP_YIELD,         203,"yield",       NULL,    1,  1,  1,  JOF_BYTE) \
+    /*
+     * Pops the top two values on the stack as 'obj' and 'v', pushes 'v' to
+     * 'obj'.
+     *
+     * This opcode is used for Array Comprehension.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands:
+     *   Stack: v, obj =>
+     */ \
     macro(JSOP_ARRAYPUSH,     204,"arraypush",   NULL,    1,  2,  0,  JOF_BYTE) \
     \
     macro(JSOP_UNUSED205,     205, "unused205",    NULL,  1,  0,  0,  JOF_BYTE) \
@@ -665,19 +1318,53 @@
     macro(JSOP_UNUSED211,     211, "unused211",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED212,     212, "unused212",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED213,     213, "unused213",    NULL,  1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pushes the global scope onto the stack.
+     *
+     * 'nameIndex' is not used.
+     *   Category: Variables and Scopes
+     *   Type: Free Variables
+     *   Operands: uint32_t nameIndex
+     *   Stack: => global
+     */ \
     macro(JSOP_BINDGNAME,     214, "bindgname",    NULL,  5,  0,  1,  JOF_ATOM|JOF_NAME|JOF_SET|JOF_GNAME) \
     \
-    /* Opcodes to hold 8-bit and 32-bit immediate integer operands. */ \
+    /*
+     * Pushes 8-bit int immediate integer operand onto the stack.
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands: int8_t val
+     *   Stack: => val
+     */ \
     macro(JSOP_INT8,          215, "int8",         NULL,  2,  0,  1, JOF_INT8) \
+    /*
+     * Pushes 32-bit int immediate integer operand onto the stack.
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands: int32_t val
+     *   Stack: => val
+     */ \
     macro(JSOP_INT32,         216, "int32",        NULL,  5,  0,  1, JOF_INT32) \
     \
-    /* Get the value of the 'length' property from a stacked value. */ \
+    /*
+     * Pops the top of stack value, pushes the 'length' property of it onto the
+     * stack.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj => obj['length']
+     */ \
     macro(JSOP_LENGTH,        217, "length",       NULL,  5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_TMPSLOT3) \
     \
     /*
-     * Push a JSVAL_HOLE value onto the stack, representing an omitted property in
-     * an array literal (e.g. property 0 in the array [, 1]).  This opcode is used
-     * with the JSOP_NEWARRAY opcode.
+     * Pushes a JS_ELEMENTS_HOLE value onto the stack, representing an omitted
+     * property in an array literal (e.g. property 0 in the array '[, 1]').
+     *
+     * This opcode is used with the JSOP_NEWARRAY opcode.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands:
+     *   Stack: => hole
      */ \
     macro(JSOP_HOLE,          218, "hole",         NULL,  1,  0,  1,  JOF_BYTE) \
     \
@@ -687,12 +1374,34 @@
     macro(JSOP_UNUSED222,     222,"unused222",     NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED223,     223,"unused223",     NULL,  1,  0,  0,  JOF_BYTE) \
     \
+    /*
+     * Creates rest parameter array for current function call, and pushes it
+     * onto the stack.
+     *   Category: Variables and Scopes
+     *   Type: Arguments
+     *   Operands:
+     *   Stack: => rest
+     */ \
     macro(JSOP_REST,          224, "rest",         NULL,  1,  0,  1,  JOF_BYTE|JOF_TYPESET) \
     \
-    /* Pop the stack, convert to a jsid (int or string), and push back. */ \
+    /*
+     * Pops the top of stack value, converts it into a jsid (int or string), and
+     * pushes it onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, id => obj, (jsid of id)
+     */ \
     macro(JSOP_TOID,          225, "toid",         NULL,  1,  1,  1,  JOF_BYTE) \
     \
-    /* Push the implicit 'this' value for calls to the associated name. */ \
+    /*
+     * Pushes the implicit 'this' value for calls to the associated name onto
+     * the stack.
+     *   Category: Variables and Scopes
+     *   Type: This
+     *   Operands: uint32_t nameIndex
+     *   Stack: => this
+     */                                                                 \
     macro(JSOP_IMPLICITTHIS,  226, "implicitthis", "",    5,  0,  1,  JOF_ATOM) \
     \
     /*

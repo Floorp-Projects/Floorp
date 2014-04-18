@@ -12,10 +12,9 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.ColorDrawable;
 import android.util.AttributeSet;
-import android.widget.@VIEWTYPE@;
 
-public class Themed@VIEWTYPE@ extends @VIEWTYPE@
-                              implements LightweightTheme.OnChangeListener {
+public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
+                                     implements LightweightTheme.OnChangeListener {
     private final LightweightTheme mTheme;
 
     private static final int[] STATE_PRIVATE_MODE = { R.attr.state_private };
@@ -31,7 +30,7 @@ public class Themed@VIEWTYPE@ extends @VIEWTYPE@
     private boolean mIsDark = false;
     private boolean mAutoUpdateTheme = true;
 
-    public Themed@VIEWTYPE@(Context context, AttributeSet attrs) {
+    public Themed@VIEW_NAME_SUFFIX@(Context context, AttributeSet attrs) {
         super(context, attrs);
         mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 

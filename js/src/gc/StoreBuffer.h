@@ -134,10 +134,6 @@ class StoreBuffer
         void put(StoreBuffer *owner, const T &t) {
             JS_ASSERT(storage_);
 
-            T *tip = storage_->peek<T>();
-            if (tip && tip->canMergeWith(t))
-                return tip->mergeInplace(t);
-
             T *tp = storage_->new_<T>(t);
             if (!tp)
                 CrashAtUnhandlableOOM("Failed to allocate for MonoTypeBuffer::put.");
@@ -251,9 +247,6 @@ class StoreBuffer
             return !nursery.isInside(edge) && nursery.isInside(*edge);
         }
 
-        bool canMergeWith(const CellPtrEdge &other) const { return edge == other.edge; }
-        void mergeInplace(const CellPtrEdge &) {}
-
         void mark(JSTracer *trc);
 
         CellPtrEdge tagged() const { return CellPtrEdge((Cell **)(uintptr_t(edge) | 1)); }
@@ -276,9 +269,6 @@ class StoreBuffer
         bool maybeInRememberedSet(const Nursery &nursery) const {
             return !nursery.isInside(edge) && nursery.isInside(deref());
         }
-
-        bool canMergeWith(const ValueEdge &other) const { return edge == other.edge; }
-        void mergeInplace(const ValueEdge &) {}
 
         void mark(JSTracer *trc);
 
@@ -321,16 +311,6 @@ class StoreBuffer
             return !(*this == other);
         }
 
-        bool canMergeWith(const SlotsEdge &other) const {
-            return objectAndKind_ == other.objectAndKind_;
-        }
-
-        void mergeInplace(const SlotsEdge &other) {
-            int32_t end = Max(start_ + count_, other.start_ + other.count_);
-            start_ = Min(start_, other.start_);
-            count_ = end - start_;
-        }
-
         bool maybeInRememberedSet(const Nursery &nursery) const {
             return !nursery.isInside(object());
         }
@@ -359,9 +339,6 @@ class StoreBuffer
 
         static bool supportsDeduplication() { return true; }
         void *deduplicationKey() const { return (void *)edge; }
-
-        bool canMergeWith(const WholeCellEdges &other) const { return edge == other.edge; }
-        void mergeInplace(const WholeCellEdges &) {}
 
         void mark(JSTracer *trc);
 

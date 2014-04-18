@@ -1,0 +1,4 @@
+#filter substitution
+#define VIEW_NAME_SUFFIX View
+#define BASE_TYPE android.view.View
+#include ThemedView.java.frag

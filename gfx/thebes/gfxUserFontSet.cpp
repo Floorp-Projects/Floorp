@@ -18,6 +18,7 @@
 #include "gfxFontConstants.h"
 #include "mozilla/Services.h"
 #include "mozilla/gfx/2D.h"
+#include "gfxPlatformFontList.h"
 
 #include "opentype-sanitiser.h"
 #include "ots-memory-stream.h"
@@ -102,13 +103,21 @@ gfxProxyFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeed
 }
 
 gfxUserFontSet::gfxUserFontSet()
-    : mFontFamilies(5)
+    : mFontFamilies(5), mLocalRulesUsed(false)
 {
     IncrementGeneration();
+    gfxPlatformFontList *fp = gfxPlatformFontList::PlatformFontList();
+    if (fp) {
+        fp->AddUserFontSet(this);
+    }
 }
 
 gfxUserFontSet::~gfxUserFontSet()
 {
+    gfxPlatformFontList *fp = gfxPlatformFontList::PlatformFontList();
+    if (fp) {
+        fp->RemoveUserFontSet(this);
+    }
 }
 
 gfxFontEntry*
@@ -539,6 +548,7 @@ gfxUserFontSet::LoadNext(gfxMixedFontFamily *aFamily,
             gfxFontEntry *fe =
                 gfxPlatform::GetPlatform()->LookupLocalFont(aProxyEntry,
                                                             currSrc.mLocalName);
+            mLocalRulesUsed = true;
             if (fe) {
                 LOG(("userfonts (%p) [src %d] loaded local: (%s) for (%s) gen: %8.8x\n",
                      this, aProxyEntry->mSrcIndex,
@@ -664,6 +674,13 @@ gfxUserFontSet::IncrementGeneration()
     mGeneration = sFontSetGeneration;
 }
 
+void
+gfxUserFontSet::RebuildLocalRules()
+{
+    if (mLocalRulesUsed) {
+        DoRebuildUserFontSet();
+    }
+}
 
 gfxFontEntry*
 gfxUserFontSet::LoadFont(gfxMixedFontFamily *aFamily,

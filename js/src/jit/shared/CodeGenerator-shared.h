@@ -467,13 +467,8 @@ class CodeGeneratorShared : public LInstructionVisitor
         return emitTracelogTree(/* isStart =*/ true, textId);
     }
     bool emitTracelogStopEvent(uint32_t textId) {
-#ifdef DEBUG
         return emitTracelogTree(/* isStart =*/ false, textId);
-#else
-        return emitTracelogScript(/* isStart =*/ false);
-#endif
     }
-    bool emitTracelogStopEvent();
 #endif
 };
 
