@@ -14,14 +14,14 @@
 
 namespace mozilla {
 namespace dom {
-class MediaStreamConstraintsInternal;
+class MediaStreamConstraints;
 
 class GetUserMediaRequest : public nsISupports, public nsWrapperCache
 {
 public:
   GetUserMediaRequest(nsPIDOMWindow* aInnerWindow,
                       const nsAString& aCallID,
-                      const MediaStreamConstraintsInternal& aConstraints,
+                      const MediaStreamConstraints& aConstraints,
                       bool aIsSecure);
   virtual ~GetUserMediaRequest() {};
 
@@ -36,12 +36,12 @@ public:
   uint64_t InnerWindowID();
   bool IsSecure();
   void GetCallID(nsString& retval);
-  void GetConstraints(MediaStreamConstraintsInternal &result);
+  void GetConstraints(MediaStreamConstraints &result);
 
 private:
   uint64_t mInnerWindowID, mOuterWindowID;
   const nsString mCallID;
-  nsAutoPtr<MediaStreamConstraintsInternal> mConstraints;
+  nsAutoPtr<MediaStreamConstraints> mConstraints;
   bool mIsSecure;
 };
 

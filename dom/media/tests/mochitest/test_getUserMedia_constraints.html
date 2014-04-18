@@ -20,24 +20,50 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=882145
 <script type="application/javascript">
 /**
   Tests covering gUM constraints API for audio, video and fake video. Exercise
-  successful parsing code and ensure that unknown mandatory constraints and
+  successful parsing code and ensure that unknown required constraints and
   overconstraining cases produce appropriate errors.
 */
 var tests = [
   // Each test here tests a different constraint or codepath.
+  { message: "unknown required constraint on video fails",
+    constraints: { video: { somethingUnknown:0, require:["somethingUnknown"] } },
+    error: "NO_DEVICES_FOUND",
+    pass: false },
+  { message: "unknown required constraint on audio fails",
+    constraints: { audio: { somethingUnknown:0, require:["somethingUnknown"] } },
+    error: "NO_DEVICES_FOUND",
+    pass: false },
+  { message: "missing required constraint on video fails",
+    constraints: { video: { require:["facingMode"] } },
+    error: "NO_DEVICES_FOUND",
+    pass: false },
+  { message: "missing required constraint on audio fails",
+    constraints: { audio: { require:["facingMode"] } },
+    error: "NO_DEVICES_FOUND",
+    pass: false },
   { message: "video overconstrained by facingMode fails",
-    constraints: { video: { mandatory: { facingMode:'left' } } },
+    constraints: { video: { facingMode:'left', require:["facingMode"] } },
+    error: "NO_DEVICES_FOUND",
+    pass: false },
+  { message: "audio overconstrained by facingMode fails",
+    constraints: { audio: { facingMode:'left', require:["facingMode"] } },
     error: "NO_DEVICES_FOUND",
     pass: false },
   { message: "Success-path: optional video facingMode + audio ignoring facingMode",
     constraints: { fake: true,
-                   audio: { mandatory: { facingMode:'left' } },
-                   video: { mandatory: { somethingUnknown:0 },
-                            optional: [{ facingMode:'left' },
-                                       { facingMode:'right' },
-                                       { facingMode:'environment' },
+                   audio: { facingMode:'left',
+                            foo:0,
+                            advanced: [{ facingMode:'environment' },
                                        { facingMode:'user' },
-                                       { foo:0 }] } },
+                                       { bar:0 }] },
+                   video: { // TODO: Bug 767924 sequences in unions
+                            //facingMode:['left', 'right', 'user', 'environment'],
+                            //require:["facingMode"],
+                            facingMode:'left',
+                            foo:0,
+                            advanced: [{ facingMode:'environment' },
+                                       { facingMode:'user' },
+                                       { bar:0 }] } },
     error: null,
     pass: false },
   { message: null },

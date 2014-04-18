@@ -176,7 +176,7 @@ MediaPermissionRequest::MediaPermissionRequest(nsRefPtr<dom::GetUserMediaRequest
                                                nsTArray<nsCOMPtr<nsIMediaDevice> > &aDevices)
   : mRequest(aRequest)
 {
-  dom::MediaStreamConstraintsInternal constraints;
+  dom::MediaStreamConstraints constraints;
   mRequest->GetConstraints(constraints);
 
   mAudio = !constraints.mAudio.IsBoolean() || constraints.mAudio.GetAsBoolean();
@@ -578,7 +578,7 @@ MediaPermissionManager::HandleRequest(nsRefPtr<dom::GetUserMediaRequest> &req)
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onError =
       new MediaDeviceErrorCallback(callID);
 
-  dom::MediaStreamConstraintsInternal constraints;
+  dom::MediaStreamConstraints constraints;
   req->GetConstraints(constraints);
 
   nsRefPtr<MediaManager> MediaMgr = MediaManager::GetInstance();
