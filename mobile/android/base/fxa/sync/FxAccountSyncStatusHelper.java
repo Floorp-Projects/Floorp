@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.WeakHashMap;
 
+import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 
 import android.content.ContentResolver;
@@ -17,10 +18,6 @@ import android.content.SyncStatusObserver;
  * Abstract away some details of Android's SyncStatusObserver.
  * <p>
  * Provides a simplified sync started/sync finished delegate.
- * <p>
- * We would prefer to register multiple observers, but it's of limited value
- * right now, so we support only a single observer, and we are as tolerant as
- * possible of non-paired add/remove calls.
  */
 public class FxAccountSyncStatusHelper implements SyncStatusObserver {
   @SuppressWarnings("unused")
@@ -35,27 +32,18 @@ public class FxAccountSyncStatusHelper implements SyncStatusObserver {
     return sInstance;
   }
 
-  public interface Delegate {
-    public AndroidFxAccount getAccount();
-    public void handleSyncStarted();
-    public void handleSyncFinished();
-  }
-
   // Used to unregister this as a listener.
   protected Object handle = null;
 
   // Maps delegates to whether their underlying Android account was syncing the
   // last time we observed a status change.
-  protected Map<Delegate, Boolean> delegates = new WeakHashMap<Delegate, Boolean>();
+  protected Map<FirefoxAccounts.SyncStatusListener, Boolean> delegates = new WeakHashMap<FirefoxAccounts.SyncStatusListener, Boolean>();
 
   @Override
   public synchronized void onStatusChanged(int which) {
-    for (Entry<Delegate, Boolean> entry : delegates.entrySet()) {
-      final Delegate delegate = entry.getKey();
-      final AndroidFxAccount fxAccount = delegate.getAccount();
-      if (fxAccount == null) {
-        continue;
-      }
+    for (Entry<FirefoxAccounts.SyncStatusListener, Boolean> entry : delegates.entrySet()) {
+      final FirefoxAccounts.SyncStatusListener delegate = entry.getKey();
+      final AndroidFxAccount fxAccount = new AndroidFxAccount(delegate.getContext(), delegate.getAccount());
       final boolean active = fxAccount.isCurrentlySyncing();
       // Remember for later.
       boolean wasActiveLastTime = entry.getValue();
@@ -64,11 +52,11 @@ public class FxAccountSyncStatusHelper implements SyncStatusObserver {
 
       if (active && !wasActiveLastTime) {
         // We've started a sync.
-        delegate.handleSyncStarted();
+        delegate.onSyncStarted();
       }
       if (!active && wasActiveLastTime) {
         // We've finished a sync.
-        delegate.handleSyncFinished();
+        delegate.onSyncFinished();
       }
     }
   }
@@ -89,7 +77,7 @@ public class FxAccountSyncStatusHelper implements SyncStatusObserver {
     }
   }
 
-  public synchronized void startObserving(Delegate delegate) {
+  public synchronized void startObserving(FirefoxAccounts.SyncStatusListener delegate) {
     if (delegate == null) {
       throw new IllegalArgumentException("delegate must not be null");
     }
@@ -103,7 +91,7 @@ public class FxAccountSyncStatusHelper implements SyncStatusObserver {
     delegates.put(delegate, Boolean.FALSE);
   }
 
-  public synchronized void stopObserving(Delegate delegate) {
+  public synchronized void stopObserving(FirefoxAccounts.SyncStatusListener delegate) {
     delegates.remove(delegate);
     // If we are the last delegate leaving the party, stop listening.
     if (delegates.isEmpty()) {
