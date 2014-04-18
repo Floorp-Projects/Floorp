@@ -197,13 +197,10 @@ class scoped_ptr {
   explicit scoped_ptr(T* p = 0): ptr(p) {}
 
   ~scoped_ptr() {
-    typedef char type_must_be_complete[sizeof(T)];
     delete ptr;
   }
 
   void reset(T* p = 0) {
-    typedef char type_must_be_complete[sizeof(T)];
-
     if (ptr != p) {
       delete ptr;
       ptr = p;
@@ -286,13 +283,10 @@ class scoped_array {
   explicit scoped_array(T* p = 0) : ptr(p) {}
 
   ~scoped_array() {
-    typedef char type_must_be_complete[sizeof(T)];
     delete[] ptr;
   }
 
   void reset(T* p = 0) {
-    typedef char type_must_be_complete[sizeof(T)];
-
     if (ptr != p) {
       delete [] ptr;
       ptr = p;
@@ -380,13 +374,10 @@ class scoped_ptr_malloc {
   explicit scoped_ptr_malloc(T* p = 0): ptr(p) {}
 
   ~scoped_ptr_malloc() {
-    typedef char type_must_be_complete[sizeof(T)];
     free_((void*) ptr);
   }
 
   void reset(T* p = 0) {
-    typedef char type_must_be_complete[sizeof(T)];
-
     if (ptr != p) {
       free_((void*) ptr);
       ptr = p;
