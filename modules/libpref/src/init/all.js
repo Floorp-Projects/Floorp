@@ -567,7 +567,10 @@ pref("devtools.chrome.enabled", false);
 
 // Disable remote debugging protocol logging
 pref("devtools.debugger.log", false);
-// Disable remote debugging connections
+// Show notifications when server starts/stops
+pref("devtools.debugger.show-server-notifications", true);
+// Run a server debugger. Changing this pref dynamically will
+// stop / start the server debugger.
 pref("devtools.debugger.remote-enabled", false);
 pref("devtools.debugger.remote-port", 6000);
 // Force debugger server binding on the loopback interface
