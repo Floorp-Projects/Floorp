@@ -110,6 +110,10 @@ AutoCompleteResult.prototype = {
     return "";
   },
 
+  getFinalCompleteValueAt: function(aIndex) {
+    return this.getValueAt(aIndex);
+  },
+
   removeValueAt: function (aRowIndex, aRemoveFromDb) {},
 
   // nsISupports implementation
