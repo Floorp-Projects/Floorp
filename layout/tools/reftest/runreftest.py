@@ -163,6 +163,10 @@ class RefTest(object):
       prefs['reftest.filter'] = options.filter
     prefs['reftest.focusFilterMode'] = options.focusFilterMode
 
+    # Ensure that telemetry is disabled, so we don't connect to the telemetry
+    # server in the middle of the tests.
+    prefs['toolkit.telemetry.enabled'] = False
+
     for v in options.extraPrefs:
       thispref = v.split('=')
       if len(thispref) < 2:
