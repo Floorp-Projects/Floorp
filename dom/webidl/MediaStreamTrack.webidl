@@ -10,32 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-// Important! Do not ever add members that might need tracing (e.g. object)
-// to MediaTrackConstraintSet
-
-enum VideoFacingModeEnum {
-    "user",
-    "environment",
-    "left",
-    "right"
-};
-
-enum SupportedVideoConstraints {
-    "facingMode"
-};
-
-enum SupportedAudioConstraints {
-    "dummy"
-};
-
-dictionary MediaTrackConstraintSet {
-    ConstrainVideoFacingMode facingMode;
-};
-
-dictionary MobileLegacyMediaTrackConstraintSet {
-    VideoFacingModeEnum facingMode;
-};
-
 dictionary MediaTrackConstraints : MediaTrackConstraintSet {
     sequence<DOMString> require;
     sequence<MediaTrackConstraintSet> advanced;
@@ -45,9 +19,10 @@ dictionary MediaTrackConstraints : MediaTrackConstraintSet {
     sequence<MobileLegacyMediaTrackConstraintSet> _optional;
 };
 
-typedef VideoFacingModeEnum ConstrainVideoFacingMode;
-// TODO: Bug 767924 sequences in unions
-//typedef (VideoFacingModeEnum or sequence<VideoFacingModeEnum>) ConstrainVideoFacingMode;
+// TODO(jib): Remove in 6+ weeks (Bug 997365)
+dictionary MobileLegacyMediaTrackConstraintSet {
+    VideoFacingModeEnum facingMode;
+};
 
 interface MediaStreamTrack {
     readonly    attribute DOMString             kind;

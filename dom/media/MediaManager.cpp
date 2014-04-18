@@ -639,8 +639,15 @@ private:
 };
 
 static bool
-IsOn(const dom::OwningBooleanOrMediaTrackConstraints &aUnion) {
+IsOn(const OwningBooleanOrMediaTrackConstraints &aUnion) {
   return !aUnion.IsBoolean() || aUnion.GetAsBoolean();
+}
+
+static const MediaTrackConstraints&
+GetInvariant(const OwningBooleanOrMediaTrackConstraints &aUnion) {
+  static const MediaTrackConstraints empty;
+  return aUnion.IsMediaTrackConstraints() ?
+      aUnion.GetAsMediaTrackConstraints() : empty;
 }
 
 /**
@@ -697,6 +704,15 @@ public:
   : mRequire(aRequire)
   , mNumRequirementsMet(0) {}
 
+  MediaTrackConstraintSet& Triage(dom::SupportedVideoConstraints kind) {
+    return Triage(NS_ConvertUTF8toUTF16(
+        dom::SupportedVideoConstraintsValues::strings[uint32_t(kind)].value));
+  }
+  MediaTrackConstraintSet& Triage(dom::SupportedAudioConstraints kind) {
+    return Triage(NS_ConvertUTF8toUTF16(
+        dom::SupportedAudioConstraintsValues::strings[uint32_t(kind)].value));
+  }
+private:
   MediaTrackConstraintSet& Triage(const nsAString &name) {
     if (mRequire.IndexOf(name) != mRequire.NoIndex) {
       mNumRequirementsMet++;
@@ -705,6 +721,7 @@ public:
       return mNonrequired;
     }
   }
+public:
   bool RequirementsAreMet() {
     MOZ_ASSERT(mNumRequirementsMet <= mRequire.Length());
     return mNumRequirementsMet == mRequire.Length();
@@ -763,20 +780,11 @@ static SourceSet *
     }
   }
 
-  // If unconstrained then return the full list.
+  // Apply constraints to the list of sources.
 
-  if (aConstraints.IsBoolean()) {
-    MOZ_ASSERT(aConstraints.GetAsBoolean());
-    result->MoveElementsFrom(candidateSet);
-    return result.forget();
-  }
-
-  // Otherwise apply constraints to the list of sources.
-
-  auto& constraints = aConstraints.GetAsMediaTrackConstraints();
+  auto& c = GetInvariant(aConstraints);
   const nsTArray<nsString> empty;
-  const auto &require = constraints.mRequire.WasPassed()?
-      constraints.mRequire.Value() : empty;
+  const auto &require = c.mRequire.WasPassed()? c.mRequire.Value() : empty;
   {
     // Check upfront the names of required constraints that are unsupported for
     // this media-type. The spec requires these to fail, so getting them out of
@@ -802,13 +810,24 @@ static SourceSet *
   }
 
   // Before we start, triage constraints into required and nonrequired.
+  // This part is type-agnostic because it can be.
   // Reminder: add handling for new constraints both here & SatisfyConstraintSet
 
   TriageHelper helper(require);
 
-  if (constraints.mFacingMode.WasPassed()) {
-    helper.Triage(NS_LITERAL_STRING("facingMode")).mFacingMode.Construct(
-        constraints.mFacingMode.Value());
+  if (c.mFacingMode.WasPassed()) {
+    helper.Triage(dom::SupportedVideoConstraints::FacingMode).
+        mFacingMode.Construct(c.mFacingMode.Value());
+  }
+  if (c.mWidth.mMin.WasPassed() || c.mWidth.mMax.WasPassed()) {
+    helper.Triage(dom::SupportedVideoConstraints::Width).mWidth = c.mWidth;
+  }
+  if (c.mHeight.mMin.WasPassed() || c.mHeight.mMax.WasPassed()) {
+    helper.Triage(dom::SupportedVideoConstraints::Height).mHeight = c.mHeight;
+  }
+  if (c.mFrameRate.mMin.WasPassed() || c.mFrameRate.mMax.WasPassed()) {
+    helper.Triage(dom::SupportedVideoConstraints::FrameRate).mFrameRate =
+        c.mFrameRate;
   }
   if (!helper.RequirementsAreMet()) {
     return result.forget();
@@ -841,8 +860,8 @@ static SourceSet *
 
   SourceSet tailSet;
 
-  if (constraints.mAdvanced.WasPassed()) {
-    const auto &array = constraints.mAdvanced.Value();
+  if (c.mAdvanced.WasPassed()) {
+    const auto &array = c.mAdvanced.Value();
     for (int i = 0; i < int(array.Length()); i++) {
       SourceSet rejects;
       for (uint32_t j = 0; j < candidateSet.Length();) {
@@ -1436,12 +1455,10 @@ MediaManager::GetUserMedia(bool aPrivileged,
   // Be backwards compatible only on mobile and only for facingMode.
   if (c.mVideo.IsMediaTrackConstraints()) {
     auto& tc = c.mVideo.GetAsMediaTrackConstraints();
-
-    if (!tc.mRequire.WasPassed()) {
-      if (tc.mMandatory.mFacingMode.WasPassed() && !tc.mFacingMode.WasPassed()) {
-        tc.mFacingMode.Construct(tc.mMandatory.mFacingMode.Value());
-        tc.mRequire.Construct().AppendElement(NS_LITERAL_STRING("facingMode"));
-      }
+    if (!tc.mRequire.WasPassed() &&
+        tc.mMandatory.mFacingMode.WasPassed() && !tc.mFacingMode.WasPassed()) {
+      tc.mFacingMode.Construct(tc.mMandatory.mFacingMode.Value());
+      tc.mRequire.Construct().AppendElement(NS_LITERAL_STRING("facingMode"));
     }
     if (tc.mOptional.WasPassed() && !tc.mAdvanced.WasPassed()) {
       tc.mAdvanced.Construct();
