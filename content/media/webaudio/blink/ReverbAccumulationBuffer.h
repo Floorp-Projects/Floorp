@@ -30,6 +30,7 @@
 #define ReverbAccumulationBuffer_h
 
 #include "nsTArray.h"
+#include "mozilla/MemoryReporting.h"
 
 namespace WebCore {
 
@@ -57,6 +58,11 @@ public:
     size_t readTimeFrame() const { return m_readTimeFrame; }
 
     void reset();
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+    {
+        return m_buffer.SizeOfExcludingThis(aMallocSizeOf);
+    }
 
 private:
     AudioFloatArray m_buffer;

@@ -377,8 +377,8 @@ SVGMotionSMILAnimationFunction::CheckKeyPoints()
     SetKeyPointsErrorFlag(false);
   }
 
-  if (mKeyPoints.IsEmpty()) {
-    // keyPoints attr is set, but array is empty => it failed preliminary checks
+  if (mKeyPoints.Length() != mKeyTimes.Length()) {
+    // there must be exactly as many keyPoints as keyTimes
     SetKeyPointsErrorFlag(true);
     return;
   }
@@ -387,10 +387,6 @@ SVGMotionSMILAnimationFunction::CheckKeyPoints()
   // -  Formatting & range issues will be caught in SetKeyPoints, and will
   //  result in an empty mKeyPoints array, which will drop us into the error
   //  case above.
-  // -  Number-of-entries issues will be caught in CheckKeyTimes (and flagged
-  //  as a problem with |keyTimes|), since we use our keyPoints entries to
-  //  populate the "values" list, and that list's count gets passed to
-  //  CheckKeyTimes.
 }
 
 nsresult

@@ -13,13 +13,13 @@
 <!-- this is effectively x-moz-phonesearch, but search service expects a text/html entry -->
 <Url type="text/html" method="GET" template="http://www.bing.com/search">
   <Param name="q" value="{searchTerms}" />
-  <MozParam name="pc" value="MOZB" />
-  <MozParam name="form" value="MOZMBA" />
+  <Param name="pc" value="MOZB" />
+  <Param name="form" value="MOZMBA" />
 </Url>
 <Url type="application/x-moz-tabletsearch" method="GET" template="http://www.bing.com/search">
   <Param name="q" value="{searchTerms}" />
-  <MozParam name="pc" value="MOZA" />
-  <MozParam name="form" value="MOZAT" />
+  <Param name="pc" value="MOZA" />
+  <Param name="form" value="MOZAT" />
 </Url>
 <SearchForm>http://www.bing.com</SearchForm>
 </SearchPlugin>

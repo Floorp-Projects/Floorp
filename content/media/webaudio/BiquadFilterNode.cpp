@@ -211,6 +211,22 @@ public:
     }
   }
 
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    // Not owned:
+    // - mSource - probably not owned
+    // - mDestination - probably not owned
+    // - AudioParamTimelines - counted in the AudioNode
+    size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
+    amount += mBiquads.SizeOfExcludingThis(aMallocSizeOf);
+    return amount;
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 private:
   AudioNodeStream* mSource;
   AudioNodeStream* mDestination;
@@ -240,6 +256,37 @@ BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
   BiquadFilterNodeEngine* engine = new BiquadFilterNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
+}
+
+
+size_t
+BiquadFilterNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
+
+  if (mFrequency) {
+    amount += mFrequency->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  if (mDetune) {
+    amount += mDetune->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  if (mQ) {
+    amount += mQ->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  if (mGain) {
+    amount += mGain->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  return amount;
+}
+
+size_t
+BiquadFilterNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
 JSObject*
