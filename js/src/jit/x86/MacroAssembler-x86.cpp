@@ -113,10 +113,8 @@ MacroAssemblerX86::addConstantFloat32(float f, const FloatRegister &dest)
 void
 MacroAssemblerX86::finish()
 {
-    if (doubles_.empty() && floats_.empty())
-        return;
-
-    masm.align(sizeof(double));
+    if (!doubles_.empty())
+        masm.align(sizeof(double));
     for (size_t i = 0; i < doubles_.length(); i++) {
         CodeLabel cl(doubles_[i].uses);
         writeDoubleConstant(doubles_[i].value, cl.src());
@@ -124,6 +122,9 @@ MacroAssemblerX86::finish()
         if (!enoughMemory_)
             return;
     }
+
+    if (!floats_.empty())
+        masm.align(sizeof(float));
     for (size_t i = 0; i < floats_.length(); i++) {
         CodeLabel cl(floats_[i].uses);
         writeFloatConstant(floats_[i].value, cl.src());
