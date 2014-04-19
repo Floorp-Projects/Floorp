@@ -1380,7 +1380,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     jssrcnote *notes() { return (jssrcnote *)(code() + length()); }
 
     bool hasArray(ArrayKind kind) {
-        return (hasArrayBits & (1 << kind));
+        return hasArrayBits & (1 << kind);
     }
     void setHasArray(ArrayKind kind) { hasArrayBits |= (1 << kind); }
     void cloneHasArray(JSScript *script) { hasArrayBits = script->hasArrayBits; }

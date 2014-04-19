@@ -45,10 +45,15 @@ this.NFC_NOTIFICATION_TECH_DISCOVERED = 2001;
 this.NFC_NOTIFICATION_TECH_LOST = 2002;
 
 this.NFC_TECHS = {
-  0:'NDEF',
-  1:'NDEF_WRITEABLE',
-  2:'NDEF_FORMATABLE',
-  3:'P2P'
+  0:"NDEF",
+  1:"NDEF_WRITEABLE",
+  2:"NDEF_FORMATABLE",
+  3:"P2P",
+  4:"NFC_A",
+  5:"NFC_B",
+  6:"NFC_F",
+  7:"NFC_V",
+  8:"NFC_ISO_DEP"
 };
 
 // TODO: Bug 933595. Fill-in all error codes for Gonk/nfcd protocol
@@ -63,7 +68,6 @@ this.NFC_POWER_LEVEL_ENABLED        = 2;
 
 this.TOPIC_MOZSETTINGS_CHANGED      = "mozsettings-changed";
 this.TOPIC_XPCOM_SHUTDOWN           = "xpcom-shutdown";
-this.TOPIC_HARDWARE_STATE           = "nfc-hardware-state-change";
 this.SETTING_NFC_ENABLED            = "nfc.enabled";
 
 this.NFC_PEER_EVENT_READY = 0x01;

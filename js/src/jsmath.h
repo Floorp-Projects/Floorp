@@ -68,7 +68,7 @@ class MathCache
             return e.out;
         e.in = x;
         e.f = f;
-        return (e.out = f(x));
+        return e.out = f(x);
     }
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
