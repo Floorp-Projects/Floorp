@@ -1172,7 +1172,7 @@ class Shape : public gc::BarrieredCell<Shape>
     }
 
     uint32_t numFixedSlots() const {
-        return (slotInfo >> FIXED_SLOTS_SHIFT);
+        return slotInfo >> FIXED_SLOTS_SHIFT;
     }
 
     void setNumFixedSlots(uint32_t nfixed) {

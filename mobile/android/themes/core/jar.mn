@@ -62,6 +62,8 @@ chrome.jar:
   skin/images/search-clear-30.png           (images/search-clear-30.png)
   skin/images/play-hdpi.png                 (images/play-hdpi.png)
   skin/images/pause-hdpi.png                (images/pause-hdpi.png)
+  skin/images/cast-ready-hdpi.png           (images/cast-ready-hdpi.png)
+  skin/images/cast-active-hdpi.png          (images/cast-active-hdpi.png)
   skin/images/mute-hdpi.png                 (images/mute-hdpi.png)
   skin/images/unmute-hdpi.png               (images/unmute-hdpi.png)
   skin/images/scrubber-hdpi.png             (images/scrubber-hdpi.png)

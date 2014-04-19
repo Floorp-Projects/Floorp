@@ -108,6 +108,45 @@ namespace jit {
  *    - AutoTraceLog logger(logger, textId);
  */
 
+#define TRACELOGGER_TEXT_ID_LIST(_)                   \
+    _(Bailout)                                        \
+    _(Baseline)                                       \
+    _(BaselineCompilation)                            \
+    _(GC)                                             \
+    _(GCAllocation)                                   \
+    _(GCSweeping)                                     \
+    _(Interpreter)                                    \
+    _(Invalidation)                                   \
+    _(IonCompilation)                                 \
+    _(IonLinking)                                     \
+    _(IonMonkey)                                      \
+    _(MinorGC)                                        \
+    _(ParserCompileFunction)                          \
+    _(ParserCompileLazy)                              \
+    _(ParserCompileScript)                            \
+    _(TL)                                             \
+    _(YarrCompile)                                    \
+    _(YarrInterpret)                                  \
+    _(YarrJIT)                                        \
+    _(VM)                                             \
+                                                      \
+    /* Specific passes during ion compilation */      \
+    _(SplitCriticalEdges)                             \
+    _(RenumberBlocks)                                 \
+    _(DominatorTree)                                  \
+    _(PhiAnalysis)                                    \
+    _(ApplyTypes)                                     \
+    _(ParallelSafetyAnalysis)                         \
+    _(AliasAnalysis)                                  \
+    _(GVN)                                            \
+    _(UCE)                                            \
+    _(LICM)                                           \
+    _(RangeAnalysis)                                  \
+    _(EffectiveAddressAnalysis)                       \
+    _(EliminateDeadCode)                              \
+    _(EdgeCaseAnalysis)                               \
+    _(EliminateRedundantChecks)
+
 class AutoTraceLog;
 
 template <class T>
@@ -208,48 +247,12 @@ class TraceLogger
   public:
     // Predefined IDs for common operations. These IDs can be used
     // without using TraceLogCreateTextId, because there are already created.
-    // When changing the enum here, you must update the array containing the
-    // actual logged text in TraceLogging.cpp.
     enum TextId {
-      TL_Error,
-      Bailout,
-      Baseline,
-      GC,
-      GCAllocation,
-      GCSweeping,
-      Interpreter,
-      Invalidation,
-      IonCompilation,
-      IonLinking,
-      IonMonkey,
-      MinorGC,
-      ParserCompileFunction,
-      ParserCompileLazy,
-      ParserCompileScript,
-      TL,
-      YarrCompile,
-      YarrInterpret,
-      YarrJIT,
-      VM,
-
-      // Specific passes during ion compilation:
-      SplitCriticalEdges,
-      RenumberBlocks,
-      DominatorTree,
-      PhiAnalysis,
-      ApplyTypes,
-      ParallelSafetyAnalysis,
-      AliasAnalysis,
-      GVN,
-      UCE,
-      LICM,
-      RangeAnalysis,
-      EffectiveAddressAnalysis,
-      EliminateDeadCode,
-      EdgeCaseAnalysis,
-      EliminateRedundantChecks,
-
-      LAST
+        TL_Error = 0,
+#   define DEFINE_TEXT_ID(textId) textId,
+        TRACELOGGER_TEXT_ID_LIST(DEFINE_TEXT_ID)
+#   undef DEFINE_TEXT_ID
+        LAST
     };
 
 #ifdef JS_TRACE_LOGGING

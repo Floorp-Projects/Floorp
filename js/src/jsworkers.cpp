@@ -535,7 +535,7 @@ GlobalWorkerThreadState::canStartAsmJSCompile()
 {
     // Don't execute an AsmJS job if an earlier one failed.
     JS_ASSERT(isLocked());
-    return (!asmJSWorklist().empty() && !numAsmJSFailedJobs);
+    return !asmJSWorklist().empty() && !numAsmJSFailedJobs;
 }
 
 bool

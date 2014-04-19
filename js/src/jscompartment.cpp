@@ -528,7 +528,7 @@ JSCompartment::trace(JSTracer *trc)
 void
 JSCompartment::markRoots(JSTracer *trc)
 {
-    JS_ASSERT(!trc->runtime->isHeapMinorCollecting());
+    JS_ASSERT(!trc->runtime()->isHeapMinorCollecting());
 
 #ifdef JS_ION
     if (jitCompartment_)

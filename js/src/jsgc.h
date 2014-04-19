@@ -15,9 +15,9 @@
 #include "jslock.h"
 #include "jsobj.h"
 
+#include "gc/Tracer.h"
 #include "js/GCAPI.h"
 #include "js/SliceBudget.h"
-#include "js/Tracer.h"
 #include "js/Vector.h"
 
 class JSAtom;
@@ -775,9 +775,6 @@ NotifyGCPreSwap(JSObject *a, JSObject *b);
 
 extern void
 NotifyGCPostSwap(JSObject *a, JSObject *b, unsigned preResult);
-
-void
-InitTracer(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback);
 
 /*
  * Helper that implements sweeping and allocation for kinds that can be swept

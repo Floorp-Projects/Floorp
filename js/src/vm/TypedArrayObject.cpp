@@ -166,7 +166,7 @@ js::ClampDoubleToUint8(const double x)
          * ones bit should do the trick to get us the value we
          * want.
          */
-        return (y & ~1);
+        return y & ~1;
     }
 
     return y;
@@ -2059,7 +2059,7 @@ const JSFunctionSpec _typedArray##Object::jsfuncs[] = {                         
       if (!(obj = CheckedUnwrap(obj)))                                                          \
           return false;                                                                         \
       const Class *clasp = obj->getClass();                                                     \
-      return (clasp == &TypedArrayObject::classes[TypedArrayObjectTemplate<NativeType>::ArrayTypeID()]); \
+      return clasp == &TypedArrayObject::classes[TypedArrayObjectTemplate<NativeType>::ArrayTypeID()]; \
   }
 
 IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Int8, int8_t)

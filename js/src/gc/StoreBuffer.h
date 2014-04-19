@@ -20,8 +20,8 @@
 
 #include "ds/LifoAlloc.h"
 #include "gc/Nursery.h"
+#include "gc/Tracer.h"
 #include "js/MemoryMetrics.h"
-#include "js/Tracer.h"
 
 namespace js {
 
@@ -61,7 +61,7 @@ class HashKeyRef : public BufferableRef
         typename Map::Ptr p = map->lookup(key);
         if (!p)
             return;
-        JS_SET_TRACING_LOCATION(trc, (void*)&*p);
+        trc->setTracingLocation(&*p);
         Mark(trc, &key, "HashKeyRef");
         map->rekeyIfMoved(prior, key);
     }
