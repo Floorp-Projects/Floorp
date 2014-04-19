@@ -121,7 +121,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(0b81b4f2-cad7-4602-a5cb-b99c9d514196)]
+[scriptable, uuid(a2379a24-9f2f-46f0-826f-1b8a72a882e4)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -584,6 +584,13 @@ interface nsIXPCComponents_Utils : nsISupports
      * function throws. If it throws, you probably shouldn't be using it.
      */
     nsIPrincipal getWebIDLCallerPrincipal();
+
+    /*
+     * Gets the principal of a script object, after unwrapping any cross-
+     * compartment wrappers.
+     */
+    [implicit_jscontext]
+    nsIPrincipal getObjectPrincipal(in jsval obj);
 };
 
 /**
