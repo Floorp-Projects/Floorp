@@ -28,7 +28,7 @@ function test(source) {
     }
 
     g.evaluate(source, { fileName: "BanalBivalve.jsm",
-                         sourcePolicy: "LAZY_SOURCE"});
+                         sourceIsLazy: true });
   });
 
   assertEq(log, 'ds');
