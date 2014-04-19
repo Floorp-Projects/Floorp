@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+  function canary() {
+    var someBitOfSource = 42;
+  }
+  function inner() {
+    throw new Error("some error");
+  }
+  function throwSomething() {
+    inner();
+  }
+</script>
+</head>
+<body onload="someBitOfSource = 42">
+</body>
+</html>
