@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1408184023977000);
+const PRTime gPreloadListExpirationTime = INT64_C(1408788358092000);
 
 class nsSTSPreload
 {
@@ -22,6 +22,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "aclu.org", false },
   { "activiti.alfresco.com", false },
   { "admin.google.com", true },
+  { "adsfund.org", true },
   { "aladdinschools.appspot.com", false },
   { "alpha.irccloud.com", false },
   { "api.intercom.io", false },
@@ -39,7 +40,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "blog.linode.com", false },
   { "blog.lookout.com", false },
   { "blog.torproject.org", false },
-  { "blueseed.co", false },
   { "boxcryptor.com", true },
   { "braintreepayments.com", false },
   { "bugzilla.mozilla.org", true },
@@ -51,6 +51,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "chrome.google.com", true },
   { "chromiumcodereview.appspot.com", false },
   { "cloud.google.com", true },
+  { "cloudcert.org", true },
   { "cloudns.com.au", true },
   { "cloudsecurityalliance.org", true },
   { "code.google.com", true },
@@ -160,6 +161,12 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "opsmate.com", false },
   { "p.linode.com", false },
   { "packagist.org", false },
+  { "passport.yandex.by", false },
+  { "passport.yandex.com", false },
+  { "passport.yandex.com.tr", false },
+  { "passport.yandex.kz", false },
+  { "passport.yandex.ru", false },
+  { "passport.yandex.ua", false },
   { "passwd.io", true },
   { "passwordbox.com", false },
   { "paste.linode.com", false },
@@ -174,6 +181,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "plus.sandbox.google.com", false },
   { "profiles.google.com", true },
   { "publications.qld.gov.au", false },
+  { "pult.co", true },
   { "pypi.python.org", true },
   { "python.org", false },
   { "riseup.net", true },
@@ -184,6 +192,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "script.google.com", true },
   { "security.google.com", true },
   { "securityheaders.com", true },
+  { "seifried.org", true },
   { "semenkovich.com", true },
   { "shodan.io", true },
   { "silentcircle.com", false },
@@ -207,6 +216,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "translate.googleapis.com", true },
   { "twitter.com", false },
   { "ubertt.org", true },
+  { "vmoagents.com", false },
   { "wallet.google.com", true },
   { "webmail.gigahost.dk", false },
   { "webmail.onlime.ch", false },
