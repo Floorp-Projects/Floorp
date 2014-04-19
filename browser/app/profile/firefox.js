@@ -671,6 +671,9 @@ pref("plugin.default.state", 2);
 pref("plugin.default.state", 1);
 #endif
 
+// Plugins bundled in XPIs are enabled by default.
+pref("plugin.defaultXpi.state", 2);
+
 // Flash is enabled by default, and Java is click-to-activate by default on
 // all channels.
 pref("plugin.state.flash", 2);
