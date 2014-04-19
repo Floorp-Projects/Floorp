@@ -2,17 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function AutoCompleteTypeAheadResult(aValues, aComments) {
+function AutoCompleteTypeAheadResult(aValues, aFinalCompleteValues) {
   this._values = aValues;
-  this._comments = aComments;
+  this._finalCompleteValues = aFinalCompleteValues;
   this.defaultIndex = 0;
   this._typeAheadResult = true;
 }
 AutoCompleteTypeAheadResult.prototype = Object.create(AutoCompleteResultBase.prototype);
 
-function AutoCompleteResult(aValues, aComments) {
+function AutoCompleteResult(aValues) {
   this._values = aValues;
-  this._comments = aComments;
 }
 AutoCompleteResult.prototype = Object.create(AutoCompleteResultBase.prototype);
 
@@ -45,7 +44,7 @@ function doSearch(aSearchString, aOnCompleteCallback) {
 
   let search = new AutoCompleteSearchBase(
     "search",
-    new AutoCompleteResult([ "mozilla.org" ], [ "http://www.mozilla.org" ])
+    new AutoCompleteResult([ "mozilla.org" ])
   );
   registerAutoCompleteSearch(search);
 

@@ -543,6 +543,13 @@ TagAutoCompleteResult.prototype = {
   },
 
   /**
+   * Get the image for the result at the given index
+   */
+  getFinalCompleteValueAt: function PTACR_getFinalCompleteValueAt(index) {
+    return this.getValueAt(index);
+  },
+
+  /**
    * Remove the value at the given index from the autocomplete results.
    * If removeFromDb is set to true, the value should be removed from
    * persistent storage as well.

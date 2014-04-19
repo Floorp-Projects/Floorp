@@ -6,7 +6,11 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(b21f1579-d994-4e99-a85d-a685140f3ec1)]
+interface nsIURI;
+interface nsIPrincipal;
+interface nsIObserver;
+
+[scriptable, uuid(19533e7b-f321-4ef1-bc59-6e812dc2a733)]
 interface mozIJSSubScriptLoader : nsISupports
 {
     /**
@@ -39,4 +43,22 @@ interface mozIJSSubScriptLoader : nsISupports
      */
     [implicit_jscontext]
     jsval loadSubScriptWithOptions(in AString url, in jsval options);
+
+    /*
+     * Compiles a JS script off the main thread and calls back the
+     * observer once it's done.
+     * The script will be cached in temporary or persistent storage depending
+     * on the principal used.
+     * We fire the notification callback in all cases - there is no fatal
+     * error there.
+     * @param uri       the uri of the script to load.
+     * @param principal the principal from which we get the app id if any.
+     * @param observer  this observer will be called once the script has
+     *                  been precompiled. The notification topic will be
+     *                  'script-precompiled' and the subject the uri of the
+     *                  script as a nsIURI.
+     */
+    void precompileScript(in nsIURI uri,
+                          in nsIPrincipal principal,
+                          in nsIObserver observer);
 };

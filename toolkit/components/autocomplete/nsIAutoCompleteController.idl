@@ -6,7 +6,7 @@
 
 interface nsIAutoCompleteInput;
 
-[scriptable, uuid(dd2c4489-e4bd-4702-86bc-e1691744e556)]
+[scriptable, uuid(ff9f8465-204a-47a6-b3c9-0628b3856684)]
 interface nsIAutoCompleteController : nsISupports
 {
   /*
@@ -133,6 +133,12 @@ interface nsIAutoCompleteController : nsISupports
    * Get the url of the image of the result at a given index in the last completed search
    */
   AString getImageAt(in long index);
+
+  /*
+   * For the last completed search, get the final value that should be completed
+   * when the user confirms the match at the given index
+   */
+  AString getFinalCompleteValueAt(in long index);
 
   /*
    * Get / set the current search string.  Note, setting will not start searching
