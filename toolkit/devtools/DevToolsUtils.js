@@ -260,7 +260,7 @@ exports.isSafeJSObject = function isSafeJSObject(aObj) {
     return true; // aObj is not a cross-compartment wrapper.
   }
 
-  let principal = Services.scriptSecurityManager.getObjectPrincipal(aObj);
+  let principal = Cu.getObjectPrincipal(aObj);
   if (Services.scriptSecurityManager.isSystemPrincipal(principal)) {
     return true; // allow chrome objects
   }
