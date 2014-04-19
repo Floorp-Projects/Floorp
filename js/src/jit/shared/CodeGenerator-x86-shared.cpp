@@ -22,6 +22,7 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::Abs;
 using mozilla::FloatingPoint;
 using mozilla::FloorLog2;
 using mozilla::NegativeInfinity;
@@ -913,6 +914,88 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI *ins)
         masm.negl(lhs);
         if (!mir->isTruncated() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
             return false;
+    }
+
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitDivOrModConstantI(LDivOrModConstantI *ins) {
+    Register lhs = ToRegister(ins->numerator());
+    Register output = ToRegister(ins->output());
+    int32_t d = ins->denominator();
+
+    // This emits the division answer into edx or the modulus answer into eax.
+    JS_ASSERT(output == eax || output == edx);
+    JS_ASSERT(lhs != eax && lhs != edx);
+
+    // The absolute value of the denominator isn't a power of 2 (see LDivPowTwoI
+    // and LModPowTwoI).
+    JS_ASSERT((Abs(d) & (Abs(d) - 1)) != 0);
+
+    // We will first divide by Abs(d), and negate the answer if d is negative.
+    // If desired, this can be avoided by generalizing computeDivisionConstants.
+    ReciprocalMulConstants rmc = computeDivisionConstants(Abs(d));
+
+    // As explained in the comments of computeDivisionConstants, we first compute
+    // X >> (32 + shift), where X is either (rmc.multiplier * n) if the multiplier
+    // is non-negative or (rmc.multiplier * n) + (2^32 * n) otherwise. This is the
+    // desired division result if n is non-negative, and is one less than the result
+    // otherwise.
+    masm.movl(lhs, eax);
+    masm.movl(Imm32(rmc.multiplier), edx);
+    masm.imull(edx);
+    if (rmc.multiplier < 0)
+        masm.addl(lhs, edx);
+    masm.sarl(Imm32(rmc.shift_amount), edx);
+
+    // We'll subtract -1 instead of adding 1, because (n < 0 ? -1 : 0) can be
+    // computed with just a sign-extending shift of 31 bits.
+    if (ins->canBeNegativeDividend()) {
+        masm.movl(lhs, eax);
+        masm.sarl(Imm32(31), eax);
+        masm.subl(eax, edx);
+    }
+
+    // After this, edx contains the correct division result.
+    if (d < 0)
+        masm.negl(edx);
+
+    if (output == eax) {
+        masm.imull(Imm32(-d), edx, eax);
+        masm.addl(lhs, eax);
+    }
+
+    if (!ins->mir()->isTruncated()) {
+        if (output == edx) {
+            // This is a division op. Multiply the obtained value by d to check if
+            // the correct answer is an integer. This cannot overflow, since |d| > 1.
+            masm.imull(Imm32(d), edx, eax);
+            masm.cmpl(lhs, eax);
+            if (!bailoutIf(Assembler::NotEqual, ins->snapshot()))
+                return false;
+
+            // If lhs is zero and the divisor is negative, the answer should have
+            // been -0.
+            if (d < 0) {
+                masm.testl(lhs, lhs);
+                if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+                    return false;
+            }
+        } else if (ins->canBeNegativeDividend()) {
+            // This is a mod op. If the computed value is zero and lhs
+            // is negative, the answer should have been -0.
+            Label done;
+
+            masm.cmpl(lhs, Imm32(0));
+            masm.j(Assembler::GreaterThanOrEqual, &done);
+
+            masm.testl(eax, eax);
+            if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+                return false;
+
+            masm.bind(&done);
+        }
     }
 
     return true;

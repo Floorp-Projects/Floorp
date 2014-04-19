@@ -138,10 +138,8 @@ LIRGeneratorX86Shared::lowerDivI(MDiv *div)
     if (div->rhs()->isConstant()) {
         int32_t rhs = div->rhs()->toConstant()->value().toInt32();
 
-        // Check for division by a power of two, which is an easy and
-        // important case to optimize. Note that other optimizations
-        // are also possible: division by other constants can be
-        // optimized by a reciprocal multiplication technique.
+        // Division by powers of two can be done by shifting, and division by
+        // other numbers can be done by a reciprocal multiplication technique.
         int32_t shift = FloorLog2(Abs(rhs));
         if (rhs != 0 && uint32_t(1) << shift == Abs(rhs)) {
             LAllocation lhs = useRegisterAtStart(div->lhs());
@@ -157,6 +155,12 @@ LIRGeneratorX86Shared::lowerDivI(MDiv *div)
             if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
                 return false;
             return defineReuseInput(lir, div, 0);
+        } else if (rhs != 0) {
+            LDivOrModConstantI *lir;
+            lir = new(alloc()) LDivOrModConstantI(useRegister(div->lhs()), rhs, tempFixed(eax));
+            if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+                return false;
+            return defineFixed(lir, div, LAllocation(AnyRegister(edx)));
         }
     }
 
@@ -181,6 +185,12 @@ LIRGeneratorX86Shared::lowerModI(MMod *mod)
             if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
                 return false;
             return defineReuseInput(lir, mod, 0);
+        } else if (rhs != 0) {
+            LDivOrModConstantI *lir;
+            lir = new(alloc()) LDivOrModConstantI(useRegister(mod->lhs()), rhs, tempFixed(edx));
+            if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+                return false;
+            return defineFixed(lir, mod, LAllocation(AnyRegister(eax)));
         }
     }
 
