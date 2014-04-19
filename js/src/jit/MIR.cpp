@@ -158,7 +158,7 @@ MDefinition::valueHash() const
 }
 
 bool
-MDefinition::congruentIfOperandsEqual(MDefinition *ins) const
+MDefinition::congruentIfOperandsEqual(const MDefinition *ins) const
 {
     if (op() != ins->op())
         return false;
@@ -491,7 +491,7 @@ MConstant::valueHash() const
     return (HashNumber)JSVAL_TO_IMPL(value_).asBits;
 }
 bool
-MConstant::congruentTo(MDefinition *ins) const
+MConstant::congruentTo(const MDefinition *ins) const
 {
     if (!ins->isConstant())
         return false;
@@ -674,7 +674,7 @@ MParameter::valueHash() const
 }
 
 bool
-MParameter::congruentTo(MDefinition *ins) const
+MParameter::congruentTo(const MDefinition *ins) const
 {
     if (!ins->isParameter())
         return false;
@@ -760,7 +760,7 @@ MCallDOMNative::computeMovable()
 }
 
 bool
-MCallDOMNative::congruentTo(MDefinition *ins) const
+MCallDOMNative::congruentTo(const MDefinition *ins) const
 {
     if (!isMovable())
         return false;
@@ -768,7 +768,7 @@ MCallDOMNative::congruentTo(MDefinition *ins) const
     if (!ins->isCall())
         return false;
 
-    MCall *call = ins->toCall();
+    const MCall *call = ins->toCall();
 
     if (!call->isCallDOMNative())
         return false;
@@ -981,7 +981,7 @@ MPhi::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 }
 
 bool
-MPhi::congruentTo(MDefinition *ins) const
+MPhi::congruentTo(const MDefinition *ins) const
 {
     if (!ins->isPhi())
         return false;
@@ -2717,7 +2717,7 @@ MNewArray::shouldUseVM() const
 }
 
 bool
-MLoadFixedSlot::mightAlias(MDefinition *store)
+MLoadFixedSlot::mightAlias(const MDefinition *store) const
 {
     if (store->isStoreFixedSlot() && store->toStoreFixedSlot()->slot() != slot())
         return false;
@@ -2725,51 +2725,51 @@ MLoadFixedSlot::mightAlias(MDefinition *store)
 }
 
 bool
-MAsmJSLoadHeap::mightAlias(MDefinition *def)
+MAsmJSLoadHeap::mightAlias(const MDefinition *def) const
 {
     if (def->isAsmJSStoreHeap()) {
-        MAsmJSStoreHeap *store = def->toAsmJSStoreHeap();
+        const MAsmJSStoreHeap *store = def->toAsmJSStoreHeap();
         if (store->viewType() != viewType())
             return true;
         if (!ptr()->isConstant() || !store->ptr()->isConstant())
             return true;
-        MConstant *otherPtr = store->ptr()->toConstant();
+        const MConstant *otherPtr = store->ptr()->toConstant();
         return ptr()->toConstant()->value() == otherPtr->value();
     }
     return true;
 }
 
 bool
-MAsmJSLoadHeap::congruentTo(MDefinition *ins) const
+MAsmJSLoadHeap::congruentTo(const MDefinition *ins) const
 {
     if (!ins->isAsmJSLoadHeap())
         return false;
-    MAsmJSLoadHeap *load = ins->toAsmJSLoadHeap();
+    const MAsmJSLoadHeap *load = ins->toAsmJSLoadHeap();
     return load->viewType() == viewType() && congruentIfOperandsEqual(load);
 }
 
 bool
-MAsmJSLoadGlobalVar::mightAlias(MDefinition *def)
+MAsmJSLoadGlobalVar::mightAlias(const MDefinition *def) const
 {
     if (def->isAsmJSStoreGlobalVar()) {
-        MAsmJSStoreGlobalVar *store = def->toAsmJSStoreGlobalVar();
+        const MAsmJSStoreGlobalVar *store = def->toAsmJSStoreGlobalVar();
         return store->globalDataOffset() == globalDataOffset_;
     }
     return true;
 }
 
 bool
-MAsmJSLoadGlobalVar::congruentTo(MDefinition *ins) const
+MAsmJSLoadGlobalVar::congruentTo(const MDefinition *ins) const
 {
     if (ins->isAsmJSLoadGlobalVar()) {
-        MAsmJSLoadGlobalVar *load = ins->toAsmJSLoadGlobalVar();
+        const MAsmJSLoadGlobalVar *load = ins->toAsmJSLoadGlobalVar();
         return globalDataOffset_ == load->globalDataOffset_;
     }
     return false;
 }
 
 bool
-MLoadSlot::mightAlias(MDefinition *store)
+MLoadSlot::mightAlias(const MDefinition *store) const
 {
     if (store->isStoreSlot() && store->toStoreSlot()->slot() != slot())
         return false;
@@ -2880,7 +2880,7 @@ MStoreTypedArrayElementStatic::length() const
 }
 
 bool
-MGetPropertyPolymorphic::mightAlias(MDefinition *store)
+MGetPropertyPolymorphic::mightAlias(const MDefinition *store) const
 {
     // Allow hoisting this instruction if the store does not write to a
     // slot read by this instruction.
@@ -2889,7 +2889,7 @@ MGetPropertyPolymorphic::mightAlias(MDefinition *store)
         return true;
 
     for (size_t i = 0; i < numShapes(); i++) {
-        Shape *shape = this->shape(i);
+        const Shape *shape = this->shape(i);
         if (shape->slot() < shape->numFixedSlots()) {
             // Fixed slot.
             uint32_t slot = shape->slot();
