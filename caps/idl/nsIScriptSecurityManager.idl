@@ -11,7 +11,7 @@ interface nsIChannel;
 interface nsIDocShell;
 interface nsIDomainPolicy;
 
-[scriptable, uuid(3b6e408b-e774-4612-89e8-3ef303564392)]
+[scriptable, uuid(4c087cc3-e0cc-4ec3-88df-8d68f3023b45)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     /**
@@ -149,11 +149,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * @deprecated use getNoAppCodebasePrincipal instead.
      */
     [deprecated] nsIPrincipal getCodebasePrincipal(in nsIURI uri);
-
-    /**
-     * Return the principal of the specified object in the specified context.
-     */
-    [implicit_jscontext] nsIPrincipal getObjectPrincipal(in jsval aObject);
 
     /**
      * Returns true if the principal of the currently running script is the

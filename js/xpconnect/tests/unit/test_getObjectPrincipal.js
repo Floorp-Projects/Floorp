@@ -1,6 +1,11 @@
-function run_test() {
-  var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService(
-    Components.interfaces.nsIScriptSecurityManager);
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
-  do_check_true(secMan.isSystemPrincipal(secMan.getObjectPrincipal({})));
+function run_test() {
+  var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
+  do_check_true(secMan.isSystemPrincipal(Cu.getObjectPrincipal({})));
+  var sb = new Cu.Sandbox('http://www.example.com');
+  Cu.evalInSandbox('var obj = { foo: 42 };', sb);
+  do_check_eq(Cu.getObjectPrincipal(sb.obj).origin, 'http://www.example.com');
 }
