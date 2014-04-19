@@ -5,14 +5,12 @@
 function AutoCompleteResult(aValues, aFinalCompleteValues) {
   this._values = aValues;
   this._finalCompleteValues = aFinalCompleteValues;
-  this.defaultIndex = 0;
 }
 AutoCompleteResult.prototype = Object.create(AutoCompleteResultBase.prototype);
 
 function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
-  this.popup.selectedIndex = -1;
-  this.completeDefaultIndex = true;
+  this.popup.selectedIndex = 0;
 }
 AutoCompleteInput.prototype = Object.create(AutoCompleteInputBase.prototype);
 
@@ -20,17 +18,10 @@ function run_test() {
   run_next_test();
 }
 
-add_test(function test_keyNavigation() {
-  doSearch("moz", "mozilla.com", "http://www.mozilla.com", function(aController) {
-    do_check_eq(aController.input.textValue, "mozilla.com");
-    aController.handleKeyNavigation(Ci.nsIDOMKeyEvent.DOM_VK_RIGHT);
-    do_check_eq(aController.input.textValue, "mozilla.com");
-  });
-});
-
 add_test(function test_handleEnter() {
   doSearch("moz", "mozilla.com", "http://www.mozilla.com", function(aController) {
-    do_check_eq(aController.input.textValue, "mozilla.com");
+    do_check_eq(aController.input.textValue, "moz");
+    do_check_eq(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
     aController.handleEnter(false);
     do_check_eq(aController.input.textValue, "http://www.mozilla.com");
   });
@@ -50,9 +41,6 @@ function doSearch(aSearchString, aResultValue, aFinalCompleteValue, aOnCompleteC
   let input = new AutoCompleteInput([ search.name ]);
   input.textValue = aSearchString;
 
-  // Caret must be at the end for autofill to happen.
-  let strLen = aSearchString.length;
-  input.selectTextRange(strLen, strLen);
   controller.input = input;
   controller.startSearch(aSearchString);
 

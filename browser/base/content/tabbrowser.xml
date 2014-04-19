@@ -290,7 +290,6 @@
             return;
 
           this.moveTabTo(aTab, this._numPinnedTabs - 1);
-          aTab.setAttribute("fadein", "true");
           aTab.removeAttribute("pinned");
           aTab.style.MozMarginStart = "";
           this.tabContainer._unlockTabSizing();
