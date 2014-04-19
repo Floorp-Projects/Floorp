@@ -2480,12 +2480,6 @@ JS::CompartmentOptionsRef(JSCompartment *compartment)
 }
 
 JS::CompartmentOptions &
-JS::CompartmentOptionsRef(JSObject *obj)
-{
-    return obj->compartment()->options();
-}
-
-JS::CompartmentOptions &
 JS::CompartmentOptionsRef(JSContext *cx)
 {
     return cx->compartment()->options();
@@ -4354,7 +4348,7 @@ JS::ReadOnlyCompileOptions::copyPODOptions(const ReadOnlyCompileOptions &rhs)
     asmJSOption = rhs.asmJSOption;
     forceAsync = rhs.forceAsync;
     installedFile = rhs.installedFile;
-    sourceIsLazy = rhs.sourceIsLazy;
+    sourcePolicy = rhs.sourcePolicy;
     introductionType = rhs.introductionType;
     introductionLineno = rhs.introductionLineno;
     introductionOffset = rhs.introductionOffset;

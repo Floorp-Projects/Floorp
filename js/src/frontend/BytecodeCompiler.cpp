@@ -146,8 +146,7 @@ CanLazilyParse(ExclusiveContext *cx, const ReadOnlyCompileOptions &options)
 {
     return options.canLazilyParse &&
         options.compileAndGo &&
-        !cx->compartment()->options().discardSource() &&
-        !options.sourceIsLazy &&
+        options.sourcePolicy == CompileOptions::SAVE_SOURCE &&
         !(cx->compartment()->debugMode() &&
           cx->compartment()->runtimeFromAnyThread()->debugHooks.newScriptHook);
 }
@@ -213,7 +212,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
 
     if (!CheckLength(cx, length))
         return nullptr;
-    JS_ASSERT_IF(staticLevel != 0, !options.sourceIsLazy);
+    JS_ASSERT_IF(staticLevel != 0, options.sourcePolicy != CompileOptions::LAZY_SOURCE);
 
     RootedScriptSource sourceObject(cx, CreateScriptSourceObject(cx, options));
     if (!sourceObject)
@@ -224,11 +223,16 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     SourceCompressionTask mysct(cx);
     SourceCompressionTask *sct = extraSct ? extraSct : &mysct;
 
-    if (!cx->compartment()->options().discardSource()) {
-        if (options.sourceIsLazy)
-            ss->setSourceRetrievable();
-        else if (!ss->setSourceCopy(cx, chars, length, false, sct))
+    switch (options.sourcePolicy) {
+      case CompileOptions::SAVE_SOURCE:
+        if (!ss->setSourceCopy(cx, chars, length, false, sct))
             return nullptr;
+        break;
+      case CompileOptions::LAZY_SOURCE:
+        ss->setSourceRetrievable();
+        break;
+      case CompileOptions::NO_SOURCE:
+        break;
     }
 
     bool canLazilyParse = CanLazilyParse(cx, options);
@@ -513,8 +517,8 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
     ScriptSource *ss = sourceObject->source();
 
     SourceCompressionTask sct(cx);
-    JS_ASSERT(!options.sourceIsLazy);
-    if (!cx->compartment()->options().discardSource()) {
+    JS_ASSERT(options.sourcePolicy != CompileOptions::LAZY_SOURCE);
+    if (options.sourcePolicy == CompileOptions::SAVE_SOURCE) {
         if (!ss->setSourceCopy(cx, chars, length, true, &sct))
             return false;
     }
