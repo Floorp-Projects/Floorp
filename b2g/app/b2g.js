@@ -599,6 +599,13 @@ pref("dom.forms.color", false);
 // Turns on gralloc-based direct texturing for Gonk
 pref("gfx.gralloc.enabled", false);
 
+// This preference instructs the JS engine to discard the
+// source of any privileged JS after compilation. This saves
+// memory, but makes things like Function.prototype.toSource()
+// fail.
+// XXXbholley - we flip this to true in the last patch.
+pref("javascript.options.discardSystemSource", false);
+
 // XXXX REMOVE FOR PRODUCTION. Turns on GC and CC logging
 pref("javascript.options.mem.log", false);
 
