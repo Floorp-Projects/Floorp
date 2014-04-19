@@ -2656,7 +2656,8 @@ nsXULPrototypeScript::Compile(const char16_t* aText,
     // If the script was inline, tell the JS parser to save source for
     // Function.prototype.toSource(). If it's out of line, we retrieve the
     // source from the files on demand.
-    options.setSourceIsLazy(mOutOfLine);
+    options.setSourcePolicy(mOutOfLine ? JS::CompileOptions::LAZY_SOURCE
+                                       : JS::CompileOptions::SAVE_SOURCE);
     JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
     if (scope) {
       JS::ExposeObjectToActiveJS(scope);
