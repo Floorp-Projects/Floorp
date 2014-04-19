@@ -164,10 +164,10 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *targetObj
                                              script.Length());
         }
     } else {
-        // We only use lazy source when no special encoding is specified because
+        // We only use LAZY_SOURCE when no special encoding is specified because
         // the lazy source loader doesn't know the encoding.
         if (!reuseGlobal) {
-            options.setSourceIsLazy(true);
+            options.setSourcePolicy(JS::CompileOptions::LAZY_SOURCE);
             *scriptp = JS::Compile(cx, target_obj, options, buf.get(), len);
         } else {
             *functionp = JS::CompileFunction(cx, target_obj, options,
@@ -498,6 +498,7 @@ ScriptPrecompiler::OnStreamComplete(nsIStreamLoader* aLoader,
     JSAutoCompartment ac(cx, js::UncheckedUnwrap(&v.toObject()));
 
     JS::CompileOptions options(cx, JSVERSION_DEFAULT);
+    options.setSourcePolicy(CompileOptions::NO_SOURCE);
     options.forceAsync = true;
     options.compileAndGo = true;
     options.installedFile = true;

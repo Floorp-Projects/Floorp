@@ -904,6 +904,7 @@ js::FillSelfHostingCompileOptions(CompileOptions &options)
     options.setFileAndLine("self-hosted", 1);
     options.setSelfHostingMode(true);
     options.setCanLazilyParse(false);
+    options.setSourcePolicy(CompileOptions::NO_SOURCE);
     options.setVersion(JSVERSION_LATEST);
     options.werrorOption = true;
     options.strictOption = true;
@@ -933,11 +934,8 @@ JSRuntime::initSelfHosting(JSContext *cx)
     RootedObject savedGlobal(cx, receivesDefaultObject
                                  ? js::DefaultObjectForContextOrNull(cx)
                                  : nullptr);
-    JS::CompartmentOptions compartmentOptions;
-    compartmentOptions.setDiscardSource(true);
     if (!(selfHostingGlobal_ = JS_NewGlobalObject(cx, &self_hosting_global_class,
-                                                  nullptr, JS::DontFireOnNewGlobalHook,
-                                                  compartmentOptions)))
+                                                  nullptr, JS::DontFireOnNewGlobalHook)))
         return false;
     JSAutoCompartment ac(cx, selfHostingGlobal_);
     if (receivesDefaultObject)

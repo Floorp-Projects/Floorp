@@ -40,7 +40,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/WindowBinding.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "AccessCheck.h"
 #include "nsGlobalWindow.h"
@@ -85,10 +84,11 @@ const char* const XPCJSRuntime::mStrings[] = {
 
 /***************************************************************************/
 
-static mozilla::Atomic<bool> sDiscardSystemSource(false);
-
-bool
-xpc::ShouldDiscardSystemSource() { return sDiscardSystemSource; }
+struct CX_AND_XPCRT_Data
+{
+    JSContext* cx;
+    XPCJSRuntime* rt;
+};
 
 static void * const UNMARK_ONLY = nullptr;
 static void * const UNMARK_AND_SWEEP = (void *)1;
@@ -1551,8 +1551,6 @@ ReloadPrefsCallback(const char *pref, void *data)
     bool useBaselineEager = Preferences::GetBool(JS_OPTIONS_DOT_STR
                                                  "baselinejit.unsafe_eager_compilation");
     bool useIonEager = Preferences::GetBool(JS_OPTIONS_DOT_STR "ion.unsafe_eager_compilation");
-
-    sDiscardSystemSource = Preferences::GetBool(JS_OPTIONS_DOT_STR "discardSystemSource");
 
     JS::RuntimeOptionsRef(rt).setBaseline(useBaseline)
                              .setIon(useIon)
