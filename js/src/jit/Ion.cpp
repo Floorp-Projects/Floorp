@@ -565,8 +565,8 @@ FinishAllOffThreadCompilations(JSCompartment *comp)
 /* static */ void
 JitRuntime::Mark(JSTracer *trc)
 {
-    JS_ASSERT(!trc->runtime->isHeapMinorCollecting());
-    Zone *zone = trc->runtime->atomsCompartment()->zone();
+    JS_ASSERT(!trc->runtime()->isHeapMinorCollecting());
+    Zone *zone = trc->runtime()->atomsCompartment()->zone();
     for (gc::CellIterUnderGC i(zone, gc::FINALIZE_JITCODE); !i.done(); i.next()) {
         JitCode *code = i.get<JitCode>();
         MarkJitCodeRoot(trc, &code, "wrapper");
@@ -579,12 +579,12 @@ JitCompartment::mark(JSTracer *trc, JSCompartment *compartment)
     // Cancel any active or pending off thread compilations. Note that the
     // MIR graph does not hold any nursery pointers, so there's no need to
     // do this for minor GCs.
-    JS_ASSERT(!trc->runtime->isHeapMinorCollecting());
+    JS_ASSERT(!trc->runtime()->isHeapMinorCollecting());
     CancelOffThreadIonCompile(compartment, nullptr);
     FinishAllOffThreadCompilations(compartment);
 
     // Free temporary OSR buffer.
-    trc->runtime->jitRuntime()->freeOsrTempData();
+    trc->runtime()->jitRuntime()->freeOsrTempData();
 
     // Mark scripts with parallel IonScripts if we should preserve them.
     if (activeParallelEntryScripts_) {
@@ -607,7 +607,7 @@ JitCompartment::mark(JSTracer *trc, JSCompartment *compartment)
             // Subtlety: We depend on the tracing of the parallel IonScript's
             // callTargetEntries to propagate the parallel age to the entire
             // call graph.
-            if (ShouldPreserveParallelJITCode(trc->runtime, script, /* increase = */ true)) {
+            if (ShouldPreserveParallelJITCode(trc->runtime(), script, /* increase = */ true)) {
                 MarkScript(trc, const_cast<EncapsulatedPtrScript *>(&e.front()), "par-script");
                 MOZ_ASSERT(script == e.front());
             }

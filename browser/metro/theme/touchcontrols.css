@@ -29,6 +29,7 @@
 
 .fullscreenButton,
 .playButton,
+.castingButton,
 .muteButton {
   -moz-appearance: none;
   min-height: 42px;
@@ -60,6 +61,10 @@
 
 .playButton[paused="true"] {
   background: url("chrome://browser/skin/images/play-hdpi.png") no-repeat center;
+}
+
+.castingButton {
+  display: none;
 }
 
 .muteButton {

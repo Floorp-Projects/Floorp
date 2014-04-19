@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_Tracer_h
-#define js_Tracer_h
+#ifndef js_TracingAPI_h
+#define js_TracingAPI_h
 
 #include "mozilla/NullPtr.h"
- 
+
 #include "jspubtd.h"
 
-struct JSTracer;
+class JS_PUBLIC_API(JSTracer);
 
 namespace JS {
 template <typename T> class Heap;
@@ -46,74 +46,101 @@ enum WeakMapTraceKind {
     TraceWeakMapKeysValues = 2
 };
 
-struct JSTracer {
-    JSRuntime           *runtime;
-    JSTraceCallback     callback;
-    JSTraceNamePrinter  debugPrinter;
-    const void          *debugPrintArg;
-    size_t              debugPrintIndex;
-    WeakMapTraceKind    eagerlyTraceWeakMaps;
+class JS_PUBLIC_API(JSTracer)
+{
+  public:
+    JSTracer(JSRuntime *rt, JSTraceCallback traceCallback,
+             WeakMapTraceKind weakTraceKind = TraceWeakMapValues);
+
+    // Set debugging information about a reference to a traceable thing to prepare
+    // for the following call to JS_CallTracer.
+    //
+    // When printer is null, arg must be const char * or char * C string naming
+    // the reference and index must be either (size_t)-1 indicating that the name
+    // alone describes the reference or it must be an index into some array vector
+    // that stores the reference.
+    //
+    // When printer callback is not null, the arg and index arguments are
+    // available to the callback as debugPrintArg_ and debugPrintIndex_ fields
+    // of JSTracer.
+    //
+    // The storage for name or callback's arguments needs to live only until
+    // the following call to JS_CallTracer returns.
+    void setTracingDetails(JSTraceNamePrinter printer, const void *arg, size_t index) {
+        debugPrinter_ = printer;
+        debugPrintArg_ = arg;
+        debugPrintIndex_ = index;
+    }
+
+    void setTracingIndex(const char *name, size_t index) {
+        setTracingDetails(nullptr, (void *)name, index);
+    }
+
+    void setTracingName(const char *name) {
+        setTracingDetails(nullptr, (void *)name, size_t(-1));
+    }
+
+    // Remove the currently set tracing details.
+    void clearTracingDetails() {
+        debugPrinter_ = nullptr;
+        debugPrintArg_ = nullptr;
+    }
+
+    // Return true if tracing details are currently set.
+    bool hasTracingDetails() const;
+
+    // Get the string set with the most recent call to setTracingName or return
+    // fallback if a name printer function has been installed.
+    const char *tracingName(const char *fallback) const;
+
+    // Build a description of this edge in the heap graph. This call may invoke
+    // the debug printer, which may inspect arbitrary areas of the heap.
+    const char *getTracingEdgeName(char *buffer, size_t bufferSize);
+
+    // Access the currently active tracing details.
+    JSTraceNamePrinter debugPrinter() const;
+    const void *debugPrintArg() const;
+    size_t debugPrintIndex() const;
+
+    // Return the runtime set on the tracer.
+    JSRuntime *runtime() const { return runtime_; }
+
+    // Return the weak map tracing behavior set on this tracer.
+    WeakMapTraceKind eagerlyTraceWeakMaps() const { return eagerlyTraceWeakMaps_; }
+
+    // Update the trace callback.
+    void setTraceCallback(JSTraceCallback traceCallback);
+
 #ifdef JS_GC_ZEAL
-    void                *realLocation;
+    // Sets the "real" location for a marked reference, when passing the address
+    // directly is not feasable. This address is used for matching against the
+    // store buffer when verifying the correctness of the entrees there.
+    //
+    // This is currently complicated by our need to nest calls for Values
+    // stored as keys in hash tables.
+    void setTracingLocation(void *location);
+    void unsetTracingLocation();
+    void **tracingLocation(void **thingp);
+#else
+    void setTracingLocation(void *location) {}
+    void unsetTracingLocation() {}
+    void **tracingLocation(void **thingp) { return nullptr; }
+#endif
+
+    // We expose |callback| directly so that IS_GC_MARKING_TRACER can compare
+    // it to GCMarker::GrayCallback.
+    JSTraceCallback     callback;
+
+  private:
+    JSRuntime           *runtime_;
+    JSTraceNamePrinter  debugPrinter_;
+    const void          *debugPrintArg_;
+    size_t              debugPrintIndex_;
+    WeakMapTraceKind    eagerlyTraceWeakMaps_;
+#ifdef JS_GC_ZEAL
+    void                *realLocation_;
 #endif
 };
-
-// Set debugging information about a reference to a traceable thing to prepare
-// for the following call to JS_CallTracer.
-//
-// When printer is null, arg must be const char * or char * C string naming
-// the reference and index must be either (size_t)-1 indicating that the name
-// alone describes the reference or it must be an index into some array vector
-// that stores the reference.
-//
-// When printer callback is not null, the arg and index arguments are
-// available to the callback as debugPrintArg and debugPrintIndex fields
-// of JSTracer.
-//
-// The storage for name or callback's arguments needs to live only until
-// the following call to JS_CallTracer returns.
-//
-# define JS_SET_TRACING_DETAILS(trc, printer, arg, index)                     \
-    JS_BEGIN_MACRO                                                            \
-        (trc)->debugPrinter = (printer);                                      \
-        (trc)->debugPrintArg = (arg);                                         \
-        (trc)->debugPrintIndex = (index);                                     \
-    JS_END_MACRO
-
-// Sets the real location for a marked reference, when passing the address
-// directly is not feasable.
-//
-// FIXME: This is currently overcomplicated by our need to nest calls for Values
-// stored as keys in hash tables, but will get simplified once we can rekey
-// in-place.
-//
-#ifdef JS_GC_ZEAL
-# define JS_SET_TRACING_LOCATION(trc, location)                               \
-    JS_BEGIN_MACRO                                                            \
-        if (!(trc)->realLocation || !(location))                              \
-            (trc)->realLocation = (location);                                 \
-    JS_END_MACRO
-# define JS_UNSET_TRACING_LOCATION(trc)                                       \
-    JS_BEGIN_MACRO                                                            \
-        (trc)->realLocation = nullptr;                                        \
-    JS_END_MACRO
-#else
-# define JS_SET_TRACING_LOCATION(trc, location)                               \
-    JS_BEGIN_MACRO                                                            \
-    JS_END_MACRO
-# define JS_UNSET_TRACING_LOCATION(trc)                                       \
-    JS_BEGIN_MACRO                                                            \
-    JS_END_MACRO
-#endif
-
-// Convenience macro to describe the argument of JS_CallTracer using C string
-// and index.
-# define JS_SET_TRACING_INDEX(trc, name, index)                               \
-    JS_SET_TRACING_DETAILS(trc, nullptr, name, index)
-
-// Convenience macro to describe the argument of JS_CallTracer using C string.
-# define JS_SET_TRACING_NAME(trc, name)                                       \
-    JS_SET_TRACING_DETAILS(trc, nullptr, name, (size_t)-1)
 
 // The JS_Call*Tracer family of functions traces the given GC thing reference.
 // This performs the tracing action configured on the given JSTracer:
@@ -165,7 +192,7 @@ inline void
 JS_CallHashSetObjectTracer(JSTracer *trc, HashSetEnum &e, JSObject *const &key, const char *name)
 {
     JSObject *updated = key;
-    JS_SET_TRACING_LOCATION(trc, reinterpret_cast<void *>(&const_cast<JSObject *&>(key)));
+    trc->setTracingLocation(reinterpret_cast<void *>(&const_cast<JSObject *&>(key)));
     JS_CallObjectTracer(trc, &updated, name);
     if (updated != key)
         e.rekeyFront(key, updated);
@@ -175,10 +202,6 @@ JS_CallHashSetObjectTracer(JSTracer *trc, HashSetEnum &e, JSObject *const &key, 
 // required in this case.
 extern JS_PUBLIC_API(void)
 JS_CallTenuredObjectTracer(JSTracer *trc, JS::TenuredHeap<JSObject *> *objp, const char *name);
-
-// API for JSTraceCallback implementations.
-extern JS_PUBLIC_API(void)
-JS_TracerInit(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback);
 
 extern JS_PUBLIC_API(void)
 JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind);
@@ -190,7 +213,4 @@ extern JS_PUBLIC_API(void)
 JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
                      void *thing, JSGCTraceKind kind, bool includeDetails);
 
-extern JS_PUBLIC_API(const char *)
-JS_GetTraceEdgeName(JSTracer *trc, char *buffer, int bufferSize);
-
-#endif /* js_Tracer_h */
+#endif /* js_TracingAPI_h */

@@ -18,17 +18,6 @@ CryptoTask::~CryptoTask()
   }
 }
 
-nsresult
-CryptoTask::Dispatch(const nsACString & taskThreadName)
-{
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_NewThread(getter_AddRefs(thread), this);
-  if (thread) {
-    NS_SetThreadName(thread, taskThreadName);
-  }
-  return rv;
-}
-
 NS_IMETHODIMP
 CryptoTask::Run()
 {
@@ -52,6 +41,13 @@ CryptoTask::Run()
     }
 
     CallCallback(mRv);
+
+    // Not all uses of CryptoTask use a transient thread
+    if (mThread) {
+      // Don't leak threads!
+      mThread->Shutdown(); // can't Shutdown from the thread itself, darn
+      mThread = nullptr;
+    }
   }
 
   return NS_OK;

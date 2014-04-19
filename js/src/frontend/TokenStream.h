@@ -815,7 +815,7 @@ class MOZ_STACK_CLASS TokenStream
 #endif
 
         static bool isRawEOLChar(int32_t c) {
-            return (c == '\n' || c == '\r' || c == LINE_SEPARATOR || c == PARA_SEPARATOR);
+            return c == '\n' || c == '\r' || c == LINE_SEPARATOR || c == PARA_SEPARATOR;
         }
 
         // Finds the next EOL, but stops once 'max' jschars have been scanned

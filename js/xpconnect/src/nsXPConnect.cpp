@@ -323,18 +323,21 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
 }
 
 #ifdef DEBUG
-struct VerifyTraceXPCGlobalCalledTracer
-{
-    JSTracer base;
-    bool ok;
-};
-
 static void
 VerifyTraceXPCGlobalCalled(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
     // We don't do anything here, we only want to verify that TraceXPCGlobal
     // was called.
 }
+
+struct VerifyTraceXPCGlobalCalledTracer : public JSTracer
+{
+    bool ok;
+
+    VerifyTraceXPCGlobalCalledTracer(JSRuntime *rt)
+      : JSTracer(rt, VerifyTraceXPCGlobalCalled), ok(false)
+    {}
+};
 #endif
 
 void
@@ -379,10 +382,8 @@ CreateGlobalObject(JSContext *cx, const JSClass *clasp, nsIPrincipal *principal,
     // more complicated. Manual inspection shows that they do the right thing.
     if (!((const js::Class*)clasp)->ext.isWrappedNative)
     {
-        VerifyTraceXPCGlobalCalledTracer trc;
-        JS_TracerInit(&trc.base, JS_GetRuntime(cx), VerifyTraceXPCGlobalCalled);
-        trc.ok = false;
-        JS_TraceChildren(&trc.base, global, JSTRACE_OBJECT);
+        VerifyTraceXPCGlobalCalledTracer trc(JS_GetRuntime(cx));
+        JS_TraceChildren(&trc, global, JSTRACE_OBJECT);
         MOZ_ASSERT(trc.ok, "Trace hook on global needs to call TraceXPCGlobal for XPConnect compartments.");
     }
 #endif

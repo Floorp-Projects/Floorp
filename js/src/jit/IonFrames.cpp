@@ -921,7 +921,7 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const IonFrameIterator &frame)
     for (GeneralRegisterBackwardIterator iter(safepoint.allGprSpills()); iter.more(); iter++) {
         --spill;
         if (slotsRegs.has(*iter))
-            trc->runtime->gcNursery.forwardBufferPointer(reinterpret_cast<HeapSlot **>(spill));
+            trc->runtime()->gcNursery.forwardBufferPointer(reinterpret_cast<HeapSlot **>(spill));
     }
 
     // Skip to the right place in the safepoint
@@ -935,7 +935,7 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const IonFrameIterator &frame)
 
     while (safepoint.getSlotsOrElementsSlot(&slot)) {
         HeapSlot **slots = reinterpret_cast<HeapSlot **>(layout->slotRef(slot));
-        trc->runtime->gcNursery.forwardBufferPointer(slots);
+        trc->runtime()->gcNursery.forwardBufferPointer(slots);
     }
 }
 #endif
@@ -1195,7 +1195,7 @@ MarkJitActivations(JSRuntime *rt, JSTracer *trc)
 void
 UpdateJitActivationsForMinorGC(JSRuntime *rt, JSTracer *trc)
 {
-    JS_ASSERT(trc->runtime->isHeapMinorCollecting());
+    JS_ASSERT(trc->runtime()->isHeapMinorCollecting());
     for (JitActivationIterator activations(rt); !activations.done(); ++activations) {
         for (IonFrameIterator frames(activations); !frames.done(); ++frames) {
             if (frames.type() == JitFrame_IonJS)
