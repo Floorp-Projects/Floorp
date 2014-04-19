@@ -414,6 +414,17 @@ InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal, uint32_t 
         }
     }
 
+    if (ShouldDiscardSystemSource()) {
+        nsIPrincipal *prin = GetObjectPrincipal(aGlobal);
+        bool isSystem = nsContentUtils::IsSystemPrincipal(prin);
+        if (!isSystem) {
+            short status = prin->GetAppStatus();
+            isSystem = status == nsIPrincipal::APP_STATUS_PRIVILEGED ||
+                       status == nsIPrincipal::APP_STATUS_CERTIFIED;
+        }
+        JS::CompartmentOptionsRef(aGlobal).setDiscardSource(isSystem);
+    }
+
     // Stuff coming through this path always ends up as a DOM global.
     MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL);
 
