@@ -14,7 +14,7 @@ interface nsIAutoCompleteSimpleResultListener;
  * an array.
  */
 
-[scriptable, uuid(c738dc26-aa71-4561-a3fd-b5a0e4aa80d2)]
+[scriptable, uuid(fe8802f9-c2b7-4141-8e5b-280df3f62251)]
 interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
 {
   /**
@@ -48,12 +48,25 @@ interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
   void setTypeAheadResult(in boolean aHidden);
 
   /**
-   * Appends a result item consisting of the given value, comment, image and style.
-   * This is how you add results.  Note:  image and style are optional. 
+   * Appends a match consisting of the given value, comment, image, style and
+   * the value to use for defaultIndex completion.
+   * @param aValue
+   *        The value to autocomplete to
+   * @param aComment
+   *        Comment shown in the autocomplete widget to describe this match
+   * @param aImage
+   *        Image shown in the autocomplete widget for this match.
+   * @param aStyle
+   *        Describes how to style the match in the autocomplete widget
+   * @param aFinalCompleteValue
+   *        Value used when the user confirms selecting this match. If not
+   *        provided, aValue will be used.
    */
-  void appendMatch(in AString aValue, in AString aComment, 
-                   [optional] in AString aImage, 
-                   [optional] in AString aStyle);
+  void appendMatch(in AString aValue,
+                   in AString aComment,
+                   [optional] in AString aImage,
+                   [optional] in AString aStyle,
+                   [optional] in AString aFinalCompleteValue);
 
   /**
    * Sets a listener for changes in the result.

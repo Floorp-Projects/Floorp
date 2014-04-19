@@ -6,14 +6,20 @@ function runTests() {
   yield addNewTabPageTab();
 
   // Remember if the click handler was triggered
-  let cell = getCell(0);
+  let {site} = getCell(0);
+  let origOnClick = site.onClick;
   let clicked = false;
-  cell.site.onClick = e => {
+  site.onClick = e => {
+    origOnClick.call(site, e);
     clicked = true;
     executeSoon(TestRunner.next);
   };
 
   // Send a middle-click and make sure it happened
-  yield EventUtils.synthesizeMouseAtCenter(cell.node, {button: 1}, getContentWindow());
+  let block = getContentDocument().querySelector(".newtab-control-block");
+  yield EventUtils.synthesizeMouseAtCenter(block, {button: 1}, getContentWindow());
   ok(clicked, "middle click triggered click listener");
+
+  // Make sure the cell didn't actually get blocked
+  checkGrid("0");
 }

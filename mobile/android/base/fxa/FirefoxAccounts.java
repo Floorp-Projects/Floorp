@@ -12,6 +12,7 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.authenticator.AccountPickler;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
+import org.mozilla.gecko.fxa.sync.FxAccountSyncStatusHelper;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
 
@@ -60,6 +61,13 @@ public class FirefoxAccounts {
       SyncHint.SCHEDULE_NOW,
       SyncHint.IGNORE_LOCAL_RATE_LIMIT,
       SyncHint.IGNORE_REMOTE_SERVER_BACKOFF);
+
+  public interface SyncStatusListener {
+    public Context getContext();
+    public Account getAccount();
+    public void onSyncStarted();
+    public void onSyncFinished();
+  }
 
   /**
    * Returns true if a FirefoxAccount exists, false otherwise.
@@ -200,13 +208,15 @@ public class FirefoxAccounts {
    * Any hints are strictly optional: the actual requested sync is scheduled by
    * the Android sync scheduler, and the sync mechanism may ignore hints as it
    * sees fit.
+   * <p>
+   * It is safe to call this method from any thread.
    *
    * @param account to sync.
    * @param syncHints to pass to sync.
    * @param stagesToSync stage names to sync.
    * @param stagesToSkip stage names to skip.
    */
-  public static void requestSync(Account account, EnumSet<SyncHint> syncHints, String[] stagesToSync, String[] stagesToSkip) {
+  public static void requestSync(final Account account, EnumSet<SyncHint> syncHints, String[] stagesToSync, String[] stagesToSkip) {
     if (account == null) {
       throw new IllegalArgumentException("account must not be null");
     }
@@ -221,8 +231,37 @@ public class FirefoxAccounts {
     Logger.info(LOG_TAG, "Requesting sync.");
     logSyncHints(syncHints);
 
-    for (String authority : AndroidFxAccount.getAndroidAuthorities()) {
-      ContentResolver.requestSync(account, authority, extras);
-    }
+    // We get strict mode warnings on some devices, so make the request on a
+    // background thread.
+    ThreadPool.run(new Runnable() {
+      @Override
+      public void run() {
+        for (String authority : AndroidFxAccount.getAndroidAuthorities()) {
+          ContentResolver.requestSync(account, authority, extras);
+        }
+      }
+    });
+  }
+
+  /**
+   * Start notifying <code>syncStatusListener</code> of sync status changes.
+   * <p>
+   * Only a weak reference to <code>syncStatusListener</code> is held.
+   *
+   * @param syncStatusListener to start notifying.
+   */
+  public static void addSyncStatusListener(SyncStatusListener syncStatusListener) {
+    // startObserving null-checks its argument.
+    FxAccountSyncStatusHelper.getInstance().startObserving(syncStatusListener);
+  }
+
+  /**
+   * Stop notifying <code>syncStatusListener</code> of sync status changes.
+   *
+   * @param syncStatusListener to stop notifying.
+   */
+  public static void removeSyncStatusListener(SyncStatusListener syncStatusListener) {
+    // stopObserving null-checks its argument.
+    FxAccountSyncStatusHelper.getInstance().stopObserving(syncStatusListener);
   }
 }

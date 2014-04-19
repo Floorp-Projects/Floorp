@@ -19,7 +19,9 @@ import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncStatusHelper;
 import org.mozilla.gecko.sync.SyncConfiguration;
 
+import android.accounts.Account;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -72,7 +74,7 @@ public class FxAccountStatusFragment extends PreferenceFragment implements OnPre
   // single account. (That is, it does not capture a single account instance.)
   protected Runnable requestSyncRunnable;
 
-  protected final SyncStatusDelegate syncStatusDelegate = new SyncStatusDelegate();
+  protected final InnerSyncStatusDelegate syncStatusDelegate = new InnerSyncStatusDelegate();
 
   protected Preference ensureFindPreference(String key) {
     Preference preference = findPreference(key);
@@ -240,7 +242,7 @@ public class FxAccountStatusFragment extends PreferenceFragment implements OnPre
     setCheckboxesEnabled(true);
   }
 
-  protected class SyncStatusDelegate implements FxAccountSyncStatusHelper.Delegate {
+  protected class InnerSyncStatusDelegate implements FirefoxAccounts.SyncStatusListener {
     protected final Runnable refreshRunnable = new Runnable() {
       @Override
       public void run() {
@@ -249,12 +251,17 @@ public class FxAccountStatusFragment extends PreferenceFragment implements OnPre
     };
 
     @Override
-    public AndroidFxAccount getAccount() {
-      return fxAccount;
+    public Context getContext() {
+      return FxAccountStatusFragment.this.getActivity();
     }
 
     @Override
-    public void handleSyncStarted() {
+    public Account getAccount() {
+      return fxAccount.getAndroidAccount();
+    }
+
+    @Override
+    public void onSyncStarted() {
       if (fxAccount == null) {
         return;
       }
@@ -263,7 +270,7 @@ public class FxAccountStatusFragment extends PreferenceFragment implements OnPre
     }
 
     @Override
-    public void handleSyncFinished() {
+    public void onSyncFinished() {
       if (fxAccount == null) {
         return;
       }
