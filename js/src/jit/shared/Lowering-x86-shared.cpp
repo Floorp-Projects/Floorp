@@ -15,6 +15,7 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::Abs;
 using mozilla::FloorLog2;
 
 LTableSwitch *
@@ -137,22 +138,21 @@ LIRGeneratorX86Shared::lowerDivI(MDiv *div)
     if (div->rhs()->isConstant()) {
         int32_t rhs = div->rhs()->toConstant()->value().toInt32();
 
-        // Check for division by a positive power of two, which is an easy and
-        // important case to optimize. Note that other optimizations are also
-        // possible; division by negative powers of two can be optimized in a
-        // similar manner as positive powers of two, and division by other
-        // constants can be optimized by a reciprocal multiplication technique.
-        int32_t shift = FloorLog2(rhs);
-        if (rhs > 0 && 1 << shift == rhs) {
+        // Check for division by a power of two, which is an easy and
+        // important case to optimize. Note that other optimizations
+        // are also possible: division by other constants can be
+        // optimized by a reciprocal multiplication technique.
+        int32_t shift = FloorLog2(Abs(rhs));
+        if (rhs != 0 && uint32_t(1) << shift == Abs(rhs)) {
             LAllocation lhs = useRegisterAtStart(div->lhs());
             LDivPowTwoI *lir;
             if (!div->canBeNegativeDividend()) {
                 // Numerator is unsigned, so does not need adjusting.
-                lir = new(alloc()) LDivPowTwoI(lhs, lhs, shift);
+                lir = new(alloc()) LDivPowTwoI(lhs, lhs, shift, rhs < 0);
             } else {
                 // Numerator is signed, and needs adjusting, and an extra
                 // lhs copy register is needed.
-                lir = new(alloc()) LDivPowTwoI(lhs, useRegister(div->lhs()), shift);
+                lir = new(alloc()) LDivPowTwoI(lhs, useRegister(div->lhs()), shift, rhs < 0);
             }
             if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
                 return false;
@@ -175,8 +175,8 @@ LIRGeneratorX86Shared::lowerModI(MMod *mod)
 
     if (mod->rhs()->isConstant()) {
         int32_t rhs = mod->rhs()->toConstant()->value().toInt32();
-        int32_t shift = FloorLog2(rhs);
-        if (rhs > 0 && 1 << shift == rhs) {
+        int32_t shift = FloorLog2(Abs(rhs));
+        if (rhs != 0 && uint32_t(1) << shift == Abs(rhs)) {
             LModPowTwoI *lir = new(alloc()) LModPowTwoI(useRegisterAtStart(mod->lhs()), shift);
             if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
                 return false;
