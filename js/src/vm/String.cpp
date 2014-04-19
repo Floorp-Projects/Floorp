@@ -644,9 +644,9 @@ StaticStrings::isStatic(JSAtom *atom)
     const jschar *chars = atom->chars();
     switch (atom->length()) {
       case 1:
-        return (chars[0] < UNIT_STATIC_LIMIT);
+        return chars[0] < UNIT_STATIC_LIMIT;
       case 2:
-        return (fitsInSmallChar(chars[0]) && fitsInSmallChar(chars[1]));
+        return fitsInSmallChar(chars[0]) && fitsInSmallChar(chars[1]);
       case 3:
         if ('1' <= chars[0] && chars[0] <= '9' &&
             '0' <= chars[1] && chars[1] <= '9' &&
@@ -655,7 +655,7 @@ StaticStrings::isStatic(JSAtom *atom)
                       (chars[1] - '0') * 10 +
                       (chars[2] - '0');
 
-            return (unsigned(i) < INT_STATIC_LIMIT);
+            return unsigned(i) < INT_STATIC_LIMIT;
         }
         return false;
       default:

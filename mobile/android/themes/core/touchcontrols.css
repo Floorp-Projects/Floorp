@@ -28,6 +28,7 @@
 }
 
 .playButton,
+.castingButton,
 .muteButton {
   -moz-appearance: none;
   min-height: 42px;
@@ -42,6 +43,14 @@
 
 .playButton[paused="true"] {
   background: url("chrome://browser/skin/images/play-hdpi.png") no-repeat center;
+}
+
+.castingButton {
+  background: url("chrome://browser/skin/images/cast-ready-hdpi.png") no-repeat center;
+}
+
+.castingButton[active="true"] {
+  background: url("chrome://browser/skin/images/cast-active-hdpi.png") no-repeat center;
 }
 
 .muteButton {

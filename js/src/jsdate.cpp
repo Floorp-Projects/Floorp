@@ -660,7 +660,7 @@ digits(size_t *result, const jschar *s, size_t *i, size_t limit)
         *result += (s[*i] - '0');
         ++(*i);
     }
-    return (*i != init);
+    return *i != init;
 }
 
 /*
@@ -683,7 +683,7 @@ fractional(double *result, const jschar *s, size_t *i, size_t limit)
         factor *= 0.1;
         ++(*i);
     }
-    return (*i != init);
+    return *i != init;
 }
 
 /*
@@ -699,7 +699,7 @@ ndigits(size_t n, size_t *result, const jschar *s, size_t* i, size_t limit)
     size_t init = *i;
 
     if (digits(result, s, i, Min(limit, init+n)))
-        return ((*i - init) == n);
+        return (*i - init) == n;
 
     *i = init;
     return false;

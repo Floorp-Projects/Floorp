@@ -1602,7 +1602,7 @@ class DebugScopes::MissingScopesRef : public gc::BufferableRef
         MissingScopeMap::Ptr p = map->lookup(key);
         if (!p)
             return;
-        JS_SET_TRACING_LOCATION(trc, &const_cast<ScopeIterKey &>(p->key()).enclosingScope());
+        trc->setTracingLocation(&const_cast<ScopeIterKey &>(p->key()).enclosingScope());
         Mark(trc, &key.enclosingScope(), "MissingScopesRef");
         map->rekeyIfMoved(prior, key);
     }

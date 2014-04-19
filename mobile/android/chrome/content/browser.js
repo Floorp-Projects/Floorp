@@ -3010,10 +3010,13 @@ Tab.prototype = {
     this.browser.addEventListener("blur", this, true);
     this.browser.addEventListener("scroll", this, true);
     this.browser.addEventListener("MozScrolledAreaChanged", this, true);
-    // Note that the XBL binding is untrusted
-    this.browser.addEventListener("PluginBindingAttached", this, true, true);
     this.browser.addEventListener("pageshow", this, true);
     this.browser.addEventListener("MozApplicationManifest", this, true);
+
+    // Note that the XBL binding is untrusted
+    this.browser.addEventListener("PluginBindingAttached", this, true, true);
+    this.browser.addEventListener("VideoBindingAttached", this, true, true);
+    this.browser.addEventListener("VideoBindingCast", this, true, true);
 
     Services.obs.addObserver(this, "before-first-paint", false);
     Services.obs.addObserver(this, "after-viewport-change", false);
@@ -3179,9 +3182,12 @@ Tab.prototype = {
     this.browser.removeEventListener("blur", this, true);
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
-    this.browser.removeEventListener("PluginBindingAttached", this, true);
     this.browser.removeEventListener("pageshow", this, true);
     this.browser.removeEventListener("MozApplicationManifest", this, true);
+
+    this.browser.removeEventListener("PluginBindingAttached", this, true, true);
+    this.browser.removeEventListener("VideoBindingAttached", this, true, true);
+    this.browser.removeEventListener("VideoBindingCast", this, true, true);
 
     Services.obs.removeObserver(this, "before-first-paint");
     Services.obs.removeObserver(this, "after-viewport-change");
@@ -3931,6 +3937,16 @@ Tab.prototype = {
 
       case "PluginBindingAttached": {
         PluginHelper.handlePluginBindingAttached(this, aEvent);
+        break;
+      }
+
+      case "VideoBindingAttached": {
+        CastingApps.handleVideoBindingAttached(this, aEvent);
+        break;
+      }
+
+      case "VideoBindingCast": {
+        CastingApps.handleVideoBindingCast(this, aEvent);
         break;
       }
 

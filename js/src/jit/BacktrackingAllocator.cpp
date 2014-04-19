@@ -325,7 +325,7 @@ BacktrackingAllocator::groupAndQueueRegisters()
         for (size_t j = 0; j < block->numPhis(); j++) {
             LPhi *phi = block->getPhi(j);
             uint32_t output = phi->getDef(0)->virtualRegister();
-            for (size_t k = 0; k < phi->numOperands(); k++) {
+            for (size_t k = 0, kend = phi->numOperands(); k < kend; k++) {
                 uint32_t input = phi->getOperand(k)->toUse()->virtualRegister();
                 if (!tryGroupRegisters(input, output))
                     return false;

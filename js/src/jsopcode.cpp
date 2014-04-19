@@ -1932,7 +1932,7 @@ js::CallResultEscapes(jsbytecode *pc)
     if (*pc == JSOP_NOT)
         pc += JSOP_NOT_LENGTH;
 
-    return (*pc != JSOP_IFEQ);
+    return *pc != JSOP_IFEQ;
 }
 
 extern bool

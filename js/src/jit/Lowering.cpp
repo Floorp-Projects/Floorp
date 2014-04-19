@@ -494,7 +494,7 @@ LIRGenerator::visitCall(MCall *call)
 
             LCallNative *lir = new(alloc()) LCallNative(tempFixed(cxReg), tempFixed(numReg),
                                                         tempFixed(vpReg), tempFixed(tmpReg));
-            return (defineReturn(lir, call) && assignSafepoint(lir, call));
+            return defineReturn(lir, call) && assignSafepoint(lir, call);
         }
 
         LCallKnown *lir = new(alloc()) LCallKnown(useFixed(call->getFunction(), CallTempReg0),

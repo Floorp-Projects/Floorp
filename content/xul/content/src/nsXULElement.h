@@ -12,7 +12,7 @@
 #ifndef nsXULElement_h__
 #define nsXULElement_h__
 
-#include "js/Tracer.h"
+#include "js/TracingAPI.h"
 #include "mozilla/Attributes.h"
 #include "nsIDOMEvent.h"
 #include "nsIServiceManager.h"

@@ -63,6 +63,47 @@ var CastingApps = {
     }
   },
 
+  _sendEventToVideo: function _sendEventToVideo(aElement, aData) {
+    let event = aElement.ownerDocument.createEvent("CustomEvent");
+    event.initCustomEvent("media-videoCasting", false, true, JSON.stringify(aData));
+    aElement.dispatchEvent(event);
+  },
+
+  handleVideoBindingAttached: function handleVideoBindingAttached(aTab, aEvent) {
+    // Let's figure out if we have everything needed to cast a video. The binding
+    // defaults to |false| so we only need to send an event if |true|.
+    let video = aEvent.target;
+    if (!video instanceof HTMLVideoElement) {
+      return;
+    }
+
+    if (SimpleServiceDiscovery.services.length == 0) {
+      return;
+    }
+
+    if (!this.getVideo(video, 0, 0)) {
+      return;
+    }
+
+    // Let the binding know casting is allowed
+    this._sendEventToVideo(video, { allow: true });
+  },
+
+  handleVideoBindingCast: function handleVideoBindingCast(aTab, aEvent) {
+    // The binding wants to start a casting session
+    let video = aEvent.target;
+    if (!video instanceof HTMLVideoElement) {
+      return;
+    }
+
+    // Close an existing session first. closeExternal has checks for an exsting
+    // session and handles remote and video binding shutdown.
+    this.closeExternal();
+
+    // Start the new session
+    this.openExternal(video, 0, 0);
+  },
+
   makeURI: function makeURI(aURL, aOriginCharset, aBaseURI) {
     return Services.io.newURI(aURL, aOriginCharset, aBaseURI);
   },
@@ -221,7 +262,8 @@ var CastingApps = {
                 title: video.title,
                 source: video.source,
                 poster: video.poster
-              }
+              },
+              videoRef: Cu.getWeakReference(video.element)
             };
           }.bind(this), this);
         }.bind(this));
@@ -236,6 +278,12 @@ var CastingApps = {
 
     this.session.remoteMedia.shutdown();
     this.session.app.stop();
+
+    let video = this.session.videoRef.get();
+    if (video) {
+      this._sendEventToVideo(video, { active: false });
+    }
+
     delete this.session;
   },
 
@@ -247,6 +295,11 @@ var CastingApps = {
 
     aRemoteMedia.load(this.session.data);
     sendMessageToJava({ type: "Casting:Started", device: this.session.service.friendlyName });
+
+    let video = this.session.videoRef.get();
+    if (video) {
+      this._sendEventToVideo(video, { active: true });
+    }
   },
 
   onRemoteMediaStop: function(aRemoteMedia) {
