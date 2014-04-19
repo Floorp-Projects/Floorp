@@ -9,7 +9,7 @@
 BEGIN_TEST(testBug795104)
 {
     JS::CompileOptions opts(cx);
-    opts.setSourcePolicy(JS::CompileOptions::NO_SOURCE);
+    JS::CompartmentOptionsRef(cx->compartment()).setDiscardSource(true);
     const size_t strLen = 60002;
     char *s = static_cast<char *>(JS_malloc(cx, strLen));
     CHECK(s);
