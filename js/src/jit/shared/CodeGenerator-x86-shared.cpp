@@ -869,14 +869,23 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI *ins)
 {
     Register lhs = ToRegister(ins->numerator());
     mozilla::DebugOnly<Register> output = ToRegister(ins->output());
+
     int32_t shift = ins->shift();
+    bool negativeDivisor = ins->negativeDivisor();
+    MDiv *mir = ins->mir();
 
     // We use defineReuseInput so these should always be the same, which is
     // convenient since all of our instructions here are two-address.
     JS_ASSERT(lhs == output);
 
+    if (!mir->isTruncated() && negativeDivisor) {
+        // 0 divided by a negative number must return a double.
+        masm.testl(lhs, lhs);
+        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+            return false;
+    }
+
     if (shift != 0) {
-        MDiv *mir = ins->mir();
         if (!mir->isTruncated()) {
             // If the remainder is != 0, bailout since this must be a double.
             masm.testl(lhs, Imm32(UINT32_MAX >> (32 - shift)));
@@ -884,24 +893,26 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI *ins)
                 return false;
         }
 
-        if (!mir->canBeNegativeDividend()) {
-            // Numerator is unsigned, so needs no adjusting. Do the shift.
-            masm.sarl(Imm32(shift), lhs);
-            return true;
-        }
-
         // Adjust the value so that shifting produces a correctly rounded result
         // when the numerator is negative. See 10-1 "Signed Division by a Known
         // Power of 2" in Henry S. Warren, Jr.'s Hacker's Delight.
-        Register lhsCopy = ToRegister(ins->numeratorCopy());
-        JS_ASSERT(lhsCopy != lhs);
-        if (shift > 1)
-            masm.sarl(Imm32(31), lhs);
-        masm.shrl(Imm32(32 - shift), lhs);
-        masm.addl(lhsCopy, lhs);
+        if (mir->canBeNegativeDividend()) {
+            Register lhsCopy = ToRegister(ins->numeratorCopy());
+            JS_ASSERT(lhsCopy != lhs);
+            if (shift > 1)
+                masm.sarl(Imm32(31), lhs);
+            masm.shrl(Imm32(32 - shift), lhs);
+            masm.addl(lhsCopy, lhs);
+        }
 
-        // Do the shift.
         masm.sarl(Imm32(shift), lhs);
+        if (negativeDivisor)
+            masm.negl(lhs);
+    } else if (shift == 0 && negativeDivisor) {
+        // INT32_MIN / -1 overflows.
+        masm.negl(lhs);
+        if (!mir->isTruncated() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
+            return false;
     }
 
     return true;
@@ -1012,7 +1023,7 @@ CodeGeneratorX86Shared::visitModPowTwoI(LModPowTwoI *ins)
         masm.branchTest32(Assembler::Signed, lhs, lhs, &negative);
     }
 
-    masm.andl(Imm32((1 << shift) - 1), lhs);
+    masm.andl(Imm32((uint32_t(1) << shift) - 1), lhs);
 
     if (ins->mir()->canBeNegativeDividend()) {
         Label done;
@@ -1020,11 +1031,19 @@ CodeGeneratorX86Shared::visitModPowTwoI(LModPowTwoI *ins)
 
         // Negative numbers need a negate, bitmask, negate
         masm.bind(&negative);
-        // visitModI has an overflow check here to catch INT_MIN % -1, but
-        // here the rhs is a power of 2, and cannot be -1, so the check is not generated.
+
+        // Unlike in the visitModI case, we are not computing the mod by means of a
+        // division. Therefore, the divisor = -1 case isn't problematic (the andl
+        // always returns 0, which is what we expect).
+        //
+        // The negl instruction overflows if lhs == INT32_MIN, but this is also not
+        // a problem: shift is at most 31, and so the andl also always returns 0.
         masm.negl(lhs);
-        masm.andl(Imm32((1 << shift) - 1), lhs);
+        masm.andl(Imm32((uint32_t(1) << shift) - 1), lhs);
         masm.negl(lhs);
+
+        // Since a%b has the same sign as b, and a is negative in this branch,
+        // an answer of 0 means the correct result is actually -0. Bail out.
         if (!ins->mir()->isTruncated() && !bailoutIf(Assembler::Zero, ins->snapshot()))
             return false;
         masm.bind(&done);
