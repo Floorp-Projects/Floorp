@@ -603,8 +603,7 @@ pref("gfx.gralloc.enabled", false);
 // source of any privileged JS after compilation. This saves
 // memory, but makes things like Function.prototype.toSource()
 // fail.
-// XXXbholley - we flip this to true in the last patch.
-pref("javascript.options.discardSystemSource", false);
+pref("javascript.options.discardSystemSource", true);
 
 // XXXX REMOVE FOR PRODUCTION. Turns on GC and CC logging
 pref("javascript.options.mem.log", false);
