@@ -80,14 +80,6 @@ public:
                                       nsAString& aReturn,
                                       mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
 
-  virtual void PopChallengeResponse(const nsAString& aChallenge,
-                                    nsAString& aReturn,
-                                    mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
-
-  virtual void Random(int32_t aNumBytes,
-                      nsAString& aReturn,
-                      mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
-
   virtual void SignText(JSContext* aContext,
                         const nsAString& aStringToSign,
                         const nsAString& aCaOption,
@@ -95,8 +87,6 @@ public:
                         nsAString& aReturn) MOZ_OVERRIDE;
 
   virtual void Logout(mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
-
-  virtual void DisableRightClick(mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
 
 private:
   static already_AddRefed<nsIPrincipal> GetScriptPrincipal(JSContext *cx);

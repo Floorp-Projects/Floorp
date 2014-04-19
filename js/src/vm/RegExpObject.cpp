@@ -213,7 +213,7 @@ regexp_trace(JSTracer *trc, JSObject *obj)
       *   1. During TraceRuntime, isHeapBusy() is true
       *   2. When a write barrier executes, IS_GC_MARKING_TRACER is true.
       */
-    if (trc->runtime->isHeapBusy() && IS_GC_MARKING_TRACER(trc))
+    if (trc->runtime()->isHeapBusy() && IS_GC_MARKING_TRACER(trc))
         obj->setPrivate(nullptr);
 }
 

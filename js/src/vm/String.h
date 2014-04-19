@@ -381,7 +381,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
 
     MOZ_ALWAYS_INLINE
     bool isAtom() const {
-        return (d.lengthAndFlags & ATOM_BIT);
+        return d.lengthAndFlags & ATOM_BIT;
     }
 
     MOZ_ALWAYS_INLINE
@@ -399,7 +399,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
 
     inline bool hasBase() const {
         JS_STATIC_ASSERT((DEPENDENT_FLAGS | JS_BIT(1)) == UNDEPENDED_FLAGS);
-        return (d.lengthAndFlags & HAS_BASE_BIT);
+        return d.lengthAndFlags & HAS_BASE_BIT;
     }
 
     inline JSLinearString *base() const;
@@ -740,7 +740,7 @@ class JSAtom : public JSFlatString
 
     MOZ_ALWAYS_INLINE
     bool isPermanent() const {
-        return (d.lengthAndFlags & PERMANENT_BIT);
+        return d.lengthAndFlags & PERMANENT_BIT;
     }
 
     // Transform this atom into a permanent atom. This is only done during
