@@ -748,7 +748,8 @@ nsXULPDGlobalObject::GetCompilationGlobal()
   AutoSafeJSContext cx;
   JS::CompartmentOptions options;
   options.setZone(JS::SystemZone)
-         .setInvisibleToDebugger(true);
+         .setInvisibleToDebugger(true)
+         .setDiscardSource(xpc::ShouldDiscardSystemSource());
   mJSObject = JS_NewGlobalObject(cx, &gSharedGlobalClass,
                                  nsJSPrincipals::get(GetPrincipal()),
                                  JS::DontFireOnNewGlobalHook, options);
