@@ -76,13 +76,11 @@ function InterAppCommService() {
   //     "app://subApp1.gaiamobile.org/manifest.webapp": {
   //       pageURL: "app://subApp1.gaiamobile.org/handler.html",
   //       description: "blah blah",
-  //       appStatus: Ci.nsIPrincipal.APP_STATUS_CERTIFIED,
   //       rules: { ... }
   //     },
   //     "app://subApp2.gaiamobile.org/manifest.webapp": {
   //       pageURL: "app://subApp2.gaiamobile.org/handler.html",
   //       description: "blah blah",
-  //       appStatus: Ci.nsIPrincipal.APP_STATUS_PRIVILEGED,
   //       rules: { ... }
   //     }
   //   },
@@ -90,7 +88,6 @@ function InterAppCommService() {
   //     "app://subApp3.gaiamobile.org/manifest.webapp": {
   //       pageURL: "app://subApp3.gaiamobile.org/handler.html",
   //       description: "blah blah",
-  //       appStatus: Ci.nsIPrincipal.APP_STATUS_INSTALLED,
   //       rules: { ... }
   //     }
   //   }
@@ -214,14 +211,14 @@ function InterAppCommService() {
 
 InterAppCommService.prototype = {
   registerConnection: function(aKeyword, aHandlerPageURI, aManifestURI,
-                               aDescription, aAppStatus, aRules) {
+                               aDescription, aRules) {
     let manifestURL = aManifestURI.spec;
     let pageURL = aHandlerPageURI.spec;
 
     if (DEBUG) {
       debug("registerConnection: aKeyword: " + aKeyword +
             " manifestURL: " + manifestURL + " pageURL: " + pageURL +
-            " aDescription: " + aDescription + " aAppStatus: " + aAppStatus +
+            " aDescription: " + aDescription +
             " aRules.minimumAccessLevel: " + aRules.minimumAccessLevel +
             " aRules.manifestURLs: " + aRules.manifestURLs +
             " aRules.installOrigins: " + aRules.installOrigins);
@@ -235,7 +232,6 @@ InterAppCommService.prototype = {
     subAppManifestURLs[manifestURL] = {
       pageURL: pageURL,
       description: aDescription,
-      appStatus: aAppStatus,
       rules: aRules,
       manifestURL: manifestURL
     };
@@ -300,7 +296,7 @@ InterAppCommService.prototype = {
     return false;
   },
 
-  _matchInstallOrigins: function(aRules, aManifestURL) {
+  _matchInstallOrigins: function(aRules, aInstallOrigin) {
     if (!aRules || !Array.isArray(aRules.installOrigins)) {
       if (DEBUG) {
         debug("rules.installOrigins is not available. No need to match.");
@@ -308,31 +304,30 @@ InterAppCommService.prototype = {
       return true;
     }
 
-    let installOrigin =
-      appsService.getAppByManifestURL(aManifestURL).installOrigin;
-
     let installOrigins = aRules.installOrigins;
-    if (installOrigins.indexOf(installOrigin) != -1) {
+    if (installOrigins.indexOf(aInstallOrigin) != -1) {
       return true;
     }
 
     if (DEBUG) {
       debug("rules.installOrigins is not matched!" +
-            " aManifestURL: " + aManifestURL +
             " installOrigins: " + installOrigins +
-            " installOrigin : " + installOrigin);
+            " installOrigin : " + aInstallOrigin);
     }
     return false;
   },
 
-  _matchRules: function(aPubAppManifestURL, aPubAppStatus, aPubRules,
-                        aSubAppManifestURL, aSubAppStatus, aSubRules) {
+  _matchRules: function(aPubAppManifestURL, aPubRules,
+                        aSubAppManifestURL, aSubRules) {
+    let pubApp = appsService.getAppByManifestURL(aPubAppManifestURL);
+    let subApp = appsService.getAppByManifestURL(aSubAppManifestURL);
+
     // TODO Bug 907068 In the initiative step, we only expose this API to
     // certified apps to meet the time line. Eventually, we need to make
     // it available for the non-certified apps as well. For now, only the
     // certified apps can match the rules.
-    if (aPubAppStatus != Ci.nsIPrincipal.APP_STATUS_CERTIFIED ||
-        aSubAppStatus != Ci.nsIPrincipal.APP_STATUS_CERTIFIED) {
+    if (pubApp.appStatus != Ci.nsIPrincipal.APP_STATUS_CERTIFIED ||
+        subApp.appStatus != Ci.nsIPrincipal.APP_STATUS_CERTIFIED) {
       if (DEBUG) {
         debug("Only certified apps are allowed to do connections.");
       }
@@ -347,8 +342,8 @@ InterAppCommService.prototype = {
     }
 
     // Check minimumAccessLevel.
-    if (!this._matchMinimumAccessLevel(aPubRules, aSubAppStatus) ||
-        !this._matchMinimumAccessLevel(aSubRules, aPubAppStatus)) {
+    if (!this._matchMinimumAccessLevel(aPubRules, subApp.appStatus) ||
+        !this._matchMinimumAccessLevel(aSubRules, pubApp.appStatus)) {
       return false;
     }
 
@@ -359,8 +354,8 @@ InterAppCommService.prototype = {
     }
 
     // Check installOrigins.
-    if (!this._matchInstallOrigins(aPubRules, aSubAppManifestURL) ||
-        !this._matchInstallOrigins(aSubRules, aPubAppManifestURL)) {
+    if (!this._matchInstallOrigins(aPubRules, subApp.installOrigin) ||
+        !this._matchInstallOrigins(aSubRules, pubApp.installOrigin)) {
       return false;
     }
 
@@ -452,7 +447,6 @@ InterAppCommService.prototype = {
     let pubAppManifestURL = aMessage.manifestURL;
     let outerWindowID = aMessage.outerWindowID;
     let requestID = aMessage.requestID;
-    let pubAppStatus = aMessage.appStatus;
 
     let subAppManifestURLs = this._registeredConnections[keyword];
     if (!subAppManifestURLs) {
@@ -486,12 +480,11 @@ InterAppCommService.prototype = {
 
       // Only rule-matched publishers/subscribers are allowed to connect.
       let subscribedInfo = subAppManifestURLs[subAppManifestURL];
-      let subAppStatus = subscribedInfo.appStatus;
       let subRules = subscribedInfo.rules;
 
       let matched =
-        this._matchRules(pubAppManifestURL, pubAppStatus, pubRules,
-                         subAppManifestURL, subAppStatus, subRules);
+        this._matchRules(pubAppManifestURL, pubRules,
+                         subAppManifestURL, subRules);
       if (!matched) {
         if (DEBUG) {
           debug("Rules are not matched. Skipping: " + subAppManifestURL);

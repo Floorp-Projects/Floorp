@@ -18,6 +18,7 @@
 #include "nsIFileURL.h"
 #include "nsScriptLoader.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsThreadUtils.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -25,13 +26,16 @@
 #include "nsJSPrincipals.h"
 #include "xpcpublic.h" // For xpc::SystemErrorReporter
 #include "xpcprivate.h" // For xpc::OptionsBase
+#include "jswrapper.h"
 
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
+#include "mozilla/unused.h"
 
 using namespace mozilla::scache;
 using namespace JS;
 using namespace xpc;
+using namespace mozilla;
 
 class MOZ_STACK_CLASS LoadSubScriptOptions : public OptionsBase {
 public:
@@ -362,6 +366,214 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString &url,
     if (cache && ok && writeScript) {
         WriteCachedScript(cache, cachePath, cx, mSystemPrincipal, script);
     }
+
+    return NS_OK;
+}
+
+/**
+  * Let us compile scripts from a URI off the main thread.
+  */
+
+class ScriptPrecompiler : public nsIStreamLoaderObserver
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMLOADEROBSERVER
+
+    ScriptPrecompiler(nsIObserver* aObserver,
+                      nsIPrincipal* aPrincipal,
+                      nsIChannel* aChannel)
+        : mObserver(aObserver)
+        , mPrincipal(aPrincipal)
+        , mChannel(aChannel)
+    {}
+
+    virtual ~ScriptPrecompiler()
+    {}
+
+    static void OffThreadCallback(void *aToken, void *aData);
+
+    /* Sends the "done" notification back. Main thread only. */
+    void SendObserverNotification();
+
+private:
+    nsRefPtr<nsIObserver> mObserver;
+    nsRefPtr<nsIPrincipal> mPrincipal;
+    nsRefPtr<nsIChannel> mChannel;
+    nsString mScript;
+};
+
+NS_IMPL_ISUPPORTS1(ScriptPrecompiler, nsIStreamLoaderObserver);
+
+class NotifyPrecompilationCompleteRunnable : public nsRunnable
+{
+public:
+    NS_DECL_NSIRUNNABLE
+
+    NotifyPrecompilationCompleteRunnable(ScriptPrecompiler* aPrecompiler)
+        : mPrecompiler(aPrecompiler)
+        , mToken(nullptr)
+    {}
+
+    void SetToken(void* aToken) {
+        MOZ_ASSERT(aToken && !mToken);
+        mToken = aToken;
+    }
+
+protected:
+    nsRefPtr<ScriptPrecompiler> mPrecompiler;
+    void* mToken;
+};
+
+/* RAII helper class to send observer notifications */
+class AutoSendObserverNotification {
+public:
+    AutoSendObserverNotification(ScriptPrecompiler* aPrecompiler)
+        : mPrecompiler(aPrecompiler)
+    {}
+
+    ~AutoSendObserverNotification() {
+        if (mPrecompiler) {
+            mPrecompiler->SendObserverNotification();
+        }
+    }
+
+    void Disarm() {
+        mPrecompiler = nullptr;
+    }
+
+private:
+    ScriptPrecompiler* mPrecompiler;
+};
+
+NS_IMETHODIMP
+NotifyPrecompilationCompleteRunnable::Run(void)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mPrecompiler);
+
+    AutoSendObserverNotification notifier(mPrecompiler);
+
+    if (mToken) {
+        JSRuntime *rt = XPCJSRuntime::Get()->Runtime();
+        NS_ENSURE_TRUE(rt, NS_ERROR_FAILURE);
+        JS::FinishOffThreadScript(nullptr, rt, mToken);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ScriptPrecompiler::OnStreamComplete(nsIStreamLoader* aLoader,
+                                    nsISupports* aContext,
+                                    nsresult aStatus,
+                                    uint32_t aLength,
+                                    const uint8_t* aString)
+{
+    AutoSendObserverNotification notifier(this);
+
+    // Just notify that we are done with this load.
+    NS_ENSURE_SUCCESS(aStatus, NS_OK);
+
+    // Convert data to jschar* and prepare to call CompileOffThread.
+    nsAutoString hintCharset;
+    nsresult rv =
+        nsScriptLoader::ConvertToUTF16(mChannel, aString, aLength,
+                                       hintCharset, nullptr, mScript);
+
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+
+    // Our goal is to cache persistently the compiled script and to avoid quota
+    // checks. Since the caching mechanism decide the persistence type based on
+    // the principal, we create a new global with the app's principal.
+    // We then enter its compartment to compile with its principal.
+    AutoSafeJSContext cx;
+    RootedValue v(cx);
+    SandboxOptions sandboxOptions;
+    sandboxOptions.sandboxName.AssignASCII("asm.js precompilation");
+    sandboxOptions.invisibleToDebugger = true;
+    rv = CreateSandboxObject(cx, &v, mPrincipal, sandboxOptions);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+
+    JSAutoCompartment ac(cx, js::UncheckedUnwrap(&v.toObject()));
+
+    JS::CompileOptions options(cx, JSVERSION_DEFAULT);
+    options.setSourcePolicy(CompileOptions::NO_SOURCE);
+    options.forceAsync = true;
+    options.compileAndGo = true;
+    options.installedFile = true;
+
+    nsCOMPtr<nsIURI> uri;
+    mChannel->GetURI(getter_AddRefs(uri));
+    nsAutoCString spec;
+    uri->GetSpec(spec);
+    options.setFile(spec.get());
+
+    if (!JS::CanCompileOffThread(cx, options, mScript.Length())) {
+        NS_WARNING("Can't compile script off thread!");
+        return NS_OK;
+    }
+
+    nsRefPtr<NotifyPrecompilationCompleteRunnable> runnable =
+        new NotifyPrecompilationCompleteRunnable(this);
+
+    if (!JS::CompileOffThread(cx, options,
+                              mScript.get(), mScript.Length(),
+                              OffThreadCallback,
+                              static_cast<void*>(runnable))) {
+        NS_WARNING("Failed to compile script off thread!");
+        return NS_OK;
+    }
+
+    unused << runnable.forget();
+    notifier.Disarm();
+
+    return NS_OK;
+}
+
+/* static */
+void
+ScriptPrecompiler::OffThreadCallback(void* aToken, void* aData)
+{
+    nsRefPtr<NotifyPrecompilationCompleteRunnable> runnable =
+        dont_AddRef(static_cast<NotifyPrecompilationCompleteRunnable*>(aData));
+    runnable->SetToken(aToken);
+
+    NS_DispatchToMainThread(runnable);
+}
+
+void
+ScriptPrecompiler::SendObserverNotification()
+{
+    MOZ_ASSERT(mChannel && mObserver);
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsCOMPtr<nsIURI> uri;
+    mChannel->GetURI(getter_AddRefs(uri));
+    mObserver->Observe(uri, "script-precompiled", nullptr);
+}
+
+NS_IMETHODIMP
+mozJSSubScriptLoader::PrecompileScript(nsIURI* aURI,
+                                       nsIPrincipal* aPrincipal,
+                                       nsIObserver *aObserver)
+{
+    nsCOMPtr<nsIChannel> channel;
+    nsresult rv = NS_NewChannel(getter_AddRefs(channel),
+                                aURI, nullptr, nullptr, nullptr,
+                                nsIRequest::LOAD_NORMAL, nullptr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsRefPtr<ScriptPrecompiler> loadObserver =
+        new ScriptPrecompiler(aObserver, aPrincipal, channel);
+
+    nsCOMPtr<nsIStreamLoader> loader;
+    rv = NS_NewStreamLoader(getter_AddRefs(loader), loadObserver);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIStreamListener> listener = loader.get();
+    rv = channel->AsyncOpen(listener, nullptr);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
 }
