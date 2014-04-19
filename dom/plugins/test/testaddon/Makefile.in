@@ -1,0 +1,23 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include $(topsrcdir)/config/rules.mk
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+plugin_file_name = Test.plugin
+addon_file_name = testaddon_$(TARGET_XPCOM_ABI).xpi
+else
+plugin_file_name = $(DLL_PREFIX)nptest$(DLL_SUFFIX)
+addon_file_name = testaddon.xpi
+endif
+
+# This is so hacky. Waiting on bug 988938.
+testdir = $(abspath $(DEPTH)/_tests/xpcshell/dom/plugins/test/unit/)
+addonpath = $(testdir)/$(addon_file_name)
+
+libs::
+	$(NSINSTALL) -D $(testdir)
+	rm -f $(addonpath)
+	cd $(srcdir) && zip -rD $(addonpath) install.rdf
+	cd $(DIST) && zip -rD $(addonpath) plugins/$(plugin_file_name)
