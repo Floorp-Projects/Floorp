@@ -268,9 +268,9 @@ class JSFunction : public JSObject
     //   JSScript, delazifying the function if necessary. This is the safest to
     //   use, but has extra checks, requires a cx and may trigger a GC.
     //
-    // - For functions which may have a LazyScript but whose JSScript is known
-    //   to exist, existingScript() will get the script and delazify the
-    //   function if necessary.
+    // - For inlined functions which may have a LazyScript but whose JSScript
+    //   is known to exist, existingScriptForInlinedFunction() will get the
+    //   script and delazify the function if necessary.
     //
     // - For functions known to have a JSScript, nonLazyScript() will get it.
 
@@ -286,12 +286,18 @@ class JSFunction : public JSObject
         return nonLazyScript();
     }
 
-    JSScript *existingScript() {
-        JS_ASSERT(isInterpreted());
+    JSScript *existingScriptForInlinedFunction() {
+        MOZ_ASSERT(isInterpreted());
         if (isInterpretedLazy()) {
+            // Get the script from the canonical function. Ion used the
+            // canonical function to inline the script and because it has
+            // Baseline code it has not been relazified. Note that we can't
+            // use lazyScript->script_ here as it may be null in some cases,
+            // see bug 976536.
             js::LazyScript *lazy = lazyScript();
-            JSScript *script = lazy->maybeScript();
-            JS_ASSERT(script);
+            JSFunction *fun = lazy->functionNonDelazifying();
+            MOZ_ASSERT(fun);
+            JSScript *script = fun->nonLazyScript();
 
             if (shadowZone()->needsBarrier())
                 js::LazyScript::writeBarrierPre(lazy);
