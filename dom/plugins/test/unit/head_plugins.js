@@ -3,13 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+
+Cu.import("resource://gre/modules/Promise.jsm");
 
 const gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 const gIsOSX = ("nsILocalFileMac" in Ci);
 const gIsLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc) ||
   ("@mozilla.org/gio-service;1" in Cc);
+const gDirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
 // Finds the test plugin library
 function get_test_plugin() {
@@ -42,7 +44,7 @@ function get_test_plugin() {
 }
 
 // Finds the test nsIPluginTag
-function get_test_plugintag(aName) {
+function get_test_plugintag(aName="Test Plug-in") {
   const Cc = Components.classes;
   const Ci = Components.interfaces;
 
@@ -118,4 +120,80 @@ function get_test_plugin_no_symlink() {
     }
   }
   return null;
+}
+
+let gGlobalScope = this;
+function loadAddonManager() {
+  let ns = {};
+  Cu.import("resource://gre/modules/Services.jsm", ns);
+  let head = "../../../../toolkit/mozapps/extensions/test/xpcshell/head_addons.js";
+  let file = do_get_file(head);
+  let uri = ns.Services.io.newFileURI(file);
+  ns.Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  startupManager();
+}
+
+// Install addon and return a Promise<boolean> that is
+// resolve with true on success, false otherwise.
+function installAddon(relativePath) {
+  let deferred = Promise.defer();
+  let success = () => deferred.resolve(true);
+  let fail = () => deferred.resolve(false);
+  let listener = {
+    onDownloadCancelled: fail,
+    onDownloadFailed: fail,
+    onInstallCancelled: fail,
+    onInstallFailed: fail,
+    onInstallEnded: success,
+  };
+
+  let installCallback = install => {
+    install.addListener(listener);
+    install.install();
+  };
+
+  let file = do_get_file(relativePath, false);
+  AddonManager.getInstallForFile(file, installCallback,
+                                 "application/x-xpinstall");
+
+  return deferred.promise;
+}
+
+// Uninstall addon and return a Promise<boolean> that is
+// resolve with true on success, false otherwise.
+function uninstallAddon(id) {
+  let deferred = Promise.defer();
+
+  AddonManager.getAddonByID(id, addon => {
+    if (!addon) {
+      deferred.resolve(false);
+    }
+
+    let listener = {};
+    let handler = addon => {
+      if (addon.id !== id) {
+        return;
+      }
+
+      AddonManager.removeAddonListener(listener);
+      deferred.resolve(true);
+    };
+
+    listener.onUninstalled = handler;
+    listener.onDisabled = handler;
+
+    AddonManager.addAddonListener(listener);
+    addon.uninstall();
+  });
+
+  return deferred.promise;
+}
+
+// Returns a Promise<Addon> that is resolved with
+// the corresponding addon or rejected.
+function getAddonByID(id) {
+  let deferred = Promise.defer();
+  AddonManager.getAddonByID(id, addon => deferred.resolve(addon));
+  return deferred.promise;
 }
