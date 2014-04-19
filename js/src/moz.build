@@ -84,7 +84,7 @@ EXPORTS.js += [
     '../public/RootingAPI.h',
     '../public/SliceBudget.h',
     '../public/StructuredClone.h',
-    '../public/Tracer.h',
+    '../public/TracingAPI.h',
     '../public/TypeDecls.h',
     '../public/Utility.h',
     '../public/Value.h',

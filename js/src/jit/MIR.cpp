@@ -95,16 +95,14 @@ EvaluateConstantOperands(TempAllocator &alloc, MBinaryInstruction *ins, bool *pt
         ret = Int32Value(lhs.toInt32() ^ rhs.toInt32());
         break;
       case MDefinition::Op_Lsh:
-        ret = Int32Value(lhs.toInt32() << (rhs.toInt32() & 0x1F));
+        ret = Int32Value(uint32_t(lhs.toInt32()) << (rhs.toInt32() & 0x1F));
         break;
       case MDefinition::Op_Rsh:
         ret = Int32Value(lhs.toInt32() >> (rhs.toInt32() & 0x1F));
         break;
-      case MDefinition::Op_Ursh: {
-        uint32_t unsignedLhs = (uint32_t)lhs.toInt32();
-        ret.setNumber(uint32_t(unsignedLhs >> (rhs.toInt32() & 0x1F)));
+      case MDefinition::Op_Ursh:
+        ret.setNumber(uint32_t(lhs.toInt32()) >> (rhs.toInt32() & 0x1F));
         break;
-      }
       case MDefinition::Op_Add:
         ret.setNumber(lhs.toNumber() + rhs.toNumber());
         break;

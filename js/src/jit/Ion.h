@@ -175,7 +175,7 @@ IsIonInlinablePC(jsbytecode *pc) {
 inline bool
 TooManyArguments(unsigned nargs)
 {
-    return (nargs >= SNAPSHOT_MAX_NARGS || nargs > js_JitOptions.maxStackArgs);
+    return nargs >= SNAPSHOT_MAX_NARGS || nargs > js_JitOptions.maxStackArgs;
 }
 
 void ForbidCompilation(JSContext *cx, JSScript *script);

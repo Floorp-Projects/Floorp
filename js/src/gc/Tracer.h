@@ -4,15 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vtunewrapper_h
-#define vtunewrapper_h
+#ifndef js_Tracer_h
+#define js_Tracer_h
 
-#include "vtune/jitprofiling.h"
+#include "js/TracingAPI.h"
 
-inline bool
-IsVTuneProfilingActive()
-{
-    return iJIT_IsProfilingActive() == iJIT_SAMPLING_ON;
-}
-
-#endif // vtunewrapper_h
+#endif /* js_Tracer_h */

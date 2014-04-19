@@ -15,7 +15,7 @@
 
 #include "gtest/gtest.h"
 
-#include "js/Tracer.h"
+#include "js/TracingAPI.h"
 #include "js/HeapAPI.h"
 
 #include "mozilla/CycleCollectedJSRuntime.h"

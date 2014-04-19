@@ -3298,7 +3298,7 @@ JSScript::markChildren(JSTracer *trc)
     // JSScript::Create(), but not yet finished initializing it with
     // fullyInitFromEmitter() or fullyInitTrivial().
 
-    JS_ASSERT_IF(trc->runtime->gcStrictCompartmentChecking, zone()->isCollecting());
+    JS_ASSERT_IF(trc->runtime()->gcStrictCompartmentChecking, zone()->isCollecting());
 
     for (uint32_t i = 0; i < natoms(); ++i) {
         if (atoms[i])
@@ -3338,7 +3338,7 @@ JSScript::markChildren(JSTracer *trc)
         compartment()->mark();
 
         if (code())
-            MarkScriptData(trc->runtime, code());
+            MarkScriptData(trc->runtime(), code());
     }
 
     bindings.trace(trc);
