@@ -143,8 +143,9 @@ static const char *kPrefJavaMIME = "plugin.java.mime";
 // 0.14 force refresh due to locale comparison fix, bug 611296
 // 0.15 force refresh due to bug in reading Java plist MIME data, bug 638171
 // 0.16 version bump to avoid importing the plugin flags in newer versions
+// 0.17 added flag on whether plugin is loaded from an XPI
 // The current plugin registry version (and the maximum version we know how to read)
-static const char *kPluginRegistryVersion = "0.16";
+static const char *kPluginRegistryVersion = "0.17";
 // The minimum registry version we know how to read
 static const char *kMinimumRegistryVersion = "0.9";
 
@@ -1627,6 +1628,62 @@ int64_t GetPluginLastModifiedTime(const nsCOMPtr<nsIFile>& localfile)
   return fileModTime;
 }
 
+bool
+GetPluginIsFromExtension(const nsCOMPtr<nsIFile>& pluginFile,
+                         const nsCOMPtr<nsISimpleEnumerator>& extensionDirs)
+{
+  if (!extensionDirs) {
+    return false;
+  }
+
+  bool hasMore;
+  while (NS_SUCCEEDED(extensionDirs->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> supports;
+    nsresult rv = extensionDirs->GetNext(getter_AddRefs(supports));
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    nsCOMPtr<nsIFile> extDir(do_QueryInterface(supports, &rv));
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    nsCOMPtr<nsIFile> dir;
+    if (NS_FAILED(extDir->Clone(getter_AddRefs(dir)))) {
+      continue;
+    }
+
+    bool contains;
+    if (NS_FAILED(dir->Contains(pluginFile, true, &contains)) || !contains) {
+      continue;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+nsCOMPtr<nsISimpleEnumerator>
+GetExtensionDirectories()
+{
+  nsCOMPtr<nsIProperties> dirService = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+  if (!dirService) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> list;
+  nsresult rv = dirService->Get(XRE_EXTENSIONS_DIR_LIST,
+                                NS_GET_IID(nsISimpleEnumerator),
+                                getter_AddRefs(list));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return list;
+}
+
 struct CompareFilesByTime
 {
   bool
@@ -1690,6 +1747,11 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
 
   pluginFiles.Sort(CompareFilesByTime());
 
+  nsCOMPtr<nsISimpleEnumerator> extensionDirs = GetExtensionDirectories();
+  if (!extensionDirs) {
+    PLUGIN_LOG(PLUGIN_LOG_ALWAYS, ("Could not get extension directories."));
+  }
+
   bool warnOutdated = false;
 
   for (int32_t i = (pluginFiles.Length() - 1); i >= 0; i--) {
@@ -1700,7 +1762,8 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
     if (NS_FAILED(rv))
       continue;
 
-    int64_t fileModTime = GetPluginLastModifiedTime(localfile);
+    const int64_t fileModTime = GetPluginLastModifiedTime(localfile);
+    const bool fromExtension = GetPluginIsFromExtension(localfile, extensionDirs);
 
     // Look for it in our cache
     NS_ConvertUTF16toUTF8 filePath(utf16FilePath);
@@ -1781,7 +1844,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
         continue;
       }
 
-      pluginTag = new nsPluginTag(&info, fileModTime);
+      pluginTag = new nsPluginTag(&info, fileModTime, fromExtension);
       pluginFile.FreePluginInfo(info);
       if (!pluginTag)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -2272,13 +2335,15 @@ nsPluginHost::WritePluginInfo()
       PLUGIN_REGISTRY_FIELD_DELIMITER,
       PLUGIN_REGISTRY_END_OF_LINE_MARKER);
 
-    // lastModifiedTimeStamp|canUnload|tag->mFlags
-    PR_fprintf(fd, "%lld%c%d%c%lu%c%c\n",
+    // lastModifiedTimeStamp|canUnload|tag->mFlags|fromExtension
+    PR_fprintf(fd, "%lld%c%d%c%lu%c%d%c%c\n",
       tag->mLastModifiedTime,
       PLUGIN_REGISTRY_FIELD_DELIMITER,
       false, // did store whether or not to unload in-process plugins
       PLUGIN_REGISTRY_FIELD_DELIMITER,
       0, // legacy field for flags
+      PLUGIN_REGISTRY_FIELD_DELIMITER,
+      tag->IsFromExtension(),
       PLUGIN_REGISTRY_FIELD_DELIMITER,
       PLUGIN_REGISTRY_END_OF_LINE_MARKER);
 
@@ -2486,19 +2551,22 @@ nsPluginHost::ReadPluginInfo()
   }
 
   // Registry v0.13 and upwards includes the list of invalid plugins
-  bool hasInvalidPlugins = (version >= "0.13");
+  const bool hasInvalidPlugins = (version >= "0.13");
 
   // Registry v0.16 and upwards always have 0 for their plugin flags, prefs are used instead
   const bool hasValidFlags = (version < "0.16");
 
-  if (!ReadSectionHeader(reader, "PLUGINS"))
-    return rv;
+  // Registry v0.17 and upwards store whether the plugin comes from an XPI.
+  const bool hasFromExtension = (version >= "0.17");
 
 #if defined(XP_MACOSX)
-  bool hasFullPathInFileNameField = false;
+  const bool hasFullPathInFileNameField = false;
 #else
-  bool hasFullPathInFileNameField = (version < "0.11");
+  const bool hasFullPathInFileNameField = (version < "0.11");
 #endif
+
+  if (!ReadSectionHeader(reader, "PLUGINS"))
+    return rv;
 
   while (reader.NextLine()) {
     const char *filename;
@@ -2545,13 +2613,18 @@ nsPluginHost::ReadPluginInfo()
       version = "0";
     }
 
-    // lastModifiedTimeStamp|canUnload|tag.mFlag
-    if (reader.ParseLine(values, 3) != 3)
+    // lastModifiedTimeStamp|canUnload|tag.mFlag|fromExtension
+    const int count = hasFromExtension ? 4 : 3;
+    if (reader.ParseLine(values, count) != count)
       return rv;
 
     // If this is an old plugin registry mark this plugin tag to be refreshed
     int64_t lastmod = (vdiff == 0) ? nsCRT::atoll(values[0]) : -1;
     uint32_t tagflag = atoi(values[2]);
+    bool fromExtension = false;
+    if (hasFromExtension) {
+      fromExtension = atoi(values[3]);
+    }
     if (!reader.NextLine())
       return rv;
 
@@ -2622,7 +2695,7 @@ nsPluginHost::ReadPluginInfo()
       (const char* const*)mimetypes,
       (const char* const*)mimedescriptions,
       (const char* const*)extensions,
-      mimetypecount, lastmod, true);
+      mimetypecount, lastmod, fromExtension, true);
     if (heapalloced)
       delete [] heapalloced;
 
