@@ -230,7 +230,6 @@ COMPUTED_STYLE_PROP(z_index,                       ZIndex)
 \* ******************************* */
 
 COMPUTED_STYLE_PROP(appearance,                    Appearance)
-COMPUTED_STYLE_PROP(_moz_background_inline_policy, BackgroundInlinePolicy)
 COMPUTED_STYLE_PROP(binding,                       Binding)
 COMPUTED_STYLE_PROP(border_bottom_colors,          BorderBottomColors)
 COMPUTED_STYLE_PROP(border_left_colors,            BorderLeftColors)
