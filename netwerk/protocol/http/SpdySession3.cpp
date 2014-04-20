@@ -2210,6 +2210,14 @@ SpdySession3::Close(nsresult aReason)
   mSegmentWriter = nullptr;
 }
 
+nsHttpConnectionInfo *
+SpdySession3::ConnectionInfo()
+{
+  nsRefPtr<nsHttpConnectionInfo> ci;
+  GetConnectionInfo(getter_AddRefs(ci));
+  return ci.get();
+}
+
 void
 SpdySession3::CloseTransaction(nsAHttpTransaction *aTransaction,
                                nsresult aResult)
