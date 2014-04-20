@@ -366,6 +366,7 @@ private:
         GROUP3_OP_TEST = 0,
         GROUP3_OP_NOT  = 2,
         GROUP3_OP_NEG  = 3,
+        GROUP3_OP_IMUL = 5,
         GROUP3_OP_DIV  = 6,
         GROUP3_OP_IDIV = 7,
 
@@ -1153,6 +1154,13 @@ public:
     {
         spew("imull      %s, %s", nameIReg(4,src), nameIReg(4, dst));
         m_formatter.twoByteOp(OP2_IMUL_GvEv, dst, src);
+    }
+
+    void imull_r(RegisterID multiplier)
+    {
+        spew("imull      %s",
+             nameIReg(4, multiplier));
+        m_formatter.oneByteOp(OP_GROUP3_Ev, GROUP3_OP_IMUL, multiplier);
     }
 
     void imull_mr(int offset, RegisterID base, RegisterID dst)
