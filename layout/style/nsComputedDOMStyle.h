@@ -222,6 +222,7 @@ private:
 
   /* Box properties */
   mozilla::dom::CSSValue* DoGetBoxAlign();
+  mozilla::dom::CSSValue* DoGetBoxDecorationBreak();
   mozilla::dom::CSSValue* DoGetBoxDirection();
   mozilla::dom::CSSValue* DoGetBoxFlex();
   mozilla::dom::CSSValue* DoGetBoxOrdinalGroup();
@@ -283,7 +284,6 @@ private:
   mozilla::dom::CSSValue* DoGetBackgroundPosition();
   mozilla::dom::CSSValue* DoGetBackgroundRepeat();
   mozilla::dom::CSSValue* DoGetBackgroundClip();
-  mozilla::dom::CSSValue* DoGetBackgroundInlinePolicy();
   mozilla::dom::CSSValue* DoGetBackgroundBlendMode();
   mozilla::dom::CSSValue* DoGetBackgroundOrigin();
   mozilla::dom::CSSValue* DoGetBackgroundSize();

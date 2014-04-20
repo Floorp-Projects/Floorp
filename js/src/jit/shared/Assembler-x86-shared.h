@@ -1062,11 +1062,17 @@ class AssemblerX86Shared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
+    void imull(const Register &multiplier) {
+        masm.imull_r(multiplier.code());
+    }
     void imull(Imm32 imm, const Register &dest) {
         masm.imull_i32r(dest.code(), imm.value, dest.code());
     }
     void imull(const Register &src, const Register &dest) {
         masm.imull_rr(src.code(), dest.code());
+    }
+    void imull(Imm32 imm, const Register &src, const Register &dest) {
+        masm.imull_i32r(src.code(), imm.value, dest.code());
     }
     void imull(const Operand &src, const Register &dest) {
         switch (src.kind()) {

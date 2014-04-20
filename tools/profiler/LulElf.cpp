@@ -419,7 +419,6 @@ bool LoadSymbols(const string& obj_file,
                  SecMap* smap,
                  void* rx_avma,
                  void (*log)(const char*)) {
-  typedef typename ElfClass::Addr Addr;
   typedef typename ElfClass::Phdr Phdr;
   typedef typename ElfClass::Shdr Shdr;
 
@@ -594,7 +593,6 @@ bool ReadSymbolDataElfClass(const typename ElfClass::Ehdr* elf_header,
                             SecMap* smap, void* rx_avma,
                             void (*log)(const char*)) {
   typedef typename ElfClass::Ehdr Ehdr;
-  typedef typename ElfClass::Shdr Shdr;
 
   unsigned char identifier[16];
   if (!lul

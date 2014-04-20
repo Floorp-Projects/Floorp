@@ -1409,6 +1409,11 @@ nsTableFrame::PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
 int
 nsTableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
+  if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
+                     NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
+    return 0;
+  }
+
   int skip = 0;
   // frame attribute was accounted for in nsHTMLTableElement::MapTableBorderInto
   // account for pagination
