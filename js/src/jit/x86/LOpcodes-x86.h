@@ -14,6 +14,7 @@
     _(BoxFloatingPoint)         \
     _(DivI)                     \
     _(DivPowTwoI)               \
+    _(DivOrModConstantI)        \
     _(ModI)                     \
     _(ModPowTwoI)               \
     _(PowHalfD)                 \
