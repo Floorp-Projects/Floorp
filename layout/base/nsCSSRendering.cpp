@@ -373,8 +373,7 @@ static void DrawBorderImage(nsPresContext* aPresContext,
                             nsIFrame* aForFrame,
                             const nsRect& aBorderArea,
                             const nsStyleBorder& aStyleBorder,
-                            const nsRect& aDirtyRect,
-                            int aSkipSides);
+                            const nsRect& aDirtyRect);
 
 static nscolor MakeBevelColor(mozilla::css::Side whichSide, uint8_t style,
                               nscolor aBackgroundColor,
@@ -632,7 +631,7 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
 
   if (aStyleBorder.IsBorderImageLoaded()) {
     DrawBorderImage(aPresContext, aRenderingContext, aForFrame,
-                    aBorderArea, aStyleBorder, aDirtyRect, aSkipSides);
+                    aBorderArea, aStyleBorder, aDirtyRect);
     return;
   }
 
@@ -648,8 +647,8 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
     bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
 
   nsMargin border = aStyleBorder.GetComputedBorder();
-  if (0 == border.left && 0 == border.right &&
-      0 == border.top  && 0 == border.bottom) {
+  if ((0 == border.left) && (0 == border.right) &&
+      (0 == border.top) && (0 == border.bottom)) {
     // Empty border area
     return;
   }
@@ -3202,8 +3201,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
                 nsIFrame*            aForFrame,
                 const nsRect&        aBorderArea,
                 const nsStyleBorder& aStyleBorder,
-                const nsRect&        aDirtyRect,
-                int                  aSkipSides)
+                const nsRect&        aDirtyRect)
 {
   NS_PRECONDITION(aStyleBorder.IsBorderImageLoaded(),
                   "drawing border image that isn't successfully loaded");
@@ -3225,39 +3223,10 @@ DrawBorderImage(nsPresContext*       aPresContext,
     return;
   }
 
-  // NOTE: no Save() yet, we do that later by calling autoSR.EnsureSaved()
-  // in case we need it.
-  gfxContextAutoSaveRestore autoSR;
-
   // Determine the border image area, which by default corresponds to the
   // border box but can be modified by 'border-image-outset'.
-  // Note that 'border-radius' do not apply to 'border-image' borders per
-  // <http://dev.w3.org/csswg/css-backgrounds/#corner-clipping>.
-  nsRect borderImgArea;
-  nsMargin borderWidths(aStyleBorder.GetComputedBorder());
-  nsMargin imageOutset(aStyleBorder.GetImageOutset());
-  if (::IsBoxDecorationSlice(aStyleBorder) && aSkipSides != 0) {
-    borderImgArea =
-      ::BoxDecorationRectForBorder(aForFrame, aBorderArea, &aStyleBorder);
-    if (borderImgArea.IsEqualEdges(aBorderArea)) {
-      // No need for a clip, just skip the sides we don't want.
-      ::ApplySkipSides(aSkipSides, &borderWidths);
-      ::ApplySkipSides(aSkipSides, &imageOutset);
-      borderImgArea.Inflate(imageOutset);
-    } else {
-      // We're drawing borders around the joined continuation boxes so we need
-      // to clip that to the slice that we want for this frame.
-      borderImgArea.Inflate(imageOutset);
-      ::ApplySkipSides(aSkipSides, &imageOutset);
-      nsRect clip = aBorderArea;
-      clip.Inflate(imageOutset);
-      autoSR.EnsureSaved(aRenderingContext.ThebesContext());
-      aRenderingContext.IntersectClip(clip);
-    }
-  } else {
-    borderImgArea = aBorderArea;
-    borderImgArea.Inflate(imageOutset);
-  }
+  nsRect borderImgArea(aBorderArea);
+  borderImgArea.Inflate(aStyleBorder.GetImageOutset());
 
   // Calculate the image size used to compute slice points.
   CSSSizeOrRatio intrinsicSize = renderer.ComputeIntrinsicSize();
@@ -3296,6 +3265,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
       value = imgDimension;
     slice.Side(s) = value;
 
+    nsMargin borderWidths(aStyleBorder.GetComputedBorder());
     coord = aStyleBorder.mBorderImageWidth.Get(s);
     switch (coord.GetUnit()) {
       case eStyleUnit_Coord: // absolute dimension
