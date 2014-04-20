@@ -676,13 +676,6 @@ const KTableValue nsCSSProps::kBackgroundAttachmentKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-const KTableValue nsCSSProps::kBackgroundInlinePolicyKTable[] = {
-  eCSSKeyword_each_box,     NS_STYLE_BG_INLINE_POLICY_EACH_BOX,
-  eCSSKeyword_continuous,   NS_STYLE_BG_INLINE_POLICY_CONTINUOUS,
-  eCSSKeyword_bounding_box, NS_STYLE_BG_INLINE_POLICY_BOUNDING_BOX,
-  eCSSKeyword_UNKNOWN,-1
-};
-
 static_assert(NS_STYLE_BG_CLIP_BORDER == NS_STYLE_BG_ORIGIN_BORDER &&
               NS_STYLE_BG_CLIP_PADDING == NS_STYLE_BG_ORIGIN_PADDING &&
               NS_STYLE_BG_CLIP_CONTENT == NS_STYLE_BG_ORIGIN_CONTENT,
@@ -793,6 +786,12 @@ const KTableValue nsCSSProps::kBorderWidthKTable[] = {
 const KTableValue nsCSSProps::kBoxPropSourceKTable[] = {
   eCSSKeyword_physical,     NS_BOXPROP_SOURCE_PHYSICAL,
   eCSSKeyword_logical,      NS_BOXPROP_SOURCE_LOGICAL,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const KTableValue nsCSSProps::kBoxDecorationBreakKTable[] = {
+  eCSSKeyword_slice, NS_STYLE_BOX_DECORATION_BREAK_SLICE,
+  eCSSKeyword_clone, NS_STYLE_BOX_DECORATION_BREAK_CLONE,
   eCSSKeyword_UNKNOWN,-1
 };
 
