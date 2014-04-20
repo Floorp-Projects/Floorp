@@ -161,6 +161,12 @@ NullHttpTransaction::Close(nsresult reason)
   mIsDone = true;
 }
 
+nsHttpConnectionInfo *
+NullHttpTransaction::ConnectionInfo()
+{
+  return mConnectionInfo;
+}
+
 nsresult
 NullHttpTransaction::AddTransaction(nsAHttpTransaction *trans)
 {
