@@ -894,14 +894,14 @@ private:
   virtual bool
   PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
   {
-    MOZ_ASSUME_UNREACHABLE("Don't call Dispatch() on CloseEventRunnable!");
+    MOZ_CRASH("Don't call Dispatch() on CloseEventRunnable!");
   }
 
   virtual void
   PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                bool aDispatchResult) MOZ_OVERRIDE
   {
-    MOZ_ASSUME_UNREACHABLE("Don't call Dispatch() on CloseEventRunnable!");
+    MOZ_CRASH("Don't call Dispatch() on CloseEventRunnable!");
   }
 
   virtual bool
@@ -1500,14 +1500,14 @@ private:
   virtual bool
   PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
   {
-    MOZ_ASSUME_UNREACHABLE("Don't call Dispatch() on KillCloseEventRunnable!");
+    MOZ_CRASH("Don't call Dispatch() on KillCloseEventRunnable!");
   }
 
   virtual void
   PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                bool aDispatchResult) MOZ_OVERRIDE
   {
-    MOZ_ASSUME_UNREACHABLE("Don't call Dispatch() on KillCloseEventRunnable!");
+    MOZ_CRASH("Don't call Dispatch() on KillCloseEventRunnable!");
   }
 
   virtual bool
@@ -4066,7 +4066,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
     }
   }
 
-  MOZ_ASSUME_UNREACHABLE("Shouldn't get here!");
+  MOZ_CRASH("Shouldn't get here!");
 }
 
 void
