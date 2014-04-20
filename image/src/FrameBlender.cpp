@@ -261,7 +261,7 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
   if (!mAnim->compositingFrame) {
     mAnim->compositingFrame.SetFrame(new imgFrame());
     nsresult rv = mAnim->compositingFrame->Init(0, 0, mSize.width, mSize.height,
-                                                gfxImageFormat::ARGB32);
+                                                gfx::SurfaceFormat::B8G8R8A8);
     if (NS_FAILED(rv)) {
       mAnim->compositingFrame.SetFrame(nullptr);
       return false;
@@ -391,7 +391,7 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
     if (!mAnim->compositingPrevFrame) {
       mAnim->compositingPrevFrame.SetFrame(new imgFrame());
       nsresult rv = mAnim->compositingPrevFrame->Init(0, 0, mSize.width, mSize.height,
-                                                      gfxImageFormat::ARGB32);
+                                                      gfx::SurfaceFormat::B8G8R8A8);
       if (NS_FAILED(rv)) {
         mAnim->compositingPrevFrame.SetFrame(nullptr);
         return false;
