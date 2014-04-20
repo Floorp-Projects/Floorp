@@ -6,6 +6,7 @@ package org.mozilla.gecko.background.sync;
 import org.mozilla.gecko.background.db.CursorDumper;
 import org.mozilla.gecko.background.db.TestFennecTabsStorage;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 import org.mozilla.gecko.sync.repositories.domain.TabsRecord;
 
@@ -22,7 +23,7 @@ public class TestTabsRecord extends TestFennecTabsStorage {
     final String positionAscending = BrowserContract.Tabs.POSITION + " ASC";
     Cursor cursor = null;
     try {
-      cursor = tabsClient.query(BrowserContract.Tabs.CONTENT_URI, null, TABS_CLIENT_GUID_IS, new String[] { TEST_CLIENT_GUID }, positionAscending);
+      cursor = tabsClient.query(BrowserContractHelpers.TABS_CONTENT_URI, null, TABS_CLIENT_GUID_IS, new String[] { TEST_CLIENT_GUID }, positionAscending);
       assertEquals(3, cursor.getCount());
 
       cursor.moveToPosition(1);
@@ -55,7 +56,7 @@ public class TestTabsRecord extends TestFennecTabsStorage {
     final String positionAscending = BrowserContract.Tabs.POSITION + " ASC";
     Cursor cursor = null;
     try {
-      cursor = tabsClient.query(BrowserContract.Tabs.CONTENT_URI, null, TABS_CLIENT_GUID_IS, new String[] { TEST_CLIENT_GUID }, positionAscending);
+      cursor = tabsClient.query(BrowserContractHelpers.TABS_CONTENT_URI, null, TABS_CLIENT_GUID_IS, new String[] { TEST_CLIENT_GUID }, positionAscending);
       assertEquals(0, cursor.getCount());
 
       final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, TEST_CLIENT_GUID, TEST_CLIENT_NAME);
@@ -81,7 +82,7 @@ public class TestTabsRecord extends TestFennecTabsStorage {
     Cursor cursor = null;
     try {
       // Keep this in sync with the Fennec schema.
-      cursor = tabsClient.query(BrowserContract.Tabs.CONTENT_URI, null, BrowserContract.Tabs.CLIENT_GUID + " IS NULL", null, positionAscending);
+      cursor = tabsClient.query(BrowserContractHelpers.TABS_CONTENT_URI, null, BrowserContract.Tabs.CLIENT_GUID + " IS NULL", null, positionAscending);
       CursorDumper.dumpCursor(cursor);
 
       final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, TEST_CLIENT_GUID, TEST_CLIENT_NAME);

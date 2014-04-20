@@ -73,9 +73,9 @@ public class FennecTabsRepository extends Repository {
 
     public FennecTabsRepositorySession(Repository repository, Context context) throws NoContentProviderException {
       super(repository);
-      clientsProvider = getContentProvider(context, BrowserContract.Clients.CONTENT_URI);
+      clientsProvider = getContentProvider(context, BrowserContractHelpers.CLIENTS_CONTENT_URI);
       try {
-        tabsProvider = getContentProvider(context, BrowserContract.Tabs.CONTENT_URI);
+        tabsProvider = getContentProvider(context, BrowserContractHelpers.TABS_CONTENT_URI);
       } catch (NoContentProviderException e) {
         clientsProvider.release();
         throw e;
@@ -85,7 +85,7 @@ public class FennecTabsRepository extends Repository {
         throw new RuntimeException(e);
       }
 
-      tabsHelper = new RepoUtils.QueryHelper(context, BrowserContract.Tabs.CONTENT_URI, LOG_TAG);
+      tabsHelper = new RepoUtils.QueryHelper(context, BrowserContractHelpers.TABS_CONTENT_URI, LOG_TAG);
     }
 
     @Override
@@ -225,7 +225,7 @@ public class FennecTabsRepository extends Repository {
             if (tabsRecord.deleted) {
               try {
                 Logger.debug(LOG_TAG, "Clearing entry for client " + tabsRecord.guid);
-                clientsProvider.delete(BrowserContract.Clients.CONTENT_URI,
+                clientsProvider.delete(BrowserContractHelpers.CLIENTS_CONTENT_URI,
                                        CLIENT_GUID_IS,
                                        selectionArgs);
                 delegate.onRecordStoreSucceeded(record.guid);
@@ -239,20 +239,20 @@ public class FennecTabsRepository extends Repository {
             final ContentValues clientsCV = tabsRecord.getClientsContentValues();
 
             Logger.debug(LOG_TAG, "Updating clients provider.");
-            final int updated = clientsProvider.update(BrowserContract.Clients.CONTENT_URI,
+            final int updated = clientsProvider.update(BrowserContractHelpers.CLIENTS_CONTENT_URI,
                 clientsCV,
                 CLIENT_GUID_IS,
                 selectionArgs);
             if (0 == updated) {
-              clientsProvider.insert(BrowserContract.Clients.CONTENT_URI, clientsCV);
+              clientsProvider.insert(BrowserContractHelpers.CLIENTS_CONTENT_URI, clientsCV);
             }
 
             // Now insert tabs.
             final ContentValues[] tabsArray = tabsRecord.getTabsContentValues();
             Logger.debug(LOG_TAG, "Inserting " + tabsArray.length + " tabs for client " + tabsRecord.guid);
 
-            tabsProvider.delete(BrowserContract.Tabs.CONTENT_URI, TABS_CLIENT_GUID_IS, selectionArgs);
-            final int inserted = tabsProvider.bulkInsert(BrowserContract.Tabs.CONTENT_URI, tabsArray);
+            tabsProvider.delete(BrowserContractHelpers.TABS_CONTENT_URI, TABS_CLIENT_GUID_IS, selectionArgs);
+            final int inserted = tabsProvider.bulkInsert(BrowserContractHelpers.TABS_CONTENT_URI, tabsArray);
             Logger.trace(LOG_TAG, "Inserted: " + inserted);
 
             delegate.onRecordStoreSucceeded(record.guid);
@@ -269,8 +269,8 @@ public class FennecTabsRepository extends Repository {
     @Override
     public void wipe(RepositorySessionWipeDelegate delegate) {
       try {
-        tabsProvider.delete(BrowserContract.Tabs.CONTENT_URI, null, null);
-        clientsProvider.delete(BrowserContract.Clients.CONTENT_URI, null, null);
+        tabsProvider.delete(BrowserContractHelpers.TABS_CONTENT_URI, null, null);
+        clientsProvider.delete(BrowserContractHelpers.CLIENTS_CONTENT_URI, null, null);
       } catch (RemoteException e) {
         Logger.warn(LOG_TAG, "Got RemoteException in wipe.", e);
         delegate.onWipeFailed(e);

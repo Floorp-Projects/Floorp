@@ -10,6 +10,7 @@ import org.mozilla.gecko.background.sync.helpers.SessionTestHelper;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.repositories.NoContentProviderException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
+import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository.FennecTabsRepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
@@ -34,13 +35,14 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
 
   protected ContentProviderClient getTabsClient() {
     final ContentResolver cr = getApplicationContext().getContentResolver();
-    return cr.acquireContentProviderClient(BrowserContract.Tabs.CONTENT_URI);
+    return cr.acquireContentProviderClient(BrowserContractHelpers.TABS_CONTENT_URI);
   }
 
   public TestFennecTabsRepositorySession() throws NoContentProviderException {
     super();
   }
 
+  @Override
   public void setUp() {
     if (tabsClient == null) {
       tabsClient = getTabsClient();
@@ -51,10 +53,11 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
     if (tabsClient == null) {
       return -1;
     }
-    return tabsClient.delete(BrowserContract.Tabs.CONTENT_URI,
+    return tabsClient.delete(BrowserContractHelpers.TABS_CONTENT_URI,
         TEST_TABS_CLIENT_GUID_IS_LOCAL_SELECTION, TEST_TABS_CLIENT_GUID_IS_LOCAL_SELECTION_ARGS);
   }
 
+  @Override
   protected void tearDown() throws Exception {
     if (tabsClient != null) {
       deleteAllTestTabs(tabsClient);
@@ -148,9 +151,9 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
     history3.add("http://test.com/test3.html#2");
     testTab3 = new Tab("test title 3", "http://test.com/test3.png", history3, 3000);
 
-    tabsClient.insert(BrowserContract.Tabs.CONTENT_URI, testTab1.toContentValues(TEST_CLIENT_GUID, 0));
-    tabsClient.insert(BrowserContract.Tabs.CONTENT_URI, testTab2.toContentValues(TEST_CLIENT_GUID, 1));
-    tabsClient.insert(BrowserContract.Tabs.CONTENT_URI, testTab3.toContentValues(TEST_CLIENT_GUID, 2));
+    tabsClient.insert(BrowserContractHelpers.TABS_CONTENT_URI, testTab1.toContentValues(TEST_CLIENT_GUID, 0));
+    tabsClient.insert(BrowserContractHelpers.TABS_CONTENT_URI, testTab2.toContentValues(TEST_CLIENT_GUID, 1));
+    tabsClient.insert(BrowserContractHelpers.TABS_CONTENT_URI, testTab3.toContentValues(TEST_CLIENT_GUID, 2));
   }
 
   protected TabsRecord insertTestTabsAndExtractTabsRecord() throws RemoteException {
@@ -159,7 +162,7 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
     final String positionAscending = BrowserContract.Tabs.POSITION + " ASC";
     Cursor cursor = null;
     try {
-      cursor = tabsClient.query(BrowserContract.Tabs.CONTENT_URI, null,
+      cursor = tabsClient.query(BrowserContractHelpers.TABS_CONTENT_URI, null,
           TEST_TABS_CLIENT_GUID_IS_LOCAL_SELECTION, TEST_TABS_CLIENT_GUID_IS_LOCAL_SELECTION_ARGS, positionAscending);
       CursorDumper.dumpCursor(cursor);
 
