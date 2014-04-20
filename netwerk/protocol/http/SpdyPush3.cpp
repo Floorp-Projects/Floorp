@@ -215,6 +215,19 @@ SpdyPush3TransactionBuffer::OnTransportStatus(nsITransport* transport,
 {
 }
 
+nsHttpConnectionInfo *
+SpdyPush3TransactionBuffer::ConnectionInfo()
+{
+  if (!mPushStream) {
+    return nullptr;
+  }
+  if (!mPushStream->Transaction()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(mPushStream->Transaction() != this);
+  return mPushStream->Transaction()->ConnectionInfo();
+}
+
 bool
 SpdyPush3TransactionBuffer::IsDone()
 {
