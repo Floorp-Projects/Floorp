@@ -47,12 +47,13 @@ class LDivI : public LBinaryMath<1>
 class LDivPowTwoI : public LBinaryMath<0>
 {
     const int32_t shift_;
+    const bool negativeDivisor_;
 
   public:
     LIR_HEADER(DivPowTwoI)
 
-    LDivPowTwoI(const LAllocation &lhs, const LAllocation &lhsCopy, int32_t shift)
-      : shift_(shift)
+    LDivPowTwoI(const LAllocation &lhs, const LAllocation &lhsCopy, int32_t shift, bool negativeDivisor)
+      : shift_(shift), negativeDivisor_(negativeDivisor)
     {
         setOperand(0, lhs);
         setOperand(1, lhsCopy);
@@ -67,8 +68,42 @@ class LDivPowTwoI : public LBinaryMath<0>
     int32_t shift() const {
         return shift_;
     }
+    bool negativeDivisor() const {
+        return negativeDivisor_;
+    }
     MDiv *mir() const {
         return mir_->toDiv();
+    }
+};
+
+class LDivOrModConstantI : public LInstructionHelper<1, 1, 1>
+{
+    const int32_t denominator_;
+
+  public:
+    LIR_HEADER(DivOrModConstantI)
+
+    LDivOrModConstantI(const LAllocation &lhs, int32_t denominator, const LDefinition& temp)
+    : denominator_(denominator)
+    {
+        setOperand(0, lhs);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *numerator() {
+        return getOperand(0);
+    }
+    int32_t denominator() const {
+        return denominator_;
+    }
+    MBinaryArithInstruction *mir() const {
+        JS_ASSERT(mir_->isDiv() || mir_->isMod());
+        return static_cast<MBinaryArithInstruction *>(mir_);
+    }
+    bool canBeNegativeDividend() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeNegativeDividend();
+        return mir_->toDiv()->canBeNegativeDividend();
     }
 };
 

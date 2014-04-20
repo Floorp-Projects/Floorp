@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(7b43fad1-c735-4b45-9383-c3f057fed20d)]
+[scriptable, uuid(9203c031-c4e7-4537-a4ec-81443d623d5a)]
 interface nsIAutoCompleteResult : nsISupports
 {
   /**
@@ -80,6 +80,12 @@ interface nsIAutoCompleteResult : nsISupports
    * Get the image of the result at the given index
    */
   AString getImageAt(in long index);
+
+  /**
+   * Get the final value that should be completed when the user confirms
+   * the match at the given index.
+   */
+  AString getFinalCompleteValueAt(in long index);
 
   /**
    * Remove the value at the given index from the autocomplete results.

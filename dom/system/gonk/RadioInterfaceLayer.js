@@ -70,6 +70,7 @@ const CDMAICCINFO_CID =
 const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kNetworkConnStateChangedTopic      = "network-connection-state-changed";
+const kNetworkActiveChangedTopic         = "network-active-changed";
 const kSmsReceivedObserverTopic          = "sms-received";
 const kSilentSmsReceivedObserverTopic    = "silent-sms-received";
 const kSmsSendingObserverTopic           = "sms-sending";
@@ -1392,12 +1393,6 @@ DataConnectionHandler.prototype = {
     // necessary data call and interface information to RILContentHelper
     // and network manager for current data call type.
     if (apnSetting.iface.connected) {
-      if (apnType == "default" && !dataInfo.connected) {
-        dataInfo.connected = true;
-        gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
-                                                    this.clientId, dataInfo);
-      }
-
       // Update the interface status via-registration if the interface has
       // already been registered in the network manager.
       if (apnSetting.iface.name in gNetworkManager.networkInterfaces) {
@@ -1431,13 +1426,6 @@ DataConnectionHandler.prototype = {
     // necessary data call and interface information to RILContentHelper
     // and network manager for current data call type.
     if (apnSetting.iface.connectedTypes.length && apnSetting.iface.connected) {
-      let dataInfo = this.radioInterface.rilContext.data;
-      if (apnType == "default" && dataInfo.connected) {
-        dataInfo.connected = false;
-        gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
-                                                    this.clientId, dataInfo);
-      }
-
       // Update the interface status via-registration if the interface has
       // already been registered in the network manager.
       if (apnSetting.iface.name in gNetworkManager.networkInterfaces) {
@@ -1511,25 +1499,6 @@ DataConnectionHandler.prototype = {
    * Handle data call state changes.
    */
   handleDataCallState: function(datacall) {
-    let data = this.radioInterface.rilContext.data;
-    let defaultApnSetting = this.apnSettings && this.apnSettings.byType.default;
-    let dataCallConnected =
-        (datacall.state == RIL.GECKO_NETWORK_STATE_CONNECTED);
-    if (defaultApnSetting && datacall.ifname) {
-      if (dataCallConnected && datacall.apn == defaultApnSetting.apn &&
-          defaultApnSetting.iface.inConnectedTypes("default")) {
-        data.connected = dataCallConnected;
-        gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
-                                                     this.clientId, data);
-        data.apn = datacall.apn;
-      } else if (!dataCallConnected && datacall.apn == data.apn) {
-        data.connected = dataCallConnected;
-        delete data.apn;
-        gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
-                                                     this.clientId, data);
-      }
-    }
-
     this._deliverDataCallCallback("dataCallStateChanged", [datacall]);
 
     // Process pending radio power off request after all data calls
@@ -1878,6 +1847,7 @@ function RadioInterface(aClientId, aWorkerMessenger) {
   Services.obs.addObserver(this, kScreenStateChangedTopic, false);
 
   Services.obs.addObserver(this, kNetworkConnStateChangedTopic, false);
+  Services.obs.addObserver(this, kNetworkActiveChangedTopic, false);
   Services.prefs.addObserver(kPrefCellBroadcastDisabled, this, false);
 
   this.portAddressedSmsApps = {};
@@ -1919,6 +1889,7 @@ RadioInterface.prototype = {
     Services.obs.removeObserver(this, kSysClockChangeObserverTopic);
     Services.obs.removeObserver(this, kScreenStateChangedTopic);
     Services.obs.removeObserver(this, kNetworkConnStateChangedTopic);
+    Services.obs.removeObserver(this, kNetworkActiveChangedTopic);
   },
 
   /**
@@ -2450,13 +2421,12 @@ RadioInterface.prototype = {
     dataInfo.type = newInfo.type;
     // For the data connection, the `connected` flag indicates whether
     // there's an active data call.
-    let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
-    let apnSettings = connHandler.apnSettings;
-    let apnSetting = apnSettings && apnSettings.byType.default;
     dataInfo.connected = false;
-    if (apnSetting) {
-      dataInfo.connected = (connHandler.getDataCallStateByType("default") ==
-                            RIL.GECKO_NETWORK_STATE_CONNECTED);
+    if (gNetworkManager.active &&
+        gNetworkManager.active.type ===
+          Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE &&
+        gNetworkManager.active.serviceId === this.clientId) {
+      dataInfo.connected = true;
     }
 
     // Make sure we also reset the operator and signal strength information
@@ -2475,6 +2445,8 @@ RadioInterface.prototype = {
       gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
                                                   this.clientId, dataInfo);
     }
+
+    let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
     connHandler.updateRILNetworkInterface();
   },
 
@@ -3362,6 +3334,21 @@ RadioInterface.prototype = {
         // SNTP won't update unless the SNTP is already expired.
         if (this._sntp.isExpired()) {
           this._sntp.request();
+        }
+        break;
+      case kNetworkActiveChangedTopic:
+        let dataInfo = this.rilContext.data;
+        let connected = false;
+        if (gNetworkManager.active &&
+            gNetworkManager.active.type ===
+              Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE &&
+            gNetworkManager.active.serviceId === this.clientId) {
+          connected = true;
+        }
+        if (dataInfo.connected !== connected) {
+          dataInfo.connected = connected;
+          gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
+                                                      this.clientId, dataInfo);
         }
         break;
       case kScreenStateChangedTopic:

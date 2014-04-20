@@ -42,6 +42,7 @@ autoCompleteSimpleResult.prototype = {
  getCommentAt: function() { return null; },
  getStyleAt: function() { return null; },
  getImageAt: function() { return null; },
+ getFinalCompleteValueAt: function() { return this.getValueAt(); },
  getLabelAt: function() { return null; },
  removeValueAt: function() {}
 };
