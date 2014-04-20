@@ -539,11 +539,6 @@ struct nsStyleBackground {
 
   nscolor mBackgroundColor;       // [reset]
 
-  // FIXME: This (now background-break in css3-background) should
-  // probably move into a different struct so that everything in
-  // nsStyleBackground is set by the background shorthand.
-  uint8_t mBackgroundInlinePolicy; // [reset] See nsStyleConsts.h
-
   // True if this background is completely transparent.
   bool IsTransparent() const;
 
@@ -986,6 +981,7 @@ public:
   uint8_t        mBorderImageRepeatH; // [reset] see nsStyleConsts.h
   uint8_t        mBorderImageRepeatV; // [reset]
   uint8_t        mFloatEdge;          // [reset]
+  uint8_t        mBoxDecorationBreak; // [reset] see nsStyleConsts.h
 
 protected:
   // mComputedBorder holds the CSS2.1 computed border-width values.

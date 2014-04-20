@@ -45,6 +45,11 @@ struct PatchableBackedgeInfo
     {}
 };
 
+struct ReciprocalMulConstants {
+    int32_t multiplier;
+    int32_t shift_amount;
+};
+
 class CodeGeneratorShared : public LInstructionVisitor
 {
     js::Vector<OutOfLineCode *, 0, SystemAllocPolicy> outOfLineCode_;
@@ -402,6 +407,7 @@ class CodeGeneratorShared : public LInstructionVisitor
 
     bool addCache(LInstruction *lir, size_t cacheIndex);
     size_t addCacheLocations(const CacheLocationList &locs, size_t *numLocs);
+    ReciprocalMulConstants computeDivisionConstants(int d);
 
   protected:
     bool addOutOfLineCode(OutOfLineCode *code);

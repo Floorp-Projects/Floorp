@@ -953,6 +953,11 @@ nsIFrame::GetUsedPadding() const
 int
 nsIFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
 {
+  if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
+                     NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
+    return 0;
+  }
+
   // Convert the logical skip sides to physical sides using the frame's
   // writing mode
   WritingMode writingMode = GetWritingMode();
@@ -1277,7 +1282,8 @@ nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets)
 }
 
 /* virtual */ bool
-nsIFrame::GetBorderRadii(nscoord aRadii[8]) const
+nsIFrame::GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
+                         int aSkipSides, nscoord aRadii[8]) const
 {
   if (IsThemed()) {
     // When we're themed, the native theme code draws the border and
@@ -1292,9 +1298,16 @@ nsIFrame::GetBorderRadii(nscoord aRadii[8]) const
     }
     return false;
   }
-  nsSize size = GetSize();
-  return ComputeBorderRadii(StyleBorder()->mBorderRadius, size, size,
-                            GetSkipSides(), aRadii);
+  return ComputeBorderRadii(StyleBorder()->mBorderRadius,
+                            aFrameSize, aBorderArea,
+                            aSkipSides, aRadii);
+}
+
+bool
+nsIFrame::GetBorderRadii(nscoord aRadii[8]) const
+{
+  nsSize sz = GetSize();
+  return GetBorderRadii(sz, sz, GetSkipSides(), aRadii);
 }
 
 bool
