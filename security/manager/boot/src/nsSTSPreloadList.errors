@@ -10,6 +10,7 @@ bcrook.com: max-age too low: 86400
 betnet.fr: could not connect to host
 bigshinylock.minazo.net: could not connect to host
 blacklane.com: did not receive HSTS header
+blueseed.co: did not receive HSTS header
 braintreegateway.com: did not receive HSTS header
 browserid.org: did not receive HSTS header
 business.medbank.com.mt: did not receive HSTS header
@@ -25,7 +26,7 @@ codereview.chromium.org: did not receive HSTS header (error ignored - included r
 crate.io: did not receive HSTS header
 crowdcurity.com: did not receive HSTS header
 crypto.is: did not receive HSTS header
-csawctf.poly.edu: could not connect to host
+csawctf.poly.edu: did not receive HSTS header
 dl.google.com: did not receive HSTS header (error ignored - included regardless)
 docs.google.com: did not receive HSTS header (error ignored - included regardless)
 drive.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -74,12 +75,6 @@ nexth.net: did not receive HSTS header
 nexth.us: could not connect to host
 openshift.redhat.com: did not receive HSTS header
 ottospora.nl: could not connect to host
-passport.yandex.by: did not receive HSTS header
-passport.yandex.com: did not receive HSTS header
-passport.yandex.com.tr: did not receive HSTS header
-passport.yandex.kz: did not receive HSTS header
-passport.yandex.ru: did not receive HSTS header
-passport.yandex.ua: did not receive HSTS header
 paypal.com: max-age too low: 14400
 payroll.xero.com: max-age too low: 3600
 platform.lookout.com: could not connect to host
@@ -88,7 +83,6 @@ prodpad.com: did not receive HSTS header
 profiles.google.com: did not receive HSTS header (error ignored - included regardless)
 rapidresearch.me: did not receive HSTS header
 sah3.net: could not connect to host
-sandbox.mydigipass.com: could not connect to host
 saturngames.co.uk: did not receive HSTS header
 script.google.com: did not receive HSTS header (error ignored - included regardless)
 security.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -105,6 +99,8 @@ spreadsheets.google.com: did not receive HSTS header (error ignored - included r
 square.com: did not receive HSTS header
 ssl.google-analytics.com: did not receive HSTS header (error ignored - included regardless)
 ssl.panoramio.com: did not receive HSTS header
+stage.wepay.com: max-age too low: 2592000
+static.wepay.com: did not receive HSTS header
 sunshinepress.org: could not connect to host
 surfeasy.com: did not receive HSTS header
 talk.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -113,6 +109,7 @@ translate.googleapis.com: did not receive HSTS header (error ignored - included 
 uprotect.it: could not connect to host
 wallet.google.com: did not receive HSTS header (error ignored - included regardless)
 webmail.mayfirst.org: did not receive HSTS header
+wepay.com: max-age too low: 2592000
 whonix.org: did not receive HSTS header
 www.calyxinstitute.org: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
 www.cueup.com: did not receive HSTS header
@@ -134,4 +131,5 @@ www.paypal.com: [Exception... "Component returned failure code: 0x80004005 (NS_E
 www.roddis.net: did not receive HSTS header
 www.sandbox.mydigipass.com: could not connect to host
 www.surfeasy.com: did not receive HSTS header
+www.wepay.com: max-age too low: 2592000
 zoo24.de: max-age too low: 2592000

@@ -343,6 +343,7 @@ Experiments.Experiments = function (policy=new Experiments.Policy()) {
   this._log = Log.repository.getLoggerWithMessagePrefix(
     "Browser.Experiments.Experiments",
     "Experiments #" + gExperimentsCounter++ + "::");
+  this._log.trace("constructor");
 
   this._policy = policy;
 
@@ -424,9 +425,12 @@ Experiments.Experiments.prototype = {
    *         The promise is fulfilled when all pending tasks are finished.
    */
   uninit: Task.async(function* () {
+    this._log.trace("uninit: started");
     yield this._loadTask;
+    this._log.trace("uninit: finished with _loadTask");
 
     if (!this._shutdown) {
+      this._log.trace("uninit: no previous shutdown");
       this._unregisterWithAddonManager();
 
       gPrefs.ignore(PREF_LOGGING, configureLogging);
@@ -443,6 +447,7 @@ Experiments.Experiments.prototype = {
     this._shutdown = true;
     if (this._mainTask) {
       try {
+        this._log.trace("uninit: waiting on _mainTask");
         yield this._mainTask;
       } catch (e if e instanceof AlreadyShutdownError) {
         // We error out of tasks after shutdown via that exception.
