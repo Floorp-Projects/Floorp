@@ -9,7 +9,8 @@
 }
 
 /* SCROLLBOX */
-#newtab-scrollbox:not([page-disabled]) {
+#newtab-scrollbox:not([page-disabled]),
+#newtab-scrollbox:not([page-disabled]) #newtab-margin-bottom {
   color: rgb(0,0,0);
   background-color: hsl(0,0%,95%);
 }

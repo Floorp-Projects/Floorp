@@ -57,6 +57,7 @@ nsAutoCompleteSimpleResult.prototype = {
  getCommentAt: function() { return null; },
  getStyleAt: function() { return null; },
  getImageAt: function() { return null; },
+ getFinalCompleteValueAt: function(aIndex) { return this.getValueAt(aIndex); },
  getLabelAt: function() { return null; },
  removeValueAt: function() {}
 };
