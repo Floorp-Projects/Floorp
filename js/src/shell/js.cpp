@@ -1215,8 +1215,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             }
 
             if (loadBytecode) {
-                script = JS_DecodeScript(cx, loadBuffer, loadLength, cx->compartment()->principals,
-                                         options.originPrincipals(cx));
+                script = JS_DecodeScript(cx, loadBuffer, loadLength, options.originPrincipals(cx));
             } else {
                 script = JS::Compile(cx, global, options, codeChars, codeLength);
             }
