@@ -550,6 +550,11 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 int
 nsTableCellFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
+  if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
+                     NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
+    return 0;
+  }
+
   int skip = 0;
   if (nullptr != GetPrevInFlow()) {
     skip |= LOGICAL_SIDE_B_START;
@@ -1103,7 +1108,10 @@ nsBCTableCellFrame::GetUsedBorder() const
 }
 
 /* virtual */ bool
-nsBCTableCellFrame::GetBorderRadii(nscoord aRadii[8]) const
+nsBCTableCellFrame::GetBorderRadii(const nsSize& aFrameSize,
+                                   const nsSize& aBorderArea,
+                                   int aSkipSides,
+                                   nscoord aRadii[8]) const
 {
   NS_FOR_CSS_HALF_CORNERS(corner) {
     aRadii[corner] = 0;
