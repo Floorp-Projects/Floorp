@@ -21,6 +21,7 @@ class nsAHttpSegmentWriter;
 class nsHttpTransaction;
 class nsHttpPipeline;
 class nsHttpRequestHead;
+class nsHttpConnectionInfo;
 
 //----------------------------------------------------------------------------
 // Abstract base class for a HTTP transaction:
@@ -132,6 +133,9 @@ public:
     // return the load group connection information associated with the transaction
     virtual nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() { return nullptr; }
 
+    // return the connection information associated with the transaction
+    virtual nsHttpConnectionInfo *ConnectionInfo() = 0;
+
     // The base definition of these is done in nsHttpTransaction.cpp
     virtual bool ResponseTimeoutEnabled() const;
     virtual PRIntervalTime ResponseTimeout();
@@ -174,6 +178,7 @@ public:
     nsresult ReadSegments(nsAHttpSegmentReader *, uint32_t, uint32_t *); \
     nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *); \
     void     Close(nsresult reason);                                    \
+    nsHttpConnectionInfo *ConnectionInfo();                             \
     void     SetProxyConnectFailed();                                   \
     nsHttpRequestHead *RequestHead();                                   \
     uint32_t Http1xTransactionCount();                                  \
