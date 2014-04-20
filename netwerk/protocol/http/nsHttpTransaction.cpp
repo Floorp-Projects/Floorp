@@ -938,6 +938,12 @@ nsHttpTransaction::Close(nsresult reason)
                           "net::http::transaction");
 }
 
+nsHttpConnectionInfo *
+nsHttpTransaction::ConnectionInfo()
+{
+    return mConnInfo;
+}
+
 nsresult
 nsHttpTransaction::AddTransaction(nsAHttpTransaction *trans)
 {

@@ -529,6 +529,16 @@ nsHttpPipeline::OnTransportStatus(nsITransport* transport,
     }
 }
 
+nsHttpConnectionInfo *
+nsHttpPipeline::ConnectionInfo()
+{
+    nsAHttpTransaction *trans = Request(0) ? Request(0) : Response(0);
+    if (!trans) {
+        return nullptr;
+    }
+    return trans->ConnectionInfo();
+}
+
 bool
 nsHttpPipeline::IsDone()
 {
