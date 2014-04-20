@@ -191,6 +191,19 @@ Http2PushTransactionBuffer::OnTransportStatus(nsITransport* transport,
 {
 }
 
+nsHttpConnectionInfo *
+Http2PushTransactionBuffer::ConnectionInfo()
+{
+  if (!mPushStream) {
+    return nullptr;
+  }
+  if (!mPushStream->Transaction()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(mPushStream->Transaction() != this);
+  return mPushStream->Transaction()->ConnectionInfo();
+}
+
 bool
 Http2PushTransactionBuffer::IsDone()
 {

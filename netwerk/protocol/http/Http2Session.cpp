@@ -2553,6 +2553,14 @@ Http2Session::Close(nsresult aReason)
   mSegmentWriter = nullptr;
 }
 
+nsHttpConnectionInfo *
+Http2Session::ConnectionInfo()
+{
+  nsRefPtr<nsHttpConnectionInfo> ci;
+  GetConnectionInfo(getter_AddRefs(ci));
+  return ci.get();
+}
+
 void
 Http2Session::CloseTransaction(nsAHttpTransaction *aTransaction,
                                nsresult aResult)
