@@ -45,8 +45,6 @@ public:
 
   bool IsChrome() { return mIsChrome; }
 
-  JSObject* GetCompilationGlobal();
-
   void MarkInCCGeneration(uint32_t aGeneration);
 
   static nsresult ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo);
@@ -54,7 +52,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsXBLDocumentInfo)
 
 private:
-  void EnsureGlobalObject();
   nsCOMPtr<nsIDocument> mDocument;
   bool mScriptAccess;
   bool mIsChrome;
@@ -63,8 +60,6 @@ private:
 
   // non-owning pointer to the first binding in the table
   nsXBLPrototypeBinding* mFirstBinding;
-
-  nsRefPtr<nsXBLDocGlobalObject> mGlobalObject;
 };
 
 #ifdef DEBUG
