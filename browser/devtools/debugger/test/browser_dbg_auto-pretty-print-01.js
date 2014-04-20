@@ -52,7 +52,7 @@ function test(){
 }
 
 function testSourceIsUgly() {
-  ok(!gEditor.getText().contains("\n    "),
+  ok(!gEditor.getText().contains("\n  "),
     "The source shouldn't be pretty printed yet.");
 }
 
@@ -93,7 +93,7 @@ function testAutoPrettyPrintOff(){
 }
 
 function testSourceIsPretty() {
-  ok(gEditor.getText().contains("\n    "),
+  ok(gEditor.getText().contains("\n  "),
     "The source should be pretty printed.")
 }
 
