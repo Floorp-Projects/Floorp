@@ -4867,7 +4867,7 @@ nsLayoutUtils::DrawPixelSnapped(nsRenderingContext* aRenderingContext,
   gfxUtils::DrawPixelSnapped(ctx, aDrawable,
                              drawingParams.mUserSpaceToImageSpace, subimage,
                              sourceRect, imageRect, drawingParams.mFillRect,
-                             gfxImageFormat::ARGB32, aFilter);
+                             gfx::SurfaceFormat::B8G8R8A8, aFilter);
 }
 
 /* static */ nsresult
