@@ -2400,7 +2400,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
 {
     NS_ENSURE_TRUE(aProtoDoc, NS_ERROR_UNEXPECTED);
     AutoSafeJSContext cx;
-    JS::Rooted<JSObject*> global(cx, aProtoDoc->GetCompilationGlobal());
+    JS::Rooted<JSObject*> global(cx, xpc::GetCompilationScope());
     NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
     JSAutoCompartment ac(cx, global);
 
@@ -2422,8 +2422,8 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
     // been set.
     JS::Handle<JSScript*> script =
         JS::Handle<JSScript*>::fromMarkedLocation(mScriptObject.address());
-    MOZ_ASSERT(!strcmp(JS_GetClass(JS::CurrentGlobalOrNull(cx))->name,
-                       "nsXULPrototypeScript compilation scope"));
+    // Note - Inverting the order of these operands is a rooting hazard.
+    MOZ_ASSERT(xpc::GetCompilationScope() == JS::CurrentGlobalOrNull(cx));
     return nsContentUtils::XPConnect()->WriteScript(aStream, cx,
                                                     xpc_UnmarkGrayScript(script));
 }
@@ -2490,13 +2490,11 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
     aStream->Read32(&mLangVersion);
 
     AutoSafeJSContext cx;
-    JS::Rooted<JSObject*> global(cx, aProtoDoc->GetCompilationGlobal());
+    JS::Rooted<JSObject*> global(cx, xpc::GetCompilationScope());
     NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
     JSAutoCompartment ac(cx, global);
 
     JS::Rooted<JSScript*> newScriptObject(cx);
-    MOZ_ASSERT(!strcmp(JS_GetClass(JS::CurrentGlobalOrNull(cx))->name,
-                       "nsXULPrototypeScript compilation scope"));
     nsresult rv = nsContentUtils::XPConnect()->ReadScript(aStream, cx,
                                                           newScriptObject.address());
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2629,20 +2627,11 @@ nsXULPrototypeScript::Compile(const char16_t* aText,
                               nsXULPrototypeDocument* aProtoDoc,
                               nsIOffThreadScriptReceiver *aOffThreadReceiver /* = nullptr */)
 {
-    // We'll compile the script using the prototype document's special
-    // script object as the parent. This ensures that we won't end up
-    // with an uncollectable reference.
-    //
-    // Compiling it using (for example) the first document's global
-    // object would cause JS to keep a reference via the __proto__ or
-    // parent pointer to the first document's global. If that happened,
-    // our script object would reference the first document, and the
-    // first document would indirectly reference the prototype document
-    // because it keeps the prototype cache alive. Circularity!
+    // We'll compile the script in the compilation scope.
     MOZ_ASSERT(aProtoDoc);
-    NS_ENSURE_TRUE(aProtoDoc->GetCompilationGlobal(), NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(xpc::GetCompilationScope(), NS_ERROR_UNEXPECTED);
     AutoSafeJSContext cx;
-    JSAutoCompartment ac(cx, aProtoDoc->GetCompilationGlobal());
+    JSAutoCompartment ac(cx, xpc::GetCompilationScope());
 
     nsAutoCString urlspec;
     nsContentUtils::GetWrapperSafeScriptFilename(aDocument, aURI, urlspec);
