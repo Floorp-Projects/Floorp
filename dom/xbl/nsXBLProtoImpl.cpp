@@ -201,7 +201,7 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   // bind the prototype to a real xbl instance, we'll clone the pre-compiled JS into the real instance's 
   // context.
   AutoSafeJSContext cx;
-  JS::Rooted<JSObject*> compilationGlobal(cx, aBinding->XBLDocumentInfo()->GetCompilationGlobal());
+  JS::Rooted<JSObject*> compilationGlobal(cx, xpc::GetCompilationScope());
   NS_ENSURE_TRUE(compilationGlobal, NS_ERROR_UNEXPECTED);
   JSAutoCompartment ac(cx, compilationGlobal);
 

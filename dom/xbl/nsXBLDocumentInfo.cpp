@@ -566,7 +566,7 @@ void
 AssertInCompilationScope()
 {
   AutoJSContext cx;
-  MOZ_ASSERT(JS_GetClass(JS::CurrentGlobalOrNull(cx)) ==
-             &nsXBLDocGlobalObject::gSharedGlobalClass);
+  // Note - Inverting the order of these operands is a rooting hazard.
+  MOZ_ASSERT(xpc::GetCompilationScope() == JS::CurrentGlobalOrNull(cx));
 }
 #endif
