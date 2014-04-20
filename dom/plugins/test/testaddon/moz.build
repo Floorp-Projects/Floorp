@@ -3,12 +3,3 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-DIRS += ['testplugin', 'testaddon']
-
-XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'cocoa', 'windows'):
-    MOCHITEST_MANIFESTS += ['mochitest/mochitest.ini']
-    MOCHITEST_CHROME_MANIFESTS += ['mochitest/chrome.ini']
-

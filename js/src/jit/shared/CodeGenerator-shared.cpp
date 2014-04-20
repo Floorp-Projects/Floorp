@@ -1007,6 +1007,74 @@ CodeGeneratorShared::addCacheLocations(const CacheLocationList &locs, size_t *nu
     return firstIndex;
 }
 
+ReciprocalMulConstants
+CodeGeneratorShared::computeDivisionConstants(int d) {
+    // In what follows, d is positive and is not a power of 2.
+    JS_ASSERT(d > 0 && (d & (d - 1)) != 0);
+
+    // Speeding up division by non power-of-2 constants is possible by
+    // calculating, during compilation, a value M such that high-order
+    // bits of M*n correspond to the result of the division. Formally,
+    // we compute values 0 <= M < 2^32 and 0 <= s < 31 such that
+    //         (M * n) >> (32 + s) = floor(n/d)    if n >= 0
+    //         (M * n) >> (32 + s) = ceil(n/d) - 1 if n < 0.
+    // The original presentation of this technique appears in Hacker's
+    // Delight, a book by Henry S. Warren, Jr.. A proof of correctness
+    // for our version follows.
+
+    // Define p = 32 + s, M = ceil(2^p/d), and assume that s satisfies
+    //                     M - 2^p/d <= 2^(s+1)/d.                 (1)
+    // (Observe that s = FloorLog32(d) satisfies this, because in this
+    // case d <= 2^(s+1) and so the RHS of (1) is at least one). Then,
+    //
+    // a) If s <= FloorLog32(d), then M <= 2^32 - 1.
+    // Proof: Indeed, M is monotone in s and, for s = FloorLog32(d),
+    // the inequalities 2^31 > d >= 2^s + 1 readily imply
+    //    2^p / d  = 2^p/(d - 1) * (d - 1)/d
+    //            <= 2^32 * (1 - 1/d) < 2 * (2^31 - 1) = 2^32 - 2.
+    // The claim follows by applying the ceiling function.
+    //
+    // b) For any 0 <= n < 2^31, floor(Mn/2^p) = floor(n/d).
+    // Proof: Put x = floor(Mn/2^p); it's the unique integer for which
+    //                    Mn/2^p - 1 < x <= Mn/2^p.                (2)
+    // Using M >= 2^p/d on the LHS and (1) on the RHS, we get
+    //           n/d - 1 < x <= n/d + n/(2^31 d) < n/d + 1/d.
+    // Since x is an integer, it's not in the interval (n/d, (n+1)/d),
+    // and so n/d - 1 < x <= n/d, which implies x = floor(n/d).
+    //
+    // c) For any -2^31 <= n < 0, floor(Mn/2^p) + 1 = ceil(n/d).
+    // Proof: The proof is similar. Equation (2) holds as above. Using
+    // M > 2^p/d (d isn't a power of 2) on the RHS and (1) on the LHS,
+    //                 n/d + n/(2^31 d) - 1 < x < n/d.
+    // Using n >= -2^31 and summing 1,
+    //                  n/d - 1/d < x + 1 < n/d + 1.
+    // Since x + 1 is an integer, this implies n/d <= x + 1 < n/d + 1.
+    // In other words, x + 1 = ceil(n/d).
+    //
+    // Condition (1) isn't necessary for the existence of M and s with
+    // the properties above. Hacker's Delight provides a slightly less
+    // restrictive condition when d >= 196611, at the cost of a 3-page
+    // proof of correctness.
+
+    // Note that, since d*M - 2^p = d - (2^p)%d, (1) can be written as
+    //                   2^(s+1) >= d - (2^p)%d.
+    // We now compute the least s with this property...
+
+    int32_t shift = 0;
+    while ((int64_t(1) << (shift+1)) + (int64_t(1) << (shift+32)) % d < d)
+        shift++;
+
+    // ...and the corresponding M. This may not fit in a signed 32-bit
+    // integer; we will compute (M - 2^32) * n + (2^32 * n) instead of
+    // M * n if this is the case (cf. item (a) above).
+    ReciprocalMulConstants rmc;
+    rmc.multiplier = int32_t((int64_t(1) << (shift+32))/d + 1);
+    rmc.shift_amount = shift;
+
+    return rmc;
+}
+
+
 #ifdef JS_TRACE_LOGGING
 
 bool
