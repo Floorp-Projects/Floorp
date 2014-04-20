@@ -38,6 +38,8 @@ public class BrowserContractHelpers extends BrowserContract {
   public static final Uri DELETED_PASSWORDS_CONTENT_URI    = withSyncAndDeletedAndProfile(DeletedPasswords.CONTENT_URI);
   public static final Uri FORM_HISTORY_CONTENT_URI         = withSyncAndProfile(FormHistory.CONTENT_URI);
   public static final Uri DELETED_FORM_HISTORY_CONTENT_URI = withSyncAndProfile(DeletedFormHistory.CONTENT_URI);
+  public static final Uri TABS_CONTENT_URI                 = withSyncAndProfile(Tabs.CONTENT_URI);
+  public static final Uri CLIENTS_CONTENT_URI              = withSyncAndProfile(Clients.CONTENT_URI);
 
   public static final String[] PasswordColumns = new String[] {
     Passwords.ID,
