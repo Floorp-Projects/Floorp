@@ -783,7 +783,7 @@ InplaceEditor.prototype = {
   _onBlur: function InplaceEditor_onBlur(aEvent, aDoNotClear)
   {
     if (aEvent && this.popup && this.popup.isOpen &&
-        this.contentType == CONTENT_TYPES.CSS_MIXED) {
+        this.popup.selectedIndex >= 0) {
       let label, preLabel;
       if (this._selectedIndex === undefined) {
         ({label, preLabel}) = this.popup.getItemAtIndex(this.popup.selectedIndex);
@@ -819,6 +819,11 @@ InplaceEditor.prototype = {
       };
       this.popup._panel.addEventListener("popuphidden", onPopupHidden);
       this.popup.hidePopup();
+      // Content type other than CSS_MIXED is used in rule-view where the values
+      // are live previewed. So we apply the value before returning.
+      if (this.contentType != CONTENT_TYPES.CSS_MIXED) {
+        this._apply();
+      }
       return;
     }
     this._apply();

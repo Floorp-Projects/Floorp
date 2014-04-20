@@ -152,6 +152,15 @@ FormAutoCompleteResult.prototype = {
   },
 
   /**
+   * Retrieves a result
+   * @param  index    the index of the result requested
+   * @return          the result at the specified index
+   */
+  getFinalCompleteValueAt: function(index) {
+    return this.getValueAt(index);
+  },
+
+  /**
    * Removes a result from the resultset
    * @param  index    the index of the result to remove
    */

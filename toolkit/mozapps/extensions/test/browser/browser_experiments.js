@@ -10,6 +10,8 @@ let gCategoryUtilities;
 let gExperiments;
 let gHttpServer;
 
+let gSavedManifestURI;
+
 function getExperimentAddons() {
   let deferred = Promise.defer();
   AddonManager.getAddonsByTypes(["experiment"], (addons) => {
@@ -23,8 +25,16 @@ add_task(function* initializeState() {
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
   registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("experiments.enabled");
     if (gHttpServer) {
       gHttpServer.stop(() => {});
+      Services.prefs.clearUserPref("experiments.manifest.cert.checkAttributes");
+      if (gSavedManifestURI !== undefined) {
+        Services.prefs.setCharPref("experments.manifest.uri", gSavedManifestURI);
+      }
+    }
+    if (gExperiments) {
+      gExperiments._policy.ignoreHashes = false;
     }
   });
 
@@ -167,24 +177,6 @@ add_task(function* testCleanup() {
   Assert.equal(addons.length, 0, "No experiment add-ons are installed.");
 });
 
-// We need to initialize the experiments service for the following tests.
-add_task(function* initializeExperiments() {
-  if (!gExperiments) {
-    return;
-  }
-
-  // We need to remove the cache file to help ensure consistent state.
-  yield OS.File.remove(gExperiments._cacheFilePath);
-
-  info("Initializing experiments service.");
-  yield gExperiments.init();
-  info("Experiments service finished first run.");
-
-  // Check conditions, just to be sure.
-  let experiments = yield gExperiments.getExperiments();
-  Assert.equal(experiments.length, 0, "No experiments known to the service.");
-});
-
 // The following tests should ideally live in browser/experiments/. However,
 // they rely on some of the helper functions from head.js, which can't easily
 // be consumed from other directories. So, they live here.
@@ -220,15 +212,24 @@ add_task(function* testActivateExperiment() {
   });
 
   Services.prefs.setBoolPref("experiments.manifest.cert.checkAttributes", false);
+  gSavedManifestURI = Services.prefs.getCharPref("experiments.manifest.uri");
   Services.prefs.setCharPref("experiments.manifest.uri", root + "manifest");
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("experiments.manifest.cert.checkAttributes");
-    Services.prefs.clearUserPref("experiments.manifest.uri");
-  });
+
+  // We need to remove the cache file to help ensure consistent state.
+  yield OS.File.remove(gExperiments._cacheFilePath);
+
+  Services.prefs.setBoolPref("experiments.enabled", true);
+
+  info("Initializing experiments service.");
+  yield gExperiments.init();
+  info("Experiments service finished first run.");
+
+  // Check conditions, just to be sure.
+  let experiments = yield gExperiments.getExperiments();
+  Assert.equal(experiments.length, 0, "No experiments known to the service.");
 
   // This makes testing easier.
   gExperiments._policy.ignoreHashes = true;
-  registerCleanupFunction(() => { gExperiments._policy.ignoreHashes = false; });
 
   info("Manually updating experiments manifest.");
   yield gExperiments.updateManifest();
@@ -269,6 +270,10 @@ add_task(function testDeactivateExperiment() {
 
 add_task(function* testCleanup() {
   if (gExperiments) {
+    Services.prefs.clearUserPref("experiments.enabled");
+    Services.prefs.clearUserPref("experiments.manifest.cert.checkAttributes");
+    Services.prefs.setCharPref("experiments.manifest.uri", gSavedManifestURI);
+
     // We perform the uninit/init cycle to purge any leftover state.
     yield OS.File.remove(gExperiments._cacheFilePath);
     yield gExperiments.uninit();

@@ -51,8 +51,7 @@ user_pref("toolkit.telemetry.notifiedOptOut", 999);
 user_pref("font.size.inflation.emPerLine", 0);
 user_pref("font.size.inflation.minTwips", 0);
 
-// AddonManager tests require that the experiments feature be enabled.
-user_pref("experiments.enabled", true);
+// AddonManager tests require that the experiments provider be present.
 user_pref("experiments.supported", true);
 user_pref("experiments.logging.level", "Trace");
 // Point the manifest at something local so we don't risk it hitting production

@@ -8,7 +8,7 @@ function runTests() {
   // Remember if the click handler was triggered
   let cell = getCell(0);
   let clicked = false;
-  cell.site._onClick = e => {
+  cell.site.onClick = e => {
     clicked = true;
     executeSoon(TestRunner.next);
   };
