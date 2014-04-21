@@ -44,8 +44,6 @@ private:
   bundleCacheEntry_t *insertIntoCache(nsIStringBundle *aBundle,
                                       nsCStringKey *aHashKey);
 
-  static void recycleEntry(bundleCacheEntry_t*);
-
   nsHashtable mBundleMap;
   mozilla::LinkedList<bundleCacheEntry_t> mBundleCache;
 

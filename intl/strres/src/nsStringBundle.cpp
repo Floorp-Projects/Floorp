@@ -489,8 +489,7 @@ nsresult nsExtensibleStringBundle::GetSimpleEnumeration(nsISimpleEnumerator ** a
 
 struct bundleCacheEntry_t : public LinkedListElement<bundleCacheEntry_t> {
   nsAutoPtr<nsCStringKey> mHashKey;
-  // do not use a nsCOMPtr - this is a struct not a class!
-  nsIStringBundle* mBundle;
+  nsCOMPtr<nsIStringBundle> mBundle;
 };
 
 
@@ -561,9 +560,7 @@ nsStringBundleService::flushBundleCache()
   mBundleMap.Reset();
 
   while (!mBundleCache.isEmpty()) {
-    bundleCacheEntry_t *cacheEntry = mBundleCache.popFirst();
-    recycleEntry(cacheEntry);
-    delete cacheEntry;
+    delete mBundleCache.popFirst();
   }
 }
 
@@ -637,28 +634,17 @@ nsStringBundleService::insertIntoCache(nsIStringBundle* aBundle,
 #endif
     mBundleMap.Remove(cacheEntry->mHashKey);
     cacheEntry->remove();
-
-    // free up excess memory
-    recycleEntry(cacheEntry);
   }
 
   // at this point we have a new cacheEntry that doesn't exist
   // in the hashtable, so set up the cacheEntry
-  cacheEntry->mBundle = aBundle;
-  NS_ADDREF(cacheEntry->mBundle);
-
   cacheEntry->mHashKey = (nsCStringKey*)aHashKey->Clone();
+  cacheEntry->mBundle = aBundle;
 
   // insert the entry into the cache and map, make it the MRU
   mBundleMap.Put(cacheEntry->mHashKey, cacheEntry);
 
   return cacheEntry;
-}
-
-void
-nsStringBundleService::recycleEntry(bundleCacheEntry_t *aEntry)
-{
-  NS_RELEASE(aEntry->mBundle);
 }
 
 NS_IMETHODIMP
