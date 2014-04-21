@@ -6,8 +6,6 @@
 #ifndef nsStringBundleService_h__
 #define nsStringBundleService_h__
 
-#include "plarena.h"
-
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
 #include "nsIPersistentProperties2.h"
@@ -50,7 +48,6 @@ private:
 
   nsHashtable mBundleMap;
   mozilla::LinkedList<bundleCacheEntry_t> mBundleCache;
-  PLArenaPool mCacheEntryPool;
 
   nsCOMPtr<nsIErrorService>     mErrorService;
   nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
