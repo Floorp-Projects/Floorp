@@ -79,6 +79,10 @@ public class BrowserSearch extends HomeFragment
     // for an autocomplete result
     private static final int MAX_AUTOCOMPLETE_SEARCH = 20;
 
+    // Length of https:// + 1 required to make autocomplete
+    // fill in the domain, for both http:// and https://
+    private static final int HTTPS_PREFIX_LENGTH = 9;
+
     // Duration for fade-in animation
     private static final int ANIMATION_DURATION = 250;
 
@@ -418,7 +422,8 @@ public class BrowserSearch extends HomeFragment
             // Does the completion match against the whole URL? This will match
             // about: pages, as well as user input including "http://...".
             if (url.startsWith(searchTerm)) {
-                return uriSubstringUpToMatchedPath(url, 0, searchLength);
+                return uriSubstringUpToMatchedPath(url, 0,
+                        (searchLength > HTTPS_PREFIX_LENGTH) ? searchLength : HTTPS_PREFIX_LENGTH);
             }
 
             final Uri uri = Uri.parse(url);
