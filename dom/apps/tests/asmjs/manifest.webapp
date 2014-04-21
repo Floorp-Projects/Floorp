@@ -1,0 +1,13 @@
+{
+  "name" : "Asm.js test app",
+  "version" : "VERSIONTOKEN",
+  "package_path": "asmjs_app.sjs?getPackage=true",
+  "description": "Asm.js test app",
+  "launch_path": "/index.html",
+  "developer": {
+    "name": "marco",
+    "url": "http://www.example.com/"
+  },
+  "default_locale": "en-US",
+  "precompile": PRECOMPILETOKEN
+}
