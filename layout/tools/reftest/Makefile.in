@@ -36,6 +36,7 @@ _HARNESS_FILES = \
   $(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanagerSUT.py \
   $(topsrcdir)/testing/mozbase/mozdevice/mozdevice/droid.py \
   $(topsrcdir)/testing/mozbase/mozdevice/mozdevice/Zeroconf.py \
+  $(topsrcdir)/testing/mozbase/moznetwork/moznetwork/moznetwork.py \
   $(topsrcdir)/build/mobile/b2gautomation.py \
   $(topsrcdir)/build/automationutils.py \
   $(topsrcdir)/build/mobile/remoteautomation.py \

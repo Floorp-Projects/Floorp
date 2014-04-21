@@ -16,6 +16,7 @@ from runreftest import ReftestOptions
 from automation import Automation
 import devicemanager
 import droid
+import moznetwork
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
 
 class RemoteOptions(ReftestOptions):
@@ -53,7 +54,7 @@ class RemoteOptions(ReftestOptions):
         self.add_option("--remote-webserver", action="store",
                     type = "string", dest = "remoteWebServer",
                     help = "IP Address of the webserver hosting the reftest content")
-        defaults["remoteWebServer"] = automation.getLanIp()
+        defaults["remoteWebServer"] = moznetwork.get_ip()
 
         self.add_option("--http-port", action = "store",
                     type = "string", dest = "httpPort",
