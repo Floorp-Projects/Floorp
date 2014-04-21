@@ -116,13 +116,6 @@ nsStringBundle::GetStringFromID(int32_t aID, nsAString& aResult)
 
   rv = mProps->GetStringProperty(name, aResult);
 
-#ifdef DEBUG_tao_
-  char *s = ToNewCString(aResult);
-  printf("\n** GetStringFromID: aResult=%s, len=%d\n", s?s:"null",
-         aResult.Length());
-  if (s) nsMemory::Free(s);
-#endif /* DEBUG_tao_ */
-
   return rv;
 }
 
@@ -141,14 +134,6 @@ nsStringBundle::GetStringFromName(const nsAString& aName,
   }
 
   rv = mProps->GetStringProperty(NS_ConvertUTF16toUTF8(aName), aResult);
-#ifdef DEBUG_tao_
-  char *s = ToNewCString(aResult),
-       *ss = ToNewCString(aName);
-  printf("\n** GetStringFromName: aName=%s, aResult=%s, len=%d\n",
-         ss?ss:"null", s?s:"null", aResult.Length());
-  if (s)  nsMemory::Free(s);
-  if (ss) nsMemory::Free(ss);
-#endif /* DEBUG_tao_ */
   return rv;
 }
 
@@ -496,10 +481,6 @@ struct bundleCacheEntry_t : public LinkedListElement<bundleCacheEntry_t> {
 nsStringBundleService::nsStringBundleService() :
   mBundleMap(MAX_CACHED_BUNDLES, true)
 {
-#ifdef DEBUG_tao_
-  printf("\n++ nsStringBundleService::nsStringBundleService ++\n");
-#endif
-
   mErrorService = do_GetService(kErrorServiceCID);
   NS_ASSERTION(mErrorService, "Couldn't get error service");
 }
@@ -622,11 +603,6 @@ nsStringBundleService::insertIntoCache(already_AddRefed<nsIStringBundle> aBundle
     // remove it from the hash table and linked list
     NS_ASSERTION(mBundleMap.Exists(cacheEntry->mHashKey),
                  "Element will not be removed!");
-#ifdef DEBUG_alecf
-    NS_WARNING(nsPrintfCString("Booting %s to make room for %s\n",
-                               cacheEntry->mHashKey->GetString(),
-                               aHashKey->GetString()).get());
-#endif
     mBundleMap.Remove(cacheEntry->mHashKey);
     cacheEntry->remove();
   }
@@ -646,11 +622,6 @@ NS_IMETHODIMP
 nsStringBundleService::CreateBundle(const char* aURLSpec,
                                     nsIStringBundle** aResult)
 {
-#ifdef DEBUG_tao_
-  printf("\n++ nsStringBundleService::CreateBundle ++\n");
-  printf("\n** nsStringBundleService::CreateBundle: %s\n", aURLSpec ? aURLSpec : "null");
-#endif
-
   return getStringBundle(aURLSpec,aResult);
 }
 
