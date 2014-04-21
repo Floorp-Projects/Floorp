@@ -75,19 +75,19 @@ SubBufferDecoder::SetMediaDuration(int64_t aDuration)
 void
 SubBufferDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
 {
-  mParentDecoder->UpdateEstimatedMediaDuration(aDuration);
+  //mParentDecoder->UpdateEstimatedMediaDuration(aDuration);
 }
 
 void
 SubBufferDecoder::SetMediaSeekable(bool aMediaSeekable)
 {
-  mParentDecoder->SetMediaSeekable(aMediaSeekable);
+  //mParentDecoder->SetMediaSeekable(aMediaSeekable);
 }
 
 void
 SubBufferDecoder::SetTransportSeekable(bool aTransportSeekable)
 {
-  mParentDecoder->SetTransportSeekable(aTransportSeekable);
+  //mParentDecoder->SetTransportSeekable(aTransportSeekable);
 }
 
 layers::ImageContainer*
