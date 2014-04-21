@@ -13,7 +13,6 @@ import time
 import traceback
 
 from automation import Automation
-from devicemanager import NetworkTools
 from mozprocess import ProcessHandlerMixin
 
 
@@ -128,10 +127,6 @@ class B2GRemoteAutomation(Automation):
         cmd, args = Automation.buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs)
 
         return app, args
-
-    def getLanIp(self):
-        nettools = NetworkTools()
-        return nettools.getLanIp()
 
     def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime,
                       debuggerInfo, symbolsPath):

@@ -10,7 +10,7 @@ import shutil
 import subprocess
 
 from automation import Automation
-from devicemanager import NetworkTools, DMError
+from devicemanager import DMError
 import mozcrash
 
 # signatures for logcat messages that we don't care about much
@@ -174,10 +174,6 @@ class RemoteAutomation(Automation):
 #TODO: figure out which platform require NO_EM_RESTART
 #        return app, ['--environ:NO_EM_RESTART=1'] + args
         return app, args
-
-    def getLanIp(self):
-        nettools = NetworkTools()
-        return nettools.getLanIp()
 
     def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = None):
         if stdout == None or stdout == -1 or stdout == subprocess.PIPE:
