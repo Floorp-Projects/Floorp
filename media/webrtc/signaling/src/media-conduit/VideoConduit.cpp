@@ -125,6 +125,7 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
     mPtrViENetwork = nullptr;
     mPtrViERender = nullptr;
     mPtrRTP = nullptr;
+    mPtrExtCodec = nullptr;
 
     // only one opener can call Delete.  Have it be the last to close.
     if(mVideoEngine)
@@ -281,6 +282,13 @@ MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
   if( !(mPtrRTP = webrtc::ViERTP_RTCP::GetInterface(mVideoEngine)))
   {
     CSFLogError(logTag, "%s Unable to get video RTCP interface ", __FUNCTION__);
+    return kMediaConduitSessionNotInited;
+  }
+
+  if ( !(mPtrExtCodec = webrtc::ViEExternalCodec::GetInterface(mVideoEngine)))
+  {
+    CSFLogError(logTag, "%s Unable to get external codec interface %d ",
+                __FUNCTION__, mPtrViEBase->LastError());
     return kMediaConduitSessionNotInited;
   }
 
@@ -842,6 +850,25 @@ WebrtcVideoConduit::SelectSendResolution(unsigned short width,
     } // else no change; mSendingWidth likely was 0
   }
   return true;
+}
+
+MediaConduitErrorCode
+WebrtcVideoConduit::SetExternalSendCodec(int pltype,
+                                         VideoEncoder* encoder) {
+  int ret = mPtrExtCodec->RegisterExternalSendCodec(mChannel,
+                                                    pltype,
+                                                    static_cast<WebrtcVideoEncoder*>(encoder),
+                                                    false);
+  return ret ? kMediaConduitInvalidSendCodec : kMediaConduitNoError;
+}
+
+MediaConduitErrorCode
+WebrtcVideoConduit::SetExternalRecvCodec(int pltype,
+                                         VideoDecoder* decoder) {
+  int ret = mPtrExtCodec->RegisterExternalReceiveCodec(mChannel,
+                                                       pltype,
+                                                       static_cast<WebrtcVideoDecoder*>(decoder));
+  return ret ? kMediaConduitInvalidReceiveCodec : kMediaConduitNoError;
 }
 
 MediaConduitErrorCode
