@@ -80,7 +80,9 @@ public:
     }
     MSE_DEBUG("%p MSR::DecodeVF %d (%p) returned false (readers=%u)",
               this, mActiveVideoReader, mVideoReaders[mActiveVideoReader], mVideoReaders.Length());
-
+    if (SwitchVideoReaders(aTimeThreshold)) {
+      return mVideoReaders[mActiveVideoReader]->DecodeVideoFrame(aKeyFrameSkip, aTimeThreshold);
+    }
     return false;
   }
 
@@ -148,6 +150,28 @@ public:
                                                       MediaSourceDecoder* aParentDecoder);
 
 private:
+  bool SwitchVideoReaders(int64_t aTimeThreshold) {
+    MOZ_ASSERT(mActiveVideoReader != -1);
+    // XXX: We switch when the first reader is depleted, but it might be
+    // better to switch as soon as the next reader is ready to decode and
+    // has data for the current media time.
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
+    WaitForPendingDecoders();
+
+    if (mVideoReaders.Length() > uint32_t(mActiveVideoReader + 1)) {
+      mActiveVideoReader += 1;
+      MSE_DEBUG("%p MSR::DecodeVF switching to %d", this, mActiveVideoReader);
+
+      MOZ_ASSERT(mVideoReaders[mActiveVideoReader]->GetMediaInfo().HasVideo());
+      mVideoReaders[mActiveVideoReader]->SetActive();
+      mVideoReaders[mActiveVideoReader]->DecodeToTarget(aTimeThreshold);
+
+      return true;
+    }
+    return false;
+  }
+
   bool EnsureWorkQueueInitialized();
   nsresult EnqueueDecoderInitialization();
   void CallDecoderInitialization();
