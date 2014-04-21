@@ -34,20 +34,20 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTRINGBUNDLESERVICE
   NS_DECL_NSIOBSERVER
-    
+
 private:
   nsresult getStringBundle(const char *aUrl, nsIStringBundle** aResult);
-  nsresult FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus, 
+  nsresult FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus,
                             uint32_t argCount, char16_t** argArray,
                             char16_t* *result);
 
   void flushBundleCache();
-  
+
   bundleCacheEntry_t *insertIntoCache(nsIStringBundle *aBundle,
                                       nsCStringKey *aHashKey);
 
   static void recycleEntry(bundleCacheEntry_t*);
-  
+
   nsHashtable mBundleMap;
   mozilla::LinkedList<bundleCacheEntry_t> mBundleCache;
   PLArenaPool mCacheEntryPool;
