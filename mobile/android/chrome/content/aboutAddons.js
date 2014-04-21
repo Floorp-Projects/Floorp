@@ -23,8 +23,6 @@ XPCOMUtils.defineLazyGetter(window, "gChromeWin", function()
     .getInterface(Ci.nsIDOMWindow)
     .QueryInterface(Ci.nsIDOMChromeWindow));
 
-XPCOMUtils.defineLazyGetter(window, "SelectHelper", function() gChromeWin.SelectHelper);
-
 var ContextMenus = {
   target: null,
 
@@ -158,11 +156,6 @@ var Addons = {
     let details = document.createElement("div");
     details.className = "details";
     inner.appendChild(details);
-
-    let tagPart = document.createElement("div");
-    tagPart.textContent = gStringBundle.GetStringFromName("addonType." + aAddon.type);
-    tagPart.className = "tag";
-    details.appendChild(tagPart);
 
     let titlePart = document.createElement("div");
     titlePart.textContent = aAddon.name;
@@ -308,7 +301,6 @@ var Addons = {
 
     detailItem.querySelector(".title").textContent = addon.name;
     detailItem.querySelector(".version").textContent = addon.version;
-    detailItem.querySelector(".tag").textContent = gStringBundle.GetStringFromName("addonType." + addon.type);
     detailItem.querySelector(".description-full").textContent = addon.description;
     detailItem.querySelector(".status-uninstalled").textContent =
       gStringBundle.formatStringFromName("addonStatus.uninstalled", [addon.name], 1);
