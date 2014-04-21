@@ -501,13 +501,8 @@ nsStringBundleService::nsStringBundleService() :
   printf("\n++ nsStringBundleService::nsStringBundleService ++\n");
 #endif
 
-  PL_InitArenaPool(&mCacheEntryPool, "srEntries",
-                   sizeof(bundleCacheEntry_t)*MAX_CACHED_BUNDLES,
-                   sizeof(bundleCacheEntry_t));
-
   mErrorService = do_GetService(kErrorServiceCID);
   NS_ASSERTION(mErrorService, "Couldn't get error service");
-
 }
 
 NS_IMPL_ISUPPORTS3(nsStringBundleService,
@@ -518,7 +513,6 @@ NS_IMPL_ISUPPORTS3(nsStringBundleService,
 nsStringBundleService::~nsStringBundleService()
 {
   flushBundleCache();
-  PL_FinishArenaPool(&mCacheEntryPool);
 }
 
 nsresult
@@ -568,10 +562,9 @@ nsStringBundleService::flushBundleCache()
 
   while (!mBundleCache.isEmpty()) {
     bundleCacheEntry_t *cacheEntry = mBundleCache.popFirst();
-
     recycleEntry(cacheEntry);
+    delete cacheEntry;
   }
-  PL_FreeArenaPool(&mCacheEntryPool);
 }
 
 NS_IMETHODIMP
@@ -628,11 +621,7 @@ nsStringBundleService::insertIntoCache(nsIStringBundle* aBundle,
 
   if (mBundleMap.Count() < MAX_CACHED_BUNDLES) {
     // cache not full - create a new entry
-
-    void *cacheEntryArena;
-    PL_ARENA_ALLOCATE(cacheEntryArena, &mCacheEntryPool, sizeof(bundleCacheEntry_t));
-    cacheEntry = new (cacheEntryArena) bundleCacheEntry_t();
-
+    cacheEntry = new bundleCacheEntry_t();
   } else {
     // cache is full
     // take the last entry in the list, and recycle it.
