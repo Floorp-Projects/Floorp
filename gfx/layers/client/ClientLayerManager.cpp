@@ -164,6 +164,7 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   // If this is a new paint, increment the paint sequence number.
   if (!mIsRepeatTransaction) {
     ++mPaintSequenceNumber;
+    mApzTestData.StartNewPaint(mPaintSequenceNumber);
   }
 }
 
