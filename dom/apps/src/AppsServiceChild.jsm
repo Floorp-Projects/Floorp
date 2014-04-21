@@ -96,7 +96,7 @@ this.DOMApplicationRegistry = {
       return null;
     }
 
-    return AppsUtils.cloneAsMozIApplication(app);
+    return new mozIApplication(app);
   },
 
   getManifestURLByLocalId: function getManifestURLByLocalId(aLocalId) {
