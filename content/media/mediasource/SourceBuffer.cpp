@@ -112,6 +112,38 @@ SubBufferDecoder::ConvertToByteOffset(double aTime)
   return offset;
 }
 
+class ContainerParser {
+public:
+  virtual ~ContainerParser() {}
+
+  virtual bool IsInitSegmentPresent(const uint8_t* aData, uint32_t aLength)
+  {
+    return false;
+  }
+};
+
+class WebMContainerParser : public ContainerParser {
+public:
+  bool IsInitSegmentPresent(const uint8_t* aData, uint32_t aLength)
+  {
+    // XXX: This is overly primitive, needs to collect data as it's appended
+    // to the SB and handle, rather than assuming everything is present in a
+    // single aData segment.
+    // 0x1a45dfa3 // EBML
+    // ...
+    // DocType == "webm"
+    // ...
+    // 0x18538067 // Segment (must be "unknown" size)
+    // 0x1549a966 // -> Segment Info
+    // 0x1654ae6b // -> One or more Tracks
+    if (aLength >= 4 &&
+        aData[0] == 0x1a && aData[1] == 0x45 && aData[2] == 0xdf && aData[3] == 0xa3) {
+      return true;
+    }
+    return false;
+  }
+};
+
 namespace dom {
 
 void
@@ -232,10 +264,10 @@ SourceBuffer::Abort(ErrorResult& aRv)
   mAppendWindowStart = 0;
   mAppendWindowEnd = PositiveInfinity<double>();
 
-  MSE_DEBUG("%p Abort: Switching decoders.", this);
-  mCurrentDecoder->GetResource()->Ended();
-  if (!InitNewDecoder()) {
-    aRv.Throw(NS_ERROR_FAILURE); // XXX: Review error handling.
+  MSE_DEBUG("%p Abort: Discarding decoders.", this);
+  if (mCurrentDecoder) {
+    mCurrentDecoder->GetResource()->Ended();
+    mCurrentDecoder = nullptr;
   }
 }
 
@@ -286,6 +318,19 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   , mUpdating(false)
 {
   MOZ_ASSERT(aMediaSource);
+  if (mType.EqualsIgnoreCase("video/webm") || mType.EqualsIgnoreCase("audio/webm")) {
+    mParser = new WebMContainerParser();
+  } else {
+    // XXX: Plug in parsers for MPEG4, etc. here.
+    mParser = new ContainerParser();
+  }
+}
+
+already_AddRefed<SourceBuffer>
+SourceBuffer::Create(MediaSource* aMediaSource, const nsACString& aType)
+{
+  nsRefPtr<SourceBuffer> sourceBuffer = new SourceBuffer(aMediaSource, aType);
+  return sourceBuffer.forget();
 }
 
 SourceBuffer::~SourceBuffer()
@@ -378,11 +423,21 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   // TODO: Run coded frame eviction algorithm.
   // TODO: Test buffer full flag.
   StartUpdating();
+  // TODO: Run buffer append algorithm asynchronously (would call StopUpdating()).
+  if (mParser->IsInitSegmentPresent(aData, aLength) || !mCurrentDecoder) {
+    MSE_DEBUG("%p AppendBuffer: New initialization segment, switching decoders.", this);
+    if (mCurrentDecoder) {
+      mCurrentDecoder->GetResource()->Ended();
+    }
+    if (!InitNewDecoder()) {
+      aRv.Throw(NS_ERROR_FAILURE); // XXX: Review error handling.
+      return;
+    }
+  }
   // XXX: For future reference: NDA call must run on the main thread.
   mCurrentDecoder->NotifyDataArrived(reinterpret_cast<const char*>(aData),
                                      aLength,
                                      mCurrentDecoder->GetResource()->GetLength());
-  // TODO: Run buffer append algorithm asynchronously (would call StopUpdating()).
   mCurrentDecoder->GetResource()->AppendData(aData, aLength);
 
   // Eviction uses a byte threshold. If the buffer is greater than the

@@ -169,8 +169,8 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
-  nsRefPtr<SourceBuffer> sourceBuffer = new SourceBuffer(this, NS_ConvertUTF16toUTF8(mimeType));
-  if (!sourceBuffer->Init()) {
+  nsRefPtr<SourceBuffer> sourceBuffer = SourceBuffer::Create(this, NS_ConvertUTF16toUTF8(mimeType));
+  if (!sourceBuffer) {
     aRv.Throw(NS_ERROR_FAILURE); // XXX need a better error here
     return nullptr;
   }
