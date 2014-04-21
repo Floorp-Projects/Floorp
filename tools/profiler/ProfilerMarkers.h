@@ -6,8 +6,7 @@
 #ifndef PROFILER_MARKERS_H
 #define PROFILER_MARKERS_H
 
-#include "JSCustomObjectBuilder.h"
-#include "JSObjectBuilder.h"
+#include "JSStreamWriter.h"
 #include "mozilla/TimeStamp.h"
 #include "nsAutoPtr.h"
 
@@ -42,31 +41,21 @@ public:
   /**
    * Called from the main thread
    */
-  template<typename Builder>
-  typename Builder::Object PreparePayload(Builder& b)
-  {
-    return preparePayload(b);
+  void StreamPayload(JSStreamWriter& b) {
+    return streamPayload(b);
   }
 
 protected:
   /**
    * Called from the main thread
    */
-  template<typename Builder>
-  void prepareCommonProps(const char* aMarkerType, Builder& aBuilder,
-                          typename Builder::ObjectHandle aObject);
+  void streamCommonProps(const char* aMarkerType, JSStreamWriter& b);
 
   /**
    * Called from the main thread
    */
-  virtual JSCustomObjectBuilder::Object
-  preparePayload(JSCustomObjectBuilder& b) = 0;
-
-  /**
-   * Called from the main thread
-   */
-  virtual JSObjectBuilder::Object
-  preparePayload(JSObjectBuilder& b) = 0;
+  virtual void
+  streamPayload(JSStreamWriter& b) = 0;
 
 private:
   mozilla::TimeStamp  mStartTime;
@@ -83,14 +72,11 @@ public:
   TracingMetadata GetMetaData() const { return mMetaData; }
 
 protected:
-  virtual JSCustomObjectBuilder::Object
-  preparePayload(JSCustomObjectBuilder& b) { return preparePayloadImp(b); }
-  virtual JSObjectBuilder::Object
-  preparePayload(JSObjectBuilder& b) { return preparePayloadImp(b); }
+  virtual void
+  streamPayload(JSStreamWriter& b) { return streamPayloadImp(b); }
 
 private:
-  template<typename Builder>
-  typename Builder::Object preparePayloadImp(Builder& b);
+  void streamPayloadImp(JSStreamWriter& b);
 
 private:
   const char *mCategory;
@@ -105,14 +91,11 @@ public:
   ProfilerMarkerImagePayload(gfxASurface *aImg);
 
 protected:
-  virtual JSCustomObjectBuilder::Object
-  preparePayload(JSCustomObjectBuilder& b) { return preparePayloadImp(b); }
-  virtual JSObjectBuilder::Object
-  preparePayload(JSObjectBuilder& b) { return preparePayloadImp(b); }
+  virtual void
+  streamPayload(JSStreamWriter& b) { return streamPayloadImp(b); }
 
 private:
-  template<typename Builder>
-  typename Builder::Object preparePayloadImp(Builder& b);
+  void streamPayloadImp(JSStreamWriter& b);
 
   nsRefPtr<gfxASurface> mImg;
 };
@@ -126,14 +109,11 @@ public:
   ~IOMarkerPayload();
 
 protected:
-  virtual JSCustomObjectBuilder::Object
-  preparePayload(JSCustomObjectBuilder& b) { return preparePayloadImp(b); }
-  virtual JSObjectBuilder::Object
-  preparePayload(JSObjectBuilder& b) { return preparePayloadImp(b); }
+  virtual void
+  streamPayload(JSStreamWriter& b) { return streamPayloadImp(b); }
 
 private:
-  template<typename Builder>
-  typename Builder::Object preparePayloadImp(Builder& b);
+  void streamPayloadImp(JSStreamWriter& b);
 
   const char* mSource;
   char* mFilename;
