@@ -573,65 +573,6 @@ class DeviceManager(object):
 
         return " ".join(quotedCmd)
 
-
-class NetworkTools:
-    def __init__(self):
-        pass
-
-    # Utilities to get the local ip address
-    def getInterfaceIp(self, ifname):
-        if os.name != "nt":
-            import fcntl
-            import struct
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            return socket.inet_ntoa(fcntl.ioctl(
-                                    s.fileno(),
-                                    0x8915,  # SIOCGIFADDR
-                                    struct.pack('256s', ifname[:15])
-                                    )[20:24])
-        else:
-            return None
-
-    def getLanIp(self):
-        try:
-            ip = socket.gethostbyname(socket.gethostname())
-        except socket.gaierror:
-            ip = socket.gethostbyname(socket.gethostname() + ".local") # for Mac OS X
-        if (ip is None or ip.startswith("127.")) and os.name != "nt":
-            interfaces = ["eth0","eth1","eth2","wlan0","wlan1","wifi0","ath0","ath1","ppp0"]
-            for ifname in interfaces:
-                try:
-                    ip = self.getInterfaceIp(ifname)
-                    break
-                except IOError:
-                    pass
-        return ip
-
-    # Gets an open port starting with the seed by incrementing by 1 each time
-    def findOpenPort(self, ip, seed):
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            connected = False
-            if isinstance(seed, basestring):
-                seed = int(seed)
-            maxportnum = seed + 5000 # We will try at most 5000 ports to find an open one
-            while not connected:
-                try:
-                    s.bind((ip, seed))
-                    connected = True
-                    s.close()
-                    break
-                except:
-                    if seed > maxportnum:
-                        self._logger.error("Automation Error: Could not find open port after checking 5000 ports")
-                        raise
-                seed += 1
-        except:
-            self._logger.error("Automation Error: Socket error trying to find open port")
-
-        return seed
-
 def _pop_last_line(file_obj):
     """
     Utility function to get the last line from a file (shared between ADB and
