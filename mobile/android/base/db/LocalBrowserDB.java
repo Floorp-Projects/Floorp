@@ -691,9 +691,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         // Do this now so that the items still exist!
         bumpParents(cr, Bookmarks.URL, uri);
 
-        // Toggling bookmark on an URL should not affect the items in the reading list
-        final String[] urlArgs = new String[] { uri, String.valueOf(Bookmarks.FIXED_READING_LIST_ID) };
-        final String urlEquals = Bookmarks.URL + " = ? AND " + Bookmarks.PARENT + " != ?";
+        // Toggling bookmark on an URL should not affect the items in the reading list or pinned sites.
+        final String[] urlArgs = new String[] { uri, String.valueOf(Bookmarks.FIXED_READING_LIST_ID), String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID) };
+        final String urlEquals = Bookmarks.URL + " = ? AND " + Bookmarks.PARENT + " != ? AND " + Bookmarks.PARENT + " != ? ";
 
         cr.delete(contentUri, urlEquals, urlArgs);
     }
