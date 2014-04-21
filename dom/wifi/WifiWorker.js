@@ -1831,7 +1831,6 @@ function WifiWorker() {
     WifiManager.getMacAddress(function (mac) {
       self.macAddress = mac;
       debug("Got mac: " + mac);
-      self._ignoreNextWifiEnabledSetting = true;
       self._fireEvent("wifiUp", { macAddress: mac });
       self.requestDone();
     });
@@ -1846,7 +1845,6 @@ function WifiWorker() {
     debug("Supplicant died!");
 
     // Notify everybody, even if they didn't ask us to come up.
-    self._ignoreNextWifiDisabledSetting = true;
     self._fireEvent("wifiDown", {});
     self.requestDone();
   };
@@ -2276,13 +2274,6 @@ WifiWorker.prototype = {
   _wifiTetheringSettingsToRead: [],
 
   _oldWifiTetheringEnabledState: null,
-
-  // 930355: Workaround before bug 930355 is landed.
-  // Current system app will set settings value "wifi.enabled" after receiving
-  // wifi enable/disable event, this will cause infinite loop between gaia
-  // and gecko, so now use this variable to cut the loop.
-  _ignoreNextWifiDisabledSetting: false,
-  _ignoreNextWifiEnabledSetting: false,
 
   tetheringSettings: {},
 
@@ -3231,14 +3222,6 @@ WifiWorker.prototype = {
   handle: function handle(aName, aResult) {
     switch(aName) {
       case SETTINGS_WIFI_ENABLED:
-        if (this._ignoreNextWifiEnabledSetting && aResult) {
-          this._ignoreNextWifiEnabledSetting = false;
-          break;
-        }
-        if (this._ignoreNextWifiDisabledSetting && !aResult) {
-          this._ignoreNextWifiDisabledSetting = false;
-          break;
-        }
         this.handleWifiEnabled(aResult)
         break;
       case SETTINGS_WIFI_DEBUG_ENABLED:
