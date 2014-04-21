@@ -40,6 +40,7 @@ enum AllowedTouchBehavior {
 class Layer;
 class AsyncPanZoomController;
 class CompositorParent;
+class APZPaintLogHelper;
 
 /**
  * ****************** NOTE ON LOCK ORDERING IN APZ **************************
@@ -112,7 +113,7 @@ public:
   void UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                    Layer* aRoot,
                                    bool aIsFirstPaint,
-                                   uint64_t aFirstPaintLayersId,
+                                   uint64_t aOriginatingLayersId,
                                    uint32_t aPaintSequenceNumber);
 
   /**
@@ -335,7 +336,8 @@ private:
                                                       AsyncPanZoomController* aParent,
                                                       AsyncPanZoomController* aNextSibling,
                                                       bool aIsFirstPaint,
-                                                      uint64_t aFirstPaintLayersId,
+                                                      uint64_t aOriginatingLayersId,
+                                                      const APZPaintLogHelper& aPaintLogger,
                                                       nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy);
 
 private:
