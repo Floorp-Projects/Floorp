@@ -21,6 +21,7 @@ class nsHttpRequestHead
 {
 public:
     nsHttpRequestHead();
+    ~nsHttpRequestHead();
 
     void SetMethod(const nsACString &method);
     void SetVersion(nsHttpVersion version) { mVersion = version; }

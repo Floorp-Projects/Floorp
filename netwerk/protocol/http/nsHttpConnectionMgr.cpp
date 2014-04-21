@@ -2469,10 +2469,9 @@ nsHttpConnectionMgr::OnMsgUpdateParam(int32_t, void *param)
 // nsHttpConnectionMgr::nsConnectionEntry
 nsHttpConnectionMgr::nsConnectionEntry::~nsConnectionEntry()
 {
+    MOZ_COUNT_DTOR(nsConnectionEntry);
     if (mSpdyPreferred)
         gHttpHandler->ConnMgr()->RemoveSpdyPreferredEnt(mCoalescingKey);
-
-    NS_RELEASE(mConnInfo);
 }
 
 void
@@ -3255,7 +3254,7 @@ nsConnectionEntry::nsConnectionEntry(nsHttpConnectionInfo *ci)
     , mPreferIPv4(false)
     , mPreferIPv6(false)
 {
-    NS_ADDREF(mConnInfo);
+    MOZ_COUNT_CTOR(nsConnectionEntry);
     if (gHttpHandler->GetPipelineAggressive()) {
         mGreenDepth = kPipelineUnlimited;
         mPipelineState = PS_GREEN;
