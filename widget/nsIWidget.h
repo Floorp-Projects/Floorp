@@ -100,8 +100,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x8e081187, 0xf123, 0x4572, \
-  { 0x82, 0xc6, 0x4c, 0xcd, 0xc2, 0x0e, 0xbd, 0xf9 } }
+{ 0x87d80888, 0x9917, 0x4bfb, \
+  { 0x81, 0xa9, 0x1c, 0x5e, 0x30, 0x9c, 0x78, 0xb4 } }
 
 /*
  * Window shadow styles
@@ -1810,6 +1810,14 @@ public:
      * Get current input context.
      */
     NS_IMETHOD_(InputContext) GetInputContext() = 0;
+
+    /*
+     * Given a WidgetKeyboardEvent, this method synthesizes a corresponding
+     * native (OS-level) event for it. This method allows tests to simulate
+     * keystrokes that trigger native key bindings (which require a native
+     * event).
+     */
+    NS_IMETHOD AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) = 0;
 
     /*
      * Execute native key bindings for aType.
