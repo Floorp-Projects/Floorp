@@ -590,7 +590,6 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
 
     // hasn't been cached, so insert it into the hash table
     nsStringBundle* bundle = new nsStringBundle(aURLSpec, mOverrideStrings);
-    if (!bundle) return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(bundle);
 
     cacheEntry = insertIntoCache(bundle, &completeKey);
@@ -668,7 +667,6 @@ nsStringBundleService::CreateExtensibleBundle(const char* aCategory,
   nsresult res;
 
   nsExtensibleStringBundle * bundle = new nsExtensibleStringBundle();
-  if (!bundle) return NS_ERROR_OUT_OF_MEMORY;
 
   res = bundle->Init(aCategory, this);
   if (NS_FAILED(res)) {
