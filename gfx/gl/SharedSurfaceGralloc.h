@@ -38,6 +38,7 @@ public:
 
 protected:
     GLLibraryEGL* const mEGL;
+    EGLSync mSync;
     RefPtr<layers::ISurfaceAllocator> mAllocator;
     RefPtr<layers::TextureClient> mTextureClient;
     const GLuint mProdTex;
@@ -55,6 +56,7 @@ protected:
                            size,
                            hasAlpha)
         , mEGL(egl)
+        , mSync(0)
         , mAllocator(allocator)
         , mTextureClient(textureClient)
         , mProdTex(prodTex)
