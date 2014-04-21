@@ -32,7 +32,6 @@ class DeviceManagerTestCase(unittest.TestCase):
         self.dm = devicemanagerSUT.DeviceManagerSUT(host=ip, port=port,
                                                     logLevel=log_level)
         self.dmerror = devicemanager.DMError
-        self.nettools = devicemanager.NetworkTools
         self._setUp()
 
 
