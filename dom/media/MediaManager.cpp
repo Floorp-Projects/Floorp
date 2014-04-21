@@ -397,9 +397,15 @@ public:
     mEchoOn(true),
     mAgcOn(false),
     mNoiseOn(true),
+#ifdef MOZ_WEBRTC
     mEcho(webrtc::kEcDefault),
     mAgc(webrtc::kAgcDefault),
     mNoise(webrtc::kNsDefault),
+#else
+    mEcho(0),
+    mAgc(0),
+    mNoise(0),
+#endif
     mPlayoutDelay(20)
   {}
 
@@ -557,9 +563,13 @@ public:
   NS_IMETHOD
   Run()
   {
+#ifdef MOZ_WEBRTC
     int32_t aec = (int32_t) webrtc::kEcUnchanged;
     int32_t agc = (int32_t) webrtc::kAgcUnchanged;
     int32_t noise = (int32_t) webrtc::kNsUnchanged;
+#else
+    int32_t aec = 0, agc = 0, noise = 0;
+#endif
     bool aec_on = false, agc_on = false, noise_on = false;
     int32_t playout_delay = 0;
 
@@ -637,12 +647,10 @@ public:
     TracksAvailableCallback* tracksAvailableCallback =
       new TracksAvailableCallback(mManager, mSuccess, mWindowID, trackunion);
 
-#ifdef MOZ_WEBRTC
     mListener->AudioConfig(aec_on, (uint32_t) aec,
                            agc_on, (uint32_t) agc,
                            noise_on, (uint32_t) noise,
                            playout_delay);
-#endif
 
     // Dispatch to the media thread to ask it to start the sources,
     // because that can take a while.
