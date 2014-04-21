@@ -22,7 +22,7 @@ public:
     nsStringBundle(const char* aURLSpec, nsIStringBundleOverride*);
     nsresult LoadProperties();
     virtual ~nsStringBundle();
-  
+
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISTRINGBUNDLE
 
@@ -30,7 +30,7 @@ public:
 
 protected:
     //
-    // functional decomposition of the funitions repeatively called 
+    // functional decomposition of the funitions repeatively called
     //
     nsresult GetStringFromID(int32_t aID, nsAString& aResult);
     nsresult GetStringFromName(const nsAString& aName, nsAString& aResult);
@@ -43,7 +43,7 @@ private:
     mozilla::ReentrantMonitor    mReentrantMonitor;
     bool                         mAttemptedLoad;
     bool                         mLoaded;
-    
+
 public:
     static nsresult FormatString(const char16_t *formatStr,
                                  const char16_t **aParams, uint32_t aLength,
@@ -63,7 +63,7 @@ class nsExtensibleStringBundle : public nsIStringBundle
 
   nsresult Init(const char * aCategory, nsIStringBundleService *);
 private:
-  
+
   nsCOMArray<nsIStringBundle> mBundles;
   bool               mLoaded;
 
