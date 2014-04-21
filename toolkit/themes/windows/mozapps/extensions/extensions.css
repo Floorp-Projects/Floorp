@@ -181,22 +181,15 @@
   overflow: hidden;
 }
 
-%ifdef WINDOWS_AERO
-@media (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
-%endif
-  .category:-moz-locale-dir(ltr) {
-    border-top-left-radius: 5px;
-    border-bottom-left-radius: 5px;
-  }
-
-  .category:-moz-locale-dir(rtl) {
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
-  }
-%ifdef WINDOWS_AERO
+.category:-moz-locale-dir(ltr) {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
 }
-%endif
+
+.category:-moz-locale-dir(rtl) {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
 
 .category[disabled] {
   border-top: 0;
