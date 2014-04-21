@@ -26,14 +26,19 @@ interface Performance {
 
 // http://www.w3c-test.org/webperf/specs/PerformanceTimeline/#sec-window.performance-attribute
 partial interface Performance {
+  [Pref="dom.enable_resource_timing"]
   PerformanceEntryList getEntries();
+  [Pref="dom.enable_resource_timing"]
   PerformanceEntryList getEntriesByType(DOMString entryType);
+  [Pref="dom.enable_resource_timing"]
   PerformanceEntryList getEntriesByName(DOMString name, optional DOMString
     entryType);
 };
 
 // http://w3c-test.org/webperf/specs/ResourceTiming/#extensions-performance-interface
 partial interface Performance {
+  [Pref="dom.enable_resource_timing"]
   void clearResourceTimings();
+  [Pref="dom.enable_resource_timing"]
   void setResourceTimingBufferSize(unsigned long maxSize);
 };
