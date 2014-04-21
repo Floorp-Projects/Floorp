@@ -8,12 +8,8 @@
 #define nsCommandParams_h__
 
 #include "nsString.h"
-
 #include "nsICommandParams.h"
-
 #include "nsCOMPtr.h"
-#include "nsHashtable.h"
-
 #include "pldhash.h"
 
 

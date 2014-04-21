@@ -10,7 +10,6 @@
 
 #include "nsMenuBaseX.h"
 #include "nsIMutationObserver.h"
-#include "nsHashtable.h"
 #include "nsHashKeys.h"
 #include "nsDataHashtable.h"
 #include "nsAutoPtr.h"
