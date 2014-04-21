@@ -321,6 +321,18 @@ Call::Call()
 }
 
 void
+Call::Set(const nsAString& aNumber, const bool aIsOutgoing)
+{
+  mNumber = aNumber;
+  mDirection = (aIsOutgoing) ? BTHF_CALL_DIRECTION_OUTGOING :
+                               BTHF_CALL_DIRECTION_INCOMING;
+  // Same logic as implementation in ril_worker.js
+  if (aNumber.Length() && aNumber[0] == '+') {
+    mType = BTHF_CALL_ADDRTYPE_INTERNATIONAL;
+  }
+}
+
+void
 Call::Reset()
 {
   mState = nsITelephonyProvider::CALL_STATE_DISCONNECTED;
@@ -1129,14 +1141,8 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
     return;
   }
 
-  mCurrentCallArray[aCallIndex].mNumber = aNumber;
-  mCurrentCallArray[aCallIndex].mDirection = (aIsOutgoing) ?
-                                              BTHF_CALL_DIRECTION_OUTGOING :
-                                              BTHF_CALL_DIRECTION_INCOMING;
-  // Same logic as implementation in ril_worker.js
-  if (aNumber.Length() && aNumber[0] == '+') {
-    mCurrentCallArray[aCallIndex].mType = BTHF_CALL_ADDRTYPE_INTERNATIONAL;
-  }
+  // Update call information besides call state
+  mCurrentCallArray[aCallIndex].Set(aNumber, aIsOutgoing);
 
   // Notify bluedroid of phone state change
   UpdatePhoneCIND(aCallIndex);
@@ -1194,12 +1200,7 @@ BluetoothHfpManager::UpdateSecondNumber(const nsAString& aNumber)
 
   // Always regard second call as incoming call since v1.2 RIL
   // doesn't support outgoing second call in CDMA.
-  mCdmaSecondCall.mDirection = BTHF_CALL_DIRECTION_INCOMING;
-
-  mCdmaSecondCall.mNumber = aNumber;
-  if (aNumber[0] == '+') {
-    mCdmaSecondCall.mType = BTHF_CALL_ADDRTYPE_INTERNATIONAL;
-  }
+  mCdmaSecondCall.Set(aNumber, false);
 
   // FIXME: check CDMA + bluedroid
   //UpdateCIND(CINDType::CALLSETUP, CallSetupState::INCOMING, true);
