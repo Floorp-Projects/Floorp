@@ -188,16 +188,12 @@ class VideoEncoder
 {
 public:
   virtual ~VideoEncoder() {};
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoEncoder);
 };
 
 class VideoDecoder
 {
 public:
   virtual ~VideoDecoder() {};
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoDecoder);
 };
 
 /**
