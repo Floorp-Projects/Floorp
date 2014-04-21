@@ -384,20 +384,20 @@ static double polevl_sin(double z, double zz)
 
 static double polevl_cos(double zz)
 {
-    // Constants taken from fdlibm k_cos.c
-    double ans = -1.13596475577881948265e-11;
+    // Constants generated using Mathematica's GeneralMiniMaxApproximation.
+    // This set uses one less coefficient than usual implementations to
+    // increase performance, raising the maximum approximation error to 2 bits.
+    double ans = 2.06467337476762997948e-9;
     ans *= zz;
-    ans += 2.08757232129817482790e-09;
+    ans += -2.75555495413759160741e-7;
     ans *= zz;
-    ans += -2.75573143513906633035e-07;
+    ans +=  2.48015808595638122085e-5;
     ans *= zz;
-    ans += 2.48015872894767294178e-05;
+    ans += -1.38888888779622760722e-3;
     ans *= zz;
-    ans += -1.38888888888741095749e-03;
+    ans +=  4.16666666665987187046e-2;
     ans *= zz;
-    ans += 4.16666666666666019037e-02;
-    ans *= zz;
-    ans += -0.5;
+    ans += -4.99999999999999888978e-1;
     ans *= zz;
     ans += 1.0;
     return ans;
