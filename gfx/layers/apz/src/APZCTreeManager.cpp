@@ -267,6 +267,17 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
           apzc->MakeRoot();
         }
 
+        // For testing, log the parent scroll id of every APZC that has a
+        // parent. This allows test code to reconstruct the APZC tree.
+        // Note that we currently only do this for APZCs in the layer tree
+        // that originated the update, because the only identifying information
+        // we are logging about APZCs is the scroll id, and otherwise we could
+        // confuse APZCs from different layer trees with the same scroll id.
+        if (aLayersId == aOriginatingLayersId && apzc->GetParent()) {
+          aPaintLogger.LogTestData(metrics.GetScrollId(), "parentScrollId",
+              apzc->GetParent()->GetGuid().mScrollId);
+        }
+
         // Let this apzc be the parent of other controllers when we recurse downwards
         aParent = apzc;
 
