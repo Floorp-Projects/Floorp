@@ -36,7 +36,7 @@ public:
   virtual int64_t GetLength() MOZ_OVERRIDE { return -1; }
   virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE { return aOffset; }
   virtual int64_t GetCachedDataEnd(int64_t aOffset) MOZ_OVERRIDE { return GetLength(); }
-  virtual bool IsDataCachedToEndOfResource(int64_t aOffset) MOZ_OVERRIDE { return true; }
+  virtual bool IsDataCachedToEndOfResource(int64_t aOffset) MOZ_OVERRIDE { return false; }
   virtual bool IsSuspendedByCache() MOZ_OVERRIDE { return false; }
   virtual bool IsSuspended() MOZ_OVERRIDE { return false; }
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
