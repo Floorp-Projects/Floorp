@@ -26,6 +26,7 @@
 #include "imgIContainer.h"
 #include "mozilla/gfx/2D.h"
 #include "Units.h"
+#include "mozilla/ToString.h"
 
 #include <limits>
 #include <algorithm>
@@ -2169,6 +2170,34 @@ public:
    * Currently we don't support APZ for the parent process on B2G.
    */
   static bool WantSubAPZC();
+
+  /**
+   * Log a key/value pair for APZ testing during a paint.
+   * @param aPresShell The pres shell that identifies where to log to. The data
+   *                   will be written to the APZTestData associated with the
+   *                   pres shell's layer manager.
+   * @param aScrollId Identifies the scroll frame to which the data pertains.
+   * @param aKey The key under which to log the data.
+   * @param aValue The value of the data to be logged.
+   */
+  static void LogTestDataForPaint(nsIPresShell* aPresShell,
+                                  ViewID aScrollId,
+                                  const std::string& aKey,
+                                  const std::string& aValue);
+
+  /**
+   * A convenience overload of LogTestDataForPaint() that accepts any type
+   * as the value, and passes it through mozilla::ToString() to obtain a string
+   * value. The type passed must support streaming to an std::ostream.
+   */
+  template <typename Value>
+  static void LogTestDataForPaint(nsIPresShell* aPresShell,
+                                  ViewID aScrollId,
+                                  const std::string& aKey,
+                                  const Value& aValue) {
+    LogTestDataForPaint(aPresShell, aScrollId, aKey,
+        mozilla::ToString(aValue));
+  }
 
  /**
    * Get the display port for |aScrollFrame|'s content. If |aScrollFrame|
