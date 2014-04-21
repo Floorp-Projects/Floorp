@@ -98,7 +98,7 @@ void
 APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                              Layer* aRoot,
                                              bool aIsFirstPaint,
-                                             uint64_t aFirstPaintLayersId,
+                                             uint64_t aOriginatingLayersId,
                                              uint32_t aPaintSequenceNumber)
 {
   if (AsyncPanZoomController::GetThreadAssertionsEnabled()) {
@@ -123,6 +123,15 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
   Collect(mRootApzc, &apzcsToDestroy);
   mRootApzc = nullptr;
 
+  // For testing purposes, we log some data to the APZTestData associated with
+  // the layers id that originated this update.
+  APZTestData* testData = nullptr;
+  if (CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aOriginatingLayersId)) {
+    testData = &state->mApzTestData;
+    testData->StartNewPaint(aPaintSequenceNumber);
+  }
+  APZPaintLogHelper paintLogger(testData, aPaintSequenceNumber);
+
   if (aRoot) {
     mApzcTreeLog << "[start]\n";
     UpdatePanZoomControllerTree(aCompositor,
@@ -130,8 +139,8 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                 // aCompositor is null in gtest scenarios
                                 aCompositor ? aCompositor->RootLayerTreeId() : 0,
                                 gfx3DMatrix(), nullptr, nullptr,
-                                aIsFirstPaint, aFirstPaintLayersId,
-                                &apzcsToDestroy);
+                                aIsFirstPaint, aOriginatingLayersId,
+                                paintLogger, &apzcsToDestroy);
     mApzcTreeLog << "[end]\n";
   }
 
@@ -148,7 +157,8 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                              AsyncPanZoomController* aParent,
                                              AsyncPanZoomController* aNextSibling,
                                              bool aIsFirstPaint,
-                                             uint64_t aFirstPaintLayersId,
+                                             uint64_t aOriginatingLayersId,
+                                             const APZPaintLogHelper& aPaintLogger,
                                              nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy)
 {
   mTreeLock.AssertCurrentThreadOwns();
@@ -216,7 +226,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
         APZC_LOG("Using APZC %p for layer %p with identifiers %lld %lld\n", apzc, aLayer, aLayersId, container->GetFrameMetrics().GetScrollId());
 
         apzc->NotifyLayersUpdated(metrics,
-                                  aIsFirstPaint && (aLayersId == aFirstPaintLayersId));
+                                  aIsFirstPaint && (aLayersId == aOriginatingLayersId));
         apzc->SetScrollHandoffParentId(container->GetScrollHandoffParentId());
 
         // Use the composition bounds as the hit test region.
@@ -302,8 +312,8 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
   for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
     gfx::TreeAutoIndent indent(mApzcTreeLog);
     next = UpdatePanZoomControllerTree(aCompositor, child, childLayersId, aTransform, aParent, next,
-                                       aIsFirstPaint, aFirstPaintLayersId,
-                                       aPaintSequenceNumber, aApzcsToDestroy);
+                                       aIsFirstPaint, aOriginatingLayersId,
+                                       aPaintLogger, aApzcsToDestroy);
   }
 
   // Return the APZC that should be the sibling of other APZCs as we continue
