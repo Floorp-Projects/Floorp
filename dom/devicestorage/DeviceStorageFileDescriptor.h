@@ -13,7 +13,7 @@ class DeviceStorageFileDescriptor MOZ_FINAL
   : public mozilla::RefCounted<DeviceStorageFileDescriptor>
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(DeviceStorageFileDescriptor)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DeviceStorageFileDescriptor)
   nsRefPtr<DeviceStorageFile> mDSFile;
   mozilla::ipc::FileDescriptor mFileDescriptor;
 };
