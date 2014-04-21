@@ -56,7 +56,7 @@ nsPerformanceTiming::FetchStartHighRes()
 {
   if (!mFetchStart) {
     if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
-      return 0;
+      return mZeroTime;
     }
     TimeStamp stamp;
     mChannel->GetAsyncOpen(&stamp);
@@ -81,8 +81,9 @@ nsPerformanceTiming::FetchStart()
 void
 nsPerformanceTiming::CheckRedirectCrossOrigin(nsIHttpChannel* aResourceChannel)
 {
-  MOZ_ASSERT(mChannel, "The resource channel should not be null for any"
-            "valid resource");
+  if (!IsInitialized()) {
+    return;
+  }
   uint16_t redirectCount;
   mChannel->GetRedirectCount(&redirectCount);
   if (redirectCount == 0) {
@@ -134,7 +135,7 @@ DOMHighResTimeStamp
 nsPerformanceTiming::RedirectStartHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
-    return 0;
+    return mZeroTime;
   }
   mozilla::TimeStamp stamp;
   mChannel->GetRedirectStart(&stamp);
@@ -144,6 +145,9 @@ nsPerformanceTiming::RedirectStartHighRes()
 DOMTimeMilliSec
 nsPerformanceTiming::RedirectStart()
 {
+  if (!IsInitialized()) {
+    return mZeroTime;
+  }
   // We have to check if all the redirect URIs had the same origin (since there
   // is no check in RedirectStartHighRes())
   bool sameOrigin;
@@ -168,7 +172,7 @@ DOMHighResTimeStamp
 nsPerformanceTiming::RedirectEndHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
-    return 0;
+    return mZeroTime;
   }
   mozilla::TimeStamp stamp;
   mChannel->GetRedirectEnd(&stamp);
@@ -178,6 +182,9 @@ nsPerformanceTiming::RedirectEndHighRes()
 DOMTimeMilliSec
 nsPerformanceTiming::RedirectEnd()
 {
+  if (!IsInitialized()) {
+    return mZeroTime;
+  }
   // We have to check if all the redirect URIs had the same origin (since there
   // is no check in RedirectEndHighRes())
   bool sameOrigin;
@@ -192,7 +199,7 @@ DOMHighResTimeStamp
 nsPerformanceTiming::DomainLookupStartHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
-    return 0;
+    return mZeroTime;
   }
   mozilla::TimeStamp stamp;
   mChannel->GetDomainLookupStart(&stamp);
@@ -209,7 +216,7 @@ DOMHighResTimeStamp
 nsPerformanceTiming::DomainLookupEndHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
-    return 0;
+    return mZeroTime;
   }
   mozilla::TimeStamp stamp;
   mChannel->GetDomainLookupEnd(&stamp);
@@ -226,7 +233,7 @@ DOMHighResTimeStamp
 nsPerformanceTiming::ConnectStartHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
-    return 0;
+    return mZeroTime;
   }
   mozilla::TimeStamp stamp;
   mChannel->GetConnectStart(&stamp);
@@ -243,7 +250,7 @@ DOMHighResTimeStamp
 nsPerformanceTiming::ConnectEndHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
-    return 0;
+    return mZeroTime;
   }
   mozilla::TimeStamp stamp;
   mChannel->GetConnectEnd(&stamp);
@@ -260,7 +267,7 @@ DOMHighResTimeStamp
 nsPerformanceTiming::RequestStartHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
-    return 0;
+    return mZeroTime;
   }
   mozilla::TimeStamp stamp;
   mChannel->GetRequestStart(&stamp);
@@ -277,7 +284,7 @@ DOMHighResTimeStamp
 nsPerformanceTiming::ResponseStartHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
-    return 0;
+    return mZeroTime;
   }
   mozilla::TimeStamp stamp;
   mChannel->GetResponseStart(&stamp);
@@ -299,7 +306,7 @@ DOMHighResTimeStamp
 nsPerformanceTiming::ResponseEndHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
-    return 0;
+    return mZeroTime;
   }
   mozilla::TimeStamp stamp;
   mChannel->GetResponseEnd(&stamp);
@@ -320,8 +327,6 @@ nsPerformanceTiming::ResponseEnd()
 bool
 nsPerformanceTiming::IsInitialized() const
 {
-  MOZ_ASSERT(mChannel, "The timed channel should not be null for any "
-      "valid resource");
   return !!mChannel;
 }
 

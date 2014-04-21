@@ -34,6 +34,7 @@
 #include "nsThreadUtils.h"
 #include "PrivateBrowsingChannel.h"
 #include "mozilla/net/DNS.h"
+#include "nsITimedChannel.h"
 #include "nsISecurityConsoleMessage.h"
 
 extern PRLogModuleInfo *gHttpLog;
@@ -58,12 +59,14 @@ class HttpBaseChannel : public nsHashPropertyBag
                       , public nsIResumableChannel
                       , public nsITraceableChannel
                       , public PrivateBrowsingChannel<HttpBaseChannel>
+                      , public nsITimedChannel
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIUPLOADCHANNEL
   NS_DECL_NSIUPLOADCHANNEL2
   NS_DECL_NSITRACEABLECHANNEL
+  NS_DECL_NSITIMEDCHANNEL
 
   HttpBaseChannel();
   virtual ~HttpBaseChannel();
@@ -339,6 +342,15 @@ protected:
   // A time value equal to the time immediately after receiving the last byte of
   // the response of the last redirect.
   mozilla::TimeStamp                mRedirectEndTimeStamp;
+
+  PRTime                            mChannelCreationTime;
+  TimeStamp                         mChannelCreationTimestamp;
+  TimeStamp                         mAsyncOpenTime;
+  TimeStamp                         mCacheReadStart;
+  TimeStamp                         mCacheReadEnd;
+  // copied from the transaction before we null out mTransaction
+  // so that the timing can still be queried from OnStopRequest
+  TimingStruct                      mTransactionTimings;
 };
 
 // Share some code while working around C++'s absurd inability to handle casting
