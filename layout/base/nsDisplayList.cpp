@@ -645,10 +645,13 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     resolution.scale, resolution.scale, auPerDevPixel);
   aRoot->SetVisibleRegion(visible);
 
+  nsIPresShell* presShell = presContext->GetPresShell();
   FrameMetrics metrics;
   metrics.mViewport = CSSRect::FromAppUnits(aViewport);
   if (aDisplayPort) {
     metrics.mDisplayPort = CSSRect::FromAppUnits(*aDisplayPort);
+    nsLayoutUtils::LogTestDataForPaint(presShell, aScrollId, "displayport",
+        metrics.mDisplayPort);
     if (aCriticalDisplayPort) {
       metrics.mCriticalDisplayPort = CSSRect::FromAppUnits(*aCriticalDisplayPort);
     }
@@ -679,7 +682,6 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
 
   // Only the root scrollable frame for a given presShell should pick up
   // the presShell's resolution. All the other frames are 1.0.
-  nsIPresShell* presShell = presContext->GetPresShell();
   if (aScrollFrame == presShell->GetRootScrollFrame()) {
     metrics.mResolution = ParentLayerToLayerScale(presShell->GetXResolution(),
                                                   presShell->GetYResolution());
