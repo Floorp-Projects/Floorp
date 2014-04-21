@@ -51,7 +51,7 @@ public:
 };
 
 /**
- * An extesible implementation of the StringBudle interface.
+ * An extensible implementation of the StringBundle interface.
  *
  * @created         28/Dec/1999
  * @author  Catalin Rotaru [CATA]
