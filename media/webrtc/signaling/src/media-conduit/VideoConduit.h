@@ -182,9 +182,16 @@ public:
   /**
    * Does DeliverFrame() support a null buffer and non-null handle
    * (video texture)?
-   * XXX Investigate!  Especially for Android/B2G
+   * B2G support it (when using HW video decoder with graphic buffer output).
+   * XXX Investigate!  Especially for Android
    */
-  virtual bool IsTextureSupported() { return false; }
+  virtual bool IsTextureSupported() {
+#ifdef WEBRTC_GONK
+    return true;
+#else
+    return false;
+#endif
+  }
 
   unsigned short SendingWidth() {
     return mSendingWidth;
