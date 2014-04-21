@@ -64,7 +64,16 @@ public:
       MOZ_ASSERT(mPendingDecoders.IsEmpty());
       return false;
     }
-    return mAudioReaders[mActiveAudioReader]->DecodeAudioData();
+    bool rv = mAudioReaders[mActiveAudioReader]->DecodeAudioData();
+
+    nsAutoTArray<AudioData*, 10> audio;
+    mAudioReaders[mActiveAudioReader]->AudioQueue().GetElementsAfter(-1, &audio);
+    for (uint32_t i = 0; i < audio.Length(); ++i) {
+      AudioQueue().Push(audio[i]);
+    }
+    mAudioReaders[mActiveAudioReader]->AudioQueue().Empty();
+
+    return rv;
   }
 
   bool DecodeVideoFrame(bool& aKeyFrameSkip, int64_t aTimeThreshold) MOZ_OVERRIDE
@@ -75,15 +84,31 @@ public:
       return false;
     }
     bool rv = mVideoReaders[mActiveVideoReader]->DecodeVideoFrame(aKeyFrameSkip, aTimeThreshold);
+
+    nsAutoTArray<VideoData*, 10> video;
+    mVideoReaders[mActiveVideoReader]->VideoQueue().GetElementsAfter(-1, &video);
+    for (uint32_t i = 0; i < video.Length(); ++i) {
+      VideoQueue().Push(video[i]);
+    }
+    mVideoReaders[mActiveVideoReader]->VideoQueue().Empty();
+
     if (rv) {
       return true;
     }
+
     MSE_DEBUG("%p MSR::DecodeVF %d (%p) returned false (readers=%u)",
               this, mActiveVideoReader, mVideoReaders[mActiveVideoReader], mVideoReaders.Length());
     if (SwitchVideoReaders(aTimeThreshold)) {
-      return mVideoReaders[mActiveVideoReader]->DecodeVideoFrame(aKeyFrameSkip, aTimeThreshold);
+      rv = mVideoReaders[mActiveVideoReader]->DecodeVideoFrame(aKeyFrameSkip, aTimeThreshold);
+
+      nsAutoTArray<VideoData*, 10> video;
+      mVideoReaders[mActiveVideoReader]->VideoQueue().GetElementsAfter(-1, &video);
+      for (uint32_t i = 0; i < video.Length(); ++i) {
+        VideoQueue().Push(video[i]);
+      }
+      mVideoReaders[mActiveVideoReader]->VideoQueue().Empty();
     }
-    return false;
+    return rv;
   }
 
   bool HasVideo() MOZ_OVERRIDE
@@ -118,32 +143,6 @@ public:
     }
     aBuffered->Normalize();
     return NS_OK;
-  }
-
-  MediaQueue<AudioData>& AudioQueue() MOZ_OVERRIDE
-  {
-    // TODO: Share AudioQueue with SubReaders.
-    for (uint32_t i = 0; i < mAudioReaders.Length(); ++i) {
-      MediaQueue<AudioData>& audioQueue = mAudioReaders[i]->AudioQueue();
-      // Empty existing queues in order.
-      if (audioQueue.GetSize() > 0) {
-        return audioQueue;
-      }
-    }
-    return MediaDecoderReader::AudioQueue();
-  }
-
-  MediaQueue<VideoData>& VideoQueue() MOZ_OVERRIDE
-  {
-    // TODO: Share VideoQueue with SubReaders.
-    for (uint32_t i = 0; i < mVideoReaders.Length(); ++i) {
-      MediaQueue<VideoData>& videoQueue = mVideoReaders[i]->VideoQueue();
-      // Empty existing queues in order.
-      if (videoQueue.GetSize() > 0) {
-        return videoQueue;
-      }
-    }
-    return MediaDecoderReader::VideoQueue();
   }
 
   already_AddRefed<SubBufferDecoder> CreateSubDecoder(const nsACString& aType,
