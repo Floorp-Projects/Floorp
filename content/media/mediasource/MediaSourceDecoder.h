@@ -48,51 +48,14 @@ public:
   void AttachMediaSource(dom::MediaSource* aMediaSource);
   void DetachMediaSource();
 
-  SubBufferDecoder* CreateSubDecoder(const nsACString& aType);
-
-  const nsTArray<MediaDecoderReader*>& GetReaders()
-  {
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    while (mReaders.Length() == 0) {
-      mon.Wait();
-    }
-    return mReaders;
-  }
-
-  void SetVideoReader(MediaDecoderReader* aReader)
-  {
-    MOZ_ASSERT(aReader && !mVideoReader);
-    mVideoReader = aReader;
-  }
-
-  void SetAudioReader(MediaDecoderReader* aReader)
-  {
-    MOZ_ASSERT(aReader && !mAudioReader);
-    mAudioReader = aReader;
-  }
-
-  MediaDecoderReader* GetVideoReader()
-  {
-    return mVideoReader;
-  }
-
-  MediaDecoderReader* GetAudioReader()
-  {
-    return mAudioReader;
-  }
-
-  // Returns the duration in seconds as provided by the attached MediaSource.
-  // If no MediaSource is attached, returns the duration tracked by the decoder.
-  double GetMediaSourceDuration();
+  already_AddRefed<SubBufferDecoder> CreateSubDecoder(const nsACString& aType);
 
 private:
+  // The owning MediaSource holds a strong reference to this decoder, and
+  // calls Attach/DetachMediaSource on this decoder to set and clear
+  // mMediaSource.
   dom::MediaSource* mMediaSource;
-
-  nsTArray<nsRefPtr<SubBufferDecoder> > mDecoders;
-  nsTArray<MediaDecoderReader*> mReaders; // Readers owned by Decoders.
-
-  MediaDecoderReader* mVideoReader;
-  MediaDecoderReader* mAudioReader;
+  nsRefPtr<MediaSourceReader> mReader;
 };
 
 } // namespace mozilla

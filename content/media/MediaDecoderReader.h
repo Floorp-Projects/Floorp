@@ -160,6 +160,8 @@ public:
   // by discarding audio samples and adjusting start times of video frames.
   nsresult DecodeToTarget(int64_t aTarget);
 
+  MediaInfo GetMediaInfo() { return mInfo; }
+
 protected:
 
   // Reference to the owning decoder object.

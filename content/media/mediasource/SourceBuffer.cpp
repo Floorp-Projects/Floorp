@@ -69,7 +69,7 @@ SubBufferDecoder::GetResource() const
 void
 SubBufferDecoder::SetMediaDuration(int64_t aDuration)
 {
-  mParentDecoder->SetMediaDuration(aDuration);
+  mMediaDuration = aDuration;
 }
 
 void
@@ -103,13 +103,12 @@ SubBufferDecoder::ConvertToByteOffset(double aTime)
   // purposes of eviction this should be adequate since we have the
   // byte threshold as well to ensure data actually gets evicted and
   // we ensure we don't evict before the current playable point.
-  double duration = mParentDecoder->GetMediaSourceDuration();
-  if (duration <= 0.0 || IsNaN(duration)) {
+  if (mMediaDuration == -1) {
     return -1;
   }
   int64_t length = GetResource()->GetLength();
   MOZ_ASSERT(length > 0);
-  int64_t offset = (aTime / duration) * length;
+  int64_t offset = (aTime / (double(mMediaDuration) / USECS_PER_S)) * length;
   return offset;
 }
 
