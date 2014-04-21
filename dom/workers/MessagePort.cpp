@@ -217,8 +217,8 @@ MessagePort::AssertCorrectThread() const
 }
 #endif
 
-NS_IMPL_ADDREF_INHERITED(MessagePort, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(MessagePort, DOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(mozilla::dom::workers::MessagePort, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(mozilla::dom::workers::MessagePort, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MessagePort)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
