@@ -27,7 +27,7 @@
 <!ENTITY certmgr.pending.label                "Currently verifying certificate…">
 <!ENTITY certmgr.subjectinfo.label            "Issued To">
 <!ENTITY certmgr.issuerinfo.label             "Issued By">
-<!ENTITY certmgr.validity.label               "Validity" >
+<!ENTITY certmgr.periodofvalidity.label       "Period of Validity" >
 <!ENTITY certmgr.fingerprints.label           "Fingerprints">
 <!ENTITY certmgr.certdetail.title             "Certificate Detail">
 <!ENTITY certmgr.certdetail.cn                "Common Name (CN)">
@@ -59,7 +59,7 @@
 <!ENTITY certmgr.certserver                   "Server">
 <!ENTITY certmgr.override_lifetime            "Lifetime">
 <!ENTITY certmgr.tokenname                    "Security Device">
-<!ENTITY certmgr.issued                       "Issued On">
+<!ENTITY certmgr.begins                       "Begins On">
 <!ENTITY certmgr.expires                      "Expires On">
 <!ENTITY certmgr.email                        "E-Mail Address">
 <!ENTITY certmgr.serial                       "Serial Number">
