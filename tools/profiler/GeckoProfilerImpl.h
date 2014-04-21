@@ -144,6 +144,12 @@ JSObject* profiler_get_profile_jsobject(JSContext* aCx)
 }
 
 static inline
+void profiler_save_profile_to_file(const char* aFilename)
+{
+  return mozilla_sampler_save_profile_to_file(aFilename);
+}
+
+static inline
 const char** profiler_get_features()
 {
   return mozilla_sampler_get_features();
