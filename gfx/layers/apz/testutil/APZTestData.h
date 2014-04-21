@@ -12,6 +12,7 @@
 #include "nsDebug.h"             // for NS_WARNING
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT
 #include "mozilla/DebugOnly.h"   // for DebugOnly
+#include "mozilla/ToString.h"    // for ToString
 
 namespace mozilla {
 namespace layers {
@@ -96,6 +97,35 @@ private:
       NS_WARNING("Key already present in test data, not overwriting");
     }
   }
+};
+
+// A helper class for logging data for a paint.
+class APZPaintLogHelper {
+public:
+  APZPaintLogHelper(APZTestData* aTestData, SequenceNumber aPaintSequenceNumber)
+    : mTestData(aTestData),
+      mPaintSequenceNumber(aPaintSequenceNumber)
+  {}
+
+  template <typename Value>
+  void LogTestData(FrameMetrics::ViewID aScrollId,
+                   const std::string& aKey,
+                   const Value& aValue) const {
+    if (mTestData) {  // avoid stringifying if mTestData == nullptr
+      LogTestData(aScrollId, aKey, ToString(aValue));
+    }
+  }
+
+  void LogTestData(FrameMetrics::ViewID aScrollId,
+                   const std::string& aKey,
+                   const std::string& aValue) const {
+    if (mTestData) {
+      mTestData->LogTestDataForPaint(mPaintSequenceNumber, aScrollId, aKey, aValue);
+    }
+  }
+private:
+  APZTestData* mTestData;
+  SequenceNumber mPaintSequenceNumber;
 };
 
 }

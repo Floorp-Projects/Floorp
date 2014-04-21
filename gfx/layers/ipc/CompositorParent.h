@@ -29,6 +29,7 @@
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/LayersMessages.h"  // for TargetConfig
 #include "mozilla/layers/PCompositorParent.h"
+#include "mozilla/layers/APZTestData.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsISupportsImpl.h"
 #include "nsSize.h"                     // for nsIntSize
@@ -222,6 +223,7 @@ public:
     // the PCompositorChild
     PCompositorParent* mCrossProcessParent;
     TargetConfig mTargetConfig;
+    APZTestData mApzTestData;
   };
 
   /**
@@ -229,7 +231,7 @@ public:
    * exists.  Otherwise null is returned.  This must only be called on
    * the compositor thread.
    */
-  static const LayerTreeState* GetIndirectShadowTree(uint64_t aId);
+  static LayerTreeState* GetIndirectShadowTree(uint64_t aId);
 
   float ComputeRenderIntegrity();
 
