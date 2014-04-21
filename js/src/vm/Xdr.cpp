@@ -122,12 +122,11 @@ XDRState<mode>::codeConstValue(MutableHandleValue vp)
 }
 
 XDRDecoder::XDRDecoder(JSContext *cx, const void *data, uint32_t length,
-                       JSPrincipals *principals, JSPrincipals *originPrincipals)
+                       JSPrincipals *originPrincipals)
   : XDRState<XDR_DECODE>(cx)
 {
     buf.setData(data, length);
-    this->principals_ = principals;
-    this->originPrincipals_ = NormalizeOriginPrincipals(principals, originPrincipals);
+    this->originPrincipals_ = originPrincipals;
 }
 
 template class js::XDRState<XDR_ENCODE>;
