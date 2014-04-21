@@ -9,7 +9,6 @@
 #include "nsXBLDocumentInfo.h"
 #include "nsIInputStream.h"
 #include "nsNameSpaceManager.h"
-#include "nsHashtable.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"

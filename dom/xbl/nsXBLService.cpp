@@ -11,7 +11,6 @@
 #include "nsXBLWindowKeyHandler.h"
 #include "nsIInputStream.h"
 #include "nsNameSpaceManager.h"
-#include "nsHashtable.h"
 #include "nsIURI.h"
 #include "nsIDOMElement.h"
 #include "nsIURL.h"
