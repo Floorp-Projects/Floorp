@@ -79,6 +79,7 @@ PuppetWidget::PuppetWidget(TabChild* aTabChild)
   : mTabChild(aTabChild)
   , mDPI(-1)
   , mDefaultScale(-1)
+  , mNativeKeyCommandsValid(false)
 {
   MOZ_COUNT_CTOR(PuppetWidget);
 
@@ -275,6 +276,14 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
   NS_ABORT_IF_FALSE(!mChild || mChild->mWindowType == eWindowType_popup,
                     "Unexpected event dispatch!");
 
+  AutoCacheNativeKeyCommands autoCache(this);
+  if (event->mFlags.mIsSynthesizedForTests && !mNativeKeyCommandsValid) {
+    WidgetKeyboardEvent* keyEvent = event->AsKeyboardEvent();
+    if (keyEvent) {
+      mTabChild->RequestNativeKeyBindings(&autoCache, keyEvent);
+    }
+  }
+
   aStatus = nsEventStatus_eIgnore;
 
   if (event->message == NS_COMPOSITION_START) {
@@ -319,6 +328,12 @@ PuppetWidget::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                                       DoCommandCallback aCallback,
                                       void* aCallbackData)
 {
+  // B2G doesn't have native key bindings.
+#ifdef MOZ_B2G
+  return false;
+#else // #ifdef MOZ_B2G
+  MOZ_ASSERT(mNativeKeyCommandsValid);
+
   nsTArray<mozilla::CommandInt>& commands = mSingleLineCommands;
   switch (aType) {
     case nsIWidget::NativeKeyBindingsForSingleLineEditor:
@@ -340,6 +355,7 @@ PuppetWidget::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
     aCallback(static_cast<mozilla::Command>(commands[i]), aCallbackData);
   }
   return true;
+#endif
 }
 
 LayerManager*
