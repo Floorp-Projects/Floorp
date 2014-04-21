@@ -40,7 +40,6 @@
 #include "nsNetUtil.h"
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
-#include "nsHashtable.h"
 #include "nsPluginLogging.h"
 #include "nsIScriptChannel.h"
 #include "nsIBlocklistService.h"
