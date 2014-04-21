@@ -65,7 +65,6 @@ void MediaOmxDecoder::MetadataLoaded(int aChannels,
   MediaDecoder::MetadataLoaded(aChannels, aRate, aHasAudio, aHasVideo, aTags);
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-
   if (!mCanOffloadAudio || mFallbackToStateMachine || mOutputStreams.Length() ||
       mInitialPlaybackRate != 1.0) {
     DECODER_LOG(PR_LOG_DEBUG, ("In %s Offload Audio check failed",
@@ -95,7 +94,6 @@ void MediaOmxDecoder::PauseStateMachine()
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
   DECODER_LOG(PR_LOG_DEBUG, ("%s", __PRETTY_FUNCTION__));
-
   if (!mDecoderStateMachine) {
     return;
   }
@@ -106,7 +104,7 @@ void MediaOmxDecoder::PauseStateMachine()
 void MediaOmxDecoder::ResumeStateMachine()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  GetReentrantMonitor().AssertCurrentThreadIn();
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   DECODER_LOG(PR_LOG_DEBUG, ("%s current time %f", __PRETTY_FUNCTION__,
       mCurrentTime));
 
@@ -130,7 +128,6 @@ void MediaOmxDecoder::AudioOffloadTearDown()
   DECODER_LOG(PR_LOG_DEBUG, ("%s", __PRETTY_FUNCTION__));
   {
     // Audio offload player sent tear down event. Fallback to state machine
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
     ResumeStateMachine();
   }
 }
@@ -143,7 +140,6 @@ void MediaOmxDecoder::AddOutputStream(ProcessedMediaStream* aStream,
 
   if (mAudioOffloadPlayer) {
     // Offload player cannot handle MediaStream. Fallback
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
     ResumeStateMachine();
   }
 
@@ -158,7 +154,6 @@ void MediaOmxDecoder::SetPlaybackRate(double aPlaybackRate)
   if (mAudioOffloadPlayer &&
       ((aPlaybackRate != 0.0) || (aPlaybackRate != 1.0))) {
     // Offload player cannot handle playback rate other than 1/0. Fallback
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
     ResumeStateMachine();
   }
 
@@ -168,21 +163,22 @@ void MediaOmxDecoder::SetPlaybackRate(double aPlaybackRate)
 void MediaOmxDecoder::ChangeState(PlayState aState)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
   // Keep MediaDecoder state in sync with MediaElement irrespective of offload
   // playback so it will continue to work in normal mode when offloading fails
   // in between
   MediaDecoder::ChangeState(aState);
 
   if (mAudioOffloadPlayer) {
-    mAudioOffloadPlayer->ChangeState(aState);
+    status_t err = mAudioOffloadPlayer->ChangeState(aState);
+    if (err != OK) {
+      ResumeStateMachine();
+    }
   }
 }
 
 void MediaOmxDecoder::ApplyStateToStateMachine(PlayState aState)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
   // During offload playback, state machine should be in dormant state.
   // ApplyStateToStateMachine() can change state machine state to
   // something else or reset the seek time. So don't call this when audio is
