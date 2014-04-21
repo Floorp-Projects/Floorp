@@ -90,7 +90,8 @@ child:
                  nsCString           cachedCharset,
                  nsCString           securityInfoSerialization,
                  NetAddr             selfAddr,
-                 NetAddr             peerAddr);
+                 NetAddr             peerAddr,
+                 int16_t             redirectCount);
 
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message

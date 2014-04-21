@@ -151,18 +151,22 @@ HttpBaseChannel::Init(nsIURI *aURI,
 // HttpBaseChannel::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED10(HttpBaseChannel,
-                              nsHashPropertyBag,
-                              nsIRequest,
-                              nsIChannel,
-                              nsIEncodedChannel,
-                              nsIHttpChannel,
-                              nsIHttpChannelInternal,
-                              nsIUploadChannel,
-                              nsIUploadChannel2,
-                              nsISupportsPriority,
-                              nsITraceableChannel,
-                              nsIPrivateBrowsingChannel)
+NS_IMPL_ADDREF(HttpBaseChannel)
+NS_IMPL_RELEASE(HttpBaseChannel)
+
+NS_INTERFACE_MAP_BEGIN(HttpBaseChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIEncodedChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
+  NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIUploadChannel2)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
+  NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIPrivateBrowsingChannel)
+  NS_INTERFACE_MAP_ENTRY(nsITimedChannel)
+NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsIRequest
@@ -1950,6 +1954,195 @@ HttpBaseChannel::SameOriginWithOriginalUri(nsIURI *aURI)
   nsresult rv = ssm->CheckSameOriginURI(aURI, mOriginalURI, false);
   return (NS_SUCCEEDED(rv));
 }
+
+
+
+//-----------------------------------------------------------------------------
+// HttpBaseChannel::nsITimedChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+HttpBaseChannel::SetTimingEnabled(bool enabled) {
+  mTimingEnabled = enabled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetTimingEnabled(bool* _retval) {
+  *_retval = mTimingEnabled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetChannelCreation(TimeStamp* _retval) {
+  *_retval = mChannelCreationTimestamp;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetAsyncOpen(TimeStamp* _retval) {
+  *_retval = mAsyncOpenTime;
+  return NS_OK;
+}
+
+/**
+ * @return the number of redirects. There is no check for cross-domain
+ * redirects. This check must be done by the consumers.
+ */
+NS_IMETHODIMP
+HttpBaseChannel::GetRedirectCount(uint16_t *aRedirectCount)
+{
+  *aRedirectCount = mRedirectCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetRedirectCount(uint16_t aRedirectCount)
+{
+  mRedirectCount = aRedirectCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetRedirectStart(TimeStamp* _retval)
+{
+  *_retval = mRedirectStartTimeStamp;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetRedirectStart(TimeStamp aRedirectStart)
+{
+  mRedirectStartTimeStamp = aRedirectStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetRedirectEnd(TimeStamp* _retval)
+{
+  *_retval = mRedirectEndTimeStamp;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetRedirectEnd(TimeStamp aRedirectEnd)
+{
+  mRedirectEndTimeStamp = aRedirectEnd;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetAllRedirectsSameOrigin(bool *aAllRedirectsSameOrigin)
+{
+  *aAllRedirectsSameOrigin = mAllRedirectsSameOrigin;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetAllRedirectsSameOrigin(bool aAllRedirectsSameOrigin)
+{
+  mAllRedirectsSameOrigin = aAllRedirectsSameOrigin;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetDomainLookupStart(TimeStamp* _retval) {
+  *_retval = mTransactionTimings.domainLookupStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetDomainLookupEnd(TimeStamp* _retval) {
+  *_retval = mTransactionTimings.domainLookupEnd;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetConnectStart(TimeStamp* _retval) {
+  *_retval = mTransactionTimings.connectStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetConnectEnd(TimeStamp* _retval) {
+  *_retval = mTransactionTimings.connectEnd;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetRequestStart(TimeStamp* _retval) {
+  *_retval = mTransactionTimings.requestStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetResponseStart(TimeStamp* _retval) {
+  *_retval = mTransactionTimings.responseStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetResponseEnd(TimeStamp* _retval) {
+  *_retval = mTransactionTimings.responseEnd;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetCacheReadStart(TimeStamp* _retval) {
+  *_retval = mCacheReadStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetCacheReadEnd(TimeStamp* _retval) {
+  *_retval = mCacheReadEnd;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetInitiatorType(nsAString & aInitiatorType)
+{
+  aInitiatorType = mInitiatorType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetInitiatorType(const nsAString & aInitiatorType)
+{
+  mInitiatorType = aInitiatorType;
+  return NS_OK;
+}
+
+#define IMPL_TIMING_ATTR(name)                                 \
+NS_IMETHODIMP                                                  \
+HttpBaseChannel::Get##name##Time(PRTime* _retval) {            \
+    TimeStamp stamp;                                           \
+    Get##name(&stamp);                                         \
+    if (stamp.IsNull()) {                                      \
+        *_retval = 0;                                          \
+        return NS_OK;                                          \
+    }                                                          \
+    *_retval = mChannelCreationTime +                          \
+        (PRTime) ((stamp - mChannelCreationTimestamp).ToSeconds() * 1e6); \
+    return NS_OK;                                              \
+}
+
+IMPL_TIMING_ATTR(ChannelCreation)
+IMPL_TIMING_ATTR(AsyncOpen)
+IMPL_TIMING_ATTR(DomainLookupStart)
+IMPL_TIMING_ATTR(DomainLookupEnd)
+IMPL_TIMING_ATTR(ConnectStart)
+IMPL_TIMING_ATTR(ConnectEnd)
+IMPL_TIMING_ATTR(RequestStart)
+IMPL_TIMING_ATTR(ResponseStart)
+IMPL_TIMING_ATTR(ResponseEnd)
+IMPL_TIMING_ATTR(CacheReadStart)
+IMPL_TIMING_ATTR(CacheReadEnd)
+IMPL_TIMING_ATTR(RedirectStart)
+IMPL_TIMING_ATTR(RedirectEnd)
+
+#undef IMPL_TIMING_ATTR
+
 
 //------------------------------------------------------------------------------
 

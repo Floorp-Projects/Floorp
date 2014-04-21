@@ -4368,7 +4368,6 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
     NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
-    NS_INTERFACE_MAP_ENTRY(nsITimedChannel)
     NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
     NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
     NS_INTERFACE_MAP_ENTRY(nsIDNSListener)
@@ -4753,90 +4752,6 @@ nsHttpChannel::GetProxyInfo(nsIProxyInfo **result)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpChannel::SetTimingEnabled(bool enabled) {
-    mTimingEnabled = enabled;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetTimingEnabled(bool* _retval) {
-    *_retval = mTimingEnabled;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetChannelCreation(TimeStamp* _retval) {
-    *_retval = mChannelCreationTimestamp;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetAsyncOpen(TimeStamp* _retval) {
-    *_retval = mAsyncOpenTime;
-    return NS_OK;
-}
-
-/**
- * @return the number of redirects. There is no check for cross-domain
- * redirects. This check must be done by the consumers.
- */
-NS_IMETHODIMP
-nsHttpChannel::GetRedirectCount(uint16_t *aRedirectCount)
-{
-    *aRedirectCount = mRedirectCount;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetRedirectCount(uint16_t aRedirectCount)
-{
-    mRedirectCount = aRedirectCount;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetRedirectStart(TimeStamp* _retval)
-{
-    *_retval = mRedirectStartTimeStamp;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetRedirectStart(TimeStamp aRedirectStart)
-{
-    mRedirectStartTimeStamp = aRedirectStart;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetRedirectEnd(TimeStamp* _retval)
-{
-    *_retval = mRedirectEndTimeStamp;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetRedirectEnd(TimeStamp aRedirectEnd)
-{
-    mRedirectEndTimeStamp = aRedirectEnd;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetAllRedirectsSameOrigin(bool *aAllRedirectsSameOrigin)
-{
-    *aAllRedirectsSameOrigin = mAllRedirectsSameOrigin;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetAllRedirectsSameOrigin(bool aAllRedirectsSameOrigin)
-{
-    mAllRedirectsSameOrigin = aAllRedirectsSameOrigin;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsHttpChannel::GetDomainLookupStart(TimeStamp* _retval) {
     if (mDNSPrefetch && mDNSPrefetch->TimingsValid())
         *_retval = mDNSPrefetch->StartTimestamp();
@@ -4902,62 +4817,6 @@ nsHttpChannel::GetResponseEnd(TimeStamp* _retval) {
         *_retval = mTransactionTimings.responseEnd;
     return NS_OK;
 }
-
-NS_IMETHODIMP
-nsHttpChannel::GetCacheReadStart(TimeStamp* _retval) {
-    *_retval = mCacheReadStart;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetCacheReadEnd(TimeStamp* _retval) {
-    *_retval = mCacheReadEnd;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetInitiatorType(nsAString & aInitiatorType)
-{
-    aInitiatorType = mInitiatorType;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetInitiatorType(const nsAString & aInitiatorType)
-{
-    mInitiatorType = aInitiatorType;
-    return NS_OK;
-}
-
-#define IMPL_TIMING_ATTR(name)                                 \
-NS_IMETHODIMP                                                  \
-nsHttpChannel::Get##name##Time(PRTime* _retval) {              \
-    TimeStamp stamp;                                  \
-    Get##name(&stamp);                                         \
-    if (stamp.IsNull()) {                                      \
-        *_retval = 0;                                          \
-        return NS_OK;                                          \
-    }                                                          \
-    *_retval = mChannelCreationTime +                          \
-        (PRTime) ((stamp - mChannelCreationTimestamp).ToSeconds() * 1e6); \
-    return NS_OK;                                              \
-}
-
-IMPL_TIMING_ATTR(ChannelCreation)
-IMPL_TIMING_ATTR(AsyncOpen)
-IMPL_TIMING_ATTR(DomainLookupStart)
-IMPL_TIMING_ATTR(DomainLookupEnd)
-IMPL_TIMING_ATTR(ConnectStart)
-IMPL_TIMING_ATTR(ConnectEnd)
-IMPL_TIMING_ATTR(RequestStart)
-IMPL_TIMING_ATTR(ResponseStart)
-IMPL_TIMING_ATTR(ResponseEnd)
-IMPL_TIMING_ATTR(CacheReadStart)
-IMPL_TIMING_ATTR(CacheReadEnd)
-IMPL_TIMING_ATTR(RedirectStart)
-IMPL_TIMING_ATTR(RedirectEnd)
-
-#undef IMPL_TIMING_ATTR
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIHttpAuthenticableChannel
