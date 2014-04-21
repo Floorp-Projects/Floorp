@@ -13,7 +13,7 @@ toolkit.jar:
         skin/classic/mozapps/downloads/unknownContentType.css      (downloads/unknownContentType.css)
         skin/classic/mozapps/extensions/about.css                  (extensions/about.css)
         skin/classic/mozapps/extensions/blocklist.css              (extensions/blocklist.css)
-        skin/classic/mozapps/extensions/extensions.css             (extensions/extensions.css)
+*       skin/classic/mozapps/extensions/extensions.css             (extensions/extensions.css)
 *       skin/classic/mozapps/extensions/selectAddons.css           (extensions/selectAddons.css)
         skin/classic/mozapps/extensions/update.css                 (extensions/update.css)
         skin/classic/mozapps/extensions/extensions.svg             (extensions/extensions.svg)
