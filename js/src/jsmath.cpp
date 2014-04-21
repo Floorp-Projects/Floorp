@@ -365,18 +365,18 @@ js::math_clz32(JSContext *cx, unsigned argc, Value *vp)
 
 static double polevl_sin(double z, double zz)
 {
-    // Constants taken from fdlibm k_sin.c
-    double ans = 1.58969099521155010221e-10;
+    // Constants generated using Mathematica's GeneralMiniMaxApproximation
+    double ans = 1.59046813973877163292e-10; // 6152825598094877 / exp2(85)
     ans *= zz;
-    ans += -2.50507602534068634195e-08;
+    ans += -2.50509001624159785668e-08; // -7571170002733246 / exp2(78)
     ans *= zz;
-    ans +=  2.75573137070700676789e-06;
+    ans +=  2.75573146431678644161e-06; //  6506786951439440 / exp2(71)
     ans *= zz;
-    ans += -1.98412698298579493134e-04;
+    ans += -1.98412698327005105692e-04; // -7320136534024805 / exp2(65)
     ans *= zz;
-    ans +=  8.33333333332248946124e-03;
+    ans +=  8.33333333332626768897e-03; //  4803839602524456 / exp2(59)
     ans *= zz;
-    ans += -1.66666666666666324348e-01;
+    ans += -1.66666666666666490881e-01; // -6004799503160655 / exp2(55)
     ans *= zz * z;
     ans += z;
     return ans;
