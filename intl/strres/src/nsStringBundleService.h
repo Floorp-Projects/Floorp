@@ -41,7 +41,7 @@ private:
 
   void flushBundleCache();
 
-  bundleCacheEntry_t *insertIntoCache(nsIStringBundle *aBundle,
+  bundleCacheEntry_t *insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
                                       nsCStringKey *aHashKey);
 
   nsHashtable mBundleMap;
