@@ -54,7 +54,7 @@ let updatedFiles;
 
 let cleanup;
 
-if (navigator.platform.startsWith("Linux")) {
+if (LINUX) {
   installPath = OS.Path.join(OS.Constants.Path.homeDir, "." + WebappOSUtils.getUniqueName(app));
 
   let xdg_data_home = Cc["@mozilla.org/process/environment;1"].
@@ -99,7 +99,7 @@ if (navigator.platform.startsWith("Linux")) {
       yield OS.File.remove(desktopINI, { ignoreAbsent: true });
     });
   };
-} else if (navigator.platform.startsWith("Win")) {
+} else if (WIN) {
   installPath = OS.Path.join(OS.Constants.Path.winAppDataDir, WebappOSUtils.getUniqueName(app));
 
   let desktopShortcut = OS.Path.join(OS.Constants.Path.desktopDir, "Sample hosted app.lnk");
@@ -165,8 +165,8 @@ if (navigator.platform.startsWith("Linux")) {
       yield OS.File.remove(startMenuShortcut, { ignoreAbsent: true });
     });
   };
-} else if (navigator.platform.startsWith("Mac")) {
-  installPath = OS.Path.join(OS.Constants.Path.macLocalApplicationsDir, "Sample hosted app.app");
+} else if (MAC) {
+  installPath = OS.Path.join(OS.Constants.Path.homeDir, "Applications", "Sample hosted app.app");
   let appProfileDir = OS.Path.join(OS.Constants.Path.macUserLibDir, "Application Support",
                                    WebappOSUtils.getUniqueName(app));
 
@@ -205,26 +205,13 @@ if (navigator.platform.startsWith("Linux")) {
   };
 }
 
-let old_dry_run;
-try {
-  old_dry_run = Services.prefs.getBoolPref("browser.mozApps.installer.dry_run");
-} catch (ex) {}
-
-Services.prefs.setBoolPref("browser.mozApps.installer.dry_run", false);
-
-SimpleTest.registerCleanupFunction(function() {
-  if (old_dry_run === undefined) {
-    Services.prefs.clearUserPref("browser.mozApps.installer.dry_run");
-  } else {
-    Services.prefs.setBoolPref("browser.mozApps.installer.dry_run", old_dry_run);
-  }
-
-  cleanup();
-});
-
-Task.spawn(function() {
+let runTest = Task.async(function*() {
   // Get to a clean state before the test
   yield cleanup();
+
+  SimpleTest.registerCleanupFunction(cleanup);
+
+  setDryRunPref();
 
   let nativeApp = new NativeApp(app, manifest, app.categories);
   ok(nativeApp, "NativeApp object created");
@@ -240,6 +227,13 @@ Task.spawn(function() {
   profileDir = nativeApp.createProfile();
   ok(profileDir && profileDir.exists(), "Profile directory created");
   ok((yield OS.File.exists(profilesIni)), "profiles.ini file created");
+
+  // On Mac build servers, we don't have enough privileges to write to /Applications,
+  // so we install apps in a user-owned directory.
+  if (MAC) {
+    nativeApp._rootInstallDir = OS.Path.join(OS.Constants.Path.homeDir, "Applications");
+    yield OS.File.makeDir(nativeApp._rootInstallDir, { ignoreExisting: true });
+  }
 
   // Install application
   info("Test installation");
@@ -302,10 +296,19 @@ Task.spawn(function() {
   ok((yield checkDateHigherThan(updatedFiles, installTime)), "Modification date higher");
 
   SimpleTest.finish();
-}).then(null, function(e) {
-  ok(false, "Error during test: " + e);
-  SimpleTest.finish();
 });
+
+// The test doesn't work yet on Mac OS X 10.6 machines.
+// See bug 993690.
+if (MAC_106) {
+  todo(false, "The test doesn't work on Mac OS X 10.6 machines");
+  SimpleTest.finish();
+} else {
+  runTest().then(null, function(e) {
+    ok(false, "Error during test: " + e);
+    SimpleTest.finish();
+  });
+}
 
 ]]>
 </script>
