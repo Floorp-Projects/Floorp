@@ -2641,7 +2641,7 @@ WifiWorker.prototype = {
     self.waitForScan(waitForScanCallback);
     doScan();
     function doScan() {
-      WifiManager.scan(true, function (ok) {
+      WifiManager.scan(true, (function (ok) {
         if (!ok) {
           if (!timer) {
             count = 0;
@@ -2659,7 +2659,7 @@ WifiWorker.prototype = {
           timer.initWithCallback(doScan, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
           return;
         }
-      });
+      }).bind(this));
     }
 
     function waitForScanCallback(networks) {
