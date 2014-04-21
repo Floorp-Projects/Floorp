@@ -12,7 +12,6 @@
 #include "nsIObjectOutputStream.h"
 #include "nsIPrincipal.h"
 #include "nsJSPrincipals.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIServiceManager.h"
@@ -38,73 +37,7 @@ using mozilla::AutoPushJSContext;
 using mozilla::AutoSafeJSContext;
 using mozilla::dom::XULDocument;
 
-class nsXULPDGlobalObject : public nsISupports
-{
-public:
-    nsXULPDGlobalObject(nsXULPrototypeDocument* owner);
-
-    // nsISupports interface
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsXULPDGlobalObject)
-
-    JSObject* GetCompilationGlobal();
-    void UnmarkCompilationGlobal()
-    {
-        if (mJSObject) {
-            JS::ExposeObjectToActiveJS(mJSObject);
-        }
-    }
-    void Destroy();
-    nsIPrincipal* GetPrincipal();
-    void ClearGlobalObjectOwner();
-
-protected:
-    virtual ~nsXULPDGlobalObject();
-
-    nsCOMPtr<nsIPrincipal> mCachedPrincipal;
-    nsXULPrototypeDocument* mGlobalObjectOwner; // weak reference
-    JS::Heap<JSObject*> mJSObject;
-    bool mDestroyed; // Probably not necessary, but let's be safe.
-
-    static const JSClass gSharedGlobalClass;
-};
-
-nsIPrincipal* nsXULPrototypeDocument::gSystemPrincipal;
-nsXULPDGlobalObject* nsXULPrototypeDocument::gSystemGlobal;
 uint32_t nsXULPrototypeDocument::gRefCnt;
-
-
-void
-nsXULPDGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
-{
-    nsXULPDGlobalObject* nativeThis = static_cast<nsXULPDGlobalObject*>(JS_GetPrivate(obj));
-    nativeThis->Destroy();
-
-    // The addref was part of JSObject construction
-    nsContentUtils::DeferredFinalize(nativeThis);
-}
-
-
-bool
-nsXULPDGlobalObject_resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id)
-{
-    bool did_resolve = false;
-
-    return JS_ResolveStandardClass(cx, obj, id, &did_resolve);
-}
-
-
-const JSClass nsXULPDGlobalObject::gSharedGlobalClass = {
-    "nsXULPrototypeScript compilation scope",
-    JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
-    JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0),
-    JS_PropertyStub,  JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, nsXULPDGlobalObject_resolve,  JS_ConvertStub,
-    nsXULPDGlobalObject_finalize, nullptr, nullptr, nullptr,
-    JS_GlobalObjectTraceHook
-};
-
-
 
 //----------------------------------------------------------------------
 //
@@ -132,18 +65,8 @@ nsXULPrototypeDocument::Init()
 
 nsXULPrototypeDocument::~nsXULPrototypeDocument()
 {
-    if (mGlobalObject) {
-        // cleaup cycles etc.
-        mGlobalObject->ClearGlobalObjectOwner();
-    }
-
     if (mRoot)
         mRoot->ReleaseSubtree();
-
-    if (--gRefCnt == 0) {
-        NS_IF_RELEASE(gSystemPrincipal);
-        NS_IF_RELEASE(gSystemGlobal);
-    }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULPrototypeDocument)
@@ -156,7 +79,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULPrototypeDocument)
         return NS_SUCCESS_INTERRUPTED_TRAVERSE;
     }
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobalObject)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNodeInfoManager)
     for (uint32_t i = 0; i < tmp->mPrototypeWaiters.Length(); ++i) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mPrototypeWaiters[i]");
@@ -189,35 +111,6 @@ NS_NewXULPrototypeDocument(nsXULPrototypeDocument** aResult)
 
     NS_ADDREF(*aResult);
     return rv;
-}
-
-// Helper method that shares a system global among all prototype documents
-// that have the system principal as their security principal.   Called by
-// nsXULPrototypeDocument::Read and nsXULPrototypeDocument::GetCompilationGlobal.
-// This method greatly reduces the number of nsXULPDGlobalObjects and their
-// nsIScriptContexts in apps that load many XUL documents via chrome: URLs.
-
-nsXULPDGlobalObject *
-nsXULPrototypeDocument::NewXULPDGlobalObject()
-{
-    // Now compare DocumentPrincipal() to gSystemPrincipal, in order to create
-    // gSystemGlobal if the two pointers are equal.  Thus, gSystemGlobal
-    // implies gSystemPrincipal.
-    nsXULPDGlobalObject *global;
-    if (DocumentPrincipal() == gSystemPrincipal) {
-        if (!gSystemGlobal) {
-            gSystemGlobal = new nsXULPDGlobalObject(nullptr);
-            if (! gSystemGlobal)
-                return nullptr;
-            NS_ADDREF(gSystemGlobal);
-        }
-        global = gSystemGlobal;
-    } else {
-        global = new nsXULPDGlobalObject(this); // does not refcount
-        if (! global)
-            return nullptr;
-    }
-    return global;
 }
 
 //----------------------------------------------------------------------
@@ -264,12 +157,6 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     }
     // Better safe than sorry....
     mNodeInfoManager->SetDocumentPrincipal(principal);
-
-
-    // nsIScriptGlobalObject mGlobalObject
-    mGlobalObject = NewXULPDGlobalObject();
-    if (! mGlobalObject)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     mRoot = new nsXULPrototypeElement();
     if (! mRoot)
@@ -614,22 +501,10 @@ nsXULPrototypeDocument::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
     mNodeInfoManager->SetDocumentPrincipal(aPrincipal);
 }
 
-JSObject*
-nsXULPrototypeDocument::GetCompilationGlobal()
-{
-  if (!mGlobalObject) {
-      mGlobalObject = NewXULPDGlobalObject();
-  }
-  return mGlobalObject->GetCompilationGlobal();
-}
-
 void
 nsXULPrototypeDocument::MarkInCCGeneration(uint32_t aCCGeneration)
 {
     mCCGeneration = aCCGeneration;
-    if (mGlobalObject) {
-        mGlobalObject->UnmarkCompilationGlobal();
-    }
 }
 
 nsNodeInfoManager*
@@ -691,119 +566,4 @@ nsXULPrototypeDocument::TraceProtos(JSTracer* aTrc, uint32_t aGCNumber)
   if (mRoot) {
     mRoot->TraceAllScripts(aTrc);
   }
-}
-
-//----------------------------------------------------------------------
-//
-// nsXULPDGlobalObject
-//
-
-nsXULPDGlobalObject::nsXULPDGlobalObject(nsXULPrototypeDocument* owner)
-  : mGlobalObjectOwner(owner)
-  , mJSObject(nullptr)
-  , mDestroyed(false)
-{
-}
-
-
-nsXULPDGlobalObject::~nsXULPDGlobalObject()
-{
-  MOZ_ASSERT(!mJSObject);
-}
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULPDGlobalObject)
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXULPDGlobalObject)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJSObject)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULPDGlobalObject)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULPDGlobalObject)
-  tmp->Destroy();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULPDGlobalObject)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULPDGlobalObject)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULPDGlobalObject)
-
-JSObject *
-nsXULPDGlobalObject::GetCompilationGlobal()
-{
-  if (mJSObject) {
-    // We've been initialized before. This is what we get.
-    JS::ExposeObjectToActiveJS(mJSObject);
-    return mJSObject;
-  }
-
-  if (mDestroyed) {
-    return nullptr;
-  }
-
-  AutoSafeJSContext cx;
-  JS::CompartmentOptions options;
-  options.setZone(JS::SystemZone)
-         .setInvisibleToDebugger(true);
-  mJSObject = JS_NewGlobalObject(cx, &gSharedGlobalClass,
-                                 nsJSPrincipals::get(GetPrincipal()),
-                                 JS::DontFireOnNewGlobalHook, options);
-  NS_ENSURE_TRUE(mJSObject, nullptr);
-
-  mozilla::HoldJSObjects(this);
-
-  // Add an owning reference from JS back to us. This'll be
-  // released when the JSObject is finalized.
-  JS_SetPrivate(mJSObject, this);
-  NS_ADDREF(this);
-
-  // Set the location information for the new global, so that tools like
-  // about:memory may use that information
-  nsIURI *ownerURI = mGlobalObjectOwner->GetURI();
-  xpc::SetLocationForGlobal(mJSObject, ownerURI);
-
-  return mJSObject;
-}
-
-void
-nsXULPDGlobalObject::ClearGlobalObjectOwner()
-{
-  NS_ASSERTION(!mCachedPrincipal, "This shouldn't ever be set until now!");
-
-  // Cache mGlobalObjectOwner's principal if possible.
-  if (this != nsXULPrototypeDocument::gSystemGlobal)
-    mCachedPrincipal = mGlobalObjectOwner->DocumentPrincipal();
-
-  mGlobalObjectOwner = nullptr;
-}
-
-void
-nsXULPDGlobalObject::Destroy()
-{
-  mDestroyed = true;
-  if (!mJSObject) {
-    return;
-  }
-  mJSObject = nullptr;
-  mozilla::DropJSObjects(this);
-}
-
-nsIPrincipal*
-nsXULPDGlobalObject::GetPrincipal()
-{
-    if (!mGlobalObjectOwner) {
-        // See nsXULPrototypeDocument::NewXULPDGlobalObject, the comment
-        // about gSystemGlobal implying gSystemPrincipal.
-        if (this == nsXULPrototypeDocument::gSystemGlobal) {
-            return nsXULPrototypeDocument::gSystemPrincipal;
-        }
-        // Return the cached principal if it exists.
-        return mCachedPrincipal;
-    }
-
-    return mGlobalObjectOwner->DocumentPrincipal();
 }
