@@ -1146,7 +1146,7 @@ HTMLContentSink::FlushTags()
 NS_IMETHODIMP
 HTMLContentSink::SetDocumentCharset(nsACString& aCharset)
 {
-  MOZ_ASSUME_UNREACHABLE("<meta charset> case doesn't occur with about:blank");
+  MOZ_ASSERT_UNREACHABLE("<meta charset> case doesn't occur with about:blank");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
