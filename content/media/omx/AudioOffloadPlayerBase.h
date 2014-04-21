@@ -49,7 +49,10 @@ public:
     return android::NO_INIT;
   }
 
-  virtual void ChangeState(MediaDecoder::PlayState aState) {}
+  virtual status_t ChangeState(MediaDecoder::PlayState aState)
+  {
+    return android::NO_INIT;
+  }
 
   virtual void SetVolume(double aVolume) {}
 
