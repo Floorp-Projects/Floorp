@@ -356,7 +356,8 @@ public:
   void RenderVideoFrame(const unsigned char* buffer,
                         unsigned int buffer_size,
                         uint32_t time_stamp,
-                        int64_t render_time)
+                        int64_t render_time,
+                        const mozilla::ImageHandle& handle)
  {
   //write the frame to the file
   if(VerifyFrame(buffer, buffer_size) == 0)
