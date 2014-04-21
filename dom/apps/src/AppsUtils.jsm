@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 
 // Shared code for AppsServiceChild.jsm, Webapps.jsm and Webapps.js
 
-this.EXPORTED_SYMBOLS = ["AppsUtils", "ManifestHelper", "isAbsoluteURI"];
+this.EXPORTED_SYMBOLS = ["AppsUtils", "ManifestHelper", "isAbsoluteURI", "mozIApplication"];
 
 function debug(s) {
   //dump("-*- AppsUtils.jsm: " + s + "\n");
@@ -39,7 +39,8 @@ this.isAbsoluteURI = function(aURI) {
          Services.io.newURI(aURI, null, bar).prePath != bar.prePath;
 }
 
-function mozIApplication() {
+this.mozIApplication = function(aApp) {
+  _setAppProperties(this, aApp);
 }
 
 mozIApplication.prototype = {
@@ -65,51 +66,49 @@ mozIApplication.prototype = {
   }
 }
 
+function _setAppProperties(aObj, aApp) {
+  aObj.name = aApp.name;
+  aObj.csp = aApp.csp;
+  aObj.installOrigin = aApp.installOrigin;
+  aObj.origin = aApp.origin;
+#ifdef MOZ_ANDROID_SYNTHAPKS
+  aObj.apkPackageName = aApp.apkPackageName;
+#endif
+  aObj.receipts = aApp.receipts ? JSON.parse(JSON.stringify(aApp.receipts)) : null;
+  aObj.installTime = aApp.installTime;
+  aObj.manifestURL = aApp.manifestURL;
+  aObj.appStatus = aApp.appStatus;
+  aObj.removable = aApp.removable;
+  aObj.id = aApp.id;
+  aObj.localId = aApp.localId;
+  aObj.basePath = aApp.basePath;
+  aObj.progress = aApp.progress || 0.0;
+  aObj.installState = aApp.installState || "installed";
+  aObj.downloadAvailable = aApp.downloadAvailable;
+  aObj.downloading = aApp.downloading;
+  aObj.readyToApplyDownload = aApp.readyToApplyDownload;
+  aObj.downloadSize = aApp.downloadSize || 0;
+  aObj.lastUpdateCheck = aApp.lastUpdateCheck;
+  aObj.updateTime = aApp.updateTime;
+  aObj.etag = aApp.etag;
+  aObj.packageEtag = aApp.packageEtag;
+  aObj.manifestHash = aApp.manifestHash;
+  aObj.packageHash = aApp.packageHash;
+  aObj.staged = aApp.staged;
+  aObj.installerAppId = aApp.installerAppId || Ci.nsIScriptSecurityManager.NO_APP_ID;
+  aObj.installerIsBrowser = !!aApp.installerIsBrowser;
+  aObj.storeId = aApp.storeId || "";
+  aObj.storeVersion = aApp.storeVersion || 0;
+  aObj.role = aApp.role || "";
+  aObj.redirects = aApp.redirects;
+}
+
 this.AppsUtils = {
   // Clones a app, without the manifest.
-  cloneAppObject: function cloneAppObject(aApp) {
-    return {
-      name: aApp.name,
-      csp: aApp.csp,
-      installOrigin: aApp.installOrigin,
-      origin: aApp.origin,
-#ifdef MOZ_ANDROID_SYNTHAPKS
-      apkPackageName: aApp.apkPackageName,
-#endif
-      receipts: aApp.receipts ? JSON.parse(JSON.stringify(aApp.receipts)) : null,
-      installTime: aApp.installTime,
-      manifestURL: aApp.manifestURL,
-      appStatus: aApp.appStatus,
-      removable: aApp.removable,
-      id: aApp.id,
-      localId: aApp.localId,
-      basePath: aApp.basePath,
-      progress: aApp.progress || 0.0,
-      installState: aApp.installState || "installed",
-      downloadAvailable: aApp.downloadAvailable,
-      downloading: aApp.downloading,
-      readyToApplyDownload: aApp.readyToApplyDownload,
-      downloadSize: aApp.downloadSize || 0,
-      lastUpdateCheck: aApp.lastUpdateCheck,
-      updateTime: aApp.updateTime,
-      etag: aApp.etag,
-      packageEtag: aApp.packageEtag,
-      manifestHash: aApp.manifestHash,
-      packageHash: aApp.packageHash,
-      staged: aApp.staged,
-      installerAppId: aApp.installerAppId || Ci.nsIScriptSecurityManager.NO_APP_ID,
-      installerIsBrowser: !!aApp.installerIsBrowser,
-      storeId: aApp.storeId || "",
-      storeVersion: aApp.storeVersion || 0,
-      role: aApp.role || "",
-      redirects: aApp.redirects
-    };
-  },
-
-  cloneAsMozIApplication: function cloneAsMozIApplication(aApp) {
-    let res = this.cloneAppObject(aApp);
-    res.__proto__ = mozIApplication.prototype;
-    return res;
+  cloneAppObject: function(aApp) {
+    let obj = {};
+    _setAppProperties(obj, aApp);
+    return obj;
   },
 
   getAppByManifestURL: function getAppByManifestURL(aApps, aManifestURL) {
@@ -120,7 +119,7 @@ this.AppsUtils = {
     for (let id in aApps) {
       let app = aApps[id];
       if (app.manifestURL == aManifestURL) {
-        return this.cloneAsMozIApplication(app);
+        return new mozIApplication(app);
       }
     }
 
@@ -166,7 +165,7 @@ this.AppsUtils = {
     for (let id in aApps) {
       let app = aApps[id];
       if (app.localId == aLocalId) {
-        return this.cloneAsMozIApplication(app);
+        return new mozIApplication(app);
       }
     }
 
