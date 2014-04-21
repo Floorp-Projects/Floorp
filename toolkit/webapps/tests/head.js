@@ -7,6 +7,11 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
+const LINUX = navigator.platform.startsWith("Linux");
+const MAC = navigator.platform.startsWith("Mac");
+const WIN = navigator.platform.startsWith("Win");
+const MAC_106 = navigator.userAgent.contains("Mac OS X 10.6");
+
 function checkFiles(files) {
   return Task.spawn(function*() {
     for (let file of files) {
@@ -54,4 +59,21 @@ function getFile() {
   let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   file.initWithPath(OS.Path.join.apply(OS.Path, arguments));
   return file;
+}
+
+function setDryRunPref() {
+  let old_dry_run;
+  try {
+    old_dry_run = Services.prefs.getBoolPref("browser.mozApps.installer.dry_run");
+  } catch (ex) {}
+
+  Services.prefs.setBoolPref("browser.mozApps.installer.dry_run", false);
+
+  SimpleTest.registerCleanupFunction(function() {
+    if (old_dry_run === undefined) {
+      Services.prefs.clearUserPref("browser.mozApps.installer.dry_run");
+    } else {
+      Services.prefs.setBoolPref("browser.mozApps.installer.dry_run", old_dry_run);
+    }
+  });
 }
