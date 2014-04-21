@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+%filter substitution
+%include defines.inc
+
 .details {
   width: 100%;
 }
@@ -13,15 +16,6 @@
 .version {
   /* title is not localized, so keep the margin on the left side */
   margin-left: .67em;
-}
-
-.tag {
-  float: right;
-  margin-left: .67em;
-
-  /* compensate for the title baseline */
-  position: relative;
-  bottom: -3px;
 }
 
 #header-button {
@@ -38,7 +32,7 @@
 }
 
 .status {
-  background-color: #eef2f5;
+  background-color: @color_about_item_inner@;
   border-top: 2px solid;
   -moz-border-top-colors: #bac2ac #ffffff;
   font-weight: bold;
@@ -48,11 +42,8 @@
 
 .options-header {
   font-weight: bold;
-  padding: 1em 1.3em;
-}
-
-.options-box {
-  margin: 0 .67em;
+  text-transform: uppercase;
+  margin-top: 1em;
 }
 
 .addon-item[isDisabled="true"] .options-header,
@@ -64,45 +55,41 @@
   display: none;
 }
 
+/* Settings */
+
 setting {
-  padding: 1em .67em;
-  border-top: 2px solid;
-  -moz-border-top-colors: #bac2ac #ffffff;
+  padding-bottom: 1em;
   -moz-box-align: center;
   box-sizing: border-box;
   width: 100%;
+}
+
+setting[type="integer"],
+setting[type="string"],
+setting[type="menulist"],
+setting[type="control"] {
+  -moz-box-orient: vertical;
+  -moz-box-align: start;
 }
 
 setting > vbox {
   -moz-box-flex: 1;
 }
 
-.preferences-title {
-  font-weight: bold;
-}
-
 .preferences-description {
   margin-top: 4px;
+  color: #666;
 }
 
 .preferences-description:empty {
   display: none;
 }
 
-/* Put setting textboxes on a separate row */
-setting[type="integer"],
-setting[type="string"] {
-  -moz-box-align: center;
-  -moz-box-orient: vertical;
-}
-
-.preferences-alignment > textbox {
-  margin: .67em 0 0 0;
-  font-size: 1.2em !important;
-}
+/* Checkbox */
 
 checkbox {
   -moz-binding: url("chrome://global/content/bindings/checkbox.xml#checkbox-with-spacing") !important;
+  margin: 0;
 }
 
 checkbox[label=""] > .checkbox-label-box,
@@ -111,10 +98,11 @@ checkbox:not([label]) > .checkbox-label-box {
 }
 
 .checkbox-check {
-  background: url("chrome://browser/skin/images/checkbox_unchecked.png") no-repeat 50% 50%;
-  border: 0 transparent;
-  width: 2.6em;
-  height: 2.6em;
+  background-color: transparent;
+  background-image: url("chrome://browser/skin/images/checkbox_unchecked.png");
+  border: none;
+  height: 48px;
+  width: 48px;
 }
 
 setting:active checkbox > .checkbox-spacer-box > .checkbox-check {
@@ -144,14 +132,22 @@ textbox[type="number"] > spinbuttons {
 }
 
 textbox {
-  background: white -moz-linear-gradient(top, rgba(27,113,177,0.5) 0, rgba(198,225,246,0.2) 3px, rgba(255,255,255,0.2) 16px);
-  border-radius: 3px;
-  border-color: rgb(94,128,153);
-  padding: 0 !important;
+  min-width: 200px;
+  margin: 2px 0;
+  padding: 0.5em !important;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #333;
 }
 
-.textbox-input-box {
-  padding: .4em .67em;
+/* Button */
+
+button {
+  margin: 2px 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 0.5em;
 }
 
 /* Menulist */
@@ -159,39 +155,36 @@ textbox {
 menulist {
   -moz-appearance: none !important;
   -moz-user-focus: ignore;
-  /* min-width: 200px !important; */
-  color: #000 !important;
-  border-radius: 5px;
-  border-color: rgb(94,128,153);
-  border-style: solid;
-  padding: .4em .67em;
-  background: white;
-  border: 1px solid #cacdd5;
-  border-style: solid;
-  border-color: rgb(94,128,153);
   min-width: 200px;
-}
-
-.menulist-label {
-  background-color: transparent !important;
-}
-
-menulist > menupopup > menuitem > label {
-  -moz-padding-start: 3px !important;
-  -moz-padding-end: 7px !important;
+  margin: 2px 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.5em;
 }
 
 menulist > dropmarker {
   height: 1.8em;
   width: 1.8em;
   margin-left: @margin_snormal@;
-  background-color: transparent; /* for windows */
-  border: none;                  /* for windows */
+  background-color: transparent;
+  border: none;
   -moz-box-align: center;
   -moz-box-pack: center;
   list-style-image: url("chrome://browser/skin/images/dropmarker.svg") !important;
   -moz-image-region: auto;
   display: block;
+}
+
+/* Select */
+
+select {
+  min-width: 200px;
+  margin: 2px 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 1em;
 }
 
 /* XBL bindings */
