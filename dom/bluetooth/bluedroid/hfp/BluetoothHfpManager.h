@@ -62,6 +62,7 @@ enum PhoneType {
 class Call {
 public:
   Call();
+  void Set(const nsAString& aNumber, const bool aIsOutgoing);
   void Reset();
   bool IsActive();
 
