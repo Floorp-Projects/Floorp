@@ -77,6 +77,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "UnitTransforms.h"
 #include "TiledLayerBuffer.h" // For TILEDLAYERBUFFER_TILE_SIZE
+#include "ClientLayerManager.h"
 
 #include "mozilla/Preferences.h"
 
@@ -6514,7 +6515,21 @@ nsLayoutUtils::WantSubAPZC()
    }
 #endif
    return wantSubAPZC;
- }
+}
+
+/* static */ void
+nsLayoutUtils::LogTestDataForPaint(nsIPresShell* aPresShell,
+                                   ViewID aScrollId,
+                                   const std::string& aKey,
+                                   const std::string& aValue)
+{
+  nsRefPtr<LayerManager> lm = aPresShell->GetPresContext()->GetRootPresContext()
+      ->GetPresShell()->GetLayerManager();
+  if (lm && lm->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
+    static_cast<ClientLayerManager*>(lm.get())->LogTestDataForCurrentPaint(aScrollId, aKey, aValue);
+  }
+}
+
 
 nsLayoutUtils::SurfaceFromElementResult::SurfaceFromElementResult()
   // Use safe default values here
