@@ -2,10 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+%filter substitution
+%include defines.inc
+
 html {
   font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
-  font-size: 12px;
-  background-color: #ced7de;
+  font-size: 14px;
+  background-color: @color_about_background@;
   -moz-text-size-adjust: none;
 }
 
@@ -46,7 +49,7 @@ body {
 
 .list-item {
   color: black;
-  background-color: #e6e9eb;
+  background-color: @color_about_item@;
   border-bottom: 2px solid;
   -moz-border-bottom-colors: #ffffff #bac2ac;
   position: relative;
@@ -66,9 +69,8 @@ body {
 }
 
 .inner {
-  background-color: #eef2f5;
-  min-height: 3.8em;
-  padding: 0.5em;
+  background-color: @color_about_item_inner@;
+  padding: 1em;
 
   /* make room for the favicon */
   -moz-margin-start: 4.5em;
@@ -111,9 +113,8 @@ body[dir="ltr"] .icon {
   border-top-color: #bac2ac;
   -moz-border-start-color: #bac2ac;
   background-image: none;
-  background-color: #edf0f5;
+  background-color: @color_about_item_inner@;
   border-radius: 0px !important;
-
   flex: 1;
   padding: 0.75em 0.5em;
 }
@@ -136,14 +137,13 @@ body[dir="ltr"] .icon {
 }
 
 .title {
-  font-size: 1.2em;
   font-weight: bold;
   overflow: hidden;
   flex: 1;
 }
 
 #browse-title {
-  margin-top: 1em;
+  margin: 0.5em 0;
   background-image: url("chrome://browser/skin/images/chevron.png");
   background-size: 8px 20px;
   background-position: right;

@@ -1,5 +1,9 @@
 %filter substitution
 
+%define color_about_background #ced7de
+%define color_about_item #e6e9eb
+%define color_about_item_inner #eef2f5
+
 %define color_background_active #525252
 %define color_background_default #000
 %define color_text_default #fff
