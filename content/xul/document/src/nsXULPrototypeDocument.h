@@ -21,7 +21,6 @@ class nsIURI;
 class nsNodeInfoManager;
 class nsXULPrototypeElement;
 class nsXULPrototypePI;
-class nsXULPDGlobalObject;
 
 namespace mozilla {
 namespace dom {
@@ -112,8 +111,6 @@ public:
 
     nsNodeInfoManager *GetNodeInfoManager();
 
-    JSObject* GetCompilationGlobal();
-
     void MarkInCCGeneration(uint32_t aCCGeneration);
 
     NS_DECL_CYCLE_COLLECTION_CLASS(nsXULPrototypeDocument)
@@ -125,8 +122,6 @@ protected:
     nsRefPtr<nsXULPrototypeElement> mRoot;
     nsTArray<nsRefPtr<nsXULPrototypePI> > mProcessingInstructions;
     nsCOMArray<nsIURI> mStyleSheetReferences;
-
-    nsRefPtr<nsXULPDGlobalObject> mGlobalObject;
 
     bool mLoaded;
     nsTArray< nsRefPtr<mozilla::dom::XULDocument> > mPrototypeWaiters;
@@ -143,13 +138,7 @@ protected:
     friend NS_IMETHODIMP
     NS_NewXULPrototypeDocument(nsXULPrototypeDocument** aResult);
 
-    nsXULPDGlobalObject *NewXULPDGlobalObject();
-
-    static nsIPrincipal* gSystemPrincipal;
-    static nsXULPDGlobalObject* gSystemGlobal;
     static uint32_t gRefCnt;
-
-    friend class nsXULPDGlobalObject;
 };
 
 #endif // nsXULPrototypeDocument_h__

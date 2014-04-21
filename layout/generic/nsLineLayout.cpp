@@ -1076,12 +1076,9 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
   // in an ib split.  Note that the ib sibling (block-in-inline
   // sibling) annotations only live on the first continuation, but we
   // don't want to apply the start margin for later continuations
-  // anyway.  For box-decoration-break:clone we apply the start-margin
-  // on all continuations.
-  if ((pfd->mFrame->GetPrevContinuation() ||
-       pfd->mFrame->FrameIsNonFirstInIBSplit()) &&
-      aReflowState.mStyleBorder->mBoxDecorationBreak ==
-        NS_STYLE_BOX_DECORATION_BREAK_SLICE) {
+  // anyway.
+  if (pfd->mFrame->GetPrevContinuation() ||
+      pfd->mFrame->FrameIsNonFirstInIBSplit()) {
     // Zero this out so that when we compute the max-element-width of
     // the frame we will properly avoid adding in the starting margin.
     pfd->mMargin.IStart(frameWM) = 0;
@@ -1163,9 +1160,6 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
    * 3) The frame is in an {ib} split and is not the last part.
    *
    * However, none of that applies if this is a letter frame (XXXbz why?)
-   *
-   * For box-decoration-break:clone we apply the end margin on all
-   * continuations (that are not letter frames).
    */
   if (pfd->mFrame->GetPrevContinuation() ||
       pfd->mFrame->FrameIsNonFirstInIBSplit()) {
@@ -1173,10 +1167,8 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   }
   if ((NS_FRAME_IS_NOT_COMPLETE(aStatus) ||
        pfd->mFrame->LastInFlow()->GetNextContinuation() ||
-       pfd->mFrame->FrameIsNonLastInIBSplit()) &&
-      !pfd->GetFlag(PFD_ISLETTERFRAME) &&
-      pfd->mFrame->StyleBorder()->mBoxDecorationBreak ==
-        NS_STYLE_BOX_DECORATION_BREAK_SLICE) {
+       pfd->mFrame->FrameIsNonLastInIBSplit())
+      && !pfd->GetFlag(PFD_ISLETTERFRAME)) {
     pfd->mMargin.IEnd(frameWM) = 0;
   }
   LogicalMargin usedMargins = pfd->mMargin.ConvertTo(lineWM, frameWM);

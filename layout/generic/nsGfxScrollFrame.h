@@ -71,8 +71,7 @@ public:
                            bool&                   aCreateLayer,
                            bool                    aPositioned);
 
-  bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
-                      int aSkipSides, nscoord aRadii[8]) const;
+  bool GetBorderRadii(nscoord aRadii[8]) const;
 
   // nsIReflowCallback
   virtual bool ReflowFinished() MOZ_OVERRIDE;
@@ -472,9 +471,8 @@ public:
                        const nsPoint& aScrollPosition);
   nscoord GetIntrinsicVScrollbarWidth(nsRenderingContext *aRenderingContext);
 
-  virtual bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
-                              int aSkipSides, nscoord aRadii[8]) const MOZ_OVERRIDE {
-    return mHelper.GetBorderRadii(aFrameSize, aBorderArea, aSkipSides, aRadii);
+  virtual bool GetBorderRadii(nscoord aRadii[8]) const MOZ_OVERRIDE {
+    return mHelper.GetBorderRadii(aRadii);
   }
 
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
@@ -810,9 +808,8 @@ public:
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
   virtual nsresult GetPadding(nsMargin& aPadding) MOZ_OVERRIDE;
 
-  virtual bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
-                              int aSkipSides, nscoord aRadii[8]) const MOZ_OVERRIDE {
-    return mHelper.GetBorderRadii(aFrameSize, aBorderArea, aSkipSides, aRadii);
+  virtual bool GetBorderRadii(nscoord aRadii[8]) const MOZ_OVERRIDE {
+    return mHelper.GetBorderRadii(aRadii);
   }
 
   nsresult Layout(nsBoxLayoutState& aState);
