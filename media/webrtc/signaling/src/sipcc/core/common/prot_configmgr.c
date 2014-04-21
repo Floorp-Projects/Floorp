@@ -614,10 +614,6 @@ sip_config_video_supported_codecs_get (rtp_ptype aSupportedCodecs[],
         //codec_mask = vcmGetVideoCodecList(DSP_ENCODEONLY);
         codec_mask = vcmGetVideoCodecList(VCM_DSP_IGNORE);
     }
-    if ( codec_mask & VCM_CODEC_RESOURCE_VP8) {
-      aSupportedCodecs[count] = RTP_VP8;
-      count++;
-    }
     if ( codec_mask & VCM_CODEC_RESOURCE_H264) {
       /*
        * include payload type for packetization mode 1 only if ucm sis version
@@ -633,6 +629,10 @@ sip_config_video_supported_codecs_get (rtp_ptype aSupportedCodecs[],
           }
       }
       aSupportedCodecs[count] = RTP_H264_P0;
+      count++;
+    }
+    if ( codec_mask & VCM_CODEC_RESOURCE_VP8) {
+      aSupportedCodecs[count] = RTP_VP8;
       count++;
     }
     if ( codec_mask & VCM_CODEC_RESOURCE_H263) {
