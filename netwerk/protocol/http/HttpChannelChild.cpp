@@ -51,6 +51,9 @@ HttpChannelChild::HttpChannelChild()
 {
   LOG(("Creating HttpChannelChild @%x\n", this));
 
+  mChannelCreationTime = PR_Now();
+  mChannelCreationTimestamp = TimeStamp::Now();
+  mAsyncOpenTime = TimeStamp::Now();
   mEventQ = new ChannelEventQueue(static_cast<nsIHttpChannel*>(this));
 }
 
@@ -236,7 +239,8 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                      const nsCString& cachedCharset,
                                      const nsCString& securityInfoSerialization,
                                      const NetAddr& selfAddr,
-                                     const NetAddr& peerAddr)
+                                     const NetAddr& peerAddr,
+                                     const int16_t& redirectCount)
 {
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
   // stage, as they are set in the listener's OnStartRequest.
@@ -244,6 +248,9 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
     "mFlushedForDiversion should be unset before OnStartRequest!");
   MOZ_RELEASE_ASSERT(!mDivertingToParent,
     "mDivertingToParent should be unset before OnStartRequest!");
+
+
+  mRedirectCount = redirectCount;
 
   if (mEventQ->ShouldEnqueue()) {
     mEventQ->Enqueue(new StartRequestEvent(this, channelStatus, responseHead,
@@ -1141,6 +1148,8 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   NS_ENSURE_ARG_POINTER(listener);
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+
+  mAsyncOpenTime = TimeStamp::Now();
 
   // Port checked in parent, but duplicate here so we can return with error
   // immediately
