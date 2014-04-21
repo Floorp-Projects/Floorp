@@ -14,6 +14,7 @@
 
 #include "LoadManager.h"
 
+#include "webrtc/common_video/interface/native_handle.h"
 #include "webrtc/video_engine/include/vie_errors.h"
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -1070,7 +1071,17 @@ WebrtcVideoConduit::DeliverFrame(unsigned char* buffer,
 
   if(mRenderer)
   {
-    mRenderer->RenderVideoFrame(buffer, buffer_size, time_stamp, render_time);
+    layers::Image* img = nullptr;
+    // |handle| should be a webrtc::NativeHandle if available.
+    if (handle) {
+      webrtc::NativeHandle* native_h = static_cast<webrtc::NativeHandle*>(handle);
+      // In the handle, there should be a layers::Image.
+      img = static_cast<layers::Image*>(native_h->GetHandle());
+    }
+
+    const ImageHandle img_h(img);
+    mRenderer->RenderVideoFrame(buffer, buffer_size, time_stamp, render_time,
+                                img_h);
     return 0;
   }
 
