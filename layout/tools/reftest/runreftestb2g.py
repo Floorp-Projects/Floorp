@@ -20,6 +20,7 @@ from remotereftest import ReftestServer
 
 from mozdevice import DeviceManagerADB, DMError
 from marionette import Marionette
+import moznetwork
 
 class B2GOptions(ReftestOptions):
 
@@ -142,7 +143,7 @@ class B2GOptions(ReftestOptions):
 
         if options.remoteWebServer == None:
             if os.name != "nt":
-                options.remoteWebServer = self.automation.getLanIp()
+                options.remoteWebServer = moznetwork.get_ip()
             else:
                 print "ERROR: you must specify a --remote-webserver=<ip address>\n"
                 return None

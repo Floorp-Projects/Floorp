@@ -25,6 +25,7 @@ SERV_FILES = 	\
 		$(topsrcdir)/testing/mozbase/manifestdestiny/manifestparser/manifestparser.py \
 		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/droid.py \
 		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/Zeroconf.py \
+		$(topsrcdir)/testing/mozbase/moznetwork/moznetwork/moznetwork.py \
 		$(topsrcdir)/build/automationutils.py \
 		$(topsrcdir)/build/mobile/remoteautomation.py \
 		gen_template.pl \

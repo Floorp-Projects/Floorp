@@ -25,6 +25,7 @@ import droid
 import manifestparser
 import mozinfo
 import mozlog
+import moznetwork
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 log = mozlog.getLogger('Mochi-Remote')
@@ -131,7 +132,7 @@ class RemoteOptions(MochitestOptions):
 
         if options.remoteWebServer == None:
             if os.name != "nt":
-                options.remoteWebServer = automation.getLanIp()
+                options.remoteWebServer = moznetwork.get_ip()
             else:
                 log.error("you must specify a --remote-webserver=<ip address>")
                 return None
