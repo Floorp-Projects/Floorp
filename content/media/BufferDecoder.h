@@ -46,7 +46,7 @@ public:
 
   virtual int64_t GetEndMediaTime() const MOZ_FINAL MOZ_OVERRIDE;
 
-  virtual int64_t GetMediaDuration() MOZ_FINAL MOZ_OVERRIDE;
+  virtual int64_t GetMediaDuration() MOZ_OVERRIDE;
 
   virtual void SetMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
 
