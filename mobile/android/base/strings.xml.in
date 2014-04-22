@@ -297,6 +297,8 @@
 
   <string name="home_top_sites_title">&home_top_sites_title;</string>
   <string name="home_top_sites_add">&home_top_sites_add;</string>
+  <string name="home_top_sites_edit_empty_toast">&home_top_sites_edit_empty_toast;</string>
+
   <string name="home_history_title">&home_history_title;</string>
   <string name="home_bookmarks_empty">&home_bookmarks_empty;</string>
   <string name="home_last_tabs_title">&home_last_tabs_title;</string>
