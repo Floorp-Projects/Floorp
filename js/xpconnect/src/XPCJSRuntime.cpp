@@ -3505,12 +3505,12 @@ XPCJSRuntime::GetCompilationScope()
         SandboxOptions options;
         options.sandboxName.AssignLiteral("XPConnect Compilation Compartment");
         options.invisibleToDebugger = true;
+        options.discardSource = ShouldDiscardSystemSource();
         RootedValue v(cx);
         nsresult rv = CreateSandboxObject(cx, &v, /* principal = */ nullptr, options);
         NS_ENSURE_SUCCESS(rv, nullptr);
 
         mCompilationScope = js::UncheckedUnwrap(&v.toObject());
-        CompartmentOptionsRef(mCompilationScope).setDiscardSource(ShouldDiscardSystemSource());
     }
     return mCompilationScope;
 }
