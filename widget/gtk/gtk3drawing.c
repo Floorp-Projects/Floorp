@@ -2807,20 +2807,24 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
         w = gMenuPopupWidget;
         break;
     case MOZ_GTK_MENUITEM:
+    case MOZ_GTK_CHECKMENUITEM:
+    case MOZ_GTK_RADIOMENUITEM:
         {
-            ensure_menu_item_widget();
-            ensure_menu_bar_item_widget();
-            
-            *left = *top = *right = *bottom = gtk_container_get_border_width(GTK_CONTAINER(gMenuItemWidget));
-            moz_gtk_add_style_padding(gtk_widget_get_style_context(gMenuItemWidget), 
+            if (widget == MOZ_GTK_MENUITEM) {
+                ensure_menu_item_widget();
+                ensure_menu_bar_item_widget();
+                w = gMenuItemWidget;
+            }
+            else {
+                ensure_check_menu_item_widget();
+                w = gCheckMenuItemWidget;
+            }
+
+            *left = *top = *right = *bottom = gtk_container_get_border_width(GTK_CONTAINER(w));
+            moz_gtk_add_style_padding(gtk_widget_get_style_context(w),
                                       left, top, right, bottom);
             return MOZ_GTK_SUCCESS;
         }
-    case MOZ_GTK_CHECKMENUITEM:
-    case MOZ_GTK_RADIOMENUITEM:
-        ensure_check_menu_item_widget();
-        w = gCheckMenuItemWidget;
-        break;
     case MOZ_GTK_TAB:
         ensure_tab_widget();
         w = gTabWidget;
