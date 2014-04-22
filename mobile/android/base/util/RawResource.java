@@ -12,8 +12,17 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 
+/**
+ * {@code RawResource} provides API to load raw resources in different
+ * forms. For now, we only load them as strings. We're using raw resources
+ * as localizable 'assets' as opposed to a string that can be directly
+ * translatable e.g. JSON file vs string.
+ *
+ * This is just a utility class to avoid code duplication for the different
+ * cases where need to read such assets.
+ */
 public final class RawResource {
-    public static String get(Context context, int id) throws IOException {
+    public static String getAsString(Context context, int id) throws IOException {
         InputStreamReader reader = null;
 
         try {
