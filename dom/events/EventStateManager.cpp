@@ -3562,6 +3562,7 @@ EventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
   event->modifiers = aMouseEvent->modifiers;
   event->button = aMouseEvent->button;
   event->buttons = aMouseEvent->buttons;
+  event->pressure = aMouseEvent->pressure;
   event->pluginEvent = aMouseEvent->pluginEvent;
   event->inputSource = aMouseEvent->inputSource;
 
