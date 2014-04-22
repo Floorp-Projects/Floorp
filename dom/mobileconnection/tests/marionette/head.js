@@ -545,6 +545,40 @@ function sendMMI(aMmi) {
 }
 
 /**
+ * Set voice privacy preference.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'.
+ *
+ * @param aEnabled
+ *        Boolean indicates the preferred voice privacy mode.
+ *
+ * @return A deferred promise.
+ */
+ function setVoicePrivacyMode(aEnabled) {
+  let request = mobileConnection.setVoicePrivacyMode(aEnabled);
+  return wrapDomRequestAsPromise(request)
+    .then(null, () => { throw request.error });
+}
+
+/**
+ * Query current voice privacy mode.
+ *
+ * Fulfill params:
+     A boolean indicates the current voice privacy mode.
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'.
+ *
+ * @return A deferred promise.
+ */
+ function getVoicePrivacyMode() {
+  let request = mobileConnection.getVoicePrivacyMode();
+  return wrapDomRequestAsPromise(request)
+    .then(() => request.result, () => { throw request.error });
+}
+
+/**
  * Set data connection enabling state and wait for "datachange" event.
  *
  * Resolve if data connection state changed to the expected one.  Never reject.
