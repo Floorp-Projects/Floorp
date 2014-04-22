@@ -506,6 +506,45 @@ function sendMMI(aMmi) {
 }
 
 /**
+ * Configures call forward options.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter', or
+ *   'GenericFailure'.
+ *
+ * @param aOptions
+ *        A MozCallForwardingOptions.
+ *
+ * @return A deferred promise.
+ */
+ function setCallForwardingOption(aOptions) {
+  let request = mobileConnection.setCallForwardingOption(aOptions);
+  return wrapDomRequestAsPromise(request)
+    .then(null, () => { throw request.error });
+}
+
+/**
+ * Configures call forward options.
+ *
+ * Fulfill params:
+ *   An array of MozCallForwardingOptions.
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter', or
+ *   'GenericFailure'.
+ *
+ * @param aReason
+ *        One of MozMobileConnection.CALL_FORWARD_REASON_* values.
+ *
+ * @return A deferred promise.
+ */
+ function getCallForwardingOption(aReason) {
+  let request = mobileConnection.getCallForwardingOption(aReason);
+  return wrapDomRequestAsPromise(request)
+    .then(() => request.result, () => { throw request.error });
+}
+
+/**
  * Set data connection enabling state and wait for "datachange" event.
  *
  * Resolve if data connection state changed to the expected one.  Never reject.
