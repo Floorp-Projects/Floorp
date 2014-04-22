@@ -27,6 +27,7 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 /**
  * Dialog fragment that displays frecency search results, for pinning a site, in a GridView.
@@ -109,11 +110,16 @@ class PinSiteDialog extends DialogFragment {
 
                 // If the user manually entered a search term or URL, wrap the value in
                 // a special URI until we can get a valid URL for this bookmark.
-                final String text = mSearch.getText().toString();
-                final String url = TopSitesPanel.encodeUserEnteredUrl(text);
-                mOnSiteSelectedListener.onSiteSelected(url, text);
+                final String text = mSearch.getText().toString().trim();
+                if (!TextUtils.isEmpty(text)) {
+                    final String url = TopSitesPanel.encodeUserEnteredUrl(text);
+                    mOnSiteSelectedListener.onSiteSelected(url, text);
+                    dismiss();
+                } else {
+                    // Can't have empty text.
+                    Toast.makeText(getActivity(), R.string.home_top_sites_edit_empty_toast, Toast.LENGTH_SHORT).show();;
+                }
 
-                dismiss();
                 return true;
             }
         });
