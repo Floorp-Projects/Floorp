@@ -175,6 +175,7 @@ LOCAL_INCLUDES += [
     '/content/base/src',
     '/layout/generic',
     '/layout/xul',
+    '/netwerk/base/src',
 ]
 
 if CONFIG['MOZ_DIRECTSHOW']:

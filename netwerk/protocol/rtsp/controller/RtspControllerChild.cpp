@@ -78,6 +78,12 @@ RtspControllerChild::~RtspControllerChild()
   LOG(("RtspControllerChild::~RtspControllerChild()"));
 }
 
+void
+RtspControllerChild::ReleaseChannel()
+{
+  static_cast<RtspChannelChild*>(mChannel.get())->ReleaseController();
+}
+
 bool
 RtspControllerChild::OKToSendIPC()
 {
@@ -174,6 +180,7 @@ RtspControllerChild::RecvOnDisconnected(
   if (mListener) {
     mListener->OnDisconnected(index, reason);
   }
+  ReleaseChannel();
   return true;
 }
 
@@ -185,6 +192,7 @@ RtspControllerChild::RecvAsyncOpenFailed(const nsresult& reason)
   if (mListener) {
     mListener->OnDisconnected(0, NS_ERROR_CONNECTION_REFUSED);
   }
+  ReleaseChannel();
   return true;
 }
 
