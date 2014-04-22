@@ -538,8 +538,17 @@ nsDOMWindowUtils::SetResolution(float aXResolution, float aYResolution)
   }
 
   nsIPresShell* presShell = GetPresShell();
-  return presShell ? presShell->SetResolution(aXResolution, aYResolution)
-                   : NS_ERROR_FAILURE;
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+  if (sf) {
+    sf->SetResolution(gfxSize(aXResolution, aYResolution));
+    presShell->SetResolution(aXResolution, aYResolution);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -550,13 +559,21 @@ nsDOMWindowUtils::GetResolution(float* aXResolution, float* aYResolution)
   }
 
   nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
 
-  if (presShell) {
+  nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+  if (sf) {
+    const gfxSize& res = sf->GetResolution();
+    *aXResolution = res.width;
+    *aYResolution = res.height;
+  } else {
     *aXResolution = presShell->GetXResolution();
     *aYResolution = presShell->GetYResolution();
-    return NS_OK;
   }
-  return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

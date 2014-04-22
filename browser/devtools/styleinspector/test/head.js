@@ -34,9 +34,14 @@ registerCleanupFunction(() => {
   }
 });
 
+// Uncomment to log events
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
+
+// Clean-up all prefs that might have been changed during a test run
+// (safer here because if the test fails, then the pref is never reverted)
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.dump.emit");
+  Services.prefs.clearUserPref("devtools.defaultColorUnit");
 });
 
 /**
@@ -477,7 +482,7 @@ function hasSideBarTab(inspector, id) {
 function getRuleViewRule(view, selectorText) {
   let rule;
   for (let r of view.doc.querySelectorAll(".ruleview-rule")) {
-    let selector = r.querySelector(".ruleview-selector-matched");
+    let selector = r.querySelector(".ruleview-selector, .ruleview-selector-matched");
     if (selector && selector.textContent === selectorText) {
       rule = r;
       break;
@@ -513,6 +518,20 @@ function getRuleViewProperty(view, selectorText, propertyName) {
     }
   }
   return prop;
+}
+
+/**
+ * Get the text value of the property corresponding to a given selector and name
+ * in the rule-view
+ * @param {CssRuleView} view The instance of the rule-view panel
+ * @param {String} selectorText The selector in the rule-view to look for the
+ * property in
+ * @param {String} propertyName The name of the property
+ * @return {String} The property value
+ */
+function getRuleViewPropertyValue(view, selectorText, propertyName) {
+  return getRuleViewProperty(view, selectorText, propertyName)
+    .valueSpan.textContent;
 }
 
 /**
@@ -653,6 +672,18 @@ function getComputedViewProperty(view, name) {
     }
   }
   return prop;
+}
+
+/**
+ * Get the text value of the property corresponding to a given name in the
+ * computed-view
+ * @param {CssHtmlTree} view The instance of the computed view panel
+ * @param {String} name The name of the property to retrieve
+ * @return {String} The property value
+ */
+function getComputedViewPropertyValue(view, selectorText, propertyName) {
+  return getComputedViewProperty(view, selectorText, propertyName)
+    .valueSpan.textContent;
 }
 
 /**
