@@ -117,6 +117,11 @@ utb__release_sync_buffer(LinkedUWTBuffer* utb)
 {
 }
 
+void
+utb__end_sync_buffer_unwind(LinkedUWTBuffer* utb)
+{
+}
+
 // RUNS IN SIGHANDLER CONTEXT
 void
 uwt__release_full_buffer(ThreadProfile* aProfile,
@@ -170,6 +175,9 @@ static void finish_sync_buffer(ThreadProfile* aProfile,
 
 // Release an empty synchronous unwind buffer.
 static void release_sync_buffer(LinkedUWTBuffer* utb);
+
+// Unwind complete, mark a synchronous unwind buffer as empty
+static void end_sync_buffer_unwind(LinkedUWTBuffer* utb);
 
 // RUNS IN SIGHANDLER CONTEXT
 // Put this buffer in the queue of stuff going to the unwinder
@@ -257,6 +265,12 @@ void utb__finish_sync_buffer(ThreadProfile* profile,
 void utb__release_sync_buffer(LinkedUWTBuffer* buff)
 {
   release_sync_buffer(buff);
+}
+
+void
+utb__end_sync_buffer_unwind(LinkedUWTBuffer* utb)
+{
+  end_sync_buffer_unwind(utb);
 }
 
 // RUNS IN SIGHANDLER CONTEXT
@@ -1085,6 +1099,16 @@ static ProfileEntry utb_get_profent(UnwinderThreadBuffer* buff, uintptr_t i)
   }
 }
 
+/* Forward declaration for process_sync_buffer */
+static void process_buffer(UnwinderThreadBuffer* buff, int oldest_ix);
+
+static void process_sync_buffer(ProfileEntry& ent)
+{
+  UnwinderThreadBuffer* buff = (UnwinderThreadBuffer*)ent.get_tagPtr();
+  buff->state = S_EMPTYING;
+  process_buffer(buff, -1);
+}
+
 /* Copy ProfileEntries presented to us by the sampling thread.
    Most of them are copied verbatim into |buff->aProfile|,
    except for 'hint' tags, which direct us to do something
@@ -1167,8 +1191,7 @@ static void process_buffer(UnwinderThreadBuffer* buff, int oldest_ix)
       if (ent.is_ent_hint() || ent.is_ent('S')) { continue; }
       // handle GetBacktrace()
       if (ent.is_ent('B')) {
-        UnwinderThreadBuffer* buff = (UnwinderThreadBuffer*)ent.get_tagPtr();
-        process_buffer(buff, -1);
+        process_sync_buffer(ent);
         continue;
       }
       // and copy everything else
@@ -1205,8 +1228,7 @@ static void process_buffer(UnwinderThreadBuffer* buff, int oldest_ix)
       if (ent.is_ent_hint() || ent.is_ent('S')) { continue; }
       // handle GetBacktrace()
       if (ent.is_ent('B')) {
-        UnwinderThreadBuffer* buff = (UnwinderThreadBuffer*)ent.get_tagPtr();
-        process_buffer(buff, -1);
+        process_sync_buffer(ent);
         continue;
       }
       // and copy everything else
@@ -1232,8 +1254,7 @@ static void process_buffer(UnwinderThreadBuffer* buff, int oldest_ix)
       if (ent.is_ent_hint() || ent.is_ent('S')) { continue; }
       // handle GetBacktrace()
       if (ent.is_ent('B')) {
-        UnwinderThreadBuffer* buff = (UnwinderThreadBuffer*)ent.get_tagPtr();
-        process_buffer(buff, -1);
+        process_sync_buffer(ent);
         continue;
       }
       // and copy everything else
@@ -1265,8 +1286,7 @@ static void process_buffer(UnwinderThreadBuffer* buff, int oldest_ix)
       if (ent.is_ent_hint() || ent.is_ent('S')) { continue; }
       // handle GetBacktrace()
       if (ent.is_ent('B')) {
-        UnwinderThreadBuffer* buff = (UnwinderThreadBuffer*)ent.get_tagPtr();
-        process_buffer(buff, -1);
+        process_sync_buffer(ent);
         continue;
       }
       // and copy everything else
@@ -1747,8 +1767,16 @@ static void finish_sync_buffer(ThreadProfile* profile,
 static void release_sync_buffer(LinkedUWTBuffer* buff)
 {
   SyncUnwinderThreadBuffer* data = static_cast<SyncUnwinderThreadBuffer*>(buff);
-  MOZ_ASSERT(data->GetBuffer()->state == S_EMPTY);
+  /* If state is S_FULL or S_EMPTYING then it is not safe to delete data */
+  MOZ_ASSERT(data->GetBuffer()->state == S_EMPTY ||
+             data->GetBuffer()->state == S_FILLING);
   delete data;
+}
+
+static void end_sync_buffer_unwind(LinkedUWTBuffer* buff)
+{
+  SyncUnwinderThreadBuffer* data = static_cast<SyncUnwinderThreadBuffer*>(buff);
+  data->GetBuffer()->state = S_EMPTY;
 }
 
 ////////////////////////////////////////////////////////////////
