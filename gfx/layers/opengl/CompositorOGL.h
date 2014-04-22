@@ -156,7 +156,7 @@ protected:
 class CompositorOGL : public Compositor
 {
   typedef mozilla::gl::GLContext GLContext;
-  
+
   friend class GLManagerCompositor;
 
   std::map<ShaderConfigOGL, ShaderProgramOGL*> mPrograms;
@@ -182,7 +182,7 @@ public:
                                     SupportsPartialTextureUpdate());
   }
 
-  virtual TemporaryRef<CompositingRenderTarget> 
+  virtual TemporaryRef<CompositingRenderTarget>
   CreateRenderTarget(const gfx::IntRect &aRect, SurfaceInitMode aInit) MOZ_OVERRIDE;
 
   virtual TemporaryRef<CompositingRenderTarget>
@@ -285,7 +285,7 @@ private:
                                 const gfx::Matrix4x4 &aTransformi,
                                 GLuint aDrawMode);
 
-  /** 
+  /**
    * Context target, nullptr when drawing directly to our swap chain.
    */
   RefPtr<gfx::DrawTarget> mTarget;
