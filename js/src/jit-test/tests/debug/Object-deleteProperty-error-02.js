@@ -8,11 +8,7 @@ dbg.onDebuggerStatement = function (frame) {
         assertEq(exc.message, "diaf");
         assertEq(exc.fileName, "fail");
         assertEq(exc.lineNumber, 4);
-
-        // Arrant nonsense?  Sure -- but different from lineNumber is all this
-        // test exists to verify.  If you're the person to make column numbers
-        // actually work, change this accordingly.
-        assertEq(exc.columnNumber, 0);
+        assertEq(exc.columnNumber, 20);
         return;
     }
     throw new Error("deleteProperty should throw");
