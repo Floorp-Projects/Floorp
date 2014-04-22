@@ -190,7 +190,7 @@ class MochitestRunner(MozbuildObject):
         jsdebugger=False, debug_on_failure=False, start_at=None, end_at=None,
         e10s=False, dmd=False, dump_output_directory=None,
         dump_about_memory_after_test=False, dump_dmd_after_test=False,
-        install_extension=None, quiet=False, **kwargs):
+        install_extension=None, quiet=False, environment=[], **kwargs):
         """Runs a mochitest.
 
         test_paths are path to tests. They can be a relative path from the
@@ -314,6 +314,7 @@ class MochitestRunner(MozbuildObject):
         options.dumpDMDAfterTest = dump_dmd_after_test
         options.dumpOutputDirectory = dump_output_directory
         options.quiet = quiet
+        options.environment = environment
 
         options.failureFile = failure_file_path
         if install_extension != None:
@@ -514,6 +515,11 @@ def MochitestCommand(func):
     quiet = CommandArgument('--quiet', default=False, action='store_true',
         help='Do not print test log lines unless a failure occurs.')
     func = quiet(func)
+
+    setenv = CommandArgument('--setenv', default=[], action='append',
+                             metavar='NAME=VALUE', dest='environment',
+                             help="Sets the given variable in the application's environment")
+    func = setenv(func)
 
     return func
 
