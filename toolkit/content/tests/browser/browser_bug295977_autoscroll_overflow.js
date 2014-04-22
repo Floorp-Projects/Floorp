@@ -3,6 +3,8 @@ function test()
   const kPrefName_AutoScroll = "general.autoScroll";
   Services.prefs.setBoolPref(kPrefName_AutoScroll, true);
 
+  gBrowser.selectedTab = gBrowser.addTab();
+
   const expectScrollNone = 0;
   const expectScrollVert = 1;
   const expectScrollHori = 2;
@@ -125,7 +127,6 @@ function test()
       Services.prefs.clearUserPref(kPrefName_AutoScroll);
 
     // cleaning-up
-    gBrowser.addTab("about:blank");
     gBrowser.removeCurrentTab();
 
     // waitForFocus() fixes a failure in the next test if the latter runs too soon.
