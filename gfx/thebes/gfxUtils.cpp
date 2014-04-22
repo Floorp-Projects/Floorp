@@ -300,7 +300,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
                                  const gfxMatrix& aUserSpaceToImageSpace,
                                  const gfxRect& aSourceRect,
                                  const gfxRect& aSubimage,
-                                 const SurfaceFormat aFormat)
+                                 const gfxImageFormat aFormat)
 {
     PROFILER_LABEL("gfxUtils", "CreateSamplingRestricedDrawable");
     gfxRect userSpaceClipExtents = aContext->GetClipExtents();
@@ -334,9 +334,9 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
       nsRefPtr<gfxASurface> temp = image->GetSubimage(needed);
       drawable = new gfxSurfaceDrawable(temp, size, gfxMatrix().Translate(-needed.TopLeft()));
     } else {
-      RefPtr<DrawTarget> target =
+      mozilla::RefPtr<mozilla::gfx::DrawTarget> target =
         gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(ToIntSize(size),
-                                                                     aFormat);
+                                                                     ImageFormatToSurfaceFormat(aFormat));
       if (!target) {
         return nullptr;
       }
@@ -504,7 +504,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
                            const gfxRect&   aSourceRect,
                            const gfxRect&   aImageRect,
                            const gfxRect&   aFill,
-                           const SurfaceFormat aFormat,
+                           const gfxImageFormat aFormat,
                            GraphicsFilter aFilter,
                            uint32_t         aImageFlags)
 {
