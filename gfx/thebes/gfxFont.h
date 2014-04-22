@@ -43,14 +43,11 @@ class gfxTextRun;
 class gfxFont;
 class gfxFontFamily;
 class gfxFontGroup;
-class gfxGraphiteShaper;
-class gfxHarfBuzzShaper;
 class gfxUserFontSet;
 class gfxUserFontData;
 class gfxShapedText;
 class gfxShapedWord;
 class gfxSVGGlyphs;
-class gfxMathTable;
 class gfxTextContextPaint;
 class FontInfoData;
 
@@ -314,79 +311,6 @@ public:
     // (e.g. animated SVG glyphs)
     void NotifyGlyphsChanged();
 
-    enum MathConstant {
-        // The order of the constants must match the order of the fields
-        // defined in the MATH table.
-        ScriptPercentScaleDown,
-        ScriptScriptPercentScaleDown,
-        DelimitedSubFormulaMinHeight,
-        DisplayOperatorMinHeight,
-        MathLeading,
-        AxisHeight,
-        AccentBaseHeight,
-        FlattenedAccentBaseHeight,
-        SubscriptShiftDown,
-        SubscriptTopMax,
-        SubscriptBaselineDropMin,
-        SuperscriptShiftUp,
-        SuperscriptShiftUpCramped,
-        SuperscriptBottomMin,
-        SuperscriptBaselineDropMax,
-        SubSuperscriptGapMin,
-        SuperscriptBottomMaxWithSubscript,
-        SpaceAfterScript,
-        UpperLimitGapMin,
-        UpperLimitBaselineRiseMin,
-        LowerLimitGapMin,
-        LowerLimitBaselineDropMin,
-        StackTopShiftUp,
-        StackTopDisplayStyleShiftUp,
-        StackBottomShiftDown,
-        StackBottomDisplayStyleShiftDown,
-        StackGapMin,
-        StackDisplayStyleGapMin,
-        StretchStackTopShiftUp,
-        StretchStackBottomShiftDown,
-        StretchStackGapAboveMin,
-        StretchStackGapBelowMin,
-        FractionNumeratorShiftUp,
-        FractionNumeratorDisplayStyleShiftUp,
-        FractionDenominatorShiftDown,
-        FractionDenominatorDisplayStyleShiftDown,
-        FractionNumeratorGapMin,
-        FractionNumDisplayStyleGapMin,
-        FractionRuleThickness,
-        FractionDenominatorGapMin,
-        FractionDenomDisplayStyleGapMin,
-        SkewedFractionHorizontalGap,
-        SkewedFractionVerticalGap,
-        OverbarVerticalGap,
-        OverbarRuleThickness,
-        OverbarExtraAscender,
-        UnderbarVerticalGap,
-        UnderbarRuleThickness,
-        UnderbarExtraDescender,
-        RadicalVerticalGap,
-        RadicalDisplayStyleVerticalGap,
-        RadicalRuleThickness,
-        RadicalExtraAscender,
-        RadicalKernBeforeDegree,
-        RadicalKernAfterDegree,
-        RadicalDegreeBottomRaisePercent
-    };
-
-    // Call TryGetMathTable to try to load the Open Type MATH table. The other
-    // functions forward the call to the gfxMathTable class. The GetMath...()
-    // functions MUST NOT be called unless TryGetMathTable() has returned true.
-    bool     TryGetMathTable(gfxFont* aFont);
-    gfxFloat GetMathConstant(MathConstant aConstant);
-    bool     GetMathItalicsCorrection(uint32_t aGlyphID,
-                                      gfxFloat* aItalicCorrection);
-    uint32_t GetMathVariantsSize(uint32_t aGlyphID, bool aVertical,
-                                 uint16_t aSize);
-    bool     GetMathVariantsParts(uint32_t aGlyphID, bool aVertical,
-                                  uint32_t aGlyphs[4]);
-
     virtual bool MatchesGenericFamily(const nsACString& aGeneric) const {
         return true;
     }
@@ -509,7 +433,6 @@ public:
     bool             mIgnoreGDEF  : 1;
     bool             mIgnoreGSUB  : 1;
     bool             mSVGInitialized : 1;
-    bool             mMathInitialized : 1;
     bool             mHasSpaceFeaturesInitialized : 1;
     bool             mHasSpaceFeatures : 1;
     bool             mHasSpaceFeaturesKerning : 1;
@@ -535,7 +458,6 @@ public:
     nsAutoPtr<gfxSVGGlyphs> mSVGGlyphs;
     // list of gfxFonts that are using SVG glyphs
     nsTArray<gfxFont*> mFontsUsingSVGGlyphs;
-    nsAutoPtr<gfxMathTable> mMathTable;
     nsTArray<gfxFontFeature> mFeatureSettings;
     uint32_t         mLanguageOverride;
 
@@ -1459,10 +1381,6 @@ protected:
 
 /* a SPECIFIC single font family */
 class gfxFont {
-
-    friend class gfxHarfBuzzShaper;
-    friend class gfxGraphiteShaper;
-
 public:
     nsrefcnt AddRef(void) {
         NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");
@@ -1590,8 +1508,19 @@ public:
     virtual uint32_t GetGlyph(uint32_t unicode, uint32_t variation_selector) {
         return 0;
     }
-    // Return the horizontal advance of a glyph.
-    gfxFloat GetGlyphHAdvance(gfxContext *aCtx, uint16_t aGID);
+
+    // subclasses may provide (possibly hinted) glyph widths (in font units);
+    // if they do not override this, harfbuzz will use unhinted widths
+    // derived from the font tables
+    virtual bool ProvidesGlyphWidths() {
+        return false;
+    }
+
+    // The return value is interpreted as a horizontal advance in 16.16 fixed
+    // point format.
+    virtual int32_t GetGlyphWidth(gfxContext *aCtx, uint16_t aGID) {
+        return -1;
+    }
 
     // Return Azure GlyphRenderingOptions for drawing this font.
     virtual mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions>
@@ -1887,19 +1816,6 @@ public:
     }
 
 protected:
-    // subclasses may provide (possibly hinted) glyph widths (in font units);
-    // if they do not override this, harfbuzz will use unhinted widths
-    // derived from the font tables
-    virtual bool ProvidesGlyphWidths() {
-        return false;
-    }
-
-    // The return value is interpreted as a horizontal advance in 16.16 fixed
-    // point format.
-    virtual int32_t GetGlyphWidth(gfxContext *aCtx, uint16_t aGID) {
-        return -1;
-    }
-
     void AddGlyphChangeObserver(GlyphChangeObserver *aObserver);
     void RemoveGlyphChangeObserver(GlyphChangeObserver *aObserver);
 

@@ -152,7 +152,6 @@ skip-if(B2G) == maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482
 == whitespace-trim-3.html whitespace-trim-3-ref.html
 fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
 == whitespace-trim-5.html whitespace-trim-5-ref.html
-fails-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
 == operator-1.xhtml operator-1-ref.xhtml
 == scriptshift-1.xhtml scriptshift-1-ref.xhtml
 == number-size-1.xhtml number-size-1-ref.xhtml
