@@ -10,8 +10,8 @@ function press(key, expectedPos) {
 }
 
 function test() {
-  gBrowser.addTab();
-  gBrowser.addTab();
+  var t1 = gBrowser.addTab();
+  var t2 = gBrowser.addTab();
   is(gBrowser.tabs.length, 3, "got three tabs");
   is(gBrowser.tabs[0], gBrowser.selectedTab, "first tab is selected");
 
@@ -25,6 +25,6 @@ function test() {
   press("end", 2);
   press("home", 0);
 
-  gBrowser.removeCurrentTab();
-  gBrowser.removeCurrentTab();
+  gBrowser.removeTab(t1);
+  gBrowser.removeTab(t2);
 }

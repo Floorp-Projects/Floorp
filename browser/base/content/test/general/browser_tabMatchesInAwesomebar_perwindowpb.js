@@ -80,8 +80,8 @@ var gTestSteps = [
 
     gBrowser.addTab("about:blank", {skipAnimation: true});
     while (gBrowser.tabs.length > 1) {
-      info("Removing tab: " + gBrowser.tabs[0].linkedBrowser.currentURI.spec);
-      gBrowser.selectTabAtIndex(0);
+      info("Removing tab: " + gBrowser.tabs[1].linkedBrowser.currentURI.spec);
+      gBrowser.selectTabAtIndex(1);
       gBrowser.removeCurrentTab();
     }
     ensure_opentabs_match_db(nextStep);
