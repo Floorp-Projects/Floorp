@@ -98,6 +98,8 @@ CacheFileOutputStream::Write(const char * aBuf, uint32_t aCount,
 
   while (aCount) {
     EnsureCorrectChunk(false);
+    if (NS_FAILED(mStatus))
+      return mStatus;
 
     FillHole();
 
@@ -342,10 +344,13 @@ CacheFileOutputStream::EnsureCorrectChunk(bool aReleaseOnly)
   if (aReleaseOnly)
     return;
 
-  DebugOnly<nsresult> rv;
+  nsresult rv;
   rv = mFile->GetChunkLocked(chunkIdx, true, nullptr, getter_AddRefs(mChunk));
-  MOZ_ASSERT(NS_SUCCEEDED(rv),
-             "CacheFile::GetChunkLocked() should always succeed for writer");
+  if (NS_FAILED(rv)) {
+    LOG(("CacheFileOutputStream::EnsureCorrectChunk() - GetChunkLocked failed. "
+         "[this=%p, idx=%d, rv=0x%08x]", this, chunkIdx, rv));
+    mStatus = rv;
+  }
 }
 
 void
