@@ -928,6 +928,7 @@ CodeGeneratorX86Shared::visitDivOrModConstantI(LDivOrModConstantI *ins) {
     // This emits the division answer into edx or the modulus answer into eax.
     JS_ASSERT(output == eax || output == edx);
     JS_ASSERT(lhs != eax && lhs != edx);
+    bool isDiv = (output == edx);
 
     // The absolute value of the denominator isn't a power of 2 (see LDivPowTwoI
     // and LModPowTwoI).
@@ -942,12 +943,11 @@ CodeGeneratorX86Shared::visitDivOrModConstantI(LDivOrModConstantI *ins) {
     // is non-negative or (rmc.multiplier * n) + (2^32 * n) otherwise. This is the
     // desired division result if n is non-negative, and is one less than the result
     // otherwise.
-    masm.movl(lhs, eax);
-    masm.movl(Imm32(rmc.multiplier), edx);
-    masm.imull(edx);
+    masm.movl(Imm32(rmc.multiplier), eax);
+    masm.imull(lhs);
     if (rmc.multiplier < 0)
         masm.addl(lhs, edx);
-    masm.sarl(Imm32(rmc.shift_amount), edx);
+    masm.sarl(Imm32(rmc.shiftAmount), edx);
 
     // We'll subtract -1 instead of adding 1, because (n < 0 ? -1 : 0) can be
     // computed with just a sign-extending shift of 31 bits.
@@ -957,17 +957,17 @@ CodeGeneratorX86Shared::visitDivOrModConstantI(LDivOrModConstantI *ins) {
         masm.subl(eax, edx);
     }
 
-    // After this, edx contains the correct division result.
+    // After this, edx contains the correct truncated division result.
     if (d < 0)
         masm.negl(edx);
 
-    if (output == eax) {
+    if (!isDiv) {
         masm.imull(Imm32(-d), edx, eax);
         masm.addl(lhs, eax);
     }
 
     if (!ins->mir()->isTruncated()) {
-        if (output == edx) {
+        if (isDiv) {
             // This is a division op. Multiply the obtained value by d to check if
             // the correct answer is an integer. This cannot overflow, since |d| > 1.
             masm.imull(Imm32(d), edx, eax);

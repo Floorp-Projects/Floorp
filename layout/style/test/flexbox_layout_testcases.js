@@ -771,7 +771,7 @@ var gFlexboxTestcases =
  // max-size violated (the second one) and restart the algorithm.  This time,
  // all the available space (200px - 50px = 150px) goes to the not-yet-frozen
  // first item, and that puts it above its min-size, so all is well.
-{
+ {
    items:
      [
        {

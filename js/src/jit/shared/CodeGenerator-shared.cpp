@@ -1069,7 +1069,7 @@ CodeGeneratorShared::computeDivisionConstants(int d) {
     // M * n if this is the case (cf. item (a) above).
     ReciprocalMulConstants rmc;
     rmc.multiplier = int32_t((int64_t(1) << (shift+32))/d + 1);
-    rmc.shift_amount = shift;
+    rmc.shiftAmount = shift;
 
     return rmc;
 }
