@@ -699,7 +699,8 @@ function setClir(aMode, aServiceId) {
   ok(true, "setClir(" + aMode + ", " + aServiceId + ")");
   let mobileConn = getMozMobileConnectionByServiceId(aServiceId);
   let request = mobileConn.setCallingLineIdRestriction(aMode);
-  return wrapDomRequestAsPromise(request);
+  return wrapDomRequestAsPromise(request)
+    .then(null, () => { throw request.error });
 }
 
 /**
@@ -720,7 +721,8 @@ function getClir(aServiceId) {
   ok(true, "getClir(" + aServiceId + ")");
   let mobileConn = getMozMobileConnectionByServiceId(aServiceId);
   let request = mobileConn.getCallingLineIdRestriction();
-  return wrapDomRequestAsPromise(request);
+  return wrapDomRequestAsPromise(request)
+    .then(() => request.result, () => { throw request.error });
 }
 
 /**
