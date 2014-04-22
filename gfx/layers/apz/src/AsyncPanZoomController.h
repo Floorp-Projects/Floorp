@@ -595,14 +595,9 @@ private:
   };
 
   /*
-   * Returns whether current touch behavior values allow pinch-zooming.
+   * Returns whether current touch behavior values allow zooming.
    */
-  bool TouchActionAllowPinchZoom();
-
-  /*
-   * Returns whether current touch behavior values allow double-tap-zooming.
-   */
-  bool TouchActionAllowDoubleTapZoom();
+  bool TouchActionAllowZoom();
 
   /*
    * Returns allowed touch behavior from the mAllowedTouchBehavior array.

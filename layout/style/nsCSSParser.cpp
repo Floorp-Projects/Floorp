@@ -12405,10 +12405,8 @@ CSSParserImpl::ParseTextOverflow(nsCSSValue& aValue)
 bool
 CSSParserImpl::ParseTouchAction(nsCSSValue& aValue)
 {
-  // Avaliable values of property touch-action:
-  // auto | none | [pan-x || pan-y] | manipulation
-
-  if (!ParseVariant(aValue, VARIANT_HK, nsCSSProps::kTouchActionKTable)) {
+  if (!ParseVariant(aValue, VARIANT_HK | VARIANT_NONE | VARIANT_AUTO,
+                    nsCSSProps::kTouchActionKTable)) {
     return false;
   }
 
@@ -12425,13 +12423,6 @@ CSSParserImpl::ParseTouchAction(nsCSSValue& aValue)
 
     // duplicates aren't allowed.
     if (nextIntValue & intValue) {
-      return false;
-    }
-
-    // Auto and None and Manipulation is not allowed in conjunction with others.
-    if ((intValue | nextIntValue) & (NS_STYLE_TOUCH_ACTION_NONE |
-                                     NS_STYLE_TOUCH_ACTION_AUTO |
-                                     NS_STYLE_TOUCH_ACTION_MANIPULATION)) {
       return false;
     }
 
