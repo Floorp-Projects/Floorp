@@ -27,6 +27,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "private/pprio.h"
 #include "mozilla/VisualEventTracer.h"
+#include "mozilla/Preferences.h"
 
 // include files for ftruncate (or equivalent)
 #if defined(XP_UNIX)
@@ -43,9 +44,16 @@
 namespace mozilla {
 namespace net {
 
-#define kOpenHandlesLimit      64
-#define kMetadataWriteDelay    5000
-#define kRemoveTrashStartDelay 60000   // in milliseconds
+#define kOpenHandlesLimit        64
+#define kMetadataWriteDelay      5000
+#define kRemoveTrashStartDelay   60000 // in milliseconds
+#define kSmartSizeUpdateInterval 60000 // in milliseconds
+
+#ifdef ANDROID
+const uint32_t kMaxCacheSizeKB = 200*1024; // 200 MB
+#else
+const uint32_t kMaxCacheSizeKB = 350*1024; // 350 MB
+#endif
 
 bool
 CacheFileHandle::DispatchRelease()
@@ -2378,6 +2386,8 @@ CacheFileIOManager::EvictIfOverLimitInternal()
     return NS_OK;
   }
 
+  UpdateSmartCacheSize();
+
   uint32_t cacheUsage;
   rv = CacheIndex::GetCacheSize(&cacheUsage);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2423,6 +2433,8 @@ CacheFileIOManager::OverLimitEvictionInternal()
   if (mShuttingDown) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+
+  UpdateSmartCacheSize();
 
   while (true) {
     uint32_t cacheUsage;
@@ -3530,6 +3542,116 @@ CacheFileIOManager::SyncRemoveAllCacheFiles()
       mFailedTrashDirs.AppendElement(leafName);
     }
   }
+}
+
+// Returns default ("smart") size (in KB) of cache, given available disk space
+// (also in KB)
+static uint32_t
+SmartCacheSize(const uint32_t availKB)
+{
+  uint32_t maxSize = kMaxCacheSizeKB;
+
+  if (availKB > 100 * 1024 * 1024) {
+    return maxSize;  // skip computing if we're over 100 GB
+  }
+
+  // Grow/shrink in 10 MB units, deliberately, so that in the common case we
+  // don't shrink cache and evict items every time we startup (it's important
+  // that we don't slow down startup benchmarks).
+  uint32_t sz10MBs = 0;
+  uint32_t avail10MBs = availKB / (1024*10);
+
+  // .5% of space above 25 GB
+  if (avail10MBs > 2500) {
+    sz10MBs += static_cast<uint32_t>((avail10MBs - 2500)*.005);
+    avail10MBs = 2500;
+  }
+  // 1% of space between 7GB -> 25 GB
+  if (avail10MBs > 700) {
+    sz10MBs += static_cast<uint32_t>((avail10MBs - 700)*.01);
+    avail10MBs = 700;
+  }
+  // 5% of space between 500 MB -> 7 GB
+  if (avail10MBs > 50) {
+    sz10MBs += static_cast<uint32_t>((avail10MBs - 50)*.05);
+    avail10MBs = 50;
+  }
+
+#ifdef ANDROID
+  // On Android, smaller/older devices may have very little storage and
+  // device owners may be sensitive to storage footprint: Use a smaller
+  // percentage of available space and a smaller minimum.
+
+  // 20% of space up to 500 MB (10 MB min)
+  sz10MBs += std::max<uint32_t>(1, static_cast<uint32_t>(avail10MBs * .2));
+#else
+  // 40% of space up to 500 MB (50 MB min)
+  sz10MBs += std::max<uint32_t>(5, static_cast<uint32_t>(avail10MBs * .4));
+#endif
+
+  return std::min<uint32_t>(maxSize, sz10MBs * 10 * 1024);
+}
+
+nsresult
+CacheFileIOManager::UpdateSmartCacheSize()
+{
+  MOZ_ASSERT(mIOThread->IsCurrentThread());
+
+  nsresult rv;
+
+  if (!CacheObserver::UseNewCache()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!CacheObserver::SmartCacheSizeEnabled()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Wait at least kSmartSizeUpdateInterval before recomputing smart size.
+  static const TimeDuration kUpdateLimit =
+    TimeDuration::FromMilliseconds(kSmartSizeUpdateInterval);
+  if (!mLastSmartSizeTime.IsNull() &&
+      (TimeStamp::NowLoRes() - mLastSmartSizeTime) < kUpdateLimit) {
+    return NS_OK;
+  }
+
+  // Do not compute smart size when cache size is not reliable.
+  bool isUpToDate = false;
+  CacheIndex::IsUpToDate(&isUpToDate);
+  if (!isUpToDate) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  uint32_t cacheUsage;
+  rv = CacheIndex::GetCacheSize(&cacheUsage);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("CacheFileIOManager::UpdateSmartCacheSize() - Cannot get cacheUsage! "
+         "[rv=0x%08x]", rv));
+    return rv;
+  }
+
+  int64_t avail;
+  rv = mCacheDirectory->GetDiskSpaceAvailable(&avail);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // Do not change smart size.
+    LOG(("CacheFileIOManager::UpdateSmartCacheSize() - GetDiskSpaceAvailable() "
+         "failed! [rv=0x%08x]", rv));
+    return rv;
+  }
+
+  mLastSmartSizeTime = TimeStamp::NowLoRes();
+
+  uint32_t smartSize = SmartCacheSize(static_cast<uint32_t>(avail / 1024) +
+                                      cacheUsage);
+
+  if (smartSize == (CacheObserver::DiskCacheCapacity() >> 10)) {
+    // Smart size has not changed.
+    return NS_OK;
+  }
+
+  CacheObserver::SetDiskCacheCapacity(smartSize << 10);
+
+  return NS_OK;
 }
 
 // Memory reporting
