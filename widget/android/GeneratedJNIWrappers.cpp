@@ -33,6 +33,7 @@ jmethodID GeckoAppShell::jEnableLocationHighAccuracy = 0;
 jmethodID GeckoAppShell::jEnableNetworkNotifications = 0;
 jmethodID GeckoAppShell::jEnableScreenOrientationNotifications = 0;
 jmethodID GeckoAppShell::jEnableSensor = 0;
+jmethodID GeckoAppShell::jGamepadAdded = 0;
 jmethodID GeckoAppShell::jGetContext = 0;
 jmethodID GeckoAppShell::jGetCurrentBatteryInformationWrapper = 0;
 jmethodID GeckoAppShell::jGetCurrentNetworkInformationWrapper = 0;
@@ -82,6 +83,8 @@ jmethodID GeckoAppShell::jSetKeepScreenOn = 0;
 jmethodID GeckoAppShell::jSetURITitle = 0;
 jmethodID GeckoAppShell::jShowAlertNotificationWrapper = 0;
 jmethodID GeckoAppShell::jShowInputMethodPicker = 0;
+jmethodID GeckoAppShell::jStartMonitoringGamepad = 0;
+jmethodID GeckoAppShell::jStopMonitoringGamepad = 0;
 jmethodID GeckoAppShell::jUnlockProfile = 0;
 jmethodID GeckoAppShell::jUnlockScreenOrientation = 0;
 jmethodID GeckoAppShell::jUnregisterSurfaceTextureFrameListener = 0;
@@ -112,6 +115,7 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jEnableNetworkNotifications = getStaticMethod("enableNetworkNotifications", "()V");
     jEnableScreenOrientationNotifications = getStaticMethod("enableScreenOrientationNotifications", "()V");
     jEnableSensor = getStaticMethod("enableSensor", "(I)V");
+    jGamepadAdded = getStaticMethod("gamepadAdded", "(II)V");
     jGetContext = getStaticMethod("getContext", "()Landroid/content/Context;");
     jGetCurrentBatteryInformationWrapper = getStaticMethod("getCurrentBatteryInformation", "()[D");
     jGetCurrentNetworkInformationWrapper = getStaticMethod("getCurrentNetworkInformation", "()[D");
@@ -161,6 +165,8 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jSetURITitle = getStaticMethod("setUriTitle", "(Ljava/lang/String;Ljava/lang/String;)V");
     jShowAlertNotificationWrapper = getStaticMethod("showAlertNotification", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     jShowInputMethodPicker = getStaticMethod("showInputMethodPicker", "()V");
+    jStartMonitoringGamepad = getStaticMethod("startMonitoringGamepad", "()V");
+    jStopMonitoringGamepad = getStaticMethod("stopMonitoringGamepad", "()V");
     jUnlockProfile = getStaticMethod("unlockProfile", "()Z");
     jUnlockScreenOrientation = getStaticMethod("unlockScreenOrientation", "()V");
     jUnregisterSurfaceTextureFrameListener = getStaticMethod("unregisterSurfaceTextureFrameListener", "(Ljava/lang/Object;)V");
@@ -456,6 +462,18 @@ void GeckoAppShell::EnableSensor(int32_t a0) {
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jEnableSensor, a0);
+    AndroidBridge::HandleUncaughtException(env);
+    env->PopLocalFrame(nullptr);
+}
+
+void GeckoAppShell::GamepadAdded(int32_t a0, int32_t a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (env->PushLocalFrame(0) != 0) {
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_CRASH("Exception should have caused crash.");
+    }
+
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jGamepadAdded, a0, a1);
     AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
@@ -1135,6 +1153,30 @@ void GeckoAppShell::ShowInputMethodPicker() {
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jShowInputMethodPicker);
+    AndroidBridge::HandleUncaughtException(env);
+    env->PopLocalFrame(nullptr);
+}
+
+void GeckoAppShell::StartMonitoringGamepad() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (env->PushLocalFrame(0) != 0) {
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_CRASH("Exception should have caused crash.");
+    }
+
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jStartMonitoringGamepad);
+    AndroidBridge::HandleUncaughtException(env);
+    env->PopLocalFrame(nullptr);
+}
+
+void GeckoAppShell::StopMonitoringGamepad() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (env->PushLocalFrame(0) != 0) {
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_CRASH("Exception should have caused crash.");
+    }
+
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jStopMonitoringGamepad);
     AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }

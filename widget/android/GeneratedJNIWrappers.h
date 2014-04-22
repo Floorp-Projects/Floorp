@@ -40,6 +40,7 @@ public:
     static void EnableNetworkNotifications();
     static void EnableScreenOrientationNotifications();
     static void EnableSensor(int32_t a0);
+    static void GamepadAdded(int32_t a0, int32_t a1);
     static jobject GetContext();
     static jdoubleArray GetCurrentBatteryInformationWrapper();
     static jdoubleArray GetCurrentNetworkInformationWrapper();
@@ -89,6 +90,8 @@ public:
     static void SetURITitle(const nsAString& a0, const nsAString& a1);
     static void ShowAlertNotificationWrapper(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3, const nsAString& a4);
     static void ShowInputMethodPicker();
+    static void StartMonitoringGamepad();
+    static void StopMonitoringGamepad();
     static bool UnlockProfile();
     static void UnlockScreenOrientation();
     static void UnregisterSurfaceTextureFrameListener(jobject a0);
@@ -118,6 +121,7 @@ protected:
     static jmethodID jEnableNetworkNotifications;
     static jmethodID jEnableScreenOrientationNotifications;
     static jmethodID jEnableSensor;
+    static jmethodID jGamepadAdded;
     static jmethodID jGetContext;
     static jmethodID jGetCurrentBatteryInformationWrapper;
     static jmethodID jGetCurrentNetworkInformationWrapper;
@@ -167,6 +171,8 @@ protected:
     static jmethodID jSetURITitle;
     static jmethodID jShowAlertNotificationWrapper;
     static jmethodID jShowInputMethodPicker;
+    static jmethodID jStartMonitoringGamepad;
+    static jmethodID jStopMonitoringGamepad;
     static jmethodID jUnlockProfile;
     static jmethodID jUnlockScreenOrientation;
     static jmethodID jUnregisterSurfaceTextureFrameListener;

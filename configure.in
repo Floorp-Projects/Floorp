@@ -5949,6 +5949,11 @@ case "$OS_TARGET" in
      Darwin|WINNT|Linux)
        MOZ_GAMEPAD=1
        ;;
+     Android)
+       if test "$MOZ_WIDGET_TOOLKIT" != "gonk"; then
+         MOZ_GAMEPAD=1
+       fi
+       ;;
      *)
        ;;
 esac
@@ -5972,6 +5977,9 @@ if test "$MOZ_GAMEPAD"; then
           AC_MSG_ERROR([Can't find header linux/joystick.h, needed for gamepad support. Please install Linux kernel headers or reconfigure with --disable-gamepad to disable gamepad support.])
         fi
         MOZ_GAMEPAD_BACKEND=linux
+        ;;
+    Android)
+        MOZ_GAMEPAD_BACKEND=android
         ;;
     *)
         ;;
