@@ -42,6 +42,10 @@ BinarySearch(const Container &c, size_t begin, size_t end, T target, size_t *mat
     size_t middle = low + (high - low) / 2;
     const T &middleValue = c[middle];
 
+    MOZ_ASSERT(c[low] <= c[middle]);
+    MOZ_ASSERT(c[middle] <= c[high - 1]);
+    MOZ_ASSERT(c[low] <= c[high - 1]);
+
     if (target == middleValue) {
       *matchOrInsertionPoint = middle;
       return true;
