@@ -237,8 +237,8 @@ WebConsoleActor.prototype =
   set evalWindow(aWindow) {
     this._evalWindow = aWindow;
 
-    if (!this._progressListenerActive && this.parentActor._progressListener) {
-      this.parentActor._progressListener.once("will-navigate", this._onWillNavigate);
+    if (!this._progressListenerActive) {
+      events.on(this.parentActor, "will-navigate", this._onWillNavigate);
       this._progressListenerActive = true;
     }
   },
@@ -1374,10 +1374,13 @@ WebConsoleActor.prototype =
    * The "will-navigate" progress listener. This is used to clear the current
    * eval scope.
    */
-  _onWillNavigate: function WCA__onWillNavigate()
+  _onWillNavigate: function WCA__onWillNavigate({ window, isTopLevel })
   {
-    this._evalWindow = null;
-    this._progressListenerActive = false;
+    if (isTopLevel) {
+      this._evalWindow = null;
+      events.off(this.parentActor, "will-navigate", this._onWillNavigate);
+      this._progressListenerActive = false;
+    }
   },
 };
 
