@@ -360,7 +360,7 @@ var DebuggerServer = {
     // In case of apps being loaded in parent process, DebuggerServer is already
     // initialized and browser actors are already loaded,
     // but childtab.js hasn't been loaded yet.
-    if (!DebuggerServer.tabActorFactories.hasOwnProperty("consoleActor")) {
+    if (!("WebConsoleActor" in this)) {
       this.addTabActors();
     }
     // But webbrowser.js and childtab.js aren't loaded from shell.js.
@@ -377,7 +377,7 @@ var DebuggerServer = {
    */
   addTabActors: function() {
     this.addActors("resource://gre/modules/devtools/server/actors/script.js");
-    this.registerModule("devtools/server/actors/webconsole");
+    this.addActors("resource://gre/modules/devtools/server/actors/webconsole.js");
     this.registerModule("devtools/server/actors/inspector");
     this.registerModule("devtools/server/actors/call-watcher");
     this.registerModule("devtools/server/actors/canvas");

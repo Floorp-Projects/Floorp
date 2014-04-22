@@ -204,10 +204,10 @@ nsProfiler::GetSharedLibraryInformation(nsAString& aOutString)
 NS_IMETHODIMP nsProfiler::GetProfileData(JSContext* aCx,
                                          JS::MutableHandle<JS::Value> aResult)
 {
-  JSObject *obj = profiler_get_profile_jsobject(aCx);
-  if (!obj)
+  JS::RootedObject obj(aCx, profiler_get_profile_jsobject(aCx));
+  if (!obj) {
     return NS_ERROR_FAILURE;
-
+  }
   aResult.setObject(*obj);
   return NS_OK;
 }

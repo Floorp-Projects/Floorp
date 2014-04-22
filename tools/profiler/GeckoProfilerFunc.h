@@ -56,6 +56,8 @@ char* mozilla_sampler_get_profile();
 
 JSObject *mozilla_sampler_get_profile_data(JSContext *aCx);
 
+void mozilla_sampler_save_profile_to_file(const char* aFilename);
+
 const char** mozilla_sampler_get_features();
 
 void mozilla_sampler_init(void* stackTop);

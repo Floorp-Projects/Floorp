@@ -117,8 +117,7 @@ function test_profile(aClient, aProfiler)
     let location = stack.name + " (" + stack.filename + ":" + funcLine + ")";
     // At least one sample is expected to have been in the busy wait above.
     do_check_true(aResponse.profile.threads[0].samples.some(function(sample) {
-      return sample.name == "(root)" &&
-             typeof sample.frames == "object" &&
+      return typeof sample.frames == "object" &&
              sample.frames.length != 0 &&
              sample.frames.some(function(f) {
                return (f.line == stack.lineNumber) &&
