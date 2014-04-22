@@ -117,9 +117,7 @@ gfxFT2FontBase::GetMetrics()
         new(&mMetrics) gfxFont::Metrics(); // zero initialize
         mSpaceGlyph = 0;
     } else {
-        gfxFT2LockedFace face(this);
-        mFUnitsConvFactor = face.XScale();
-        face.GetMetrics(&mMetrics, &mSpaceGlyph);
+        gfxFT2LockedFace(this).GetMetrics(&mMetrics, &mSpaceGlyph);
     }
 
     SanitizeMetrics(&mMetrics, false);

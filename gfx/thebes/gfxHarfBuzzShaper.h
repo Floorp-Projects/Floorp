@@ -24,7 +24,6 @@ public:
         gfxContext        *mContext;
     };
 
-    bool Initialize();
     virtual bool ShapeText(gfxContext      *aContext,
                            const char16_t *aText,
                            uint32_t         aOffset,
@@ -42,11 +41,6 @@ public:
     // get harfbuzz glyph advance, in font design units
     hb_position_t GetGlyphHAdvance(gfxContext *aContext,
                                    hb_codepoint_t glyph) const;
-
-    // get harfbuzz horizontal advance in 16.16 fixed point format.
-    static hb_position_t
-    HBGetGlyphHAdvance(hb_font_t *font, void *font_data,
-                       hb_codepoint_t glyph, void *user_data);
 
     hb_position_t GetHKerning(uint16_t aFirstGlyph,
                               uint16_t aSecondGlyph) const;
