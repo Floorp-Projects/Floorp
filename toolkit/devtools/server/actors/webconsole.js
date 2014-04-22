@@ -6,33 +6,27 @@
 
 "use strict";
 
-let {Cc, Ci, Cu} = require("chrome");
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let { DebuggerServer, ActorPool } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
-// Symbols from script.js
-let { ThreadActor, EnvironmentActor, ObjectActor, LongStringActor } = DebuggerServer;
-
-Cu.import("resource://gre/modules/jsdebugger.jsm");
-addDebuggerToGlobal(this);
+let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyGetter(this, "NetworkMonitor", () => {
-  return require("devtools/toolkit/webconsole/network-monitor")
+  return devtools.require("devtools/toolkit/webconsole/network-monitor")
          .NetworkMonitor;
 });
 XPCOMUtils.defineLazyGetter(this, "NetworkMonitorChild", () => {
-  return require("devtools/toolkit/webconsole/network-monitor")
+  return devtools.require("devtools/toolkit/webconsole/network-monitor")
          .NetworkMonitorChild;
 });
 XPCOMUtils.defineLazyGetter(this, "ConsoleProgressListener", () => {
-  return require("devtools/toolkit/webconsole/network-monitor")
+  return devtools.require("devtools/toolkit/webconsole/network-monitor")
          .ConsoleProgressListener;
-});
-XPCOMUtils.defineLazyGetter(this, "events", () => {
-  return require("sdk/event/core");
 });
 
 for (let name of ["WebConsoleUtils", "ConsoleServiceListener",
@@ -43,7 +37,7 @@ for (let name of ["WebConsoleUtils", "ConsoleServiceListener",
       if (prop == "WebConsoleUtils") {
         prop = "Utils";
       }
-      return require("devtools/toolkit/webconsole/utils")[prop];
+      return devtools.require("devtools/toolkit/webconsole/utils")[prop];
     }.bind(null, name),
     configurable: true,
     enumerable: true
@@ -1834,12 +1828,6 @@ NetworkEventActor.prototype.requestTypes =
   "getEventTimings": NetworkEventActor.prototype.onGetEventTimings,
 };
 
-exports.register = function(handle) {
-  handle.addGlobalActor(WebConsoleActor, "consoleActor");
-  handle.addTabActor(WebConsoleActor, "consoleActor");
-};
+DebuggerServer.addTabActor(WebConsoleActor, "consoleActor");
+DebuggerServer.addGlobalActor(WebConsoleActor, "consoleActor");
 
-exports.unregister = function(handle) {
-  handle.removeGlobalActor(WebConsoleActor, "consoleActor");
-  handle.removeTabActor(WebConsoleActor, "consoleActor");
-};

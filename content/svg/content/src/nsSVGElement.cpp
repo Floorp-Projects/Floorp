@@ -2356,7 +2356,7 @@ nsSVGElement::DidChangeTransformList(const nsAttrValue& aEmptyOrOldValue)
 }
 
 void
-nsSVGElement::DidAnimateTransformList()
+nsSVGElement::DidAnimateTransformList(int32_t aModType)
 {
   NS_ABORT_IF_FALSE(GetTransformListAttrName(),
                     "Animating non-existent transform data?");
@@ -2365,10 +2365,9 @@ nsSVGElement::DidAnimateTransformList()
 
   if (frame) {
     nsIAtom *transformAttr = GetTransformListAttrName();
-    int32_t modType = nsIDOMMutationEvent::MODIFICATION;
     frame->AttributeChanged(kNameSpaceID_None,
                             transformAttr,
-                            modType);
+                            aModType);
     // When script changes the 'transform' attribute, Element::SetAttrAndNotify
     // will call nsNodeUtills::AttributeChanged, under which
     // SVGTransformableElement::GetAttributeChangeHint will be called and an
@@ -2377,7 +2376,7 @@ nsSVGElement::DidAnimateTransformList()
     // 'animateTransform' though (and sending out the mutation events that
     // nsNodeUtills::AttributeChanged dispatches would be inappropriate
     // anyway), so we need to post the change event ourself.
-    nsChangeHint changeHint = GetAttributeChangeHint(transformAttr, modType);
+    nsChangeHint changeHint = GetAttributeChangeHint(transformAttr, aModType);
     if (changeHint) {
       nsLayoutUtils::PostRestyleEvent(this, nsRestyleHint(0), changeHint);
     }
