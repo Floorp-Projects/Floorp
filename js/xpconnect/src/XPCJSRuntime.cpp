@@ -3510,6 +3510,7 @@ XPCJSRuntime::GetCompilationScope()
         NS_ENSURE_SUCCESS(rv, nullptr);
 
         mCompilationScope = js::UncheckedUnwrap(&v.toObject());
+        CompartmentOptionsRef(mCompilationScope).setDiscardSource(ShouldDiscardSystemSource());
     }
     return mCompilationScope;
 }
