@@ -492,6 +492,7 @@ ScriptPrecompiler::OnStreamComplete(nsIStreamLoader* aLoader,
     SandboxOptions sandboxOptions;
     sandboxOptions.sandboxName.AssignASCII("asm.js precompilation");
     sandboxOptions.invisibleToDebugger = true;
+    sandboxOptions.discardSource = true;
     rv = CreateSandboxObject(cx, &v, mPrincipal, sandboxOptions);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
