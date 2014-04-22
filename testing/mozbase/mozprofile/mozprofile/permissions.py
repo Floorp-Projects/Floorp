@@ -304,56 +304,43 @@ class Permissions(object):
             proxy.update(user_proxy)
 
         # TODO: this should live in a template!
-        # If you must escape things in this string with backslashes, be aware
-        # of the multiple layers of escaping at work:
-        #
-        # - Python will unescape backslashes;
-        # - Writing out the prefs will escape things via JSON serialization;
-        # - The prefs file reader will unescape backslashes;
-        # - The JS engine parser will unescape backslashes.
+        # TODO: So changing the 5th line of the regex below from (\\\\\\\\d+)
+        # to (\\\\d+) makes this code work. Not sure why there would be this
+        # difference between automation.py.in and this file.
         pacURL = """data:text/plain,
-var knownOrigins = (function () {
-  return [%(origins)s].reduce(function(t, h) { t[h] = true; return t; }, {})
-})();
-var uriRegex = new RegExp('^([a-z][-a-z0-9+.]*)' +
-                          '://' +
-                          '(?:[^/@]*@)?' +
-                          '(.*?)' +
-                          '(?::(\\\\d+))?/');
-var defaultPortsForScheme = {
-  'http': 80,
-  'ws': 80,
-  'https': 443,
-  'wss': 443
-};
-var originSchemesRemap = {
-  'ws': 'http',
-  'wss': 'https'
-};
-var proxyForScheme = {
-  'http': 'PROXY %(remote)s:%(http)s',
-  'https': 'PROXY %(remote)s:%(https)s',
-  'ws': 'PROXY %(remote)s:%(ws)s',
-  'wss': 'PROXY %(remote)s:%(wss)s'
-};
-
 function FindProxyForURL(url, host)
 {
-  var matches = uriRegex.exec(url);
+  var origins = [%(origins)s];
+  var regex = new RegExp('^([a-z][-a-z0-9+.]*)' +
+                         '://' +
+                         '(?:[^/@]*@)?' +
+                         '(.*?)' +
+                         '(?::(\\\\d+))?/');
+  var matches = regex.exec(url);
   if (!matches)
     return 'DIRECT';
-  var originalScheme = matches[1];
-  var host = matches[2];
-  var port = matches[3];
-  if (!port && originalScheme in defaultPortsForScheme) {
-    port = defaultPortsForScheme[originalScheme];
+  var isHttp = matches[1] == 'http';
+  var isHttps = matches[1] == 'https';
+  var isWebSocket = matches[1] == 'ws';
+  var isWebSocketSSL = matches[1] == 'wss';
+  if (!matches[3])
+  {
+    if (isHttp | isWebSocket) matches[3] = '80';
+    if (isHttps | isWebSocketSSL) matches[3] = '443';
   }
-  var schemeForOriginChecking = originSchemesRemap[originalScheme] || originalScheme;
+  if (isWebSocket)
+    matches[1] = 'http';
+  if (isWebSocketSSL)
+    matches[1] = 'https';
 
-  var origin = schemeForOriginChecking + '://' + host + ':' + port;
-  if (!(origin in knownOrigins))
+  var origin = matches[1] + '://' + matches[2] + ':' + matches[3];
+  if (origins.indexOf(origin) < 0)
     return 'DIRECT';
-  return proxyForScheme[originalScheme] || 'DIRECT';
+  if (isHttp) return 'PROXY %(remote)s:%(http)s';
+  if (isHttps) return 'PROXY %(remote)s:%(https)s';
+  if (isWebSocket) return 'PROXY %(remote)s:%(ws)s';
+  if (isWebSocketSSL) return 'PROXY %(remote)s:%(wss)s';
+  return 'DIRECT';
 }""" % proxy
         pacURL = "".join(pacURL.splitlines())
 
