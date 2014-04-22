@@ -98,7 +98,7 @@ Cu.import("resource:///modules/devtools/VariablesViewController.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
 const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
-const promise = require("sdk/core/promise");
+const promise = require("devtools/toolkit/deprecated-sync-thenables");
 const Editor = require("devtools/sourceeditor/editor");
 const DebuggerEditor = require("devtools/sourceeditor/debugger.js");
 const {Tooltip} = require("devtools/shared/widgets/Tooltip");
