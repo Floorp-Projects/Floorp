@@ -394,6 +394,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       $("#requests-menu-perf-notice-button").addEventListener("command", this._onContextPerfCommand, false);
       $("#requests-menu-network-summary-button").addEventListener("command", this._onContextPerfCommand, false);
       $("#requests-menu-network-summary-label").addEventListener("click", this._onContextPerfCommand, false);
+      $("#network-statistics-back-button").addEventListener("command", this._onContextPerfCommand, false);
     } else {
       $("#notice-perf-message").hidden = true;
       $("#request-menu-context-perf").hidden = true;
@@ -428,6 +429,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     $("#requests-menu-perf-notice-button").removeEventListener("command", this._onContextPerfCommand, false);
     $("#requests-menu-network-summary-button").removeEventListener("command", this._onContextPerfCommand, false);
     $("#requests-menu-network-summary-label").removeEventListener("click", this._onContextPerfCommand, false);
+    $("#network-statistics-back-button").removeEventListener("command", this._onContextPerfCommand, false);
 
     $("#custom-request-send-button").removeEventListener("click", this.sendCustomRequestEvent, false);
     $("#custom-request-close-button").removeEventListener("click", this.closeCustomRequestEvent, false);
