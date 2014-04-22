@@ -133,7 +133,6 @@ PlacesController.prototype = {
       case "cmd_paste":
       case "cmd_delete":
       case "placesCmd_delete":
-      case "placesCmd_moveBookmarks":
       case "cmd_paste":
       case "placesCmd_paste":
       case "placesCmd_new:folder":
