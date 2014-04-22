@@ -75,7 +75,7 @@ function testPropertyPanel()
   jsterm.clearOutput();
   jsterm.execute("document", (msg) => {
     jsterm.once("variablesview-fetched", onVariablesViewReady);
-    let anchor = msg.querySelector(".body a");
+    let anchor = msg.querySelector(".message-body a");
     EventUtils.synthesizeMouse(anchor, 2, 2, {}, gHUD.iframeWindow);
   });
 }
