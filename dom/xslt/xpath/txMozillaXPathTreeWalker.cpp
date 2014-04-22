@@ -21,9 +21,12 @@
 #include "nsUnicharUtils.h"
 #include "nsAttrName.h"
 #include "nsTArray.h"
+#include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Element.h"
 #include <stdint.h>
 #include <algorithm>
+
+using mozilla::dom::Attr;
 
 const uint32_t kUnknownIndex = uint32_t(-1);
 
@@ -691,7 +694,8 @@ txXPathNativeNode::createXPathNode(nsIDOMNode* aNode, bool aKeepRootAlive)
         NS_ASSERTION(attr, "doesn't implement nsIAttribute");
 
         nsINodeInfo *nodeInfo = attr->NodeInfo();
-        nsIContent *parent = attr->GetContent();
+        mozilla::dom::Element* parent =
+          static_cast<Attr*>(attr.get())->GetElement();
         if (!parent) {
             return nullptr;
         }

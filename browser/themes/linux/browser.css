@@ -51,15 +51,18 @@
   padding-bottom: 1px;
 }
 
-#nav-bar {
-  background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
-  box-shadow: 0 1px 0 @toolbarHighlight@ inset;
+#TabsToolbar:not([collapsed="true"]) + #nav-bar {
   margin-top: -@tabToolbarNavbarOverlap@; /* Move up into the TabsToolbar */
-  padding-top: 2px;
-  padding-bottom: 2px;
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
+}
+
+#nav-bar {
+  background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
+  box-shadow: 0 1px 0 @toolbarHighlight@ inset;
+  padding-top: 2px;
+  padding-bottom: 2px;
 }
 
 #nav-bar-overflow-button {

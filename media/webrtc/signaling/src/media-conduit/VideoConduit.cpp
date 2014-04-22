@@ -14,6 +14,7 @@
 
 #include "LoadManager.h"
 
+#include "webrtc/common_video/interface/native_handle.h"
 #include "webrtc/video_engine/include/vie_errors.h"
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -125,6 +126,7 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
     mPtrViENetwork = nullptr;
     mPtrViERender = nullptr;
     mPtrRTP = nullptr;
+    mPtrExtCodec = nullptr;
 
     // only one opener can call Delete.  Have it be the last to close.
     if(mVideoEngine)
@@ -281,6 +283,13 @@ MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
   if( !(mPtrRTP = webrtc::ViERTP_RTCP::GetInterface(mVideoEngine)))
   {
     CSFLogError(logTag, "%s Unable to get video RTCP interface ", __FUNCTION__);
+    return kMediaConduitSessionNotInited;
+  }
+
+  if ( !(mPtrExtCodec = webrtc::ViEExternalCodec::GetInterface(mVideoEngine)))
+  {
+    CSFLogError(logTag, "%s Unable to get external codec interface %d ",
+                __FUNCTION__, mPtrViEBase->LastError());
     return kMediaConduitSessionNotInited;
   }
 
@@ -845,6 +854,25 @@ WebrtcVideoConduit::SelectSendResolution(unsigned short width,
 }
 
 MediaConduitErrorCode
+WebrtcVideoConduit::SetExternalSendCodec(int pltype,
+                                         VideoEncoder* encoder) {
+  int ret = mPtrExtCodec->RegisterExternalSendCodec(mChannel,
+                                                    pltype,
+                                                    static_cast<WebrtcVideoEncoder*>(encoder),
+                                                    false);
+  return ret ? kMediaConduitInvalidSendCodec : kMediaConduitNoError;
+}
+
+MediaConduitErrorCode
+WebrtcVideoConduit::SetExternalRecvCodec(int pltype,
+                                         VideoDecoder* decoder) {
+  int ret = mPtrExtCodec->RegisterExternalReceiveCodec(mChannel,
+                                                       pltype,
+                                                       static_cast<WebrtcVideoDecoder*>(decoder));
+  return ret ? kMediaConduitInvalidReceiveCodec : kMediaConduitNoError;
+}
+
+MediaConduitErrorCode
 WebrtcVideoConduit::SendVideoFrame(unsigned char* video_frame,
                                    unsigned int video_frame_length,
                                    unsigned short width,
@@ -1043,7 +1071,17 @@ WebrtcVideoConduit::DeliverFrame(unsigned char* buffer,
 
   if(mRenderer)
   {
-    mRenderer->RenderVideoFrame(buffer, buffer_size, time_stamp, render_time);
+    layers::Image* img = nullptr;
+    // |handle| should be a webrtc::NativeHandle if available.
+    if (handle) {
+      webrtc::NativeHandle* native_h = static_cast<webrtc::NativeHandle*>(handle);
+      // In the handle, there should be a layers::Image.
+      img = static_cast<layers::Image*>(native_h->GetHandle());
+    }
+
+    const ImageHandle img_h(img);
+    mRenderer->RenderVideoFrame(buffer, buffer_size, time_stamp, render_time,
+                                img_h);
     return 0;
   }
 

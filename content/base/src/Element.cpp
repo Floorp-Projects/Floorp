@@ -127,6 +127,7 @@
 #include "nsStyledElement.h"
 #include "nsXBLService.h"
 #include "nsITextControlElement.h"
+#include "nsITextControlFrame.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -201,7 +202,28 @@ nsIContent::UpdateEditableState(bool aNotify)
   NS_ASSERTION(!IsElement(), "What happened here?");
   nsIContent *parent = GetParent();
 
-  SetEditableFlag(parent && parent->HasFlag(NODE_IS_EDITABLE));
+  // Skip over unknown native anonymous content to avoid setting a flag we
+  // can't clear later
+  bool isUnknownNativeAnon = false;
+  if (IsInNativeAnonymousSubtree()) {
+    isUnknownNativeAnon = true;
+    nsCOMPtr<nsIContent> root = this;
+    while (root && !root->IsRootOfNativeAnonymousSubtree()) {
+      root = root->GetParent();
+    }
+    // root should always be true here, but isn't -- bug 999416
+    if (root) {
+      nsIFrame* rootFrame = root->GetPrimaryFrame();
+      if (rootFrame) {
+        nsIFrame* parentFrame = rootFrame->GetParent();
+        nsITextControlFrame* textCtrl = do_QueryFrame(parentFrame);
+        isUnknownNativeAnon = !textCtrl;
+      }
+    }
+  }
+
+  SetEditableFlag(parent && parent->HasFlag(NODE_IS_EDITABLE) &&
+                  !isUnknownNativeAnon);
 }
 
 void
