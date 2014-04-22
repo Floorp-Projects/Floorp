@@ -99,6 +99,10 @@
   background-position: top 5px left 4px;
 }
 
+.subviewbutton[checked="true"]:-moz-locale-dir(rtl) {
+  background-position: top 5px right 4px;
+}
+
 .subviewbutton:not(:-moz-any([image],[targetURI],.cui-withicon, .bookmark-item)) > .menu-iconic-left {
   display: none;
 }
