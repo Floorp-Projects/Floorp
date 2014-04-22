@@ -83,7 +83,7 @@ public class HomeProvider extends SQLiteBridgeContentProvider {
     private Cursor queryFakeItems(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         JSONArray items = null;
         try {
-            final String jsonString = RawResource.get(getContext(), R.raw.fake_home_items);
+            final String jsonString = RawResource.getAsString(getContext(), R.raw.fake_home_items);
             items = new JSONArray(jsonString);
         } catch (IOException e) {
             Log.e(LOGTAG, "Error getting fake home items", e);

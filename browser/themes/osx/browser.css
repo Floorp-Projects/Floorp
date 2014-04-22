@@ -109,6 +109,13 @@ toolbarseparator {
   background: url(chrome://browser/skin/Toolbar-background-noise.png) hsl(0,0%,83%);
 }
 
+#TabsToolbar:not([collapsed="true"]) + #nav-bar {
+  margin-top: -@tabToolbarNavbarOverlap@; /* Move up into the TabsToolbar */
+  /* Position the toolbar above the bottom of background tabs */
+  position: relative;
+  z-index: 1;
+}
+
 #nav-bar {
   -moz-appearance: none;
   background: url(chrome://browser/skin/Toolbar-background-noise.png),
@@ -124,10 +131,6 @@ toolbarseparator {
   background-position: 0 1px, 0 0;
 
   box-shadow: inset 0 1px 0 hsla(0,0%,100%,.4);
-  margin-top: -@tabToolbarNavbarOverlap@;
-  /* Position the toolbar above the bottom of background tabs */
-  position: relative;
-  z-index: 1;
 }
 
 @media (min-resolution: 2dppx) {

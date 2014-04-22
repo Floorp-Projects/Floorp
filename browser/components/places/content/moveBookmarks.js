@@ -23,27 +23,38 @@ var gMoveBookmarksDialog = {
   },
 
   onOK: function MBD_onOK(aEvent) {
-    var selectedNode = this.foldersTree.selectedNode;
-    NS_ASSERT(selectedNode,
-              "selectedNode must be set in a single-selection tree with initial selection set");
-    var selectedFolderID = PlacesUtils.getConcreteItemId(selectedNode);
+    let selectedNode = this.foldersTree.selectedNode;
+    let selectedFolderId = PlacesUtils.getConcreteItemId(selectedNode);
 
-    var transactions = [];
-    for (var i=0; i < this._nodes.length; i++) {
-      // Nothing to do if the node is already under the selected folder
-      if (this._nodes[i].parent.itemId == selectedFolderID)
-        continue;
+    if (!PlacesUIUtils.useAsyncTransactions) {
+      let transactions = [];
+      for (var i=0; i < this._nodes.length; i++) {
+        // Nothing to do if the node is already under the selected folder
+        if (this._nodes[i].parent.itemId == selectedFolderId)
+          continue;
 
-      let txn = new PlacesMoveItemTransaction(this._nodes[i].itemId,
-                                              selectedFolderID,
-                                              PlacesUtils.bookmarks.DEFAULT_INDEX);
-      transactions.push(txn);
+        let txn = new PlacesMoveItemTransaction(this._nodes[i].itemId,
+                                                selectedFolderId,
+                                                PlacesUtils.bookmarks.DEFAULT_INDEX);
+        transactions.push(txn);
+      }
+      if (transactions.length != 0) {
+        let txn = new PlacesAggregatedTransaction("Move Items", transactions);
+        PlacesUtils.transactionManager.doTransaction(txn);
+      }
+      return;
     }
 
-    if (transactions.length != 0) {
-      let txn = new PlacesAggregatedTransaction("Move Items", transactions);
-      PlacesUtils.transactionManager.doTransaction(txn);
-    }
+    PlacesTransactions.transact(function* () {
+      let newParentGUID = yield PlacesUtils.promiseItemGUID(selectedFolderId);
+      for (let node of this._nodes) {
+        // Nothing to do if the node is already under the selected folder.
+        if (node.parent.itemId == selectedFolderId)
+          continue;
+        yield PlacesTransactions.MoveItem({ GUID: node.bookmarkGuid
+                                          , newParentGUID: newParentGUID });
+      }
+    }.bind(this)).then(null, Components.utils.reportError);
   },
 
   newFolder: function MBD_newFolder() {

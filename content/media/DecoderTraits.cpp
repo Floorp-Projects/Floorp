@@ -431,6 +431,11 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
       GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), &codecList))
     result = CANPLAY_MAYBE;
 #endif
+#ifdef NECKO_PROTOCOL_rtsp
+  if (IsRtspSupportedType(nsDependentCString(aMIMEType))) {
+    result = CANPLAY_MAYBE;
+  }
+#endif
   if (result == CANPLAY_NO || !aHaveRequestedCodecs || !codecList) {
     return result;
   }
@@ -664,6 +669,9 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
 #endif
 #ifdef MOZ_APPLEMEDIA
     IsAppleMediaSupportedType(aType) ||
+#endif
+#ifdef NECKO_PROTOCOL_rtsp
+    IsRtspSupportedType(aType) ||
 #endif
     false;
 }
