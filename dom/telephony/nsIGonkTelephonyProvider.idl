@@ -10,13 +10,10 @@
         "@mozilla.org/telephony/gonktelephonyprovider;1"
 %}
 
-[scriptable, uuid(5fdd720f-fbe8-46f5-b671-3bf3360013dd)]
+[scriptable, uuid(9d884482-90fc-4050-a4b1-1a370afe7a35)]
 interface nsIGonkTelephonyProvider : nsITelephonyProvider
 {
   void notifyCallDisconnected(in unsigned long clientId, in jsval call);
-
-  void notifyCallError(in unsigned long clientId, in long callIndex,
-                       in AString error);
 
   void notifyCallRing();
 
