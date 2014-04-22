@@ -144,6 +144,15 @@ protected:
   virtual PRtspControllerParent* AllocPRtspControllerParent() MOZ_OVERRIDE;
   virtual bool DeallocPRtspControllerParent(PRtspControllerParent*) MOZ_OVERRIDE;
 
+  virtual PRtspChannelParent*
+    AllocPRtspChannelParent(const RtspChannelConnectArgs& aArgs)
+                            MOZ_OVERRIDE;
+  virtual bool
+    RecvPRtspChannelConstructor(PRtspChannelParent* aActor,
+                                const RtspChannelConnectArgs& aArgs)
+                                MOZ_OVERRIDE;
+  virtual bool DeallocPRtspChannelParent(PRtspChannelParent*) MOZ_OVERRIDE;
+
   virtual PChannelDiverterParent*
   AllocPChannelDiverterParent(const ChannelDiverterArgs& channel) MOZ_OVERRIDE;
   virtual bool
