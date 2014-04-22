@@ -66,7 +66,7 @@ function consoleOpened(HUD) {
 
   jsterm.execute("window._container", (msg) => {
     jsterm.once("variablesview-fetched", testVariablesView.bind(null, HUD));
-    let anchor = msg.querySelector(".body a");
+    let anchor = msg.querySelector(".message-body a");
     EventUtils.synthesizeMouse(anchor, 2, 2, {}, HUD.iframeWindow);
   });
 }
