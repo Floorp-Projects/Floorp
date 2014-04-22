@@ -51,6 +51,9 @@ SyncProfile::EndUnwind()
 {
   // Mutex must be held when this is called
   GetMutex()->AssertCurrentThreadOwns();
+  if (mUtb) {
+    utb__end_sync_buffer_unwind(mUtb);
+  }
   if (mOwnerState != ORPHANED) {
     flush();
     mOwnerState = OWNED;

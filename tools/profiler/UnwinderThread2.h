@@ -91,6 +91,9 @@ void utb__finish_sync_buffer(ThreadProfile* aProfile,
 // utb__acquire_sync_buffer.
 void utb__release_sync_buffer(LinkedUWTBuffer* utb);
 
+// Unwind complete, mark a synchronous unwind buffer as empty
+void utb__end_sync_buffer_unwind(LinkedUWTBuffer* utb);
+
 // This typedef must match uwt__release_full_buffer and uwt__finish_sync_buffer
 typedef void (*UTB_RELEASE_FUNC)(ThreadProfile*,UnwinderThreadBuffer*,void*);
 
