@@ -37,13 +37,6 @@
 #include "assembler/assembler/X86Assembler.h"
 #include "assembler/assembler/AbstractMacroAssembler.h"
 
-#if WTF_COMPILER_MSVC
-#if WTF_CPU_X86_64
-/* for __cpuid */
-#include <intrin.h>
-#endif
-#endif
-
 namespace JSC {
 
 class MacroAssemblerX86Common : public AbstractMacroAssembler<X86Assembler> {
@@ -1300,140 +1293,15 @@ private:
 
     static SSECheckState s_sseCheckState;
 
-    static void setSSECheckState()
-    {
-        // Default the flags value to zero; if the compiler is
-        // not MSVC or GCC we will read this as SSE2 not present.
-        volatile int flags_edx = 0;
-        volatile int flags_ecx = 0;
-#if WTF_COMPILER_MSVC
-#if WTF_CPU_X86_64
-        int cpuinfo[4];
+    static void setSSECheckState();
 
-        __cpuid(cpuinfo, 1);
-        flags_ecx = cpuinfo[2];
-        flags_edx = cpuinfo[3];
-#else
-        _asm {
-            mov eax, 1 // cpuid function 1 gives us the standard feature set
-            cpuid;
-            mov flags_ecx, ecx;
-            mov flags_edx, edx;
-        }
-#endif
-#elif WTF_COMPILER_GCC
-#if WTF_CPU_X86_64
-        asm (
-             "movl $0x1, %%eax;"
-             "pushq %%rbx;"
-             "cpuid;"
-             "popq %%rbx;"
-             "movl %%ecx, %0;"
-             "movl %%edx, %1;"
-             : "=g" (flags_ecx), "=g" (flags_edx)
-             :
-             : "%eax", "%ecx", "%edx"
-             );
-#else
-        asm (
-             "movl $0x1, %%eax;"
-             "pushl %%ebx;"
-             "cpuid;"
-             "popl %%ebx;"
-             "movl %%ecx, %0;"
-             "movl %%edx, %1;"
-             : "=g" (flags_ecx), "=g" (flags_edx)
-             :
-             : "%eax", "%ecx", "%edx"
-             );
-#endif
-#elif WTF_COMPILER_SUNCC
-#if WTF_CPU_X86_64
-        asm (
-             "movl $0x1, %%eax;"
-             "pushq %%rbx;"
-             "cpuid;"
-             "popq %%rbx;"
-             "movl %%ecx, (%rsi);"
-             "movl %%edx, (%rdi);"
-             :
-             : "S" (&flags_ecx), "D" (&flags_edx)
-             : "%eax", "%ecx", "%edx"
-             );
-#else
-        asm (
-             "movl $0x1, %eax;"
-             "pushl %ebx;"
-             "cpuid;"
-             "popl %ebx;"
-             "movl %ecx, (%esi);"
-             "movl %edx, (%edi);"
-             :
-             : "S" (&flags_ecx), "D" (&flags_edx)
-             : "%eax", "%ecx", "%edx"
-             );
-#endif
-#endif
-
-#ifdef DEBUG
-        if (s_floatingPointDisabled) {
-            // Disable SSE2.
-            s_sseCheckState = HasSSE;
-            return;
-        }
-#endif
-
-        static const int SSEFeatureBit = 1 << 25;
-        static const int SSE2FeatureBit = 1 << 26;
-        static const int SSE3FeatureBit = 1 << 0;
-        static const int SSSE3FeatureBit = 1 << 9;
-        static const int SSE41FeatureBit = 1 << 19;
-        static const int SSE42FeatureBit = 1 << 20;
-        if (flags_ecx & SSE42FeatureBit)
-            s_sseCheckState = HasSSE4_2;
-        else if (flags_ecx & SSE41FeatureBit)
-            s_sseCheckState = HasSSE4_1;
-        else if (flags_ecx & SSSE3FeatureBit)
-            s_sseCheckState = HasSSSE3;
-        else if (flags_ecx & SSE3FeatureBit)
-            s_sseCheckState = HasSSE3;
-        else if (flags_edx & SSE2FeatureBit)
-            s_sseCheckState = HasSSE2;
-        else if (flags_edx & SSEFeatureBit)
-            s_sseCheckState = HasSSE;
-        else
-            s_sseCheckState = NoSSE;
-
-#ifdef DEBUG
-        if (s_sseCheckState >= HasSSE4_1 && s_SSE4Disabled)
-            s_sseCheckState = HasSSE3;
-        if (s_sseCheckState >= HasSSE3 && s_SSE3Disabled)
-            s_sseCheckState = HasSSE2;
-#endif
-    }
-
+  public:
 #if WTF_CPU_X86
-#if WTF_OS_MAC_OS_X
-
-    // All X86 Macs are guaranteed to support at least SSE2
     static bool isSSEPresent()
     {
+#if defined(__SSE__) && !defined(DEBUG)
         return true;
-    }
-
-    static bool isSSE2Present()
-    {
-#ifdef DEBUG
-        if (s_floatingPointDisabled)
-            return false;
-#endif
-        return true;
-    }
-
-#else // OS(MAC_OS_X)
-
-    static bool isSSEPresent()
-    {
+#else
         if (s_sseCheckState == NotCheckedSSE) {
             setSSECheckState();
         }
@@ -1441,10 +1309,14 @@ private:
         ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE;
+#endif
     }
 
     static bool isSSE2Present()
     {
+#if defined(__SSE2__) && !defined(DEBUG)
+        return true;
+#else
         if (s_sseCheckState == NotCheckedSSE) {
             setSSECheckState();
         }
@@ -1452,9 +1324,9 @@ private:
         ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE2;
+#endif
     }
 
-#endif // PLATFORM(MAC)
 #elif !defined(NDEBUG) // CPU(X86)
 
     // On x86-64 we should never be checking for SSE2 in a non-debug build,
@@ -1467,6 +1339,9 @@ private:
 #endif
     static bool isSSE3Present()
     {
+#if defined(__SSE3__) && !defined(DEBUG)
+        return true;
+#else
         if (s_sseCheckState == NotCheckedSSE) {
             setSSECheckState();
         }
@@ -1474,10 +1349,14 @@ private:
         ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE3;
+#endif
     }
 
     static bool isSSSE3Present()
     {
+#if defined(__SSSE3__) && !defined(DEBUG)
+        return true;
+#else
         if (s_sseCheckState == NotCheckedSSE) {
             setSSECheckState();
         }
@@ -1485,10 +1364,14 @@ private:
         ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSSE3;
+#endif
     }
 
     static bool isSSE41Present()
     {
+#if defined(__SSE4_1__) && !defined(DEBUG)
+        return true;
+#else
         if (s_sseCheckState == NotCheckedSSE) {
             setSSECheckState();
         }
@@ -1496,10 +1379,14 @@ private:
         ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE4_1;
+#endif
     }
 
     static bool isSSE42Present()
     {
+#if defined(__SSE4_2__) && !defined(DEBUG)
+        return true;
+#else
         if (s_sseCheckState == NotCheckedSSE) {
             setSSECheckState();
         }
@@ -1507,8 +1394,10 @@ private:
         ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE4_2;
+#endif
     }
 
+  private:
 #ifdef DEBUG
     static bool s_floatingPointDisabled;
     static bool s_SSE3Disabled;
