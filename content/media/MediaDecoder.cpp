@@ -581,9 +581,7 @@ nsresult MediaDecoder::ScheduleStateMachineThread()
   if (mShuttingDown)
     return NS_OK;
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  MediaDecoderStateMachine* m =
-    static_cast<MediaDecoderStateMachine*>(mDecoderStateMachine.get());
-  return m->ScheduleStateMachine();
+  return mDecoderStateMachine->ScheduleStateMachine();
 }
 
 nsresult MediaDecoder::Play()

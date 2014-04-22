@@ -1034,7 +1034,7 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoderStateMachine* aCloneDonor)
 
   MediaDecoderReader* cloneReader = nullptr;
   if (aCloneDonor) {
-    cloneReader = static_cast<MediaDecoderStateMachine*>(aCloneDonor)->mReader;
+    cloneReader = aCloneDonor->mReader;
   }
 
   mStateMachineThreadPool = stateMachinePool;
