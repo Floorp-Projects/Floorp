@@ -169,7 +169,25 @@ function onEditorKeypress({ ed, Editor }, event) {
     return;
   }
 
+  if ((event.ctrlKey || event.metaKey) && event.keyCode == event.DOM_VK_SPACE) {
+    // When Ctrl/Cmd + Space is pressed, two simultaneous keypresses are emitted
+    // first one for just the Ctrl/Cmd and second one for combo. The first one
+    // leave the private.doNotAutocomplete as true, so we have to make it false
+    private.doNotAutocomplete = false;
+    return;
+  }
+
+  if (event.ctrlKey || event.metaKey || event.altKey) {
+    private.doNotAutocomplete = true;
+    private.popup.hidePopup();
+    return;
+  }
+
   switch (event.keyCode) {
+    case event.DOM_VK_RETURN:
+      private.doNotAutocomplete = true;
+      break;
+
     case event.DOM_VK_ESCAPE:
       if (private.popup.isOpen)
         event.preventDefault();

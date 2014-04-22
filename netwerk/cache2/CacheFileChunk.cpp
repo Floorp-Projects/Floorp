@@ -127,6 +127,7 @@ CacheFileChunk::CacheFileChunk(CacheFile *aFile, uint32_t aIndex)
   : CacheMemoryConsumer(aFile->mOpenAsMemoryOnly ? MEMORY_ONLY : DONT_REPORT)
   , mIndex(aIndex)
   , mState(INITIAL)
+  , mStatus(NS_OK)
   , mIsDirty(false)
   , mRemovingChunk(false)
   , mDataSize(0)
@@ -203,17 +204,17 @@ CacheFileChunk::Read(CacheFileHandle *aHandle, uint32_t aLen,
 
   rv = CacheFileIOManager::Read(aHandle, mIndex * kChunkSize, mRWBuf, aLen,
                                 this);
-  if (NS_FAILED(rv)) {
-    mState = READING;   // TODO: properly handle error states
-//    mState = ERROR;
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    rv = mIndex ? NS_ERROR_FILE_CORRUPTED : NS_ERROR_FILE_NOT_FOUND;
+    SetError(rv);
+  } else {
+    mState = READING;
+    mListener = aCallback;
+    mDataSize = aLen;
+    mReadHash = aHash;
   }
 
-  mState = READING;
-  mListener = aCallback;
-  mDataSize = aLen;
-  mReadHash = aHash;
-  return NS_OK;
+  return rv;
 }
 
 nsresult
@@ -239,16 +240,15 @@ CacheFileChunk::Write(CacheFileHandle *aHandle,
 
   rv = CacheFileIOManager::Write(aHandle, mIndex * kChunkSize, mRWBuf,
                                  mDataSize, false, this);
-  if (NS_FAILED(rv)) {
-    mState = WRITING;   // TODO: properly handle error states
-//    mState = ERROR;
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    SetError(rv);
+  } else {
+    mState = WRITING;
+    mListener = aCallback;
+    mIsDirty = false;
   }
 
-  mState = WRITING;
-  mListener = aCallback;
-  mIsDirty = false;
-  return NS_OK;
+  return rv;
 }
 
 void
@@ -368,6 +368,10 @@ CacheFileChunk::UpdateDataSize(uint32_t aOffset, uint32_t aLen, bool aEOF)
   MOZ_ASSERT(!aEOF, "Implement me! What to do with opened streams?");
   MOZ_ASSERT(aOffset <= mDataSize);
 
+  // UpdateDataSize() is called only when we've written some data to the chunk
+  // and we never write data anymore once some error occurs.
+  MOZ_ASSERT(mState != ERROR);
+
   LOG(("CacheFileChunk::UpdateDataSize() [this=%p, offset=%d, len=%d, EOF=%d]",
        this, aOffset, aLen, aEOF));
 
@@ -468,29 +472,23 @@ CacheFileChunk::OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
     MOZ_ASSERT(mState == WRITING);
     MOZ_ASSERT(mListener);
 
-#if 0
-    // TODO: properly handle error states
-    if (NS_FAILED(aResult)) {
-      mState = ERROR;
-    }
-    else {
-#endif
+    if (NS_WARN_IF(NS_FAILED(aResult))) {
+      SetError(aResult);
+    } else {
       mState = READY;
-      if (!mBuf) {
-        mBuf = mRWBuf;
-        mBufSize = mRWBufSize;
-      }
-      else {
-        free(mRWBuf);
-      }
-
-      mRWBuf = nullptr;
-      mRWBufSize = 0;
-
-      DoMemoryReport(MemorySize());
-#if 0
     }
-#endif
+
+    if (!mBuf) {
+      mBuf = mRWBuf;
+      mBufSize = mRWBufSize;
+    } else {
+      free(mRWBuf);
+    }
+
+    mRWBuf = nullptr;
+    mRWBufSize = 0;
+
+    DoMemoryReport(MemorySize());
 
     mListener.swap(listener);
   }
@@ -555,14 +553,10 @@ CacheFileChunk::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
     }
 
     if (NS_FAILED(aResult)) {
-#if 0
-      // TODO: properly handle error states
-      mState = ERROR;
-#endif
-      mState = READY;
+      aResult = mIndex ? NS_ERROR_FILE_CORRUPTED : NS_ERROR_FILE_NOT_FOUND;
+      SetError(aResult);
       mDataSize = 0;
-    }
-    else {
+    } else {
       mState = READY;
     }
 
@@ -600,7 +594,7 @@ CacheFileChunk::IsReady() const
 {
   mFile->AssertOwnsLock();
 
-  return (mState == READY || mState == WRITING);
+  return (NS_SUCCEEDED(mStatus) && (mState == READY || mState == WRITING));
 }
 
 bool
@@ -609,6 +603,26 @@ CacheFileChunk::IsDirty() const
   mFile->AssertOwnsLock();
 
   return mIsDirty;
+}
+
+nsresult
+CacheFileChunk::GetStatus()
+{
+  mFile->AssertOwnsLock();
+
+  return mStatus;
+}
+
+void
+CacheFileChunk::SetError(nsresult aStatus)
+{
+  if (NS_SUCCEEDED(mStatus)) {
+    MOZ_ASSERT(mState != ERROR);
+    mStatus = aStatus;
+    mState = ERROR;
+  } else {
+    MOZ_ASSERT(mState == ERROR);
+  }
 }
 
 char *
@@ -640,6 +654,10 @@ void
 CacheFileChunk::EnsureBufSize(uint32_t aBufSize)
 {
   mFile->AssertOwnsLock();
+
+  // EnsureBufSize() is called only when we want to write some data to the chunk
+  // and we never write data anymore once some error occurs.
+  MOZ_ASSERT(mState != ERROR);
 
   if (mBufSize >= aBufSize)
     return;

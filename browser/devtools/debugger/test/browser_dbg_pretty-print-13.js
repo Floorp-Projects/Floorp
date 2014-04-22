@@ -41,7 +41,7 @@ function test() {
 }
 
 function testSourceIsUgly() {
-  ok(!gEditor.getText().contains("\n    "),
+  ok(!gEditor.getText().contains("\n  "),
      "The source shouldn't be pretty printed yet.");
 }
 
@@ -55,7 +55,7 @@ function testProgressBarShown() {
 }
 
 function testSourceIsPretty() {
-  ok(gEditor.getText().contains("\n    "),
+  ok(gEditor.getText().contains("\n  "),
      "The source should be pretty printed.")
 }
 
@@ -69,7 +69,7 @@ function testSourceIsStillPretty() {
 
   const { source } = gSources.selectedItem.attachment;
   gDebugger.DebuggerController.SourceScripts.getText(source).then(([, text]) => {
-    ok(text.contains("\n    "),
+    ok(text.contains("\n  "),
        "Subsequent calls to getText return the pretty printed source.");
     deferred.resolve();
   });

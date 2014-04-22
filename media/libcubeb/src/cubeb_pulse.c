@@ -94,7 +94,7 @@ static void
 sink_info_callback(pa_context * context, const pa_sink_info * info, int eol, void * u)
 {
   cubeb * ctx = u;
-   if (!eol) {
+  if (!eol) {
     ctx->default_sink_info = malloc(sizeof(pa_sink_info));
     memcpy(ctx->default_sink_info, info, sizeof(pa_sink_info));
   }
@@ -404,9 +404,11 @@ pulse_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 {
   assert(ctx && max_channels);
 
+  WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
   while (!ctx->default_sink_info) {
     WRAP(pa_threaded_mainloop_wait)(ctx->mainloop);
   }
+  WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
 
   *max_channels = ctx->default_sink_info->channel_map.channels;
 
@@ -416,6 +418,8 @@ pulse_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 static int
 pulse_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
 {
+  assert(ctx && rate);
+
   WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
   while (!ctx->default_sink_info) {
     WRAP(pa_threaded_mainloop_wait)(ctx->mainloop);
