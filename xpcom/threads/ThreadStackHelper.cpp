@@ -79,6 +79,34 @@ ThreadStackHelper::~ThreadStackHelper()
 #endif
 }
 
+#if defined(XP_LINUX) && defined(__arm__)
+// Some (old) Linux kernels on ARM have a bug where a signal handler
+// can be called without clearing the IT bits in CPSR first. The result
+// is that the first few instructions of the handler could be skipped,
+// ultimately resulting in crashes. To workaround this bug, the handler
+// on ARM is a trampoline that starts with enough NOP instructions, so
+// that even if the IT bits are not cleared, only the NOP instructions
+// will be skipped over.
+
+template <void (*H)(int, siginfo_t*, void*)>
+__attribute__((naked)) void
+SignalTrampoline(int aSignal, siginfo_t* aInfo, void* aContext)
+{
+  asm volatile (
+    "nop; nop; nop; nop"
+    : : : "memory");
+
+  // Because the assembler may generate additional insturctions below, we
+  // need to ensure NOPs are inserted first by separating them out above.
+
+  asm volatile (
+    "bx %0"
+    :
+    : "r"(H), "l"(aSignal), "l"(aInfo), "l"(aContext)
+    : "memory");
+}
+#endif // XP_LINUX && __arm__
+
 void
 ThreadStackHelper::GetStack(Stack& aStack)
 {
@@ -99,7 +127,11 @@ ThreadStackHelper::GetStack(Stack& aStack)
   }
   sCurrent = this;
   struct sigaction sigact = {};
+#ifdef __arm__
+  sigact.sa_sigaction = SignalTrampoline<SigAction>;
+#else
   sigact.sa_sigaction = SigAction;
+#endif
   sigemptyset(&sigact.sa_mask);
   sigact.sa_flags = SA_SIGINFO | SA_RESTART;
   if (::sigaction(SIGPROF, &sigact, &sOldSigAction)) {

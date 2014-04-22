@@ -137,16 +137,36 @@ typedef std::vector<std::pair<pthread_key_t, void *>,
 TLSInfoList;
 
 /**
+ * Return the system's page size
+ */
+static size_t getPageSize(void) {
+#ifdef HAVE_GETPAGESIZE
+  return getpagesize();
+#elif defined(_SC_PAGESIZE)
+  return sysconf(_SC_PAGESIZE);
+#elif defined(PAGE_SIZE)
+  return PAGE_SIZE;
+#else
+  #warning "Hard-coding page size to 4096 bytes"
+  return 4096
+#endif
+}
+
+/**
+ * Align the pointer to the next page boundary unless it's already aligned
+ */
+static uintptr_t ceilToPage(uintptr_t aPtr) {
+  size_t pageSize = getPageSize();
+
+  return ((aPtr + pageSize - 1) / pageSize) * pageSize;
+}
+
+/**
  * The stack size is chosen carefully so the frozen threads doesn't consume too
  * much memory in the Nuwa process. The threads shouldn't run deep recursive
  * methods or do large allocations on the stack to avoid stack overflow.
  */
 #ifndef NUWA_STACK_SIZE
-#ifndef PAGE_SIZE
-#warning "Hard-coding page size to 4096 byte"
-#define PAGE_SIZE 4096ul
-#endif
-#define PAGE_ALIGN_MASK (~(PAGE_SIZE-1))
 #define NUWA_STACK_SIZE (1024 * 128)
 #endif
 
@@ -495,17 +515,13 @@ thread_info_new(void) {
   tinfo->recreatedThreadID = 0;
   tinfo->recreatedNativeThreadID = 0;
   tinfo->reacquireMutex = nullptr;
-  tinfo->stk = malloc(NUWA_STACK_SIZE + PAGE_SIZE);
+  tinfo->stk = malloc(NUWA_STACK_SIZE + getPageSize());
 
   // We use a smaller stack size. Add protection to stack overflow: mprotect()
   // stack top (the page at the lowest address) so we crash instead of corrupt
   // other content that is malloc()'d.
-  unsigned long long pageGuard = ((unsigned long long)tinfo->stk);
-  pageGuard &= PAGE_ALIGN_MASK;
-  if (pageGuard != (unsigned long long) tinfo->stk) {
-    pageGuard += PAGE_SIZE; // Round up to be page-aligned.
-  }
-  mprotect((void*)pageGuard, PAGE_SIZE, PROT_READ);
+  uintptr_t pageGuard = ceilToPage((uintptr_t)tinfo->stk);
+  mprotect((void*)pageGuard, getPageSize(), PROT_READ);
 
   pthread_attr_init(&tinfo->threadAttr);
 

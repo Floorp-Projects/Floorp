@@ -6,15 +6,6 @@
 #include "SaveProfileTask.h"
 #include "GeckoProfiler.h"
 
-static bool
-WriteCallback(const jschar *buf, uint32_t len, void *data)
-{
-  std::ofstream& stream = *static_cast<std::ofstream*>(data);
-  nsAutoCString profile = NS_ConvertUTF16toUTF8(buf, len);
-  stream << profile.Data();
-  return true;
-}
-
 nsresult
 SaveProfileTask::Run() {
   // Get file path
@@ -39,48 +30,7 @@ SaveProfileTask::Run() {
     return rv;
 #endif
 
-  // Create a JSContext to run a JSObjectBuilder :(
-  // Based on XPCShellEnvironment
-  JSRuntime *rt;
-  JSContext *cx;
-  nsCOMPtr<nsIJSRuntimeService> rtsvc
-    = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
-  if (!rtsvc || NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt) {
-    LOG("failed to get RuntimeService");
-    return NS_ERROR_FAILURE;;
-  }
-
-  cx = JS_NewContext(rt, 8192);
-  if (!cx) {
-    LOG("Failed to get context");
-    return NS_ERROR_FAILURE;
-  }
-
-  {
-    JSAutoRequest ar(cx);
-    static const JSClass c = {
-      "global", JSCLASS_GLOBAL_FLAGS,
-      JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-      JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub,
-      nullptr, nullptr, nullptr, nullptr,
-      JS_GlobalObjectTraceHook
-    };
-    JSObject *obj = JS_NewGlobalObject(cx, &c, nullptr, JS::FireOnNewGlobalHook);
-
-    std::ofstream stream;
-    stream.open(tmpPath.get());
-    if (stream.is_open()) {
-      JSAutoCompartment autoComp(cx, obj);
-      JSObject* profileObj = profiler_get_profile_jsobject(cx);
-      JS::Rooted<JS::Value> val(cx, OBJECT_TO_JSVAL(profileObj));
-      JS_Stringify(cx, &val, JS::NullPtr(), JS::NullHandleValue, WriteCallback, &stream);
-      stream.close();
-      LOGF("Saved to %s", tmpPath.get());
-    } else {
-      LOG("Fail to open profile log file.");
-    }
-  }
-  JS_DestroyContext(cx);
+  profiler_save_profile_to_file(tmpPath.get());
 
   return NS_OK;
 }

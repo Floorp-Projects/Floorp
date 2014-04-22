@@ -151,6 +151,9 @@ static inline char* profiler_get_profile() { return nullptr; }
 // Get the profile encoded as a JSON object.
 static inline JSObject* profiler_get_profile_jsobject(JSContext* aCx) { return nullptr; }
 
+// Get the profile and write it into a file
+static inline void profiler_save_profile_to_file(char* aFilename) { }
+
 // Get the features supported by the profiler that are accepted by profiler_init.
 // Returns a null terminated char* array.
 static inline char** profiler_get_features() { return nullptr; }

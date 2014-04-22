@@ -472,9 +472,19 @@ nsresult nsExtensibleStringBundle::GetSimpleEnumeration(nsISimpleEnumerator ** a
 
 #define MAX_CACHED_BUNDLES 16
 
-struct bundleCacheEntry_t : public LinkedListElement<bundleCacheEntry_t> {
+struct bundleCacheEntry_t MOZ_FINAL : public LinkedListElement<bundleCacheEntry_t> {
   nsAutoPtr<nsCStringKey> mHashKey;
   nsCOMPtr<nsIStringBundle> mBundle;
+
+  bundleCacheEntry_t()
+  {
+    MOZ_COUNT_CTOR(bundleCacheEntry_t);
+  }
+
+  ~bundleCacheEntry_t()
+  {
+    MOZ_COUNT_DTOR(bundleCacheEntry_t);
+  }
 };
 
 
