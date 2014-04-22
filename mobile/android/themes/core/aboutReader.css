@@ -346,7 +346,7 @@ body {
 
 .toolbar > * {
   float: right;
-  width: 25%;
+  width: 33%;
 }
 
 .button {
@@ -496,14 +496,6 @@ body {
   background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-mdpi.png');
 }
 
-.list-button.on {
-  background-image: url('chrome://browser/skin/images/reader-list-on-icon-mdpi.png');
-}
-
-.list-button {
-  background-image: url('chrome://browser/skin/images/reader-list-off-icon-mdpi.png');
-}
-
 .share-button {
   background-image: url('chrome://browser/skin/images/reader-share-icon-mdpi.png');
 }
@@ -531,14 +523,6 @@ body {
 
   .toggle-button {
     background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-hdpi.png');
-  }
-
-  .list-button.on {
-    background-image: url('chrome://browser/skin/images/reader-list-on-icon-hdpi.png');
-  }
-
-  .list-button {
-    background-image: url('chrome://browser/skin/images/reader-list-off-icon-hdpi.png');
   }
 
   .share-button {
@@ -569,14 +553,6 @@ body {
 
   .toggle-button {
     background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xhdpi.png');
-  }
-
-  .list-button.on {
-    background-image: url('chrome://browser/skin/images/reader-list-on-icon-xhdpi.png');
-  }
-
-  .list-button {
-    background-image: url('chrome://browser/skin/images/reader-list-off-icon-xhdpi.png');
   }
 
   .share-button {
