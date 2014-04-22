@@ -351,16 +351,20 @@ let PlacesTransactions = {
    * are not protected from consumers who use the raw places APIs directly.
    */
   transact: function (aToTransact) {
-    let generatorMode = typeof(aToTransact) == "function";
-    if (generatorMode) {
-      if (!aToTransact.isGenerator())
+    let isGeneratorObj =
+      o => Object.prototype.toString.call(o) ==  "[object Generator]";
+
+    let generator = null;
+    if (typeof(aToTransact) == "function") {
+      generator = aToTransact();
+      if (!isGeneratorObj(generator))
         throw new Error("aToTransact is not a generator function");
     }
-    else {
-      if (!TransactionsHistory.isProxifiedTransactionObject(aToTransact))
-        throw new Error("aToTransact is not a valid transaction object");
-      if (executedTransactions.has(aToTransact))
-        throw new Error("Transactions objects may not be recycled.");
+    else if (!TransactionsHistory.isProxifiedTransactionObject(aToTransact)) {
+      throw new Error("aToTransact is not a valid transaction object");
+    }
+    else if (executedTransactions.has(aToTransact)) {
+      throw new Error("Transactions objects may not be recycled.");
     }
 
     return Serialize(function* () {
@@ -387,7 +391,7 @@ let PlacesTransactions = {
           let next = error ?
                      aGenerator.throw(sendValue) : aGenerator.next(sendValue);
           sendValue = next.value;
-          if (Object.prototype.toString.call(sendValue) == "[object Generator]") {
+          if (isGeneratorObj(sendValue)) {
             sendValue = yield transactBatch(sendValue);
           }
           else if (typeof(sendValue) == "object" && sendValue) {
@@ -410,8 +414,8 @@ let PlacesTransactions = {
         return sendValue;
       }
 
-      if (generatorMode)
-        return yield transactBatch(aToTransact());
+      if (generator)
+        return yield transactBatch(generator);
       else
         return yield transactOneTransaction(aToTransact);
     }.bind(this));
@@ -887,9 +891,10 @@ PT.NewLivemark.prototype = Object.seal({
 /**
  * Transaction for moving an item.
  *
- * Required Input Properties: GUID, newParentGUID, newIndex.
+ * Required Input Properties: GUID, newParentGUID.
+ * Optional Input Properties  newIndex.
  */
-PT.MoveItem = DefineTransaction(["GUID", "newParentGUID", "newIndex"]);
+PT.MoveItem = DefineTransaction(["GUID", "newParentGUID"], ["newIndex"]);
 PT.MoveItem.prototype = Object.seal({
   execute: function* (aGUID, aNewParentGUID, aNewIndex) {
     let itemId = yield PlacesUtils.promiseItemId(aGUID),
