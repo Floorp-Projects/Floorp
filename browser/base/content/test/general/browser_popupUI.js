@@ -2,6 +2,8 @@ function test() {
   waitForExplicitFinish();
   gPrefService.setBoolPref("dom.disable_open_during_load", false);
 
+  gBrowser.selectedTab = gBrowser.addTab();
+
   var browser = gBrowser.selectedBrowser;
   browser.addEventListener("load", function () {
     browser.removeEventListener("load", arguments.callee, true);
@@ -51,7 +53,6 @@ function testPopupUI(win) {
 
   if (!win.closed)
     win.close();
-  gBrowser.addTab();
   gBrowser.removeCurrentTab();
   finish();
 }
