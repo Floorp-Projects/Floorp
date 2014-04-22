@@ -110,7 +110,7 @@ public:
 class ProfilerMarkerPayload;
 template<typename T>
 class ProfilerLinkedList;
-class JSAObjectBuilder;
+class JSStreamWriter;
 class JSCustomArray;
 class ThreadProfile;
 class ProfilerMarker {
@@ -126,8 +126,8 @@ public:
     return mMarkerName;
   }
 
-  template<typename Builder> void
-  BuildJSObject(Builder& b, typename Builder::ArrayHandle markers) const;
+  void
+  StreamJSObject(JSStreamWriter& b) const;
 
   void SetGeneration(int aGenID);
 
