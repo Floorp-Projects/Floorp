@@ -151,6 +151,8 @@ protected:
 
     LOG("[%p] ticking drivers...", this);
     nsTArray<nsRefPtr<nsRefreshDriver> > drivers(mRefreshDrivers);
+    // RD is short for RefreshDriver
+    profiler_tracing("Paint", "RD", TRACING_INTERVAL_START);
     for (size_t i = 0; i < drivers.Length(); ++i) {
       // don't poke this driver if it's in test mode
       if (drivers[i]->IsTestControllingRefreshesEnabled()) {
@@ -159,6 +161,7 @@ protected:
 
       TickDriver(drivers[i], jsnow, now);
     }
+    profiler_tracing("Paint", "RD", TRACING_INTERVAL_END);
     LOG("[%p] done.", this);
   }
 
@@ -680,6 +683,8 @@ nsRefreshDriver::ChooseTimer() const
 
 nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
   : mActiveTimer(nullptr),
+    mReflowCause(nullptr),
+    mStyleCause(nullptr),
     mPresContext(aPresContext),
     mFreezeCount(0),
     mThrottled(false),
@@ -702,6 +707,9 @@ nsRefreshDriver::~nsRefreshDriver()
     mPresShellsToInvalidateIfHidden[i]->InvalidatePresShellIfHidden();
   }
   mPresShellsToInvalidateIfHidden.Clear();
+
+  profiler_free_backtrace(mStyleCause);
+  profiler_free_backtrace(mReflowCause);
 }
 
 // Method for testing.  See nsIDOMWindowUtils.advanceTimeAndRefresh
@@ -1066,8 +1074,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     return;
   }
 
-  profiler_tracing("Paint", "RD", TRACING_INTERVAL_START);
-
   AutoRestore<bool> restoreInRefresh(mInRefresh);
   mInRefresh = true;
 
@@ -1085,7 +1091,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       
       if (!mPresContext || !mPresContext->GetPresShell()) {
         StopTimer();
-        profiler_tracing("Paint", "RD", TRACING_INTERVAL_END);
         return;
       }
     }
@@ -1134,6 +1139,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 
       // This is the Flush_Style case.
       if (mPresContext && mPresContext->GetPresShell()) {
+        bool tracingStyleFlush = false;
         nsAutoTArray<nsIPresShell*, 16> observers;
         observers.AppendElements(mStyleFlushObservers);
         for (uint32_t j = observers.Length();
@@ -1143,16 +1149,28 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           nsIPresShell* shell = observers[j - 1];
           if (!mStyleFlushObservers.Contains(shell))
             continue;
+
+          if (!tracingStyleFlush) {
+            tracingStyleFlush = true;
+            profiler_tracing("Paint", "Styles", mStyleCause, TRACING_INTERVAL_START);
+            mStyleCause = nullptr;
+          }
+
           NS_ADDREF(shell);
           mStyleFlushObservers.RemoveElement(shell);
           shell->GetPresContext()->RestyleManager()->mObservingRefreshDriver = false;
           shell->FlushPendingNotifications(ChangesToFlush(Flush_Style, false));
           NS_RELEASE(shell);
         }
+
+        if (tracingStyleFlush) {
+          profiler_tracing("Paint", "Styles", TRACING_INTERVAL_END);
+        }
       }
     } else if  (i == 1) {
       // This is the Flush_Layout case.
       if (mPresContext && mPresContext->GetPresShell()) {
+        bool tracingLayoutFlush = false;
         nsAutoTArray<nsIPresShell*, 16> observers;
         observers.AppendElements(mLayoutFlushObservers);
         for (uint32_t j = observers.Length();
@@ -1162,6 +1180,13 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           nsIPresShell* shell = observers[j - 1];
           if (!mLayoutFlushObservers.Contains(shell))
             continue;
+
+          if (!tracingLayoutFlush) {
+            tracingLayoutFlush = true;
+            profiler_tracing("Paint", "Reflow", mReflowCause, TRACING_INTERVAL_START);
+            mReflowCause = nullptr;
+          }
+
           NS_ADDREF(shell);
           mLayoutFlushObservers.RemoveElement(shell);
           shell->mReflowScheduled = false;
@@ -1169,6 +1194,10 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           shell->FlushPendingNotifications(ChangesToFlush(Flush_InterruptibleLayout,
                                                           false));
           NS_RELEASE(shell);
+        }
+
+        if (tracingLayoutFlush) {
+          profiler_tracing("Paint", "Reflow", TRACING_INTERVAL_END);
         }
       }
     }
@@ -1203,6 +1232,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   mPresShellsToInvalidateIfHidden.Clear();
 
   if (mViewManagerFlushIsPending) {
+    profiler_tracing("Paint", "DisplayList", TRACING_INTERVAL_START);
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
       printf_stderr("Starting ProcessPendingUpdates\n");
@@ -1217,12 +1247,12 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       printf_stderr("Ending ProcessPendingUpdates\n");
     }
 #endif
+    profiler_tracing("Paint", "DisplayList", TRACING_INTERVAL_END);
   }
 
   for (uint32_t i = 0; i < mPostRefreshObservers.Length(); ++i) {
     mPostRefreshObservers[i]->DidRefresh();
   }
-  profiler_tracing("Paint", "RD", TRACING_INTERVAL_END);
 
   NS_ASSERTION(mInRefresh, "Still in refresh");
 }

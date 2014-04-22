@@ -57,6 +57,8 @@ protected:
   virtual void
   streamPayload(JSStreamWriter& b) = 0;
 
+  void SetStack(ProfilerBacktrace* aStack) { mStack = aStack; }
+
 private:
   mozilla::TimeStamp  mStartTime;
   mozilla::TimeStamp  mEndTime;
@@ -67,6 +69,7 @@ class ProfilerMarkerTracing : public ProfilerMarkerPayload
 {
 public:
   ProfilerMarkerTracing(const char* aCategory, TracingMetadata aMetaData);
+  ProfilerMarkerTracing(const char* aCategory, TracingMetadata aMetaData, ProfilerBacktrace* aCause);
 
   const char *GetCategory() const { return mCategory; }
   TracingMetadata GetMetaData() const { return mMetaData; }
