@@ -1103,6 +1103,7 @@ vpx/vpx_decoder.h
 vpx/vpx_encoder.h
 vpx/vp8cx.h
 vpx/vp8dx.h
+vpx_mem/vpx_mem.h
 #endif
 #ifdef GKMEDIAS_SHARED_LIBRARY
 vpx/vpx_codec.h
@@ -1110,6 +1111,7 @@ vpx/vpx_decoder.h
 vpx/vpx_encoder.h
 vpx/vp8cx.h
 vpx/vp8dx.h
+vpx_mem/vpx_mem.h
 vorbis/codec.h
 theora/theoradec.h
 tremor/ivorbiscodec.h
