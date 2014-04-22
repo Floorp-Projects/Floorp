@@ -136,14 +136,8 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         d.setNumber(*static_cast<const double*>(s));
         return true;
     case nsXPTType::T_BOOL  :
-    {
-        bool b = *static_cast<const bool*>(s);
-
-        NS_WARN_IF_FALSE(b == 1 || b == 0,
-                         "Passing a malformed bool through XPConnect");
-        d.setBoolean(b);
+        d.setBoolean(*static_cast<const bool*>(s));
         return true;
-    }
     case nsXPTType::T_CHAR  :
     {
         char p = *static_cast<const char*>(s);
