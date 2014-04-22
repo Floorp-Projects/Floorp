@@ -70,7 +70,7 @@ public:
                                  const gfxRect&   aSourceRect,
                                  const gfxRect&   aImageRect,
                                  const gfxRect&   aFill,
-                                 const mozilla::gfx::SurfaceFormat aFormat,
+                                 const gfxImageFormat aFormat,
                                  GraphicsFilter aFilter,
                                  uint32_t         aImageFlags = imgIContainer::FLAG_NONE);
 
