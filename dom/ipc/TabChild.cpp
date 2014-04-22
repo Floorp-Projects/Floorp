@@ -118,6 +118,13 @@ TabChildBase::TabChildBase()
 {
 }
 
+NS_IMPL_CYCLE_COLLECTING_ADDREF(TabChildBase)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(TabChildBase)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TabChildBase)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_2(TabChildBase, mTabChildGlobal, mGlobal)
+
 void
 TabChildBase::InitializeRootMetrics()
 {
