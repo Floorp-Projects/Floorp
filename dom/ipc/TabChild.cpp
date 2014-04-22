@@ -2729,8 +2729,8 @@ TabChildGlobal::Init()
                                               MM_CHILD);
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(TabChildGlobal, DOMEventTargetHelper,
-                                     mMessageManager)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_2(TabChildGlobal, DOMEventTargetHelper,
+                                     mMessageManager, mTabChild)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TabChildGlobal)
   NS_INTERFACE_MAP_ENTRY(nsIMessageListenerManager)
