@@ -426,9 +426,6 @@ gfxFT2Font::ShapeText(gfxContext      *aContext,
 
     if (!ok && gfxPlatform::GetPlatform()->UseHarfBuzzForScript(aScript)) {
         if (!mHarfBuzzShaper) {
-            gfxFT2LockedFace face(this);
-            mFUnitsConvFactor = face.XScale();
-
             mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
         }
         ok = mHarfBuzzShaper->ShapeText(aContext, aText,
