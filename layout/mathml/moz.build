@@ -55,11 +55,9 @@ JAR_MANIFESTS += ['jar.mn']
 
 RESOURCE_FILES.fonts += [
     'mathfont.properties',
-    'mathfontAsanaMath.properties',
     'mathfontMathJax_Main.properties',
     'mathfontStandardSymbolsL.properties',
     'mathfontSTIXNonUnicode.properties',
-    'mathfontSTIXSize1.properties',
     'mathfontSTIXSizeOneSym.properties',
     'mathfontUnicode.properties',
 ]
