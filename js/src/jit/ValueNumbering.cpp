@@ -506,6 +506,7 @@ ValueNumberer::breakClass(MDefinition *def)
         MDefinition *newRep = findSplit(def);
         if (!newRep)
             return;
+        markConsumers(def);
         ValueNumberData *newdata = newRep->valueNumberData();
 
         // Right now, |defdata| is at the front of the list, and |newdata| is
@@ -544,8 +545,10 @@ ValueNumberer::breakClass(MDefinition *def)
         // make the VN of every member in the class the VN of the new representative number.
         for (MDefinition *tmp = newRep; tmp != nullptr; tmp = tmp->valueNumberData()->classNext) {
             // if this instruction is already scheduled to be processed, don't do anything.
-            if (tmp->isInWorklist())
+            if (tmp->isInWorklist()) {
+                IonSpew(IonSpew_GVN, "Defer  to a new congruence class: %d", tmp->id());
                 continue;
+            }
             IonSpew(IonSpew_GVN, "Moving to a new congruence class: %d", tmp->id());
             tmp->setValueNumber(newRep->id());
             markConsumers(tmp);
