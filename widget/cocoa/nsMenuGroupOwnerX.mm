@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsObjCExceptions.h"
-#include "nsHashtable.h"
 #include "nsThreadUtils.h"
 
 #include "mozilla/dom/Element.h"
