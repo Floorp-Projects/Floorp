@@ -30,7 +30,6 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOMStrings.h"
 #include "nsProxyRelease.h"
-#include "nsString.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Mutex.h"
@@ -70,7 +69,6 @@ PRLogModuleInfo *gUrlClassifierDbServiceLog = nullptr;
 #define GETHASH_NOISE_PREF      "urlclassifier.gethashnoise"
 #define GETHASH_NOISE_DEFAULT   4
 
-// Comma-separated lists
 #define MALWARE_TABLE_PREF      "urlclassifier.malware_table"
 #define PHISH_TABLE_PREF        "urlclassifier.phish_table"
 #define DOWNLOAD_BLOCK_TABLE_PREF "urlclassifier.downloadBlockTable"
@@ -1073,39 +1071,6 @@ nsUrlClassifierDBService::~nsUrlClassifierDBService()
 }
 
 nsresult
-nsUrlClassifierDBService::ReadTablesFromPrefs()
-{
-  nsCString allTables;
-  nsCString tables;
-  Preferences::GetCString(PHISH_TABLE_PREF, &allTables);
-
-  Preferences::GetCString(MALWARE_TABLE_PREF, &tables);
-  if (!tables.IsEmpty()) {
-    allTables.Append(',');
-    allTables.Append(tables);
-  }
-
-  Preferences::GetCString(DOWNLOAD_BLOCK_TABLE_PREF, &tables);
-  if (!tables.IsEmpty()) {
-    allTables.Append(',');
-    allTables.Append(tables);
-  }
-
-  Preferences::GetCString(DOWNLOAD_ALLOW_TABLE_PREF, &tables);
-  if (!tables.IsEmpty()) {
-    allTables.Append(',');
-    allTables.Append(tables);
-  }
-
-  Classifier::SplitTables(allTables, mGethashTables);
-
-  Preferences::GetCString(DISALLOW_COMPLETION_TABLE_PREF, &tables);
-  Classifier::SplitTables(tables, mDisallowCompletionsTables);
-
-  return NS_OK;
-}
-
-nsresult
 nsUrlClassifierDBService::Init()
 {
 #if defined(PR_LOGGING)
@@ -1122,7 +1087,15 @@ nsUrlClassifierDBService::Init()
     GETHASH_NOISE_DEFAULT);
   gFreshnessGuarantee = Preferences::GetInt(CONFIRM_AGE_PREF,
     CONFIRM_AGE_DEFAULT_SEC);
-  ReadTablesFromPrefs();
+  mGethashTables.AppendElement(Preferences::GetCString(PHISH_TABLE_PREF));
+  mGethashTables.AppendElement(Preferences::GetCString(MALWARE_TABLE_PREF));
+  mGethashTables.AppendElement(Preferences::GetCString(
+    DOWNLOAD_BLOCK_TABLE_PREF));
+  mGethashTables.AppendElement(Preferences::GetCString(
+    DOWNLOAD_ALLOW_TABLE_PREF));
+  nsCString tables;
+  Preferences::GetCString(DISALLOW_COMPLETION_TABLE_PREF, &tables);
+  Classifier::SplitTables(tables, mDisallowCompletionsTables);
 
   // Do we *really* need to be able to change all of these at runtime?
   Preferences::AddStrongObserver(this, CHECK_MALWARE_PREF);
@@ -1199,7 +1172,6 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 
   nsAutoCString tables;
   nsAutoCString malware;
-  // LookupURI takes a comma-separated list already.
   Preferences::GetCString(MALWARE_TABLE_PREF, &malware);
   if (!malware.IsEmpty()) {
     tables.Append(malware);
@@ -1438,9 +1410,6 @@ nsUrlClassifierDBService::GetCompleter(const nsACString &tableName,
     return false;
   }
 
-  // We should never fetch hash completions for test tables.
-  MOZ_ASSERT(!StringBeginsWith(tableName, "test-"));
-
   // Otherwise, call gethash to find the hash completions.
   return NS_SUCCEEDED(CallGetService(NS_URLCLASSIFIERHASHCOMPLETER_CONTRACTID,
                                      completer));
@@ -1460,14 +1429,23 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
     } else if (NS_LITERAL_STRING(CHECK_PHISHING_PREF).Equals(aData)) {
       mCheckPhishing = Preferences::GetBool(CHECK_PHISHING_PREF,
         CHECK_PHISHING_DEFAULT);
-    } else if (
-      NS_LITERAL_STRING(PHISH_TABLE_PREF).Equals(aData) ||
-      NS_LITERAL_STRING(MALWARE_TABLE_PREF).Equals(aData) ||
-      NS_LITERAL_STRING(DOWNLOAD_BLOCK_TABLE_PREF).Equals(aData) ||
-      NS_LITERAL_STRING(DOWNLOAD_ALLOW_TABLE_PREF).Equals(aData) ||
-      NS_LITERAL_STRING(DISALLOW_COMPLETION_TABLE_PREF).Equals(aData)) {
+    } else if (NS_LITERAL_STRING(PHISH_TABLE_PREF).Equals(aData) ||
+               NS_LITERAL_STRING(MALWARE_TABLE_PREF).Equals(aData) ||
+               NS_LITERAL_STRING(DOWNLOAD_BLOCK_TABLE_PREF).Equals(aData) ||
+               NS_LITERAL_STRING(DOWNLOAD_ALLOW_TABLE_PREF).Equals(aData)) {
       // Just read everything again.
-      ReadTablesFromPrefs();
+      mGethashTables.Clear();
+      mGethashTables.AppendElement(Preferences::GetCString(PHISH_TABLE_PREF));
+      mGethashTables.AppendElement(Preferences::GetCString(MALWARE_TABLE_PREF));
+      mGethashTables.AppendElement(Preferences::GetCString(
+        DOWNLOAD_BLOCK_TABLE_PREF));
+      mGethashTables.AppendElement(Preferences::GetCString(
+        DOWNLOAD_ALLOW_TABLE_PREF));
+    } else if (NS_LITERAL_STRING(DISALLOW_COMPLETION_TABLE_PREF).Equals(aData)) {
+      mDisallowCompletionsTables.Clear();
+      nsCString tables;
+      Preferences::GetCString(DISALLOW_COMPLETION_TABLE_PREF, &tables);
+      Classifier::SplitTables(tables, mDisallowCompletionsTables);
     } else if (NS_LITERAL_STRING(CONFIRM_AGE_PREF).Equals(aData)) {
       gFreshnessGuarantee = Preferences::GetInt(CONFIRM_AGE_PREF,
         CONFIRM_AGE_DEFAULT_SEC);
