@@ -4666,6 +4666,7 @@ gsmsdp_negotiate_rtcp_fb (cc_sdp_t *cc_sdp_p,
          */
         switch (codec) {
             case RTP_VP8:
+            case RTP_I420:
                 fb_types &=
                   sdp_rtcp_fb_nack_to_bitmap(SDP_RTCP_FB_NACK_BASIC) |
                   sdp_rtcp_fb_nack_to_bitmap(SDP_RTCP_FB_NACK_PLI) |

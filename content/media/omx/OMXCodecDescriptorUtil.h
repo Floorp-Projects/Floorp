@@ -6,17 +6,21 @@
 #ifndef OMXCodecDescriptorUtil_h_
 #define OMXCodecDescriptorUtil_h_
 
-#include <stagefright/foundation/ABuffer.h>
+#include <stagefright/foundation/AMessage.h>
 #include <stagefright/MediaErrors.h>
 
 #include <nsTArray.h>
 
-namespace android {
+#include "OMXCodecWrapper.h"
 
-// Generate decoder config descriptor (defined in ISO/IEC 14496-15 5.2.4.1.1)
-// for AVC/H.264 using codec config blob from encoder.
-status_t GenerateAVCDescriptorBlob(ABuffer* aData,
-                                   nsTArray<uint8_t>* aOutputBuf);
+namespace android {
+// Generate decoder config blob using aConfigData provided by encoder.
+// The output will be stored in aOutputBuf.
+// aFormat specifies the output format: AVC_MP4 is for MP4 file, and AVC_NAL is
+// for RTP packet used by WebRTC.
+status_t GenerateAVCDescriptorBlob(sp<AMessage>& aConfigData,
+                                   nsTArray<uint8_t>* aOutputBuf,
+                                   OMXVideoEncoder::BlobFormat aFormat);
 
 }
 

@@ -56,7 +56,7 @@ public:
 
   // nsIAttribute interface
   void SetMap(nsDOMAttributeMap *aMap) MOZ_OVERRIDE;
-  nsIContent *GetContent() const MOZ_OVERRIDE;
+  Element* GetElement() const;
   nsresult SetOwnerDocument(nsIDocument* aDocument) MOZ_OVERRIDE;
 
   // nsINode interface
@@ -98,14 +98,13 @@ public:
 protected:
   virtual Element* GetNameSpaceElement()
   {
-    return GetContentInternal();
+    return GetElement();
   }
 
   static bool sInitialized;
 
 private:
   already_AddRefed<nsIAtom> GetNameAtom(nsIContent* aContent);
-  Element* GetContentInternal() const;
 
   nsString mValue;
 };

@@ -13,6 +13,8 @@
 #include "VideoTypes.h"
 #include "MediaConduitErrors.h"
 
+#include "ImageContainer.h"
+
 #include <vector>
 
 namespace mozilla {
@@ -44,6 +46,20 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TransportInterface)
 };
 
+/**
+ * This class wraps image object for VideoRenderer::RenderVideoFrame()
+ * callback implementation to use for rendering.
+ */
+class ImageHandle
+{
+public:
+  ImageHandle(layers::Image* image) : mImage(image) {}
+
+  const RefPtr<layers::Image>& GetImage() const { return mImage; }
+
+private:
+  RefPtr<layers::Image> mImage;
+};
 
 /**
  * 1. Abstract renderer for video data
@@ -75,16 +91,21 @@ class VideoRenderer
    * @param time_stamp: Decoder timestamp, typically 90KHz as per RTP
    * @render_time: Wall-clock time at the decoder for synchronization
    *                purposes in milliseconds
-   * NOTE: It is the responsibility of the concrete implementations of this
-   * class to own copy of the frame if needed for time longer than scope of
-   * this callback.
+   * @handle: opaque handle for image object of decoded video frame.
+   * NOTE: If decoded video frame is passed through buffer , it is the
+   * responsibility of the concrete implementations of this class to own copy
+   * of the frame if needed for time longer than scope of this callback.
    * Such implementations should be quick in processing the frames and return
    * immediately.
+   * On the other hand, if decoded video frame is passed through handle, the
+   * implementations should keep a reference to the (ref-counted) image object
+   * inside until it's no longer needed.
    */
   virtual void RenderVideoFrame(const unsigned char* buffer,
                                 unsigned int buffer_size,
                                 uint32_t time_stamp,
-                                int64_t render_time) = 0;
+                                int64_t render_time,
+                                const ImageHandle& handle) = 0;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoRenderer)
 };
@@ -162,6 +183,18 @@ public:
 
 };
 
+// Abstract base classes for external encoder/decoder.
+class VideoEncoder
+{
+public:
+  virtual ~VideoEncoder() {};
+};
+
+class VideoDecoder
+{
+public:
+  virtual ~VideoDecoder() {};
+};
 
 /**
  * MediaSessionConduit for video
@@ -241,6 +274,21 @@ public:
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
                                 const std::vector<VideoCodecConfig* >& recvCodecConfigList) = 0;
 
+  /**
+   * Set an external encoder
+   * @param encoder
+   * @result: on success, we will use the specified encoder
+   */
+  virtual MediaConduitErrorCode SetExternalSendCodec(int pltype,
+                                                     VideoEncoder* encoder) = 0;
+
+  /**
+   * Set an external decoder
+   * @param decoder
+   * @result: on success, we will use the specified decoder
+   */
+  virtual MediaConduitErrorCode SetExternalRecvCodec(int pltype,
+                                                     VideoDecoder* decoder) = 0;
 
   /**
    * These methods allow unit tests to double-check that the
@@ -361,7 +409,3 @@ public:
 };
 }
 #endif
-
-
-
-
