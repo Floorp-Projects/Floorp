@@ -42,8 +42,8 @@ class MediaSourceReader : public MediaDecoderReader
 public:
   MediaSourceReader(MediaSourceDecoder* aDecoder)
     : MediaDecoderReader(aDecoder)
-    , mActiveVideoReader(-1)
-    , mActiveAudioReader(-1)
+    , mActiveVideoDecoder(-1)
+    , mActiveAudioDecoder(-1)
   {
   }
 
@@ -62,54 +62,54 @@ public:
 
   bool DecodeAudioData() MOZ_OVERRIDE
   {
-    if (mActiveAudioReader == -1) {
+    if (!GetAudioReader()) {
       MSE_DEBUG("%p DecodeAudioFrame called with no audio reader", this);
       MOZ_ASSERT(mPendingDecoders.IsEmpty());
       return false;
     }
-    bool rv = mAudioReaders[mActiveAudioReader]->DecodeAudioData();
+    bool rv = GetAudioReader()->DecodeAudioData();
 
     nsAutoTArray<AudioData*, 10> audio;
-    mAudioReaders[mActiveAudioReader]->AudioQueue().GetElementsAfter(-1, &audio);
+    GetAudioReader()->AudioQueue().GetElementsAfter(-1, &audio);
     for (uint32_t i = 0; i < audio.Length(); ++i) {
       AudioQueue().Push(audio[i]);
     }
-    mAudioReaders[mActiveAudioReader]->AudioQueue().Empty();
+    GetAudioReader()->AudioQueue().Empty();
 
     return rv;
   }
 
   bool DecodeVideoFrame(bool& aKeyFrameSkip, int64_t aTimeThreshold) MOZ_OVERRIDE
   {
-    if (mActiveVideoReader == -1) {
+    if (!GetVideoReader()) {
       MSE_DEBUG("%p DecodeVideoFrame called with no video reader", this);
       MOZ_ASSERT(mPendingDecoders.IsEmpty());
       return false;
     }
-    bool rv = mVideoReaders[mActiveVideoReader]->DecodeVideoFrame(aKeyFrameSkip, aTimeThreshold);
+    bool rv = GetVideoReader()->DecodeVideoFrame(aKeyFrameSkip, aTimeThreshold);
 
     nsAutoTArray<VideoData*, 10> video;
-    mVideoReaders[mActiveVideoReader]->VideoQueue().GetElementsAfter(-1, &video);
+    GetVideoReader()->VideoQueue().GetElementsAfter(-1, &video);
     for (uint32_t i = 0; i < video.Length(); ++i) {
       VideoQueue().Push(video[i]);
     }
-    mVideoReaders[mActiveVideoReader]->VideoQueue().Empty();
+    GetVideoReader()->VideoQueue().Empty();
 
     if (rv) {
       return true;
     }
 
     MSE_DEBUG("%p MSR::DecodeVF %d (%p) returned false (readers=%u)",
-              this, mActiveVideoReader, mVideoReaders[mActiveVideoReader], mVideoReaders.Length());
+              this, mActiveVideoDecoder, mDecoders[mActiveVideoDecoder].get(), mDecoders.Length());
     if (SwitchVideoReaders(aTimeThreshold)) {
-      rv = mVideoReaders[mActiveVideoReader]->DecodeVideoFrame(aKeyFrameSkip, aTimeThreshold);
+      rv = GetVideoReader()->DecodeVideoFrame(aKeyFrameSkip, aTimeThreshold);
 
       nsAutoTArray<VideoData*, 10> video;
-      mVideoReaders[mActiveVideoReader]->VideoQueue().GetElementsAfter(-1, &video);
+      GetVideoReader()->VideoQueue().GetElementsAfter(-1, &video);
       for (uint32_t i = 0; i < video.Length(); ++i) {
         VideoQueue().Push(video[i]);
       }
-      mVideoReaders[mActiveVideoReader]->VideoQueue().Empty();
+      GetVideoReader()->VideoQueue().Empty();
     }
     return rv;
   }
@@ -134,14 +134,9 @@ public:
 
   nsresult GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime) MOZ_OVERRIDE
   {
-    for (uint32_t i = 0; i < mVideoReaders.Length(); ++i) {
+    for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
       nsRefPtr<dom::TimeRanges> r = new dom::TimeRanges();
-      mVideoReaders[i]->GetBuffered(r, aStartTime);
-      aBuffered->Add(r->GetStartTime(), r->GetEndTime());
-    }
-    for (uint32_t i = 0; i < mAudioReaders.Length(); ++i) {
-      nsRefPtr<dom::TimeRanges> r = new dom::TimeRanges();
-      mAudioReaders[i]->GetBuffered(r, aStartTime);
+      mDecoders[i]->GetBuffered(r);
       aBuffered->Add(r->GetStartTime(), r->GetEndTime());
     }
     aBuffered->Normalize();
@@ -155,25 +150,43 @@ public:
 
 private:
   bool SwitchVideoReaders(int64_t aTimeThreshold) {
-    MOZ_ASSERT(mActiveVideoReader != -1);
+    MOZ_ASSERT(mActiveVideoDecoder != -1);
     // XXX: We switch when the first reader is depleted, but it might be
     // better to switch as soon as the next reader is ready to decode and
     // has data for the current media time.
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
+    GetVideoReader()->SetIdle();
+
     WaitForPendingDecoders();
 
-    if (mVideoReaders.Length() > uint32_t(mActiveVideoReader + 1)) {
-      mActiveVideoReader += 1;
-      MSE_DEBUG("%p MSR::DecodeVF switching to %d", this, mActiveVideoReader);
+    for (uint32_t i = mActiveVideoDecoder + 1; i < mDecoders.Length(); ++i) {
+      if (!mDecoders[i]->GetReader()->GetMediaInfo().HasVideo()) {
+        continue;
+      }
+      mActiveVideoDecoder = i;
+      MSE_DEBUG("%p MSR::DecodeVF switching to %d", this, mActiveVideoDecoder);
 
-      MOZ_ASSERT(mVideoReaders[mActiveVideoReader]->GetMediaInfo().HasVideo());
-      mVideoReaders[mActiveVideoReader]->SetActive();
-      mVideoReaders[mActiveVideoReader]->DecodeToTarget(aTimeThreshold);
+      GetVideoReader()->SetActive();
+      GetVideoReader()->DecodeToTarget(aTimeThreshold);
 
       return true;
     }
     return false;
+  }
+
+  MediaDecoderReader* GetAudioReader() {
+    if (mActiveAudioDecoder == -1) {
+      return nullptr;
+    }
+    return mDecoders[mActiveAudioDecoder]->GetReader();
+  }
+
+  MediaDecoderReader* GetVideoReader() {
+    if (mActiveVideoDecoder == -1) {
+      return nullptr;
+    }
+    return mDecoders[mActiveVideoDecoder]->GetReader();
   }
 
   bool EnsureWorkQueueInitialized();
@@ -183,10 +196,8 @@ private:
   nsTArray<nsRefPtr<SubBufferDecoder>> mPendingDecoders;
   nsTArray<nsRefPtr<SubBufferDecoder>> mDecoders;
 
-  nsTArray<MediaDecoderReader*> mVideoReaders;
-  nsTArray<MediaDecoderReader*> mAudioReaders;
-  int32_t mActiveVideoReader;
-  int32_t mActiveAudioReader;
+  int32_t mActiveVideoDecoder;
+  int32_t mActiveAudioDecoder;
 
   nsCOMPtr<nsIThread> mWorkQueue;
 };
@@ -342,14 +353,8 @@ MediaSourceReader::CallDecoderInitialization()
     }
 
     bool active = false;
-    if (mi.HasVideo()) {
-      MSE_DEBUG("%p: Reader %p has video track", this, reader);
-      mVideoReaders.AppendElement(reader);
-      active = true;
-    }
-    if (mi.HasAudio()) {
-      MSE_DEBUG("%p: Reader %p has audio track", this, reader);
-      mAudioReaders.AppendElement(reader);
+    if (mi.HasVideo() || mi.HasAudio()) {
+      MSE_DEBUG("%p: Reader %p has video=%d audio=%d", this, reader, mi.HasVideo(), mi.HasAudio());
       active = true;
     }
 
@@ -421,15 +426,15 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     MediaInfo mi = reader->GetMediaInfo();
 
     if (mi.HasVideo() && !mInfo.HasVideo()) {
-      MOZ_ASSERT(mActiveVideoReader == -1);
-      mActiveVideoReader = i;
+      MOZ_ASSERT(mActiveVideoDecoder == -1);
+      mActiveVideoDecoder = i;
       mInfo.mVideo = mi.mVideo;
       maxDuration = std::max(maxDuration, mDecoders[i]->GetMediaDuration());
       MSE_DEBUG("%p: MSR::ReadMetadata video decoder=%u maxDuration=%lld", this, i, maxDuration);
     }
     if (mi.HasAudio() && !mInfo.HasAudio()) {
-      MOZ_ASSERT(mActiveAudioReader == -1);
-      mActiveAudioReader = i;
+      MOZ_ASSERT(mActiveAudioDecoder == -1);
+      mActiveAudioDecoder = i;
       mInfo.mAudio = mi.mAudio;
       maxDuration = std::max(maxDuration, mDecoders[i]->GetMediaDuration());
       MSE_DEBUG("%p: MSR::ReadMetadata audio decoder=%u maxDuration=%lld", this, i, maxDuration);
