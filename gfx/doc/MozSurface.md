@@ -1,8 +1,7 @@
 MozSurface {#mozsurface}
 ==========
 
-## This document is work in progress.  Some information may be missing or
-incomplete.
+**This document is work in progress.  Some information may be missing or incomplete.**
 
 ## Goals
 
@@ -34,10 +33,11 @@ Drawing web content into a surface and share it with the compositor process to d
 
 TextureClient and TextureHost are the closest abstractions we currently have to MozSurface.
 Inline documentation about TextureClient and TextureHost can be found in:
-* http://dxr.mozilla.org/mozilla-central/source/gfx/layers/client/TextureClient.h
-* http://dxr.mozilla.org/mozilla-central/source/gfx/layers/composite/TextureHost.h
 
-TextureClient is the client-side handle on a MozSurface, while TextureHost is the equivalent host-side representation. There can only be one TextureClient for a given TextureHost, and one TextureHost for a given TextureClient. likewise, the can only be one shared object for a given TextureClient/TextureHost pair.
+* [gfx/layers/client/TextureClient.h](http://dxr.mozilla.org/mozilla-central/source/gfx/layers/client/TextureClient.h)
+* [gfx/layers/composite/TextureHost.h](http://dxr.mozilla.org/mozilla-central/source/gfx/layers/composite/TextureHost.h)
+
+TextureClient is the client-side handle on a MozSurface, while TextureHost is the equivalent host-side representation. There can only be one TextureClient for a given TextureHost, and one TextureHost for a given TextureClient. Likewise, there can only be one shared object for a given TextureClient/TextureHost pair.
 
 A MozSurface containing data that is shared between a client process and a host process exists in the foolowing form:
 
@@ -56,16 +56,17 @@ A MozSurface containing data that is shared between a client process and a host 
 ```
 
 The above figure is a logical representation, not a class diagram.
-<SharedData> Is a placeholder for whichever platform specific surface type we are sharing. For example a Gralloc buffer on Gonk or a D3D11 texture on Windows
+`<SharedData>` is a placeholder for whichever platform specific surface type we are sharing, for example a Gralloc buffer on Gonk or a D3D11 texture on Windows.
 
 ## Locking semantics
 
 In order to access the shared surface data users of MozSurface must acquire and release a lock on the surface, specifying the open mode (read/write/read+write).
 
-bool Lock(OpenMode aMode);
-void Unlock();
+    bool Lock(OpenMode aMode);
+    void Unlock();
 
 This locking API has two purposes:
+
 * Ensure that access to the shared data is race-free.
 * Let the implemetation do whatever is necessary for the user to have access to the data. For example it can be mapping and unmapping the surface data in memory if the underlying backend requires it.
 
@@ -73,8 +74,8 @@ The lock is expected to behave as a cross-process blocking read/write lock that 
 
 ## Immutable surfaces
 
-In some cases we know in advance that a surface will not be modified after it has been shared. This is for example true for video frames. In this case the surface can be arked as immutable and the underlying implementation doesn't need to hold an actual blocking lock on the shared data.
-Trying to acquire a write lock on a MoSurface that is marked as immutable and already shared must fail (return false).
+In some cases we know in advance that a surface will not be modified after it has been shared. This is for example true for video frames. In this case the surface can be marked as immutable and the underlying implementation doesn't need to hold an actual blocking lock on the shared data.
+Trying to acquire a write lock on a MozSurface that is marked as immutable and already shared must fail (return false).
 Note that it is still required to use the Lock/Unlock API to read the data, in order for the implementation to be able to properly map and unmap the memory. This is just an optimization and a safety check.
 
 ## Drawing into a surface
@@ -83,13 +84,13 @@ In most cases we want to be able to paint directly into a surface through the Mo
 
 A surface lets you *borrow* a DrawTarget that is only valid between Lock and Unlock.
 
-DrawTarget* GetAsDrawTarget();
+    DrawTarget* GetAsDrawTarget();
 
-It is invalid to hold a referene to the DrawTarget after Unlock, and a different DrawTarget may be obtained during the next Lock/Unlock interval.
+It is invalid to hold a reference to the DrawTarget after Unlock, and a different DrawTarget may be obtained during the next Lock/Unlock interval.
 
 In some cases we want to use MozSurface without Drawing into it. For instance to share video frames accross processes. Some surface types may also not be accessible through a DrawTarget (for example YCbCr surfaces).
 
-bool CanExposeDrawTarget();
+    bool CanExposeDrawTarget();
 
 helps with making sure that a Surface supports exposing a Moz2D DrawTarget.
 
@@ -134,6 +135,7 @@ When a TextureClient's reference count reaches zero, a "Remove" message is sent 
 ```
 
 This handshake protocol is twofold:
+
 * It defines where and when it is possible to deallocate the shared data without races
 * It makes it impossible for asynchronous messages to race with the destruction of the MozSurface.
 
@@ -163,14 +165,17 @@ Surfaces can move from state N to state N+1 and be deallocated in any of these s
 
 The deallocation protocol above, applies to the Shared state (3).
 In the other cases:
+
 * (1) Unitilialized: There is nothing to do.
 * (2) Local: The shared data is deallocated by the client side without need for a handshake, since it is not shared with other threads.
 * (4) Invalid: There is nothing to do (deallocation has already happenned).
 
 ## Internal buffers / direct texturing
 
-Some MozSurface implementations use CPU-side shared memory to share the texture data accross processes, and require a GPU texture upload when interfacing with a TextureSource. In this case we say that the surface has an internal buffer (because it is implicitly equivalent to double buffering where the shared data is the back buffer and the gpu side texture is the front buffer). We also say that it doesn't do "direct texturing" meaning that we don't draw directly in the GPU-side texture.
-examples:
+Some MozSurface implementations use CPU-side shared memory to share the texture data accross processes, and require a GPU texture upload when interfacing with a TextureSource. In this case we say that the surface has an internal buffer (because it is implicitly equivalent to double buffering where the shared data is the back buffer and the GPU side texture is the front buffer). We also say that it doesn't do "direct texturing" meaning that we don't draw directly into the GPU-side texture.
+
+Examples:
+
  * Shmem MozSurface + OpenGL TextureSource: Has an internal buffer (no direct texturing)
  * Gralloc MozSurface + Gralloc TextureSource: No internal buffer (direct texturing)
 
@@ -185,6 +190,7 @@ The current design of MozSurface makes the surface accessible from both sides at
 Using pure message passing was actually the first approach we tried when we created the first version of TextureClient and TextureHost. This strategy failed in several places, partly because of some legacy in Gecko's architecture, and partly because of some of optimizations we do to avoid copying surfaces.
 
 We need a given surface to be accessible on both the client and host for the following reasons:
+
 * Gecko can at any time require read access on the client side to a surface that is shared with the host process, for example to build a temporary layer manager and generate a screenshot. This is mostly a legacy problem.
 * We do some copy-on-write optimizations on surfaces that are shared with the compositor in order to keep invalid regions as small as possible. Out tiling implementation is an example of that.
 * Our buffer rotation code on scrollable non-tiled layers also requires a synchronization on the client side between the front and back buffers, while the front buffer is used on the host side.
