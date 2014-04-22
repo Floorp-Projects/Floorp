@@ -663,13 +663,7 @@ pref("plugins.click_to_play", true);
 
 pref("plugins.hideMissingPluginsNotification", false);
 
-#ifdef RELEASE_BUILD
-// For now, plugins other than Java and Flash are enabled in beta/release
-// and click-to-activate in earlier channels.
-pref("plugin.default.state", 2);
-#else
 pref("plugin.default.state", 1);
-#endif
 
 // Plugins bundled in XPIs are enabled by default.
 pref("plugin.defaultXpi.state", 2);
@@ -678,6 +672,124 @@ pref("plugin.defaultXpi.state", 2);
 // all channels.
 pref("plugin.state.flash", 2);
 pref("plugin.state.java", 1);
+
+// Whitelist Requests
+
+// Unity player, bug 979849
+#ifdef XP_WIN
+pref("plugin.state.npunity3d", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.unity web player", 2);
+#endif
+
+// Cisco Jabber SDK, bug 980133
+#ifdef XP_WIN
+pref("plugin.state.npciscowebcommunicator", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.ciscowebcommunicator", 2);
+#endif
+
+// McAfee Security Scanner detection plugin, bug 980772
+#ifdef XP_WIN
+pref("plugin.state.npmcafeemss", 2);
+#endif
+
+// Cisco VGConnect for directv.com, bug 981403
+#ifdef XP_WIN
+pref("plugin.state.npplayerplugin", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.playerplugin", 2);
+#endif
+
+// Cisco Jabber Client, bug 981905
+#ifdef XP_WIN
+pref("plugin.state.npchip", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.cisco jabber guest plug-in", 2);
+#endif
+
+// Estonian ID-card plugin, bug 982045
+#ifdef XP_WIN
+pref("plugin.state.npesteid-firefox-plugin", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.esteidfirefoxplugin", 2);
+#endif
+#ifdef UNIX_BUT_NOT_MAC
+pref("plugin.state.npesteid-firefox-plugin", 2);
+#endif
+
+// coupons.com, bug 984441
+#ifdef XP_WIN
+pref("plugin.state.npmozcouponprinter", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.couponprinter-firefox_v", 2);
+#endif
+
+// Nexus Personal BankID, bug 987056
+pref("plugin.state.npbispbrowser", 2);
+
+// Gradecam, bug 988119
+#ifdef XP_WIN
+pref("plugin.state.npgcplugin", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.gcplugin", 2);
+#endif
+
+// Smart Card Plugin, bug 988781
+#ifdef XP_WIN
+pref("plugin.state.npwebcard", 2);
+#endif
+
+// Cisco WebEx, bug 989096
+#ifdef XP_WIN
+pref("plugin.state.npatgpc", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.webex", 2);
+#endif
+#ifdef UNIX_BUT_NOT_MAC
+pref("plugin.state.npatgpc", 2);
+#endif
+
+// Skype, bug 990067
+#ifdef XP_WIN
+pref("plugin.state.npskypewebplugin", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.skypewebplugin", 2);
+#endif
+
+// Facebook video calling, bug 990068
+#ifdef XP_WIN
+pref("plugin.state.npfacebookvideocalling", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.facebookvideocalling", 2);
+#endif
+
+// MS Office Lync plugin, bug 990069
+#ifdef XP_WIN
+pref("plugin.state.npmeetingjoinpluginoc", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.lwaplugin", 2);
+#endif
+
+// VidyoWeb, bug 990286
+#ifdef XP_WIN
+pref("plugin.state.npvidyoweb", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.npvidyoweb", 2);
+pref("plugin.state.vidyoweb", 2);
+#endif
 
 // display door hanger if flash not installed
 pref("plugins.notifyMissingFlash", true);
@@ -1286,7 +1398,7 @@ pref("devtools.eyedropper.zoom", 6);
 // - keymap: which keymap to use (can be 'default', 'emacs' or 'vim')
 // - autoclosebrackets: whether to permit automatic bracket/quote closing.
 // - detectindentation: whether to detect the indentation from the file
-pref("devtools.editor.tabsize", 4);
+pref("devtools.editor.tabsize", 2);
 pref("devtools.editor.expandtab", true);
 pref("devtools.editor.keymap", "default");
 pref("devtools.editor.autoclosebrackets", true);

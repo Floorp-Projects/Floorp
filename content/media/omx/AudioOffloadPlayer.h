@@ -86,7 +86,7 @@ public:
   // To update progress bar when the element is visible
   void SetElementVisibility(bool aIsVisible);
 
-  void ChangeState(MediaDecoder::PlayState aState);
+  status_t ChangeState(MediaDecoder::PlayState aState);
 
   void SetVolume(double aVolume);
 
@@ -96,6 +96,9 @@ public:
   MediaDecoderOwner::NextFrameStatus GetNextFrameStatus();
 
   void TimeUpdate();
+
+  // Close the audio sink, stop time updates, frees the input buffers
+  void Reset();
 
 private:
   // Set when audio source is started and audioSink is initialized
@@ -121,6 +124,12 @@ private:
   // Used in main thread and offload callback thread, protected by Mutex
   // mLock
   bool mSeekDuringPause;
+
+  // Seek can be triggered internally or by MediaDecoder. This bool is to
+  // to track seek triggered by MediaDecoder so that we can send back
+  // SeekingStarted and SeekingStopped events.
+  // Used in main thread and offload callback thread, protected by Mutex mLock
+  bool mDispatchSeekEvents;
 
   // Set when the HTML Audio Element is visible to the user.
   // Used only in main thread
@@ -164,7 +173,7 @@ private:
   android::sp<MediaSource> mSource;
 
   // Audio sink wrapper to access offloaded audio tracks
-  // Used in main thread and offload callback thread, access is protected by
+  // Used in main thread and offload callback thread
   // Race conditions are protected in underlying Android::AudioTrack class
   android::sp<AudioSink> mAudioSink;
 
@@ -175,10 +184,17 @@ private:
   MediaOmxDecoder* mObserver;
 
   TimeStamp mLastFireUpdateTime;
+
   // Timer to trigger position changed events
   nsCOMPtr<nsITimer> mTimeUpdateTimer;
 
+  // Timer to reset AudioSink when audio is paused for OFFLOAD_PAUSE_MAX_USECS.
+  // It is triggered in Pause() and canceled when there is a Play() within
+  // OFFLOAD_PAUSE_MAX_USECS. Used only from main thread so no lock is needed.
+  nsCOMPtr<nsITimer> mResetTimer;
+
   int64_t GetMediaTimeUs();
+
   // Provide the playback position in microseconds from total number of
   // frames played by audio track
   int64_t GetOutputPlayPositionUs_l() const;
@@ -198,16 +214,14 @@ private:
   bool IsSeeking();
 
   // Set mSeekTime to the given position and restart the sink. Actual seek
-  // happens in FillBuffer(). To MediaDecoder, send SeekingStarted event always
-  // and SeekingStopped event when the play state is paused.
+  // happens in FillBuffer(). If aDispatchSeekEvents is true, send
+  // SeekingStarted event always and SeekingStopped event when the play state is
+  // paused to MediaDecoder.
   // When decoding and playing happens separately, if there is a seek during
   // pause, we can decode and keep data ready.
   // In case of offload player, no way to seek during pause. So just fake that
   // seek is done.
-  status_t SeekTo(int64_t aTimeUs);
-
-  // Close the audio sink, stop time updates, frees the input buffers
-  void Reset();
+  status_t SeekTo(int64_t aTimeUs, bool aDispatchSeekEvents = false);
 
   // Start/Resume the audio sink so that callback will start being called to get
   // compressed data
