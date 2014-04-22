@@ -463,8 +463,9 @@ nsThread::DispatchInternal(nsIRunnable *event, uint32_t flags,
     if (NS_FAILED(rv))
       return rv;
 
+    // Allows waiting; ensure no locks are held that would deadlock us!
     while (wrapper->IsPending())
-      NS_ProcessNextEvent(thread);
+      NS_ProcessNextEvent(thread, true);
     return wrapper->Result();
   }
 
@@ -539,8 +540,9 @@ nsThread::Shutdown()
   // after setting mShutdownContext just before exiting.
   
   // Process events on the current thread until we receive a shutdown ACK.
+  // Allows waiting; ensure no locks are held that would deadlock us!
   while (!context.shutdownAck)
-    NS_ProcessNextEvent(context.joiningThread);
+    NS_ProcessNextEvent(context.joiningThread, true);
 
   // Now, it should be safe to join without fear of dead-locking.
 
