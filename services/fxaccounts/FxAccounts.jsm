@@ -499,29 +499,45 @@ FxAccountsInternal.prototype = {
     this.currentAccountState = new AccountState(this);
   },
 
-  signOut: function signOut() {
+  signOut: function signOut(localOnly) {
     let currentState = this.currentAccountState;
-    let fxAccountsClient = this.fxAccountsClient;
     let sessionToken;
     return currentState.getUserAccountData().then(data => {
       // Save the session token for use in the call to signOut below.
       sessionToken = data && data.sessionToken;
-      this.abortExistingFlow();
-      this.currentAccountState.signedInUser = null; // clear in-memory cache
-      return this.signedInUserStorage.set(null);
+      return this._signOutLocal();
     }).then(() => {
-      // Wrap this in a promise so *any* errors in signOut won't
-      // block the local sign out. This is *not* returned.
-      Promise.resolve().then(() => {
-        // This can happen in the background and shouldn't block
-        // the user from signing out. The server must tolerate
-        // clients just disappearing, so this call should be best effort.
-        return fxAccountsClient.signOut(sessionToken);
-      }).then(null, err => {
-        log.error("Error during remote sign out of Firefox Accounts: " + err);
-      });
+      // FxAccountsManager calls here, then does its own call
+      // to FxAccountsClient.signOut().
+      if (!localOnly) {
+        // Wrap this in a promise so *any* errors in signOut won't
+        // block the local sign out. This is *not* returned.
+        Promise.resolve().then(() => {
+          // This can happen in the background and shouldn't block
+          // the user from signing out. The server must tolerate
+          // clients just disappearing, so this call should be best effort.
+          return this._signOutServer(sessionToken);
+        }).then(null, err => {
+          log.error("Error during remote sign out of Firefox Accounts: " + err);
+        });
+      }
+    }).then(() => {
       this.notifyObservers(ONLOGOUT_NOTIFICATION);
     });
+  },
+
+  /**
+   * This function should be called in conjunction with a server-side
+   * signOut via FxAccountsClient.
+   */
+  _signOutLocal: function signOutLocal() {
+    this.abortExistingFlow();
+    this.currentAccountState.signedInUser = null; // clear in-memory cache
+    return this.signedInUserStorage.set(null);
+  },
+
+  _signOutServer: function signOutServer(sessionToken) {
+    return this.fxAccountsClient.signOut(sessionToken);
   },
 
   /**
