@@ -122,36 +122,25 @@ tabbrowser {
   visibility: hidden;
 }
 
-.tab-background,
 .tab-close-button,
-.tab-label {
+.tab-background {
   /* Explicitly set the visibility to override the value (collapsed)
    * we inherit from #TabsToolbar[collapsed] upon opening a browser window. */
   visibility: visible;
 }
 
+.tab-close-button[fadein],
 .tab-background[fadein] {
   /* This transition is only wanted for opening tabs. */
   transition: visibility 0ms 25ms;
 }
 
+.tab-close-button:not([fadein]),
 .tab-background:not([fadein]) {
   visibility: hidden;
 }
 
-.tab-close-button[fadein],
-.tab-label[fadein] {
-  /* This transition is only wanted for opening tabs. */
-  transition: opacity 70ms 230ms,
-              visibility 0ms 230ms;
-}
-
-.tab-close-button:not([fadein]),
-.tab-label:not([fadein]) {
-  visibility: collapse;
-  opacity: .6;
-}
-
+.tab-label:not([fadein]),
 .tab-throbber:not([fadein]),
 .tab-icon-image:not([fadein]) {
   display: none;
