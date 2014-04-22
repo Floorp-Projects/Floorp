@@ -1360,15 +1360,6 @@ TabChild::~TabChild()
     if (webBrowser) {
       webBrowser->SetContainerWindow(nullptr);
     }
-    mGlobal = nullptr;
-
-    if (mTabChildGlobal) {
-      EventListenerManager* elm = mTabChildGlobal->GetExistingListenerManager();
-      if (elm) {
-        elm->Disconnect();
-      }
-      mTabChildGlobal->mTabChild = nullptr;
-    }
 }
 
 void
