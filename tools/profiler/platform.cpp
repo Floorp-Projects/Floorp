@@ -927,6 +927,13 @@ void mozilla_sampler_tracing(const char* aCategory, const char* aInfo,
   mozilla_sampler_add_marker(aInfo, new ProfilerMarkerTracing(aCategory, aMetaData));
 }
 
+void mozilla_sampler_tracing(const char* aCategory, const char* aInfo,
+                             ProfilerBacktrace* aCause,
+                             TracingMetadata aMetaData)
+{
+  mozilla_sampler_add_marker(aInfo, new ProfilerMarkerTracing(aCategory, aMetaData, aCause));
+}
+
 void mozilla_sampler_add_marker(const char *aMarker, ProfilerMarkerPayload *aPayload)
 {
   // Note that aPayload may be allocated by the caller, so we need to make sure
