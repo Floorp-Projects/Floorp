@@ -979,17 +979,9 @@ CompositorParent::AllocateLayerTreeId()
 }
 
 static void
-EraseLayerState(uint64_t aId)
+RemoveIndirectTree(uint64_t aId)
 {
   sIndirectLayerTrees.erase(aId);
-}
-
-/*static*/ void
-CompositorParent::DeallocateLayerTreeId(uint64_t aId)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  CompositorLoop()->PostTask(FROM_HERE,
-                             NewRunnableFunction(&EraseLayerState, aId));
 }
 
 static void
@@ -1183,12 +1175,6 @@ CompositorParent::GetIndirectShadowTree(uint64_t aId)
     return nullptr;
   }
   return &cit->second;
-}
-
-static void
-RemoveIndirectTree(uint64_t aId)
-{
-  sIndirectLayerTrees.erase(aId);
 }
 
 void
