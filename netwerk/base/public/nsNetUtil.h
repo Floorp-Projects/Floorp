@@ -2308,7 +2308,7 @@ NS_IsAboutBlank(nsIURI *uri)
 
 inline nsresult
 NS_GenerateHostPort(const nsCString& host, int32_t port,
-                    nsCString& hostLine)
+                    nsACString& hostLine)
 {
     if (strchr(host.get(), ':')) {
         // host is an IPv6 address literal and must be encapsulated in []'s
