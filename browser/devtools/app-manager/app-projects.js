@@ -1,6 +1,6 @@
 const {Cc,Ci,Cu} = require("chrome");
 const ObservableObject = require("devtools/shared/observable-object");
-const promise = require("sdk/core/promise");
+const promise = require("devtools/toolkit/deprecated-sync-thenables");
 
 const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js");
 const {generateUUID} = Cc['@mozilla.org/uuid-generator;1'].getService(Ci.nsIUUIDGenerator);

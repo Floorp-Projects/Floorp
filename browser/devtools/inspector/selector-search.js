@@ -4,7 +4,7 @@
 
 "use strict";
 
-const promise = require("sdk/core/promise");
+const promise = require("devtools/toolkit/deprecated-sync-thenables");
 
 loader.lazyGetter(this, "AutocompletePopup", () => require("devtools/shared/autocomplete-popup").AutocompletePopup);
 

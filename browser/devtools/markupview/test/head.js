@@ -6,7 +6,7 @@ const Cu = Components.utils;
 let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let TargetFactory = devtools.TargetFactory;
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-let promise = devtools.require("sdk/core/promise");
+let promise = devtools.require("devtools/toolkit/deprecated-sync-thenables");
 let {getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared/inplace-editor");
 
 // All test are asynchronous
