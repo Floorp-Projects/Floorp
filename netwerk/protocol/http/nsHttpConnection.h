@@ -175,6 +175,10 @@ public:
     // non null HTTP transaction of any version.
     bool    IsExperienced() { return mExperienced; }
 
+    static nsresult MakeConnectString(nsAHttpTransaction *trans,
+                                      nsHttpRequestHead *request,
+                                      nsACString &result);
+
 private:
     // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
     enum TCPKeepaliveConfig {
