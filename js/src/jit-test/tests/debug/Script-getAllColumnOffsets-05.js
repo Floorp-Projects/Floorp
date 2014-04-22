@@ -1,4 +1,4 @@
-// getColumnOffsets correctly places the various parts of a ForStatement.
+// getColumnOffsets correctly places array properties.
 
 var global = newGlobal();
 Debugger(global).onDebuggerStatement = function (frame) {
@@ -14,6 +14,7 @@ Debugger(global).onDebuggerStatement = function (frame) {
 };
 
 global.log = '';
-global.eval("function f(n) { for (var i = 0; i < n; ++i) log += '. '; log += '! '; } debugger;");
+global.eval("function f(n){var a=[1,2,3]} debugger;");
 global.f(3);
-assertEq(global.log, "25 32 44 . 39 32 44 . 39 32 44 . 39 32 57 ! 69 ");
+// Should hit each item in the array.
+assertEq(global.log, "18 21 23 25 19 ");
