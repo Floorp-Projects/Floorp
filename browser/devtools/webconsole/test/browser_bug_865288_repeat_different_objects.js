@@ -53,7 +53,7 @@ function checkMessages([result])
     if (msg) {
       ok(msg, "message element #" + m);
 
-      let clickable = msg.querySelector(".body a");
+      let clickable = msg.querySelector(".message-body a");
       ok(clickable, "clickable object #" + m);
 
       msg.scrollIntoView(false);
