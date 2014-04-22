@@ -55,6 +55,11 @@ public:
     return NS_OK;
   }
 
+  bool IsWaitingMediaResources() MOZ_OVERRIDE
+  {
+    return mDecoders.IsEmpty() && mPendingDecoders.IsEmpty();
+  }
+
   bool DecodeAudioData() MOZ_OVERRIDE
   {
     if (mActiveAudioReader == -1) {
@@ -355,6 +360,7 @@ MediaSourceReader::CallDecoderInitialization()
     }
   }
   mPendingDecoders.Clear();
+  mDecoder->NotifyWaitingForResourcesStatusChanged();
   mon.NotifyAll();
 }
 
@@ -383,6 +389,7 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType, MediaSourceDecoder*
   decoder->SetReader(reader.forget());
   mPendingDecoders.AppendElement(decoder);
   EnqueueDecoderInitialization();
+  mDecoder->NotifyWaitingForResourcesStatusChanged();
   return decoder.forget();
 }
 
