@@ -433,11 +433,11 @@ nsIdleService::AddIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS)
   }
 
   PR_LOG(sLog, PR_LOG_DEBUG,
-       ("idleService: Register idle observer %x for %d seconds",
+       ("idleService: Register idle observer %p for %d seconds",
         aObserver, aIdleTimeInS));
 #ifdef MOZ_WIDGET_ANDROID
   __android_log_print(ANDROID_LOG_INFO, "IdleService",
-                      "Register idle observer %x for %d seconds",
+                      "Register idle observer %p for %d seconds",
                       aObserver, aIdleTimeInS);
 #endif
 
@@ -503,11 +503,11 @@ nsIdleService::RemoveIdleObserver(nsIObserver* aObserver, uint32_t aTimeInS)
       mIdleObserverCount--;
     mArrayListeners.RemoveElementAt(listenerIndex);
     PR_LOG(sLog, PR_LOG_DEBUG,
-           ("idleService: Remove observer %x (%d seconds), %d remain idle",
+           ("idleService: Remove observer %p (%d seconds), %d remain idle",
             aObserver, aTimeInS, mIdleObserverCount));
 #ifdef MOZ_WIDGET_ANDROID
     __android_log_print(ANDROID_LOG_INFO, "IdleService",
-                        "Remove observer %x (%d seconds), %d remain idle",
+                        "Remove observer %p (%d seconds), %d remain idle",
                         aObserver, aTimeInS, mIdleObserverCount);
 #endif
     return NS_OK;
@@ -515,11 +515,11 @@ nsIdleService::RemoveIdleObserver(nsIObserver* aObserver, uint32_t aTimeInS)
 
   // If we get here, we haven't removed anything:
   PR_LOG(sLog, PR_LOG_WARNING, 
-         ("idleService: Failed to remove idle observer %x (%d seconds)",
+         ("idleService: Failed to remove idle observer %p (%d seconds)",
           aObserver, aTimeInS));
 #ifdef MOZ_WIDGET_ANDROID
   __android_log_print(ANDROID_LOG_INFO, "IdleService",
-                      "Failed to remove idle observer %x (%d seconds)",
+                      "Failed to remove idle observer %p (%d seconds)",
                       aObserver, aTimeInS);
 #endif
   return NS_ERROR_FAILURE;
@@ -589,11 +589,11 @@ nsIdleService::ResetIdleTimeOut(uint32_t idleDeltaInMS)
   // Send the "non-idle" events.
   while (numberOfPendingNotifications--) {
     PR_LOG(sLog, PR_LOG_DEBUG,
-           ("idleService: Reset idle timeout: tell observer %x user is back",
+           ("idleService: Reset idle timeout: tell observer %p user is back",
             notifyList[numberOfPendingNotifications]));
 #ifdef MOZ_WIDGET_ANDROID
     __android_log_print(ANDROID_LOG_INFO, "IdleService",
-                        "Reset idle timeout: tell observer %x user is back",
+                        "Reset idle timeout: tell observer %p user is back",
                         notifyList[numberOfPendingNotifications]);
 #endif
     notifyList[numberOfPendingNotifications]->Observe(this,
@@ -773,11 +773,11 @@ nsIdleService::IdleTimerCallback(void)
   // Notify all listeners that just timed out.
   while (numberOfPendingNotifications--) {
     PR_LOG(sLog, PR_LOG_DEBUG,
-           ("idleService: **** Idle timer callback: tell observer %x user is idle",
+           ("idleService: **** Idle timer callback: tell observer %p user is idle",
             notifyList[numberOfPendingNotifications]));
 #ifdef MOZ_WIDGET_ANDROID
   __android_log_print(ANDROID_LOG_INFO, "IdleService",
-                      "Idle timer callback: tell observer %x user is idle",
+                      "Idle timer callback: tell observer %p user is idle",
                       notifyList[numberOfPendingNotifications]);
 #endif
     notifyList[numberOfPendingNotifications]->Observe(this,
@@ -892,11 +892,11 @@ nsIdleService::ReconfigureTimer(void)
 
     if (nextTimeoutAt > pollTimeout) {
       PR_LOG(sLog, PR_LOG_DEBUG,
-           ("idleService: idle observers, reducing timeout to %u msec from now",
+           ("idleService: idle observers, reducing timeout to %lu msec from now",
             MIN_IDLE_POLL_INTERVAL_MSEC));
 #ifdef MOZ_WIDGET_ANDROID
       __android_log_print(ANDROID_LOG_INFO, "IdleService",
-                          "idle observers, reducing timeout to %u msec from now",
+                          "idle observers, reducing timeout to %lu msec from now",
                           MIN_IDLE_POLL_INTERVAL_MSEC);
 #endif
       nextTimeoutAt = pollTimeout;
