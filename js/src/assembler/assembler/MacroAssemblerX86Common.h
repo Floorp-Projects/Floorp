@@ -1297,27 +1297,11 @@ private:
 
   public:
 #if WTF_CPU_X86
-#if WTF_OS_MAC_OS_X
-
-    // All X86 Macs are guaranteed to support at least SSE2
     static bool isSSEPresent()
     {
+#if defined(__SSE__) && !defined(DEBUG)
         return true;
-    }
-
-    static bool isSSE2Present()
-    {
-#ifdef DEBUG
-        if (s_floatingPointDisabled)
-            return false;
-#endif
-        return true;
-    }
-
-#else // OS(MAC_OS_X)
-
-    static bool isSSEPresent()
-    {
+#else
         if (s_sseCheckState == NotCheckedSSE) {
             setSSECheckState();
         }
@@ -1325,10 +1309,14 @@ private:
         ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE;
+#endif
     }
 
     static bool isSSE2Present()
     {
+#if defined(__SSE2__) && !defined(DEBUG)
+        return true;
+#else
         if (s_sseCheckState == NotCheckedSSE) {
             setSSECheckState();
         }
@@ -1336,9 +1324,9 @@ private:
         ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE2;
+#endif
     }
 
-#endif // PLATFORM(MAC)
 #elif !defined(NDEBUG) // CPU(X86)
 
     // On x86-64 we should never be checking for SSE2 in a non-debug build,
@@ -1351,6 +1339,9 @@ private:
 #endif
     static bool isSSE3Present()
     {
+#if defined(__SSE3__) && !defined(DEBUG)
+        return true;
+#else
         if (s_sseCheckState == NotCheckedSSE) {
             setSSECheckState();
         }
@@ -1358,10 +1349,14 @@ private:
         ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE3;
+#endif
     }
 
     static bool isSSSE3Present()
     {
+#if defined(__SSSE3__) && !defined(DEBUG)
+        return true;
+#else
         if (s_sseCheckState == NotCheckedSSE) {
             setSSECheckState();
         }
@@ -1369,10 +1364,14 @@ private:
         ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSSE3;
+#endif
     }
 
     static bool isSSE41Present()
     {
+#if defined(__SSE4_1__) && !defined(DEBUG)
+        return true;
+#else
         if (s_sseCheckState == NotCheckedSSE) {
             setSSECheckState();
         }
@@ -1380,10 +1379,14 @@ private:
         ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE4_1;
+#endif
     }
 
     static bool isSSE42Present()
     {
+#if defined(__SSE4_2__) && !defined(DEBUG)
+        return true;
+#else
         if (s_sseCheckState == NotCheckedSSE) {
             setSSECheckState();
         }
@@ -1391,6 +1394,7 @@ private:
         ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE4_2;
+#endif
     }
 
   private:
