@@ -1393,13 +1393,6 @@ RILContentHelper.prototype = {
     let request = Services.DOMRequest.createRequest(window);
     let requestId = this.getRequestId(request);
 
-    let radioState = this.rilContexts[clientId].radioState;
-    if (radioState !== RIL.GECKO_DETAILED_RADIOSTATE_ENABLED) {
-      this.dispatchFireRequestError(requestId,
-                                    RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
-      return request;
-    }
-
     cpmm.sendAsyncMessage("RIL:GetCallingLineIdRestriction", {
       clientId: clientId,
       data: {
@@ -1411,19 +1404,13 @@ RILContentHelper.prototype = {
   },
 
   setCallingLineIdRestriction: function(clientId, window, clirMode) {
+
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
     }
     let request = Services.DOMRequest.createRequest(window);
     let requestId = this.getRequestId(request);
-
-    let radioState = this.rilContexts[clientId].radioState;
-    if (radioState !== RIL.GECKO_DETAILED_RADIOSTATE_ENABLED) {
-      this.dispatchFireRequestError(requestId,
-                                    RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
-      return request;
-    }
 
     cpmm.sendAsyncMessage("RIL:SetCallingLineIdRestriction", {
       clientId: clientId,
