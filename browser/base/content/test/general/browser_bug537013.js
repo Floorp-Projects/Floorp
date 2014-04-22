@@ -86,6 +86,7 @@ function continueTests2() {
   // Test for bug 892384
   is(gFindBar._findField.getAttribute("focused"), "true",
      "Open findbar refocused on tab change!");
+  gURLBar.focus();
   gBrowser.selectedTab = tabs[0];
   ok(gFindBar.hidden, "First tab doesn't show find bar!");
 
@@ -95,6 +96,9 @@ function continueTests2() {
 
   // Now we jump to the second, then first, and then fourth
   gBrowser.selectedTab = tabs[1];
+  // Test for bug 892384
+  ok(!gFindBar._findField.hasAttribute("focused"),
+     "Open findbar not refocused on tab change!");
   gBrowser.selectedTab = tabs[0];
   gBrowser.selectedTab = tabs[3];
   ok(gFindBar.hidden, "Fourth tab doesn't show find bar!");
