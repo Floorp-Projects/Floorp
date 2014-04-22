@@ -120,7 +120,6 @@ public:
   MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                MediaDecoderReader* aReader,
                                bool aRealTime = false);
-  ~MediaDecoderStateMachine();
 
   nsresult Init(MediaDecoderStateMachine* aCloneDonor);
 
@@ -359,10 +358,10 @@ public:
   void SetMinimizePrerollUntilPlaybackStarts();
 
 protected:
+  virtual ~MediaDecoderStateMachine();
 
   void AssertCurrentThreadInMonitor() const { mDecoder->GetReentrantMonitor().AssertCurrentThreadIn(); }
 
-private:
   class WakeDecoderRunnable : public nsRunnable {
   public:
     WakeDecoderRunnable(MediaDecoderStateMachine* aSM)

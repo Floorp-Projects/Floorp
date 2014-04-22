@@ -47,8 +47,6 @@ public:
   {
   }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaSourceReader)
-
   nsresult Init(MediaDecoderReader* aCloneDonor) MOZ_OVERRIDE
   {
     // Although we technically don't implement anything here, we return NS_OK
@@ -148,6 +146,8 @@ public:
   already_AddRefed<SubBufferDecoder> CreateSubDecoder(const nsACString& aType,
                                                       MediaSourceDecoder* aParentDecoder);
 
+  void CallDecoderInitialization();
+
 private:
   bool SwitchVideoReaders(int64_t aTimeThreshold) {
     MOZ_ASSERT(mActiveVideoReader != -1);
@@ -173,7 +173,6 @@ private:
 
   bool EnsureWorkQueueInitialized();
   nsresult EnqueueDecoderInitialization();
-  void CallDecoderInitialization();
   void WaitForPendingDecoders();
 
   nsTArray<nsRefPtr<SubBufferDecoder>> mPendingDecoders;
@@ -185,6 +184,26 @@ private:
   int32_t mActiveAudioReader;
 
   nsCOMPtr<nsIThread> mWorkQueue;
+};
+
+class MediaSourceStateMachine : public MediaDecoderStateMachine
+{
+public:
+  MediaSourceStateMachine(MediaDecoder* aDecoder,
+                          MediaDecoderReader* aReader,
+                          bool aRealTime = false)
+    : MediaDecoderStateMachine(aDecoder, aReader, aRealTime)
+  {
+  }
+
+  already_AddRefed<SubBufferDecoder> CreateSubDecoder(const nsACString& aType,
+                                                      MediaSourceDecoder* aParentDecoder) {
+    return static_cast<MediaSourceReader*>(mReader.get())->CreateSubDecoder(aType, aParentDecoder);
+  }
+
+  void CallDecoderInitialization() {
+    return static_cast<MediaSourceReader*>(mReader.get())->CallDecoderInitialization();
+  }
 };
 
 MediaSourceDecoder::MediaSourceDecoder(dom::HTMLMediaElement* aElement)
@@ -203,9 +222,7 @@ MediaSourceDecoder::Clone()
 MediaDecoderStateMachine*
 MediaSourceDecoder::CreateStateMachine()
 {
-  // XXX: Find a cleaner way to retain a reference to our reader.
-  mReader = new MediaSourceReader(this);
-  return new MediaDecoderStateMachine(this, mReader);
+  return new MediaSourceStateMachine(this, new MediaSourceReader(this));
 }
 
 nsresult
@@ -260,7 +277,13 @@ MediaSourceDecoder::DetachMediaSource()
 already_AddRefed<SubBufferDecoder>
 MediaSourceDecoder::CreateSubDecoder(const nsACString& aType)
 {
-  return mReader->CreateSubDecoder(aType, this);
+  return static_cast<MediaSourceStateMachine*>(mDecoderStateMachine.get())->CreateSubDecoder(aType, this);
+}
+
+void
+MediaSourceDecoder::CallDecoderInitialization()
+{
+  return static_cast<MediaSourceStateMachine*>(mDecoderStateMachine.get())->CallDecoderInitialization();
 }
 
 bool
@@ -284,7 +307,9 @@ MediaSourceReader::EnqueueDecoderInitialization()
   if (!EnsureWorkQueueInitialized()) {
     return NS_ERROR_FAILURE;
   }
-  return mWorkQueue->Dispatch(NS_NewRunnableMethod(this, &MediaSourceReader::CallDecoderInitialization), NS_DISPATCH_NORMAL);
+  return mWorkQueue->Dispatch(NS_NewRunnableMethod(static_cast<MediaSourceDecoder*>(mDecoder),
+                                                   &MediaSourceDecoder::CallDecoderInitialization),
+                              NS_DISPATCH_NORMAL);
 }
 
 void
@@ -345,6 +370,7 @@ MediaSourceReader::WaitForPendingDecoders()
 already_AddRefed<SubBufferDecoder>
 MediaSourceReader::CreateSubDecoder(const nsACString& aType, MediaSourceDecoder* aParentDecoder)
 {
+  // XXX: Why/when is mDecoder null here, since it should be equal to aParentDecoder?!
   nsRefPtr<SubBufferDecoder> decoder =
     new SubBufferDecoder(new SourceBufferResource(nullptr, aType), aParentDecoder);
   nsAutoPtr<MediaDecoderReader> reader(DecoderTraits::CreateReader(aType, decoder));
@@ -352,7 +378,7 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType, MediaSourceDecoder*
     return nullptr;
   }
   reader->Init(nullptr);
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  ReentrantMonitorAutoEnter mon(aParentDecoder->GetReentrantMonitor());
   MSE_DEBUG("Registered subdecoder %p subreader %p", decoder.get(), reader.get());
   decoder->SetReader(reader.forget());
   mPendingDecoders.AppendElement(decoder);
@@ -366,7 +392,11 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
   mDecoder->SetMediaSeekable(true);
   mDecoder->SetTransportSeekable(false);
 
+  MSE_DEBUG("%p: MSR::ReadMetadata pending=%u", this, mPendingDecoders.Length());
+
   WaitForPendingDecoders();
+
+  MSE_DEBUG("%p: MSR::ReadMetadata decoders=%u", this, mDecoders.Length());
 
   // XXX: Make subdecoder setup async, so that use cases like bug 989888 can
   // work.  This will require teaching the state machine about dynamic track
@@ -388,12 +418,14 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
       mActiveVideoReader = i;
       mInfo.mVideo = mi.mVideo;
       maxDuration = std::max(maxDuration, mDecoders[i]->GetMediaDuration());
+      MSE_DEBUG("%p: MSR::ReadMetadata video decoder=%u maxDuration=%lld", this, i, maxDuration);
     }
     if (mi.HasAudio() && !mInfo.HasAudio()) {
       MOZ_ASSERT(mActiveAudioReader == -1);
       mActiveAudioReader = i;
       mInfo.mAudio = mi.mAudio;
       maxDuration = std::max(maxDuration, mDecoders[i]->GetMediaDuration());
+      MSE_DEBUG("%p: MSR::ReadMetadata audio decoder=%u maxDuration=%lld", this, i, maxDuration);
     }
   }
   *aInfo = mInfo;
