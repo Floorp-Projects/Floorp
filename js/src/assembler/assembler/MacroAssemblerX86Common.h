@@ -1412,6 +1412,7 @@ private:
 #endif
     }
 
+  public:
 #if WTF_CPU_X86
 #if WTF_OS_MAC_OS_X
 
@@ -1509,6 +1510,7 @@ private:
         return s_sseCheckState >= HasSSE4_2;
     }
 
+  private:
 #ifdef DEBUG
     static bool s_floatingPointDisabled;
     static bool s_SSE3Disabled;
