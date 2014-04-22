@@ -12,9 +12,14 @@
 
 // Video Engine Includes
 #include "webrtc/common_types.h"
+#ifdef FF
+#undef FF // Avoid name collision between scoped_ptr.h and nsCRTGlue.h.
+#endif
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
 #include "webrtc/video_engine/include/vie_base.h"
 #include "webrtc/video_engine/include/vie_capture.h"
 #include "webrtc/video_engine/include/vie_codec.h"
+#include "webrtc/video_engine/include/vie_external_codec.h"
 #include "webrtc/video_engine/include/vie_render.h"
 #include "webrtc/video_engine/include/vie_network.h"
 #include "webrtc/video_engine/include/vie_rtp_rtcp.h"
@@ -29,11 +34,21 @@
  using  webrtc::ViECapture;
  using  webrtc::ViERender;
  using  webrtc::ViEExternalCapture;
-
+ using  webrtc::ViEExternalCodec;
 
 namespace mozilla {
 
 class WebrtcAudioConduit;
+
+// Interface of external video encoder for WebRTC.
+class WebrtcVideoEncoder:public VideoEncoder
+                         ,public webrtc::VideoEncoder
+{};
+
+// Interface of external video decoder for WebRTC.
+class WebrtcVideoDecoder:public VideoDecoder
+                         ,public webrtc::VideoDecoder
+{};
 
 /**
  * Concrete class for Video session. Hooks up
@@ -127,6 +142,19 @@ public:
                                                 VideoType video_type,
                                                 uint64_t capture_time);
 
+  /**
+   * Set an external encoder object |encoder| to the payload type |pltype|
+   * for sender side codec.
+   */
+  virtual MediaConduitErrorCode SetExternalSendCodec(int pltype,
+                                                     VideoEncoder* encoder);
+
+  /**
+   * Set an external decoder object |decoder| to the payload type |pltype|
+   * for receiver side codec.
+   */
+  virtual MediaConduitErrorCode SetExternalRecvCodec(int pltype,
+                                                     VideoDecoder* decoder);
 
 
   /**
@@ -154,9 +182,16 @@ public:
   /**
    * Does DeliverFrame() support a null buffer and non-null handle
    * (video texture)?
-   * XXX Investigate!  Especially for Android/B2G
+   * B2G support it (when using HW video decoder with graphic buffer output).
+   * XXX Investigate!  Especially for Android
    */
-  virtual bool IsTextureSupported() { return false; }
+  virtual bool IsTextureSupported() {
+#ifdef WEBRTC_GONK
+    return true;
+#else
+    return false;
+#endif
+  }
 
   unsigned short SendingWidth() {
     return mSendingWidth;
@@ -265,6 +300,7 @@ private:
   ScopedCustomReleasePtr<webrtc::ViENetwork> mPtrViENetwork;
   ScopedCustomReleasePtr<webrtc::ViERender> mPtrViERender;
   ScopedCustomReleasePtr<webrtc::ViERTP_RTCP> mPtrRTP;
+  ScopedCustomReleasePtr<webrtc::ViEExternalCodec> mPtrExtCodec;
 
   webrtc::ViEExternalCapture* mPtrExtCapture; // shared
 

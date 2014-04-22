@@ -53,6 +53,9 @@ int32_t CacheObserver::sAutoMemoryCacheCapacity = -1;
 static uint32_t const kDefaultDiskCacheCapacity = 250 * 1024; // 250 MB
 uint32_t CacheObserver::sDiskCacheCapacity = kDefaultDiskCacheCapacity;
 
+static bool const kDefaultSmartCacheSizeEnabled = false;
+bool CacheObserver::sSmartCacheSizeEnabled = kDefaultSmartCacheSizeEnabled;
+
 static uint32_t const kDefaultMaxMemoryEntrySize = 4 * 1024; // 4 MB
 uint32_t CacheObserver::sMaxMemoryEntrySize = kDefaultMaxMemoryEntrySize;
 
@@ -133,6 +136,8 @@ CacheObserver::AttachToPreferences()
 
   mozilla::Preferences::AddUintVarCache(
     &sDiskCacheCapacity, "browser.cache.disk.capacity", kDefaultDiskCacheCapacity);
+  mozilla::Preferences::AddBoolVarCache(
+    &sSmartCacheSizeEnabled, "browser.cache.disk.smart_size.enabled", kDefaultSmartCacheSizeEnabled);
   mozilla::Preferences::AddIntVarCache(
     &sMemoryCacheCapacity, "browser.cache.memory.capacity", kDefaultMemoryCacheCapacity);
 
@@ -271,6 +276,32 @@ bool const CacheObserver::UseNewCache()
   }
 
   return true;
+}
+
+// static
+void
+CacheObserver::SetDiskCacheCapacity(uint32_t aCapacity)
+{
+  sDiskCacheCapacity = aCapacity >> 10;
+
+  if (!sSelf) {
+    return;
+  }
+
+  if (NS_IsMainThread()) {
+    sSelf->StoreDiskCacheCapacity();
+  } else {
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(sSelf, &CacheObserver::StoreDiskCacheCapacity);
+    NS_DispatchToMainThread(event);
+  }
+}
+
+void
+CacheObserver::StoreDiskCacheCapacity()
+{
+  mozilla::Preferences::SetInt("browser.cache.disk.capacity",
+                               sDiskCacheCapacity);
 }
 
 // static

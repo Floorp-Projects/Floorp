@@ -787,20 +787,14 @@ TelephonyProvider.prototype = {
                                                     aCall.isSwitchable,
                                                     aCall.isMergeable]);
     } else {
-      this.notifyCallError(aClientId, aCall.callIndex, aCall.failCause);
+      this._notifyAllListeners("notifyError",
+                               [aClientId, aCall.callIndex, aCall.failCause]);
     }
     delete this._currentCalls[aClientId][aCall.callIndex];
 
     if (manualConfStateChange) {
       this.notifyConferenceCallStateChanged(RIL.CALL_STATE_UNKNOWN);
     }
-  },
-
-  /**
-   * Handle call error.
-   */
-  notifyCallError: function(aClientId, aCallIndex, aErrorMsg) {
-    this._notifyAllListeners("notifyError", [aClientId, aCallIndex, aErrorMsg]);
   },
 
   /**

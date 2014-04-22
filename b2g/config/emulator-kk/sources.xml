@@ -12,10 +12,10 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="52c909ccead537f8f9dbf634f3e6639078a8b0bd">
+  <project name="platform_build" path="build" remote="b2g" revision="65fba428f8d76336b33ddd9e15900357953600ba">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="f0463704888881b8ed1619e8d4b0d851b0e0311b"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="0a4d2dea25a7162ee43db3a0db817798b70e7521"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="266bca6e60dad43e395f38b66edabe8bdc882334"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
@@ -119,15 +119,15 @@
   <project name="platform/system/netd" path="system/netd" revision="36704b0da24debcab8090156568ac236315036bb"/>
   <project name="platform/system/security" path="system/security" revision="583374f69f531ba68fc3dcbff1f74893d2a96406"/>
   <project name="platform/system/vold" path="system/vold" revision="d4455b8cf361f8353e8aebac15ffd64b4aedd2b9"/>
-  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="ee814270f52127febfcf29bacf9f1b327d7c4c29"/>
-  <project name="platform_system_core" path="system/core" remote="b2g" revision="9395eb5aa885cf6d305a202de6e9694a58a89717"/>
   <default remote="caf" revision="refs/tags/android-4.4.2_r1" sync-j="4"/>
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="a706bf388e30ec1f5273cf72cd0156e429f23fac"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="0909f27aaa6bf55314edddb48bb1cd6296a2d55c"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="3ef6c54fd5bba6fbd4c11f3870ab3aa32693f0da"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="694cecf256122d0cb3b6a1a4efb4b5c7401db223"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="e5dba2723b3e417b107cf9546fb8e10b98e977ae"/>
+  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="ee814270f52127febfcf29bacf9f1b327d7c4c29"/>
+  <project name="platform_system_core" path="system/core" remote="b2g" revision="9395eb5aa885cf6d305a202de6e9694a58a89717"/>
   <project name="platform/development" path="development" revision="5968ff4e13e0d696ad8d972281fc27ae5a12829b"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="0951179277915335251c5e11d242e4e1a8c2236f"/>
 </manifest>
