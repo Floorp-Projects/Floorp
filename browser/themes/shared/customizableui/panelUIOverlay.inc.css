@@ -1068,6 +1068,10 @@ toolbaritem[overflowedItem=true],
   background: url("chrome://global/skin/menu/shared-menu-check.png") center left 7px / 11px 11px no-repeat transparent;
 }
 
+.subviewbutton[checked="true"]:-moz-locale-dir(rtl) {
+  background-position: center right 7px;
+}
+
 .subviewbutton > .menu-iconic-left {
   -moz-appearance: none;
   -moz-margin-end: 3px;

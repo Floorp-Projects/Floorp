@@ -15,6 +15,7 @@
 #include "mozilla/net/WebSocketChannelParent.h"
 #ifdef NECKO_PROTOCOL_rtsp
 #include "mozilla/net/RtspControllerParent.h"
+#include "mozilla/net/RtspChannelParent.h"
 #endif
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/RemoteOpenFileParent.h"
@@ -331,6 +332,42 @@ NeckoParent::DeallocPRtspControllerParent(PRtspControllerParent* actor)
 {
 #ifdef NECKO_PROTOCOL_rtsp
   RtspControllerParent* p = static_cast<RtspControllerParent*>(actor);
+  p->Release();
+#endif
+  return true;
+}
+
+PRtspChannelParent*
+NeckoParent::AllocPRtspChannelParent(const RtspChannelConnectArgs& aArgs)
+{
+#ifdef NECKO_PROTOCOL_rtsp
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aArgs.uri());
+  RtspChannelParent *p = new RtspChannelParent(uri);
+  p->AddRef();
+  return p;
+#else
+  return nullptr;
+#endif
+}
+
+bool
+NeckoParent::RecvPRtspChannelConstructor(
+                      PRtspChannelParent* aActor,
+                      const RtspChannelConnectArgs& aConnectArgs)
+{
+#ifdef NECKO_PROTOCOL_rtsp
+  RtspChannelParent* p = static_cast<RtspChannelParent*>(aActor);
+  return p->Init(aConnectArgs);
+#else
+  return nullptr;
+#endif
+}
+
+bool
+NeckoParent::DeallocPRtspChannelParent(PRtspChannelParent* actor)
+{
+#ifdef NECKO_PROTOCOL_rtsp
+  RtspChannelParent* p = static_cast<RtspChannelParent*>(actor);
   p->Release();
 #endif
   return true;
