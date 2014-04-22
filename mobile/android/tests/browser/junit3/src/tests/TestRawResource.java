@@ -16,7 +16,7 @@ import java.io.IOException;
 import org.mozilla.gecko.util.RawResource;
 
 /**
- * Tests whether RawResource.get() produces the right String
+ * Tests whether RawResource.getAsString() produces the right String
  * result after reading the returned raw resource's InputStream.
  */
 public class TestRawResource extends BrowserTestCase {
@@ -57,7 +57,7 @@ public class TestRawResource extends BrowserTestCase {
         String result;
 
         try {
-            result = RawResource.get(context, RAW_RESOURCE_ID);
+            result = RawResource.getAsString(context, RAW_RESOURCE_ID);
         } catch (IOException e) {
             result = null;
         }
