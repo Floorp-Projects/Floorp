@@ -91,5 +91,9 @@ extern bool sps_version2();
 void mozilla_sampler_tracing(const char* aCategory, const char* aInfo,
                              TracingMetadata aMetaData);
 
+void mozilla_sampler_tracing(const char* aCategory, const char* aInfo,
+                             ProfilerBacktrace* aCause,
+                             TracingMetadata aMetaData);
+
 #endif
 

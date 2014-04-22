@@ -47,7 +47,21 @@ ProfilerMarkerPayload::streamCommonProps(const char* aMarkerType,
 ProfilerMarkerTracing::ProfilerMarkerTracing(const char* aCategory, TracingMetadata aMetaData)
   : mCategory(aCategory)
   , mMetaData(aMetaData)
-{}
+{
+  if (aMetaData == TRACING_EVENT_BACKTRACE) {
+    SetStack(profiler_get_backtrace());
+  }
+}
+
+ProfilerMarkerTracing::ProfilerMarkerTracing(const char* aCategory, TracingMetadata aMetaData,
+                                             ProfilerBacktrace* aCause)
+  : mCategory(aCategory)
+  , mMetaData(aMetaData)
+{
+  if (aCause) {
+    SetStack(aCause);
+  }
+}
 
 void
 ProfilerMarkerTracing::streamPayloadImp(JSStreamWriter& b)

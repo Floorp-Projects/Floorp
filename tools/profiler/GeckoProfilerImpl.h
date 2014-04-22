@@ -245,6 +245,22 @@ bool profiler_in_privacy_mode()
 }
 
 static inline void profiler_tracing(const char* aCategory, const char* aInfo,
+                                    ProfilerBacktrace* aCause,
+                                    TracingMetadata aMetaData = TRACING_DEFAULT)
+{
+  if (!stack_key_initialized)
+    return;
+
+  // Don't insert a marker if we're not profiling to avoid
+  // the heap copy (malloc).
+  if (!profiler_is_active()) {
+    return;
+  }
+
+  mozilla_sampler_tracing(aCategory, aInfo, aCause, aMetaData);
+}
+
+static inline void profiler_tracing(const char* aCategory, const char* aInfo,
                                     TracingMetadata aMetaData = TRACING_DEFAULT)
 {
   if (!stack_key_initialized)
