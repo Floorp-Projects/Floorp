@@ -214,10 +214,16 @@ public:
 
   already_AddRefed<SubBufferDecoder> CreateSubDecoder(const nsACString& aType,
                                                       MediaSourceDecoder* aParentDecoder) {
+    if (!mReader) {
+      return nullptr;
+    }
     return static_cast<MediaSourceReader*>(mReader.get())->CreateSubDecoder(aType, aParentDecoder);
   }
 
   void CallDecoderInitialization() {
+    if (!mReader) {
+      return;
+    }
     return static_cast<MediaSourceReader*>(mReader.get())->CallDecoderInitialization();
   }
 };
@@ -293,12 +299,18 @@ MediaSourceDecoder::DetachMediaSource()
 already_AddRefed<SubBufferDecoder>
 MediaSourceDecoder::CreateSubDecoder(const nsACString& aType)
 {
+  if (!mDecoderStateMachine) {
+    return nullptr;
+  }
   return static_cast<MediaSourceStateMachine*>(mDecoderStateMachine.get())->CreateSubDecoder(aType, this);
 }
 
 void
 MediaSourceDecoder::CallDecoderInitialization()
 {
+  if (!mDecoderStateMachine) {
+    return;
+  }
   return static_cast<MediaSourceStateMachine*>(mDecoderStateMachine.get())->CallDecoderInitialization();
 }
 
@@ -440,12 +452,14 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
       MSE_DEBUG("%p: MSR::ReadMetadata audio decoder=%u maxDuration=%lld", this, i, maxDuration);
     }
   }
-  *aInfo = mInfo;
 
   if (maxDuration != -1) {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mDecoder->SetMediaDuration(maxDuration);
   }
+
+  *aInfo = mInfo;
+  *aTags = nullptr; // TODO: Handle metadata.
 
   return NS_OK;
 }
