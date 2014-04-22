@@ -21,8 +21,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.0.21';
-PDFJS.build = 'f954cde';
+PDFJS.version = '1.0.68';
+PDFJS.build = 'ead4cbf';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -451,6 +451,28 @@ function stringToBytes(str) {
 function string32(value) {
   return String.fromCharCode((value >> 24) & 0xff, (value >> 16) & 0xff,
                              (value >> 8) & 0xff, value & 0xff);
+}
+
+function log2(x) {
+  var n = 1, i = 0;
+  while (x > n) {
+    n <<= 1;
+    i++;
+  }
+  return i;
+}
+
+function readInt8(data, start) {
+  return (data[start] << 24) >> 24;
+}
+
+function readUint16(data, offset) {
+  return (data[offset] << 8) | data[offset + 1];
+}
+
+function readUint32(data, offset) {
+  return ((data[offset] << 24) | (data[offset + 1] << 16) |
+         (data[offset + 2] << 8) | data[offset + 3]) >>> 0;
 }
 
 // Lazy test the endianness of the platform
@@ -1745,31 +1767,31 @@ var DeviceCmykCS = (function DeviceCmykCSClosure() {
     var k = src[srcOffset + 3] * srcScale;
 
     var r =
-      c * (-4.387332384609988 * c + 54.48615194189176 * m +
-           18.82290502165302 * y + 212.25662451639585 * k +
-           -285.2331026137004) +
-      m * (1.7149763477362134 * m - 5.6096736904047315 * y +
-           -17.873870861415444 * k - 5.497006427196366) +
-      y * (-2.5217340131683033 * y - 21.248923337353073 * k +
-           17.5119270841813) +
-      k * (-21.86122147463605 * k - 189.48180835922747) + 255;
+      (c * (-4.387332384609988 * c + 54.48615194189176 * m +
+            18.82290502165302 * y + 212.25662451639585 * k +
+            -285.2331026137004) +
+       m * (1.7149763477362134 * m - 5.6096736904047315 * y +
+            -17.873870861415444 * k - 5.497006427196366) +
+       y * (-2.5217340131683033 * y - 21.248923337353073 * k +
+            17.5119270841813) +
+       k * (-21.86122147463605 * k - 189.48180835922747) + 255) | 0;
     var g =
-      c * (8.841041422036149 * c + 60.118027045597366 * m +
-           6.871425592049007 * y + 31.159100130055922 * k +
-           -79.2970844816548) +
-      m * (-15.310361306967817 * m + 17.575251261109482 * y +
-           131.35250912493976 * k - 190.9453302588951) +
-      y * (4.444339102852739 * y + 9.8632861493405 * k - 24.86741582555878) +
-      k * (-20.737325471181034 * k - 187.80453709719578) + 255;
+      (c * (8.841041422036149 * c + 60.118027045597366 * m +
+            6.871425592049007 * y + 31.159100130055922 * k +
+            -79.2970844816548) +
+       m * (-15.310361306967817 * m + 17.575251261109482 * y +
+            131.35250912493976 * k - 190.9453302588951) +
+       y * (4.444339102852739 * y + 9.8632861493405 * k - 24.86741582555878) +
+       k * (-20.737325471181034 * k - 187.80453709719578) + 255) | 0;
     var b =
-      c * (0.8842522430003296 * c + 8.078677503112928 * m +
-           30.89978309703729 * y - 0.23883238689178934 * k +
-           -14.183576799673286) +
-      m * (10.49593273432072 * m + 63.02378494754052 * y +
-           50.606957656360734 * k - 112.23884253719248) +
-      y * (0.03296041114873217 * y + 115.60384449646641 * k +
-           -193.58209356861505) +
-      k * (-22.33816807309886 * k - 180.12613974708367) + 255;
+      (c * (0.8842522430003296 * c + 8.078677503112928 * m +
+            30.89978309703729 * y - 0.23883238689178934 * k +
+            -14.183576799673286) +
+       m * (10.49593273432072 * m + 63.02378494754052 * y +
+            50.606957656360734 * k - 112.23884253719248) +
+       y * (0.03296041114873217 * y + 115.60384449646641 * k +
+            -193.58209356861505) +
+       k * (-22.33816807309886 * k - 180.12613974708367) + 255) | 0;
 
     dest[destOffset] = r > 255 ? 255 : r < 0 ? 0 : r;
     dest[destOffset + 1] = g > 255 ? 255 : g < 0 ? 0 : g;
@@ -2142,7 +2164,6 @@ var PDFFunction = (function PDFFunctionClosure() {
     constructSampled: function PDFFunction_constructSampled(str, dict) {
       function toMultiArray(arr) {
         var inputLength = arr.length;
-        var outputLength = arr.length / 2;
         var out = [];
         var index = 0;
         for (var i = 0; i < inputLength; i += 2) {
@@ -2213,7 +2234,7 @@ var PDFFunction = (function PDFFunctionClosure() {
         var samples = IR[5];
         var size = IR[6];
         var n = IR[7];
-        var mask = IR[8];
+        //var mask = IR[8];
         var range = IR[9];
 
         if (m != args.length) {
@@ -2884,6 +2905,7 @@ var Annotation = (function AnnotationClosure() {
 
     this.appearance = getDefaultAppearance(dict);
     data.hasAppearance = !!this.appearance;
+    data.id = params.ref.num;
   }
 
   Annotation.prototype = {
@@ -2991,8 +3013,6 @@ var Annotation = (function AnnotationClosure() {
       var bbox = appearanceDict.get('BBox') || [0, 0, 1, 1];
       var matrix = appearanceDict.get('Matrix') || [1, 0, 0, 1, 0 ,0];
       var transform = getTransformMatrix(data.rect, bbox, matrix);
-
-      var border = data.border;
 
       resourcesPromise.then(function(resources) {
         var opList = new OperatorList();
@@ -3219,7 +3239,6 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
   }
 
 
-  var parent = WidgetAnnotation.prototype;
   Util.inherit(TextWidgetAnnotation, WidgetAnnotation, {
     hasHtml: function TextWidgetAnnotation_hasHtml() {
       return !this.data.hasAppearance && !!this.data.fieldValue;
@@ -3242,7 +3261,7 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
 
       var fontObj = item.fontRefName ?
                     commonObjs.getData(item.fontRefName) : null;
-      var cssRules = setTextStyles(content, item, fontObj);
+      setTextStyles(content, item, fontObj);
 
       element.appendChild(content);
 
@@ -3274,7 +3293,6 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
       var appearanceFnArray = opList.fnArray;
       var appearanceArgsArray = opList.argsArray;
       var fnArray = [];
-      var argsArray = [];
 
       // TODO(mack): Add support for stroke color
       data.rgb = [0, 0, 0];
@@ -3490,7 +3508,6 @@ var TextAnnotation = (function TextAnnotationClosure() {
           }
         };
 
-        var self = this;
         image.addEventListener('click', function image_clickHandler() {
           toggleAnnotation();
         }, false);
@@ -3595,7 +3612,6 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
       container.className = 'annotLink';
 
       var item = this.data;
-      var rect = item.rect;
 
       container.style.borderColor = item.colorCssRgb;
       container.style.borderStyle = 'solid';
@@ -3849,6 +3865,13 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
      */
     getDestinations: function PDFDocumentProxy_getDestinations() {
       return this.transport.getDestinations();
+    },
+    /**
+     * @return {Promise} A promise that is resolved with a lookup table for
+     * mapping named attachments to their content.
+     */
+    getAttachments: function PDFDocumentProxy_getAttachments() {
+      return this.transport.getAttachments();
     },
     /**
      * @return {Promise} A promise that is resolved with an array of all the
@@ -4622,6 +4645,16 @@ var WorkerTransport = (function WorkerTransportClosure() {
       this.messageHandler.send('GetDestinations', null,
         function transportDestinations(destinations) {
           promise.resolve(destinations);
+        }
+      );
+      return promise;
+    },
+
+    getAttachments: function WorkerTransport_getAttachments() {
+      var promise = new PDFJS.LegacyPromise();
+      this.messageHandler.send('GetAttachments', null,
+        function transportAttachments(attachments) {
+          promise.resolve(attachments);
         }
       );
       return promise;
@@ -5421,7 +5454,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     // imgData.kind tells us which one this is.
     if (imgData.kind === ImageKind.GRAYSCALE_1BPP) {
       // Grayscale, 1 bit per pixel (i.e. black-and-white).
-      var destDataLength = dest.length;
       var srcLength = src.byteLength;
       var dest32 = PDFJS.hasCanvasTypedArrays ? new Uint32Array(dest.buffer) :
         new Uint32ArrayView(dest);
@@ -5692,7 +5724,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         return i;
       }
 
-      var executionEndIdx;
       var endTime = Date.now() + EXECUTION_TIME;
 
       var commonObjs = this.commonObjs;
@@ -6268,7 +6299,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var vertical = font.vertical;
       var defaultVMetrics = font.defaultVMetrics;
       var i, glyph, width;
-      var VERTICAL_TEXT_ROTATION = Math.PI / 2;
 
       if (fontSize === 0) {
         return;
@@ -6396,7 +6426,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       }
     },
     showSpacedText: function CanvasGraphics_showSpacedText(arr) {
-      var ctx = this.ctx;
       var current = this.current;
       var font = current.font;
       var fontSize = current.fontSize;
@@ -6472,8 +6501,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         var base = cs.base;
         var color;
         if (base) {
-          var baseComps = base.numComps;
-
           color = base.getRgb(args, 0);
         }
         pattern = new TilingPattern(IR, color, this.ctx, this.objs,
@@ -7732,13 +7759,13 @@ var createMeshCanvas = (function createMeshCanvasClosure() {
 
 ShadingIRs.Mesh = {
   fromIR: function Mesh_fromIR(raw) {
-    var type = raw[1];
+    //var type = raw[1];
     var coords = raw[2];
     var colors = raw[3];
     var figures = raw[4];
     var bounds = raw[5];
     var matrix = raw[6];
-    var bbox = raw[7];
+    //var bbox = raw[7];
     var background = raw[8];
     return {
       type: 'Pattern',
@@ -7835,7 +7862,6 @@ var TilingPattern = (function TilingPatternClosure() {
       var color = this.color;
       var objs = this.objs;
       var commonObjs = this.commonObjs;
-      var ctx = this.ctx;
 
       info('TilingType: ' + tilingType);
 
