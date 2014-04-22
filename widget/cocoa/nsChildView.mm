@@ -1942,6 +1942,13 @@ nsChildView::GetInputContext()
   return mInputContext;
 }
 
+NS_IMETHODIMP
+nsChildView::AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent)
+{
+  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
+  return mTextInputHandler->AttachNativeKeyEvent(aEvent);
+}
+
 NS_IMETHODIMP_(bool)
 nsChildView::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                                      const WidgetKeyboardEvent& aEvent,

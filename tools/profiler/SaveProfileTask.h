@@ -15,9 +15,6 @@
 #include "nsIJSRuntimeService.h"
 #include "nsIProfileSaveEvent.h"
 
-#include <ostream>
-#include <fstream>
-
 #ifdef XP_WIN
  #include <windows.h>
  #define getpid GetCurrentProcessId

@@ -26,10 +26,6 @@
 #include "UnwinderThread2.h"
 #include "TableTicker.h"
 
-// JSON
-#include "JSObjectBuilder.h"
-#include "nsIJSRuntimeService.h"
-
 // Meta
 #include "nsXPCOM.h"
 #include "nsXPCOMCID.h"

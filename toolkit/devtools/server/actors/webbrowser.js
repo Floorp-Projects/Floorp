@@ -942,15 +942,9 @@ TabActor.prototype = {
    *         True if the window.console object is native, or false otherwise.
    */
   hasNativeConsoleAPI: function BTA_hasNativeConsoleAPI(aWindow) {
-    let isNative = false;
-    try {
-      // We are very explicitly examining the "console" property of
-      // the non-Xrayed object here.
-      let console = aWindow.wrappedJSObject.console;
-      isNative = console instanceof aWindow.Console;
-    }
-    catch (ex) { }
-    return isNative;
+    // Do not expose WebConsoleActor function directly as it is always
+    // loaded after the BrowserTabActor
+    return WebConsoleActor.prototype.hasNativeConsoleAPI(aWindow);
   }
 };
 
