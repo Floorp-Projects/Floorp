@@ -1584,51 +1584,63 @@ nsHttpConnection::OnSocketReadable()
 }
 
 nsresult
+nsHttpConnection::MakeConnectString(nsAHttpTransaction *trans,
+                                    nsHttpRequestHead *request,
+                                    nsACString &result)
+{
+    result.Truncate();
+    if (!trans->ConnectionInfo()) {
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    nsHttpHandler::GenerateHostPort(
+        nsDependentCString(trans->ConnectionInfo()->Host()),
+                           trans->ConnectionInfo()->Port(), result);
+
+    // CONNECT host:port HTTP/1.1
+    request->SetMethod(NS_LITERAL_CSTRING("CONNECT"));
+    request->SetVersion(gHttpHandler->HttpVersion());
+    request->SetRequestURI(result);
+    request->SetHeader(nsHttp::User_Agent, gHttpHandler->UserAgent());
+
+    // a CONNECT is always persistent
+    request->SetHeader(nsHttp::Proxy_Connection, NS_LITERAL_CSTRING("keep-alive"));
+    request->SetHeader(nsHttp::Connection, NS_LITERAL_CSTRING("keep-alive"));
+
+    const char *val = trans->RequestHead()->PeekHeader(nsHttp::Host);
+    if (val) {
+        // all HTTP/1.1 requests must include a Host header (even though it
+        // may seem redundant in this case; see bug 82388).
+        request->SetHeader(nsHttp::Host, nsDependentCString(val));
+    }
+
+    val = trans->RequestHead()->PeekHeader(nsHttp::Proxy_Authorization);
+    if (val) {
+        // we don't know for sure if this authorization is intended for the
+        // SSL proxy, so we add it just in case.
+        request->SetHeader(nsHttp::Proxy_Authorization, nsDependentCString(val));
+    }
+
+    result.Truncate();
+    request->Flatten(result, false);
+    result.AppendLiteral("\r\n");
+    return NS_OK;
+}
+
+nsresult
 nsHttpConnection::SetupProxyConnect()
 {
-    const char *val;
-
     LOG(("nsHttpConnection::SetupProxyConnect [this=%p]\n", this));
-
     NS_ENSURE_TRUE(!mProxyConnectStream, NS_ERROR_ALREADY_INITIALIZED);
     MOZ_ASSERT(!mUsingSpdyVersion,
                "SPDY NPN Complete while using proxy connect stream");
 
     nsAutoCString buf;
-    nsresult rv = nsHttpHandler::GenerateHostPort(
-            nsDependentCString(mConnInfo->Host()), mConnInfo->Port(), buf);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // CONNECT host:port HTTP/1.1
     nsHttpRequestHead request;
-    request.SetMethod(NS_LITERAL_CSTRING("CONNECT"));
-    request.SetVersion(gHttpHandler->HttpVersion());
-    request.SetRequestURI(buf);
-    request.SetHeader(nsHttp::User_Agent, gHttpHandler->UserAgent());
-
-    // a CONNECT is always persistent
-    request.SetHeader(nsHttp::Proxy_Connection, NS_LITERAL_CSTRING("keep-alive"));
-    request.SetHeader(nsHttp::Connection, NS_LITERAL_CSTRING("keep-alive"));
-
-    val = mTransaction->RequestHead()->PeekHeader(nsHttp::Host);
-    if (val) {
-        // all HTTP/1.1 requests must include a Host header (even though it
-        // may seem redundant in this case; see bug 82388).
-        request.SetHeader(nsHttp::Host, nsDependentCString(val));
+    nsresult rv = MakeConnectString(mTransaction, &request, buf);
+    if (NS_FAILED(rv)) {
+        return rv;
     }
-
-    val = mTransaction->RequestHead()->PeekHeader(nsHttp::Proxy_Authorization);
-    if (val) {
-        // we don't know for sure if this authorization is intended for the
-        // SSL proxy, so we add it just in case.
-        request.SetHeader(nsHttp::Proxy_Authorization, nsDependentCString(val));
-    }
-
-    buf.Truncate();
-    request.Flatten(buf, false);
-    buf.AppendLiteral("\r\n");
-
     return NS_NewCStringInputStream(getter_AddRefs(mProxyConnectStream), buf);
 }
 
