@@ -558,6 +558,7 @@ var WifiManager = (function() {
       // Tell the event worker to start waiting for events.
       retryTimer = null;
       connectTries = 0;
+      recvErrors = 0;
       manager.connectToSupplicant = true;
       didConnectSupplicant(function(){});
       return;
@@ -735,8 +736,8 @@ var WifiManager = (function() {
     if (eventData.indexOf("CTRL-EVENT-TERMINATING") === 0) {
       // As long the monitor socket is not closed and we haven't seen too many
       // recv errors yet, we will keep going for a bit longer.
-      if (eventData.indexOf("connection closed") === -1 &&
-          eventData.indexOf("recv error") !== -1 && ++recvErrors < 10)
+      if (event.indexOf("connection closed") === -1 &&
+          event.indexOf("recv error") !== -1 && ++recvErrors < 10)
         return true;
 
       notifyStateChange({ state: "DISCONNECTED", BSSID: null, id: -1 });
