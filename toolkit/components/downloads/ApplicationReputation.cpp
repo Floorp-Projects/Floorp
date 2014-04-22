@@ -297,7 +297,7 @@ PendingDBLookup::HandleEvent(const nsACString& tables)
   // Blocklisting trumps allowlisting.
   nsAutoCString blockList;
   Preferences::GetCString(PREF_DOWNLOAD_BLOCK_TABLE, &blockList);
-  if (!mAllowlistOnly && FindInReadable(tables, blockList)) {
+  if (!mAllowlistOnly && FindInReadable(blockList, tables)) {
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, BLOCK_LIST);
     LOG(("Found principal %s on blocklist [this = %p]", mSpec.get(), this));
     return mPendingLookup->OnComplete(true, NS_OK);
@@ -305,7 +305,7 @@ PendingDBLookup::HandleEvent(const nsACString& tables)
 
   nsAutoCString allowList;
   Preferences::GetCString(PREF_DOWNLOAD_ALLOW_TABLE, &allowList);
-  if (FindInReadable(tables, allowList)) {
+  if (FindInReadable(allowList, tables)) {
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, ALLOW_LIST);
     LOG(("Found principal %s on allowlist [this = %p]", mSpec.get(), this));
     return mPendingLookup->OnComplete(false, NS_OK);
