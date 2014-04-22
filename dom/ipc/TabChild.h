@@ -138,7 +138,7 @@ public:
   virtual JSObject* GetGlobalJSObject() MOZ_OVERRIDE;
 
   nsCOMPtr<nsIContentFrameMessageManager> mMessageManager;
-  TabChildBase* mTabChild;
+  nsRefPtr<TabChildBase> mTabChild;
 };
 
 class ContentListener MOZ_FINAL : public nsIDOMEventListener
