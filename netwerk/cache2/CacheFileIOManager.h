@@ -359,6 +359,12 @@ private:
   static nsresult CacheIndexStateChanged();
   nsresult CacheIndexStateChangedInternal();
 
+  // Smart size calculation. UpdateSmartCacheSize() must be called on IO thread.
+  // It is called in EvictIfOverLimitInternal() just before we decide whether to
+  // start overlimit eviction or not and also in OverLimitEvictionInternal()
+  // before we start an eviction loop.
+  nsresult UpdateSmartCacheSize();
+
   // Memory reporting (private part)
   size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -380,6 +386,7 @@ private:
   nsCOMPtr<nsIDirectoryEnumerator>     mTrashDirEnumerator;
   nsTArray<nsCString>                  mFailedTrashDirs;
   nsRefPtr<CacheFileContextEvictor>    mContextEvictor;
+  TimeStamp                            mLastSmartSizeTime;
 };
 
 } // net

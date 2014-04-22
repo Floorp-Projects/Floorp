@@ -117,7 +117,8 @@ protected:
   /**
    * Construct codec specific configuration blob with given data aData generated
    * by media codec and append it into aOutputBuf. Needed by MP4 container
-   * writer for generating decoder config box. Returns OK if succeed.
+   * writer for generating decoder config box, or WebRTC for generating RTP
+   * packets. Returns OK if succeed.
    */
   virtual status_t AppendDecoderConfig(nsTArray<uint8_t>* aOutputBuf,
                                        ABuffer* aData) = 0;
@@ -240,12 +241,22 @@ private:
  */
 class OMXVideoEncoder MOZ_FINAL : public OMXCodecWrapper
 {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OMXVideoEncoder)
 public:
+  // Types of output blob format.
+  enum BlobFormat {
+    AVC_MP4, // MP4 file config descripter (defined in ISO/IEC 14496-15 5.2.4.1.1)
+    AVC_NAL  // NAL (Network Abstract Layer) (defined in ITU-T H.264 7.4.1)
+  };
+
   /**
    * Configure video codec parameters and start media codec. It must be called
    * before calling Encode() and GetNextEncodedFrame().
+   * aBlobFormat specifies output blob format provided by encoder. It can be
+   * AVC_MP4 or AVC_NAL.
    */
-  nsresult Configure(int aWidth, int aHeight, int aFrameRate);
+  nsresult Configure(int aWidth, int aHeight, int aFrameRate,
+                     BlobFormat aBlobFormat = BlobFormat::AVC_MP4);
 
   /**
    * Encode a aWidth pixels wide and aHeight pixels tall video frame of
@@ -256,12 +267,22 @@ public:
   nsresult Encode(const mozilla::layers::Image* aImage, int aWidth, int aHeight,
                   int64_t aTimestamp, int aInputFlags = 0);
 
+  /** Set encoding bitrate (in kbps). */
+  nsresult SetBitrate(int32_t aKbps);
+
+  /**
+   * Get current AVC codec config blob. The output format depends on the
+   * aBlobFormat argument given when Configure() was called.
+   */
+  nsresult GetCodecConfig(nsTArray<uint8_t>* aOutputBuf);
+
 protected:
   virtual status_t AppendDecoderConfig(nsTArray<uint8_t>* aOutputBuf,
                                        ABuffer* aData) MOZ_OVERRIDE;
 
-  // AVC/H.264 encoder replaces NAL unit start code with the unit length as
-  // specified in ISO/IEC 14496-15 5.2.3.
+  // If configured to output MP4 format blob, AVC/H.264 encoder has to replace
+  // NAL unit start code with the unit length as specified in
+  // ISO/IEC 14496-15 5.2.3.
   virtual void AppendFrame(nsTArray<uint8_t>* aOutputBuf,
                            const uint8_t* aData, size_t aSize) MOZ_OVERRIDE;
 
@@ -276,13 +297,20 @@ private:
    * CODEC_AVC_ENC.
    */
   OMXVideoEncoder(CodecType aCodecType)
-    : OMXCodecWrapper(aCodecType), mWidth(0), mHeight(0) {}
+    : OMXCodecWrapper(aCodecType)
+    , mWidth(0)
+    , mHeight(0)
+    , mBlobFormat(BlobFormat::AVC_MP4)
+    , mHasConfigBlob(false)
+  {}
 
   // For creator function to access hidden constructor.
   friend class OMXCodecWrapper;
 
   int mWidth;
   int mHeight;
+  BlobFormat mBlobFormat;
+  bool mHasConfigBlob;
 };
 
 } // namespace android
