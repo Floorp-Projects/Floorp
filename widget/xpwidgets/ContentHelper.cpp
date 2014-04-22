@@ -35,12 +35,9 @@ void
 ContentHelper::UpdateAllowedBehavior(uint32_t aTouchActionValue, bool aConsiderPanning, TouchBehaviorFlags& aOutBehavior)
 {
   if (aTouchActionValue != NS_STYLE_TOUCH_ACTION_AUTO) {
-    // Double-tap-zooming need property value AUTO
-    aOutBehavior &= ~AllowedTouchBehavior::DOUBLE_TAP_ZOOM;
-    if (aTouchActionValue != NS_STYLE_TOUCH_ACTION_MANIPULATION) {
-      // Pinch-zooming need value AUTO or MANIPULATION
-      aOutBehavior &= ~AllowedTouchBehavior::PINCH_ZOOM;
-    }
+    // Dropping zoom flag since zooming requires touch-action values of all touches
+    // to be AUTO.
+    aOutBehavior &= ~AllowedTouchBehavior::ZOOM;
   }
 
   if (aConsiderPanning) {
@@ -89,7 +86,7 @@ ContentHelper::GetAllowedTouchBehavior(nsIWidget* aWidget, const nsIntPoint& aPo
 
   bool considerPanning = true;
   TouchBehaviorFlags behavior = AllowedTouchBehavior::VERTICAL_PAN | AllowedTouchBehavior::HORIZONTAL_PAN |
-                                AllowedTouchBehavior::PINCH_ZOOM |
+                                AllowedTouchBehavior::ZOOM;
 
   for (nsIFrame *frame = target; frame && frame->GetContent() && behavior; frame = frame->GetParent()) {
     UpdateAllowedBehavior(GetTouchActionFromFrame(frame), considerPanning, behavior);
