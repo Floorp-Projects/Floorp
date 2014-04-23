@@ -43,16 +43,10 @@ function getUA(host) {
 
 function testUA(options, callback) {
 
-  var [domain, override, test_hosts, skip, expected] =
-    [options.domain, options.override, options.test_hosts, options.skip, options.expected];
+  var [domain, override, test_hosts, expected] =
+    [options.domain, options.override, options.test_hosts, options.expected];
 
   info('Overriding ' + domain + ' with ' + override);
-
-  if (skip) {
-    todo(false, 'Skipping');
-    callback();
-    return;
-  }
 
   function is_subdomain(host) {
     var [test_domain] = host.slice(host.lastIndexOf('/') + 1).split(':', 1);
@@ -104,12 +98,6 @@ function testUA(options, callback) {
   });
 }
 
-// mochitests on Android appear to have trouble with https
-// but when it eventually works, we should re-enable the test
-var skipHttps = /android/i.test(DEFAULT_UA);
-if (skipHttps) {
-  SimpleTest.doesThrow(function () getUA('https://example.com'), 'Re-enable https test');
-}
 
 var step = 0; // for logging
 var tests = [
@@ -150,7 +138,6 @@ var tests = [
 
   // should work with https
   {
-    skip: skipHttps,
     domain: 'example.com',
     override: UA_WHOLE_OVERRIDE,
     test_hosts: ['https://example.com',
@@ -243,4 +230,3 @@ testOverrides(function ()
 </pre>
 </body>
 </html>
-

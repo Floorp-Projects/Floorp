@@ -627,6 +627,20 @@ bool OmxDecoder::SetVideoFormat() {
     NS_WARNING("slice height not available, assuming height");
   }
 
+  // Since ICS, valid video side is caluculated from kKeyCropRect.
+  // kKeyWidth means decoded video buffer width.
+  // kKeyHeight means decoded video buffer height.
+  // On some hardwares, decoded video buffer and valid video size are different.
+  int32_t crop_left, crop_top, crop_right, crop_bottom;
+  if (mVideoSource->getFormat()->findRect(kKeyCropRect,
+                                          &crop_left,
+                                          &crop_top,
+                                          &crop_right,
+                                          &crop_bottom)) {
+    mVideoWidth = crop_right - crop_left + 1;
+    mVideoHeight = crop_bottom - crop_top + 1;
+  }
+
   if (!mVideoSource->getFormat()->findInt32(kKeyRotation, &mVideoRotation)) {
     mVideoRotation = 0;
     NS_WARNING("rotation not available, assuming 0");

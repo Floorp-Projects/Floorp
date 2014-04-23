@@ -35,20 +35,20 @@ withSourceHook(function (url) {
                               }, function () {
                                 log += 'I';
                                 return evaluate('(function inner() { 2; })',
-                                                { fileName: 'inner', sourcePolicy: 'LAZY_SOURCE' })
+                                                { fileName: 'inner', sourceIsLazy: true })
                                        .toSource();
                               }),
                '(function inner() { 1; })');
       // Verify that the source hook that throws has been reinstated.
       evaluate('(function middle() { })',
-               { fileName: 'middle', sourcePolicy: 'LAZY_SOURCE' })
+               { fileName: 'middle', sourceIsLazy: true })
       .toSource();
     });
   }, 'borborygmus');
 
   // Verify that the outermost source hook has been restored.
   assertEq(evaluate('(function outer() { 4; })',
-                    { fileName: 'outer', sourcePolicy: 'LAZY_SOURCE' })
+                    { fileName: 'outer', sourceIsLazy: true })
            .toSource(),
            '(function outer() { 3; })');
 });

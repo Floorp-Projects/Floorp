@@ -225,19 +225,36 @@ protected:
     // verifies that a family contains a non-zero font count
     gfxFontFamily* CheckFamily(gfxFontFamily *aFamily);
 
-    // separate initialization for reading in name tables, since this is expensive
+    // initialize localized family names
     void InitOtherFamilyNames();
 
-    static PLDHashOperator InitOtherFamilyNamesProc(nsStringHashKey::KeyType aKey,
-                                                    nsRefPtr<gfxFontFamily>& aFamilyEntry,
-                                                    void* userArg);
+    static PLDHashOperator
+    InitOtherFamilyNamesProc(nsStringHashKey::KeyType aKey,
+                             nsRefPtr<gfxFontFamily>& aFamilyEntry,
+                             void* userArg);
 
-    // read in all fullname/Postscript names for all font faces
-    void InitFaceNameLists();
+    // search through font families, looking for a given name, initializing
+    // facename lists along the way. first checks all families with names
+    // close to face name, then searchs all families if not found.
+    gfxFontEntry* SearchFamiliesForFaceName(const nsAString& aFaceName);
 
-    static PLDHashOperator InitFaceNameListsProc(nsStringHashKey::KeyType aKey,
-                                                 nsRefPtr<gfxFontFamily>& aFamilyEntry,
-                                                 void* userArg);
+    static PLDHashOperator
+    ReadFaceNamesProc(nsStringHashKey::KeyType aKey,
+                      nsRefPtr<gfxFontFamily>& aFamilyEntry,
+                      void* userArg);
+
+    // helper method for finding fullname/postscript names in facename lists
+    gfxFontEntry* FindFaceName(const nsAString& aFaceName);
+
+    // look up a font by name, for cases where platform font list
+    // maintains explicit mappings of fullname/psname ==> font
+    virtual gfxFontEntry* LookupInFaceNameLists(const nsAString& aFontName);
+
+    static PLDHashOperator LookupMissedFaceNamesProc(nsStringHashKey *aKey,
+                                                     void *aUserArg);
+
+    static PLDHashOperator LookupMissedOtherNamesProc(nsStringHashKey *aKey,
+                                                      void *aUserArg);
 
     // commonly used fonts for which the name table should be loaded at startup
     virtual void PreloadNamesList();
@@ -286,7 +303,7 @@ protected:
     bool mOtherFamilyNamesInitialized;
 
     // flag set after fullname and Postcript name lists are populated
-    bool mFaceNamesInitialized;
+    bool mFaceNameListsInitialized;
 
     struct ExtraNames {
       ExtraNames() : mFullnames(100), mPostscriptNames(100) {}
@@ -296,6 +313,12 @@ protected:
       nsRefPtrHashtable<nsStringHashKey, gfxFontEntry> mPostscriptNames;
     };
     nsAutoPtr<ExtraNames> mExtraNames;
+
+    // face names missed when face name loading takes a long time
+    nsAutoPtr<nsTHashtable<nsStringHashKey> > mFaceNamesMissed;
+
+    // localized family names missed when face name loading takes a long time
+    nsAutoPtr<nsTHashtable<nsStringHashKey> > mOtherNamesMissed;
 
     // cached pref font lists
     // maps list of family names ==> array of family entries, one per lang group
