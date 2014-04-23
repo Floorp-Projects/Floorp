@@ -20,7 +20,7 @@ addLoadEvent(function() {
   var context = new AudioContext();
   var buffer = null;
 
-  var sourceSP = context.createJavaScriptNode(2048);
+  var sourceSP = context.createScriptProcessor(2048);
   sourceSP.addEventListener("audioprocess", function(e) {
     // generate the audio
     for (var i = 0; i < 2048; ++i) {

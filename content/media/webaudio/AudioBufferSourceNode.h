@@ -44,22 +44,7 @@ public:
 
   void Start(double aWhen, double aOffset,
              const Optional<double>& aDuration, ErrorResult& aRv);
-  void NoteOn(double aWhen, ErrorResult& aRv)
-  {
-    Start(aWhen, 0.0, Optional<double>(), aRv);
-  }
-  void NoteGrainOn(double aWhen, double aOffset,
-                   double aDuration, ErrorResult& aRv)
-  {
-    Optional<double> duration;
-    duration.Construct(aDuration);
-    Start(aWhen, aOffset, duration, aRv);
-  }
   void Stop(double aWhen, ErrorResult& aRv);
-  void NoteOff(double aWhen, ErrorResult& aRv)
-  {
-    Stop(aWhen, aRv);
-  }
 
   AudioBuffer* GetBuffer(JSContext* aCx) const
   {

@@ -1620,9 +1620,12 @@ const KTableValue nsCSSProps::kTextTransformKTable[] = {
 };
 
 const KTableValue nsCSSProps::kTouchActionKTable[] = {
-  eCSSKeyword_pan_x, NS_STYLE_TOUCH_ACTION_PAN_X,
-  eCSSKeyword_pan_y, NS_STYLE_TOUCH_ACTION_PAN_Y,
-  eCSSKeyword_UNKNOWN, -1
+  eCSSKeyword_none,         NS_STYLE_TOUCH_ACTION_NONE,
+  eCSSKeyword_auto,         NS_STYLE_TOUCH_ACTION_AUTO,
+  eCSSKeyword_pan_x,        NS_STYLE_TOUCH_ACTION_PAN_X,
+  eCSSKeyword_pan_y,        NS_STYLE_TOUCH_ACTION_PAN_Y,
+  eCSSKeyword_manipulation, NS_STYLE_TOUCH_ACTION_MANIPULATION,
+  eCSSKeyword_UNKNOWN,      -1
 };
 
 const KTableValue nsCSSProps::kTransitionTimingFunctionKTable[] = {

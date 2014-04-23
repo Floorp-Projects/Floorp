@@ -4373,10 +4373,17 @@ if (SpecialPowers.getBoolPref("layout.css.touch_action.enabled")) {
         inherited: false,
         type: CSS_TYPE_LONGHAND,
         initial_values: ["auto"],
-        other_values: ["none", "pan-x", "pan-y", "pan-x pan-y", "pan-y pan-x"],
+        other_values: ["none", "pan-x", "pan-y", "pan-x pan-y", "pan-y pan-x", "manipulation"],
         invalid_values: ["zoom", "pinch", "tap", "10px", "2", "auto pan-x", "pan-x auto", "none pan-x", "pan-x none",
-        				 "auto pan-y", "pan-y auto", "none pan-y", "pan-y none",
-        				 "pan-x pan-y none", "none pan-x pan-y", "pan-x pan-y auto", "auto pan-x pan-y"]
+        				 "auto pan-y", "pan-y auto", "none pan-y", "pan-y none", "pan-x pan-x", "pan-y pan-y",
+        				 "pan-x pan-y none", "pan-x none pan-y", "none pan-x pan-y", "pan-y pan-x none", "pan-y none pan-x", "none pan-y pan-x",
+        				 "pan-x pan-y auto", "pan-x auto pan-y", "auto pan-x pan-y", "pan-y pan-x auto", "pan-y auto pan-x", "auto pan-y pan-x",
+        				 "pan-x pan-y zoom", "pan-x zoom pan-y", "zoom pan-x pan-y", "pan-y pan-x zoom", "pan-y zoom pan-x", "zoom pan-y pan-x",
+        				 "pan-x pan-y pan-x", "pan-x pan-x pan-y", "pan-y pan-x pan-x", "pan-y pan-x pan-y", "pan-y pan-y pan-x", "pan-x pan-y pan-y",
+        				 "manipulation none", "none manipulation", "manipulation auto", "auto manipulation", "manipulation zoom", "zoom manipulation",
+        				 "manipulation manipulation", "manipulation pan-x", "pan-x manipulation", "manipulation pan-y", "pan-y manipulation",
+        				 "manipulation pan-x pan-y", "pan-x manipulation pan-y", "pan-x pan-y manipulation",
+        				 "manipulation pan-y pan-x", "pan-y manipulation pan-x", "pan-y pan-x manipulation"]
     };
 }
 

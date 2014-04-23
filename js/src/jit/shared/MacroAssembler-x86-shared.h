@@ -90,6 +90,9 @@ class MacroAssemblerX86Shared : public Assembler
         j(ConditionFromDoubleCondition(cond), label);
     }
 
+    void branchNegativeZero(const FloatRegister &reg, const Register &scratch, Label *label);
+    void branchNegativeZeroFloat32(const FloatRegister &reg, const Register &scratch, Label *label);
+
     void move32(const Imm32 &imm, const Register &dest) {
         // Use the ImmWord version of mov to register, which has special
         // optimizations. Casting to uint32_t here ensures that the value
@@ -519,31 +522,16 @@ class MacroAssemblerX86Shared : public Assembler
     void convertDoubleToInt32(FloatRegister src, Register dest, Label *fail,
                               bool negativeZeroCheck = true)
     {
+        // Check for -0.0
+        if (negativeZeroCheck)
+            branchNegativeZero(src, dest, fail);
+
         cvttsd2si(src, dest);
         cvtsi2sd(dest, ScratchFloatReg);
         ucomisd(src, ScratchFloatReg);
         j(Assembler::Parity, fail);
         j(Assembler::NotEqual, fail);
 
-        // Check for -0
-        if (negativeZeroCheck) {
-            Label notZero;
-            testl(dest, dest);
-            j(Assembler::NonZero, &notZero);
-
-            if (Assembler::HasSSE41()) {
-                ptest(src, src);
-                j(Assembler::NonZero, fail);
-            } else {
-                // bit 0 = sign of low double
-                // bit 1 = sign of high double
-                movmskpd(src, dest);
-                andl(Imm32(1), dest);
-                j(Assembler::NonZero, fail);
-            }
-
-            bind(&notZero);
-        }
     }
 
     // Checks whether a float32 is representable as a 32-bit integer. If so, the
@@ -552,30 +540,15 @@ class MacroAssemblerX86Shared : public Assembler
     void convertFloat32ToInt32(FloatRegister src, Register dest, Label *fail,
                                bool negativeZeroCheck = true)
     {
+        // Check for -0.0
+        if (negativeZeroCheck)
+            branchNegativeZeroFloat32(src, dest, fail);
+
         cvttss2si(src, dest);
         convertInt32ToFloat32(dest, ScratchFloatReg);
         ucomiss(src, ScratchFloatReg);
         j(Assembler::Parity, fail);
         j(Assembler::NotEqual, fail);
-
-        // Check for -0
-        if (negativeZeroCheck) {
-            Label notZero;
-            branchTest32(Assembler::NonZero, dest, dest, &notZero);
-
-            if (Assembler::HasSSE41()) {
-                ptest(src, src);
-                j(Assembler::NonZero, fail);
-            } else {
-                // bit 0 = sign of low float
-                // bits 1 to 3 = signs of higher floats
-                movmskps(src, dest);
-                andl(Imm32(1), dest);
-                j(Assembler::NonZero, fail);
-            }
-
-            bind(&notZero);
-        }
     }
 
     void clampIntToUint8(Register reg) {

@@ -94,16 +94,13 @@ let apps = [
     },
   },
   {
-    title: "a privileged app, which may not use synthetic events (until bug 982460 lands)",
+    title: "a privileged app, which may use synthetic events",
     manifest: "https://example.com/manifest_priv.webapp",
     origin: "https://example.com",
     uri: "https://example.com/chrome/dom/identity/tests/mochitest/file_syntheticEvents.html",
     wantIssuer: "firefox-accounts",
     expected: {
-      success: false,
-      errors: [
-        "ERROR_REQUEST_WHILE_NOT_HANDLING_USER_INPUT",
-      ],
+      success: true,
     },
   },
   {

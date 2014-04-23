@@ -12,7 +12,7 @@
 #include "jsfun.h"
 #include "jsscript.h"
 
-#include "jit/IonFrameIterator.h"
+#include "jit/JitFrameIterator.h"
 #ifdef CHECK_OSIPOINT_REGISTERS
 #include "jit/Registers.h" // for RegisterDump
 #endif
@@ -1515,7 +1515,7 @@ class FrameIter
         ActivationIterator activations_;
 
 #ifdef JS_ION
-        jit::IonFrameIterator ionFrames_;
+        jit::JitFrameIterator jitFrames_;
 #endif
 
         Data(JSContext *cx, SavedOption savedOption, ContextOption contextOption,
@@ -1758,9 +1758,9 @@ FrameIter::script() const
         return interpFrame()->script();
 #ifdef JS_ION
     JS_ASSERT(data_.state_ == JIT);
-    if (data_.ionFrames_.isIonJS())
+    if (data_.jitFrames_.isIonJS())
         return ionInlineFrames_.script();
-    return data_.ionFrames_.script();
+    return data_.jitFrames_.script();
 #else
     return nullptr;
 #endif
@@ -1770,7 +1770,7 @@ inline bool
 FrameIter::isIon() const
 {
 #ifdef JS_ION
-    return isJit() && data_.ionFrames_.isIonJS();
+    return isJit() && data_.jitFrames_.isIonJS();
 #else
     return false;
 #endif
@@ -1780,7 +1780,7 @@ inline bool
 FrameIter::isBaseline() const
 {
 #ifdef JS_ION
-    return isJit() && data_.ionFrames_.isBaselineJS();
+    return isJit() && data_.jitFrames_.isBaselineJS();
 #else
     return false;
 #endif

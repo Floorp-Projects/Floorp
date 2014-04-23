@@ -199,6 +199,8 @@ public:
 
 protected:
   friend class nsGlyphTable;
+  friend class nsPropertiesTable;
+  friend class nsOpenTypeTable;
   nsString           mData;
 
 private:

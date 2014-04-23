@@ -34,6 +34,13 @@ typedef enum {
      kPlatformCharsetSel_PlainTextInFile = 7
 } nsPlatformCharsetSel;
 
+/**
+ * DO NOT ADD NEW USES OF THIS INTERFACE!
+ * Removal is https://bugzilla.mozilla.org/show_bug.cgi?id=943272
+ *
+ * Instead, use UTF-16 APIs on Windows and UTF-8 APIs everywhere else.
+ * Assume plain text files are UTF-8.
+ */
 class nsIPlatformCharset : public nsISupports
 {
 public:
