@@ -46,13 +46,23 @@ public:
   void ExtractBuffer(nsTArray<nsTArray<uint8_t> >* aDestBufs,
                      uint32_t aFlag = 0);
 private:
+  // Move the metadata data to mClusterCanFlushBuffs.
+  void FinishMetadata();
   // Close current cluster and move data to mClusterCanFlushBuffs.
   void FinishCluster();
   // The temporary storage for cluster data.
   nsTArray<nsTArray<uint8_t> > mClusterBuffs;
   // The storage which contain valid cluster data.
   nsTArray<nsTArray<uint8_t> > mClusterCanFlushBuffs;
-  // Indicate the header index in mClusterBuffs.
+
+  // Indicate the data types in mClusterBuffs.
+  enum {
+    FLUSH_NONE = 0,
+    FLUSH_METADATA = 1 << 0,
+    FLUSH_CLUSTER = 1 << 1
+  };
+  uint32_t mFlushState;
+  // Indicate the cluster header index in mClusterBuffs.
   uint32_t mClusterHeaderIndex;
   // The cluster length position.
   uint64_t mClusterLengthLoc;
