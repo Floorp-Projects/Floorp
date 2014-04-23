@@ -8,9 +8,9 @@ const protocol = require("devtools/server/protocol");
 const {method, RetVal} = protocol;
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {LongStringActor} = require("devtools/server/actors/string");
+const {DebuggerServer} = require("devtools/server/main");
 
 Cu.import("resource://gre/modules/PermissionsTable.jsm")
-Cu.import('resource://gre/modules/devtools/dbg-server.jsm');
 
 const APP_MAP = {
   '{ec8030f7-c20a-464f-9b0e-13a3a9e97384}': 'firefox',
