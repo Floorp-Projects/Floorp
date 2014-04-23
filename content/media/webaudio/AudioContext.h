@@ -67,7 +67,6 @@ class AudioContext MOZ_FINAL : public DOMEventTargetHelper,
 {
   AudioContext(nsPIDOMWindow* aParentWindow,
                bool aIsOffline,
-               AudioChannel aChannel = AudioChannel::Normal,
                uint32_t aNumberOfChannels = 0,
                uint32_t aLength = 0,
                float aSampleRate = 0.0f);
@@ -95,12 +94,6 @@ public:
   // Constructor for regular AudioContext
   static already_AddRefed<AudioContext>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
-
-  // Constructor for regular AudioContext. A default audio channel is needed.
-  static already_AddRefed<AudioContext>
-  Constructor(const GlobalObject& aGlobal,
-              AudioChannel aChannel,
-              ErrorResult& aRv);
 
   // Constructor for offline AudioContext
   static already_AddRefed<AudioContext>
