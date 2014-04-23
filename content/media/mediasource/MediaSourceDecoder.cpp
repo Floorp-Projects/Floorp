@@ -340,6 +340,22 @@ MediaSourceReader::EnqueueDecoderInitialization()
                               NS_DISPATCH_NORMAL);
 }
 
+class ReleaseDecodersTask : public nsRunnable {
+public:
+  ReleaseDecodersTask(nsTArray<nsRefPtr<SubBufferDecoder>>& aDecoders)
+  {
+    mDecoders.SwapElements(aDecoders);
+  }
+
+  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL {
+    mDecoders.Clear();
+    return NS_OK;
+  }
+
+private:
+  nsTArray<nsRefPtr<SubBufferDecoder>> mDecoders;
+};
+
 void
 MediaSourceReader::CallDecoderInitialization()
 {
@@ -376,7 +392,8 @@ MediaSourceReader::CallDecoderInitialization()
       MSE_DEBUG("%p: Reader %p not activated", this, reader);
     }
   }
-  mPendingDecoders.Clear();
+  NS_DispatchToMainThread(new ReleaseDecodersTask(mPendingDecoders));
+  MOZ_ASSERT(mPendingDecoders.IsEmpty());
   mDecoder->NotifyWaitingForResourcesStatusChanged();
   mon.NotifyAll();
 }
