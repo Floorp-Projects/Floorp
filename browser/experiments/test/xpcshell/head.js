@@ -155,10 +155,16 @@ function loadAddonManager() {
   startupManager();
 }
 
-function getExperimentAddons() {
+function getExperimentAddons(previous=false) {
   let deferred = Promise.defer();
 
-  AddonManager.getAddonsByTypes(["experiment"], deferred.resolve);
+  AddonManager.getAddonsByTypes(["experiment"], (addons) => {
+    if (previous) {
+      deferred.resolve(addons);
+    } else {
+      deferred.resolve([a for (a of addons) if (!a.appDisabled)]);
+    }
+  });
 
   return deferred.promise;
 }
