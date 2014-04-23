@@ -5,7 +5,7 @@
 const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
 const {Promise: promise} =
-  Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
+  Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js", {});
 const {devtools} =
   Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {require} = devtools;
