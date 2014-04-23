@@ -38,8 +38,7 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
         return LDefinition::BogusTemp();
     }
 
-    bool needTempForObjectInNurseryRange() { return true; }
-    bool needTempForValueIsNurseryObject() { return true; }
+    bool needTempForPostBarrier() { return true; }
 
     LDefinition tempForDispatchCache(MIRType outputType = MIRType_None);
 
