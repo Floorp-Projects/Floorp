@@ -42,15 +42,15 @@ CheckTimes(const CERTCertificate* cert, PRTime time)
 // Modeled after GetKeyUsage in certdb.c
 Result
 CheckKeyUsage(EndEntityOrCA endEntityOrCA,
-              bool isTrustAnchor,
               const SECItem* encodedKeyUsage,
               KeyUsages requiredKeyUsagesIfPresent,
               PLArenaPool* arena)
 {
   if (!encodedKeyUsage) {
-    // TODO: Reject certificates that are being used to verify certificate
-    // signatures unless the certificate is a trust anchor, to reduce the
-    // chances of an end-entity certificate being abused as a CA certificate.
+    // TODO(bug 970196): Reject certificates that are being used to verify
+    // certificate signatures unless the certificate is a trust anchor, to
+    // reduce the chances of an end-entity certificate being abused as a CA
+    // certificate.
     // if (endEntityOrCA == MustBeCA && !isTrustAnchor) {
     //   return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
     // }
@@ -505,7 +505,7 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   // 4.2.1.2. Subject Key Identifier is ignored (see bug 965136).
 
   // 4.2.1.3. Key Usage
-  rv = CheckKeyUsage(endEntityOrCA, isTrustAnchor, cert.encodedKeyUsage,
+  rv = CheckKeyUsage(endEntityOrCA, cert.encodedKeyUsage,
                      requiredKeyUsagesIfPresent, arena);
   if (rv != Success) {
     return rv;
