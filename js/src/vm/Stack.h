@@ -12,7 +12,7 @@
 #include "jsfun.h"
 #include "jsscript.h"
 
-#include "jit/IonFrameIterator.h"
+#include "jit/JitFrameIterator.h"
 #ifdef CHECK_OSIPOINT_REGISTERS
 #include "jit/Registers.h" // for RegisterDump
 #endif
@@ -1515,7 +1515,7 @@ class FrameIter
         ActivationIterator activations_;
 
 #ifdef JS_ION
-        jit::IonFrameIterator ionFrames_;
+        jit::JitFrameIterator ionFrames_;
 #endif
 
         Data(JSContext *cx, SavedOption savedOption, ContextOption contextOption,

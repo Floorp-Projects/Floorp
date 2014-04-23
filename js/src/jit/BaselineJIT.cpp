@@ -931,7 +931,7 @@ jit::ToggleBaselineSPS(JSRuntime *runtime, bool enable)
 static void
 MarkActiveBaselineScripts(JSRuntime *rt, const JitActivationIterator &activation)
 {
-    for (jit::IonFrameIterator iter(activation); !iter.done(); ++iter) {
+    for (jit::JitFrameIterator iter(activation); !iter.done(); ++iter) {
         switch (iter.type()) {
           case JitFrame_BaselineJS:
             iter.script()->baselineScript()->setActive();
