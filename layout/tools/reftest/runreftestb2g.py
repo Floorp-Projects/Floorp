@@ -31,6 +31,11 @@ class B2GOptions(ReftestOptions):
 
         ReftestOptions.__init__(self, automation)
 
+        self.add_option("--browser-arg", action="store",
+                    type = "string", dest = "browser_arg",
+                    help = "Optional command-line arg to pass to the browser")
+        defaults["browser_arg"] = None
+
         self.add_option("--b2gpath", action="store",
                     type = "string", dest = "b2gPath",
                     help = "path to B2G repo or qemu dir")
