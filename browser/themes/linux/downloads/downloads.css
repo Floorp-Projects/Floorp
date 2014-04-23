@@ -18,13 +18,22 @@
   display: none;
 }
 
+#downloadsPanel[hasdownloads] > #emptyDownloads {
+  display: none;
+}
+
+#emptyDownloads {
+  padding: 10px 20px;
+  max-width: 40ch;
+}
+
 #downloadsHistory {
   background: transparent;
   color: -moz-nativehyperlinktext;
   cursor: pointer;
 }
 
-#downloadsPanel[hasdownloads] > #downloadsFooter {
+#downloadsFooter {
   border-top: 1px solid ThreeDShadow;
   background-image: linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
 }
