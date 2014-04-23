@@ -23,6 +23,7 @@
 #include "gfxTypes.h"
 #include "gfxContext.h"
 #include "gfxFontMissingGlyphs.h"
+#include "gfxHarfBuzzShaper.h"
 #include "gfxUserFontSet.h"
 #include "gfxPlatformFontList.h"
 #include "gfxScriptItemizer.h"
@@ -2025,6 +2026,28 @@ gfxFont::~gfxFont()
     if (mGlyphChangeObservers) {
         mGlyphChangeObservers->EnumerateEntries(NotifyFontDestroyed, nullptr);
     }
+}
+
+gfxFloat
+gfxFont::GetGlyphHAdvance(gfxContext *aCtx, uint16_t aGID)
+{
+    if (ProvidesGlyphWidths()) {
+        return GetGlyphWidth(aCtx, aGID) / 65536.0;
+    }
+    if (mFUnitsConvFactor == 0.0f) {
+        GetMetrics();
+    }
+    NS_ASSERTION(mFUnitsConvFactor > 0.0f,
+                 "missing font unit conversion factor");
+    if (!mHarfBuzzShaper) {
+        mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
+    }
+    gfxHarfBuzzShaper* shaper =
+        static_cast<gfxHarfBuzzShaper*>(mHarfBuzzShaper.get());
+    if (!shaper->Initialize() || !SetupCairoFont(aCtx)) {
+        return 0;
+    }
+    return shaper->GetGlyphHAdvance(aCtx, aGID) / 65536.0;
 }
 
 /*static*/
