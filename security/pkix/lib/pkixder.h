@@ -376,8 +376,7 @@ Boolean(Input& input, /*out*/ bool& value)
     case 0: value = false; return Success;
     case 0xFF: value = true; return Success;
     default:
-      PR_SetError(SEC_ERROR_BAD_DER, 0);
-      return Failure;
+      return Fail(SEC_ERROR_BAD_DER);
   }
 }
 
