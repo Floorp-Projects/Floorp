@@ -44,39 +44,6 @@ function checkDateHigherThan(files, date) {
   });
 }
 
-function dirContainsOnly(dir, expectedFiles) {
-  return Task.spawn(function*() {
-    let iterator = new OS.File.DirectoryIterator(dir);
-
-    let entries;
-    try {
-      entries = yield iterator.nextBatch();
-    } finally {
-      iterator.close();
-    }
-
-    let ret = true;
-
-    // Find unexpected files
-    for each (let {path} in entries) {
-      if (expectedFiles.indexOf(path) == -1) {
-        info("Unexpected file: " + path);
-        ret = false;
-      }
-    }
-
-    // Find missing files
-    for each (let expectedPath in expectedFiles) {
-      if (entries.findIndex(({path}) => path == expectedPath) == -1) {
-        info("Missing file: " + expectedPath);
-        ret = false;
-      }
-    }
-
-    return ret;
-  });
-}
-
 function wait(time) {
   let deferred = Promise.defer();
 
