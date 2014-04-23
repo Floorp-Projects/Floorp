@@ -3731,9 +3731,9 @@ nsStyleAnimation::Value::SetAndAdoptCSSValueListValue(
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSValueListUnit(aUnit), "bad unit");
-  NS_ABORT_IF_FALSE(aUnit != eUnit_Dasharray || aUnit != eUnit_Filter ||
+  NS_ABORT_IF_FALSE(aUnit == eUnit_Shadow || aUnit == eUnit_Filter ||
                     aValueList != nullptr,
-                    "dasharrays and filters may not be null");
+                    "value lists other than shadows and filters may not be null");
   mUnit = aUnit;
   mValue.mCSSValueList = aValueList; // take ownership
 }
