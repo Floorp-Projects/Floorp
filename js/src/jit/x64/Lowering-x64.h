@@ -35,8 +35,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
 
     LDefinition tempToUnbox();
 
-    bool needTempForObjectInNurseryRange() { return false; }
-    bool needTempForValueIsNurseryObject() { return true; }
+    bool needTempForPostBarrier() { return false; }
 
     // x64 has a scratch register, so no need for another temp for dispatch
     // ICs.
