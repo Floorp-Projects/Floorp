@@ -46,7 +46,11 @@ CryptoTask::Run()
     if (mThread) {
       // Don't leak threads!
       mThread->Shutdown(); // can't Shutdown from the thread itself, darn
-      mThread = nullptr;
+      // Don't null out mThread!
+      // See bug 999104.  We must hold a ref to the thread across Dispatch()
+      // since the internal mThread ref could be released while processing
+      // the Dispatch(), and Dispatch/PutEvent itself doesn't hold a ref; it
+      // assumes the caller does.
     }
   }
 
