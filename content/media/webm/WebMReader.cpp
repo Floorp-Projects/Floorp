@@ -1004,7 +1004,17 @@ nsresult WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
   }
   int r = nestegg_track_seek(mContext, trackToSeek, target);
   if (r != 0) {
-    return NS_ERROR_FAILURE;
+    // Try seeking directly based on cluster information in memory.
+    int64_t offset = 0;
+    bool rv = mBufferedState->GetOffsetForTime((aTarget - aStartTime)/NS_PER_USEC, &offset);
+    if (!rv) {
+      return NS_ERROR_FAILURE;
+    }
+
+    r = nestegg_offset_seek(mContext, offset);
+    if (r != 0) {
+      return NS_ERROR_FAILURE;
+    }
   }
   return NS_OK;
 }
