@@ -233,3 +233,15 @@ richlistitem:not([selected]) * {
 #experiments-change-telemetry[disabled="true"] {
   display: none;
 }
+
+.view-pane[type="experiment"] .error,
+.view-pane[type="experiment"] .warning,
+.view-pane[type="experiment"] .pending,
+.view-pane[type="experiment"] .disabled-postfix,
+.view-pane[type="experiment"] .update-postfix,
+.view-pane[type="experiment"] .version,
+#detail-view[type="experiment"] .alert-container,
+#detail-view[type="experiment"] #detail-version,
+#detail-view[type="experiment"] #detail-creator {
+  display: none;
+}
