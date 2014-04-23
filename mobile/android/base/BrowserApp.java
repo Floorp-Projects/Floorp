@@ -38,7 +38,7 @@ import org.mozilla.gecko.health.HealthRecorder;
 import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.HomeBanner;
-import org.mozilla.gecko.home.HomeConfigInvalidator;
+import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.SearchEngine;
@@ -1678,7 +1678,7 @@ abstract public class BrowserApp extends GeckoApp
     public void onLocaleReady(final String locale) {
         super.onLocaleReady(locale);
 
-        HomeConfigInvalidator.getInstance().onLocaleReady(locale);
+        HomePanelsManager.getInstance().onLocaleReady(locale);
 
         if (mMenu != null) {
             mMenu.clear();

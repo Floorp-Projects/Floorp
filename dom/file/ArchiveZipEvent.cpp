@@ -8,8 +8,6 @@
 #include "ArchiveZipFile.h"
 
 #include "nsContentUtils.h"
-#include "nsIPlatformCharset.h"
-#include "nsNativeCharsetUtils.h"
 #include "nsCExternalHandlerService.h"
 
 using namespace mozilla::dom;

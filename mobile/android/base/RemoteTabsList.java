@@ -16,59 +16,38 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class RemoteTabs extends ExpandableListView
-                        implements TabsPanel.PanelView,
-                                   ExpandableListView.OnGroupClickListener,
-                                   ExpandableListView.OnChildClickListener, 
-                                   TabsAccessor.OnQueryTabsCompleteListener {
-    private static final String LOGTAG = "GeckoRemoteTabs";
-
-    private Context mContext;
-    private TabsPanel mTabsPanel;
-
-    private static ArrayList <ArrayList <HashMap <String, String>>> mTabsList;
-
+/**
+ * The actual list of synced tabs. This serves as the only child view of {@link RemoteTabsContainer}
+ * so it can be refreshed using a swipe-to-refresh gesture.
+ */
+class RemoteTabsList extends ExpandableListView
+                            implements ExpandableListView.OnGroupClickListener,
+                                       ExpandableListView.OnChildClickListener,
+                                       TabsAccessor.OnQueryTabsCompleteListener {
     private static final String[] CLIENT_KEY = new String[] { "name" };
     private static final String[] TAB_KEY = new String[] { "title", "url" };
     private static final int[] CLIENT_RESOURCE = new int[] { R.id.client };
     private static final int[] TAB_RESOURCE = new int[] { R.id.tab, R.id.url };
 
-    public RemoteTabs(Context context, AttributeSet attrs) {
+    private final Context context;
+    private TabsPanel tabsPanel;
+
+    private ArrayList <ArrayList <HashMap <String, String>>> tabsList;
+
+    public RemoteTabsList(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mContext = context;
+        this.context = context;
 
         setOnGroupClickListener(this);
         setOnChildClickListener(this);
     }
 
-    @Override
-    public ViewGroup getLayout() {
-        return this;
-    }
-
-    @Override
     public void setTabsPanel(TabsPanel panel) {
-        mTabsPanel = panel;
-    }
-
-    @Override
-    public void show() {
-        setVisibility(View.VISIBLE);
-        TabsAccessor.getTabs(mContext, this);
-    }
-
-    @Override
-    public void hide() {
-        setVisibility(View.GONE);
+        tabsPanel = panel;
     }
 
     private void autoHidePanel() {
-        mTabsPanel.autoHidePanel();
-    }
-
-    @Override
-    public boolean shouldExpand() {
-        return true;
+        tabsPanel.autoHidePanel();
     }
 
     @Override
@@ -79,7 +58,7 @@ public class RemoteTabs extends ExpandableListView
 
     @Override
     public boolean onChildClick(ExpandableListView parent, View view, int groupPosition, int childPosition, long id) {
-        HashMap <String, String> tab = mTabsList.get(groupPosition).get(childPosition);
+        HashMap <String, String> tab = tabsList.get(groupPosition).get(childPosition);
         if (tab == null) {
             autoHidePanel();
             return true;
@@ -95,44 +74,44 @@ public class RemoteTabs extends ExpandableListView
         ArrayList<TabsAccessor.RemoteTab> remoteTabs = new ArrayList<TabsAccessor.RemoteTab> (remoteTabsList);
         if (remoteTabs == null || remoteTabs.size() == 0)
             return;
-        
+
         ArrayList <HashMap <String, String>> clients = new ArrayList <HashMap <String, String>>();
 
-        mTabsList = new ArrayList <ArrayList <HashMap <String, String>>>();
+        tabsList = new ArrayList <ArrayList <HashMap <String, String>>>();
 
         String oldGuid = null;
         ArrayList <HashMap <String, String>> tabsForClient = null;
         HashMap <String, String> client;
         HashMap <String, String> tab;
-        
+
         for (TabsAccessor.RemoteTab remoteTab : remoteTabs) {
             if (oldGuid == null || !TextUtils.equals(oldGuid, remoteTab.guid)) {
                 client = new HashMap <String, String>();
                 client.put("name", remoteTab.name);
                 clients.add(client);
-        
+
                 tabsForClient = new ArrayList <HashMap <String, String>>();
-                mTabsList.add(tabsForClient);
-        
+                tabsList.add(tabsForClient);
+
                 oldGuid = new String(remoteTab.guid);
             }
-        
+
             tab = new HashMap<String, String>();
             tab.put("title", TextUtils.isEmpty(remoteTab.title) ? remoteTab.url : remoteTab.title);
             tab.put("url", remoteTab.url);
             tabsForClient.add(tab);
         }
-        
-        setAdapter(new SimpleExpandableListAdapter(mContext,
+
+        setAdapter(new SimpleExpandableListAdapter(context,
                                                    clients,
                                                    R.layout.remote_tabs_group,
                                                    CLIENT_KEY,
                                                    CLIENT_RESOURCE,
-                                                   mTabsList,
+                                                   tabsList,
                                                    R.layout.remote_tabs_child,
                                                    TAB_KEY,
                                                    TAB_RESOURCE));
-        
+
         for (int i = 0; i < clients.size(); i++) {
             expandGroup(i);
         }

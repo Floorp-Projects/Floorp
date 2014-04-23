@@ -74,29 +74,6 @@ interface AudioContext : EventTarget {
 
 };
 
-/*
- * The origin of this IDL file is
- * https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AlternateNames
- */
-partial interface AudioContext {
-    [NewObject, Throws]
-    AudioBuffer? createBuffer(ArrayBuffer buffer, boolean mixToMono);
-
-    // Same as createGain()
-    [NewObject,Pref="media.webaudio.legacy.AudioContext"]
-    GainNode createGainNode();
-
-    // Same as createDelay()
-    [NewObject, Throws, Pref="media.webaudio.legacy.AudioContext"]
-    DelayNode createDelayNode(optional double maxDelayTime = 1);
-
-    // Same as createScriptProcessor()
-    [NewObject, Throws, Pref="media.webaudio.legacy.AudioContext"]
-    ScriptProcessorNode createJavaScriptNode(optional unsigned long bufferSize = 0,
-                                             optional unsigned long numberOfInputChannels = 2,
-                                             optional unsigned long numberOfOutputChannels = 2);
-};
-
 // Mozilla extensions
 partial interface AudioContext {
   // Read AudioChannel.webidl for more information about this attribute.

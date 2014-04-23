@@ -86,6 +86,32 @@ ClientTiledThebesLayer::BeginPaint()
     return;
   }
 
+#ifdef MOZ_WIDGET_ANDROID
+  // Subframes on Fennec are not async scrollable because they have no displayport.
+  // However, the code in RenderLayer() picks up a displayport from the nearest
+  // scrollable ancestor container layer anyway, which is incorrect for Fennec. This
+  // behaviour results in the subframe getting clipped improperly and perma-blank areas
+  // while scrolling the subframe. To work around this, we detect if this layer is
+  // the primary scrollable layer and disable the tiling behaviour if it is not.
+  bool isPrimaryScrollableThebesLayer = false;
+  if (Layer* scrollable = ClientManager()->GetPrimaryScrollableLayer()) {
+    if (GetParent() == scrollable) {
+      for (Layer* child = scrollable->GetFirstChild(); child; child = child->GetNextSibling()) {
+        if (child->GetType() == Layer::TYPE_THEBES) {
+          if (child == this) {
+            // |this| is the first thebes layer child of the GetPrimaryScrollableLayer()
+            isPrimaryScrollableThebesLayer = true;
+          }
+          break;
+        }
+      }
+    }
+  }
+  if (!isPrimaryScrollableThebesLayer) {
+    return;
+  }
+#endif
+
   // Get the metrics of the nearest scrollable layer and the nearest layer
   // with a displayport.
   ContainerLayer* displayPortParent = nullptr;

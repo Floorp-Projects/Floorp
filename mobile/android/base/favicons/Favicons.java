@@ -331,7 +331,7 @@ public class Favicons {
                 return false;
             }
 
-            Log.d(LOGTAG, "Cancelling favicon load (" + taskId + ")");
+            Log.v(LOGTAG, "Cancelling favicon load " + taskId + ".");
 
             LoadFaviconTask task = loadTasks.get(taskId);
             cancelled = task.cancel(false);

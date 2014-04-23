@@ -217,6 +217,9 @@ var AboutConfig = {
   uninit: function AC_uninit() {
     // Remove the prefs observer
     Services.prefs.removeObserver("", this);
+
+    // Ensure pref adds/changes/resets flushed to disk on unload
+    Services.prefs.savePrefFile(null);
   },
 
   // Clear the filterInput value, to display the entire list

@@ -139,6 +139,16 @@ class Nursery
         return total;
     }
 
+    MOZ_ALWAYS_INLINE uintptr_t start() const {
+        JS_ASSERT(runtime_);
+        return ((JS::shadow::Runtime *)runtime_)->gcNurseryStart_;
+    }
+
+    MOZ_ALWAYS_INLINE uintptr_t heapEnd() const {
+        JS_ASSERT(runtime_);
+        return ((JS::shadow::Runtime *)runtime_)->gcNurseryEnd_;
+    }
+
   private:
     /*
      * The start and end pointers are stored under the runtime so that we can
@@ -188,16 +198,6 @@ class Nursery
         JS_ASSERT(index < NumNurseryChunks);
         JS_ASSERT(start());
         return reinterpret_cast<NurseryChunkLayout *>(start())[index];
-    }
-
-    MOZ_ALWAYS_INLINE uintptr_t start() const {
-        JS_ASSERT(runtime_);
-        return ((JS::shadow::Runtime *)runtime_)->gcNurseryStart_;
-    }
-
-    MOZ_ALWAYS_INLINE uintptr_t heapEnd() const {
-        JS_ASSERT(runtime_);
-        return ((JS::shadow::Runtime *)runtime_)->gcNurseryEnd_;
     }
 
     MOZ_ALWAYS_INLINE void setCurrentChunk(int chunkno) {
@@ -314,10 +314,7 @@ class Nursery
 #endif
 
     friend class gc::MinorCollectionTracer;
-    friend class jit::CodeGenerator;
     friend class jit::MacroAssembler;
-    friend class jit::ICStubCompiler;
-    friend class jit::BaselineCompiler;
     friend void SetGCZeal(JSRuntime *, uint8_t, uint32_t);
 };
 

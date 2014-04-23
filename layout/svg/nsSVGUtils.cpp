@@ -889,6 +889,8 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
       // The spec says getBBox "Returns the tight bounding box in *current user
       // space*". So we should really be doing this for all elements, but that
       // needs investigation to check that we won't break too much content.
+      // NOTE: When changing this to apply to other frame types, make sure to
+      // also update nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset.
       NS_ABORT_IF_FALSE(content->IsSVG(), "bad cast");
       nsSVGElement *element = static_cast<nsSVGElement*>(content);
       matrix = element->PrependLocalTransformsTo(matrix,
@@ -897,6 +899,35 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
     return svg->GetBBoxContribution(ToMatrix(matrix), aFlags).ToThebesRect();
   }
   return nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);
+}
+
+gfxPoint
+nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(nsIFrame *aFrame)
+{
+  if (!(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
+    // The user space for non-SVG frames is defined as the bounding box of the
+    // frame's border-box rects over all continuations.
+    return gfxPoint();
+  }
+
+  // Leaf frames apply their own offset inside their user space.
+  if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
+      aFrame->IsSVGText()) {
+    return nsLayoutUtils::RectToGfxRect(aFrame->GetRect(),
+                                         nsPresContext::AppUnitsPerCSSPixel()).TopLeft();
+  }
+
+  // For foreignObject frames, nsSVGUtils::GetBBox applies their local
+  // transform, so we need to do the same here.
+  if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+    gfxMatrix transform = static_cast<nsSVGElement*>(aFrame->GetContent())->
+        PrependLocalTransformsTo(gfxMatrix(),
+                                 nsSVGElement::eChildToUserSpace);
+    NS_ASSERTION(!transform.HasNonTranslation(), "we're relying on this being an offset-only transform");
+    return transform.GetTranslation();
+  }
+
+  return gfxPoint();
 }
 
 gfxRect
