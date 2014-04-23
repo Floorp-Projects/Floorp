@@ -57,7 +57,7 @@
             is(event.message, "Error: " + sentMessage, "Got correct error");
             is(event.filename, errorFilename, "Got correct filename");
             is(event.lineno, errorLine, "Got correct lineno");
-            is(event.column, errorColumn, "Got correct column");
+            is(event.colno, errorColumn, "Got correct column");
             ok(receivedMessage !== undefined, "Got message already");
             ok(receivedError === undefined, "Haven't gotten error yet");
             receivedError = event.message;
