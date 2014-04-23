@@ -548,8 +548,14 @@ MConstant::printOpcode(FILE *fp) const
       case MIRType_String:
         fprintf(fp, "string %p", (void *)value().toString());
         break;
-      case MIRType_Magic:
-        fprintf(fp, "magic");
+      case MIRType_MagicOptimizedArguments:
+        fprintf(fp, "magic lazyargs");
+        break;
+      case MIRType_MagicHole:
+        fprintf(fp, "magic hole");
+        break;
+      case MIRType_MagicIsConstructing:
+        fprintf(fp, "magic is-constructing");
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("unexpected type");
@@ -1695,7 +1701,9 @@ KnownNonStringPrimitive(MDefinition *op)
 {
     return !op->mightBeType(MIRType_Object)
         && !op->mightBeType(MIRType_String)
-        && !op->mightBeType(MIRType_Magic);
+        && !op->mightBeType(MIRType_MagicOptimizedArguments)
+        && !op->mightBeType(MIRType_MagicHole)
+        && !op->mightBeType(MIRType_MagicIsConstructing);
 }
 
 void
@@ -1819,7 +1827,9 @@ ObjectOrSimplePrimitive(MDefinition *op)
     return !op->mightBeType(MIRType_String)
         && !op->mightBeType(MIRType_Double)
         && !op->mightBeType(MIRType_Float32)
-        && !op->mightBeType(MIRType_Magic);
+        && !op->mightBeType(MIRType_MagicOptimizedArguments)
+        && !op->mightBeType(MIRType_MagicHole)
+        && !op->mightBeType(MIRType_MagicIsConstructing);
 }
 
 static bool

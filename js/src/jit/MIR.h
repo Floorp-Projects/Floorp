@@ -42,6 +42,18 @@ MIRType MIRTypeFromValue(const js::Value &vp)
 {
     if (vp.isDouble())
         return MIRType_Double;
+    if (vp.isMagic()) {
+        switch (vp.whyMagic()) {
+          case JS_OPTIMIZED_ARGUMENTS:
+            return MIRType_MagicOptimizedArguments;
+          case JS_ELEMENTS_HOLE:
+            return MIRType_MagicHole;
+          case JS_IS_CONSTRUCTING:
+            return MIRType_MagicIsConstructing;
+          default:
+            MOZ_ASSERT(!"Unexpected magic constant");
+        }
+    }
     return MIRTypeFromValueType(vp.extractNonDoubleType());
 }
 
@@ -455,7 +467,7 @@ class MDefinition : public MNode
     bool emptyResultTypeSet() const;
 
     bool mightBeType(MIRType type) const {
-        JS_ASSERT(type != MIRType_Value);
+        MOZ_ASSERT(type != MIRType_Value);
 
         if (type == this->type())
             return true;

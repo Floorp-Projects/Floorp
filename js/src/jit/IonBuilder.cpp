@@ -1031,7 +1031,7 @@ IonBuilder::addOsrValueTypeBarrier(uint32_t slot, MInstruction **def_,
         def = barrier;
     } else if (type == MIRType_Null ||
                type == MIRType_Undefined ||
-               type == MIRType_Magic)
+               type == MIRType_MagicOptimizedArguments)
     {
         // No unbox instruction will be added below, so check the type by
         // adding a type barrier for a singleton type set.
@@ -1077,7 +1077,7 @@ IonBuilder::addOsrValueTypeBarrier(uint32_t slot, MInstruction **def_,
         break;
       }
 
-      case MIRType_Magic:
+      case MIRType_MagicOptimizedArguments:
         JS_ASSERT(lazyArguments_);
         osrBlock->rewriteSlot(slot, lazyArguments_);
         def = lazyArguments_;
@@ -4943,14 +4943,14 @@ IonBuilder::jsop_funapply(uint32_t argc)
     // to be either definitely |arguments| or definitely not |arguments|.
     MDefinition *argument = current->peek(-1);
     if (script()->argumentsHasVarBinding() &&
-        argument->mightBeType(MIRType_Magic) &&
-        argument->type() != MIRType_Magic)
+        argument->mightBeType(MIRType_MagicOptimizedArguments) &&
+        argument->type() != MIRType_MagicOptimizedArguments)
     {
         return abort("fun.apply with MaybeArguments");
     }
 
     // Fallback to regular call if arg 2 is not definitely |arguments|.
-    if (argument->type() != MIRType_Magic) {
+    if (argument->type() != MIRType_MagicOptimizedArguments) {
         CallInfo callInfo(alloc(), false);
         if (!callInfo.init(current, argc))
             return false;
@@ -5531,7 +5531,7 @@ IonBuilder::jsop_initelem_array()
     // to them during initialization.
     bool needStub = false;
     types::TypeObjectKey *initializer = obj->resultTypeSet()->getObject(0);
-    if (value->isConstant() && value->toConstant()->value().isMagic(JS_ELEMENTS_HOLE)) {
+    if (value->type() == MIRType_MagicHole) {
         if (!initializer->hasFlags(constraints(), types::OBJECT_FLAG_NON_PACKED))
             needStub = true;
     } else if (!initializer->unknownProperties()) {
@@ -6462,7 +6462,7 @@ jit::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *input
       case MIRType_Double:
       case MIRType_Float32:
       case MIRType_String:
-      case MIRType_Magic:
+      case MIRType_MagicOptimizedArguments:
         return types->hasType(types::Type::PrimitiveType(ValueTypeFromMIRType(input)));
 
       case MIRType_Object:
@@ -6677,7 +6677,7 @@ IonBuilder::jsop_getelem()
     if (!getElemTryArgumentsInlined(&emitted, obj, index) || emitted)
         return emitted;
 
-    if (script()->argumentsHasVarBinding() && obj->mightBeType(MIRType_Magic))
+    if (script()->argumentsHasVarBinding() && obj->mightBeType(MIRType_MagicOptimizedArguments))
         return abort("Type is not definitely lazy arguments.");
 
     if (!getElemTryCache(&emitted, obj, index) || emitted)
@@ -7113,7 +7113,7 @@ IonBuilder::getElemTryArguments(bool *emitted, MDefinition *obj, MDefinition *in
     if (inliningDepth_ > 0)
         return true;
 
-    if (obj->type() != MIRType_Magic)
+    if (obj->type() != MIRType_MagicOptimizedArguments)
         return true;
 
     // Emit GetFrameArgument.
@@ -7156,7 +7156,7 @@ IonBuilder::getElemTryArgumentsInlined(bool *emitted, MDefinition *obj, MDefinit
     if (inliningDepth_ == 0)
         return true;
 
-    if (obj->type() != MIRType_Magic)
+    if (obj->type() != MIRType_MagicOptimizedArguments)
         return true;
 
     // Emit inlined arguments.
@@ -7573,7 +7573,7 @@ IonBuilder::jsop_setelem()
     if (!setElemTryArguments(&emitted, object, index, value) || emitted)
         return emitted;
 
-    if (script()->argumentsHasVarBinding() && object->mightBeType(MIRType_Magic))
+    if (script()->argumentsHasVarBinding() && object->mightBeType(MIRType_MagicOptimizedArguments))
         return abort("Type is not definitely lazy arguments.");
 
     if (!setElemTryCache(&emitted, object, index, value) || emitted)
@@ -7784,7 +7784,7 @@ IonBuilder::setElemTryArguments(bool *emitted, MDefinition *object,
 {
     JS_ASSERT(*emitted == false);
 
-    if (object->type() != MIRType_Magic)
+    if (object->type() != MIRType_MagicOptimizedArguments)
         return true;
 
     // Arguments are not supported yet.
@@ -8588,9 +8588,12 @@ bool
 IonBuilder::getPropTryArgumentsLength(bool *emitted)
 {
     JS_ASSERT(*emitted == false);
-    if (current->peek(-1)->type() != MIRType_Magic) {
-        if (script()->argumentsHasVarBinding() && current->peek(-1)->mightBeType(MIRType_Magic))
+    if (current->peek(-1)->type() != MIRType_MagicOptimizedArguments) {
+        if (script()->argumentsHasVarBinding() &&
+            current->peek(-1)->mightBeType(MIRType_MagicOptimizedArguments))
+        {
             return abort("Type is not definitely lazy arguments.");
+        }
         return true;
     }
     if (JSOp(*pc) != JSOP_LENGTH)
