@@ -122,7 +122,6 @@ BuildForwardInner(TrustDomain& trustDomain,
                   SECOidTag requiredEKUIfPresent,
                   SECOidTag requiredPolicy,
                   CERTCertificate* potentialIssuerCertToDup,
-                  /*optional*/ const SECItem* stapledOCSPResponse,
                   unsigned int subCACount,
                   ScopedCERTCertList& results)
 {
@@ -252,8 +251,7 @@ BuildForward(TrustDomain& trustDomain,
        !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
     rv = BuildForwardInner(trustDomain, subject, time, endEntityOrCA,
                            requiredEKUIfPresent, requiredPolicy,
-                           n->cert, stapledOCSPResponse, subCACount,
-                           results);
+                           n->cert, subCACount, results);
     if (rv == Success) {
       // If we found a valid chain but deferred reporting an error with the
       // end-entity certificate, report it now.
