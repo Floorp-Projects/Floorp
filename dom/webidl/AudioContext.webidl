@@ -13,8 +13,7 @@
 callback DecodeSuccessCallback = void (AudioBuffer decodedData);
 callback DecodeErrorCallback = void ();
 
-[Constructor,
- Constructor(AudioChannel audioChannelType)]
+[Constructor]
 interface AudioContext : EventTarget {
 
     readonly attribute AudioDestinationNode destination;
@@ -29,7 +28,7 @@ interface AudioContext : EventTarget {
                          DecodeSuccessCallback successCallback,
                          optional DecodeErrorCallback errorCallback);
 
-    // AudioNode creation
+    // AudioNode creation 
     [NewObject]
     AudioBufferSourceNode createBufferSource();
 
