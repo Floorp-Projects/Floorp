@@ -34,14 +34,6 @@ extern "C" {
                                                   CFTypeRef value,
                                                   CFErrorRef* error);
   SecTransformSetAttributeFunc SecTransformSetAttributePtr = NULL;
-  typedef SecCertificateRef (*SecCertificateCreateWithDataFunc)
-                              (CFAllocatorRef allocator,
-                               CFDataRef data);
-  SecCertificateCreateWithDataFunc SecCertificateCreateWithDataPtr = NULL;
-  typedef OSStatus (*SecCertificateCopyPublicKeyFunc)
-                     (SecCertificateRef certificate,
-                      SecKeyRef* key);
-  SecCertificateCopyPublicKeyFunc SecCertificateCopyPublicKeyPtr = NULL;
 #ifdef __cplusplus
 }
 #endif
@@ -98,6 +90,42 @@ static bool OnLionOrLater()
   return sOnLionOrLater > 0 ? true : false;
 }
 
+static bool sCssmInitialized = false;
+static CSSM_VERSION sCssmVersion = {2, 0};
+static const CSSM_GUID sMozCssmGuid =
+  { 0x9243121f, 0x5820, 0x4b41,
+    { 0xa6, 0x52, 0xba, 0xb6, 0x3f, 0x9d, 0x3d, 0x7f }};
+static CSSM_CSP_HANDLE sCspHandle = NULL;
+
+void* cssmMalloc (CSSM_SIZE aSize, void* aAllocRef) {
+  (void)aAllocRef;
+  return malloc(aSize);
+}
+
+void cssmFree (void* aPtr, void* aAllocRef) {
+  (void)aAllocRef;
+  free(aPtr);
+  return;
+}
+
+void* cssmRealloc (void* aPtr, CSSM_SIZE aSize, void* aAllocRef) {
+  (void)aAllocRef;
+  return realloc(aPtr, aSize);
+}
+
+void* cssmCalloc (uint32 aNum, CSSM_SIZE aSize, void* aAllocRef) {
+  (void)aAllocRef;
+  return calloc(aNum, aSize);
+}
+
+static CSSM_API_MEMORY_FUNCS cssmMemFuncs = {
+    &cssmMalloc,
+    &cssmFree,
+    &cssmRealloc,
+    &cssmCalloc,
+    NULL
+ };
+
 CryptoX_Result
 CryptoMac_InitCryptoProvider()
 {
@@ -122,57 +150,47 @@ CryptoMac_InitCryptoProvider()
     SecTransformSetAttributePtr = (SecTransformSetAttributeFunc)
       dlsym(RTLD_DEFAULT, "SecTransformSetAttribute");
   }
-  if (!SecCertificateCreateWithDataPtr) {
-    SecCertificateCreateWithDataPtr = (SecCertificateCreateWithDataFunc)
-      dlsym(RTLD_DEFAULT, "SecCertificateCreateWithData");
-  }
-  if (!SecCertificateCopyPublicKeyPtr) {
-    SecCertificateCopyPublicKeyPtr = (SecCertificateCopyPublicKeyFunc)
-      dlsym(RTLD_DEFAULT, "SecCertificateCopyPublicKey");
-  }
   if (!SecTransformCreateReadTransformWithReadStreamPtr ||
       !SecTransformExecutePtr ||
       !SecVerifyTransformCreatePtr ||
-      !SecTransformSetAttributePtr ||
-      !SecCertificateCreateWithDataPtr ||
-      !SecCertificateCopyPublicKeyPtr) {
+      !SecTransformSetAttributePtr) {
     return CryptoX_Error;
   }
   return CryptoX_Success;
 }
 
 CryptoX_Result
-CryptoMac_VerifyBegin(CryptoX_SignatureHandle* aInputData,
-                      CryptoX_PublicKey* aPublicKey)
+CryptoMac_VerifyBegin(CryptoX_SignatureHandle* aInputData)
 {
-  if (!OnLionOrLater()) {
-    return NSS_VerifyBegin((VFYContext**)aInputData,
-                           (SECKEYPublicKey* const*)aPublicKey);
-  }
-
-  (void)aPublicKey;
   if (!aInputData) {
     return CryptoX_Error;
   }
 
-  CryptoX_Result result = CryptoX_Error;
-  *aInputData = CFDataCreateMutable(kCFAllocatorDefault, 0);
-  if (*aInputData) {
-    result = CryptoX_Success;
+  void* inputData = CFDataCreateMutable(kCFAllocatorDefault, 0);
+  if (!inputData) {
+    return CryptoX_Error;
   }
 
-  return result;
+  if (!OnLionOrLater()) {
+    CSSM_DATA_PTR cssmData = (CSSM_DATA_PTR)malloc(sizeof(CSSM_DATA));
+    if (!cssmData) {
+      CFRelease(inputData);
+      return CryptoX_Error;
+    }
+    cssmData->Data = (uint8*)inputData;
+    cssmData->Length = 0;
+    *aInputData = cssmData;
+    return CryptoX_Success;
+  }
+
+  *aInputData = inputData;
+  return CryptoX_Success;
 }
 
 CryptoX_Result
 CryptoMac_VerifyUpdate(CryptoX_SignatureHandle* aInputData, void* aBuf,
                        unsigned int aLen)
 {
-  if (!OnLionOrLater()) {
-    return VFY_Update((VFYContext*)*aInputData,
-                      (const unsigned char*)aBuf, aLen);
-  }
-
   if (aLen == 0) {
     return CryptoX_Success;
   }
@@ -180,31 +198,125 @@ CryptoMac_VerifyUpdate(CryptoX_SignatureHandle* aInputData, void* aBuf,
     return CryptoX_Error;
   }
 
-  CryptoX_Result result = CryptoX_Error;
-  CFDataAppendBytes((CFMutableDataRef)*aInputData, (const UInt8 *) aBuf, aLen);
-  if (*aInputData) {
-    result = CryptoX_Success;
+  CFMutableDataRef inputData;
+  if (!OnLionOrLater()) {
+    inputData = (CFMutableDataRef)((CSSM_DATA_PTR)*aInputData)->Data;
+    ((CSSM_DATA_PTR)*aInputData)->Length += aLen;
+  } else {
+    inputData = (CFMutableDataRef)*aInputData;
   }
 
-  return result;
+  CFDataAppendBytes(inputData, (const uint8*)aBuf, aLen);
+  return CryptoX_Success;
 }
 
 CryptoX_Result
 CryptoMac_LoadPublicKey(const unsigned char* aCertData,
-                        CryptoX_PublicKey* aPublicKey,
-                        const char* aCertName,
-                        CryptoX_Certificate* aCert)
+                        CryptoX_PublicKey* aPublicKey)
 {
-  if (!aPublicKey ||
-      (OnLionOrLater() && !aCertData) ||
-      (!OnLionOrLater() && !aCertName)) {
+  if (!aCertData || !aPublicKey) {
     return CryptoX_Error;
   }
+  *aPublicKey = NULL;
 
   if (!OnLionOrLater()) {
-    return NSS_LoadPublicKey(aCertName,
-                             (SECKEYPublicKey**)aPublicKey,
-                             (CERTCertificate**)aCert);
+    if (!sCspHandle) {
+      CSSM_RETURN rv;
+      if (!sCssmInitialized) {
+        CSSM_PVC_MODE pvcPolicy = CSSM_PVC_NONE;
+        rv = CSSM_Init(&sCssmVersion,
+                       CSSM_PRIVILEGE_SCOPE_PROCESS,
+                       &sMozCssmGuid,
+                       CSSM_KEY_HIERARCHY_NONE,
+                       &pvcPolicy,
+                       NULL);
+        if (rv != CSSM_OK) {
+          return CryptoX_Error;
+        }
+        sCssmInitialized = true;
+      }
+
+      rv = CSSM_ModuleLoad(&gGuidAppleCSP,
+                           CSSM_KEY_HIERARCHY_NONE,
+                           NULL,
+                           NULL);
+      if (rv != CSSM_OK) {
+        return CryptoX_Error;
+      }
+
+      CSSM_CSP_HANDLE cspHandle;
+      rv = CSSM_ModuleAttach(&gGuidAppleCSP,
+                             &sCssmVersion,
+                             &cssmMemFuncs,
+                             0,
+                             CSSM_SERVICE_CSP,
+                             0,
+                             CSSM_KEY_HIERARCHY_NONE,
+                             NULL,
+                             0,
+                             NULL,
+                             &cspHandle);
+      if (rv != CSSM_OK) {
+        return CryptoX_Error;
+      }
+      sCspHandle = cspHandle;
+    }
+
+    FILE* certFile = NULL;
+    long certFileSize = 0;
+    uint8* certBuffer = NULL;
+
+    certFile = fopen((char*)aCertData, "rb");
+    if (!certFile) {
+      return CryptoX_Error;
+    }
+    if (fseek(certFile, 0, SEEK_END)) {
+      fclose(certFile);
+      return CryptoX_Error;
+    }
+    certFileSize = ftell(certFile);
+    if (certFileSize < 0) {
+      fclose(certFile);
+      return CryptoX_Error;
+    }
+    certBuffer = (uint8*)malloc(certFileSize);
+    if (fseek(certFile, 0, SEEK_SET)) {
+      free(certBuffer);
+      fclose(certFile);
+      return CryptoX_Error;
+    }
+    uint readResult = fread(certBuffer, sizeof(uint8), certFileSize, certFile);
+    if (readResult != certFileSize) {
+      free(certBuffer);
+      fclose(certFile);
+      return CryptoX_Error;
+    }
+    fclose(certFile);
+
+    CFDataRef certData = CFDataCreate(kCFAllocatorDefault,
+                                      certBuffer,
+                                      certFileSize);
+    free(certBuffer);
+    if (!certData) {
+      return CryptoX_Error;
+    }
+
+    SecCertificateRef cert = SecCertificateCreateWithData(kCFAllocatorDefault,
+                                                          certData);
+    CFRelease(certData);
+    if (!cert) {
+      return CryptoX_Error;
+    }
+
+    SecKeyRef publicKey;
+    OSStatus status = SecCertificateCopyPublicKey(cert, (SecKeyRef*)&publicKey);
+    CFRelease(cert);
+    if (status) {
+      return CryptoX_Error;
+    }
+
+    *aPublicKey = (void*)publicKey;
+    return CryptoX_Success;
   }
 
   CFURLRef url =
@@ -240,8 +352,8 @@ CryptoMac_LoadPublicKey(const unsigned char* aCertData,
     return CryptoX_Error;
   }
 
-  SecCertificateRef cert = SecCertificateCreateWithDataPtr(kCFAllocatorDefault,
-                                                           tempCertData);
+  SecCertificateRef cert = SecCertificateCreateWithData(kCFAllocatorDefault,
+                                                        tempCertData);
   if (!cert) {
     CFRelease(url);
     CFRelease(stream);
@@ -251,8 +363,8 @@ CryptoMac_LoadPublicKey(const unsigned char* aCertData,
   }
 
   CryptoX_Result result = CryptoX_Error;
-  OSStatus status = SecCertificateCopyPublicKeyPtr(cert,
-                                                   (SecKeyRef*)aPublicKey);
+  OSStatus status = SecCertificateCopyPublicKey(cert,
+                                                (SecKeyRef*)aPublicKey);
   if (status == 0) {
     result = CryptoX_Success;
   }
@@ -272,14 +384,49 @@ CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
                           const unsigned char* aSignature,
                           unsigned int aSignatureLen)
 {
-  if (!OnLionOrLater()) {
-    return NSS_VerifySignature((VFYContext* const*)aInputData, aSignature,
-                               aSignatureLen);
-  }
-
   if (!aInputData || !*aInputData || !aPublicKey || !*aPublicKey ||
       !aSignature || aSignatureLen == 0) {
     return CryptoX_Error;
+  }
+
+  if (!OnLionOrLater()) {
+    if (!sCspHandle) {
+      return CryptoX_Error;
+    }
+
+    CSSM_KEY* publicKey;
+    OSStatus status = SecKeyGetCSSMKey((SecKeyRef)*aPublicKey,
+                                       (const CSSM_KEY**)&publicKey);
+    if (status) {
+      return CryptoX_Error;
+    }
+
+    CSSM_CC_HANDLE ccHandle;
+    if (CSSM_CSP_CreateSignatureContext(sCspHandle,
+                                        CSSM_ALGID_SHA1WithRSA,
+                                        NULL,
+                                        publicKey,
+                                        &ccHandle) != CSSM_OK) {
+      return CryptoX_Error;
+    }
+
+    CryptoX_Result result = CryptoX_Error;
+    CSSM_DATA signatureData;
+    signatureData.Data = (uint8*)aSignature;
+    signatureData.Length = aSignatureLen;
+    CSSM_DATA inputData;
+    inputData.Data =
+      CFDataGetMutableBytePtr((CFMutableDataRef)
+                                (((CSSM_DATA_PTR)*aInputData)->Data));
+    inputData.Length = ((CSSM_DATA_PTR)*aInputData)->Length;
+    if (CSSM_VerifyData(ccHandle,
+                        &inputData,
+                        1,
+                        CSSM_ALGID_NONE,
+                        &signatureData) == CSSM_OK) {
+      result = CryptoX_Success;
+    }
+    return result;
   }
 
   CFDataRef signatureData = CFDataCreate(kCFAllocatorDefault,
@@ -330,38 +477,32 @@ CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
 void
 CryptoMac_FreeSignatureHandle(CryptoX_SignatureHandle* aInputData)
 {
-  if (!OnLionOrLater()) {
-    return VFY_DestroyContext((VFYContext*)aInputData, PR_TRUE);
-  }
-
   if (!aInputData || !*aInputData) {
     return;
   }
-  CFRelease((CFMutableDataRef)*aInputData);
+
+  CFMutableDataRef inputData = NULL;
+  if (OnLionOrLater()) {
+    inputData = (CFMutableDataRef)*aInputData;
+  } else {
+    inputData = (CFMutableDataRef)((CSSM_DATA_PTR)*aInputData)->Data;
+  }
+
+  CFRelease(inputData);
+  if (!OnLionOrLater()) {
+    free((CSSM_DATA_PTR)*aInputData);
+  }
 }
 
 void
 CryptoMac_FreePublicKey(CryptoX_PublicKey* aPublicKey)
 {
-  if (!OnLionOrLater()) {
-    return SECKEY_DestroyPublicKey((SECKEYPublicKey*)*aPublicKey);
-  }
-
   if (!aPublicKey || !*aPublicKey) {
     return;
   }
+  if (!OnLionOrLater() && sCspHandle) {
+    CSSM_ModuleDetach(sCspHandle);
+    sCspHandle = NULL;
+  }
   CFRelease((SecKeyRef)*aPublicKey);
-}
-
-void
-CryptoMac_FreeCertificate(CryptoX_Certificate* aCertificate)
-{
-  if (!OnLionOrLater()) {
-    return CERT_DestroyCertificate((CERTCertificate*)*aCertificate);
-  }
-
-  if (!aCertificate || !*aCertificate) {
-    return;
-  }
-  CFRelease((SecKeyRef)*aCertificate);
 }

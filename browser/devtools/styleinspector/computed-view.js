@@ -17,9 +17,11 @@ const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/styleeditor/utils");
 const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/devtools/Templater.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
+                                  "resource://gre/modules/PluralForm.jsm");
 
 const FILTER_CHANGED_TIMEOUT = 300;
 const HTML_NS = "http://www.w3.org/1999/xhtml";

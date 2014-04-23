@@ -11,8 +11,8 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.ThreadUtils;
 
 class ToolbarTitlePrefs {
-    public static final String PREF_TITLEBAR_MODE = "browser.chrome.titlebarMode";
-    public static final String PREF_TRIM_URLS = "browser.urlbar.trimURLs";
+    static final String PREF_TITLEBAR_MODE = "browser.chrome.titlebarMode";
+    static final String PREF_TRIM_URLS = "browser.urlbar.trimURLs";
 
     interface OnChangeListener {
         public void onChange();

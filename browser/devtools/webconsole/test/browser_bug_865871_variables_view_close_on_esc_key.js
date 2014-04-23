@@ -23,7 +23,7 @@ function test()
     ok(msg, "output message found");
 
     let anchor = msg.querySelector("a");
-    let body = msg.querySelector(".body");
+    let body = msg.querySelector(".message-body");
     ok(anchor, "object anchor");
     ok(body, "message body");
     ok(body.textContent.contains('testProp: "testValue"'), "message text check");
@@ -59,7 +59,7 @@ function test()
     msg = yield execute("window.location");
     ok(msg, "output message found");
 
-    body = msg.querySelector(".body");
+    body = msg.querySelector(".message-body");
     ok(body, "message body");
     anchor = msg.querySelector("a");
     ok(anchor, "object anchor");

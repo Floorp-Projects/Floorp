@@ -7,9 +7,6 @@ let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-// Panel ID defined in HomeConfig.java.
-const READING_LIST_PANEL_ID = "20f4549a-64ad-4c32-93e4-1dcef792733b";
-
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", function ()
   window.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIWebNavigation)
@@ -34,8 +31,6 @@ let AboutReader = function(doc, win) {
   Services.obs.addObserver(this, "Reader:FaviconReturn", false);
   Services.obs.addObserver(this, "Reader:Add", false);
   Services.obs.addObserver(this, "Reader:Remove", false);
-  Services.obs.addObserver(this, "Reader:ListCountReturn", false);
-  Services.obs.addObserver(this, "Reader:ListCountUpdated", false);
   Services.obs.addObserver(this, "Reader:ListStatusReturn", false);
 
   this._article = null;
@@ -64,7 +59,6 @@ let AboutReader = function(doc, win) {
 
   this._setupAllDropdowns();
   this._setupButton("toggle-button", this._onReaderToggle.bind(this));
-  this._setupButton("list-button", this._onList.bind(this));
   this._setupButton("share-button", this._onShare.bind(this));
 
   let colorSchemeOptions = [
@@ -126,11 +120,6 @@ let AboutReader = function(doc, win) {
   // Track status of reader toolbar add/remove toggle button
   this._isReadingListItem = -1;
   this._updateToggleButton();
-
-  // Track status of reader toolbar list button
-  this._readingListCount = -1;
-  this._updateListButton();
-  this._requestReadingListCount();
 
   let url = queryArgs.url;
   let tabId = queryArgs.tabId;
@@ -215,27 +204,6 @@ AboutReader.prototype = {
         break;
       }
 
-      case "Reader:ListCountReturn":
-      case "Reader:ListCountUpdated": {
-        let count = parseInt(aData);
-        if (this._readingListCount != count) {
-          let isInitialStateChange = (this._readingListCount == -1);
-          this._readingListCount = count;
-          this._updateListButton();
-
-          // Display the toolbar when all its initial component states are known
-          if (isInitialStateChange) {
-            this._setToolbarVisibility(true);
-          }
-
-          // Initial readinglist count is requested before any page is displayed
-          if (this._article) {
-            this._requestReadingListStatus();
-          }
-        }
-        break;
-      }
-
       case "Reader:ListStatusReturn": {
         let args = JSON.parse(aData);
         if (args.url == this._article.url) {
@@ -289,8 +257,6 @@ AboutReader.prototype = {
       case "unload":
         Services.obs.removeObserver(this, "Reader:Add");
         Services.obs.removeObserver(this, "Reader:Remove");
-        Services.obs.removeObserver(this, "Reader:ListCountReturn");
-        Services.obs.removeObserver(this, "Reader:ListCountUpdated");
         Services.obs.removeObserver(this, "Reader:ListStatusReturn");
         break;
     }
@@ -304,20 +270,6 @@ AboutReader.prototype = {
     } else {
       classes.remove("on");
     }
-  },
-
-  _updateListButton: function Reader_updateListButton() {
-    let classes = this._doc.getElementById("list-button").classList;
-
-    if (this._readingListCount > 0) {
-      classes.add("on");
-    } else {
-      classes.remove("on");
-    }
-  },
-
-  _requestReadingListCount: function Reader_requestReadingListCount() {
-    gChromeWin.sendMessageToJava({ type: "Reader:ListCountRequest" });
   },
 
   _requestReadingListStatus: function Reader_requestReadingListStatus() {
@@ -359,13 +311,6 @@ AboutReader.prototype = {
       // updated (handled in this file).
       Services.obs.notifyObservers(null, "Reader:Remove", this._article.url);
     }
-  },
-
-  _onList: function Reader_onList() {
-    if (!this._article || this._readingListCount < 1)
-      return;
-
-    gChromeWin.BrowserApp.loadURI("about:home?panel=" + READING_LIST_PANEL_ID);
   },
 
   _onShare: function Reader_onShare() {
@@ -494,7 +439,7 @@ AboutReader.prototype = {
       return;
 
     // Don't allow visible toolbar until banner state is known
-    if (this._readingListCount == -1 || this._isReadingListItem == -1)
+    if (this._isReadingListItem == -1)
       return;
 
     if (this._getToolbarVisibility() === visible)
