@@ -2514,7 +2514,7 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
 
     size_t frameno = 1;
 
-    for (IonFrameIterator it(ionTop, SequentialExecution); !it.done(); ++it, ++frameno) {
+    for (JitFrameIterator it(ionTop, SequentialExecution); !it.done(); ++it, ++frameno) {
         JS_ASSERT_IF(frameno == 1, it.type() == JitFrame_Exit);
 
 #ifdef DEBUG
@@ -2880,7 +2880,7 @@ jit::ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode)
       case SequentialExecution:
         if (script->hasIonScript()) {
             // It is only safe to modify script->ion if the script is not currently
-            // running, because IonFrameIterator needs to tell what ionScript to
+            // running, because JitFrameIterator needs to tell what ionScript to
             // use (either the one on the JSScript, or the one hidden in the
             // breadcrumbs Invalidation() leaves). Therefore, if invalidation
             // fails, we cannot disable the script.

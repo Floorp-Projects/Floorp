@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_IonFrameIterator_h
-#define jit_IonFrameIterator_h
+#ifndef jit_JitFrameIterator_h
+#define jit_JitFrameIterator_h
 
 #ifdef JS_ION
 
@@ -81,7 +81,7 @@ class BaselineFrame;
 
 class JitActivation;
 
-class IonFrameIterator
+class JitFrameIterator
 {
   protected:
     uint8_t *current_;
@@ -97,7 +97,7 @@ class IonFrameIterator
     void dumpBaseline() const;
 
   public:
-    explicit IonFrameIterator(uint8_t *top, ExecutionMode mode)
+    explicit JitFrameIterator(uint8_t *top, ExecutionMode mode)
       : current_(top),
         type_(JitFrame_Exit),
         returnAddressToFp_(nullptr),
@@ -107,9 +107,9 @@ class IonFrameIterator
         mode_(mode)
     { }
 
-    explicit IonFrameIterator(JSContext *cx);
-    explicit IonFrameIterator(const ActivationIterator &activations);
-    explicit IonFrameIterator(IonJSFrameLayout *fp, ExecutionMode mode);
+    explicit JitFrameIterator(JSContext *cx);
+    explicit JitFrameIterator(const ActivationIterator &activations);
+    explicit JitFrameIterator(IonJSFrameLayout *fp, ExecutionMode mode);
 
     // Current frame information.
     FrameType type() const {
@@ -195,7 +195,7 @@ class IonFrameIterator
     inline bool done() const {
         return type_ == JitFrame_Entry;
     }
-    IonFrameIterator &operator++();
+    JitFrameIterator &operator++();
 
     // Returns the IonScript associated with this JS frame.
     IonScript *ionScript() const;
@@ -351,7 +351,7 @@ class SnapshotIterator
 
     SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
                      IonJSFrameLayout *fp, const MachineState &machine);
-    SnapshotIterator(const IonFrameIterator &iter);
+    SnapshotIterator(const JitFrameIterator &iter);
     SnapshotIterator(const IonBailoutIterator &iter);
     SnapshotIterator();
 
@@ -423,7 +423,7 @@ class SnapshotIterator
 template <AllowGC allowGC=CanGC>
 class InlineFrameIteratorMaybeGC
 {
-    const IonFrameIterator *frame_;
+    const JitFrameIterator *frame_;
     SnapshotIterator start_;
     SnapshotIterator si_;
     uint32_t framesRead_;
@@ -447,14 +447,14 @@ class InlineFrameIteratorMaybeGC
     void findNextFrame();
 
   public:
-    InlineFrameIteratorMaybeGC(JSContext *cx, const IonFrameIterator *iter)
+    InlineFrameIteratorMaybeGC(JSContext *cx, const JitFrameIterator *iter)
       : callee_(cx),
         script_(cx)
     {
         resetOn(iter);
     }
 
-    InlineFrameIteratorMaybeGC(JSRuntime *rt, const IonFrameIterator *iter)
+    InlineFrameIteratorMaybeGC(JSRuntime *rt, const JitFrameIterator *iter)
       : callee_(rt),
         script_(rt)
     {
@@ -614,9 +614,9 @@ class InlineFrameIteratorMaybeGC
 
     void dump() const;
 
-    void resetOn(const IonFrameIterator *iter);
+    void resetOn(const JitFrameIterator *iter);
 
-    const IonFrameIterator &frame() const {
+    const JitFrameIterator &frame() const {
         return *frame_;
     }
 
@@ -638,4 +638,4 @@ typedef InlineFrameIteratorMaybeGC<NoGC> InlineFrameIteratorNoGC;
 
 #endif // JS_ION
 
-#endif /* jit_IonFrameIterator_h */
+#endif /* jit_JitFrameIterator_h */

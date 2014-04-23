@@ -3147,7 +3147,7 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
     errorInit.mMessage = aMessage;
     errorInit.mFilename = aFilename;
     errorInit.mLineno = aLineNumber;
-    errorInit.mColumn = aColumnNumber;
+    errorInit.mColno = aColumnNumber;
 
     nsRefPtr<ErrorEvent> errorEvent =
       ErrorEvent::Constructor(sharedWorker, NS_LITERAL_STRING("error"),

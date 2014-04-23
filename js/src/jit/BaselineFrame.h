@@ -296,7 +296,7 @@ class BaselineFrame
         flags_ |= OVER_RECURSED;
     }
 
-    void trace(JSTracer *trc, IonFrameIterator &frame);
+    void trace(JSTracer *trc, JitFrameIterator &frame);
 
     bool isFunctionFrame() const {
         return CalleeTokenIsFunction(calleeToken());

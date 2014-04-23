@@ -15,7 +15,7 @@
 #include "jit/Snapshots.h"
 #include "vm/TraceLogging.h"
 
-#include "jit/IonFrameIterator-inl.h"
+#include "jit/JitFrameIterator-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -24,15 +24,15 @@ using namespace js::jit;
 // These constructor are exactly the same except for the type of the iterator
 // which is given to the SnapshotIterator constructor. Doing so avoid the
 // creation of virtual functions for the IonIterator but may introduce some
-// weirdness as IonInlineIterator is using an IonFrameIterator reference.
+// weirdness as IonInlineIterator is using a JitFrameIterator reference.
 //
 // If a function relies on ionScript() or to use OsiIndex(), due to the
-// lack of virtual, these functions will use the IonFrameIterator reference
+// lack of virtual, these functions will use the JitFrameIterator reference
 // contained in the InlineFrameIterator and thus are not able to recover
 // correctly the data stored in IonBailoutIterator.
 //
 // Currently, such cases should not happen because our only use case of the
-// IonFrameIterator within InlineFrameIterator is to read the frame content, or
+// JitFrameIterator within InlineFrameIterator is to read the frame content, or
 // to clone it to find the parent scripted frame.  Both use cases are fine and
 // should not cause any issue since the only potential issue is to read the
 // bailed out frame.
@@ -63,7 +63,7 @@ IonBailoutIterator::dump() const
             ++frames;
         }
     } else {
-        IonFrameIterator::dump();
+        JitFrameIterator::dump();
     }
 }
 
@@ -151,8 +151,8 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
 }
 
 IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
-                                       const IonFrameIterator &frame)
-  : IonFrameIterator(activations),
+                                       const JitFrameIterator &frame)
+  : JitFrameIterator(activations),
     machine_(frame.machineState())
 {
     returnAddressToFp_ = frame.returnAddressToFp();

@@ -804,6 +804,7 @@ gfxWindowsPlatform::GetCommonFallbackFonts(const uint32_t aCh,
             aFontList.AppendElement(kFontEbrima);
             break;
         case 0x09:
+            aFontList.AppendElement(kFontNirmalaUI);
             aFontList.AppendElement(kFontUtsaah);
             aFontList.AppendElement(kFontAparajita);
             break;

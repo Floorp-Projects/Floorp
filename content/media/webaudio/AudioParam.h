@@ -109,10 +109,6 @@ public:
     AudioParamTimeline::SetTargetAtTime(aTarget, DOMTimeToStreamTime(aStartTime), aTimeConstant, aRv);
     mCallback(mNode);
   }
-  void SetTargetValueAtTime(float aTarget, double aStartTime, double aTimeConstant, ErrorResult& aRv)
-  {
-    SetTargetAtTime(aTarget, aStartTime, aTimeConstant, aRv);
-  }
   void CancelScheduledValues(double aStartTime, ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aStartTime)) {
