@@ -866,28 +866,10 @@ ParseCompileOptions(JSContext *cx, CompileOptions &options, HandleObject opts,
         options.setLine(u);
     }
 
-    if (!JS_GetProperty(cx, opts, "sourcePolicy", &v))
+    if (!JS_GetProperty(cx, opts, "sourceIsLazy", &v))
         return false;
-    if (!v.isUndefined()) {
-        RootedString s(cx, ToString(cx, v));
-        if (!s)
-            return false;
-
-        JSAutoByteString bytes;
-        char *policy = bytes.encodeUtf8(cx, s);
-        if (!policy)
-            return false;
-        if (strcmp(policy, "NO_SOURCE") == 0) {
-            options.setSourcePolicy(CompileOptions::NO_SOURCE);
-        } else if (strcmp(policy, "LAZY_SOURCE") == 0) {
-            options.setSourcePolicy(CompileOptions::LAZY_SOURCE);
-        } else if (strcmp(policy, "SAVE_SOURCE") == 0) {
-            options.setSourcePolicy(CompileOptions::SAVE_SOURCE);
-        } else {
-            JS_ReportError(cx, "bad 'sourcePolicy' option: '%s'", policy);
-            return false;
-        }
-    }
+    if (v.isBoolean())
+        options.setSourceIsLazy(v.toBoolean());
 
     return true;
 }
@@ -3636,7 +3618,7 @@ OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
 
     // These option settings must override whatever the caller requested.
     options.setCompileAndGo(true)
-           .setSourcePolicy(CompileOptions::SAVE_SOURCE);
+           .setSourceIsLazy(false);
 
     // We assume the caller wants caching if at all possible, ignoring
     // heuristics that make sense for a real browser.
@@ -4389,9 +4371,9 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         provide that as the code's source map URL. If omitted, attach no\n"
 "         source map URL to the code (although the code may provide one itself,\n"
 "         via a //#sourceMappingURL comment).\n"
-"      sourcePolicy: if present, the value converted to a string must be either\n"
-"         'NO_SOURCE', 'LAZY_SOURCE', or 'SAVE_SOURCE'; use the given source\n"
-"         retention policy for this compilation.\n"
+"      sourceIsLazy: if present and true, indicates that, after compilation, \n"
+          "script source should not be cached by the JS engine and should be \n"
+          "lazily loaded from the embedding as-needed.\n"
 "      loadBytecode: if true, and if the source is a CacheEntryObject,\n"
 "         the bytecode would be loaded and decoded from the cache entry instead\n"
 "         of being parsed, then it would be executed as usual.\n"
