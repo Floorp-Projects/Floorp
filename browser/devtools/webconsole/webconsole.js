@@ -1373,7 +1373,7 @@ WebConsoleFrame.prototype = {
                                       aScriptError.timeStamp);
 
     // Select the body of the message node that is displayed in the console
-    let msgBody = node.getElementsByClassName("body")[0];
+    let msgBody = node.getElementsByClassName("message-body")[0];
     // Add the more info link node to messages that belong to certain categories
     this.addMoreInfoLink(msgBody, aScriptError);
 
@@ -2461,7 +2461,7 @@ WebConsoleFrame.prototype = {
 
     // Create the message body, which contains the actual text of the message.
     let bodyNode = this.document.createElementNS(XHTML_NS, "span");
-    bodyNode.className = "body devtools-monospace";
+    bodyNode.className = "message-body-wrapper message-body devtools-monospace";
 
     // Store the body text, since it is needed later for the variables view.
     let body = aBody;
@@ -2608,7 +2608,9 @@ WebConsoleFrame.prototype = {
 
     locationNode.href = isScratchpad || !fullURL ? "#" : fullURL;
     locationNode.draggable = false;
-    locationNode.target = aTarget;
+    if (aTarget) {
+      locationNode.target = aTarget;
+    }
     locationNode.setAttribute("title", aSourceURL);
     locationNode.className = "message-location theme-link devtools-monospace";
 

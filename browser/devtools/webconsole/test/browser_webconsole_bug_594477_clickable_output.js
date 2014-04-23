@@ -36,7 +36,7 @@ function tabLoad2(aEvent) {
     }],
   }).then(([result]) => {
     let msg = [...result.matched][0];
-    outputItem = msg.querySelector(".body .url");
+    outputItem = msg.querySelector(".message-body .url");
     ok(outputItem, "found a network message");
     document.addEventListener("popupshown", networkPanelShown, false);
 
@@ -102,7 +102,7 @@ function networkPanelHidden(aEvent) {
       info("jsterm execute 'document' callback");
 
       HUD.jsterm.once("variablesview-open", onVariablesViewOpen);
-      let outputItem = msg.querySelector(".body a");
+      let outputItem = msg.querySelector(".message-body a");
       ok(outputItem, "jsterm output message found");
 
       // Send the mousedown and click events such that the property panel opens.

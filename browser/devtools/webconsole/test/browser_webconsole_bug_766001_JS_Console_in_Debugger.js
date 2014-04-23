@@ -1,8 +1,12 @@
 /* vim:set ts=2 sw=2 sts=2 et: */
-/* ***** BEGIN LICENSE BLOCK *****
- * Any copyright is dedicated to the Public Domain.
+/* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
- * ***** END LICENSE BLOCK ***** */
+ */
+
+// Test that message source links for js errors and console API calls open in
+// the jsdebugger when clicked.
+
+"use strict";
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test" +
                  "/test-bug-766001-js-console-links.html";
@@ -61,10 +65,8 @@ function test() {
       EventUtils.sendMouseEvent({ type: "click" }, node);
     });
 
-    yield hud.ui.once("source-in-debugger-opened", checkLine.bind(null, url, line));
-  }
+    yield hud.ui.once("source-in-debugger-opened");
 
-  function* checkLine(url, line) {
     let toolbox = yield gDevTools.getToolbox(hud.target);
     let {panelWin: { DebuggerView: view }} = toolbox.getPanel("jsdebugger");
     is(view.Sources.selectedValue, url, "expected source url");

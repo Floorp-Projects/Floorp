@@ -284,7 +284,7 @@ const CustomizableWidgets = [{
   }, {
     id: "save-page-button",
     shortcutId: "key_savePage",
-    tooltiptext: "save-page-button.tooltiptext2",
+    tooltiptext: "save-page-button.tooltiptext3",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target &&
@@ -297,7 +297,7 @@ const CustomizableWidgets = [{
   }, {
     id: "find-button",
     shortcutId: "key_find",
-    tooltiptext: "find-button.tooltiptext2",
+    tooltiptext: "find-button.tooltiptext3",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target &&
@@ -310,7 +310,7 @@ const CustomizableWidgets = [{
   }, {
     id: "open-file-button",
     shortcutId: "openFileKb",
-    tooltiptext: "open-file-button.tooltiptext2",
+    tooltiptext: "open-file-button.tooltiptext3",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target
@@ -325,6 +325,7 @@ const CustomizableWidgets = [{
     type: "view",
     viewId: "PanelUI-developer",
     shortcutId: "key_devToolboxMenuItem",
+    tooltiptext: "developer-button.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
     onViewShowing: function(aEvent) {
       // Populate the subview with whatever menuitems are in the developer
@@ -350,6 +351,7 @@ const CustomizableWidgets = [{
     id: "sidebar-button",
     type: "view",
     viewId: "PanelUI-sidebar",
+    tooltiptext: "sidebar-button.tooltiptext2",
     onViewShowing: function(aEvent) {
       // Largely duplicated from the developer-button above with a couple minor
       // alterations.
@@ -377,7 +379,7 @@ const CustomizableWidgets = [{
   }, {
     id: "add-ons-button",
     shortcutId: "key_openAddons",
-    tooltiptext: "add-ons-button.tooltiptext2",
+    tooltiptext: "add-ons-button.tooltiptext3",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target &&
@@ -412,6 +414,7 @@ const CustomizableWidgets = [{
   }, {
     id: "zoom-controls",
     type: "custom",
+    tooltiptext: "zoom-controls.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
     onBuild: function(aDocument) {
       const kPanelId = "PanelUI-popup";
@@ -584,6 +587,7 @@ const CustomizableWidgets = [{
   }, {
     id: "edit-controls",
     type: "custom",
+    tooltiptext: "edit-controls.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
     onBuild: function(aDocument) {
       let buttons = [{
@@ -675,6 +679,7 @@ const CustomizableWidgets = [{
     id: "feed-button",
     type: "view",
     viewId: "PanelUI-feeds",
+    tooltiptext: "feed-button.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
     onClick: function(aEvent) {
       let win = aEvent.target.ownerDocument.defaultView;
@@ -877,7 +882,7 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "email-link-button",
-    tooltiptext: "email-link-button.tooltiptext2",
+    tooltiptext: "email-link-button.tooltiptext3",
     onCommand: function(aEvent) {
       let win = aEvent.view;
       win.MailIntegration.sendLinkForWindow(win.content);

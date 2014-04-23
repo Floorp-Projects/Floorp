@@ -47,7 +47,7 @@ function onConsoleMessage(aResults)
   let msg = [...aResults[0].matched][0];
   ok(msg, "message element");
 
-  let body = msg.querySelector(".body");
+  let body = msg.querySelector(".message-body");
   ok(body, "message body");
 
   let clickable = aResults[0].clickableElements[0];
