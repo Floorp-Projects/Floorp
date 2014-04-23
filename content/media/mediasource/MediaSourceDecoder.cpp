@@ -20,6 +20,7 @@
 #include "MediaSource.h"
 #include "SubBufferDecoder.h"
 #include "SourceBufferResource.h"
+#include "SourceBufferList.h"
 #include "VideoUtils.h"
 
 #ifdef PR_LOGGING
@@ -40,10 +41,11 @@ class TimeRanges;
 class MediaSourceReader : public MediaDecoderReader
 {
 public:
-  MediaSourceReader(MediaSourceDecoder* aDecoder)
+  MediaSourceReader(MediaSourceDecoder* aDecoder, dom::MediaSource* aSource)
     : MediaDecoderReader(aDecoder)
     , mActiveVideoDecoder(-1)
     , mActiveAudioDecoder(-1)
+    , mMediaSource(aSource)
   {
   }
 
@@ -125,24 +127,9 @@ public:
   }
 
   nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) MOZ_OVERRIDE;
-
   nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
-                int64_t aCurrentTime) MOZ_OVERRIDE
-  {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  nsresult GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime) MOZ_OVERRIDE
-  {
-    for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
-      nsRefPtr<dom::TimeRanges> r = new dom::TimeRanges();
-      mDecoders[i]->GetBuffered(r);
-      aBuffered->Add(r->GetStartTime(), r->GetEndTime());
-    }
-    aBuffered->Normalize();
-    return NS_OK;
-  }
-
+                int64_t aCurrentTime) MOZ_OVERRIDE;
+  nsresult GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime) MOZ_OVERRIDE;
   already_AddRefed<SubBufferDecoder> CreateSubDecoder(const nsACString& aType,
                                                       MediaSourceDecoder* aParentDecoder);
 
@@ -198,6 +185,7 @@ private:
 
   int32_t mActiveVideoDecoder;
   int32_t mActiveAudioDecoder;
+  dom::MediaSource* mMediaSource;
 
   nsCOMPtr<nsIThread> mWorkQueue;
 };
@@ -244,7 +232,7 @@ MediaSourceDecoder::Clone()
 MediaDecoderStateMachine*
 MediaSourceDecoder::CreateStateMachine()
 {
-  return new MediaSourceStateMachine(this, new MediaSourceReader(this));
+  return new MediaSourceStateMachine(this, new MediaSourceReader(this, mMediaSource));
 }
 
 nsresult
@@ -425,6 +413,42 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType, MediaSourceDecoder*
   EnqueueDecoderInitialization();
   mDecoder->NotifyWaitingForResourcesStatusChanged();
   return decoder.forget();
+}
+
+nsresult
+MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
+                        int64_t aCurrentTime)
+{
+  ResetDecode();
+
+  dom::SourceBufferList* sbl = mMediaSource->ActiveSourceBuffers();
+  if (sbl->ContainsTime (aTime / USECS_PER_S)) {
+    if (GetAudioReader()) {
+      nsresult rv = GetAudioReader()->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+    if (GetVideoReader()) {
+      nsresult rv = GetVideoReader()->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+MediaSourceReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
+{
+  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+    nsRefPtr<dom::TimeRanges> r = new dom::TimeRanges();
+    mDecoders[i]->GetBuffered(r);
+    aBuffered->Add(r->GetStartTime(), r->GetEndTime());
+  }
+  aBuffered->Normalize();
+  return NS_OK;
 }
 
 nsresult
