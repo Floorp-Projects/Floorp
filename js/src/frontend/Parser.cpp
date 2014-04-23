@@ -6910,7 +6910,10 @@ Parser<ParseHandler>::newRegExp()
     RegExpFlag flags = tokenStream.currentToken().regExpFlags();
 
     Rooted<RegExpObject*> reobj(context);
-    RegExpStatics *res = context->global()->getRegExpStatics();
+    RegExpStatics *res = context->global()->getRegExpStatics(context);
+    if (!res)
+        return null();
+
     reobj = RegExpObject::create(context, res, chars, length, flags, &tokenStream);
     if (!reobj)
         return null();
