@@ -27,10 +27,10 @@ import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 
-public class HomeConfigInvalidator implements GeckoEventListener {
-    public static final String LOGTAG = "HomeConfigInvalidator";
+public class HomePanelsManager implements GeckoEventListener {
+    public static final String LOGTAG = "HomePanelsManager";
 
-    private static final HomeConfigInvalidator sInstance = new HomeConfigInvalidator();
+    private static final HomePanelsManager sInstance = new HomePanelsManager();
 
     private static final int INVALIDATION_DELAY_MSEC = 500;
     private static final int PANEL_INFO_TIMEOUT_MSEC = 1000;
@@ -74,7 +74,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     private final Queue<ConfigChange> mPendingChanges = new ConcurrentLinkedQueue<ConfigChange>();
     private final Runnable mInvalidationRunnable = new InvalidationRunnable();
 
-    public static HomeConfigInvalidator getInstance() {
+    public static HomePanelsManager getInstance() {
         return sInstance;
     }
 
