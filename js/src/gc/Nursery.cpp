@@ -410,6 +410,12 @@ js::Nursery::setElementsForwardingPointer(ObjectElements *oldHeader, ObjectEleme
     *reinterpret_cast<HeapSlot **>(oldHeader->elements()) = newHeader->elements();
 }
 
+void
+js::Nursery::setTypedArrayElementsForwardingPointer(void *oldData, void *newData)
+{
+    *reinterpret_cast<void **>(oldData) = newData;
+}
+
 #ifdef DEBUG
 static bool IsWriteableAddress(void *ptr)
 {
@@ -566,8 +572,15 @@ js::Nursery::moveObjectToTenured(JSObject *dst, JSObject *src, AllocKind dstKind
     tenuredSize += moveSlotsToTenured(dst, src, dstKind);
     tenuredSize += moveElementsToTenured(dst, src, dstKind);
 
-    if (src->is<TypedArrayObject>())
-        dst->setPrivate(dst->fixedData(TypedArrayObject::FIXED_DATA_START));
+    if (src->is<TypedArrayObject>()) {
+        void *oldData = dst->getPrivate();
+        JS_ASSERT(isInside(oldData) == (oldData == src->fixedData(TypedArrayObject::FIXED_DATA_START)));
+        if (isInside(oldData)) {
+            void *newData = dst->fixedData(TypedArrayObject::FIXED_DATA_START);
+            dst->setPrivate(newData);
+            setTypedArrayElementsForwardingPointer(oldData, newData);
+        }
+    }
 
     /* The shape's list head may point into the old object. */
     if (&src->shape_ == dst->shape_->listp)
