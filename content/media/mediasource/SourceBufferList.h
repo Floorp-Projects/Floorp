@@ -78,7 +78,7 @@ public:
   void Evict(double aStart, double aEnd);
 
   // Returns true if all SourceBuffers in the list contain data for the given time.
-  bool ContainsTime(double aTime);
+  bool AllContainsTime(double aTime);
 
 private:
   friend class AsyncEventRunner<SourceBufferList>;
