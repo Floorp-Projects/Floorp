@@ -6,6 +6,7 @@
 
 CPP_UNIT_TESTS += [
     'TestAtomics.cpp',
+    'TestBinarySearch.cpp',
     'TestBloomFilter.cpp',
     'TestCasting.cpp',
     'TestCeilingFloor.cpp',
