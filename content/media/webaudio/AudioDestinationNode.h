@@ -30,6 +30,7 @@ public:
   // whether it's in offline mode.
   AudioDestinationNode(AudioContext* aContext,
                        bool aIsOffline,
+                       AudioChannel aChannel = AudioChannel::Normal,
                        uint32_t aNumberOfChannels = 0,
                        uint32_t aLength = 0,
                        float aSampleRate = 0.0f);
