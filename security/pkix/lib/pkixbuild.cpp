@@ -256,8 +256,7 @@ BuildForward(TrustDomain& trustDomain,
       // If we found a valid chain but deferred reporting an error with the
       // end-entity certificate, report it now.
       if (deferredEndEntityError != 0) {
-        PR_SetError(deferredEndEntityError, 0);
-        return FatalError;
+        return Fail(FatalError, deferredEndEntityError);
       }
 
       SECStatus srv = trustDomain.CheckRevocation(endEntityOrCA,
@@ -279,8 +278,7 @@ BuildForward(TrustDomain& trustDomain,
     switch (currentError) {
       case 0:
         PR_NOT_REACHED("Error code not set!");
-        PR_SetError(PR_INVALID_STATE_ERROR, 0);
-        return FatalError;
+        return Fail(FatalError, PR_INVALID_STATE_ERROR);
       case SEC_ERROR_UNTRUSTED_CERT:
         currentError = SEC_ERROR_UNTRUSTED_ISSUER;
         break;
