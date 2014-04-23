@@ -202,7 +202,7 @@ MIRType
 IonBuilder::getInlineReturnType()
 {
     types::TemporaryTypeSet *returnTypes = getInlineReturnTypeSet();
-    return MIRTypeFromValueType(returnTypes->getKnownTypeTag());
+    return returnTypes->getKnownMIRType();
 }
 
 IonBuilder::InliningStatus
@@ -1537,7 +1537,7 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
     // constructed type objects, so we can only perform the inlining if we
     // already have one of these type objects.
     types::TemporaryTypeSet *returnTypes = getInlineReturnTypeSet();
-    if (returnTypes->getKnownTypeTag() != JSVAL_TYPE_OBJECT)
+    if (returnTypes->getKnownMIRType() != MIRType_Object)
         return InliningStatus_NotInlined;
     if (returnTypes->unknownObject() || returnTypes->getObjectCount() != 1)
         return InliningStatus_NotInlined;
