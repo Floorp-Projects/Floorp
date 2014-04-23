@@ -25,7 +25,7 @@ function testInputFocus() {
       }],
     }).then(([result]) => {
       let msg = [...result.matched][0];
-      let outputItem = msg.querySelector(".body");
+      let outputItem = msg.querySelector(".message-body");
       ok(outputItem, "found a logged message");
       let inputNode = hud.jsterm.inputNode;
       ok(inputNode.getAttribute("focused"), "input node is focused, first");

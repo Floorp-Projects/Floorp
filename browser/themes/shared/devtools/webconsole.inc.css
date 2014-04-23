@@ -38,10 +38,8 @@ a {
   width: 8px;
 }
 
-.message > .body {
+.message > .message-body-wrapper {
   flex: 1 1 100%;
-  white-space: pre-wrap;
-  word-wrap: break-word;
   margin-top: 4px;
 }
 
@@ -71,7 +69,7 @@ a {
   align-self: flex-start;
   justify-content: flex-end;
   width: 10em;
-  margin-top: 4px;
+  margin: 3px 0;
   color: -moz-nativehyperlinktext;
   text-decoration: none;
   white-space: nowrap;
@@ -90,6 +88,20 @@ a {
 
 .message-location > .line-number {
   flex: 0 0 auto;
+}
+
+.message-flex-body {
+  display: flex;
+}
+
+.message-body {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.message-flex-body > .message-body {
+  display: block;
+  flex: 1 1 auto;
 }
 
 .jsterm-input-container {
@@ -153,6 +165,14 @@ a {
   border-color: #777;
 }
 
+.theme-light .message[severity=error] {
+  background-color: rgba(255, 150, 150, 0.3);
+}
+
+.theme-dark .message[severity=error] {
+  background-color: rgba(255, 100, 100, 0.3);
+}
+
 .message[category=network] > .icon {
   -moz-border-start: solid #000 6px;
 }
@@ -161,7 +181,7 @@ a {
   background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 0, 16, 8, 8);
 }
 
-.message[category=network] > .body {
+.message[category=network] > .message-body {
   display: flex;
 }
 
@@ -284,7 +304,7 @@ a {
   overflow-x: hidden;
 }
 
-.inlined-variables-view .body {
+.inlined-variables-view .message-body {
   display: flex;
   flex-direction: column;
 }
@@ -340,25 +360,33 @@ a {
   text-decoration: none;
 }
 
-.consoleTrace .body > div {
-  display: flex;
-  margin-bottom: 5px;
-}
-
-.consoleTrace .title {
-  display: block;
-  flex: 1 1 auto;
-}
-
 .stacktrace {
+  display: none;
   list-style: none;
   padding: 0 1em 0 1.5em;
-  margin: 0;
+  margin: 5px 0 0 0;
   max-height: 10em;
   overflow-y: auto;
-
-  border: 1px solid rgba(128, 128, 128, .5);
+  border: 1px solid rgb(200,200,200);
   border-radius: 3px;
+}
+
+.theme-light .message[severity=error] .stacktrace {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.theme-dark .message[severity=error] .stacktrace {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.message[open] .stacktrace {
+  display: block;
+}
+
+.message .theme-twisty {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 2px 3px 0 0;
 }
 
 .stacktrace li {
