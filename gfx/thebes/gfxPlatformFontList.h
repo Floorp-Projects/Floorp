@@ -225,7 +225,7 @@ protected:
     // verifies that a family contains a non-zero font count
     gfxFontFamily* CheckFamily(gfxFontFamily *aFamily);
 
-    // separate initialization for reading in name tables, since this is expensive
+    // initialize localized family names
     void InitOtherFamilyNames();
 
     static PLDHashOperator
@@ -252,6 +252,9 @@ protected:
 
     static PLDHashOperator LookupMissedFaceNamesProc(nsStringHashKey *aKey,
                                                      void *aUserArg);
+
+    static PLDHashOperator LookupMissedOtherNamesProc(nsStringHashKey *aKey,
+                                                      void *aUserArg);
 
     // commonly used fonts for which the name table should be loaded at startup
     virtual void PreloadNamesList();
@@ -313,6 +316,9 @@ protected:
 
     // face names missed when face name loading takes a long time
     nsAutoPtr<nsTHashtable<nsStringHashKey> > mFaceNamesMissed;
+
+    // localized family names missed when face name loading takes a long time
+    nsAutoPtr<nsTHashtable<nsStringHashKey> > mOtherNamesMissed;
 
     // cached pref font lists
     // maps list of family names ==> array of family entries, one per lang group
