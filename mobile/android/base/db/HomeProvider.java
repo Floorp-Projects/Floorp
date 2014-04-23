@@ -11,6 +11,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.HomeItems;
+import org.mozilla.gecko.db.DBUtils;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.util.RawResource;
 
@@ -72,6 +73,15 @@ public class HomeProvider extends SQLiteBridgeContentProvider {
         if (match == ITEMS_FAKE) {
             return queryFakeItems(uri, projection, selection, selectionArgs, sortOrder);
         }
+
+        final String datasetId = uri.getQueryParameter(BrowserContract.PARAM_DATASET_ID);
+        if (datasetId == null) {
+            throw new IllegalArgumentException("All queries should contain a dataset ID parameter");
+        }
+
+        selection = DBUtils.concatenateWhere(selection, HomeItems.DATASET_ID + " = ?");
+        selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                                                    new String[] { datasetId });
 
         // Otherwise, let the SQLiteContentProvider implementation take care of this query for us!
         return super.query(uri, projection, selection, selectionArgs, sortOrder);
