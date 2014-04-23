@@ -37,7 +37,7 @@
 #include <sslproto.h>
 #include <algorithm>
 
-#ifdef MOZ_OMX_ENCODER
+#ifdef MOZ_WEBRTC_OMX
 #include "OMXVideoCodec.h"
 #endif
 
@@ -2120,7 +2120,7 @@ static int vcmEnsureExternalCodec(
     mozilla::VideoCodecConfig* config,
     bool send)
 {
-#ifdef MOZ_OMX_ENCODER
+#ifdef MOZ_WEBRTC_OMX
   // Here we use "I420" to register H.264 because WebRTC.org code has a
   // whitelist of supported video codec in |webrtc::ViECodecImpl::CodecValid()|
   // and will reject registration of those not in it.
