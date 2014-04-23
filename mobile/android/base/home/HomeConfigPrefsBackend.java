@@ -155,7 +155,7 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
             // If the user has saved HomeConfig before, return null this
             // one time to trigger a refresh and ensure we use the
             // correct locale for the saved state. For more context,
-            // see HomeConfigInvalidator.onLocaleReady().
+            // see HomePanelsManager.onLocaleReady().
             if (!prefs.contains(PREFS_CONFIG_KEY)) {
                 locale = currentLocale;
             }
