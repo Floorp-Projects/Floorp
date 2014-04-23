@@ -22,8 +22,8 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.util.Log;
 import android.util.SparseArray;
 
-public class PanelManager implements GeckoEventListener {
-    private static final String LOGTAG = "GeckoPanelManager";
+public class PanelInfoManager implements GeckoEventListener {
+    private static final String LOGTAG = "GeckoPanelInfoManager";
 
     public class PanelInfo {
         private final String mId;
