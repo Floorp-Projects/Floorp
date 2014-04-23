@@ -16,7 +16,7 @@ Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
 const MAX_LABEL_LENGTH = 40;
 
-let promise = require("sdk/core/promise");
+let promise = require("devtools/toolkit/deprecated-sync-thenables");
 
 const LOW_PRIORITY_ELEMENTS = {
   "HEAD": true,

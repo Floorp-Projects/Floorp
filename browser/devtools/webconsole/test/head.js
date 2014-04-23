@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
@@ -882,6 +884,8 @@ function openDebugger(aOptions = {})
  *            message.
  *            - longString: boolean, set to |true} to match long strings in the
  *            message.
+ *            - collapsible: boolean, set to |true| to match messages that can
+ *            be collapsed/expanded.
  *            - type: match messages that are instances of the given object. For
  *            example, you can point to Messages.NavigationMarker to match any
  *            such message.
@@ -890,6 +894,8 @@ function openDebugger(aOptions = {})
  *            - source: object of the shape { url, line }. This is used to
  *            match the source URL and line number of the error message or
  *            console API call.
+ *            - stacktrace: array of objects of the form { file, fn, line } that
+ *            can match frames in the stacktrace associated with the message.
  *            - groupDepth: number used to check the depth of the message in
  *            a group.
  *            - url: URL to match for network requests.
@@ -918,7 +924,7 @@ function waitForMessages(aOptions)
 
   function checkText(aRule, aText)
   {
-    let result;
+    let result = false;
     if (Array.isArray(aRule)) {
       result = aRule.every((s) => checkText(s, aText));
     }
@@ -927,6 +933,9 @@ function waitForMessages(aOptions)
     }
     else if (aRule instanceof RegExp) {
       result = aRule.test(aText);
+    }
+    else {
+      result = aRule == aText;
     }
     return result;
   }
@@ -940,40 +949,17 @@ function waitForMessages(aOptions)
       return false;
     }
 
-    let frame = aElement.querySelector(".stacktrace li:first-child");
-    if (trace.file) {
-      let file = frame.querySelector(".message-location").title;
-      if (!checkText(trace.file, file)) {
-        ok(false, "console.trace() message is missing the file name: " +
-                  trace.file);
-        displayErrorContext(aRule, aElement);
-        return false;
-      }
-    }
-
-    if (trace.fn) {
-      let fn = frame.querySelector(".function").textContent;
-      if (!checkText(trace.fn, fn)) {
-        ok(false, "console.trace() message is missing the function name: " +
-                  trace.fn);
-        displayErrorContext(aRule, aElement);
-        return false;
-      }
-    }
-
-    if (trace.line) {
-      let line = frame.querySelector(".message-location").sourceLine;
-      if (!checkText(trace.line, line)) {
-        ok(false, "console.trace() message is missing the line number: " +
-                  trace.line);
-        displayErrorContext(aRule, aElement);
-        return false;
-      }
-    }
-
     aRule.category = CATEGORY_WEBDEV;
     aRule.severity = SEVERITY_LOG;
     aRule.type = Messages.ConsoleTrace;
+
+    if (!aRule.stacktrace && typeof trace == "object" && trace !== true) {
+      if (Array.isArray(trace)) {
+        aRule.stacktrace = trace;
+      } else {
+        aRule.stacktrace = [trace];
+      }
+    }
 
     return true;
   }
@@ -1058,6 +1044,66 @@ function waitForMessages(aOptions)
     return true;
   }
 
+  function checkCollapsible(aRule, aElement)
+  {
+    let msg = aElement._messageObject;
+    if (!msg || !!msg.collapsible != aRule.collapsible) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function checkStacktrace(aRule, aElement)
+  {
+    let stack = aRule.stacktrace;
+    let frames = aElement.querySelectorAll(".stacktrace > li");
+    if (!frames.length) {
+      return false;
+    }
+
+    for (let i = 0; i < stack.length; i++) {
+      let frame = frames[i];
+      let expected = stack[i];
+      if (!frame) {
+        ok(false, "expected frame #" + i + " but didnt find it");
+        return false;
+      }
+
+      if (expected.file) {
+        let file = frame.querySelector(".message-location").title;
+        if (!checkText(expected.file, file)) {
+          ok(false, "frame #" + i + " does not match file name: " +
+                    expected.file);
+          displayErrorContext(aRule, aElement);
+          return false;
+        }
+      }
+
+      if (expected.fn) {
+        let fn = frame.querySelector(".function").textContent;
+        if (!checkText(expected.fn, fn)) {
+          ok(false, "frame #" + i + " does not match the function name: " +
+                    expected.fn);
+          displayErrorContext(aRule, aElement);
+          return false;
+        }
+      }
+
+      if (expected.line) {
+        let line = frame.querySelector(".message-location").sourceLine;
+        if (!checkText(expected.line, line)) {
+          ok(false, "frame #" + i + " does not match the line number: " +
+                    expected.line);
+          displayErrorContext(aRule, aElement);
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
   function checkMessage(aRule, aElement)
   {
     let elemText = aElement.textContent;
@@ -1094,6 +1140,10 @@ function waitForMessages(aOptions)
       return false;
     }
 
+    if ("collapsible" in aRule && !checkCollapsible(aRule, aElement)) {
+      return false;
+    }
+
     let partialMatch = !!(aRule.consoleTrace || aRule.consoleTime ||
                           aRule.consoleTimeEnd);
 
@@ -1124,6 +1174,18 @@ function waitForMessages(aOptions)
       if (partialMatch) {
         is(aElement.severity, aRule.severity,
            "message severity for rule: " + displayRule(aRule));
+        displayErrorContext(aRule, aElement);
+      }
+      return false;
+    }
+
+    if (aRule.text) {
+      partialMatch = true;
+    }
+
+    if (aRule.stacktrace && !checkStacktrace(aRule, aElement)) {
+      if (partialMatch) {
+        ok(false, "failed to match stacktrace for rule: " + displayRule(aRule));
         displayErrorContext(aRule, aElement);
       }
       return false;
@@ -1166,7 +1228,7 @@ function waitForMessages(aOptions)
     }
 
     if ("objects" in aRule) {
-      let clickables = aElement.querySelectorAll(".body a");
+      let clickables = aElement.querySelectorAll(".message-body a");
       if (aRule.objects != !!clickables[0]) {
         if (partialMatch) {
           is(!!clickables[0], aRule.objects,
@@ -1410,7 +1472,8 @@ function checkOutputForInputs(hud, inputTests)
 
   function checkObjectClick(entry, msg)
   {
-    let body = msg.querySelector(".body a") || msg.querySelector(".body");
+    let body = msg.querySelector(".message-body a") ||
+               msg.querySelector(".message-body");
     ok(body, "the message body");
 
     let deferred = promise.defer();

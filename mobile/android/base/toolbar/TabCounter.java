@@ -67,7 +67,7 @@ public class TabCounter extends ThemedTextSwitcher
         }
     }
 
-    public void setCountWithAnimation(int count) {
+    void setCountWithAnimation(int count) {
         // Don't animate from initial state
         if (mCount == 0) {
             setCount(count);
@@ -97,7 +97,7 @@ public class TabCounter extends ThemedTextSwitcher
         mCount = count;
     }
 
-    public void setCount(int count) {
+    void setCount(int count) {
         setCurrentText(String.valueOf(count));
         mCount = count;
     }

@@ -30,7 +30,7 @@ function checkResult(msg, desc) {
       category: CATEGORY_OUTPUT,
     }],
   }).then(([result]) => {
-    let node = [...result.matched][0].querySelector(".body");
+    let node = [...result.matched][0].querySelector(".message-body");
     if (typeof msg == "string") {
       is(node.textContent.trim(), msg,
         "correct message shown for " + desc);

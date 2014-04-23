@@ -61,12 +61,14 @@ function attachURL(url, callback) {
           for (let tab of response.tabs) {
             if (tab.url === url) {
               window.removeEventListener("message", loadListener, false);
-              try {
-                callback(null, client, tab, win.document);
-              } catch(ex) {
-                Cu.reportError(ex);
-                dump(ex);
-              }
+              client.attachTab(tab.actor, function(aResponse, aTabClient) {
+                try {
+                  callback(null, client, tab, win.document);
+                } catch(ex) {
+                  Cu.reportError(ex);
+                  dump(ex);
+                }
+              });
               break;
             }
           }

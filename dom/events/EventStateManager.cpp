@@ -3534,12 +3534,11 @@ EventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsAutoPtr<WidgetPointerEvent> newPointerEvent;
-  nsAutoPtr<WidgetMouseEvent> newMouseEvent;
-  WidgetMouseEvent* event = nullptr;
+  nsAutoPtr<WidgetMouseEvent> event;
   WidgetPointerEvent* sourcePointer = aMouseEvent->AsPointerEvent();
   if (sourcePointer) {
     PROFILER_LABEL("Input", "DispatchPointerEvent");
+    nsAutoPtr<WidgetPointerEvent> newPointerEvent;
     newPointerEvent =
       new WidgetPointerEvent(aMouseEvent->mFlags.mIsTrusted, aMessage,
                              aMouseEvent->widget);
@@ -3548,20 +3547,23 @@ EventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
     newPointerEvent->width = sourcePointer->width;
     newPointerEvent->height = sourcePointer->height;
     newPointerEvent->inputSource = sourcePointer->inputSource;
-    event = newPointerEvent.get();
+    newPointerEvent->relatedTarget = nsIPresShell::GetPointerCapturingContent(sourcePointer->pointerId)
+                                       ? nullptr
+                                       : aRelatedContent;
+    event = newPointerEvent.forget();
   } else {
     PROFILER_LABEL("Input", "DispatchMouseEvent");
-    newMouseEvent =
+    event =
       new WidgetMouseEvent(aMouseEvent->mFlags.mIsTrusted, aMessage,
                            aMouseEvent->widget, WidgetMouseEvent::eReal);
-    event = newMouseEvent.get();
+    event->relatedTarget = aRelatedContent;
   }
   event->refPoint = aMouseEvent->refPoint;
   event->modifiers = aMouseEvent->modifiers;
   event->button = aMouseEvent->button;
   event->buttons = aMouseEvent->buttons;
+  event->pressure = aMouseEvent->pressure;
   event->pluginEvent = aMouseEvent->pluginEvent;
-  event->relatedTarget = aRelatedContent;
   event->inputSource = aMouseEvent->inputSource;
 
   nsWeakFrame previousTarget = mCurrentTarget;
