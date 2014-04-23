@@ -445,6 +445,7 @@ public:
     // Can't add 'this' as the event to run, since mThread may not be set yet
     nsresult rv = NS_NewNamedThread("CubebInit", getter_AddRefs(mThread));
     if (NS_SUCCEEDED(rv)) {
+      // Note: event must not null out mThread!
       rv = mThread->Dispatch(this, NS_DISPATCH_NORMAL);
     }
     return rv;

@@ -25,7 +25,7 @@ const Ci = SpecialPowers.Ci;
 // not enabled by default yet.
 SimpleTest.waitForExplicitFinish();
 
-var policy = setupPolicy();
+var policy;
 
 SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
 
@@ -88,7 +88,12 @@ function teardownPolicy() {
 }
 
 function beginTest() {
-  navigator.sendBeacon(beaconUrl, "bacon would have been a better name than beacon");
+  policy = setupPolicy();
+  // Make sure to hit the event loop here in order to ensure that nsContentPolicy
+  // has been notified of the newly registered policy.
+  SimpleTest.executeSoon(function() {
+    navigator.sendBeacon(beaconUrl, "bacon would have been a better name than beacon");
+  });
 }
 
 </script>

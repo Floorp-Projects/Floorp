@@ -2120,20 +2120,6 @@ typedef enum JSGCParamKey {
     JSGC_DECOMMIT_THRESHOLD = 20
 } JSGCParamKey;
 
-typedef enum JSGCMode {
-    /* Perform only global GCs. */
-    JSGC_MODE_GLOBAL = 0,
-
-    /* Perform per-compartment GCs until too much garbage has accumulated. */
-    JSGC_MODE_COMPARTMENT = 1,
-
-    /*
-     * Collect in short time slices rather than all at once. Implies
-     * JSGC_MODE_COMPARTMENT.
-     */
-    JSGC_MODE_INCREMENTAL = 2
-} JSGCMode;
-
 extern JS_PUBLIC_API(void)
 JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value);
 
