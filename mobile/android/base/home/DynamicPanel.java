@@ -12,6 +12,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.HomeItems;
 import org.mozilla.gecko.db.DBUtils;
+import org.mozilla.gecko.db.HomeProvider;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PanelLayout.DatasetHandler;
@@ -321,11 +322,7 @@ public class DynamicPanel extends HomeFragment
         Log.d(LOGTAG, "Refresh request for dataset: " + datasetId);
 
         final ContentResolver cr = activity.getContentResolver();
-        cr.notifyChange(getDatasetNotificationUri(datasetId), null);
-    }
-
-    private static Uri getDatasetNotificationUri(String datasetId) {
-        return Uri.withAppendedPath(HomeItems.CONTENT_URI, datasetId);
+        cr.notifyChange(HomeProvider.getDatasetNotificationUri(datasetId), null);
     }
 
     /**
@@ -418,15 +415,7 @@ public class DynamicPanel extends HomeFragment
 
             // XXX: You can use HomeItems.CONTENT_FAKE_URI for development
             // to pull items from fake_home_items.json.
-            final Cursor c = cr.query(queryUri, null, selection, selectionArgs, null);
-
-            // SQLiteBridgeContentProvider may return a null Cursor if the database hasn't been created yet.
-            if (c != null) {
-                final Uri notificationUri = getDatasetNotificationUri(mRequest.getDatasetId());
-                c.setNotificationUri(cr, notificationUri);
-            }
-
-            return c;
+            return cr.query(queryUri, null, selection, selectionArgs, null);
         }
     }
 

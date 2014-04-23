@@ -15,6 +15,7 @@ import org.mozilla.gecko.db.DBUtils;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.util.RawResource;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
@@ -84,7 +85,13 @@ public class HomeProvider extends SQLiteBridgeContentProvider {
                                                     new String[] { datasetId });
 
         // Otherwise, let the SQLiteContentProvider implementation take care of this query for us!
-        return super.query(uri, projection, selection, selectionArgs, sortOrder);
+        final Cursor c = super.query(uri, projection, selection, selectionArgs, sortOrder);
+        if (c != null) {
+            final ContentResolver cr = getContext().getContentResolver();
+            c.setNotificationUri(cr, getDatasetNotificationUri(datasetId));
+        }
+
+        return c;
     }
 
     /**
@@ -180,5 +187,7 @@ public class HomeProvider extends SQLiteBridgeContentProvider {
     @Override
     public void onPostQuery(Cursor cursor, Uri uri, SQLiteBridge db) { }
 
-
+    public static Uri getDatasetNotificationUri(String datasetId) {
+        return Uri.withAppendedPath(HomeItems.CONTENT_URI, datasetId);
+    }
 }
