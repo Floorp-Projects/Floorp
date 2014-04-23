@@ -405,6 +405,16 @@ public:
   static gfxRect GetBBox(nsIFrame *aFrame,
                          uint32_t aFlags = eBBoxIncludeFillGeometry);
 
+  /*
+   * "User space" is the space that the frame's BBox (as calculated by
+   * nsSVGUtils::GetBBox) is in. "Frame space" is the space that has its origin
+   * at the top left of the union of the frame's border-box rects over all
+   * continuations.
+   * This function returns the offset one needs to add to something in frame
+   * space in order to get its coordinates in user space.
+   */
+  static gfxPoint FrameSpaceInCSSPxToUserSpaceOffset(nsIFrame *aFrame);
+
   /**
    * Convert a userSpaceOnUse/objectBoundingBoxUnits rectangle that's specified
    * using four nsSVGLength2 values into a user unit rectangle in user space.
