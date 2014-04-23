@@ -189,10 +189,10 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
                 if (e.front().key() != key)
                     entryMoved(e, key);
             } else if (keyNeedsMark(key)) {
+                gc::Mark(trc, &e.front().value(), "WeakMap entry value");
                 gc::Mark(trc, &key, "proxy-preserved WeakMap entry key");
                 if (e.front().key() != key)
                     entryMoved(e, key);
-                gc::Mark(trc, &e.front().value(), "WeakMap entry value");
                 markedAny = true;
             }
             key.unsafeSet(nullptr);
