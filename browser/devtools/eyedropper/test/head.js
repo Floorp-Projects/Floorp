@@ -4,7 +4,7 @@
 const TEST_BASE = "chrome://mochitests/content/browser/browser/devtools/eyedropper/test/";
 const TEST_HOST = 'mochi.test:8888';
 
-const promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
+const promise = Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js").Promise;
 const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 const { Eyedropper } = require("devtools/eyedropper/eyedropper");
 

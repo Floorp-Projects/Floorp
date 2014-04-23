@@ -7,7 +7,7 @@ Cu.import("resource:///modules/devtools/gDevTools.jsm");
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {require} = devtools;
 const {ConnectionManager, Connection} = require("devtools/client/connection-manager");
-const promise = require("sdk/core/promise");
+const promise = require("devtools/toolkit/deprecated-sync-thenables");
 const prefs = require('sdk/preferences/service');
 
 

@@ -23,7 +23,7 @@
 
       const { utils: Cu } = Components;
       const { Promise: promise } =
-        Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
+        Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js", {});
       const { EventEmitter } =
         Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
       const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});

@@ -34,7 +34,7 @@ function performTest(hud)
   }).then(([result]) => {
     let msg = [...result.matched][0];
     ok(msg, "message element");
-    let body = msg.querySelector(".body");
+    let body = msg.querySelector(".message-body");
     ok(body, "message body");
     let clickable = result.clickableElements[0];
     ok(clickable, "the console.log() object anchor was found");
