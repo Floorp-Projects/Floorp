@@ -112,14 +112,14 @@ SourceBufferList::Evict(double aStart, double aEnd)
 }
 
 bool
-SourceBufferList::ContainsTime(double aTime)
+SourceBufferList::AllContainsTime(double aTime)
 {
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     if (!mSourceBuffers[i]->ContainsTime(aTime)) {
       return false;
     }
   }
-  return true;
+  return mSourceBuffers.Length() > 0;
 }
 
 void

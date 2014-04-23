@@ -422,7 +422,7 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
   ResetDecode();
 
   dom::SourceBufferList* sbl = mMediaSource->ActiveSourceBuffers();
-  if (sbl->ContainsTime (aTime / USECS_PER_S)) {
+  if (sbl->AllContainsTime (aTime / USECS_PER_S)) {
     if (GetAudioReader()) {
       nsresult rv = GetAudioReader()->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
       if (NS_FAILED(rv)) {

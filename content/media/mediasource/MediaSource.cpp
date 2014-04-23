@@ -175,6 +175,7 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
     return nullptr;
   }
   mSourceBuffers->Append(sourceBuffer);
+  mActiveSourceBuffers->Append(sourceBuffer);
   MSE_DEBUG("%p AddSourceBuffer(Type=%s) -> %p", this,
             NS_ConvertUTF16toUTF8(mimeType).get(), sourceBuffer.get());
   return sourceBuffer.forget();
