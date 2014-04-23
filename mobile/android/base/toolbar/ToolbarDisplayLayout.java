@@ -95,7 +95,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         public void onTitleChange(CharSequence title);
     }
 
-    final private BrowserApp mActivity;
+    private final BrowserApp mActivity;
 
     private UIMode mUiMode;
 

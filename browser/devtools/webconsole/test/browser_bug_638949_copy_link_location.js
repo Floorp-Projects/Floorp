@@ -67,6 +67,7 @@ function onConsoleMessage(aResults) {
 
   // Test that the "Copy Link Location" menu item is hidden for non-network
   // messages.
+  message.scrollIntoView();
   waitForContextMenu(menu, message, () => {
     let isHidden = menu.querySelector(CONTEXT_MENU_ID).hidden;
     ok(isHidden, CONTEXT_MENU_ID + " is hidden");
@@ -107,6 +108,7 @@ function onNetworkMessage(aResults) {
   function testMenuWithNetActivity() {
     // Test that the "Copy Link Location" menu item is visible for network-related
     // messages.
+    message.scrollIntoView();
     waitForContextMenu(menu, message, () => {
       let isVisible = !menu.querySelector(CONTEXT_MENU_ID).hidden;
       ok(isVisible, CONTEXT_MENU_ID + " is visible");

@@ -516,7 +516,6 @@
                class="devtools-toolbar">
         <button id="network-statistics-back-button"
                 class="devtools-toolbarbutton"
-                onclick="NetMonitorView.toggleFrontendMode()"
                 label="&netmonitorUI.backButton;"/>
       </toolbar>
       <box id="network-statistics-charts"
