@@ -37,14 +37,3 @@ interface AudioParam {
     void cancelScheduledValues(double startTime);
 
 };
-
-/*
- * The origin of this IDL file is
- * https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AlternateNames
- */
-partial interface AudioParam {
-    // Same as setTargetAtTime()
-    [Throws,Pref="media.webaudio.legacy.AudioParam"]
-    void setTargetValueAtTime(float target, double startTime, double timeConstant);
-};
-

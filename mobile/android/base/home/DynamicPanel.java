@@ -9,8 +9,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.HomeItems;
 import org.mozilla.gecko.db.DBUtils;
+import org.mozilla.gecko.db.HomeProvider;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PanelLayout.DatasetHandler;
@@ -54,8 +56,7 @@ import android.widget.FrameLayout;
  * See {@code PanelLayout} for more details on how {@code DynamicPanel}
  * receives dataset requests and delivers them back to the {@code PanelLayout}.
  */
-public class DynamicPanel extends HomeFragment
-                          implements GeckoEventListener {
+public class DynamicPanel extends HomeFragment {
     private static final String LOGTAG = "GeckoDynamicPanel";
 
     // Dataset ID to be used by the loader
@@ -152,7 +153,6 @@ public class DynamicPanel extends HomeFragment
         }
 
         mPanelAuthCache.setOnChangeListener(new PanelAuthChangeListener());
-        GeckoAppShell.registerEventListener("HomePanels:RefreshDataset", this);
     }
 
     @Override
@@ -163,7 +163,6 @@ public class DynamicPanel extends HomeFragment
         mPanelAuthLayout = null;
 
         mPanelAuthCache.setOnChangeListener(null);
-        GeckoAppShell.unregisterEventListener("HomePanels:RefreshDataset", this);
 
         if (mAuthStateTask != null) {
             mAuthStateTask.cancel(true);
@@ -287,46 +286,6 @@ public class DynamicPanel extends HomeFragment
         mUIMode = mode;
     }
 
-    @Override
-    public void handleMessage(String event, final JSONObject message) {
-        if (event.equals("HomePanels:RefreshDataset")) {
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    handleDatasetRefreshRequest(message);
-                }
-            });
-        }
-    }
-
-    /**
-     * Handles a dataset refresh request from Gecko. This is usually
-     * triggered by a HomeStorage.save() call in an add-on.
-     */
-    private void handleDatasetRefreshRequest(JSONObject message) {
-        final String datasetId;
-        try {
-            datasetId = message.getString("datasetId");
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Failed to handle dataset refresh", e);
-            return;
-        }
-
-        final Activity activity = getActivity();
-        if (activity == null) {
-            return;
-        }
-
-        Log.d(LOGTAG, "Refresh request for dataset: " + datasetId);
-
-        final ContentResolver cr = activity.getContentResolver();
-        cr.notifyChange(getDatasetNotificationUri(datasetId), null);
-    }
-
-    private static Uri getDatasetNotificationUri(String datasetId) {
-        return Uri.withAppendedPath(HomeItems.CONTENT_URI, datasetId);
-    }
-
     /**
      * Used by the PanelLayout to make load and reset requests to
      * the holding fragment.
@@ -403,23 +362,21 @@ public class DynamicPanel extends HomeFragment
 
             // Null represents the root filter
             if (mRequest.getFilter() == null) {
-                selection = DBUtils.concatenateWhere(HomeItems.DATASET_ID + " = ?", HomeItems.FILTER + " IS NULL");
-                selectionArgs = new String[] { mRequest.getDatasetId() };
+                selection = HomeItems.FILTER + " IS NULL";
+                selectionArgs = null;
             } else {
-                selection = DBUtils.concatenateWhere(HomeItems.DATASET_ID + " = ?", HomeItems.FILTER + " = ?");
-                selectionArgs = new String[] { mRequest.getDatasetId(), mRequest.getFilter() };
+                selection = HomeItems.FILTER + " = ?";
+                selectionArgs = new String[] { mRequest.getFilter() };
             }
 
-            // XXX: You can use CONTENT_FAKE_URI for development to pull items from fake_home_items.json.
-            final Cursor c = cr.query(HomeItems.CONTENT_URI, null, selection, selectionArgs, null);
+            final Uri queryUri = HomeItems.CONTENT_URI.buildUpon()
+                                                      .appendQueryParameter(BrowserContract.PARAM_DATASET_ID,
+                                                                            mRequest.getDatasetId())
+                                                      .build();
 
-            // SQLiteBridgeContentProvider may return a null Cursor if the database hasn't been created yet.
-            if (c != null) {
-                final Uri notificationUri = getDatasetNotificationUri(mRequest.getDatasetId());
-                c.setNotificationUri(cr, notificationUri);
-            }
-
-            return c;
+            // XXX: You can use HomeItems.CONTENT_FAKE_URI for development
+            // to pull items from fake_home_items.json.
+            return cr.query(queryUri, null, selection, selectionArgs, null);
         }
     }
 

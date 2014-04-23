@@ -367,18 +367,30 @@ MacroAssemblerX64::handleFailureWithHandlerTail()
     jmp(Operand(rsp, offsetof(ResumeFromException, target)));
 }
 
-Assembler::Condition
-MacroAssemblerX64::testNegativeZero(const FloatRegister &reg, const Register &scratch)
+#ifdef JSGC_GENERATIONAL
+
+void
+MacroAssemblerX64::branchPtrInNurseryRange(Register ptr, Register temp, Label *label)
 {
-    movq(reg, scratch);
-    cmpq(scratch, Imm32(1));
-    return Overflow;
+    JS_ASSERT(ptr != temp);
+    JS_ASSERT(ptr != ScratchReg);
+
+    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
+    movePtr(ImmWord(-ptrdiff_t(nursery.start())), ScratchReg);
+    addPtr(ptr, ScratchReg);
+    branchPtr(Assembler::Below, ScratchReg, Imm32(Nursery::NurserySize), label);
 }
 
-Assembler::Condition
-MacroAssemblerX64::testNegativeZeroFloat32(const FloatRegister &reg, const Register &scratch)
+void
+MacroAssemblerX64::branchValueIsNurseryObject(ValueOperand value, Register temp, Label *label)
 {
-    movd(reg, scratch);
-    cmpl(scratch, Imm32(1));
-    return Overflow;
+    // 'Value' representing the start of the nursery tagged as a JSObject
+    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
+    Value start = ObjectValue(*reinterpret_cast<JSObject *>(nursery.start()));
+
+    movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), ScratchReg);
+    addPtr(value.valueReg(), ScratchReg);
+    branchPtr(Assembler::Below, ScratchReg, Imm32(Nursery::NurserySize), label);
 }
+
+#endif

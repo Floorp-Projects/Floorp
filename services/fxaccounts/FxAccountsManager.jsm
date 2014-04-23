@@ -163,7 +163,7 @@ this.FxAccountsManager = {
     // in case that we have network connection.
     let sessionToken = this._activeSession.sessionToken;
 
-    return this._fxAccounts.signOut(sessionToken).then(
+    return this._fxAccounts.signOut(true).then(
       () => {
         // At this point the local session should already be removed.
 

@@ -4063,20 +4063,14 @@ nsComputedDOMStyle::DoGetTouchAction()
 
   int32_t intValue = StyleDisplay()->mTouchAction;
 
-  // None and Auto values aren't allowed to be in conjunction with
-  // other values.
-  if (NS_STYLE_TOUCH_ACTION_AUTO == intValue) {
-    val->SetIdent(eCSSKeyword_auto);
-  } else if (NS_STYLE_TOUCH_ACTION_NONE == intValue) {
-    val->SetIdent(eCSSKeyword_none);
-  } else {
-    nsAutoString valueStr;
-    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_touch_action,
-      intValue, NS_STYLE_TOUCH_ACTION_PAN_X,
-      NS_STYLE_TOUCH_ACTION_PAN_Y, valueStr);
-    val->SetString(valueStr);
-  }
-
+  // None and Auto and Manipulation values aren't allowed
+  // to be in conjunction with other values.
+  // But there are all checks in CSSParserImpl::ParseTouchAction
+  nsAutoString valueStr;
+  nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_touch_action, intValue,
+    NS_STYLE_TOUCH_ACTION_NONE, NS_STYLE_TOUCH_ACTION_MANIPULATION,
+    valueStr);
+  val->SetString(valueStr);
   return val;
 }
 

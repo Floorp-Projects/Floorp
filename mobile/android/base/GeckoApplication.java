@@ -6,7 +6,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.home.HomeConfigInvalidator;
+import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -121,7 +121,7 @@ public class GeckoApplication extends Application
         Clipboard.init(getApplicationContext());
         FilePicker.init(getApplicationContext());
         GeckoLoader.loadMozGlue();
-        HomeConfigInvalidator.getInstance().init(getApplicationContext());
+        HomePanelsManager.getInstance().init(getApplicationContext());
         super.onCreate();
     }
 

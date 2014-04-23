@@ -233,7 +233,8 @@ typedef GeckoContentController::APZStateChange APZStateChange;
  */
 static const uint32_t DefaultTouchBehavior = AllowedTouchBehavior::VERTICAL_PAN |
                                              AllowedTouchBehavior::HORIZONTAL_PAN |
-                                             AllowedTouchBehavior::ZOOM;
+                                             AllowedTouchBehavior::PINCH_ZOOM |
+                                             AllowedTouchBehavior::DOUBLE_TAP_ZOOM;
 
 /**
  * Angle from axis within which we stay axis-locked
@@ -781,7 +782,7 @@ nsEventStatus AsyncPanZoomController::OnTouchCancel(const MultiTouchInput& aEven
 nsEventStatus AsyncPanZoomController::OnScaleBegin(const PinchGestureInput& aEvent) {
   APZC_LOG("%p got a scale-begin in state %d\n", this, mState);
 
-  if (!TouchActionAllowZoom()) {
+  if (!TouchActionAllowPinchZoom()) {
     return nsEventStatus_eIgnore;
   }
 
@@ -972,7 +973,7 @@ nsEventStatus AsyncPanZoomController::OnSingleTapUp(const TapGestureInput& aEven
   APZC_LOG("%p got a single-tap-up in state %d\n", this, mState);
   // If mZoomConstraints.mAllowDoubleTapZoom is true we wait for a call to OnSingleTapConfirmed before
   // sending event to content
-  if (!mZoomConstraints.mAllowDoubleTapZoom) {
+  if (!(mZoomConstraints.mAllowDoubleTapZoom && TouchActionAllowDoubleTapZoom())) {
     return GenerateSingleTap(aEvent.mPoint, aEvent.modifiers);
   }
   return nsEventStatus_eIgnore;
@@ -987,14 +988,13 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(const TapGestureInput& aEvent)
   APZC_LOG("%p got a double-tap in state %d\n", this, mState);
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
-    if (mZoomConstraints.mAllowDoubleTapZoom) {
+    if (mZoomConstraints.mAllowDoubleTapZoom && TouchActionAllowDoubleTapZoom()) {
       int32_t modifiers = WidgetModifiersToDOMModifiers(aEvent.modifiers);
       CSSPoint geckoScreenPoint;
       if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
         controller->HandleDoubleTap(geckoScreenPoint, modifiers, GetGuid());
       }
     }
-
     return nsEventStatus_eConsumeNoDefault;
   }
   return nsEventStatus_eIgnore;
@@ -1961,19 +1961,29 @@ void AsyncPanZoomController::CheckContentResponse() {
   }
 }
 
-bool AsyncPanZoomController::TouchActionAllowZoom() {
+bool AsyncPanZoomController::TouchActionAllowPinchZoom() {
   if (!mTouchActionPropertyEnabled) {
     return true;
   }
-
   // Pointer events specification implies all touch points to allow zoom
   // to perform it.
   for (size_t i = 0; i < mTouchBlockState.mAllowedTouchBehaviors.Length(); i++) {
-    if (!(mTouchBlockState.mAllowedTouchBehaviors[i] & AllowedTouchBehavior::ZOOM)) {
+    if (!(mTouchBlockState.mAllowedTouchBehaviors[i] & AllowedTouchBehavior::PINCH_ZOOM)) {
       return false;
     }
   }
+  return true;
+}
 
+bool AsyncPanZoomController::TouchActionAllowDoubleTapZoom() {
+  if (!mTouchActionPropertyEnabled) {
+    return true;
+  }
+  for (size_t i = 0; i < mTouchBlockState.mAllowedTouchBehaviors.Length(); i++) {
+    if (!(mTouchBlockState.mAllowedTouchBehaviors[i] & AllowedTouchBehavior::DOUBLE_TAP_ZOOM)) {
+      return false;
+    }
+  }
   return true;
 }
 

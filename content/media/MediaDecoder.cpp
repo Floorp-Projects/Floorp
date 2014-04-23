@@ -48,11 +48,15 @@ static const uint32_t STALL_MS = 3000;
 // fluctuating bitrates.
 static const int64_t CAN_PLAY_THROUGH_MARGIN = 1;
 
+// avoid redefined macro in unified build
+#undef DECODER_LOG
+
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaDecoderLog;
-#define DECODER_LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
+#define DECODER_LOG(type, msg, ...) \
+  PR_LOG(gMediaDecoderLog, type, ("Decoder=%p " msg, this, ##__VA_ARGS__))
 #else
-#define DECODER_LOG(type, msg)
+#define DECODER_LOG(type, msg, ...)
 #endif
 
 class MediaMemoryTracker : public nsIMemoryReporter
@@ -314,8 +318,7 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs)
 {
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
-  DECODER_LOG(PR_LOG_DEBUG, ("MediaDecoder::RecreateDecodedStream this=%p aStartTimeUSecs=%lld!",
-                             this, (long long)aStartTimeUSecs));
+  DECODER_LOG(PR_LOG_DEBUG, "RecreateDecodedStream aStartTimeUSecs=%lld!", aStartTimeUSecs);
 
   DestroyDecodedStream();
 
@@ -347,8 +350,7 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
                                    bool aFinishWhenEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  DECODER_LOG(PR_LOG_DEBUG, ("MediaDecoder::AddOutputStream this=%p aStream=%p!",
-                             this, aStream));
+  DECODER_LOG(PR_LOG_DEBUG, "AddOutputStream aStream=%p!", aStream);
 
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
@@ -509,7 +511,7 @@ nsresult MediaDecoder::OpenResource(nsIStreamListener** aStreamListener)
 
     nsresult rv = mResource->Open(aStreamListener);
     if (NS_FAILED(rv)) {
-      DECODER_LOG(PR_LOG_DEBUG, ("%p Failed to open stream!", this));
+      DECODER_LOG(PR_LOG_WARNING, "Failed to open stream!");
       return rv;
     }
   }
@@ -526,7 +528,7 @@ nsresult MediaDecoder::Load(nsIStreamListener** aStreamListener,
 
   mDecoderStateMachine = CreateStateMachine();
   if (!mDecoderStateMachine) {
-    DECODER_LOG(PR_LOG_DEBUG, ("%p Failed to create state machine!", this));
+    DECODER_LOG(PR_LOG_WARNING, "Failed to create state machine!");
     return NS_ERROR_FAILURE;
   }
 
@@ -541,7 +543,7 @@ nsresult MediaDecoder::InitializeStateMachine(MediaDecoder* aCloneDonor)
   MediaDecoder* cloneDonor = static_cast<MediaDecoder*>(aCloneDonor);
   if (NS_FAILED(mDecoderStateMachine->Init(cloneDonor ?
                                            cloneDonor->mDecoderStateMachine : nullptr))) {
-    DECODER_LOG(PR_LOG_DEBUG, ("%p Failed to init state machine!", this));
+    DECODER_LOG(PR_LOG_WARNING, "Failed to init state machine!");
     return NS_ERROR_FAILURE;
   }
   {
@@ -1233,7 +1235,7 @@ void MediaDecoder::DurationChanged()
   SetInfinite(mDuration == -1);
 
   if (mOwner && oldDuration != mDuration && !IsInfinite()) {
-    DECODER_LOG(PR_LOG_DEBUG, ("%p duration changed to %lld", this, mDuration));
+    DECODER_LOG(PR_LOG_DEBUG, "Duration changed to %lld", mDuration);
     mOwner->DispatchEvent(NS_LITERAL_STRING("durationchange"));
   }
 }
@@ -1799,3 +1801,5 @@ MediaMemoryTracker::~MediaMemoryTracker()
 
 } // namespace mozilla
 
+// avoid redefined macro in unified build
+#undef DECODER_LOG

@@ -28,7 +28,7 @@ MarkLocals(BaselineFrame *frame, JSTracer *trc, unsigned start, unsigned end)
 }
 
 void
-BaselineFrame::trace(JSTracer *trc, IonFrameIterator &frameIterator)
+BaselineFrame::trace(JSTracer *trc, JitFrameIterator &frameIterator)
 {
     replaceCalleeToken(MarkCalleeToken(trc, calleeToken()));
 
@@ -208,7 +208,7 @@ BaselineFrame::initForOsr(InterpreterFrame *fp, uint32_t numStackValues)
         // debugger, wants a valid return address, but it's okay to just pick one.
         // In debug mode there's always at least 1 ICEntry (since there are always
         // debug prologue/epilogue calls).
-        IonFrameIterator iter(cx);
+        JitFrameIterator iter(cx);
         JS_ASSERT(iter.returnAddress() == nullptr);
         BaselineScript *baseline = fp->script()->baselineScript();
         iter.current()->setReturnAddress(baseline->returnAddressForIC(baseline->icEntry(0)));

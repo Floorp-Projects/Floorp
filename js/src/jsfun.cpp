@@ -33,7 +33,7 @@
 #include "gc/Marking.h"
 #ifdef JS_ION
 #include "jit/Ion.h"
-#include "jit/IonFrameIterator.h"
+#include "jit/JitFrameIterator.h"
 #endif
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"

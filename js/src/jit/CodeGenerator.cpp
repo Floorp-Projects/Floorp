@@ -1012,9 +1012,12 @@ CodeGenerator::visitLambdaArrow(LLambdaArrow *lir)
 
     emitLambdaInit(output, scopeChain, info);
 
-    // Store the lexical |this| value.
+    // Initialize extended slots. Lexical |this| is stored in the first one.
     MOZ_ASSERT(info.flags & JSFunction::EXTENDED);
-    masm.storeValue(thisv, Address(output, FunctionExtended::offsetOfArrowThisSlot()));
+    static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2, "All slots must be initialized");
+    static_assert(FunctionExtended::ARROW_THIS_SLOT == 0, "|this| must be stored in first slot");
+    masm.storeValue(thisv, Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
+    masm.storeValue(UndefinedValue(), Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
 
     masm.bind(ool->rejoin());
     return true;
@@ -1828,22 +1831,16 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
-    Register temp = ToRegister(lir->temp());
+    Register temp = ToTempRegisterOrInvalid(lir->temp());
 
     if (lir->object()->isConstant()) {
+        const Nursery &nursery = GetIonContext()->runtime->gcNursery();
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
     } else {
-        Register objreg = ToRegister(lir->object());
-        masm.movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
-        masm.addPtr(objreg, temp);
-        masm.branchPtr(Assembler::Below, temp, Imm32(Nursery::NurserySize), ool->rejoin());
+        masm.branchPtrInNurseryRange(ToRegister(lir->object()), temp, ool->rejoin());
     }
 
-    Register valuereg = ToRegister(lir->value());
-    masm.movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
-    masm.addPtr(valuereg, temp);
-    masm.branchPtr(Assembler::Below, temp, Imm32(Nursery::NurserySize), ool->entry());
+    masm.branchPtrInNurseryRange(ToRegister(lir->value()), temp, ool->entry());
 
     masm.bind(ool->rejoin());
 #endif
@@ -1858,27 +1855,17 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    ValueOperand value = ToValue(lir, LPostWriteBarrierV::Input);
-    masm.branchTestObject(Assembler::NotEqual, value, ool->rejoin());
-
-    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
+    Register temp = ToTempRegisterOrInvalid(lir->temp());
 
     if (lir->object()->isConstant()) {
+        const Nursery &nursery = GetIonContext()->runtime->gcNursery();
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
     } else {
-        Register temp = ToRegister(lir->temp());
-        Register objreg = ToRegister(lir->object());
-        masm.movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
-        masm.addPtr(objreg, temp);
-        masm.branchPtr(Assembler::Below, temp, Imm32(Nursery::NurserySize), ool->rejoin());
+        masm.branchPtrInNurseryRange(ToRegister(lir->object()), temp, ool->rejoin());
     }
 
-    // This section is a little different because we mustn't trash the temp
-    // register before we use its contents.
-    Register temp = ToRegister(lir->temp());
-    masm.unboxObject(value, temp);
-    masm.addPtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
-    masm.branchPtr(Assembler::Below, temp, Imm32(Nursery::NurserySize), ool->entry());
+    ValueOperand value = ToValue(lir, LPostWriteBarrierV::Input);
+    masm.branchValueIsNurseryObject(value, temp, ool->entry());
 
     masm.bind(ool->rejoin());
 #endif
