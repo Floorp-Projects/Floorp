@@ -236,6 +236,17 @@ interface MozWifiManager : EventTarget {
                         DOMString certNickname);
 
   /**
+   * Get list of imported WIFI certificates.
+   * onsuccess: We have successfully gotten imported certificate list.
+   *            request.result is an object using nickname as key, array of usage
+   *            string as value.
+   *            request.result[USAGE] = [CA_NICKNAME1, CA_NICKNAME2, ...]
+   *            USAGE string includes: "ServerCert".
+   * onerror: We have failed to list certificate.
+   */
+  DOMRequest getImportedCerts();
+
+  /**
    * Returns whether or not wifi is currently enabled.
    */
   readonly attribute boolean enabled;
