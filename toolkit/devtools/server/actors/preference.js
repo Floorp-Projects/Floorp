@@ -8,7 +8,6 @@ const {Arg, method, RetVal} = protocol;
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import('resource://gre/modules/devtools/dbg-server.jsm');
 
 exports.register = function(handle) {
   handle.addGlobalActor(PreferenceActor, "preferenceActor");
