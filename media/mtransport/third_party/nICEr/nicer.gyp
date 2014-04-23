@@ -74,6 +74,8 @@
                 "./src/net/nr_socket.h",
                 #"./src/net/nr_socket_local.c",
                 "./src/net/nr_socket_local.h",
+                "./src/net/nr_socket_multi_tcp.c",
+                "./src/net/nr_socket_multi_tcp.h",
                 "./src/net/transport_addr.c",
                 "./src/net/transport_addr.h",
                 "./src/net/transport_addr_reg.c",

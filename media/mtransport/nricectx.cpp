@@ -202,16 +202,14 @@ static nr_ice_crypto_vtbl nr_ice_crypto_nss_vtbl = {
   nr_crypto_nss_md5
 };
 
-nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server *server,
-                                            const std::string &transport) const {
+nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server *server) const {
   int r;
-  int transport_int;
 
   memset(server, 0, sizeof(nr_ice_stun_server));
-  if (transport == kNrIceTransportUdp) {
-    transport_int = IPPROTO_UDP;
-  } else if (transport == kNrIceTransportTcp) {
-    transport_int = IPPROTO_TCP;
+  if (transport_ == kNrIceTransportUdp) {
+    server->transport = IPPROTO_UDP;
+  } else if (transport_ == kNrIceTransportTcp) {
+    server->transport = IPPROTO_TCP;
   } else {
     MOZ_ASSERT(false);
     return NS_ERROR_FAILURE;
@@ -219,7 +217,7 @@ nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server *server,
 
   if (has_addr_) {
     r = nr_praddr_to_transport_addr(&addr_, &server->u.addr,
-                                    transport_int, 0);
+                                    server->transport, 0);
     if (r) {
       return NS_ERROR_FAILURE;
     }
@@ -240,18 +238,9 @@ nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server *server,
 nsresult NrIceTurnServer::ToNicerTurnStruct(nr_ice_turn_server *server) const {
   memset(server, 0, sizeof(nr_ice_turn_server));
 
-  nsresult rv = ToNicerStunStruct(&server->turn_server, transport_);
+  nsresult rv = ToNicerStunStruct(&server->turn_server);
   if (NS_FAILED(rv))
     return rv;
-
-  if (transport_ == kNrIceTransportUdp) {
-    server->transport = IPPROTO_UDP;
-  } else if (transport_ == kNrIceTransportTcp) {
-    server->transport = IPPROTO_TCP;
-  } else {
-    MOZ_ASSERT(false);
-    return NS_ERROR_FAILURE;
-  }
 
   if (username_.empty())
     return NS_ERROR_INVALID_ARG;
@@ -407,6 +396,9 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_PEER_RFLX, 110);
     NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_HOST, 126);
     NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_RELAYED, 5);
+    NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_SRV_RFLX_TCP, 99);
+    NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_PEER_RFLX_TCP, 109);
+    NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_HOST_TCP, 125);
     NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_RELAYED_TCP, 0);
 
     if (set_interface_priorities) {
@@ -438,6 +430,7 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
 
     int32_t stun_client_maximum_transmits = 7;
     int32_t ice_trickle_grace_period = 5000;
+    int32_t ice_tcp_so_sock_count = 3;
 #ifndef MOZILLA_XPCOMRT_API
     nsresult res;
     nsCOMPtr<nsIPrefService> prefs =
@@ -452,6 +445,9 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
         branch->GetIntPref(
             "media.peerconnection.ice.trickle_grace_period",
             &ice_trickle_grace_period);
+        branch->GetIntPref(
+            "media.peerconnection.ice.tcp_so_sock_count",
+            &ice_tcp_so_sock_count);
       }
     }
 #endif
@@ -459,6 +455,8 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
                      stun_client_maximum_transmits);
     NR_reg_set_uint4((char *)NR_ICE_REG_TRICKLE_GRACE_PERIOD,
                      ice_trickle_grace_period);
+    NR_reg_set_int4((char *)NR_ICE_REG_ICE_TCP_SO_SOCK_COUNT,
+                     ice_tcp_so_sock_count);
 
     if (allow_loopback) {
       NR_reg_set_char((char *)NR_STUN_REG_PREF_ALLOW_LOOPBACK_ADDRS, 1);

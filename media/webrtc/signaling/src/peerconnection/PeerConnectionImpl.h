@@ -149,9 +149,10 @@ class PCUuidGenerator : public mozilla::JsepUuidGenerator {
 class IceConfiguration
 {
 public:
-  bool addStunServer(const std::string& addr, uint16_t port)
+  bool addStunServer(const std::string& addr, uint16_t port,
+                     const char* transport)
   {
-    NrIceStunServer* server(NrIceStunServer::Create(addr, port));
+    NrIceStunServer* server(NrIceStunServer::Create(addr, port, transport));
     if (!server) {
       return false;
     }

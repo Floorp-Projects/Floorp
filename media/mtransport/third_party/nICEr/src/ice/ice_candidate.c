@@ -62,6 +62,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_candidate.c,v 1.2 2008/04/28 17:59:0
 #include "ice_util.h"
 #include "nr_socket_turn.h"
 #include "nr_socket.h"
+#include "nr_socket_multi_tcp.h"
 
 static int next_automatic_preference = 224;
 
@@ -89,6 +90,7 @@ void nr_ice_candidate_compute_codeword(nr_ice_candidate *cand)
   }
 
 char *nr_ice_candidate_type_names[]={0,"host","srflx","prflx","relay",0};
+char *nr_ice_candidate_tcp_type_names[]={0,"active","passive","so",0};
 
 static const char *nr_ctype_name(nr_ice_candidate_type ctype) {
   assert(ctype<CTYPE_MAX && ctype>0);
@@ -96,6 +98,14 @@ static const char *nr_ctype_name(nr_ice_candidate_type ctype) {
     return "ERROR";
   }
   return nr_ice_candidate_type_names[ctype];
+}
+
+static const char *nr_tcp_type_name(nr_socket_tcp_type tcp_type) {
+  assert(tcp_type<TCP_TYPE_MAX && tcp_type>0);
+  if (tcp_type <= 0 || tcp_type >= TCP_TYPE_MAX) {
+    return "ERROR";
+  }
+  return nr_ice_candidate_tcp_type_names[tcp_type];
 }
 
 static int nr_ice_candidate_format_stun_label(char *label, size_t size, nr_ice_candidate *cand)
@@ -122,7 +132,7 @@ static int nr_ice_candidate_format_stun_label(char *label, size_t size, nr_ice_c
     return(_status);
   }
 
-int nr_ice_candidate_create(nr_ice_ctx *ctx,nr_ice_component *comp,nr_ice_socket *isock, nr_socket *osock, nr_ice_candidate_type ctype, nr_ice_stun_server *stun_server, UCHAR component_id, nr_ice_candidate **candp)
+int nr_ice_candidate_create(nr_ice_ctx *ctx,nr_ice_component *comp,nr_ice_socket *isock, nr_socket *osock, nr_ice_candidate_type ctype, nr_socket_tcp_type tcp_type, nr_ice_stun_server *stun_server, UCHAR component_id, nr_ice_candidate **candp)
   {
     nr_ice_candidate *cand=0;
     nr_ice_candidate *tmp=0;
@@ -136,6 +146,7 @@ int nr_ice_candidate_create(nr_ice_ctx *ctx,nr_ice_component *comp,nr_ice_socket
     cand->isock=isock;
     cand->osock=osock;
     cand->type=ctype;
+    cand->tcp_type=tcp_type;
     cand->stun_server=stun_server;
     cand->component_id=component_id;
     cand->component=comp;
@@ -168,6 +179,16 @@ int nr_ice_candidate_create(nr_ice_ctx *ctx,nr_ice_component *comp,nr_ice_socket
         assert(0); /* Can't happen */
         ABORT(R_BAD_ARGS);
     }
+
+    if (tcp_type) {
+      size_t slen=strlen(label)+1; /* plus space going to be added*/
+      if (slen<sizeof(label)) {
+        label[slen-1]=' ';
+        strncpy(label+slen, nr_tcp_type_name(tcp_type), sizeof(label)-slen-1);
+        label[sizeof(label)-1]=0;
+      }
+    }
+
     if(!(cand->label=r_strdup(label)))
       ABORT(R_NO_MEMORY);
 
@@ -348,43 +369,91 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
     UCHAR type_preference;
     UCHAR interface_preference;
     UCHAR stun_priority;
+    UCHAR direction_priority=0;
     int r,_status;
+
+    if (cand->base.protocol != IPPROTO_UDP && cand->base.protocol != IPPROTO_TCP){
+      r_log(LOG_ICE,LOG_ERR,"Unknown protocol type %u",
+            (unsigned int)cand->base.protocol);
+      ABORT(R_INTERNAL);
+    }
 
     switch(cand->type){
       case HOST:
-        if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_HOST,&type_preference))
-          ABORT(r);
+        if(cand->base.protocol == IPPROTO_UDP) {
+          if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_HOST,&type_preference))
+            ABORT(r);
+        } else if(cand->base.protocol == IPPROTO_TCP) {
+          if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_HOST_TCP,&type_preference))
+            ABORT(r);
+        } else
+          ABORT(R_INTERNAL);
         stun_priority=0;
         break;
       case RELAYED:
         if(cand->base.protocol == IPPROTO_UDP) {
           if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_RELAYED,&type_preference))
             ABORT(r);
-        }
-        else if(cand->base.protocol == IPPROTO_TCP) {
+        } else if(cand->base.protocol == IPPROTO_TCP) {
           if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_RELAYED_TCP,&type_preference))
             ABORT(r);
-
-        }
-        else {
-          r_log(LOG_ICE,LOG_ERR,"Unknown protocol type %u",
-                (unsigned int)cand->base.protocol);
+        } else
           ABORT(R_INTERNAL);
-        }
-        stun_priority=255-cand->stun_server->index;
+        stun_priority=31-cand->stun_server->index;
         break;
       case SERVER_REFLEXIVE:
-        if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_SRV_RFLX,&type_preference))
-          ABORT(r);
-        stun_priority=255-cand->stun_server->index;
+        if(cand->base.protocol == IPPROTO_UDP) {
+          if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_SRV_RFLX,&type_preference))
+            ABORT(r);
+        } else if(cand->base.protocol == IPPROTO_TCP) {
+          if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_SRV_RFLX_TCP,&type_preference))
+            ABORT(r);
+        } else
+          ABORT(R_INTERNAL);
+        stun_priority=31-cand->stun_server->index;
         break;
       case PEER_REFLEXIVE:
-        if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_PEER_RFLX,&type_preference))
-          ABORT(r);
+        if(cand->base.protocol == IPPROTO_UDP) {
+          if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_PEER_RFLX,&type_preference))
+            ABORT(r);
+        } else if(cand->base.protocol == IPPROTO_TCP) {
+          if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_PEER_RFLX_TCP,&type_preference))
+            ABORT(r);
+        } else
+          ABORT(R_INTERNAL);
         stun_priority=0;
         break;
       default:
         ABORT(R_INTERNAL);
+    }
+
+    if(cand->base.protocol == IPPROTO_TCP){
+      switch (cand->tcp_type) {
+        case TCP_TYPE_ACTIVE:
+          if (cand->type == HOST)
+            direction_priority=6;
+          else
+            direction_priority=4;
+          break;
+        case  TCP_TYPE_PASSIVE:
+          if (cand->type == HOST)
+            direction_priority=4;
+          else
+            direction_priority=2;
+          break;
+        case  TCP_TYPE_SO:
+          if (cand->type == HOST)
+            direction_priority=2;
+          else
+            direction_priority=6;
+          break;
+        case  TCP_TYPE_NONE:
+          break;
+        case TCP_TYPE_MAX:
+        default:
+          assert(0);
+          ABORT(R_INTERNAL);
+      }
     }
 
     if(type_preference > 126)
@@ -429,9 +498,13 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
       }
     }
 
+    assert(stun_priority < 32);
+    assert(direction_priority < 8);
+
     cand->priority=
       (type_preference << 24) |
       (interface_preference << 16) |
+      (direction_priority << 13) |
       (stun_priority << 8) |
       (256 - cand->component_id);
 
@@ -455,7 +528,6 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
   {
     int r,_status;
     int protocol=NR_RESOLVE_PROTOCOL_STUN;
-    int transport=IPPROTO_UDP;
     cand->done_cb=ready_cb;
     cand->cb_arg=cb_arg;
 
@@ -475,7 +547,6 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
 #ifdef USE_TURN
       case RELAYED:
         protocol=NR_RESOLVE_PROTOCOL_TURN;
-        transport=cand->u.relayed.server->transport;
         /* Fall through */
 #endif
       case SERVER_REFLEXIVE:
@@ -497,7 +568,7 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
           resource.domain_name=cand->stun_server->u.dnsname.host;
           resource.port=cand->stun_server->u.dnsname.port;
           resource.stun_turn=protocol;
-          resource.transport_protocol=transport;
+          resource.transport_protocol=cand->stun_server->transport;
 
           /* Try to resolve */
           if(!cand->ctx->resolver) {
@@ -549,6 +620,11 @@ static int nr_ice_candidate_resolved_cb(void *cb_arg, nr_transport_addr *addr)
     /* Copy the address */
     if(r=nr_transport_addr_copy(&cand->stun_server_addr,addr))
       ABORT(r);
+
+    if (cand->tcp_type == TCP_TYPE_PASSIVE || cand->tcp_type == TCP_TYPE_SO){
+      if (r=nr_socket_multi_tcp_stun_server_connect(cand->osock, addr))
+        ABORT(r);
+    }
 
     /* Now start initializing */
     if(r=nr_ice_candidate_initialize2(cand))
@@ -713,6 +789,8 @@ static void nr_ice_srvrflx_stun_finished_cb(NR_SOCKET sock, int how, void *cb_ar
       case NR_STUN_CLIENT_STATE_DONE:
         /* Copy the address */
         nr_transport_addr_copy(&cand->addr, &cand->u.srvrflx.stun->results.stun_binding_response.mapped_addr);
+        cand->addr.protocol=cand->base.protocol;
+        nr_transport_addr_fmt_addr_string(&cand->addr);
         nr_stun_client_ctx_destroy(&cand->u.srvrflx.stun);
         cand->state=NR_ICE_CAND_STATE_INITIALIZED;
         /* Execute the ready callback */
@@ -834,8 +912,8 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
       ABORT(r);
     if(r=nr_transport_addr_get_port(&cand->addr,&port))
       ABORT(r);
-    snprintf(attr,maxlen,"candidate:%s %d UDP %u %s %d typ %s",
-      cand->foundation, cand->component_id, cand->priority, addr, port,
+    snprintf(attr,maxlen,"candidate:%s %d %s %u %s %d typ %s",
+      cand->foundation, cand->component_id, cand->addr.protocol==IPPROTO_UDP?"UDP":"TCP",cand->priority, addr, port,
       nr_ctype_name(cand->type));
 
     len=strlen(attr); attr+=len; maxlen-=len;
@@ -867,6 +945,12 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
         ABORT(R_INTERNAL);
         break;
     }
+
+    if (cand->base.protocol==IPPROTO_TCP && cand->tcp_type){
+      len=strlen(attr); attr+=len; maxlen-=len;
+      snprintf(attr,maxlen," tcptype %s",nr_tcp_type_name(cand->tcp_type));
+    }
+
     _status=0;
   abort:
     return(_status);

@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2007, Adobe Systems, Incorporated
-Copyright (c) 2013, Mozilla
+Copyright (c) 2014, Mozilla
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -31,31 +31,23 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-
-#ifndef _nr_socket_buffered_stun_h
-#define _nr_socket_buffered_stun_h
+#ifndef _nr_socket_multi_tcp_h
+#define _nr_socket_multi_tcp_h
 
 #include "nr_socket.h"
 
-/* Wrapper socket which provides buffered STUN-oriented I/O
+/* Argument use_framing is 0 only in call from test code (STUN TCP server
+   listening socket). For other purposes it should be always set to true */
 
-   1. Writes don't block and are automatically flushed when needed.
-   2. All reads are in units of STUN messages
+int nr_socket_multi_tcp_create(struct nr_ice_ctx_ *ctx,
+  nr_transport_addr *addr,  nr_socket_tcp_type tcp_type,
+  int precreated_so_count, int use_framing, int max_pending,
+  nr_socket **sockp);
 
-   This socket takes ownership of the inner socket |sock|.
- */
+int nr_socket_multi_tcp_set_readable_cb(nr_socket *sock,
+  NR_async_cb readable_cb,void *readable_cb_arg);
 
-typedef enum {
-  TURN_TCP_FRAMING=0,
-  ICE_TCP_FRAMING
-} nr_framing_type;
-
-int nr_socket_buffered_stun_create(nr_socket *inner, int max_pending,
-  nr_framing_type framing_type, nr_socket **sockp);
-
-int nr_socket_buffered_set_connected_to(nr_socket *sock,
-    nr_transport_addr *remote_addr);
+int nr_socket_multi_tcp_stun_server_connect(nr_socket *sock,
+  nr_transport_addr *addr);
 
 #endif
-

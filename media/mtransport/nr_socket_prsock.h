@@ -70,6 +70,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Stub declaration for nICEr type
 typedef struct nr_socket_vtbl_ nr_socket_vtbl;
+typedef struct nr_socket_ nr_socket;
 
 namespace mozilla {
 
@@ -98,6 +99,8 @@ public:
   virtual int connect(nr_transport_addr *addr) = 0;
   virtual int write(const void *msg, size_t len, size_t *written) = 0;
   virtual int read(void* buf, size_t maxlen, size_t *len) = 0;
+  virtual int listen(int backlog) = 0;
+  virtual int accept(nr_transport_addr *addrp, nr_socket **sockp) = 0;
 
    // Implementations of the async_event APIs
   virtual int async_wait(int how, NR_async_cb cb, void *cb_arg,
@@ -165,6 +168,8 @@ public:
   virtual int connect(nr_transport_addr *addr) override;
   virtual int write(const void *msg, size_t len, size_t *written) override;
   virtual int read(void* buf, size_t maxlen, size_t *len) override;
+  virtual int listen(int backlog) override;
+  virtual int accept(nr_transport_addr *addrp, nr_socket **sockp) override;
 
 protected:
   virtual ~NrSocket() {
@@ -230,6 +235,8 @@ public:
   virtual int connect(nr_transport_addr *addr) override;
   virtual int write(const void *msg, size_t len, size_t *written) override;
   virtual int read(void* buf, size_t maxlen, size_t *len) override;
+  virtual int listen(int backlog) override;
+  virtual int accept(nr_transport_addr *addrp, nr_socket **sockp) override;
 
 private:
   virtual ~NrSocketIpc();

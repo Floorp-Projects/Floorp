@@ -607,7 +607,8 @@ PeerConnectionImpl::AddIceServer(const RTCIceServer &aServer,
         return NS_ERROR_FAILURE;
       }
     } else {
-      if (!aDst->addStunServer(host.get(), port)) {
+      if (!aDst->addStunServer(host.get(), port, (transport.IsEmpty() ?
+                                kNrIceTransportUdp : transport.get()))) {
         return NS_ERROR_FAILURE;
       }
     }
