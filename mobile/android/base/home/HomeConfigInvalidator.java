@@ -18,8 +18,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
-import org.mozilla.gecko.home.PanelManager.PanelInfo;
-import org.mozilla.gecko.home.PanelManager.RequestCallback;
+import org.mozilla.gecko.home.PanelInfoManager.PanelInfo;
+import org.mozilla.gecko.home.PanelInfoManager.RequestCallback;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -292,7 +292,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
         final Object panelRequestLock = new Object();
         final List<PanelInfo> latestPanelInfos = new ArrayList<PanelInfo>();
 
-        final PanelManager pm = new PanelManager();
+        final PanelInfoManager pm = new PanelInfoManager();
         pm.requestPanelsById(ids, new RequestCallback() {
             @Override
             public void onComplete(List<PanelInfo> panelInfos) {
