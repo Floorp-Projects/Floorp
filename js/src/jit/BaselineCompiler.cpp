@@ -416,7 +416,6 @@ BaselineCompiler::emitEpilogue()
 #ifdef JSGC_GENERATIONAL
 // On input:
 //  R2.scratchReg() contains object being written to.
-//  R1.scratchReg() contains slot index being written to.
 //  Otherwise, baseline stack will be synced, so all other registers are usable as scratch.
 // This calls:
 //    void PostWriteBarrier(JSRuntime *rt, JSObject *obj);
@@ -2101,15 +2100,13 @@ BaselineCompiler::emit_JSOP_SETALIASEDVAR()
     // Fully sync the stack if post-barrier is needed.
     // Scope coordinate object is already in R2.scratchReg().
     frame.syncStack(0);
+    Register temp = R1.scratchReg();
 
     Nursery &nursery = cx->runtime()->gcNursery;
     Label skipBarrier;
-    Label isTenured;
     masm.branchTestObject(Assembler::NotEqual, R0, &skipBarrier);
-    masm.branchPtr(Assembler::Below, objReg, ImmWord(nursery.start()), &isTenured);
-    masm.branchPtr(Assembler::Below, objReg, ImmWord(nursery.heapEnd()), &skipBarrier);
+    masm.branchPtrInNurseryRange(objReg, temp, &skipBarrier);
 
-    masm.bind(&isTenured);
     masm.call(&postBarrierSlot_);
 
     masm.bind(&skipBarrier);
@@ -2419,6 +2416,7 @@ BaselineCompiler::emitFormalArgAccess(uint32_t arg, bool get)
 #ifdef JSGC_GENERATIONAL
         // Fully sync the stack if post-barrier is needed.
         frame.syncStack(0);
+        Register temp = R1.scratchReg();
 
         // Reload the arguments object
         Register reg = R2.scratchReg();
@@ -2426,11 +2424,8 @@ BaselineCompiler::emitFormalArgAccess(uint32_t arg, bool get)
 
         Nursery &nursery = cx->runtime()->gcNursery;
         Label skipBarrier;
-        Label isTenured;
-        masm.branchPtr(Assembler::Below, reg, ImmWord(nursery.start()), &isTenured);
-        masm.branchPtr(Assembler::Below, reg, ImmWord(nursery.heapEnd()), &skipBarrier);
+        masm.branchPtrInNurseryRange(reg, temp, &skipBarrier);
 
-        masm.bind(&isTenured);
         masm.call(&postBarrierSlot_);
 
         masm.bind(&skipBarrier);
