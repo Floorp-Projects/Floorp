@@ -117,7 +117,7 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
   RefPtr<CompositableHost> result;
   switch (aTextureInfo.mCompositableType) {
   case BUFFER_BRIDGE:
-    MOZ_CRASH("Cannot create an image bridge compositable this way");
+    NS_ERROR("Cannot create an image bridge compositable this way");
     break;
   case BUFFER_CONTENT_INC:
     result = new ContentHostIncremental(aTextureInfo);
@@ -136,7 +136,7 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
     result = new ContentHostDoubleBuffered(aTextureInfo);
     break;
   default:
-    MOZ_CRASH("Unknown CompositableType");
+    NS_ERROR("Unknown CompositableType");
   }
   // We know that Tiled buffers don't use the compositable backend-specific
   // data, so don't bother creating it.
