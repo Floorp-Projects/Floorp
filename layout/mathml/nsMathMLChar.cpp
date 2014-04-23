@@ -1763,6 +1763,10 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
     mUnscaledAscent = aDesiredStretchSize.ascent;
   }
     
+  if (glyphFound) {
+    return NS_OK;
+  }
+
   // stretchy character
   if (stretchy) {
     if (isVertical) {
@@ -1795,7 +1799,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
 
   // We do not have a char variant for this largeop in display mode, so we
   // apply a scale transform to the base char.
-  if (!glyphFound && largeop) {
+  if (largeop) {
     float scale;
     float largeopFactor = kLargeOpFactor;
 
