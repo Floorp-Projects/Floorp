@@ -104,7 +104,7 @@ FxAccountsService.prototype = {
           },
           error => {
             log.error("get silent assertion failed: " + JSON.stringify(error));
-            this.doError(aRpCaller.id, error.toString());
+            this.doError(aRpCaller.id, error);
           }
         );
       }
