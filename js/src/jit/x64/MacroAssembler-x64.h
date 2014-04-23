@@ -1325,6 +1325,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         storeValue(JSVAL_TYPE_INT32, ScratchReg, Dest);
     }
 
+#ifdef JSGC_GENERATIONAL
+    void branchPtrInNurseryRange(Register ptr, Register temp, Label *label);
+    void branchValueIsNurseryObject(ValueOperand value, Register temp, Label *label);
+#endif
 };
 
 typedef MacroAssemblerX64 MacroAssemblerSpecific;

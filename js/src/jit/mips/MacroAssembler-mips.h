@@ -1142,6 +1142,8 @@ public:
     void moveFloat32(FloatRegister src, FloatRegister dest) {
         as_movs(dest, src);
     }
+
+    void branchPtrInNurseryRange(Register ptr, Register temp, Label *label);
 };
 
 typedef MacroAssemblerMIPSCompat MacroAssemblerSpecific;
