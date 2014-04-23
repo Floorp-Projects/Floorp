@@ -31,7 +31,8 @@ void EbmlComposer::GenerateHeader()
     Ebml_StartSubElement(&ebml, &segEbmlLoc, Segment);
     {
       Ebml_StartSubElement(&ebml, &ebmlLocseg, SeekHead);
-      // Todo: We don't know the exact sizes of encoded data and ignore this section.
+      // Todo: We don't know the exact sizes of encoded data and
+      // ignore this section.
       Ebml_EndSubElement(&ebml, &ebmlLocseg);
       writeSegmentInformation(&ebml, &ebmlLoc, TIME_CODE_SCALE, 0);
       {
@@ -54,31 +55,52 @@ void EbmlComposer::GenerateHeader()
         Ebml_EndSubElement(&ebml, &trackLoc);
       }
     }
-    // The Recording length is unknow and ignore write the whole Segment element size
+    // The Recording length is unknown and
+    // ignore write the whole Segment element size
   }
   MOZ_ASSERT(ebml.offset <= DEFAULT_HEADER_SIZE + mCodecPrivateData.Length(),
              "write more data > EBML_BUFFER_SIZE");
-  mClusterBuffs.AppendElement();
-  mClusterBuffs.LastElement().SetLength(ebml.offset);
-  memcpy(mClusterBuffs.LastElement().Elements(), ebml.buf, ebml.offset);
+  auto block = mClusterBuffs.AppendElement();
+  block->SetLength(ebml.offset);
+  memcpy(block->Elements(), ebml.buf, ebml.offset);
+  mFlushState |= FLUSH_METADATA;
+}
+
+void EbmlComposer::FinishMetadata()
+{
+  if (mFlushState & FLUSH_METADATA) {
+    // We don't remove the first element of mClusterBuffs because the
+    // |mClusterHeaderIndex| may have value.
+    mClusterCanFlushBuffs.AppendElement()->SwapElements(mClusterBuffs[0]);
+    mFlushState &= ~FLUSH_METADATA;
+  }
 }
 
 void EbmlComposer::FinishCluster()
 {
-  MOZ_ASSERT(mClusterLengthLoc > 0 );
-  MOZ_ASSERT(mClusterHeaderIndex > 0);
-  for (uint32_t i = 0; i < mClusterBuffs.Length(); i ++ ) {
-    mClusterCanFlushBuffs.AppendElement()->SwapElements(mClusterBuffs[i]);
+  FinishMetadata();
+  if (!(mFlushState & FLUSH_CLUSTER)) {
+    // No completed cluster available.
+    return;
   }
-  mClusterBuffs.Clear();
+
+  MOZ_ASSERT(mClusterLengthLoc > 0);
   EbmlGlobal ebml;
   EbmlLoc ebmlLoc;
   ebmlLoc.offset = mClusterLengthLoc;
-  ebml.offset = mClusterCanFlushBuffs[mClusterHeaderIndex].Length();
-  ebml.buf = mClusterCanFlushBuffs[mClusterHeaderIndex].Elements();
+  ebml.offset = mClusterBuffs[mClusterHeaderIndex].Length();
+  ebml.buf = mClusterBuffs[mClusterHeaderIndex].Elements();
   Ebml_EndSubElement(&ebml, &ebmlLoc);
+  // Move the mClusterBuffs data from mClusterHeaderIndex that we can skip
+  // the metadata and the rest P-frames after ContainerWriter::FLUSH_NEEDED.
+  for (uint32_t i = mClusterHeaderIndex; i < mClusterBuffs.Length(); i++) {
+    mClusterCanFlushBuffs.AppendElement()->SwapElements(mClusterBuffs[i]);
+  }
+
   mClusterHeaderIndex = 0;
   mClusterLengthLoc = 0;
+  mClusterBuffs.Clear();
+  mFlushState &= ~FLUSH_CLUSTER;
 }
 
 void
@@ -87,27 +109,29 @@ EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame)
   EbmlGlobal ebml;
   ebml.offset = 0;
 
-  if (aFrame->GetFrameType() == EncodedFrame::FrameType::VP8_I_FRAME && mClusterHeaderIndex > 0) {
+  if (aFrame->GetFrameType() == EncodedFrame::FrameType::VP8_I_FRAME) {
     FinishCluster();
   }
 
-  mClusterBuffs.AppendElement();
-  mClusterBuffs.LastElement().SetLength(aFrame->GetFrameData().Length() + DEFAULT_HEADER_SIZE);
-  ebml.buf = mClusterBuffs.LastElement().Elements();
+  auto block = mClusterBuffs.AppendElement();
+  block->SetLength(aFrame->GetFrameData().Length() + DEFAULT_HEADER_SIZE);
+  ebml.buf = block->Elements();
 
   if (aFrame->GetFrameType() == EncodedFrame::FrameType::VP8_I_FRAME) {
     EbmlLoc ebmlLoc;
     Ebml_StartSubElement(&ebml, &ebmlLoc, Cluster);
-    mClusterHeaderIndex = mClusterBuffs.Length() - 1; // current cluster header array index
+    MOZ_ASSERT(mClusterBuffs.Length() > 0);
+    // current cluster header array index
+    mClusterHeaderIndex = mClusterBuffs.Length() - 1;
     mClusterLengthLoc = ebmlLoc.offset;
-    if (aFrame->GetFrameType() != EncodedFrame::FrameType::VORBIS_AUDIO_FRAME) {
-      mClusterTimecode = aFrame->GetTimeStamp() / PR_USEC_PER_MSEC;
-    }
+    mClusterTimecode = aFrame->GetTimeStamp() / PR_USEC_PER_MSEC;
     Ebml_SerializeUnsigned(&ebml, Timecode, mClusterTimecode);
+    mFlushState |= FLUSH_CLUSTER;
   }
 
   if (aFrame->GetFrameType() != EncodedFrame::FrameType::VORBIS_AUDIO_FRAME) {
-    short timeCode = aFrame->GetTimeStamp() / PR_USEC_PER_MSEC - mClusterTimecode;
+    short timeCode = aFrame->GetTimeStamp() / PR_USEC_PER_MSEC
+                     - mClusterTimecode;
     writeSimpleBlock(&ebml, 0x1, timeCode, aFrame->GetFrameType() ==
                      EncodedFrame::FrameType::VP8_I_FRAME,
                      0, 0, (unsigned char*)aFrame->GetFrameData().Elements(),
@@ -117,9 +141,10 @@ EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame)
                      0, 0, (unsigned char*)aFrame->GetFrameData().Elements(),
                      aFrame->GetFrameData().Length());
   }
-  MOZ_ASSERT(ebml.offset <= DEFAULT_HEADER_SIZE + aFrame->GetFrameData().Length(),
+  MOZ_ASSERT(ebml.offset <= DEFAULT_HEADER_SIZE +
+             aFrame->GetFrameData().Length(),
              "write more data > EBML_BUFFER_SIZE");
-  mClusterBuffs.LastElement().SetLength(ebml.offset);
+  block->SetLength(ebml.offset);
 }
 
 void
@@ -155,18 +180,25 @@ void
 EbmlComposer::ExtractBuffer(nsTArray<nsTArray<uint8_t> >* aDestBufs,
                             uint32_t aFlag)
 {
-  if ((aFlag & ContainerWriter::FLUSH_NEEDED) && mClusterHeaderIndex > 0) {
+  if ((aFlag & ContainerWriter::FLUSH_NEEDED) ||
+      (aFlag & ContainerWriter::GET_HEADER))
+  {
+    FinishMetadata();
+  }
+  if (aFlag & ContainerWriter::FLUSH_NEEDED)
+  {
     FinishCluster();
   }
   // aDestBufs may have some element
-  for (uint32_t i = 0; i < mClusterCanFlushBuffs.Length(); i ++ ) {
+  for (uint32_t i = 0; i < mClusterCanFlushBuffs.Length(); i++) {
     aDestBufs->AppendElement()->SwapElements(mClusterCanFlushBuffs[i]);
   }
   mClusterCanFlushBuffs.Clear();
 }
 
 EbmlComposer::EbmlComposer()
-  : mClusterHeaderIndex(0)
+  : mFlushState(FLUSH_NONE)
+  , mClusterHeaderIndex(0)
   , mClusterLengthLoc(0)
   , mClusterTimecode(0)
   , mWidth(0)
