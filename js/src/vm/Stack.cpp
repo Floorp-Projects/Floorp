@@ -18,7 +18,7 @@
 #endif
 #include "vm/Opcodes.h"
 
-#include "jit/IonFrameIterator-inl.h"
+#include "jit/JitFrameIterator-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/Probes-inl.h"
 #include "vm/ScopeObject-inl.h"
@@ -568,7 +568,7 @@ FrameIter::settleOnActivation()
 
 #ifdef JS_ION
         if (activation->isJit()) {
-            data_.ionFrames_ = jit::IonFrameIterator(data_.activations_);
+            data_.ionFrames_ = jit::JitFrameIterator(data_.activations_);
 
             // Stop at the first scripted frame.
             while (!data_.ionFrames_.isScripted() && !data_.ionFrames_.done())
@@ -655,7 +655,7 @@ FrameIter::Data::Data(const FrameIter::Data &other)
 FrameIter::FrameIter(JSContext *cx, SavedOption savedOption)
   : data_(cx, savedOption, CURRENT_CONTEXT, nullptr)
 #ifdef JS_ION
-  , ionInlineFrames_(cx, (js::jit::IonFrameIterator*) nullptr)
+  , ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
 #endif
 {
     settleOnActivation();
@@ -665,7 +665,7 @@ FrameIter::FrameIter(JSContext *cx, ContextOption contextOption,
                      SavedOption savedOption, JSPrincipals *principals)
   : data_(cx, savedOption, contextOption, principals)
 #ifdef JS_ION
-  , ionInlineFrames_(cx, (js::jit::IonFrameIterator*) nullptr)
+  , ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
 #endif
 {
     settleOnActivation();
@@ -1107,7 +1107,7 @@ FrameIter::updatePcQuadratic()
                 ++data_.activations_;
 
             // Look for the current frame.
-            data_.ionFrames_ = jit::IonFrameIterator(data_.activations_);
+            data_.ionFrames_ = jit::JitFrameIterator(data_.activations_);
             while (!data_.ionFrames_.isBaselineJS() || data_.ionFrames_.baselineFrame() != frame)
                 ++data_.ionFrames_;
 
