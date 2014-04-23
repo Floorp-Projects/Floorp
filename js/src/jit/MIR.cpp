@@ -1122,7 +1122,7 @@ MPhi::typeIncludes(MDefinition *def)
             return types->isSubset(this->resultTypeSet());
         if (this->type() == MIRType_Value || types->empty())
             return true;
-        return this->type() == MIRTypeFromValueType(types->getKnownTypeTag());
+        return this->type() == types->getKnownMIRType();
     }
 
     if (def->type() == MIRType_Value) {
@@ -3065,7 +3065,7 @@ jit::DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinit
 
         types::HeapTypeSetKey elementTypes = object->property(JSID_VOID);
 
-        MIRType type = MIRTypeFromValueType(elementTypes.knownTypeTag(constraints));
+        MIRType type = elementTypes.knownMIRType(constraints);
         if (type == MIRType_None)
             return MIRType_None;
 
@@ -3342,7 +3342,7 @@ TryAddTypeBarrierForWrite(TempAllocator &alloc, types::CompilerConstraintList *c
 
     JS_ASSERT(!aggregateProperty.empty());
 
-    MIRType propertyType = MIRTypeFromValueType(aggregateProperty.ref().knownTypeTag(constraints));
+    MIRType propertyType = aggregateProperty.ref().knownMIRType(constraints);
     switch (propertyType) {
       case MIRType_Boolean:
       case MIRType_Int32:
