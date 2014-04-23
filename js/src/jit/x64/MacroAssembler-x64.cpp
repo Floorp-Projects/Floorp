@@ -367,22 +367,6 @@ MacroAssemblerX64::handleFailureWithHandlerTail()
     jmp(Operand(rsp, offsetof(ResumeFromException, target)));
 }
 
-Assembler::Condition
-MacroAssemblerX64::testNegativeZero(const FloatRegister &reg, const Register &scratch)
-{
-    movq(reg, scratch);
-    cmpq(scratch, Imm32(1));
-    return Overflow;
-}
-
-Assembler::Condition
-MacroAssemblerX64::testNegativeZeroFloat32(const FloatRegister &reg, const Register &scratch)
-{
-    movd(reg, scratch);
-    cmpl(scratch, Imm32(1));
-    return Overflow;
-}
-
 #ifdef JSGC_GENERATIONAL
 
 void

@@ -387,47 +387,6 @@ MacroAssemblerX86::branchTestValue(Condition cond, const ValueOperand &value, co
     }
 }
 
-Assembler::Condition
-MacroAssemblerX86::testNegativeZero(const FloatRegister &reg, const Register &scratch)
-{
-    // Determines whether the single double contained in the XMM register reg
-    // is equal to double-precision -0.
-
-    Label nonZero;
-
-    // Compare to zero. Lets through {0, -0}.
-    xorpd(ScratchFloatReg, ScratchFloatReg);
-
-    // If reg is non-zero, jump to nonZero.
-    // Sets ZF=0 and PF=0.
-    branchDouble(DoubleNotEqual, reg, ScratchFloatReg, &nonZero);
-
-    // Input register is either zero or negative zero. Retrieve sign of input.
-    movmskpd(reg, scratch);
-
-    // If reg is 1 or 3, input is negative zero.
-    // If reg is 0 or 2, input is a normal zero.
-    // So the following test will set PF=1 for negative zero.
-    orl(Imm32(2), scratch);
-
-    bind(&nonZero);
-
-    // Here we need to be able to test if the input is a negative zero.
-    // - branchDouble joins here for non-zero values in which case it sets
-    //   ZF=0 and PF=0. In that case the test should fail.
-    // - orl sets PF=1 on negative zero and PF=0 otherwise
-    // => So testing PF=1 will return if input is negative zero or not.
-    return Parity;
-}
-
-Assembler::Condition
-MacroAssemblerX86::testNegativeZeroFloat32(const FloatRegister &reg, const Register &scratch)
-{
-    movd(reg, scratch);
-    cmpl(scratch, Imm32(1));
-    return Overflow;
-}
-
 #ifdef JSGC_GENERATIONAL
 
 void
