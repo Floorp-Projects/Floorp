@@ -47,7 +47,6 @@ class Compositor;
 class ISurfaceAllocator;
 class Layer;
 class ThebesBufferData;
-class TiledThebesLayerComposite;
 struct EffectChain;
 
 
