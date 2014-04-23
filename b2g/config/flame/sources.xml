@@ -136,8 +136,10 @@
   <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="e38444b6ce12c7c25883272a439800376d5308eb"/>
   <project name="platform/hardware/qcom/gps" path="hardware/qcom/gps" revision="13312a5577db9261cb0fcee9ccbc58cdb5e6bc55"/>
   <project name="platform/hardware/qcom/media" path="hardware/qcom/media" revision="8a0d0b0d9889ef99c4c6317c810db4c09295f15a"/>
+  <project name="platform/hardware/qcom/wlan" path="hardware/qcom/wlan" revision="2208fa3537ace873b8f9ec2355055761c79dfd5f"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="c4e2ac95907a5519a0e09f01a0d8e27fec101af0"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="e1eb226fa3ad3874ea7b63c56a9dc7012d7ff3c2"/>
   <project name="platform/system/core" path="system/core" revision="e284280277c1312017a9450956a9676584441cdf"/>
+  <project name="platform/system/qcom" path="system/qcom" revision="1cdab258b15258b7f9657da70e6f06ebd5a2fc25"/>
   <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="b3001d5f1686f89995b7bf70963cf69c8faebd83"/>
 </manifest>
