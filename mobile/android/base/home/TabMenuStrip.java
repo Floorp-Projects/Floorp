@@ -16,186 +16,85 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.accessibility.AccessibilityEvent;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class TabMenuStrip extends LinearLayout
-                          implements HomePager.Decor,
-                                     View.OnFocusChangeListener {
-    private static final String LOGTAG = "GeckoTabMenuStrip";
+/**
+ * {@code TabMenuStrip} is the view used to display {@code HomePager} tabs
+ * on tablets. See {@code TabMenuStripLayout} for details about how the
+ * tabs are created and updated.
+ */
+public class TabMenuStrip extends HorizontalScrollView
+                          implements HomePager.Decor {
 
-    private HomePager.OnTitleClickListener mOnTitleClickListener;
-    private Drawable mStrip;
-    private View mSelectedView;
+    // Offset between the selected tab title and the edge of the screen,
+    // except for the first and last tab in the tab strip.
+    private static final int TITLE_OFFSET_DIPS = 24;
 
-    // Data associated with the scrolling of the strip drawable.
-    private View toTab;
-    private View fromTab;
-    private float progress;
-
-    // This variable is used to predict the direction of scroll.
-    private float mPrevProgress;
+    private final int titleOffset;
+    private final TabMenuStripLayout layout;
 
     public TabMenuStrip(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabMenuStrip);
-        final int stripResId = a.getResourceId(R.styleable.TabMenuStrip_strip, -1);
-        a.recycle();
+        // Disable the scroll bar.
+        setHorizontalScrollBarEnabled(false);
 
-        if (stripResId != -1) {
-            mStrip = getResources().getDrawable(stripResId);
-        }
+        titleOffset = (int) (TITLE_OFFSET_DIPS * getResources().getDisplayMetrics().density);
 
-        setWillNotDraw(false);
+        layout = new TabMenuStripLayout(context, attrs);
+        addView(layout, LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
     }
 
     @Override
     public void onAddPagerView(String title) {
-        final TextView button = (TextView) LayoutInflater.from(getContext()).inflate(R.layout.tab_menu_strip, this, false);
-        button.setText(title.toUpperCase());
-
-        addView(button);
-        button.setOnClickListener(new ViewClickListener(getChildCount() - 1));
-        button.setOnFocusChangeListener(this);
+        layout.onAddPagerView(title);
     }
 
     @Override
     public void removeAllPagerViews() {
-        removeAllViews();
+        layout.removeAllViews();
     }
 
     @Override
     public void onPageSelected(final int position) {
-        mSelectedView = getChildAt(position);
-
-        // Callback to measure and draw the strip after the view is visible.
-        ViewTreeObserver vto = mSelectedView.getViewTreeObserver();
-        if (vto.isAlive()) {
-            vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    mSelectedView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-
-                    if (mStrip != null) {
-                        mStrip.setBounds(mSelectedView.getLeft(),
-                                         mSelectedView.getTop(),
-                                         mSelectedView.getRight(),
-                                         mSelectedView.getBottom());
-                    }
-
-                    mPrevProgress = position;
-                }
-            });
-        }
+        layout.onPageSelected(position);
     }
 
-    // Page scroll animates the drawable and its bounds from the previous to next child view.
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-        if (mStrip == null) {
+        layout.onPageScrolled(position, positionOffset, positionOffsetPixels);
+
+        final View selectedTitle = layout.getChildAt(position);
+        if (selectedTitle == null) {
             return;
         }
 
-        setScrollingData(position, positionOffset);
+        final int selectedTitleOffset = (int) (positionOffset * selectedTitle.getWidth());
 
-        if (fromTab == null || toTab == null) {
-            return;
+        int titleLeft = selectedTitle.getLeft() + selectedTitleOffset;
+        if (position > 0) {
+            titleLeft -= titleOffset;
         }
 
-        final int fromTabLeft =  fromTab.getLeft();
-        final int fromTabRight = fromTab.getRight();
-
-        final int toTabLeft =  toTab.getLeft();
-        final int toTabRight = toTab.getRight();
-
-        mStrip.setBounds((int) (fromTabLeft + ((toTabLeft - fromTabLeft) * progress)),
-                         0,
-                         (int) (fromTabRight + ((toTabRight - fromTabRight) * progress)),
-                         getHeight());
-        invalidate();
-    }
-
-    /*
-     * position + positionOffset goes from 0 to 2 as we scroll from page 1 to 3.
-     * Normalized progress is relative to the the direction the page is being scrolled towards.
-     * For this, we maintain direction of scroll with a state, and the child view we are moving towards and away from.
-     */
-    private void setScrollingData(int position, float positionOffset) {
-        if (position >= getChildCount() - 1) {
-            return;
+        int titleRight = selectedTitle.getRight() + selectedTitleOffset;
+        if (position < layout.getChildCount() - 1) {
+            titleRight += titleOffset;
         }
 
-        final float currProgress = position + positionOffset;
-
-        if (mPrevProgress > currProgress) {
-            toTab = getChildAt(position);
-            fromTab = getChildAt(position + 1);
-            progress = 1 - positionOffset;
-        } else {
-            toTab = getChildAt(position + 1);
-            fromTab = getChildAt(position);
-            progress = positionOffset;
-        }
-
-        mPrevProgress = currProgress;
-    }
-
-    @Override
-    public void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
-        if (mStrip != null) {
-            mStrip.draw(canvas);
-        }
-    }
-
-    @Override
-    public void onFocusChange(View v, boolean hasFocus) {
-        if (v == this && hasFocus && getChildCount() > 0) {
-            mSelectedView.requestFocus();
-            return;
-        }
-
-        if (!hasFocus) {
-            return;
-        }
-
-        int i = 0;
-        final int numTabs = getChildCount();
-
-        while (i < numTabs) {
-            View view = getChildAt(i);
-            if (view == v) {
-                view.requestFocus();
-                if (isShown()) {
-                    // A view is focused so send an event to announce the menu strip state.
-                    sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED);
-                }
-                break;
-            }
-
-            i++;
+        final int scrollX = getScrollX();
+        if (titleLeft < scrollX) {
+            // Tab strip overflows to the left.
+            scrollTo(titleLeft, 0);
+        } else if (titleRight > scrollX + getWidth()) {
+            // Tab strip overflows to the right.
+            scrollTo(titleRight - getWidth(), 0);
         }
     }
 
     @Override
     public void setOnTitleClickListener(HomePager.OnTitleClickListener onTitleClickListener) {
-        mOnTitleClickListener = onTitleClickListener;
-    }
-
-    private class ViewClickListener implements OnClickListener {
-        private final int mIndex;
-
-        public ViewClickListener(int index) {
-            mIndex = index;
-        }
-
-        @Override
-        public void onClick(View view) {
-            if (mOnTitleClickListener != null) {
-                mOnTitleClickListener.onTitleClicked(mIndex);
-            }
-        }
+        layout.setOnTitleClickListener(onTitleClickListener);
     }
 }
