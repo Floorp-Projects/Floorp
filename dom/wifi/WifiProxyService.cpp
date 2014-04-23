@@ -10,6 +10,11 @@
 #include "WifiUtils.h"
 #include "nsCxPusher.h"
 
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracer.h"
+using namespace mozilla::tasktracer;
+#endif
+
 #define NS_WIFIPROXYSERVICE_CID \
   { 0xc6c9be7e, 0x744f, 0x4222, {0xb2, 0x03, 0xcd, 0x55, 0xdf, 0xc8, 0xbc, 0x12} }
 
@@ -63,6 +68,12 @@ public:
     nsAutoString event;
     gWpaSupplicant->WaitForEvent(event, mInterface);
     if (!event.IsEmpty()) {
+#ifdef MOZ_TASK_TRACER
+      // Make wifi initialization events to be the source events of TaskTracer,
+      // and originate the rest correlation tasks from here.
+      AutoSourceEvent taskTracerEvent(SourceEventType::WIFI);
+      AddLabel("%s %s", mInterface.get(), NS_ConvertUTF16toUTF8(event).get());
+#endif
       nsCOMPtr<nsIRunnable> runnable = new WifiEventDispatcher(event, mInterface);
       NS_DispatchToMainThread(runnable);
     }

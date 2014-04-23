@@ -9,6 +9,11 @@
 #include "nsXULAppAPI.h"
 #include <fcntl.h>
 
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracer.h"
+using namespace mozilla::tasktracer;
+#endif
+
 static const size_t MAX_READ_SIZE = 1 << 16;
 
 namespace mozilla {
@@ -672,6 +677,12 @@ UnixSocketImpl::OnSocketCanReceiveWithoutBlocking()
       NS_DispatchToMainThread(r);
       return;
     }
+
+#ifdef MOZ_TASK_TRACER
+    // Make unix socket creation events to be the source events of TaskTracer,
+    // and originate the rest correlation tasks from here.
+    AutoSourceEvent taskTracerEvent(SourceEventType::UNIXSOCKET);
+#endif
 
     incoming->mSize = ret;
     nsRefPtr<SocketReceiveRunnable> r =
