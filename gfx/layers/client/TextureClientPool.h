@@ -78,6 +78,8 @@ public:
    */
   void Clear();
 
+  gfx::SurfaceFormat GetFormat() { return mFormat; }
+
 private:
   // The time in milliseconds before the pool will be shrunk to the minimum
   // size after returning a client.

@@ -37,11 +37,6 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-  TextureClientPoolMember::TextureClientPoolMember(SurfaceFormat aFormat, TextureClientPool* aTexturePool)
-  : mFormat(aFormat)
-  , mTexturePool(aTexturePool)
-{}
-
 ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   : mPhase(PHASE_NONE)
   , mWidget(aWidget) 
@@ -61,8 +56,6 @@ ClientLayerManager::~ClientLayerManager()
   mRoot = nullptr;
 
   MOZ_COUNT_DTOR(ClientLayerManager);
-
-  mTexturePools.clear();
 }
 
 int32_t
@@ -233,9 +226,8 @@ ClientLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
     MakeSnapshotIfRequired();
   }
 
-  for (const TextureClientPoolMember* item = mTexturePools.getFirst();
-       item; item = item->getNext()) {
-    item->mTexturePool->ReturnDeferredClients();
+  for (size_t i = 0; i < mTexturePools.Length(); i++) {
+    mTexturePools[i]->ReturnDeferredClients();
   }
 }
 
@@ -458,21 +450,18 @@ ClientLayerManager::SetIsFirstPaint()
 TextureClientPool*
 ClientLayerManager::GetTexturePool(SurfaceFormat aFormat)
 {
-  for (const TextureClientPoolMember* item = mTexturePools.getFirst();
-       item; item = item->getNext()) {
-    if (item->mFormat == aFormat) {
-      return item->mTexturePool;
+  for (size_t i = 0; i < mTexturePools.Length(); i++) {
+    if (mTexturePools[i]->GetFormat() == aFormat) {
+      return mTexturePools[i];
     }
   }
 
-  TextureClientPoolMember* texturePoolMember =
-    new TextureClientPoolMember(aFormat,
+  mTexturePools.AppendElement(
       new TextureClientPool(aFormat, IntSize(TILEDLAYERBUFFER_TILE_SIZE,
                                              TILEDLAYERBUFFER_TILE_SIZE),
                             mForwarder));
-  mTexturePools.insertBack(texturePoolMember);
 
-  return texturePoolMember->mTexturePool;
+  return mTexturePools.LastElement();
 }
 
 SimpleTextureClientPool*
@@ -502,9 +491,8 @@ ClientLayerManager::ClearCachedResources(Layer* aSubtree)
   } else if (mRoot) {
     ClearLayer(mRoot);
   }
-  for (const TextureClientPoolMember* item = mTexturePools.getFirst();
-       item; item = item->getNext()) {
-    item->mTexturePool->Clear();
+  for (size_t i = 0; i < mTexturePools.Length(); i++) {
+    mTexturePools[i]->Clear();
   }
 }
 
