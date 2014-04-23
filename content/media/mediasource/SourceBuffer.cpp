@@ -490,6 +490,15 @@ SourceBuffer::Evict(double aStart, double aEnd)
   }
 }
 
+bool
+SourceBuffer::ContainsTime(double aTime)
+{
+  double start = 0.0;
+  double end = 0.0;
+  GetBufferedStartEndTime(&start, &end);
+  return aTime >= start && aTime <= end;
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED_1(SourceBuffer, DOMEventTargetHelper,
                                      mMediaSource)
 
