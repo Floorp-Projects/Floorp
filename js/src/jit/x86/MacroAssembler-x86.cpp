@@ -427,3 +427,40 @@ MacroAssemblerX86::testNegativeZeroFloat32(const FloatRegister &reg, const Regis
     cmpl(scratch, Imm32(1));
     return Overflow;
 }
+
+#ifdef JSGC_GENERATIONAL
+
+void
+MacroAssemblerX86::branchPtrInNurseryRange(Register ptr, Register temp, Label *label)
+{
+    JS_ASSERT(ptr != temp);
+    JS_ASSERT(temp != InvalidReg);
+
+    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
+    movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
+    addPtr(ptr, temp);
+    branchPtr(Assembler::Below, temp, Imm32(Nursery::NurserySize), label);
+}
+
+void
+MacroAssemblerX86::branchValueIsNurseryObject(ValueOperand value, Register temp, Label *label)
+{
+    Label done;
+
+    branchTestObject(Assembler::NotEqual, value, &done);
+
+    Register obj = extractObject(value, temp);
+    // valobj and temp may be the same register, in which case we mustn't trash it
+    // before we use its contents.
+    if (obj == temp) {
+        const Nursery &nursery = GetIonContext()->runtime->gcNursery();
+        addPtr(ImmWord(-ptrdiff_t(nursery.start())), obj);
+        branchPtr(Assembler::Below, obj, Imm32(Nursery::NurserySize), label);
+    } else {
+        branchPtrInNurseryRange(obj, temp, label);
+    }
+
+    bind(&done);
+}
+
+#endif

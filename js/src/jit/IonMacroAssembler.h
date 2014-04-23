@@ -1352,11 +1352,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         convertTypedOrValueToInt(src, temp, output, fail, IntConversion_ClampToUint8);
     }
 
-#ifdef JSGC_GENERATIONAL
-    void branchPtrInNurseryRange(Register ptr, Register temp, Label *label);
-    void branchValueIsNurseryObject(ValueOperand value, Register temp, Label *label);
-#endif
-
   public:
     class AfterICSaveLive {
         friend class MacroAssembler;
