@@ -121,7 +121,10 @@ private:
 
   struct CacheEntry
   {
-    NS_INLINE_DECL_REFCOUNTING(DeviceStorageUsedSpaceCache::CacheEntry)
+    // Technically, this doesn't need to be threadsafe, but the implementation
+    // of the non-thread safe one causes ASSERTS due to the underlying thread
+    // associated with a LazyIdleThread changing from time to time.
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DeviceStorageUsedSpaceCache::CacheEntry)
 
     bool mDirty;
     nsString mStorageName;

@@ -59,7 +59,7 @@ function test() {
     let msg = [...result.matched][0];
     ok(msg, "message element");
 
-    let span = msg.querySelector(".body span[style]");
+    let span = msg.querySelector(".message-body span[style]");
     ok(span, "span element");
 
     info("span textContent is: " + span.textContent);
