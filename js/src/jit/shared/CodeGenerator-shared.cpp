@@ -193,7 +193,7 @@ CodeGeneratorShared::encodeAllocations(LSnapshot *snapshot, MResumePoint *resume
             }
             break;
           }
-          case MIRType_Magic:
+          case MIRType_MagicOptimizedArguments:
           {
             uint32_t index;
             if (!graph.addConstantToPool(MagicValue(JS_OPTIMIZED_ARGUMENTS), &index))

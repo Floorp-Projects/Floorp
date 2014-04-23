@@ -310,29 +310,6 @@ TemporaryTypeSet::TemporaryTypeSet(Type type)
     }
 }
 
-static inline TypeFlags
-PrimitiveMIRType(jit::MIRType type)
-{
-    switch (type) {
-      case jit::MIRType_Undefined:
-        return TYPE_FLAG_UNDEFINED;
-      case jit::MIRType_Null:
-        return TYPE_FLAG_NULL;
-      case jit::MIRType_Boolean:
-        return TYPE_FLAG_BOOLEAN;
-      case jit::MIRType_Int32:
-        return TYPE_FLAG_INT32;
-      case jit::MIRType_Double:
-        return TYPE_FLAG_DOUBLE;
-      case jit::MIRType_String:
-        return TYPE_FLAG_STRING;
-      case jit::MIRType_Magic:
-        return TYPE_FLAG_LAZYARGS;
-      default:
-        MOZ_ASSUME_UNREACHABLE("Bad MIR type");
-    }
-}
-
 bool
 TypeSet::mightBeMIRType(jit::MIRType type)
 {
@@ -342,7 +319,37 @@ TypeSet::mightBeMIRType(jit::MIRType type)
     if (type == jit::MIRType_Object)
         return unknownObject() || baseObjectCount() != 0;
 
-    return baseFlags() & PrimitiveMIRType(type);
+    switch (type) {
+      case jit::MIRType_Undefined:
+        return baseFlags() & TYPE_FLAG_UNDEFINED;
+      case jit::MIRType_Null:
+        return baseFlags() & TYPE_FLAG_NULL;
+      case jit::MIRType_Boolean:
+        return baseFlags() & TYPE_FLAG_BOOLEAN;
+      case jit::MIRType_Int32:
+        return baseFlags() & TYPE_FLAG_INT32;
+      case jit::MIRType_Float32: // Fall through, there's no JSVAL for Float32.
+      case jit::MIRType_Double:
+        return baseFlags() & TYPE_FLAG_DOUBLE;
+      case jit::MIRType_String:
+        return baseFlags() & TYPE_FLAG_STRING;
+      case jit::MIRType_MagicOptimizedArguments:
+        return baseFlags() & TYPE_FLAG_LAZYARGS;
+      case jit::MIRType_MagicHole:
+      case jit::MIRType_MagicIsConstructing:
+        // These magic constants do not escape to script and are not observed
+        // in the type sets.
+        //
+        // The reason we can return false here is subtle: if Ion is asking the
+        // type set if it has seen such a magic constant, then the MIR in
+        // question is the most generic type, MIRType_Value. A magic constant
+        // could only be emitted by a MIR of MIRType_Value if that MIR is a
+        // phi, and we check that different magic constants do not flow to the
+        // same join point in GuessPhiType.
+        return false;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Bad MIR type");
+    }
 }
 
 bool
@@ -1182,7 +1189,7 @@ GetMIRTypeFromTypeFlags(TypeFlags flags)
       case TYPE_FLAG_STRING:
         return jit::MIRType_String;
       case TYPE_FLAG_LAZYARGS:
-        return jit::MIRType_Magic;
+        return jit::MIRType_MagicOptimizedArguments;
       case TYPE_FLAG_ANYOBJECT:
         return jit::MIRType_Object;
       default:
