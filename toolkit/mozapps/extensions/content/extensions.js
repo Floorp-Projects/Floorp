@@ -34,7 +34,6 @@ const PREF_GETADDONS_CACHE_ID_ENABLED = "extensions.%ID%.getAddons.cache.enabled
 const PREF_UI_TYPE_HIDDEN = "extensions.ui.%TYPE%.hidden";
 const PREF_UI_LASTCATEGORY = "extensions.ui.lastCategory";
 const PREF_ADDON_DEBUGGING_ENABLED = "devtools.chrome.enabled";
-const PREF_REMOTE_DEBUGGING_ENABLED = "devtools.debugger.remote-enabled";
 
 const LOADING_MSG_DELAY = 100;
 
@@ -154,7 +153,6 @@ function initialize(event) {
   gViewController.loadInitialView(view);
 
   Services.prefs.addObserver(PREF_ADDON_DEBUGGING_ENABLED, debuggingPrefChanged, false);
-  Services.prefs.addObserver(PREF_REMOTE_DEBUGGING_ENABLED, debuggingPrefChanged, false);
 }
 
 function notifyInitialized() {
@@ -176,7 +174,6 @@ function shutdown() {
   gViewController.shutdown();
   Services.obs.removeObserver(sendEMPong, "EM-ping");
   Services.prefs.removeObserver(PREF_ADDON_DEBUGGING_ENABLED, debuggingPrefChanged);
-  Services.prefs.removeObserver(PREF_REMOTE_DEBUGGING_ENABLED, debuggingPrefChanged);
 }
 
 function sendEMPong(aSubject, aTopic, aData) {
@@ -1014,9 +1011,7 @@ var gViewController = {
       isEnabled: function cmd_debugItem_isEnabled(aAddon) {
         let debuggerEnabled = Services.prefs.
                               getBoolPref(PREF_ADDON_DEBUGGING_ENABLED);
-        let remoteEnabled = Services.prefs.
-                            getBoolPref(PREF_REMOTE_DEBUGGING_ENABLED);
-        return aAddon && aAddon.isDebuggable && debuggerEnabled && remoteEnabled;
+        return aAddon && aAddon.isDebuggable && debuggerEnabled;
       }
     },
 
