@@ -154,8 +154,10 @@ nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
   return (style->HasFilters() || style->mClipPath || style->mMask);
 }
 
-/* static */ nsPoint
-nsSVGIntegrationUtils::GetOffsetToUserSpace(nsIFrame* aFrame)
+// For non-SVG frames, this gives the offset to the frame's "user space".
+// For SVG frames, this returns a zero offset.
+static nsPoint
+GetOffsetToBoundingBox(nsIFrame* aFrame)
 {
   if ((aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
     // Do NOT call GetAllInFlowRectsUnion for SVG - it will get the
@@ -208,7 +210,7 @@ nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame)
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aNonSVGFrame);
   // 'r' is in "user space":
   nsRect r = GetPreEffectsVisualOverflowUnion(firstFrame, nullptr, nsRect(),
-                                              GetOffsetToUserSpace(firstFrame));
+                                              GetOffsetToBoundingBox(firstFrame));
   return nsLayoutUtils::RectToGfxRect(r,
            aNonSVGFrame->PresContext()->AppUnitsPerCSSPixel());
 }
@@ -217,7 +219,7 @@ nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame)
 // continuations. When we're called for a frame with continuations, we're
 // called for each continuation in turn as it's reflowed. However, it isn't
 // until the last continuation is reflowed that this method's
-// GetOffsetToUserSpace() and GetPreEffectsVisualOverflowUnion() calls will
+// GetOffsetToBoundingBox() and GetPreEffectsVisualOverflowUnion() calls will
 // obtain valid border boxes for all the continuations. As a result, we'll
 // end up returning bogus post-filter visual overflow rects for all the prior
 // continuations. Unfortunately, by the time the last continuation is
@@ -262,7 +264,7 @@ nsRect
   }
 
   // Create an override bbox - see comment above:
-  nsPoint firstFrameToUserSpace = GetOffsetToUserSpace(firstFrame);
+  nsPoint firstFrameToBoundingBox = GetOffsetToBoundingBox(firstFrame);
   // overrideBBox is in "user space", in _CSS_ pixels:
   // XXX Why are we rounding out to pixel boundaries? We don't do that in
   // GetSVGBBoxForNonSVGFrame, and it doesn't appear to be necessary.
@@ -270,7 +272,7 @@ nsRect
     nsLayoutUtils::RectToGfxRect(
       GetPreEffectsVisualOverflowUnion(firstFrame, aFrame,
                                        aPreEffectsOverflowRect,
-                                       firstFrameToUserSpace),
+                                       firstFrameToBoundingBox),
       aFrame->PresContext()->AppUnitsPerCSSPixel());
   overrideBBox.RoundOut();
 
@@ -278,7 +280,7 @@ nsRect
     nsFilterInstance::GetPostFilterBounds(firstFrame, &overrideBBox);
 
   // Return overflowRect relative to aFrame, rather than "user space":
-  return overflowRect - (aFrame->GetOffsetTo(firstFrame) + firstFrameToUserSpace);
+  return overflowRect - (aFrame->GetOffsetTo(firstFrame) + firstFrameToBoundingBox);
 }
 
 nsIntRect
@@ -310,18 +312,18 @@ nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
     return overflow.ToOutsidePixels(appUnitsPerDevPixel);
   }
 
-  // Convert aInvalidRect into "user space" in app units:
-  nsPoint toUserSpace =
-    aFrame->GetOffsetTo(firstFrame) + GetOffsetToUserSpace(firstFrame);
+  // Convert aInvalidRect into bounding box frame space in app units:
+  nsPoint toBoundingBox =
+    aFrame->GetOffsetTo(firstFrame) + GetOffsetToBoundingBox(firstFrame);
   // The initial rect was relative to the reference frame, so we need to
   // remove that offset to get a rect relative to the current frame.
-  toUserSpace -= aToReferenceFrame;
-  nsRect preEffectsRect = aInvalidRect.ToAppUnits(appUnitsPerDevPixel) + toUserSpace;
+  toBoundingBox -= aToReferenceFrame;
+  nsRect preEffectsRect = aInvalidRect.ToAppUnits(appUnitsPerDevPixel) + toBoundingBox;
 
   // Adjust the dirty area for effects, and shift it back to being relative to
   // the reference frame.
   nsRect result = nsFilterInstance::GetPostFilterDirtyArea(firstFrame,
-    preEffectsRect) - toUserSpace;
+    preEffectsRect) - toBoundingBox;
   // Return the result, in pixels relative to the reference frame.
   return result.ToOutsidePixels(appUnitsPerDevPixel);
 }
@@ -341,7 +343,7 @@ nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(nsIFrame* aFrame,
   
   // Convert aDirtyRect into "user space" in app units:
   nsPoint toUserSpace =
-    aFrame->GetOffsetTo(firstFrame) + GetOffsetToUserSpace(firstFrame);
+    aFrame->GetOffsetTo(firstFrame) + GetOffsetToBoundingBox(firstFrame);
   nsRect postEffectsRect = aDirtyRect + toUserSpace;
 
   // Return ther result, relative to aFrame, not in user space:
@@ -357,10 +359,11 @@ nsSVGIntegrationUtils::HitTestFrameForEffects(nsIFrame* aFrame, const nsPoint& a
   // Convert aPt to user space:
   nsPoint toUserSpace;
   if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+    // XXXmstange Isn't this wrong for svg:use and innerSVG frames?
     toUserSpace = aFrame->GetPosition();
   } else {
     toUserSpace =
-      aFrame->GetOffsetTo(firstFrame) + GetOffsetToUserSpace(firstFrame);
+      aFrame->GetOffsetTo(firstFrame) + GetOffsetToBoundingBox(firstFrame);
   }
   nsPoint pt = aPt + toUserSpace;
   return nsSVGUtils::HitTestClip(firstFrame, pt);
@@ -460,7 +463,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   gfxContext* gfx = aCtx->ThebesContext();
   gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
 
-  nsPoint firstFrameOffset = GetOffsetToUserSpace(firstFrame);
+  nsPoint firstFrameOffset = GetOffsetToBoundingBox(firstFrame);
   nsPoint offset = aBuilder->ToReferenceFrame(firstFrame) - firstFrameOffset;
   nsPoint offsetWithoutSVGGeomFramePos;
   if (firstFrame->IsFrameOfType(nsIFrame::eSVG)) {
@@ -620,7 +623,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   // to have it anchored at the top left corner of the bounding box of all of
   // mFrame's continuations. So we add a translation transform.
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-  nsPoint offset = nsSVGIntegrationUtils::GetOffsetToUserSpace(mFrame);
+  nsPoint offset = GetOffsetToBoundingBox(mFrame);
   gfxPoint devPxOffset = gfxPoint(offset.x, offset.y) / appUnitsPerDevPixel;
   aContext->Multiply(gfxMatrix().Translate(devPxOffset));
 
