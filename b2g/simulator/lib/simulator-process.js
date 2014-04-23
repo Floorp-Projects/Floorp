@@ -18,6 +18,7 @@ const Self = require("sdk/self");
 const URL = require("sdk/url");
 const Subprocess = require("subprocess");
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+const Prefs = require("sdk/simple-prefs").prefs;
 
 const { rootURI: ROOT_URI } = require('@loader/options');
 const PROFILE_URL = ROOT_URI + "profile/";
@@ -136,7 +137,15 @@ exports.SimulatorProcess = Class({
 
   // compute current b2g file handle
   get b2gExecutable() {
-    if (this._executable) return this._executable;
+    if (this._executable) {
+      return this._executable;
+    }
+
+    if (Prefs.customRuntime) {
+      this._executable = Prefs.customRuntime;
+      this._executableFilename = "Custom runtime";
+      return this._executable;
+    }
 
     let bin = URL.toFilename(BIN_URL);
     let executables = {
@@ -168,9 +177,9 @@ exports.SimulatorProcess = Class({
   get b2gArguments() {
     let args = [];
 
-    let profile = URL.toFilename(PROFILE_URL);
+    let profile = Prefs.gaiaProfile || URL.toFilename(PROFILE_URL);
     args.push("-profile", profile);
-    Cu.reportError(profile);
+    console.log("profile", profile);
 
     // NOTE: push dbgport option on the b2g-desktop commandline
     args.push("-start-debugger-server", "" + this.remoteDebuggerPort);
