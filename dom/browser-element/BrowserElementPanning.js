@@ -141,6 +141,7 @@ const ContentPanning = {
     if (this.watchedEventsType == 'touch') {
       if ('primaryPointerId' in this || evt.touches.length >= 2) {
         this._resetActive();
+        this._finishPanning();
         return;
       }
 
