@@ -28,54 +28,6 @@ addLoadEvent(function() {
   is(destination.channelInterpretation, "speakers", "Correct channelCountInterpretation for the destination node");
   ok(destination instanceof EventTarget, "AudioNodes must be EventTargets");
 
-  testWith(context, buffer, destination, function(source) {
-    source.start(0);
-  }, function(source) {
-    source.stop();
-  }, function() {
-    testWith(context, buffer, destination, function(source) {
-      source.start(0, 1);
-    }, function(source) {
-      expectTypeError(function() {
-        source.noteOff();
-      });
-      source.noteOff(0);
-    }, function() {
-      testWith(context, buffer, destination, function(source) {
-        source.start(0, 1, 0.5);
-      }, function(source) {
-        source.stop(0);
-      }, function() {
-        testWith(context, buffer, destination, function(source) {
-          source.noteOn(0);
-        }, function(source) {
-          source.noteOff(0);
-        }, function() {
-          testWith(context, buffer, destination, function(source) {
-            source.noteGrainOn(0, 1, 0.5);
-          }, function(source) {
-            source.stop();
-          }, function() {
-            SimpleTest.finish();
-          });
-        });
-      });
-    });
-  });
-});
-
-function testWith(context, buffer, destination, start, stop, callback)
-{
-  var source = createNode(context, buffer, destination);
-  start(source);
-  SimpleTest.executeSoon(function() {
-    stop(source);
-    callback();
-    source.disconnect();
-  });
-}
-
-function createNode(context, buffer, destination) {
   var source = context.createBufferSource();
   is(source.context, context, "Source node has proper context");
   is(source.numberOfInputs, 0, "Source node has 0 inputs");
@@ -102,8 +54,15 @@ function createNode(context, buffer, destination) {
   is(destination.numberOfInputs, 1, "Destination node has 0 inputs");
   is(destination.numberOfOutputs, 0, "Destination node has 0 outputs");
 
-  return source;
-}
+  source.start(0);
+  SimpleTest.executeSoon(function() {
+    source.stop(0);
+    source.disconnect();
+
+    SpecialPowers.clearUserPref("media.webaudio.enabled");
+    SimpleTest.finish();
+  });
+});
 
 </script>
 </pre>
