@@ -1027,7 +1027,8 @@ nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame)
   NS_ASSERTION(!aFrame->GetPrevContinuation(),
                "aFrame must be first continuation");
 
-  nsIFrame* firstFrame = GetFirstChildFrame(aFrame, aFrame->GetContent());
+  nsIFrame* cif = aFrame->GetContentInsertionFrame();
+  nsIFrame* firstFrame = GetFirstChildFrame(cif, aFrame->GetContent());
 
   if (firstFrame && IsGeneratedContentFor(nullptr, firstFrame,
                                           nsCSSPseudoElements::before)) {
@@ -1043,7 +1044,8 @@ nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
-  nsIFrame* lastFrame = GetLastChildFrame(aFrame, aFrame->GetContent());
+  nsIFrame* cif = aFrame->GetContentInsertionFrame();
+  nsIFrame* lastFrame = GetLastChildFrame(cif, aFrame->GetContent());
 
   if (lastFrame && IsGeneratedContentFor(nullptr, lastFrame,
                                          nsCSSPseudoElements::after)) {
