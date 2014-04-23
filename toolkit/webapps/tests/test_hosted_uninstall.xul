@@ -1,0 +1,269 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=898647
+-->
+<window title="Mozilla Bug 898647"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=898647"
+     target="_blank">Mozilla Bug 898647</a>
+  </body>
+
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 898647 **/
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NativeApp.jsm");
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+
+let manifest = {
+  name: "Sample hosted app",
+};
+
+let app = {
+  name: "Sample hosted app",
+  manifestURL: "http://example.com/sample.manifest",
+  manifest: manifest,
+  origin: "http://example.com/",
+  categories: [],
+  installOrigin: "http://example.com/",
+  receipts: [],
+  installTime: Date.now(),
+};
+
+let profileDir;
+let profilesIni;
+let installPath;
+let trashDir;
+
+let installedFiles;
+
+let cleanup;
+
+if (LINUX) {
+  installPath = OS.Path.join(OS.Constants.Path.homeDir, "." + WebappOSUtils.getUniqueName(app));
+
+  let xdg_data_home = Cc["@mozilla.org/process/environment;1"].
+                      getService(Ci.nsIEnvironment).
+                      get("XDG_DATA_HOME");
+  if (!xdg_data_home) {
+    xdg_data_home = OS.Path.join(OS.Constants.Path.homeDir, ".local", "share");
+  }
+
+  let desktopINI = OS.Path.join(xdg_data_home, "applications",
+                                "owa-" + WebappOSUtils.getUniqueName(app) + ".desktop");
+
+  installedFiles = [
+    OS.Path.join(installPath, "icon.png"),
+    OS.Path.join(installPath, "webapprt-stub"),
+    OS.Path.join(installPath, "webapp.json"),
+    OS.Path.join(installPath, "webapp.ini"),
+    desktopINI,
+  ];
+
+  profilesIni = OS.Path.join(installPath, "profiles.ini");
+
+  cleanup = function() {
+    return Task.spawn(function*() {
+      if (profileDir) {
+        yield OS.File.removeDir(profileDir.parent.path, { ignoreAbsent: true });
+      }
+
+      yield OS.File.removeDir(installPath, { ignoreAbsent: true });
+
+      yield OS.File.remove(desktopINI, { ignoreAbsent: true });
+    });
+  };
+} else if (WIN) {
+  installPath = OS.Path.join(OS.Constants.Path.winAppDataDir, WebappOSUtils.getUniqueName(app));
+
+  let desktopShortcut = OS.Path.join(OS.Constants.Path.desktopDir, "Sample hosted app.lnk");
+  let startMenuShortcut = OS.Path.join(OS.Constants.Path.winStartMenuProgsDir, "Sample hosted app.lnk");
+
+  installedFiles = [
+    OS.Path.join(installPath, "Sample hosted app.exe"),
+    OS.Path.join(installPath, "chrome", "icons", "default", "default.ico"),
+    OS.Path.join(installPath, "webapp.json"),
+    OS.Path.join(installPath, "webapp.ini"),
+    OS.Path.join(installPath, "uninstall", "shortcuts_log.ini"),
+    OS.Path.join(installPath, "uninstall", "uninstall.log"),
+    OS.Path.join(installPath, "uninstall", "webapp-uninstaller.exe"),
+    desktopShortcut,
+    startMenuShortcut,
+  ];
+
+  profilesIni = OS.Path.join(installPath, "profiles.ini");
+
+  cleanup = function() {
+    return Task.spawn(function*() {
+      let uninstallKey;
+      try {
+        uninstallKey = Cc["@mozilla.org/windows-registry-key;1"].
+                       createInstance(Ci.nsIWindowsRegKey);
+        uninstallKey.open(uninstallKey.ROOT_KEY_CURRENT_USER,
+                          "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+                          uninstallKey.ACCESS_WRITE);
+        if (uninstallKey.hasChild(WebappOSUtils.getUniqueName(app))) {
+          uninstallKey.removeChild(WebappOSUtils.getUniqueName(app));
+        }
+      } catch (e) {
+      } finally {
+        if (uninstallKey) {
+          uninstallKey.close();
+        }
+      }
+
+      if (profileDir) {
+        yield OS.File.removeDir(profileDir.parent.parent.path, { ignoreAbsent: true });
+      }
+
+      yield OS.File.removeDir(installPath, { ignoreAbsent: true });
+
+      yield OS.File.remove(desktopShortcut, { ignoreAbsent: true });
+      yield OS.File.remove(startMenuShortcut, { ignoreAbsent: true });
+    });
+  };
+} else if (MAC) {
+  installPath = OS.Path.join(OS.Constants.Path.homeDir, "Applications", "Sample hosted app.app");
+  let appProfileDir = OS.Path.join(OS.Constants.Path.macUserLibDir, "Application Support",
+                                   WebappOSUtils.getUniqueName(app));
+
+  installedFiles = [
+    OS.Path.join(installPath, "Contents", "Info.plist"),
+    OS.Path.join(installPath, "Contents", "MacOS", "webapprt"),
+    OS.Path.join(installPath, "Contents", "MacOS", "webapp.ini"),
+    OS.Path.join(installPath, "Contents", "Resources", "appicon.icns"),
+    OS.Path.join(appProfileDir, "webapp.json"),
+  ];
+
+  profilesIni = OS.Path.join(appProfileDir, "profiles.ini");
+
+  cleanup = function() {
+    return Task.spawn(function*() {
+      if (profileDir) {
+        yield OS.File.removeDir(profileDir.parent.path, { ignoreAbsent: true });
+      }
+
+      if (trashDir) {
+        yield OS.File.removeDir(trashDir, { ignoreAbsent: true });
+      }
+
+      yield OS.File.removeDir(installPath, { ignoreAbsent: true });
+
+      yield OS.File.removeDir(appProfileDir, { ignoreAbsent: true });
+    });
+  };
+}
+
+let runTest = Task.async(function*() {
+  // Get to a clean state before the test
+  yield cleanup();
+
+  SimpleTest.registerCleanupFunction(cleanup);
+
+  setDryRunPref();
+
+  let nativeApp = new NativeApp(app, manifest, app.categories);
+  ok(nativeApp, "NativeApp object created");
+
+  profileDir = nativeApp.createProfile();
+  ok(profileDir && profileDir.exists(), "Profile directory created");
+  ok((yield OS.File.exists(profilesIni)), "profiles.ini file created");
+
+  // On Mac build servers, we don't have enough privileges to write to /Applications,
+  // so we install apps in a user-owned directory.
+  if (MAC) {
+    nativeApp._rootInstallDir = OS.Path.join(OS.Constants.Path.homeDir, "Applications");
+    yield OS.File.makeDir(nativeApp._rootInstallDir, { ignoreExisting: true });
+  }
+
+  // Install application
+  info("Test installation");
+  yield nativeApp.install(manifest);
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
+  }
+  ok(true, "App launchable");
+  ok((yield checkFiles(installedFiles)), "Files correctly written");
+  is(WebappOSUtils.getInstallPath(app), installPath, "getInstallPath == installPath");
+
+  // Uninstall application
+  info("Test uninstallation");
+  ok((yield WebappOSUtils.uninstall(app)), "Application uninstalled");
+
+  ok(profileDir.exists(), "Profile directory still existent");
+
+  if (LINUX) {
+    ok((yield dirContainsOnly(installPath, [ profileDir.path, profilesIni ])),
+       "Files correctly removed");
+  } else if (WIN) {
+    ok((yield dirContainsOnly(installPath, [ profileDir.parent.path,
+                                             profilesIni,
+                                             OS.Path.join(installPath, "uninstall") ])),
+       "Files correctly removed");
+  } else if (MAC) {
+    ok(!(yield OS.File.exists(installPath)), "Files correctly removed");
+  }
+
+  // On Mac, the app is moved to the trash, it is still considered launchable
+  // (because it does have a install path).
+  if (!MAC) {
+    ok(!WebappOSUtils.isLaunchable(app), "App not launchable");
+    is(WebappOSUtils.getInstallPath(app), null, "getInstallPath == null");
+  } else {
+    trashDir = WebappOSUtils.getInstallPath(app);
+    ok(trashDir.contains(".Trash"), "App moved to Trash");
+  }
+
+  is(WebappOSUtils.launch(app), false, "Launch fails");
+
+  // On Mac, after we've tried to launch the app, its install path becomes null
+  // We can now repeat the tests we've already done on the other platforms:
+  if (MAC) {
+    while (WebappOSUtils.isLaunchable(app)) {
+      yield wait(1000);
+    }
+    ok(true, "App not launchable");
+
+    is(WebappOSUtils.getInstallPath(app), null, "getInstallPath == null");
+  }
+
+  let exc;
+  try {
+    yield WebappOSUtils.uninstall(app);
+  } catch (e) {
+    exc = e;
+  }
+  ok(!!exc, "Re-uninstalling failed");
+
+  SimpleTest.finish();
+});
+
+// The test doesn't work yet on Mac OS X 10.6 machines.
+// See bug 993690.
+if (MAC_106) {
+  todo(false, "The test doesn't work on Mac OS X 10.6 machines");
+  SimpleTest.finish();
+} else {
+  runTest().then(null, function(e) {
+    ok(false, "Error during test: " + e);
+    SimpleTest.finish();
+  });
+}
+
+]]>
+</script>
+</window>
