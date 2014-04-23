@@ -18,7 +18,7 @@ const {installHosted, installPackaged, getTargetForApp,
        reloadApp, launchApp, closeApp} = require("devtools/app-actor-front");
 const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js");
 
-const promise = require("sdk/core/promise");
+const promise = require("devtools/toolkit/deprecated-sync-thenables");
 
 const MANIFEST_EDITOR_ENABLED = "devtools.appmanager.manifestEditor.enabled";
 

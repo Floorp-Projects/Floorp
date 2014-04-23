@@ -8,7 +8,7 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-let promise = require("sdk/core/promise");
+let promise = require("devtools/toolkit/deprecated-sync-thenables");
 let EventEmitter = require("devtools/toolkit/event-emitter");
 let {CssLogic} = require("devtools/styleinspector/css-logic");
 

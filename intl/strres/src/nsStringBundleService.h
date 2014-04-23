@@ -7,7 +7,8 @@
 #define nsStringBundleService_h__
 
 #include "nsCOMPtr.h"
-#include "nsHashtable.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIStringBundle.h"
 #include "nsIObserver.h"
@@ -29,7 +30,7 @@ public:
 
   nsresult Init();
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSISTRINGBUNDLESERVICE
   NS_DECL_NSIOBSERVER
 
@@ -42,12 +43,12 @@ private:
   void flushBundleCache();
 
   bundleCacheEntry_t *insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
-                                      nsCStringKey *aHashKey);
+                                      nsCString &aHashKey);
 
-  nsHashtable mBundleMap;
+  nsDataHashtable<nsCStringHashKey, bundleCacheEntry_t*> mBundleMap;
   mozilla::LinkedList<bundleCacheEntry_t> mBundleCache;
 
-  nsCOMPtr<nsIErrorService>     mErrorService;
+  nsCOMPtr<nsIErrorService> mErrorService;
   nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
 };
 

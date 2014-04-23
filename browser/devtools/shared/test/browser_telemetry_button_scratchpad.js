@@ -7,7 +7,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_button_scrat
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
+let promise = Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js", {}).Promise;
 let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 let require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
