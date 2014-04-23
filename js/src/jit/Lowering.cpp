@@ -2331,15 +2331,17 @@ LIRGenerator::visitPostWriteBarrier(MPostWriteBarrier *ins)
 #ifdef JSGC_GENERATIONAL
     switch (ins->value()->type()) {
       case MIRType_Object: {
+        LDefinition tmp = needTempForObjectInNurseryRange() ? temp() : LDefinition::BogusTemp();
         LPostWriteBarrierO *lir =
             new(alloc()) LPostWriteBarrierO(useRegisterOrConstant(ins->object()),
-                                            useRegister(ins->value()),
-                                            temp());
+                                            useRegister(ins->value()), tmp);
         return add(lir, ins) && assignSafepoint(lir, ins);
       }
       case MIRType_Value: {
+        bool needTemp = needTempForObjectInNurseryRange() || needTempForValueIsNurseryObject();
+        LDefinition tmp = needTemp ? temp() : LDefinition::BogusTemp();
         LPostWriteBarrierV *lir =
-            new(alloc()) LPostWriteBarrierV(useRegisterOrConstant(ins->object()), temp());
+            new(alloc()) LPostWriteBarrierV(useRegisterOrConstant(ins->object()), tmp);
         if (!useBox(lir, LPostWriteBarrierV::Input, ins->value()))
             return false;
         return add(lir, ins) && assignSafepoint(lir, ins);

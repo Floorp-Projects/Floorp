@@ -1831,7 +1831,7 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    Register temp = ToRegister(lir->temp());
+    Register temp = ToTempRegisterOrInvalid(lir->temp());
 
     if (lir->object()->isConstant()) {
         const Nursery &nursery = GetIonContext()->runtime->gcNursery();
@@ -1855,7 +1855,7 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    Register temp = ToRegister(lir->temp());
+    Register temp = ToTempRegisterOrInvalid(lir->temp());
 
     if (lir->object()->isConstant()) {
         const Nursery &nursery = GetIonContext()->runtime->gcNursery();

@@ -38,6 +38,9 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
         return LDefinition::BogusTemp();
     }
 
+    bool needTempForObjectInNurseryRange() { return true; }
+    bool needTempForValueIsNurseryObject() { return true; }
+
     LDefinition tempForDispatchCache(MIRType outputType = MIRType_None);
 
     void lowerUntypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock *block, size_t lirIndex);
