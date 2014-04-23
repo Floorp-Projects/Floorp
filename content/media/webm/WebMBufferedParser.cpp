@@ -219,6 +219,22 @@ bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset, int64_t 
   return true;
 }
 
+bool WebMBufferedState::GetOffsetForTime(uint64_t aTime, int64_t* aOffset)
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  WebMTimeDataOffset result(0,0);
+
+  for (uint32_t i = 0; i < mTimeMapping.Length(); ++i) {
+    WebMTimeDataOffset o = mTimeMapping[i];
+    if (o.mTimecode < aTime && o.mTimecode > result.mTimecode) {
+      result = o;
+    }
+  }
+
+  *aOffset = result.mOffset;
+  return true;
+}
+
 void WebMBufferedState::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
