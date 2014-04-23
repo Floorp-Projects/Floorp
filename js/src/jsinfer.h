@@ -224,6 +224,10 @@ class Type
         return (JSValueType) data;
     }
 
+    bool isMagicArguments() const {
+        return primitive() == JSVAL_TYPE_MAGIC;
+    }
+
     bool isSomeObject() const {
         return data == JSVAL_TYPE_OBJECT || data > JSVAL_TYPE_UNKNOWN;
     }
@@ -657,7 +661,7 @@ class TemporaryTypeSet : public TypeSet
     /* Get any type tag which all values in this set must have. */
     jit::MIRType getKnownMIRType();
 
-    bool isMagicArguments() { return getKnownMIRType() == jit::MIRType_Magic; }
+    bool isMagicArguments() { return getKnownMIRType() == jit::MIRType_MagicOptimizedArguments; }
 
     /* Whether this value may be an object. */
     bool maybeObject() { return unknownObject() || baseObjectCount() > 0; }
