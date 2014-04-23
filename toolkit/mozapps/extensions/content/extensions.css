@@ -245,3 +245,8 @@ richlistitem:not([selected]) * {
 #detail-view[type="experiment"] #detail-creator {
   display: none;
 }
+
+.view-pane:not([type="experiment"]) .experiment-container,
+.view-pane:not([type="experiment"]) #detail-experiment-container {
+  display: none;
+}

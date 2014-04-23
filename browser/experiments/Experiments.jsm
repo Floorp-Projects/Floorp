@@ -593,6 +593,28 @@ Experiments.Experiments.prototype = {
   },
 
   /**
+   * Returns the ExperimentInfo for the active experiment, or null
+   * if there is none.
+   */
+  getActiveExperiment: function () {
+    let experiment = this._getActiveExperiment();
+    if (!experiment) {
+      return null;
+    }
+
+    let info = {
+      id: experiment.id,
+      name: experiment._name,
+      description: experiment._description,
+      active: experiment.enabled,
+      endDate: experiment.endDate.getTime(),
+      detailURL: experiment._homepageURL,
+    };
+
+    return info;
+  },
+
+  /**
    * Determine whether another date has the same UTC day as now().
    */
   _dateIsTodayUTC: function (d) {
@@ -742,6 +764,7 @@ Experiments.Experiments.prototype = {
       return;
     }
 
+    this._log.trace("onInstallStarted() - " + install.addon.id);
     if (install.addon.appDisabled) {
       // This is a PreviousExperiment
       return;
@@ -2061,6 +2084,7 @@ function PreviousExperimentAddon(experiment) {
   this._id = experiment.id;
   this._name = experiment.name;
   this._endDate = experiment.endDate;
+  this._description = experiment.description;
 }
 
 PreviousExperimentAddon.prototype = Object.freeze({
@@ -2134,7 +2158,9 @@ PreviousExperimentAddon.prototype = Object.freeze({
 
   // BEGIN OPTIONAL PROPERTIES
 
-  // TODO description
+  get description() {
+    return this._description;
+  },
 
   get updateDate() {
     return new Date(this._endDate);
@@ -2154,5 +2180,13 @@ PreviousExperimentAddon.prototype = Object.freeze({
   },
 
   // END REQUIRED METHODS
+
+  /**
+   * The end-date of the experiment, required for the Addon Manager UI.
+   */
+
+   get endDate() {
+     return this._endDate;
+   },
 
 });
