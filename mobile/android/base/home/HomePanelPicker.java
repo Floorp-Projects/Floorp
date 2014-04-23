@@ -135,7 +135,7 @@ public class HomePanelPicker extends FragmentActivity {
 
     private void installNewPanelAndQuit(PanelInfo panelInfo) {
         final PanelConfig newPanelConfig = panelInfo.toPanelConfig();
-        HomeConfigInvalidator.getInstance().installPanel(newPanelConfig);
+        HomePanelsManager.getInstance().installPanel(newPanelConfig);
         showToastForNewPanel(newPanelConfig);
 
         setResult(Activity.RESULT_OK);
