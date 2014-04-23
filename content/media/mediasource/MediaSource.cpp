@@ -44,9 +44,14 @@ namespace mozilla {
 static const char* const gMediaSourceTypes[6] = {
   "video/webm",
   "audio/webm",
+// XXX: Disabled other codecs temporarily to allow WebM testing.  For now, set
+// the developer-only media.mediasource.ignore_codecs pref to true to test other
+// codecs, and expect things to be broken.
+#if 0
   "video/mp4",
   "audio/mp4",
   "audio/mpeg",
+#endif
   nullptr
 };
 
