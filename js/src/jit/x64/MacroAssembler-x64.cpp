@@ -390,7 +390,6 @@ MacroAssemblerX64::branchPtrInNurseryRange(Register ptr, Register temp, Label *l
 {
     JS_ASSERT(ptr != temp);
     JS_ASSERT(ptr != ScratchReg);
-    // temp may be InvalidReg.
 
     const Nursery &nursery = GetIonContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), ScratchReg);
@@ -401,24 +400,13 @@ MacroAssemblerX64::branchPtrInNurseryRange(Register ptr, Register temp, Label *l
 void
 MacroAssemblerX64::branchValueIsNurseryObject(ValueOperand value, Register temp, Label *label)
 {
-    JS_ASSERT(temp != InvalidReg);
+    // 'Value' representing the start of the nursery tagged as a JSObject
+    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
+    Value start = ObjectValue(*reinterpret_cast<JSObject *>(nursery.start()));
 
-    Label done;
-
-    branchTestObject(Assembler::NotEqual, value, &done);
-
-    Register obj = extractObject(value, temp);
-    // obj and temp may be the same register, in which case we mustn't trash it
-    // before we use its contents.
-    if (obj == temp) {
-        const Nursery &nursery = GetIonContext()->runtime->gcNursery();
-        addPtr(ImmWord(-ptrdiff_t(nursery.start())), obj);
-        branchPtr(Assembler::Below, obj, Imm32(Nursery::NurserySize), label);
-    } else {
-        branchPtrInNurseryRange(obj, temp, label);
-    }
-
-    bind(&done);
+    movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), ScratchReg);
+    addPtr(value.valueReg(), ScratchReg);
+    branchPtr(Assembler::Below, ScratchReg, Imm32(Nursery::NurserySize), label);
 }
 
 #endif
