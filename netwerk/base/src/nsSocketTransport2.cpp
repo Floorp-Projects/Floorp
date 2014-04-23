@@ -2433,11 +2433,11 @@ nsSocketTransport::OnKeepaliveEnabledPrefChange(bool aEnabled)
 nsresult
 nsSocketTransport::SetKeepaliveEnabledInternal(bool aEnable)
 {
-    MOZ_ASSERT(mKeepaliveIdleTimeS > 0 ||
+    MOZ_ASSERT(mKeepaliveIdleTimeS > 0 &&
                mKeepaliveIdleTimeS <= kMaxTCPKeepIdle);
-    MOZ_ASSERT(mKeepaliveRetryIntervalS > 0 ||
+    MOZ_ASSERT(mKeepaliveRetryIntervalS > 0 &&
                mKeepaliveRetryIntervalS <= kMaxTCPKeepIntvl);
-    MOZ_ASSERT(mKeepaliveProbeCount > 0 ||
+    MOZ_ASSERT(mKeepaliveProbeCount > 0 &&
                mKeepaliveProbeCount <= kMaxTCPKeepCount);
 
     PRFileDescAutoLock fd(this);

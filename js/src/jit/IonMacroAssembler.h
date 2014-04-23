@@ -127,12 +127,16 @@ class MacroAssembler : public MacroAssemblerSpecific
             JS_ASSERT(isInitialized());
             MIRType mirType = MIRType_None;
 
-            if (type_.isPrimitive())
-                mirType = MIRTypeFromValueType(type_.primitive());
-            else if (type_.isAnyObject())
+            if (type_.isPrimitive()) {
+                if (type_.isMagicArguments())
+                    mirType = MIRType_MagicOptimizedArguments;
+                else
+                    mirType = MIRTypeFromValueType(type_.primitive());
+            } else if (type_.isAnyObject()) {
                 mirType = MIRType_Object;
-            else
+            } else {
                 MOZ_ASSUME_UNREACHABLE("Unknown conversion to mirtype");
+            }
 
             if (mirType == MIRType_Double)
                 masm.branchTestNumber(cond(), reg(), jump());
@@ -332,14 +336,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename Value>
     void branchTestMIRType(Condition cond, const Value &val, MIRType type, Label *label) {
         switch (type) {
-          case MIRType_Null:        return branchTestNull(cond, val, label);
-          case MIRType_Undefined:   return branchTestUndefined(cond, val, label);
-          case MIRType_Boolean:     return branchTestBoolean(cond, val, label);
-          case MIRType_Int32:       return branchTestInt32(cond, val, label);
-          case MIRType_String:      return branchTestString(cond, val, label);
-          case MIRType_Object:      return branchTestObject(cond, val, label);
-          case MIRType_Double:      return branchTestDouble(cond, val, label);
-          case MIRType_Magic:       return branchTestMagic(cond, val, label);
+          case MIRType_Null:      return branchTestNull(cond, val, label);
+          case MIRType_Undefined: return branchTestUndefined(cond, val, label);
+          case MIRType_Boolean:   return branchTestBoolean(cond, val, label);
+          case MIRType_Int32:     return branchTestInt32(cond, val, label);
+          case MIRType_String:    return branchTestString(cond, val, label);
+          case MIRType_Object:    return branchTestObject(cond, val, label);
+          case MIRType_Double:    return branchTestDouble(cond, val, label);
+          case MIRType_MagicOptimizedArguments: // Fall through.
+          case MIRType_MagicIsConstructing:
+          case MIRType_MagicHole: return branchTestMagic(cond, val, label);
           default:
             MOZ_ASSUME_UNREACHABLE("Bad MIRType");
         }

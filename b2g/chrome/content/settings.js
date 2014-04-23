@@ -146,6 +146,7 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
 
   let appInfo = Cc["@mozilla.org/xre/app-info;1"]
                   .getService(Ci.nsIXULAppInfo);
+  let update_channel = Services.prefs.getCharPref('app.update.channel');
 
   // Get the hardware info and firmware revision from device properties.
   let hardware_info = null;
@@ -163,6 +164,7 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
     'deviceinfo.software': software,
     'deviceinfo.platform_version': appInfo.platformVersion,
     'deviceinfo.platform_build_id': appInfo.platformBuildID,
+    'deviceinfo.update_channel': update_channel,
     'deviceinfo.hardware': hardware_info,
     'deviceinfo.firmware_revision': firmware_revision,
     'deviceinfo.product_model': product_model
@@ -544,7 +546,6 @@ function setUpdateTrackingId() {
 }
 setUpdateTrackingId();
 
-
 // ================ Debug ================
 (function Composer2DSettingToPref() {
   //layers.composer.enabled can be enabled in three ways
@@ -679,12 +680,6 @@ let settingsToObserve = {
   },
   'layers.draw-borders': false,
   'app.update.interval': 86400,
-  'app.update.url': {
-    resetToPref: true
-  },
-  'app.update.channel': {
-    resetToPref: true
-  },
   'debug.log-animations.enabled': {
     prefName: 'layers.offmainthreadcomposition.log-animations',
     defaultValue: false
@@ -694,51 +689,34 @@ let settingsToObserve = {
 for (let key in settingsToObserve) {
   let setting = settingsToObserve[key];
 
-  // Allow setting to contain flags redefining prefName and defaultValue.
-  let prefName = setting.prefName || key;
-  let defaultValue = setting.defaultValue || setting;
+  // By default, assume the setting name and the pref name are the same.
+  let prefName = key;
+  let defaultValue = setting;
 
-  let prefs = Services.prefs;
-
-  // If requested, reset setting value and defaultValue to the pref value.
-  if (setting.resetToPref) {
-    switch (prefs.getPrefType(prefName)) {
-      case Ci.nsIPrefBranch.PREF_BOOL:
-        defaultValue = prefs.getBoolPref(prefName);
-        break;
-
-      case Ci.nsIPrefBranch.PREF_INT:
-        defaultValue = prefs.getIntPref(prefName);
-        break;
-
-      case Ci.nsIPrefBranch.PREF_STRING:
-        defaultValue = prefs.getCharPref(prefName);
-        break;
-    }
-
-    let setting = {};
-    setting[key] = defaultValue;
-    window.navigator.mozSettings.createLock().set(setting);
+  // Check if the pref name has been overidden.
+  if (typeof setting == 'object') {
+    prefName = setting.prefName;
+    defaultValue = setting.defaultValue;
   }
 
-  // Figure out the right setter function for this type of pref.
-  let setPref;
-  switch(typeof defaultValue) {
+  switch (typeof defaultValue) {
     case 'boolean':
-      setPref = prefs.setBoolPref.bind(prefs);
-      break;
-
-    case 'number':
-      setPref = prefs.setIntPref.bind(prefs);
+      SettingsListener.observe(key, defaultValue, function(value) {
+        Services.prefs.setBoolPref(prefName, value);
+      });
       break;
 
     case 'string':
-      setPref = prefs.setCharPref.bind(prefs);
+      SettingsListener.observe(key, defaultValue, function(value) {
+        Services.prefs.setCharPref(prefName, value);
+      });
+      break;
+
+    case 'number':
+      SettingsListener.observe(key, defaultValue, function(value) {
+        Services.prefs.setIntPref(prefName, value);
+      });
       break;
   }
-
-  SettingsListener.observe(key, defaultValue, function(value) {
-    setPref(prefName, value);
-  });
 };
 

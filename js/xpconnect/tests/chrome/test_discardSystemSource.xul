@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=990353
+-->
+<window title="Mozilla Bug 990353"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=990353"
+     target="_blank">Mozilla Bug 990353</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 990353 **/
+  SimpleTest.waitForExplicitFinish();
+  const Cu = Components.utils;
+
+  function canary() {
+    var someBitOfSource = 42;
+  }
+
+  var gLoadCount = 0;
+  function frameLoaded() {
+    switch (++gLoadCount) {
+      case 1:
+        ok(/sourceless/.test(window[0].canary.toSource()), "System function should be sourceless: " + window[0].canary.toSource());
+        ok(/sourceless/.test(window[0].onload.toSource()), "System event handler should be sourceless: " + window[0].onload.toSource());
+        var sb = new Cu.Sandbox('http://www.example.com', { discardSource: true });
+        Cu.evalInSandbox('function canary() { var someBitOfSource = 42; }', sb);
+        ok(/sourceless/.test(sb.canary.toSource()), "Function from sandbox with explicit discarding should be sourceless");
+        try {
+          window[0].throwSomething();
+          ok(false, "should have thrown");
+        } catch (e) {
+          ok(/some error/.test(e), "Threw exception as expected: " + e);
+          ok(/throwSomething/.test(e.stack), "Exception stack trace works: " + e.stack);
+        }
+        window[0].location = "http://example.org/tests/js/xpconnect/tests/chrome/file_discardSystemSource.html";
+        break;
+      case 2:
+        ok(/someBitOfSource/.test(Cu.waiveXrays(window[0]).canary.toSource()), "Content function should have source");
+        ok(/someBitOfSource/.test(Cu.waiveXrays(window[0]).onload.toSource()), "Content event handler should have source");
+        testWorker();
+        break;
+    }
+  }
+
+  function testWorker() {
+    var worker = new window[0].wrappedJSObject.Worker('worker_discardSystemSource.js');
+    worker.onmessage = function(evt) {
+      ok(/someBitOfSource/.test(evt.data), "Non-chrome worker should have source: " + evt.data);
+      var chromeWorker = new Worker('worker_discardSystemSource.js');
+      chromeWorker.onmessage = function(evt) {
+        ok(/sourceless/.test(evt.data), "Chrome worker should not have source: " + evt.data);
+        SimpleTest.finish();
+      }
+    }
+  }
+
+  function go() {
+    // We should have our own source, because the pref wasn't enabled when we
+    // were loaded.
+    ok(/someBitOfSource/.test(canary.toSource()), "Should have own source");
+
+    window[0].frameElement.onload = frameLoaded;
+    window[0].location = "file_discardSystemSource.html";
+  }
+  addLoadEvent(function() {
+    SpecialPowers.pushPrefEnv({set: [['javascript.options.discardSystemSource', true]]}, go);
+  });
+
+  ]]>
+  </script>
+  <iframe></iframe>
+</window>

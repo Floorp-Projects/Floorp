@@ -1047,8 +1047,6 @@ X11/Xlibint.h
 X11/Xlocale.h
 X11/Xos.h
 X11/Xutil.h
-xpt_struct.h
-xpt_xdr.h
 zmouse.h
 speex/speex_resampler.h
 soundtouch/SoundTouch.h

@@ -15,14 +15,16 @@ FORCE_STATIC_LIB = True
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     USE_STATIC_LIBS = True
-else:
-    DEFINES['MAR_NSS'] = True
-    LOCAL_INCLUDES += ['../sign']
-
-if CONFIG['OS_ARCH'] == 'Darwin':
+elif CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
       'MacVerifyCrypto.cpp',
     ]
+    LDFLAGS += [
+      '-framework Security',
+    ]
+else:
+    DEFINES['MAR_NSS'] = True
+    LOCAL_INCLUDES += ['../sign']
 
 LOCAL_INCLUDES += [
     '../src',

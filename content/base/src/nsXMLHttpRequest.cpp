@@ -2261,6 +2261,10 @@ nsXMLHttpRequest::SendAsBinary(const nsAString &aBody,
     return;
   }
 
+  if (GetOwner() && GetOwner()->GetExtantDoc()) {
+    GetOwner()->GetExtantDoc()->WarnOnceAbout(nsIDocument::eSendAsBinary);
+  }
+
   nsAString::const_iterator iter, end;
   aBody.BeginReading(iter);
   aBody.EndReading(end);
