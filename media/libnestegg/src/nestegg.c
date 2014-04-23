@@ -1962,6 +1962,11 @@ nestegg_offset_seek(nestegg * ctx, uint64_t offset)
   ne_ctx_push(ctx, ne_top_level_elements, ctx);
   ne_ctx_push(ctx, ne_segment_elements, &ctx->segment);
 
+  ctx->log(ctx, NESTEGG_LOG_DEBUG, "seek: parsing cluster elements");
+  r = ne_parse(ctx, NULL, -1);
+  if (r != 1)
+    return -1;
+
   return 0;
 }
 
@@ -1997,10 +2002,6 @@ nestegg_track_seek(nestegg * ctx, unsigned int track, uint64_t tstamp)
 
   /* Seek and set up parser state for segment-level element (Cluster). */
   r = nestegg_offset_seek(ctx, ctx->segment_offset + seek_pos);
-  ctx->log(ctx, NESTEGG_LOG_DEBUG, "seek: parsing cluster elements");
-  r = ne_parse(ctx, NULL, -1);
-  if (r != 1)
-    return -1;
 
   if (!ne_is_suspend_element(ctx->last_id))
     return -1;
