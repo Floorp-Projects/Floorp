@@ -5,6 +5,33 @@ let pendingEmulatorCmdCount = 0;
 
 SpecialPowers.addPermission("nfc-manager", true, document);
 
+/**
+ * Emulator helper.
+ */
+let emulator = (function() {
+  let pendingCmdCount = 0;
+  let originalRunEmulatorCmd = runEmulatorCmd;
+
+  // Overwritten it so people could not call this function directly.
+  runEmulatorCmd = function() {
+    throw "Use emulator.run(cmd, callback) instead of runEmulatorCmd";
+  };
+
+  function run(cmd, callback) {
+    pendingCmdCount++;
+    originalRunEmulatorCmd(cmd, function(result) {
+      pendingCmdCount--;
+      if (callback && typeof callback === "function") {
+        callback(result);
+      }
+    });
+  }
+
+  return {
+    run: run
+  };
+}());
+
 function toggleNFC(enabled, callback) {
   isnot(callback, null);
 
