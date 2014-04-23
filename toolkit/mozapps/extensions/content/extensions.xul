@@ -532,6 +532,15 @@
                     </hbox>
                     <label id="detail-creator" class="creator"/>
                   </vbox>
+                  <hbox id="detail-experiment-container">
+                    <svg width="8" height="8" viewBox="0 0 8 8" version="1.1"
+                         xmlns="http://www.w3.org/2000/svg"
+                         id="detail-experiment-bullet-container">
+                      <circle cx="4" cy="4" r="4" id="detail-experiment-bullet"/>
+                    </svg>
+                    <label id="detail-experiment-state"/>
+                    <label id="detail-experiment-time"/>
+                  </hbox>
                   <hbox id="detail-desc-container" align="start">
                     <vbox pack="center"> <!-- Necessary to work around bug 394738 -->
                       <image id="detail-screenshot" hidden="true"/>

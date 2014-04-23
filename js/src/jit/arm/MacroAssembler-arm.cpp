@@ -4334,3 +4334,29 @@ MacroAssemblerARMCompat::jumpWithPatch(RepatchLabel *label, Condition cond)
     return ret;
 }
 
+#ifdef JSGC_GENERATIONAL
+
+void
+MacroAssemblerARMCompat::branchPtrInNurseryRange(Register ptr, Register temp, Label *label)
+{
+    JS_ASSERT(ptr != temp);
+    JS_ASSERT(ptr != ScratchRegister);
+
+    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
+    movePtr(ImmWord(-ptrdiff_t(nursery.start())), ScratchRegister);
+    addPtr(ptr, ScratchRegister);
+    branchPtr(Assembler::Below, ScratchRegister, Imm32(Nursery::NurserySize), label);
+}
+
+void
+MacroAssemblerARMCompat::branchValueIsNurseryObject(ValueOperand value, Register temp, Label *label)
+{
+    Label done;
+
+    branchTestObject(Assembler::NotEqual, value, &done);
+    branchPtrInNurseryRange(value.payloadReg(), temp, label);
+
+    bind(&done);
+}
+
+#endif

@@ -42,6 +42,7 @@ public class BrowserContract {
     public static final String PARAM_INSERT_IF_NEEDED = "insert_if_needed";
     public static final String PARAM_INCREMENT_VISITS = "increment_visits";
     public static final String PARAM_EXPIRE_PRIORITY = "priority";
+    public static final String PARAM_DATASET_ID = "dataset_id";
 
     static public enum ExpirePriority {
         NORMAL,

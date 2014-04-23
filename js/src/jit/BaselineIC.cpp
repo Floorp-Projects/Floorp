@@ -738,10 +738,7 @@ ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, Val
     Label skipBarrier;
     masm.branchTestObject(Assembler::NotEqual, val, &skipBarrier);
 
-    Label isTenured;
-    masm.branchPtr(Assembler::Below, obj, ImmWord(nursery.start()), &isTenured);
-    masm.branchPtr(Assembler::Below, obj, ImmWord(nursery.heapEnd()), &skipBarrier);
-    masm.bind(&isTenured);
+    masm.branchPtrInNurseryRange(obj, scratch, &skipBarrier);
 
     Register valReg = masm.extractObject(val, scratch);
     masm.branchPtr(Assembler::Below, valReg, ImmWord(nursery.start()), &skipBarrier);
@@ -773,7 +770,7 @@ IsTopFrameConstructing(JSContext *cx)
 {
     JS_ASSERT(cx->currentlyRunningInJit());
     JitActivationIterator activations(cx->runtime());
-    IonFrameIterator iter(activations);
+    JitFrameIterator iter(activations);
     JS_ASSERT(iter.type() == JitFrame_Exit);
 
     ++iter;

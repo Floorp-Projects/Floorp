@@ -101,8 +101,6 @@ public:
                              uint32_t aChannel,
                              float* aContents);
 
-  void MixToMono(JSContext* aJSContext);
-
 protected:
   bool RestoreJSChannelData(JSContext* aJSContext);
   void ClearJSChannels();

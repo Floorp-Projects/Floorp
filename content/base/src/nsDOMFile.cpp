@@ -20,7 +20,6 @@
 #include "nsIIPCSerializableInputStream.h"
 #include "nsIMemoryReporter.h"
 #include "nsIMIMEService.h"
-#include "nsIPlatformCharset.h"
 #include "nsISeekableStream.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIUnicodeDecoder.h"

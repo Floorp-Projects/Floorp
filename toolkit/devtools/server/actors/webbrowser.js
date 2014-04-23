@@ -537,7 +537,9 @@ TabActor.prototype = {
    * Getter for the nsIMessageManager associated to the tab.
    */
   get messageManager() {
-    return this._chromeEventHandler;
+    return this.docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIContentFrameMessageManager);
   },
 
   /**
@@ -1080,14 +1082,6 @@ BrowserTabActor.prototype.constructor = BrowserTabActor;
 Object.defineProperty(BrowserTabActor.prototype, "docShell", {
   get: function() {
     return this._browser.docShell;
-  },
-  enumerable: true,
-  configurable: false
-});
-
-Object.defineProperty(BrowserTabActor.prototype, "messageManager", {
-  get: function() {
-    return this._browser.messageManager;
   },
   enumerable: true,
   configurable: false

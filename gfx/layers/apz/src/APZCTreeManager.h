@@ -32,8 +32,9 @@ enum AllowedTouchBehavior {
   NONE =               0,
   VERTICAL_PAN =       1 << 0,
   HORIZONTAL_PAN =     1 << 1,
-  ZOOM =               1 << 2,
-  UNKNOWN =            1 << 3
+  PINCH_ZOOM =         1 << 2,
+  DOUBLE_TAP_ZOOM =    1 << 3,
+  UNKNOWN =            1 << 4
 };
 
 class Layer;

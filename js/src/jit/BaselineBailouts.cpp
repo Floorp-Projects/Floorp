@@ -1538,7 +1538,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     RootedScript outerScript(cx, nullptr);
 
     JS_ASSERT(cx->currentlyRunningInJit());
-    IonFrameIterator iter(cx);
+    JitFrameIterator iter(cx);
 
     uint32_t frameno = 0;
     while (frameno < numFrames) {

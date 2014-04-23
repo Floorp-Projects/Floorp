@@ -260,12 +260,50 @@ add_task(function testDeactivateExperiment() {
     return;
   }
 
+  // Fake an empty manifest to purge data from previous manifest.
   yield gExperiments._updateExperiments({
     "version": 1,
     "experiments": [],
   });
 
   yield gExperiments.disableExperiment("testing");
+
+  // We should have a record of the previously-active experiment.
+  let experiments = yield gExperiments.getExperiments();
+  Assert.equal(experiments.length, 1, "1 experiment is known.");
+  Assert.equal(experiments[0].active, false, "Experiment is not active.");
+
+  // We should have a previous experiment in the add-ons manager.
+  let deferred = Promise.defer();
+  AddonManager.getAddonsByTypes(["experiment"], (addons) => {
+    deferred.resolve(addons);
+  });
+  let addons = yield deferred.promise;
+  Assert.equal(addons.length, 1, "1 experiment add-on known.");
+  Assert.ok(addons[0].appDisabled, "It is a previous experiment.");
+  Assert.equal(addons[0].id, "experiment-1", "Add-on ID matches expected.");
+
+  // Verify the UI looks sane.
+  // TODO remove the pane cycle once the UI refreshes automatically.
+  yield gCategoryUtilities.openType("extension");
+
+  Assert.ok(gCategoryUtilities.isTypeVisible("experiment"), "Experiment tab visible.");
+  yield gCategoryUtilities.openType("experiment");
+
+  let item = get_addon_element(gManagerWindow, "experiment-1");
+  Assert.ok(item, "Got add-on element.");
+  Assert.ok(!item.active, "Element should not be active.");
+
+  // User control buttons should not be present because previous experiments
+  // should have no permissions.
+  let el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
+  is_element_hidden(el, "Remove button is not visible.");
+  el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "disable-btn");
+  is_element_hidden(el, "Disable button is not visible.");
+  el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "enable-btn");
+  is_element_hidden(el, "Enable button is not visible.");
+  el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "preferences-btn");
+  is_element_hidden(el, "Preferences button is not visible.");
 });
 
 add_task(function* testCleanup() {
@@ -285,6 +323,4 @@ add_task(function* testCleanup() {
   Assert.equal(addons.length, 0, "No experiment add-ons are installed.");
 
   yield close_manager(gManagerWindow);
-
 });
-

@@ -23,9 +23,6 @@ var gTest = {
 
     var delay = context.createDelay();
 
-    var delay2 = context.createDelayNode();
-    isnot(delay, delay2, "createDelayNode should create a different delay node");
-
     source.buffer = buffer;
 
     source.connect(delay);
@@ -39,13 +36,6 @@ var gTest = {
     is(delay.channelCount, 2, "delay node has 2 input channels by default");
     is(delay.channelCountMode, "max", "Correct channelCountMode for the delay node");
     is(delay.channelInterpretation, "speakers", "Correct channelCountInterpretation for the delay node");
-
-    var delay2 = context.createDelay(2);
-    is(delay2.delayTime.value, 0, "Correct initial value");
-    is(delay2.delayTime.defaultValue, 0, "Correct default value");
-    delay2.delayTime.value = 0.5;
-    is(delay2.delayTime.value, 0.5, "Correct initial value");
-    is(delay2.delayTime.defaultValue, 0, "Correct default value");
 
     expectException(function() {
       context.createDelay(0);

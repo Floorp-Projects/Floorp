@@ -804,6 +804,15 @@
             <xul:label anonid="date-updated" class="date-updated"
                        unknown="&addon.unknownDate;"/>
           </xul:hbox>
+          <xul:hbox class="experiment-container">
+            <svg width="6" height="6" viewBox="0 0 6 6" version="1.1"
+                 xmlns="http://www.w3.org/2000/svg"
+                 class="experiment-bullet-container">
+              <circle cx="3" cy="3" r="3" class="experiment-bullet"/>
+            </svg>
+            <xul:label anonid="experiment-state" class="experiment-state"/>
+            <xul:label anonid="experiment-time" class="experiment-time"/>
+          </xul:hbox>
 
           <xul:hbox class="advancedinfo-container" flex="1">
             <xul:vbox class="description-outer-container" flex="1">
@@ -972,6 +981,12 @@
       </field>
       <field name="_version">
         document.getAnonymousElementByAttribute(this, "anonid", "version");
+      </field>
+      <field name="_experimentState">
+        document.getAnonymousElementByAttribute(this, "anonid", "experiment-state");
+      </field>
+      <field name="_experimentTime">
+        document.getAnonymousElementByAttribute(this, "anonid", "experiment-time");
       </field>
       <field name="_icon">
         document.getAnonymousElementByAttribute(this, "anonid", "icon");
@@ -1347,6 +1362,33 @@
                            Services.prefs.getBoolPref('devtools.debugger.remote-enabled');
 
           this._debugBtn.disabled = this._debugBtn.hidden = !debuggable
+
+          if (this.mAddon.type == "experiment") {
+            let prefix = "experiment.";
+            let active = this.mAddon.isActive;
+
+            let stateKey = prefix + "state." + (active ? "active" : "complete");
+            this._experimentState.value = gStrings.ext.GetStringFromName(stateKey);
+
+            let now = Date.now();
+            let end = this.endDate;
+            let days = Math.abs(end - now) / (24 * 60 * 60 * 1000);
+
+            let timeKey = prefix + "time.";
+            let timeMessage;
+            if (days < 1) {
+              timeKey += (active ? "endsToday" : "endedToday");
+              timeMessage = gStrings.ext.GetStringFromName(timeKey);
+            } else {
+              timeKey += (active ? "daysRemaining" : "daysPassed");
+              days = Math.round(days);
+              let timeString = gStrings.ext.GetStringFromName(timeKey);
+              timeMessage = PluralForm.get(days, timeString)
+                                      .replace("#1", days);
+            }
+
+            this._experimentTime.value = timeMessage;
+          }
         ]]></body>
       </method>
 
