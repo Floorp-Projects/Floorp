@@ -848,7 +848,7 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
         // match the system's ideal channel configuration.
         // NOTE: we presume this is either fast or async-under-the-covers
         audioOutputStream->mStream->Init(2, IdealAudioRate(),
-                                         aStream->mAudioChannelType,
+                                         AudioChannel::Normal,
                                          AudioStream::LowLatency);
         audioOutputStream->mTrackID = tracks->GetID();
 
