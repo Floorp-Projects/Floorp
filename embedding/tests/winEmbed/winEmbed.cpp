@@ -1077,7 +1077,7 @@ nsresult AppCallbacks::CreateBrowserWindow(uint32_t aChromeFlags,
 
   // the interface to return and one addref, which we assume will be
   // immediately released
-  CallQueryInterface(static_cast<nsIWebBrowserChrome*>(chrome), aNewWindow);
+  *aNewWindow = static_cast<nsIWebBrowserChrome*>(chrome);
   // now an extra addref; the window owns itself (to be released by
   // WebBrowserChromeUI::Destroy)
   NS_ADDREF(*aNewWindow);
