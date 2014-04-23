@@ -118,6 +118,13 @@ TabChildBase::TabChildBase()
 {
 }
 
+NS_IMPL_CYCLE_COLLECTING_ADDREF(TabChildBase)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(TabChildBase)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TabChildBase)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_2(TabChildBase, mTabChildGlobal, mGlobal)
+
 void
 TabChildBase::InitializeRootMetrics()
 {
@@ -1352,15 +1359,6 @@ TabChild::~TabChild()
     nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(WebNavigation());
     if (webBrowser) {
       webBrowser->SetContainerWindow(nullptr);
-    }
-    mGlobal = nullptr;
-
-    if (mTabChildGlobal) {
-      EventListenerManager* elm = mTabChildGlobal->GetExistingListenerManager();
-      if (elm) {
-        elm->Disconnect();
-      }
-      mTabChildGlobal->mTabChild = nullptr;
     }
 }
 
@@ -2722,8 +2720,8 @@ TabChildGlobal::Init()
                                               MM_CHILD);
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(TabChildGlobal, DOMEventTargetHelper,
-                                     mMessageManager)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_2(TabChildGlobal, DOMEventTargetHelper,
+                                     mMessageManager, mTabChild)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TabChildGlobal)
   NS_INTERFACE_MAP_ENTRY(nsIMessageListenerManager)

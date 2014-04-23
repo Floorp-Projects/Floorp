@@ -508,7 +508,7 @@ mar_verify_signatures_for_fp(FILE *fp,
   rv = CryptoX_Success;
 failure:
   for (i = 0; i < signatureCount; i++) {
-    CryptoX_FreeSignatureHandle(signatureHandles[i]);
+    CryptoX_FreeSignatureHandle(&signatureHandles[i]);
   }
 
   return rv;
