@@ -378,12 +378,11 @@ pref("gfx.bundled_fonts.force-enabled", false);
 pref("gfx.filter.nearest.force-enabled", false);
 
 // prefs controlling the font (name/cmap) loader that runs shortly after startup
-#ifdef XP_WIN
 pref("gfx.font_loader.families_per_slice", 3); // read in info 3 families at a time
+#ifdef XP_WIN
 pref("gfx.font_loader.delay", 120000);         // 2 minutes after startup
 pref("gfx.font_loader.interval", 1000);        // every 1 second until complete
 #else
-pref("gfx.font_loader.families_per_slice", 3); // read in info 3 families at a time
 pref("gfx.font_loader.delay", 8000);           // 8 secs after startup
 pref("gfx.font_loader.interval", 50);          // run every 50 ms
 #endif
@@ -2683,7 +2682,7 @@ pref("ui.window_class_override", "");
 // page back/forward actions, or if pinch-to-zoom does not work.
 pref("ui.elantech_gesture_hacks.enabled", -1);
 
-# WINNT
+# XP_WIN
 #endif
 
 #ifdef XP_MACOSX
