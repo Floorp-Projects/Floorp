@@ -41,7 +41,9 @@ ActiveElementManager::SetTargetElement(nsIDOMEventTarget* aTarget)
 {
   if (mTarget) {
     // Multiple fingers on screen (since HandleTouchEnd clears mTarget).
+    CancelTask();
     ResetActive();
+    mTarget = nullptr;
     return;
   }
 
