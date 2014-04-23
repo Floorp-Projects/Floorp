@@ -418,6 +418,8 @@ OMXVideoEncoder::GetCodecConfig(nsTArray<uint8_t>* aOutputBuf)
   return AppendDecoderConfig(aOutputBuf, nullptr) == OK ? NS_OK : NS_ERROR_FAILURE;
 }
 
+// MediaCodec::setParameters() is available only after API level 18.
+#if ANDROID_VERSION >= 18
 nsresult
 OMXVideoEncoder::SetBitrate(int32_t aKbps)
 {
@@ -427,6 +429,7 @@ OMXVideoEncoder::SetBitrate(int32_t aKbps)
   MOZ_ASSERT(result == OK);
   return result == OK ? NS_OK : NS_ERROR_FAILURE;
 }
+#endif
 
 nsresult
 OMXAudioEncoder::Configure(int aChannels, int aInputSampleRate,

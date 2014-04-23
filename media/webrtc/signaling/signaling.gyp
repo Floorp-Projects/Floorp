@@ -192,7 +192,7 @@
       # Conditionals
       #
       'conditions': [
-        ['moz_omx_encoder==1', {
+        ['moz_webrtc_omx==1', {
           'sources': [
             './src/media-conduit/WebrtcOMXH264VideoCodec.cpp',
             './src/media-conduit/OMXVideoCodec.cpp',
@@ -209,7 +209,7 @@
             '-I$(ANDROID_SOURCE)/frameworks/native/opengl/include',
           ],
           'defines' : [
-            'MOZ_OMX_ENCODER'
+            'MOZ_WEBRTC_OMX'
           ],
         }],
         ['build_for_test==0', {
