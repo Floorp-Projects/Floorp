@@ -55,6 +55,24 @@ public:
     SetHTMLAttr(nsGkAtoms::type, aType, rv);
   }
 
+  void GetSrcset(nsString& aSrcset)
+  {
+    GetHTMLAttr(nsGkAtoms::srcset, aSrcset);
+  }
+  void SetSrcset(const nsAString& aSrcset, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::srcset, aSrcset, rv);
+  }
+
+  void GetSizes(nsString& aSizes)
+  {
+    GetHTMLAttr(nsGkAtoms::sizes, aSizes);
+  }
+  void SetSizes(const nsAString& aSizes, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::sizes, aSizes, rv);
+  }
+
   void GetMedia(nsString& aMedia)
   {
     GetHTMLAttr(nsGkAtoms::media, aMedia);

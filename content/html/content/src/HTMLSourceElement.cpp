@@ -29,6 +29,8 @@ NS_IMPL_ELEMENT_CLONE(HTMLSourceElement)
 
 NS_IMPL_URI_ATTR(HTMLSourceElement, Src, src)
 NS_IMPL_STRING_ATTR(HTMLSourceElement, Type, type)
+NS_IMPL_STRING_ATTR(HTMLSourceElement, Srcset, srcset)
+NS_IMPL_STRING_ATTR(HTMLSourceElement, Sizes, sizes)
 NS_IMPL_STRING_ATTR(HTMLSourceElement, Media, media)
 
 void
