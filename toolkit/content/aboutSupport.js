@@ -4,10 +4,13 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/Troubleshoot.jsm");
-Components.utils.import("resource://gre/modules/PluralForm.jsm");
-Components.utils.import("resource://gre/modules/ResetProfile.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Troubleshoot.jsm");
+Cu.import("resource://gre/modules/ResetProfile.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
+                                  "resource://gre/modules/PluralForm.jsm");
 
 window.addEventListener("load", function onload(event) {
   window.removeEventListener("load", onload, false);
