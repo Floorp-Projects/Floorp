@@ -507,9 +507,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         emitSet(cond, dest);
     }
 
-    Condition testNegativeZero(const FloatRegister &reg, const Register &scratch);
-    Condition testNegativeZeroFloat32(const FloatRegister &reg, const Register &scratch);
-
     /////////////////////////////////////////////////////////////////
     // Common interface.
     /////////////////////////////////////////////////////////////////

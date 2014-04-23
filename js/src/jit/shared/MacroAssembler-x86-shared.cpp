@@ -154,3 +154,45 @@ MacroAssemblerX86Shared::buildOOLFakeExitFrame(void *fakeReturnAddr)
     Push(ImmPtr(fakeReturnAddr));
     return true;
 }
+
+void
+MacroAssemblerX86Shared::branchNegativeZero(const FloatRegister &reg,
+                                            const Register &scratch,
+                                            Label *label)
+{
+    // Determines whether the low double contained in the XMM register reg
+    // is equal to -0.0.
+
+#if defined(JS_CODEGEN_X86)
+    Label nonZero;
+
+    // Compare to zero. Lets through {0, -0}.
+    xorpd(ScratchFloatReg, ScratchFloatReg);
+
+    // If reg is non-zero, jump to nonZero.
+    branchDouble(DoubleNotEqual, reg, ScratchFloatReg, &nonZero);
+
+    // Input register is either zero or negative zero. Retrieve sign of input.
+    movmskpd(reg, scratch);
+
+    // If reg is 1 or 3, input is negative zero.
+    // If reg is 0 or 2, input is a normal zero.
+    branchTest32(NonZero, scratch, Imm32(1), label);
+
+    bind(&nonZero);
+#elif defined(JS_CODEGEN_X64)
+    movq(reg, scratch);
+    cmpq(scratch, Imm32(1));
+    j(Overflow, label);
+#endif
+}
+
+void
+MacroAssemblerX86Shared::branchNegativeZeroFloat32(const FloatRegister &reg,
+                                                   const Register &scratch,
+                                                   Label *label)
+{
+    movd(reg, scratch);
+    cmpl(scratch, Imm32(1));
+    j(Overflow, label);
+}
