@@ -2323,11 +2323,12 @@ pref("font.name-list.serif.zh-HK", "MingLiu_HKSCS, Ming(for ISO10646), MingLiU, 
 pref("font.name-list.sans-serif.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB");
 pref("font.name-list.monospace.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB");
 
-pref("font.name.serif.x-devanagari", "Mangal");
-pref("font.name.sans-serif.x-devanagari", "Raghindi");
+pref("font.name.serif.x-devanagari", "Kokila");
+pref("font.name.sans-serif.x-devanagari", "Nirmala UI");
 pref("font.name.monospace.x-devanagari", "Mangal");
-pref("font.name-list.serif.x-devanagari", "Mangal, Raghindi");
-pref("font.name-list.monospace.x-devanagari", "Mangal, Raghindi");
+pref("font.name-list.serif.x-devanagari", "Kokila, Raghindi");
+pref("font.name-list.sans-serif.x-devanagari", "Nirmala UI, Mangal");
+pref("font.name-list.monospace.x-devanagari", "Mangal, Nirmala UI");
 
 pref("font.name.serif.x-tamil", "Latha");
 pref("font.name.sans-serif.x-tamil", "Code2000");
@@ -2470,7 +2471,7 @@ pref("font.default.x-cyrillic", "serif");
 pref("font.size.variable.x-cyrillic", 16);
 pref("font.size.fixed.x-cyrillic", 13);
 
-pref("font.default.x-devanagari", "serif");
+pref("font.default.x-devanagari", "sans-serif");
 pref("font.size.variable.x-devanagari", 16);
 pref("font.size.fixed.x-devanagari", 13);
 
