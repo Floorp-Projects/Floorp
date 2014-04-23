@@ -92,6 +92,7 @@ extern "C" {
 #include "local_addr.h"
 #include "stun_util.h"
 #include "registry.h"
+#include "nr_socket_multi_tcp.h"
 }
 
 #include "stunserver.h"
@@ -154,7 +155,7 @@ static int nr_socket_wrapped_set_send_addr(nr_socket *sock, nr_transport_addr *a
 }
 
 static nr_socket_vtbl nr_socket_wrapped_vtbl = {
-  1,
+  2,
   nr_socket_wrapped_destroy,
   nr_socket_wrapped_sendto,
   nr_socket_wrapped_recvfrom,
@@ -163,7 +164,9 @@ static nr_socket_vtbl nr_socket_wrapped_vtbl = {
   0,
   0,
   0,
-  nr_socket_wrapped_close
+  nr_socket_wrapped_close,
+  0,
+  0
 };
 
 int nr_socket_wrapped_create(nr_socket *inner, nr_socket **outp) {
@@ -184,7 +187,9 @@ int nr_socket_wrapped_create(nr_socket *inner, nr_socket **outp) {
 // Note: Calling Create() at static init time is not going to be safe, since
 // we have no reason to expect this will be initted to a nullptr yet.
 TestStunServer* TestStunServer::instance;
+TestStunTcpServer* TestStunTcpServer::instance;
 uint16_t TestStunServer::instance_port = 3478;
+uint16_t TestStunTcpServer::instance_port = 3478;
 
 TestStunServer::~TestStunServer() {
   // TODO(ekr@rtfm.com): Put this on the right thread.
@@ -209,31 +214,36 @@ TestStunServer::~TestStunServer() {
   delete response_addr_;
 }
 
-int TestStunServer::TryOpenListenSocket(nr_local_addr* addr, uint16_t port) {
+int TestStunServer::SetInternalPort(nr_local_addr* addr, uint16_t port) {
+  if (nr_transport_addr_set_port(&addr->addr, port)) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't set port");
+    return R_INTERNAL;
+  }
 
-    if (nr_transport_addr_set_port(&addr->addr, port)) {
-      MOZ_MTLOG(ML_ERROR, "Couldn't set port");
-      return R_INTERNAL;
-    }
+  if (nr_transport_addr_fmt_addr_string(&addr->addr)) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't re-set addr string");
+    return R_INTERNAL;
+  }
 
-    if (nr_transport_addr_fmt_addr_string(&addr->addr)) {
-      MOZ_MTLOG(ML_ERROR, "Couldn't re-set addr string");
-      return R_INTERNAL;
-    }
-
-    if (nr_socket_local_create(nullptr, &addr->addr, &listen_sock_)) {
-      MOZ_MTLOG(ML_ERROR, "Couldn't create listen socket");
-      return R_ALREADY;
-    }
-
-    return 0;
+  return 0;
 }
 
-TestStunServer* TestStunServer::Create() {
-  NR_reg_init(NR_REG_MODE_LOCAL);
+int TestStunServer::TryOpenListenSocket(nr_local_addr* addr, uint16_t port) {
 
-  ScopedDeletePtr<TestStunServer> server(new TestStunServer());
+  int r = SetInternalPort(addr, port);
 
+  if (r)
+    return r;
+
+  if (nr_socket_local_create(nullptr, &addr->addr, &listen_sock_)) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't create listen socket");
+    return R_ALREADY;
+  }
+
+  return 0;
+}
+
+int TestStunServer::Initialize() {
   nr_local_addr addrs[100];
   int addr_ct;
   int r;
@@ -241,19 +251,18 @@ TestStunServer* TestStunServer::Create() {
   r = nr_stun_find_local_addresses(addrs, 100, &addr_ct);
   if (r) {
     MOZ_MTLOG(ML_ERROR, "Couldn't retrieve addresses");
-    return nullptr;
+    return R_INTERNAL;
   }
 
   if (addr_ct < 1) {
     MOZ_MTLOG(ML_ERROR, "No local addresses");
-    return nullptr;
+    return R_INTERNAL;
   }
 
-  NR_SOCKET fd;
   int tries = 100;
   while (tries--) {
     // Bind to the first address (arbitrarily) on configured port (default 3478)
-    r = server->TryOpenListenSocket(&addrs[0], instance_port);
+    r = TryOpenListenSocket(&addrs[0], instance_port);
     // We interpret R_ALREADY to mean the addr is probably in use. Try another.
     // Otherwise, it either worked or it didn't, and we check below.
     if (r != R_ALREADY) {
@@ -263,27 +272,21 @@ TestStunServer* TestStunServer::Create() {
   }
 
   if (r) {
-    return nullptr;
+    return R_INTERNAL;
   }
 
-  r = nr_socket_getfd(server->listen_sock_, &fd);
-  if (r) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't get fd");
-    return nullptr;
-  }
-
-  r = nr_socket_wrapped_create(server->listen_sock_, &server->send_sock_);
+  r = nr_socket_wrapped_create(listen_sock_, &send_sock_);
   if (r) {
     MOZ_MTLOG(ML_ERROR, "Couldn't create send socket");
-    return nullptr;
+    return R_INTERNAL;
   }
 
   r = nr_stun_server_ctx_create(const_cast<char *>("Test STUN server"),
-                                server->send_sock_,
-                                &server->stun_server_);
+                                send_sock_,
+                                &stun_server_);
   if (r) {
     MOZ_MTLOG(ML_ERROR, "Couldn't create STUN server");
-    return nullptr;
+    return R_INTERNAL;
   }
 
   // Cache the address and port.
@@ -292,11 +295,29 @@ TestStunServer* TestStunServer::Create() {
                                        sizeof(addr_string));
   if (r) {
     MOZ_MTLOG(ML_ERROR, "Failed to convert listen addr to a string representation");
-    return nullptr;
+    return R_INTERNAL;
   }
 
-  server->listen_addr_ = addr_string;
-  server->listen_port_ = instance_port;
+  listen_addr_ = addr_string;
+  listen_port_ = instance_port;
+
+  return 0;
+}
+
+TestStunServer* TestStunServer::Create() {
+  NR_reg_init(NR_REG_MODE_LOCAL);
+
+  ScopedDeletePtr<TestStunServer> server(new TestStunServer());
+
+  if (server->Initialize())
+    return nullptr;
+
+  NR_SOCKET fd;
+  int r = nr_socket_getfd(server->listen_sock_, &fd);
+  if (r) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't get fd");
+    return nullptr;
+  }
 
   NR_ASYNC_WAIT(fd, NR_ASYNC_WAIT_READ, &TestStunServer::readable_cb, server.get());
 
@@ -449,6 +470,75 @@ void TestStunServer::Reset() {
   }
   delete response_addr_;
   response_addr_ = nullptr;
+}
+
+
+// TestStunTcpServer
+
+void TestStunTcpServer::ConfigurePort(uint16_t port) {
+  instance_port = port;
+}
+
+TestStunTcpServer* TestStunTcpServer::GetInstance() {
+  if (!instance)
+    instance = Create();
+
+  MOZ_ASSERT(instance);
+  return instance;
+}
+
+void TestStunTcpServer::ShutdownInstance() {
+  delete instance;
+
+  instance = nullptr;
+}
+
+int TestStunTcpServer::TryOpenListenSocket(nr_local_addr* addr, uint16_t port) {
+
+  addr->addr.protocol=IPPROTO_TCP;
+
+  int r = SetInternalPort(addr, port);
+
+  if (r)
+    return r;
+
+  if (ice_ctx_ == NULL)
+    ice_ctx_ = NrIceCtx::Create("stun", true);
+
+  //TODO (nils@mozilla.com) can we replace this with a more basic TCP socket
+  // alternative which would allow us to remove the framing argument from the
+  // nr_socket_multi_tcp_create() call?
+  if(nr_socket_multi_tcp_create(ice_ctx_->ctx(),
+     &addr->addr, TCP_TYPE_PASSIVE, 0, 0, 2048,
+     &listen_sock_)) {
+     MOZ_MTLOG(ML_ERROR, "Couldn't create listen socket");
+     return R_ALREADY;
+  }
+
+  if(nr_socket_listen(listen_sock_, 10)) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't listen on socket");
+    return R_ALREADY;
+  }
+
+  return 0;
+}
+
+TestStunTcpServer* TestStunTcpServer::Create() {
+  NR_reg_init(NR_REG_MODE_LOCAL);
+
+  ScopedDeletePtr<TestStunTcpServer> server(new TestStunTcpServer());
+
+  server->Initialize();
+
+  nr_socket_multi_tcp_set_readable_cb(server->listen_sock_,
+    &TestStunServer::readable_cb, server.get());
+
+  return server.forget();
+}
+
+TestStunTcpServer::~TestStunTcpServer() {
+  ice_ctx_ = nullptr;
+  nr_socket_destroy(&listen_sock_);
 }
 
 }  // close namespace

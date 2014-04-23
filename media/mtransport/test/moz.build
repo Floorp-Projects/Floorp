@@ -8,6 +8,7 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     CppUnitTests([
         'buffered_stun_socket_unittest',
         'ice_unittest',
+        'multi_tcp_socket_unittest',
         'nrappkit_unittest',
         'proxy_tunnel_socket_unittest',
         'rlogringbuffer_unittest',

@@ -124,7 +124,7 @@ class TurnClient : public ::testing::Test {
 
     if (protocol_ == IPPROTO_TCP) {
       int r =
-          nr_socket_buffered_stun_create(real_socket_, 100000,
+          nr_socket_buffered_stun_create(real_socket_, 100000, TURN_TCP_FRAMING,
                                          &buffered_socket_);
       ASSERT_EQ(0, r);
       net_socket_ = buffered_socket_;

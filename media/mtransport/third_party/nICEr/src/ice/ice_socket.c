@@ -39,6 +39,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_socket.c,v 1.2 2008/04/28 17:59:01 e
 #include "nr_api.h"
 #include "ice_ctx.h"
 #include "stun.h"
+#include "nr_socket_multi_tcp.h"
 
 static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
   {
@@ -60,12 +61,13 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Socket ready to read",sock->ctx->label);
 
     /* Re-arm first! */
-    NR_ASYNC_WAIT(s,how,nr_ice_socket_readable_cb,cb_arg);
+    if (sock->type != NR_ICE_SOCKET_TYPE_STREAM_TCP)
+      NR_ASYNC_WAIT(s,how,nr_ice_socket_readable_cb,cb_arg);
 
     if(r=nr_socket_recvfrom(sock->sock,buf,sizeof(buf),&len_s,0,&addr)){
-      if (r != R_WOULDBLOCK && (sock->type != NR_ICE_SOCKET_TYPE_DGRAM)) {
+      if (r != R_WOULDBLOCK && (sock->type == NR_ICE_SOCKET_TYPE_STREAM_TURN)) {
         /* Report this error upward. Bug 946423 */
-        r_log(LOG_ICE,LOG_ERR,"ICE(%s): Error on reliable socket. Abandoning.",sock->ctx->label);
+        r_log(LOG_ICE,LOG_ERR,"ICE(%s): Error %d on reliable socket. Abandoning.",sock->ctx->label, r);
         NR_ASYNC_CANCEL(s, NR_ASYNC_WAIT_READ);
       }
       return;
@@ -190,7 +192,7 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
     return;
   }
 
-int nr_ice_socket_create(nr_ice_ctx *ctx,nr_ice_component *comp, nr_socket *nsock, nr_ice_socket **sockp)
+int nr_ice_socket_create(nr_ice_ctx *ctx,nr_ice_component *comp, nr_socket *nsock, int type, nr_ice_socket **sockp)
   {
     nr_ice_socket *sock=0;
     NR_SOCKET fd;
@@ -207,21 +209,28 @@ int nr_ice_socket_create(nr_ice_ctx *ctx,nr_ice_component *comp, nr_socket *nsoc
     if(r=nr_socket_getaddr(nsock, &addr))
       ABORT(r);
 
-    if (addr.protocol == IPPROTO_UDP) {
-      sock->type = NR_ICE_SOCKET_TYPE_DGRAM;
+    if (type == NR_ICE_SOCKET_TYPE_DGRAM) {
+      assert(addr.protocol == IPPROTO_UDP);
     }
     else {
       assert(addr.protocol == IPPROTO_TCP);
-      sock->type = NR_ICE_SOCKET_TYPE_STREAM;
     }
+    sock->type=type;
 
     TAILQ_INIT(&sock->candidates);
     TAILQ_INIT(&sock->stun_ctxs);
 
-    if(r=nr_socket_getfd(nsock,&fd))
-      ABORT(r);
-
-    NR_ASYNC_WAIT(fd,NR_ASYNC_WAIT_READ,nr_ice_socket_readable_cb,sock);
+    if (sock->type != NR_ICE_SOCKET_TYPE_STREAM_TCP){
+      if((r=nr_socket_getfd(nsock,&fd)))
+        ABORT(r);
+      NR_ASYNC_WAIT(fd,NR_ASYNC_WAIT_READ,nr_ice_socket_readable_cb,sock);
+    }
+    else {
+      /* in this case we can't hook up using NR_ASYNC_WAIT, because nr_socket_multi_tcp
+         consists of multiple nr_sockets and file descriptors. */
+      if((r=nr_socket_multi_tcp_set_readable_cb(nsock,nr_ice_socket_readable_cb,sock)))
+        ABORT(r);
+    }
 
     *sockp=sock;
 
@@ -273,13 +282,15 @@ int nr_ice_socket_close(nr_ice_socket *isock)
     if (!isock||!isock->sock)
       return(0);
 
-    nr_socket_getfd(isock->sock,&fd);
     assert(isock->sock!=0);
-    if(fd != no_socket){
-      NR_ASYNC_CANCEL(fd,NR_ASYNC_WAIT_READ);
-      NR_ASYNC_CANCEL(fd,NR_ASYNC_WAIT_WRITE);
-      nr_socket_destroy(&isock->sock);
+    if (isock->type != NR_ICE_SOCKET_TYPE_STREAM_TCP){
+      nr_socket_getfd(isock->sock,&fd);
+      if(fd != no_socket){
+        NR_ASYNC_CANCEL(fd,NR_ASYNC_WAIT_READ);
+        NR_ASYNC_CANCEL(fd,NR_ASYNC_WAIT_WRITE);
+      }
     }
+    nr_socket_destroy(&isock->sock);
 
     return(0);
   }

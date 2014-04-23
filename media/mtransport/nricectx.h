@@ -99,9 +99,10 @@ class NrIceStunServer {
   }
 
    // The main function to use. Will take either an address or a hostname.
-  static NrIceStunServer* Create(const std::string& addr, uint16_t port) {
+  static NrIceStunServer* Create(const std::string& addr, uint16_t port,
+      const char *transport = kNrIceTransportUdp) {
     ScopedDeletePtr<NrIceStunServer> server(
-        new NrIceStunServer());
+        new NrIceStunServer(transport));
 
     nsresult rv = server->Init(addr, port);
     if (NS_FAILED(rv))
@@ -110,12 +111,11 @@ class NrIceStunServer {
     return server.forget();
   }
 
-  nsresult ToNicerStunStruct(nr_ice_stun_server* server,
-                             const std::string& transport =
-                             kNrIceTransportUdp) const;
+  nsresult ToNicerStunStruct(nr_ice_stun_server* server) const;
 
  protected:
-  NrIceStunServer() : addr_() {}
+  explicit NrIceStunServer(const char *transport) :
+      addr_(), transport_(transport) {}
 
   nsresult Init(const std::string& addr, uint16_t port) {
     PRStatus status = PR_StringToNetAddr(addr.c_str(), &addr_);
@@ -141,6 +141,7 @@ class NrIceStunServer {
   std::string host_;
   uint16_t port_;
   PRNetAddr addr_;
+  std::string transport_;
 };
 
 class NrIceTurnServer : public NrIceStunServer {
@@ -165,11 +166,10 @@ class NrIceTurnServer : public NrIceStunServer {
   NrIceTurnServer(const std::string& username,
                   const std::vector<unsigned char>& password,
                   const char *transport) :
-      username_(username), password_(password), transport_(transport) {}
+      NrIceStunServer(transport), username_(username), password_(password) {}
 
   std::string username_;
   std::vector<unsigned char> password_;
-  std::string transport_;
 };
 
 class NrIceProxyServer {

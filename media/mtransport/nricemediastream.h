@@ -80,9 +80,17 @@ struct NrIceCandidate {
     ICE_RELAYED
   };
 
+  enum TcpType {
+    ICE_NONE,
+    ICE_ACTIVE,
+    ICE_PASSIVE,
+    ICE_SO
+  };
+
   NrIceAddr cand_addr;
   NrIceAddr local_addr;
   Type type;
+  TcpType tcp_type;
   std::string codeword;
 };
 
