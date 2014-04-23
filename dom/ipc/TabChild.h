@@ -138,7 +138,7 @@ public:
   virtual JSObject* GetGlobalJSObject() MOZ_OVERRIDE;
 
   nsCOMPtr<nsIContentFrameMessageManager> mMessageManager;
-  TabChildBase* mTabChild;
+  nsRefPtr<TabChildBase> mTabChild;
 };
 
 class ContentListener MOZ_FINAL : public nsIDOMEventListener
@@ -155,11 +155,14 @@ protected:
 // between b2g/android FF/embedlite clients implementation.
 // It make sense to place in this class all helper functions, and functionality which could be shared between
 // Cross-process/Cross-thread implmentations.
-class TabChildBase : public nsFrameScriptExecutor,
+class TabChildBase : public nsISupports,
+                     public nsFrameScriptExecutor,
                      public ipc::MessageManagerCallback
 {
 public:
     TabChildBase();
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(TabChildBase)
 
     virtual nsIWebNavigation* WebNavigation() = 0;
     virtual nsIWidget* WebWidget() = 0;

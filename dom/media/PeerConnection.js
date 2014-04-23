@@ -350,7 +350,7 @@ RTCPeerConnection.prototype = {
   _initIdp: function() {
     let prefName = "media.peerconnection.identity.timeout";
     let idpTimeout = Services.prefs.getIntPref(prefName);
-    let warningFunc = this.reportWarning.bind(this);
+    let warningFunc = this.logWarning.bind(this);
     this._localIdp = new PeerConnectionIdp(this._win, idpTimeout, warningFunc,
                                            this.dispatchEvent.bind(this));
     this._remoteIdp = new PeerConnectionIdp(this._win, idpTimeout, warningFunc,
@@ -500,15 +500,31 @@ RTCPeerConnection.prototype = {
   },
 
   // Log error message to web console and window.onerror, if present.
-  reportError: function(msg, file, line) {
-    this.reportMsg(msg, file, line, Ci.nsIScriptError.exceptionFlag);
+  logErrorAndCallOnError: function(msg, file, line) {
+    this.logMsg(msg, file, line, Ci.nsIScriptError.exceptionFlag);
+
+    // Safely call onerror directly if present (necessary for testing)
+    try {
+      if (typeof this._win.onerror === "function") {
+        this._win.onerror(msg, file, line);
+      }
+    } catch(e) {
+      // If onerror itself throws, service it.
+      try {
+        this.logError(e.message, e.fileName, e.lineNumber);
+      } catch(e) {}
+    }
   },
 
-  reportWarning: function(msg, file, line) {
-    this.reportMsg(msg, file, line, Ci.nsIScriptError.warningFlag);
+  logError: function(msg, file, line) {
+    this.logMsg(msg, file, line, Ci.nsIScriptError.errorFlag);
   },
 
-  reportMsg: function(msg, file, line, flag) {
+  logWarning: function(msg, file, line) {
+    this.logMsg(msg, file, line, Ci.nsIScriptError.warningFlag);
+  },
+
+  logMsg: function(msg, file, line, flag) {
     let scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
     let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
     scriptError.initWithWindowID(msg, file, null, line, 0, flag,
@@ -516,25 +532,6 @@ RTCPeerConnection.prototype = {
     let console = Cc["@mozilla.org/consoleservice;1"].
       getService(Ci.nsIConsoleService);
     console.logMessage(scriptError);
-
-    if (flag != Ci.nsIScriptError.warningFlag) {
-      // Safely call onerror directly if present (necessary for testing)
-      try {
-        if (typeof this._win.onerror === "function") {
-          this._win.onerror(msg, file, line);
-        }
-      } catch(e) {
-        // If onerror itself throws, service it.
-        try {
-          let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
-          scriptError.initWithWindowID(e.message, e.fileName, null, e.lineNumber,
-                                       0, Ci.nsIScriptError.exceptionFlag,
-                                       "content javascript",
-                                       this._winID);
-          console.logMessage(scriptError);
-        } catch(e) {}
-      }
-    }
   },
 
   getEH: function(type) {
@@ -663,7 +660,7 @@ RTCPeerConnection.prototype = {
       let processIdentity = this._processIdentity.bind(this);
       this._remoteIdp.verifyIdentityFromSDP(desc.sdp, processIdentity);
     } catch (e) {
-      this.reportWarning(e.message, e.fileName, e.lineNumber);
+      this.logWarning(e.message, e.fileName, e.lineNumber);
       // only happens if processing the SDP for identity doesn't work
       // let _setRemoteDescription do the error reporting
     }
@@ -863,20 +860,20 @@ RTCPeerConnection.prototype = {
     }
     if (dict.maxRetransmitNum != undefined) {
       dict.maxRetransmits = dict.maxRetransmitNum;
-      this.reportWarning("Deprecated RTCDataChannelInit dictionary entry maxRetransmitNum used!", null, 0);
+      this.logWarning("Deprecated RTCDataChannelInit dictionary entry maxRetransmitNum used!", null, 0);
     }
     if (dict.outOfOrderAllowed != undefined) {
       dict.ordered = !dict.outOfOrderAllowed; // the meaning is swapped with
                                               // the name change
-      this.reportWarning("Deprecated RTCDataChannelInit dictionary entry outOfOrderAllowed used!", null, 0);
+      this.logWarning("Deprecated RTCDataChannelInit dictionary entry outOfOrderAllowed used!", null, 0);
     }
     if (dict.preset != undefined) {
       dict.negotiated = dict.preset;
-      this.reportWarning("Deprecated RTCDataChannelInit dictionary entry preset used!", null, 0);
+      this.logWarning("Deprecated RTCDataChannelInit dictionary entry preset used!", null, 0);
     }
     if (dict.stream != undefined) {
       dict.id = dict.stream;
-      this.reportWarning("Deprecated RTCDataChannelInit dictionary entry stream used!", null, 0);
+      this.logWarning("Deprecated RTCDataChannelInit dictionary entry stream used!", null, 0);
     }
 
     if (dict.maxRetransmitTime != undefined &&
@@ -975,7 +972,9 @@ PeerConnectionObserver.prototype = {
         // A content script (user-provided) callback threw an error. We don't
         // want this to take down peerconnection, but we still want the user
         // to see it, so we catch it, report it, and move on.
-        this._dompc.reportError(e.message, e.fileName, e.lineNumber);
+        this._dompc.logErrorAndCallOnError(e.message,
+                                           e.fileName,
+                                           e.lineNumber);
       }
     }
   },
@@ -1116,6 +1115,7 @@ PeerConnectionObserver.prototype = {
 
     if (iceConnectionState === 'failed') {
       histogram.add(false);
+      this._dompc.logError("ICE failed, see about:webrtc for more details", null, 0);
     }
     if (this._dompc.iceConnectionState === 'checking' &&
         (iceConnectionState === 'completed' ||
@@ -1186,7 +1186,7 @@ PeerConnectionObserver.prototype = {
         break;
 
       default:
-        this._dompc.reportWarning("Unhandled state type: " + state, null, 0);
+        this._dompc.logWarning("Unhandled state type: " + state, null, 0);
         break;
     }
   },
