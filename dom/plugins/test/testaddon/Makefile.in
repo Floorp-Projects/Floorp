@@ -5,10 +5,10 @@
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-plugin_file_name = Test.plugin
+plugin_file_names = Test.plugin SecondTest.plugin
 addon_file_name = testaddon_$(TARGET_XPCOM_ABI).xpi
 else
-plugin_file_name = $(DLL_PREFIX)nptest$(DLL_SUFFIX)
+plugin_file_names = $(DLL_PREFIX)nptest$(DLL_SUFFIX) $(DLL_PREFIX)npsecondtest$(DLL_SUFFIX)
 addon_file_name = testaddon.xpi
 endif
 
@@ -20,4 +20,4 @@ libs::
 	$(NSINSTALL) -D $(testdir)
 	rm -f $(addonpath)
 	cd $(srcdir) && zip -rD $(addonpath) install.rdf
-	cd $(DIST) && zip -rD $(addonpath) plugins/$(plugin_file_name)
+	cd $(DIST) && zip -rD $(addonpath) $(foreach name,$(plugin_file_names),plugins/$(name))
