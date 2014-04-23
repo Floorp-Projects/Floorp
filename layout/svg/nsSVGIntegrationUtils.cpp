@@ -464,27 +464,35 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
 
   nsPoint firstFrameOffset = GetOffsetToBoundingBox(firstFrame);
-  nsPoint offset = aBuilder->ToReferenceFrame(firstFrame) - firstFrameOffset;
-  nsPoint offsetWithoutSVGGeomFramePos;
-  if (firstFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    offsetWithoutSVGGeomFramePos = offset;
-  } else {
+  nsPoint offsetToBoundingBox = aBuilder->ToReferenceFrame(firstFrame) - firstFrameOffset;
+  if (!firstFrame->IsFrameOfType(nsIFrame::eSVG)) {
     /* Snap the offset if the reference frame is not a SVG frame,
      * since other frames will be snapped to pixel when rendering. */
-    offsetWithoutSVGGeomFramePos = nsPoint(
-      aFrame->PresContext()->RoundAppUnitsToNearestDevPixels(offset.x),
-      aFrame->PresContext()->RoundAppUnitsToNearestDevPixels(offset.y));
-  }
-  nsPoint svgGeomFramePos;
-  if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
-      aFrame->IsSVGText()) {
-    // SVG leaf frames apply their offset themselves, we need to unapply it at
-    // various points below to prevent it being double counted.
-    svgGeomFramePos = aFrame->GetPosition();
-    offsetWithoutSVGGeomFramePos -= svgGeomFramePos;
+    offsetToBoundingBox = nsPoint(
+      aFrame->PresContext()->RoundAppUnitsToNearestDevPixels(offsetToBoundingBox.x),
+      aFrame->PresContext()->RoundAppUnitsToNearestDevPixels(offsetToBoundingBox.y));
   }
 
-  aCtx->Translate(offsetWithoutSVGGeomFramePos);
+  // After applying only "offsetToBoundingBox", aCtx would have its origin at
+  // the top left corner of aFrame's bounding box (over all continuations).
+  // However, SVG painting needs the origin to be located at the origin of the
+  // SVG frame's "user space", i.e. the space in which, for example, the
+  // frame's BBox lives.
+  // SVG geometry frames and foreignObject frames apply their own offsets, so
+  // their position is relative to their user space. So for these frame types,
+  // if we want aCtx to be in user space, we first need to subtract the
+  // frame's position so that SVG painting can later add it again and the
+  // frame is painted in the right place.
+
+  gfxPoint toUserSpaceGfx = nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(aFrame);
+  nsPoint toUserSpace(nsPresContext::CSSPixelsToAppUnits(float(toUserSpaceGfx.x)),
+                      nsPresContext::CSSPixelsToAppUnits(float(toUserSpaceGfx.y)));
+  nsPoint offsetToUserSpace = offsetToBoundingBox - toUserSpace;
+
+  NS_ASSERTION(hasSVGLayout || offsetToBoundingBox == offsetToUserSpace,
+               "For non-SVG frames there shouldn't be any additional offset");
+
+  aCtx->Translate(offsetToUserSpace);
 
   gfxMatrix cssPxToDevPxMatrix = GetCSSPxToDevPxMatrix(aFrame);
 
@@ -496,7 +504,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
     complexEffects = true;
     gfx->Save();
     aCtx->IntersectClip(aFrame->GetVisualOverflowRectRelativeToSelf() +
-                        svgGeomFramePos);
+                        toUserSpace);
     gfx->PushGroup(gfxContentType::COLOR_ALPHA);
   }
 
@@ -511,13 +519,14 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   /* Paint the child */
   if (effectProperties.HasValidFilter()) {
     RegularFramePaintCallback callback(aBuilder, aLayerManager,
-                                       offsetWithoutSVGGeomFramePos);
-    nsRect dirtyRect = aDirtyRect - offset;
+                                       offsetToUserSpace);
+
+    nsRect dirtyRect = aDirtyRect - offsetToBoundingBox;
     nsFilterInstance::PaintFilteredFrame(aCtx, aFrame, &callback, &dirtyRect);
   } else {
     gfx->SetMatrix(matrixAutoSaveRestore.Matrix());
     aLayerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
-    aCtx->Translate(offsetWithoutSVGGeomFramePos);
+    aCtx->Translate(offsetToUserSpace);
   }
 
   if (clipPathFrame && isTrivialClip) {
