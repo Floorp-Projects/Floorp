@@ -207,7 +207,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mMinimizePreroll(false),
   mDecodeThreadWaiting(false),
   mRealTime(aRealTime),
-  mLastFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED)
+  mLastFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED),
+  mTimerId(0)
 {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -247,9 +248,8 @@ MediaDecoderStateMachine::~MediaDecoderStateMachine()
     mDecodeTaskQueue = nullptr;
   }
 
-  if (mTimer) {
-    mTimer->Cancel();
-  }
+  // No need to cancel the timer here for we've done that in
+  // TimeoutExpired() triggered by Shutdown()
   mTimer = nullptr;
   mReader = nullptr;
 
@@ -2677,18 +2677,16 @@ nsresult MediaDecoderStateMachine::CallRunStateMachine()
   return res;
 }
 
-static void TimeoutExpired(nsITimer *aTimer, void *aClosure) {
-  MediaDecoderStateMachine *machine =
-    static_cast<MediaDecoderStateMachine*>(aClosure);
-  NS_ASSERTION(machine, "Must have been passed state machine");
-  machine->TimeoutExpired();
-}
-
-void MediaDecoderStateMachine::TimeoutExpired()
+nsresult MediaDecoderStateMachine::TimeoutExpired(int aTimerId)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   NS_ASSERTION(OnStateMachineThread(), "Must be on state machine thread");
-  CallRunStateMachine();
+  mTimer->Cancel();
+  if (mTimerId == aTimerId) {
+    return CallRunStateMachine();
+  } else {
+    return NS_OK;
+  }
 }
 
 void MediaDecoderStateMachine::ScheduleStateMachineWithLockAndWakeDecoder() {
@@ -2696,6 +2694,26 @@ void MediaDecoderStateMachine::ScheduleStateMachineWithLockAndWakeDecoder() {
   DispatchAudioDecodeTaskIfNeeded();
   DispatchVideoDecodeTaskIfNeeded();
 }
+
+class TimerEvent : public nsITimerCallback, public nsRunnable {
+  NS_DECL_THREADSAFE_ISUPPORTS
+public:
+  TimerEvent(MediaDecoderStateMachine* aStateMachine, int aTimerId)
+    : mStateMachine(aStateMachine), mTimerId(aTimerId) {}
+
+  NS_IMETHOD Run() MOZ_OVERRIDE {
+    return mStateMachine->TimeoutExpired(mTimerId);
+  }
+
+  NS_IMETHOD Notify(nsITimer* aTimer) {
+    return mStateMachine->TimeoutExpired(mTimerId);
+  }
+private:
+  const nsRefPtr<MediaDecoderStateMachine> mStateMachine;
+  int mTimerId;
+};
+
+NS_IMPL_ISUPPORTS2(TimerEvent, nsITimerCallback, nsIRunnable);
 
 nsresult MediaDecoderStateMachine::ScheduleStateMachine(int64_t aUsecs) {
   AssertCurrentThreadInMonitor();
@@ -2718,15 +2736,32 @@ nsresult MediaDecoderStateMachine::ScheduleStateMachine(int64_t aUsecs) {
   if (mRealTime && ms > 40) {
     ms = 40;
   }
-  mTimeout = timeout;
-  // Cancel existing timer if any since we are going to schedule a new one.
-  mTimer->Cancel();
-  nsresult rv = mTimer->InitWithFuncCallback(mozilla::TimeoutExpired,
-                                             this,
-                                             ms,
-                                             nsITimer::TYPE_ONE_SHOT);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+
+  // Don't cancel the timer here for this function will be called from
+  // different threads.
+
+  nsresult rv = NS_ERROR_FAILURE;
+  nsRefPtr<TimerEvent> event = new TimerEvent(this, mTimerId+1);
+
+  if (ms == 0) {
+    // Dispatch a runnable to the state machine thread when delay is 0.
+    // It will has less latency than dispatching a runnable to the state
+    // machine thread which will then schedule a zero-delay timer.
+    rv = GetStateMachineThread()->Dispatch(event, NS_DISPATCH_NORMAL);
+  } else if (OnStateMachineThread()) {
+    rv = mTimer->InitWithCallback(event, ms, nsITimer::TYPE_ONE_SHOT);
+  } else {
+    MOZ_ASSERT(false, "non-zero delay timer should be only scheduled in state machine thread");
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    mTimeout = timeout;
+    ++mTimerId;
+  } else {
+    NS_WARNING("Failed to schedule state machine");
+  }
+
+  return rv;
 }
 
 bool MediaDecoderStateMachine::OnDecodeThread() const
