@@ -542,9 +542,10 @@ nsOpenTypeTable::MakeTextRun(gfxContext*        aThebesContext,
                        false);
   gfxTextRun::DetailedGlyph detailedGlyph;
   detailedGlyph.mGlyphID = aGlyph.glyphID;
-  // We set the advance width to zero and this will be fixed in MeasureTextRun.
-  // XXXfredw: We should use gfxHarfbuzzShaper::GetGlyphHAdvance()
-  detailedGlyph.mAdvance = 0;
+  detailedGlyph.mAdvance =
+    NSToCoordRound(aAppUnitsPerDevPixel *
+                   aFontGroup->GetFontAt(0)->
+                   GetGlyphHAdvance(aThebesContext, aGlyph.glyphID));
   detailedGlyph.mXOffset = detailedGlyph.mYOffset = 0;
   gfxShapedText::CompressedGlyph g;
   g.SetComplex(true, true, 1);
@@ -1153,11 +1154,6 @@ MeasureTextRun(gfxContext* aThebesContext, gfxTextRun* aTextRun)
   bm.ascent = NSToCoordCeil(-metrics.mBoundingBox.Y());
   bm.descent = NSToCoordCeil(metrics.mBoundingBox.YMost());
   bm.width = NSToCoordRound(metrics.mAdvanceWidth);
-  if (bm.width == 0) {
-    // The advance width was not set in nsGlyphTable::MakeTextRun, so we use
-    // the right bearing instead.
-    bm.width = bm.rightBearing;
-  }
 
   return bm;
 }
@@ -1296,10 +1292,12 @@ StretchEnumContext::TryVariants(nsGlyphTable* aGlyphTable,
     if (ch.IsGlyphID()) {
       gfxFont* mathFont = aFontGroup->get()->GetFontAt(0);
       if (mathFont->GetFontEntry()->TryGetMathTable(mathFont)) {
-        // MeasureTextRun has set the advance width to the right bearing. We now
-        // subtract the italic correction, so that nsMathMLmmultiscripts will
-        // place the scripts correctly.
-        // Note that STIX-Word does not provide italic corrections
+        // MeasureTextRun should have set the advance width to the right
+        // bearing for OpenType MATH fonts. We now subtract the italic
+        // correction, so that nsMathMLmmultiscripts will place the scripts
+        // correctly.
+        // Note that STIX-Word does not provide italic corrections but its
+        // advance widths do not match right bearings.
         // (http://sourceforge.net/p/stixfonts/tracking/50/)
         gfxFloat italicCorrection;
         if (mathFont->GetFontEntry()->

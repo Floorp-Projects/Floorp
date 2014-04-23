@@ -43,6 +43,8 @@ class gfxTextRun;
 class gfxFont;
 class gfxFontFamily;
 class gfxFontGroup;
+class gfxGraphiteShaper;
+class gfxHarfBuzzShaper;
 class gfxUserFontSet;
 class gfxUserFontData;
 class gfxShapedText;
@@ -1457,6 +1459,10 @@ protected:
 
 /* a SPECIFIC single font family */
 class gfxFont {
+
+    friend class gfxHarfBuzzShaper;
+    friend class gfxGraphiteShaper;
+
 public:
     nsrefcnt AddRef(void) {
         NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");
@@ -1584,19 +1590,8 @@ public:
     virtual uint32_t GetGlyph(uint32_t unicode, uint32_t variation_selector) {
         return 0;
     }
-
-    // subclasses may provide (possibly hinted) glyph widths (in font units);
-    // if they do not override this, harfbuzz will use unhinted widths
-    // derived from the font tables
-    virtual bool ProvidesGlyphWidths() {
-        return false;
-    }
-
-    // The return value is interpreted as a horizontal advance in 16.16 fixed
-    // point format.
-    virtual int32_t GetGlyphWidth(gfxContext *aCtx, uint16_t aGID) {
-        return -1;
-    }
+    // Return the horizontal advance of a glyph.
+    gfxFloat GetGlyphHAdvance(gfxContext *aCtx, uint16_t aGID);
 
     // Return Azure GlyphRenderingOptions for drawing this font.
     virtual mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions>
@@ -1892,6 +1887,19 @@ public:
     }
 
 protected:
+    // subclasses may provide (possibly hinted) glyph widths (in font units);
+    // if they do not override this, harfbuzz will use unhinted widths
+    // derived from the font tables
+    virtual bool ProvidesGlyphWidths() {
+        return false;
+    }
+
+    // The return value is interpreted as a horizontal advance in 16.16 fixed
+    // point format.
+    virtual int32_t GetGlyphWidth(gfxContext *aCtx, uint16_t aGID) {
+        return -1;
+    }
+
     void AddGlyphChangeObserver(GlyphChangeObserver *aObserver);
     void RemoveGlyphChangeObserver(GlyphChangeObserver *aObserver);
 
