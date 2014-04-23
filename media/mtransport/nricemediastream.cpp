@@ -144,7 +144,24 @@ static bool ToNrIceCandidate(const nr_ice_candidate& candc,
       return false;
   }
 
+  NrIceCandidate::TcpType tcp_type;
+  switch (cand->tcp_type) {
+    case TCP_TYPE_ACTIVE:
+      tcp_type = NrIceCandidate::ICE_ACTIVE;
+      break;
+    case TCP_TYPE_PASSIVE:
+      tcp_type = NrIceCandidate::ICE_PASSIVE;
+      break;
+    case TCP_TYPE_SO:
+      tcp_type = NrIceCandidate::ICE_SO;
+      break;
+    default:
+      tcp_type = NrIceCandidate::ICE_NONE;
+      break;
+  }
+
   out->type = type;
+  out->tcp_type = tcp_type;
   out->codeword = candc.codeword;
   return true;
 }

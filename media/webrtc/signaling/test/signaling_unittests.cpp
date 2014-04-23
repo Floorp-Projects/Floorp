@@ -906,7 +906,8 @@ class SignalingAgent {
     mExpectRtcpMuxAudio(true),
     mExpectRtcpMuxVideo(true),
     mRemoteDescriptionSet(false) {
-    cfg_.addStunServer(stun_addr, stun_port);
+    cfg_.addStunServer(stun_addr, stun_port, kNrIceTransportUdp);
+    cfg_.addStunServer(stun_addr, stun_port, kNrIceTransportTcp);
 
     PeerConnectionImpl *pcImpl =
       PeerConnectionImpl::CreatePeerConnection();

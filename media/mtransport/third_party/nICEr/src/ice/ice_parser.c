@@ -124,6 +124,7 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
     int i;
     unsigned int component_id;
     char *rel_addr=0;
+    unsigned char transport;
 
     if(!(cand=RCALLOC(sizeof(nr_ice_candidate))))
         ABORT(R_NO_MEMORY);
@@ -178,8 +179,12 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
         ABORT(R_BAD_DATA);
 
     /* Protocol */
-    if (strncasecmp(str, "UDP", 3))
-        ABORT(R_BAD_DATA);
+    if (!strncasecmp(str, "UDP", 3))
+      transport=IPPROTO_UDP;
+    else if (!strncasecmp(str, "TCP", 3))
+      transport=IPPROTO_TCP;
+    else
+      ABORT(R_BAD_DATA);
 
     fast_forward(&str, 3);
     if (*str == '\0')
@@ -222,7 +227,7 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
         ABORT(R_BAD_DATA);
 
     /* Assume v4 for now */
-    if(r=nr_ip4_port_to_transport_addr(ntohl(addr),port,IPPROTO_UDP,&cand->addr))
+    if(r=nr_ip4_port_to_transport_addr(ntohl(addr),port,transport,&cand->addr))
       ABORT(r);
 
     skip_to_past_space(&str);
@@ -310,7 +315,7 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
             ABORT(R_BAD_DATA);
 
         /* Assume v4 for now */
-        if(r=nr_ip4_port_to_transport_addr(ntohl(addr),port,IPPROTO_UDP,&cand->base))
+        if(r=nr_ip4_port_to_transport_addr(ntohl(addr),port,transport,&cand->base))
           ABORT(r);
 
         skip_to_past_space(&str);
@@ -324,6 +329,28 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
 
     skip_whitespace(&str);
 
+    if (transport == IPPROTO_TCP && cand->type != RELAYED) {
+      /* Parse tcptype extension per RFC 6544 S 4.5 */
+      if (strncasecmp("tcptype ", str, 8))
+        ABORT(R_BAD_DATA);
+
+      fast_forward(&str, 8);
+      skip_whitespace(&str);
+
+      for (i = 1; nr_ice_candidate_tcp_type_names[i]; ++i) {
+        if(!strncasecmp(nr_ice_candidate_tcp_type_names[i], str, strlen(nr_ice_candidate_tcp_type_names[i]))) {
+          cand->tcp_type=i;
+          fast_forward(&str, strlen(nr_ice_candidate_tcp_type_names[i]));
+          break;
+        }
+      }
+
+      if (cand->tcp_type == 0)
+        ABORT(R_BAD_DATA);
+
+      if (*str && *str != ' ')
+        ABORT(R_BAD_DATA);
+    }
     /* Ignore extensions per RFC 5245 S 15.1 */
 #if 0
     /* This used to be an assert, but we don't want to exit on invalid

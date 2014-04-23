@@ -717,6 +717,12 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
         else
             ABORT(R_BAD_DATA);
 
+        // STUN doesn't distinguish protocol in mapped address, therefore
+        // assign used protocol from peer_addr
+        if (mapped_addr->protocol!=peer_addr->protocol){
+          mapped_addr->protocol=peer_addr->protocol;
+          nr_transport_addr_fmt_addr_string(mapped_addr);
+        }
 
         r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): Received mapped address: %s", ctx->label, mapped_addr->as_string);
     }
