@@ -73,6 +73,9 @@ public interface TelemetryContract {
 
         // Action triggered from a view list item, like a row of a list.
         public static final String LIST_ITEM = "listitem";
+
+        // Action triggered from a suggestion provided to the user.
+        public static final String SUGGESTION = "suggestion";
     }
 
     /**
@@ -93,6 +96,9 @@ public interface TelemetryContract {
 
         // URL bar focused.
         public static final String URLBAR_FOCUSED = "urlbar.1:";
+
+        // Awesomescreen frecency search is active.
+        public static final String FRECENCY = "frecency.1:";
     }
 
     /**
