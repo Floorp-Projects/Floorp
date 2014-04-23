@@ -44,9 +44,6 @@ public:
   ClientTiledThebesLayer(ClientLayerManager* const aManager);
   ~ClientTiledThebesLayer();
 
-  // Override name to distinguish it from ClientThebesLayer in layer dumps
-  virtual const char* Name() const { return "TiledThebesLayer"; }
-
   // Thebes Layer
   virtual Layer* AsLayer() { return this; }
   virtual void InvalidateRegion(const nsIntRegion& aRegion) {
