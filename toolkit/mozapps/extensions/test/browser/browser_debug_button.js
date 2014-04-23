@@ -13,8 +13,9 @@ const getDebugButton = node =>
     node.ownerDocument.getAnonymousElementByAttribute(node, "anonid", "debug-btn");
 const addonDebuggingEnabled = bool =>
   Services.prefs.setBoolPref("devtools.chrome.enabled", !!bool);
-const remoteDebuggingEnabled = bool =>
-  Services.prefs.setBoolPref("devtools.debugger.remote-enabled", !!bool);
+
+Services.prefs.setBoolPref("devtools.debugger.show-server-notifications", false);
+
 
 function test() {
   requestLongerTimeout(2);
@@ -37,7 +38,6 @@ function test() {
 
   Task.spawn(function* () {
     addonDebuggingEnabled(false);
-    remoteDebuggingEnabled(false);
 
     yield testDOM((nondebug, debuggable) => {
       is(nondebug.disabled, true,
@@ -51,35 +51,6 @@ function test() {
     });
     
     addonDebuggingEnabled(true);
-    remoteDebuggingEnabled(false);
-
-    yield testDOM((nondebug, debuggable) => {
-      is(nondebug.disabled, true,
-        "addon:enabled::remote:disabled button is disabled for legacy addons");
-      is(nondebug.disabled, true,
-        "addon:enabled::remote:disabled button is hidden for legacy addons");
-      is(debuggable.disabled, true,
-        "addon:enabled::remote:disabled button is disabled for debuggable addons");
-      is(debuggable.disabled, true,
-        "addon:enabled::remote:disabled button is hidden for debuggable addons");
-    });
-    
-    addonDebuggingEnabled(false);
-    remoteDebuggingEnabled(true);
-
-    yield testDOM((nondebug, debuggable) => {
-      is(nondebug.disabled, true,
-        "addon:disabled::remote:enabled button is disabled for legacy addons");
-      is(nondebug.disabled, true,
-        "addon:disabled::remote:enabled button is hidden for legacy addons");
-      is(debuggable.disabled, true,
-        "addon:disabled::remote:enabled button is disabled for debuggable addons");
-      is(debuggable.disabled, true,
-        "addon:disabled::remote:enabled button is hidden for debuggable addons");
-    });
-    
-    addonDebuggingEnabled(true);
-    remoteDebuggingEnabled(true);
 
     yield testDOM((nondebug, debuggable) => {
       is(nondebug.disabled, true,
@@ -92,6 +63,7 @@ function test() {
         "addon:enabled::remote:enabled button is visible for debuggable addons");
     });
 
+    Services.prefs.clearUserPref("devtools.debugger.show-server-notifications");
     finish();
   });
 
