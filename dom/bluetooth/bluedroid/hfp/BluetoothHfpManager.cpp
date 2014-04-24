@@ -369,7 +369,6 @@ BluetoothHfpManager::Reset()
 
   // Phone & Device CIND
   ResetCallArray();
-  mCallSetupState = nsITelephonyProvider::CALL_STATE_DISCONNECTED;
   mBattChg = 5;
   mService = 0;
   mRoam = 0;
@@ -667,7 +666,7 @@ BluetoothHfpManager::ProcessAtCind()
                           mService,
                           numActive,
                           numHeld,
-                          ConvertToBthfCallState(mCallSetupState),
+                          ConvertToBthfCallState(GetCallSetupState()),
                           mSignal,
                           mRoam,
                           mBattChg);
@@ -719,7 +718,7 @@ BluetoothHfpManager::ProcessKeyPressed()
     (FindFirstCall(nsITelephonyProvider::CALL_STATE_CONNECTED) > 0);
 
   // Refer to AOSP HeadsetStateMachine.processKeyPressed
-  if (mCallSetupState == nsITelephonyProvider::CALL_STATE_INCOMING
+  if (FindFirstCall(nsITelephonyProvider::CALL_STATE_INCOMING)
       && !hasActiveCall) {
     /**
      * Bluetooth HSP spec 4.2.2
@@ -1003,16 +1002,19 @@ BluetoothHfpManager::UpdatePhoneCIND(uint32_t aCallIndex, bool aSend)
 
   int numActive = GetNumberOfCalls(nsITelephonyProvider::CALL_STATE_CONNECTED);
   int numHeld = GetNumberOfCalls(nsITelephonyProvider::CALL_STATE_HELD);
-  bthf_call_state_t bthfCallState = ConvertToBthfCallState(mCallSetupState);
-  nsAutoCString number = NS_ConvertUTF16toUTF8(mCurrentCallArray[aCallIndex].mNumber);
+  bthf_call_state_t callSetupState =
+    ConvertToBthfCallState(GetCallSetupState());
+  nsAutoCString number =
+    NS_ConvertUTF16toUTF8(mCurrentCallArray[aCallIndex].mNumber);
   bthf_call_addrtype_t type = mCurrentCallArray[aCallIndex].mType;
 
-  BT_LOGR("[%d] state %d => BTHF: active[%d] held[%d] state[%d]", aCallIndex,
-          mCurrentCallArray[aCallIndex].mState, numActive, numHeld, bthfCallState);
+  BT_LOGR("[%d] state %d => BTHF: active[%d] held[%d] setupstate[%d]",
+          aCallIndex, mCurrentCallArray[aCallIndex].mState,
+          numActive, numHeld, callSetupState);
 
   NS_ENSURE_TRUE_VOID(BT_STATUS_SUCCESS ==
     sBluetoothHfpInterface->phone_state_change(
-      numActive, numHeld, bthfCallState, number.get(), type));
+      numActive, numHeld, callSetupState, number.get(), type));
 }
 
 void
@@ -1054,6 +1056,25 @@ BluetoothHfpManager::GetNumberOfCalls(uint16_t aState)
   }
 
   return num;
+}
+
+uint16_t
+BluetoothHfpManager::GetCallSetupState()
+{
+  uint32_t callLength = mCurrentCallArray.Length();
+
+  for (uint32_t i = 1; i < callLength; ++i) {
+    switch (mCurrentCallArray[i].mState) {
+      case nsITelephonyProvider::CALL_STATE_INCOMING:
+      case nsITelephonyProvider::CALL_STATE_DIALING:
+      case nsITelephonyProvider::CALL_STATE_ALERTING:
+        return mCurrentCallArray[i].mState;
+      default:
+        break;
+    }
+  }
+
+  return nsITelephonyProvider::CALL_STATE_DISCONNECTED;
 }
 
 bthf_call_state_t
@@ -1113,22 +1134,6 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
   // Same logic as implementation in ril_worker.js
   if (aNumber.Length() && aNumber[0] == '+') {
     mCurrentCallArray[aCallIndex].mType = BTHF_CALL_ADDRTYPE_INTERNATIONAL;
-  }
-
-  bool isSetupCall = (aCallState == nsITelephonyProvider::CALL_STATE_INCOMING ||
-                      aCallState == nsITelephonyProvider::CALL_STATE_ALERTING ||
-                      aCallState == nsITelephonyProvider::CALL_STATE_DIALING);
-  bool hasSetupCall = (FindFirstCall(nsITelephonyProvider::CALL_STATE_INCOMING) ||
-                       FindFirstCall(nsITelephonyProvider::CALL_STATE_ALERTING) ||
-                       FindFirstCall(nsITelephonyProvider::CALL_STATE_DIALING));
-
-  // Update callsetup state when
-  // 1) this call is in call setup
-  // 2) all calls in the call array including this call are not in call setup
-  if (isSetupCall) {
-    mCallSetupState = aCallState;
-  } else if (!hasSetupCall) {
-    mCallSetupState = nsITelephonyProvider::CALL_STATE_DISCONNECTED;
   }
 
   UpdatePhoneCIND(aCallIndex, aSend);
