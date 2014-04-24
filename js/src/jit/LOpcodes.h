@@ -24,6 +24,7 @@
     _(TableSwitchV)                 \
     _(Goto)                         \
     _(NewArray)                     \
+    _(ArraySplice)                  \
     _(NewObject)                    \
     _(NewSlots)                     \
     _(NewDeclEnvObject)             \

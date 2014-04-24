@@ -98,6 +98,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitLoadArrowThis(MLoadArrowThis *ins);
     bool visitCall(MCall *call);
     bool visitApplyArgs(MApplyArgs *apply);
+    bool visitArraySplice(MArraySplice *splice);
     bool visitBail(MBail *bail);
     bool visitAssertFloat32(MAssertFloat32 *ins);
     bool visitGetDynamicName(MGetDynamicName *ins);
