@@ -2325,18 +2325,26 @@ void nsDisplayBackgroundImage::ComputeInvalidationRegion(nsDisplayListBuilder* a
     // Positioning area changed in a way that could cause everything to change,
     // so invalidate everything (both old and new painting areas).
     aInvalidRegion->Or(bounds, geometry->mBounds);
+
+    if (positioningArea.Size() != geometry->mPositioningArea.Size()) {
+      NotifyRenderingChanged();
+    }
     return;
   }
   if (aBuilder->ShouldSyncDecodeImages()) {
     if (mBackgroundStyle &&
         !nsCSSRendering::IsBackgroundImageDecodedForStyleContextAndLayer(mBackgroundStyle, mLayer)) {
       aInvalidRegion->Or(*aInvalidRegion, bounds);
+
+      NotifyRenderingChanged();
     }
   }
   if (!bounds.IsEqualInterior(geometry->mBounds)) {
     // Positioning area is unchanged, so invalidate just the change in the
     // painting area.
     aInvalidRegion->Xor(bounds, geometry->mBounds);
+
+    NotifyRenderingChanged();
   }
 }
 
