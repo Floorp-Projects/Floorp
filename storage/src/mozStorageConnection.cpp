@@ -519,6 +519,18 @@ NS_IMETHODIMP_(MozExternalRefCountType) Connection::Release(void)
   return count;
 }
 
+int32_t
+Connection::getSqliteRuntimeStatus(int32_t aStatusOption, int32_t* aMaxValue)
+{
+  MOZ_ASSERT(mDBConn, "A connection must exist at this point");
+  int curr = 0, max = 0;
+  DebugOnly<int> rc = ::sqlite3_db_status(mDBConn, aStatusOption, &curr, &max, 0);
+  MOZ_ASSERT(NS_SUCCEEDED(convertResultCode(rc)));
+  if (aMaxValue)
+    *aMaxValue = max;
+  return curr;
+}
+
 nsIEventTarget *
 Connection::getAsyncExecutionTarget()
 {
@@ -1335,7 +1347,7 @@ Connection::CreateStatement(const nsACString &aSQLStatement,
   nsRefPtr<Statement> statement(new Statement());
   NS_ENSURE_TRUE(statement, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = statement->initialize(this, aSQLStatement);
+  nsresult rv = statement->initialize(this, mDBConn, aSQLStatement);
   NS_ENSURE_SUCCESS(rv, rv);
 
   Statement *rawPtr;
@@ -1354,7 +1366,7 @@ Connection::CreateAsyncStatement(const nsACString &aSQLStatement,
   nsRefPtr<AsyncStatement> statement(new AsyncStatement());
   NS_ENSURE_TRUE(statement, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = statement->initialize(this, aSQLStatement);
+  nsresult rv = statement->initialize(this, mDBConn, aSQLStatement);
   NS_ENSURE_SUCCESS(rv, rv);
 
   AsyncStatement *rawPtr;
@@ -1396,7 +1408,8 @@ Connection::ExecuteAsync(mozIStorageBaseStatement **aStatements,
   }
 
   // Dispatch to the background
-  return AsyncExecuteStatements::execute(stmts, this, aCallback, _handle);
+  return AsyncExecuteStatements::execute(stmts, this, mDBConn, aCallback,
+                                         _handle);
 }
 
 NS_IMETHODIMP

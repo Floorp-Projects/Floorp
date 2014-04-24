@@ -163,12 +163,14 @@ private:
 nsresult
 AsyncExecuteStatements::execute(StatementDataArray &aStatements,
                                 Connection *aConnection,
+                                sqlite3 *aNativeConnection,
                                 mozIStorageStatementCallback *aCallback,
                                 mozIStoragePendingStatement **_stmt)
 {
   // Create our event to run in the background
   nsRefPtr<AsyncExecuteStatements> event =
-    new AsyncExecuteStatements(aStatements, aConnection, aCallback);
+    new AsyncExecuteStatements(aStatements, aConnection, aNativeConnection,
+                               aCallback);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
   // Dispatch it to the background
@@ -194,8 +196,10 @@ AsyncExecuteStatements::execute(StatementDataArray &aStatements,
 
 AsyncExecuteStatements::AsyncExecuteStatements(StatementDataArray &aStatements,
                                                Connection *aConnection,
+                                               sqlite3 *aNativeConnection,
                                                mozIStorageStatementCallback *aCallback)
 : mConnection(aConnection)
+, mNativeConnection(aNativeConnection)
 , mTransactionManager(nullptr)
 , mCallback(aCallback)
 , mCallingThread(::do_GetCurrentThread())
@@ -364,8 +368,9 @@ AsyncExecuteStatements::executeStatement(sqlite3_stmt *aStatement)
 
     // Construct the error message before giving up the mutex (which we cannot
     // hold during the call to notifyError).
-    sqlite3 *db = mConnection->GetNativeConnection();
-    nsCOMPtr<mozIStorageError> errorObj(new Error(rc, ::sqlite3_errmsg(db)));
+    nsCOMPtr<mozIStorageError> errorObj(
+      new Error(rc, ::sqlite3_errmsg(mNativeConnection))
+    );
     // We cannot hold the DB mutex while calling notifyError.
     SQLiteMutexAutoUnlock unlockedScope(mDBMutex);
     (void)notifyError(errorObj);
@@ -592,9 +597,8 @@ AsyncExecuteStatements::Run()
         mState = ERROR;
 
         // Build the error object; can't call notifyError with the lock held
-        sqlite3 *db = mConnection->GetNativeConnection();
         nsCOMPtr<mozIStorageError> errorObj(
-          new Error(rc, ::sqlite3_errmsg(db))
+          new Error(rc, ::sqlite3_errmsg(mNativeConnection))
         );
         {
           // We cannot hold the DB mutex and call notifyError.
