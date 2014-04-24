@@ -54,6 +54,7 @@
 
 #include "mozilla/CORSMode.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
 
 #ifdef PR_LOGGING
@@ -86,9 +87,7 @@ public:
 
   ~nsScriptLoadRequest()
   {
-    if (mScriptTextBuf) {
-      js_free(mScriptTextBuf);
-    }
+    js_free(mScriptTextBuf);
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -433,7 +432,7 @@ ParseTypeAttribute(const nsAString& aType, JSVersion* aVersion)
   return true;
 }
 
-bool
+static bool
 CSPAllowsInlineScript(nsIScriptElement *aElement, nsIDocument *aDocument)
 {
   nsCOMPtr<nsIContentSecurityPolicy> csp;
@@ -540,6 +539,43 @@ CSPAllowsInlineScript(nsIScriptElement *aElement, nsIDocument *aDocument)
   return true;
 }
 
+static void
+AccumulateJavaScriptVersionTelemetry(nsIScriptElement* aElement,
+                                     JSVersion aVersion)
+{
+  uint32_t minorVersion;
+  switch (aVersion) {
+    case JSVERSION_DEFAULT: minorVersion = 5; break;
+    case JSVERSION_1_6:     minorVersion = 6; break;
+    case JSVERSION_1_7:     minorVersion = 7; break;
+    case JSVERSION_1_8:     minorVersion = 8; break;
+    default:                MOZ_ASSERT_UNREACHABLE("Unexpected JSVersion");
+    case JSVERSION_UNKNOWN: minorVersion = 0; break;
+  }
+
+  // Only report SpiderMonkey's nonstandard JS versions: 1.6, 1.7, and 1.8.
+  if (minorVersion < 6) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> scriptURI = aElement->GetScriptURI();
+  if (!scriptURI) {
+    return;
+  }
+
+  // We only care about web content, not chrome or add-on JS versions.
+  bool chrome = false;
+  scriptURI->SchemeIs("chrome", &chrome);
+  if (!chrome) {
+    scriptURI->SchemeIs("resource", &chrome);
+  }
+  if (chrome) {
+    return;
+  }
+
+  Telemetry::Accumulate(Telemetry::JS_MINOR_VERSION, minorVersion);
+}
+
 bool
 nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 {
@@ -568,6 +604,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   aElement->GetScriptType(type);
   if (!type.IsEmpty()) {
     NS_ENSURE_TRUE(ParseTypeAttribute(type, &version), false);
+    AccumulateJavaScriptVersionTelemetry(aElement, version);
   } else {
     // no 'type=' element
     // "language" is a deprecated attribute of HTML, so we check it only for
