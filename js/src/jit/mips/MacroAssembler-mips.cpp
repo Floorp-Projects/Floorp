@@ -803,8 +803,8 @@ MacroAssemblerMIPS::computeScaledAddress(const BaseIndex &address, Register dest
 {
     int32_t shift = Imm32::ShiftOf(address.scale).value;
     if (shift) {
-        ma_sll(dest, address.index, Imm32(shift));
-        as_addu(dest, address.base, dest);
+        ma_sll(ScratchRegister, address.index, Imm32(shift));
+        as_addu(dest, address.base, ScratchRegister);
     } else {
         as_addu(dest, address.base, address.index);
     }
