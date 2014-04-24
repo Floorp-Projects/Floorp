@@ -1399,8 +1399,13 @@ class JitActivation : public Activation
     RematerializedFrame *getRematerializedFrame(JSContext *cx, JitFrameIterator &iter,
                                                 size_t inlineDepth = 0);
 
-    // Look up a rematerialized frame by the fp.
+    // Look up a rematerialized frame by the fp. If inlineDepth is out of
+    // bounds of what has been rematerialized, nullptr is returned.
     RematerializedFrame *lookupRematerializedFrame(uint8_t *top, size_t inlineDepth = 0);
+
+    bool hasRematerializedFrame(uint8_t *top, size_t inlineDepth = 0) {
+        return !!lookupRematerializedFrame(top, inlineDepth);
+    }
 
     // Remove a previous rematerialization by fp.
     void removeRematerializedFrame(uint8_t *top);

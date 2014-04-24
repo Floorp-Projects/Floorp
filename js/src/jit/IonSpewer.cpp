@@ -261,6 +261,7 @@ jit::CheckLogging()
             "  bl-ic-fb   Baseline IC fallback stub messages\n"
             "  bl-osr     Baseline IC OSR messages\n"
             "  bl-bails   Baseline bailouts\n"
+            "  bl-dbg-osr Baseline debug mode on stack recompile messages\n"
             "  bl-all     All baseline spew\n"
             "\n"
         );
@@ -322,6 +323,8 @@ jit::CheckLogging()
         EnableChannel(IonSpew_BaselineOSR);
     if (ContainsFlag(env, "bl-bails"))
         EnableChannel(IonSpew_BaselineBailouts);
+    if (ContainsFlag(env, "bl-dbg-osr"))
+        EnableChannel(IonSpew_BaselineDebugModeOSR);
     if (ContainsFlag(env, "bl-all")) {
         EnableChannel(IonSpew_BaselineAbort);
         EnableChannel(IonSpew_BaselineScripts);
@@ -330,6 +333,7 @@ jit::CheckLogging()
         EnableChannel(IonSpew_BaselineICFallback);
         EnableChannel(IonSpew_BaselineOSR);
         EnableChannel(IonSpew_BaselineBailouts);
+        EnableChannel(IonSpew_BaselineDebugModeOSR);
     }
 
     IonSpewFile = stderr;
