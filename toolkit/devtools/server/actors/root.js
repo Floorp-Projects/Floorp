@@ -6,78 +6,10 @@
 
 "use strict";
 
+let devtools_ = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+let { createExtraActors, appendExtraActors } = devtools_.require("devtools/server/actors/common");
+
 /* Root actor for the remote debugging protocol. */
-
-/**
- * Methods shared between RootActor and BrowserTabActor.
- */
-
-/**
- * Populate |this._extraActors| as specified by |aFactories|, reusing whatever
- * actors are already there. Add all actors in the final extra actors table to
- * |aPool|.
- *
- * The root actor and the tab actor use this to instantiate actors that other
- * parts of the browser have specified with DebuggerServer.addTabActor antd
- * DebuggerServer.addGlobalActor.
- *
- * @param aFactories
- *     An object whose own property names are the names of properties to add to
- *     some reply packet (say, a tab actor grip or the "listTabs" response
- *     form), and whose own property values are actor constructor functions, as
- *     documented for addTabActor and addGlobalActor.
- *
- * @param this
- *     The BrowserRootActor or BrowserTabActor with which the new actors will
- *     be associated. It should support whatever API the |aFactories|
- *     constructor functions might be interested in, as it is passed to them.
- *     For the sake of CommonCreateExtraActors itself, it should have at least
- *     the following properties:
- *
- *     - _extraActors
- *        An object whose own property names are factory table (and packet)
- *        property names, and whose values are no-argument actor constructors,
- *        of the sort that one can add to an ActorPool.
- *
- *     - conn
- *        The DebuggerServerConnection in which the new actors will participate.
- *
- *     - actorID
- *        The actor's name, for use as the new actors' parentID.
- */
-function CommonCreateExtraActors(aFactories, aPool) {
-  // Walk over global actors added by extensions.
-  for (let name in aFactories) {
-    let actor = this._extraActors[name];
-    if (!actor) {
-      actor = aFactories[name].bind(null, this.conn, this);
-      actor.prototype = aFactories[name].prototype;
-      actor.parentID = this.actorID;
-      this._extraActors[name] = actor;
-    }
-    aPool.addActor(actor);
-  }
-}
-
-/**
- * Append the extra actors in |this._extraActors|, constructed by a prior call
- * to CommonCreateExtraActors, to |aObject|.
- *
- * @param aObject
- *     The object to which the extra actors should be added, under the
- *     property names given in the |aFactories| table passed to
- *     CommonCreateExtraActors.
- *
- * @param this
- *     The BrowserRootActor or BrowserTabActor whose |_extraActors| table we
- *     should use; see above.
- */
-function CommonAppendExtraActors(aObject) {
-  for (let name in this._extraActors) {
-    let actor = this._extraActors[name];
-    aObject[name] = actor.actorID;
-  }
-}
 
 /**
  * Create a remote debugging protocol root actor.
@@ -364,8 +296,8 @@ RootActor.prototype = {
   },
 
   /* Support for DebuggerServer.addGlobalActor. */
-  _createExtraActors: CommonCreateExtraActors,
-  _appendExtraActors: CommonAppendExtraActors,
+  _createExtraActors: createExtraActors,
+  _appendExtraActors: appendExtraActors,
 
   /* ThreadActor hooks. */
 

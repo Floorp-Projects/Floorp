@@ -98,13 +98,13 @@ function createAndLoadTemporaryFile()
 {
   // Create a temporary file.
   gFile = FileUtils.getFile("TmpD", [gFileName]);
-  gFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  gFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   // Write the temporary file.
   let fout = Cc["@mozilla.org/network/file-output-stream;1"].
              createInstance(Ci.nsIFileOutputStream);
   fout.init(gFile.QueryInterface(Ci.nsILocalFile), 0x02 | 0x08 | 0x20,
-            0644, fout.DEFER_OPEN);
+            0o644, fout.DEFER_OPEN);
 
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
                   createInstance(Ci.nsIScriptableUnicodeConverter);

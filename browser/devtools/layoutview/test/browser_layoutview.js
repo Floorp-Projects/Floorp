@@ -97,3 +97,19 @@ function*() {
     is(elt.textContent, res2[i].value, res2[i].selector + " has the right value after style update.");
   }
 });
+
+addTest("Test that long labels on left/right are rotated 90 degrees",
+function*() {
+  let viewdoc = view.document;
+  const LONG_TEXT_ROTATE_LIMIT = 3;
+
+  for (let i = 0; i < res1.length; i++) {
+    let elt = viewdoc.querySelector(res1[i].selector);
+    let isLong = elt.textContent.length > LONG_TEXT_ROTATE_LIMIT;
+    let classList = elt.parentNode.classList
+    let canBeRotated = classList.contains("left") || classList.contains("right");
+    let isRotated = classList.contains("rotate");
+
+    is(canBeRotated && isLong, isRotated, res1[i].selector + " correctly rotated.");
+  }
+});

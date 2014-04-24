@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 let B2G_ID = "{3c2e2abc-06d4-11e1-ac3b-374f68613e61}";
@@ -554,7 +555,7 @@ ThreadActor.prototype = {
       this._prettyPrintWorker.addEventListener(
         "error", this._onPrettyPrintError, false);
 
-      if (wantLogging) {
+      if (dumpn.wantLogging) {
         this._prettyPrintWorker.addEventListener("message", this._onPrettyPrintMsg, false);
 
         const postMsg = this._prettyPrintWorker.postMessage;

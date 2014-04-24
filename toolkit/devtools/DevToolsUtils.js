@@ -10,7 +10,7 @@
 // on the main thread, and false if we are running on a worker thread.
 var { Ci, Cu } = require("chrome");
 var Services = require("Services");
-var setTimeout = Cu.import("resource://gre/modules/Timer.jsm", {}).setTimeout;
+var { setTimeout } = require("Timer");
 
 /**
  * Turn the error |aError| into a string, without fail.

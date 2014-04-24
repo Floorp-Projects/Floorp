@@ -523,7 +523,7 @@ nsDOMIdentity.prototype = {
         }
 
         if (this._rpWatcher.onerror) {
-          this._rpWatcher.onerror(msg.message);
+          this._rpWatcher.onerror(JSON.stringify({name: msg.message.error}));
         }
         break;
       case "Identity:IDP:CallBeginProvisioningCallback":
