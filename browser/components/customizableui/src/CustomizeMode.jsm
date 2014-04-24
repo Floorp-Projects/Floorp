@@ -180,10 +180,10 @@ CustomizeMode.prototype = {
       // customization mode when pressing ESC.
       document.addEventListener("keypress", this);
 
-      // Same goes for the menu button - if we're customizing, a mousedown to the
+      // Same goes for the menu button - if we're customizing, a click on the
       // menu button means a quick exit from customization mode.
       window.PanelUI.hide();
-      window.PanelUI.menuButton.addEventListener("mousedown", this);
+      window.PanelUI.menuButton.addEventListener("command", this);
       window.PanelUI.menuButton.open = true;
       window.PanelUI.beginBatchUpdate();
 
@@ -332,7 +332,7 @@ CustomizeMode.prototype = {
     CustomizableUI.removeListener(this);
 
     this.document.removeEventListener("keypress", this);
-    this.window.PanelUI.menuButton.removeEventListener("mousedown", this);
+    this.window.PanelUI.menuButton.removeEventListener("command", this);
     this.window.PanelUI.menuButton.open = false;
 
     this.window.PanelUI.beginBatchUpdate();
@@ -1180,13 +1180,13 @@ CustomizeMode.prototype = {
       case "dragend":
         this._onDragEnd(aEvent);
         break;
-      case "mousedown":
-        if (aEvent.button == 0 &&
-            (aEvent.originalTarget == this.window.PanelUI.menuButton)) {
+      case "command":
+        if (aEvent.originalTarget == this.window.PanelUI.menuButton) {
           this.exit();
           aEvent.preventDefault();
-          return;
         }
+        break;
+      case "mousedown":
         this._onMouseDown(aEvent);
         break;
       case "mouseup":
