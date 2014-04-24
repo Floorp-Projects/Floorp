@@ -1602,6 +1602,8 @@ nsGlobalWindow::FreeInnerObjects()
   mAudioContexts.Clear();
 
 #ifdef MOZ_GAMEPAD
+  DisableGamepadUpdates();
+  mHasGamepad = false;
   mGamepads.Clear();
 #endif
 }
