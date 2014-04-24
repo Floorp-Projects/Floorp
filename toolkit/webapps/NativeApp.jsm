@@ -183,7 +183,7 @@ CommonNativeApp.prototype = {
       // because the app isn't installed yet).
       if (this.iconURI.scheme == "app") {
         let zipUrl = OS.Path.toFileURI(OS.Path.join(aTmpDir,
-                                                    "application.zip"));
+                                                    this.zipFile));
 
         let filePath = this.iconURI.QueryInterface(Ci.nsIURL).filePath;
 
