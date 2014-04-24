@@ -303,10 +303,10 @@ nsresult
 RtspOmxReader::ReadMetadata(MediaInfo* aInfo,
                             MetadataTags** aTags)
 {
+  SetActive();
+
   nsresult rv = MediaOmxReader::ReadMetadata(aInfo, aTags);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  SetActive();
 
   return NS_OK;
 }
