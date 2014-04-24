@@ -401,7 +401,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
     public boolean onBackPressed() {
         if (isEditing()) {
-            stopEditing();
+            cancelEdit();
             return true;
         }
 
