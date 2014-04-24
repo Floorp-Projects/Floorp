@@ -10,9 +10,7 @@
 #include "prprf.h"
 #include "nsFrame.h"
 #include "nsPresArena.h"
-#ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
-#endif
 #include "nsIFrameInlines.h"
 #include "WritingModes.h"
 #include "mozilla/Assertions.h"
@@ -684,7 +682,6 @@ nsLineIterator::FindLineContaining(nsIFrame* aFrame, int32_t aStartLine)
   return -1;
 }
 
-#ifdef IBMBIDI
 NS_IMETHODIMP
 nsLineIterator::CheckLineOrder(int32_t                  aLine,
                                bool                     *aIsReordered,
@@ -711,7 +708,6 @@ nsLineIterator::CheckLineOrder(int32_t                  aLine,
 
   return NS_OK;
 }
-#endif // IBMBIDI
 
 NS_IMETHODIMP
 nsLineIterator::FindFrameAt(int32_t aLineNumber,

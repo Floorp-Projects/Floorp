@@ -14,27 +14,13 @@ const gIsLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc) ||
 const gDirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
 // Finds the test plugin library
-function get_test_plugin() {
+function get_test_plugin(secondplugin=false) {
   var pluginEnum = gDirSvc.get("APluginsDL", Ci.nsISimpleEnumerator);
   while (pluginEnum.hasMoreElements()) {
     let dir = pluginEnum.getNext().QueryInterface(Ci.nsILocalFile);
+    let name = get_platform_specific_plugin_name(secondplugin);
     let plugin = dir.clone();
-    // OSX plugin
-    plugin.append("Test.plugin");
-    if (plugin.exists()) {
-      plugin.normalize();
-      return plugin;
-    }
-    plugin = dir.clone();
-    // *nix plugin
-    plugin.append("libnptest.so");
-    if (plugin.exists()) {
-      plugin.normalize();
-      return plugin;
-    }
-    // Windows plugin
-    plugin = dir.clone();
-    plugin.append("nptest.dll");
+    plugin.append(name);
     if (plugin.exists()) {
       plugin.normalize();
       return plugin;
@@ -93,11 +79,17 @@ function do_get_profile_startup() {
   return file.clone();
 }
 
-function get_platform_specific_plugin_name() {
-  if (gIsWindows) return "nptest.dll";
-  else if (gIsOSX) return "Test.plugin";
-  else if (gIsLinux) return "libnptest.so";
-  else return null;
+function get_platform_specific_plugin_name(secondplugin=false) {
+  if (secondplugin) {
+    if (gIsWindows) return "npsecondtest.dll";
+    if (gIsOSX) return "SecondTest.plugin";
+    if (gIsLinux) return "libnpsecondtest.so";
+  } else {
+    if (gIsWindows) return "nptest.dll";
+    if (gIsOSX) return "Test.plugin";
+    if (gIsLinux) return "libnptest.so";
+  }
+  return null;
 }
 
 function get_platform_specific_plugin_suffix() {
