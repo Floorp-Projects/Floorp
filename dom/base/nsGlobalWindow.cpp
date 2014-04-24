@@ -8430,6 +8430,13 @@ nsGlobalWindow::EnterModalState()
     }
   }
 
+  // If there are any drag and drop operations in flight, try to end them.
+  nsCOMPtr<nsIDragService> ds =
+    do_GetService("@mozilla.org/widget/dragservice;1");
+  if (ds) {
+    ds->EndDragSession(true);
+  }
+
   // Clear the capturing content if it is under topDoc.
   // Usually the activeESM check above does that, but there are cases when
   // we don't have activeESM, or it is for different document.

@@ -14,7 +14,7 @@
 %define toolbarShadowColor hsla(209,67%,12%,0.35)
 %define navbarTextboxCustomBorder border-color: rgba(0,0,0,.32);
 %define forwardTransitionLength 150ms
-%define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-container
+%define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-wrapper
 %define conditionalForwardWithUrlbarWidth 30
 
 #menubar-items {
@@ -886,36 +886,28 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 
 #forward-button > .toolbarbutton-icon {
   background-clip: padding-box !important;
-  /*mask: url(keyhole-forward-mask.svg#mask); XXX: this regresses twinopen */
-  clip-path: url(chrome://browser/content/browser.xul#keyhole-forward-clip-path) !important;
-  margin-left: -6px !important;
   border-left-style: none !important;
   border-radius: 0 !important;
   padding-left: 9px !important;
   padding-right: 3px !important;
 }
 
-%ifdef WINDOWS_AERO
-@media (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
-%endif
-  #forward-button > .toolbarbutton-icon {
-    margin-left: -6px !important;
-  }
-%ifdef WINDOWS_AERO
-}
-%endif
-
 @conditionalForwardWithUrlbar@:not([switchingtabs]) > #forward-button {
-  transition: opacity @forwardTransitionLength@ ease-out;
+  transition: margin-left @forwardTransitionLength@ ease-out;
+}
+
+@conditionalForwardWithUrlbar@ > #forward-button[disabled] {
+  margin-left: -@conditionalForwardWithUrlbarWidth@px;
+}
+
+@conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] {
+  /* delay the hiding of the forward button when hovered to avoid accidental clicks on the url bar */
+  transition-delay: 100s;
 }
 
 @conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] {
-  opacity: 0;
-}
-
-@conditionalForwardWithUrlbar@ > #forward-button[occluded-by-urlbar] {
-  visibility: hidden;
+  /* when not hovered anymore, trigger a new transition to hide the forward button immediately */
+  margin-left: -@conditionalForwardWithUrlbarWidth@.01px;
 }
 
 #back-button {
@@ -999,8 +991,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 }
 %endif
 
-#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
-#forward-button:-moz-locale-dir(rtl) {
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   transform: scaleX(-1);
 }
 
@@ -1172,57 +1163,34 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   background-color: white;
 }
 
-@conditionalForwardWithUrlbar@ > #urlbar-wrapper {
-  padding-left: @conditionalForwardWithUrlbarWidth@px;
-  -moz-margin-start: -@conditionalForwardWithUrlbarWidth@px;
-  position: relative;
-  pointer-events: none;
-}
-
-@conditionalForwardWithUrlbar@ > #urlbar-wrapper > #urlbar {
+@conditionalForwardWithUrlbar@ > #urlbar {
   -moz-border-start: none;
   margin-left: 0;
-  pointer-events: all;
 }
 
-@conditionalForwardWithUrlbar@:not([switchingtabs]) > #urlbar-wrapper > #urlbar {
-  transition: margin-left @forwardTransitionLength@ ease-out;
-}
-
-@conditionalForwardWithUrlbar@ > #urlbar-wrapper > #urlbar:-moz-locale-dir(ltr) {
+@conditionalForwardWithUrlbar@ > #urlbar:-moz-locale-dir(ltr) {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
 
-@conditionalForwardWithUrlbar@ > #urlbar-wrapper > #urlbar:-moz-locale-dir(rtl) {
+@conditionalForwardWithUrlbar@ > #urlbar:-moz-locale-dir(rtl) {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper {
+@conditionalForwardWithUrlbar@ {
   clip-path: url("chrome://browser/content/browser.xul#urlbar-back-button-clip-path");
+  -moz-margin-start: -5px;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper > #urlbar {
-  margin-left: -@conditionalForwardWithUrlbarWidth@px;
-}
-
-@conditionalForwardWithUrlbar@[forwarddisabled]:hover:not([switchingtabs]) > #urlbar-wrapper > #urlbar {
-  /* delay the hiding of the forward button when hovered to avoid accidental clicks on the url bar */
-  transition-delay: 100s;
-}
-
-@conditionalForwardWithUrlbar@[forwarddisabled][switchingtabs] + #urlbar-container > #urlbar,
-@conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) > #urlbar-wrapper > #urlbar {
-  /* when switching tabs, or when not hovered anymore, trigger a new transition
-   * to hide the forward button immediately */
-  margin-left: -@conditionalForwardWithUrlbarWidth@.01px;
-}
-
-@conditionalForwardWithUrlbar@ > #urlbar-wrapper:-moz-locale-dir(rtl),
-@conditionalForwardWithUrlbar@ > #urlbar-wrapper > #urlbar:-moz-locale-dir(rtl) {
-  /* let windows-urlbar-back-button-mask clip the urlbar's right side for RTL */
+@conditionalForwardWithUrlbar@:-moz-locale-dir(rtl),
+@conditionalForwardWithUrlbar@ > #urlbar:-moz-locale-dir(rtl) {
+  /* let urlbar-back-button-clip-path clip the urlbar's right side for RTL */
   transform: scaleX(-1);
+}
+
+@conditionalForwardWithUrlbar@:-moz-locale-dir(rtl) {
+  -moz-box-direction: reverse;
 }
 
 html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
@@ -1314,33 +1282,33 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   border-radius: 0;
 }
 
-@conditionalForwardWithUrlbar@ > #urlbar-wrapper > #urlbar > #identity-box {
+@conditionalForwardWithUrlbar@ > #urlbar > #identity-box {
   border-radius: 0;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
+@conditionalForwardWithUrlbar@:not([switchingtabs]) > #urlbar > #identity-box {
+  transition: padding-left, padding-right;
+}
+
+@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
   padding-left: 5px;
-  transition: padding-left;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
+@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
   padding-right: 5px;
-  transition: padding-right;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled]:hover:not([switchingtabs]) > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box {
+@conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
   /* forward button hiding is delayed when hovered */
   transition-delay: 100s;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled][switchingtabs] + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr),
-@conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
+@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
   /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
   padding-left: 5.01px;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled][switchingtabs] + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl),
-@conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
+@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
   /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
   padding-right: 5.01px;
 }
@@ -1395,12 +1363,8 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   margin-top: 1px;
   margin-bottom: 1px;
   -moz-margin-start: 3px;
-  -moz-margin-end: 2px;
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-@conditionalForwardWithUrlbar@ > #urlbar-wrapper > #urlbar > #identity-box > #page-proxy-favicon {
   -moz-margin-end: 1px;
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 #identity-box:hover > #page-proxy-favicon {

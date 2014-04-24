@@ -26,7 +26,12 @@ class MotionEventHelper {
         Log.d(LOGTAG, "Triggering down at (" + x + "," + y + ")");
         long downTime = SystemClock.uptimeMillis();
         MotionEvent event = MotionEvent.obtain(downTime, downTime, MotionEvent.ACTION_DOWN, mSurfaceOffsetX + x, mSurfaceOffsetY + y, 0);
-        mInstrumentation.sendPointerSync(event);
+        try {
+            mInstrumentation.sendPointerSync(event);
+        } finally {
+            event.recycle();
+            event = null;
+        }
         return downTime;
     }
 
@@ -37,7 +42,12 @@ class MotionEventHelper {
     public long move(long downTime, long moveTime, float x, float y) {
         Log.d(LOGTAG, "Triggering move to (" + x + "," + y + ")");
         MotionEvent event = MotionEvent.obtain(downTime, moveTime, MotionEvent.ACTION_MOVE, mSurfaceOffsetX + x, mSurfaceOffsetY + y, 0);
-        mInstrumentation.sendPointerSync(event);
+        try {
+            mInstrumentation.sendPointerSync(event);
+        } finally {
+            event.recycle();
+            event = null;
+        }
         return downTime;
     }
 
@@ -48,7 +58,12 @@ class MotionEventHelper {
     public long up(long downTime, long upTime, float x, float y) {
         Log.d(LOGTAG, "Triggering up at (" + x + "," + y + ")");
         MotionEvent event = MotionEvent.obtain(downTime, upTime, MotionEvent.ACTION_UP, mSurfaceOffsetX + x, mSurfaceOffsetY + y, 0);
-        mInstrumentation.sendPointerSync(event);
+        try {
+            mInstrumentation.sendPointerSync(event);
+        } finally {
+            event.recycle();
+            event = null;
+        }
         return -1L;
     }
 

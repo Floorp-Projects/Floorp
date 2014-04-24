@@ -148,11 +148,9 @@ FRAME_STATE_BIT(Generic, 15, NS_FRAME_PART_OF_IBSPLIT)
 // common case.
 FRAME_STATE_BIT(Generic, 16, NS_FRAME_MAY_BE_TRANSFORMED)
 
-#ifdef IBMBIDI
 // If this bit is set, the frame itself is a bidi continuation,
 // or is incomplete (its next sibling is a bidi continuation)
 FRAME_STATE_BIT(Generic, 17, NS_FRAME_IS_BIDI)
-#endif
 
 // If this bit is set the frame has descendant with a view
 FRAME_STATE_BIT(Generic, 18, NS_FRAME_HAS_CHILD_WITH_VIEW)

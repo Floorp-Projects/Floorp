@@ -34,7 +34,6 @@
 #include "nsTextFragment.h"
 #include <algorithm>
 
-// for IBMBIDI
 #include "nsGkAtoms.h"
 #include "nsIFrameTraversal.h"
 #include "nsLayoutUtils.h"
@@ -70,9 +69,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIClipboard.h"
 #include "nsIFrameInlines.h"
 
-#ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
-#endif // IBMBIDI
 
 #include "nsError.h"
 #include "mozilla/dom/Element.h"
@@ -331,9 +328,7 @@ nsFrameSelection::nsFrameSelection()
   mMouseDoubleDownState = false;
   
   mHint = HINTLEFT;
-#ifdef IBMBIDI
   mCaretBidiLevel = BIDI_LEVEL_UNDEFINED;
-#endif
   mDragSelectingCells = false;
   mSelectingTableCellMode = 0;
   mSelectedCellIndex = 0;
@@ -598,7 +593,6 @@ nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame  *aFrame,
   return NS_OK;
 }
 
-#ifdef IBMBIDI
 void
 nsFrameSelection::SetCaretBidiLevel(uint8_t aLevel)
 {
@@ -619,8 +613,6 @@ nsFrameSelection::UndefineCaretBidiLevel()
 {
   mCaretBidiLevel |= BIDI_LEVEL_UNDEFINED;
 }
-#endif
-
 
 #ifdef PRINT_RANGE
 void printRange(nsRange *aDomRange)

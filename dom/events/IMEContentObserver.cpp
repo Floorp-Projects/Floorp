@@ -7,6 +7,7 @@
 #include "ContentEventHandler.h"
 #include "IMEContentObserver.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/dom/Element.h"
@@ -33,14 +34,24 @@ namespace mozilla {
 
 using namespace widget;
 
-NS_IMPL_ISUPPORTS5(IMEContentObserver,
-                   nsIMutationObserver,
-                   nsISelectionListener,
-                   nsIReflowObserver,
-                   nsIScrollObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_CYCLE_COLLECTION_5(IMEContentObserver,
+                           mWidget, mSelection,
+                           mRootContent, mEditableNode, mDocShell)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IMEContentObserver)
+ NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
+ NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+ NS_INTERFACE_MAP_ENTRY(nsIReflowObserver)
+ NS_INTERFACE_MAP_ENTRY(nsIScrollObserver)
+ NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+ NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISelectionListener)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(IMEContentObserver)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(IMEContentObserver)
 
 IMEContentObserver::IMEContentObserver()
+  : mESM(nullptr)
 {
 }
 
@@ -49,6 +60,9 @@ IMEContentObserver::Init(nsIWidget* aWidget,
                          nsPresContext* aPresContext,
                          nsIContent* aContent)
 {
+  mESM = aPresContext->EventStateManager();
+  mESM->OnStartToObserveContent(this);
+
   mWidget = aWidget;
   mEditableNode = IMEStateManager::GetRootEditableNode(aPresContext, aContent);
   if (!mEditableNode) {
@@ -174,6 +188,17 @@ IMEContentObserver::Destroy()
   mEditableNode = nullptr;
   mDocShell = nullptr;
   mUpdatePreference.mWantUpdates = nsIMEUpdatePreference::NOTIFY_NOTHING;
+
+  if (mESM) {
+    mESM->OnStopObservingContent(this);
+    mESM = nullptr;
+  }
+}
+
+void
+IMEContentObserver::DisconnectFromEventStateManager()
+{
+  mESM = nullptr;
 }
 
 bool

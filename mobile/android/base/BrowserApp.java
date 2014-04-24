@@ -1920,7 +1920,7 @@ abstract public class BrowserApp extends GeckoApp
      */
     private void addAddonMenuItemToMenu(final Menu menu, final MenuItemInfo info) {
         info.added = true;
-        
+
         final Menu destination;
         if (info.parent == 0) {
             destination = menu;
@@ -2056,7 +2056,7 @@ abstract public class BrowserApp extends GeckoApp
         // Sets mMenu = menu.
         super.onCreateOptionsMenu(menu);
 
-        // Inform the menu about the action-items bar. 
+        // Inform the menu about the action-items bar.
         if (menu instanceof GeckoMenu &&
             HardwareUtils.isTablet()) {
             ((GeckoMenu) menu).setActionItemBarPresenter(mBrowserToolbar);
@@ -2470,7 +2470,7 @@ abstract public class BrowserApp extends GeckoApp
     /*
      * If the app has been launched a certain number of times, and we haven't asked for feedback before,
      * open a new tab with about:feedback when launching the app from the icon shortcut.
-     */ 
+     */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -2572,7 +2572,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onNewTabs(String[] urls) {
         final EnumSet<OnUrlOpenListener.Flags> flags = EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB);
- 
+
         for (String url : urls) {
             if (!maybeSwitchToTab(url, flags)) {
                 openUrlAndStopEditing(url, true);
