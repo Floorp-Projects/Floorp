@@ -155,18 +155,52 @@ uint32_t Bailout(BailoutStack *sp, BaselineBailoutInfo **info);
 uint32_t InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
                              BaselineBailoutInfo **info);
 
-struct ExceptionBailoutInfo
+class ExceptionBailoutInfo
 {
-    size_t frameNo;
-    jsbytecode *resumePC;
-    size_t numExprSlots;
+    size_t frameNo_;
+    jsbytecode *resumePC_;
+    size_t numExprSlots_;
+
+  public:
+    ExceptionBailoutInfo(size_t frameNo, jsbytecode *resumePC, size_t numExprSlots)
+      : frameNo_(frameNo),
+        resumePC_(resumePC),
+        numExprSlots_(numExprSlots)
+    { }
+
+    ExceptionBailoutInfo()
+      : frameNo_(0),
+        resumePC_(nullptr),
+        numExprSlots_(0)
+    { }
+
+    bool catchingException() const {
+        return !!resumePC_;
+    }
+    bool propagatingIonExceptionForDebugMode() const {
+        return !resumePC_;
+    }
+
+    size_t frameNo() const {
+        MOZ_ASSERT(catchingException());
+        return frameNo_;
+    }
+    jsbytecode *resumePC() const {
+        MOZ_ASSERT(catchingException());
+        return resumePC_;
+    }
+    size_t numExprSlots() const {
+        MOZ_ASSERT(catchingException());
+        return numExprSlots_;
+    }
 };
 
 // Called from the exception handler to enter a catch or finally block.
 // Returns a BAILOUT_* error code.
 uint32_t ExceptionHandlerBailout(JSContext *cx, const InlineFrameIterator &frame,
+                                 ResumeFromException *rfe,
                                  const ExceptionBailoutInfo &excInfo,
-                                 BaselineBailoutInfo **bailoutInfo);
+                                 bool *overrecursed);
 
 uint32_t FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo);
 

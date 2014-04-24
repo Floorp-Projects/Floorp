@@ -48,7 +48,10 @@ enum BailoutKind
     Bailout_ShapeGuard,
 
     // A bailout caused by invalid assumptions based on Baseline code.
-    Bailout_BaselineInfo
+    Bailout_BaselineInfo,
+
+    // A bailout to baseline from Ion on exception to handle Debugger hooks.
+    Bailout_IonExceptionDebugMode,
 };
 
 inline const char *
@@ -65,6 +68,8 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_ShapeGuard";
       case Bailout_BaselineInfo:
         return "Bailout_BaselineInfo";
+      case Bailout_IonExceptionDebugMode:
+        return "Bailout_IonExceptionDebugMode";
       default:
         MOZ_ASSUME_UNREACHABLE("Invalid BailoutKind");
     }
