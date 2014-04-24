@@ -33,12 +33,21 @@ namespace mozilla {
 
 using namespace widget;
 
-NS_IMPL_ISUPPORTS5(IMEContentObserver,
-                   nsIMutationObserver,
-                   nsISelectionListener,
-                   nsIReflowObserver,
-                   nsIScrollObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_CYCLE_COLLECTION_5(IMEContentObserver,
+                           mWidget, mSelection,
+                           mRootContent, mEditableNode, mDocShell)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IMEContentObserver)
+ NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
+ NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+ NS_INTERFACE_MAP_ENTRY(nsIReflowObserver)
+ NS_INTERFACE_MAP_ENTRY(nsIScrollObserver)
+ NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+ NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISelectionListener)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(IMEContentObserver)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(IMEContentObserver)
 
 IMEContentObserver::IMEContentObserver()
 {
