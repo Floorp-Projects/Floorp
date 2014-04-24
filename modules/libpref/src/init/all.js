@@ -1534,7 +1534,7 @@ pref("font.mathfont-family", "MathJax_Main, STIXNonUnicode, STIXSizeOneSym, STIX
 // These fonts are ignored the underline offset, instead of it, the underline is lowered to bottom of its em descent.
 pref("font.blacklist.underline_offset", "FangSong,Gulim,GulimChe,MingLiU,MingLiU-ExtB,MingLiU_HKSCS,MingLiU-HKSCS-ExtB,MS Gothic,MS Mincho,MS PGothic,MS PMincho,MS UI Gothic,PMingLiU,PMingLiU-ExtB,SimHei,SimSun,SimSun-ExtB,Hei,Kai,Apple LiGothic,Apple LiSung,Osaka");
 
-#ifdef MOZ_B2G
+#ifdef MOZ_WIDGET_GONK
 // Whitelist of fonts that ship with B2G that do not include space lookups in
 // default features. This allows us to skip analyzing the GSUB/GPOS tables
 // unless features are explicitly enabled.
@@ -2063,162 +2063,37 @@ pref("svg.marker-improvements.enabled", false);
 pref("svg.marker-improvements.enabled", true);
 #endif
 
-
-// Default font types and sizes by locale
-pref("font.default.ar", "sans-serif");
 pref("font.minimum-size.ar", 0);
-pref("font.size.variable.ar", 16);
-pref("font.size.fixed.ar", 13);
-
-pref("font.default.el", "serif");
-pref("font.minimum-size.el", 0);
-pref("font.size.variable.el", 16);
-pref("font.size.fixed.el", 13);
-
-pref("font.default.he", "sans-serif");
-pref("font.minimum-size.he", 0);
-pref("font.size.variable.he", 16);
-pref("font.size.fixed.he", 13);
-
-pref("font.default.ja", "sans-serif");
-pref("font.minimum-size.ja", 0);
-pref("font.size.variable.ja", 16);
-pref("font.size.fixed.ja", 16);
-
-pref("font.default.ko", "sans-serif");
-pref("font.minimum-size.ko", 0);
-pref("font.size.variable.ko", 16);
-pref("font.size.fixed.ko", 16);
-
-pref("font.default.th", "serif");
-pref("font.minimum-size.th", 0);
-pref("font.size.variable.th", 16);
-pref("font.size.fixed.th", 13);
-
-pref("font.default.tr", "serif");
-pref("font.minimum-size.tr", 0);
-pref("font.size.variable.tr", 16);
-pref("font.size.fixed.tr", 13);
-
-pref("font.default.x-baltic", "serif");
-pref("font.minimum-size.x-baltic", 0);
-pref("font.size.variable.x-baltic", 16);
-pref("font.size.fixed.x-baltic", 13);
-
-pref("font.default.x-central-euro", "serif");
-pref("font.minimum-size.x-central-euro", 0);
-pref("font.size.variable.x-central-euro", 16);
-pref("font.size.fixed.x-central-euro", 13);
-
-pref("font.default.x-cyrillic", "serif");
-pref("font.minimum-size.x-cyrillic", 0);
-pref("font.size.variable.x-cyrillic", 16);
-pref("font.size.fixed.x-cyrillic", 13);
-
-pref("font.default.x-devanagari", "serif");
-pref("font.minimum-size.x-devanagari", 0);
-pref("font.size.variable.x-devanagari", 16);
-pref("font.size.fixed.x-devanagari", 13);
-
-pref("font.default.x-tamil", "serif");
-pref("font.minimum-size.x-tamil", 0);
-pref("font.size.variable.x-tamil", 16);
-pref("font.size.fixed.x-tamil", 13);
-
-pref("font.default.x-armn", "serif");
 pref("font.minimum-size.x-armn", 0);
-pref("font.size.variable.x-armn", 16);
-pref("font.size.fixed.x-armn", 13);
-
-pref("font.default.x-beng", "serif");
 pref("font.minimum-size.x-beng", 0);
-pref("font.size.variable.x-beng", 16);
-pref("font.size.fixed.x-beng", 13);
-
-pref("font.default.x-cans", "serif");
-pref("font.minimum-size.x-cans", 0);
-pref("font.size.variable.x-cans", 16);
-pref("font.size.fixed.x-cans", 13);
-
-pref("font.default.x-ethi", "serif");
-pref("font.minimum-size.x-ethi", 0);
-pref("font.size.variable.x-ethi", 16);
-pref("font.size.fixed.x-ethi", 13);
-
-pref("font.default.x-geor", "serif");
-pref("font.minimum-size.x-geor", 0);
-pref("font.size.variable.x-geor", 16);
-pref("font.size.fixed.x-geor", 13);
-
-pref("font.default.x-gujr", "serif");
-pref("font.minimum-size.x-gujr", 0);
-pref("font.size.variable.x-gujr", 16);
-pref("font.size.fixed.x-gujr", 13);
-
-pref("font.default.x-guru", "serif");
-pref("font.minimum-size.x-guru", 0);
-pref("font.size.variable.x-guru", 16);
-pref("font.size.fixed.x-guru", 13);
-
-pref("font.default.x-khmr", "serif");
-pref("font.minimum-size.x-khmr", 0);
-pref("font.size.variable.x-khmr", 16);
-pref("font.size.fixed.x-khmr", 13);
-
-pref("font.default.x-mlym", "serif");
-pref("font.minimum-size.x-mlym", 0);
-pref("font.size.variable.x-mlym", 16);
-pref("font.size.fixed.x-mlym", 13);
-
-pref("font.default.x-orya", "serif");
-pref("font.minimum-size.x-orya", 0);
-pref("font.size.variable.x-orya", 16);
-pref("font.size.fixed.x-orya", 13);
-
-pref("font.default.x-telu", "serif");
-pref("font.minimum-size.x-telu", 0);
-pref("font.size.variable.x-telu", 16);
-pref("font.size.fixed.x-telu", 13);
-
-pref("font.default.x-knda", "serif");
-pref("font.minimum-size.x-knda", 0);
-pref("font.size.variable.x-knda", 16);
-pref("font.size.fixed.x-knda", 13);
-
-pref("font.default.x-sinh", "serif");
-pref("font.minimum-size.x-sinh", 0);
-pref("font.size.variable.x-sinh", 16);
-pref("font.size.fixed.x-sinh", 13);
-
-pref("font.default.x-tibt", "serif");
-pref("font.minimum-size.x-tibt", 0);
-pref("font.size.variable.x-tibt", 16);
-pref("font.size.fixed.x-tibt", 13);
-
-pref("font.default.x-unicode", "serif");
-pref("font.minimum-size.x-unicode", 0);
-pref("font.size.variable.x-unicode", 16);
-pref("font.size.fixed.x-unicode", 13);
-
-pref("font.default.x-western", "serif");
-pref("font.minimum-size.x-western", 0);
-pref("font.size.variable.x-western", 16);
-pref("font.size.fixed.x-western", 13);
-
-pref("font.default.zh-CN", "sans-serif");
+pref("font.minimum-size.x-baltic", 0);
+pref("font.minimum-size.x-central-euro", 0);
 pref("font.minimum-size.zh-CN", 0);
-pref("font.size.variable.zh-CN", 16);
-pref("font.size.fixed.zh-CN", 16);
-
-pref("font.default.zh-HK", "sans-serif");
 pref("font.minimum-size.zh-HK", 0);
-pref("font.size.variable.zh-HK", 16);
-pref("font.size.fixed.zh-HK", 16);
-
-pref("font.default.zh-TW", "sans-serif");
 pref("font.minimum-size.zh-TW", 0);
-pref("font.size.variable.zh-TW", 16);
-pref("font.size.fixed.zh-TW", 16);
+pref("font.minimum-size.x-cyrillic", 0);
+pref("font.minimum-size.x-devanagari", 0);
+pref("font.minimum-size.x-ethi", 0);
+pref("font.minimum-size.x-geor", 0);
+pref("font.minimum-size.el", 0);
+pref("font.minimum-size.x-gujr", 0);
+pref("font.minimum-size.x-guru", 0);
+pref("font.minimum-size.he", 0);
+pref("font.minimum-size.ja", 0);
+pref("font.minimum-size.x-knda", 0);
+pref("font.minimum-size.x-khmr", 0);
+pref("font.minimum-size.ko", 0);
+pref("font.minimum-size.x-mlym", 0);
+pref("font.minimum-size.x-orya", 0);
+pref("font.minimum-size.x-sinh", 0);
+pref("font.minimum-size.x-tamil", 0);
+pref("font.minimum-size.x-telu", 0);
+pref("font.minimum-size.x-tibt", 0);
+pref("font.minimum-size.th", 0);
+pref("font.minimum-size.tr", 0);
+pref("font.minimum-size.x-cans", 0);
+pref("font.minimum-size.x-western", 0);
+pref("font.minimum-size.x-unicode", 0);
 
 /*
  * A value greater than zero enables font size inflation for
@@ -2553,9 +2428,131 @@ pref("font.name-list.serif.x-tibt", "Tibetan Machine Uni, Jomolhari, Microsoft H
 pref("font.name-list.sans-serif.x-tibt", "Tibetan Machine Uni, Jomolhari, Microsoft Himalaya");
 pref("font.name-list.monospace.x-tibt", "Tibetan Machine Uni, Jomolhari, Microsoft Himalaya");
 
+pref("font.default.ar", "sans-serif");
+pref("font.size.variable.ar", 16);
+pref("font.size.fixed.ar", 13);
+
+pref("font.default.el", "serif");
+pref("font.size.variable.el", 16);
+pref("font.size.fixed.el", 13);
+
+pref("font.default.he", "sans-serif");
+pref("font.size.variable.he", 16);
+pref("font.size.fixed.he", 13);
+
+pref("font.default.ja", "sans-serif");
+pref("font.size.variable.ja", 16);
+pref("font.size.fixed.ja", 16);
+
+pref("font.default.ko", "sans-serif");
+pref("font.size.variable.ko", 16);
+pref("font.size.fixed.ko", 16);
+
+pref("font.default.th", "serif");
+pref("font.size.variable.th", 16);
+pref("font.size.fixed.th", 13);
 pref("font.minimum-size.th", 10);
 
+pref("font.default.tr", "serif");
+pref("font.size.variable.tr", 16);
+pref("font.size.fixed.tr", 13);
+
+pref("font.default.x-baltic", "serif");
+pref("font.size.variable.x-baltic", 16);
+pref("font.size.fixed.x-baltic", 13);
+
+pref("font.default.x-central-euro", "serif");
+pref("font.size.variable.x-central-euro", 16);
+pref("font.size.fixed.x-central-euro", 13);
+
+pref("font.default.x-cyrillic", "serif");
+pref("font.size.variable.x-cyrillic", 16);
+pref("font.size.fixed.x-cyrillic", 13);
+
 pref("font.default.x-devanagari", "sans-serif");
+pref("font.size.variable.x-devanagari", 16);
+pref("font.size.fixed.x-devanagari", 13);
+
+pref("font.default.x-tamil", "serif");
+pref("font.size.variable.x-tamil", 16);
+pref("font.size.fixed.x-tamil", 13);
+
+pref("font.default.x-armn", "serif");
+pref("font.size.variable.x-armn", 16);
+pref("font.size.fixed.x-armn", 13);
+
+pref("font.default.x-beng", "serif");
+pref("font.size.variable.x-beng", 16);
+pref("font.size.fixed.x-beng", 13);
+
+pref("font.default.x-cans", "serif");
+pref("font.size.variable.x-cans", 16);
+pref("font.size.fixed.x-cans", 13);
+
+pref("font.default.x-ethi", "serif");
+pref("font.size.variable.x-ethi", 16);
+pref("font.size.fixed.x-ethi", 13);
+
+pref("font.default.x-geor", "serif");
+pref("font.size.variable.x-geor", 16);
+pref("font.size.fixed.x-geor", 13);
+
+pref("font.default.x-gujr", "serif");
+pref("font.size.variable.x-gujr", 16);
+pref("font.size.fixed.x-gujr", 13);
+
+pref("font.default.x-guru", "serif");
+pref("font.size.variable.x-guru", 16);
+pref("font.size.fixed.x-guru", 13);
+
+pref("font.default.x-khmr", "serif");
+pref("font.size.variable.x-khmr", 16);
+pref("font.size.fixed.x-khmr", 13);
+
+pref("font.default.x-mlym", "serif");
+pref("font.size.variable.x-mlym", 16);
+pref("font.size.fixed.x-mlym", 13);
+
+pref("font.default.x-orya", "serif");
+pref("font.size.variable.x-orya", 16);
+pref("font.size.fixed.x-orya", 13);
+
+pref("font.default.x-telu", "serif");
+pref("font.size.variable.x-telu", 16);
+pref("font.size.fixed.x-telu", 13);
+
+pref("font.default.x-knda", "serif");
+pref("font.size.variable.x-knda", 16);
+pref("font.size.fixed.x-knda", 13);
+
+pref("font.default.x-sinh", "serif");
+pref("font.size.variable.x-sinh", 16);
+pref("font.size.fixed.x-sinh", 13);
+
+pref("font.default.x-tibt", "serif");
+pref("font.size.variable.x-tibt", 16);
+pref("font.size.fixed.x-tibt", 13);
+
+pref("font.default.x-unicode", "serif");
+pref("font.size.variable.x-unicode", 16);
+pref("font.size.fixed.x-unicode", 13);
+
+pref("font.default.x-western", "serif");
+pref("font.size.variable.x-western", 16);
+pref("font.size.fixed.x-western", 13);
+
+pref("font.default.zh-CN", "sans-serif");
+pref("font.size.variable.zh-CN", 16);
+pref("font.size.fixed.zh-CN", 16);
+
+pref("font.default.zh-TW", "sans-serif");
+pref("font.size.variable.zh-TW", 16);
+pref("font.size.fixed.zh-TW", 16);
+
+pref("font.default.zh-HK", "sans-serif");
+pref("font.size.variable.zh-HK", 16);
+pref("font.size.fixed.zh-HK", 16);
+
 // We have special support for Monotype Symbol on Windows.
 pref("font.mathfont-family", "MathJax_Main, STIXNonUnicode, STIXSizeOneSym, STIXGeneral, Asana Math, Symbol, DejaVu Sans, Cambria Math");
 
@@ -2963,11 +2960,130 @@ pref("font.name-list.serif.zh-HK", "Times,LiSong Pro,Heiti TC");
 pref("font.name-list.sans-serif.zh-HK", "Helvetica,Heiti TC,LiHei Pro");
 pref("font.name-list.monospace.zh-HK", "Courier,Heiti TC,LiHei Pro");
 
-// XP_MACOSX changes to default font sizes
+pref("font.default.ar", "sans-serif");
+pref("font.size.variable.ar", 16);
+pref("font.size.fixed.ar", 13);
+
+pref("font.default.el", "serif");
+pref("font.size.variable.el", 16);
+pref("font.size.fixed.el", 13);
+
+pref("font.default.he", "sans-serif");
+pref("font.size.variable.he", 16);
+pref("font.size.fixed.he", 13);
+
+pref("font.default.ja", "sans-serif");
+pref("font.size.variable.ja", 16);
+pref("font.size.fixed.ja", 16);
+
+pref("font.default.ko", "sans-serif");
+pref("font.size.variable.ko", 16);
+pref("font.size.fixed.ko", 16);
+
+pref("font.default.th", "serif");
+pref("font.size.variable.th", 16);
+pref("font.size.fixed.th", 13);
 pref("font.minimum-size.th", 10);
+
+pref("font.default.tr", "serif");
+pref("font.size.variable.tr", 16);
+pref("font.size.fixed.tr", 13);
+
+pref("font.default.x-armn", "serif");
+pref("font.size.variable.x-armn", 16);
+pref("font.size.fixed.x-armn", 13);
+
+pref("font.default.x-baltic", "serif");
+pref("font.size.variable.x-baltic", 16);
+pref("font.size.fixed.x-baltic", 13);
+
+pref("font.default.x-beng", "serif");
+pref("font.size.variable.x-beng", 16);
+pref("font.size.fixed.x-beng", 13);
+
+pref("font.default.x-cans", "serif");
+pref("font.size.variable.x-cans", 16);
+pref("font.size.fixed.x-cans", 13);
+
+pref("font.default.x-central-euro", "serif");
+pref("font.size.variable.x-central-euro", 16);
+pref("font.size.fixed.x-central-euro", 13);
+
+pref("font.default.x-cyrillic", "serif");
+pref("font.size.variable.x-cyrillic", 16);
+pref("font.size.fixed.x-cyrillic", 13);
+
+pref("font.default.x-devanagari", "serif");
+pref("font.size.variable.x-devanagari", 16);
+pref("font.size.fixed.x-devanagari", 13);
+
+pref("font.default.x-ethi", "serif");
+pref("font.size.variable.x-ethi", 16);
+pref("font.size.fixed.x-ethi", 13);
+
+pref("font.default.x-geor", "serif");
+pref("font.size.variable.x-geor", 16);
+pref("font.size.fixed.x-geor", 13);
+
+pref("font.default.x-gujr", "serif");
+pref("font.size.variable.x-gujr", 16);
+pref("font.size.fixed.x-gujr", 13);
+
+pref("font.default.x-guru", "serif");
+pref("font.size.variable.x-guru", 16);
+pref("font.size.fixed.x-guru", 13);
+
+pref("font.default.x-khmr", "serif");
+pref("font.size.variable.x-khmr", 16);
+pref("font.size.fixed.x-khmr", 13);
+
+pref("font.default.x-mlym", "serif");
+pref("font.size.variable.x-mlym", 16);
+pref("font.size.fixed.x-mlym", 13);
+
+pref("font.default.x-tamil", "serif");
+pref("font.size.variable.x-tamil", 16);
+pref("font.size.fixed.x-tamil", 13);
+
+pref("font.default.x-orya", "serif");
+pref("font.size.variable.x-orya", 16);
+pref("font.size.fixed.x-orya", 13);
+
+pref("font.default.x-telu", "serif");
+pref("font.size.variable.x-telu", 16);
+pref("font.size.fixed.x-telu", 13);
+
+pref("font.default.x-knda", "serif");
+pref("font.size.variable.x-knda", 16);
+pref("font.size.fixed.x-knda", 13);
+
+pref("font.default.x-sinh", "serif");
+pref("font.size.variable.x-sinh", 16);
+pref("font.size.fixed.x-sinh", 13);
+
+pref("font.default.x-tibt", "serif");
+pref("font.size.variable.x-tibt", 16);
+pref("font.size.fixed.x-tibt", 13);
+
+pref("font.default.x-unicode", "serif");
+pref("font.size.variable.x-unicode", 16);
+pref("font.size.fixed.x-unicode", 13);
+
+pref("font.default.x-western", "serif");
+pref("font.size.variable.x-western", 16);
+pref("font.size.fixed.x-western", 13);
+
+pref("font.default.zh-CN", "sans-serif");
 pref("font.size.variable.zh-CN", 15);
-pref("font.size.variable.zh-HK", 15);
+pref("font.size.fixed.zh-CN", 16);
+
+pref("font.default.zh-TW", "sans-serif");
 pref("font.size.variable.zh-TW", 15);
+pref("font.size.fixed.zh-TW", 16);
+
+pref("font.default.zh-HK", "sans-serif");
+pref("font.size.variable.zh-HK", 15);
+pref("font.size.fixed.zh-HK", 16);
 
 // Apple's Symbol is Unicode so use it
 pref("font.mathfont-family", "MathJax_Main, STIXNonUnicode, STIXSizeOneSym, STIXGeneral, Asana Math, Symbol, DejaVu Sans, Cambria Math");
@@ -3079,215 +3195,22 @@ pref("print.print_paper_size", 0);
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 0); // twips
 
-/* PostScript print module prefs */
-// pref("print.postscript.enabled",      true);
-pref("print.postscript.paper_size",    "letter");
-pref("print.postscript.orientation",   "portrait");
-pref("print.postscript.print_command", "lpr ${MOZ_PRINTER_NAME:+-P\"$MOZ_PRINTER_NAME\"}");
-
-// Setting default_level_parent to true makes the default level for popup
-// windows "top" instead of "parent".  On GTK2 platform, this is implemented
-// with override-redirect windows which is the normal way to implement
-// temporary popup windows.  Setting this to false would make the default
-// level "parent" which is implemented with managed windows.
-// A problem with using managed windows is that metacity sometimes deactivates
-// the parent window when the managed popup is shown.
-pref("ui.panel.default_level_parent", true);
-
-pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
-
 # ANDROID
 #endif
 
-
-#ifndef ANDROID
-#ifndef XP_MACOSX
-#ifdef XP_UNIX
-// Handled differently under Mac/Windows
-pref("network.protocol-handler.warn-external.file", false);
-pref("browser.drag_out_of_frame_style", 1);
-
-// Middle-mouse handling
-pref("middlemouse.paste", true);
-pref("middlemouse.contentLoadURL", true);
-pref("middlemouse.openNewWindow", true);
-pref("middlemouse.scrollbarPosition", true);
-
-// Clipboard behavior
-pref("clipboard.autocopy", true);
-
-pref("browser.urlbar.clickSelectsAll", false);
-
-// Tab focus model bit field:
-// 1 focuses text controls, 2 focuses other form elements, 4 adds links.
-// Leave this at the default, 7, to match mozilla1.0-era user expectations.
-// pref("accessibility.tabfocus", 1);
-
-// autocomplete keyboard grab workaround
-pref("autocomplete.grab_during_popup", true);
-pref("autocomplete.ungrab_during_mode_switch", true);
-
-// Default to using the system filepicker if possible, but allow
-// toggling to use the XUL filepicker
-pref("ui.allow_platform_file_picker", true);
-
-pref("helpers.global_mime_types_file", "/etc/mime.types");
-pref("helpers.global_mailcap_file", "/etc/mailcap");
-pref("helpers.private_mime_types_file", "~/.mime.types");
-pref("helpers.private_mailcap_file", "~/.mailcap");
-pref("print.print_command", "lpr ${MOZ_PRINTER_NAME:+-P\"$MOZ_PRINTER_NAME\"}");
-pref("print.printer_list", ""); // list of printers, separated by spaces
-pref("print.print_reversed", false);
-pref("print.print_color", true);
-pref("print.print_landscape", false);
-pref("print.print_paper_size", 0);
-
-// print_extra_margin enables platforms to specify an extra gap or margin
-// around the content of the page for Print Preview only
-pref("print.print_extra_margin", 0); // twips
-
+#if defined(ANDROID) || defined(FXOS_SIMULATOR)
 // font names
 
 pref("font.alias-list", "sans,sans-serif,serif,monospace");
 
-pref("font.size.fixed.ar", 12);
-
-pref("font.name.serif.el", "serif");
-pref("font.name.sans-serif.el", "sans-serif");
-pref("font.name.monospace.el", "monospace");
-pref("font.size.fixed.el", 12);
-
-pref("font.name.serif.he", "serif");
-pref("font.name.sans-serif.he", "sans-serif");
-pref("font.name.monospace.he", "monospace");
-pref("font.size.fixed.he", 12);
-
-pref("font.name.serif.ja", "serif");
-pref("font.name.sans-serif.ja", "sans-serif");
-pref("font.name.monospace.ja", "monospace");
-
-pref("font.name.serif.ko", "serif");
-pref("font.name.sans-serif.ko", "sans-serif");
-pref("font.name.monospace.ko", "monospace");
-
-pref("font.name.serif.th", "serif");
-pref("font.name.sans-serif.th", "sans-serif");
-pref("font.minimum-size.th", 13);
-pref("font.name.monospace.th", "monospace");
-
-pref("font.name.serif.tr", "serif");
-pref("font.name.sans-serif.tr", "sans-serif");
-pref("font.name.monospace.tr", "monospace");
-pref("font.size.fixed.tr", 12);
-
-pref("font.name.serif.x-baltic", "serif");
-pref("font.name.sans-serif.x-baltic", "sans-serif");
-pref("font.name.monospace.x-baltic", "monospace");
-pref("font.size.fixed.x-baltic", 12);
-
-pref("font.name.serif.x-central-euro", "serif");
-pref("font.name.sans-serif.x-central-euro", "sans-serif");
-pref("font.name.monospace.x-central-euro", "monospace");
-pref("font.size.fixed.x-central-euro", 12);
-
-pref("font.name.serif.x-cyrillic", "serif");
-pref("font.name.sans-serif.x-cyrillic", "sans-serif");
-pref("font.name.monospace.x-cyrillic", "monospace");
-pref("font.size.fixed.x-cyrillic", 12);
-
-pref("font.name.serif.x-unicode", "serif");
-pref("font.name.sans-serif.x-unicode", "sans-serif");
-pref("font.name.monospace.x-unicode", "monospace");
-pref("font.size.fixed.x-unicode", 12);
-
-pref("font.name.serif.x-western", "serif");
-pref("font.name.sans-serif.x-western", "sans-serif");
-pref("font.name.monospace.x-western", "monospace");
-pref("font.size.fixed.x-western", 12);
-
-pref("font.name.serif.zh-CN", "serif");
-pref("font.name.sans-serif.zh-CN", "sans-serif");
-pref("font.name.monospace.zh-CN", "monospace");
-
-// ming_uni.ttf (HKSCS-2001)
-// http://www.info.gov.hk/digital21/eng/hkscs/download/uime.exe
-pref("font.name.serif.zh-HK", "serif");
-pref("font.name.sans-serif.zh-HK", "sans-serif");
-pref("font.name.monospace.zh-HK", "monospace");
-
-// zh-TW
-
-/* PostScript print module prefs */
-// pref("print.postscript.enabled",      true);
-pref("print.postscript.paper_size",    "letter");
-pref("print.postscript.orientation",   "portrait");
-pref("print.postscript.print_command", "lpr ${MOZ_PRINTER_NAME:+-P\"$MOZ_PRINTER_NAME\"}");
-
-// On GTK2 platform, we should use topmost window level for the default window
-// level of <panel> element of XUL. GTK2 has only two window types. One is
-// normal top level window, other is popup window. The popup window is always
-// topmost window level, therefore, we are using normal top level window for
-// non-topmost panel, but it is pretty hacky. On some Window Managers, we have
-// 2 problems:
-// 1. The non-topmost panel steals focus from its parent window at showing.
-// 2. The parent of non-topmost panel is not activated when the panel is hidden.
-// So, we have no reasons we should use non-toplevel window for popup.
-pref("ui.panel.default_level_parent", true);
-
-pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
-
-#if MOZ_WIDGET_GTK == 2
-pref("intl.ime.use_simple_context_on_password_field", true);
-#else
-pref("intl.ime.use_simple_context_on_password_field", false);
-#endif
-
-# XP_UNIX
-#endif
-#endif
-#endif
-
-
-#if defined(ANDROID) || defined(MOZ_B2G)
-pref("font.alias-list", "sans,sans-serif,serif,monospace");
-pref("font.size.fixed.ar", 12);
-
-pref("font.default.el", "sans-serif");
-pref("font.size.fixed.el", 12);
-
-pref("font.size.fixed.he", 12);
-
-pref("font.minimum-size.th", 13);
-
-pref("font.default.tr", "sans-serif");
-pref("font.size.fixed.tr", 12);
-
-pref("font.default.x-baltic", "sans-serif");
-pref("font.size.fixed.x-baltic", 12);
-
-pref("font.default.x-central-euro", "sans-serif");
-pref("font.size.fixed.x-central-euro", 12);
-
-pref("font.default.x-cyrillic", "sans-serif");
-pref("font.size.fixed.x-cyrillic", 12);
-
-pref("font.default.x-unicode", "sans-serif");
-pref("font.size.fixed.x-unicode", 12);
-
-pref("font.default.x-western", "sans-serif");
-pref("font.size.fixed.x-western", 12);
-# ANDROID || MOZ_B2G
-#endif
-
-
-#ifdef MOZ_B2G
-// Gonk, FxOS Simulator and B2G Desktop
+// Gonk (along with FxOS Simulator) and Android ship different sets of fonts
+#if defined(MOZ_WIDGET_GONK) || defined(FXOS_SIMULATOR)
 
 // TODO: some entries could probably be cleaned up.
 
 // ar
 
-pref("font.name.serif.el", "Droid Serif"); // not Charis SIL Compact, only has a few Greek chars
+pref("font.name.serif.el", "Droid Serif");
 pref("font.name.sans-serif.el", "Roboto"); // To be updated once the Greek letters in Fira are revised
 pref("font.name.monospace.el", "Droid Sans Mono");
 
@@ -3347,8 +3270,10 @@ pref("font.name.serif.zh-TW", "Charis SIL Compact");
 pref("font.name.sans-serif.zh-TW", "Fira Sans OT");
 pref("font.name.monospace.zh-TW", "Fira Mono OT");
 
-#elif defined(ANDROID)
-// We use the bundled fonts for Firefox for Android
+#else
+
+// not MOZ_WIDGET_GONK / FXOS_SIMULATOR
+// (i.e. this is Firefox for Android) - here, we use the bundled fonts
 
 // ar
 
@@ -3438,8 +3363,421 @@ pref("font.name-list.serif.zh-TW", "Droid Serif, Droid Sans Fallback");
 pref("font.name-list.sans-serif.zh-TW", "Roboto, Droid Sans, Droid Sans Fallback");
 pref("font.name-list.monospace.zh-TW", "Droid Sans Fallback");
 
+// end ! (MOZ_WIDGET_GONK || FXOS_SIMULATOR)
+
 #endif
 
+pref("font.default.ar", "sans-serif");
+pref("font.size.variable.ar", 16);
+pref("font.size.fixed.ar", 12);
+
+pref("font.default.el", "sans-serif");
+pref("font.size.variable.el", 16);
+pref("font.size.fixed.el", 12);
+
+pref("font.default.he", "sans-serif");
+pref("font.size.variable.he", 16);
+pref("font.size.fixed.he", 12);
+
+pref("font.default.ja", "sans-serif");
+pref("font.size.variable.ja", 16);
+pref("font.size.fixed.ja", 16);
+
+pref("font.default.ko", "sans-serif");
+pref("font.size.variable.ko", 16);
+pref("font.size.fixed.ko", 16);
+
+pref("font.default.th", "serif");
+pref("font.size.variable.th", 16);
+pref("font.size.fixed.th", 13);
+pref("font.minimum-size.th", 13);
+
+pref("font.default.tr", "sans-serif");
+pref("font.size.variable.tr", 16);
+pref("font.size.fixed.tr", 12);
+
+pref("font.default.x-baltic", "sans-serif");
+pref("font.size.variable.x-baltic", 16);
+pref("font.size.fixed.x-baltic", 12);
+
+pref("font.default.x-central-euro", "sans-serif");
+pref("font.size.variable.x-central-euro", 16);
+pref("font.size.fixed.x-central-euro", 12);
+
+pref("font.default.x-cyrillic", "sans-serif");
+pref("font.size.variable.x-cyrillic", 16);
+pref("font.size.fixed.x-cyrillic", 12);
+
+pref("font.default.x-unicode", "sans-serif");
+pref("font.size.variable.x-unicode", 16);
+pref("font.size.fixed.x-unicode", 12);
+
+pref("font.default.x-western", "sans-serif");
+pref("font.size.variable.x-western", 16);
+pref("font.size.fixed.x-western", 12);
+
+pref("font.default.zh-CN", "sans-serif");
+pref("font.size.variable.zh-CN", 16);
+pref("font.size.fixed.zh-CN", 16);
+
+pref("font.default.zh-TW", "sans-serif");
+pref("font.size.variable.zh-TW", 16);
+pref("font.size.fixed.zh-TW", 16);
+
+pref("font.default.zh-HK", "sans-serif");
+pref("font.size.variable.zh-HK", 16);
+pref("font.size.fixed.zh-HK", 16);
+
+pref("font.default.x-devanagari", "serif");
+pref("font.size.variable.x-devanagari", 16);
+pref("font.size.fixed.x-devanagari", 13);
+
+pref("font.default.x-tamil", "serif");
+pref("font.size.variable.x-tamil", 16);
+pref("font.size.fixed.x-tamil", 13);
+
+pref("font.default.x-armn", "serif");
+pref("font.size.variable.x-armn", 16);
+pref("font.size.fixed.x-armn", 13);
+
+pref("font.default.x-beng", "serif");
+pref("font.size.variable.x-beng", 16);
+pref("font.size.fixed.x-beng", 13);
+
+pref("font.default.x-cans", "serif");
+pref("font.size.variable.x-cans", 16);
+pref("font.size.fixed.x-cans", 13);
+
+pref("font.default.x-ethi", "serif");
+pref("font.size.variable.x-ethi", 16);
+pref("font.size.fixed.x-ethi", 13);
+
+pref("font.default.x-geor", "serif");
+pref("font.size.variable.x-geor", 16);
+pref("font.size.fixed.x-geor", 13);
+
+pref("font.default.x-gujr", "serif");
+pref("font.size.variable.x-gujr", 16);
+pref("font.size.fixed.x-gujr", 13);
+
+pref("font.default.x-guru", "serif");
+pref("font.size.variable.x-guru", 16);
+pref("font.size.fixed.x-guru", 13);
+
+pref("font.default.x-khmr", "serif");
+pref("font.size.variable.x-khmr", 16);
+pref("font.size.fixed.x-khmr", 13);
+
+pref("font.default.x-mlym", "serif");
+pref("font.size.variable.x-mlym", 16);
+pref("font.size.fixed.x-mlym", 13);
+
+pref("font.default.x-orya", "serif");
+pref("font.size.variable.x-orya", 16);
+pref("font.size.fixed.x-orya", 13);
+
+pref("font.default.x-telu", "serif");
+pref("font.size.variable.x-telu", 16);
+pref("font.size.fixed.x-telu", 13);
+
+pref("font.default.x-knda", "serif");
+pref("font.size.variable.x-knda", 16);
+pref("font.size.fixed.x-knda", 13);
+
+pref("font.default.x-sinh", "serif");
+pref("font.size.variable.x-sinh", 16);
+pref("font.size.fixed.x-sinh", 13);
+
+pref("font.default.x-tibt", "serif");
+pref("font.size.variable.x-tibt", 16);
+pref("font.size.fixed.x-tibt", 13);
+
+# ANDROID || FXOS_SIMUALTOR
+#endif
+
+#ifdef ANDROID
+/* PostScript print module prefs */
+// pref("print.postscript.enabled",      true);
+pref("print.postscript.paper_size",    "letter");
+pref("print.postscript.orientation",   "portrait");
+pref("print.postscript.print_command", "lpr ${MOZ_PRINTER_NAME:+-P\"$MOZ_PRINTER_NAME\"}");
+
+// Setting default_level_parent to true makes the default level for popup
+// windows "top" instead of "parent".  On GTK2 platform, this is implemented
+// with override-redirect windows which is the normal way to implement
+// temporary popup windows.  Setting this to false would make the default
+// level "parent" which is implemented with managed windows.
+// A problem with using managed windows is that metacity sometimes deactivates
+// the parent window when the managed popup is shown.
+pref("ui.panel.default_level_parent", true);
+
+pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
+
+# ANDROID
+#endif
+
+#ifndef ANDROID
+#ifndef XP_MACOSX
+#ifdef XP_UNIX
+// Handled differently under Mac/Windows
+pref("network.protocol-handler.warn-external.file", false);
+pref("browser.drag_out_of_frame_style", 1);
+
+// Middle-mouse handling
+pref("middlemouse.paste", true);
+pref("middlemouse.contentLoadURL", true);
+pref("middlemouse.openNewWindow", true);
+pref("middlemouse.scrollbarPosition", true);
+
+// Clipboard behavior
+pref("clipboard.autocopy", true);
+
+pref("browser.urlbar.clickSelectsAll", false);
+
+// Tab focus model bit field:
+// 1 focuses text controls, 2 focuses other form elements, 4 adds links.
+// Leave this at the default, 7, to match mozilla1.0-era user expectations.
+// pref("accessibility.tabfocus", 1);
+
+// autocomplete keyboard grab workaround
+pref("autocomplete.grab_during_popup", true);
+pref("autocomplete.ungrab_during_mode_switch", true);
+
+// Default to using the system filepicker if possible, but allow
+// toggling to use the XUL filepicker
+pref("ui.allow_platform_file_picker", true);
+
+pref("helpers.global_mime_types_file", "/etc/mime.types");
+pref("helpers.global_mailcap_file", "/etc/mailcap");
+pref("helpers.private_mime_types_file", "~/.mime.types");
+pref("helpers.private_mailcap_file", "~/.mailcap");
+pref("print.print_command", "lpr ${MOZ_PRINTER_NAME:+-P\"$MOZ_PRINTER_NAME\"}");
+pref("print.printer_list", ""); // list of printers, separated by spaces
+pref("print.print_reversed", false);
+pref("print.print_color", true);
+pref("print.print_landscape", false);
+pref("print.print_paper_size", 0);
+
+// print_extra_margin enables platforms to specify an extra gap or margin
+// around the content of the page for Print Preview only
+pref("print.print_extra_margin", 0); // twips
+
+// font names
+
+pref("font.alias-list", "sans,sans-serif,serif,monospace");
+
+// ar
+
+pref("font.name.serif.el", "serif");
+pref("font.name.sans-serif.el", "sans-serif");
+pref("font.name.monospace.el", "monospace");
+
+pref("font.name.serif.he", "serif");
+pref("font.name.sans-serif.he", "sans-serif");
+pref("font.name.monospace.he", "monospace");
+
+pref("font.name.serif.ja", "serif");
+pref("font.name.sans-serif.ja", "sans-serif");
+pref("font.name.monospace.ja", "monospace");
+
+pref("font.name.serif.ko", "serif");
+pref("font.name.sans-serif.ko", "sans-serif");
+pref("font.name.monospace.ko", "monospace");
+
+pref("font.name.serif.th", "serif");
+pref("font.name.sans-serif.th", "sans-serif");
+pref("font.name.monospace.th", "monospace");
+
+pref("font.name.serif.tr", "serif");
+pref("font.name.sans-serif.tr", "sans-serif");
+pref("font.name.monospace.tr", "monospace");
+
+pref("font.name.serif.x-baltic", "serif");
+pref("font.name.sans-serif.x-baltic", "sans-serif");
+pref("font.name.monospace.x-baltic", "monospace");
+
+pref("font.name.serif.x-central-euro", "serif");
+pref("font.name.sans-serif.x-central-euro", "sans-serif");
+pref("font.name.monospace.x-central-euro", "monospace");
+
+pref("font.name.serif.x-cyrillic", "serif");
+pref("font.name.sans-serif.x-cyrillic", "sans-serif");
+pref("font.name.monospace.x-cyrillic", "monospace");
+
+pref("font.name.serif.x-unicode", "serif");
+pref("font.name.sans-serif.x-unicode", "sans-serif");
+pref("font.name.monospace.x-unicode", "monospace");
+
+pref("font.name.serif.x-western", "serif");
+pref("font.name.sans-serif.x-western", "sans-serif");
+pref("font.name.monospace.x-western", "monospace");
+
+pref("font.name.serif.zh-CN", "serif");
+pref("font.name.sans-serif.zh-CN", "sans-serif");
+pref("font.name.monospace.zh-CN", "monospace");
+
+// ming_uni.ttf (HKSCS-2001)
+// http://www.info.gov.hk/digital21/eng/hkscs/download/uime.exe
+pref("font.name.serif.zh-HK", "serif");
+pref("font.name.sans-serif.zh-HK", "sans-serif");
+pref("font.name.monospace.zh-HK", "monospace");
+
+// zh-TW
+
+pref("font.default.ar", "sans-serif");
+pref("font.size.variable.ar", 16);
+pref("font.size.fixed.ar", 12);
+
+pref("font.default.el", "serif");
+pref("font.size.variable.el", 16);
+pref("font.size.fixed.el", 12);
+
+pref("font.default.he", "sans-serif");
+pref("font.size.variable.he", 16);
+pref("font.size.fixed.he", 12);
+
+pref("font.default.ja", "sans-serif");
+pref("font.size.variable.ja", 16);
+pref("font.size.fixed.ja", 16);
+
+pref("font.default.ko", "sans-serif");
+pref("font.size.variable.ko", 16);
+pref("font.size.fixed.ko", 16);
+
+pref("font.default.th", "serif");
+pref("font.size.variable.th", 16);
+pref("font.size.fixed.th", 13);
+pref("font.minimum-size.th", 13);
+
+pref("font.default.tr", "serif");
+pref("font.size.variable.tr", 16);
+pref("font.size.fixed.tr", 12);
+
+pref("font.default.x-baltic", "serif");
+pref("font.size.variable.x-baltic", 16);
+pref("font.size.fixed.x-baltic", 12);
+
+pref("font.default.x-central-euro", "serif");
+pref("font.size.variable.x-central-euro", 16);
+pref("font.size.fixed.x-central-euro", 12);
+
+pref("font.default.x-cyrillic", "serif");
+pref("font.size.variable.x-cyrillic", 16);
+pref("font.size.fixed.x-cyrillic", 12);
+
+pref("font.default.x-unicode", "serif");
+pref("font.size.variable.x-unicode", 16);
+pref("font.size.fixed.x-unicode", 12);
+
+pref("font.default.x-western", "serif");
+pref("font.size.variable.x-western", 16);
+pref("font.size.fixed.x-western", 12);
+
+pref("font.default.zh-CN", "sans-serif");
+pref("font.size.variable.zh-CN", 16);
+pref("font.size.fixed.zh-CN", 16);
+
+pref("font.default.zh-TW", "sans-serif");
+pref("font.size.variable.zh-TW", 16);
+pref("font.size.fixed.zh-TW", 16);
+
+pref("font.default.zh-HK", "sans-serif");
+pref("font.size.variable.zh-HK", 16);
+pref("font.size.fixed.zh-HK", 16);
+
+pref("font.default.x-devanagari", "serif");
+pref("font.size.variable.x-devanagari", 16);
+pref("font.size.fixed.x-devanagari", 13);
+
+pref("font.default.x-tamil", "serif");
+pref("font.size.variable.x-tamil", 16);
+pref("font.size.fixed.x-tamil", 13);
+
+pref("font.default.x-armn", "serif");
+pref("font.size.variable.x-armn", 16);
+pref("font.size.fixed.x-armn", 13);
+
+pref("font.default.x-beng", "serif");
+pref("font.size.variable.x-beng", 16);
+pref("font.size.fixed.x-beng", 13);
+
+pref("font.default.x-cans", "serif");
+pref("font.size.variable.x-cans", 16);
+pref("font.size.fixed.x-cans", 13);
+
+pref("font.default.x-ethi", "serif");
+pref("font.size.variable.x-ethi", 16);
+pref("font.size.fixed.x-ethi", 13);
+
+pref("font.default.x-geor", "serif");
+pref("font.size.variable.x-geor", 16);
+pref("font.size.fixed.x-geor", 13);
+
+pref("font.default.x-gujr", "serif");
+pref("font.size.variable.x-gujr", 16);
+pref("font.size.fixed.x-gujr", 13);
+
+pref("font.default.x-guru", "serif");
+pref("font.size.variable.x-guru", 16);
+pref("font.size.fixed.x-guru", 13);
+
+pref("font.default.x-khmr", "serif");
+pref("font.size.variable.x-khmr", 16);
+pref("font.size.fixed.x-khmr", 13);
+
+pref("font.default.x-mlym", "serif");
+pref("font.size.variable.x-mlym", 16);
+pref("font.size.fixed.x-mlym", 13);
+
+pref("font.default.x-orya", "serif");
+pref("font.size.variable.x-orya", 16);
+pref("font.size.fixed.x-orya", 13);
+
+pref("font.default.x-telu", "serif");
+pref("font.size.variable.x-telu", 16);
+pref("font.size.fixed.x-telu", 13);
+
+pref("font.default.x-knda", "serif");
+pref("font.size.variable.x-knda", 16);
+pref("font.size.fixed.x-knda", 13);
+
+pref("font.default.x-sinh", "serif");
+pref("font.size.variable.x-sinh", 16);
+pref("font.size.fixed.x-sinh", 13);
+
+pref("font.default.x-tibt", "serif");
+pref("font.size.variable.x-tibt", 16);
+pref("font.size.fixed.x-tibt", 13);
+
+/* PostScript print module prefs */
+// pref("print.postscript.enabled",      true);
+pref("print.postscript.paper_size",    "letter");
+pref("print.postscript.orientation",   "portrait");
+pref("print.postscript.print_command", "lpr ${MOZ_PRINTER_NAME:+-P\"$MOZ_PRINTER_NAME\"}");
+
+// On GTK2 platform, we should use topmost window level for the default window
+// level of <panel> element of XUL. GTK2 has only two window types. One is
+// normal top level window, other is popup window. The popup window is always
+// topmost window level, therefore, we are using normal top level window for
+// non-topmost panel, but it is pretty hacky. On some Window Managers, we have
+// 2 problems:
+// 1. The non-topmost panel steals focus from its parent window at showing.
+// 2. The parent of non-topmost panel is not activated when the panel is hidden.
+// So, we have no reasons we should use non-toplevel window for popup.
+pref("ui.panel.default_level_parent", true);
+
+pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
+
+#if MOZ_WIDGET_GTK == 2
+pref("intl.ime.use_simple_context_on_password_field", true);
+#else
+pref("intl.ime.use_simple_context_on_password_field", false);
+#endif
+
+# XP_UNIX
+#endif
+#endif
+#endif
 
 #if OS_ARCH==AIX
 
