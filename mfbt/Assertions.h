@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MacroArgs.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -295,30 +296,13 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
        MOZ_REALLY_CRASH(); \
      } \
    } while (0)
-/* And now, helper macrology up the wazoo. */
-/*
- * Count the number of arguments passed to MOZ_ASSERT, very carefully
- * tiptoeing around an MSVC bug where it improperly expands __VA_ARGS__ as a
- * single token in argument lists.  See these URLs for details:
- *
- *   http://connect.microsoft.com/VisualStudio/feedback/details/380090/variadic-macro-replacement
- *   http://cplusplus.co.il/2010/07/17/variadic-macro-to-count-number-of-arguments/#comment-644
- */
-#define MOZ_COUNT_ASSERT_ARGS_IMPL2(_1, _2, count, ...) \
-   count
-#define MOZ_COUNT_ASSERT_ARGS_IMPL(args) \
-       MOZ_COUNT_ASSERT_ARGS_IMPL2 args
-#define MOZ_COUNT_ASSERT_ARGS(...) \
-   MOZ_COUNT_ASSERT_ARGS_IMPL((__VA_ARGS__, 2, 1, 0))
-/* Pick the right helper macro to invoke. */
-#define MOZ_ASSERT_CHOOSE_HELPER2(count) MOZ_ASSERT_HELPER##count
-#define MOZ_ASSERT_CHOOSE_HELPER1(count) MOZ_ASSERT_CHOOSE_HELPER2(count)
-#define MOZ_ASSERT_CHOOSE_HELPER(count) MOZ_ASSERT_CHOOSE_HELPER1(count)
-/* The actual macros. */
-#define MOZ_ASSERT_GLUE(x, y) x y
+
+#define MOZ_RELEASE_ASSERT_GLUE(a, b) a b
 #define MOZ_RELEASE_ASSERT(...) \
-   MOZ_ASSERT_GLUE(MOZ_ASSERT_CHOOSE_HELPER(MOZ_COUNT_ASSERT_ARGS(__VA_ARGS__)), \
-                   (__VA_ARGS__))
+   MOZ_RELEASE_ASSERT_GLUE( \
+     MOZ_PASTE_PREFIX_AND_ARG_COUNT(MOZ_ASSERT_HELPER, __VA_ARGS__), \
+     (__VA_ARGS__))
+
 #ifdef DEBUG
 #  define MOZ_ASSERT(...) MOZ_RELEASE_ASSERT(__VA_ARGS__)
 #else
