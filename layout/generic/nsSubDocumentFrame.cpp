@@ -385,7 +385,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // for root content documents we want the base to be the composition bounds
       nsRect displayportBase = presContext->IsRootContentDocument() ?
           nsRect(nsPoint(0,0), nsLayoutUtils::CalculateCompositionSizeForFrame(rootScrollFrame)) :
-          dirty;
+          dirty.Intersect(nsRect(nsPoint(0,0), subdocRootFrame->GetSize()));
       nsRect displayPort;
       if (nsLayoutUtils::GetOrMaybeCreateDisplayPort(
             *aBuilder, rootScrollFrame, displayportBase, &displayPort)) {
