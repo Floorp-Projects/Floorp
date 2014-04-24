@@ -12,7 +12,7 @@ function readFrom(a) {
   return a[2].f + a[2].g;
 }
 
-function main() {
+function main(variant) {
   var a = new A(10);
   a[2].f = 22;
   a[2].g = 44;
@@ -20,7 +20,7 @@ function main() {
   for (var i = 0; i < 10; i++)
     assertEq(readFrom(a), 66);
 
-  neuter(storage(a).buffer);
+  neuter(storage(a).buffer, variant);
 
   for (var i = 0; i < 10; i++) {
     var ok = false;
@@ -35,4 +35,5 @@ function main() {
   }
 }
 
-main();
+main("same-data");
+main("change-data");
