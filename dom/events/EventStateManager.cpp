@@ -20,6 +20,7 @@
 #include "mozilla/dom/UIEvent.h"
 
 #include "ContentEventHandler.h"
+#include "IMEContentObserver.h"
 #include "WheelHandlingHelper.h"
 
 #include "nsCOMPtr.h"
@@ -337,6 +338,8 @@ EventStateManager::Init()
 
 EventStateManager::~EventStateManager()
 {
+  ReleaseCurrentIMEContentObserver();
+
   if (sActiveESM == this) {
     sActiveESM = nullptr;
   }
@@ -410,7 +413,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(EventStateManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(EventStateManager)
 
-NS_IMPL_CYCLE_COLLECTION_16(EventStateManager,
+NS_IMPL_CYCLE_COLLECTION_17(EventStateManager,
                             mCurrentTargetContent,
                             mGestureDownContent,
                             mGestureDownFrameOwner,
@@ -426,7 +429,34 @@ NS_IMPL_CYCLE_COLLECTION_16(EventStateManager,
                             mMouseEnterLeaveHelper,
                             mPointersEnterLeaveHelper,
                             mDocument,
+                            mIMEContentObserver,
                             mAccessKeys)
+
+void
+EventStateManager::ReleaseCurrentIMEContentObserver()
+{
+  if (mIMEContentObserver) {
+    mIMEContentObserver->DisconnectFromEventStateManager();
+  }
+  mIMEContentObserver = nullptr;
+}
+
+void
+EventStateManager::OnStartToObserveContent(
+                     IMEContentObserver* aIMEContentObserver)
+{
+  ReleaseCurrentIMEContentObserver();
+  mIMEContentObserver = aIMEContentObserver;
+}
+
+void
+EventStateManager::OnStopObservingContent(
+                     IMEContentObserver* aIMEContentObserver)
+{
+  aIMEContentObserver->DisconnectFromEventStateManager();
+  NS_ENSURE_TRUE_VOID(mIMEContentObserver == aIMEContentObserver);
+  mIMEContentObserver = nullptr;
+}
 
 nsresult
 EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
