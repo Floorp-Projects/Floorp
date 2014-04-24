@@ -86,9 +86,4 @@ contract @mozilla.org/helperapplauncherdialog;1 {710322af-e6ae-4b0c-b2c9-1474a87
 component {c83c02c0-5d43-4e3e-987f-9173b313e880} SimulatorScreen.js
 contract @mozilla.org/simulator-screen;1 {c83c02c0-5d43-4e3e-987f-9173b313e880}
 category profile-after-change SimulatorScreen @mozilla.org/simulator-screen;1
-
-component {e30b0e13-2d12-4cb0-bc4c-4e617a1bf76e} OopCommandLine.js
-contract @mozilla.org/commandlinehandler/general-startup;1?type=b2goop {e30b0e13-2d12-4cb0-bc4c-4e617a1bf76e}
-category command-line-handler m-b2goop @mozilla.org/commandlinehandler/general-startup;1?type=b2goop
 #endif
-
