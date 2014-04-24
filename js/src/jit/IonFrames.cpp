@@ -11,6 +11,7 @@
 #include "jsscript.h"
 
 #include "gc/Marking.h"
+#include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
@@ -225,10 +226,18 @@ JitFrameIterator::baselineScriptAndPc(JSScript **scriptRes, jsbytecode **pcRes) 
     if (scriptRes)
         *scriptRes = script;
     uint8_t *retAddr = returnAddressToFp();
+
+    // If we are in the middle of a recompile handler, get the real return
+    // address as stashed in the RecompileInfo.
+    if (BaselineDebugModeOSRInfo *info = baselineFrame()->getDebugModeOSRInfo())
+        retAddr = info->resumeAddr;
+
     if (pcRes) {
-        // If the return address is into the prologue entry address, then assume start
-        // of script.
-        if (retAddr == script->baselineScript()->prologueEntryAddr()) {
+        // If the return address is into the prologue entry address or just
+        // after the debug prologue, then assume start of script.
+        if (retAddr == script->baselineScript()->prologueEntryAddr() ||
+            retAddr == script->baselineScript()->postDebugPrologueAddr())
+        {
             *pcRes = script->code();
             return;
         }
@@ -568,6 +577,13 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
 
 }
 
+struct AutoDeleteDebugModeOSRInfo
+{
+    BaselineFrame *frame;
+    AutoDeleteDebugModeOSRInfo(BaselineFrame *frame) : frame(frame) { MOZ_ASSERT(frame); }
+    ~AutoDeleteDebugModeOSRInfo() { frame->deleteDebugModeOSRInfo(); }
+};
+
 void
 HandleException(ResumeFromException *rfe)
 {
@@ -638,6 +654,16 @@ HandleException(ResumeFromException *rfe)
             bool calledDebugEpilogue = false;
 
             HandleExceptionBaseline(cx, iter, rfe, &calledDebugEpilogue);
+
+            // If we are propagating an exception through a frame with
+            // on-stack recompile info, we should free the allocated
+            // RecompileInfo struct before we leave this block, as we will not
+            // be returning to the recompile handler.
+            //
+            // We cannot delete it immediately because of the call to
+            // iter.baselineScriptAndPc below.
+            AutoDeleteDebugModeOSRInfo deleteDebugModeOSRInfo(iter.baselineFrame());
+
             if (rfe->kind != ResumeFromException::RESUME_ENTRY_FRAME)
                 return;
 

@@ -11,6 +11,7 @@
 #include "jit/CompileInfo.h"
 #include "jit/IonSpewer.h"
 #include "jit/Recover.h"
+#include "jit/RematerializedFrame.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/TraceLogging.h"
 
@@ -384,12 +385,12 @@ static inline void*
 GetStubReturnAddress(JSContext *cx, jsbytecode *pc)
 {
     if (IsGetPropPC(pc))
-        return cx->compartment()->jitCompartment()->baselineGetPropReturnAddr();
+        return cx->compartment()->jitCompartment()->baselineGetPropReturnFromIonAddr();
     if (IsSetPropPC(pc))
-        return cx->compartment()->jitCompartment()->baselineSetPropReturnAddr();
+        return cx->compartment()->jitCompartment()->baselineSetPropReturnFromIonAddr();
     // This should be a call op of some kind, now.
     JS_ASSERT(IsCallPC(pc));
-    return cx->compartment()->jitCompartment()->baselineCallReturnAddr();
+    return cx->compartment()->jitCompartment()->baselineCallReturnFromIonAddr();
 }
 
 static inline jsbytecode *
@@ -1535,6 +1536,34 @@ HandleBaselineInfoBailout(JSContext *cx, JSScript *outerScript, JSScript *innerS
     return Invalidate(cx, outerScript);
 }
 
+static void
+CopyFromRematerializedFrame(JSContext *cx, JitActivation *act, uint8_t *fp, size_t inlineDepth,
+                            BaselineFrame *frame)
+{
+    RematerializedFrame *rematFrame = act->lookupRematerializedFrame(fp, inlineDepth);
+
+    // We might not have rematerialized a frame if the user never requested a
+    // Debugger.Frame for it.
+    if (!rematFrame)
+        return;
+
+    MOZ_ASSERT(rematFrame->script() == frame->script());
+    MOZ_ASSERT(rematFrame->numActualArgs() == frame->numActualArgs());
+
+    frame->setScopeChain(rematFrame->scopeChain());
+    frame->thisValue() = rematFrame->thisValue();
+
+    for (unsigned i = 0; i < frame->numActualArgs(); i++)
+        frame->argv()[i] = rematFrame->argv()[i];
+
+    for (size_t i = 0; i < frame->script()->nfixed(); i++)
+        *frame->valueSlot(i) = rematFrame->locals()[i];
+
+    IonSpew(IonSpew_BaselineBailouts,
+            "  Copied from rematerialized frame at (%p,%u)",
+            fp, inlineDepth);
+}
+
 uint32_t
 jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
 {
@@ -1574,6 +1603,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
 
     JS_ASSERT(cx->currentlyRunningInJit());
     JitFrameIterator iter(cx);
+    uint8_t *outerFp = nullptr;
 
     uint32_t frameno = 0;
     while (frameno < numFrames) {
@@ -1607,8 +1637,10 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
             if (frameno == 0)
                 innerScript = frame->script();
 
-            if (frameno == numFrames - 1)
+            if (frameno == numFrames - 1) {
                 outerScript = frame->script();
+                outerFp = iter.fp();
+            }
 
             frameno++;
         }
@@ -1616,8 +1648,31 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
         ++iter;
     }
 
-    JS_ASSERT(innerScript);
-    JS_ASSERT(outerScript);
+    MOZ_ASSERT(innerScript);
+    MOZ_ASSERT(outerScript);
+    MOZ_ASSERT(outerFp);
+
+    // If we rematerialized Ion frames due to debug mode toggling, copy their
+    // values into the baseline frame. We need to do this even when debug mode
+    // is off, as we should respect the mutations made while debug mode was
+    // on.
+    JitActivation *act = cx->mainThread().activation()->asJit();
+    if (act->hasRematerializedFrame(outerFp)) {
+        JitFrameIterator iter(cx);
+        size_t inlineDepth = numFrames;
+        while (inlineDepth > 0) {
+            if (iter.isBaselineJS()) {
+                inlineDepth--;
+                CopyFromRematerializedFrame(cx, act, outerFp, inlineDepth, iter.baselineFrame());
+            }
+            ++iter;
+        }
+
+        // After copying from all the rematerialized frames, remove them from
+        // the table to keep the table up to date.
+        act->removeRematerializedFrame(outerFp);
+    }
+
     IonSpew(IonSpew_BaselineBailouts,
             "  Restored outerScript=(%s:%u,%u) innerScript=(%s:%u,%u) (bailoutKind=%u)",
             outerScript->filename(), outerScript->lineno(), outerScript->getUseCount(),
