@@ -1059,9 +1059,44 @@ FrameIter::isConstructing() const
     MOZ_ASSUME_UNREACHABLE("Unexpected state");
 }
 
+bool
+FrameIter::ensureHasRematerializedFrame()
+{
+#ifdef JS_ION
+    MOZ_ASSERT(isIon());
+    return !!activation()->asJit()->getRematerializedFrame(activation()->cx(), data_.jitFrames_);
+#else
+    return true;
+#endif
+}
+
+bool
+FrameIter::hasUsableAbstractFramePtr() const
+{
+    switch (data_.state_) {
+      case DONE:
+      case ASMJS:
+        return false;
+      case JIT:
+#ifdef JS_ION
+        if (data_.jitFrames_.isBaselineJS())
+            return true;
+
+        MOZ_ASSERT(data_.jitFrames_.isIonJS());
+        return !!activation()->asJit()->lookupRematerializedFrame(data_.jitFrames_.fp(),
+                                                                  ionInlineFrames_.frameNo());
+#endif
+        break;
+      case INTERP:
+        return true;
+    }
+    MOZ_ASSUME_UNREACHABLE("Unexpected state");
+}
+
 AbstractFramePtr
 FrameIter::abstractFramePtr() const
 {
+    MOZ_ASSERT(hasUsableAbstractFramePtr());
     switch (data_.state_) {
       case DONE:
       case ASMJS:
@@ -1072,11 +1107,8 @@ FrameIter::abstractFramePtr() const
             return data_.jitFrames_.baselineFrame();
 
         MOZ_ASSERT(data_.jitFrames_.isIonJS());
-        jit::RematerializedFrame *frame =
-            activation()->asJit()->lookupRematerializedFrame(data_.jitFrames_.fp(),
-                                                             ionInlineFrames_.frameNo());
-        MOZ_ASSERT(frame);
-        return frame;
+        return activation()->asJit()->lookupRematerializedFrame(data_.jitFrames_.fp(),
+                                                                ionInlineFrames_.frameNo());
 #endif
         break;
       }
