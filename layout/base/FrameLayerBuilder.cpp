@@ -2855,7 +2855,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayerData* aLayerData,
       if (aLayerState == LAYER_SVG_EFFECTS) {
         invalid = nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(aItem->Frame(),
                                                                         aItem->ToReferenceFrame(),
-                                                                        invalid.GetBounds());
+                                                                        invalid);
       }
       if (!invalid.IsEmpty()) {
 #ifdef MOZ_DUMP_PAINTING
