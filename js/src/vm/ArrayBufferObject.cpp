@@ -475,11 +475,9 @@ ArrayBufferObject::neuter(ObjectElements *newHeader, JSContext *cx)
 {
     MOZ_ASSERT(!isSharedArrayBuffer());
 
-    if (hasStealableContents()) {
+    ObjectElements *oldHeader = getElementsHeader();
+    if (hasStealableContents() && oldHeader != newHeader) {
         MOZ_ASSERT(newHeader);
-
-        ObjectElements *oldHeader = getElementsHeader();
-        MOZ_ASSERT(newHeader != oldHeader);
 
         changeContents(cx, newHeader);
 
@@ -1266,7 +1264,8 @@ JS_GetStableArrayBufferData(JSContext *cx, JSObject *obj)
 }
 
 JS_FRIEND_API(bool)
-JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj)
+js::NeuterArrayBuffer(JSContext *cx, HandleObject obj,
+                      NeuterDataDisposition changeData)
 {
     if (!obj->is<ArrayBufferObject>()) {
         JS_ReportError(cx, "ArrayBuffer object required");
@@ -1276,7 +1275,9 @@ JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj)
     Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
 
     ObjectElements *newHeader;
-    if (buffer->hasStealableContents()) {
+    bool allocateNewData = (changeData == ChangeData &&
+                            buffer->hasStealableContents());
+    if (allocateNewData) {
         // If we're "disposing" with the buffer contents, allocate zeroed
         // memory of equal size and swap that in as contents.  This ensures
         // that stale indexes that assume the original length, won't index out
@@ -1293,7 +1294,7 @@ JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj)
 
     // Mark all views of the ArrayBuffer as neutered.
     if (!ArrayBufferObject::neuterViews(cx, buffer, newHeader->elements())) {
-        if (buffer->hasStealableContents()) {
+        if (allocateNewData) {
             FreeOp fop(cx->runtime(), false);
             fop.free_(newHeader);
         }
@@ -1302,6 +1303,12 @@ JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj)
 
     buffer->neuter(newHeader, cx);
     return true;
+}
+
+JS_FRIEND_API(bool)
+JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj)
+{
+    return js::NeuterArrayBuffer(cx, obj, ChangeData);
 }
 
 JS_FRIEND_API(JSObject *)

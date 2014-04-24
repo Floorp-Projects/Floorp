@@ -8,13 +8,13 @@ function readFromS(s) {
   return s.f + s.g;
 }
 
-function main() {
+function main(variant) {
   var s = new S({f: 22, g: 44});
 
   for (var i = 0; i < 10; i++)
     assertEq(readFromS(s), 66);
 
-  neuter(storage(s).buffer);
+  neuter(storage(s).buffer, variant);
 
   for (var i = 0; i < 10; i++) {
     var ok = false;
@@ -29,4 +29,5 @@ function main() {
   }
 }
 
-main();
+main("same-data");
+main("change-data");

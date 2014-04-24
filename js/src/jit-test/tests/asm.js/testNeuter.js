@@ -26,7 +26,8 @@ if (isAsmJSCompilationAvailable())
 set(4, 42);
 assertEq(get(4), 42);
 
-neuter(buffer);
+neuter(buffer, "change-data");
+neuter(buffer, "same-data");
 
 // These operations may throw internal errors
 try {
@@ -56,7 +57,13 @@ var buffer = i32.buffer;
 var threw = false;
 function ffi() {
     try {
-        neuter(buffer);
+        neuter(buffer, "same-data");
+    } catch (e) {
+        assertEq(String(e).indexOf("InternalError"), 0);
+        threw = true;
+    }
+    try {
+        neuter(buffer, "change-data");
     } catch (e) {
         assertEq(String(e).indexOf("InternalError"), 0);
         threw = true;
