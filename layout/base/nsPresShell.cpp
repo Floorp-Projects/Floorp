@@ -6716,7 +6716,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         // in the same document by taking the target of the events already in
         // the capture list
         nsCOMPtr<nsIContent> anyTarget;
-        if (gCaptureTouchList->Count() > 0) {
+        if (gCaptureTouchList->Count() > 0 && touchEvent->touches.Length() > 1) {
           gCaptureTouchList->Enumerate(&FindAnyTarget, &anyTarget);
         } else {
           gPreventMouseEvents = false;
