@@ -1432,11 +1432,33 @@ JS_GetArrayBufferViewData(JSObject *obj);
 extern JS_FRIEND_API(JSObject *)
 JS_GetArrayBufferViewBuffer(JSObject *obj);
 
+typedef enum {
+    ChangeData,
+    KeepData
+} NeuterDataDisposition;
+
 /*
  * Set an ArrayBuffer's length to 0 and neuter all of its views.
  */
 extern JS_FRIEND_API(bool)
 JS_NeuterArrayBuffer(JSContext *cx, JS::HandleObject obj);
+
+namespace js {
+
+/*
+ * Set an ArrayBuffer's length to 0 and neuter all of its views.
+ *
+ * The |changeData| argument is a hint to inform internal behavior with respect
+ * to the internal pointer to the ArrayBuffer's data after being neutered.
+ * There is no guarantee it will be respected.  But if it is respected, the
+ * ArrayBuffer's internal data pointer will, or will not, have changed
+ * accordingly.
+ */
+extern JS_FRIEND_API(bool)
+NeuterArrayBuffer(JSContext *cx, JS::HandleObject obj,
+                  NeuterDataDisposition changeData);
+
+} /* namespace js */
 
 /*
  * Check whether obj supports JS_GetDataView* APIs.
