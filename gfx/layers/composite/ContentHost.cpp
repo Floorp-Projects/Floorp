@@ -410,7 +410,7 @@ ContentHostIncremental::DestroyTextures()
   mUpdateList.Clear();
 }
 
-void
+bool
 ContentHostIncremental::CreatedIncrementalTexture(ISurfaceAllocator* aAllocator,
                                                   const TextureInfo& aTextureInfo,
                                                   const nsIntRect& aBufferRect)
@@ -419,6 +419,7 @@ ContentHostIncremental::CreatedIncrementalTexture(ISurfaceAllocator* aAllocator,
                                                        aBufferRect));
   mDeAllocator = aAllocator;
   FlushUpdateQueue();
+  return true;
 }
 
 void

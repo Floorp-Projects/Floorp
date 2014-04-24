@@ -1027,7 +1027,8 @@ nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame)
   NS_ASSERTION(!aFrame->GetPrevContinuation(),
                "aFrame must be first continuation");
 
-  nsIFrame* firstFrame = GetFirstChildFrame(aFrame, aFrame->GetContent());
+  nsIFrame* cif = aFrame->GetContentInsertionFrame();
+  nsIFrame* firstFrame = GetFirstChildFrame(cif, aFrame->GetContent());
 
   if (firstFrame && IsGeneratedContentFor(nullptr, firstFrame,
                                           nsCSSPseudoElements::before)) {
@@ -1043,7 +1044,8 @@ nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
-  nsIFrame* lastFrame = GetLastChildFrame(aFrame, aFrame->GetContent());
+  nsIFrame* cif = aFrame->GetContentInsertionFrame();
+  nsIFrame* lastFrame = GetLastChildFrame(cif, aFrame->GetContent());
 
   if (lastFrame && IsGeneratedContentFor(nullptr, lastFrame,
                                          nsCSSPseudoElements::after)) {
@@ -4287,7 +4289,6 @@ nsLayoutUtils::DrawString(const nsIFrame*       aFrame,
                           nsPoint               aPoint,
                           nsStyleContext*       aStyleContext)
 {
-#ifdef IBMBIDI
   nsresult rv = NS_ERROR_FAILURE;
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
@@ -4299,7 +4300,6 @@ nsLayoutUtils::DrawString(const nsIFrame*       aFrame,
                                      aPoint.x, aPoint.y);
   }
   if (NS_FAILED(rv))
-#endif // IBMBIDI
   {
     aContext->SetTextRunRTL(false);
     aContext->DrawString(aString, aLength, aPoint.x, aPoint.y);
@@ -4312,7 +4312,6 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
                               const char16_t*     aString,
                               int32_t              aLength)
 {
-#ifdef IBMBIDI
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
     nsBidiLevel level =
@@ -4320,7 +4319,6 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
     return nsBidiPresUtils::MeasureTextWidth(aString, aLength,
                                              level, presContext, *aContext);
   }
-#endif // IBMBIDI
   aContext->SetTextRunRTL(false);
   return aContext->GetWidth(aString, aLength);
 }
