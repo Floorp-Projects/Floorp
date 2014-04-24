@@ -7,6 +7,7 @@
 #include "ContentEventHandler.h"
 #include "IMEContentObserver.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/dom/Element.h"
@@ -50,6 +51,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(IMEContentObserver)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(IMEContentObserver)
 
 IMEContentObserver::IMEContentObserver()
+  : mESM(nullptr)
 {
 }
 
@@ -58,6 +60,9 @@ IMEContentObserver::Init(nsIWidget* aWidget,
                          nsPresContext* aPresContext,
                          nsIContent* aContent)
 {
+  mESM = aPresContext->EventStateManager();
+  mESM->OnStartToObserveContent(this);
+
   mWidget = aWidget;
   mEditableNode = IMEStateManager::GetRootEditableNode(aPresContext, aContent);
   if (!mEditableNode) {
@@ -183,6 +188,17 @@ IMEContentObserver::Destroy()
   mEditableNode = nullptr;
   mDocShell = nullptr;
   mUpdatePreference.mWantUpdates = nsIMEUpdatePreference::NOTIFY_NOTHING;
+
+  if (mESM) {
+    mESM->OnStopObservingContent(this);
+    mESM = nullptr;
+  }
+}
+
+void
+IMEContentObserver::DisconnectFromEventStateManager()
+{
+  mESM = nullptr;
 }
 
 bool

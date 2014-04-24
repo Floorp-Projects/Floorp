@@ -25,6 +25,8 @@ class nsPresContext;
 
 namespace mozilla {
 
+class EventStateManager;
+
 // IMEContentObserver notifies widget of any text and selection changes
 // in the currently focused editor
 class IMEContentObserver MOZ_FINAL : public nsISelectionListener,
@@ -54,6 +56,12 @@ public:
   void Init(nsIWidget* aWidget, nsPresContext* aPresContext,
             nsIContent* aContent);
   void Destroy();
+  /**
+   * IMEContentObserver is stored by EventStateManager during observing.
+   * DisconnectFromEventStateManager() is called when EventStateManager stops
+   * storing the instance.
+   */
+  void DisconnectFromEventStateManager();
   bool IsManaging(nsPresContext* aPresContext, nsIContent* aContent);
   bool IsEditorHandlingEventForComposition() const;
   bool KeepAliveDuringDeactive() const
@@ -73,6 +81,9 @@ private:
   nsCOMPtr<nsIContent> mRootContent;
   nsCOMPtr<nsINode> mEditableNode;
   nsCOMPtr<nsIDocShell> mDocShell;
+
+  EventStateManager* mESM;
+
   nsIMEUpdatePreference mUpdatePreference;
   uint32_t mPreAttrChangeLength;
 };
