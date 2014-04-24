@@ -417,7 +417,7 @@ GeneralizedTime(Input& input, PRTime& time)
   if (ExpectTagAndGetLength(input, GENERALIZED_TIME, length) != Success) {
     return Failure;
   }
-  if (input.Skip(length, encoded)) {
+  if (input.Skip(length, encoded) != Success) {
     return Failure;
   }
   if (DER_GeneralizedTimeToTime(&time, &encoded) != SECSuccess) {
