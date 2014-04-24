@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsIDocShell.h" // XXX Why does only this need to be included here?
 #include "nsIReflowObserver.h"
 #include "nsISelectionListener.h"
@@ -35,7 +36,9 @@ class IMEContentObserver MOZ_FINAL : public nsISelectionListener,
 public:
   IMEContentObserver();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(IMEContentObserver,
+                                           nsISelectionListener)
   NS_DECL_NSISELECTIONLISTENER
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
