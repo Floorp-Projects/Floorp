@@ -125,6 +125,12 @@ extern bool
 array_pop(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool
+array_splice(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern bool
+array_splice_impl(JSContext *cx, unsigned argc, js::Value *vp, bool pop);
+
+extern bool
 array_concat(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool

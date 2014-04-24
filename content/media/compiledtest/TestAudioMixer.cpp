@@ -11,7 +11,7 @@ using mozilla::AudioSampleFormat;
 
 /* In this test, the different audio stream and channels are always created to
  * cancel each other. */
-void MixingDone(AudioDataValue* aData, AudioSampleFormat aFormat, uint32_t aChannels, uint32_t aFrames)
+void MixingDone(AudioDataValue* aData, AudioSampleFormat aFormat, uint32_t aChannels, uint32_t aFrames, uint32_t aSampleRate)
 {
   bool silent = true;
   for (uint32_t i = 0; i < aChannels * aFrames; i++) {
@@ -67,6 +67,7 @@ void FillBuffer(AudioDataValue* aBuffer, uint32_t aLength, AudioDataValue aValue
 
 int main(int argc, char* argv[]) {
   const uint32_t CHANNEL_LENGTH = 256;
+  const uint32_t AUDIO_RATE = 44100;
   AudioDataValue a[CHANNEL_LENGTH * 2];
   AudioDataValue b[CHANNEL_LENGTH * 2];
   FillBuffer(a, CHANNEL_LENGTH, GetLowValue<AudioDataValue>());
@@ -81,8 +82,8 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "Test AudioMixer constant buffer length.\n");
 
     while (iterations--) {
-      mixer.Mix(a, 2, CHANNEL_LENGTH);
-      mixer.Mix(b, 2, CHANNEL_LENGTH);
+      mixer.Mix(a, 2, CHANNEL_LENGTH, AUDIO_RATE);
+      mixer.Mix(b, 2, CHANNEL_LENGTH, AUDIO_RATE);
       mixer.FinishMixing();
     }
   }
@@ -96,22 +97,22 @@ int main(int argc, char* argv[]) {
     FillBuffer(a + CHANNEL_LENGTH / 2, CHANNEL_LENGTH / 2, GetLowValue<AudioDataValue>());
     FillBuffer(b, CHANNEL_LENGTH / 2, GetHighValue<AudioDataValue>());
     FillBuffer(b + CHANNEL_LENGTH / 2, CHANNEL_LENGTH / 2, GetHighValue<AudioDataValue>());
-    mixer.Mix(a, 2, CHANNEL_LENGTH / 2);
-    mixer.Mix(b, 2, CHANNEL_LENGTH / 2);
+    mixer.Mix(a, 2, CHANNEL_LENGTH / 2, AUDIO_RATE);
+    mixer.Mix(b, 2, CHANNEL_LENGTH / 2, AUDIO_RATE);
     mixer.FinishMixing();
     FillBuffer(a, CHANNEL_LENGTH, GetLowValue<AudioDataValue>());
     FillBuffer(a + CHANNEL_LENGTH, CHANNEL_LENGTH, GetHighValue<AudioDataValue>());
     FillBuffer(b, CHANNEL_LENGTH, GetHighValue<AudioDataValue>());
     FillBuffer(b + CHANNEL_LENGTH, CHANNEL_LENGTH, GetLowValue<AudioDataValue>());
-    mixer.Mix(a, 2, CHANNEL_LENGTH);
-    mixer.Mix(b, 2, CHANNEL_LENGTH);
+    mixer.Mix(a, 2, CHANNEL_LENGTH, AUDIO_RATE);
+    mixer.Mix(b, 2, CHANNEL_LENGTH, AUDIO_RATE);
     mixer.FinishMixing();
     FillBuffer(a, CHANNEL_LENGTH / 2, GetLowValue<AudioDataValue>());
     FillBuffer(a + CHANNEL_LENGTH / 2, CHANNEL_LENGTH / 2, GetLowValue<AudioDataValue>());
     FillBuffer(b, CHANNEL_LENGTH / 2, GetHighValue<AudioDataValue>());
     FillBuffer(b + CHANNEL_LENGTH / 2, CHANNEL_LENGTH / 2, GetHighValue<AudioDataValue>());
-    mixer.Mix(a, 2, CHANNEL_LENGTH / 2);
-    mixer.Mix(b, 2, CHANNEL_LENGTH / 2);
+    mixer.Mix(a, 2, CHANNEL_LENGTH / 2, AUDIO_RATE);
+    mixer.Mix(b, 2, CHANNEL_LENGTH / 2, AUDIO_RATE);
     mixer.FinishMixing();
   }
 
@@ -122,14 +123,14 @@ int main(int argc, char* argv[]) {
     mozilla::AudioMixer mixer(MixingDone);
     fprintf(stderr, "Test AudioMixer variable channel count.\n");
 
-    mixer.Mix(a, 1, CHANNEL_LENGTH);
-    mixer.Mix(b, 1, CHANNEL_LENGTH);
+    mixer.Mix(a, 1, CHANNEL_LENGTH, AUDIO_RATE);
+    mixer.Mix(b, 1, CHANNEL_LENGTH, AUDIO_RATE);
     mixer.FinishMixing();
-    mixer.Mix(a, 1, CHANNEL_LENGTH);
-    mixer.Mix(b, 1, CHANNEL_LENGTH);
+    mixer.Mix(a, 1, CHANNEL_LENGTH, AUDIO_RATE);
+    mixer.Mix(b, 1, CHANNEL_LENGTH, AUDIO_RATE);
     mixer.FinishMixing();
-    mixer.Mix(a, 1, CHANNEL_LENGTH);
-    mixer.Mix(b, 1, CHANNEL_LENGTH);
+    mixer.Mix(a, 1, CHANNEL_LENGTH, AUDIO_RATE);
+    mixer.Mix(b, 1, CHANNEL_LENGTH, AUDIO_RATE);
     mixer.FinishMixing();
   }
 
@@ -137,16 +138,16 @@ int main(int argc, char* argv[]) {
     mozilla::AudioMixer mixer(MixingDone);
     fprintf(stderr, "Test AudioMixer variable stream count.\n");
 
-    mixer.Mix(a, 2, CHANNEL_LENGTH);
-    mixer.Mix(b, 2, CHANNEL_LENGTH);
+    mixer.Mix(a, 2, CHANNEL_LENGTH, AUDIO_RATE);
+    mixer.Mix(b, 2, CHANNEL_LENGTH, AUDIO_RATE);
     mixer.FinishMixing();
-    mixer.Mix(a, 2, CHANNEL_LENGTH);
-    mixer.Mix(b, 2, CHANNEL_LENGTH);
-    mixer.Mix(a, 2, CHANNEL_LENGTH);
-    mixer.Mix(b, 2, CHANNEL_LENGTH);
+    mixer.Mix(a, 2, CHANNEL_LENGTH, AUDIO_RATE);
+    mixer.Mix(b, 2, CHANNEL_LENGTH, AUDIO_RATE);
+    mixer.Mix(a, 2, CHANNEL_LENGTH, AUDIO_RATE);
+    mixer.Mix(b, 2, CHANNEL_LENGTH, AUDIO_RATE);
     mixer.FinishMixing();
-    mixer.Mix(a, 2, CHANNEL_LENGTH);
-    mixer.Mix(b, 2, CHANNEL_LENGTH);
+    mixer.Mix(a, 2, CHANNEL_LENGTH, AUDIO_RATE);
+    mixer.Mix(b, 2, CHANNEL_LENGTH, AUDIO_RATE);
     mixer.FinishMixing();
   }
 

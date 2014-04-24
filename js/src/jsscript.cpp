@@ -3158,32 +3158,21 @@ JSScript::ensureHasDebugScript(JSContext *cx)
 }
 
 void
-JSScript::recompileForStepMode(FreeOp *fop)
+JSScript::setNewStepMode(FreeOp *fop, uint32_t newValue)
 {
-#ifdef JS_ION
-    if (hasBaselineScript())
-        baseline->toggleDebugTraps(this, nullptr);
-#endif
-}
-
-bool
-JSScript::tryNewStepMode(JSContext *cx, uint32_t newValue)
-{
-    JS_ASSERT(hasDebugScript_);
-
     DebugScript *debug = debugScript();
     uint32_t prior = debug->stepMode;
     debug->stepMode = newValue;
 
     if (!prior != !newValue) {
-        /* Step mode has been enabled or disabled. Alert the methodjit. */
-        recompileForStepMode(cx->runtime()->defaultFreeOp());
+#ifdef JS_ION
+        if (hasBaselineScript())
+            baseline->toggleDebugTraps(this, nullptr);
+#endif
 
         if (!stepModeEnabled() && !debug->numSites)
-            js_free(releaseDebugScript());
+            fop->free_(releaseDebugScript());
     }
-
-    return true;
 }
 
 bool
@@ -3192,25 +3181,40 @@ JSScript::setStepModeFlag(JSContext *cx, bool step)
     if (!ensureHasDebugScript(cx))
         return false;
 
-    return tryNewStepMode(cx, (debugScript()->stepMode & stepCountMask) |
-                               (step ? stepFlagMask : 0));
+    setNewStepMode(cx->runtime()->defaultFreeOp(),
+                   (debugScript()->stepMode & stepCountMask) |
+                   (step ? stepFlagMask : 0));
+    return true;
 }
 
 bool
-JSScript::changeStepModeCount(JSContext *cx, int delta)
+JSScript::incrementStepModeCount(JSContext *cx)
 {
+    assertSameCompartment(cx, this);
+    MOZ_ASSERT(cx->compartment()->debugMode());
+
     if (!ensureHasDebugScript(cx))
         return false;
 
-    assertSameCompartment(cx, this);
-    JS_ASSERT_IF(delta > 0, cx->compartment()->debugMode());
-
     DebugScript *debug = debugScript();
     uint32_t count = debug->stepMode & stepCountMask;
-    JS_ASSERT(((count + delta) & stepCountMask) == count + delta);
-    return tryNewStepMode(cx,
-                          (debug->stepMode & stepFlagMask) |
-                          ((count + delta) & stepCountMask));
+    MOZ_ASSERT(((count + 1) & stepCountMask) == count + 1);
+
+    setNewStepMode(cx->runtime()->defaultFreeOp(),
+                   (debug->stepMode & stepFlagMask) |
+                   ((count + 1) & stepCountMask));
+    return true;
+}
+
+void
+JSScript::decrementStepModeCount(FreeOp *fop)
+{
+    DebugScript *debug = debugScript();
+    uint32_t count = debug->stepMode & stepCountMask;
+
+    setNewStepMode(fop,
+                   (debug->stepMode & stepFlagMask) |
+                   ((count - 1) & stepCountMask));
 }
 
 BreakpointSite *
@@ -3481,10 +3485,13 @@ js::SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
         pc += JSOP_ARGUMENTS_LENGTH;
         JS_ASSERT(*pc == JSOP_SETALIASEDVAR);
 
-        if (frame.callObj().as<ScopeObject>().aliasedVar(pc).isMagic(JS_OPTIMIZED_ARGUMENTS))
+        // Note that here and below, it is insufficient to only check for
+        // JS_OPTIMIZED_ARGUMENTS, as Ion could have optimized out the
+        // arguments slot.
+        if (IsOptimizedPlaceholderMagicValue(frame.callObj().as<ScopeObject>().aliasedVar(pc)))
             frame.callObj().as<ScopeObject>().setAliasedVar(cx, pc, cx->names().arguments, ObjectValue(*argsobj));
     } else {
-        if (frame.unaliasedLocal(var).isMagic(JS_OPTIMIZED_ARGUMENTS))
+        if (IsOptimizedPlaceholderMagicValue(frame.unaliasedLocal(var)))
             frame.unaliasedLocal(var) = ObjectValue(*argsobj);
     }
 }

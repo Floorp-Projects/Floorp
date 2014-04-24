@@ -1,35 +1,21 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/**
- * DOMApplicationRegistry._isLaunchable() sometimes returns false right after
- * installation on Mac, perhaps because of a race condition between
- * WebappsInstaller and nsIMacWebAppUtils::pathForAppWithIdentifier().
- * That causes methods like mgmt.getAll() to exclude the app from their results,
- * even though the app is registered and installed.
- *
- * To work around this problem, set DOMApplicationRegistry.allAppsLaunchable
- * to true, which makes _isLaunchable() return true for all registered apps.
- */
-function makeAllAppsLaunchable() {
-  var Webapps = {};
-  Components.utils.import("resource://gre/modules/Webapps.jsm", Webapps);
-  var originalValue = Webapps.DOMApplicationRegistry.allAppsLaunchable;
-  Webapps.DOMApplicationRegistry.allAppsLaunchable = true;
-
-  // Clean up after ourselves once tests are done so the test page is unloaded.
-  window.addEventListener("unload", function restoreAllAppsLaunchable(event) {
-    if (event.target == window.document) {
-      window.removeEventListener("unload", restoreAllAppsLaunchable, false);
-      Webapps.DOMApplicationRegistry.allAppsLaunchable = originalValue;
-    }
-  }, false);
-}
-
 function runAll(steps) {
   SimpleTest.waitForExplicitFinish();
 
-  makeAllAppsLaunchable();
+  /**
+   * On Mac, apps aren't considered launchable right after they've been
+   * installed because the OS takes some time to detect them (so
+   * nsIMacWebAppUtils::pathForAppWithIdentifier() returns null).
+   * That causes methods like mgmt.getAll() to exclude the app from their
+   * results, even though the app is installed and is in the registry.
+   * See the tests under toolkit/webapps for a viable solution.
+   *
+   * To work around this problem, set allAppsLaunchable to true, which makes
+   * all apps considered as launchable.
+   */
+  SpecialPowers.setAllAppsLaunchable(true);
 
   // Clone the array so we don't modify the original.
   steps = steps.concat();

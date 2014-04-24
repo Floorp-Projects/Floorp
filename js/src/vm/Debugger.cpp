@@ -147,8 +147,8 @@ ValueToIdentifier(JSContext *cx, HandleValue v, MutableHandleId id)
  * A range of all the Debugger.Frame objects for a particular AbstractFramePtr.
  *
  * FIXME This checks only current debuggers, so it relies on a hack in
- * Debugger::removeDebuggeeGlobal to make sure only current debuggers have Frame
- * objects with .live === true.
+ * Debugger::removeDebuggeeGlobal to make sure only current debuggers
+ * have Frame objects with .live === true.
  */
 class Debugger::FrameRange
 {
@@ -554,6 +554,10 @@ Debugger::slowPathOnEnterFrame(JSContext *cx, AbstractFramePtr frame, MutableHan
 }
 
 static void
+DebuggerFrame_maybeDecrementFrameScriptStepModeCount(FreeOp *fop, AbstractFramePtr frame,
+                                                     JSObject *frameobj);
+
+static void
 DebuggerFrame_freeScriptFrameIterData(FreeOp *fop, JSObject *obj);
 
 /*
@@ -630,15 +634,9 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool frame
         Debugger *dbg = r.frontDebugger();
         JS_ASSERT(dbg == Debugger::fromChildJSObject(frameobj));
 
-        DebuggerFrame_freeScriptFrameIterData(cx->runtime()->defaultFreeOp(), frameobj);
-
-        /* If this frame had an onStep handler, adjust the script's count. */
-        if (!frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() &&
-            !frame.script()->changeStepModeCount(cx, -1))
-        {
-            status = JSTRAP_ERROR;
-            /* Don't exit the loop; we must mark all frames as dead. */
-        }
+        FreeOp *fop = cx->runtime()->defaultFreeOp();
+        DebuggerFrame_freeScriptFrameIterData(fop, frameobj);
+        DebuggerFrame_maybeDecrementFrameScriptStepModeCount(fop, frame, frameobj);
 
         dbg->frames.remove(frame);
     }
@@ -756,6 +754,19 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
 
             vp.setObject(*dobj);
         }
+    } else if (vp.isMagic()) {
+        // Other magic values should not have escaped.
+        MOZ_ASSERT(vp.whyMagic() == JS_OPTIMIZED_OUT);
+
+        RootedObject optObj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+        if (!optObj)
+            return false;
+
+        RootedValue trueVal(cx, BooleanValue(true));
+        if (!JSObject::defineProperty(cx, optObj, cx->names().optimizedOut, trueVal))
+            return false;
+
+        vp.setObject(*optObj);
     } else if (!cx->compartment()->wrap(cx, vp)) {
         vp.setUndefined();
         return false;
@@ -1644,8 +1655,12 @@ Debugger::sweepAll(FreeOp *fop)
              * might be GC'd too. Since detaching requires access to both
              * objects, this must be done before finalize time.
              */
-            for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-                dbg->removeDebuggeeGlobal(fop, e.front(), nullptr, &e);
+            for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront()) {
+                // We can't recompile on-stack scripts here, and we
+                // can only toggle debug mode to off, so we use an
+                // infallible variant of removeDebuggeeGlobal.
+                dbg->removeDebuggeeGlobalUnderGC(fop, e.front(), nullptr, &e);
+            }
         }
     }
 
@@ -1654,8 +1669,10 @@ Debugger::sweepAll(FreeOp *fop)
         GlobalObjectSet &debuggees = comp->getDebuggees();
         for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
             GlobalObject *global = e.front();
-            if (IsObjectAboutToBeFinalized(&global))
+            if (IsObjectAboutToBeFinalized(&global)) {
+                // See infallibility note above.
                 detachAllDebuggersFromGlobal(fop, global, &e);
+            }
             else if (global != e.front())
                 e.rekeyFront(global);
         }
@@ -1669,7 +1686,7 @@ Debugger::detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global,
     const GlobalObject::DebuggerVector *debuggers = global->getDebuggers();
     JS_ASSERT(!debuggers->empty());
     while (!debuggers->empty())
-        debuggers->back()->removeDebuggeeGlobal(fop, global, compartmentEnum, nullptr);
+        debuggers->back()->removeDebuggeeGlobalUnderGC(fop, global, compartmentEnum, nullptr);
 }
 
 /* static */ void
@@ -2007,6 +2024,7 @@ Debugger::addAllGlobalsAsDebuggees(JSContext *cx, unsigned argc, Value *vp)
         // Invalidate a zone at a time to avoid doing a zone-wide CellIter
         // per compartment.
         AutoDebugModeInvalidation invalidate(zone);
+
         for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
             if (c == dbg->object->compartment() || c->options().invisibleToDebugger())
                 continue;
@@ -2032,8 +2050,10 @@ Debugger::removeDebuggee(JSContext *cx, unsigned argc, Value *vp)
     GlobalObject *global = dbg->unwrapDebuggeeArgument(cx, args[0]);
     if (!global)
         return false;
-    if (dbg->debuggees.has(global))
-        dbg->removeDebuggeeGlobal(cx->runtime()->defaultFreeOp(), global, nullptr, nullptr);
+    if (dbg->debuggees.has(global)) {
+        if (!dbg->removeDebuggeeGlobal(cx, global, nullptr, nullptr))
+            return false;
+    }
     args.rval().setUndefined();
     return true;
 }
@@ -2042,8 +2062,11 @@ bool
 Debugger::removeAllDebuggees(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "removeAllDebuggees", args, dbg);
-    for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-        dbg->removeDebuggeeGlobal(cx->runtime()->defaultFreeOp(), e.front(), nullptr, &e);
+
+    for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront()) {
+        if (!dbg->removeDebuggeeGlobal(cx, e.front(), nullptr, &e))
+            return false;
+    }
 
     args.rval().setUndefined();
     return true;
@@ -2087,15 +2110,14 @@ Debugger::getNewestFrame(JSContext *cx, unsigned argc, Value *vp)
 
     /* Since there may be multiple contexts, use AllFramesIter. */
     for (AllFramesIter i(cx); !i.done(); ++i) {
-        /*
-         * Debug-mode currently disables Ion compilation in the compartment of
-         * the debuggee.
-         */
-        if (i.isIon())
-            continue;
-        if (dbg->observesFrame(i.abstractFramePtr())) {
+        if (dbg->observesFrame(i)) {
+            // Ensure that Ion frames are rematerialized. Only rematerialized
+            // Ion frames may be used as AbstractFramePtrs.
+            if (i.isIon() && !i.ensureHasRematerializedFrame())
+                return false;
+            AbstractFramePtr frame = i.abstractFramePtr();
             ScriptFrameIter iter(i.activation()->cx(), ScriptFrameIter::GO_THROUGH_SAVED);
-            while (iter.isIon() || iter.abstractFramePtr() != i.abstractFramePtr())
+            while (!iter.hasUsableAbstractFramePtr() || iter.abstractFramePtr() != frame)
                 ++iter;
             return dbg->getScriptFrame(cx, iter, args.rval());
         }
@@ -2237,12 +2259,6 @@ Debugger::addDebuggeeGlobal(JSContext *cx,
         }
     }
 
-    /* Refuse to enable debug mode for a compartment that has running scripts. */
-    if (!debuggeeCompartment->debugMode() && debuggeeCompartment->hasScriptsOnStack()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_IDLE);
-        return false;
-    }
-
     /*
      * Each debugger-debuggee relation must be stored in up to three places.
      * JSCompartment::addDebuggee enables debug mode if needed.
@@ -2270,19 +2286,10 @@ Debugger::addDebuggeeGlobal(JSContext *cx,
 }
 
 void
-Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
-                               GlobalObjectSet::Enum *compartmentEnum,
-                               GlobalObjectSet::Enum *debugEnum)
-{
-    AutoDebugModeInvalidation invalidate(global->compartment());
-    return removeDebuggeeGlobal(fop, global, invalidate, compartmentEnum, debugEnum);
-}
-
-void
-Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
-                               AutoDebugModeInvalidation &invalidate,
-                               GlobalObjectSet::Enum *compartmentEnum,
-                               GlobalObjectSet::Enum *debugEnum)
+Debugger::cleanupDebuggeeGlobalBeforeRemoval(FreeOp *fop, GlobalObject *global,
+                                             AutoDebugModeInvalidation &invalidate,
+                                             GlobalObjectSet::Enum *compartmentEnum,
+                                             GlobalObjectSet::Enum *debugEnum)
 {
     /*
      * Each debuggee is in two HashSets: one for its compartment and one for
@@ -2306,8 +2313,10 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
      */
     for (FrameMap::Enum e(frames); !e.empty(); e.popFront()) {
         AbstractFramePtr frame = e.front().key();
+        JSObject *frameobj = e.front().value();
         if (&frame.script()->global() == global) {
-            DebuggerFrame_freeScriptFrameIterData(fop, e.front().value());
+            DebuggerFrame_freeScriptFrameIterData(fop, frameobj);
+            DebuggerFrame_maybeDecrementFrameScriptStepModeCount(fop, frame, frameobj);
             e.removeFront();
         }
     }
@@ -2338,14 +2347,57 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
             bp->destroy(fop);
     }
     JS_ASSERT_IF(debuggees.empty(), !firstBreakpoint());
+}
+
+bool
+Debugger::removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
+                               GlobalObjectSet::Enum *compartmentEnum,
+                               GlobalObjectSet::Enum *debugEnum)
+{
+    AutoDebugModeInvalidation invalidate(global->compartment());
+    return removeDebuggeeGlobal(cx, global, invalidate, compartmentEnum, debugEnum);
+}
+
+bool
+Debugger::removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
+                               AutoDebugModeInvalidation &invalidate,
+                               GlobalObjectSet::Enum *compartmentEnum,
+                               GlobalObjectSet::Enum *debugEnum)
+{
+    cleanupDebuggeeGlobalBeforeRemoval(cx->runtime()->defaultFreeOp(), global,
+                                       invalidate, compartmentEnum, debugEnum);
+
+    // The debuggee needs to be removed from the compartment last to save a root.
+    if (global->getDebuggers()->empty())
+        return global->compartment()->removeDebuggee(cx, global, invalidate, compartmentEnum);
+
+    return true;
+}
+
+void
+Debugger::removeDebuggeeGlobalUnderGC(FreeOp *fop, GlobalObject *global,
+                                      GlobalObjectSet::Enum *compartmentEnum,
+                                      GlobalObjectSet::Enum *debugEnum)
+{
+    AutoDebugModeInvalidation invalidate(global->compartment());
+    removeDebuggeeGlobalUnderGC(fop, global, invalidate, compartmentEnum, debugEnum);
+}
+
+void
+Debugger::removeDebuggeeGlobalUnderGC(FreeOp *fop, GlobalObject *global,
+                                      AutoDebugModeInvalidation &invalidate,
+                                      GlobalObjectSet::Enum *compartmentEnum,
+                                      GlobalObjectSet::Enum *debugEnum)
+{
+    cleanupDebuggeeGlobalBeforeRemoval(fop, global, invalidate, compartmentEnum, debugEnum);
 
     /*
      * The debuggee needs to be removed from the compartment last, as this can
      * trigger GCs if the compartment's debug mode is being changed, and the
      * global cannot be rooted on the stack without a cx.
      */
-    if (v->empty())
-        global->compartment()->removeDebuggee(fop, global, invalidate, compartmentEnum);
+    if (global->getDebuggers()->empty())
+        global->compartment()->removeDebuggeeUnderGC(fop, global, invalidate, compartmentEnum);
 }
 
 /*
@@ -3548,6 +3600,12 @@ Debugger::observesFrame(AbstractFramePtr frame) const
 }
 
 bool
+Debugger::observesFrame(const ScriptFrameIter &iter) const
+{
+    return observesScript(iter.script());
+}
+
+bool
 Debugger::observesScript(JSScript *script) const
 {
     if (!enabled)
@@ -3557,12 +3615,10 @@ Debugger::observesScript(JSScript *script) const
 }
 
 /* static */ bool
-Debugger::handleBaselineOsr(JSContext *cx, InterpreterFrame *from, jit::BaselineFrame *to)
+Debugger::replaceFrameGuts(JSContext *cx, AbstractFramePtr from, AbstractFramePtr to,
+                           ScriptFrameIter &iter)
 {
-    ScriptFrameIter iter(cx);
-    JS_ASSERT(iter.abstractFramePtr() == to);
-
-    for (FrameRange r(from); !r.empty(); r.popFront()) {
+    for (Debugger::FrameRange r(from); !r.empty(); r.popFront()) {
         RootedObject frameobj(cx, r.frontFrame());
         Debugger *dbg = r.frontDebugger();
         JS_ASSERT(dbg == Debugger::fromChildJSObject(frameobj));
@@ -3585,6 +3641,31 @@ Debugger::handleBaselineOsr(JSContext *cx, InterpreterFrame *from, jit::Baseline
     }
 
     return true;
+}
+
+/* static */ bool
+Debugger::handleBaselineOsr(JSContext *cx, InterpreterFrame *from, jit::BaselineFrame *to)
+{
+    ScriptFrameIter iter(cx);
+    JS_ASSERT(iter.abstractFramePtr() == to);
+    return replaceFrameGuts(cx, from, to, iter);
+}
+
+/* static */ bool
+Debugger::handleIonBailout(JSContext *cx, jit::RematerializedFrame *from, jit::BaselineFrame *to)
+{
+    // When we return to a bailed-out Ion real frame, we must update all
+    // Debugger.Frames that refer to its inline frames. However, since we
+    // can't pop individual inline frames off the stack (we can only pop the
+    // real frame that contains them all, as a unit), we cannot assume that
+    // the frame we're dealing with is the top frame. Advance the iterator
+    // across any inlined frames younger than |to|, the baseline frame
+    // reconstructed during bailout from the Ion frame corresponding to
+    // |from|.
+    ScriptFrameIter iter(cx);
+    while (iter.abstractFramePtr() != to)
+        ++iter;
+    return replaceFrameGuts(cx, from, to, iter);
 }
 
 static bool
@@ -4021,12 +4102,58 @@ static const JSFunctionSpec DebuggerSource_methods[] = {
 /*** Debugger.Frame ******************************************************************************/
 
 static void
+UpdateFrameIterPc(FrameIter &iter)
+{
+    if (iter.abstractFramePtr().isRematerializedFrame()) {
+#ifdef DEBUG
+        // Rematerialized frames don't need their pc updated. The reason we
+        // need to update pc is because we might get the same Debugger.Frame
+        // object for multiple re-entries into debugger code from debuggee
+        // code. This reentrancy is not possible with rematerialized frames,
+        // because when returning to debuggee code, we would have bailed out
+        // to baseline.
+        //
+        // We walk the stack to assert that it doesn't need updating.
+        jit::RematerializedFrame *frame = iter.abstractFramePtr().asRematerializedFrame();
+        jit::IonJSFrameLayout *jsFrame = (jit::IonJSFrameLayout *)frame->top();
+        jit::JitActivation *activation = iter.activation()->asJit();
+
+        ActivationIterator activationIter(activation->cx()->runtime());
+        while (activationIter.activation() != activation)
+            ++activationIter;
+
+        jit::JitFrameIterator jitIter(activationIter);
+        while (!jitIter.isIonJS() || jitIter.jsFrame() != jsFrame)
+            ++jitIter;
+
+        jit::InlineFrameIterator ionInlineIter(activation->cx(), &jitIter);
+        while (ionInlineIter.frameNo() != frame->frameNo())
+            ++ionInlineIter;
+
+        MOZ_ASSERT(ionInlineIter.pc() == iter.pc());
+#endif
+        return;
+    }
+
+    iter.updatePcQuadratic();
+}
+
+static void
 DebuggerFrame_freeScriptFrameIterData(FreeOp *fop, JSObject *obj)
 {
     AbstractFramePtr frame = AbstractFramePtr::FromRaw(obj->getPrivate());
     if (frame.isScriptFrameIterData())
         fop->delete_((ScriptFrameIter::Data *) frame.raw());
     obj->setPrivate(nullptr);
+}
+
+static void
+DebuggerFrame_maybeDecrementFrameScriptStepModeCount(FreeOp *fop, AbstractFramePtr frame,
+                                                     JSObject *frameobj)
+{
+    /* If this frame has an onStep handler, decrement the script's count. */
+    if (!frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined())
+        frame.script()->decrementStepModeCount(fop);
 }
 
 static void
@@ -4154,6 +4281,27 @@ DebuggerFrame_getType(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
+DebuggerFrame_getImplementation(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_FRAME(cx, argc, vp, "get implementation", args, thisobj, frame);
+
+    const char *s;
+    if (frame.isBaselineFrame())
+        s = "baseline";
+    else if (frame.isRematerializedFrame())
+        s = "ion";
+    else
+        s = "interpreter";
+
+    JSAtom *str = Atomize(cx, s, strlen(s));
+    if (!str)
+        return false;
+
+    args.rval().setString(str);
+    return true;
+}
+
+static bool
 DebuggerFrame_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_FRAME_OWNER_ITER(cx, argc, vp, "get environment", args, thisobj, _, iter, dbg);
@@ -4161,7 +4309,7 @@ DebuggerFrame_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
     Rooted<Env*> env(cx);
     {
         AutoCompartment ac(cx, iter.abstractFramePtr().scopeChain());
-        iter.updatePcQuadratic();
+        UpdateFrameIterPc(iter);
         env = GetDebugScopeForFrame(cx, iter.abstractFramePtr(), iter.pc());
         if (!env)
             return false;
@@ -4206,7 +4354,7 @@ DebuggerFrame_getThis(JSContext *cx, unsigned argc, Value *vp)
         AutoCompartment ac(cx, iter.scopeChain());
         if (!iter.computeThis(cx))
             return false;
-        thisv = iter.thisv();
+        thisv = iter.computedThisValue();
     }
     if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, &thisv))
         return false;
@@ -4221,10 +4369,11 @@ DebuggerFrame_getOlder(JSContext *cx, unsigned argc, Value *vp)
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
 
     for (++iter; !iter.done(); ++iter) {
-        if (iter.isIon())
-            continue;
-        if (dbg->observesFrame(iter.abstractFramePtr()))
+        if (dbg->observesFrame(iter)) {
+            if (iter.isIon() && !iter.ensureHasRematerializedFrame())
+                return false;
             return dbg->getScriptFrame(cx, iter, args.rval());
+        }
     }
     args.rval().setNull();
     return true;
@@ -4386,7 +4535,7 @@ DebuggerFrame_getOffset(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_FRAME_ITER(cx, argc, vp, "get offset", args, thisobj, _, iter);
     JSScript *script = iter.script();
-    iter.updatePcQuadratic();
+    UpdateFrameIterPc(iter);
     jsbytecode *pc = iter.pc();
     size_t offset = script->pcToOffset(pc);
     args.rval().setNumber(double(offset));
@@ -4433,12 +4582,14 @@ DebuggerFrame_setOnStep(JSContext *cx, unsigned argc, Value *vp)
     }
 
     Value prior = thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER);
-    int delta = !args[0].isUndefined() - !prior.isUndefined();
-    if (delta != 0) {
-        /* Try to adjust this frame's script single-step mode count. */
+    if (!args[0].isUndefined() && prior.isUndefined()) {
+        // Single stepping toggled off->on.
         AutoCompartment ac(cx, frame.scopeChain());
-        if (!frame.script()->changeStepModeCount(cx, delta))
+        if (!frame.script()->incrementStepModeCount(cx))
             return false;
+    } else if (args[0].isUndefined() && !prior.isUndefined()) {
+        // Single stepping toggled on->off.
+        frame.script()->decrementStepModeCount(cx->runtime()->defaultFreeOp());
     }
 
     /* Now that the step mode switch has succeeded, we can install the handler. */
@@ -4608,7 +4759,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
         /* ExecuteInEnv requires 'fp' to have a computed 'this" value. */
         if (!iter->computeThis(cx))
             return false;
-        thisv = iter->thisv();
+        thisv = iter->computedThisValue();
         env = GetDebugScopeForFrame(cx, iter->abstractFramePtr(), iter->pc());
         if (!env)
             return false;
@@ -4659,7 +4810,7 @@ DebuggerFrame_eval(JSContext *cx, unsigned argc, Value *vp)
     THIS_FRAME_ITER(cx, argc, vp, "eval", args, thisobj, _, iter);
     REQUIRE_ARGC("Debugger.Frame.prototype.eval", 1);
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
-    iter.updatePcQuadratic();
+    UpdateFrameIterPc(iter);
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.eval",
                                args[0], EvalWithDefaultBindings, JS::UndefinedHandleValue,
                                args.get(1), args.rval(), dbg, js::NullPtr(), &iter);
@@ -4671,7 +4822,7 @@ DebuggerFrame_evalWithBindings(JSContext *cx, unsigned argc, Value *vp)
     THIS_FRAME_ITER(cx, argc, vp, "evalWithBindings", args, thisobj, _, iter);
     REQUIRE_ARGC("Debugger.Frame.prototype.evalWithBindings", 2);
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
-    iter.updatePcQuadratic();
+    UpdateFrameIterPc(iter);
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.evalWithBindings",
                                args[0], EvalHasExtraBindings, args[1], args.get(2),
                                args.rval(), dbg, js::NullPtr(), &iter);
@@ -4697,6 +4848,7 @@ static const JSPropertySpec DebuggerFrame_properties[] = {
     JS_PSG("script", DebuggerFrame_getScript, 0),
     JS_PSG("this", DebuggerFrame_getThis, 0),
     JS_PSG("type", DebuggerFrame_getType, 0),
+    JS_PSG("implementation", DebuggerFrame_getImplementation, 0),
     JS_PSGS("onStep", DebuggerFrame_getOnStep, DebuggerFrame_setOnStep, 0),
     JS_PSGS("onPop", DebuggerFrame_getOnPop, DebuggerFrame_setOnPop, 0),
     JS_PS_END
@@ -5956,9 +6108,9 @@ JS_DefineDebuggerObject(JSContext *cx, HandleObject obj)
     if (!objectProto)
         return false;
     envProto = js_InitClass(cx, debugCtor, objProto, &DebuggerEnv_class,
-                                      DebuggerEnv_construct, 0,
-                                      DebuggerEnv_properties, DebuggerEnv_methods,
-                                      nullptr, nullptr);
+                            DebuggerEnv_construct, 0,
+                            DebuggerEnv_properties, DebuggerEnv_methods,
+                            nullptr, nullptr);
     if (!envProto)
         return false;
     memoryProto = js_InitClass(cx, debugCtor, objProto, &DebuggerMemory::class_,

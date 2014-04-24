@@ -17,6 +17,7 @@
 #include "jit/AliasAnalysis.h"
 #include "jit/AsmJSModule.h"
 #include "jit/BacktrackingAllocator.h"
+#include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineInspector.h"
 #include "jit/BaselineJIT.h"
@@ -158,6 +159,7 @@ JitRuntime::JitRuntime()
     invalidator_(nullptr),
     debugTrapHandler_(nullptr),
     forkJoinGetSliceStub_(nullptr),
+    baselineDebugModeOSRHandler_(nullptr),
     functionWrappers_(nullptr),
     osrTempData_(nullptr),
     flusher_(nullptr),
@@ -456,9 +458,12 @@ jit::RequestInterruptForIonCode(JSRuntime *rt, JSRuntime::InterruptMode mode)
 
 JitCompartment::JitCompartment()
   : stubCodes_(nullptr),
-    baselineCallReturnAddr_(nullptr),
-    baselineGetPropReturnAddr_(nullptr),
-    baselineSetPropReturnAddr_(nullptr),
+    baselineCallReturnFromIonAddr_(nullptr),
+    baselineGetPropReturnFromIonAddr_(nullptr),
+    baselineSetPropReturnFromIonAddr_(nullptr),
+    baselineCallReturnFromStubAddr_(nullptr),
+    baselineGetPropReturnFromStubAddr_(nullptr),
+    baselineSetPropReturnFromStubAddr_(nullptr),
     stringConcatStub_(nullptr),
     parallelStringConcatStub_(nullptr),
     activeParallelEntryScripts_(nullptr)
@@ -621,13 +626,19 @@ JitCompartment::sweep(FreeOp *fop)
     stubCodes_->sweep(fop);
 
     // If the sweep removed the ICCall_Fallback stub, nullptr the baselineCallReturnAddr_ field.
-    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::Call_Fallback)))
-        baselineCallReturnAddr_ = nullptr;
+    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::Call_Fallback))) {
+        baselineCallReturnFromIonAddr_ = nullptr;
+        baselineCallReturnFromStubAddr_ = nullptr;
+    }
     // Similarly for the ICGetProp_Fallback stub.
-    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::GetProp_Fallback)))
-        baselineGetPropReturnAddr_ = nullptr;
-    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::SetProp_Fallback)))
-        baselineSetPropReturnAddr_ = nullptr;
+    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::GetProp_Fallback))) {
+        baselineGetPropReturnFromIonAddr_ = nullptr;
+        baselineGetPropReturnFromStubAddr_ = nullptr;
+    }
+    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::SetProp_Fallback))) {
+        baselineSetPropReturnFromIonAddr_ = nullptr;
+        baselineSetPropReturnFromStubAddr_ = nullptr;
+    }
 
     if (stringConcatStub_ && !IsJitCodeMarked(stringConcatStub_.unsafeGet()))
         stringConcatStub_ = nullptr;
@@ -2008,7 +2019,7 @@ CheckScriptSize(JSContext *cx, JSScript* script)
 }
 
 bool
-CanIonCompileScript(JSContext *cx, HandleScript script, bool osr)
+CanIonCompileScript(JSContext *cx, JSScript *script, bool osr)
 {
     if (!script->canIonCompile() || !CheckScript(cx, script, osr))
         return false;
@@ -3009,6 +3020,44 @@ jit::TraceIonScripts(JSTracer* trc, JSScript *script)
         jit::BaselineScript::Trace(trc, script->baselineScript());
 }
 
+bool
+jit::RematerializeAllFrames(JSContext *cx, JSCompartment *comp)
+{
+    for (JitActivationIterator iter(comp->runtimeFromMainThread()); !iter.done(); ++iter) {
+        if (iter.activation()->compartment() == comp) {
+            for (JitFrameIterator frameIter(iter); !frameIter.done(); ++frameIter) {
+                if (!frameIter.isIonJS())
+                    continue;
+                if (!iter.activation()->asJit()->getRematerializedFrame(cx, frameIter))
+                    return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool
+jit::UpdateForDebugMode(JSContext *maybecx, JSCompartment *comp,
+                     AutoDebugModeInvalidation &invalidate)
+{
+    MOZ_ASSERT(invalidate.isFor(comp));
+
+    // Schedule invalidation of all optimized JIT code since debug mode
+    // invalidates assumptions.
+    invalidate.scheduleInvalidation(comp->debugMode());
+
+    // Recompile on-stack baseline scripts if we have a cx.
+    if (maybecx) {
+        IonContext ictx(maybecx, nullptr);
+        if (!RecompileOnStackBaselineScriptsForDebugMode(maybecx, comp)) {
+            js_ReportOutOfMemory(maybecx);
+            return false;
+        }
+    }
+
+    return true;
+}
+
 AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
 {
     MOZ_ASSERT(!!comp_ != !!zone_);
@@ -3027,11 +3076,13 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
             StopAllOffThreadCompilations(comp);
     }
 
+    // Don't discard active baseline scripts. They are recompiled for debug
+    // mode.
     jit::MarkActiveBaselineScripts(zone);
 
     for (JitActivationIterator iter(rt); !iter.done(); ++iter) {
         JSCompartment *comp = iter.activation()->compartment();
-        if ((comp_ && comp_ == comp) || (zone_ && zone_ == comp->zone())) {
+        if (comp_ == comp || zone_ == comp->zone()) {
             IonContext ictx(CompileRuntime::get(rt));
             AutoFlushCache afc("AutoDebugModeInvalidation", rt->jitRuntime());
             IonSpew(IonSpew_Invalidate, "Invalidating frames for debug mode toggle");
@@ -3041,7 +3092,7 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
 
     for (gc::CellIter i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        if ((comp_ && script->compartment() == comp_) || zone_) {
+        if (script->compartment() == comp_ || zone_) {
             FinishInvalidation<SequentialExecution>(fop, script);
             FinishInvalidation<ParallelExecution>(fop, script);
             FinishDiscardBaselineScript(fop, script);

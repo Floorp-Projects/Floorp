@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=821307
+-->
+<head>
+  <title>Test for Bug 821307</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=821307">Mozilla Bug 821307</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<input id='dummy'></input>
+<input type="password" id='input' value='11111111111111111' style="width:40em; font-size:40px;"></input>
+
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var dummy = document.getElementById('dummy');
+  dummy.focus();
+  is(document.activeElement, dummy, "Check dummy element is now focused");
+
+  var input = document.getElementById('input');
+  var rect = input.getBoundingClientRect();
+  synthesizeMouse(input, 100, rect.height/2, {});
+  is(document.activeElement, input, "Check input element is now focused");
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

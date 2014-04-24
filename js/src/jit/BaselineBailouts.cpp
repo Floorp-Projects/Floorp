@@ -11,7 +11,10 @@
 #include "jit/CompileInfo.h"
 #include "jit/IonSpewer.h"
 #include "jit/Recover.h"
+#include "jit/RematerializedFrame.h"
+
 #include "vm/ArgumentsObject.h"
+#include "vm/Debugger.h"
 #include "vm/TraceLogging.h"
 
 #include "jsscriptinlines.h"
@@ -346,9 +349,9 @@ struct BaselineStackBuilder
         JS_ASSERT(BaselineFrameReg == FramePointer);
         priorOffset -= sizeof(void *);
         return virtualPointerAtStackOffset(priorOffset);
-#elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
-        // On X64 and ARM, the frame pointer save location depends on the caller of the
-        // the rectifier frame.
+#elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+        // On X64, ARM and MIPS, the frame pointer save location depends on
+        // the caller of the rectifier frame.
         BufferPointer<IonRectifierFrameLayout> priorFrame =
             pointerAtStackOffset<IonRectifierFrameLayout>(priorOffset);
         FrameType priorType = priorFrame->prevType();
@@ -384,12 +387,12 @@ static inline void*
 GetStubReturnAddress(JSContext *cx, jsbytecode *pc)
 {
     if (IsGetPropPC(pc))
-        return cx->compartment()->jitCompartment()->baselineGetPropReturnAddr();
+        return cx->compartment()->jitCompartment()->baselineGetPropReturnFromIonAddr();
     if (IsSetPropPC(pc))
-        return cx->compartment()->jitCompartment()->baselineSetPropReturnAddr();
+        return cx->compartment()->jitCompartment()->baselineSetPropReturnFromIonAddr();
     // This should be a call op of some kind, now.
     JS_ASSERT(IsCallPC(pc));
-    return cx->compartment()->jitCompartment()->baselineCallReturnAddr();
+    return cx->compartment()->jitCompartment()->baselineCallReturnFromIonAddr();
 }
 
 static inline jsbytecode *
@@ -484,12 +487,16 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 {
     MOZ_ASSERT(script->hasBaselineScript());
 
-    // If excInfo is non-nullptr, we are bailing out to a catch or finally block
-    // and this is the frame where we will resume. Usually the expression stack
-    // should be empty in this case but there can be iterators on the stack.
+    // Are we catching an exception?
+    bool catchingException = excInfo && excInfo->catchingException();
+
+    // If we are catching an exception, we are bailing out to a catch or
+    // finally block and this is the frame where we will resume. Usually the
+    // expression stack should be empty in this case but there can be
+    // iterators on the stack.
     uint32_t exprStackSlots;
-    if (excInfo)
-        exprStackSlots = excInfo->numExprSlots;
+    if (catchingException)
+        exprStackSlots = excInfo->numExprSlots();
     else
         exprStackSlots = iter.numAllocations() - (script->nfixed() + CountArgSlots(script, fun));
 
@@ -588,7 +595,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             if (fun && fun->isHeavyweight())
                 flags |= BaselineFrame::HAS_CALL_OBJ;
         } else {
-            JS_ASSERT(v.isUndefined());
+            JS_ASSERT(v.isUndefined() || v.isMagic(JS_OPTIMIZED_OUT));
 
             // Get scope chain from function or script.
             if (fun) {
@@ -617,7 +624,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         // If script maybe has an arguments object, the third slot will hold it.
         if (script->argumentsHasVarBinding()) {
             v = iter.read();
-            JS_ASSERT(v.isObject() || v.isUndefined());
+            JS_ASSERT(v.isObject() || v.isUndefined() || v.isMagic(JS_OPTIMIZED_OUT));
             if (v.isObject())
                 argsObj = &v.toObject().as<ArgumentsObject>();
         }
@@ -680,8 +687,8 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
     // Get the pc. If we are handling an exception, resume at the pc of the
     // catch or finally block.
-    jsbytecode *pc = excInfo ? excInfo->resumePC : script->offsetToPC(iter.pcOffset());
-    bool resumeAfter = excInfo ? false : iter.resumeAfter();
+    jsbytecode *pc = catchingException ? excInfo->resumePC() : script->offsetToPC(iter.pcOffset());
+    bool resumeAfter = catchingException ? false : iter.resumeAfter();
 
     JSOp op = JSOp(*pc);
 
@@ -774,16 +781,30 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     for (uint32_t i = pushedSlots; i < exprStackSlots; i++) {
         Value v;
 
-        // If coming from an invalidation bailout, and this is the topmost
-        // value, and a value override has been specified, don't read from the
-        // iterator. Otherwise, we risk using a garbage value.
         if (!iter.moreFrames() && i == exprStackSlots - 1 &&
             cx->runtime()->hasIonReturnOverride())
         {
+            // If coming from an invalidation bailout, and this is the topmost
+            // value, and a value override has been specified, don't read from the
+            // iterator. Otherwise, we risk using a garbage value.
             JS_ASSERT(invalidate);
             iter.skip();
             IonSpew(IonSpew_BaselineBailouts, "      [Return Override]");
             v = cx->runtime()->takeIonReturnOverride();
+        } else if (excInfo && excInfo->propagatingIonExceptionForDebugMode()) {
+            // If we are in the middle of propagating an exception from Ion by
+            // bailing to baseline due to debug mode, we might not have all
+            // the stack if we are at the newest frame.
+            //
+            // For instance, if calling |f()| pushed an Ion frame which threw,
+            // the snapshot expects the return value to be pushed, but it's
+            // possible nothing was pushed before we threw. Iterators might
+            // still be on the stack, so we can't just drop the stack.
+            MOZ_ASSERT(cx->compartment()->debugMode());
+            if (iter.moreFrames())
+                v = iter.read();
+            else
+                v = MagicValue(JS_OPTIMIZED_OUT);
         } else {
             v = iter.read();
         }
@@ -856,7 +877,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
     // If this was the last inline frame, or we are bailing out to a catch or
     // finally block in this frame, then unpacking is almost done.
-    if (!iter.moreFrames() || excInfo) {
+    if (!iter.moreFrames() || catchingException) {
         // Last frame, so PC for call to next frame is set to nullptr.
         *callPC = nullptr;
 
@@ -1320,8 +1341,21 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
             iter.script()->filename(), iter.script()->lineno(), (void *) iter.ionScript(),
             (int) prevFrameType);
 
-    if (excInfo)
-        IonSpew(IonSpew_BaselineBailouts, "Resuming in catch or finally block");
+    bool catchingException;
+    bool propagatingExceptionForDebugMode;
+    if (excInfo) {
+        catchingException = excInfo->catchingException();
+        propagatingExceptionForDebugMode = excInfo->propagatingIonExceptionForDebugMode();
+
+        if (catchingException)
+            IonSpew(IonSpew_BaselineBailouts, "Resuming in catch or finally block");
+
+        if (propagatingExceptionForDebugMode)
+            IonSpew(IonSpew_BaselineBailouts, "Resuming in-place for debug mode");
+    } else {
+        catchingException = false;
+        propagatingExceptionForDebugMode = false;
+    }
 
     IonSpew(IonSpew_BaselineBailouts, "  Reading from snapshot offset %u size %u",
             iter.snapshotOffset(), iter.ionScript()->snapshotsListSize());
@@ -1376,13 +1410,17 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
 
         // If we are bailing out to a catch or finally block in this frame,
         // pass excInfo to InitFromBailout and don't unpack any other frames.
-        bool handleException = (excInfo && excInfo->frameNo == frameNo);
+        bool handleException = (catchingException && excInfo->frameNo() == frameNo);
+
+        // We also need to pass excInfo if we're bailing out in place for
+        // debug mode.
+        bool passExcInfo = handleException || propagatingExceptionForDebugMode;
 
         jsbytecode *callPC = nullptr;
         RootedFunction nextCallee(cx, nullptr);
         if (!InitFromBailout(cx, caller, callerPC, fun, scr, iter.ionScript(),
                              snapIter, invalidate, builder, startFrameFormals,
-                             &nextCallee, &callPC, handleException ? excInfo : nullptr))
+                             &nextCallee, &callPC, passExcInfo ? excInfo : nullptr))
         {
             return BAILOUT_RETURN_FATAL_ERROR;
         }
@@ -1500,6 +1538,39 @@ HandleBaselineInfoBailout(JSContext *cx, JSScript *outerScript, JSScript *innerS
     return Invalidate(cx, outerScript);
 }
 
+static bool
+CopyFromRematerializedFrame(JSContext *cx, JitActivation *act, uint8_t *fp, size_t inlineDepth,
+                            BaselineFrame *frame)
+{
+    RematerializedFrame *rematFrame = act->lookupRematerializedFrame(fp, inlineDepth);
+
+    // We might not have rematerialized a frame if the user never requested a
+    // Debugger.Frame for it.
+    if (!rematFrame)
+        return true;
+
+    MOZ_ASSERT(rematFrame->script() == frame->script());
+    MOZ_ASSERT(rematFrame->numActualArgs() == frame->numActualArgs());
+
+    frame->setScopeChain(rematFrame->scopeChain());
+    frame->thisValue() = rematFrame->thisValue();
+
+    for (unsigned i = 0; i < frame->numActualArgs(); i++)
+        frame->argv()[i] = rematFrame->argv()[i];
+
+    for (size_t i = 0; i < frame->script()->nfixed(); i++)
+        *frame->valueSlot(i) = rematFrame->locals()[i];
+
+    IonSpew(IonSpew_BaselineBailouts,
+            "  Copied from rematerialized frame at (%p,%u)",
+            fp, inlineDepth);
+
+    if (cx->compartment()->debugMode())
+        return Debugger::handleIonBailout(cx, rematFrame, frame);
+
+    return true;
+}
+
 uint32_t
 jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
 {
@@ -1539,6 +1610,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
 
     JS_ASSERT(cx->currentlyRunningInJit());
     JitFrameIterator iter(cx);
+    uint8_t *outerFp = nullptr;
 
     uint32_t frameno = 0;
     while (frameno < numFrames) {
@@ -1572,8 +1644,10 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
             if (frameno == 0)
                 innerScript = frame->script();
 
-            if (frameno == numFrames - 1)
+            if (frameno == numFrames - 1) {
                 outerScript = frame->script();
+                outerFp = iter.fp();
+            }
 
             frameno++;
         }
@@ -1581,8 +1655,33 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
         ++iter;
     }
 
-    JS_ASSERT(innerScript);
-    JS_ASSERT(outerScript);
+    MOZ_ASSERT(innerScript);
+    MOZ_ASSERT(outerScript);
+    MOZ_ASSERT(outerFp);
+
+    // If we rematerialized Ion frames due to debug mode toggling, copy their
+    // values into the baseline frame. We need to do this even when debug mode
+    // is off, as we should respect the mutations made while debug mode was
+    // on.
+    JitActivation *act = cx->mainThread().activation()->asJit();
+    if (act->hasRematerializedFrame(outerFp)) {
+        JitFrameIterator iter(cx);
+        size_t inlineDepth = numFrames;
+        while (inlineDepth > 0) {
+            if (iter.isBaselineJS() &&
+                !CopyFromRematerializedFrame(cx, act, outerFp, --inlineDepth,
+                                             iter.baselineFrame()))
+            {
+                return false;
+            }
+            ++iter;
+        }
+
+        // After copying from all the rematerialized frames, remove them from
+        // the table to keep the table up to date.
+        act->removeRematerializedFrame(outerFp);
+    }
+
     IonSpew(IonSpew_BaselineBailouts,
             "  Restored outerScript=(%s:%u,%u) innerScript=(%s:%u,%u) (bailoutKind=%u)",
             outerScript->filename(), outerScript->lineno(), outerScript->getUseCount(),
@@ -1608,6 +1707,10 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
         if (!HandleBaselineInfoBailout(cx, outerScript, innerScript))
             return false;
         break;
+      case Bailout_IonExceptionDebugMode:
+        // Return false to resume in HandleException with reconstructed
+        // baseline frame.
+        return false;
       default:
         MOZ_ASSUME_UNREACHABLE("Unknown bailout kind!");
     }
