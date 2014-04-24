@@ -1832,8 +1832,10 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
     Register temp = ToTempRegisterOrInvalid(lir->temp());
 
     if (lir->object()->isConstant()) {
+#ifdef DEBUG
         const Nursery &nursery = GetIonContext()->runtime->gcNursery();
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
+#endif
     } else {
         masm.branchPtrInNurseryRange(ToRegister(lir->object()), temp, ool->rejoin());
     }
@@ -1856,8 +1858,10 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
     Register temp = ToTempRegisterOrInvalid(lir->temp());
 
     if (lir->object()->isConstant()) {
+#ifdef DEBUG
         const Nursery &nursery = GetIonContext()->runtime->gcNursery();
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
+#endif
     } else {
         masm.branchPtrInNurseryRange(ToRegister(lir->object()), temp, ool->rejoin());
     }
