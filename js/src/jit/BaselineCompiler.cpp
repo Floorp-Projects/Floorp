@@ -2102,7 +2102,6 @@ BaselineCompiler::emit_JSOP_SETALIASEDVAR()
     frame.syncStack(0);
     Register temp = R1.scratchReg();
 
-    Nursery &nursery = cx->runtime()->gcNursery;
     Label skipBarrier;
     masm.branchTestObject(Assembler::NotEqual, R0, &skipBarrier);
     masm.branchPtrInNurseryRange(objReg, temp, &skipBarrier);
@@ -2422,7 +2421,6 @@ BaselineCompiler::emitFormalArgAccess(uint32_t arg, bool get)
         Register reg = R2.scratchReg();
         masm.loadPtr(Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfArgsObj()), reg);
 
-        Nursery &nursery = cx->runtime()->gcNursery;
         Label skipBarrier;
         masm.branchPtrInNurseryRange(reg, temp, &skipBarrier);
 
