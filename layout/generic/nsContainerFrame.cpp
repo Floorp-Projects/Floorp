@@ -96,9 +96,7 @@ nsContainerFrame::AppendFrames(ChildListID  aListID,
                                nsFrameList& aFrameList)
 {
   if (aListID != kPrincipalList) {
-#ifdef IBMBIDI
     if (aListID != kNoReflowPrincipalList)
-#endif
     {
       NS_ERROR("unexpected child list");
       return NS_ERROR_INVALID_ARG;
@@ -108,9 +106,7 @@ nsContainerFrame::AppendFrames(ChildListID  aListID,
     mFrames.AppendFrames(this, aFrameList);
 
     // Ask the parent frame to reflow me.
-#ifdef IBMBIDI
     if (aListID == kPrincipalList)
-#endif
     {
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,
@@ -129,9 +125,7 @@ nsContainerFrame::InsertFrames(ChildListID aListID,
                "inserting after sibling frame with different parent");
 
   if (aListID != kPrincipalList) {
-#ifdef IBMBIDI
     if (aListID != kNoReflowPrincipalList)
-#endif
     {
       NS_ERROR("unexpected child list");
       return NS_ERROR_INVALID_ARG;
@@ -141,9 +135,7 @@ nsContainerFrame::InsertFrames(ChildListID aListID,
     // Insert frames after aPrevFrame
     mFrames.InsertFrames(this, aPrevFrame, aFrameList);
 
-#ifdef IBMBIDI
     if (aListID == kPrincipalList)
-#endif
     {
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,
@@ -158,9 +150,7 @@ nsContainerFrame::RemoveFrame(ChildListID aListID,
                               nsIFrame* aOldFrame)
 {
   if (aListID != kPrincipalList) {
-#ifdef IBMBIDI
     if (kNoReflowPrincipalList != aListID)
-#endif
     {
       NS_ERROR("unexpected child list");
       return NS_ERROR_INVALID_ARG;
@@ -171,11 +161,9 @@ nsContainerFrame::RemoveFrame(ChildListID aListID,
   // Request a reflow on the parent frames involved unless we were explicitly
   // told not to (kNoReflowPrincipalList).
   bool generateReflowCommand = true;
-#ifdef IBMBIDI
   if (kNoReflowPrincipalList == aListID) {
     generateReflowCommand = false;
   }
-#endif
   nsIPresShell* shell = PresContext()->PresShell();
   nsContainerFrame* lastParent = nullptr;
   while (aOldFrame) {
