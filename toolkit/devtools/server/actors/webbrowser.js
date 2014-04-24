@@ -7,11 +7,13 @@
 "use strict";
 
 let {Ci,Cu} = require("chrome");
+let {createExtraActors, appendExtraActors} = require("devtools/server/actors/common");
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+
+let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 // Assumptions on events module:
@@ -669,8 +671,8 @@ TabActor.prototype = {
   },
 
   /* Support for DebuggerServer.addTabActor. */
-  _createExtraActors: CommonCreateExtraActors,
-  _appendExtraActors: CommonAppendExtraActors,
+  _createExtraActors: createExtraActors,
+  _appendExtraActors: appendExtraActors,
 
   /**
    * Does the actual work of attching to a tab.
