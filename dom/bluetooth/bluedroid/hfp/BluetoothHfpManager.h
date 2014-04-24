@@ -147,6 +147,7 @@ private:
   void ResetCallArray();
   uint32_t FindFirstCall(uint16_t aState);
   uint32_t GetNumberOfCalls(uint16_t aState);
+  uint16_t GetCallSetupState();
   bthf_call_state_t ConvertToBthfCallState(int aCallState);
 
   void UpdatePhoneCIND(uint32_t aCallIndex, bool aSend = true);
@@ -158,8 +159,6 @@ private:
   int mConnectionState;
   int mPrevConnectionState;
   int mAudioState;
-  // Phone CIND
-  int mCallSetupState;
   // Device CIND
   int mBattChg;
   int mService;
