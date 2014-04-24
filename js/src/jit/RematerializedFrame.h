@@ -24,6 +24,9 @@ namespace jit {
 //
 class RematerializedFrame
 {
+    // See DebugScopes::updateLiveScopes.
+    bool prevUpToDate_;
+
     // The fp of the top frame associated with this possibly inlined frame.
     uint8_t *top_;
 
@@ -42,6 +45,13 @@ class RematerializedFrame
 
   public:
     static RematerializedFrame *New(JSContext *cx, uint8_t *top, InlineFrameIterator &iter);
+
+    bool prevUpToDate() const {
+        return prevUpToDate_;
+    }
+    void setPrevUpToDate() {
+        prevUpToDate_ = true;
+    }
 
     uint8_t *top() const {
         return top_;
