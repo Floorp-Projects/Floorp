@@ -247,8 +247,8 @@ pref("media.navigator.video.max_fs", 1200); // 640x480 == 1200mb
 pref("media.navigator.video.max_fr", 30);
 pref("media.peerconnection.video.h264_enabled", false);
 #else
-pref("media.navigator.video.default_width",640);
-pref("media.navigator.video.default_height",480);
+pref("media.navigator.video.default_width",0);  // adaptive default
+pref("media.navigator.video.default_height",0); // adaptive default
 pref("media.peerconnection.enabled", true);
 pref("media.peerconnection.video.enabled", true);
 pref("media.navigator.video.max_fs", 0); // unrestricted

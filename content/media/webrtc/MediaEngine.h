@@ -46,8 +46,10 @@ public:
 
   static const int DEFAULT_VIDEO_FPS = 30;
   static const int DEFAULT_VIDEO_MIN_FPS = 10;
-  static const int DEFAULT_VIDEO_WIDTH = 640;
-  static const int DEFAULT_VIDEO_HEIGHT = 480;
+  static const int DEFAULT_43_VIDEO_WIDTH = 640;
+  static const int DEFAULT_43_VIDEO_HEIGHT = 480;
+  static const int DEFAULT_169_VIDEO_WIDTH = 1280;
+  static const int DEFAULT_169_VIDEO_HEIGHT = 720;
   static const int DEFAULT_AUDIO_TIMER_MS = 10;
 
   /* Populate an array of video sources in the nsTArray. Also include devices

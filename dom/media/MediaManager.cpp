@@ -1189,8 +1189,8 @@ MediaManager::MediaManager()
   : mMediaThread(nullptr)
   , mMutex("mozilla::MediaManager")
   , mBackend(nullptr) {
-  mPrefs.mWidth  = MediaEngine::DEFAULT_VIDEO_WIDTH;
-  mPrefs.mHeight = MediaEngine::DEFAULT_VIDEO_HEIGHT;
+  mPrefs.mWidth  = 0; // adaptive default
+  mPrefs.mHeight = 0; // adaptive default
   mPrefs.mFPS    = MediaEngine::DEFAULT_VIDEO_FPS;
   mPrefs.mMinFPS = MediaEngine::DEFAULT_VIDEO_MIN_FPS;
 

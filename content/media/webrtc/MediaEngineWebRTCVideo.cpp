@@ -181,10 +181,13 @@ MediaEngineWebRTCVideoSource::ChooseCapability(
 
   LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps", aPrefs.mWidth, aPrefs.mHeight, aPrefs.mFPS, aPrefs.mMinFPS));
 
+  int prefWidth = aPrefs.mWidth? aPrefs.mWidth : MediaEngine::DEFAULT_43_VIDEO_WIDTH;
+  int prefHeight = aPrefs.mHeight? aPrefs.mHeight : MediaEngine::DEFAULT_43_VIDEO_HEIGHT;
+
   if (num <= 0) {
     // Set to default values
-    mCapability.width  = aPrefs.mWidth;
-    mCapability.height = aPrefs.mHeight;
+    mCapability.width  = prefWidth;
+    mCapability.height = prefHeight;
     mCapability.maxFPS = MediaEngine::DEFAULT_VIDEO_FPS;
 
     // Mac doesn't support capabilities.
@@ -206,11 +209,11 @@ MediaEngineWebRTCVideoSource::ChooseCapability(
         mCapability = cap;
         // FIXME: expose expected capture delay?
       }
-      if (cap.width <= (uint32_t) aPrefs.mWidth && cap.height <= (uint32_t) aPrefs.mHeight) {
+      if (cap.width <= (uint32_t) prefWidth && cap.height <= (uint32_t) prefHeight) {
         higher = false;
       }
     } else {
-      if (cap.width > (uint32_t) aPrefs.mWidth || cap.height > (uint32_t) aPrefs.mHeight ||
+      if (cap.width > (uint32_t) prefWidth || cap.height > (uint32_t) prefHeight ||
           cap.maxFPS < (uint32_t) aPrefs.mMinFPS) {
         continue;
       }
