@@ -5,7 +5,8 @@
 
 const gDashboard = Cc['@mozilla.org/network/dashboard;1']
   .getService(Ci.nsIDashboard);
-
+const serverSocket = Components.classes["@mozilla.org/network/server-socket;1"]
+    .createInstance(Ci.nsIServerSocket);
 function connectionFailed(status) {
   let status_ok = [
                     "NS_NET_STATUS_RESOLVING_HOST"
@@ -43,9 +44,6 @@ function test_sockets() {
 }
 
 function run_test() {
-  let serverSocket = Components.classes["@mozilla.org/network/server-socket;1"]
-    .createInstance(Ci.nsIServerSocket);
-
   serverSocket.init(-1, true, -1);
 
   do_test_pending();

@@ -40,15 +40,18 @@ PCMappingSlotInfo::ToSlotLocation(const StackValue *stackVal)
     return SlotIgnore;
 }
 
-BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t spsPushToggleOffset)
+BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
+                               uint32_t spsPushToggleOffset, uint32_t postDebugPrologueOffset)
   : method_(nullptr),
     templateScope_(nullptr),
     fallbackStubSpace_(),
     prologueOffset_(prologueOffset),
+    epilogueOffset_(epilogueOffset),
 #ifdef DEBUG
     spsOn_(false),
 #endif
     spsPushToggleOffset_(spsPushToggleOffset),
+    postDebugPrologueOffset_(postDebugPrologueOffset),
     flags_(0)
 { }
 
@@ -214,7 +217,7 @@ jit::EnterBaselineAtBranch(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc)
 }
 
 MethodStatus
-jit::BaselineCompile(JSContext *cx, HandleScript script)
+jit::BaselineCompile(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(!script->hasBaselineScript());
     JS_ASSERT(script->canBaselineCompile());
@@ -359,9 +362,9 @@ jit::CanEnterBaselineMethod(JSContext *cx, RunState &state)
 };
 
 BaselineScript *
-BaselineScript::New(JSContext *cx, uint32_t prologueOffset,
-                    uint32_t spsPushToggleOffset, size_t icEntries,
-                    size_t pcMappingIndexEntries, size_t pcMappingSize,
+BaselineScript::New(JSContext *cx, uint32_t prologueOffset, uint32_t epilogueOffset,
+                    uint32_t spsPushToggleOffset, uint32_t postDebugPrologueOffset,
+                    size_t icEntries, size_t pcMappingIndexEntries, size_t pcMappingSize,
                     size_t bytecodeTypeMapEntries)
 {
     static const unsigned DataAlignment = sizeof(uintptr_t);
@@ -388,7 +391,8 @@ BaselineScript::New(JSContext *cx, uint32_t prologueOffset,
         return nullptr;
 
     BaselineScript *script = reinterpret_cast<BaselineScript *>(buffer);
-    new (script) BaselineScript(prologueOffset, spsPushToggleOffset);
+    new (script) BaselineScript(prologueOffset, epilogueOffset,
+                                spsPushToggleOffset, postDebugPrologueOffset);
 
     size_t offsetCursor = paddedBaselineScriptSize;
 
@@ -596,7 +600,7 @@ BaselineScript::icEntryFromReturnAddress(uint8_t *returnAddr)
 }
 
 void
-BaselineScript::copyICEntries(HandleScript script, const ICEntry *entries, MacroAssembler &masm)
+BaselineScript::copyICEntries(JSScript *script, const ICEntry *entries, MacroAssembler &masm)
 {
     // Fix up the return offset in the IC entries and copy them in.
     // Also write out the IC entry ptrs in any fallback stubs that were added.

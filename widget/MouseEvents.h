@@ -188,9 +188,6 @@ protected:
     reason(aReason), context(eNormal), exit(eChild), clickCount(0)
   {
     switch (aMessage) {
-      case NS_MOUSE_MOVE:
-        mFlags.mCancelable = false;
-        break;
       case NS_MOUSEENTER:
       case NS_MOUSELEAVE:
         mFlags.mBubbles = false;
@@ -211,9 +208,6 @@ public:
     reason(aReason), context(aContext), exit(eChild), clickCount(0)
   {
     switch (aMessage) {
-      case NS_MOUSE_MOVE:
-        mFlags.mCancelable = false;
-        break;
       case NS_MOUSEENTER:
       case NS_MOUSELEAVE:
         mFlags.mBubbles = false;

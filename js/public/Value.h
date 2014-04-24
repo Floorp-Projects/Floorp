@@ -237,6 +237,7 @@ typedef enum JSWhyMagic
     JS_HASH_KEY_EMPTY,           /* see class js::HashableValue */
     JS_ION_ERROR,                /* error while running Ion code */
     JS_ION_BAILOUT,              /* status code to signal EnterIon will OSR into Interpret */
+    JS_OPTIMIZED_OUT,            /* optimized out slot */
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;
 
@@ -1275,6 +1276,16 @@ IsPoisonedValue(const Value &v)
         return IsPoisonedPtr(v.toString());
     if (v.isObject())
         return IsPoisonedPtr(&v.toObject());
+    return false;
+}
+
+inline bool
+IsOptimizedPlaceholderMagicValue(const Value &v)
+{
+    if (v.isMagic()) {
+        MOZ_ASSERT(v.whyMagic() == JS_OPTIMIZED_ARGUMENTS || v.whyMagic() == JS_OPTIMIZED_OUT);
+        return true;
+    }
     return false;
 }
 

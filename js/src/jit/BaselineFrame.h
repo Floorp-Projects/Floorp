@@ -15,6 +15,8 @@
 namespace js {
 namespace jit {
 
+struct BaselineDebugModeOSRInfo;
+
 // The stack looks like this, fp is the frame pointer:
 //
 // fp+y   arguments
@@ -57,7 +59,11 @@ class BaselineFrame
         HAS_PUSHED_SPS_FRAME = 1 << 8,
 
         // Frame has over-recursed on an early check.
-        OVER_RECURSED    = 1 << 9
+        OVER_RECURSED    = 1 << 9,
+
+        // Frame has a BaselineRecompileInfo stashed in the scratch value
+        // slot. See PatchBaselineFramesForDebugMOde.
+        HAS_DEBUG_MODE_OSR_INFO = 1 << 10
     };
 
   protected: // Silence Clang warning about unused private fields.
@@ -295,6 +301,24 @@ class BaselineFrame
     void setOverRecursed() {
         flags_ |= OVER_RECURSED;
     }
+
+    BaselineDebugModeOSRInfo *debugModeOSRInfo() {
+        MOZ_ASSERT(flags_ & HAS_DEBUG_MODE_OSR_INFO);
+        return *reinterpret_cast<BaselineDebugModeOSRInfo **>(&loScratchValue_);
+    }
+
+    BaselineDebugModeOSRInfo *getDebugModeOSRInfo() {
+        if (flags_ & HAS_DEBUG_MODE_OSR_INFO)
+            return debugModeOSRInfo();
+        return nullptr;
+    }
+
+    void setDebugModeOSRInfo(BaselineDebugModeOSRInfo *info) {
+        flags_ |= HAS_DEBUG_MODE_OSR_INFO;
+        *reinterpret_cast<BaselineDebugModeOSRInfo **>(&loScratchValue_) = info;
+    }
+
+    void deleteDebugModeOSRInfo();
 
     void trace(JSTracer *trc, JitFrameIterator &frame);
 

@@ -102,4 +102,15 @@ EXPORTS += [
     'GeckoProfiler.h',
 ]
 
+if CONFIG['MOZ_TASK_TRACER']:
+    EXPORTS += [
+        'GeckoTaskTracer.h',
+        'GeckoTaskTracerImpl.h',
+        'TracedTaskCommon.h',
+    ]
+    UNIFIED_SOURCES += [
+        'GeckoTaskTracer.cpp',
+        'TracedTaskCommon.cpp',
+    ]
+
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']

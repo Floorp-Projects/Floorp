@@ -216,7 +216,7 @@ AudioSegment::WriteTo(uint64_t aID, AudioStream* aOutput, AudioMixer* aMixer)
   aOutput->Write(buf.Elements(), GetDuration(), &(mChunks[mChunks.Length() - 1].mTimeStamp));
 
   if (aMixer) {
-    aMixer->Mix(buf.Elements(), outputChannels, GetDuration());
+    aMixer->Mix(buf.Elements(), outputChannels, GetDuration(), aOutput->GetRate());
   }
   aOutput->Start();
 }

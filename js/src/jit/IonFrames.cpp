@@ -11,6 +11,7 @@
 #include "jsscript.h"
 
 #include "gc/Marking.h"
+#include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
@@ -24,9 +25,11 @@
 #include "jit/Safepoints.h"
 #include "jit/Snapshots.h"
 #include "jit/VMFunctions.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
 
+#include "jsscriptinlines.h"
 #include "jit/JitFrameIterator-inl.h"
 #include "vm/Probes-inl.h"
 
@@ -223,10 +226,18 @@ JitFrameIterator::baselineScriptAndPc(JSScript **scriptRes, jsbytecode **pcRes) 
     if (scriptRes)
         *scriptRes = script;
     uint8_t *retAddr = returnAddressToFp();
+
+    // If we are in the middle of a recompile handler, get the real return
+    // address as stashed in the RecompileInfo.
+    if (BaselineDebugModeOSRInfo *info = baselineFrame()->getDebugModeOSRInfo())
+        retAddr = info->resumeAddr;
+
     if (pcRes) {
-        // If the return address is into the prologue entry address, then assume start
-        // of script.
-        if (retAddr == script->baselineScript()->prologueEntryAddr()) {
+        // If the return address is into the prologue entry address or just
+        // after the debug prologue, then assume start of script.
+        if (retAddr == script->baselineScript()->prologueEntryAddr() ||
+            retAddr == script->baselineScript()->postDebugPrologueAddr())
+        {
             *pcRes = script->code();
             return;
         }
@@ -373,6 +384,26 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
     RootedScript script(cx, frame.script());
     jsbytecode *pc = frame.pc();
 
+    bool bailedOutForDebugMode = false;
+    if (cx->compartment()->debugMode()) {
+        // If we have an exception from within Ion and the debugger is active,
+        // we do the following:
+        //
+        //   1. Bailout to baseline to reconstruct a baseline frame.
+        //   2. Resume immediately into the exception tail afterwards, and
+        //   handle the exception again with the top frame now a baseline
+        //   frame.
+        //
+        // An empty exception info denotes that we're propagating an Ion
+        // exception due to debug mode, which BailoutIonToBaseline needs to
+        // know. This is because we might not be able to fully reconstruct up
+        // to the stack depth at the snapshot, as we could've thrown in the
+        // middle of a call.
+        ExceptionBailoutInfo propagateInfo;
+        uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, propagateInfo, overrecursed);
+        bailedOutForDebugMode = retval == BAILOUT_RETURN_OK;
+    }
+
     if (!script->hasTrynotes())
         return;
 
@@ -400,7 +431,7 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
             break;
 
           case JSTRY_CATCH:
-            if (cx->isExceptionPending()) {
+            if (cx->isExceptionPending() && !bailedOutForDebugMode) {
                 // Ion can compile try-catch, but bailing out to catch
                 // exceptions is slow. Reset the use count so that if we
                 // catch many exceptions we won't Ion-compile the script.
@@ -408,34 +439,13 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
 
                 // Bailout at the start of the catch block.
                 jsbytecode *catchPC = script->main() + tn->start + tn->length;
-
-                ExceptionBailoutInfo excInfo;
-                excInfo.frameNo = frame.frameNo();
-                excInfo.resumePC = catchPC;
-                excInfo.numExprSlots = tn->stackDepth;
-
-                BaselineBailoutInfo *info = nullptr;
-                uint32_t retval = ExceptionHandlerBailout(cx, frame, excInfo, &info);
-
-                if (retval == BAILOUT_RETURN_OK) {
-                    JS_ASSERT(info);
-                    rfe->kind = ResumeFromException::RESUME_BAILOUT;
-                    rfe->target = cx->runtime()->jitRuntime()->getBailoutTail()->raw();
-                    rfe->bailoutInfo = info;
+                ExceptionBailoutInfo excInfo(frame.frameNo(), catchPC, tn->stackDepth);
+                uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, excInfo, overrecursed);
+                if (retval == BAILOUT_RETURN_OK)
                     return;
-                }
 
-                // Bailout failed. If there was a fatal error, clear the
-                // exception to turn this into an uncatchable error. If the
-                // overrecursion check failed, continue popping all inline
-                // frames and have the caller report an overrecursion error.
-                JS_ASSERT(!info);
-                cx->clearPendingException();
-
-                if (retval == BAILOUT_RETURN_OVERRECURSED)
-                    *overrecursed = true;
-                else
-                    JS_ASSERT(retval == BAILOUT_RETURN_FATAL_ERROR);
+                // Error on bailout clears pending exception.
+                MOZ_ASSERT(!cx->isExceptionPending());
             }
             break;
 
@@ -567,6 +577,13 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
 
 }
 
+struct AutoDeleteDebugModeOSRInfo
+{
+    BaselineFrame *frame;
+    AutoDeleteDebugModeOSRInfo(BaselineFrame *frame) : frame(frame) { MOZ_ASSERT(frame); }
+    ~AutoDeleteDebugModeOSRInfo() { frame->deleteDebugModeOSRInfo(); }
+};
+
 void
 HandleException(ResumeFromException *rfe)
 {
@@ -637,6 +654,16 @@ HandleException(ResumeFromException *rfe)
             bool calledDebugEpilogue = false;
 
             HandleExceptionBaseline(cx, iter, rfe, &calledDebugEpilogue);
+
+            // If we are propagating an exception through a frame with
+            // on-stack recompile info, we should free the allocated
+            // RecompileInfo struct before we leave this block, as we will not
+            // be returning to the recompile handler.
+            //
+            // We cannot delete it immediately because of the call to
+            // iter.baselineScriptAndPc below.
+            AutoDeleteDebugModeOSRInfo deleteDebugModeOSRInfo(iter.baselineFrame());
+
             if (rfe->kind != ResumeFromException::RESUME_ENTRY_FRAME)
                 return;
 
@@ -1147,15 +1174,18 @@ MarkRectifierFrame(JSTracer *trc, const JitFrameIterator &frame)
 static void
 MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
 {
+    JitActivation *activation = activations.activation()->asJit();
+
 #ifdef CHECK_OSIPOINT_REGISTERS
     if (js_JitOptions.checkOsiPointRegisters) {
         // GC can modify spilled registers, breaking our register checks.
         // To handle this, we disable these checks for the current VM call
         // when a GC happens.
-        JitActivation *activation = activations.activation()->asJit();
         activation->setCheckRegs(false);
     }
 #endif
+
+    activation->markRematerializedFrames(trc);
 
     for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
         switch (frames.type()) {

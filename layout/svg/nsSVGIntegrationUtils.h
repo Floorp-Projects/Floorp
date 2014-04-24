@@ -16,6 +16,7 @@ class nsDisplayList;
 class nsDisplayListBuilder;
 class nsIFrame;
 class nsRenderingContext;
+class nsIntRegion;
 
 struct nsRect;
 struct nsIntRect;
@@ -96,14 +97,14 @@ public:
    * @param aFrame The effects frame.
    * @param aToReferenceFrame The offset (in app units) from aFrame to its
    * reference display item.
-   * @param aInvalidRect The pre-effects invalid rect in pixels relative to
+   * @param aInvalidRegion The pre-effects invalid region in pixels relative to
    * the reference display item.
    * @return The post-effects invalid rect in pixels relative to the reference
    * display item.
    */
-  static nsIntRect
+  static nsIntRegion
   AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame, const nsPoint& aToReferenceFrame,
-                                 const nsIntRect& aInvalidRect);
+                                 const nsIntRegion& aInvalidRegion);
 
   /**
    * Figure out which area of the source is needed given an area to

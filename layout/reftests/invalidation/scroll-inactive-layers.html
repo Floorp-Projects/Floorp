@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>Scrolling over inactive layers shouldn't repaint their contents</title>
+
+<style>
+
+.outer {
+  border: 1px solid black;
+  width: 100px;
+  height: 2000px;
+  margin-top: 200px;
+  margin-right: 20px;
+  padding-top: 100px;
+  float: left;
+}
+
+.opacity {
+  opacity: 0.5;
+}
+
+.transform {
+  transform: translateX(1px);
+}
+
+.filter {
+  filter: url(#filter);
+}
+
+.mask {
+  mask: url(#mask);
+}
+
+.reftest-no-paint {
+  height: 50px;
+  border: 1px solid lime;
+}
+
+</style>
+
+<svg height="0">
+  <defs>
+    <filter id="filter" filterUnits="objectBoundingBox"
+            x="0%" y="0%" width="100%" height="100%"
+            color-interpolation-filters="sRGB">
+      <feMerge><feMergeNode/><feMerge>
+    </filter>
+    <mask id="mask" maskContentUnits="objectBoundingBox">
+      <rect x="0" y="0" width="1" height="1" fill="white"/>
+    </mask>
+  </defs>
+</svg>
+
+<div class="outer opacity">
+  <div class="reftest-no-paint"></div>
+</div>
+
+<div class="outer transform">
+  <div class="reftest-no-paint"></div>
+</div>
+
+<div class="outer filter">
+  <div class="reftest-no-paint"></div>
+</div>
+
+<div class="outer mask">
+  <div class="reftest-no-paint"></div>
+</div>
+
+<script>
+
+function doTest() {
+  document.documentElement.scrollTop = 100;
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>

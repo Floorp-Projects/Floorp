@@ -136,6 +136,15 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor)
 }
 
 NS_IMETHODIMP
+nsTextEditRules::SetInitialValue(const nsAString& aValue)
+{
+  if (IsPasswordEditor()) {
+    mPasswordText = aValue;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsTextEditRules::DetachEditor()
 {
   if (mTimer)

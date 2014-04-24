@@ -5662,6 +5662,7 @@ dumpValue(const Value &v)
           case JS_NATIVE_ENUMERATE:  fprintf(stderr, " native enumeration"); break;
           case JS_NO_ITER_VALUE:     fprintf(stderr, " no iter value");      break;
           case JS_GENERATOR_CLOSING: fprintf(stderr, " generator closing");  break;
+          case JS_OPTIMIZED_OUT:     fprintf(stderr, " optimized out");      break;
           default:                   fprintf(stderr, " ?!");                 break;
         }
 #endif

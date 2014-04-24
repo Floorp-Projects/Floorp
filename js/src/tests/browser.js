@@ -108,7 +108,7 @@ function writeFormattedResult( expect, actual, string, passed ) {
   var s = "<tt>"+ string ;
   s += "<b>" ;
   s += ( passed ) ? "<font color=#009900> &nbsp;" + PASSED
-    : "<font color=#aa0000>&nbsp;" +  FAILED + expect + "</tt>";
+    : "<font color=#aa0000>&nbsp;" +  FAILED + expect;
 
   DocumentWrite( s + "</font></b></tt><br>" );
   return passed;
