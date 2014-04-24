@@ -73,14 +73,13 @@ LayerTransactionChild::DeallocPLayerChild(PLayerChild* actor)
 PCompositableChild*
 LayerTransactionChild::AllocPCompositableChild(const TextureInfo& aInfo)
 {
-  return new CompositableChild();
+  return CompositableClient::CreateIPDLActor();
 }
 
 bool
 LayerTransactionChild::DeallocPCompositableChild(PCompositableChild* actor)
 {
-  delete actor;
-  return true;
+  return CompositableClient::DestroyIPDLActor(actor);
 }
 
 void

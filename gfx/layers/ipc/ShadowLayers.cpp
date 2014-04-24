@@ -648,11 +648,10 @@ ShadowLayerForwarder::Connect(CompositableClient* aCompositable)
   if (!mShadowManager->IPCOpen()) {
     return;
   }
-  CompositableChild* child = static_cast<CompositableChild*>(
-    mShadowManager->SendPCompositableConstructor(aCompositable->GetTextureInfo()));
-  MOZ_ASSERT(child);
-  aCompositable->SetIPDLActor(child);
-  child->SetClient(aCompositable);
+  PCompositableChild* actor =
+    mShadowManager->SendPCompositableConstructor(aCompositable->GetTextureInfo());
+  MOZ_ASSERT(actor);
+  aCompositable->InitIPDLActor(actor);
 }
 
 void
