@@ -706,19 +706,24 @@ static bool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType t
     return changed;
 }
 
-static void pref_SetValue(PrefValue* oldValue, PrefValue newValue, PrefType type)
+/*
+ * Overwrite the type and value of an existing preference. Caller must
+ * ensure that they are not changing the type of a preference that has
+ * a default value.
+ */
+static void pref_SetValue(PrefValue* existingValue, uint16_t *existingFlags,
+                          PrefValue newValue, PrefType newType)
 {
-    switch (type & PREF_VALUETYPE_MASK)
-    {
-        case PREF_STRING:
-            PR_ASSERT(newValue.stringVal);
-            if (oldValue->stringVal)
-                PL_strfree(oldValue->stringVal);
-            oldValue->stringVal = newValue.stringVal ? PL_strdup(newValue.stringVal) : nullptr;
-            break;
-
-        default:
-            *oldValue = newValue;
+    if ((*existingFlags & PREF_STRING) && existingValue->stringVal) {
+        PL_strfree(existingValue->stringVal);
+    }
+    *existingFlags = (*existingFlags & ~PREF_VALUETYPE_MASK) | newType;
+    if (newType & PREF_STRING) {
+        PR_ASSERT(newValue.stringVal);
+        existingValue->stringVal = newValue.stringVal ? PL_strdup(newValue.stringVal) : nullptr;
+    }
+    else {
+        *existingValue = newValue;
     }
     gDirty = true;
 }
@@ -752,7 +757,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
     if (!pref)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    // new entry, better intialize
+    // new entry, better initialize
     if (!pref->key) {
 
         // initialize the pref entry
@@ -761,10 +766,9 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
         memset(&pref->defaultPref, 0, sizeof(pref->defaultPref));
         memset(&pref->userPref, 0, sizeof(pref->userPref));
     }
-    else if ((((PrefType)(pref->flags)) & PREF_VALUETYPE_MASK) !=
-                 (type & PREF_VALUETYPE_MASK))
+    else if ((pref->flags & PREF_HAS_DEFAULT) && PREF_TYPE(pref) != type)
     {
-        NS_WARNING(nsPrintfCString("Trying to set pref %s to with the wrong type!", key).get());
+        NS_WARNING(nsPrintfCString("Trying to overwrite value of default pref %s with the wrong type!", key).get());
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -776,7 +780,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
             if (pref_ValueChanged(pref->defaultPref, value, type) ||
                 !(pref->flags & PREF_HAS_DEFAULT))
             {
-                pref_SetValue(&pref->defaultPref, value, type);
+                pref_SetValue(&pref->defaultPref, &pref->flags, value, type);
                 pref->flags |= PREF_HAS_DEFAULT;
                 if (!PREF_HAS_USER_VALUE(pref))
                     valueChanged = true;
@@ -787,21 +791,23 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
     {
         /* If new value is same as the default value, then un-set the user value.
            Otherwise, set the user value only if it has changed */
-        if (!pref_ValueChanged(pref->defaultPref, value, type) &&
-            (pref->flags & PREF_HAS_DEFAULT) &&
+        if ((pref->flags & PREF_HAS_DEFAULT) &&
+            !pref_ValueChanged(pref->defaultPref, value, type) &&
             !(flags & kPrefForceSet))
         {
             if (PREF_HAS_USER_VALUE(pref))
             {
+                /* XXX should we free a user-set string value if there is one? */
                 pref->flags &= ~PREF_USERSET;
                 if (!PREF_IS_LOCKED(pref))
                     valueChanged = true;
             }
         }
-        else if ( !PREF_HAS_USER_VALUE(pref) ||
-                   pref_ValueChanged(pref->userPref, value, type) )
+        else if (!PREF_HAS_USER_VALUE(pref) ||
+                 PREF_TYPE(pref) != type ||
+                 pref_ValueChanged(pref->userPref, value, type) )
         {
-            pref_SetValue(&pref->userPref, value, type);
+            pref_SetValue(&pref->userPref, &pref->flags, value, type);
             pref->flags |= PREF_USERSET;
             if (!PREF_IS_LOCKED(pref))
                 valueChanged = true;

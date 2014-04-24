@@ -31,6 +31,15 @@
   "permissions": {
     "private-browsing": true
   },
+  "preferences": [{
+    "type": "directory",
+    "name": "gaiaProfile",
+    "title": "Select a custom Gaia profile directory"
+  }, {
+    "type": "file",
+    "name": "customRuntime",
+    "title": "Select a custom runtime executable"
+  }],
   "license": "MPL 2.0",
   "unpack": true,
   "dependencies": ["subprocess"]
