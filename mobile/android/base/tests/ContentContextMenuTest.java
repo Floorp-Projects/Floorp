@@ -1,13 +1,10 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.Actions;
-import org.mozilla.gecko.Element;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.Clipboard;
 
 import android.util.DisplayMetrics;
 
-import com.jayway.android.robotium.solo.Condition;
 
 /**
  * This class covers interactions with the context menu opened from web content
@@ -68,22 +65,6 @@ abstract class ContentContextMenuTest extends PixelTest {
         mSolo.clickOnText(tab);
     }
 
-    protected void verifyViewImageOption(final String viewImageOption, final String imageUrl) {
-        if (!mSolo.searchText(viewImageOption)) {
-            openWebContentContextMenu(viewImageOption);
-        }
-        mSolo.clickOnText(viewImageOption);
-        boolean viewedImage = waitForCondition(new Condition() {
-            @Override
-            public boolean isSatisfied() {
-                final Element urlBarElement = mDriver.findElement(getActivity(), R.id.url_edit_text);
-                final String loadedUrl = urlBarElement.getText();
-                return loadedUrl.contentEquals(imageUrl);
-            }
-        }, MAX_TEST_TIMEOUT);
-        mAsserter.ok(viewedImage, "Checking if the image is correctly viewed", "The image was correctly viewed");
-        mSolo.goBack();
-    }
 
     protected void verifyCopyOption(String copyOption, final String copiedText) {
         if (!mSolo.searchText(copyOption)) {

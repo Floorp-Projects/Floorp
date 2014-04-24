@@ -652,15 +652,6 @@ var BrowserApp = {
         aTarget.muted = false;
       });
 
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.viewImage"),
-      NativeWindow.contextmenus.imageLocationCopyableContext,
-      function(aTarget) {
-        let url = aTarget.src;
-        ContentAreaUtils.urlSecurityCheck(url, aTarget.ownerDocument.nodePrincipal,
-                                          Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-        BrowserApp.loadURI(url);
-      });
-
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyImageLocation"),
       NativeWindow.contextmenus.imageLocationCopyableContext,
       function(aTarget) {

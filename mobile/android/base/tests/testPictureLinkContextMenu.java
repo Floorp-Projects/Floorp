@@ -6,10 +6,9 @@ public class testPictureLinkContextMenu extends ContentContextMenuTest {
     // Test website strings
     private static String PICTURE_PAGE_URL;
     private static String BLANK_PAGE_URL;
-    private static String PICTURE_URL;
     private static final String PICTURE_PAGE_TITLE = "Picture Link";
     private static final String tabs [] = { "Image", "Link" };
-    private static final String photoMenuItems [] = { "Copy Image Location", "Share Image", "View Image", "Set Image As", "Save Image" };
+    private static final String photoMenuItems [] = { "Copy Image Location", "Share Image", "Set Image As", "Save Image" };
     private static final String linkMenuItems [] = { "Open Link in New Tab", "Open Link in Private Tab", "Copy Link", "Share Link", "Bookmark Link"};
     private static final String imageTitle = "^Image$";
 
@@ -18,7 +17,6 @@ public class testPictureLinkContextMenu extends ContentContextMenuTest {
 
         PICTURE_PAGE_URL=getAbsoluteUrl("/robocop/robocop_picture_link.html");
         BLANK_PAGE_URL=getAbsoluteUrl("/robocop/robocop_blank_02.html");
-        PICTURE_URL=getAbsoluteUrl("/robocop/Firefox.jpg");
         loadAndPaint(PICTURE_PAGE_URL);
         verifyPageTitle(PICTURE_PAGE_TITLE);
 
@@ -29,7 +27,6 @@ public class testPictureLinkContextMenu extends ContentContextMenuTest {
         verifyCopyOption(photoMenuItems[0], "Firefox.jpg"); // Test the "Copy Image Location" option
         switchTabs(imageTitle);
         verifyShareOption(photoMenuItems[1], PICTURE_PAGE_TITLE); // Test the "Share Image" option
-        verifyViewImageOption(photoMenuItems[2], PICTURE_URL); // Test the "View Image" option
 
         verifyContextMenuItems(linkMenuItems);
         openTabFromContextMenu(linkMenuItems[0],2); // Test the "Open in New Tab" option - expecting 2 tabs: the original and the new one
