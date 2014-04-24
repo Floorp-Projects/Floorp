@@ -177,15 +177,9 @@ int r_int2timeval(UINT8 t,struct timeval *tv)
 
 UINT8 r_gettimeint()
   {
-
-#ifdef WIN32
-    struct timeval tv = {0,0};
-
-#else
     struct timeval tv;
 
     gettimeofday(&tv,0);
-#endif
 
     return r_timeval2int(&tv);
   }
