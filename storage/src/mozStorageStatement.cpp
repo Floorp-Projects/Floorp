@@ -139,10 +139,12 @@ Statement::initialize(Connection *aDBConnection,
                       const nsACString &aSQLStatement)
 {
   MOZ_ASSERT(aDBConnection, "No database connection given!");
+  MOZ_ASSERT(!aDBConnection->isClosed(), "Database connection should be valid");
   MOZ_ASSERT(!mDBStatement, "Statement already initialized!");
   MOZ_ASSERT(aNativeConnection, "No native connection given!");
 
-  int srv = aDBConnection->prepareStatement(PromiseFlatCString(aSQLStatement),
+  int srv = aDBConnection->prepareStatement(aNativeConnection,
+                                            PromiseFlatCString(aSQLStatement),
                                             &mDBStatement);
   if (srv != SQLITE_OK) {
       PR_LOG(gStorageLog, PR_LOG_ERROR,
@@ -284,7 +286,8 @@ Statement::getAsyncStatement(sqlite3_stmt **_stmt)
   // If we do not yet have a cached async statement, clone our statement now.
   if (!mAsyncStatement) {
     nsDependentCString sql(::sqlite3_sql(mDBStatement));
-    int rc = mDBConnection->prepareStatement(sql, &mAsyncStatement);
+    int rc = mDBConnection->prepareStatement(mNativeConnection, sql,
+                                             &mAsyncStatement);
     if (rc != SQLITE_OK) {
       *_stmt = nullptr;
       return rc;
@@ -356,7 +359,7 @@ Statement::internalFinalize(bool aDestructing)
 
   int srv = SQLITE_OK;
 
-  if (!mDBConnection->isClosing(true)) {
+  if (!mDBConnection->isClosed()) {
     //
     // The connection is still open. While statement finalization and
     // closing may, in some cases, take place in two distinct threads,
@@ -632,7 +635,7 @@ Statement::ExecuteStep(bool *_moreResults)
     // We have bound, so now we can clear our array.
     mParamsArray = nullptr;
   }
-  int srv = mDBConnection->stepStatement(mDBStatement);
+  int srv = mDBConnection->stepStatement(mNativeConnection, mDBStatement);
 
 #ifdef PR_LOGGING
   if (srv != SQLITE_ROW && srv != SQLITE_DONE) {

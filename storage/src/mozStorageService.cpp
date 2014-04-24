@@ -346,7 +346,7 @@ Service::minimizeMemory()
 
   for (uint32_t i = 0; i < connections.Length(); i++) {
     nsRefPtr<Connection> conn = connections[i];
-    if (conn->ConnectionReady()) {
+    if (conn->connectionReady()) {
       NS_NAMED_LITERAL_CSTRING(shrinkPragma, "PRAGMA shrink_memory");
       nsCOMPtr<mozIStorageConnection> syncConn = do_QueryInterface(
         NS_ISUPPORTS_CAST(mozIStorageAsyncConnection*, conn));
@@ -914,9 +914,6 @@ Service::Observe(nsISupports *, const char *aTopic, const char16_t *)
       anyOpen = false;
       for (uint32_t i = 0; i < connections.Length(); i++) {
         nsRefPtr<Connection> &conn = connections[i];
-
-        // While it would be nice to close all connections, we only
-        // check async ones for now.
         if (conn->isClosing()) {
           anyOpen = true;
           break;
@@ -932,7 +929,7 @@ Service::Observe(nsISupports *, const char *aTopic, const char16_t *)
       nsTArray<nsRefPtr<Connection> > connections;
       getConnections(connections);
       for (uint32_t i = 0, n = connections.Length(); i < n; i++) {
-        if (connections[i]->ConnectionReady()) {
+        if (!connections[i]->isClosed()) {
           MOZ_CRASH();
         }
       }
