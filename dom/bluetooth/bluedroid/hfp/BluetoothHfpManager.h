@@ -149,6 +149,7 @@ private:
   uint32_t FindFirstCall(uint16_t aState);
   uint32_t GetNumberOfCalls(uint16_t aState);
   uint16_t GetCallSetupState();
+  bool IsTransitionState(uint16_t aCallState, bool aIsConference);
   bthf_call_state_t ConvertToBthfCallState(int aCallState);
 
   void UpdatePhoneCIND(uint32_t aCallIndex);
