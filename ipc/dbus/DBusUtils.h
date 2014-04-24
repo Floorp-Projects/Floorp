@@ -58,12 +58,10 @@ private:
  * should be passed to the DBus send function, with the class instance as
  * user-data argument.
  */
-class DBusReplyHandler : public mozilla::RefCounted<DBusReplyHandler>
+class DBusReplyHandler
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(DBusReplyHandler)
-  virtual ~DBusReplyHandler() {
-  }
+  NS_INLINE_DECL_REFCOUNTING(DBusReplyHandler)
 
   /**
    * Implements a call-back function for DBus. The supplied value for
@@ -88,6 +86,10 @@ protected:
   DBusReplyHandler& operator = (const DBusReplyHandler& aRhs)
   {
     return *this;
+  }
+
+  virtual ~DBusReplyHandler()
+  {
   }
 };
 

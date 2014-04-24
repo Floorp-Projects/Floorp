@@ -36,10 +36,8 @@
 #include "nsAccessibilityService.h"
 #endif
 
-#ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #include "nsBidiPresUtils.h"
-#endif // IBMBIDI
 
 using namespace mozilla;
 
@@ -508,7 +506,6 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
 
     aRenderingContext.SetColor(aOverrideColor ? *aOverrideColor : StyleColor()->mColor);
 
-#ifdef IBMBIDI
     nsresult rv = NS_ERROR_FAILURE;
 
     if (mState & NS_FRAME_IS_BIDI) {
@@ -536,9 +533,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
                                            aTextRect.x, baseline);
       }
     }
-    if (NS_FAILED(rv) )
-#endif // IBMBIDI
-    {
+    if (NS_FAILED(rv)) {
        aRenderingContext.SetTextRunRTL(false);
 
        if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
@@ -619,11 +614,9 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
 
     if (titleWidth <= aWidth) {
         mCroppedTitle = mTitle;
-#ifdef IBMBIDI
         if (HasRTLChars(mTitle)) {
             mState |= NS_FRAME_IS_BIDI;
         }
-#endif // IBMBIDI
         return titleWidth;  // fits, done.
     }
 
@@ -667,11 +660,9 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
                     break;
 
                 twidth += cwidth;
-#ifdef IBMBIDI
                 if (UCS2_CHAR_IS_BIDI(ch) ) {
                   mState |= NS_FRAME_IS_BIDI;
                 }
-#endif // IBMBIDI
             }
 
             if (i == 0)
@@ -697,11 +688,9 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
                     break;
 
                 twidth += cwidth;
-#ifdef IBMBIDI
                 if (UCS2_CHAR_IS_BIDI(ch) ) {
                   mState |= NS_FRAME_IS_BIDI;
                 }
-#endif // IBMBIDI
             }
 
             if (i == length-1)
@@ -743,10 +732,8 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
                     break;
                 leftString.Insert(ch, leftString.Length());
 
-#ifdef IBMBIDI
                 if (UCS2_CHAR_IS_BIDI(ch))
                     mState |= NS_FRAME_IS_BIDI;
-#endif
 
                 // look at the next character on the right end
                 if (rightPos > leftPos) {
@@ -759,10 +746,8 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
                         break;
                     rightString.Insert(ch, 0);
 
-#ifdef IBMBIDI
                     if (UCS2_CHAR_IS_BIDI(ch))
                         mState |= NS_FRAME_IS_BIDI;
-#endif
                 }
 
                 // look at the next two characters

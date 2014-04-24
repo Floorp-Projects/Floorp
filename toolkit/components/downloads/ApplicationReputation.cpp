@@ -29,6 +29,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/LoadContext.h"
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -765,6 +766,13 @@ PendingLookup::SendRemoteQueryInternal()
   rv = uploadChannel->ExplicitSetUploadStream(sstream,
     NS_LITERAL_CSTRING("application/octet-stream"), serialized.size(),
     NS_LITERAL_CSTRING("POST"), false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set the Safebrowsing cookie jar, so that the regular Google cookie is not
+  // sent with this request. See bug 897516.
+  nsCOMPtr<nsIInterfaceRequestor> loadContext =
+    new mozilla::LoadContext(NECKO_SAFEBROWSING_APP_ID);
+  rv = channel->SetNotificationCallbacks(loadContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = channel->AsyncOpen(this, nullptr);
