@@ -2031,6 +2031,9 @@ gfxFont::~gfxFont()
 gfxFloat
 gfxFont::GetGlyphHAdvance(gfxContext *aCtx, uint16_t aGID)
 {
+    if (!SetupCairoFont(aCtx)) {
+        return 0;
+    }
     if (ProvidesGlyphWidths()) {
         return GetGlyphWidth(aCtx, aGID) / 65536.0;
     }
@@ -2044,7 +2047,7 @@ gfxFont::GetGlyphHAdvance(gfxContext *aCtx, uint16_t aGID)
     }
     gfxHarfBuzzShaper* shaper =
         static_cast<gfxHarfBuzzShaper*>(mHarfBuzzShaper.get());
-    if (!shaper->Initialize() || !SetupCairoFont(aCtx)) {
+    if (!shaper->Initialize()) {
         return 0;
     }
     return shaper->GetGlyphHAdvance(aCtx, aGID) / 65536.0;

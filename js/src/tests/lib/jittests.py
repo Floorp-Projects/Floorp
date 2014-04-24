@@ -374,6 +374,12 @@ def check_output(out, err, rc, timed_out, test):
             return False
 
     if rc != test.expect_status:
+        # Tests which expect a timeout check for exit code 6.
+        # Sometimes 0 is returned on Windows for unknown reasons.
+        # See bug 899697.
+        if sys.platform in ['win32', 'cygwin'] and rc == 0:
+            return True
+
         # Allow a non-zero exit code if we want to allow OOM, but only if we
         # actually got OOM.
         return test.allow_oom and 'out of memory' in err and 'Assertion failure' not in err
