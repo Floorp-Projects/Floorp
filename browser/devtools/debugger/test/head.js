@@ -12,9 +12,6 @@ let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 let gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
-// Disable notifications (to avoid "unknown window" errors)
-Services.prefs.setBoolPref("devtools.debugger.show-server-notifications", false);
-
 let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
@@ -42,7 +39,6 @@ waitForExplicitFinish();
 registerCleanupFunction(function() {
   info("finish() was called, cleaning up...");
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
-  Services.prefs.clearUserPref("devtools.debugger.show-server-notifications");
 
   // Properly shut down the server to avoid memory leaks.
   DebuggerServer.destroy();

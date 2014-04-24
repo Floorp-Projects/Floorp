@@ -16,6 +16,8 @@ const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 // Always log packets when running tests. runxpcshelltests.py will throw
 // the output away anyway, unless you give it the --verbose flag.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
+// Enable remote debugging for the relevant tests.
+Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
 function tryImport(url) {
   try {

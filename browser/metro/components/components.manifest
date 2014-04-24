@@ -81,6 +81,3 @@ contract @mozilla.org/safebrowsing/application;1 {aadaed90-6c03-42d0-924a-fc6119
 category app-startup SafeBrowsing service,@mozilla.org/safebrowsing/application;1
 #endif
 
-# DebuggerServerController.js
-component {0849238d-6fb7-4bc4-87b7-4019bb53e01b} DebuggerServerController.js
-contract @mozilla.org/devtools/DebuggerServerController;1 {0849238d-6fb7-4bc4-87b7-4019bb53e01b}

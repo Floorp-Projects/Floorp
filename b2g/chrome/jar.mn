@@ -25,9 +25,6 @@ chrome.jar:
   content/screen.js                     (content/screen.js)
   content/runapp.js                     (content/runapp.js)
 #endif
-#ifdef MOZ_WIDGET_GONK
-  content/adbController.js              (content/adbController.js)
-#endif
 * content/content.css                   (content/content.css)
   content/touchcontrols.css             (content/touchcontrols.css)
 

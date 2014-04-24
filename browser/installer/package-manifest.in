@@ -366,6 +366,8 @@
 @BINPATH@/browser/components/DownloadsStartup.js
 @BINPATH@/browser/components/DownloadsUI.js
 @BINPATH@/browser/components/BrowserPlaces.manifest
+@BINPATH@/browser/components/devtools-clhandler.manifest
+@BINPATH@/browser/components/devtools-clhandler.js
 @BINPATH@/browser/components/Experiments.manifest
 @BINPATH@/browser/components/ExperimentsService.js
 @BINPATH@/components/Downloads.manifest
@@ -573,19 +575,10 @@
 @BINPATH@/components/MozKeyboard.js
 @BINPATH@/components/InputMethod.manifest
 
-
 #ifdef MOZ_DEBUG
 @BINPATH@/components/TestInterfaceJS.js
 @BINPATH@/components/TestInterfaceJS.manifest
 #endif
-
-; DevTools browser
-@BINPATH@/browser/components/DevToolsComponents.manifest
-@BINPATH@/browser/components/DebuggerServerController.js
-@BINPATH@/browser/components/CommandLineHandler.js
-; DevTools toolkit
-@BINPATH@/components/DevToolsComponents.manifest
-@BINPATH@/components/DevToolsAppStartup.js
 
 ; Modules
 @BINPATH@/browser/modules/*
