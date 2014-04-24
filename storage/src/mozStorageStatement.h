@@ -47,10 +47,13 @@ public:
    *
    * @param aDBConnection
    *        The Connection object this statement is associated with.
+   * @param aNativeConnection
+   *        The native Sqlite connection this statement is associated with.
    * @param aSQLStatement
    *        The SQL statement to prepare that this object will represent.
    */
   nsresult initialize(Connection *aDBConnection,
+                      sqlite3* aNativeConnection,
                       const nsACString &aSQLStatement);
 
 

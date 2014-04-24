@@ -1179,7 +1179,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 } else {
                     /* The unaliased value has been lost to the debugger. */
                     if (action == GET)
-                        vp.set(UndefinedValue());
+                        vp.set(MagicValue(JS_OPTIMIZED_OUT));
                 }
             } else {
                 JS_ASSERT(bi->kind() == Binding::ARGUMENT);
@@ -1208,7 +1208,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 } else {
                     /* The unaliased value has been lost to the debugger. */
                     if (action == GET)
-                        vp.set(UndefinedValue());
+                        vp.set(MagicValue(JS_OPTIMIZED_OUT));
                 }
 
                 if (action == SET)
@@ -2017,11 +2017,7 @@ DebugScopes::updateLiveScopes(JSContext *cx)
      * the flag for us, at exactly the time when execution resumes fp->prev().
      */
     for (AllFramesIter i(cx); !i.done(); ++i) {
-        /*
-         * Debug-mode currently disables Ion compilation in the compartment of
-         * the debuggee.
-         */
-        if (i.isIon())
+        if (!i.hasUsableAbstractFramePtr())
             continue;
 
         AbstractFramePtr frame = i.abstractFramePtr();

@@ -206,8 +206,8 @@ class ReftestRunner(MozbuildObject):
         return reftest.run_remote_reftests(parser, options, args)
 
     def run_desktop_test(self, test_file=None, filter=None, suite=None,
-            debugger=None, parallel=False, e10s=False, this_chunk=None,
-            total_chunks=None):
+            debugger=None, parallel=False, shuffle=False,
+            e10s=False, this_chunk=None, total_chunks=None):
         """Runs a reftest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -224,6 +224,8 @@ class ReftestRunner(MozbuildObject):
         debugger to run.
 
         parallel indicates whether tests should be run in parallel or not.
+
+        shuffle indicates whether to run tests in random order.
         """
 
         if suite not in ('reftest', 'reftest-ipc', 'crashtest', 'crashtest-ipc'):
@@ -248,6 +250,9 @@ class ReftestRunner(MozbuildObject):
 
         if parallel:
             extra_args.append('--run-tests-in-parallel')
+
+        if shuffle:
+            extra_args.append('--shuffle')
 
         if e10s:
             extra_args.append('--e10s')
@@ -288,6 +293,10 @@ def ReftestCommand(func):
     parallel = CommandArgument('--parallel', action='store_true',
         help='Run tests in parallel.')
     func = parallel(func)
+
+    shuffle = CommandArgument('--shuffle', action='store_true',
+        help='Run tests in random order.')
+    func = shuffle(func)
 
     e10s = CommandArgument('--e10s', action='store_true',
         help='Use content processes.')

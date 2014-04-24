@@ -18,6 +18,10 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
 
+#ifdef MOZ_TASK_TRACER
+#include "TracedTaskCommon.h"
+#endif
+
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo *GetTimerLog();
 #define DEBUG_TIMERS 1
@@ -61,6 +65,13 @@ public:
   NS_DECL_NSITIMER
 
   int32_t GetGeneration() { return mGeneration; }
+
+#ifdef MOZ_TASK_TRACER
+  void DispatchTracedTask()
+  {
+    mTracedTask = mozilla::tasktracer::CreateFakeTracedTask(*(int**)(this));
+  }
+#endif
 
 private:
   ~nsTimerImpl();
@@ -128,6 +139,10 @@ private:
 
   uint32_t              mDelay;
   TimeStamp             mTimeout;
+
+#ifdef MOZ_TASK_TRACER
+  nsAutoPtr<mozilla::tasktracer::FakeTracedTask> mTracedTask;
+#endif
 
 #ifdef DEBUG_TIMERS
   TimeStamp             mStart, mStart2;

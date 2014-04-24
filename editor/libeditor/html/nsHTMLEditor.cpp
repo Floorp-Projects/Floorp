@@ -225,10 +225,12 @@ NS_IMETHODIMP
 nsHTMLEditor::Init(nsIDOMDocument *aDoc,
                    nsIContent *aRoot,
                    nsISelectionController *aSelCon,
-                   uint32_t aFlags)
+                   uint32_t aFlags,
+                   const nsAString& aInitialValue)
 {
   NS_PRECONDITION(aDoc && !aSelCon, "bad arg");
   NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(aInitialValue.IsEmpty(), "Non-empty initial values not supported");
 
   nsresult result = NS_OK, rulesRes = NS_OK;
    
@@ -238,7 +240,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     nsAutoEditInitRulesTrigger rulesTrigger(static_cast<nsPlaintextEditor*>(this), rulesRes);
 
     // Init the plaintext editor
-    result = nsPlaintextEditor::Init(aDoc, aRoot, nullptr, aFlags);
+    result = nsPlaintextEditor::Init(aDoc, aRoot, nullptr, aFlags, aInitialValue);
     if (NS_FAILED(result)) { return result; }
 
     // Init mutation observer
@@ -3227,12 +3229,22 @@ nsHTMLEditor::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
                               nsIContent* aFirstNewContent,
                               int32_t aIndexInContainer)
 {
-  ContentInserted(aDocument, aContainer, aFirstNewContent, aIndexInContainer);
+  DoContentInserted(aDocument, aContainer, aFirstNewContent, aIndexInContainer,
+                    eAppended);
 }
 
 void
 nsHTMLEditor::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
                               nsIContent* aChild, int32_t aIndexInContainer)
+{
+  DoContentInserted(aDocument, aContainer, aChild, aIndexInContainer,
+                    eInserted);
+}
+
+void
+nsHTMLEditor::DoContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
+                                nsIContent* aChild, int32_t aIndexInContainer,
+                                InsertedOrAppended aInsertedOrAppended)
 {
   if (!aChild) {
     return;
@@ -3257,8 +3269,17 @@ nsHTMLEditor::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
     // Update spellcheck for only the newly-inserted node (bug 743819)
     if (mInlineSpellChecker) {
       nsRefPtr<nsRange> range = new nsRange(aChild);
+      int32_t endIndex = aIndexInContainer + 1;
+      if (aInsertedOrAppended == eAppended) {
+        // Count all the appended nodes
+        nsIContent* sibling = aChild->GetNextSibling();
+        while (sibling) {
+          endIndex++;
+          sibling = sibling->GetNextSibling();
+        }
+      }
       nsresult res = range->Set(aContainer, aIndexInContainer,
-                                aContainer, aIndexInContainer + 1);
+                                aContainer, endIndex);
       if (NS_SUCCEEDED(res)) {
         mInlineSpellChecker->SpellCheckRange(range);
       }

@@ -1,0 +1,42 @@
+// Tests that we can reflect optimized out values.
+//
+// Unfortunately these tests are brittle. They depend on opaque JIT heuristics
+// kicking in.
+
+load(libdir + "jitopts.js");
+
+if (!jitTogglesMatch(Opts_Ion2NoParallelCompilation))
+  quit(0);
+
+withJitOptions(Opts_Ion2NoParallelCompilation, function () {
+  var g = newGlobal();
+  var dbg = new Debugger;
+
+  // Note that this *depends* on CCW scripted functions being opaque to Ion
+  // optimization and not deoptimizing the frames below the call to toggle.
+  g.toggle = function toggle(d) {
+    if (d) {
+      dbg.addDebuggee(g);
+      var frame = dbg.getNewestFrame();
+      assertEq(frame.implementation, "ion");
+      // x is unused and should be elided.
+      assertEq(frame.environment.getVariable("x").optimizedOut, true);
+      assertEq(frame.arguments[1].optimizedOut, true);
+    }
+  };
+
+  g.eval("" + function f(d, x) { g(d, x); });
+
+  g.eval("" + function g(d, x) {
+    for (var i = 0; i < 200; i++);
+    // Hack to prevent inlining.
+    function inner() { i = 42; };
+    toggle(d);
+  });
+
+  g.eval("(" + function test() {
+    for (i = 0; i < 5; i++)
+      f(false, 42);
+    f(true, 42);
+  } + ")();");
+});

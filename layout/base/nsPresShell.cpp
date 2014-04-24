@@ -175,6 +175,11 @@
 #include "nsIDocShellTreeOwner.h"
 #endif
 
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracer.h"
+using namespace mozilla::tasktracer;
+#endif
+
 #define ANCHOR_SCROLL_FLAGS \
   (nsIPresShell::SCROLL_OVERFLOW_HIDDEN | nsIPresShell::SCROLL_NO_PARENT_FRAMES)
 
@@ -6496,6 +6501,20 @@ PresShell::HandleEvent(nsIFrame* aFrame,
                        bool aDontRetargetEvents,
                        nsEventStatus* aEventStatus)
 {
+#ifdef MOZ_TASK_TRACER
+  // Make touch events, mouse events and hardware key events to be the source
+  // events of TaskTracer, and originate the rest correlation tasks from here.
+  SourceEventType type = SourceEventType::UNKNOWN;
+  if (WidgetTouchEvent* inputEvent = aEvent->AsTouchEvent()) {
+    type = SourceEventType::TOUCH;
+  } else if (WidgetMouseEvent* inputEvent = aEvent->AsMouseEvent()) {
+    type = SourceEventType::MOUSE;
+  } else if (WidgetKeyboardEvent* inputEvent = aEvent->AsKeyboardEvent()) {
+    type = SourceEventType::KEY;
+  }
+  AutoSourceEvent taskTracerEvent(type);
+#endif
+
   if (sPointerEventEnabled) {
     DispatchPointerFromMouseOrTouch(this, aFrame, aEvent, aDontRetargetEvents, aEventStatus);
   }
