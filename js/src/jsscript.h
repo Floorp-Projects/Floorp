@@ -50,10 +50,6 @@ class Shape;
 class WatchpointMap;
 class NestedScopeObject;
 
-namespace analyze {
-    class ScriptAnalysis;
-}
-
 namespace frontend {
     class BytecodeEmitter;
 }
@@ -1134,7 +1130,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     /*
      * As an optimization, even when argsHasLocalBinding, the function prologue
      * may not need to create an arguments object. This is determined by
-     * needsArgsObj which is set by ScriptAnalysis::analyzeSSA before running
+     * needsArgsObj which is set by AnalyzeArgumentsUsage before running
      * the script the first time. When !needsArgsObj, the prologue may simply
      * write MagicValue(JS_OPTIMIZED_ARGUMENTS) to 'arguments's slot and any
      * uses of 'arguments' will be guaranteed to handle this magic value.
@@ -1142,6 +1138,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
      * that needsArgsObj is only called after the script has been analyzed.
      */
     bool analyzedArgsUsage() const { return !needsArgsAnalysis_; }
+    inline bool ensureHasAnalyzedArgsUsage(JSContext *cx);
     bool needsArgsObj() const {
         JS_ASSERT(analyzedArgsUsage());
         return needsArgsObj_;
@@ -1317,19 +1314,6 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     /* Ensure the script has a TypeScript. */
     inline bool ensureHasTypes(JSContext *cx);
 
-    /*
-     * Ensure the script has bytecode analysis information. Performed when the
-     * script first runs, or first runs after a TypeScript GC purge.
-     */
-    inline bool ensureRanAnalysis(JSContext *cx);
-
-    /* Ensure the script has type inference analysis information. */
-    inline bool ensureRanInference(JSContext *cx);
-
-    inline bool hasAnalysis();
-    inline void clearAnalysis();
-    inline js::analyze::ScriptAnalysis *analysis();
-
     inline js::GlobalObject &global() const;
     js::GlobalObject &uninlinedGlobal() const;
 
@@ -1342,7 +1326,6 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
 
   private:
     bool makeTypes(JSContext *cx);
-    bool makeAnalysis(JSContext *cx);
 
   public:
     uint32_t getUseCount() const {

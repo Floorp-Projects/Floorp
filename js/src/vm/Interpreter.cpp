@@ -33,6 +33,7 @@
 #include "builtin/Eval.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
+#include "jit/IonAnalysis.h"
 #include "js/OldDebugAPI.h"
 #include "vm/Debugger.h"
 #include "vm/Opcodes.h"
@@ -2865,7 +2866,7 @@ CASE(JSOP_TABLESWITCH)
 
 CASE(JSOP_ARGUMENTS)
     JS_ASSERT(!REGS.fp()->fun()->hasRest());
-    if (!script->analyzedArgsUsage() && !script->ensureRanAnalysis(cx))
+    if (!script->ensureHasAnalyzedArgsUsage(cx))
         goto error;
     if (script->needsArgsObj()) {
         ArgumentsObject *obj = ArgumentsObject::createExpected(cx, REGS.fp());

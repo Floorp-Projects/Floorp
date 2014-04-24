@@ -150,7 +150,13 @@ enum ExecutionMode {
      * MIR analysis performed when invoking 'new' on a script, to determine
      * definite properties. Used by the optimizing JIT.
      */
-    DefinitePropertiesAnalysis
+    DefinitePropertiesAnalysis,
+
+    /*
+     * MIR analysis performed when executing a script which uses its arguments,
+     * when it is not known whether a lazy arguments value can be used.
+     */
+    ArgumentsUsageAnalysis
 };
 
 /*
@@ -184,10 +190,6 @@ namespace jit {
     struct IonScript;
     class IonAllocPolicy;
     class TempAllocator;
-}
-
-namespace analyze {
-    class ScriptAnalysis;
 }
 
 namespace types {
@@ -1242,9 +1244,6 @@ class TypeScript
 {
     friend class ::JSScript;
 
-    /* Analysis information for the script, cleared on each GC. */
-    analyze::ScriptAnalysis *analysis;
-
   public:
     /* Array of type type sets for variables and JOF_TYPESET ops. */
     StackTypeSet *typeArray() const { return (StackTypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
@@ -1258,7 +1257,7 @@ class TypeScript
     static inline StackTypeSet *BytecodeTypes(JSScript *script, jsbytecode *pc);
 
     template <typename TYPESET>
-    static inline TYPESET *BytecodeTypes(JSScript *script, jsbytecode *pc,
+    static inline TYPESET *BytecodeTypes(JSScript *script, jsbytecode *pc, uint32_t *bytecodeMap,
                                          uint32_t *hint, TYPESET *typeArray);
 
     /* Get a type object for an allocation site in this script. */
@@ -1309,6 +1308,9 @@ class TypeScript
     void printTypes(JSContext *cx, HandleScript script) const;
 #endif
 };
+
+void
+FillBytecodeTypeMap(JSScript *script, uint32_t *bytecodeMap);
 
 class RecompileInfo;
 
