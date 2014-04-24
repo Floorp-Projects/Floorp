@@ -1113,6 +1113,33 @@ BluetoothHfpManager::ConvertToBthfCallState(int aCallState)
   return state;
 }
 
+bool
+BluetoothHfpManager::IsTransitionState(uint16_t aCallState, bool aIsConference)
+{
+  /**
+   * Regard this callstate change as during CHLD=2 transition state if
+   * - the call becomes active, and numActive > 1
+   * - the call becomes held, and numHeld > 1 or an incoming call exists
+   *
+   * TODO:
+   * 1) handle CHLD=1 transition state
+   * 2) handle conference call cases
+   */
+  if (!aIsConference) {
+    switch (aCallState) {
+      case nsITelephonyProvider::CALL_STATE_CONNECTED:
+        return (GetNumberOfCalls(aCallState) > 1);
+      case nsITelephonyProvider::CALL_STATE_HELD:
+        return (GetNumberOfCalls(aCallState) > 1 ||
+                FindFirstCall(nsITelephonyProvider::CALL_STATE_INCOMING));
+      default:
+        break;
+    }
+  }
+
+  return false;
+}
+
 void
 BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
                                             uint16_t aCallState,
@@ -1144,8 +1171,11 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
   // Update call information besides call state
   mCurrentCallArray[aCallIndex].Set(aNumber, aIsOutgoing);
 
-  // Notify bluedroid of phone state change
-  UpdatePhoneCIND(aCallIndex);
+  // Notify bluedroid of phone state change if this
+  // call state change is not during transition state
+  if (!IsTransitionState(aCallState, aIsConference)) {
+    UpdatePhoneCIND(aCallIndex);
+  }
 
   switch (aCallState) {
     case nsITelephonyProvider::CALL_STATE_DIALING:
