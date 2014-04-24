@@ -7,8 +7,6 @@
 #ifndef nsBidiPresUtils_h___
 #define nsBidiPresUtils_h___
 
-#ifdef IBMBIDI
-
 #include "nsBidi.h"
 #include "nsBidiUtils.h"
 #include "nsHashKeys.h"
@@ -511,7 +509,5 @@ private:
                            uint32_t aSrcLength,
                            char16_t* aDest);
 };
-
-#endif // IBMBIDI
 
 #endif /* nsBidiPresUtils_h___ */
