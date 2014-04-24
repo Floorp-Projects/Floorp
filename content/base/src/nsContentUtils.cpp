@@ -177,9 +177,7 @@
 #include "HTMLSplitOnSpacesTokenizer.h"
 #include "nsContentTypeParser.h"
 
-#ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
-#endif
 
 extern "C" int MOZ_XMLTranslateEntity(const char* ptr, const char* end,
                                       const char** next, char16_t* result);
@@ -210,9 +208,7 @@ nsIContentPolicy *nsContentUtils::sContentPolicyService;
 bool nsContentUtils::sTriedToGetContentPolicy = false;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
-#ifdef IBMBIDI
 nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nullptr;
-#endif
 uint32_t nsContentUtils::sScriptBlockerCount = 0;
 #ifdef DEBUG
 uint32_t nsContentUtils::sDOMNodeRemovedSuppressCount = 0;
@@ -947,7 +943,6 @@ nsContentUtils::ParseSandboxAttributeToFlags(const nsAttrValue* sandboxAttr)
 #undef IF_KEYWORD
 }
 
-#ifdef IBMBIDI
 nsIBidiKeyboard*
 nsContentUtils::GetBidiKeyboard()
 {
@@ -959,7 +954,6 @@ nsContentUtils::GetBidiKeyboard()
   }
   return sBidiKeyboard;
 }
-#endif
 
 template <class OutputIterator>
 struct NormalizeNewlinesCharTraits {
@@ -1444,9 +1438,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
-#ifdef IBMBIDI
   NS_IF_RELEASE(sBidiKeyboard);
-#endif
 
   delete sAtomEventTable;
   sAtomEventTable = nullptr;
