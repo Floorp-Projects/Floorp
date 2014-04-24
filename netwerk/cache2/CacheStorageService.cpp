@@ -1080,6 +1080,7 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
 
     // check whether the file is already doomed
     if (entryExists && entry->IsFileDoomed() && !aReplace) {
+      LOG(("  file already doomed, replacing the entry"));
       aReplace = true;
     }
 
