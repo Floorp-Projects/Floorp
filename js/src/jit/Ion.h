@@ -82,7 +82,7 @@ IonContext *MaybeGetIonContext();
 
 void SetIonContext(IonContext *ctx);
 
-bool CanIonCompileScript(JSContext *cx, HandleScript script, bool osr);
+bool CanIonCompileScript(JSContext *cx, JSScript *script, bool osr);
 
 MethodStatus CanEnterAtBranch(JSContext *cx, JSScript *script,
                               BaselineFrame *frame, jsbytecode *pc, bool isConstructing);
@@ -187,6 +187,10 @@ void DestroyIonScripts(FreeOp *fop, JSScript *script);
 void TraceIonScripts(JSTracer* trc, JSScript *script);
 
 void RequestInterruptForIonCode(JSRuntime *rt, JSRuntime::InterruptMode mode);
+
+bool RematerializeAllFrames(JSContext *cx, JSCompartment *comp);
+bool UpdateForDebugMode(JSContext *maybecx, JSCompartment *comp,
+                        AutoDebugModeInvalidation &invalidate);
 
 } // namespace jit
 } // namespace js

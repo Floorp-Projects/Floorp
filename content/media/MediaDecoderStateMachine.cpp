@@ -2466,7 +2466,10 @@ void MediaDecoderStateMachine::AdvanceFrame()
         mReader->VideoQueue().PushFront(currentFrame.forget());
       }
       StartBuffering();
-      ScheduleStateMachine();
+      // Don't go straight back to the state machine loop since that might
+      // cause us to start decoding again and we could flip-flop between
+      // decoding and quick-buffering.
+      ScheduleStateMachine(USECS_PER_S);
       return;
     }
   }

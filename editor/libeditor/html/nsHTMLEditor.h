@@ -249,7 +249,9 @@ public:
   nsresult EndUpdateViewBatch();
 
   /** prepare the editor for use */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *aSelCon, uint32_t aFlags);
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot,
+                  nsISelectionController *aSelCon, uint32_t aFlags,
+                  const nsAString& aValue);
   NS_IMETHOD PreDestroy(bool aDestroyingFrames);
 
   /** Internal, static version */
@@ -950,7 +952,10 @@ private:
                                        nsIAtom* aProperty,
                                        const nsAString* aAttribute,
                                        const nsAString* aValue);
-
+  typedef enum { eInserted, eAppended } InsertedOrAppended;
+  void DoContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
+                         nsIContent* aChild, int32_t aIndexInContainer,
+                         InsertedOrAppended aInsertedOrAppended);
 };
 #endif //nsHTMLEditor_h__
 

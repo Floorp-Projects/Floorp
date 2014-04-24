@@ -35,7 +35,7 @@ gyp_vars = {
     'arm_neon_optional': 1,
 
     'moz_widget_toolkit_gonk': 0,
-    'moz_omx_encoder': 0,
+    'moz_webrtc_omx': 0,
 
     # (for vp8) chromium sets to 0 also
     'use_temporal_layers': 0,
@@ -62,8 +62,8 @@ elif os == 'Android':
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         gyp_vars['build_with_gonk'] = 1
         gyp_vars['moz_widget_toolkit_gonk'] = 1
-        if CONFIG['MOZ_OMX_ENCODER']:
-          gyp_vars['moz_omx_encoder'] = 1
+        if int(CONFIG['ANDROID_VERSION']) >= 18:
+          gyp_vars['moz_webrtc_omx'] = 1
     else:
         gyp_vars.update(
             gtest_target_type='executable',

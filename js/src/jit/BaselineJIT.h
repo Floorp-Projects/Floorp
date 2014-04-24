@@ -119,11 +119,23 @@ struct BaselineScript
     // Native code offset right before the scope chain is initialized.
     uint32_t prologueOffset_;
 
+    // Native code offset right before the frame is popped and the method
+    // returned from.
+    uint32_t epilogueOffset_;
+
     // The offsets for the toggledJump instructions for SPS update ICs.
 #ifdef DEBUG
     mozilla::DebugOnly<bool> spsOn_;
 #endif
     uint32_t spsPushToggleOffset_;
+
+    // Native code offsets right after the debug prologue VM call returns, or
+    // would have returned. This offset is recorded even when debug mode is
+    // off to aid on-stack debug mode recompilation.
+    //
+    // We don't need one for the debug epilogue because that always happens
+    // right before the epilogue, so we just use the epilogue offset.
+    uint32_t postDebugPrologueOffset_;
 
   public:
     enum Flag {
@@ -165,9 +177,11 @@ struct BaselineScript
 
   public:
     // Do not call directly, use BaselineScript::New. This is public for cx->new_.
-    BaselineScript(uint32_t prologueOffset, uint32_t spsPushToggleOffset);
+    BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
+                   uint32_t spsPushToggleOffset, uint32_t postDebugPrologueOffset);
 
     static BaselineScript *New(JSContext *cx, uint32_t prologueOffset,
+                               uint32_t epilogueOffset, uint32_t postDebugPrologueOffset,
                                uint32_t spsPushToggleOffset, size_t icEntries,
                                size_t pcMappingIndexEntries, size_t pcMappingSize,
                                size_t bytecodeTypeMapEntries);
@@ -224,6 +238,20 @@ struct BaselineScript
         return method_->raw() + prologueOffset_;
     }
 
+    uint32_t epilogueOffset() const {
+        return epilogueOffset_;
+    }
+    uint8_t *epilogueEntryAddr() const {
+        return method_->raw() + epilogueOffset_;
+    }
+
+    uint32_t postDebugPrologueOffset() const {
+        return postDebugPrologueOffset_;
+    }
+    uint8_t *postDebugPrologueAddr() const {
+        return method_->raw() + postDebugPrologueOffset_;
+    }
+
     ICEntry *icEntryList() {
         return (ICEntry *)(reinterpret_cast<uint8_t *>(this) + icEntriesOffset_);
     }
@@ -257,10 +285,15 @@ struct BaselineScript
         method()->togglePreBarriers(enabled);
     }
 
+    bool containsCodeAddress(uint8_t *addr) const {
+        return method()->raw() <= addr && addr <= method()->raw() + method()->instructionsSize();
+    }
+
     ICEntry &icEntry(size_t index);
     ICEntry *maybeICEntryFromReturnOffset(CodeOffsetLabel returnOffset);
     ICEntry &icEntryFromReturnOffset(CodeOffsetLabel returnOffset);
     ICEntry &icEntryFromPCOffset(uint32_t pcOffset);
+    ICEntry &icEntryForDebugModeRecompileFromPCOffset(uint32_t pcOffset);
     ICEntry &icEntryFromPCOffset(uint32_t pcOffset, ICEntry *prevLookedUpEntry);
     ICEntry *maybeICEntryFromReturnAddress(uint8_t *returnAddr);
     ICEntry &icEntryFromReturnAddress(uint8_t *returnAddr);
@@ -270,7 +303,7 @@ struct BaselineScript
         return icEntries_;
     }
 
-    void copyICEntries(HandleScript script, const ICEntry *entries, MacroAssembler &masm);
+    void copyICEntries(JSScript *script, const ICEntry *entries, MacroAssembler &masm);
     void adoptFallbackStubs(FallbackICStubSpace *stubSpace);
 
     PCMappingIndexEntry &pcMappingIndexEntry(size_t index);
@@ -387,7 +420,7 @@ void
 MarkActiveBaselineScripts(Zone *zone);
 
 MethodStatus
-BaselineCompile(JSContext *cx, HandleScript script);
+BaselineCompile(JSContext *cx, JSScript *script);
 
 } // namespace jit
 } // namespace js

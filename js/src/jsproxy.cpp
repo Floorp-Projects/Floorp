@@ -322,7 +322,7 @@ BaseProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleVa
     assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
     RootedValue val(cx, ObjectValue(*proxy.get()));
     js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
-                        JSDVG_SEARCH_STACK, val, NullPtr());
+                        JSDVG_SEARCH_STACK, val, js::NullPtr());
     return false;
 }
 
@@ -3248,7 +3248,7 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
     // Stash the call and construct traps on a holder object that we can stick
     // in a slot on the proxy.
     RootedObject ccHolder(cx, JS_NewObjectWithGivenProto(cx, Jsvalify(&CallConstructHolder),
-                                                         NullPtr(), cx->global()));
+                                                         js::NullPtr(), cx->global()));
     if (!ccHolder)
         return false;
     ccHolder->setReservedSlot(0, ObjectValue(*call));

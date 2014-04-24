@@ -46,6 +46,8 @@ MIRType MIRTypeFromValue(const js::Value &vp)
         switch (vp.whyMagic()) {
           case JS_OPTIMIZED_ARGUMENTS:
             return MIRType_MagicOptimizedArguments;
+          case JS_OPTIMIZED_OUT:
+            return MIRType_MagicOptimizedOut;
           case JS_ELEMENTS_HOLE:
             return MIRType_MagicHole;
           case JS_IS_CONSTRUCTING:
@@ -1939,6 +1941,46 @@ class MCallDOMNative : public MCall
     }
 
     virtual void computeMovable() MOZ_OVERRIDE;
+};
+
+// arr.splice(start, deleteCount) with unused return value.
+class MArraySplice
+  : public MTernaryInstruction,
+    public Mix3Policy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2> >
+{
+  private:
+
+    MArraySplice(MDefinition *object, MDefinition *start, MDefinition *deleteCount)
+      : MTernaryInstruction(object, start, deleteCount)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(ArraySplice)
+    static MArraySplice *New(TempAllocator &alloc, MDefinition *object,
+                             MDefinition *start, MDefinition *deleteCount)
+    {
+        return new(alloc) MArraySplice(object, start, deleteCount);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+
+    MDefinition *start() const {
+        return getOperand(1);
+    }
+
+    MDefinition *deleteCount() const {
+        return getOperand(2);
+    }
+
+    bool possiblyCalls() const {
+        return true;
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
 };
 
 // fun.apply(self, arguments)

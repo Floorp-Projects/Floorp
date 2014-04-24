@@ -73,7 +73,9 @@ public:
                                          bool aSuppressTransaction);
 
   /** prepare the editor for use */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *aSelCon, uint32_t aFlags);
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot,
+                  nsISelectionController *aSelCon, uint32_t aFlags,
+                  const nsAString& aValue);
   
   NS_IMETHOD GetDocumentIsEmpty(bool *aDocumentIsEmpty);
   NS_IMETHOD GetIsDocumentEditable(bool *aIsDocumentEditable);
