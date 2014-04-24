@@ -16,7 +16,6 @@ EXTRA_COMPONENTS += [
     'BrowserStartup.js',
     'ContentDispatchChooser.js',
     'ContentPermissionPrompt.js',
-    'DebuggerServerController.js',
     'DirectoryProvider.js',
     'DownloadManagerUI.js',
     'HelperAppDialog.js',

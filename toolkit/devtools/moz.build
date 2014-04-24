@@ -16,10 +16,5 @@ PARALLEL_DIRS += [
     'pretty-fast'
 ]
 
-EXTRA_COMPONENTS += [
-    'DevToolsAppStartup.js',
-    'DevToolsComponents.manifest'
-]
-
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
