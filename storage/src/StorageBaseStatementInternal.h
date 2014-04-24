@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 
+struct sqlite3;
 struct sqlite3_stmt;
 class mozIStorageError;
 class mozIStorageBindingParamsArray;
@@ -97,6 +98,7 @@ protected: // mix-in bits are protected
   StorageBaseStatementInternal();
 
   nsRefPtr<Connection> mDBConnection;
+  sqlite3 *mNativeConnection;
 
   /**
    * Our asynchronous statement.
