@@ -25,7 +25,6 @@ EXTRA_COMPONENTS += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     EXTRA_COMPONENTS += [
-      'OopCommandLine.js',
       'SimulatorScreen.js'
     ]
 
