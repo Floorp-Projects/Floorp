@@ -23,6 +23,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/ProxyObject.h"
+#include "vm/SavedStacks.h"
 #include "vm/TraceLogging.h"
 
 #include "jscntxtinlines.h"
@@ -850,6 +851,25 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static bool
+GetSavedFrameCount(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setNumber(cx->compartment()->savedStacks().count());
+    return true;
+}
+
+static bool
+SaveStack(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    Rooted<SavedFrame*> frame(cx);
+    if (!cx->compartment()->savedStacks().saveCurrentStack(cx, &frame))
+        return false;
+    args.rval().setObject(*frame.get());
+    return true;
+}
+
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 static bool
 OOMAfterAllocations(JSContext *cx, unsigned argc, jsval *vp)
@@ -1570,6 +1590,15 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  to count only things of that kind. If kind is the string 'specific',\n"
 "  then you can provide an extra argument with some specific traceable\n"
 "  thing to count.\n"),
+
+    JS_FN_HELP("getSavedFrameCount", GetSavedFrameCount, 0, 0,
+"getSavedFrameCount()",
+"  Return the number of SavedFrame instances stored in this compartment's\n"
+"  SavedStacks cache."),
+
+    JS_FN_HELP("saveStack", SaveStack, 0, 0,
+"saveStack()",
+"  Capture a stack.\n"),
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     JS_FN_HELP("oomAfterAllocations", OOMAfterAllocations, 1, 0,

@@ -684,7 +684,7 @@ FrameIter::FrameIter(const FrameIter &other)
   : data_(other.data_)
 #ifdef JS_ION
   , ionInlineFrames_(other.data_.cx_,
-                     data_.jitFrames_.isScripted() ? &other.ionInlineFrames_ : nullptr)
+                     data_.jitFrames_.isIonJS() ? &other.ionInlineFrames_ : nullptr)
 #endif
 {
 }
