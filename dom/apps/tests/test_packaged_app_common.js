@@ -165,7 +165,7 @@ var PackagedTestHelper = (function PackagedTestHelper() {
       is(aApp.manifest.size, aExpectedApp.size, "Check size");
     }
     if (aApp.manifest) {
-      is(aApp.manifest.launch_path, aExpectedApp.launch_path || gSJSPath, "Check launch path");
+      is(aApp.manifest.launch_path, gSJSPath, "Check launch path");
     }
     if (aExpectedApp.manifestURL) {
       is(aApp.manifestURL, aExpectedApp.manifestURL, "Check manifestURL");
