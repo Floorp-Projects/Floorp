@@ -105,10 +105,6 @@ typedef enum nsCharType nsCharType;
    */
    bool HasRTLChars(const nsAString& aString);
 
-// --------------------------------------------------
-// IBMBIDI 
-// --------------------------------------------------
-//
 // These values are shared with Preferences dialog
 //  ------------------
 //  If Pref values are to be changed
