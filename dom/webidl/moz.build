@@ -553,6 +553,7 @@ if CONFIG['MOZ_B2G_RIL']:
         'MozIccManager.webidl',
         'MozMobileCellInfo.webidl',
         'MozMobileConnectionArray.webidl',
+        'MozMobileConnectionInfo.webidl',
         'MozMobileNetworkInfo.webidl',
         'MozVoicemail.webidl',
         'MozVoicemailEvent.webidl',

@@ -7,6 +7,7 @@
 XPIDL_SOURCES += [
     'nsIDOMMobileConnection.idl',
     'nsIMobileCellInfo.idl',
+    'nsIMobileConnectionInfo.idl',
     'nsIMobileConnectionProvider.idl',
     'nsIMobileNetworkInfo.idl',
 ]

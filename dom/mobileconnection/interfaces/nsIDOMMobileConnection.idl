@@ -479,67 +479,6 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   [implicit_jscontext] attribute jsval onclirmodechange;
 };
 
-[scriptable, uuid(49706beb-a160-40b7-b745-50f62e389a2c)]
-interface nsIDOMMozMobileConnectionInfo : nsISupports
-{
-  /**
-   * State of the connection.
-   *
-   * Possible values: 'notSearching', 'searching', 'denied', 'registered'.
-   * null if the state is unknown.
-   */
-  readonly attribute DOMString state;
-
-  /**
-   * Indicates whether the connection is ready. This may be different
-   */
-  readonly attribute bool connected;
-
-  /**
-   * Indicates whether only emergency calls are possible.
-   *
-   * This flag is only relevant to voice connections and when 'connected' is
-   * false.
-   */
-  readonly attribute bool emergencyCallsOnly;
-
-  /**
-   * Indicates whether the connection is going through a foreign operator
-   * (roaming) or not.
-   */
-  readonly attribute bool roaming;
-
-  /**
-   * Network operator
-   */
-  readonly attribute nsIDOMMozMobileNetworkInfo network;
-
-  /**
-   * Type of connection.
-   *
-   * Possible values: 'gsm', 'cdma', gprs', 'edge', 'umts', 'hsdpa', 'evdo0',
-   * 'evdoa', 'evdob', etc.
-   */
-  readonly attribute DOMString type;
-
-  /**
-   * Signal strength in dBm, or null if no service is available.
-   */
-  readonly attribute jsval signalStrength;
-
-  /**
-   * Signal strength, represented linearly as a number between 0 (weakest
-   * signal) and 100 (full signal).
-   */
-  readonly attribute jsval relSignalStrength;
-
-  /**
-   * Cell location.
-   */
-  readonly attribute nsIDOMMozMobileCellInfo cell;
-
-};
-
 [scriptable, uuid(d1b35ad8-99aa-47cc-ab49-2e72b00e39df)]
 interface nsIDOMMozMobileCFInfo : nsISupports
 {
