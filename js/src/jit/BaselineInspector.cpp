@@ -304,6 +304,9 @@ TryToSpecializeBinaryArithOp(ICStub **stubs,
 MIRType
 BaselineInspector::expectedBinaryArithSpecialization(jsbytecode *pc)
 {
+    if (!hasBaselineScript())
+        return MIRType_None;
+
     MIRType result;
     ICStub *stubs[2];
 
@@ -449,6 +452,9 @@ BaselineInspector::getTemplateObjectForNative(jsbytecode *pc, Native native)
 DeclEnvObject *
 BaselineInspector::templateDeclEnvObject()
 {
+    if (!hasBaselineScript())
+        return nullptr;
+
     JSObject *res = &templateCallObject()->as<ScopeObject>().enclosingScope();
     JS_ASSERT(res);
 
@@ -458,6 +464,9 @@ BaselineInspector::templateDeclEnvObject()
 CallObject *
 BaselineInspector::templateCallObject()
 {
+    if (!hasBaselineScript())
+        return nullptr;
+
     JSObject *res = baselineScript()->templateScope();
     JS_ASSERT(res);
 
@@ -467,6 +476,9 @@ BaselineInspector::templateCallObject()
 JSObject *
 BaselineInspector::commonGetPropFunction(jsbytecode *pc, Shape **lastProperty, JSFunction **commonGetter)
 {
+    if (!hasBaselineScript())
+        return nullptr;
+
     const ICEntry &entry = icEntryFromPC(pc);
     for (ICStub *stub = entry.firstStub(); stub; stub = stub->next()) {
         if (stub->isGetProp_CallScripted()  ||
@@ -485,6 +497,9 @@ BaselineInspector::commonGetPropFunction(jsbytecode *pc, Shape **lastProperty, J
 JSObject *
 BaselineInspector::commonSetPropFunction(jsbytecode *pc, Shape **lastProperty, JSFunction **commonSetter)
 {
+    if (!hasBaselineScript())
+        return nullptr;
+
     const ICEntry &entry = icEntryFromPC(pc);
     for (ICStub *stub = entry.firstStub(); stub; stub = stub->next()) {
         if (stub->isSetProp_CallScripted() || stub->isSetProp_CallNative()) {

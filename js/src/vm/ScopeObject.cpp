@@ -1150,7 +1150,7 @@ class DebugScopeProxy : public BaseProxyHandler
         if (scope->is<CallObject>() && !scope->as<CallObject>().isForEval()) {
             CallObject &callobj = scope->as<CallObject>();
             RootedScript script(cx, callobj.callee().nonLazyScript());
-            if (!script->ensureHasTypes(cx))
+            if (!script->ensureHasTypes(cx) || !script->ensureHasAnalyzedArgsUsage(cx))
                 return false;
 
             Bindings &bindings = script->bindings;

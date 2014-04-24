@@ -1947,11 +1947,6 @@ CheckScript(JSContext *cx, JSScript *script, bool osr)
         return false;
     }
 
-    if (!script->analyzedArgsUsage() && !script->ensureRanAnalysis(cx)) {
-        IonSpew(IonSpew_Abort, "OOM under ensureRanAnalysis");
-        return false;
-    }
-
     if (!script->compileAndGo()) {
         IonSpew(IonSpew_Abort, "not compile-and-go");
         return false;

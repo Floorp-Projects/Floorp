@@ -567,15 +567,10 @@ TypeScript::ArgTypes(JSScript *script, unsigned i)
 
 template <typename TYPESET>
 /* static */ inline TYPESET *
-TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc, uint32_t *hint, TYPESET *typeArray)
+TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc, uint32_t *bytecodeMap,
+                          uint32_t *hint, TYPESET *typeArray)
 {
     JS_ASSERT(js_CodeSpec[*pc].format & JOF_TYPESET);
-#ifdef JS_ION
-    uint32_t *bytecodeMap = script->baselineScript()->bytecodeTypeMap();
-#else
-    uint32_t *bytecodeMap = nullptr;
-    MOZ_CRASH();
-#endif
     uint32_t offset = script->pcToOffset(pc);
 
     // See if this pc is the next typeset opcode after the last one looked up.
@@ -617,11 +612,11 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc)
     JS_ASSERT(CurrentThreadCanAccessRuntime(script->runtimeFromMainThread()));
 #ifdef JS_ION
     uint32_t *hint = script->baselineScript()->bytecodeTypeMap() + script->nTypeSets();
+    return BytecodeTypes(script, pc, script->baselineScript()->bytecodeTypeMap(),
+                         hint, script->types->typeArray());
 #else
-    uint32_t *hint = nullptr;
     MOZ_CRASH();
 #endif
-    return BytecodeTypes(script, pc, hint, script->types->typeArray());
 }
 
 struct AllocationSiteKey : public DefaultHasher<AllocationSiteKey> {
@@ -1354,39 +1349,6 @@ inline bool
 JSScript::ensureHasTypes(JSContext *cx)
 {
     return types || makeTypes(cx);
-}
-
-inline bool
-JSScript::ensureRanAnalysis(JSContext *cx)
-{
-    js::types::AutoEnterAnalysis aea(cx);
-
-    if (!ensureHasTypes(cx))
-        return false;
-    if (!hasAnalysis() && !makeAnalysis(cx))
-        return false;
-    JS_ASSERT(hasAnalysis());
-    return true;
-}
-
-inline bool
-JSScript::hasAnalysis()
-{
-    return types && types->analysis;
-}
-
-inline js::analyze::ScriptAnalysis *
-JSScript::analysis()
-{
-    JS_ASSERT(hasAnalysis());
-    return types->analysis;
-}
-
-inline void
-JSScript::clearAnalysis()
-{
-    if (types)
-        types->analysis = nullptr;
 }
 
 namespace js {
