@@ -661,6 +661,7 @@ JSCompartment::clearTables()
     JS_ASSERT(!gcWeakMapList);
     JS_ASSERT(enumerators->next() == enumerators);
 
+    types.clearTables();
     if (baseShapes.initialized())
         baseShapes.clear();
     if (initialShapes.initialized())
