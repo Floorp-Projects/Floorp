@@ -747,6 +747,7 @@ TabChild::Observe(nsISupports *aSubject,
 
       if (SameCOMIdentity(subject, doc)) {
         nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
+        utils->SetIsFirstPaint(true);
 
         mContentDocumentIsDisplayed = true;
 
@@ -809,9 +810,6 @@ TabChild::OnLocationChange(nsIWebProgress* aWebProgress,
   if (!window) {
     return NS_OK;
   }
-
-  nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(window));
-  utils->SetIsFirstPaint(true);
 
   nsCOMPtr<nsIDOMDocument> progressDoc;
   window->GetDocument(getter_AddRefs(progressDoc));
