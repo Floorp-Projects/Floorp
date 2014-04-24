@@ -13,6 +13,7 @@ let { Ci, Cc, CC, Cu, Cr } = require("chrome");
 let Debugger = require("Debugger");
 let Services = require("Services");
 let { ActorPool } = require("devtools/server/actors/common");
+let { DebuggerTransport, LocalDebuggerTransport, ChildDebuggerTransport } = require("devtools/server/transport");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { dumpn, dbg_assert } = DevToolsUtils;
 let Services = require("Services");
@@ -47,6 +48,7 @@ const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
 const nsFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 Cu.import("resource://gre/modules/reflect.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 dumpn.wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 
 Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js");
@@ -82,8 +84,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
 XPCOMUtils.defineLazyGetter(this, "NetworkMonitorManager", () => {
   return require("devtools/toolkit/webconsole/network-monitor").NetworkMonitorManager;
 });
-
-loadSubScript.call(this, "resource://gre/modules/devtools/server/transport.js");
 
 // XPCOM constructors
 const ServerSocket = CC("@mozilla.org/network/server-socket;1",
