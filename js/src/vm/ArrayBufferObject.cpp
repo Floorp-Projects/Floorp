@@ -1024,7 +1024,8 @@ JS_GetStableArrayBufferData(JSContext *cx, HandleObject objArg)
 }
 
 JS_FRIEND_API(bool)
-JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj)
+JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj,
+                     NeuterDataDisposition changeData)
 {
     if (!obj->is<ArrayBufferObject>()) {
         JS_ReportError(cx, "ArrayBuffer object required");
@@ -1038,7 +1039,16 @@ JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj)
         return false;
     }
 
-    ArrayBufferObject::neuter(cx, buffer, buffer->dataPointer());
+    void *newData;
+    if (changeData == ChangeData) {
+        newData = AllocateArrayBufferContents(cx, buffer->byteLength());
+        if (!newData)
+            return false;
+    } else {
+        newData = buffer->dataPointer();
+    }
+
+    ArrayBufferObject::neuter(cx, buffer, newData);
     return true;
 }
 
