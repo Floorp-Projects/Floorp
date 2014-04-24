@@ -12,7 +12,7 @@ interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 interface nsIVariant;
 
-[scriptable, builtinclass, uuid(389ad352-4e43-4c1a-85e9-bae745554326)]
+[scriptable, builtinclass, uuid(e891c732-216b-40b2-bda5-5a9d62e08779)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -471,6 +471,12 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * changes.
    */
   [implicit_jscontext] attribute jsval onradiostatechange;
+
+  /**
+   * The 'onclirmodechange' event is notified whenever the mode of the calling
+   * line id restriction (CLIR) changes.
+   */
+  [implicit_jscontext] attribute jsval onclirmodechange;
 };
 
 [scriptable, uuid(49706beb-a160-40b7-b745-50f62e389a2c)]
