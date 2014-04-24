@@ -50,65 +50,65 @@ class RollingMeanSuite
   private:
     void testZero() {
       RollingMean<uint32_t, uint64_t> mean(3);
-      MOZ_ASSERT(mean.empty());
+      MOZ_RELEASE_ASSERT(mean.empty());
     }
 
     void testClear() {
       RollingMean<uint32_t, uint64_t> mean(3);
 
       mean.insert(4);
-      MOZ_ASSERT(mean.mean() == 4);
+      MOZ_RELEASE_ASSERT(mean.mean() == 4);
 
       mean.clear();
-      MOZ_ASSERT(mean.empty());
+      MOZ_RELEASE_ASSERT(mean.empty());
 
       mean.insert(3);
-      MOZ_ASSERT(mean.mean() == 3);
+      MOZ_RELEASE_ASSERT(mean.mean() == 3);
     }
 
     void testRolling() {
       RollingMean<uint32_t, uint64_t> mean(3);
 
       mean.insert(10);
-      MOZ_ASSERT(mean.mean() == 10);
+      MOZ_RELEASE_ASSERT(mean.mean() == 10);
 
       mean.insert(20);
-      MOZ_ASSERT(mean.mean() == 15);
+      MOZ_RELEASE_ASSERT(mean.mean() == 15);
 
       mean.insert(35);
-      MOZ_ASSERT(mean.mean() == 21);
+      MOZ_RELEASE_ASSERT(mean.mean() == 21);
 
       mean.insert(5);
-      MOZ_ASSERT(mean.mean() == 20);
+      MOZ_RELEASE_ASSERT(mean.mean() == 20);
 
       mean.insert(10);
-      MOZ_ASSERT(mean.mean() == 16);
+      MOZ_RELEASE_ASSERT(mean.mean() == 16);
     }
 
     void testClass() {
       RollingMean<MyClass, MyClass> mean(3);
 
       mean.insert(MyClass(4));
-      MOZ_ASSERT(mean.mean() == MyClass(4));
+      MOZ_RELEASE_ASSERT(mean.mean() == MyClass(4));
 
       mean.clear();
-      MOZ_ASSERT(mean.empty());
+      MOZ_RELEASE_ASSERT(mean.empty());
     }
 
     void testMove() {
       RollingMean<uint32_t, uint64_t> mean(3);
       mean = RollingMean<uint32_t, uint64_t>(4);
-      MOZ_ASSERT(mean.maxValues() == 4);
+      MOZ_RELEASE_ASSERT(mean.maxValues() == 4);
 
       mean.insert(10);
-      MOZ_ASSERT(mean.mean() == 10);
+      MOZ_RELEASE_ASSERT(mean.mean() == 10);
 
       mean = RollingMean<uint32_t, uint64_t>(3);
       mean.insert(30);
       mean.insert(40);
       mean.insert(50);
       mean.insert(60);
-      MOZ_ASSERT(mean.mean() == 50);
+      MOZ_RELEASE_ASSERT(mean.mean() == 50);
     }
 
 };
