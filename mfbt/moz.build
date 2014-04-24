@@ -36,6 +36,7 @@ EXPORTS.mozilla = [
     'IntegerTypeTraits.h',
     'Likely.h',
     'LinkedList.h',
+    'MacroArgs.h',
     'MathAlgorithms.h',
     'Maybe.h',
     'MemoryChecking.h',

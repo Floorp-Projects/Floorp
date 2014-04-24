@@ -10,6 +10,7 @@
 #define mozilla_TypedEnum_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MacroArgs.h"
 
 #if defined(__cplusplus)
 
@@ -290,33 +291,12 @@
 #  define MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(Name) typename Name::Enum
 #endif
 
-   /*
-    * Count the number of arguments passed to MOZ_COUNT_BEGIN_ENUM_CLASS_ARGS,
-    * very carefully tiptoeing around an MSVC bug where it improperly expands
-    * __VA_ARGS__ as a single token in argument lists. See these URLs for
-    * details:
-    *
-    *   http://connect.microsoft.com/VisualStudio/feedback/details/380090/variadic-macro-replacement
-    *   http://cplusplus.co.il/2010/07/17/variadic-macro-to-count-number-of-arguments/#comment-644
-    */
-#  define MOZ_COUNT_BEGIN_ENUM_CLASS_ARGS_IMPL2(_1, _2, count, ...) \
-     count
-#  define MOZ_COUNT_BEGIN_ENUM_CLASS_ARGS_IMPL(args) \
-     MOZ_COUNT_BEGIN_ENUM_CLASS_ARGS_IMPL2 args
-#  define MOZ_COUNT_BEGIN_ENUM_CLASS_ARGS(...) \
-     MOZ_COUNT_BEGIN_ENUM_CLASS_ARGS_IMPL((__VA_ARGS__, 2, 1, 0))
-   /* Pick the right helper macro to invoke. */
-#  define MOZ_BEGIN_NESTED_ENUM_CLASS_CHOOSE_HELPER2(count) \
-    MOZ_BEGIN_NESTED_ENUM_CLASS_HELPER##count
-#  define MOZ_BEGIN_NESTED_ENUM_CLASS_CHOOSE_HELPER1(count) \
-     MOZ_BEGIN_NESTED_ENUM_CLASS_CHOOSE_HELPER2(count)
-#  define MOZ_BEGIN_NESTED_ENUM_CLASS_CHOOSE_HELPER(count) \
-     MOZ_BEGIN_NESTED_ENUM_CLASS_CHOOSE_HELPER1(count)
-   /* The actual macro. */
-#  define MOZ_BEGIN_NESTED_ENUM_CLASS_GLUE(x, y) x y
+#  define MOZ_BEGIN_NESTED_ENUM_CLASS_GLUE(a, b) a b
 #  define MOZ_BEGIN_NESTED_ENUM_CLASS(...) \
-     MOZ_BEGIN_NESTED_ENUM_CLASS_GLUE(MOZ_BEGIN_NESTED_ENUM_CLASS_CHOOSE_HELPER(MOZ_COUNT_BEGIN_ENUM_CLASS_ARGS(__VA_ARGS__)), \
-                                      (__VA_ARGS__))
+     MOZ_BEGIN_NESTED_ENUM_CLASS_GLUE( \
+       MOZ_PASTE_PREFIX_AND_ARG_COUNT(MOZ_BEGIN_NESTED_ENUM_CLASS_HELPER, \
+                                      __VA_ARGS__), \
+       (__VA_ARGS__))
 
 #  define MOZ_BEGIN_ENUM_CLASS(...) MOZ_BEGIN_NESTED_ENUM_CLASS(__VA_ARGS__)
 #  define MOZ_END_ENUM_CLASS(Name) \
