@@ -19,6 +19,11 @@ DEFINES['OPUS_BUILD'] = True
 DEFINES['OPUS_VERSION'] = '"v1.1-mozilla"'
 DEFINES['USE_ALLOCA'] = True
 
+# We only need to export symbols if we're built into libgkmedias
+# instead of libxul.
+if not CONFIG['GKMEDIAS_SHARED_LIBRARY']:
+    DEFINES['OPUS_EXPORT'] = ''
+
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
     DEFINES['OPUS_ARM_ASM'] = True
     DEFINES['OPUS_ARM_EXTERNAL_ASM'] = True
