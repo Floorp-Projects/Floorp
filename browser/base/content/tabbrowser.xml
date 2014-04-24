@@ -1012,12 +1012,12 @@
             this.mCurrentTab = this.tabContainer.selectedItem;
             this.showTab(this.mCurrentTab);
 
-            var backForwardContainer = document.getElementById("urlbar-container");
-            if (backForwardContainer) {
-              backForwardContainer.setAttribute("switchingtabs", "true");
+            var forwardButtonContainer = document.getElementById("urlbar-wrapper");
+            if (forwardButtonContainer) {
+              forwardButtonContainer.setAttribute("switchingtabs", "true");
               window.addEventListener("MozAfterPaint", function removeSwitchingtabsAttr() {
                 window.removeEventListener("MozAfterPaint", removeSwitchingtabsAttr);
-                backForwardContainer.removeAttribute("switchingtabs");
+                forwardButtonContainer.removeAttribute("switchingtabs");
               });
             }
 

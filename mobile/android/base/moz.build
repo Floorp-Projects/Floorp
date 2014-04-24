@@ -279,6 +279,7 @@ gbjar.sources += [
     'home/SimpleCursorLoader.java',
     'home/SuggestClient.java',
     'home/TabMenuStrip.java',
+    'home/TabMenuStripLayout.java',
     'home/TopSitesGridItemView.java',
     'home/TopSitesGridView.java',
     'home/TopSitesPanel.java',
