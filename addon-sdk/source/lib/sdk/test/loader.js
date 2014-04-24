@@ -8,7 +8,7 @@ const { resolveURI, Require,
         unload, override, descriptor } = require('../../toolkit/loader');
 const { ensure } = require('../system/unload');
 const addonWindow = require('../addon/window');
-const { PlainTextConsole } = require("sdk/console/plain-text");
+const { PlainTextConsole } = require('sdk/console/plain-text');
 
 let defaultGlobals = override(require('../system/globals'), {
   console: console
@@ -43,33 +43,43 @@ function CustomLoader(module, globals, packaging, overrides={}) {
 };
 exports.Loader = CustomLoader;
 
+function HookedPlainTextConsole(hook, print, innerID) {
+  this.log = hook.bind(null, "log", innerID);
+  this.info = hook.bind(null, "info", innerID);
+  this.warn = hook.bind(null, "warn", innerID);
+  this.error = hook.bind(null, "error", innerID);
+  this.debug = hook.bind(null, "debug", innerID);
+  this.exception = hook.bind(null, "exception", innerID);
+  this.time = hook.bind(null, "time", innerID);
+  this.timeEnd = hook.bind(null, "timeEnd", innerID);
+
+  this.__exposedProps__ = {
+    log: "rw", info: "rw", warn: "rw", error: "rw", debug: "rw",
+    exception: "rw", time: "rw", timeEnd: "rw"
+  };
+}
+
 // Creates a custom loader instance whose console module is hooked in order
 // to avoid printing messages to the console, and instead, expose them in the
 // returned `messages` array attribute
 exports.LoaderWithHookedConsole = function (module, callback) {
   let messages = [];
-  function hook(msg) {
-    messages.push({type: this, msg: msg});
+  function hook(type, innerID, msg) {
+    messages.push({ type: type, msg: msg, innerID: innerID });
     if (callback)
-      callback(this, msg);
+      callback(type, msg, innerID);
   }
+
   return {
     loader: CustomLoader(module, {
-      console: {
-        log: hook.bind("log"),
-        info: hook.bind("info"),
-        warn: hook.bind("warn"),
-        error: hook.bind("error"),
-        debug: hook.bind("debug"),
-        exception: hook.bind("exception"),
-        time: hook.bind("time"),
-        timeEnd: hook.bind("timeEnd"),
-        __exposedProps__: {
-          log: "rw", info: "rw", warn: "rw", error: "rw", debug: "rw",
-          exception: "rw", time: "rw", timeEnd: "rw"
+      console: new HookedPlainTextConsole(hook, null, null)
+    }, override(require("@loader/options"), {
+      modules: {
+        'sdk/console/plain-text': {
+          PlainTextConsole: HookedPlainTextConsole.bind(null, hook)
         }
       }
-    }),
+    })),
     messages: messages
   };
 }
@@ -94,25 +104,19 @@ exports.LoaderWithHookedConsole2 = function (module, callback) {
 // console message type and message and if it returns false the message will
 // not be logged normally
 exports.LoaderWithFilteredConsole = function (module, callback) {
-  function hook(msg) {
-    if (callback && callback(this, msg) == false)
+  function hook(type, innerID, msg) {
+    if (callback && callback(type, msg, innerID) == false)
       return;
-    console[this](msg);
+    console[type](msg);
   }
+
   return CustomLoader(module, {
-    console: {
-      log: hook.bind("log"),
-      info: hook.bind("info"),
-      warn: hook.bind("warn"),
-      error: hook.bind("error"),
-      debug: hook.bind("debug"),
-      exception: hook.bind("exception"),
-      time: hook.bind("time"),
-      timeEnd: hook.bind("timeEnd"),
-      __exposedProps__: {
-        log: "rw", info: "rw", warn: "rw", error: "rw", debug: "rw",
-        exception: "rw", time: "rw", timeEnd: "rw"
+    console: new HookedPlainTextConsole(hook, null, null)
+  }, override(require("@loader/options"), {
+    modules: {
+      'sdk/console/plain-text': {
+        PlainTextConsole: HookedPlainTextConsole.bind(null, hook)
       }
     }
-  });
+  }));
 }

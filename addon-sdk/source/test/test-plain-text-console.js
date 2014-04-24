@@ -230,6 +230,31 @@ exports.testPlainTextConsoleBoundMethods = function(assert) {
   restorePrefs();
 };
 
+exports.testConsoleInnerID = function(assert) {
+  let Console = require("sdk/console/plain-text").PlainTextConsole;
+  let { log, info, warn, error, debug, exception, trace } = new Console(function() {}, "test ID");
+
+  let messages = [];
+  function onMessage({ subject }) {
+    let message = subject.wrappedJSObject;
+    messages.push({ msg: message.arguments[0], type: message.level, innerID: message.innerID });
+  }
+
+  const system = require("sdk/system/events");
+  system.on("console-api-log-event", onMessage);
+
+  log("Test log");
+  warn("Test warning");
+  error("Test error");
+
+  assert.equal(messages.length, 3, "Should see 3 log events");
+  assert.deepEqual(messages[0], { msg: "Test log", type: "log", innerID: "test ID" }, "Should see the right event");
+  assert.deepEqual(messages[1], { msg: "Test warning", type: "warn", innerID: "test ID" }, "Should see the right event");
+  assert.deepEqual(messages[2], { msg: "Test error", type: "error", innerID: "test ID" }, "Should see the right event");
+
+  system.off("console-api-log-event", onMessage);
+};
+
 function restorePrefs() {
   if (HAS_ORIGINAL_ADDON_LOG_LEVEL)
     prefs.set(ADDON_LOG_LEVEL_PREF, ORIGINAL_ADDON_LOG_LEVEL);

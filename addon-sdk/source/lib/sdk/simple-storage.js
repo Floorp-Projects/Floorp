@@ -8,13 +8,16 @@ module.metadata = {
   "stability": "stable"
 };
 
-const { Cc, Ci } = require("chrome");
+const { Cc, Ci, Cu } = require("chrome");
 const file = require("./io/file");
 const prefs = require("./preferences/service");
 const jpSelf = require("./self");
 const timer = require("./timers");
 const unload = require("./system/unload");
 const { emit, on, off } = require("./event/core");
+const { defer } = require('./core/promise');
+
+const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 
 const WRITE_PERIOD_PREF = "extensions.addon-sdk.simple-storage.writePeriod";
 const WRITE_PERIOD_DEFAULT = 300000; // 5 minutes
@@ -35,6 +38,57 @@ Object.defineProperties(exports, {
   }
 });
 
+function getHash(data) {
+  let { promise, resolve } = defer();
+
+  let crypto = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+  crypto.init(crypto.MD5);
+
+  let listener = {
+    onStartRequest: function() { },
+
+    onDataAvailable: function(request, context, inputStream, offset, count) {
+      crypto.updateFromStream(inputStream, count);
+    },
+
+    onStopRequest: function(request, context, status) {
+      resolve(crypto.finish(false));
+    }
+  };
+
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                  createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = "UTF-8";
+  let stream = converter.convertToInputStream(data);
+  let pump = Cc["@mozilla.org/network/input-stream-pump;1"].
+             createInstance(Ci.nsIInputStreamPump);
+  pump.init(stream, -1, -1, 0, 0, true);
+  pump.asyncRead(listener, null);
+
+  return promise;
+}
+
+function writeData(filename, data) {
+  let { promise, resolve, reject } = defer();
+
+  let stream = file.open(filename, "w");
+  try {
+    stream.writeAsync(data, err => {
+      if (err)
+        reject(err);
+      else
+        resolve();
+    });
+  }
+  catch (err) {
+    // writeAsync closes the stream after it's done, so only close on error.
+    stream.close();
+    reject(err);
+  }
+
+  return promise;
+}
+
 // A generic JSON store backed by a file on disk.  This should be isolated
 // enough to move to its own module if need be...
 function JsonStore(options) {
@@ -43,11 +97,9 @@ function JsonStore(options) {
   this.writePeriod = options.writePeriod;
   this.onOverQuota = options.onOverQuota;
   this.onWrite = options.onWrite;
-
+  this.hash = null;
   unload.ensure(this);
-
-  this.writeTimer = timer.setInterval(this.write.bind(this),
-                                      this.writePeriod);
+  this.startTimer();
 }
 
 JsonStore.prototype = {
@@ -81,11 +133,18 @@ JsonStore.prototype = {
            undefined;
   },
 
+  startTimer: function JsonStore_startTimer() {
+    timer.setTimeout(() => {
+      this.write().then(this.startTimer.bind(this));
+    }, this.writePeriod);
+  },
+
   // Removes the backing file and all empty subdirectories.
   purge: function JsonStore_purge() {
     try {
       // This'll throw if the file doesn't exist.
       file.remove(this.filename);
+      this.hash = null;
       let parentPath = this.filename;
       do {
         parentPath = file.dirname(parentPath);
@@ -105,31 +164,25 @@ JsonStore.prototype = {
       // errors cause tests to fail.  Supporting "known" errors in the test
       // harness appears to be non-trivial.  Maybe later.
       this.root = JSON.parse(str);
+      let self = this;
+      getHash(str).then(hash => this.hash = hash);
     }
     catch (err) {
       this.root = {};
+      this.hash = null;
     }
-  },
-
-  // If the store is under quota, writes the root to the backing file.
-  // Otherwise quota observers are notified and nothing is written.
-  write: function JsonStore_write() {
-    if (this.quotaUsage > 1)
-      this.onOverQuota(this);
-    else
-      this._write();
   },
 
   // Cleans up on unload.  If unloading because of uninstall, the store is
   // purged; otherwise it's written.
   unload: function JsonStore_unload(reason) {
-    timer.clearInterval(this.writeTimer);
+    timer.clearTimeout(this.writeTimer);
     this.writeTimer = null;
 
     if (reason === "uninstall")
       this.purge();
     else
-      this._write();
+      this.write();
   },
 
   // True if the root is an empty object.
@@ -148,32 +201,40 @@ JsonStore.prototype = {
   // Writes the root to the backing file, notifying write observers when
   // complete.  If the store is over quota or if it's empty and the store has
   // never been written, nothing is written and write observers aren't notified.
-  _write: function JsonStore__write() {
+  write: Task.async(function JsonStore_write() {
     // Don't write if the root is uninitialized or if the store is empty and the
     // backing file doesn't yet exist.
     if (!this.isRootInited || (this._isEmpty && !file.exists(this.filename)))
       return;
 
+    let data = JSON.stringify(this.root);
+
     // If the store is over quota, don't write.  The current under-quota state
     // should persist.
-    if (this.quotaUsage > 1)
+    if ((this.quota > 0) && (data.length > this.quota)) {
+      this.onOverQuota(this);
+      return;
+    }
+
+    // Hash the data to compare it to any previously written data
+    let hash = yield getHash(data);
+
+    if (hash == this.hash)
       return;
 
     // Finally, write.
-    let stream = file.open(this.filename, "w");
     try {
-      stream.writeAsync(JSON.stringify(this.root), function writeAsync(err) {
-        if (err)
-          console.error("Error writing simple storage file: " + this.filename);
-        else if (this.onWrite)
-          this.onWrite(this);
-      }.bind(this));
+      yield writeData(this.filename, data);
+
+      this.hash = hash;
+      if (this.onWrite)
+        this.onWrite(this);
     }
     catch (err) {
-      // writeAsync closes the stream after it's done, so only close on error.
-      stream.close();
+      console.error("Error writing simple storage file: " + this.filename);
+      console.error(err);
     }
-  }
+  })
 };
 
 

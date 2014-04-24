@@ -9,6 +9,7 @@ module.metadata = {
   }
 };
 
+const { Cu } = require("chrome");
 const { Frame } = require("sdk/ui/frame");
 const { Toolbar } = require("sdk/ui/toolbar");
 const { Loader } = require("sdk/test/loader");
@@ -16,15 +17,29 @@ const { identify } = require("sdk/ui/id");
 const { setTimeout } = require("sdk/timers");
 const { getMostRecentBrowserWindow, open } = require("sdk/window/utils");
 const { ready, loaded, close } = require("sdk/window/helpers");
-const { defer } = require("sdk/core/promise");
+const { defer, all } = require("sdk/core/promise");
 const { send } = require("sdk/event/utils");
 const { object } = require("sdk/util/sequence");
 const { OutputPort } = require("sdk/output/system");
+const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const output = new OutputPort({ id: "toolbar-change" });
 
-const wait = (toolbar, event) => {
+const wait = (toolbar, event, times) => {
   let { promise, resolve } = defer();
-  toolbar.once(event, resolve);
+  if (times) {
+    let resolveArray = [];
+    let counter = 0;
+    toolbar.on(event, function onEvent (e) {
+      resolveArray.push(e);
+      if (++counter === times) {
+        toolbar.off(event, onEvent);
+        resolve(resolveArray);
+      }
+    });
+  }
+  else {
+    toolbar.once(event, resolve);
+  }
   return promise;
 };
 
@@ -36,7 +51,9 @@ const stateEventsFor = frame =>
 const isAttached = ({id}, window=getMostRecentBrowserWindow()) =>
   !!window.document.getElementById(id);
 
-exports["test frame API"] = function*(assert) {
+// Use `Task.spawn` instead of `Task.async` because the returned function does not contain
+// a length for the test harness to determine whether the test should be executed
+exports["test frame API"] = function* (assert) {
   const url = "data:text/html,frame-api";
   assert.throws(() => new Frame(),
                 /The `options.url`/,
@@ -86,8 +103,7 @@ exports["test frame API"] = function*(assert) {
   f3.destroy();
 };
 
-
-exports["test frame in toolbar"] = function*(assert) {
+exports["test frame in toolbar"] = function* (assert) {
   const assertEvent = (event, type) => {
     assert.ok(event, "`" + type + "` event was dispatched");
     assert.equal(event.type, type, "event.type is: " + type);
@@ -116,7 +132,6 @@ exports["test frame in toolbar"] = function*(assert) {
   const [a2, r2, l2] = stateEventsFor(f1);
   const w2 = open();
 
-
   assertEvent((yield a2), "attach");
   assert.ok(isAttached(f1, w2), "frame is in the window#2");
   assertEvent((yield r2), "ready");
@@ -126,7 +141,6 @@ exports["test frame in toolbar"] = function*(assert) {
 
   const d1 = wait(f1, "detach");
   yield close(w2);
-
   assertEvent((yield d1), "detach");
   assert.pass("frame detached when window is closed");
 
@@ -138,7 +152,7 @@ exports["test frame in toolbar"] = function*(assert) {
 };
 
 
-exports["test host to content messaging"] = function*(assert) {
+exports["test host to content messaging"] = function* (assert) {
   const url = "data:text/html,<script>new " + function() {
     window.addEventListener("message", (event) => {
       if (event.data === "ping!")
@@ -159,7 +173,7 @@ exports["test host to content messaging"] = function*(assert) {
 };
 
 
-exports["test content to host messaging"] = function*(assert) {
+exports["test content to host messaging"] = function* (assert) {
   const url = "data:text/html,<script>new " + function() {
     window.addEventListener("message", (event) => {
       if (event.data === "pong!")
@@ -182,10 +196,11 @@ exports["test content to host messaging"] = function*(assert) {
 
   t1.destroy();
   yield wait(t1, "detach");
+
 };
 
 
-exports["test direct messaging"] = function*(assert) {
+exports["test direct messaging"] = function* (assert) {
   const url = "data:text/html,<script>new " + function() {
     var n = 0;
     window.addEventListener("message", (event) => {
@@ -208,31 +223,30 @@ exports["test direct messaging"] = function*(assert) {
   yield wait(f1, "ready");
   assert.pass("document loaded in window#2");
 
+  let messages = wait(f1, "message", 2);
   f1.postMessage("inc", f1.origin);
   f1.postMessage("print", f1.origin);
 
-  const e1 = yield wait(f1, "message");
+  const [e1, e2] = yield messages;
   assert.deepEqual(e1.data, {n: 1}, "received message from window#1");
-
-  const e2 = yield wait(f1, "message");
   assert.deepEqual(e2.data, {n: 1}, "received message from window#2");
 
+  let message = wait(f1, "message");
   e1.source.postMessage("inc", e1.origin);
-
   e1.source.postMessage("print", e1.origin);
-
-  const e3 = yield wait(f1, "message");
+  const e3 = yield message;
   assert.deepEqual(e3.data, {n: 2}, "state changed in window#1");
 
+  let message = wait(f1, "message");
   e2.source.postMessage("print", e2.origin);
-  const e4 = yield wait(f1, "message");
-
+  yield message;
   assert.deepEqual(e2.data, {n:1}, "window#2 didn't received inc message");
 
   yield close(w2);
   t1.destroy();
 
   yield wait(t1, "detach");
+
 };
 
 require("sdk/test").run(exports);
