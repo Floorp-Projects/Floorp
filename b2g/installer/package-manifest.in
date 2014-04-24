@@ -432,6 +432,7 @@
 @BINPATH@/components/amContentHandler.js
 @BINPATH@/components/amWebInstallListener.js
 @BINPATH@/components/nsBlocklistService.js
+@BINPATH@/components/OopCommandLine.js
 #endif
 
 #ifdef MOZ_UPDATER
