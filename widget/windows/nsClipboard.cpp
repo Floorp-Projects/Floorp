@@ -103,8 +103,7 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
   else if (strcmp(aMimeStr, kFileMime) == 0 ||
            strcmp(aMimeStr, kFilePromiseMime) == 0)
     format = CF_HDROP;
-  else if (strcmp(aMimeStr, kNativeHTMLMime) == 0 ||
-           strcmp(aMimeStr, kHTMLMime) == 0)
+  else if (strcmp(aMimeStr, kNativeHTMLMime) == 0)
     format = CF_HTML;
   else
     format = ::RegisterClipboardFormatW(NS_ConvertASCIItoUTF16(aMimeStr).get());
@@ -642,8 +641,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
               genericDataWrapper = do_QueryInterface(file);
             nsMemory::Free(data);
           }
-        else if ( strcmp(flavorStr, kNativeHTMLMime) == 0 ||
-                  strcmp(flavorStr, kHTMLMime) == 0) {
+        else if ( strcmp(flavorStr, kNativeHTMLMime) == 0) {
           // the editor folks want CF_HTML exactly as it's on the clipboard, no conversions,
           // no fancy stuff. Pull it off the clipboard, stuff it into a wrapper and hand
           // it back to them.

@@ -1277,14 +1277,7 @@ DataTransfer::FillInExternalData(TransferItem& aItem, uint32_t aIndex)
       variant->SetAsAString(str);
     }
     else {
-      nsCOMPtr<nsISupportsCString> supportscstr = do_QueryInterface(data);
-      if (supportscstr) {
-        nsAutoCString str;
-        supportscstr->GetData(str);
-        variant->SetAsACString(str);
-      } else {
-        variant->SetAsISupports(data);
-      }
+      variant->SetAsISupports(data);
     }
 
     aItem.mData = variant;

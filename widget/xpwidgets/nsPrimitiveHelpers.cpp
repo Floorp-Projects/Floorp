@@ -53,9 +53,7 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, const void* 
   if ( !aPrimitive )
     return;
 
-  if ( strcmp(aFlavor,kTextMime) == 0 ||
-       strcmp(aFlavor,kNativeHTMLMime) == 0 ||
-       strcmp(aFlavor,kHTMLMime) == 0) {
+  if ( strcmp(aFlavor,kTextMime) == 0 || strcmp(aFlavor,kNativeHTMLMime) == 0 ) {
     nsCOMPtr<nsISupportsCString> primitive =
         do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
     if ( primitive ) {
