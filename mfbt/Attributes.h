@@ -45,7 +45,7 @@
  * Current versions of g++ do not correctly set __cplusplus, so we check both
  * for forward compatibility.
  */
-#if defined(__clang__) || defined(__clang_analyzer__)
+#if defined(__clang__)
    /*
     * Per Clang documentation, "Note that marketing version numbers should not
     * be used to check for language features, as different vendors use different
@@ -63,9 +63,6 @@
 #  if __has_extension(cxx_override_control)
 #    define MOZ_HAVE_CXX11_OVERRIDE
 #    define MOZ_HAVE_CXX11_FINAL         final
-#  endif
-#  if __has_extension(attribute_analyzer_noreturn)
-#    define MOZ_HAVE_ANALYZER_NORETURN   __attribute__((analyzer_noreturn))
 #  endif
 #  if __has_attribute(noinline)
 #    define MOZ_HAVE_NEVER_INLINE        __attribute__((noinline))
@@ -154,27 +151,6 @@
 #  define MOZ_NORETURN          MOZ_HAVE_NORETURN
 #else
 #  define MOZ_NORETURN          /* no support */
-#endif
-
-/*
- * MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS, specified at the end of a function
- * declaration, indicates that for the purposes of static analysis, this
- * function does not return.  (The function definition does not need to be
- * annotated.)
- *
- * MOZ_ReportCrash(const char* s, const char* file, int ln) MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
- *
- * Some static analyzers, like scan-build from clang, can use this information
- * to eliminate false positives.  From the upstream documentation of scan-build:
- * "This attribute is useful for annotating assertion handlers that actually
- * can return, but for the purpose of using the analyzer we want to pretend
- * that such functions do not return."
- *
- */
-#if defined(MOZ_HAVE_ANALYZER_NORETURN)
-#  define MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS          MOZ_HAVE_ANALYZER_NORETURN
-#else
-#  define MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS          /* no support */
 #endif
 
 /*
