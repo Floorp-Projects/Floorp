@@ -23,6 +23,7 @@ let Debugger = sandbox.Debugger;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+let Timer = Cu.import("resource://gre/modules/Timer.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
@@ -63,6 +64,7 @@ BuiltinProvider.prototype = {
       modules: {
         "Debugger": Debugger,
         "Services": Object.create(Services),
+        "Timer": Object.create(Timer),
         "toolkit/loader": loader,
         "source-map": SourceMap,
       },
@@ -141,6 +143,7 @@ SrcdirProvider.prototype = {
       modules: {
         "Debugger": Debugger,
         "Services": Object.create(Services),
+        "Timer": Object.create(Timer),
         "toolkit/loader": loader,
         "source-map": SourceMap,
       },

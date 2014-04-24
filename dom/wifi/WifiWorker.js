@@ -1831,7 +1831,6 @@ function WifiWorker() {
     WifiManager.getMacAddress(function (mac) {
       self.macAddress = mac;
       debug("Got mac: " + mac);
-      self._ignoreNextWifiEnabledSetting = true;
       self._fireEvent("wifiUp", { macAddress: mac });
       self.requestDone();
     });
@@ -1846,7 +1845,6 @@ function WifiWorker() {
     debug("Supplicant died!");
 
     // Notify everybody, even if they didn't ask us to come up.
-    self._ignoreNextWifiDisabledSetting = true;
     self._fireEvent("wifiDown", {});
     self.requestDone();
   };
@@ -2276,13 +2274,6 @@ WifiWorker.prototype = {
   _wifiTetheringSettingsToRead: [],
 
   _oldWifiTetheringEnabledState: null,
-
-  // 930355: Workaround before bug 930355 is landed.
-  // Current system app will set settings value "wifi.enabled" after receiving
-  // wifi enable/disable event, this will cause infinite loop between gaia
-  // and gecko, so now use this variable to cut the loop.
-  _ignoreNextWifiDisabledSetting: false,
-  _ignoreNextWifiEnabledSetting: false,
 
   tetheringSettings: {},
 
@@ -2752,13 +2743,20 @@ WifiWorker.prototype = {
 
   // requestDone() must be called to before callback complete(or error)
   // so next queue in the request quene can be executed.
-  queueRequest: function(enabled, callback) {
+  queueRequest: function(data, callback) {
     if (!callback) {
         throw "Try to enqueue a request without callback";
     }
 
+    let optimizeCommandList = ["setWifiEnabled", "setWifiApEnabled"];
+    if (optimizeCommandList.indexOf(data.command) != -1) {
+      this._stateRequests = this._stateRequests.filter(function(element) {
+        return element.data.command !== data.command;
+      });
+    }
+
     this._stateRequests.push({
-      enabled: enabled,
+      data: data,
       callback: callback
     });
 
@@ -3074,7 +3072,7 @@ WifiWorker.prototype = {
 
   shutdown: function() {
     debug("shutting down ...");
-    this.queueRequest(false, function(data) {
+    this.queueRequest({command: "setWifiEnabled", value: false}, function(data) {
       this.setWifiEnabled(false, this._setWifiEnabledCallback.bind(this));
     }.bind(this));
   },
@@ -3104,7 +3102,7 @@ WifiWorker.prototype = {
     // Find next valid request
     let request = this._stateRequests.shift();
 
-    request.callback(request.enabled);
+    request.callback(request.data);
   },
 
   notifyTetheringOn: function notifyTetheringOn() {
@@ -3152,7 +3150,7 @@ WifiWorker.prototype = {
   handleWifiEnabled: function(enabled) {
     // Make sure Wifi hotspot is idle before switching to Wifi mode.
     if (enabled) {
-      this.queueRequest(false, function(data) {
+      this.queueRequest({command: "setWifiApEnabled", value: false}, function(data) {
         if (this.tetheringSettings[SETTINGS_WIFI_TETHERING_ENABLED] ||
             WifiManager.isWifiTetheringEnabled(WifiManager.tetheringState)) {
           this.disconnectedByWifi = true;
@@ -3163,12 +3161,12 @@ WifiWorker.prototype = {
       }.bind(this));
     }
 
-    this.queueRequest(enabled, function(data) {
+    this.queueRequest({command: "setWifiEnabled", value: enabled}, function(data) {
       this.setWifiEnabled(enabled, this._setWifiEnabledCallback.bind(this));
     }.bind(this));
 
     if (!enabled) {
-      this.queueRequest(true, function(data) {
+      this.queueRequest({command: "setWifiApEnabled", value: true}, function(data) {
         if (this.disconnectedByWifi) {
           this.setWifiApEnabled(true, this.notifyTetheringOn.bind(this));
         } else {
@@ -3182,7 +3180,7 @@ WifiWorker.prototype = {
   handleWifiTetheringEnabled: function(enabled) {
     // Make sure Wifi is idle before switching to Wifi hotspot mode.
     if (enabled) {
-      this.queueRequest(false, function(data) {
+      this.queueRequest({command: "setWifiEnabled", value: false}, function(data) {
         if (WifiManager.isWifiEnabled(WifiManager.state)) {
           this.disconnectedByWifiTethering = true;
           this.setWifiEnabled(false, this._setWifiEnabledCallback.bind(this));
@@ -3192,12 +3190,12 @@ WifiWorker.prototype = {
       }.bind(this));
     }
 
-    this.queueRequest(enabled, function(data) {
+    this.queueRequest({command: "setWifiApEnabled", value: enabled}, function(data) {
       this.setWifiApEnabled(enabled, this.requestDone.bind(this));
     }.bind(this));
 
     if (!enabled) {
-      this.queueRequest(true, function(data) {
+      this.queueRequest({command: "setWifiEnabled", value: true}, function(data) {
         if (this.disconnectedByWifiTethering) {
           this.setWifiEnabled(true, this._setWifiEnabledCallback.bind(this));
         } else {
@@ -3231,14 +3229,6 @@ WifiWorker.prototype = {
   handle: function handle(aName, aResult) {
     switch(aName) {
       case SETTINGS_WIFI_ENABLED:
-        if (this._ignoreNextWifiEnabledSetting && aResult) {
-          this._ignoreNextWifiEnabledSetting = false;
-          break;
-        }
-        if (this._ignoreNextWifiDisabledSetting && !aResult) {
-          this._ignoreNextWifiDisabledSetting = false;
-          break;
-        }
         this.handleWifiEnabled(aResult)
         break;
       case SETTINGS_WIFI_DEBUG_ENABLED:

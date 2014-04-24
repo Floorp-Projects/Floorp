@@ -45,21 +45,21 @@ function runTests()
 
   // Create a temporary file.
   gFileA = FileUtils.getFile("TmpD", ["fileAForBug684546.tmp"]);
-  gFileA.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  gFileA.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   gFileB = FileUtils.getFile("TmpD", ["fileBForBug684546.tmp"]);
-  gFileB.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  gFileB.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   // Write the temporary file.
   let foutA = Cc["@mozilla.org/network/file-output-stream;1"].
              createInstance(Ci.nsIFileOutputStream);
   foutA.init(gFileA.QueryInterface(Ci.nsILocalFile), 0x02 | 0x08 | 0x20,
-            0644, foutA.DEFER_OPEN);
+            0o644, foutA.DEFER_OPEN);
 
   let foutB = Cc["@mozilla.org/network/file-output-stream;1"].
              createInstance(Ci.nsIFileOutputStream);
   foutB.init(gFileB.QueryInterface(Ci.nsILocalFile), 0x02 | 0x08 | 0x20,
-            0644, foutB.DEFER_OPEN);
+            0o644, foutB.DEFER_OPEN);
 
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
                   createInstance(Ci.nsIScriptableUnicodeConverter);

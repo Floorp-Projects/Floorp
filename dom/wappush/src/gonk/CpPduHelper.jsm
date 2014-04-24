@@ -210,8 +210,7 @@ this.Authenticator = {
 /**
   * Tag tokens
   *
-  * @see WAP-183-ProvCont-20010724-A, clause 8.1 for code page 0
-  * @see OMA-WAP-TS-ProvCont-V1_1-20090421-C, clause 7.1 for code page 1
+  * @see OMA-WAP-TS-ProvCont-V1_1-20090421-C, clause 7.1
   */
 const CP_TAG_FIELDS = (function () {
   let names = {};
@@ -240,8 +239,7 @@ const CP_TAG_FIELDS = (function () {
 /**
   * Attribute Tokens
   *
-  * @see WAP-183-ProvCont-20010724-A, clause 8.2 for code page 0
-  * @see OMA-WAP-TS-ProvCont-V1_1-20090421-C, clause 7.2 for code page 1
+  * @see OMA-WAP-TS-ProvCont-V1_1-20090421-C, clause 7.2
   */
 const CP_ATTRIBUTE_FIELDS = (function () {
   let names = {};
@@ -314,8 +312,19 @@ const CP_ATTRIBUTE_FIELDS = (function () {
   add("name",     "TRANSFER-DELAY",               0,  0x3A);
   add("name",     "GUARANTEED-BITRATE-UPLINK",    0,  0x3B);
   add("name",     "GUARANTEED-BITRATE-DNLINK",    0,  0x3C);
+  add("name",     "PXADDR-FQDN",                  0,  0x3D);
+  add("name",     "PROXY-PW",                     0,  0x3E);
+  add("name",     "PPGAUTH-TYPE",                 0,  0x3F);
   add("version",  "",                             0,  0x45);
   add("version",  "1.0",                          0,  0x46);
+  add("name",     "PULLENABLED",                  0,  0x47);
+  add("name",     "DNS-ADDR",                     0,  0x48);
+  add("name",     "MAX-NUM-RETRY",                0,  0x49);
+  add("name",     "FIRST-RETRY-TIMEOUT",          0,  0x4A);
+  add("name",     "REREG-THRESHOLD",              0,  0x4B);
+  add("name",     "T-BIT",                        0,  0x4C);
+  add("name",     "AUTH-ENTITY",                  0,  0x4E);
+  add("name",     "SPI",                          0,  0x4F);
   add("type",     "",                             0,  0x50);
   add("type",     "PXLOGICAL",                    0,  0x51);
   add("type",     "PXPHYSICAL",                   0,  0x52);
@@ -331,6 +340,7 @@ const CP_ATTRIBUTE_FIELDS = (function () {
   add("type",     "CLIENTIDENTITY",               0,  0x58);
   add("type",     "PXAUTHINFO",                   0,  0x59);
   add("type",     "NAPAUTHINFO",                  0,  0x5A);
+  add("type",     "ACCESS",                       0,  0x5B);
 
   // Code page 1
   add("name",     "",                             1,  0x05);
@@ -369,8 +379,7 @@ const CP_ATTRIBUTE_FIELDS = (function () {
 /**
   * Value Tokens
   *
-  * @see WAP-183-ProvCont-20010724-A, clause 8.3 for code page 0
-  * @see OMA-WAP-TS-ProvCont-V1_1-20090421-C, clause 7.3 for code page 1
+  * @see OMA-WAP-TS-ProvCont-V1_1-20090421-C, clause 7.3
   */
 const CP_VALUE_FIELDS = (function () {
   let names = {};
