@@ -122,11 +122,7 @@ function addAddon(aUrl) {
     let listener = {
       onInstallEnded: function(aAddon, aAddonInstall) {
         aInstaller.removeListener(listener);
-
-        // Wait for add-on's startup scripts to execute. See bug 997408
-        executeSoon(function() {
-          deferred.resolve(aAddonInstall);
-        });
+        deferred.resolve(aAddonInstall);
       }
     };
     aInstaller.addListener(listener);

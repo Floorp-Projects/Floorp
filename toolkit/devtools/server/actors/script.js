@@ -25,9 +25,8 @@ let addonManager = null;
  * about them.
  */
 function mapURIToAddonID(uri, id) {
-  if (Services.appinfo.ID == B2G_ID) {
+  if (Services.appinfo.ID == B2G_ID)
     return false;
-  }
 
   if (!addonManager) {
     addonManager = Cc["@mozilla.org/addons/integration;1"].
@@ -4779,31 +4778,6 @@ update(AddonThreadActor.prototype, {
   // A constant prefix that will be used to form the actor ID by the server.
   actorPrefix: "addonThread",
 
-  onAttach: function(aRequest) {
-    if (!this.attached) {
-      Services.obs.addObserver(this, "document-element-inserted", false);
-    }
-    return ThreadActor.prototype.onAttach.call(this, aRequest);
-  },
-
-  disconnect: function() {
-    if (this.attached) {
-      Services.obs.removeObserver(this, "document-element-inserted");
-    }
-    return ThreadActor.prototype.disconnect.call(this);
-  },
-
-  /**
-   * Called when a new DOM document element is created. Check if the DOM was
-   * laoded from an add-on and if so make the window a debuggee.
-   */
-  observe: function(aSubject, aTopic, aData) {
-    let id = {};
-    if (mapURIToAddonID(aSubject.documentURIObject, id) && id.value === this.addonID) {
-      this.dbg.addDebuggee(aSubject.defaultView);
-    }
-  },
-
   /**
    * Override the eligibility check for scripts and sources to make
    * sure every script and source with a URL is stored when debugging
@@ -4811,14 +4785,12 @@ update(AddonThreadActor.prototype, {
    */
   _allowSource: function(aSourceURL) {
     // Hide eval scripts
-    if (!aSourceURL) {
+    if (!aSourceURL)
       return false;
-    }
 
     // XPIProvider.jsm evals some code in every add-on's bootstrap.js. Hide it
-    if (aSourceURL == "resource://gre/modules/addons/XPIProvider.jsm") {
+    if (aSourceURL == "resource://gre/modules/addons/XPIProvider.jsm")
       return false;
-    }
 
     return true;
   },
@@ -4865,60 +4837,32 @@ update(AddonThreadActor.prototype, {
    * @param aGlobal Debugger.Object
    */
   _checkGlobal: function ADA_checkGlobal(aGlobal) {
-    let obj = null;
-    try {
-      obj = aGlobal.unsafeDereference();
-    }
-    catch (e) {
-      // Because of bug 991399 we sometimes get bad objects here. If we can't
-      // dereference them then they won't be useful to us
-      return false;
-    }
-
     try {
       // This will fail for non-Sandbox objects, hence the try-catch block.
-      let metadata = Cu.getSandboxMetadata(obj);
-      if (metadata) {
+      let metadata = Cu.getSandboxMetadata(aGlobal.unsafeDereference());
+      if (metadata)
         return metadata.addonID === this.addonID;
-      }
     } catch (e) {
-    }
-
-    if (obj instanceof Ci.nsIDOMWindow) {
-      let id = {};
-      if (mapURIToAddonID(obj.document.documentURIObject, id)) {
-        return id.value === this.addonID;
-      }
-      return false;
     }
 
     // Check the global for a __URI__ property and then try to map that to an
     // add-on
     let uridescriptor = aGlobal.getOwnPropertyDescriptor("__URI__");
-    if (uridescriptor && "value" in uridescriptor && uridescriptor.value) {
-      let uri;
+    if (uridescriptor && "value" in uridescriptor) {
       try {
-        uri = Services.io.newURI(uridescriptor.value, null, null);
+        let uri = Services.io.newURI(uridescriptor.value, null, null);
+        let id = {};
+        if (mapURIToAddonID(uri, id)) {
+          return id.value === this.addonID;
+        }
       }
       catch (e) {
-        DevToolsUtils.reportException("AddonThreadActor.prototype._checkGlobal",
-                                      new Error("Invalid URI: " + uridescriptor.value));
-        return false;
-      }
-
-      let id = {};
-      if (mapURIToAddonID(uri, id)) {
-        return id.value === this.addonID;
+        DevToolsUtils.reportException("AddonThreadActor.prototype._checkGlobal", e);
       }
     }
 
     return false;
   }
-});
-
-AddonThreadActor.prototype.requestTypes = Object.create(ThreadActor.prototype.requestTypes);
-update(AddonThreadActor.prototype.requestTypes, {
-  "attach": AddonThreadActor.prototype.onAttach
 });
 
 /**
