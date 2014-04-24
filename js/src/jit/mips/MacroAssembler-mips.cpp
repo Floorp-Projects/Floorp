@@ -1482,7 +1482,6 @@ MacroAssemblerMIPSCompat::buildFakeExitFrame(const Register &scratch, uint32_t *
 bool
 MacroAssemblerMIPSCompat::buildOOLFakeExitFrame(void *fakeReturnAddr)
 {
-    DebugOnly<uint32_t> initialDepth = framePushed();
     uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
 
     Push(Imm32(descriptor)); // descriptor_
@@ -2322,7 +2321,7 @@ void
 MacroAssemblerMIPSCompat::branchTestUndefined(Condition cond, const ValueOperand &value,
                                               Label *label)
 {
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ma_b(value.typeReg(), ImmType(JSVAL_TYPE_UNDEFINED), label, cond);
 }
 
