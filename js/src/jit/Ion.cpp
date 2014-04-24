@@ -3036,6 +3036,28 @@ jit::RematerializeAllFrames(JSContext *cx, JSCompartment *comp)
     return true;
 }
 
+bool
+jit::UpdateForDebugMode(JSContext *maybecx, JSCompartment *comp,
+                     AutoDebugModeInvalidation &invalidate)
+{
+    MOZ_ASSERT(invalidate.isFor(comp));
+
+    // Schedule invalidation of all optimized JIT code since debug mode
+    // invalidates assumptions.
+    invalidate.scheduleInvalidation(comp->debugMode());
+
+    // Recompile on-stack baseline scripts if we have a cx.
+    if (maybecx) {
+        IonContext ictx(maybecx, nullptr);
+        if (!RecompileOnStackBaselineScriptsForDebugMode(maybecx, comp)) {
+            js_ReportOutOfMemory(maybecx);
+            return false;
+        }
+    }
+
+    return true;
+}
+
 AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
 {
     MOZ_ASSERT(!!comp_ != !!zone_);
@@ -3054,11 +3076,13 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
             StopAllOffThreadCompilations(comp);
     }
 
+    // Don't discard active baseline scripts. They are recompiled for debug
+    // mode.
     jit::MarkActiveBaselineScripts(zone);
 
     for (JitActivationIterator iter(rt); !iter.done(); ++iter) {
         JSCompartment *comp = iter.activation()->compartment();
-        if ((comp_ && comp_ == comp) || (zone_ && zone_ == comp->zone())) {
+        if (comp_ == comp || zone_ == comp->zone()) {
             IonContext ictx(CompileRuntime::get(rt));
             AutoFlushCache afc("AutoDebugModeInvalidation", rt->jitRuntime());
             IonSpew(IonSpew_Invalidate, "Invalidating frames for debug mode toggle");
@@ -3068,7 +3092,7 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
 
     for (gc::CellIter i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        if ((comp_ && script->compartment() == comp_) || zone_) {
+        if (script->compartment() == comp_ || zone_) {
             FinishInvalidation<SequentialExecution>(fop, script);
             FinishInvalidation<ParallelExecution>(fop, script);
             FinishDiscardBaselineScript(fop, script);

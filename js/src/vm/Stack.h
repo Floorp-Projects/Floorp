@@ -1666,9 +1666,19 @@ class FrameIter
     size_t      numFrameSlots() const;
     Value       frameSlotValue(size_t index) const;
 
-    // --------------------------------------------------------------------------
-    // The following functions can only be called when isInterp() or isBaseline()
-    // --------------------------------------------------------------------------
+    // Ensures that we have rematerialized the top frame and its associated
+    // inline frames. Can only be called when isIon().
+    bool ensureHasRematerializedFrame();
+
+    // True when isInterp() or isBaseline(). True when isIon() if it
+    // has a rematerialized frame. False otherwise false otherwise.
+    bool hasUsableAbstractFramePtr() const;
+
+    // -----------------------------------------------------------
+    // The following functions can only be called when isInterp(),
+    // isBaseline(), or isIon(). Further, abstractFramePtr() can
+    // only be called when hasUsableAbstractFramePtr().
+    // -----------------------------------------------------------
 
     AbstractFramePtr abstractFramePtr() const;
     AbstractFramePtr copyDataAsAbstractFramePtr() const;
