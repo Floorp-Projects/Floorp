@@ -97,7 +97,7 @@
           </hbox>
           <hbox class="hidden-labels-box">
             <checkbox label="&options.enableRemote.label3;"
-                      tooltiptext="&options.enableRemote.tooltip2;"
+                      tooltiptext="&options.enableRemote.tooltip;"
                       data-pref="devtools.debugger.remote-enabled"/>
           </hbox>
           <label class="options-citation-label"

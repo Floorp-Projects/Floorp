@@ -4,8 +4,8 @@
 let temp = {};
 
 const PROFILER_ENABLED = "devtools.profiler.enabled";
+const REMOTE_ENABLED = "devtools.debugger.remote-enabled";
 const SHOW_PLATFORM_DATA = "devtools.profiler.ui.show-platform-data";
-const SHOW_NOTIFICATIONS = "devtools.debugger.show-server-notifications";
 const PROFILE_IDLE = 0;
 const PROFILE_RUNNING = 1;
 const PROFILE_COMPLETED = 2;
@@ -31,8 +31,8 @@ SimpleTest.registerCleanupFunction(() => {
 registerCleanupFunction(function () {
   helpers = null;
   Services.prefs.clearUserPref(PROFILER_ENABLED);
+  Services.prefs.clearUserPref(REMOTE_ENABLED);
   Services.prefs.clearUserPref(SHOW_PLATFORM_DATA);
-  Services.prefs.clearUserPref(SHOW_NOTIFICATIONS);
   DebuggerServer.destroy();
 
   // These tests use a lot of memory due to GL contexts, so force a GC to help

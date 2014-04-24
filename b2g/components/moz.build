@@ -12,7 +12,6 @@ EXTRA_COMPONENTS += [
     'B2GAboutRedirector.js',
     'ContentHandler.js',
     'ContentPermissionPrompt.js',
-    'DebuggerServerController.js',
     'FilePicker.js',
     'HelperAppDialog.js',
     'MailtoProtocolHandler.js',

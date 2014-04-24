@@ -1,3 +1,0 @@
-component {9ba9bbe7-5866-46f1-bea6-3299066b7933} DevToolsAppStartup.js
-contract @mozilla.org/toolkit/devtools-app-startup;1 {9ba9bbe7-5866-46f1-bea6-3299066b7933}
-category command-line-handler DevToolsAppStartup @mozilla.org/toolkit/devtools-app-startup;1
