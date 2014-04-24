@@ -37,7 +37,8 @@ public class JavascriptTest extends BaseTest {
         mAsserter.dumpLog("Loading JavaScript test from " + url);
         loadUrl(url);
 
-        final JavascriptMessageParser testMessageParser = new JavascriptMessageParser(mAsserter);
+        final JavascriptMessageParser testMessageParser =
+                new JavascriptMessageParser(mAsserter, false);
         try {
             while (!testMessageParser.isTestFinished()) {
                 if (Log.isLoggable(LOGTAG, Log.VERBOSE)) {
