@@ -11,7 +11,6 @@
 
 #include "jit/AsmJSLink.h"
 #include "jit/BaselineJIT.h"
-#include "jit/IonAnalysis.h"
 #include "vm/ScopeObject.h"
 
 #include "jscompartmentinlines.h"
@@ -172,18 +171,6 @@ JSScript::setBaselineScript(JSContext *maybecx, js::jit::BaselineScript *baselin
     MOZ_ASSERT(!hasIonScript());
     baseline = baselineScript;
     updateBaselineOrIonRaw();
-}
-
-inline bool
-JSScript::ensureHasAnalyzedArgsUsage(JSContext *cx)
-{
-    if (analyzedArgsUsage())
-        return true;
-#ifdef JS_ION
-    return js::jit::AnalyzeArgumentsUsage(cx, this);
-#else
-    MOZ_CRASH();
-#endif
 }
 
 #endif /* jsscriptinlines_h */

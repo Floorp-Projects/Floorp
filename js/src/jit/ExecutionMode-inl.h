@@ -67,7 +67,6 @@ CanIonCompile(JSScript *script, ExecutionMode cmode)
       case SequentialExecution: return script->canIonCompile();
       case ParallelExecution: return script->canParallelIonCompile();
       case DefinitePropertiesAnalysis: return true;
-      case ArgumentsUsageAnalysis: return true;
       default:;
     }
     MOZ_ASSUME_UNREACHABLE("No such execution mode");
