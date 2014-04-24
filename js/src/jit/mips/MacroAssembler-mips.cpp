@@ -3041,6 +3041,14 @@ void MacroAssemblerMIPSCompat::checkStackAlignment()
 }
 
 void
+MacroAssemblerMIPSCompat::alignPointerUp(Register src, Register dest, uint32_t alignment)
+{
+    MOZ_ASSERT(alignment > 1);
+    ma_addu(dest, src, Imm32(alignment - 1));
+    ma_and(dest, dest, Imm32(~(alignment - 1)));
+}
+
+void
 MacroAssemblerMIPSCompat::callWithABIPre(uint32_t *stackAdjust)
 {
     MOZ_ASSERT(inCall_);

@@ -1382,6 +1382,34 @@ class LApplyArgsGeneric : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES +
     }
 };
 
+class LArraySplice : public LCallInstructionHelper<0, 3, 0>
+{
+  public:
+    LIR_HEADER(ArraySplice)
+
+    LArraySplice(const LAllocation &object, const LAllocation &start,
+                 const LAllocation &deleteCount)
+    {
+        setOperand(0, object);
+        setOperand(1, start);
+        setOperand(2, deleteCount);
+    }
+
+    MArraySplice *mir() const {
+        return mir_->toArraySplice();
+    }
+
+    const LAllocation *getObject() {
+        return getOperand(0);
+    }
+    const LAllocation *getStart() {
+        return getOperand(1);
+    }
+    const LAllocation *getDeleteCount() {
+        return getOperand(2);
+    }
+};
+
 class LGetDynamicName : public LCallInstructionHelper<BOX_PIECES, 2, 3>
 {
   public:

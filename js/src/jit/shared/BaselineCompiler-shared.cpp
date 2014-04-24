@@ -12,16 +12,16 @@
 using namespace js;
 using namespace js::jit;
 
-BaselineCompilerShared::BaselineCompilerShared(JSContext *cx, TempAllocator &alloc, HandleScript script)
+BaselineCompilerShared::BaselineCompilerShared(JSContext *cx, TempAllocator &alloc, JSScript *script)
   : cx(cx),
-    script(cx, script),
+    script(script),
     pc(script->code()),
     ionCompileable_(jit::IsIonEnabled(cx) && CanIonCompileScript(cx, script, false)),
     ionOSRCompileable_(jit::IsIonEnabled(cx) && CanIonCompileScript(cx, script, true)),
     debugMode_(cx->compartment()->debugMode()),
     alloc_(alloc),
     analysis_(alloc, script),
-    frame(cx, script, masm),
+    frame(script, masm),
     stubSpace_(),
     icEntries_(),
     pcMappingEntries_(),
@@ -96,7 +96,7 @@ BaselineCompilerShared::callVM(const VMFunction &fun, CallVMPhase phase)
 
     // Add a fake ICEntry (without stubs), so that the return offset to
     // pc mapping works.
-    ICEntry entry(script->pcToOffset(pc), false);
+    ICEntry entry(script->pcToOffset(pc), ICEntry::Kind_CallVM);
     entry.setReturnOffset(callOffset);
 
     return icEntries_.append(entry);

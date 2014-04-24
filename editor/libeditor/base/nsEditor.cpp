@@ -204,7 +204,9 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsEditor)
 
 
 NS_IMETHODIMP
-nsEditor::Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *aSelCon, uint32_t aFlags)
+nsEditor::Init(nsIDOMDocument *aDoc, nsIContent *aRoot,
+               nsISelectionController *aSelCon, uint32_t aFlags,
+               const nsAString& aValue)
 {
   NS_PRECONDITION(aDoc, "bad arg");
   if (!aDoc)

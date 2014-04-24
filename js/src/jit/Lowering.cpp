@@ -567,6 +567,15 @@ LIRGenerator::visitAssertFloat32(MAssertFloat32 *assertion)
 }
 
 bool
+LIRGenerator::visitArraySplice(MArraySplice *ins)
+{
+    LArraySplice *lir = new(alloc()) LArraySplice(useRegisterAtStart(ins->object()),
+                                                  useRegisterAtStart(ins->start()),
+                                                  useRegisterAtStart(ins->deleteCount()));
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitGetDynamicName(MGetDynamicName *ins)
 {
     MDefinition *scopeChain = ins->getScopeChain();

@@ -21,7 +21,7 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-[scriptable, uuid(753b38d1-ee03-4e58-a650-1076ccccdb7f)]
+[scriptable, uuid(65523eab-db1f-44aa-893e-dfe57ad306f0)]
 
 interface nsIEditor  : nsISupports
 {
@@ -56,7 +56,8 @@ interface nsIEditor  : nsISupports
   [noscript] void init(in nsIDOMDocument doc,
                        in nsIContent aRoot,
                        in nsISelectionController aSelCon,
-                       in unsigned long aFlags);
+                       in unsigned long aFlags,
+                       in AString initialValue);
 
   void setAttributeOrEquivalent(in nsIDOMElement element,
                                 in AString sourceAttrName,

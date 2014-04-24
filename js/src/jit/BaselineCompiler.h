@@ -14,8 +14,12 @@
 # include "jit/x86/BaselineCompiler-x86.h"
 #elif defined(JS_CODEGEN_X64)
 # include "jit/x64/BaselineCompiler-x64.h"
-#else
+#elif defined(JS_CODEGEN_ARM)
 # include "jit/arm/BaselineCompiler-arm.h"
+#elif defined(JS_CODEGEN_MIPS)
+# include "jit/mips/BaselineCompiler-mips.h"
+#else
+# error "Unknown architecture!"
 #endif
 
 namespace js {
@@ -173,6 +177,14 @@ class BaselineCompiler : public BaselineCompilerSpecific
     // Native code offset right before the scope chain is initialized.
     CodeOffsetLabel prologueOffset_;
 
+    // Native code offset right before the frame is popped and the method
+    // returned from.
+    CodeOffsetLabel epilogueOffset_;
+
+    // Native code offset right after debug prologue and epilogue, or
+    // equivalent positions when debug mode is off.
+    CodeOffsetLabel postDebugPrologueOffset_;
+
     // Whether any on stack arguments are modified.
     bool modifiesArguments_;
 
@@ -188,7 +200,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
     }
 
   public:
-    BaselineCompiler(JSContext *cx, TempAllocator &alloc, HandleScript script);
+    BaselineCompiler(JSContext *cx, TempAllocator &alloc, JSScript *script);
     bool init();
 
     MethodStatus compile();
@@ -201,12 +213,12 @@ class BaselineCompiler : public BaselineCompilerSpecific
 #ifdef JSGC_GENERATIONAL
     bool emitOutOfLinePostBarrierSlot();
 #endif
-    bool emitIC(ICStub *stub, bool isForOp);
+    bool emitIC(ICStub *stub, ICEntry::Kind kind);
     bool emitOpIC(ICStub *stub) {
-        return emitIC(stub, true);
+        return emitIC(stub, ICEntry::Kind_Op);
     }
     bool emitNonOpIC(ICStub *stub) {
-        return emitIC(stub, false);
+        return emitIC(stub, ICEntry::Kind_NonOp);
     }
 
     bool emitStackCheck(bool earlyCheck=false);
