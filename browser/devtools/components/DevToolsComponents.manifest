@@ -1,7 +1,0 @@
-# CommandLineHandler.js
-component {9e9a9283-0ce9-4e4a-8f1c-ba129a032c32} CommandLineHandler.js
-contract @mozilla.org/toolkit/console-clh;1 {9e9a9283-0ce9-4e4a-8f1c-ba129a032c32}
-
-# DebuggerServerController.js
-component {f6e8e269-ae4a-4c4a-bf80-fb4164fb072d} DebuggerServerController.js
-contract @mozilla.org/devtools/DebuggerServerController;1 {f6e8e269-ae4a-4c4a-bf80-fb4164fb072d}

@@ -434,11 +434,6 @@
 @BINPATH@/components/nsBlocklistService.js
 #endif
 
-; DevTools
-@BINPATH@/components/DevToolsComponents.manifest
-@BINPATH@/components/DevToolsAppStartup.js
-@BINPATH@/components/DebuggerServerController.js
-
 #ifdef MOZ_UPDATER
 @BINPATH@/components/nsUpdateService.manifest
 @BINPATH@/components/nsUpdateService.js
