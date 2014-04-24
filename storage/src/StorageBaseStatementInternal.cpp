@@ -194,8 +194,8 @@ StorageBaseStatementInternal::ExecuteAsync(
   NS_ENSURE_TRUE(stmts.AppendElement(data), NS_ERROR_OUT_OF_MEMORY);
 
   // Dispatch to the background
-  return AsyncExecuteStatements::execute(stmts, mDBConnection, aCallback,
-                                         _stmt);
+  return AsyncExecuteStatements::execute(stmts, mDBConnection,
+                                         mNativeConnection, aCallback, _stmt);
 }
 
 NS_IMETHODIMP

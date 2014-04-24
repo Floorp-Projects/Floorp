@@ -96,9 +96,29 @@ public:
    */
   nsresult initialize(nsIFileURL *aFileURL);
 
-  // fetch the native handle
-  sqlite3 *GetNativeConnection() { return mDBConn; }
-  operator sqlite3 *() const { return mDBConn; }
+  /**
+   * Fetches runtime status information for this connection.
+   *
+   * @param aStatusOption One of the SQLITE_DBSTATUS options defined at
+   *        http://www.sqlite.org/c3ref/c_dbstatus_options.html
+   * @param [optional] aMaxValue if provided, will be set to the highest
+   *        istantaneous value.
+   * @return the current value for the specified option.
+   */
+  int32_t getSqliteRuntimeStatus(int32_t aStatusOption,
+                                 int32_t* aMaxValue=nullptr);
+  /**
+   * Registers/unregisters a commit hook callback.
+   *
+   * @param aCallbackFn a callback function to be invoked on transactions
+   *        commit.  Pass nullptr to unregister the current callback.
+   * @param [optional] aData if provided, will be passed to the callback.
+   * @see http://sqlite.org/c3ref/commit_hook.html
+   */
+  void setCommitHook(int (*aCallbackFn)(void *) , void *aData=nullptr) {
+    MOZ_ASSERT(mDBConn, "A connection must exist at this point");
+    ::sqlite3_commit_hook(mDBConn, aCallbackFn, aData);
+  };
 
   /**
    * Lazily creates and returns a background execution thread.  In the future,
@@ -112,8 +132,12 @@ public:
   /**
    * Mutex used by asynchronous statements to protect state.  The mutex is
    * declared on the connection object because there is no contention between
-   * asynchronous statements (they are serialized on mAsyncExecutionThread).  It
-   * also protects mPendingStatements.
+   * asynchronous statements (they are serialized on mAsyncExecutionThread).
+   * Currently protects:
+   *  - Connection.mAsyncExecutionThreadShuttingDown
+   *  - Connection.mAsyncExecutionThread
+   *  - Connection.mConnectionClosed
+   *  - AsyncExecuteStatements.mCancelRequested
    */
   Mutex sharedAsyncExecutionMutex;
 
@@ -134,7 +158,7 @@ public:
   /**
    * Closes the SQLite database, and warns about any non-finalized statements.
    */
-  nsresult internalClose();
+  nsresult internalClose(sqlite3 *aDBConn);
 
   /**
    * Obtains the filename of the connection.  Useful for logging.
@@ -144,39 +168,52 @@ public:
   /**
    * Creates an sqlite3 prepared statement object from an SQL string.
    *
+   * @param aNativeConnection
+   *        The underlying Sqlite connection to prepare the statement with.
    * @param aSQL
    *        The SQL statement string to compile.
    * @param _stmt
    *        New sqlite3_stmt object.
    * @return the result from sqlite3_prepare_v2.
    */
-  int prepareStatement(const nsCString &aSQL, sqlite3_stmt **_stmt);
+  int prepareStatement(sqlite3* aNativeConnection,
+                       const nsCString &aSQL, sqlite3_stmt **_stmt);
 
   /**
    * Performs a sqlite3_step on aStatement, while properly handling SQLITE_LOCKED
    * when not on the main thread by waiting until we are notified.
    *
+   * @param aNativeConnection
+   *        The underlying Sqlite connection to step the statement with.
    * @param aStatement
    *        A pointer to a sqlite3_stmt object.
    * @return the result from sqlite3_step.
    */
-  int stepStatement(sqlite3_stmt* aStatement);
-
-  bool ConnectionReady() {
-    return mDBConn != nullptr;
-  }
+  int stepStatement(sqlite3* aNativeConnection, sqlite3_stmt* aStatement);
 
   /**
-   * True if this connection is currently shutting down.
+   * Raw connection transaction management.
    *
-   * In particular, if |isClosing(true)| returns |true|, any sqlite3 statement
-   * belonging to this connection must be discarded as its memory has already
-   * been released to sqlite3.
-   *
-   * @param aResultOnceClosed
-   *        The value to return if closing has completed.
+   * @see BeginTransactionAs, CommitTransaction, RollbackTransaction.
    */
-  bool isClosing(bool aResultOnceClosed = false);
+  nsresult beginTransactionInternal(sqlite3 *aNativeConnection,
+                                    int32_t aTransactionType=TRANSACTION_DEFERRED);
+  nsresult commitTransactionInternal(sqlite3 *aNativeConnection);
+  nsresult rollbackTransactionInternal(sqlite3 *aNativeConnection);
+
+  bool connectionReady();
+
+  /**
+   * True if this connection is shutting down but not yet closed.
+   */
+  bool isClosing();
+
+  /**
+   * True if the underlying connection is closed.
+   * Any sqlite resources may be lost when this returns true, so nothing should
+   * try to use them.
+   */
+  bool isClosed();
 
   nsresult initializeClone(Connection *aClone, bool aReadOnly);
 
@@ -195,11 +232,13 @@ private:
   /**
    * Helper for calls to sqlite3_exec. Reports long delays to Telemetry.
    *
+   * @param aNativeConnection
+   *        The underlying Sqlite connection to execute the query with.
    * @param aSqlString
    *        SQL string to execute
    * @return the result from sqlite3_exec.
    */
-  int executeSql(const char *aSqlString);
+  int executeSql(sqlite3 *aNativeConnection, const char *aSqlString);
 
   /**
    * Describes a certain primitive type in the database.
@@ -256,25 +295,34 @@ private:
    * returns null.
    *
    * This variable should be accessed while holding the
-   * mAsyncExecutionMutex.
+   * sharedAsyncExecutionMutex.
    */
   bool mAsyncExecutionThreadShuttingDown;
 
   /**
+   * Set to true just prior to calling sqlite3_close on the
+   * connection.
+   *
+   * This variable should be accessed while holding the
+   * sharedAsyncExecutionMutex.
+   */
+  bool mConnectionClosed;
+
+  /**
    * Tracks if we have a transaction in progress or not.  Access protected by
-   * mDBMutex.
+   * sharedDBMutex.
    */
   bool mTransactionInProgress;
 
   /**
    * Stores the mapping of a given function by name to its instance.  Access is
-   * protected by mDBMutex.
+   * protected by sharedDBMutex.
    */
   nsDataHashtable<nsCStringHashKey, FunctionInfo> mFunctions;
 
   /**
    * Stores the registered progress handler for the database connection.  Access
-   * is protected by mDBMutex.
+   * is protected by sharedDBMutex.
    */
   nsCOMPtr<mozIStorageProgressHandler> mProgressHandler;
 
