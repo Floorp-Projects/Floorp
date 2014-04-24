@@ -46,5 +46,3 @@
     // reflow so that that rare edge case doesn't lead to reftest
     // failures.
     branch.setBoolPref("layout.interruptible-reflow.enabled", false);
-    // Don't try to connect to the telemetry server.
-    branch.setBoolPref("toolkit.telemetry.enabled", false);
