@@ -103,11 +103,21 @@ WifiGeoPositionProvider.prototype = {
       return;
 
     this.started = true;
+    let settingsCallback = {
+      handle: function(name, result) {
+        gLoggingEnabled = result && result.value === true ? true : false;
+      },
+      
+      handleError: function(message) {
+        gLoggingEnabled = false;
+        LOG("settings callback threw an exception, dropping");
+      }
+    };
 
     try {
       Services.obs.addObserver(this, SETTING_CHANGED_TOPIC, false);
       let settings = Cc["@mozilla.org/settingsService;1"].getService(Ci.nsISettingsService);
-      settings.createLock().get(SETTING_DEBUG_ENABLED, this);
+      settings.createLock().get(SETTING_DEBUG_ENABLED, settingsCallback);
     } catch(ex) {
       // This platform doesn't have the settings interface, and that is just peachy
     }
