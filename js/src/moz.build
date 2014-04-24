@@ -246,6 +246,7 @@ if CONFIG['ENABLE_ION']:
         'jit/Bailouts.cpp',
         'jit/BaselineBailouts.cpp',
         'jit/BaselineCompiler.cpp',
+        'jit/BaselineDebugModeOSR.cpp',
         'jit/BaselineFrame.cpp',
         'jit/BaselineFrameInfo.cpp',
         'jit/BaselineIC.cpp',
