@@ -80,9 +80,6 @@ DebuggerServerController.prototype = {
   // nsIDebuggerController
 
   start: function(portOrPath) {
-    if (!portOrPath) {
-      throw new Error("No TCP port or unix socket path specified.");
-    }
 
     if (!this.debugger.initialized) {
       // Ask for remote connections.
@@ -133,10 +130,12 @@ DebuggerServerController.prototype = {
 
     }
 
-    try {
-      this.debugger.openListener(portOrPath);
-    } catch (e) {
-      dump("Unable to start debugger server (" + portOrPath + "): " + e + "\n");
+    if (portOrPath) {
+      try {
+        this.debugger.openListener(portOrPath);
+      } catch (e) {
+        dump("Unable to start debugger server (" + portOrPath + "): " + e + "\n");
+      }
     }
 
   },

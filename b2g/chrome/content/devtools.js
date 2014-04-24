@@ -15,6 +15,10 @@ XPCOMUtils.defineLazyGetter(this, 'DebuggerClient', function() {
   return Cu.import('resource://gre/modules/devtools/dbg-client.jsm', {}).DebuggerClient;
 });
 
+XPCOMUtils.defineLazyGetter(this, 'DebuggerServer', function() {
+  return Cu.import('resource://gre/modules/devtools/dbg-server.jsm', {}).DebuggerServer;
+});
+
 XPCOMUtils.defineLazyGetter(this, 'WebConsoleUtils', function() {
   return devtools.require('devtools/toolkit/webconsole/utils').Utils;
 });
@@ -58,7 +62,7 @@ let developerHUD = {
       return;
 
     if (!DebuggerServer.initialized) {
-      RemoteDebugger.start();
+      DebuggerServer.controller.start(null);
     }
 
     // We instantiate a local debugger connection so that watchers can use our
