@@ -3009,6 +3009,22 @@ jit::TraceIonScripts(JSTracer* trc, JSScript *script)
         jit::BaselineScript::Trace(trc, script->baselineScript());
 }
 
+bool
+jit::RematerializeAllFrames(JSContext *cx, JSCompartment *comp)
+{
+    for (JitActivationIterator iter(comp->runtimeFromMainThread()); !iter.done(); ++iter) {
+        if (iter.activation()->compartment() == comp) {
+            for (JitFrameIterator frameIter(iter); !frameIter.done(); ++frameIter) {
+                if (!frameIter.isIonJS())
+                    continue;
+                if (!iter.activation()->asJit()->getRematerializedFrame(cx, frameIter))
+                    return false;
+            }
+        }
+    }
+    return true;
+}
+
 AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
 {
     MOZ_ASSERT(!!comp_ != !!zone_);
