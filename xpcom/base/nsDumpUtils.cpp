@@ -48,6 +48,9 @@ using namespace mozilla;
 // specific signal occurs.
 static Atomic<int> sDumpPipeWriteFd(-1);
 
+const char* const FifoWatcher::kPrefName =
+    "memory_info_dumper.watch_fifo.enabled";
+
 static void
 DumpSignalHandler(int aSignum)
 {
@@ -239,8 +242,7 @@ FifoWatcher::GetSingleton()
 {
   if (!sSingleton) {
     nsAutoCString dirPath;
-    Preferences::GetCString(
-      "memory_info_dumper.watch_fifo.directory", &dirPath);
+    Preferences::GetCString(kPrefName, &dirPath);
     sSingleton = new FifoWatcher(dirPath);
     sSingleton->Init();
     ClearOnShutdown(&sSingleton);
