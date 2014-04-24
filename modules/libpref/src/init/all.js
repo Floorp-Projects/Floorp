@@ -1337,6 +1337,9 @@ pref("network.seer.preserve", 80); // percentage of seer data to keep when clean
 //   [scheme "://"] [host [":" port]]
 // For example, "foo.com" would match "http://www.foo.com/bar", etc.
 
+// Allow insecure NTLMv1 when needed.
+pref("network.negotiate-auth.allow-insecure-ntlm-v1", false);
+
 // This list controls which URIs can use the negotiate-auth protocol.  This
 // list should be limited to the servers you know you'll need to login to.
 pref("network.negotiate-auth.trusted-uris", "");
