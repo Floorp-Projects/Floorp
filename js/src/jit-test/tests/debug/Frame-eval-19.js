@@ -2,18 +2,22 @@
 
 load(libdir + "jitopts.js");
 
-if (!jitTogglesMatch(Opts_Ion2NoParallelCompilation))
+if (!jitTogglesMatch(Opts_IonEagerNoParallelCompilation))
   quit(0);
 
-withJitOptions(Opts_Ion2NoParallelCompilation, function () {
+withJitOptions(Opts_IonEagerNoParallelCompilation, function () {
   var g = newGlobal();
   var dbg = new Debugger;
 
   g.eval("" + function f(d) { g(d); });
   g.eval("" + function g(d) { h(d); });
-  g.eval("" + function h(d) { while (d); });
+  g.eval("" + function h(d) {
+    var i = 0;
+    while (d)
+      interruptIf(d && i++ == 4000);
+  });
 
-  timeout(5, function () {
+  setInterruptCallback(function () {
     dbg.addDebuggee(g);
     var frame = dbg.getNewestFrame();
     if (frame.callee.name != "h" || frame.implementation != "ion")
