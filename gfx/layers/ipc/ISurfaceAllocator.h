@@ -17,7 +17,6 @@
 #include "mozilla/layers/LayersMessages.h" // for ShmemSection
 #include "LayersTypes.h"
 #include <vector>
-#include "mozilla/layers/AtomicRefCountedWithFinalize.h"
 
 /*
  * FIXME [bjacob] *** PURE CRAZYNESS WARNING ***
@@ -77,13 +76,11 @@ bool ReleaseOwnedSurfaceDescriptor(const SurfaceDescriptor& aDescriptor);
  * These methods should be only called in the ipdl implementor's thread, unless
  * specified otherwise in the implementing class.
  */
-class ISurfaceAllocator : public AtomicRefCountedWithFinalize<ISurfaceAllocator>
+class ISurfaceAllocator : public AtomicRefCounted<ISurfaceAllocator>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(ISurfaceAllocator)
   ISurfaceAllocator() {}
-
-  void Finalize();
 
   /**
    * Returns the type of backend that is used off the main thread.
@@ -184,7 +181,7 @@ protected:
   // This is used to implement an extremely simple & naive heap allocator.
   std::vector<mozilla::ipc::Shmem> mUsedShmems;
 
-  friend class AtomicRefCountedWithFinalize<ISurfaceAllocator>;
+  friend class detail::RefCounted<ISurfaceAllocator, detail::AtomicRefCount>;
 };
 
 class GfxMemoryImageReporter MOZ_FINAL : public nsIMemoryReporter
