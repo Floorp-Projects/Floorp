@@ -109,7 +109,7 @@ bool TestNeuterObject()
 {
     JS::RootedObject obj(cx, CreateNewObject(8, 12));
     CHECK(obj);
-    JS_NeuterArrayBuffer(cx, obj);
+    JS_NeuterArrayBuffer(cx, obj, ChangeData);
     CHECK(isNeutered(obj));
 
     return true;
