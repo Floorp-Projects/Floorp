@@ -36,6 +36,15 @@ class PLayerChild;
 class TextureClientPool;
 class SimpleTextureClientPool;
 
+class TextureClientPoolMember
+  : public LinkedListElement<TextureClientPoolMember> {
+public:
+  TextureClientPoolMember(gfx::SurfaceFormat aFormat, TextureClientPool* aTexturePool);
+
+  gfx::SurfaceFormat mFormat;
+  RefPtr<TextureClientPool> mTexturePool;
+};
+
 class ClientLayerManager : public LayerManager
 {
   typedef nsTArray<nsRefPtr<Layer> > LayerRefArray;
@@ -220,7 +229,7 @@ private:
   bool mNeedsComposite;
 
   RefPtr<ShadowLayerForwarder> mForwarder;
-  nsAutoTArray<RefPtr<TextureClientPool>,2> mTexturePools;
+  LinkedList<TextureClientPoolMember> mTexturePools;
 
   // indexed by gfx::SurfaceFormat
   nsTArray<RefPtr<SimpleTextureClientPool> > mSimpleTilePools;
