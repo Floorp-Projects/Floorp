@@ -120,7 +120,3 @@ category update-timer WebappsUpdateTimer @mozilla.org/webapps-update-timer;1,get
 # ColorPicker.js
 component {430b987f-bb9f-46a3-99a5-241749220b29} ColorPicker.js
 contract @mozilla.org/colorpicker;1 {430b987f-bb9f-46a3-99a5-241749220b29}
-
-# DebuggerServerController.js
-component {f6e8e269-ae4a-4c4a-bf80-fb4164fb072c} DebuggerServerController.js
-contract @mozilla.org/devtools/DebuggerServerController;1 {f6e8e269-ae4a-4c4a-bf80-fb4164fb072c}

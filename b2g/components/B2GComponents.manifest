@@ -87,7 +87,3 @@ component {c83c02c0-5d43-4e3e-987f-9173b313e880} SimulatorScreen.js
 contract @mozilla.org/simulator-screen;1 {c83c02c0-5d43-4e3e-987f-9173b313e880}
 category profile-after-change SimulatorScreen @mozilla.org/simulator-screen;1
 #endif
-
-# DebuggerServerController.js
-component {9390f6ac-7914-46c6-b9d0-ccc7db550d8c} DebuggerServerController.js
-contract @mozilla.org/devtools/DebuggerServerController;1 {9390f6ac-7914-46c6-b9d0-ccc7db550d8c}

@@ -439,13 +439,18 @@ let gDevToolsBrowser = {
     toggleCmd("Tools:DevAppMgr", appMgrEnabled);
 
     // Enable Browser Toolbox?
-    let chromeEnabled = Services.prefs.getBoolPref("devtools.chrome.enabled") &&
+    let chromeEnabled = Services.prefs.getBoolPref("devtools.chrome.enabled");
+    let devtoolsRemoteEnabled = Services.prefs.getBoolPref("devtools.debugger.remote-enabled");
+    let remoteEnabled = chromeEnabled && devtoolsRemoteEnabled &&
                         Services.prefs.getBoolPref("devtools.debugger.chrome-enabled");
-    toggleCmd("Tools:BrowserToolbox", chromeEnabled);
+    toggleCmd("Tools:BrowserToolbox", remoteEnabled);
 
     // Enable Error Console?
     let consoleEnabled = Services.prefs.getBoolPref("devtools.errorconsole.enabled");
     toggleCmd("Tools:ErrorConsole", consoleEnabled);
+
+    // Enable DevTools connection screen, if the preference allows this.
+    toggleCmd("Tools:DevToolsConnect", devtoolsRemoteEnabled);
   },
 
   observe: function(subject, topic, prefName) {
