@@ -512,8 +512,7 @@ struct CompartmentStats
     macro(Other,   NotLiveGCThing, compartmentObject) \
     macro(Other,   NotLiveGCThing, crossCompartmentWrappersTable) \
     macro(Other,   NotLiveGCThing, regexpCompartment) \
-    macro(Other,   NotLiveGCThing, debuggeesSet) \
-    macro(Other,   IsLiveGCThing,  savedStacksSet)
+    macro(Other,   NotLiveGCThing, debuggeesSet)
 
     CompartmentStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
