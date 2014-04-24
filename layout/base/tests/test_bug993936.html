@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=993936
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 993936</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 993936 **/
+
+var currentId = 0;
+var evictedTouchesCount = 0;
+
+function testtouch(aOptions) {
+  if (!aOptions)
+    aOptions = {};
+  this.identifier = aOptions.identifier || 0;
+  this.target = aOptions.target || 0;
+  this.page = aOptions.page || {x: 0, y: 0};
+  this.radius = aOptions.radius || {x: 0, y: 0};
+  this.rotationAngle = aOptions.rotationAngle || 0;
+  this.force = aOptions.force || 1;
+}
+
+function touchEvent(aOptions) {
+  if (!aOptions) {
+    aOptions = {};
+  }
+  this.ctrlKey = aOptions.ctrlKey || false;
+  this.altKey = aOptions.altKey || false;
+  this.shiftKey = aOptions.shiftKey || false;
+  this.metaKey = aOptions.metaKey || false;
+  this.touches = aOptions.touches || [];
+  this.targetTouches = aOptions.targetTouches || [];
+  this.changedTouches = aOptions.changedTouches || [];
+}
+
+function sendTouchEvent(windowUtils, aType, aEvent, aModifiers) {
+  var ids = [], xs=[], ys=[], rxs = [], rys = [],
+      rotations = [], forces = [];
+
+  for (var touchType of ["touches", "changedTouches", "targetTouches"]) {
+    for (var i = 0; i < aEvent[touchType].length; i++) {
+      if (ids.indexOf(aEvent[touchType][i].identifier) == -1) {
+        ids.push(aEvent[touchType][i].identifier);
+        xs.push(aEvent[touchType][i].page.x);
+        ys.push(aEvent[touchType][i].page.y);
+        rxs.push(aEvent[touchType][i].radius.x);
+        rys.push(aEvent[touchType][i].radius.y);
+        rotations.push(aEvent[touchType][i].rotationAngle);
+        forces.push(aEvent[touchType][i].force);
+      }
+    }
+  }
+  return windowUtils.sendTouchEvent(aType,
+                                    ids, xs, ys, rxs, rys,
+                                    rotations, forces,
+                                    ids.length, aModifiers, 0);
+}
+
+function getSingleTouchEventForTarget(target, cwu) {
+  currentId++;
+  var bcr = target.getBoundingClientRect();
+  var touch = new testtouch({
+    page: {x: Math.round(bcr.left + bcr.width/2),
+           y: Math.round(bcr.top  + bcr.height/2)},
+    target: target,
+    identifier: currentId,
+  });
+  var event = new touchEvent({
+    touches: [touch],
+    targetTouches: [touch],
+    changedTouches: [touch]
+  });
+  return event;
+}
+
+function getMultiTouchEventForTarget(target, cwu) {
+  currentId++;
+  var bcr = target.getBoundingClientRect();
+  var touch1 = new testtouch({
+    page: {x: Math.round(bcr.left + bcr.width/2),
+           y: Math.round(bcr.top  + bcr.height/2)},
+    target: target,
+    identifier: currentId,
+  });
+  currentId++;
+  var touch2 = new testtouch({
+    page: {x: Math.round(bcr.left + bcr.width),
+           y: Math.round(bcr.top  + bcr.height)},
+    target: target,
+    identifier: currentId,
+  });
+  var event = new touchEvent({
+    touches: [touch1, touch2],
+    targetTouches: [touch1, touch2],
+    changedTouches: [touch1, touch2]
+  });
+  return event;
+}
+
+function runTests() {
+  var cwu = SpecialPowers.getDOMWindowUtils(window);
+
+  var event1 = getMultiTouchEventForTarget(d0, cwu);
+  sendTouchEvent(cwu, "touchstart", event1, 0);
+  sendTouchEvent(cwu, "touchmove", event1, 0);
+  is(evictedTouchesCount, 0, "Still no evicted touches");
+
+  var event2 = getSingleTouchEventForTarget(d0, cwu);
+  sendTouchEvent(cwu, "touchstart", event2, 0);
+
+  // By now we should get touchend event
+  ok(evictedTouchesCount > 0, "Got evicted touch");
+
+  finishTest();
+}
+
+function finishTest() {
+  // Let window.onerror have a chance to fire
+  setTimeout(function() {
+    SimpleTest.finish();
+  }, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=993936">Mozilla Bug 993936</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<div id="d0">
+    Test div
+</div>
+
+<script>
+var d0 = document.getElementById("d0");
+
+d0.addEventListener("touchend", function(ev) {
+  evictedTouchesCount++;
+});
+
+window.onload = function () {
+  setTimeout(function() {
+    runTests();
+  }, 0);
+}
+
+</script>
+</body>
+</html>
