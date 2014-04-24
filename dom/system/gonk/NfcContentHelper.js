@@ -362,7 +362,7 @@ NfcContentHelper.prototype = {
   // nsIObserver
   observe: function observe(subject, topic, data) {
     if (topic == "xpcom-shutdown") {
-      this.removeMessageListener();
+      this.destroyDOMRequestHelper();
       Services.obs.removeObserver(this, "xpcom-shutdown");
       cpmm = null;
     }
