@@ -41,6 +41,11 @@ add_task(function* test_state() {
   // xpcshell tests have plugins in per-test profiles, so that's fine.
   let file = get_test_plugin();
   file.remove(true);
+  file = get_test_plugin(true);
+  file.remove(true);
+
+  Services.prefs.setIntPref("plugin.default.state", Ci.nsIPluginTag.STATE_CLICKTOPLAY);
+  Services.prefs.setIntPref("plugin.defaultXpi.state", Ci.nsIPluginTag.STATE_ENABLED);
 
   let success = yield installAddon(getTestaddonFilename());
   Assert.ok(success, "Should have installed addon.");
@@ -105,4 +110,8 @@ add_task(function* test_state() {
 
   pluginDir.append(testPlugin.filename);
   Assert.ok(pluginDir.exists(), "Plugin file should exist in addon directory: " + pluginDir.path);
+
+  testPlugin = get_test_plugintag("Second Test Plug-in");
+  Assert.notEqual(testPlugin, null, "Second test plugin should have been found");
+  Assert.equal(testPlugin.enabledState, Ci.nsIPluginTag.STATE_ENABLED, "Second test plugin from addon should have state enabled");
 });
