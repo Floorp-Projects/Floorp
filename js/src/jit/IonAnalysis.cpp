@@ -2241,7 +2241,7 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
     IonContext ictx(cx, &temp);
 
     if (!cx->compartment()->ensureJitCompartmentExists(cx))
-        return Method_Error;
+        return false;
 
     if (!script->hasBaselineScript()) {
         MethodStatus status = BaselineCompile(cx, script);
@@ -2301,7 +2301,6 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
     // appear in the graph.
     Vector<MInstruction *> instructions(cx);
 
-    Vector<MDefinition *> useWorklist(cx);
     for (MUseDefIterator uses(thisValue); uses; uses++) {
         MDefinition *use = uses.def();
 
@@ -2359,5 +2358,116 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
             return true;
     }
 
+    return true;
+}
+
+static bool
+ArgumentsUseCanBeLazy(JSContext *cx, JSScript *script, MInstruction *ins, size_t index)
+{
+    // We can read the frame's arguments directly for f.apply(x, arguments).
+    if (ins->isCall()) {
+        if (*ins->toCall()->resumePoint()->pc() == JSOP_FUNAPPLY &&
+            ins->toCall()->numActualArgs() == 2 &&
+            index == MCall::IndexOfArgument(1))
+        {
+            return true;
+        }
+    }
+
+    // arguments[i] can read fp->canonicalActualArg(i) directly.
+    if (ins->isCallGetElement() && index == 0)
+        return true;
+
+    // arguments.length length can read fp->numActualArgs() directly.
+    if (ins->isCallGetProperty() && index == 0 && ins->toCallGetProperty()->name() == cx->names().length)
+        return true;
+
+    return false;
+}
+
+bool
+jit::AnalyzeArgumentsUsage(JSContext *cx, JSScript *scriptArg)
+{
+    RootedScript script(cx, scriptArg);
+    types::AutoEnterAnalysis enter(cx);
+
+    JS_ASSERT(!script->analyzedArgsUsage());
+
+    // Treat the script as needing an arguments object until we determine it
+    // does not need one. This both allows us to easily see where the arguments
+    // object can escape through assignments to the function's named arguments,
+    // and also simplifies handling of early returns.
+    script->setNeedsArgsObj(true);
+
+    if (!jit::IsIonEnabled(cx) || !script->compileAndGo())
+        return true;
+
+    static const uint32_t MAX_SCRIPT_SIZE = 10000;
+    if (script->length() > MAX_SCRIPT_SIZE)
+        return true;
+
+    if (!script->ensureHasTypes(cx))
+        return false;
+
+    LifoAlloc alloc(types::TypeZone::TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+
+    TempAllocator temp(&alloc);
+    IonContext ictx(cx, &temp);
+
+    if (!cx->compartment()->ensureJitCompartmentExists(cx))
+        return false;
+
+    MIRGraph graph(&temp);
+    CompileInfo info(script, script->functionNonDelazifying(),
+                     /* osrPc = */ nullptr, /* constructing = */ false,
+                     ArgumentsUsageAnalysis,
+                     /* needsArgsObj = */ true);
+
+    AutoTempAllocatorRooter root(cx, &temp);
+
+    const OptimizationInfo *optimizationInfo = js_IonOptimizations.get(Optimization_Normal);
+
+    types::CompilerConstraintList *constraints = types::NewCompilerConstraintList(temp);
+    if (!constraints)
+        return false;
+
+    BaselineInspector inspector(script);
+    const JitCompileOptions options(cx);
+
+    IonBuilder builder(nullptr, CompileCompartment::get(cx->compartment()), options, &temp, &graph, constraints,
+                       &inspector, &info, optimizationInfo, /* baselineFrame = */ nullptr);
+
+    if (!builder.build()) {
+        if (builder.abortReason() == AbortReason_Alloc)
+            return false;
+        return true;
+    }
+
+    if (!SplitCriticalEdges(graph))
+        return false;
+
+    if (!RenumberBlocks(graph))
+        return false;
+
+    if (!BuildDominatorTree(graph))
+        return false;
+
+    if (!EliminatePhis(&builder, graph, AggressiveObservability))
+        return false;
+
+    MDefinition *argumentsValue = graph.begin()->getSlot(info.argsObjSlot());
+
+    for (MUseDefIterator uses(argumentsValue); uses; uses++) {
+        MDefinition *use = uses.def();
+
+        // Don't track |arguments| through assignments to phis.
+        if (!use->isInstruction())
+            return true;
+
+        if (!ArgumentsUseCanBeLazy(cx, script, use->toInstruction(), uses.index()))
+            return true;
+    }
+
+    script->setNeedsArgsObj(false);
     return true;
 }
