@@ -670,7 +670,7 @@ Connection::initializeInternal(nsIFile* aDatabaseFile)
   nsAutoCString cacheSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
                                "PRAGMA cache_size = ");
   cacheSizeQuery.AppendInt(-MAX_CACHE_SIZE_KIBIBYTES);
-  int srv = executeSql(cacheSizeQuery.get());
+  int srv = executeSql(mDBConn, cacheSizeQuery.get());
   if (srv != SQLITE_OK) {
     ::sqlite3_close(mDBConn);
     mDBConn = nullptr;
@@ -1056,13 +1056,14 @@ Connection::prepareStatement(sqlite3 *aNativeConnection, const nsCString &aSQL,
 
 
 int
-Connection::executeSql(const char *aSqlString)
+Connection::executeSql(sqlite3 *aNativeConnection, const char *aSqlString)
 {
-  if (!mDBConn)
+  if (isClosed())
     return SQLITE_MISUSE;
 
   TimeStamp startTime = TimeStamp::Now();
-  int srv = ::sqlite3_exec(mDBConn, aSqlString, nullptr, nullptr, nullptr);
+  int srv = ::sqlite3_exec(aNativeConnection, aSqlString, nullptr, nullptr,
+                           nullptr);
 
   // Report very slow SQL statements to Telemetry
   TimeDuration duration = TimeStamp::Now() - startTime;
@@ -1411,7 +1412,7 @@ Connection::ExecuteSimpleSQL(const nsACString &aSQLStatement)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
-  int srv = executeSql(PromiseFlatCString(aSQLStatement).get());
+  int srv = executeSql(mDBConn, PromiseFlatCString(aSQLStatement).get());
   return convertResultCode(srv);
 }
 
@@ -1503,19 +1504,26 @@ Connection::BeginTransactionAs(int32_t aTransactionType)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
+  return beginTransactionInternal(mDBConn, aTransactionType);
+}
+
+nsresult
+Connection::beginTransactionInternal(sqlite3 *aNativeConnection,
+                                     int32_t aTransactionType)
+{
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
   if (mTransactionInProgress)
     return NS_ERROR_FAILURE;
   nsresult rv;
   switch(aTransactionType) {
     case TRANSACTION_DEFERRED:
-      rv = ExecuteSimpleSQL(NS_LITERAL_CSTRING("BEGIN DEFERRED"));
+      rv = convertResultCode(executeSql(aNativeConnection, "BEGIN DEFERRED"));
       break;
     case TRANSACTION_IMMEDIATE:
-      rv = ExecuteSimpleSQL(NS_LITERAL_CSTRING("BEGIN IMMEDIATE"));
+      rv = convertResultCode(executeSql(aNativeConnection, "BEGIN IMMEDIATE"));
       break;
     case TRANSACTION_EXCLUSIVE:
-      rv = ExecuteSimpleSQL(NS_LITERAL_CSTRING("BEGIN EXCLUSIVE"));
+      rv = convertResultCode(executeSql(aNativeConnection, "BEGIN EXCLUSIVE"));
       break;
     default:
       return NS_ERROR_ILLEGAL_VALUE;
@@ -1531,11 +1539,17 @@ Connection::CommitTransaction()
   if (!mDBConn)
     return NS_ERROR_NOT_INITIALIZED;
 
+  return commitTransactionInternal(mDBConn);
+}
+
+nsresult
+Connection::commitTransactionInternal(sqlite3 *aNativeConnection)
+{
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
   if (!mTransactionInProgress)
     return NS_ERROR_UNEXPECTED;
-
-  nsresult rv = ExecuteSimpleSQL(NS_LITERAL_CSTRING("COMMIT TRANSACTION"));
+  nsresult rv =
+    convertResultCode(executeSql(aNativeConnection, "COMMIT TRANSACTION"));
   if (NS_SUCCEEDED(rv))
     mTransactionInProgress = false;
   return rv;
@@ -1547,11 +1561,18 @@ Connection::RollbackTransaction()
   if (!mDBConn)
     return NS_ERROR_NOT_INITIALIZED;
 
+  return rollbackTransactionInternal(mDBConn);
+}
+
+nsresult
+Connection::rollbackTransactionInternal(sqlite3 *aNativeConnection)
+{
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
   if (!mTransactionInProgress)
     return NS_ERROR_UNEXPECTED;
 
-  nsresult rv = ExecuteSimpleSQL(NS_LITERAL_CSTRING("ROLLBACK TRANSACTION"));
+  nsresult rv =
+    convertResultCode(executeSql(aNativeConnection, "ROLLBACK TRANSACTION"));
   if (NS_SUCCEEDED(rv))
     mTransactionInProgress = false;
   return rv;
@@ -1567,7 +1588,7 @@ Connection::CreateTable(const char *aTableName,
   if (!buf)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  int srv = executeSql(buf);
+  int srv = executeSql(mDBConn, buf);
   ::PR_smprintf_free(buf);
 
   return convertResultCode(srv);

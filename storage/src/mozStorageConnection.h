@@ -191,6 +191,16 @@ public:
    */
   int stepStatement(sqlite3* aNativeConnection, sqlite3_stmt* aStatement);
 
+  /**
+   * Raw connection transaction management.
+   *
+   * @see BeginTransactionAs, CommitTransaction, RollbackTransaction.
+   */
+  nsresult beginTransactionInternal(sqlite3 *aNativeConnection,
+                                    int32_t aTransactionType=TRANSACTION_DEFERRED);
+  nsresult commitTransactionInternal(sqlite3 *aNativeConnection);
+  nsresult rollbackTransactionInternal(sqlite3 *aNativeConnection);
+
   bool connectionReady();
 
   /**
@@ -222,11 +232,13 @@ private:
   /**
    * Helper for calls to sqlite3_exec. Reports long delays to Telemetry.
    *
+   * @param aNativeConnection
+   *        The underlying Sqlite connection to execute the query with.
    * @param aSqlString
    *        SQL string to execute
    * @return the result from sqlite3_exec.
    */
-  int executeSql(const char *aSqlString);
+  int executeSql(sqlite3 *aNativeConnection, const char *aSqlString);
 
   /**
    * Describes a certain primitive type in the database.
