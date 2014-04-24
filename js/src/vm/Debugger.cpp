@@ -756,6 +756,19 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
 
             vp.setObject(*dobj);
         }
+    } else if (vp.isMagic()) {
+        // Other magic values should not have escaped.
+        MOZ_ASSERT(vp.whyMagic() == JS_OPTIMIZED_OUT);
+
+        RootedObject optObj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+        if (!optObj)
+            return false;
+
+        RootedValue trueVal(cx, BooleanValue(true));
+        if (!JSObject::defineProperty(cx, optObj, cx->names().optimizedOut, trueVal))
+            return false;
+
+        vp.setObject(*optObj);
     } else if (!cx->compartment()->wrap(cx, vp)) {
         vp.setUndefined();
         return false;
@@ -5956,9 +5969,9 @@ JS_DefineDebuggerObject(JSContext *cx, HandleObject obj)
     if (!objectProto)
         return false;
     envProto = js_InitClass(cx, debugCtor, objProto, &DebuggerEnv_class,
-                                      DebuggerEnv_construct, 0,
-                                      DebuggerEnv_properties, DebuggerEnv_methods,
-                                      nullptr, nullptr);
+                            DebuggerEnv_construct, 0,
+                            DebuggerEnv_properties, DebuggerEnv_methods,
+                            nullptr, nullptr);
     if (!envProto)
         return false;
     memoryProto = js_InitClass(cx, debugCtor, objProto, &DebuggerMemory::class_,

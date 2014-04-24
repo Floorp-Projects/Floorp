@@ -453,6 +453,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      *
      * If *vp is an object, this produces a (new or existing) Debugger.Object
      * wrapper for it. Otherwise this is the same as JSCompartment::wrap.
+     *
+     * If *vp is a magic JS_OPTIMIZED_OUT value, this produces a plain object
+     * of the form { optimizedOut: true }.
      */
     bool wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp);
 

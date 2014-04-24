@@ -150,7 +150,7 @@ CodeGeneratorShared::encodeAllocations(LSnapshot *snapshot, MResumePoint *resume
             mir = mir->toBox()->getOperand(0);
 
         MIRType type = mir->isUnused()
-                       ? MIRType_Undefined
+                       ? MIRType_MagicOptimizedOut
                        : mir->type();
 
         RValueAllocation alloc;
@@ -194,9 +194,14 @@ CodeGeneratorShared::encodeAllocations(LSnapshot *snapshot, MResumePoint *resume
             break;
           }
           case MIRType_MagicOptimizedArguments:
+          case MIRType_MagicOptimizedOut:
           {
             uint32_t index;
-            if (!graph.addConstantToPool(MagicValue(JS_OPTIMIZED_ARGUMENTS), &index))
+            JSWhyMagic why = (type == MIRType_MagicOptimizedArguments
+                              ? JS_OPTIMIZED_ARGUMENTS
+                              : JS_OPTIMIZED_OUT);
+            Value v = MagicValue(why);
+            if (!graph.addConstantToPool(v, &index))
                 return false;
             alloc = RValueAllocation::ConstantPool(index);
             break;
