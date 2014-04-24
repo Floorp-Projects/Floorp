@@ -3686,34 +3686,39 @@ IonBuilder::processThrow()
 {
     MDefinition *def = current->pop();
 
-    if (graph().hasTryBlock()) {
-        // MThrow is not marked as effectful. This means when it throws and we
-        // are inside a try block, we could use an earlier resume point and this
-        // resume point may not be up-to-date, for example:
-        //
-        // (function() {
-        //     try {
-        //         var x = 1;
-        //         foo(); // resume point
-        //         x = 2;
-        //         throw foo;
-        //     } catch(e) {
-        //         print(x);
-        //     }
-        // ])();
-        //
-        // If we use the resume point after the call, this will print 1 instead
-        // of 2. To fix this, we create a resume point right before the MThrow.
-        //
-        // Note that this is not a problem for instructions other than MThrow
-        // because they are either marked as effectful (have their own resume
-        // point) or cannot throw a catchable exception.
-        MNop *ins = MNop::New(alloc());
-        current->add(ins);
+    // MThrow is not marked as effectful. This means when it throws and we
+    // are inside a try block, we could use an earlier resume point and this
+    // resume point may not be up-to-date, for example:
+    //
+    // (function() {
+    //     try {
+    //         var x = 1;
+    //         foo(); // resume point
+    //         x = 2;
+    //         throw foo;
+    //     } catch(e) {
+    //         print(x);
+    //     }
+    // ])();
+    //
+    // If we use the resume point after the call, this will print 1 instead
+    // of 2. To fix this, we create a resume point right before the MThrow.
+    //
+    // Note that this is not a problem for instructions other than MThrow
+    // because they are either marked as effectful (have their own resume
+    // point) or cannot throw a catchable exception.
+    //
+    // We always install this resume point (instead of only when the function
+    // has a try block) in order to handle the Debugger onExceptionUnwind
+    // hook. When we need to handle the hook, we bail out to baseline right
+    // after the throw and propagate the exception when debug mode is on. This
+    // is opposed to the normal behavior of resuming directly in the
+    // associated catch block.
+    MNop *nop = MNop::New(alloc());
+    current->add(nop);
 
-        if (!resumeAfter(ins))
-            return ControlStatus_Error;
-    }
+    if (!resumeAfter(nop))
+        return ControlStatus_Error;
 
     MThrow *ins = MThrow::New(alloc(), def);
     current->end(ins);
