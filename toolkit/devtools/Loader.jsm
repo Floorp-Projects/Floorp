@@ -276,6 +276,24 @@ DevToolsLoader.prototype = {
   },
 
   /**
+   * Define a getter property on the given object that requires the given
+   * module. This enables delaying importing modules until the module is
+   * actually used.
+   *
+   * @param Object obj
+   *    The object to define the property on.
+   * @param String property
+   *    The property name.
+   * @param String module
+   *    The module path.
+   */
+  lazyRequireGetter: function (obj, property, module) {
+    Object.defineProperty(obj, property, {
+      get: () => this.require(module)
+    });
+  },
+
+  /**
    * Add a URI to the loader.
    * @param string id
    *    The module id that can be used within the loader to refer to this module.
