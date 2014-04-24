@@ -37,10 +37,7 @@
 #include "nsThreadUtils.h"
 #include "ScrollbarStyles.h"
 
-#ifdef IBMBIDI
 class nsBidiPresUtils;
-#endif // IBMBIDI
-
 class nsAString;
 class nsIPrintSettings;
 class nsDocShell;
@@ -692,7 +689,6 @@ public:
   bool StyleUpdateForAllAnimationsIsUpToDate();
   void TickLastStyleUpdateForAllAnimations();
 
-#ifdef IBMBIDI
   /**
    *  Check if bidi enabled (set depending on the presence of RTL
    *  characters or when default directionality is RTL).
@@ -755,7 +751,6 @@ public:
    * include nsIDocument.
    */
   NS_HIDDEN_(uint32_t) GetBidi() const;
-#endif // IBMBIDI
 
   /**
    * Render only Selection

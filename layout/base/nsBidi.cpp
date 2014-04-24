@@ -3,7 +3,6 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifdef IBMBIDI
 
 #include "nsBidi.h"
 #include "nsUnicodeProperties.h"
@@ -2218,4 +2217,3 @@ nsresult nsBidi::WriteReverse(const char16_t *aSrc, int32_t aSrcLength, char16_t
   return NS_OK;
 }
 #endif // FULL_BIDI_ENGINE
-#endif // IBMBIDI

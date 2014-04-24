@@ -66,9 +66,7 @@
 #include "nsAccessibilityService.h"
 #include "nsIWritablePropertyBag2.h"
 #endif
-#ifdef IBMBIDI
 #include "nsBidiUtils.h"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::layout;
