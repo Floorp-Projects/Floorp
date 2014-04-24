@@ -12,7 +12,9 @@
 #include "jit/IonSpewer.h"
 #include "jit/Recover.h"
 #include "jit/RematerializedFrame.h"
+
 #include "vm/ArgumentsObject.h"
+#include "vm/Debugger.h"
 #include "vm/TraceLogging.h"
 
 #include "jsscriptinlines.h"
@@ -1536,7 +1538,7 @@ HandleBaselineInfoBailout(JSContext *cx, JSScript *outerScript, JSScript *innerS
     return Invalidate(cx, outerScript);
 }
 
-static void
+static bool
 CopyFromRematerializedFrame(JSContext *cx, JitActivation *act, uint8_t *fp, size_t inlineDepth,
                             BaselineFrame *frame)
 {
@@ -1545,7 +1547,7 @@ CopyFromRematerializedFrame(JSContext *cx, JitActivation *act, uint8_t *fp, size
     // We might not have rematerialized a frame if the user never requested a
     // Debugger.Frame for it.
     if (!rematFrame)
-        return;
+        return true;
 
     MOZ_ASSERT(rematFrame->script() == frame->script());
     MOZ_ASSERT(rematFrame->numActualArgs() == frame->numActualArgs());
@@ -1562,6 +1564,11 @@ CopyFromRematerializedFrame(JSContext *cx, JitActivation *act, uint8_t *fp, size
     IonSpew(IonSpew_BaselineBailouts,
             "  Copied from rematerialized frame at (%p,%u)",
             fp, inlineDepth);
+
+    if (cx->compartment()->debugMode())
+        return Debugger::handleIonBailout(cx, rematFrame, frame);
+
+    return true;
 }
 
 uint32_t
@@ -1661,9 +1668,11 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
         JitFrameIterator iter(cx);
         size_t inlineDepth = numFrames;
         while (inlineDepth > 0) {
-            if (iter.isBaselineJS()) {
-                inlineDepth--;
-                CopyFromRematerializedFrame(cx, act, outerFp, inlineDepth, iter.baselineFrame());
+            if (iter.isBaselineJS() &&
+                !CopyFromRematerializedFrame(cx, act, outerFp, --inlineDepth,
+                                             iter.baselineFrame()))
+            {
+                return false;
             }
             ++iter;
         }
