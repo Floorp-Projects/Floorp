@@ -72,15 +72,6 @@ public:
   operator BindingParamsArray *() const { return mParamsArray; }
 
   /**
-   * Provide the ability to coerce back to a sqlite3 * connection for purposes 
-   * of getting an error message out of it.
-   */
-  operator sqlite3 *() const
-  {
-    return mStatementOwner->getOwner()->GetNativeConnection();
-  }
-
-  /**
    * NULLs out our sqlite3_stmt (it is held by the owner) after reseting it and
    * clear all bindings to it.  This is expected to occur on the async thread.
    */

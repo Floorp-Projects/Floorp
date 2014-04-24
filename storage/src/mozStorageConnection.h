@@ -96,9 +96,29 @@ public:
    */
   nsresult initialize(nsIFileURL *aFileURL);
 
-  // fetch the native handle
-  sqlite3 *GetNativeConnection() { return mDBConn; }
-  operator sqlite3 *() const { return mDBConn; }
+  /**
+   * Fetches runtime status information for this connection.
+   *
+   * @param aStatusOption One of the SQLITE_DBSTATUS options defined at
+   *        http://www.sqlite.org/c3ref/c_dbstatus_options.html
+   * @param [optional] aMaxValue if provided, will be set to the highest
+   *        istantaneous value.
+   * @return the current value for the specified option.
+   */
+  int32_t getSqliteRuntimeStatus(int32_t aStatusOption,
+                                 int32_t* aMaxValue=nullptr);
+  /**
+   * Registers/unregisters a commit hook callback.
+   *
+   * @param aCallbackFn a callback function to be invoked on transactions
+   *        commit.  Pass nullptr to unregister the current callback.
+   * @param [optional] aData if provided, will be passed to the callback.
+   * @see http://sqlite.org/c3ref/commit_hook.html
+   */
+  void setCommitHook(int (*aCallbackFn)(void *) , void *aData=nullptr) {
+    MOZ_ASSERT(mDBConn, "A connection must exist at this point");
+    ::sqlite3_commit_hook(mDBConn, aCallbackFn, aData);
+  };
 
   /**
    * Lazily creates and returns a background execution thread.  In the future,
@@ -262,19 +282,19 @@ private:
 
   /**
    * Tracks if we have a transaction in progress or not.  Access protected by
-   * mDBMutex.
+   * sharedDBMutex.
    */
   bool mTransactionInProgress;
 
   /**
    * Stores the mapping of a given function by name to its instance.  Access is
-   * protected by mDBMutex.
+   * protected by sharedDBMutex.
    */
   nsDataHashtable<nsCStringHashKey, FunctionInfo> mFunctions;
 
   /**
    * Stores the registered progress handler for the database connection.  Access
-   * is protected by mDBMutex.
+   * is protected by sharedDBMutex.
    */
   nsCOMPtr<mozIStorageProgressHandler> mProgressHandler;
 
