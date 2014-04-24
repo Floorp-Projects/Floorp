@@ -540,37 +540,6 @@ interface nsIDOMMozMobileConnectionInfo : nsISupports
 
 };
 
-[scriptable, uuid(40018fc7-4c42-47b6-8de6-3591a9c622bc)]
-interface nsIDOMMozMobileNetworkInfo: nsISupports
-{
-  /**
-   * Short name of the network operator
-   */
-  readonly attribute DOMString shortName;
-
-  /**
-   * Long name of the network operator
-   */
-  readonly attribute DOMString longName;
-
-  /**
-   * Mobile Country Code (MCC) of the network operator
-   */
-  readonly attribute DOMString mcc;
-
-  /**
-   * Mobile Network Code (MNC) of the network operator
-   */
-  readonly attribute DOMString mnc;
-
-  /**
-   * State of this network operator.
-   *
-   * Possible values: 'available', 'connected', 'forbidden', or null (unknown)
-   */
-  readonly attribute DOMString state;
-};
-
 [scriptable, uuid(d1b35ad8-99aa-47cc-ab49-2e72b00e39df)]
 interface nsIDOMMozMobileCFInfo : nsISupports
 {
