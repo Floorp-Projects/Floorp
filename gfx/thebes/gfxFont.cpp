@@ -800,11 +800,17 @@ gfxFontEntry::DisconnectSVG()
     }
 }
 
+bool
+gfxFontEntry::HasFontTable(uint32_t aTableTag)
+{
+    AutoTable table(this, aTableTag);
+    return table && hb_blob_get_length(table) > 0;
+}
+
 void
 gfxFontEntry::CheckForGraphiteTables()
 {
-    AutoTable silfTable(this, TRUETYPE_TAG('S','i','l','f'));
-    mHasGraphiteTables = silfTable && hb_blob_get_length(silfTable) > 0;
+    mHasGraphiteTables = HasFontTable(TRUETYPE_TAG('S','i','l','f'));
 }
 
 /* static */ size_t
@@ -4165,13 +4171,25 @@ gfxFont::InitMetricsFromSfntTables(Metrics& aMetrics)
             // Abs because of negative xHeight seen in Kokonor (Tibetan) font
             aMetrics.xHeight = Abs(aMetrics.xHeight);
         }
-        // this should always be present
-        if (len >= offsetof(OS2Table, yStrikeoutPosition) + sizeof(int16_t)) {
+        // this should always be present in any valid OS/2 of any version
+        if (len >= offsetof(OS2Table, sTypoLineGap) + sizeof(int16_t)) {
             SET_SIGNED(aveCharWidth, os2->xAvgCharWidth);
             SET_SIGNED(subscriptOffset, os2->ySubscriptYOffset);
             SET_SIGNED(superscriptOffset, os2->ySuperscriptYOffset);
             SET_SIGNED(strikeoutSize, os2->yStrikeoutSize);
             SET_SIGNED(strikeoutOffset, os2->yStrikeoutPosition);
+
+            // for fonts with USE_TYPO_METRICS set in the fsSelection field,
+            // and for all OpenType math fonts (having a 'MATH' table),
+            // let the OS/2 sTypo* metrics override those from the hhea table
+            // (see http://www.microsoft.com/typography/otspec/os2.htm#fss)
+            const uint16_t kUseTypoMetricsMask = 1 << 7;
+            if ((uint16_t(os2->fsSelection) & kUseTypoMetricsMask) ||
+                mFontEntry->HasFontTable(TRUETYPE_TAG('M','A','T','H'))) {
+                SET_SIGNED(maxAscent, os2->sTypoAscender);
+                SET_SIGNED(maxDescent, - int16_t(os2->sTypoDescender));
+                SET_SIGNED(externalLeading, os2->sTypoLineGap);
+            }
         }
     }
 
