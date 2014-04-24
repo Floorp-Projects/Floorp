@@ -135,20 +135,19 @@ Statement::Statement()
 
 nsresult
 Statement::initialize(Connection *aDBConnection,
+                      sqlite3 *aNativeConnection,
                       const nsACString &aSQLStatement)
 {
-  NS_ASSERTION(aDBConnection, "No database connection given!");
-  NS_ASSERTION(!mDBStatement, "Statement already initialized!");
-
-  DebugOnly<sqlite3 *> db = aDBConnection->GetNativeConnection();
-  NS_ASSERTION(db, "We should never be called with a null sqlite3 database!");
+  MOZ_ASSERT(aDBConnection, "No database connection given!");
+  MOZ_ASSERT(!mDBStatement, "Statement already initialized!");
+  MOZ_ASSERT(aNativeConnection, "No native connection given!");
 
   int srv = aDBConnection->prepareStatement(PromiseFlatCString(aSQLStatement),
                                             &mDBStatement);
   if (srv != SQLITE_OK) {
       PR_LOG(gStorageLog, PR_LOG_ERROR,
              ("Sqlite statement prepare error: %d '%s'", srv,
-              ::sqlite3_errmsg(db)));
+              ::sqlite3_errmsg(aNativeConnection)));
       PR_LOG(gStorageLog, PR_LOG_ERROR,
              ("Statement was: '%s'", PromiseFlatCString(aSQLStatement).get()));
       return NS_ERROR_FAILURE;
@@ -159,6 +158,7 @@ Statement::initialize(Connection *aDBConnection,
                                       mDBStatement));
 
   mDBConnection = aDBConnection;
+  mNativeConnection = aNativeConnection;
   mParamCount = ::sqlite3_bind_parameter_count(mDBStatement);
   mResultColumnCount = ::sqlite3_column_count(mDBStatement);
   mColumnNames.Clear();
@@ -335,7 +335,7 @@ Statement::Clone(mozIStorageStatement **_statement)
   NS_ENSURE_TRUE(statement, NS_ERROR_OUT_OF_MEMORY);
 
   nsAutoCString sql(::sqlite3_sql(mDBStatement));
-  nsresult rv = statement->initialize(mDBConnection, sql);
+  nsresult rv = statement->initialize(mDBConnection, mNativeConnection, sql);
   NS_ENSURE_SUCCESS(rv, rv);
 
   statement.forget(_statement);

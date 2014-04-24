@@ -66,6 +66,8 @@ public:
    *        Ownership is transfered from the caller.
    * @param aConnection
    *        The connection that created the statements to execute.
+   * @param aNativeConnection
+   *        The native Sqlite connection that created the statements to execute.
    * @param aCallback
    *        The callback that is notified of results, completion, and errors.
    * @param _stmt
@@ -73,6 +75,7 @@ public:
    */
   static nsresult execute(StatementDataArray &aStatements,
                           Connection *aConnection,
+                          sqlite3 *aNativeConnection,
                           mozIStorageStatementCallback *aCallback,
                           mozIStoragePendingStatement **_stmt);
 
@@ -90,6 +93,7 @@ public:
 private:
   AsyncExecuteStatements(StatementDataArray &aStatements,
                          Connection *aConnection,
+                         sqlite3 *aNativeConnection,
                          mozIStorageStatementCallback *aCallback);
 
   /**
@@ -187,6 +191,7 @@ private:
 
   StatementDataArray mStatements;
   nsRefPtr<Connection> mConnection;
+  sqlite3 *mNativeConnection;
   mozStorageAsyncTransaction *mTransactionManager;
   mozIStorageStatementCallback *mCallback;
   nsCOMPtr<nsIThread> mCallingThread;

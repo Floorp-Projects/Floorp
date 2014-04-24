@@ -131,13 +131,14 @@ AsyncStatement::AsyncStatement()
 
 nsresult
 AsyncStatement::initialize(Connection *aDBConnection,
+                           sqlite3 *aNativeConnection,
                            const nsACString &aSQLStatement)
 {
-  NS_ASSERTION(aDBConnection, "No database connection given!");
-  NS_ASSERTION(aDBConnection->GetNativeConnection(),
-               "We should never be called with a null sqlite3 database!");
+  MOZ_ASSERT(aDBConnection, "No database connection given!");
+  MOZ_ASSERT(aNativeConnection, "No native connection given!");
 
   mDBConnection = aDBConnection;
+  mNativeConnection = aNativeConnection;
   mSQLString = aSQLStatement;
 
   PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Inited async statement '%s' (0x%p)",
@@ -304,7 +305,7 @@ AsyncStatement::getAsyncStatement(sqlite3_stmt **_stmt)
     if (rc != SQLITE_OK) {
       PR_LOG(gStorageLog, PR_LOG_ERROR,
              ("Sqlite statement prepare error: %d '%s'", rc,
-              ::sqlite3_errmsg(mDBConnection->GetNativeConnection())));
+              ::sqlite3_errmsg(mNativeConnection)));
       PR_LOG(gStorageLog, PR_LOG_ERROR,
              ("Statement was: '%s'", mSQLString.get()));
       *_stmt = nullptr;
