@@ -10,7 +10,7 @@
  * collection of DOM window objects.
  */
 
-[scriptable, uuid(a6cf906f-15b3-11d2-932e-00805f8add32)]
+[uuid(a6cf906f-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMWindowCollection : nsISupports
 {
   /**
