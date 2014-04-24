@@ -18,6 +18,15 @@
   display: none;
 }
 
+#downloadsPanel[hasdownloads] > #emptyDownloads {
+  display: none;
+}
+
+#emptyDownloads {
+  padding: 10px 20px;
+  max-width: 40ch;
+}
+
 #downloadsHistory {
   background: transparent;
   cursor: pointer;
@@ -44,18 +53,18 @@
   margin: 1em;
 }
 
-#downloadsPanel[hasdownloads] > #downloadsFooter {
+#downloadsFooter {
   background-color: hsla(210,4%,10%,.04);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.08) inset;
   transition-duration: 150ms;
   transition-property: background-color;
 }
 
-#downloadsPanel[hasdownloads] > #downloadsFooter:hover {
+#downloadsFooter:hover {
   background-color: hsla(210,4%,10%,.05);
 }
 
-#downloadsPanel[hasdownloads] > #downloadsFooter:hover:active {
+#downloadsFooter:hover:active {
   background-color: hsla(210,4%,10%,.1);
   box-shadow: 0 2px 0 0 hsla(210,4%,10%,.1) inset;
 }
@@ -65,15 +74,15 @@
        (-moz-os-version: windows-win7) {
 %endif
 @media (-moz-windows-default-theme) {
-  #downloadsPanel[hasdownloads] > #downloadsFooter {
+  #downloadsFooter {
     border-bottom-left-radius: 3px;
     border-bottom-right-radius: 3px;
     transition-duration: 0s;
   }
 
-  #downloadsPanel[hasdownloads] > #downloadsFooter,
-  #downloadsPanel[hasdownloads] > #downloadsFooter:hover,
-  #downloadsPanel[hasdownloads] > #downloadsFooter:hover:active {
+  #downloadsFooter,
+  #downloadsFooter:hover,
+  #downloadsFooter:hover:active {
 %ifdef WINDOWS_AERO
     background-color: #f1f5fb;
 %else
