@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=704423
+-->
+<head>
+  <title>Test for Bug 704423</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=704423">Mozilla Bug 704423</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 704423 **/
+
+function doTest()
+{
+  function handler(aEvent) {
+    aEvent.preventDefault();
+    ok(aEvent.defaultPrevented,
+       "mousemove event should be cancelable");
+  }
+  window.addEventListener("mousemove", handler, true);
+  synthesizeMouseAtCenter(document.body, { type: "mousemove" });
+  window.removeEventListener("mousemove", handler, true);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(doTest);
+
+</script>
+</pre>
+</body>
+</html>

@@ -18,10 +18,7 @@ WebappRT.config = {
   registryDir: Services.dirsvc.get("ProfD", Ci.nsIFile).path,
 };
 
-
 Cu.import("resource://gre/modules/Webapps.jsm");
-
-DOMApplicationRegistry.allAppsLaunchable = true;
 
 becomeWebapp("http://mochi.test:8888/tests/webapprt/test/content/test.webapp",
              undefined, function onBecome() {

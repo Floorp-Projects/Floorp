@@ -1,17 +1,16 @@
 
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=887364
--->
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug 887364</title>
+  <title>Test URL API</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=887364">Mozilla Bug 887364</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=991471">Mozilla Bug 991471</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=996055">Mozilla Bug 996055</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   <iframe name="x" id="x"></iframe>
@@ -274,6 +273,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887364
     if ('href' in test) is (test.href, url + '', 'stringify works');
   }
 
+  </script>
+
+  <script>
+    /** Test for Bug 991471 **/
+    var url = new URL("http://localhost/");
+    url.hostname = "";
+    url.username = "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt";
+    url.hostname = "www.mozilla.org";
+    url.username = "";
+    url.hostname = "www.mozilla.org";
+    is(url.href, "http://www.mozilla.org/", "No parsing error with empty host");
+  </script>
+
+  <script>
+    /** Test for Bug 996055 **/
+    var url = new URL("http://localhost/");
+    url.hostname = "";
+    is(url.href, "http://localhost/", "Empty hostname is ignored");
   </script>
 </body>
 </html>
