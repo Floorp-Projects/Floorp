@@ -8,7 +8,6 @@ DIRS += [
     'app-manager',
     'canvasdebugger',
     'commandline',
-    'components',
     'debugger',
     'eyedropper',
     'fontinspector',
@@ -28,6 +27,11 @@ DIRS += [
     'tilt',
     'webaudioeditor',
     'webconsole',
+]
+
+EXTRA_COMPONENTS += [
+    'devtools-clhandler.js',
+    'devtools-clhandler.manifest',
 ]
 
 JAR_MANIFESTS += ['jar.mn']

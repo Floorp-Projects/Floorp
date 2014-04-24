@@ -17,6 +17,7 @@ let ProfilerController = temp.ProfilerController;
 
 function test() {
   waitForExplicitFinish();
+  Services.prefs.setBoolPref(REMOTE_ENABLED, true);
 
   loadTab(URL, function onTabLoad(tab, browser) {
     DebuggerServer.init(function () true);

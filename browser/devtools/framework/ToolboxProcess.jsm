@@ -127,7 +127,13 @@ BrowserToolboxProcess.prototype = {
       this.debuggerServer.on("connectionchange", this.emit.bind(this));
     }
 
-    this.debuggerServer.controller.start(Prefs.chromeDebuggingPort);
+    if (!this.debuggerServer.initialized) {
+      this.debuggerServer.init();
+      this.debuggerServer.addBrowserActors();
+      dumpn("initialized and added the browser actors for the DebuggerServer.");
+    }
+
+    this.debuggerServer.openListener(Prefs.chromeDebuggingPort);
 
     dumpn("Finished initializing the chrome toolbox server.");
     dumpn("Started listening on port: " + Prefs.chromeDebuggingPort);

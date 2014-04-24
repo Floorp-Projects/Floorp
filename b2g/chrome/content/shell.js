@@ -52,6 +52,11 @@ XPCOMUtils.defineLazyServiceGetter(Services, 'fm',
                                    '@mozilla.org/focus-manager;1',
                                    'nsIFocusManager');
 
+XPCOMUtils.defineLazyGetter(this, 'DebuggerServer', function() {
+  Cu.import('resource://gre/modules/devtools/dbg-server.jsm');
+  return DebuggerServer;
+});
+
 XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
   return Cc["@mozilla.org/parentprocessmessagemanager;1"]
          .getService(Ci.nsIMessageListenerManager);
@@ -762,6 +767,9 @@ var CustomEventManager = {
       case 'system-message-listener-ready':
         Services.obs.notifyObservers(null, 'system-message-listener-ready', null);
         break;
+      case 'remote-debugger-prompt':
+        RemoteDebugger.handleEvent(detail);
+        break;
       case 'captive-portal-login-cancel':
         CaptivePortalLoginHelper.handleEvent(detail);
         break;
@@ -1066,6 +1074,131 @@ let IndexedDBPromptHelper = {
       observer.observe(null, responseTopic,
                        Ci.nsIPermissionManager.DENY_ACTION);
     }, 0);
+  }
+}
+
+let RemoteDebugger = {
+  _promptDone: false,
+  _promptAnswer: false,
+  _running: false,
+
+  prompt: function debugger_prompt() {
+    this._promptDone = false;
+
+    shell.sendChromeEvent({
+      "type": "remote-debugger-prompt"
+    });
+
+    while(!this._promptDone) {
+      Services.tm.currentThread.processNextEvent(true);
+    }
+
+    return this._promptAnswer;
+  },
+
+  handleEvent: function debugger_handleEvent(detail) {
+    this._promptAnswer = detail.value;
+    this._promptDone = true;
+  },
+
+  get isDebugging() {
+    if (!this._running) {
+      return false;
+    }
+
+    return DebuggerServer._connections &&
+           Object.keys(DebuggerServer._connections).length > 0;
+  },
+
+  // Start the debugger server.
+  start: function debugger_start() {
+    if (this._running) {
+      return;
+    }
+
+    if (!DebuggerServer.initialized) {
+      // Ask for remote connections.
+      DebuggerServer.init(this.prompt.bind(this));
+
+      // /!\ Be careful when adding a new actor, especially global actors.
+      // Any new global actor will be exposed and returned by the root actor.
+
+      // Add Firefox-specific actors, but prevent tab actors to be loaded in
+      // the parent process, unless we enable certified apps debugging.
+      let restrictPrivileges = Services.prefs.getBoolPref("devtools.debugger.forbid-certified-apps");
+      DebuggerServer.addBrowserActors("navigator:browser", restrictPrivileges);
+
+      /**
+       * Construct a root actor appropriate for use in a server running in B2G.
+       * The returned root actor respects the factories registered with
+       * DebuggerServer.addGlobalActor only if certified apps debugging is on,
+       * otherwise we used an explicit limited list of global actors
+       *
+       * * @param connection DebuggerServerConnection
+       *        The conection to the client.
+       */
+      DebuggerServer.createRootActor = function createRootActor(connection)
+      {
+        let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+        let parameters = {
+          // We do not expose browser tab actors yet,
+          // but we still have to define tabList.getList(),
+          // otherwise, client won't be able to fetch global actors
+          // from listTabs request!
+          tabList: {
+            getList: function() {
+              return promise.resolve([]);
+            }
+          },
+          // Use an explicit global actor list to prevent exposing
+          // unexpected actors
+          globalActorFactories: restrictPrivileges ? {
+            webappsActor: DebuggerServer.globalActorFactories.webappsActor,
+            deviceActor: DebuggerServer.globalActorFactories.deviceActor,
+          } : DebuggerServer.globalActorFactories
+        };
+        let root = new DebuggerServer.RootActor(connection, parameters);
+        root.applicationType = "operating-system";
+        return root;
+      };
+
+#ifdef MOZ_WIDGET_GONK
+      DebuggerServer.on("connectionchange", function() {
+        AdbController.updateState();
+      });
+#endif
+    }
+
+    let path = Services.prefs.getCharPref("devtools.debugger.unix-domain-socket") ||
+               "/data/local/debugger-socket";
+    try {
+      DebuggerServer.openListener(path);
+      // Temporary event, until bug 942756 lands and offers a way to know
+      // when the server is up and running.
+      Services.obs.notifyObservers(null, 'debugger-server-started', null);
+      this._running = true;
+    } catch (e) {
+      dump('Unable to start debugger server: ' + e + '\n');
+    }
+  },
+
+  stop: function debugger_stop() {
+    if (!this._running) {
+      return;
+    }
+
+    if (!DebuggerServer.initialized) {
+      // Can this really happen if we are running?
+      this._running = false;
+      return;
+    }
+
+    try {
+      DebuggerServer.closeListener();
+    } catch (e) {
+      dump('Unable to stop debugger server: ' + e + '\n');
+    }
+    this._running = false;
   }
 }
 
