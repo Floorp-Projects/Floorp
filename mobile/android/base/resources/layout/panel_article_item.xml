@@ -8,19 +8,14 @@
     <ImageView android:id="@+id/image"
                android:layout_width="54dp"
                android:layout_height="44dp"
-               android:layout_marginTop="10dip"
-               android:layout_marginBottom="10dip"
                android:layout_marginLeft="10dip"
                android:scaleType="centerCrop"/>
 
     <LinearLayout android:id="@+id/title_desc_container"
                   android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
-                  android:paddingTop="15dip"
-                  android:paddingBottom="15dip"
                   android:paddingLeft="10dip"
                   android:paddingRight="10dip"
-                  android:minHeight="@dimen/page_row_height"
                   android:gravity="center_vertical"
                   android:orientation="vertical">
 

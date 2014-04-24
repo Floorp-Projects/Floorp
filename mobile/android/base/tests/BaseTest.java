@@ -438,9 +438,8 @@ abstract class BaseTest extends BaseRobocopTest {
         if (listLength > 1) {
             for (int i = 1; i < listLength; i++) {
                 String itemName = "^" + listItems[i] + "$";
-                if (!waitForPreferencesText(itemName)) {
-                    mSolo.scrollDown();
-                }
+                mAsserter.ok(waitForPreferencesText(itemName), "Waiting for and scrolling once to find item " + itemName, itemName + " found");
+                mAsserter.ok(waitForEnabledText(itemName), "Waiting for enabled text " + itemName, itemName + " option is present and enabled");
                 mSolo.clickOnText(itemName);
             }
         }
