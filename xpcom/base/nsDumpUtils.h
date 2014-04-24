@@ -108,6 +108,11 @@ typedef nsTArray<FifoInfo> FifoInfoArray;
 class FifoWatcher : public FdWatcher
 {
 public:
+  /**
+   * The name of the preference used to enable/disable the FifoWatcher.
+   */
+  static const char* const kPrefName;
+
   static FifoWatcher* GetSingleton();
 
   static bool MaybeCreate();

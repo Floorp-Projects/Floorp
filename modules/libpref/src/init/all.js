@@ -4360,7 +4360,7 @@ pref("ui.touch_activation.duration_ms", 10);
 
 // nsMemoryInfoDumper can watch a fifo in the temp directory and take various
 // actions when the fifo is written to.  Disable this in general.
-pref("memory_info_dumper.watch_fifo", false);
+pref("memory_info_dumper.watch_fifo.enabled", false);
 
 #ifdef MOZ_CAPTIVEDETECT
 pref("captivedetect.maxWaitingTime", 5000);
