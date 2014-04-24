@@ -229,6 +229,10 @@ const kEventConstructors = {
                                                           return new MozCellBroadcastEvent(aName, aProps);
                                                        },
                                              },
+  MozClirModeEvent:                          { create: function (aName, aProps) {
+                                                         return new MozClirModeEvent(aName, aProps);
+                                                       },
+                                             },
   MozContactChangeEvent:                     { create: function (aName, aProps) {
                                                          return new MozContactChangeEvent(aName, aProps);
                                                        },
