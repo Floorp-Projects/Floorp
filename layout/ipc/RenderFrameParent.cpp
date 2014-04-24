@@ -942,6 +942,7 @@ void
 RenderFrameParent::ActorDestroy(ActorDestroyReason why)
 {
   if (mLayersId != 0) {
+    CompositorParent::DeallocateLayerTreeId(mLayersId);
     if (mContentController) {
       // Stop our content controller from requesting repaints of our
       // content.
