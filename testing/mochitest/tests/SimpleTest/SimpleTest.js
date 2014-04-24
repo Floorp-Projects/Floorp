@@ -846,58 +846,62 @@ SimpleTest.registerCleanupFunction = function(aFunc) {
  * Finishes the tests. This is automatically called, except when
  * SimpleTest.waitForExplicitFinish() has been invoked.
 **/
-SimpleTest.finish = function () {
+SimpleTest.finish = function() {
+    var Task = SpecialPowers.Cu.import("resource://gre/modules/Task.jsm").Task;
+
     if (SimpleTest._alreadyFinished) {
         SimpleTest.ok(false, "[SimpleTest.finish()] this test already called finish!");
     }
 
     SimpleTest._alreadyFinished = true;
 
-    // Execute all of our cleanup functions.
-    var func;
-    while ((func = SimpleTest._cleanupFunctions.pop())) {
-      try {
-        func();
-      }
-      catch (ex) {
-        SimpleTest.ok(false, "Cleanup function threw exception: " + ex);
-      }
-    }
+    Task.spawn(function*() {
+        // Execute all of our cleanup functions.
+        var func;
+        while ((func = SimpleTest._cleanupFunctions.pop())) {
+          try {
+            yield func();
+          }
+          catch (ex) {
+            SimpleTest.ok(false, "Cleanup function threw exception: " + ex);
+          }
+        }
 
-    if (SpecialPowers.DOMWindowUtils.isTestControllingRefreshes) {
-        SimpleTest.ok(false, "test left refresh driver under test control");
-        SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
-    }
-    if (SimpleTest._expectingUncaughtException) {
-        SimpleTest.ok(false, "expectUncaughtException was called but no uncaught exception was detected!");
-    }
-    if (SimpleTest._pendingWaitForFocusCount != 0) {
-        SimpleTest.is(SimpleTest._pendingWaitForFocusCount, 0,
-                      "[SimpleTest.finish()] waitForFocus() was called a "
-                      + "different number of times from the number of "
-                      + "callbacks run.  Maybe the test terminated "
-                      + "prematurely -- be sure to use "
-                      + "SimpleTest.waitForExplicitFinish().");
-    }
-    if (SimpleTest._tests.length == 0) {
-        SimpleTest.ok(false, "[SimpleTest.finish()] No checks actually run. "
-                           + "(You need to call ok(), is(), or similar "
-                           + "functions at least once.  Make sure you use "
-                           + "SimpleTest.waitForExplicitFinish() if you need "
-                           + "it.)");
-    }
+        if (SpecialPowers.DOMWindowUtils.isTestControllingRefreshes) {
+            SimpleTest.ok(false, "test left refresh driver under test control");
+            SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+        }
+        if (SimpleTest._expectingUncaughtException) {
+            SimpleTest.ok(false, "expectUncaughtException was called but no uncaught exception was detected!");
+        }
+        if (SimpleTest._pendingWaitForFocusCount != 0) {
+            SimpleTest.is(SimpleTest._pendingWaitForFocusCount, 0,
+                          "[SimpleTest.finish()] waitForFocus() was called a "
+                          + "different number of times from the number of "
+                          + "callbacks run.  Maybe the test terminated "
+                          + "prematurely -- be sure to use "
+                          + "SimpleTest.waitForExplicitFinish().");
+        }
+        if (SimpleTest._tests.length == 0) {
+            SimpleTest.ok(false, "[SimpleTest.finish()] No checks actually run. "
+                               + "(You need to call ok(), is(), or similar "
+                               + "functions at least once.  Make sure you use "
+                               + "SimpleTest.waitForExplicitFinish() if you need "
+                               + "it.)");
+        }
 
-    if (parentRunner) {
-        /* We're running in an iframe, and the parent has a TestRunner */
-        parentRunner.testFinished(SimpleTest._tests);
-    } else {
-        SpecialPowers.flushAllAppsLaunchable();
-        SpecialPowers.flushPermissions(function () {
-          SpecialPowers.flushPrefEnv(function() {
-            SimpleTest.showReport();
-          });
-        });
-    }
+        if (parentRunner) {
+            /* We're running in an iframe, and the parent has a TestRunner */
+            parentRunner.testFinished(SimpleTest._tests);
+        } else {
+            SpecialPowers.flushAllAppsLaunchable();
+            SpecialPowers.flushPermissions(function () {
+              SpecialPowers.flushPrefEnv(function() {
+                SimpleTest.showReport();
+              });
+            });
+        }
+    });
 };
 
 /**
