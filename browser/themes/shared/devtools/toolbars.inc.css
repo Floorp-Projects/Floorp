@@ -580,6 +580,9 @@
   background-image: url("chrome://browser/skin/devtools/command-console.png");
 }
 
+#command-button-eyedropper > image {
+  background-image: url("chrome://browser/skin/devtools/command-eyedropper.png");
+}
 
 @media (min-resolution: 2dppx) {
   #command-button-paintflashing > image {
@@ -604,6 +607,10 @@
 
   #command-button-splitconsole > image {
     background-image: url("chrome://browser/skin/devtools/command-console@2x.png");
+  }
+
+  #command-button-eyedropper > image {
+    background-image: url("chrome://browser/skin/devtools/command-eyedropper@2x.png");
   }
 }
 
