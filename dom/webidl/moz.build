@@ -551,6 +551,7 @@ if CONFIG['MOZ_B2G_RIL']:
         'MozCellBroadcastEvent.webidl',
         'MozIcc.webidl',
         'MozIccManager.webidl',
+        'MozMobileCellInfo.webidl',
         'MozMobileConnectionArray.webidl',
         'MozVoicemail.webidl',
         'MozVoicemailEvent.webidl',
