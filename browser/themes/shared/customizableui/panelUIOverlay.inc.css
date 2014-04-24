@@ -728,7 +728,7 @@ menuitem.subviewbutton@menuStateHover@,
   border-color: hsla(210,4%,10%,.11);
 }
 
-panelview .toolbarbutton-1@buttonStateActive@,
+panelview .toolbarbutton-1:-moz-any(@buttonStateActive@,[checked=true]),
 toolbarbutton.subviewbutton@buttonStateActive@,
 menu.subviewbutton@menuStateActive@,
 menuitem.subviewbutton@menuStateActive@,
