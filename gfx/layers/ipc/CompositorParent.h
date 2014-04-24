@@ -164,6 +164,12 @@ public:
    * Must run on the content main thread.
    */
   static uint64_t AllocateLayerTreeId();
+  /**
+   * Release compositor-thread resources referred to by |aID|.
+   *
+   * Must run on the content main thread.
+   */
+  static void DeallocateLayerTreeId(uint64_t aId);
 
   /**
    * Set aController as the pan/zoom callback for the subtree referred
