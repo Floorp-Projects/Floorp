@@ -71,7 +71,7 @@ PowerManagerService::Init()
   // absent, in case the profile might be damaged and we need to
   // restart to repair it.
   mWatchdogTimeoutSecs =
-    Preferences::GetInt("shutdown.watchdog.timeoutSecs", 5);
+    Preferences::GetInt("shutdown.watchdog.timeoutSecs", 10);
 }
 
 PowerManagerService::~PowerManagerService()
