@@ -516,6 +516,10 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
 nsresult
 nsMemoryInfoDumper::DumpDMD(const nsAString &aIdentifier)
 {
+  if (!dmd::IsEnabled()) {
+    return NS_OK;
+  }
+
   nsresult rv;
 
   // Create a filename like dmd-<identifier>-<pid>.txt.gz, which will be used
