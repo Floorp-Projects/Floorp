@@ -111,8 +111,7 @@ public:
   ResolveMathMLCharStyle(nsPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsStyleContext*  aParenStyleContext,
-                         nsMathMLChar*    aMathMLChar,
-                         bool             aIsMutableChar);
+                         nsMathMLChar*    aMathMLChar);
 
   // helper to get the mEmbellishData of a frame
   // The MathML REC precisely defines an "embellished operator" as:
