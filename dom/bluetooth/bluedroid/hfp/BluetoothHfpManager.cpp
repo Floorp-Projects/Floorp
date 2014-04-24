@@ -522,7 +522,7 @@ BluetoothHfpManager::ProcessConnectionState(bthf_connection_state_t aState,
   mPrevConnectionState = mConnectionState;
   mConnectionState = aState;
 
-  if (aState == BTHF_CONNECTION_STATE_CONNECTED) {
+  if (aState == BTHF_CONNECTION_STATE_SLC_CONNECTED) {
     BdAddressTypeToString(aBdAddress, mDeviceAddress);
     BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_CONN_STATE_CHANGED,
                         NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
@@ -602,6 +602,7 @@ BluetoothHfpManager::ProcessAtChld(bthf_chld_type_t aChld)
   message.AppendInt((int)aChld);
   BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
                       NS_ConvertUTF8toUTF16(message));
+
   SendResponse(BTHF_AT_RESPONSE_OK);
 }
 
@@ -996,7 +997,7 @@ BluetoothHfpManager::SendResponse(bthf_at_response_t aResponseCode)
 }
 
 void
-BluetoothHfpManager::UpdatePhoneCIND(uint32_t aCallIndex, bool aSend)
+BluetoothHfpManager::UpdatePhoneCIND(uint32_t aCallIndex)
 {
   NS_ENSURE_TRUE_VOID(sBluetoothHfpInterface);
 
@@ -1109,11 +1110,6 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
                                             const bool aIsConference,
                                             bool aSend)
 {
-  if (!IsConnected()) {
-    // Normal case. No need to print out warnings.
-    return;
-  }
-
   // aCallIndex can be UINT32_MAX for the pending outgoing call state update.
   // aCallIndex will be updated again after real call state changes. See Bug
   // 990467.
@@ -1121,12 +1117,18 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
     return;
   }
 
+  // Update call state only
   while (aCallIndex >= mCurrentCallArray.Length()) {
     Call call;
     mCurrentCallArray.AppendElement(call);
   }
-
   mCurrentCallArray[aCallIndex].mState = aCallState;
+
+  // Return if SLC is disconnected
+  if (!IsConnected()) {
+    return;
+  }
+
   mCurrentCallArray[aCallIndex].mNumber = aNumber;
   mCurrentCallArray[aCallIndex].mDirection = (aIsOutgoing) ?
                                               BTHF_CALL_DIRECTION_OUTGOING :
@@ -1136,7 +1138,8 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
     mCurrentCallArray[aCallIndex].mType = BTHF_CALL_ADDRTYPE_INTERNATIONAL;
   }
 
-  UpdatePhoneCIND(aCallIndex, aSend);
+  // Notify bluedroid of phone state change
+  UpdatePhoneCIND(aCallIndex);
 
   switch (aCallState) {
     case nsITelephonyProvider::CALL_STATE_DIALING:
@@ -1280,8 +1283,7 @@ BluetoothHfpManager::IsScoConnected()
 bool
 BluetoothHfpManager::IsConnected()
 {
-  return (mConnectionState == BTHF_CONNECTION_STATE_SLC_CONNECTED ||
-          mConnectionState == BTHF_CONNECTION_STATE_CONNECTED);
+  return (mConnectionState == BTHF_CONNECTION_STATE_SLC_CONNECTED);
 }
 
 void
