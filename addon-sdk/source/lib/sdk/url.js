@@ -28,12 +28,14 @@ function newURI(uriStr, base) {
     let baseURI = base ? ios.newURI(base, null, null) : null;
     return ios.newURI(uriStr, null, baseURI);
   }
-  catch (e if e.result == Cr.NS_ERROR_MALFORMED_URI) {
-    throw new Error("malformed URI: " + uriStr);
-  }
-  catch (e if (e.result == Cr.NS_ERROR_FAILURE ||
-               e.result == Cr.NS_ERROR_ILLEGAL_VALUE)) {
-    throw new Error("invalid URI: " + uriStr);
+  catch (e) {
+    if (e.result == Cr.NS_ERROR_MALFORMED_URI) {
+      throw new Error("malformed URI: " + uriStr);
+    }
+    if (e.result == Cr.NS_ERROR_FAILURE ||
+        e.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
+      throw new Error("invalid URI: " + uriStr);
+    }
   }
 }
 
@@ -41,9 +43,12 @@ function resolveResourceURI(uri) {
   var resolved;
   try {
     resolved = resProt.resolveURI(uri);
-  } catch (e if e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
-    throw new Error("resource does not exist: " + uri.spec);
-  };
+  }
+  catch (e) {
+    if (e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
+      throw new Error("resource does not exist: " + uri.spec);
+    }
+  }
   return resolved;
 }
 
@@ -63,8 +68,11 @@ let toFilename = exports.toFilename = function toFilename(url) {
     try {
       channel = channel.QueryInterface(Ci.nsIFileChannel);
       return channel.file.path;
-    } catch (e if e.result == Cr.NS_NOINTERFACE) {
-      throw new Error("chrome url isn't on filesystem: " + url);
+    }
+    catch (e) {
+      if (e.result == Cr.NS_NOINTERFACE) {
+        throw new Error("chrome url isn't on filesystem: " + url);
+      }
     }
   }
   if (uri.scheme == "file") {
@@ -84,17 +92,32 @@ function URL(url, base) {
   var userPass = null;
   try {
     userPass = uri.userPass ? uri.userPass : null;
-  } catch (e if e.result == Cr.NS_ERROR_FAILURE) {}
+  }
+  catch (e) {
+    if (e.result != Cr.NS_ERROR_FAILURE) {
+      throw e;
+    }
+  }
 
   var host = null;
   try {
     host = uri.host;
-  } catch (e if e.result == Cr.NS_ERROR_FAILURE) {}
+  }
+  catch (e) {
+    if (e.result != Cr.NS_ERROR_FAILURE) {
+      throw e;
+    }
+  }
 
   var port = null;
   try {
     port = uri.port == -1 ? null : uri.port;
-  } catch (e if e.result == Cr.NS_ERROR_FAILURE) {}
+  }
+  catch (e) {
+    if (e.result != Cr.NS_ERROR_FAILURE) {
+      throw e;
+    }
+  }
 
   let uriData = [uri.path, uri.path.length, {}, {}, {}, {}, {}, {}];
   URLParser.parsePath.apply(URLParser, uriData);
@@ -262,16 +285,21 @@ let getTLD = exports.getTLD = function getTLD (url) {
   let tld = null;
   try {
     tld = tlds.getPublicSuffix(uri);
-  } catch (e if
-      e.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS ||
-      e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS) {}
+  }
+  catch (e) {
+    if (e.result != Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS &&
+        e.result != Cr.NS_ERROR_HOST_IS_IP_ADDRESS) {
+      throw e;
+    }
+  }
   return tld;
 };
 
 let isValidURI = exports.isValidURI = function (uri) {
   try {
     newURI(uri);
-  } catch(e) {
+  }
+  catch(e) {
     return false;
   }
   return true;

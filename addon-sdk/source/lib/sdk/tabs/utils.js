@@ -20,6 +20,31 @@ const { isGlobalPBSupported } = require('../private-browsing/utils');
 // Bug 834961: ignore private windows when they are not supported
 function getWindows() windows(null, { includePrivate: isPrivateBrowsingSupported || isGlobalPBSupported });
 
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+// Define predicate functions that can be used to detech weather
+// we deal with fennec tabs or firefox tabs.
+
+// Predicate to detect whether tab is XUL "Tab" node.
+const isXULTab = tab =>
+  tab instanceof Ci.nsIDOMNode &&
+  tab.nodeName === "tab" &&
+  tab.namespaceURI === XUL_NS;
+exports.isXULTab = isXULTab;
+
+// Predicate to detecet whether given tab is a fettec tab.
+// Unfortunately we have to guess via duck typinng of:
+// http://mxr.mozilla.org/mozilla-central/source/mobile/android/chrome/content/browser.js#2583
+const isFennecTab = tab =>
+  tab &&
+  tab.QueryInterface &&
+  Ci.nsIBrowserTab &&
+  tab.QueryInterface(Ci.nsIBrowserTab) === tab;
+exports.isFennecTab = isFennecTab;
+
+const isTab = x => isXULTab(x) || isFennecTab(x);
+exports.isTab = isTab;
+
 function activateTab(tab, window) {
   let gBrowser = getTabBrowserForTab(tab);
 

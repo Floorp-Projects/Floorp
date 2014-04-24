@@ -49,8 +49,9 @@ exports.TreeNode = TreeNode;
 
 /*
  * Descends down from `node` applying `fn` to each in order.
- * Can be asynchronous if `fn` returns a promise. `fn` is passed 
- * one argument, the current node, `curr`
+ * `fn` can return values or promises -- if promise returned,
+ * children are not processed until resolved. `fn` is passed 
+ * one argument, the current node, `curr`.
  */
 function walk (curr, fn) {
   return promised(fn)(curr).then(val => {
