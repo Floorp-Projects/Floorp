@@ -66,7 +66,7 @@ jit::NewBaselineFrameInspector(TempAllocator *temp, BaselineFrame *frame, Compil
     // during compilation could capture nursery pointers, so the values' types
     // are recorded instead.
 
-    inspector->thisType = types::GetValueType(frame->thisValue());
+    inspector->thisType = types::GetMaybeOptimizedOutValueType(frame->thisValue());
 
     if (frame->scopeChain()->hasSingletonType())
         inspector->singletonScopeChain = frame->scopeChain();
@@ -77,24 +77,29 @@ jit::NewBaselineFrameInspector(TempAllocator *temp, BaselineFrame *frame, Compil
         if (!inspector->argTypes.reserve(frame->numFormalArgs()))
             return nullptr;
         for (size_t i = 0; i < frame->numFormalArgs(); i++) {
-            if (script->formalIsAliased(i))
+            if (script->formalIsAliased(i)) {
                 inspector->argTypes.infallibleAppend(types::Type::UndefinedType());
-            else if (!script->argsObjAliasesFormals())
-                inspector->argTypes.infallibleAppend(types::GetValueType(frame->unaliasedFormal(i)));
-            else if (frame->hasArgsObj())
-                inspector->argTypes.infallibleAppend(types::GetValueType(frame->argsObj().arg(i)));
-            else
+            } else if (!script->argsObjAliasesFormals()) {
+                types::Type type = types::GetMaybeOptimizedOutValueType(frame->unaliasedFormal(i));
+                inspector->argTypes.infallibleAppend(type);
+            } else if (frame->hasArgsObj()) {
+                types::Type type = types::GetMaybeOptimizedOutValueType(frame->argsObj().arg(i));
+                inspector->argTypes.infallibleAppend(type);
+            } else {
                 inspector->argTypes.infallibleAppend(types::Type::UndefinedType());
+            }
         }
     }
 
     if (!inspector->varTypes.reserve(frame->script()->nfixed()))
         return nullptr;
     for (size_t i = 0; i < frame->script()->nfixed(); i++) {
-        if (info->isSlotAliasedAtOsr(i + info->firstLocalSlot()))
+        if (info->isSlotAliasedAtOsr(i + info->firstLocalSlot())) {
             inspector->varTypes.infallibleAppend(types::Type::UndefinedType());
-        else
-            inspector->varTypes.infallibleAppend(types::GetValueType(frame->unaliasedLocal(i)));
+        } else {
+            types::Type type = types::GetMaybeOptimizedOutValueType(frame->unaliasedLocal(i));
+            inspector->varTypes.infallibleAppend(type);
+        }
     }
 
     return inspector;
