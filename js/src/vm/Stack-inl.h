@@ -823,7 +823,9 @@ AbstractFramePtr::prevUpToDate() const
     if (isInterpreterFrame())
         return asInterpreterFrame()->prevUpToDate();
 #ifdef JS_ION
-    return asBaselineFrame()->prevUpToDate();
+    if (isBaselineFrame())
+        return asBaselineFrame()->prevUpToDate();
+    return asRematerializedFrame()->prevUpToDate();
 #else
     MOZ_ASSUME_UNREACHABLE("Invalid frame");
 #endif
@@ -836,7 +838,11 @@ AbstractFramePtr::setPrevUpToDate() const
         return;
     }
 #ifdef JS_ION
-    asBaselineFrame()->setPrevUpToDate();
+    if (isBaselineFrame()) {
+        asBaselineFrame()->setPrevUpToDate();
+        return;
+    }
+    asRematerializedFrame()->setPrevUpToDate();
 #else
     MOZ_ASSUME_UNREACHABLE("Invalid frame");
 #endif
