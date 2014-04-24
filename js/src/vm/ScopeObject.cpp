@@ -2017,11 +2017,7 @@ DebugScopes::updateLiveScopes(JSContext *cx)
      * the flag for us, at exactly the time when execution resumes fp->prev().
      */
     for (AllFramesIter i(cx); !i.done(); ++i) {
-        /*
-         * Debug-mode currently disables Ion compilation in the compartment of
-         * the debuggee.
-         */
-        if (i.isIon())
+        if (!i.hasUsableAbstractFramePtr())
             continue;
 
         AbstractFramePtr frame = i.abstractFramePtr();

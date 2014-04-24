@@ -29,7 +29,8 @@ struct CopyValueToRematerializedFrame
 };
 
 RematerializedFrame::RematerializedFrame(JSContext *cx, uint8_t *top, InlineFrameIterator &iter)
-  : top_(top),
+  : prevUpToDate_(false),
+    top_(top),
     frameNo_(iter.frameNo()),
     numActualArgs_(iter.numActualArgs()),
     script_(iter.script())
