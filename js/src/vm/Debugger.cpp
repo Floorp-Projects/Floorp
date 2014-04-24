@@ -4219,7 +4219,7 @@ DebuggerFrame_getThis(JSContext *cx, unsigned argc, Value *vp)
         AutoCompartment ac(cx, iter.scopeChain());
         if (!iter.computeThis(cx))
             return false;
-        thisv = iter.thisv();
+        thisv = iter.computedThisValue();
     }
     if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, &thisv))
         return false;
@@ -4621,7 +4621,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
         /* ExecuteInEnv requires 'fp' to have a computed 'this" value. */
         if (!iter->computeThis(cx))
             return false;
-        thisv = iter->thisv();
+        thisv = iter->computedThisValue();
         env = GetDebugScopeForFrame(cx, iter->abstractFramePtr(), iter->pc());
         if (!env)
             return false;

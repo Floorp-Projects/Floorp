@@ -188,6 +188,8 @@ void TraceIonScripts(JSTracer* trc, JSScript *script);
 
 void RequestInterruptForIonCode(JSRuntime *rt, JSRuntime::InterruptMode mode);
 
+bool RematerializeAllFrames(JSContext *cx, JSCompartment *comp);
+
 } // namespace jit
 } // namespace js
 
