@@ -27,6 +27,7 @@ this.Keyboard = {
   ],
 
   _messageNames: [
+    'RemoveFocus',
     'SetSelectionRange', 'ReplaceSurroundingText', 'ShowInputMethodPicker',
     'SwitchToNextInputMethod', 'HideInputMethod',
     'GetText', 'SendKey', 'GetContext',
