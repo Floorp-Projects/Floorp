@@ -37,6 +37,6 @@
                              BTA_AG_FEAT_EXTERR)
 
 /* CHLD values */
-#define BTA_AG_CHLD_VAL    "(0,1,2)"
+#define BTA_AG_CHLD_VAL    "(0,1,2,3)"
 
 #endif /* B2G_BDROID_BUILDCFG_H */

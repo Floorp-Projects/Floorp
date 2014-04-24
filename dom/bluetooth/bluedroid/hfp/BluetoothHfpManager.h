@@ -150,7 +150,7 @@ private:
   uint16_t GetCallSetupState();
   bthf_call_state_t ConvertToBthfCallState(int aCallState);
 
-  void UpdatePhoneCIND(uint32_t aCallIndex, bool aSend = true);
+  void UpdatePhoneCIND(uint32_t aCallIndex);
   void UpdateDeviceCIND();
   void SendCLCC(Call& aCall, int aIndex);
   void SendLine(const char* aMessage);
