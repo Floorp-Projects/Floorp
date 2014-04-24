@@ -179,6 +179,7 @@ UNIFIED_SOURCES += [
     'vm/RegExpObject.cpp',
     'vm/RegExpStatics.cpp',
     'vm/Runtime.cpp',
+    'vm/SavedStacks.cpp',
     'vm/ScopeObject.cpp',
     'vm/SelfHosting.cpp',
     'vm/Shape.cpp',
