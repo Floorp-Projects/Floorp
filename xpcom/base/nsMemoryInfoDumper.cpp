@@ -32,6 +32,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "mozilla/Preferences.h"
 #endif
 
 using namespace mozilla;
@@ -167,6 +168,43 @@ void doGCCCDump(const uint8_t recvSig)
   NS_DispatchToMainThread(runnable);
 }
 
+bool SetupFifo()
+{
+  static bool fifoCallbacksRegistered = false;
+
+  if (!FifoWatcher::MaybeCreate()) {
+    return false;
+  }
+
+  MOZ_ASSERT(!fifoCallbacksRegistered,
+             "FifoWatcher callbacks should be registered only once");
+
+  FifoWatcher* fw = FifoWatcher::GetSingleton();
+  // Dump our memory reports (but run this on the main thread!).
+  fw->RegisterCallback(NS_LITERAL_CSTRING("memory report"),
+                       doMemoryReport);
+  fw->RegisterCallback(NS_LITERAL_CSTRING("minimize memory report"),
+                       doMemoryReport);
+  // Dump GC and CC logs (from the main thread).
+  fw->RegisterCallback(NS_LITERAL_CSTRING("gc log"),
+                       doGCCCDump);
+  fw->RegisterCallback(NS_LITERAL_CSTRING("abbreviated gc log"),
+                       doGCCCDump);
+
+  fifoCallbacksRegistered = true;
+  return true;
+}
+
+void OnFifoEnabledChange(const char* /*unused*/, void* /*unused*/)
+{
+  LOG("%s changed", FifoWatcher::kPrefName);
+  if (SetupFifo()) {
+    Preferences::UnregisterCallback(OnFifoEnabledChange,
+                                    FifoWatcher::kPrefName,
+                                    nullptr);
+  }
+}
+
 } // anonymous namespace
 #endif // XP_LINUX }
 
@@ -196,18 +234,14 @@ nsMemoryInfoDumper::Initialize()
   sGCAndCCDumpSignum = SIGRTMIN + 2;
   sw->RegisterCallback(sGCAndCCDumpSignum, doGCCCDump);
 
-  if (FifoWatcher::MaybeCreate()) {
-    FifoWatcher* fw = FifoWatcher::GetSingleton();
-    // Dump our memory reports (but run this on the main thread!).
-    fw->RegisterCallback(NS_LITERAL_CSTRING("memory report"),
-                         doMemoryReport);
-    fw->RegisterCallback(NS_LITERAL_CSTRING("minimize memory report"),
-                         doMemoryReport);
-    // Dump GC and CC logs (from the main thread).
-    fw->RegisterCallback(NS_LITERAL_CSTRING("gc log"),
-                         doGCCCDump);
-    fw->RegisterCallback(NS_LITERAL_CSTRING("abbreviated gc log"),
-                         doGCCCDump);
+  if (!SetupFifo()) {
+    // NB: This gets loaded early enough that it's possible there is a user pref
+    //     set to enable the fifo watcher that has not been loaded yet. Register
+    //     to attempt to initialize if the fifo watcher becomes enabled by
+    //     a user pref.
+    Preferences::RegisterCallback(OnFifoEnabledChange,
+                                  FifoWatcher::kPrefName,
+                                  nullptr);
   }
 #endif
 }
