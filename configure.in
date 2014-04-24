@@ -5050,10 +5050,6 @@ MOZ_ARG_DISABLE_BOOL(dbm,
     NSS_DISABLE_DBM=1,
     NSS_DISABLE_DBM=)
 
-dnl bi-directional support always on
-IBMBIDI=1
-AC_DEFINE(IBMBIDI)
-
 dnl ========================================================
 dnl accessibility support on by default on all platforms
 dnl ========================================================
@@ -8487,7 +8483,6 @@ AC_SUBST(KEYTOOL)
 AC_SUBST(MOZ_PROFILELOCKING)
 
 AC_SUBST(ENABLE_TESTS)
-AC_SUBST(IBMBIDI)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_SPELLCHECK)
