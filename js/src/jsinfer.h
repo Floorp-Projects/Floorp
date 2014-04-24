@@ -296,6 +296,13 @@ class Type
 inline Type GetValueType(const Value &val);
 
 /*
+ * Get the type of a possibly optimized out value. This generally only
+ * happens on unconditional type monitors on bailing out of Ion, such as
+ * for argument and local types.
+ */
+inline Type GetMaybeOptimizedOutValueType(const Value &val);
+
+/*
  * Type inference memory management overview.
  *
  * Type information about the values observed within scripts and about the
