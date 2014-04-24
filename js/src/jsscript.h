@@ -1504,14 +1504,8 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     bool formalLivesInArgumentsObject(unsigned argSlot);
 
   private:
-    /*
-     * Recompile with or without single-stepping support, as directed
-     * by stepModeEnabled().
-     */
-    void recompileForStepMode(js::FreeOp *fop);
-
-    /* Attempt to change this->stepMode to |newValue|. */
-    bool tryNewStepMode(JSContext *cx, uint32_t newValue);
+    /* Change this->stepMode to |newValue|. */
+    void setNewStepMode(js::FreeOp *fop, uint32_t newValue);
 
     bool ensureHasDebugScript(JSContext *cx);
     js::DebugScript *debugScript();
@@ -1549,8 +1543,11 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
      * the flag (set by setStepModeFlag) is set, then the script is in
      * single-step mode. (JSD uses an on/off-style interface; Debugger uses a
      * count-style interface.)
+     *
+     * Only incrementing is fallible, as it could allocate a DebugScript.
      */
-    bool changeStepModeCount(JSContext *cx, int delta);
+    bool incrementStepModeCount(JSContext *cx);
+    void decrementStepModeCount(js::FreeOp *fop);
 
     bool stepModeEnabled() { return hasDebugScript_ && !!debugScript()->stepMode; }
 
