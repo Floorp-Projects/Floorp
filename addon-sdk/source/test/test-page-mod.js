@@ -24,6 +24,7 @@ const { isTabPBSupported, isWindowPBSupported, isGlobalPBSupported } = require('
 const promise = require("sdk/core/promise");
 const { pb } = require('./private-browsing/helper');
 const { URL } = require("sdk/url");
+const { LoaderWithHookedConsole } = require('sdk/test/loader');
 
 const { waitUntil } = require("sdk/test/utils");
 const data = require("./fixtures");
@@ -1529,6 +1530,41 @@ exports.testDetachOnUnload = function(assert, done) {
     url: TEST_URL,
     onOpen: t => tab = t
   })
+}
+
+exports.testConsole = function(assert, done) {
+  let innerID;
+  const TEST_URL = 'data:text/html;charset=utf-8,console';
+  const { loader } = LoaderWithHookedConsole(module, onMessage);
+  const { PageMod } = loader.require('sdk/page-mod');
+  const system = require("sdk/system/events");
+
+  let seenMessage = false;
+  function onMessage(type, msg, msgID) {
+    seenMessage = true;
+    innerID = msgID;
+  }
+
+  let mod = PageMod({
+    include: TEST_URL,
+    contentScriptWhen: "ready",
+    contentScript: Isolate(function() {
+      console.log("Hello from the page mod");
+      self.port.emit("done");
+    }),
+    onAttach: function(worker) {
+      worker.port.on("done", function() {
+        let window = getTabContentWindow(tab);
+        let id = getInnerId(window);
+        assert.ok(seenMessage, "Should have seen the console message");
+        assert.equal(innerID, id, "Should have seen the right inner ID");
+        closeTab(tab);
+        done();
+      });
+    },
+  });
+
+  let tab = openTab(getMostRecentBrowserWindow(), TEST_URL);
 }
 
 exports.testSyntaxErrorInContentScript = function(assert, done) {

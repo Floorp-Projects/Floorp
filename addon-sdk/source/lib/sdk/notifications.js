@@ -45,15 +45,16 @@ exports.notify = function notifications_notify(options) {
   try {
     notifyWithOpts(notify);
   }
-  catch (err if err instanceof Ci.nsIException &&
-                err.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
-    console.warn("The notification icon named by " + valOpts.iconURL +
-                 " does not exist.  A default icon will be used instead.");
-    delete valOpts.iconURL;
-    notifyWithOpts(notify);
-  }
   catch (err) {
-    notifyWithOpts(notifyUsingConsole);
+    if (err instanceof Ci.nsIException && err.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
+      console.warn("The notification icon named by " + valOpts.iconURL +
+                   " does not exist.  A default icon will be used instead.");
+      delete valOpts.iconURL;
+      notifyWithOpts(notify);
+    }
+    else {
+      notifyWithOpts(notifyUsingConsole);
+    }
   }
 };
 
