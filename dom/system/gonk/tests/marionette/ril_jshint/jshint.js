@@ -584,7 +584,6 @@ exports.browser = {
 	XPathEvaluator       : false,
 	XPathException       : false,
 	XPathExpression      : false,
-	XPathNamespace       : false,
 	XPathNSResolver      : false,
 	XPathResult          : false
 };
