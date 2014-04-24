@@ -337,7 +337,7 @@ AsyncExecuteStatements::executeStatement(sqlite3_stmt *aStatement)
     // lock the sqlite mutex so sqlite3_errmsg cannot change
     SQLiteMutexAutoLock lockedScope(mDBMutex);
 
-    int rc = mConnection->stepStatement(aStatement);
+    int rc = mConnection->stepStatement(mNativeConnection, aStatement);
     // Stop if we have no more results.
     if (rc == SQLITE_DONE)
     {
@@ -568,6 +568,8 @@ AsyncExecuteStatements::Cancel()
 NS_IMETHODIMP
 AsyncExecuteStatements::Run()
 {
+  MOZ_ASSERT(!mConnection->isClosed());
+
   // Do not run if we have been canceled.
   {
     MutexAutoLock lockedScope(mMutex);
