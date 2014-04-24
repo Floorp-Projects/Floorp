@@ -29,14 +29,6 @@ class Connection;
 class ResultSet;
 class StatementData;
 
-/**
- * An instance of the mozStorageTransaction<> family dedicated
- * to concrete class |Connection|.
- */
-typedef mozStorageTransactionBase<mozilla::storage::Connection,
-                                  nsRefPtr<mozilla::storage::Connection> >
-    mozStorageAsyncTransaction;
-
 class AsyncExecuteStatements MOZ_FINAL : public nsIRunnable
                                        , public mozIStoragePendingStatement
 {
@@ -95,6 +87,7 @@ private:
                          Connection *aConnection,
                          sqlite3 *aNativeConnection,
                          mozIStorageStatementCallback *aCallback);
+  ~AsyncExecuteStatements();
 
   /**
    * Binds and then executes a given statement until completion, an error
@@ -192,7 +185,7 @@ private:
   StatementDataArray mStatements;
   nsRefPtr<Connection> mConnection;
   sqlite3 *mNativeConnection;
-  mozStorageAsyncTransaction *mTransactionManager;
+  bool mHasTransaction;
   mozIStorageStatementCallback *mCallback;
   nsCOMPtr<nsIThread> mCallingThread;
   nsRefPtr<ResultSet> mResultSet;

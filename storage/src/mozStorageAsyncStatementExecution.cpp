@@ -200,7 +200,7 @@ AsyncExecuteStatements::AsyncExecuteStatements(StatementDataArray &aStatements,
                                                mozIStorageStatementCallback *aCallback)
 : mConnection(aConnection)
 , mNativeConnection(aNativeConnection)
-, mTransactionManager(nullptr)
+, mHasTransaction(false)
 , mCallback(aCallback)
 , mCallingThread(::do_GetCurrentThread())
 , mMaxWait(TimeDuration::FromMilliseconds(MAX_MILLISECONDS_BETWEEN_RESULTS))
@@ -214,6 +214,11 @@ AsyncExecuteStatements::AsyncExecuteStatements(StatementDataArray &aStatements,
   (void)mStatements.SwapElements(aStatements);
   NS_ASSERTION(mStatements.Length(), "We weren't given any statements!");
   NS_IF_ADDREF(mCallback);
+}
+
+AsyncExecuteStatements::~AsyncExecuteStatements()
+{
+  MOZ_ASSERT(!mHasTransaction, "There should be no transaction at this point");
 }
 
 bool
@@ -438,9 +443,9 @@ AsyncExecuteStatements::notifyComplete()
   mStatements.Clear();
 
   // Handle our transaction, if we have one
-  if (mTransactionManager) {
+  if (mHasTransaction) {
     if (mState == COMPLETED) {
-      nsresult rv = mTransactionManager->Commit();
+      nsresult rv = mConnection->commitTransactionInternal(mNativeConnection);
       if (NS_FAILED(rv)) {
         mState = ERROR;
         (void)notifyError(mozIStorageError::ERROR,
@@ -448,10 +453,9 @@ AsyncExecuteStatements::notifyComplete()
       }
     }
     else {
-      (void)mTransactionManager->Rollback();
+      NS_WARN_IF(NS_FAILED(mConnection->rollbackTransactionInternal(mNativeConnection)));
     }
-    delete mTransactionManager;
-    mTransactionManager = nullptr;
+    mHasTransaction = false;
   }
 
   // Always generate a completion notification; it is what guarantees that our
@@ -581,8 +585,15 @@ AsyncExecuteStatements::Run()
 
   if (statementsNeedTransaction()) {
     Connection* rawConnection = static_cast<Connection*>(mConnection.get());
-    mTransactionManager = new mozStorageAsyncTransaction(rawConnection, false,
-                                                         mozIStorageConnection::TRANSACTION_IMMEDIATE);
+    if (NS_SUCCEEDED(mConnection->beginTransactionInternal(mNativeConnection,
+                                                           mozIStorageConnection::TRANSACTION_IMMEDIATE))) {
+      mHasTransaction = true;
+    }
+#ifdef DEBUG
+    else {
+      NS_WARNING("Unable to create a transaction for async execution.");
+    }
+#endif
   }
 
   // Execute each statement, giving the callback results if it returns any.
