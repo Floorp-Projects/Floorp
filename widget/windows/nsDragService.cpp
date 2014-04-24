@@ -517,7 +517,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
     format = nsClipboard::GetFormat(aDataFlavor);
     SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,
                   TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
-    if (SUCCEEDED(mDataObject->QueryGetData(&fe)))
+    if (mDataObject->QueryGetData(&fe) == S_OK)
       *_retval = true;                 // found it!
     else {
       // We haven't found the exact flavor the client asked for, but
@@ -530,7 +530,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
         format = nsClipboard::GetFormat(kTextMime);
         SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,
                       TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
-        if (SUCCEEDED(mDataObject->QueryGetData(&fe)))
+        if (mDataObject->QueryGetData(&fe) == S_OK)
           *_retval = true;                 // found it!
       }
       else if (strcmp(aDataFlavor, kURLMime) == 0) {
@@ -540,15 +540,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
         format = nsClipboard::GetFormat(kFileMime);
         SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,
                       TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
-        if (SUCCEEDED(mDataObject->QueryGetData(&fe)))
-          *_retval = true;                 // found it!
-      }
-      else if (!strcmp(aDataFlavor, kHTMLMime)) {
-        // if the client wants html, maybe it's in "HTML Format"
-        format = nsClipboard::GetFormat(kHTMLMime);
-        SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,
-                      TYMED_HGLOBAL);
-        if (SUCCEEDED(mDataObject->QueryGetData(&fe)))
+        if (mDataObject->QueryGetData(&fe) == S_OK)
           *_retval = true;                 // found it!
       }
     } // else try again
