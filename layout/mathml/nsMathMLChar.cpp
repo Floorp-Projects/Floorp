@@ -679,14 +679,6 @@ nsGlyphTableList::GetGlyphTableFor(const nsAString& aFamily)
 
 // -----------------------------------------------------------------------------
 
-static bool
-MathFontEnumCallback(const nsString& aFamily, bool aGeneric, void *aData)
-{
-  if (!gGlyphTableList->AddGlyphTable(aFamily))
-    return false; // stop in low-memory situations
-  return true; // don't stop
-}
-
 static nsresult
 InitGlobals(nsPresContext* aPresContext)
 {
@@ -704,35 +696,21 @@ InitGlobals(nsPresContext* aPresContext)
     gGlyphTableList = nullptr;
     return rv;
   }
-  /*
-  else
-    The gGlyphTableList has been successfully registered as a shutdown observer.
-    It will be deleted at shutdown, even if a failure happens below.
-  */
+  // The gGlyphTableList has been successfully registered as a shutdown
+  // observer and will be deleted at shutdown. We now add some private
+  // per font-family tables for stretchy operators, in order of preference.
+  // Do not include the Unicode table in this list.
+  if (!gGlyphTableList->AddGlyphTable(NS_LITERAL_STRING("MathJax_Main")) ||
+      !gGlyphTableList->AddGlyphTable(NS_LITERAL_STRING("STIXNonUnicode")) ||
+      !gGlyphTableList->AddGlyphTable(NS_LITERAL_STRING("STIXSizeOneSym")) ||
+      !gGlyphTableList->AddGlyphTable(NS_LITERAL_STRING("Standard Symbols L"))
+#ifdef XP_WIN
+      || !gGlyphTableList->AddGlyphTable(NS_LITERAL_STRING("Symbol"))
+#endif
+      ) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  nsAutoCString key;
-  nsAutoString value;
-  nsCOMPtr<nsIPersistentProperties> mathfontProp;
-
-  // Add the math fonts in the gGlyphTableList in order of preference ...
-  // Note: we only load font-names at this stage. The actual glyph tables will
-  // be loaded lazily (see nsGlyphTable::ElementAt()).
-
-  // Load the "mathfont.properties" file
-  value.Truncate();
-  rv = LoadProperties(value, mathfontProp);
-  if (NS_FAILED(rv)) return rv;
-
-  // Get the list of mathfonts having special glyph tables to be used for
-  // stretchy characters.
-  // We just want to iterate over the font-family list using the
-  // callback mechanism that nsFont has...
-  nsFont font("", 0, 0, 0, 0, 0, 0);
-  NS_NAMED_LITERAL_CSTRING(defaultKey, "font.mathfont-glyph-tables");
-  rv = mathfontProp->GetStringProperty(defaultKey, font.name);
-  if (NS_FAILED(rv)) return rv;
-
-  font.EnumerateFamilies(MathFontEnumCallback, nullptr);
   return rv;
 }
 
