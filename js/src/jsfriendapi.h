@@ -1446,11 +1446,17 @@ JS_GetArrayBufferViewData(JSObject *obj);
 extern JS_FRIEND_API(JSObject *)
 JS_GetArrayBufferViewBuffer(JSContext *cx, JSObject *obj);
 
+typedef enum {
+    ChangeData,
+    KeepData
+} NeuterDataDisposition;
+
 /*
  * Set an ArrayBuffer's length to 0 and neuter all of its views.
  */
 extern JS_FRIEND_API(bool)
-JS_NeuterArrayBuffer(JSContext *cx, JS::HandleObject obj);
+JS_NeuterArrayBuffer(JSContext *cx, JS::HandleObject obj,
+                     NeuterDataDisposition changeData);
 
 /*
  * Check whether obj supports JS_GetDataView* APIs.
