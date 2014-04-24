@@ -38,6 +38,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineArrayPush(callInfo);
     if (native == js::array_concat)
         return inlineArrayConcat(callInfo);
+    if (native == js::array_splice)
+        return inlineArraySplice(callInfo);
 
     // Math natives.
     if (native == js_math_abs)
@@ -392,6 +394,42 @@ IonBuilder::inlineArrayPopShift(CallInfo &callInfo, MArrayPopShift::Mode mode)
     if (!pushTypeBarrier(ins, returnTypes, barrier))
         return InliningStatus_Error;
 
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineArraySplice(CallInfo &callInfo)
+{
+    if (callInfo.argc() != 2 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    // Ensure |this|, argument and result are objects.
+    if (getInlineReturnType() != MIRType_Object)
+        return InliningStatus_NotInlined;
+    if (callInfo.thisArg()->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(0)->type() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(1)->type() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    // Specialize arr.splice(start, deleteCount) with unused return value and
+    // avoid creating the result array in this case.
+    if (!BytecodeIsPopped(pc))
+        return InliningStatus_NotInlined;
+
+    MArraySplice *ins = MArraySplice::New(alloc(),
+                                          callInfo.thisArg(),
+                                          callInfo.getArg(0),
+                                          callInfo.getArg(1));
+
+    current->add(ins);
+    pushConstant(UndefinedValue());
+
+    if (!resumeAfter(ins))
+        return InliningStatus_Error;
     return InliningStatus_Inlined;
 }
 
