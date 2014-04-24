@@ -113,9 +113,6 @@ JSCompartment::init(JSContext *cx)
     if (!enumerators)
         return false;
 
-    if (!savedStacks_.init())
-        return false;
-
     return debuggees.init(0);
 }
 
@@ -566,7 +563,6 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
         sweepNewTypeObjectTable(newTypeObjects);
         sweepNewTypeObjectTable(lazyTypeObjects);
         sweepCallsiteClones();
-        savedStacks_.sweep(rt);
 
         if (global_ && IsObjectAboutToBeFinalized(global_.unsafeGet()))
             global_ = nullptr;
@@ -669,8 +665,6 @@ JSCompartment::clearTables()
         newTypeObjects.clear();
     if (lazyTypeObjects.initialized())
         lazyTypeObjects.clear();
-    if (savedStacks_.initialized())
-        savedStacks_.clear();
 }
 
 void
@@ -921,8 +915,7 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                       size_t *shapesCompartmentTables,
                                       size_t *crossCompartmentWrappersArg,
                                       size_t *regexpCompartment,
-                                      size_t *debuggeesSet,
-                                      size_t *savedStacksSet)
+                                      size_t *debuggeesSet)
 {
     *compartmentObject += mallocSizeOf(this);
     types.addSizeOfExcludingThis(mallocSizeOf, tiAllocationSiteTables,
@@ -934,7 +927,6 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     *crossCompartmentWrappersArg += crossCompartmentWrappers.sizeOfExcludingThis(mallocSizeOf);
     *regexpCompartment += regExps.sizeOfExcludingThis(mallocSizeOf);
     *debuggeesSet += debuggees.sizeOfExcludingThis(mallocSizeOf);
-    *savedStacksSet += savedStacks_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 void

@@ -13,7 +13,6 @@
 #include "gc/Zone.h"
 #include "vm/GlobalObject.h"
 #include "vm/PIC.h"
-#include "vm/SavedStacks.h"
 
 namespace js {
 
@@ -199,8 +198,6 @@ struct JSCompartment
   private:
     js::ObjectMetadataCallback   objectMetadataCallback;
 
-    js::SavedStacks              savedStacks_;
-
     js::WrapperMap               crossCompartmentWrappers;
 
   public:
@@ -227,8 +224,7 @@ struct JSCompartment
                                 size_t *shapesCompartmentTables,
                                 size_t *crossCompartmentWrappers,
                                 size_t *regexpCompartment,
-                                size_t *debuggeesSet,
-                                size_t *savedStacksSet);
+                                size_t *debuggeesSet);
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.
@@ -345,8 +341,6 @@ struct JSCompartment
     bool callObjectMetadataCallback(JSContext *cx, JSObject **obj) const {
         return objectMetadataCallback(cx, obj);
     }
-
-    js::SavedStacks &savedStacks() { return savedStacks_; }
 
     void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone> &finder);
 
