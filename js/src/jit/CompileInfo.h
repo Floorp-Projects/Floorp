@@ -297,10 +297,6 @@ class CompileInfo
         return executionMode_;
     }
 
-    bool executionModeIsAnalysis() const {
-        return executionMode_ == DefinitePropertiesAnalysis || executionMode_ == ArgumentsUsageAnalysis;
-    }
-
     bool isParallelExecution() const {
         return executionMode_ == ParallelExecution;
     }

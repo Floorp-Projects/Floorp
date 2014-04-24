@@ -124,7 +124,6 @@ IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp,
     argTypes(nullptr),
     typeArray(nullptr),
     typeArrayHint(0),
-    bytecodeTypeMap(nullptr),
     loopDepth_(loopDepth),
     callerResumePoint_(nullptr),
     callerBuilder_(nullptr),
@@ -146,7 +145,7 @@ IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp,
     script_ = info->script();
     pc = info->startPC();
 
-    JS_ASSERT(script()->hasBaselineScript() == (info->executionMode() != ArgumentsUsageAnalysis));
+    JS_ASSERT(script()->hasBaselineScript());
     JS_ASSERT(!!analysisContext == (info->executionMode() == DefinitePropertiesAnalysis));
 }
 
@@ -610,17 +609,6 @@ IonBuilder::init()
     if (!analysis().init(alloc(), gsn))
         return false;
 
-    // The baseline script normally has the bytecode type map, but compute
-    // it ourselves if we do not have a baseline script.
-    if (script()->hasBaselineScript()) {
-        bytecodeTypeMap = script()->baselineScript()->bytecodeTypeMap();
-    } else {
-        bytecodeTypeMap = alloc_->lifoAlloc()->newArrayUninitialized<uint32_t>(script()->nTypeSets());
-        if (!bytecodeTypeMap)
-            return false;
-        types::FillBytecodeTypeMap(script(), bytecodeTypeMap);
-    }
-
     return true;
 }
 
@@ -998,10 +986,8 @@ IonBuilder::initScopeChain(MDefinition *callee)
         scope = MFunctionEnvironment::New(alloc(), callee);
         current->add(scope);
 
-        // This reproduce what is done in CallObject::createForFunction. Skip
-        // this for analyses, as the script might not have a baseline script
-        // with template objects yet.
-        if (fun->isHeavyweight() && !info().executionModeIsAnalysis()) {
+        // This reproduce what is done in CallObject::createForFunction
+        if (fun->isHeavyweight()) {
             if (fun->isNamedLambda()) {
                 scope = createDeclEnvObject(callee, scope);
                 if (!scope)
@@ -3587,12 +3573,7 @@ IonBuilder::jsop_try()
         return abort("Has try-finally");
 
     // Try-catch within inline frames is not yet supported.
-    JS_ASSERT(!isInlineBuilder());
-
-    // Try-catch during the arguments usage analysis is not yet supported. Code
-    // accessing the arguments within the 'catch' block is not accounted for.
-    if (info().executionMode() == ArgumentsUsageAnalysis)
-        return abort("Try-catch during arguments usage analysis");
+    JS_ASSERT(script()->uninlineable() && !isInlineBuilder());
 
     graph().setHasTryBlock();
 
@@ -4113,10 +4094,6 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
 {
     // When there is no target, inlining is impossible.
     if (target == nullptr)
-        return InliningDecision_DontInline;
-
-    // Never inline during the arguments usage analysis.
-    if (info().executionMode() == ArgumentsUsageAnalysis)
         return InliningDecision_DontInline;
 
     // Native functions provide their own detection in inlineNativeCall().
@@ -5664,8 +5641,14 @@ IonBuilder::jsop_initprop(PropertyName *name)
 
     // In parallel execution, we never require write barriers.  See
     // forkjoin.cpp for more information.
-    if (info().executionMode() == ParallelExecution)
+    switch (info().executionMode()) {
+      case SequentialExecution:
+      case DefinitePropertiesAnalysis:
+        break;
+      case ParallelExecution:
         needsBarrier = false;
+        break;
+    }
 
     if (templateObject->isFixedSlot(shape->slot())) {
         MStoreFixedSlot *store = MStoreFixedSlot::New(alloc(), obj, shape->slot(), value);
@@ -6680,21 +6663,6 @@ IonBuilder::jsop_getelem()
 {
     MDefinition *index = current->pop();
     MDefinition *obj = current->pop();
-
-    // Always use a call if we are performing analysis and not actually
-    // emitting code, to simplify later analysis.
-    if (info().executionModeIsAnalysis()) {
-        MInstruction *ins = MCallGetElement::New(alloc(), obj, index);
-
-        current->add(ins);
-        current->push(ins);
-
-        if (!resumeAfter(ins))
-            return false;
-
-        types::TemporaryTypeSet *types = bytecodeTypes(pc);
-        return pushTypeBarrier(ins, types, true);
-    }
 
     bool emitted = false;
 
@@ -8568,11 +8536,11 @@ IonBuilder::jsop_getprop(PropertyName *name)
     bool barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
                                                 current->peek(-1), name, types);
 
-    // Always use a call if we are performing analysis and
+    // Always use a call if we are doing the definite properties analysis and
     // not actually emitting code, to simplify later analysis. Also skip deeper
     // analysis if there are no known types for this operation, as it will
     // always invalidate when executing.
-    if (info().executionModeIsAnalysis() || types->empty()) {
+    if (info().executionMode() == DefinitePropertiesAnalysis || types->empty()) {
         MDefinition *obj = current->peek(-1);
         MCallGetProperty *call = MCallGetProperty::New(alloc(), obj, name, *pc == JSOP_CALLPROP);
         current->add(call);
@@ -8581,7 +8549,7 @@ IonBuilder::jsop_getprop(PropertyName *name)
         // constants read off the prototype chain, to allow inlining later on.
         // In this case we still need the getprop call so that the later
         // analysis knows when the |this| value has been read from.
-        if (info().executionModeIsAnalysis()) {
+        if (info().executionMode() == DefinitePropertiesAnalysis) {
             if (!getPropTryConstant(&emitted, name, types) || emitted)
                 return emitted;
         }
@@ -9048,7 +9016,7 @@ IonBuilder::jsop_setprop(PropertyName *name)
 
     // Always use a call if we are doing the definite properties analysis and
     // not actually emitting code, to simplify later analysis.
-    if (info().executionModeIsAnalysis()) {
+    if (info().executionMode() == DefinitePropertiesAnalysis) {
         MInstruction *ins = MCallSetProperty::New(alloc(), obj, value, name, script()->strict());
         current->add(ins);
         current->push(value);
@@ -9634,10 +9602,11 @@ IonBuilder::jsop_this()
         return true;
     }
 
-    // If we are doing an analysis, we might not yet know the type of |this|.
-    // Instead of bailing out just push the |this| slot, as this code won't
-    // actually execute and it does not matter whether |this| is primitive.
-    if (info().executionModeIsAnalysis()) {
+    // If we are doing a definite properties analysis, we don't yet know the
+    // |this| type as its type object is being created right now. Instead of
+    // bailing out just push the |this| slot, as this code won't actually
+    // execute and it does not matter whether |this| is primitive.
+    if (info().executionMode() == DefinitePropertiesAnalysis) {
         current->pushSlot(info().thisSlot());
         return true;
     }
@@ -10038,7 +10007,7 @@ IonBuilder::addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bail
 types::TemporaryTypeSet *
 IonBuilder::bytecodeTypes(jsbytecode *pc)
 {
-    return types::TypeScript::BytecodeTypes(script(), pc, bytecodeTypeMap, &typeArrayHint, typeArray);
+    return types::TypeScript::BytecodeTypes(script(), pc, &typeArrayHint, typeArray);
 }
 
 TypeDescrSetHash *

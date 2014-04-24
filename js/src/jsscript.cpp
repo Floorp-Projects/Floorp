@@ -3450,17 +3450,13 @@ void
 JSScript::setArgumentsHasVarBinding()
 {
     argsHasVarBinding_ = true;
-#ifdef JS_ION
     needsArgsAnalysis_ = true;
-#else
-    // The arguments analysis is performed by IonBuilder.
-    needsArgsObj_ = true;
-#endif
 }
 
 void
 JSScript::setNeedsArgsObj(bool needsArgsObj)
 {
+    JS_ASSERT(!analyzedArgsUsage());
     JS_ASSERT_IF(needsArgsObj, argumentsHasVarBinding());
     needsArgsAnalysis_ = false;
     needsArgsObj_ = needsArgsObj;
