@@ -754,6 +754,8 @@ class DebugProgram(MachCommandBase):
         help='Do not pass the -no-remote argument by default')
     @CommandArgument('+background', '+b', action='store_true',
         help='Do not pass the -foreground argument by default on Mac')
+    @CommandArgument('+debugger', default=None, type=str,
+        help='Name of debugger to launch')
     @CommandArgument('+debugparams', default=None, metavar='params', type=str,
         help='Command-line arguments to pass to GDB or LLDB itself; split as the Bourne shell would.')
     # Bug 933807 introduced JS_DISABLE_SLOW_SCRIPT_SIGNALS to avoid clever
@@ -763,19 +765,29 @@ class DebugProgram(MachCommandBase):
     # automatic resuming; see the bug.
     @CommandArgument('+slowscript', action='store_true',
         help='Do not set the JS_DISABLE_SLOW_SCRIPT_SIGNALS env variable; when not set, recoverable but misleading SIGSEGV instances may occur in Ion/Odin JIT code')
-    def debug(self, params, remote, background, debugparams, slowscript):
+    def debug(self, params, remote, background, debugger, debugparams, slowscript):
         import which
         use_lldb = False
-        try:
-            debugger = which.which('gdb')
-        except Exception:
+        use_gdb = False
+        if debugger:
             try:
-                debugger = which.which('lldb')
-                use_lldb = True
+                debugger = which.which(debugger)
             except Exception as e:
-                print("You don't have gdb or lldb in your PATH")
+                print("You don't have %s in your PATH" % (debugger))
                 print(e)
                 return 1
+        else:
+            try:
+                debugger = which.which('gdb')
+                use_gdb = True
+            except Exception:
+                try:
+                    debugger = which.which('lldb')
+                    use_lldb = True
+                except Exception as e:
+                    print("You don't have gdb or lldb in your PATH")
+                    print(e)
+                    return 1
         args = [debugger]
         extra_env = { 'MOZ_CRASHREPORTER_DISABLE' : '1' }
         if debugparams:
@@ -797,10 +809,11 @@ class DebugProgram(MachCommandBase):
             print(e)
             return 1
 
-        if not use_lldb:
-            args.extend(['--args', binpath])
-        else:
-            args.extend(['--', binpath])
+        if use_gdb:
+            args.append('--args')
+        elif use_lldb:
+            args.append('--')
+        args.append(binpath)
 
         if not remote:
             args.append('-no-remote')
