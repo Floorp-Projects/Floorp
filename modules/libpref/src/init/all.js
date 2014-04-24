@@ -1534,7 +1534,7 @@ pref("font.mathfont-family", "MathJax_Main, STIXNonUnicode, STIXSizeOneSym, STIX
 // These fonts are ignored the underline offset, instead of it, the underline is lowered to bottom of its em descent.
 pref("font.blacklist.underline_offset", "FangSong,Gulim,GulimChe,MingLiU,MingLiU-ExtB,MingLiU_HKSCS,MingLiU-HKSCS-ExtB,MS Gothic,MS Mincho,MS PGothic,MS PMincho,MS UI Gothic,PMingLiU,PMingLiU-ExtB,SimHei,SimSun,SimSun-ExtB,Hei,Kai,Apple LiGothic,Apple LiSung,Osaka");
 
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G
 // Whitelist of fonts that ship with B2G that do not include space lookups in
 // default features. This allows us to skip analyzing the GSUB/GPOS tables
 // unless features are explicitly enabled.
@@ -3079,209 +3079,6 @@ pref("print.print_paper_size", 0);
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 0); // twips
 
-# ANDROID
-#endif
-
-#if defined(ANDROID) || defined(FXOS_SIMULATOR)
-// font names
-
-pref("font.alias-list", "sans,sans-serif,serif,monospace");
-
-// Gonk (along with FxOS Simulator) and Android ship different sets of fonts
-#if defined(MOZ_WIDGET_GONK) || defined(FXOS_SIMULATOR)
-
-// TODO: some entries could probably be cleaned up.
-
-// ar
-
-pref("font.name.serif.el", "Droid Serif"); // not Charis SIL Compact, only has a few Greek chars
-pref("font.name.sans-serif.el", "Roboto"); // To be updated once the Greek letters in Fira are revised
-pref("font.name.monospace.el", "Droid Sans Mono");
-
-pref("font.name.serif.he", "Charis SIL Compact");
-pref("font.name.sans-serif.he", "Fira Sans OT");
-pref("font.name.monospace.he", "Fira Mono OT");
-pref("font.name-list.sans-serif.he", "Droid Sans Hebrew, Fira Sans OT");
-
-pref("font.name.serif.ja", "Charis SIL Compact");
-pref("font.name.sans-serif.ja", "Fira Sans OT");
-pref("font.name.monospace.ja", "MotoyaLMaru");
-pref("font.name-list.sans-serif.ja", "Fira Sans OT, MotoyaLMaru, MotoyaLCedar, Droid Sans Japanese");
-pref("font.name-list.monospace.ja", "MotoyaLMaru, MotoyaLCedar, Fira Mono OT");
-
-pref("font.name.serif.ko", "Charis SIL Compact");
-pref("font.name.sans-serif.ko", "Fira Sans OT");
-pref("font.name.monospace.ko", "Fira Mono OT");
-
-pref("font.name.serif.th", "Charis SIL Compact");
-pref("font.name.sans-serif.th", "Fira Sans OT");
-pref("font.name.monospace.th", "Fira Mono OT");
-pref("font.name-list.sans-serif.th", "Fira Sans OT, Droid Sans Thai");
-
-pref("font.name.serif.tr", "Charis SIL Compact");
-pref("font.name.sans-serif.tr", "Fira Sans OT");
-pref("font.name.monospace.tr", "Fira Mono OT");
-
-pref("font.name.serif.x-baltic", "Charis SIL Compact");
-pref("font.name.sans-serif.x-baltic", "Fira Sans OT");
-pref("font.name.monospace.x-baltic", "Fira Mono OT");
-
-pref("font.name.serif.x-central-euro", "Charis SIL Compact");
-pref("font.name.sans-serif.x-central-euro", "Fira Sans OT");
-pref("font.name.monospace.x-central-euro", "Fira Mono OT");
-
-pref("font.name.serif.x-cyrillic", "Charis SIL Compact");
-pref("font.name.sans-serif.x-cyrillic", "Fira Sans OT");
-pref("font.name.monospace.x-cyrillic", "Fira Mono OT");
-
-pref("font.name.serif.x-unicode", "Charis SIL Compact");
-pref("font.name.sans-serif.x-unicode", "Fira Sans OT");
-pref("font.name.monospace.x-unicode", "Fira Mono OT");
-
-pref("font.name.serif.x-western", "Charis SIL Compact");
-pref("font.name.sans-serif.x-western", "Fira Sans OT");
-pref("font.name.monospace.x-western", "Fira Mono OT");
-
-pref("font.name.serif.zh-CN", "Charis SIL Compact");
-pref("font.name.sans-serif.zh-CN", "Fira Sans OT");
-pref("font.name.monospace.zh-CN", "Fira Mono OT");
-
-pref("font.name.serif.zh-HK", "Charis SIL Compact");
-pref("font.name.sans-serif.zh-HK", "Fira Sans OT");
-pref("font.name.monospace.zh-HK", "Fira Mono OT");
-
-pref("font.name.serif.zh-TW", "Charis SIL Compact");
-pref("font.name.sans-serif.zh-TW", "Fira Sans OT");
-pref("font.name.monospace.zh-TW", "Fira Mono OT");
-
-#else
-
-// not MOZ_WIDGET_GONK / FXOS_SIMULATOR
-// (i.e. this is Firefox for Android) - here, we use the bundled fonts
-
-// ar
-
-pref("font.name.serif.el", "Droid Serif"); // not Charis SIL Compact, only has a few Greek chars
-pref("font.name.sans-serif.el", "Clear Sans");
-pref("font.name.monospace.el", "Droid Sans Mono");
-pref("font.name-list.sans-serif.el", "Clear Sans, Roboto, Droid Sans");
-
-pref("font.name.serif.he", "Droid Serif");
-pref("font.name.sans-serif.he", "Clear Sans");
-pref("font.name.monospace.he", "Droid Sans Mono");
-pref("font.name-list.sans-serif.he", "Droid Sans Hebrew, Clear Sans, Droid Sans");
-
-pref("font.name.serif.ja", "Charis SIL Compact");
-pref("font.name.sans-serif.ja", "Clear Sans");
-pref("font.name.monospace.ja", "MotoyaLMaru");
-pref("font.name-list.serif.ja", "Droid Serif");
-pref("font.name-list.sans-serif.ja", "Clear Sans, Roboto, Droid Sans, MotoyaLMaru, MotoyaLCedar, Droid Sans Japanese");
-pref("font.name-list.monospace.ja", "MotoyaLMaru, MotoyaLCedar, Droid Sans Mono");
-
-pref("font.name.serif.ko", "Charis SIL Compact");
-pref("font.name.sans-serif.ko", "Clear Sans");
-pref("font.name.monospace.ko", "Droid Sans Mono");
-pref("font.name-list.serif.ko", "Droid Serif, HYSerif");
-pref("font.name-list.sans-serif.ko", "SmartGothic, NanumGothic, DroidSansFallback, Droid Sans Fallback");
-
-pref("font.name.serif.th", "Charis SIL Compact");
-pref("font.name.sans-serif.th", "Clear Sans");
-pref("font.name.monospace.th", "Droid Sans Mono");
-pref("font.name-list.serif.th", "Droid Serif");
-pref("font.name-list.sans-serif.th", "Droid Sans Thai, Clear Sans, Droid Sans");
-
-pref("font.name.serif.tr", "Charis SIL Compact");
-pref("font.name.sans-serif.tr", "Clear Sans");
-pref("font.name.monospace.tr", "Droid Sans Mono");
-pref("font.name-list.serif.tr", "Droid Serif");
-pref("font.name-list.sans-serif.tr", "Clear Sans, Roboto, Droid Sans");
-
-pref("font.name.serif.x-baltic", "Charis SIL Compact");
-pref("font.name.sans-serif.x-baltic", "Clear Sans");
-pref("font.name.monospace.x-baltic", "Droid Sans Mono");
-pref("font.name-list.serif.x-baltic", "Droid Serif");
-pref("font.name-list.sans-serif.x-baltic", "Clear Sans, Roboto, Droid Sans");
-
-pref("font.name.serif.x-central-euro", "Charis SIL Compact");
-pref("font.name.sans-serif.x-central-euro", "Clear Sans");
-pref("font.name.monospace.x-central-euro", "Droid Sans Mono");
-pref("font.name-list.serif.x-central-euro", "Droid Serif");
-pref("font.name-list.sans-serif.x-central-euro", "Clear Sans, Roboto, Droid Sans");
-
-pref("font.name.serif.x-cyrillic", "Charis SIL Compact");
-pref("font.name.sans-serif.x-cyrillic", "Clear Sans");
-pref("font.name.monospace.x-cyrillic", "Droid Sans Mono");
-pref("font.name-list.serif.x-cyrillic", "Droid Serif");
-pref("font.name-list.sans-serif.x-cyrillic", "Clear Sans, Roboto, Droid Sans");
-
-pref("font.name.serif.x-unicode", "Charis SIL Compact");
-pref("font.name.sans-serif.x-unicode", "Clear Sans");
-pref("font.name.monospace.x-unicode", "Droid Sans Mono");
-pref("font.name-list.serif.x-unicode", "Droid Serif");
-pref("font.name-list.sans-serif.x-unicode", "Clear Sans, Roboto, Droid Sans");
-
-pref("font.name.serif.x-western", "Charis SIL Compact");
-pref("font.name.sans-serif.x-western", "Clear Sans");
-pref("font.name.monospace.x-western", "Droid Sans Mono");
-pref("font.name-list.serif.x-western", "Droid Serif");
-pref("font.name-list.sans-serif.x-western", "Clear Sans, Roboto, Droid Sans");
-
-pref("font.name.serif.zh-CN", "Charis SIL Compact");
-pref("font.name.sans-serif.zh-CN", "Clear Sans");
-pref("font.name.monospace.zh-CN", "Droid Sans Mono");
-pref("font.name-list.serif.zh-CN", "Droid Serif, Droid Sans Fallback");
-pref("font.name-list.sans-serif.zh-CN", "Roboto, Droid Sans, Droid Sans Fallback");
-pref("font.name-list.monospace.zh-CN", "Droid Sans Fallback");
-
-pref("font.name.serif.zh-HK", "Charis SIL Compact");
-pref("font.name.sans-serif.zh-HK", "Clear Sans");
-pref("font.name.monospace.zh-HK", "Droid Sans Mono");
-pref("font.name-list.serif.zh-HK", "Droid Serif, Droid Sans Fallback");
-pref("font.name-list.sans-serif.zh-HK", "Roboto, Droid Sans, Droid Sans Fallback");
-pref("font.name-list.monospace.zh-HK", "Droid Sans Fallback");
-
-pref("font.name.serif.zh-TW", "Charis SIL Compact");
-pref("font.name.sans-serif.zh-TW", "Clear Sans");
-pref("font.name.monospace.zh-TW", "Droid Sans Mono");
-pref("font.name-list.serif.zh-TW", "Droid Serif, Droid Sans Fallback");
-pref("font.name-list.sans-serif.zh-TW", "Roboto, Droid Sans, Droid Sans Fallback");
-pref("font.name-list.monospace.zh-TW", "Droid Sans Fallback");
-
-// end ! (MOZ_WIDGET_GONK || FXOS_SIMULATOR)
-
-#endif
-
-pref("font.size.fixed.ar", 12);
-
-pref("font.default.el", "sans-serif");
-pref("font.size.fixed.el", 12);
-
-pref("font.size.fixed.he", 12);
-
-pref("font.minimum-size.th", 13);
-
-pref("font.default.tr", "sans-serif");
-pref("font.size.fixed.tr", 12);
-
-pref("font.default.x-baltic", "sans-serif");
-pref("font.size.fixed.x-baltic", 12);
-
-pref("font.default.x-central-euro", "sans-serif");
-pref("font.size.fixed.x-central-euro", 12);
-
-pref("font.default.x-cyrillic", "sans-serif");
-pref("font.size.fixed.x-cyrillic", 12);
-
-pref("font.default.x-unicode", "sans-serif");
-pref("font.size.fixed.x-unicode", 12);
-
-pref("font.default.x-western", "sans-serif");
-pref("font.size.fixed.x-western", 12);
-
-# ANDROID || FXOS_SIMUALTOR
-#endif
-
-#ifdef ANDROID
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);
 pref("print.postscript.paper_size",    "letter");
@@ -3301,6 +3098,7 @@ pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 
 # ANDROID
 #endif
+
 
 #ifndef ANDROID
 #ifndef XP_MACOSX
@@ -3448,6 +3246,200 @@ pref("intl.ime.use_simple_context_on_password_field", false);
 #endif
 #endif
 #endif
+
+
+#if defined(ANDROID) || defined(MOZ_B2G)
+pref("font.alias-list", "sans,sans-serif,serif,monospace");
+pref("font.size.fixed.ar", 12);
+
+pref("font.default.el", "sans-serif");
+pref("font.size.fixed.el", 12);
+
+pref("font.size.fixed.he", 12);
+
+pref("font.minimum-size.th", 13);
+
+pref("font.default.tr", "sans-serif");
+pref("font.size.fixed.tr", 12);
+
+pref("font.default.x-baltic", "sans-serif");
+pref("font.size.fixed.x-baltic", 12);
+
+pref("font.default.x-central-euro", "sans-serif");
+pref("font.size.fixed.x-central-euro", 12);
+
+pref("font.default.x-cyrillic", "sans-serif");
+pref("font.size.fixed.x-cyrillic", 12);
+
+pref("font.default.x-unicode", "sans-serif");
+pref("font.size.fixed.x-unicode", 12);
+
+pref("font.default.x-western", "sans-serif");
+pref("font.size.fixed.x-western", 12);
+# ANDROID || MOZ_B2G
+#endif
+
+
+#ifdef MOZ_B2G
+// Gonk, FxOS Simulator and B2G Desktop
+
+// TODO: some entries could probably be cleaned up.
+
+// ar
+
+pref("font.name.serif.el", "Droid Serif"); // not Charis SIL Compact, only has a few Greek chars
+pref("font.name.sans-serif.el", "Roboto"); // To be updated once the Greek letters in Fira are revised
+pref("font.name.monospace.el", "Droid Sans Mono");
+
+pref("font.name.serif.he", "Charis SIL Compact");
+pref("font.name.sans-serif.he", "Fira Sans OT");
+pref("font.name.monospace.he", "Fira Mono OT");
+pref("font.name-list.sans-serif.he", "Droid Sans Hebrew, Fira Sans OT");
+
+pref("font.name.serif.ja", "Charis SIL Compact");
+pref("font.name.sans-serif.ja", "Fira Sans OT");
+pref("font.name.monospace.ja", "MotoyaLMaru");
+pref("font.name-list.sans-serif.ja", "Fira Sans OT, MotoyaLMaru, MotoyaLCedar, Droid Sans Japanese");
+pref("font.name-list.monospace.ja", "MotoyaLMaru, MotoyaLCedar, Fira Mono OT");
+
+pref("font.name.serif.ko", "Charis SIL Compact");
+pref("font.name.sans-serif.ko", "Fira Sans OT");
+pref("font.name.monospace.ko", "Fira Mono OT");
+
+pref("font.name.serif.th", "Charis SIL Compact");
+pref("font.name.sans-serif.th", "Fira Sans OT");
+pref("font.name.monospace.th", "Fira Mono OT");
+pref("font.name-list.sans-serif.th", "Fira Sans OT, Droid Sans Thai");
+
+pref("font.name.serif.tr", "Charis SIL Compact");
+pref("font.name.sans-serif.tr", "Fira Sans OT");
+pref("font.name.monospace.tr", "Fira Mono OT");
+
+pref("font.name.serif.x-baltic", "Charis SIL Compact");
+pref("font.name.sans-serif.x-baltic", "Fira Sans OT");
+pref("font.name.monospace.x-baltic", "Fira Mono OT");
+
+pref("font.name.serif.x-central-euro", "Charis SIL Compact");
+pref("font.name.sans-serif.x-central-euro", "Fira Sans OT");
+pref("font.name.monospace.x-central-euro", "Fira Mono OT");
+
+pref("font.name.serif.x-cyrillic", "Charis SIL Compact");
+pref("font.name.sans-serif.x-cyrillic", "Fira Sans OT");
+pref("font.name.monospace.x-cyrillic", "Fira Mono OT");
+
+pref("font.name.serif.x-unicode", "Charis SIL Compact");
+pref("font.name.sans-serif.x-unicode", "Fira Sans OT");
+pref("font.name.monospace.x-unicode", "Fira Mono OT");
+
+pref("font.name.serif.x-western", "Charis SIL Compact");
+pref("font.name.sans-serif.x-western", "Fira Sans OT");
+pref("font.name.monospace.x-western", "Fira Mono OT");
+
+pref("font.name.serif.zh-CN", "Charis SIL Compact");
+pref("font.name.sans-serif.zh-CN", "Fira Sans OT");
+pref("font.name.monospace.zh-CN", "Fira Mono OT");
+
+pref("font.name.serif.zh-HK", "Charis SIL Compact");
+pref("font.name.sans-serif.zh-HK", "Fira Sans OT");
+pref("font.name.monospace.zh-HK", "Fira Mono OT");
+
+pref("font.name.serif.zh-TW", "Charis SIL Compact");
+pref("font.name.sans-serif.zh-TW", "Fira Sans OT");
+pref("font.name.monospace.zh-TW", "Fira Mono OT");
+
+#elif defined(ANDROID)
+// We use the bundled fonts for Firefox for Android
+
+// ar
+
+pref("font.name.serif.el", "Droid Serif"); // not Charis SIL Compact, only has a few Greek chars
+pref("font.name.sans-serif.el", "Clear Sans");
+pref("font.name.monospace.el", "Droid Sans Mono");
+pref("font.name-list.sans-serif.el", "Clear Sans, Roboto, Droid Sans");
+
+pref("font.name.serif.he", "Droid Serif");
+pref("font.name.sans-serif.he", "Clear Sans");
+pref("font.name.monospace.he", "Droid Sans Mono");
+pref("font.name-list.sans-serif.he", "Droid Sans Hebrew, Clear Sans, Droid Sans");
+
+pref("font.name.serif.ja", "Charis SIL Compact");
+pref("font.name.sans-serif.ja", "Clear Sans");
+pref("font.name.monospace.ja", "MotoyaLMaru");
+pref("font.name-list.serif.ja", "Droid Serif");
+pref("font.name-list.sans-serif.ja", "Clear Sans, Roboto, Droid Sans, MotoyaLMaru, MotoyaLCedar, Droid Sans Japanese");
+pref("font.name-list.monospace.ja", "MotoyaLMaru, MotoyaLCedar, Droid Sans Mono");
+
+pref("font.name.serif.ko", "Charis SIL Compact");
+pref("font.name.sans-serif.ko", "Clear Sans");
+pref("font.name.monospace.ko", "Droid Sans Mono");
+pref("font.name-list.serif.ko", "Droid Serif, HYSerif");
+pref("font.name-list.sans-serif.ko", "SmartGothic, NanumGothic, DroidSansFallback, Droid Sans Fallback");
+
+pref("font.name.serif.th", "Charis SIL Compact");
+pref("font.name.sans-serif.th", "Clear Sans");
+pref("font.name.monospace.th", "Droid Sans Mono");
+pref("font.name-list.serif.th", "Droid Serif");
+pref("font.name-list.sans-serif.th", "Droid Sans Thai, Clear Sans, Droid Sans");
+
+pref("font.name.serif.tr", "Charis SIL Compact");
+pref("font.name.sans-serif.tr", "Clear Sans");
+pref("font.name.monospace.tr", "Droid Sans Mono");
+pref("font.name-list.serif.tr", "Droid Serif");
+pref("font.name-list.sans-serif.tr", "Clear Sans, Roboto, Droid Sans");
+
+pref("font.name.serif.x-baltic", "Charis SIL Compact");
+pref("font.name.sans-serif.x-baltic", "Clear Sans");
+pref("font.name.monospace.x-baltic", "Droid Sans Mono");
+pref("font.name-list.serif.x-baltic", "Droid Serif");
+pref("font.name-list.sans-serif.x-baltic", "Clear Sans, Roboto, Droid Sans");
+
+pref("font.name.serif.x-central-euro", "Charis SIL Compact");
+pref("font.name.sans-serif.x-central-euro", "Clear Sans");
+pref("font.name.monospace.x-central-euro", "Droid Sans Mono");
+pref("font.name-list.serif.x-central-euro", "Droid Serif");
+pref("font.name-list.sans-serif.x-central-euro", "Clear Sans, Roboto, Droid Sans");
+
+pref("font.name.serif.x-cyrillic", "Charis SIL Compact");
+pref("font.name.sans-serif.x-cyrillic", "Clear Sans");
+pref("font.name.monospace.x-cyrillic", "Droid Sans Mono");
+pref("font.name-list.serif.x-cyrillic", "Droid Serif");
+pref("font.name-list.sans-serif.x-cyrillic", "Clear Sans, Roboto, Droid Sans");
+
+pref("font.name.serif.x-unicode", "Charis SIL Compact");
+pref("font.name.sans-serif.x-unicode", "Clear Sans");
+pref("font.name.monospace.x-unicode", "Droid Sans Mono");
+pref("font.name-list.serif.x-unicode", "Droid Serif");
+pref("font.name-list.sans-serif.x-unicode", "Clear Sans, Roboto, Droid Sans");
+
+pref("font.name.serif.x-western", "Charis SIL Compact");
+pref("font.name.sans-serif.x-western", "Clear Sans");
+pref("font.name.monospace.x-western", "Droid Sans Mono");
+pref("font.name-list.serif.x-western", "Droid Serif");
+pref("font.name-list.sans-serif.x-western", "Clear Sans, Roboto, Droid Sans");
+
+pref("font.name.serif.zh-CN", "Charis SIL Compact");
+pref("font.name.sans-serif.zh-CN", "Clear Sans");
+pref("font.name.monospace.zh-CN", "Droid Sans Mono");
+pref("font.name-list.serif.zh-CN", "Droid Serif, Droid Sans Fallback");
+pref("font.name-list.sans-serif.zh-CN", "Roboto, Droid Sans, Droid Sans Fallback");
+pref("font.name-list.monospace.zh-CN", "Droid Sans Fallback");
+
+pref("font.name.serif.zh-HK", "Charis SIL Compact");
+pref("font.name.sans-serif.zh-HK", "Clear Sans");
+pref("font.name.monospace.zh-HK", "Droid Sans Mono");
+pref("font.name-list.serif.zh-HK", "Droid Serif, Droid Sans Fallback");
+pref("font.name-list.sans-serif.zh-HK", "Roboto, Droid Sans, Droid Sans Fallback");
+pref("font.name-list.monospace.zh-HK", "Droid Sans Fallback");
+
+pref("font.name.serif.zh-TW", "Charis SIL Compact");
+pref("font.name.sans-serif.zh-TW", "Clear Sans");
+pref("font.name.monospace.zh-TW", "Droid Sans Mono");
+pref("font.name-list.serif.zh-TW", "Droid Serif, Droid Sans Fallback");
+pref("font.name-list.sans-serif.zh-TW", "Roboto, Droid Sans, Droid Sans Fallback");
+pref("font.name-list.monospace.zh-TW", "Droid Sans Fallback");
+
+#endif
+
 
 #if OS_ARCH==AIX
 
