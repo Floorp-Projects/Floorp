@@ -889,7 +889,7 @@ class Shape : public gc::BarrieredCell<Shape>
 
   protected:
     HeapPtrBaseShape    base_;
-    EncapsulatedId      propid_;
+    PreBarrieredId      propid_;
 
     JS_ENUM_HEADER(SlotInfo, uint32_t)
     {
@@ -1192,12 +1192,12 @@ class Shape : public gc::BarrieredCell<Shape>
         slotInfo = slotInfo | ((count + 1) << LINEAR_SEARCHES_SHIFT);
     }
 
-    const EncapsulatedId &propid() const {
+    const PreBarrieredId &propid() const {
         JS_ASSERT(!isEmptyShape());
         JS_ASSERT(!JSID_IS_VOID(propid_));
         return propid_;
     }
-    EncapsulatedId &propidRef() { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
+    PreBarrieredId &propidRef() { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
     jsid propidRaw() const {
         // Return the actual jsid, not an internal reference.
         return propid();

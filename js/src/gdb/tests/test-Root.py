@@ -3,8 +3,8 @@
 assert_subprinter_registered('SpiderMonkey', 'instantiations-of-JS::Rooted')
 assert_subprinter_registered('SpiderMonkey', 'instantiations-of-JS::Handle')
 assert_subprinter_registered('SpiderMonkey', 'instantiations-of-JS::MutableHandle')
-assert_subprinter_registered('SpiderMonkey', 'instantiations-of-js::EncapsulatedPtr')
-assert_subprinter_registered('SpiderMonkey', 'js::EncapsulatedValue')
+assert_subprinter_registered('SpiderMonkey', 'instantiations-of-js::PreBarriered')
+assert_subprinter_registered('SpiderMonkey', 'js::PreBarrieredValue')
 
 run_fragment('Root.handle')
 
