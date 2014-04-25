@@ -88,6 +88,24 @@ class JS_FRIEND_API(Wrapper);
 class JS_FRIEND_API(BaseProxyHandler)
 {
     const void *mFamily;
+
+    /*
+     * Proxy handlers can use mHasPrototype to request the following special
+     * treatment from the JS engine:
+     *
+     *   - When mHasPrototype is true, the engine never calls these methods:
+     *     getPropertyDescriptor, has, set, enumerate, iterate.  Instead, for
+     *     these operations, it calls the "own" traps like
+     *     getOwnPropertyDescriptor, hasOwn, defineProperty, keys, etc., and
+     *     consults the prototype chain if needed.
+     *
+     *   - When mHasPrototype is true, the engine calls handler->get() only if
+     *     handler->hasOwn() says an own property exists on the proxy. If not,
+     *     it consults the prototype chain.
+     *
+     * This is useful because it frees the ProxyHandler from having to implement
+     * any behavior having to do with the prototype chain.
+     */
     bool mHasPrototype;
 
     /*
@@ -348,17 +366,6 @@ inline bool IsProxy(JSObject *obj)
     return GetObjectClass(obj)->isProxy();
 }
 
-BaseProxyHandler *
-GetProxyHandler(JSObject *obj);
-
-inline bool IsScriptedProxy(JSObject *obj)
-{
-    if (!IsProxy(obj))
-        return false;
-
-    return GetProxyHandler(obj)->isScripted();
-}
-
 /*
  * These are part of the API.
  *
@@ -413,6 +420,12 @@ SetProxyExtra(JSObject *obj, size_t n, const Value &extra)
     JS_ASSERT(IsProxy(obj));
     JS_ASSERT(n <= 1);
     SetReservedSlot(obj, PROXY_EXTRA_SLOT + n, extra);
+}
+
+inline bool
+IsScriptedProxy(JSObject *obj)
+{
+    return IsProxy(obj) && GetProxyHandler(obj)->isScripted();
 }
 
 class MOZ_STACK_CLASS ProxyOptions {

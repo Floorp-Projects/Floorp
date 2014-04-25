@@ -311,5 +311,13 @@ IdToInt32(JSContext* cx, JS::Handle<jsid> id)
   return i;
 }
 
+bool
+DOMProxyHandler::setCustom(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
+                           JS::MutableHandle<JS::Value> vp, bool *done)
+{
+  *done = false;
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla
