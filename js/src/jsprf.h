@@ -58,22 +58,10 @@ extern JS_PUBLIC_API(void) JS_smprintf_free(char *mem);
 extern JS_PUBLIC_API(char*) JS_sprintf_append(char *last, const char *fmt, ...);
 
 /*
-** sprintf into a function. The function "f" is called with a string to
-** place into the output. "arg" is an opaque pointer used by the stuff
-** function to hold any state needed to do the storage of the output
-** data. The return value is a count of the number of characters fed to
-** the stuff function, or (uint32_t)-1 if an error occurs.
-*/
-typedef int (*JSStuffFunc)(void *arg, const char *s, uint32_t slen);
-
-extern JS_PUBLIC_API(uint32_t) JS_sxprintf(JSStuffFunc f, void *arg, const char *fmt, ...);
-
-/*
 ** va_list forms of the above.
 */
 extern JS_PUBLIC_API(uint32_t) JS_vsnprintf(char *out, uint32_t outlen, const char *fmt, va_list ap);
 extern JS_PUBLIC_API(char*) JS_vsmprintf(const char *fmt, va_list ap);
 extern JS_PUBLIC_API(char*) JS_vsprintf_append(char *last, const char *fmt, va_list ap);
-extern JS_PUBLIC_API(uint32_t) JS_vsxprintf(JSStuffFunc f, void *arg, const char *fmt, va_list ap);
 
 #endif /* jsprf_h */
