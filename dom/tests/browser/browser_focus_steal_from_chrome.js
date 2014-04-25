@@ -8,7 +8,8 @@ function test() {
   let fm = Components.classes["@mozilla.org/focus-manager;1"]
                      .getService(Components.interfaces.nsIFocusManager);
 
-  let tabs = [ gBrowser.selectedTab, gBrowser.addTab() ];
+  let tabs = [ gBrowser.addTab(), gBrowser.addTab() ];
+  gBrowser.selectedTab = tabs[0];
 
   let testingList = [
     { uri: "data:text/html,<body onload=\"setTimeout(function () { document.getElementById('target').focus(); }, 10);\"><input id='target'></body>",
@@ -61,7 +62,6 @@ function test() {
   function runNextTest() {
     if (++testingIndex >= testingList.length) {
       // cleaning-up...
-      gBrowser.addTab();
       for (let i = 0; i < tabs.length; i++) {
         gBrowser.removeTab(tabs[i]);
       }
