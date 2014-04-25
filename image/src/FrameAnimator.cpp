@@ -11,11 +11,12 @@
 using namespace mozilla::image;
 using namespace mozilla;
 
-FrameAnimator::FrameAnimator(FrameBlender& aFrameBlender)
+FrameAnimator::FrameAnimator(FrameBlender& aFrameBlender,
+                             uint16_t aAnimationMode)
   : mCurrentAnimationFrameIndex(0)
   , mLoopCounter(-1)
   , mFrameBlender(aFrameBlender)
-  , mAnimationMode(imgIContainer::kNormalAnimMode)
+  , mAnimationMode(aAnimationMode)
   , mDoneDecoding(false)
 {
 }

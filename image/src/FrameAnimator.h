@@ -18,7 +18,7 @@ class FrameBlender;
 class FrameAnimator
 {
 public:
-  FrameAnimator(FrameBlender& aBlender);
+  FrameAnimator(FrameBlender& aBlender, uint16_t aAnimationMode);
 
   /**
    * Return value from RequestRefresh. Tells callers what happened in that call
