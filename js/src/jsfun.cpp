@@ -312,7 +312,7 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
         }
 
         if (!DefineNativeProperty(cx, fun, id, v, JS_PropertyStub, JS_StrictPropertyStub,
-                                  JSPROP_PERMANENT | JSPROP_READONLY, 0)) {
+                                  JSPROP_PERMANENT | JSPROP_READONLY)) {
             return false;
         }
         objp.set(fun);
@@ -341,7 +341,7 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                 setter = JS_StrictPropertyStub;
             }
 
-            if (!DefineNativeProperty(cx, fun, id, UndefinedHandleValue, getter, setter, attrs, 0))
+            if (!DefineNativeProperty(cx, fun, id, UndefinedHandleValue, getter, setter, attrs))
                 return false;
             objp.set(fun);
             return true;

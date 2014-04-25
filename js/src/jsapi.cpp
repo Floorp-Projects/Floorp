@@ -3006,8 +3006,6 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
                             : nullptr);
 
     JSAutoResolveFlags rf(cx, 0);
-    if (flags != 0 && obj->isNative())
-        return DefineNativeProperty(cx, obj, id, value, getter, setter, attrs, flags);
     return JSObject::defineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
