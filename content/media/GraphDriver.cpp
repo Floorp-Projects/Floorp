@@ -123,7 +123,21 @@ SystemClockDriver::RunThread()
   NS_ASSERTION(!messageQueue.IsEmpty(),
                "Shouldn't have started a graph with empty message queue!");
 
-  while(mGraphImpl->OneIteration(messageQueue));
+  bool stillProcessing = true;
+  while (stillProcessing) {
+    GraphTime prevCurrentTime, nextCurrentTime;
+    GetIntervalForIteration(prevCurrentTime, nextCurrentTime);
+
+    GraphTime nextStateComputedTime =
+      mGraphImpl->RoundUpToNextAudioBlock(
+          IterationEnd() + mGraphImpl->MillisecondsToMediaTime(AUDIO_TARGET_MS));
+
+    stillProcessing = mGraphImpl->OneIteration(prevCurrentTime,
+                                               nextCurrentTime,
+                                               StateComputedTime(),
+                                               nextStateComputedTime,
+                                               messageQueue);
+  }
 }
 
 void
@@ -162,12 +176,6 @@ TimeStamp
 SystemClockDriver::GetCurrentTimeStamp()
 {
   return mCurrentTimeStamp;
-}
-
-void
-SystemClockDriver::DoIteration(nsTArray<MessageBlock>& aMessageQueue)
-{
-  mGraphImpl->DoIteration(aMessageQueue);
 }
 
 void
@@ -255,7 +263,23 @@ OfflineClockDriver::RunThread()
   NS_ASSERTION(!messageQueue.IsEmpty(),
                "Shouldn't have started a graph with empty message queue!");
 
-  while(mGraphImpl->OneIteration(messageQueue));
+  bool stillProcessing = true;
+
+  while(stillProcessing) {
+    GraphTime prevCurrentTime, nextCurrentTime;
+    GetIntervalForIteration(prevCurrentTime, nextCurrentTime);
+
+    GraphTime nextStateComputedTime =
+      mGraphImpl->RoundUpToNextAudioBlock(
+          IterationEnd() + mGraphImpl->MillisecondsToMediaTime(AUDIO_TARGET_MS));
+
+
+    stillProcessing = mGraphImpl->OneIteration(prevCurrentTime,
+                                               nextCurrentTime,
+                                               StateComputedTime(),
+                                               nextStateComputedTime,
+                                               messageQueue);
+  }
 }
 
 void
@@ -283,12 +307,6 @@ GraphTime
 OfflineClockDriver::GetCurrentTime()
 {
   return mIterationEnd;
-}
-
-void
-OfflineClockDriver::DoIteration(nsTArray<MessageBlock>& aMessageQueue)
-{
-  mGraphImpl->DoIteration(aMessageQueue);
 }
 
 void
