@@ -1978,6 +1978,8 @@ TypedArrayObject::getElement(uint32_t index)
 void
 TypedArrayObject::setElement(TypedArrayObject &obj, uint32_t index, double d)
 {
+    MOZ_ASSERT(index < obj.length());
+
     switch (obj.type()) {
       case ScalarTypeDescr::TYPE_INT8:
         TypedArrayObjectTemplate<int8_t>::setIndexValue(obj, index, d);
