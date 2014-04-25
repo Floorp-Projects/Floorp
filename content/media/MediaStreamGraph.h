@@ -17,6 +17,7 @@
 #include "VideoSegment.h"
 #include "MainThreadUtils.h"
 #include "nsAutoRef.h"
+#include "GraphDriver.h"
 #include <speex/speex_resampler.h>
 #include "mozilla/dom/AudioChannelBinding.h"
 
@@ -36,12 +37,6 @@ class DOMMediaStream;
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaStreamGraphLog;
 #endif
-
-/**
- * Microseconds relative to the start of the graph timeline.
- */
-typedef int64_t GraphTime;
-const GraphTime GRAPH_TIME_MAX = MEDIA_TIME_MAX;
 
 /*
  * MediaStreamGraph is a framework for synchronized audio/video processing
