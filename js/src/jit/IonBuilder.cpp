@@ -3884,7 +3884,10 @@ bool
 IonBuilder::jsop_pos()
 {
     if (IsNumberType(current->peek(-1)->type())) {
-        // Already int32 or double.
+        // Already int32 or double. Set the operand as implicitly used so it
+        // doesn't get optimized out if it has no other uses, as we could bail
+        // out.
+        current->peek(-1)->setImplicitlyUsedUnchecked();
         return true;
     }
 
