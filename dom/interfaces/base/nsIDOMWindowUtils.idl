@@ -43,7 +43,7 @@ interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 interface nsITranslationNodeList;
 
-[scriptable, uuid(926c7450-ab88-11e3-a5e2-0800200c9a66)]
+[scriptable, uuid(9376bafe-e7b1-48e7-87e2-1e64a7b5d54d)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1021,17 +1021,31 @@ interface nsIDOMWindowUtils : nsISupports {
   nsICompositionStringSynthesizer createCompositionStringSynthesizer();
 
   /**
+   * If sendQueryContentEvent()'s aAdditionalFlags argument is
+   * QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK, plain text generated from content
+   * is created with "\n".
+   * Otherwise, platform dependent.  E.g., on Windows, "\r\n" is used.
+   * aOffset and aLength are offset and length in/of the plain text content.
+   * This flag also affects the result values such as offset, length and string.
+   */
+  const unsigned long QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK = 0x0000;
+  const unsigned long QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK     = 0x0001;
+
+  /**
    * Synthesize a query content event. Note that the result value returned here
    * is in LayoutDevice pixels rather than CSS pixels.
    *
    * @param aType  One of the following const values.  And see also each comment
    *               for the other parameters and the result.
+   * @param aAdditionalFlags See the description of QUERY_CONTENT_FLAG_*.
    */
-  nsIQueryContentEventResult sendQueryContentEvent(in unsigned long aType,
-                                                   in unsigned long aOffset,
-                                                   in unsigned long aLength,
-                                                   in long aX,
-                                                   in long aY);
+  nsIQueryContentEventResult sendQueryContentEvent(
+                               in unsigned long aType,
+                               in unsigned long aOffset,
+                               in unsigned long aLength,
+                               in long aX,
+                               in long aY,
+                               [optional] in unsigned long aAdditionalFlags);
 
   // NOTE: following values are same as NS_QUERY_* in BasicEvents.h
 
@@ -1144,6 +1158,22 @@ interface nsIDOMWindowUtils : nsISupports {
   void exitFullscreen();
 
   /**
+   * If sendQueryContentEvent()'s aAdditionalFlags argument is
+   * SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK, aOffset and aLength are offset
+   * and length in/of plain text generated from content is created with "\n".
+   * Otherwise, platform dependent.  E.g., on Windows, "\r\n" is used.
+   */
+  const unsigned long SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK = 0x0000;
+  const unsigned long SELECTION_SET_FLAG_USE_XP_LINE_BREAK     = 0x0001;
+
+  /**
+   * If SELECTION_SET_FLAG_REVERSE is set, the selection is set from
+   * |aOffset + aLength| to |aOffset|.  Otherwise, it's set from |aOffset| to
+   * |aOffset + aLength|.
+   */
+  const unsigned long SELECTION_SET_FLAG_REVERSE               = 0x0002;
+
+  /**
    * Synthesize a selection set event to the window.
    *
    * This sets the selection as the specified information.
@@ -1151,14 +1181,12 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aOffset  The caret offset of the selection start.
    * @param aLength  The length of the selection.  If this is too long, the
    *                 extra length is ignored.
-   * @param aReverse If true, the selection set from |aOffset + aLength| to
-   *                 |aOffset|.  Otherwise, set from |aOffset| to
-   *                 |aOffset + aLength|.
+   * @param aAdditionalFlags See the description of SELECTION_SET_FLAG_*.
    * @return True, if succeeded.  Otherwise, false.
    */
   boolean sendSelectionSetEvent(in unsigned long aOffset,
                                 in unsigned long aLength,
-                                in boolean aReverse);
+                                [optional] in unsigned long aAdditionalFlags);
 
   /* Selection behaviors - mirror nsIFrame's nsSelectionAmount constants */
   const unsigned long SELECT_CHARACTER   = 0;
