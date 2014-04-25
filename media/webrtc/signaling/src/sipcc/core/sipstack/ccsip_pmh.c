@@ -1668,7 +1668,7 @@ sippmh_parse_contact_params (char *params, sipContactParams_t *contact_params)
                      * IOS does not use this parameter, but the SIP phones
                      * do.
                      */
-                    contact_params->expires_gmt = '\0';
+                    contact_params->expires_gmt = NULL;
                     good_params = TRUE;
                     param_value = params;
                     while (isdigit((int) *params)) {
