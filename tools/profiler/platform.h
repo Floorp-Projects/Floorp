@@ -44,7 +44,6 @@
 #include "mozilla/unused.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Mutex.h"
-#include "MainThreadUtils.h"
 #include "PlatformMacros.h"
 #include "v8-support.h"
 #include <vector>
@@ -354,17 +353,6 @@ class Sampler {
   static void SetActiveSampler(TableTicker* sampler) { sActiveSampler = sampler; }
 
   static mozilla::Mutex* sRegisteredThreadsMutex;
-
-  static bool CanNotifyObservers() {
-#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
-    // Android ANR reporter uses the profiler off the main thread
-    return NS_IsMainThread();
-#else
-    MOZ_ASSERT(NS_IsMainThread());
-    return true;
-#endif
-  }
-
  protected:
   static std::vector<ThreadInfo*>* sRegisteredThreads;
   static TableTicker* sActiveSampler;

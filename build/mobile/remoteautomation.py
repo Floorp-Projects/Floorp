@@ -98,12 +98,10 @@ class RemoteAutomation(Automation):
         return status
 
     def deleteANRs(self):
-        # empty ANR traces.txt file; usually need root permissions
-        # we make it empty and writable so we can test the ANR reporter later
+        # delete ANR traces.txt file; usually need root permissions
         traces = "/data/anr/traces.txt"
         try:
-            self._devicemanager.shellCheckOutput(['echo', '', '>', traces], root=True)
-            self._devicemanager.shellCheckOutput(['chmod', '666', traces], root=True)
+            self._devicemanager.shellCheckOutput(['rm', traces], root=True)
         except DMError:
             print "Error deleting %s" % traces
             pass
