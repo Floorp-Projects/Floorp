@@ -498,9 +498,6 @@ struct JSContext : public js::ExclusiveContext,
                                                JS_EndRequest. */
 #endif
 
-    /* Stored here to avoid passing it around as a parameter. */
-    unsigned               resolveFlags;
-
     /* Location to stash the iteration value between JSOP_MOREITER and JSOP_ITERNEXT. */
     js::Value           iterValue;
 
@@ -639,29 +636,6 @@ struct AutoResolving {
     AutoResolving       *const link;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
-
-} /* namespace js */
-
-class JSAutoResolveFlags
-{
-  public:
-    JSAutoResolveFlags(JSContext *cx, unsigned flags
-                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mContext(cx), mSaved(cx->resolveFlags)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        cx->resolveFlags = flags;
-    }
-
-    ~JSAutoResolveFlags() { mContext->resolveFlags = mSaved; }
-
-  private:
-    JSContext *mContext;
-    unsigned mSaved;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-namespace js {
 
 /*
  * Enumerate all contexts in a runtime.

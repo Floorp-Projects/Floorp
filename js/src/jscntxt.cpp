@@ -1108,7 +1108,6 @@ JSContext::JSContext(JSRuntime *rt)
 #ifdef JS_THREADSAFE
     outstandingRequests(0),
 #endif
-    resolveFlags(0),
     iterValue(MagicValue(JS_NO_ITER_VALUE)),
     jitIsBroken(false),
 #ifdef MOZ_TRACE_JSCALLS
