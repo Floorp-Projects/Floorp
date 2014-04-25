@@ -217,6 +217,12 @@ static nsIScriptSecurityManager *sSecurityManager;
 
 static bool sGCOnMemoryPressure;
 
+// In testing, we call RunNextCollectorTimer() to ensure that the collectors are run more
+// aggressively than they would be in regular browsing. sExpensiveCollectorPokes keeps
+// us from triggering expensive full collections too frequently.
+static int32_t sExpensiveCollectorPokes = 0;
+static const int32_t kPokesBetweenExpensiveCollectorTriggers = 5;
+
 static PRTime
 GetCollectionTimeDelta()
 {
@@ -2318,6 +2324,64 @@ nsJSContext::LoadEnd()
   PokeGC(JS::gcreason::LOAD_END);
 }
 
+// Only trigger expensive timers when they have been checked a number of times.
+static bool
+ReadyToTriggerExpensiveCollectorTimer()
+{
+  bool ready = kPokesBetweenExpensiveCollectorTriggers < ++sExpensiveCollectorPokes;
+  if (ready) {
+    sExpensiveCollectorPokes = 0;
+  }
+  return ready;
+}
+
+
+// Check all of the various collector timers and see if they are waiting to fire.
+// For the synchronous collector timers, sGCTimer and sCCTimer, we only want to trigger
+// the collection occasionally, because they are expensive.  The incremental collector
+// timers, sInterSliceGCTimer and sICCTimer, are fast and need to be run many times, so
+// always run their corresponding timer.
+
+// This does not check sFullGCTimer, as that's an even more expensive collector we run
+// on a long timer.
+
+// static
+void
+nsJSContext::RunNextCollectorTimer()
+{
+  if (sShuttingDown) {
+    return;
+  }
+
+  if (sGCTimer) {
+    if (ReadyToTriggerExpensiveCollectorTimer()) {
+      GCTimerFired(nullptr, reinterpret_cast<void *>(JS::gcreason::DOM_WINDOW_UTILS));
+    }
+    return;
+  }
+
+  if (sInterSliceGCTimer) {
+    InterSliceGCTimerFired(nullptr, nullptr);
+    return;
+  }
+
+  // Check the CC timers after the GC timers, because the CC timers won't do
+  // anything if a GC is in progress.
+  MOZ_ASSERT(!sCCLockedOut, "Don't check the CC timers if the CC is locked out.");
+
+  if (sCCTimer) {
+    if (ReadyToTriggerExpensiveCollectorTimer()) {
+      CCTimerFired(nullptr, nullptr);
+    }
+    return;
+  }
+
+  if (sICCTimer) {
+    ICCTimerFired(nullptr, nullptr);
+    return;
+  }
+}
+
 // static
 void
 nsJSContext::PokeGC(JS::gcreason::Reason aReason, int aDelay)
@@ -2448,7 +2512,6 @@ void
 nsJSContext::KillCCTimer()
 {
   sCCLockedOutTime = 0;
-
   if (sCCTimer) {
     sCCTimer->Cancel();
     NS_RELEASE(sCCTimer);
@@ -2649,6 +2712,7 @@ mozilla::dom::StartupJSEnvironment()
   sContextCount = 0;
   sSecurityManager = nullptr;
   gCCStats.Clear();
+  sExpensiveCollectorPokes = 0;
 }
 
 static void
