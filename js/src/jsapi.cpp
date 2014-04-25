@@ -4533,7 +4533,8 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
     assertSameCompartment(cx, obj);
     AutoLastFrameCheck lfc(cx);
 
-    return frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, chars, length);
+    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
+    return frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, srcBuf);
 }
 
 JSScript *
@@ -4716,7 +4717,8 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
     if (!fun)
         return nullptr;
 
-    if (!frontend::CompileFunctionBody(cx, &fun, options, formals, chars, length))
+    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
+    if (!frontend::CompileFunctionBody(cx, &fun, options, formals, srcBuf))
         return nullptr;
 
     if (obj && funAtom && options.defineOnScope) {
@@ -4871,9 +4873,10 @@ Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsA
     options.setCompileAndGo(obj->is<GlobalObject>());
     options.setNoScriptRval(!rval);
     SourceCompressionTask sct(cx);
+    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
     RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(),
                                                     obj, NullPtr(), options,
-                                                    chars, length, nullptr, 0, &sct));
+                                                    srcBuf, nullptr, 0, &sct));
     if (!script)
         return false;
 

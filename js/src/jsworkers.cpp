@@ -299,7 +299,8 @@ js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &optio
     // which could require barriers on the atoms compartment.
     gc::AutoSuppressGC suppress(cx);
 
-    frontend::MaybeCallSourceHandler(cx, options, chars, length);
+    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
+    frontend::MaybeCallSourceHandler(cx, options, srcBuf);
 
     EnsureWorkerThreadsInitialized(cx);
 
@@ -860,10 +861,12 @@ WorkerThread::handleParseWorkload()
         AutoUnlockWorkerThreadState unlock;
         PerThreadData::AutoEnterRuntime enter(threadData.addr(),
                                               parseTask->exclusiveContextGlobal->runtimeFromAnyThread());
+        SourceBufferHolder srcBuf(parseTask->chars, parseTask->length,
+                                  SourceBufferHolder::NoOwnership);
         parseTask->script = frontend::CompileScript(parseTask->cx, &parseTask->alloc,
                                                     NullPtr(), NullPtr(),
                                                     parseTask->options,
-                                                    parseTask->chars, parseTask->length);
+                                                    srcBuf);
     }
 
     // The callback is invoked while we are still off the main thread.
