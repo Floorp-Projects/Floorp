@@ -3853,7 +3853,7 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSFunction *
     if (fun) {
         if (fun->hasScript())
             fun = fun->nonLazyScript()->functionNonDelazifying();
-        else if (fun->isInterpretedLazy())
+        else if (fun->isInterpretedLazy() && !fun->isSelfHostedBuiltin())
             fun = fun->lazyScript()->functionNonDelazifying();
         else
             fun = nullptr;
