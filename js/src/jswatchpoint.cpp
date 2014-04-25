@@ -160,16 +160,16 @@ WatchpointMap::markIteratively(JSTracer *trc)
         JSObject *priorKeyObj = entry.key().object;
         jsid priorKeyId(entry.key().id.get());
         bool objectIsLive =
-            IsObjectMarked(const_cast<EncapsulatedPtrObject *>(&entry.key().object));
+            IsObjectMarked(const_cast<PreBarrieredObject *>(&entry.key().object));
         if (objectIsLive || entry.value().held) {
             if (!objectIsLive) {
-                MarkObject(trc, const_cast<EncapsulatedPtrObject *>(&entry.key().object),
+                MarkObject(trc, const_cast<PreBarrieredObject *>(&entry.key().object),
                            "held Watchpoint object");
                 marked = true;
             }
 
             JS_ASSERT(JSID_IS_STRING(priorKeyId) || JSID_IS_INT(priorKeyId));
-            MarkId(trc, const_cast<EncapsulatedId *>(&entry.key().id), "WatchKey::id");
+            MarkId(trc, const_cast<PreBarrieredId *>(&entry.key().id), "WatchKey::id");
 
             if (entry.value().closure && !IsObjectMarked(&entry.value().closure)) {
                 MarkObject(trc, &entry.value().closure, "Watchpoint::closure");
@@ -193,9 +193,9 @@ WatchpointMap::markAll(JSTracer *trc)
         WatchKey prior = key;
         JS_ASSERT(JSID_IS_STRING(prior.id) || JSID_IS_INT(prior.id));
 
-        MarkObject(trc, const_cast<EncapsulatedPtrObject *>(&key.object),
+        MarkObject(trc, const_cast<PreBarrieredObject *>(&key.object),
                    "held Watchpoint object");
-        MarkId(trc, const_cast<EncapsulatedId *>(&key.id), "WatchKey::id");
+        MarkId(trc, const_cast<PreBarrieredId *>(&key.id), "WatchKey::id");
         MarkObject(trc, &entry.value().closure, "Watchpoint::closure");
 
         if (prior.object != key.object || prior.id != key.id)
