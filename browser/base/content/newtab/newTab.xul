@@ -11,6 +11,8 @@
 <!DOCTYPE window [
   <!ENTITY % newTabDTD SYSTEM "chrome://browser/locale/newTab.dtd">
   %newTabDTD;
+  <!ENTITY % searchBarDTD SYSTEM "chrome://browser/locale/searchbar.dtd">
+  %searchBarDTD;
 ]>
 
 <xul:window id="newtab-window" xmlns="http://www.w3.org/1999/xhtml"
@@ -22,6 +24,13 @@
     <xul:label class="text-link"
                href="https://support.mozilla.org/kb/how-do-sponsored-tiles-work"
                value="&newtab.panel.link.text;" />
+  </xul:panel>
+
+  <xul:panel id="newtab-search-panel" orient="vertical" type="arrow"
+             noautohide="true">
+    <xul:hbox id="newtab-search-manage" class="newtab-search-panel-engine">
+      <xul:label>&cmd_engineManager.label;</xul:label>
+    </xul:hbox>
   </xul:panel>
 
   <div id="newtab-scrollbox">
@@ -44,6 +53,16 @@
                              class="close-icon tabbable"
                              tooltiptext="&newtab.undo.closeTooltip;" />
         </div>
+      </div>
+
+      <div id="newtab-search-container">
+        <form id="newtab-search-form" name="searchForm">
+          <div id="newtab-search-logo"/>
+          <input type="text" name="q" value="" id="newtab-search-text"
+                 maxlength="256" dir="auto"/>
+          <input id="newtab-search-submit" type="submit"
+                 value="&searchEndCap.label;"/>
+        </form>
       </div>
 
       <div id="newtab-horizontal-margin">

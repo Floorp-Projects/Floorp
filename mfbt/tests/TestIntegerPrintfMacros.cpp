@@ -33,11 +33,11 @@ TestPrintSigned8()
 {
   PoisonOutput();
   sprintf(output, "%" PRId8, int8_t(-17));
-  MOZ_ASSERT(!strcmp(output, "-17"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "-17"));
 
   PoisonOutput();
   sprintf(output, "%" PRIi8, int8_t(42));
-  MOZ_ASSERT(!strcmp(output, "42"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "42"));
 }
 
 static void
@@ -45,11 +45,11 @@ TestPrintSigned16()
 {
   PoisonOutput();
   sprintf(output, "%" PRId16, int16_t(-289));
-  MOZ_ASSERT(!strcmp(output, "-289"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "-289"));
 
   PoisonOutput();
   sprintf(output, "%" PRIi16, int16_t(728));
-  MOZ_ASSERT(!strcmp(output, "728"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "728"));
 }
 
 static void
@@ -57,11 +57,11 @@ TestPrintSigned32()
 {
   PoisonOutput();
   sprintf(output, "%" PRId32, int32_t(-342178));
-  MOZ_ASSERT(!strcmp(output, "-342178"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "-342178"));
 
   PoisonOutput();
   sprintf(output, "%" PRIi32, int32_t(5719283));
-  MOZ_ASSERT(!strcmp(output, "5719283"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "5719283"));
 }
 
 static void
@@ -69,11 +69,11 @@ TestPrintSigned64()
 {
   PoisonOutput();
   sprintf(output, "%" PRId64, int64_t(-INT64_C(432157943248732)));
-  MOZ_ASSERT(!strcmp(output, "-432157943248732"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "-432157943248732"));
 
   PoisonOutput();
   sprintf(output, "%" PRIi64, int64_t(INT64_C(325719232983)));
-  MOZ_ASSERT(!strcmp(output, "325719232983"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "325719232983"));
 }
 
 static void
@@ -90,11 +90,11 @@ TestPrintSignedLeast8()
 {
   PoisonOutput();
   sprintf(output, "%" PRIdLEAST8, int_least8_t(-17));
-  MOZ_ASSERT(!strcmp(output, "-17"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "-17"));
 
   PoisonOutput();
   sprintf(output, "%" PRIiLEAST8, int_least8_t(42));
-  MOZ_ASSERT(!strcmp(output, "42"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "42"));
 }
 
 static void
@@ -102,11 +102,11 @@ TestPrintSignedLeast16()
 {
   PoisonOutput();
   sprintf(output, "%" PRIdLEAST16, int_least16_t(-289));
-  MOZ_ASSERT(!strcmp(output, "-289"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "-289"));
 
   PoisonOutput();
   sprintf(output, "%" PRIiLEAST16, int_least16_t(728));
-  MOZ_ASSERT(!strcmp(output, "728"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "728"));
 }
 
 static void
@@ -114,11 +114,11 @@ TestPrintSignedLeast32()
 {
   PoisonOutput();
   sprintf(output, "%" PRIdLEAST32, int_least32_t(-342178));
-  MOZ_ASSERT(!strcmp(output, "-342178"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "-342178"));
 
   PoisonOutput();
   sprintf(output, "%" PRIiLEAST32, int_least32_t(5719283));
-  MOZ_ASSERT(!strcmp(output, "5719283"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "5719283"));
 }
 
 static void
@@ -126,11 +126,11 @@ TestPrintSignedLeast64()
 {
   PoisonOutput();
   sprintf(output, "%" PRIdLEAST64, int_least64_t(-INT64_C(432157943248732)));
-  MOZ_ASSERT(!strcmp(output, "-432157943248732"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "-432157943248732"));
 
   PoisonOutput();
   sprintf(output, "%" PRIiLEAST64, int_least64_t(INT64_C(325719232983)));
-  MOZ_ASSERT(!strcmp(output, "325719232983"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "325719232983"));
 }
 
 static void
@@ -147,11 +147,11 @@ TestPrintSignedFast8()
 {
   PoisonOutput();
   sprintf(output, "%" PRIdFAST8, int_fast8_t(-17));
-  MOZ_ASSERT(!strcmp(output, "-17"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "-17"));
 
   PoisonOutput();
   sprintf(output, "%" PRIiFAST8, int_fast8_t(42));
-  MOZ_ASSERT(!strcmp(output, "42"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "42"));
 }
 
 static void
@@ -159,11 +159,11 @@ TestPrintSignedFast16()
 {
   PoisonOutput();
   sprintf(output, "%" PRIdFAST16, int_fast16_t(-289));
-  MOZ_ASSERT(!strcmp(output, "-289"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "-289"));
 
   PoisonOutput();
   sprintf(output, "%" PRIiFAST16, int_fast16_t(728));
-  MOZ_ASSERT(!strcmp(output, "728"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "728"));
 }
 
 static void
@@ -171,11 +171,11 @@ TestPrintSignedFast32()
 {
   PoisonOutput();
   sprintf(output, "%" PRIdFAST32, int_fast32_t(-342178));
-  MOZ_ASSERT(!strcmp(output, "-342178"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "-342178"));
 
   PoisonOutput();
   sprintf(output, "%" PRIiFAST32, int_fast32_t(5719283));
-  MOZ_ASSERT(!strcmp(output, "5719283"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "5719283"));
 }
 
 static void
@@ -183,11 +183,11 @@ TestPrintSignedFast64()
 {
   PoisonOutput();
   sprintf(output, "%" PRIdFAST64, int_fast64_t(-INT64_C(432157943248732)));
-  MOZ_ASSERT(!strcmp(output, "-432157943248732"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "-432157943248732"));
 
   PoisonOutput();
   sprintf(output, "%" PRIiFAST64, int_fast64_t(INT64_C(325719232983)));
-  MOZ_ASSERT(!strcmp(output, "325719232983"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "325719232983"));
 }
 
 static void
@@ -204,11 +204,11 @@ TestPrintSignedMax()
 {
   PoisonOutput();
   sprintf(output, "%" PRIdMAX, intmax_t(-INTMAX_C(432157943248732)));
-  MOZ_ASSERT(!strcmp(output, "-432157943248732"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "-432157943248732"));
 
   PoisonOutput();
   sprintf(output, "%" PRIiMAX, intmax_t(INTMAX_C(325719232983)));
-  MOZ_ASSERT(!strcmp(output, "325719232983"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "325719232983"));
 }
 
 static void
@@ -216,11 +216,11 @@ TestPrintSignedPtr()
 {
   PoisonOutput();
   sprintf(output, "%" PRIdPTR, intptr_t(reinterpret_cast<void*>(12345678)));
-  MOZ_ASSERT(!strcmp(output, "12345678"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "12345678"));
 
   PoisonOutput();
   sprintf(output, "%" PRIiPTR, intptr_t(reinterpret_cast<void*>(87654321)));
-  MOZ_ASSERT(!strcmp(output, "87654321"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "87654321"));
 }
 
 static void
@@ -249,19 +249,19 @@ TestPrintUnsigned8()
 {
   PoisonOutput();
   sprintf(output, "%" PRIo8, uint8_t(042));
-  MOZ_ASSERT(!strcmp(output, "42"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "42"));
 
   PoisonOutput();
   sprintf(output, "%" PRIu8, uint8_t(17));
-  MOZ_ASSERT(!strcmp(output, "17"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "17"));
 
   PoisonOutput();
   sprintf(output, "%" PRIx8, uint8_t(0x2a));
-  MOZ_ASSERT(!strcmp(output, "2a"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "2a"));
 
   PoisonOutput();
   sprintf(output, "%" PRIX8, uint8_t(0xCD));
-  MOZ_ASSERT(!strcmp(output, "CD"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "CD"));
 }
 
 static void
@@ -269,19 +269,19 @@ TestPrintUnsigned16()
 {
   PoisonOutput();
   sprintf(output, "%" PRIo16, uint16_t(04242));
-  MOZ_ASSERT(!strcmp(output, "4242"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "4242"));
 
   PoisonOutput();
   sprintf(output, "%" PRIu16, uint16_t(1717));
-  MOZ_ASSERT(!strcmp(output, "1717"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "1717"));
 
   PoisonOutput();
   sprintf(output, "%" PRIx16, uint16_t(0x2a2a));
-  MOZ_ASSERT(!strcmp(output, "2a2a"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "2a2a"));
 
   PoisonOutput();
   sprintf(output, "%" PRIX16, uint16_t(0xCDCD));
-  MOZ_ASSERT(!strcmp(output, "CDCD"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "CDCD"));
 }
 
 static void
@@ -289,19 +289,19 @@ TestPrintUnsigned32()
 {
   PoisonOutput();
   sprintf(output, "%" PRIo32, uint32_t(0424242));
-  MOZ_ASSERT(!strcmp(output, "424242"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "424242"));
 
   PoisonOutput();
   sprintf(output, "%" PRIu32, uint32_t(171717));
-  MOZ_ASSERT(!strcmp(output, "171717"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "171717"));
 
   PoisonOutput();
   sprintf(output, "%" PRIx32, uint32_t(0x2a2a2a));
-  MOZ_ASSERT(!strcmp(output, "2a2a2a"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "2a2a2a"));
 
   PoisonOutput();
   sprintf(output, "%" PRIX32, uint32_t(0xCDCDCD));
-  MOZ_ASSERT(!strcmp(output, "CDCDCD"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "CDCDCD"));
 }
 
 static void
@@ -309,19 +309,19 @@ TestPrintUnsigned64()
 {
   PoisonOutput();
   sprintf(output, "%" PRIo64, uint64_t(UINT64_C(0424242424242)));
-  MOZ_ASSERT(!strcmp(output, "424242424242"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "424242424242"));
 
   PoisonOutput();
   sprintf(output, "%" PRIu64, uint64_t(UINT64_C(17171717171717171717)));
-  MOZ_ASSERT(!strcmp(output, "17171717171717171717"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "17171717171717171717"));
 
   PoisonOutput();
   sprintf(output, "%" PRIx64, uint64_t(UINT64_C(0x2a2a2a2a2a2a2a)));
-  MOZ_ASSERT(!strcmp(output, "2a2a2a2a2a2a2a"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "2a2a2a2a2a2a2a"));
 
   PoisonOutput();
   sprintf(output, "%" PRIX64, uint64_t(UINT64_C(0xCDCDCDCDCDCD)));
-  MOZ_ASSERT(!strcmp(output, "CDCDCDCDCDCD"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "CDCDCDCDCDCD"));
 }
 
 static void
@@ -338,19 +338,19 @@ TestPrintUnsignedLeast8()
 {
   PoisonOutput();
   sprintf(output, "%" PRIoLEAST8, uint_least8_t(042));
-  MOZ_ASSERT(!strcmp(output, "42"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "42"));
 
   PoisonOutput();
   sprintf(output, "%" PRIuLEAST8, uint_least8_t(17));
-  MOZ_ASSERT(!strcmp(output, "17"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "17"));
 
   PoisonOutput();
   sprintf(output, "%" PRIxLEAST8, uint_least8_t(0x2a));
-  MOZ_ASSERT(!strcmp(output, "2a"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "2a"));
 
   PoisonOutput();
   sprintf(output, "%" PRIXLEAST8, uint_least8_t(0xCD));
-  MOZ_ASSERT(!strcmp(output, "CD"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "CD"));
 }
 
 static void
@@ -358,19 +358,19 @@ TestPrintUnsignedLeast16()
 {
   PoisonOutput();
   sprintf(output, "%" PRIoLEAST16, uint_least16_t(04242));
-  MOZ_ASSERT(!strcmp(output, "4242"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "4242"));
 
   PoisonOutput();
   sprintf(output, "%" PRIuLEAST16, uint_least16_t(1717));
-  MOZ_ASSERT(!strcmp(output, "1717"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "1717"));
 
   PoisonOutput();
   sprintf(output, "%" PRIxLEAST16, uint_least16_t(0x2a2a));
-  MOZ_ASSERT(!strcmp(output, "2a2a"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "2a2a"));
 
   PoisonOutput();
   sprintf(output, "%" PRIXLEAST16, uint_least16_t(0xCDCD));
-  MOZ_ASSERT(!strcmp(output, "CDCD"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "CDCD"));
 }
 
 static void
@@ -378,19 +378,19 @@ TestPrintUnsignedLeast32()
 {
   PoisonOutput();
   sprintf(output, "%" PRIoLEAST32, uint_least32_t(0424242));
-  MOZ_ASSERT(!strcmp(output, "424242"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "424242"));
 
   PoisonOutput();
   sprintf(output, "%" PRIuLEAST32, uint_least32_t(171717));
-  MOZ_ASSERT(!strcmp(output, "171717"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "171717"));
 
   PoisonOutput();
   sprintf(output, "%" PRIxLEAST32, uint_least32_t(0x2a2a2a));
-  MOZ_ASSERT(!strcmp(output, "2a2a2a"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "2a2a2a"));
 
   PoisonOutput();
   sprintf(output, "%" PRIXLEAST32, uint_least32_t(0xCDCDCD));
-  MOZ_ASSERT(!strcmp(output, "CDCDCD"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "CDCDCD"));
 }
 
 static void
@@ -398,19 +398,19 @@ TestPrintUnsignedLeast64()
 {
   PoisonOutput();
   sprintf(output, "%" PRIoLEAST64, uint_least64_t(UINT64_C(0424242424242)));
-  MOZ_ASSERT(!strcmp(output, "424242424242"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "424242424242"));
 
   PoisonOutput();
   sprintf(output, "%" PRIuLEAST64, uint_least64_t(UINT64_C(17171717171717171717)));
-  MOZ_ASSERT(!strcmp(output, "17171717171717171717"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "17171717171717171717"));
 
   PoisonOutput();
   sprintf(output, "%" PRIxLEAST64, uint_least64_t(UINT64_C(0x2a2a2a2a2a2a2a)));
-  MOZ_ASSERT(!strcmp(output, "2a2a2a2a2a2a2a"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "2a2a2a2a2a2a2a"));
 
   PoisonOutput();
   sprintf(output, "%" PRIXLEAST64, uint_least64_t(UINT64_C(0xCDCDCDCDCDCD)));
-  MOZ_ASSERT(!strcmp(output, "CDCDCDCDCDCD"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "CDCDCDCDCDCD"));
 }
 
 static void
@@ -427,19 +427,19 @@ TestPrintUnsignedFast8()
 {
   PoisonOutput();
   sprintf(output, "%" PRIoFAST8, uint_fast8_t(042));
-  MOZ_ASSERT(!strcmp(output, "42"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "42"));
 
   PoisonOutput();
   sprintf(output, "%" PRIuFAST8, uint_fast8_t(17));
-  MOZ_ASSERT(!strcmp(output, "17"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "17"));
 
   PoisonOutput();
   sprintf(output, "%" PRIxFAST8, uint_fast8_t(0x2a));
-  MOZ_ASSERT(!strcmp(output, "2a"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "2a"));
 
   PoisonOutput();
   sprintf(output, "%" PRIXFAST8, uint_fast8_t(0xCD));
-  MOZ_ASSERT(!strcmp(output, "CD"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "CD"));
 }
 
 static void
@@ -447,19 +447,19 @@ TestPrintUnsignedFast16()
 {
   PoisonOutput();
   sprintf(output, "%" PRIoFAST16, uint_fast16_t(04242));
-  MOZ_ASSERT(!strcmp(output, "4242"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "4242"));
 
   PoisonOutput();
   sprintf(output, "%" PRIuFAST16, uint_fast16_t(1717));
-  MOZ_ASSERT(!strcmp(output, "1717"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "1717"));
 
   PoisonOutput();
   sprintf(output, "%" PRIxFAST16, uint_fast16_t(0x2a2a));
-  MOZ_ASSERT(!strcmp(output, "2a2a"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "2a2a"));
 
   PoisonOutput();
   sprintf(output, "%" PRIXFAST16, uint_fast16_t(0xCDCD));
-  MOZ_ASSERT(!strcmp(output, "CDCD"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "CDCD"));
 }
 
 static void
@@ -467,19 +467,19 @@ TestPrintUnsignedFast32()
 {
   PoisonOutput();
   sprintf(output, "%" PRIoFAST32, uint_fast32_t(0424242));
-  MOZ_ASSERT(!strcmp(output, "424242"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "424242"));
 
   PoisonOutput();
   sprintf(output, "%" PRIuFAST32, uint_fast32_t(171717));
-  MOZ_ASSERT(!strcmp(output, "171717"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "171717"));
 
   PoisonOutput();
   sprintf(output, "%" PRIxFAST32, uint_fast32_t(0x2a2a2a));
-  MOZ_ASSERT(!strcmp(output, "2a2a2a"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "2a2a2a"));
 
   PoisonOutput();
   sprintf(output, "%" PRIXFAST32, uint_fast32_t(0xCDCDCD));
-  MOZ_ASSERT(!strcmp(output, "CDCDCD"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "CDCDCD"));
 }
 
 static void
@@ -487,19 +487,19 @@ TestPrintUnsignedFast64()
 {
   PoisonOutput();
   sprintf(output, "%" PRIoFAST64, uint_fast64_t(UINT64_C(0424242424242)));
-  MOZ_ASSERT(!strcmp(output, "424242424242"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "424242424242"));
 
   PoisonOutput();
   sprintf(output, "%" PRIuFAST64, uint_fast64_t(UINT64_C(17171717171717171717)));
-  MOZ_ASSERT(!strcmp(output, "17171717171717171717"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "17171717171717171717"));
 
   PoisonOutput();
   sprintf(output, "%" PRIxFAST64, uint_fast64_t(UINT64_C(0x2a2a2a2a2a2a2a)));
-  MOZ_ASSERT(!strcmp(output, "2a2a2a2a2a2a2a"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "2a2a2a2a2a2a2a"));
 
   PoisonOutput();
   sprintf(output, "%" PRIXFAST64, uint_fast64_t(UINT64_C(0xCDCDCDCDCDCD)));
-  MOZ_ASSERT(!strcmp(output, "CDCDCDCDCDCD"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "CDCDCDCDCDCD"));
 }
 
 static void
@@ -516,19 +516,19 @@ TestPrintUnsignedMax()
 {
   PoisonOutput();
   sprintf(output, "%" PRIoMAX, uintmax_t(UINTMAX_C(432157943248732)));
-  MOZ_ASSERT(!strcmp(output, "14220563454333534"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "14220563454333534"));
 
   PoisonOutput();
   sprintf(output, "%" PRIuMAX, uintmax_t(UINTMAX_C(325719232983)));
-  MOZ_ASSERT(!strcmp(output, "325719232983"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "325719232983"));
 
   PoisonOutput();
   sprintf(output, "%" PRIxMAX, uintmax_t(UINTMAX_C(327281321873)));
-  MOZ_ASSERT(!strcmp(output, "4c337ca791"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "4c337ca791"));
 
   PoisonOutput();
   sprintf(output, "%" PRIXMAX, uintmax_t(UINTMAX_C(912389523743523)));
-  MOZ_ASSERT(!strcmp(output, "33DD03D75A323"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "33DD03D75A323"));
 }
 
 static void
@@ -536,19 +536,19 @@ TestPrintUnsignedPtr()
 {
   PoisonOutput();
   sprintf(output, "%" PRIoPTR, uintptr_t(reinterpret_cast<void*>(12345678)));
-  MOZ_ASSERT(!strcmp(output, "57060516"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "57060516"));
 
   PoisonOutput();
   sprintf(output, "%" PRIuPTR, uintptr_t(reinterpret_cast<void*>(87654321)));
-  MOZ_ASSERT(!strcmp(output, "87654321"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "87654321"));
 
   PoisonOutput();
   sprintf(output, "%" PRIxPTR, uintptr_t(reinterpret_cast<void*>(0x4c3a791)));
-  MOZ_ASSERT(!strcmp(output, "4c3a791"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "4c3a791"));
 
   PoisonOutput();
   sprintf(output, "%" PRIXPTR, uintptr_t(reinterpret_cast<void*>(0xF328DB)));
-  MOZ_ASSERT(!strcmp(output, "F328DB"));
+  MOZ_RELEASE_ASSERT(!strcmp(output, "F328DB"));
 }
 
 static void
@@ -638,13 +638,13 @@ TestScanSigned8()
 
   PoisonInput(u);
   sscanf("-17", "%" SCNd8, &u.i);
-  MOZ_ASSERT(u.i == -17);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == -17);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("042", "%" SCNi8, &u.i);
-  MOZ_ASSERT(u.i == 042);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 042);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 #endif
 }
 
@@ -655,13 +655,13 @@ TestScanSigned16()
 
   PoisonInput(u);
   sscanf("-1742", "%" SCNd16, &u.i);
-  MOZ_ASSERT(u.i == -1742);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == -1742);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("04217", "%" SCNi16, &u.i);
-  MOZ_ASSERT(u.i == 04217);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 04217);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -671,13 +671,13 @@ TestScanSigned32()
 
   PoisonInput(u);
   sscanf("-174257", "%" SCNd32, &u.i);
-  MOZ_ASSERT(u.i == -174257);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == -174257);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("0423571", "%" SCNi32, &u.i);
-  MOZ_ASSERT(u.i == 0423571);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 0423571);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -687,13 +687,13 @@ TestScanSigned64()
 
   PoisonInput(u);
   sscanf("-17425238927232", "%" SCNd64, &u.i);
-  MOZ_ASSERT(u.i == -INT64_C(17425238927232));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == -INT64_C(17425238927232));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("042333576571", "%" SCNi64, &u.i);
-  MOZ_ASSERT(u.i == INT64_C(042333576571));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == INT64_C(042333576571));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -713,13 +713,13 @@ TestScanSignedLeast8()
 
   PoisonInput(u);
   sscanf("-17", "%" SCNdLEAST8, &u.i);
-  MOZ_ASSERT(u.i == -17);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == -17);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("042", "%" SCNiLEAST8, &u.i);
-  MOZ_ASSERT(u.i == 042);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 042);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 #endif
 }
 
@@ -730,13 +730,13 @@ TestScanSignedLeast16()
 
   PoisonInput(u);
   sscanf("-1742", "%" SCNdLEAST16, &u.i);
-  MOZ_ASSERT(u.i == -1742);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == -1742);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("04217", "%" SCNiLEAST16, &u.i);
-  MOZ_ASSERT(u.i == 04217);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 04217);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -746,13 +746,13 @@ TestScanSignedLeast32()
 
   PoisonInput(u);
   sscanf("-174257", "%" SCNdLEAST32, &u.i);
-  MOZ_ASSERT(u.i == -174257);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == -174257);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("0423571", "%" SCNiLEAST32, &u.i);
-  MOZ_ASSERT(u.i == 0423571);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 0423571);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -762,13 +762,13 @@ TestScanSignedLeast64()
 
   PoisonInput(u);
   sscanf("-17425238927232", "%" SCNdLEAST64, &u.i);
-  MOZ_ASSERT(u.i == -INT64_C(17425238927232));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == -INT64_C(17425238927232));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("042333576571", "%" SCNiLEAST64, &u.i);
-  MOZ_ASSERT(u.i == INT64_C(042333576571));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == INT64_C(042333576571));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -788,13 +788,13 @@ TestScanSignedFast8()
 
   PoisonInput(u);
   sscanf("-17", "%" SCNdFAST8, &u.i);
-  MOZ_ASSERT(u.i == -17);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == -17);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("042", "%" SCNiFAST8, &u.i);
-  MOZ_ASSERT(u.i == 042);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 042);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 #endif
 }
 
@@ -805,13 +805,13 @@ TestScanSignedFast16()
 
   PoisonInput(u);
   sscanf("-1742", "%" SCNdFAST16, &u.i);
-  MOZ_ASSERT(u.i == -1742);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == -1742);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("04217", "%" SCNiFAST16, &u.i);
-  MOZ_ASSERT(u.i == 04217);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 04217);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -821,13 +821,13 @@ TestScanSignedFast32()
 
   PoisonInput(u);
   sscanf("-174257", "%" SCNdFAST32, &u.i);
-  MOZ_ASSERT(u.i == -174257);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == -174257);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("0423571", "%" SCNiFAST32, &u.i);
-  MOZ_ASSERT(u.i == 0423571);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 0423571);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -837,13 +837,13 @@ TestScanSignedFast64()
 
   PoisonInput(u);
   sscanf("-17425238927232", "%" SCNdFAST64, &u.i);
-  MOZ_ASSERT(u.i == -INT64_C(17425238927232));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == -INT64_C(17425238927232));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("042333576571", "%" SCNiFAST64, &u.i);
-  MOZ_ASSERT(u.i == INT64_C(042333576571));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == INT64_C(042333576571));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -862,13 +862,13 @@ TestScanSignedMax()
 
   PoisonInput(u);
   sscanf("-432157943248732", "%" SCNdMAX, &u.i);
-  MOZ_ASSERT(u.i == -INTMAX_C(432157943248732));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == -INTMAX_C(432157943248732));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("04233357236571", "%" SCNiMAX, &u.i);
-  MOZ_ASSERT(u.i == INTMAX_C(04233357236571));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == INTMAX_C(04233357236571));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -878,13 +878,13 @@ TestScanSignedPtr()
 
   PoisonInput(u);
   sscanf("12345678", "%" SCNdPTR, &u.i);
-  MOZ_ASSERT(u.i == intptr_t(reinterpret_cast<void*>(12345678)));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == intptr_t(reinterpret_cast<void*>(12345678)));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("04233357236", "%" SCNiPTR, &u.i);
-  MOZ_ASSERT(u.i == intptr_t(reinterpret_cast<void*>(04233357236)));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == intptr_t(reinterpret_cast<void*>(04233357236)));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -915,18 +915,18 @@ TestScanUnsigned8()
 
   PoisonInput(u);
   sscanf("17", "%" SCNo8, &u.i);
-  MOZ_ASSERT(u.i == 017);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 017);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("42", "%" SCNu8, &u.i);
-  MOZ_ASSERT(u.i == 42);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 42);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("2A", "%" SCNx8, &u.i);
-  MOZ_ASSERT(u.i == 0x2A);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 0x2A);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 #endif
 }
 
@@ -937,18 +937,18 @@ TestScanUnsigned16()
 
   PoisonInput(u);
   sscanf("1742", "%" SCNo16, &u.i);
-  MOZ_ASSERT(u.i == 01742);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 01742);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("4217", "%" SCNu16, &u.i);
-  MOZ_ASSERT(u.i == 4217);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 4217);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("2ABC", "%" SCNx16, &u.i);
-  MOZ_ASSERT(u.i == 0x2ABC);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 0x2ABC);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -958,18 +958,18 @@ TestScanUnsigned32()
 
   PoisonInput(u);
   sscanf("17421742", "%" SCNo32, &u.i);
-  MOZ_ASSERT(u.i == 017421742);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 017421742);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("4217867", "%" SCNu32, &u.i);
-  MOZ_ASSERT(u.i == 4217867);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 4217867);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("2ABCBEEF", "%" SCNx32, &u.i);
-  MOZ_ASSERT(u.i == 0x2ABCBEEF);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 0x2ABCBEEF);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -979,18 +979,18 @@ TestScanUnsigned64()
 
   PoisonInput(u);
   sscanf("17421742173", "%" SCNo64, &u.i);
-  MOZ_ASSERT(u.i == UINT64_C(017421742173));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == UINT64_C(017421742173));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("421786713579", "%" SCNu64, &u.i);
-  MOZ_ASSERT(u.i == UINT64_C(421786713579));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == UINT64_C(421786713579));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("DEADBEEF7457E", "%" SCNx64, &u.i);
-  MOZ_ASSERT(u.i == UINT64_C(0xDEADBEEF7457E));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == UINT64_C(0xDEADBEEF7457E));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -1010,18 +1010,18 @@ TestScanUnsignedLeast8()
 
   PoisonInput(u);
   sscanf("17", "%" SCNoLEAST8, &u.i);
-  MOZ_ASSERT(u.i == 017);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 017);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("42", "%" SCNuLEAST8, &u.i);
-  MOZ_ASSERT(u.i == 42);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 42);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("2A", "%" SCNxLEAST8, &u.i);
-  MOZ_ASSERT(u.i == 0x2A);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 0x2A);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 #endif
 }
 
@@ -1032,18 +1032,18 @@ TestScanUnsignedLeast16()
 
   PoisonInput(u);
   sscanf("1742", "%" SCNoLEAST16, &u.i);
-  MOZ_ASSERT(u.i == 01742);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 01742);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("4217", "%" SCNuLEAST16, &u.i);
-  MOZ_ASSERT(u.i == 4217);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 4217);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("2ABC", "%" SCNxLEAST16, &u.i);
-  MOZ_ASSERT(u.i == 0x2ABC);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 0x2ABC);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -1053,18 +1053,18 @@ TestScanUnsignedLeast32()
 
   PoisonInput(u);
   sscanf("17421742", "%" SCNoLEAST32, &u.i);
-  MOZ_ASSERT(u.i == 017421742);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 017421742);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("4217867", "%" SCNuLEAST32, &u.i);
-  MOZ_ASSERT(u.i == 4217867);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 4217867);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("2ABCBEEF", "%" SCNxLEAST32, &u.i);
-  MOZ_ASSERT(u.i == 0x2ABCBEEF);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 0x2ABCBEEF);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -1074,18 +1074,18 @@ TestScanUnsignedLeast64()
 
   PoisonInput(u);
   sscanf("17421742173", "%" SCNoLEAST64, &u.i);
-  MOZ_ASSERT(u.i == UINT64_C(017421742173));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == UINT64_C(017421742173));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("421786713579", "%" SCNuLEAST64, &u.i);
-  MOZ_ASSERT(u.i == UINT64_C(421786713579));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == UINT64_C(421786713579));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("DEADBEEF7457E", "%" SCNxLEAST64, &u.i);
-  MOZ_ASSERT(u.i == UINT64_C(0xDEADBEEF7457E));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == UINT64_C(0xDEADBEEF7457E));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -1105,18 +1105,18 @@ TestScanUnsignedFast8()
 
   PoisonInput(u);
   sscanf("17", "%" SCNoFAST8, &u.i);
-  MOZ_ASSERT(u.i == 017);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 017);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("42", "%" SCNuFAST8, &u.i);
-  MOZ_ASSERT(u.i == 42);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 42);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("2A", "%" SCNxFAST8, &u.i);
-  MOZ_ASSERT(u.i == 0x2A);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 0x2A);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 #endif
 }
 
@@ -1127,18 +1127,18 @@ TestScanUnsignedFast16()
 
   PoisonInput(u);
   sscanf("1742", "%" SCNoFAST16, &u.i);
-  MOZ_ASSERT(u.i == 01742);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 01742);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("4217", "%" SCNuFAST16, &u.i);
-  MOZ_ASSERT(u.i == 4217);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 4217);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("2ABC", "%" SCNxFAST16, &u.i);
-  MOZ_ASSERT(u.i == 0x2ABC);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 0x2ABC);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -1148,18 +1148,18 @@ TestScanUnsignedFast32()
 
   PoisonInput(u);
   sscanf("17421742", "%" SCNoFAST32, &u.i);
-  MOZ_ASSERT(u.i == 017421742);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 017421742);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("4217867", "%" SCNuFAST32, &u.i);
-  MOZ_ASSERT(u.i == 4217867);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 4217867);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("2ABCBEEF", "%" SCNxFAST32, &u.i);
-  MOZ_ASSERT(u.i == 0x2ABCBEEF);
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == 0x2ABCBEEF);
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -1169,18 +1169,18 @@ TestScanUnsignedFast64()
 
   PoisonInput(u);
   sscanf("17421742173", "%" SCNoFAST64, &u.i);
-  MOZ_ASSERT(u.i == UINT64_C(017421742173));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == UINT64_C(017421742173));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("421786713579", "%" SCNuFAST64, &u.i);
-  MOZ_ASSERT(u.i == UINT64_C(421786713579));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == UINT64_C(421786713579));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("DEADBEEF7457E", "%" SCNxFAST64, &u.i);
-  MOZ_ASSERT(u.i == UINT64_C(0xDEADBEEF7457E));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == UINT64_C(0xDEADBEEF7457E));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -1199,18 +1199,18 @@ TestScanUnsignedMax()
 
   PoisonInput(u);
   sscanf("14220563454333534", "%" SCNoMAX, &u.i);
-  MOZ_ASSERT(u.i == UINTMAX_C(432157943248732));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == UINTMAX_C(432157943248732));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("432157943248732", "%" SCNuMAX, &u.i);
-  MOZ_ASSERT(u.i == UINTMAX_C(432157943248732));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == UINTMAX_C(432157943248732));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("4c337ca791", "%" SCNxMAX, &u.i);
-  MOZ_ASSERT(u.i == UINTMAX_C(327281321873));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == UINTMAX_C(327281321873));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void
@@ -1220,18 +1220,18 @@ TestScanUnsignedPtr()
 
   PoisonInput(u);
   sscanf("57060516", "%" SCNoPTR, &u.i);
-  MOZ_ASSERT(u.i == uintptr_t(reinterpret_cast<void*>(12345678)));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == uintptr_t(reinterpret_cast<void*>(12345678)));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("87654321", "%" SCNuPTR, &u.i);
-  MOZ_ASSERT(u.i == uintptr_t(reinterpret_cast<void*>(87654321)));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == uintptr_t(reinterpret_cast<void*>(87654321)));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
   sscanf("4c3a791", "%" SCNxPTR, &u.i);
-  MOZ_ASSERT(u.i == uintptr_t(reinterpret_cast<void*>(0x4c3a791)));
-  MOZ_ASSERT(ExtraBitsUntouched(u));
+  MOZ_RELEASE_ASSERT(u.i == uintptr_t(reinterpret_cast<void*>(0x4c3a791)));
+  MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
 static void

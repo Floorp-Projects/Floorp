@@ -110,8 +110,10 @@ public final class JavascriptBridge {
     public JavascriptBridge(final Object target) {
         mTarget = target;
         mMethods = target.getClass().getMethods();
-        mLogParser = new JavascriptMessageParser(sAsserter);
         mExpecter = sActions.expectGeckoEvent(EVENT_TYPE);
+        // The JS here is unrelated to a test harness, so we
+        // have our message parser end on assertion failure.
+        mLogParser = new JavascriptMessageParser(sAsserter, true);
     }
 
     /**

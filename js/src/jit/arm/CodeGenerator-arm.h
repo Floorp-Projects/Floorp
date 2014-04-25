@@ -71,6 +71,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
   protected:
     bool generatePrologue();
+    bool generateAsmJSPrologue(Label *stackOverflowLabel);
     bool generateEpilogue();
     bool generateOutOfLineCode();
 

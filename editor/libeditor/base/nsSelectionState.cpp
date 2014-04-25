@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/Selection.h"          // for Selection
+#include "mozilla/dom/Selection.h"      // for Selection
 #include "nsAString.h"                  // for nsAString_internal::Length
 #include "nsAutoPtr.h"                  // for nsRefPtr, getter_AddRefs, etc
 #include "nsCycleCollectionParticipant.h"
@@ -21,6 +21,7 @@
 #include "nsSelectionState.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 /***************************************************************************
  * class for recording selection info.  stores selection as collection of

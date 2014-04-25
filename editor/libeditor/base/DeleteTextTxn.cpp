@@ -5,7 +5,7 @@
 
 #include "DeleteTextTxn.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 #include "nsAutoPtr.h"
 #include "nsDebug.h"
 #include "nsEditor.h"
@@ -17,6 +17,7 @@
 #include "nsAString.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 DeleteTextTxn::DeleteTextTxn() :
   EditTxn(),

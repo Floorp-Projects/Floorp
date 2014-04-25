@@ -198,7 +198,7 @@ main()
                 "size");
 
   for (size_t i = 0; i < SHA1Sum::HashSize; i++)
-    MOZ_ASSERT(hash[i] == expected[i]);
+    MOZ_RELEASE_ASSERT(hash[i] == expected[i]);
 
   return 0;
 }

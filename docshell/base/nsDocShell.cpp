@@ -10871,20 +10871,30 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
 
     // Step 5: If aReplace is false, indicating that we're doing a pushState
     // rather than a replaceState, notify bfcache that we've added a page to
-    // the history so it can evict content viewers if appropriate.
+    // the history so it can evict content viewers if appropriate. Otherwise
+    // call ReplaceEntry so that we notify nsIHistoryListeners that an entry
+    // was replaced.
+    nsCOMPtr<nsISHistory> rootSH;
+    GetRootSessionHistory(getter_AddRefs(rootSH));
+    NS_ENSURE_TRUE(rootSH, NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<nsISHistoryInternal> internalSH =
+        do_QueryInterface(rootSH);
+    NS_ENSURE_TRUE(internalSH, NS_ERROR_UNEXPECTED);
+
     if (!aReplace) {
-        nsCOMPtr<nsISHistory> rootSH;
-        GetRootSessionHistory(getter_AddRefs(rootSH));
-        NS_ENSURE_TRUE(rootSH, NS_ERROR_UNEXPECTED);
-
-        nsCOMPtr<nsISHistoryInternal> internalSH =
-            do_QueryInterface(rootSH);
-        NS_ENSURE_TRUE(internalSH, NS_ERROR_UNEXPECTED);
-
         int32_t curIndex = -1;
         rv = rootSH->GetIndex(&curIndex);
         if (NS_SUCCEEDED(rv) && curIndex > -1) {
             internalSH->EvictOutOfRangeContentViewers(curIndex);
+        }
+    } else {
+        nsCOMPtr<nsISHEntry> rootSHEntry = GetRootSHEntry(newSHEntry);
+
+        int32_t index = -1;
+        rv = rootSH->GetIndexOfEntry(rootSHEntry, &index);
+        if (NS_SUCCEEDED(rv) && index > -1) {
+            internalSH->ReplaceEntry(index, rootSHEntry);
         }
     }
 

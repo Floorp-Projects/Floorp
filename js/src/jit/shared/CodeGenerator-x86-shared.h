@@ -78,6 +78,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
   protected:
     bool generatePrologue();
+    bool generateAsmJSPrologue(Label *stackOverflowLabe);
     bool generateEpilogue();
     bool generateOutOfLineCode();
 

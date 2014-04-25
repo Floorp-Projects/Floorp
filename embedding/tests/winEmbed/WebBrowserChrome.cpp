@@ -366,6 +366,12 @@ WebBrowserChrome::OnHistoryPurge(int32_t aNumEntries, bool *aContinue)
     return SendHistoryStatusMessage(nullptr, "purge", aNumEntries);
 }
 
+NS_IMETHODIMP
+WebBrowserChrome::OnHistoryReplaceEntry(int32_t aIndex)
+{
+    return SendHistoryStatusMessage(nullptr, "replace", aIndex);
+}
+
 static void
 AppendIntToCString(int32_t info1, nsCString& aResult)
 {
@@ -437,6 +443,11 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, int3
     {
         AppendIntToCString(info1, status);
         status.Append(" purged from Session History");
+    }
+    else if (!(strcmp(operation, "replace")))
+    {
+        status.Assign("Replacing HistoryIndex: ");
+        AppentIntToCString(info1, status);
     }
 
     nsString wstatus;
