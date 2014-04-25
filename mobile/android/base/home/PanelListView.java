@@ -27,49 +27,57 @@ public class PanelListView extends HomeListView
 
     private static final String LOGTAG = "GeckoPanelListView";
 
-    private final PanelViewAdapter mAdapter;
-    private final ViewConfig mViewConfig;
-    private final PanelViewItemHandler mItemHandler;
+    private final ViewConfig viewConfig;
+    private final PanelViewAdapter adapter;
+    private final PanelViewItemHandler itemHandler;
+    private OnItemOpenListener itemOpenListener;
 
     public PanelListView(Context context, ViewConfig viewConfig) {
         super(context);
 
-        mViewConfig = viewConfig;
-        mItemHandler = new PanelViewItemHandler(viewConfig);
+        this.viewConfig = viewConfig;
+        itemHandler = new PanelViewItemHandler(viewConfig);
 
-        mAdapter = new PanelViewAdapter(context, viewConfig);
-        setAdapter(mAdapter);
+        adapter = new PanelViewAdapter(context, viewConfig);
+        setAdapter(adapter);
 
         setOnItemClickListener(new PanelListItemClickListener());
+    }
+
+     @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        itemHandler.setOnItemOpenListener(itemOpenListener);
     }
 
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        mItemHandler.setOnItemOpenListener(null);
+        itemHandler.setOnItemOpenListener(null);
     }
 
     @Override
     public void setDataset(Cursor cursor) {
-        Log.d(LOGTAG, "Setting dataset: " + mViewConfig.getDatasetId());
-        mAdapter.swapCursor(cursor);
+        Log.d(LOGTAG, "Setting dataset: " + viewConfig.getDatasetId());
+        adapter.swapCursor(cursor);
     }
 
     @Override
     public void setOnItemOpenListener(OnItemOpenListener listener) {
-        mItemHandler.setOnItemOpenListener(listener);
+        itemHandler.setOnItemOpenListener(listener);
+        itemOpenListener = listener;
     }
 
     @Override
     public void setFilterManager(FilterManager filterManager) {
-        mAdapter.setFilterManager(filterManager);
-        mItemHandler.setFilterManager(filterManager);
+        adapter.setFilterManager(filterManager);
+        itemHandler.setFilterManager(filterManager);
     }
 
     private class PanelListItemClickListener implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            mItemHandler.openItemAtPosition(mAdapter.getCursor(), position);
+            itemHandler.openItemAtPosition(adapter.getCursor(), position);
         }
     }
 }

@@ -60,13 +60,6 @@ cast(const PLayerParent* in)
     static_cast<const ShadowLayerParent*>(in));
 }
 
-static CompositableParent*
-cast(const PCompositableParent* in)
-{
-  return const_cast<CompositableParent*>(
-    static_cast<const CompositableParent*>(in));
-}
-
 template<class OpCreateT>
 static ShadowLayerParent*
 AsLayerComposite(const OpCreateT& op)
@@ -508,24 +501,26 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     }
     case Edit::TOpAttachCompositable: {
       const OpAttachCompositable& op = edit.get_OpAttachCompositable();
-      if (!Attach(cast(op.layerParent()), cast(op.compositableParent()), false)) {
+      CompositableHost* host = CompositableHost::FromIPDLActor(op.compositableParent());
+      if (!Attach(cast(op.layerParent()), host, false)) {
         return false;
       }
-      cast(op.compositableParent())->SetCompositorID(
-        mLayerManager->GetCompositor()->GetCompositorID());
+      host->SetCompositorID(mLayerManager->GetCompositor()->GetCompositorID());
       break;
     }
     case Edit::TOpAttachAsyncCompositable: {
       const OpAttachAsyncCompositable& op = edit.get_OpAttachAsyncCompositable();
-      CompositableParent* compositableParent = CompositableMap::Get(op.containerID());
+      PCompositableParent* compositableParent = CompositableMap::Get(op.containerID());
       if (!compositableParent) {
         NS_ERROR("CompositableParent not found in the map");
         return false;
       }
-      if (!Attach(cast(op.layerParent()), compositableParent, true)) {
+      CompositableHost* host = CompositableHost::FromIPDLActor(compositableParent);
+      if (!Attach(cast(op.layerParent()), host, true)) {
         return false;
       }
-      compositableParent->SetCompositorID(mLayerManager->GetCompositor()->GetCompositorID());
+
+      host->SetCompositorID(mLayerManager->GetCompositor()->GetCompositorID());
       break;
     }
     default:
@@ -694,9 +689,13 @@ LayerTransactionParent::RecvSetAsyncScrollOffset(PLayerParent* aLayer,
 
 bool
 LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent,
-                               CompositableParent* aCompositable,
-                               bool aIsAsyncVideo)
+                               CompositableHost* aCompositable,
+                               bool aIsAsync)
 {
+  if (!aCompositable) {
+    return false;
+  }
+
   Layer* baselayer = aLayerParent->AsLayer();
   if (!baselayer) {
     return false;
@@ -709,21 +708,16 @@ LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent,
   Compositor* compositor
     = static_cast<LayerManagerComposite*>(aLayerParent->AsLayer()->Manager())->GetCompositor();
 
-  CompositableHost* compositable = aCompositable->GetCompositableHost();
-  if (!compositable) {
-    return false;
-  }
-  if (!layer->SetCompositableHost(compositable)) {
+  if (!layer->SetCompositableHost(aCompositable)) {
     // not all layer types accept a compositable, see bug 967824
     return false;
   }
-  compositable->Attach(aLayerParent->AsLayer(),
-                       compositor,
-                       aIsAsyncVideo
-                         ? CompositableHost::ALLOW_REATTACH
-                           | CompositableHost::KEEP_ATTACHED
-                         : CompositableHost::NO_FLAGS);
-
+  aCompositable->Attach(aLayerParent->AsLayer(),
+                        compositor,
+                        aIsAsync
+                          ? CompositableHost::ALLOW_REATTACH
+                            | CompositableHost::KEEP_ATTACHED
+                          : CompositableHost::NO_FLAGS);
   return true;
 }
 
@@ -789,14 +783,13 @@ LayerTransactionParent::DeallocPLayerParent(PLayerParent* actor)
 PCompositableParent*
 LayerTransactionParent::AllocPCompositableParent(const TextureInfo& aInfo)
 {
-  return new CompositableParent(this, aInfo);
+  return CompositableHost::CreateIPDLActor(this, aInfo, 0);
 }
 
 bool
-LayerTransactionParent::DeallocPCompositableParent(PCompositableParent* actor)
+LayerTransactionParent::DeallocPCompositableParent(PCompositableParent* aActor)
 {
-  delete actor;
-  return true;
+  return CompositableHost::DestroyIPDLActor(aActor);
 }
 
 PTextureParent*
