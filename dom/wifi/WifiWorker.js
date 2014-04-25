@@ -672,6 +672,27 @@ var WifiManager = (function() {
     });
   }
 
+  function handleWpaEapEvents(event) {
+    if (event.indexOf("CTRL-EVENT-EAP-FAILURE") !== -1) {
+      if (event.indexOf("EAP authentication failed") !== -1) {
+        notify("passwordmaybeincorrect");
+      }
+      return true;
+    }
+    if (event.indexOf("CTRL-EVENT-EAP-TLS-CERT-ERROR") !== -1) {
+      // Cert Error
+      manager.disconnect(function() {
+        manager.reassociate(function(){});
+      });
+      return true;
+    }
+    if (event.indexOf("CTRL-EVENT-EAP-STARTED") !== -1) {
+      notifyStateChange({ state: "AUTHENTICATING" });
+      return true;
+    }
+    return true;
+  }
+
   // Handle events sent to us by the event worker.
   function handleEvent(event) {
     debug("Event coming in: " + event);
@@ -777,12 +798,6 @@ var WifiManager = (function() {
       }
       return true;
     }
-    if (eventData.indexOf("CTRL-EVENT-EAP-FAILURE") === 0) {
-      if (event.indexOf("EAP authentication failed") !== -1) {
-        notify("passwordmaybeincorrect");
-      }
-      return true;
-    }
     if (eventData.indexOf("CTRL-EVENT-CONNECTED") === 0) {
       // Format: CTRL-EVENT-CONNECTED - Connection to 00:1e:58:ec:d5:6d completed (reauth) [id=1 id_str=]
       var bssid = event.split(" ")[4];
@@ -803,6 +818,9 @@ var WifiManager = (function() {
       manager.handlePostWifiScan();
       notify("scanresultsavailable");
       return true;
+    }
+    if (eventData.indexOf("CTRL-EVENT-EAP") === 0) {
+      return handleWpaEapEvents(event);
     }
     if (eventData.indexOf("WPS-TIMEOUT") === 0) {
       notifyStateChange({ state: "WPS_TIMEOUT", BSSID: null, id: -1 });
@@ -2076,6 +2094,9 @@ function WifiWorker() {
         break;
       case "WPS_OVERLAP_DETECTED":
         self._fireEvent("onwpsoverlap", {});
+        break;
+      case "AUTHENTICATING":
+        self._fireEvent("onauthenticating", {network: netToDOM(self.currentNetwork)});
         break;
       case "SCANNING":
         // If we're already scanning in the background, we don't need to worry
