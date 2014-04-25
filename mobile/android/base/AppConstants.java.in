@@ -157,4 +157,11 @@ public class AppConstants {
 #else
     false;
 #endif
+
+    public static final boolean DEBUG_BUILD =
+#ifdef MOZ_DEBUG
+    true;
+#else
+    false;
+#endif
 }
