@@ -1109,7 +1109,6 @@ TypeSet::addType(Type type, LifoAlloc *alloc)
 
     if (false) {
     unknownObject:
-        type = Type::AnyObjectType();
         flags |= TYPE_FLAG_ANYOBJECT;
         clearObjects();
     }
@@ -1160,12 +1159,18 @@ HeapTypeSet::newPropertyState(ExclusiveContext *cxArg)
 }
 
 inline void
+HeapTypeSet::setNonDataProperty()
+{
+    flags |= TYPE_FLAG_NON_DATA_PROPERTY;
+}
+
+inline void
 HeapTypeSet::setNonDataProperty(ExclusiveContext *cx)
 {
     if (flags & TYPE_FLAG_NON_DATA_PROPERTY)
         return;
 
-    flags |= TYPE_FLAG_NON_DATA_PROPERTY;
+    setNonDataProperty();
     newPropertyState(cx);
 }
 

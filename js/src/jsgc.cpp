@@ -3950,7 +3950,13 @@ BeginSweepingZoneGroup(JSRuntime *rt)
 
         for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
             gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
-            zone->sweep(&fop, releaseTypes && !zone->isPreservingCode());
+            bool oom = false;
+            zone->sweep(&fop, releaseTypes && !zone->isPreservingCode(), &oom);
+            if (oom) {
+                zone->setPreservingCode(false);
+                zone->discardJitCode(&fop);
+                zone->types.clearAllNewScriptAddendumsOnOOM();
+            }
         }
     }
 
