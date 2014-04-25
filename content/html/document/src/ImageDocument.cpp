@@ -147,8 +147,8 @@ ImageDocument::~ImageDocument()
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(ImageDocument, MediaDocument,
-                                     mImageContent)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ImageDocument, MediaDocument,
+                                   mImageContent)
 
 NS_IMPL_ADDREF_INHERITED(ImageDocument, MediaDocument)
 NS_IMPL_RELEASE_INHERITED(ImageDocument, MediaDocument)

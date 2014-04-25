@@ -17,13 +17,13 @@ using WebCore::DynamicsCompressor;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_6(DynamicsCompressorNode, AudioNode,
-                                     mThreshold,
-                                     mKnee,
-                                     mRatio,
-                                     mReduction,
-                                     mAttack,
-                                     mRelease)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DynamicsCompressorNode, AudioNode,
+                                   mThreshold,
+                                   mKnee,
+                                   mRatio,
+                                   mReduction,
+                                   mAttack,
+                                   mRelease)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DynamicsCompressorNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)

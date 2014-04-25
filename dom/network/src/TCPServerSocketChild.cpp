@@ -16,7 +16,7 @@ using mozilla::net::gNeckoChild;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_1(TCPServerSocketChildBase, mServerSocket)
+NS_IMPL_CYCLE_COLLECTION(TCPServerSocketChildBase, mServerSocket)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TCPServerSocketChildBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TCPServerSocketChildBase)
 

@@ -94,8 +94,8 @@ UIEvent::Constructor(const GlobalObject& aGlobal,
   return e.forget();
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(UIEvent, Event,
-                                     mView)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(UIEvent, Event,
+                                   mView)
 
 NS_IMPL_ADDREF_INHERITED(UIEvent, Event)
 NS_IMPL_RELEASE_INHERITED(UIEvent, Event)

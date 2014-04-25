@@ -1157,7 +1157,7 @@ protected:
   nsCOMPtr<nsIObjectLoadingContent> mContent;
 };
 
-NS_IMPL_CYCLE_COLLECTION_1(ObjectInterfaceRequestorShim, mContent)
+NS_IMPL_CYCLE_COLLECTION(ObjectInterfaceRequestorShim, mContent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ObjectInterfaceRequestorShim)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)

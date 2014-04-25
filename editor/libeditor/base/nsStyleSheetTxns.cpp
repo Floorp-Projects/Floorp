@@ -51,8 +51,8 @@ AddStyleSheetTxn::AddStyleSheetTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(AddStyleSheetTxn, EditTxn,
-                                     mSheet)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(AddStyleSheetTxn, EditTxn,
+                                   mSheet)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AddStyleSheetTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
@@ -101,8 +101,8 @@ RemoveStyleSheetTxn::RemoveStyleSheetTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(RemoveStyleSheetTxn, EditTxn,
-                                     mSheet)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(RemoveStyleSheetTxn, EditTxn,
+                                   mSheet)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RemoveStyleSheetTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)

@@ -76,9 +76,9 @@ HTMLButtonElement::~HTMLButtonElement()
 
 // nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(HTMLButtonElement,
-                                     nsGenericHTMLFormElementWithState,
-                                     mValidity)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLButtonElement,
+                                   nsGenericHTMLFormElementWithState,
+                                   mValidity)
 
 NS_IMPL_ADDREF_INHERITED(HTMLButtonElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLButtonElement, Element)

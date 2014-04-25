@@ -45,27 +45,27 @@ NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 NS_IMPL_ADDREF_INHERITED(nsDOMCameraControl, DOMMediaStream)
 NS_IMPL_RELEASE_INHERITED(nsDOMCameraControl, DOMMediaStream)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_20(nsDOMCameraControl, DOMMediaStream,
-                                      mCapabilities,
-                                      mWindow,
-                                      mGetCameraOnSuccessCb,
-                                      mGetCameraOnErrorCb,
-                                      mAutoFocusOnSuccessCb,
-                                      mAutoFocusOnErrorCb,
-                                      mTakePictureOnSuccessCb,
-                                      mTakePictureOnErrorCb,
-                                      mStartRecordingOnSuccessCb,
-                                      mStartRecordingOnErrorCb,
-                                      mReleaseOnSuccessCb,
-                                      mReleaseOnErrorCb,
-                                      mSetConfigurationOnSuccessCb,
-                                      mSetConfigurationOnErrorCb,
-                                      mOnShutterCb,
-                                      mOnClosedCb,
-                                      mOnRecorderStateChangeCb,
-                                      mOnPreviewStateChangeCb,
-                                      mOnAutoFocusMovingCb,
-                                      mOnFacesDetectedCb)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsDOMCameraControl, DOMMediaStream,
+                                   mCapabilities,
+                                   mWindow,
+                                   mGetCameraOnSuccessCb,
+                                   mGetCameraOnErrorCb,
+                                   mAutoFocusOnSuccessCb,
+                                   mAutoFocusOnErrorCb,
+                                   mTakePictureOnSuccessCb,
+                                   mTakePictureOnErrorCb,
+                                   mStartRecordingOnSuccessCb,
+                                   mStartRecordingOnErrorCb,
+                                   mReleaseOnSuccessCb,
+                                   mReleaseOnErrorCb,
+                                   mSetConfigurationOnSuccessCb,
+                                   mSetConfigurationOnErrorCb,
+                                   mOnShutterCb,
+                                   mOnClosedCb,
+                                   mOnRecorderStateChangeCb,
+                                   mOnPreviewStateChangeCb,
+                                   mOnAutoFocusMovingCb,
+                                   mOnFacesDetectedCb)
 
 /* static */
 bool

@@ -20,7 +20,7 @@ FireInteralError(mozilla::net::PTCPServerSocketParent* aActor,
                           NS_LITERAL_STRING(__FILE__), aLineNo, 0);
 }
 
-NS_IMPL_CYCLE_COLLECTION_2(TCPServerSocketParent, mServerSocket, mIntermediary)
+NS_IMPL_CYCLE_COLLECTION(TCPServerSocketParent, mServerSocket, mIntermediary)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TCPServerSocketParent)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TCPServerSocketParent)
 

@@ -244,10 +244,10 @@ NS_INTERFACE_MAP_BEGIN(nsEditorSpellCheck)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsEditorSpellCheck)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_3(nsEditorSpellCheck,
-                           mEditor,
-                           mSpellChecker,
-                           mTxtSrvFilter)
+NS_IMPL_CYCLE_COLLECTION(nsEditorSpellCheck,
+                         mEditor,
+                         mSpellChecker,
+                         mTxtSrvFilter)
 
 nsEditorSpellCheck::nsEditorSpellCheck()
   : mSuggestedWordIndex(0)

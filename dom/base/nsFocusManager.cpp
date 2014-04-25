@@ -129,13 +129,13 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFocusManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFocusManager)
 
-NS_IMPL_CYCLE_COLLECTION_6(nsFocusManager,
-                           mActiveWindow,
-                           mFocusedWindow,
-                           mFocusedContent,
-                           mFirstBlurEvent,
-                           mFirstFocusEvent,
-                           mWindowBeingLowered)
+NS_IMPL_CYCLE_COLLECTION(nsFocusManager,
+                         mActiveWindow,
+                         mFocusedWindow,
+                         mFocusedContent,
+                         mFirstBlurEvent,
+                         mFirstFocusEvent,
+                         mWindowBeingLowered)
 
 nsFocusManager* nsFocusManager::sInstance = nullptr;
 bool nsFocusManager::sMouseFocusesFormControl = false;

@@ -31,8 +31,8 @@ MediaStreamTrack::~MediaStreamTrack()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(MediaStreamTrack, DOMEventTargetHelper,
-                                     mStream)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaStreamTrack, DOMEventTargetHelper,
+                                   mStream)
 
 NS_IMPL_ADDREF_INHERITED(MediaStreamTrack, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MediaStreamTrack, DOMEventTargetHelper)

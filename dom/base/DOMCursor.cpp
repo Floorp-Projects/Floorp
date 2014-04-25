@@ -10,8 +10,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(DOMCursor, DOMRequest,
-                                     mCallback)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DOMCursor, DOMRequest,
+                                   mCallback)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DOMCursor)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDOMCursor)

@@ -38,7 +38,7 @@ FireInteralError(mozilla::net::PTCPSocketParent* aActor, uint32_t aLineNo)
                            NS_LITERAL_STRING("connecting"));
 }
 
-NS_IMPL_CYCLE_COLLECTION_2(TCPSocketParentBase, mSocket, mIntermediary)
+NS_IMPL_CYCLE_COLLECTION(TCPSocketParentBase, mSocket, mIntermediary)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TCPSocketParentBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TCPSocketParentBase)
 

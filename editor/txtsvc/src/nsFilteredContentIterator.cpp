@@ -46,12 +46,12 @@ NS_INTERFACE_MAP_BEGIN(nsFilteredContentIterator)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsFilteredContentIterator)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_5(nsFilteredContentIterator,
-                           mCurrentIterator,
-                           mIterator,
-                           mPreIterator,
-                           mFilter,
-                           mRange)
+NS_IMPL_CYCLE_COLLECTION(nsFilteredContentIterator,
+                         mCurrentIterator,
+                         mIterator,
+                         mPreIterator,
+                         mFilter,
+                         mRange)
 
 //------------------------------------------------------------
 nsresult

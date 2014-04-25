@@ -43,7 +43,7 @@ DeserializeArrayBuffer(JS::Handle<JSObject*> aObj,
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_1(TCPSocketChildBase, mSocket)
+NS_IMPL_CYCLE_COLLECTION(TCPSocketChildBase, mSocket)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TCPSocketChildBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TCPSocketChildBase)
 

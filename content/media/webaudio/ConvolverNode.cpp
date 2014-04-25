@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(ConvolverNode, AudioNode, mBuffer)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ConvolverNode, AudioNode, mBuffer)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ConvolverNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)

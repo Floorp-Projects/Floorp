@@ -24,9 +24,9 @@ InsertElementTxn::InsertElementTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(InsertElementTxn, EditTxn,
-                                     mNode,
-                                     mParent)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertElementTxn, EditTxn,
+                                   mNode,
+                                   mParent)
 
 NS_IMPL_ADDREF_INHERITED(InsertElementTxn, EditTxn)
 NS_IMPL_RELEASE_INHERITED(InsertElementTxn, EditTxn)

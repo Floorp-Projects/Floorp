@@ -27,7 +27,7 @@ class nsIDOMDocument;
  *                     XPCOM cruft 
  *******************************************************************/
 
-NS_IMPL_CYCLE_COLLECTION_1(TypeInState, mLastSelectionContainer)
+NS_IMPL_CYCLE_COLLECTION(TypeInState, mLastSelectionContainer)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TypeInState)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TypeInState)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TypeInState)

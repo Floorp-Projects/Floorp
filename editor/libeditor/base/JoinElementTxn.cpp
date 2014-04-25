@@ -22,10 +22,10 @@ JoinElementTxn::JoinElementTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_3(JoinElementTxn, EditTxn,
-                                     mLeftNode,
-                                     mRightNode,
-                                     mParent)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(JoinElementTxn, EditTxn,
+                                   mLeftNode,
+                                   mRightNode,
+                                   mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JoinElementTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)

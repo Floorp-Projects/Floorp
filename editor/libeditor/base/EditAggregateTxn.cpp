@@ -16,8 +16,8 @@ EditAggregateTxn::EditAggregateTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(EditAggregateTxn, EditTxn,
-                                     mChildren)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(EditAggregateTxn, EditTxn,
+                                   mChildren)
 
 NS_IMPL_ADDREF_INHERITED(EditAggregateTxn, EditTxn)
 NS_IMPL_RELEASE_INHERITED(EditAggregateTxn, EditTxn)

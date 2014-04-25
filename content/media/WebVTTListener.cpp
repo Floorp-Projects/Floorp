@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_2(WebVTTListener, mElement, mParserWrapper)
+NS_IMPL_CYCLE_COLLECTION(WebVTTListener, mElement, mParserWrapper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebVTTListener)
   NS_INTERFACE_MAP_ENTRY(nsIWebVTTListener)

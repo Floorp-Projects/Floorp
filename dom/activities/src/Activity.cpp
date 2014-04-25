@@ -18,8 +18,8 @@ NS_INTERFACE_MAP_END_INHERITING(DOMRequest)
 NS_IMPL_ADDREF_INHERITED(Activity, DOMRequest)
 NS_IMPL_RELEASE_INHERITED(Activity, DOMRequest)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(Activity, DOMRequest,
-                                     mProxy)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(Activity, DOMRequest,
+                                   mProxy)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(Activity, DOMRequest)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END

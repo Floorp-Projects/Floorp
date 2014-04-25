@@ -144,7 +144,7 @@ private:
   nsCOMPtr<nsIDOMXULElement> mElement;
 };
 
-NS_IMPL_CYCLE_COLLECTION_1(nsXULElementTearoff, mElement)
+NS_IMPL_CYCLE_COLLECTION(nsXULElementTearoff, mElement)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULElementTearoff)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULElementTearoff)

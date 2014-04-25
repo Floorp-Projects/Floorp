@@ -16,8 +16,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(DelayNode, AudioNode,
-                                     mDelay)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DelayNode, AudioNode,
+                                   mDelay)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DelayNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)

@@ -189,7 +189,7 @@ private:
   nsRefPtr<nsGenericHTMLElement> mElement;
 };
 
-NS_IMPL_CYCLE_COLLECTION_1(nsGenericHTMLElementTearoff, mElement)
+NS_IMPL_CYCLE_COLLECTION(nsGenericHTMLElementTearoff, mElement)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGenericHTMLElementTearoff)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGenericHTMLElementTearoff)

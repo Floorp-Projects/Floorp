@@ -390,8 +390,8 @@ MediaSource::NotifyEvicted(double aStart, double aEnd)
   mSourceBuffers->Evict(aStart, aEnd);
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(MediaSource, DOMEventTargetHelper,
-                                     mSourceBuffers, mActiveSourceBuffers)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaSource, DOMEventTargetHelper,
+                                   mSourceBuffers, mActiveSourceBuffers)
 
 NS_IMPL_ADDREF_INHERITED(MediaSource, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MediaSource, DOMEventTargetHelper)

@@ -8,9 +8,9 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(PerformanceResourceTiming,
-                                     PerformanceEntry,
-                                     mTiming)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(PerformanceResourceTiming,
+                                   PerformanceEntry,
+                                   mTiming)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PerformanceResourceTiming,
                                                PerformanceEntry)

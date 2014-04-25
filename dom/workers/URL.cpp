@@ -506,7 +506,7 @@ private:
   mozilla::ErrorResult& mRv;
 };
 
-NS_IMPL_CYCLE_COLLECTION_1(URL, mSearchParams)
+NS_IMPL_CYCLE_COLLECTION(URL, mSearchParams)
 
 // The reason for using worker::URL is to have different refcnt logging than
 // for main thread URL.

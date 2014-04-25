@@ -25,8 +25,8 @@ class nsIEditor;
 
 #define kNullCh (char16_t('\0'))
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(ChangeCSSInlineStyleTxn, EditTxn,
-                                     mElement)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeCSSInlineStyleTxn, EditTxn,
+                                   mElement)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChangeCSSInlineStyleTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)

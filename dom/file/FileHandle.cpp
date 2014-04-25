@@ -55,8 +55,8 @@ private:
 
 } // anonymous namespace
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(FileHandle, DOMEventTargetHelper,
-                                     mFileStorage)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(FileHandle, DOMEventTargetHelper,
+                                   mFileStorage)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileHandle)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)

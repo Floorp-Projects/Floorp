@@ -3341,7 +3341,7 @@ private:
   nsRefPtr<nsXMLHttpRequest> mXHR;
 };
 
-NS_IMPL_CYCLE_COLLECTION_1(AsyncVerifyRedirectCallbackForwarder, mXHR)
+NS_IMPL_CYCLE_COLLECTION(AsyncVerifyRedirectCallbackForwarder, mXHR)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AsyncVerifyRedirectCallbackForwarder)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -3809,7 +3809,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXMLHttpRequestXPCOMifier)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXMLHttpRequestXPCOMifier)
 
-// Can't NS_IMPL_CYCLE_COLLECTION_1 because mXHR has ambiguous
+// Can't NS_IMPL_CYCLE_COLLECTION( because mXHR has ambiguous
 // inheritance from nsISupports.
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLHttpRequestXPCOMifier)
 

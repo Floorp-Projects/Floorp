@@ -36,8 +36,8 @@ File::File(const File* aOther, uint64_t aStart, uint64_t aLength,
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(File, nsDOMFileCC,
-                                     mLockedFile)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(File, nsDOMFileCC,
+                                   mLockedFile)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(File)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMFileCC)

@@ -53,10 +53,10 @@ static const char kMaxEntriesPref[] =  "offline.max_site_resources";
 // nsDOMOfflineResourceList
 //
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(nsDOMOfflineResourceList,
-                                     DOMEventTargetHelper,
-                                     mCacheUpdate,
-                                     mPendingEvents)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsDOMOfflineResourceList,
+                                   DOMEventTargetHelper,
+                                   mCacheUpdate,
+                                   mPendingEvents)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMOfflineResourceList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMOfflineResourceList)

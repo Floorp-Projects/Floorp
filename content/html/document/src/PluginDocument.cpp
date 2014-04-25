@@ -109,8 +109,8 @@ PluginDocument::~PluginDocument()
 {}
 
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(PluginDocument, MediaDocument,
-                                     mPluginContent)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(PluginDocument, MediaDocument,
+                                   mPluginContent)
 
 NS_IMPL_ADDREF_INHERITED(PluginDocument, MediaDocument)
 NS_IMPL_RELEASE_INHERITED(PluginDocument, MediaDocument)

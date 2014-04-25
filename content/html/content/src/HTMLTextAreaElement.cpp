@@ -75,11 +75,11 @@ HTMLTextAreaElement::HTMLTextAreaElement(already_AddRefed<nsINodeInfo>& aNodeInf
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_3(HTMLTextAreaElement,
-                                     nsGenericHTMLFormElementWithState,
-                                     mValidity,
-                                     mControllers,
-                                     mState)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLTextAreaElement,
+                                   nsGenericHTMLFormElementWithState,
+                                   mValidity,
+                                   mControllers,
+                                   mState)
 
 NS_IMPL_ADDREF_INHERITED(HTMLTextAreaElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLTextAreaElement, Element)

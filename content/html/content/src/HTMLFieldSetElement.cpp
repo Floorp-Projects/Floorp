@@ -38,8 +38,8 @@ HTMLFieldSetElement::~HTMLFieldSetElement()
 
 // nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(HTMLFieldSetElement, nsGenericHTMLFormElement,
-                                     mValidity, mElements)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLFieldSetElement, nsGenericHTMLFormElement,
+                                   mValidity, mElements)
 
 NS_IMPL_ADDREF_INHERITED(HTMLFieldSetElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLFieldSetElement, Element)
