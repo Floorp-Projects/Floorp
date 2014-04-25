@@ -176,8 +176,6 @@ private:
     return mDecoders[mActiveVideoDecoder]->GetReader();
   }
 
-  bool EnsureWorkQueueInitialized();
-  nsresult EnqueueDecoderInitialization();
   void WaitForPendingDecoders();
 
   nsTArray<nsRefPtr<SubBufferDecoder>> mPendingDecoders;
@@ -186,8 +184,6 @@ private:
   int32_t mActiveVideoDecoder;
   int32_t mActiveAudioDecoder;
   dom::MediaSource* mMediaSource;
-
-  nsCOMPtr<nsIThread> mWorkQueue;
 };
 
 class MediaSourceStateMachine : public MediaDecoderStateMachine
@@ -208,11 +204,21 @@ public:
     return static_cast<MediaSourceReader*>(mReader.get())->CreateSubDecoder(aType, aParentDecoder);
   }
 
+  nsresult EnqueueDecoderInitialization() {
+    AssertCurrentThreadInMonitor();
+    if (!mReader) {
+      return NS_ERROR_FAILURE;
+    }
+    return mDecodeTaskQueue->Dispatch(NS_NewRunnableMethod(this,
+                                                           &MediaSourceStateMachine::CallDecoderInitialization));
+  }
+
+private:
   void CallDecoderInitialization() {
     if (!mReader) {
       return;
     }
-    return static_cast<MediaSourceReader*>(mReader.get())->CallDecoderInitialization();
+    static_cast<MediaSourceReader*>(mReader.get())->CallDecoderInitialization();
   }
 };
 
@@ -293,39 +299,13 @@ MediaSourceDecoder::CreateSubDecoder(const nsACString& aType)
   return static_cast<MediaSourceStateMachine*>(mDecoderStateMachine.get())->CreateSubDecoder(aType, this);
 }
 
-void
-MediaSourceDecoder::CallDecoderInitialization()
+nsresult
+MediaSourceDecoder::EnqueueDecoderInitialization()
 {
   if (!mDecoderStateMachine) {
-    return;
-  }
-  return static_cast<MediaSourceStateMachine*>(mDecoderStateMachine.get())->CallDecoderInitialization();
-}
-
-bool
-MediaSourceReader::EnsureWorkQueueInitialized()
-{
-  // TODO: Use a global threadpool rather than a thread per MediaSource.
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mWorkQueue &&
-      NS_FAILED(NS_NewNamedThread("MediaSource",
-                                  getter_AddRefs(mWorkQueue),
-                                  nullptr,
-                                  MEDIA_THREAD_STACK_SIZE))) {
-    return false;
-  }
-  return true;
-}
-
-nsresult
-MediaSourceReader::EnqueueDecoderInitialization()
-{
-  if (!EnsureWorkQueueInitialized()) {
     return NS_ERROR_FAILURE;
   }
-  return mWorkQueue->Dispatch(NS_NewRunnableMethod(static_cast<MediaSourceDecoder*>(mDecoder),
-                                                   &MediaSourceDecoder::CallDecoderInitialization),
-                              NS_DISPATCH_NORMAL);
+  return static_cast<MediaSourceStateMachine*>(mDecoderStateMachine.get())->EnqueueDecoderInitialization();
 }
 
 class ReleaseDecodersTask : public nsRunnable {
@@ -410,7 +390,10 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType, MediaSourceDecoder*
   MSE_DEBUG("Registered subdecoder %p subreader %p", decoder.get(), reader.get());
   decoder->SetReader(reader.forget());
   mPendingDecoders.AppendElement(decoder);
-  EnqueueDecoderInitialization();
+  if (NS_FAILED(static_cast<MediaSourceDecoder*>(mDecoder)->EnqueueDecoderInitialization())) {
+    MSE_DEBUG("%p: Failed to enqueue decoder initialization task", this);
+    return nullptr;
+  }
   mDecoder->NotifyWaitingForResourcesStatusChanged();
   return decoder.forget();
 }
