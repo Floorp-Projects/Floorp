@@ -837,6 +837,7 @@ class IonBuilder : public MIRGenerator
 
     types::TemporaryTypeSet *thisTypes, *argTypes, *typeArray;
     uint32_t typeArrayHint;
+    uint32_t *bytecodeTypeMap;
 
     GSNCache gsn;
     ScopeCoordinateNameCache scopeCoordinateNameCache;
