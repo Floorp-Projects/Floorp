@@ -145,7 +145,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp 
                           JS::Value *statep, jsid *idp);
 
 static bool
-NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, unsigned flags,
+NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                         JS::MutableHandle<JSObject*> objp);
 
 static bool
@@ -1522,7 +1522,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp 
 }
 
 static bool
-NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, unsigned flags,
+NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                         JS::MutableHandle<JSObject*> objp)
 {
   NPObject *npobj = GetNPObject(cx, obj);

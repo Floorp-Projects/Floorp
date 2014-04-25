@@ -1062,7 +1062,7 @@ BEGIN_WORKERS_NAMESPACE
 // Entry point for main thread non-window globals.
 bool
 ResolveWorkerClasses(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
-                     unsigned aFlags, JS::MutableHandle<JSObject*> aObjp)
+                     JS::MutableHandle<JSObject*> aObjp)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());

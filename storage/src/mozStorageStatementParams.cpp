@@ -157,7 +157,6 @@ StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
                             JSContext *aCtx,
                             JSObject *aScopeObj,
                             jsid aId,
-                            uint32_t aFlags,
                             JSObject **_objp,
                             bool *_retval)
 {

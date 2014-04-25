@@ -172,7 +172,7 @@ enum WorkerPreference
 // All of these are implemented in RuntimeService.cpp
 bool
 ResolveWorkerClasses(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
-                     unsigned aFlags, JS::MutableHandle<JSObject*> aObjp);
+                     JS::MutableHandle<JSObject*> aObjp);
 
 void
 CancelWorkersForWindow(nsPIDOMWindow* aWindow);

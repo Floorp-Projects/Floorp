@@ -6763,7 +6763,6 @@ class CGNewResolveHook(CGAbstractBindingMethod):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('unsigned', 'flags'),
                 Argument('JS::MutableHandle<JSObject*>', 'objp')]
         # Our "self" is actually the "obj" argument in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
@@ -6796,7 +6795,7 @@ class CGNewResolveHook(CGAbstractBindingMethod):
         if self.descriptor.interface.getExtendedAttribute("Global"):
             # Resolve standard classes
             prefix = indent(dedent("""
-                if (!ResolveGlobal(cx, obj, id, flags, objp)) {
+                if (!ResolveGlobal(cx, obj, id, objp)) {
                   return false;
                 }
                 if (objp) {
@@ -8640,7 +8639,6 @@ class CGResolveOwnProperty(CGAbstractStaticMethod):
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc'),
-                Argument('unsigned', 'flags'),
                 ]
         CGAbstractStaticMethod.__init__(self, descriptor, "ResolveOwnProperty",
                                         "bool", args)
@@ -8660,8 +8658,7 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
                 Argument('JS::Handle<JSObject*>', 'wrapper'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc'),
-                Argument('unsigned', 'flags')]
+                Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc')]
         CGAbstractBindingMethod.__init__(self, descriptor,
                                          "ResolveOwnPropertyViaNewresolve",
                                          args, getThisObj="",
