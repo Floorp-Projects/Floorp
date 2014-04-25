@@ -121,7 +121,7 @@ protected:
   virtual bool DeallocPTextureParent(PTextureParent* actor) MOZ_OVERRIDE;
 
   bool Attach(ShadowLayerParent* aLayerParent,
-              CompositableParent* aCompositable,
+              CompositableHost* aCompositable,
               bool aIsAsyncVideo);
 
   void AddIPDLReference() {
