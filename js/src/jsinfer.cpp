@@ -448,6 +448,104 @@ ConstraintTypeSet::addConstraint(JSContext *cx, TypeConstraint *constraint, bool
 }
 
 void
+TypeSet::clearObjects()
+{
+    setBaseObjectCount(0);
+    objectSet = nullptr;
+}
+
+void
+TypeSet::addType(Type type, LifoAlloc *alloc)
+{
+    if (unknown())
+        return;
+
+    if (type.isUnknown()) {
+        flags |= TYPE_FLAG_BASE_MASK;
+        clearObjects();
+        JS_ASSERT(unknown());
+        return;
+    }
+
+    if (type.isPrimitive()) {
+        TypeFlags flag = PrimitiveTypeFlag(type.primitive());
+        if (flags & flag)
+            return;
+
+        /* If we add float to a type set it is also considered to contain int. */
+        if (flag == TYPE_FLAG_DOUBLE)
+            flag |= TYPE_FLAG_INT32;
+
+        flags |= flag;
+        return;
+    }
+
+    if (flags & TYPE_FLAG_ANYOBJECT)
+        return;
+    if (type.isAnyObject())
+        goto unknownObject;
+
+    {
+        uint32_t objectCount = baseObjectCount();
+        TypeObjectKey *object = type.objectKey();
+        TypeObjectKey **pentry = HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
+                                     (*alloc, objectSet, objectCount, object);
+        if (!pentry)
+            goto unknownObject;
+        if (*pentry)
+            return;
+        *pentry = object;
+
+        setBaseObjectCount(objectCount);
+
+        if (objectCount == TYPE_FLAG_OBJECT_COUNT_LIMIT)
+            goto unknownObject;
+    }
+
+    if (type.isTypeObject()) {
+        TypeObject *nobject = type.typeObject();
+        JS_ASSERT(!nobject->singleton());
+        if (nobject->unknownProperties())
+            goto unknownObject;
+    }
+
+    if (false) {
+    unknownObject:
+        flags |= TYPE_FLAG_ANYOBJECT;
+        clearObjects();
+    }
+}
+
+void
+ConstraintTypeSet::addType(ExclusiveContext *cxArg, Type type)
+{
+    JS_ASSERT(cxArg->compartment()->activeAnalysis);
+
+    if (hasType(type))
+        return;
+
+    TypeSet::addType(type, &cxArg->typeLifoAlloc());
+
+    if (type.isObjectUnchecked() && unknownObject())
+        type = Type::AnyObjectType();
+
+    InferSpew(ISpewOps, "addType: %sT%p%s %s",
+              InferSpewColor(this), this, InferSpewColorReset(),
+              TypeString(type));
+
+    /* Propagate the type to all constraints. */
+    if (JSContext *cx = cxArg->maybeJSContext()) {
+        TypeConstraint *constraint = constraintList;
+        while (constraint) {
+            constraint->newType(cx, this, type);
+            constraint = constraint->next;
+        }
+    } else {
+        JS_ASSERT(!constraintList);
+    }
+}
+
+void
 TypeSet::print()
 {
     if (flags & TYPE_FLAG_NON_DATA_PROPERTY)
@@ -1075,7 +1173,7 @@ types::FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode execu
     return true;
 }
 
-static void
+MOZ_NEVER_INLINE void
 CheckDefinitePropertiesTypeSet(JSContext *cx, TemporaryTypeSet *frozen, StackTypeSet *actual)
 {
     // The definite properties analysis happens on the main thread, so no new
@@ -1122,6 +1220,9 @@ types::FinishDefinitePropertiesAnalysis(JSContext *cx, CompilerConstraintList *c
         const CompilerConstraintList::FrozenScript &entry = constraints->frozenScript(i);
         JSScript *script = entry.script;
         JS_ASSERT(script->types);
+
+        if (!script->types)
+            MOZ_CRASH();
 
         CheckDefinitePropertiesTypeSet(cx, entry.thisTypes, TypeScript::ThisTypes(script));
 
@@ -1922,81 +2023,6 @@ TypeCompartment::newTypeObject(ExclusiveContext *cx, const Class *clasp, Handle<
     return object;
 }
 
-static inline jsbytecode *
-PreviousOpcode(HandleScript script, jsbytecode *pc)
-{
-    ScriptAnalysis *analysis = script->analysis();
-    JS_ASSERT(analysis->isReachable(pc));
-
-    if (pc == script->code())
-        return nullptr;
-
-    for (pc--;; pc--) {
-        if (analysis->isReachable(pc))
-            break;
-    }
-
-    return pc;
-}
-
-/*
- * If pc is an array initializer within an outer multidimensional array
- * initializer, find the opcode of the previous newarray. nullptr otherwise.
- */
-static inline jsbytecode *
-FindPreviousInnerInitializer(HandleScript script, jsbytecode *initpc)
-{
-    if (!script->hasAnalysis())
-        return nullptr;
-
-    if (!script->analysis()->isReachable(initpc))
-        return nullptr;
-
-    /*
-     * Pattern match the following bytecode, which will appear between
-     * adjacent initializer elements:
-     *
-     * endinit (for previous initializer)
-     * initelem_array (for previous initializer)
-     * newarray
-     */
-
-    if (*initpc != JSOP_NEWARRAY)
-        return nullptr;
-
-    jsbytecode *last = PreviousOpcode(script, initpc);
-    if (!last || *last != JSOP_INITELEM_ARRAY)
-        return nullptr;
-
-    last = PreviousOpcode(script, last);
-    if (!last || *last != JSOP_ENDINIT)
-        return nullptr;
-
-    /*
-     * Find the start of the previous initializer. Keep track of initializer
-     * depth to skip over inner initializers within the previous one (e.g. for
-     * arrays with three or more dimensions).
-     */
-    size_t initDepth = 0;
-    jsbytecode *previnit;
-    for (previnit = last; previnit; previnit = PreviousOpcode(script, previnit)) {
-        if (*previnit == JSOP_ENDINIT)
-            initDepth++;
-        if (*previnit == JSOP_NEWINIT ||
-            *previnit == JSOP_NEWARRAY ||
-            *previnit == JSOP_NEWOBJECT)
-        {
-            if (--initDepth == 0)
-                break;
-        }
-    }
-
-    if (!previnit || *previnit != JSOP_NEWARRAY)
-        return nullptr;
-
-    return previnit;
-}
-
 TypeObject *
 TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey key)
 {
@@ -2015,24 +2041,8 @@ TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
 
     TypeObject *res = nullptr;
 
-    /*
-     * If this is an array initializer nested in another array initializer,
-     * try to reuse the type objects from earlier elements to avoid
-     * distinguishing elements of the outer array unnecessarily.
-     */
     jsbytecode *pc = key.script->offsetToPC(key.offset);
     RootedScript keyScript(cx, key.script);
-    jsbytecode *prev = FindPreviousInnerInitializer(keyScript, pc);
-    if (prev) {
-        AllocationSiteKey nkey;
-        nkey.script = key.script;
-        nkey.offset = key.script->pcToOffset(prev);
-        nkey.kind = JSProto_Array;
-
-        AllocationSiteTable::Ptr p = cx->compartment()->types.allocationSiteTable->lookup(nkey);
-        if (p)
-            res = p->value();
-    }
 
     if (!res) {
         RootedObject proto(cx);
@@ -3489,6 +3499,21 @@ IsAboutToBeFinalized(TypeObjectKey *key)
 }
 
 void
+types::FillBytecodeTypeMap(JSScript *script, uint32_t *bytecodeMap)
+{
+    uint32_t added = 0;
+    for (jsbytecode *pc = script->code(); pc < script->codeEnd(); pc += GetBytecodeLength(pc)) {
+        JSOp op = JSOp(*pc);
+        if (js_CodeSpec[op].format & JOF_TYPESET) {
+            bytecodeMap[added++] = script->pcToOffset(pc);
+            if (added == script->nTypeSets())
+                break;
+        }
+    }
+    JS_ASSERT(added == script->nTypeSets());
+}
+
+void
 types::TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Value &rval)
 {
     /* Allow the non-TYPESET scenario to simplify stubs used in compound opcodes. */
@@ -3608,28 +3633,6 @@ JSScript::makeTypes(JSContext *cx)
                   i, id());
     }
 #endif
-
-    return analyzedArgsUsage() || ensureRanAnalysis(cx);
-}
-
-bool
-JSScript::makeAnalysis(JSContext *cx)
-{
-    JS_ASSERT(types && !types->analysis);
-
-    AutoEnterAnalysis enter(cx);
-
-    types->analysis = cx->typeLifoAlloc().new_<ScriptAnalysis>(this);
-
-    if (!types->analysis)
-        return false;
-
-    RootedScript self(cx, this);
-
-    if (!self->types->analysis->analyzeBytecode(cx)) {
-        self->types->analysis = nullptr;
-        return false;
-    }
 
     return true;
 }
@@ -4359,6 +4362,8 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
 
     /* Sweep and find compressed indexes for each compiler output. */
     size_t newCompilerOutputCount = 0;
+
+#ifdef JS_ION
     if (compilerOutputs) {
         for (size_t i = 0; i < compilerOutputs->length(); i++) {
             CompilerOutput &output = (*compilerOutputs)[i];
@@ -4373,6 +4378,7 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
             }
         }
     }
+#endif
 
     {
         gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_DISCARD_TI);
@@ -4384,11 +4390,15 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
 
                 if (releaseTypes) {
                     if (script->hasParallelIonScript()) {
+#ifdef JS_ION
                         // It's possible that we preserved the parallel
                         // IonScript. The heuristic for their preservation is
                         // independent of general JIT code preservation.
                         MOZ_ASSERT(jit::ShouldPreserveParallelJITCode(rt, script));
                         script->parallelIonScript()->recompileInfoRef().shouldSweep(*this);
+#else
+                        MOZ_CRASH();
+#endif
                     } else {
                         script->types->destroy();
                         script->types = nullptr;
@@ -4438,14 +4448,6 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
         }
         JS_ASSERT(sweepIndex == newCompilerOutputCount);
         JS_ALWAYS_TRUE(compilerOutputs->resize(newCompilerOutputCount));
-    }
-
-    {
-        gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_CLEAR_SCRIPT_ANALYSIS);
-        for (CellIterUnderGC i(zone(), FINALIZE_SCRIPT); !i.done(); i.next()) {
-            JSScript *script = i.get<JSScript>();
-            script->clearAnalysis();
-        }
     }
 
     {
@@ -4577,4 +4579,3 @@ TypeDescr &
 js::types::TypeTypedObject::descr() {
     return descr_->as<TypeDescr>();
 }
-
