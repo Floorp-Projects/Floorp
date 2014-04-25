@@ -11,5 +11,7 @@ CPP_UNIT_TESTS += [
 if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['NOMINMAX'] = True
 
+MOCHITEST_MANIFESTS += ['mochitest.ini']
+
 FAIL_ON_WARNINGS = True
 
