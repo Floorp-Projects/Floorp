@@ -11,6 +11,7 @@ EXTRA_JS_MODULES += [
     'BrowserUITelemetry.jsm',
     'ContentClick.jsm',
     'ContentLinkHandler.jsm',
+    'ContentSearch.jsm',
     'CustomizationTabPreloader.jsm',
     'Feeds.jsm',
     'NetworkPrioritizer.jsm',
