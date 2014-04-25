@@ -75,7 +75,7 @@ inline int32_t CompareIntegers(uint32_t a, uint32_t b)
 using namespace mozilla;
 using namespace mozilla::places;
 
-NS_IMPL_CYCLE_COLLECTION_1(nsNavHistoryResultNode, mParent)
+NS_IMPL_CYCLE_COLLECTION(nsNavHistoryResultNode, mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryResultNode)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINavHistoryResultNode)
@@ -308,9 +308,9 @@ nsNavHistoryResultNode::GetGeneratingOptions()
   return nullptr;
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(nsNavHistoryContainerResultNode, nsNavHistoryResultNode,
-                                     mResult,
-                                     mChildren)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsNavHistoryContainerResultNode, nsNavHistoryResultNode,
+                                   mResult,
+                                   mChildren)
 
 NS_IMPL_ADDREF_INHERITED(nsNavHistoryContainerResultNode, nsNavHistoryResultNode)
 NS_IMPL_RELEASE_INHERITED(nsNavHistoryContainerResultNode, nsNavHistoryResultNode)

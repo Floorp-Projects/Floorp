@@ -41,7 +41,7 @@ TreeWalker::~TreeWalker()
  * nsISupports and cycle collection stuff
  */
 
-NS_IMPL_CYCLE_COLLECTION_3(TreeWalker, mFilter, mCurrentNode, mRoot)
+NS_IMPL_CYCLE_COLLECTION(TreeWalker, mFilter, mCurrentNode, mRoot)
 
 // QueryInterface implementation for TreeWalker
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TreeWalker)

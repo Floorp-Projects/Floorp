@@ -14,7 +14,7 @@
 #include "txURIUtils.h"
 #include "txXPathTreeWalker.h"
 
-NS_IMPL_CYCLE_COLLECTION_1(nsXPathExpression, mDocument)
+NS_IMPL_CYCLE_COLLECTION(nsXPathExpression, mDocument)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXPathExpression)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXPathExpression)

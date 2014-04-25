@@ -717,7 +717,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(AllResolveHandler)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AllResolveHandler)
 NS_INTERFACE_MAP_END_INHERITING(PromiseNativeHandler)
 
-NS_IMPL_CYCLE_COLLECTION_1(AllResolveHandler, mCountdownHolder)
+NS_IMPL_CYCLE_COLLECTION(AllResolveHandler, mCountdownHolder)
 
 /* static */ already_AddRefed<Promise>
 Promise::All(const GlobalObject& aGlobal, JSContext* aCx,

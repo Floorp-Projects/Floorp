@@ -9,7 +9,7 @@
 // XXXndeakin for some reason, making this class have classinfo breaks trees.
 //#include "nsIDOMClassInfo.h"
 
-NS_IMPL_CYCLE_COLLECTION_1(nsXULTemplateResultRDF, mQuery)
+NS_IMPL_CYCLE_COLLECTION(nsXULTemplateResultRDF, mQuery)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULTemplateResultRDF)
   NS_INTERFACE_MAP_ENTRY(nsIXULTemplateResult)

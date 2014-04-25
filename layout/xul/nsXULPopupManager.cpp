@@ -973,7 +973,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransitionEnder)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_1(TransitionEnder, mContent);
+NS_IMPL_CYCLE_COLLECTION(TransitionEnder, mContent);
 
 void
 nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,

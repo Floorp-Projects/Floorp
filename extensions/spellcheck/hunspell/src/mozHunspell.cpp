@@ -91,10 +91,10 @@ NS_INTERFACE_MAP_BEGIN(mozHunspell)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(mozHunspell)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_3(mozHunspell,
-                           mPersonalDictionary,
-                           mEncoder,
-                           mDecoder)
+NS_IMPL_CYCLE_COLLECTION(mozHunspell,
+                         mPersonalDictionary,
+                         mEncoder,
+                         mDecoder)
 
 template<> mozilla::Atomic<size_t> mozilla::CountingAllocatorBase<HunspellAllocator>::sAmount(0);
 

@@ -7,7 +7,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsDOMString.h"
 
-NS_IMPL_CYCLE_COLLECTION_1(nsXPathNSResolver, mNode)
+NS_IMPL_CYCLE_COLLECTION(nsXPathNSResolver, mNode)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXPathNSResolver)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXPathNSResolver)

@@ -45,7 +45,7 @@ NS_INTERFACE_MAP_BEGIN(mozPersonalDictionary)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(mozPersonalDictionary)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_1(mozPersonalDictionary, mEncoder)
+NS_IMPL_CYCLE_COLLECTION(mozPersonalDictionary, mEncoder)
 
 mozPersonalDictionary::mozPersonalDictionary()
  : mDirty(false)

@@ -96,8 +96,8 @@ FileRequest::NotifyHelperCompleted(FileHelper* aFileHelper)
   return NS_OK;
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(FileRequest, DOMRequest,
-                                     mLockedFile)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(FileRequest, DOMRequest,
+                                   mLockedFile)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileRequest)
 NS_INTERFACE_MAP_END_INHERITING(DOMRequest)

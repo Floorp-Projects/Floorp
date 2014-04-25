@@ -9,7 +9,7 @@
 #include "nsXULTemplateQueryProcessorRDF.h"
 #include "nsRDFQuery.h"
 
-NS_IMPL_CYCLE_COLLECTION_1(nsRDFQuery, mQueryNode)
+NS_IMPL_CYCLE_COLLECTION(nsRDFQuery, mQueryNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsRDFQuery)
   NS_INTERFACE_MAP_ENTRY(nsITemplateRDFQuery)

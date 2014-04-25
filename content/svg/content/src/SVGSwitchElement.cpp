@@ -26,8 +26,8 @@ SVGSwitchElement::WrapNode(JSContext *aCx)
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(SVGSwitchElement, SVGSwitchElementBase,
-                                     mActiveChild)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(SVGSwitchElement, SVGSwitchElementBase,
+                                   mActiveChild)
 
 NS_IMPL_ADDREF_INHERITED(SVGSwitchElement,SVGSwitchElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGSwitchElement,SVGSwitchElementBase)

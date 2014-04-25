@@ -18,8 +18,8 @@ ChangeAttributeTxn::ChangeAttributeTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(ChangeAttributeTxn, EditTxn,
-                                     mElement)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeAttributeTxn, EditTxn,
+                                   mElement)
 
 NS_IMPL_ADDREF_INHERITED(ChangeAttributeTxn, EditTxn)
 NS_IMPL_RELEASE_INHERITED(ChangeAttributeTxn, EditTxn)

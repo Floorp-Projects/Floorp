@@ -14,10 +14,10 @@ namespace dom {
  * DeviceMotionEvent
  *****************************************************************************/
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_3(DeviceMotionEvent, Event,
-                                     mAcceleration,
-                                     mAccelerationIncludingGravity,
-                                     mRotationRate)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DeviceMotionEvent, Event,
+                                   mAcceleration,
+                                   mAccelerationIncludingGravity,
+                                   mRotationRate)
 
 NS_IMPL_ADDREF_INHERITED(DeviceMotionEvent, Event)
 NS_IMPL_RELEASE_INHERITED(DeviceMotionEvent, Event)

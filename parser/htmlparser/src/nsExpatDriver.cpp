@@ -338,7 +338,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsExpatDriver)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsExpatDriver)
 
-NS_IMPL_CYCLE_COLLECTION_2(nsExpatDriver, mSink, mExtendedSink)
+NS_IMPL_CYCLE_COLLECTION(nsExpatDriver, mSink, mExtendedSink)
 
 nsExpatDriver::nsExpatDriver()
   : mExpatParser(nullptr),

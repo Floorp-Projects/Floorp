@@ -521,7 +521,7 @@ private:
   nsRefPtr<EventSource> mEventSource;
 };
 
-NS_IMPL_CYCLE_COLLECTION_1(AsyncVerifyRedirectCallbackFwr, mEventSource)
+NS_IMPL_CYCLE_COLLECTION(AsyncVerifyRedirectCallbackFwr, mEventSource)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AsyncVerifyRedirectCallbackFwr)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

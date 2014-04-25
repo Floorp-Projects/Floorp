@@ -31,9 +31,9 @@ HTMLContentElement::~HTMLContentElement()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(HTMLContentElement,
-                                     nsGenericHTMLElement,
-                                     mMatchedNodes)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLContentElement,
+                                   nsGenericHTMLElement,
+                                   mMatchedNodes)
 
 NS_IMPL_ADDREF_INHERITED(HTMLContentElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLContentElement, Element)
@@ -242,7 +242,7 @@ HTMLContentElement::GetDistributedNodes()
   return list.forget();
 }
 
-NS_IMPL_CYCLE_COLLECTION_2(DistributedContentList, mParent, mDistributedNodes)
+NS_IMPL_CYCLE_COLLECTION(DistributedContentList, mParent, mDistributedNodes)
 
 NS_INTERFACE_TABLE_HEAD(DistributedContentList)
   NS_INTERFACE_TABLE1(DistributedContentList, nsINodeList)

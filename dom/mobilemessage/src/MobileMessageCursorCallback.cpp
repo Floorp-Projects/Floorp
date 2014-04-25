@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 namespace mobilemessage {
 
-NS_IMPL_CYCLE_COLLECTION_1(MobileMessageCursorCallback, mDOMCursor)
+NS_IMPL_CYCLE_COLLECTION(MobileMessageCursorCallback, mDOMCursor)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MobileMessageCursorCallback)
   NS_INTERFACE_MAP_ENTRY(nsIMobileMessageCursorCallback)

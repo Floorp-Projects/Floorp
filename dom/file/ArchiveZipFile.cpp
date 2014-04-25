@@ -396,8 +396,8 @@ ArchiveZipFile::CreateSlice(uint64_t aStart,
   return t.forget();
 }
 
-NS_IMPL_CYCLE_COLLECTION_1(ArchiveZipFile,
-                           mArchiveReader)
+NS_IMPL_CYCLE_COLLECTION(ArchiveZipFile,
+                         mArchiveReader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ArchiveZipFile)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFile)

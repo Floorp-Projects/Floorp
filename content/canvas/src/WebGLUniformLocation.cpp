@@ -27,7 +27,7 @@ WebGLUniformLocation::WebGLUniformLocation(WebGLContext *context, WebGLProgram *
     mElementSize = info.ElementSize();
 }
 
-NS_IMPL_CYCLE_COLLECTION_1(WebGLUniformLocation, mProgram)
+NS_IMPL_CYCLE_COLLECTION(WebGLUniformLocation, mProgram)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLUniformLocation, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLUniformLocation, Release)

@@ -48,7 +48,7 @@ nsAccessiblePivot::nsAccessiblePivot(Accessible* aRoot) :
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_3(nsAccessiblePivot, mRoot, mPosition, mObservers)
+NS_IMPL_CYCLE_COLLECTION(nsAccessiblePivot, mRoot, mPosition, mObservers)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsAccessiblePivot)
   NS_INTERFACE_MAP_ENTRY(nsIAccessiblePivot)

@@ -34,9 +34,9 @@ namespace mozilla {
 
 using namespace widget;
 
-NS_IMPL_CYCLE_COLLECTION_5(IMEContentObserver,
-                           mWidget, mSelection,
-                           mRootContent, mEditableNode, mDocShell)
+NS_IMPL_CYCLE_COLLECTION(IMEContentObserver,
+                         mWidget, mSelection,
+                         mRootContent, mEditableNode, mDocShell)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IMEContentObserver)
  NS_INTERFACE_MAP_ENTRY(nsISelectionListener)

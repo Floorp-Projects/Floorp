@@ -20,8 +20,8 @@ InsertTextTxn::InsertTextTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(InsertTextTxn, EditTxn,
-                                     mElement)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertTextTxn, EditTxn,
+                                   mElement)
 
 NS_IMPL_ADDREF_INHERITED(InsertTextTxn, EditTxn)
 NS_IMPL_RELEASE_INHERITED(InsertTextTxn, EditTxn)

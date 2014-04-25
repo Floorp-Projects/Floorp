@@ -22,9 +22,9 @@ NS_INTERFACE_MAP_BEGIN(mozSpellChecker)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(mozSpellChecker)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_2(mozSpellChecker,
-                           mTsDoc,
-                           mPersonalDictionary)
+NS_IMPL_CYCLE_COLLECTION(mozSpellChecker,
+                         mTsDoc,
+                         mPersonalDictionary)
 
 mozSpellChecker::mozSpellChecker()
 {

@@ -14,10 +14,10 @@ using namespace mozilla::a11y;
 
 // nsISupports and cycle collection
 
-NS_IMPL_CYCLE_COLLECTION_3(xpcAccessibleTextRange,
-                           mRange.mRoot,
-                           mRange.mStartContainer,
-                           mRange.mEndContainer)
+NS_IMPL_CYCLE_COLLECTION(xpcAccessibleTextRange,
+                         mRange.mRoot,
+                         mRange.mStartContainer,
+                         mRange.mEndContainer)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(xpcAccessibleTextRange)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleTextRange)

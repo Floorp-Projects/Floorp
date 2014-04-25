@@ -180,11 +180,11 @@ TelephonyCall::ChangeGroup(TelephonyCallGroup* aGroup)
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_3(TelephonyCall,
-                                     DOMEventTargetHelper,
-                                     mTelephony,
-                                     mError,
-                                     mGroup);
+NS_IMPL_CYCLE_COLLECTION_INHERITED(TelephonyCall,
+                                   DOMEventTargetHelper,
+                                   mTelephony,
+                                   mError,
+                                   mGroup);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TelephonyCall)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)

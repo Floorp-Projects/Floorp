@@ -146,8 +146,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFindContentIterator)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFindContentIterator)
 
-NS_IMPL_CYCLE_COLLECTION_6(nsFindContentIterator, mOuterIterator, mInnerIterator,
-                           mStartOuterContent, mEndOuterContent, mEndNode, mStartNode)
+NS_IMPL_CYCLE_COLLECTION(nsFindContentIterator, mOuterIterator, mInnerIterator,
+                         mStartOuterContent, mEndOuterContent, mEndNode, mStartNode)
 
 
 nsresult
@@ -455,7 +455,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFind)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFind)
 
-  NS_IMPL_CYCLE_COLLECTION_3(nsFind, mLastBlockParent, mIterNode, mIterator)
+  NS_IMPL_CYCLE_COLLECTION(nsFind, mLastBlockParent, mIterNode, mIterator)
 
 nsFind::nsFind()
   : mFindBackward(false)

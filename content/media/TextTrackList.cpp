@@ -13,10 +13,10 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(TextTrackList,
-                                     DOMEventTargetHelper,
-                                     mTextTracks,
-                                     mTextTrackManager)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(TextTrackList,
+                                   DOMEventTargetHelper,
+                                   mTextTracks,
+                                   mTextTrackManager)
 
 NS_IMPL_ADDREF_INHERITED(TextTrackList, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TextTrackList, DOMEventTargetHelper)

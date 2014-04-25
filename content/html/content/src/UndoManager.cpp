@@ -119,7 +119,7 @@ protected:
   nsString mUndoValue;
 };
 
-NS_IMPL_CYCLE_COLLECTION_2(UndoAttrChanged, mElement, mAttrAtom)
+NS_IMPL_CYCLE_COLLECTION(UndoAttrChanged, mElement, mAttrAtom)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UndoAttrChanged)
   NS_INTERFACE_MAP_ENTRY(nsITransaction)
@@ -225,7 +225,7 @@ protected:
   nsString mUndoValue;
 };
 
-NS_IMPL_CYCLE_COLLECTION_1(UndoTextChanged, mContent)
+NS_IMPL_CYCLE_COLLECTION(UndoTextChanged, mContent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UndoTextChanged)
   NS_INTERFACE_MAP_ENTRY(nsITransaction)
@@ -334,7 +334,7 @@ protected:
   nsCOMArray<nsIContent> mChildren;
 };
 
-NS_IMPL_CYCLE_COLLECTION_2(UndoContentAppend, mContent, mChildren)
+NS_IMPL_CYCLE_COLLECTION(UndoContentAppend, mContent, mChildren)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UndoContentAppend)
   NS_INTERFACE_MAP_ENTRY(nsITransaction)
@@ -405,7 +405,7 @@ protected:
   nsCOMPtr<nsIContent> mNextNode;
 };
 
-NS_IMPL_CYCLE_COLLECTION_3(UndoContentInsert, mContent, mChild, mNextNode)
+NS_IMPL_CYCLE_COLLECTION(UndoContentInsert, mContent, mChild, mNextNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UndoContentInsert)
   NS_INTERFACE_MAP_ENTRY(nsITransaction)
@@ -493,7 +493,7 @@ protected:
   nsCOMPtr<nsIContent> mNextNode;
 };
 
-NS_IMPL_CYCLE_COLLECTION_3(UndoContentRemove, mContent, mChild, mNextNode)
+NS_IMPL_CYCLE_COLLECTION(UndoContentRemove, mContent, mChild, mNextNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UndoContentRemove)
   NS_INTERFACE_MAP_ENTRY(nsITransaction)
@@ -741,7 +741,7 @@ protected:
   uint32_t mFlags;
 };
 
-NS_IMPL_CYCLE_COLLECTION_1(FunctionCallTxn, mTransaction)
+NS_IMPL_CYCLE_COLLECTION(FunctionCallTxn, mTransaction)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FunctionCallTxn)
   NS_INTERFACE_MAP_ENTRY(nsITransaction)

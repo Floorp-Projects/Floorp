@@ -29,7 +29,7 @@
 #include "nsStyleSet.h"
 #include "nsIScriptSecurityManager.h"
 
-NS_IMPL_CYCLE_COLLECTION_1(nsXBLResourceLoader, mBoundElements)
+NS_IMPL_CYCLE_COLLECTION(nsXBLResourceLoader, mBoundElements)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXBLResourceLoader)
   NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)

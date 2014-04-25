@@ -262,8 +262,8 @@ LockedFile::~LockedFile()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(LockedFile, DOMEventTargetHelper,
-                                     mFileHandle)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(LockedFile, DOMEventTargetHelper,
+                                   mFileHandle)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(LockedFile)
   NS_INTERFACE_MAP_ENTRY(nsIRunnable)

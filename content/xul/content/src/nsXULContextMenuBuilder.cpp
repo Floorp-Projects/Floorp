@@ -24,8 +24,8 @@ nsXULContextMenuBuilder::~nsXULContextMenuBuilder()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_4(nsXULContextMenuBuilder, mFragment, mDocument,
-                           mCurrentNode, mElements)
+NS_IMPL_CYCLE_COLLECTION(nsXULContextMenuBuilder, mFragment, mDocument,
+                         mCurrentNode, mElements)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULContextMenuBuilder)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULContextMenuBuilder)

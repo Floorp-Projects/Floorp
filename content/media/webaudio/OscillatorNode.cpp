@@ -14,8 +14,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_3(OscillatorNode, AudioNode,
-                                     mPeriodicWave, mFrequency, mDetune)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(OscillatorNode, AudioNode,
+                                   mPeriodicWave, mFrequency, mDetune)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(OscillatorNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)

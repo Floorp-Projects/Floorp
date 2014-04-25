@@ -24,9 +24,9 @@ SplitElementTxn::SplitElementTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(SplitElementTxn, EditTxn,
-                                     mParent,
-                                     mNewLeftNode)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(SplitElementTxn, EditTxn,
+                                   mParent,
+                                   mNewLeftNode)
 
 NS_IMPL_ADDREF_INHERITED(SplitElementTxn, EditTxn)
 NS_IMPL_RELEASE_INHERITED(SplitElementTxn, EditTxn)

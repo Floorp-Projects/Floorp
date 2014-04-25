@@ -28,7 +28,7 @@ using namespace dom;
  * mozilla::EventListenerInfo
  ******************************************************************************/
 
-NS_IMPL_CYCLE_COLLECTION_1(EventListenerInfo, mListener)
+NS_IMPL_CYCLE_COLLECTION(EventListenerInfo, mListener)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EventListenerInfo)
   NS_INTERFACE_MAP_ENTRY(nsIEventListenerInfo)

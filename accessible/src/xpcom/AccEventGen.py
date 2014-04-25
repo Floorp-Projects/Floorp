@@ -176,7 +176,7 @@ def write_cpp(eventname, iface, fd):
     classname = "xpcAcc%s" % eventname
     attributes = allAttributes(iface)
     ccattributes = filter(lambda m: m.realtype.nativeType('in').endswith('*'), attributes)
-    fd.write("NS_IMPL_CYCLE_COLLECTION_%u(%s" % (len(ccattributes), classname))
+    fd.write("NS_IMPL_CYCLE_COLLECTION(%s" % classname)
     for c in ccattributes:
         fd.write(", m%s" % firstCap(c.name))
     fd.write(")\n\n");

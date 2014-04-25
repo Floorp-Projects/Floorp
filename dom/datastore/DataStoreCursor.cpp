@@ -16,7 +16,7 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DataStoreCursor, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DataStoreCursor, Release)
 
-NS_IMPL_CYCLE_COLLECTION_1(DataStoreCursor, mCursor)
+NS_IMPL_CYCLE_COLLECTION(DataStoreCursor, mCursor)
 
 already_AddRefed<DataStoreCursor>
 DataStoreCursor::Constructor(GlobalObject& aGlobal, ErrorResult& aRv)

@@ -14,8 +14,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(GainNode, AudioNode,
-                                     mGain)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(GainNode, AudioNode,
+                                   mGain)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(GainNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)

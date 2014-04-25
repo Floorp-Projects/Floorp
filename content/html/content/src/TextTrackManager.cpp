@@ -75,8 +75,8 @@ CompareTextTracks::LessThan(TextTrack* aOne, TextTrack* aTwo) const
   return true;
 }
 
-NS_IMPL_CYCLE_COLLECTION_4(TextTrackManager, mMediaElement, mTextTracks,
-                           mPendingTextTracks, mNewCues)
+NS_IMPL_CYCLE_COLLECTION(TextTrackManager, mMediaElement, mTextTracks,
+                         mPendingTextTracks, mNewCues)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TextTrackManager)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
