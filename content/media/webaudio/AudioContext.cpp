@@ -77,6 +77,7 @@ static float GetSampleRateForAudioContext(bool aIsOffline, float aSampleRate)
 
 AudioContext::AudioContext(nsPIDOMWindow* aWindow,
                            bool aIsOffline,
+                           AudioChannel aChannel,
                            uint32_t aNumberOfChannels,
                            uint32_t aLength,
                            float aSampleRate)
@@ -92,8 +93,8 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
 
   // Note: AudioDestinationNode needs an AudioContext that must already be
   // bound to the window.
-  mDestination = new AudioDestinationNode(this, aIsOffline, aNumberOfChannels,
-                                          aLength, aSampleRate);
+  mDestination = new AudioDestinationNode(this, aIsOffline, aChannel,
+                                          aNumberOfChannels, aLength, aSampleRate);
   // We skip calling SetIsOnlyNodeForContext during mDestination's constructor,
   // because we can only call SetIsOnlyNodeForContext after mDestination has
   // been set up.
@@ -139,6 +140,24 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
 
 /* static */ already_AddRefed<AudioContext>
 AudioContext::Constructor(const GlobalObject& aGlobal,
+                          AudioChannel aChannel,
+                          ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!window) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<AudioContext> object = new AudioContext(window, false, aChannel);
+
+  RegisterWeakMemoryReporter(object);
+
+  return object.forget();
+}
+
+/* static */ already_AddRefed<AudioContext>
+AudioContext::Constructor(const GlobalObject& aGlobal,
                           uint32_t aNumberOfChannels,
                           uint32_t aLength,
                           float aSampleRate,
@@ -162,6 +181,7 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
 
   nsRefPtr<AudioContext> object = new AudioContext(window,
                                                    true,
+                                                   AudioChannel::Normal,
                                                    aNumberOfChannels,
                                                    aLength,
                                                    aSampleRate);
