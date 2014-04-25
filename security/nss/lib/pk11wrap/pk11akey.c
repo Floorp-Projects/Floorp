@@ -1898,7 +1898,7 @@ PK11_ExportEncryptedPrivateKeyInfo(
 }
 
 SECItem*
-PK11_DEREncodePublicKey(SECKEYPublicKey *pubk)
+PK11_DEREncodePublicKey(const SECKEYPublicKey *pubk)
 {
     return SECKEY_EncodeDERSubjectPublicKeyInfo(pubk);
 }

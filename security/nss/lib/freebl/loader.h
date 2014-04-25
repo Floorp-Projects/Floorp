@@ -10,7 +10,7 @@
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0310
+#define FREEBL_VERSION 0x0311
 
 struct FREEBLVectorStr {
 
@@ -697,6 +697,15 @@ struct FREEBLVectorStr {
                                       unsigned int sigLen);
 
   /* Version 3.016 came to here */
+
+ SECStatus (* p_EC_FillParams)(PLArenaPool *arena,
+                               const SECItem *encodedParams, ECParams *params);
+ SECStatus (* p_EC_DecodeParams)(const SECItem *encodedParams,
+                               ECParams **ecparams);
+ SECStatus (* p_EC_CopyParams)(PLArenaPool *arena, ECParams *dstParams,
+                               const ECParams *srcParams);
+
+  /* Version 3.017 came to here */
 
   /* Add new function pointers at the end of this struct and bump
    * FREEBL_VERSION at the beginning of this file. */

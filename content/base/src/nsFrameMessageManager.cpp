@@ -1493,6 +1493,8 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
   nsCOMPtr<nsIInputStream> input;
   channel->Open(getter_AddRefs(input));
   nsString dataString;
+  jschar* dataStringBuf = nullptr;
+  size_t dataStringLength = 0;
   uint64_t avail64 = 0;
   if (input && NS_SUCCEEDED(input->Available(&avail64)) && avail64) {
     if (avail64 > UINT32_MAX) {
@@ -1504,10 +1506,14 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
       return;
     }
     nsScriptLoader::ConvertToUTF16(channel, (uint8_t*)buffer.get(), avail,
-                                   EmptyString(), nullptr, dataString);
+                                   EmptyString(), nullptr,
+                                   dataStringBuf, dataStringLength);
   }
 
-  if (!dataString.IsEmpty()) {
+  JS::SourceBufferHolder srcBuf(dataStringBuf, dataStringLength,
+                                JS::SourceBufferHolder::GiveOwnership);
+
+  if (dataStringBuf && dataStringLength > 0) {
     AutoSafeJSContext cx;
     JS::Rooted<JSObject*> global(cx, mGlobal->GetJSObject());
     if (global) {
@@ -1518,14 +1524,12 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
       JS::Rooted<JSObject*> funobj(cx);
       if (aRunInGlobalScope) {
         options.setNoScriptRval(true);
-        script = JS::Compile(cx, JS::NullPtr(), options, dataString.get(),
-                             dataString.Length());
+        script = JS::Compile(cx, JS::NullPtr(), options, srcBuf);
       } else {
         JS::Rooted<JSFunction *> fun(cx);
         fun = JS::CompileFunction(cx, JS::NullPtr(), options,
                                   nullptr, 0, nullptr, /* name, nargs, args */
-                                  dataString.get(),
-                                  dataString.Length());
+                                  srcBuf);
         if (!fun) {
           return;
         }
