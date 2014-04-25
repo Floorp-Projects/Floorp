@@ -2986,17 +2986,17 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, size_t
         ptr += bytesRead;
     }
 
-    nsString decoded;
     rv = nsScriptLoader::ConvertToUTF16(scriptChannel, buf, rawLen, EmptyString(),
-                                        nullptr, decoded);
+                                        nullptr, *src, *len);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Copy to JS engine.
-    *len = decoded.Length();
-    *src = static_cast<jschar *>(JS_malloc(cx, decoded.Length()*sizeof(jschar)));
     if (!*src)
         return NS_ERROR_FAILURE;
-    memcpy(*src, decoded.get(), decoded.Length()*sizeof(jschar));
+
+    // Historically this method used JS_malloc() which updates the GC memory
+    // accounting.  Since ConvertToUTF16() now uses js_malloc() instead we
+    // update the accounting manually after the fact.
+    JS_updateMallocCounter(cx, *len);
 
     return NS_OK;
 }

@@ -344,9 +344,9 @@ ArrayBufferObject::neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer, void
     }
 
     if (buffer->isMappedArrayBuffer())
-        buffer->changeContents(cx, nullptr);
+        buffer->setNewOwnedData(cx->runtime()->defaultFreeOp(), nullptr);
     else if (newData != buffer->dataPointer())
-        buffer->changeContents(cx, newData);
+        buffer->setNewOwnedData(cx->runtime()->defaultFreeOp(), newData);
 
     buffer->setByteLength(0);
     buffer->setViewList(nullptr);
@@ -371,11 +371,26 @@ ArrayBufferObject::neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer, void
 }
 
 void
-ArrayBufferObject::changeContents(JSContext *cx, void *newData)
+ArrayBufferObject::setNewOwnedData(FreeOp* fop, void *newData)
 {
     JS_ASSERT(!isAsmJSArrayBuffer());
     JS_ASSERT(!isSharedArrayBuffer());
     JS_ASSERT_IF(isMappedArrayBuffer(), !newData);
+
+    if (ownsData()) {
+        JS_ASSERT(newData != dataPointer());
+        releaseData(fop);
+    }
+
+    setDataPointer(static_cast<uint8_t *>(newData), OwnsData);
+}
+
+void
+ArrayBufferObject::changeContents(JSContext *cx, void *newData)
+{
+    // Change buffer contents.
+    uint8_t* oldDataPointer = dataPointer();
+    setNewOwnedData(cx->runtime()->defaultFreeOp(), newData);
 
     // Update all views.
     ArrayBufferViewObject *viewListHead = viewList();
@@ -386,18 +401,14 @@ ArrayBufferObject::changeContents(JSContext *cx, void *newData)
         uint8_t *viewDataPointer = view->dataPointer();
         if (viewDataPointer) {
             JS_ASSERT(newData);
-            viewDataPointer += static_cast<uint8_t *>(newData) - dataPointer();
+            ptrdiff_t offset = viewDataPointer - oldDataPointer;
+            viewDataPointer = static_cast<uint8_t *>(newData) + offset;
             view->setPrivate(viewDataPointer);
         }
 
         // Notify compiled jit code that the base pointer has moved.
         MarkObjectStateChange(cx, view);
     }
-
-    if (ownsData())
-        releaseData(cx->runtime()->defaultFreeOp());
-
-    setDataPointer(static_cast<uint8_t *>(newData), OwnsData);
 }
 
 #if defined(JS_CPU_X64)

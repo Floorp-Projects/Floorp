@@ -4525,7 +4525,7 @@ JS::CompileOptions::wrap(JSContext *cx, JSCompartment *compartment)
 
 JSScript *
 JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
-            const jschar *chars, size_t length)
+            SourceBufferHolder &srcBuf)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
@@ -4533,7 +4533,15 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
     assertSameCompartment(cx, obj);
     AutoLastFrameCheck lfc(cx);
 
-    return frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, chars, length);
+    return frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, srcBuf);
+}
+
+JSScript *
+JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
+            const jschar *chars, size_t length)
+{
+    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
+    return Compile(cx, obj, options, srcBuf);
 }
 
 JSScript *
@@ -4689,7 +4697,7 @@ JS_GetGlobalFromScript(JSScript *script)
 JS_PUBLIC_API(JSFunction *)
 JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
                     const char *name, unsigned nargs, const char *const *argnames,
-                    const jschar *chars, size_t length)
+                    SourceBufferHolder &srcBuf)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
@@ -4716,7 +4724,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
     if (!fun)
         return nullptr;
 
-    if (!frontend::CompileFunctionBody(cx, &fun, options, formals, chars, length))
+    if (!frontend::CompileFunctionBody(cx, &fun, options, formals, srcBuf))
         return nullptr;
 
     if (obj && funAtom && options.defineOnScope) {
@@ -4727,6 +4735,15 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
     }
 
     return fun;
+}
+
+JS_PUBLIC_API(JSFunction *)
+JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
+                    const char *name, unsigned nargs, const char *const *argnames,
+                    const jschar *chars, size_t length)
+{
+  SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
+  return JS::CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4858,7 +4875,7 @@ static const unsigned LARGE_SCRIPT_LENGTH = 500*1024;
 
 static bool
 Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
-         const jschar *chars, size_t length, JS::Value *rval)
+         SourceBufferHolder &srcBuf, JS::Value *rval)
 {
     CompileOptions options(cx, optionsArg);
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
@@ -4873,7 +4890,7 @@ Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsA
     SourceCompressionTask sct(cx);
     RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(),
                                                     obj, NullPtr(), options,
-                                                    chars, length, nullptr, 0, &sct));
+                                                    srcBuf, nullptr, 0, &sct));
     if (!script)
         return false;
 
@@ -4898,6 +4915,14 @@ Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsA
 }
 
 static bool
+Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
+         const jschar *chars, size_t length, JS::Value *rval)
+{
+  SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
+  return ::Evaluate(cx, obj, optionsArg, srcBuf, rval);
+}
+
+static bool
 Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
          const char *bytes, size_t length, JS::Value *rval)
 {
@@ -4909,8 +4934,8 @@ Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
     if (!chars)
         return false;
 
-    bool ok = ::Evaluate(cx, obj, options, chars, length, rval);
-    js_free(chars);
+    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::GiveOwnership);
+    bool ok = ::Evaluate(cx, obj, options, srcBuf, rval);
     return ok;
 }
 
@@ -4932,6 +4957,13 @@ Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsA
 
 extern JS_PUBLIC_API(bool)
 JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
+             SourceBufferHolder &srcBuf, MutableHandleValue rval)
+{
+    return ::Evaluate(cx, obj, optionsArg, srcBuf, rval.address());
+}
+
+extern JS_PUBLIC_API(bool)
+JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
              const jschar *chars, size_t length, MutableHandleValue rval)
 {
     return ::Evaluate(cx, obj, optionsArg, chars, length, rval.address());
@@ -4949,6 +4981,13 @@ JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &opti
              const char *filename, MutableHandleValue rval)
 {
     return ::Evaluate(cx, obj, optionsArg, filename, rval.address());
+}
+
+extern JS_PUBLIC_API(bool)
+JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
+             SourceBufferHolder &srcBuf)
+{
+    return ::Evaluate(cx, obj, optionsArg, srcBuf, nullptr);
 }
 
 extern JS_PUBLIC_API(bool)
@@ -4980,6 +5019,16 @@ JS_EvaluateUCScript(JSContext *cx, HandleObject obj, const jschar *chars, unsign
     options.setFileAndLine(filename, lineno);
 
     return ::Evaluate(cx, obj, options, chars, length, rval.address());
+}
+
+JS_PUBLIC_API(bool)
+JS_EvaluateUCScript(JSContext *cx, HandleObject obj, SourceBufferHolder &srcBuf,
+                    const char *filename, unsigned lineno, MutableHandleValue rval)
+{
+    CompileOptions options(cx);
+    options.setFileAndLine(filename, lineno);
+
+    return ::Evaluate(cx, obj, options, srcBuf, rval.address());
 }
 
 JS_PUBLIC_API(bool)

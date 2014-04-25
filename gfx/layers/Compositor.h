@@ -500,6 +500,7 @@ public:
   // In addition, the clip rect needs to be offset by the rendering origin.
   // This becomes important if intermediate surfaces are used.
   gfx::Rect ClipRectInLayersCoordinates(gfx::Rect aClip) const;
+
 protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                const gfx::Rect& aVisibleRect,
@@ -527,6 +528,8 @@ protected:
   size_t mPixelsFilled;
 
   ScreenRotation mScreenRotation;
+
+  virtual gfx::IntSize GetWidgetSize() const = 0;
 
 private:
   static LayersBackend sBackend;

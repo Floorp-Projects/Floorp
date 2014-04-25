@@ -1,5 +1,5 @@
 /*
- * crypto.h - public data structures and prototypes for the crypto library
+ * blapi.h - public prototypes for the crypto library
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1575,6 +1575,18 @@ PRBool BLAPI_VerifySelf(const char *name);
 extern const SECHashObject * HASH_GetRawHashObject(HASH_HashType hashType);
 
 extern void BL_SetForkState(PRBool forked);
+
+#ifndef NSS_DISABLE_ECC
+/*
+** pepare an ECParam structure from DEREncoded params
+ */
+extern SECStatus EC_FillParams(PLArenaPool *arena,
+                               const SECItem *encodedParams, ECParams *params);
+extern SECStatus EC_DecodeParams(const SECItem *encodedParams,
+                                 ECParams **ecparams);
+extern SECStatus EC_CopyParams(PLArenaPool *arena, ECParams *dstParams,
+                               const ECParams *srcParams);
+#endif
 
 SEC_END_PROTOS
 

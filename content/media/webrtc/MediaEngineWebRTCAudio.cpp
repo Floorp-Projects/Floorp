@@ -142,6 +142,7 @@ AudioOutputObserver::InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aSampl
 #endif
     aSamples -= to_copy;
     mSamplesSaved += to_copy;
+    aBuffer += to_copy * aChannels;
 
     if (mSamplesSaved >= mChunkSize) {
       int free_slots = mPlayoutFifo->capacity() - mPlayoutFifo->size();

@@ -1,5 +1,5 @@
 /*
- * crypto.h - public data structures and prototypes for the crypto library
+ * secdig.h - public prototypes for digestinfos from the util lib
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

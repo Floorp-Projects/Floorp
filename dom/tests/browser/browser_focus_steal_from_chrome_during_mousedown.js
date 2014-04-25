@@ -13,7 +13,8 @@ function test() {
     "<button id=\"eventTarget\" onmousedown=\"onMouseDown(event);\">click here</button>" +
     "<input id=\"willBeFocused\"></body>";
 
-  let tab = gBrowser.selectedTab;
+  let tab = gBrowser.addTab();
+  gBrowser.selectedTab = tab;
 
   // Set the focus to the contents.
   tab.linkedBrowser.focus();
@@ -52,7 +53,6 @@ function test() {
          button);
     }
 
-    gBrowser.addTab();
     gBrowser.removeTab(tab);
     finish();
   }
