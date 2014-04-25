@@ -9619,30 +9619,6 @@ class CGDOMJSProxyHandler_get(ClassMethod):
             named=getNamed)
 
 
-class CGDOMJSProxyHandler_set(ClassMethod):
-    def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('JS::Handle<JSObject*>', 'proxy'),
-                Argument('JS::Handle<JSObject*>', 'receiver'),
-                Argument('JS::Handle<jsid>', 'id'),
-                Argument('bool', 'strict'),
-                Argument('JS::MutableHandle<JS::Value>', 'vp')]
-        ClassMethod.__init__(self, "set", "bool", args, virtual=True, override=True)
-        self.descriptor = descriptor
-
-    def getBody(self):
-        return dedent("""
-            MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy),
-                       "Should not have a XrayWrapper here");
-            bool done;
-            if (!setCustom(cx, proxy, id, vp, &done))
-                return false;
-            if (done)
-                return true;
-            return mozilla::dom::DOMProxyHandler::set(cx, proxy, receiver, id, strict, vp);
-            """)
-
-
 class CGDOMJSProxyHandler_setCustom(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'),
@@ -9832,7 +9808,6 @@ class CGDOMJSProxyHandler(CGClass):
             (descriptor.operations['NamedSetter'] is not None and
              descriptor.interface.getExtendedAttribute('OverrideBuiltins'))):
             methods.append(CGDOMJSProxyHandler_setCustom(descriptor))
-            methods.append(CGDOMJSProxyHandler_set(descriptor))
 
         CGClass.__init__(self, 'DOMProxyHandler',
                          bases=[ClassBase('mozilla::dom::DOMProxyHandler')],
