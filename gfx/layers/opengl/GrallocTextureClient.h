@@ -37,7 +37,7 @@ namespace layers {
 class GrallocTextureClientOGL : public BufferTextureClient
 {
 public:
-  GrallocTextureClientOGL(MaybeMagicGrallocBufferHandle buffer,
+  GrallocTextureClientOGL(GrallocBufferActor* aActor,
                           gfx::IntSize aSize,
                           gfx::BackendType aMoz2dBackend,
                           TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
@@ -66,7 +66,7 @@ public:
 
   virtual void WaitReleaseFence() MOZ_OVERRIDE;
 
-  void InitWith(MaybeMagicGrallocBufferHandle aDesc, gfx::IntSize aSize);
+  void InitWith(GrallocBufferActor* aActor, gfx::IntSize aSize);
 
   void SetTextureFlags(TextureFlags aFlags) { AddFlags(aFlags); }
 
@@ -120,7 +120,7 @@ protected:
   /**
    * Unfortunately, until bug 879681 is fixed we need to use a GrallocBufferActor.
    */
-  MaybeMagicGrallocBufferHandle mGrallocHandle;
+  GrallocBufferActor* mGrallocActor;
 
   android::sp<android::GraphicBuffer> mGraphicBuffer;
 
