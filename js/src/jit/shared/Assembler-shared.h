@@ -663,6 +663,143 @@ class CodeLocationLabel
     }
 };
 
+// Describes the user-visible properties of a callsite.
+//
+// A few general notes about the stack-walking supported by CallSite(Desc):
+//  - This information facilitates stack-walking performed by FrameIter which
+//    is used by Error.stack and other user-visible stack-walking functions.
+//  - Ion/asm.js calling conventions do not maintain a frame-pointer so
+//    stack-walking must lookup the stack depth based on the PC.
+//  - Stack-walking only occurs from C++ after a synchronous calls (JS-to-JS and
+//    JS-to-C++). Thus, we do not need to map arbitrary PCs to stack-depths,
+//    just the return address at callsites.
+//  - An exception to the above rule is the interrupt callback which can happen
+//    at arbitrary PCs. In such cases, we drop frames from the stack-walk. In
+//    the future when a full PC->stack-depth map is maintained, we handle this
+//    case.
+class CallSiteDesc
+{
+    uint32_t line_;
+    uint32_t column_;
+    uint32_t functionNameIndex_;
+
+    static const uint32_t sEntryTrampoline = UINT32_MAX;
+    static const uint32_t sExit = UINT32_MAX - 1;
+
+  public:
+    static const uint32_t FUNCTION_NAME_INDEX_MAX = UINT32_MAX - 2;
+
+    CallSiteDesc() {}
+
+    CallSiteDesc(uint32_t line, uint32_t column, uint32_t functionNameIndex)
+     : line_(line), column_(column), functionNameIndex_(functionNameIndex)
+    {}
+
+    static CallSiteDesc Entry() { return CallSiteDesc(0, 0, sEntryTrampoline); }
+    static CallSiteDesc Exit() { return CallSiteDesc(0, 0, sExit); }
+
+    bool isEntry() const { return functionNameIndex_ == sEntryTrampoline; }
+    bool isExit() const { return functionNameIndex_ == sExit; }
+    bool isNormal() const { return !(isEntry() || isExit()); }
+
+    uint32_t line() const { JS_ASSERT(isNormal()); return line_; }
+    uint32_t column() const { JS_ASSERT(isNormal()); return column_; }
+    uint32_t functionNameIndex() const { JS_ASSERT(isNormal()); return functionNameIndex_; }
+};
+
+// Adds to CallSiteDesc the metadata necessary to walk the stack given an
+// initial stack-pointer.
+struct CallSite : public CallSiteDesc
+{
+    uint32_t returnAddressOffset_;
+    uint32_t stackDepth_;
+
+  public:
+    CallSite() {}
+
+    CallSite(CallSiteDesc desc, uint32_t returnAddressOffset, uint32_t stackDepth)
+      : CallSiteDesc(desc),
+        returnAddressOffset_(returnAddressOffset),
+        stackDepth_(stackDepth)
+    { }
+
+    void setReturnAddressOffset(uint32_t r) { returnAddressOffset_ = r; }
+    uint32_t returnAddressOffset() const { return returnAddressOffset_; }
+
+    // The stackDepth measures the amount of stack space pushed since the
+    // function was called. In particular, this includes the word pushed by the
+    // call instruction on x86/x64.
+    uint32_t stackDepth() const { JS_ASSERT(!isEntry()); return stackDepth_; }
+};
+
+typedef Vector<CallSite, 0, SystemAllocPolicy> CallSiteVector;
+
+// Summarizes a heap access made by asm.js code that needs to be patched later
+// and/or looked up by the asm.js signal handlers. Different architectures need
+// to know different things (x64: offset and length, ARM: where to patch in
+// heap length, x86: where to patch in heap length and base) hence the massive
+// #ifdefery.
+class AsmJSHeapAccess
+{
+    uint32_t offset_;
+#if defined(JS_CODEGEN_X86)
+    uint8_t cmpDelta_;  // the number of bytes from the cmp to the load/store instruction
+#endif
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    uint8_t opLength_;  // the length of the load/store instruction
+    uint8_t isFloat32Load_;
+    AnyRegister::Code loadedReg_ : 8;
+#endif
+
+    JS_STATIC_ASSERT(AnyRegister::Total < UINT8_MAX);
+
+  public:
+    AsmJSHeapAccess() {}
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    // If 'cmp' equals 'offset' or if it is not supplied then the
+    // cmpDelta_ is zero indicating that there is no length to patch.
+    AsmJSHeapAccess(uint32_t offset, uint32_t after, ArrayBufferView::ViewType vt,
+                    AnyRegister loadedReg, uint32_t cmp = UINT32_MAX)
+      : offset_(offset),
+# if defined(JS_CODEGEN_X86)
+        cmpDelta_(cmp == UINT32_MAX ? 0 : offset - cmp),
+# endif
+        opLength_(after - offset),
+        isFloat32Load_(vt == ArrayBufferView::TYPE_FLOAT32),
+        loadedReg_(loadedReg.code())
+    {}
+    AsmJSHeapAccess(uint32_t offset, uint8_t after, uint32_t cmp = UINT32_MAX)
+      : offset_(offset),
+# if defined(JS_CODEGEN_X86)
+        cmpDelta_(cmp == UINT32_MAX ? 0 : offset - cmp),
+# endif
+        opLength_(after - offset),
+        isFloat32Load_(false),
+        loadedReg_(UINT8_MAX)
+    {}
+#elif defined(JS_CODEGEN_ARM)
+    explicit AsmJSHeapAccess(uint32_t offset)
+      : offset_(offset)
+    {}
+#endif
+
+    uint32_t offset() const { return offset_; }
+    void setOffset(uint32_t offset) { offset_ = offset; }
+#if defined(JS_CODEGEN_X86)
+    bool hasLengthCheck() const { return cmpDelta_ > 0; }
+    void *patchLengthAt(uint8_t *code) const { return code + (offset_ - cmpDelta_); }
+    void *patchOffsetAt(uint8_t *code) const { return code + (offset_ + opLength_); }
+#endif
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    unsigned opLength() const { return opLength_; }
+    bool isLoad() const { return loadedReg_ != UINT8_MAX; }
+    bool isFloat32Load() const { return isFloat32Load_; }
+    AnyRegister loadedReg() const { return AnyRegister::FromCode(loadedReg_); }
+#endif
+};
+
+typedef Vector<AsmJSHeapAccess, 0, SystemAllocPolicy> AsmJSHeapAccessVector;
+
 struct AsmJSGlobalAccess
 {
     CodeOffsetLabel patchAt;
@@ -672,8 +809,6 @@ struct AsmJSGlobalAccess
       : patchAt(patchAt), globalDataOffset(globalDataOffset)
     {}
 };
-
-typedef Vector<AsmJSGlobalAccess, 0, IonAllocPolicy> AsmJSGlobalAccessVector;
 
 // Describes the intended pointee of an immediate to be embedded in asm.js
 // code. By representing the pointee as a symbolic enum, the pointee can be
@@ -747,7 +882,29 @@ struct AsmJSAbsoluteLink
     AsmJSImmKind target;
 };
 
-typedef Vector<AsmJSAbsoluteLink, 0, SystemAllocPolicy> AsmJSAbsoluteLinkVector;
+// The base class of all Assemblers for all archs.
+class AssemblerShared
+{
+    Vector<CallSite, 0, SystemAllocPolicy> callsites_;
+    Vector<AsmJSHeapAccess, 0, SystemAllocPolicy> asmJSHeapAccesses_;
+    Vector<AsmJSGlobalAccess, 0, SystemAllocPolicy> asmJSGlobalAccesses_;
+    Vector<AsmJSAbsoluteLink, 0, SystemAllocPolicy> asmJSAbsoluteLinks_;
+
+  public:
+    bool append(CallSite callsite) { return callsites_.append(callsite); }
+    CallSiteVector &&extractCallSites() { return Move(callsites_); }
+
+    bool append(AsmJSHeapAccess access) { return asmJSHeapAccesses_.append(access); }
+    AsmJSHeapAccessVector &&extractAsmJSHeapAccesses() { return Move(asmJSHeapAccesses_); }
+
+    bool append(AsmJSGlobalAccess access) { return asmJSGlobalAccesses_.append(access); }
+    size_t numAsmJSGlobalAccesses() const { return asmJSGlobalAccesses_.length(); }
+    AsmJSGlobalAccess asmJSGlobalAccess(size_t i) const { return asmJSGlobalAccesses_[i]; }
+
+    bool append(AsmJSAbsoluteLink link) { return asmJSAbsoluteLinks_.append(link); }
+    size_t numAsmJSAbsoluteLinks() const { return asmJSAbsoluteLinks_.length(); }
+    AsmJSAbsoluteLink asmJSAbsoluteLink(size_t i) const { return asmJSAbsoluteLinks_[i]; }
+};
 
 } // namespace jit
 } // namespace js

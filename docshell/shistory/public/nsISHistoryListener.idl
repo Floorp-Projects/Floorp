@@ -21,7 +21,7 @@ interface nsIURI;
  * A session history listener can be registered on a particular nsISHistory
  * instance via the nsISHistory::addSHistoryListener() method.
  */
-[scriptable, uuid(3b07f591-e8e1-11d4-9882-00c04fa02f40)]
+[scriptable, uuid(125c0833-746a-400e-9b89-d2d18545c08a)]
 interface nsISHistoryListener : nsISupports 
 {
   /**
@@ -87,4 +87,14 @@ interface nsISHistoryListener : nsISupports
    * @return              Whether the operation can proceed.
    */
    boolean OnHistoryPurge(in long aNumEntries);
+
+  /**
+   * Called when an entry is replaced in the session history. Entries are
+   * replaced when navigating away from non-persistent history entries (such as
+   * about pages) and when history.replaceState is called.
+   *
+   * @param aIndex        The index in session history of the entry being
+  *                       replaced
+   */
+   void OnHistoryReplaceEntry(in long aIndex);
 };

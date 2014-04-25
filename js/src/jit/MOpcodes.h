@@ -210,7 +210,6 @@ namespace jit {
     _(AsmJSVoidReturn)                                                      \
     _(AsmJSPassStackArg)                                                    \
     _(AsmJSCall)                                                            \
-    _(AsmJSCheckOverRecursed)                                               \
     _(CheckOverRecursedPar)                                                 \
     _(NewCallObjectPar)                                                     \
     _(NewPar)                                                               \

@@ -371,9 +371,6 @@ AsmJSModule::~AsmJSModule()
 
         DeallocateExecutableMemory(code_, pod.totalBytes_);
     }
-
-    for (size_t i = 0; i < numFunctionCounts(); i++)
-        js_delete(functionCounts(i));
 }
 
 void
@@ -385,6 +382,8 @@ AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModu
                         globals_.sizeOfExcludingThis(mallocSizeOf) +
                         exits_.sizeOfExcludingThis(mallocSizeOf) +
                         exports_.sizeOfExcludingThis(mallocSizeOf) +
+                        callSites_.sizeOfExcludingThis(mallocSizeOf) +
+                        functionNames_.sizeOfExcludingThis(mallocSizeOf) +
                         heapAccesses_.sizeOfExcludingThis(mallocSizeOf) +
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
                         profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
@@ -392,7 +391,6 @@ AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModu
 #if defined(JS_ION_PERF)
                         perfProfiledBlocksFunctions_.sizeOfExcludingThis(mallocSizeOf) +
 #endif
-                        functionCounts_.sizeOfExcludingThis(mallocSizeOf) +
                         staticLinkData_.sizeOfExcludingThis(mallocSizeOf);
 }
 
@@ -481,6 +479,12 @@ SerializedNameSize(PropertyName *name)
            (name ? name->length() * sizeof(jschar) : 0);
 }
 
+size_t
+AsmJSModule::Name::serializedSize() const
+{
+    return SerializedNameSize(name_);
+}
+
 static uint8_t *
 SerializeName(uint8_t *cursor, PropertyName *name)
 {
@@ -492,6 +496,12 @@ SerializeName(uint8_t *cursor, PropertyName *name)
         cursor = WriteScalar<uint32_t>(cursor, 0);
     }
     return cursor;
+}
+
+uint8_t *
+AsmJSModule::Name::serialize(uint8_t *cursor) const
+{
+    return SerializeName(cursor, name_);
 }
 
 static const uint8_t *
@@ -523,6 +533,19 @@ DeserializeName(ExclusiveContext *cx, const uint8_t *cursor, PropertyName **name
 
     *name = atom->asPropertyName();
     return cursor + length * sizeof(jschar);
+}
+
+const uint8_t *
+AsmJSModule::Name::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
+{
+    return DeserializeName(cx, cursor, &name_);
+}
+
+bool
+AsmJSModule::Name::clone(ExclusiveContext *cx, Name *out) const
+{
+    out->name_ = name_;
+    return true;
 }
 
 template <class T>
@@ -792,6 +815,8 @@ AsmJSModule::serializedSize() const
            SerializedVectorSize(globals_) +
            SerializedVectorSize(exits_) +
            SerializedVectorSize(exports_) +
+           SerializedPodVectorSize(callSites_) +
+           SerializedVectorSize(functionNames_) +
            SerializedPodVectorSize(heapAccesses_) +
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
            SerializedVectorSize(profiledFunctions_) +
@@ -810,6 +835,8 @@ AsmJSModule::serialize(uint8_t *cursor) const
     cursor = SerializeVector(cursor, globals_);
     cursor = SerializeVector(cursor, exits_);
     cursor = SerializeVector(cursor, exports_);
+    cursor = SerializePodVector(cursor, callSites_);
+    cursor = SerializeVector(cursor, functionNames_);
     cursor = SerializePodVector(cursor, heapAccesses_);
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     cursor = SerializeVector(cursor, profiledFunctions_);
@@ -834,6 +861,8 @@ AsmJSModule::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
     (cursor = DeserializeVector(cx, cursor, &globals_)) &&
     (cursor = DeserializeVector(cx, cursor, &exits_)) &&
     (cursor = DeserializeVector(cx, cursor, &exports_)) &&
+    (cursor = DeserializePodVector(cx, cursor, &callSites_)) &&
+    (cursor = DeserializeVector(cx, cursor, &functionNames_)) &&
     (cursor = DeserializePodVector(cx, cursor, &heapAccesses_)) &&
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     (cursor = DeserializeVector(cx, cursor, &profiledFunctions_)) &&
@@ -901,6 +930,8 @@ AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) con
     if (!CloneVector(cx, globals_, &out.globals_) ||
         !CloneVector(cx, exits_, &out.exits_) ||
         !CloneVector(cx, exports_, &out.exports_) ||
+        !ClonePodVector(cx, callSites_, &out.callSites_) ||
+        !CloneVector(cx, functionNames_, &out.functionNames_) ||
         !ClonePodVector(cx, heapAccesses_, &out.heapAccesses_) ||
         !staticLinkData_.clone(cx, &out.staticLinkData_))
     {

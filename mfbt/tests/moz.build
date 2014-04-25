@@ -17,6 +17,8 @@ CPP_UNIT_TESTS += [
     'TestEnumSet.cpp',
     'TestFloatingPoint.cpp',
     'TestIntegerPrintfMacros.cpp',
+    'TestMacroArgs.cpp',
+    'TestMacroForEach.cpp',
     'TestRollingMean.cpp',
     'TestSHA1.cpp',
     'TestTypedEnum.cpp',

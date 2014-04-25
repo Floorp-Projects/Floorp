@@ -489,100 +489,20 @@ NS_IMETHODIMP CacheStorageService::PurgeFromMemory(uint32_t aWhat)
   return Dispatch(event);
 }
 
-namespace { // anon
-
-class AsyncGetDiskConsumptionWrapper : public nsRunnable,
-                                       public nsICacheStorageVisitor
-{
-public:
-  AsyncGetDiskConsumptionWrapper(nsICacheStorageConsumptionObserver* aCallback);
-  virtual ~AsyncGetDiskConsumptionWrapper() {}
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSICACHESTORAGEVISITOR
-  NS_DECL_NSIRUNNABLE
-
-private:
-  nsCOMPtr<nsICacheStorageConsumptionObserver> mCallback;
-  uint32_t mExpected;
-  uint64_t mSize;
-};
-
-NS_IMPL_ISUPPORTS_INHERITED1(AsyncGetDiskConsumptionWrapper,
-                             nsRunnable,
-                             nsICacheStorageVisitor)
-
-AsyncGetDiskConsumptionWrapper::AsyncGetDiskConsumptionWrapper(
-  nsICacheStorageConsumptionObserver* aCallback)
-  : mCallback(aCallback)
-  , mExpected(2) // expecting two callbacks, from non-anon and anon storage
-  , mSize(0)
-{
-}
-
-NS_IMETHODIMP
-AsyncGetDiskConsumptionWrapper::Run()
-{
-  mCallback->OnNetworkCacheDiskConsumption(mSize);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AsyncGetDiskConsumptionWrapper::OnCacheStorageInfo(
-  uint32_t aEntryCount, uint64_t aConsumption)
-{
-  mSize += aConsumption;
-  if (--mExpected == 0)
-    NS_DispatchToMainThread(this);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AsyncGetDiskConsumptionWrapper::OnCacheEntryInfo(nsICacheEntry *aEntry)
-{
-  MOZ_CRASH("Unexpected");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AsyncGetDiskConsumptionWrapper::OnCacheEntryVisitCompleted()
-{
-  MOZ_CRASH("Unexpected");
-  return NS_OK;
-}
-
-} // anon
-
 NS_IMETHODIMP CacheStorageService::AsyncGetDiskConsumption(
   nsICacheStorageConsumptionObserver* aObserver)
 {
   NS_ENSURE_ARG(aObserver);
 
-  if (CacheObserver::UseNewCache()) {
-    return CacheIndex::AsyncGetDiskConsumption(aObserver);
-  }
-
   nsresult rv;
 
-  nsRefPtr<LoadContextInfo> def = GetLoadContextInfo(
-    false, nsILoadContextInfo::NO_APP_ID, false, false);
-  nsRefPtr<LoadContextInfo> anon = GetLoadContextInfo(
-    false, nsILoadContextInfo::NO_APP_ID, false, true);
-
-  nsCOMPtr<nsICacheStorage> defaultStorage;
-  rv = DiskCacheStorage(def, false, getter_AddRefs(defaultStorage));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsICacheStorage> anonymousStorage;
-  rv = DiskCacheStorage(anon, false, getter_AddRefs(anonymousStorage));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRefPtr<AsyncGetDiskConsumptionWrapper> visitor =
-    new AsyncGetDiskConsumptionWrapper(aObserver);
-
-  rv = defaultStorage->AsyncVisitStorage(visitor, false);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = anonymousStorage->AsyncVisitStorage(visitor, false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (CacheObserver::UseNewCache()) {
+    rv = CacheIndex::AsyncGetDiskConsumption(aObserver);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    rv = _OldGetDiskConsumption::Get(aObserver);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
@@ -1080,6 +1000,7 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
 
     // check whether the file is already doomed
     if (entryExists && entry->IsFileDoomed() && !aReplace) {
+      LOG(("  file already doomed, replacing the entry"));
       aReplace = true;
     }
 

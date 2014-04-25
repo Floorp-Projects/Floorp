@@ -66,7 +66,12 @@ nsXBLPrototypeResources::FlushSkinSheets()
 
   nsCOMPtr<nsIDocument> doc =
     mLoader->mBinding->XBLDocumentInfo()->GetDocument();
-  mozilla::css::Loader* cssLoader = doc->CSSLoader();
+
+  // If doc is null, we're in the process of tearing things down, so just
+  // return without rebuilding anything.
+  if (!doc) {
+    return NS_OK;
+  }
 
   // We have scoped stylesheets.  Reload any chrome stylesheets we
   // encounter.  (If they aren't skin sheets, it doesn't matter, since
@@ -75,6 +80,8 @@ nsXBLPrototypeResources::FlushSkinSheets()
 
   sheet_array_type oldSheets(mStyleSheetList);
   mStyleSheetList.Clear();
+
+  mozilla::css::Loader* cssLoader = doc->CSSLoader();
 
   for (sheet_array_type::size_type i = 0, count = oldSheets.Length();
        i < count; ++i) {

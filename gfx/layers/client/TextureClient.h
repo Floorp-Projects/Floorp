@@ -236,9 +236,9 @@ public:
   /**
    * Allocate and deallocate a TextureChild actor.
    *
-   * TextureChild is an implementation detail of TextureHost that is not
+   * TextureChild is an implementation detail of TextureClient that is not
    * exposed to the rest of the code base. CreateIPDLActor and DestroyIPDLActor
-   * are for use with the maging IPDL protocols only (so that they can
+   * are for use with the managing IPDL protocols only (so that they can
    * implement AllocPextureChild and DeallocPTextureChild).
    */
   static PTextureChild* CreateIPDLActor();
