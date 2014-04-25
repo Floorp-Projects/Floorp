@@ -584,7 +584,7 @@ function(peer, provider, protocol, identity) {
  *        Callback to execute if the local description was set successfully
  */
 PeerConnectionTest.prototype.setLocalDescription =
-function PCT_setLocalDescription(peer, desc, onSuccess) {
+function PCT_setLocalDescription(peer, desc, stateExpected, onSuccess) {
   var eventFired = false;
   var stateChanged = false;
 
@@ -597,9 +597,14 @@ function PCT_setLocalDescription(peer, desc, onSuccess) {
   peer.onsignalingstatechange = function (state) {
     //info(peer + ": 'onsignalingstatechange' event registered, signalingState: " + peer.signalingState);
     info(peer + ": 'onsignalingstatechange' event '" + state + "' received");
-
-    eventFired = true;
-    check_next_test();
+    if(stateExpected === state && eventFired == false) {
+      eventFired = true;
+      check_next_test();
+    } else {
+      ok(false, "This event has either already fired or there has been a " +
+                "mismatch between event received " + state +
+                " and event expected " + stateExpected);
+    }
   };
 
   peer.setLocalDescription(desc, function () {
@@ -646,7 +651,7 @@ function PCT_setOfferConstraints(constraints) {
  *        Callback to execute if the local description was set successfully
  */
 PeerConnectionTest.prototype.setRemoteDescription =
-function PCT_setRemoteDescription(peer, desc, onSuccess) {
+function PCT_setRemoteDescription(peer, desc, stateExpected, onSuccess) {
   var eventFired = false;
   var stateChanged = false;
 
@@ -658,9 +663,14 @@ function PCT_setRemoteDescription(peer, desc, onSuccess) {
 
   peer.onsignalingstatechange = function (state) {
     info(peer + ": 'onsignalingstatechange' event '" + state + "' received");
-
-    eventFired = true;
-    check_next_test();
+    if(stateExpected === state && eventFired == false) {
+      eventFired = true;
+      check_next_test();
+    } else {
+      ok(false, "This event has either already fired or there has been a " +
+                "mismatch between event received " + state +
+                " and event expected " + stateExpected);
+    }
   };
 
   peer.setRemoteDescription(desc, function () {
@@ -857,16 +867,16 @@ DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
      * @param {function} onSuccess
      *        Callback to execute if the local description was set successfully
      */
-    value : function DCT_setLocalDescription(peer, desc, onSuccess) {
+    value : function DCT_setLocalDescription(peer, desc, state, onSuccess) {
       // If the peer has a remote offer we are in the final call, and have
       // to wait for the datachannel connection to be open. It will also set
       // the local description internally.
       if (peer.signalingState === 'have-remote-offer') {
-        this.waitForInitialDataChannel(peer, desc, onSuccess);
+        this.waitForInitialDataChannel(peer, desc, state, onSuccess);
       }
       else {
         PeerConnectionTest.prototype.setLocalDescription.call(this, peer,
-                                                              desc, onSuccess);
+                                                              desc, state, onSuccess);
       }
 
     }
@@ -883,7 +893,7 @@ DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
      * @param {Function} onSuccess
      *        Callback when the creation was successful
      */
-    value : function DCT_waitForInitialDataChannel(peer, desc, onSuccess) {
+    value : function DCT_waitForInitialDataChannel(peer, desc, state, onSuccess) {
       var self = this;
 
       var targetPeer = peer;
@@ -914,6 +924,7 @@ DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
       });
 
       PeerConnectionTest.prototype.setLocalDescription.call(this, targetPeer, desc,
+        state,
         function () {
           self.connected = true;
           check_next_test();
