@@ -21,6 +21,10 @@
 class nsScriptLoadRequest;
 class nsIURI;
 
+namespace JS {
+  class SourceBufferHolder;
+}
+
 //////////////////////////////////////////////////////////////
 // Script loader implementation
 //////////////////////////////////////////////////////////////
@@ -130,6 +134,27 @@ public:
       ProcessPendingRequestsAsync();
     }
   }
+
+  /**
+   * Convert the given buffer to a UTF-16 string.
+   * @param aChannel     Channel corresponding to the data. May be null.
+   * @param aData        The data to convert
+   * @param aLength      Length of the data
+   * @param aHintCharset Hint for the character set (e.g., from a charset
+   *                     attribute). May be the empty string.
+   * @param aDocument    Document which the data is loaded for. Must not be
+   *                     null.
+   * @param aBufOut      [out] jschar array allocated by ConvertToUTF16 and
+   *                     containing data converted to unicode.  Caller must
+   *                     js_free() this data when no longer needed.
+   * @param aLengthOut   [out] Length of array returned in aBufOut in number
+   *                     of jschars.
+   */
+  static nsresult ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
+                                 uint32_t aLength,
+                                 const nsAString& aHintCharset,
+                                 nsIDocument* aDocument,
+                                 jschar*& aBufOut, size_t& aLengthOut);
 
   /**
    * Convert the given buffer to a UTF-16 string.
@@ -277,7 +302,7 @@ private:
   void FireScriptEvaluated(nsresult aResult,
                            nsScriptLoadRequest* aRequest);
   nsresult EvaluateScript(nsScriptLoadRequest* aRequest,
-                          const nsAFlatString& aScript,
+                          JS::SourceBufferHolder& aSrcBuf,
                           void **aOffThreadToken);
 
   already_AddRefed<nsIScriptGlobalObject> GetScriptGlobalObject();
