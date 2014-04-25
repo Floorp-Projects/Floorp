@@ -34,9 +34,9 @@ public:
   virtual void AddListener(CameraControlListener* aListener) MOZ_OVERRIDE;
   virtual void RemoveListener(CameraControlListener* aListener) MOZ_OVERRIDE;
 
-  // See ICameraControl.h for these methods' return values.
   virtual nsresult Start(const Configuration* aConfig = nullptr) MOZ_OVERRIDE;
   virtual nsresult Stop() MOZ_OVERRIDE;
+
   virtual nsresult SetConfiguration(const Configuration& aConfig) MOZ_OVERRIDE;
   virtual nsresult StartPreview() MOZ_OVERRIDE;
   virtual nsresult StopPreview() MOZ_OVERRIDE;
@@ -57,8 +57,8 @@ public:
   // Event handlers called directly from outside this class.
   void OnShutter();
   void OnClosed();
-  void OnUserError(CameraControlListener::UserContext aContext, nsresult aError);
-  void OnSystemError(CameraControlListener::SystemContext aContext, nsresult aError);
+  void OnError(CameraControlListener::CameraErrorContext aContext,
+               CameraControlListener::CameraError aError);
   void OnAutoFocusMoving(bool aIsMoving);
 
 protected:
@@ -96,21 +96,6 @@ protected:
   class ControlMessage;
   class ListenerMessage;
 
-  nsresult Dispatch(ControlMessage* aMessage);
-
-  // Asynchronous method implementations, invoked on the Camera Thread.
-  //
-  // Return values:
-  //  - NS_OK on success;
-  //  - NS_ERROR_INVALID_ARG if one or more arguments is invalid;
-  //  - NS_ERROR_NOT_INITIALIZED if the underlying hardware is not initialized,
-  //      failed to initialize (in the case of StartImpl()), or has been stopped;
-  //      for StartRecordingImpl(), this indicates that no recorder has been
-  //      configured (either by calling StartImpl() or SetConfigurationImpl());
-  //  - NS_ERROR_ALREADY_INITIALIZED if the underlying hardware is already
-  //      initialized;
-  //  - NS_ERROR_NOT_IMPLEMENTED if the method is not implemented;
-  //  - NS_ERROR_FAILURE on general failures.
   virtual nsresult StartImpl(const Configuration* aConfig = nullptr) = 0;
   virtual nsresult StopImpl() = 0;
   virtual nsresult SetConfigurationImpl(const Configuration& aConfig) = 0;
@@ -126,7 +111,6 @@ protected:
   virtual nsresult ResumeContinuousFocusImpl() = 0;
   virtual nsresult PushParametersImpl() = 0;
   virtual nsresult PullParametersImpl() = 0;
-
   virtual already_AddRefed<RecorderProfileManager> GetRecorderProfileManagerImpl() = 0;
 
   void OnShutterInternal();

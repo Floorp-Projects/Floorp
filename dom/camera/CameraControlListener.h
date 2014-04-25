@@ -82,7 +82,7 @@ public:
   virtual void OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType) { }
   virtual void OnFacesDetected(const nsTArray<ICameraControl::Face>& aFaces) { }
 
-  enum UserContext
+  enum CameraErrorContext
   {
     kInStartCamera,
     kInStopCamera,
@@ -95,21 +95,20 @@ public:
     kInSetConfiguration,
     kInStartPreview,
     kInStopPreview,
-    kInSetPictureSize,
-    kInSetThumbnailSize,
     kInResumeContinuousFocus,
     kInUnspecified
   };
-  // Error handler for problems arising due to user-initiated actions.
-  virtual void OnUserError(UserContext aContext, nsresult aError) { }
-
-  enum SystemContext
+  enum CameraError
   {
-    kSystemService
+    kErrorApiFailed,
+    kErrorInitFailed,
+    kErrorInvalidConfiguration,
+    kErrorServiceFailed,
+    kErrorSetPictureSizeFailed,
+    kErrorSetThumbnailSizeFailed,
+    kErrorUnknown
   };
-  // Error handler for problems arising due to system failures, not triggered
-  // by something the CameraControl API user did.
-  virtual void OnSystemError(SystemContext aContext, nsresult aError) { }
+  virtual void OnError(CameraErrorContext aContext, CameraError aError) { }
 };
 
 } // namespace mozilla

@@ -54,9 +54,9 @@ public:
   void OnTakePictureError();
   void OnNewPreviewFrame(layers::TextureClient* aBuffer);
   void OnRecorderEvent(int msg, int ext1, int ext2);
-  void OnSystemError(CameraControlListener::SystemContext aWhere, nsresult aError);
- 
-  // See ICameraControl.h for getter/setter return values.
+  void OnError(CameraControlListener::CameraErrorContext aWhere,
+               CameraControlListener::CameraError aError);
+
   virtual nsresult Set(uint32_t aKey, const nsAString& aValue) MOZ_OVERRIDE;
   virtual nsresult Get(uint32_t aKey, nsAString& aValue) MOZ_OVERRIDE;
   virtual nsresult Set(uint32_t aKey, double aValue) MOZ_OVERRIDE;
@@ -87,23 +87,22 @@ protected:
   using CameraControlImpl::OnFacesDetected;
   using CameraControlImpl::OnTakePictureComplete;
   using CameraControlImpl::OnConfigurationChange;
-  using CameraControlImpl::OnUserError;
+  using CameraControlImpl::OnError;
 
   virtual void BeginBatchParameterSet() MOZ_OVERRIDE;
   virtual void EndBatchParameterSet() MOZ_OVERRIDE;
 
+  virtual nsresult StartImpl(const Configuration* aInitialConfig = nullptr) MOZ_OVERRIDE;
+  virtual nsresult StopImpl() MOZ_OVERRIDE;
   nsresult Initialize();
 
+  virtual nsresult SetConfigurationImpl(const Configuration& aConfig) MOZ_OVERRIDE;
   nsresult SetConfigurationInternal(const Configuration& aConfig);
   nsresult SetPictureConfiguration(const Configuration& aConfig);
   nsresult SetVideoConfiguration(const Configuration& aConfig);
 
   template<class T> nsresult SetAndPush(uint32_t aKey, const T& aValue);
 
-  // See CameraControlImpl.h for these methods' return values.
-  virtual nsresult StartImpl(const Configuration* aInitialConfig = nullptr) MOZ_OVERRIDE;
-  virtual nsresult SetConfigurationImpl(const Configuration& aConfig) MOZ_OVERRIDE;
-  virtual nsresult StopImpl() MOZ_OVERRIDE;
   virtual nsresult StartPreviewImpl() MOZ_OVERRIDE;
   virtual nsresult StopPreviewImpl() MOZ_OVERRIDE;
   virtual nsresult AutoFocusImpl() MOZ_OVERRIDE;
@@ -180,9 +179,8 @@ void OnFacesDetected(nsGonkCameraControl* gc, camera_frame_metadata_t* aMetaData
 void OnNewPreviewFrame(nsGonkCameraControl* gc, layers::TextureClient* aBuffer);
 void OnShutter(nsGonkCameraControl* gc);
 void OnClosed(nsGonkCameraControl* gc);
-void OnSystemError(nsGonkCameraControl* gc,
-                   CameraControlListener::SystemContext aWhere,
-                   int32_t aArg1, int32_t aArg2);
+void OnError(nsGonkCameraControl* gc, CameraControlListener::CameraError aError,
+             int32_t aArg1, int32_t aArg2);
 
 } // namespace mozilla
 

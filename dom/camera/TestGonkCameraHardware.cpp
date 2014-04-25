@@ -43,7 +43,7 @@ nsresult
 TestGonkCameraHardware::Init()
 {
   if (IsTestCase("init-failure")) {
-    return NS_ERROR_NOT_INITIALIZED;
+    return NS_ERROR_FAILURE;
   }
 
   return GonkCameraHardware::Init();

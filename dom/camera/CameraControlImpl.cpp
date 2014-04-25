@@ -6,7 +6,6 @@
 #include "base/basictypes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/unused.h"
-#include "nsPrintfCString.h"
 #include "nsIWeakReferenceUtils.h"
 #include "CameraRecorderProfiles.h"
 #include "CameraCommon.h"
@@ -19,8 +18,7 @@ using namespace mozilla;
 nsWeakPtr CameraControlImpl::sCameraThread;
 
 CameraControlImpl::CameraControlImpl(uint32_t aCameraId)
-  : mListenerLock(PR_NewRWLock(PR_RWLOCK_RANK_NONE, "CameraControlImpl.Listeners.Lock"))
-  , mCameraId(aCameraId)
+  : mCameraId(aCameraId)
   , mPreviewState(CameraControlListener::kPreviewStopped)
   , mHardwareState(CameraControlListener::kHardwareClosed)
 {
@@ -32,9 +30,9 @@ CameraControlImpl::CameraControlImpl(uint32_t aCameraId)
     mCameraThread = ct.forget();
   } else {
     nsresult rv = NS_NewNamedThread("CameraThread", getter_AddRefs(mCameraThread));
-    if (NS_FAILED(rv)) {
-      MOZ_CRASH("Failed to create new Camera Thread");
-    }
+    unused << rv; // swallow rv to suppress a compiler warning when the macro
+                  // is #defined to nothing (i.e. in non-DEBUG builds).
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // keep a weak reference to the new thread
     sCameraThread = do_GetWeakReference(mCameraThread);
@@ -51,14 +49,11 @@ CameraControlImpl::CameraControlImpl(uint32_t aCameraId)
   //
   // Multiple parallel listeners being invoked are not a problem because
   // the read-write lock allows multiple simultaneous read-locks.
-  if (!mListenerLock) {
-    MOZ_CRASH("Out of memory getting new PRRWLock");
-  }
+  mListenerLock = PR_NewRWLock(PR_RWLOCK_RANK_NONE, "CameraControlImpl.Listeners.Lock");
 }
 
 CameraControlImpl::~CameraControlImpl()
 {
-  MOZ_ASSERT(mListenerLock, "mListenerLock missing in ~CameraControlImpl()");
   if (mListenerLock) {
     PR_DestroyRWLock(mListenerLock);
     mListenerLock = nullptr;
@@ -268,14 +263,23 @@ CameraControlImpl::OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uin
 }
 
 void
-CameraControlImpl::OnUserError(CameraControlListener::UserContext aContext,
-                               nsresult aError)
+CameraControlImpl::OnError(CameraControlListener::CameraErrorContext aContext,
+                           CameraControlListener::CameraError aError)
 {
   // This callback can run on threads other than the Main Thread and
   //  the Camera Thread.
   RwLockAutoEnterRead lock(mListenerLock);
 
 #ifdef PR_LOGGING
+  const char* error[] = {
+    "api-failed",
+    "init-failed",
+    "invalid-configuration",
+    "service-failed",
+    "set-picture-size-failed",
+    "set-thumbnail-size-failed",
+    "unknown"
+  };
   const char* context[] = {
     "StartCamera",
     "StopCamera",
@@ -288,50 +292,22 @@ CameraControlImpl::OnUserError(CameraControlListener::UserContext aContext,
     "SetConfiguration",
     "StartPreview",
     "StopPreview",
-    "SetPictureSize",
-    "SetThumbnailSize",
     "ResumeContinuousFocus",
     "Unspecified"
   };
-  if (static_cast<size_t>(aContext) < sizeof(context) / sizeof(context[0])) {
-    DOM_CAMERA_LOGW("CameraControlImpl::OnUserError : aContext='%s' (%d), aError=0x%x\n",
-      context[aContext], aContext, aError);
+  if (static_cast<unsigned int>(aError) < sizeof(error) / sizeof(error[0]) &&
+    static_cast<unsigned int>(aContext) < sizeof(context) / sizeof(context[0])) {
+    DOM_CAMERA_LOGW("CameraControlImpl::OnError : aContext='%s' (%u), aError='%s' (%u)\n",
+      context[aContext], aContext, error[aError], aError);
   } else {
-    DOM_CAMERA_LOGE("CameraControlImpl::OnUserError : aContext=%d, aError=0x%x\n",
+    DOM_CAMERA_LOGE("CameraControlImpl::OnError : aContext=%u, aError=%d\n",
       aContext, aError);
   }
 #endif
 
   for (uint32_t i = 0; i < mListeners.Length(); ++i) {
     CameraControlListener* l = mListeners[i];
-    l->OnUserError(aContext, aError);
-  }
-}
-
-void
-CameraControlImpl::OnSystemError(CameraControlListener::SystemContext aContext,
-                                 nsresult aError)
-{
-  // This callback can run on threads other than the Main Thread and
-  //  the Camera Thread.
-  RwLockAutoEnterRead lock(mListenerLock);
-
-#ifdef PR_LOGGING
-  const char* context[] = {
-    "Camera Service"
-  };
-  if (static_cast<size_t>(aContext) < sizeof(context) / sizeof(context[0])) {
-    DOM_CAMERA_LOGW("CameraControlImpl::OnSystemError : aContext='%s' (%d), aError=0x%x\n",
-      context[aContext], aContext, aError);
-  } else {
-    DOM_CAMERA_LOGE("CameraControlImpl::OnSystemError : aContext=%d, aError=0x%x\n",
-      aContext, aError);
-  }
-#endif
-
-  for (uint32_t i = 0; i < mListeners.Length(); ++i) {
-    CameraControlListener* l = mListeners[i];
-    l->OnSystemError(aContext, aError);
+    l->OnError(aContext, aError);
   }
 }
 
@@ -342,10 +318,17 @@ class CameraControlImpl::ControlMessage : public nsRunnable
 {
 public:
   ControlMessage(CameraControlImpl* aCameraControl,
-                 CameraControlListener::UserContext aContext)
+                 CameraControlListener::CameraErrorContext aContext)
     : mCameraControl(aCameraControl)
     , mContext(aContext)
-  { }
+  {
+    MOZ_COUNT_CTOR(CameraControlImpl::ControlMessage);
+  }
+
+  virtual ~ControlMessage()
+  {
+    MOZ_COUNT_DTOR(CameraControlImpl::ControlMessage);
+  }
 
   virtual nsresult RunImpl() = 0;
 
@@ -357,33 +340,18 @@ public:
 
     nsresult rv = RunImpl();
     if (NS_FAILED(rv)) {
-      nsPrintfCString msg("Camera control API(%d) failed with 0x%x", mContext, rv);
-      NS_WARNING(msg.get());
-      mCameraControl->OnUserError(mContext, rv);
+      DOM_CAMERA_LOGW("Camera control API failed at %d with 0x%x\n", mContext, rv);
+      // XXXmikeh - do we want to report a more specific error code?
+      mCameraControl->OnError(mContext, CameraControlListener::kErrorApiFailed);
     }
 
     return NS_OK;
   }
 
 protected:
-  virtual ~ControlMessage() { }
-
   nsRefPtr<CameraControlImpl> mCameraControl;
-  CameraControlListener::UserContext mContext;
+  CameraControlListener::CameraErrorContext mContext;
 };
-
-nsresult
-CameraControlImpl::Dispatch(ControlMessage* aMessage)
-{
-  nsresult rv = mCameraThread->Dispatch(aMessage, NS_DISPATCH_NORMAL);
-  if (NS_SUCCEEDED(rv)) {
-    return NS_OK;
-  }
-
-  nsPrintfCString msg("Failed to dispatch camera control message (0x%x)", rv);
-  NS_WARNING(msg.get());
-  return NS_ERROR_FAILURE;
-}
 
 nsresult
 CameraControlImpl::Start(const Configuration* aConfig)
@@ -392,7 +360,7 @@ CameraControlImpl::Start(const Configuration* aConfig)
   {
   public:
     Message(CameraControlImpl* aCameraControl,
-            CameraControlListener::UserContext aContext,
+            CameraControlListener::CameraErrorContext aContext,
             const Configuration* aConfig)
       : ControlMessage(aCameraControl, aContext)
       , mHaveInitialConfig(false)
@@ -417,7 +385,8 @@ CameraControlImpl::Start(const Configuration* aConfig)
     Configuration mConfig;
   };
 
-  return Dispatch(new Message(this, CameraControlListener::kInStartCamera, aConfig));
+  return mCameraThread->Dispatch(
+    new Message(this, CameraControlListener::kInStartCamera, aConfig), NS_DISPATCH_NORMAL);
 }
 
 nsresult
@@ -427,7 +396,7 @@ CameraControlImpl::SetConfiguration(const Configuration& aConfig)
   {
   public:
     Message(CameraControlImpl* aCameraControl,
-            CameraControlListener::UserContext aContext,
+            CameraControlListener::CameraErrorContext aContext,
             const Configuration& aConfig)
       : ControlMessage(aCameraControl, aContext)
       , mConfig(aConfig)
@@ -443,7 +412,8 @@ CameraControlImpl::SetConfiguration(const Configuration& aConfig)
     Configuration mConfig;
   };
 
-  return Dispatch(new Message(this, CameraControlListener::kInSetConfiguration, aConfig));
+  return mCameraThread->Dispatch(
+    new Message(this, CameraControlListener::kInSetConfiguration, aConfig), NS_DISPATCH_NORMAL);
 }
 
 nsresult
@@ -453,7 +423,7 @@ CameraControlImpl::AutoFocus()
   {
   public:
     Message(CameraControlImpl* aCameraControl,
-            CameraControlListener::UserContext aContext)
+            CameraControlListener::CameraErrorContext aContext)
       : ControlMessage(aCameraControl, aContext)
     { }
 
@@ -464,7 +434,8 @@ CameraControlImpl::AutoFocus()
     }
   };
 
-  return Dispatch(new Message(this, CameraControlListener::kInAutoFocus));
+  return mCameraThread->Dispatch(
+    new Message(this, CameraControlListener::kInAutoFocus), NS_DISPATCH_NORMAL);
 }
 
 nsresult
@@ -474,7 +445,7 @@ CameraControlImpl::StartFaceDetection()
   {
   public:
     Message(CameraControlImpl* aCameraControl,
-            CameraControlListener::UserContext aContext)
+            CameraControlListener::CameraErrorContext aContext)
       : ControlMessage(aCameraControl, aContext)
     { }
 
@@ -485,7 +456,8 @@ CameraControlImpl::StartFaceDetection()
     }
   };
 
-  return Dispatch(new Message(this, CameraControlListener::kInStartFaceDetection));
+  return mCameraThread->Dispatch(
+    new Message(this, CameraControlListener::kInStartFaceDetection), NS_DISPATCH_NORMAL);
 }
 
 nsresult
@@ -495,7 +467,7 @@ CameraControlImpl::StopFaceDetection()
   {
   public:
     Message(CameraControlImpl* aCameraControl,
-            CameraControlListener::UserContext aContext)
+            CameraControlListener::CameraErrorContext aContext)
       : ControlMessage(aCameraControl, aContext)
     { }
 
@@ -506,7 +478,8 @@ CameraControlImpl::StopFaceDetection()
     }
   };
 
-  return Dispatch(new Message(this, CameraControlListener::kInStopFaceDetection));
+  return mCameraThread->Dispatch(
+    new Message(this, CameraControlListener::kInStopFaceDetection), NS_DISPATCH_NORMAL);
 }
 
 nsresult
@@ -516,7 +489,7 @@ CameraControlImpl::TakePicture()
   {
   public:
     Message(CameraControlImpl* aCameraControl,
-            CameraControlListener::UserContext aContext)
+            CameraControlListener::CameraErrorContext aContext)
       : ControlMessage(aCameraControl, aContext)
     { }
 
@@ -527,7 +500,8 @@ CameraControlImpl::TakePicture()
     }
   };
 
-  return Dispatch(new Message(this, CameraControlListener::kInTakePicture));
+  return mCameraThread->Dispatch(
+    new Message(this, CameraControlListener::kInTakePicture), NS_DISPATCH_NORMAL);
 }
 
 nsresult
@@ -538,7 +512,7 @@ CameraControlImpl::StartRecording(DeviceStorageFileDescriptor* aFileDescriptor,
   {
   public:
     Message(CameraControlImpl* aCameraControl,
-            CameraControlListener::UserContext aContext,
+            CameraControlListener::CameraErrorContext aContext,
             const StartRecordingOptions* aOptions,
             DeviceStorageFileDescriptor* aFileDescriptor)
       : ControlMessage(aCameraControl, aContext)
@@ -564,11 +538,9 @@ CameraControlImpl::StartRecording(DeviceStorageFileDescriptor* aFileDescriptor,
     nsRefPtr<DeviceStorageFileDescriptor> mFileDescriptor;
   };
 
-  if (!aFileDescriptor) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  return Dispatch(new Message(this, CameraControlListener::kInStartRecording,
-    aOptions, aFileDescriptor));
+
+  return mCameraThread->Dispatch(new Message(this, CameraControlListener::kInStartRecording,
+    aOptions, aFileDescriptor), NS_DISPATCH_NORMAL);
 }
 
 nsresult
@@ -578,7 +550,7 @@ CameraControlImpl::StopRecording()
   {
   public:
     Message(CameraControlImpl* aCameraControl,
-            CameraControlListener::UserContext aContext)
+            CameraControlListener::CameraErrorContext aContext)
       : ControlMessage(aCameraControl, aContext)
     { }
 
@@ -589,7 +561,8 @@ CameraControlImpl::StopRecording()
     }
   };
 
-  return Dispatch(new Message(this, CameraControlListener::kInStopRecording));
+  return mCameraThread->Dispatch(
+    new Message(this, CameraControlListener::kInStopRecording), NS_DISPATCH_NORMAL);
 }
 
 nsresult
@@ -599,7 +572,7 @@ CameraControlImpl::StartPreview()
   {
   public:
     Message(CameraControlImpl* aCameraControl,
-            CameraControlListener::UserContext aContext)
+            CameraControlListener::CameraErrorContext aContext)
       : ControlMessage(aCameraControl, aContext)
     { }
 
@@ -610,7 +583,8 @@ CameraControlImpl::StartPreview()
     }
   };
 
-  return Dispatch(new Message(this, CameraControlListener::kInStartPreview));
+  return mCameraThread->Dispatch(
+    new Message(this, CameraControlListener::kInStartPreview), NS_DISPATCH_NORMAL);
 }
 
 nsresult
@@ -620,7 +594,7 @@ CameraControlImpl::StopPreview()
   {
   public:
     Message(CameraControlImpl* aCameraControl,
-            CameraControlListener::UserContext aContext)
+            CameraControlListener::CameraErrorContext aContext)
       : ControlMessage(aCameraControl, aContext)
     { }
 
@@ -631,7 +605,8 @@ CameraControlImpl::StopPreview()
     }
   };
 
-  return Dispatch(new Message(this, CameraControlListener::kInStopPreview));
+  return mCameraThread->Dispatch(
+    new Message(this, CameraControlListener::kInStopPreview), NS_DISPATCH_NORMAL);
 }
 
 nsresult
@@ -641,7 +616,7 @@ CameraControlImpl::ResumeContinuousFocus()
   {
   public:
     Message(CameraControlImpl* aCameraControl,
-            CameraControlListener::UserContext aContext)
+            CameraControlListener::CameraErrorContext aContext)
       : ControlMessage(aCameraControl, aContext)
     { }
 
@@ -652,7 +627,8 @@ CameraControlImpl::ResumeContinuousFocus()
     }
   };
 
-  return Dispatch(new Message(this, CameraControlListener::kInResumeContinuousFocus));
+  return mCameraThread->Dispatch(
+    new Message(this, CameraControlListener::kInResumeContinuousFocus), NS_DISPATCH_NORMAL);
 }
 
 nsresult
@@ -662,7 +638,7 @@ CameraControlImpl::Stop()
   {
   public:
     Message(CameraControlImpl* aCameraControl,
-            CameraControlListener::UserContext aContext)
+            CameraControlListener::CameraErrorContext aContext)
       : ControlMessage(aCameraControl, aContext)
     { }
 
@@ -673,7 +649,8 @@ CameraControlImpl::Stop()
     }
   };
 
-  return Dispatch(new Message(this, CameraControlListener::kInStopCamera));
+  return mCameraThread->Dispatch(
+    new Message(this, CameraControlListener::kInStopCamera), NS_DISPATCH_NORMAL);
 }
 
 class CameraControlImpl::ListenerMessage : public CameraControlImpl::ControlMessage
@@ -722,9 +699,7 @@ CameraControlImpl::AddListener(CameraControlListener* aListener)
     }
   };
 
-  if (aListener) {
-    Dispatch(new Message(this, aListener));
-  }
+  mCameraThread->Dispatch(new Message(this, aListener), NS_DISPATCH_NORMAL);
 }
 
 void
@@ -756,7 +731,5 @@ CameraControlImpl::RemoveListener(CameraControlListener* aListener)
     }
   };
 
-  if (aListener) {
-    Dispatch(new Message(this, aListener));
-  }
+  mCameraThread->Dispatch(new Message(this, aListener), NS_DISPATCH_NORMAL);
 }

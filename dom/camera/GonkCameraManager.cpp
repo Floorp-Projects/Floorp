@@ -20,8 +20,6 @@
 
 #include "CameraCommon.h"
 #include "GonkCameraControl.h"
-#include "mozilla/Preferences.h"
-#include "TestGonkCameraControl.h"
 
 using namespace mozilla;
 
@@ -42,7 +40,7 @@ ICameraControl::GetCameraName(uint32_t aDeviceNum, nsCString& aDeviceName)
   DOM_CAMERA_LOGI("GetCameraName : getNumberOfCameras() returned %d\n", count);
   if (deviceNum < 0 || deviceNum > count) {
     DOM_CAMERA_LOGE("GetCameraName : invalid device number (%u)\n", aDeviceNum);
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   android::CameraInfo info;
@@ -75,7 +73,6 @@ ICameraControl::GetListOfCameras(nsTArray<nsString>& aList)
   int32_t count = android::Camera::getNumberOfCameras();
   DOM_CAMERA_LOGI("getListOfCameras : getNumberOfCameras() returned %d\n", count);
   if (count <= 0) {
-    aList.Clear();
     return NS_OK;
   }
 
@@ -117,19 +114,10 @@ ICameraControl::GetListOfCameras(nsTArray<nsString>& aList)
   return NS_OK;
 }
 
-static const char* sTestModeEnabled = "camera.control.test.enabled";
-
 // implementation-specific camera factory
 already_AddRefed<ICameraControl>
 ICameraControl::Create(uint32_t aCameraId)
 {
-  const nsAdoptingCString& test = Preferences::GetCString(sTestModeEnabled);
-  nsRefPtr<nsGonkCameraControl> control;
-  if (test.EqualsASCII("control")) {
-    NS_WARNING("Using test CameraControl layer");
-    control = new TestGonkCameraControl(aCameraId);
-  } else {
-    control = new nsGonkCameraControl(aCameraId);
-  }
+  nsRefPtr<nsGonkCameraControl> control = new nsGonkCameraControl(aCameraId);
   return control.forget();
 }
