@@ -32,6 +32,7 @@
 #include "mozilla/dom/CameraCapabilitiesBinding.h"
 #include "DOMCameraDetectedFace.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "nsPrintfCString.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -202,8 +203,7 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
   // Start the camera...
   nsresult rv = mCameraControl->Start(&config);
   if (NS_FAILED(rv)) {
-    mListener->OnError(DOMCameraControlListener::kInStartCamera,
-                       DOMCameraControlListener::kErrorApiFailed);
+    mListener->OnUserError(DOMCameraControlListener::kInStartCamera, rv);
   }
 }
 
@@ -738,7 +738,7 @@ nsDOMCameraControl::StartRecording(const CameraStartRecordingOptions& aOptions,
   nsCOMPtr<nsIDOMDOMRequest> request;
   mDSFileDescriptor = new DeviceStorageFileDescriptor();
   aRv = aStorageArea.CreateFileDescriptor(aFilename, mDSFileDescriptor.get(),
-                                         getter_AddRefs(request));
+                                          getter_AddRefs(request));
   if (aRv.Failed()) {
     return;
   }
@@ -758,6 +758,8 @@ nsDOMCameraControl::StartRecording(const CameraStartRecordingOptions& aOptions,
 void
 nsDOMCameraControl::OnCreatedFileDescriptor(bool aSucceeded)
 {
+  nsresult rv = NS_ERROR_FAILURE;
+
   if (aSucceeded && mDSFileDescriptor->mFileDescriptor.IsValid()) {
     ICameraControl::StartRecordingOptions o;
 
@@ -765,12 +767,13 @@ nsDOMCameraControl::OnCreatedFileDescriptor(bool aSucceeded)
     o.maxFileSizeBytes = mOptions.mMaxFileSizeBytes;
     o.maxVideoLengthMs = mOptions.mMaxVideoLengthMs;
     o.autoEnableLowLightTorch = mOptions.mAutoEnableLowLightTorch;
-    nsresult rv = mCameraControl->StartRecording(mDSFileDescriptor.get(), &o);
+    rv = mCameraControl->StartRecording(mDSFileDescriptor.get(), &o);
     if (NS_SUCCEEDED(rv)) {
       return;
     }
   }
-  OnError(CameraControlListener::kInStartRecording, NS_LITERAL_STRING("FAILURE"));
+
+  OnUserError(CameraControlListener::kInStartRecording, rv);
 
   if (mDSFileDescriptor->mFileDescriptor.IsValid()) {
     // An error occured. We need to manually close the file associated with the
@@ -804,6 +807,28 @@ nsDOMCameraControl::ResumePreview(ErrorResult& aRv)
   aRv = mCameraControl->StartPreview();
 }
 
+class ImmediateErrorCallback : public nsRunnable
+{
+public:
+  ImmediateErrorCallback(CameraErrorCallback* aCallback, const nsAString& aMessage)
+    : mCallback(aCallback)
+    , mMessage(aMessage)
+  { }
+  
+  NS_IMETHODIMP
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    ErrorResult ignored;
+    mCallback->Call(mMessage, ignored);
+    return NS_OK;
+  }
+
+protected:
+  nsRefPtr<CameraErrorCallback> mCallback;
+  nsString mMessage;
+};
+
 void
 nsDOMCameraControl::SetConfiguration(const CameraConfiguration& aConfiguration,
                                      const Optional<OwningNonNull<CameraSetConfigurationCallback> >& aOnSuccess,
@@ -816,10 +841,14 @@ nsDOMCameraControl::SetConfiguration(const CameraConfiguration& aConfiguration,
   if (cb) {
     // We're busy taking a picture, can't change modes right now.
     if (aOnError.WasPassed()) {
-      ErrorResult ignored;
-      aOnError.Value().Call(NS_LITERAL_STRING("Busy"), ignored);
+      // There is already a call to TakePicture() in progress, abort this
+      // call and invoke the error callback (if one was passed in).
+      NS_DispatchToMainThread(new ImmediateErrorCallback(&aOnError.Value(),
+                              NS_LITERAL_STRING("TakePictureInProgress")));
+    } else {
+      // Only throw if no error callback was passed in.
+      aRv = NS_ERROR_FAILURE;
     }
-    aRv = NS_ERROR_FAILURE;
     return;
   }
 
@@ -844,29 +873,6 @@ nsDOMCameraControl::SetConfiguration(const CameraConfiguration& aConfiguration,
   aRv = mCameraControl->SetConfiguration(config);
 }
 
-class ImmediateErrorCallback : public nsRunnable
-{
-public:
-  ImmediateErrorCallback(CameraErrorCallback* aCallback, const nsAString& aMessage)
-    : mCallback(aCallback)
-    , mMessage(aMessage)
-  { }
-  
-  NS_IMETHODIMP
-  Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    ErrorResult ignored;
-    mCallback->Call(mMessage, ignored);
-    return NS_OK;
-  }
-
-protected:
-  nsRefPtr<CameraErrorCallback> mCallback;
-  nsString mMessage;
-};
-
-
 void
 nsDOMCameraControl::AutoFocus(CameraAutoFocusCallback& aOnSuccess,
                               const Optional<OwningNonNull<CameraErrorCallback> >& aOnError,
@@ -881,8 +887,10 @@ nsDOMCameraControl::AutoFocus(CameraAutoFocusCallback& aOnSuccess,
       // and invoke the error callback (if one was passed in).
       NS_DispatchToMainThread(new ImmediateErrorCallback(&aOnError.Value(),
                               NS_LITERAL_STRING("AutoFocusAlreadyInProgress")));
+    } else {
+      // Only throw if no error callback was passed in.
+      aRv = NS_ERROR_FAILURE;
     }
-    aRv = NS_ERROR_FAILURE;
     return;
   }
 
@@ -924,8 +932,10 @@ nsDOMCameraControl::TakePicture(const CameraPictureOptions& aOptions,
       // one and invoke the error callback (if one was passed in).
       NS_DispatchToMainThread(new ImmediateErrorCallback(&aOnError.Value(),
                               NS_LITERAL_STRING("TakePictureAlreadyInProgress")));
+    } else {
+      // Only throw if no error callback was passed in.
+      aRv = NS_ERROR_FAILURE;
     }
-    aRv = NS_ERROR_FAILURE;
     return;
   }
 
@@ -1270,10 +1280,8 @@ nsDOMCameraControl::OnTakePictureComplete(nsIDOMBlob* aPicture)
 }
 
 void
-nsDOMCameraControl::OnError(CameraControlListener::CameraErrorContext aContext, const nsAString& aError)
+nsDOMCameraControl::OnUserError(CameraControlListener::UserContext aContext, nsresult aError)
 {
-  DOM_CAMERA_LOGI("DOM OnError context=%d, error='%s'\n", aContext,
-    NS_LossyConvertUTF16toASCII(aError).get());
   MOZ_ASSERT(NS_IsMainThread());
 
   nsRefPtr<CameraErrorCallback> errorCb;
@@ -1321,36 +1329,79 @@ nsDOMCameraControl::OnError(CameraControlListener::CameraErrorContext aContext, 
       NS_WARNING("Failed to (re)start preview");
       return;
 
-    case CameraControlListener::kInUnspecified:
-      if (aError.EqualsASCII("ErrorServiceFailed")) {
-        // If the camera service fails, we will get preview-stopped and
-        // hardware-closed events, so nothing to do here.
-        NS_WARNING("Camera service failed");
-        return;
-      }
-      if (aError.EqualsASCII("ErrorSetPictureSizeFailed") ||
-          aError.EqualsASCII("ErrorSetThumbnailSizeFailed")) {
-        // We currently don't handle attribute setter failure. Practically,
-        // this only ever happens if a setter is called after the hardware
-        // has gone away before an asynchronous set gets to happen, so we
-        // swallow these.
-        NS_WARNING("Failed to set either picture or thumbnail size");
-        return;
-      }
-      // fallthrough
+    case CameraControlListener::kInStopPreview:
+      // This method doesn't have any callbacks, so all we can do is log the
+      // failure. This only happens after the hardware has been released.
+      NS_WARNING("Failed to stop preview");
+      return;
+
+    case CameraControlListener::kInSetPictureSize:
+      // This method doesn't have any callbacks, so all we can do is log the
+      // failure. This only happens after the hardware has been released.
+      NS_WARNING("Failed to set picture size");
+      return;
+
+    case CameraControlListener::kInSetThumbnailSize:
+      // This method doesn't have any callbacks, so all we can do is log the
+      // failure. This only happens after the hardware has been released.
+      NS_WARNING("Failed to set thumbnail size");
+      return;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Error occurred in unanticipated camera state");
+      {
+        nsPrintfCString msg("Unhandled aContext=%u, aError=0x%x\n", aContext, aError);
+        NS_WARNING(msg.get());
+      }
+      MOZ_ASSUME_UNREACHABLE("Unhandled user error");
       return;
   }
 
   if (!errorCb) {
-    DOM_CAMERA_LOGW("DOM No error handler for error '%s' in context=%d\n",
-      NS_LossyConvertUTF16toASCII(aError).get(), aContext);
+    DOM_CAMERA_LOGW("DOM No error handler for aError=0x%x in aContext=%u\n",
+      aError, aContext);
     return;
   }
 
-  ErrorResult ignored;
-  errorCb->Call(aError, ignored);
-}
+  nsString error;
+  switch (aError) {
+    case NS_ERROR_INVALID_ARG:
+      error = NS_LITERAL_STRING("InvalidArgument");
+      break;
 
+    case NS_ERROR_NOT_AVAILABLE:
+      error = NS_LITERAL_STRING("NotAvailable");
+      break;
+
+    case NS_ERROR_NOT_IMPLEMENTED:
+      error = NS_LITERAL_STRING("NotImplemented");
+      break;
+
+    case NS_ERROR_NOT_INITIALIZED:
+      error = NS_LITERAL_STRING("HardwareClosed");
+      break;
+
+    case NS_ERROR_ALREADY_INITIALIZED:
+      error = NS_LITERAL_STRING("HardwareAlreadyOpen");
+      break;
+
+    case NS_ERROR_OUT_OF_MEMORY:
+      error = NS_LITERAL_STRING("OutOfMemory");
+      break;
+
+    default:
+      {
+        nsPrintfCString msg("Reporting aError=0x%x as generic\n", aError);
+        NS_WARNING(msg.get());
+      }
+      // fallthrough
+
+    case NS_ERROR_FAILURE:
+      error = NS_LITERAL_STRING("GeneralFailure");
+      break;
+  }
+
+  DOM_CAMERA_LOGI("DOM OnUserError aContext=%u, error='%s'\n", aContext,
+    NS_ConvertUTF16toUTF8(error).get());
+  ErrorResult ignored;
+  errorCb->Call(error, ignored);
+}
