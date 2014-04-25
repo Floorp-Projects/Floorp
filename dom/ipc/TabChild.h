@@ -205,7 +205,6 @@ protected:
 
     nsEventStatus DispatchWidgetEvent(WidgetGUIEvent& event);
 
-    bool HasValidInnerSize();
     void InitializeRootMetrics();
 
     mozilla::layers::FrameMetrics ProcessUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics);
@@ -522,6 +521,8 @@ private:
                               bool* aWindowIsNew,
                               nsIDOMWindow** aReturn);
 
+    bool HasValidInnerSize();
+
     class CachedFileDescriptorInfo;
     class CachedFileDescriptorCallbackRunnable;
 
@@ -560,6 +561,7 @@ private:
 
     bool mIgnoreKeyPressEvent;
     nsRefPtr<ActiveElementManager> mActiveElementManager;
+    bool mHasValidInnerSize;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
