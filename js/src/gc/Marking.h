@@ -27,7 +27,7 @@ class ScopeObject;
 class Shape;
 class UnownedBaseShape;
 
-template<class, typename> class HeapPtr;
+template<class> class HeapPtr;
 
 namespace jit {
 class JitCode;
@@ -49,10 +49,10 @@ namespace gc {
  * these are the variants generated for JSObject. They are listed from most to
  * least desirable for use:
  *
- * MarkObject(JSTracer *trc, const HeapPtr<JSObject> &thing, const char *name);
+ * MarkObject(JSTracer *trc, const HeapPtrObject &thing, const char *name);
  *     This function should be used for marking JSObjects, in preference to all
- *     others below. Use it when you have HeapPtr<JSObject>, which
- *     automatically implements write barriers.
+ *     others below. Use it when you have HeapPtrObject, which automatically
+ *     implements write barriers.
  *
  * MarkObjectRoot(JSTracer *trc, JSObject *thing, const char *name);
  *     This function is only valid during the root marking phase of GC (i.e.,
@@ -88,16 +88,16 @@ namespace gc {
  */
 
 #define DeclMarker(base, type)                                                                    \
-void Mark##base(JSTracer *trc, BarrieredPtr<type> *thing, const char *name);                      \
+void Mark##base(JSTracer *trc, BarrieredPtr<type*> *thing, const char *name);                     \
 void Mark##base##Root(JSTracer *trc, type **thingp, const char *name);                            \
 void Mark##base##Unbarriered(JSTracer *trc, type **thingp, const char *name);                     \
-void Mark##base##Range(JSTracer *trc, size_t len, HeapPtr<type> *thing, const char *name);        \
+void Mark##base##Range(JSTracer *trc, size_t len, HeapPtr<type*> *thing, const char *name);       \
 void Mark##base##RootRange(JSTracer *trc, size_t len, type **thing, const char *name);            \
 bool Is##base##Marked(type **thingp);                                                             \
-bool Is##base##Marked(BarrieredPtr<type> *thingp);                                                \
+bool Is##base##Marked(BarrieredPtr<type*> *thingp);                                               \
 bool Is##base##AboutToBeFinalized(type **thingp);                                                 \
-bool Is##base##AboutToBeFinalized(BarrieredPtr<type> *thingp);                                    \
-type *Update##base##IfRelocated(JSRuntime *rt, BarrieredPtr<type> *thingp);                       \
+bool Is##base##AboutToBeFinalized(BarrieredPtr<type*> *thingp);                                   \
+type *Update##base##IfRelocated(JSRuntime *rt, BarrieredPtr<type*> *thingp);                      \
 type *Update##base##IfRelocated(JSRuntime *rt, type **thingp);
 
 DeclMarker(BaseShape, BaseShape)
@@ -240,13 +240,6 @@ MarkCrossCompartmentSlot(JSTracer *trc, JSObject *src, HeapSlot *dst_slot, const
 /*** Special Cases ***/
 
 /*
- * The unioned HeapPtr stored in script->globalObj needs special treatment to
- * typecheck correctly.
- */
-void
-MarkObject(JSTracer *trc, HeapPtr<GlobalObject, JSScript *> *thingp, const char *name);
-
-/*
  * MarkChildren<JSObject> is exposed solely for preWriteBarrier on
  * JSObject::TradeGuts. It should not be considered external interface.
  */
@@ -290,7 +283,7 @@ Mark(JSTracer *trc, BarrieredPtrScript *o, const char *name)
 }
 
 inline void
-Mark(JSTracer *trc, HeapPtr<jit::JitCode> *code, const char *name)
+Mark(JSTracer *trc, HeapPtrJitCode *code, const char *name)
 {
     MarkJitCode(trc, code, name);
 }

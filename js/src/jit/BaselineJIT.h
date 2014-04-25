@@ -107,7 +107,7 @@ struct BaselineScript
 
   private:
     // Code pointer containing the actual method.
-    HeapPtr<JitCode> method_;
+    HeapPtrJitCode method_;
 
     // For heavyweight scripts, template objects to use for the call object and
     // decl env object (linked via the call object's enclosing scope).

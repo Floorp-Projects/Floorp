@@ -31,9 +31,9 @@ struct NativeIterator
 {
     HeapPtrObject obj;                  // Object being iterated.
     JSObject *iterObj_;                 // Internal iterator object.
-    HeapPtr<JSFlatString> *props_array;
-    HeapPtr<JSFlatString> *props_cursor;
-    HeapPtr<JSFlatString> *props_end;
+    HeapPtrFlatString *props_array;
+    HeapPtrFlatString *props_cursor;
+    HeapPtrFlatString *props_end;
     Shape **shapes_array;
     uint32_t shapes_length;
     uint32_t shapes_key;
@@ -49,11 +49,11 @@ struct NativeIterator
         return (flags & JSITER_FOREACH) == 0;
     }
 
-    inline HeapPtr<JSFlatString> *begin() const {
+    inline HeapPtrFlatString *begin() const {
         return props_array;
     }
 
-    inline HeapPtr<JSFlatString> *end() const {
+    inline HeapPtrFlatString *end() const {
         return props_end;
     }
 
@@ -64,7 +64,7 @@ struct NativeIterator
     JSObject *iterObj() const {
         return iterObj_;
     }
-    HeapPtr<JSFlatString> *current() const {
+    HeapPtrFlatString *current() const {
         JS_ASSERT(props_cursor < props_end);
         return props_cursor;
     }
