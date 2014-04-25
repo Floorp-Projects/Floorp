@@ -1487,6 +1487,18 @@ nsDOMWindowUtils::CycleCollect(nsICycleCollectorListener *aListener,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::RunNextCollectorTimer()
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsJSContext::RunNextCollectorTimer();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
                                          float aX,
                                          float aY,

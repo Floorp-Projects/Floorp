@@ -43,7 +43,7 @@ interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 interface nsITranslationNodeList;
 
-[scriptable, uuid(3d977df2-1c0e-4b61-bc21-c6ee757a9191)]
+[scriptable, uuid(926c7450-ab88-11e3-a5e2-0800200c9a66)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -742,6 +742,12 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void cycleCollect([optional] in nsICycleCollectorListener aListener,
                     [optional] in long aExtraForgetSkippableCalls);
+
+  /**
+   * Trigger whichever GC or CC timer is currently active and waiting to fire.
+   * Don't do this too much for initiating heavy actions, like the start of a IGC.
+   */
+  void runNextCollectorTimer();
 
   /** Synthesize a simple gesture event for a window. The event types
    *  supported are: MozSwipeGestureStart, MozSwipeGestureUpdate,

@@ -11,12 +11,7 @@ window.addEventListener("load", function() {
   runner.testUnloaded();
 
   if (SpecialPowers) {
-    if (!runner.garbageCollectCount) {
-      runner.garbageCollectCount = 0;
-    }
-    if (runner.garbageCollectCount++ % 10 == 0) {
-      SpecialPowers.DOMWindowUtils.garbageCollect();
-    }
+    SpecialPowers.DOMWindowUtils.runNextCollectorTimer();
   }
 });
 </script>
