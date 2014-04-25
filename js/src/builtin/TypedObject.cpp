@@ -1300,7 +1300,7 @@ DefineMetaTypeDescr(JSContext *cx,
     RootedObject protoProto(cx);
     protoProto = NewObjectWithProto<JSObject>(cx, objProto,
                                               global, SingletonObject);
-    if (!proto)
+    if (!protoProto)
         return nullptr;
 
     RootedValue protoProtoValue(cx, ObjectValue(*protoProto));
