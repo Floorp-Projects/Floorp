@@ -29,7 +29,7 @@ public:
   virtual void OnConfigurationChange(const CameraListenerConfiguration& aConfiguration) MOZ_OVERRIDE;
   virtual void OnShutter() MOZ_OVERRIDE;
   virtual bool OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight) MOZ_OVERRIDE;
-  virtual void OnError(CameraErrorContext aContext, CameraError aError) MOZ_OVERRIDE;
+  virtual void OnUserError(UserContext aContext, nsresult aError) MOZ_OVERRIDE;
 
 protected:
   virtual ~DOMCameraControlListener();
