@@ -55,14 +55,14 @@ var tests = [
   {
     key: "set-picture-size-after-release",
     func: function testSetPictureSize(camera) {
-      camera.setPictureSize({ width: 0, height: 0 });
+      camera.pictureSize = { width: 0, height: 0 };
       next();
     }
   },
   {
     key: "set-thumbnail-size-after-release",
     func: function testSetThumbnailSize(camera) {
-      camera.setThumbnailSize({ width: 0, height: 0 });
+      camera.thumbnailSize = { width: 0, height: 0 };
       next();
     }
   },
@@ -191,7 +191,7 @@ var Camera = {
         "capabilities.pictureSizes.length = " +
         camera.capabilities.pictureSizes.length);
       Camera._otherPictureSize = camera.capabilities.pictureSizes.slice(-1)[0];
-      camera.setPictureSize(camera.capabilities.pictureSizes[0]);
+      camera.pictureSize = camera.capabilities.pictureSizes[0];
       options.pictureSize = Camera._otherPictureSize;
       options.fileFormat = camera.capabilities.fileFormats[0];
       info("getCamera callback, setting pictureSize = " + options.pictureSize.toSource());
