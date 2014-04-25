@@ -28,7 +28,7 @@
 
 using namespace mozilla;
 
-#if defined(XP_LINUX) || defined(__FreeBSD__) // {
+#if defined(XP_LINUX) || defined(__FreeBSD__) || defined(XP_MACOSX) // {
 
 /**
  * Abstract base class for something which watches an fd and takes action when
