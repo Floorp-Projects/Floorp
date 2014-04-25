@@ -3172,7 +3172,7 @@ CASE(JSOP_INITPROP)
     RootedId &id = rootId0;
     id = NameToId(name);
 
-    if (!DefineNativeProperty(cx, obj, id, rval, nullptr, nullptr, JSPROP_ENUMERATE, 0, 0))
+    if (!DefineNativeProperty(cx, obj, id, rval, nullptr, nullptr, JSPROP_ENUMERATE))
         goto error;
 
     REGS.sp--;

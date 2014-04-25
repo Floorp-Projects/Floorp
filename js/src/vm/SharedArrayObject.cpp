@@ -321,7 +321,7 @@ js_InitSharedArrayBufferClass(JSContext *cx, HandleObject obj)
         return nullptr;
 
     RootedId byteLengthId(cx, NameToId(cx->names().byteLength));
-    unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
+    unsigned attrs = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
     JSObject *getter = NewFunction(cx, NullPtr(), SharedArrayBufferObject::byteLengthGetter, 0,
                                    JSFunction::NATIVE_FUN, global, NullPtr());
     if (!getter)
@@ -329,7 +329,7 @@ js_InitSharedArrayBufferClass(JSContext *cx, HandleObject obj)
 
     RootedValue value(cx, UndefinedValue());
     if (!DefineNativeProperty(cx, proto, byteLengthId, value,
-                              JS_DATA_TO_FUNC_PTR(PropertyOp, getter), nullptr, flags, 0, 0))
+                              JS_DATA_TO_FUNC_PTR(PropertyOp, getter), nullptr, attrs))
     {
         return nullptr;
     }

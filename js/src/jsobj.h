@@ -1367,10 +1367,16 @@ DeepCloneObjectLiteral(JSContext *cx, HandleObject obj, NewObjectKind newKind = 
 /*
  * Flags for the defineHow parameter of DefineNativeProperty.
  */
-const unsigned DNP_DONT_PURGE   = 1;   /* suppress js_PurgeScopeChain */
-const unsigned DNP_UNQUALIFIED  = 2;   /* Unqualified property set.  Only used in
-                                       the defineHow argument of
-                                       js_SetPropertyHelper. */
+enum {
+    /* Suppress js_PurgeScopeChain. */
+    DNP_DONT_PURGE   = 1,
+
+    /*
+     * Unqualified property set.  Only used in the defineHow argument of
+     * js_SetPropertyHelper.
+     */
+    DNP_UNQUALIFIED  = 2
+};
 
 /*
  * Return successfully added or changed shape or nullptr on error.
@@ -1378,7 +1384,7 @@ const unsigned DNP_UNQUALIFIED  = 2;   /* Unqualified property set.  Only used i
 extern bool
 DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleValue value,
                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
-                     unsigned flags, unsigned defineHow = 0);
+                     unsigned defineHow = 0);
 
 /*
  * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.

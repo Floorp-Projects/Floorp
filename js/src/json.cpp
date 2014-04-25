@@ -648,7 +648,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
     /* Step 10. */
     RootedId emptyId(cx, NameToId(cx->names().empty));
     if (!DefineNativeProperty(cx, wrapper, emptyId, vp, JS_PropertyStub, JS_StrictPropertyStub,
-                              JSPROP_ENUMERATE, 0))
+                              JSPROP_ENUMERATE))
     {
         return false;
     }

@@ -894,7 +894,7 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value_,
     if (!obj ||
         !wrapDebuggeeValue(cx, &value) ||
         !DefineNativeProperty(cx, obj, key, value, JS_PropertyStub, JS_StrictPropertyStub,
-                              JSPROP_ENUMERATE, 0))
+                              JSPROP_ENUMERATE))
     {
         return false;
     }
@@ -4470,7 +4470,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
         RootedValue fargcVal(cx, Int32Value(fargc));
         if (!DefineNativeProperty(cx, argsobj, cx->names().length,
                                   fargcVal, nullptr, nullptr,
-                                  JSPROP_PERMANENT | JSPROP_READONLY, 0))
+                                  JSPROP_PERMANENT | JSPROP_READONLY))
         {
             return false;
         }
@@ -4487,7 +4487,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
             if (!getobj ||
                 !DefineNativeProperty(cx, argsobj, id, UndefinedHandleValue,
                                       JS_DATA_TO_FUNC_PTR(PropertyOp, getobj.get()), nullptr,
-                                      JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER, 0))
+                                      JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER))
             {
                 return false;
             }
@@ -4788,7 +4788,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
             id = keys[i];
             MutableHandleValue val = values.handleAt(i);
             if (!cx->compartment()->wrap(cx, val) ||
-                !DefineNativeProperty(cx, env, id, val, nullptr, nullptr, 0, 0))
+                !DefineNativeProperty(cx, env, id, val, nullptr, nullptr, 0))
             {
                 return false;
             }
