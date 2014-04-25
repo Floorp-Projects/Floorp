@@ -8860,7 +8860,7 @@ class CGProxyIndexedOperation(CGProxySpecialOperation):
         else:
             setIndex = "uint32_t %s = index;\n" % argName
         if self.doUnwrap:
-            unwrap = "%s* self = UnwrapProxy(proxy);\n"
+            unwrap = "%s* self = UnwrapProxy(proxy);\n" % self.descriptor.nativeType
         else:
             unwrap = ""
         return (setIndex + unwrap +
@@ -8903,6 +8903,14 @@ class CGProxyIndexedSetter(CGProxyIndexedOperation):
     """
     def __init__(self, descriptor):
         CGProxyIndexedOperation.__init__(self, descriptor, 'IndexedSetter')
+
+
+class CGProxyIndexedDeleter(CGProxyIndexedOperation):
+    """
+    Class to generate a call to an indexed deleter.
+    """
+    def __init__(self, descriptor):
+        CGProxyIndexedOperation.__init__(self, descriptor, 'IndexedDeleter')
 
 
 class CGProxyNamedOperation(CGProxySpecialOperation):
@@ -9004,14 +9012,6 @@ class CGProxyNamedSetter(CGProxyNamedOperation):
         CGProxyNamedOperation.__init__(self, descriptor, 'NamedSetter')
 
 
-class CGProxyIndexedDeleter(CGProxyIndexedOperation):
-    """
-    Class to generate a call to an indexed deleter.
-    """
-    def __init__(self, descriptor):
-        CGProxyIndexedOperation.__init__(self, descriptor, 'IndexedDeleter')
-
-
 class CGProxyNamedDeleter(CGProxyNamedOperation):
     """
     Class to generate a call to a named deleter.
@@ -9086,8 +9086,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
                   $*{callGetter}
                 }
                 """,
-                callGetter=(CGProxyIndexedGetter(self.descriptor, templateValues).define() %
-                            self.descriptor.nativeType))
+                callGetter=CGProxyIndexedGetter(self.descriptor, templateValues).define())
 
         if UseHolderForUnforgeable(self.descriptor):
             tryHolder = dedent("""
@@ -9217,12 +9216,16 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
         if indexedSetter:
             if self.descriptor.operations['IndexedCreator'] is not indexedSetter:
                 raise TypeError("Can't handle creator that's different from the setter")
-            set += ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
-                    "if (IsArrayIndex(index)) {\n" +
-                    "  *defined = true;" +  # SUPER BOGUS missing newline here
-                    indent(CGProxyIndexedSetter(self.descriptor).define()) +
-                    "  return true;\n" +
-                    "}\n") % self.descriptor.nativeType
+            set += fill(
+                """
+                int32_t index = GetArrayIndexFromId(cx, id);
+                if (IsArrayIndex(index)) {
+                  *defined = true;
+                  $*{callSetter}
+                  return true;
+                }
+                """,
+                callSetter=CGProxyIndexedSetter(self.descriptor).define())
         elif self.descriptor.supportsIndexedProperties():
             set += fill(
                 """
@@ -9341,7 +9344,7 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
                   return true;
                 }
                 """,
-                indexedBody=indexedBody % self.descriptor.nativeType)
+                indexedBody=indexedBody)
 
         if UseHolderForUnforgeable(self.descriptor):
             unforgeable = dedent("""
@@ -9479,8 +9482,7 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
                 }
 
                 """,
-                presenceChecker=(CGProxyIndexedPresenceChecker(self.descriptor).define() %
-                                 self.descriptor.nativeType))
+                presenceChecker=CGProxyIndexedPresenceChecker(self.descriptor).define())
         else:
             indexed = ""
 
@@ -9598,8 +9600,7 @@ class CGDOMJSProxyHandler_get(ClassMethod):
                   $*{getUnforgeableOrExpando}
                 }
                 """,
-                callGetter=(CGProxyIndexedGetter(self.descriptor, templateValues).define() %
-                            self.descriptor.nativeType),
+                callGetter=CGProxyIndexedGetter(self.descriptor, templateValues).define(),
                 getUnforgeableOrExpando=getUnforgeableOrExpando)
         else:
             getIndexedOrExpando = getUnforgeableOrExpando
