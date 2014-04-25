@@ -698,11 +698,9 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
 
   sIsProfiling = true;
 
-  if (Sampler::CanNotifyObservers()) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os)
-      os->NotifyObservers(nullptr, "profiler-started", nullptr);
-  }
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os)
+    os->NotifyObservers(nullptr, "profiler-started", nullptr);
 
   LOG("END   mozilla_sampler_start");
 }
@@ -751,11 +749,9 @@ void mozilla_sampler_stop()
 
   sIsProfiling = false;
 
-  if (Sampler::CanNotifyObservers()) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os)
-      os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
-  }
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os)
+    os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
 
   LOG("END   mozilla_sampler_stop");
 }
