@@ -635,7 +635,7 @@ MediaEngineWebRTCVideoSource::OnHardwareStateChange(HardwareState aState)
 }
 
 void
-MediaEngineWebRTCVideoSource::OnUserError(UserContext aContext, nsresult aError)
+MediaEngineWebRTCVideoSource::OnError(CameraErrorContext aContext, CameraError aError)
 {
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
   mCallbackMonitor.Notify();

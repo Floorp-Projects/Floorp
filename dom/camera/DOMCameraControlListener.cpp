@@ -354,14 +354,14 @@ DOMCameraControlListener::OnTakePictureComplete(uint8_t* aData, uint32_t aLength
 }
 
 void
-DOMCameraControlListener::OnUserError(UserContext aContext, nsresult aError)
+DOMCameraControlListener::OnError(CameraErrorContext aContext, CameraError aError)
 {
   class Callback : public DOMCallback
   {
   public:
     Callback(nsMainThreadPtrHandle<nsDOMCameraControl> aDOMCameraControl,
-             UserContext aContext,
-             nsresult aError)
+             CameraErrorContext aContext,
+             CameraError aError)
       : DOMCallback(aDOMCameraControl)
       , mContext(aContext)
       , mError(aError)
@@ -370,12 +370,36 @@ DOMCameraControlListener::OnUserError(UserContext aContext, nsresult aError)
     virtual void
     RunCallback(nsDOMCameraControl* aDOMCameraControl) MOZ_OVERRIDE
     {
-      aDOMCameraControl->OnUserError(mContext, mError);
+      nsString error;
+
+      switch (mError) {
+        case kErrorServiceFailed:
+          error = NS_LITERAL_STRING("ErrorServiceFailed");
+          break;
+
+        case kErrorSetPictureSizeFailed:
+          error = NS_LITERAL_STRING("ErrorSetPictureSizeFailed");
+          break;
+
+        case kErrorSetThumbnailSizeFailed:
+          error = NS_LITERAL_STRING("ErrorSetThumbnailSizeFailed");
+          break;
+
+        case kErrorApiFailed:
+          // XXXmikeh legacy error placeholder
+          error = NS_LITERAL_STRING("FAILURE");
+          break;
+
+        default:
+          error = NS_LITERAL_STRING("ErrorUnknown");
+          break;
+      }
+      aDOMCameraControl->OnError(mContext, error);
     }
 
   protected:
-    UserContext mContext;
-    nsresult mError;
+    CameraErrorContext mContext;
+    CameraError mError;
   };
 
   NS_DispatchToMainThread(new Callback(mDOMCameraControl, aContext, aError));

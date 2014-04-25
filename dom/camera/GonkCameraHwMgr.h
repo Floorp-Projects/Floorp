@@ -43,12 +43,6 @@ class GonkCameraHardware : public GonkNativeWindowNewFrameCallback
 protected:
   GonkCameraHardware(mozilla::nsGonkCameraControl* aTarget, uint32_t aCameraId, const sp<Camera>& aCamera);
   virtual ~GonkCameraHardware();
-
-  // Initialize the AOSP camera interface.
-  //
-  // Return values:
-  //  - NS_OK on success;
-  //  - NS_ERROR_NOT_INITIALIZED if the interface could not be initialized.
   virtual nsresult Init();
 
 public:

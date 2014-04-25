@@ -4,7 +4,6 @@
   <title>Test for bug 975472</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="camera_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -87,7 +86,7 @@ var tests = [
         ok(false, "autoFocus() succeeded incorrectly");
       }
       function onError(error) {
-        ok(error === "hardware-closed", "autoFocus() failed with: " + error);
+        ok(true, "autoFocus() failed correctly with: " + error);
         next();
       }
       camera.autoFocus(onSuccess, onError);
@@ -100,7 +99,7 @@ var tests = [
         ok(false, "takePicture() succeeded incorrectly");
       }
       function onError(error) {
-        ok(error === "hardware-closed", "takePicture() failed with: " + error);
+        ok(true, "takePicture() failed correctly with: " + error);
         next();
       }
       camera.takePicture(null, onSuccess, onError);
@@ -113,7 +112,7 @@ var tests = [
         ok(false, "startRecording() process succeeded incorrectly");
       }
       function onError(error) {
-        ok(error === "hardware-closed", "startRecording() failed with: " + error);
+        ok(true, "startRecording() process failed correctly with: " + error);
         next();
       }
       var recordingOptions = {
@@ -140,7 +139,7 @@ var tests = [
         ok(false, "setConfiguration() process succeeded incorrectly");
       }
       function onError(error) {
-        ok(error === "hardware-closed", "setConfiguration() failed with: " + error);
+        ok(true, "setConfiguration() process failed correctly with: " + error);
         next();
       }
       camera.setConfiguration(config, onSuccess, onError);
@@ -168,7 +167,7 @@ var Camera = {
         t.func(Camera.cameraObj);
       } catch(e) {
         if (e instanceof StopIteration) {
-          CameraTest.end();
+          SimpleTest.finish();
         } else {
           throw e;
         }
