@@ -2657,7 +2657,7 @@ ProcessedMediaStream::DestroyImpl()
 }
 
 MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime, TrackRate aSampleRate)
-  : mDriverHolder(this)
+  : mDriverHolder(MOZ_THIS_IN_INITIALIZER_LIST())
   , mProcessingGraphUpdateIndex(0)
   , mPortCount(0)
   , mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED)
@@ -2798,7 +2798,7 @@ MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
     mNeedsMemoryReport = true;
 
     // Wake up the MSG thread.
-    CurrentDriver()->EnsureImmediateWakeUpLocked();
+    CurrentDriver()->WakeUp();
 
     if (mLifecycleState >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN) {
       // Shutting down, nothing to report.

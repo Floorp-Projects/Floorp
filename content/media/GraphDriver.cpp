@@ -58,19 +58,16 @@ DriverHolder::Switch(GraphDriver* aDriver)
   mDriver = aDriver;
 }
 
-SystemClockDriver::SystemClockDriver(MediaStreamGraphImpl* aGraphImpl)
-  : GraphDriver(aGraphImpl),
-    mInitialTimeStamp(TimeStamp::Now()),
-    mLastTimeStamp(TimeStamp::Now()),
-    mCurrentTimeStamp(TimeStamp::Now())
-{}
+ThreadedDriver::ThreadedDriver(MediaStreamGraphImpl* aGraphImpl)
+  : GraphDriver(aGraphImpl)
+{ }
 
-SystemClockDriver::~SystemClockDriver()
+ThreadedDriver::~ThreadedDriver()
 { }
 
 class MediaStreamGraphInitThreadRunnable : public nsRunnable {
 public:
-  explicit MediaStreamGraphInitThreadRunnable(GraphDriver* aDriver)
+  explicit MediaStreamGraphInitThreadRunnable(ThreadedDriver* aDriver)
     : mDriver(aDriver)
   {
   }
@@ -82,24 +79,24 @@ public:
     return NS_OK;
   }
 private:
-  GraphDriver* mDriver;
+  ThreadedDriver* mDriver;
 };
 
 void
-SystemClockDriver::Start()
+ThreadedDriver::Start()
 {
   nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
   NS_NewNamedThread("MediaStreamGrph", getter_AddRefs(mThread), event);
 }
 
 void
-SystemClockDriver::Dispatch(nsIRunnable* aEvent)
+ThreadedDriver::Dispatch(nsIRunnable* aEvent)
 {
   mThread->Dispatch(aEvent, NS_DISPATCH_NORMAL);
 }
 
 void
-SystemClockDriver::Stop()
+ThreadedDriver::Stop()
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
   // mGraph's thread is not running so it's OK to do whatever here
@@ -111,8 +108,18 @@ SystemClockDriver::Stop()
   }
 }
 
+SystemClockDriver::SystemClockDriver(MediaStreamGraphImpl* aGraphImpl)
+  : ThreadedDriver(aGraphImpl),
+    mInitialTimeStamp(TimeStamp::Now()),
+    mLastTimeStamp(TimeStamp::Now()),
+    mCurrentTimeStamp(TimeStamp::Now())
+{}
+
+SystemClockDriver::~SystemClockDriver()
+{ }
+
 void
-SystemClockDriver::RunThread()
+ThreadedDriver::RunThread()
 {
   AutoProfilerUnregisterThread autoUnregister;
   nsTArray<MessageBlock> messageQueue;
@@ -216,7 +223,7 @@ SystemClockDriver::WakeUp()
 }
 
 OfflineClockDriver::OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTime aSlice)
-  : GraphDriver(aGraphImpl),
+  : ThreadedDriver(aGraphImpl),
     mSlice(aSlice)
 {
 
@@ -224,63 +231,6 @@ OfflineClockDriver::OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTi
 
 OfflineClockDriver::~OfflineClockDriver()
 { }
-
-void
-OfflineClockDriver::Start()
-{
-  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
-  NS_NewNamedThread("MediaStreamGrph", getter_AddRefs(mThread), event);
-}
-
-void
-OfflineClockDriver::Stop()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
-  // mGraph's thread is not running so it's OK to do whatever here
-  STREAM_LOG(PR_LOG_DEBUG, ("Stopping threads for MediaStreamGraph %p", this));
-
-  if (mThread) {
-    mThread->Shutdown();
-    mThread = nullptr;
-  }
-}
-
-void
-OfflineClockDriver::Dispatch(nsIRunnable* aEvent)
-{
-  mThread->Dispatch(aEvent, NS_DISPATCH_NORMAL);
-}
-
-void
-OfflineClockDriver::RunThread()
-{
-  AutoProfilerUnregisterThread autoUnregister;
-  nsTArray<MessageBlock> messageQueue;
-  {
-    MonitorAutoLock lock(mMonitor);
-    messageQueue.SwapElements(mGraphImpl->MessageQueue());
-  }
-  NS_ASSERTION(!messageQueue.IsEmpty(),
-               "Shouldn't have started a graph with empty message queue!");
-
-  bool stillProcessing = true;
-
-  while(stillProcessing) {
-    GraphTime prevCurrentTime, nextCurrentTime;
-    GetIntervalForIteration(prevCurrentTime, nextCurrentTime);
-
-    GraphTime nextStateComputedTime =
-      mGraphImpl->RoundUpToNextAudioBlock(
-          IterationEnd() + mGraphImpl->MillisecondsToMediaTime(AUDIO_TARGET_MS));
-
-
-    stillProcessing = mGraphImpl->OneIteration(prevCurrentTime,
-                                               nextCurrentTime,
-                                               StateComputedTime(),
-                                               nextStateComputedTime,
-                                               messageQueue);
-  }
-}
 
 void
 OfflineClockDriver::GetIntervalForIteration(GraphTime& aFrom, GraphTime& aTo)

@@ -9,7 +9,7 @@
 namespace mozilla {
 
 /**
- * We make the initial IterationEnd() nonzero so that zero times can have
+ * We make the initial graph time nonzero so that zero times can have
  * special meaning if necessary.
  */
 static const int32_t INITIAL_CURRENT_TIME = 1;
@@ -62,8 +62,13 @@ public:
   /* Dispatch an event to the graph's thread. */
   virtual void Dispatch(nsIRunnable* aEvent) = 0;
 
+  /**
+   * If we are running a real time graph, get the current time stamp to schedule
+   * video frames. This has to be reimplemented by real time drivers.
+   */
   virtual TimeStamp GetCurrentTimeStamp() {
     MOZ_ASSERT(false, "This clock does not support getting the current time stamp.");
+    return TimeStamp();
   }
 
   bool IsWaiting() {
@@ -87,6 +92,11 @@ public:
     return mStateComputedTime;
   }
 
+  /**
+   * Whenever the graph has computed the time until it has all state
+   * (mStateComputedState), it calls this to indicate the new time until which
+   * we have computed state.
+   */
   void UpdateStateComputedTime(GraphTime aStateComputedTime) {
     MOZ_ASSERT(aStateComputedTime > mIterationEnd);
 
@@ -195,18 +205,30 @@ protected:
 };
 
 /**
+ * This class is a driver that manages its own thread.
+ */
+class ThreadedDriver : public GraphDriver
+{
+public:
+  ThreadedDriver(MediaStreamGraphImpl* aGraphImpl);
+  virtual ~ThreadedDriver();
+  virtual void Start() MOZ_OVERRIDE;
+  virtual void Stop() MOZ_OVERRIDE;
+  virtual void Dispatch(nsIRunnable* aEvent) MOZ_OVERRIDE;
+  void RunThread();
+private:
+  nsCOMPtr<nsIThread> mThread;
+};
+
+/**
  * A SystemClockDriver drives a MediaStreamGraph using a system clock, and waits
  * using a monitor, between each iteration.
  */
-class SystemClockDriver : public GraphDriver
+class SystemClockDriver : public ThreadedDriver
 {
 public:
   SystemClockDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~SystemClockDriver();
-  virtual void Start() MOZ_OVERRIDE;
-  virtual void Stop() MOZ_OVERRIDE;
-  virtual void Dispatch(nsIRunnable* aEvent) MOZ_OVERRIDE;
-  virtual void RunThread() MOZ_OVERRIDE;
   virtual void GetIntervalForIteration(GraphTime& aFrom,
                                        GraphTime& aTo) MOZ_OVERRIDE;
   virtual GraphTime GetCurrentTime() MOZ_OVERRIDE;
@@ -219,22 +241,17 @@ private:
   TimeStamp mInitialTimeStamp;
   TimeStamp mLastTimeStamp;
   TimeStamp mCurrentTimeStamp;
-  nsCOMPtr<nsIThread> mThread;
 };
 
 /**
  * An OfflineClockDriver runs the graph as fast as possible, without waiting
  * between iteration.
  */
-class OfflineClockDriver : public GraphDriver
+class OfflineClockDriver : public ThreadedDriver
 {
 public:
   OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTime aSlice);
   virtual ~OfflineClockDriver();
-  virtual void Start() MOZ_OVERRIDE;
-  virtual void Stop() MOZ_OVERRIDE;
-  virtual void Dispatch(nsIRunnable* aEvent) MOZ_OVERRIDE;
-  virtual void RunThread() MOZ_OVERRIDE;
   virtual void GetIntervalForIteration(GraphTime& aFrom,
                                        GraphTime& aTo) MOZ_OVERRIDE;
   virtual GraphTime GetCurrentTime() MOZ_OVERRIDE;
@@ -244,7 +261,6 @@ public:
 private:
   // Time, in GraphTime, for each iteration
   GraphTime mSlice;
-  nsCOMPtr<nsIThread> mThread;
 };
 
 }
