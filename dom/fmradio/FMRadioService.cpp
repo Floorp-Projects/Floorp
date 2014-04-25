@@ -24,6 +24,9 @@
 #define CHANNEL_WIDTH_100KHZ 100
 #define CHANNEL_WIDTH_50KHZ  50
 
+#define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
+#define SETTING_KEY_AIRPLANEMODE_ENABLED "airplaneMode.enabled"
+
 using namespace mozilla::hal;
 using mozilla::Preferences;
 
@@ -45,8 +48,8 @@ StaticRefPtr<FMRadioService> FMRadioService::sFMRadioService;
 FMRadioService::FMRadioService()
   : mPendingFrequencyInKHz(0)
   , mState(Disabled)
-  , mHasReadRilSetting(false)
-  , mRilDisabled(false)
+  , mHasReadAirplaneModeSetting(false)
+  , mAirplaneModeEnabled(false)
   , mPendingRequest(nullptr)
   , mObserverList(FMRadioEventObserverList())
 {
@@ -90,6 +93,12 @@ FMRadioService::FMRadioService()
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
 
+  if (obs && NS_FAILED(obs->AddObserver(this,
+                                        MOZSETTINGS_CHANGED_ID,
+                                        /* useWeak */ false))) {
+    NS_WARNING("Failed to add settings change observer!");
+  }
+
   RegisterFMRadioObserver(this);
 }
 
@@ -128,12 +137,12 @@ private:
  * Read the airplane-mode setting, if the airplane-mode is not enabled, we
  * enable the FM radio.
  */
-class ReadRilSettingTask MOZ_FINAL : public nsISettingsServiceCallback
+class ReadAirplaneModeSettingTask MOZ_FINAL : public nsISettingsServiceCallback
 {
 public:
   NS_DECL_ISUPPORTS
 
-  ReadRilSettingTask(nsRefPtr<FMRadioReplyRunnable> aPendingRequest)
+  ReadAirplaneModeSettingTask(nsRefPtr<FMRadioReplyRunnable> aPendingRequest)
     : mPendingRequest(aPendingRequest) { }
 
   NS_IMETHOD
@@ -142,7 +151,7 @@ public:
     FMRadioService* fmRadioService = FMRadioService::Singleton();
     MOZ_ASSERT(mPendingRequest == fmRadioService->mPendingRequest);
 
-    fmRadioService->mHasReadRilSetting = true;
+    fmRadioService->mHasReadAirplaneModeSetting = true;
 
     if (!aResult.isBoolean()) {
       // Failed to read the setting value, set the state back to Disabled.
@@ -151,8 +160,8 @@ public:
       return NS_OK;
     }
 
-    fmRadioService->mRilDisabled = aResult.toBoolean();
-    if (!fmRadioService->mRilDisabled) {
+    fmRadioService->mAirplaneModeEnabled = aResult.toBoolean();
+    if (!fmRadioService->mAirplaneModeEnabled) {
       EnableRunnable* runnable =
         new EnableRunnable(fmRadioService->mUpperBoundInKHz,
                            fmRadioService->mLowerBoundInKHz,
@@ -183,7 +192,7 @@ private:
   nsRefPtr<FMRadioReplyRunnable> mPendingRequest;
 };
 
-NS_IMPL_ISUPPORTS1(ReadRilSettingTask, nsISettingsServiceCallback)
+NS_IMPL_ISUPPORTS1(ReadAirplaneModeSettingTask, nsISettingsServiceCallback)
 
 class DisableRunnable MOZ_FINAL : public nsRunnable
 {
@@ -407,7 +416,7 @@ FMRadioService::Enable(double aFrequencyInMHz,
     return;
   }
 
-  if (mHasReadRilSetting && mRilDisabled) {
+  if (mHasReadAirplaneModeSetting && mAirplaneModeEnabled) {
     aReplyRunnable->SetReply(ErrorResponse(
       NS_LITERAL_STRING("Airplane mode currently enabled")));
     NS_DispatchToMainThread(aReplyRunnable);
@@ -422,7 +431,7 @@ FMRadioService::Enable(double aFrequencyInMHz,
   // Cache the frequency value, and set it after the FM radio HW is enabled
   mPendingFrequencyInKHz = roundedFrequency;
 
-  if (!mHasReadRilSetting) {
+  if (!mHasReadAirplaneModeSetting) {
     nsCOMPtr<nsISettingsService> settings =
       do_GetService("@mozilla.org/settingsService;1");
 
@@ -434,10 +443,10 @@ FMRadioService::Enable(double aFrequencyInMHz,
       return;
     }
 
-    nsRefPtr<ReadRilSettingTask> callback =
-      new ReadRilSettingTask(mPendingRequest);
+    nsRefPtr<ReadAirplaneModeSettingTask> callback =
+      new ReadAirplaneModeSettingTask(mPendingRequest);
 
-    rv = settingsLock->Get("ril.radio.disabled", callback);
+    rv = settingsLock->Get(SETTING_KEY_AIRPLANEMODE_ENABLED, callback);
     if (NS_FAILED(rv)) {
       TransitionState(ErrorResponse(
         NS_LITERAL_STRING("Can't get settings lock")), Disabled);
@@ -454,18 +463,25 @@ FMRadioService::Enable(double aFrequencyInMHz,
 void
 FMRadioService::Disable(FMRadioReplyRunnable* aReplyRunnable)
 {
+  // When airplane-mode is enabled, we will call this function from
+  // FMRadioService::Observe without passing a FMRadioReplyRunnable,
+  // so we have to check if |aReplyRunnable| is null before we dispatch it.
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   switch (mState) {
     case Disabling:
-      aReplyRunnable->SetReply(
-        ErrorResponse(NS_LITERAL_STRING("FM radio currently disabling")));
-      NS_DispatchToMainThread(aReplyRunnable);
+      if (aReplyRunnable) {
+        aReplyRunnable->SetReply(
+          ErrorResponse(NS_LITERAL_STRING("FM radio currently disabling")));
+        NS_DispatchToMainThread(aReplyRunnable);
+      }
       return;
     case Disabled:
-      aReplyRunnable->SetReply(
-        ErrorResponse(NS_LITERAL_STRING("FM radio currently disabled")));
-      NS_DispatchToMainThread(aReplyRunnable);
+      if (aReplyRunnable) {
+        aReplyRunnable->SetReply(
+          ErrorResponse(NS_LITERAL_STRING("FM radio currently disabled")));
+        NS_DispatchToMainThread(aReplyRunnable);
+      }
       return;
     case Enabled:
     case Enabling:
@@ -494,13 +510,15 @@ FMRadioService::Disable(FMRadioReplyRunnable* aReplyRunnable)
       ErrorResponse(NS_LITERAL_STRING("Enable action is cancelled")));
     NS_DispatchToMainThread(enablingRequest);
 
-    // If we haven't read the ril settings yet we won't enable the FM radio HW,
-    // so fail the disable request immediately.
-    if (!mHasReadRilSetting) {
+    // If we haven't read the airplane mode settings yet we won't enable the
+    // FM radio HW, so fail the disable request immediately.
+    if (!mHasReadAirplaneModeSetting) {
       SetState(Disabled);
 
-      aReplyRunnable->SetReply(SuccessResponse());
-      NS_DispatchToMainThread(aReplyRunnable);
+      if (aReplyRunnable) {
+        aReplyRunnable->SetReply(SuccessResponse());
+        NS_DispatchToMainThread(aReplyRunnable);
+      }
     }
 
     return;
@@ -631,6 +649,66 @@ FMRadioService::CancelSeek(FMRadioReplyRunnable* aReplyRunnable)
   NS_DispatchToMainThread(aReplyRunnable);
 }
 
+NS_IMETHODIMP
+FMRadioService::Observe(nsISupports * aSubject,
+                        const char * aTopic,
+                        const char16_t * aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(sFMRadioService);
+
+  if (strcmp(aTopic, MOZSETTINGS_CHANGED_ID) != 0) {
+    return NS_OK;
+  }
+
+  // The string that we're interested in will be a JSON string looks like:
+  //  {"key":"airplaneMode.enabled","value":true}
+  AutoSafeJSContext cx;
+  const nsDependentString dataStr(aData);
+  JS::Rooted<JS::Value> val(cx);
+  if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||
+      !val.isObject()) {
+    NS_WARNING("Bad JSON string format.");
+    return NS_OK;
+  }
+
+  JS::Rooted<JSObject*> obj(cx, &val.toObject());
+  JS::Rooted<JS::Value> key(cx);
+  if (!JS_GetProperty(cx, obj, "key", &key) ||
+      !key.isString()) {
+    NS_WARNING("Failed to get string property `key`.");
+    return NS_OK;
+  }
+
+  JS::Rooted<JSString*> jsKey(cx, key.toString());
+  nsDependentJSString keyStr;
+  if (!keyStr.init(cx, jsKey)) {
+    return NS_OK;
+  }
+
+  if (keyStr.EqualsLiteral(SETTING_KEY_AIRPLANEMODE_ENABLED)) {
+    JS::Rooted<JS::Value> value(cx);
+    if (!JS_GetProperty(cx, obj, "value", &value)) {
+      NS_WARNING("Failed to get property `value`.");
+      return NS_OK;
+    }
+
+    if (!value.isBoolean()) {
+      return NS_OK;
+    }
+
+    mAirplaneModeEnabled = value.toBoolean();
+    mHasReadAirplaneModeSetting = true;
+
+    // Disable the FM radio HW if Airplane mode is enabled.
+    if (mAirplaneModeEnabled) {
+      Disable(nullptr);
+    }
+  }
+
+  return NS_OK;
+}
+
 void
 FMRadioService::NotifyFMRadioEvent(FMRadioEventType aType)
 {
@@ -732,7 +810,7 @@ FMRadioService::Singleton()
   return sFMRadioService;
 }
 
-NS_IMPL_ISUPPORTS0(FMRadioService)
+NS_IMPL_ISUPPORTS1(FMRadioService, nsIObserver)
 
 END_FMRADIO_NAMESPACE
 
