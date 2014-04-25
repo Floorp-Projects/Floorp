@@ -8,18 +8,42 @@
 #define MediaStreamAudioSourceNode_h_
 
 #include "AudioNode.h"
+#include "DOMMediaStream.h"
+#include "AudioNodeEngine.h"
 
 namespace mozilla {
 
-class DOMMediaStream;
-
 namespace dom {
 
-class MediaStreamAudioSourceNode : public AudioNode
+class MediaStreamAudioSourceNodeEngine : public AudioNodeEngine
+{
+public:
+  MediaStreamAudioSourceNodeEngine(AudioNode* aNode)
+    : AudioNodeEngine(aNode), mEnabled(false) {}
+
+  bool IsEnabled() const { return mEnabled; }
+  enum Parameters {
+    ENABLE
+  };
+  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aValue) MOZ_OVERRIDE
+  {
+    switch (aIndex) {
+    case ENABLE:
+      mEnabled = !!aValue;
+      break;
+    default:
+      NS_ERROR("MediaStreamAudioSourceNodeEngine bad parameter index");
+    }
+  }
+private:
+  bool mEnabled;
+};
+
+class MediaStreamAudioSourceNode : public AudioNode,
+                                   public DOMMediaStream::PrincipalChangeObserver
 {
 public:
   MediaStreamAudioSourceNode(AudioContext* aContext, DOMMediaStream* aMediaStream);
-  // Define constructor out-of-line so we can forward-declare DOMMediaStream
   virtual ~MediaStreamAudioSourceNode();
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -38,6 +62,8 @@ public:
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
+  virtual void PrincipalChanged(DOMMediaStream* aMediaStream) MOZ_OVERRIDE;
 
 private:
   nsRefPtr<MediaInputPort> mInputPort;
