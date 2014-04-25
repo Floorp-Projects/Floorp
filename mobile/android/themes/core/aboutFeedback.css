@@ -126,7 +126,7 @@ section:not([active]) {
 
 .description,
 #last-url {
-  font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
+  font-family: "Clear Sans",sans-serif;
   font-size: 14px;
   margin-bottom: 10px;
   padding: 5px;

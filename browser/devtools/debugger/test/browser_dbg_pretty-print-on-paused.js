@@ -2,16 +2,15 @@
   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Test that pretty printing when the debugger is paused
- * does not switch away from the selected source.
+ * Test that pretty printing when the debugger is paused does not switch away
+ * from the selected source.
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print-on-paused.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
-let gSources;
+let gTab, gDebuggee, gPanel, gDebugger, gThreadClient, gSources;
 
-let gSecondSourceLabel = "code_ugly-2.js";
+const SECOND_SOURCE_VALUE = EXAMPLE_URL + "code_ugly-2.js";
 
 function test(){
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
@@ -19,57 +18,43 @@ function test(){
     gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
+    gThreadClient = gDebugger.gThreadClient;
     gSources = gDebugger.DebuggerView.Sources;
 
-    gPanel.addBreakpoint({ url: gSources.values[0], line: 6 });
+    Task.spawn(function* () {
+      try {
+        yield ensureSourceIs(gPanel, "code_script-switching-02.js", true);
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6)
-      .then(testPaused)
-      .then(() => {
-        // Switch to the second source.
-        let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN);
-        gSources.selectedIndex = 1;
-        return finished;
-      })
-      .then(testSecondSourceIsSelected)
-      .then(() => {
-        const finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN);
-        clickPrettyPrintButton();
-        testProgressBarShown();
-        return finished;
-      })
-      .then(testSecondSourceIsStillSelected)
-      .then(() => closeDebuggerAndFinish(gPanel))
-      .then(null, aError => {
-        ok(false, "Got an error: " + DevToolsUtils.safeErrorString(aError));
-      })
+        yield doInterrupt(gPanel);
+        yield rdpInvoke(gThreadClient, gThreadClient.setBreakpoint, {
+          url: gSources.selectedValue,
+          line: 6
+        });
+        yield doResume(gPanel);
 
-    gDebuggee.secondCall();
+        const bpHit = waitForCaretAndScopes(gPanel, 6);
+        // Get the debuggee call off this tick so that we aren't accidentally
+        // blocking the yielding of bpHit which causes a deadlock.
+        executeSoon(() => gDebuggee.secondCall());
+        yield bpHit;
+
+        info("Switch to the second source.");
+        const sourceShown = waitForSourceShown(gPanel, SECOND_SOURCE_VALUE);
+        gSources.selectedValue = SECOND_SOURCE_VALUE;
+        yield sourceShown;
+
+        info("Pretty print the source.");
+        const prettyPrinted = waitForSourceShown(gPanel, SECOND_SOURCE_VALUE);
+        gDebugger.document.getElementById("pretty-print").click();
+        yield prettyPrinted;
+
+        yield resumeDebuggerThenCloseAndFinish(gPanel);
+      } catch (e) {
+        DevToolsUtils.reportException("browser_dbg_pretty-print-on-paused.js", e);
+        ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+      }
+    });
   });
-}
-
-function testPaused() {
-  is(gDebugger.gThreadClient.paused, true,
-    "The thread should be paused");
-}
-
-function testSecondSourceIsSelected() {
-  ok(gSources.containsValue(EXAMPLE_URL + gSecondSourceLabel),
-    "The second source should be selected.");
-}
-
-function clickPrettyPrintButton() {
-  gDebugger.document.getElementById("pretty-print").click();
-}
-
-function testProgressBarShown() {
-  const deck = gDebugger.document.getElementById("editor-deck");
-  is(deck.selectedIndex, 2, "The progress bar should be shown");
-}
-
-function testSecondSourceIsStillSelected() {
-  ok(gSources.containsValue(EXAMPLE_URL + gSecondSourceLabel),
-    "The second source should still be selected.");
 }
 
 registerCleanupFunction(function() {
@@ -77,5 +62,6 @@ registerCleanupFunction(function() {
   gDebuggee = null;
   gPanel = null;
   gDebugger = null;
+  gThreadClient = null;
   gSources = null;
 });

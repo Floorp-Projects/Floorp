@@ -66,6 +66,50 @@ function test() {
       }
     },
     {
+      name: "new tab search",
+      searchURL: base,
+      run: function () {
+        function doSearch(doc) {
+          // Re-add the listener, and perform a search
+          gBrowser.addProgressListener(listener);
+          doc.getElementById("newtab-search-text").value = "foo";
+          doc.getElementById("newtab-search-submit").click();
+        }
+
+        // load about:newtab, but remove the listener first so it doesn't
+        // get in the way
+        gBrowser.removeProgressListener(listener);
+        gBrowser.loadURI("about:newtab");
+        info("Waiting for about:newtab load");
+        tab.linkedBrowser.addEventListener("load", function load(event) {
+          if (event.originalTarget != tab.linkedBrowser.contentDocument ||
+              event.target.location.href == "about:blank") {
+            info("skipping spurious load event");
+            return;
+          }
+          tab.linkedBrowser.removeEventListener("load", load, true);
+
+          // Observe page setup
+          let win = gBrowser.contentWindow;
+          if (win.gSearch.currentEngineName ==
+              Services.search.currentEngine.name) {
+            doSearch(win.document);
+          }
+          else {
+            info("Waiting for newtab search init");
+            win.addEventListener("ContentSearchService", function done(event) {
+              info("Got newtab search event " + event.detail.type);
+              if (event.detail.type == "State") {
+                win.removeEventListener("ContentSearchService", done);
+                // Let gSearch respond to the event before continuing.
+                executeSoon(() => doSearch(win.document));
+              }
+            });
+          }
+        }, true);
+      }
+    },
+    {
       name: "home page search",
       searchURL: base + "&form=MOZSPG",
       run: function () {

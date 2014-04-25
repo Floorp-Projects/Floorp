@@ -62,14 +62,3 @@ function inspectPage(dropper, click=true) {
 function pressESC() {
   EventUtils.synthesizeKey("VK_ESCAPE", { });
 }
-
-function dropperLoaded(dropper) {
-  if (dropper.loaded) {
-    return promise.resolve();
-  }
-
-  let deferred = promise.defer();
-  dropper.once("load", deferred.resolve);
-
-  return deferred.promise;
-}

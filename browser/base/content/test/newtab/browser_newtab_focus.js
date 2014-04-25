@@ -9,9 +9,9 @@ function runTests() {
   Services.prefs.setIntPref("accessibility.tabfocus", 7);
 
   // Focus count in new tab page.
-  // 28 = 9 * 3 + 1 = 9 sites and 1 toggle button, each site has a link, a pin
-  // and a remove button.
-  let FOCUS_COUNT = 28;
+  // 30 = 9 * 3 + 3 = 9 sites, each with link, pin and remove buttons; search
+  // bar; search button; and toggle button.
+  let FOCUS_COUNT = 30;
 
   // Create a new tab page.
   yield setLinks("0,1,2,3,4,5,6,7,8");
