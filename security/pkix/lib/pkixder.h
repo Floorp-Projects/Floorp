@@ -465,7 +465,7 @@ Null(Input& input)
   return ExpectTagAndLength(input, NULLTag, 0);
 }
 
-template <uint16_t Len>
+template <uint8_t Len>
 Result
 OID(Input& input, const uint8_t (&expectedOid)[Len])
 {
