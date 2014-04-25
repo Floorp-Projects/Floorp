@@ -145,23 +145,25 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *targetObj
     JS::CompileOptions options(cx);
     options.setFileAndLine(uriStr, 1);
     if (!charset.IsVoid()) {
-        nsString script;
+        jschar *scriptBuf = nullptr;
+        size_t scriptLength = 0;
+
         rv = nsScriptLoader::ConvertToUTF16(nullptr, reinterpret_cast<const uint8_t*>(buf.get()), len,
-                                            charset, nullptr, script);
+                                            charset, nullptr, scriptBuf, scriptLength);
+
+        JS::SourceBufferHolder srcBuf(scriptBuf, scriptLength,
+                                      JS::SourceBufferHolder::GiveOwnership);
 
         if (NS_FAILED(rv)) {
             return ReportError(cx, LOAD_ERROR_BADCHARSET);
         }
 
         if (!reuseGlobal) {
-            *scriptp = JS::Compile(cx, target_obj, options,
-                                   script.get(),
-                                   script.Length());
+            *scriptp = JS::Compile(cx, target_obj, options, srcBuf);
         } else {
             *functionp = JS::CompileFunction(cx, target_obj, options,
                                              nullptr, 0, nullptr,
-                                             script.get(),
-                                             script.Length());
+                                             srcBuf);
         }
     } else {
         // We only use lazy source when no special encoding is specified because
@@ -386,10 +388,16 @@ public:
         : mObserver(aObserver)
         , mPrincipal(aPrincipal)
         , mChannel(aChannel)
+        , mScriptBuf(nullptr)
+        , mScriptLength(0)
     {}
 
     virtual ~ScriptPrecompiler()
-    {}
+    {
+      if (mScriptBuf) {
+        js_free(mScriptBuf);
+      }
+    }
 
     static void OffThreadCallback(void *aToken, void *aData);
 
@@ -400,7 +408,8 @@ private:
     nsRefPtr<nsIObserver> mObserver;
     nsRefPtr<nsIPrincipal> mPrincipal;
     nsRefPtr<nsIChannel> mChannel;
-    nsString mScript;
+    jschar* mScriptBuf;
+    size_t mScriptLength;
 };
 
 NS_IMPL_ISUPPORTS1(ScriptPrecompiler, nsIStreamLoaderObserver);
@@ -479,7 +488,8 @@ ScriptPrecompiler::OnStreamComplete(nsIStreamLoader* aLoader,
     nsAutoString hintCharset;
     nsresult rv =
         nsScriptLoader::ConvertToUTF16(mChannel, aString, aLength,
-                                       hintCharset, nullptr, mScript);
+                                       hintCharset, nullptr,
+                                       mScriptBuf, mScriptLength);
 
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
@@ -509,7 +519,7 @@ ScriptPrecompiler::OnStreamComplete(nsIStreamLoader* aLoader,
     uri->GetSpec(spec);
     options.setFile(spec.get());
 
-    if (!JS::CanCompileOffThread(cx, options, mScript.Length())) {
+    if (!JS::CanCompileOffThread(cx, options, mScriptLength)) {
         NS_WARNING("Can't compile script off thread!");
         return NS_OK;
     }
@@ -518,7 +528,7 @@ ScriptPrecompiler::OnStreamComplete(nsIStreamLoader* aLoader,
         new NotifyPrecompilationCompleteRunnable(this);
 
     if (!JS::CompileOffThread(cx, options,
-                              mScript.get(), mScript.Length(),
+                              mScriptBuf, mScriptLength,
                               OffThreadCallback,
                               static_cast<void*>(runnable))) {
         NS_WARNING("Failed to compile script off thread!");
