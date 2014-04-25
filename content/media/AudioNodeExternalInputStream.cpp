@@ -7,6 +7,7 @@
 #include "AudioNodeExternalInputStream.h"
 #include "AudioChannelFormat.h"
 #include "speex/speex_resampler.h"
+#include "mozilla/dom/MediaStreamAudioSourceNode.h"
 
 using namespace mozilla::dom;
 
@@ -324,7 +325,7 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
 
   // GC stuff can result in our input stream being destroyed before this stream.
   // Handle that.
-  if (mInputs.IsEmpty()) {
+  if (!IsEnabled() || mInputs.IsEmpty()) {
     mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
     AdvanceOutputSegment();
     return;
@@ -450,6 +451,12 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
 
   // Using AudioNodeStream's AdvanceOutputSegment to push the media stream graph along with null data.
   AdvanceOutputSegment();
+}
+
+bool
+AudioNodeExternalInputStream::IsEnabled()
+{
+  return ((MediaStreamAudioSourceNodeEngine*)Engine())->IsEnabled();
 }
 
 }
