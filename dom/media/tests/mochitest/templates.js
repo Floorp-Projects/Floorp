@@ -1,6 +1,12 @@
 /**
  * Default list of commands to execute for a PeerConnection test.
  */
+
+var STABLE = "stable";
+var HAVE_LOCAL_OFFER = "have-local-offer";
+var HAVE_REMOTE_OFFER = "have-remote-offer";
+var CLOSED = "closed";
+
 var commandsPeerConnection = [
   [
     'PC_LOCAL_GUM',
@@ -21,7 +27,7 @@ var commandsPeerConnection = [
   [
     'PC_LOCAL_CHECK_INITIAL_SIGNALINGSTATE',
     function (test) {
-      is(test.pcLocal.signalingState, "stable",
+      is(test.pcLocal.signalingState, STABLE,
          "Initial local signalingState is 'stable'");
       test.next();
     }
@@ -29,7 +35,7 @@ var commandsPeerConnection = [
   [
     'PC_REMOTE_CHECK_INITIAL_SIGNALINGSTATE',
     function (test) {
-      is(test.pcRemote.signalingState, "stable",
+      is(test.pcRemote.signalingState, STABLE,
          "Initial remote signalingState is 'stable'");
       test.next();
     }
@@ -38,7 +44,7 @@ var commandsPeerConnection = [
     'PC_LOCAL_CREATE_OFFER',
     function (test) {
       test.createOffer(test.pcLocal, function () {
-        is(test.pcLocal.signalingState, "stable",
+        is(test.pcLocal.signalingState, STABLE,
            "Local create offer does not change signaling state");
         if (!test.pcRemote) {
           send_message({"offer": test.pcLocal._last_offer,
@@ -51,8 +57,8 @@ var commandsPeerConnection = [
   [
     'PC_LOCAL_SET_LOCAL_DESCRIPTION',
     function (test) {
-      test.setLocalDescription(test.pcLocal, test.pcLocal._last_offer, function () {
-        is(test.pcLocal.signalingState, "have-local-offer",
+      test.setLocalDescription(test.pcLocal, test.pcLocal._last_offer, HAVE_LOCAL_OFFER, function () {
+        is(test.pcLocal.signalingState, HAVE_LOCAL_OFFER,
            "signalingState after local setLocalDescription is 'have-local-offer'");
         test.next();
       });
@@ -78,8 +84,8 @@ var commandsPeerConnection = [
   [
     'PC_REMOTE_SET_REMOTE_DESCRIPTION',
     function (test) {
-      test.setRemoteDescription(test.pcRemote, test._local_offer, function () {
-        is(test.pcRemote.signalingState, "have-remote-offer",
+      test.setRemoteDescription(test.pcRemote, test._local_offer, HAVE_REMOTE_OFFER, function () {
+        is(test.pcRemote.signalingState, HAVE_REMOTE_OFFER,
            "signalingState after remote setRemoteDescription is 'have-remote-offer'");
         test.next();
       });
@@ -89,7 +95,7 @@ var commandsPeerConnection = [
     'PC_REMOTE_CREATE_ANSWER',
     function (test) {
       test.createAnswer(test.pcRemote, function () {
-        is(test.pcRemote.signalingState, "have-remote-offer",
+        is(test.pcRemote.signalingState, HAVE_REMOTE_OFFER,
            "Remote createAnswer does not change signaling state");
         if (!test.pcLocal) {
           send_message({"answer": test.pcRemote._last_answer,
@@ -119,8 +125,8 @@ var commandsPeerConnection = [
   [
     'PC_LOCAL_SET_REMOTE_DESCRIPTION',
     function (test) {
-      test.setRemoteDescription(test.pcLocal, test._remote_answer, function () {
-        is(test.pcLocal.signalingState, "stable",
+      test.setRemoteDescription(test.pcLocal, test._remote_answer, STABLE, function () {
+        is(test.pcLocal.signalingState, STABLE,
            "signalingState after local setRemoteDescription is 'stable'");
         test.next();
       });
@@ -129,8 +135,8 @@ var commandsPeerConnection = [
   [
     'PC_REMOTE_SET_LOCAL_DESCRIPTION',
     function (test) {
-      test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer, function () {
-        is(test.pcRemote.signalingState, "stable",
+      test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer, STABLE, function () {
+        is(test.pcRemote.signalingState, STABLE,
            "signalingState after remote setLocalDescription is 'stable'");
         test.next();
       });
@@ -260,19 +266,25 @@ var commandsDataChannel = [
     }
   ],
   [
+    'PC_LOCAL_INITIAL_SIGNALINGSTATE',
+    function (test) {
+      is(test.pcLocal.signalingState, STABLE,
+         "Initial local signalingState is stable");
+      test.next();
+    }
+  ],
+  [
     'PC_REMOTE_GUM',
     function (test) {
       test.pcRemote.getAllUserMedia(function () {
-        test.next();
+      test.next();
       });
     }
   ],
   [
-    'PC_CHECK_INITIAL_SIGNALINGSTATE',
+    'PC_REMOTE_INITIAL_SIGNALINGSTATE',
     function (test) {
-      is(test.pcLocal.signalingState, "stable",
-         "Initial local signalingState is stable");
-      is(test.pcRemote.signalingState, "stable",
+      is(test.pcRemote.signalingState, STABLE,
          "Initial remote signalingState is stable");
       test.next();
     }
@@ -285,7 +297,7 @@ var commandsDataChannel = [
       is(channel.binaryType, "blob", channel + " is of binary type 'blob'");
       is(channel.readyState, "connecting", channel + " is in state: 'connecting'");
 
-      is(test.pcLocal.signalingState, "stable",
+      is(test.pcLocal.signalingState, STABLE,
          "Create datachannel does not change signaling state");
 
       test.next();
@@ -295,7 +307,7 @@ var commandsDataChannel = [
     'PC_LOCAL_CREATE_OFFER',
     function (test) {
       test.pcLocal.createOffer(function (offer) {
-        is(test.pcLocal.signalingState, "stable",
+        is(test.pcLocal.signalingState, STABLE,
            "Local create offer does not change signaling state");
         ok(offer.sdp.contains("m=application"),
            "m=application is contained in the SDP");
@@ -306,8 +318,9 @@ var commandsDataChannel = [
   [
     'PC_LOCAL_SET_LOCAL_DESCRIPTION',
     function (test) {
-      test.setLocalDescription(test.pcLocal, test.pcLocal._last_offer, function () {
-        is(test.pcLocal.signalingState, "have-local-offer",
+      test.setLocalDescription(test.pcLocal, test.pcLocal._last_offer, HAVE_LOCAL_OFFER,
+        function () {
+        is(test.pcLocal.signalingState, HAVE_LOCAL_OFFER,
            "signalingState after local setLocalDescription is 'have-local-offer'");
         test.next();
       });
@@ -316,8 +329,9 @@ var commandsDataChannel = [
   [
     'PC_REMOTE_SET_REMOTE_DESCRIPTION',
     function (test) {
-      test.setRemoteDescription(test.pcRemote, test.pcLocal._last_offer, function () {
-        is(test.pcRemote.signalingState, "have-remote-offer",
+      test.setRemoteDescription(test.pcRemote, test.pcLocal._last_offer, HAVE_REMOTE_OFFER,
+        function () {
+        is(test.pcRemote.signalingState, HAVE_REMOTE_OFFER,
            "signalingState after remote setRemoteDescription is 'have-remote-offer'");
         test.next();
       });
@@ -327,7 +341,7 @@ var commandsDataChannel = [
     'PC_REMOTE_CREATE_ANSWER',
     function (test) {
       test.createAnswer(test.pcRemote, function () {
-        is(test.pcRemote.signalingState, "have-remote-offer",
+        is(test.pcRemote.signalingState, HAVE_REMOTE_OFFER,
            "Remote create offer does not change signaling state");
         test.next();
       });
@@ -336,8 +350,9 @@ var commandsDataChannel = [
   [
     'PC_LOCAL_SET_REMOTE_DESCRIPTION',
     function (test) {
-      test.setRemoteDescription(test.pcLocal, test.pcRemote._last_answer, function () {
-        is(test.pcLocal.signalingState, "stable",
+      test.setRemoteDescription(test.pcLocal, test.pcRemote._last_answer, STABLE,
+        function () {
+        is(test.pcLocal.signalingState, STABLE,
            "signalingState after local setRemoteDescription is 'stable'");
         test.next();
       });
@@ -346,12 +361,12 @@ var commandsDataChannel = [
   [
     'PC_REMOTE_SET_LOCAL_DESCRIPTION',
     function (test) {
-      test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer,
+      test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer, STABLE,
         function (sourceChannel, targetChannel) {
           is(sourceChannel.readyState, "open", test.pcLocal + " is in state: 'open'");
           is(targetChannel.readyState, "open", test.pcRemote + " is in state: 'open'");
 
-          is(test.pcRemote.signalingState, "stable",
+          is(test.pcRemote.signalingState, STABLE,
              "signalingState after remote setLocalDescription is 'stable'");
           test.next();
         }
