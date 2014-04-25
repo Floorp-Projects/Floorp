@@ -62,6 +62,7 @@ function indirectCallCannotGC(fullCaller, fullVariable)
 var ignoreClasses = {
     "JSTracer" : true,
     "JSStringFinalizer" : true,
+    "SprintfState" : true,
     "SprintfStateStr" : true,
     "JSLocaleCallbacks" : true,
     "JSC::ExecutableAllocator" : true,
