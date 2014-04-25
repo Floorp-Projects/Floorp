@@ -1766,6 +1766,13 @@ toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
   -moz-padding-start: 0px;
 }
 
+#sidebar-header > .close-icon {
+  -moz-appearance: none;
+  padding: 4px 2px;
+  margin: 0;
+  border: none;
+}
+
 .browserContainer > findbar {
   background-color: -moz-dialog;
   color: -moz-DialogText;
@@ -1995,20 +2002,6 @@ toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
 .alltabs-item[tabIsVisible] {
   /* box-shadow instead of background-color to work around native styling */
   box-shadow: inset -5px 0 ThreeDShadow;
-}
-
-/* Tabstrip close button */
-.tabs-closebutton {
-  -moz-appearance: none;
-  padding: 4px 2px;
-  margin: 0px;
-  border: none;
-}
-
-.tabs-closebutton > .toolbarbutton-icon {
-  -moz-margin-end: 0px !important;
-  -moz-padding-end: 2px !important;
-  -moz-padding-start: 2px !important;
 }
 
 toolbarbutton.chevron {
