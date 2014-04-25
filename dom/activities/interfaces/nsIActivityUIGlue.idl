@@ -13,13 +13,13 @@ interface nsIActivityUIGlueCallback : nsISupports
 /**
   * To be implemented by @mozilla.org/dom/activities/ui-glue;1
   */
-[scriptable, uuid(8624ad73-937a-400f-9d93-39ab5449b867)]
+[scriptable, uuid(03e6743c-2fc3-43fa-bcb3-0476947c8ac5)]
 interface nsIActivityUIGlue : nsISupports
 {
     /**
-      * @param name        The name of the activity to handle (eg. "share", "pick").
+      * @param options     The ActivityOptions object in the form of { name: "send", data: { ... } }
       * @param activities  A json blob which is an array of { "title":"...", "icon":"..." }.
       * @param onresult    The callback to send the index of the choosen activity. Send -1 if no choice is made.
       */
-    void chooseActivity(in DOMString title, in jsval activities, in nsIActivityUIGlueCallback onresult);
+    void chooseActivity(in jsval options, in jsval activities, in nsIActivityUIGlueCallback onresult);
 };
