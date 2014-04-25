@@ -2705,7 +2705,7 @@ LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, HandleId id,
     if (!obj2->isNative()) {
         if (obj2->is<ProxyObject>()) {
             Rooted<PropertyDescriptor> desc(cx);
-            if (!Proxy::getPropertyDescriptor(cx, obj2, id, &desc, 0))
+            if (!Proxy::getPropertyDescriptor(cx, obj2, id, &desc))
                 return false;
             if (!desc.isShared()) {
                 vp.set(desc.value());
@@ -3295,17 +3295,17 @@ JS_DefineProperties(JSContext *cx, HandleObject obj, const JSPropertySpec *ps)
 }
 
 static bool
-GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                          bool own, MutableHandle<PropertyDescriptor> desc)
+GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id,
+                          MutableHandle<PropertyDescriptor> desc)
 {
     RootedObject obj2(cx);
     RootedShape shape(cx);
 
-    if (!LookupPropertyById(cx, obj, id, flags, &obj2, &shape))
+    if (!LookupPropertyById(cx, obj, id, 0, &obj2, &shape))
         return false;
 
     desc.clear();
-    if (!shape || (own && obj != obj2))
+    if (!shape)
         return true;
 
     desc.object().set(obj2);
@@ -3323,10 +3323,8 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
         }
     } else {
         if (obj2->is<ProxyObject>()) {
-            JSAutoResolveFlags rf(cx, flags);
-            return own
-                   ? Proxy::getOwnPropertyDescriptor(cx, obj2, id, desc, 0)
-                   : Proxy::getPropertyDescriptor(cx, obj2, id, desc, 0);
+            JSAutoResolveFlags rf(cx, 0);
+            return Proxy::getPropertyDescriptor(cx, obj2, id, desc);
         }
         if (!JSObject::getGenericAttributes(cx, obj2, id, &desc.attributesRef()))
             return false;
@@ -3338,42 +3336,42 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
 }
 
 JS_PUBLIC_API(bool)
-JS_GetOwnPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+JS_GetOwnPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id,
                                 MutableHandle<JSPropertyDescriptor> desc)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return GetPropertyDescriptorById(cx, obj, id, flags, true, desc);
+    return GetOwnPropertyDescriptor(cx, obj, id, desc);
 }
 
 JS_PUBLIC_API(bool)
-JS_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, const char *name, unsigned flags,
+JS_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, const char *name,
                             MutableHandle<JSPropertyDescriptor> desc)
 {
     JSAtom *atom = Atomize(cx, name, strlen(name));
     if (!atom)
         return false;
     RootedId id(cx, AtomToId(atom));
-    return JS_GetOwnPropertyDescriptorById(cx, obj, id, flags, desc);
+    return JS_GetOwnPropertyDescriptorById(cx, obj, id, desc);
 }
 
 JS_PUBLIC_API(bool)
-JS_GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+JS_GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id,
                              MutableHandle<JSPropertyDescriptor> desc)
 {
-    return GetPropertyDescriptorById(cx, obj, id, flags, false, desc);
+    return GetPropertyDescriptorById(cx, obj, id, desc);
 }
 
 JS_PUBLIC_API(bool)
-JS_GetPropertyDescriptor(JSContext *cx, HandleObject obj, const char *name, unsigned flags,
+JS_GetPropertyDescriptor(JSContext *cx, HandleObject obj, const char *name,
                          MutableHandle<JSPropertyDescriptor> desc)
 {
     JSAtom *atom = Atomize(cx, name, strlen(name));
     if (!atom)
         return false;
     RootedId id(cx, AtomToId(atom));
-    return atom && JS_GetPropertyDescriptorById(cx, obj, id, flags, desc);
+    return atom && JS_GetPropertyDescriptorById(cx, obj, id, desc);
 }
 
 JS_PUBLIC_API(bool)

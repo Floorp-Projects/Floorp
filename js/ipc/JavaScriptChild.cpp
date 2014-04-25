@@ -174,8 +174,7 @@ EmptyDesc(PPropertyDescriptor *desc)
 
 bool
 JavaScriptChild::AnswerGetPropertyDescriptor(const ObjectId &objId, const nsString &id,
-                                             const uint32_t &flags, ReturnStatus *rs,
-                                             PPropertyDescriptor *out)
+                                             ReturnStatus *rs, PPropertyDescriptor *out)
 {
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
@@ -193,7 +192,7 @@ JavaScriptChild::AnswerGetPropertyDescriptor(const ObjectId &objId, const nsStri
         return fail(cx, rs);
 
     Rooted<JSPropertyDescriptor> desc(cx);
-    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, flags, &desc))
+    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, &desc))
         return fail(cx, rs);
 
     if (!desc.object())
@@ -207,8 +206,7 @@ JavaScriptChild::AnswerGetPropertyDescriptor(const ObjectId &objId, const nsStri
 
 bool
 JavaScriptChild::AnswerGetOwnPropertyDescriptor(const ObjectId &objId, const nsString &id,
-                                                const uint32_t &flags, ReturnStatus *rs,
-                                                PPropertyDescriptor *out)
+                                                ReturnStatus *rs, PPropertyDescriptor *out)
 {
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
@@ -226,7 +224,7 @@ JavaScriptChild::AnswerGetOwnPropertyDescriptor(const ObjectId &objId, const nsS
         return fail(cx, rs);
 
     Rooted<JSPropertyDescriptor> desc(cx);
-    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, flags, &desc))
+    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, &desc))
         return fail(cx, rs);
 
     if (desc.object() != obj)
@@ -344,7 +342,7 @@ JavaScriptChild::AnswerHasOwn(const ObjectId &objId, const nsString &id, ReturnS
         return fail(cx, rs);
 
     Rooted<JSPropertyDescriptor> desc(cx);
-    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, 0, &desc))
+    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, &desc))
         return fail(cx, rs);
     *bp = (desc.object() == obj);
 

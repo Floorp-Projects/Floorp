@@ -50,8 +50,7 @@ public:
                  JS::AutoIdVector& props) MOZ_OVERRIDE;
   bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy,
                              JS::Handle<jsid> id,
-                             JS::MutableHandle<JSPropertyDescriptor> desc,
-                             unsigned flags) MOZ_OVERRIDE;
+                             JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
 
   bool watch(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
              JS::Handle<JSObject*> callable) MOZ_OVERRIDE;

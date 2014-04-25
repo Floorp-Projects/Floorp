@@ -52,7 +52,7 @@ PropIsFromStandardPrototype(JSContext *cx, HandleObject wrapper,
     Rooted<JSPropertyDescriptor> desc(cx);
     ChromeObjectWrapper *handler = &ChromeObjectWrapper::singleton;
     if (!handler->ChromeObjectWrapperBase::getPropertyDescriptor(cx, wrapper, id,
-                                                                 &desc, 0) ||
+                                                                 &desc) ||
         !desc.object())
     {
         return false;
@@ -64,15 +64,14 @@ bool
 ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
                                            HandleObject wrapper,
                                            HandleId id,
-                                           JS::MutableHandle<JSPropertyDescriptor> desc,
-                                           unsigned flags)
+                                           JS::MutableHandle<JSPropertyDescriptor> desc)
 {
     assertEnteredPolicy(cx, wrapper, id, GET | SET);
     // First, try a lookup on the base wrapper if permitted.
     desc.object().set(nullptr);
     if (AllowedByBase(cx, wrapper, id, Wrapper::GET) &&
         !ChromeObjectWrapperBase::getPropertyDescriptor(cx, wrapper, id,
-                                                        desc, flags)) {
+                                                        desc)) {
         return false;
     }
 
@@ -91,7 +90,7 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
 
     // If not, try doing the lookup on the prototype.
     MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
-    return JS_GetPropertyDescriptorById(cx, wrapperProto, id, 0, desc);
+    return JS_GetPropertyDescriptorById(cx, wrapperProto, id, desc);
 }
 
 bool
@@ -116,7 +115,7 @@ ChromeObjectWrapper::has(JSContext *cx, HandleObject wrapper,
     // Try the prototype if that failed.
     MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
     Rooted<JSPropertyDescriptor> desc(cx);
-    if (!JS_GetPropertyDescriptorById(cx, wrapperProto, id, 0, &desc))
+    if (!JS_GetPropertyDescriptorById(cx, wrapperProto, id, &desc))
         return false;
     *bp = !!desc.object();
     return true;

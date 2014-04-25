@@ -515,7 +515,7 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
 
         if(!JS_WrapId(cx, &id))
             return nullptr;
-        if(!JS_GetOwnPropertyDescriptorById(cx, obj, id, 0, &desc))
+        if(!JS_GetOwnPropertyDescriptorById(cx, obj, id, &desc))
             return nullptr;
         if(!desc.object())
             return nullptr;
