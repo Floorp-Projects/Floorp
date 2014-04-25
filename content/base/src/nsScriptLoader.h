@@ -157,22 +157,6 @@ public:
                                  jschar*& aBufOut, size_t& aLengthOut);
 
   /**
-   * Convert the given buffer to a UTF-16 string.
-   * @param aChannel     Channel corresponding to the data. May be null.
-   * @param aData        The data to convert
-   * @param aLength      Length of the data
-   * @param aHintCharset Hint for the character set (e.g., from a charset
-   *                     attribute). May be the empty string.
-   * @param aDocument    Document which the data is loaded for. Must not be
-   *                     null.
-   * @param aString      [out] Data as converted to unicode
-   */
-  static nsresult ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
-                                 uint32_t aLength,
-                                 const nsAString& aHintCharset,
-                                 nsIDocument* aDocument, nsString& aString);
-
-  /**
    * Processes any pending requests that are ready for processing.
    */
   void ProcessPendingRequests();
