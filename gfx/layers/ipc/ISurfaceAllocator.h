@@ -46,7 +46,6 @@ class DataSourceSurface;
 
 namespace layers {
 
-class PGrallocBufferChild;
 class MaybeMagicGrallocBufferHandle;
 class MemoryTextureClient;
 class MemoryTextureHost;
@@ -155,18 +154,12 @@ public:
   virtual void DestroySharedSurface(SurfaceDescriptor* aSurface);
 
   // method that does the actual allocation work
-  virtual PGrallocBufferChild* AllocGrallocBuffer(const gfx::IntSize& aSize,
-                                                  uint32_t aFormat,
-                                                  uint32_t aUsage,
-                                                  MaybeMagicGrallocBufferHandle* aHandle)
-  {
-    return nullptr;
-  }
+  bool AllocGrallocBuffer(const gfx::IntSize& aSize,
+                          uint32_t aFormat,
+                          uint32_t aUsage,
+                          MaybeMagicGrallocBufferHandle* aHandle);
 
-  virtual void DeallocGrallocBuffer(PGrallocBufferChild* aChild)
-  {
-    NS_RUNTIMEABORT("should not be called");
-  }
+  void DeallocGrallocBuffer(MaybeMagicGrallocBufferHandle* aHandle);
 
   virtual bool IPCOpen() const { return true; }
   virtual bool IsSameProcess() const = 0;

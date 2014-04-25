@@ -9,7 +9,6 @@ include LayersSurfaces;
 include LayersMessages;
 include protocol PCompositable;
 include protocol PCompositor;
-include protocol PGrallocBuffer;
 include protocol PLayer;
 include protocol PRenderFrame;
 include protocol PTexture;
@@ -39,39 +38,9 @@ sync protocol PLayerTransaction {
   manager PRenderFrame or PCompositor;
   manages PLayer;
   manages PCompositable;
-  manages PGrallocBuffer;
   manages PTexture;
 
 parent:
-  /**
-   * Only the parent side has privileges to allocate the buffer.
-   * Allocation may fail (pmem is a scarce resource), and if so null_t
-   * is returned.
-   *
-   * |format| is an Android PixelFormat (see PixelFormat.h)
-   *
-   * commonly used PixelFormats are:
-   *   PIXEL_FORMAT_RGBA_8888
-   *   PIXEL_FORMAT_RGBX_8888
-   *   PIXEL_FORMAT_BGRA_8888
-   *
-   * Note that SurfaceDescriptorGralloc has a "isRBSwapped" boolean
-   * that can treat the R/B bytes as swapped when they are rendered
-   * to the screen, to help with matching the native pixel format
-   * of other rendering engines.
-   *
-   * |usage| is a USAGE_* mask (see GraphicBuffer.h)
-   *
-   * commonly used USAGE flags are:
-   *   USAGE_SW_READ_OFTEN | USAGE_SW_WRITE_OFTEN | USAGE_HW_TEXTURE
-   *     - used for software rendering to a buffer which the compositor
-   *       treats as a texture
-   *   USAGE_HW_RENDER | USAGE_HW_TEXTURE
-   *     - used for GL rendering to a buffer which the compositor
-   *       treats as a texture
-   */
-  sync PGrallocBuffer(IntSize size, uint32_t format, uint32_t usage)
-    returns (MaybeMagicGrallocBufferHandle handle);
   async PLayer();
   async PCompositable(TextureInfo aTextureInfo);
   async PTexture(SurfaceDescriptor aSharedData, uint32_t aTextureFlags);
