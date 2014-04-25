@@ -27,6 +27,28 @@ public final class SharedPreferencesHelper
 {
     public static final String LOGTAG = "GeckoAndSharedPrefs";
 
+    private enum Scope {
+        APP("app"),
+        PROFILE("profile"),
+        GLOBAL("global");
+
+        public final String key;
+
+        private Scope(String key) {
+            this.key = key;
+        }
+
+        public static Scope forKey(String key) {
+            for (Scope scope : values()) {
+                if (scope.key.equals(key)) {
+                    return scope;
+                }
+            }
+
+            throw new IllegalStateException("SharedPreferences scope must be valid.");
+        }
+    }
+
     protected final Context mContext;
 
     // mListeners is not synchronized because it is only updated in
