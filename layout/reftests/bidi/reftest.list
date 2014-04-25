@@ -146,6 +146,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 712600-2-dyn.html 712600
 fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == 869833-1.xul 869833-1-ref.xul
 == 922530-1.html 922530-1-ref.html
 == 922550-1.html 922550-1-ref.html
+== 989994-1.html 989994-1-ref.html
 == 1067268-1.html 1067268-1-ref.html
 == 1069941-inline-bidi-border-1.html 1069941-inline-bidi-border-1-ref.html
 == 1069941-inline-bidi-margin-1.html 1069941-inline-bidi-margin-1-ref.html
