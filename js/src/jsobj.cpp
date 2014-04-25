@@ -4991,7 +4991,12 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
                     return false;
             }
 
-            TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
+            // Silently do nothing for out-of-bounds sets, for consistency with
+            // current behavior.  (ES6 currently says to throw for this in
+            // strict mode code, so we may eventually need to change.)
+            TypedArrayObject &tarray = obj->as<TypedArrayObject>();
+            if (index < tarray.length())
+                TypedArrayObject::setElement(tarray, index, d);
             return true;
         }
 
