@@ -280,8 +280,8 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
   *countUsed = avail - (oldLen - endHeader) + 4;
   mSynFrameComplete = 1;
 
-  nsCString hostHeader;
-  nsCString hashkey;
+  nsAutoCString hostHeader;
+  nsAutoCString hashkey;
   mTransaction->RequestHead()->GetHeader(nsHttp::Host, hostHeader);
 
   CreatePushHashKey(NS_LITERAL_CSTRING("https"),
