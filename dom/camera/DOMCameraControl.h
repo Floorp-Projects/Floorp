@@ -167,7 +167,7 @@ protected:
   void OnRecorderStateChange(CameraControlListener::RecorderState aState, int32_t aStatus, int32_t aTrackNum);
   void OnConfigurationChange(DOMCameraConfiguration* aConfiguration);
   void OnShutter();
-  void OnError(CameraControlListener::CameraErrorContext aContext, const nsAString& mError);
+  void OnUserError(CameraControlListener::UserContext aContext, nsresult aError);
 
   bool IsWindowStillActive();
 

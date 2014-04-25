@@ -34,6 +34,7 @@ if CONFIG['MOZ_B2G_CAMERA']:
         'GonkCameraSource.cpp',
         'GonkRecorder.cpp',
         'GonkRecorderProfiles.cpp',
+        'TestGonkCameraControl.cpp',
         'TestGonkCameraHardware.cpp',
     ]
 else:
