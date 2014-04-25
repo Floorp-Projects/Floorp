@@ -85,11 +85,16 @@ public class HomeProvider extends SQLiteBridgeContentProvider {
                                                     new String[] { datasetId });
 
         // Otherwise, let the SQLiteContentProvider implementation take care of this query for us!
-        final Cursor c = super.query(uri, projection, selection, selectionArgs, sortOrder);
-        if (c != null) {
-            final ContentResolver cr = getContext().getContentResolver();
-            c.setNotificationUri(cr, getDatasetNotificationUri(datasetId));
+        Cursor c = super.query(uri, projection, selection, selectionArgs, sortOrder);
+
+        // SQLiteBridgeContentProvider may return a null Cursor if the database hasn't been created yet.
+        // However, we need a non-null cursor in order to listen for notifications.
+        if (c == null) {
+            c = new MatrixCursor(projection != null ? projection : HomeItems.DEFAULT_PROJECTION);
         }
+
+        final ContentResolver cr = getContext().getContentResolver();
+        c.setNotificationUri(cr, getDatasetNotificationUri(datasetId));
 
         return c;
     }
@@ -110,17 +115,7 @@ public class HomeProvider extends SQLiteBridgeContentProvider {
             return null;
         }
 
-        final String[] itemsColumns = new String[] {
-            HomeItems._ID,
-            HomeItems.DATASET_ID,
-            HomeItems.URL,
-            HomeItems.TITLE,
-            HomeItems.DESCRIPTION,
-            HomeItems.IMAGE_URL,
-            HomeItems.FILTER
-        };
-
-        final MatrixCursor c = new MatrixCursor(itemsColumns);
+        final MatrixCursor c = new MatrixCursor(HomeItems.DEFAULT_PROJECTION);
         for (int i = 0; i < items.length(); i++) {
             try {
                 final JSONObject item = items.getJSONObject(i);

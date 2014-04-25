@@ -549,7 +549,7 @@
              iconsize="small"
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
-             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
+             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button"
              collapsed="true">
 
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
@@ -599,13 +599,6 @@
           <menuseparator id="alltabs-popup-separator"/>
         </menupopup>
       </toolbarbutton>
-
-      <toolbarbutton id="tabs-closebutton"
-                     class="close-button tabs-closebutton close-icon"
-                     command="cmd_close"
-                     label="&closeTab.label;"
-                     cui-areatype="toolbar"
-                     tooltiptext="&closeTab.label;"/>
 
 #if !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_QT)
       <hbox class="private-browsing-indicator" skipintoolbarset="true"/>
@@ -1054,7 +1047,7 @@
         <sidebarheader id="sidebar-header" align="center">
           <label id="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
           <image id="sidebar-throbber"/>
-          <toolbarbutton class="tabs-closebutton close-icon" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="toggleSidebar();"/>
+          <toolbarbutton class="close-icon tabbable" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="toggleSidebar();"/>
         </sidebarheader>
         <browser id="sidebar" flex="1" autoscroll="false" disablehistory="true"
                   style="min-width: 14em; width: 18em; max-width: 36em;"/>
