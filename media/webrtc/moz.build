@@ -214,3 +214,4 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         )
         GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources
         GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources_2
+

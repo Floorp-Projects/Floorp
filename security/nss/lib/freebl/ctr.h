@@ -41,4 +41,11 @@ SECStatus CTR_Update(CTRContext *ctr, unsigned char *outbuf,
 			const unsigned char *inbuf, unsigned int inlen,
 			unsigned int blocksize);
 
+#ifdef USE_HW_AES
+SECStatus CTR_Update_HW_AES(CTRContext *ctr, unsigned char *outbuf,
+			unsigned int *outlen, unsigned int maxout,
+			const unsigned char *inbuf, unsigned int inlen,
+			unsigned int blocksize);
+#endif
+
 #endif
