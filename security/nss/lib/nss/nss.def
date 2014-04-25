@@ -1049,6 +1049,7 @@ CERT_GetSubjectPublicKeyDigest;
 ;+    global:
 PK11_ExportDERPrivateKeyInfo;
 PK11_ExportPrivKeyInfo;
+SECMOD_InternaltoPubMechFlags;
 ;+    local:
 ;+       *;
 ;+};

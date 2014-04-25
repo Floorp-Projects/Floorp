@@ -14,13 +14,14 @@
 #ifdef _LIBUTIL_H_
 /* must be included before util */
 /*#error stubs.h included too late */
-#define MP_DIGITES(x) "stubs included too late" 
+#define MP_DIGITES(x) "stubs included too late"
 #endif
 
 /* hide libutil rename */
 #define _LIBUTIL_H_ 1
 
 #define PORT_Alloc PORT_Alloc_stub
+#define PORT_ArenaAlloc  PORT_ArenaAlloc_stub
 #define PORT_ArenaZAlloc  PORT_ArenaZAlloc_stub
 #define PORT_Free PORT_Free_stub
 #define PORT_FreeArena  PORT_FreeArena_stub
@@ -35,6 +36,7 @@
 #define SECITEM_CopyItem  SECITEM_CopyItem_stub
 #define SECITEM_FreeItem  SECITEM_FreeItem_stub
 #define SECITEM_ZfreeItem  SECITEM_ZfreeItem_stub
+#define SECOID_FindOIDTag  SECOID_FindOIDTag_stub
 #define NSS_SecureMemcmp NSS_SecureMemcmp_stub
 
 #define PR_Assert  PR_Assert_stub

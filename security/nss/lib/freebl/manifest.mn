@@ -110,6 +110,7 @@ CSRCS = \
 	camellia.c \
 	dh.c \
 	ec.c \
+	ecdecode.c \
 	pqg.c \
 	dsa.c \
 	rsa.c \
