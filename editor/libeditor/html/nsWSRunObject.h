@@ -336,7 +336,7 @@ class MOZ_STACK_CLASS nsWSRunObject
                                int32_t      aOffset,
                                nsIDOMNode  *aBlockParent, 
                                nsCOMPtr<nsIDOMNode> *aPriorNode);
-    nsresult GetPreviousWSNode(DOMPoint aPoint,
+    nsresult GetPreviousWSNode(::DOMPoint aPoint,
                                nsIDOMNode  *aBlockParent, 
                                nsCOMPtr<nsIDOMNode> *aPriorNode);
     nsresult GetNextWSNode(nsIDOMNode *aStartNode, 
@@ -346,7 +346,7 @@ class MOZ_STACK_CLASS nsWSRunObject
                            int32_t     aOffset,
                            nsIDOMNode *aBlockParent, 
                            nsCOMPtr<nsIDOMNode> *aNextNode);
-    nsresult GetNextWSNode(DOMPoint aPoint,
+    nsresult GetNextWSNode(::DOMPoint aPoint,
                            nsIDOMNode  *aBlockParent, 
                            nsCOMPtr<nsIDOMNode> *aNextNode);
     nsresult PrepareToDeleteRangePriv(nsWSRunObject* aEndObject);

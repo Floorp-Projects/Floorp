@@ -415,8 +415,11 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, bool aPersist)
   if(currentTxn)
     currentTxn->GetPersist(&currentPersist);
 
+  int32_t currentIndex = mIndex;
+
   if(!currentPersist)
   {
+    NOTIFY_LISTENERS(OnHistoryReplaceEntry, (currentIndex));
     NS_ENSURE_SUCCESS(currentTxn->SetSHEntry(aSHEntry),NS_ERROR_FAILURE);
     currentTxn->SetPersist(aPersist);
     return NS_OK;
@@ -426,7 +429,6 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, bool aPersist)
   NS_ENSURE_TRUE(txn, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIURI> uri;
-  int32_t currentIndex = mIndex;
   aSHEntry->GetURI(getter_AddRefs(uri));
   NOTIFY_LISTENERS(OnHistoryNewEntry, (uri));
 
@@ -554,6 +556,50 @@ nsSHistory::GetTransactionAtIndex(int32_t aIndex, nsISHTransaction ** aResult)
   
   return NS_OK;
 }
+
+
+/* Get the index of a given entry */
+NS_IMETHODIMP
+nsSHistory::GetIndexOfEntry(nsISHEntry* aSHEntry, int32_t* aResult) {
+  NS_ENSURE_ARG(aSHEntry);
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = -1;
+
+  if (mLength <= 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsISHTransaction> currentTxn;
+  int32_t cnt = 0;
+
+  nsresult rv = GetRootTransaction(getter_AddRefs(currentTxn));
+  if (NS_FAILED(rv) || !currentTxn) {
+    return NS_ERROR_FAILURE;
+  }
+
+  while (true) {
+    nsCOMPtr<nsISHEntry> entry;
+    rv = currentTxn->GetSHEntry(getter_AddRefs(entry));
+    if (NS_FAILED(rv) || !entry) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (aSHEntry == entry) {
+      *aResult = cnt;
+      break;
+    }
+
+    rv = currentTxn->GetNext(getter_AddRefs(currentTxn));
+    if (NS_FAILED(rv) || !currentTxn) {
+      return NS_ERROR_FAILURE;
+    }
+
+    cnt++;
+  }
+
+  return NS_OK;
+}
+
 
 #ifdef DEBUG
 nsresult
@@ -734,6 +780,8 @@ nsSHistory::ReplaceEntry(int32_t aIndex, nsISHEntry * aReplaceEntry)
 
   if(currentTxn)
   {
+    NOTIFY_LISTENERS(OnHistoryReplaceEntry, (aIndex));
+
     // Set the replacement entry in the transaction
     rv = currentTxn->SetSHEntry(aReplaceEntry);
     rv = currentTxn->SetPersist(true);

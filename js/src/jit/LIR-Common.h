@@ -5995,16 +5995,6 @@ class LAsmJSCall MOZ_FINAL : public LInstruction
     }
 };
 
-class LAsmJSCheckOverRecursed : public LInstructionHelper<0, 0, 0>
-{
-  public:
-    LIR_HEADER(AsmJSCheckOverRecursed)
-
-    MAsmJSCheckOverRecursed *mir() const {
-        return mir_->toAsmJSCheckOverRecursed();
-    }
-};
-
 class LAssertRangeI : public LInstructionHelper<0, 1, 0>
 {
   public:

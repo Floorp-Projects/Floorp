@@ -11,6 +11,7 @@
 #include "mozilla/IOInterposer.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
+#include "nsAutoPtr.h"
 
 /**
  * This code uses NSPR stuff and STL containers because it must be detached
@@ -207,10 +208,11 @@ namespace MainThreadIOLogger {
 bool
 Init()
 {
-  sImpl = new MainThreadIOLoggerImpl();
-  if (!sImpl->Init()) {
+  nsAutoPtr<MainThreadIOLoggerImpl> impl(new MainThreadIOLoggerImpl());
+  if (!impl->Init()) {
     return false;
   }
+  sImpl = impl.forget();
   IOInterposer::Register(IOInterposeObserver::OpAllWithStaging, sImpl);
   return true;
 }

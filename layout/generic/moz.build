@@ -34,7 +34,7 @@ EXPORTS += [
     'WritingModes.h',
 ]
 
-EXPORTS.mozilla += [
+EXPORTS.mozilla.dom += [
     'Selection.h',
 ]
 

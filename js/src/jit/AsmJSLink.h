@@ -9,7 +9,32 @@
 
 #include "NamespaceImports.h"
 
+class JSAtom;
+
 namespace js {
+
+class AsmJSActivation;
+class AsmJSModule;
+namespace jit { class CallSite; }
+
+// Iterates over the frames of a single AsmJSActivation.
+class AsmJSFrameIterator
+{
+    const AsmJSModule *module_;
+    const jit::CallSite *callsite_;
+    uint8_t *sp_;
+    uint8_t *returnAddress_;
+
+    void popFrame();
+    void settle();
+
+  public:
+    AsmJSFrameIterator(const AsmJSActivation *activation);
+    void operator++() { popFrame(); settle(); }
+    bool done() const { return !callsite_; }
+    JSAtom *functionDisplayAtom() const;
+    unsigned computeLine(uint32_t *column) const;
+};
 
 #ifdef JS_ION
 

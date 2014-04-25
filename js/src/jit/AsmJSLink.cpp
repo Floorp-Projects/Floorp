@@ -6,6 +6,9 @@
 
 #include "jit/AsmJSLink.h"
 
+#include "mozilla/BinarySearch.h"
+#include "mozilla/PodOperations.h"
+
 #ifdef MOZ_VTUNE
 # include "vtune/VTuneWrapper.h"
 #endif
@@ -29,7 +32,102 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::BinarySearch;
 using mozilla::IsNaN;
+using mozilla::PodZero;
+
+AsmJSFrameIterator::AsmJSFrameIterator(const AsmJSActivation *activation)
+{
+    if (!activation || activation->isInterruptedSP()) {
+        PodZero(this);
+        JS_ASSERT(done());
+        return;
+    }
+
+    module_ = &activation->module();
+    sp_ = activation->exitSP();
+
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    // For calls to Ion/C++ on x86/x64, the exitSP is the SP right before the call
+    // to C++. Since the call instruction pushes the return address, we know
+    // that the return address is 1 word below exitSP.
+    returnAddress_ = *(uint8_t**)(sp_ - sizeof(void*));
+#else
+    // For calls to Ion/C++ on ARM, the *caller* pushes the return address on
+    // the stack. For Ion, this is just part of the ABI. For C++, the return
+    // address is explicitly pushed before the call since we cannot expect the
+    // callee to immediately push lr. This means that exitSP points to the
+    // return address.
+    returnAddress_ = *(uint8_t**)sp_;
+#endif
+
+    settle();
+}
+
+struct GetCallSite
+{
+    const AsmJSModule &module;
+    GetCallSite(const AsmJSModule &module) : module(module) {}
+    uint32_t operator[](size_t index) const {
+        return module.callSite(index).returnAddressOffset();
+    }
+};
+
+void
+AsmJSFrameIterator::popFrame()
+{
+    // After adding stackDepth, sp points to the word before the return address,
+    // on both ARM and x86/x64.
+    sp_ += callsite_->stackDepth();
+    returnAddress_ = *(uint8_t**)(sp_ - sizeof(void*));
+}
+
+void
+AsmJSFrameIterator::settle()
+{
+    while (true) {
+        uint32_t target = returnAddress_ - module_->codeBase();
+        size_t lowerBound = 0;
+        size_t upperBound = module_->numCallSites();
+
+        size_t match;
+        if (!BinarySearch(GetCallSite(*module_), lowerBound, upperBound, target, &match)) {
+            callsite_ = nullptr;
+            return;
+        }
+
+        callsite_ = &module_->callSite(match);
+
+        if (callsite_->isExit()) {
+            popFrame();
+            continue;
+        }
+
+        if (callsite_->isEntry()) {
+            callsite_ = nullptr;
+            return;
+        }
+
+        JS_ASSERT(callsite_->isNormal());
+        return;
+    }
+}
+
+JSAtom *
+AsmJSFrameIterator::functionDisplayAtom() const
+{
+    JS_ASSERT(!done());
+    return module_->functionName(callsite_->functionNameIndex());
+}
+
+unsigned
+AsmJSFrameIterator::computeLine(uint32_t *column) const
+{
+    JS_ASSERT(!done());
+    if (column)
+        *column = callsite_->column();
+    return callsite_->line();
+}
 
 static bool
 CloneModule(JSContext *cx, MutableHandle<AsmJSModuleObject*> moduleObj)
@@ -408,8 +506,7 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
         // that the optimized asm.js-to-Ion FFI call path (which we want to be
         // very fast) can avoid doing so. The JitActivation is marked as
         // inactive so stack iteration will skip over it.
-        unsigned exportIndex = FunctionToExportedFunctionIndex(callee);
-        AsmJSActivation activation(cx, module, exportIndex);
+        AsmJSActivation activation(cx, module);
         JitActivation jitActivation(cx, /* firstFrameIsConstructing = */ false, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
