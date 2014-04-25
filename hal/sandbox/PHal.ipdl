@@ -7,6 +7,8 @@
 include protocol PContent;
 include protocol PBrowser;
 
+include "mozilla/GfxMessageUtils.h";
+
 using mozilla::dom::ScreenOrientation from "mozilla/dom/ScreenOrientation.h";
 using mozilla::hal::FlashMode from "mozilla/HalTypes.h";
 using mozilla::hal::LightType from "mozilla/HalTypes.h";
