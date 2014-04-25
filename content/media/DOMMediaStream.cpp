@@ -250,7 +250,40 @@ DOMMediaStream::SetTrackEnabled(TrackID aTrackID, bool aEnabled)
 bool
 DOMMediaStream::CombineWithPrincipal(nsIPrincipal* aPrincipal)
 {
-  return nsContentUtils::CombineResourcePrincipals(&mPrincipal, aPrincipal);
+  bool changed =
+    nsContentUtils::CombineResourcePrincipals(&mPrincipal, aPrincipal);
+  if (changed) {
+    NotifyPrincipalChanged();
+  }
+  return changed;
+}
+
+void
+DOMMediaStream::SetPrincipal(nsIPrincipal* aPrincipal)
+{
+  mPrincipal = aPrincipal;
+  NotifyPrincipalChanged();
+}
+
+void
+DOMMediaStream::NotifyPrincipalChanged()
+{
+  for (uint32_t i = 0; i < mPrincipalChangeObservers.Length(); ++i) {
+    mPrincipalChangeObservers[i]->PrincipalChanged(this);
+  }
+}
+
+
+bool
+DOMMediaStream::AddPrincipalChangeObserver(PrincipalChangeObserver* aObserver)
+{
+  return mPrincipalChangeObservers.AppendElement(aObserver) != nullptr;
+}
+
+bool
+DOMMediaStream::RemovePrincipalChangeObserver(PrincipalChangeObserver* aObserver)
+{
+  return mPrincipalChangeObservers.RemoveElement(aObserver);
 }
 
 MediaStreamTrack*
