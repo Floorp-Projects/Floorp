@@ -30,6 +30,8 @@ class MacroAssemblerX86Shared : public Assembler
     uint32_t framePushed_;
 
   public:
+    using Assembler::call;
+
     MacroAssemblerX86Shared()
       : framePushed_(0)
     { }
@@ -660,6 +662,24 @@ class MacroAssemblerX86Shared : public Assembler
 
     void callIon(const Register &callee) {
         call(callee);
+    }
+
+    void appendCallSite(const CallSiteDesc &desc) {
+        // Add an extra sizeof(void*) to include the return address that was
+        // pushed by the call instruction (see CallSite::stackDepth).
+        enoughMemory_ &= append(CallSite(desc, currentOffset(), framePushed_ + sizeof(void*)));
+    }
+
+    void call(const CallSiteDesc &desc, Label *label) {
+        call(label);
+        appendCallSite(desc);
+    }
+    void call(const CallSiteDesc &desc, const Register &reg) {
+        call(reg);
+        appendCallSite(desc);
+    }
+    void callIonFromAsmJS(const Register &reg) {
+        call(CallSiteDesc::Exit(), reg);
     }
 
     void checkStackAlignment() {

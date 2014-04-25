@@ -12,8 +12,8 @@
 #include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
 #include "mozilla/dom/TabChild.h"       // for TabChild
 #include "mozilla/hal_sandbox/PHal.h"   // for ScreenConfiguration
-#include "mozilla/layers/CompositableClient.h"  // for CompositableChild, etc
-#include "mozilla/layers/ContentClient.h"  // for ContentClientRemote
+#include "mozilla/layers/CompositableClient.h"
+#include "mozilla/layers/ContentClient.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/LayersMessages.h"  // for EditReply, etc
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
@@ -379,10 +379,10 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
 
         const OpContentBufferSwap& obs = reply.get_OpContentBufferSwap();
 
-        CompositableChild* compositableChild =
-          static_cast<CompositableChild*>(obs.compositableChild());
+        CompositableClient* compositable =
+          CompositableClient::FromIPDLActor(obs.compositableChild());
         ContentClientRemote* contentClient =
-          static_cast<ContentClientRemote*>(compositableChild->GetCompositableClient());
+          static_cast<ContentClientRemote*>(compositable);
         MOZ_ASSERT(contentClient);
 
         contentClient->SwapBuffers(obs.frontUpdatedRegion());
@@ -394,12 +394,10 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
 
         const OpTextureSwap& ots = reply.get_OpTextureSwap();
 
-        CompositableChild* compositableChild =
-          static_cast<CompositableChild*>(ots.compositableChild());
-        MOZ_ASSERT(compositableChild);
-
-        compositableChild->GetCompositableClient()
-          ->SetDescriptorFromReply(ots.textureId(), ots.image());
+        CompositableClient* compositable =
+          CompositableClient::FromIPDLActor(ots.compositableChild());
+        MOZ_ASSERT(compositable);
+        compositable->SetDescriptorFromReply(ots.textureId(), ots.image());
         break;
       }
       case EditReply::TReturnReleaseFence: {

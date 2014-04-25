@@ -50,7 +50,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 #include "mozilla/TextEvents.h"
 #include "nsAString.h"
 #include "nsAttrName.h"

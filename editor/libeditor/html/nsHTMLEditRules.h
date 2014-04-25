@@ -33,9 +33,9 @@ class nsPlaintextEditor;
 class nsRange;
 class nsRulesInfo;
 namespace mozilla {
-class Selection;
 namespace dom {
 class Element;
+class Selection;
 }  // namespace dom
 }  // namespace mozilla
 struct DOMPoint;
@@ -79,7 +79,7 @@ public:
                         nsIEditor::EDirection aDirection);
   NS_IMETHOD AfterEdit(EditAction action,
                        nsIEditor::EDirection aDirection);
-  NS_IMETHOD WillDoAction(mozilla::Selection* aSelection, nsRulesInfo* aInfo,
+  NS_IMETHOD WillDoAction(mozilla::dom::Selection* aSelection, nsRulesInfo* aInfo,
                           bool* aCancel, bool* aHandled);
   NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD DocumentModified();
@@ -127,19 +127,19 @@ protected:
   // nsHTMLEditRules implementation methods
   nsresult WillInsert(nsISelection *aSelection, bool *aCancel);
   nsresult WillInsertText(  EditAction aAction,
-                            mozilla::Selection* aSelection,
+                            mozilla::dom::Selection* aSelection,
                             bool            *aCancel,
                             bool            *aHandled,
                             const nsAString *inString,
                             nsAString       *outString,
                             int32_t          aMaxLength);
   nsresult WillLoadHTML(nsISelection *aSelection, bool *aCancel);
-  nsresult WillInsertBreak(mozilla::Selection* aSelection,
+  nsresult WillInsertBreak(mozilla::dom::Selection* aSelection,
                            bool* aCancel, bool* aHandled);
   nsresult StandardBreakImpl(nsIDOMNode *aNode, int32_t aOffset, nsISelection *aSelection);
   nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
   nsresult SplitMailCites(nsISelection *aSelection, bool aPlaintext, bool *aHandled);
-  nsresult WillDeleteSelection(mozilla::Selection* aSelection,
+  nsresult WillDeleteSelection(mozilla::dom::Selection* aSelection,
                                nsIEditor::EDirection aAction,
                                nsIEditor::EStripWrappers aStripWrappers,
                                bool* aCancel, bool* aHandled);
@@ -154,36 +154,36 @@ protected:
   nsresult MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, int32_t *aOffset);
   nsresult MoveContents(nsIDOMNode *aSource, nsIDOMNode *aDest, int32_t *aOffset);
   nsresult DeleteNonTableElements(nsINode* aNode);
-  nsresult WillMakeList(mozilla::Selection* aSelection,
+  nsresult WillMakeList(mozilla::dom::Selection* aSelection,
                         const nsAString* aListType,
                         bool aEntireList,
                         const nsAString* aBulletType,
                         bool* aCancel, bool* aHandled,
                         const nsAString* aItemType = nullptr);
-  nsresult WillRemoveList(mozilla::Selection* aSelection,
+  nsresult WillRemoveList(mozilla::dom::Selection* aSelection,
                           bool aOrdered, bool* aCancel, bool* aHandled);
-  nsresult WillIndent(mozilla::Selection* aSelection,
+  nsresult WillIndent(mozilla::dom::Selection* aSelection,
                       bool* aCancel, bool* aHandled);
-  nsresult WillCSSIndent(mozilla::Selection* aSelection,
+  nsresult WillCSSIndent(mozilla::dom::Selection* aSelection,
                          bool* aCancel, bool* aHandled);
-  nsresult WillHTMLIndent(mozilla::Selection* aSelection,
+  nsresult WillHTMLIndent(mozilla::dom::Selection* aSelection,
                           bool* aCancel, bool* aHandled);
-  nsresult WillOutdent(mozilla::Selection* aSelection,
+  nsresult WillOutdent(mozilla::dom::Selection* aSelection,
                        bool* aCancel, bool* aHandled);
-  nsresult WillAlign(mozilla::Selection* aSelection,
+  nsresult WillAlign(mozilla::dom::Selection* aSelection,
                      const nsAString* alignType,
                      bool* aCancel, bool* aHandled);
-  nsresult WillAbsolutePosition(mozilla::Selection* aSelection,
+  nsresult WillAbsolutePosition(mozilla::dom::Selection* aSelection,
                                 bool* aCancel, bool* aHandled);
-  nsresult WillRemoveAbsolutePosition(mozilla::Selection* aSelection,
+  nsresult WillRemoveAbsolutePosition(mozilla::dom::Selection* aSelection,
                                       bool* aCancel, bool* aHandled);
-  nsresult WillRelativeChangeZIndex(mozilla::Selection* aSelection,
+  nsresult WillRelativeChangeZIndex(mozilla::dom::Selection* aSelection,
                                     int32_t aChange,
                                     bool* aCancel, bool* aHandled);
-  nsresult WillMakeDefListItem(mozilla::Selection* aSelection,
+  nsresult WillMakeDefListItem(mozilla::dom::Selection* aSelection,
                                const nsAString* aBlockType, bool aEntireList,
                                bool* aCancel, bool* aHandled);
-  nsresult WillMakeBasicBlock(mozilla::Selection* aSelection,
+  nsresult WillMakeBasicBlock(mozilla::dom::Selection* aSelection,
                               const nsAString* aBlockType,
                               bool* aCancel, bool* aHandled);
   nsresult DidMakeBasicBlock(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);

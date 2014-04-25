@@ -215,10 +215,11 @@ using namespace mozilla;
 // everything. The default value is "all". This must be used with either
 // MOZ_CC_LOG_ALL or MOZ_CC_LOG_SHUTDOWN for it to do anything.
 //
-// MOZ_CC_ALL_TRACES_AT_SHUTDOWN: If defined, any cycle collector
-// logging done at shutdown will be WantAllTraces, which disables
+// MOZ_CC_ALL_TRACES: If set to "all", any cycle collector
+// logging done will be WantAllTraces, which disables
 // various cycle collector optimizations to give a fuller picture of
-// the heap.
+// the heap. If set to "shutdown", only shutdown logging will be WantAllTraces.
+// The default is none.
 //
 // MOZ_CC_RUN_DURING_SHUTDOWN: In non-DEBUG or builds, if this is set,
 // run cycle collections at shutdown.
@@ -234,13 +235,15 @@ struct nsCycleCollectorParams
 {
     bool mLogAll;
     bool mLogShutdown;
-    bool mAllTracesAtShutdown;
+    bool mAllTracesAll;
+    bool mAllTracesShutdown;
     bool mLogThisThread;
 
     nsCycleCollectorParams() :
         mLogAll      (PR_GetEnv("MOZ_CC_LOG_ALL") != nullptr),
         mLogShutdown (PR_GetEnv("MOZ_CC_LOG_SHUTDOWN") != nullptr),
-        mAllTracesAtShutdown (PR_GetEnv("MOZ_CC_ALL_TRACES_AT_SHUTDOWN") != nullptr)
+        mAllTracesAll(false),
+        mAllTracesShutdown(false)
     {
         const char* logThreadEnv = PR_GetEnv("MOZ_CC_LOG_THREAD");
         bool threadLogging = true;
@@ -271,11 +274,25 @@ struct nsCycleCollectorParams
             }
         }
         mLogThisThread = threadLogging && processLogging;
+
+        const char* allTracesEnv = PR_GetEnv("MOZ_CC_ALL_TRACES");
+        if (allTracesEnv) {
+            if (!strcmp(allTracesEnv, "all")) {
+                mAllTracesAll = true;
+            } else if (!strcmp(allTracesEnv, "shutdown")) {
+                mAllTracesShutdown = true;
+            }
+        }
     }
 
     bool LogThisCC(bool aIsShutdown)
     {
         return (mLogAll || (aIsShutdown && mLogShutdown)) && mLogThisThread;
+    }
+
+    bool AllTracesThisCC(bool aIsShutdown)
+    {
+        return mAllTracesAll || (aIsShutdown && mAllTracesShutdown);
     }
 };
 
@@ -3411,7 +3428,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     aManualListener = nullptr;
     if (!mListener && mParams.LogThisCC(isShutdown)) {
         nsRefPtr<nsCycleCollectorLogger> logger = new nsCycleCollectorLogger();
-        if (isShutdown && mParams.mAllTracesAtShutdown) {
+        if (mParams.AllTracesThisCC(isShutdown)) {
             logger->SetAllTraces();
         }
         mListener = logger.forget();

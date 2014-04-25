@@ -264,26 +264,22 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable)
 {
   MOZ_ASSERT(aCompositable);
   uint64_t id = 0;
-  CompositableChild* child = static_cast<CompositableChild*>(
-    SendPCompositableConstructor(aCompositable->GetTextureInfo(), &id));
+  PCompositableChild* child =
+    SendPCompositableConstructor(aCompositable->GetTextureInfo(), &id);
   MOZ_ASSERT(child);
-  child->SetAsyncID(id);
-  aCompositable->SetIPDLActor(child);
-  MOZ_ASSERT(child->GetAsyncID() == id);
-  child->SetClient(aCompositable);
+  aCompositable->InitIPDLActor(child, id);
 }
 
 PCompositableChild*
 ImageBridgeChild::AllocPCompositableChild(const TextureInfo& aInfo, uint64_t* aID)
 {
-  return new CompositableChild();
+  return CompositableClient::CreateIPDLActor();
 }
 
 bool
 ImageBridgeChild::DeallocPCompositableChild(PCompositableChild* aActor)
 {
-  delete aActor;
-  return true;
+  return CompositableClient::DestroyIPDLActor(aActor);
 }
 
 
@@ -491,13 +487,12 @@ ImageBridgeChild::EndTransaction()
     case EditReply::TOpTextureSwap: {
       const OpTextureSwap& ots = reply.get_OpTextureSwap();
 
-      CompositableChild* compositableChild =
-          static_cast<CompositableChild*>(ots.compositableChild());
+      CompositableClient* compositable =
+        CompositableClient::FromIPDLActor(ots.compositableChild());
 
-      MOZ_ASSERT(compositableChild);
+      MOZ_ASSERT(compositable);
 
-      compositableChild->GetCompositableClient()
-        ->SetDescriptorFromReply(ots.textureId(), ots.image());
+      compositable->SetDescriptorFromReply(ots.textureId(), ots.image());
       break;
     }
     case EditReply::TReturnReleaseFence: {

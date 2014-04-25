@@ -276,28 +276,6 @@ KeyboardEvent::InitKeyEvent(const nsAString& aType,
   return NS_OK;
 }
 
-void
-KeyboardEvent::InitKeyboardEvent(const nsAString& aType,
-                                 bool aCanBubble,
-                                 bool aCancelable,
-                                 nsIDOMWindow* aView,
-                                 uint32_t aDetail,
-                                 const nsAString& aKey,
-                                 uint32_t aLocation,
-                                 const nsAString& aModifiersList,
-                                 bool aRepeat,
-                                 ErrorResult& aRv)
-{
-  aRv = UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, aDetail);
-
-  WidgetKeyboardEvent* keyEvent = mEvent->AsKeyboardEvent();
-  keyEvent->modifiers = UIEvent::ComputeModifierState(aModifiersList);
-  keyEvent->location = aLocation;
-  keyEvent->mIsRepeat = aRepeat;
-  keyEvent->mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
-  keyEvent->mKeyValue = aKey;
-}
-
 } // namespace dom
 } // namespace mozilla
 

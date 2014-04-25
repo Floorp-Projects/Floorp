@@ -67,13 +67,13 @@ class nsString;
 class nsTransactionManager;
 
 namespace mozilla {
-class Selection;
 class TextComposition;
 
 namespace dom {
 class DataTransfer;
 class Element;
 class EventTarget;
+class Selection;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -435,7 +435,7 @@ public:
   /** routines for managing the preservation of selection across 
    *  various editor actions */
   bool     ArePreservingSelection();
-  void     PreserveSelectionAcrossActions(mozilla::Selection* aSel);
+  void     PreserveSelectionAcrossActions(mozilla::dom::Selection* aSel);
   nsresult RestorePreservedSelection(nsISelection *aSel);
   void     StopPreservingSelection();
 
@@ -623,17 +623,17 @@ public:
   static nsCOMPtr<nsIDOMNode> GetNodeAtRangeOffsetPoint(nsIDOMNode* aParentOrNode, int32_t aOffset);
 
   static nsresult GetStartNodeAndOffset(nsISelection *aSelection, nsIDOMNode **outStartNode, int32_t *outStartOffset);
-  static nsresult GetStartNodeAndOffset(mozilla::Selection* aSelection,
+  static nsresult GetStartNodeAndOffset(mozilla::dom::Selection* aSelection,
                                         nsINode** aStartNode,
                                         int32_t* aStartOffset);
   static nsresult GetEndNodeAndOffset(nsISelection *aSelection, nsIDOMNode **outEndNode, int32_t *outEndOffset);
-  static nsresult GetEndNodeAndOffset(mozilla::Selection* aSelection,
+  static nsresult GetEndNodeAndOffset(mozilla::dom::Selection* aSelection,
                                       nsINode** aEndNode,
                                       int32_t* aEndOffset);
 #if DEBUG_JOE
   static void DumpNode(nsIDOMNode *aNode, int32_t indent=0);
 #endif
-  mozilla::Selection* GetSelection();
+  mozilla::dom::Selection* GetSelection();
 
   // Helpers to add a node to the selection. 
   // Used by table cell selection methods
