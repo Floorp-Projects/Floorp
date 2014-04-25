@@ -599,17 +599,14 @@ function makeURLAbsolute(aBase, aUrl)
   return makeURI(aUrl, null, makeURI(aBase)).spec;
 }
 
-
 /**
  * openNewTabWith: opens a new tab with the given URL.
  *
  * @param aURL
  *        The URL to open (as a string).
  * @param aDocument
- *        The document from which the URL came, or null. This is used to set the
- *        referrer header and to do a security check of whether the document is
- *        allowed to reference the URL. If null, there will be no referrer
- *        header and no security check.
+ *        Note this parameter is now ignored. There is no security check & no
+ *        referrer header derived from aDocument (null case).
  * @param aPostData
  *        Form POST data, or null.
  * @param aEvent
@@ -620,46 +617,40 @@ function makeURLAbsolute(aBase, aUrl)
  *        (e.g., Google's I Feel Lucky) for interpretation. This parameter may
  *        be undefined in which case it is treated as false.
  * @param [optional] aReferrer
- *        If aDocument is null, then this will be used as the referrer.
- *        There will be no security check.
+ *        This will be used as the referrer. There will be no security check.
  */ 
 function openNewTabWith(aURL, aDocument, aPostData, aEvent,
                         aAllowThirdPartyFixup, aReferrer) {
-  if (aDocument)
-    urlSecurityCheck(aURL, aDocument.nodePrincipal);
 
   // As in openNewWindowWith(), we want to pass the charset of the
   // current document over to a new tab.
-  var originCharset = aDocument && aDocument.characterSet;
-  if (!originCharset &&
-      document.documentElement.getAttribute("windowtype") == "navigator:browser")
-    originCharset = window.content.document.characterSet;
+  let originCharset = null;
+  if (document.documentElement.getAttribute("windowtype") == "navigator:browser")
+    originCharset = gBrowser.selectedBrowser.characterSet;
 
   openLinkIn(aURL, aEvent && aEvent.shiftKey ? "tabshifted" : "tab",
              { charset: originCharset,
                postData: aPostData,
                allowThirdPartyFixup: aAllowThirdPartyFixup,
-               referrerURI: aDocument ? aDocument.documentURIObject : aReferrer });
+               referrerURI: aReferrer });
 }
 
+/**
+ * @param aDocument
+ *        Note this parameter is ignored. See openNewTabWith()
+ */
 function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup, aReferrer) {
-  if (aDocument)
-    urlSecurityCheck(aURL, aDocument.nodePrincipal);
-
-  // if and only if the current window is a browser window and it has a
-  // document with a character set, then extract the current charset menu
-  // setting from the current document and use it to initialize the new browser
-  // window...
-  var originCharset = aDocument && aDocument.characterSet;
-  if (!originCharset &&
-      document.documentElement.getAttribute("windowtype") == "navigator:browser")
-    originCharset = window.content.document.characterSet;
+  // Extract the current charset menu setting from the current document and
+  // use it to initialize the new browser window...
+  let originCharset = null;
+  if (document.documentElement.getAttribute("windowtype") == "navigator:browser")
+    originCharset = gBrowser.selectedBrowser.characterSet;
 
   openLinkIn(aURL, "window",
              { charset: originCharset,
                postData: aPostData,
                allowThirdPartyFixup: aAllowThirdPartyFixup,
-               referrerURI: aDocument ? aDocument.documentURIObject : aReferrer });
+               referrerURI: aReferrer });
 }
 
 // aCalledFromModal is optional
