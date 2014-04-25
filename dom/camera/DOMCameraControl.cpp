@@ -224,84 +224,124 @@ nsDOMCameraControl::IsWindowStillActive()
   return nsDOMCameraManager::IsWindowStillActive(mWindow->WindowID());
 }
 
+// JS-to-native helpers
 // Setter for weighted regions: { top, bottom, left, right, weight }
 nsresult
-nsDOMCameraControl::Set(uint32_t aKey, const Optional<Sequence<CameraRegion> >& aValue, uint32_t aLimit)
+nsDOMCameraControl::Set(JSContext* aCx, uint32_t aKey, const JS::Value& aValue, uint32_t aLimit)
 {
   if (aLimit == 0) {
     DOM_CAMERA_LOGI("%s:%d : aLimit = 0, nothing to do\n", __func__, __LINE__);
     return NS_OK;
   }
 
+  if (!aValue.isObject()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  uint32_t length = 0;
+
+  JS::Rooted<JSObject*> regions(aCx, &aValue.toObject());
+  if (!JS_GetArrayLength(aCx, regions, &length)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  DOM_CAMERA_LOGI("%s:%d : got %d regions (limited to %d)\n", __func__, __LINE__, length, aLimit);
+  if (length > aLimit) {
+    length = aLimit;
+  }
+
   nsTArray<ICameraControl::Region> regionArray;
-  if (aValue.WasPassed()) {
-    const Sequence<CameraRegion>& regions = aValue.Value();
-    uint32_t length = regions.Length();
+  regionArray.SetCapacity(length);
 
-    DOM_CAMERA_LOGI("%s:%d : got %d regions (limited to %d)\n", __func__, __LINE__, length, aLimit);
-    if (length > aLimit) {
-      length = aLimit;
+  for (uint32_t i = 0; i < length; ++i) {
+    JS::Rooted<JS::Value> v(aCx);
+
+    if (!JS_GetElement(aCx, regions, i, &v)) {
+      return NS_ERROR_FAILURE;
     }
 
-    // aLimit supplied by camera library provides sane ceiling (i.e. <10)
-    regionArray.SetCapacity(length);
-
-    for (uint32_t i = 0; i < length; ++i) {
-      ICameraControl::Region* r = regionArray.AppendElement();
-      const CameraRegion &region = regions[i];
-      r->top = region.mTop;
-      r->left = region.mLeft;
-      r->bottom = region.mBottom;
-      r->right = region.mRight;
-      r->weight = region.mWeight;
-
-      DOM_CAMERA_LOGI("region %d: top=%d, left=%d, bottom=%d, right=%d, weight=%u\n",
-        i,
-        r->top,
-        r->left,
-        r->bottom,
-        r->right,
-        r->weight
-      );
+    CameraRegion region;
+    if (!region.Init(aCx, v)) {
+      return NS_ERROR_FAILURE;
     }
-  } else {
-    DOM_CAMERA_LOGI("%s:%d : clear regions\n", __func__, __LINE__);
+
+    ICameraControl::Region* r = regionArray.AppendElement();
+    r->top = region.mTop;
+    r->left = region.mLeft;
+    r->bottom = region.mBottom;
+    r->right = region.mRight;
+    r->weight = region.mWeight;
+
+    DOM_CAMERA_LOGI("region %d: top=%d, left=%d, bottom=%d, right=%d, weight=%u\n",
+      i,
+      r->top,
+      r->left,
+      r->bottom,
+      r->right,
+      r->weight
+    );
   }
   return mCameraControl->Set(aKey, regionArray);
 }
 
 // Getter for weighted regions: { top, bottom, left, right, weight }
 nsresult
-nsDOMCameraControl::Get(uint32_t aKey, nsTArray<CameraRegion>& aValue)
+nsDOMCameraControl::Get(JSContext* aCx, uint32_t aKey, JS::Value* aValue)
 {
   nsTArray<ICameraControl::Region> regionArray;
 
   nsresult rv = mCameraControl->Get(aKey, regionArray);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  uint32_t length = regionArray.Length();
-  DOM_CAMERA_LOGI("%s:%d : got %d regions\n", __func__, __LINE__, length);
-  aValue.SetLength(length);
-
-  for (uint32_t i = 0; i < length; ++i) {
-    ICameraControl::Region& r = regionArray[i];
-    CameraRegion& v = aValue[i];
-    v.mTop = r.top;
-    v.mLeft = r.left;
-    v.mBottom = r.bottom;
-    v.mRight = r.right;
-    v.mWeight = r.weight;
-
-    DOM_CAMERA_LOGI("region %d: top=%d, left=%d, bottom=%d, right=%d, weight=%u\n",
-      i,
-      v.mTop,
-      v.mLeft,
-      v.mBottom,
-      v.mRight,
-      v.mWeight
-    );
+  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0));
+  if (!array) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  uint32_t length = regionArray.Length();
+  DOM_CAMERA_LOGI("%s:%d : got %d regions\n", __func__, __LINE__, length);
+
+  for (uint32_t i = 0; i < length; ++i) {
+    ICameraControl::Region* r = &regionArray[i];
+    JS::Rooted<JS::Value> v(aCx);
+
+    JS::Rooted<JSObject*> o(aCx, JS_NewObject(aCx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    if (!o) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    DOM_CAMERA_LOGI("top=%d\n", r->top);
+    v = INT_TO_JSVAL(r->top);
+    if (!JS_SetProperty(aCx, o, "top", v)) {
+      return NS_ERROR_FAILURE;
+    }
+    DOM_CAMERA_LOGI("left=%d\n", r->left);
+    v = INT_TO_JSVAL(r->left);
+    if (!JS_SetProperty(aCx, o, "left", v)) {
+      return NS_ERROR_FAILURE;
+    }
+    DOM_CAMERA_LOGI("bottom=%d\n", r->bottom);
+    v = INT_TO_JSVAL(r->bottom);
+    if (!JS_SetProperty(aCx, o, "bottom", v)) {
+      return NS_ERROR_FAILURE;
+    }
+    DOM_CAMERA_LOGI("right=%d\n", r->right);
+    v = INT_TO_JSVAL(r->right);
+    if (!JS_SetProperty(aCx, o, "right", v)) {
+      return NS_ERROR_FAILURE;
+    }
+    DOM_CAMERA_LOGI("weight=%d\n", r->weight);
+    v = INT_TO_JSVAL(r->weight);
+    if (!JS_SetProperty(aCx, o, "weight", v)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!JS_SetElement(aCx, array, i, o)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  *aValue = JS::ObjectValue(*array);
   return NS_OK;
 }
 
@@ -400,27 +440,33 @@ nsDOMCameraControl::SetZoom(double aZoom, ErrorResult& aRv)
   aRv = mCameraControl->Set(CAMERA_PARAM_ZOOM, aZoom);
 }
 
-void
-nsDOMCameraControl::GetMeteringAreas(nsTArray<CameraRegion>& aAreas, ErrorResult& aRv)
+/* attribute jsval meteringAreas; */
+JS::Value
+nsDOMCameraControl::GetMeteringAreas(JSContext* cx, ErrorResult& aRv)
 {
-  aRv = Get(CAMERA_PARAM_METERINGAREAS, aAreas);
-}
-void
-nsDOMCameraControl::SetMeteringAreas(const Optional<Sequence<CameraRegion> >& aMeteringAreas, ErrorResult& aRv)
-{
-  aRv = Set(CAMERA_PARAM_METERINGAREAS, aMeteringAreas,
-            mCurrentConfiguration->mMaxMeteringAreas);
+  JS::Rooted<JS::Value> areas(cx);
+  aRv = Get(cx, CAMERA_PARAM_METERINGAREAS, areas.address());
+  return areas;
 }
 
 void
-nsDOMCameraControl::GetFocusAreas(nsTArray<CameraRegion>& aAreas, ErrorResult& aRv)
+nsDOMCameraControl::SetMeteringAreas(JSContext* cx, JS::Handle<JS::Value> aMeteringAreas, ErrorResult& aRv)
 {
-  aRv = Get(CAMERA_PARAM_FOCUSAREAS, aAreas);
+  aRv = Set(cx, CAMERA_PARAM_METERINGAREAS, aMeteringAreas,
+            mCurrentConfiguration->mMaxMeteringAreas);
+}
+
+JS::Value
+nsDOMCameraControl::GetFocusAreas(JSContext* cx, ErrorResult& aRv)
+{
+  JS::Rooted<JS::Value> value(cx);
+  aRv = Get(cx, CAMERA_PARAM_FOCUSAREAS, value.address());
+  return value;
 }
 void
-nsDOMCameraControl::SetFocusAreas(const Optional<Sequence<CameraRegion> >& aFocusAreas, ErrorResult& aRv)
+nsDOMCameraControl::SetFocusAreas(JSContext* cx, JS::Handle<JS::Value> aFocusAreas, ErrorResult& aRv)
 {
-  aRv = Set(CAMERA_PARAM_FOCUSAREAS, aFocusAreas,
+  aRv = Set(cx, CAMERA_PARAM_FOCUSAREAS, aFocusAreas,
             mCurrentConfiguration->mMaxFocusAreas);
 }
 
@@ -447,7 +493,7 @@ GetSize(JSContext* aCx, JS::Value* aValue, const ICameraControl::Size& aSize)
   return NS_OK;
 }
 
-/* attribute any pictureSize, deprecated */
+/* attribute any pictureSize */
 JS::Value
 nsDOMCameraControl::GetPictureSize(JSContext* cx, ErrorResult& aRv)
 {
@@ -475,26 +521,7 @@ nsDOMCameraControl::SetPictureSize(JSContext* aCx, JS::Handle<JS::Value> aSize, 
   aRv = mCameraControl->Set(CAMERA_PARAM_PICTURE_SIZE, s);
 }
 
-void
-nsDOMCameraControl::GetPictureSize(CameraSize& aSize, ErrorResult& aRv)
-{
-  ICameraControl::Size size;
-  aRv = mCameraControl->Get(CAMERA_PARAM_PICTURE_SIZE, size);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  aSize.mWidth = size.width;
-  aSize.mHeight = size.height;
-}
-void
-nsDOMCameraControl::SetPictureSize(const CameraSize& aSize, ErrorResult& aRv)
-{
-  ICameraControl::Size s = { aSize.mWidth, aSize.mHeight };
-  aRv = mCameraControl->Set(CAMERA_PARAM_PICTURE_SIZE, s);
-}
-
-/* attribute any thumbnailSize, deprecated */
+/* attribute any thumbnailSize */
 JS::Value
 nsDOMCameraControl::GetThumbnailSize(JSContext* aCx, ErrorResult& aRv)
 {
@@ -519,25 +546,6 @@ nsDOMCameraControl::SetThumbnailSize(JSContext* aCx, JS::Handle<JS::Value> aSize
   }
 
   ICameraControl::Size s = { size.mWidth, size.mHeight };
-  aRv = mCameraControl->Set(CAMERA_PARAM_THUMBNAILSIZE, s);
-}
-
-void
-nsDOMCameraControl::GetThumbnailSize(CameraSize& aSize, ErrorResult& aRv)
-{
-  ICameraControl::Size size;
-  aRv = mCameraControl->Get(CAMERA_PARAM_THUMBNAILSIZE, size);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  aSize.mWidth = size.width;
-  aSize.mHeight = size.height;
-}
-void
-nsDOMCameraControl::SetThumbnailSize(const CameraSize& aSize, ErrorResult& aRv)
-{
-  ICameraControl::Size s = { aSize.mWidth, aSize.mHeight };
   aRv = mCameraControl->Set(CAMERA_PARAM_THUMBNAILSIZE, s);
 }
 

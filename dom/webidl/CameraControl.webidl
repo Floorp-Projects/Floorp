@@ -170,20 +170,18 @@ interface CameraControl : MediaStream
           weight: 1000
       }
 
-     'top', 'left', 'bottom', and 'right' all range from -1000 at
-     the top-/leftmost of the sensor to 1000 at the bottom-/rightmost
-     of the sensor.
+      'top', 'left', 'bottom', and 'right' all range from -1000 at
+      the top-/leftmost of the sensor to 1000 at the bottom-/rightmost
+      of the sensor.
 
-     objects missing one or more of these properties will be ignored;
-     if the array contains more than capabilities.maxMeteringAreas,
-     extra areas will be ignored.
+      objects missing one or more of these properties will be ignored;
+      if the array contains more than capabilities.maxMeteringAreas,
+      extra areas will be ignored.
 
-     if this setter is called with no arguments, the camera will
-     determine metering areas on its own. */
+      this attribute can be set to null to allow the camera to determine
+      where to perform light metering. */
   [Throws]
-  sequence<CameraRegion> getMeteringAreas();
-  [Throws]
-  void setMeteringAreas(optional sequence<CameraRegion> meteringAreas);
+  attribute any             meteringAreas;
 
   /* an array of one or more objects that define where the camera will
      perform auto-focusing, with the same definition as meteringAreas.
@@ -191,12 +189,10 @@ interface CameraControl : MediaStream
      if the array contains more than capabilities.maxFocusAreas, extra
      areas will be ignored.
 
-     if this setter is called with no arguments, the camera will
-     determine focus areas on its own. */
+     this attribute can be set to null to allow the camera to determine
+     where to focus. */
   [Throws]
-  sequence<CameraRegion> getFocusAreas();
-  [Throws]
-  void setFocusAreas(optional sequence<CameraRegion> focusAreas);
+  attribute any             focusAreas;
 
   /* focal length in millimetres */
   [Throws]
@@ -249,21 +245,13 @@ interface CameraControl : MediaStream
      useful for synchronizing other UI elements. */
   attribute CameraPreviewStateChange? onPreviewStateChange;
 
-  /* the attribute is deprecated in favour of get/setPictureSize.
-
-     the size of the picture to be returned by a call to takePicture();
+  /* the size of the picture to be returned by a call to takePicture();
      an object with 'height' and 'width' properties that corresponds to
      one of the options returned by capabilities.pictureSizes. */
   [Throws]
   attribute any              pictureSize;
-  [Throws]
-  CameraSize getPictureSize();
-  [Throws]
-  void setPictureSize(optional CameraSize size);
 
-  /* the attribute is deprecated in favour of get/setThumbnailSize.
-
-     the size of the thumbnail to be included in the picture returned
+  /* the size of the thumbnail to be included in the picture returned
      by a call to takePicture(), assuming the chosen fileFormat supports
      one; an object with 'height' and 'width' properties that corresponds
      to one of the options returned by capabilities.pictureSizes.
@@ -271,11 +259,7 @@ interface CameraControl : MediaStream
      this setting should be considered a hint: the implementation will
      respect it when possible, and override it if necessary. */
   [Throws]
-  attribute any              thumbnailSize;
-  [Throws]
-  CameraSize getThumbnailSize();
-  [Throws]
-  void setThumbnailSize(optional CameraSize size);
+  attribute any             thumbnailSize;
 
   /* the angle, in degrees, that the image sensor is mounted relative
      to the display; e.g. if 'sensorAngle' is 270 degrees (or -90 degrees),
