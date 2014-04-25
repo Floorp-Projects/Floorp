@@ -130,12 +130,12 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     // CERTDB_TERMINAL_RECORD means "stop trying to inherit trust" so if the
     // relevant trust bit isn't set then that means the cert must be considered
     // distrusted.
-    PRUint32 relevantTrustBit = endEntityOrCA == MustBeCA
+    PRUint32 relevantTrustBit = endEntityOrCA == EndEntityOrCA::MustBeCA
                               ? CERTDB_TRUSTED_CA
                               : CERTDB_TRUSTED;
     if (((flags & (relevantTrustBit | CERTDB_TERMINAL_RECORD)))
             == CERTDB_TERMINAL_RECORD) {
-      *trustLevel = ActivelyDistrusted;
+      *trustLevel = TrustLevel::ActivelyDistrusted;
       return SECSuccess;
     }
 
@@ -148,7 +148,7 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     // needed to consider end-entity certs to be their own trust anchors since
     // Gecko implemented nsICertOverrideService.
     if (flags & CERTDB_TRUSTED_CA) {
-      *trustLevel = TrustAnchor;
+      *trustLevel = TrustLevel::TrustAnchor;
       return SECSuccess;
     }
 #endif
@@ -156,11 +156,11 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
 
   // mTrustedRoot is the only trust anchor for this validation.
   if (CERT_CompareCerts(mTrustedRoot.get(), candidateCert)) {
-    *trustLevel = TrustAnchor;
+    *trustLevel = TrustLevel::TrustAnchor;
     return SECSuccess;
   }
 
-  *trustLevel = InheritsTrust;
+  *trustLevel = TrustLevel::InheritsTrust;
   return SECSuccess;
 }
 
