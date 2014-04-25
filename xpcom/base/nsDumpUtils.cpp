@@ -242,7 +242,8 @@ FifoWatcher::GetSingleton()
 {
   if (!sSingleton) {
     nsAutoCString dirPath;
-    Preferences::GetCString(kPrefName, &dirPath);
+    Preferences::GetCString(
+      "memory_info_dumper.watch_fifo.directory", &dirPath);
     sSingleton = new FifoWatcher(dirPath);
     sSingleton->Init();
     ClearOnShutdown(&sSingleton);
@@ -261,7 +262,7 @@ FifoWatcher::MaybeCreate()
     return false;
   }
 
-  if (!Preferences::GetBool("memory_info_dumper.watch_fifo.enabled", false)) {
+  if (!Preferences::GetBool(kPrefName, false)) {
     LOG("Fifo watcher disabled via pref.");
     return false;
   }
