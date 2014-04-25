@@ -57,6 +57,7 @@ add_task(function test_record() {
     }
     yield provider.recordSearch(engine, "abouthome");
     yield provider.recordSearch(engine, "contextmenu");
+    yield provider.recordSearch(engine, "newtab");
     yield provider.recordSearch(engine, "searchbar");
     yield provider.recordSearch(engine, "urlbar");
   }
