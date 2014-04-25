@@ -94,6 +94,11 @@ enum JSShellExitCode {
     EXITCODE_TIMEOUT            = 6
 };
 
+enum PathResolutionMode {
+    RootRelative,
+    ScriptRelative
+};
+
 static size_t gStackChunkSize = 8192;
 
 /*
@@ -629,7 +634,7 @@ Version(JSContext *cx, unsigned argc, jsval *vp)
  * directory.
  */
 static JSString *
-ResolvePath(JSContext *cx, HandleString filenameStr, bool scriptRelative)
+ResolvePath(JSContext *cx, HandleString filenameStr, PathResolutionMode resolveMode)
 {
     JSAutoByteString filename(cx, filenameStr);
     if (!filename)
@@ -660,10 +665,10 @@ ResolvePath(JSContext *cx, HandleString filenameStr, bool scriptRelative)
         return nullptr;
 
     if (strcmp(scriptFilename.get(), "-e") == 0 || strcmp(scriptFilename.get(), "typein") == 0)
-        scriptRelative = false;
+        resolveMode = RootRelative;
 
     static char buffer[PATH_MAX+1];
-    if (scriptRelative) {
+    if (resolveMode == ScriptRelative) {
 #ifdef XP_WIN
         // The docs say it can return EINVAL, but the compiler says it's void
         _splitpath(scriptFilename.get(), nullptr, buffer, nullptr, nullptr);
@@ -689,6 +694,87 @@ ResolvePath(JSContext *cx, HandleString filenameStr, bool scriptRelative)
         return nullptr;
 
     return JS_NewStringCopyZ(cx, buffer);
+}
+
+static bool
+CreateMappedArrayBuffer(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1 || args.length() > 3) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
+                             args.length() < 1 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
+                             "createMappedArrayBuffer");
+        return false;
+    }
+
+    RootedString rawFilenameStr(cx, JS::ToString(cx, args[0]));
+    if (!rawFilenameStr)
+        return false;
+    // It's a little bizarre to resolve relative to the script, but for testing
+    // I need a file at a known location, and the only good way I know of to do
+    // that right now is to include it in the repo alongside the test script.
+    // Bug 944164 would introduce an alternative.
+    JSString *filenameStr = ResolvePath(cx, rawFilenameStr, ScriptRelative);
+    if (!filenameStr)
+        return false;
+    JSAutoByteString filename(cx, filenameStr);
+    if (!filename)
+        return false;
+
+    uint32_t offset = 0;
+    if (args.length() >= 2) {
+        if (!JS::ToUint32(cx, args[1], &offset))
+            return false;
+    }
+
+    bool sizeGiven = false;
+    uint32_t size;
+    if (args.length() >= 3) {
+        if (!JS::ToUint32(cx, args[2], &size))
+            return false;
+        sizeGiven = true;
+        if (offset > size) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                                 JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
+            return false;
+        }
+    }
+
+    FILE *file = fopen(filename.ptr(), "r");
+    if (!file) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
+                             JSSMSG_CANT_OPEN, filename.ptr(), strerror(errno));
+        return false;
+    }
+    AutoCloseInputFile autoClose(file);
+
+    if (!sizeGiven) {
+        struct stat st;
+        if (fstat(fileno(file), &st) < 0) {
+            JS_ReportError(cx, "Unable to stat file");
+            return false;
+        }
+        if (st.st_size < offset) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                                 JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
+            return false;
+        }
+        size = st.st_size - offset;
+    }
+
+    void *contents = JS_CreateMappedArrayBufferContents(fileno(file), offset, size);
+    if (!contents) {
+        JS_ReportError(cx, "failed to allocate mapped array buffer contents (possibly due to bad alignment)");
+        return false;
+    }
+
+    RootedObject obj(cx, JS_NewMappedArrayBufferWithContents(cx, size, contents));
+    if (!obj)
+        return false;
+
+    args.rval().setObject(*obj);
+    return true;
 }
 
 static bool
@@ -772,7 +858,7 @@ LoadScript(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
             JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "load");
             return false;
         }
-        str = ResolvePath(cx, str, scriptRelative);
+        str = ResolvePath(cx, str, scriptRelative ? ScriptRelative : RootRelative);
         if (!str) {
             JS_ReportError(cx, "unable to resolve path");
             return false;
@@ -3753,7 +3839,7 @@ ReadFile(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
     }
 
     RootedString givenPath(cx, args[0].toString());
-    RootedString str(cx, ResolvePath(cx, givenPath, scriptRelative));
+    RootedString str(cx, ResolvePath(cx, givenPath, scriptRelative ? ScriptRelative : RootRelative));
     if (!str)
         return false;
 
@@ -3798,7 +3884,7 @@ ReadRelativeToScript(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 redirect(JSContext *cx, FILE* fp, HandleString relFilename)
 {
-    RootedString filename(cx, ResolvePath(cx, relFilename, false));
+    RootedString filename(cx, ResolvePath(cx, relFilename, RootRelative));
     if (!filename)
         return false;
     JSAutoByteString filenameABS(cx, filename);
@@ -4693,6 +4779,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         principals of ~0 subsumes all other principals. The absence of a\n"
 "         principal is treated as if its bits were 0xffff, for subsumption\n"
 "         purposes. If this property is omitted, supply no principal."),
+
+    JS_FN_HELP("createMappedArrayBuffer", CreateMappedArrayBuffer, 1, 0,
+"createMappedArrayBuffer(filename, [offset, [size]])",
+"  Create an array buffer that mmaps the given file."),
 
     JS_FN_HELP("enableStackWalkingAssertion", EnableStackWalkingAssertion, 1, 0,
 "enableStackWalkingAssertion(enabled)",
