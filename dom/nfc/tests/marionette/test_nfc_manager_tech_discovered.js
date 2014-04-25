@@ -4,9 +4,6 @@
 MARIONETTE_TIMEOUT = 30000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-let Promise =
-  SpecialPowers.Cu.import("resource://gre/modules/Promise.jsm").Promise;
-
 // See nfc-nci.h.
 const NCI_LAST_NOTIFICATION  = 0;
 const NCI_LIMIT_NOTIFICATION = 1;
@@ -24,7 +21,7 @@ function activateRE(re) {
   let cmd = 'nfc ntf rf_intf_activated ' + re;
 
   emulator.run(cmd, function(result) {
-    is(result.pop(), 'OK', 'check activation of RE0');
+    is(result.pop(), 'OK', 'check activation of RE' + re);
     deferred.resolve();
   });
 
