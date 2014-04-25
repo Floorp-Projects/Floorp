@@ -1,0 +1,224 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for nsIDOMWindowUtils.sendQueryContentEvent() and .sendSelectionSetEvent()</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<div id="editor" contenteditable>abc<br>def</div>
+<pre id="test">
+<script type="application/javascript">
+
+var editor = document.getElementById("editor");
+
+SimpleTest.waitForExplicitFinish();
+
+const kIsWin = navigator.platform.indexOf("Win") == 0;
+const kIsMac = navigator.platform.indexOf("Mac") == 0;
+
+const kLineBreak = kIsWin ? "\r\n" : kIsMac ? "\r" : "\n";
+
+var gUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                   .getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+function escape(aStr)
+{
+  var result = aStr.replace("\n", "\\n");
+  return result.replace("\r", "\\r");
+}
+
+function runTests()
+{
+  editor.focus();
+
+  // NOTE: For compatibility, calling without flags should work as with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK.
+
+  // QueryTextContent
+  var expectedStr = escape(("abc" + kLineBreak + "def").substr(2, 4));
+  var result = gUtils.sendQueryContentEvent(gUtils.QUERY_TEXT_CONTENT, 2, 4, 0, 0,
+                                            gUtils.QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
+  ok(result.succeeded,
+     "sendQueryContentEvent(QUERY_TEXT_CONTENT, QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK) should succeed");
+  is(escape(result.text), expectedStr,
+     "sendQueryContentEvent(QUERY_TEXT_CONTENT, QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK) got unexpected string");
+
+  result = gUtils.sendQueryContentEvent(gUtils.QUERY_TEXT_CONTENT, 2, 4, 0, 0);
+  ok(result.succeeded,
+     "sendQueryContentEvent(QUERY_TEXT_CONTENT) should succeed");
+  is(escape(result.text), expectedStr,
+     "sendQueryContentEvent(QUERY_TEXT_CONTENT) should return same string as calling with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK");
+
+  expectedStr = escape(("abc\ndef").substr(2, 4));
+  result = gUtils.sendQueryContentEvent(gUtils.QUERY_TEXT_CONTENT, 2, 4, 0, 0,
+                                        gUtils.QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
+  ok(result.succeeded,
+     "sendQueryContentEvent(QUERY_TEXT_CONTENT, QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK) should succeed");
+  is(escape(result.text), expectedStr,
+     "sendQueryContentEvent(QUERY_TEXT_CONTENT, QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK) got unexpected string");
+
+  // QueryCaretRect
+  window.getSelection().collapse(editor.firstChild, 0);
+
+  var caretNative = gUtils.sendQueryContentEvent(gUtils.QUERY_CARET_RECT, 6, 0, 0, 0,
+                                                 gUtils.QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
+  ok(caretNative.succeeded,
+     "sendQueryContentEvent(QUERY_CARET_RECT, QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK) should succeed");
+  var caretXP = gUtils.sendQueryContentEvent(gUtils.QUERY_CARET_RECT, 6 - kLineBreak.length + 1, 0, 0, 0,
+                                             gUtils.QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
+  ok(caretXP.succeeded,
+     "sendQueryContentEvent(QUERY_CARET_RECT, QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK) should succeed");
+
+  is(caretXP.top, caretNative.top,
+     "The caret top should be same");
+  is(caretXP.left, caretNative.left,
+     "The caret left should be same");
+
+  result = gUtils.sendQueryContentEvent(gUtils.QUERY_CARET_RECT, 6, 0, 0, 0);
+  ok(result.succeeded,
+     "sendQueryContentEvent(QUERY_CARET_RECT) should succeed");
+  is(result.top, caretNative.top,
+     "sendQueryContentEvent(QUERY_CARET_RECT) should return same top as calling with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK");
+  is(result.left, caretNative.left,
+     "sendQueryContentEvent(QUERY_CARET_RECT) should return same left as calling with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK");
+
+  // QueryTextRect
+  var textRectNative = gUtils.sendQueryContentEvent(gUtils.QUERY_TEXT_RECT, 6, 1, 0, 0,
+                                                    gUtils.QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
+  ok(textRectNative.succeeded,
+     "sendQueryContentEvent(QUERY_TEXT_RECT, QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK) should succeed");
+  var textRectXP = gUtils.sendQueryContentEvent(gUtils.QUERY_TEXT_RECT, 6 - kLineBreak.length + 1, 1, 0, 0,
+                                                gUtils.QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
+  ok(textRectXP.succeeded,
+     "sendQueryContentEvent(QUERY_TEXT_RECT, QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK) should succeed");
+
+  is(textRectXP.top, textRectNative.top,
+     "The text top should be same");
+  is(textRectXP.left, textRectNative.left,
+     "The text left should be same");
+  is(textRectXP.height, textRectNative.height,
+     "The text height should be same");
+  is(textRectXP.width, textRectNative.width,
+     "The text width should be same");
+
+  result = gUtils.sendQueryContentEvent(gUtils.QUERY_TEXT_RECT, 6, 1, 0, 0);
+  ok(result.succeeded,
+     "sendQueryContentEvent(QUERY_TEXT_RECT) should succeed");
+  is(result.top, textRectNative.top,
+     "sendQueryContentEvent(QUERY_TEXT_RECT) should return same top as calling with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK");
+  is(result.left, textRectNative.left,
+     "sendQueryContentEvent(QUERY_TEXT_RECT) should return same left as calling with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK");
+  is(result.height, textRectNative.height,
+     "sendQueryContentEvent(QUERY_TEXT_RECT) should return same height as calling with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK");
+  is(result.width, textRectNative.width,
+     "sendQueryContentEvent(QUERY_TEXT_RECT) should return same width as calling with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK");
+
+  // QueryCharacterAtOffset
+  result = gUtils.sendQueryContentEvent(gUtils.QUERY_CHARACTER_AT_POINT, 0, 0, textRectNative.left + 1, textRectNative.top + 1,
+                                        gUtils.QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
+  ok(result.succeeded,
+     "sendQueryContentEvent(QUERY_CHARACTER_AT_POINT, QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK) should succeed");
+  is(result.top, textRectNative.top,
+     "The character top is wrong");
+  is(result.left, textRectNative.left,
+     "The character left is wrong");
+  is(result.height, textRectNative.height,
+     "The character height is wrong");
+  is(result.width, textRectNative.width,
+     "The character width is wrong");
+  is(result.offset, 6,
+     "The character offset is wrong");
+
+  result = gUtils.sendQueryContentEvent(gUtils.QUERY_CHARACTER_AT_POINT, 0, 0, textRectNative.left + 1, textRectNative.top + 1);
+  ok(result.succeeded,
+     "sendQueryContentEvent(QUERY_CHARACTER_AT_POINT) should succeed");
+  is(result.top, textRectNative.top,
+     "The character top should be same as calling with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK");
+  is(result.left, textRectNative.left,
+     "The character left should be same as calling with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK");
+  is(result.height, textRectNative.height,
+     "The character height should be same as calling with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK");
+  is(result.width, textRectNative.width,
+     "The character width should be same as calling with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK");
+  is(result.offset, 6,
+     "The character offset should be same as calling with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK");
+
+  result = gUtils.sendQueryContentEvent(gUtils.QUERY_CHARACTER_AT_POINT, 0, 0, textRectXP.left + 1, textRectXP.top + 1,
+                                        gUtils.QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
+  ok(result.succeeded,
+     "sendQueryContentEvent(QUERY_CHARACTER_AT_POINT, QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK) should succeed");
+  is(result.top, textRectXP.top,
+     "The character top is wrong");
+  is(result.left, textRectXP.left,
+     "The character left is wrong");
+  is(result.height, textRectXP.height,
+     "The character height is wrong");
+  is(result.width, textRectXP.width,
+     "The character width is wrong");
+  is(result.offset, 6 - kLineBreak.length + 1,
+     "The character offset is wrong");
+
+  // SelectionSet and QuerySelectedText
+  var selectionSet = gUtils.sendSelectionSetEvent(0, 6, gUtils.SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK);
+  ok(selectionSet,
+     "sendSelectionSetEvent(0, 6, SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK) should succeed");
+  expectedStr = escape(("abc" + kLineBreak + "def").substr(0, 6));
+
+  result = gUtils.sendQueryContentEvent(gUtils.QUERY_SELECTED_TEXT, 0, 0, 0, 0,
+                                        gUtils.QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
+  ok(result.succeeded,
+     "sendQueryContentEvent(QUERY_SELECTED_TEXT, QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK) should succeed");
+  ok(!result.reversed,
+     "sendSelectionSetEvent(0, 6, SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK) should set non-reversed selection");
+  is(escape(result.text), expectedStr,
+     "sendQueryContentEvent(QUERY_SELECTED_TEXT, QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK) got unexpected string");
+
+  selectionSet = gUtils.sendSelectionSetEvent(0, 6, gUtils.SELECTION_SET_FLAG_USE_XP_LINE_BREAK);
+  ok(selectionSet,
+     "sendSelectionSetEvent(0, 6, SELECTION_SET_FLAG_USE_XP_LINE_BREAK) should succeed");
+  expectedStr = escape(("abc\ndef").substr(0, 6));
+
+  result = gUtils.sendQueryContentEvent(gUtils.QUERY_SELECTED_TEXT, 0, 0, 0, 0,
+                                        gUtils.QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
+  ok(result.succeeded,
+     "sendQueryContentEvent(QUERY_SELECTED_TEXT, QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK) should succeed");
+  ok(!result.reversed,
+     "sendSelectionSetEvent(0, 6, SELECTION_SET_FLAG_USE_XP_LINE_BREAK) should set non-reversed selection");
+  is(escape(result.text), expectedStr,
+     "sendQueryContentEvent(QUERY_SELECTED_TEXT, QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK) got unexpected string");
+
+  var selectionSet = gUtils.sendSelectionSetEvent(0, 6, gUtils.SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK | gUtils.SELECTION_SET_FLAG_REVERSE);
+  ok(selectionSet,
+     "sendSelectionSetEvent(0, 6, SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK) should succeed");
+
+  result = gUtils.sendQueryContentEvent(gUtils.QUERY_SELECTED_TEXT, 0, 0, 0, 0,
+                                        gUtils.QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
+  ok(result.succeeded,
+     "sendQueryContentEvent(QUERY_SELECTED_TEXT, QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK) should succeed");
+  ok(result.reversed,
+     "sendSelectionSetEvent(0, 6, SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK | SELECTION_SET_FLAG_REVERSE) should set reversed selection");
+
+  selectionSet = gUtils.sendSelectionSetEvent(0, 6, gUtils.SELECTION_SET_FLAG_USE_XP_LINE_BREAK | gUtils.SELECTION_SET_FLAG_REVERSE);
+  ok(selectionSet,
+     "sendSelectionSetEvent(0, 6, SELECTION_SET_FLAG_USE_XP_LINE_BREAK | SELECTION_SET_FLAG_REVERSE) should succeed");
+
+  result = gUtils.sendQueryContentEvent(gUtils.QUERY_SELECTED_TEXT, 0, 0, 0, 0,
+                                        gUtils.QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
+  ok(result.succeeded,
+     "sendQueryContentEvent(QUERY_SELECTED_TEXT, QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK) should succeed");
+  ok(result.reversed,
+     "sendSelectionSetEvent(0, 6, SELECTION_SET_FLAG_USE_XP_LINE_BREAK | SELECTION_SET_FLAG_REVERSE) should set reversed selection");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTests);
+
+</script>
+</pre>
+</body>
+</html>
