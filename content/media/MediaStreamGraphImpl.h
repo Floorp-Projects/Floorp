@@ -178,11 +178,6 @@ public:
   // The following methods run on the graph thread (or possibly the main thread if
   // mLifecycleState > LIFECYCLE_RUNNING)
   /**
-   * Runs main control loop on the graph thread. Normally a single invocation
-   * of this runs for the entire lifetime of the graph thread.
-   */
-  void RunThread();
-  /**
    * Do one full iteration of the graph. Returns false if the graph should
    * stop, true otherwise.
    */
@@ -191,6 +186,10 @@ public:
    * This does the actual iteration: Message processing, MediaStream ordering,
    * blocking computation and processing.
    */
+  nsTArray<MessageBlock>& MessageQueue() {
+    CurrentDriver()->GetThreadMonitor().AssertCurrentThreadOwns();
+    return mMessageQueue;
+  }
   void DoIteration(nsTArray<MessageBlock>& aMessageQueue);
 
   /* This is the end of the current iteration, that is, the current time of the
@@ -417,12 +416,6 @@ public:
 
   // Data members
 
-  /**
-   * Media graph thread.
-   * Readonly after initialization on the main thread.
-   */
-  nsCOMPtr<nsIThread> mThread;
-
   // The following state is managed on the graph thread only, unless
   // mLifecycleState > LIFECYCLE_RUNNING in which case the graph thread
   // is not running and this state can be used from the main thread.
@@ -439,25 +432,6 @@ public:
    * cycles.
    */
   uint32_t mFirstCycleBreaker;
-  /**
-   * The current graph time for the current iteration of the RunThread control
-   * loop.
-   */
-  GraphTime mCurrentTime;
-  /**
-   * Blocking decisions and all stream contents have been computed up to this
-   * time. The next batch of updates from the main thread will be processed
-   * at this time. Always >= mCurrentTime.
-   */
-  GraphTime mStateComputedTime;
-  /**
-   * A timestamp corresponding to INITIAL_CURRENT_TIME.
-   */
-  TimeStamp mInitialTimeStamp;
-  /**
-   * The real timestamp of the latest run of UpdateCurrentTime.
-   */
-  TimeStamp mCurrentTimeStamp;
   /**
    * Date of the last time we updated the main thread with the graph state.
    */
