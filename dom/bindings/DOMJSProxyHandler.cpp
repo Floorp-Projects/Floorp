@@ -214,6 +214,22 @@ DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::
 }
 
 bool
+DOMProxyHandler::set(JSContext *cx, Handle<JSObject*> proxy, Handle<JSObject*> receiver,
+                     Handle<jsid> id, bool strict, MutableHandle<JS::Value> vp)
+{
+  MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy),
+             "Should not have a XrayWrapper here");
+  bool done;
+  if (!setCustom(cx, proxy, id, vp, &done)) {
+    return false;
+  }
+  if (done) {
+    return true;
+  }
+  return mozilla::dom::BaseDOMProxyHandler::set(cx, proxy, receiver, id, strict, vp);
+}
+
+bool
 DOMProxyHandler::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
                          JS::Handle<jsid> id, bool* bp)
 {
