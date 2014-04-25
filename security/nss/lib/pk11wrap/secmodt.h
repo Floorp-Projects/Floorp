@@ -127,12 +127,12 @@ typedef enum {
 } PK11CertListType;
 
 /*
- * Entry into the Array which lists all the legal bits for the default flags
- * in the slot, their definition, and the PKCS #11 mechanism the represent
- * Always Statically allocated. 
+ * Entry into the array which lists all the legal bits for the default flags
+ * in the slot, their definition, and the PKCS #11 mechanism they represent.
+ * Always statically allocated. 
  */
 struct PK11DefaultArrayEntryStr {
-    char *name;
+    const char *name;
     unsigned long flag;
     unsigned long mechanism; /* this is a long so we don't include the 
 			      * whole pkcs 11 world to use this header */

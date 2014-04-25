@@ -31,7 +31,7 @@ intel_AES_GCMContext *intel_AES_GCM_CreateContext(void *context, freeblCipherFun
 
 void intel_AES_GCM_DestroyContext(intel_AES_GCMContext *gcm, PRBool freeit);
 
-SECStatus intel_AES_GCM_EncryptUpdate(intel_AES_GCMContext  *gcm, unsigned char *outbuf,
+SECStatus intel_AES_GCM_EncryptUpdate(intel_AES_GCMContext *gcm, unsigned char *outbuf,
 			unsigned int *outlen, unsigned int maxout,
 			const unsigned char *inbuf, unsigned int inlen,
 			unsigned int blocksize);

@@ -26,8 +26,6 @@ extern int test_certchainchecker(int argc, char *argv[]);
 extern int test_comcrlselparams(int argc, char *argv[]);
 extern int test_crlselector(int argc, char *argv[]);
 
-/* This test fails to build. Need to fix                */
-/* extern int test_buildparams(int argc, char *argv[]); */
 extern int test_procparams(int argc, char *argv[]);
 extern int test_resourcelimits(int argc, char *argv[]);
 extern int test_trustanchor(int argc, char *argv[]);
@@ -104,7 +102,6 @@ testFunctionRef testFnRefTable[] = {
     {"test_certchainchecker",          test_certchainchecker},
     {"test_comcrlselparams",           test_comcrlselparams},
     {"test_crlselector",               test_crlselector},
-/*  {"test_buildparams",               test_buildparams}*/
     {"test_procparams",                test_procparams},
     {"test_resourcelimits",            test_resourcelimits},
     {"test_trustanchor",               test_trustanchor},

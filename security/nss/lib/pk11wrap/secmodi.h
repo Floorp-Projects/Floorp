@@ -50,7 +50,6 @@ extern SECMODModuleList *SECMOD_DestroyModuleListElement(SECMODModuleList *);
 extern void SECMOD_DestroyModuleList(SECMODModuleList *);
 extern SECStatus SECMOD_AddModule(SECMODModule *newModule);
 
-extern unsigned long SECMOD_InternaltoPubMechFlags(unsigned long internalFlags);
 extern unsigned long SECMOD_InternaltoPubCipherFlags(unsigned long internalFlags);
 
 /* Library functions */
