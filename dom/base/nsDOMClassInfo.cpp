@@ -3255,11 +3255,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // we're an Xray, we have to resolve stuff here to make "window.location =
   // someString" work.
   if (sLocation_id == id && isXray) {
-    // This must be done even if we're just getting the value of
-    // window.location (i.e. no checking flags & JSRESOLVE_ASSIGNING
-    // here) since we must define window.location to prevent the
-    // getter from being overriden (for security reasons).
-
     nsCOMPtr<nsIDOMLocation> location;
     nsresult rv = win->GetLocation(getter_AddRefs(location));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3354,7 +3349,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  if (!(flags & JSRESOLVE_ASSIGNING) && sDocument_id == id) {
+  if (sDocument_id == id) {
     nsCOMPtr<nsIDocument> document = win->GetDoc();
     JS::Rooted<JS::Value> v(cx);
     nsresult rv = WrapNative(cx, document, document,
