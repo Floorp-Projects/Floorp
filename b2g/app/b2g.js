@@ -569,7 +569,7 @@ pref("extensions.getAddons.cache.enabled", false);
 
 // Context Menu
 pref("ui.click_hold_context_menus", true);
-pref("ui.click_hold_context_menus.delay", 750);
+pref("ui.click_hold_context_menus.delay", 400);
 
 // Enable device storage
 pref("device.storage.enabled", true);
