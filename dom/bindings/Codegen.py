@@ -3589,7 +3589,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             declType = CGGeneric("JSObject*")
             declArgs = None
         templateBody = "${declName} = &${val}.toObject();\n"
-        setToNullCode = "${declName} = nullptr;;\n"  # BOGUS extra semicolon
+        setToNullCode = "${declName} = nullptr;\n"
         template = wrapObjectTemplate(templateBody, type, setToNullCode,
                                       failureCode)
         return JSToNativeConversionInfo(template, declType=declType,
@@ -4362,7 +4362,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         if defaultValue is not None:
             if isinstance(defaultValue, IDLNullValue):
                 assert type.nullable()
-                template = handleDefault(template, setNull.rstrip() + ";\n")  # BOGUS extra semicolon
+                template = handleDefault(template, setNull)
             else:
                 assert(defaultValue.type.tag() == IDLType.Tags.domstring)
                 template = handleDefault(template,
@@ -8682,7 +8682,7 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
               // underlying object first.  That gives it a chance to
               // define properties on the actual object as needed, and
               // then use the fact that it created the objects as a flag
-              // o avoid re-resolving the properties if someone deletes
+              // to avoid re-resolving the properties if someone deletes
               // them.
               JSAutoCompartment ac(cx, obj);
               JS::Rooted<JSPropertyDescriptor> objDesc(cx);
