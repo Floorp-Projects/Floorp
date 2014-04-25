@@ -198,7 +198,7 @@ let gGrid = {
 
     let availSpace = document.documentElement.clientHeight - this._cellMargin -
                      document.querySelector("#newtab-margin-undo-container").offsetHeight -
-                     document.querySelector("#newtab-search-form").offsetHeight;
+                     document.querySelector("#newtab-search-container").offsetHeight;
     let visibleRows = Math.floor(availSpace / this._cellHeight);
     this._node.style.height = this._computeHeight() + "px";
     this._node.style.maxHeight = this._computeHeight(visibleRows) + "px";
