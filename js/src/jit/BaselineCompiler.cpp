@@ -10,6 +10,7 @@
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/FixedList.h"
+#include "jit/IonAnalysis.h"
 #include "jit/IonLinker.h"
 #include "jit/IonSpewer.h"
 #ifdef JS_ION_PERF
@@ -79,15 +80,8 @@ BaselineCompiler::compile()
     AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, script));
     AutoTraceLog logCompile(logger, TraceLogger::BaselineCompilation);
 
-    if (!script->ensureHasTypes(cx))
+    if (!script->ensureHasTypes(cx) || !script->ensureHasAnalyzedArgsUsage(cx))
         return Method_Error;
-
-    // Only need to analyze scripts which are marked |argumensHasVarBinding|, to
-    // compute |needsArgsObj| flag.
-    if (script->argumentsHasVarBinding()) {
-        if (!script->ensureRanAnalysis(cx))
-            return Method_Error;
-    }
 
     // Pin analysis info during compilation.
     types::AutoEnterAnalysis autoEnterAnalysis(cx);
@@ -240,18 +234,7 @@ BaselineCompiler::compile()
         baselineScript->toggleSPS(true);
 
     uint32_t *bytecodeMap = baselineScript->bytecodeTypeMap();
-
-    uint32_t added = 0;
-    for (jsbytecode *pc = script->code(); pc < script->codeEnd(); pc += GetBytecodeLength(pc)) {
-        JSOp op = JSOp(*pc);
-        if (js_CodeSpec[op].format & JOF_TYPESET) {
-            bytecodeMap[added++] = script->pcToOffset(pc);
-            if (added == script->nTypeSets())
-                break;
-        }
-    }
-
-    JS_ASSERT(added == script->nTypeSets());
+    types::FillBytecodeTypeMap(script, bytecodeMap);
 
     // The last entry in the last index found, and is used to avoid binary
     // searches for the sought entry when queries are in linear order.

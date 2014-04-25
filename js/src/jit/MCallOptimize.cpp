@@ -1482,12 +1482,6 @@ IonBuilder::inlineForceSequentialOrInParallelSection(CallInfo &callInfo)
 
     ExecutionMode executionMode = info().executionMode();
     switch (executionMode) {
-      case SequentialExecution:
-      case DefinitePropertiesAnalysis:
-        // In sequential mode, leave as is, because we'd have to
-        // access the "in warmup" flag of the runtime.
-        return InliningStatus_NotInlined;
-
       case ParallelExecution: {
         // During Parallel Exec, we always force sequential, so
         // replace with true.  This permits UCE to eliminate the
@@ -1498,6 +1492,11 @@ IonBuilder::inlineForceSequentialOrInParallelSection(CallInfo &callInfo)
         current->push(ins);
         return InliningStatus_Inlined;
       }
+
+      default:
+        // In sequential mode, leave as is, because we'd have to
+        // access the "in warmup" flag of the runtime.
+        return InliningStatus_NotInlined;
     }
 
     MOZ_ASSUME_UNREACHABLE("Invalid execution mode");
@@ -1522,11 +1521,6 @@ IonBuilder::inlineForkJoinGetSlice(CallInfo &callInfo)
     callInfo.setImplicitlyUsedUnchecked();
 
     switch (info().executionMode()) {
-      case SequentialExecution:
-      case DefinitePropertiesAnalysis:
-        // ForkJoinGetSlice acts as identity for sequential execution.
-        current->push(callInfo.getArg(0));
-        return InliningStatus_Inlined;
       case ParallelExecution:
         if (LIRGenerator::allowInlineForkJoinGetSlice()) {
             MForkJoinGetSlice *getSlice = MForkJoinGetSlice::New(alloc(),
@@ -1536,6 +1530,11 @@ IonBuilder::inlineForkJoinGetSlice(CallInfo &callInfo)
             return InliningStatus_Inlined;
         }
         return InliningStatus_NotInlined;
+
+      default:
+        // ForkJoinGetSlice acts as identity for sequential execution.
+        current->push(callInfo.getArg(0));
+        return InliningStatus_Inlined;
     }
 
     MOZ_ASSUME_UNREACHABLE("Invalid execution mode");
@@ -1551,11 +1550,10 @@ IonBuilder::inlineNewDenseArray(CallInfo &callInfo)
     // par. mode we use inlined MIR.
     ExecutionMode executionMode = info().executionMode();
     switch (executionMode) {
-      case SequentialExecution:
-      case DefinitePropertiesAnalysis:
-        return inlineNewDenseArrayForSequentialExecution(callInfo);
       case ParallelExecution:
         return inlineNewDenseArrayForParallelExecution(callInfo);
+      default:
+        return inlineNewDenseArrayForSequentialExecution(callInfo);
     }
 
     MOZ_ASSUME_UNREACHABLE("unknown ExecutionMode");

@@ -300,7 +300,6 @@ static const PhaseInfo phases[] = {
     { PHASE_DISCARD_TI, "Discard TI", PHASE_DISCARD_ANALYSIS },
     { PHASE_FREE_TI_ARENA, "Free TI Arena", PHASE_DISCARD_ANALYSIS },
     { PHASE_SWEEP_TYPES, "Sweep Types", PHASE_DISCARD_ANALYSIS },
-    { PHASE_CLEAR_SCRIPT_ANALYSIS, "Clear Script Analysis", PHASE_DISCARD_ANALYSIS },
     { PHASE_SWEEP_OBJECT, "Sweep Object", PHASE_SWEEP },
     { PHASE_SWEEP_STRING, "Sweep String", PHASE_SWEEP },
     { PHASE_SWEEP_SCRIPT, "Sweep Script", PHASE_SWEEP },
