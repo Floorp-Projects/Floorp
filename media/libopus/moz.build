@@ -28,11 +28,6 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
     DEFINES['OPUS_ARM_MAY_HAVE_MEDIA'] = True
     DEFINES['OPUS_ARM_MAY_HAVE_NEON'] = True
 
-# We only need to export symbols if we're built into libgkmedias instead of
-# libxul which only happens on windows.
-if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
-    DEFINES['OPUS_EXPORT'] = ''
-
 if CONFIG['MOZ_DEBUG']:
     DEFINES['ENABLE_ASSERTIONS'] = True
 
