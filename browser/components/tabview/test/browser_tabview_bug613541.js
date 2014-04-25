@@ -3,6 +3,7 @@
 
 function test() {
   let cw;
+  let win;
   let currentTest;
 
   let getGroupItem = function (index) {
@@ -15,7 +16,7 @@ function test() {
     cw.UI.setActive(groupItem);
 
     for (let i=0; i<numTabs || 0; i++)
-      gBrowser.loadOneTab('about:blank', {inBackground: true});
+      win.gBrowser.loadOneTab('about:blank', {inBackground: true});
 
     return groupItem;
   }
@@ -35,13 +36,13 @@ function test() {
       }
 
       currentTest = test.name;
-      showTabView(test.func);
+      showTabView(test.func, win);
     } else
-      hideTabView(finish);
+      promiseWindowClosed(win).then(finish);
   }
 
   let assertTabViewIsHidden = function () {
-    ok(!TabView.isVisible(), currentTest + ': tabview is hidden');
+    ok(!win.TabView.isVisible(), currentTest + ': tabview is hidden');
   }
 
   let assertNumberOfGroupItems = function (num) {
@@ -49,7 +50,7 @@ function test() {
   }
 
   let assertNumberOfTabs = function (num) {
-    is(gBrowser.tabs.length, num, currentTest + ': number of tabs is equal to ' + num);
+    is(win.gBrowser.tabs.length, num, currentTest + ': number of tabs is equal to ' + num);
   }
 
   let assertGroupItemRemoved = function (groupItem) {
@@ -68,7 +69,7 @@ function test() {
     closeGroupItem(groupItem, function () {
       assertNumberOfGroupItems(1);
       assertGroupItemRemoved(groupItem);
-      whenTabViewIsHidden(next);
+      whenTabViewIsHidden(next, win);
     });
   }
 
@@ -82,7 +83,7 @@ function test() {
         assertNumberOfGroupItems(1);
         assertGroupItemRemoved(groupItem);
         next();
-      });
+      }, win);
     });
   }
 
@@ -97,7 +98,7 @@ function test() {
     closeGroupItem(groupItem, function () {
       assertNumberOfGroupItems(1);
       assertGroupItemExists(newGroupItem);
-      hideTabView(next);
+      hideTabView(next, win);
     });
   }
 
@@ -115,7 +116,7 @@ function test() {
         assertGroupItemRemoved(groupItem);
         assertGroupItemExists(newGroupItem);
         next();
-      });
+      }, win);
     });
   }
 
@@ -123,37 +124,37 @@ function test() {
   // action: exit panorama
   // expected: nothing should happen
   let testPinnedTab1 = function () {
-    gBrowser.pinTab(gBrowser.selectedTab);
+    win.gBrowser.pinTab(win.gBrowser.selectedTab);
 
     let groupItem = getGroupItem(0);
     hideTabView(function () {
       assertNumberOfGroupItems(1);
       assertGroupItemExists(groupItem);
-      gBrowser.unpinTab(gBrowser.selectedTab);
+      win.gBrowser.unpinTab(win.gBrowser.selectedTab);
       next();
-    });
+    }, win);
   }
 
   // setup: 1 pinned tab
   // action: exit panorama
   // expected: new blank group is created
   let testPinnedTab2 = function () {
-    gBrowser.pinTab(gBrowser.selectedTab);
+    win.gBrowser.pinTab(win.gBrowser.selectedTab);
     getGroupItem(0).close();
 
     hideTabView(function () {
       assertNumberOfTabs(1);
       assertNumberOfGroupItems(1);
-      gBrowser.unpinTab(gBrowser.selectedTab);
+      win.gBrowser.unpinTab(win.gBrowser.selectedTab);
       next();
-    });
+    }, win);
   }
 
   // setup: 1 pinned tab, 1 empty group, 1 non-empty group
   // action: close non-empty group
   // expected: nothing should happen
   let testPinnedTab3 = function () {
-    gBrowser.pinTab(gBrowser.selectedTab);
+    win.gBrowser.pinTab(win.gBrowser.selectedTab);
 
     let groupItem = getGroupItem(0);
     let newGroupItem = createGroupItem(1);
@@ -163,8 +164,8 @@ function test() {
       assertNumberOfGroupItems(1);
       assertGroupItemExists(groupItem);
 
-      gBrowser.unpinTab(gBrowser.selectedTab);
-      hideTabView(next);
+      win.gBrowser.unpinTab(win.gBrowser.selectedTab);
+      hideTabView(next, win);
     });
   }
 
@@ -172,7 +173,7 @@ function test() {
   // action: hide non-empty group, exit panorama
   // expected: nothing should happen
   let testPinnedTab4 = function () {
-    gBrowser.pinTab(gBrowser.selectedTab);
+    win.gBrowser.pinTab(win.gBrowser.selectedTab);
 
     let groupItem = getGroupItem(0);
     let newGroupItem = createGroupItem(1);
@@ -183,9 +184,9 @@ function test() {
         assertNumberOfGroupItems(1);
         assertGroupItemExists(groupItem);
         assertGroupItemRemoved(newGroupItem);
-        gBrowser.unpinTab(gBrowser.selectedTab);
+        win.gBrowser.unpinTab(win.gBrowser.selectedTab);
         next();
-      });
+      }, win);
     });
   }
 
@@ -200,7 +201,7 @@ function test() {
     closeGroupItem(groupItem, function () {
       assertNumberOfGroupItems(1);
       assertGroupItemExists(newGroupItem);
-      whenTabViewIsHidden(next);
+      whenTabViewIsHidden(next, win);
     });
   }
 
@@ -218,7 +219,7 @@ function test() {
         assertGroupItemRemoved(groupItem);
         assertGroupItemExists(newGroupItem);
         next();
-      });
+      }, win);
     });
   }
 
@@ -235,7 +236,7 @@ function test() {
         assertNumberOfGroupItems(1);
         assertGroupItemRemoved(groupItem);
         assertGroupItemExists(hiddenGroupItem);
-        hideTabView(next);
+        hideTabView(next, win);
       });
     });
   }
@@ -255,7 +256,7 @@ function test() {
           assertGroupItemRemoved(groupItem);
           assertGroupItemRemoved(hiddenGroupItem);
           next();
-        });
+        }, win);
       });
     });
   }
@@ -279,8 +280,9 @@ function test() {
 
   waitForExplicitFinish();
 
-  showTabView(function () {
-    cw = TabView.getContentWindow();
+  newWindowWithTabView(window => {
+    win = window;
+    cw = win.TabView.getContentWindow();
     next();
   });
 }

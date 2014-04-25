@@ -37,6 +37,7 @@ function test() {
 
     Services.prefs.clearUserPref("browser.sessionstore.restore_hidden_tabs");
 
+    gBrowser.selectedTab = gBrowser.tabs[0];
     ss.setBrowserState(stateBackup);
   });
 
