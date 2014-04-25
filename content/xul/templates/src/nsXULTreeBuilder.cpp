@@ -273,11 +273,11 @@ NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 NS_IMPL_ADDREF_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
 NS_IMPL_RELEASE_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_4(nsXULTreeBuilder, nsXULTemplateBuilder,
-                                     mBoxObject,
-                                     mSelection,
-                                     mPersistStateStore,
-                                     mObservers)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder,
+                                   mBoxObject,
+                                   mSelection,
+                                   mPersistStateStore,
+                                   mObservers)
 
 DOMCI_DATA(XULTreeBuilder, nsXULTreeBuilder)
 

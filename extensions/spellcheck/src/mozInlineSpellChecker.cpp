@@ -523,10 +523,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozInlineSpellChecker)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(mozInlineSpellChecker)
 
-NS_IMPL_CYCLE_COLLECTION_3(mozInlineSpellChecker,
-                           mSpellCheck,
-                           mTreeWalker,
-                           mCurrentSelectionAnchorNode)
+NS_IMPL_CYCLE_COLLECTION(mozInlineSpellChecker,
+                         mSpellCheck,
+                         mTreeWalker,
+                         mCurrentSelectionAnchorNode)
 
 mozInlineSpellChecker::SpellCheckingState
   mozInlineSpellChecker::gCanEnableSpellChecking =

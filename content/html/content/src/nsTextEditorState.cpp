@@ -256,7 +256,7 @@ NS_INTERFACE_TABLE_HEAD(nsTextInputSelectionImpl)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsTextInputSelectionImpl)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_2(nsTextInputSelectionImpl, mFrameSelection, mLimiter)
+NS_IMPL_CYCLE_COLLECTION(nsTextInputSelectionImpl, mFrameSelection, mLimiter)
 
 
 // BEGIN nsTextInputSelectionImpl

@@ -14,7 +14,7 @@
 #include "nsError.h"
 #include "nsTreeBodyFrame.h"
 
-NS_IMPL_CYCLE_COLLECTION_1(nsTreeBoxObject, mView)
+NS_IMPL_CYCLE_COLLECTION(nsTreeBoxObject, mView)
 
 NS_IMPL_ADDREF_INHERITED(nsTreeBoxObject, nsBoxObject)
 NS_IMPL_RELEASE_INHERITED(nsTreeBoxObject, nsBoxObject)

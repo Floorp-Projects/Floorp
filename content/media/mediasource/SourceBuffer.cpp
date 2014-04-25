@@ -499,8 +499,8 @@ SourceBuffer::ContainsTime(double aTime)
   return aTime >= start && aTime <= end;
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(SourceBuffer, DOMEventTargetHelper,
-                                     mMediaSource)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(SourceBuffer, DOMEventTargetHelper,
+                                   mMediaSource)
 
 NS_IMPL_ADDREF_INHERITED(SourceBuffer, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(SourceBuffer, DOMEventTargetHelper)

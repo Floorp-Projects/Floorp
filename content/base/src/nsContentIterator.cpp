@@ -211,11 +211,11 @@ NS_INTERFACE_MAP_BEGIN(nsContentIterator)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsContentIterator)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_4(nsContentIterator,
-                           mCurNode,
-                           mFirst,
-                           mLast,
-                           mCommonParent)
+NS_IMPL_CYCLE_COLLECTION(nsContentIterator,
+                         mCurNode,
+                         mFirst,
+                         mLast,
+                         mCommonParent)
 
 void
 nsContentIterator::LastRelease()
@@ -1158,8 +1158,8 @@ NS_IMPL_RELEASE_INHERITED(nsContentSubtreeIterator, nsContentIterator)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsContentSubtreeIterator)
 NS_INTERFACE_MAP_END_INHERITING(nsContentIterator)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(nsContentSubtreeIterator, nsContentIterator,
-                                     mRange)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsContentSubtreeIterator, nsContentIterator,
+                                   mRange)
 
 void
 nsContentSubtreeIterator::LastRelease()

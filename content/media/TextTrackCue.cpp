@@ -12,13 +12,13 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_5(TextTrackCue,
-                                     DOMEventTargetHelper,
-                                     mDocument,
-                                     mTrack,
-                                     mTrackElement,
-                                     mDisplayState,
-                                     mRegion)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(TextTrackCue,
+                                   DOMEventTargetHelper,
+                                   mDocument,
+                                   mTrack,
+                                   mTrackElement,
+                                   mDisplayState,
+                                   mRegion)
 
 NS_IMPL_ADDREF_INHERITED(TextTrackCue, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TextTrackCue, DOMEventTargetHelper)

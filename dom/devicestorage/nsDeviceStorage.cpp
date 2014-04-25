@@ -1764,8 +1764,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DeviceStorageCursorRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DeviceStorageCursorRequest)
 
-NS_IMPL_CYCLE_COLLECTION_1(DeviceStorageCursorRequest,
-                           mCursor)
+NS_IMPL_CYCLE_COLLECTION(DeviceStorageCursorRequest,
+                         mCursor)
 
 
 class PostErrorEvent : public nsRunnable
@@ -3083,11 +3083,11 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DeviceStorageRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DeviceStorageRequest)
 
-NS_IMPL_CYCLE_COLLECTION_4(DeviceStorageRequest,
-                           mRequest,
-                           mWindow,
-                           mBlob,
-                           mDeviceStorage)
+NS_IMPL_CYCLE_COLLECTION(DeviceStorageRequest,
+                         mRequest,
+                         mWindow,
+                         mBlob,
+                         mDeviceStorage)
 
 
 NS_INTERFACE_MAP_BEGIN(nsDOMDeviceStorage)

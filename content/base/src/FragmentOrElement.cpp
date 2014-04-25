@@ -428,7 +428,7 @@ nsChildContentList::IndexOf(nsIContent* aContent)
 
 //----------------------------------------------------------------------
 
-NS_IMPL_CYCLE_COLLECTION_1(nsNode3Tearoff, mNode)
+NS_IMPL_CYCLE_COLLECTION(nsNode3Tearoff, mNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNode3Tearoff)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXPathNSResolver)
@@ -483,7 +483,7 @@ nsNodeWeakReference::QueryReferent(const nsIID& aIID, void** aInstancePtr)
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_1(nsNodeSupportsWeakRefTearoff, mNode)
+NS_IMPL_CYCLE_COLLECTION(nsNodeSupportsWeakRefTearoff, mNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNodeSupportsWeakRefTearoff)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)

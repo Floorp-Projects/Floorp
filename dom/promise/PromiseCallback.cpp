@@ -311,8 +311,8 @@ WrapperPromiseCallback::Call(JS::Handle<JS::Value> aValue)
 
 // NativePromiseCallback
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(NativePromiseCallback,
-                                     PromiseCallback, mHandler)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(NativePromiseCallback,
+                                   PromiseCallback, mHandler)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(NativePromiseCallback)
 NS_INTERFACE_MAP_END_INHERITING(PromiseCallback)

@@ -174,7 +174,7 @@ protected:
   nsRefPtr<CameraErrorCallback> mOnError;
 };
 
-NS_IMPL_CYCLE_COLLECTION_3(CameraPermissionRequest, mWindow, mOnSuccess, mOnError)
+NS_IMPL_CYCLE_COLLECTION(CameraPermissionRequest, mWindow, mOnSuccess, mOnError)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CameraPermissionRequest)
   NS_INTERFACE_MAP_ENTRY(nsIContentPermissionRequest)

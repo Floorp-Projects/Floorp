@@ -344,7 +344,7 @@ JSStackFrame::~JSStackFrame()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_2(JSStackFrame, mStackDescription, mCaller)
+NS_IMPL_CYCLE_COLLECTION(JSStackFrame, mStackDescription, mCaller)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(JSStackFrame)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(JSStackFrame)

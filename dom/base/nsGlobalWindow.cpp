@@ -581,7 +581,7 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
 nsPIDOMWindow::~nsPIDOMWindow() {}
 
 // DialogValueHolder CC goop.
-NS_IMPL_CYCLE_COLLECTION_1(DialogValueHolder, mValue)
+NS_IMPL_CYCLE_COLLECTION(DialogValueHolder, mValue)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DialogValueHolder)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

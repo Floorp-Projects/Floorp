@@ -22,7 +22,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DataStore)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_CYCLE_COLLECTION_1(DataStore, mStore)
+NS_IMPL_CYCLE_COLLECTION(DataStore, mStore)
 
 DataStore::DataStore(nsPIDOMWindow* aWindow)
   : DOMEventTargetHelper(aWindow)

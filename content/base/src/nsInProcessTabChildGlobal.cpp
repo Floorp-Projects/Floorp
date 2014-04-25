@@ -143,10 +143,10 @@ nsInProcessTabChildGlobal::Init()
   return NS_OK;
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(nsInProcessTabChildGlobal,
-                                     DOMEventTargetHelper,
-                                     mMessageManager,
-                                     mGlobal)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsInProcessTabChildGlobal,
+                                   DOMEventTargetHelper,
+                                   mMessageManager,
+                                   mGlobal)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsInProcessTabChildGlobal)
   NS_INTERFACE_MAP_ENTRY(nsIMessageListenerManager)

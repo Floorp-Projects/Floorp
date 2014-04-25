@@ -63,10 +63,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTypeAheadFind)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTypeAheadFind)
 
-NS_IMPL_CYCLE_COLLECTION_9(nsTypeAheadFind, mFoundLink, mFoundEditable,
-                           mCurrentWindow, mStartFindRange, mSearchRange,
-                           mStartPointRange, mEndPointRange, mSoundInterface,
-                           mFind)
+NS_IMPL_CYCLE_COLLECTION(nsTypeAheadFind, mFoundLink, mFoundEditable,
+                         mCurrentWindow, mStartFindRange, mSearchRange,
+                         mStartPointRange, mEndPointRange, mSoundInterface,
+                         mFind)
 
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 

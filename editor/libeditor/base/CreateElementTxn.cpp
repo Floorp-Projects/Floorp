@@ -30,10 +30,10 @@ CreateElementTxn::CreateElementTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_3(CreateElementTxn, EditTxn,
-                                     mParent,
-                                     mNewNode,
-                                     mRefNode)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(CreateElementTxn, EditTxn,
+                                   mParent,
+                                   mNewNode,
+                                   mRefNode)
 
 NS_IMPL_ADDREF_INHERITED(CreateElementTxn, EditTxn)
 NS_IMPL_RELEASE_INHERITED(CreateElementTxn, EditTxn)

@@ -242,10 +242,10 @@ OverOutElementsWrapper::~OverOutElementsWrapper()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_3(OverOutElementsWrapper,
-                           mLastOverElement,
-                           mFirstOverEventElement,
-                           mFirstOutEventElement)
+NS_IMPL_CYCLE_COLLECTION(OverOutElementsWrapper,
+                         mLastOverElement,
+                         mFirstOverEventElement,
+                         mFirstOutEventElement)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(OverOutElementsWrapper)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(OverOutElementsWrapper)
 
@@ -413,24 +413,24 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(EventStateManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(EventStateManager)
 
-NS_IMPL_CYCLE_COLLECTION_17(EventStateManager,
-                            mCurrentTargetContent,
-                            mGestureDownContent,
-                            mGestureDownFrameOwner,
-                            mLastLeftMouseDownContent,
-                            mLastLeftMouseDownContentParent,
-                            mLastMiddleMouseDownContent,
-                            mLastMiddleMouseDownContentParent,
-                            mLastRightMouseDownContent,
-                            mLastRightMouseDownContentParent,
-                            mActiveContent,
-                            mHoverContent,
-                            mURLTargetContent,
-                            mMouseEnterLeaveHelper,
-                            mPointersEnterLeaveHelper,
-                            mDocument,
-                            mIMEContentObserver,
-                            mAccessKeys)
+NS_IMPL_CYCLE_COLLECTION(EventStateManager,
+                         mCurrentTargetContent,
+                         mGestureDownContent,
+                         mGestureDownFrameOwner,
+                         mLastLeftMouseDownContent,
+                         mLastLeftMouseDownContentParent,
+                         mLastMiddleMouseDownContent,
+                         mLastMiddleMouseDownContentParent,
+                         mLastRightMouseDownContent,
+                         mLastRightMouseDownContentParent,
+                         mActiveContent,
+                         mHoverContent,
+                         mURLTargetContent,
+                         mMouseEnterLeaveHelper,
+                         mPointersEnterLeaveHelper,
+                         mDocument,
+                         mIMEContentObserver,
+                         mAccessKeys)
 
 void
 EventStateManager::ReleaseCurrentIMEContentObserver()

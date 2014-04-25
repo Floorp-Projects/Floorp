@@ -21,8 +21,8 @@ HTMLDataListElement::WrapNode(JSContext *aCx)
   return HTMLDataListElementBinding::Wrap(aCx, this);
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(HTMLDataListElement, nsGenericHTMLElement,
-                                     mOptions)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLDataListElement, nsGenericHTMLElement,
+                                   mOptions)
 
 NS_IMPL_ADDREF_INHERITED(HTMLDataListElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLDataListElement, Element)

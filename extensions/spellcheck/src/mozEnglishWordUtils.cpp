@@ -21,8 +21,8 @@ NS_INTERFACE_MAP_BEGIN(mozEnglishWordUtils)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(mozEnglishWordUtils)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_1(mozEnglishWordUtils,
-                           mURLDetector)
+NS_IMPL_CYCLE_COLLECTION(mozEnglishWordUtils,
+                         mURLDetector)
 
 mozEnglishWordUtils::mozEnglishWordUtils()
 {

@@ -83,10 +83,10 @@ TouchEvent::TouchEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_3(TouchEvent, UIEvent,
-                                     mTouches,
-                                     mTargetTouches,
-                                     mChangedTouches)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(TouchEvent, UIEvent,
+                                   mTouches,
+                                   mTargetTouches,
+                                   mChangedTouches)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TouchEvent)
 NS_INTERFACE_MAP_END_INHERITING(UIEvent)

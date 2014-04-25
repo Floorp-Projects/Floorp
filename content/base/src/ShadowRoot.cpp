@@ -655,8 +655,8 @@ ShadowRoot::ContentRemoved(nsIDocument* aDocument,
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(ShadowRootStyleSheetList, StyleSheetList,
-                                     mShadowRoot)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ShadowRootStyleSheetList, StyleSheetList,
+                                   mShadowRoot)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ShadowRootStyleSheetList)
 NS_INTERFACE_MAP_END_INHERITING(StyleSheetList)

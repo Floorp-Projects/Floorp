@@ -269,8 +269,8 @@ ArchiveRequest::Create(nsPIDOMWindow* aOwner,
   return request.forget();
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(ArchiveRequest, DOMRequest,
-                                     mArchiveReader)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ArchiveRequest, DOMRequest,
+                                   mArchiveReader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ArchiveRequest)
 NS_INTERFACE_MAP_END_INHERITING(DOMRequest)

@@ -408,8 +408,8 @@ NotificationController::ContentInsertion::
   return haveToUpdate;
 }
 
-NS_IMPL_CYCLE_COLLECTION_1(NotificationController::ContentInsertion,
-                           mContainer)
+NS_IMPL_CYCLE_COLLECTION(NotificationController::ContentInsertion,
+                         mContainer)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(NotificationController::ContentInsertion,
                                      AddRef)

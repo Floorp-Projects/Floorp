@@ -17,7 +17,7 @@ namespace dom {
 //----------------------------------------------------------------------
 // Implementation
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(SVGZoomEvent, UIEvent, mPreviousTranslate, mNewTranslate)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(SVGZoomEvent, UIEvent, mPreviousTranslate, mNewTranslate)
 
 NS_IMPL_ADDREF_INHERITED(SVGZoomEvent, UIEvent)
 NS_IMPL_RELEASE_INHERITED(SVGZoomEvent, UIEvent)

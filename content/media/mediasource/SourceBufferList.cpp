@@ -164,8 +164,8 @@ SourceBufferList::WrapObject(JSContext* aCx)
   return SourceBufferListBinding::Wrap(aCx, this);
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(SourceBufferList, DOMEventTargetHelper,
-                                     mMediaSource, mSourceBuffers)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(SourceBufferList, DOMEventTargetHelper,
+                                   mMediaSource, mSourceBuffers)
 
 NS_IMPL_ADDREF_INHERITED(SourceBufferList, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(SourceBufferList, DOMEventTargetHelper)

@@ -41,7 +41,7 @@ AccEvent::AccEvent(uint32_t aEventType, Accessible* aAccessible,
 ////////////////////////////////////////////////////////////////////////////////
 // AccEvent cycle collection
 
-NS_IMPL_CYCLE_COLLECTION_1(AccEvent, mAccessible)
+NS_IMPL_CYCLE_COLLECTION(AccEvent, mAccessible)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AccEvent, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AccEvent, Release)

@@ -10,7 +10,7 @@
 
 using namespace mozilla::image;
 
-NS_IMPL_CYCLE_COLLECTION_1(ScriptedNotificationObserver, mInner)
+NS_IMPL_CYCLE_COLLECTION(ScriptedNotificationObserver, mInner)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ScriptedNotificationObserver)
   NS_INTERFACE_MAP_ENTRY(imgINotificationObserver)

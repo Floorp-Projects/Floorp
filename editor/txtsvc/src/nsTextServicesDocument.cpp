@@ -122,14 +122,14 @@ NS_INTERFACE_MAP_BEGIN(nsTextServicesDocument)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsTextServicesDocument)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_7(nsTextServicesDocument,
-                           mDOMDocument,
-                           mSelCon,
-                           mIterator,
-                           mPrevTextBlock,
-                           mNextTextBlock,
-                           mExtent,
-                           mTxtSvcFilter)
+NS_IMPL_CYCLE_COLLECTION(nsTextServicesDocument,
+                         mDOMDocument,
+                         mSelCon,
+                         mIterator,
+                         mPrevTextBlock,
+                         mNextTextBlock,
+                         mExtent,
+                         mTxtSvcFilter)
 
 NS_IMETHODIMP
 nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)

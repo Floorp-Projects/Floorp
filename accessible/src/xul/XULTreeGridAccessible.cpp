@@ -265,9 +265,9 @@ XULTreeGridRowAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridRowAccessible: nsISupports and cycle collection implementation
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(XULTreeGridRowAccessible,
-                                     XULTreeItemAccessibleBase,
-                                     mAccessibleCache)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(XULTreeGridRowAccessible,
+                                   XULTreeItemAccessibleBase,
+                                   mAccessibleCache)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XULTreeGridRowAccessible)
 NS_INTERFACE_MAP_END_INHERITING(XULTreeItemAccessibleBase)
@@ -453,8 +453,8 @@ XULTreeGridCellAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridCellAccessible: nsISupports implementation
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(XULTreeGridCellAccessible, LeafAccessible,
-                                     mTree, mColumn)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(XULTreeGridCellAccessible, LeafAccessible,
+                                   mTree, mColumn)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XULTreeGridCellAccessible)
   NS_INTERFACE_TABLE_INHERITED2(XULTreeGridCellAccessible,

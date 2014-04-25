@@ -94,9 +94,9 @@ NS_IMPL_ELEMENT_CLONE(HTMLTrackElement)
 NS_IMPL_ADDREF_INHERITED(HTMLTrackElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLTrackElement, Element)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_4(HTMLTrackElement, nsGenericHTMLElement,
-                                     mTrack, mChannel, mMediaParent,
-                                     mListener)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLTrackElement, nsGenericHTMLElement,
+                                   mTrack, mChannel, mMediaParent,
+                                   mListener)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLTrackElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)

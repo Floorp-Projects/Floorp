@@ -214,8 +214,8 @@ static bool UseAudioChannelService()
   return Preferences::GetBool("media.useAudioChannelService");
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(AudioDestinationNode, AudioNode,
-                                     mAudioChannelAgent)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioDestinationNode, AudioNode,
+                                   mAudioChannelAgent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioDestinationNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)

@@ -123,9 +123,9 @@ HTMLCanvasElement::~HTMLCanvasElement()
   ResetPrintCallback();
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_4(HTMLCanvasElement, nsGenericHTMLElement,
-                                     mCurrentContext, mPrintCallback,
-                                     mPrintState, mOriginalCanvas)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLCanvasElement, nsGenericHTMLElement,
+                                   mCurrentContext, mPrintCallback,
+                                   mPrintState, mOriginalCanvas)
 
 NS_IMPL_ADDREF_INHERITED(HTMLCanvasElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLCanvasElement, Element)
