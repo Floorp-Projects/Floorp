@@ -369,6 +369,37 @@ struct InternalGCMethods<Value>
     }
 };
 
+template <>
+struct InternalGCMethods<jsid>
+{
+    static bool isMarkable(jsid id) { return JSID_IS_OBJECT(id) || JSID_IS_STRING(id); }
+
+    static void preBarrier(jsid id) {
+#ifdef JSGC_INCREMENTAL
+        if (JSID_IS_OBJECT(id)) {
+            JSObject *obj = JSID_TO_OBJECT(id);
+            JS::shadow::Zone *shadowZone = ShadowZoneOfObjectFromAnyThread(obj);
+            if (shadowZone->needsBarrier()) {
+                js::gc::MarkObjectUnbarriered(shadowZone->barrierTracer(), &obj, "write barrier");
+                JS_ASSERT(obj == JSID_TO_OBJECT(id));
+            }
+        } else if (JSID_IS_STRING(id)) {
+            JSString *str = JSID_TO_STRING(id);
+            JS::shadow::Zone *shadowZone = ShadowZoneOfStringFromAnyThread(str);
+            if (shadowZone->needsBarrier()) {
+                js::gc::MarkStringUnbarriered(shadowZone->barrierTracer(), &str, "write barrier");
+                JS_ASSERT(str == JSID_TO_STRING(id));
+            }
+        }
+#endif
+    }
+    static void preBarrier(Zone *zone, jsid id) { preBarrier(id); }
+
+    static void postBarrier(jsid *idp) {}
+    static void postBarrierRelocate(jsid *idp) {}
+    static void postBarrierRemove(jsid *idp) {}
+};
+
 /*
  * Base class for barriered pointer types.
  */
@@ -386,6 +417,9 @@ class BarrieredPtr : public HeapBase<T>
         JS_ASSERT(!GCMethods<T>::poisoned(v));
         this->value = v;
     }
+
+    bool operator==(const T &other) const { return value == other; }
+    bool operator!=(const T &other) const { return value != other; }
 
     /* Use this if the automatic coercion to T isn't working. */
     const T &get() const { return value; }
@@ -420,7 +454,7 @@ template <class T>
 class EncapsulatedPtr : public BarrieredPtr<T>
 {
   public:
-    EncapsulatedPtr() : BarrieredPtr<T>(nullptr) {}
+    EncapsulatedPtr() : BarrieredPtr<T>(GCMethods<T>::initial()) {}
     EncapsulatedPtr(T v) : BarrieredPtr<T>(v) {}
     explicit EncapsulatedPtr(const EncapsulatedPtr<T> &v)
       : BarrieredPtr<T>(v.value) {}
@@ -689,6 +723,11 @@ typedef EncapsulatedPtr<Value> EncapsulatedValue;
 typedef RelocatablePtr<Value> RelocatableValue;
 typedef HeapPtr<Value> HeapValue;
 
+typedef BarrieredPtr<jsid> BarrieredId;
+typedef EncapsulatedPtr<jsid> EncapsulatedId;
+typedef RelocatablePtr<jsid> RelocatableId;
+typedef HeapPtr<jsid> HeapId;
+
 /* Useful for hashtables with a HeapPtr as key. */
 template <class T>
 struct HeapPtrHasher
@@ -844,152 +883,6 @@ class HeapSlotArray
 
     HeapSlotArray operator +(int offset) const { return HeapSlotArray(array + offset); }
     HeapSlotArray operator +(uint32_t offset) const { return HeapSlotArray(array + offset); }
-};
-
-/*
- * Base class for barriered jsid types.
- */
-class BarrieredId
-{
-  protected:
-    jsid value;
-
-  private:
-    BarrieredId(const BarrieredId &v) MOZ_DELETE;
-
-  protected:
-    explicit BarrieredId(jsid id) : value(id) {}
-    ~BarrieredId() { pre(); }
-
-  public:
-    bool operator==(jsid id) const { return value == id; }
-    bool operator!=(jsid id) const { return value != id; }
-
-    jsid get() const { return value; }
-    jsid *unsafeGet() { return &value; }
-    void unsafeSet(jsid newId) { value = newId; }
-    operator jsid() const { return value; }
-
-  protected:
-    void pre() {
-#ifdef JSGC_INCREMENTAL
-        if (JSID_IS_OBJECT(value)) {
-            JSObject *obj = JSID_TO_OBJECT(value);
-            JS::shadow::Zone *shadowZone = ShadowZoneOfObjectFromAnyThread(obj);
-            if (shadowZone->needsBarrier()) {
-                js::gc::MarkObjectUnbarriered(shadowZone->barrierTracer(), &obj, "write barrier");
-                JS_ASSERT(obj == JSID_TO_OBJECT(value));
-            }
-        } else if (JSID_IS_STRING(value)) {
-            JSString *str = JSID_TO_STRING(value);
-            JS::shadow::Zone *shadowZone = ShadowZoneOfStringFromAnyThread(str);
-            if (shadowZone->needsBarrier()) {
-                js::gc::MarkStringUnbarriered(shadowZone->barrierTracer(), &str, "write barrier");
-                JS_ASSERT(str == JSID_TO_STRING(value));
-            }
-        }
-#endif
-    }
-};
-
-// Like EncapsulatedPtr, but specialized for jsid.
-// See the comments on that class for details.
-class EncapsulatedId : public BarrieredId
-{
-  public:
-    explicit EncapsulatedId(jsid id) : BarrieredId(id) {}
-    explicit EncapsulatedId() : BarrieredId(JSID_VOID) {}
-
-    EncapsulatedId &operator=(const EncapsulatedId &v) {
-        if (v.value != value)
-            pre();
-        JS_ASSERT(!IsPoisonedId(v.value));
-        value = v.value;
-        return *this;
-    }
-};
-
-// Like RelocatablePtr, but specialized for jsid.
-// See the comments on that class for details.
-class RelocatableId : public BarrieredId
-{
-  public:
-    explicit RelocatableId() : BarrieredId(JSID_VOID) {}
-    explicit inline RelocatableId(jsid id) : BarrieredId(id) {}
-    ~RelocatableId() { pre(); }
-
-    bool operator==(jsid id) const { return value == id; }
-    bool operator!=(jsid id) const { return value != id; }
-
-    jsid get() const { return value; }
-    operator jsid() const { return value; }
-
-    jsid *unsafeGet() { return &value; }
-
-    RelocatableId &operator=(jsid id) {
-        if (id != value)
-            pre();
-        JS_ASSERT(!IsPoisonedId(id));
-        value = id;
-        return *this;
-    }
-
-    RelocatableId &operator=(const RelocatableId &v) {
-        if (v.value != value)
-            pre();
-        JS_ASSERT(!IsPoisonedId(v.value));
-        value = v.value;
-        return *this;
-    }
-};
-
-// Like HeapPtr, but specialized for jsid.
-// See the comments on that class for details.
-class HeapId : public BarrieredId
-{
-  public:
-    explicit HeapId() : BarrieredId(JSID_VOID) {}
-
-    explicit HeapId(jsid id)
-      : BarrieredId(id)
-    {
-        JS_ASSERT(!IsPoisonedId(id));
-        post();
-    }
-
-    ~HeapId() { pre(); }
-
-    void init(jsid id) {
-        JS_ASSERT(!IsPoisonedId(id));
-        value = id;
-        post();
-    }
-
-    HeapId &operator=(jsid id) {
-        if (id != value)
-            pre();
-        JS_ASSERT(!IsPoisonedId(id));
-        value = id;
-        post();
-        return *this;
-    }
-
-    HeapId &operator=(const HeapId &v) {
-        if (v.value != value)
-            pre();
-        JS_ASSERT(!IsPoisonedId(v.value));
-        value = v.value;
-        post();
-        return *this;
-    }
-
-  private:
-    void post() {};
-
-    HeapId(const HeapId &v) MOZ_DELETE;
-
-    HeapId(HeapId &&) MOZ_DELETE;
-    HeapId &operator=(HeapId &&) MOZ_DELETE;
 };
 
 /*
