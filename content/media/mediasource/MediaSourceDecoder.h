@@ -50,7 +50,7 @@ public:
 
   already_AddRefed<SubBufferDecoder> CreateSubDecoder(const nsACString& aType);
 
-  void CallDecoderInitialization();
+  nsresult EnqueueDecoderInitialization();
 
 private:
   // The owning MediaSource holds a strong reference to this decoder, and
