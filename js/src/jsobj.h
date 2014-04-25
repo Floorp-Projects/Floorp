@@ -119,25 +119,27 @@ GetElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue v
     return GetElement(cx, obj, obj, index, vp);
 }
 
+/*
+ * Indicates whether an assignment operation is qualified (`x.y = 0`) or
+ * unqualified (`y = 0`). In strict mode, the latter is an error if no such
+ * variable already exists.
+ *
+ * Used as an argument to baseops::SetPropertyHelper.
+ */
+enum QualifiedBool {
+    Unqualified = 0,
+    Qualified = 1
+};
+
 template <ExecutionMode mode>
 extern bool
 SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cx, HandleObject obj,
-                  HandleObject receiver, HandleId id, unsigned defineHow,
+                  HandleObject receiver, HandleId id, QualifiedBool qualified,
                   MutableHandleValue vp, bool strict);
-
-template <ExecutionMode mode>
-inline bool
-SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cx, HandleObject obj,
-                  HandleObject receiver, PropertyName *name, unsigned defineHow,
-                  MutableHandleValue vp, bool strict)
-{
-    Rooted<jsid> id(cx, NameToId(name));
-    return SetPropertyHelper<mode>(cx, obj, receiver, id, defineHow, vp, strict);
-}
 
 extern bool
 SetElementHelper(JSContext *cx, HandleObject obj, HandleObject Receiver, uint32_t index,
-                 unsigned defineHow, MutableHandleValue vp, bool strict);
+                 MutableHandleValue vp, bool strict);
 
 extern bool
 GetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
@@ -1018,8 +1020,8 @@ class JSObject : public js::ObjectImpl
     {
         if (obj->getOps()->setGeneric)
             return nonNativeSetProperty(cx, obj, id, vp, strict);
-        return js::baseops::SetPropertyHelper<js::SequentialExecution>(cx, obj, receiver, id, 0,
-                                                                       vp, strict);
+        return js::baseops::SetPropertyHelper<js::SequentialExecution>(
+            cx, obj, receiver, id, js::baseops::Qualified, vp, strict);
     }
 
     static bool setProperty(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
@@ -1035,7 +1037,7 @@ class JSObject : public js::ObjectImpl
     {
         if (obj->getOps()->setElement)
             return nonNativeSetElement(cx, obj, index, vp, strict);
-        return js::baseops::SetElementHelper(cx, obj, receiver, index, 0, vp, strict);
+        return js::baseops::SetElementHelper(cx, obj, receiver, index, vp, strict);
     }
 
     static bool nonNativeSetProperty(JSContext *cx, js::HandleObject obj,
@@ -1365,26 +1367,11 @@ extern JSObject *
 DeepCloneObjectLiteral(JSContext *cx, HandleObject obj, NewObjectKind newKind = GenericObject);
 
 /*
- * Flags for the defineHow parameter of DefineNativeProperty.
- */
-enum {
-    /* Suppress js_PurgeScopeChain. */
-    DNP_DONT_PURGE   = 1,
-
-    /*
-     * Unqualified property set.  Only used in the defineHow argument of
-     * js_SetPropertyHelper.
-     */
-    DNP_UNQUALIFIED  = 2
-};
-
-/*
  * Return successfully added or changed shape or nullptr on error.
  */
 extern bool
 DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
-                     unsigned defineHow = 0);
+                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 
 extern bool
 LookupNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id,
