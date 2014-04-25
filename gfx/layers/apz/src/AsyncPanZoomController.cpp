@@ -1602,6 +1602,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   // smooth. If an animation frame is requested, it is the compositor's
   // responsibility to schedule a composite.
   bool requestAnimationFrame = false;
+  Vector<Task*> deferredTasks;
 
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
@@ -1616,12 +1617,19 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
               ParentLayerSize(mFrameMetrics.mCompositionBounds.Size()) / mFrameMetrics.GetZoomToParent()));
 
     mCurrentAsyncScrollOffset = mFrameMetrics.GetScrollOffset();
+
+    // Get any deferred tasks queued up by mAnimation's Sample() (called by
+    // UpdateAnimation()). This needs to be done here since mAnimation can
+    // be destroyed by another thread when we release the monitor, but
+    // the tasks need to be executed after we release the monitor since they
+    // are allowed to call APZCTreeManager methods which can grab the tree lock. 
+    if (mAnimation) {
+      deferredTasks = mAnimation->TakeDeferredTasks();
+    }
   }
 
-  // Execute tasks queued up by mAnimation's Sample() (called by
-  // UpdateAnimation()) for execution after mMonitor has been released.
-  if (mAnimation) {
-    mAnimation->ExecuteDeferredTasks();
+  for (uint32_t i = 0; i < deferredTasks.length(); ++i) {
+    deferredTasks[i]->Run();
   }
 
   // Cancel the mAsyncScrollTimeoutTask because we will fire a
