@@ -52,7 +52,6 @@ class Shmem;
 
 namespace layers {
 
-class PGrallocBufferChild;
 typedef std::vector<CompositableOperation> OpVector;
 
 struct CompositableTransaction
@@ -223,43 +222,6 @@ static void CreateImageClientSync(RefPtr<ImageClient>* result,
   *result = sImageBridgeChildSingleton->CreateImageClientNow(aType);
   *aDone = true;
   barrier->NotifyAll();
-}
-
-
-struct GrallocParam {
-  IntSize size;
-  uint32_t format;
-  uint32_t usage;
-  MaybeMagicGrallocBufferHandle* handle;
-  PGrallocBufferChild** child;
-
-  GrallocParam(const IntSize& aSize,
-               const uint32_t& aFormat,
-               const uint32_t& aUsage,
-               MaybeMagicGrallocBufferHandle* aHandle,
-               PGrallocBufferChild** aChild)
-    : size(aSize)
-    , format(aFormat)
-    , usage(aUsage)
-    , handle(aHandle)
-    , child(aChild)
-  {}
-};
-
-// dispatched function
-static void AllocGrallocBufferSync(const GrallocParam& aParam,
-                                   Monitor* aBarrier,
-                                   bool* aDone)
-{
-  MonitorAutoLock autoMon(*aBarrier);
-
-  sImageBridgeChildSingleton->AllocGrallocBufferNow(aParam.size,
-                                                    aParam.format,
-                                                    aParam.usage,
-                                                    aParam.handle,
-                                                    aParam.child);
-  *aDone = true;
-  aBarrier->NotifyAll();
 }
 
 // dispatched function
@@ -700,32 +662,6 @@ ImageBridgeChild::CreateImageClientNow(CompositableType aType)
   return client.forget();
 }
 
-PGrallocBufferChild*
-ImageBridgeChild::AllocPGrallocBufferChild(const IntSize&, const uint32_t&, const uint32_t&,
-                                           MaybeMagicGrallocBufferHandle*)
-{
-  MOZ_ASSERT(!mShuttingDown);
-#ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  return GrallocBufferActor::Create();
-#else
-  NS_RUNTIMEABORT("No gralloc buffers for you");
-  return nullptr;
-#endif
-}
-
-bool
-ImageBridgeChild::DeallocPGrallocBufferChild(PGrallocBufferChild* actor)
-{
-  MOZ_ASSERT(!mShuttingDown);
-#ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  delete actor;
-  return true;
-#else
-  NS_RUNTIMEABORT("Um, how did we get here?");
-  return false;
-#endif
-}
-
 bool
 ImageBridgeChild::AllocUnsafeShmem(size_t aSize,
                                    ipc::SharedMemory::SharedMemoryType aType,
@@ -841,100 +777,6 @@ ImageBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
                                NewRunnableFunction(&ProxyDeallocShmemNow,
                                                    this,
                                                    &aShmem,
-                                                   &barrier,
-                                                   &done));
-    while (!done) {
-      barrier.Wait();
-    }
-  }
-}
-
-PGrallocBufferChild*
-ImageBridgeChild::AllocGrallocBuffer(const IntSize& aSize,
-                                     uint32_t aFormat,
-                                     uint32_t aUsage,
-                                     MaybeMagicGrallocBufferHandle* aHandle)
-{
-  if (InImageBridgeChildThread()) {
-    PGrallocBufferChild* child = nullptr;
-    ImageBridgeChild::AllocGrallocBufferNow(aSize, aFormat, aUsage, aHandle, &child);
-    return child;
-  }
-
-  Monitor barrier("AllocGrallocBuffer Lock");
-  MonitorAutoLock autoMon(barrier);
-  bool done = false;
-  PGrallocBufferChild* child = nullptr;
-
-  GetMessageLoop()->PostTask(
-    FROM_HERE,
-    NewRunnableFunction(&AllocGrallocBufferSync,
-                        GrallocParam(aSize, aFormat, aUsage, aHandle, &child), &barrier, &done));
-
-  while (!done) {
-    barrier.Wait();
-  }
-
-  return child;
-}
-
-void
-ImageBridgeChild::AllocGrallocBufferNow(const gfx::IntSize& aSize,
-                                        uint32_t aFormat, uint32_t aUsage,
-                                        MaybeMagicGrallocBufferHandle* aHandle,
-                                        PGrallocBufferChild** aChild)
-{
-  MOZ_ASSERT(!mShuttingDown);
-#ifdef MOZ_WIDGET_GONK
-  *aChild = SendPGrallocBufferConstructor(aSize,
-                                          aFormat,
-                                          aUsage,
-                                          aHandle);
-#else
-  NS_RUNTIMEABORT("not implemented");
-  aChild = nullptr;
-#endif
-}
-
-static void ProxyDeallocGrallocBufferNow(ISurfaceAllocator* aAllocator,
-                                         PGrallocBufferChild* aChild,
-                                         ReentrantMonitor* aBarrier,
-                                         bool* aDone)
-{
-  MOZ_ASSERT(aChild);
-  MOZ_ASSERT(aDone);
-  MOZ_ASSERT(aBarrier);
-
-#ifdef MOZ_WIDGET_GONK
-  PGrallocBufferChild::Send__delete__(aChild);
-#else
-  NS_RUNTIMEABORT("not implemented");
-#endif
-
-  ReentrantMonitorAutoEnter autoMon(*aBarrier);
-  *aDone = true;
-  aBarrier->NotifyAll();
-}
-
-void
-ImageBridgeChild::DeallocGrallocBuffer(PGrallocBufferChild* aChild)
-{
-  MOZ_ASSERT(aChild);
-  if (InImageBridgeChildThread()) {
-#ifdef MOZ_WIDGET_GONK
-    PGrallocBufferChild::Send__delete__(aChild);
-#else
-    NS_RUNTIMEABORT("not implemented");
-#endif
-  } else {
-    ReentrantMonitor barrier("AllocatorProxy Dealloc");
-    ReentrantMonitorAutoEnter autoMon(barrier);
-
-    bool done = false;
-    GetMessageLoop()->PostTask(FROM_HERE,
-                               NewRunnableFunction(&ProxyDeallocGrallocBufferNow,
-                                                   this,
-                                                   aChild,
                                                    &barrier,
                                                    &done));
     while (!done) {

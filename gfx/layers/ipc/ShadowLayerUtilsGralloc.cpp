@@ -8,13 +8,13 @@
 #include "mozilla/DebugOnly.h"
 
 #include "mozilla/gfx/Point.h"
-#include "mozilla/layers/PGrallocBufferChild.h"
-#include "mozilla/layers/PGrallocBufferParent.h"
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/TextureHost.h"
+#include "mozilla/layers/SharedBufferManagerChild.h"
+#include "mozilla/layers/SharedBufferManagerParent.h"
 #include "mozilla/unused.h"
 #include "nsXULAppAPI.h"
 
@@ -38,6 +38,28 @@ using namespace mozilla::layers;
 using namespace mozilla::gl;
 
 namespace IPC {
+
+void
+ParamTraits<GrallocBufferRef>::Write(Message* aMsg,
+                                     const paramType& aParam)
+{
+  aMsg->WriteInt(aParam.mOwner);
+  aMsg->WriteInt32(aParam.mKey);
+}
+
+bool
+ParamTraits<GrallocBufferRef>::Read(const Message* aMsg, void** aIter,
+                                    paramType* aParam)
+{
+  int owner;
+  int index;
+  if (!aMsg->ReadInt(aIter, &owner) ||
+      !aMsg->ReadInt32(aIter, &index))
+    return false;
+  aParam->mOwner = owner;
+  aParam->mKey = index;
+  return true;
+}
 
 void
 ParamTraits<MagicGrallocBufferHandle>::Write(Message* aMsg,
@@ -70,7 +92,8 @@ ParamTraits<MagicGrallocBufferHandle>::Write(Message* aMsg,
 #else
   flattenable->flatten(data, nbytes, fds, nfds);
 #endif
-
+  aMsg->WriteInt(aParam.mRef.mOwner);
+  aMsg->WriteInt32(aParam.mRef.mKey);
   aMsg->WriteSize(nbytes);
   aMsg->WriteSize(nfds);
 
@@ -90,15 +113,19 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
   size_t nbytes;
   size_t nfds;
   const char* data;
+  int owner;
+  int index;
 
-  if (!aMsg->ReadSize(aIter, &nbytes) ||
+  if (!aMsg->ReadInt(aIter, &owner) ||
+      !aMsg->ReadInt32(aIter, &index) ||
+      !aMsg->ReadSize(aIter, &nbytes) ||
       !aMsg->ReadSize(aIter, &nfds) ||
       !aMsg->ReadBytes(aIter, &data, nbytes)) {
     return false;
   }
 
   int fds[nfds];
-
+  bool sameProcess = (XRE_GetProcessType() == GeckoProcessType_Default);
   for (size_t n = 0; n < nfds; ++n) {
     FileDescriptor fd;
     if (!aMsg->ReadFileDescriptor(aIter, &fd)) {
@@ -109,27 +136,41 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
     // SCM_RIGHTS doesn't dup the fd.  That's surprising, but we just
     // deal with it here.  NB: only the "default" (master) process can
     // alloc gralloc buffers.
-    bool sameProcess = (XRE_GetProcessType() == GeckoProcessType_Default);
-    int dupFd = sameProcess ? dup(fd.fd) : fd.fd;
+    int dupFd = sameProcess && index < 0 ? dup(fd.fd) : fd.fd;
     fds[n] = dupFd;
   }
 
-  sp<GraphicBuffer> buffer(new GraphicBuffer());
+  aResult->mRef.mOwner = owner;
+  aResult->mRef.mKey = index;
+  if (sameProcess)
+    aResult->mGraphicBuffer = SharedBufferManagerParent::GetGraphicBuffer(aResult->mRef);
+  else {
+    aResult->mGraphicBuffer = SharedBufferManagerChild::GetSingleton()->GetGraphicBuffer(index);
+    if (index >= 0 && aResult->mGraphicBuffer == nullptr) {
+      //Only newly created GraphicBuffer should deserialize
 #if ANDROID_VERSION >= 19
-  // Make a copy of "data" and "fds" for unflatten() to avoid casting problem
-  void const *pdata = (void const *)data;
-  int const *pfds = fds;
-
-  if (NO_ERROR == buffer->unflatten(pdata, nbytes, pfds, nfds)) {
+      sp<GraphicBuffer> flattenable(new GraphicBuffer());
+      const void* datap = (const void*)data;
+      const int* fdsp = &fds[0];
+      if (NO_ERROR == flattenable->unflatten(datap, nbytes, fdsp, nfds)) {
+        aResult->mGraphicBuffer = flattenable;
+      }
 #else
-  Flattenable *flattenable = buffer.get();
+      sp<GraphicBuffer> buffer(new GraphicBuffer());
+      Flattenable *flattenable = buffer.get();
 
-  if (NO_ERROR == flattenable->unflatten(data, nbytes, fds, nfds)) {
+      if (NO_ERROR == flattenable->unflatten(data, nbytes, fds, nfds)) {
+        aResult->mGraphicBuffer = buffer;
+      }
 #endif
-    aResult->mGraphicBuffer = buffer;
-    return true;
+    }
   }
-  return false;
+
+  if (aResult->mGraphicBuffer == nullptr) {
+    return false;
+  }
+
+  return true;
 }
 
 } // namespace IPC
@@ -137,8 +178,9 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
 namespace mozilla {
 namespace layers {
 
-MagicGrallocBufferHandle::MagicGrallocBufferHandle(const sp<GraphicBuffer>& aGraphicBuffer)
+MagicGrallocBufferHandle::MagicGrallocBufferHandle(const sp<GraphicBuffer>& aGraphicBuffer, GrallocBufferRef ref)
   : mGraphicBuffer(aGraphicBuffer)
+  , mRef(ref)
 {
 }
 
@@ -213,122 +255,6 @@ ContentTypeFromPixelFormat(android::PixelFormat aFormat)
   return gfxASurface::ContentFromFormat(ImageFormatForPixelFormat(aFormat));
 }
 
-class GrallocReporter MOZ_FINAL : public nsIMemoryReporter
-{
-  friend class GrallocBufferActor;
-
-public:
-  NS_DECL_ISUPPORTS
-
-  GrallocReporter()
-  {
-#ifdef DEBUG
-    // There must be only one instance of this class, due to |sAmount|
-    // being static.  Assert this.
-    static bool hasRun = false;
-    MOZ_ASSERT(!hasRun);
-    hasRun = true;
-#endif
-  }
-
-  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData)
-  {
-    return MOZ_COLLECT_REPORT(
-      "gralloc", KIND_OTHER, UNITS_BYTES, sAmount,
-"Special RAM that can be shared between processes and directly accessed by "
-"both the CPU and GPU. Gralloc memory is usually a relatively precious "
-"resource, with much less available than generic RAM. When it's exhausted, "
-"graphics performance can suffer. This value can be incorrect because of race "
-"conditions.");
-  }
-
-private:
-  static int64_t sAmount;
-};
-
-NS_IMPL_ISUPPORTS1(GrallocReporter, nsIMemoryReporter)
-
-int64_t GrallocReporter::sAmount = 0;
-
-void InitGralloc() {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  RegisterStrongMemoryReporter(new GrallocReporter());
-}
-
-GrallocBufferActor::GrallocBufferActor()
-: mAllocBytes(0)
-, mTextureHost(nullptr)
-{
-}
-
-GrallocBufferActor::~GrallocBufferActor()
-{
-  if (mAllocBytes > 0) {
-    GrallocReporter::sAmount -= mAllocBytes;
-  }
-}
-
-/*static*/ PGrallocBufferParent*
-GrallocBufferActor::Create(const gfx::IntSize& aSize,
-                           const uint32_t& aFormat,
-                           const uint32_t& aUsage,
-                           MaybeMagicGrallocBufferHandle* aOutHandle)
-{
-  PROFILER_LABEL("GrallocBufferActor", "Create");
-  GrallocBufferActor* actor = new GrallocBufferActor();
-  *aOutHandle = null_t();
-  uint32_t format = aFormat;
-  uint32_t usage = aUsage;
-
-  if (format == 0 || usage == 0) {
-    printf_stderr("GrallocBufferActor::Create -- format and usage must be non-zero");
-    return actor;
-  }
-
-  // If the requested size is too big (i.e. exceeds the commonly used max GL texture size)
-  // then we risk OOMing the parent process. It's better to just deny the allocation and
-  // kill the child process, which is what the following code does.
-  // TODO: actually use GL_MAX_TEXTURE_SIZE instead of hardcoding 4096
-  if (aSize.width > 4096 || aSize.height > 4096) {
-    printf_stderr("GrallocBufferActor::Create -- requested gralloc buffer is too big. Killing child instead.");
-    delete actor;
-    return nullptr;
-  }
-
-  sp<GraphicBuffer> buffer(new GraphicBuffer(aSize.width, aSize.height, format, usage));
-  if (buffer->initCheck() != OK)
-    return actor;
-
-  size_t bpp = BytesPerPixelForPixelFormat(format);
-  actor->mAllocBytes = aSize.width * aSize.height * bpp;
-  GrallocReporter::sAmount += actor->mAllocBytes;
-
-  actor->mGraphicBuffer = buffer;
-  *aOutHandle = MagicGrallocBufferHandle(buffer);
-
-  return actor;
-}
-
-void GrallocBufferActor::ActorDestroy(ActorDestroyReason)
-{
-  // Used only for hacky fix for bug 966446.
-  if (mTextureHost) {
-    mTextureHost->ForgetBufferActor();
-    mTextureHost = nullptr;
-  }
-}
-
-void GrallocBufferActor::AddTextureHost(TextureHost* aTextureHost)
-{
-  mTextureHost = aTextureHost;
-}
-
-void GrallocBufferActor::RemoveTextureHost()
-{
-  mTextureHost = nullptr;
-}
-
 /*static*/ bool
 LayerManagerComposite::SupportsDirectTexturing()
 {
@@ -342,49 +268,33 @@ LayerManagerComposite::PlatformSyncBeforeReplyUpdate()
 }
 
 //-----------------------------------------------------------------------------
-// Child process
-
-/*static*/ PGrallocBufferChild*
-GrallocBufferActor::Create()
-{
-  return new GrallocBufferActor();
-}
-
-void
-GrallocBufferActor::InitFromHandle(const MagicGrallocBufferHandle& aHandle)
-{
-  MOZ_ASSERT(!mGraphicBuffer.get());
-  MOZ_ASSERT(aHandle.mGraphicBuffer.get());
-
-  mGraphicBuffer = aHandle.mGraphicBuffer;
-}
-
-PGrallocBufferChild*
-ShadowLayerForwarder::AllocGrallocBuffer(const gfx::IntSize& aSize,
-                                         uint32_t aFormat,
-                                         uint32_t aUsage,
-                                         MaybeMagicGrallocBufferHandle* aHandle)
-{
-  if (!mShadowManager->IPCOpen()) {
-    return nullptr;
-  }
-  return mShadowManager->SendPGrallocBufferConstructor(aSize, aFormat, aUsage, aHandle);
-}
-
-void
-ShadowLayerForwarder::DeallocGrallocBuffer(PGrallocBufferChild* aChild)
-{
-  MOZ_ASSERT(aChild);
-  PGrallocBufferChild::Send__delete__(aChild);
-}
-
-//-----------------------------------------------------------------------------
 // Both processes
 
-android::GraphicBuffer*
-GrallocBufferActor::GetGraphicBuffer()
+/*static*/ sp<GraphicBuffer>
+GetGraphicBufferFrom(MaybeMagicGrallocBufferHandle aHandle)
 {
-  return mGraphicBuffer.get();
+  if (aHandle.type() != MaybeMagicGrallocBufferHandle::TMagicGrallocBufferHandle) {
+    if (aHandle.type() == MaybeMagicGrallocBufferHandle::TGrallocBufferRef) {
+      if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        return SharedBufferManagerParent::GetGraphicBuffer(aHandle.get_GrallocBufferRef());
+      }
+      return SharedBufferManagerChild::GetSingleton()->GetGraphicBuffer(aHandle.get_GrallocBufferRef().mKey);
+    }
+  } else {
+    MagicGrallocBufferHandle realHandle = aHandle.get_MagicGrallocBufferHandle();
+    return realHandle.mGraphicBuffer;
+  }
+  return nullptr;
+}
+
+android::sp<android::GraphicBuffer>
+GetGraphicBufferFromDesc(SurfaceDescriptor aDesc)
+{
+  MaybeMagicGrallocBufferHandle handle;
+  if (aDesc.type() == SurfaceDescriptor::TNewSurfaceDescriptorGralloc) {
+    handle = aDesc.get_NewSurfaceDescriptorGralloc().buffer();
+  }
+  return GetGraphicBufferFrom(handle);
 }
 
 /*static*/ void
