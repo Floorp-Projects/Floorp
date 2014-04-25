@@ -15,6 +15,7 @@
 #include "nsIRunnable.h"
 #include "Latency.h"
 #include "mozilla/WeakPtr.h"
+#include "GraphDriver.h"
 
 namespace mozilla {
 
@@ -100,6 +101,12 @@ protected:
   MediaStream* mStream;
 };
 
+struct MessageBlock {
+  int64_t mGraphUpdateIndex;
+  nsTArray<nsAutoPtr<ControlMessage> > mMessages;
+};
+
+
 /**
  * The implementation of a media stream graph. This class is private to this
  * file. It's not in the anonymous namespace because MediaStream needs to
@@ -176,19 +183,19 @@ public:
    */
   void RunThread();
   /**
-   * Call this to indicate that another iteration of the control loop is
-   * required on its regular schedule. The monitor must not be held.
+   * Do one full iteration of the graph. Returns false if the graph should
+   * stop, true otherwise.
    */
-  void EnsureNextIteration();
-  /**
-   * As above, but with the monitor already held.
+  bool OneIteration(nsTArray<MessageBlock>& aMessageQueue);
+  /*
+   * This does the actual iteration: Message processing, MediaStream ordering,
+   * blocking computation and processing.
    */
-  void EnsureNextIterationLocked(MonitorAutoLock& aLock);
-  /**
-   * Call this to indicate that another iteration of the control loop is
-   * required immediately. The monitor must already be held.
-   */
-  void EnsureImmediateWakeUpLocked(MonitorAutoLock& aLock);
+  void DoIteration(nsTArray<MessageBlock>& aMessageQueue);
+
+  /* This is the end of the current iteration, that is, the current time of the
+   * graph. */
+  GraphTime IterationEnd();
   /**
    * Ensure there is an event posted to the main thread to run RunInStableState.
    * mMonitor must be held.
@@ -464,13 +471,6 @@ public:
    */
   int32_t mPortCount;
 
-  // mMonitor guards the data below.
-  // MediaStreamGraph normally does its work without holding mMonitor, so it is
-  // not safe to just grab mMonitor from some thread and start monkeying with
-  // the graph. Instead, communicate with the graph thread using provided
-  // mechanisms such as the ControlMessage queue.
-  Monitor mMonitor;
-
   // Data guarded by mMonitor (must always be accessed with mMonitor held,
   // regardless of the value of mLifecycleState.
 
@@ -482,10 +482,6 @@ public:
    * Runnables to run after the next update to main thread state.
    */
   nsTArray<nsCOMPtr<nsIRunnable> > mUpdateRunnables;
-  struct MessageBlock {
-    int64_t mGraphUpdateIndex;
-    nsTArray<nsAutoPtr<ControlMessage> > mMessages;
-  };
   /**
    * A list of batches of messages to process. Each batch is processed
    * as an atomic unit.
@@ -643,6 +639,12 @@ private:
    * Indicates that the MSG thread should gather data for a memory report.
    */
   bool mNeedsMemoryReport;
+
+  /**
+   * True if the audio outputs are paused because they would output silence
+   * anyway.
+   */
+  bool mAudioOutputsPaused;
 
 #ifdef DEBUG
   /**
