@@ -149,7 +149,7 @@ JSRuntime::initializeAtoms(JSContext *cx)
     if (!commonNames)
         return false;
 
-    FixedHeapPtr<PropertyName> *names = reinterpret_cast<FixedHeapPtr<PropertyName> *>(commonNames);
+    ImmutablePropertyNamePtr *names = reinterpret_cast<ImmutablePropertyNamePtr *>(commonNames);
     for (size_t i = 0; i < ArrayLength(cachedNames); i++, names++) {
         JSAtom *atom = Atomize(cx, cachedNames[i].str, cachedNames[i].length, InternAtom);
         if (!atom)
