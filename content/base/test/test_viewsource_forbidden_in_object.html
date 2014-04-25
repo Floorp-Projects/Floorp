@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=973837
+-->
+<head>
+<meta charset="utf-8">
+<title>Tests for Bug 973837</title>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  const OBJLC = SpecialPowers.Ci.nsIObjectLoadingContent;
+
+  function runObjectURITest(testCase) {
+    var testObject = document.getElementById("testObject");
+    testObject.data = testCase.URI;
+
+    testObject instanceof OBJLC;
+    testObject = SpecialPowers.wrap(testObject);
+
+    is(testObject.displayedType, OBJLC.TYPE_NULL, testCase.desc +
+       " testObject.displayedType should be TYPE_NULL (4)");
+    runNextTest();
+  }
+
+  var testCaseIndex = -1;
+  testCases = [
+    {
+      desc: "Test 1: view-source should not be allowed in an object.",
+      URI: "view-source:file_general_document.html"
+    },
+    {
+      desc: "Test 2: feed:view-source should not be allowed in an object.",
+      URI: "feed:view-source:file_general_document.html"
+    },
+    {
+      desc: "Test 3: jar:view-source should not be allowed in an object",
+      URI: "jar:view-source:file_general_document.html/!/"
+    },
+    {
+      desc: "Test 4: pcast:view-source should not be allowed in an object",
+      URI: "pcast:view-source:file_general_document.html"
+    },
+    {
+      desc: "Test 5: pcast:feed:view-source should not be allowed in an object",
+      URI: "pcast:feed:view-source:file_general_document.html"
+    }
+  ];
+
+  function runNextTest() {
+    ++testCaseIndex;
+    if (testCaseIndex == testCases.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    runObjectURITest(testCases[testCaseIndex]);
+  }
+
+  addLoadEvent(runNextTest);
+</script>
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=973837">Mozilla Bug 973837</a>
+<p id="display"></p>
+
+<object id="testObject"></object>
+
+</body>
+</html>
