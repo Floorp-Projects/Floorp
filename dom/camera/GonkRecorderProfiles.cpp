@@ -93,6 +93,11 @@ GonkRecorderProfile::~GonkRecorderProfile()
 nsresult
 GonkRecorderProfile::ConfigureRecorder(GonkRecorder* aRecorder)
 {
+  if (!aRecorder) {
+    DOM_CAMERA_LOGW("ConfigureRecorder() called with null aRecorder\n");
+    return NS_ERROR_INVALID_ARG;
+  }
+
   static const size_t SIZE = 256;
   char buffer[SIZE];
 
