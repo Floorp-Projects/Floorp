@@ -163,6 +163,9 @@ public:
 
     virtual void preserveWrapper(JSObject *target) = 0;
 
+    static bool set(JSContext *cx, HandleObject wrapper, HandleObject receiver, HandleId id,
+                    bool strict, MutableHandleValue vp);
+
     JSObject* getExpandoObject(JSContext *cx, HandleObject target,
                                HandleObject consumer);
     JSObject* ensureExpandoObject(JSContext *cx, HandleObject wrapper,
@@ -262,6 +265,8 @@ public:
     static bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                MutableHandle<JSPropertyDescriptor> desc,
                                Handle<JSPropertyDescriptor> existingDesc, bool *defined);
+    static bool set(JSContext *cx, HandleObject wrapper, HandleObject receiver, HandleId id,
+                    bool strict, MutableHandleValue vp);
     virtual bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
                                 AutoIdVector &props);
     static bool call(JSContext *cx, HandleObject wrapper,
@@ -1189,6 +1194,15 @@ XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
 }
 
 bool
+XrayTraits::set(JSContext *cx, HandleObject wrapper, HandleObject receiver, HandleId id,
+                bool strict, MutableHandleValue vp)
+{
+    // Skip our Base if it isn't already BaseProxyHandler.
+    js::BaseProxyHandler *handler = js::GetProxyHandler(wrapper);
+    return handler->js::BaseProxyHandler::set(cx, wrapper, receiver, id, strict, vp);
+}
+
+bool
 XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
                                                HandleObject wrapper, HandleObject holder,
                                                HandleId id, MutableHandle<JSPropertyDescriptor> desc,
@@ -1469,6 +1483,24 @@ DOMXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
 
     JS::Rooted<JSObject*> obj(cx, getTargetObject(wrapper));
     return XrayDefineProperty(cx, wrapper, obj, id, desc, defined);
+}
+
+bool
+DOMXrayTraits::set(JSContext *cx, HandleObject wrapper, HandleObject receiver, HandleId id,
+                   bool strict, MutableHandleValue vp)
+{
+    MOZ_ASSERT(xpc::WrapperFactory::IsXrayWrapper(wrapper));
+    RootedObject obj(cx, getTargetObject(wrapper));
+    if (IsDOMProxy(obj)) {
+        DOMProxyHandler* handler = GetDOMProxyHandler(obj);
+
+        bool done;
+        if (!handler->setCustom(cx, obj, id, vp, &done))
+            return false;
+        if (done)
+            return true;
+    }
+    return XrayTraits::set(cx, wrapper, receiver, id, strict, vp);
 }
 
 bool
@@ -2082,10 +2114,10 @@ XrayWrapper<Base, Traits>::set(JSContext *cx, HandleObject wrapper,
                                HandleObject receiver, HandleId id,
                                bool strict, MutableHandleValue vp)
 {
-    // Skip our Base if it isn't already BaseProxyHandler.
+    // Delegate to Traits.
     // NB: None of the functions we call are prepared for the receiver not
     // being the wrapper, so ignore the receiver here.
-    return js::BaseProxyHandler::set(cx, wrapper, Traits::HasPrototype ? receiver : wrapper, id, strict, vp);
+    return Traits::set(cx, wrapper, Traits::HasPrototype ? receiver : wrapper, id, strict, vp);
 }
 
 template <typename Base, typename Traits>

@@ -97,6 +97,14 @@ public:
   bool has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id, bool* bp) MOZ_OVERRIDE;
   bool isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible) MOZ_OVERRIDE;
 
+  /*
+   * If assigning to proxy[id] hits a named setter with OverrideBuiltins or
+   * an indexed setter, call it and set *done to true on success. Otherwise, set
+   * *done to false.
+   */
+  virtual bool setCustom(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
+                         JS::MutableHandle<JS::Value> vp, bool *done);
+
   static JSObject* GetExpandoObject(JSObject* obj)
   {
     MOZ_ASSERT(IsDOMProxy(obj), "expected a DOM proxy object");
@@ -119,6 +127,13 @@ public:
   static JSObject* EnsureExpandoObject(JSContext* cx,
                                        JS::Handle<JSObject*> obj);
 };
+
+inline DOMProxyHandler*
+GetDOMProxyHandler(JSObject* obj)
+{
+  MOZ_ASSERT(IsDOMProxy(obj));
+  return static_cast<DOMProxyHandler*>(js::GetProxyHandler(obj));
+}
 
 extern jsid s_length_id;
 
