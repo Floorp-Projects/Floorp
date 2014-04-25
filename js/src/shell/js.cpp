@@ -3014,7 +3014,7 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
 
     objp.set(nullptr);
     if (referent->isNative()) {
-        if (!LookupPropertyWithFlags(cx, referent, id, 0, &obj2, &shape))
+        if (!LookupNativeProperty(cx, referent, id, &obj2, &shape))
             return false;
         if (obj2 != referent)
             return true;

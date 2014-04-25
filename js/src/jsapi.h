@@ -2867,14 +2867,6 @@ extern JS_PUBLIC_API(bool)
 JS_LookupPropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                       JS::MutableHandleValue vp);
 
-extern JS_PUBLIC_API(bool)
-JS_LookupPropertyWithFlags(JSContext *cx, JS::HandleObject obj, const char *name,
-                           unsigned flags, JS::MutableHandleValue vp);
-
-extern JS_PUBLIC_API(bool)
-JS_LookupPropertyWithFlagsById(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                               unsigned flags, JS::MutableHandleObject objp, JS::MutableHandleValue vp);
-
 struct JSPropertyDescriptor {
     JSObject           *obj;
     unsigned           attrs;

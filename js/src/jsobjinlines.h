@@ -1080,14 +1080,6 @@ DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, PropertyName *name,
     return DefineNativeProperty(cx, obj, id, value, getter, setter, attrs, defineHow);
 }
 
-inline bool
-LookupPropertyWithFlags(ExclusiveContext *cx, HandleObject obj, PropertyName *name, unsigned flags,
-                        js::MutableHandleObject objp, js::MutableHandleShape propp)
-{
-    Rooted<jsid> id(cx, NameToId(name));
-    return LookupPropertyWithFlags(cx, obj, id, flags, objp, propp);
-}
-
 namespace baseops {
 
 inline bool
