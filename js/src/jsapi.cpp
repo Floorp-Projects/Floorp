@@ -2679,14 +2679,13 @@ JS_DeepFreezeObject(JSContext *cx, HandleObject obj)
 }
 
 static bool
-LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id,
                    MutableHandleObject objp, MutableHandleShape propp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
 
-    JSAutoResolveFlags rf(cx, flags);
     return JSObject::lookupGeneric(cx, obj, id, objp, propp);
 }
 
@@ -2734,7 +2733,7 @@ JS_LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id, MutableHandl
     RootedObject obj2(cx);
     RootedShape prop(cx);
 
-    return LookupPropertyById(cx, obj, id, 0, &obj2, &prop) &&
+    return LookupPropertyById(cx, obj, id, &obj2, &prop) &&
            LookupResult(cx, obj, obj2, id, prop, vp);
 }
 
@@ -2774,41 +2773,11 @@ JS_LookupUCProperty(JSContext *cx, HandleObject objArg, const jschar *name, size
 }
 
 JS_PUBLIC_API(bool)
-JS_LookupPropertyWithFlagsById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                               MutableHandleObject objp, MutableHandleValue vp)
-{
-    RootedShape prop(cx);
-
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id);
-    if (!(obj->isNative()
-          ? LookupPropertyWithFlags(cx, obj, id, flags, objp, &prop)
-          : JSObject::lookupGeneric(cx, obj, id, objp, &prop)))
-        return false;
-
-    return LookupResult(cx, obj, objp, id, prop, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_LookupPropertyWithFlags(JSContext *cx, HandleObject obj, const char *name, unsigned flags,
-                           MutableHandleValue vp)
-{
-    RootedObject obj2(cx);
-    JSAtom *atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-
-    RootedId id(cx, AtomToId(atom));
-    return JS_LookupPropertyWithFlagsById(cx, obj, id, flags, &obj2, vp);
-}
-
-JS_PUBLIC_API(bool)
 JS_HasPropertyById(JSContext *cx, HandleObject obj, HandleId id, bool *foundp)
 {
     RootedObject obj2(cx);
     RootedShape prop(cx);
-    bool ok = LookupPropertyById(cx, obj, id, 0, &obj2, &prop);
+    bool ok = LookupPropertyById(cx, obj, id, &obj2, &prop);
     *foundp = (prop != nullptr);
     return ok;
 }
@@ -2855,7 +2824,7 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, HandleObject obj, HandleId id, bool 
         RootedObject obj2(cx);
         RootedShape prop(cx);
 
-        if (!LookupPropertyById(cx, obj, id, 0, &obj2, &prop))
+        if (!LookupPropertyById(cx, obj, id, &obj2, &prop))
             return false;
         *foundp = (obj == obj2);
         return true;
@@ -3299,7 +3268,7 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id,
     RootedObject obj2(cx);
     RootedShape shape(cx);
 
-    if (!LookupPropertyById(cx, obj, id, 0, &obj2, &shape))
+    if (!LookupPropertyById(cx, obj, id, &obj2, &shape))
         return false;
 
     desc.clear();

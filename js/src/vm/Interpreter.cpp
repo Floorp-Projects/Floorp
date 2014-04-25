@@ -1442,8 +1442,6 @@ Interpret(JSContext *cx, RunState &state)
                      activation.opMask() == EnableInterruptsPseudoOpcode);    \
     JS_END_MACRO
 
-    JSAutoResolveFlags rf(cx, RESOLVE_INFER);
-
     gc::MaybeVerifyBarriers(cx, true);
     JS_ASSERT(!cx->compartment()->activeAnalysis);
 

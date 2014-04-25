@@ -1386,12 +1386,9 @@ DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, Handle
                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
                      unsigned defineHow = 0);
 
-/*
- * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.
- */
 extern bool
-LookupPropertyWithFlags(ExclusiveContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                        js::MutableHandleObject objp, js::MutableHandleShape propp);
+LookupNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id,
+                     js::MutableHandleObject objp, js::MutableHandleShape propp);
 
 /*
  * Call the [[DefineOwnProperty]] internal method of obj.
@@ -1416,12 +1413,6 @@ DefineProperties(JSContext *cx, HandleObject obj, HandleObject props);
 extern bool
 ReadPropertyDescriptors(JSContext *cx, HandleObject props, bool checkAccessors,
                         AutoIdVector *ids, AutoPropDescArrayRooter *descs);
-
-/*
- * Constant to pass to js_LookupPropertyWithFlags to infer bits from current
- * bytecode.
- */
-static const unsigned RESOLVE_INFER = 0xffff;
 
 /* Read the name using a dynamic lookup on the scopeChain. */
 extern bool
