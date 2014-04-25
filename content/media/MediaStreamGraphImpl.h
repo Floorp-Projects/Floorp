@@ -177,11 +177,6 @@ public:
   void Init();
   // The following methods run on the graph thread (or possibly the main thread if
   // mLifecycleState > LIFECYCLE_RUNNING)
-  /**
-   * Do one full iteration of the graph. Returns false if the graph should
-   * stop, true otherwise.
-   */
-  bool OneIteration(nsTArray<MessageBlock>& aMessageQueue);
   /*
    * This does the actual iteration: Message processing, MediaStream ordering,
    * blocking computation and processing.
@@ -191,6 +186,10 @@ public:
     return mMessageQueue;
   }
   void DoIteration(nsTArray<MessageBlock>& aMessageQueue);
+
+  bool OneIteration(GraphTime aFrom, GraphTime aTo,
+                    GraphTime aStateFrom, GraphTime aStateEnd,
+                    nsTArray<MessageBlock>& aMessageQueue);
 
   /* This is the end of the current iteration, that is, the current time of the
    * graph. */
@@ -219,10 +218,20 @@ public:
   bool ShouldUpdateMainThread();
   // The following methods are the various stages of RunThread processing.
   /**
-   * Compute a new current time for the graph and advance all on-graph-thread
-   * state to the new current time.
+   * Advance all stream state to the new current time.
    */
-  void UpdateCurrentTime();
+  void UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime,
+                                   GraphTime aNextCurrentTime);
+  /**
+   * Process graph message for this iteration, update stream processing order,
+   * and recompute stream blocking until aEndBlockingDecisions.
+   */
+  void UpdateGraph(nsTArray<MessageBlock>& aMessageQueue,
+                   GraphTime aEndBlockingDecisions);
+  /**
+   * Do all the processing and play the audio and video, ffrom aFrom to aTo.
+   */
+  void Process(GraphTime aFrom, GraphTime aTo);
   /**
    * Update the consumption state of aStream to reflect whether its data
    * is needed or not.
@@ -279,6 +288,13 @@ public:
                            GraphTime aTime, GraphTime aEndBlockingDecisions,
                            GraphTime* aEnd);
   /**
+   * Returns smallest value of t such that
+   * TimeToTicksRoundUp(aSampleRate, t) is a multiple of WEBAUDIO_BLOCK_SIZE
+   * and floor(TimeToTicksRoundUp(aSampleRate, t)/WEBAUDIO_BLOCK_SIZE) >
+   * floor(TimeToTicksRoundUp(aSampleRate, aTime)/WEBAUDIO_BLOCK_SIZE).
+   */
+  GraphTime RoundUpToNextAudioBlock(GraphTime aTime);
+  /**
    * Produce data for all streams >= aStreamIndex for the given time interval.
    * Advances block by block, each iteration producing data for all streams
    * for a single block.
@@ -296,6 +312,7 @@ public:
    */
   bool WillUnderrun(MediaStream* aStream, GraphTime aTime,
                     GraphTime aEndBlockingDecisions, GraphTime* aEnd);
+
   /**
    * Given a graph time aTime, convert it to a stream time taking into
    * account the time during which aStream is scheduled to be blocked.
