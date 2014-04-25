@@ -67,7 +67,7 @@ function test() {
     },
     {
       name: "new tab search",
-      searchURL: base,
+      searchURL: base + "&form=MOZTSB",
       run: function () {
         function doSearch(doc) {
           // Re-add the listener, and perform a search
