@@ -484,6 +484,7 @@ struct ParamTraits<mozilla::WidgetQueryContentEvent>
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
     WriteParam(aMsg, aParam.mSucceeded);
+    WriteParam(aMsg, aParam.mUseNativeLineBreak);
     WriteParam(aMsg, aParam.mInput.mOffset);
     WriteParam(aMsg, aParam.mInput.mLength);
     WriteParam(aMsg, aParam.mReply.mOffset);
@@ -500,6 +501,7 @@ struct ParamTraits<mozilla::WidgetQueryContentEvent>
     return ReadParam(aMsg, aIter,
                      static_cast<mozilla::WidgetGUIEvent*>(aResult)) &&
            ReadParam(aMsg, aIter, &aResult->mSucceeded) &&
+           ReadParam(aMsg, aIter, &aResult->mUseNativeLineBreak) &&
            ReadParam(aMsg, aIter, &aResult->mInput.mOffset) &&
            ReadParam(aMsg, aIter, &aResult->mInput.mLength) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mOffset) &&
@@ -525,6 +527,7 @@ struct ParamTraits<mozilla::WidgetSelectionEvent>
     WriteParam(aMsg, aParam.mReversed);
     WriteParam(aMsg, aParam.mExpandToClusterBoundary);
     WriteParam(aMsg, aParam.mSucceeded);
+    WriteParam(aMsg, aParam.mUseNativeLineBreak);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -536,7 +539,8 @@ struct ParamTraits<mozilla::WidgetSelectionEvent>
            ReadParam(aMsg, aIter, &aResult->mLength) &&
            ReadParam(aMsg, aIter, &aResult->mReversed) &&
            ReadParam(aMsg, aIter, &aResult->mExpandToClusterBoundary) &&
-           ReadParam(aMsg, aIter, &aResult->mSucceeded);
+           ReadParam(aMsg, aIter, &aResult->mSucceeded) &&
+           ReadParam(aMsg, aIter, &aResult->mUseNativeLineBreak);
   }
 };
 
