@@ -44,14 +44,6 @@ public:
     }
   }
 
-  // Get a representation of this video profile that can be returned
-  // to JS, possibly as a child member of another object.
-  //
-  // Return values:
-  //  - NS_OK on success;
-  //  - NS_ERROR_INVALID_ARG if 'aObject' is null;
-  //  - NS_ERROR_OUT_OF_MEMORY if a new object could not be allocated;
-  //  - NS_ERROR_FAILURE if construction of the JS object fails.
   nsresult GetJsObject(JSContext* aCx, JSObject** aObject);
 
 protected:
@@ -81,6 +73,7 @@ public:
     UNKNOWN
   };
 
+public:
   Codec GetCodec() const    { return mCodec; }
   const char* GetCodecName() const
   {
@@ -92,14 +85,6 @@ public:
     }
   }
 
-  // Get a representation of this audio profile that can be returned
-  // to JS, possibly as a child member of another object.
-  //
-  // Return values:
-  //  - NS_OK on success;
-  //  - NS_ERROR_INVALID_ARG if 'aObject' is null;
-  //  - NS_ERROR_OUT_OF_MEMORY if a new object could not be allocated;
-  //  - NS_ERROR_FAILURE if construction of the JS object fails.
   nsresult GetJsObject(JSContext* aCx, JSObject** aObject);
 
 protected:
@@ -145,14 +130,6 @@ public:
     }
   }
 
-  // Get a representation of this recorder profile that can be returned
-  // to JS, possibly as a child member of another object.
-  //
-  // Return values:
-  //  - NS_OK on success;
-  //  - NS_ERROR_INVALID_ARG if 'aObject' is null;
-  //  - NS_ERROR_OUT_OF_MEMORY if a new object could not be allocated;
-  //  - NS_ERROR_FAILURE if construction of the JS object fails.
   virtual nsresult GetJsObject(JSContext* aCx, JSObject** aObject) = 0;
 
 protected:
@@ -184,24 +161,14 @@ public:
   const RecorderVideoProfile* GetVideoProfile() const { return &mVideo; }
   const RecorderAudioProfile* GetAudioProfile() const { return &mAudio; }
 
-  // Get a representation of this recorder profile that can be returned
-  // to JS, possibly as a child member of another object.
-  //
-  // Return values:
-  //  - NS_OK on success;
-  //  - NS_ERROR_INVALID_ARG if 'aObject' is null;
-  //  - NS_ERROR_OUT_OF_MEMORY if a new object could not be allocated;
-  //  - NS_ERROR_NOT_AVAILABLE if the profile has no file format name;
-  //  - NS_ERROR_FAILURE if construction of the JS object fails.
-  nsresult
-  GetJsObject(JSContext* aCx, JSObject** aObject)
+  nsresult GetJsObject(JSContext* aCx, JSObject** aObject)
   {
     NS_ENSURE_TRUE(aObject, NS_ERROR_INVALID_ARG);
 
     const char* format = GetFileFormatName();
     if (!format) {
       // the profile must have a file format
-      return NS_ERROR_NOT_AVAILABLE;
+      return NS_ERROR_FAILURE;
     }
 
     JS::Rooted<JSObject*> o(aCx, JS_NewObject(aCx, nullptr, JS::NullPtr(), JS::NullPtr()));
@@ -249,16 +216,6 @@ public:
   virtual already_AddRefed<RecorderProfile> Get(uint32_t aQualityIndex) const = 0;
 
   uint32_t GetMaxQualityIndex() const { return mMaxQualityIndex; }
-
-  // Get a representation of all supported recorder profiles that can be
-  // returned to JS.
-  //
-  // Return values:
-  //  - NS_OK on success;
-  //  - NS_ERROR_INVALID_ARG if 'aObject' is null;
-  //  - NS_ERROR_OUT_OF_MEMORY if a new object could not be allocated;
-  //  - NS_ERROR_NOT_AVAILABLE if the profile has no file format name;
-  //  - NS_ERROR_FAILURE if construction of the JS object fails.
   nsresult GetJsObject(JSContext* aCx, JSObject** aObject) const;
 
 protected:

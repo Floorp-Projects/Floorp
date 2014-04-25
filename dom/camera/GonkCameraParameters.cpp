@@ -139,14 +139,13 @@ GonkCameraParameters::GonkCameraParameters()
 {
   MOZ_COUNT_CTOR(GonkCameraParameters);
   if (!mLock) {
-    MOZ_CRASH("Out of memory getting new PRRWLock");
+    MOZ_CRASH("OOM getting new PRRWLock");
   }
 }
 
 GonkCameraParameters::~GonkCameraParameters()
 {
   MOZ_COUNT_DTOR(GonkCameraParameters);
-  MOZ_ASSERT(mLock, "mLock missing in ~GonkCameraParameters()");
   if (mLock) {
     PR_DestroyRWLock(mLock);
     mLock = nullptr;
@@ -164,7 +163,7 @@ GonkCameraParameters::MapIsoToGonk(const nsAString& aIso, nsACString& aIsoOut)
     nsAutoCString v = NS_LossyConvertUTF16toASCII(aIso);
     unsigned int iso;
     if (sscanf(v.get(), "%u", &iso) != 1) {
-      return NS_ERROR_INVALID_ARG;
+      return NS_ERROR_FAILURE;
     }
     aIsoOut = nsPrintfCString("ISO%u", iso);
   }
@@ -182,7 +181,7 @@ GonkCameraParameters::MapIsoFromGonk(const char* aIso, nsAString& aIsoOut)
   } else {
     unsigned int iso;
     if (sscanf(aIso, "ISO%u", &iso) != 1) {
-      return NS_ERROR_INVALID_ARG;
+      return NS_ERROR_FAILURE;
     }
     aIsoOut.AppendInt(iso);
   }
@@ -334,18 +333,12 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, ICameraControl::Size& aSize)
     int height;
 
     rv = GetImpl(Parameters::KEY_JPEG_THUMBNAIL_WIDTH, width);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    if (width < 0) {
-      return NS_ERROR_NOT_AVAILABLE;
+    if (NS_FAILED(rv) || width < 0) {
+      return NS_ERROR_FAILURE;
     }
     rv = GetImpl(Parameters::KEY_JPEG_THUMBNAIL_HEIGHT, height);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    if (height < 0) {
-      return NS_ERROR_NOT_AVAILABLE;
+    if (NS_FAILED(rv) || height < 0) {
+      return NS_ERROR_FAILURE;
     }
 
     aSize.width = static_cast<uint32_t>(width);
@@ -355,18 +348,14 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, ICameraControl::Size& aSize)
 
   const char* value;
   rv = GetImpl(aKey, value);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!value || *value == '\0') {
-    DOM_CAMERA_LOGW("Camera parameter aKey=%d not available\n", aKey);
+  if (NS_FAILED(rv) || !value || *value == '\0') {
+    DOM_CAMERA_LOGW("Camera parameter aKey=%d not available (0x%x)\n", aKey, rv);
     return NS_ERROR_NOT_AVAILABLE;
   }
   if (sscanf(value, "%ux%u", &aSize.width, &aSize.height) != 2) {
     DOM_CAMERA_LOGE("Camera parameter aKey=%d size tuple '%s' is invalid\n", aKey, value);
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_FAILURE;
   }
-
   return NS_OK;
 }
 
@@ -401,12 +390,8 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, nsTArray<ICameraControl::Regi
 
   const char* value;
   nsresult rv = GetImpl(aKey, value);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!value || *value == '\0') {
-    DOM_CAMERA_LOGW("Camera parameter aKey=%d not available\n", aKey);
-    return NS_ERROR_NOT_AVAILABLE;
+  if (NS_FAILED(rv) || !value || *value == '\0') {
+    return NS_ERROR_FAILURE;
   }
 
   const char* p = value;
@@ -426,9 +411,9 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, nsTArray<ICameraControl::Regi
   for (i = 0, p = value; p && i < count; ++i, p = strchr(p + 1, '(')) {
     r = aRegions.AppendElement();
     if (sscanf(p, "(%d,%d,%d,%d,%u)", &r->top, &r->left, &r->bottom, &r->right, &r->weight) != 5) {
-      DOM_CAMERA_LOGE("Camera parameter aKey=%d region tuple has bad format: '%s'\n", aKey, p);
+      DOM_CAMERA_LOGE("%s:%d : region tuple has bad format: '%s'\n", __func__, __LINE__, p);
       aRegions.Clear();
-      return NS_ERROR_NOT_AVAILABLE;
+      return NS_ERROR_FAILURE;
     }
   }
 
@@ -458,7 +443,6 @@ GonkCameraParameters::SetTranslated(uint32_t aKey, const ICameraControl::Positio
     DOM_CAMERA_LOGI("setting picture timestamp to %lf\n", aPosition.timestamp);
     SetImpl(Parameters::KEY_GPS_TIMESTAMP, nsPrintfCString("%lf", aPosition.timestamp).get());
   }
-
   return NS_OK;
 }
 
@@ -698,7 +682,7 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, uint32_t& aValue)
     return rv;
   }
   if (val < 0) {
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_FAILURE;
   }
 
   aValue = val;
@@ -725,8 +709,8 @@ ParseItem(const char* aStart, const char* aEnd, ICameraControl::Size* aItem)
     return NS_OK;
   }
 
-  DOM_CAMERA_LOGE("Size tuple has bad format: '%s'\n", aStart);
-  return NS_ERROR_NOT_AVAILABLE;
+  DOM_CAMERA_LOGE("Size tuple has bad format: '%s'\n", __func__, __LINE__, aStart);
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -758,7 +742,7 @@ ParseItem(const char* aStart, const char* aEnd, double* aItem)
     return NS_OK;
   }
 
-  return NS_ERROR_NOT_AVAILABLE;
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -768,7 +752,7 @@ ParseItem(const char* aStart, const char* aEnd, int* aItem)
     return NS_OK;
   }
 
-  return NS_ERROR_NOT_AVAILABLE;
+  return NS_ERROR_FAILURE;
 }
 
 template<class T> nsresult
@@ -795,8 +779,11 @@ GonkCameraParameters::GetListAsArray(uint32_t aKey, nsTArray<T>& aArray)
   const char* comma;
 
   while (p) {
-    // nsTArray::AppendElement() is infallible
     T* v = aArray.AppendElement();
+    if (!v) {
+      aArray.Clear();
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     comma = strchr(p, ',');
     if (comma != p) {
       rv = ParseItem(p, comma, v);

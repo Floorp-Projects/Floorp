@@ -41,13 +41,8 @@ public:
   static bool HasSupport(JSContext* aCx, JSObject* aGlobal);
 
   CameraCapabilities(nsPIDOMWindow* aWindow);
+  ~CameraCapabilities();
 
-  // Populate the camera capabilities interface from the specific
-  // camera control object.
-  //
-  // Return values:
-  //  - NS_OK on success;
-  //  - NS_ERROR_INVALID_ARG if 'aCameraControl' is null.
   nsresult Populate(ICameraControl* aCameraControl);
 
   nsPIDOMWindow* GetParentObject() const { return mWindow; }
@@ -75,8 +70,6 @@ public:
   void GetIsoModes(nsTArray<nsString>& aRetVal) const;
 
 protected:
-  ~CameraCapabilities();
-
   nsresult TranslateToDictionary(ICameraControl* aCameraControl,
                                  uint32_t aKey, nsTArray<CameraSize>& aSizes);
 
