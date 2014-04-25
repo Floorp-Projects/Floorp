@@ -83,6 +83,11 @@ toolbarpaletteitem[place="palette"] > #new-window-button {
   -moz-image-region: rect(0px, 512px, 32px, 480px);
 }
 
+#e10s-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #e10s-button {
+  -moz-image-region: rect(0px, 512px, 32px, 480px);
+}
+
 #new-tab-button[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #new-tab-button {
   -moz-image-region: rect(0px, 544px, 32px, 512px);
