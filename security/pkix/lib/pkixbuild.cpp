@@ -128,7 +128,7 @@ BuildForwardInner(TrustDomain& trustDomain,
   PORT_Assert(potentialIssuerCertToDup);
 
   BackCert potentialIssuer(potentialIssuerCertToDup, &subject,
-                           BackCert::ExcludeCN);
+                           BackCert::IncludeCN::No);
   Result rv = potentialIssuer.Init();
   if (rv != Success) {
     return rv;
@@ -157,12 +157,12 @@ BuildForwardInner(TrustDomain& trustDomain,
   }
 
   unsigned int newSubCACount = subCACount;
-  if (endEntityOrCA == MustBeCA) {
+  if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
     newSubCACount = subCACount + 1;
   } else {
     PR_ASSERT(newSubCACount == 0);
   }
-  rv = BuildForward(trustDomain, potentialIssuer, time, MustBeCA,
+  rv = BuildForward(trustDomain, potentialIssuer, time, EndEntityOrCA::MustBeCA,
                     KU_KEY_CERT_SIGN, requiredEKUIfPresent, requiredPolicy,
                     nullptr, newSubCACount, results);
   if (rv != Success) {
@@ -204,7 +204,7 @@ BuildForward(TrustDomain& trustDomain,
 
   Result rv;
 
-  TrustDomain::TrustLevel trustLevel;
+  TrustLevel trustLevel;
   // If this is an end-entity and not a trust anchor, we defer reporting
   // any error found here until after attempting to find a valid chain.
   // See the explanation of error prioritization in pkix.h.
@@ -215,15 +215,15 @@ BuildForward(TrustDomain& trustDomain,
                                         subCACount, &trustLevel);
   PRErrorCode deferredEndEntityError = 0;
   if (rv != Success) {
-    if (endEntityOrCA == MustBeEndEntity &&
-        trustLevel != TrustDomain::TrustAnchor) {
+    if (endEntityOrCA == EndEntityOrCA::MustBeEndEntity &&
+        trustLevel != TrustLevel::TrustAnchor) {
       deferredEndEntityError = PR_GetError();
     } else {
       return rv;
     }
   }
 
-  if (trustLevel == TrustDomain::TrustAnchor) {
+  if (trustLevel == TrustLevel::TrustAnchor) {
     ScopedCERTCertList certChain(CERT_NewCertList());
     if (!certChain) {
       PR_SetError(SEC_ERROR_NO_MEMORY, 0);
@@ -346,13 +346,13 @@ BuildCertChain(TrustDomain& trustDomain,
 
   // XXX: Support the legacy use of the subject CN field for indicating the
   // domain name the certificate is valid for.
-  BackCert::ConstrainedNameOptions cnOptions
-    = endEntityOrCA == MustBeEndEntity &&
+  BackCert::IncludeCN includeCN
+    = endEntityOrCA == EndEntityOrCA::MustBeEndEntity &&
       requiredEKUIfPresent == SEC_OID_EXT_KEY_USAGE_SERVER_AUTH
-    ? BackCert::IncludeCN
-    : BackCert::ExcludeCN;
+    ? BackCert::IncludeCN::Yes
+    : BackCert::IncludeCN::No;
 
-  BackCert cert(certToDup, nullptr, cnOptions);
+  BackCert cert(certToDup, nullptr, includeCN);
   Result rv = cert.Init();
   if (rv != Success) {
     return SECFailure;

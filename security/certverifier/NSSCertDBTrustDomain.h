@@ -68,7 +68,7 @@ public:
   virtual SECStatus GetCertTrust(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                                  SECOidTag policy,
                                  const CERTCertificate* candidateCert,
-                         /*out*/ TrustLevel* trustLevel);
+                         /*out*/ mozilla::pkix::TrustLevel* trustLevel);
 
   virtual SECStatus VerifySignedData(const CERTSignedData* signedData,
                                      const CERTCertificate* cert);

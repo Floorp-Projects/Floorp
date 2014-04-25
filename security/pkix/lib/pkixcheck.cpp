@@ -51,7 +51,7 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA,
     // certificate signatures unless the certificate is a trust anchor, to
     // reduce the chances of an end-entity certificate being abused as a CA
     // certificate.
-    // if (endEntityOrCA == MustBeCA && !isTrustAnchor) {
+    // if (endEntityOrCA == EndEntityOrCA::MustBeCA && !isTrustAnchor) {
     //   return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
     // }
     //
@@ -77,7 +77,7 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA,
     return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
   }
 
-  if (endEntityOrCA == MustBeCA) {
+  if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
    // "If the keyUsage extension is present, then the subject public key
    //  MUST NOT be used to verify signatures on certificates or CRLs unless
    //  the corresponding keyCertSign or cRLSign bit is set."
@@ -129,7 +129,7 @@ CheckCertificatePolicies(BackCert& cert, EndEntityOrCA endEntityOrCA,
   // trusted for, so we cannot require the policies to be present in those
   // certificates. Instead, the determination of which roots are trusted for
   // which policies is made by the TrustDomain's GetCertTrust method.
-  if (isTrustAnchor && endEntityOrCA == MustBeCA) {
+  if (isTrustAnchor && endEntityOrCA == EndEntityOrCA::MustBeCA) {
     return Success;
   }
 
@@ -150,7 +150,7 @@ CheckCertificatePolicies(BackCert& cert, EndEntityOrCA endEntityOrCA,
       return Success;
     }
     // Intermediate certs are allowed to have the anyPolicy OID
-    if (endEntityOrCA == MustBeCA &&
+    if (endEntityOrCA == EndEntityOrCA::MustBeCA &&
         (*policyInfos)->oid == SEC_OID_X509_ANY_POLICY) {
       return Success;
     }
@@ -248,7 +248,7 @@ CheckBasicConstraints(const BackCert& cert,
     // constraints as CAs.
     //
     // TODO: add check for self-signedness?
-    if (endEntityOrCA == MustBeCA && isTrustAnchor) {
+    if (endEntityOrCA == EndEntityOrCA::MustBeCA && isTrustAnchor) {
       const CERTCertificate* nssCert = cert.GetNSSCert();
       // We only allow trust anchor CA certs to omit the
       // basicConstraints extension if they are v1. v1 is encoded
@@ -260,7 +260,7 @@ CheckBasicConstraints(const BackCert& cert,
     }
   }
 
-  if (endEntityOrCA == MustBeEndEntity) {
+  if (endEntityOrCA == EndEntityOrCA::MustBeEndEntity) {
     // CA certificates are not trusted as EE certs.
 
     if (basicConstraints.isCA) {
@@ -280,7 +280,7 @@ CheckBasicConstraints(const BackCert& cert,
     return Success;
   }
 
-  PORT_Assert(endEntityOrCA == MustBeCA);
+  PORT_Assert(endEntityOrCA == EndEntityOrCA::MustBeCA);
 
   // End-entity certificates are not allowed to act as CA certs.
   if (!basicConstraints.isCA) {
@@ -307,7 +307,7 @@ BackCert::GetConstrainedNames(/*out*/ const CERTGeneralName** result)
 
     constrainedNames =
       CERT_GetConstrainedCertificateNames(nssCert, arena.get(),
-                                          cnOptions == IncludeCN);
+                                          includeCN == IncludeCN::Yes);
     if (!constrainedNames) {
       return MapSECStatus(SECFailure);
     }
@@ -397,7 +397,7 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
         // COMODO has issued certificates that require this behavior
         // that don't expire until June 2020!
         // TODO 982932: Limit this expection to old certificates
-        if (endEntityOrCA == MustBeCA &&
+        if (endEntityOrCA == EndEntityOrCA::MustBeCA &&
             requiredEKU == SEC_OID_EXT_KEY_USAGE_SERVER_AUTH &&
             oidTag == SEC_OID_NS_KEY_USAGE_GOVT_APPROVED) {
           found = true;
@@ -417,7 +417,7 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
 
   // pkixocsp.cpp depends on the following additional checks.
 
-  if (endEntityOrCA == MustBeEndEntity) {
+  if (endEntityOrCA == EndEntityOrCA::MustBeEndEntity) {
     // When validating anything other than an delegated OCSP signing cert,
     // reject any cert that also claims to be an OCSP responder, because such
     // a cert does not make sense. For example, if an SSL certificate were to
@@ -461,11 +461,11 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
                                  SECOidTag requiredEKUIfPresent,
                                  SECOidTag requiredPolicy,
                                  unsigned int subCACount,
-                /*optional out*/ TrustDomain::TrustLevel* trustLevelOut)
+                /*optional out*/ TrustLevel* trustLevelOut)
 {
   Result rv;
 
-  TrustDomain::TrustLevel trustLevel;
+  TrustLevel trustLevel;
   rv = MapSECStatus(trustDomain.GetCertTrust(endEntityOrCA,
                                              requiredPolicy,
                                              cert.GetNSSCert(),
@@ -473,11 +473,11 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   if (rv != Success) {
     return rv;
   }
-  if (trustLevel == TrustDomain::ActivelyDistrusted) {
+  if (trustLevel == TrustLevel::ActivelyDistrusted) {
     return Fail(RecoverableError, SEC_ERROR_UNTRUSTED_CERT);
   }
-  if (trustLevel != TrustDomain::TrustAnchor &&
-      trustLevel != TrustDomain::InheritsTrust) {
+  if (trustLevel != TrustLevel::TrustAnchor &&
+      trustLevel != TrustLevel::InheritsTrust) {
     // The TrustDomain returned a trust level that we weren't expecting.
     PORT_SetError(PR_INVALID_STATE_ERROR);
     return FatalError;
@@ -486,8 +486,8 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
     *trustLevelOut = trustLevel;
   }
 
-  bool isTrustAnchor = endEntityOrCA == MustBeCA &&
-                       trustLevel == TrustDomain::TrustAnchor;
+  bool isTrustAnchor = endEntityOrCA == EndEntityOrCA::MustBeCA &&
+                       trustLevel == TrustLevel::TrustAnchor;
 
   PLArenaPool* arena = cert.GetArena();
   if (!arena) {
