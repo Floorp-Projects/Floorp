@@ -25,9 +25,40 @@ let isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
 let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 let gWindow = window;
 
+// The tests assume all three rows of sites are shown, but the window may be too
+// short to actually show three rows.  Resize it if necessary.
+let requiredInnerHeight =
+  40 + 32 + // undo container + bottom margin
+  44 + 32 + // search bar + bottom margin
+  (3 * (150 + 32)) + // 3 rows * (tile height + title and bottom margin)
+  100; // breathing room
+
+let oldInnerHeight = null;
+if (gBrowser.contentWindow.innerHeight < requiredInnerHeight) {
+  oldInnerHeight = gBrowser.contentWindow.innerHeight;
+  info("Changing browser inner height from " + oldInnerHeight + " to " +
+       requiredInnerHeight);
+  gBrowser.contentWindow.innerHeight = requiredInnerHeight;
+  let screenHeight = {};
+  Cc["@mozilla.org/gfx/screenmanager;1"].
+    getService(Ci.nsIScreenManager).
+    primaryScreen.
+    GetAvailRectDisplayPix({}, {}, {}, screenHeight);
+  screenHeight = screenHeight.value;
+  if (screenHeight < gBrowser.contentWindow.outerHeight) {
+    info("Warning: Browser outer height is now " +
+         gBrowser.contentWindow.outerHeight + ", which is larger than the " +
+         "available screen height, " + screenHeight +
+         ". That may cause problems.");
+  }
+}
+
 registerCleanupFunction(function () {
   while (gWindow.gBrowser.tabs.length > 1)
     gWindow.gBrowser.removeTab(gWindow.gBrowser.tabs[1]);
+
+  if (oldInnerHeight)
+    gBrowser.contentWindow.innerHeight = oldInnerHeight;
 
   Services.prefs.clearUserPref(PREF_NEWTAB_ENABLED);
   Services.prefs.clearUserPref(PREF_NEWTAB_DIRECTORYSOURCE);
@@ -548,4 +579,36 @@ function whenPagesUpdated(aCallback, aOnlyIfHidden=false) {
   registerCleanupFunction(function () {
     NewTabUtils.allPages.unregister(page);
   });
+}
+
+/**
+ * Waits a small amount of time for search events to stop occurring in the
+ * newtab page.
+ *
+ * newtab pages receive some search events around load time that are difficult
+ * to predict.  There are two categories of such events: (1) "State" events
+ * triggered by engine notifications like engine-changed, due to the search
+ * service initializing itself on app startup.  This can happen when a test is
+ * the first test to run.  (2) "State" events triggered by the newtab page
+ * itself when gSearch first sets itself up.  newtab preloading makes these a
+ * pain to predict.
+ */
+function whenSearchInitDone() {
+  info("Waiting for initial search events...");
+  let numTicks = 0;
+  function reset(event) {
+    info("Got initial search event " + event.detail.type +
+         ", waiting for more...");
+    numTicks = 0;
+  }
+  let eventName = "ContentSearchService";
+  getContentWindow().addEventListener(eventName, reset);
+  let interval = window.setInterval(() => {
+    if (++numTicks >= 100) {
+      info("Done waiting for initial search events");
+      window.clearInterval(interval);
+      getContentWindow().removeEventListener(eventName, reset);
+      TestRunner.next();
+    }
+  }, 0);
 }

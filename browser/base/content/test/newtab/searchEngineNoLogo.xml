@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>browser_newtab_search searchEngineNoLogo.xml</ShortName>
+<Url type="text/html" method="GET" template="http://browser-newtab-search.com/nologo" rel="searchform"/>
+</SearchPlugin>
