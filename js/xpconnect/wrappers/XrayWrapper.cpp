@@ -1995,10 +1995,8 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
 {
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::SET);
 
-    // NB: We still need JSRESOLVE_ASSIGNING here for the time being, because it
-    // tells things like nodelists whether they should create the property or not.
     Rooted<JSPropertyDescriptor> existing_desc(cx);
-    if (!getOwnPropertyDescriptor(cx, wrapper, id, &existing_desc, JSRESOLVE_ASSIGNING))
+    if (!getOwnPropertyDescriptor(cx, wrapper, id, &existing_desc, 0))
         return false;
 
     if (existing_desc.object() && existing_desc.isPermanent())

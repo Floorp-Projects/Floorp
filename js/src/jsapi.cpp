@@ -3441,7 +3441,6 @@ JS_SetPropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue v)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
-    JSAutoResolveFlags rf(cx, JSRESOLVE_ASSIGNING);
 
     return JSObject::setGeneric(cx, obj, obj, id, &value, false);
 }
@@ -3452,7 +3451,6 @@ SetElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue v
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, vp);
-    JSAutoResolveFlags rf(cx, JSRESOLVE_ASSIGNING);
 
     return JSObject::setElement(cx, obj, obj, index, vp, false);
 }
