@@ -153,6 +153,8 @@ private:
 
   void ReportFailure(const nsACString &aMsg, HRESULT aCode);
 
+  virtual gfx::IntSize GetWidgetSize() const MOZ_OVERRIDE { return mSize; }
+
   /* Device manager instance for this compositor */
   nsRefPtr<DeviceManagerD3D9> mDeviceManager;
 

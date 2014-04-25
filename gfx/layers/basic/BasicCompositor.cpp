@@ -378,6 +378,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
 {
   nsIntRect intRect;
   mWidget->GetClientBounds(intRect);
+  mWidgetSize = gfx::ToIntSize(intRect.Size());
 
   // The result of GetClientBounds is shifted over by the size of the window
   // manager styling. We want to ignore that.
