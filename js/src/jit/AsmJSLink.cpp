@@ -163,7 +163,7 @@ GetDataProperty(JSContext *cx, HandleValue objVal, HandlePropertyName field, Mut
     Rooted<JSPropertyDescriptor> desc(cx);
     RootedObject obj(cx, &objVal.toObject());
     RootedId id(cx, NameToId(field));
-    if (!JS_GetPropertyDescriptorById(cx, obj, id, 0, &desc))
+    if (!JS_GetPropertyDescriptorById(cx, obj, id, &desc))
         return false;
 
     if (!desc.object())

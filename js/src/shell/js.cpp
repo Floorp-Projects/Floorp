@@ -3034,7 +3034,7 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
         if (!desc.setter() && !desc.hasSetterObject())
             desc.setSetter(JS_StrictPropertyStub);
     } else if (referent->is<ProxyObject>()) {
-        if (!Proxy::getOwnPropertyDescriptor(cx, referent, id, &desc, 0))
+        if (!Proxy::getOwnPropertyDescriptor(cx, referent, id, &desc))
             return false;
         if (!desc.object())
             return true;

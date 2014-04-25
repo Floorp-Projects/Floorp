@@ -8647,7 +8647,7 @@ class CGResolveOwnProperty(CGAbstractStaticMethod):
 
     def definition_body(self):
         # BOGUS extra blank line at end of function
-        return "  return js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, desc, flags);\n\n"
+        return "  return js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, desc);\n\n"
 
 
 class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
@@ -8661,8 +8661,7 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc'),
-                Argument('unsigned', 'flags'),
-                ]
+                Argument('unsigned', 'flags')]
         CGAbstractBindingMethod.__init__(self, descriptor,
                                          "ResolveOwnPropertyViaNewresolve",
                                          args, getThisObj="",
@@ -9067,8 +9066,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc'),
-                Argument('unsigned', 'flags')]
+                Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc')]
         ClassMethod.__init__(self, "getOwnPropertyDescriptor", "bool", args,
                              virtual=True, override=True)
         self.descriptor = descriptor
@@ -9100,7 +9098,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
 
         if UseHolderForUnforgeable(self.descriptor):
             tryHolder = dedent("""
-                if (!JS_GetPropertyDescriptorById(cx, ${holder}, id, flags, desc)) {
+                if (!JS_GetPropertyDescriptorById(cx, ${holder}, id, desc)) {
                   return false;
                 }
                 MOZ_ASSERT_IF(desc.object(), desc.object() == ${holder});
@@ -9155,7 +9153,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             $*{getUnforgeable}
             JS::Rooted<JSObject*> expando(cx);
             if (!isXray && (expando = GetExpandoObject(proxy))) {
-              if (!JS_GetPropertyDescriptorById(cx, expando, id, flags, desc)) {
+              if (!JS_GetPropertyDescriptorById(cx, expando, id, desc)) {
                 return false;
               }
               if (desc.object()) {

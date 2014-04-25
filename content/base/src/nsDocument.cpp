@@ -5850,7 +5850,7 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
 
     JS::Rooted<JSPropertyDescriptor> descRoot(aCx);
     JS::MutableHandle<JSPropertyDescriptor> desc(&descRoot);
-    if(!JS_GetPropertyDescriptor(aCx, protoObject, "constructor", 0, desc)) {
+    if (!JS_GetPropertyDescriptor(aCx, protoObject, "constructor", desc)) {
       rv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }

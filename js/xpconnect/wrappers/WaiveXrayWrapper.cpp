@@ -42,19 +42,17 @@ WaiveXrayWrapper::~WaiveXrayWrapper()
 
 bool
 WaiveXrayWrapper::getPropertyDescriptor(JSContext *cx, HandleObject wrapper,
-                                        HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc,
-                                        unsigned flags)
+                                        HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc)
 {
-    return CrossCompartmentWrapper::getPropertyDescriptor(cx, wrapper, id, desc, flags) &&
+    return CrossCompartmentWrapper::getPropertyDescriptor(cx, wrapper, id, desc) &&
            WrapperFactory::WaiveXrayAndWrap(cx, desc.value()) && WaiveAccessors(cx, desc);
 }
 
 bool
 WaiveXrayWrapper::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper,
-                                           HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc,
-                                           unsigned flags)
+                                           HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc)
 {
-    return CrossCompartmentWrapper::getOwnPropertyDescriptor(cx, wrapper, id, desc, flags) &&
+    return CrossCompartmentWrapper::getOwnPropertyDescriptor(cx, wrapper, id, desc) &&
            WrapperFactory::WaiveXrayAndWrap(cx, desc.value()) && WaiveAccessors(cx, desc);
 }
 

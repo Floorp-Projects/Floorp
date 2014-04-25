@@ -64,11 +64,9 @@ class CPOWProxyHandler : public BaseProxyHandler
 
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
     virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                       MutableHandle<JSPropertyDescriptor> desc,
-                                       unsigned flags) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
-                                          HandleId id, MutableHandle<JSPropertyDescriptor> desc,
-                                          unsigned flags) MOZ_OVERRIDE;
+                                       MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
+                                          MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy,
@@ -123,14 +121,14 @@ JavaScriptParent::preventExtensions(JSContext *cx, HandleObject proxy)
 
 bool
 CPOWProxyHandler::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                        MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
+                                        MutableHandle<JSPropertyDescriptor> desc)
 {
-    FORWARD(getPropertyDescriptor, (cx, proxy, id, desc, flags));
+    FORWARD(getPropertyDescriptor, (cx, proxy, id, desc));
 }
 
 bool
 JavaScriptParent::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                        MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
+                                        MutableHandle<JSPropertyDescriptor> desc)
 {
     ObjectId objId = idOf(proxy);
 
@@ -140,7 +138,7 @@ JavaScriptParent::getPropertyDescriptor(JSContext *cx, HandleObject proxy, Handl
 
     ReturnStatus status;
     PPropertyDescriptor result;
-    if (!CallGetPropertyDescriptor(objId, idstr, flags, &status, &result))
+    if (!CallGetPropertyDescriptor(objId, idstr, &status, &result))
         return ipcfail(cx);
     if (!ok(cx, status))
         return false;
@@ -150,15 +148,14 @@ JavaScriptParent::getPropertyDescriptor(JSContext *cx, HandleObject proxy, Handl
 
 bool
 CPOWProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
-                                           HandleId id, MutableHandle<JSPropertyDescriptor> desc,
-                                           unsigned flags)
+                                           HandleId id, MutableHandle<JSPropertyDescriptor> desc)
 {
-    FORWARD(getOwnPropertyDescriptor, (cx, proxy, id, desc, flags));
+    FORWARD(getOwnPropertyDescriptor, (cx, proxy, id, desc));
 }
 
 bool
 JavaScriptParent::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                           MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
+                                           MutableHandle<JSPropertyDescriptor> desc)
 {
     ObjectId objId = idOf(proxy);
 
@@ -168,7 +165,7 @@ JavaScriptParent::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, Ha
 
     ReturnStatus status;
     PPropertyDescriptor result;
-    if (!CallGetOwnPropertyDescriptor(objId, idstr, flags, &status, &result))
+    if (!CallGetOwnPropertyDescriptor(objId, idstr, &status, &result))
         return ipcfail(cx);
     if (!ok(cx, status))
         return false;
