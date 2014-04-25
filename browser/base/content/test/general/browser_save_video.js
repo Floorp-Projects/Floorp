@@ -12,9 +12,10 @@ function test() {
   waitForExplicitFinish();
   var fileName;
 
-  gBrowser.selectedTab = gBrowser.addTab("http://mochi.test:8888/browser/browser/base/content/test/general/bug564387.html");
+  gBrowser.loadURI("http://mochi.test:8888/browser/browser/base/content/test/general/bug564387.html");
 
   registerCleanupFunction(function () {
+    gBrowser.addTab();
     gBrowser.removeCurrentTab();
   });
 
