@@ -437,10 +437,8 @@ abstract class PanelLayout extends FrameLayout {
             final String imageUrl = (emptyViewConfig == null) ? null : emptyViewConfig.getImageUrl();
             final ImageView imageView = (ImageView) view.findViewById(R.id.home_empty_image);
 
-            if (imageUrl == null) {
-                Picasso.with(getContext())
-                       .load(R.drawable.icon_home_empty_firefox)
-                       .into(imageView);
+            if (TextUtils.isEmpty(imageUrl)) {
+                imageView.setImageResource(R.drawable.icon_home_empty_firefox);
             } else {
                 Picasso.with(getContext())
                        .load(imageUrl)
