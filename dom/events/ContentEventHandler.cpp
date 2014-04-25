@@ -204,6 +204,7 @@ static bool IsContentBR(nsIContent* aContent)
 static void ConvertToNativeNewlines(nsAFlatString& aString)
 {
 #if defined(XP_MACOSX)
+  // XXX Mac OS X doesn't use "\r".
   aString.ReplaceSubstring(NS_LITERAL_STRING("\n"), NS_LITERAL_STRING("\r"));
 #elif defined(XP_WIN)
   aString.ReplaceSubstring(NS_LITERAL_STRING("\n"), NS_LITERAL_STRING("\r\n"));
@@ -290,6 +291,14 @@ static uint32_t CountNewlinesInNativeLength(nsIContent* aContent,
 ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
                                          uint32_t aMaxLength)
 {
+  return GetTextLength(aContent, LINE_BREAK_TYPE_NATIVE, aMaxLength);
+}
+
+/* static */ uint32_t
+ContentEventHandler::GetTextLength(nsIContent* aContent,
+                                   LineBreakType aLineBreakType,
+                                   uint32_t aMaxLength)
+{
   if (aContent->IsNodeOfType(nsINode::eTEXT)) {
     uint32_t textLengthDifference =
 #if defined(XP_MACOSX)
@@ -301,7 +310,8 @@ ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
       // On Windows, the length of a native newline ("\r\n") is twice the length
       // of the XP newline ("\n"), so XP length is equal to the length of the
       // native offset plus the number of newlines encountered in the string.
-      CountNewlinesInXPLength(aContent, aMaxLength);
+      (aLineBreakType == LINE_BREAK_TYPE_NATIVE) ?
+        CountNewlinesInXPLength(aContent, aMaxLength) : 0;
 #else
       // On other platforms, the native and XP newlines are the same.
       0;
@@ -316,7 +326,7 @@ ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
   } else if (IsContentBR(aContent)) {
 #if defined(XP_WIN)
     // Length of \r\n
-    return 2;
+    return (aLineBreakType == LINE_BREAK_TYPE_NATIVE) ? 2 : 1;
 #else
     return 1;
 #endif
@@ -342,7 +352,8 @@ static uint32_t ConvertToXPOffset(nsIContent* aContent, uint32_t aNativeOffset)
 }
 
 static nsresult GenerateFlatTextContent(nsRange* aRange,
-                                        nsAFlatString& aString)
+                                        nsAFlatString& aString,
+                                        LineBreakType aLineBreakType)
 {
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
   iter->Init(aRange);
@@ -386,7 +397,9 @@ static nsresult GenerateFlatTextContent(nsRange* aRange,
       aString.Append(char16_t('\n'));
     }
   }
-  ConvertToNativeNewlines(aString);
+  if (aLineBreakType == LINE_BREAK_TYPE_NATIVE) {
+    ConvertToNativeNewlines(aString);
+  }
   return NS_OK;
 }
 
@@ -443,6 +456,7 @@ nsresult
 ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
                                                 uint32_t aNativeOffset,
                                                 uint32_t aNativeLength,
+                                                LineBreakType aLineBreakType,
                                                 bool aExpandToClusterBoundaries,
                                                 uint32_t* aNewNativeOffset)
 {
@@ -467,8 +481,7 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
     }
     nsIContent* content = static_cast<nsIContent*>(node);
 
-    uint32_t nativeTextLength;
-    nativeTextLength = GetNativeTextLength(content);
+    uint32_t nativeTextLength = GetTextLength(content, aLineBreakType);
     if (nativeTextLength == 0) {
       continue;
     }
@@ -478,9 +491,15 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
       nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(content));
       NS_ASSERTION(domNode, "aContent doesn't have nsIDOMNode!");
 
-      uint32_t xpOffset =
-        content->IsNodeOfType(nsINode::eTEXT) ?
-          ConvertToXPOffset(content, aNativeOffset - nativeOffset) : 0;
+      uint32_t xpOffset;
+      if (!content->IsNodeOfType(nsINode::eTEXT)) {
+        xpOffset = 0;
+      } else {
+        xpOffset = aNativeOffset - nativeOffset;
+        if (aLineBreakType == LINE_BREAK_TYPE_NATIVE) {
+          xpOffset = ConvertToXPOffset(content, xpOffset);
+        }
+      }
 
       if (aExpandToClusterBoundaries) {
         uint32_t oldXPOffset = xpOffset;
@@ -507,7 +526,10 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
 
       uint32_t xpOffset;
       if (content->IsNodeOfType(nsINode::eTEXT)) {
-        xpOffset = ConvertToXPOffset(content, nativeEndOffset - nativeOffset);
+        xpOffset = nativeEndOffset - nativeOffset;
+        if (aLineBreakType == LINE_BREAK_TYPE_NATIVE) {
+          xpOffset = ConvertToXPOffset(content, xpOffset);
+        }
         if (aExpandToClusterBoundaries) {
           rv = ExpandToClusterBoundary(content, true, &xpOffset);
           NS_ENSURE_SUCCESS(rv, rv);
@@ -550,6 +572,25 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
   return rv;
 }
 
+/* static */ LineBreakType
+ContentEventHandler::GetLineBreakType(WidgetQueryContentEvent* aEvent)
+{
+  return GetLineBreakType(aEvent->mUseNativeLineBreak);
+}
+
+/* static */ LineBreakType
+ContentEventHandler::GetLineBreakType(WidgetSelectionEvent* aEvent)
+{
+  return GetLineBreakType(aEvent->mUseNativeLineBreak);
+}
+
+/* static */ LineBreakType
+ContentEventHandler::GetLineBreakType(bool aUseNativeLineBreak)
+{
+  return aUseNativeLineBreak ?
+    LINE_BREAK_TYPE_NATIVE : LINE_BREAK_TYPE_XP;
+}
+
 nsresult
 ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
 {
@@ -561,8 +602,9 @@ ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
   NS_ASSERTION(aEvent->mReply.mString.IsEmpty(),
                "The reply string must be empty");
 
-  rv = GetFlatTextOffsetOfRange(mRootContent,
-                                mFirstSelectedRange, &aEvent->mReply.mOffset);
+  LineBreakType lineBreakType = GetLineBreakType(aEvent);
+  rv = GetFlatTextOffsetOfRange(mRootContent, mFirstSelectedRange,
+                                &aEvent->mReply.mOffset, lineBreakType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMNode> anchorDomNode, focusDomNode;
@@ -586,7 +628,8 @@ ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
   aEvent->mReply.mReversed = compare > 0;
 
   if (compare) {
-    rv = GenerateFlatTextContent(mFirstSelectedRange, aEvent->mReply.mString);
+    rv = GenerateFlatTextContent(mFirstSelectedRange, aEvent->mReply.mString,
+                                 lineBreakType);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -605,13 +648,15 @@ ContentEventHandler::OnQueryTextContent(WidgetQueryContentEvent* aEvent)
   NS_ASSERTION(aEvent->mReply.mString.IsEmpty(),
                "The reply string must be empty");
 
+  LineBreakType lineBreakType = GetLineBreakType(aEvent);
+
   nsRefPtr<nsRange> range = new nsRange(mRootContent);
   rv = SetRangeFromFlatTextOffset(range, aEvent->mInput.mOffset,
-                                  aEvent->mInput.mLength, false,
+                                  aEvent->mInput.mLength, lineBreakType, false,
                                   &aEvent->mReply.mOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = GenerateFlatTextContent(range, aEvent->mReply.mString);
+  rv = GenerateFlatTextContent(range, aEvent->mReply.mString, lineBreakType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aEvent->mSucceeded = true;
@@ -664,12 +709,13 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
     return rv;
   }
 
+  LineBreakType lineBreakType = GetLineBreakType(aEvent);
   nsRefPtr<nsRange> range = new nsRange(mRootContent);
   rv = SetRangeFromFlatTextOffset(range, aEvent->mInput.mOffset,
-                                  aEvent->mInput.mLength, true,
+                                  aEvent->mInput.mLength, lineBreakType, true,
                                   &aEvent->mReply.mOffset);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = GenerateFlatTextContent(range, aEvent->mReply.mString);
+  rv = GenerateFlatTextContent(range, aEvent->mReply.mString, lineBreakType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // used to iterate over all contents and their frames
@@ -772,6 +818,8 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
     return rv;
   }
 
+  LineBreakType lineBreakType = GetLineBreakType(aEvent);
+
   nsRefPtr<nsCaret> caret = mPresShell->GetCaret();
   NS_ASSERTION(caret, "GetCaret returned null");
 
@@ -783,15 +831,9 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
 
   if (selectionIsCollapsed) {
     uint32_t offset;
-    rv = GetFlatTextOffsetOfRange(mRootContent, mFirstSelectedRange, &offset);
+    rv = GetFlatTextOffsetOfRange(mRootContent, mFirstSelectedRange, &offset,
+                                  lineBreakType);
     NS_ENSURE_SUCCESS(rv, rv);
-    // strip out native new lines, we want the non-native offset. The offsets
-    // handed in here are from selection, caretPositionFromPoint, and editable
-    // element offset properties. We need to match those or things break. 
-    nsINode* startNode = mFirstSelectedRange->GetStartParent();
-    if (startNode && startNode->IsNodeOfType(nsINode::eTEXT)) {
-      offset = ConvertToXPOffset(static_cast<nsIContent*>(startNode), offset);
-    }
     if (offset == aEvent->mInput.mOffset) {
       nsRect rect;
       nsIFrame* caretFrame = caret->GetGeometry(mSelection, &rect);
@@ -810,7 +852,8 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
 
   // Otherwise, we should set the guessed caret rect.
   nsRefPtr<nsRange> range = new nsRange(mRootContent);
-  rv = SetRangeFromFlatTextOffset(range, aEvent->mInput.mOffset, 0, true,
+  rv = SetRangeFromFlatTextOffset(range, aEvent->mInput.mOffset, 0,
+                                  lineBreakType, true,
                                   &aEvent->mReply.mOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -902,6 +945,7 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
 
   WidgetQueryContentEvent eventOnRoot(true, NS_QUERY_CHARACTER_AT_POINT,
                                       rootWidget);
+  eventOnRoot.mUseNativeLineBreak = aEvent->mUseNativeLineBreak;
   eventOnRoot.refPoint = aEvent->refPoint;
   if (rootWidget != aEvent->widget) {
     eventOnRoot.refPoint += LayoutDeviceIntPoint::FromUntyped(
@@ -932,11 +976,11 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
   NS_ENSURE_TRUE(offsets.content, NS_ERROR_FAILURE);
   uint32_t nativeOffset;
   rv = GetFlatTextOffsetOfRange(mRootContent, offsets.content, offsets.offset,
-                                &nativeOffset);
+                                &nativeOffset, GetLineBreakType(aEvent));
   NS_ENSURE_SUCCESS(rv, rv);
 
   WidgetQueryContentEvent textRect(true, NS_QUERY_TEXT_RECT, aEvent->widget);
-  textRect.InitForQueryTextRect(nativeOffset, 1);
+  textRect.InitForQueryTextRect(nativeOffset, 1, aEvent->mUseNativeLineBreak);
   rv = OnQueryTextRect(&textRect);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(textRect.mSucceeded, NS_ERROR_FAILURE);
@@ -992,11 +1036,12 @@ ContentEventHandler::OnQueryDOMWidgetHittest(WidgetQueryContentEvent* aEvent)
   return NS_OK;
 }
 
-nsresult
+/* static */ nsresult
 ContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
                                               nsINode* aNode,
                                               int32_t aNodeOffset,
-                                              uint32_t* aNativeOffset)
+                                              uint32_t* aNativeOffset,
+                                              LineBreakType aLineBreakType)
 {
   NS_ENSURE_STATE(aRootContent);
   NS_ASSERTION(aNativeOffset, "param is invalid");
@@ -1040,14 +1085,14 @@ ContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
     if (node->IsNodeOfType(nsINode::eTEXT)) {
       // Note: our range always starts from offset 0
       if (node == endNode) {
-        *aNativeOffset += GetNativeTextLength(content, aNodeOffset);
+        *aNativeOffset += GetTextLength(content, aLineBreakType, aNodeOffset);
       } else {
-        *aNativeOffset += GetNativeTextLength(content);
+        *aNativeOffset += GetTextLength(content, aLineBreakType);
       }
     } else if (IsContentBR(content)) {
 #if defined(XP_WIN)
       // On Windows, the length of the newline is 2.
-      *aNativeOffset += 2;
+      *aNativeOffset += (aLineBreakType == LINE_BREAK_TYPE_NATIVE) ? 2 : 1;
 #else
       // On other platforms, the length of the newline is 1.
       *aNativeOffset += 1;
@@ -1057,16 +1102,17 @@ ContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
   return NS_OK;
 }
 
-nsresult
+/* static */ nsresult
 ContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
                                               nsRange* aRange,
-                                              uint32_t* aNativeOffset)
+                                              uint32_t* aNativeOffset,
+                                              LineBreakType aLineBreakType)
 {
   nsINode* startNode = aRange->GetStartParent();
   NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
   int32_t startOffset = aRange->StartOffset();
   return GetFlatTextOffsetOfRange(aRootContent, startNode, startOffset,
-                                  aNativeOffset);
+                                  aNativeOffset, aLineBreakType);
 }
 
 nsresult
@@ -1163,6 +1209,7 @@ ContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent)
   // Get range from offset and length
   nsRefPtr<nsRange> range = new nsRange(mRootContent);
   rv = SetRangeFromFlatTextOffset(range, aEvent->mOffset, aEvent->mLength,
+                                  GetLineBreakType(aEvent),
                                   aEvent->mExpandToClusterBoundary);
   NS_ENSURE_SUCCESS(rv, rv);
 

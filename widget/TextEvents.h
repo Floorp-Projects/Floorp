@@ -337,9 +337,11 @@ public:
   }
 
   WidgetQueryContentEvent(bool aIsTrusted, uint32_t aMessage,
-                          nsIWidget* aWidget) :
-    WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_QUERY_CONTENT_EVENT),
-    mSucceeded(false), mWasAsync(false)
+                          nsIWidget* aWidget)
+    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_QUERY_CONTENT_EVENT)
+    , mSucceeded(false)
+    , mWasAsync(false)
+    , mUseNativeLineBreak(true)
   {
   }
 
@@ -352,27 +354,33 @@ public:
     return nullptr;
   }
 
-  void InitForQueryTextContent(uint32_t aOffset, uint32_t aLength)
+  void InitForQueryTextContent(uint32_t aOffset, uint32_t aLength,
+                               bool aUseNativeLineBreak = true)
   {
     NS_ASSERTION(message == NS_QUERY_TEXT_CONTENT,
                  "wrong initializer is called");
     mInput.mOffset = aOffset;
     mInput.mLength = aLength;
+    mUseNativeLineBreak = aUseNativeLineBreak;
   }
 
-  void InitForQueryCaretRect(uint32_t aOffset)
+  void InitForQueryCaretRect(uint32_t aOffset,
+                             bool aUseNativeLineBreak = true)
   {
     NS_ASSERTION(message == NS_QUERY_CARET_RECT,
                  "wrong initializer is called");
     mInput.mOffset = aOffset;
+    mUseNativeLineBreak = aUseNativeLineBreak;
   }
 
-  void InitForQueryTextRect(uint32_t aOffset, uint32_t aLength)
+  void InitForQueryTextRect(uint32_t aOffset, uint32_t aLength,
+                            bool aUseNativeLineBreak = true)
   {
     NS_ASSERTION(message == NS_QUERY_TEXT_RECT,
                  "wrong initializer is called");
     mInput.mOffset = aOffset;
     mInput.mLength = aLength;
+    mUseNativeLineBreak = aUseNativeLineBreak;
   }
 
   void InitForQueryDOMWidgetHittest(const mozilla::LayoutDeviceIntPoint& aPoint)
@@ -398,6 +406,7 @@ public:
 
   bool mSucceeded;
   bool mWasAsync;
+  bool mUseNativeLineBreak;
   struct
   {
     uint32_t mOffset;
@@ -473,6 +482,7 @@ public:
     , mReversed(false)
     , mExpandToClusterBoundary(true)
     , mSucceeded(false)
+    , mUseNativeLineBreak(true)
   {
   }
 
@@ -495,6 +505,8 @@ public:
   bool mExpandToClusterBoundary;
   // true if setting selection succeeded.
   bool mSucceeded;
+  // true if native line breaks are used for mOffset and mLength
+  bool mUseNativeLineBreak;
 };
 
 /******************************************************************************
