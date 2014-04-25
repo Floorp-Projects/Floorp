@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <span id="x" style="position: sticky; bottom: 75px;">
+      <div></div>
+    </span>
+    <script>
+      document.addEventListener("MozReftestInvalidate", function() {
+        document.getElementById('x').style.bottom = '-3000px';
+      });
+    </script>
+  </body>
+</html>
