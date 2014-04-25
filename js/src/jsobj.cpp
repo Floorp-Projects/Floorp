@@ -1663,20 +1663,7 @@ Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
 unsigned
 js_InferFlags(JSContext *cx, unsigned defaultFlags)
 {
-    /*
-     * We intentionally want to look across compartment boundaries to correctly
-     * handle the case of cross-compartment property access.
-     */
-    jsbytecode *pc;
-    JSScript *script = cx->currentScript(&pc, JSContext::ALLOW_CROSS_COMPARTMENT);
-    if (!script)
-        return defaultFlags;
-
-    uint32_t format = js_CodeSpec[*pc].format;
-    unsigned flags = 0;
-    if (format & JOF_SET)
-        flags |= JSRESOLVE_ASSIGNING;
-    return flags;
+    return 0;
 }
 
 /* static */ bool
@@ -4904,7 +4891,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
 
                 JSContext *cx = cxArg->asJSContext();
                 Rooted<PropertyDescriptor> pd(cx);
-                if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd, JSRESOLVE_ASSIGNING))
+                if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd, 0))
                     return false;
 
                 if ((pd.attributes() & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {

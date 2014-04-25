@@ -159,7 +159,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
     assertEnteredPolicy(cx, proxy, id, SET);
 
     Rooted<PropertyDescriptor> desc(cx);
-    if (!getOwnPropertyDescriptor(cx, proxy, id, &desc, JSRESOLVE_ASSIGNING))
+    if (!getOwnPropertyDescriptor(cx, proxy, id, &desc, 0))
         return false;
     /* The control-flow here differs from ::get() because of the fall-through case below. */
     if (desc.object()) {
@@ -187,7 +187,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
         desc.value().set(vp.get());
         return defineProperty(cx, receiver, id, &desc);
     }
-    if (!getPropertyDescriptor(cx, proxy, id, &desc, JSRESOLVE_ASSIGNING))
+    if (!getPropertyDescriptor(cx, proxy, id, &desc, 0))
         return false;
     if (desc.object()) {
         // Check for read-only properties.
@@ -2601,7 +2601,7 @@ Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
     // If we have an existing (own or non-own) property with a setter, we want
     // to invoke that.
     Rooted<PropertyDescriptor> desc(cx);
-    if (!Proxy::getPropertyDescriptor(cx, proxy, id, &desc, JSRESOLVE_ASSIGNING))
+    if (!Proxy::getPropertyDescriptor(cx, proxy, id, &desc, 0))
         return false;
     if (desc.object() && desc.setter() && desc.setter() != JS_StrictPropertyStub)
         return CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), strict, vp);
@@ -2969,7 +2969,7 @@ js::proxy_SetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, uns
 {
     /* Lookup the current property descriptor so we have setter/getter/value. */
     Rooted<PropertyDescriptor> desc(cx);
-    if (!Proxy::getOwnPropertyDescriptor(cx, obj, id, &desc, JSRESOLVE_ASSIGNING))
+    if (!Proxy::getOwnPropertyDescriptor(cx, obj, id, &desc, 0))
         return false;
     desc.setAttributes(*attrsp);
     return Proxy::defineProperty(cx, obj, id, &desc);

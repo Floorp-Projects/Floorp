@@ -2332,11 +2332,6 @@ extern JS_PUBLIC_API(bool)
 JS_IdToValue(JSContext *cx, jsid id, JS::MutableHandle<JS::Value> vp);
 
 /*
- * JSNewResolveOp flag bits.
- */
-#define JSRESOLVE_ASSIGNING     0x01    /* resolve on the left of assignment */
-
-/*
  * Invoke the [[DefaultValue]] hook (see ES5 8.6.2) with the provided hint on
  * the specified object, computing a primitive default value for the object.
  * The hint must be JSTYPE_STRING, JSTYPE_NUMBER, or JSTYPE_VOID (no hint).  On
