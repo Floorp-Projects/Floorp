@@ -38,8 +38,11 @@ public:
   virtual ~GraphDriver()
   { }
 
-  /* Main loop */
-  virtual void RunThread(nsTArray<MessageBlock>& aMessageQueue) = 0;
+  /**
+   * Runs main control loop on the graph thread. Normally a single invocation
+   * of this runs for the entire lifetime of the graph thread.
+   */
+  virtual void RunThread() = 0;
   /* When the graph wakes up to do an iteration, this returns the range of time
    * that will be processed. */
   virtual void GetIntervalForIteration(GraphTime& aFrom,
@@ -55,6 +58,16 @@ public:
   virtual void WaitForNextIteration() = 0;
   /* Wakes up the graph if it is waiting. */
   virtual void WakeUp() = 0;
+  /* Start the graph, creating the thread. */
+  virtual void Start() = 0;
+  /* Stop the graph, shutting down the thread. */
+  virtual void Stop() = 0;
+  /* Dispatch an event to the graph's thread. */
+  virtual void Dispatch(nsIRunnable* aEvent) = 0;
+
+  virtual TimeStamp GetCurrentTimeStamp() {
+    MOZ_ASSERT(false, "This clock does not support getting the current time stamp.");
+  }
 
   bool IsWaiting() {
     return mWaitState == WAITSTATE_WAITING_INDEFINITELY ||
@@ -148,6 +161,7 @@ protected:
     WAITSTATE_WAKING_UP
   };
   WaitState mWaitState;
+
   bool mNeedAnotherIteration;
   // Monitor to synchronize the graph thread and the main thread.
   Monitor mMonitor;
@@ -191,7 +205,10 @@ class SystemClockDriver : public GraphDriver
 public:
   SystemClockDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~SystemClockDriver();
-  virtual void RunThread(nsTArray<MessageBlock>& aMessageQueue) MOZ_OVERRIDE;
+  virtual void Start() MOZ_OVERRIDE;
+  virtual void Stop() MOZ_OVERRIDE;
+  virtual void Dispatch(nsIRunnable* aEvent) MOZ_OVERRIDE;
+  virtual void RunThread() MOZ_OVERRIDE;
   virtual void GetIntervalForIteration(GraphTime& aFrom,
                                        GraphTime& aTo) MOZ_OVERRIDE;
   virtual GraphTime GetCurrentTime() MOZ_OVERRIDE;
@@ -199,10 +216,13 @@ public:
   virtual void WaitForNextIteration() MOZ_OVERRIDE;
   virtual void WakeUp() MOZ_OVERRIDE;
 
+  virtual TimeStamp GetCurrentTimeStamp() MOZ_OVERRIDE;
+
 private:
   TimeStamp mInitialTimeStamp;
   TimeStamp mLastTimeStamp;
   TimeStamp mCurrentTimeStamp;
+  nsCOMPtr<nsIThread> mThread;
 };
 
 /**
@@ -214,7 +234,10 @@ class OfflineClockDriver : public GraphDriver
 public:
   OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTime aSlice);
   virtual ~OfflineClockDriver();
-  virtual void RunThread(nsTArray<MessageBlock>& aMessageQueue) MOZ_OVERRIDE;
+  virtual void Start() MOZ_OVERRIDE;
+  virtual void Stop() MOZ_OVERRIDE;
+  virtual void Dispatch(nsIRunnable* aEvent) MOZ_OVERRIDE;
+  virtual void RunThread() MOZ_OVERRIDE;
   virtual void GetIntervalForIteration(GraphTime& aFrom,
                                        GraphTime& aTo) MOZ_OVERRIDE;
   virtual GraphTime GetCurrentTime() MOZ_OVERRIDE;
@@ -225,6 +248,7 @@ public:
 private:
   // Time, in GraphTime, for each iteration
   GraphTime mSlice;
+  nsCOMPtr<nsIThread> mThread;
 };
 
 }

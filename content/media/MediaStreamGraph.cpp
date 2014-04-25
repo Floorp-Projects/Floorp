@@ -739,7 +739,7 @@ MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
     }
 
     GraphTime end;
-    stream->mBlocked.GetAt(mCurrentTime, &end);
+    stream->mBlocked.GetAt(IterationEnd(), &end);
     if (end < GRAPH_TIME_MAX) {
       blockingDecisionsWillChange = true;
     }
@@ -1097,7 +1097,7 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
                               frame->GetIntrinsicSize().height));
   GraphTime startTime = StreamTimeToGraphTime(aStream,
       track->TicksToTimeRoundDown(start), INCLUDE_TRAILING_BLOCKED_INTERVAL);
-  TimeStamp targetTime = mCurrentTimeStamp +
+  TimeStamp targetTime = CurrentDriver()->GetCurrentTimeStamp() +
       TimeDuration::FromMilliseconds(double(startTime - IterationEnd()));
   for (uint32_t i = 0; i < aStream->mVideoOutputs.Length(); ++i) {
     VideoFrameContainer* output = aStream->mVideoOutputs[i];
@@ -1273,19 +1273,6 @@ MediaStreamGraphImpl::ResumeAllAudioOutputs()
   mAudioOutputsPaused = false;
 }
 
-struct AutoProfilerUnregisterThread
-{
-  // The empty ctor is used to silence a pre-4.8.0 GCC unused variable warning.
-  AutoProfilerUnregisterThread()
-  {
-  }
-
-  ~AutoProfilerUnregisterThread()
-  {
-    profiler_unregister_thread();
-  }
-};
-
 void
 MediaStreamGraphImpl::DoIteration(nsTArray<MessageBlock>& aMessageQueue)
 {
@@ -1441,22 +1428,6 @@ MediaStreamGraphImpl::OneIteration(nsTArray<MessageBlock>& aMessageQueue)
 }
 
 void
-MediaStreamGraphImpl::RunThread()
-{
-  nsTArray<MessageBlock> messageQueue;
-  {
-    MonitorAutoLock lock(CurrentDriver()->GetThreadMonitor());
-    messageQueue.SwapElements(mMessageQueue);
-  }
-  NS_ASSERTION(!messageQueue.IsEmpty(),
-               "Shouldn't have started a graph with empty message queue!");
-
-  AutoProfilerUnregisterThread autoUnregister;
-
-  CurrentDriver()->RunThread(messageQueue);
-}
-
-void
 MediaStreamGraphImpl::ApplyStreamUpdate(StreamUpdate* aUpdate)
 {
   CurrentDriver()->GetThreadMonitor().AssertCurrentThreadOwns();
@@ -1476,19 +1447,6 @@ MediaStreamGraphImpl::ApplyStreamUpdate(StreamUpdate* aUpdate)
 }
 
 void
-MediaStreamGraphImpl::ShutdownThreads()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
-  // mGraph's thread is not running so it's OK to do whatever here
-  STREAM_LOG(PR_LOG_DEBUG, ("Stopping threads for MediaStreamGraph %p", this));
-
-  if (mThread) {
-    mThread->Shutdown();
-    mThread = nullptr;
-  }
-}
-
-void
 MediaStreamGraphImpl::ForceShutDown()
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
@@ -1502,47 +1460,34 @@ MediaStreamGraphImpl::ForceShutDown()
 
 namespace {
 
-class MediaStreamGraphInitThreadRunnable : public nsRunnable {
-public:
-  explicit MediaStreamGraphInitThreadRunnable(MediaStreamGraphImpl* aGraph)
-    : mGraph(aGraph)
-  {
-  }
-  NS_IMETHOD Run()
-  {
-    char aLocal;
-    profiler_register_thread("MediaStreamGraph", &aLocal);
-    mGraph->RunThread();
-    return NS_OK;
-  }
-private:
-  MediaStreamGraphImpl* mGraph;
-};
-
 class MediaStreamGraphThreadRunnable : public nsRunnable {
 public:
-  explicit MediaStreamGraphThreadRunnable(MediaStreamGraphImpl* aGraph)
-    : mGraph(aGraph)
+  explicit MediaStreamGraphThreadRunnable(GraphDriver* aDriver)
+    : mDriver(aDriver)
   {
   }
   NS_IMETHOD Run()
   {
-    mGraph->RunThread();
+    mDriver->RunThread();
     return NS_OK;
   }
 private:
-  MediaStreamGraphImpl* mGraph;
+  GraphDriver* mDriver;
 };
 
 class MediaStreamGraphShutDownRunnable : public nsRunnable {
 public:
-  MediaStreamGraphShutDownRunnable(MediaStreamGraphImpl* aGraph) : mGraph(aGraph) {}
+  MediaStreamGraphShutDownRunnable(MediaStreamGraphImpl* aGraph,
+                                   GraphDriver* aDriver)
+    : mGraph(aGraph),
+      mDriver(aDriver)
+  {}
   NS_IMETHOD Run()
   {
     NS_ASSERTION(mGraph->mDetectedNotRunning,
                  "We should know the graph thread control loop isn't running!");
 
-    mGraph->ShutdownThreads();
+    mDriver->Stop();
 
     // mGraph's thread is not running so it's OK to do whatever here
     if (mGraph->IsEmpty()) {
@@ -1569,6 +1514,7 @@ public:
   }
 private:
   MediaStreamGraphImpl* mGraph;
+  GraphDriver* mDriver;
 };
 
 class MediaStreamGraphStableStateRunnable : public nsRunnable {
@@ -1650,8 +1596,7 @@ MediaStreamGraphImpl::RunInStableState()
       // Start the thread now. We couldn't start it earlier because
       // the graph might exit immediately on finding it has no streams. The
       // first message for a new graph must create a stream.
-      nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
-      NS_NewNamedThread("MediaStreamGrph", getter_AddRefs(mThread), event);
+      CurrentDriver()->Start();
     }
 
     if (mCurrentTaskMessageQueue.IsEmpty()) {
@@ -1667,7 +1612,7 @@ MediaStreamGraphImpl::RunInStableState()
         // synchronously because it spins the event loop waiting for threads
         // to shut down, and we don't want to do that in a stable state handler.
         mLifecycleState = LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
-        nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutDownRunnable(this);
+        nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutDownRunnable(this, CurrentDriver());
         NS_DispatchToMainThread(event);
       }
     } else {
@@ -1689,8 +1634,8 @@ MediaStreamGraphImpl::RunInStableState()
         // Revive the MediaStreamGraph since we have more messages going to it.
         // Note that we need to put messages into its queue before reviving it,
         // or it might exit immediately.
-        nsCOMPtr<nsIRunnable> event = new MediaStreamGraphThreadRunnable(this);
-        mThread->Dispatch(event, 0);
+        nsCOMPtr<nsIRunnable> event = new MediaStreamGraphThreadRunnable(CurrentDriver());
+        CurrentDriver()->Dispatch(event);
       }
     }
 
@@ -1706,7 +1651,7 @@ MediaStreamGraphImpl::RunInStableState()
       // Stop MediaStreamGraph threads. Do not clear gGraph since
       // we have outstanding DOM objects that may need it.
       mLifecycleState = LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
-      nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutDownRunnable(this);
+      nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutDownRunnable(this, CurrentDriver());
       NS_DispatchToMainThread(event);
     }
 
