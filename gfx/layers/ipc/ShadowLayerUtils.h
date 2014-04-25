@@ -38,10 +38,6 @@ namespace mozilla { namespace layers {
 struct MagicGrallocBufferHandle {
   bool operator==(const MagicGrallocBufferHandle&) const { return false; }
 };
-
-struct GrallocBufferRef {
-  bool operator==(const GrallocBufferRef&) const { return false; }
-};
 } }
 #endif
 
@@ -83,13 +79,6 @@ struct ParamTraits<mozilla::gl::SharedTextureShareType>
 template <>
 struct ParamTraits<mozilla::layers::MagicGrallocBufferHandle> {
   typedef mozilla::layers::MagicGrallocBufferHandle paramType;
-  static void Write(Message*, const paramType&) {}
-  static bool Read(const Message*, void**, paramType*) { return false; }
-};
-
-template <>
-struct ParamTraits<mozilla::layers::GrallocBufferRef> {
-  typedef mozilla::layers::GrallocBufferRef paramType;
   static void Write(Message*, const paramType&) {}
   static bool Read(const Message*, void**, paramType*) { return false; }
 };
