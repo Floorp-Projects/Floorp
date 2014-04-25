@@ -280,12 +280,18 @@ static const struct FREEBLVectorStr vector =
     RSA_CheckSignPSS,
     RSA_Sign,
     RSA_CheckSign,
-    RSA_CheckSignRecover
+    RSA_CheckSignRecover,
 
     /* End of Version 3.016 */
+
+    EC_FillParams,
+    EC_DecodeParams,
+    EC_CopyParams
+
+    /* End of Version 3.017 */
 };
 
-const FREEBLVector * 
+const FREEBLVector *
 FREEBL_GetVector(void)
 {
     extern const char __nss_freebl_rcsid[];
@@ -294,7 +300,7 @@ FREEBL_GetVector(void)
     /* force a reference that won't get optimized away */
     volatile char c;
 
-    c = __nss_freebl_rcsid[0] + __nss_freebl_sccsid[0]; 
+    c = __nss_freebl_rcsid[0] + __nss_freebl_sccsid[0];
 #ifdef FREEBL_NO_DEPEND
     FREEBL_InitStubs();
 #endif
