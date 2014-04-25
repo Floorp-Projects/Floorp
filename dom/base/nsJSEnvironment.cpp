@@ -1692,8 +1692,7 @@ nsJSContext::SetProcessingScriptTag(bool aFlag)
 void
 FullGCTimerFired(nsITimer* aTimer, void* aClosure)
 {
-  NS_RELEASE(sFullGCTimer);
-
+  nsJSContext::KillFullGCTimer();
   uintptr_t reason = reinterpret_cast<uintptr_t>(aClosure);
   nsJSContext::GarbageCollectNow(static_cast<JS::gcreason::Reason>(reason),
                                  nsJSContext::IncrementalGC);
@@ -2174,7 +2173,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
 void
 InterSliceGCTimerFired(nsITimer *aTimer, void *aClosure)
 {
-  NS_RELEASE(sInterSliceGCTimer);
+  nsJSContext::KillInterSliceGCTimer();
   nsJSContext::GarbageCollectNow(JS::gcreason::INTER_SLICE_GC,
                                  nsJSContext::IncrementalGC,
                                  nsJSContext::CompartmentGC,
@@ -2186,8 +2185,7 @@ InterSliceGCTimerFired(nsITimer *aTimer, void *aClosure)
 void
 GCTimerFired(nsITimer *aTimer, void *aClosure)
 {
-  NS_RELEASE(sGCTimer);
-
+  nsJSContext::KillGCTimer();
   uintptr_t reason = reinterpret_cast<uintptr_t>(aClosure);
   nsJSContext::GarbageCollectNow(static_cast<JS::gcreason::Reason>(reason),
                                  nsJSContext::IncrementalGC,
@@ -2197,8 +2195,7 @@ GCTimerFired(nsITimer *aTimer, void *aClosure)
 void
 ShrinkGCBuffersTimerFired(nsITimer *aTimer, void *aClosure)
 {
-  NS_RELEASE(sShrinkGCBuffersTimer);
-
+  nsJSContext::KillShrinkGCBuffersTimer();
   nsJSContext::ShrinkGCBuffersNow();
 }
 
@@ -2414,7 +2411,6 @@ nsJSContext::KillGCTimer()
 {
   if (sGCTimer) {
     sGCTimer->Cancel();
-
     NS_RELEASE(sGCTimer);
   }
 }
@@ -2443,7 +2439,6 @@ nsJSContext::KillShrinkGCBuffersTimer()
 {
   if (sShrinkGCBuffersTimer) {
     sShrinkGCBuffersTimer->Cancel();
-
     NS_RELEASE(sShrinkGCBuffersTimer);
   }
 }
@@ -2456,7 +2451,6 @@ nsJSContext::KillCCTimer()
 
   if (sCCTimer) {
     sCCTimer->Cancel();
-
     NS_RELEASE(sCCTimer);
   }
 }
@@ -2469,7 +2463,6 @@ nsJSContext::KillICCTimer()
 
   if (sICCTimer) {
     sICCTimer->Cancel();
-
     NS_RELEASE(sICCTimer);
   }
 }
