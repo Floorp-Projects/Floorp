@@ -77,7 +77,7 @@ MediaStreamGraphImpl::FinishStream(MediaStream* aStream)
   aStream->mFinished = true;
   aStream->mBuffer.AdvanceKnownTracksTime(STREAM_TIME_MAX);
   // Force at least one more iteration of the control loop, since we rely
-  // on UpdateCurrentTime to notify our listeners once the stream end
+  // on UpdateCurrentTimeForStreams to notify our listeners once the stream end
   // has been reached.
   CurrentDriver()->EnsureNextIteration();
 
@@ -352,12 +352,8 @@ MediaStreamGraphImpl::IterationEnd()
 }
 
 void
-MediaStreamGraphImpl::UpdateCurrentTime()
+MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime, GraphTime aNextCurrentTime)
 {
-  GraphTime prevCurrentTime, nextCurrentTime;
-
-  CurrentDriver()->GetIntervalForIteration(prevCurrentTime, nextCurrentTime);
-
   nsTArray<MediaStream*> streamsReadyToFinish;
   nsAutoTArray<bool,800> streamHasOutput;
   streamHasOutput.SetLength(mStreams.Length());
@@ -366,14 +362,14 @@ MediaStreamGraphImpl::UpdateCurrentTime()
 
     // Calculate blocked time and fire Blocked/Unblocked events
     GraphTime blockedTime = 0;
-    GraphTime t = prevCurrentTime;
+    GraphTime t = aPrevCurrentTime;
     // include |nextCurrentTime| to ensure NotifyBlockingChanged() is called
     // before NotifyEvent(this, EVENT_FINISHED) when |nextCurrentTime == stream end time|
-    while (t <= nextCurrentTime) {
+    while (t <= aNextCurrentTime) {
       GraphTime end;
       bool blocked = stream->mBlocked.GetAt(t, &end);
       if (blocked) {
-        blockedTime += std::min(end, nextCurrentTime) - t;
+        blockedTime += std::min(end, aNextCurrentTime) - t;
       }
       if (blocked != stream->mNotifiedBlocked) {
         for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
@@ -387,12 +383,12 @@ MediaStreamGraphImpl::UpdateCurrentTime()
     }
 
 
-    stream->AdvanceTimeVaryingValuesToCurrentTime(nextCurrentTime, blockedTime);
+    stream->AdvanceTimeVaryingValuesToCurrentTime(aNextCurrentTime, blockedTime);
     // Advance mBlocked last so that implementations of
     // AdvanceTimeVaryingValuesToCurrentTime can rely on the value of mBlocked.
-    stream->mBlocked.AdvanceCurrentTime(nextCurrentTime);
+    stream->mBlocked.AdvanceCurrentTime(aNextCurrentTime);
 
-    streamHasOutput[i] = blockedTime < nextCurrentTime - prevCurrentTime;
+    streamHasOutput[i] = blockedTime < aNextCurrentTime - aPrevCurrentTime;
     // Make this an assertion when bug 957832 is fixed.
     NS_WARN_IF_FALSE(!streamHasOutput[i] || !stream->mNotifiedFinished,
       "Shouldn't have already notified of finish *and* have output!");
@@ -406,7 +402,6 @@ MediaStreamGraphImpl::UpdateCurrentTime()
   }
 
 
-  // Do these after setting mCurrentTime so that StreamTimeToGraphTime works properly.
   for (uint32_t i = 0; i < streamHasOutput.Length(); ++i) {
     if (!streamHasOutput[i]) {
       continue;
@@ -985,11 +980,11 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
       }
     }
 
-    // We don't update aStream->mBufferStartTime here to account for
-    // time spent blocked. Instead, we'll update it in UpdateCurrentTime after the
-    // blocked period has completed. But we do need to make sure we play from the
-    // right offsets in the stream buffer, even if we've already written silence for
-    // some amount of blocked time after the current time.
+    // We don't update aStream->mBufferStartTime here to account for time spent
+    // blocked. Instead, we'll update it in UpdateCurrentTimeForStreams after
+    // the blocked period has completed. But we do need to make sure we play
+    // from the right offsets in the stream buffer, even if we've already
+    // written silence for some amount of blocked time after the current time.
     GraphTime t = aFrom;
     while (ticksNeeded) {
       GraphTime end;
@@ -1182,8 +1177,8 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
  * and floor(TimeToTicksRoundUp(aSampleRate, t)/WEBAUDIO_BLOCK_SIZE) >
  * floor(TimeToTicksRoundUp(aSampleRate, aTime)/WEBAUDIO_BLOCK_SIZE).
  */
-static GraphTime
-RoundUpToNextAudioBlock(TrackRate aSampleRate, GraphTime aTime)
+GraphTime
+MediaStreamGraphImpl::RoundUpToNextAudioBlock(GraphTime aTime)
 {
   TrackTicks ticks = aTime;
   uint64_t block = ticks >> WEBAUDIO_BLOCK_SIZE_BITS;
@@ -1202,7 +1197,7 @@ MediaStreamGraphImpl::ProduceDataForStreamsBlockByBlock(uint32_t aStreamIndex,
              "Cycle breaker is not AudioNodeStream?");
   GraphTime t = aFrom;
   while (t < aTo) {
-    GraphTime next = RoundUpToNextAudioBlock(aSampleRate, t);
+    GraphTime next = RoundUpToNextAudioBlock(t);
     for (uint32_t i = mFirstCycleBreaker; i < mStreams.Length(); ++i) {
       auto ns = static_cast<AudioNodeStream*>(mStreams[i]);
       MOZ_ASSERT(ns->AsAudioNodeStream());
@@ -1274,7 +1269,8 @@ MediaStreamGraphImpl::ResumeAllAudioOutputs()
 }
 
 void
-MediaStreamGraphImpl::DoIteration(nsTArray<MessageBlock>& aMessageQueue)
+MediaStreamGraphImpl::UpdateGraph(nsTArray<MessageBlock>& aMessageQueue,
+                                  GraphTime aEndBlockingDecision)
 {
   // Calculate independent action times for each batch of messages (each
   // batch corresponding to an event loop task). This isolates the performance
@@ -1293,8 +1289,6 @@ MediaStreamGraphImpl::DoIteration(nsTArray<MessageBlock>& aMessageQueue)
     UpdateStreamOrder();
   }
 
-  GraphTime endBlockingDecisions =
-    RoundUpToNextAudioBlock(mSampleRate, IterationEnd() + MillisecondsToMediaTime(AUDIO_TARGET_MS));
   bool ensureNextIteration = false;
 
   // Grab pending stream input.
@@ -1302,24 +1296,28 @@ MediaStreamGraphImpl::DoIteration(nsTArray<MessageBlock>& aMessageQueue)
     SourceMediaStream* is = mStreams[i]->AsSourceStream();
     if (is) {
       UpdateConsumptionState(is);
-      ExtractPendingInput(is, endBlockingDecisions, &ensureNextIteration);
+      ExtractPendingInput(is, aEndBlockingDecision, &ensureNextIteration);
     }
   }
 
   // The loop is woken up so soon that IterationEnd() barely advances and we
-  // end up having endBlockingDecisions == CurrentDriver()->StateComputedTime().
+  // end up having aEndBlockingDecision == CurrentDriver()->StateComputedTime().
   // Since stream blocking is computed in the interval of
-  // [CurrentDriver()->StateComputedTime(), endBlockingDecisions), it won't be computed at all.
+  // [CurrentDriver()->StateComputedTime(), aEndBlockingDecision), it won't be computed at all.
   // We should ensure next iteration so that pending blocking changes will be
   // computed in next loop.
-  if (endBlockingDecisions == CurrentDriver()->StateComputedTime()) {
-    ensureNextIteration = true;
+  if (ensureNextIteration ||
+      aEndBlockingDecision == CurrentDriver()->StateComputedTime()) {
+    CurrentDriver()->EnsureNextIteration();
   }
 
   // Figure out which streams are blocked and when.
-  GraphTime prevComputedTime = CurrentDriver()->StateComputedTime();
-  RecomputeBlocking(endBlockingDecisions);
+  RecomputeBlocking(aEndBlockingDecision);
+}
 
+void
+MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
+{
   // Play stream contents.
   bool allBlockedForever = true;
   // True when we've done ProcessInput for all processed streams.
@@ -1347,14 +1345,12 @@ MediaStreamGraphImpl::DoIteration(nsTArray<MessageBlock>& aMessageQueue)
 #endif
           // Since an AudioNodeStream is present, go ahead and
           // produce audio block by block for all the rest of the streams.
-          ProduceDataForStreamsBlockByBlock(i, n->SampleRate(), prevComputedTime, CurrentDriver()->StateComputedTime());
-          TimeToTicksRoundDown(n->SampleRate(), CurrentDriver()->StateComputedTime() - prevComputedTime);
+          ProduceDataForStreamsBlockByBlock(i, n->SampleRate(), aFrom, aTo);
           doneAllProducing = true;
         } else {
-          ps->ProcessInput(prevComputedTime, CurrentDriver()->StateComputedTime(),
-                           ProcessedMediaStream::ALLOW_FINISH);
+          ps->ProcessInput(aFrom, aTo, ProcessedMediaStream::ALLOW_FINISH);
           NS_WARN_IF_FALSE(stream->mBuffer.GetEnd() >=
-                           GraphTimeToStreamTime(stream, CurrentDriver()->StateComputedTime()),
+                           GraphTimeToStreamTime(stream, aTo),
                            "Stream did not produce enough data");
         }
       }
@@ -1362,8 +1358,8 @@ MediaStreamGraphImpl::DoIteration(nsTArray<MessageBlock>& aMessageQueue)
     NotifyHasCurrentData(stream);
     if (mRealtime) {
       // Only playback audio and video in real-time mode
-      CreateOrDestroyAudioStreams(prevComputedTime, stream);
-      TrackTicks ticksPlayedForThisStream = PlayAudio(stream, prevComputedTime, CurrentDriver()->StateComputedTime());
+      CreateOrDestroyAudioStreams(aFrom, stream);
+      TrackTicks ticksPlayedForThisStream = PlayAudio(stream, aFrom, aTo);
       if (!ticksPlayed) {
         ticksPlayed = ticksPlayedForThisStream;
       } else {
@@ -1377,7 +1373,7 @@ MediaStreamGraphImpl::DoIteration(nsTArray<MessageBlock>& aMessageQueue)
       UpdateBufferSufficiencyState(is);
     }
     GraphTime end;
-    if (!stream->mBlocked.GetAt(IterationEnd(), &end) || end < GRAPH_TIME_MAX) {
+    if (!stream->mBlocked.GetAt(aTo, &end) || end < GRAPH_TIME_MAX) {
       allBlockedForever = false;
     }
   }
@@ -1386,19 +1382,21 @@ MediaStreamGraphImpl::DoIteration(nsTArray<MessageBlock>& aMessageQueue)
     mMixer->FinishMixing();
   }
 
-  if (ensureNextIteration || !allBlockedForever) {
+  if (!allBlockedForever) {
     CurrentDriver()->EnsureNextIteration();
   }
 }
 
 bool
-MediaStreamGraphImpl::OneIteration(nsTArray<MessageBlock>& aMessageQueue)
+MediaStreamGraphImpl::OneIteration(GraphTime aFrom, GraphTime aTo,
+                                   GraphTime aStateFrom, GraphTime aStateEnd,
+                                   nsTArray<MessageBlock>& aMessageQueue)
 {
-  // Update IterationEnd() to the min of the playing audio times, or using the
-  // wall-clock time change if no audio is playing.
-  UpdateCurrentTime();
+  UpdateCurrentTimeForStreams(aFrom, aTo);
 
-  CurrentDriver()->DoIteration(aMessageQueue);
+  UpdateGraph(aMessageQueue, aStateEnd);
+
+  Process(aStateFrom, aStateEnd);
 
   // Send updates to the main thread and wait for the next control loop
   // iteration.

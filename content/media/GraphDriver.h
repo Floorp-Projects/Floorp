@@ -50,9 +50,6 @@ public:
   /* Returns the current time for this graph. This is the end of the current
    * iteration. */
   virtual GraphTime GetCurrentTime() = 0;
-  /* Do one iteration of the graph. aMessageQueue are the messages that will be
-   * processed at the beginning of the iteration. */
-  virtual void DoIteration(nsTArray<MessageBlock>& aMessageQueue) = 0;
   /* For real-time graphs, this waits until it's time to process more data. For
    * offline graphs, this is a no-op. */
   virtual void WaitForNextIteration() = 0;
@@ -113,6 +110,7 @@ public:
   /**
    * Call this to indicate that another iteration of the control loop is
    * required on its regular schedule. The monitor must not be held.
+   * This function has to be idempotent.
    */
   void EnsureNextIteration() {
     MonitorAutoLock lock(mMonitor);
@@ -212,7 +210,6 @@ public:
   virtual void GetIntervalForIteration(GraphTime& aFrom,
                                        GraphTime& aTo) MOZ_OVERRIDE;
   virtual GraphTime GetCurrentTime() MOZ_OVERRIDE;
-  virtual void DoIteration(nsTArray<MessageBlock>& aMessageQueue) MOZ_OVERRIDE;
   virtual void WaitForNextIteration() MOZ_OVERRIDE;
   virtual void WakeUp() MOZ_OVERRIDE;
 
@@ -241,7 +238,6 @@ public:
   virtual void GetIntervalForIteration(GraphTime& aFrom,
                                        GraphTime& aTo) MOZ_OVERRIDE;
   virtual GraphTime GetCurrentTime() MOZ_OVERRIDE;
-  virtual void DoIteration(nsTArray<MessageBlock>& aMessageQueue) MOZ_OVERRIDE;
   virtual void WaitForNextIteration() MOZ_OVERRIDE;
   virtual void WakeUp() MOZ_OVERRIDE;
 
