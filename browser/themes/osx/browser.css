@@ -2623,10 +2623,6 @@ sidebarheader {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
-sidebarheader > .tabs-closebutton > .toolbarbutton-text {
-  display: none;
-}
-
 /* ----- CONTENT ----- */
 
 .browserContainer > findbar {
@@ -3177,18 +3173,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .alltabs-item[tabIsVisible] {
   /* box-shadow instead of background-color to work around native styling */
   box-shadow: inset -5px 0 ThreeDShadow;
-}
-
-/* Tabstrip close button */
-.tabs-closebutton {
-  -moz-padding-end: 4px;
-  border: none;
-}
-
-@media (min-resolution: 2dppx) {
-  .tabs-closebutton > .toolbarbutton-icon {
-    width: 16px;
-  }
 }
 
 /* Bookmarks toolbar */
