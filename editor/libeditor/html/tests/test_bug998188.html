@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=565392
+-->
+<head>
+  <title>Test for Bug 998188</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=998188">Mozilla Bug 998188</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<div id="editor" contenteditable>abc</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 998188 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests()
+{
+  var editor = document.getElementById("editor");
+  editor.focus();
+
+  var textNode1 = document.createTextNode("def");
+  var textNode2 = document.createTextNode("ghi");
+
+  editor.appendChild(textNode1);
+  editor.appendChild(textNode2);
+
+  window.getSelection().collapse(textNode2, 3);
+
+  for (var i = 0; i < 9; i++) {
+    var caretRect = synthesizeQueryCaretRect(i);
+    ok(caretRect.succeeded, "QueryCaretRect should succeeded (" + i + ")");
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTests);
+
+</script>
+</pre>
+</body>
+</html>

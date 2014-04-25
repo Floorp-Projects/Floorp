@@ -267,7 +267,7 @@ static uint32_t CountNewlinesInNativeLength(nsIContent* aContent,
     return 0;
   }
   // For automated tests, we should abort on debug build.
-  NS_ABORT_IF_FALSE(
+  MOZ_ASSERT(
     (aNativeLength == UINT32_MAX || aNativeLength <= text->GetLength() * 2),
     "aNativeLength is unexpected value");
   const uint32_t xpLength = text->GetLength();
