@@ -3772,10 +3772,8 @@ NativeLookupOwnProperty(ExclusiveContext *cx, HandleObject obj, HandleId id,
 
 bool
 js::DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                         PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
-                         unsigned defineHow /* = 0 */)
+                         PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    JS_ASSERT((defineHow & ~DNP_DONT_PURGE) == 0);
     JS_ASSERT(!(attrs & JSPROP_NATIVE_ACCESSORS));
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
@@ -3822,13 +3820,10 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, Ha
 
     /*
      * Purge the property cache of any properties named by id that are about
-     * to be shadowed in obj's scope chain unless it is known a priori that it
-     * is not possible.
+     * to be shadowed in obj's scope chain.
      */
-    if (!(defineHow & DNP_DONT_PURGE)) {
-        if (!PurgeScopeChain(cx, obj, id))
-            return false;
-    }
+    if (!PurgeScopeChain(cx, obj, id))
+        return false;
 
     /* Use the object's class getter and setter by default. */
     const Class *clasp = obj->getClass();
@@ -4828,10 +4823,9 @@ template <ExecutionMode mode>
 bool
 baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg,
                            HandleObject obj, HandleObject receiver, HandleId id,
-                           unsigned defineHow, MutableHandleValue vp, bool strict)
+                           QualifiedBool qualified, MutableHandleValue vp, bool strict)
 {
     JS_ASSERT(cxArg->isThreadLocal(obj));
-    JS_ASSERT((defineHow & ~DNP_UNQUALIFIED) == 0);
 
     if (MOZ_UNLIKELY(obj->watched())) {
         if (mode == ParallelExecution)
@@ -4885,7 +4879,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
         /* We should never add properties to lexical blocks. */
         JS_ASSERT(!obj->is<BlockObject>());
 
-        if (obj->is<GlobalObject>() && (defineHow & DNP_UNQUALIFIED)) {
+        if (obj->is<GlobalObject>() && !qualified) {
             if (mode == ParallelExecution)
                 return false;
 
@@ -5066,23 +5060,23 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
 
 template bool
 baseops::SetPropertyHelper<SequentialExecution>(JSContext *cx, HandleObject obj,
-                                                HandleObject receiver,
-                                                HandleId id, unsigned defineHow,
+                                                HandleObject receiver, HandleId id,
+                                                QualifiedBool qualified,
                                                 MutableHandleValue vp, bool strict);
 template bool
 baseops::SetPropertyHelper<ParallelExecution>(ForkJoinContext *cx, HandleObject obj,
-                                              HandleObject receiver,
-                                              HandleId id, unsigned defineHow,
+                                              HandleObject receiver, HandleId id,
+                                              QualifiedBool qualified,
                                               MutableHandleValue vp, bool strict);
 
 bool
 baseops::SetElementHelper(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
-                          unsigned defineHow, MutableHandleValue vp, bool strict)
+                          MutableHandleValue vp, bool strict)
 {
     RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;
-    return baseops::SetPropertyHelper<SequentialExecution>(cx, obj, receiver, id, defineHow, vp,
+    return baseops::SetPropertyHelper<SequentialExecution>(cx, obj, receiver, id, Qualified, vp,
                                                            strict);
 }
 

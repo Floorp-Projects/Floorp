@@ -1072,11 +1072,10 @@ NewObjectMetadata(ExclusiveContext *cxArg, JSObject **pmetadata)
 
 inline bool
 DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, PropertyName *name, HandleValue value,
-                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
-                     unsigned defineHow = 0)
+                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
     Rooted<jsid> id(cx, NameToId(name));
-    return DefineNativeProperty(cx, obj, id, value, getter, setter, attrs, defineHow);
+    return DefineNativeProperty(cx, obj, id, value, getter, setter, attrs);
 }
 
 namespace baseops {
