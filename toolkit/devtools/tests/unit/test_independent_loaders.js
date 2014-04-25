@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { DevToolsLoader } =
-  Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-
 /**
  * Ensure that each instance of the Dev Tools loader contains its own loader
  * instance, and also returns unique objects.  This ensures there is no sharing
