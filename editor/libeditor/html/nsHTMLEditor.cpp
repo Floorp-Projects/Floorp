@@ -854,11 +854,8 @@ nsHTMLEditor::GetBlockNodeParent(nsIDOMNode *aNode)
     return nullptr;
   }
 
-  nsCOMPtr<nsINode> parent = GetBlockNodeParent(node);
-  if (!parent) {
-    return nullptr;
-  }
-  nsCOMPtr<nsIDOMNode> ret = dont_AddRef(parent.forget().take()->AsDOMNode());
+  nsCOMPtr<nsIDOMNode> ret =
+    dont_AddRef(GetAsDOMNode(GetBlockNodeParent(node).take()));
   return ret.forget();
 }
 
