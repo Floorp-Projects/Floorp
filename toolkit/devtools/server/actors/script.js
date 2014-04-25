@@ -4781,25 +4781,27 @@ update(AddonThreadActor.prototype, {
 
   onAttach: function(aRequest) {
     if (!this.attached) {
-      Services.obs.addObserver(this, "document-element-inserted", false);
+      Services.obs.addObserver(this, "chrome-document-global-created", false);
+      Services.obs.addObserver(this, "content-document-global-created", false);
     }
     return ThreadActor.prototype.onAttach.call(this, aRequest);
   },
 
   disconnect: function() {
     if (this.attached) {
-      Services.obs.removeObserver(this, "document-element-inserted");
+      Services.obs.removeObserver(this, "content-document-global-created");
+      Services.obs.removeObserver(this, "chrome-document-global-created");
     }
     return ThreadActor.prototype.disconnect.call(this);
   },
 
   /**
-   * Called when a new DOM document element is created. Check if the DOM was
-   * laoded from an add-on and if so make the window a debuggee.
+   * Called when a new DOM document global is created. Check if the DOM was
+   * loaded from an add-on and if so make the window a debuggee.
    */
   observe: function(aSubject, aTopic, aData) {
     let id = {};
-    if (mapURIToAddonID(aSubject.documentURIObject, id) && id.value === this.addonID) {
+    if (mapURIToAddonID(aSubject.location, id) && id.value === this.addonID) {
       this.dbg.addDebuggee(aSubject.defaultView);
     }
   },

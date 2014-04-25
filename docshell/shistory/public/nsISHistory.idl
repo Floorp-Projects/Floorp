@@ -22,12 +22,12 @@ interface nsISimpleEnumerator;
 
 %{C++
 #define NS_SHISTORY_CID \
-{0x7294fe9c, 0x14d8, 0x11d5, {0x98, 0x82, 0x00, 0xC0, 0x4f, 0xa0, 0x2f, 0x40}}
+{0x7b807041, 0xe60a, 0x4384, {0x93, 0x5f, 0xaf, 0x30, 0x61, 0xd8, 0xb8, 0x15}}
 
 #define NS_SHISTORY_CONTRACTID "@mozilla.org/browser/shistory;1"
 %}
 
-[scriptable, uuid(b4440e2e-0fc2-11e3-971f-59e799890b3c)]
+[scriptable, uuid(7b807041-e60a-4384-935f-af3061d8b815)]
 interface nsISHistory: nsISupports
 {
   /**
@@ -147,4 +147,16 @@ interface nsISHistory: nsISupports
    readonly attribute nsISimpleEnumerator SHistoryEnumerator;
 
    void reloadCurrentEntry();
+
+   /**
+   * Called to obtain the index to a given history entry.
+   *
+   * @param aEntry            The entry to obtain the index of.
+   *
+   * @return                  <code>NS_OK</code> index for the history entry
+   *                          is obtained successfully.
+   *                          <code>NS_ERROR_FAILURE</code> Error in obtaining
+   *                          index for the given history entry.
+   */
+   long getIndexOfEntry(in nsISHEntry aEntry);
 };

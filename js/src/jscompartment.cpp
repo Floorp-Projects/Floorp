@@ -681,7 +681,7 @@ bool
 JSCompartment::hasScriptsOnStack()
 {
     for (ActivationIterator iter(runtimeFromMainThread()); !iter.done(); ++iter) {
-        if (iter.activation()->compartment() == this)
+        if (iter->compartment() == this)
             return true;
     }
 

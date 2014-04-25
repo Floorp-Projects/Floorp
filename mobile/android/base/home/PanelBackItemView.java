@@ -29,10 +29,15 @@ class PanelBackItemView extends LinearLayout {
         title = (TextView) findViewById(R.id.title);
 
         final ImageView image = (ImageView) findViewById(R.id.image);
-        Picasso.with(getContext())
-               .load(backImageUrl)
-               .placeholder(R.drawable.folder_up)
-               .into(image);
+
+        if (TextUtils.isEmpty(backImageUrl)) {
+            image.setImageResource(R.drawable.folder_up);
+        } else {
+            Picasso.with(getContext())
+                   .load(backImageUrl)
+                   .placeholder(R.drawable.folder_up)
+                   .into(image);
+        }
     }
 
     public void updateFromFilter(FilterDetail filter) {

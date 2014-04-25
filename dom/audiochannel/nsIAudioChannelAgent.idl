@@ -6,7 +6,7 @@
 
 interface nsIDOMWindow;
 
-[scriptable, uuid(194b55d9-39c0-45c6-b8ef-b8049f978ea5)]
+[uuid(194b55d9-39c0-45c6-b8ef-b8049f978ea5)]
 interface nsIAudioChannelAgentCallback : nsISupports
 {
   /**
@@ -40,7 +40,7 @@ interface nsIAudioChannelAgentCallback : nsISupports
  *   1. Changes to the playable status of this channel.
  */
 
-[scriptable, uuid(2b0222a5-8f7b-49d2-9ab8-cd01b744b23e)]
+[uuid(2b0222a5-8f7b-49d2-9ab8-cd01b744b23e)]
 interface nsIAudioChannelAgent : nsISupports
 {
   const long AUDIO_AGENT_CHANNEL_NORMAL             = 0;

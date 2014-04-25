@@ -18,4 +18,5 @@ function run_test() {
   do_check_true(MODULE_IMPORTED);
   do_check_true(SUBMODULE_IMPORTED);
   do_check_true(same_scope);
+  do_check_true(SUBMODULE_IMPORTED_TO_SCOPE);
 }

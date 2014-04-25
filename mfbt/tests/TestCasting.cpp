@@ -17,7 +17,7 @@ template<typename Uint, typename Ulong>
 struct UintUlongBitwiseCast<Uint, Ulong, true>
 {
     static void test() {
-      MOZ_ASSERT(BitwiseCast<Ulong>(Uint(8675309)) == Ulong(8675309));
+      MOZ_RELEASE_ASSERT(BitwiseCast<Ulong>(Uint(8675309)) == Ulong(8675309));
     }
 };
 
@@ -30,71 +30,71 @@ struct UintUlongBitwiseCast<Uint, Ulong, false>
 static void
 TestBitwiseCast()
 {
-  MOZ_ASSERT(BitwiseCast<int>(int(8675309)) == int(8675309));
+  MOZ_RELEASE_ASSERT(BitwiseCast<int>(int(8675309)) == int(8675309));
   UintUlongBitwiseCast<unsigned int, unsigned long>::test();
 }
 
 static void
 TestSameSize()
 {
-  MOZ_ASSERT((IsInBounds<int16_t, int16_t>(int16_t(0))));
-  MOZ_ASSERT((IsInBounds<int16_t, int16_t>(int16_t(INT16_MIN))));
-  MOZ_ASSERT((IsInBounds<int16_t, int16_t>(int16_t(INT16_MAX))));
-  MOZ_ASSERT((IsInBounds<uint16_t, uint16_t>(uint16_t(UINT16_MAX))));
-  MOZ_ASSERT((IsInBounds<uint16_t, int16_t>(uint16_t(0))));
-  MOZ_ASSERT((!IsInBounds<uint16_t, int16_t>(uint16_t(-1))));
-  MOZ_ASSERT((!IsInBounds<int16_t, uint16_t>(int16_t(-1))));
-  MOZ_ASSERT((IsInBounds<int16_t, uint16_t>(int16_t(INT16_MAX))));
-  MOZ_ASSERT((!IsInBounds<int16_t, uint16_t>(int16_t(INT16_MIN))));
-  MOZ_ASSERT((IsInBounds<int32_t, uint32_t>(int32_t(INT32_MAX))));
-  MOZ_ASSERT((!IsInBounds<int32_t, uint32_t>(int32_t(INT32_MIN))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int16_t>(int16_t(0))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int16_t>(int16_t(INT16_MIN))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int16_t>(int16_t(INT16_MAX))));
+  MOZ_RELEASE_ASSERT((IsInBounds<uint16_t, uint16_t>(uint16_t(UINT16_MAX))));
+  MOZ_RELEASE_ASSERT((IsInBounds<uint16_t, int16_t>(uint16_t(0))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<uint16_t, int16_t>(uint16_t(-1))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int16_t, uint16_t>(int16_t(-1))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int16_t, uint16_t>(int16_t(INT16_MAX))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int16_t, uint16_t>(int16_t(INT16_MIN))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int32_t, uint32_t>(int32_t(INT32_MAX))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int32_t, uint32_t>(int32_t(INT32_MIN))));
 }
 
 static void
 TestToBiggerSize()
 {
-  MOZ_ASSERT((IsInBounds<int16_t, int32_t>(int16_t(0))));
-  MOZ_ASSERT((IsInBounds<int16_t, int32_t>(int16_t(INT16_MIN))));
-  MOZ_ASSERT((IsInBounds<int16_t, int32_t>(int16_t(INT16_MAX))));
-  MOZ_ASSERT((IsInBounds<uint16_t, uint32_t>(uint16_t(UINT16_MAX))));
-  MOZ_ASSERT((IsInBounds<uint16_t, int32_t>(uint16_t(0))));
-  MOZ_ASSERT((IsInBounds<uint16_t, int32_t>(uint16_t(-1))));
-  MOZ_ASSERT((!IsInBounds<int16_t, uint32_t>(int16_t(-1))));
-  MOZ_ASSERT((IsInBounds<int16_t, uint32_t>(int16_t(INT16_MAX))));
-  MOZ_ASSERT((!IsInBounds<int16_t, uint32_t>(int16_t(INT16_MIN))));
-  MOZ_ASSERT((IsInBounds<int32_t, uint64_t>(int32_t(INT32_MAX))));
-  MOZ_ASSERT((!IsInBounds<int32_t, uint64_t>(int32_t(INT32_MIN))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int32_t>(int16_t(0))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int32_t>(int16_t(INT16_MIN))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int32_t>(int16_t(INT16_MAX))));
+  MOZ_RELEASE_ASSERT((IsInBounds<uint16_t, uint32_t>(uint16_t(UINT16_MAX))));
+  MOZ_RELEASE_ASSERT((IsInBounds<uint16_t, int32_t>(uint16_t(0))));
+  MOZ_RELEASE_ASSERT((IsInBounds<uint16_t, int32_t>(uint16_t(-1))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int16_t, uint32_t>(int16_t(-1))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int16_t, uint32_t>(int16_t(INT16_MAX))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int16_t, uint32_t>(int16_t(INT16_MIN))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int32_t, uint64_t>(int32_t(INT32_MAX))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int32_t, uint64_t>(int32_t(INT32_MIN))));
 }
 
 static void
 TestToSmallerSize()
 {
-  MOZ_ASSERT((IsInBounds<int16_t, int8_t>(int16_t(0))));
-  MOZ_ASSERT((!IsInBounds<int16_t, int8_t>(int16_t(INT16_MIN))));
-  MOZ_ASSERT((!IsInBounds<int16_t, int8_t>(int16_t(INT16_MAX))));
-  MOZ_ASSERT((!IsInBounds<uint16_t, uint8_t>(uint16_t(UINT16_MAX))));
-  MOZ_ASSERT((IsInBounds<uint16_t, int8_t>(uint16_t(0))));
-  MOZ_ASSERT((!IsInBounds<uint16_t, int8_t>(uint16_t(-1))));
-  MOZ_ASSERT((!IsInBounds<int16_t, uint8_t>(int16_t(-1))));
-  MOZ_ASSERT((!IsInBounds<int16_t, uint8_t>(int16_t(INT16_MAX))));
-  MOZ_ASSERT((!IsInBounds<int16_t, uint8_t>(int16_t(INT16_MIN))));
-  MOZ_ASSERT((!IsInBounds<int32_t, uint16_t>(int32_t(INT32_MAX))));
-  MOZ_ASSERT((!IsInBounds<int32_t, uint16_t>(int32_t(INT32_MIN))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int16_t, int8_t>(int16_t(0))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int16_t, int8_t>(int16_t(INT16_MIN))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int16_t, int8_t>(int16_t(INT16_MAX))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<uint16_t, uint8_t>(uint16_t(UINT16_MAX))));
+  MOZ_RELEASE_ASSERT((IsInBounds<uint16_t, int8_t>(uint16_t(0))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<uint16_t, int8_t>(uint16_t(-1))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int16_t, uint8_t>(int16_t(-1))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int16_t, uint8_t>(int16_t(INT16_MAX))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int16_t, uint8_t>(int16_t(INT16_MIN))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int32_t, uint16_t>(int32_t(INT32_MAX))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int32_t, uint16_t>(int32_t(INT32_MIN))));
 
   // Boundary cases
-  MOZ_ASSERT((!IsInBounds<int64_t, int32_t>(int64_t(INT32_MIN) - 1)));
-  MOZ_ASSERT((IsInBounds<int64_t, int32_t>(int64_t(INT32_MIN))));
-  MOZ_ASSERT((IsInBounds<int64_t, int32_t>(int64_t(INT32_MIN) + 1)));
-  MOZ_ASSERT((IsInBounds<int64_t, int32_t>(int64_t(INT32_MAX) - 1)));
-  MOZ_ASSERT((IsInBounds<int64_t, int32_t>(int64_t(INT32_MAX))));
-  MOZ_ASSERT((!IsInBounds<int64_t, int32_t>(int64_t(INT32_MAX) + 1)));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int64_t, int32_t>(int64_t(INT32_MIN) - 1)));
+  MOZ_RELEASE_ASSERT((IsInBounds<int64_t, int32_t>(int64_t(INT32_MIN))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int64_t, int32_t>(int64_t(INT32_MIN) + 1)));
+  MOZ_RELEASE_ASSERT((IsInBounds<int64_t, int32_t>(int64_t(INT32_MAX) - 1)));
+  MOZ_RELEASE_ASSERT((IsInBounds<int64_t, int32_t>(int64_t(INT32_MAX))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int64_t, int32_t>(int64_t(INT32_MAX) + 1)));
 
-  MOZ_ASSERT((!IsInBounds<int64_t, uint32_t>(int64_t(-1))));
-  MOZ_ASSERT((IsInBounds<int64_t, uint32_t>(int64_t(0))));
-  MOZ_ASSERT((IsInBounds<int64_t, uint32_t>(int64_t(1))));
-  MOZ_ASSERT((IsInBounds<int64_t, uint32_t>(int64_t(UINT32_MAX) - 1)));
-  MOZ_ASSERT((IsInBounds<int64_t, uint32_t>(int64_t(UINT32_MAX))));
-  MOZ_ASSERT((!IsInBounds<int64_t, uint32_t>(int64_t(UINT32_MAX) + 1)));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int64_t, uint32_t>(int64_t(-1))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int64_t, uint32_t>(int64_t(0))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int64_t, uint32_t>(int64_t(1))));
+  MOZ_RELEASE_ASSERT((IsInBounds<int64_t, uint32_t>(int64_t(UINT32_MAX) - 1)));
+  MOZ_RELEASE_ASSERT((IsInBounds<int64_t, uint32_t>(int64_t(UINT32_MAX))));
+  MOZ_RELEASE_ASSERT((!IsInBounds<int64_t, uint32_t>(int64_t(UINT32_MAX) + 1)));
 }
 
 int

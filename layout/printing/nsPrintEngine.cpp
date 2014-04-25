@@ -10,7 +10,7 @@
 #include "nsCRT.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"

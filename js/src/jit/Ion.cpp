@@ -1628,29 +1628,22 @@ GenerateLIR(MIRGenerator *mir)
 }
 
 CodeGenerator *
-GenerateCode(MIRGenerator *mir, LIRGraph *lir, MacroAssembler *maybeMasm)
+GenerateCode(MIRGenerator *mir, LIRGraph *lir)
 {
-    CodeGenerator *codegen = js_new<CodeGenerator>(mir, lir, maybeMasm);
+    CodeGenerator *codegen = js_new<CodeGenerator>(mir, lir);
     if (!codegen)
         return nullptr;
 
-    if (mir->compilingAsmJS()) {
-        if (!codegen->generateAsmJS()) {
-            js_delete(codegen);
-            return nullptr;
-        }
-    } else {
-        if (!codegen->generate()) {
-            js_delete(codegen);
-            return nullptr;
-        }
+    if (!codegen->generate()) {
+        js_delete(codegen);
+        return nullptr;
     }
 
     return codegen;
 }
 
 CodeGenerator *
-CompileBackEnd(MIRGenerator *mir, MacroAssembler *maybeMasm)
+CompileBackEnd(MIRGenerator *mir)
 {
     if (!OptimizeMIR(mir))
         return nullptr;
@@ -1659,7 +1652,7 @@ CompileBackEnd(MIRGenerator *mir, MacroAssembler *maybeMasm)
     if (!lir)
         return nullptr;
 
-    return GenerateCode(mir, lir, maybeMasm);
+    return GenerateCode(mir, lir);
 }
 
 void
@@ -2660,7 +2653,7 @@ jit::InvalidateAll(FreeOp *fop, Zone *zone)
         StopAllOffThreadCompilations(comp);
 
     for (JitActivationIterator iter(fop->runtime()); !iter.done(); ++iter) {
-        if (iter.activation()->compartment()->zone() == zone) {
+        if (iter->compartment()->zone() == zone) {
             IonContext ictx(CompileRuntime::get(fop->runtime()));
             AutoFlushCache afc("InvalidateAll", fop->runtime()->jitRuntime());
             IonSpew(IonSpew_Invalidate, "Invalidating all frames for GC");
@@ -3081,7 +3074,7 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
     jit::MarkActiveBaselineScripts(zone);
 
     for (JitActivationIterator iter(rt); !iter.done(); ++iter) {
-        JSCompartment *comp = iter.activation()->compartment();
+        JSCompartment *comp = iter->compartment();
         if (comp_ == comp || zone_ == comp->zone()) {
             IonContext ictx(CompileRuntime::get(rt));
             AutoFlushCache afc("AutoDebugModeInvalidation", rt->jitRuntime());
