@@ -308,19 +308,22 @@ BuildCertChainForOneKeyUsage(TrustDomain& trustDomain, CERTCertificate* cert,
   PR_ASSERT(ku1);
   PR_ASSERT(ku2);
 
-  SECStatus rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
-                                ku1, eku, requiredPolicy, stapledOCSPResponse,
-                                builtChain);
+  SECStatus rv = BuildCertChain(trustDomain, cert, time,
+                                EndEntityOrCA::MustBeEndEntity, ku1,
+                                eku, requiredPolicy,
+                                stapledOCSPResponse, builtChain);
   if (rv != SECSuccess && ku2 &&
       PR_GetError() == SEC_ERROR_INADEQUATE_KEY_USAGE) {
-    rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
-                        ku2, eku, requiredPolicy, stapledOCSPResponse,
-                        builtChain);
+    rv = BuildCertChain(trustDomain, cert, time,
+                        EndEntityOrCA::MustBeEndEntity, ku2,
+                        eku, requiredPolicy,
+                        stapledOCSPResponse, builtChain);
     if (rv != SECSuccess && ku3 &&
         PR_GetError() == SEC_ERROR_INADEQUATE_KEY_USAGE) {
-      rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
-                          ku3, eku, requiredPolicy, stapledOCSPResponse,
-                          builtChain);
+      rv = BuildCertChain(trustDomain, cert, time,
+                          EndEntityOrCA::MustBeEndEntity, ku3,
+                          eku, requiredPolicy,
+                          stapledOCSPResponse, builtChain);
       if (rv != SECSuccess) {
         PR_SetError(SEC_ERROR_INADEQUATE_KEY_USAGE, 0);
       }
@@ -386,8 +389,8 @@ CertVerifier::MozillaPKIXVerifyCert(
       // just use trustEmail as it is the closest alternative.
       NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, mOCSPCache,
                                        pinArg);
-      rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
-                          KU_DIGITAL_SIGNATURE,
+      rv = BuildCertChain(trustDomain, cert, time,
+                          EndEntityOrCA::MustBeEndEntity, KU_DIGITAL_SIGNATURE,
                           SEC_OID_EXT_KEY_USAGE_CLIENT_AUTH,
                           SEC_OID_X509_ANY_POLICY,
                           stapledOCSPResponse, builtChain);
@@ -449,7 +452,7 @@ CertVerifier::MozillaPKIXVerifyCert(
     case certificateUsageSSLCA: {
       NSSCertDBTrustDomain trustDomain(trustSSL, ocspFetching, mOCSPCache,
                                        pinArg);
-      rv = BuildCertChain(trustDomain, cert, time, MustBeCA,
+      rv = BuildCertChain(trustDomain, cert, time, EndEntityOrCA::MustBeCA,
                           KU_KEY_CERT_SIGN,
                           SEC_OID_EXT_KEY_USAGE_SERVER_AUTH,
                           SEC_OID_X509_ANY_POLICY,
@@ -460,8 +463,8 @@ CertVerifier::MozillaPKIXVerifyCert(
     case certificateUsageEmailSigner: {
       NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, mOCSPCache,
                                        pinArg);
-      rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
-                          KU_DIGITAL_SIGNATURE,
+      rv = BuildCertChain(trustDomain, cert, time,
+                          EndEntityOrCA::MustBeEndEntity, KU_DIGITAL_SIGNATURE,
                           SEC_OID_EXT_KEY_USAGE_EMAIL_PROTECT,
                           SEC_OID_X509_ANY_POLICY,
                           stapledOCSPResponse, builtChain);
@@ -487,8 +490,8 @@ CertVerifier::MozillaPKIXVerifyCert(
     case certificateUsageObjectSigner: {
       NSSCertDBTrustDomain trustDomain(trustObjectSigning, ocspFetching,
                                        mOCSPCache, pinArg);
-      rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
-                          KU_DIGITAL_SIGNATURE,
+      rv = BuildCertChain(trustDomain, cert, time,
+                          EndEntityOrCA::MustBeEndEntity, KU_DIGITAL_SIGNATURE,
                           SEC_OID_EXT_KEY_USAGE_CODE_SIGN,
                           SEC_OID_X509_ANY_POLICY,
                           stapledOCSPResponse, builtChain);
@@ -505,11 +508,11 @@ CertVerifier::MozillaPKIXVerifyCert(
       mozilla::pkix::KeyUsages keyUsage;
       SECOidTag eku;
       if (usage == certificateUsageVerifyCA) {
-        endEntityOrCA = MustBeCA;
+        endEntityOrCA = EndEntityOrCA::MustBeCA;
         keyUsage = KU_KEY_CERT_SIGN;
         eku = SEC_OID_UNKNOWN;
       } else {
-        endEntityOrCA = MustBeEndEntity;
+        endEntityOrCA = EndEntityOrCA::MustBeEndEntity;
         keyUsage = KU_DIGITAL_SIGNATURE;
         eku = SEC_OID_OCSP_RESPONDER;
       }
