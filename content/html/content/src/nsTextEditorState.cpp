@@ -1939,11 +1939,6 @@ nsTextEditorState::InitializeKeyboardEventListeners()
 void
 nsTextEditorState::ValueWasChanged(bool aNotify)
 {
-  // placeholder management
-  if (!mPlaceholderDiv) {
-    return;
-  }
-
   UpdatePlaceholderVisibility(aNotify);
 }
 
@@ -1964,15 +1959,11 @@ nsTextEditorState::UpdatePlaceholderText(bool aNotify)
   nsContentUtils::RemoveNewlines(placeholderValue);
   NS_ASSERTION(mPlaceholderDiv->GetFirstChild(), "placeholder div has no child");
   mPlaceholderDiv->GetFirstChild()->SetText(placeholderValue, aNotify);
-  ValueWasChanged(aNotify);
 }
 
 void
 nsTextEditorState::UpdatePlaceholderVisibility(bool aNotify)
 {
-  NS_ASSERTION(mPlaceholderDiv, "This function should not be called if "
-                                "mPlaceholderDiv isn't set");
-
   nsAutoString value;
   GetValue(value, true);
 
