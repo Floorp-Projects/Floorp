@@ -447,9 +447,11 @@ var SelectionHandler = {
     // Special case: we are dealing with an input that is taller than the
     // desired height of content. We need to center on the caret location.
     let rect =
-      this._domWinUtils.sendQueryContentEvent(this._domWinUtils.QUERY_CARET_RECT,
-                                              this._targetElement.selectionEnd,
-                                              0, 0, 0);
+      this._domWinUtils.sendQueryContentEvent(
+        this._domWinUtils.QUERY_CARET_RECT,
+        this._targetElement.selectionEnd,
+        0, 0, 0,
+        this._domWinUtils.QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
     if (!rect || !rect.succeeded) {
       Util.dumpLn("no caret was present, unexpected.");
       return 0;
