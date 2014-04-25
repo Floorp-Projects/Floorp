@@ -40,16 +40,34 @@ CodeGeneratorARM::CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph, MacroAsse
 bool
 CodeGeneratorARM::generatePrologue()
 {
-    if (gen->compilingAsmJS()) {
-        masm.Push(lr);
-        // Note that this automatically sets MacroAssembler::framePushed().
-        masm.reserveStack(frameDepth_);
-    } else {
-        // Note that this automatically sets MacroAssembler::framePushed().
-        masm.reserveStack(frameSize());
-        masm.checkStackAlignment();
+    JS_ASSERT(!gen->compilingAsmJS());
+
+    // Note that this automatically sets MacroAssembler::framePushed().
+    masm.reserveStack(frameSize());
+    masm.checkStackAlignment();
+    return true;
+}
+
+bool
+CodeGeneratorARM::generateAsmJSPrologue(Label *stackOverflowLabel)
+{
+    JS_ASSERT(gen->compilingAsmJS());
+
+    masm.Push(lr);
+
+    // The asm.js over-recursed handler wants to be able to assume that SP
+    // points to the return address, so perform the check after pushing lr but
+    // before pushing frameDepth.
+    if (!omitOverRecursedCheck()) {
+        masm.branchPtr(Assembler::AboveOrEqual,
+                       AsmJSAbsoluteAddress(AsmJSImm_StackLimit),
+                       StackPointer,
+                       stackOverflowLabel);
     }
 
+    // Note that this automatically sets MacroAssembler::framePushed().
+    masm.reserveStack(frameDepth_);
+    masm.checkStackAlignment();
     return true;
 }
 
@@ -2011,7 +2029,7 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
         masm.ma_mov(Imm32(0), d, NoSetCond, Assembler::AboveOrEqual);
         masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg, d, Offset, Assembler::Below);
     }
-    return gen->noteHeapAccess(AsmJSHeapAccess(bo.getOffset()));
+    return masm.append(AsmJSHeapAccess(bo.getOffset()));
 }
 
 bool
@@ -2078,7 +2096,7 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
         masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, ptrReg,
                               ToRegister(ins->value()), Offset, Assembler::Below);
     }
-    return gen->noteHeapAccess(AsmJSHeapAccess(bo.getOffset()));
+    return masm.append(AsmJSHeapAccess(bo.getOffset()));
 }
 
 bool

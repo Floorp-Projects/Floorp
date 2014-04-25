@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "nsAString.h"
 #include "nsAlgorithm.h"
@@ -42,6 +42,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 /***************************************************************************
  * stack based helper class for restoring selection after table edit

@@ -62,7 +62,7 @@
 #include "nsCOMArray.h"
 #include "nsContainerFrame.h"
 #include "nsISelection.h"
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
@@ -1852,7 +1852,6 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
     // case XBL constructors changed styles somewhere.
     {
       nsAutoScriptBlocker scriptBlocker;
-      mFrameConstructor->CreateNeededFrames();
       mPresContext->RestyleManager()->ProcessPendingRestyles();
     }
 
@@ -1987,7 +1986,6 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
     // Make sure style is up to date
     {
       nsAutoScriptBlocker scriptBlocker;
-      mFrameConstructor->CreateNeededFrames();
       mPresContext->RestyleManager()->ProcessPendingRestyles();
     }
 
@@ -4051,7 +4049,6 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
       // The FlushResampleRequests() above flushed style changes.
       if (!mIsDestroying) {
         nsAutoScriptBlocker scriptBlocker;
-        mFrameConstructor->CreateNeededFrames();
         mPresContext->RestyleManager()->ProcessPendingRestyles();
       }
     }
@@ -4078,7 +4075,6 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     // type.
     if (!mIsDestroying) {
       nsAutoScriptBlocker scriptBlocker;
-      mFrameConstructor->CreateNeededFrames();
       mPresContext->RestyleManager()->ProcessPendingRestyles();
     }
 
@@ -6720,7 +6716,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         // in the same document by taking the target of the events already in
         // the capture list
         nsCOMPtr<nsIContent> anyTarget;
-        if (gCaptureTouchList->Count() > 0) {
+        if (gCaptureTouchList->Count() > 0 && touchEvent->touches.Length() > 1) {
           gCaptureTouchList->Enumerate(&FindAnyTarget, &anyTarget);
         } else {
           gPreventMouseEvents = false;

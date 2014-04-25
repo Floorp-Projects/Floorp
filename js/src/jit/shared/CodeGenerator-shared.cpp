@@ -776,6 +776,17 @@ CodeGeneratorShared::visitOutOfLineTruncateSlow(OutOfLineTruncateSlow *ool)
     return true;
 }
 
+bool
+CodeGeneratorShared::omitOverRecursedCheck() const
+{
+    // If the current function makes no calls (which means it isn't recursive)
+    // and it uses only a small amount of stack space, it doesn't need a
+    // stack overflow check. Note that the actual number here is somewhat
+    // arbitrary, and codegen actually uses small bounded amounts of
+    // additional stack space in some cases too.
+    return frameSize() < 64 && !gen->performsCall();
+}
+
 void
 CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation *index, MIRType type)
 {

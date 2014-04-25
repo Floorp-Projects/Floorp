@@ -1412,6 +1412,10 @@ RestyleManager::ProcessPendingRestyles()
   NS_PRECONDITION(!nsContentUtils::IsSafeToRunScript(),
                   "Missing a script blocker!");
 
+  // First do any queued-up frame creation.  (We should really
+  // merge this into the rest of the process, though; see bug 827239.)
+  mPresContext->FrameConstructor()->CreateNeededFrames();
+
   // Process non-animation restyles...
   NS_ABORT_IF_FALSE(!mPresContext->IsProcessingRestyles(),
                     "Nesting calls to ProcessPendingRestyles?");

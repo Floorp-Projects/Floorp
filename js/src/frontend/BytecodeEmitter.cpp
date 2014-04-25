@@ -3436,6 +3436,8 @@ EmitVariables(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
 
     ParseNode *next;
     for (ParseNode *pn2 = pn->pn_head; ; pn2 = next) {
+        if (!UpdateSourceCoordNotes(cx, bce, pn2->pn_pos.begin))
+            return false;
         next = pn2->pn_next;
 
         ParseNode *pn3;
@@ -5904,6 +5906,9 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+        if (!UpdateSourceCoordNotes(cx, bce, pn2->pn_pos.begin))
+            return false;
+
         /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
         ParseNode *pn3 = pn2->pn_left;
         bool isIndex = false;
@@ -6065,6 +6070,8 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, uint32_t co
     if (nspread && !EmitNumberOp(cx, 0, bce))
         return false;
     for (atomIndex = 0; pn2; atomIndex++, pn2 = pn2->pn_next) {
+        if (!UpdateSourceCoordNotes(cx, bce, pn2->pn_pos.begin))
+            return false;
         if (pn2->isKind(PNK_ELISION)) {
             if (Emit1(cx, bce, JSOP_HOLE) < 0)
                 return false;
@@ -6372,6 +6379,8 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_COMMA:
       {
         for (ParseNode *pn2 = pn->pn_head; ; pn2 = pn2->pn_next) {
+            if (!UpdateSourceCoordNotes(cx, bce, pn2->pn_pos.begin))
+                return false;
             if (!EmitTree(cx, bce, pn2))
                 return false;
             if (!pn2->pn_next)

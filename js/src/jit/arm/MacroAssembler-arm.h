@@ -399,6 +399,9 @@ class MacroAssemblerARM : public Assembler
 
     void ma_call(ImmPtr dest);
 
+    // calls reg, storing the return address into sp[0]
+    void ma_callAndStoreRet(const Register reg, uint32_t stackArgBytes);
+
     // Float registers can only be loaded/stored in continuous runs
     // when using vstm/vldm.
     // This function breaks set into continuous runs and loads/stores
@@ -543,7 +546,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void call(const Register reg) {
         as_blx(reg);
     }
-
     void call(Label *label) {
         // for now, assume that it'll be nearby?
         as_bl(label, Always);
@@ -572,6 +574,38 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_movPatchable(ImmPtr(c->raw()), ScratchRegister, Always, rs);
         ma_callIonHalfPush(ScratchRegister);
     }
+
+    void appendCallSite(const CallSiteDesc &desc) {
+        enoughMemory_ &= append(CallSite(desc, currentOffset(), framePushed_));
+    }
+
+    void call(const CallSiteDesc &desc, const Register reg) {
+        call(reg);
+        appendCallSite(desc);
+    }
+    void call(const CallSiteDesc &desc, Label *label) {
+        call(label);
+        appendCallSite(desc);
+    }
+    void call(const CallSiteDesc &desc, AsmJSImmPtr imm) {
+        call(imm);
+        appendCallSite(desc);
+    }
+    void callExit(AsmJSImmPtr imm, uint32_t stackArgBytes) {
+        movePtr(imm, CallReg);
+        ma_callAndStoreRet(CallReg, stackArgBytes);
+        appendCallSite(CallSiteDesc::Exit());
+    }
+    void callIonFromAsmJS(const Register reg) {
+        ma_callIonNoPush(reg);
+        appendCallSite(CallSiteDesc::Exit());
+
+        // The Ion ABI has the callee pop the return address off the stack.
+        // The asm.js caller assumes that the call leaves sp unchanged, so bump
+        // the stack.
+        subPtr(Imm32(sizeof(void*)), sp);
+    }
+
     void branch(JitCode *c) {
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);

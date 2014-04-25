@@ -31,17 +31,6 @@ interface KeyboardEvent : UIEvent
   readonly attribute boolean       isComposing;
 
   readonly attribute DOMString key;
-
-  [Throws]
-  void initKeyboardEvent(DOMString typeArg,
-                         boolean bubblesArg,
-                         boolean cancelableArg,
-                         WindowProxy? viewArg,
-                         long detailArg,
-                         DOMString keyArg,
-                         unsigned long locationArg,
-                         DOMString modifiersListArg,
-                         boolean repeatArg);
 };
 
 dictionary KeyboardEventInit : UIEventInit

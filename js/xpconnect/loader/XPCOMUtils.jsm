@@ -279,13 +279,13 @@ this.XPCOMUtils = {
    * Allows you to fake a relative import. Expects the global object from the
    * module that's calling us, and the relative filename that we wish to import.
    */
-  importRelative: function XPCOMUtils__importRelative(that, path) {
+  importRelative: function XPCOMUtils__importRelative(that, path, scope) {
     if (!("__URI__" in that))
       throw Error("importRelative may only be used from a JSM, and its first argument "+
                   "must be that JSM's global object (hint: use this)");
     let uri = that.__URI__;
     let i = uri.lastIndexOf("/");
-    Components.utils.import(uri.substring(0, i+1) + path, that);
+    Components.utils.import(uri.substring(0, i+1) + path, scope || that);
   },
 
   /**

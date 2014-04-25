@@ -136,7 +136,7 @@ nsMathMLmoFrame::ProcessTextData()
   if (mFrames.GetLength() != 1) {
     data.Truncate(); // empty data to reset the char
     mMathMLChar.SetData(presContext, data);
-    ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mMathMLChar, false);
+    ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mMathMLChar);
     return;
   }
 
@@ -192,7 +192,7 @@ nsMathMLmoFrame::ProcessTextData()
   if (isMutable)
     mFlags |= NS_MATHML_OPERATOR_MUTABLE;
 
-  ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mMathMLChar, isMutable);
+  ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mMathMLChar);
 }
 
 // get our 'form' and lookup in the Operator Dictionary to fetch 
