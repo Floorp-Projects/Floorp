@@ -239,6 +239,8 @@ browser.jar:
         skin/classic/browser/devtools/command-pick@2x.png           (../shared/devtools/images/command-pick@2x.png)
         skin/classic/browser/devtools/command-console.png           (../shared/devtools/images/command-console.png)
         skin/classic/browser/devtools/command-console@2x.png        (../shared/devtools/images/command-console@2x.png)
+        skin/classic/browser/devtools/command-eyedropper.png        (../shared/devtools/images/command-eyedropper.png)
+        skin/classic/browser/devtools/command-eyedropper@2x.png     (../shared/devtools/images/command-eyedropper@2x.png)
         skin/classic/browser/devtools/markup-view.css               (../shared/devtools/markup-view.css)
         skin/classic/browser/devtools/editor-error.png              (devtools/editor-error.png)
         skin/classic/browser/devtools/editor-breakpoint.png         (devtools/editor-breakpoint.png)
@@ -333,7 +335,6 @@ browser.jar:
         skin/classic/browser/devtools/app-manager/rocket.svg                (../shared/devtools/app-manager/images/rocket.svg)
         skin/classic/browser/devtools/app-manager/noise.png                 (../shared/devtools/app-manager/images/noise.png)
         skin/classic/browser/devtools/app-manager/default-app-icon.png      (../shared/devtools/app-manager/images/default-app-icon.png)
-        skin/classic/browser/devtools/eyedropper-black.png                  (../shared/devtools/images/eyedropper-black.png)
 
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/browser/sync-16.png
@@ -599,6 +600,8 @@ browser.jar:
         skin/classic/aero/browser/devtools/command-pick@2x.png       (../shared/devtools/images/command-pick@2x.png)
         skin/classic/aero/browser/devtools/command-console.png       (../shared/devtools/images/command-console.png)
         skin/classic/aero/browser/devtools/command-console@2x.png    (../shared/devtools/images/command-console@2x.png)
+        skin/classic/aero/browser/devtools/command-eyedropper.png        (../shared/devtools/images/command-eyedropper.png)
+        skin/classic/aero/browser/devtools/command-eyedropper@2x.png     (../shared/devtools/images/command-eyedropper@2x.png)
         skin/classic/aero/browser/devtools/alerticon-warning.png     (devtools/alerticon-warning.png)
 *       skin/classic/aero/browser/devtools/ruleview.css              (../shared/devtools/ruleview.css)
         skin/classic/aero/browser/devtools/commandline.css           (devtools/commandline.css)
@@ -695,8 +698,6 @@ browser.jar:
         skin/classic/aero/browser/devtools/app-manager/rocket.svg                (../shared/devtools/app-manager/images/rocket.svg)
         skin/classic/aero/browser/devtools/app-manager/noise.png                 (../shared/devtools/app-manager/images/noise.png)
         skin/classic/aero/browser/devtools/app-manager/default-app-icon.png      (../shared/devtools/app-manager/images/default-app-icon.png)
-        skin/classic/aero/browser/devtools/eyedropper-black.png        (../shared/devtools/images/eyedropper-black.png)
-
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/aero/browser/sync-16.png
         skin/classic/aero/browser/sync-32.png

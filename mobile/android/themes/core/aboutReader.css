@@ -321,7 +321,7 @@ body {
 }
 
 .toolbar {
-  font-family: "Droid Sans",helvetica,arial,clean,sans-serif;
+  font-family: "Clear Sans",sans-serif;
   transition-property: visibility, opacity;
   transition-duration: 0.7s;
   visibility: visible;
@@ -465,7 +465,7 @@ body {
 .segmented-button > li > a {
   display: block;
   padding: 5px 0;
-  font-family: "Roboto",sans-serif;
+  font-family: "Clear Sans",sans-serif;
   font-weight: lighter;
 }
 

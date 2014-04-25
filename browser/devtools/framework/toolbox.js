@@ -573,7 +573,8 @@ Toolbox.prototype = {
       "command-button-responsive",
       "command-button-paintflashing",
       "command-button-tilt",
-      "command-button-scratchpad"
+      "command-button-scratchpad",
+      "command-button-eyedropper"
     ].map(id => {
       let button = this.doc.getElementById(id);
       // Some buttons may not exist inside of Browser Toolbox

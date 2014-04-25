@@ -693,7 +693,7 @@ Tooltip.prototype = {
     let iframe = this.doc.createElementNS(XHTML_NS, "iframe");
     iframe.setAttribute("transparent", true);
     iframe.setAttribute("width", "210");
-    iframe.setAttribute("height", "220");
+    iframe.setAttribute("height", "216");
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("class", "devtools-tooltip-iframe");
 

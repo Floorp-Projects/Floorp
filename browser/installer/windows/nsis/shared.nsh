@@ -430,6 +430,30 @@ FunctionEnd
     WriteRegStr SHCTX "$0\.xhtml" "" "FirefoxHTML"
   ${EndIf}
 
+  ; Only add .oga if it's not present
+  ${CheckIfRegistryKeyExists} "$0" ".oga" $7
+  ${If} $7 == "false"
+    WriteRegStr SHCTX "$0\.oga"  "" "FirefoxHTML"
+  ${EndIf}
+
+  ; Only add .ogg if it's not present
+  ${CheckIfRegistryKeyExists} "$0" ".ogg" $7
+  ${If} $7 == "false"
+    WriteRegStr SHCTX "$0\.ogg"  "" "FirefoxHTML"
+  ${EndIf}
+
+  ; Only add .ogv if it's not present
+  ${CheckIfRegistryKeyExists} "$0" ".ogv" $7
+  ${If} $7 == "false"
+    WriteRegStr SHCTX "$0\.ogv"  "" "FirefoxHTML"
+  ${EndIf}
+
+  ; Only add .pdf if it's not present
+  ${CheckIfRegistryKeyExists} "$0" ".pdf" $7
+  ${If} $7 == "false"
+    WriteRegStr SHCTX "$0\.pdf"  "" "FirefoxHTML"
+  ${EndIf}
+
   ; Only add webm if it's not present
   ${CheckIfRegistryKeyExists} "$0" ".webm" $7
   ${If} $7 == "false"
