@@ -602,7 +602,7 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
     };
 
     /* For owned BaseShapes, the canonical unowned BaseShape. */
-    HeapPtr<UnownedBaseShape> unowned_;
+    HeapPtrUnownedBaseShape unowned_;
 
     /* For owned BaseShapes, the shape's shape table. */
     ShapeTable       *table_;

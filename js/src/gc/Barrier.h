@@ -150,6 +150,10 @@
  * js/public/RootingAPI.h.
  */
 
+class JSAtom;
+class JSFlatString;
+class JSLinearString;
+
 namespace js {
 
 class PropertyName;
@@ -285,46 +289,54 @@ ZoneOfValueFromAnyThread(const JS::Value &value)
     return static_cast<js::gc::Cell *>(value.toGCThing())->tenuredZoneFromAnyThread();
 }
 
+template <typename T>
+struct InternalGCMethods {};
+
+template <typename T>
+struct InternalGCMethods<T *>
+{
+    static void preBarrier(T *v) { T::writeBarrierPre(v); }
+#ifdef JSGC_GENERATIONAL
+    static void postBarrier(T **vp) { T::writeBarrierPost(*vp, vp); }
+    static void postBarrierRelocate(T **vp) { T::writeBarrierPostRelocate(*vp, vp); }
+    static void postBarrierRemove(T **vp) { T::writeBarrierPostRemove(*vp, vp); }
+#endif
+};
+
 /*
  * Base class for barriered pointer types.
  */
-template <class T, typename Unioned = uintptr_t>
+template <class T>
 class BarrieredPtr
 {
   protected:
-    union {
-        T *value;
-        Unioned other;
-    };
+    T value;
 
-    BarrieredPtr(T *v) : value(v) {}
+    BarrieredPtr(T v) : value(v) {}
     ~BarrieredPtr() { pre(); }
 
   public:
-    void init(T *v) {
-        JS_ASSERT(!IsPoisonedPtr<T>(v));
+    void init(T v) {
+        JS_ASSERT(!GCMethods<T>::poisoned(v));
         this->value = v;
     }
 
-    /* Use this if the automatic coercion to T* isn't working. */
-    T *get() const { return value; }
+    /* Use this if the automatic coercion to T isn't working. */
+    T get() const { return value; }
 
     /*
      * Use these if you want to change the value without invoking the barrier.
      * Obviously this is dangerous unless you know the barrier is not needed.
      */
-    T **unsafeGet() { return &value; }
-    void unsafeSet(T *v) { value = v; }
+    T *unsafeGet() { return &value; }
+    void unsafeSet(T v) { value = v; }
 
-    Unioned *unsafeGetUnioned() { return &other; }
+    T operator->() const { return value; }
 
-    T &operator*() const { return *value; }
-    T *operator->() const { return value; }
-
-    operator T*() const { return value; }
+    operator T() const { return value; }
 
   protected:
-    void pre() { T::writeBarrierPre(value); }
+    void pre() { InternalGCMethods<T>::preBarrier(value); }
 };
 
 /*
@@ -333,14 +345,14 @@ class BarrieredPtr
  * should be used in all cases that do not require explicit low-level control
  * of moving behavior, e.g. for HashMap keys.
  */
-template <class T, typename Unioned = uintptr_t>
-class EncapsulatedPtr : public BarrieredPtr<T, Unioned>
+template <class T>
+class EncapsulatedPtr : public BarrieredPtr<T>
 {
   public:
-    EncapsulatedPtr() : BarrieredPtr<T, Unioned>(nullptr) {}
-    EncapsulatedPtr(T *v) : BarrieredPtr<T, Unioned>(v) {}
-    explicit EncapsulatedPtr(const EncapsulatedPtr<T, Unioned> &v)
-      : BarrieredPtr<T, Unioned>(v.value) {}
+    EncapsulatedPtr() : BarrieredPtr<T>(nullptr) {}
+    EncapsulatedPtr(T v) : BarrieredPtr<T>(v) {}
+    explicit EncapsulatedPtr(const EncapsulatedPtr<T> &v)
+      : BarrieredPtr<T>(v.value) {}
 
     /* Use to set the pointer to nullptr. */
     void clear() {
@@ -348,16 +360,16 @@ class EncapsulatedPtr : public BarrieredPtr<T, Unioned>
         this->value = nullptr;
     }
 
-    EncapsulatedPtr<T, Unioned> &operator=(T *v) {
+    EncapsulatedPtr<T> &operator=(T v) {
         this->pre();
-        JS_ASSERT(!IsPoisonedPtr<T>(v));
+        JS_ASSERT(!GCMethods<T>::poisoned(v));
         this->value = v;
         return *this;
     }
 
-    EncapsulatedPtr<T, Unioned> &operator=(const EncapsulatedPtr<T> &v) {
+    EncapsulatedPtr<T> &operator=(const EncapsulatedPtr<T> &v) {
         this->pre();
-        JS_ASSERT(!IsPoisonedPtr<T>(v.value));
+        JS_ASSERT(!GCMethods<T>::poisoned(v.value));
         this->value = v.value;
         return *this;
     }
@@ -375,45 +387,49 @@ class EncapsulatedPtr : public BarrieredPtr<T, Unioned>
  * stored in memory that has GC lifetime. HeapPtr must not be used in contexts
  * where it may be implicitly moved or deleted, e.g. most containers.
  */
-template <class T, class Unioned = uintptr_t>
-class HeapPtr : public BarrieredPtr<T, Unioned>
+template <class T>
+class HeapPtr : public BarrieredPtr<T>
 {
   public:
-    HeapPtr() : BarrieredPtr<T, Unioned>(nullptr) {}
-    explicit HeapPtr(T *v) : BarrieredPtr<T, Unioned>(v) { post(); }
-    explicit HeapPtr(const HeapPtr<T, Unioned> &v) : BarrieredPtr<T, Unioned>(v) { post(); }
+    HeapPtr() : BarrieredPtr<T>(nullptr) {}
+    explicit HeapPtr(T v) : BarrieredPtr<T>(v) { post(); }
+    explicit HeapPtr(const HeapPtr<T> &v) : BarrieredPtr<T>(v) { post(); }
 
-    void init(T *v) {
-        JS_ASSERT(!IsPoisonedPtr<T>(v));
+    void init(T v) {
+        JS_ASSERT(!GCMethods<T>::poisoned(v));
         this->value = v;
         post();
     }
 
-    HeapPtr<T, Unioned> &operator=(T *v) {
+    HeapPtr<T> &operator=(T v) {
         this->pre();
-        JS_ASSERT(!IsPoisonedPtr<T>(v));
+        JS_ASSERT(!GCMethods<T>::poisoned(v));
         this->value = v;
         post();
         return *this;
     }
 
-    HeapPtr<T, Unioned> &operator=(const HeapPtr<T, Unioned> &v) {
+    HeapPtr<T> &operator=(const HeapPtr<T> &v) {
         this->pre();
-        JS_ASSERT(!IsPoisonedPtr<T>(v.value));
+        JS_ASSERT(!GCMethods<T>::poisoned(v.value));
         this->value = v.value;
         post();
         return *this;
     }
 
   protected:
-    void post() { T::writeBarrierPost(this->value, (void *)&this->value); }
+    void post() {
+#ifdef JSGC_GENERATIONAL
+        InternalGCMethods<T>::postBarrier(&this->value);
+#endif
+    }
 
     /* Make this friend so it can access pre() and post(). */
     template <class T1, class T2>
     friend inline void
     BarrieredSetPair(Zone *zone,
-                     HeapPtr<T1> &v1, T1 *val1,
-                     HeapPtr<T2> &v2, T2 *val2);
+                     HeapPtr<T1*> &v1, T1 *val1,
+                     HeapPtr<T2*> &v2, T2 *val2);
 
   private:
     /*
@@ -424,7 +440,7 @@ class HeapPtr : public BarrieredPtr<T, Unioned>
      * semantics, so this does not completely prevent invalid uses.
      */
     HeapPtr(HeapPtr<T> &&) MOZ_DELETE;
-    HeapPtr<T, Unioned> &operator=(HeapPtr<T, Unioned> &&) MOZ_DELETE;
+    HeapPtr<T> &operator=(HeapPtr<T> &&) MOZ_DELETE;
 };
 
 /*
@@ -469,7 +485,7 @@ class RelocatablePtr : public BarrieredPtr<T>
 {
   public:
     RelocatablePtr() : BarrieredPtr<T>(nullptr) {}
-    explicit RelocatablePtr(T *v) : BarrieredPtr<T>(v) {
+    explicit RelocatablePtr(T v) : BarrieredPtr<T>(v) {
         if (v)
             post();
     }
@@ -490,9 +506,9 @@ class RelocatablePtr : public BarrieredPtr<T>
             relocate();
     }
 
-    RelocatablePtr<T> &operator=(T *v) {
+    RelocatablePtr<T> &operator=(T v) {
         this->pre();
-        JS_ASSERT(!IsPoisonedPtr<T>(v));
+        JS_ASSERT(!GCMethods<T>::poisoned(v));
         if (v) {
             this->value = v;
             post();
@@ -505,7 +521,7 @@ class RelocatablePtr : public BarrieredPtr<T>
 
     RelocatablePtr<T> &operator=(const RelocatablePtr<T> &v) {
         this->pre();
-        JS_ASSERT(!IsPoisonedPtr<T>(v.value));
+        JS_ASSERT(!GCMethods<T>::poisoned(v.value));
         if (v.value) {
             this->value = v.value;
             post();
@@ -520,14 +536,14 @@ class RelocatablePtr : public BarrieredPtr<T>
     void post() {
 #ifdef JSGC_GENERATIONAL
         JS_ASSERT(this->value);
-        T::writeBarrierPostRelocate(this->value, &this->value);
+        InternalGCMethods<T>::postBarrierRelocate(&this->value);
 #endif
     }
 
     void relocate() {
 #ifdef JSGC_GENERATIONAL
         JS_ASSERT(this->value);
-        T::writeBarrierPostRemove(this->value, &this->value);
+        InternalGCMethods<T>::postBarrierRemove(&this->value);
 #endif
     }
 };
@@ -539,8 +555,8 @@ class RelocatablePtr : public BarrieredPtr<T>
 template <class T1, class T2>
 static inline void
 BarrieredSetPair(Zone *zone,
-                 HeapPtr<T1> &v1, T1 *val1,
-                 HeapPtr<T2> &v2, T2 *val2)
+                 HeapPtr<T1*> &v1, T1 *val1,
+                 HeapPtr<T2*> &v2, T2 *val2)
 {
     if (T1::needWriteBarrierPre(zone)) {
         v1.pre();
@@ -552,27 +568,45 @@ BarrieredSetPair(Zone *zone,
     v2.post();
 }
 
+class ArrayBufferObject;
+class NestedScopeObject;
 class Shape;
 class BaseShape;
-namespace types { struct TypeObject; }
+class UnownedBaseShape;
+namespace jit {
+class JitCode;
+}
+namespace types {
+struct TypeObject;
+struct TypeObjectAddendum;
+}
 
-typedef BarrieredPtr<JSObject> BarrieredPtrObject;
-typedef BarrieredPtr<JSScript> BarrieredPtrScript;
+typedef BarrieredPtr<JSObject*> BarrieredPtrObject;
+typedef BarrieredPtr<JSScript*> BarrieredPtrScript;
 
-typedef EncapsulatedPtr<JSObject> EncapsulatedPtrObject;
-typedef EncapsulatedPtr<JSScript> EncapsulatedPtrScript;
+typedef EncapsulatedPtr<JSObject*> EncapsulatedPtrObject;
+typedef EncapsulatedPtr<JSScript*> EncapsulatedPtrScript;
+typedef EncapsulatedPtr<jit::JitCode*> EncapsulatedPtrJitCode;
 
-typedef RelocatablePtr<JSObject> RelocatablePtrObject;
-typedef RelocatablePtr<JSScript> RelocatablePtrScript;
+typedef RelocatablePtr<JSObject*> RelocatablePtrObject;
+typedef RelocatablePtr<JSScript*> RelocatablePtrScript;
+typedef RelocatablePtr<NestedScopeObject*> RelocatablePtrNestedScopeObject;
 
-typedef HeapPtr<JSObject> HeapPtrObject;
-typedef HeapPtr<JSFunction> HeapPtrFunction;
-typedef HeapPtr<JSString> HeapPtrString;
-typedef HeapPtr<PropertyName> HeapPtrPropertyName;
-typedef HeapPtr<JSScript> HeapPtrScript;
-typedef HeapPtr<Shape> HeapPtrShape;
-typedef HeapPtr<BaseShape> HeapPtrBaseShape;
-typedef HeapPtr<types::TypeObject> HeapPtrTypeObject;
+typedef HeapPtr<ArrayBufferObject*> HeapPtrArrayBufferObject;
+typedef HeapPtr<JSObject*> HeapPtrObject;
+typedef HeapPtr<JSFunction*> HeapPtrFunction;
+typedef HeapPtr<JSAtom*> HeapPtrAtom;
+typedef HeapPtr<JSString*> HeapPtrString;
+typedef HeapPtr<JSFlatString*> HeapPtrFlatString;
+typedef HeapPtr<JSLinearString*> HeapPtrLinearString;
+typedef HeapPtr<PropertyName*> HeapPtrPropertyName;
+typedef HeapPtr<JSScript*> HeapPtrScript;
+typedef HeapPtr<Shape*> HeapPtrShape;
+typedef HeapPtr<BaseShape*> HeapPtrBaseShape;
+typedef HeapPtr<UnownedBaseShape*> HeapPtrUnownedBaseShape;
+typedef HeapPtr<types::TypeObject*> HeapPtrTypeObject;
+typedef HeapPtr<types::TypeObjectAddendum*> HeapPtrTypeObjectAddendum;
+typedef HeapPtr<jit::JitCode*> HeapPtrJitCode;
 
 /* Useful for hashtables with a HeapPtr as key. */
 
@@ -580,9 +614,9 @@ template <class T>
 struct HeapPtrHasher
 {
     typedef HeapPtr<T> Key;
-    typedef T *Lookup;
+    typedef T Lookup;
 
-    static HashNumber hash(Lookup obj) { return DefaultHasher<T *>::hash(obj); }
+    static HashNumber hash(Lookup obj) { return DefaultHasher<T>::hash(obj); }
     static bool match(const Key &k, Lookup l) { return k.get() == l; }
     static void rekey(Key &k, const Key& newKey) { k.unsafeSet(newKey); }
 };
@@ -595,9 +629,9 @@ template <class T>
 struct EncapsulatedPtrHasher
 {
     typedef EncapsulatedPtr<T> Key;
-    typedef T *Lookup;
+    typedef T Lookup;
 
-    static HashNumber hash(Lookup obj) { return DefaultHasher<T *>::hash(obj); }
+    static HashNumber hash(Lookup obj) { return DefaultHasher<T>::hash(obj); }
     static bool match(const Key &k, Lookup l) { return k.get() == l; }
     static void rekey(Key &k, const Key& newKey) { k.unsafeSet(newKey); }
 };
