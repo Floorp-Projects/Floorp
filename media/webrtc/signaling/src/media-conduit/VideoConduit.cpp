@@ -11,8 +11,11 @@
 #include "VideoConduit.h"
 #include "AudioConduit.h"
 #include "nsThreadUtils.h"
-
 #include "LoadManager.h"
+#include "YuvStamper.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #include "webrtc/common_video/interface/native_handle.h"
 #include "webrtc/video_engine/include/vie_errors.h"
@@ -733,8 +736,23 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     error = mPtrViEBase->LastError();
     CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, error);
 
+
     return kMediaConduitUnknownError;
   }
+
+#ifdef MOZILLA_INTERNAL_API
+  if (NS_IsMainThread()) {
+    nsresult rv;
+    nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+
+      if (branch) {
+	branch->GetBoolPref("media.video.test_latency", &mVideoLatencyTestEnable);
+      }
+    }
+  }
+#endif
 
   // by now we should be successfully started the reception
   mPtrRTP->SetRembStatus(mChannel, false, true);
@@ -1050,6 +1068,10 @@ WebrtcVideoConduit::FrameSizeChange(unsigned int width,
 {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
 
+
+  mReceivingWidth = width;
+  mReceivingHeight = height;
+
   if(mRenderer)
   {
     mRenderer->FrameSizeChange(width, height, numStreams);
@@ -1077,6 +1099,18 @@ WebrtcVideoConduit::DeliverFrame(unsigned char* buffer,
       webrtc::NativeHandle* native_h = static_cast<webrtc::NativeHandle*>(handle);
       // In the handle, there should be a layers::Image.
       img = static_cast<layers::Image*>(native_h->GetHandle());
+    }
+
+    if (mVideoLatencyTestEnable && mReceivingWidth && mReceivingHeight) {
+      uint64_t now = PR_Now();
+      uint64_t timestamp = 0;
+      bool ok = YuvStamper::Decode(mReceivingWidth, mReceivingHeight, mReceivingWidth,
+				   buffer,
+				   reinterpret_cast<unsigned char*>(&timestamp),
+				   sizeof(timestamp), 0, 0);
+      if (ok) {
+	VideoLatencyUpdate(now - timestamp);
+      }
     }
 
     const ImageHandle img_h(img);
@@ -1205,6 +1239,18 @@ WebrtcVideoConduit::DumpCodecDB() const
     CSFLogDebug(logTag,"Payload Max Frame Size: %d", mRecvCodecList[i]->mMaxFrameSize);
     CSFLogDebug(logTag,"Payload Max Frame Rate: %d", mRecvCodecList[i]->mMaxFrameRate);
   }
+}
+
+void
+WebrtcVideoConduit::VideoLatencyUpdate(uint64_t newSample)
+{
+  mVideoLatencyAvg = (sRoundingPadding * newSample + sAlphaNum * mVideoLatencyAvg) / sAlphaDen;
+}
+
+uint64_t
+WebrtcVideoConduit::MozVideoLatencyAvg()
+{
+  return mVideoLatencyAvg / sRoundingPadding;
 }
 
 }// end namespace

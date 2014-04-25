@@ -1213,17 +1213,12 @@ SECKEY_ConvertToPublicKey(SECKEYPrivateKey *privk)
     return NULL;
 }
 
-CERTSubjectPublicKeyInfo *
-SECKEY_CreateSubjectPublicKeyInfo(SECKEYPublicKey *pubk)
+static CERTSubjectPublicKeyInfo *
+seckey_CreateSubjectPublicKeyInfo_helper(SECKEYPublicKey *pubk)
 {
     CERTSubjectPublicKeyInfo *spki;
     PLArenaPool *arena;
     SECItem params = { siBuffer, NULL, 0 };
-
-    if (!pubk) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return NULL;
-    }
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL) {
@@ -1332,6 +1327,26 @@ SECKEY_CreateSubjectPublicKeyInfo(SECKEYPublicKey *pubk)
     return NULL;
 }
 
+CERTSubjectPublicKeyInfo *
+SECKEY_CreateSubjectPublicKeyInfo(const SECKEYPublicKey *pubk)
+{
+    CERTSubjectPublicKeyInfo *spki;
+    SECKEYPublicKey *tempKey;
+
+    if (!pubk) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
+    tempKey = SECKEY_CopyPublicKey(pubk);
+    if (!tempKey) {
+        return NULL;
+    }
+    spki = seckey_CreateSubjectPublicKeyInfo_helper(tempKey);
+    SECKEY_DestroyPublicKey(tempKey);
+    return spki;
+}
+
 void
 SECKEY_DestroySubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki)
 {
@@ -1341,7 +1356,7 @@ SECKEY_DestroySubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki)
 }
 
 SECItem *
-SECKEY_EncodeDERSubjectPublicKeyInfo(SECKEYPublicKey *pubk)
+SECKEY_EncodeDERSubjectPublicKeyInfo(const SECKEYPublicKey *pubk)
 {
     CERTSubjectPublicKeyInfo *spki=NULL;
     SECItem *spkiDER=NULL;

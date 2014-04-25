@@ -90,7 +90,7 @@ SECKEYPrivateKey *SECKEY_CreateECPrivateKey(SECKEYECParams *param,
 ** Create a subject-public-key-info based on a public key.
 */
 extern CERTSubjectPublicKeyInfo *
-SECKEY_CreateSubjectPublicKeyInfo(SECKEYPublicKey *k);
+SECKEY_CreateSubjectPublicKeyInfo(const SECKEYPublicKey *k);
 
 /*
 ** Convert a base64 ascii encoded DER public key and challenge to spki,
@@ -105,7 +105,7 @@ SECKEY_ConvertAndDecodePublicKeyAndChallenge(char *pkacstr, char *challenge,
 ** DER encoded subject public key info. 
 */
 SECItem *
-SECKEY_EncodeDERSubjectPublicKeyInfo(SECKEYPublicKey *pubk);
+SECKEY_EncodeDERSubjectPublicKeyInfo(const SECKEYPublicKey *pubk);
 
 /*
 ** Decode a DER encoded subject public key info into a
