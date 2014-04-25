@@ -2343,6 +2343,58 @@ BaselineCompiler::emit_JSOP_INITELEM_SETTER()
 }
 
 bool
+BaselineCompiler::emit_JSOP_INITELEM_INC()
+{
+    // Keep the object and rhs on the stack.
+    frame.syncStack(0);
+
+    // Load object in R0, index in R1.
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-3)), R0);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R1);
+
+    // Call IC.
+    ICSetElem_Fallback::Compiler stubCompiler(cx);
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
+
+    // Pop the rhs
+    frame.pop();
+
+    // Increment index
+    Address indexAddr = frame.addressOfStackValue(frame.peek(-1));
+    masm.incrementInt32Value(indexAddr);
+    return true;
+}
+
+typedef bool (*SpreadFn)(JSContext *, HandleObject, HandleValue,
+                         HandleValue, MutableHandleValue);
+static const VMFunction SpreadInfo = FunctionInfo<SpreadFn>(js::SpreadOperation);
+
+bool
+BaselineCompiler::emit_JSOP_SPREAD()
+{
+    // Load index and iterable in R0 and R1, but keep values on the stack for
+    // the decompiler.
+    frame.syncStack(0);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+
+    prepareVMCall();
+
+    pushArg(R1);
+    pushArg(R0);
+    masm.extractObject(frame.addressOfStackValue(frame.peek(-3)), R0.scratchReg());
+    pushArg(R0.scratchReg());
+
+    if (!callVM(SpreadInfo))
+        return false;
+
+    frame.popn(2);
+    frame.push(R0);
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_GETLOCAL()
 {
     frame.pushLocal(GET_LOCALNO(pc));
