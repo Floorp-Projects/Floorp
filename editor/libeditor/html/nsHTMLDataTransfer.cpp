@@ -568,10 +568,9 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
           curNode->GetFirstChild(getter_AddRefs(child));
         }
 
-      }
-      // Check for pre's going into pre's.
-      else if (nsHTMLEditUtils::IsPre(parentBlock) && nsHTMLEditUtils::IsPre(curNode))
-      {
+      } else if (parentBlock && nsHTMLEditUtils::IsPre(parentBlock) &&
+                 nsHTMLEditUtils::IsPre(curNode)) {
+        // Check for pre's going into pre's.
         nsCOMPtr<nsIDOMNode> child, tmp;
         curNode->GetFirstChild(getter_AddRefs(child));
         while (child)
