@@ -1757,7 +1757,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
              */
             HeapValue::writeBarrierPre(gen->regs.sp[-1]);
             gen->regs.sp[-1] = arg;
-            HeapValue::writeBarrierPost(cx->runtime(), gen->regs.sp[-1], &gen->regs.sp[-1]);
+            HeapValue::writeBarrierPost(gen->regs.sp[-1], &gen->regs.sp[-1]);
         }
         futureState = JSGEN_RUNNING;
         break;
