@@ -36,9 +36,6 @@ const SEVERITY_LOG = 3;
 // The indent of a console group in pixels.
 const GROUP_INDENT = 12;
 
-// The default indent in pixels, applied even without any groups.
-const GROUP_INDENT_DEFAULT = 6;
-
 const WEBCONSOLE_STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let WCU_l10n = new WebConsoleUtils.l10n(WEBCONSOLE_STRINGS_URI);
 
@@ -1204,10 +1201,10 @@ function waitForMessages(aOptions)
     }
 
     if ("groupDepth" in aRule) {
-      let icon = aElement.querySelector(".icon");
-      let indent = (GROUP_INDENT * aRule.groupDepth + GROUP_INDENT_DEFAULT) + "px";
-      if (!icon || icon.style.marginLeft != indent) {
-        is(icon.style.marginLeft, indent,
+      let indentNode = aElement.querySelector(".indent");
+      let indent = (GROUP_INDENT * aRule.groupDepth)  + "px";
+      if (!indentNode || indentNode.style.width != indent) {
+        is(indentNode.style.width, indent,
            "group depth check failed for message rule: " + displayRule(aRule));
         return false;
       }
