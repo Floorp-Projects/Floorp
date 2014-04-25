@@ -2229,7 +2229,9 @@ PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 	return pk11_PubDeriveECKeyWithKDF( privKey, pubKey, isSender, 
 		randomA, randomB, derive, target, operation, keySize, 
 		kdf, sharedData, wincx);
-    default: break;
+    default:
+        PORT_SetError(SEC_ERROR_BAD_KEY);
+        break;
     }
 
     return NULL;

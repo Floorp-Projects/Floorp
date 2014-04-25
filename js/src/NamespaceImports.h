@@ -37,6 +37,8 @@ template <typename T> class AutoVectorRooter;
 template<typename K, typename V> class AutoHashMapRooter;
 template<typename T> class AutoHashSetRooter;
 
+class SourceBufferHolder;
+
 class HandleValueArray;
 
 }
@@ -87,6 +89,7 @@ using JS::IsAcceptableThis;
 using JS::NativeImpl;
 using JS::OwningCompileOptions;
 using JS::ReadOnlyCompileOptions;
+using JS::SourceBufferHolder;
 
 using JS::Rooted;
 using JS::RootedFunction;
