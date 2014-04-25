@@ -2938,46 +2938,62 @@ SECStatus
 verify_self_test(bltestIO *result, bltestIO *cmp, bltestCipherMode mode,
 		 PRBool forward, SECStatus sigstatus)
 {
-    int res;
+    PRBool equal;
     char *modestr = mode_strings[mode];
-    res = SECITEM_CompareItem(&result->pBuf, &cmp->buf);
+    equal = SECITEM_ItemsAreEqual(&result->pBuf, &cmp->buf);
     if (is_sigCipher(mode)) {
 	if (forward) {
-	    if (res == 0) {
+	    if (equal) {
 		printf("Signature self-test for %s passed.\n", modestr);
 	    } else {
 		printf("Signature self-test for %s failed!\n", modestr);
 	    }
+	    return equal ? SECSuccess : SECFailure;
 	} else {
 	    if (sigstatus == SECSuccess) {
 		printf("Verification self-test for %s passed.\n", modestr);
 	    } else {
 		printf("Verification self-test for %s failed!\n", modestr);
 	    }
+	    return sigstatus;
 	}
-	return sigstatus;
     } else if (is_hashCipher(mode)) {
-	if (res == 0) {
+	if (equal) {
 	    printf("Hash self-test for %s passed.\n", modestr);
 	} else {
 	    printf("Hash self-test for %s failed!\n", modestr);
 	}
     } else {
 	if (forward) {
-	    if (res == 0) {
+	    if (equal) {
 		printf("Encryption self-test for %s passed.\n", modestr);
 	    } else {
 		printf("Encryption self-test for %s failed!\n", modestr);
 	    }
 	} else {
-	    if (res == 0) {
+	    if (equal) {
 		printf("Decryption self-test for %s passed.\n", modestr);
 	    } else {
 		printf("Decryption self-test for %s failed!\n", modestr);
 	    }
 	}
     }
-    return (res != 0);
+    return equal ? SECSuccess : SECFailure;
+}
+
+static SECStatus
+ReadFileToItem(SECItem *dst, const char *filename)
+{
+    PRFileDesc *file;
+    SECStatus rv;
+
+    file = PR_Open(filename, PR_RDONLY, 00660);
+    if (!file) {
+	return SECFailure;
+    }
+    rv = SECU_FileToItem(dst, file);
+    PR_Close(file);
+    return rv;
 }
 
 static SECStatus
@@ -2991,19 +3007,16 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
     int i, j, nummodes, numtests;
     char *modestr;
     char filename[256];
-    PRFileDesc *file;
     PLArenaPool *arena;
     SECItem item;
-    PRBool finished;
     SECStatus rv = SECSuccess, srv;
 
     PORT_Memset(&cipherInfo, 0, sizeof(cipherInfo));
     arena = PORT_NewArena(BLTEST_DEFAULT_CHUNKSIZE);
     cipherInfo.arena = arena;
 
-    finished = PR_FALSE;
     nummodes = (numModes == 0) ? NUMMODES : numModes;
-    for (i=0; i < nummodes && !finished; i++) {
+    for (i=0; i < nummodes; i++) {
 	if (numModes > 0)
 	    mode = modes[i];
 	else
@@ -3017,13 +3030,11 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	params = &cipherInfo.params;
 	/* get the number of tests in the directory */
 	sprintf(filename, "%s/tests/%s/%s", testdir, modestr, "numtests");
-	file = PR_Open(filename, PR_RDONLY, 00660);
-	if (!file) {
-	    fprintf(stderr, "%s: File %s does not exist.\n", progName,filename);
-	    return SECFailure;
+	if (ReadFileToItem(&item, filename) != SECSuccess) {
+	    fprintf(stderr, "%s: Cannot read file %s.\n", progName, filename);
+	    rv = SECFailure;
+	    continue;
 	}
-	rv = SECU_FileToItem(&item, file);
-	PR_Close(file);
 	/* loop over the tests in the directory */
 	numtests = 0;
 	for (j=0; j<item.len; j++) {
@@ -3048,8 +3059,6 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    ** Align the input buffer (plaintext) according to request
 	    ** then perform operation and compare to ciphertext
 	    */
-	    /* XXX for now */
-	    rv = SECSuccess;
 	    if (encrypt) {
 		bltestCopyIO(arena, &cipherInfo.input, &pt);
 		misalignBuffer(arena, &cipherInfo.input, inoff);
@@ -3059,11 +3068,10 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 		rv |= cipherDoOp(&cipherInfo);
 		rv |= cipherFinish(&cipherInfo);
 		rv |= verify_self_test(&cipherInfo.output, 
-		                       &ct, mode, PR_TRUE, 0);
+		                       &ct, mode, PR_TRUE, SECSuccess);
 		/* If testing hash, only one op to test */
 		if (is_hashCipher(mode))
 		    continue;
-		/*if (rv) return rv;*/
 		if (is_sigCipher(mode)) {
 		    /* Verify operations support detached signature files. For
 		    ** consistency between tests that run Sign/Verify back to
@@ -3079,8 +3087,6 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    }
 	    if (!decrypt)
 		continue;
-	    /* XXX for now */
-	    rv = SECSuccess;
 	    /* Reverse Operation (Decrypt/Verify)
 	    ** Align the input buffer (ciphertext) according to request
 	    ** then perform operation and compare to plaintext
@@ -3100,7 +3106,6 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    rv |= cipherFinish(&cipherInfo);
 	    rv |= verify_self_test(&cipherInfo.output, 
 	                           &pt, mode, PR_FALSE, srv);
-	    /*if (rv) return rv;*/
 	}
     }
     return rv;
@@ -3605,7 +3610,7 @@ int main(int argc, char **argv)
 	rv = blapi_selftest(modesToTest, numModesToTest, inoff, outoff,
 	                    encrypt, decrypt);
 	PORT_Free(cipherInfo);
-	return rv;
+	return rv == SECSuccess ? 0 : 1;
     }
 
     /* Do FIPS self-test */

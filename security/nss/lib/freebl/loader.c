@@ -2093,3 +2093,29 @@ SECStatus RSA_CheckSignRecover(RSAPublicKey *key,
   return (vector->p_RSA_CheckSignRecover)(key, output, outputLen, maxOutputLen,
                                           sig, sigLen);
 }
+
+SECStatus EC_FillParams(PLArenaPool *arena,
+                        const SECItem *encodedParams,
+                        ECParams *params)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_EC_FillParams)(arena, encodedParams, params);
+}
+
+SECStatus EC_DecodeParams(const SECItem *encodedParams,
+                          ECParams **ecparams)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_EC_DecodeParams)(encodedParams, ecparams);
+}
+
+SECStatus EC_CopyParams(PLArenaPool *arena, ECParams *dstParams,
+                        const ECParams *srcParams)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_EC_CopyParams)(arena, dstParams,  srcParams);
+}
+

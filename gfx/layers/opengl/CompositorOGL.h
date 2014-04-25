@@ -6,6 +6,7 @@
 #ifndef MOZILLA_GFX_COMPOSITOROGL_H
 #define MOZILLA_GFX_COMPOSITOROGL_H
 
+#include "gfx2DGlue.h"
 #include "GLContextTypes.h"             // for GLContext, etc
 #include "GLDefs.h"                     // for GLuint, LOCAL_GL_TEXTURE_2D, etc
 #include "OGLShaderProgram.h"           // for ShaderProgramOGL, etc
@@ -284,6 +285,11 @@ private:
                                 gfx::Float aOpacity,
                                 const gfx::Matrix4x4 &aTransformi,
                                 GLuint aDrawMode);
+
+  virtual gfx::IntSize GetWidgetSize() const MOZ_OVERRIDE
+  {
+    return gfx::ToIntSize(mWidgetSize);
+  }
 
   /**
    * Context target, nullptr when drawing directly to our swap chain.

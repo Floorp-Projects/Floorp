@@ -754,6 +754,9 @@ PK11_DigestOp(PK11Context *context, const unsigned char * in, unsigned inLen)
     CK_RV crv = CKR_OK;
     SECStatus rv = SECSuccess;
 
+    if (inLen == 0) {
+        return SECSuccess;
+    }
     if (!in) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;

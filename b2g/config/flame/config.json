@@ -14,7 +14,7 @@
         "{objdir}/dist/b2g-*.crashreporter-symbols.zip",
         "{objdir}/dist/b2g-*.tar.gz",
         "{workdir}/sources.xml",
-        "{objdir}/dist/b2g-update/b2g-gecko-update.mar"
+        "{objdir}/dist/b2g-update/*.mar"
     ],
     "zip_files": [
         ["{workdir}/out/target/product/flame/*.img", "out/target/product/flame/"],
