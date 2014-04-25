@@ -615,13 +615,11 @@ public:
   virtual bool getPropertyDescriptor(JSContext* cx,
                                      JS::Handle<JSObject*> proxy,
                                      JS::Handle<jsid> id,
-                                     JS::MutableHandle<JSPropertyDescriptor> desc,
-                                     unsigned flags) MOZ_OVERRIDE;
+                                     JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
   virtual bool getOwnPropertyDescriptor(JSContext* cx,
                                         JS::Handle<JSObject*> proxy,
                                         JS::Handle<jsid> id,
-                                        JS::MutableHandle<JSPropertyDescriptor> desc,
-                                        unsigned flags) MOZ_OVERRIDE;
+                                        JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
   virtual bool defineProperty(JSContext* cx,
                               JS::Handle<JSObject*> proxy,
                               JS::Handle<jsid> id,
@@ -748,14 +746,13 @@ bool
 nsOuterWindowProxy::getPropertyDescriptor(JSContext* cx,
                                           JS::Handle<JSObject*> proxy,
                                           JS::Handle<jsid> id,
-                                          JS::MutableHandle<JSPropertyDescriptor> desc,
-                                          unsigned flags)
+                                          JS::MutableHandle<JSPropertyDescriptor> desc)
 {
   // The only thing we can do differently from js::Wrapper is shadow stuff with
   // our indexed properties, so we can just try getOwnPropertyDescriptor and if
   // that gives us nothing call on through to js::Wrapper.
   desc.object().set(nullptr);
-  if (!getOwnPropertyDescriptor(cx, proxy, id, desc, flags)) {
+  if (!getOwnPropertyDescriptor(cx, proxy, id, desc)) {
     return false;
   }
 
@@ -763,15 +760,14 @@ nsOuterWindowProxy::getPropertyDescriptor(JSContext* cx,
     return true;
   }
 
-  return js::Wrapper::getPropertyDescriptor(cx, proxy, id, desc, flags);
+  return js::Wrapper::getPropertyDescriptor(cx, proxy, id, desc);
 }
 
 bool
 nsOuterWindowProxy::getOwnPropertyDescriptor(JSContext* cx,
                                              JS::Handle<JSObject*> proxy,
                                              JS::Handle<jsid> id,
-                                             JS::MutableHandle<JSPropertyDescriptor> desc,
-                                             unsigned flags)
+                                             JS::MutableHandle<JSPropertyDescriptor> desc)
 {
   bool found;
   if (!GetSubframeWindow(cx, proxy, id, desc.value(), found)) {
@@ -783,7 +779,7 @@ nsOuterWindowProxy::getOwnPropertyDescriptor(JSContext* cx,
   }
   // else fall through to js::Wrapper
 
-  return js::Wrapper::getOwnPropertyDescriptor(cx, proxy, id, desc, flags);
+  return js::Wrapper::getOwnPropertyDescriptor(cx, proxy, id, desc);
 }
 
 bool

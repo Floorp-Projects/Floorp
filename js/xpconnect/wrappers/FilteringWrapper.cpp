@@ -60,11 +60,10 @@ template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, HandleObject wrapper,
                                                       HandleId id,
-                                                      JS::MutableHandle<JSPropertyDescriptor> desc,
-                                                      unsigned flags)
+                                                      JS::MutableHandle<JSPropertyDescriptor> desc)
 {
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET);
-    if (!Base::getPropertyDescriptor(cx, wrapper, id, desc, flags))
+    if (!Base::getPropertyDescriptor(cx, wrapper, id, desc))
         return false;
     return FilterSetter<Policy>(cx, wrapper, id, desc);
 }
@@ -73,11 +72,10 @@ template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper,
                                                          HandleId id,
-                                                         JS::MutableHandle<JSPropertyDescriptor> desc,
-                                                         unsigned flags)
+                                                         JS::MutableHandle<JSPropertyDescriptor> desc)
 {
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET);
-    if (!Base::getOwnPropertyDescriptor(cx, wrapper, id, desc, flags))
+    if (!Base::getOwnPropertyDescriptor(cx, wrapper, id, desc))
         return false;
     return FilterSetter<Policy>(cx, wrapper, id, desc);
 }

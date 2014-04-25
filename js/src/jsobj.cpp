@@ -220,7 +220,7 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
 {
     // FIXME: Call TrapGetOwnProperty directly once ScriptedIndirectProxies is removed
     if (obj->is<ProxyObject>())
-        return Proxy::getOwnPropertyDescriptor(cx, obj, id, desc, 0);
+        return Proxy::getOwnPropertyDescriptor(cx, obj, id, desc);
 
     RootedObject pobj(cx);
     RootedShape shape(cx);
@@ -4891,7 +4891,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
 
                 JSContext *cx = cxArg->asJSContext();
                 Rooted<PropertyDescriptor> pd(cx);
-                if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd, 0))
+                if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd))
                     return false;
 
                 if ((pd.attributes() & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {

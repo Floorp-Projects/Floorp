@@ -166,10 +166,9 @@ bool
 BaseDOMProxyHandler::getPropertyDescriptor(JSContext* cx,
                                            JS::Handle<JSObject*> proxy,
                                            JS::Handle<jsid> id,
-                                           MutableHandle<JSPropertyDescriptor> desc,
-                                           unsigned flags)
+                                           MutableHandle<JSPropertyDescriptor> desc)
 {
-  if (!getOwnPropertyDescriptor(cx, proxy, id, desc, flags)) {
+  if (!getOwnPropertyDescriptor(cx, proxy, id, desc)) {
     return false;
   }
   if (desc.object()) {
@@ -185,7 +184,7 @@ BaseDOMProxyHandler::getPropertyDescriptor(JSContext* cx,
     return true;
   }
 
-  return JS_GetPropertyDescriptorById(cx, proto, id, 0, desc);
+  return JS_GetPropertyDescriptorById(cx, proto, id, desc);
 }
 
 bool

@@ -29,11 +29,10 @@ class JavaScriptChild
 
     bool AnswerPreventExtensions(const ObjectId &objId, ReturnStatus *rs) MOZ_OVERRIDE;
     bool AnswerGetPropertyDescriptor(const ObjectId &objId, const nsString &id,
-                                     const uint32_t &flags, ReturnStatus *rs,
+                                     ReturnStatus *rs,
                                      PPropertyDescriptor *out) MOZ_OVERRIDE;
     bool AnswerGetOwnPropertyDescriptor(const ObjectId &objId,
                                         const nsString &id,
-                                        const uint32_t &flags,
                                         ReturnStatus *rs,
                                         PPropertyDescriptor *out) MOZ_OVERRIDE;
     bool AnswerDefineProperty(const ObjectId &objId, const nsString &id,

@@ -442,7 +442,7 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
         // native. Handle proxies separately.
         args.rval().setUndefined();
         Rooted<PropertyDescriptor> desc(cx);
-        if (!Proxy::getPropertyDescriptor(cx, obj, id, &desc, 0))
+        if (!Proxy::getPropertyDescriptor(cx, obj, id, &desc))
             return false;
         if (desc.object() && desc.hasGetterObject() && desc.getterObject())
             args.rval().setObject(*desc.getterObject());
@@ -478,7 +478,7 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
         // native. Handle proxies separately.
         args.rval().setUndefined();
         Rooted<PropertyDescriptor> desc(cx);
-        if (!Proxy::getPropertyDescriptor(cx, obj, id, &desc, 0))
+        if (!Proxy::getPropertyDescriptor(cx, obj, id, &desc))
             return false;
         if (desc.object() && desc.hasSetterObject() && desc.setterObject())
             args.rval().setObject(*desc.setterObject());

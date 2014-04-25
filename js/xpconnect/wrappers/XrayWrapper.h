@@ -73,10 +73,9 @@ class XrayWrapper : public Base {
     virtual bool isExtensible(JSContext *cx, JS::Handle<JSObject*> wrapper, bool *extensible) MOZ_OVERRIDE;
     virtual bool preventExtensions(JSContext *cx, JS::Handle<JSObject*> wrapper) MOZ_OVERRIDE;
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
+                                       JS::MutableHandle<JSPropertyDescriptor> desc);
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-                                          JS::MutableHandle<JSPropertyDescriptor> desc,
-                                          unsigned flags);
+                                          JS::MutableHandle<JSPropertyDescriptor> desc);
     virtual bool defineProperty(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                                 JS::MutableHandle<JSPropertyDescriptor> desc);
     virtual bool getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject*> wrapper,
@@ -156,12 +155,10 @@ public:
 
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> proxy,
                                        JS::Handle<jsid> id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc,
-                                       unsigned flags) MOZ_OVERRIDE;
+                                       JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> proxy,
                                           JS::Handle<jsid> id,
-                                          JS::MutableHandle<JSPropertyDescriptor> desc,
-                                          unsigned flags) MOZ_OVERRIDE;
+                                          JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
 
     // We just forward the derived traps to the BaseProxyHandler versions which
     // implement them in terms of the fundamental traps.

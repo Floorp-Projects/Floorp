@@ -857,14 +857,12 @@ bool
 xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx,
                                                 JS::Handle<JSObject*> proxy,
                                                 JS::Handle<jsid> id,
-                                                JS::MutableHandle<JSPropertyDescriptor> desc,
-                                                unsigned flags)
+                                                JS::MutableHandle<JSPropertyDescriptor> desc)
 {
     JS::RootedObject obj(cx, wrappedObject(proxy));
 
     MOZ_ASSERT(js::GetObjectCompartment(obj) == js::GetObjectCompartment(proxy));
-    if (!JS_GetPropertyDescriptorById(cx, obj, id,
-                                      flags, desc))
+    if (!JS_GetPropertyDescriptorById(cx, obj, id, desc))
         return false;
 
     if (!desc.object())
@@ -905,10 +903,9 @@ bool
 xpc::SandboxProxyHandler::getOwnPropertyDescriptor(JSContext *cx,
                                                    JS::Handle<JSObject*> proxy,
                                                    JS::Handle<jsid> id,
-                                                   JS::MutableHandle<JSPropertyDescriptor> desc,
-                                                   unsigned flags)
+                                                   JS::MutableHandle<JSPropertyDescriptor> desc)
 {
-    if (!getPropertyDescriptor(cx, proxy, id, desc, flags))
+    if (!getPropertyDescriptor(cx, proxy, id, desc))
         return false;
 
     if (desc.object() != wrappedObject(proxy))

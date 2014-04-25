@@ -30,8 +30,7 @@ public:
   virtual bool
   getOwnPropertyDescriptor(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                            JS::Handle<jsid> aId,
-                           JS::MutableHandle<JSPropertyDescriptor> aDesc,
-                           unsigned aFlags) MOZ_OVERRIDE;
+                           JS::MutableHandle<JSPropertyDescriptor> aDesc) MOZ_OVERRIDE;
   virtual bool
   defineProperty(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                  JS::Handle<jsid> aId,

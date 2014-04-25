@@ -178,11 +178,9 @@ class JS_FRIEND_API(BaseProxyHandler)
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy) = 0;
     virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                       MutableHandle<JSPropertyDescriptor> desc,
-                                       unsigned flags) = 0;
+                                       MutableHandle<JSPropertyDescriptor> desc) = 0;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
-                                          HandleId id, MutableHandle<JSPropertyDescriptor> desc,
-                                          unsigned flags) = 0;
+                                          HandleId id, MutableHandle<JSPropertyDescriptor> desc) = 0;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 MutableHandle<JSPropertyDescriptor> desc) = 0;
     virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy,
@@ -248,10 +246,9 @@ class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
     virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                       MutableHandle<JSPropertyDescriptor> desc, unsigned flags) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
-                                          HandleId id, MutableHandle<JSPropertyDescriptor> desc,
-                                          unsigned flags) MOZ_OVERRIDE;
+                                       MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
+                                          MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy,
@@ -308,12 +305,12 @@ class Proxy
     /* ES5 Harmony fundamental proxy traps. */
     static bool preventExtensions(JSContext *cx, HandleObject proxy);
     static bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                      MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
-    static bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, unsigned flags, HandleId id,
+                                      MutableHandle<JSPropertyDescriptor> desc);
+    static bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                       MutableHandleValue vp);
     static bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                         MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
-    static bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, unsigned flags, HandleId id,
+                                         MutableHandle<JSPropertyDescriptor> desc);
+    static bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                          MutableHandleValue vp);
     static bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                MutableHandle<JSPropertyDescriptor> desc);
