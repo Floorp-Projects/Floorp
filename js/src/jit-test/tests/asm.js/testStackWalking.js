@@ -1,38 +1,93 @@
 load(libdir + "asm.js");
 load(libdir + "asserts.js");
 
-var callFFI1 = asmCompile('global', 'ffis', USE_ASM + "var ffi=ffis.ffi; function asmfun1() { return ffi(1)|0 } return asmfun1");
-var callFFI2 = asmCompile('global', 'ffis', USE_ASM + "var ffi=ffis.ffi; function asmfun2() { return ffi(2)|0 } return asmfun2");
+function matchStack(stackString, stackArray)
+{
+    var match = 0;
+    for (name of stackArray) {
+        match = stackString.indexOf(name, match);
+        if (match === -1)
+            throw name + " not found in the stack " + stack;
+    }
+}
 
 var stack;
-function dumpStack(i) { stack = new Error().stack; return i+11 }
+function dumpStack()
+{
+    stack = new Error().stack
+}
 
-var asmfun1 = asmLink(callFFI1, null, {ffi:dumpStack});
-assertEq(asmfun1(), 12);
-assertEq(stack.indexOf("asmfun1") === -1, false);
+var callFFI = asmCompile('global', 'ffis', USE_ASM + "var ffi=ffis.ffi; function f() { return ffi()|0 } return f");
 
-var asmfun2 = asmLink(callFFI2, null, {ffi:function ffi(i){return asmfun1()+20}});
-assertEq(asmfun2(), 32);
-assertEq(stack.indexOf("asmfun1") == -1, false);
-assertEq(stack.indexOf("asmfun2") == -1, false);
-assertEq(stack.indexOf("asmfun2") > stack.indexOf("asmfun1"), true);
+var f = asmLink(callFFI, null, {ffi:dumpStack});
+for (var i = 0; i < 5000; i++) {
+    stack = null;
+    f();
+    matchStack(stack, ['dumpStack', 'f']);
+}
+
+if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
+    var callFFI = asmCompile('global', 'ffis', USE_ASM + "var ffi=ffis.ffi; function f() { return ffi()|0 } return f");
+    assertEq(isAsmJSModuleLoadedFromCache(callFFI), true);
+    stack = null;
+    f();
+    matchStack(stack, ['dumpStack', 'f']);
+}
+
+var f1 = asmLink(callFFI, null, {ffi:dumpStack});
+var f2 = asmLink(callFFI, null, {ffi:function middle() { f1() }});
+stack = null;
+(function outer() { f2() })();
+matchStack(stack, ["dumpStack", "f", "middle", "f"]);
+
+function returnStackDumper() { return { valueOf:function() { stack = new Error().stack } } }
+var f = asmLink(callFFI, null, {ffi:returnStackDumper});
+for (var i = 0; i < 5000; i++) {
+    stack = null;
+    f();
+    matchStack(stack, ['valueOf', 'f']);
+}
 
 var caught = false;
 try {
+    stack = null;
     asmLink(asmCompile(USE_ASM + "function asmRec() { asmRec() } return asmRec"))();
 } catch (e) {
     caught = true;
+    matchStack(e.stack, ['asmRec', 'asmRec', 'asmRec', 'asmRec']);
 }
 assertEq(caught, true);
 
 var caught = false;
 try {
-    callFFI1(null, {ffi:Object.preventExtensions})();
+    callFFI(null, {ffi:Object.preventExtensions})();
 } catch (e) {
     caught = true;
 }
 assertEq(caught, true);
 
-assertEq(asmLink(callFFI1, null, {ffi:eval})(), 1);
-assertEq(asmLink(callFFI1, null, {ffi:Function})(), 0);
-assertEq(asmLink(callFFI1, null, {ffi:Error})(), 0);
+asmLink(callFFI, null, {ffi:eval})();
+asmLink(callFFI, null, {ffi:Function})();
+asmLink(callFFI, null, {ffi:Error})();
+
+var manyCalls = asmCompile('global', 'ffis',
+    USE_ASM +
+    "var ffi=ffis.ffi;\
+     function f1(a,b,c,d,e,f,g,h,i,j,k) { \
+       a=a|0;b=b|0;c=c|0;d=d|0;e=e|0;f=f|0;g=g|0;h=h|0;i=i|0;j=j|0;k=k|0; \
+       ffi(); \
+       return (a+b+c+d+e+f+g+h+i+j+k)|0; \
+     } \
+     function f2() { \
+       return f1(1,2,3,4,5,6,7,8,f1(1,2,3,4,5,6,7,8,9,10,11)|0,10,11)|0; \
+     } \
+     function f3() { return 13 } \
+     function f4(i) { \
+       i=i|0; \
+       return TBL[i&3]()|0; \
+     } \
+     var TBL=[f3, f3, f2, f3]; \
+     return f4;");
+stack = null;
+assertEq(asmLink(manyCalls, null, {ffi:dumpStack})(2), 123);
+matchStack(stack, ['dumpStack', 'f1', 'f2', 'f4']);

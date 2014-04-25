@@ -15,6 +15,7 @@
 
 class nsIURI;
 class nsICacheEntryOpenCallback;
+class nsICacheStorageConsumptionObserver;
 class nsIApplicationCache;
 class nsILoadContextInfo;
 
@@ -119,6 +120,23 @@ private:
   bool const mWriteToDisk : 1;
   bool const mLookupAppCache : 1;
   bool const mOfflineStorage : 1;
+};
+
+class _OldGetDiskConsumption : public nsRunnable,
+                               public nsICacheVisitor
+{
+public:
+  static nsresult Get(nsICacheStorageConsumptionObserver* aCallback);
+
+private:
+  _OldGetDiskConsumption(nsICacheStorageConsumptionObserver* aCallback);
+  virtual ~_OldGetDiskConsumption() {}
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSICACHEVISITOR
+  NS_DECL_NSIRUNNABLE
+
+  nsCOMPtr<nsICacheStorageConsumptionObserver> mCallback;
+  int64_t mSize;
 };
 
 }}

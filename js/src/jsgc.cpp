@@ -4277,7 +4277,7 @@ AutoGCSlice::AutoGCSlice(JSRuntime *rt)
      * set it at the start of every phase.
      */
     for (ActivationIterator iter(rt); !iter.done(); ++iter)
-        iter.activation()->compartment()->zone()->active = true;
+        iter->compartment()->zone()->active = true;
 
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         /*
