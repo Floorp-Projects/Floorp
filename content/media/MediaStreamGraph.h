@@ -19,6 +19,7 @@
 #include "nsAutoRef.h"
 #include "speex/speex_resampler.h"
 #include "AudioMixer.h"
+#include "mozilla/dom/AudioChannelBinding.h"
 
 class nsIRunnable;
 
@@ -524,6 +525,8 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
+  void SetAudioChannelType(dom::AudioChannel aType) { mAudioChannelType = aType; }
+
 protected:
   virtual void AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime, GraphTime aBlockedTime)
   {
@@ -650,6 +653,8 @@ protected:
 
   // Our media stream graph
   MediaStreamGraphImpl* mGraph;
+
+  dom::AudioChannel mAudioChannelType;
 };
 
 /**

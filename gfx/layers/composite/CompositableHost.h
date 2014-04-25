@@ -51,6 +51,7 @@ class Compositor;
 class ISurfaceAllocator;
 class ThebesBufferData;
 class TiledLayerComposer;
+class CompositableParentManager;
 struct EffectChain;
 
 /**
@@ -307,8 +308,28 @@ public:
     mFlashCounter = mFlashCounter >= DIAGNOSTIC_FLASH_COUNTER_MAX
                   ? DIAGNOSTIC_FLASH_COUNTER_MAX : mFlashCounter + 1;
   }
+
+  static PCompositableParent*
+  CreateIPDLActor(CompositableParentManager* mgr,
+                  const TextureInfo& textureInfo,
+                  uint64_t asyncID);
+
+  static bool DestroyIPDLActor(PCompositableParent* actor);
+
+  static CompositableHost* FromIPDLActor(PCompositableParent* actor);
+
+  uint64_t GetCompositorID() const { return mCompositorID; }
+
+  uint64_t GetAsyncID() const { return mAsyncID; }
+
+  void SetCompositorID(uint64_t aID) { mCompositorID = aID; }
+
+  void SetAsyncID(uint64_t aID) { mAsyncID = aID; }
+
 protected:
   TextureInfo mTextureInfo;
+  uint64_t mAsyncID;
+  uint64_t mCompositorID;
   Compositor* mCompositor;
   Layer* mLayer;
   RefPtr<CompositableBackendSpecificData> mBackendData;
@@ -316,65 +337,6 @@ protected:
   bool mAttached;
   bool mKeepAttached;
 };
-
-class CompositableParentManager;
-
-/**
- * IPDL actor used by CompositableHost to match with its corresponding
- * CompositableClient on the content side.
- *
- * CompositableParent is owned by the IPDL system. It's deletion is triggered
- * by either the CompositableChild's deletion, or by the IPDL communication
- * goind down.
- */
-class CompositableParent : public PCompositableParent
-{
-public:
-  CompositableParent(CompositableParentManager* aMgr,
-                     const TextureInfo& aTextureInfo,
-                     uint64_t aID = 0);
-  ~CompositableParent();
-
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
-
-  CompositableHost* GetCompositableHost() const
-  {
-    return mHost;
-  }
-
-  void SetCompositableHost(CompositableHost* aHost)
-  {
-    mHost = aHost;
-  }
-
-  CompositableType GetType() const
-  {
-    return mType;
-  }
-
-  CompositableParentManager* GetCompositableManager() const
-  {
-    return mManager;
-  }
-
-  void SetCompositorID(uint64_t aCompositorID)
-  {
-    mCompositorID = aCompositorID;
-  }
-
-  uint64_t GetCompositorID() const
-  {
-    return mCompositorID;
-  }
-
-private:
-  RefPtr<CompositableHost> mHost;
-  CompositableParentManager* mManager;
-  CompositableType mType;
-  uint64_t mID;
-  uint64_t mCompositorID;
-};
-
 
 /**
  * Global CompositableMap, to use in the compositor thread only.
@@ -406,8 +368,8 @@ private:
 namespace CompositableMap {
   void Create();
   void Destroy();
-  CompositableParent* Get(uint64_t aID);
-  void Set(uint64_t aID, CompositableParent* aParent);
+  PCompositableParent* Get(uint64_t aID);
+  void Set(uint64_t aID, PCompositableParent* aParent);
   void Erase(uint64_t aID);
   void Clear();
 } // CompositableMap

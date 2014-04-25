@@ -33,7 +33,6 @@ PRIVATE_EXPORTS = \
 	$(NULL)
 
 CSRCS = \
-	ecdecode.c \
 	fipsaudt.c \
 	fipstest.c \
 	fipstokn.c \

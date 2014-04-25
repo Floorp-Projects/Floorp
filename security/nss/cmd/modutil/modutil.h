@@ -20,6 +20,7 @@
 
 #include "error.h"
 
+Error LoadMechanismList(void);
 Error FipsMode(char *arg);
 Error ChkFipsMode(char *arg);
 Error AddModule(char *moduleName, char *libFile, char *ciphers,
