@@ -1567,11 +1567,11 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 }
 
 bool
-ScriptSource::setSourceCopy(ExclusiveContext *cx, const jschar *src, uint32_t length,
+ScriptSource::setSourceCopy(ExclusiveContext *cx, SourceBufferHolder &srcBuf,
                             bool argumentsNotIncluded, SourceCompressionTask *task)
 {
     JS_ASSERT(!hasSourceData());
-    length_ = length;
+    length_ = srcBuf.length();
     argumentsNotIncluded_ = argumentsNotIncluded;
 
     // There are several cases where source compression is not a good idea:
@@ -1604,16 +1604,18 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, const jschar *src, uint32_t le
 #endif
     const size_t TINY_SCRIPT = 256;
     const size_t HUGE_SCRIPT = 5 * 1024 * 1024;
-    if (TINY_SCRIPT <= length && length < HUGE_SCRIPT && canCompressOffThread) {
+    if (TINY_SCRIPT <= srcBuf.length() && srcBuf.length() < HUGE_SCRIPT && canCompressOffThread) {
         task->ss = this;
-        task->chars = src;
+        task->chars = srcBuf.get();
         ready_ = false;
         if (!StartOffThreadCompression(cx, task))
             return false;
+    } else if (srcBuf.ownsChars()) {
+        data.source = srcBuf.take();
     } else {
-        if (!adjustDataSize(sizeof(jschar) * length))
+        if (!adjustDataSize(sizeof(jschar) * srcBuf.length()))
             return false;
-        PodCopy(data.source, src, length_);
+        PodCopy(data.source, srcBuf.get(), length_);
     }
 
     return true;
