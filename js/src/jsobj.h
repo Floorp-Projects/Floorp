@@ -817,7 +817,7 @@ class JSObject : public js::ObjectImpl
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp *fop);
 
     static inline bool hasProperty(JSContext *cx, js::HandleObject obj,
-                                   js::HandleId id, bool *foundp, unsigned flags = 0);
+                                   js::HandleId id, bool *foundp);
 
     /*
      * Allocate and free an object slot.
