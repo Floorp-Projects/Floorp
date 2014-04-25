@@ -291,7 +291,7 @@ js::GetFirstArgumentAsObject(JSContext *cx, const CallArgs &args, const char *me
 static bool
 HasProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp, bool *foundp)
 {
-    if (!JSObject::hasProperty(cx, obj, id, foundp, 0))
+    if (!JSObject::hasProperty(cx, obj, id, foundp))
         return false;
     if (!*foundp) {
         vp.setUndefined();
