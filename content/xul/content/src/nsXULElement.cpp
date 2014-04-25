@@ -2600,6 +2600,7 @@ NotifyOffThreadScriptCompletedRunnable::Run()
     JSScript *script;
     {
         AutoSafeJSContext cx;
+        JSAutoCompartment ac(cx, xpc::GetCompilationScope());
         script = JS::FinishOffThreadScript(cx, JS_GetRuntime(cx), mToken);
     }
 
