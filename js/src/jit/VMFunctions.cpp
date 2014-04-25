@@ -497,9 +497,13 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
     }
 
     if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
-        unsigned defineHow = (op == JSOP_SETNAME || op == JSOP_SETGNAME) ? DNP_UNQUALIFIED : 0;
-        return baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, defineHow, &v,
-                                                               strict);
+        return baseops::SetPropertyHelper<SequentialExecution>(
+            cx, obj, obj, id,
+            (op == JSOP_SETNAME || op == JSOP_SETGNAME)
+            ? baseops::Unqualified
+            : baseops::Qualified,
+            &v,
+            strict);
     }
 
     return JSObject::setGeneric(cx, obj, obj, id, &v, strict);

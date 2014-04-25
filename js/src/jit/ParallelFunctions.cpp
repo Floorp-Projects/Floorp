@@ -256,7 +256,8 @@ jit::SetPropertyPar(ForkJoinContext *cx, HandleObject obj, HandlePropertyName na
 
     RootedValue v(cx, value);
     RootedId id(cx, NameToId(name));
-    return baseops::SetPropertyHelper<ParallelExecution>(cx, obj, obj, id, 0, &v, strict);
+    return baseops::SetPropertyHelper<ParallelExecution>(cx, obj, obj, id, baseops::Qualified, &v,
+                                                         strict);
 }
 
 bool
@@ -273,7 +274,8 @@ jit::SetElementPar(ForkJoinContext *cx, HandleObject obj, HandleValue index, Han
     // can't modify any TI state anyways. If we need to add a new type, we
     // would bail out.
     RootedValue v(cx, value);
-    return baseops::SetPropertyHelper<ParallelExecution>(cx, obj, obj, id, 0, &v, strict);
+    return baseops::SetPropertyHelper<ParallelExecution>(cx, obj, obj, id, baseops::Qualified, &v,
+                                                         strict);
 }
 
 bool

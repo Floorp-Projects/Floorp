@@ -239,13 +239,14 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
     /*
      * In strict-mode, we need to trigger an error when trying to assign to an
      * undeclared global variable. To do this, we call SetPropertyHelper
-     * directly and pass DNP_UNQUALIFIED.
+     * directly and pass Unqualified.
      */
     if (scope->is<GlobalObject>()) {
         JS_ASSERT(!scope->getOps()->setProperty);
         RootedId id(cx, NameToId(name));
         return baseops::SetPropertyHelper<SequentialExecution>(cx, scope, scope, id,
-                                                               DNP_UNQUALIFIED, &valCopy, strict);
+                                                               baseops::Unqualified, &valCopy,
+                                                               strict);
     }
 
     return JSObject::setProperty(cx, scope, scope, name, &valCopy, strict);

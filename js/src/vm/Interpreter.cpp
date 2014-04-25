@@ -331,7 +331,7 @@ SetPropertyOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleV
 
     RootedId id(cx, NameToId(script->getName(pc)));
     if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
-        if (!baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, 0,
+        if (!baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, baseops::Qualified,
                                                              &rref, script->strict()))
         {
             return false;
