@@ -135,9 +135,18 @@ ChannelFromScriptURL(nsIPrincipal* principal,
 struct ScriptLoadInfo
 {
   ScriptLoadInfo()
-  : mLoadResult(NS_ERROR_NOT_INITIALIZED), mExecutionScheduled(false),
-    mExecutionResult(false)
+  : mScriptTextBuf(nullptr)
+  , mScriptTextLength(0)
+  , mLoadResult(NS_ERROR_NOT_INITIALIZED), mExecutionScheduled(false)
+  , mExecutionResult(false)
   { }
+
+  ~ScriptLoadInfo()
+  {
+    if (mScriptTextBuf) {
+      js_free(mScriptTextBuf);
+    }
+  }
 
   bool
   ReadyToExecute()
@@ -147,7 +156,8 @@ struct ScriptLoadInfo
 
   nsString mURL;
   nsCOMPtr<nsIChannel> mChannel;
-  nsString mScriptText;
+  jschar* mScriptTextBuf;
+  size_t mScriptTextLength;
 
   nsresult mLoadResult;
   bool mExecutionScheduled;
@@ -448,12 +458,13 @@ private:
     // per spec. So we explicitly pass in the charset hint.
     rv = nsScriptLoader::ConvertToUTF16(aLoadInfo.mChannel, aString, aStringLen,
                                         NS_LITERAL_STRING("UTF-8"), parentDoc,
-                                        aLoadInfo.mScriptText);
+                                        aLoadInfo.mScriptTextBuf,
+                                        aLoadInfo.mScriptTextLength);
     if (NS_FAILED(rv)) {
       return rv;
     }
 
-    if (aLoadInfo.mScriptText.IsEmpty()) {
+    if (!aLoadInfo.mScriptTextBuf || !aLoadInfo.mScriptTextLength) {
       return NS_ERROR_FAILURE;
     }
 
@@ -730,8 +741,14 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
     JS::CompileOptions options(aCx);
     options.setFileAndLine(filename.get(), 1);
-    if (!JS::Evaluate(aCx, global, options, loadInfo.mScriptText.get(),
-                      loadInfo.mScriptText.Length())) {
+
+    JS::SourceBufferHolder srcBuf(loadInfo.mScriptTextBuf,
+                                  loadInfo.mScriptTextLength,
+                                  JS::SourceBufferHolder::GiveOwnership);
+    loadInfo.mScriptTextBuf = nullptr;
+    loadInfo.mScriptTextLength = 0;
+
+    if (!JS::Evaluate(aCx, global, options, srcBuf)) {
       return true;
     }
 

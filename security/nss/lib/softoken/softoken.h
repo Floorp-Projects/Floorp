@@ -35,19 +35,6 @@ RSA_HashCheckSign(SECOidTag hashOid, NSSLOWKEYPublicKey *key,
                   const unsigned char *sig, unsigned int sigLen,
                   const unsigned char *hash, unsigned int hashLen);
 
-#ifndef NSS_DISABLE_ECC
-/*
-** pepare an ECParam structure from DEREncoded params
- */
-extern SECStatus EC_FillParams(PLArenaPool *arena,
-                               const SECItem *encodedParams, ECParams *params);
-extern SECStatus EC_DecodeParams(const SECItem *encodedParams, 
-				ECParams **ecparams);
-extern SECStatus EC_CopyParams(PLArenaPool *arena, ECParams *dstParams,
-              			const ECParams *srcParams);
-#endif
-
-
 /*
 ** Prepare a buffer for padded CBC encryption, growing to the appropriate 
 ** boundary, filling with the appropriate padding.

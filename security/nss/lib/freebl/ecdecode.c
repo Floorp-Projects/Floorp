@@ -4,6 +4,10 @@
 
 #ifndef NSS_DISABLE_ECC
 
+#ifdef FREEBL_NO_DEPEND
+#include "stubs.h"
+#endif
+
 #include "blapi.h"
 #include "secoid.h"
 #include "secitem.h"

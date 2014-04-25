@@ -251,7 +251,7 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
         self.b2g_pid = None
         del kwargs['marionette']
 
-        if self.capabilities['device'] != 'desktop' and self.capabilities['b2g']:
+        if self.capabilities["device"] != "desktop" and self.capabilities["browserName"] == "B2G":
             def b2g_pre_run():
                 dm_type = os.environ.get('DM_TRANS', 'adb')
                 if dm_type == 'adb':
