@@ -545,9 +545,9 @@ class HeapPtr : public BarrieredPtr<T>
 };
 
 /*
- * FixedHeapPtr is designed for one very narrow case: replacing immutable raw
- * pointers to GC-managed things, implicitly converting to a handle type for
- * ease of use.  Pointers encapsulated by this type must:
+ * ImmutableTenuredPtr is designed for one very narrow case: replacing
+ * immutable raw pointers to GC-managed things, implicitly converting to a
+ * handle type for ease of use. Pointers encapsulated by this type must:
  *
  *   be immutable (no incremental write barriers),
  *   never point into the nursery (no generational write barriers), and
@@ -556,20 +556,21 @@ class HeapPtr : public BarrieredPtr<T>
  * In short: you *really* need to know what you're doing before you use this
  * class!
  */
-template <class T>
-class FixedHeapPtr
+template <typename T>
+class ImmutableTenuredPtr
 {
-    T *value;
+    T value;
 
   public:
-    operator T*() const { return value; }
-    T * operator->() const { return value; }
+    operator T() const { return value; }
+    T operator->() const { return value; }
 
-    operator Handle<T*>() const {
-        return Handle<T*>::fromMarkedLocation(&value);
+    operator Handle<T>() const {
+        return Handle<T>::fromMarkedLocation(&value);
     }
 
-    void init(T *ptr) {
+    void init(T ptr) {
+        JS_ASSERT(ptr->isTenured());
         value = ptr;
     }
 };
@@ -727,6 +728,8 @@ typedef BarrieredPtr<jsid> BarrieredId;
 typedef EncapsulatedPtr<jsid> EncapsulatedId;
 typedef RelocatablePtr<jsid> RelocatableId;
 typedef HeapPtr<jsid> HeapId;
+
+typedef ImmutableTenuredPtr<PropertyName*> ImmutablePropertyNamePtr;
 
 /* Useful for hashtables with a HeapPtr as key. */
 template <class T>
