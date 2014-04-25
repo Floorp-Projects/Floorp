@@ -188,10 +188,12 @@ CustomizeMode.prototype = {
 
       // The menu panel is lazy, and registers itself when the popup shows. We
       // need to force the menu panel to register itself, or else customization
-      // is really not going to work. We pass "true" to ensureRegistered to
+      // is really not going to work. We pass "true" to ensureReady to
       // indicate that we're handling calling startBatchUpdate and
       // endBatchUpdate.
-      yield window.PanelUI.ensureReady(true);
+      if (!window.PanelUI.isReady()) {
+        yield window.PanelUI.ensureReady(true);
+      }
 
       // Hide the palette before starting the transition for increased perf.
       this.visiblePalette.hidden = true;
