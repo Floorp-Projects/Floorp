@@ -10,6 +10,7 @@ enum WifiWPSMethod {
 
 enum ConnectionStatus {
   "connecting",
+  "authenticating",
   "associated",
   "connected",
   "disconnected",
