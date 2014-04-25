@@ -485,6 +485,23 @@ MakeContinuationFluid(nsIFrame* aFrame, nsIFrame* aNext)
   aNext->SetPrevInFlow(aFrame);
 }
 
+static void
+MakeContinuationsNonFluidUpParentChain(nsIFrame* aFrame, nsIFrame* aNext)
+{
+  nsIFrame* frame;
+  nsIFrame* next;
+
+  for (frame = aFrame, next = aNext;
+       frame && next &&
+         next != frame && next == frame->GetNextInFlow() &&
+         IsBidiSplittable(frame);
+       frame = frame->GetParent(), next = next->GetParent()) {
+
+    frame->SetNextContinuation(next);
+    next->SetPrevContinuation(frame);
+  }
+}
+
 // If aFrame is the last child of its parent, convert bidi continuations to
 // fluid continuations for all of its inline ancestors.
 // If it isn't the last child, make sure that its continuation is fluid.
@@ -841,20 +858,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
             nsIFrame* next = frame->GetNextInFlow();
             if (next) {
               currentLine->MarkDirty();
-              nsIFrame* parent = frame;
-              nsIFrame* nextParent = next;
-              while (parent && nextParent) {
-                if (parent == nextParent ||
-                    nextParent != parent->GetNextInFlow() ||
-                    !IsBidiSplittable(parent)) {
-                  break;
-                }
-                parent->SetNextContinuation(nextParent);
-                nextParent->SetPrevContinuation(parent);
-
-                parent = parent->GetParent();
-                nextParent = nextParent->GetParent();
-              }
+              MakeContinuationsNonFluidUpParentChain(frame, next);
             }
           }
           frame->AdjustOffsetsForBidi(contentOffset, contentOffset + fragmentLength);
@@ -1660,11 +1664,7 @@ nsBidiPresUtils::RemoveBidiContinuation(BidiParagraphData *aBpd,
   // fluid continuation (this can happen when re-resolving after dynamic changes
   // to content)
   nsIFrame* lastFrame = aBpd->FrameAt(aLastIndex);
-  nsIFrame* next = lastFrame->GetNextInFlow();
-  if (next && IsBidiSplittable(lastFrame)) {
-    lastFrame->SetNextContinuation(next);
-    next->SetPrevContinuation(lastFrame);
-  }
+  MakeContinuationsNonFluidUpParentChain(lastFrame, lastFrame->GetNextInFlow());
 }
 
 nsresult
