@@ -65,15 +65,6 @@ public:
     return NS_OK;
   }
 
-  // Override FindStartTime() to return null pointer.
-  // For Rtsp, we don't have the first video frame in DECODING_METADATA state.
-  // It will be available until player request Play() and media decoder enters
-  // DECODING state.
-  virtual VideoData* FindStartTime(int64_t& aOutStartTime)
-    MOZ_FINAL MOZ_OVERRIDE {
-    return nullptr;
-  }
-
   virtual void SetIdle() MOZ_OVERRIDE;
   virtual void SetActive() MOZ_OVERRIDE;
 

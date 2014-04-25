@@ -20,7 +20,7 @@ function test() {
       TabView.moveTabTo(newTabs[newTabs.length - 1], null);
       ok(gBrowser.visibleTabs[0].getBoundingClientRect().width > gBrowser.tabContainer.mTabClipWidth, 
          "Tab width is bigger than tab clip width");
-      is(gBrowser.tabContainer.getAttribute("closebuttons"), "alltabs", "Show button on all tabs.")
+      is(gBrowser.tabContainer.getAttribute("closebuttons"), "", "Show button on all tabs.")
 
       // clean up and finish
       newTabs.forEach(function(tab) {

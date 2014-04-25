@@ -1772,32 +1772,15 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   z-index: 3;
 }
 
-/* In-tab close button */
-.tab-close-button > .toolbarbutton-icon {
-  /* XXX Buttons have padding in widget/ that we don't want here but can't override with good CSS, so we must
-     use evil CSS to give the impression of smaller content */
-  margin: -4px;
-}
-
-/* Tabstrip close button */
-.tabs-closebutton,
-.tab-close-button {
-  -moz-appearance: none;
-  height: 16px;
-  width: 16px;
-}
-
-.tabs-closebutton:not([selected]):not(:hover),
+/* Tab close button */
 .tab-close-button:not([selected]):not(:hover) {
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 64, 16, 48);
 }
 
-.tabs-closebutton:not([selected]):not(:hover):-moz-lwtheme-brighttext,
 .tab-close-button:not([selected]):not(:hover):-moz-lwtheme-brighttext {
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
 }
 
-.tabs-closebutton:not([selected]):not(:hover):-moz-lwtheme-darktext,
 .tab-close-button:not([selected]):not(:hover):-moz-lwtheme-darktext {
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 96, 16, 80);
 }
@@ -1808,23 +1791,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #TabsToolbar > #wrapper-new-tab-button > #new-tab-button {
   list-style-image: url("moz-icon://stock/gtk-add?size=menu");
   -moz-image-region: auto;
-}
-
-.customization-tipPanel-closeBox > .close-icon {
-  -moz-appearance: none;
-  width: 16px;
-  height: 16px;
-}
-
-/* The :hover:active style from toolkit doesn't seem to work in this panel so just use :active. */
-.customization-tipPanel-closeBox > .close-icon:active {
-  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 48, 16, 32);
-}
-
-.tabs-closebutton > .toolbarbutton-icon {
-  /* XXX Buttons have padding in widget/ that we don't want here but can't override with good CSS, so we must
-     use evil CSS to give the impression of smaller content */
-  margin: -2px;
 }
 
 /* Tabbrowser arrowscrollbox arrows */
@@ -1903,11 +1869,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* Sidebar */
-#sidebar-header > .tabs-closebutton {
-  margin-bottom: 0px !important;
-  padding: 0px 2px 0px 2px !important;
-}
-
 #sidebar-throbber[loading="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
   -moz-margin-end: 4px;
@@ -2233,6 +2194,11 @@ chatbox {
   background-clip: padding-box;
   border-right: 3px solid transparent;
   border-left: 3px solid transparent;
+}
+
+/* The :hover:active style from toolkit doesn't seem to work in this panel so just use :active. */
+.customization-tipPanel-closeBox > .close-icon:active {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 48, 16, 32);
 }
 
 /* End customization mode */
