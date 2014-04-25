@@ -19,6 +19,7 @@ import org.mozilla.gecko.home.PanelLayout.PanelView;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
@@ -30,6 +31,7 @@ public class PanelGridView extends GridView
     private final ViewConfig viewConfig;
     private final PanelViewAdapter adapter;
     private PanelViewItemHandler itemHandler;
+    private OnItemOpenListener itemOpenListener;
 
     public PanelGridView(Context context, ViewConfig viewConfig) {
         super(context, null, R.attr.panelGridViewStyle);
@@ -44,6 +46,12 @@ public class PanelGridView extends GridView
     }
 
     @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        itemHandler.setOnItemOpenListener(itemOpenListener);
+    }
+
+    @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         itemHandler.setOnItemOpenListener(null);
@@ -51,12 +59,14 @@ public class PanelGridView extends GridView
 
     @Override
     public void setDataset(Cursor cursor) {
+        Log.d(LOGTAG, "Setting dataset: " + viewConfig.getDatasetId());
         adapter.swapCursor(cursor);
     }
 
     @Override
     public void setOnItemOpenListener(OnItemOpenListener listener) {
         itemHandler.setOnItemOpenListener(listener);
+        itemOpenListener = listener;
     }
 
     @Override
