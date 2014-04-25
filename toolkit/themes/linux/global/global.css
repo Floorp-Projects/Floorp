@@ -310,6 +310,9 @@ notification > button {
 /* :::::: Close button icons ::::: */
 
 .close-icon {
+  -moz-appearance: none;
+  height: 16px;
+  width: 16px;
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 16, 16, 0);
   background-position: center center;
   background-repeat: no-repeat;
