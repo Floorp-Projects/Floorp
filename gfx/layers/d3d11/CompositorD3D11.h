@@ -7,6 +7,7 @@
 #define MOZILLA_GFX_COMPOSITORD3D11_H
 
 #include "mozilla/gfx/2D.h"
+#include "gfx2DGlue.h"
 #include "mozilla/layers/Compositor.h"
 #include "TextureD3D11.h"
 #include <d3d11.h>
