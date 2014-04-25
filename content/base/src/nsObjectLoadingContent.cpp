@@ -24,6 +24,7 @@
 #include "nsPluginHost.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsJSNPRuntime.h"
+#include "nsINestedURI.h"
 #include "nsIPresShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsScriptSecurityManager.h"
@@ -2022,6 +2023,31 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
       } else {
         fallbackType = eFallbackSuppressed;
       }
+    }
+  }
+
+  // Don't allow view-source scheme.
+  // view-source is the only scheme to which this applies at the moment due to
+  // potential timing attacks to read data from cross-origin documents. If this
+  // widens we should add a protocol flag for whether the scheme is only allowed
+  // in top and use something like nsNetUtil::NS_URIChainHasFlags.
+  if (mType != eType_Null) {
+    nsCOMPtr<nsIURI> tempURI = mURI;
+    nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(tempURI);
+    while (nestedURI) {
+      // view-source should always be an nsINestedURI, loop and check the
+      // scheme on this and all inner URIs that are also nested URIs.
+      bool isViewSource = false;
+      rv = tempURI->SchemeIs("view-source", &isViewSource);
+      if (NS_FAILED(rv) || isViewSource) {
+        LOG(("OBJLC [%p]: Blocking as effective URI has view-source scheme",
+             this));
+        mType = eType_Null;
+        break;
+      }
+
+      nestedURI->GetInnerURI(getter_AddRefs(tempURI));
+      nestedURI = do_QueryInterface(tempURI);
     }
   }
 
