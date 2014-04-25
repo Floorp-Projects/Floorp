@@ -285,6 +285,11 @@ private:
                                 const gfx::Matrix4x4 &aTransformi,
                                 GLuint aDrawMode);
 
+  virtual gfx::IntSize GetWidgetSize() const MOZ_OVERRIDE
+  {
+    return gfx::ToIntSize(mWidgetSize);
+  }
+
   /**
    * Context target, nullptr when drawing directly to our swap chain.
    */
