@@ -50,7 +50,7 @@ static const JSClass DocumentAllClass = {
 };
 
 bool
-document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned flags,
+document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                  JS::MutableHandleObject objp)
 {
     // If id is "all", resolve document.all=true.

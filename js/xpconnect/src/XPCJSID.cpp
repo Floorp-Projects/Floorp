@@ -383,8 +383,8 @@ nsJSIID::NewID(nsIInterfaceInfo* aInfo)
 NS_IMETHODIMP
 nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
                     JSContext * cx, JSObject * objArg,
-                    jsid idArg, uint32_t flags,
-                    JSObject * *objp, bool *_retval)
+                    jsid idArg, JSObject * *objp,
+                    bool *_retval)
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);

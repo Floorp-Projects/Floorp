@@ -2070,7 +2070,7 @@ bool
 XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<JSObject*> obj,
                        JS::Handle<jsid> id,
-                       JS::MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
+                       JS::MutableHandle<JSPropertyDescriptor> desc);
 
 /**
  * This resolves operations, attributes and constants of the interfaces for obj.
@@ -2548,8 +2548,7 @@ FinalizeGlobal(JSFreeOp* aFop, JSObject* aObj);
 
 bool
 ResolveGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
-              JS::Handle<jsid> aId, unsigned aFlags,
-              JS::MutableHandle<JSObject*> aObjp);
+              JS::Handle<jsid> aId, JS::MutableHandle<JSObject*> aObjp);
 
 bool
 EnumerateGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj);
