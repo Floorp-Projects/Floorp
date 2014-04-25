@@ -450,7 +450,8 @@ FormAssistant.prototype = {
     if (element && (element.mozIsTextField && element.mozIsTextField(false) ||
         element instanceof HTMLTextAreaElement) && focusedElement == element && this._isVisibleElement(element)) {
       let utils = Util.getWindowUtils(element.ownerDocument.defaultView);
-      let rect = utils.sendQueryContentEvent(utils.QUERY_CARET_RECT, element.selectionEnd, 0, 0, 0);
+      let rect = utils.sendQueryContentEvent(utils.QUERY_CARET_RECT, element.selectionEnd, 0, 0, 0,
+                                             utils.QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
       if (rect) {
         let scroll = ContentScroll.getScrollOffset(element.ownerDocument.defaultView);
         return new Rect(scroll.x + rect.left, scroll.y + rect.top, rect.width, rect.height);
