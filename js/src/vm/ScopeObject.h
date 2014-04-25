@@ -726,8 +726,8 @@ class ScopeIterVal
     friend class DebugScopes;
 
     AbstractFramePtr frame_;
-    RelocatablePtr<JSObject> cur_;
-    RelocatablePtr<NestedScopeObject> staticScope_;
+    RelocatablePtrObject cur_;
+    RelocatablePtrNestedScopeObject staticScope_;
     ScopeIter::Type type_;
     bool hasScopeObject_;
 

@@ -169,10 +169,10 @@ struct IonScript
 {
   private:
     // Code pointer containing the actual method.
-    EncapsulatedPtr<JitCode> method_;
+    EncapsulatedPtrJitCode method_;
 
     // Deoptimization table used by this method.
-    EncapsulatedPtr<JitCode> deoptTable_;
+    EncapsulatedPtrJitCode deoptTable_;
 
     // Entrypoint for OSR, or nullptr.
     jsbytecode *osrPc_;
