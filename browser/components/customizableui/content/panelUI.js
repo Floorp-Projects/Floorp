@@ -200,6 +200,10 @@ const PanelUI = {
     }
   },
 
+  isReady: function() {
+    return !!this._isReady;
+  },
+
   /**
    * Registering the menu panel is done lazily for performance reasons. This
    * method is exposed so that CustomizationMode can force panel-readyness in the
@@ -263,6 +267,7 @@ const PanelUI = {
       }
       this._updateQuitTooltip();
       this.panel.hidden = false;
+      this._isReady = true;
     }.bind(this)).then(null, Cu.reportError);
 
     return this._readyPromise;
