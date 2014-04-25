@@ -125,12 +125,9 @@ public:
   gfx::DrawTarget *GetDrawTarget() { return mDrawTarget; }
 
 private:
-
-  virtual gfx::IntSize GetWidgetSize() const MOZ_OVERRIDE { return mWidgetSize; }
-
   // Widget associated with this compositor
   nsIWidget *mWidget;
-  gfx::IntSize mWidgetSize;
+  nsIntSize mWidgetSize;
 
   // The final destination surface
   RefPtr<gfx::DrawTarget> mDrawTarget;
