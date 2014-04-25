@@ -286,6 +286,10 @@ let SessionHistoryListener = {
     return true;
   },
 
+  OnHistoryReplaceEntry: function (index) {
+    this.collect();
+  },
+
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsISHistoryListener,
     Ci.nsISupportsWeakReference

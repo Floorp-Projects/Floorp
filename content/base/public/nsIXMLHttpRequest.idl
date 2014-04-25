@@ -331,7 +331,7 @@ interface nsIXMLHttpRequest : nsISupports
   readonly attribute boolean mozSystem;
 };
 
-[scriptable, uuid(840d0d00-e83e-4a29-b3c7-67e96e90a499)]
+[uuid(840d0d00-e83e-4a29-b3c7-67e96e90a499)]
 interface nsIXHRSendable : nsISupports {
   void getSendInfo(out nsIInputStream body,
                    out uint64_t contentLength,

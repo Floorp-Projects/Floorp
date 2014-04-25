@@ -220,15 +220,15 @@ add_task(function test_pushstate_replacestate() {
   is(entries[1].url, "http://example.com/test-entry/", "url is correct");
 
   // Disabled until replaceState invalidation is supported. See Bug 967028.
-  // browser.messageManager.
-  //   sendAsyncMessage("ss-test:historyReplaceState", {url: 'test-entry2/'});
-  // yield promiseContentMessage(browser, "ss-test:historyReplaceState");
+  browser.messageManager.
+    sendAsyncMessage("ss-test:historyReplaceState", {url: 'test-entry2/'});
+  yield promiseContentMessage(browser, "ss-test:historyReplaceState");
 
-  // // Check that we have modified the history entry.
-  // SyncHandlers.get(browser).flush();
-  // let {entries} = JSON.parse(ss.getTabState(tab));
-  // is(entries.length, 2, "there is still two shistory entries");
-  // is(entries[1].url, "http://example.com/test-entry/test-entry2/", "url is correct");
+  // Check that we have modified the history entry.
+  SyncHandlers.get(browser).flush();
+  let {entries} = JSON.parse(ss.getTabState(tab));
+  is(entries.length, 2, "there is still two shistory entries");
+  is(entries[1].url, "http://example.com/test-entry/test-entry2/", "url is correct");
 
   // Cleanup.
   gBrowser.removeTab(tab);

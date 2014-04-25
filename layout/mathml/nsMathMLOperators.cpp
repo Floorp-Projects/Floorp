@@ -428,25 +428,6 @@ nsMathMLOperators::LookupOperators(const nsString&       aOperator,
   }
 }
 
-bool
-nsMathMLOperators::IsMutableOperator(const nsString& aOperator)
-{
-  if (!gGlobalsInitialized) {
-    InitGlobals();
-  }
-  // lookup all the variants of the operator and return true if there
-  // is a variant that is stretchy or largeop
-  nsOperatorFlags flags[4];
-  float lspace[4], rspace[4];
-  nsMathMLOperators::LookupOperators(aOperator, flags, lspace, rspace);
-  nsOperatorFlags allFlags =
-    flags[NS_MATHML_OPERATOR_FORM_INFIX] |
-    flags[NS_MATHML_OPERATOR_FORM_POSTFIX] |
-    flags[NS_MATHML_OPERATOR_FORM_PREFIX];
-  return NS_MATHML_OPERATOR_IS_STRETCHY(allFlags) ||
-         NS_MATHML_OPERATOR_IS_LARGEOP(allFlags);
-}
-
 /* static */ bool
 nsMathMLOperators::IsMirrorableOperator(const nsString& aOperator)
 {

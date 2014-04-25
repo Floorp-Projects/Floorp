@@ -172,7 +172,7 @@
 
 #include "nsIDragService.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/Selection.h"
+#include "mozilla/dom/Selection.h"
 #include "nsFrameLoader.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPCOMCID.h"
@@ -1607,6 +1607,8 @@ nsGlobalWindow::FreeInnerObjects()
   mAudioContexts.Clear();
 
 #ifdef MOZ_GAMEPAD
+  DisableGamepadUpdates();
+  mHasGamepad = false;
   mGamepads.Clear();
 #endif
 }

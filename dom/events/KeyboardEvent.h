@@ -69,13 +69,6 @@ public:
                        aKeyCode, aCharCode);
   }
 
-  void InitKeyboardEvent(const nsAString& aType,
-                         bool aCanBubble, bool aCancelable,
-                         nsIDOMWindow* aView, uint32_t aDetail,
-                         const nsAString& aKey, uint32_t aLocation,
-                         const nsAString& aModifiersList, bool aRepeat,
-                         ErrorResult& aRv);
-
 private:
   // True, if the instance is created with Constructor().
   bool mInitializedByCtor;
