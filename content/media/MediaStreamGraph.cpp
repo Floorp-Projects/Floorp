@@ -849,7 +849,7 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
         // match the system's ideal channel configuration.
         // NOTE: we presume this is either fast or async-under-the-covers
         audioOutputStream->mStream->Init(2, mSampleRate,
-                                         aStream->mAudioChannelType,
+                                         AudioChannel::Normal,
                                          AudioStream::LowLatency);
         audioOutputStream->mTrackID = tracks->GetID();
 
@@ -1784,7 +1784,6 @@ MediaStream::MediaStream(DOMMediaStream* aWrapper)
   , mMainThreadFinished(false)
   , mMainThreadDestroyed(false)
   , mGraph(nullptr)
-  , mAudioChannelType(dom::AudioChannel::Normal)
 {
   MOZ_COUNT_CTOR(MediaStream);
   // aWrapper should not already be connected to a MediaStream! It needs
