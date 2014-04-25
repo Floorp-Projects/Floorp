@@ -116,6 +116,7 @@ gbjar.sources += [
     'animation/ViewHelper.java',
     'ANRReporter.java',
     'AppNotificationClient.java',
+    'Assert.java',
     'BaseGeckoInterface.java',
     'BrowserApp.java',
     'BrowserLocaleManager.java',
