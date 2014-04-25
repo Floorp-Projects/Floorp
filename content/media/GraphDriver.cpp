@@ -14,6 +14,19 @@ extern PRLogModuleInfo* gMediaStreamGraphLog;
 
 namespace mozilla {
 
+struct AutoProfilerUnregisterThread
+{
+  // The empty ctor is used to silence a pre-4.8.0 GCC unused variable warning.
+  AutoProfilerUnregisterThread()
+  {
+  }
+
+  ~AutoProfilerUnregisterThread()
+  {
+    profiler_unregister_thread();
+  }
+};
+
 GraphDriver::GraphDriver(MediaStreamGraphImpl* aGraphImpl)
     : mIterationStart(INITIAL_CURRENT_TIME),
       mIterationEnd(INITIAL_CURRENT_TIME),
@@ -55,10 +68,62 @@ SystemClockDriver::SystemClockDriver(MediaStreamGraphImpl* aGraphImpl)
 SystemClockDriver::~SystemClockDriver()
 { }
 
+class MediaStreamGraphInitThreadRunnable : public nsRunnable {
+public:
+  explicit MediaStreamGraphInitThreadRunnable(GraphDriver* aDriver)
+    : mDriver(aDriver)
+  {
+  }
+  NS_IMETHOD Run()
+  {
+    char aLocal;
+    profiler_register_thread("MediaStreamGraph", &aLocal);
+    mDriver->RunThread();
+    return NS_OK;
+  }
+private:
+  GraphDriver* mDriver;
+};
+
 void
-SystemClockDriver::RunThread(nsTArray<MessageBlock>& aMessageQueue)
+SystemClockDriver::Start()
 {
-  while(mGraphImpl->OneIteration(aMessageQueue));
+  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
+  NS_NewNamedThread("MediaStreamGrph", getter_AddRefs(mThread), event);
+}
+
+void
+SystemClockDriver::Dispatch(nsIRunnable* aEvent)
+{
+  mThread->Dispatch(aEvent, NS_DISPATCH_NORMAL);
+}
+
+void
+SystemClockDriver::Stop()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
+  // mGraph's thread is not running so it's OK to do whatever here
+  STREAM_LOG(PR_LOG_DEBUG, ("Stopping threads for MediaStreamGraph %p", this));
+
+  if (mThread) {
+    mThread->Shutdown();
+    mThread = nullptr;
+  }
+}
+
+void
+SystemClockDriver::RunThread()
+{
+  AutoProfilerUnregisterThread autoUnregister;
+  nsTArray<MessageBlock> messageQueue;
+  {
+    MonitorAutoLock lock(mMonitor);
+    messageQueue.SwapElements(mGraphImpl->MessageQueue());
+  }
+  NS_ASSERTION(!messageQueue.IsEmpty(),
+               "Shouldn't have started a graph with empty message queue!");
+
+  while(mGraphImpl->OneIteration(messageQueue));
 }
 
 void
@@ -91,6 +156,12 @@ GraphTime
 SystemClockDriver::GetCurrentTime()
 {
   return IterationEnd();
+}
+
+TimeStamp
+SystemClockDriver::GetCurrentTimeStamp()
+{
+  return mCurrentTimeStamp;
 }
 
 void
@@ -147,9 +218,44 @@ OfflineClockDriver::~OfflineClockDriver()
 { }
 
 void
-OfflineClockDriver::RunThread(nsTArray<MessageBlock>& aMessageQueue)
+OfflineClockDriver::Start()
 {
-  while(mGraphImpl->OneIteration(aMessageQueue));
+  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
+  NS_NewNamedThread("MediaStreamGrph", getter_AddRefs(mThread), event);
+}
+
+void
+OfflineClockDriver::Stop()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
+  // mGraph's thread is not running so it's OK to do whatever here
+  STREAM_LOG(PR_LOG_DEBUG, ("Stopping threads for MediaStreamGraph %p", this));
+
+  if (mThread) {
+    mThread->Shutdown();
+    mThread = nullptr;
+  }
+}
+
+void
+OfflineClockDriver::Dispatch(nsIRunnable* aEvent)
+{
+  mThread->Dispatch(aEvent, NS_DISPATCH_NORMAL);
+}
+
+void
+OfflineClockDriver::RunThread()
+{
+  AutoProfilerUnregisterThread autoUnregister;
+  nsTArray<MessageBlock> messageQueue;
+  {
+    MonitorAutoLock lock(mMonitor);
+    messageQueue.SwapElements(mGraphImpl->MessageQueue());
+  }
+  NS_ASSERTION(!messageQueue.IsEmpty(),
+               "Shouldn't have started a graph with empty message queue!");
+
+  while(mGraphImpl->OneIteration(messageQueue));
 }
 
 void
