@@ -34,25 +34,6 @@ function synthesizeQueryTextContent(aOffset, aLength, aWindow)
 }
 
 /**
- * Synthesize a query caret rect event.
- *
- * @param aOffset  The caret offset.  0 means left side of the first character
- *                 in the selection root.
- * @param aWindow  Optional (If null, current |window| will be used)
- * @return         An nsIQueryContentEventResult object.  If this failed,
- *                 the result might be null.
- */
-function synthesizeQueryCaretRect(aOffset, aWindow)
-{
-  var utils = _getDOMWindowUtils(aWindow);
-  if (!utils) {
-    return nullptr;
-  }
-  return utils.sendQueryContentEvent(utils.QUERY_CARET_RECT,
-                                     aOffset, 0, 0, 0);
-}
-
-/**
  * Synthesize a query text rect event.
  *
  * @param aOffset  The character offset.  0 means the first character in the
