@@ -1346,23 +1346,6 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
   return rv;
 }
 
-/* static */ nsresult
-nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
-                               uint32_t aLength, const nsAString& aHintCharset,
-                               nsIDocument* aDocument, nsString& aString)
-{
-  jschar* bufOut = nullptr;
-  size_t lengthOut = 0;
-  nsresult rv = ConvertToUTF16(aChannel, aData, aLength, aHintCharset,
-                aDocument, bufOut, lengthOut);
-  aString.SetLength(lengthOut);
-  if (bufOut) {
-    memcpy(aString.BeginWriting(), bufOut, lengthOut * sizeof(jschar));
-    js_free(bufOut);
-  }
-  return rv;
-}
-
 NS_IMETHODIMP
 nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
                                  nsISupports* aContext,
