@@ -8136,6 +8136,7 @@ class ClassMethod(ClassItem):
         override indicates whether to flag the method as MOZ_OVERRIDE
         """
         assert not override or virtual
+        assert not (override and static)
         self.returnType = returnType
         self.args = args
         self.inline = inline or bodyInHeader
@@ -8781,7 +8782,7 @@ class CGProxySpecialOperation(CGPerSignatureCall):
     If checkFound is False, will just assert that the prop is found instead of
     checking that it is before wrapping the value.
     """
-    def __init__(self, descriptor, operation, checkFound=True):
+    def __init__(self, descriptor, operation, checkFound=True, argumentMutableValue=None):
         self.checkFound = checkFound
 
         nativeName = MakeNativeName(descriptor.binaryNames.get(operation, operation))
@@ -8805,11 +8806,13 @@ class CGProxySpecialOperation(CGPerSignatureCall):
                 treatNullAs=argument.treatNullAs,
                 sourceDescription=("value being assigned to %s setter" %
                                    descriptor.interface.identifier.name))
+            if argumentMutableValue is None:
+                argumentMutableValue = "desc.value()"
             templateValues = {
                 "declName": argument.identifier.name,
                 "holderName": argument.identifier.name + "_holder",
-                "val": "desc.value()",
-                "mutableVal": "desc.value()",
+                "val": argumentMutableValue,
+                "mutableVal": argumentMutableValue,
                 "obj": "obj"
             }
             self.cgRoot.prepend(instantiateJSToNativeConversion(info, templateValues))
@@ -8847,9 +8850,11 @@ class CGProxyIndexedOperation(CGProxySpecialOperation):
     If checkFound is False, will just assert that the prop is found instead of
     checking that it is before wrapping the value.
     """
-    def __init__(self, descriptor, name, doUnwrap=True, checkFound=True):
+    def __init__(self, descriptor, name, doUnwrap=True, checkFound=True,
+                argumentMutableValue=None):
         self.doUnwrap = doUnwrap
-        CGProxySpecialOperation.__init__(self, descriptor, name, checkFound)
+        CGProxySpecialOperation.__init__(self, descriptor, name, checkFound,
+                                         argumentMutableValue=argumentMutableValue)
 
     def define(self):
         # Our first argument is the id we're getting.
@@ -8901,8 +8906,9 @@ class CGProxyIndexedSetter(CGProxyIndexedOperation):
     """
     Class to generate a call to an indexed setter.
     """
-    def __init__(self, descriptor):
-        CGProxyIndexedOperation.__init__(self, descriptor, 'IndexedSetter')
+    def __init__(self, descriptor, argumentMutableValue=None):
+        CGProxyIndexedOperation.__init__(self, descriptor, 'IndexedSetter',
+                                         argumentMutableValue=argumentMutableValue)
 
 
 class CGProxyIndexedDeleter(CGProxyIndexedOperation):
@@ -8920,8 +8926,9 @@ class CGProxyNamedOperation(CGProxySpecialOperation):
     'value' is the jsval to use for the name; None indicates that it should be
     gotten from the property id.
     """
-    def __init__(self, descriptor, name, value=None):
-        CGProxySpecialOperation.__init__(self, descriptor, name)
+    def __init__(self, descriptor, name, value=None, argumentMutableValue=None):
+        CGProxySpecialOperation.__init__(self, descriptor, name,
+                                         argumentMutableValue=argumentMutableValue)
         self.value = value
 
     def define(self):
@@ -9008,8 +9015,9 @@ class CGProxyNamedSetter(CGProxyNamedOperation):
     """
     Class to generate a call to a named setter.
     """
-    def __init__(self, descriptor):
-        CGProxyNamedOperation.__init__(self, descriptor, 'NamedSetter')
+    def __init__(self, descriptor, argumentMutableValue=None):
+        CGProxyNamedOperation.__init__(self, descriptor, 'NamedSetter',
+                                       argumentMutableValue=argumentMutableValue)
 
 
 class CGProxyNamedDeleter(CGProxyNamedOperation):
@@ -9069,9 +9077,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
         indexedGetter = self.descriptor.operations['IndexedGetter']
         indexedSetter = self.descriptor.operations['IndexedSetter']
 
-        setOrIndexedGet = "bool isXray = xpc::WrapperFactory::IsXrayWrapper(proxy);\n"
         if self.descriptor.supportsIndexedProperties():
-            setOrIndexedGet += "int32_t index = GetArrayIndexFromId(cx, id);\n"
             readonly = toStringBool(indexedSetter is None)
             fillDescriptor = "FillPropertyDescriptor(desc, proxy, %s);\nreturn true;\n" % readonly
             templateValues = {
@@ -9080,13 +9086,17 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
                 'obj': 'proxy',
                 'successCode': fillDescriptor
             }
-            get = fill(
+            getIndexed = fill(
                 """
+                int32_t index = GetArrayIndexFromId(cx, id);
                 if (IsArrayIndex(index)) {
                   $*{callGetter}
                 }
+
                 """,
                 callGetter=CGProxyIndexedGetter(self.descriptor, templateValues).define())
+        else:
+            getIndexed = ""
 
         if UseHolderForUnforgeable(self.descriptor):
             tryHolder = dedent("""
@@ -9095,6 +9105,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
                 }
                 MOZ_ASSERT_IF(desc.object(), desc.object() == ${holder});
                 """)
+
             # We don't want to look at the unforgeable holder at all
             # in the xray case; that part got handled already.
             getUnforgeable = fill(
@@ -9111,44 +9122,6 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
                 callOnUnforgeable=CallOnUnforgeableHolder(self.descriptor, tryHolder))
         else:
             getUnforgeable = ""
-
-        if indexedSetter or self.descriptor.operations['NamedSetter']:
-            setOrIndexedGet += "if (flags & JSRESOLVE_ASSIGNING) {\n"
-            if indexedSetter:
-                setOrIndexedGet += ("  if (IsArrayIndex(index)) {\n")
-                if 'IndexedCreator' not in self.descriptor.operations:
-                    # FIXME need to check that this is a 'supported property
-                    # index'.  But if that happens, watch out for the assumption
-                    # below that the name setter always returns for
-                    # IsArrayIndex(index).
-                    assert False
-                setOrIndexedGet += ("    FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);\n" +
-                                    "    return true;\n" +
-                                    "  }\n")
-            setOrIndexedGet += indent(getUnforgeable)
-            if self.descriptor.operations['NamedSetter']:
-                if 'NamedCreator' not in self.descriptor.operations:
-                    # FIXME need to check that this is a 'supported property name'
-                    assert False
-                create = CGGeneric("FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);\n"
-                                   "return true;\n")
-                # If we have an indexed setter we've already returned
-                if (self.descriptor.supportsIndexedProperties() and
-                        not indexedSetter):
-                    create = CGIfWrapper(create, "!IsArrayIndex(index)")
-                setOrIndexedGet += indent(create.define())
-            setOrIndexedGet += "} else {\n"
-            if indexedGetter:
-                setOrIndexedGet += indent(get + "\n" + getUnforgeable)
-            else:
-                setOrIndexedGet += indent(getUnforgeable)
-            setOrIndexedGet += "}\n\n"
-        else:
-            if indexedGetter:
-                setOrIndexedGet += ("if (!(flags & JSRESOLVE_ASSIGNING)) {\n" +
-                                    indent(get) +
-                                    "}\n\n")
-            setOrIndexedGet += getUnforgeable
 
         if self.descriptor.supportsNamedProperties():
             operations = self.descriptor.operations
@@ -9167,7 +9140,6 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             condition = "!HasPropertyOnPrototype(cx, proxy, id)"
             if self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
                 condition = "(!isXray || %s)" % condition
-            condition = "!(flags & JSRESOLVE_ASSIGNING) && " + condition
             if self.descriptor.supportsIndexedProperties():
                 condition = "!IsArrayIndex(index) && " + condition
             namedGet = (CGIfWrapper(CGProxyNamedGetter(self.descriptor, templateValues),
@@ -9178,7 +9150,9 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
 
         return fill(
             """
-            $*{setOrIndexedGet}
+            bool isXray = xpc::WrapperFactory::IsXrayWrapper(proxy);
+            $*{getIndexed}
+            $*{getUnforgeable}
             JS::Rooted<JSObject*> expando(cx);
             if (!isXray && (expando = GetExpandoObject(proxy))) {
               if (!JS_GetPropertyDescriptorById(cx, expando, id, flags, desc)) {
@@ -9195,7 +9169,8 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             desc.object().set(nullptr);
             return true;
             """,
-            setOrIndexedGet=setOrIndexedGet,
+            getIndexed=getIndexed,
+            getUnforgeable=getUnforgeable,
             namedGet=namedGet)
 
 
@@ -9644,6 +9619,95 @@ class CGDOMJSProxyHandler_get(ClassMethod):
             named=getNamed)
 
 
+class CGDOMJSProxyHandler_set(ClassMethod):
+    def __init__(self, descriptor):
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject*>', 'proxy'),
+                Argument('JS::Handle<JSObject*>', 'receiver'),
+                Argument('JS::Handle<jsid>', 'id'),
+                Argument('bool', 'strict'),
+                Argument('JS::MutableHandle<JS::Value>', 'vp')]
+        ClassMethod.__init__(self, "set", "bool", args, virtual=True, override=True)
+        self.descriptor = descriptor
+
+    def getBody(self):
+        return dedent("""
+            MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy),
+                       "Should not have a XrayWrapper here");
+            bool done;
+            if (!setCustom(cx, proxy, id, vp, &done))
+                return false;
+            if (done)
+                return true;
+            return mozilla::dom::DOMProxyHandler::set(cx, proxy, receiver, id, strict, vp);
+            """)
+
+
+class CGDOMJSProxyHandler_setCustom(ClassMethod):
+    def __init__(self, descriptor):
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject*>', 'proxy'),
+                Argument('JS::Handle<jsid>', 'id'),
+                Argument('JS::MutableHandle<JS::Value>', 'vp'),
+                Argument('bool*', 'done')]
+        ClassMethod.__init__(self, "setCustom", "bool", args, virtual=True, override=True)
+        self.descriptor = descriptor
+
+    def getBody(self):
+        assertion = ("MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy),\n"
+                     '           "Should not have a XrayWrapper here");\n')
+
+        # Correctness first. If we have a NamedSetter and [OverrideBuiltins],
+        # always call the NamedSetter and never do anything else.
+        namedSetter = self.descriptor.operations['NamedSetter']
+        if (namedSetter is not None and
+            self.descriptor.interface.getExtendedAttribute('OverrideBuiltins')):
+            # Check assumptions.
+            if self.descriptor.supportsIndexedProperties():
+                raise ValueError("In interface " + self.descriptor.name + ": " +
+                                 "Can't cope with [OverrideBuiltins] and an indexed getter")
+            if self.descriptor.operations['NamedCreator'] is not namedSetter:
+                raise ValueError("In interface " + self.descriptor.name + ": " +
+                                 "Can't cope with named setter that is not also a named creator")
+            if UseHolderForUnforgeable(self.descriptor):
+                raise ValueError("In interface " + self.descriptor.name + ": " +
+                                 "Can't cope with [OverrideBuiltins] and unforgeable members")
+
+            callSetter = CGProxyNamedSetter(self.descriptor, argumentMutableValue="vp")
+            return (assertion +
+                    callSetter.define() +
+                    "*done = true;\n"
+                    "return true;\n")
+
+        # As an optimization, if we are going to call an IndexedSetter, go
+        # ahead and call it and have done.
+        indexedSetter = self.descriptor.operations['IndexedSetter']
+        if indexedSetter is not None:
+            if self.descriptor.operations['IndexedCreator'] is not indexedSetter:
+                raise ValueError("In interface " + self.descriptor.name + ": " +
+                                 "Can't cope with indexed setter that is not " +
+                                 "also an indexed creator")
+            setIndexed = fill(
+                """
+                int32_t index = GetArrayIndexFromId(cx, id);
+                if (IsArrayIndex(index)) {
+                  $*{callSetter}
+                  *done = true;
+                  return true;
+                }
+
+                """,
+                callSetter=CGProxyIndexedSetter(self.descriptor,
+                                                argumentMutableValue="vp").define())
+        else:
+            setIndexed = ""
+
+        return (assertion +
+                setIndexed +
+                "*done = false;\n"
+                "return true;\n")
+
+
 class CGDOMJSProxyHandler_className(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'),
@@ -9688,7 +9752,7 @@ class CGDOMJSProxyHandler_slice(ClassMethod):
                 Argument('uint32_t', 'begin'),
                 Argument('uint32_t', 'end'),
                 Argument('JS::Handle<JSObject*>', 'array')]
-        ClassMethod.__init__(self, "slice", "bool", args)
+        ClassMethod.__init__(self, "slice", "bool", args, virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -9764,6 +9828,11 @@ class CGDOMJSProxyHandler(CGClass):
                    CGDOMJSProxyHandler_delete(descriptor)]
         if descriptor.supportsIndexedProperties():
             methods.append(CGDOMJSProxyHandler_slice(descriptor))
+        if (descriptor.operations['IndexedSetter'] is not None or
+            (descriptor.operations['NamedSetter'] is not None and
+             descriptor.interface.getExtendedAttribute('OverrideBuiltins'))):
+            methods.append(CGDOMJSProxyHandler_setCustom(descriptor))
+            methods.append(CGDOMJSProxyHandler_set(descriptor))
 
         CGClass.__init__(self, 'DOMProxyHandler',
                          bases=[ClassBase('mozilla::dom::DOMProxyHandler')],
