@@ -740,32 +740,6 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)                               \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-// TODO: Remove these after changing everything to the variadic variant.
-#define NS_IMPL_CYCLE_COLLECTION_1(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION(_class, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_2(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION(_class, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_3(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION(_class, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_4(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION(_class, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_5(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION(_class, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_6(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION(_class, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_7(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION(_class, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_8(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION(_class, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_9(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION(_class, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_10(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION(_class, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_16(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION(_class, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_17(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION(_class, __VA_ARGS__)
-
 #define NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, ...)                 \
   NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                       \
   NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(_class, _base)               \
@@ -774,48 +748,6 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(_class, _base)             \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)                               \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-// TODO: Remove these after changing everything to the variadic variant.
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_1(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_2(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_3(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_4(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_5(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_6(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_7(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_8(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_9(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_10(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_11(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_12(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_13(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_14(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_15(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_16(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_17(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_18(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_19(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
-#define NS_IMPL_CYCLE_COLLECTION_INHERITED_20(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, __VA_ARGS__)
 
 #define NS_CYCLE_COLLECTION_NOTE_EDGE_NAME CycleCollectionNoteEdgeName
 
