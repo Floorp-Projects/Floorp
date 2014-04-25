@@ -224,6 +224,7 @@ let CustomizableUIInternal = {
         "tabbrowser-tabs",
         "new-tab-button",
         "alltabs-button",
+        "tabs-closebutton",
       ],
       defaultCollapsed: null,
     }, true);
