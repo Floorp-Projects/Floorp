@@ -106,11 +106,11 @@ protected:
   // If aExpandToClusterBoundaries is true, the start offset and the end one are
   // expanded to nearest cluster boundaries.
   nsresult SetRangeFromFlatTextOffset(nsRange* aRange,
-                                      uint32_t aNativeOffset,
-                                      uint32_t aNativeLength,
+                                      uint32_t aOffset,
+                                      uint32_t aLength,
                                       LineBreakType aLineBreakType,
                                       bool aExpandToClusterBoundaries,
-                                      uint32_t* aNewNativeOffset = nullptr);
+                                      uint32_t* aNewOffset = nullptr);
   // Find the first textframe for the range, and get the start offset in
   // the frame.
   nsresult GetStartFrameAndOffset(nsRange* aRange,
