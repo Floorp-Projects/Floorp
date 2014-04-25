@@ -389,8 +389,7 @@ str_enumerate(JSContext *cx, HandleObject obj)
 }
 
 bool
-js::str_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                MutableHandleObject objp)
+js::str_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
 {
     if (!JSID_IS_INT(id))
         return true;

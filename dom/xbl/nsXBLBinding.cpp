@@ -886,7 +886,7 @@ GetOrCreateClassObjectMap(JSContext *cx, JS::Handle<JSObject*> scope, const char
 
   // First, see if the map is already defined.
   JS::Rooted<JSPropertyDescriptor> desc(cx);
-  if (!JS_GetOwnPropertyDescriptor(cx, scope, mapName, 0, &desc)) {
+  if (!JS_GetOwnPropertyDescriptor(cx, scope, mapName, &desc)) {
     return nullptr;
   }
   if (desc.object() && desc.value().isObject() &&
@@ -1008,7 +1008,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
   // to create and define it.
   JS::Rooted<JSObject*> proto(cx);
   JS::Rooted<JSPropertyDescriptor> desc(cx);
-  if (!JS_GetOwnPropertyDescriptor(cx, holder, aClassName.get(), 0, &desc)) {
+  if (!JS_GetOwnPropertyDescriptor(cx, holder, aClassName.get(), &desc)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   *aNew = !desc.object();

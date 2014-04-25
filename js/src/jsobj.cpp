@@ -1656,16 +1656,6 @@ Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
     return false;
 }
 
-/*
- * Infer lookup flags from the currently executing bytecode, returning
- * defaultFlags if a currently executing bytecode cannot be determined.
- */
-unsigned
-js_InferFlags(JSContext *cx, unsigned defaultFlags)
-{
-    return 0;
-}
-
 /* static */ bool
 JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj,
                                HandleId id, MutableHandleValue vp, bool strict)
@@ -3878,8 +3868,8 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, Ha
  *     *recursedp = false and return true.
  */
 static MOZ_ALWAYS_INLINE bool
-CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-              MutableHandleObject objp, MutableHandleShape propp, bool *recursedp)
+CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp,
+              MutableHandleShape propp, bool *recursedp)
 {
     const Class *clasp = obj->getClass();
     JSResolveOp resolve = clasp->resolve;
@@ -3904,11 +3894,8 @@ CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
     if (clasp->flags & JSCLASS_NEW_RESOLVE) {
         JSNewResolveOp newresolve = reinterpret_cast<JSNewResolveOp>(resolve);
-        if (flags == RESOLVE_INFER)
-            flags = js_InferFlags(cx, 0);
-
         RootedObject obj2(cx, nullptr);
-        if (!newresolve(cx, obj, id, flags, &obj2))
+        if (!newresolve(cx, obj, id, &obj2))
             return false;
 
         /*
@@ -4001,7 +3988,6 @@ LookupOwnPropertyWithFlagsInline(ExclusiveContext *cx,
         if (!CallResolveOp(cx->asJSContext(),
                            MaybeRooted<JSObject*, allowGC>::toHandle(obj),
                            MaybeRooted<jsid, allowGC>::toHandle(id),
-                           flags,
                            MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
                            MaybeRooted<Shape*, allowGC>::toMutableHandle(propp),
                            &recursed))

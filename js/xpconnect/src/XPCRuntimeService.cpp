@@ -42,12 +42,12 @@ NS_IMPL_RELEASE(BackstagePass)
                             nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES
 #include "xpc_map_end.h" /* This will #undef the above */
 
-/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, in uint32_t flags, out JSObjectPtr objp); */
+/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, out JSObjectPtr objp); */
 NS_IMETHODIMP
 BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
                           JSContext * cx, JSObject * objArg,
-                          jsid idArg, uint32_t flags,
-                          JSObject * *objpArg, bool *_retval)
+                          jsid idArg, JSObject * *objpArg,
+                          bool *_retval)
 {
     JS::RootedObject obj(cx, objArg);
     JS::RootedId id(cx, idArg);
@@ -65,7 +65,7 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
 
     JS::RootedObject objp(cx, *objpArg);
 
-    *_retval = ResolveWorkerClasses(cx, obj, id, flags, &objp);
+    *_retval = ResolveWorkerClasses(cx, obj, id, &objp);
     NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
 
     if (objp) {

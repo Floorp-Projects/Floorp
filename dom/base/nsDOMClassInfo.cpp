@@ -1447,8 +1447,8 @@ nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *aObj,
 
 NS_IMETHODIMP
 nsDOMClassInfo::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                           JSObject *obj, jsid id, uint32_t flags,
-                           JSObject **objp, bool *_retval)
+                           JSObject *obj, jsid id, JSObject **objp,
+                           bool *_retval)
 {
   if (id == sConstructor_id) {
     return ResolveConstructor(cx, obj, objp);
@@ -3218,8 +3218,8 @@ LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
 
 NS_IMETHODIMP
 nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JSObject *obj_, jsid id_, uint32_t flags,
-                       JSObject **objp, bool *_retval)
+                       JSObject *obj_, jsid id_, JSObject **objp,
+                       bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, obj_);
   JS::Rooted<jsid> id(cx, id_);
@@ -3373,8 +3373,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  return nsDOMGenericSH::NewResolve(wrapper, cx, obj, id, flags, objp,
-                                    _retval);
+  return nsDOMGenericSH::NewResolve(wrapper, cx, obj, id, objp, _retval);
 }
 
 NS_IMETHODIMP
@@ -3503,8 +3502,8 @@ nsEventTargetSH::PreserveWrapper(nsISupports *aNative)
 
 NS_IMETHODIMP
 nsGenericArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                             JSObject *aObj, jsid aId, uint32_t flags,
-                             JSObject **objp, bool *_retval)
+                             JSObject *aObj, jsid aId, JSObject **objp,
+                             bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
   JS::Rooted<jsid> id(cx, aId);
@@ -3670,8 +3669,8 @@ nsCSSRuleListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
 
 NS_IMETHODIMP
 nsStorage2SH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid aId, uint32_t flags,
-                         JSObject **objp, bool *_retval)
+                         JSObject *obj, jsid aId, JSObject **objp,
+                         bool *_retval)
 {
   JS::Rooted<jsid> id(cx, aId);
   if (ObjectIsNativeWrapper(cx, obj)) {
@@ -3917,8 +3916,8 @@ nsDOMConstructorSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
 NS_IMETHODIMP
 nsDOMConstructorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                               JSObject *aObj, jsid aId, uint32_t flags,
-                               JSObject **objp, bool *_retval)
+                               JSObject *aObj, jsid aId, JSObject **objp,
+                               bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
   JS::Rooted<jsid> id(cx, aId);

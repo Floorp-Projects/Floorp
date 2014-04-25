@@ -2712,8 +2712,7 @@ sandbox_enumerate(JSContext *cx, HandleObject obj)
 }
 
 static bool
-sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                MutableHandleObject objp)
+sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
 {
     RootedValue v(cx);
     if (!JS_GetProperty(cx, obj, "lazy", &v))
@@ -3007,7 +3006,7 @@ ShapeOf(JSContext *cx, unsigned argc, JS::Value *vp)
  */
 static bool
 CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id,
-             unsigned lookupFlags, MutableHandleObject objp)
+             MutableHandleObject objp)
 {
     RootedShape shape(cx);
     Rooted<PropertyDescriptor> desc(cx);
@@ -3015,7 +3014,7 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
 
     objp.set(nullptr);
     if (referent->isNative()) {
-        if (!LookupPropertyWithFlags(cx, referent, id, lookupFlags, &obj2, &shape))
+        if (!LookupPropertyWithFlags(cx, referent, id, 0, &obj2, &shape))
             return false;
         if (obj2 != referent)
             return true;
@@ -3061,12 +3060,11 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
 }
 
 static bool
-resolver_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                 MutableHandleObject objp)
+resolver_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
 {
     jsval v = JS_GetReservedSlot(obj, 0);
     Rooted<JSObject*> vobj(cx, &v.toObject());
-    return CopyProperty(cx, obj, vobj, id, flags, objp);
+    return CopyProperty(cx, obj, vobj, id, objp);
 }
 
 static bool
@@ -3080,7 +3078,7 @@ resolver_enumerate(JSContext *cx, HandleObject obj)
     RootedObject ignore(cx);
     for (size_t i = 0; ok && i < ida.length(); i++) {
         Rooted<jsid> id(cx, ida[i]);
-        ok = CopyProperty(cx, obj, referent, id, 0, &ignore);
+        ok = CopyProperty(cx, obj, referent, id, &ignore);
     }
     return ok;
 }
@@ -5055,8 +5053,7 @@ global_enumerate(JSContext *cx, HandleObject obj)
 }
 
 static bool
-global_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-               MutableHandleObject objp)
+global_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
 {
 #ifdef LAZY_STANDARD_CLASSES
     bool resolved;
@@ -5161,8 +5158,7 @@ env_enumerate(JSContext *cx, HandleObject obj)
 }
 
 static bool
-env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-            MutableHandleObject objp)
+env_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
 {
     RootedValue idvalue(cx, IdToValue(id));
     RootedString idstring(cx, ToString(cx, idvalue));

@@ -286,12 +286,12 @@ nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
     }
 }
 
-/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, in uint32_t flags, out JSObjectPtr objp); */
+/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, out JSObjectPtr objp); */
 NS_IMETHODIMP
 nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
                                        JSContext *cx, JSObject *objArg,
-                                       jsid idArg, uint32_t flags,
-                                       JSObject **objp, bool *_retval)
+                                       jsid idArg, JSObject **objp,
+                                       bool *_retval)
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
@@ -535,12 +535,12 @@ nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
     }
 }
 
-/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, in uint32_t flags, out JSObjectPtr objp); */
+/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, out JSObjectPtr objp); */
 NS_IMETHODIMP
 nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
                                            JSContext *cx, JSObject *objArg,
-                                           jsid idArg, uint32_t flags,
-                                           JSObject **objp, bool *_retval)
+                                           jsid idArg, JSObject **objp,
+                                           bool *_retval)
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
@@ -794,12 +794,12 @@ nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
     }
 }
 
-/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, in uint32_t flags, out JSObjectPtr objp); */
+/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, out JSObjectPtr objp); */
 NS_IMETHODIMP
 nsXPCComponents_Classes::NewResolve(nsIXPConnectWrappedNative *wrapper,
                                     JSContext *cx, JSObject *objArg,
-                                    jsid idArg, uint32_t flags,
-                                    JSObject **objp, bool *_retval)
+                                    jsid idArg, JSObject **objp,
+                                    bool *_retval)
 
 {
     RootedId id(cx, idArg);
@@ -1052,12 +1052,12 @@ IsRegisteredCLSID(const char* str)
     return registered;
 }
 
-/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, in uint32_t flags, out JSObjectPtr objp); */
+/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, out JSObjectPtr objp); */
 NS_IMETHODIMP
 nsXPCComponents_ClassesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
                                         JSContext *cx, JSObject *objArg,
-                                        jsid idArg, uint32_t flags,
-                                        JSObject **objp, bool *_retval)
+                                        jsid idArg, JSObject **objp,
+                                        bool *_retval)
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
@@ -1287,12 +1287,12 @@ nsXPCComponents_Results::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
 }
 
 
-/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, in uint32_t flags, out JSObjectPtr objp); */
+/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, out JSObjectPtr objp); */
 NS_IMETHODIMP
 nsXPCComponents_Results::NewResolve(nsIXPConnectWrappedNative *wrapper,
                                     JSContext *cx, JSObject *objArg,
-                                    jsid idArg, uint32_t flags,
-                                    JSObject * *objp, bool *_retval)
+                                    jsid idArg, JSObject * *objp,
+                                    bool *_retval)
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);

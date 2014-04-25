@@ -358,8 +358,7 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHand
 }
 
 static bool
-args_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-             MutableHandleObject objp)
+args_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
 {
     objp.set(nullptr);
 
@@ -476,8 +475,7 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, bool strict, Mutab
 }
 
 static bool
-strictargs_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                   MutableHandleObject objp)
+strictargs_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
 {
     objp.set(nullptr);
 

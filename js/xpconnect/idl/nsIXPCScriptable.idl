@@ -119,7 +119,7 @@ interface nsIXPCScriptable : nsISupports
 
     boolean newResolve(in nsIXPConnectWrappedNative wrapper,
                       in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
-                      in uint32_t flags, out JSObjectPtr objp);
+                      out JSObjectPtr objp);
 
     boolean convert(in nsIXPConnectWrappedNative wrapper,
                    in JSContextPtr cx, in JSObjectPtr obj,

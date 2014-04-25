@@ -265,8 +265,7 @@ js::FunctionHasResolveHook(const JSAtomState &atomState, PropertyName *name)
 }
 
 bool
-js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                MutableHandleObject objp)
+js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
 {
     if (!JSID_IS_ATOM(id))
         return true;

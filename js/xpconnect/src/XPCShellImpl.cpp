@@ -825,7 +825,7 @@ env_enumerate(JSContext *cx, HandleObject obj)
 }
 
 static bool
-env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+env_resolve(JSContext *cx, HandleObject obj, HandleId id,
             JS::MutableHandleObject objp)
 {
     JSString *idstr, *valstr;

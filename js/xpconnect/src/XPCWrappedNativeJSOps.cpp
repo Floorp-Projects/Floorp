@@ -873,7 +873,7 @@ XPC_WN_Helper_Finalize(js::FreeOp *fop, JSObject *obj)
 }
 
 static bool
-XPC_WN_Helper_NewResolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+XPC_WN_Helper_NewResolve(JSContext *cx, HandleObject obj, HandleId id,
                          MutableHandleObject objp)
 {
     nsresult rv = NS_OK;
@@ -893,7 +893,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, HandleObject obj, HandleId id, unsigned 
         if (allowPropMods)
             oldResolvingWrapper = ccx.SetResolvingWrapper(wrapper);
 
-        rv = si->GetCallback()->NewResolve(wrapper, cx, obj, id, flags,
+        rv = si->GetCallback()->NewResolve(wrapper, cx, obj, id,
                                            obj2FromScriptable.address(), &retval);
 
         if (allowPropMods)

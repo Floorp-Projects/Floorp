@@ -127,16 +127,15 @@ typedef bool
 typedef bool
 (* JSResolveOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
 
-// Like JSResolveOp, except with a useless flags argument, always 0. Also:
-//
-// The *objp out parameter, on success, should be null to indicate that id
-// was not resolved; and non-null, referring to obj or one of its prototypes,
-// if id was resolved.  The hook may assume *objp is null on entry.
+// Like JSResolveOp, except the *objp out parameter, on success, should be null
+// to indicate that id was not resolved; and non-null, referring to obj or one
+// of its prototypes, if id was resolved.  The hook may assume *objp is null on
+// entry.
 //
 // This hook instead of JSResolveOp is called via the JSClass.resolve member
 // if JSCLASS_NEW_RESOLVE is set in JSClass.flags.
 typedef bool
-(* JSNewResolveOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned flags,
+(* JSNewResolveOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                    JS::MutableHandleObject objp);
 
 // Convert obj to the given type, returning true with the resulting value in
