@@ -82,8 +82,10 @@
   }
 
   function testCaretPosition(aDomWinUtils, aOffset, aRectDims) {
-    let rect = aDomWinUtils.sendQueryContentEvent(aDomWinUtils.QUERY_CARET_RECT,
-                                                  aOffset, 0, 0, 0);
+    let rect = aDomWinUtils.sendQueryContentEvent(
+                 aDomWinUtils.QUERY_CARET_RECT,
+                 aOffset, 0, 0, 0,
+                 aDomWinUtils.QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
     ok(rect, "rect returned");
     ok(rect.succeeded, "call succeeded");
 
