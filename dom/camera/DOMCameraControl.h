@@ -28,6 +28,8 @@ namespace dom {
   class CameraCapabilities;
   class CameraPictureOptions;
   class CameraStartRecordingOptions;
+  class CameraRegion;
+  class CameraSize;
   template<typename T> class Optional;
 }
 class ErrorResult;
@@ -70,10 +72,6 @@ public:
   void SetFocusMode(const nsAString& aMode, ErrorResult& aRv);
   double GetZoom(ErrorResult& aRv);
   void SetZoom(double aZoom, ErrorResult& aRv);
-  JS::Value GetMeteringAreas(JSContext* aCx, ErrorResult& aRv);
-  void SetMeteringAreas(JSContext* aCx, JS::Handle<JS::Value> aAreas, ErrorResult& aRv);
-  JS::Value GetFocusAreas(JSContext* aCx, ErrorResult& aRv);
-  void SetFocusAreas(JSContext* aCx, JS::Handle<JS::Value> aAreas, ErrorResult& aRv);
   JS::Value GetPictureSize(JSContext* aCx, ErrorResult& aRv);
   void SetPictureSize(JSContext* aCx, JS::Handle<JS::Value> aSize, ErrorResult& aRv);
   JS::Value GetThumbnailSize(JSContext* aCx, ErrorResult& aRv);
@@ -108,6 +106,14 @@ public:
                         const dom::Optional<dom::OwningNonNull<dom::CameraSetConfigurationCallback> >& aOnSuccess,
                         const dom::Optional<dom::OwningNonNull<dom::CameraErrorCallback> >& aOnError,
                         ErrorResult& aRv);
+  void GetMeteringAreas(nsTArray<dom::CameraRegion>& aAreas, ErrorResult& aRv);
+  void SetMeteringAreas(const dom::Optional<dom::Sequence<dom::CameraRegion> >& aAreas, ErrorResult& aRv);
+  void GetFocusAreas(nsTArray<dom::CameraRegion>& aAreas, ErrorResult& aRv);
+  void SetFocusAreas(const dom::Optional<dom::Sequence<dom::CameraRegion> >& aAreas, ErrorResult& aRv);
+  void GetPictureSize(dom::CameraSize& aSize, ErrorResult& aRv);
+  void SetPictureSize(const dom::CameraSize& aSize, ErrorResult& aRv);
+  void GetThumbnailSize(dom::CameraSize& aSize, ErrorResult& aRv);
+  void SetThumbnailSize(const dom::CameraSize& aSize, ErrorResult& aRv);
   void AutoFocus(dom::CameraAutoFocusCallback& aOnSuccess,
                  const dom::Optional<dom::OwningNonNull<dom::CameraErrorCallback> >& aOnError,
                  ErrorResult& aRv);
@@ -178,8 +184,8 @@ protected:
   // An agent used to join audio channel service.
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
 
-  nsresult Set(JSContext* aCx, uint32_t aKey, const JS::Value& aValue, uint32_t aLimit);
-  nsresult Get(JSContext* aCx, uint32_t aKey, JS::Value* aValue);
+  nsresult Set(uint32_t aKey, const dom::Optional<dom::Sequence<dom::CameraRegion> >& aValue, uint32_t aLimit);
+  nsresult Get(uint32_t aKey, nsTArray<dom::CameraRegion>& aValue);
 
   nsRefPtr<DOMCameraConfiguration>              mCurrentConfiguration;
   nsRefPtr<dom::CameraCapabilities>             mCapabilities;
