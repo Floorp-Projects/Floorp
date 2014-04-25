@@ -62,6 +62,7 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
       "tabbrowser-tabs",
       "new-tab-button",
       "alltabs-button",
+      "tabs-closebutton",
     ],
     "PersonalToolbar": [
       "personal-bookmarks",
