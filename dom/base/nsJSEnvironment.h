@@ -104,6 +104,8 @@ public:
   static void BeginCycleCollectionCallback();
   static void EndCycleCollectionCallback(mozilla::CycleCollectorResults &aResults);
 
+  static void RunNextCollectorTimer();
+
   static void PokeGC(JS::gcreason::Reason aReason, int aDelay = 0);
   static void KillGCTimer();
 
