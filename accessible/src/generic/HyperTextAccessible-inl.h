@@ -42,7 +42,7 @@ HyperTextAccessible::IsValidRange(int32_t aStartOffset, int32_t aEndOffset)
 inline bool
 HyperTextAccessible::AddToSelection(int32_t aStartOffset, int32_t aEndOffset)
 {
-  Selection* domSel = DOMSelection();
+  dom::Selection* domSel = DOMSelection();
   return domSel &&
     SetSelectionBoundsAt(domSel->GetRangeCount(), aStartOffset, aEndOffset);
 }
@@ -149,7 +149,7 @@ HyperTextAccessible::FrameSelection() const
   return frame ? frame->GetFrameSelection() : nullptr;
 }
 
-inline Selection*
+inline dom::Selection*
 HyperTextAccessible::DOMSelection() const
 {
   nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();

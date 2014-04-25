@@ -3503,12 +3503,6 @@ LIRGenerator::visitAsmJSCall(MAsmJSCall *ins)
 }
 
 bool
-LIRGenerator::visitAsmJSCheckOverRecursed(MAsmJSCheckOverRecursed *ins)
-{
-    return add(new(alloc()) LAsmJSCheckOverRecursed(), ins);
-}
-
-bool
 LIRGenerator::visitSetDOMProperty(MSetDOMProperty *ins)
 {
     MDefinition *val = ins->value();

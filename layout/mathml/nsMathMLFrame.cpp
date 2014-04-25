@@ -79,11 +79,9 @@ nsMathMLFrame::UpdatePresentationData(uint32_t        aFlagsValues,
 nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext*  aPresContext,
                                       nsIContent*      aContent,
                                       nsStyleContext*  aParentStyleContext,
-                                      nsMathMLChar*    aMathMLChar,
-                                      bool             aIsMutableChar)
+                                      nsMathMLChar*    aMathMLChar)
 {
-  nsCSSPseudoElements::Type pseudoType = (aIsMutableChar) ?
-    nsCSSPseudoElements::ePseudo_mozMathStretchy :
+  nsCSSPseudoElements::Type pseudoType =
     nsCSSPseudoElements::ePseudo_mozMathAnonymous; // savings
   nsRefPtr<nsStyleContext> newStyleContext;
   newStyleContext = aPresContext->StyleSet()->

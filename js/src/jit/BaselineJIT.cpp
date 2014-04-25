@@ -958,7 +958,7 @@ jit::MarkActiveBaselineScripts(Zone *zone)
 {
     JSRuntime *rt = zone->runtimeFromMainThread();
     for (JitActivationIterator iter(rt); !iter.done(); ++iter) {
-        if (iter.activation()->compartment()->zone() == zone)
+        if (iter->compartment()->zone() == zone)
             MarkActiveBaselineScripts(rt, iter);
     }
 }

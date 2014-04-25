@@ -4,7 +4,7 @@
 
 // Module used by test_import_module.js
 
-const EXPORTED_SYMBOLS = [ "MODULE_IMPORTED", "MODULE_URI", "SUBMODULE_IMPORTED", "same_scope" ];
+const EXPORTED_SYMBOLS = [ "MODULE_IMPORTED", "MODULE_URI", "SUBMODULE_IMPORTED", "same_scope", "SUBMODULE_IMPORTED_TO_SCOPE" ];
 
 const MODULE_IMPORTED = true;
 const MODULE_URI = __URI__;
@@ -26,3 +26,9 @@ XPCOMUtils.importRelative(scope2, "duh/../import_sub_module.jsm");
 // We'll leave it up to test_import_module.js to check that this variable is
 // true.
 var same_scope = (scope1.test_obj.i == scope2.test_obj.i);
+
+// Check that importRelative can also import into a given scope
+var testScope = {};
+XPCOMUtils.importRelative(this, "import_sub_module.jsm", testScope);
+var SUBMODULE_IMPORTED_TO_SCOPE = testScope.SUBMODULE_IMPORTED;
+

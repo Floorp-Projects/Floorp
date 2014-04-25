@@ -25,6 +25,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MacroArgs.h"
+#include "mozilla/MacroForEach.h"
 
 inline nsISupports*
 ToSupports(nsISupports* p)
@@ -824,246 +826,79 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
     NS_INTERFACE_TABLE_ENTRY(_class, nsISupports)                             \
   NS_INTERFACE_TABLE_END
 
-#define NS_INTERFACE_TABLE1(_class, _i1)                                      \
+#define NS_INTERFACE_TABLE(aClass, ...)                                       \
+  MOZ_STATIC_ASSERT_VALID_ARG_COUNT(__VA_ARGS__);                             \
   NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
+    MOZ_FOR_EACH(NS_INTERFACE_TABLE_ENTRY, (aClass,), (__VA_ARGS__))          \
+    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(aClass, nsISupports,                   \
+                                       MOZ_ARG_1(__VA_ARGS__))                \
   NS_INTERFACE_TABLE_END
 
-#define NS_INTERFACE_TABLE2(_class, _i1, _i2)                                 \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE3(_class, _i1, _i2, _i3)                            \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE4(_class, _i1, _i2, _i3, _i4)                       \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE5(_class, _i1, _i2, _i3, _i4, _i5)                  \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)             \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)        \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i7)                                     \
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)   \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i7)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i8)                                     \
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7,        \
-                            _i8, _i9)                                         \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i7)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i8)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i9)                                     \
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7,       \
-                             _i8, _i9, _i10)                                  \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i7)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i8)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i9)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i10)                                    \
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE11(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7,       \
-                             _i8, _i9, _i10, _i11)                            \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i7)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i8)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i9)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i10)                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i11)                                    \
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE12(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7,       \
-                             _i8, _i9, _i10, _i11, _i12)                      \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i7)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i8)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i9)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i10)                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i11)                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i12)                                    \
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE13(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7,       \
-                             _i8, _i9, _i10, _i11, _i12, _i13)                \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i7)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i8)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i9)                                     \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i10)                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i11)                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i12)                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i13)                                    \
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
-  NS_INTERFACE_TABLE_END
+// TODO: Remove these after changing everything to the variadic variant.
+#define NS_INTERFACE_TABLE1(aClass, ...) \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE2(aClass, ...) \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE3(aClass, ...) \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE4(aClass, ...) \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE5(aClass, ...) \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE6(aClass, ...) \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE7(aClass, ...) \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE8(aClass, ...) \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE9(aClass, ...) \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE10(aClass, ...) \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE11(aClass, ...) \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE12(aClass, ...) \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE13(aClass, ...) \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
 
 #define NS_IMPL_QUERY_INTERFACE0(_class)                                      \
   NS_INTERFACE_TABLE_HEAD(_class)                                             \
   NS_INTERFACE_TABLE0(_class)                                                 \
   NS_INTERFACE_TABLE_TAIL
 
-#define NS_IMPL_QUERY_INTERFACE1(_class, _i1)                                 \
-  NS_INTERFACE_TABLE_HEAD(_class)                                             \
-  NS_INTERFACE_TABLE1(_class, _i1)                                            \
+#define NS_IMPL_QUERY_INTERFACE(aClass, ...)                                  \
+  NS_INTERFACE_TABLE_HEAD(aClass)                                             \
+  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)                                     \
   NS_INTERFACE_TABLE_TAIL
 
-#define NS_IMPL_QUERY_INTERFACE2(_class, _i1, _i2)                            \
-  NS_INTERFACE_TABLE_HEAD(_class)                                             \
-  NS_INTERFACE_TABLE2(_class, _i1, _i2)                                       \
-  NS_INTERFACE_TABLE_TAIL
-
-#define NS_IMPL_QUERY_INTERFACE3(_class, _i1, _i2, _i3)                       \
-  NS_INTERFACE_TABLE_HEAD(_class)                                             \
-  NS_INTERFACE_TABLE3(_class, _i1, _i2, _i3)                                  \
-  NS_INTERFACE_TABLE_TAIL
-
-#define NS_IMPL_QUERY_INTERFACE4(_class, _i1, _i2, _i3, _i4)                  \
-  NS_INTERFACE_TABLE_HEAD(_class)                                             \
-  NS_INTERFACE_TABLE4(_class, _i1, _i2, _i3, _i4)                             \
-  NS_INTERFACE_TABLE_TAIL
-
-#define NS_IMPL_QUERY_INTERFACE5(_class, _i1, _i2, _i3, _i4, _i5)             \
-  NS_INTERFACE_TABLE_HEAD(_class)                                             \
-  NS_INTERFACE_TABLE5(_class, _i1, _i2, _i3, _i4, _i5)                        \
-  NS_INTERFACE_TABLE_TAIL
-
-#define NS_IMPL_QUERY_INTERFACE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)        \
-  NS_INTERFACE_TABLE_HEAD(_class)                                             \
-  NS_INTERFACE_TABLE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)                   \
-  NS_INTERFACE_TABLE_TAIL
-
-#define NS_IMPL_QUERY_INTERFACE7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)   \
-  NS_INTERFACE_TABLE_HEAD(_class)                                             \
-  NS_INTERFACE_TABLE7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)              \
-  NS_INTERFACE_TABLE_TAIL
-
-#define NS_IMPL_QUERY_INTERFACE8(_class, _i1, _i2, _i3, _i4, _i5, _i6,        \
-                                 _i7, _i8)                                    \
-  NS_INTERFACE_TABLE_HEAD(_class)                                             \
-  NS_INTERFACE_TABLE8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)         \
-  NS_INTERFACE_TABLE_TAIL
-
-#define NS_IMPL_QUERY_INTERFACE9(_class, _i1, _i2, _i3, _i4, _i5, _i6,        \
-                                 _i7, _i8, _i9)                               \
-  NS_INTERFACE_TABLE_HEAD(_class)                                             \
-  NS_INTERFACE_TABLE9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9)    \
-  NS_INTERFACE_TABLE_TAIL
-
-#define NS_IMPL_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6,       \
-                                  _i7, _i8, _i9, _i10)                        \
-  NS_INTERFACE_TABLE_HEAD(_class)                                             \
-  NS_INTERFACE_TABLE10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,        \
-                       _i9, _i10)                                             \
-  NS_INTERFACE_TABLE_TAIL
-
-#define NS_IMPL_QUERY_INTERFACE11(_class, _i1, _i2, _i3, _i4, _i5, _i6,       \
-                                  _i7, _i8, _i9, _i10, _i11)                  \
-  NS_INTERFACE_TABLE_HEAD(_class)                                             \
-  NS_INTERFACE_TABLE11(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,        \
-                       _i9, _i10, _i11)                                       \
-  NS_INTERFACE_TABLE_TAIL
-
-#define NS_IMPL_QUERY_INTERFACE12(_class, _i1, _i2, _i3, _i4, _i5, _i6,       \
-                                  _i7, _i8, _i9, _i10, _i11, _i12)            \
-  NS_INTERFACE_TABLE_HEAD(_class)                                             \
-  NS_INTERFACE_TABLE12(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,        \
-                       _i9, _i10, _i11, _i12)                                 \
-  NS_INTERFACE_TABLE_TAIL
-
-#define NS_IMPL_QUERY_INTERFACE13(_class, _i1, _i2, _i3, _i4, _i5, _i6,       \
-                                  _i7, _i8, _i9, _i10, _i11, _i12, _i13)      \
-  NS_INTERFACE_TABLE_HEAD(_class)                                             \
-  NS_INTERFACE_TABLE13(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,        \
-                       _i9, _i10, _i11, _i12, _i13)                           \
-  NS_INTERFACE_TABLE_TAIL
+// TODO: Remove these after changing everything to the variadic variant.
+#define NS_IMPL_QUERY_INTERFACE1(aClass, ...) \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE2(aClass, ...) \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE3(aClass, ...) \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE4(aClass, ...) \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE5(aClass, ...) \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE6(aClass, ...) \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE7(aClass, ...) \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE8(aClass, ...) \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE9(aClass, ...) \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE10(aClass, ...) \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE11(aClass, ...) \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE12(aClass, ...) \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE13(aClass, ...) \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
 
 /**
  * Declare that you're going to inherit from something that already
@@ -1126,193 +961,69 @@ NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
 
 #define NS_INTERFACE_TABLE_INHERITED0(Class) /* Nothing to do here */
 
-#define NS_INTERFACE_TABLE_INHERITED1(Class, i1)                              \
+#define NS_INTERFACE_TABLE_INHERITED(aClass, ...)                             \
+  MOZ_STATIC_ASSERT_VALID_ARG_COUNT(__VA_ARGS__);                             \
   NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(Class, i1)                                       \
+    MOZ_FOR_EACH(NS_INTERFACE_TABLE_ENTRY, (aClass,), (__VA_ARGS__))          \
   NS_INTERFACE_TABLE_END
 
-#define NS_INTERFACE_TABLE_INHERITED2(Class, i1, i2)                          \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(Class, i1)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i2)                                       \
-  NS_INTERFACE_TABLE_END
+// TODO: Remove these after changing everything to the variadic variant.
+#define NS_INTERFACE_TABLE_INHERITED1(aClass, ...) \
+  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE_INHERITED2(aClass, ...) \
+  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE_INHERITED3(aClass, ...) \
+  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE_INHERITED4(aClass, ...) \
+  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE_INHERITED5(aClass, ...) \
+  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE_INHERITED6(aClass, ...) \
+  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE_INHERITED7(aClass, ...) \
+  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE_INHERITED8(aClass, ...) \
+  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE_INHERITED9(aClass, ...) \
+  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE_INHERITED10(aClass, ...) \
+  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE_INHERITED11(aClass, ...) \
+  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
+#define NS_INTERFACE_TABLE_INHERITED12(aClass, ...) \
+  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
 
-#define NS_INTERFACE_TABLE_INHERITED3(Class, i1, i2, i3)                      \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(Class, i1)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i2)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i3)                                       \
-  NS_INTERFACE_TABLE_END
+#define NS_IMPL_QUERY_INTERFACE_INHERITED0(aClass, aSuper)                    \
+  NS_INTERFACE_TABLE_HEAD(aClass)                                             \
+  NS_INTERFACE_TABLE_INHERITED0(aClass)                                       \
+  NS_INTERFACE_TABLE_TAIL_INHERITING(aSuper)
 
-#define NS_INTERFACE_TABLE_INHERITED4(Class, i1, i2, i3, i4)                  \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(Class, i1)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i2)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i3)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i4)                                       \
-  NS_INTERFACE_TABLE_END
+#define NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, ...)                \
+  NS_INTERFACE_TABLE_HEAD(aClass)                                             \
+  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)                           \
+  NS_INTERFACE_TABLE_TAIL_INHERITING(aSuper)
 
-#define NS_INTERFACE_TABLE_INHERITED5(Class, i1, i2, i3, i4, i5)              \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(Class, i1)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i2)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i3)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i4)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i5)                                       \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE_INHERITED6(Class, i1, i2, i3, i4, i5, i6)          \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(Class, i1)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i2)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i3)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i4)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i5)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i6)                                       \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE_INHERITED7(Class, i1, i2, i3, i4, i5, i6, i7)      \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(Class, i1)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i2)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i3)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i4)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i5)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i6)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i7)                                       \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE_INHERITED8(Class, i1, i2, i3, i4, i5, i6, i7, i8)  \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(Class, i1)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i2)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i3)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i4)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i5)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i6)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i7)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i8)                                       \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE_INHERITED9(Class, i1, i2, i3, i4, i5, i6, i7,      \
-                                      i8, i9)                                 \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(Class, i1)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i2)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i3)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i4)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i5)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i6)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i7)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i8)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i9)                                       \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE_INHERITED10(Class, i1, i2, i3, i4, i5, i6, i7,     \
-                                      i8, i9, i10)                            \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(Class, i1)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i2)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i3)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i4)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i5)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i6)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i7)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i8)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i9)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i10)                                      \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE_INHERITED11(Class, i1, i2, i3, i4, i5, i6, i7,     \
-                                      i8, i9, i10, i11)                       \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(Class, i1)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i2)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i3)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i4)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i5)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i6)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i7)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i8)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i9)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i10)                                      \
-    NS_INTERFACE_TABLE_ENTRY(Class, i11)                                      \
-  NS_INTERFACE_TABLE_END
-
-#define NS_INTERFACE_TABLE_INHERITED12(Class, i1, i2, i3, i4, i5, i6, i7,     \
-                                      i8, i9, i10, i11, i12)                  \
-  NS_INTERFACE_TABLE_BEGIN                                                    \
-    NS_INTERFACE_TABLE_ENTRY(Class, i1)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i2)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i3)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i4)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i5)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i6)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i7)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i8)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i9)                                       \
-    NS_INTERFACE_TABLE_ENTRY(Class, i10)                                      \
-    NS_INTERFACE_TABLE_ENTRY(Class, i11)                                      \
-    NS_INTERFACE_TABLE_ENTRY(Class, i12)                                      \
-  NS_INTERFACE_TABLE_END
-
-#define NS_IMPL_QUERY_INTERFACE_INHERITED0(Class, Super)                      \
-  NS_INTERFACE_TABLE_HEAD(Class)                                              \
-  NS_INTERFACE_TABLE_INHERITED0(Class)                                        \
-  NS_INTERFACE_TABLE_TAIL_INHERITING(Super)
-
-#define NS_IMPL_QUERY_INTERFACE_INHERITED1(Class, Super, i1)                  \
-  NS_INTERFACE_TABLE_HEAD(Class)                                              \
-  NS_INTERFACE_TABLE_INHERITED1(Class, i1)                                    \
-  NS_INTERFACE_TABLE_TAIL_INHERITING(Super)
-
-#define NS_IMPL_QUERY_INTERFACE_INHERITED2(Class, Super, i1, i2)              \
-  NS_INTERFACE_TABLE_HEAD(Class)                                              \
-  NS_INTERFACE_TABLE_INHERITED2(Class, i1, i2)                                \
-  NS_INTERFACE_TABLE_TAIL_INHERITING(Super)
-
-#define NS_IMPL_QUERY_INTERFACE_INHERITED3(Class, Super, i1, i2, i3)          \
-  NS_INTERFACE_TABLE_HEAD(Class)                                              \
-  NS_INTERFACE_TABLE_INHERITED3(Class, i1, i2, i3)                            \
-  NS_INTERFACE_TABLE_TAIL_INHERITING(Super)
-
-#define NS_IMPL_QUERY_INTERFACE_INHERITED4(Class, Super, i1, i2, i3, i4)      \
-  NS_INTERFACE_TABLE_HEAD(Class)                                              \
-  NS_INTERFACE_TABLE_INHERITED4(Class, i1, i2, i3, i4)                        \
-  NS_INTERFACE_TABLE_TAIL_INHERITING(Super)
-
-#define NS_IMPL_QUERY_INTERFACE_INHERITED5(Class,Super,i1,i2,i3,i4,i5)        \
-  NS_INTERFACE_TABLE_HEAD(Class)                                              \
-  NS_INTERFACE_TABLE_INHERITED5(Class, i1, i2, i3, i4, i5)                    \
-  NS_INTERFACE_TABLE_TAIL_INHERITING(Super)
-
-#define NS_IMPL_QUERY_INTERFACE_INHERITED6(Class,Super,i1,i2,i3,i4,i5,i6)     \
-  NS_INTERFACE_TABLE_HEAD(Class)                                              \
-  NS_INTERFACE_TABLE_INHERITED6(Class, i1, i2, i3, i4, i5, i6)                \
-  NS_INTERFACE_TABLE_TAIL_INHERITING(Super)
-
-#define NS_IMPL_QUERY_INTERFACE_INHERITED7(Class,Super,i1,i2,i3,i4,i5,i6,i7)  \
-  NS_INTERFACE_TABLE_HEAD(Class)                                              \
-  NS_INTERFACE_TABLE_INHERITED7(Class, i1, i2, i3, i4, i5, i6, i7)            \
-  NS_INTERFACE_TABLE_TAIL_INHERITING(Super)
-
-#define NS_IMPL_QUERY_INTERFACE_INHERITED8(Class,Super,i1,i2,i3,i4,i5,i6,     \
-                                           i7,i8)                             \
-  NS_INTERFACE_TABLE_HEAD(Class)                                              \
-  NS_INTERFACE_TABLE_INHERITED8(Class, i1, i2, i3, i4, i5, i6, i7, i8)        \
-  NS_INTERFACE_TABLE_TAIL_INHERITING(Super)
-
-#define NS_IMPL_QUERY_INTERFACE_INHERITED9(Class,Super,i1,i2,i3,i4,i5,i6,     \
-                                           i7,i8,i9)                          \
-  NS_INTERFACE_TABLE_HEAD(Class)                                              \
-  NS_INTERFACE_TABLE_INHERITED9(Class, i1, i2, i3, i4, i5, i6, i7, i8, i9)    \
-  NS_INTERFACE_TABLE_TAIL_INHERITING(Super)
-
-#define NS_IMPL_QUERY_INTERFACE_INHERITED10(Class,Super,i1,i2,i3,i4,i5,i6,       \
-                                            i7,i8,i9,i10)                        \
-  NS_INTERFACE_TABLE_HEAD(Class)                                                 \
-  NS_INTERFACE_TABLE_INHERITED10(Class, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10) \
-  NS_INTERFACE_TABLE_TAIL_INHERITING(Super)
+// TODO: Remove these after changing everything to the variadic variant.
+#define NS_IMPL_QUERY_INTERFACE_INHERITED1(aClass, aSuper, ...) \
+  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE_INHERITED2(aClass, aSuper, ...) \
+  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE_INHERITED3(aClass, aSuper, ...) \
+  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE_INHERITED4(aClass, aSuper, ...) \
+  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE_INHERITED5(aClass, aSuper, ...) \
+  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE_INHERITED6(aClass, aSuper, ...) \
+  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE_INHERITED7(aClass, aSuper, ...) \
+  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE_INHERITED8(aClass, aSuper, ...) \
+  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE_INHERITED9(aClass, aSuper, ...) \
+  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_QUERY_INTERFACE_INHERITED10(aClass, aSuper, ...) \
+  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
 
 /**
  * Convenience macros for implementing all nsISupports methods for
@@ -1327,134 +1038,71 @@ NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
   NS_IMPL_RELEASE(_class)                                                     \
   NS_IMPL_QUERY_INTERFACE0(_class)
 
-#define NS_IMPL_ISUPPORTS1(_class, _interface)                                \
-  NS_IMPL_ADDREF(_class)                                                      \
-  NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE1(_class, _interface)
+#define NS_IMPL_ISUPPORTS(aClass, ...)                                        \
+  NS_IMPL_ADDREF(aClass)                                                      \
+  NS_IMPL_RELEASE(aClass)                                                     \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
 
-#define NS_IMPL_ISUPPORTS2(_class, _i1, _i2)                                  \
-  NS_IMPL_ADDREF(_class)                                                      \
-  NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE2(_class, _i1, _i2)
+// TODO: Remove these after changing everything to the variadic variant.
+#define NS_IMPL_ISUPPORTS1(aClass, ...) \
+  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS2(aClass, ...) \
+  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS3(aClass, ...) \
+  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS4(aClass, ...) \
+  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS5(aClass, ...) \
+  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS6(aClass, ...) \
+  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS7(aClass, ...) \
+  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS8(aClass, ...) \
+  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS9(aClass, ...) \
+  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS10(aClass, ...) \
+  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS11(aClass, ...) \
+  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS12(aClass, ...) \
+  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS13(aClass, ...) \
+  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
 
-#define NS_IMPL_ISUPPORTS3(_class, _i1, _i2, _i3)                             \
-  NS_IMPL_ADDREF(_class)                                                      \
-  NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE3(_class, _i1, _i2, _i3)
+#define NS_IMPL_ISUPPORTS_INHERITED0(aClass, aSuper)                          \
+    NS_IMPL_QUERY_INTERFACE_INHERITED0(aClass, aSuper)                        \
+    NS_IMPL_ADDREF_INHERITED(aClass, aSuper)                                  \
+    NS_IMPL_RELEASE_INHERITED(aClass, aSuper)                                 \
 
-#define NS_IMPL_ISUPPORTS4(_class, _i1, _i2, _i3, _i4)                        \
-  NS_IMPL_ADDREF(_class)                                                      \
-  NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE4(_class, _i1, _i2, _i3, _i4)
+#define NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, ...)                      \
+  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)              \
+  NS_IMPL_ADDREF_INHERITED(aClass, aSuper)                                    \
+  NS_IMPL_RELEASE_INHERITED(aClass, aSuper)
 
-#define NS_IMPL_ISUPPORTS5(_class, _i1, _i2, _i3, _i4, _i5)                   \
-  NS_IMPL_ADDREF(_class)                                                      \
-  NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE5(_class, _i1, _i2, _i3, _i4, _i5)
+// TODO: Remove these after changing everything to the variadic variant.
+#define NS_IMPL_ISUPPORTS_INHERITED1(aClass, aSuper, ...) \
+  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS_INHERITED2(aClass, aSuper, ...) \
+  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS_INHERITED3(aClass, aSuper, ...) \
+  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS_INHERITED4(aClass, aSuper, ...) \
+  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS_INHERITED5(aClass, aSuper, ...) \
+  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS_INHERITED6(aClass, aSuper, ...) \
+  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS_INHERITED7(aClass, aSuper, ...) \
+  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS_INHERITED8(aClass, aSuper, ...) \
+  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS_INHERITED9(aClass, aSuper, ...) \
+  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
+#define NS_IMPL_ISUPPORTS_INHERITED10(aClass, aSuper, ...) \
+  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
 
-#define NS_IMPL_ISUPPORTS6(_class, _i1, _i2, _i3, _i4, _i5, _i6)              \
-  NS_IMPL_ADDREF(_class)                                                      \
-  NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)
-
-#define NS_IMPL_ISUPPORTS7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)         \
-  NS_IMPL_ADDREF(_class)                                                      \
-  NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)
-
-#define NS_IMPL_ISUPPORTS8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)    \
-  NS_IMPL_ADDREF(_class)                                                      \
-  NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)
-
-#define NS_IMPL_ISUPPORTS9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,    \
-                           _i9)                                               \
-  NS_IMPL_ADDREF(_class)                                                      \
-  NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9)
-
-#define NS_IMPL_ISUPPORTS10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
-                            _i9, _i10)                                        \
-  NS_IMPL_ADDREF(_class)                                                      \
-  NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
-                            _i9, _i10)
-
-#define NS_IMPL_ISUPPORTS11(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
-                            _i9, _i10, _i11)                                  \
-  NS_IMPL_ADDREF(_class)                                                      \
-  NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE11(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
-                            _i9, _i10, _i11)
-
-#define NS_IMPL_ISUPPORTS12(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
-                            _i9, _i10, _i11, _i12)                            \
-  NS_IMPL_ADDREF(_class)                                                      \
-  NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE12(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
-                            _i9, _i10, _i11, _i12)
-
-#define NS_IMPL_ISUPPORTS13(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
-                            _i9, _i10, _i11, _i12, _i13)                      \
-  NS_IMPL_ADDREF(_class)                                                      \
-  NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE13(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
-                            _i9, _i10, _i11, _i12, _i13)
-
-#define NS_IMPL_ISUPPORTS_INHERITED0(Class, Super)                            \
-    NS_IMPL_QUERY_INTERFACE_INHERITED0(Class, Super)                          \
-    NS_IMPL_ADDREF_INHERITED(Class, Super)                                    \
-    NS_IMPL_RELEASE_INHERITED(Class, Super)                                   \
-
-#define NS_IMPL_ISUPPORTS_INHERITED1(Class, Super, i1)                        \
-    NS_IMPL_QUERY_INTERFACE_INHERITED1(Class, Super, i1)                      \
-    NS_IMPL_ADDREF_INHERITED(Class, Super)                                    \
-    NS_IMPL_RELEASE_INHERITED(Class, Super)                                   \
-
-#define NS_IMPL_ISUPPORTS_INHERITED2(Class, Super, i1, i2)                    \
-    NS_IMPL_QUERY_INTERFACE_INHERITED2(Class, Super, i1, i2)                  \
-    NS_IMPL_ADDREF_INHERITED(Class, Super)                                    \
-    NS_IMPL_RELEASE_INHERITED(Class, Super)                                   \
-
-#define NS_IMPL_ISUPPORTS_INHERITED3(Class, Super, i1, i2, i3)                \
-    NS_IMPL_QUERY_INTERFACE_INHERITED3(Class, Super, i1, i2, i3)              \
-    NS_IMPL_ADDREF_INHERITED(Class, Super)                                    \
-    NS_IMPL_RELEASE_INHERITED(Class, Super)                                   \
-
-#define NS_IMPL_ISUPPORTS_INHERITED4(Class, Super, i1, i2, i3, i4)            \
-    NS_IMPL_QUERY_INTERFACE_INHERITED4(Class, Super, i1, i2, i3, i4)          \
-    NS_IMPL_ADDREF_INHERITED(Class, Super)                                    \
-    NS_IMPL_RELEASE_INHERITED(Class, Super)                                   \
-
-#define NS_IMPL_ISUPPORTS_INHERITED5(Class, Super, i1, i2, i3, i4, i5)        \
-    NS_IMPL_QUERY_INTERFACE_INHERITED5(Class, Super, i1, i2, i3, i4, i5)      \
-    NS_IMPL_ADDREF_INHERITED(Class, Super)                                    \
-    NS_IMPL_RELEASE_INHERITED(Class, Super)                                   \
-
-#define NS_IMPL_ISUPPORTS_INHERITED6(Class, Super, i1, i2, i3, i4, i5, i6)    \
-    NS_IMPL_QUERY_INTERFACE_INHERITED6(Class, Super, i1, i2, i3, i4, i5, i6)  \
-    NS_IMPL_ADDREF_INHERITED(Class, Super)                                    \
-    NS_IMPL_RELEASE_INHERITED(Class, Super)                                   \
-
-#define NS_IMPL_ISUPPORTS_INHERITED7(Class, Super, i1, i2, i3, i4, i5, i6, i7) \
-    NS_IMPL_QUERY_INTERFACE_INHERITED7(Class, Super, i1, i2, i3, i4, i5, i6, i7) \
-    NS_IMPL_ADDREF_INHERITED(Class, Super)                                    \
-    NS_IMPL_RELEASE_INHERITED(Class, Super)                                   \
-
-#define NS_IMPL_ISUPPORTS_INHERITED8(Class, Super, i1, i2, i3, i4, i5, i6, i7, i8) \
-    NS_IMPL_QUERY_INTERFACE_INHERITED8(Class, Super, i1, i2, i3, i4, i5, i6, i7, i8) \
-    NS_IMPL_ADDREF_INHERITED(Class, Super)                                    \
-    NS_IMPL_RELEASE_INHERITED(Class, Super)                                   \
-
-#define NS_IMPL_ISUPPORTS_INHERITED9(Class, Super, i1, i2, i3, i4, i5, i6, i7, i8, i9) \
-    NS_IMPL_QUERY_INTERFACE_INHERITED9(Class, Super, i1, i2, i3, i4, i5, i6, i7, i8, i9) \
-    NS_IMPL_ADDREF_INHERITED(Class, Super)                                    \
-    NS_IMPL_RELEASE_INHERITED(Class, Super)                                   \
-
-#define NS_IMPL_ISUPPORTS_INHERITED10(Class, Super, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10) \
-    NS_IMPL_QUERY_INTERFACE_INHERITED10(Class, Super, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10) \
-    NS_IMPL_ADDREF_INHERITED(Class, Super)                                    \
-    NS_IMPL_RELEASE_INHERITED(Class, Super)                                   \
 /*
  * Macro to glue together a QI that starts with an interface table
  * and segues into an interface map (e.g. it uses singleton classinfo

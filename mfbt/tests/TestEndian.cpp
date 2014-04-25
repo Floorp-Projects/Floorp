@@ -3,13 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Assertions.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/Endian.h"
 
 #include <stddef.h>
 
 using mozilla::BigEndian;
-using mozilla::DebugOnly;
 using mozilla::LittleEndian;
 using mozilla::NativeEndian;
 
@@ -18,13 +16,13 @@ void
 TestSingleSwap(T value, T swappedValue)
 {
 #if MOZ_LITTLE_ENDIAN
-  MOZ_ASSERT(NativeEndian::swapToBigEndian(value) == swappedValue);
-  MOZ_ASSERT(NativeEndian::swapFromBigEndian(value) == swappedValue);
-  MOZ_ASSERT(NativeEndian::swapToNetworkOrder(value) == swappedValue);
-  MOZ_ASSERT(NativeEndian::swapFromNetworkOrder(value) == swappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapToBigEndian(value) == swappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapFromBigEndian(value) == swappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapToNetworkOrder(value) == swappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapFromNetworkOrder(value) == swappedValue);
 #else
-  MOZ_ASSERT(NativeEndian::swapToLittleEndian(value) == swappedValue);
-  MOZ_ASSERT(NativeEndian::swapFromLittleEndian(value) == swappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapToLittleEndian(value) == swappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapFromLittleEndian(value) == swappedValue);
 #endif
 }
 
@@ -33,13 +31,13 @@ void
 TestSingleNoSwap(T value, T notSwappedValue)
 {
 #if MOZ_LITTLE_ENDIAN
-  MOZ_ASSERT(NativeEndian::swapToLittleEndian(value) == notSwappedValue);
-  MOZ_ASSERT(NativeEndian::swapFromLittleEndian(value) == notSwappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapToLittleEndian(value) == notSwappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapFromLittleEndian(value) == notSwappedValue);
 #else
-  MOZ_ASSERT(NativeEndian::swapToBigEndian(value) == notSwappedValue);
-  MOZ_ASSERT(NativeEndian::swapFromBigEndian(value) == notSwappedValue);
-  MOZ_ASSERT(NativeEndian::swapToNetworkOrder(value) == notSwappedValue);
-  MOZ_ASSERT(NativeEndian::swapFromNetworkOrder(value) == notSwappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapToBigEndian(value) == notSwappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapFromBigEndian(value) == notSwappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapToNetworkOrder(value) == notSwappedValue);
+  MOZ_RELEASE_ASSERT(NativeEndian::swapFromNetworkOrder(value) == notSwappedValue);
 #endif
 }
 
@@ -106,7 +104,7 @@ TestBulkSwapToSub(enum SwapExpectation expectSwap,
   const uint8_t fillValue = 0xa5;
   static uint8_t checkBuffer[bufferSize];
 
-  MOZ_ASSERT(bufferSize > 2 * sizeof(T));
+  MOZ_RELEASE_ASSERT(bufferSize > 2 * sizeof(T));
 
   memset(checkBuffer, fillValue, bufferSize);
 
@@ -115,17 +113,17 @@ TestBulkSwapToSub(enum SwapExpectation expectSwap,
       memset(buffer, fillValue, bufferSize);
       swapperFunc(buffer + startPosition, values, nValues);
 
-      MOZ_ASSERT(memcmp(buffer, checkBuffer, startPosition) == 0);
-      DebugOnly<size_t> valuesEndPosition = startPosition + sizeof(T) * nValues;
-      MOZ_ASSERT(memcmp(buffer + valuesEndPosition,
+      MOZ_RELEASE_ASSERT(memcmp(buffer, checkBuffer, startPosition) == 0);
+      size_t valuesEndPosition = startPosition + sizeof(T) * nValues;
+      MOZ_RELEASE_ASSERT(memcmp(buffer + valuesEndPosition,
                         checkBuffer + valuesEndPosition,
                         bufferSize - valuesEndPosition) == 0);
       if (expectSwap == NoSwap) {
-        MOZ_ASSERT(memcmp(buffer + startPosition, values,
+        MOZ_RELEASE_ASSERT(memcmp(buffer + startPosition, values,
                           nValues * sizeof(T)) == 0);
       }
       for (size_t i = 0; i < nValues; ++i) {
-        MOZ_ASSERT(readerFunc(buffer + startPosition + sizeof(T) * i) ==
+        MOZ_RELEASE_ASSERT(readerFunc(buffer + startPosition + sizeof(T) * i) ==
                    values[i]);
       }
     }
@@ -152,17 +150,17 @@ TestBulkSwapFromSub(enum SwapExpectation expectSwap,
       memset(buffer, fillValue, bufferSize);
       swapperFunc(buffer + startPosition, values, nValues);
 
-      MOZ_ASSERT(memcmp(buffer, checkBuffer, startPosition * sizeof(T)) == 0);
-      DebugOnly<size_t> valuesEndPosition = startPosition + nValues;
-      MOZ_ASSERT(memcmp(buffer + valuesEndPosition,
+      MOZ_RELEASE_ASSERT(memcmp(buffer, checkBuffer, startPosition * sizeof(T)) == 0);
+      size_t valuesEndPosition = startPosition + nValues;
+      MOZ_RELEASE_ASSERT(memcmp(buffer + valuesEndPosition,
                         checkBuffer + valuesEndPosition,
                         (arraySize - valuesEndPosition) * sizeof(T)) == 0);
       if (expectSwap == NoSwap) {
-        MOZ_ASSERT(memcmp(buffer + startPosition, values,
+        MOZ_RELEASE_ASSERT(memcmp(buffer + startPosition, values,
                           nValues * sizeof(T)) == 0);
       }
       for (size_t i = 0; i < nValues; ++i)
-        MOZ_ASSERT(readerFunc(buffer + startPosition + i) == values[i]);
+        MOZ_RELEASE_ASSERT(readerFunc(buffer + startPosition + i) == values[i]);
     }
   }
 }
@@ -181,7 +179,7 @@ TestBulkInPlaceSub(enum SwapExpectation expectSwap,
   const T fillValue = 0xa5;
   static T checkBuffer[bufferCount];
 
-  MOZ_ASSERT(bufferSize > 2 * sizeof(T));
+  MOZ_RELEASE_ASSERT(bufferSize > 2 * sizeof(T));
 
   memset(checkBuffer, fillValue, bufferSize);
 
@@ -191,17 +189,17 @@ TestBulkInPlaceSub(enum SwapExpectation expectSwap,
       memcpy(buffer + startPosition, values, nValues * sizeof(T));
       swapperFunc(buffer + startPosition, nValues);
 
-      MOZ_ASSERT(memcmp(buffer, checkBuffer, startPosition * sizeof(T)) == 0);
-      DebugOnly<size_t> valuesEndPosition = startPosition + nValues;
-      MOZ_ASSERT(memcmp(buffer + valuesEndPosition,
+      MOZ_RELEASE_ASSERT(memcmp(buffer, checkBuffer, startPosition * sizeof(T)) == 0);
+      size_t valuesEndPosition = startPosition + nValues;
+      MOZ_RELEASE_ASSERT(memcmp(buffer + valuesEndPosition,
                         checkBuffer + valuesEndPosition,
                         bufferSize - valuesEndPosition * sizeof(T)) == 0);
       if (expectSwap == NoSwap) {
-        MOZ_ASSERT(memcmp(buffer + startPosition, values,
+        MOZ_RELEASE_ASSERT(memcmp(buffer + startPosition, values,
                           nValues * sizeof(T)) == 0);
       }
       for (size_t i = 0; i < nValues; ++i)
-        MOZ_ASSERT(readerFunc(buffer + startPosition + i) == values[i]);
+        MOZ_RELEASE_ASSERT(readerFunc(buffer + startPosition + i) == values[i]);
     }
   }
 }
@@ -304,53 +302,53 @@ main()
                                            int64_t(0xf1f2f3f4f5f6f7f8) };
   uint8_t buffer[8];
 
-  MOZ_ASSERT(LittleEndian::readUint16(&unsigned_bytes[0]) == 0x201);
-  MOZ_ASSERT(BigEndian::readUint16(&unsigned_bytes[0]) == 0x102);
+  MOZ_RELEASE_ASSERT(LittleEndian::readUint16(&unsigned_bytes[0]) == 0x201);
+  MOZ_RELEASE_ASSERT(BigEndian::readUint16(&unsigned_bytes[0]) == 0x102);
 
-  MOZ_ASSERT(LittleEndian::readUint32(&unsigned_bytes[0]) == 0x4030201U);
-  MOZ_ASSERT(BigEndian::readUint32(&unsigned_bytes[0]) == 0x1020304U);
+  MOZ_RELEASE_ASSERT(LittleEndian::readUint32(&unsigned_bytes[0]) == 0x4030201U);
+  MOZ_RELEASE_ASSERT(BigEndian::readUint32(&unsigned_bytes[0]) == 0x1020304U);
 
-  MOZ_ASSERT(LittleEndian::readUint64(&unsigned_bytes[0]) == 0x807060504030201ULL);
-  MOZ_ASSERT(BigEndian::readUint64(&unsigned_bytes[0]) == 0x102030405060708ULL);
+  MOZ_RELEASE_ASSERT(LittleEndian::readUint64(&unsigned_bytes[0]) == 0x807060504030201ULL);
+  MOZ_RELEASE_ASSERT(BigEndian::readUint64(&unsigned_bytes[0]) == 0x102030405060708ULL);
 
   LittleEndian::writeUint16(&buffer[0], 0x201);
-  MOZ_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint16_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint16_t)) == 0);
   BigEndian::writeUint16(&buffer[0], 0x102);
-  MOZ_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint16_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint16_t)) == 0);
 
   LittleEndian::writeUint32(&buffer[0], 0x4030201U);
-  MOZ_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint32_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint32_t)) == 0);
   BigEndian::writeUint32(&buffer[0], 0x1020304U);
-  MOZ_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint32_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint32_t)) == 0);
 
   LittleEndian::writeUint64(&buffer[0], 0x807060504030201ULL);
-  MOZ_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint64_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint64_t)) == 0);
   BigEndian::writeUint64(&buffer[0], 0x102030405060708ULL);
-  MOZ_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint64_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint64_t)) == 0);
 
-  MOZ_ASSERT(LittleEndian::readInt16(&signed_bytes[0]) == int16_t(0xf2f1));
-  MOZ_ASSERT(BigEndian::readInt16(&signed_bytes[0]) == int16_t(0xf1f2));
+  MOZ_RELEASE_ASSERT(LittleEndian::readInt16(&signed_bytes[0]) == int16_t(0xf2f1));
+  MOZ_RELEASE_ASSERT(BigEndian::readInt16(&signed_bytes[0]) == int16_t(0xf1f2));
 
-  MOZ_ASSERT(LittleEndian::readInt32(&signed_bytes[0]) == int32_t(0xf4f3f2f1));
-  MOZ_ASSERT(BigEndian::readInt32(&signed_bytes[0]) == int32_t(0xf1f2f3f4));
+  MOZ_RELEASE_ASSERT(LittleEndian::readInt32(&signed_bytes[0]) == int32_t(0xf4f3f2f1));
+  MOZ_RELEASE_ASSERT(BigEndian::readInt32(&signed_bytes[0]) == int32_t(0xf1f2f3f4));
 
-  MOZ_ASSERT(LittleEndian::readInt64(&signed_bytes[0]) == int64_t(0xf8f7f6f5f4f3f2f1LL));
-  MOZ_ASSERT(BigEndian::readInt64(&signed_bytes[0]) == int64_t(0xf1f2f3f4f5f6f7f8LL));
+  MOZ_RELEASE_ASSERT(LittleEndian::readInt64(&signed_bytes[0]) == int64_t(0xf8f7f6f5f4f3f2f1LL));
+  MOZ_RELEASE_ASSERT(BigEndian::readInt64(&signed_bytes[0]) == int64_t(0xf1f2f3f4f5f6f7f8LL));
 
   LittleEndian::writeInt16(&buffer[0], 0xf2f1);
-  MOZ_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int16_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int16_t)) == 0);
   BigEndian::writeInt16(&buffer[0], 0xf1f2);
-  MOZ_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int16_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int16_t)) == 0);
 
   LittleEndian::writeInt32(&buffer[0], 0xf4f3f2f1);
-  MOZ_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int32_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int32_t)) == 0);
   BigEndian::writeInt32(&buffer[0], 0xf1f2f3f4);
-  MOZ_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int32_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int32_t)) == 0);
 
   LittleEndian::writeInt64(&buffer[0], 0xf8f7f6f5f4f3f2f1LL);
-  MOZ_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int64_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int64_t)) == 0);
   BigEndian::writeInt64(&buffer[0], 0xf1f2f3f4f5f6f7f8LL);
-  MOZ_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int64_t)) == 0);
+  MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int64_t)) == 0);
 
   TestSingleSwap(uint16_t(0xf2f1), uint16_t(0xf1f2));
   TestSingleSwap(uint32_t(0xf4f3f2f1), uint32_t(0xf1f2f3f4));

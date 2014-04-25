@@ -38,8 +38,8 @@ Example()
   // Destroying the underlying object clears weak pointers to it.
   delete ptr;
 
-  MOZ_ASSERT(!weak, "Deleting |ptr| clears weak pointers to it.");
-  MOZ_ASSERT(!other, "Deleting |ptr| clears all weak pointers to it.");
+  MOZ_RELEASE_ASSERT(!weak, "Deleting |ptr| clears weak pointers to it.");
+  MOZ_RELEASE_ASSERT(!other, "Deleting |ptr| clears all weak pointers to it.");
 }
 
 struct A : public SupportsWeakPtr<A>
@@ -63,13 +63,13 @@ main()
   WeakPtr<A> ptr = a->asWeakPtr();
   {
       WeakPtr<A> ptr2 = a->asWeakPtr();
-      MOZ_ASSERT(ptr->data == 5);
+      MOZ_RELEASE_ASSERT(ptr->data == 5);
       WeakPtr<A> ptr3 = a->asWeakPtr();
-      MOZ_ASSERT(ptr->data == 5);
+      MOZ_RELEASE_ASSERT(ptr->data == 5);
   }
 
   delete a;
-  MOZ_ASSERT(!ptr);
+  MOZ_RELEASE_ASSERT(!ptr);
 
   delete a2;
 
