@@ -14,17 +14,6 @@
 namespace js {
 
 #ifdef DEBUG
-
-bool
-HeapValue::preconditionForSet(Zone *zone)
-{
-    if (!value.isMarkable())
-        return true;
-
-    return ZoneOfValue(value) == zone ||
-           zone->runtimeFromAnyThread()->isAtomsZone(ZoneOfValue(value));
-}
-
 bool
 HeapSlot::preconditionForSet(JSObject *owner, Kind kind, uint32_t slot)
 {
