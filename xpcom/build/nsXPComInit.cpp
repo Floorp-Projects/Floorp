@@ -461,6 +461,17 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     // chance to start up, because the initialization is not thread-safe.
     mozilla::AvailableMemoryTracker::Init();
 
+#ifdef XP_UNIX
+    // Discover the current value of the umask, and save it where
+    // nsSystemInfo::Init can retrieve it when necessary.  There is no way
+    // to read the umask without changing it, and the setting is process-
+    // global, so this must be done while we are still single-threaded; the
+    // nsSystemInfo object is typically created much later, when some piece
+    // of chrome JS wants it.  The system call is specified as unable to fail.
+    nsSystemInfo::gUserUmask = ::umask(0777);
+    ::umask(nsSystemInfo::gUserUmask);
+#endif
+
     NS_LogInit();
 
     // Set up chromium libs
