@@ -95,9 +95,9 @@ TextureRequiresLocking(TextureFlags aFlags)
   // If we're not double buffered, or uploading
   // within a transaction, then we need to support
   // locking correctly.
-  return !(aFlags & (TEXTURE_IMMEDIATE_UPLOAD |
-                     TEXTURE_DOUBLE_BUFFERED |
-                     TEXTURE_IMMUTABLE));
+  return !(aFlags & (TextureFlags::IMMEDIATE_UPLOAD |
+                     TextureFlags::DOUBLE_BUFFERED |
+                     TextureFlags::IMMUTABLE));
 }
 
 /**
