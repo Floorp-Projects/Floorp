@@ -3810,7 +3810,7 @@ pref("print.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+-d\"$MOZ_PRINTER_NAME\
 // Login Manager prefs
 pref("signon.rememberSignons",              true);
 pref("signon.autofillForms",                true);
-pref("signon.autologin.proxy",              true);
+pref("signon.autologin.proxy",              false);
 pref("signon.storeWhenAutocompleteOff",     true);
 pref("signon.debug",                        false);
 
