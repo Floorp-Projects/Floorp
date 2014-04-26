@@ -2770,6 +2770,11 @@ BeginMarkPhase(JSRuntime *rt)
             c->zone()->setPreservingCode(true);
     }
 
+    if (!rt->gcShouldCleanUpEverything) {
+        if (JSCompartment *comp = jit::TopmostJitActivationCompartment(rt))
+            comp->zone()->setPreservingCode(true);
+    }
+
     /*
      * Atoms are not in the cross-compartment map. So if there are any
      * zones that are not being collected, we are not allowed to collect
