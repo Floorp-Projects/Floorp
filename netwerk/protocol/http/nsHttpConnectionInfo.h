@@ -24,6 +24,7 @@ class nsHttpConnectionInfo
 {
 public:
     nsHttpConnectionInfo(const nsACString &host, int32_t port,
+                         const nsACString &username,
                          nsProxyInfo* proxyInfo,
                          bool usingSSL=false);
 
@@ -62,6 +63,7 @@ public:
 
     const char   *Host() const           { return mHost.get(); }
     int32_t       Port() const           { return mPort; }
+    const char   *Username() const       { return mUsername.get(); }
     nsProxyInfo  *ProxyInfo()            { return mProxyInfo; }
     bool          UsingHttpProxy() const { return mUsingHttpProxy; }
     bool          UsingSSL() const       { return mUsingSSL; }
@@ -85,6 +87,7 @@ private:
     nsCString              mHashKey;
     nsCString              mHost;
     int32_t                mPort;
+    nsCString              mUsername;
     nsCOMPtr<nsProxyInfo>  mProxyInfo;
     bool                   mUsingHttpProxy;
     bool                   mUsingSSL;

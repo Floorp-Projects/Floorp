@@ -4533,6 +4533,7 @@ nsHttpChannel::BeginConnect()
     // Construct connection info object
     nsAutoCString host;
     int32_t port = -1;
+    nsAutoCString username;
     bool usingSSL = false;
 
     rv = mURI->SchemeIs("https", &usingSSL);
@@ -4540,6 +4541,8 @@ nsHttpChannel::BeginConnect()
         rv = mURI->GetAsciiHost(host);
     if (NS_SUCCEEDED(rv))
         rv = mURI->GetPort(&port);
+    if (NS_SUCCEEDED(rv))
+        mURI->GetUsername(username);
     if (NS_SUCCEEDED(rv))
         rv = mURI->GetAsciiSpec(mSpec);
     if (NS_FAILED(rv))
@@ -4555,7 +4558,7 @@ nsHttpChannel::BeginConnect()
     if (mProxyInfo)
         proxyInfo = do_QueryInterface(mProxyInfo);
 
-    mConnectionInfo = new nsHttpConnectionInfo(host, port, proxyInfo, usingSSL);
+    mConnectionInfo = new nsHttpConnectionInfo(host, port, username, proxyInfo, usingSSL);
 
     mAuthProvider =
         do_CreateInstance("@mozilla.org/network/http-channel-auth-provider;1",
