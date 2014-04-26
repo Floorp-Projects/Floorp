@@ -58,7 +58,7 @@ Compositor::ShouldDrawDiagnostics(DiagnosticFlags aFlags)
       !(mDiagnosticTypes & DiagnosticTypes::BIGIMAGE_BORDERS)) {
     return false;
   }
-  if (!mDiagnosticTypes) {
+  if (mDiagnosticTypes == DiagnosticTypes::NO_DIAGNOSTIC) {
     return false;
   }
   return true;

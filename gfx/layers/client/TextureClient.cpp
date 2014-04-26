@@ -649,7 +649,7 @@ BufferTextureClient::BufferTextureClient(ISurfaceAllocator* aAllocator,
   , mAllocator(aAllocator)
   , mFormat(aFormat)
   , mBackend(aMoz2DBackend)
-  , mOpenMode(0)
+  , mOpenMode(OpenMode::OPEN_NONE)
   , mUsingFallbackDrawTarget(false)
   , mLocked(false)
 {}
