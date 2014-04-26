@@ -159,6 +159,13 @@ private:
   // Whether the storage change is about to persist
   bool Persist(const DOMStorage* aStorage) const;
 
+  // Whether the storage change is about to persist and also the database
+  // is still up.  No need to use the database-is-up check before
+  // WaitForPreload() calls that also dereferences sDatabase since preload
+  // is either done before we've shut the DB down or when the DB could not
+  // start, preload has not even be started.
+  bool PersistAndDatabaseUp(const DOMStorage* aStorage) const;
+
   // Changes the quota usage on the given data set if it fits the quota.
   // If not, then false is returned and no change to the set must be done.
   bool ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDelta);
@@ -225,6 +232,9 @@ private:
   // DOMStorageDBThread on the parent or single process,
   // DOMStorageDBChild on the child process.
   static DOMStorageDBBridge* sDatabase;
+
+  // False until we shut the database down.
+  static bool sDatabaseDown;
 };
 
 // DOMStorageUsage
