@@ -166,7 +166,7 @@ public:
   CanvasRadialGradient(CanvasRenderingContext2D* aContext,
                        const Point &aBeginOrigin, Float aBeginRadius,
                        const Point &aEndOrigin, Float aEndRadius)
-    : CanvasGradient(aContext, RADIAL)
+    : CanvasGradient(aContext, Type::RADIAL)
     , mCenter1(aBeginOrigin)
     , mCenter2(aEndOrigin)
     , mRadius1(aBeginRadius)
@@ -185,7 +185,7 @@ class CanvasLinearGradient : public CanvasGradient
 public:
   CanvasLinearGradient(CanvasRenderingContext2D* aContext,
                        const Point &aBegin, const Point &aEnd)
-    : CanvasGradient(aContext, LINEAR)
+    : CanvasGradient(aContext, Type::LINEAR)
     , mBegin(aBegin)
     , mEnd(aEnd)
   {

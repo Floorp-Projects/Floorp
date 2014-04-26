@@ -24,6 +24,7 @@
 #include "gfx2DGlue.h"
 #include "imgIEncoder.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/EnumeratedArray.h"
 
 class nsGlobalWindow;
 class nsXULElement;
@@ -870,6 +871,9 @@ protected:
 
     ContextState(const ContextState& other)
         : fontGroup(other.fontGroup),
+          gradientStyles(other.gradientStyles),
+          patternStyles(other.patternStyles),
+          colorStyles(other.colorStyles),
           font(other.font),
           textAlign(other.textAlign),
           textBaseline(other.textBaseline),
@@ -887,13 +891,7 @@ protected:
           lineCap(other.lineCap),
           lineJoin(other.lineJoin),
           imageSmoothingEnabled(other.imageSmoothingEnabled)
-    {
-      for (int i = 0; i < Style::MAX; i++) {
-        colorStyles[i] = other.colorStyles[i];
-        gradientStyles[i] = other.gradientStyles[i];
-        patternStyles[i] = other.patternStyles[i];
-      }
-    }
+    { }
 
     void SetColorStyle(Style whichStyle, nscolor color)
     {
@@ -926,14 +924,14 @@ protected:
     std::vector<mozilla::RefPtr<mozilla::gfx::Path> > clipsPushed;
 
     nsRefPtr<gfxFontGroup> fontGroup;
-    nsRefPtr<CanvasGradient> gradientStyles[Style::MAX];
-    nsRefPtr<CanvasPattern> patternStyles[Style::MAX];
+    EnumeratedArray<Style, Style::MAX, nsRefPtr<CanvasGradient>> gradientStyles;
+    EnumeratedArray<Style, Style::MAX, nsRefPtr<CanvasPattern>> patternStyles;
+    EnumeratedArray<Style, Style::MAX, nscolor> colorStyles;
 
     nsString font;
     TextAlign textAlign;
     TextBaseline textBaseline;
 
-    nscolor colorStyles[Style::MAX];
     nscolor shadowColor;
 
     mozilla::gfx::Matrix transform;
