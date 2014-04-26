@@ -143,9 +143,9 @@ ClientImageLayer::RenderLayer()
     if (type == BUFFER_UNKNOWN) {
       return;
     }
-    TextureFlags flags = TEXTURE_FRONT;
+    TextureFlags flags = TextureFlags::FRONT;
     if (mDisallowBigImage) {
-      flags |= TEXTURE_DISALLOW_BIGIMAGE;
+      flags |= TextureFlags::DISALLOW_BIGIMAGE;
     }
     mImageClient = ImageClient::CreateImageClient(type,
                                                   ClientManager()->AsShadowForwarder(),

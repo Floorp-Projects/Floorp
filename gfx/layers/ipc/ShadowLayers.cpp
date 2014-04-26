@@ -367,7 +367,7 @@ ShadowLayerForwarder::UpdatedTexture(CompositableClient* aCompositable,
   MOZ_ASSERT(aTexture->GetIPDLActor());
   MaybeRegion region = aRegion ? MaybeRegion(*aRegion)
                                : MaybeRegion(null_t());
-  if (aTexture->GetFlags() & TEXTURE_IMMEDIATE_UPLOAD) {
+  if (aTexture->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD) {
     mTxn->AddPaint(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
                                    nullptr, aTexture->GetIPDLActor(),
                                    region));
@@ -417,7 +417,7 @@ ShadowLayerForwarder::RemoveTextureFromCompositable(CompositableClient* aComposi
   MOZ_ASSERT(aTexture->GetIPDLActor());
   mTxn->AddEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
                                 nullptr, aTexture->GetIPDLActor()));
-  if (aTexture->GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
+  if (aTexture->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
     mTxn->MarkSyncTransaction();
   }
   // Hold texture until transaction complete.
