@@ -685,7 +685,7 @@ ContentHostTexture::GetRenderState()
   LayerRenderState result = mTextureHost->GetRenderState();
 
   if (mBufferRotation != nsIntPoint()) {
-    result.mFlags |= LAYER_RENDER_STATE_BUFFER_ROTATION;
+    result.mFlags |= LayerRenderStateFlags::BUFFER_ROTATION;
   }
   result.SetOffset(GetOriginOffset());
   return result;
