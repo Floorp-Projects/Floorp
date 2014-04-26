@@ -46,6 +46,7 @@
 #include "nsIObserver.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsIXULRuntime.h"
+#include "nsIPropertyBag2.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
@@ -163,6 +164,12 @@ struct Paths {
  */
 Paths* gPaths = nullptr;
 
+/**
+ * (Unix) the umask, which goes in OS.Constants.Sys but
+ * can only be looked up (via the system-info service)
+ * on the main thread.
+ */
+uint32_t gUserUmask = 0;
 }
 
 /**
@@ -297,6 +304,19 @@ nsresult InitOSFileConstants()
 #endif // defined(XP_MACOSX)
 
   gPaths = paths.forget();
+
+  // Get the umask from the system-info service.
+  // The property will always be present, but it will be zero on
+  // non-Unix systems.
+  nsCOMPtr<nsIPropertyBag2> infoService =
+    do_GetService("@mozilla.org/system-info;1");
+  MOZ_ASSERT(infoService, "Could not access the system information service");
+  rv = infoService->GetPropertyAsUint32(NS_LITERAL_STRING("umask"),
+                                        &gUserUmask);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   return NS_OK;
 }
 
@@ -852,6 +872,14 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
     return false;
   }
 #endif
+
+  dom::ConstantSpec umask_cs[] = {
+    { "umask", UINT_TO_JSVAL(gUserUmask) },
+    PROP_END
+  };
+  if (!dom::DefineConstants(cx, objSys, umask_cs)) {
+      return false;
+  }
 
   // Build OS.Constants.Path
 
