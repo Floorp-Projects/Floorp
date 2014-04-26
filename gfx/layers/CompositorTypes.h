@@ -28,7 +28,8 @@ const SurfaceDescriptorType SURFACEDESCRIPTOR_UNKNOWN = 0;
  *
  * XXX - switch to all caps constant names which seems to be the standard in gecko
  */
-MOZ_BEGIN_ENUM_CLASS(TextureFlags)
+MOZ_BEGIN_ENUM_CLASS(TextureFlags, uint32_t)
+  NO_FLAGS           = 0,
   // Use nearest-neighbour texture filtering (as opposed to linear filtering).
   USE_NEAREST_FILTER = 1 << 0,
   // The texture should be flipped around the y-axis when composited.
@@ -51,39 +52,41 @@ MOZ_BEGIN_ENUM_CLASS(TextureFlags)
   // (for example, with GL), a BGRA shader should be used.
   RB_SWAPPED         = 1 << 6,
 
-  FRONT              = 1 << 12,
+  FRONT              = 1 << 7,
   // A texture host on white for component alpha
-  ON_WHITE           = 1 << 13,
+  ON_WHITE           = 1 << 8,
   // A texture host on black for component alpha
-  ON_BLACK           = 1 << 14,
+  ON_BLACK           = 1 << 9,
   // A texture host that supports tiling
-  TILE               = 1 << 15,
+  TILE               = 1 << 10,
   // A texture should be recycled when no longer in used
-  RECYCLE            = 1 << 16,
+  RECYCLE            = 1 << 11,
   // Texture contents should be initialized
   // from the previous texture.
-  COPY_PREVIOUS      = 1 << 24,
+  COPY_PREVIOUS      = 1 << 12,
   // Who is responsible for deallocating the shared data.
   // if DEALLOCATE_CLIENT is set, the shared data is deallocated on the
   // client side and requires some extra synchronizaion to ensure race-free
   // deallocation.
   // The default behaviour is to deallocate on the host side.
-  DEALLOCATE_CLIENT  = 1 << 25,
+  DEALLOCATE_CLIENT  = 1 << 13,
   // After being shared ith the compositor side, an immutable texture is never
   // modified, it can only be read. It is safe to not Lock/Unlock immutable
   // textures.
-  IMMUTABLE          = 1 << 27,
+  IMMUTABLE          = 1 << 14,
   // The contents of the texture must be uploaded or copied immediately
   // during the transaction, because the producer may want to write
   // to it again.
-  IMMEDIATE_UPLOAD   = 1 << 28,
+  IMMEDIATE_UPLOAD   = 1 << 15,
   // The texture is going to be used as part of a double
   // buffered pair, and so we can guarantee that the producer/consumer
   // won't be racing to access its contents.
-  DOUBLE_BUFFERED    = 1 << 29,
+  DOUBLE_BUFFERED    = 1 << 16,
   // We've previously tried a texture and it didn't work for some reason. If there
   // is a fallback available, try that.
-  ALLOC_FALLBACK     = 1 << 31,
+  ALLOC_FALLBACK     = 1 << 17,
+  // OR union of all valid bits
+  ALL_BITS           = (1 << 18) - 1,
   // the default flags
   DEFAULT = FRONT
 MOZ_END_ENUM_CLASS(TextureFlags)
@@ -229,13 +232,13 @@ struct TextureInfo
   TextureInfo()
     : mCompositableType(BUFFER_UNKNOWN)
     , mDeprecatedTextureHostFlags(0)
-    , mTextureFlags(0)
+    , mTextureFlags(TextureFlags::NO_FLAGS)
   {}
 
   TextureInfo(CompositableType aType)
     : mCompositableType(aType)
     , mDeprecatedTextureHostFlags(0)
-    , mTextureFlags(0)
+    , mTextureFlags(TextureFlags::NO_FLAGS)
   {}
 
   bool operator==(const TextureInfo& aOther) const
