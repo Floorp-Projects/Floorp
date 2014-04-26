@@ -19,8 +19,9 @@ using namespace android;
 
 static gfx::SurfaceFormat
 SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
-                                   bool swapRB = false)
+                                   TextureFlags aFlags)
 {
+  bool swapRB = bool(aFlags & TextureFlags::RB_SWAPPED);
   switch (aFormat) {
   case android::PIXEL_FORMAT_BGRA_8888:
     return swapRB ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::B8G8R8A8;
@@ -290,7 +291,7 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
   if (graphicBuffer) {
     format =
       SurfaceFormatForAndroidPixelFormat(graphicBuffer->getPixelFormat(),
-                                         aFlags & TextureFlags::RB_SWAPPED);
+                                         aFlags);
   }
   mTextureSource = new GrallocTextureSourceOGL(nullptr,
                                                graphicBuffer,

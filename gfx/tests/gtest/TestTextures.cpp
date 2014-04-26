@@ -270,7 +270,7 @@ TEST(Layers, TextureSerialization) {
       = new MemoryTextureClient(nullptr,
                                 mozilla::gfx::ImageFormatToSurfaceFormat(surface->Format()),
                                 gfx::BackendType::CAIRO,
-                                TEXTURE_DEALLOCATE_CLIENT);
+                                TextureFlags::DEALLOCATE_CLIENT);
 
     TestTextureClientSurface(client, surface);
 
@@ -307,7 +307,7 @@ TEST(Layers, TextureYCbCrSerialization) {
     = new MemoryTextureClient(nullptr,
                               mozilla::gfx::SurfaceFormat::YUV,
                               gfx::BackendType::CAIRO,
-                              TEXTURE_DEALLOCATE_CLIENT);
+                              TextureFlags::DEALLOCATE_CLIENT);
 
   TestTextureClientYCbCr(client, clientData);
 
