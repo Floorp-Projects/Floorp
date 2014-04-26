@@ -27,13 +27,12 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CanvasPattern)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CanvasPattern)
 
-  enum RepeatMode
-  {
+  MOZ_BEGIN_NESTED_ENUM_CLASS(RepeatMode, uint8_t)
     REPEAT,
     REPEATX,
     REPEATY,
     NOREPEAT
-  };
+  MOZ_END_NESTED_ENUM_CLASS(RepeatMode)
 
   CanvasPattern(CanvasRenderingContext2D* aContext,
                 gfx::SourceSurface* aSurface,
@@ -43,10 +42,10 @@ public:
                 bool CORSUsed)
     : mContext(aContext)
     , mSurface(aSurface)
-    , mRepeat(aRepeat)
     , mPrincipal(principalForSecurityCheck)
     , mForceWriteOnly(forceWriteOnly)
     , mCORSUsed(CORSUsed)
+    , mRepeat(aRepeat)
   {
     SetIsDOMBinding();
   }
@@ -63,11 +62,13 @@ public:
 
   nsRefPtr<CanvasRenderingContext2D> mContext;
   RefPtr<gfx::SourceSurface> mSurface;
-  const RepeatMode mRepeat;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   const bool mForceWriteOnly;
   const bool mCORSUsed;
+  const RepeatMode mRepeat;
 };
+
+MOZ_FINISH_NESTED_ENUM_CLASS(CanvasPattern::RepeatMode)
 
 }
 }

@@ -23,17 +23,15 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CanvasGradient)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CanvasGradient)
 
-  enum Type
-  {
+  MOZ_BEGIN_NESTED_ENUM_CLASS(Type, uint8_t)
     LINEAR = 0,
     RADIAL
-  };
+  MOZ_END_NESTED_ENUM_CLASS(Type)
 
   Type GetType()
   {
     return mType;
   }
-
 
   mozilla::gfx::GradientStops *
   GetGradientStopsForTarget(mozilla::gfx::DrawTarget *aRT)
@@ -77,6 +75,8 @@ protected:
   Type mType;
   virtual ~CanvasGradient() {}
 };
+
+MOZ_FINISH_NESTED_ENUM_CLASS(CanvasGradient::Type)
 
 } // namespace dom
 } // namespace mozilla
