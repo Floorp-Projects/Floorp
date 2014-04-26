@@ -11,6 +11,9 @@
 #include "LayersTypes.h"                // for LayersBackend, etc
 #include "nsXULAppAPI.h"                // for GeckoProcessType, etc
 
+#include "mozilla/TypedEnum.h"
+#include "mozilla/TypedEnumBits.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -25,65 +28,66 @@ const SurfaceDescriptorType SURFACEDESCRIPTOR_UNKNOWN = 0;
  *
  * XXX - switch to all caps constant names which seems to be the standard in gecko
  */
-typedef uint32_t TextureFlags;
-// Use nearest-neighbour texture filtering (as opposed to linear filtering).
-const TextureFlags TEXTURE_USE_NEAREST_FILTER = 1 << 0;
-// The texture should be flipped around the y-axis when composited.
-const TextureFlags TEXTURE_NEEDS_Y_FLIP       = 1 << 1;
-// Force the texture to be represented using a single tile (note that this means
-// tiled textures, not tiled layers).
-const TextureFlags TEXTURE_DISALLOW_BIGIMAGE  = 1 << 2;
-// Allow using 'repeat' mode for wrapping.
-const TextureFlags TEXTURE_ALLOW_REPEAT       = 1 << 3;
-// The texture represents a tile which is newly created.
-const TextureFlags TEXTURE_NEW_TILE           = 1 << 4;
-// The texture is part of a component-alpha pair
-const TextureFlags TEXTURE_COMPONENT_ALPHA    = 1 << 5;
-// The buffer will be treated as if the RB bytes are swapped.
-// This is useful for rendering using Cairo/Thebes, because there is no
-// BGRX Android pixel format, and so we have to do byte swapping.
-//
-// For example, if the GraphicBuffer has an Android pixel format of
-// PIXEL_FORMAT_RGBA_8888 and isRBSwapped is true, when it is sampled
-// (for example, with GL), a BGRA shader should be used.
-const TextureFlags TEXTURE_RB_SWAPPED         = 1 << 6;
+MOZ_BEGIN_ENUM_CLASS(TextureFlags)
+  // Use nearest-neighbour texture filtering (as opposed to linear filtering).
+  USE_NEAREST_FILTER = 1 << 0,
+  // The texture should be flipped around the y-axis when composited.
+  NEEDS_Y_FLIP       = 1 << 1,
+  // Force the texture to be represented using a single tile (note that this means
+  // tiled textures, not tiled layers).
+  DISALLOW_BIGIMAGE  = 1 << 2,
+  // Allow using 'repeat' mode for wrapping.
+  ALLOW_REPEAT       = 1 << 3,
+  // The texture represents a tile which is newly created.
+  NEW_TILE           = 1 << 4,
+  // The texture is part of a component-alpha pair
+  COMPONENT_ALPHA    = 1 << 5,
+  // The buffer will be treated as if the RB bytes are swapped.
+  // This is useful for rendering using Cairo/Thebes, because there is no
+  // BGRX Android pixel format, and so we have to do byte swapping.
+  //
+  // For example, if the GraphicBuffer has an Android pixel format of
+  // PIXEL_FORMAT_RGBA_8888 and isRBSwapped is true, when it is sampled
+  // (for example, with GL), a BGRA shader should be used.
+  RB_SWAPPED         = 1 << 6,
 
-const TextureFlags TEXTURE_FRONT              = 1 << 12;
-// A texture host on white for component alpha
-const TextureFlags TEXTURE_ON_WHITE           = 1 << 13;
- // A texture host on black for component alpha
-const TextureFlags TEXTURE_ON_BLACK           = 1 << 14;
-// A texture host that supports tiling
-const TextureFlags TEXTURE_TILE               = 1 << 15;
-// A texture should be recycled when no longer in used
-const TextureFlags TEXTURE_RECYCLE            = 1 << 16;
-// Texture contents should be initialized
-// from the previous texture.
-const TextureFlags TEXTURE_COPY_PREVIOUS      = 1 << 24;
-// Who is responsible for deallocating the shared data.
-// if TEXTURE_DEALLOCATE_CLIENT is set, the shared data is deallocated on the
-// client side and requires some extra synchronizaion to ensure race-free
-// deallocation.
-// The default behaviour is to deallocate on the host side.
-const TextureFlags TEXTURE_DEALLOCATE_CLIENT  = 1 << 25;
-// After being shared ith the compositor side, an immutable texture is never
-// modified, it can only be read. It is safe to not Lock/Unlock immutable
-// textures.
-const TextureFlags TEXTURE_IMMUTABLE          = 1 << 27;
-// The contents of the texture must be uploaded or copied immediately
-// during the transaction, because the producer may want to write
-// to it again.
-const TextureFlags TEXTURE_IMMEDIATE_UPLOAD   = 1 << 28;
-// The texture is going to be used as part of a double
-// buffered pair, and so we can guarantee that the producer/consumer
-// won't be racing to access its contents.
-const TextureFlags TEXTURE_DOUBLE_BUFFERED    = 1 << 29;
-// We've previously tried a texture and it didn't work for some reason. If there
-// is a fallback available, try that.
-const TextureFlags TEXTURE_ALLOC_FALLBACK     = 1 << 31;
-
-// the default flags
-const TextureFlags TEXTURE_FLAGS_DEFAULT = TEXTURE_FRONT;
+  FRONT              = 1 << 12,
+  // A texture host on white for component alpha
+  ON_WHITE           = 1 << 13,
+  // A texture host on black for component alpha
+  ON_BLACK           = 1 << 14,
+  // A texture host that supports tiling
+  TILE               = 1 << 15,
+  // A texture should be recycled when no longer in used
+  RECYCLE            = 1 << 16,
+  // Texture contents should be initialized
+  // from the previous texture.
+  COPY_PREVIOUS      = 1 << 24,
+  // Who is responsible for deallocating the shared data.
+  // if DEALLOCATE_CLIENT is set, the shared data is deallocated on the
+  // client side and requires some extra synchronizaion to ensure race-free
+  // deallocation.
+  // The default behaviour is to deallocate on the host side.
+  DEALLOCATE_CLIENT  = 1 << 25,
+  // After being shared ith the compositor side, an immutable texture is never
+  // modified, it can only be read. It is safe to not Lock/Unlock immutable
+  // textures.
+  IMMUTABLE          = 1 << 27,
+  // The contents of the texture must be uploaded or copied immediately
+  // during the transaction, because the producer may want to write
+  // to it again.
+  IMMEDIATE_UPLOAD   = 1 << 28,
+  // The texture is going to be used as part of a double
+  // buffered pair, and so we can guarantee that the producer/consumer
+  // won't be racing to access its contents.
+  DOUBLE_BUFFERED    = 1 << 29,
+  // We've previously tried a texture and it didn't work for some reason. If there
+  // is a fallback available, try that.
+  ALLOC_FALLBACK     = 1 << 31,
+  // the default flags
+  DEFAULT = FRONT
+MOZ_END_ENUM_CLASS(TextureFlags)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TextureFlags)
 
 static inline bool
 TextureRequiresLocking(TextureFlags aFlags)
@@ -220,7 +224,7 @@ struct TextureInfo
 {
   CompositableType mCompositableType;
   uint32_t mDeprecatedTextureHostFlags;
-  uint32_t mTextureFlags;
+  TextureFlags mTextureFlags;
 
   TextureInfo()
     : mCompositableType(BUFFER_UNKNOWN)
