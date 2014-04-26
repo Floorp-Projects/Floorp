@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1396993434000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1398202482000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -182,7 +182,7 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i566" id="{77BEC163-D389-42c1-91A4-C758846296A5}">
+      <emItem  blockID="i491" id="{515b2424-5911-40bd-8a2c-bdb20286d8f5}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -1103,6 +1103,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i566" id="{77BEC163-D389-42c1-91A4-C758846296A5}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i533" id="extension@Fast_Free_Converter.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -1121,8 +1127,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i491" id="{515b2424-5911-40bd-8a2c-bdb20286d8f5}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i576" id="newmoz@facebook.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
