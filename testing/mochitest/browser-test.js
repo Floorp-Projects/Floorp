@@ -10,6 +10,7 @@ if (Cc === undefined) {
 }
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
@@ -88,7 +89,7 @@ function Tester(aTests, aDumper, aCallback) {
   this._scriptLoader.loadSubScript("chrome://mochikit/content/chrome-harness.js", simpleTestScope);
   this.SimpleTest = simpleTestScope.SimpleTest;
   this.MemoryStats = simpleTestScope.MemoryStats;
-  this.Task = Components.utils.import("resource://gre/modules/Task.jsm", null).Task;
+  this.Task = Task;
   this.Promise = Components.utils.import("resource://gre/modules/Promise.jsm", null).Promise;
   this.Assert = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
 
@@ -314,7 +315,7 @@ Tester.prototype = {
     }
   },
 
-  nextTest: this.Task.async(function*() {
+  nextTest: Task.async(function*() {
     if (this.currentTest) {
       // Run cleanup functions for the current test before moving on to the
       // next one.
