@@ -187,8 +187,11 @@ public:
   /**
    * Set the display port base rect for given element to be used with display
    * port margins.
+   * SetDisplayPortBaseIfNotSet is like SetDisplayPortBase except it only sets
+   * the display port base to aBase if no display port base is currently set.
    */
   static void SetDisplayPortBase(nsIContent* aContent, const nsRect& aBase);
+  static void SetDisplayPortBaseIfNotSet(nsIContent* aContent, const nsRect& aBase);
 
   /**
    * Get the critical display port for the given element.

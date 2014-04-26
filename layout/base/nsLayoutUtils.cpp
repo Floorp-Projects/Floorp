@@ -829,6 +829,14 @@ nsLayoutUtils::SetDisplayPortBase(nsIContent* aContent, const nsRect& aBase)
                         nsINode::DeleteProperty<nsRect>);
 }
 
+void
+nsLayoutUtils::SetDisplayPortBaseIfNotSet(nsIContent* aContent, const nsRect& aBase)
+{
+  if (!aContent->GetProperty(nsGkAtoms::DisplayPortBase)) {
+    SetDisplayPortBase(aContent, aBase);
+  }
+}
+
 bool
 nsLayoutUtils::GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult)
 {
