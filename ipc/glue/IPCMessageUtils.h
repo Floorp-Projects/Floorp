@@ -155,6 +155,26 @@ public:
   }
 };
 
+template <typename E,
+          E AllBits>
+struct BitFlagsEnumValidator
+{
+  static bool IsLegalValue(E e)
+  {
+    return (e & AllBits) == e;
+  }
+};
+
+template <typename E,
+          MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(E) AllBits>
+struct BitFlagsTypedEnumValidator
+{
+  static bool IsLegalValue(E e)
+  {
+    return (e & AllBits) == e;
+  }
+};
+
 /**
  * Specialization of EnumSerializer for enums with contiguous enum values.
  *
@@ -190,6 +210,45 @@ template <typename E,
 struct ContiguousTypedEnumSerializer
   : EnumSerializer<E,
                    ContiguousTypedEnumValidator<E, MinLegal, HighBound>>
+{};
+
+/**
+ * Specialization of EnumSerializer for enums representing bit flags.
+ *
+ * Provide one value: AllBits. An enum value x will be
+ * considered legal if (x & AllBits) == x;
+ *
+ * Example:
+ * \code
+ * enum FOO {
+ *   FOO_FIRST =  1 << 0,
+ *   FOO_SECOND = 1 << 1,
+ *   FOO_LAST =   1 << 2,
+ *   ALL_BITS =   (1 << 3) - 1
+ * };
+ *
+ * template <>
+ * struct ParamTraits<FOO>:
+ *     public BitFlagsEnumSerializer<FOO, FOO::ALL_BITS> {};
+ * \endcode
+ */
+template <typename E,
+          E AllBits>
+struct BitFlagsEnumSerializer
+  : EnumSerializer<E,
+                   BitFlagsEnumValidator<E, AllBits>>
+{};
+
+/**
+ * Similar to BitFlagsEnumSerializer, but for MFBT typed enums
+ * as constructed by MOZ_BEGIN_ENUM_CLASS. This can go away when
+ * we drop MOZ_BEGIN_ENUM_CLASS and use C++11 enum classes directly.
+ */
+template <typename E,
+          MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(E) AllBits>
+struct BitFlagsTypedEnumSerializer
+  : EnumSerializer<E,
+                   BitFlagsTypedEnumValidator<E, AllBits>>
 {};
 
 template <>
