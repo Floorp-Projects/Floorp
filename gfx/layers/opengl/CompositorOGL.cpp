@@ -909,8 +909,8 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
   EffectMask* effectMask;
   TextureSourceOGL* sourceMask = nullptr;
   gfx::Matrix4x4 maskQuadTransform;
-  if (aEffectChain.mSecondaryEffects[size_t(EffectTypes::MASK)]) {
-    effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[size_t(EffectTypes::MASK)].get());
+  if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
+    effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EffectTypes::MASK].get());
     sourceMask = effectMask->mMaskTexture->AsSourceOGL();
 
     // NS_ASSERTION(textureMask->IsAlpha(),
