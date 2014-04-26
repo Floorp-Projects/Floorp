@@ -23,6 +23,7 @@ namespace dom {
 
 // static
 DOMStorageDBBridge* DOMStorageCache::sDatabase = nullptr;
+bool DOMStorageCache::sDatabaseDown = false;
 
 namespace { // anon
 
@@ -147,6 +148,18 @@ DOMStorageCache::Persist(const DOMStorage* aStorage) const
   return mPersistent &&
          !aStorage->IsSessionOnly() &&
          !aStorage->IsPrivate();
+}
+
+inline bool
+DOMStorageCache::PersistAndDatabaseUp(const DOMStorage* aStorage) const
+{
+  bool persist = Persist(aStorage);
+
+  MOZ_ASSERT(!persist || sDatabase,
+             "Writing to localStorage after the database has been shut down"
+             ", data lose!");
+
+  return persist && sDatabase;
 }
 
 namespace { // anon
@@ -495,7 +508,7 @@ DOMStorageCache::SetItem(const DOMStorage* aStorage, const nsAString& aKey,
 
   data.mKeys.Put(aKey, aValue);
 
-  if (Persist(aStorage)) {
+  if (PersistAndDatabaseUp(aStorage)) {
     if (DOMStringIsNull(aOld)) {
       return sDatabase->AsyncAddItem(this, aKey, aValue);
     }
@@ -530,7 +543,7 @@ DOMStorageCache::RemoveItem(const DOMStorage* aStorage, const nsAString& aKey,
   unused << ProcessUsageDelta(aStorage, delta);
   data.mKeys.Remove(aKey);
 
-  if (Persist(aStorage)) {
+  if (PersistAndDatabaseUp(aStorage)) {
     return sDatabase->AsyncRemoveItem(this, aKey);
   }
 
@@ -566,7 +579,7 @@ DOMStorageCache::Clear(const DOMStorage* aStorage)
     data.mKeys.Clear();
   }
 
-  if (Persist(aStorage) && (refresh || hadData)) {
+  if (PersistAndDatabaseUp(aStorage) && (refresh || hadData)) {
     return sDatabase->AsyncClear(this);
   }
 
@@ -745,7 +758,10 @@ DOMStorageUsage::CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex, const int64_
 DOMStorageDBBridge*
 DOMStorageCache::StartDatabase()
 {
-  if (sDatabase) {
+  if (sDatabase || sDatabaseDown) {
+    // When sDatabaseDown is at true, sDatabase is null.
+    // Checking sDatabaseDown flag here prevents reinitialization of
+    // the database after shutdown.
     return sDatabase;
   }
 
@@ -787,6 +803,8 @@ DOMStorageCache::StopDatabase()
   if (!sDatabase) {
     return NS_OK;
   }
+
+  sDatabaseDown = true;
 
   nsresult rv = sDatabase->Shutdown();
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
