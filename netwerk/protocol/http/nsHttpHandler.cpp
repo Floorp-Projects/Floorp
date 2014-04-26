@@ -1914,8 +1914,11 @@ nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
     if (NS_FAILED(rv))
         return rv;
 
+    nsAutoCString username;
+    aURI->GetUsername(username);
+
     nsHttpConnectionInfo *ci =
-        new nsHttpConnectionInfo(host, port, nullptr, usingSSL);
+        new nsHttpConnectionInfo(host, port, username, nullptr, usingSSL);
 
     return SpeculativeConnect(ci, aCallbacks);
 }
