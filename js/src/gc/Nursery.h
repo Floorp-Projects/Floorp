@@ -201,19 +201,13 @@ class Nursery
         return reinterpret_cast<NurseryChunkLayout *>(start())[index];
     }
 
-    MOZ_ALWAYS_INLINE void initChunk(int chunkno) {
-        NurseryChunkLayout &c = chunk(chunkno);
-        c.trailer.location = gc::ChunkLocationNursery;
-        c.trailer.runtime = runtime();
-    }
-
     MOZ_ALWAYS_INLINE void setCurrentChunk(int chunkno) {
         JS_ASSERT(chunkno < NumNurseryChunks);
         JS_ASSERT(chunkno < numActiveChunks_);
         currentChunk_ = chunkno;
         position_ = chunk(chunkno).start();
         currentEnd_ = chunk(chunkno).end();
-        initChunk(chunkno);
+        chunk(chunkno).trailer.runtime = runtime();
     }
 
     void updateDecommittedRegion() {
