@@ -28,6 +28,12 @@ let gPage = {
     this._sponsoredPanel = document.getElementById("sponsored-panel");
     let link = this._sponsoredPanel.querySelector(".text-link");
     link.addEventListener("click", () => this._sponsoredPanel.hidePopup());
+    if (UpdateChannel.get().startsWith("release")) {
+      document.getElementById("sponsored-panel-trial-descr").style.display = "none";
+    }
+    else {
+      document.getElementById("sponsored-panel-release-descr").style.display = "none";
+    }
 
     // Check if the new tab feature is enabled.
     let enabled = gAllPages.enabled;
