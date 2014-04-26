@@ -54,6 +54,7 @@ class Nursery
     static const int NumNurseryChunks = 16;
     static const int LastNurseryChunk = NumNurseryChunks - 1;
     static const size_t Alignment = gc::ChunkSize;
+    static const size_t ChunkShift = gc::ChunkShift;
     static const size_t NurserySize = gc::ChunkSize * NumNurseryChunks;
 
     explicit Nursery(JSRuntime *rt)
