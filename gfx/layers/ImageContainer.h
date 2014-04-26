@@ -30,6 +30,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "nsDataHashtable.h"
+#include "mozilla/EnumeratedArray.h"
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**
@@ -155,9 +156,9 @@ public:
   }
 
   ImageBackendData* GetBackendData(LayersBackend aBackend)
-  { return mBackendData[size_t(aBackend)]; }
+  { return mBackendData[aBackend]; }
   void SetBackendData(LayersBackend aBackend, ImageBackendData* aData)
-  { mBackendData[size_t(aBackend)] = aData; }
+  { mBackendData[aBackend] = aData; }
 
   int32_t GetSerial() { return mSerial; }
 
@@ -177,7 +178,10 @@ protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~Image() {}
 
-  nsAutoPtr<ImageBackendData> mBackendData[size_t(mozilla::layers::LayersBackend::LAYERS_LAST)];
+  mozilla::EnumeratedArray<mozilla::layers::LayersBackend,
+                           mozilla::layers::LayersBackend::LAYERS_LAST,
+                           nsAutoPtr<ImageBackendData>>
+    mBackendData;
 
   void* mImplData;
   int32_t mSerial;
