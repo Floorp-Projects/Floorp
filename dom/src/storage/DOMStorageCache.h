@@ -225,6 +225,9 @@ private:
   // DOMStorageDBThread on the parent or single process,
   // DOMStorageDBChild on the child process.
   static DOMStorageDBBridge* sDatabase;
+
+  // False until we shut the database down.
+  static bool sDatabaseDown;
 };
 
 // DOMStorageUsage

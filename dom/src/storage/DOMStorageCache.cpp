@@ -23,6 +23,7 @@ namespace dom {
 
 // static
 DOMStorageDBBridge* DOMStorageCache::sDatabase = nullptr;
+bool DOMStorageCache::sDatabaseDown = false;
 
 namespace { // anon
 
@@ -340,6 +341,10 @@ DOMStorageCache::WaitForPreload(Telemetry::ID aTelemetryID)
   // read from the database.  It seems to me more optimal.
 
   // TODO place for A/B testing (force main thread load vs. let preload finish)
+
+  // No need to check sDatabase for being non-null since preload is either
+  // done before we've shut the DB down or when the DB could not start,
+  // preload has not even be started.
   sDatabase->SyncPreload(this);
 }
 
@@ -496,6 +501,12 @@ DOMStorageCache::SetItem(const DOMStorage* aStorage, const nsAString& aKey,
   data.mKeys.Put(aKey, aValue);
 
   if (Persist(aStorage)) {
+    if (!sDatabase) {
+      NS_ERROR("Writing to localStorage after the database has been shut down"
+               ", data lose!");
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+
     if (DOMStringIsNull(aOld)) {
       return sDatabase->AsyncAddItem(this, aKey, aValue);
     }
@@ -531,6 +542,12 @@ DOMStorageCache::RemoveItem(const DOMStorage* aStorage, const nsAString& aKey,
   data.mKeys.Remove(aKey);
 
   if (Persist(aStorage)) {
+    if (!sDatabase) {
+      NS_ERROR("Writing to localStorage after the database has been shut down"
+               ", data lose!");
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+
     return sDatabase->AsyncRemoveItem(this, aKey);
   }
 
@@ -567,6 +584,12 @@ DOMStorageCache::Clear(const DOMStorage* aStorage)
   }
 
   if (Persist(aStorage) && (refresh || hadData)) {
+    if (!sDatabase) {
+      NS_ERROR("Writing to localStorage after the database has been shut down"
+               ", data lose!");
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+
     return sDatabase->AsyncClear(this);
   }
 
@@ -745,7 +768,10 @@ DOMStorageUsage::CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex, const int64_
 DOMStorageDBBridge*
 DOMStorageCache::StartDatabase()
 {
-  if (sDatabase) {
+  if (sDatabase || sDatabaseDown) {
+    // When sDatabaseDown is at true, sDatabase is null.
+    // Checking sDatabaseDown flag here prevents reinitialization of
+    // the database after shutdown.
     return sDatabase;
   }
 
@@ -787,6 +813,8 @@ DOMStorageCache::StopDatabase()
   if (!sDatabase) {
     return NS_OK;
   }
+
+  sDatabaseDown = true;
 
   nsresult rv = sDatabase->Shutdown();
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
