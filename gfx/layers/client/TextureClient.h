@@ -130,7 +130,7 @@ class TextureClient
   : public AtomicRefCountedWithFinalize<TextureClient>
 {
 public:
-  TextureClient(TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
+  TextureClient(TextureFlags aFlags = TextureFlags::DEFAULT);
   virtual ~TextureClient();
 
   static TemporaryRef<BufferTextureClient>
@@ -262,7 +262,7 @@ public:
   TextureFlags GetFlags() const { return mFlags; }
 
   /**
-   * valid only for TEXTURE_RECYCLE TextureClient.
+   * valid only for TextureFlags::RECYCLE TextureClient.
    * When called this texture client will grab a strong reference and release
    * it once the compositor notifies that it is done with the texture.
    * NOTE: In this stage the texture client can no longer be used by the
@@ -275,9 +275,9 @@ public:
    * modified, it can only be read. It is safe to not Lock/Unlock immutable
    * textures.
    */
-  bool IsImmutable() const { return mFlags & TEXTURE_IMMUTABLE; }
+  bool IsImmutable() const { return mFlags & TextureFlags::IMMUTABLE; }
 
-  void MarkImmutable() { AddFlags(TEXTURE_IMMUTABLE); }
+  void MarkImmutable() { AddFlags(TextureFlags::IMMUTABLE); }
 
   bool IsSharedWithCompositor() const { return mShared; }
 
@@ -307,7 +307,7 @@ public:
   /**
    * Triggers the destruction of the shared data and the corresponding TextureHost.
    *
-   * If the texture flags contain TEXTURE_DEALLOCATE_CLIENT, the destruction
+   * If the texture flags contain TextureFlags::DEALLOCATE_CLIENT, the destruction
    * will be synchronously coordinated with the compositor side, otherwise it
    * will be done asynchronously.
    */
