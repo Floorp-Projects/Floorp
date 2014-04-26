@@ -180,13 +180,13 @@ AppendToString(nsACString& s, TextureFlags flags,
                const char* pfx, const char* sfx)
 {
   s += pfx;
-  if (!flags) {
+  if (flags == TextureFlags::NO_FLAGS) {
     s += "NoFlags";
   } else {
 
 #define AppendFlag(test) \
 { \
-  if (flags & test) { \
+  if (!!(flags & test)) { \
     if (previous) { \
       s += "|"; \
     } \

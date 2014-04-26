@@ -77,7 +77,7 @@ DataTextureSourceD3D11::DataTextureSourceD3D11(SurfaceFormat aFormat,
                                                ID3D11Texture2D* aTexture)
 : mCompositor(aCompositor)
 , mFormat(aFormat)
-, mFlags(0)
+, mFlags(TextureFlags::NO_FLAGS)
 , mCurrentTile(0)
 , mIsTiled(false)
 , mIterating(false)
