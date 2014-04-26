@@ -5,6 +5,7 @@
 
 #include "LayerUtils.h"
 #include "PremultiplyTables.h"
+#include "mozilla/Endian.h"
 
 namespace mozilla {
 namespace layers {
@@ -18,6 +19,24 @@ static inline const uint8_t PremultiplyValue(uint8_t a, uint8_t v) {
 static inline const uint8_t UnpremultiplyValue(uint8_t a, uint8_t v) {
   return UnpremultiplyTable[a*256+v];
 }
+
+#ifdef DEBUG
+static bool IsLittleEndian()
+{
+    // Violate strict aliasing, because violating strict aliasing is how
+    // we always pack and unpack between uint32_t and uint8_t[].
+    uint16_t testShort;
+    static const uint8_t testBytes[2] = { 0xAA, 0xBB };
+    memcpy(&testShort, testBytes, sizeof(testBytes));
+    return testShort == 0xBBAA;
+}
+#endif // DEBUG
+
+#ifdef MOZ_LITTLE_ENDIAN
+#define ASSERT_ENDIAN() MOZ_ASSERT(IsLittleEndian(), "Defined as little endian, but actually big!")
+#else
+#define ASSERT_ENDIAN() MOZ_ASSERT(!IsLittleEndian(), "Defined as big endian, but actually little!")
+#endif
 
 void
 PremultiplySurface(DataSourceSurface* srcSurface,
@@ -48,9 +67,12 @@ PremultiplySurface(DataSourceSurface* srcSurface,
   uint8_t *src = srcSurface->GetData();
   uint8_t *dst = destSurface->GetData();
 
+  // Assert that our endian define is correct.
+  ASSERT_ENDIAN();
+
   uint32_t dim = srcSize.width * srcSize.height;
   for (uint32_t i = 0; i < dim; ++i) {
-#ifdef IS_LITTLE_ENDIAN
+#ifdef MOZ_LITTLE_ENDIAN
     uint8_t b = *src++;
     uint8_t g = *src++;
     uint8_t r = *src++;
