@@ -1391,7 +1391,7 @@ this.DOMApplicationRegistry = {
       return;
     }
 
-    let manifest = new ManifestHelper(json, app.installOrigin);
+    let manifest = new ManifestHelper(json, app.manifestURL);
     let [aId, aManifest] = yield this.downloadPackage(manifest, {
         manifestURL: aManifestURL,
         origin: app.origin,
@@ -1694,7 +1694,7 @@ this.DOMApplicationRegistry = {
             }
           }
         };
-        let helper = new ManifestHelper(manifest);
+        let helper = new ManifestHelper(manifest, aData.manifestURL);
         debug("onlyCheckAppCache - launch updateSvc.checkForUpdate for " +
               helper.fullAppcachePath());
         updateSvc.checkForUpdate(Services.io.newURI(helper.fullAppcachePath(), null, null),

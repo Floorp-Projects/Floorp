@@ -1,0 +1,237 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=997886
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 997886 - Test installing and updating apps with asm.js pre-compiling</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+SimpleTest.waitForExplicitFinish();
+
+const gBaseURL = 'http://test/chrome/dom/apps/tests/asmjs/';
+const gSJS = gBaseURL + 'asmjs_app.sjs';
+const gManifestURL = gSJS + '?getManifest=true';
+let gGenerator = runTest();
+
+// Mock WebappOSUtils
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+let oldWebappOSUtils = WebappOSUtils;
+WebappOSUtils.getPackagePath = function(aApp) {
+  return aApp.basePath + "/" + aApp.id;
+}
+
+// Enable the ScriptPreloader module
+Cu.import("resource://gre/modules/ScriptPreloader.jsm");
+let oldScriptPreloaderEnabled = ScriptPreloader._enabled;
+ScriptPreloader._enabled = true;
+
+SimpleTest.registerCleanupFunction(() => {
+  WebappOSUtils = oldWebappOSUtils;
+  ScriptPreloader._enabled = oldScriptPreloaderEnabled;
+});
+
+function go() {
+  gGenerator.next();
+}
+
+function continueTest() {
+  try {
+    gGenerator.next();
+  } catch (e if e instanceof StopIteration) {
+    SimpleTest.finish();
+  }
+}
+
+function mozAppsError() {
+  ok(false, "mozApps error: " + this.error.name);
+  SimpleTest.finish();
+}
+
+function xhrError(aEvent, aURL) {
+  var xhr = aEvent.target;
+  ok(false, "XHR error loading " + aURL + ": " + xhr.status + " - " +
+            xhr.statusText);
+  SimpleTest.finish();
+}
+
+function xhrAbort(aURL) {
+  ok(false, "XHR abort loading " + aURL);
+  SimpleTest.finish();
+}
+
+function setState(aQuery, aVersion, aCallback) {
+  var xhr = new XMLHttpRequest();
+  var url = gSJS + '?' + aQuery + '=' + aVersion;
+  xhr.addEventListener("load", function() {
+    is(xhr.responseText, "OK", aQuery + " OK");
+    aCallback();
+  });
+  xhr.addEventListener("error", event => xhrError(event, url));
+  xhr.addEventListener("abort", event => xhrAbort(url));
+  xhr.open('GET', url, true);
+  xhr.send();
+}
+
+function runApp(aApp, aCallback) {
+  let domParent = document.getElementById('container');
+
+  let ifr = document.createElement('iframe');
+  ifr.setAttribute('mozbrowser', 'true');
+  ifr.setAttribute('mozapp', gManifestURL);
+  ifr.src = aApp.origin + aApp.manifest.launch_path;
+
+  ifr.addEventListener('mozbrowsershowmodalprompt', function onAlert(e) {
+    var message = e.detail.message;
+
+    if (message.startsWith("OK: ")) {
+      ok(true, message.substring(4, message.length));
+    } else if (message.startsWith("ERROR: ")) {
+      ok(false, message.substring(7, message.length));
+    } else if (message == "DONE") {
+      ifr.removeEventListener('mozbrowsershowmodalprompt', onAlert, false);
+      domParent.removeChild(ifr);
+      aCallback();
+    }
+  }, false);
+
+  domParent.appendChild(ifr);
+}
+
+function testNoPrecompile(aPrecompile, aCallback) {
+  setState("setPrecompile", aPrecompile, function() {
+    let request = navigator.mozApps.installPackage(gManifestURL);
+    request.onerror = mozAppsError;
+    request.onsuccess = function() {
+      let app = request.result;
+      ok(app, "App is non-null");
+
+      app.ondownloaderror = mozAppsError;
+      app.ondownloadapplied = function() {
+        runApp(app, function() {
+          request = navigator.mozApps.mgmt.uninstall(app);
+          request.onerror = mozAppsError;
+          request.onsuccess = function() {
+            app.ondownloadapplied = null;
+            aCallback();
+          };
+        });
+      };
+    };
+  });
+}
+
+function runTest() {
+  // Set up.
+
+  SpecialPowers.setAllAppsLaunchable(true);
+  SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true]]},
+                            continueTest);
+  yield undefined;
+
+  SpecialPowers.autoConfirmAppInstall(continueTest);
+  yield undefined;
+
+  setState("setVersion", 1, continueTest);
+  yield undefined;
+
+  // Test apps with wrong precompile fields
+  info("Test with an empty array");
+  testNoPrecompile('[]', continueTest);
+  yield undefined;
+  info("Test with an object");
+  testNoPrecompile('{}', continueTest);
+  yield undefined;
+  info("Test with a string");
+  testNoPrecompile('"asmjsmodule"', continueTest);
+  yield undefined;
+  info("Test with a file that doesn't exist");
+  testNoPrecompile('["file.js"]', continueTest);
+  yield undefined;
+
+  setState("setPrecompile", '["asmjsmodule.js"]', continueTest);
+  yield undefined;
+
+  let request = navigator.mozApps.installPackage(gManifestURL);
+  request.onerror = mozAppsError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  let app = request.result;
+  ok(app, "App is non-null");
+  app.ondownloaderror = mozAppsError;
+  app.ondownloadsuccess = continueTest;
+  app.ondownloadapplied = continueTest;
+  yield undefined;
+  yield undefined;
+
+  runApp(app, continueTest);
+  yield undefined;
+
+  // Update app version
+  setState("setVersion", 2, continueTest);
+  yield undefined;
+
+  // Check for updates
+  lastCheck = app.lastUpdateCheck;
+  app.ondownloadavailable = function() {
+    ok(true, "downloadavailable fired");
+    continueTest();
+  }
+  request = app.checkForUpdate();
+  request.onerror = mozAppsError;
+  request.onsuccess = function() {
+    ok(true, "checkForUpdate success");
+    continueTest();
+  }
+  yield undefined;
+  yield undefined;
+
+  // Check that there's a download available and download it
+  ok(app.downloadAvailable, "Download available");
+  app.ondownloaderror = mozAppsError;
+  app.ondownloadsuccess = function() {
+    ok(true, "downloadsuccess fired");
+    continueTest();
+  }
+  app.download();
+  yield undefined;
+
+  // Apply downloaded update
+  ok(app.readyToApplyDownload, "App ready to apply download");
+  app.ondownloaderror = mozAppsError;
+  app.ondownloadapplied = function() {
+    ok(true, "downloadapplied fired");
+    continueTest();
+  }
+  navigator.mozApps.mgmt.applyDownload(app);
+  yield undefined;
+
+  runApp(app, continueTest);
+  yield undefined;
+
+  // Uninstall the app.
+  request = navigator.mozApps.mgmt.uninstall(app);
+  request.onerror = mozAppsError;
+  request.onsuccess = continueTest;
+  yield undefined;
+}
+
+  </script>
+</head>
+<body onload="go()">
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+<div id="container"></div>
+</body>
+</html>
