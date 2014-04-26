@@ -40,6 +40,13 @@ NS_EXPORT int android_sdk_version;
 }
 #endif
 
+// Slot for NS_InitXPCOM2 to pass information to nsSystemInfo::Init.
+// Only set to nonzero (potentially) if XP_UNIX.  On such systems, the
+// system call to discover the appropriate value is not thread-safe,
+// so we must call it before going multithreaded, but nsSystemInfo::Init
+// only happens well after that point.
+uint32_t nsSystemInfo::gUserUmask = 0;
+
 #if defined(XP_WIN)
 namespace {
 nsresult GetHDDInfo(const char* aSpecialDirName, nsAutoCString& aModel,
@@ -198,6 +205,7 @@ nsSystemInfo::Init()
     SetInt32Property(NS_LITERAL_STRING("memmapalign"), PR_GetMemMapAlignment());
     SetInt32Property(NS_LITERAL_STRING("cpucount"), PR_GetNumberOfProcessors());
     SetUint64Property(NS_LITERAL_STRING("memsize"), PR_GetPhysicalMemorySize());
+    SetUint32Property(NS_LITERAL_STRING("umask"), nsSystemInfo::gUserUmask);
 
     for (uint32_t i = 0; i < ArrayLength(cpuPropItems); i++) {
         rv = SetPropertyAsBool(NS_ConvertASCIItoUTF16(cpuPropItems[i].name),
@@ -304,6 +312,19 @@ nsSystemInfo::SetInt32Property(const nsAString &aPropertyName,
       SetPropertyAsInt32(aPropertyName, aValue);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Unable to set property");
   }
+}
+
+void
+nsSystemInfo::SetUint32Property(const nsAString &aPropertyName,
+                                const uint32_t aValue)
+{
+  // Only one property is currently set via this function.
+  // It may legitimately be zero.
+#ifdef DEBUG
+  nsresult rv =
+#endif
+    SetPropertyAsUint32(aPropertyName, aValue);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Unable to set property");
 }
 
 void
