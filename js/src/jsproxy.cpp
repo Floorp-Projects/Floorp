@@ -1933,22 +1933,20 @@ ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, 
 
     // step 7
     if (!success) {
-        bool sealed;
-        if (!IsSealed(cx, target, id, &sealed))
+        Rooted<PropertyDescriptor> desc(cx);
+        if (!GetOwnPropertyDescriptor(cx, target, id, &desc))
             return false;
-        if (sealed) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NC_AS_NE);
-            return false;
-        }
 
-        bool extensible;
-        if (!JSObject::isExtensible(cx, target, &extensible))
-            return false;
-        if (!extensible) {
-            bool isFixed;
-            if (!HasOwn(cx, target, id, &isFixed))
+        if (desc.object()) {
+            if (desc.isPermanent()) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NC_AS_NE);
                 return false;
-            if (isFixed) {
+            }
+
+            bool extensible;
+            if (!JSObject::isExtensible(cx, target, &extensible))
+                return false;
+            if (!extensible) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_E_AS_NE);
                 return false;
             }
