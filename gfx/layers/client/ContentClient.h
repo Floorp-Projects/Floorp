@@ -274,7 +274,7 @@ protected:
   virtual void DestroyFrontBuffer() {}
 
   bool CreateAndAllocateTextureClient(RefPtr<TextureClient>& aClient,
-                                      TextureFlags aFlags = 0);
+                                      TextureFlags aFlags = TextureFlags::NO_FLAGS);
 
   virtual void AbortTextureClientCreation()
   {
@@ -443,16 +443,7 @@ private:
     BUFFER_WHITE
   };
 
-  void NotifyBufferCreated(ContentType aType, uint32_t aFlags)
-  {
-    mTextureInfo.mTextureFlags = aFlags & ~TextureFlags::DEALLOCATE_CLIENT;
-    mContentType = aType;
-
-    mForwarder->CreatedIncrementalBuffer(this,
-                                         mTextureInfo,
-                                         mBufferRect);
-
-  }
+  void NotifyBufferCreated(ContentType aType, TextureFlags aFlags);
 
   TemporaryRef<gfx::DrawTarget> GetUpdateSurface(BufferType aType,
                                                  const nsIntRegion& aUpdateRegion);

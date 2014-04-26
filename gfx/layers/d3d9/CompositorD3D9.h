@@ -123,7 +123,7 @@ public:
   }
 
   virtual TemporaryRef<DataTextureSource>
-    CreateDataTextureSource(TextureFlags aFlags = 0) MOZ_OVERRIDE;
+    CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) MOZ_OVERRIDE;
 private:
   // ensure mSize is up to date with respect to mWidget
   void EnsureSize();

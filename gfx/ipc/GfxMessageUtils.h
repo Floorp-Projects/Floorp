@@ -323,6 +323,13 @@ struct ParamTraits<mozilla::gfx::ColorSpace>
              mozilla::gfx::ColorSpace::Max>
 {};
 
+template <>
+struct ParamTraits<mozilla::layers::TextureFlags>
+  : public BitFlagsTypedEnumSerializer<
+            mozilla::layers::TextureFlags,
+            mozilla::layers::TextureFlags::ALL_BITS>
+{};
+
 /*
 template <>
 struct ParamTraits<mozilla::PixelFormat>
