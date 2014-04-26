@@ -48,17 +48,17 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
 {
   RefPtr<ImageClient> result = nullptr;
   switch (aCompositableHostType) {
-  case COMPOSITABLE_IMAGE:
-  case BUFFER_IMAGE_SINGLE:
-    result = new ImageClientSingle(aForwarder, aFlags, COMPOSITABLE_IMAGE);
+  case CompositableType::IMAGE:
+  case CompositableType::BUFFER_IMAGE_SINGLE:
+    result = new ImageClientSingle(aForwarder, aFlags, CompositableType::IMAGE);
     break;
-  case BUFFER_IMAGE_BUFFERED:
-    result = new ImageClientBuffered(aForwarder, aFlags, COMPOSITABLE_IMAGE);
+  case CompositableType::BUFFER_IMAGE_BUFFERED:
+    result = new ImageClientBuffered(aForwarder, aFlags, CompositableType::IMAGE);
     break;
-  case BUFFER_BRIDGE:
+  case CompositableType::BUFFER_BRIDGE:
     result = new ImageClientBridge(aForwarder, aFlags);
     break;
-  case BUFFER_UNKNOWN:
+  case CompositableType::BUFFER_UNKNOWN:
     result = nullptr;
     break;
   default:
@@ -86,7 +86,7 @@ ImageClientBuffered::ImageClientBuffered(CompositableForwarder* aFwd,
 
 TextureInfo ImageClientSingle::GetTextureInfo() const
 {
-  return TextureInfo(COMPOSITABLE_IMAGE);
+  return TextureInfo(CompositableType::IMAGE);
 }
 
 void
@@ -174,7 +174,7 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
       bufferCreated = true;
     }
 
-    if (!mFrontBuffer->Lock(OPEN_WRITE_ONLY)) {
+    if (!mFrontBuffer->Lock(OpenMode::OPEN_WRITE_ONLY)) {
       mFrontBuffer = nullptr;
       return false;
     }
@@ -242,7 +242,7 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
       bufferCreated = true;
     }
 
-    if (!mFrontBuffer->Lock(OPEN_WRITE_ONLY)) {
+    if (!mFrontBuffer->Lock(OpenMode::OPEN_WRITE_ONLY)) {
       mFrontBuffer = nullptr;
       return false;
     }
@@ -335,7 +335,7 @@ ImageClient::UpdatePictureRect(nsIntRect aRect)
 
 ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
                                      TextureFlags aFlags)
-: ImageClient(aFwd, aFlags, BUFFER_BRIDGE)
+: ImageClient(aFwd, aFlags, CompositableType::BUFFER_BRIDGE)
 , mAsyncContainerID(0)
 , mLayer(nullptr)
 {

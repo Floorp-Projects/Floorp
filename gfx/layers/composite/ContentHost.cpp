@@ -198,8 +198,8 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
                                         Float(tileRegionRect.height) / texRect.height);
           GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain, aOpacity, aTransform);
           if (usingTiles) {
-            DiagnosticTypes diagnostics = DIAGNOSTIC_CONTENT | DIAGNOSTIC_BIGIMAGE;
-            diagnostics |= iterOnWhite ? DIAGNOSTIC_COMPONENT_ALPHA : 0;
+            DiagnosticTypes diagnostics = DiagnosticFlags::CONTENT | DiagnosticFlags::BIGIMAGE;
+            diagnostics |= iterOnWhite ? DiagnosticFlags::COMPONENT_ALPHA : 0;
             GetCompositor()->DrawDiagnostics(diagnostics, rect, aClipRect,
                                              aTransform, mFlashCounter);
           }
@@ -219,8 +219,8 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
     iterOnWhite->EndTileIteration();
   }
 
-  DiagnosticTypes diagnostics = DIAGNOSTIC_CONTENT;
-  diagnostics |= iterOnWhite ? DIAGNOSTIC_COMPONENT_ALPHA : 0;
+  DiagnosticTypes diagnostics = DiagnosticFlags::CONTENT;
+  diagnostics |= iterOnWhite ? DiagnosticFlags::COMPONENT_ALPHA : 0;
   GetCompositor()->DrawDiagnostics(diagnostics, *aVisibleRegion, aClipRect,
                                    aTransform, mFlashCounter);
 }
@@ -496,7 +496,7 @@ ContentHostIncremental::TextureCreationRequest::Execute(ContentHostIncremental* 
     newSourceOnWhite = temp->AsSourceOGL()->AsTextureImageTextureSource();
   }
 
-  if (mTextureInfo.mDeprecatedTextureHostFlags & TEXTURE_HOST_COPY_PREVIOUS) {
+  if (mTextureInfo.mDeprecatedTextureHostFlags & DeprecatedTextureHostFlags::COPY_PREVIOUS) {
     nsIntRect bufferRect = aHost->mBufferRect;
     nsIntPoint bufferRotation = aHost->mBufferRotation;
     nsIntRect overlap;
@@ -646,7 +646,7 @@ ContentHostIncremental::TextureUpdateRequest::Execute(ContentHostIncremental* aH
 
   RefPtr<DataSourceSurface> surf = GetSurfaceForDescriptor(mDescriptor);
 
-  if (mTextureId == TextureFront) {
+  if (mTextureId == TextureIdentifier::Front) {
     aHost->mSource->Update(surf, &mUpdated, &offset);
   } else {
     aHost->mSourceOnWhite->Update(surf, &mUpdated, &offset);
