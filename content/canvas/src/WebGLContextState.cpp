@@ -117,7 +117,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
     }
 
-    if (IsExtensionEnabled(WEBGL_draw_buffers)) {
+    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers)) {
         if (pname == LOCAL_GL_MAX_COLOR_ATTACHMENTS) {
             return JS::Int32Value(mGLMaxColorAttachments);
 
@@ -144,7 +144,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
     }
 
-    if (IsExtensionEnabled(OES_vertex_array_object)) {
+    if (IsExtensionEnabled(WebGLExtensionID::OES_vertex_array_object)) {
         if (pname == LOCAL_GL_VERTEX_ARRAY_BINDING) {
             if (mBoundVertexArray == mDefaultVertexArray){
                 return WebGLObjectAsJSValue(cx, (WebGLVertexArray *) nullptr, rv);
@@ -182,7 +182,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case UNMASKED_RENDERER_WEBGL: {
             // The privilege check is done in WebGLContext::IsExtensionSupported.
             // So here we just have to check that the extension is enabled.
-            if (!IsExtensionEnabled(WEBGL_debug_renderer_info)) {
+            if (!IsExtensionEnabled(WebGLExtensionID::WEBGL_debug_renderer_info)) {
                 break;
             }
             GLenum glstringname = LOCAL_GL_NONE;
@@ -246,7 +246,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             return JS::Int32Value(i);
         }
         case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT: {
-            if (IsExtensionEnabled(OES_standard_derivatives)) {
+            if (IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives)) {
                 GLint i = 0;
                 gl->fGetIntegerv(pname, &i);
                 return JS::Int32Value(i);
@@ -304,7 +304,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
         // float
         case LOCAL_GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: {
-            if (IsExtensionEnabled(EXT_texture_filter_anisotropic)) {
+            if (IsExtensionEnabled(WebGLExtensionID::EXT_texture_filter_anisotropic)) {
                 GLfloat f = 0.f;
                 gl->fGetFloatv(pname, &f);
                 return JS::DoubleValue(f);

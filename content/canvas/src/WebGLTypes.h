@@ -143,6 +143,34 @@ MOZ_BEGIN_ENUM_CLASS(WebGLTexImageFunc, int)
     CompTexSubImage,
 MOZ_END_ENUM_CLASS(WebGLTexImageFunc)
 
+// Please keep extensions in alphabetic order.
+MOZ_BEGIN_ENUM_CLASS(WebGLExtensionID, uint8_t)
+    ANGLE_instanced_arrays,
+    EXT_color_buffer_half_float,
+    EXT_frag_depth,
+    EXT_sRGB,
+    EXT_texture_filter_anisotropic,
+    OES_element_index_uint,
+    OES_standard_derivatives,
+    OES_texture_float,
+    OES_texture_float_linear,
+    OES_texture_half_float,
+    OES_texture_half_float_linear,
+    OES_vertex_array_object,
+    WEBGL_color_buffer_float,
+    WEBGL_compressed_texture_atc,
+    WEBGL_compressed_texture_etc1,
+    WEBGL_compressed_texture_pvrtc,
+    WEBGL_compressed_texture_s3tc,
+    WEBGL_debug_renderer_info,
+    WEBGL_debug_shaders,
+    WEBGL_depth_texture,
+    WEBGL_draw_buffers,
+    WEBGL_lose_context,
+    Max,
+    Unknown
+MOZ_END_ENUM_CLASS(WebGLExtensionID)
+
 } // namespace mozilla
 
 #endif

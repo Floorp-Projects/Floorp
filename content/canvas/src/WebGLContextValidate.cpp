@@ -312,7 +312,7 @@ WebGLContext::BaseTexFormat(GLenum internalFormat) const
         return internalFormat;
     }
 
-    if (IsExtensionEnabled(EXT_sRGB)) {
+    if (IsExtensionEnabled(WebGLExtensionID::EXT_sRGB)) {
         if (internalFormat == LOCAL_GL_SRGB)
             return LOCAL_GL_RGB;
 
@@ -320,7 +320,7 @@ WebGLContext::BaseTexFormat(GLenum internalFormat) const
             return LOCAL_GL_RGBA;
     }
 
-    if (IsExtensionEnabled(WEBGL_compressed_texture_atc)) {
+    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_atc)) {
         if (internalFormat == LOCAL_GL_ATC_RGB)
             return LOCAL_GL_RGB;
 
@@ -331,12 +331,12 @@ WebGLContext::BaseTexFormat(GLenum internalFormat) const
         }
     }
 
-    if (IsExtensionEnabled(WEBGL_compressed_texture_etc1)) {
+    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_etc1)) {
         if (internalFormat == LOCAL_GL_ETC1_RGB8_OES)
             return LOCAL_GL_RGB;
     }
 
-    if (IsExtensionEnabled(WEBGL_compressed_texture_pvrtc)) {
+    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_pvrtc)) {
         if (internalFormat == LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1 ||
             internalFormat == LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1)
         {
@@ -350,7 +350,7 @@ WebGLContext::BaseTexFormat(GLenum internalFormat) const
         }
     }
 
-    if (IsExtensionEnabled(WEBGL_compressed_texture_s3tc)) {
+    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_s3tc)) {
         if (internalFormat == LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT)
             return LOCAL_GL_RGB;
 
@@ -362,7 +362,7 @@ WebGLContext::BaseTexFormat(GLenum internalFormat) const
         }
     }
 
-    if (IsExtensionEnabled(WEBGL_depth_texture)) {
+    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_depth_texture)) {
         if (internalFormat == LOCAL_GL_DEPTH_COMPONENT ||
             internalFormat == LOCAL_GL_DEPTH_COMPONENT16 ||
             internalFormat == LOCAL_GL_DEPTH_COMPONENT32)
@@ -601,7 +601,7 @@ WebGLContext::ValidateTexImageFormat(GLenum format, WebGLTexImageFunc func)
     if (format == LOCAL_GL_DEPTH_COMPONENT ||
         format == LOCAL_GL_DEPTH_STENCIL)
     {
-        bool validFormat = IsExtensionEnabled(WEBGL_depth_texture);
+        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_depth_texture);
         if (!validFormat)
             ErrorInvalidEnum("%s: invalid format %s: need WEBGL_depth_texture enabled",
                              InfoFrom(func), NameFrom(format));
@@ -612,7 +612,7 @@ WebGLContext::ValidateTexImageFormat(GLenum format, WebGLTexImageFunc func)
     if (format == LOCAL_GL_SRGB ||
         format == LOCAL_GL_SRGB_ALPHA)
     {
-        bool validFormat = IsExtensionEnabled(EXT_sRGB);
+        bool validFormat = IsExtensionEnabled(WebGLExtensionID::EXT_sRGB);
         if (!validFormat)
             ErrorInvalidEnum("%s: invalid format %s: need EXT_sRGB enabled",
                              InfoFrom(func), NameFrom(format));
@@ -624,7 +624,7 @@ WebGLContext::ValidateTexImageFormat(GLenum format, WebGLTexImageFunc func)
         format == LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA ||
         format == LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA)
     {
-        bool validFormat = IsExtensionEnabled(WEBGL_compressed_texture_atc);
+        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_atc);
         if (!validFormat)
             ErrorInvalidEnum("%s: invalid format %s: need WEBGL_compressed_texture_atc enabled",
                              InfoFrom(func), NameFrom(format));
@@ -633,7 +633,7 @@ WebGLContext::ValidateTexImageFormat(GLenum format, WebGLTexImageFunc func)
 
     // WEBGL_compressed_texture_etc1
     if (format == LOCAL_GL_ETC1_RGB8_OES) {
-        bool validFormat = IsExtensionEnabled(WEBGL_compressed_texture_etc1);
+        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_etc1);
         if (!validFormat)
             ErrorInvalidEnum("%s: invalid format %s: need WEBGL_compressed_texture_etc1 enabled",
                              InfoFrom(func), NameFrom(format));
@@ -646,7 +646,7 @@ WebGLContext::ValidateTexImageFormat(GLenum format, WebGLTexImageFunc func)
         format == LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1 ||
         format == LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1)
     {
-        bool validFormat = IsExtensionEnabled(WEBGL_compressed_texture_pvrtc);
+        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_pvrtc);
         if (!validFormat)
             ErrorInvalidEnum("%s: invalid format %s: need WEBGL_compressed_texture_pvrtc enabled",
                              InfoFrom(func), NameFrom(format));
@@ -659,7 +659,7 @@ WebGLContext::ValidateTexImageFormat(GLenum format, WebGLTexImageFunc func)
         format == LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT ||
         format == LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT)
     {
-        bool validFormat = IsExtensionEnabled(WEBGL_compressed_texture_s3tc);
+        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_s3tc);
         if (!validFormat)
             ErrorInvalidEnum("%s: invalid format %s: need WEBGL_compressed_texture_s3tc enabled",
                              InfoFrom(func), NameFrom(format));
@@ -713,7 +713,7 @@ WebGLContext::ValidateTexImageType(GLenum type, WebGLTexImageFunc func)
 
     /* OES_texture_float added types */
     if (type == LOCAL_GL_FLOAT) {
-        bool validType = IsExtensionEnabled(OES_texture_float);
+        bool validType = IsExtensionEnabled(WebGLExtensionID::OES_texture_float);
         if (!validType)
             ErrorInvalidEnum("%s: invalid type %s: need OES_texture_float enabled",
                              InfoFrom(func), NameFrom(type));
@@ -722,7 +722,7 @@ WebGLContext::ValidateTexImageType(GLenum type, WebGLTexImageFunc func)
 
     /* OES_texture_half_float add types */
     if (type == LOCAL_GL_HALF_FLOAT_OES) {
-        bool validType = IsExtensionEnabled(OES_texture_half_float);
+        bool validType = IsExtensionEnabled(WebGLExtensionID::OES_texture_half_float);
         if (!validType)
             ErrorInvalidEnum("%s: invalid type %s: need OES_texture_half_float enabled",
                              InfoFrom(func), NameFrom(type));
@@ -734,7 +734,7 @@ WebGLContext::ValidateTexImageType(GLenum type, WebGLTexImageFunc func)
         type == LOCAL_GL_UNSIGNED_INT ||
         type == LOCAL_GL_UNSIGNED_INT_24_8)
     {
-        bool validType = IsExtensionEnabled(WEBGL_depth_texture);
+        bool validType = IsExtensionEnabled(WebGLExtensionID::WEBGL_depth_texture);
         if (!validType)
             ErrorInvalidEnum("%s: invalid type %s: need WEBGL_depth_texture enabled",
                              InfoFrom(func), NameFrom(type));

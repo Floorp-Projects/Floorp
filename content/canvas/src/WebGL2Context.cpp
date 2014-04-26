@@ -63,14 +63,14 @@ WebGLContext::InitWebGL2()
     MOZ_ASSERT(IsWebGL2(), "WebGLContext is not a WebGL 2 context!");
 
     const WebGLExtensionID sExtensionNativelySupportedArr[] = {
-        ANGLE_instanced_arrays,
-        OES_element_index_uint,
-        OES_standard_derivatives,
-        OES_texture_float,
-        OES_texture_float_linear,
-        OES_vertex_array_object,
-        WEBGL_depth_texture,
-        WEBGL_draw_buffers
+        WebGLExtensionID::ANGLE_instanced_arrays,
+        WebGLExtensionID::OES_element_index_uint,
+        WebGLExtensionID::OES_standard_derivatives,
+        WebGLExtensionID::OES_texture_float,
+        WebGLExtensionID::OES_texture_float_linear,
+        WebGLExtensionID::OES_vertex_array_object,
+        WebGLExtensionID::WEBGL_depth_texture,
+        WebGLExtensionID::WEBGL_draw_buffers
     };
     const GLFeature sFeatureRequiredArr[] = {
         GLFeature::blend_minmax,

@@ -334,7 +334,7 @@ WebGLTexture::ResolvedFakeBlackStatus() {
     }
 
     if (ImageInfoBase().mType == LOCAL_GL_FLOAT &&
-        !Context()->IsExtensionEnabled(WebGLContext::OES_texture_float_linear))
+        !Context()->IsExtensionEnabled(WebGLExtensionID::OES_texture_float_linear))
     {
         if (mMinFilter == LOCAL_GL_LINEAR ||
             mMinFilter == LOCAL_GL_LINEAR_MIPMAP_LINEAR ||
@@ -354,7 +354,7 @@ WebGLTexture::ResolvedFakeBlackStatus() {
             mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
         }
     } else if (ImageInfoBase().mType == LOCAL_GL_HALF_FLOAT_OES &&
-               !Context()->IsExtensionEnabled(WebGLContext::OES_texture_half_float_linear))
+               !Context()->IsExtensionEnabled(WebGLExtensionID::OES_texture_half_float_linear))
     {
         if (mMinFilter == LOCAL_GL_LINEAR ||
             mMinFilter == LOCAL_GL_LINEAR_MIPMAP_LINEAR ||
