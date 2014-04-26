@@ -106,49 +106,52 @@ TextureRequiresLocking(TextureFlags aFlags)
 /**
  * The type of debug diagnostic to enable.
  */
-typedef uint32_t DiagnosticTypes;
-const DiagnosticTypes DIAGNOSTIC_NONE             = 0;
-const DiagnosticTypes DIAGNOSTIC_TILE_BORDERS     = 1 << 0;
-const DiagnosticTypes DIAGNOSTIC_LAYER_BORDERS    = 1 << 1;
-const DiagnosticTypes DIAGNOSTIC_BIGIMAGE_BORDERS = 1 << 2;
-const DiagnosticTypes DIAGNOSTIC_FLASH_BORDERS    = 1 << 3;
+MOZ_BEGIN_ENUM_CLASS(DiagnosticTypes, uint8_t)
+  NO_DIAGNOSTIC    = 0,
+  TILE_BORDERS     = 1 << 0,
+  LAYER_BORDERS    = 1 << 1,
+  BIGIMAGE_BORDERS = 1 << 2,
+  FLASH_BORDERS    = 1 << 3
+MOZ_END_ENUM_CLASS(DiagnosticTypes)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DiagnosticTypes)
 
 #define DIAGNOSTIC_FLASH_COUNTER_MAX 100
 
 /**
  * Information about the object that is being diagnosed.
  */
-typedef uint32_t DiagnosticFlags;
-const DiagnosticFlags DIAGNOSTIC_IMAGE      = 1 << 0;
-const DiagnosticFlags DIAGNOSTIC_CONTENT    = 1 << 1;
-const DiagnosticFlags DIAGNOSTIC_CANVAS     = 1 << 2;
-const DiagnosticFlags DIAGNOSTIC_COLOR      = 1 << 3;
-const DiagnosticFlags DIAGNOSTIC_CONTAINER  = 1 << 4;
-const DiagnosticFlags DIAGNOSTIC_TILE       = 1 << 5;
-const DiagnosticFlags DIAGNOSTIC_BIGIMAGE   = 1 << 6;
-const DiagnosticFlags DIAGNOSTIC_COMPONENT_ALPHA = 1 << 7;
-const DiagnosticFlags DIAGNOSTIC_REGION_RECT = 1 << 8;
+MOZ_BEGIN_ENUM_CLASS(DiagnosticFlags, uint16_t)
+  NO_DIAGNOSTIC   = 0,
+  IMAGE           = 1 << 0,
+  CONTENT         = 1 << 1,
+  CANVAS          = 1 << 2,
+  COLOR           = 1 << 3,
+  CONTAINER       = 1 << 4,
+  TILE            = 1 << 5,
+  BIGIMAGE        = 1 << 6,
+  COMPONENT_ALPHA = 1 << 7,
+  REGION_RECT     = 1 << 8
+MOZ_END_ENUM_CLASS(DiagnosticFlags)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DiagnosticFlags)
 
 /**
  * See gfx/layers/Effects.h
  */
-enum EffectTypes
-{
-  EFFECT_MASK,
-  EFFECT_MAX_SECONDARY, // sentinel for the count of secondary effect types
-  EFFECT_RGB,
-  EFFECT_YCBCR,
-  EFFECT_COMPONENT_ALPHA,
-  EFFECT_SOLID_COLOR,
-  EFFECT_RENDER_TARGET,
-  EFFECT_MAX  //sentinel for the count of all effect types
-};
+MOZ_BEGIN_ENUM_CLASS(EffectTypes, uint8_t)
+  MASK,
+  MAX_SECONDARY, // sentinel for the count of secondary effect types
+  RGB,
+  YCBCR,
+  COMPONENT_ALPHA,
+  SOLID_COLOR,
+  RENDER_TARGET,
+  MAX  //sentinel for the count of all effect types
+MOZ_END_ENUM_CLASS(EffectTypes)
 
 /**
  * How the Compositable should manage textures.
  */
-enum CompositableType
-{
+MOZ_BEGIN_ENUM_CLASS(CompositableType, uint8_t)
   BUFFER_UNKNOWN,
   // the deprecated compositable types
   BUFFER_IMAGE_SINGLE,    // image/canvas with a single texture, single buffered
@@ -160,23 +163,22 @@ enum CompositableType
   BUFFER_TILED,           // tiled thebes layer
   BUFFER_SIMPLE_TILED,
   // the new compositable types
-  COMPOSITABLE_IMAGE,     // image with single buffering
-  COMPOSITABLE_CONTENT_SINGLE,  // thebes layer interface, single buffering
-  COMPOSITABLE_CONTENT_DOUBLE,  // thebes layer interface, double buffering
+  IMAGE,     // image with single buffering
+  CONTENT_SINGLE,  // thebes layer interface, single buffering
+  CONTENT_DOUBLE,  // thebes layer interface, double buffering
   BUFFER_COUNT
-};
+MOZ_END_ENUM_CLASS(CompositableType)
 
 /**
  * How the texture host is used for composition,
  */
-enum DeprecatedTextureHostFlags
-{
-  TEXTURE_HOST_DEFAULT = 0,       // The default texture host for the given
-                                  // SurfaceDescriptor
-  TEXTURE_HOST_TILED = 1 << 0,    // A texture host that supports tiling
-  TEXTURE_HOST_COPY_PREVIOUS = 1 << 1 // Texture contents should be initialized
+MOZ_BEGIN_ENUM_CLASS(DeprecatedTextureHostFlags, uint8_t)
+  DEFAULT = 0,       // The default texture host for the given SurfaceDescriptor
+  TILED = 1 << 0,    // A texture host that supports tiling
+  COPY_PREVIOUS = 1 << 1 // Texture contents should be initialized
                                       // from the previous texture.
-};
+MOZ_END_ENUM_CLASS(DeprecatedTextureHostFlags)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DeprecatedTextureHostFlags)
 
 /**
  * Sent from the compositor to the content-side LayerManager, includes properties
@@ -210,11 +212,12 @@ struct TextureFactoryIdentifier
  * XXX - This is now redundant with TextureFlags. it ill be removed along with
  * deprecated texture classes.
  */
-typedef uint32_t TextureIdentifier;
-const TextureIdentifier TextureFront = 1;
-const TextureIdentifier TextureBack = 2;
-const TextureIdentifier TextureOnWhiteFront = 3;
-const TextureIdentifier TextureOnWhiteBack = 4;
+MOZ_BEGIN_ENUM_CLASS(TextureIdentifier, uint8_t)
+  Front = 1,
+  Back = 2,
+  OnWhiteFront = 3,
+  OnWhiteBack = 4
+MOZ_END_ENUM_CLASS(TextureIdentifier)
 
 /**
  * Information required by the compositor from the content-side for creating or
@@ -226,18 +229,18 @@ const TextureIdentifier TextureOnWhiteBack = 4;
 struct TextureInfo
 {
   CompositableType mCompositableType;
-  uint32_t mDeprecatedTextureHostFlags;
+  DeprecatedTextureHostFlags mDeprecatedTextureHostFlags;
   TextureFlags mTextureFlags;
 
   TextureInfo()
-    : mCompositableType(BUFFER_UNKNOWN)
-    , mDeprecatedTextureHostFlags(0)
+    : mCompositableType(CompositableType::BUFFER_UNKNOWN)
+    , mDeprecatedTextureHostFlags(DeprecatedTextureHostFlags::DEFAULT)
     , mTextureFlags(TextureFlags::NO_FLAGS)
   {}
 
   TextureInfo(CompositableType aType)
     : mCompositableType(aType)
-    , mDeprecatedTextureHostFlags(0)
+    , mDeprecatedTextureHostFlags(DeprecatedTextureHostFlags::DEFAULT)
     , mTextureFlags(TextureFlags::NO_FLAGS)
   {}
 
@@ -254,21 +257,24 @@ struct TextureInfo
  *
  * See ShadowLayerForwarder::OpenDescriptor for example.
  */
-typedef uint32_t OpenMode;
-const OpenMode OPEN_READ        = 0x1;
-const OpenMode OPEN_WRITE       = 0x2;
-const OpenMode OPEN_READ_WRITE  = OPEN_READ|OPEN_WRITE;
-const OpenMode OPEN_READ_ONLY   = OPEN_READ;
-const OpenMode OPEN_WRITE_ONLY  = OPEN_WRITE;
+MOZ_BEGIN_ENUM_CLASS(OpenMode, uint8_t)
+  OPEN_NONE        = 0,
+  OPEN_READ        = 0x1,
+  OPEN_WRITE       = 0x2,
+  OPEN_READ_WRITE  = OPEN_READ|OPEN_WRITE,
+  OPEN_READ_ONLY   = OPEN_READ,
+  OPEN_WRITE_ONLY  = OPEN_WRITE
+MOZ_END_ENUM_CLASS(OpenMode)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(OpenMode)
 
 // The kinds of mask texture a shader can support
 // We rely on the items in this enum being sequential
-enum MaskType {
+MOZ_BEGIN_ENUM_CLASS(MaskType, uint8_t)
   MaskNone = 0,   // no mask layer
   Mask2d,         // mask layer for layers with 2D transforms
   Mask3d,         // mask layer for layers with 3D transforms
   NumMaskTypes
-};
+MOZ_END_ENUM_CLASS(MaskType)
 
 } // namespace layers
 } // namespace mozilla
