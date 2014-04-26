@@ -1835,10 +1835,11 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId 
 
     // step 6-7
     if (ToBoolean(trapResult)) {
-        bool sealed;
-        if (!IsSealed(cx, target, id, &sealed))
+        Rooted<PropertyDescriptor> desc(cx);
+        if (!GetOwnPropertyDescriptor(cx, target, id, &desc))
             return false;
-        if (sealed) {
+
+        if (desc.object() && desc.isPermanent()) {
             RootedValue v(cx, IdToValue(id));
             js_ReportValueError(cx, JSMSG_CANT_DELETE, JSDVG_IGNORE_STACK, v, js::NullPtr());
             return false;
