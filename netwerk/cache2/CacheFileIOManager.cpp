@@ -559,18 +559,22 @@ protected:
 class OpenFileEvent : public nsRunnable {
 public:
   OpenFileEvent(const nsACString &aKey,
-                uint32_t aFlags,
+                uint32_t aFlags, bool aResultOnAnyThread,
                 CacheFileIOListener *aCallback)
     : mFlags(aFlags)
+    , mResultOnAnyThread(aResultOnAnyThread)
     , mCallback(aCallback)
     , mRV(NS_ERROR_FAILURE)
     , mKey(aKey)
   {
     MOZ_COUNT_CTOR(OpenFileEvent);
 
-    mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
+    if (!aResultOnAnyThread) {
+      mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
+      MOZ_ASSERT(mTarget);
+    }
+
     mIOMan = CacheFileIOManager::gInstance;
-    MOZ_ASSERT(mTarget);
 
     MOZ_EVENT_TRACER_NAME_OBJECT(static_cast<nsIRunnable*>(this), aKey.BeginReading());
     MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::open-background");
@@ -583,7 +587,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    if (mTarget) {
+    if (mResultOnAnyThread || mTarget) {
       mRV = NS_OK;
 
       if (!(mFlags & CacheFileIOManager::SPECIAL_FILE)) {
@@ -617,20 +621,27 @@ public:
       MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::open-background");
 
       MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::open-result");
-      nsCOMPtr<nsIEventTarget> target;
-      mTarget.swap(target);
-      target->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
-    } else {
+
+      if (mTarget) {
+        nsCOMPtr<nsIEventTarget> target;
+        mTarget.swap(target);
+        return target->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+      }
+    }
+
+    if (!mTarget) {
       MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::open-result");
       mCallback->OnFileOpened(mHandle, mRV);
       MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::open-result");
     }
+
     return NS_OK;
   }
 
 protected:
   SHA1Sum::Hash                 mHash;
   uint32_t                      mFlags;
+  bool                          mResultOnAnyThread;
   nsCOMPtr<CacheFileIOListener> mCallback;
   nsCOMPtr<nsIEventTarget>      mTarget;
   nsRefPtr<CacheFileIOManager>  mIOMan;
@@ -642,16 +653,20 @@ protected:
 class ReadEvent : public nsRunnable {
 public:
   ReadEvent(CacheFileHandle *aHandle, int64_t aOffset, char *aBuf,
-            int32_t aCount, CacheFileIOListener *aCallback)
+            int32_t aCount, bool aResultOnAnyThread, CacheFileIOListener *aCallback)
     : mHandle(aHandle)
     , mOffset(aOffset)
     , mBuf(aBuf)
     , mCount(aCount)
+    , mResultOnAnyThread(aResultOnAnyThread)
     , mCallback(aCallback)
     , mRV(NS_ERROR_FAILURE)
   {
     MOZ_COUNT_CTOR(ReadEvent);
-    mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
+
+    if (!aResultOnAnyThread) {
+      mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
+    }
 
     MOZ_EVENT_TRACER_NAME_OBJECT(static_cast<nsIRunnable*>(this), aHandle->Key().get());
     MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::read-background");
@@ -664,7 +679,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    if (mTarget) {
+    if (mResultOnAnyThread || mTarget) {
       MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::read-background");
       if (mHandle->IsClosed()) {
         mRV = NS_ERROR_NOT_INITIALIZED;
@@ -675,16 +690,20 @@ public:
       MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::read-background");
 
       MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::read-result");
-      nsCOMPtr<nsIEventTarget> target;
-      mTarget.swap(target);
-      target->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
-    } else {
-      MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::read-result");
-      if (mCallback) {
-        mCallback->OnDataRead(mHandle, mBuf, mRV);
+
+      if (mTarget) {
+        nsCOMPtr<nsIEventTarget> target;
+        mTarget.swap(target);
+        return target->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
       }
+    }
+
+    if (!mTarget && mCallback) {
+      MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::read-result");
+      mCallback->OnDataRead(mHandle, mBuf, mRV);
       MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::read-result");
     }
+
     return NS_OK;
   }
 
@@ -693,6 +712,7 @@ protected:
   int64_t                       mOffset;
   char                         *mBuf;
   int32_t                       mCount;
+  bool                          mResultOnAnyThread;
   nsCOMPtr<CacheFileIOListener> mCallback;
   nsCOMPtr<nsIEventTarget>      mTarget;
   nsresult                      mRV;
@@ -1532,7 +1552,7 @@ CacheFileIOManager::Notify(nsITimer * aTimer)
 // static
 nsresult
 CacheFileIOManager::OpenFile(const nsACString &aKey,
-                             uint32_t aFlags,
+                             uint32_t aFlags, bool aResultOnAnyThread,
                              CacheFileIOListener *aCallback)
 {
   LOG(("CacheFileIOManager::OpenFile() [key=%s, flags=%d, listener=%p]",
@@ -1546,7 +1566,7 @@ CacheFileIOManager::OpenFile(const nsACString &aKey,
   }
 
   bool priority = aFlags & CacheFileIOManager::PRIORITY;
-  nsRefPtr<OpenFileEvent> ev = new OpenFileEvent(aKey, aFlags, aCallback);
+  nsRefPtr<OpenFileEvent> ev = new OpenFileEvent(aKey, aFlags, aResultOnAnyThread, aCallback);
   rv = ioMan->mIOThread->Dispatch(ev, priority
     ? CacheIOThread::OPEN_PRIORITY
     : CacheIOThread::OPEN);
@@ -1799,7 +1819,7 @@ CacheFileIOManager::CloseHandleInternal(CacheFileHandle *aHandle)
 // static
 nsresult
 CacheFileIOManager::Read(CacheFileHandle *aHandle, int64_t aOffset,
-                         char *aBuf, int32_t aCount,
+                         char *aBuf, int32_t aCount, bool aResultOnAnyThread,
                          CacheFileIOListener *aCallback)
 {
   LOG(("CacheFileIOManager::Read() [handle=%p, offset=%lld, count=%d, "
@@ -1813,7 +1833,7 @@ CacheFileIOManager::Read(CacheFileHandle *aHandle, int64_t aOffset,
   }
 
   nsRefPtr<ReadEvent> ev = new ReadEvent(aHandle, aOffset, aBuf, aCount,
-                                         aCallback);
+                                         aResultOnAnyThread, aCallback);
   rv = ioMan->mIOThread->Dispatch(ev, aHandle->IsPriority()
     ? CacheIOThread::READ_PRIORITY
     : CacheIOThread::READ);

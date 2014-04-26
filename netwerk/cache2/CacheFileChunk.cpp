@@ -203,7 +203,7 @@ CacheFileChunk::Read(CacheFileHandle *aHandle, uint32_t aLen,
   DoMemoryReport(MemorySize());
 
   rv = CacheFileIOManager::Read(aHandle, mIndex * kChunkSize, mRWBuf, aLen,
-                                this);
+                                true, this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     rv = mIndex ? NS_ERROR_FILE_CORRUPTED : NS_ERROR_FILE_NOT_FOUND;
     SetError(rv);
