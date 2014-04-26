@@ -164,7 +164,7 @@ struct EffectChain
   explicit EffectChain(void* aLayerRef) : mLayerRef(aLayerRef) {}
 
   RefPtr<Effect> mPrimaryEffect;
-  RefPtr<Effect> mSecondaryEffects[EffectTypes::MAX_SECONDARY];
+  RefPtr<Effect> mSecondaryEffects[size_t(EffectTypes::MAX_SECONDARY)];
   void* mLayerRef; //!< For LayerScope logging
 };
 
