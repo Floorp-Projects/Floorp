@@ -16,7 +16,6 @@
 #include "nsIRelativeFilePref.h"
 #include "nsIFile.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
 #include "nsTArray.h"
 #include "nsWeakReference.h"
 #include "nsClassHashtable.h"

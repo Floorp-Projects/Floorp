@@ -8,7 +8,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsVoidArray.h"
 #include "nsJSPrincipals.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
