@@ -14,7 +14,7 @@ using namespace mozilla::a11y;
 
 
 /**
- * An object that stores a given traversal rule during 
+ * An object that stores a given traversal rule during the pivot movement.
  */
 class RuleCache
 {
@@ -325,7 +325,7 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary, bool* aResult)
 
     // If there's no more text on the current node, try to find the next text
     // node; if there isn't one, bail out.
-    if (tempEnd == text->CharacterCount()) {
+    if (tempEnd == static_cast<int32_t>(text->CharacterCount())) {
       if (tempPosition == root)
         return NS_OK;
 
@@ -389,7 +389,7 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary, bool* aResult)
     // instead want to traverse into it. So restart the movement with
     // the child as the starting point.
     if (childAtOffset && nsAccUtils::IsEmbeddedObject(childAtOffset) &&
-        tempStart == childAtOffset->StartOffset()) {
+        tempStart == static_cast<int32_t>(childAtOffset->StartOffset())) {
       tempPosition = childAtOffset;
       tempStart = tempEnd = -1;
       continue;
@@ -517,7 +517,7 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary, bool* aResult)
     // instead want to traverse into it. So restart the movement with
     // the child as the starting point.
     if (childAtOffset && nsAccUtils::IsEmbeddedObject(childAtOffset) &&
-        tempEnd == childAtOffset->EndOffset()) {
+        tempEnd == static_cast<int32_t>(childAtOffset->EndOffset())) {
       tempPosition = childAtOffset;
       tempStart = tempEnd = childAtOffset->AsHyperText()->CharacterCount();
       continue;
