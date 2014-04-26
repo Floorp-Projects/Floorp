@@ -295,6 +295,12 @@ MouseEvent::GetRelatedTarget()
   return nullptr;
 }
 
+void
+MouseEvent::GetRegion(nsAString& aRegion)
+{
+  SetDOMStringToNull(aRegion);
+}
+
 NS_IMETHODIMP
 MouseEvent::GetMozMovementX(int32_t* aMovementX)
 {
