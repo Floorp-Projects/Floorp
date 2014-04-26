@@ -4352,12 +4352,14 @@ void
 MacroAssemblerARMCompat::branchPtrInNurseryRange(Register ptr, Register temp, Label *label)
 {
     JS_ASSERT(ptr != temp);
-    JS_ASSERT(ptr != ScratchRegister);
+    JS_ASSERT(ptr != secondScratchReg_);
 
     const Nursery &nursery = GetIonContext()->runtime->gcNursery();
-    movePtr(ImmWord(-ptrdiff_t(nursery.start())), ScratchRegister);
-    addPtr(ptr, ScratchRegister);
-    branchPtr(Assembler::Below, ScratchRegister, Imm32(Nursery::NurserySize), label);
+    uintptr_t startChunk = nursery.start() >> Nursery::ChunkShift;
+
+    ma_mov(Imm32(startChunk), secondScratchReg_);
+    as_rsb(secondScratchReg_, secondScratchReg_, lsr(ptr, Nursery::ChunkShift));
+    branch32(Assembler::Below, secondScratchReg_, Imm32(Nursery::NumNurseryChunks), label);
 }
 
 void
