@@ -238,10 +238,10 @@ public:
   static nsresult ShutdownMetadataWriteScheduling();
 
   static nsresult OpenFile(const nsACString &aKey,
-                           uint32_t aFlags,
+                           uint32_t aFlags, bool aResultOnAnyThread,
                            CacheFileIOListener *aCallback);
   static nsresult Read(CacheFileHandle *aHandle, int64_t aOffset,
-                       char *aBuf, int32_t aCount,
+                       char *aBuf, int32_t aCount, bool aResultOnAnyThread,
                        CacheFileIOListener *aCallback);
   static nsresult Write(CacheFileHandle *aHandle, int64_t aOffset,
                         const char *aBuf, int32_t aCount, bool aValidate,

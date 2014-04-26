@@ -269,7 +269,7 @@ CacheFile::Init(const nsACString &aKey,
 
     mOpeningFile = true;
     mListener = aCallback;
-    rv = CacheFileIOManager::OpenFile(mKey, flags, this);
+    rv = CacheFileIOManager::OpenFile(mKey, flags, true, this);
     if (NS_FAILED(rv)) {
       mListener = nullptr;
       mOpeningFile = false;
