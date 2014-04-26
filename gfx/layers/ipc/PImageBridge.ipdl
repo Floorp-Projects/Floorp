@@ -13,6 +13,7 @@ include ProtocolTypes;
 include "mozilla/GfxMessageUtils.h";
 
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
+using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -51,7 +52,7 @@ parent:
   sync Stop();
 
   sync PCompositable(TextureInfo aInfo) returns (uint64_t id);
-  async PTexture(SurfaceDescriptor aSharedData, uint32_t aTextureFlags);
+  async PTexture(SurfaceDescriptor aSharedData, TextureFlags aTextureFlags);
 };
 
 
