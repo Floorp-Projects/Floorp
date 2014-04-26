@@ -830,7 +830,7 @@ bool WebGLFramebuffer::CheckColorAttachmentNumber(GLenum attachment, const char*
 {
     const char* const errorFormating = "%s: attachment: invalid enum value 0x%x";
 
-    if (mContext->IsExtensionEnabled(WebGLContext::WEBGL_draw_buffers)) {
+    if (mContext->IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers)) {
         if (attachment < LOCAL_GL_COLOR_ATTACHMENT0 ||
             attachment >= GLenum(LOCAL_GL_COLOR_ATTACHMENT0 + mContext->mGLMaxColorAttachments))
         {

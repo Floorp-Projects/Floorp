@@ -904,7 +904,7 @@ WebGLContext::GenerateMipmap(GLenum target)
     if (IsTextureFormatCompressed(internalFormat))
         return ErrorInvalidOperation("generateMipmap: Texture data at level zero is compressed.");
 
-    if (IsExtensionEnabled(WEBGL_depth_texture) &&
+    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_depth_texture) &&
         (IsGLDepthFormat(internalFormat) || IsGLDepthStencilFormat(internalFormat)))
     {
         return ErrorInvalidOperation("generateMipmap: "
@@ -1088,7 +1088,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         attachment != LOCAL_GL_STENCIL_ATTACHMENT &&
         attachment != LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
     {
-        if (IsExtensionEnabled(WEBGL_draw_buffers))
+        if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
         {
             if (attachment < LOCAL_GL_COLOR_ATTACHMENT0 ||
                 attachment >= GLenum(LOCAL_GL_COLOR_ATTACHMENT0 + mGLMaxColorAttachments))
@@ -1113,7 +1113,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
     if (fba.Renderbuffer()) {
         switch (pname) {
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT:
-                if (IsExtensionEnabled(EXT_sRGB)) {
+                if (IsExtensionEnabled(WebGLExtensionID::EXT_sRGB)) {
                     const GLenum internalFormat = fba.Renderbuffer()->InternalFormat();
                     return (internalFormat == LOCAL_GL_SRGB_EXT ||
                             internalFormat == LOCAL_GL_SRGB_ALPHA_EXT ||
@@ -1130,8 +1130,8 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                 return WebGLObjectAsJSValue(cx, fba.Renderbuffer(), rv);
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE: {
-                if (!IsExtensionEnabled(EXT_color_buffer_half_float) &&
-                    !IsExtensionEnabled(WEBGL_color_buffer_float))
+                if (!IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_half_float) &&
+                    !IsExtensionEnabled(WebGLExtensionID::WEBGL_color_buffer_float))
                 {
                     break;
                 }
@@ -1176,7 +1176,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
     } else if (fba.Texture()) {
         switch (pname) {
              case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT:
-                if (IsExtensionEnabled(EXT_sRGB)) {
+                if (IsExtensionEnabled(WebGLExtensionID::EXT_sRGB)) {
                     const GLenum internalFormat =
                         fba.Texture()->ImageInfoBase().InternalFormat();
                     return (internalFormat == LOCAL_GL_SRGB_EXT ||
@@ -1203,8 +1203,8 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
             }
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE: {
-                if (!IsExtensionEnabled(EXT_color_buffer_half_float) &&
-                    !IsExtensionEnabled(WEBGL_color_buffer_float))
+                if (!IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_half_float) &&
+                    !IsExtensionEnabled(WebGLExtensionID::WEBGL_color_buffer_float))
                 {
                     break;
                 }
@@ -1535,7 +1535,7 @@ void WebGLContext::TexParameter_base(GLenum target, GLenum pname,
             }
             break;
         case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
-            if (IsExtensionEnabled(EXT_texture_filter_anisotropic)) {
+            if (IsExtensionEnabled(WebGLExtensionID::EXT_texture_filter_anisotropic)) {
                 if (floatParamPtr && floatParam < 1.f)
                     paramValueInvalid = true;
                 else if (intParamPtr && intParam < 1)
@@ -1598,7 +1598,7 @@ WebGLContext::GetTexParameter(GLenum target, GLenum pname)
             return JS::NumberValue(uint32_t(i));
         }
         case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
-            if (IsExtensionEnabled(EXT_texture_filter_anisotropic)) {
+            if (IsExtensionEnabled(WebGLExtensionID::EXT_texture_filter_anisotropic)) {
                 GLfloat f = 0.f;
                 gl->fGetTexParameterfv(target, pname, &f);
                 return JS::DoubleValue(f);
@@ -1795,7 +1795,7 @@ WebGLContext::Hint(GLenum target, GLenum mode)
             isValid = true;
             break;
         case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
-            if (IsExtensionEnabled(OES_standard_derivatives))
+            if (IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives))
                 isValid = true;
             break;
     }
@@ -2118,8 +2118,8 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
             requiredDataType = js::ArrayBufferView::TYPE_UINT16;
             break;
         case LOCAL_GL_FLOAT:
-            if (IsExtensionEnabled(WEBGL_color_buffer_float) ||
-                IsExtensionEnabled(EXT_color_buffer_half_float))
+            if (IsExtensionEnabled(WebGLExtensionID::WEBGL_color_buffer_float) ||
+                IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_half_float))
             {
                 isReadTypeValid = true;
                 isReadTypeFloat = true;
@@ -2378,16 +2378,16 @@ WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei 
         break;
     case LOCAL_GL_RGB16F:
     case LOCAL_GL_RGBA16F: {
-        bool hasExtensions = IsExtensionEnabled(OES_texture_half_float) &&
-                             IsExtensionEnabled(EXT_color_buffer_half_float);
+        bool hasExtensions = IsExtensionEnabled(WebGLExtensionID::OES_texture_half_float) &&
+                             IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_half_float);
         if (!hasExtensions)
             return ErrorInvalidEnumInfo("renderbufferStorage: internalformat", target);
         break;
     }
     case LOCAL_GL_RGB32F:
     case LOCAL_GL_RGBA32F: {
-        bool hasExtensions = IsExtensionEnabled(OES_texture_float) &&
-                             IsExtensionEnabled(WEBGL_color_buffer_float);
+        bool hasExtensions = IsExtensionEnabled(WebGLExtensionID::OES_texture_float) &&
+                             IsExtensionEnabled(WebGLExtensionID::WEBGL_color_buffer_float);
         if (!hasExtensions)
             return ErrorInvalidEnumInfo("renderbufferStorage: internalformat", target);
         break;
@@ -2985,13 +2985,13 @@ WebGLContext::CompileShader(WebGLShader *shader)
         resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
         resources.MaxDrawBuffers = mGLMaxDrawBuffers;
 
-        if (IsExtensionEnabled(EXT_frag_depth))
+        if (IsExtensionEnabled(WebGLExtensionID::EXT_frag_depth))
             resources.EXT_frag_depth = 1;
 
-        if (IsExtensionEnabled(OES_standard_derivatives))
+        if (IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives))
             resources.OES_standard_derivatives = 1;
 
-        if (IsExtensionEnabled(WEBGL_draw_buffers))
+        if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
             resources.EXT_draw_buffers = 1;
 
         // Tell ANGLE to allow highp in frag shaders. (unless disabled)
