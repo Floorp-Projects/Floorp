@@ -126,12 +126,12 @@ ImageHost::Composite(EffectChain& aEffectChain,
       }
       GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
                                 aOpacity, aTransform);
-      GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE|DIAGNOSTIC_BIGIMAGE,
+      GetCompositor()->DrawDiagnostics(DiagnosticFlags::IMAGE|DIAGNOSTIC_BIGIMAGE,
                                        rect, aClipRect, aTransform, mFlashCounter);
     } while (it->NextTile());
     it->EndBigImageIteration();
     // layer border
-    GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE,
+    GetCompositor()->DrawDiagnostics(DiagnosticFlags::IMAGE,
                                      gfxPictureRect, aClipRect,
                                      aTransform, mFlashCounter);
   } else {
@@ -155,7 +155,7 @@ ImageHost::Composite(EffectChain& aEffectChain,
 
     GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
                               aOpacity, aTransform);
-    GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE,
+    GetCompositor()->DrawDiagnostics(DiagnosticFlags::IMAGE,
                                      rect, aClipRect,
                                      aTransform, mFlashCounter);
   }

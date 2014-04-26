@@ -314,7 +314,7 @@ public:
   ContentClientDoubleBuffered(CompositableForwarder* aFwd)
     : ContentClientRemoteBuffer(aFwd)
   {
-    mTextureInfo.mCompositableType = COMPOSITABLE_CONTENT_DOUBLE;
+    mTextureInfo.mCompositableType = CompositableType::CONTENT_DOUBLE;
   }
   virtual ~ContentClientDoubleBuffered() {}
 
@@ -368,7 +368,7 @@ public:
   ContentClientSingleBuffered(CompositableForwarder* aFwd)
     : ContentClientRemoteBuffer(aFwd)
   {
-    mTextureInfo.mCompositableType = COMPOSITABLE_CONTENT_SINGLE;
+    mTextureInfo.mCompositableType = CompositableType::CONTENT_SINGLE;
   }
   virtual ~ContentClientSingleBuffered() {}
 
@@ -394,7 +394,7 @@ public:
     , mHasBuffer(false)
     , mHasBufferOnWhite(false)
   {
-    mTextureInfo.mCompositableType = BUFFER_CONTENT_INC;
+    mTextureInfo.mCompositableType = CompositableType::BUFFER_CONTENT_INC;
   }
 
   typedef RotatedContentBuffer::PaintState PaintState;

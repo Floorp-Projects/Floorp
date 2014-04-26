@@ -51,11 +51,11 @@ Compositor::AssertOnCompositorThread()
 bool
 Compositor::ShouldDrawDiagnostics(DiagnosticFlags aFlags)
 {
-  if ((aFlags & DIAGNOSTIC_TILE) && !(mDiagnosticTypes & DIAGNOSTIC_TILE_BORDERS)) {
+  if ((aFlags & DiagnosticFlags::TILE) && !(mDiagnosticTypes & DiagnosticTypes::TILE_BORDERS)) {
     return false;
   }
-  if ((aFlags & DIAGNOSTIC_BIGIMAGE) &&
-      !(mDiagnosticTypes & DIAGNOSTIC_BIGIMAGE_BORDERS)) {
+  if ((aFlags & DiagnosticFlags::BIGIMAGE) &&
+      !(mDiagnosticTypes & DiagnosticTypes::BIGIMAGE_BORDERS)) {
     return false;
   }
   if (!mDiagnosticTypes) {
@@ -80,7 +80,7 @@ Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
 
     while (const nsIntRect* rect = screenIter.Next())
     {
-      DrawDiagnostics(aFlags | DIAGNOSTIC_REGION_RECT,
+      DrawDiagnostics(aFlags | DiagnosticFlags::REGION_RECT,
                       ToRect(*rect), aClipRect, aTransform, aFlashCounter);
     }
   }
@@ -153,23 +153,23 @@ Compositor::DrawDiagnosticsInternal(DiagnosticFlags aFlags,
   float opacity = 0.7f;
 
   gfx::Color color;
-  if (aFlags & DIAGNOSTIC_CONTENT) {
+  if (aFlags & DiagnosticFlags::CONTENT) {
     color = gfx::Color(0.0f, 1.0f, 0.0f, 1.0f); // green
-    if (aFlags & DIAGNOSTIC_COMPONENT_ALPHA) {
+    if (aFlags & DiagnosticFlags::COMPONENT_ALPHA) {
       color = gfx::Color(0.0f, 1.0f, 1.0f, 1.0f); // greenish blue
     }
-  } else if (aFlags & DIAGNOSTIC_IMAGE) {
+  } else if (aFlags & DiagnosticFlags::IMAGE) {
     color = gfx::Color(1.0f, 0.0f, 0.0f, 1.0f); // red
-  } else if (aFlags & DIAGNOSTIC_COLOR) {
+  } else if (aFlags & DiagnosticFlags::COLOR) {
     color = gfx::Color(0.0f, 0.0f, 1.0f, 1.0f); // blue
-  } else if (aFlags & DIAGNOSTIC_CONTAINER) {
+  } else if (aFlags & DiagnosticFlags::CONTAINER) {
     color = gfx::Color(0.8f, 0.0f, 0.8f, 1.0f); // purple
   }
 
   // make tile borders a bit more transparent to keep layer borders readable.
-  if (aFlags & DIAGNOSTIC_TILE ||
-      aFlags & DIAGNOSTIC_BIGIMAGE ||
-      aFlags & DIAGNOSTIC_REGION_RECT) {
+  if (aFlags & DiagnosticFlags::TILE ||
+      aFlags & DiagnosticFlags::BIGIMAGE ||
+      aFlags & DiagnosticFlags::REGION_RECT) {
     lWidth = 1;
     opacity = 0.5f;
     color.r *= 0.7f;
@@ -177,7 +177,7 @@ Compositor::DrawDiagnosticsInternal(DiagnosticFlags aFlags,
     color.b *= 0.7f;
   }
 
-  if (mDiagnosticTypes & DIAGNOSTIC_FLASH_BORDERS) {
+  if (mDiagnosticTypes & DiagnosticTypes::FLASH_BORDERS) {
     float flash = (float)aFlashCounter / (float)DIAGNOSTIC_FLASH_COUNTER_MAX;
     color.r *= flash;
     color.g *= flash;

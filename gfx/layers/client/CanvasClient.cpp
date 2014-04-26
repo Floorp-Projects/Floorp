@@ -79,7 +79,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     bufferCreated = true;
   }
 
-  if (!mBuffer->Lock(OPEN_WRITE_ONLY)) {
+  if (!mBuffer->Lock(OpenMode::OPEN_WRITE_ONLY)) {
     mBuffer = nullptr;
     return;
   }
