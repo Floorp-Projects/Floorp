@@ -244,7 +244,7 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
                     baseCSS.y * nsPresContext::AppUnitsPerCSSPixel(),
                     baseCSS.width * nsPresContext::AppUnitsPerCSSPixel(),
                     baseCSS.height * nsPresContext::AppUnitsPerCSSPixel());
-        nsLayoutUtils::SetDisplayPortBase(content, base);
+        nsLayoutUtils::SetDisplayPortBaseIfNotSet(content, base);
     }
 }
 
@@ -299,7 +299,7 @@ APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
                         baseCSS.y * nsPresContext::AppUnitsPerCSSPixel(),
                         baseCSS.width * nsPresContext::AppUnitsPerCSSPixel(),
                         baseCSS.height * nsPresContext::AppUnitsPerCSSPixel());
-            nsLayoutUtils::SetDisplayPortBase(aContent, base);
+            nsLayoutUtils::SetDisplayPortBaseIfNotSet(aContent, base);
         }
     }
 
