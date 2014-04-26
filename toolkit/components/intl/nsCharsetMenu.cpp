@@ -1005,7 +1005,7 @@ nsresult nsCharsetMenu::InitMoreMenu(nsTArray<nsCString>& aDecs,
   if (NS_FAILED(res)) goto done;
 
 done:
-  // free the elements in the VoidArray
+  // free the elements in the nsTArray<nsMenuEntry*>
   FreeMenuItemArray(&moreMenu);
 
   return res;

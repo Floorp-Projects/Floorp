@@ -14,7 +14,6 @@
 #include "secasn1.h"
 #include "pk11pqg.h"
 #include "nsKeygenHandler.h"
-#include "nsVoidArray.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIContent.h"
