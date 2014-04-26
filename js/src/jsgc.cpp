@@ -796,7 +796,6 @@ Chunk::init(JSRuntime *rt)
 
     /* Initialize the chunk info. */
     info.age = 0;
-    info.trailer.location = ChunkLocationTenuredHeap;
     info.trailer.runtime = rt;
 
     /* The rest of info fields are initialized in PickChunk. */

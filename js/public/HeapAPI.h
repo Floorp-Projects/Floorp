@@ -26,8 +26,6 @@ CurrentThreadCanAccessZone(JS::Zone *zone);
 
 namespace gc {
 
-struct Cell;
-
 const size_t ArenaShift = 12;
 const size_t ArenaSize = size_t(1) << ArenaShift;
 const size_t ArenaMask = ArenaSize - 1;
@@ -41,10 +39,9 @@ const size_t CellSize = size_t(1) << CellShift;
 const size_t CellMask = CellSize - 1;
 
 /* These are magic constants derived from actual offsets in gc/Heap.h. */
-const size_t ChunkMarkBitmapOffset = 1032360;
+const size_t ChunkMarkBitmapOffset = 1032368;
 const size_t ChunkMarkBitmapBits = 129024;
 const size_t ChunkRuntimeOffset = ChunkSize - sizeof(void*);
-const size_t ChunkLocationOffset = ChunkSize - sizeof(void*) - sizeof(uintptr_t);
 
 /*
  * Live objects are marked black. How many other additional colors are available
@@ -53,13 +50,6 @@ const size_t ChunkLocationOffset = ChunkSize - sizeof(void*) - sizeof(uintptr_t)
  */
 static const uint32_t BLACK = 0;
 static const uint32_t GRAY = 1;
-
-/*
- * Constants used to indicate whether a chunk is part of the tenured heap or the
- * nusery.
- */
-const uintptr_t ChunkLocationNursery = 0;
-const uintptr_t ChunkLocationTenuredHeap = 1;
 
 } /* namespace gc */
 } /* namespace js */
@@ -169,24 +159,6 @@ IsInsideNursery(const JS::shadow::Runtime *runtime, const void *p)
 {
 #ifdef JSGC_GENERATIONAL
     return uintptr_t(p) >= runtime->gcNurseryStart_ && uintptr_t(p) < runtime->gcNurseryEnd_;
-#else
-    return false;
-#endif
-}
-
-MOZ_ALWAYS_INLINE bool
-IsInsideNursery(const js::gc::Cell *cell)
-{
-#ifdef JSGC_GENERATIONAL
-    if (!cell)
-        return false;
-    uintptr_t addr = uintptr_t(cell);
-    addr &= ~js::gc::ChunkMask;
-    addr |= js::gc::ChunkLocationOffset;
-    uint32_t location = *reinterpret_cast<uint32_t *>(addr);
-    JS_ASSERT(location == gc::ChunkLocationNursery ||
-              location == gc::ChunkLocationTenuredHeap);
-    return location == gc::ChunkLocationNursery;
 #else
     return false;
 #endif
