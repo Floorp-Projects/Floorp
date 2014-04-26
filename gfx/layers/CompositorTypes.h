@@ -111,7 +111,8 @@ MOZ_BEGIN_ENUM_CLASS(DiagnosticTypes, uint8_t)
   TILE_BORDERS     = 1 << 0,
   LAYER_BORDERS    = 1 << 1,
   BIGIMAGE_BORDERS = 1 << 2,
-  FLASH_BORDERS    = 1 << 3
+  FLASH_BORDERS    = 1 << 3,
+  ALL_BITS         = (1 << 4) - 1
 MOZ_END_ENUM_CLASS(DiagnosticTypes)
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DiagnosticTypes)
 
@@ -175,8 +176,9 @@ MOZ_END_ENUM_CLASS(CompositableType)
 MOZ_BEGIN_ENUM_CLASS(DeprecatedTextureHostFlags, uint8_t)
   DEFAULT = 0,       // The default texture host for the given SurfaceDescriptor
   TILED = 1 << 0,    // A texture host that supports tiling
-  COPY_PREVIOUS = 1 << 1 // Texture contents should be initialized
+  COPY_PREVIOUS = 1 << 1, // Texture contents should be initialized
                                       // from the previous texture.
+  ALL_BITS = (1 << 2) - 1
 MOZ_END_ENUM_CLASS(DeprecatedTextureHostFlags)
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DeprecatedTextureHostFlags)
 
@@ -216,7 +218,8 @@ MOZ_BEGIN_ENUM_CLASS(TextureIdentifier, uint8_t)
   Front = 1,
   Back = 2,
   OnWhiteFront = 3,
-  OnWhiteBack = 4
+  OnWhiteBack = 4,
+  HighBound
 MOZ_END_ENUM_CLASS(TextureIdentifier)
 
 /**

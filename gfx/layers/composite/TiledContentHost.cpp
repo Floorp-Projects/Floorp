@@ -380,7 +380,7 @@ TiledContentHost::RenderTile(const TileHost& aTile,
                                   textureRect.height / aTextureBounds.height);
     mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, aOpacity, aTransform);
   }
-  mCompositor->DrawDiagnostics(DiagnosticFlags::CONTENT|DIAGNOSTIC_TILE,
+  mCompositor->DrawDiagnostics(DiagnosticFlags::CONTENT | DiagnosticFlags::TILE,
                                aScreenRegion, aClipRect, aTransform, mFlashCounter);
 }
 
