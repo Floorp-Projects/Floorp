@@ -7,7 +7,6 @@
 #define nsIDOMClassInfo_h___
 
 #include "nsIClassInfoImpl.h"
-#include "nsVoidArray.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIXPCScriptable.h"
 #include "nsIServiceManager.h"

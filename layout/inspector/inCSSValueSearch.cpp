@@ -8,7 +8,6 @@
 #include "nsCSSStyleSheet.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsVoidArray.h"
 #include "nsReadableUtils.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMStyleSheetList.h"

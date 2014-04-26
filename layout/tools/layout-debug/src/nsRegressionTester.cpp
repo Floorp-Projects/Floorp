@@ -9,7 +9,6 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIWindowWatcher.h"
-#include "nsVoidArray.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
 #include "nsIURI.h"
