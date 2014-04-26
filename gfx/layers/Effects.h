@@ -17,6 +17,7 @@
 #include "mozilla/layers/TextureHost.h"  // for CompositingRenderTarget, etc
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nscore.h"                     // for nsACString
+#include "mozilla/EnumeratedArray.h"
 
 namespace mozilla {
 namespace layers {
@@ -164,7 +165,8 @@ struct EffectChain
   explicit EffectChain(void* aLayerRef) : mLayerRef(aLayerRef) {}
 
   RefPtr<Effect> mPrimaryEffect;
-  RefPtr<Effect> mSecondaryEffects[size_t(EffectTypes::MAX_SECONDARY)];
+  EnumeratedArray<EffectTypes, EffectTypes::MAX_SECONDARY, RefPtr<Effect>>
+    mSecondaryEffects;
   void* mLayerRef; //!< For LayerScope logging
 };
 
