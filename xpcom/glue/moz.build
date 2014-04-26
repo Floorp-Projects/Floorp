@@ -69,6 +69,7 @@ EXPORTS.mozilla += [
     'BlockingResourceBase.h',
     'CondVar.h',
     'DeadlockDetector.h',
+    'EnumeratedArrayCycleCollection.h',
     'FileUtils.h',
     'GenericFactory.h',
     'HoldDropJSObjects.h',
