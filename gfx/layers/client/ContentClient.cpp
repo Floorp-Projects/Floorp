@@ -587,7 +587,7 @@ RotatedContentBuffer::PaintState
 ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
                                            uint32_t aFlags)
 {
-  mTextureInfo.mDeprecatedTextureHostFlags = 0;
+  mTextureInfo.mDeprecatedTextureHostFlags = DeprecatedTextureHostFlags::DEFAULT;
   PaintState result;
   // We need to disable rotation if we're going to be resampled when
   // drawing, because we might sample across the rotation boundary.
