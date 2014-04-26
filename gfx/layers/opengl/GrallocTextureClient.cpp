@@ -145,10 +145,10 @@ GrallocTextureClientOGL::Lock(OpenMode aMode)
   WaitReleaseFence();
 
   uint32_t usage = 0;
-  if (aMode & OPEN_READ) {
+  if (aMode & OpenMode::OPEN_READ) {
     usage |= GRALLOC_USAGE_SW_READ_OFTEN;
   }
-  if (aMode & OPEN_WRITE) {
+  if (aMode & OpenMode::OPEN_WRITE) {
     usage |= GRALLOC_USAGE_SW_WRITE_OFTEN;
   }
   int32_t rv = mGraphicBuffer->lock(usage, reinterpret_cast<void**>(&mMappedBuffer));

@@ -174,7 +174,7 @@ public:
    *
    * This is typically used as follows:
    *
-   * if (!texture->Lock(OPEN_READ_WRITE)) {
+   * if (!texture->Lock(OpenMode::OPEN_READ_WRITE)) {
    *   return false;
    * }
    * {
