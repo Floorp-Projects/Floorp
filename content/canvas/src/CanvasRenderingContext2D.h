@@ -492,17 +492,17 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(CanvasRenderingContext2D)
 
-  enum CanvasMultiGetterType {
-    CMG_STYLE_STRING = 0,
-    CMG_STYLE_PATTERN = 1,
-    CMG_STYLE_GRADIENT = 2
-  };
+  MOZ_BEGIN_NESTED_ENUM_CLASS(CanvasMultiGetterType, uint8_t)
+    STRING = 0,
+    PATTERN = 1,
+    GRADIENT = 2
+  MOZ_END_NESTED_ENUM_CLASS(CanvasMultiGetterType)
 
-  enum Style {
-    STYLE_STROKE = 0,
-    STYLE_FILL,
-    STYLE_MAX
-  };
+  MOZ_BEGIN_NESTED_ENUM_CLASS(Style, uint8_t)
+    STROKE = 0,
+    FILL,
+    MAX
+  MOZ_END_NESTED_ENUM_CLASS(Style)
 
   nsINode* GetParentObject()
   {
@@ -810,30 +810,35 @@ protected:
   }
 
   // text
-  enum TextAlign {
-    TEXT_ALIGN_START,
-    TEXT_ALIGN_END,
-    TEXT_ALIGN_LEFT,
-    TEXT_ALIGN_RIGHT,
-    TEXT_ALIGN_CENTER
-  };
 
-  enum TextBaseline {
-    TEXT_BASELINE_TOP,
-    TEXT_BASELINE_HANGING,
-    TEXT_BASELINE_MIDDLE,
-    TEXT_BASELINE_ALPHABETIC,
-    TEXT_BASELINE_IDEOGRAPHIC,
-    TEXT_BASELINE_BOTTOM
-  };
+public: // These enums are public only to accomodate non-C++11 legacy path of
+        // MOZ_FINISH_NESTED_ENUM_CLASS. Can move back to protected as soon
+        // as that legacy path is dropped.
+  MOZ_BEGIN_NESTED_ENUM_CLASS(TextAlign, uint8_t)
+    START,
+    END,
+    LEFT,
+    RIGHT,
+    CENTER
+  MOZ_END_NESTED_ENUM_CLASS(TextAlign)
 
+  MOZ_BEGIN_NESTED_ENUM_CLASS(TextBaseline, uint8_t)
+    TOP,
+    HANGING,
+    MIDDLE,
+    ALPHABETIC,
+    IDEOGRAPHIC,
+    BOTTOM
+  MOZ_END_NESTED_ENUM_CLASS(TextBaseline)
+
+  MOZ_BEGIN_NESTED_ENUM_CLASS(TextDrawOperation, uint8_t)
+    FILL,
+    STROKE,
+    MEASURE
+  MOZ_END_NESTED_ENUM_CLASS(TextDrawOperation)
+
+protected:
   gfxFontGroup *GetCurrentFontStyle();
-
-  enum TextDrawOperation {
-    TEXT_DRAW_OPERATION_FILL,
-    TEXT_DRAW_OPERATION_STROKE,
-    TEXT_DRAW_OPERATION_MEASURE
-  };
 
   /*
     * Implementation of the fillText, strokeText, and measure functions with
@@ -986,6 +991,12 @@ protected:
 
   friend struct CanvasBidiProcessor;
 };
+
+MOZ_FINISH_NESTED_ENUM_CLASS(CanvasRenderingContext2D::CanvasMultiGetterType)
+MOZ_FINISH_NESTED_ENUM_CLASS(CanvasRenderingContext2D::Style)
+MOZ_FINISH_NESTED_ENUM_CLASS(CanvasRenderingContext2D::TextAlign)
+MOZ_FINISH_NESTED_ENUM_CLASS(CanvasRenderingContext2D::TextBaseline)
+MOZ_FINISH_NESTED_ENUM_CLASS(CanvasRenderingContext2D::TextDrawOperation)
 
 }
 }
