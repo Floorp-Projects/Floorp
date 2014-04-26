@@ -17,6 +17,7 @@
 #include "nsILoadGroup.h"
 #include "nsCOMArray.h"
 #include "nsTObserverArray.h"
+#include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
@@ -30,6 +31,8 @@
 #include "nsAutoPtr.h"
 
 #include "mozilla/LinkedList.h"
+
+struct nsListenerInfo;
 
 /****************************************************************************
  * nsDocLoader implementation...
@@ -94,20 +97,6 @@ public:
     // |this|.
     nsresult AddChildLoader(nsDocLoader* aChild);
     nsDocLoader* GetParent() const { return mParent; }
-
-    struct nsListenerInfo {
-      nsListenerInfo(nsIWeakReference *aListener, unsigned long aNotifyMask) 
-        : mWeakListener(aListener),
-          mNotifyMask(aNotifyMask)
-      {
-      }
-
-      // Weak pointer for the nsIWebProgressListener...
-      nsWeakPtr mWeakListener;
-
-      // Mask indicating which notifications the listener wants to receive.
-      unsigned long mNotifyMask;
-    };
 
 protected:
     virtual ~nsDocLoader();
@@ -260,8 +249,7 @@ protected:
 
     nsDocLoader*               mParent;                // [WEAK]
 
-    typedef nsAutoTObserverArray<nsListenerInfo, 8> ListenerArray;
-    ListenerArray              mListenerInfoList;
+    nsVoidArray                mListenerInfoList;
 
     nsCOMPtr<nsILoadGroup>        mLoadGroup;
     // We hold weak refs to all our kids
@@ -315,6 +303,8 @@ private:
     // loadgroup has no active requests before checking for "real" emptiness if
     // aFlushLayout is true.
     void DocLoaderIsEmpty(bool aFlushLayout);
+
+    nsListenerInfo *GetListenerInfo(nsIWebProgressListener* aListener);
 
     int64_t GetMaxTotalProgress();
 
