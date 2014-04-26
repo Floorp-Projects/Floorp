@@ -57,6 +57,9 @@
 #  if __has_extension(cxx_constexpr)
 #    define MOZ_HAVE_CXX11_CONSTEXPR
 #  endif
+#  if __has_extension(cxx_explicit_conversions)
+#    define MOZ_HAVE_EXPLICIT_CONVERSION
+#  endif
 #  if __has_extension(cxx_deleted_functions)
 #    define MOZ_HAVE_CXX11_DELETE
 #  endif
@@ -78,6 +81,9 @@
 #    endif
 #    if MOZ_GCC_VERSION_AT_LEAST(4, 6, 0)
 #      define MOZ_HAVE_CXX11_CONSTEXPR
+#    endif
+#    if MOZ_GCC_VERSION_AT_LEAST(4, 5, 0)
+#      define MOZ_HAVE_EXPLICIT_CONVERSION
 #    endif
 #    define MOZ_HAVE_CXX11_DELETE
 #  else
@@ -101,6 +107,8 @@
 #  define MOZ_HAVE_CXX11_OVERRIDE
 #  define MOZ_HAVE_NEVER_INLINE          __declspec(noinline)
 #  define MOZ_HAVE_NORETURN              __declspec(noreturn)
+// Staying away from explicit conversion operators in MSVC for now, see
+// http://stackoverflow.com/questions/20498142/visual-studio-2013-explicit-keyword-bug
 #endif
 
 /*
@@ -119,6 +127,30 @@
 #else
 #  define MOZ_CONSTEXPR         /* no support */
 #  define MOZ_CONSTEXPR_VAR     const
+#endif
+
+/*
+ * MOZ_EXPLICIT_CONVERSION is a specifier on a type conversion
+ * overloaded operator that declares that a C++11 compiler should restrict
+ * this operator to allow only explicit type conversions, disallowing
+ * implicit conversions.
+ *
+ * Example:
+ *
+ *   template<typename T>
+ *   class Ptr
+ *   {
+ *      T* ptr;
+ *      MOZ_EXPLICIT_CONVERSION operator bool() const {
+ *        return ptr != nullptr;
+ *      }
+ *   };
+ *
+ */
+#ifdef MOZ_HAVE_EXPLICIT_CONVERSION
+#  define MOZ_EXPLICIT_CONVERSION explicit
+#else
+#  define MOZ_EXPLICIT_CONVERSION /* no support */
 #endif
 
 /*
