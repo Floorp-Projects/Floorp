@@ -158,22 +158,22 @@ public:
 
   void GetStrokeStyle(OwningStringOrCanvasGradientOrCanvasPattern& value)
   {
-    GetStyleAsUnion(value, STYLE_STROKE);
+    GetStyleAsUnion(value, Style::STROKE);
   }
 
   void SetStrokeStyle(const StringOrCanvasGradientOrCanvasPattern& value)
   {
-    SetStyleFromUnion(value, STYLE_STROKE);
+    SetStyleFromUnion(value, Style::STROKE);
   }
 
   void GetFillStyle(OwningStringOrCanvasGradientOrCanvasPattern& value)
   {
-    GetStyleAsUnion(value, STYLE_FILL);
+    GetStyleAsUnion(value, Style::FILL);
   }
 
   void SetFillStyle(const StringOrCanvasGradientOrCanvasPattern& value)
   {
-    SetStyleFromUnion(value, STYLE_FILL);
+    SetStyleFromUnion(value, Style::FILL);
   }
 
   already_AddRefed<CanvasGradient>
@@ -854,8 +854,8 @@ protected:
   // state stack handling
   class ContextState {
   public:
-    ContextState() : textAlign(TEXT_ALIGN_START),
-                     textBaseline(TEXT_BASELINE_ALPHABETIC),
+    ContextState() : textAlign(TextAlign::START),
+                     textBaseline(TextBaseline::ALPHABETIC),
                      lineWidth(1.0f),
                      miterLimit(10.0f),
                      globalAlpha(1.0f),
@@ -888,7 +888,7 @@ protected:
           lineJoin(other.lineJoin),
           imageSmoothingEnabled(other.imageSmoothingEnabled)
     {
-      for (int i = 0; i < STYLE_MAX; i++) {
+      for (int i = 0; i < Style::MAX; i++) {
         colorStyles[i] = other.colorStyles[i];
         gradientStyles[i] = other.gradientStyles[i];
         patternStyles[i] = other.patternStyles[i];
@@ -926,14 +926,14 @@ protected:
     std::vector<mozilla::RefPtr<mozilla::gfx::Path> > clipsPushed;
 
     nsRefPtr<gfxFontGroup> fontGroup;
-    nsRefPtr<CanvasGradient> gradientStyles[STYLE_MAX];
-    nsRefPtr<CanvasPattern> patternStyles[STYLE_MAX];
+    nsRefPtr<CanvasGradient> gradientStyles[Style::MAX];
+    nsRefPtr<CanvasPattern> patternStyles[Style::MAX];
 
     nsString font;
     TextAlign textAlign;
     TextBaseline textBaseline;
 
-    nscolor colorStyles[STYLE_MAX];
+    nscolor colorStyles[Style::MAX];
     nscolor shadowColor;
 
     mozilla::gfx::Matrix transform;
