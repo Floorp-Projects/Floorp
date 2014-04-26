@@ -248,7 +248,7 @@ XULListboxAccessible::RowCount()
 
 Accessible*
 XULListboxAccessible::CellAt(uint32_t aRowIndex, uint32_t aColumnIndex)
-{ 
+{
   nsCOMPtr<nsIDOMXULSelectControlElement> control =
     do_QueryInterface(mContent);
   NS_ENSURE_TRUE(control, nullptr);
@@ -280,7 +280,7 @@ XULListboxAccessible::IsColSelected(uint32_t aColIdx)
   nsresult rv = control->GetSelectedCount(&selectedrowCount);
   NS_ENSURE_SUCCESS(rv, false);
 
-  return selectedrowCount == RowCount();
+  return selectedrowCount == static_cast<int32_t>(RowCount());
 }
 
 bool
@@ -338,7 +338,8 @@ XULListboxAccessible::SelectedColCount()
   nsresult rv = control->GetSelectedCount(&selectedRowCount);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  return selectedRowCount > 0 && selectedRowCount == RowCount() ? ColCount() : 0;
+  return selectedRowCount > 0 &&
+   selectedRowCount == static_cast<int32_t>(RowCount()) ? ColCount() : 0;
 }
 
 uint32_t
@@ -560,7 +561,7 @@ XULListboxAccessible::ContainerWidget() const
       if (inputElm) {
         nsCOMPtr<nsINode> inputNode = do_QueryInterface(inputElm);
         if (inputNode) {
-          Accessible* input = 
+          Accessible* input =
             mDoc->GetAccessible(inputNode);
           return input ? input->ContainerWidget() : nullptr;
         }
@@ -587,12 +588,12 @@ XULListitemAccessible::
 
 NS_IMPL_ISUPPORTS_INHERITED0(XULListitemAccessible, Accessible)
 
-Accessible* 
+Accessible*
 XULListitemAccessible::GetListAccessible()
 {
   if (IsDefunct())
     return nullptr;
-  
+
   nsCOMPtr<nsIDOMXULSelectControlItemElement> listItem =
     do_QueryInterface(mContent);
   if (!listItem)

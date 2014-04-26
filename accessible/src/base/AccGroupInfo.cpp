@@ -198,7 +198,7 @@ AccGroupInfo::NextItemTo(Accessible* aItem)
 
   Accessible* parent = aItem->Parent();
   uint32_t childCount = parent->ChildCount();
-  for (int32_t idx = aItem->IndexInParent() + 1; idx < childCount; idx++) {
+  for (uint32_t idx = aItem->IndexInParent() + 1; idx < childCount; idx++) {
     Accessible* nextItem = parent->GetChildAt(idx);
     AccGroupInfo* nextGroupInfo = nextItem->GetGroupInfo();
     if (nextGroupInfo &&
