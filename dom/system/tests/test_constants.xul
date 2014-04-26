@@ -64,6 +64,14 @@ function test_debugBuildMainThread(isDebugBuild) {
   is(isDebugBuild, !!OS.Constants.Sys.DEBUG, "OS.Constants.Sys.DEBUG is set properly on main thread");
 }
 
+// Test that OS.Constants.Sys.umask is set properly on main thread
+function test_umaskMainThread(umask) {
+  is(umask, OS.Constants.Sys.umask,
+     "OS.Constants.Sys.umask is set properly on main thread: " +
+     ("0000"+umask.toString(8)).slice(-4));
+}
+
+
 function test() {
   ok(true, "test_constants.xul: Starting test");
 
@@ -79,6 +87,11 @@ function test() {
   let isDebugBuild = Components.classes["@mozilla.org/xpcom/debug;1"]
                             .getService(Components.interfaces.nsIDebug2).isDebugBuild;
   test_debugBuildMainThread(isDebugBuild);
+
+  let umask = Components.classes["@mozilla.org/system-info;1"].
+    getService(Components.interfaces.nsIPropertyBag2).
+    getProperty("umask");
+  test_umaskMainThread(umask);
 
   // Test 2: Load libxul from chrome thread
   worker = new ChromeWorker("worker_constants.js");
@@ -108,8 +121,12 @@ function test() {
     }
   };
 
-  // nsIDebug2 is inaccessible from ChromeWorker. We need to pass isDebugBuild to the worker
-  worker.postMessage(isDebugBuild);
+  // pass expected values that are unavailable off-main-thread
+  // to the worker
+  worker.postMessage({
+    isDebugBuild: isDebugBuild,
+    umask: umask
+  });
   ok(true, "test_constants.xul: Test in progress");
 };
 ]]>
