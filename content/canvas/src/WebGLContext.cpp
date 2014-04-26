@@ -57,6 +57,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/ProcessPriorityManager.h"
+#include "mozilla/EnumeratedArrayCycleCollection.h"
 
 #include "Layers.h"
 
@@ -262,10 +263,10 @@ WebGLContext::DestroyResourcesAndContext()
 
     // disable all extensions except "WEBGL_lose_context". see bug #927969
     // spec: http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
-    for (size_t i = 0; i < size_t(WebGLExtensionID_max); ++i) {
+    for (size_t i = 0; i < size_t(WebGLExtensionID::Max); ++i) {
         WebGLExtensionID extension = WebGLExtensionID(i);
 
-        if (!IsExtensionEnabled(extension) || (extension == WEBGL_lose_context))
+        if (!IsExtensionEnabled(extension) || (extension == WebGLExtensionID::WEBGL_lose_context))
             continue;
 
         mExtensions[extension]->MarkLost();
@@ -992,7 +993,7 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool
     bool initializeColorBuffer = 0 != (mask & LOCAL_GL_COLOR_BUFFER_BIT);
     bool initializeDepthBuffer = 0 != (mask & LOCAL_GL_DEPTH_BUFFER_BIT);
     bool initializeStencilBuffer = 0 != (mask & LOCAL_GL_STENCIL_BUFFER_BIT);
-    bool drawBuffersIsEnabled = IsExtensionEnabled(WEBGL_draw_buffers);
+    bool drawBuffersIsEnabled = IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers);
 
     GLenum currentDrawBuffers[WebGLContext::sMaxColorAttachments];
 
