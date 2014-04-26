@@ -267,12 +267,12 @@ ContentClientRemoteBuffer::CreateBuffer(ContentType aType,
 
   // We just created the textures and we are about to get their draw targets
   // so we have to lock them here.
-  DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
+  DebugOnly<bool> locked = mTextureClient->Lock(OpenMode::OPEN_READ_WRITE);
   MOZ_ASSERT(locked, "Could not lock the TextureClient");
 
   *aBlackDT = mTextureClient->GetAsDrawTarget();
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
-    locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
+    locked = mTextureClientOnWhite->Lock(OpenMode::OPEN_READ_WRITE);
     MOZ_ASSERT(locked, "Could not lock the second TextureClient for component alpha");
 
     *aWhiteDT = mTextureClientOnWhite->GetAsDrawTarget();
@@ -426,11 +426,11 @@ void
 ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 {
   if (mTextureClient) {
-    DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
+    DebugOnly<bool> locked = mTextureClient->Lock(OpenMode::OPEN_READ_WRITE);
     MOZ_ASSERT(locked);
   }
   if (mTextureClientOnWhite) {
-    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
+    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OpenMode::OPEN_READ_WRITE);
     MOZ_ASSERT(locked);
   }
 
@@ -464,11 +464,11 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 
   // We need to ensure that we lock these two buffers in the same
   // order as the compositor to prevent deadlocks.
-  if (!mFrontClient->Lock(OPEN_READ_ONLY)) {
+  if (!mFrontClient->Lock(OpenMode::OPEN_READ_ONLY)) {
     return;
   }
   if (mFrontClientOnWhite &&
-      !mFrontClientOnWhite->Lock(OPEN_READ_ONLY)) {
+      !mFrontClientOnWhite->Lock(OpenMode::OPEN_READ_ONLY)) {
     mFrontClient->Unlock();
     return;
   }
@@ -539,11 +539,11 @@ void
 ContentClientSingleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 {
   if (mTextureClient) {
-    DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
+    DebugOnly<bool> locked = mTextureClient->Lock(OpenMode::OPEN_READ_WRITE);
     MOZ_ASSERT(locked);
   }
   if (mTextureClientOnWhite) {
-    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
+    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OpenMode::OPEN_READ_WRITE);
     MOZ_ASSERT(locked);
   }
 }
@@ -754,7 +754,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
   if (createdBuffer) {
     if (mHasBuffer &&
         (mode != SurfaceMode::SURFACE_COMPONENT_ALPHA || mHasBufferOnWhite)) {
-      mTextureInfo.mDeprecatedTextureHostFlags = TEXTURE_HOST_COPY_PREVIOUS;
+      mTextureInfo.mDeprecatedTextureHostFlags = DeprecatedTextureHostFlags::COPY_PREVIOUS;
     }
 
     mHasBuffer = true;
@@ -851,7 +851,7 @@ ContentClientIncremental::Updated(const nsIntRegion& aRegionToDraw,
 {
   if (IsSurfaceDescriptorValid(mUpdateDescriptor)) {
     mForwarder->UpdateTextureIncremental(this,
-                                         TextureFront,
+                                         TextureIdentifier::Front,
                                          mUpdateDescriptor,
                                          aRegionToDraw,
                                          mBufferRect,
@@ -860,7 +860,7 @@ ContentClientIncremental::Updated(const nsIntRegion& aRegionToDraw,
   }
   if (IsSurfaceDescriptorValid(mUpdateDescriptorOnWhite)) {
     mForwarder->UpdateTextureIncremental(this,
-                                         TextureOnWhiteFront,
+                                         TextureIdentifier::OnWhiteFront,
                                          mUpdateDescriptorOnWhite,
                                          aRegionToDraw,
                                          mBufferRect,
