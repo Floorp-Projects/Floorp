@@ -322,7 +322,7 @@ nsWindowsRegKey::ReadStringValue(const nsAString &name, nsAString &result)
   if (type == REG_EXPAND_SZ) {
     const nsString &flatSource = PromiseFlatString(result);
     resultLen = ExpandEnvironmentStringsW(flatSource.get(), nullptr, 0);
-    if (resultLen > 0) {
+    if (resultLen > 1) {
       nsAutoString expandedResult;
       // |resultLen| includes the terminating null character
       --resultLen;
@@ -342,6 +342,9 @@ nsWindowsRegKey::ReadStringValue(const nsAString &name, nsAString &result)
         rv = ERROR_SUCCESS;
         result = expandedResult;
       }
+    } else if (resultLen == 1) {
+      // It apparently expands to nothing (just a null terminator).
+      result.Truncate();
     }
   }
 
@@ -386,6 +389,11 @@ nsWindowsRegKey::ReadBinaryValue(const nsAString &name, nsACString &result)
 
   if (rv != ERROR_SUCCESS)
     return NS_ERROR_FAILURE;
+
+  if (!size) {
+    result.Truncate();
+    return NS_OK;
+  }
 
   result.SetLength(size);
   nsACString::iterator begin;
