@@ -355,7 +355,7 @@ BufferTextureHost::GetFormat() const
   // instead (see BufferTextureHost::Upload)
   if (mFormat == gfx::SurfaceFormat::YUV &&
     mCompositor &&
-    !mCompositor->SupportsEffect(EFFECT_YCBCR)) {
+    !mCompositor->SupportsEffect(EffectTypes::YCBCR)) {
     return gfx::SurfaceFormat::R8G8B8X8;
   }
   return mFormat;
@@ -397,7 +397,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     YCbCrImageDataDeserializer yuvDeserializer(GetBuffer(), GetBufferSize());
     MOZ_ASSERT(yuvDeserializer.IsValid());
 
-    if (!mCompositor->SupportsEffect(EFFECT_YCBCR)) {
+    if (!mCompositor->SupportsEffect(EffectTypes::YCBCR)) {
       RefPtr<gfx::DataSourceSurface> surf = yuvDeserializer.ToDataSourceSurface();
       if (!mFirstSource) {
         mFirstSource = mCompositor->CreateDataTextureSource(mFlags);
