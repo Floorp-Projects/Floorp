@@ -66,7 +66,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
                                                 : gfxContentType::COLOR_ALPHA;
     gfxImageFormat format
       = gfxPlatform::GetPlatform()->OptimalFormatForContent(contentType);
-    uint32_t flags = TextureFlags::DEFAULT;
+    TextureFlags flags = TextureFlags::DEFAULT;
     if (mTextureFlags & TextureFlags::NEEDS_Y_FLIP) {
       flags |= TextureFlags::NEEDS_Y_FLIP;
     }

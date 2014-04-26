@@ -40,7 +40,7 @@ namespace layers {
 
 static TextureFlags TextureFlagsForRotatedContentBufferFlags(uint32_t aBufferFlags)
 {
-  TextureFlags result = 0;
+  TextureFlags result = TextureFlags::NO_FLAGS;
 
   if (aBufferFlags & RotatedContentBuffer::BUFFER_COMPONENT_ALPHA) {
     result |= TextureFlags::COMPONENT_ALPHA;
@@ -52,7 +52,6 @@ static TextureFlags TextureFlagsForRotatedContentBufferFlags(uint32_t aBufferFla
 
   return result;
 }
-
 
 /* static */ TemporaryRef<ContentClient>
 ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
@@ -572,6 +571,18 @@ FillSurface(DrawTarget* aDT, const nsIntRegion& aRegion,
   }
 }
 
+void
+ContentClientIncremental::NotifyBufferCreated(ContentType aType, TextureFlags aFlags)
+{
+  mTextureInfo.mTextureFlags = aFlags;
+  mContentType = aType;
+
+  mForwarder->CreatedIncrementalBuffer(this,
+                                        mTextureInfo,
+                                        mBufferRect);
+
+}
+
 RotatedContentBuffer::PaintState
 ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
                                            uint32_t aFlags)
@@ -685,7 +696,10 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
   nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
   bool createdBuffer = false;
 
-  uint32_t bufferFlags = canHaveRotation ? TextureFlags::ALLOW_REPEAT : 0;
+  TextureFlags bufferFlags = TextureFlags::NO_FLAGS;
+  if (canHaveRotation) {
+    bufferFlags |= TextureFlags::ALLOW_REPEAT;
+  }
   if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
     bufferFlags |= TextureFlags::COMPONENT_ALPHA;
   }
