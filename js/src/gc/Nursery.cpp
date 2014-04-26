@@ -904,7 +904,7 @@ js::Nursery::sweep(JSRuntime *rt)
     /* Poison the nursery contents so touching a freed object will crash. */
     JS_POISON((void *)start(), JS_SWEPT_NURSERY_PATTERN, NurserySize);
     for (int i = 0; i < NumNurseryChunks; ++i)
-        chunk(i).trailer.runtime = runtime();
+        initChunk(i);
 
     if (rt->gcZeal_ == ZealGenerationalGCValue) {
         MOZ_ASSERT(numActiveChunks_ == NumNurseryChunks);
