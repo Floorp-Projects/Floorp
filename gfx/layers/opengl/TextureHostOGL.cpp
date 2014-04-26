@@ -106,11 +106,11 @@ FlagsToGLFlags(TextureFlags aFlags)
 {
   uint32_t result = TextureImage::NoFlags;
 
-  if (aFlags & TEXTURE_USE_NEAREST_FILTER)
+  if (aFlags & TextureFlags::USE_NEAREST_FILTER)
     result |= TextureImage::UseNearestFilter;
-  if (aFlags & TEXTURE_NEEDS_Y_FLIP)
+  if (aFlags & TextureFlags::NEEDS_Y_FLIP)
     result |= TextureImage::NeedsYFlip;
-  if (aFlags & TEXTURE_DISALLOW_BIGIMAGE)
+  if (aFlags & TextureFlags::DISALLOW_BIGIMAGE)
     result |= TextureImage::DisallowBigImage;
 
   return static_cast<gl::TextureImage::Flags>(result);
@@ -229,10 +229,10 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
   if (!mTexImage ||
       (mTexImage->GetSize() != size && !aSrcOffset) ||
       mTexImage->GetContentType() != gfx::ContentForFormat(aSurface->GetFormat())) {
-    if (mFlags & TEXTURE_DISALLOW_BIGIMAGE) {
+    if (mFlags & TextureFlags::DISALLOW_BIGIMAGE) {
       mTexImage = CreateBasicTextureImage(mGL, size,
                                           gfx::ContentForFormat(aSurface->GetFormat()),
-                                          WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
+                                          WrapMode(mGL, mFlags & TextureFlags::ALLOW_REPEAT),
                                           FlagsToGLFlags(mFlags),
                                           SurfaceFormatToImageFormat(aSurface->GetFormat()));
     } else {
@@ -243,7 +243,7 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
       mTexImage = CreateTextureImage(mGL,
                                      size,
                                      gfx::ContentForFormat(aSurface->GetFormat()),
-                                     WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
+                                     WrapMode(mGL, mFlags & TextureFlags::ALLOW_REPEAT),
                                      FlagsToGLFlags(mFlags),
                                      SurfaceFormatToImageFormat(aSurface->GetFormat()));
     }
@@ -268,7 +268,7 @@ TextureImageTextureSourceOGL::EnsureBuffer(const nsIntSize& aSize,
     mTexImage = CreateTextureImage(mGL,
                                    aSize.ToIntSize(),
                                    aContentType,
-                                   WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
+                                   WrapMode(mGL, mFlags & TextureFlags::ALLOW_REPEAT),
                                    FlagsToGLFlags(mFlags));
   }
   mTexImage->Resize(aSize.ToIntSize());

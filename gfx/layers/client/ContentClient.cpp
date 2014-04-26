@@ -43,11 +43,11 @@ static TextureFlags TextureFlagsForRotatedContentBufferFlags(uint32_t aBufferFla
   TextureFlags result = 0;
 
   if (aBufferFlags & RotatedContentBuffer::BUFFER_COMPONENT_ALPHA) {
-    result |= TEXTURE_COMPONENT_ALPHA;
+    result |= TextureFlags::COMPONENT_ALPHA;
   }
 
   if (aBufferFlags & RotatedContentBuffer::ALLOW_REPEAT) {
-    result |= TEXTURE_ALLOW_REPEAT;
+    result |= TextureFlags::ALLOW_REPEAT;
   }
 
   return result;
@@ -197,7 +197,7 @@ ContentClientRemoteBuffer::CreateAndAllocateTextureClient(RefPtr<TextureClient>&
 
   if (!aClient->AllocateForSurface(mSize, ALLOC_CLEAR_BUFFER)) {
     aClient = CreateTextureClientForDrawing(mSurfaceFormat,
-                mTextureInfo.mTextureFlags | TEXTURE_ALLOC_FALLBACK | aFlags,
+                mTextureInfo.mTextureFlags | TextureFlags::ALLOC_FALLBACK | aFlags,
                 gfx::BackendType::NONE,
                 mSize);
     if (!aClient) {
@@ -236,19 +236,19 @@ ContentClientRemoteBuffer::BuildTextureClients(SurfaceFormat aFormat,
   mSize = gfx::IntSize(aRect.width, aRect.height);
   mTextureInfo.mTextureFlags = TextureFlagsForRotatedContentBufferFlags(aFlags);
 
-  if (!CreateAndAllocateTextureClient(mTextureClient, TEXTURE_ON_BLACK) ||
+  if (!CreateAndAllocateTextureClient(mTextureClient, TextureFlags::ON_BLACK) ||
       !AddTextureClient(mTextureClient)) {
     AbortTextureClientCreation();
     return;
   }
 
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
-    if (!CreateAndAllocateTextureClient(mTextureClientOnWhite, TEXTURE_ON_WHITE) ||
+    if (!CreateAndAllocateTextureClient(mTextureClientOnWhite, TextureFlags::ON_WHITE) ||
         !AddTextureClient(mTextureClientOnWhite)) {
       AbortTextureClientCreation();
       return;
     }
-    mTextureInfo.mTextureFlags |= TEXTURE_COMPONENT_ALPHA;
+    mTextureInfo.mTextureFlags |= TextureFlags::COMPONENT_ALPHA;
   }
 
   CreateFrontBuffer(aRect);
@@ -339,13 +339,13 @@ ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 void
 ContentClientDoubleBuffered::CreateFrontBuffer(const nsIntRect& aBufferRect)
 {
-  if (!CreateAndAllocateTextureClient(mFrontClient, TEXTURE_ON_BLACK) ||
+  if (!CreateAndAllocateTextureClient(mFrontClient, TextureFlags::ON_BLACK) ||
       !AddTextureClient(mFrontClient)) {
     AbortTextureClientCreation();
     return;
   }
-  if (mTextureInfo.mTextureFlags & TEXTURE_COMPONENT_ALPHA) {
-    if (!CreateAndAllocateTextureClient(mFrontClientOnWhite, TEXTURE_ON_WHITE) ||
+  if (mTextureInfo.mTextureFlags & TextureFlags::COMPONENT_ALPHA) {
+    if (!CreateAndAllocateTextureClient(mFrontClientOnWhite, TextureFlags::ON_WHITE) ||
         !AddTextureClient(mFrontClientOnWhite)) {
       AbortTextureClientCreation();
       return;
@@ -601,7 +601,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
     canReuseBuffer = neededRegion.GetBounds().Size() <= mBufferRect.Size() &&
       mHasBuffer &&
       (!(aFlags & RotatedContentBuffer::PAINT_WILL_RESAMPLE) ||
-       !(mTextureInfo.mTextureFlags & TEXTURE_ALLOW_REPEAT));
+       !(mTextureInfo.mTextureFlags & TextureFlags::ALLOW_REPEAT));
 
     if (canReuseBuffer) {
       if (mBufferRect.Contains(neededRegion.GetBounds())) {
@@ -685,9 +685,9 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
   nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
   bool createdBuffer = false;
 
-  uint32_t bufferFlags = canHaveRotation ? TEXTURE_ALLOW_REPEAT : 0;
+  uint32_t bufferFlags = canHaveRotation ? TextureFlags::ALLOW_REPEAT : 0;
   if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
-    bufferFlags |= TEXTURE_COMPONENT_ALPHA;
+    bufferFlags |= TextureFlags::COMPONENT_ALPHA;
   }
   if (canReuseBuffer) {
     nsIntRect keepArea;
