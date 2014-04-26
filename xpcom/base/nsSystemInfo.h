@@ -14,15 +14,9 @@ public:
 
     nsresult Init();
 
-    // Slot for NS_InitXPCOM2 to pass information to nsSystemInfo::Init.
-    // See comments above the variable definition and in NS_InitXPCOM2.
-    static uint32_t gUserUmask;
-
 protected:
     void SetInt32Property(const nsAString &aPropertyName,
                           const int32_t aValue);
-    void SetUint32Property(const nsAString &aPropertyName,
-                           const uint32_t aValue);
     void SetUint64Property(const nsAString &aPropertyName,
                            const uint64_t aValue);
 
