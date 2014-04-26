@@ -289,7 +289,7 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
       gfxWindowsPlatform::GetPlatform()->GetD2DDevice() &&
       aSizeHint.width <= maxTextureSize &&
       aSizeHint.height <= maxTextureSize &&
-      !(aTextureFlags & TEXTURE_ALLOC_FALLBACK)) {
+      !(aTextureFlags & TextureFlags::ALLOC_FALLBACK)) {
     result = new TextureClientD3D11(aFormat, aTextureFlags);
   }
   if (parentBackend == LayersBackend::LAYERS_D3D9 &&
@@ -297,7 +297,7 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
       aAllocator->IsSameProcess() &&
       aSizeHint.width <= maxTextureSize &&
       aSizeHint.height <= maxTextureSize &&
-      !(aTextureFlags & TEXTURE_ALLOC_FALLBACK)) {
+      !(aTextureFlags & TextureFlags::ALLOC_FALLBACK)) {
     if (!gfxWindowsPlatform::GetPlatform()->GetD3D9Device()) {
       result = new DIBTextureClientD3D9(aFormat, aTextureFlags);
     } else {
@@ -314,7 +314,7 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
   if (parentBackend == LayersBackend::LAYERS_BASIC &&
       aMoz2DBackend == gfx::BackendType::CAIRO &&
       type == gfxSurfaceType::Xlib &&
-      !(aTextureFlags & TEXTURE_ALLOC_FALLBACK))
+      !(aTextureFlags & TextureFlags::ALLOC_FALLBACK))
   {
     result = new TextureClientX11(aFormat, aTextureFlags);
   }
@@ -323,7 +323,7 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
   // Bug 977963: Disabled for black layers
   if (parentBackend == LayersBackend::LAYERS_OPENGL &&
       type == gfxSurfaceType::Xlib &&
-      !(aTextureFlags & TEXTURE_ALLOC_FALLBACK) &&
+      !(aTextureFlags & TextureFlags::ALLOC_FALLBACK) &&
       aFormat != SurfaceFormat::A8 &&
       gl::sGLXLibrary.UseTextureFromPixmap())
   {
@@ -461,7 +461,7 @@ TextureClient::~TextureClient()
 void TextureClient::ForceRemove()
 {
   if (mValid && mActor) {
-    if (GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
+    if (GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
       mActor->SetTextureData(DropTextureData());
       if (mActor->IPCOpen()) {
         mActor->SendRemoveTextureSync();

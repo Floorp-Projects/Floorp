@@ -131,7 +131,7 @@ D3D9SurfaceImage::GetTextureClient(CompositableClient* aClient)
   EnsureSynchronized();
   if (!mTextureClient) {
     RefPtr<SharedTextureClientD3D9> textureClient =
-      new SharedTextureClientD3D9(gfx::SurfaceFormat::B8G8R8X8, TEXTURE_FLAGS_DEFAULT);
+      new SharedTextureClientD3D9(gfx::SurfaceFormat::B8G8R8X8, TextureFlags::DEFAULT);
     textureClient->InitWith(mTexture, mShareHandle, mDesc);
     mTextureClient = textureClient;
   }
