@@ -290,7 +290,7 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
   if (graphicBuffer) {
     format =
       SurfaceFormatForAndroidPixelFormat(graphicBuffer->getPixelFormat(),
-                                         aFlags & TEXTURE_RB_SWAPPED);
+                                         aFlags & TextureFlags::RB_SWAPPED);
   }
   mTextureSource = new GrallocTextureSourceOGL(nullptr,
                                                graphicBuffer,
@@ -370,10 +370,10 @@ GrallocTextureHostOGL::GetRenderState()
 {
   if (IsValid()) {
     uint32_t flags = 0;
-    if (mFlags & TEXTURE_NEEDS_Y_FLIP) {
+    if (mFlags & TextureFlags::NEEDS_Y_FLIP) {
       flags |= LAYER_RENDER_STATE_Y_FLIPPED;
     }
-    if (mFlags & TEXTURE_RB_SWAPPED) {
+    if (mFlags & TextureFlags::RB_SWAPPED) {
       flags |= LAYER_RENDER_STATE_FORMAT_RB_SWAP;
     }
     return LayerRenderState(mTextureSource->mGraphicBuffer.get(),

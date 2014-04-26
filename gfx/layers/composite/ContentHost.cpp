@@ -488,7 +488,7 @@ ContentHostIncremental::TextureCreationRequest::Execute(ContentHostIncremental* 
     temp->AsSourceOGL()->AsTextureImageTextureSource();
 
   RefPtr<TextureImageTextureSourceOGL> newSourceOnWhite;
-  if (mTextureInfo.mTextureFlags & TEXTURE_COMPONENT_ALPHA) {
+  if (mTextureInfo.mTextureFlags & TextureFlags::COMPONENT_ALPHA) {
     temp =
       compositor->CreateDataTextureSource(mTextureInfo.mTextureFlags);
     MOZ_ASSERT(temp->AsSourceOGL() &&

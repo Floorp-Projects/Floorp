@@ -234,14 +234,14 @@ GrallocTextureClientOGL::AllocateForSurface(gfx::IntSize aSize,
     break;
   case gfx::SurfaceFormat::B8G8R8A8:
      format = android::PIXEL_FORMAT_RGBA_8888;
-     mFlags |= TEXTURE_RB_SWAPPED;
+     mFlags |= TextureFlags::RB_SWAPPED;
     break;
   case gfx::SurfaceFormat::R8G8B8X8:
     format = android::PIXEL_FORMAT_RGBX_8888;
     break;
   case gfx::SurfaceFormat::B8G8R8X8:
      format = android::PIXEL_FORMAT_RGBX_8888;
-     mFlags |= TEXTURE_RB_SWAPPED;
+     mFlags |= TextureFlags::RB_SWAPPED;
     break;
   case gfx::SurfaceFormat::R5G6B5:
     format = android::PIXEL_FORMAT_RGB_565;
