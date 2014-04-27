@@ -417,7 +417,6 @@ public class FaviconCache {
             if (element == null) {
                 Log.w(LOGTAG, "Cannot compute dominant color of non-cached favicon. Cache fullness " +
                               currentSize.get() + '/' + maxSizeBytes);
-                finishRead();
                 return 0xFFFFFF;
             }
 

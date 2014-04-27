@@ -901,7 +901,7 @@ exports['test passing DOM node as first argument'] = function (assert, done) {
 
   let widgetNode = document.getElementById(widgetId);
 
-  all(warned.promise, shown.promise).
+  all([warned.promise, shown.promise]).
     then(loader.unload).
     then(done, assert.fail)
 

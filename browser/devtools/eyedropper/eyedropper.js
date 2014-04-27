@@ -115,6 +115,8 @@ function Eyedropper(chromeWindow, opts = { copyOnSelect: true }) {
   this._dragging = true;
   this.loaded = false;
 
+  this._mouseMoveCounter = 0;
+
   this.format = Services.prefs.getCharPref(FORMAT_PREF); // color value format
   this.zoom = Services.prefs.getIntPref(ZOOM_PREF);      // zoom level - integer
 
@@ -375,6 +377,11 @@ Eyedropper.prototype = {
    */
   _onMouseMove: function(event) {
     if (!this._dragging || !this._panel || !this._canvas) {
+      return;
+    }
+
+    if (this._OS == "Linux" && ++this._mouseMoveCounter % 2 == 0) {
+      // skip every other mousemove to preserve performance.
       return;
     }
 
