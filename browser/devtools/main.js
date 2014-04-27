@@ -105,7 +105,7 @@ Tools.webConsole = {
   },
 
   isTargetSupported: function(target) {
-    return true;
+    return !target.isAddon;
   },
   build: function(iframeWindow, toolbox) {
     let panel = new WebConsolePanel(iframeWindow, toolbox);
@@ -314,7 +314,7 @@ Tools.scratchpad = {
   commands: "devtools/scratchpad/scratchpad-commands",
 
   isTargetSupported: function(target) {
-    return target.isRemote;
+    return !target.isAddon && target.isRemote;
   },
 
   build: function(iframeWindow, toolbox) {
