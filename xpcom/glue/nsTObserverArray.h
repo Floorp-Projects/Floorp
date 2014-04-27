@@ -386,8 +386,8 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             uint32_t aFlags = 0)
 {
   aFlags |= CycleCollectionEdgeNameArrayFlag;
-  size_t length = aField.Length();
-  for (size_t i = 0; i < length; ++i) {
+  nsTArray::size_type length = aField.Length();
+  for (nsTArray::size_type i = 0; i < length; ++i) {
     ImplCycleCollectionTraverse(aCallback, aField.ElementAt(i), aName, aFlags);
   }
 }
