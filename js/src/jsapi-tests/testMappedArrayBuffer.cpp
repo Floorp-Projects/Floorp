@@ -65,7 +65,10 @@ JSObject *CreateNewObject(const int offset, const int length)
     if (!ptr)
         return nullptr;
     JSObject *obj = JS_NewMappedArrayBufferWithContents(cx, length, ptr);
-
+    if (!obj) {
+        JS_ReleaseMappedArrayBufferContents(ptr, length);
+        return nullptr;
+    }
     return obj;
 }
 

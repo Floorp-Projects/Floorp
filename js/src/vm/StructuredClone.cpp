@@ -1572,7 +1572,9 @@ JSStructuredCloneReader::readTransferMap()
             MOZ_ASSERT(obj);
             MOZ_ASSERT(!cx->isExceptionPending());
         }
-
+        
+        // On failure, the buffer will still own the data (since its ownership will not get set to SCTAG_TMO_UNOWNED),
+        // so the data will be freed by ClearStructuredClone
         if (!obj)
             return false;
 
