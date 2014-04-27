@@ -21,6 +21,7 @@
 #include "nsIWindowMediator.h"
 #include "nsILocalFileWin.h"
 #include "nsILoadContext.h"
+#include "nsIXULAppInfo.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsArrayEnumerator.h"
@@ -940,23 +941,35 @@ nsDownloadManager::Init()
                                    getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-#if defined(MOZ_JSDOWNLOADS) && !defined(XP_WIN)
-
-  // When MOZ_JSDOWNLOADS is defined on a non-Windows platform, this component
-  // is always disabled and we can safely omit the initialization code.
-  mUseJSTransfer = true;
-
-#else
-
-#if defined(MOZ_JSDOWNLOADS) && defined(XP_WIN)
-  // When MOZ_JSDOWNLOADS is defined on Windows, this component is disabled
-  // unless we are running in Windows Metro.  The conversion of Windows Metro
-  // to use the JavaScript API for downloads is tracked in bug 906042.
-  mUseJSTransfer = !IsRunningInWindowsMetro();
-#else
+#if !defined(MOZ_JSDOWNLOADS)
   // When MOZ_JSDOWNLOADS is undefined, we still check the preference that can
   // be used to enable the JavaScript API during the migration process.
   mUseJSTransfer = Preferences::GetBool(PREF_BD_USEJSTRANSFER, false);
+#else
+
+  nsAutoCString appID;
+  nsCOMPtr<nsIXULAppInfo> info = do_GetService("@mozilla.org/xre/app-info;1");
+  if (info) {
+    rv = info->GetID(appID);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // The webapp runtime doesn't use the new JS downloads API yet.
+  // The conversion of the webapp runtime to use the JavaScript API for
+  // downloads is tracked in bug 911636.
+  if (appID.EqualsLiteral("webapprt@mozilla.org")) {
+    mUseJSTransfer = false;
+  } else {
+#if !defined(XP_WIN)
+    mUseJSTransfer = true;
+#else
+    // When MOZ_JSDOWNLOADS is defined on Windows, this component is disabled
+    // unless we are running in Windows Metro.  The conversion of Windows Metro
+    // to use the JavaScript API for downloads is tracked in bug 906042.
+    mUseJSTransfer = !IsRunningInWindowsMetro();
+#endif
+  }
+
 #endif
 
   if (mUseJSTransfer)
@@ -1028,8 +1041,6 @@ nsDownloadManager::Init()
 
   if (history)
     (void)history->AddObserver(this, true);
-
-#endif // defined(MOZ_JSDOWNLOADS) && !defined(XP_WIN)
 
   return NS_OK;
 }
