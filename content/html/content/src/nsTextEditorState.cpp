@@ -1429,6 +1429,7 @@ nsTextEditorState::DestroyEditor()
     mEditor->PreDestroy(true);
     mEditorInitialized = false;
   }
+  ClearValueCache();
 }
 
 void
