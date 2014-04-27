@@ -651,11 +651,9 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, void *data /* = nullpt
     gc::AllocKind allocKind = GetGCObjectKind(nslots);
 
     Rooted<ArrayBufferObject*> obj(cx, NewBuiltinClassInstance<ArrayBufferObject>(cx, allocKind, newKind));
-    if (!obj) {
-        if (data)
-            js_free(data);
+    if (!obj)
         return nullptr;
-    }
+
     JS_ASSERT(obj->getClass() == &class_);
 
     JS_ASSERT(!gc::IsInsideNursery(cx->runtime(), obj));
