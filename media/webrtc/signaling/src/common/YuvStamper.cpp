@@ -346,7 +346,13 @@ static unsigned char *DIGITS[] = {
   bool YuvStamper::WriteBit(bool one)
   {
     // A bit is mapped to a mSymbolWidth x mSymbolHeight square of luma data points.
-    unsigned char value = one ? sYOn : sYOff;
+    // Don't use ternary op.: https://bugzilla.mozilla.org/show_bug.cgi?id=1001708
+    unsigned char value;
+    if (one)
+      value = sYOn;
+    else
+      value = sYOff;
+
     for (uint32_t y = 0; y < mSymbolHeight; y++) {
       for (uint32_t x = 0; x < mSymbolWidth; x++) {
 	*(pYData + (mCursor.x + x) + ((mCursor.y + y) * mStride)) = value;
@@ -452,8 +458,11 @@ static unsigned char *DIGITS[] = {
 
   void YuvStamper::WritePixel(unsigned char *data, uint32_t x, uint32_t y) {
     unsigned char *ptr = &data[y * mStride + x];
-    *ptr = (*ptr > sLumaThreshold) ? sLumaMin : sLumaMax;
-    return;
+    // Don't use ternary op.: https://bugzilla.mozilla.org/show_bug.cgi?id=1001708
+    if (*ptr > sLumaThreshold)
+      *ptr = sLumaMin;
+    else
+      *ptr = sLumaMax;
    }
 
 }  // Namespace mozilla.
