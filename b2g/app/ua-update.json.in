@@ -5,8 +5,6 @@
 {
   // bug 826335, globo.com
   "globo.com": "\\(Mobile#(Android; Mobile",
-  // bug 826344, abril.com.br
-  "abril.com.br": "\\(Mobile#(Android; Mobile",
   // bug 826347, msn.com
   "msn.com": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 826348, linkedin.com
@@ -43,20 +41,10 @@
   "avianca.com": "\\(Mobile#(Android; Mobile",
   // bug 827678, marca.com
   "marca.com": "\\(Mobile#(Android; Mobile",
-  // bug 828354, gazeta.pl
-  "gazeta.pl": "\\(Mobile#(Android; Mobile",
-  // bug 828360, sport.pl
-  "sport.pl": "\\(Mobile#(Android; Mobile",
   // bug 828371, ingbank.pl
   "ingbank.pl": "\\(Mobile#(Android; Mobile",
-  // bug 828378, wyborcza.pl
-  "wyborcza.pl": "\\(Mobile#(Android; Mobile",
-  // bug 828380, deser.pl
-  "deser.pl": "\\(Mobile#(Android; Mobile",
   // bug 828386, ebay.es
   "ebay.es": "\\(Mobile#(Android; Mobile",
-  // bug 828392, infojobs.net
-  "infojobs.net": "\\(Mobile#(Android; Mobile",
   // bug 828399, antena3.com
   "antena3.com": "\\(Mobile#(Android; Mobile",
   // bug 828416, loteriasyapuestas.es
@@ -79,8 +67,6 @@
   "games.com": "\\(Mobile#(Android; Mobile",
   // bug 843160, ehow.com
   "ehow.com": "\\(Mobile#(Android; Mobile",
-  // bug 866577, 3g.qq.com
-  "3g.qq.com": "\\(Mobile#(Android; Mobile",
   // bug 878228, blikk.hu
   "blikk.hu": "\\(Mobile#(Android; Mobile",
   // bug 878232, hazipatika.com
@@ -97,8 +83,6 @@
   "portfolio.hu": "\\(Mobile#(Android; Mobile",
   // bug 878253, vatera.hu
   "vatera.hu": "\\(Mobile#(Android; Mobile",
-  // bug 878255, 24sata.hr
-  "24sata.hr": "\\(Mobile#(Android; Mobile",
   // bug 878260, cdm.me
   "cdm.me": "\\(Mobile#(Android; Mobile",
   // bug 878262, download.com
@@ -111,8 +95,6 @@
   "livescore.com": "\\(Mobile#(Android; Mobile",
   // bug 878277, naslovi.net
   "naslovi.net": "\\(Mobile#(Android; Mobile",
-  // bug 878630, ask.com
-  "ask.com": "\\(Mobile#(Android; Mobile",
   // bug 878632, banorte.com
   "banorte.com": "\\(Mobile#(Android; Mobile",
   // bug 878649, univision.com
