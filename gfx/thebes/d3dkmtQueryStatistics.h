@@ -104,7 +104,15 @@ typedef struct _D3DKMTQS_PROCESS_INFO
 
 typedef struct _D3DKMTQS_PROCESS_SEGMENT_INFO
 {
-    ULONGLONG BytesCommitted;
+    union {
+        struct {
+            ULONGLONG BytesCommitted;
+        } Win8;
+        struct {
+            ULONG BytesCommitted;
+            ULONG UnknownRandomness;
+        } Win7;
+    };
 
     ULONGLONG Filler[2];
     ULONG Filler2;
