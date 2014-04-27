@@ -106,20 +106,20 @@ FlagsToGLFlags(TextureFlags aFlags)
 {
   uint32_t result = TextureImage::NoFlags;
 
-  if (aFlags & TextureFlags::USE_NEAREST_FILTER)
+  if (aFlags & TEXTURE_USE_NEAREST_FILTER)
     result |= TextureImage::UseNearestFilter;
-  if (aFlags & TextureFlags::NEEDS_Y_FLIP)
+  if (aFlags & TEXTURE_NEEDS_Y_FLIP)
     result |= TextureImage::NeedsYFlip;
-  if (aFlags & TextureFlags::DISALLOW_BIGIMAGE)
+  if (aFlags & TEXTURE_DISALLOW_BIGIMAGE)
     result |= TextureImage::DisallowBigImage;
 
   return static_cast<gl::TextureImage::Flags>(result);
 }
 
-static GLenum
-WrapMode(gl::GLContext *aGl, TextureFlags aFlags)
+GLenum
+WrapMode(gl::GLContext *aGl, bool aAllowRepeat)
 {
-  if ((aFlags & TextureFlags::ALLOW_REPEAT) &&
+  if (aAllowRepeat &&
       (aGl->IsExtensionSupported(GLContext::ARB_texture_non_power_of_two) ||
        aGl->IsExtensionSupported(GLContext::OES_texture_npot))) {
     return LOCAL_GL_REPEAT;
@@ -229,10 +229,10 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
   if (!mTexImage ||
       (mTexImage->GetSize() != size && !aSrcOffset) ||
       mTexImage->GetContentType() != gfx::ContentForFormat(aSurface->GetFormat())) {
-    if (mFlags & TextureFlags::DISALLOW_BIGIMAGE) {
+    if (mFlags & TEXTURE_DISALLOW_BIGIMAGE) {
       mTexImage = CreateBasicTextureImage(mGL, size,
                                           gfx::ContentForFormat(aSurface->GetFormat()),
-                                          WrapMode(mGL, mFlags),
+                                          WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                           FlagsToGLFlags(mFlags),
                                           SurfaceFormatToImageFormat(aSurface->GetFormat()));
     } else {
@@ -243,7 +243,7 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
       mTexImage = CreateTextureImage(mGL,
                                      size,
                                      gfx::ContentForFormat(aSurface->GetFormat()),
-                                     WrapMode(mGL, mFlags),
+                                     WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                      FlagsToGLFlags(mFlags),
                                      SurfaceFormatToImageFormat(aSurface->GetFormat()));
     }
@@ -268,7 +268,7 @@ TextureImageTextureSourceOGL::EnsureBuffer(const nsIntSize& aSize,
     mTexImage = CreateTextureImage(mGL,
                                    aSize.ToIntSize(),
                                    aContentType,
-                                   WrapMode(mGL, mFlags),
+                                   WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                    FlagsToGLFlags(mFlags));
   }
   mTexImage->Resize(aSize.ToIntSize());

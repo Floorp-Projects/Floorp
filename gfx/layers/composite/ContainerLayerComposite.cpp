@@ -18,7 +18,7 @@
 #include "mozilla/gfx/Point.h"          // for Point, IntPoint
 #include "mozilla/gfx/Rect.h"           // for IntRect, Rect
 #include "mozilla/layers/Compositor.h"  // for Compositor, etc
-#include "mozilla/layers/CompositorTypes.h"  // for DiagnosticFlags::CONTAINER
+#include "mozilla/layers/CompositorTypes.h"  // for DIAGNOSTIC_CONTAINER
 #include "mozilla/layers/Effects.h"     // for Effect, EffectChain, etc
 #include "mozilla/layers/TextureHost.h"  // for CompositingRenderTarget
 #include "mozilla/mozalloc.h"           // for operator delete, etc
@@ -413,7 +413,7 @@ ContainerRender(ContainerT* aContainer,
     LayerRect layerBounds = ParentLayerRect(frame.mCompositionBounds) * ParentLayerToLayerScale(1.0);
     gfx::Rect rect(layerBounds.x, layerBounds.y, layerBounds.width, layerBounds.height);
     gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
-    aManager->GetCompositor()->DrawDiagnostics(DiagnosticFlags::CONTAINER,
+    aManager->GetCompositor()->DrawDiagnostics(DIAGNOSTIC_CONTAINER,
                                                rect, clipRect,
                                                aContainer->GetEffectiveTransform());
   }

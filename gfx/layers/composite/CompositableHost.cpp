@@ -158,7 +158,7 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
                                              source->GetSize(),
                                              aTransform);
   effect->mIs3D = aIs3D;
-  aEffects.mSecondaryEffects[EffectTypes::MASK] = effect;
+  aEffects.mSecondaryEffects[EFFECT_MASK] = effect;
   return true;
 }
 
@@ -179,23 +179,23 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
 {
   RefPtr<CompositableHost> result;
   switch (aTextureInfo.mCompositableType) {
-  case CompositableType::BUFFER_BRIDGE:
+  case BUFFER_BRIDGE:
     NS_ERROR("Cannot create an image bridge compositable this way");
     break;
-  case CompositableType::BUFFER_CONTENT_INC:
+  case BUFFER_CONTENT_INC:
     result = new ContentHostIncremental(aTextureInfo);
     break;
-  case CompositableType::BUFFER_TILED:
-  case CompositableType::BUFFER_SIMPLE_TILED:
+  case BUFFER_TILED:
+  case BUFFER_SIMPLE_TILED:
     result = new TiledContentHost(aTextureInfo);
     break;
-  case CompositableType::IMAGE:
+  case COMPOSITABLE_IMAGE:
     result = new ImageHost(aTextureInfo);
     break;
-  case CompositableType::CONTENT_SINGLE:
+  case COMPOSITABLE_CONTENT_SINGLE:
     result = new ContentHostSingleBuffered(aTextureInfo);
     break;
-  case CompositableType::CONTENT_DOUBLE:
+  case COMPOSITABLE_CONTENT_DOUBLE:
     result = new ContentHostDoubleBuffered(aTextureInfo);
     break;
   default:
@@ -203,7 +203,7 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
   }
   // We know that Tiled buffers don't use the compositable backend-specific
   // data, so don't bother creating it.
-  if (result && aTextureInfo.mCompositableType != CompositableType::BUFFER_TILED) {
+  if (result && aTextureInfo.mCompositableType != BUFFER_TILED) {
     RefPtr<CompositableBackendSpecificData> data = CreateCompositableBackendSpecificDataOGL();
     result->SetCompositableBackendSpecificData(data);
   }

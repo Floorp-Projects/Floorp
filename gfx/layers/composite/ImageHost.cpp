@@ -126,12 +126,12 @@ ImageHost::Composite(EffectChain& aEffectChain,
       }
       GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
                                 aOpacity, aTransform);
-      GetCompositor()->DrawDiagnostics(DiagnosticFlags::IMAGE | DiagnosticFlags::BIGIMAGE,
+      GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE|DIAGNOSTIC_BIGIMAGE,
                                        rect, aClipRect, aTransform, mFlashCounter);
     } while (it->NextTile());
     it->EndTileIteration();
     // layer border
-    GetCompositor()->DrawDiagnostics(DiagnosticFlags::IMAGE,
+    GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE,
                                      gfxPictureRect, aClipRect,
                                      aTransform, mFlashCounter);
   } else {
@@ -148,14 +148,14 @@ ImageHost::Composite(EffectChain& aEffectChain,
       rect = gfx::Rect(0, 0, textureSize.width, textureSize.height);
     }
 
-    if (mFrontBuffer->GetFlags() & TextureFlags::NEEDS_Y_FLIP) {
+    if (mFrontBuffer->GetFlags() & TEXTURE_NEEDS_Y_FLIP) {
       effect->mTextureCoords.y = effect->mTextureCoords.YMost();
       effect->mTextureCoords.height = -effect->mTextureCoords.height;
     }
 
     GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
                               aOpacity, aTransform);
-    GetCompositor()->DrawDiagnostics(DiagnosticFlags::IMAGE,
+    GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE,
                                      rect, aClipRect,
                                      aTransform, mFlashCounter);
   }
