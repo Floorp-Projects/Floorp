@@ -670,46 +670,17 @@ GonkGPSGeolocationProvider::NetworkLocationUpdate::Update(nsIDOMGeoPosition *pos
     return NS_ERROR_FAILURE;
   }
 
+  // if we haven't seen anything from the GPS device for 1s,
+  // use this network derived location.
+  int64_t diff = PR_Now() - provider->mLastGPSDerivedLocationTime;
+  if (provider->mLocationCallback && diff > kDefaultPeriod) {
+    provider->mLocationCallback->Update(position);
+  }
+
   double lat, lon, acc;
   coords->GetLatitude(&lat);
   coords->GetLongitude(&lon);
   coords->GetAccuracy(&acc);
-
-  double delta = MAXFLOAT;
-  if (mLastMLSPosition) {
-    double oldLat, oldLon;
-    mLastMLSPosition->GetLatitude(&oldLat);
-    mLastMLSPosition->GetLongitude(&oldLon);
-
-    // Use spherical law of cosines to calculate difference
-    // Not quite as correct as the Haversine but simpler and cheaper
-    // Should the following be a utility function? Others might need this calc.
-    double radsInDeg = 3.14159265 / 180.0;
-    double rNewLat = newLat * radsInDeg;
-    double rNewLon = newLon * radsInDeg;
-    double rOldLat = oldLat * radsInDeg;
-    double rOldLon = oldLon * radsInDeg;
-    // WGS84 equatorial radius of earth = 6378137m
-    delta = acos( (sin(rNewLat) * sin(rOldLat)) +
-                         (cos(rNewLat) * cos(rOldLat) * cos(rOldLon - rNewLon)) )
-                        * 6378137;
-  }
-
-  // if the MLS coord change is smaller than this arbitrarily small value
-  // assume the MLS coord is unchanged, and stick with the GPS location
-  const double kMinMLSCoordChangeInMeters = 10;
-
-  // if we haven't seen anything from the GPS device for 1s,
-  // use this network derived location.
-  int64_t diff = PR_Now() - provider->mLastGPSDerivedLocationTime;
-  if (provider->mLocationCallback && diff > kDefaultPeriod
-      && delta > kMinMLSCoordChangeInMeters)
-  {
-    provider->mLocationCallback->Update(position);
-  }
-
-  mLastMLSPosition = position;
-
   provider->InjectLocation(lat, lon, acc);
   return NS_OK;
 }

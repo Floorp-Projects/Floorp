@@ -114,7 +114,6 @@ private:
   PRTime mLastGPSDerivedLocationTime;
   nsCOMPtr<nsIThread> mInitThread;
   nsCOMPtr<nsIGeolocationProvider> mNetworkLocationProvider;
-  nsCOMPtr<nsIDOMGeoPositionCoords> mLastMLSPosition;
 
   class NetworkLocationUpdate : public nsIGeolocationUpdate
   {
