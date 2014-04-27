@@ -9,10 +9,39 @@
 #ifndef mozilla_TypedEnum_h
 #define mozilla_TypedEnum_h
 
-#include "mozilla/TypedEnumInternal.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/MacroArgs.h"
 
 #if defined(__cplusplus)
+
+#if defined(__clang__)
+   /*
+    * Per Clang documentation, "Note that marketing version numbers should not
+    * be used to check for language features, as different vendors use different
+    * numbering schemes. Instead, use the feature checking macros."
+    */
+#  ifndef __has_extension
+#    define __has_extension __has_feature /* compatibility, for older versions of clang */
+#  endif
+#  if __has_extension(cxx_strong_enums)
+#    define MOZ_HAVE_CXX11_ENUM_TYPE
+#    define MOZ_HAVE_CXX11_STRONG_ENUMS
+#  endif
+#elif defined(__GNUC__)
+#  if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
+#    if MOZ_GCC_VERSION_AT_LEAST(4, 6, 3)
+#      define MOZ_HAVE_CXX11_ENUM_TYPE
+#      define MOZ_HAVE_CXX11_STRONG_ENUMS
+#    endif
+#  endif
+#elif defined(_MSC_VER)
+#  if _MSC_VER >= 1400
+#    define MOZ_HAVE_CXX11_ENUM_TYPE
+#  endif
+#  if _MSC_VER >= 1700
+#    define MOZ_HAVE_CXX11_STRONG_ENUMS
+#  endif
+#endif
 
 /**
  * MOZ_ENUM_TYPE specifies the underlying numeric type for an enum.  It's
@@ -161,13 +190,9 @@
 #  define MOZ_END_NESTED_ENUM_CLASS(Name) \
          }; \
          Name() {} \
-         MOZ_CONSTEXPR Name(Enum aEnum) : mEnum(aEnum) {} \
-         template<typename Other> \
-         explicit MOZ_CONSTEXPR Name(Other num) : mEnum((Enum)num) {} \
-         MOZ_CONSTEXPR operator Enum() const { return mEnum; } \
-         explicit MOZ_CONSTEXPR Name(const mozilla::CastableTypedEnumResult<Name>& aOther) \
-           : mEnum(aOther.get()) \
-         {} \
+         Name(Enum aEnum) : mEnum(aEnum) {} \
+         explicit Name(int num) : mEnum((Enum)num) {} \
+         operator Enum() const { return mEnum; } \
        private: \
          Enum mEnum; \
      };
@@ -205,6 +230,7 @@
      inline bool operator&&(const Name::Enum&, const bool&) MOZ_DELETE; \
      inline bool operator||(const bool&, const Name::Enum&) MOZ_DELETE; \
      inline bool operator||(const Name::Enum&, const bool&) MOZ_DELETE; \
+     inline int operator~(const Name::Enum&) MOZ_DELETE; \
      inline int operator&(const int&, const Name::Enum&) MOZ_DELETE; \
      inline int operator&(const Name::Enum&, const int&) MOZ_DELETE; \
      inline int operator|(const int&, const Name::Enum&) MOZ_DELETE; \

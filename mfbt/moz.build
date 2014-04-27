@@ -61,8 +61,6 @@ EXPORTS.mozilla = [
     'TemplateLib.h',
     'ThreadLocal.h',
     'TypedEnum.h',
-    'TypedEnumBits.h',
-    'TypedEnumInternal.h',
     'Types.h',
     'TypeTraits.h',
     'Vector.h',
