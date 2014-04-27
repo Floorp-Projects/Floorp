@@ -944,7 +944,6 @@
              collapsed="true"
              customizable="true">
       <toolbaritem id="personal-bookmarks"
-                   flex="1"
                    title="&bookmarksToolbarItem.label;"
                    cui-areatype="toolbar"
                    removable="true">

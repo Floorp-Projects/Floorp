@@ -238,6 +238,8 @@ let HomePanels = (function () {
     },
 
     "HomePanels:Installed": function handlePanelsInstalled(id) {
+      _assertPanelExists(id);
+
       let options = _registeredPanels[id]();
       if (!options.oninstall) {
         return;
@@ -249,6 +251,8 @@ let HomePanels = (function () {
     },
 
     "HomePanels:Uninstalled": function handlePanelsUninstalled(id) {
+      _assertPanelExists(id);
+
       let options = _registeredPanels[id]();
       if (!options.onuninstall) {
         return;

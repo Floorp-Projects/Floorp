@@ -829,7 +829,7 @@ exports.testShowingInOneWindowDoesNotAffectOtherWindows = function(assert, done)
   }, assert.fail);
 }
 
-exports.testHidingAHiddenSidebarRejects = function(assert) {
+exports.testHidingAHiddenSidebarRejects = function(assert, done) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testHidingAHiddenSidebarRejects';
   let url = 'data:text/html;charset=utf-8,'+testName;
@@ -1385,7 +1385,7 @@ exports.testEventListeners = function(assert, done) {
     onHide.resolve();
   });
 
-  all(constructorOnShow.promise,
+  all([constructorOnShow.promise,
       constructorOnAttach.promise,
       constructorOnReady.promise,
       constructorOnHide.promise,
@@ -1396,7 +1396,7 @@ exports.testEventListeners = function(assert, done) {
       onShow.promise,
       onAttach.promise,
       onReady.promise,
-      onHide.promise).then(function() {
+      onHide.promise]).then(function() {
         assert.equal(eventListenerOrder.join(), [
             'onAttach',
             'once attach',
@@ -1436,31 +1436,22 @@ exports.testAttachDoesNotEmitWhenShown = function(assert, done) {
       }
 
       if (++count == 1) {
-        setTimeout(function() {
-          let shown = false;
-          let endShownTest = false;
-          sidebar.once('show', function() {
-            assert.pass('shown was emitted');
-            shown = !endShownTest && true;
-          });
+        setImmediate(function() {
+          let shownFired = 0;
+          let onShow = () => shownFired++;
+          sidebar.on('show', onShow);
 
-          sidebar.show().then(function() {
-            assert.pass('calling hide');
-            sidebar.hide();
-          }).then(function() {
-            endShownTest = true;
-
-            setTimeout(function() {
-              sidebar.show().then(function() {
-                assert.ok(!shown, 'show did not emit');
-
-                sidebar.hide().then(function() {
-                  sidebar.destroy();
-                  done();
-                }).then(null, assert.fail);
-              })
-            })
-          }).then(null, assert.fail);
+          sidebar.show()
+          .then(() => assert.equal(shownFired, 0, 'shown should not be fired again when already showing from after attach'))
+          .then(sidebar.hide.bind(sidebar))
+          .then(sidebar.show.bind(sidebar))
+          .then(() => assert.equal(shownFired, 1, 'shown was emitted when `show` called after being hidden'))
+          .then(sidebar.show.bind(sidebar))
+          .then(() => {
+            assert.equal(shownFired, 1, 'shown was not emitted again if already being shown');
+            sidebar.off('show', onShow);
+            sidebar.destroy();
+          }).catch(assert.fail).then(done);
         });
       }
     }

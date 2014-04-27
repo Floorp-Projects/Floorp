@@ -18,29 +18,35 @@ a {
 .message {
   display: flex;
   flex: 0 0 auto;
-  -moz-margin-start: 6px;
-  -moz-margin-end: 8px;
-  width: calc(100% - 6px - 8px);
+  padding: 0 7px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .message > .timestamp {
   flex: 0 0 auto;
   color: GrayText;
-  margin: 4px 0;
+  margin: 4px 6px 0 0;
+}
+
+.message > .indent {
+  flex: 0 0 auto;
 }
 
 .message > .icon {
   background: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 0, 1, 0, 0) no-repeat;
-  background-position: center 0.5em;
+  background-position: center;
   flex: 0 0 auto;
-  margin: 0 6px;
+  margin: 3px 6px 0 0;
   padding: 0 4px;
   width: 8px;
+  height: 1em;
+  align-self: flex-start;
 }
 
 .message > .message-body-wrapper {
   flex: 1 1 100%;
-  margin-top: 4px;
+  margin: 3px;
 }
 
 /* The red bubble that shows the number of times a message is repeated */
@@ -63,13 +69,12 @@ a {
 }
 
 .message-location {
-  -moz-margin-start: 6px;
   display: flex;
   flex: 0 0 auto;
   align-self: flex-start;
   justify-content: flex-end;
   width: 10em;
-  margin: 3px 0;
+  margin-top: 3px;
   color: -moz-nativehyperlinktext;
   text-decoration: none;
   white-space: nowrap;
@@ -102,6 +107,11 @@ a {
 .message-flex-body > .message-body {
   display: block;
   flex: 1 1 auto;
+  vertical-align: middle;
+}
+
+.message-flex-body > .message-location {
+  margin-top: 0;
 }
 
 .jsterm-input-container {
@@ -122,8 +132,22 @@ a {
   align-items: flex-start;
 }
 
+#output-container.hideTimestamps > .message {
+  -moz-padding-start: 0;
+  -moz-margin-start: 7px;
+  width: calc(100% - 7px);
+}
+
 #output-container.hideTimestamps > .message > .timestamp {
   display: none;
+}
+
+.theme-dark #output-container.hideTimestamps > .message > .indent {
+  background-color: #14171a; /* .theme-body */
+}
+
+.theme-light #output-container.hideTimestamps > .message > .indent {
+  background-color: #fcfcfc; /* .theme-body */
 }
 
 .filtered-by-type,
@@ -170,11 +194,19 @@ a {
 }
 
 .theme-dark .message[severity=error] {
-  background-color: rgba(255, 100, 100, 0.3);
+  background-color: rgba(235, 83, 104, 0.17);
 }
 
-.message[category=network] > .icon {
-  -moz-border-start: solid #000 6px;
+.theme-dark .console-string {
+  color: #d99b28;
+}
+
+.theme-light .console-string {
+  color: hsl(24,85%,39%);
+}
+
+.message[category=network] > .indent {
+  -moz-border-end: solid #000 6px;
 }
 
 .message[category=network][severity=error] > .icon {
@@ -219,8 +251,8 @@ a {
   border-color: #1BA2CC;
 }
 
-.message[category=cssparser] > .icon {
-  -moz-border-start: solid #00b6f0 6px;
+.message[category=cssparser] > .indent {
+  -moz-border-end: solid #00b6f0 6px;
 }
 
 .message[category=cssparser][severity=error] > .icon {
@@ -237,8 +269,8 @@ a {
   border-color: #E98A00;
 }
 
-.message[category=exception] > .icon {
-  -moz-border-start: solid #fb9500 6px;
+.message[category=exception] > .indent {
+  -moz-border-end: solid #fb9500 6px;
 }
 
 .message[category=exception][severity=error] > .icon {
@@ -255,8 +287,8 @@ a {
   border-color: #929292;
 }
 
-.message[category=console] > .icon {
-  -moz-border-start: solid #cbcbcb 6px;
+.message[category=console] > .indent {
+  -moz-border-end: solid #cbcbcb 6px;
 }
 
 .message[category=console][severity=error] > .icon,
@@ -273,9 +305,9 @@ a {
 }
 
 /* Input and output styles */
-.message[category=input] > .icon,
-.message[category=output] > .icon {
-  -moz-border-start: solid #808080 6px;
+.message[category=input] > .indent,
+.message[category=output] > .indent {
+  -moz-border-end: solid #808080 6px;
 }
 
 .message[category=input] > .icon {
@@ -329,8 +361,8 @@ a {
 
 /* Security styles */
 
-.message[category=security] > .icon {
-  -moz-border-start: solid red 6px;
+.message[category=security] > .indent {
+  -moz-border-end: solid red 6px;
 }
 
 .webconsole-filter-button[category="security"] > .toolbarbutton-menubutton-button:before {
@@ -386,7 +418,7 @@ a {
 .message .theme-twisty {
   display: inline-block;
   vertical-align: middle;
-  margin: 2px 3px 0 0;
+  margin: 0 3px 0 0;
 }
 
 .stacktrace li {

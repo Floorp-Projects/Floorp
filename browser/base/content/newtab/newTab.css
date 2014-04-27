@@ -28,6 +28,7 @@ input[type=button] {
 #newtab-undo-container {
   transition: opacity 100ms ease-out;
   display: -moz-box;
+  margin-bottom: 26px; /* 32 - 6 search form top "padding" */
   -moz-box-align: center;
   -moz-box-pack: center;
 }
@@ -60,7 +61,6 @@ input[type=button] {
 #newtab-margin-undo-container {
   display: -moz-box;
   -moz-box-pack: center;
-  margin-bottom: 26px; /* 32 - 6 search form top "padding" */
 }
 
 #newtab-horizontal-margin {

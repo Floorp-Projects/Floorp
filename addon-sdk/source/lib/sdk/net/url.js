@@ -15,27 +15,24 @@ const { merge } = require("../util/object");
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 
 /**
- * Open a channel synchronously for the URI given, with an optional charset, and
- * returns a resolved promise if succeed; rejected promise otherwise.
+ * Reads a URI and returns a promise.
+ *
+ * @param uri {string} The URI to read
+ * @param [options] {object} This parameter can have any or all of the following
+ * fields: `charset`. By default the `charset` is set to 'UTF-8'.
+ *
+ * @returns {promise}  The promise that will be resolved with the content of the
+ *          URL given.
+ *
+ * @example
+ *  let promise = readURI('resource://gre/modules/NetUtil.jsm', {
+ *    charset: 'US-ASCII'
+ *  });
  */
-function readSync(uri, charset) {
-  let { promise, resolve, reject } = defer();
+function readURI(uri, options) {
+  options = options || {};
+  let charset = options.charset || 'UTF-8';
 
-  try {
-    resolve(readURISync(uri, charset));
-  }
-  catch (e) {
-    reject("Failed to read: '" + uri + "' (Error Code: " + e.result + ")");
-  }
-
-  return promise;
-}
-
-/**
- * Open a channel synchronously for the URI given, with an optional charset, and
- * returns a promise.
- */
-function readAsync(uri, charset) {
   let channel = NetUtil.newChannel(uri, charset, null);
 
   let { promise, resolve, reject } = defer();
@@ -57,34 +54,6 @@ function readAsync(uri, charset) {
   }
 
   return promise;
-}
-
-/**
- * Reads a URI and returns a promise. If the `sync` option is set to `true`, the
- * promise will be resolved synchronously.
- *
- * @param uri {string} The URI to read
- * @param [options] {object} This parameter can have any or all of the following
- * fields: `sync`, `charset`. By default the `charset` is set to 'UTF-8'.
- *
- * @returns {promise}  The promise that will be resolved with the content of the
- *          URL given.
-  *
- * @example
- *  let promise = readURI('resource://gre/modules/NetUtil.jsm', {
- *    sync: true,
- *    charset: 'US-ASCII'
- });
- */
-function readURI(uri, options) {
-  options = merge({
-    charset: "UTF-8",
-    sync: false
-  }, options);
-
-  return options.sync
-    ? readSync(uri, options.charset)
-    : readAsync(uri, options.charset);
 }
 
 exports.readURI = readURI;
