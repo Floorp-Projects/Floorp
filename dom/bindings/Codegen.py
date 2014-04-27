@@ -45,7 +45,11 @@ def isTypeCopyConstructible(type):
             (type.isUnion() and
              CGUnionStruct.isUnionCopyConstructible(type)) or
             (type.isDictionary() and
-             CGDictionary.isDictionaryCopyConstructible(type.inner)))
+             CGDictionary.isDictionaryCopyConstructible(type.inner)) or
+            # Interface types are only copy-constructible if they're Gecko
+            # interfaces.  SpiderMonkey interfaces are not copy-constructible
+            # because of rooting issues.
+            (type.isInterface() and type.isGeckoInterface()))
 
 
 def wantsAddProperty(desc):
