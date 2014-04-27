@@ -1687,8 +1687,10 @@ var gApplicationsPane = {
     var typeItem = this._list.selectedItem;
     var handlerInfo = this._handledTypes[typeItem.type];
 
-    document.documentElement.openSubDialog("chrome://browser/content/preferences/applicationManager.xul",
-                                           "", handlerInfo);
+    openDialog("chrome://browser/content/preferences/applicationManager.xul",
+               "",
+               "modal,centerscreen,resizable=no",
+               handlerInfo);
 
     // Rebuild the actions menu so that we revert to the previous selection,
     // or "Always ask" if the previous default application has been removed

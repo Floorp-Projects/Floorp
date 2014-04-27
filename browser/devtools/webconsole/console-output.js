@@ -68,9 +68,6 @@ const COMPAT = {
 
   // The indent of a console group in pixels.
   GROUP_INDENT: 12,
-
-  // The default indent in pixels, applied even without any groups.
-  GROUP_INDENT_DEFAULT: 6,
 };
 
 // A map from the console API call levels to the Web Console severities.
@@ -817,9 +814,10 @@ Messages.Simple.prototype = Heritage.extend(Messages.BaseMessage.prototype,
 
     // Apply the current group by indenting appropriately.
     // TODO: remove this once bug 778766 is fixed.
-    let iconMarginLeft = this._groupDepthCompat * COMPAT.GROUP_INDENT +
-                         COMPAT.GROUP_INDENT_DEFAULT;
-    icon.style.marginLeft = iconMarginLeft + "px";
+    let indent = this._groupDepthCompat * COMPAT.GROUP_INDENT;
+    let indentNode = this.document.createElementNS(XHTML_NS, "span");
+    indentNode.className = "indent";
+    indentNode.style.width = indent + "px";
 
     let body = this._renderBody();
     this._repeatID.textContent += "|" + body.textContent;
@@ -833,6 +831,7 @@ Messages.Simple.prototype = Heritage.extend(Messages.BaseMessage.prototype,
     }
 
     this.element.appendChild(timestamp.element);
+    this.element.appendChild(indentNode);
     this.element.appendChild(icon);
     this.element.appendChild(body);
     if (repeatNode) {
@@ -1110,14 +1109,14 @@ Messages.Extended.prototype = Heritage.extend(Messages.Simple.prototype,
   {
     let map = {
       "number": "cm-number",
-      "longstring": "cm-string",
-      "string": "cm-string",
+      "longstring": "console-string",
+      "string": "console-string",
       "regexp": "cm-string-2",
       "boolean": "cm-atom",
       "-infinity": "cm-atom",
       "infinity": "cm-atom",
       "null": "cm-atom",
-      "undefined": "cm-atom",
+      "undefined": "cm-comment",
     };
 
     let className = map[typeof grip];
@@ -2117,8 +2116,8 @@ Widgets.ObjectRenderers.add({
       });
 
       // Strings are property names.
-      if (keyElem.classList && keyElem.classList.contains("cm-string")) {
-        keyElem.classList.remove("cm-string");
+      if (keyElem.classList && keyElem.classList.contains("console-string")) {
+        keyElem.classList.remove("console-string");
         keyElem.classList.add("cm-property");
       }
 
@@ -2192,7 +2191,7 @@ Widgets.ObjectRenderers.add({
 
     if (!this.options.concise) {
       this._text(" ");
-      this.element.appendChild(this.el("span.cm-string",
+      this.element.appendChild(this.el("span.console-string",
                                        VariablesView.getString(preview.text)));
     }
   },
@@ -2336,7 +2335,8 @@ Widgets.ObjectRenderers.add({
     }
 
     this._text("=", fragment);
-    fragment.appendChild(this.el("span.cm-string", '"' + escapeHTML(value) + '"'));
+    fragment.appendChild(this.el("span.console-string",
+                                 '"' + escapeHTML(value) + '"'));
 
     return fragment;
   },
@@ -2350,7 +2350,7 @@ Widgets.ObjectRenderers.add({
     this._text(" ");
 
     let text = VariablesView.getString(preview.textContent);
-    this.element.appendChild(this.el("span.cm-string", text));
+    this.element.appendChild(this.el("span.console-string", text));
   },
 
   _renderCommentNode: function()
@@ -2678,7 +2678,7 @@ Widgets.LongString.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
     }
 
     let result = this.element = this.document.createElementNS(XHTML_NS, "span");
-    result.className = "longString cm-string";
+    result.className = "longString console-string";
     this._renderString(this.longStringActor.initial);
     result.appendChild(this._renderEllipsis());
 

@@ -137,7 +137,8 @@ exports.isSet = isSet;
 function reset(name) {
   try {
     prefSvc.clearUserPref(name);
-  } catch (e if e.result == Cr.NS_ERROR_UNEXPECTED) {
+  }
+  catch (e) {
     // The pref service throws NS_ERROR_UNEXPECTED when the caller tries
     // to reset a pref that doesn't exist or is already set to its default
     // value.  This interface fails silently in those cases, so callers
@@ -145,6 +146,9 @@ function reset(name) {
     // resetting first or trap exceptions after the fact.  It passes through
     // other exceptions, however, so callers know about them, since we don't
     // know what other exceptions might be thrown and what they might mean.
+    if (e.result != Cr.NS_ERROR_UNEXPECTED) {
+      throw e;
+    }
   }
 }
 exports.reset = reset;
