@@ -2932,8 +2932,8 @@ UpdateService.prototype = {
     // with the new version of the application.
     for (var i = 0; i < this._incompatibleAddons.length; ++i) {
       if (this._incompatibleAddons[i].id == addon.id) {
-        LOG("UpdateService:onAddonUpdateEnded - found update for add-on ID: " +
-            addon.id);
+        LOG("UpdateService:onCompatibilityUpdateAvailable - found update for " +
+			"add-on ID: " + addon.id);
         this._incompatibleAddons.splice(i, 1);
       }
     }
@@ -3184,7 +3184,6 @@ UpdateService.prototype = {
   _xpcom_factory: UpdateServiceFactory,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIApplicationUpdateService,
                                          Ci.nsIUpdateCheckListener,
-                                         Ci.nsIAddonUpdateCheckListener,
                                          Ci.nsITimerCallback,
                                          Ci.nsIObserver])
 };
