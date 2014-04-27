@@ -26,9 +26,9 @@ function test() {
     });
 
     let tabs = addonDebugger.frame.contentDocument.getElementById("toolbox-tabs").children;
-    let expectedTabs = ["options", "jsdebugger"];
+    let expectedTabs = ["options", "webconsole", "jsdebugger", "scratchpad"];
 
-    is(tabs.length, 2, "displaying only 2 tabs in addon debugger");
+    is(tabs.length, expectedTabs.length, "displaying only " + expectedTabs.length + " tabs in addon debugger");
     Array.forEach(tabs, (tab, i) => {
       let toolName = expectedTabs[i];
       is(tab.getAttribute("toolid"), toolName, "displaying " + toolName);
