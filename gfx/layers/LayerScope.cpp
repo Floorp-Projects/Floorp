@@ -778,20 +778,20 @@ LayerScope::SendEffectChain(GLContext* aGLContext,
 
     const Effect* primaryEffect = aEffectChain.mPrimaryEffect;
     switch (primaryEffect->mType) {
-    case EffectTypes::RGB:
+    case EFFECT_RGB:
     {
         const TexturedEffect* texturedEffect =
             static_cast<const TexturedEffect*>(primaryEffect);
         SendTexturedEffect(aGLContext, aEffectChain.mLayerRef, texturedEffect);
     }
     break;
-    case EffectTypes::YCBCR:
+    case EFFECT_YCBCR:
     {
         const EffectYCbCr* yCbCrEffect =
             static_cast<const EffectYCbCr*>(primaryEffect);
         SendYCbCrEffect(aGLContext, aEffectChain.mLayerRef, yCbCrEffect);
     }
-    case EffectTypes::SOLID_COLOR:
+    case EFFECT_SOLID_COLOR:
     {
         const EffectSolidColor* solidColorEffect =
             static_cast<const EffectSolidColor*>(primaryEffect);
@@ -802,13 +802,13 @@ LayerScope::SendEffectChain(GLContext* aGLContext,
         SendColor(aEffectChain.mLayerRef, color, aWidth, aHeight);
     }
     break;
-    case EffectTypes::COMPONENT_ALPHA:
-    case EffectTypes::RENDER_TARGET:
+    case EFFECT_COMPONENT_ALPHA:
+    case EFFECT_RENDER_TARGET:
     default:
         break;
     }
 
-    //const Effect* secondaryEffect = aEffectChain.mSecondaryEffects[EffectTypes::MASK];
+    //const Effect* secondaryEffect = aEffectChain.mSecondaryEffects[EFFECT_MASK];
     // TODO:
 }
 

@@ -233,7 +233,7 @@ TextureHost::~TextureHost()
 
 void TextureHost::Finalize()
 {
-  if (!(GetFlags() & TextureFlags::DEALLOCATE_CLIENT)) {
+  if (!(GetFlags() & TEXTURE_DEALLOCATE_CLIENT)) {
     DeallocateSharedData();
     DeallocateDeviceData();
   }
@@ -292,7 +292,7 @@ BufferTextureHost::Updated(const nsIntRegion* aRegion)
   } else {
     mPartialUpdate = false;
   }
-  if (GetFlags() & TextureFlags::IMMEDIATE_UPLOAD) {
+  if (GetFlags() & TEXTURE_IMMEDIATE_UPLOAD) {
     DebugOnly<bool> result = MaybeUpload(mPartialUpdate ? &mMaybeUpdatedRegion : nullptr);
     NS_WARN_IF_FALSE(result, "Failed to upload a texture");
   }
@@ -355,7 +355,7 @@ BufferTextureHost::GetFormat() const
   // instead (see BufferTextureHost::Upload)
   if (mFormat == gfx::SurfaceFormat::YUV &&
     mCompositor &&
-    !mCompositor->SupportsEffect(EffectTypes::YCBCR)) {
+    !mCompositor->SupportsEffect(EFFECT_YCBCR)) {
     return gfx::SurfaceFormat::R8G8B8X8;
   }
   return mFormat;
@@ -397,7 +397,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     YCbCrImageDataDeserializer yuvDeserializer(GetBuffer(), GetBufferSize());
     MOZ_ASSERT(yuvDeserializer.IsValid());
 
-    if (!mCompositor->SupportsEffect(EffectTypes::YCBCR)) {
+    if (!mCompositor->SupportsEffect(EFFECT_YCBCR)) {
       RefPtr<gfx::DataSourceSurface> surf = yuvDeserializer.ToDataSourceSurface();
       if (!mFirstSource) {
         mFirstSource = mCompositor->CreateDataTextureSource(mFlags);
@@ -411,9 +411,9 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     RefPtr<DataTextureSource> srcV;
     if (!mFirstSource) {
       // We don't support BigImages for YCbCr compositing.
-      srcY = mCompositor->CreateDataTextureSource(mFlags|TextureFlags::DISALLOW_BIGIMAGE);
-      srcU = mCompositor->CreateDataTextureSource(mFlags|TextureFlags::DISALLOW_BIGIMAGE);
-      srcV = mCompositor->CreateDataTextureSource(mFlags|TextureFlags::DISALLOW_BIGIMAGE);
+      srcY = mCompositor->CreateDataTextureSource(mFlags|TEXTURE_DISALLOW_BIGIMAGE);
+      srcU = mCompositor->CreateDataTextureSource(mFlags|TEXTURE_DISALLOW_BIGIMAGE);
+      srcV = mCompositor->CreateDataTextureSource(mFlags|TEXTURE_DISALLOW_BIGIMAGE);
       mFirstSource = srcY;
       srcY->SetNextSibling(srcU);
       srcU->SetNextSibling(srcV);
@@ -569,7 +569,7 @@ MemoryTextureHost::MemoryTextureHost(uint8_t* aBuffer,
 MemoryTextureHost::~MemoryTextureHost()
 {
   DeallocateDeviceData();
-  NS_ASSERTION(!mBuffer || (mFlags & TextureFlags::DEALLOCATE_CLIENT),
+  NS_ASSERTION(!mBuffer || (mFlags & TEXTURE_DEALLOCATE_CLIENT),
                "Leaking our buffer");
   MOZ_COUNT_DTOR(MemoryTextureHost);
 }
@@ -644,7 +644,7 @@ TextureParent::CompositorRecycle()
 
   // Don't forget to prepare for the next reycle
   // if TextureClient request it.
-  if (mTextureHost->GetFlags() & TextureFlags::RECYCLE) {
+  if (mTextureHost->GetFlags() & TEXTURE_RECYCLE) {
     mWaitForClientRecycle = mTextureHost;
   }
 }
@@ -671,7 +671,7 @@ TextureParent::Init(const SurfaceDescriptor& aSharedData,
                                      aFlags);
   if (mTextureHost) {
     mTextureHost->mActor = this;
-    if (aFlags & TextureFlags::RECYCLE) {
+    if (aFlags & TEXTURE_RECYCLE) {
       mWaitForClientRecycle = mTextureHost;
       RECYCLE_LOG("Setup recycling for tile %p\n", this);
     }
@@ -711,11 +711,11 @@ TextureParent::ActorDestroy(ActorDestroyReason why)
     NS_RUNTIMEABORT("FailedConstructor isn't possible in PTexture");
   }
 
-  if (mTextureHost->GetFlags() & TextureFlags::RECYCLE) {
+  if (mTextureHost->GetFlags() & TEXTURE_RECYCLE) {
     RECYCLE_LOG("clear recycling for tile %p\n", this);
     mTextureHost->ClearRecycleCallback();
   }
-  if (mTextureHost->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
+  if (mTextureHost->GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
     mTextureHost->ForgetSharedData();
   }
 

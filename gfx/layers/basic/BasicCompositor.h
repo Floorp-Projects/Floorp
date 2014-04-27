@@ -65,7 +65,7 @@ public:
                                const gfx::IntPoint &aSourcePoint) MOZ_OVERRIDE;
 
   virtual TemporaryRef<DataTextureSource>
-  CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) MOZ_OVERRIDE;
+  CreateDataTextureSource(TextureFlags aFlags = 0) MOZ_OVERRIDE;
 
   virtual bool SupportsEffect(EffectTypes aEffect) MOZ_OVERRIDE;
 

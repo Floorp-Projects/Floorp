@@ -195,15 +195,15 @@ static DeviceManagerD3D9::ShaderMode
 ShaderModeForEffectType(EffectTypes aEffectType, gfx::SurfaceFormat aFormat)
 {
   switch (aEffectType) {
-  case EffectTypes::SOLID_COLOR:
+  case EFFECT_SOLID_COLOR:
     return DeviceManagerD3D9::SOLIDCOLORLAYER;
-  case EffectTypes::RENDER_TARGET:
+  case EFFECT_RENDER_TARGET:
     return DeviceManagerD3D9::RGBALAYER;
-  case EffectTypes::RGB:
+  case EFFECT_RGB:
     if (aFormat == SurfaceFormat::B8G8R8A8 || aFormat == SurfaceFormat::R8G8B8A8)
       return DeviceManagerD3D9::RGBALAYER;
     return DeviceManagerD3D9::RGBLAYER;
-  case EffectTypes::YCBCR:
+  case EFFECT_YCBCR:
     return DeviceManagerD3D9::YCBCRLAYER;
   }
 
@@ -253,7 +253,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
                                        1);
   bool target = false;
 
-  if (aEffectChain.mPrimaryEffect->mType != EffectTypes::SOLID_COLOR) {
+  if (aEffectChain.mPrimaryEffect->mType != EFFECT_SOLID_COLOR) {
     float opacity[4];
     /*
      * We always upload a 4 component float, but the shader will use only the
@@ -265,13 +265,13 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
 
   bool isPremultiplied = true;
 
-  MaskType maskType = MaskType::MaskNone;
+  MaskType maskType = MaskNone;
 
-  if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
+  if (aEffectChain.mSecondaryEffects[EFFECT_MASK]) {
     if (aTransform.Is2D()) {
-      maskType = MaskType::Mask2d;
+      maskType = Mask2d;
     } else {
-      maskType = MaskType::Mask3d;
+      maskType = Mask3d;
     }
   }
 
@@ -284,7 +284,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
 
   uint32_t maskTexture = 0;
   switch (aEffectChain.mPrimaryEffect->mType) {
-  case EffectTypes::SOLID_COLOR:
+  case EFFECT_SOLID_COLOR:
     {
       // output color is premultiplied, so we need to adjust all channels.
       Color layerColor =
@@ -301,8 +301,8 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
         ->SetShaderMode(DeviceManagerD3D9::SOLIDCOLORLAYER, maskType);
     }
     break;
-  case EffectTypes::RENDER_TARGET:
-  case EffectTypes::RGB:
+  case EFFECT_RENDER_TARGET:
+  case EFFECT_RGB:
     {
       TexturedEffect* texturedEffect =
         static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
@@ -329,7 +329,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
       isPremultiplied = texturedEffect->mPremultiplied;
     }
     break;
-  case EffectTypes::YCBCR:
+  case EFFECT_YCBCR:
     {
       EffectYCbCr* ycbcrEffect =
         static_cast<EffectYCbCr*>(aEffectChain.mPrimaryEffect.get());
@@ -415,7 +415,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
       maskTexture = mDeviceManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER, maskType);
     }
     break;
-  case EffectTypes::COMPONENT_ALPHA:
+  case EFFECT_COMPONENT_ALPHA:
     {
       MOZ_ASSERT(gfxPrefs::ComponentAlphaEnabled());
       EffectComponentAlpha* effectComponentAlpha =
@@ -476,7 +476,7 @@ void
 CompositorD3D9::SetMask(const EffectChain &aEffectChain, uint32_t aMaskTexture)
 {
   EffectMask *maskEffect =
-    static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EffectTypes::MASK].get());
+    static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EFFECT_MASK].get());
   if (!maskEffect) {
     return;
   }

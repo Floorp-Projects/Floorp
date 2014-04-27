@@ -196,7 +196,7 @@ class TextureImageTextureSourceOGL : public DataTextureSource
 {
 public:
   TextureImageTextureSourceOGL(gl::GLContext* aGL,
-                               TextureFlags aFlags = TextureFlags::DEFAULT)
+                               TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT)
     : mGL(aGL)
     , mFlags(aFlags)
     , mIterating(false)

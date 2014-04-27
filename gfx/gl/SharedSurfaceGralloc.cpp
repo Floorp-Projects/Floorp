@@ -75,7 +75,7 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
           allocator,
           gfx::ImageFormatToSurfaceFormat(format),
           gfx::BackendType::NONE, // we don't need to use it with a DrawTarget
-          layers::TextureFlags::DEFAULT);
+          TEXTURE_FLAGS_DEFAULT);
 
     if (!grallocTC->AllocateForGLRendering(size)) {
       return nullptr;

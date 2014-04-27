@@ -17,7 +17,6 @@
 #include "mozilla/layers/TextureHost.h"  // for CompositingRenderTarget, etc
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nscore.h"                     // for nsACString
-#include "mozilla/EnumeratedArray.h"
 
 namespace mozilla {
 namespace layers {
@@ -81,7 +80,7 @@ struct EffectMask : public Effect
   EffectMask(TextureSource *aMaskTexture,
              gfx::IntSize aSize,
              const gfx::Matrix4x4 &aMaskTransform)
-    : Effect(EffectTypes::MASK)
+    : Effect(EFFECT_MASK)
     , mMaskTexture(aMaskTexture)
     , mIs3D(false)
     , mSize(aSize)
@@ -100,7 +99,7 @@ struct EffectMask : public Effect
 struct EffectRenderTarget : public TexturedEffect
 {
   EffectRenderTarget(CompositingRenderTarget *aRenderTarget)
-    : TexturedEffect(EffectTypes::RENDER_TARGET, aRenderTarget, true, gfx::Filter::LINEAR)
+    : TexturedEffect(EFFECT_RENDER_TARGET, aRenderTarget, true, gfx::Filter::LINEAR)
     , mRenderTarget(aRenderTarget)
   {}
 
@@ -116,7 +115,7 @@ struct EffectRGB : public TexturedEffect
             bool aPremultiplied,
             gfx::Filter aFilter,
             bool aFlipped = false)
-    : TexturedEffect(EffectTypes::RGB, aTexture, aPremultiplied, aFilter)
+    : TexturedEffect(EFFECT_RGB, aTexture, aPremultiplied, aFilter)
   {}
 
   virtual const char* Name() { return "EffectRGB"; }
@@ -125,7 +124,7 @@ struct EffectRGB : public TexturedEffect
 struct EffectYCbCr : public TexturedEffect
 {
   EffectYCbCr(TextureSource *aSource, gfx::Filter aFilter)
-    : TexturedEffect(EffectTypes::YCBCR, aSource, false, aFilter)
+    : TexturedEffect(EFFECT_YCBCR, aSource, false, aFilter)
   {}
 
   virtual const char* Name() { return "EffectYCbCr"; }
@@ -136,7 +135,7 @@ struct EffectComponentAlpha : public TexturedEffect
   EffectComponentAlpha(TextureSource *aOnBlack,
                        TextureSource *aOnWhite,
                        gfx::Filter aFilter)
-    : TexturedEffect(EffectTypes::COMPONENT_ALPHA, nullptr, false, aFilter)
+    : TexturedEffect(EFFECT_COMPONENT_ALPHA, nullptr, false, aFilter)
     , mOnBlack(aOnBlack)
     , mOnWhite(aOnWhite)
   {}
@@ -150,7 +149,7 @@ struct EffectComponentAlpha : public TexturedEffect
 struct EffectSolidColor : public Effect
 {
   EffectSolidColor(const gfx::Color &aColor)
-    : Effect(EffectTypes::SOLID_COLOR)
+    : Effect(EFFECT_SOLID_COLOR)
     , mColor(aColor)
   {}
 
@@ -165,8 +164,7 @@ struct EffectChain
   explicit EffectChain(void* aLayerRef) : mLayerRef(aLayerRef) {}
 
   RefPtr<Effect> mPrimaryEffect;
-  EnumeratedArray<EffectTypes, EffectTypes::MAX_SECONDARY, RefPtr<Effect>>
-    mSecondaryEffects;
+  RefPtr<Effect> mSecondaryEffects[EFFECT_MAX_SECONDARY];
   void* mLayerRef; //!< For LayerScope logging
 };
 

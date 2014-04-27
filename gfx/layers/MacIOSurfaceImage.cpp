@@ -14,7 +14,7 @@ MacIOSurfaceImage::GetTextureClient(CompositableClient* aClient)
 {
   if (!mTextureClient) {
     RefPtr<MacIOSurfaceTextureClientOGL> buffer =
-      new MacIOSurfaceTextureClientOGL(TextureFlags::DEFAULT);
+      new MacIOSurfaceTextureClientOGL(TEXTURE_FLAGS_DEFAULT);
     buffer->InitWith(mSurface);
     mTextureClient = buffer;
   }
