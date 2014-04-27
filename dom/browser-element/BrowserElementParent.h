@@ -109,7 +109,7 @@ public:
 
   /**
    * Fire a mozbrowserasyncscroll CustomEvent on the given TabParent's frame element.
-   * This event's detail is an instance of nsIAsyncScrollEventDetail.
+   * This event's detail is an AsyncScrollEventDetail dictionary.
    *
    * @param aContentRect: The portion of the page which is currently visible
    *                      onscreen in CSS pixels.
