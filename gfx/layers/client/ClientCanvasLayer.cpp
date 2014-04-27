@@ -133,18 +133,18 @@ ClientCanvasLayer::RenderLayer()
   }
   
   if (!mCanvasClient) {
-    TextureFlags flags = TextureFlags::IMMEDIATE_UPLOAD;
+    TextureFlags flags = TEXTURE_IMMEDIATE_UPLOAD;
     if (mNeedsYFlip) {
-      flags |= TextureFlags::NEEDS_Y_FLIP;
+      flags |= TEXTURE_NEEDS_Y_FLIP;
     }
 
     if (!mGLContext) {
       // We don't support locking for buffer surfaces currently
-      flags |= TextureFlags::IMMEDIATE_UPLOAD;
+      flags |= TEXTURE_IMMEDIATE_UPLOAD;
     } else {
       // GLContext's SurfaceStream handles ownership itself,
       // and doesn't require layers to do any deallocation.
-      flags |= TextureFlags::DEALLOCATE_CLIENT;
+      flags |= TEXTURE_DEALLOCATE_CLIENT;
     }
     mCanvasClient = CanvasClient::CreateCanvasClient(GetCanvasClientType(),
                                                      ClientManager()->AsShadowForwarder(), flags);

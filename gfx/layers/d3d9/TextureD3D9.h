@@ -106,14 +106,14 @@ class DataTextureSourceD3D9 : public DataTextureSource
 public:
   DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
                         CompositorD3D9* aCompositor,
-                        TextureFlags aFlags = TextureFlags::DEFAULT,
+                        TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT,
                         StereoMode aStereoMode = StereoMode::MONO);
 
   DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
                         gfx::IntSize aSize,
                         CompositorD3D9* aCompositor,
                         IDirect3DTexture9* aTexture,
-                        TextureFlags aFlags = TextureFlags::DEFAULT);
+                        TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
 
   virtual ~DataTextureSourceD3D9();
 

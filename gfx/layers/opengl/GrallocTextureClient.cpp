@@ -145,10 +145,10 @@ GrallocTextureClientOGL::Lock(OpenMode aMode)
   WaitReleaseFence();
 
   uint32_t usage = 0;
-  if (aMode & OpenMode::OPEN_READ) {
+  if (aMode & OPEN_READ) {
     usage |= GRALLOC_USAGE_SW_READ_OFTEN;
   }
-  if (aMode & OpenMode::OPEN_WRITE) {
+  if (aMode & OPEN_WRITE) {
     usage |= GRALLOC_USAGE_SW_WRITE_OFTEN;
   }
   int32_t rv = mGraphicBuffer->lock(usage, reinterpret_cast<void**>(&mMappedBuffer));
@@ -234,14 +234,14 @@ GrallocTextureClientOGL::AllocateForSurface(gfx::IntSize aSize,
     break;
   case gfx::SurfaceFormat::B8G8R8A8:
      format = android::PIXEL_FORMAT_RGBA_8888;
-     mFlags |= TextureFlags::RB_SWAPPED;
+     mFlags |= TEXTURE_RB_SWAPPED;
     break;
   case gfx::SurfaceFormat::R8G8B8X8:
     format = android::PIXEL_FORMAT_RGBX_8888;
     break;
   case gfx::SurfaceFormat::B8G8R8X8:
      format = android::PIXEL_FORMAT_RGBX_8888;
-     mFlags |= TextureFlags::RB_SWAPPED;
+     mFlags |= TEXTURE_RB_SWAPPED;
     break;
   case gfx::SurfaceFormat::R5G6B5:
     format = android::PIXEL_FORMAT_RGB_565;

@@ -40,18 +40,19 @@ namespace layers {
 
 static TextureFlags TextureFlagsForRotatedContentBufferFlags(uint32_t aBufferFlags)
 {
-  TextureFlags result = TextureFlags::NO_FLAGS;
+  TextureFlags result = 0;
 
   if (aBufferFlags & RotatedContentBuffer::BUFFER_COMPONENT_ALPHA) {
-    result |= TextureFlags::COMPONENT_ALPHA;
+    result |= TEXTURE_COMPONENT_ALPHA;
   }
 
   if (aBufferFlags & RotatedContentBuffer::ALLOW_REPEAT) {
-    result |= TextureFlags::ALLOW_REPEAT;
+    result |= TEXTURE_ALLOW_REPEAT;
   }
 
   return result;
 }
+
 
 /* static */ TemporaryRef<ContentClient>
 ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
@@ -196,7 +197,7 @@ ContentClientRemoteBuffer::CreateAndAllocateTextureClient(RefPtr<TextureClient>&
 
   if (!aClient->AllocateForSurface(mSize, ALLOC_CLEAR_BUFFER)) {
     aClient = CreateTextureClientForDrawing(mSurfaceFormat,
-                mTextureInfo.mTextureFlags | TextureFlags::ALLOC_FALLBACK | aFlags,
+                mTextureInfo.mTextureFlags | TEXTURE_ALLOC_FALLBACK | aFlags,
                 gfx::BackendType::NONE,
                 mSize);
     if (!aClient) {
@@ -235,19 +236,19 @@ ContentClientRemoteBuffer::BuildTextureClients(SurfaceFormat aFormat,
   mSize = gfx::IntSize(aRect.width, aRect.height);
   mTextureInfo.mTextureFlags = TextureFlagsForRotatedContentBufferFlags(aFlags);
 
-  if (!CreateAndAllocateTextureClient(mTextureClient, TextureFlags::ON_BLACK) ||
+  if (!CreateAndAllocateTextureClient(mTextureClient, TEXTURE_ON_BLACK) ||
       !AddTextureClient(mTextureClient)) {
     AbortTextureClientCreation();
     return;
   }
 
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
-    if (!CreateAndAllocateTextureClient(mTextureClientOnWhite, TextureFlags::ON_WHITE) ||
+    if (!CreateAndAllocateTextureClient(mTextureClientOnWhite, TEXTURE_ON_WHITE) ||
         !AddTextureClient(mTextureClientOnWhite)) {
       AbortTextureClientCreation();
       return;
     }
-    mTextureInfo.mTextureFlags |= TextureFlags::COMPONENT_ALPHA;
+    mTextureInfo.mTextureFlags |= TEXTURE_COMPONENT_ALPHA;
   }
 
   CreateFrontBuffer(aRect);
@@ -267,12 +268,12 @@ ContentClientRemoteBuffer::CreateBuffer(ContentType aType,
 
   // We just created the textures and we are about to get their draw targets
   // so we have to lock them here.
-  DebugOnly<bool> locked = mTextureClient->Lock(OpenMode::OPEN_READ_WRITE);
+  DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
   MOZ_ASSERT(locked, "Could not lock the TextureClient");
 
   *aBlackDT = mTextureClient->GetAsDrawTarget();
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
-    locked = mTextureClientOnWhite->Lock(OpenMode::OPEN_READ_WRITE);
+    locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
     MOZ_ASSERT(locked, "Could not lock the second TextureClient for component alpha");
 
     *aWhiteDT = mTextureClientOnWhite->GetAsDrawTarget();
@@ -338,13 +339,13 @@ ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 void
 ContentClientDoubleBuffered::CreateFrontBuffer(const nsIntRect& aBufferRect)
 {
-  if (!CreateAndAllocateTextureClient(mFrontClient, TextureFlags::ON_BLACK) ||
+  if (!CreateAndAllocateTextureClient(mFrontClient, TEXTURE_ON_BLACK) ||
       !AddTextureClient(mFrontClient)) {
     AbortTextureClientCreation();
     return;
   }
-  if (mTextureInfo.mTextureFlags & TextureFlags::COMPONENT_ALPHA) {
-    if (!CreateAndAllocateTextureClient(mFrontClientOnWhite, TextureFlags::ON_WHITE) ||
+  if (mTextureInfo.mTextureFlags & TEXTURE_COMPONENT_ALPHA) {
+    if (!CreateAndAllocateTextureClient(mFrontClientOnWhite, TEXTURE_ON_WHITE) ||
         !AddTextureClient(mFrontClientOnWhite)) {
       AbortTextureClientCreation();
       return;
@@ -426,11 +427,11 @@ void
 ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 {
   if (mTextureClient) {
-    DebugOnly<bool> locked = mTextureClient->Lock(OpenMode::OPEN_READ_WRITE);
+    DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
     MOZ_ASSERT(locked);
   }
   if (mTextureClientOnWhite) {
-    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OpenMode::OPEN_READ_WRITE);
+    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
     MOZ_ASSERT(locked);
   }
 
@@ -464,11 +465,11 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 
   // We need to ensure that we lock these two buffers in the same
   // order as the compositor to prevent deadlocks.
-  if (!mFrontClient->Lock(OpenMode::OPEN_READ_ONLY)) {
+  if (!mFrontClient->Lock(OPEN_READ_ONLY)) {
     return;
   }
   if (mFrontClientOnWhite &&
-      !mFrontClientOnWhite->Lock(OpenMode::OPEN_READ_ONLY)) {
+      !mFrontClientOnWhite->Lock(OPEN_READ_ONLY)) {
     mFrontClient->Unlock();
     return;
   }
@@ -539,11 +540,11 @@ void
 ContentClientSingleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 {
   if (mTextureClient) {
-    DebugOnly<bool> locked = mTextureClient->Lock(OpenMode::OPEN_READ_WRITE);
+    DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
     MOZ_ASSERT(locked);
   }
   if (mTextureClientOnWhite) {
-    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OpenMode::OPEN_READ_WRITE);
+    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
     MOZ_ASSERT(locked);
   }
 }
@@ -571,23 +572,11 @@ FillSurface(DrawTarget* aDT, const nsIntRegion& aRegion,
   }
 }
 
-void
-ContentClientIncremental::NotifyBufferCreated(ContentType aType, TextureFlags aFlags)
-{
-  mTextureInfo.mTextureFlags = aFlags;
-  mContentType = aType;
-
-  mForwarder->CreatedIncrementalBuffer(this,
-                                        mTextureInfo,
-                                        mBufferRect);
-
-}
-
 RotatedContentBuffer::PaintState
 ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
                                            uint32_t aFlags)
 {
-  mTextureInfo.mDeprecatedTextureHostFlags = DeprecatedTextureHostFlags::DEFAULT;
+  mTextureInfo.mDeprecatedTextureHostFlags = 0;
   PaintState result;
   // We need to disable rotation if we're going to be resampled when
   // drawing, because we might sample across the rotation boundary.
@@ -612,7 +601,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
     canReuseBuffer = neededRegion.GetBounds().Size() <= mBufferRect.Size() &&
       mHasBuffer &&
       (!(aFlags & RotatedContentBuffer::PAINT_WILL_RESAMPLE) ||
-       !(mTextureInfo.mTextureFlags & TextureFlags::ALLOW_REPEAT));
+       !(mTextureInfo.mTextureFlags & TEXTURE_ALLOW_REPEAT));
 
     if (canReuseBuffer) {
       if (mBufferRect.Contains(neededRegion.GetBounds())) {
@@ -696,12 +685,9 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
   nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
   bool createdBuffer = false;
 
-  TextureFlags bufferFlags = TextureFlags::NO_FLAGS;
-  if (canHaveRotation) {
-    bufferFlags |= TextureFlags::ALLOW_REPEAT;
-  }
+  uint32_t bufferFlags = canHaveRotation ? TEXTURE_ALLOW_REPEAT : 0;
   if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
-    bufferFlags |= TextureFlags::COMPONENT_ALPHA;
+    bufferFlags |= TEXTURE_COMPONENT_ALPHA;
   }
   if (canReuseBuffer) {
     nsIntRect keepArea;
@@ -754,7 +740,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
   if (createdBuffer) {
     if (mHasBuffer &&
         (mode != SurfaceMode::SURFACE_COMPONENT_ALPHA || mHasBufferOnWhite)) {
-      mTextureInfo.mDeprecatedTextureHostFlags = DeprecatedTextureHostFlags::COPY_PREVIOUS;
+      mTextureInfo.mDeprecatedTextureHostFlags = TEXTURE_HOST_COPY_PREVIOUS;
     }
 
     mHasBuffer = true;
@@ -851,7 +837,7 @@ ContentClientIncremental::Updated(const nsIntRegion& aRegionToDraw,
 {
   if (IsSurfaceDescriptorValid(mUpdateDescriptor)) {
     mForwarder->UpdateTextureIncremental(this,
-                                         TextureIdentifier::Front,
+                                         TextureFront,
                                          mUpdateDescriptor,
                                          aRegionToDraw,
                                          mBufferRect,
@@ -860,7 +846,7 @@ ContentClientIncremental::Updated(const nsIntRegion& aRegionToDraw,
   }
   if (IsSurfaceDescriptorValid(mUpdateDescriptorOnWhite)) {
     mForwarder->UpdateTextureIncremental(this,
-                                         TextureIdentifier::OnWhiteFront,
+                                         TextureOnWhiteFront,
                                          mUpdateDescriptorOnWhite,
                                          aRegionToDraw,
                                          mBufferRect,

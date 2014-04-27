@@ -90,7 +90,7 @@ SimpleTiledLayerBuffer::ValidateTile(SimpleTiledLayerTile aTile,
     return SimpleTiledLayerTile();
   }
 
-  if (!textureClient->Lock(OpenMode::OPEN_READ_WRITE)) {
+  if (!textureClient->Lock(OPEN_READ_WRITE)) {
     NS_WARNING("TextureClient lock failed");
     return SimpleTiledLayerTile();
   }
