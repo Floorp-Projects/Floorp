@@ -1036,7 +1036,7 @@ function detectIndentation(ed) {
 
     // see how much this line is offset from the line above it
     let indent = Math.abs(width - last);
-    if (indent > 1) {
+    if (indent > 1 && indent <= 8) {
       spaces[indent] = (spaces[indent] || 0) + 1;
     }
     last = width;
@@ -1053,7 +1053,7 @@ function detectIndentation(ed) {
   }
 
   // find most frequent non-zero width difference between adjacent lines
-  let freqIndent = null, max = 0;
+  let freqIndent = null, max = 1;
   for (let width in spaces) {
     width = parseInt(width, 10);
     let tally = spaces[width];
@@ -1061,6 +1061,9 @@ function detectIndentation(ed) {
       max = tally;
       freqIndent = width;
     }
+  }
+  if (!freqIndent) {
+    return null;
   }
 
   return { tabs: false, spaces: freqIndent };

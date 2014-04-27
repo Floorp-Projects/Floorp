@@ -1551,6 +1551,8 @@ RilObject.prototype = {
       return;
     }
 
+    call.hangUpLocal = true;
+
     if (call.state === CALL_STATE_HOLDING) {
       this.sendHangUpBackgroundRequest(callIndex);
     } else {
@@ -1628,6 +1630,8 @@ RilObject.prototype = {
     if (!call) {
       return;
     }
+
+    call.hangUpLocal = true;
 
     let Buf = this.context.Buf;
     if (this._isCdma) {
@@ -3762,7 +3766,9 @@ RilObject.prototype = {
         if (this.currentConference.participants[currentCall.callIndex]) {
           conferenceChanged = true;
         }
-        this._removeVoiceCall(currentCall);
+        this._removeVoiceCall(currentCall,
+                              currentCall.hangUpLocal ?
+                                GECKO_CALL_ERROR_NORMAL_CALL_CLEARING : null);
         continue;
       }
 
