@@ -4018,12 +4018,16 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum internalformat, GLenum type
             case LOCAL_GL_RGBA32F:
                 return WebGLTexelFormat::RGBA32F;
             case LOCAL_GL_RGB:
+            case LOCAL_GL_RGB32F:
                 return WebGLTexelFormat::RGB32F;
             case LOCAL_GL_ALPHA:
+            case LOCAL_GL_ALPHA32F_ARB:
                 return WebGLTexelFormat::A32F;
             case LOCAL_GL_LUMINANCE:
+            case LOCAL_GL_LUMINANCE32F_ARB:
                 return WebGLTexelFormat::R32F;
             case LOCAL_GL_LUMINANCE_ALPHA:
+            case LOCAL_GL_LUMINANCE_ALPHA32F_ARB:
                 return WebGLTexelFormat::RA32F;
         }
 
@@ -4032,14 +4036,19 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum internalformat, GLenum type
         // OES_texture_half_float
         switch (internalformat) {
             case LOCAL_GL_RGBA:
+            case LOCAL_GL_RGBA16F:
                 return WebGLTexelFormat::RGBA16F;
             case LOCAL_GL_RGB:
+            case LOCAL_GL_RGB16F:
                 return WebGLTexelFormat::RGB16F;
             case LOCAL_GL_ALPHA:
+            case LOCAL_GL_ALPHA16F_ARB:
                 return WebGLTexelFormat::A16F;
             case LOCAL_GL_LUMINANCE:
+            case LOCAL_GL_LUMINANCE16F_ARB:
                 return WebGLTexelFormat::R16F;
             case LOCAL_GL_LUMINANCE_ALPHA:
+            case LOCAL_GL_LUMINANCE_ALPHA16F_ARB:
                 return WebGLTexelFormat::RA16F;
             default:
                 MOZ_ASSERT(false, "Coding mistake?! Should never reach this point.");
