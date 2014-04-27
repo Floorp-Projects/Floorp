@@ -196,16 +196,10 @@ SourceBuffer::GetBuffered(ErrorResult& aRv)
     nsRefPtr<TimeRanges> r = new TimeRanges();
     mDecoders[i]->GetBuffered(r);
     if (r->Length() > 0) {
-      MSE_DEBUG("%p GetBuffered decoder=%u Length=%u Start=%f End=%f", this, i, r->Length(),
-                r->GetStartTime(), r->GetEndTime());
       ranges->Add(r->GetStartTime(), r->GetEndTime());
-    } else {
-      MSE_DEBUG("%p GetBuffered decoder=%u Length=%u", this, i, r->Length());
     }
   }
   ranges->Normalize();
-  MSE_DEBUG("%p GetBuffered Length=%u Start=%f End=%f", this, ranges->Length(),
-            ranges->GetStartTime(), ranges->GetEndTime());
   return ranges.forget();
 }
 
