@@ -834,34 +834,6 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
                                        MOZ_ARG_1(__VA_ARGS__))                \
   NS_INTERFACE_TABLE_END
 
-// TODO: Remove these after changing everything to the variadic variant.
-#define NS_INTERFACE_TABLE1(aClass, ...) \
-  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE2(aClass, ...) \
-  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE3(aClass, ...) \
-  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE4(aClass, ...) \
-  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE5(aClass, ...) \
-  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE6(aClass, ...) \
-  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE7(aClass, ...) \
-  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE8(aClass, ...) \
-  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE9(aClass, ...) \
-  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE10(aClass, ...) \
-  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE11(aClass, ...) \
-  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE12(aClass, ...) \
-  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE13(aClass, ...) \
-  NS_INTERFACE_TABLE(aClass, __VA_ARGS__)
-
 #define NS_IMPL_QUERY_INTERFACE0(_class)                                      \
   NS_INTERFACE_TABLE_HEAD(_class)                                             \
   NS_INTERFACE_TABLE0(_class)                                                 \
@@ -871,34 +843,6 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   NS_INTERFACE_TABLE_HEAD(aClass)                                             \
   NS_INTERFACE_TABLE(aClass, __VA_ARGS__)                                     \
   NS_INTERFACE_TABLE_TAIL
-
-// TODO: Remove these after changing everything to the variadic variant.
-#define NS_IMPL_QUERY_INTERFACE1(aClass, ...) \
-  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE2(aClass, ...) \
-  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE3(aClass, ...) \
-  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE4(aClass, ...) \
-  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE5(aClass, ...) \
-  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE6(aClass, ...) \
-  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE7(aClass, ...) \
-  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE8(aClass, ...) \
-  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE9(aClass, ...) \
-  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE10(aClass, ...) \
-  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE11(aClass, ...) \
-  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE12(aClass, ...) \
-  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE13(aClass, ...) \
-  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
 
 /**
  * Declare that you're going to inherit from something that already
@@ -967,32 +911,6 @@ NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
     MOZ_FOR_EACH(NS_INTERFACE_TABLE_ENTRY, (aClass,), (__VA_ARGS__))          \
   NS_INTERFACE_TABLE_END
 
-// TODO: Remove these after changing everything to the variadic variant.
-#define NS_INTERFACE_TABLE_INHERITED1(aClass, ...) \
-  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE_INHERITED2(aClass, ...) \
-  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE_INHERITED3(aClass, ...) \
-  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE_INHERITED4(aClass, ...) \
-  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE_INHERITED5(aClass, ...) \
-  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE_INHERITED6(aClass, ...) \
-  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE_INHERITED7(aClass, ...) \
-  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE_INHERITED8(aClass, ...) \
-  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE_INHERITED9(aClass, ...) \
-  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE_INHERITED10(aClass, ...) \
-  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE_INHERITED11(aClass, ...) \
-  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
-#define NS_INTERFACE_TABLE_INHERITED12(aClass, ...) \
-  NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)
-
 #define NS_IMPL_QUERY_INTERFACE_INHERITED0(aClass, aSuper)                    \
   NS_INTERFACE_TABLE_HEAD(aClass)                                             \
   NS_INTERFACE_TABLE_INHERITED0(aClass)                                       \
@@ -1002,28 +920,6 @@ NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
   NS_INTERFACE_TABLE_HEAD(aClass)                                             \
   NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)                           \
   NS_INTERFACE_TABLE_TAIL_INHERITING(aSuper)
-
-// TODO: Remove these after changing everything to the variadic variant.
-#define NS_IMPL_QUERY_INTERFACE_INHERITED1(aClass, aSuper, ...) \
-  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE_INHERITED2(aClass, aSuper, ...) \
-  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE_INHERITED3(aClass, aSuper, ...) \
-  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE_INHERITED4(aClass, aSuper, ...) \
-  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE_INHERITED5(aClass, aSuper, ...) \
-  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE_INHERITED6(aClass, aSuper, ...) \
-  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE_INHERITED7(aClass, aSuper, ...) \
-  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE_INHERITED8(aClass, aSuper, ...) \
-  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE_INHERITED9(aClass, aSuper, ...) \
-  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_QUERY_INTERFACE_INHERITED10(aClass, aSuper, ...) \
-  NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)
 
 /**
  * Convenience macros for implementing all nsISupports methods for
@@ -1043,34 +939,6 @@ NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
   NS_IMPL_RELEASE(aClass)                                                     \
   NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
 
-// TODO: Remove these after changing everything to the variadic variant.
-#define NS_IMPL_ISUPPORTS1(aClass, ...) \
-  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS2(aClass, ...) \
-  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS3(aClass, ...) \
-  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS4(aClass, ...) \
-  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS5(aClass, ...) \
-  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS6(aClass, ...) \
-  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS7(aClass, ...) \
-  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS8(aClass, ...) \
-  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS9(aClass, ...) \
-  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS10(aClass, ...) \
-  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS11(aClass, ...) \
-  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS12(aClass, ...) \
-  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS13(aClass, ...) \
-  NS_IMPL_ISUPPORTS(aClass, __VA_ARGS__)
-
 #define NS_IMPL_ISUPPORTS_INHERITED0(aClass, aSuper)                          \
     NS_IMPL_QUERY_INTERFACE_INHERITED0(aClass, aSuper)                        \
     NS_IMPL_ADDREF_INHERITED(aClass, aSuper)                                  \
@@ -1080,28 +948,6 @@ NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
   NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)              \
   NS_IMPL_ADDREF_INHERITED(aClass, aSuper)                                    \
   NS_IMPL_RELEASE_INHERITED(aClass, aSuper)
-
-// TODO: Remove these after changing everything to the variadic variant.
-#define NS_IMPL_ISUPPORTS_INHERITED1(aClass, aSuper, ...) \
-  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS_INHERITED2(aClass, aSuper, ...) \
-  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS_INHERITED3(aClass, aSuper, ...) \
-  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS_INHERITED4(aClass, aSuper, ...) \
-  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS_INHERITED5(aClass, aSuper, ...) \
-  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS_INHERITED6(aClass, aSuper, ...) \
-  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS_INHERITED7(aClass, aSuper, ...) \
-  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS_INHERITED8(aClass, aSuper, ...) \
-  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS_INHERITED9(aClass, aSuper, ...) \
-  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
-#define NS_IMPL_ISUPPORTS_INHERITED10(aClass, aSuper, ...) \
-  NS_IMPL_ISUPPORTS_INHERITED(aClass, aSuper, __VA_ARGS__)
 
 /*
  * Macro to glue together a QI that starts with an interface table
