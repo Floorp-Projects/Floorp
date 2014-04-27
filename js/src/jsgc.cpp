@@ -2771,8 +2771,10 @@ BeginMarkPhase(JSRuntime *rt)
     }
 
     if (!rt->gcShouldCleanUpEverything) {
+#ifdef JS_ION
         if (JSCompartment *comp = jit::TopmostJitActivationCompartment(rt))
             comp->zone()->setPreservingCode(true);
+#endif
     }
 
     /*
