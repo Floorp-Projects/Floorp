@@ -59,7 +59,7 @@ SpeakerManagerService::Shutdown()
   }
 }
 
-NS_IMPL_ISUPPORTS1(SpeakerManagerService, nsIObserver)
+NS_IMPL_ISUPPORTS(SpeakerManagerService, nsIObserver)
 
 void
 SpeakerManagerService::ForceSpeaker(bool aEnable, uint64_t aChildId)

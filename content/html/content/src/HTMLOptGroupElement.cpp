@@ -36,8 +36,8 @@ HTMLOptGroupElement::~HTMLOptGroupElement()
 }
 
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLOptGroupElement, nsGenericHTMLElement,
-                             nsIDOMHTMLOptGroupElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLOptGroupElement, nsGenericHTMLElement,
+                            nsIDOMHTMLOptGroupElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLOptGroupElement)
 

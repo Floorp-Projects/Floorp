@@ -84,7 +84,7 @@ AudioChannelService::Shutdown()
   }
 }
 
-NS_IMPL_ISUPPORTS2(AudioChannelService, nsIObserver, nsITimerCallback)
+NS_IMPL_ISUPPORTS(AudioChannelService, nsIObserver, nsITimerCallback)
 
 AudioChannelService::AudioChannelService()
 : mCurrentHigherChannel(-1)

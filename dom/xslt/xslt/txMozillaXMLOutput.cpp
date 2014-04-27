@@ -949,9 +949,9 @@ txTransformNotifier::txTransformNotifier()
 {
 }
 
-NS_IMPL_ISUPPORTS2(txTransformNotifier,
-                   nsIScriptLoaderObserver,
-                   nsICSSLoaderObserver)
+NS_IMPL_ISUPPORTS(txTransformNotifier,
+                  nsIScriptLoaderObserver,
+                  nsICSSLoaderObserver)
 
 NS_IMETHODIMP
 txTransformNotifier::ScriptAvailable(nsresult aResult, 

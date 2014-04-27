@@ -25,9 +25,9 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridAccessible: nsISupports implementation
 
-NS_IMPL_ISUPPORTS_INHERITED1(XULTreeGridAccessible,
-                             XULTreeAccessible,
-                             nsIAccessibleTable)
+NS_IMPL_ISUPPORTS_INHERITED(XULTreeGridAccessible,
+                            XULTreeAccessible,
+                            nsIAccessibleTable)
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridAccessible: nsIAccessibleTable implementation
@@ -457,9 +457,9 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(XULTreeGridCellAccessible, LeafAccessible,
                                    mTree, mColumn)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XULTreeGridCellAccessible)
-  NS_INTERFACE_TABLE_INHERITED2(XULTreeGridCellAccessible,
-                                nsIAccessibleTableCell,
-                                XULTreeGridCellAccessible)
+  NS_INTERFACE_TABLE_INHERITED(XULTreeGridCellAccessible,
+                               nsIAccessibleTableCell,
+                               XULTreeGridCellAccessible)
 NS_INTERFACE_TABLE_TAIL_INHERITING(LeafAccessible)
 NS_IMPL_ADDREF_INHERITED(XULTreeGridCellAccessible, LeafAccessible)
 NS_IMPL_RELEASE_INHERITED(XULTreeGridCellAccessible, LeafAccessible)

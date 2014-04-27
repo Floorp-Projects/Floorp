@@ -19,7 +19,7 @@ namespace mozilla {
 
 using namespace dom;
 
-NS_IMPL_ISUPPORTS2(FakeSpeechRecognitionService, nsISpeechRecognitionService, nsIObserver)
+NS_IMPL_ISUPPORTS(FakeSpeechRecognitionService, nsISpeechRecognitionService, nsIObserver)
 
 FakeSpeechRecognitionService::FakeSpeechRecognitionService()
 {

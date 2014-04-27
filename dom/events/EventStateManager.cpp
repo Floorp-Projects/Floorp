@@ -203,7 +203,7 @@ private:
   uint32_t mPreviousCount;
 };
 
-NS_IMPL_ISUPPORTS1(UITimerCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(UITimerCallback, nsITimerCallback)
 
 // If aTimer is nullptr, this method always sends "user-interaction-inactive"
 // notification.

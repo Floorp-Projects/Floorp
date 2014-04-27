@@ -75,7 +75,7 @@ interface nsIStatusReporterManager : nsISupports
       NS_IMETHOD GetDescription(nsACString &desc)                             \
         { _desc_Function(desc); return NS_OK; }                               \
     };                                                                        \
-    NS_IMPL_ISUPPORTS1(StatusReporter_##_classname, nsIStatusReporter)
+    NS_IMPL_ISUPPORTS(StatusReporter_##_classname, nsIStatusReporter)
 
 #define NS_STATUS_REPORTER_NAME(_classname)  StatusReporter_##_classname
 

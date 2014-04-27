@@ -6,7 +6,7 @@
 #include "nsXULTemplateResultSetRDF.h"
 #include "nsXULTemplateQueryProcessorRDF.h"
 
-NS_IMPL_ISUPPORTS1(nsXULTemplateResultSetRDF, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsXULTemplateResultSetRDF, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsXULTemplateResultSetRDF::HasMoreElements(bool *aResult)

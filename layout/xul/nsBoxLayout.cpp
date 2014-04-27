@@ -91,4 +91,4 @@ nsBoxLayout::AddSmallestSize(nsSize& aSize, const nsSize& aSize2)
      aSize.height = aSize2.height;
 }
 
-NS_IMPL_ISUPPORTS1(nsBoxLayout, nsBoxLayout)
+NS_IMPL_ISUPPORTS(nsBoxLayout, nsBoxLayout)

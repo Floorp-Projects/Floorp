@@ -260,7 +260,7 @@ private:
   nsRefPtr<nsPicoService> mService;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED1(PicoCallbackRunnable, nsRunnable, nsISpeechTaskCallback)
+NS_IMPL_ISUPPORTS_INHERITED(PicoCallbackRunnable, nsRunnable, nsISpeechTaskCallback)
 
 // nsRunnable
 

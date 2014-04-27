@@ -10,7 +10,7 @@
 
 using namespace mozilla::widget::android;
 
-NS_IMPL_ISUPPORTS1(nsShellService, nsIShellService)
+NS_IMPL_ISUPPORTS(nsShellService, nsIShellService)
 
 NS_IMETHODIMP
 nsShellService::SwitchTask()

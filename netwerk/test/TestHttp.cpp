@@ -34,9 +34,9 @@ public:
     virtual ~MyListener() {}
 };
 
-NS_IMPL_ISUPPORTS2(MyListener,
-                   nsIRequestObserver,
-                   nsIStreamListener)
+NS_IMPL_ISUPPORTS(MyListener,
+                  nsIRequestObserver,
+                  nsIStreamListener)
 
 NS_IMETHODIMP
 MyListener::OnStartRequest(nsIRequest *req, nsISupports *ctxt)
@@ -96,9 +96,9 @@ public:
     virtual ~MyNotifications() {}
 };
 
-NS_IMPL_ISUPPORTS2(MyNotifications,
-                   nsIInterfaceRequestor,
-                   nsIProgressEventSink)
+NS_IMPL_ISUPPORTS(MyNotifications,
+                  nsIInterfaceRequestor,
+                  nsIProgressEventSink)
 
 NS_IMETHODIMP
 MyNotifications::GetInterface(const nsIID &iid, void **result)

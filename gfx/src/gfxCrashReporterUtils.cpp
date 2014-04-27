@@ -45,8 +45,8 @@ public:
   virtual ~ObserverToDestroyFeaturesAlreadyReported() {}
 };
 
-NS_IMPL_ISUPPORTS1(ObserverToDestroyFeaturesAlreadyReported,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(ObserverToDestroyFeaturesAlreadyReported,
+                  nsIObserver)
 
 NS_IMETHODIMP
 ObserverToDestroyFeaturesAlreadyReported::Observe(nsISupports* aSubject,

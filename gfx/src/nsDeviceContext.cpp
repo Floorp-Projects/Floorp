@@ -77,7 +77,7 @@ protected:
     nsTArray<nsFontMetrics*>  mFontMetrics;
 };
 
-NS_IMPL_ISUPPORTS1(nsFontCache, nsIObserver)
+NS_IMPL_ISUPPORTS(nsFontCache, nsIObserver)
 
 // The Init and Destroy methods are necessary because it's not
 // safe to call AddObserver from a constructor or RemoveObserver

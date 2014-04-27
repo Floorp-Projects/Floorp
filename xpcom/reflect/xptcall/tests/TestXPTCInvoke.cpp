@@ -134,7 +134,7 @@ public:
     NS_IMETHOD ShouldFail(int32_t p);
 };
 
-NS_IMPL_ISUPPORTS1(InvokeTestTarget, InvokeTestTargetInterface)
+NS_IMPL_ISUPPORTS(InvokeTestTarget, InvokeTestTargetInterface)
 
 InvokeTestTarget::InvokeTestTarget()
 {

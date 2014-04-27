@@ -23,7 +23,7 @@ nsUserInfo::~nsUserInfo()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsUserInfo, nsIUserInfo)
+NS_IMPL_ISUPPORTS(nsUserInfo, nsIUserInfo)
 
 NS_IMETHODIMP
 nsUserInfo::GetUsername(char **aUsername)

@@ -255,7 +255,7 @@ public:
   NS_IMETHODIMP OnIceCandidate(uint16_t level, const char *mid, const char *cand, ER&);
 };
 
-NS_IMPL_ISUPPORTS1(TestObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(TestObserver, nsISupportsWeakReference)
 
 NS_IMETHODIMP
 TestObserver::OnCreateOfferSuccess(const char* offer, ER&)

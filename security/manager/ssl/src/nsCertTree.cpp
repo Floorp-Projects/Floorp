@@ -103,7 +103,7 @@ static const PLDHashTableOps gMapOps = {
 };
 
 NS_IMPL_ISUPPORTS0(nsCertAddonInfo)
-NS_IMPL_ISUPPORTS1(nsCertTreeDispInfo, nsICertTreeItem)
+NS_IMPL_ISUPPORTS(nsCertTreeDispInfo, nsICertTreeItem)
 
 nsCertTreeDispInfo::nsCertTreeDispInfo()
 :mAddonInfo(nullptr)
@@ -158,7 +158,7 @@ nsCertTreeDispInfo::GetHostPort(nsAString &aHostPort)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2(nsCertTree, nsICertTree, nsITreeView)
+NS_IMPL_ISUPPORTS(nsCertTree, nsICertTree, nsITreeView)
 
 nsCertTree::nsCertTree() : mTreeArray(nullptr)
 {

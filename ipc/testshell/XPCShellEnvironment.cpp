@@ -409,7 +409,7 @@ XPCShellDirProvider::Release()
     return 1;
 }
 
-NS_IMPL_QUERY_INTERFACE1(XPCShellDirProvider, nsIDirectoryServiceProvider)
+NS_IMPL_QUERY_INTERFACE(XPCShellDirProvider, nsIDirectoryServiceProvider)
 
 bool
 XPCShellDirProvider::SetGREDir(const char *dir)

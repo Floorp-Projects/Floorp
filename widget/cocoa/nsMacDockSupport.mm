@@ -9,7 +9,7 @@
 #include "nsMacDockSupport.h"
 #include "nsObjCExceptions.h"
 
-NS_IMPL_ISUPPORTS2(nsMacDockSupport, nsIMacDockSupport, nsITaskbarProgress)
+NS_IMPL_ISUPPORTS(nsMacDockSupport, nsIMacDockSupport, nsITaskbarProgress)
 
 nsMacDockSupport::nsMacDockSupport()
 : mAppIcon(nil)

@@ -5,9 +5,9 @@
 #include "nsPrintSettingsWin.h"
 #include "nsCRT.h"
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsPrintSettingsWin, 
-                             nsPrintSettings, 
-                             nsIPrintSettingsWin)
+NS_IMPL_ISUPPORTS_INHERITED(nsPrintSettingsWin, 
+                            nsPrintSettings, 
+                            nsIPrintSettingsWin)
 
 /** ---------------------------------------------------
  *  See documentation in nsPrintSettingsWin.h

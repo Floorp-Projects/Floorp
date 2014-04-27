@@ -53,7 +53,7 @@ private:
  ***************** nsPrintingPromptService **********************
  ****************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsPrintingPromptService, nsIPrintingPromptService, nsIWebProgressListener)
+NS_IMPL_ISUPPORTS(nsPrintingPromptService, nsIPrintingPromptService, nsIWebProgressListener)
 
 nsPrintingPromptService::nsPrintingPromptService() 
 {

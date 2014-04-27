@@ -128,7 +128,7 @@ nsPluginTag::~nsPluginTag()
   NS_ASSERTION(!mNext, "Risk of exhausting the stack space, bug 486349");
 }
 
-NS_IMPL_ISUPPORTS1(nsPluginTag, nsIPluginTag)
+NS_IMPL_ISUPPORTS(nsPluginTag, nsIPluginTag)
 
 void nsPluginTag::InitMime(const char* const* aMimeTypes,
                            const char* const* aMimeDescriptions,

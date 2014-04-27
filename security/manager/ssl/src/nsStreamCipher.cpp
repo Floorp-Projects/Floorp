@@ -7,7 +7,7 @@
 #include "nsStreamUtils.h"
 #include "base64.h"
 
-NS_IMPL_ISUPPORTS1(nsStreamCipher, nsIStreamCipher)
+NS_IMPL_ISUPPORTS(nsStreamCipher, nsIStreamCipher)
 
 nsStreamCipher::nsStreamCipher()
   : mContext(nullptr)

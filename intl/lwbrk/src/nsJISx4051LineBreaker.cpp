@@ -530,7 +530,7 @@ nsJISx4051LineBreaker::~nsJISx4051LineBreaker()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsJISx4051LineBreaker, nsILineBreaker)
+NS_IMPL_ISUPPORTS(nsJISx4051LineBreaker, nsILineBreaker)
 
 class ContextState {
 public:

@@ -631,7 +631,7 @@ nsGnomeVFSInputStream::SetContentTypeOfChannel(const char *contentType)
   return rv;
 }
 
-NS_IMPL_ISUPPORTS1(nsGnomeVFSInputStream, nsIInputStream)
+NS_IMPL_ISUPPORTS(nsGnomeVFSInputStream, nsIInputStream)
 
 NS_IMETHODIMP
 nsGnomeVFSInputStream::Close()
@@ -755,7 +755,7 @@ class nsGnomeVFSProtocolHandler MOZ_FINAL : public nsIProtocolHandler
     nsCString mSupportedProtocols;
 };
 
-NS_IMPL_ISUPPORTS2(nsGnomeVFSProtocolHandler, nsIProtocolHandler, nsIObserver)
+NS_IMPL_ISUPPORTS(nsGnomeVFSProtocolHandler, nsIProtocolHandler, nsIObserver)
 
 nsresult
 nsGnomeVFSProtocolHandler::Init()

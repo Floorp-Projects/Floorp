@@ -74,7 +74,7 @@ nsClipboard::~nsClipboard()
 
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsClipboard, nsBaseClipboard, nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED(nsClipboard, nsBaseClipboard, nsIObserver)
 
 NS_IMETHODIMP
 nsClipboard::Observe(nsISupports *aSubject, const char *aTopic,

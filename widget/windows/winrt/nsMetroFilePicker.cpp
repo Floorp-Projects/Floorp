@@ -34,7 +34,7 @@ nsMetroFilePicker::~nsMetroFilePicker()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsMetroFilePicker, nsIFilePicker)
+NS_IMPL_ISUPPORTS(nsMetroFilePicker, nsIFilePicker)
 
 NS_IMETHODIMP
 nsMetroFilePicker::Init(nsIDOMWindow *parent, const nsAString& title, int16_t mode)

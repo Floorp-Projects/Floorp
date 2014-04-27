@@ -166,7 +166,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS2(Listener, nsIStreamListener, nsIRequestObserver)
+NS_IMPL_ISUPPORTS(Listener, nsIStreamListener, nsIRequestObserver)
 
 nsresult
 TestAsyncRead(const char* url)

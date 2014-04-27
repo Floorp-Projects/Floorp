@@ -620,7 +620,7 @@ nsHTTPListener::~nsHTTPListener()
   }
 }
 
-NS_IMPL_ISUPPORTS1(nsHTTPListener, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(nsHTTPListener, nsIStreamLoaderObserver)
 
 void
 nsHTTPListener::FreeLoadGroup(bool aCancelLoad)

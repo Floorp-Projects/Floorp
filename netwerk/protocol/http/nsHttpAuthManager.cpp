@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS1(nsHttpAuthManager, nsIHttpAuthManager)
+NS_IMPL_ISUPPORTS(nsHttpAuthManager, nsIHttpAuthManager)
 
 nsHttpAuthManager::nsHttpAuthManager()
 {

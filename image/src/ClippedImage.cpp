@@ -156,7 +156,7 @@ ClippedImage::ShouldClip()
   return mShouldClip.ref();
 }
 
-NS_IMPL_ISUPPORTS1(ClippedImage, imgIContainer)
+NS_IMPL_ISUPPORTS(ClippedImage, imgIContainer)
 
 nsIntRect
 ClippedImage::FrameRect(uint32_t aWhichFrame)

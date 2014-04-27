@@ -162,9 +162,9 @@ protected:
     nsresult                       mInputCondition;
 };
 
-NS_IMPL_ISUPPORTS2(MyCopier,
-                   nsIInputStreamCallback,
-                   nsIOutputStreamCallback)
+NS_IMPL_ISUPPORTS(MyCopier,
+                  nsIInputStreamCallback,
+                  nsIOutputStreamCallback)
 
 ////////////////////////////////////////////////////////////////////////////////
 

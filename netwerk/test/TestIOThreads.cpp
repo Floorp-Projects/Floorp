@@ -33,7 +33,7 @@ public:
 private:
     int mIndex;
 };
-NS_IMPL_ISUPPORTS1(nsIOEvent, nsIRunnable)
+NS_IMPL_ISUPPORTS(nsIOEvent, nsIRunnable)
 
 static nsresult RunTest()
 {

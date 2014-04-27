@@ -330,16 +330,16 @@ nsIncrementalDownload::ReadCurrentSize()
 
 // nsISupports
 
-NS_IMPL_ISUPPORTS9(nsIncrementalDownload,
-                   nsIIncrementalDownload,
-                   nsIRequest,
-                   nsIStreamListener,
-                   nsIRequestObserver,
-                   nsIObserver,
-                   nsIInterfaceRequestor,
-                   nsIChannelEventSink,
-                   nsISupportsWeakReference,
-                   nsIAsyncVerifyRedirectCallback)
+NS_IMPL_ISUPPORTS(nsIncrementalDownload,
+                  nsIIncrementalDownload,
+                  nsIRequest,
+                  nsIStreamListener,
+                  nsIRequestObserver,
+                  nsIObserver,
+                  nsIInterfaceRequestor,
+                  nsIChannelEventSink,
+                  nsISupportsWeakReference,
+                  nsIAsyncVerifyRedirectCallback)
 
 // nsIRequest
 

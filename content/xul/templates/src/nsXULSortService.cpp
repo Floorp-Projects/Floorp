@@ -38,7 +38,7 @@
 #include "nsICollation.h"
 #include "nsUnicharUtils.h"
 
-NS_IMPL_ISUPPORTS1(XULSortServiceImpl, nsIXULSortService)
+NS_IMPL_ISUPPORTS(XULSortServiceImpl, nsIXULSortService)
 
 void
 XULSortServiceImpl::SetSortHints(nsIContent *aNode, nsSortState* aSortState)

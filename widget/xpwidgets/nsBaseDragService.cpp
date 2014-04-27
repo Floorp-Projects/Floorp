@@ -58,7 +58,7 @@ nsBaseDragService::~nsBaseDragService()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsBaseDragService, nsIDragService, nsIDragSession)
+NS_IMPL_ISUPPORTS(nsBaseDragService, nsIDragService, nsIDragSession)
 
 //---------------------------------------------------------
 NS_IMETHODIMP

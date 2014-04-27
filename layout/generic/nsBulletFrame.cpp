@@ -1893,7 +1893,7 @@ nsBulletFrame::GetBaseline() const
 
 
 
-NS_IMPL_ISUPPORTS1(nsBulletListener, imgINotificationObserver)
+NS_IMPL_ISUPPORTS(nsBulletListener, imgINotificationObserver)
 
 nsBulletListener::nsBulletListener() :
   mFrame(nullptr)

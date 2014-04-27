@@ -339,11 +339,11 @@ nsScriptSecurityManager::GetCxSubjectPrincipal(JSContext *cx)
 ////////////////////////////////////
 // Methods implementing ISupports //
 ////////////////////////////////////
-NS_IMPL_ISUPPORTS4(nsScriptSecurityManager,
-                   nsIScriptSecurityManager,
-                   nsIXPCSecurityManager,
-                   nsIChannelEventSink,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(nsScriptSecurityManager,
+                  nsIScriptSecurityManager,
+                  nsIXPCSecurityManager,
+                  nsIChannelEventSink,
+                  nsIObserver)
 
 ///////////////////////////////////////////////////
 // Methods implementing nsIScriptSecurityManager //

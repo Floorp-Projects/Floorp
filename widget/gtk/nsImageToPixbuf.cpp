@@ -16,7 +16,7 @@ using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SurfaceFormat;
 using mozilla::RefPtr;
 
-NS_IMPL_ISUPPORTS1(nsImageToPixbuf, nsIImageToPixbuf)
+NS_IMPL_ISUPPORTS(nsImageToPixbuf, nsIImageToPixbuf)
 
 inline unsigned char
 unpremultiply (unsigned char color,

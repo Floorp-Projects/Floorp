@@ -74,7 +74,7 @@ private:
     bool                    mDone;
 };
 
-NS_IMPL_ISUPPORTS1(nsDNSRecord, nsIDNSRecord)
+NS_IMPL_ISUPPORTS(nsDNSRecord, nsIDNSRecord)
 
 NS_IMETHODIMP
 nsDNSRecord::GetCanonicalName(nsACString &result)
@@ -326,7 +326,7 @@ nsDNSAsyncRequest::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
     return n;
 }
 
-NS_IMPL_ISUPPORTS1(nsDNSAsyncRequest, nsICancelable)
+NS_IMPL_ISUPPORTS(nsDNSAsyncRequest, nsICancelable)
 
 NS_IMETHODIMP
 nsDNSAsyncRequest::Cancel(nsresult reason)
@@ -433,8 +433,8 @@ nsDNSService::~nsDNSService()
 {
 }
 
-NS_IMPL_ISUPPORTS4(nsDNSService, nsIDNSService, nsPIDNSService, nsIObserver,
-                   nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(nsDNSService, nsIDNSService, nsPIDNSService, nsIObserver,
+                  nsIMemoryReporter)
 
 /******************************************************************************
  * nsDNSService impl:

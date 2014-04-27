@@ -35,7 +35,7 @@ CloseFileRunnable::~CloseFileRunnable()
   }
 }
 
-NS_IMPL_ISUPPORTS1(CloseFileRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS(CloseFileRunnable, nsIRunnable)
 
 void
 CloseFileRunnable::Dispatch()

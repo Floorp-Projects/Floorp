@@ -18,8 +18,8 @@ namespace mozilla {
 namespace dom {
 namespace system {
 
-NS_IMPL_QUERY_INTERFACE_INHERITED1(AudioChannelManager, DOMEventTargetHelper,
-                                   nsIDOMEventListener)
+NS_IMPL_QUERY_INTERFACE_INHERITED(AudioChannelManager, DOMEventTargetHelper,
+                                  nsIDOMEventListener)
 NS_IMPL_ADDREF_INHERITED(AudioChannelManager, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(AudioChannelManager, DOMEventTargetHelper)
 

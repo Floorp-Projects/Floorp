@@ -48,14 +48,14 @@ nsUrlClassifierStreamUpdater::nsUrlClassifierStreamUpdater()
 
 }
 
-NS_IMPL_ISUPPORTS7(nsUrlClassifierStreamUpdater,
-                              nsIUrlClassifierStreamUpdater,
-                              nsIUrlClassifierUpdateObserver,
-                              nsIRequestObserver,
-                              nsIStreamListener,
-                              nsIObserver,
-                              nsIInterfaceRequestor,
-                              nsITimerCallback)
+NS_IMPL_ISUPPORTS(nsUrlClassifierStreamUpdater,
+                  nsIUrlClassifierStreamUpdater,
+                  nsIUrlClassifierUpdateObserver,
+                  nsIRequestObserver,
+                  nsIStreamListener,
+                  nsIObserver,
+                  nsIInterfaceRequestor,
+                  nsITimerCallback)
 
 /**
  * Clear out the update.

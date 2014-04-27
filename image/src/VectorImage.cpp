@@ -159,7 +159,7 @@ private:
   VectorImage* const mImage; // Raw pointer to owner.
 };
 
-NS_IMPL_ISUPPORTS1(SVGParseCompleteListener, nsIDocumentObserver)
+NS_IMPL_ISUPPORTS(SVGParseCompleteListener, nsIDocumentObserver)
 
 class SVGLoadEventListener MOZ_FINAL : public nsIDOMEventListener {
 public:
@@ -228,7 +228,7 @@ private:
   VectorImage* const mImage; // Raw pointer to owner.
 };
 
-NS_IMPL_ISUPPORTS1(SVGLoadEventListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(SVGLoadEventListener, nsIDOMEventListener)
 
 // Helper-class: SVGDrawingCallback
 class SVGDrawingCallback : public gfxDrawingCallback {
@@ -302,10 +302,10 @@ SVGDrawingCallback::operator()(gfxContext* aContext,
 }
 
 // Implement VectorImage's nsISupports-inherited methods
-NS_IMPL_ISUPPORTS3(VectorImage,
-                   imgIContainer,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(VectorImage,
+                  imgIContainer,
+                  nsIStreamListener,
+                  nsIRequestObserver)
 
 //------------------------------------------------------------------------------
 // Constructor / Destructor

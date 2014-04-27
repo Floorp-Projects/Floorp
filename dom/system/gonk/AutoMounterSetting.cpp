@@ -57,7 +57,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(SettingsServiceCallback, nsISettingsServiceCallback)
+NS_IMPL_ISUPPORTS(SettingsServiceCallback, nsISettingsServiceCallback)
 
 class CheckVolumeSettingsCallback MOZ_FINAL : public nsISettingsServiceCallback
 {
@@ -85,7 +85,7 @@ private:
   nsCString mVolumeName;
 };
 
-NS_IMPL_ISUPPORTS1(CheckVolumeSettingsCallback, nsISettingsServiceCallback)
+NS_IMPL_ISUPPORTS(CheckVolumeSettingsCallback, nsISettingsServiceCallback)
 
 AutoMounterSetting::AutoMounterSetting()
   : mStatus(AUTOMOUNTER_STATUS_DISABLED)
@@ -136,7 +136,7 @@ AutoMounterSetting::~AutoMounterSetting()
   }
 }
 
-NS_IMPL_ISUPPORTS1(AutoMounterSetting, nsIObserver)
+NS_IMPL_ISUPPORTS(AutoMounterSetting, nsIObserver)
 
 const char *
 AutoMounterSetting::StatusStr(int32_t aStatus)

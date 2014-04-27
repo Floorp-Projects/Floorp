@@ -274,7 +274,7 @@ class HTMLInputElementState MOZ_FINAL : public nsISupports
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HTMLInputElementState, NS_INPUT_ELEMENT_STATE_IID)
 
-NS_IMPL_ISUPPORTS1(HTMLInputElementState, HTMLInputElementState)
+NS_IMPL_ISUPPORTS(HTMLInputElementState, HTMLInputElementState)
 
 HTMLInputElement::nsFilePickerShownCallback::nsFilePickerShownCallback(
   HTMLInputElement* aInput, nsIFilePicker* aFilePicker)
@@ -283,7 +283,7 @@ HTMLInputElement::nsFilePickerShownCallback::nsFilePickerShownCallback(
 {
 }
 
-NS_IMPL_ISUPPORTS1(UploadLastDir::ContentPrefCallback, nsIContentPrefCallback2)
+NS_IMPL_ISUPPORTS(UploadLastDir::ContentPrefCallback, nsIContentPrefCallback2)
 
 NS_IMETHODIMP
 UploadLastDir::ContentPrefCallback::HandleCompletion(uint16_t aReason)
@@ -478,7 +478,7 @@ private:
   nsTArray<nsCOMPtr<nsISimpleEnumerator> > mDirEnumeratorStack;
 };
 
-NS_IMPL_ISUPPORTS1(DirPickerRecursiveFileEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(DirPickerRecursiveFileEnumerator, nsISimpleEnumerator)
 
 /**
  * This may return nullptr if aDomFile's implementation of
@@ -714,8 +714,8 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
                                               false);
 }
 
-NS_IMPL_ISUPPORTS1(HTMLInputElement::nsFilePickerShownCallback,
-                   nsIFilePickerShownCallback)
+NS_IMPL_ISUPPORTS(HTMLInputElement::nsFilePickerShownCallback,
+                  nsIFilePickerShownCallback)
 
 class nsColorPickerShownCallback MOZ_FINAL
   : public nsIColorPickerShownCallback
@@ -814,7 +814,7 @@ nsColorPickerShownCallback::Done(const nsAString& aColor)
   return rv;
 }
 
-NS_IMPL_ISUPPORTS1(nsColorPickerShownCallback, nsIColorPickerShownCallback)
+NS_IMPL_ISUPPORTS(nsColorPickerShownCallback, nsIColorPickerShownCallback)
 
 bool
 HTMLInputElement::IsPopupBlocked() const
@@ -989,7 +989,7 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
 
 #define CPS_PREF_NAME NS_LITERAL_STRING("browser.upload.lastDir")
 
-NS_IMPL_ISUPPORTS2(UploadLastDir, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(UploadLastDir, nsIObserver, nsISupportsWeakReference)
 
 void
 HTMLInputElement::InitUploadLastDir() {
@@ -1223,16 +1223,16 @@ NS_IMPL_RELEASE_INHERITED(HTMLInputElement, Element)
 
 // QueryInterface implementation for HTMLInputElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLInputElement)
-  NS_INTERFACE_TABLE_INHERITED9(HTMLInputElement,
-                                nsIDOMHTMLInputElement,
-                                nsITextControlElement,
-                                nsIPhonetic,
-                                imgINotificationObserver,
-                                nsIImageLoadingContent,
-                                imgIOnloadBlocker,
-                                nsIDOMNSEditableElement,
-                                nsITimerCallback,
-                                nsIConstraintValidation)
+  NS_INTERFACE_TABLE_INHERITED(HTMLInputElement,
+                               nsIDOMHTMLInputElement,
+                               nsITextControlElement,
+                               nsIPhonetic,
+                               imgINotificationObserver,
+                               nsIImageLoadingContent,
+                               imgIOnloadBlocker,
+                               nsIDOMNSEditableElement,
+                               nsITimerCallback,
+                               nsIConstraintValidation)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElementWithState)
 
 // nsIConstraintValidation

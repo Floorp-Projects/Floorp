@@ -41,7 +41,7 @@ namespace net {
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsHttpConnectionMgr, nsIObserver)
+NS_IMPL_ISUPPORTS(nsHttpConnectionMgr, nsIObserver)
 
 static void
 InsertTransactionSorted(nsTArray<nsHttpTransaction*> &pendingQ, nsHttpTransaction *trans)
@@ -2710,11 +2710,11 @@ nsHttpConnectionMgr::nsConnectionHandle::PushBack(const char *buf, uint32_t bufL
 //////////////////////// nsHalfOpenSocket
 
 
-NS_IMPL_ISUPPORTS4(nsHttpConnectionMgr::nsHalfOpenSocket,
-                   nsIOutputStreamCallback,
-                   nsITransportEventSink,
-                   nsIInterfaceRequestor,
-                   nsITimerCallback)
+NS_IMPL_ISUPPORTS(nsHttpConnectionMgr::nsHalfOpenSocket,
+                  nsIOutputStreamCallback,
+                  nsITransportEventSink,
+                  nsIInterfaceRequestor,
+                  nsITimerCallback)
 
 nsHttpConnectionMgr::
 nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,

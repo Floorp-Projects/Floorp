@@ -51,8 +51,8 @@ static void notify_closed_marshal(GClosure* closure,
   NS_RELEASE(alert);
 }
 
-NS_IMPL_ISUPPORTS3(nsAlertsIconListener, imgINotificationObserver,
-                   nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsAlertsIconListener, imgINotificationObserver,
+                  nsIObserver, nsISupportsWeakReference)
 
 nsAlertsIconListener::nsAlertsIconListener()
 : mLoadedFrame(false),

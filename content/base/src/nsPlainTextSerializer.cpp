@@ -112,8 +112,8 @@ nsPlainTextSerializer::~nsPlainTextSerializer()
   NS_WARN_IF_FALSE(mHeadLevel == 0, "Wrong head level!");
 }
 
-NS_IMPL_ISUPPORTS1(nsPlainTextSerializer,
-                   nsIContentSerializer)
+NS_IMPL_ISUPPORTS(nsPlainTextSerializer,
+                  nsIContentSerializer)
 
 
 NS_IMETHODIMP 

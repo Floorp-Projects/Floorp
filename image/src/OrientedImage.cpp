@@ -20,7 +20,7 @@ using mozilla::layers::ImageContainer;
 namespace mozilla {
 namespace image {
 
-NS_IMPL_ISUPPORTS1(OrientedImage, imgIContainer)
+NS_IMPL_ISUPPORTS(OrientedImage, imgIContainer)
 
 nsIntRect
 OrientedImage::FrameRect(uint32_t aWhichFrame)

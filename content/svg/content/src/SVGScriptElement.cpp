@@ -29,11 +29,11 @@ nsSVGElement::StringInfo SVGScriptElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED6(SVGScriptElement, SVGScriptElementBase,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement,
-                             nsIScriptLoaderObserver,
-                             nsIScriptElement, nsIMutationObserver)
+NS_IMPL_ISUPPORTS_INHERITED(SVGScriptElement, SVGScriptElementBase,
+                            nsIDOMNode, nsIDOMElement,
+                            nsIDOMSVGElement,
+                            nsIScriptLoaderObserver,
+                            nsIScriptElement, nsIMutationObserver)
 
 //----------------------------------------------------------------------
 // Implementation

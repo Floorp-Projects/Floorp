@@ -52,7 +52,7 @@ public:
   NS_DECL_NSITHREADPOOLLISTENER
 };
 
-NS_IMPL_ISUPPORTS1(Listener, nsIThreadPoolListener)
+NS_IMPL_ISUPPORTS(Listener, nsIThreadPoolListener)
 
 NS_IMETHODIMP
 Listener::OnThreadCreated()

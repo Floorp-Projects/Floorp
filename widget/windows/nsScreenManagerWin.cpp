@@ -26,7 +26,7 @@ nsScreenManagerWin :: ~nsScreenManagerWin()
 
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS1(nsScreenManagerWin, nsIScreenManager)
+NS_IMPL_ISUPPORTS(nsScreenManagerWin, nsIScreenManager)
 
 
 //

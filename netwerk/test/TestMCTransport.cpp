@@ -54,9 +54,9 @@ private:
     FILE *mFile;
 };
 
-NS_IMPL_ISUPPORTS2(TestListener,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(TestListener,
+                  nsIStreamListener,
+                  nsIRequestObserver)
 
 TestListener::TestListener(char *filename)
     : mFilename(filename)

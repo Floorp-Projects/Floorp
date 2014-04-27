@@ -40,7 +40,7 @@ private:
   uint16_t mFlags;
 };
 
-NS_IMPL_ISUPPORTS1(ChildDNSRecord, nsIDNSRecord)
+NS_IMPL_ISUPPORTS(ChildDNSRecord, nsIDNSRecord)
 
 ChildDNSRecord::ChildDNSRecord(const DNSRecord& reply, uint16_t flags)
   : mCurrent(0)
@@ -229,8 +229,8 @@ DNSRequestChild::Recv__delete__(const DNSRequestResponse& reply)
 // DNSRequestChild::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(DNSRequestChild,
-                   nsICancelable)
+NS_IMPL_ISUPPORTS(DNSRequestChild,
+                  nsICancelable)
 
 //-----------------------------------------------------------------------------
 // DNSRequestChild::nsICancelable

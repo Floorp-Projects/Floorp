@@ -15,8 +15,8 @@
 
 //----------------------------------------------------------------------
 // Interface nsISupports [implementation]
-NS_IMPL_ISUPPORTS1(nsCyrXPCOMDetector, nsICharsetDetector)
-NS_IMPL_ISUPPORTS1(nsCyrXPCOMStringDetector, nsIStringCharsetDetector)
+NS_IMPL_ISUPPORTS(nsCyrXPCOMDetector, nsICharsetDetector)
+NS_IMPL_ISUPPORTS(nsCyrXPCOMStringDetector, nsIStringCharsetDetector)
 
 void nsCyrillicDetector::HandleData(const char* aBuf, uint32_t aLen)
 {

@@ -383,7 +383,7 @@ public:
     return NS_OK;
   }
 };
-NS_IMPL_ISUPPORTS1(LowEventsReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(LowEventsReporter, nsIMemoryReporter)
 
 #endif // defined(XP_WIN)
 
@@ -400,7 +400,7 @@ public:
   NS_DECL_NSIRUNNABLE
 };
 
-NS_IMPL_ISUPPORTS1(nsJemallocFreeDirtyPagesRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS(nsJemallocFreeDirtyPagesRunnable, nsIRunnable)
 
 NS_IMETHODIMP
 nsJemallocFreeDirtyPagesRunnable::Run()
@@ -431,7 +431,7 @@ private:
   static bool sFreeDirtyPages;
 };
 
-NS_IMPL_ISUPPORTS1(nsMemoryPressureWatcher, nsIObserver)
+NS_IMPL_ISUPPORTS(nsMemoryPressureWatcher, nsIObserver)
 
 bool nsMemoryPressureWatcher::sFreeDirtyPages = false;
 

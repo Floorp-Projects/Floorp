@@ -25,7 +25,7 @@ using namespace mozilla;
 
 #define NS_MOZ_DATA_FROM_PRIVATEBROWSING "application/x-moz-private-browsing"
 
-NS_IMPL_ISUPPORTS2(nsClipboardPrivacyHandler, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsClipboardPrivacyHandler, nsIObserver, nsISupportsWeakReference)
 
 nsresult
 nsClipboardPrivacyHandler::Init()

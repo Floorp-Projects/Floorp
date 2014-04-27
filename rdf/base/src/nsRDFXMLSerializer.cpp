@@ -113,7 +113,7 @@ nsRDFXMLSerializer::~nsRDFXMLSerializer()
     }
 }
 
-NS_IMPL_ISUPPORTS2(nsRDFXMLSerializer, nsIRDFXMLSerializer, nsIRDFXMLSource)
+NS_IMPL_ISUPPORTS(nsRDFXMLSerializer, nsIRDFXMLSerializer, nsIRDFXMLSource)
 
 NS_IMETHODIMP
 nsRDFXMLSerializer::Init(nsIRDFDataSource* aDataSource)
@@ -1016,7 +1016,7 @@ private:
     nsRDFXMLSerializer* mParent;
 };
 
-NS_IMPL_ISUPPORTS1(QNameCollector, rdfITripleVisitor)
+NS_IMPL_ISUPPORTS(QNameCollector, rdfITripleVisitor)
 nsresult
 QNameCollector::Visit(nsIRDFNode* aSubject, nsIRDFResource* aPredicate,
                       nsIRDFNode* aObject, bool aTruthValue)

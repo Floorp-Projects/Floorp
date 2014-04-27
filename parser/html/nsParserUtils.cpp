@@ -41,9 +41,9 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS2(nsParserUtils,
-                   nsIScriptableUnescapeHTML,
-                   nsIParserUtils)
+NS_IMPL_ISUPPORTS(nsParserUtils,
+                  nsIScriptableUnescapeHTML,
+                  nsIParserUtils)
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 

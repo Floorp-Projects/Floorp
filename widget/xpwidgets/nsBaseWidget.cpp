@@ -82,7 +82,7 @@ bool            gDisableNativeTheme               = false;
 int32_t nsIWidget::sPointerIdCounter = 0;
 
 // nsBaseWidget
-NS_IMPL_ISUPPORTS1(nsBaseWidget, nsIWidget)
+NS_IMPL_ISUPPORTS(nsBaseWidget, nsIWidget)
 
 
 nsAutoRollup::nsAutoRollup()
@@ -137,7 +137,7 @@ nsBaseWidget::nsBaseWidget()
   nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 }
 
-NS_IMPL_ISUPPORTS1(WidgetShutdownObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(WidgetShutdownObserver, nsIObserver)
 
 NS_IMETHODIMP
 WidgetShutdownObserver::Observe(nsISupports *aSubject,
@@ -1718,7 +1718,7 @@ class Debug_PrefObserver MOZ_FINAL : public nsIObserver {
     NS_DECL_NSIOBSERVER
 };
 
-NS_IMPL_ISUPPORTS1(Debug_PrefObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(Debug_PrefObserver, nsIObserver)
 
 NS_IMETHODIMP
 Debug_PrefObserver::Observe(nsISupports* subject, const char* topic,

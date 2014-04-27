@@ -27,8 +27,8 @@ public:
   NS_DECL_NSIPROGRESSEVENTSINK
 };
 
-NS_IMPL_ISUPPORTS2(FetchObserver, nsIRequestObserver,
-                   nsIProgressEventSink)
+NS_IMPL_ISUPPORTS(FetchObserver, nsIRequestObserver,
+                  nsIProgressEventSink)
 
 NS_IMETHODIMP
 FetchObserver::OnStartRequest(nsIRequest *request, nsISupports *context)

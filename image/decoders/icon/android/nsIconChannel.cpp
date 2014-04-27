@@ -13,9 +13,9 @@
 #include "nsIStringStream.h"
 #include "nsNetUtil.h"
 
-NS_IMPL_ISUPPORTS2(nsIconChannel,
-                   nsIRequest,
-                   nsIChannel)
+NS_IMPL_ISUPPORTS(nsIconChannel,
+                  nsIRequest,
+                  nsIChannel)
 
 using namespace mozilla;
 using mozilla::dom::ContentChild;

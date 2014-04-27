@@ -13,7 +13,7 @@
 using namespace mozilla;
 using mozilla::dom::ContentChild;
 
-NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
+NS_IMPL_ISUPPORTS(nsClipboard, nsIClipboard)
 
 /* The Android clipboard only supports text and doesn't support mime types
  * so we assume all clipboard data is text/unicode for now. Documentation

@@ -8,7 +8,7 @@
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS2(LoadContext, nsILoadContext, nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS(LoadContext, nsILoadContext, nsIInterfaceRequestor)
 
 //-----------------------------------------------------------------------------
 // LoadContext::nsILoadContext

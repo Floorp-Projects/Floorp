@@ -1664,7 +1664,7 @@ nsVariant::Traverse(const nsDiscriminatedUnion& data,
 /***************************************************************************/
 // members...
 
-NS_IMPL_ISUPPORTS2(nsVariant, nsIVariant, nsIWritableVariant)
+NS_IMPL_ISUPPORTS(nsVariant, nsIVariant, nsIWritableVariant)
 
 nsVariant::nsVariant()
     : mWritable(true)

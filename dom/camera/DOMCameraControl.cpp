@@ -106,7 +106,7 @@ StartRecordingHelper::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(mozilla::StartRecordingHelper, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(mozilla::StartRecordingHelper, nsIDOMEventListener)
 
 nsDOMCameraControl::DOMCameraConfiguration::DOMCameraConfiguration()
   : CameraConfiguration()

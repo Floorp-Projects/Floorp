@@ -375,7 +375,7 @@ private:
     }
 };
 
-NS_IMPL_ISUPPORTS1(ICUReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(ICUReporter, nsIMemoryReporter)
 
 /* static */ template<> Atomic<size_t> CountingAllocatorBase<ICUReporter>::sAmount(0);
 
@@ -395,7 +395,7 @@ private:
     }
 };
 
-NS_IMPL_ISUPPORTS1(OggReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(OggReporter, nsIMemoryReporter)
 
 /* static */ template<> Atomic<size_t> CountingAllocatorBase<OggReporter>::sAmount(0);
 
@@ -416,7 +416,7 @@ private:
     }
 };
 
-NS_IMPL_ISUPPORTS1(VPXReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(VPXReporter, nsIMemoryReporter)
 
 /* static */ template<> Atomic<size_t> CountingAllocatorBase<VPXReporter>::sAmount(0);
 #endif /* MOZ_VPX */
@@ -438,7 +438,7 @@ private:
     }
 };
 
-NS_IMPL_ISUPPORTS1(NesteggReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(NesteggReporter, nsIMemoryReporter)
 
 /* static */ template<> Atomic<size_t> CountingAllocatorBase<NesteggReporter>::sAmount(0);
 #endif /* MOZ_WEBM */

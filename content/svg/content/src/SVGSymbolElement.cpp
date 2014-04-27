@@ -20,9 +20,9 @@ SVGSymbolElement::WrapNode(JSContext *aCx)
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED4(SVGSymbolElement, SVGSymbolElementBase,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement, mozilla::dom::SVGTests)
+NS_IMPL_ISUPPORTS_INHERITED(SVGSymbolElement, SVGSymbolElementBase,
+                            nsIDOMNode, nsIDOMElement,
+                            nsIDOMSVGElement, mozilla::dom::SVGTests)
 
 //----------------------------------------------------------------------
 // Implementation

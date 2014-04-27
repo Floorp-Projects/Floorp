@@ -405,10 +405,10 @@ nsFileChannel::OpenContentStream(bool async, nsIInputStream **result,
 //-----------------------------------------------------------------------------
 // nsFileChannel::nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsFileChannel,
-                             nsBaseChannel,
-                             nsIUploadChannel,
-                             nsIFileChannel)
+NS_IMPL_ISUPPORTS_INHERITED(nsFileChannel,
+                            nsBaseChannel,
+                            nsIUploadChannel,
+                            nsIFileChannel)
 
 //-----------------------------------------------------------------------------
 // nsFileChannel::nsIFileChannel

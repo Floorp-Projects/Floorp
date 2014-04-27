@@ -208,7 +208,7 @@ FileSystemDataSource::Create(nsISupports* aOuter, const nsIID& aIID, void **aRes
     return self->QueryInterface(aIID, aResult);
 }
 
-NS_IMPL_ISUPPORTS1(FileSystemDataSource, nsIRDFDataSource)
+NS_IMPL_ISUPPORTS(FileSystemDataSource, nsIRDFDataSource)
 
 NS_IMETHODIMP
 FileSystemDataSource::GetURI(char **uri)

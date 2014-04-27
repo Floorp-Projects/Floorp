@@ -2428,7 +2428,7 @@ nsListControlFrame::PostHandleKeyEvent(int32_t aNewIndex,
  * nsListEventListener
  *****************************************************************************/
 
-NS_IMPL_ISUPPORTS1(nsListEventListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(nsListEventListener, nsIDOMEventListener)
 
 NS_IMETHODIMP
 nsListEventListener::HandleEvent(nsIDOMEvent* aEvent)

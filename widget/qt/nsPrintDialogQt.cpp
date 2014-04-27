@@ -11,7 +11,7 @@
 // print dialog at this point.  So, this class's methods are left
 // un-implemented for now.
 
-NS_IMPL_ISUPPORTS1(nsPrintDialogServiceQt, nsIPrintDialogService)
+NS_IMPL_ISUPPORTS(nsPrintDialogServiceQt, nsIPrintDialogService)
 
 nsPrintDialogServiceQt::nsPrintDialogServiceQt()
 {

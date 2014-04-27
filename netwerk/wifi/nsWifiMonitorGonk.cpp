@@ -26,10 +26,10 @@ using namespace mozilla;
 PRLogModuleInfo *gWifiMonitorLog;
 #endif
 
-NS_IMPL_ISUPPORTS3(nsWifiMonitor,
-                   nsIWifiMonitor,
-                   nsIObserver,
-                   nsIWifiScanResultsReady)
+NS_IMPL_ISUPPORTS(nsWifiMonitor,
+                  nsIWifiMonitor,
+                  nsIObserver,
+                  nsIWifiScanResultsReady)
 
 nsWifiMonitor::nsWifiMonitor()
 {

@@ -17,7 +17,7 @@
 #include "nsIExternalProtocolHandler.h"
 #include "nsNetUtil.h"
 
-NS_IMPL_ISUPPORTS1(nsNoDataProtocolContentPolicy, nsIContentPolicy)
+NS_IMPL_ISUPPORTS(nsNoDataProtocolContentPolicy, nsIContentPolicy)
 
 NS_IMETHODIMP
 nsNoDataProtocolContentPolicy::ShouldLoad(uint32_t aContentType,

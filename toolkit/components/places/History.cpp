@@ -1529,7 +1529,7 @@ private:
    */
   nsRefPtr<History> mHistory;
 };
-NS_IMPL_ISUPPORTS1(
+NS_IMPL_ISUPPORTS(
   SetDownloadAnnotations,
   mozIVisitInfoCallback
 )
@@ -2930,7 +2930,7 @@ History::Observe(nsISupports* aSubject, const char* aTopic,
 ////////////////////////////////////////////////////////////////////////////////
 //// nsISupports
 
-NS_IMPL_ISUPPORTS5(
+NS_IMPL_ISUPPORTS(
   History
 , IHistory
 , nsIDownloadHistory

@@ -36,8 +36,8 @@ nsWyciwygProtocolHandler::~nsWyciwygProtocolHandler()
   LOG(("Deleting nsWyciwygProtocolHandler [this=%p]\n", this));
 }
 
-NS_IMPL_ISUPPORTS1(nsWyciwygProtocolHandler,
-                   nsIProtocolHandler)
+NS_IMPL_ISUPPORTS(nsWyciwygProtocolHandler,
+                  nsIProtocolHandler)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler methods:

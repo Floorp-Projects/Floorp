@@ -30,12 +30,12 @@
  * you should already have the following nsISupports implementation in its cpp
  * file:
  *
- *   NS_IMPL_ISUPPORTS2(nsFooBar, nsIFoo, nsIBar).
+ *   NS_IMPL_ISUPPORTS(nsFooBar, nsIFoo, nsIBar).
  *
  * Change this to
  *
  *   NS_IMPL_CLASSINFO(nsFooBar, nullptr, 0, NS_FOOBAR_CID)
- *   NS_IMPL_ISUPPORTS2_CI(nsFooBar, nsIFoo, nsIBar)
+ *   NS_IMPL_ISUPPORTS_CI(nsFooBar, nsIFoo, nsIBar)
  *
  * If nsFooBar is threadsafe, change the 0 above to nsIClassInfo::THREADSAFE.
  * If it's a singleton, use nsIClassInfo::SINGLETON.  The full list of flags is
@@ -45,9 +45,9 @@
  * from an XPCOM object to a scriptable helper.  Unless you're doing
  * specialized JS work, you can probably leave this as nullptr.
  *
- * This file also defines the NS_IMPL_QUERY_INTERFACE2_CI macro, which you can
- * use to replace NS_IMPL_QUERY_INTERFACE2, if you use that instead of
- * NS_IMPL_ISUPPORTS2.
+ * This file also defines the NS_IMPL_QUERY_INTERFACE_CI macro, which you can
+ * use to replace NS_IMPL_QUERY_INTERFACE, if you use that instead of
+ * NS_IMPL_ISUPPORTS.
  *
  * That's it!  The rest is gory details.
  *
@@ -56,7 +56,7 @@
  * "implement" it.  However, after adding these macros to nsFooBar, you you can
  * QueryInterface an instance of nsFooBar to nsIClassInfo.  How can this be?
  *
- * The answer lies in the NS_IMPL_ISUPPORTS2_CI macro.  It modifies nsFooBar's
+ * The answer lies in the NS_IMPL_ISUPPORTS_CI macro.  It modifies nsFooBar's
  * QueryInterface implementation such that, if we ask to QI to nsIClassInfo, it
  * returns a singleton object associated with the class.  (That singleton is
  * defined by NS_IMPL_CLASSINFO.)  So all nsFooBar instances will return the

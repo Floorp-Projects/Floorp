@@ -102,7 +102,7 @@ public:
   NS_DECL_NSIOBSERVER
 };
 
-NS_IMPL_ISUPPORTS1(ClearHashtableOnShutdown, nsIObserver)
+NS_IMPL_ISUPPORTS(ClearHashtableOnShutdown, nsIObserver)
 
 NS_IMETHODIMP
 ClearHashtableOnShutdown::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* data)
@@ -121,7 +121,7 @@ public:
   NS_DECL_NSIOBSERVER
 };
 
-NS_IMPL_ISUPPORTS1(CleanupOnContentShutdown, nsIObserver)
+NS_IMPL_ISUPPORTS(CleanupOnContentShutdown, nsIObserver)
 
 NS_IMETHODIMP
 CleanupOnContentShutdown::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* data)

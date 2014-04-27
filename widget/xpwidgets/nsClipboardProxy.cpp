@@ -12,7 +12,7 @@
 using namespace mozilla;
 using mozilla::dom::ContentChild;
 
-NS_IMPL_ISUPPORTS1(nsClipboardProxy, nsIClipboard)
+NS_IMPL_ISUPPORTS(nsClipboardProxy, nsIClipboard)
 
 nsClipboardProxy::nsClipboardProxy()
 {

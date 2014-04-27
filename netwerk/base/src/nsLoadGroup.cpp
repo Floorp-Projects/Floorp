@@ -1108,7 +1108,7 @@ private:
     nsAutoPtr<mozilla::net::SpdyPushCache> mSpdyCache;
 };
 
-NS_IMPL_ISUPPORTS1(nsLoadGroupConnectionInfo, nsILoadGroupConnectionInfo)
+NS_IMPL_ISUPPORTS(nsLoadGroupConnectionInfo, nsILoadGroupConnectionInfo)
 
 nsLoadGroupConnectionInfo::nsLoadGroupConnectionInfo()
     : mBlockingTransactionCount(0)

@@ -90,7 +90,7 @@ protected:
   int line_;
 };
 
-NS_IMPL_ISUPPORTS1(nrappkitTimerCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(nrappkitTimerCallback, nsITimerCallback)
 
 NS_IMETHODIMP nrappkitTimerCallback::Notify(nsITimer *timer) {
   r_log(LOG_GENERIC, LOG_DEBUG, "Timer callback fired (set in %s:%d)",

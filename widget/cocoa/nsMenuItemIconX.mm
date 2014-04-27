@@ -56,7 +56,7 @@ static const uint32_t kIconBytes = kIconBytesPerRow * kIconHeight;
 typedef NS_STDCALL_FUNCPROTO(nsresult, GetRectSideMethod, nsIDOMRect,
                              GetBottom, (nsIDOMCSSPrimitiveValue**));
 
-NS_IMPL_ISUPPORTS1(nsMenuItemIconX, imgINotificationObserver)
+NS_IMPL_ISUPPORTS(nsMenuItemIconX, imgINotificationObserver)
 
 nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem,
                                  nsIContent*    aContent,

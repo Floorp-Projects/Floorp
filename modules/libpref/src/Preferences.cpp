@@ -154,7 +154,7 @@ public:
   nsTArray<void*> mClosures;
 };
 
-NS_IMPL_ISUPPORTS1(ValueObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(ValueObserver, nsIObserver)
 
 NS_IMETHODIMP
 ValueObserver::Observe(nsISupports     *aSubject,
@@ -240,7 +240,7 @@ protected:
                                         void* aClosure);
 };
 
-NS_IMPL_ISUPPORTS1(PreferenceServiceReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(PreferenceServiceReporter, nsIMemoryReporter)
 
 struct PreferencesReferentCount {
   PreferencesReferentCount() : numStrong(0), numWeakAlive(0), numWeakDead(0) {}

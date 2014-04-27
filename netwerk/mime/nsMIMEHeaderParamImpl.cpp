@@ -42,7 +42,7 @@ static nsresult internalDecodeParameter(const nsACString&, const char*,
      !nsCRT::strncasecmp((cset), "HZ-GB", 5)    || \
      !nsCRT::strncasecmp((cset), "UTF-7", 5))   
 
-NS_IMPL_ISUPPORTS1(nsMIMEHeaderParamImpl, nsIMIMEHeaderParam)
+NS_IMPL_ISUPPORTS(nsMIMEHeaderParamImpl, nsIMIMEHeaderParam)
 
 NS_IMETHODIMP 
 nsMIMEHeaderParamImpl::GetParameter(const nsACString& aHeaderVal, 

@@ -16,7 +16,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) nsCaseConversionImp2::Release(void)
   return (MozExternalRefCountType)1;
 }
 
-NS_IMPL_QUERY_INTERFACE1(nsCaseConversionImp2, nsICaseConversion)
+NS_IMPL_QUERY_INTERFACE(nsCaseConversionImp2, nsICaseConversion)
 
 NS_IMETHODIMP nsCaseConversionImp2::ToUpper(char16_t aChar, char16_t* aReturn)
 {

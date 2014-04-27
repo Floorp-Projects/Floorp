@@ -98,7 +98,7 @@ private:
 };
 
 // ISuuports implementation for nsTokenEventRunnable
-NS_IMPL_ISUPPORTS1(nsTokenEventRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS(nsTokenEventRunnable, nsIRunnable)
 
 nsTokenEventRunnable::nsTokenEventRunnable(const nsAString& aType,
                                            const nsAString& aTokenName)
@@ -875,7 +875,7 @@ private:
   CipherSuiteChangeObserver() {}
 };
 
-NS_IMPL_ISUPPORTS1(CipherSuiteChangeObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(CipherSuiteChangeObserver, nsIObserver)
 
 // static
 StaticRefPtr<CipherSuiteChangeObserver> CipherSuiteChangeObserver::sObserver;
@@ -1365,12 +1365,12 @@ nsNSSComponent::Init()
 }
 
 // nsISupports Implementation for the class
-NS_IMPL_ISUPPORTS5(nsNSSComponent,
-                   nsISignatureVerifier,
-                   nsIEntropyCollector,
-                   nsINSSComponent,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsNSSComponent,
+                  nsISignatureVerifier,
+                  nsIEntropyCollector,
+                  nsINSSComponent,
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 
 // Callback functions for decoder. For now, use empty/default functions.
@@ -1859,7 +1859,7 @@ GetDefaultCertVerifier()
 
 } } // namespace mozilla::psm
 
-NS_IMPL_ISUPPORTS1(PipUIContext, nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS(PipUIContext, nsIInterfaceRequestor)
 
 PipUIContext::PipUIContext()
 {

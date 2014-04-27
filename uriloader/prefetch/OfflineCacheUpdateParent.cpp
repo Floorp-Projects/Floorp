@@ -43,9 +43,9 @@ namespace docshell {
 // OfflineCacheUpdateParent::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS2(OfflineCacheUpdateParent,
-                   nsIOfflineCacheUpdateObserver,
-                   nsILoadContext)
+NS_IMPL_ISUPPORTS(OfflineCacheUpdateParent,
+                  nsIOfflineCacheUpdateObserver,
+                  nsILoadContext)
 
 //-----------------------------------------------------------------------------
 // OfflineCacheUpdateParent <public>

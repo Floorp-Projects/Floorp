@@ -45,11 +45,11 @@ nsSVGElement::StringInfo SVGImageElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED6(SVGImageElement, SVGImageElementBase,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement,
-                             imgINotificationObserver,
-                             nsIImageLoadingContent, imgIOnloadBlocker)
+NS_IMPL_ISUPPORTS_INHERITED(SVGImageElement, SVGImageElementBase,
+                            nsIDOMNode, nsIDOMElement,
+                            nsIDOMSVGElement,
+                            imgINotificationObserver,
+                            nsIImageLoadingContent, imgIOnloadBlocker)
 
 //----------------------------------------------------------------------
 // Implementation

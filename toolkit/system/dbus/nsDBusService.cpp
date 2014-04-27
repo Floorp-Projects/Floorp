@@ -27,7 +27,7 @@ nsDBusService::~nsDBusService() {
   gSingleton = nullptr;
 }
 
-NS_IMPL_ISUPPORTS1(nsDBusService, nsDBusService)
+NS_IMPL_ISUPPORTS(nsDBusService, nsDBusService)
 
 nsDBusService* nsDBusService::gSingleton = nullptr;
 

@@ -42,7 +42,7 @@ FileHelper::~FileHelper()
                !mRequest, "Should have cleared this!");
 }
 
-NS_IMPL_ISUPPORTS1(FileHelper, nsIRequestObserver)
+NS_IMPL_ISUPPORTS(FileHelper, nsIRequestObserver)
 
 nsresult
 FileHelper::Enqueue()

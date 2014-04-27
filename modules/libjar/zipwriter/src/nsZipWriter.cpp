@@ -43,8 +43,8 @@
  * [central directory]
  * [end of central directory record]
  */
-NS_IMPL_ISUPPORTS2(nsZipWriter, nsIZipWriter,
-                                nsIRequestObserver)
+NS_IMPL_ISUPPORTS(nsZipWriter, nsIZipWriter,
+                  nsIRequestObserver)
 
 nsZipWriter::nsZipWriter()
 {

@@ -1258,7 +1258,7 @@ class WatchdogManager : public nsIObserver
     PRTime mTimestamps[TimestampCount];
 };
 
-NS_IMPL_ISUPPORTS1(WatchdogManager, nsIObserver)
+NS_IMPL_ISUPPORTS(WatchdogManager, nsIObserver)
 
 AutoLockWatchdog::AutoLockWatchdog(Watchdog *aWatchdog) : mWatchdog(aWatchdog)
 {
@@ -1740,7 +1740,7 @@ class JSMainRuntimeTemporaryPeakReporter MOZ_FINAL : public nsIMemoryReporter
     }
 };
 
-NS_IMPL_ISUPPORTS1(JSMainRuntimeTemporaryPeakReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(JSMainRuntimeTemporaryPeakReporter, nsIMemoryReporter)
 
 // The REPORT* macros do an unconditional report.  The ZCREPORT* macros are for
 // compartments and zones; they aggregate any entries smaller than
@@ -2516,7 +2516,7 @@ class JSMainRuntimeCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
     }
 };
 
-NS_IMPL_ISUPPORTS1(JSMainRuntimeCompartmentsReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(JSMainRuntimeCompartmentsReporter, nsIMemoryReporter)
 
 MOZ_DEFINE_MALLOC_SIZE_OF(OrphanMallocSizeOf)
 

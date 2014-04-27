@@ -4,7 +4,7 @@
 
 #include "nsAuthInformationHolder.h"
 
-NS_IMPL_ISUPPORTS1(nsAuthInformationHolder, nsIAuthInformation)
+NS_IMPL_ISUPPORTS(nsAuthInformationHolder, nsIAuthInformation)
 
 NS_IMETHODIMP
 nsAuthInformationHolder::GetFlags(uint32_t* aFlags)

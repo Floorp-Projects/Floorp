@@ -192,7 +192,7 @@ private:
   nsRefPtr<FMRadioReplyRunnable> mPendingRequest;
 };
 
-NS_IMPL_ISUPPORTS1(ReadAirplaneModeSettingTask, nsISettingsServiceCallback)
+NS_IMPL_ISUPPORTS(ReadAirplaneModeSettingTask, nsISettingsServiceCallback)
 
 class DisableRunnable MOZ_FINAL : public nsRunnable
 {
@@ -810,7 +810,7 @@ FMRadioService::Singleton()
   return sFMRadioService;
 }
 
-NS_IMPL_ISUPPORTS1(FMRadioService, nsIObserver)
+NS_IMPL_ISUPPORTS(FMRadioService, nsIObserver)
 
 END_FMRADIO_NAMESPACE
 

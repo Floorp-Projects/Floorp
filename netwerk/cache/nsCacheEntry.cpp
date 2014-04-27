@@ -271,7 +271,7 @@ nsCacheEntry::GetDescriptors(
  * nsCacheEntryInfo - for implementing about:cache
  *****************************************************************************/
 
-NS_IMPL_ISUPPORTS1(nsCacheEntryInfo, nsICacheEntryInfo)
+NS_IMPL_ISUPPORTS(nsCacheEntryInfo, nsICacheEntryInfo)
 
 
 NS_IMETHODIMP

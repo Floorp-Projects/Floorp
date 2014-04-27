@@ -164,7 +164,7 @@ private:
   nsCOMPtr<nsIDownload> mInner;
 };
 
-NS_IMPL_ISUPPORTS3(nsDownloadProxy, nsITransfer,
-                   nsIWebProgressListener, nsIWebProgressListener2)
+NS_IMPL_ISUPPORTS(nsDownloadProxy, nsITransfer,
+                  nsIWebProgressListener, nsIWebProgressListener2)
 
 #endif

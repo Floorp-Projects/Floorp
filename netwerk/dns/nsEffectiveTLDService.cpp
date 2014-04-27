@@ -18,8 +18,8 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS2(nsEffectiveTLDService, nsIEffectiveTLDService,
-                   nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(nsEffectiveTLDService, nsIEffectiveTLDService,
+                  nsIMemoryReporter)
 
 // ----------------------------------------------------------------------
 

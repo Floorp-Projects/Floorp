@@ -44,7 +44,7 @@
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS1(LoadMonitor, nsIObserver)
+NS_IMPL_ISUPPORTS(LoadMonitor, nsIObserver)
 
 LoadMonitor::LoadMonitor(int aLoadUpdateInterval)
   : mLoadUpdateInterval(aLoadUpdateInterval),

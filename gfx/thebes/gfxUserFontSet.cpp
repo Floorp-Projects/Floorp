@@ -827,7 +827,7 @@ gfxUserFontSet::FindFamilyFor(gfxFontEntry* aFontEntry) const
 nsTHashtable<gfxUserFontSet::UserFontCache::Entry>*
     gfxUserFontSet::UserFontCache::sUserFonts = nullptr;
 
-NS_IMPL_ISUPPORTS1(gfxUserFontSet::UserFontCache::Flusher, nsIObserver)
+NS_IMPL_ISUPPORTS(gfxUserFontSet::UserFontCache::Flusher, nsIObserver)
 
 PLDHashOperator
 gfxUserFontSet::UserFontCache::Entry::RemoveIfPrivate(Entry* aEntry,

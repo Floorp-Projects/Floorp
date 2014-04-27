@@ -159,7 +159,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(PeerConnectionCtxShutdown, nsIObserver);
+NS_IMPL_ISUPPORTS(PeerConnectionCtxShutdown, nsIObserver);
 }
 
 using namespace mozilla;

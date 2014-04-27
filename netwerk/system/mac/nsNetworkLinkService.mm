@@ -13,9 +13,9 @@
 #import <Cocoa/Cocoa.h>
 #import <netinet/in.h>
 
-NS_IMPL_ISUPPORTS2(nsNetworkLinkService,
-                   nsINetworkLinkService,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(nsNetworkLinkService,
+                  nsINetworkLinkService,
+                  nsIObserver)
 
 nsNetworkLinkService::nsNetworkLinkService()
     : mLinkUp(true)

@@ -27,9 +27,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS2(nsChromeProtocolHandler,
-                   nsIProtocolHandler,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsChromeProtocolHandler,
+                  nsIProtocolHandler,
+                  nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler methods:

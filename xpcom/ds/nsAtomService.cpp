@@ -6,7 +6,7 @@
 #include "nsAtomService.h"
 #include "nsIAtom.h"
 
-NS_IMPL_ISUPPORTS1(nsAtomService, nsIAtomService)
+NS_IMPL_ISUPPORTS(nsAtomService, nsIAtomService)
 
 nsAtomService::nsAtomService()
 {

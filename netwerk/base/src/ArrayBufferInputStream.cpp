@@ -9,7 +9,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
-NS_IMPL_ISUPPORTS2(ArrayBufferInputStream, nsIArrayBufferInputStream, nsIInputStream);
+NS_IMPL_ISUPPORTS(ArrayBufferInputStream, nsIArrayBufferInputStream, nsIInputStream);
 
 ArrayBufferInputStream::ArrayBufferInputStream()
 : mBuffer(nullptr)

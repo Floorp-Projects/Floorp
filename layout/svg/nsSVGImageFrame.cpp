@@ -569,7 +569,7 @@ nsSVGImageFrame::GetHitTestFlags()
 //----------------------------------------------------------------------
 // nsSVGImageListener implementation
 
-NS_IMPL_ISUPPORTS1(nsSVGImageListener, imgINotificationObserver)
+NS_IMPL_ISUPPORTS(nsSVGImageListener, imgINotificationObserver)
 
 nsSVGImageListener::nsSVGImageListener(nsSVGImageFrame *aFrame) :  mFrame(aFrame)
 {

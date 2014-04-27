@@ -6,7 +6,7 @@
 #include "nsExternalURLHandlerService.h"
 #include "nsMIMEInfoAndroid.h"
 
-NS_IMPL_ISUPPORTS1(nsExternalURLHandlerService, nsIExternalURLHandlerService)
+NS_IMPL_ISUPPORTS(nsExternalURLHandlerService, nsIExternalURLHandlerService)
 
 nsExternalURLHandlerService::nsExternalURLHandlerService()
 {

@@ -862,7 +862,7 @@ AndroidLayerRendererFrame::Dispose(JNIEnv *env)
     wrapped_obj = 0;
 }
 
-NS_IMPL_ISUPPORTS1(nsAndroidDisplayport, nsIAndroidDisplayport)
+NS_IMPL_ISUPPORTS(nsAndroidDisplayport, nsIAndroidDisplayport)
 
 bool
 AndroidLayerRendererFrame::BeginDrawing(AutoLocalJNIFrame *jniFrame)

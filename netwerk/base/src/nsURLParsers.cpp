@@ -29,8 +29,8 @@ CountConsecutiveSlashes(const char *str, int32_t len)
 // nsBaseURLParser implementation
 //----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsAuthURLParser, nsIURLParser)
-NS_IMPL_ISUPPORTS1(nsNoAuthURLParser, nsIURLParser)
+NS_IMPL_ISUPPORTS(nsAuthURLParser, nsIURLParser)
+NS_IMPL_ISUPPORTS(nsNoAuthURLParser, nsIURLParser)
 
 #define SET_RESULT(component, pos, len) \
     PR_BEGIN_MACRO \

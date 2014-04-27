@@ -132,7 +132,7 @@ nsListScrollSmoother::Stop()
   }
 }
 
-NS_IMPL_ISUPPORTS1(nsListScrollSmoother, nsITimerCallback)
+NS_IMPL_ISUPPORTS(nsListScrollSmoother, nsITimerCallback)
 
 /////////////// nsListBoxBodyFrame //////////////////
 

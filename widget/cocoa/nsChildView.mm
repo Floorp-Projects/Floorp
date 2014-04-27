@@ -427,7 +427,7 @@ nsChildView::ReleaseTitlebarCGContext()
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsChildView, nsBaseWidget, nsIPluginWidget)
+NS_IMPL_ISUPPORTS_INHERITED(nsChildView, nsBaseWidget, nsIPluginWidget)
 
 nsresult nsChildView::Create(nsIWidget *aParent,
                              nsNativeWidget aNativeParent,

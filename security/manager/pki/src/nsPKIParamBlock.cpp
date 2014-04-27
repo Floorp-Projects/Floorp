@@ -9,7 +9,7 @@
 #include "nsIDialogParamBlock.h"
 #include "nsIMutableArray.h"
 
-NS_IMPL_ISUPPORTS2(nsPKIParamBlock, nsIPKIParamBlock, nsIDialogParamBlock)
+NS_IMPL_ISUPPORTS(nsPKIParamBlock, nsIPKIParamBlock, nsIDialogParamBlock)
 
 nsPKIParamBlock::nsPKIParamBlock()
 {

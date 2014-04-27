@@ -23,7 +23,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS1(nsPrintPreviewListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(nsPrintPreviewListener, nsIDOMEventListener)
 
 
 //

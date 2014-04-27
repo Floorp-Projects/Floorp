@@ -63,7 +63,7 @@ private:
   nsTHashtable<nsStringHashKey> mLockedTopics;
 };
 
-NS_IMPL_ISUPPORTS1(WinWakeLockListener, nsIDOMMozWakeLockListener)
+NS_IMPL_ISUPPORTS(WinWakeLockListener, nsIDOMMozWakeLockListener)
 StaticRefPtr<WinWakeLockListener> sWakeLockListener;
 
 static void

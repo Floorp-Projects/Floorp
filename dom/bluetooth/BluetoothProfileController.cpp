@@ -197,7 +197,7 @@ BluetoothProfileController::SetupProfiles(bool aAssignServiceClass)
   }
 }
 
-NS_IMPL_ISUPPORTS1(CheckProfileStatusCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(CheckProfileStatusCallback, nsITimerCallback)
 
 NS_IMETHODIMP
 CheckProfileStatusCallback::Notify(nsITimer* aTimer)

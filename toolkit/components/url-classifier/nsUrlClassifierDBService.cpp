@@ -189,9 +189,9 @@ private:
   nsTArray<PendingLookup> mPendingLookups;
 };
 
-NS_IMPL_ISUPPORTS2(nsUrlClassifierDBServiceWorker,
-                              nsIUrlClassifierDBServiceWorker,
-                              nsIUrlClassifierDBService)
+NS_IMPL_ISUPPORTS(nsUrlClassifierDBServiceWorker,
+                  nsIUrlClassifierDBServiceWorker,
+                  nsIUrlClassifierDBService)
 
 nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
   : mInStream(false)
@@ -788,9 +788,9 @@ private:
   nsCOMPtr<nsIUrlClassifierCallback> mCallback;
 };
 
-NS_IMPL_ISUPPORTS2(nsUrlClassifierLookupCallback,
-                              nsIUrlClassifierLookupCallback,
-                              nsIUrlClassifierHashCompleterCallback)
+NS_IMPL_ISUPPORTS(nsUrlClassifierLookupCallback,
+                  nsIUrlClassifierLookupCallback,
+                  nsIUrlClassifierHashCompleterCallback)
 
 nsUrlClassifierLookupCallback::~nsUrlClassifierLookupCallback()
 {
@@ -992,8 +992,8 @@ private:
   bool mCheckPhishing;
 };
 
-NS_IMPL_ISUPPORTS1(nsUrlClassifierClassifyCallback,
-                              nsIUrlClassifierCallback)
+NS_IMPL_ISUPPORTS(nsUrlClassifierClassifyCallback,
+                  nsIUrlClassifierCallback)
 
 NS_IMETHODIMP
 nsUrlClassifierClassifyCallback::HandleEvent(const nsACString& tables)
@@ -1029,10 +1029,10 @@ nsUrlClassifierClassifyCallback::HandleEvent(const nsACString& tables)
 // -------------------------------------------------------------------------
 // Proxy class implementation
 
-NS_IMPL_ISUPPORTS3(nsUrlClassifierDBService,
-                              nsIUrlClassifierDBService,
-                              nsIURIClassifier,
-                              nsIObserver)
+NS_IMPL_ISUPPORTS(nsUrlClassifierDBService,
+                  nsIUrlClassifierDBService,
+                  nsIURIClassifier,
+                  nsIObserver)
 
 /* static */ nsUrlClassifierDBService*
 nsUrlClassifierDBService::GetInstance(nsresult *result)

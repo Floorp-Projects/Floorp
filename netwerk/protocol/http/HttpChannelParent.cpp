@@ -103,13 +103,13 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
 // HttpChannelParent::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS6(HttpChannelParent,
-                   nsIInterfaceRequestor,
-                   nsIProgressEventSink,
-                   nsIRequestObserver,
-                   nsIStreamListener,
-                   nsIParentChannel,
-                   nsIParentRedirectingChannel)
+NS_IMPL_ISUPPORTS(HttpChannelParent,
+                  nsIInterfaceRequestor,
+                  nsIProgressEventSink,
+                  nsIRequestObserver,
+                  nsIStreamListener,
+                  nsIParentChannel,
+                  nsIParentRedirectingChannel)
 
 //-----------------------------------------------------------------------------
 // HttpChannelParent::nsIInterfaceRequestor

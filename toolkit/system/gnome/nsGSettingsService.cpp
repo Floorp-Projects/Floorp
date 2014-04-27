@@ -133,7 +133,7 @@ nsGSettingsCollection::SetValue(const nsACString& aKey,
                               aValue);
 }
 
-NS_IMPL_ISUPPORTS1(nsGSettingsCollection, nsIGSettingsCollection)
+NS_IMPL_ISUPPORTS(nsGSettingsCollection, nsIGSettingsCollection)
 
 NS_IMETHODIMP
 nsGSettingsCollection::SetString(const nsACString& aKey,
@@ -319,7 +319,7 @@ nsGSettingsService::Init()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsGSettingsService, nsIGSettingsService)
+NS_IMPL_ISUPPORTS(nsGSettingsService, nsIGSettingsService)
 
 nsGSettingsService::~nsGSettingsService()
 {

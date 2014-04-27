@@ -30,7 +30,7 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace layers {
 
-NS_IMPL_ISUPPORTS1(GfxMemoryImageReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(GfxMemoryImageReporter, nsIMemoryReporter)
 
 mozilla::Atomic<size_t> GfxMemoryImageReporter::sAmount(0);
 

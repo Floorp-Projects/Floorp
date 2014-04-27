@@ -12,7 +12,7 @@
 #include "nsContentUtils.h"
 #include "imgLoader.h"
 
-NS_IMPL_ISUPPORTS1(nsWebNavigationInfo, nsIWebNavigationInfo)
+NS_IMPL_ISUPPORTS(nsWebNavigationInfo, nsIWebNavigationInfo)
 
 #define CONTENT_DLF_CONTRACT "@mozilla.org/content/document-loader-factory;1"
 #define PLUGIN_DLF_CONTRACT \

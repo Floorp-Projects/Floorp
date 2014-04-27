@@ -19,7 +19,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsISecurityUITelemetry.h"
 
-NS_IMPL_ISUPPORTS1(nsSecurityWarningDialogs, nsISecurityWarningDialogs)
+NS_IMPL_ISUPPORTS(nsSecurityWarningDialogs, nsISecurityWarningDialogs)
 
 #define STRING_BUNDLE_URL    "chrome://pipnss/locale/security.properties"
 

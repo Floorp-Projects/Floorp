@@ -23,7 +23,7 @@ nsScriptableRegion::nsScriptableRegion()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsScriptableRegion, nsIScriptableRegion)
+NS_IMPL_ISUPPORTS(nsScriptableRegion, nsIScriptableRegion)
 
 NS_IMETHODIMP nsScriptableRegion::Init()
 {

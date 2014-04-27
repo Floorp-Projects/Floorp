@@ -15,7 +15,7 @@
 
 #define NSDATETIMEFORMAT_BUFFER_LEN  80
 
-NS_IMPL_ISUPPORTS1(nsDateTimeFormatWin, nsIDateTimeFormat)
+NS_IMPL_ISUPPORTS(nsDateTimeFormatWin, nsIDateTimeFormat)
 
 
 // init this interface to a specified locale

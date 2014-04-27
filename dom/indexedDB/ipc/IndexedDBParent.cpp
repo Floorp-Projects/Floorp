@@ -2248,7 +2248,7 @@ IndexedDBDeleteDatabaseRequestParent::SetOpenRequest(
  * WeakEventListener
  ******************************************************************************/
 
- NS_IMPL_ISUPPORTS1(WeakEventListenerBase, nsIDOMEventListener)
+ NS_IMPL_ISUPPORTS(WeakEventListenerBase, nsIDOMEventListener)
 
  NS_IMETHODIMP
  WeakEventListenerBase::HandleEvent(nsIDOMEvent* aEvent)

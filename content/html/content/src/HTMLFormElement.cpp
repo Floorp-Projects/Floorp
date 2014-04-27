@@ -177,11 +177,11 @@ NS_IMPL_RELEASE_INHERITED(HTMLFormElement, Element)
 
 // QueryInterface implementation for HTMLFormElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED4(HTMLFormElement,
-                                nsIDOMHTMLFormElement,
-                                nsIForm,
-                                nsIWebProgressListener,
-                                nsIRadioGroupContainer)
+  NS_INTERFACE_TABLE_INHERITED(HTMLFormElement,
+                               nsIDOMHTMLFormElement,
+                               nsIForm,
+                               nsIWebProgressListener,
+                               nsIRadioGroupContainer)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
 
 

@@ -36,10 +36,10 @@ PRLogModuleInfo* gFTPDirListConvLog = nullptr;
 #endif /* PR_LOGGING */
 
 // nsISupports implementation
-NS_IMPL_ISUPPORTS3(nsFTPDirListingConv,
-                   nsIStreamConverter,
-                   nsIStreamListener, 
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(nsFTPDirListingConv,
+                  nsIStreamConverter,
+                  nsIStreamListener, 
+                  nsIRequestObserver)
 
 
 // nsIStreamConverter implementation

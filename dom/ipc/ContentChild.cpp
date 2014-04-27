@@ -189,7 +189,7 @@ private:
     nsString mDMDDumpIdent;
 };
 
-NS_IMPL_ISUPPORTS1(MemoryReportRequestChild, nsIRunnable)
+NS_IMPL_ISUPPORTS(MemoryReportRequestChild, nsIRunnable)
 
 MemoryReportRequestChild::MemoryReportRequestChild(uint32_t aGeneration, const nsAString& aDMDDumpIdent)
 : mGeneration(aGeneration), mDMDDumpIdent(aDMDDumpIdent)
@@ -251,7 +251,7 @@ private:
     friend class ContentChild;
 };
 
-NS_IMPL_ISUPPORTS1(ConsoleListener, nsIConsoleListener)
+NS_IMPL_ISUPPORTS(ConsoleListener, nsIConsoleListener)
 
 NS_IMETHODIMP
 ConsoleListener::Observe(nsIConsoleMessage* aMessage)
@@ -332,7 +332,7 @@ SystemMessageHandledObserver::Observe(nsISupports* aSubject,
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(SystemMessageHandledObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(SystemMessageHandledObserver, nsIObserver)
 
 class BackgroundChildPrimer MOZ_FINAL :
   public nsIIPCBackgroundChildCreateCallback
@@ -360,7 +360,7 @@ private:
     }
 };
 
-NS_IMPL_ISUPPORTS1(BackgroundChildPrimer, nsIIPCBackgroundChildCreateCallback)
+NS_IMPL_ISUPPORTS(BackgroundChildPrimer, nsIIPCBackgroundChildCreateCallback)
 
 ContentChild* ContentChild::sSingleton;
 
@@ -602,7 +602,7 @@ public:
 private:
     const nsCString mProcess;
 };
-NS_IMPL_ISUPPORTS1(
+NS_IMPL_ISUPPORTS(
   MemoryReportCallback
 , nsIMemoryReporterCallback
 )

@@ -116,7 +116,7 @@ nsGNOMEShellService::Init()
   return appPath->GetNativePath(mAppPath);
 }
 
-NS_IMPL_ISUPPORTS1(nsGNOMEShellService, nsIShellService)
+NS_IMPL_ISUPPORTS(nsGNOMEShellService, nsIShellService)
 
 bool
 nsGNOMEShellService::GetAppPathFromLauncher()

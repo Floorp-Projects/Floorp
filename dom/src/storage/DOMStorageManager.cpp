@@ -94,8 +94,8 @@ PrincipalsEqual(nsIPrincipal* aObjectPrincipal, nsIPrincipal* aSubjectPrincipal)
   return aSubjectPrincipal->Equals(aObjectPrincipal);
 }
 
-NS_IMPL_ISUPPORTS1(DOMStorageManager,
-                   nsIDOMStorageManager)
+NS_IMPL_ISUPPORTS(DOMStorageManager,
+                  nsIDOMStorageManager)
 
 DOMStorageManager::DOMStorageManager(nsPIDOMStorage::StorageType aType)
   : mCaches(10)

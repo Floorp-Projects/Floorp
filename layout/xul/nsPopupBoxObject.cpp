@@ -33,7 +33,7 @@ protected:
   nsPopupSetFrame* GetPopupSetFrame();
 };
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsPopupBoxObject, nsBoxObject, nsIPopupBoxObject)
+NS_IMPL_ISUPPORTS_INHERITED(nsPopupBoxObject, nsBoxObject, nsIPopupBoxObject)
 
 nsPopupSetFrame*
 nsPopupBoxObject::GetPopupSetFrame()

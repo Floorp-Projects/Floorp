@@ -8,7 +8,7 @@
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS1(SpdyZlibReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(SpdyZlibReporter, nsIMemoryReporter)
 
 /* static */ Atomic<size_t> SpdyZlibReporter::sAmount;
 

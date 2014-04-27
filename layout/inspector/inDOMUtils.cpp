@@ -56,7 +56,7 @@ inDOMUtils::~inDOMUtils()
 {
 }
 
-NS_IMPL_ISUPPORTS1(inDOMUtils, inIDOMUtils)
+NS_IMPL_ISUPPORTS(inDOMUtils, inIDOMUtils)
 
 ///////////////////////////////////////////////////////////////////////////////
 // inIDOMUtils

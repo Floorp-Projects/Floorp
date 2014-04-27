@@ -20,10 +20,10 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS3(nsDirIndexParser,
-                   nsIRequestObserver,
-                   nsIStreamListener,
-                   nsIDirIndexParser)
+NS_IMPL_ISUPPORTS(nsDirIndexParser,
+                  nsIRequestObserver,
+                  nsIStreamListener,
+                  nsIDirIndexParser)
 
 nsDirIndexParser::nsDirIndexParser() {
 }

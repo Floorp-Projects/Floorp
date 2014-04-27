@@ -20,7 +20,7 @@
 namespace mozilla {
 namespace layout {
 
-NS_IMPL_ISUPPORTS1(ScrollbarActivity, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(ScrollbarActivity, nsIDOMEventListener)
 
 static bool
 GetForceAlwaysVisiblePref()

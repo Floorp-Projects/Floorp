@@ -172,8 +172,8 @@ HTMLMenuItemElement::~HTMLMenuItemElement()
 }
 
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLMenuItemElement, nsGenericHTMLElement,
-                             nsIDOMHTMLMenuItemElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLMenuItemElement, nsGenericHTMLElement,
+                            nsIDOMHTMLMenuItemElement)
 
 //NS_IMPL_ELEMENT_CLONE(HTMLMenuItemElement)
 nsresult

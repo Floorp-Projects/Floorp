@@ -63,10 +63,10 @@ RtspChannelChild::ReleaseIPDLReference()
 //-----------------------------------------------------------------------------
 // nsISupports
 //-----------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS_INHERITED2(RtspChannelChild,
-                             nsBaseChannel,
-                             nsIChannel,
-                             nsIChildChannel)
+NS_IMPL_ISUPPORTS_INHERITED(RtspChannelChild,
+                            nsBaseChannel,
+                            nsIChannel,
+                            nsIChildChannel)
 
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsIChannel

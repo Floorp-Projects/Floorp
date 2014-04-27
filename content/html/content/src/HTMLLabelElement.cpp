@@ -32,8 +32,8 @@ HTMLLabelElement::WrapNode(JSContext *aCx)
 
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLLabelElement, nsGenericHTMLFormElement,
-                             nsIDOMHTMLLabelElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLLabelElement, nsGenericHTMLFormElement,
+                            nsIDOMHTMLLabelElement)
 
 // nsIDOMHTMLLabelElement
 

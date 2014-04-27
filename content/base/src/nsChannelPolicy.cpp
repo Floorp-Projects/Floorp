@@ -14,7 +14,7 @@ nsChannelPolicy::~nsChannelPolicy()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsChannelPolicy, nsIChannelPolicy)
+NS_IMPL_ISUPPORTS(nsChannelPolicy, nsIChannelPolicy)
 
 NS_IMETHODIMP
 nsChannelPolicy::GetLoadType(uint32_t *aLoadType)

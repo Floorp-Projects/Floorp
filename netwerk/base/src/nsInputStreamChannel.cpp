@@ -38,9 +38,9 @@ nsInputStreamChannel::OpenContentStream(bool async, nsIInputStream **result,
 //-----------------------------------------------------------------------------
 // nsInputStreamChannel::nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsInputStreamChannel,
-                             nsBaseChannel,
-                             nsIInputStreamChannel)
+NS_IMPL_ISUPPORTS_INHERITED(nsInputStreamChannel,
+                            nsBaseChannel,
+                            nsIInputStreamChannel)
 
 //-----------------------------------------------------------------------------
 // nsInputStreamChannel::nsIInputStreamChannel

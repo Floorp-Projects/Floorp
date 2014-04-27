@@ -813,7 +813,7 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsComponentManager: Destroyed."));
 }
 
-NS_IMPL_ISUPPORTS6(
+NS_IMPL_ISUPPORTS(
     nsComponentManagerImpl,
     nsIComponentManager,
     nsIServiceManager,

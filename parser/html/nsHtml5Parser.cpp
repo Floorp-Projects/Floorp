@@ -15,7 +15,7 @@
 #include "nsNetUtil.h"
 
 NS_INTERFACE_TABLE_HEAD(nsHtml5Parser)
-  NS_INTERFACE_TABLE2(nsHtml5Parser, nsIParser, nsISupportsWeakReference)
+  NS_INTERFACE_TABLE(nsHtml5Parser, nsIParser, nsISupportsWeakReference)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsHtml5Parser)
 NS_INTERFACE_MAP_END
 

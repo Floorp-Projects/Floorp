@@ -11,7 +11,7 @@
 #include "nsIWidget.h"
 #include "WidgetUtils.h"
 
-NS_IMPL_ISUPPORTS1(nsColorPicker, nsIColorPicker)
+NS_IMPL_ISUPPORTS(nsColorPicker, nsIColorPicker)
 
 int nsColorPicker::convertGdkColorComponent(guint16 color_component) {
   // GdkColor value is in range [0..65535]. We need something in range [0..255]

@@ -143,7 +143,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(DataChannelShutdown, nsIObserver);
+NS_IMPL_ISUPPORTS(DataChannelShutdown, nsIObserver);
 
 
 BufferedMsg::BufferedMsg(struct sctp_sendv_spa &spa, const char *data,
@@ -292,8 +292,8 @@ void DataChannelConnection::DestroyOnSTS(struct socket *aMasterSocket,
   disconnect_all();
 }
 
-NS_IMPL_ISUPPORTS1(DataChannelConnection,
-                   nsITimerCallback)
+NS_IMPL_ISUPPORTS(DataChannelConnection,
+                  nsITimerCallback)
 
 bool
 DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aUsingDtls)

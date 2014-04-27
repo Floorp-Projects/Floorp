@@ -74,8 +74,8 @@ void* nsMappedAttributes::operator new(size_t aSize, uint32_t aAttrCount) CPP_TH
   return newAttrs;
 }
 
-NS_IMPL_ISUPPORTS1(nsMappedAttributes,
-                   nsIStyleRule)
+NS_IMPL_ISUPPORTS(nsMappedAttributes,
+                  nsIStyleRule)
 
 void
 nsMappedAttributes::SetAndTakeAttr(nsIAtom* aAttrName, nsAttrValue& aValue)

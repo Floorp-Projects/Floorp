@@ -743,7 +743,7 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, bool creating,
 
 /* Contexts */
 /*
-NS_IMPL_ISUPPORTS2(jsdContext, jsdIContext, jsdIEphemeral);
+NS_IMPL_ISUPPORTS(jsdContext, jsdIContext, jsdIEphemeral);
 
 NS_IMETHODIMP
 jsdContext::GetJSDContext(JSDContext **_rval)
@@ -754,7 +754,7 @@ jsdContext::GetJSDContext(JSDContext **_rval)
 */
 
 /* Objects */
-NS_IMPL_ISUPPORTS1(jsdObject, jsdIObject)
+NS_IMPL_ISUPPORTS(jsdObject, jsdIObject)
 
 NS_IMETHODIMP
 jsdObject::GetJSDContext(JSDContext **_rval)
@@ -808,7 +808,7 @@ jsdObject::GetValue(jsdIValue **_rval)
 }
 
 /* Properties */
-NS_IMPL_ISUPPORTS2(jsdProperty, jsdIProperty, jsdIEphemeral)
+NS_IMPL_ISUPPORTS(jsdProperty, jsdIProperty, jsdIEphemeral)
 
 jsdProperty::jsdProperty (JSDContext *aCx, JSDProperty *aProperty) :
     mCx(aCx), mProperty(aProperty)
@@ -899,7 +899,7 @@ jsdProperty::GetValue(jsdIValue **_rval)
 }
 
 /* Scripts */
-NS_IMPL_ISUPPORTS2(jsdScript, jsdIScript, jsdIEphemeral)
+NS_IMPL_ISUPPORTS(jsdScript, jsdIScript, jsdIEphemeral)
 
 static NS_IMETHODIMP
 AssignToJSString(JSDContext *aCx, nsACString *x, JSString *str_)
@@ -1564,7 +1564,7 @@ jsdScript::ClearAllBreakpoints()
 }
 
 /* Contexts */
-NS_IMPL_ISUPPORTS2(jsdContext, jsdIContext, jsdIEphemeral)
+NS_IMPL_ISUPPORTS(jsdContext, jsdIContext, jsdIEphemeral)
 
 jsdIContext *
 jsdContext::FromPtr (JSDContext *aJSDCx, JSContext *aJSCx)
@@ -1785,7 +1785,7 @@ jsdContext::SetScriptsEnabled (bool _rval)
 }
 
 /* Stack Frames */
-NS_IMPL_ISUPPORTS2(jsdStackFrame, jsdIStackFrame, jsdIEphemeral)
+NS_IMPL_ISUPPORTS(jsdStackFrame, jsdIStackFrame, jsdIEphemeral)
 
 jsdStackFrame::jsdStackFrame (JSDContext *aCx, JSDThreadState *aThreadState,
                               JSDStackFrameInfo *aStackFrameInfo) :
@@ -2057,7 +2057,7 @@ jsdStackFrame::Eval (const nsAString &bytes, const nsACString &fileName,
 }        
 
 /* Values */
-NS_IMPL_ISUPPORTS2(jsdValue, jsdIValue, jsdIEphemeral)
+NS_IMPL_ISUPPORTS(jsdValue, jsdIValue, jsdIEphemeral)
 jsdIValue *
 jsdValue::FromPtr (JSDContext *aCx, JSDValue *aValue)
 {
@@ -3338,7 +3338,7 @@ class jsdASObserver MOZ_FINAL : public nsIObserver
     jsdASObserver () {}    
 };
 
-NS_IMPL_ISUPPORTS1(jsdASObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(jsdASObserver, nsIObserver)
 
 NS_IMETHODIMP
 jsdASObserver::Observe (nsISupports *aSubject, const char *aTopic,
@@ -3436,7 +3436,7 @@ CreateJSDGlobal(JSContext *aCx, const JSClass *aClasp)
 
 #if 0
 /* Thread States */
-NS_IMPL_ISUPPORTS1(jsdThreadState, jsdIThreadState); 
+NS_IMPL_ISUPPORTS(jsdThreadState, jsdIThreadState); 
 
 NS_IMETHODIMP
 jsdThreadState::GetJSDContext(JSDContext **_rval)

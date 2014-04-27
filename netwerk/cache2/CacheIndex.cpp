@@ -225,7 +225,7 @@ NS_IMETHODIMP FileOpenHelper::OnFileOpened(CacheFileHandle *aHandle,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(FileOpenHelper, CacheFileIOListener);
+NS_IMPL_ISUPPORTS(FileOpenHelper, CacheFileIOListener);
 
 
 CacheIndex * CacheIndex::gInstance = nullptr;

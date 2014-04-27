@@ -177,7 +177,7 @@ nsScriptLoader::~nsScriptLoader()
   }  
 }
 
-NS_IMPL_ISUPPORTS1(nsScriptLoader, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(nsScriptLoader, nsIStreamLoaderObserver)
 
 // Helper method for checking if the script element is an event-handler
 // This means that it has both a for-attribute and a event-attribute.

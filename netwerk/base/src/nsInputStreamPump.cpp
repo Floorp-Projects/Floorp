@@ -159,11 +159,11 @@ nsInputStreamPump::EnsureWaiting()
 // although this class can only be accessed from one thread at a time, we do
 // allow its ownership to move from thread to thread, assuming the consumer
 // understands the limitations of this.
-NS_IMPL_ISUPPORTS4(nsInputStreamPump,
-                   nsIRequest,
-                   nsIThreadRetargetableRequest,
-                   nsIInputStreamCallback,
-                   nsIInputStreamPump)
+NS_IMPL_ISUPPORTS(nsInputStreamPump,
+                  nsIRequest,
+                  nsIThreadRetargetableRequest,
+                  nsIInputStreamCallback,
+                  nsIInputStreamPump)
 
 //-----------------------------------------------------------------------------
 // nsInputStreamPump::nsIRequest

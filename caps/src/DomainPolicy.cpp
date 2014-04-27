@@ -9,7 +9,7 @@
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS1(DomainPolicy, nsIDomainPolicy)
+NS_IMPL_ISUPPORTS(DomainPolicy, nsIDomainPolicy)
 
 DomainPolicy::DomainPolicy() : mBlacklist(new DomainSet())
                              , mSuperBlacklist(new DomainSet())
@@ -92,7 +92,7 @@ GetCanonicalClone(nsIURI* aURI)
     return clone.forget();
 }
 
-NS_IMPL_ISUPPORTS1(DomainSet, nsIDomainSet)
+NS_IMPL_ISUPPORTS(DomainSet, nsIDomainSet)
 
 NS_IMETHODIMP
 DomainSet::Add(nsIURI* aDomain)

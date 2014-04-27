@@ -245,7 +245,7 @@ HTMLContentElement::GetDistributedNodes()
 NS_IMPL_CYCLE_COLLECTION(DistributedContentList, mParent, mDistributedNodes)
 
 NS_INTERFACE_TABLE_HEAD(DistributedContentList)
-  NS_INTERFACE_TABLE1(DistributedContentList, nsINodeList)
+  NS_INTERFACE_TABLE(DistributedContentList, nsINodeList)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(DistributedContentList)
 NS_INTERFACE_MAP_END
 

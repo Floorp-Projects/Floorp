@@ -10,9 +10,9 @@
 #include "nsIFile.h"
 #include "nsCRTGlue.h"
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsPrintSettingsQt,
-                             nsPrintSettings,
-                             nsPrintSettingsQt)
+NS_IMPL_ISUPPORTS_INHERITED(nsPrintSettingsQt,
+                            nsPrintSettings,
+                            nsPrintSettingsQt)
 
 nsPrintSettingsQt::nsPrintSettingsQt():
     mQPrinter(new QPrinter())

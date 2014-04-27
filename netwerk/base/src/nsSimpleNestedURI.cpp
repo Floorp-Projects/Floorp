@@ -10,7 +10,7 @@
 #include "nsIObjectOutputStream.h"
 #include "nsNetUtil.h"
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsSimpleNestedURI, nsSimpleURI, nsINestedURI)
+NS_IMPL_ISUPPORTS_INHERITED(nsSimpleNestedURI, nsSimpleURI, nsINestedURI)
 
 nsSimpleNestedURI::nsSimpleNestedURI(nsIURI* innerURI)
     : mInnerURI(innerURI)

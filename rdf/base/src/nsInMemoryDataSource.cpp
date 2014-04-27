@@ -469,7 +469,7 @@ InMemoryAssertionEnumeratorImpl::~InMemoryAssertionEnumeratorImpl()
 
 NS_IMPL_ADDREF(InMemoryAssertionEnumeratorImpl)
 NS_IMPL_RELEASE(InMemoryAssertionEnumeratorImpl)
-NS_IMPL_QUERY_INTERFACE1(InMemoryAssertionEnumeratorImpl, nsISimpleEnumerator)
+NS_IMPL_QUERY_INTERFACE(InMemoryAssertionEnumeratorImpl, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 InMemoryAssertionEnumeratorImpl::HasMoreElements(bool* aResult)
@@ -637,7 +637,7 @@ InMemoryArcsEnumeratorImpl::~InMemoryArcsEnumeratorImpl()
 
 NS_IMPL_ADDREF(InMemoryArcsEnumeratorImpl)
 NS_IMPL_RELEASE(InMemoryArcsEnumeratorImpl)
-NS_IMPL_QUERY_INTERFACE1(InMemoryArcsEnumeratorImpl, nsISimpleEnumerator)
+NS_IMPL_QUERY_INTERFACE(InMemoryArcsEnumeratorImpl, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 InMemoryArcsEnumeratorImpl::HasMoreElements(bool* aResult)

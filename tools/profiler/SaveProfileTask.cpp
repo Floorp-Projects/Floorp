@@ -35,7 +35,7 @@ SaveProfileTask::Run() {
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(ProfileSaveEvent, nsIProfileSaveEvent)
+NS_IMPL_ISUPPORTS(ProfileSaveEvent, nsIProfileSaveEvent)
 
 nsresult
 ProfileSaveEvent::AddSubProfile(const char* aProfile) {

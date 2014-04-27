@@ -172,7 +172,7 @@ nsStringBundle::FormatStringFromName(const char16_t *aName,
 }
 
 
-NS_IMPL_ISUPPORTS1(nsStringBundle, nsIStringBundle)
+NS_IMPL_ISUPPORTS(nsStringBundle, nsIStringBundle)
 
 /* void GetStringFromID (in long aID, out wstring aResult); */
 NS_IMETHODIMP
@@ -350,7 +350,7 @@ nsStringBundle::FormatString(const char16_t *aFormatStr,
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMPL_ISUPPORTS1(nsExtensibleStringBundle, nsIStringBundle)
+NS_IMPL_ISUPPORTS(nsExtensibleStringBundle, nsIStringBundle)
 
 nsExtensibleStringBundle::nsExtensibleStringBundle()
 {
@@ -495,10 +495,10 @@ nsStringBundleService::nsStringBundleService() :
   NS_ASSERTION(mErrorService, "Couldn't get error service");
 }
 
-NS_IMPL_ISUPPORTS3(nsStringBundleService,
-                   nsIStringBundleService,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsStringBundleService,
+                  nsIStringBundleService,
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 nsStringBundleService::~nsStringBundleService()
 {

@@ -1487,7 +1487,7 @@ AndroidBridge::~AndroidBridge()
 }
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(nsAndroidBridge, nsIAndroidBridge)
+NS_IMPL_ISUPPORTS(nsAndroidBridge, nsIAndroidBridge)
 
 nsAndroidBridge::nsAndroidBridge()
 {

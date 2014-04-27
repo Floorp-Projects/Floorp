@@ -71,7 +71,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS1(FreetypeReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(FreetypeReporter, nsIMemoryReporter)
 
 template<> Atomic<size_t> CountingAllocatorBase<FreetypeReporter>::sAmount(0);
 

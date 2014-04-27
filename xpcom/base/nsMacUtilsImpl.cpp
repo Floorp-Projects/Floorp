@@ -7,7 +7,7 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-NS_IMPL_ISUPPORTS1(nsMacUtilsImpl, nsIMacUtils)
+NS_IMPL_ISUPPORTS(nsMacUtilsImpl, nsIMacUtils)
 
 nsresult nsMacUtilsImpl::GetArchString(nsAString& archString)
 {

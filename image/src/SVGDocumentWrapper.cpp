@@ -37,11 +37,11 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace image {
 
-NS_IMPL_ISUPPORTS4(SVGDocumentWrapper,
-                   nsIStreamListener,
-                   nsIRequestObserver,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(SVGDocumentWrapper,
+                  nsIStreamListener,
+                  nsIRequestObserver,
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 SVGDocumentWrapper::SVGDocumentWrapper()
   : mIgnoreInvalidation(false),

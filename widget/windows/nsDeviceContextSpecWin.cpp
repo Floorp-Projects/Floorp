@@ -152,7 +152,7 @@ nsDeviceContextSpecWin::nsDeviceContextSpecWin()
 
 //----------------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsDeviceContextSpecWin, nsIDeviceContextSpec)
+NS_IMPL_ISUPPORTS(nsDeviceContextSpecWin, nsIDeviceContextSpec)
 
 nsDeviceContextSpecWin::~nsDeviceContextSpecWin()
 {
@@ -610,7 +610,7 @@ nsPrinterEnumeratorWin::~nsPrinterEnumeratorWin()
   // GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 }
 
-NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorWin, nsIPrinterEnumerator)
+NS_IMPL_ISUPPORTS(nsPrinterEnumeratorWin, nsIPrinterEnumerator)
 
 //----------------------------------------------------------------------------------
 // Return the Default Printer name

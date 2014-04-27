@@ -26,7 +26,7 @@ nsPluginPlayPreviewInfo::~nsPluginPlayPreviewInfo()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsPluginPlayPreviewInfo, nsIPluginPlayPreviewInfo)
+NS_IMPL_ISUPPORTS(nsPluginPlayPreviewInfo, nsIPluginPlayPreviewInfo)
 
 NS_IMETHODIMP
 nsPluginPlayPreviewInfo::GetMimeType(nsACString& aMimeType)

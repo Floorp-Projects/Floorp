@@ -11,9 +11,9 @@
 #include "mozilla/Services.h"
 #include "nsCRT.h"
 
-NS_IMPL_ISUPPORTS2(nsQtNetworkLinkService,
-                   nsINetworkLinkService,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(nsQtNetworkLinkService,
+                  nsINetworkLinkService,
+                  nsIObserver)
 
 nsQtNetworkLinkService::nsQtNetworkLinkService()
 {

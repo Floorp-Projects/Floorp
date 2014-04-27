@@ -103,7 +103,7 @@ public:
   bool mFirstComponentCreated;
 };
 
-NS_IMPL_ISUPPORTS1(Factory, nsIFactory)
+NS_IMPL_ISUPPORTS(Factory, nsIFactory)
 
 class Component1 MOZ_FINAL : public nsISupports
 {

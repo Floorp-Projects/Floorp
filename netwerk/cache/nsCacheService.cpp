@@ -201,7 +201,7 @@ private:
     bool                    mClearCacheOnShutdown;
 };
 
-NS_IMPL_ISUPPORTS1(nsCacheProfilePrefObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(nsCacheProfilePrefObserver, nsIObserver)
 
 class nsSetDiskSmartSizeCallback MOZ_FINAL : public nsITimerCallback
 {
@@ -218,7 +218,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS1(nsSetDiskSmartSizeCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(nsSetDiskSmartSizeCallback, nsITimerCallback)
 
 // Runnable sent to main thread after the cache IO thread calculates available
 // disk space, so that there is no race in setting mDiskCacheCapacity.
@@ -1072,8 +1072,8 @@ private:
  *****************************************************************************/
 nsCacheService *   nsCacheService::gService = nullptr;
 
-NS_IMPL_ISUPPORTS3(nsCacheService, nsICacheService, nsICacheServiceInternal,
-                   nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(nsCacheService, nsICacheService, nsICacheServiceInternal,
+                  nsIMemoryReporter)
 
 nsCacheService::nsCacheService()
     : mObserver(nullptr),

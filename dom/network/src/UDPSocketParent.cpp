@@ -56,7 +56,7 @@ ConvertNetAddrToString(mozilla::net::NetAddr &netAddr, nsACString *address, uint
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(UDPSocketParent, nsIUDPSocketListener)
+NS_IMPL_ISUPPORTS(UDPSocketParent, nsIUDPSocketListener)
 
 UDPSocketParent::~UDPSocketParent()
 {

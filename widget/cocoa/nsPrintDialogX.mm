@@ -20,7 +20,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS1(nsPrintDialogServiceX, nsIPrintDialogService)
+NS_IMPL_ISUPPORTS(nsPrintDialogServiceX, nsIPrintDialogService)
 
 nsPrintDialogServiceX::nsPrintDialogServiceX()
 {

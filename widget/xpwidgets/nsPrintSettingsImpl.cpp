@@ -9,7 +9,7 @@
 
 #define DEFAULT_MARGIN_WIDTH 0.5
 
-NS_IMPL_ISUPPORTS1(nsPrintSettings, nsIPrintSettings)
+NS_IMPL_ISUPPORTS(nsPrintSettings, nsIPrintSettings)
 
 /** ---------------------------------------------------
  *  See documentation in nsPrintSettingsImpl.h

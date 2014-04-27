@@ -285,16 +285,16 @@ nsBaseChannel::ClassifyURI()
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED8(nsBaseChannel,
-                             nsHashPropertyBag,
-                             nsIRequest,
-                             nsIChannel,
-                             nsIInterfaceRequestor,
-                             nsITransportEventSink,
-                             nsIRequestObserver,
-                             nsIStreamListener,
-                             nsIAsyncVerifyRedirectCallback,
-                             nsIPrivateBrowsingChannel)
+NS_IMPL_ISUPPORTS_INHERITED(nsBaseChannel,
+                            nsHashPropertyBag,
+                            nsIRequest,
+                            nsIChannel,
+                            nsIInterfaceRequestor,
+                            nsITransportEventSink,
+                            nsIRequestObserver,
+                            nsIStreamListener,
+                            nsIAsyncVerifyRedirectCallback,
+                            nsIPrivateBrowsingChannel)
 
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsIRequest

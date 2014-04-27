@@ -20,7 +20,7 @@
 #include "nsIContent.h"
 #include "nsCOMArray.h"
 
-NS_IMPL_ISUPPORTS1(nsContentPolicy, nsIContentPolicy)
+NS_IMPL_ISUPPORTS(nsContentPolicy, nsIContentPolicy)
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gConPolLog;

@@ -149,12 +149,12 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
   }
 }
 
-NS_IMPL_ISUPPORTS5(nsSecureBrowserUIImpl,
-                   nsISecureBrowserUI,
-                   nsIWebProgressListener,
-                   nsIFormSubmitObserver,
-                   nsISupportsWeakReference,
-                   nsISSLStatusProvider)
+NS_IMPL_ISUPPORTS(nsSecureBrowserUIImpl,
+                  nsISecureBrowserUI,
+                  nsIWebProgressListener,
+                  nsIFormSubmitObserver,
+                  nsISupportsWeakReference,
+                  nsISSLStatusProvider)
 
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::Init(nsIDOMWindow *aWindow)
@@ -1614,7 +1614,7 @@ private:
   nsCOMPtr<nsIDOMWindow> mWindow;
 };
 
-NS_IMPL_ISUPPORTS1(nsUIContext, nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS(nsUIContext, nsIInterfaceRequestor)
 
 nsUIContext::nsUIContext(nsIDOMWindow *aWindow)
 : mWindow(aWindow)

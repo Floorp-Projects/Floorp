@@ -8,7 +8,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS1(QTMLocationProvider, nsIGeolocationProvider)
+NS_IMPL_ISUPPORTS(QTMLocationProvider, nsIGeolocationProvider)
 
 QTMLocationProvider::QTMLocationProvider()
 {

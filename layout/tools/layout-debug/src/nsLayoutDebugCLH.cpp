@@ -23,7 +23,7 @@ nsLayoutDebugCLH::~nsLayoutDebugCLH()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsLayoutDebugCLH, ICOMMANDLINEHANDLER)
+NS_IMPL_ISUPPORTS(nsLayoutDebugCLH, ICOMMANDLINEHANDLER)
 
 NS_IMETHODIMP
 nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine)

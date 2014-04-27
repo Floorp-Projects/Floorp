@@ -69,7 +69,7 @@ public:
 /* AlertServiceObserver                                                     */
 /* ------------------------------------------------------------------------ */
 
-NS_IMPL_ISUPPORTS1(AlertServiceObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(AlertServiceObserver, nsIObserver)
 
 /* ------------------------------------------------------------------------ */
 /* DesktopNotification                                                      */
@@ -308,9 +308,9 @@ DesktopNotificationCenter::WrapObject(JSContext* aCx)
 /* DesktopNotificationRequest                                               */
 /* ------------------------------------------------------------------------ */
 
-NS_IMPL_ISUPPORTS2(DesktopNotificationRequest,
-                   nsIContentPermissionRequest,
-                   nsIRunnable)
+NS_IMPL_ISUPPORTS(DesktopNotificationRequest,
+                  nsIContentPermissionRequest,
+                  nsIRunnable)
 
 NS_IMETHODIMP
 DesktopNotificationRequest::GetPrincipal(nsIPrincipal * *aRequestingPrincipal)

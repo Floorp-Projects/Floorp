@@ -247,7 +247,7 @@ SmsRequestChild::Recv__delete__(const MessageReply& aReply)
  * MobileMessageCursorChild
  ******************************************************************************/
 
-NS_IMPL_ISUPPORTS1(MobileMessageCursorChild, nsICursorContinueCallback)
+NS_IMPL_ISUPPORTS(MobileMessageCursorChild, nsICursorContinueCallback)
 
 MobileMessageCursorChild::MobileMessageCursorChild(nsIMobileMessageCursorCallback* aCallback)
   : mCursorCallback(aCallback)

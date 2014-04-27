@@ -84,10 +84,10 @@ nsCertOverride::convertStringToBits(const nsACString &str, OverrideBits &ob)
   }
 }
 
-NS_IMPL_ISUPPORTS3(nsCertOverrideService,
-                   nsICertOverrideService,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsCertOverrideService,
+                  nsICertOverrideService,
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 nsCertOverrideService::nsCertOverrideService()
   : monitor("nsCertOverrideService.monitor")

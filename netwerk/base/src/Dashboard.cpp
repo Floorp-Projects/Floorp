@@ -159,7 +159,7 @@ public:
     nsString mStatus;
 };
 
-NS_IMPL_ISUPPORTS2(ConnectionData, nsITransportEventSink, nsITimerCallback)
+NS_IMPL_ISUPPORTS(ConnectionData, nsITransportEventSink, nsITimerCallback)
 
 NS_IMETHODIMP
 ConnectionData::OnTransportStatus(nsITransport *aTransport, nsresult aStatus,
@@ -271,7 +271,7 @@ public:
     nsresult mStatus;
 };
 
-NS_IMPL_ISUPPORTS1(LookupHelper, nsIDNSListener)
+NS_IMPL_ISUPPORTS(LookupHelper, nsIDNSListener)
 
 NS_IMETHODIMP
 LookupHelper::OnLookupComplete(nsICancelable *aRequest,
@@ -327,7 +327,7 @@ LookupHelper::ConstructAnswer(LookupArgument *aArgument)
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2(Dashboard, nsIDashboard, nsIDashboardEventNotifier)
+NS_IMPL_ISUPPORTS(Dashboard, nsIDashboard, nsIDashboardEventNotifier)
 
 Dashboard::Dashboard()
 {

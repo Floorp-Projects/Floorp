@@ -19,10 +19,10 @@
 
 NS_DEFINE_CID(kTestConverterCID, NS_TESTCONVERTER_CID);
 
-NS_IMPL_ISUPPORTS3(TestConverter,
-                   nsIStreamConverter,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(TestConverter,
+                  nsIStreamConverter,
+                  nsIStreamListener,
+                  nsIRequestObserver)
 
 TestConverter::TestConverter() {
 }

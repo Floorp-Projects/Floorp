@@ -2716,7 +2716,7 @@ private:
   int mTimerId;
 };
 
-NS_IMPL_ISUPPORTS2(TimerEvent, nsITimerCallback, nsIRunnable);
+NS_IMPL_ISUPPORTS(TimerEvent, nsITimerCallback, nsIRunnable);
 
 nsresult MediaDecoderStateMachine::ScheduleStateMachine(int64_t aUsecs) {
   AssertCurrentThreadInMonitor();

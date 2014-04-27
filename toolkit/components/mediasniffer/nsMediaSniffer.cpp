@@ -27,7 +27,7 @@ static const uint32_t MAX_BYTES_SNIFFED = 512;
 // This is 320kbps * 144 / 32kHz + 1 padding byte + 4 bytes of capture pattern.
 static const uint32_t MAX_BYTES_SNIFFED_MP3 = 320 * 144 / 32 + 1 + 4;
 
-NS_IMPL_ISUPPORTS1(nsMediaSniffer, nsIContentSniffer)
+NS_IMPL_ISUPPORTS(nsMediaSniffer, nsIContentSniffer)
 
 nsMediaSniffer::nsMediaSnifferEntry nsMediaSniffer::sSnifferEntries[] = {
   // The string OggS, followed by the null byte.

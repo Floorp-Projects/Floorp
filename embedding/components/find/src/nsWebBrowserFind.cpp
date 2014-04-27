@@ -63,7 +63,7 @@ nsWebBrowserFind::~nsWebBrowserFind()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsWebBrowserFind, nsIWebBrowserFind, nsIWebBrowserFindInFrames)
+NS_IMPL_ISUPPORTS(nsWebBrowserFind, nsIWebBrowserFind, nsIWebBrowserFindInFrames)
 
 
 /* boolean findNext (); */

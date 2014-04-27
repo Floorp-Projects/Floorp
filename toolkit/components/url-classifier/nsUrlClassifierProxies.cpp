@@ -18,8 +18,8 @@ DispatchToWorkerThread(nsIRunnable* r)
   return t->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 
-NS_IMPL_ISUPPORTS1(UrlClassifierDBServiceWorkerProxy,
-                              nsIUrlClassifierDBServiceWorker)
+NS_IMPL_ISUPPORTS(UrlClassifierDBServiceWorkerProxy,
+                  nsIUrlClassifierDBServiceWorker)
 
 NS_IMETHODIMP
 UrlClassifierDBServiceWorkerProxy::Lookup(nsIPrincipal* aPrincipal,
@@ -181,8 +181,8 @@ UrlClassifierDBServiceWorkerProxy::CacheMissesRunnable::Run()
 }
 
 
-NS_IMPL_ISUPPORTS1(UrlClassifierLookupCallbackProxy,
-                              nsIUrlClassifierLookupCallback)
+NS_IMPL_ISUPPORTS(UrlClassifierLookupCallbackProxy,
+                  nsIUrlClassifierLookupCallback)
 
 NS_IMETHODIMP
 UrlClassifierLookupCallbackProxy::LookupComplete
@@ -199,8 +199,8 @@ UrlClassifierLookupCallbackProxy::LookupCompleteRunnable::Run()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(UrlClassifierCallbackProxy,
-                              nsIUrlClassifierCallback)
+NS_IMPL_ISUPPORTS(UrlClassifierCallbackProxy,
+                  nsIUrlClassifierCallback)
 
 NS_IMETHODIMP
 UrlClassifierCallbackProxy::HandleEvent(const nsACString& aValue)
@@ -216,8 +216,8 @@ UrlClassifierCallbackProxy::HandleEventRunnable::Run()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(UrlClassifierUpdateObserverProxy,
-                              nsIUrlClassifierUpdateObserver)
+NS_IMPL_ISUPPORTS(UrlClassifierUpdateObserverProxy,
+                  nsIUrlClassifierUpdateObserver)
 
 NS_IMETHODIMP
 UrlClassifierUpdateObserverProxy::UpdateUrlRequested

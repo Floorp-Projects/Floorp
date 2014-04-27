@@ -41,7 +41,7 @@ using namespace mozilla::widget;
 
 #define DEFAULT_THREAD_TIMEOUT_MS 30000
 
-NS_IMPL_ISUPPORTS1(nsDataObj::CStream, nsIStreamListener)
+NS_IMPL_ISUPPORTS(nsDataObj::CStream, nsIStreamListener)
 
 //-----------------------------------------------------------------------------
 // CStream implementation

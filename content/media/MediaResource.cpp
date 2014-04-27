@@ -106,9 +106,9 @@ ChannelMediaResource::~ChannelMediaResource()
 // disconnect the old listener from the ChannelMediaResource and hook up
 // a new listener, so notifications from the old channel are discarded
 // and don't confuse us.
-NS_IMPL_ISUPPORTS4(ChannelMediaResource::Listener,
-                   nsIRequestObserver, nsIStreamListener, nsIChannelEventSink,
-                   nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS(ChannelMediaResource::Listener,
+                  nsIRequestObserver, nsIStreamListener, nsIChannelEventSink,
+                  nsIInterfaceRequestor)
 
 nsresult
 ChannelMediaResource::Listener::OnStartRequest(nsIRequest* aRequest,

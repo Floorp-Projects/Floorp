@@ -205,9 +205,9 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(BluetoothService::StartupTask, nsISettingsServiceCallback);
+NS_IMPL_ISUPPORTS(BluetoothService::StartupTask, nsISettingsServiceCallback);
 
-NS_IMPL_ISUPPORTS1(BluetoothService, nsIObserver)
+NS_IMPL_ISUPPORTS(BluetoothService, nsIObserver)
 
 bool
 BluetoothService::IsToggling() const

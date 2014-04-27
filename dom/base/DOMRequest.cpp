@@ -175,7 +175,7 @@ DOMRequest::RootResultVal()
   mozilla::HoldJSObjects(this);
 }
 
-NS_IMPL_ISUPPORTS1(DOMRequestService, nsIDOMRequestService)
+NS_IMPL_ISUPPORTS(DOMRequestService, nsIDOMRequestService)
 
 NS_IMETHODIMP
 DOMRequestService::CreateRequest(nsIDOMWindow* aWindow,

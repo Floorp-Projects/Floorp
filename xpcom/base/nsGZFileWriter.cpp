@@ -16,7 +16,7 @@
 #include <unistd.h>
 #endif
 
-NS_IMPL_ISUPPORTS1(nsGZFileWriter, nsIGZFileWriter)
+NS_IMPL_ISUPPORTS(nsGZFileWriter, nsIGZFileWriter)
 
 nsGZFileWriter::nsGZFileWriter()
   : mInitialized(false)

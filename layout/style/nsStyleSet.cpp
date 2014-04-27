@@ -38,7 +38,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS1(nsEmptyStyleRule, nsIStyleRule)
+NS_IMPL_ISUPPORTS(nsEmptyStyleRule, nsIStyleRule)
 
 /* virtual */ void
 nsEmptyStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
@@ -54,7 +54,7 @@ nsEmptyStyleRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-NS_IMPL_ISUPPORTS1(nsInitialStyleRule, nsIStyleRule)
+NS_IMPL_ISUPPORTS(nsInitialStyleRule, nsIStyleRule)
 
 /* virtual */ void
 nsInitialStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
@@ -104,7 +104,7 @@ nsInitialStyleRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-NS_IMPL_ISUPPORTS1(nsDisableTextZoomStyleRule, nsIStyleRule)
+NS_IMPL_ISUPPORTS(nsDisableTextZoomStyleRule, nsIStyleRule)
 
 /* virtual */ void
 nsDisableTextZoomStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)

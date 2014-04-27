@@ -26,7 +26,7 @@ StatementParams::StatementParams(mozIStorageStatement *aStatement) :
   (void)mStatement->GetParameterCount(&mParamCount);
 }
 
-NS_IMPL_ISUPPORTS2(
+NS_IMPL_ISUPPORTS(
   StatementParams,
   mozIStorageStatementParams,
   nsIXPCScriptable

@@ -70,7 +70,7 @@ const char      RDFContainerUtilsImpl::kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
-NS_IMPL_ISUPPORTS1(RDFContainerUtilsImpl, nsIRDFContainerUtils)
+NS_IMPL_ISUPPORTS(RDFContainerUtilsImpl, nsIRDFContainerUtils)
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFContainerUtils interface

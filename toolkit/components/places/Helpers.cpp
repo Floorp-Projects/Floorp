@@ -20,7 +20,7 @@ namespace places {
 ////////////////////////////////////////////////////////////////////////////////
 //// AsyncStatementCallback
 
-NS_IMPL_ISUPPORTS1(
+NS_IMPL_ISUPPORTS(
   AsyncStatementCallback
 , mozIStorageStatementCallback
 )
@@ -370,7 +370,7 @@ PlacesEvent::Notify()
   }
 }
 
-NS_IMPL_ISUPPORTS1(
+NS_IMPL_ISUPPORTS(
   PlacesEvent
 , nsIRunnable
 )

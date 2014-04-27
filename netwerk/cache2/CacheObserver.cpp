@@ -71,9 +71,9 @@ bool CacheObserver::sSanitizeOnShutdown = kDefaultSanitizeOnShutdown;
 static bool kDefaultClearCacheOnShutdown = false;
 bool CacheObserver::sClearCacheOnShutdown = kDefaultClearCacheOnShutdown;
 
-NS_IMPL_ISUPPORTS2(CacheObserver,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(CacheObserver,
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 // static
 nsresult

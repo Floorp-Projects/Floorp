@@ -57,7 +57,7 @@
 #include "nsUnicodeNormalizer.h"
 #include "nsString.h"
 
-NS_IMPL_ISUPPORTS1(nsUnicodeNormalizer, nsIUnicodeNormalizer)
+NS_IMPL_ISUPPORTS(nsUnicodeNormalizer, nsIUnicodeNormalizer)
 
 
 nsUnicodeNormalizer::nsUnicodeNormalizer()

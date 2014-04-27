@@ -62,9 +62,9 @@ nsStorageStream::~nsStorageStream()
     delete mSegmentedBuffer;
 }
 
-NS_IMPL_ISUPPORTS2(nsStorageStream,
-                   nsIStorageStream,
-                   nsIOutputStream)
+NS_IMPL_ISUPPORTS(nsStorageStream,
+                  nsIStorageStream,
+                  nsIOutputStream)
 
 NS_IMETHODIMP
 nsStorageStream::Init(uint32_t segmentSize, uint32_t maxSize)
@@ -352,9 +352,9 @@ private:
     uint32_t SegOffset(uint32_t aPosition) {return aPosition & (mSegmentSize - 1);}
 };
 
-NS_IMPL_ISUPPORTS2(nsStorageInputStream,
-                   nsIInputStream,
-                   nsISeekableStream)
+NS_IMPL_ISUPPORTS(nsStorageInputStream,
+                  nsIInputStream,
+                  nsISeekableStream)
 
 NS_IMETHODIMP
 nsStorageStream::NewInputStream(int32_t aStartingOffset, nsIInputStream* *aInputStream)

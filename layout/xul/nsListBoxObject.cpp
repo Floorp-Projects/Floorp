@@ -34,8 +34,8 @@ protected:
   nsListBoxBodyFrame *mListBoxBody;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsListBoxObject, nsBoxObject, nsIListBoxObject,
-                             nsPIListBoxObject)
+NS_IMPL_ISUPPORTS_INHERITED(nsListBoxObject, nsBoxObject, nsIListBoxObject,
+                            nsPIListBoxObject)
 
 nsListBoxObject::nsListBoxObject()
   : mListBoxBody(nullptr)

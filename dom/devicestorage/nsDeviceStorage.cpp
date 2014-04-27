@@ -438,7 +438,7 @@ DeviceStorageTypeChecker::IsVolumeBased(const nsAString& aType)
 #endif
 }
 
-NS_IMPL_ISUPPORTS1(FileUpdateDispatcher, nsIObserver)
+NS_IMPL_ISUPPORTS(FileUpdateDispatcher, nsIObserver)
 
 mozilla::StaticRefPtr<FileUpdateDispatcher> FileUpdateDispatcher::sSingleton;
 
@@ -614,7 +614,7 @@ private:
   static mozilla::StaticRefPtr<OverrideRootDir> sSingleton;
 };
 
-NS_IMPL_ISUPPORTS1(OverrideRootDir, nsIObserver)
+NS_IMPL_ISUPPORTS(OverrideRootDir, nsIObserver)
 
 mozilla::StaticRefPtr<OverrideRootDir>
   OverrideRootDir::sSingleton;

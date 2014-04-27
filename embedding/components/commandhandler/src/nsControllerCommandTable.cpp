@@ -27,7 +27,7 @@ nsControllerCommandTable::~nsControllerCommandTable()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsControllerCommandTable, nsIControllerCommandTable, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsControllerCommandTable, nsIControllerCommandTable, nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsControllerCommandTable::MakeImmutable(void)

@@ -19,8 +19,8 @@ NS_IMPL_ADDREF_INHERITED(XBLChildrenElement, Element)
 NS_IMPL_RELEASE_INHERITED(XBLChildrenElement, Element)
 
 NS_INTERFACE_TABLE_HEAD(XBLChildrenElement)
-  NS_INTERFACE_TABLE_INHERITED2(XBLChildrenElement, nsIDOMNode,
-                                                    nsIDOMElement)
+  NS_INTERFACE_TABLE_INHERITED(XBLChildrenElement, nsIDOMNode,
+                               nsIDOMElement)
   NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_INTERFACE_MAP_END_INHERITING(Element)
 
@@ -82,8 +82,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsAnonymousContentList)
 
 NS_INTERFACE_TABLE_HEAD(nsAnonymousContentList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_TABLE_INHERITED2(nsAnonymousContentList, nsINodeList,
-                                                        nsIDOMNodeList)
+  NS_INTERFACE_TABLE_INHERITED(nsAnonymousContentList, nsINodeList,
+                               nsIDOMNodeList)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsAnonymousContentList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

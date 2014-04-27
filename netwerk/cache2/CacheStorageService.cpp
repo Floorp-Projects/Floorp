@@ -99,10 +99,10 @@ CacheStorageService::MemoryPool::Limit() const
   return 0;
 }
 
-NS_IMPL_ISUPPORTS3(CacheStorageService,
-                   nsICacheStorageService,
-                   nsIMemoryReporter,
-                   nsITimerCallback)
+NS_IMPL_ISUPPORTS(CacheStorageService,
+                  nsICacheStorageService,
+                  nsIMemoryReporter,
+                  nsITimerCallback)
 
 CacheStorageService* CacheStorageService::sSelf = nullptr;
 
@@ -1079,7 +1079,7 @@ NS_IMETHODIMP CacheEntryDoomByKeyCallback::OnFileDoomed(CacheFileHandle *aHandle
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(CacheEntryDoomByKeyCallback, CacheFileIOListener);
+NS_IMPL_ISUPPORTS(CacheEntryDoomByKeyCallback, CacheFileIOListener);
 
 } // anon
 

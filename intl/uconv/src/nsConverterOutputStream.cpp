@@ -11,9 +11,9 @@
 #include "nsConverterOutputStream.h"
 #include "nsServiceManagerUtils.h"
 
-NS_IMPL_ISUPPORTS2(nsConverterOutputStream,
-                   nsIUnicharOutputStream,
-                   nsIConverterOutputStream)
+NS_IMPL_ISUPPORTS(nsConverterOutputStream,
+                  nsIUnicharOutputStream,
+                  nsIConverterOutputStream)
 
 nsConverterOutputStream::~nsConverterOutputStream()
 {

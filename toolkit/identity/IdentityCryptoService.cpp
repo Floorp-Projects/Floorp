@@ -107,7 +107,7 @@ private:
   void operator=(const KeyPair &) MOZ_DELETE;
 };
 
-NS_IMPL_ISUPPORTS1(KeyPair, nsIIdentityKeyPair)
+NS_IMPL_ISUPPORTS(KeyPair, nsIIdentityKeyPair)
 
 class KeyGenRunnable : public nsRunnable, public nsNSSShutDownObject
 {
@@ -208,7 +208,7 @@ private:
   void operator=(const IdentityCryptoService &) MOZ_DELETE;
 };
 
-NS_IMPL_ISUPPORTS1(IdentityCryptoService, nsIIdentityCryptoService)
+NS_IMPL_ISUPPORTS(IdentityCryptoService, nsIIdentityCryptoService)
 
 NS_IMETHODIMP
 IdentityCryptoService::GenerateKeyPair(

@@ -1758,11 +1758,11 @@ nsHttpConnection::DisableTCPKeepalives()
 // nsHttpConnection::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS4(nsHttpConnection,
-                   nsIInputStreamCallback,
-                   nsIOutputStreamCallback,
-                   nsITransportEventSink,
-                   nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS(nsHttpConnection,
+                  nsIInputStreamCallback,
+                  nsIOutputStreamCallback,
+                  nsITransportEventSink,
+                  nsIInterfaceRequestor)
 
 //-----------------------------------------------------------------------------
 // nsHttpConnection::nsIInputStreamCallback

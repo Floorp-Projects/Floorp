@@ -85,7 +85,7 @@ nsClipboard::~nsClipboard()
     }
 }
 
-NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
+NS_IMPL_ISUPPORTS(nsClipboard, nsIClipboard)
 
 nsresult
 nsClipboard::Init(void)

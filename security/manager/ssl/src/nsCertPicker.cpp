@@ -21,7 +21,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS1(nsCertPicker, nsIUserCertPicker)
+NS_IMPL_ISUPPORTS(nsCertPicker, nsIUserCertPicker)
 
 nsCertPicker::nsCertPicker()
 {

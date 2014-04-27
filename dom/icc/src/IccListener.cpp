@@ -12,7 +12,7 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS1(IccListener, nsIIccListener)
+NS_IMPL_ISUPPORTS(IccListener, nsIIccListener)
 
 IccListener::IccListener(IccManager* aIccManager, uint32_t aClientId)
   : mClientId(aClientId)

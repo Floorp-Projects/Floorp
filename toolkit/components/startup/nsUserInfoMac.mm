@@ -11,7 +11,7 @@
 #import <Cocoa/Cocoa.h>
 #import <AddressBook/AddressBook.h>
 
-NS_IMPL_ISUPPORTS1(nsUserInfo, nsIUserInfo)
+NS_IMPL_ISUPPORTS(nsUserInfo, nsIUserInfo)
 
 nsUserInfo::nsUserInfo() {}
 

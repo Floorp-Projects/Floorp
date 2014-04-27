@@ -80,9 +80,9 @@ nsSiteSecurityService::~nsSiteSecurityService()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsSiteSecurityService,
-                   nsIObserver,
-                   nsISiteSecurityService)
+NS_IMPL_ISUPPORTS(nsSiteSecurityService,
+                  nsIObserver,
+                  nsISiteSecurityService)
 
 nsresult
 nsSiteSecurityService::Init()

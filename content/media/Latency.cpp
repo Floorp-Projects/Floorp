@@ -136,7 +136,7 @@ AsyncLatencyLogger* AsyncLatencyLogger::Get(bool aStartTimer)
   return gAsyncLogger;
 }
 
-NS_IMPL_ISUPPORTS1(AsyncLatencyLogger, nsIObserver)
+NS_IMPL_ISUPPORTS(AsyncLatencyLogger, nsIObserver)
 
 AsyncLatencyLogger::AsyncLatencyLogger()
   : mThread(nullptr),

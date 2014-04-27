@@ -26,7 +26,7 @@
 #define RUNDLL32_EXE L"\\rundll32.exe"
 
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsMIMEInfoWin, nsMIMEInfoBase, nsIPropertyBag)
+NS_IMPL_ISUPPORTS_INHERITED(nsMIMEInfoWin, nsMIMEInfoBase, nsIPropertyBag)
 
 nsMIMEInfoWin::~nsMIMEInfoWin()
 {

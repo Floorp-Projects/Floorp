@@ -464,7 +464,7 @@ private:
   nsRefPtr<nsWebShellWindow> mWindow;
 };
 
-NS_IMPL_ISUPPORTS1(WebShellWindowTimerCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(WebShellWindowTimerCallback, nsITimerCallback)
 
 } // namespace mozilla
 

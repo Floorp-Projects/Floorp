@@ -159,7 +159,7 @@ private:
   nsCOMPtr<CacheFileListener>  mListener;
 };
 
-NS_IMPL_ISUPPORTS1(DoomFileHelper, CacheFileIOListener)
+NS_IMPL_ISUPPORTS(DoomFileHelper, CacheFileIOListener)
 
 
 NS_IMPL_ADDREF(CacheFile)

@@ -117,7 +117,7 @@ nsresult StringUnicharInputStream::Close()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(StringUnicharInputStream, nsIUnicharInputStream)
+NS_IMPL_ISUPPORTS(StringUnicharInputStream, nsIUnicharInputStream)
 
 //----------------------------------------------------------------------
 
@@ -165,7 +165,7 @@ UTF8InputStream::Init(nsIInputStream* aStream)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(UTF8InputStream,nsIUnicharInputStream)
+NS_IMPL_ISUPPORTS(UTF8InputStream,nsIUnicharInputStream)
 
 UTF8InputStream::~UTF8InputStream()
 {
@@ -369,9 +369,9 @@ UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, uint32_t aMaxBytes, ui
   aValidUTF16CodeUnits = utf16length;
 }
 
-NS_IMPL_QUERY_INTERFACE2(nsSimpleUnicharStreamFactory,
-                         nsIFactory,
-                         nsISimpleUnicharStreamFactory)
+NS_IMPL_QUERY_INTERFACE(nsSimpleUnicharStreamFactory,
+                        nsIFactory,
+                        nsISimpleUnicharStreamFactory)
 
 NS_IMETHODIMP_(MozExternalRefCountType) nsSimpleUnicharStreamFactory::AddRef() { return 2; }
 NS_IMETHODIMP_(MozExternalRefCountType) nsSimpleUnicharStreamFactory::Release() { return 1; }

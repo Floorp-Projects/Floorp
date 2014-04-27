@@ -30,9 +30,9 @@ namespace dom {
 static const char kStartupTopic[] = "sessionstore-windows-restored";
 static const uint32_t kStartupDelay = 0;
 
-NS_IMPL_ISUPPORTS2(DOMStorageObserver,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(DOMStorageObserver,
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 DOMStorageObserver* DOMStorageObserver::sSelf = nullptr;
 

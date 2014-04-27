@@ -24,8 +24,8 @@ HTMLTableCaptionElement::WrapNode(JSContext *aCx)
   return HTMLTableCaptionElementBinding::Wrap(aCx, this);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLTableCaptionElement, nsGenericHTMLElement,
-                             nsIDOMHTMLTableCaptionElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLTableCaptionElement, nsGenericHTMLElement,
+                            nsIDOMHTMLTableCaptionElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLTableCaptionElement)
 

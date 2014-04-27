@@ -46,8 +46,8 @@ nsUnicharStreamLoader::Create(nsISupports *aOuter,
   return rv;
 }
 
-NS_IMPL_ISUPPORTS3(nsUnicharStreamLoader, nsIUnicharStreamLoader,
-                   nsIRequestObserver, nsIStreamListener)
+NS_IMPL_ISUPPORTS(nsUnicharStreamLoader, nsIUnicharStreamLoader,
+                  nsIRequestObserver, nsIStreamListener)
 
 /* readonly attribute nsIChannel channel; */
 NS_IMETHODIMP

@@ -262,9 +262,9 @@ private:
   uint32_t mLoadID;
 };
 
-NS_IMPL_ISUPPORTS5(HTMLMediaElement::MediaLoadListener, nsIRequestObserver,
-                   nsIStreamListener, nsIChannelEventSink,
-                   nsIInterfaceRequestor, nsIObserver)
+NS_IMPL_ISUPPORTS(HTMLMediaElement::MediaLoadListener, nsIRequestObserver,
+                  nsIStreamListener, nsIChannelEventSink,
+                  nsIInterfaceRequestor, nsIObserver)
 
 NS_IMETHODIMP
 HTMLMediaElement::MediaLoadListener::Observe(nsISupports* aSubject,

@@ -41,7 +41,7 @@ protected:
 };
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(nsGroupsEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsGroupsEnumerator, nsISimpleEnumerator)
 
 nsGroupsEnumerator::nsGroupsEnumerator(nsHashtable& inHashTable)
 : mHashTable(inHashTable)
@@ -159,7 +159,7 @@ nsNamedGroupEnumerator::~nsNamedGroupEnumerator()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsNamedGroupEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsNamedGroupEnumerator, nsISimpleEnumerator)
 
 /* boolean hasMoreElements (); */
 NS_IMETHODIMP
@@ -202,7 +202,7 @@ nsNamedGroupEnumerator::GetNext(nsISupports **_retval)
 
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(nsControllerCommandGroup, nsIControllerCommandGroup)
+NS_IMPL_ISUPPORTS(nsControllerCommandGroup, nsIControllerCommandGroup)
 
 nsControllerCommandGroup::nsControllerCommandGroup()
 {

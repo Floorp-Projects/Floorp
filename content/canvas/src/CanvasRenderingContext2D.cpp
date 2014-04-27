@@ -158,7 +158,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(Canvas2dPixelsReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(Canvas2dPixelsReporter, nsIMemoryReporter)
 
 class CanvasRadialGradient : public CanvasGradient
 {

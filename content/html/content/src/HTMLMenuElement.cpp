@@ -54,8 +54,8 @@ HTMLMenuElement::~HTMLMenuElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(HTMLMenuElement, nsGenericHTMLElement,
-                             nsIDOMHTMLMenuElement, nsIHTMLMenu)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLMenuElement, nsGenericHTMLElement,
+                            nsIDOMHTMLMenuElement, nsIHTMLMenu)
 
 NS_IMPL_ELEMENT_CLONE(HTMLMenuElement)
 

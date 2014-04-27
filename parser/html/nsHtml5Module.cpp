@@ -106,7 +106,7 @@ class nsHtml5ParserThreadTerminator MOZ_FINAL : public nsIObserver
     nsCOMPtr<nsIThread> mThread;
 };
 
-NS_IMPL_ISUPPORTS1(nsHtml5ParserThreadTerminator, nsIObserver)
+NS_IMPL_ISUPPORTS(nsHtml5ParserThreadTerminator, nsIObserver)
 
 // static 
 nsIThread*

@@ -56,7 +56,7 @@ NS_DeserializeObject(const nsCSubstring& str, nsISupports** obj)
   return objstream->ReadObject(true, obj);
 }
 
-NS_IMPL_ISUPPORTS1(nsSerializationHelper, nsISerializationHelper)
+NS_IMPL_ISUPPORTS(nsSerializationHelper, nsISerializationHelper)
 
 NS_IMETHODIMP
 nsSerializationHelper::SerializeToString(nsISerializable *serializable,

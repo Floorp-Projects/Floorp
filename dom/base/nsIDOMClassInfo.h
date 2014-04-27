@@ -137,7 +137,7 @@ NS_DOMCI_EXTENSION_NAME(_module)::~NS_DOMCI_EXTENSION_NAME(_module)()     \
 {                                                                         \
 }                                                                         \
                                                                           \
-NS_IMPL_ISUPPORTS1(NS_DOMCI_EXTENSION_NAME(_module), nsIDOMCIExtension)   \
+NS_IMPL_ISUPPORTS(NS_DOMCI_EXTENSION_NAME(_module), nsIDOMCIExtension)    \
                                                                           \
 NS_IMETHODIMP                                                             \
 NS_DOMCI_EXTENSION_NAME(_module)::RegisterDOMCI(const char* aName,        \

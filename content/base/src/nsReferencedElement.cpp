@@ -217,8 +217,8 @@ nsReferencedElement::Observe(Element* aOldElement,
 NS_IMPL_ISUPPORTS_INHERITED0(nsReferencedElement::ChangeNotification,
                              nsRunnable)
 
-NS_IMPL_ISUPPORTS1(nsReferencedElement::DocumentLoadNotification,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(nsReferencedElement::DocumentLoadNotification,
+                  nsIObserver)
 
 NS_IMETHODIMP
 nsReferencedElement::DocumentLoadNotification::Observe(nsISupports* aSubject,

@@ -27,8 +27,8 @@ static const char kMemoryPressureNotification[] = "memory-pressure";
 
 nsHyphenationManager *nsHyphenationManager::sInstance = nullptr;
 
-NS_IMPL_ISUPPORTS1(nsHyphenationManager::MemoryPressureObserver,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(nsHyphenationManager::MemoryPressureObserver,
+                  nsIObserver)
 
 NS_IMETHODIMP
 nsHyphenationManager::MemoryPressureObserver::Observe(nsISupports *aSubject,

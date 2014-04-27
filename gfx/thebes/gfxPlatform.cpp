@@ -137,7 +137,7 @@ public:
     NS_DECL_NSIOBSERVER
 };
 
-NS_IMPL_ISUPPORTS2(SRGBOverrideObserver, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(SRGBOverrideObserver, nsIObserver, nsISupportsWeakReference)
 
 #define GFX_DOWNLOADABLE_FONTS_ENABLED "gfx.downloadable_fonts.enabled"
 
@@ -182,7 +182,7 @@ public:
     NS_DECL_NSIOBSERVER
 };
 
-NS_IMPL_ISUPPORTS1(FontPrefsObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(FontPrefsObserver, nsIObserver)
 
 NS_IMETHODIMP
 FontPrefsObserver::Observe(nsISupports *aSubject,
@@ -206,7 +206,7 @@ public:
     NS_DECL_NSIOBSERVER
 };
 
-NS_IMPL_ISUPPORTS1(MemoryPressureObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(MemoryPressureObserver, nsIObserver)
 
 NS_IMETHODIMP
 MemoryPressureObserver::Observe(nsISupports *aSubject,

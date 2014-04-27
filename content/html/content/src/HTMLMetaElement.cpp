@@ -24,8 +24,8 @@ HTMLMetaElement::~HTMLMetaElement()
 }
 
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLMetaElement, nsGenericHTMLElement,
-                             nsIDOMHTMLMetaElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLMetaElement, nsGenericHTMLElement,
+                            nsIDOMHTMLMetaElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLMetaElement)
 

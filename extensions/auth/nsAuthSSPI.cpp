@@ -178,7 +178,7 @@ nsAuthSSPI::Reset()
     }
 }
 
-NS_IMPL_ISUPPORTS1(nsAuthSSPI, nsIAuthModule)
+NS_IMPL_ISUPPORTS(nsAuthSSPI, nsIAuthModule)
 
 NS_IMETHODIMP
 nsAuthSSPI::Init(const char *serviceName,

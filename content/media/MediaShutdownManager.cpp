@@ -20,7 +20,7 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(type, msg)
 #endif
 
-NS_IMPL_ISUPPORTS1(MediaShutdownManager, nsIObserver)
+NS_IMPL_ISUPPORTS(MediaShutdownManager, nsIObserver)
 
 MediaShutdownManager::MediaShutdownManager()
   : mIsObservingShutdown(false),

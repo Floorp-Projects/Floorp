@@ -17,8 +17,8 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS1(StreamingProtocolControllerService,
-                   nsIStreamingProtocolControllerService)
+NS_IMPL_ISUPPORTS(StreamingProtocolControllerService,
+                  nsIStreamingProtocolControllerService)
 
 /* static */
 StaticRefPtr<StreamingProtocolControllerService> sSingleton;

@@ -259,7 +259,7 @@ public:
   DOMStorageCacheHolder(DOMStorageCache* aCache) : mCache(aCache) {}
 };
 
-NS_IMPL_ISUPPORTS1(DOMStorageCacheHolder, nsITimerCallback)
+NS_IMPL_ISUPPORTS(DOMStorageCacheHolder, nsITimerCallback)
 
 } // anon
 

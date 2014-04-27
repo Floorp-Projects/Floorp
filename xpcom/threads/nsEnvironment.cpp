@@ -14,7 +14,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS1(nsEnvironment, nsIEnvironment)
+NS_IMPL_ISUPPORTS(nsEnvironment, nsIEnvironment)
 
 nsresult
 nsEnvironment::Create(nsISupports *aOuter, REFNSIID aIID,
