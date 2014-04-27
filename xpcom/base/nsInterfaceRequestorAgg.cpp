@@ -34,7 +34,7 @@ private:
   nsCOMPtr<nsIEventTarget> mConsumerTarget;
 };
 
-NS_IMPL_ISUPPORTS1(nsInterfaceRequestorAgg, nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS(nsInterfaceRequestorAgg, nsIInterfaceRequestor)
 
 NS_IMETHODIMP
 nsInterfaceRequestorAgg::GetInterface(const nsIID &aIID, void **aResult)

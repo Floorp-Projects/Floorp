@@ -65,7 +65,7 @@ NS_IMPL_ADDREF_INHERITED(SVGUseElement,SVGUseElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGUseElement,SVGUseElementBase)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGUseElement)
-  NS_INTERFACE_TABLE_INHERITED1(SVGUseElement, nsIMutationObserver)
+  NS_INTERFACE_TABLE_INHERITED(SVGUseElement, nsIMutationObserver)
 NS_INTERFACE_TABLE_TAIL_INHERITING(SVGUseElementBase)
 
 //----------------------------------------------------------------------

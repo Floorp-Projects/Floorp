@@ -52,7 +52,7 @@ private:
   nsString mStringOut;   
 };
 
-NS_IMPL_ISUPPORTS1(nsScriptableDateFormat, nsIScriptableDateFormat)
+NS_IMPL_ISUPPORTS(nsScriptableDateFormat, nsIScriptableDateFormat)
 
 NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
                             const char16_t *aLocale, 

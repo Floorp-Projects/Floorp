@@ -21,9 +21,9 @@
 #include "nsIconChannel.h"
 #include "nsGtkQtIconsConverter.h"
 
-NS_IMPL_ISUPPORTS2(nsIconChannel,
-                   nsIRequest,
-                   nsIChannel)
+NS_IMPL_ISUPPORTS(nsIconChannel,
+                  nsIRequest,
+                  nsIChannel)
 
 static nsresult
 moz_qicon_to_channel(QImage *image, nsIURI *aURI,

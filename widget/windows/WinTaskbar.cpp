@@ -193,7 +193,7 @@ DefaultController::OnClick(nsITaskbarPreviewButton *button) {
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(DefaultController, nsITaskbarPreviewController)
+NS_IMPL_ISUPPORTS(DefaultController, nsITaskbarPreviewController)
 }
 
 namespace mozilla {
@@ -202,7 +202,7 @@ namespace widget {
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWinTaskbar
 
-NS_IMPL_ISUPPORTS1(WinTaskbar, nsIWinTaskbar)
+NS_IMPL_ISUPPORTS(WinTaskbar, nsIWinTaskbar)
 
 bool
 WinTaskbar::Initialize() {

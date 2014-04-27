@@ -49,9 +49,9 @@ NS_IMPL_ADDREF_INHERITED(SVGMPathElement,SVGMPathElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGMPathElement,SVGMPathElementBase)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGMPathElement)
-  NS_INTERFACE_TABLE_INHERITED4(SVGMPathElement, nsIDOMNode, nsIDOMElement,
-                                nsIDOMSVGElement,
-                                nsIMutationObserver)
+  NS_INTERFACE_TABLE_INHERITED(SVGMPathElement, nsIDOMNode, nsIDOMElement,
+                               nsIDOMSVGElement,
+                               nsIMutationObserver)
 NS_INTERFACE_TABLE_TAIL_INHERITING(SVGMPathElementBase)
 
 // Constructor

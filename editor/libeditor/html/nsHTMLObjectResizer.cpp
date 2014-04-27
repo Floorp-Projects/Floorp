@@ -54,7 +54,7 @@ class nsHTMLEditUtils;
 // ==================================================================
 // DocumentResizeEventListener
 // ==================================================================
-NS_IMPL_ISUPPORTS1(DocumentResizeEventListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(DocumentResizeEventListener, nsIDOMEventListener)
 
 DocumentResizeEventListener::DocumentResizeEventListener(nsIHTMLEditor * aEditor) 
 {
@@ -78,7 +78,7 @@ DocumentResizeEventListener::HandleEvent(nsIDOMEvent* aMouseEvent)
 // ResizerSelectionListener
 // ==================================================================
 
-NS_IMPL_ISUPPORTS1(ResizerSelectionListener, nsISelectionListener)
+NS_IMPL_ISUPPORTS(ResizerSelectionListener, nsISelectionListener)
 
 ResizerSelectionListener::ResizerSelectionListener(nsIHTMLEditor * aEditor)
 {
@@ -110,7 +110,7 @@ ResizerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection 
 // ResizerMouseMotionListener
 // ==================================================================
 
-NS_IMPL_ISUPPORTS1(ResizerMouseMotionListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(ResizerMouseMotionListener, nsIDOMEventListener)
 
 ResizerMouseMotionListener::ResizerMouseMotionListener(nsIHTMLEditor * aEditor)
 {

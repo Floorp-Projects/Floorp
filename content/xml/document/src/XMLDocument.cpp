@@ -228,7 +228,7 @@ XMLDocument::~XMLDocument()
 }
 
 // QueryInterface implementation for XMLDocument
-NS_IMPL_ISUPPORTS_INHERITED1(XMLDocument, nsDocument, nsIDOMXMLDocument)
+NS_IMPL_ISUPPORTS_INHERITED(XMLDocument, nsDocument, nsIDOMXMLDocument)
 
 nsresult
 XMLDocument::Init()

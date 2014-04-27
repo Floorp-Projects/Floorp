@@ -156,7 +156,7 @@ nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer, void* aClosure)
   }
 }
 
-NS_IMPL_ISUPPORTS1(nsFontFaceLoader, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(nsFontFaceLoader, nsIStreamLoaderObserver)
 
 NS_IMETHODIMP
 nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,

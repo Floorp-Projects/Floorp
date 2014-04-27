@@ -85,9 +85,9 @@ nsForceXMLListener::~nsForceXMLListener()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsForceXMLListener,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(nsForceXMLListener,
+                  nsIStreamListener,
+                  nsIRequestObserver)
 
 NS_IMETHODIMP
 nsForceXMLListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
@@ -116,12 +116,12 @@ nsSyncLoader::~nsSyncLoader()
     }
 }
 
-NS_IMPL_ISUPPORTS5(nsSyncLoader,
-                   nsIStreamListener,
-                   nsIRequestObserver,
-                   nsIChannelEventSink,
-                   nsIInterfaceRequestor,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsSyncLoader,
+                  nsIStreamListener,
+                  nsIRequestObserver,
+                  nsIChannelEventSink,
+                  nsIInterfaceRequestor,
+                  nsISupportsWeakReference)
 
 nsresult
 nsSyncLoader::LoadDocument(nsIChannel* aChannel,

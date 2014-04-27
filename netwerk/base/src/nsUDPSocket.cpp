@@ -67,7 +67,7 @@ ResolveHost(const nsACString &host, nsIDNSListener *listener)
 //-----------------------------------------------------------------------------
 // nsUDPOutputStream impl
 //-----------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS1(nsUDPOutputStream, nsIOutputStream)
+NS_IMPL_ISUPPORTS(nsUDPOutputStream, nsIOutputStream)
 
 nsUDPOutputStream::nsUDPOutputStream(nsUDPSocket* aSocket,
                                      PRFileDesc* aFD,
@@ -371,7 +371,7 @@ private:
   FallibleTArray<uint8_t> mData;
 };
 
-NS_IMPL_ISUPPORTS1(UDPMessageProxy, nsIUDPMessage)
+NS_IMPL_ISUPPORTS(UDPMessageProxy, nsIUDPMessage)
 
 /* readonly attribute nsINetAddr from; */
 NS_IMETHODIMP
@@ -522,7 +522,7 @@ nsUDPSocket::IsLocal(bool *aIsLocal)
 // nsSocket::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsUDPSocket, nsIUDPSocket)
+NS_IMPL_ISUPPORTS(nsUDPSocket, nsIUDPSocket)
 
 
 //-----------------------------------------------------------------------------
@@ -708,8 +708,8 @@ private:
   nsCOMPtr<nsIEventTarget> mTargetThread;
 };
 
-NS_IMPL_ISUPPORTS1(SocketListenerProxy,
-                   nsIUDPSocketListener)
+NS_IMPL_ISUPPORTS(SocketListenerProxy,
+                  nsIUDPSocketListener)
 
 NS_IMETHODIMP
 SocketListenerProxy::OnPacketReceived(nsIUDPSocket* aSocket,
@@ -778,7 +778,7 @@ private:
   FallibleTArray<uint8_t> mData;
 };
 
-NS_IMPL_ISUPPORTS1(PendingSend, nsIDNSListener)
+NS_IMPL_ISUPPORTS(PendingSend, nsIDNSListener)
 
 NS_IMETHODIMP
 PendingSend::OnLookupComplete(nsICancelable *request,

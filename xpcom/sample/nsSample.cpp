@@ -31,7 +31,7 @@ nsSampleImpl::~nsSampleImpl()
 }
 
 /**
- * NS_IMPL_ISUPPORTS1 expands to a simple implementation of the nsISupports
+ * NS_IMPL_ISUPPORTS expands to a simple implementation of the nsISupports
  * interface.  This includes a proper implementation of AddRef, Release,
  * and QueryInterface.  If this class supported more interfaces than just
  * nsISupports, 
@@ -45,7 +45,7 @@ nsSampleImpl::~nsSampleImpl()
  * and interface flattening.
  */
 NS_IMPL_CLASSINFO(nsSampleImpl, nullptr, 0, NS_SAMPLE_CID)
-NS_IMPL_ISUPPORTS1_CI(nsSampleImpl, nsISample)
+NS_IMPL_ISUPPORTS_CI(nsSampleImpl, nsISample)
 /**
  * Notice that in the protoype for this function, the NS_IMETHOD macro was
  * used to declare the return type.  For the implementation, the return

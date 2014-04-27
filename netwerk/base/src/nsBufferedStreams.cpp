@@ -59,7 +59,7 @@ nsBufferedStream::~nsBufferedStream()
     Close();
 }
 
-NS_IMPL_ISUPPORTS1(nsBufferedStream, nsISeekableStream)
+NS_IMPL_ISUPPORTS(nsBufferedStream, nsISeekableStream)
 
 nsresult
 nsBufferedStream::Init(nsISupports* stream, uint32_t bufferSize)
@@ -258,11 +258,11 @@ NS_INTERFACE_MAP_BEGIN(nsBufferedInputStream)
     NS_IMPL_QUERY_CLASSINFO(nsBufferedInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsBufferedStream)
 
-NS_IMPL_CI_INTERFACE_GETTER4(nsBufferedInputStream,
-                             nsIInputStream,
-                             nsIBufferedInputStream,
-                             nsISeekableStream,
-                             nsIStreamBufferAccess)
+NS_IMPL_CI_INTERFACE_GETTER(nsBufferedInputStream,
+                            nsIInputStream,
+                            nsIBufferedInputStream,
+                            nsISeekableStream,
+                            nsIStreamBufferAccess)
 
 nsresult
 nsBufferedInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

@@ -15,7 +15,7 @@ typedef gboolean (*GdkKeymapHaveBidiLayoutsType)(GdkKeymap *keymap);
 static GdkKeymapHaveBidiLayoutsType GdkKeymapHaveBidiLayouts = nullptr;
 #endif
 
-NS_IMPL_ISUPPORTS1(nsBidiKeyboard, nsIBidiKeyboard)
+NS_IMPL_ISUPPORTS(nsBidiKeyboard, nsIBidiKeyboard)
 
 nsBidiKeyboard::nsBidiKeyboard()
 {

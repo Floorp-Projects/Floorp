@@ -62,7 +62,7 @@ public:
 
 static gfxFontListPrefObserver* gFontListPrefObserver = nullptr;
 
-NS_IMPL_ISUPPORTS1(gfxFontListPrefObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(gfxFontListPrefObserver, nsIObserver)
 
 NS_IMETHODIMP
 gfxFontListPrefObserver::Observe(nsISupports     *aSubject,
@@ -79,7 +79,7 @@ gfxFontListPrefObserver::Observe(nsISupports     *aSubject,
 
 MOZ_DEFINE_MALLOC_SIZE_OF(FontListMallocSizeOf)
 
-NS_IMPL_ISUPPORTS1(gfxPlatformFontList::MemoryReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(gfxPlatformFontList::MemoryReporter, nsIMemoryReporter)
 
 NS_IMETHODIMP
 gfxPlatformFontList::MemoryReporter::CollectReports

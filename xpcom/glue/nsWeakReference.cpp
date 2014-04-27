@@ -110,7 +110,7 @@ nsSupportsWeakReference::GetWeakReference( nsIWeakReference** aInstancePtr )
     return status;
   }
 
-NS_IMPL_ISUPPORTS1(nsWeakReference, nsIWeakReference)
+NS_IMPL_ISUPPORTS(nsWeakReference, nsIWeakReference)
 
 NS_IMETHODIMP
 nsWeakReference::QueryReferent( const nsIID& aIID, void** aInstancePtr )

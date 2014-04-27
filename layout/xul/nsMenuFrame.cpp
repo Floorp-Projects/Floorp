@@ -1467,7 +1467,7 @@ nsIScrollableFrame* nsMenuFrame::GetScrollTargetFrame()
 }
 
 // nsMenuTimerMediator implementation.
-NS_IMPL_ISUPPORTS1(nsMenuTimerMediator, nsITimerCallback)
+NS_IMPL_ISUPPORTS(nsMenuTimerMediator, nsITimerCallback)
 
 /**
  * Constructs a wrapper around an nsMenuFrame.

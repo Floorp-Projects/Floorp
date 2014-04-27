@@ -40,7 +40,7 @@ static uint32_t const ENTRY_NEEDS_REVALIDATION =
 static uint32_t const ENTRY_NOT_WANTED =
   nsICacheEntryOpenCallback::ENTRY_NOT_WANTED;
 
-NS_IMPL_ISUPPORTS1(CacheEntryHandle, nsICacheEntry)
+NS_IMPL_ISUPPORTS(CacheEntryHandle, nsICacheEntry)
 
 // CacheEntryHandle
 
@@ -149,10 +149,10 @@ nsresult CacheEntry::Callback::OnAvailThread(bool *aOnAvailThread) const
 
 // CacheEntry
 
-NS_IMPL_ISUPPORTS3(CacheEntry,
-                   nsICacheEntry,
-                   nsIRunnable,
-                   CacheFileListener)
+NS_IMPL_ISUPPORTS(CacheEntry,
+                  nsICacheEntry,
+                  nsIRunnable,
+                  CacheFileListener)
 
 CacheEntry::CacheEntry(const nsACString& aStorageID,
                        nsIURI* aURI,

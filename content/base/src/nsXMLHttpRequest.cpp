@@ -138,7 +138,7 @@ using namespace mozilla::dom;
     return NS_OK;                                                               \
   }
 
-NS_IMPL_ISUPPORTS1(nsXHRParseEndListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(nsXHRParseEndListener, nsIDOMEventListener)
 
 class nsResumeTimeoutsEvent : public nsRunnable
 {
@@ -180,7 +180,7 @@ public:
   virtual ~XMLHttpRequestAuthPrompt();
 };
 
-NS_IMPL_ISUPPORTS1(XMLHttpRequestAuthPrompt, nsIAuthPrompt)
+NS_IMPL_ISUPPORTS(XMLHttpRequestAuthPrompt, nsIAuthPrompt)
 
 XMLHttpRequestAuthPrompt::XMLHttpRequestAuthPrompt()
 {
@@ -3781,7 +3781,7 @@ nsXMLHttpRequest::EnsureXPCOMifier()
   return newRef.forget();
 }
 
-NS_IMPL_ISUPPORTS1(nsXMLHttpRequest::nsHeaderVisitor, nsIHttpHeaderVisitor)
+NS_IMPL_ISUPPORTS(nsXMLHttpRequest::nsHeaderVisitor, nsIHttpHeaderVisitor)
 
 NS_IMETHODIMP nsXMLHttpRequest::
 nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)

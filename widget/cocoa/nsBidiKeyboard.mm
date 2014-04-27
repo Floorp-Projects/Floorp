@@ -13,7 +13,7 @@
 
 using namespace mozilla::widget;
 
-NS_IMPL_ISUPPORTS1(nsBidiKeyboard, nsIBidiKeyboard)
+NS_IMPL_ISUPPORTS(nsBidiKeyboard, nsIBidiKeyboard)
 
 nsBidiKeyboard::nsBidiKeyboard() : nsIBidiKeyboard()
 {

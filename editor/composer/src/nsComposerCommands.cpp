@@ -52,7 +52,7 @@ nsBaseComposerCommand::nsBaseComposerCommand()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsBaseComposerCommand, nsIControllerCommand)
+NS_IMPL_ISUPPORTS(nsBaseComposerCommand, nsIControllerCommand)
 
 
 nsBaseStateUpdatingCommand::nsBaseStateUpdatingCommand(nsIAtom* aTagName)

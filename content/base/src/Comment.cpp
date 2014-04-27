@@ -22,8 +22,8 @@ Comment::~Comment()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(Comment, nsGenericDOMDataNode, nsIDOMNode,
-                             nsIDOMCharacterData, nsIDOMComment)
+NS_IMPL_ISUPPORTS_INHERITED(Comment, nsGenericDOMDataNode, nsIDOMNode,
+                            nsIDOMCharacterData, nsIDOMComment)
 
 bool
 Comment::IsNodeOfType(uint32_t aFlags) const

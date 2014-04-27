@@ -93,7 +93,7 @@ protected:
   uint32_t mStringCurItem;
 };
 
-NS_IMPL_ISUPPORTS2(BaseStringEnumerator, nsISimpleEnumerator, nsIUTF8StringEnumerator)
+NS_IMPL_ISUPPORTS(BaseStringEnumerator, nsISimpleEnumerator, nsIUTF8StringEnumerator)
 
 NS_IMETHODIMP
 BaseStringEnumerator::HasMoreElements(bool *_retval)
@@ -400,7 +400,7 @@ CategoryEnumerator::enumfunc_createenumerator(const char* aStr, CategoryNode* aN
 // nsCategoryManager implementations
 //
 
-NS_IMPL_QUERY_INTERFACE2(nsCategoryManager, nsICategoryManager, nsIMemoryReporter)
+NS_IMPL_QUERY_INTERFACE(nsCategoryManager, nsICategoryManager, nsIMemoryReporter)
 
 NS_IMETHODIMP_(MozExternalRefCountType)
 nsCategoryManager::AddRef()

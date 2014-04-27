@@ -1642,7 +1642,7 @@ private:
     nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
-NS_IMPL_ISUPPORTS1(ContextHolder, nsIScriptObjectPrincipal)
+NS_IMPL_ISUPPORTS(ContextHolder, nsIScriptObjectPrincipal)
 
 ContextHolder::ContextHolder(JSContext *aOuterCx,
                              HandleObject aSandbox,

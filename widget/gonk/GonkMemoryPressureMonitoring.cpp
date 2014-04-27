@@ -269,7 +269,7 @@ private:
   ScopedClose mShutdownPipeWrite;
 };
 
-NS_IMPL_ISUPPORTS2(MemoryPressureWatcher, nsIRunnable, nsIObserver);
+NS_IMPL_ISUPPORTS(MemoryPressureWatcher, nsIRunnable, nsIObserver);
 
 } // anonymous namespace
 

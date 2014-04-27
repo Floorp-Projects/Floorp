@@ -36,10 +36,10 @@ ChildDNSService* ChildDNSService::GetSingleton()
   return gChildDNSService;
 }
 
-NS_IMPL_ISUPPORTS3(ChildDNSService,
-                   nsIDNSService,
-                   nsPIDNSService,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(ChildDNSService,
+                  nsIDNSService,
+                  nsPIDNSService,
+                  nsIObserver)
 
 ChildDNSService::ChildDNSService()
   : mFirstTime(true)

@@ -10,7 +10,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS_INHERITED1(FocusEvent, UIEvent, nsIDOMFocusEvent)
+NS_IMPL_ISUPPORTS_INHERITED(FocusEvent, UIEvent, nsIDOMFocusEvent)
 
 FocusEvent::FocusEvent(EventTarget* aOwner,
                        nsPresContext* aPresContext,

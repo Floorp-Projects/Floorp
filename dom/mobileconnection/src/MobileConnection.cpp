@@ -45,7 +45,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(MobileConnection::Listener, nsIMobileConnectionListener)
+NS_IMPL_ISUPPORTS(MobileConnection::Listener, nsIMobileConnectionListener)
 
 DOMCI_DATA(MozMobileConnection, MobileConnection)
 

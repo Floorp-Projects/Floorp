@@ -42,8 +42,8 @@ nsWindowMemoryReporter::~nsWindowMemoryReporter()
   KillCheckTimer();
 }
 
-NS_IMPL_ISUPPORTS3(nsWindowMemoryReporter, nsIMemoryReporter, nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsWindowMemoryReporter, nsIMemoryReporter, nsIObserver,
+                  nsISupportsWeakReference)
 
 static nsresult
 AddNonJSSizeOfWindowAndItsDescendents(nsGlobalWindow* aWindow,
@@ -882,8 +882,8 @@ nsWindowMemoryReporter::CheckForGhostWindows(
                              &ghostEnumData);
 }
 
-NS_IMPL_ISUPPORTS1(nsWindowMemoryReporter::GhostWindowsReporter,
-                   nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(nsWindowMemoryReporter::GhostWindowsReporter,
+                  nsIMemoryReporter)
 
 /* static */ int64_t
 nsWindowMemoryReporter::GhostWindowsReporter::DistinguishedAmount()

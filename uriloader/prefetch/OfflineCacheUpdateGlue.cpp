@@ -40,10 +40,10 @@ namespace docshell {
 // OfflineCacheUpdateGlue::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS3(OfflineCacheUpdateGlue,
-                   nsIOfflineCacheUpdate,
-                   nsIOfflineCacheUpdateObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(OfflineCacheUpdateGlue,
+                  nsIOfflineCacheUpdate,
+                  nsIOfflineCacheUpdateObserver,
+                  nsISupportsWeakReference)
 
 //-----------------------------------------------------------------------------
 // OfflineCacheUpdateGlue <public>

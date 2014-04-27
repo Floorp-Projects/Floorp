@@ -94,8 +94,8 @@ public:
   nsComboboxControlFrame* mComboBox;
 };
 
-NS_IMPL_ISUPPORTS1(nsComboButtonListener,
-                   nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(nsComboButtonListener,
+                  nsIDOMEventListener)
 
 // static class data member for Bug 32920
 nsComboboxControlFrame* nsComboboxControlFrame::sFocused = nullptr;

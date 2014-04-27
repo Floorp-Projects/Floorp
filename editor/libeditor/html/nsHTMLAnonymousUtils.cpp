@@ -104,7 +104,7 @@ protected:
   nsINode* mObservedNode;
 };
 
-NS_IMPL_ISUPPORTS1(nsElementDeletionObserver, nsIMutationObserver)
+NS_IMPL_ISUPPORTS(nsElementDeletionObserver, nsIMutationObserver)
 NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(nsElementDeletionObserver)
 
 void

@@ -26,13 +26,13 @@ ServerIsNES3x(nsIHttpChannel *httpChannel)
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS6(nsURIChecker,
-                   nsIURIChecker,
-                   nsIRequest,
-                   nsIRequestObserver,
-                   nsIStreamListener,
-                   nsIChannelEventSink,
-                   nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS(nsURIChecker,
+                  nsIURIChecker,
+                  nsIRequest,
+                  nsIRequestObserver,
+                  nsIStreamListener,
+                  nsIChannelEventSink,
+                  nsIInterfaceRequestor)
 
 nsURIChecker::nsURIChecker()
     : mStatus(NS_OK)

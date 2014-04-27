@@ -52,10 +52,10 @@ private:
   bool mRemoveMagicNumber;
 };
 
-NS_IMPL_ISUPPORTS3(nsPluginByteRangeStreamListener,
-                   nsIRequestObserver,
-                   nsIStreamListener,
-                   nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS(nsPluginByteRangeStreamListener,
+                  nsIRequestObserver,
+                  nsIStreamListener,
+                  nsIInterfaceRequestor)
 
 nsPluginByteRangeStreamListener::nsPluginByteRangeStreamListener(nsIWeakReference* aWeakPtr)
 {
@@ -245,13 +245,13 @@ nsPluginByteRangeStreamListener::GetInterface(const nsIID& aIID, void** result)
 
 // nsPluginStreamListenerPeer
 
-NS_IMPL_ISUPPORTS6(nsPluginStreamListenerPeer,
-                   nsIStreamListener,
-                   nsIRequestObserver,
-                   nsIHttpHeaderVisitor,
-                   nsISupportsWeakReference,
-                   nsIInterfaceRequestor,
-                   nsIChannelEventSink)
+NS_IMPL_ISUPPORTS(nsPluginStreamListenerPeer,
+                  nsIStreamListener,
+                  nsIRequestObserver,
+                  nsIHttpHeaderVisitor,
+                  nsISupportsWeakReference,
+                  nsIInterfaceRequestor,
+                  nsIChannelEventSink)
 
 nsPluginStreamListenerPeer::nsPluginStreamListenerPeer()
 {
@@ -1221,7 +1221,7 @@ private:
   nsCOMPtr<nsIChannel> mNewChannel;
 };
 
-NS_IMPL_ISUPPORTS1(ChannelRedirectProxyCallback, nsIAsyncVerifyRedirectCallback)
+NS_IMPL_ISUPPORTS(ChannelRedirectProxyCallback, nsIAsyncVerifyRedirectCallback)
 
 
 NS_IMETHODIMP

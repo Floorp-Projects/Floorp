@@ -46,11 +46,11 @@ using namespace mozilla::dom;
 using namespace xpc;
 using namespace JS;
 
-NS_IMPL_ISUPPORTS4(nsXPConnect,
-                   nsIXPConnect,
-                   nsISupportsWeakReference,
-                   nsIThreadObserver,
-                   nsIJSRuntimeService)
+NS_IMPL_ISUPPORTS(nsXPConnect,
+                  nsIXPConnect,
+                  nsISupportsWeakReference,
+                  nsIThreadObserver,
+                  nsIJSRuntimeService)
 
 nsXPConnect* nsXPConnect::gSelf = nullptr;
 bool         nsXPConnect::gOnceAliveNowDead = false;

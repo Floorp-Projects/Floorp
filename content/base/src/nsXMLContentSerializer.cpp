@@ -71,7 +71,7 @@ nsXMLContentSerializer::~nsXMLContentSerializer()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsXMLContentSerializer, nsIContentSerializer)
+NS_IMPL_ISUPPORTS(nsXMLContentSerializer, nsIContentSerializer)
 
 NS_IMETHODIMP 
 nsXMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,

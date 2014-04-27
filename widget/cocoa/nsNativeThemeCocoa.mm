@@ -453,7 +453,7 @@ static BOOL IsActive(nsIFrame* aFrame, BOOL aIsToolbarControl)
   return FrameIsInActiveWindow(aFrame);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsNativeThemeCocoa, nsNativeTheme, nsITheme)
+NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeCocoa, nsNativeTheme, nsITheme)
 
 
 nsNativeThemeCocoa::nsNativeThemeCocoa()

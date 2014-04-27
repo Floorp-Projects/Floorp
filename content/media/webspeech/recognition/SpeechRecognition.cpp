@@ -938,7 +938,7 @@ SpeechEvent::Run()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(SpeechRecognition::GetUserMediaSuccessCallback, nsIDOMGetUserMediaSuccessCallback)
+NS_IMPL_ISUPPORTS(SpeechRecognition::GetUserMediaSuccessCallback, nsIDOMGetUserMediaSuccessCallback)
 
 NS_IMETHODIMP
 SpeechRecognition::GetUserMediaSuccessCallback::OnSuccess(nsISupports* aStream)
@@ -948,7 +948,7 @@ SpeechRecognition::GetUserMediaSuccessCallback::OnSuccess(nsISupports* aStream)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(SpeechRecognition::GetUserMediaErrorCallback, nsIDOMGetUserMediaErrorCallback)
+NS_IMPL_ISUPPORTS(SpeechRecognition::GetUserMediaErrorCallback, nsIDOMGetUserMediaErrorCallback)
 
 NS_IMETHODIMP
 SpeechRecognition::GetUserMediaErrorCallback::OnError(const nsAString& aError)

@@ -15,7 +15,7 @@ xpcJSWeakReference::xpcJSWeakReference()
 {
 }
 
-NS_IMPL_ISUPPORTS1(xpcJSWeakReference, xpcIJSWeakReference)
+NS_IMPL_ISUPPORTS(xpcJSWeakReference, xpcIJSWeakReference)
 
 nsresult xpcJSWeakReference::Init(JSContext* cx, const JS::Value& object)
 {

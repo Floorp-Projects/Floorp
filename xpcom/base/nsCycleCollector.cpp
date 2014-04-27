@@ -1250,7 +1250,7 @@ private:
     void CleanupAfterCollection();
 };
 
-NS_IMPL_ISUPPORTS1(nsCycleCollector, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(nsCycleCollector, nsIMemoryReporter)
 
 /**
  * GraphWalker is templatized over a Visitor class that must provide
@@ -1807,7 +1807,7 @@ private:
     mozilla::LinkedList<CCGraphDescriber> mDescribers;
 };
 
-NS_IMPL_ISUPPORTS1(nsCycleCollectorLogger, nsICycleCollectorListener)
+NS_IMPL_ISUPPORTS(nsCycleCollectorLogger, nsICycleCollectorListener)
 
 nsresult
 nsCycleCollectorLoggerConstructor(nsISupports* aOuter,

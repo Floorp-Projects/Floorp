@@ -13,7 +13,7 @@ nsSampleWordBreaker::~nsSampleWordBreaker()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsSampleWordBreaker, nsIWordBreaker)
+NS_IMPL_ISUPPORTS(nsSampleWordBreaker, nsIWordBreaker)
 
 bool nsSampleWordBreaker::BreakInBetween(
   const char16_t* aText1 , uint32_t aTextLen1,

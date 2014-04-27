@@ -25,8 +25,8 @@ using namespace mozilla::services;
 namespace mozilla {
 namespace system {
 
-NS_IMPL_ISUPPORTS3(nsVolumeMountLock, nsIVolumeMountLock,
-                   nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsVolumeMountLock, nsIVolumeMountLock,
+                  nsIObserver, nsISupportsWeakReference)
 
 // static
 already_AddRefed<nsVolumeMountLock>

@@ -24,7 +24,7 @@ nsXBLEventHandler::~nsXBLEventHandler()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsXBLEventHandler, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(nsXBLEventHandler, nsIDOMEventListener)
 
 NS_IMETHODIMP
 nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
@@ -79,7 +79,7 @@ nsXBLKeyEventHandler::~nsXBLKeyEventHandler()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsXBLKeyEventHandler, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(nsXBLKeyEventHandler, nsIDOMEventListener)
 
 bool
 nsXBLKeyEventHandler::ExecuteMatchedHandlers(nsIDOMKeyEvent* aKeyEvent,

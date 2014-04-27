@@ -149,7 +149,7 @@ public:
   { }
 };
 
-NS_IMPL_ISUPPORTS1(SeerDNSListener, nsIDNSListener);
+NS_IMPL_ISUPPORTS(SeerDNSListener, nsIDNSListener);
 
 NS_IMETHODIMP
 SeerDNSListener::OnLookupComplete(nsICancelable *request,
@@ -172,11 +172,11 @@ static PRLogModuleInfo *gSeerLog = nullptr;
 #define SEER_LOG(args)
 #endif
 
-NS_IMPL_ISUPPORTS4(Seer,
-                   nsINetworkSeer,
-                   nsIObserver,
-                   nsISpeculativeConnectionOverrider,
-                   nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS(Seer,
+                  nsINetworkSeer,
+                  nsIObserver,
+                  nsISpeculativeConnectionOverrider,
+                  nsIInterfaceRequestor)
 
 Seer::Seer()
   :mInitialized(false)

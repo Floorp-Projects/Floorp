@@ -302,7 +302,7 @@ public:
 nsIDOMWindowUtils* EventListener::sWindowUtils = nullptr;
 nsIAppShell* EventListener::sAppShell = nullptr;
 
-NS_IMPL_ISUPPORTS1(EventListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(EventListener, nsIDOMEventListener)
 
 already_AddRefed<nsIAppShell>
 GetAppShell()

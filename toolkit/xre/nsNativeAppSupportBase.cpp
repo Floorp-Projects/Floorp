@@ -13,7 +13,7 @@ nsNativeAppSupportBase::~nsNativeAppSupportBase()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsNativeAppSupportBase, nsINativeAppSupport)
+NS_IMPL_ISUPPORTS(nsNativeAppSupportBase, nsINativeAppSupport)
 
 // Start answer defaults to OK.
 NS_IMETHODIMP

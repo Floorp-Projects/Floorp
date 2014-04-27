@@ -1157,5 +1157,5 @@ void nsSliderFrame::Notify(void)
     }
 }
 
-NS_IMPL_ISUPPORTS1(nsSliderMediator,
-                   nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(nsSliderMediator,
+                  nsIDOMEventListener)

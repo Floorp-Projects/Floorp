@@ -128,7 +128,7 @@ nsDirEnumeratorUnix::~nsDirEnumeratorUnix()
     Close();
 }
 
-NS_IMPL_ISUPPORTS2(nsDirEnumeratorUnix, nsISimpleEnumerator, nsIDirectoryEnumerator)
+NS_IMPL_ISUPPORTS(nsDirEnumeratorUnix, nsISimpleEnumerator, nsIDirectoryEnumerator)
 
 NS_IMETHODIMP
 nsDirEnumeratorUnix::Init(nsLocalFile *parent, bool resolveSymlinks /*ignored*/)
@@ -226,16 +226,16 @@ nsLocalFile::nsLocalFile(const nsLocalFile& other)
 }
 
 #ifdef MOZ_WIDGET_COCOA
-NS_IMPL_ISUPPORTS4(nsLocalFile,
-                   nsILocalFileMac,
-                   nsILocalFile,
-                   nsIFile,
-                   nsIHashable)
+NS_IMPL_ISUPPORTS(nsLocalFile,
+                  nsILocalFileMac,
+                  nsILocalFile,
+                  nsIFile,
+                  nsIHashable)
 #else
-NS_IMPL_ISUPPORTS3(nsLocalFile,
-                   nsILocalFile,
-                   nsIFile,
-                   nsIHashable)
+NS_IMPL_ISUPPORTS(nsLocalFile,
+                  nsILocalFile,
+                  nsIFile,
+                  nsIHashable)
 #endif
 
 nsresult

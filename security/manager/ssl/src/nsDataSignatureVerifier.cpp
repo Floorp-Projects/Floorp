@@ -14,7 +14,7 @@
 
 SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
 
-NS_IMPL_ISUPPORTS1(nsDataSignatureVerifier, nsIDataSignatureVerifier)
+NS_IMPL_ISUPPORTS(nsDataSignatureVerifier, nsIDataSignatureVerifier)
 
 const SEC_ASN1Template CERT_SignatureDataTemplate[] =
 {

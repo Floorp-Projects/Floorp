@@ -223,8 +223,8 @@ nsHTMLDNSPrefetch::CancelPrefetchLow(const nsAString &hostname, nsresult aReason
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS1(nsHTMLDNSPrefetch::nsListener,
-                   nsIDNSListener)
+NS_IMPL_ISUPPORTS(nsHTMLDNSPrefetch::nsListener,
+                  nsIDNSListener)
 
 NS_IMETHODIMP
 nsHTMLDNSPrefetch::nsListener::OnLookupComplete(nsICancelable *request,
@@ -255,10 +255,10 @@ nsHTMLDNSPrefetch::nsDeferrals::~nsDeferrals()
   Flush();
 }
 
-NS_IMPL_ISUPPORTS3(nsHTMLDNSPrefetch::nsDeferrals,
-                   nsIWebProgressListener,
-                   nsISupportsWeakReference,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(nsHTMLDNSPrefetch::nsDeferrals,
+                  nsIWebProgressListener,
+                  nsISupportsWeakReference,
+                  nsIObserver)
 
 void
 nsHTMLDNSPrefetch::nsDeferrals::Flush()

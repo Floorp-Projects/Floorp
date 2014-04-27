@@ -31,10 +31,10 @@ nsPopupWindowManager::~nsPopupWindowManager()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsPopupWindowManager, 
-                   nsIPopupWindowManager,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsPopupWindowManager, 
+                  nsIPopupWindowManager,
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 nsresult
 nsPopupWindowManager::Init()

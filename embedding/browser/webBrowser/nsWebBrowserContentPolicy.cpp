@@ -21,7 +21,7 @@ nsWebBrowserContentPolicy::~nsWebBrowserContentPolicy()
     MOZ_COUNT_DTOR(nsWebBrowserContentPolicy);
 }
 
-NS_IMPL_ISUPPORTS1(nsWebBrowserContentPolicy, nsIContentPolicy)
+NS_IMPL_ISUPPORTS(nsWebBrowserContentPolicy, nsIContentPolicy)
 
 NS_IMETHODIMP
 nsWebBrowserContentPolicy::ShouldLoad(uint32_t          contentType,

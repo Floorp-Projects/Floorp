@@ -96,7 +96,7 @@ private:
   nsAutoPtr<ReadbackTask> mTask;
 };
 
-NS_IMPL_ISUPPORTS1(ReadbackResultWriter, nsIRunnable)
+NS_IMPL_ISUPPORTS(ReadbackResultWriter, nsIRunnable)
 
 DWORD WINAPI StartTaskThread(void *aManager)
 {

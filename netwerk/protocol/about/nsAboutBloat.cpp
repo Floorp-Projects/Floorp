@@ -18,7 +18,7 @@
 
 static void GC_gcollect() {}
 
-NS_IMPL_ISUPPORTS1(nsAboutBloat, nsIAboutModule)
+NS_IMPL_ISUPPORTS(nsAboutBloat, nsIAboutModule)
 
 NS_IMETHODIMP
 nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)

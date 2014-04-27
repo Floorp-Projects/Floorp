@@ -33,9 +33,9 @@ nsIconChannel::nsIconChannel()
 nsIconChannel::~nsIconChannel() 
 {}
 
-NS_IMPL_ISUPPORTS4(nsIconChannel, 
-                              nsIChannel, 
-                              nsIRequest,
+NS_IMPL_ISUPPORTS(nsIconChannel, 
+                  nsIChannel, 
+                  nsIRequest,
 			       nsIRequestObserver,
 			       nsIStreamListener)
 

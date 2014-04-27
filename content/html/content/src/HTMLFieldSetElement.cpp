@@ -46,9 +46,9 @@ NS_IMPL_RELEASE_INHERITED(HTMLFieldSetElement, Element)
 
 // QueryInterface implementation for HTMLFieldSetElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLFieldSetElement)
-  NS_INTERFACE_TABLE_INHERITED2(HTMLFieldSetElement,
-                                nsIDOMHTMLFieldSetElement,
-                                nsIConstraintValidation)
+  NS_INTERFACE_TABLE_INHERITED(HTMLFieldSetElement,
+                               nsIDOMHTMLFieldSetElement,
+                               nsIConstraintValidation)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLFieldSetElement)

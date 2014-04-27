@@ -25,11 +25,11 @@
 #include "nsXPIDLString.h"
 #include <algorithm>
 
-NS_IMPL_ISUPPORTS4(nsIndexedToHTML,
-                   nsIDirIndexListener,
-                   nsIStreamConverter,
-                   nsIRequestObserver,
-                   nsIStreamListener)
+NS_IMPL_ISUPPORTS(nsIndexedToHTML,
+                  nsIDirIndexListener,
+                  nsIStreamConverter,
+                  nsIRequestObserver,
+                  nsIStreamListener)
 
 static void AppendNonAsciiToNCR(const nsAString& in, nsCString& out)
 {

@@ -5,7 +5,7 @@
 
 #include "nsSemanticUnitScanner.h"
 
-NS_IMPL_ISUPPORTS1(nsSemanticUnitScanner, nsISemanticUnitScanner)
+NS_IMPL_ISUPPORTS(nsSemanticUnitScanner, nsISemanticUnitScanner)
 
 nsSemanticUnitScanner::nsSemanticUnitScanner() : nsSampleWordBreaker()
 {

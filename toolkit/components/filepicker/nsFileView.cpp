@@ -49,7 +49,7 @@ public:
   uint16_t mSearchResult;
 };
 
-NS_IMPL_ISUPPORTS1(nsFileResult, nsIAutoCompleteResult)
+NS_IMPL_ISUPPORTS(nsFileResult, nsIAutoCompleteResult)
 
 nsFileResult::nsFileResult(const nsAString& aSearchString,
                            const nsAString& aSearchParam):
@@ -190,7 +190,7 @@ public:
   NS_DECL_NSIAUTOCOMPLETESEARCH
 };
 
-NS_IMPL_ISUPPORTS1(nsFileComplete, nsIAutoCompleteSearch)
+NS_IMPL_ISUPPORTS(nsFileComplete, nsIAutoCompleteSearch)
 
 NS_IMETHODIMP
 nsFileComplete::StartSearch(const nsAString& aSearchString,
@@ -305,7 +305,7 @@ nsFileView::Init()
 
 // nsISupports implementation
 
-NS_IMPL_ISUPPORTS2(nsFileView, nsITreeView, nsIFileView)
+NS_IMPL_ISUPPORTS(nsFileView, nsITreeView, nsIFileView)
 
 // nsIFileView implementation
 

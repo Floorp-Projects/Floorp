@@ -52,7 +52,7 @@ nsDeviceContextSpecQt::~nsDeviceContextSpecQt()
     DO_PR_DEBUG_LOG(("nsDeviceContextSpecQt::~nsDeviceContextSpecQt()\n"));
 }
 
-NS_IMPL_ISUPPORTS1(nsDeviceContextSpecQt,
+NS_IMPL_ISUPPORTS(nsDeviceContextSpecQt,
         nsIDeviceContextSpec)
 
 NS_IMETHODIMP nsDeviceContextSpecQt::GetSurfaceForPrinter(
@@ -214,7 +214,7 @@ nsPrinterEnumeratorQt::nsPrinterEnumeratorQt()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorQt, nsIPrinterEnumerator)
+NS_IMPL_ISUPPORTS(nsPrinterEnumeratorQt, nsIPrinterEnumerator)
 
 NS_IMETHODIMP nsPrinterEnumeratorQt::GetPrinterNameList(
         nsIStringEnumerator** aPrinterNameList)

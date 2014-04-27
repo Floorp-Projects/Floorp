@@ -181,7 +181,7 @@ protected:
 
 static nsSHistoryObserver* gObserver = nullptr;
 
-NS_IMPL_ISUPPORTS1(nsSHistoryObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(nsSHistoryObserver, nsIObserver)
 
 NS_IMETHODIMP
 nsSHistoryObserver::Observe(nsISupports *aSubject, const char *aTopic,
@@ -1838,7 +1838,7 @@ nsSHEnumerator::~nsSHEnumerator()
   mSHistory = nullptr;
 }
 
-NS_IMPL_ISUPPORTS1(nsSHEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsSHEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsSHEnumerator::HasMoreElements(bool * aReturn)

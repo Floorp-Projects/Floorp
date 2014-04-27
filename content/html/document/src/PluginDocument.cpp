@@ -116,7 +116,7 @@ NS_IMPL_ADDREF_INHERITED(PluginDocument, MediaDocument)
 NS_IMPL_RELEASE_INHERITED(PluginDocument, MediaDocument)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(PluginDocument)
-  NS_INTERFACE_TABLE_INHERITED1(PluginDocument, nsIPluginDocument)
+  NS_INTERFACE_TABLE_INHERITED(PluginDocument, nsIPluginDocument)
 NS_INTERFACE_TABLE_TAIL_INHERITING(MediaDocument)
 
 void

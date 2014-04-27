@@ -40,7 +40,7 @@ WindowCreator::~WindowCreator()
 {
 }
 
-NS_IMPL_ISUPPORTS1(WindowCreator, nsIWindowCreator)
+NS_IMPL_ISUPPORTS(WindowCreator, nsIWindowCreator)
 
 NS_IMETHODIMP
 WindowCreator::CreateChromeWindow(nsIWebBrowserChrome *parent,

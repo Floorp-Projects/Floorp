@@ -27,8 +27,8 @@ HTMLIFrameElement::~HTMLIFrameElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLIFrameElement, nsGenericHTMLFrameElement,
-                             nsIDOMHTMLIFrameElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLIFrameElement, nsGenericHTMLFrameElement,
+                            nsIDOMHTMLIFrameElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLIFrameElement)
 

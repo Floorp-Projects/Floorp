@@ -18,7 +18,7 @@
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
-NS_IMPL_ISUPPORTS1(nsPK11Token, nsIPK11Token)
+NS_IMPL_ISUPPORTS(nsPK11Token, nsIPK11Token)
 
 nsPK11Token::nsPK11Token(PK11SlotInfo *slot)
 {
@@ -422,7 +422,7 @@ NS_IMETHODIMP nsPK11Token::IsFriendly(bool *_retval)
 
 /*=========================================================*/
 
-NS_IMPL_ISUPPORTS1(nsPK11TokenDB, nsIPK11TokenDB)
+NS_IMPL_ISUPPORTS(nsPK11TokenDB, nsIPK11TokenDB)
 
 nsPK11TokenDB::nsPK11TokenDB()
 {

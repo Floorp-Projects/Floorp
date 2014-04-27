@@ -45,8 +45,8 @@ NS_IMETHODIMP_(MozExternalRefCountType) EmptyEnumeratorImpl::Release(void)
     return 1;
 }
 
-NS_IMPL_QUERY_INTERFACE3(EmptyEnumeratorImpl, nsISimpleEnumerator,
-                         nsIUTF8StringEnumerator, nsIStringEnumerator)
+NS_IMPL_QUERY_INTERFACE(EmptyEnumeratorImpl, nsISimpleEnumerator,
+                        nsIUTF8StringEnumerator, nsIStringEnumerator)
 
 // nsISimpleEnumerator interface
 NS_IMETHODIMP EmptyEnumeratorImpl::HasMoreElements(bool* aResult)
@@ -116,7 +116,7 @@ nsSingletonEnumerator::~nsSingletonEnumerator()
     NS_IF_RELEASE(mValue);
 }
 
-NS_IMPL_ISUPPORTS1(nsSingletonEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsSingletonEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsSingletonEnumerator::HasMoreElements(bool* aResult)
@@ -194,7 +194,7 @@ nsUnionEnumerator::~nsUnionEnumerator()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsUnionEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsUnionEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsUnionEnumerator::HasMoreElements(bool* aResult)

@@ -38,7 +38,7 @@ nsRegressionTester::~nsRegressionTester()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsRegressionTester, nsILayoutRegressionTester)
+NS_IMPL_ISUPPORTS(nsRegressionTester, nsILayoutRegressionTester)
 
 NS_IMETHODIMP
 nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump,

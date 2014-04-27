@@ -41,7 +41,7 @@ uint32_t nsCCUncollectableMarker::sGeneration = 0;
 #include "nsXULPrototypeCache.h"
 #endif
 
-NS_IMPL_ISUPPORTS1(nsCCUncollectableMarker, nsIObserver)
+NS_IMPL_ISUPPORTS(nsCCUncollectableMarker, nsIObserver)
 
 /* static */
 nsresult

@@ -85,7 +85,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 // QueryInterface implementation for nsBaseContentList
 NS_INTERFACE_TABLE_HEAD(nsBaseContentList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_TABLE2(nsBaseContentList, nsINodeList, nsIDOMNodeList)
+  NS_INTERFACE_TABLE(nsBaseContentList, nsINodeList, nsIDOMNodeList)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsBaseContentList)
 NS_INTERFACE_MAP_END
 
@@ -493,9 +493,9 @@ nsContentList::WrapObject(JSContext *cx)
   return HTMLCollectionBinding::Wrap(cx, this);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsContentList, nsBaseContentList,
-                             nsIHTMLCollection, nsIDOMHTMLCollection,
-                             nsIMutationObserver)
+NS_IMPL_ISUPPORTS_INHERITED(nsContentList, nsBaseContentList,
+                            nsIHTMLCollection, nsIDOMHTMLCollection,
+                            nsIMutationObserver)
 
 uint32_t
 nsContentList::Length(bool aDoFlush)

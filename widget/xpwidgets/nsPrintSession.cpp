@@ -9,7 +9,7 @@
 //***    nsPrintSession
 //*****************************************************************************
 
-NS_IMPL_ISUPPORTS2(nsPrintSession, nsIPrintSession, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsPrintSession, nsIPrintSession, nsISupportsWeakReference)
                              
 //-----------------------------------------------------------------------------
 nsPrintSession::nsPrintSession()

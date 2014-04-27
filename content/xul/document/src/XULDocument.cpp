@@ -354,9 +354,9 @@ NS_IMPL_RELEASE_INHERITED(XULDocument, XMLDocument)
 
 // QueryInterface implementation for XULDocument
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XULDocument)
-    NS_INTERFACE_TABLE_INHERITED5(XULDocument, nsIXULDocument,
-                                  nsIDOMXULDocument, nsIStreamLoaderObserver,
-                                  nsICSSLoaderObserver, nsIOffThreadScriptReceiver)
+    NS_INTERFACE_TABLE_INHERITED(XULDocument, nsIXULDocument,
+                                 nsIDOMXULDocument, nsIStreamLoaderObserver,
+                                 nsICSSLoaderObserver, nsIOffThreadScriptReceiver)
 NS_INTERFACE_TABLE_TAIL_INHERITING(XMLDocument)
 
 
@@ -4593,8 +4593,8 @@ XULDocument::CachedChromeStreamListener::~CachedChromeStreamListener()
 }
 
 
-NS_IMPL_ISUPPORTS2(XULDocument::CachedChromeStreamListener,
-                   nsIRequestObserver, nsIStreamListener)
+NS_IMPL_ISUPPORTS(XULDocument::CachedChromeStreamListener,
+                  nsIRequestObserver, nsIStreamListener)
 
 NS_IMETHODIMP
 XULDocument::CachedChromeStreamListener::OnStartRequest(nsIRequest *request,
@@ -4642,7 +4642,7 @@ XULDocument::ParserObserver::~ParserObserver()
 {
 }
 
-NS_IMPL_ISUPPORTS1(XULDocument::ParserObserver, nsIRequestObserver)
+NS_IMPL_ISUPPORTS(XULDocument::ParserObserver, nsIRequestObserver)
 
 NS_IMETHODIMP
 XULDocument::ParserObserver::OnStartRequest(nsIRequest *request,

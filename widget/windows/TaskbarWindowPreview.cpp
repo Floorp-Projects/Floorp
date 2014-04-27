@@ -27,9 +27,9 @@ bool WindowHookProc(void *aContext, HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM 
 }
 }
 
-NS_IMPL_ISUPPORTS4(TaskbarWindowPreview, nsITaskbarWindowPreview,
-                   nsITaskbarProgress, nsITaskbarOverlayIconController,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(TaskbarWindowPreview, nsITaskbarWindowPreview,
+                  nsITaskbarProgress, nsITaskbarOverlayIconController,
+                  nsISupportsWeakReference)
 
 /**
  * These correspond directly to the states defined in nsITaskbarProgress.idl, so

@@ -48,7 +48,7 @@ private:
   }
 };
 
-NS_IMPL_QUERY_INTERFACE1(nsTestCom, nsITestCom)
+NS_IMPL_QUERY_INTERFACE(nsTestCom, nsITestCom)
 
 MozExternalRefCountType nsTestCom::AddRef()
 {
@@ -87,7 +87,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(nsTestComFactory, nsIFactory)
+NS_IMPL_ISUPPORTS(nsTestComFactory, nsIFactory)
 
 nsresult nsTestComFactory::CreateInstance(nsISupports *aOuter,
 					  const nsIID &aIID,

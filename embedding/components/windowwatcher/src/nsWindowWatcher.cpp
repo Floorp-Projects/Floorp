@@ -161,7 +161,7 @@ private:
 
 NS_IMPL_ADDREF(nsWatcherWindowEnumerator)
 NS_IMPL_RELEASE(nsWatcherWindowEnumerator)
-NS_IMPL_QUERY_INTERFACE1(nsWatcherWindowEnumerator, nsISimpleEnumerator)
+NS_IMPL_QUERY_INTERFACE(nsWatcherWindowEnumerator, nsISimpleEnumerator)
 
 nsWatcherWindowEnumerator::nsWatcherWindowEnumerator(nsWindowWatcher *inWatcher)
   : mWindowWatcher(inWatcher),
@@ -240,10 +240,10 @@ void nsWatcherWindowEnumerator::WindowRemoved(nsWatcherWindowEntry *inInfo) {
 
 NS_IMPL_ADDREF(nsWindowWatcher)
 NS_IMPL_RELEASE(nsWindowWatcher)
-NS_IMPL_QUERY_INTERFACE3(nsWindowWatcher,
-                         nsIWindowWatcher,
-                         nsIPromptFactory,
-                         nsPIWindowWatcher)
+NS_IMPL_QUERY_INTERFACE(nsWindowWatcher,
+                        nsIWindowWatcher,
+                        nsIPromptFactory,
+                        nsPIWindowWatcher)
 
 nsWindowWatcher::nsWindowWatcher() :
         mEnumeratorList(),

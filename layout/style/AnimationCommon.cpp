@@ -78,7 +78,7 @@ CommonAnimationManager::RemoveAllElementData()
  * nsISupports implementation
  */
 
-NS_IMPL_ISUPPORTS1(CommonAnimationManager, nsIStyleRuleProcessor)
+NS_IMPL_ISUPPORTS(CommonAnimationManager, nsIStyleRuleProcessor)
 
 nsRestyleHint
 CommonAnimationManager::HasStateDependentStyle(StateRuleProcessorData* aData)
@@ -271,7 +271,7 @@ CommonAnimationManager::UpdateThrottledStyle(dom::Element* aElement,
   return newStyle;
 }
 
-NS_IMPL_ISUPPORTS1(AnimValuesStyleRule, nsIStyleRule)
+NS_IMPL_ISUPPORTS(AnimValuesStyleRule, nsIStyleRule)
 
 /* virtual */ void
 AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)

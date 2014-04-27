@@ -183,7 +183,7 @@ nsToolkitProfile::nsToolkitProfile(const nsACString& aName,
     }
 }
 
-NS_IMPL_ISUPPORTS1(nsToolkitProfile, nsIToolkitProfile)
+NS_IMPL_ISUPPORTS(nsToolkitProfile, nsIToolkitProfile)
 
 NS_IMETHODIMP
 nsToolkitProfile::GetRootDir(nsIFile* *aResult)
@@ -284,7 +284,7 @@ nsToolkitProfile::Lock(nsIProfileUnlocker* *aUnlocker, nsIProfileLock* *aResult)
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsToolkitProfileLock, nsIProfileLock)
+NS_IMPL_ISUPPORTS(nsToolkitProfileLock, nsIProfileLock)
 
 nsresult
 nsToolkitProfileLock::Init(nsToolkitProfile* aProfile, nsIProfileUnlocker* *aUnlocker)
@@ -374,8 +374,8 @@ nsToolkitProfileLock::~nsToolkitProfileLock()
 nsToolkitProfileService*
 nsToolkitProfileService::gService = nullptr;
 
-NS_IMPL_ISUPPORTS1(nsToolkitProfileService,
-                   nsIToolkitProfileService)
+NS_IMPL_ISUPPORTS(nsToolkitProfileService,
+                  nsIToolkitProfileService)
 
 nsresult
 nsToolkitProfileService::Init()
@@ -524,8 +524,8 @@ nsToolkitProfileService::GetProfiles(nsISimpleEnumerator* *aResult)
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsToolkitProfileService::ProfileEnumerator,
-                   nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsToolkitProfileService::ProfileEnumerator,
+                  nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsToolkitProfileService::ProfileEnumerator::HasMoreElements(bool* aResult)
@@ -957,7 +957,7 @@ nsToolkitProfileService::Flush()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsToolkitProfileFactory, nsIFactory)
+NS_IMPL_ISUPPORTS(nsToolkitProfileFactory, nsIFactory)
 
 NS_IMETHODIMP
 nsToolkitProfileFactory::CreateInstance(nsISupports* aOuter, const nsID& aIID,

@@ -294,13 +294,13 @@ nsIOService::GetInstance() {
     return gIOService;
 }
 
-NS_IMPL_ISUPPORTS6(nsIOService,
-                   nsIIOService,
-                   nsIIOService2,
-                   nsINetUtil,
-                   nsISpeculativeConnect,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsIOService,
+                  nsIIOService,
+                  nsIIOService2,
+                  nsINetUtil,
+                  nsISpeculativeConnect,
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1194,7 +1194,7 @@ private:
     nsRefPtr<nsIOService>           mIOService;
 };
 
-NS_IMPL_ISUPPORTS1(IOServiceProxyCallback, nsIProtocolProxyCallback)
+NS_IMPL_ISUPPORTS(IOServiceProxyCallback, nsIProtocolProxyCallback)
 
 NS_IMETHODIMP
 IOServiceProxyCallback::OnProxyAvailable(nsICancelable *request, nsIURI *aURI,

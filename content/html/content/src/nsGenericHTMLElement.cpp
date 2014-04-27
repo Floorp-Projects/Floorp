@@ -195,8 +195,8 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGenericHTMLElementTearoff)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGenericHTMLElementTearoff)
 
 NS_INTERFACE_TABLE_HEAD(nsGenericHTMLElementTearoff)
-  NS_INTERFACE_TABLE_INHERITED1(nsGenericHTMLElementTearoff,
-                                nsIDOMElementCSSInlineStyle)
+  NS_INTERFACE_TABLE_INHERITED(nsGenericHTMLElementTearoff,
+                               nsIDOMElementCSSInlineStyle)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsGenericHTMLElementTearoff)
 NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 
@@ -1924,9 +1924,9 @@ nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
   NS_ASSERTION(!mForm, "mForm should be null at this point!");
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsGenericHTMLFormElement,
-                             nsGenericHTMLElement,
-                             nsIFormControl)
+NS_IMPL_ISUPPORTS_INHERITED(nsGenericHTMLFormElement,
+                            nsGenericHTMLElement,
+                            nsIFormControl)
 
 mozilla::dom::ParentObject
 nsGenericHTMLFormElement::GetParentObject() const

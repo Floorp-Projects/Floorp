@@ -86,9 +86,9 @@ NS_IMPL_RELEASE_INHERITED(HTMLButtonElement, Element)
 
 // QueryInterface implementation for HTMLButtonElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLButtonElement)
-  NS_INTERFACE_TABLE_INHERITED2(HTMLButtonElement,
-                                nsIDOMHTMLButtonElement,
-                                nsIConstraintValidation)
+  NS_INTERFACE_TABLE_INHERITED(HTMLButtonElement,
+                               nsIDOMHTMLButtonElement,
+                               nsIConstraintValidation)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElementWithState)
 
 // nsIConstraintValidation

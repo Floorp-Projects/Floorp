@@ -7,7 +7,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS1(nsIMEPicker, nsIIMEPicker)
+NS_IMPL_ISUPPORTS(nsIMEPicker, nsIIMEPicker)
 
 nsIMEPicker::nsIMEPicker()
 {

@@ -22,12 +22,12 @@
 NS_IMPL_CLASSINFO(nsSystemPrincipal, nullptr,
                   nsIClassInfo::SINGLETON | nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_SYSTEMPRINCIPAL_CID)
-NS_IMPL_QUERY_INTERFACE2_CI(nsSystemPrincipal,
+NS_IMPL_QUERY_INTERFACE_CI(nsSystemPrincipal,
+                           nsIPrincipal,
+                           nsISerializable)
+NS_IMPL_CI_INTERFACE_GETTER(nsSystemPrincipal,
                             nsIPrincipal,
                             nsISerializable)
-NS_IMPL_CI_INTERFACE_GETTER2(nsSystemPrincipal,
-                             nsIPrincipal,
-                             nsISerializable)
 
 NS_IMETHODIMP_(MozExternalRefCountType)
 nsSystemPrincipal::AddRef()

@@ -7,7 +7,7 @@
 #include "nsStringStream.h"
 #include "nsNetUtil.h"
 
-NS_IMPL_ISUPPORTS1(nsAboutBlank, nsIAboutModule)
+NS_IMPL_ISUPPORTS(nsAboutBlank, nsIAboutModule)
 
 NS_IMETHODIMP
 nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)

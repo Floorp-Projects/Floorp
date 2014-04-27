@@ -17,7 +17,7 @@ GenericClassInfo::Release()
   return 1;
 }
 
-NS_IMPL_QUERY_INTERFACE1(GenericClassInfo, nsIClassInfo)
+NS_IMPL_QUERY_INTERFACE(GenericClassInfo, nsIClassInfo)
 
 NS_IMETHODIMP
 GenericClassInfo::GetInterfaces(uint32_t* countp, nsIID*** array)

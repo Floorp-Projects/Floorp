@@ -35,7 +35,7 @@ Notes to self:
 #include "nsILoadContext.h"
 #include "nsAutoPtr.h"
 
-NS_IMPL_ISUPPORTS1(nsTransferable, nsITransferable)
+NS_IMPL_ISUPPORTS(nsTransferable, nsITransferable)
 
 uint32_t GetDataForFlavor (const nsTArray<DataStruct>& aArray,
                            const char* aDataFlavor)

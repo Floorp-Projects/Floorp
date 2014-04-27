@@ -89,7 +89,7 @@ private:
   int mVisits;
   int mExpectedVisits;
 };
-NS_IMPL_ISUPPORTS1(
+NS_IMPL_ISUPPORTS(
   VisitURIObserver,
   nsIObserver
 )
@@ -364,7 +364,7 @@ namespace test_observer_topic_dispatched_helpers {
     const bool mExpectVisit;
     bool& mNotified;
   };
-  NS_IMPL_ISUPPORTS1(
+  NS_IMPL_ISUPPORTS(
     statusObserver,
     nsIObserver
   )

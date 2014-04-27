@@ -468,7 +468,7 @@ private:
   bool mStopIssued;
 };
 
-NS_IMPL_ISUPPORTS1(MediaRecorder::Session, nsIObserver)
+NS_IMPL_ISUPPORTS(MediaRecorder::Session, nsIObserver)
 
 MediaRecorder::~MediaRecorder()
 {

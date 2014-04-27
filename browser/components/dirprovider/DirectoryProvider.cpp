@@ -27,9 +27,9 @@
 namespace mozilla {
 namespace browser {
 
-NS_IMPL_ISUPPORTS2(DirectoryProvider,
-                   nsIDirectoryServiceProvider,
-                   nsIDirectoryServiceProvider2)
+NS_IMPL_ISUPPORTS(DirectoryProvider,
+                  nsIDirectoryServiceProvider,
+                  nsIDirectoryServiceProvider2)
 
 NS_IMETHODIMP
 DirectoryProvider::GetFile(const char *aKey, bool *aPersist, nsIFile* *aResult)
@@ -254,7 +254,7 @@ DirectoryProvider::GetFiles(const char *aKey, nsISimpleEnumerator* *aResult)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMPL_ISUPPORTS1(DirectoryProvider::AppendingEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(DirectoryProvider::AppendingEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 DirectoryProvider::AppendingEnumerator::HasMoreElements(bool *aResult)

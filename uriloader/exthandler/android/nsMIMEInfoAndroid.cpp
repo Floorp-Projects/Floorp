@@ -12,7 +12,7 @@
 
 using namespace mozilla::widget::android;
 
-NS_IMPL_ISUPPORTS2(nsMIMEInfoAndroid, nsIMIMEInfo, nsIHandlerInfo)
+NS_IMPL_ISUPPORTS(nsMIMEInfoAndroid, nsIMIMEInfo, nsIHandlerInfo)
 
 NS_IMETHODIMP
 nsMIMEInfoAndroid::LaunchDefaultWithFile(nsIFile* aFile)
@@ -378,7 +378,7 @@ nsMIMEInfoAndroid::nsMIMEInfoAndroid(const nsACString& aMIMEType) :
   mHandlerApps->AppendElement(mPrefApp, false);
 }
 
-NS_IMPL_ISUPPORTS1(nsMIMEInfoAndroid::SystemChooser, nsIHandlerApp)
+NS_IMPL_ISUPPORTS(nsMIMEInfoAndroid::SystemChooser, nsIHandlerApp)
 
 
 nsresult nsMIMEInfoAndroid::SystemChooser::GetName(nsAString & aName) {

@@ -225,7 +225,7 @@ void OnFifoEnabledChange(const char* /*unused*/, void* /*unused*/)
 } // anonymous namespace
 #endif // MOZ_SUPPORTS_FIFO }
 
-NS_IMPL_ISUPPORTS1(nsMemoryInfoDumper, nsIMemoryInfoDumper)
+NS_IMPL_ISUPPORTS(nsMemoryInfoDumper, nsIMemoryInfoDumper)
 
 nsMemoryInfoDumper::nsMemoryInfoDumper()
 {
@@ -403,7 +403,7 @@ private:
   nsRefPtr<nsGZFileWriter> mWriter;
 };
 
-NS_IMPL_ISUPPORTS1(DumpReportCallback, nsIHandleReportCallback)
+NS_IMPL_ISUPPORTS(DumpReportCallback, nsIHandleReportCallback)
 
 } // namespace mozilla
 
@@ -494,7 +494,7 @@ private:
   nsString mIdentifier;
 };
 
-NS_IMPL_ISUPPORTS1(TempDirMemoryFinishCallback, nsIFinishReportingCallback)
+NS_IMPL_ISUPPORTS(TempDirMemoryFinishCallback, nsIFinishReportingCallback)
 
 NS_IMETHODIMP
 nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
@@ -712,7 +712,7 @@ private:
   nsCOMPtr<nsISupports> mFinishDumpingData;
 };
 
-NS_IMPL_ISUPPORTS1(FinishReportingCallback, nsIFinishReportingCallback)
+NS_IMPL_ISUPPORTS(FinishReportingCallback, nsIFinishReportingCallback)
 
 NS_IMETHODIMP
 nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(

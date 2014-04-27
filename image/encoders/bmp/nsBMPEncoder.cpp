@@ -13,7 +13,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS3(nsBMPEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
+NS_IMPL_ISUPPORTS(nsBMPEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
 
 nsBMPEncoder::nsBMPEncoder() : mImageBufferStart(nullptr), 
                                mImageBufferCurr(0),

@@ -8,7 +8,7 @@
 namespace mozilla {
 namespace system {
 
-NS_IMPL_ISUPPORTS1(nsVolumeStat, nsIVolumeStat)
+NS_IMPL_ISUPPORTS(nsVolumeStat, nsIVolumeStat)
 
 nsVolumeStat::nsVolumeStat(const nsAString& aPath)
 {

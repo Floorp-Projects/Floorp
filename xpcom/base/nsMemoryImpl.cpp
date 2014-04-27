@@ -25,7 +25,7 @@
 
 static nsMemoryImpl sGlobalMemory;
 
-NS_IMPL_QUERY_INTERFACE1(nsMemoryImpl, nsIMemory)
+NS_IMPL_QUERY_INTERFACE(nsMemoryImpl, nsIMemory)
 
 NS_IMETHODIMP_(void*)
 nsMemoryImpl::Alloc(size_t size)
@@ -175,7 +175,7 @@ nsMemoryImpl::RunFlushers(const char16_t* aReason)
 // XXX need NS_IMPL_STATIC_ADDREF/RELEASE
 NS_IMETHODIMP_(MozExternalRefCountType) nsMemoryImpl::FlushEvent::AddRef() { return 2; }
 NS_IMETHODIMP_(MozExternalRefCountType) nsMemoryImpl::FlushEvent::Release() { return 1; }
-NS_IMPL_QUERY_INTERFACE1(nsMemoryImpl::FlushEvent, nsIRunnable)
+NS_IMPL_QUERY_INTERFACE(nsMemoryImpl::FlushEvent, nsIRunnable)
 
 NS_IMETHODIMP
 nsMemoryImpl::FlushEvent::Run()

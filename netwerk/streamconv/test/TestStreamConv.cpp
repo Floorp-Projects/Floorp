@@ -86,9 +86,9 @@ public:
                              nsresult aStatus) { return NS_OK; }
 };
 
-NS_IMPL_ISUPPORTS2(EndListener,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(EndListener,
+                  nsIStreamListener,
+                  nsIRequestObserver)
 
 ////////////////////////////////////////////////////////////////////////
 // EndListener END

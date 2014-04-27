@@ -1348,8 +1348,8 @@ nsHttpChannelAuthProvider::GetCurrentPath(nsACString &path)
     return rv;
 }
 
-NS_IMPL_ISUPPORTS3(nsHttpChannelAuthProvider, nsICancelable,
-                   nsIHttpChannelAuthProvider, nsIAuthPromptCallback)
+NS_IMPL_ISUPPORTS(nsHttpChannelAuthProvider, nsICancelable,
+                  nsIHttpChannelAuthProvider, nsIAuthPromptCallback)
 
 } // namespace mozilla::net
 } // namespace mozilla

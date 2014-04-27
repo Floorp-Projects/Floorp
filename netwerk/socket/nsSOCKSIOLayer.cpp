@@ -177,7 +177,7 @@ nsSOCKSSocketInfo::Init(int32_t version, int32_t family, const char *proxyHost, 
     mFlags           = flags;
 }
 
-NS_IMPL_ISUPPORTS2(nsSOCKSSocketInfo, nsISOCKSSocketInfo, nsIDNSListener)
+NS_IMPL_ISUPPORTS(nsSOCKSSocketInfo, nsISOCKSSocketInfo, nsIDNSListener)
 
 NS_IMETHODIMP 
 nsSOCKSSocketInfo::GetExternalProxyAddr(NetAddr * *aExternalProxyAddr)

@@ -7,7 +7,7 @@
 #include "nsExternalSharingAppService.h"
 #include "nsString.h"
 
-NS_IMPL_ISUPPORTS1(nsExternalSharingAppService, nsIExternalSharingAppService)
+NS_IMPL_ISUPPORTS(nsExternalSharingAppService, nsIExternalSharingAppService)
 
 nsExternalSharingAppService::nsExternalSharingAppService()
   : mShareUi(nullptr)

@@ -199,7 +199,7 @@ TabParent* sEventCapturer;
 
 TabParent *TabParent::mIMETabParent = nullptr;
 
-NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIAuthPromptProvider, nsISecureBrowserUI)
+NS_IMPL_ISUPPORTS(TabParent, nsITabParent, nsIAuthPromptProvider, nsISecureBrowserUI)
 
 TabParent::TabParent(ContentParent* aManager, const TabContext& aContext, uint32_t aChromeFlags)
   : TabContext(aContext)

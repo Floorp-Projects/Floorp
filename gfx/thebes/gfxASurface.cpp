@@ -656,7 +656,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS1(SurfaceMemoryReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(SurfaceMemoryReporter, nsIMemoryReporter)
 
 void
 gfxASurface::RecordMemoryUsedForSurfaceType(gfxSurfaceType aType,

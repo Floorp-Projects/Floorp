@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace psm {
 
-NS_IMPL_ISUPPORTS1(NSSErrorsService, nsINSSErrorsService)
+NS_IMPL_ISUPPORTS(NSSErrorsService, nsINSSErrorsService)
 
 nsresult
 NSSErrorsService::Init()

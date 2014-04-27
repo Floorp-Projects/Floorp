@@ -49,8 +49,8 @@ extern PRLogModuleInfo* gRtspLog;
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS1(RtspController,
-                   nsIStreamingProtocolController)
+NS_IMPL_ISUPPORTS(RtspController,
+                  nsIStreamingProtocolController)
 
 RtspController::RtspController(nsIChannel *channel)
   : mState(INIT)

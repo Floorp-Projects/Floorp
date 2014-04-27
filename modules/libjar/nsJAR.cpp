@@ -91,7 +91,7 @@ nsJAR::~nsJAR()
   Close();
 }
 
-NS_IMPL_QUERY_INTERFACE1(nsJAR, nsIZipReader)
+NS_IMPL_QUERY_INTERFACE(nsJAR, nsIZipReader)
 NS_IMPL_ADDREF(nsJAR)
 
 // Custom Release method works with nsZipReaderCache...
@@ -847,7 +847,7 @@ nsresult nsJAR::CalculateDigest(const char* aInBuf, uint32_t aLen,
   return hasher->Finish(true, digest);
 }
 
-NS_IMPL_ISUPPORTS1(nsJAREnumerator, nsIUTF8StringEnumerator)
+NS_IMPL_ISUPPORTS(nsJAREnumerator, nsIUTF8StringEnumerator)
 
 //----------------------------------------------
 // nsJAREnumerator::HasMore
@@ -889,7 +889,7 @@ nsJAREnumerator::GetNext(nsACString& aResult)
 }
 
 
-NS_IMPL_ISUPPORTS1(nsJARItem, nsIZipEntry)
+NS_IMPL_ISUPPORTS(nsJARItem, nsIZipEntry)
 
 nsJARItem::nsJARItem(nsZipItem* aZipItem)
     : mSize(aZipItem->Size()),
@@ -1002,7 +1002,7 @@ nsJARItem::GetPermissions(uint32_t* aPermissions)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIZipReaderCache
 
-NS_IMPL_ISUPPORTS3(nsZipReaderCache, nsIZipReaderCache, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsZipReaderCache, nsIZipReaderCache, nsIObserver, nsISupportsWeakReference)
 
 nsZipReaderCache::nsZipReaderCache()
   : mLock("nsZipReaderCache.mLock")

@@ -17,7 +17,7 @@
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
-NS_IMPL_ISUPPORTS1(nsPKCS11Slot, nsIPKCS11Slot)
+NS_IMPL_ISUPPORTS(nsPKCS11Slot, nsIPKCS11Slot)
 
 nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo *slot)
 {
@@ -223,7 +223,7 @@ nsPKCS11Slot::GetStatus(uint32_t *_retval)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsPKCS11Module, nsIPKCS11Module)
+NS_IMPL_ISUPPORTS(nsPKCS11Module, nsIPKCS11Module)
 
 nsPKCS11Module::nsPKCS11Module(SECMODModule *module)
 {
@@ -363,7 +363,7 @@ nsPKCS11Module::ListSlots(nsIEnumerator **_retval)
   return rv;
 }
 
-NS_IMPL_ISUPPORTS2(nsPKCS11ModuleDB, nsIPKCS11ModuleDB, nsICryptoFIPSInfo)
+NS_IMPL_ISUPPORTS(nsPKCS11ModuleDB, nsIPKCS11ModuleDB, nsICryptoFIPSInfo)
 
 nsPKCS11ModuleDB::nsPKCS11ModuleDB()
 {

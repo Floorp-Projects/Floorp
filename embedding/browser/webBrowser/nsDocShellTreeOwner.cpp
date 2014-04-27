@@ -1003,7 +1003,7 @@ protected:
     nsCOMPtr<nsIAtom>   mTag_window;
 };
 
-NS_IMPL_ISUPPORTS1(DefaultTooltipTextProvider, nsITooltipTextProvider)
+NS_IMPL_ISUPPORTS(DefaultTooltipTextProvider, nsITooltipTextProvider)
 
 DefaultTooltipTextProvider::DefaultTooltipTextProvider()
 {
@@ -1132,7 +1132,7 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, char16_t **aText,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS1(ChromeTooltipListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(ChromeTooltipListener, nsIDOMEventListener)
 
 //
 // ChromeTooltipListener ctor
@@ -1525,7 +1525,7 @@ ChromeTooltipListener::sAutoHideCallback(nsITimer *aTimer, void* aListener)
 } // sAutoHideCallback
 
 
-NS_IMPL_ISUPPORTS1(ChromeContextMenuListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(ChromeContextMenuListener, nsIDOMEventListener)
 
 
 //

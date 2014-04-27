@@ -36,9 +36,9 @@ GtkPaperSize* moz_gtk_paper_size_copy_to_new_custom(GtkPaperSize* oldPaperSize)
                                    GTK_UNIT_INCH);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsPrintSettingsGTK, 
-                             nsPrintSettings, 
-                             nsPrintSettingsGTK)
+NS_IMPL_ISUPPORTS_INHERITED(nsPrintSettingsGTK, 
+                            nsPrintSettings, 
+                            nsPrintSettingsGTK)
 
 /** ---------------------------------------------------
  */

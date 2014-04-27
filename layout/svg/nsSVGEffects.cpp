@@ -21,7 +21,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 // nsSVGRenderingObserver impl
-NS_IMPL_ISUPPORTS1(nsSVGRenderingObserver, nsIMutationObserver)
+NS_IMPL_ISUPPORTS(nsSVGRenderingObserver, nsIMutationObserver)
 
 void
 nsSVGRenderingObserver::StartListening()
@@ -214,7 +214,7 @@ nsSVGRenderingObserver::ContentRemoved(nsIDocument *aDocument,
   DoUpdate();
 }
 
-NS_IMPL_ISUPPORTS1(nsSVGFilterProperty, nsISupports)
+NS_IMPL_ISUPPORTS(nsSVGFilterProperty, nsISupports)
 
 nsSVGFilterProperty::nsSVGFilterProperty(const nsTArray<nsStyleFilter> &aFilters,
                                          nsIFrame *aFilteredFrame) :
@@ -266,9 +266,9 @@ nsSVGFilterProperty::Invalidate()
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsSVGFilterReference,
-                             nsSVGIDRenderingObserver,
-                             nsISVGFilterReference);
+NS_IMPL_ISUPPORTS_INHERITED(nsSVGFilterReference,
+                            nsSVGIDRenderingObserver,
+                            nsISVGFilterReference);
 
 nsSVGFilterFrame *
 nsSVGFilterReference::GetFilterFrame()

@@ -14,7 +14,7 @@
 
 #include "nsICacheService.h"
 
-NS_IMPL_ISUPPORTS2(nsAboutCache, nsIAboutModule, nsICacheVisitor)
+NS_IMPL_ISUPPORTS(nsAboutCache, nsIAboutModule, nsICacheVisitor)
 
 NS_IMETHODIMP
 nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)

@@ -395,7 +395,7 @@ private:
   nsCOMPtr<nsIObjectLoadingContent> mContent;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsStopPluginRunnable, nsRunnable, nsITimerCallback)
+NS_IMPL_ISUPPORTS_INHERITED(nsStopPluginRunnable, nsRunnable, nsITimerCallback)
 
 NS_IMETHODIMP
 nsStopPluginRunnable::Notify(nsITimer *aTimer)
@@ -3514,5 +3514,5 @@ nsObjectLoadingContent::SetupProtoChainRunner::Run()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsObjectLoadingContent::SetupProtoChainRunner, nsIRunnable)
+NS_IMPL_ISUPPORTS(nsObjectLoadingContent::SetupProtoChainRunner, nsIRunnable)
 

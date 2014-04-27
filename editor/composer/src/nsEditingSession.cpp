@@ -86,8 +86,8 @@ nsEditingSession::~nsEditingSession()
     mLoadBlankDocTimer->Cancel();
 }
 
-NS_IMPL_ISUPPORTS3(nsEditingSession, nsIEditingSession, nsIWebProgressListener, 
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsEditingSession, nsIEditingSession, nsIWebProgressListener, 
+                  nsISupportsWeakReference)
 
 /*---------------------------------------------------------------------------
 

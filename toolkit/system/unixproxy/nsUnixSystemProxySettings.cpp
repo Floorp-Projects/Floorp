@@ -45,7 +45,7 @@ private:
   nsresult SetProxyResultFromGSettings(const char* aKeyBase, const char* aType, nsACString& aResult);
 };
 
-NS_IMPL_ISUPPORTS1(nsUnixSystemProxySettings, nsISystemProxySettings)
+NS_IMPL_ISUPPORTS(nsUnixSystemProxySettings, nsISystemProxySettings)
 
 NS_IMETHODIMP
 nsUnixSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly)

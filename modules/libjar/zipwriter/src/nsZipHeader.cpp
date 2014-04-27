@@ -21,7 +21,7 @@
 /**
  * nsZipHeader represents an entry from a zip file.
  */
-NS_IMPL_ISUPPORTS1(nsZipHeader, nsIZipEntry)
+NS_IMPL_ISUPPORTS(nsZipHeader, nsIZipEntry)
 
 /* readonly attribute unsigned short compression; */
 NS_IMETHODIMP nsZipHeader::GetCompression(uint16_t *aCompression)

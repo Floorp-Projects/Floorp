@@ -64,7 +64,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIdleServiceDaily
 
-NS_IMPL_ISUPPORTS2(nsIdleServiceDaily, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsIdleServiceDaily, nsIObserver, nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsIdleServiceDaily::Observe(nsISupports *,
@@ -416,7 +416,7 @@ nsIdleService::~nsIdleService()
   gIdleService = nullptr;
 }
 
-NS_IMPL_ISUPPORTS2(nsIdleService, nsIIdleService, nsIIdleServiceInternal)
+NS_IMPL_ISUPPORTS(nsIdleService, nsIIdleService, nsIIdleServiceInternal)
 
 NS_IMETHODIMP
 nsIdleService::AddIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS)

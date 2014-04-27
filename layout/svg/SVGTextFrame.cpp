@@ -3315,7 +3315,7 @@ SVGTextFrame::ScheduleReflowSVGNonDisplayText()
     f, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
 }
 
-NS_IMPL_ISUPPORTS1(SVGTextFrame::MutationObserver, nsIMutationObserver)
+NS_IMPL_ISUPPORTS(SVGTextFrame::MutationObserver, nsIMutationObserver)
 
 void
 SVGTextFrame::MutationObserver::ContentAppended(nsIDocument* aDocument,

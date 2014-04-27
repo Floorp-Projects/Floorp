@@ -658,7 +658,7 @@ private:
   nsWeakPtr mDocument;
 };
 
-NS_IMPL_ISUPPORTS1(VibrateWindowListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(VibrateWindowListener, nsIDOMEventListener)
 
 StaticRefPtr<VibrateWindowListener> gVibrateWindowListener;
 
@@ -1017,9 +1017,9 @@ class BeaconStreamListener MOZ_FINAL : public nsIStreamListener
     NS_DECL_NSIREQUESTOBSERVER
 };
 
-NS_IMPL_ISUPPORTS2(BeaconStreamListener,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(BeaconStreamListener,
+                  nsIStreamListener,
+                  nsIRequestObserver)
 
 
 NS_IMETHODIMP

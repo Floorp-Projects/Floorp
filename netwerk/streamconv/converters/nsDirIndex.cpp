@@ -6,8 +6,8 @@
 #include "nsDirIndex.h"
 #include "nsISupportsObsolete.h"
 
-NS_IMPL_ISUPPORTS1(nsDirIndex,
-                   nsIDirIndex)
+NS_IMPL_ISUPPORTS(nsDirIndex,
+                  nsIDirIndex)
 
 nsDirIndex::nsDirIndex() : mType(TYPE_UNKNOWN),
                            mSize(UINT64_MAX),

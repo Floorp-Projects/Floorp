@@ -45,7 +45,7 @@ namespace power {
 
 using namespace hal;
 
-NS_IMPL_ISUPPORTS1(PowerManagerService, nsIPowerManagerService)
+NS_IMPL_ISUPPORTS(PowerManagerService, nsIPowerManagerService)
 
 /* static */ StaticRefPtr<PowerManagerService> PowerManagerService::sSingleton;
 

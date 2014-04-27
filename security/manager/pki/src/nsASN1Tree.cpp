@@ -8,7 +8,7 @@
 #include "nsIMutableArray.h"
 #include "nsArrayUtils.h"
 
-NS_IMPL_ISUPPORTS2(nsNSSASN1Tree, nsIASN1Tree, nsITreeView)
+NS_IMPL_ISUPPORTS(nsNSSASN1Tree, nsIASN1Tree, nsITreeView)
 
 nsNSSASN1Tree::nsNSSASN1Tree() 
 :mTopNode(nullptr)

@@ -83,9 +83,9 @@ nsCommandLine::nsCommandLine() :
 
 
 NS_IMPL_CLASSINFO(nsCommandLine, nullptr, 0, NS_COMMANDLINE_CID)
-NS_IMPL_ISUPPORTS2_CI(nsCommandLine,
-                      nsICommandLine,
-                      nsICommandLineRunner)
+NS_IMPL_ISUPPORTS_CI(nsCommandLine,
+                     nsICommandLine,
+                     nsICommandLineRunner)
 
 NS_IMETHODIMP
 nsCommandLine::GetLength(int32_t *aResult)

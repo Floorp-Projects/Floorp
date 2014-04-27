@@ -105,9 +105,9 @@ public:
 
 StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 
-NS_IMPL_ISUPPORTS1(MediaMemoryTracker, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(MediaMemoryTracker, nsIMemoryReporter)
 
-NS_IMPL_ISUPPORTS1(MediaDecoder, nsIObserver)
+NS_IMPL_ISUPPORTS(MediaDecoder, nsIObserver)
 
 void MediaDecoder::SetDormantIfNecessary(bool aDormant)
 {

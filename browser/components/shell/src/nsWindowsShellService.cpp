@@ -60,7 +60,7 @@ using mozilla::IsWin8OrLater;
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellService)
+NS_IMPL_ISUPPORTS(nsWindowsShellService, nsIWindowsShellService, nsIShellService)
 
 static nsresult
 OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)

@@ -7,10 +7,10 @@
 #include "MainThreadUtils.h"
 #endif
 
-NS_IMPL_ISUPPORTS3(nsStreamListenerWrapper,
-                   nsIStreamListener,
-                   nsIRequestObserver,
-                   nsIThreadRetargetableStreamListener)
+NS_IMPL_ISUPPORTS(nsStreamListenerWrapper,
+                  nsIStreamListener,
+                  nsIRequestObserver,
+                  nsIThreadRetargetableStreamListener)
 
 NS_IMETHODIMP
 nsStreamListenerWrapper::CheckListenerChain()

@@ -228,7 +228,7 @@ nsNavBookmarks::~nsNavBookmarks()
 }
 
 
-NS_IMPL_ISUPPORTS5(nsNavBookmarks
+NS_IMPL_ISUPPORTS(nsNavBookmarks
 , nsINavBookmarksService
 , nsINavHistoryObserver
 , nsIAnnotationObserver
@@ -1006,7 +1006,7 @@ nsNavBookmarks::GetIdForItemAt(int64_t aFolder,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsNavBookmarks::RemoveFolderTransaction, nsITransaction)
+NS_IMPL_ISUPPORTS(nsNavBookmarks::RemoveFolderTransaction, nsITransaction)
 
 NS_IMETHODIMP
 nsNavBookmarks::GetRemoveFolderTransaction(int64_t aFolderId, nsITransaction** aResult)

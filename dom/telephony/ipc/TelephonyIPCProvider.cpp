@@ -36,10 +36,10 @@ getDefaultServiceId()
 
 } // Anonymous namespace
 
-NS_IMPL_ISUPPORTS3(TelephonyIPCProvider,
-                   nsITelephonyProvider,
-                   nsITelephonyListener,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(TelephonyIPCProvider,
+                  nsITelephonyProvider,
+                  nsITelephonyListener,
+                  nsIObserver)
 
 TelephonyIPCProvider::TelephonyIPCProvider()
 {

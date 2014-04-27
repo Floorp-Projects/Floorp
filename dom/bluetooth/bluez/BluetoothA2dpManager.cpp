@@ -473,5 +473,5 @@ BluetoothA2dpManager::GetTitle(nsAString& aTitle)
   aTitle.Assign(mTitle);
 }
 
-NS_IMPL_ISUPPORTS1(BluetoothA2dpManager, nsIObserver)
+NS_IMPL_ISUPPORTS(BluetoothA2dpManager, nsIObserver)
 

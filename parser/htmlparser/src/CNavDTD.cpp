@@ -10,7 +10,7 @@
 #include "CNavDTD.h"
 #include "nsIHTMLContentSink.h"
 
-NS_IMPL_ISUPPORTS1(CNavDTD, nsIDTD);
+NS_IMPL_ISUPPORTS(CNavDTD, nsIDTD);
 
 CNavDTD::CNavDTD()
 {

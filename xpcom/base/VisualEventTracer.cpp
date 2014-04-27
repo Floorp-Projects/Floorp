@@ -518,7 +518,7 @@ protected:
   TimeStamp mProfilerStart;
 };
 
-NS_IMPL_ISUPPORTS1(VisualEventTracerLog, nsIVisualEventTracerLog)
+NS_IMPL_ISUPPORTS(VisualEventTracerLog, nsIVisualEventTracerLog)
 
 VisualEventTracerLog::~VisualEventTracerLog()
 {
@@ -607,7 +607,7 @@ VisualEventTracerLog::WriteToProfilingFile()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(VisualEventTracer, nsIVisualEventTracer)
+NS_IMPL_ISUPPORTS(VisualEventTracer, nsIVisualEventTracer)
 
 NS_IMETHODIMP
 VisualEventTracer::Start(const uint32_t aMaxBacklogSeconds)

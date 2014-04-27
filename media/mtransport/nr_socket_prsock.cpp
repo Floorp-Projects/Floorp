@@ -657,7 +657,7 @@ abort:
 }
 
 // NrSocketIpc Implementation
-NS_IMPL_ISUPPORTS1(NrSocketIpc, nsIUDPSocketInternal)
+NS_IMPL_ISUPPORTS(NrSocketIpc, nsIUDPSocketInternal)
 
 NrSocketIpc::NrSocketIpc(const nsCOMPtr<nsIEventTarget> &main_thread)
     : err_(false),

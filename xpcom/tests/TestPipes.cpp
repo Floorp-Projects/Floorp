@@ -146,7 +146,7 @@ protected:
     uint32_t            mCount;
 };
 
-NS_IMPL_ISUPPORTS1(nsReceiver, nsIRunnable)
+NS_IMPL_ISUPPORTS(nsReceiver, nsIRunnable)
 
 nsresult
 TestPipe(nsIInputStream* in, nsIOutputStream* out)
@@ -261,7 +261,7 @@ protected:
     Monitor*                 mMon;
 };
 
-NS_IMPL_ISUPPORTS1(nsShortReader, nsIRunnable)
+NS_IMPL_ISUPPORTS(nsShortReader, nsIRunnable)
 
 nsresult
 TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
@@ -352,7 +352,7 @@ protected:
     uint32_t                            mCount;
 };
 
-NS_IMPL_ISUPPORTS1(nsPump, nsIRunnable)
+NS_IMPL_ISUPPORTS(nsPump, nsIRunnable)
 
 nsresult
 TestChainedPipes()

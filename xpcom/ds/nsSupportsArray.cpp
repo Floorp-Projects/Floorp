@@ -173,7 +173,7 @@ nsSupportsArray::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
   return it->QueryInterface(aIID, aResult);
 }
 
-NS_IMPL_ISUPPORTS3(nsSupportsArray, nsISupportsArray, nsICollection, nsISerializable)
+NS_IMPL_ISUPPORTS(nsSupportsArray, nsISupportsArray, nsICollection, nsISerializable)
 
 NS_IMETHODIMP
 nsSupportsArray::Read(nsIObjectInputStream *aStream)

@@ -269,8 +269,8 @@ public:
 
 uint32_t BackgroundTester::sCallbackCount = 0;
 
-NS_IMPL_ISUPPORTS2(BackgroundTester, nsIIPCBackgroundChildCreateCallback,
-                                     nsIObserver)
+NS_IMPL_ISUPPORTS(BackgroundTester, nsIIPCBackgroundChildCreateCallback,
+                  nsIObserver)
 
 #endif // ENABLE_TESTS
 
@@ -345,7 +345,7 @@ public:
     NS_DECL_NSIMEMORYREPORTER
 };
 
-NS_IMPL_ISUPPORTS1(ContentParentsMemoryReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(ContentParentsMemoryReporter, nsIMemoryReporter)
 
 NS_IMETHODIMP
 ContentParentsMemoryReporter::CollectReports(nsIMemoryReporterCallback* cb,
@@ -933,8 +933,8 @@ private:
 StaticAutoPtr<LinkedList<SystemMessageHandledListener> >
     SystemMessageHandledListener::sListeners;
 
-NS_IMPL_ISUPPORTS1(SystemMessageHandledListener,
-                   nsITimerCallback)
+NS_IMPL_ISUPPORTS(SystemMessageHandledListener,
+                  nsITimerCallback)
 
 } // anonymous namespace
 
@@ -3438,7 +3438,7 @@ ContentParent::DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor)
 } // namespace dom
 } // namespace mozilla
 
-NS_IMPL_ISUPPORTS1(ParentIdleListener, nsIObserver)
+NS_IMPL_ISUPPORTS(ParentIdleListener, nsIObserver)
 
 NS_IMETHODIMP
 ParentIdleListener::Observe(nsISupports*, const char* aTopic, const char16_t* aData) {

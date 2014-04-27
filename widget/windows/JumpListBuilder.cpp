@@ -40,7 +40,7 @@ extern const wchar_t *gMozillaJumpListIDGeneric;
 bool JumpListBuilder::sBuildingList = false;
 const char kPrefTaskbarEnabled[] = "browser.taskbar.lists.enabled";
 
-NS_IMPL_ISUPPORTS2(JumpListBuilder, nsIJumpListBuilder, nsIObserver)
+NS_IMPL_ISUPPORTS(JumpListBuilder, nsIJumpListBuilder, nsIObserver)
 
 JumpListBuilder::JumpListBuilder() :
   mMaxItems(0),

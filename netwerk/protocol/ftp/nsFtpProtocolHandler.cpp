@@ -88,11 +88,11 @@ nsFtpProtocolHandler::~nsFtpProtocolHandler()
     gFtpHandler = nullptr;
 }
 
-NS_IMPL_ISUPPORTS4(nsFtpProtocolHandler,
-                   nsIProtocolHandler,
-                   nsIProxiedProtocolHandler,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsFtpProtocolHandler,
+                  nsIProtocolHandler,
+                  nsIProxiedProtocolHandler,
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 nsresult
 nsFtpProtocolHandler::Init()

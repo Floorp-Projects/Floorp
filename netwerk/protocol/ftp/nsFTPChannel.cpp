@@ -24,12 +24,12 @@ extern PRLogModuleInfo* gFTPLog;
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED4(nsFtpChannel,
-                             nsBaseChannel,
-                             nsIUploadChannel,
-                             nsIResumableChannel,
-                             nsIFTPChannel,
-                             nsIProxiedChannel)
+NS_IMPL_ISUPPORTS_INHERITED(nsFtpChannel,
+                            nsBaseChannel,
+                            nsIUploadChannel,
+                            nsIResumableChannel,
+                            nsIFTPChannel,
+                            nsIProxiedChannel)
 
 //-----------------------------------------------------------------------------
 
@@ -165,7 +165,7 @@ private:
     nsCOMPtr<nsIThread> mTargetThread;
 };
 
-NS_IMPL_ISUPPORTS1(FTPEventSinkProxy, nsIFTPEventSink)
+NS_IMPL_ISUPPORTS(FTPEventSinkProxy, nsIFTPEventSink)
 
 NS_IMETHODIMP
 FTPEventSinkProxy::OnFTPControlLog(bool aServer, const char* aMsg)

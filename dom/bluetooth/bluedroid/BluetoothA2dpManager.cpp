@@ -1102,5 +1102,5 @@ BluetoothA2dpManager::GetArtist(nsAString& aArtist)
   aArtist.Assign(mArtist);
 }
 
-NS_IMPL_ISUPPORTS1(BluetoothA2dpManager, nsIObserver)
+NS_IMPL_ISUPPORTS(BluetoothA2dpManager, nsIObserver)
 

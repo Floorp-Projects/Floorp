@@ -13,7 +13,7 @@
 #include "nsServiceManagerUtils.h"
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(nsScriptableUnicodeConverter, nsIScriptableUnicodeConverter)
+NS_IMPL_ISUPPORTS(nsScriptableUnicodeConverter, nsIScriptableUnicodeConverter)
 
 nsScriptableUnicodeConverter::nsScriptableUnicodeConverter()
 : mIsInternal(false)

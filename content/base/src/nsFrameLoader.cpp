@@ -122,7 +122,7 @@ public:
   nsRefPtr<nsIDocShell> mDocShell;
 };
 
-NS_IMPL_ISUPPORTS1(nsContentView, nsIContentView)
+NS_IMPL_ISUPPORTS(nsContentView, nsIContentView)
 
 nsresult
 nsContentView::Update(const ViewConfig& aConfig)

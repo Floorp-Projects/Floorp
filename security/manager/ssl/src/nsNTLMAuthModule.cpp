@@ -747,7 +747,7 @@ GenerateType3Msg(const nsString &domain,
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsNTLMAuthModule, nsIAuthModule)
+NS_IMPL_ISUPPORTS(nsNTLMAuthModule, nsIAuthModule)
 
 nsNTLMAuthModule::~nsNTLMAuthModule()
 {

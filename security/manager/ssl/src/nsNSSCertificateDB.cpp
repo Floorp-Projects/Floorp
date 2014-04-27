@@ -83,7 +83,7 @@ attemptToLogInWithDefaultPassword()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2(nsNSSCertificateDB, nsIX509CertDB, nsIX509CertDB2)
+NS_IMPL_ISUPPORTS(nsNSSCertificateDB, nsIX509CertDB, nsIX509CertDB2)
 
 nsNSSCertificateDB::nsNSSCertificateDB()
 : mBadCertsLock("nsNSSCertificateDB::mBadCertsLock")

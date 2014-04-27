@@ -159,10 +159,10 @@ nsXREDirProvider::SetProfile(nsIFile* aDir, nsIFile* aLocalDir)
   return NS_OK;
 }
 
-NS_IMPL_QUERY_INTERFACE3(nsXREDirProvider,
-                         nsIDirectoryServiceProvider,
-                         nsIDirectoryServiceProvider2,
-                         nsIProfileStartup)
+NS_IMPL_QUERY_INTERFACE(nsXREDirProvider,
+                        nsIDirectoryServiceProvider,
+                        nsIDirectoryServiceProvider2,
+                        nsIProfileStartup)
 
 NS_IMETHODIMP_(MozExternalRefCountType)
 nsXREDirProvider::AddRef()

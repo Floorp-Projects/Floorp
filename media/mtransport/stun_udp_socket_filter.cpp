@@ -100,7 +100,7 @@ class STUNUDPSocketFilter : public nsIUDPSocketFilter {
   std::set<PendingSTUNRequest> response_allowed_;
 };
 
-NS_IMPL_ISUPPORTS1(STUNUDPSocketFilter, nsIUDPSocketFilter)
+NS_IMPL_ISUPPORTS(STUNUDPSocketFilter, nsIUDPSocketFilter)
 
 NS_IMETHODIMP
 STUNUDPSocketFilter::FilterPacket(const mozilla::net::NetAddr *remote_addr,
@@ -194,7 +194,7 @@ bool STUNUDPSocketFilter::filter_outgoing_packet(const mozilla::net::NetAddr *re
 
 } // anonymous namespace
 
-NS_IMPL_ISUPPORTS1(nsStunUDPSocketFilterHandler, nsIUDPSocketFilterHandler)
+NS_IMPL_ISUPPORTS(nsStunUDPSocketFilterHandler, nsIUDPSocketFilterHandler)
 
 NS_IMETHODIMP nsStunUDPSocketFilterHandler::NewFilter(nsIUDPSocketFilter **result)
 {

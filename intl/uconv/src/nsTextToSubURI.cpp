@@ -20,7 +20,7 @@ nsTextToSubURI::~nsTextToSubURI()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsTextToSubURI, nsITextToSubURI)
+NS_IMPL_ISUPPORTS(nsTextToSubURI, nsITextToSubURI)
 
 NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
   const char *charset, const char16_t *text, char **_retval) 

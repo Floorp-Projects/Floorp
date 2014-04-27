@@ -127,7 +127,7 @@ nsContentAreaDragDrop::GetDragData(nsPIDOMWindow* aWindow,
 }
 
 
-NS_IMPL_ISUPPORTS1(nsContentAreaDragDropDataProvider, nsIFlavorDataProvider)
+NS_IMPL_ISUPPORTS(nsContentAreaDragDropDataProvider, nsIFlavorDataProvider)
 
 // SaveURIToFile
 // used on platforms where it's possible to drag items (e.g. images)

@@ -14,7 +14,7 @@
 // XXX why does nsMIMEInfoImpl have a threadsafe nsISupports?  do we need one 
 // here too?
 NS_IMPL_CLASSINFO(nsDBusHandlerApp, nullptr, 0, NS_DBUSHANDLERAPP_CID)
-NS_IMPL_ISUPPORTS2_CI(nsDBusHandlerApp, nsIDBusHandlerApp, nsIHandlerApp)
+NS_IMPL_ISUPPORTS_CI(nsDBusHandlerApp, nsIDBusHandlerApp, nsIHandlerApp)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIHandlerApp

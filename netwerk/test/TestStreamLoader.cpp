@@ -20,7 +20,7 @@ public:
   NS_DECL_NSISTREAMLOADEROBSERVER
 };
 
-NS_IMPL_ISUPPORTS1(MyStreamLoaderObserver, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(MyStreamLoaderObserver, nsIStreamLoaderObserver)
 
 NS_IMETHODIMP
 MyStreamLoaderObserver::OnStreamComplete(nsIStreamLoader *loader,

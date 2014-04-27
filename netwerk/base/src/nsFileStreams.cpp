@@ -44,9 +44,9 @@ nsFileStreamBase::~nsFileStreamBase()
     Close();
 }
 
-NS_IMPL_ISUPPORTS2(nsFileStreamBase,
-                   nsISeekableStream,
-                   nsIFileMetadata)
+NS_IMPL_ISUPPORTS(nsFileStreamBase,
+                  nsISeekableStream,
+                  nsIFileMetadata)
 
 NS_IMETHODIMP
 nsFileStreamBase::Seek(int32_t whence, int64_t offset)
@@ -369,11 +369,11 @@ NS_INTERFACE_MAP_BEGIN(nsFileInputStream)
     NS_IMPL_QUERY_CLASSINFO(nsFileInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsFileStreamBase)
 
-NS_IMPL_CI_INTERFACE_GETTER4(nsFileInputStream,
-                             nsIInputStream,
-                             nsIFileInputStream,
-                             nsISeekableStream,
-                             nsILineInputStream)
+NS_IMPL_CI_INTERFACE_GETTER(nsFileInputStream,
+                            nsIInputStream,
+                            nsIFileInputStream,
+                            nsISeekableStream,
+                            nsILineInputStream)
 
 nsresult
 nsFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -632,11 +632,11 @@ NS_INTERFACE_MAP_BEGIN(nsPartialFileInputStream)
     NS_IMPL_QUERY_CLASSINFO(nsPartialFileInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsFileStreamBase)
 
-NS_IMPL_CI_INTERFACE_GETTER4(nsPartialFileInputStream,
-                             nsIInputStream,
-                             nsIPartialFileInputStream,
-                             nsISeekableStream,
-                             nsILineInputStream)
+NS_IMPL_CI_INTERFACE_GETTER(nsPartialFileInputStream,
+                            nsIInputStream,
+                            nsIPartialFileInputStream,
+                            nsISeekableStream,
+                            nsILineInputStream)
 
 nsresult
 nsPartialFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID,
@@ -795,10 +795,10 @@ nsPartialFileInputStream::Deserialize(
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileOutputStream
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsFileOutputStream,
-                             nsFileStreamBase,
-                             nsIOutputStream,
-                             nsIFileOutputStream)
+NS_IMPL_ISUPPORTS_INHERITED(nsFileOutputStream,
+                            nsFileStreamBase,
+                            nsIOutputStream,
+                            nsIFileOutputStream)
  
 nsresult
 nsFileOutputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -835,11 +835,11 @@ nsFileOutputStream::Init(nsIFile* file, int32_t ioFlags, int32_t perm,
 ////////////////////////////////////////////////////////////////////////////////
 // nsAtomicFileOutputStream
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsAtomicFileOutputStream,
-                             nsFileOutputStream,
-                             nsISafeOutputStream,
-                             nsIOutputStream,
-                             nsIFileOutputStream)
+NS_IMPL_ISUPPORTS_INHERITED(nsAtomicFileOutputStream,
+                            nsFileOutputStream,
+                            nsISafeOutputStream,
+                            nsIOutputStream,
+                            nsIFileOutputStream)
 
 NS_IMETHODIMP
 nsAtomicFileOutputStream::Init(nsIFile* file, int32_t ioFlags, int32_t perm,
@@ -987,11 +987,11 @@ nsSafeFileOutputStream::Finish()
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileStream
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsFileStream,
-                             nsFileStreamBase,
-                             nsIInputStream,
-                             nsIOutputStream,
-                             nsIFileStream)
+NS_IMPL_ISUPPORTS_INHERITED(nsFileStream,
+                            nsFileStreamBase,
+                            nsIInputStream,
+                            nsIOutputStream,
+                            nsIFileStream)
 
 NS_IMETHODIMP
 nsFileStream::Init(nsIFile* file, int32_t ioFlags, int32_t perm,

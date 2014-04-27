@@ -79,7 +79,7 @@ EventListenerInfo::GetListenerObject(JSContext* aCx,
  * mozilla::EventListenerService
  ******************************************************************************/
 
-NS_IMPL_ISUPPORTS1(EventListenerService, nsIEventListenerService)
+NS_IMPL_ISUPPORTS(EventListenerService, nsIEventListenerService)
 
 bool
 EventListenerInfo::GetJSVal(JSContext* aCx,

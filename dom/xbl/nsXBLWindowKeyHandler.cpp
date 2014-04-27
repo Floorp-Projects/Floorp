@@ -67,7 +67,7 @@ public:
 const char nsXBLSpecialDocInfo::sHTMLBindingStr[] =
   "chrome://global/content/platformHTMLBindings.xml";
 
-NS_IMPL_ISUPPORTS1(nsXBLSpecialDocInfo, nsIObserver)
+NS_IMPL_ISUPPORTS(nsXBLSpecialDocInfo, nsIObserver)
 
 NS_IMETHODIMP
 nsXBLSpecialDocInfo::Observe(nsISupports* aSubject,
@@ -183,8 +183,8 @@ nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
   }
 }
 
-NS_IMPL_ISUPPORTS1(nsXBLWindowKeyHandler,
-                   nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(nsXBLWindowKeyHandler,
+                  nsIDOMEventListener)
 
 static void
 BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)

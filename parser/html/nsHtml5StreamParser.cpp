@@ -73,8 +73,8 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsHtml5StreamParser)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsHtml5StreamParser)
 
 NS_INTERFACE_TABLE_HEAD(nsHtml5StreamParser)
-  NS_INTERFACE_TABLE1(nsHtml5StreamParser,
-                      nsICharsetDetectionObserver)
+  NS_INTERFACE_TABLE(nsHtml5StreamParser,
+                     nsICharsetDetectionObserver)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsHtml5StreamParser)
 NS_INTERFACE_MAP_END
 

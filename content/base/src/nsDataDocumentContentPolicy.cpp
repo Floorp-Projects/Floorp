@@ -16,7 +16,7 @@
 #include "nsINode.h"
 #include "nsIDOMWindow.h"
 
-NS_IMPL_ISUPPORTS1(nsDataDocumentContentPolicy, nsIContentPolicy)
+NS_IMPL_ISUPPORTS(nsDataDocumentContentPolicy, nsIContentPolicy)
 
 // Helper method for ShouldLoad()
 // Checks a URI for the given flags.  Returns true if the URI has the flags,

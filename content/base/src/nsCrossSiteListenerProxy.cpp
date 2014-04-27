@@ -397,9 +397,9 @@ nsPreflightCache::GetCacheKey(nsIURI* aURI,
 //////////////////////////////////////////////////////////////////////////
 // nsCORSListenerProxy
 
-NS_IMPL_ISUPPORTS5(nsCORSListenerProxy, nsIStreamListener,
-                   nsIRequestObserver, nsIChannelEventSink,
-                   nsIInterfaceRequestor, nsIAsyncVerifyRedirectCallback)
+NS_IMPL_ISUPPORTS(nsCORSListenerProxy, nsIStreamListener,
+                  nsIRequestObserver, nsIChannelEventSink,
+                  nsIInterfaceRequestor, nsIAsyncVerifyRedirectCallback)
 
 /* static */
 void
@@ -931,9 +931,9 @@ private:
   bool mWithCredentials;
 };
 
-NS_IMPL_ISUPPORTS4(nsCORSPreflightListener, nsIStreamListener,
-                   nsIRequestObserver, nsIInterfaceRequestor,
-                   nsIChannelEventSink)
+NS_IMPL_ISUPPORTS(nsCORSPreflightListener, nsIStreamListener,
+                  nsIRequestObserver, nsIInterfaceRequestor,
+                  nsIChannelEventSink)
 
 void
 nsCORSPreflightListener::AddResultToCache(nsIRequest *aRequest)

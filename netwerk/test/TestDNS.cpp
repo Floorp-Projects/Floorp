@@ -57,7 +57,7 @@ private:
     int32_t   mIndex;
 };
 
-NS_IMPL_ISUPPORTS1(myDNSListener, nsIDNSListener)
+NS_IMPL_ISUPPORTS(myDNSListener, nsIDNSListener)
 
 static bool IsAscii(const char *s)
 {

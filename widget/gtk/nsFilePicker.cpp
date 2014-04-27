@@ -148,7 +148,7 @@ MakeCaseInsensitiveShellGlob(const char* aPattern) {
   return result;
 }
 
-NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
+NS_IMPL_ISUPPORTS(nsFilePicker, nsIFilePicker)
 
 nsFilePicker::nsFilePicker()
   : mSelectedType(0),

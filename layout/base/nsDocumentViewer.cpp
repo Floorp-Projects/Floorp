@@ -3310,7 +3310,7 @@ nsDocumentViewer::GetContentSize(int32_t* aWidth, int32_t* aHeight)
 }
 
 
-NS_IMPL_ISUPPORTS1(nsDocViewerSelectionListener, nsISelectionListener)
+NS_IMPL_ISUPPORTS(nsDocViewerSelectionListener, nsISelectionListener)
 
 nsresult nsDocViewerSelectionListener::Init(nsDocumentViewer *aDocViewer)
 {
@@ -3510,8 +3510,8 @@ NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocumen
 }
 
 //nsDocViewerFocusListener
-NS_IMPL_ISUPPORTS1(nsDocViewerFocusListener,
-                   nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(nsDocViewerFocusListener,
+                  nsIDOMEventListener)
 
 nsDocViewerFocusListener::nsDocViewerFocusListener()
 :mDocViewer(nullptr)

@@ -21,7 +21,7 @@ static const char* kWinCharsets[][3] = {
 #include "wincharset.properties.h"
 };
 
-NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
+NS_IMPL_ISUPPORTS(nsPlatformCharset, nsIPlatformCharset)
 
 nsPlatformCharset::nsPlatformCharset()
 {

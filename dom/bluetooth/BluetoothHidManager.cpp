@@ -267,4 +267,4 @@ BluetoothHidManager::GetAddress(nsAString& aDeviceAddress)
   aDeviceAddress = mDeviceAddress;
 }
 
-NS_IMPL_ISUPPORTS1(BluetoothHidManager, nsIObserver)
+NS_IMPL_ISUPPORTS(BluetoothHidManager, nsIObserver)

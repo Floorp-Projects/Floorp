@@ -12,7 +12,7 @@ using namespace mozilla;
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS1(RtspMetaData, nsIStreamingProtocolMetaData)
+NS_IMPL_ISUPPORTS(RtspMetaData, nsIStreamingProtocolMetaData)
 
 RtspMetaData::RtspMetaData()
  : mIndex(0)

@@ -379,8 +379,8 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(Telephony, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(Telephony, DOMEventTargetHelper)
 
-NS_IMPL_ISUPPORTS1(Telephony::Listener, nsITelephonyListener)
-NS_IMPL_ISUPPORTS1(Telephony::Callback, nsITelephonyCallback)
+NS_IMPL_ISUPPORTS(Telephony::Listener, nsITelephonyListener)
+NS_IMPL_ISUPPORTS(Telephony::Callback, nsITelephonyCallback)
 
 // Telephony WebIDL
 

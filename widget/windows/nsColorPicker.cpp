@@ -150,7 +150,7 @@ nsColorPicker::~nsColorPicker()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsColorPicker, nsIColorPicker)
+NS_IMPL_ISUPPORTS(nsColorPicker, nsIColorPicker)
 
 NS_IMETHODIMP
 nsColorPicker::Init(nsIDOMWindow* parent,

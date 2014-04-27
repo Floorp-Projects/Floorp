@@ -45,7 +45,7 @@ const char kShowHiddenFilesPref[] = "filepicker.showHiddenFiles";
 - (void) menuChangedItem:(NSNotification*)aSender;
 @end
 
-NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
+NS_IMPL_ISUPPORTS(nsFilePicker, nsIFilePicker)
 
 // We never want to call the secret show hidden files API unless the pref
 // has been set. Once the pref has been set we always need to call it even

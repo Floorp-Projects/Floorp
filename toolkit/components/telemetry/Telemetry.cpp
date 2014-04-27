@@ -2536,7 +2536,7 @@ TelemetryImpl::RecordThreadHangStats(Telemetry::ThreadHangStats& aStats)
   sTelemetry->mThreadHangStats.append(Move(aStats));
 }
 
-NS_IMPL_ISUPPORTS2(TelemetryImpl, nsITelemetry, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(TelemetryImpl, nsITelemetry, nsIMemoryReporter)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelemetry, TelemetryImpl::CreateTelemetryInstance)
 
 #define NS_TELEMETRY_CID \

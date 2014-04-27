@@ -1210,7 +1210,7 @@ protected:
                       MessageManagerReferentCount* aReferentCount);
 };
 
-NS_IMPL_ISUPPORTS1(MessageManagerReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(MessageManagerReporter, nsIMemoryReporter)
 
 static PLDHashOperator
 CollectMessageListenerData(const nsAString& aKey,
@@ -1611,7 +1611,7 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope,
   return true;
 }
 
-NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver)
+NS_IMPL_ISUPPORTS(nsScriptCacheCleaner, nsIObserver)
 
 nsFrameMessageManager* nsFrameMessageManager::sChildProcessManager = nullptr;
 nsFrameMessageManager* nsFrameMessageManager::sParentProcessManager = nullptr;

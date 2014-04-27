@@ -146,7 +146,7 @@ public:
 private:
   nsRefPtr<nsEditorSpellCheck> mSpellCheck;
 };
-NS_IMPL_ISUPPORTS1(DictionaryFetcher, nsIContentPrefCallback2)
+NS_IMPL_ISUPPORTS(DictionaryFetcher, nsIContentPrefCallback2)
 
 NS_IMETHODIMP
 DictionaryFetcher::Fetch(nsIEditor* aEditor)

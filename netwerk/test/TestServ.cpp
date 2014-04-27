@@ -31,7 +31,7 @@ public:
     virtual ~MySocketListener() {}
 };
 
-NS_IMPL_ISUPPORTS1(MySocketListener, nsIServerSocketListener)
+NS_IMPL_ISUPPORTS(MySocketListener, nsIServerSocketListener)
 
 NS_IMETHODIMP
 MySocketListener::OnSocketAccepted(nsIServerSocket *serv,

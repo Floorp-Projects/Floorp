@@ -212,7 +212,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(AppClearDataObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(AppClearDataObserver, nsIObserver)
 
 static bool
 IsExpandedPrincipal(nsIPrincipal* aPrincipal)
@@ -260,7 +260,7 @@ protected:
   bool mRebuildOnSuccess;
 };
 
-NS_IMPL_ISUPPORTS1(CloseDatabaseListener, mozIStorageCompletionCallback)
+NS_IMPL_ISUPPORTS(CloseDatabaseListener, mozIStorageCompletionCallback)
 
 CloseDatabaseListener::CloseDatabaseListener(nsPermissionManager* aManager,
                                              bool aRebuildOnSuccess)
@@ -306,7 +306,7 @@ protected:
   nsRefPtr<nsPermissionManager> mManager;
 };
 
-NS_IMPL_ISUPPORTS1(DeleteFromMozHostListener, mozIStorageStatementCallback)
+NS_IMPL_ISUPPORTS(DeleteFromMozHostListener, mozIStorageStatementCallback)
 
 DeleteFromMozHostListener::
 DeleteFromMozHostListener(nsPermissionManager* aManager)
@@ -354,7 +354,7 @@ static const char kHostpermFileName[] = "hostperm.1";
 
 static const char kPermissionChangeNotification[] = PERM_CHANGE_NOTIFICATION;
 
-NS_IMPL_ISUPPORTS3(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISupportsWeakReference)
 
 nsPermissionManager::nsPermissionManager()
  : mLargestID(0)

@@ -12,7 +12,7 @@ using namespace mozilla;
 
 extern nsIGeolocationUpdate *gLocationCallback;
 
-NS_IMPL_ISUPPORTS1(AndroidLocationProvider, nsIGeolocationProvider)
+NS_IMPL_ISUPPORTS(AndroidLocationProvider, nsIGeolocationProvider)
 
 AndroidLocationProvider::AndroidLocationProvider()
 {

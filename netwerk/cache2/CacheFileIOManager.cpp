@@ -1147,7 +1147,7 @@ public:
 
 CacheFileIOManager * CacheFileIOManager::gInstance = nullptr;
 
-NS_IMPL_ISUPPORTS1(CacheFileIOManager, nsITimerCallback)
+NS_IMPL_ISUPPORTS(CacheFileIOManager, nsITimerCallback)
 
 CacheFileIOManager::CacheFileIOManager()
   : mShuttingDown(false)

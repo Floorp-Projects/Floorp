@@ -12,7 +12,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsThreadUtils.h"
 
-NS_IMPL_ISUPPORTS1(ThirdPartyUtil, mozIThirdPartyUtil)
+NS_IMPL_ISUPPORTS(ThirdPartyUtil, mozIThirdPartyUtil)
 
 nsresult
 ThirdPartyUtil::Init()

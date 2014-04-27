@@ -10,7 +10,7 @@ namespace alarm {
 
 using namespace hal;
 
-NS_IMPL_ISUPPORTS1(AlarmHalService, nsIAlarmHalService)
+NS_IMPL_ISUPPORTS(AlarmHalService, nsIAlarmHalService)
 
 void
 AlarmHalService::Init()

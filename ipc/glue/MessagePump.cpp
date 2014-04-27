@@ -211,7 +211,7 @@ MessagePump::DoDelayedWork(base::MessagePump::Delegate* aDelegate)
   }
 }
 
-NS_IMPL_ISUPPORTS2(DoWorkRunnable, nsIRunnable, nsITimerCallback)
+NS_IMPL_ISUPPORTS(DoWorkRunnable, nsIRunnable, nsITimerCallback)
 
 NS_IMETHODIMP
 DoWorkRunnable::Run()

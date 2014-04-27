@@ -356,7 +356,7 @@ public:
   virtual ~ResourceSocketListener() { }
 };
 
-NS_IMPL_ISUPPORTS1(ResourceSocketListener, nsIServerSocketListener)
+NS_IMPL_ISUPPORTS(ResourceSocketListener, nsIServerSocketListener)
 
 NS_IMETHODIMP
 ResourceSocketListener::OnSocketAccepted(nsIServerSocket* aServ,

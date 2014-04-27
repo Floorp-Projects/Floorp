@@ -99,7 +99,7 @@ public:
 
 NS_IMETHODIMP_(MozExternalRefCountType) nsThreadClassInfo::AddRef() { return 2; }
 NS_IMETHODIMP_(MozExternalRefCountType) nsThreadClassInfo::Release() { return 1; }
-NS_IMPL_QUERY_INTERFACE1(nsThreadClassInfo, nsIClassInfo)
+NS_IMPL_QUERY_INTERFACE(nsThreadClassInfo, nsIClassInfo)
 
 NS_IMETHODIMP
 nsThreadClassInfo::GetInterfaces(uint32_t *count, nsIID ***array)
@@ -170,8 +170,8 @@ NS_INTERFACE_MAP_BEGIN(nsThread)
     foundInterface = static_cast<nsIClassInfo*>(&sThreadClassInfo);
   } else
 NS_INTERFACE_MAP_END
-NS_IMPL_CI_INTERFACE_GETTER4(nsThread, nsIThread, nsIThreadInternal,
-                             nsIEventTarget, nsISupportsPriority)
+NS_IMPL_CI_INTERFACE_GETTER(nsThread, nsIThread, nsIThreadInternal,
+                            nsIEventTarget, nsISupportsPriority)
 
 //-----------------------------------------------------------------------------
 
@@ -934,7 +934,7 @@ nsThreadSyncDispatch::Run()
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsThread::nsNestedEventTarget, nsIEventTarget)
+NS_IMPL_ISUPPORTS(nsThread::nsNestedEventTarget, nsIEventTarget)
 
 NS_IMETHODIMP
 nsThread::nsNestedEventTarget::Dispatch(nsIRunnable *event, uint32_t flags)

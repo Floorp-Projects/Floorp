@@ -37,8 +37,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsAutoCompleteController)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsAutoCompleteController)
 NS_INTERFACE_TABLE_HEAD(nsAutoCompleteController)
-  NS_INTERFACE_TABLE4(nsAutoCompleteController, nsIAutoCompleteController,
-                      nsIAutoCompleteObserver, nsITimerCallback, nsITreeView)
+  NS_INTERFACE_TABLE(nsAutoCompleteController, nsIAutoCompleteController,
+                     nsIAutoCompleteObserver, nsITimerCallback, nsITreeView)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsAutoCompleteController)
 NS_INTERFACE_MAP_END
 

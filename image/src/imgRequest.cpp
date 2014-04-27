@@ -50,12 +50,12 @@ GetImgLog()
 }
 #endif
 
-NS_IMPL_ISUPPORTS6(imgRequest,
-                   nsIStreamListener, nsIRequestObserver,
-                   nsIThreadRetargetableStreamListener,
-                   nsIChannelEventSink,
-                   nsIInterfaceRequestor,
-                   nsIAsyncVerifyRedirectCallback)
+NS_IMPL_ISUPPORTS(imgRequest,
+                  nsIStreamListener, nsIRequestObserver,
+                  nsIThreadRetargetableStreamListener,
+                  nsIChannelEventSink,
+                  nsIInterfaceRequestor,
+                  nsIAsyncVerifyRedirectCallback)
 
 imgRequest::imgRequest(imgLoader* aLoader)
  : mLoader(aLoader)

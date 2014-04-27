@@ -33,7 +33,7 @@ using namespace mozilla::gfx;
 
 
 
-NS_IMPL_ISUPPORTS1(imgTools, imgITools)
+NS_IMPL_ISUPPORTS(imgTools, imgITools)
 
 imgTools::imgTools()
 {

@@ -64,7 +64,7 @@ Foo::~Foo()
           mID, static_cast<void*>(this), gCount);
 }
 
-NS_IMPL_ISUPPORTS1(Foo, IFoo)
+NS_IMPL_ISUPPORTS(Foo, IFoo)
 
 const char* AssertEqual(int32_t aValue1, int32_t aValue2)
 {

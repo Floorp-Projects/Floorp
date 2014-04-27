@@ -9,7 +9,7 @@
 using namespace mozilla::widget::android;
 
 
-NS_IMPL_ISUPPORTS2(nsAndroidHandlerApp, nsIHandlerApp, nsISharingHandlerApp)
+NS_IMPL_ISUPPORTS(nsAndroidHandlerApp, nsIHandlerApp, nsISharingHandlerApp)
 
 nsAndroidHandlerApp::nsAndroidHandlerApp(const nsAString& aName,
                                          const nsAString& aDescription,

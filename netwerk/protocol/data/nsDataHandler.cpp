@@ -18,7 +18,7 @@ nsDataHandler::nsDataHandler() {
 nsDataHandler::~nsDataHandler() {
 }
 
-NS_IMPL_ISUPPORTS1(nsDataHandler, nsIProtocolHandler)
+NS_IMPL_ISUPPORTS(nsDataHandler, nsIProtocolHandler)
 
 nsresult
 nsDataHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {

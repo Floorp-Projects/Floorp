@@ -27,8 +27,8 @@ HTMLTitleElement::~HTMLTitleElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(HTMLTitleElement, nsGenericHTMLElement,
-                             nsIDOMHTMLTitleElement, nsIMutationObserver)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLTitleElement, nsGenericHTMLElement,
+                            nsIDOMHTMLTitleElement, nsIMutationObserver)
 
 NS_IMPL_ELEMENT_CLONE(HTMLTitleElement)
 

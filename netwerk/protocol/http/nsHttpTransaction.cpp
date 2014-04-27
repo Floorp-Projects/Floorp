@@ -1807,9 +1807,9 @@ nsHttpTransaction::Release()
     return count;
 }
 
-NS_IMPL_QUERY_INTERFACE2(nsHttpTransaction,
-                         nsIInputStreamCallback,
-                         nsIOutputStreamCallback)
+NS_IMPL_QUERY_INTERFACE(nsHttpTransaction,
+                        nsIInputStreamCallback,
+                        nsIOutputStreamCallback)
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction::nsIInputStreamCallback

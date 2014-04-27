@@ -25,7 +25,7 @@ extern PRLogModuleInfo* gFTPLog;
 // nsFtpControlConnection implementation ...
 //
 
-NS_IMPL_ISUPPORTS1(nsFtpControlConnection, nsIInputStreamCallback)
+NS_IMPL_ISUPPORTS(nsFtpControlConnection, nsIInputStreamCallback)
 
 NS_IMETHODIMP
 nsFtpControlConnection::OnInputStreamReady(nsIAsyncInputStream *stream)

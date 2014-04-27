@@ -104,8 +104,8 @@ nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
   }
 }
 
-NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
-                   nsIDeviceContextSpec)
+NS_IMPL_ISUPPORTS(nsDeviceContextSpecGTK,
+                  nsIDeviceContextSpec)
 
 #include "gfxPDFSurface.h"
 #include "gfxPSSurface.h"
@@ -412,7 +412,7 @@ nsPrinterEnumeratorGTK::nsPrinterEnumeratorGTK()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorGTK, nsIPrinterEnumerator)
+NS_IMPL_ISUPPORTS(nsPrinterEnumeratorGTK, nsIPrinterEnumerator)
 
 NS_IMETHODIMP nsPrinterEnumeratorGTK::GetPrinterNameList(nsIStringEnumerator **aPrinterNameList)
 {

@@ -23,8 +23,8 @@ HTMLFrameSetElement::WrapNode(JSContext *aCx)
   return HTMLFrameSetElementBinding::Wrap(aCx, this);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLFrameSetElement, nsGenericHTMLElement,
-                             nsIDOMHTMLFrameSetElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLFrameSetElement, nsGenericHTMLElement,
+                            nsIDOMHTMLFrameSetElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLFrameSetElement)
 

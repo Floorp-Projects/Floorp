@@ -17,7 +17,7 @@
 static const CLSID CLSID_WinParentalControls = {0xE77CC89B,0x7401,0x4C04,{0x8C,0xED,0x14,0x9D,0xB3,0x5A,0xDD,0x04}};
 static const IID IID_IWinParentalControls  = {0x28B4D88B,0xE072,0x49E6,{0x80,0x4D,0x26,0xED,0xBE,0x21,0xA7,0xB9}};
 
-NS_IMPL_ISUPPORTS1(nsParentalControlsServiceWin, nsIParentalControlsService)
+NS_IMPL_ISUPPORTS(nsParentalControlsServiceWin, nsIParentalControlsService)
 
 static HINSTANCE gAdvAPIDLLInst = nullptr;
 

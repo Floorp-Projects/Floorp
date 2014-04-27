@@ -28,14 +28,14 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS1(nsXMLQuery, nsXMLQuery)
+NS_IMPL_ISUPPORTS(nsXMLQuery, nsXMLQuery)
 
 //----------------------------------------------------------------------
 //
 // nsXULTemplateResultSetXML
 //
 
-NS_IMPL_ISUPPORTS1(nsXULTemplateResultSetXML, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsXULTemplateResultSetXML, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsXULTemplateResultSetXML::HasMoreElements(bool *aResult)

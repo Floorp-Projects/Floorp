@@ -9,7 +9,7 @@
 #include "nsAboutProtocolUtils.h"
 #include "mozilla/ArrayUtils.h"
 
-NS_IMPL_ISUPPORTS1(nsAboutRedirector, nsIAboutModule)
+NS_IMPL_ISUPPORTS(nsAboutRedirector, nsIAboutModule)
 
 struct RedirEntry {
     const char* id;

@@ -170,7 +170,7 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsHttpNegotiateAuth, nsIHttpAuthenticator)
+NS_IMPL_ISUPPORTS(nsHttpNegotiateAuth, nsIHttpAuthenticator)
    
 //
 // GenerateCredentials

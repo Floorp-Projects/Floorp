@@ -187,7 +187,7 @@ CanvasImageCache::Lookup(Element* aImage,
   return entry->mData->mSourceSurface;
 }
 
-NS_IMPL_ISUPPORTS1(CanvasImageCacheShutdownObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(CanvasImageCacheShutdownObserver, nsIObserver)
 
 NS_IMETHODIMP
 CanvasImageCacheShutdownObserver::Observe(nsISupports *aSubject,

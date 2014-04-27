@@ -17,7 +17,7 @@ namespace net {
 
 CacheIOThread* CacheIOThread::sSelf = nullptr;
 
-NS_IMPL_ISUPPORTS1(CacheIOThread, nsIThreadObserver)
+NS_IMPL_ISUPPORTS(CacheIOThread, nsIThreadObserver)
 
 CacheIOThread::CacheIOThread()
 : mMonitor("CacheIOThread")

@@ -83,7 +83,7 @@ public:
 
 static MediaCacheFlusher* gMediaCacheFlusher;
 
-NS_IMPL_ISUPPORTS2(MediaCacheFlusher, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(MediaCacheFlusher, nsIObserver, nsISupportsWeakReference)
 
 MediaCacheFlusher::~MediaCacheFlusher()
 {

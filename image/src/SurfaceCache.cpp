@@ -435,8 +435,8 @@ private:
   Cost                                                      mAvailableCost;
 };
 
-NS_IMPL_ISUPPORTS1(SurfaceCacheImpl, nsIMemoryReporter)
-NS_IMPL_ISUPPORTS1(SurfaceCacheImpl::MemoryPressureObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(SurfaceCacheImpl, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(SurfaceCacheImpl::MemoryPressureObserver, nsIObserver)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public API

@@ -33,8 +33,8 @@ ApplicationAccessible::ApplicationAccessible() :
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED1(ApplicationAccessible, Accessible,
-                             nsIAccessibleApplication)
+NS_IMPL_ISUPPORTS_INHERITED(ApplicationAccessible, Accessible,
+                            nsIAccessibleApplication)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible

@@ -21,7 +21,7 @@ nsScreenManagerQt::~nsScreenManagerQt()
 }
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS1(nsScreenManagerQt, nsIScreenManager)
+NS_IMPL_ISUPPORTS(nsScreenManagerQt, nsIScreenManager)
 
 void nsScreenManagerQt::init()
 {

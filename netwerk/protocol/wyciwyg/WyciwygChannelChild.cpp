@@ -24,11 +24,11 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS4(WyciwygChannelChild,
-                   nsIRequest,
-                   nsIChannel,
-                   nsIWyciwygChannel,
-                   nsIPrivateBrowsingChannel)
+NS_IMPL_ISUPPORTS(WyciwygChannelChild,
+                  nsIRequest,
+                  nsIChannel,
+                  nsIWyciwygChannel,
+                  nsIPrivateBrowsingChannel)
 
 
 WyciwygChannelChild::WyciwygChannelChild()

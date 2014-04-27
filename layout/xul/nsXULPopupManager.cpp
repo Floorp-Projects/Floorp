@@ -109,10 +109,10 @@ void nsMenuChainItem::Detach(nsMenuChainItem** aRoot)
   }
 }
 
-NS_IMPL_ISUPPORTS3(nsXULPopupManager,
-                   nsIDOMEventListener,
-                   nsITimerCallback,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(nsXULPopupManager,
+                  nsIDOMEventListener,
+                  nsITimerCallback,
+                  nsIObserver)
 
 nsXULPopupManager::nsXULPopupManager() :
   mRangeOffset(0),

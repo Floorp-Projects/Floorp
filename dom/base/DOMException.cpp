@@ -171,7 +171,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Exception)
   tmp->mThrownJSVal.setNull();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CI_INTERFACE_GETTER1(Exception, nsIXPCException)
+NS_IMPL_CI_INTERFACE_GETTER(Exception, nsIXPCException)
 
 Exception::Exception(const nsACString& aMessage,
                      nsresult aResult,

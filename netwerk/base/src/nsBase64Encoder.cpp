@@ -7,7 +7,7 @@
 #include "plbase64.h"
 #include "prmem.h"
 
-NS_IMPL_ISUPPORTS1(nsBase64Encoder, nsIOutputStream)
+NS_IMPL_ISUPPORTS(nsBase64Encoder, nsIOutputStream)
 
 NS_IMETHODIMP
 nsBase64Encoder::Close()

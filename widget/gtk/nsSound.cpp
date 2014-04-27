@@ -165,7 +165,7 @@ ca_finish_cb(ca_context *c,
     }
 }
 
-NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(nsSound, nsISound, nsIStreamLoaderObserver)
 
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()

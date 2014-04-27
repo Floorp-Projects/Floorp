@@ -443,8 +443,8 @@ private:
   nsCOMPtr<nsITimer> mTimer;
 };
 
-NS_IMPL_ISUPPORTS4(nsPingListener, nsIStreamListener, nsIRequestObserver,
-                   nsIInterfaceRequestor, nsIChannelEventSink)
+NS_IMPL_ISUPPORTS(nsPingListener, nsIStreamListener, nsIRequestObserver,
+                  nsIInterfaceRequestor, nsIChannelEventSink)
 
 nsPingListener::~nsPingListener()
 {
@@ -8746,7 +8746,7 @@ private:
     bool mInPrivateBrowsing;
 };
 
-NS_IMPL_ISUPPORTS1(nsCopyFaviconCallback, nsIFaviconDataCallback)
+NS_IMPL_ISUPPORTS(nsCopyFaviconCallback, nsIFaviconDataCallback)
 #endif
 
 // Tell the favicon service that aNewURI has the same favicon as aOldURI.
@@ -12163,7 +12163,7 @@ nsDocShell::InterfaceRequestorProxy::~InterfaceRequestorProxy()
     mWeakPtr = nullptr;
 }
 
-NS_IMPL_ISUPPORTS1(nsDocShell::InterfaceRequestorProxy, nsIInterfaceRequestor) 
+NS_IMPL_ISUPPORTS(nsDocShell::InterfaceRequestorProxy, nsIInterfaceRequestor) 
   
 NS_IMETHODIMP 
 nsDocShell::InterfaceRequestorProxy::GetInterface(const nsIID & aIID, void **aSink)

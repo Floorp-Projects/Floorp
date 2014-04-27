@@ -35,8 +35,8 @@ ImageAccessible::
   mType = eImageType;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(ImageAccessible, Accessible,
-                             nsIAccessibleImage)
+NS_IMPL_ISUPPORTS_INHERITED(ImageAccessible, Accessible,
+                            nsIAccessibleImage)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible public

@@ -64,8 +64,8 @@ GetNativeModuleLoaderLog()
 
 #define LOG(level, args) PR_LOG(GetNativeModuleLoaderLog(), level, args)
 
-NS_IMPL_QUERY_INTERFACE1(nsNativeModuleLoader,
-                         mozilla::ModuleLoader)
+NS_IMPL_QUERY_INTERFACE(nsNativeModuleLoader,
+                        mozilla::ModuleLoader)
 
 NS_IMPL_ADDREF_USING_AGGREGATOR(nsNativeModuleLoader,
                                 nsComponentManagerImpl::gComponentManager)

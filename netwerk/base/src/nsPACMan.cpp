@@ -555,8 +555,8 @@ nsPACMan::ProcessPending()
   return true;
 }
 
-NS_IMPL_ISUPPORTS3(nsPACMan, nsIStreamLoaderObserver,
-                   nsIInterfaceRequestor, nsIChannelEventSink)
+NS_IMPL_ISUPPORTS(nsPACMan, nsIStreamLoaderObserver,
+                  nsIInterfaceRequestor, nsIChannelEventSink)
 
 NS_IMETHODIMP
 nsPACMan::OnStreamComplete(nsIStreamLoader *loader,

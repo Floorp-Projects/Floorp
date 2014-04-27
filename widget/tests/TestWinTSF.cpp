@@ -1412,8 +1412,8 @@ TSFDocumentMgrImpl::Release(void)
   return 0;
 }
 
-NS_IMPL_ISUPPORTS2(TestApp, nsIWebProgressListener,
-                            nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(TestApp, nsIWebProgressListener,
+                  nsISupportsWeakReference)
 
 nsresult
 TestApp::Run(void)

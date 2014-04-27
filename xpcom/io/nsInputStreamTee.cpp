@@ -207,9 +207,9 @@ nsInputStreamTee::WriteSegmentFun(nsIInputStream *in, void *closure, const char 
     return tee->TeeSegment(fromSegment, *writeCount);
 }
 
-NS_IMPL_ISUPPORTS2(nsInputStreamTee,
-                   nsIInputStreamTee,
-                   nsIInputStream)
+NS_IMPL_ISUPPORTS(nsInputStreamTee,
+                  nsIInputStreamTee,
+                  nsIInputStream)
 NS_IMETHODIMP
 nsInputStreamTee::Close()
 {

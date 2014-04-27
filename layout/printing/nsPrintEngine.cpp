@@ -216,8 +216,8 @@ protected:
   bool                    mSuppressed;
 };
 
-NS_IMPL_ISUPPORTS3(nsPrintEngine, nsIWebProgressListener,
-                   nsISupportsWeakReference, nsIObserver)
+NS_IMPL_ISUPPORTS(nsPrintEngine, nsIWebProgressListener,
+                  nsISupportsWeakReference, nsIObserver)
 
 //---------------------------------------------------
 //-- nsPrintEngine Class Impl

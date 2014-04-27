@@ -83,4 +83,4 @@ NS_IMETHODIMP nsRepeatService::Notify(nsITimer *timer)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsRepeatService, nsITimerCallback)
+NS_IMPL_ISUPPORTS(nsRepeatService, nsITimerCallback)

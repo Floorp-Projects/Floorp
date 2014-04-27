@@ -26,6 +26,6 @@ private:
   PK11SymKey * key;
 };
 
-NS_IMPL_ISUPPORTS1(nsSyncJPAKE, nsISyncJPAKE)
+NS_IMPL_ISUPPORTS(nsSyncJPAKE, nsISyncJPAKE)
 
 #endif // nsSyncJPAKE_h__

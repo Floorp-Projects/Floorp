@@ -44,7 +44,7 @@ private:
   BOOL   mWatchRecursive;
 };
 
-NS_IMPL_ISUPPORTS1(nsWindowsRegKey, nsIWindowsRegKey)
+NS_IMPL_ISUPPORTS(nsWindowsRegKey, nsIWindowsRegKey)
 
 NS_IMETHODIMP
 nsWindowsRegKey::GetKey(HKEY *key)

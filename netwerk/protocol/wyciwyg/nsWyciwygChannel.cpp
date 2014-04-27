@@ -107,14 +107,14 @@ nsWyciwygChannel::~nsWyciwygChannel()
 {
 }
 
-NS_IMPL_ISUPPORTS7(nsWyciwygChannel,
-                   nsIChannel,
-                   nsIRequest,
-                   nsIStreamListener,
-                   nsIRequestObserver,
-                   nsICacheEntryOpenCallback,
-                   nsIWyciwygChannel,
-                   nsIPrivateBrowsingChannel)
+NS_IMPL_ISUPPORTS(nsWyciwygChannel,
+                  nsIChannel,
+                  nsIRequest,
+                  nsIStreamListener,
+                  nsIRequestObserver,
+                  nsICacheEntryOpenCallback,
+                  nsIWyciwygChannel,
+                  nsIPrivateBrowsingChannel)
 
 nsresult
 nsWyciwygChannel::Init(nsIURI* uri)

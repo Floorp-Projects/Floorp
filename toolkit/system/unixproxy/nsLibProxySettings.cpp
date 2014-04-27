@@ -33,7 +33,7 @@ private:
   pxProxyFactory *mProxyFactory;
 };
 
-NS_IMPL_ISUPPORTS1(nsUnixSystemProxySettings, nsISystemProxySettings)
+NS_IMPL_ISUPPORTS(nsUnixSystemProxySettings, nsISystemProxySettings)
 
 NS_IMETHODIMP
 nsUnixSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly)

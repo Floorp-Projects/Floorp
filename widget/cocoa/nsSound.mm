@@ -13,7 +13,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(nsSound, nsISound, nsIStreamLoaderObserver)
 
 nsSound::nsSound()
 {

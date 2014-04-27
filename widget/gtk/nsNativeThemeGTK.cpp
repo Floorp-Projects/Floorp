@@ -35,8 +35,8 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsNativeThemeGTK, nsNativeTheme, nsITheme,
-                                                              nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeGTK, nsNativeTheme, nsITheme,
+                                                             nsIObserver)
 
 static int gLastGdkError;
 

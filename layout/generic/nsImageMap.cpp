@@ -660,9 +660,9 @@ nsImageMap::~nsImageMap()
   NS_ASSERTION(mAreas.Length() == 0, "Destroy was not called");
 }
 
-NS_IMPL_ISUPPORTS2(nsImageMap,
-                   nsIMutationObserver,
-                   nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(nsImageMap,
+                  nsIMutationObserver,
+                  nsIDOMEventListener)
 
 nsresult
 nsImageMap::GetBoundsForAreaContent(nsIContent *aContent,

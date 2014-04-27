@@ -13,7 +13,7 @@
 #include "nsAppStartupNotifier.h"
 #include "nsISimpleEnumerator.h"
 
-NS_IMPL_ISUPPORTS1(nsAppStartupNotifier, nsIObserver)
+NS_IMPL_ISUPPORTS(nsAppStartupNotifier, nsIObserver)
 
 nsAppStartupNotifier::nsAppStartupNotifier()
 {

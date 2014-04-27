@@ -132,7 +132,7 @@ public:
 #endif
 
 
-NS_IMPL_ISUPPORTS1(nsSelectionCommandsBase, nsIControllerCommand)
+NS_IMPL_ISUPPORTS(nsSelectionCommandsBase, nsIControllerCommand)
 
 /* boolean isCommandEnabled (in string aCommandName, in nsISupports aCommandContext); */
 NS_IMETHODIMP
@@ -329,7 +329,7 @@ public:
   NS_DECL_NSICONTROLLERCOMMAND
 };
 
-NS_IMPL_ISUPPORTS1(nsClipboardCommand, nsIControllerCommand)
+NS_IMPL_ISUPPORTS(nsClipboardCommand, nsIControllerCommand)
 
 nsresult
 nsClipboardCommand::IsCommandEnabled(const char* aCommandName, nsISupports *aContext, bool *outCmdEnabled)
@@ -403,7 +403,7 @@ protected:
 };
 
 
-NS_IMPL_ISUPPORTS1(nsSelectionCommand, nsIControllerCommand)
+NS_IMPL_ISUPPORTS(nsSelectionCommand, nsIControllerCommand)
 
 
 /*---------------------------------------------------------------------------
@@ -634,7 +634,7 @@ protected:
      no params
 ----------------------------------------------------------------------------*/
 
-NS_IMPL_ISUPPORTS1(nsWebNavigationBaseCommand, nsIControllerCommand)
+NS_IMPL_ISUPPORTS(nsWebNavigationBaseCommand, nsIControllerCommand)
 
 NS_IMETHODIMP
 nsWebNavigationBaseCommand::IsCommandEnabled(const char * aCommandName,
@@ -732,7 +732,7 @@ protected:
 };
 
 
-NS_IMPL_ISUPPORTS1(nsClipboardDragDropHookCommand, nsIControllerCommand)
+NS_IMPL_ISUPPORTS(nsClipboardDragDropHookCommand, nsIControllerCommand)
 
 NS_IMETHODIMP
 nsClipboardDragDropHookCommand::IsCommandEnabled(const char * aCommandName,

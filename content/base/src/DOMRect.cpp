@@ -29,7 +29,7 @@ DOMRectReadOnly::WrapObject(JSContext* aCx)
 
 // -----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED1(DOMRect, DOMRectReadOnly, nsIDOMClientRect)
+NS_IMPL_ISUPPORTS_INHERITED(DOMRect, DOMRectReadOnly, nsIDOMClientRect)
 
 #define FORWARD_GETTER(_name)                                                   \
   NS_IMETHODIMP                                                                 \
@@ -76,7 +76,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(DOMRectList, mParent, mArray)
 
 NS_INTERFACE_TABLE_HEAD(DOMRectList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_TABLE1(DOMRectList, nsIDOMClientRectList)
+  NS_INTERFACE_TABLE(DOMRectList, nsIDOMClientRectList)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(DOMRectList)
 NS_INTERFACE_MAP_END
 

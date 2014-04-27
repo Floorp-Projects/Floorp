@@ -217,12 +217,12 @@ nsAppStartup::Init()
 // nsAppStartup->nsISupports
 //
 
-NS_IMPL_ISUPPORTS5(nsAppStartup,
-                              nsIAppStartup,
-                              nsIWindowCreator,
-                              nsIWindowCreator2,
-                              nsIObserver,
-                              nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsAppStartup,
+                  nsIAppStartup,
+                  nsIWindowCreator,
+                  nsIWindowCreator2,
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 
 //

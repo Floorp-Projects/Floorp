@@ -36,7 +36,7 @@ BodyRule::~BodyRule()
 {
 }
 
-NS_IMPL_ISUPPORTS1(BodyRule, nsIStyleRule)
+NS_IMPL_ISUPPORTS(BodyRule, nsIStyleRule)
 
 /* virtual */ void
 BodyRule::MapRuleInfoInto(nsRuleData* aData)
@@ -194,8 +194,8 @@ HTMLBodyElement::WrapNode(JSContext *aCx)
   return HTMLBodyElementBinding::Wrap(aCx, this);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLBodyElement, nsGenericHTMLElement,
-                             nsIDOMHTMLBodyElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLBodyElement, nsGenericHTMLElement,
+                            nsIDOMHTMLBodyElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLBodyElement)
 

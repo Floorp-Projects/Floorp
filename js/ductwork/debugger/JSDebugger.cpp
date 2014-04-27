@@ -25,7 +25,7 @@ namespace jsdebugger {
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(JSDebugger)
 
-NS_IMPL_ISUPPORTS1(JSDebugger, IJSDebugger)
+NS_IMPL_ISUPPORTS(JSDebugger, IJSDebugger)
 
 JSDebugger::JSDebugger()
 {

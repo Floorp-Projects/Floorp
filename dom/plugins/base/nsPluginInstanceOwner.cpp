@@ -349,11 +349,11 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   }
 }
 
-NS_IMPL_ISUPPORTS4(nsPluginInstanceOwner,
-                   nsIPluginInstanceOwner,
-                   nsIDOMEventListener,
-                   nsIPrivacyTransitionObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsPluginInstanceOwner,
+                  nsIPluginInstanceOwner,
+                  nsIDOMEventListener,
+                  nsIPrivacyTransitionObserver,
+                  nsISupportsWeakReference)
 
 nsresult
 nsPluginInstanceOwner::SetInstance(nsNPAPIPluginInstance *aInstance)
@@ -3177,8 +3177,8 @@ nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsPluginDOMContextMenuListener,
-                   nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(nsPluginDOMContextMenuListener,
+                  nsIDOMEventListener)
 
 NS_IMETHODIMP
 nsPluginDOMContextMenuListener::HandleEvent(nsIDOMEvent* aEvent)

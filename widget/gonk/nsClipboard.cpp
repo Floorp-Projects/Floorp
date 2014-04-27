@@ -16,7 +16,7 @@ using mozilla::dom::ContentChild;
 #define LOGI(args...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, ## args)
 #define LOGE(args...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, ## args)
 
-NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
+NS_IMPL_ISUPPORTS(nsClipboard, nsIClipboard)
 
 nsClipboard::nsClipboard()
 {

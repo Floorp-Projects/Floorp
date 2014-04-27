@@ -7,7 +7,7 @@
 #include "nsReadableUtils.h"
 
 
-NS_IMPL_ISUPPORTS1(nsPrintProgressParams, nsIPrintProgressParams)
+NS_IMPL_ISUPPORTS(nsPrintProgressParams, nsIPrintProgressParams)
 
 nsPrintProgressParams::nsPrintProgressParams()
 {

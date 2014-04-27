@@ -513,7 +513,7 @@ nsPrintDialogWidgetGTK::ConstructHeaderFooterDropdown(const char16_t *currentStr
   return dropdown;
 }
 
-NS_IMPL_ISUPPORTS1(nsPrintDialogServiceGTK, nsIPrintDialogService)
+NS_IMPL_ISUPPORTS(nsPrintDialogServiceGTK, nsIPrintDialogService)
 
 nsPrintDialogServiceGTK::nsPrintDialogServiceGTK()
 {

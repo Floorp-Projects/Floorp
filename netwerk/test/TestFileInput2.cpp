@@ -218,7 +218,7 @@ protected:
     uint32_t            mBufferSize;
 };
 
-NS_IMPL_ISUPPORTS1(FileSpecWorker, nsIRunnable)
+NS_IMPL_ISUPPORTS(FileSpecWorker, nsIRunnable)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -310,7 +310,7 @@ protected:
     uint32_t            mBufferSize;
 };
 
-NS_IMPL_ISUPPORTS1(FileChannelWorker, nsIRunnable)
+NS_IMPL_ISUPPORTS(FileChannelWorker, nsIRunnable)
 
 ////////////////////////////////////////////////////////////////////////////////
 

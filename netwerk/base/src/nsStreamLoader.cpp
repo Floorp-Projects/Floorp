@@ -43,8 +43,8 @@ nsStreamLoader::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
   return rv;
 }
 
-NS_IMPL_ISUPPORTS3(nsStreamLoader, nsIStreamLoader,
-                   nsIRequestObserver, nsIStreamListener)
+NS_IMPL_ISUPPORTS(nsStreamLoader, nsIStreamLoader,
+                  nsIRequestObserver, nsIStreamListener)
 
 NS_IMETHODIMP 
 nsStreamLoader::GetNumBytesRead(uint32_t* aNumBytes)

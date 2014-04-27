@@ -89,7 +89,7 @@ public:
     uint64_t               mProgressMax;
 };
 
-NS_IMPL_ISUPPORTS1(nsTransportEventSinkProxy, nsITransportEventSink)
+NS_IMPL_ISUPPORTS(nsTransportEventSinkProxy, nsITransportEventSink)
 
 NS_IMETHODIMP
 nsTransportEventSinkProxy::OnTransportStatus(nsITransport *transport,

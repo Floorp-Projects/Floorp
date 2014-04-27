@@ -1088,7 +1088,7 @@ nsCSSRuleProcessor::~nsCSSRuleProcessor()
   ClearRuleCascades();
 }
 
-NS_IMPL_ISUPPORTS1(nsCSSRuleProcessor, nsIStyleRuleProcessor)
+NS_IMPL_ISUPPORTS(nsCSSRuleProcessor, nsIStyleRuleProcessor)
 
 /* static */ nsresult
 nsCSSRuleProcessor::Startup()

@@ -126,7 +126,7 @@ GetParamsFromSendMmsMessageRequest(JSContext* aCx,
   return true;
 }
 
-NS_IMPL_ISUPPORTS1(SmsParent, nsIObserver)
+NS_IMPL_ISUPPORTS(SmsParent, nsIObserver)
 
 SmsParent::SmsParent()
 {
@@ -444,7 +444,7 @@ SmsParent::DeallocPMobileMessageCursorParent(PMobileMessageCursorParent* aActor)
  * SmsRequestParent
  ******************************************************************************/
 
-NS_IMPL_ISUPPORTS1(SmsRequestParent, nsIMobileMessageCallback)
+NS_IMPL_ISUPPORTS(SmsRequestParent, nsIMobileMessageCallback)
 
 void
 SmsRequestParent::ActorDestroy(ActorDestroyReason aWhy)
@@ -731,7 +731,7 @@ SmsRequestParent::NotifyGetSmscAddressFailed(int32_t aError)
  * MobileMessageCursorParent
  ******************************************************************************/
 
-NS_IMPL_ISUPPORTS1(MobileMessageCursorParent, nsIMobileMessageCursorCallback)
+NS_IMPL_ISUPPORTS(MobileMessageCursorParent, nsIMobileMessageCursorCallback)
 
 void
 MobileMessageCursorParent::ActorDestroy(ActorDestroyReason aWhy)

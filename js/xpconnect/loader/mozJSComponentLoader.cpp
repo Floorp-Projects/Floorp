@@ -337,10 +337,10 @@ mozJSComponentLoader::~mozJSComponentLoader()
 mozJSComponentLoader*
 mozJSComponentLoader::sSelf;
 
-NS_IMPL_ISUPPORTS3(mozJSComponentLoader,
-                   mozilla::ModuleLoader,
-                   xpcIJSModuleLoader,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(mozJSComponentLoader,
+                  mozilla::ModuleLoader,
+                  xpcIJSModuleLoader,
+                  nsIObserver)
 
 nsresult
 mozJSComponentLoader::ReallyInit()

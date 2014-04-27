@@ -13,8 +13,8 @@
 
 #define CONVERTER_BUFFER_SIZE 8192
 
-NS_IMPL_ISUPPORTS3(nsConverterInputStream, nsIConverterInputStream,
-                   nsIUnicharInputStream, nsIUnicharLineInputStream)
+NS_IMPL_ISUPPORTS(nsConverterInputStream, nsIConverterInputStream,
+                  nsIUnicharInputStream, nsIUnicharLineInputStream)
 
 
 NS_IMETHODIMP

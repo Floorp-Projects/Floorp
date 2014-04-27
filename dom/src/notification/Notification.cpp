@@ -371,7 +371,7 @@ NotificationPermissionRequest::Recv__delete__(const bool& aAllow,
   return true;
 }
 
-NS_IMPL_ISUPPORTS1(NotificationTask, nsIRunnable)
+NS_IMPL_ISUPPORTS(NotificationTask, nsIRunnable)
 
 NS_IMETHODIMP
 NotificationTask::Run()
@@ -389,7 +389,7 @@ NotificationTask::Run()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(NotificationObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(NotificationObserver, nsIObserver)
 
 NS_IMETHODIMP
 NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,

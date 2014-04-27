@@ -124,7 +124,7 @@ public:
 
 };
 
-NS_IMPL_ISUPPORTS1(nsSplitterFrameInner, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(nsSplitterFrameInner, nsIDOMEventListener)
 
 nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeBefore()

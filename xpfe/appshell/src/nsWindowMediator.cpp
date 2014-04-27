@@ -743,7 +743,7 @@ nsWindowMediator::SortZOrderBackToFront()
   mSortingZOrder = false;
 }
 
-NS_IMPL_ISUPPORTS3(nsWindowMediator,
+NS_IMPL_ISUPPORTS(nsWindowMediator,
   nsIWindowMediator,
   nsIObserver,
   nsISupportsWeakReference)

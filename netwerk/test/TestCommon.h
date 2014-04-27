@@ -26,7 +26,7 @@ public:
     return NS_OK;
   }
 };
-NS_IMPL_ISUPPORTS1(nsQuitPumpingEvent, nsIRunnable)
+NS_IMPL_ISUPPORTS(nsQuitPumpingEvent, nsIRunnable)
 
 static inline void PumpEvents()
 {

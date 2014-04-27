@@ -39,13 +39,13 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS6(nsFormFillController,
-                   nsIFormFillController,
-                   nsIAutoCompleteInput,
-                   nsIAutoCompleteSearch,
-                   nsIDOMEventListener,
-                   nsIFormAutoCompleteObserver,
-                   nsIMutationObserver)
+NS_IMPL_ISUPPORTS(nsFormFillController,
+                  nsIFormFillController,
+                  nsIAutoCompleteInput,
+                  nsIAutoCompleteSearch,
+                  nsIDOMEventListener,
+                  nsIFormAutoCompleteObserver,
+                  nsIMutationObserver)
 
 nsFormFillController::nsFormFillController() :
   mFocusedInput(nullptr),

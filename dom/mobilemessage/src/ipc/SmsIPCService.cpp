@@ -99,11 +99,11 @@ getDefaultServiceId(const char* aPrefKey)
 
 } // anonymous namespace
 
-NS_IMPL_ISUPPORTS4(SmsIPCService,
-                   nsISmsService,
-                   nsIMmsService,
-                   nsIMobileMessageDatabaseService,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(SmsIPCService,
+                  nsISmsService,
+                  nsIMmsService,
+                  nsIMobileMessageDatabaseService,
+                  nsIObserver)
 
 SmsIPCService::SmsIPCService()
 {

@@ -12,9 +12,9 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS2(nsPreloadedStream,
-                   nsIInputStream,
-                   nsIAsyncInputStream)
+NS_IMPL_ISUPPORTS(nsPreloadedStream,
+                  nsIInputStream,
+                  nsIAsyncInputStream)
 
 nsPreloadedStream::nsPreloadedStream(nsIAsyncInputStream *aStream,
                                      const char *data, uint32_t datalen)

@@ -95,7 +95,7 @@ nsSHEntryShared::~nsSHEntryShared()
   }
 }
 
-NS_IMPL_ISUPPORTS2(nsSHEntryShared, nsIBFCacheEntry, nsIMutationObserver)
+NS_IMPL_ISUPPORTS(nsSHEntryShared, nsIBFCacheEntry, nsIMutationObserver)
 
 already_AddRefed<nsSHEntryShared>
 nsSHEntryShared::Duplicate(nsSHEntryShared *aEntry)

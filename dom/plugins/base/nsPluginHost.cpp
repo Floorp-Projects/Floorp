@@ -277,11 +277,11 @@ nsPluginHost::~nsPluginHost()
   sInst = nullptr;
 }
 
-NS_IMPL_ISUPPORTS4(nsPluginHost,
-                   nsIPluginHost,
-                   nsIObserver,
-                   nsITimerCallback,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsPluginHost,
+                  nsIPluginHost,
+                  nsIObserver,
+                  nsITimerCallback,
+                  nsISupportsWeakReference)
 
 already_AddRefed<nsPluginHost>
 nsPluginHost::GetInst()

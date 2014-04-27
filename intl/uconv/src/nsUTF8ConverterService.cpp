@@ -11,7 +11,7 @@
 #include "nsAutoPtr.h"
 #include "nsServiceManagerUtils.h"
 
-NS_IMPL_ISUPPORTS1(nsUTF8ConverterService, nsIUTF8ConverterService)
+NS_IMPL_ISUPPORTS(nsUTF8ConverterService, nsIUTF8ConverterService)
 
 static nsresult 
 ToUTF8(const nsACString &aString, const char *aCharset,

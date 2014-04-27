@@ -191,7 +191,7 @@ void TimerEventAllocator::Free(void* aPtr)
 
 } // anonymous namespace
 
-NS_IMPL_QUERY_INTERFACE1(nsTimerImpl, nsITimer)
+NS_IMPL_QUERY_INTERFACE(nsTimerImpl, nsITimer)
 NS_IMPL_ADDREF(nsTimerImpl)
 
 NS_IMETHODIMP_(MozExternalRefCountType) nsTimerImpl::Release(void)

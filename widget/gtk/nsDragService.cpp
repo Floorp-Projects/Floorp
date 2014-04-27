@@ -142,7 +142,7 @@ nsDragService::~nsDragService()
 
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsDragService, nsBaseDragService, nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED(nsDragService, nsBaseDragService, nsIObserver)
 
 /* static */ nsDragService*
 nsDragService::GetInstance()

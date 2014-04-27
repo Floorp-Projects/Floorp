@@ -150,7 +150,7 @@ nsMixedContentBlocker::~nsMixedContentBlocker()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsMixedContentBlocker, nsIContentPolicy)
+NS_IMPL_ISUPPORTS(nsMixedContentBlocker, nsIContentPolicy)
 
 static void
 LogMixedContentMessage(MixedContentTypes aClassification,

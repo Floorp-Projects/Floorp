@@ -18,7 +18,7 @@ txNodeSetAdaptor::txNodeSetAdaptor(txNodeSet *aNodeSet)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(txNodeSetAdaptor, txXPathObjectAdaptor, txINodeSet)
+NS_IMPL_ISUPPORTS_INHERITED(txNodeSetAdaptor, txXPathObjectAdaptor, txINodeSet)
 
 nsresult
 txNodeSetAdaptor::Init()

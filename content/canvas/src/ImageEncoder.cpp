@@ -81,7 +81,7 @@ private:
   bool mFailed;
 };
 
-NS_IMPL_ISUPPORTS1(EncodingCompleteEvent, nsIRunnable);
+NS_IMPL_ISUPPORTS(EncodingCompleteEvent, nsIRunnable);
 
 class EncodingRunnable : public nsRunnable
 {
@@ -175,7 +175,7 @@ private:
   bool mUsingCustomOptions;
 };
 
-NS_IMPL_ISUPPORTS1(EncodingRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS(EncodingRunnable, nsIRunnable)
 
 /* static */
 nsresult

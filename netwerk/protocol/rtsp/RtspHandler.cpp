@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS1(RtspHandler, nsIProtocolHandler)
+NS_IMPL_ISUPPORTS(RtspHandler, nsIProtocolHandler)
 
 //-----------------------------------------------------------------------------
 // RtspHandler::nsIProtocolHandler

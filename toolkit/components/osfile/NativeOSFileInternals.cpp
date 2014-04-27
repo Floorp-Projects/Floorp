@@ -859,7 +859,7 @@ protected:
 
 // The OS.File service
 
-NS_IMPL_ISUPPORTS1(NativeOSFileInternalsService, nsINativeOSFileInternalsService);
+NS_IMPL_ISUPPORTS(NativeOSFileInternalsService, nsINativeOSFileInternalsService);
 
 NS_IMETHODIMP
 NativeOSFileInternalsService::Read(const nsAString& aPath,

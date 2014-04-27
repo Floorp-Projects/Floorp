@@ -58,7 +58,7 @@ private:
   static const SchemeMapping gSchemeMappingList[];
 };
 
-NS_IMPL_ISUPPORTS1(nsOSXSystemProxySettings, nsISystemProxySettings)
+NS_IMPL_ISUPPORTS(nsOSXSystemProxySettings, nsISystemProxySettings)
 
 NS_IMETHODIMP
 nsOSXSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly)

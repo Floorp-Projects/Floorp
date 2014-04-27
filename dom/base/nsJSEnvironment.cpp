@@ -262,7 +262,7 @@ public:
   NS_DECL_NSIOBSERVER
 };
 
-NS_IMPL_ISUPPORTS1(nsJSEnvironmentObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(nsJSEnvironmentObserver, nsIObserver)
 
 NS_IMETHODIMP
 nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,

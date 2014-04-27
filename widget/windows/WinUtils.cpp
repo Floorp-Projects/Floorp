@@ -59,13 +59,13 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace widget {
 
-NS_IMPL_ISUPPORTS1(myDownloadObserver, nsIDownloadObserver)
+NS_IMPL_ISUPPORTS(myDownloadObserver, nsIDownloadObserver)
 #ifdef MOZ_PLACES
-NS_IMPL_ISUPPORTS1(AsyncFaviconDataReady, nsIFaviconDataCallback)
+NS_IMPL_ISUPPORTS(AsyncFaviconDataReady, nsIFaviconDataCallback)
 #endif
-NS_IMPL_ISUPPORTS1(AsyncEncodeAndWriteIcon, nsIRunnable)
-NS_IMPL_ISUPPORTS1(AsyncDeleteIconFromDisk, nsIRunnable)
-NS_IMPL_ISUPPORTS1(AsyncDeleteAllFaviconsFromDisk, nsIRunnable)
+NS_IMPL_ISUPPORTS(AsyncEncodeAndWriteIcon, nsIRunnable)
+NS_IMPL_ISUPPORTS(AsyncDeleteIconFromDisk, nsIRunnable)
+NS_IMPL_ISUPPORTS(AsyncDeleteAllFaviconsFromDisk, nsIRunnable)
 
 
 const char FaviconHelper::kJumpListCacheDir[] = "jumpListCache";

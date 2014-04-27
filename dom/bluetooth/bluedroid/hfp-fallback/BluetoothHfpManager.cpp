@@ -186,4 +186,4 @@ BluetoothHfpManager::Reset()
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-NS_IMPL_ISUPPORTS1(BluetoothHfpManager, nsIObserver)
+NS_IMPL_ISUPPORTS(BluetoothHfpManager, nsIObserver)

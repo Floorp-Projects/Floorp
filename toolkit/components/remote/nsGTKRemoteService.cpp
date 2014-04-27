@@ -25,9 +25,9 @@
 
 #include "nsGTKToolkit.h"
 
-NS_IMPL_ISUPPORTS2(nsGTKRemoteService,
-                   nsIRemoteService,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(nsGTKRemoteService,
+                  nsIRemoteService,
+                  nsIObserver)
 
 NS_IMETHODIMP
 nsGTKRemoteService::Startup(const char* aAppName, const char* aProfileName)

@@ -38,7 +38,7 @@ protected:
     int mNum;
 };
 
-NS_IMPL_ISUPPORTS1(nsRunner, nsIRunnable)
+NS_IMPL_ISUPPORTS(nsRunner, nsIRunnable)
 
 nsresult
 TestThreads()
@@ -106,7 +106,7 @@ protected:
 
 int32_t nsStressRunner::gNum = 0;
 
-NS_IMPL_ISUPPORTS1(nsStressRunner, nsIRunnable)
+NS_IMPL_ISUPPORTS(nsStressRunner, nsIRunnable)
 
 static int Stress(int loops, int threads)
 {

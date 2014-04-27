@@ -24,7 +24,7 @@ namespace mozilla {
 namespace widget {
 
 #ifdef DEBUG
-NS_IMPL_ISUPPORTS_INHERITED1(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
+NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
 
 // these global variables will be set when firing the glxtest process

@@ -288,7 +288,7 @@ public:
   nsCOMPtr<nsIDNSRecord>  mResponse;
   nsCOMPtr<nsITimer>      mTimer;
 };
-NS_IMPL_ISUPPORTS2(PACResolver, nsIDNSListener, nsITimerCallback)
+NS_IMPL_ISUPPORTS(PACResolver, nsIDNSListener, nsITimerCallback)
 
 static
 void PACLogToConsole(nsString &aMessage)

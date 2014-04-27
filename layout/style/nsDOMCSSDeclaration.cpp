@@ -32,9 +32,9 @@ nsDOMCSSDeclaration::WrapObject(JSContext* aCx)
 }
 
 NS_INTERFACE_TABLE_HEAD(nsDOMCSSDeclaration)
-  NS_INTERFACE_TABLE2(nsDOMCSSDeclaration,
-                      nsICSSDeclaration,
-                      nsIDOMCSSStyleDeclaration)
+  NS_INTERFACE_TABLE(nsDOMCSSDeclaration,
+                     nsICSSDeclaration,
+                     nsIDOMCSSStyleDeclaration)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_INTERFACE_MAP_END
 
