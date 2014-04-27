@@ -123,10 +123,10 @@ nsJARProtocolHandler::RemoteOpenFileComplete(nsIHashable *aRemoteFile,
     }
 }
 
-NS_IMPL_ISUPPORTS3(nsJARProtocolHandler,
-                              nsIJARProtocolHandler,
-                              nsIProtocolHandler,
-                              nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsJARProtocolHandler,
+                  nsIJARProtocolHandler,
+                  nsIProtocolHandler,
+                  nsISupportsWeakReference)
 
 nsJARProtocolHandler*
 nsJARProtocolHandler::GetSingleton()

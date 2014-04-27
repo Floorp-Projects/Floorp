@@ -150,7 +150,7 @@ ImageWrapper::GetURI()
 
 // Methods inherited from XPCOM interfaces.
 
-NS_IMPL_ISUPPORTS1(ImageWrapper, imgIContainer)
+NS_IMPL_ISUPPORTS(ImageWrapper, imgIContainer)
 
 NS_IMETHODIMP
 ImageWrapper::GetWidth(int32_t* aWidth)

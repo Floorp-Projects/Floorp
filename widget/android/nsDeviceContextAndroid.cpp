@@ -10,7 +10,7 @@
 #include "nsIPrintSettings.h"
 #include "nsDirectoryServiceDefs.h"
 
-NS_IMPL_ISUPPORTS1(nsDeviceContextSpecAndroid, nsIDeviceContextSpec)
+NS_IMPL_ISUPPORTS(nsDeviceContextSpecAndroid, nsIDeviceContextSpec)
 
 NS_IMETHODIMP
 nsDeviceContextSpecAndroid::GetSurfaceForPrinter(gfxASurface** aSurface)

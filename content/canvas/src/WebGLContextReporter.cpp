@@ -8,7 +8,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS1(WebGLMemoryPressureObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(WebGLMemoryPressureObserver, nsIObserver)
 
 NS_IMETHODIMP
 WebGLMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
@@ -85,7 +85,7 @@ WebGLMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(WebGLMemoryTracker, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(WebGLMemoryTracker, nsIMemoryReporter)
 
 StaticRefPtr<WebGLMemoryTracker> WebGLMemoryTracker::sUniqueInstance;
 

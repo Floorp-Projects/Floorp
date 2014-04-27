@@ -94,8 +94,8 @@ private:
     nsCOMPtr<nsIEventTarget>         mTarget;
 };
 
-NS_IMPL_ISUPPORTS2(nsInputStreamReadyEvent, nsIRunnable,
-                   nsIInputStreamCallback)
+NS_IMPL_ISUPPORTS(nsInputStreamReadyEvent, nsIRunnable,
+                  nsIInputStreamCallback)
 
 //-----------------------------------------------------------------------------
 
@@ -172,8 +172,8 @@ private:
     nsCOMPtr<nsIEventTarget>          mTarget;
 };
 
-NS_IMPL_ISUPPORTS2(nsOutputStreamReadyEvent, nsIRunnable,
-                   nsIOutputStreamCallback)
+NS_IMPL_ISUPPORTS(nsOutputStreamReadyEvent, nsIRunnable,
+                  nsIOutputStreamCallback)
 
 //-----------------------------------------------------------------------------
 
@@ -462,10 +462,10 @@ protected:
     nsresult                       mCancelStatus;
 };
 
-NS_IMPL_ISUPPORTS3(nsAStreamCopier,
-                   nsIInputStreamCallback,
-                   nsIOutputStreamCallback,
-                   nsIRunnable)
+NS_IMPL_ISUPPORTS(nsAStreamCopier,
+                  nsIInputStreamCallback,
+                  nsIOutputStreamCallback,
+                  nsIRunnable)
 
 class nsStreamCopierIB MOZ_FINAL : public nsAStreamCopier
 {

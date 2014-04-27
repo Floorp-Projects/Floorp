@@ -62,9 +62,9 @@ ProcessingInstruction::~ProcessingInstruction()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(ProcessingInstruction, nsGenericDOMDataNode,
-                             nsIDOMNode, nsIDOMCharacterData,
-                             nsIDOMProcessingInstruction)
+NS_IMPL_ISUPPORTS_INHERITED(ProcessingInstruction, nsGenericDOMDataNode,
+                            nsIDOMNode, nsIDOMCharacterData,
+                            nsIDOMProcessingInstruction)
 
 JSObject*
 ProcessingInstruction::WrapNode(JSContext *aCx)

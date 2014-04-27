@@ -17,7 +17,7 @@
 
 using namespace mozilla::net;
 
-NS_IMPL_ISUPPORTS2(AndroidCameraInputStream, nsIInputStream, nsIAsyncInputStream)
+NS_IMPL_ISUPPORTS(AndroidCameraInputStream, nsIInputStream, nsIAsyncInputStream)
 
 AndroidCameraInputStream::AndroidCameraInputStream() :
   mWidth(0), mHeight(0), mCamera(0), mHeaderSent(false), mClosed(true), mFrameSize(0),

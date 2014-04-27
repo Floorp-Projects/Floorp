@@ -409,10 +409,10 @@ nsPartChannel::GetBaseChannel(nsIChannel ** aReturn)
 
 
 // nsISupports implementation
-NS_IMPL_ISUPPORTS3(nsMultiMixedConv,
-                   nsIStreamConverter,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(nsMultiMixedConv,
+                  nsIStreamConverter,
+                  nsIStreamListener,
+                  nsIRequestObserver)
 
 
 // nsIStreamConverter implementation

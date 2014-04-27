@@ -23,7 +23,7 @@ namespace jsperf {
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(Module)
 
-NS_IMPL_ISUPPORTS1(Module, nsIXPCScriptable)
+NS_IMPL_ISUPPORTS(Module, nsIXPCScriptable)
 
 Module::Module()
 {

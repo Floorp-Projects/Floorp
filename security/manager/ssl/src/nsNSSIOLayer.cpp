@@ -142,9 +142,9 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags)
   mTLSVersionRange.max = 0;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsNSSSocketInfo, TransportSecurityInfo,
-                             nsISSLSocketControl,
-                             nsIClientAuthUserDecision)
+NS_IMPL_ISUPPORTS_INHERITED(nsNSSSocketInfo, TransportSecurityInfo,
+                            nsISSLSocketControl,
+                            nsIClientAuthUserDecision)
 
 NS_IMETHODIMP
 nsNSSSocketInfo::GetProviderFlags(uint32_t* aProviderFlags)
@@ -1374,7 +1374,7 @@ private:
 
 } // unnamed namespace
 
-NS_IMPL_ISUPPORTS1(PrefObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(PrefObserver, nsIObserver)
 
 NS_IMETHODIMP
 PrefObserver::Observe(nsISupports* aSubject, const char* aTopic,

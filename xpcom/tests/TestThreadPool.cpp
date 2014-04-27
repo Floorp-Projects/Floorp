@@ -32,7 +32,7 @@ public:
 private:
   int mIndex;
 };
-NS_IMPL_ISUPPORTS1(Task, nsIRunnable)
+NS_IMPL_ISUPPORTS(Task, nsIRunnable)
 
 static nsresult
 RunTests()

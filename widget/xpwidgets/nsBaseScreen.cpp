@@ -9,7 +9,7 @@
 
 #include "nsBaseScreen.h"
 
-NS_IMPL_ISUPPORTS1(nsBaseScreen, nsIScreen)
+NS_IMPL_ISUPPORTS(nsBaseScreen, nsIScreen)
 
 nsBaseScreen::nsBaseScreen()
 {

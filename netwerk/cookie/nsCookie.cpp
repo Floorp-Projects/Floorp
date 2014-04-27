@@ -153,4 +153,4 @@ nsCookie::GetExpires(uint64_t *aExpires)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2(nsCookie, nsICookie2, nsICookie)
+NS_IMPL_ISUPPORTS(nsCookie, nsICookie2, nsICookie)

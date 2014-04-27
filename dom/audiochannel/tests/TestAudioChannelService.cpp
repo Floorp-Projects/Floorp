@@ -135,8 +135,8 @@ public:
   AudioChannelState mCanPlay;
 };
 
-NS_IMPL_ISUPPORTS2(Agent, nsIAudioChannelAgentCallback,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(Agent, nsIAudioChannelAgentCallback,
+                  nsISupportsWeakReference)
 
 nsresult
 TestDoubleStartPlaying()

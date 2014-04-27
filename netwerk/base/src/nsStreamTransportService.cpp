@@ -69,9 +69,9 @@ private:
     bool                            mInProgress;
 };
 
-NS_IMPL_ISUPPORTS2(nsInputStreamTransport,
-                   nsITransport,
-                   nsIInputStream)
+NS_IMPL_ISUPPORTS(nsInputStreamTransport,
+                  nsITransport,
+                  nsIInputStream)
 
 /** nsITransport **/
 
@@ -269,9 +269,9 @@ private:
     bool                            mInProgress;
 };
 
-NS_IMPL_ISUPPORTS2(nsOutputStreamTransport,
-                   nsITransport,
-                   nsIOutputStream)
+NS_IMPL_ISUPPORTS(nsOutputStreamTransport,
+                  nsITransport,
+                  nsIOutputStream)
 
 /** nsITransport **/
 
@@ -438,7 +438,7 @@ public:
     ~STSThreadPoolListener() {}
 };
 
-NS_IMPL_ISUPPORTS1(STSThreadPoolListener, nsIThreadPoolListener)
+NS_IMPL_ISUPPORTS(STSThreadPoolListener, nsIThreadPoolListener)
 
 NS_IMETHODIMP
 STSThreadPoolListener::OnThreadCreated()
@@ -490,10 +490,10 @@ nsStreamTransportService::Init()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS3(nsStreamTransportService,
-                   nsIStreamTransportService,
-                   nsIEventTarget,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(nsStreamTransportService,
+                  nsIStreamTransportService,
+                  nsIEventTarget,
+                  nsIObserver)
 
 NS_IMETHODIMP
 nsStreamTransportService::Dispatch(nsIRunnable *task, uint32_t flags)

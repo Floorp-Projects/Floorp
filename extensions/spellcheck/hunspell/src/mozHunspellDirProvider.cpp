@@ -40,7 +40,7 @@
 #include "mozISpellCheckingEngine.h"
 #include "nsICategoryManager.h"
 
-NS_IMPL_ISUPPORTS2(mozHunspellDirProvider,
+NS_IMPL_ISUPPORTS(mozHunspellDirProvider,
 		   nsIDirectoryServiceProvider,
 		   nsIDirectoryServiceProvider2)
 
@@ -80,7 +80,7 @@ mozHunspellDirProvider::GetFiles(const char *aKey,
   return NS_SUCCESS_AGGREGATE_RESULT;
 }
 
-NS_IMPL_ISUPPORTS1(mozHunspellDirProvider::AppendingEnumerator,
+NS_IMPL_ISUPPORTS(mozHunspellDirProvider::AppendingEnumerator,
 		   nsISimpleEnumerator)
 
 NS_IMETHODIMP

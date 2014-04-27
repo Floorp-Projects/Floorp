@@ -10,8 +10,8 @@
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsDeviceProtocolHandler,
-                   nsIProtocolHandler)
+NS_IMPL_ISUPPORTS(nsDeviceProtocolHandler,
+                  nsIProtocolHandler)
 
 nsresult
 nsDeviceProtocolHandler::Init(){

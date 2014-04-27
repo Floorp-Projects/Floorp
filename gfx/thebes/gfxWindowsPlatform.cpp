@@ -109,7 +109,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS1(GfxD2DSurfaceReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(GfxD2DSurfaceReporter, nsIMemoryReporter)
 
 #endif
 
@@ -139,7 +139,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS1(GfxD2DVramReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(GfxD2DVramReporter, nsIMemoryReporter)
 
 #define GFX_USE_CLEARTYPE_ALWAYS "gfx.font_rendering.cleartype.always_use_for_content"
 #define GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE "gfx.font_rendering.cleartype.use_for_downloadable_fonts"
@@ -280,7 +280,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS1(GPUAdapterReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(GPUAdapterReporter, nsIMemoryReporter)
 
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)

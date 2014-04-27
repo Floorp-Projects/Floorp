@@ -54,9 +54,9 @@ MozQRemoteEventHandlerWidget::x11Event(XEvent *aEvt)
   return false;
 }
 
-NS_IMPL_ISUPPORTS2(nsQtRemoteService,
-                   nsIRemoteService,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(nsQtRemoteService,
+                  nsIRemoteService,
+                  nsIObserver)
 
 nsQtRemoteService::nsQtRemoteService():
 mServerWindow(0)

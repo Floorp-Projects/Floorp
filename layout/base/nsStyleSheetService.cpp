@@ -42,7 +42,7 @@ nsStyleSheetService::~nsStyleSheetService()
   nsLayoutStatics::Release();
 }
 
-NS_IMPL_ISUPPORTS2(
+NS_IMPL_ISUPPORTS(
   nsStyleSheetService, nsIStyleSheetService, nsIMemoryReporter)
 
 void

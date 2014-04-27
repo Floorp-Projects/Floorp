@@ -729,7 +729,7 @@ nsresult nsImageBoxFrame::FrameChanged(imgIRequest *aRequest)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2(nsImageBoxListener, imgINotificationObserver, imgIOnloadBlocker)
+NS_IMPL_ISUPPORTS(nsImageBoxListener, imgINotificationObserver, imgIOnloadBlocker)
 
 nsImageBoxListener::nsImageBoxListener()
 {

@@ -171,7 +171,7 @@ static const JSFunctionSpec sWitnessClassFunctions[] = {
 
 }
 
-NS_IMPL_ISUPPORTS1(FinalizationWitnessService, nsIFinalizationWitnessService)
+NS_IMPL_ISUPPORTS(FinalizationWitnessService, nsIFinalizationWitnessService)
 
 /**
  * Create a new Finalization Witness.

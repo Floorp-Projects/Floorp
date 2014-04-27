@@ -245,7 +245,7 @@ ConnectionCloseCallback::ConnectionCloseCallback()
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-NS_IMPL_ISUPPORTS1(
+NS_IMPL_ISUPPORTS(
   ConnectionCloseCallback
 , mozIStorageCompletionCallback
 )
@@ -328,7 +328,7 @@ CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
 
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(Database, gDatabase)
 
-NS_IMPL_ISUPPORTS2(Database
+NS_IMPL_ISUPPORTS(Database
 , nsIObserver
 , nsISupportsWeakReference
 )

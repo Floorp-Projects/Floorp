@@ -495,7 +495,7 @@ nsFrameUtil::~nsFrameUtil()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsFrameUtil, nsIFrameUtil)
+NS_IMPL_ISUPPORTS(nsFrameUtil, nsIFrameUtil)
 
 void
 nsFrameUtil::DumpNode(Node* aNode, FILE* aOutputFile, int32_t aIndent)

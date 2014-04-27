@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace browser {
 
-NS_IMPL_ISUPPORTS1(AboutRedirector, nsIAboutModule)
+NS_IMPL_ISUPPORTS(AboutRedirector, nsIAboutModule)
 
 struct RedirEntry {
   const char* id;

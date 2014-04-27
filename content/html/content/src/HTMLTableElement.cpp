@@ -95,8 +95,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(TableRowsCollection)
 
 NS_INTERFACE_TABLE_HEAD(TableRowsCollection)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_TABLE2(TableRowsCollection, nsIHTMLCollection,
-                      nsIDOMHTMLCollection)
+  NS_INTERFACE_TABLE(TableRowsCollection, nsIHTMLCollection,
+                     nsIDOMHTMLCollection)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(TableRowsCollection)
 NS_INTERFACE_MAP_END
 
@@ -328,7 +328,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLTableElement, Element)
 
 // QueryInterface implementation for HTMLTableElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLTableElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLTableElement, nsIDOMHTMLTableElement)
+  NS_INTERFACE_TABLE_INHERITED(HTMLTableElement, nsIDOMHTMLTableElement)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
 
 

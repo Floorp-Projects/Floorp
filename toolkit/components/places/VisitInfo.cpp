@@ -56,7 +56,7 @@ VisitInfo::GetReferrerURI(nsIURI** _referrer)
 ////////////////////////////////////////////////////////////////////////////////
 //// nsISupports
 
-NS_IMPL_ISUPPORTS1(
+NS_IMPL_ISUPPORTS(
   VisitInfo
 , mozIVisitInfo
 )

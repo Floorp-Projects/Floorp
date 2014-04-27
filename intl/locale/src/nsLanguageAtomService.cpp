@@ -11,7 +11,7 @@
 #include "mozilla/Services.h"
 #include "nsServiceManagerUtils.h"
 
-NS_IMPL_ISUPPORTS1(nsLanguageAtomService, nsILanguageAtomService)
+NS_IMPL_ISUPPORTS(nsLanguageAtomService, nsILanguageAtomService)
 
 nsLanguageAtomService::nsLanguageAtomService()
 {

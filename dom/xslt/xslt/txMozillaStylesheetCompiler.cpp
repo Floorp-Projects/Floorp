@@ -106,13 +106,13 @@ txStylesheetSink::txStylesheetSink(txStylesheetCompiler* aCompiler,
     mListener = do_QueryInterface(aParser);
 }
 
-NS_IMPL_ISUPPORTS6(txStylesheetSink,
-                   nsIXMLContentSink,
-                   nsIContentSink,
-                   nsIExpatSink,
-                   nsIStreamListener,
-                   nsIRequestObserver,
-                   nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS(txStylesheetSink,
+                  nsIXMLContentSink,
+                  nsIContentSink,
+                  nsIExpatSink,
+                  nsIStreamListener,
+                  nsIRequestObserver,
+                  nsIInterfaceRequestor)
 
 NS_IMETHODIMP
 txStylesheetSink::HandleStartElement(const char16_t *aName,

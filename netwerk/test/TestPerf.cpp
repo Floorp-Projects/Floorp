@@ -67,7 +67,7 @@ public:
     virtual ~MyListener() {}
 };
 
-NS_IMPL_ISUPPORTS2(MyListener, nsIStreamListener, nsIRequestObserver)
+NS_IMPL_ISUPPORTS(MyListener, nsIStreamListener, nsIRequestObserver)
 
 NS_IMETHODIMP
 MyListener::OnStartRequest(nsIRequest *req, nsISupports *ctx)

@@ -195,8 +195,8 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(BluetoothHfpManager::GetVolumeTask,
-                   nsISettingsServiceCallback);
+NS_IMPL_ISUPPORTS(BluetoothHfpManager::GetVolumeTask,
+                  nsISettingsServiceCallback);
 
 NS_IMETHODIMP
 BluetoothHfpManager::Observe(nsISupports* aSubject,
@@ -2042,5 +2042,5 @@ BluetoothHfpManager::OnDisconnect(const nsAString& aErrorStr)
   controller->NotifyCompletion(aErrorStr);
 }
 
-NS_IMPL_ISUPPORTS1(BluetoothHfpManager, nsIObserver)
+NS_IMPL_ISUPPORTS(BluetoothHfpManager, nsIObserver)
 

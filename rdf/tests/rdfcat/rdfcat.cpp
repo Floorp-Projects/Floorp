@@ -98,7 +98,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS1(ConsoleOutputStreamImpl, nsIOutputStream)
+NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, nsIOutputStream)
 
 ////////////////////////////////////////////////////////////////////////
 

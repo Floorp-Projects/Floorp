@@ -36,9 +36,9 @@ MediaDocumentStreamListener::~MediaDocumentStreamListener()
 }
 
 
-NS_IMPL_ISUPPORTS2(MediaDocumentStreamListener,
-                   nsIRequestObserver,
-                   nsIStreamListener)
+NS_IMPL_ISUPPORTS(MediaDocumentStreamListener,
+                  nsIRequestObserver,
+                  nsIStreamListener)
 
 
 void

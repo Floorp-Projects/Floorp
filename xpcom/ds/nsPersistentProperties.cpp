@@ -470,7 +470,7 @@ nsPersistentProperties::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
   return props->QueryInterface(aIID, aResult);
 }
 
-NS_IMPL_ISUPPORTS2(nsPersistentProperties, nsIPersistentProperties, nsIProperties)
+NS_IMPL_ISUPPORTS(nsPersistentProperties, nsIPersistentProperties, nsIProperties)
 
 NS_IMETHODIMP
 nsPersistentProperties::Load(nsIInputStream *aIn)
@@ -650,7 +650,7 @@ nsPropertyElement::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
   return propElem->QueryInterface(aIID, aResult);
 }
 
-NS_IMPL_ISUPPORTS1(nsPropertyElement, nsIPropertyElement)
+NS_IMPL_ISUPPORTS(nsPropertyElement, nsIPropertyElement)
 
 NS_IMETHODIMP
 nsPropertyElement::GetKey(nsACString& aReturnKey)

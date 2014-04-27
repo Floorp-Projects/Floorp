@@ -27,7 +27,7 @@ nsHTMLFormatConverter::~nsHTMLFormatConverter()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsHTMLFormatConverter, nsIFormatConverter)
+NS_IMPL_ISUPPORTS(nsHTMLFormatConverter, nsIFormatConverter)
 
 //
 // GetInputDataFlavors

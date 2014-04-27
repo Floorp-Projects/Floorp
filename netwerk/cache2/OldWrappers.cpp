@@ -105,7 +105,7 @@ private:
   nsCOMPtr<nsICacheEntryDoomCallback> mCB;
 };
 
-NS_IMPL_ISUPPORTS1(DoomCallbackWrapper, nsICacheListener);
+NS_IMPL_ISUPPORTS(DoomCallbackWrapper, nsICacheListener);
 
 NS_IMETHODIMP DoomCallbackWrapper::OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor,
                                                          nsCacheAccessMode accessGranted,
@@ -148,7 +148,7 @@ private:
   char* const mDeviceID;
 };
 
-NS_IMPL_ISUPPORTS1(VisitCallbackWrapper, nsICacheVisitor)
+NS_IMPL_ISUPPORTS(VisitCallbackWrapper, nsICacheVisitor)
 
 VisitCallbackWrapper::~VisitCallbackWrapper()
 {
@@ -229,9 +229,9 @@ nsresult _OldGetDiskConsumption::Get(nsICacheStorageConsumptionObserver* aCallba
   return NS_DispatchToMainThread(cb);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(_OldGetDiskConsumption,
-                             nsRunnable,
-                             nsICacheVisitor)
+NS_IMPL_ISUPPORTS_INHERITED(_OldGetDiskConsumption,
+                            nsRunnable,
+                            nsICacheVisitor)
 
 _OldGetDiskConsumption::_OldGetDiskConsumption(
   nsICacheStorageConsumptionObserver* aCallback)
@@ -295,7 +295,7 @@ _OldCacheEntryWrapper::~_OldCacheEntryWrapper()
   LOG(("Destroying _OldCacheEntryWrapper %p for descriptor %p", this, mOldInfo.get()));
 }
 
-NS_IMPL_ISUPPORTS1(_OldCacheEntryWrapper, nsICacheEntry)
+NS_IMPL_ISUPPORTS(_OldCacheEntryWrapper, nsICacheEntry)
 
 NS_IMETHODIMP _OldCacheEntryWrapper::AsyncDoom(nsICacheEntryDoomCallback* listener)
 {
@@ -545,7 +545,7 @@ GetCacheSession(nsCSubstring const &aScheme,
 } // anon
 
 
-NS_IMPL_ISUPPORTS_INHERITED1(_OldCacheLoad, nsRunnable, nsICacheListener)
+NS_IMPL_ISUPPORTS_INHERITED(_OldCacheLoad, nsRunnable, nsICacheListener)
 
 _OldCacheLoad::_OldCacheLoad(nsCSubstring const& aScheme,
                              nsCSubstring const& aCacheKey,
@@ -781,7 +781,7 @@ _OldCacheLoad::OnCacheEntryDoomed(nsresult)
 
 // nsICacheStorage old cache wrapper
 
-NS_IMPL_ISUPPORTS1(_OldStorage, nsICacheStorage)
+NS_IMPL_ISUPPORTS(_OldStorage, nsICacheStorage)
 
 _OldStorage::_OldStorage(nsILoadContextInfo* aInfo,
                          bool aAllowDisk,

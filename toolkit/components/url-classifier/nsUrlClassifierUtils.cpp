@@ -85,7 +85,7 @@ nsUrlClassifierUtils::Init()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsUrlClassifierUtils, nsIUrlClassifierUtils)
+NS_IMPL_ISUPPORTS(nsUrlClassifierUtils, nsIUrlClassifierUtils)
 
 /////////////////////////////////////////////////////////////////////////////
 // nsIUrlClassifierUtils

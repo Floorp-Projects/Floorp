@@ -12,7 +12,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS1(nsSOCKSSocketProvider, nsISocketProvider)
+NS_IMPL_ISUPPORTS(nsSOCKSSocketProvider, nsISocketProvider)
 
 nsresult
 nsSOCKSSocketProvider::CreateV4(nsISupports *aOuter, REFNSIID aIID, void **aResult)

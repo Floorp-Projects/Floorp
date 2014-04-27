@@ -34,7 +34,7 @@ using namespace mozilla;
 
 // Standard ISupports implementation
 // NOTE: Should these be the thread-safe versions?
-NS_IMPL_ISUPPORTS2(nsSecretDecoderRing, nsISecretDecoderRing, nsISecretDecoderRingConfig)
+NS_IMPL_ISUPPORTS(nsSecretDecoderRing, nsISecretDecoderRing, nsISecretDecoderRingConfig)
 
 // nsSecretDecoderRing constructor
 nsSecretDecoderRing::nsSecretDecoderRing()

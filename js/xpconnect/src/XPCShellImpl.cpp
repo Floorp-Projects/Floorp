@@ -1207,7 +1207,7 @@ public:
     TestGlobal(){}
 };
 
-NS_IMPL_ISUPPORTS2(TestGlobal, nsIXPCTestNoisy, nsIXPCScriptable)
+NS_IMPL_ISUPPORTS(TestGlobal, nsIXPCTestNoisy, nsIXPCScriptable)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           TestGlobal
@@ -1240,7 +1240,7 @@ public:
 };
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(nsXPCFunctionThisTranslator, nsIXPCFunctionThisTranslator)
+NS_IMPL_ISUPPORTS(nsXPCFunctionThisTranslator, nsIXPCFunctionThisTranslator)
 
 nsXPCFunctionThisTranslator::nsXPCFunctionThisTranslator()
 {
@@ -1668,9 +1668,9 @@ XPCShellDirProvider::Release()
     return 1;
 }
 
-NS_IMPL_QUERY_INTERFACE2(XPCShellDirProvider,
-                         nsIDirectoryServiceProvider,
-                         nsIDirectoryServiceProvider2)
+NS_IMPL_QUERY_INTERFACE(XPCShellDirProvider,
+                        nsIDirectoryServiceProvider,
+                        nsIDirectoryServiceProvider2)
 
 NS_IMETHODIMP
 XPCShellDirProvider::GetFile(const char *prop, bool *persistent,

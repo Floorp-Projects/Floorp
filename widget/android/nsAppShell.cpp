@@ -68,7 +68,7 @@ nsAutoPtr<mozilla::AndroidGeckoEvent> gLastSizeChange;
 
 nsAppShell *nsAppShell::gAppShell = nullptr;
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsAppShell, nsBaseAppShell, nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED(nsAppShell, nsBaseAppShell, nsIObserver)
 
 class ThumbnailRunnable : public nsRunnable {
 public:
@@ -115,7 +115,7 @@ class WakeLockListener MOZ_FINAL : public nsIDOMMozWakeLockListener {
   }
 };
 
-NS_IMPL_ISUPPORTS1(WakeLockListener, nsIDOMMozWakeLockListener)
+NS_IMPL_ISUPPORTS(WakeLockListener, nsIDOMMozWakeLockListener)
 nsCOMPtr<nsIPowerManagerService> sPowerManagerService = nullptr;
 StaticRefPtr<WakeLockListener> sWakeLockListener;
 

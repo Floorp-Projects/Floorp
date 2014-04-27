@@ -647,8 +647,8 @@ IndexedDatabaseManager::BlockAndGetFileReferences(
 
 NS_IMPL_ADDREF(IndexedDatabaseManager)
 NS_IMPL_RELEASE_WITH_DESTROY(IndexedDatabaseManager, Destroy())
-NS_IMPL_QUERY_INTERFACE2(IndexedDatabaseManager, nsIIndexedDatabaseManager,
-                                                 nsIObserver)
+NS_IMPL_QUERY_INTERFACE(IndexedDatabaseManager, nsIIndexedDatabaseManager,
+                        nsIObserver)
 
 NS_IMETHODIMP
 IndexedDatabaseManager::InitWindowless(JS::Handle<JS::Value> aGlobal, JSContext* aCx)
@@ -812,8 +812,8 @@ AsyncDeleteFileRunnable::AsyncDeleteFileRunnable(FileManager* aFileManager,
 {
 }
 
-NS_IMPL_ISUPPORTS1(AsyncDeleteFileRunnable,
-                   nsIRunnable)
+NS_IMPL_ISUPPORTS(AsyncDeleteFileRunnable,
+                  nsIRunnable)
 
 NS_IMETHODIMP
 AsyncDeleteFileRunnable::Run()
@@ -886,8 +886,8 @@ GetFileReferencesHelper::DispatchAndReturnFileReferences(int32_t* aMemRefCnt,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(GetFileReferencesHelper,
-                   nsIRunnable)
+NS_IMPL_ISUPPORTS(GetFileReferencesHelper,
+                  nsIRunnable)
 
 NS_IMETHODIMP
 GetFileReferencesHelper::Run()

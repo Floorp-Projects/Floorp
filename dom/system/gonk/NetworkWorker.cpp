@@ -134,7 +134,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(NetworkWorker, nsINetworkWorker)
+NS_IMPL_ISUPPORTS(NetworkWorker, nsINetworkWorker)
 
 NetworkWorker::NetworkWorker()
 {

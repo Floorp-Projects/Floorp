@@ -38,7 +38,7 @@ nsNativeTheme::nsNativeTheme()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsNativeTheme, nsITimerCallback)
+NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback)
 
 nsIPresShell *
 nsNativeTheme::GetPresShell(nsIFrame* aFrame)

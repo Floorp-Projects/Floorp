@@ -3816,7 +3816,7 @@ NS_INTERFACE_MAP_END
     { 0xae, 0xb0, 0xaf, 0x9a, 0x51, 0xe4, 0x4c, 0x81 } }
 
 NS_IMPL_CLASSINFO(nsXPCComponentsBase, &ComponentsSH::Get, nsIClassInfo::DOM_OBJECT, NSXPCCOMPONENTSBASE_CID)
-NS_IMPL_ISUPPORTS1_CI(nsXPCComponentsBase, nsIXPCComponentsBase)
+NS_IMPL_ISUPPORTS_CI(nsXPCComponentsBase, nsIXPCComponentsBase)
 
 NS_IMPL_CLASSINFO(nsXPCComponents, &ComponentsSH::Get, nsIClassInfo::DOM_OBJECT, NSXPCCOMPONENTS_CID)
 // Below is more or less what NS_IMPL_ISUPPORTS_CI_INHERITED1 would look like
@@ -3827,7 +3827,7 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents)
     NS_INTERFACE_MAP_ENTRY(nsIXPCComponents)
     NS_IMPL_QUERY_CLASSINFO(nsXPCComponents)
 NS_INTERFACE_MAP_END_INHERITING(nsXPCComponentsBase)
-NS_IMPL_CI_INTERFACE_GETTER1(nsXPCComponents, nsIXPCComponents)
+NS_IMPL_CI_INTERFACE_GETTER(nsXPCComponents, nsIXPCComponents)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us
 #define XPC_MAP_CLASSNAME           ComponentsSH

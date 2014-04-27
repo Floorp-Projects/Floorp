@@ -15,7 +15,7 @@
 
 static uint32_t sTemplateId = 0;
 
-NS_IMPL_ISUPPORTS1(nsXULTemplateResultXML, nsIXULTemplateResult)
+NS_IMPL_ISUPPORTS(nsXULTemplateResultXML, nsIXULTemplateResult)
 
 nsXULTemplateResultXML::nsXULTemplateResultXML(nsXMLQuery* aQuery,
                                                nsIDOMNode* aNode,

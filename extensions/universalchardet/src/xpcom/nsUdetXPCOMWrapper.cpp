@@ -29,7 +29,7 @@ nsXPCOMDetector::~nsXPCOMDetector()
 }
 //---------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsXPCOMDetector, nsICharsetDetector)
+NS_IMPL_ISUPPORTS(nsXPCOMDetector, nsICharsetDetector)
 
 //---------------------------------------------------------------------
 NS_IMETHODIMP nsXPCOMDetector::Init(
@@ -104,7 +104,7 @@ nsXPCOMStringDetector::~nsXPCOMStringDetector()
 {
 }
 //---------------------------------------------------------------------
-NS_IMPL_ISUPPORTS1(nsXPCOMStringDetector, nsIStringCharsetDetector)
+NS_IMPL_ISUPPORTS(nsXPCOMStringDetector, nsIStringCharsetDetector)
 //---------------------------------------------------------------------
 void nsXPCOMStringDetector::Report(const char *aCharset) 
 {

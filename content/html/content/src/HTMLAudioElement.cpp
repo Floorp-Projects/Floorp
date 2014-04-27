@@ -29,8 +29,8 @@ namespace dom {
 
 extern bool IsAudioAPIEnabled();
 
-NS_IMPL_ISUPPORTS_INHERITED2(HTMLAudioElement, HTMLMediaElement,
-                             nsIDOMHTMLMediaElement, nsIDOMHTMLAudioElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLAudioElement, HTMLMediaElement,
+                            nsIDOMHTMLMediaElement, nsIDOMHTMLAudioElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLAudioElement)
 

@@ -168,7 +168,7 @@ private:
   bool mClosed;
 };
 
-NS_IMPL_ISUPPORTS1(FakeInputStream, nsIInputStream)
+NS_IMPL_ISUPPORTS(FakeInputStream, nsIInputStream)
 
 NS_IMETHODIMP
 FakeInputStream::Close()

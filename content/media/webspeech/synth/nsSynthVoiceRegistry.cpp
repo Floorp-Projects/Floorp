@@ -99,7 +99,7 @@ public:
 
 static StaticRefPtr<nsSynthVoiceRegistry> gSynthVoiceRegistry;
 
-NS_IMPL_ISUPPORTS1(nsSynthVoiceRegistry, nsISynthVoiceRegistry)
+NS_IMPL_ISUPPORTS(nsSynthVoiceRegistry, nsISynthVoiceRegistry)
 
 nsSynthVoiceRegistry::nsSynthVoiceRegistry()
   : mSpeechSynthChild(nullptr)

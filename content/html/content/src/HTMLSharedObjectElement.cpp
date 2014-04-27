@@ -92,15 +92,15 @@ NS_IMPL_ADDREF_INHERITED(HTMLSharedObjectElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLSharedObjectElement, Element)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLSharedObjectElement)
-  NS_INTERFACE_TABLE_INHERITED8(HTMLSharedObjectElement,
-                                nsIRequestObserver,
-                                nsIStreamListener,
-                                nsIFrameLoaderOwner,
-                                nsIObjectLoadingContent,
-                                imgINotificationObserver,
-                                nsIImageLoadingContent,
-                                imgIOnloadBlocker,
-                                nsIChannelEventSink)
+  NS_INTERFACE_TABLE_INHERITED(HTMLSharedObjectElement,
+                               nsIRequestObserver,
+                               nsIStreamListener,
+                               nsIFrameLoaderOwner,
+                               nsIObjectLoadingContent,
+                               imgINotificationObserver,
+                               nsIImageLoadingContent,
+                               imgIOnloadBlocker,
+                               nsIChannelEventSink)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLAppletElement, applet)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLEmbedElement, embed)

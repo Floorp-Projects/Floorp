@@ -118,7 +118,7 @@ SharedSSLState* gPublicState;
 SharedSSLState* gPrivateState;
 } // anonymous namespace
 
-NS_IMPL_ISUPPORTS1(PrivateBrowsingObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(PrivateBrowsingObserver, nsIObserver)
 
 NS_IMETHODIMP
 PrivateBrowsingObserver::Observe(nsISupports     *aSubject,

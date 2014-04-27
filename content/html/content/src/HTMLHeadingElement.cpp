@@ -21,8 +21,8 @@ HTMLHeadingElement::~HTMLHeadingElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLHeadingElement, nsGenericHTMLElement,
-                             nsIDOMHTMLHeadingElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLHeadingElement, nsGenericHTMLElement,
+                            nsIDOMHTMLHeadingElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLHeadingElement)
 

@@ -160,7 +160,7 @@ CompositeEnumeratorImpl::~CompositeEnumeratorImpl(void)
 
 NS_IMPL_ADDREF(CompositeEnumeratorImpl)
 NS_IMPL_RELEASE(CompositeEnumeratorImpl)
-NS_IMPL_QUERY_INTERFACE1(CompositeEnumeratorImpl, nsISimpleEnumerator)
+NS_IMPL_QUERY_INTERFACE(CompositeEnumeratorImpl, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 CompositeEnumeratorImpl::HasMoreElements(bool* aResult)

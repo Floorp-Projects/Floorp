@@ -107,7 +107,7 @@ protected:
     nsCOMPtr<nsIVariant> mValue;
 };
 
-NS_IMPL_ISUPPORTS1(nsSimpleProperty, nsIProperty)
+NS_IMPL_ISUPPORTS(nsSimpleProperty, nsIProperty)
 
 NS_IMETHODIMP
 nsSimpleProperty::GetName(nsAString& aName)

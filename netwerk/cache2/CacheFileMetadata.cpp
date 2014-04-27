@@ -26,7 +26,7 @@ namespace net {
 
 #define kCacheEntryVersion 1
 
-NS_IMPL_ISUPPORTS1(CacheFileMetadata, CacheFileIOListener)
+NS_IMPL_ISUPPORTS(CacheFileMetadata, CacheFileIOListener)
 
 CacheFileMetadata::CacheFileMetadata(CacheFileHandle *aHandle, const nsACString &aKey)
   : CacheMemoryConsumer(NORMAL)

@@ -7,7 +7,7 @@
 
 using namespace mozilla::widget::winrt;
 
-NS_IMPL_ISUPPORTS1(WakeLockListener, nsIDOMMozWakeLockListener)
+NS_IMPL_ISUPPORTS(WakeLockListener, nsIDOMMozWakeLockListener)
 
 NS_IMETHODIMP
 WakeLockListener::Callback(const nsAString& aTopic, const nsAString& aState)

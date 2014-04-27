@@ -815,7 +815,7 @@ nsScreenGonk::GetConfiguration()
                                colorDepth, colorDepth);
 }
 
-NS_IMPL_ISUPPORTS1(nsScreenManagerGonk, nsIScreenManager)
+NS_IMPL_ISUPPORTS(nsScreenManagerGonk, nsIScreenManager)
 
 nsScreenManagerGonk::nsScreenManagerGonk()
 {

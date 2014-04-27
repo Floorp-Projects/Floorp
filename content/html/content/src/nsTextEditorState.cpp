@@ -249,10 +249,10 @@ private:
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTextInputSelectionImpl)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTextInputSelectionImpl)
 NS_INTERFACE_TABLE_HEAD(nsTextInputSelectionImpl)
-  NS_INTERFACE_TABLE3(nsTextInputSelectionImpl,
-                      nsISelectionController,
-                      nsISelectionDisplay,
-                      nsISupportsWeakReference)
+  NS_INTERFACE_TABLE(nsTextInputSelectionImpl,
+                     nsISelectionController,
+                     nsISelectionDisplay,
+                     nsISupportsWeakReference)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsTextInputSelectionImpl)
 NS_INTERFACE_MAP_END
 
@@ -725,11 +725,11 @@ nsTextInputListener::~nsTextInputListener()
 {
 }
 
-NS_IMPL_ISUPPORTS4(nsTextInputListener,
-                   nsISelectionListener,
-                   nsIEditorObserver,
-                   nsISupportsWeakReference,
-                   nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(nsTextInputListener,
+                  nsISelectionListener,
+                  nsIEditorObserver,
+                  nsISupportsWeakReference,
+                  nsIDOMEventListener)
 
 // BEGIN nsIDOMSelectionListener
 
@@ -1991,7 +1991,7 @@ nsTextEditorState::HideSelectionIfBlurred()
   }
 }
 
-NS_IMPL_ISUPPORTS1(nsAnonDivObserver, nsIMutationObserver)
+NS_IMPL_ISUPPORTS(nsAnonDivObserver, nsIMutationObserver)
 
 void
 nsAnonDivObserver::CharacterDataChanged(nsIDocument*             aDocument,

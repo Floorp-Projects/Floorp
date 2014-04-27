@@ -33,7 +33,7 @@
 // nsXULTemplateResultSetStorage
 //
 
-NS_IMPL_ISUPPORTS1(nsXULTemplateResultSetStorage, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsXULTemplateResultSetStorage, nsISimpleEnumerator)
 
 
 nsXULTemplateResultSetStorage::nsXULTemplateResultSetStorage(mozIStorageStatement* aStatement)
@@ -142,8 +142,8 @@ nsXULTemplateResultSetStorage::FillColumnValues(nsCOMArray<nsIVariant>& aArray)
 // nsXULTemplateQueryProcessorStorage
 //
 
-NS_IMPL_ISUPPORTS1(nsXULTemplateQueryProcessorStorage,
-                   nsIXULTemplateQueryProcessor)
+NS_IMPL_ISUPPORTS(nsXULTemplateQueryProcessorStorage,
+                  nsIXULTemplateQueryProcessor)
 
 
 nsXULTemplateQueryProcessorStorage::nsXULTemplateQueryProcessorStorage() 

@@ -69,7 +69,7 @@ PSMContentDownloader::~PSMContentDownloader()
     nsMemory::Free(mByteData);
 }
 
-NS_IMPL_ISUPPORTS2(PSMContentDownloader, nsIStreamListener, nsIRequestObserver)
+NS_IMPL_ISUPPORTS(PSMContentDownloader, nsIStreamListener, nsIRequestObserver)
 
 const int32_t kDefaultCertAllocLength = 2048;
 
@@ -213,9 +213,9 @@ getPSMContentType(const char * aContentType)
 
 } // unnamed namespace
 
-NS_IMPL_ISUPPORTS2(PSMContentListener,
-                   nsIURIContentListener,
-                   nsISupportsWeakReference) 
+NS_IMPL_ISUPPORTS(PSMContentListener,
+                  nsIURIContentListener,
+                  nsISupportsWeakReference) 
 
 PSMContentListener::PSMContentListener()
 {

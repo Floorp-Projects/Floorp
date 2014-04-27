@@ -106,7 +106,7 @@ public:
 };
 
 #ifdef DEBUG
-NS_IMPL_ISUPPORTS_INHERITED1(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
+NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
 
 GfxInfo::GfxInfo()

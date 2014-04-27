@@ -710,7 +710,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(nsDOMMemoryFileDataOwnerMemoryReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(nsDOMMemoryFileDataOwnerMemoryReporter, nsIMemoryReporter)
 
 /* static */ void
 nsDOMMemoryFile::DataOwner::EnsureMemoryReporterRegistered()

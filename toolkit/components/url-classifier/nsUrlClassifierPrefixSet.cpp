@@ -35,7 +35,7 @@ static const PRLogModuleInfo *gUrlClassifierPrefixSetLog = nullptr;
 #define LOG_ENABLED() (false)
 #endif
 
-NS_IMPL_ISUPPORTS2(
+NS_IMPL_ISUPPORTS(
   nsUrlClassifierPrefixSet, nsIUrlClassifierPrefixSet, nsIMemoryReporter)
 
 nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()

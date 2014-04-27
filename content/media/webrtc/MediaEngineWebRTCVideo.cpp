@@ -38,9 +38,9 @@ extern PRLogModuleInfo* GetMediaManagerLog();
  * Webrtc video source.
  */
 #ifndef MOZ_B2G_CAMERA
-NS_IMPL_ISUPPORTS1(MediaEngineWebRTCVideoSource, nsIRunnable)
+NS_IMPL_ISUPPORTS(MediaEngineWebRTCVideoSource, nsIRunnable)
 #else
-NS_IMPL_QUERY_INTERFACE1(MediaEngineWebRTCVideoSource, nsIRunnable)
+NS_IMPL_QUERY_INTERFACE(MediaEngineWebRTCVideoSource, nsIRunnable)
 NS_IMPL_ADDREF_INHERITED(MediaEngineWebRTCVideoSource, CameraControlListener)
 NS_IMPL_RELEASE_INHERITED(MediaEngineWebRTCVideoSource, CameraControlListener)
 #endif

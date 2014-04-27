@@ -212,12 +212,12 @@ private:
   }
 };
 
-NS_IMPL_ISUPPORTS1(imgMemoryReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(imgMemoryReporter, nsIMemoryReporter)
 
-NS_IMPL_ISUPPORTS3(nsProgressNotificationProxy,
-                   nsIProgressEventSink,
-                   nsIChannelEventSink,
-                   nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS(nsProgressNotificationProxy,
+                  nsIProgressEventSink,
+                  nsIChannelEventSink,
+                  nsIInterfaceRequestor)
 
 NS_IMETHODIMP
 nsProgressNotificationProxy::OnProgress(nsIRequest* request,
@@ -672,7 +672,7 @@ public:
   NS_DECL_NSIOBSERVER
 };
 
-NS_IMPL_ISUPPORTS1(imgCacheObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(imgCacheObserver, nsIObserver)
 
 NS_IMETHODIMP
 imgCacheObserver::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aSomeData)
@@ -729,7 +729,7 @@ double imgLoader::sCacheTimeWeight;
 uint32_t imgLoader::sCacheMaxSize;
 imgMemoryReporter* imgLoader::sMemReporter;
 
-NS_IMPL_ISUPPORTS5(imgLoader, imgILoader, nsIContentSniffer, imgICache, nsISupportsWeakReference, nsIObserver)
+NS_IMPL_ISUPPORTS(imgLoader, imgILoader, nsIContentSniffer, imgICache, nsISupportsWeakReference, nsIObserver)
 
 static imgLoader* gSingleton = nullptr;
 static imgLoader* gPBSingleton = nullptr;
@@ -2066,10 +2066,10 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, uint32_t aLeng
 #include "nsIRequest.h"
 #include "nsIStreamConverterService.h"
 
-NS_IMPL_ISUPPORTS3(ProxyListener,
-                   nsIStreamListener,
-                   nsIThreadRetargetableStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(ProxyListener,
+                  nsIStreamListener,
+                  nsIThreadRetargetableStreamListener,
+                  nsIRequestObserver)
 
 ProxyListener::ProxyListener(nsIStreamListener *dest) :
   mDestListener(dest)
@@ -2168,10 +2168,10 @@ ProxyListener::CheckListenerChain()
  * http validate class.  check a channel for a 304
  */
 
-NS_IMPL_ISUPPORTS6(imgCacheValidator, nsIStreamListener, nsIRequestObserver,
-                   nsIThreadRetargetableStreamListener,
-                   nsIChannelEventSink, nsIInterfaceRequestor,
-                   nsIAsyncVerifyRedirectCallback)
+NS_IMPL_ISUPPORTS(imgCacheValidator, nsIStreamListener, nsIRequestObserver,
+                  nsIThreadRetargetableStreamListener,
+                  nsIChannelEventSink, nsIInterfaceRequestor,
+                  nsIAsyncVerifyRedirectCallback)
 
 imgCacheValidator::imgCacheValidator(nsProgressNotificationProxy* progress,
                                      imgLoader* loader, imgRequest *request,

@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS2(FileSystemPermissionRequest, nsIRunnable, nsIContentPermissionRequest)
+NS_IMPL_ISUPPORTS(FileSystemPermissionRequest, nsIRunnable, nsIContentPermissionRequest)
 
 // static
 void

@@ -53,7 +53,7 @@ using namespace mozilla::dom;
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED1(RootAccessible, DocAccessible, nsIAccessibleDocument)
+NS_IMPL_ISUPPORTS_INHERITED(RootAccessible, DocAccessible, nsIAccessibleDocument)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor/destructor

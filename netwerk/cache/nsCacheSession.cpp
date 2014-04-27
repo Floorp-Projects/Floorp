@@ -9,7 +9,7 @@
 #include "nsCRT.h"
 #include "nsThreadUtils.h"
 
-NS_IMPL_ISUPPORTS1(nsCacheSession, nsICacheSession)
+NS_IMPL_ISUPPORTS(nsCacheSession, nsICacheSession)
 
 nsCacheSession::nsCacheSession(const char *         clientID,
                                nsCacheStoragePolicy storagePolicy,

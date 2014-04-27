@@ -115,9 +115,9 @@ private:
     uint32_t  mWriteOffset;
 };
 
-NS_IMPL_ISUPPORTS2(MyHandler,
-                   nsIOutputStreamCallback,
-                   nsIInputStreamCallback)
+NS_IMPL_ISUPPORTS(MyHandler,
+                  nsIOutputStreamCallback,
+                  nsIInputStreamCallback)
 
 ////////////////////////////////////////////////////////////////////////////////
 

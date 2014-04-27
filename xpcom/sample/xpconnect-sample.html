@@ -62,7 +62,7 @@ compiler. The attribute Value has been expanded into a get and set
 and the return values have been modified to NS_IMETHOD, a success status
 for the method. The macro NS_DECL_ISUPPORTS, defined in <a href="http://lxr.mozilla.org/mozilla/source/xpcom/base/nsISupportsUtils.h">mozilla/xpcom/public/nsISupportsUtils.h</a>
 defines the inherited methods from nsISupports.h.
-<br><tt>NS_IMPL_ISUPPORTS1(SampleImpl, nsISample)</tt>
+<br><tt>NS_IMPL_ISUPPORTS(SampleImpl, nsISample)</tt>
 <br>In the constructor, the macro NS_INIT_REFCNT is called which sets the
 reference count to 0.<p>
 Note that the methods in the C++ bindings use InterCaps style, while the IDL

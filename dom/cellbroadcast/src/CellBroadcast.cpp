@@ -40,7 +40,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(CellBroadcast::Listener, nsICellBroadcastListener)
+NS_IMPL_ISUPPORTS(CellBroadcast::Listener, nsICellBroadcastListener)
 
 /**
  * CellBroadcast Implementation.

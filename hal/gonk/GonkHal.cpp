@@ -155,7 +155,7 @@ private:
   static bool sShuttingDown;
 };
 
-NS_IMPL_ISUPPORTS2(VibratorRunnable, nsIRunnable, nsIObserver);
+NS_IMPL_ISUPPORTS(VibratorRunnable, nsIRunnable, nsIObserver);
 
 bool VibratorRunnable::sShuttingDown = false;
 
@@ -1091,7 +1091,7 @@ private:
   double mLastLineChecked;
   ScopedFreePtr<regex_t> mRegexes;
 };
-NS_IMPL_ISUPPORTS1(OomVictimLogger, nsIObserver);
+NS_IMPL_ISUPPORTS(OomVictimLogger, nsIObserver);
 
 NS_IMETHODIMP
 OomVictimLogger::Observe(

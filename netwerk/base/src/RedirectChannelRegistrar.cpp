@@ -7,7 +7,7 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS1(RedirectChannelRegistrar, nsIRedirectChannelRegistrar)
+NS_IMPL_ISUPPORTS(RedirectChannelRegistrar, nsIRedirectChannelRegistrar)
 
 RedirectChannelRegistrar::RedirectChannelRegistrar()
   : mRealChannels(64)

@@ -133,8 +133,8 @@ CleanupFileRunnable::CleanupFileRunnable(FileManager* aFileManager,
 {
 }
 
-NS_IMPL_ISUPPORTS1(CleanupFileRunnable,
-                   nsIRunnable)
+NS_IMPL_ISUPPORTS(CleanupFileRunnable,
+                  nsIRunnable)
 
 NS_IMETHODIMP
 CleanupFileRunnable::Run()

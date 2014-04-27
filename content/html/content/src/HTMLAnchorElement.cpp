@@ -44,9 +44,9 @@ HTMLAnchorElement::~HTMLAnchorElement()
 }
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLAnchorElement)
-  NS_INTERFACE_TABLE_INHERITED2(HTMLAnchorElement,
-                                nsIDOMHTMLAnchorElement,
-                                Link)
+  NS_INTERFACE_TABLE_INHERITED(HTMLAnchorElement,
+                               nsIDOMHTMLAnchorElement,
+                               Link)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
 
 NS_IMPL_ADDREF_INHERITED(HTMLAnchorElement, Element)

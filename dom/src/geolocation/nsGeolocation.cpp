@@ -164,7 +164,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(GeolocationSettingsCallback, nsISettingsServiceCallback)
+NS_IMPL_ISUPPORTS(GeolocationSettingsCallback, nsISettingsServiceCallback)
 
 class RequestPromptEvent : public nsRunnable
 {

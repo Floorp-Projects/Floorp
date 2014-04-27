@@ -26,7 +26,7 @@
 using namespace mozilla;
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(nsDefaultURIFixup, nsIURIFixup)
+NS_IMPL_ISUPPORTS(nsDefaultURIFixup, nsIURIFixup)
 
 static bool sFixTypos = true;
 

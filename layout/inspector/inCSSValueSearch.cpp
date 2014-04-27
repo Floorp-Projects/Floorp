@@ -46,7 +46,7 @@ inCSSValueSearch::~inCSSValueSearch()
   nsCSSProps::ReleaseTable();
 }
 
-NS_IMPL_ISUPPORTS2(inCSSValueSearch, inISearchProcess, inICSSValueSearch)
+NS_IMPL_ISUPPORTS(inCSSValueSearch, inISearchProcess, inICSSValueSearch)
 
 ///////////////////////////////////////////////////////////////////////////////
 // inISearchProcess

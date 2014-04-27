@@ -53,9 +53,9 @@ NS_NewLayoutHistoryState()
   return state.forget();
 }
 
-NS_IMPL_ISUPPORTS2(nsLayoutHistoryState,
-                   nsILayoutHistoryState,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsLayoutHistoryState,
+                  nsILayoutHistoryState,
+                  nsISupportsWeakReference)
 
 void
 nsLayoutHistoryState::AddState(const nsCString& aStateKey, nsPresState* aState)

@@ -6,7 +6,7 @@
 
 #include "xpctest_private.h"
 
-NS_IMPL_ISUPPORTS1(xpcTestObjectReadOnly, nsIXPCTestObjectReadOnly)
+NS_IMPL_ISUPPORTS(xpcTestObjectReadOnly, nsIXPCTestObjectReadOnly)
 
 xpcTestObjectReadOnly :: xpcTestObjectReadOnly() {
     boolProperty = true;
@@ -54,7 +54,7 @@ NS_IMETHODIMP xpcTestObjectReadOnly :: GetTimeReadOnly(PRTime *aTimeReadOnly){
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(xpcTestObjectReadWrite, nsIXPCTestObjectReadWrite)
+NS_IMPL_ISUPPORTS(xpcTestObjectReadWrite, nsIXPCTestObjectReadWrite)
 
 xpcTestObjectReadWrite :: xpcTestObjectReadWrite() {
     const char s[] = "XPConnect Read-Writable String";

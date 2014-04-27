@@ -9,7 +9,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS1(nsHapticFeedback, nsIHapticFeedback)
+NS_IMPL_ISUPPORTS(nsHapticFeedback, nsIHapticFeedback)
 
 NS_IMETHODIMP
 nsHapticFeedback::PerformSimpleAction(int32_t aType)

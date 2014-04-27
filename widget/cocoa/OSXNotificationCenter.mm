@@ -181,7 +181,7 @@ OSXNotificationCenter::~OSXNotificationCenter()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMPL_ISUPPORTS3(OSXNotificationCenter, nsIAlertsService, imgINotificationObserver, nsITimerCallback)
+NS_IMPL_ISUPPORTS(OSXNotificationCenter, nsIAlertsService, imgINotificationObserver, nsITimerCallback)
 
 nsresult OSXNotificationCenter::Init()
 {

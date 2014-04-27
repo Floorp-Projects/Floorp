@@ -109,7 +109,7 @@ PreallocatedProcessManagerImpl::Singleton()
   return sSingleton;
 }
 
-NS_IMPL_ISUPPORTS1(PreallocatedProcessManagerImpl, nsIObserver)
+NS_IMPL_ISUPPORTS(PreallocatedProcessManagerImpl, nsIObserver)
 
 PreallocatedProcessManagerImpl::PreallocatedProcessManagerImpl()
   : mEnabled(false)

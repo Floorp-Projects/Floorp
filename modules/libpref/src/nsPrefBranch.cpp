@@ -859,7 +859,7 @@ nsPrefLocalizedString::SetDataWithLength(uint32_t aLength,
 // nsRelativeFilePref
 //----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsRelativeFilePref, nsIRelativeFilePref)
+NS_IMPL_ISUPPORTS(nsRelativeFilePref, nsIRelativeFilePref)
 
 nsRelativeFilePref::nsRelativeFilePref()
 {

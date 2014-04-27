@@ -22,8 +22,8 @@
 using mozilla::unused;
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS1(FilePickerParent::FilePickerShownCallback,
-                   nsIFilePickerShownCallback);
+NS_IMPL_ISUPPORTS(FilePickerParent::FilePickerShownCallback,
+                  nsIFilePickerShownCallback);
 
 NS_IMETHODIMP
 FilePickerParent::FilePickerShownCallback::Done(int16_t aResult)

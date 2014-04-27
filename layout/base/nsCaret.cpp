@@ -236,7 +236,7 @@ void nsCaret::Terminate()
 }
 
 //-----------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS1(nsCaret, nsISelectionListener)
+NS_IMPL_ISUPPORTS(nsCaret, nsISelectionListener)
 
 //-----------------------------------------------------------------------------
 nsISelection* nsCaret::GetCaretDOMSelection()

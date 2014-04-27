@@ -999,7 +999,7 @@ Proxy::AddRemoveEventListeners(bool aUpload, bool aAdd)
   return true;
 }
 
-NS_IMPL_ISUPPORTS1(Proxy, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(Proxy, nsIDOMEventListener)
 
 NS_IMETHODIMP
 Proxy::HandleEvent(nsIDOMEvent* aEvent)
@@ -1082,8 +1082,8 @@ NS_IMPL_ISUPPORTS_INHERITED0(WorkerThreadProxySyncRunnable, nsRunnable)
 
 NS_IMPL_ISUPPORTS_INHERITED0(AsyncTeardownRunnable, nsRunnable)
 
-NS_IMPL_ISUPPORTS_INHERITED1(LoadStartDetectionRunnable, nsRunnable,
-                                                         nsIDOMEventListener)
+NS_IMPL_ISUPPORTS_INHERITED(LoadStartDetectionRunnable, nsRunnable,
+                                                        nsIDOMEventListener)
 
 NS_IMETHODIMP
 LoadStartDetectionRunnable::Run()

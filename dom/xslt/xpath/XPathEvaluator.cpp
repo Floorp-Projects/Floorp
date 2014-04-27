@@ -58,7 +58,7 @@ private:
     bool mIsCaseSensitive;
 };
 
-NS_IMPL_ISUPPORTS1(XPathEvaluator, nsIDOMXPathEvaluator)
+NS_IMPL_ISUPPORTS(XPathEvaluator, nsIDOMXPathEvaluator)
 
 XPathEvaluator::XPathEvaluator(nsIDocument* aDocument)
     : mDocument(do_GetWeakReference(aDocument))

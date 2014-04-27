@@ -112,7 +112,7 @@ end:
 #define NS_NET_PREF_ESCAPEUTF8         "network.standard-url.escape-utf8"
 #define NS_NET_PREF_ALWAYSENCODEINUTF8 "network.standard-url.encode-utf8"
 
-NS_IMPL_ISUPPORTS1(nsStandardURL::nsPrefObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(nsStandardURL::nsPrefObserver, nsIObserver)
 
 NS_IMETHODIMP nsStandardURL::
 nsPrefObserver::Observe(nsISupports *subject,

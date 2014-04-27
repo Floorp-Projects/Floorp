@@ -109,7 +109,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(TimeZoneSettingCb, nsISettingsServiceCallback)
+NS_IMPL_ISUPPORTS(TimeZoneSettingCb, nsISettingsServiceCallback)
 
 TimeZoneSettingObserver::TimeZoneSettingObserver()
 {
@@ -180,7 +180,7 @@ TimeZoneSettingObserver::~TimeZoneSettingObserver()
   }
 }
 
-NS_IMPL_ISUPPORTS1(TimeZoneSettingObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(TimeZoneSettingObserver, nsIObserver)
 
 NS_IMETHODIMP
 TimeZoneSettingObserver::Observe(nsISupports *aSubject,

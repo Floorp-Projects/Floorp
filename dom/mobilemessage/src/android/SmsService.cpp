@@ -12,7 +12,7 @@ namespace mozilla {
 namespace dom {
 namespace mobilemessage {
 
-NS_IMPL_ISUPPORTS1(SmsService, nsISmsService)
+NS_IMPL_ISUPPORTS(SmsService, nsISmsService)
 
 NS_IMETHODIMP
 SmsService::GetSmsDefaultServiceId(uint32_t* aServiceId)

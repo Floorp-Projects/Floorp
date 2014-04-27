@@ -385,7 +385,7 @@ AtomImpl::~AtomImpl()
   nsStringBuffer::FromData(mString)->Release();
 }
 
-NS_IMPL_ISUPPORTS1(AtomImpl, nsIAtom)
+NS_IMPL_ISUPPORTS(AtomImpl, nsIAtom)
 
 PermanentAtomImpl::~PermanentAtomImpl()
 {

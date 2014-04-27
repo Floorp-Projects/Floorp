@@ -79,7 +79,7 @@ nsScreenManagerGtk :: ~nsScreenManagerGtk()
 
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS1(nsScreenManagerGtk, nsIScreenManager)
+NS_IMPL_ISUPPORTS(nsScreenManagerGtk, nsIScreenManager)
 
 
 // this function will make sure that everything has been initialized.

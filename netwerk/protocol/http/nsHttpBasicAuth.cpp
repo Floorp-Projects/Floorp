@@ -29,7 +29,7 @@ nsHttpBasicAuth::~nsHttpBasicAuth()
 // nsHttpBasicAuth::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsHttpBasicAuth, nsIHttpAuthenticator)
+NS_IMPL_ISUPPORTS(nsHttpBasicAuth, nsIHttpAuthenticator)
 
 //-----------------------------------------------------------------------------
 // nsHttpBasicAuth::nsIHttpAuthenticator

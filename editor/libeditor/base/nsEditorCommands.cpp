@@ -36,7 +36,7 @@ nsBaseEditorCommand::nsBaseEditorCommand()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsBaseEditorCommand, nsIControllerCommand)
+NS_IMPL_ISUPPORTS(nsBaseEditorCommand, nsIControllerCommand)
 
 
 NS_IMETHODIMP

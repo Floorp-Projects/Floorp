@@ -413,7 +413,7 @@ public:
   NS_DECL_ISUPPORTS
 };
 
-NS_IMPL_ISUPPORTS1(TestTransaction, nsITransaction)
+NS_IMPL_ISUPPORTS(TestTransaction, nsITransaction)
 
 class SimpleTransaction : public TestTransaction
 {

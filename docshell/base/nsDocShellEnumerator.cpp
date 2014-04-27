@@ -22,7 +22,7 @@ nsDocShellEnumerator::~nsDocShellEnumerator()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsDocShellEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsDocShellEnumerator, nsISimpleEnumerator)
 
 
 /* nsISupports getNext (); */

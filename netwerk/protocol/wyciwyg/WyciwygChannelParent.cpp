@@ -48,10 +48,10 @@ WyciwygChannelParent::ActorDestroy(ActorDestroyReason why)
 // WyciwygChannelParent::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS3(WyciwygChannelParent,
-                   nsIStreamListener,
-                   nsIInterfaceRequestor,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(WyciwygChannelParent,
+                  nsIStreamListener,
+                  nsIInterfaceRequestor,
+                  nsIRequestObserver)
 
 //-----------------------------------------------------------------------------
 // WyciwygChannelParent::PWyciwygChannelParent

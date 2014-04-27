@@ -177,8 +177,8 @@ nsPluginDirServiceProvider::~nsPluginDirServiceProvider()
 // nsPluginDirServiceProvider::nsISupports
 //*****************************************************************************
 
-NS_IMPL_ISUPPORTS1(nsPluginDirServiceProvider,
-                   nsIDirectoryServiceProvider)
+NS_IMPL_ISUPPORTS(nsPluginDirServiceProvider,
+                  nsIDirectoryServiceProvider)
 
 //*****************************************************************************
 // nsPluginDirServiceProvider::nsIDirectoryServiceProvider

@@ -42,7 +42,7 @@ nsCollationUnix::~nsCollationUnix()
     delete mCollation;
 }
 
-NS_IMPL_ISUPPORTS1(nsCollationUnix, nsICollation)
+NS_IMPL_ISUPPORTS(nsCollationUnix, nsICollation)
 
 nsresult nsCollationUnix::Initialize(nsILocale* locale) 
 {

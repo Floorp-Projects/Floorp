@@ -219,8 +219,8 @@ private:
   nsresult LookupSpecInternal(const nsACString& aSpec);
 };
 
-NS_IMPL_ISUPPORTS1(PendingDBLookup,
-                   nsIUrlClassifierCallback)
+NS_IMPL_ISUPPORTS(PendingDBLookup,
+                  nsIUrlClassifierCallback)
 
 PendingDBLookup::PendingDBLookup(PendingLookup* aPendingLookup) :
   mAllowlistOnly(false),
@@ -318,9 +318,9 @@ PendingDBLookup::HandleEvent(const nsACString& tables)
   return mPendingLookup->LookupNext();
 }
 
-NS_IMPL_ISUPPORTS2(PendingLookup,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(PendingLookup,
+                  nsIStreamListener,
+                  nsIRequestObserver)
 
 PendingLookup::PendingLookup(nsIApplicationReputationQuery* aQuery,
                              nsIApplicationReputationCallback* aCallback) :
@@ -879,8 +879,8 @@ PendingLookup::OnStopRequestInternal(nsIRequest *aRequest,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(ApplicationReputationService,
-                   nsIApplicationReputationService)
+NS_IMPL_ISUPPORTS(ApplicationReputationService,
+                  nsIApplicationReputationService)
 
 ApplicationReputationService*
   ApplicationReputationService::gApplicationReputationService = nullptr;

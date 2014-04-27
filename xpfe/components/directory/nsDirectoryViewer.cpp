@@ -1254,7 +1254,7 @@ nsDirectoryViewerFactory::~nsDirectoryViewerFactory()
 }
 
 
-NS_IMPL_ISUPPORTS1(nsDirectoryViewerFactory, nsIDocumentLoaderFactory)
+NS_IMPL_ISUPPORTS(nsDirectoryViewerFactory, nsIDocumentLoaderFactory)
 
 
 

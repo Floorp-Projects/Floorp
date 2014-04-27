@@ -44,9 +44,9 @@ NS_IMPL_ADDREF(nsThreadPool)
 NS_IMPL_RELEASE(nsThreadPool)
 NS_IMPL_CLASSINFO(nsThreadPool, nullptr, nsIClassInfo::THREADSAFE,
                   NS_THREADPOOL_CID)
-NS_IMPL_QUERY_INTERFACE3_CI(nsThreadPool, nsIThreadPool, nsIEventTarget,
-                            nsIRunnable)
-NS_IMPL_CI_INTERFACE_GETTER2(nsThreadPool, nsIThreadPool, nsIEventTarget)
+NS_IMPL_QUERY_INTERFACE_CI(nsThreadPool, nsIThreadPool, nsIEventTarget,
+                           nsIRunnable)
+NS_IMPL_CI_INTERFACE_GETTER(nsThreadPool, nsIThreadPool, nsIEventTarget)
 
 nsThreadPool::nsThreadPool()
   : mThreadLimit(DEFAULT_THREAD_LIMIT)

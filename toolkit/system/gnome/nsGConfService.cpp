@@ -94,7 +94,7 @@ nsGConfService::Init()
   return mClient ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NS_IMPL_ISUPPORTS1(nsGConfService, nsIGConfService)
+NS_IMPL_ISUPPORTS(nsGConfService, nsIGConfService)
 
 NS_IMETHODIMP
 nsGConfService::GetBool(const nsACString &aKey, bool *aResult)

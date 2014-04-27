@@ -33,7 +33,7 @@ extern nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
 
 // nsISupports Implementation
 
-NS_IMPL_ISUPPORTS6(nsAutoConfig, nsIAutoConfig, nsITimerCallback, nsIStreamListener, nsIObserver, nsIRequestObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsAutoConfig, nsIAutoConfig, nsITimerCallback, nsIStreamListener, nsIObserver, nsIRequestObserver, nsISupportsWeakReference)
 
 nsAutoConfig::nsAutoConfig()
 {

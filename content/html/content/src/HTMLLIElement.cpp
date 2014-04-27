@@ -21,8 +21,8 @@ HTMLLIElement::~HTMLLIElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLLIElement, nsGenericHTMLElement,
-                             nsIDOMHTMLLIElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLLIElement, nsGenericHTMLElement,
+                            nsIDOMHTMLLIElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLLIElement)
 

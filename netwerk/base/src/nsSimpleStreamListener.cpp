@@ -10,10 +10,10 @@
 // nsISupports implementation...
 //----------------------------------------------------------------------------
 //
-NS_IMPL_ISUPPORTS3(nsSimpleStreamListener,
-                   nsISimpleStreamListener,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(nsSimpleStreamListener,
+                  nsISimpleStreamListener,
+                  nsIStreamListener,
+                  nsIRequestObserver)
 
 //
 //----------------------------------------------------------------------------

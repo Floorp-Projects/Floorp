@@ -52,9 +52,9 @@ static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
 
 static const char kPermissionType[] = "cookie";
 
-NS_IMPL_ISUPPORTS2(nsCookiePermission,
-                   nsICookiePermission,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(nsCookiePermission,
+                  nsICookiePermission,
+                  nsIObserver)
 
 bool
 nsCookiePermission::Init()

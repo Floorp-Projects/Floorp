@@ -20,7 +20,7 @@
 #include "nsIClassInfo.h"
 #include "nsIInterfaceInfo.h"
 
-NS_IMPL_ISUPPORTS1(txXPathObjectAdaptor, txIXPathObject)
+NS_IMPL_ISUPPORTS(txXPathObjectAdaptor, txIXPathObject)
 
 class txFunctionEvaluationContext MOZ_FINAL : public txIFunctionEvaluationContext
 {
@@ -47,7 +47,7 @@ txFunctionEvaluationContext::txFunctionEvaluationContext(txIEvalContext *aContex
 {
 }
 
-NS_IMPL_ISUPPORTS1(txFunctionEvaluationContext, txIFunctionEvaluationContext)
+NS_IMPL_ISUPPORTS(txFunctionEvaluationContext, txIFunctionEvaluationContext)
 
 NS_IMETHODIMP
 txFunctionEvaluationContext::GetPosition(uint32_t *aPosition)

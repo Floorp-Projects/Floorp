@@ -246,10 +246,10 @@ SystemWorkerManager::InitKeyStore(JSContext *cx)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS3(SystemWorkerManager,
-                   nsIObserver,
-                   nsIInterfaceRequestor,
-                   nsISystemWorkerManager)
+NS_IMPL_ISUPPORTS(SystemWorkerManager,
+                  nsIObserver,
+                  nsIInterfaceRequestor,
+                  nsISystemWorkerManager)
 
 NS_IMETHODIMP
 SystemWorkerManager::Observe(nsISupports *aSubject, const char *aTopic,

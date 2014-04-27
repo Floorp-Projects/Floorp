@@ -107,7 +107,7 @@ ContainerEnumeratorImpl::~ContainerEnumeratorImpl()
     }
 }
 
-NS_IMPL_ISUPPORTS1(ContainerEnumeratorImpl, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(ContainerEnumeratorImpl, nsISimpleEnumerator)
 
 
 NS_IMETHODIMP

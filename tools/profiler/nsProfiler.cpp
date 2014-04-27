@@ -23,7 +23,7 @@
 
 using std::string;
 
-NS_IMPL_ISUPPORTS1(nsProfiler, nsIProfiler)
+NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler)
 
 nsProfiler::nsProfiler()
   : mLockedForPrivateBrowsing(false)

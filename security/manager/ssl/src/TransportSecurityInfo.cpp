@@ -62,13 +62,13 @@ TransportSecurityInfo::virtualDestroyNSSReference()
 {
 }
 
-NS_IMPL_ISUPPORTS6(TransportSecurityInfo,
-                   nsITransportSecurityInfo,
-                   nsIInterfaceRequestor,
-                   nsISSLStatusProvider,
-                   nsIAssociatedContentSecurity,
-                   nsISerializable,
-                   nsIClassInfo)
+NS_IMPL_ISUPPORTS(TransportSecurityInfo,
+                  nsITransportSecurityInfo,
+                  nsIInterfaceRequestor,
+                  nsISSLStatusProvider,
+                  nsIAssociatedContentSecurity,
+                  nsISerializable,
+                  nsIClassInfo)
 
 nsresult
 TransportSecurityInfo::SetHostName(const char* host)

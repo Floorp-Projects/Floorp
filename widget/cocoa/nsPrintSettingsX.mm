@@ -17,7 +17,7 @@ using namespace mozilla;
 
 #define MAC_OS_X_PAGE_SETUP_PREFNAME    "print.macosx.pagesetup-2"
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsPrintSettingsX, nsPrintSettings, nsPrintSettingsX)
+NS_IMPL_ISUPPORTS_INHERITED(nsPrintSettingsX, nsPrintSettings, nsPrintSettingsX)
 
 nsPrintSettingsX::nsPrintSettingsX()
 {

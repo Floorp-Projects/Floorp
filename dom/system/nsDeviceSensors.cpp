@@ -94,7 +94,7 @@ NS_IMETHODIMP nsDeviceSensorData::GetZ(double *aZ)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsDeviceSensors, nsIDeviceSensors)
+NS_IMPL_ISUPPORTS(nsDeviceSensors, nsIDeviceSensors)
 
 nsDeviceSensors::nsDeviceSensors()
 {

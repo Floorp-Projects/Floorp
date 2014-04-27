@@ -44,9 +44,9 @@ void extractAttributeValue(const char* searchString, const char* attributeName, 
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsDeviceChannel,
-                             nsBaseChannel,
-                             nsIChannel)
+NS_IMPL_ISUPPORTS_INHERITED(nsDeviceChannel,
+                            nsBaseChannel,
+                            nsIChannel)
 
 // nsDeviceChannel methods
 nsDeviceChannel::nsDeviceChannel()

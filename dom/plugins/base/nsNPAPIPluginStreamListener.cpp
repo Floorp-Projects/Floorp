@@ -35,7 +35,7 @@ nsNPAPIStreamWrapper::~nsNPAPIStreamWrapper()
   }
 }
 
-NS_IMPL_ISUPPORTS1(nsPluginStreamToFile, nsIOutputStream)
+NS_IMPL_ISUPPORTS(nsPluginStreamToFile, nsIOutputStream)
 
 nsPluginStreamToFile::nsPluginStreamToFile(const char* target,
                                            nsIPluginInstanceOwner* owner)
@@ -128,8 +128,8 @@ nsPluginStreamToFile::Close(void)
 
 // nsNPAPIPluginStreamListener Methods
 
-NS_IMPL_ISUPPORTS2(nsNPAPIPluginStreamListener,
-                   nsITimerCallback, nsIHTTPHeaderListener)
+NS_IMPL_ISUPPORTS(nsNPAPIPluginStreamListener,
+                  nsITimerCallback, nsIHTTPHeaderListener)
 
 nsNPAPIPluginStreamListener::nsNPAPIPluginStreamListener(nsNPAPIPluginInstance* inst, 
                                                          void* notifyData,

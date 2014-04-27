@@ -990,7 +990,7 @@ private:
  * BlobChild::RemoteBlob Implementation
  ******************************************************************************/
 
-NS_IMPL_ISUPPORTS_INHERITED1(BlobChild::RemoteBlob, nsDOMFile, nsIRemoteBlob)
+NS_IMPL_ISUPPORTS_INHERITED(BlobChild::RemoteBlob, nsDOMFile, nsIRemoteBlob)
 
 already_AddRefed<nsIDOMBlob>
 BlobChild::
@@ -1683,7 +1683,7 @@ private:
  * BlobChild::RemoteBlob Implementation
  ******************************************************************************/
 
-NS_IMPL_ISUPPORTS_INHERITED1(BlobParent::RemoteBlob, nsDOMFile, nsIRemoteBlob)
+NS_IMPL_ISUPPORTS_INHERITED(BlobParent::RemoteBlob, nsDOMFile, nsIRemoteBlob)
 
 already_AddRefed<nsIDOMBlob>
 BlobParent::

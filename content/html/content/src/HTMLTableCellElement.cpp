@@ -28,8 +28,8 @@ HTMLTableCellElement::WrapNode(JSContext *aCx)
   return HTMLTableCellElementBinding::Wrap(aCx, this);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLTableCellElement, nsGenericHTMLElement,
-                             nsIDOMHTMLTableCellElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLTableCellElement, nsGenericHTMLElement,
+                            nsIDOMHTMLTableCellElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLTableCellElement)
 

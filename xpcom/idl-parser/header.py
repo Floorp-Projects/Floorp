@@ -267,7 +267,7 @@ protected:
 };
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(%(implclass)s, %(name)s)
+NS_IMPL_ISUPPORTS(%(implclass)s, %(name)s)
 
 %(implclass)s::%(implclass)s()
 {

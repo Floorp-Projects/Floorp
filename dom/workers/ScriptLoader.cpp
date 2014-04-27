@@ -611,7 +611,7 @@ private:
   }
 };
 
-NS_IMPL_ISUPPORTS2(ScriptLoaderRunnable, nsIRunnable, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(ScriptLoaderRunnable, nsIRunnable, nsIStreamLoaderObserver)
 
 class ChannelGetterRunnable MOZ_FINAL : public nsRunnable
 {

@@ -12,8 +12,8 @@
 
 using namespace mozilla::widget::android;
 
-NS_IMPL_ISUPPORTS1(nsAndroidNetworkLinkService,
-                   nsINetworkLinkService)
+NS_IMPL_ISUPPORTS(nsAndroidNetworkLinkService,
+                  nsINetworkLinkService)
 
 nsAndroidNetworkLinkService::nsAndroidNetworkLinkService()
 {

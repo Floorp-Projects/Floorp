@@ -217,8 +217,8 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLDocument, nsDocument)
 
 // QueryInterface implementation for nsHTMLDocument
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
-  NS_INTERFACE_TABLE_INHERITED2(nsHTMLDocument, nsIHTMLDocument,
-                                nsIDOMHTMLDocument)
+  NS_INTERFACE_TABLE_INHERITED(nsHTMLDocument, nsIHTMLDocument,
+                               nsIDOMHTMLDocument)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsDocument)
 
 JSObject*

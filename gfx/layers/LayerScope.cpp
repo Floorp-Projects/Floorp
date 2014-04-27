@@ -269,7 +269,7 @@ private:
     SocketStateType mState;
 };
 
-NS_IMPL_ISUPPORTS1(LayerScopeWebSocketHandler, nsIInputStreamCallback);
+NS_IMPL_ISUPPORTS(LayerScopeWebSocketHandler, nsIInputStreamCallback);
 
 class LayerScopeWebSocketManager {
 public:
@@ -575,7 +575,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS1(DebugListener, nsIServerSocketListener);
+NS_IMPL_ISUPPORTS(DebugListener, nsIServerSocketListener);
 
 
 class DebugDataSender : public nsIRunnable
@@ -635,7 +635,7 @@ protected:
     LinkedList<DebugGLData> *mList;
 };
 
-NS_IMPL_ISUPPORTS1(DebugDataSender, nsIRunnable);
+NS_IMPL_ISUPPORTS(DebugDataSender, nsIRunnable);
 
 void
 LayerScope::CreateServerSocket()

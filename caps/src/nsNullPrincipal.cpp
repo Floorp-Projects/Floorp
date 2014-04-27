@@ -29,12 +29,12 @@ using namespace mozilla;
 
 NS_IMPL_CLASSINFO(nsNullPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_NULLPRINCIPAL_CID)
-NS_IMPL_QUERY_INTERFACE2_CI(nsNullPrincipal,
+NS_IMPL_QUERY_INTERFACE_CI(nsNullPrincipal,
+                           nsIPrincipal,
+                           nsISerializable)
+NS_IMPL_CI_INTERFACE_GETTER(nsNullPrincipal,
                             nsIPrincipal,
                             nsISerializable)
-NS_IMPL_CI_INTERFACE_GETTER2(nsNullPrincipal,
-                             nsIPrincipal,
-                             nsISerializable)
 
 NS_IMETHODIMP_(MozExternalRefCountType)
 nsNullPrincipal::AddRef()

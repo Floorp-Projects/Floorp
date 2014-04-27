@@ -31,7 +31,7 @@ nsMenuBoxObject::~nsMenuBoxObject()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsMenuBoxObject, nsBoxObject, nsIMenuBoxObject)
+NS_IMPL_ISUPPORTS_INHERITED(nsMenuBoxObject, nsBoxObject, nsIMenuBoxObject)
 
 /* void openMenu (in boolean openFlag); */
 NS_IMETHODIMP nsMenuBoxObject::OpenMenu(bool aOpenFlag)

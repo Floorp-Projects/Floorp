@@ -19,7 +19,7 @@ using namespace JS;
 // nsJSID
 
 NS_IMPL_CLASSINFO(nsJSID, nullptr, 0, NS_JS_ID_CID)
-NS_IMPL_ISUPPORTS1_CI(nsJSID, nsIJSID)
+NS_IMPL_ISUPPORTS_CI(nsJSID, nsIJSID)
 
 char nsJSID::gNoString[] = "";
 
@@ -287,7 +287,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsJSIID)
 NS_IMPL_RELEASE(nsJSIID)
-NS_IMPL_CI_INTERFACE_GETTER2(nsJSIID, nsIJSID, nsIJSIID)
+NS_IMPL_CI_INTERFACE_GETTER(nsJSIID, nsIJSID, nsIJSIID)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsJSIID
@@ -567,7 +567,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsJSCID)
 NS_IMPL_RELEASE(nsJSCID)
-NS_IMPL_CI_INTERFACE_GETTER2(nsJSCID, nsIJSID, nsIJSCID)
+NS_IMPL_CI_INTERFACE_GETTER(nsJSCID, nsIJSID, nsIJSCID)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsJSCID

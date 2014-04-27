@@ -576,7 +576,7 @@ xptiInterfaceInfo::BuildParent()
 
 /***************************************************************************/
 
-NS_IMPL_QUERY_INTERFACE1(xptiInterfaceInfo, nsIInterfaceInfo)
+NS_IMPL_QUERY_INTERFACE(xptiInterfaceInfo, nsIInterfaceInfo)
 
 xptiInterfaceInfo::xptiInterfaceInfo(xptiInterfaceEntry* entry)
     : mEntry(entry), mParent(nullptr)

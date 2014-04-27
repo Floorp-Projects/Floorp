@@ -60,7 +60,7 @@ nsInt2StrHashtable::Remove(uint32_t key)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS1(nsErrorService, nsIErrorService)
+NS_IMPL_ISUPPORTS(nsErrorService, nsIErrorService)
 
 nsresult
 nsErrorService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)

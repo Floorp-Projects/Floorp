@@ -7,7 +7,7 @@
 #include "nsStreamUtils.h"
 #include <algorithm>
 
-NS_IMPL_ISUPPORTS1(nsTemporaryFileInputStream, nsIInputStream)
+NS_IMPL_ISUPPORTS(nsTemporaryFileInputStream, nsIInputStream)
 
 nsTemporaryFileInputStream::nsTemporaryFileInputStream(FileDescOwner* aFileDescOwner, uint64_t aStartPos, uint64_t aEndPos)
   : mFileDescOwner(aFileDescOwner),

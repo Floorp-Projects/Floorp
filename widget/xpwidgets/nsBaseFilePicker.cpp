@@ -111,7 +111,7 @@ private:
   nsCOMPtr<nsISimpleEnumerator> mIterator;
 };
 
-NS_IMPL_ISUPPORTS1(nsBaseFilePickerEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsBaseFilePickerEnumerator, nsISimpleEnumerator)
 
 nsBaseFilePicker::nsBaseFilePicker()
   : mAddToRecentDocs(true)

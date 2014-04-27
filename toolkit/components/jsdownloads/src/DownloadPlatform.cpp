@@ -33,7 +33,7 @@ using namespace mozilla;
 
 DownloadPlatform *DownloadPlatform::gDownloadPlatformService = nullptr;
 
-NS_IMPL_ISUPPORTS1(DownloadPlatform, mozIDownloadPlatform);
+NS_IMPL_ISUPPORTS(DownloadPlatform, mozIDownloadPlatform);
 
 DownloadPlatform* DownloadPlatform::GetDownloadPlatform()
 {

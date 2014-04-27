@@ -57,7 +57,7 @@ class SendPeriodic : public nsITimerCallback {
   int to_send_;
 };
 
-NS_IMPL_ISUPPORTS1(SendPeriodic, nsITimerCallback)
+NS_IMPL_ISUPPORTS(SendPeriodic, nsITimerCallback)
 
 
 class TransportTestPeer : public sigslot::has_slots<> {

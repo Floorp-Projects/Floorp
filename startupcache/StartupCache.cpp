@@ -127,7 +127,7 @@ bool StartupCache::gShutdownInitiated;
 bool StartupCache::gIgnoreDiskCache;
 enum StartupCache::TelemetrifyAge StartupCache::gPostFlushAgeAction = StartupCache::IGNORE_AGE;
 
-NS_IMPL_ISUPPORTS1(StartupCache, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(StartupCache, nsIMemoryReporter)
 
 StartupCache::StartupCache()
   : mArchive(nullptr), mStartupWriteInitiated(false), mWriteThread(nullptr)
@@ -578,7 +578,7 @@ StartupCache::WriteTimeout(nsITimer *aTimer, void *aClosure)
 
 // We don't want to refcount StartupCache, so we'll just
 // hold a ref to this and pass it to observerService instead.
-NS_IMPL_ISUPPORTS1(StartupCacheListener, nsIObserver)
+NS_IMPL_ISUPPORTS(StartupCacheListener, nsIObserver)
 
 nsresult
 StartupCacheListener::Observe(nsISupports *subject, const char* topic, const char16_t* data)
@@ -638,8 +638,8 @@ StartupCache::RecordAgesAlways()
 
 // StartupCacheDebugOutputStream implementation
 #ifdef DEBUG
-NS_IMPL_ISUPPORTS3(StartupCacheDebugOutputStream, nsIObjectOutputStream, 
-                   nsIBinaryOutputStream, nsIOutputStream)
+NS_IMPL_ISUPPORTS(StartupCacheDebugOutputStream, nsIObjectOutputStream, 
+                  nsIBinaryOutputStream, nsIOutputStream)
 
 bool
 StartupCacheDebugOutputStream::CheckReferences(nsISupports* aObject)
@@ -733,7 +733,7 @@ StartupCacheDebugOutputStream::PutBuffer(char* aBuffer, uint32_t aLength)
 
 StartupCacheWrapper* StartupCacheWrapper::gStartupCacheWrapper = nullptr;
 
-NS_IMPL_ISUPPORTS1(StartupCacheWrapper, nsIStartupCache)
+NS_IMPL_ISUPPORTS(StartupCacheWrapper, nsIStartupCache)
 
 StartupCacheWrapper* StartupCacheWrapper::GetSingleton() 
 {

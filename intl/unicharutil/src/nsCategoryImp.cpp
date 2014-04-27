@@ -8,7 +8,7 @@
 #include "nsCategoryImp.h"
 #include "nsUnicodeProperties.h"
 
-NS_IMPL_QUERY_INTERFACE1(nsCategoryImp, nsIUGenCategory)
+NS_IMPL_QUERY_INTERFACE(nsCategoryImp, nsIUGenCategory)
 
 NS_IMETHODIMP_(MozExternalRefCountType) nsCategoryImp::AddRef(void)
 {

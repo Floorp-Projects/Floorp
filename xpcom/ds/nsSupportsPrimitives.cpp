@@ -11,7 +11,7 @@ using mozilla::fallible_t;
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsIDImpl, nsISupportsID, nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsIDImpl, nsISupportsID, nsISupportsPrimitive)
 
 nsSupportsIDImpl::nsSupportsIDImpl()
     : mData(nullptr)
@@ -71,8 +71,8 @@ NS_IMETHODIMP nsSupportsIDImpl::ToString(char **_retval)
  * nsSupportsCStringImpl
  *****************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsCStringImpl, nsISupportsCString,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsCStringImpl, nsISupportsCString,
+                  nsISupportsPrimitive)
 
 NS_IMETHODIMP nsSupportsCStringImpl::GetType(uint16_t *aType)
 {
@@ -110,8 +110,8 @@ NS_IMETHODIMP nsSupportsCStringImpl::SetData(const nsACString& aData)
  * nsSupportsStringImpl
  *****************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsStringImpl, nsISupportsString,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsStringImpl, nsISupportsString,
+                  nsISupportsPrimitive)
 
 NS_IMETHODIMP nsSupportsStringImpl::GetType(uint16_t *aType)
 {
@@ -147,8 +147,8 @@ NS_IMETHODIMP nsSupportsStringImpl::SetData(const nsAString& aData)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsPRBoolImpl, nsISupportsPRBool,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsPRBoolImpl, nsISupportsPRBool,
+                  nsISupportsPrimitive)
 
 nsSupportsPRBoolImpl::nsSupportsPRBoolImpl()
     : mData(false)
@@ -188,8 +188,8 @@ NS_IMETHODIMP nsSupportsPRBoolImpl::ToString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsPRUint8Impl, nsISupportsPRUint8,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsPRUint8Impl, nsISupportsPRUint8,
+                  nsISupportsPrimitive)
 
 nsSupportsPRUint8Impl::nsSupportsPRUint8Impl()
     : mData(0)
@@ -233,8 +233,8 @@ NS_IMETHODIMP nsSupportsPRUint8Impl::ToString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsPRUint16Impl, nsISupportsPRUint16,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsPRUint16Impl, nsISupportsPRUint16,
+                  nsISupportsPrimitive)
 
 nsSupportsPRUint16Impl::nsSupportsPRUint16Impl()
     : mData(0)
@@ -278,8 +278,8 @@ NS_IMETHODIMP nsSupportsPRUint16Impl::ToString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsPRUint32Impl, nsISupportsPRUint32,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsPRUint32Impl, nsISupportsPRUint32,
+                  nsISupportsPrimitive)
 
 nsSupportsPRUint32Impl::nsSupportsPRUint32Impl()
     : mData(0)
@@ -323,8 +323,8 @@ NS_IMETHODIMP nsSupportsPRUint32Impl::ToString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsPRUint64Impl, nsISupportsPRUint64,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsPRUint64Impl, nsISupportsPRUint64,
+                  nsISupportsPrimitive)
 
 nsSupportsPRUint64Impl::nsSupportsPRUint64Impl()
     : mData(0)
@@ -368,8 +368,8 @@ NS_IMETHODIMP nsSupportsPRUint64Impl::ToString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsPRTimeImpl, nsISupportsPRTime,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsPRTimeImpl, nsISupportsPRTime,
+                  nsISupportsPrimitive)
 
 nsSupportsPRTimeImpl::nsSupportsPRTimeImpl()
     : mData(0)
@@ -413,8 +413,8 @@ NS_IMETHODIMP nsSupportsPRTimeImpl::ToString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsCharImpl, nsISupportsChar,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsCharImpl, nsISupportsChar,
+                  nsISupportsPrimitive)
 
 nsSupportsCharImpl::nsSupportsCharImpl()
     : mData(0)
@@ -458,8 +458,8 @@ NS_IMETHODIMP nsSupportsCharImpl::ToString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsPRInt16Impl, nsISupportsPRInt16,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsPRInt16Impl, nsISupportsPRInt16,
+                  nsISupportsPrimitive)
 
 nsSupportsPRInt16Impl::nsSupportsPRInt16Impl()
     : mData(0)
@@ -503,8 +503,8 @@ NS_IMETHODIMP nsSupportsPRInt16Impl::ToString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsPRInt32Impl, nsISupportsPRInt32,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsPRInt32Impl, nsISupportsPRInt32,
+                  nsISupportsPrimitive)
 
 nsSupportsPRInt32Impl::nsSupportsPRInt32Impl()
     : mData(0)
@@ -548,8 +548,8 @@ NS_IMETHODIMP nsSupportsPRInt32Impl::ToString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsPRInt64Impl, nsISupportsPRInt64,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsPRInt64Impl, nsISupportsPRInt64,
+                  nsISupportsPrimitive)
 
 nsSupportsPRInt64Impl::nsSupportsPRInt64Impl()
     : mData(0)
@@ -593,8 +593,8 @@ NS_IMETHODIMP nsSupportsPRInt64Impl::ToString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsFloatImpl, nsISupportsFloat,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsFloatImpl, nsISupportsFloat,
+                  nsISupportsPrimitive)
 
 nsSupportsFloatImpl::nsSupportsFloatImpl()
     : mData(float(0.0))
@@ -638,8 +638,8 @@ NS_IMETHODIMP nsSupportsFloatImpl::ToString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsDoubleImpl, nsISupportsDouble,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsDoubleImpl, nsISupportsDouble,
+                  nsISupportsPrimitive)
 
 nsSupportsDoubleImpl::nsSupportsDoubleImpl()
     : mData(double(0.0))
@@ -684,8 +684,8 @@ NS_IMETHODIMP nsSupportsDoubleImpl::ToString(char **_retval)
 /***************************************************************************/
 
 
-NS_IMPL_ISUPPORTS2(nsSupportsVoidImpl, nsISupportsVoid,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsVoidImpl, nsISupportsVoid,
+                  nsISupportsPrimitive)
 
 nsSupportsVoidImpl::nsSupportsVoidImpl()
     : mData(nullptr)
@@ -726,9 +726,9 @@ NS_IMETHODIMP nsSupportsVoidImpl::ToString(char **_retval)
 /***************************************************************************/
 
 
-NS_IMPL_ISUPPORTS2(nsSupportsInterfacePointerImpl,
-                   nsISupportsInterfacePointer,
-                   nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsInterfacePointerImpl,
+                  nsISupportsInterfacePointer,
+                  nsISupportsPrimitive)
 
 nsSupportsInterfacePointerImpl::nsSupportsInterfacePointerImpl()
     : mIID(nullptr)
@@ -807,7 +807,7 @@ NS_IMETHODIMP nsSupportsInterfacePointerImpl::ToString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsDependentCString,nsISupportsCString,nsISupportsPrimitive)
+NS_IMPL_ISUPPORTS(nsSupportsDependentCString,nsISupportsCString,nsISupportsPrimitive)
 
 nsSupportsDependentCString::nsSupportsDependentCString(const char* aStr)
     : mData(aStr)

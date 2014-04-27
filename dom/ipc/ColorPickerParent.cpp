@@ -15,8 +15,8 @@
 using mozilla::unused;
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS1(ColorPickerParent::ColorPickerShownCallback,
-                   nsIColorPickerShownCallback);
+NS_IMPL_ISUPPORTS(ColorPickerParent::ColorPickerShownCallback,
+                  nsIColorPickerShownCallback);
 
 NS_IMETHODIMP
 ColorPickerParent::ColorPickerShownCallback::Update(const nsAString& aColor)

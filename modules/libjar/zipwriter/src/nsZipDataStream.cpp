@@ -22,8 +22,8 @@
  * Currently only the deflate compression method is supported.
  * The CRC checksum for the entry's data is also generated here.
  */
-NS_IMPL_ISUPPORTS2(nsZipDataStream, nsIStreamListener,
-                                               nsIRequestObserver)
+NS_IMPL_ISUPPORTS(nsZipDataStream, nsIStreamListener,
+                  nsIRequestObserver)
 
 nsresult nsZipDataStream::Init(nsZipWriter *aWriter,
                                nsIOutputStream *aStream,

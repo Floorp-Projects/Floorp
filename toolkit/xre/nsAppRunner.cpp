@@ -1297,7 +1297,7 @@ nsSingletonFactory::nsSingletonFactory(nsISupports* aSingleton)
   NS_ASSERTION(mSingleton, "Singleton was null!");
 }
 
-NS_IMPL_ISUPPORTS1(nsSingletonFactory, nsIFactory)
+NS_IMPL_ISUPPORTS(nsSingletonFactory, nsIFactory)
 
 NS_IMETHODIMP
 nsSingletonFactory::CreateInstance(nsISupports* aOuter,

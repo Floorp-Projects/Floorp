@@ -86,7 +86,7 @@ nsDNSPrefetch::PrefetchHigh(bool refreshDNS)
 }
 
 
-NS_IMPL_ISUPPORTS1(nsDNSPrefetch, nsIDNSListener)
+NS_IMPL_ISUPPORTS(nsDNSPrefetch, nsIDNSListener)
 
 NS_IMETHODIMP
 nsDNSPrefetch::OnLookupComplete(nsICancelable *request,

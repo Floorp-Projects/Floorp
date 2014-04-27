@@ -25,7 +25,7 @@ nsBaseClipboard::~nsBaseClipboard()
   EmptyClipboard(kFindClipboard);
 }
 
-NS_IMPL_ISUPPORTS1(nsBaseClipboard, nsIClipboard)
+NS_IMPL_ISUPPORTS(nsBaseClipboard, nsIClipboard)
 
 /**
   * Sets the transferable object

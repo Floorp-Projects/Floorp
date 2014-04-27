@@ -1760,7 +1760,7 @@ private:
     PluginModuleParent* mPmp;
 };
 
-NS_IMPL_ISUPPORTS2(PluginProfilerObserver, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(PluginProfilerObserver, nsIObserver, nsISupportsWeakReference)
 
 NS_IMETHODIMP
 PluginProfilerObserver::Observe(nsISupports *aSubject,

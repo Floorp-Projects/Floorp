@@ -48,7 +48,7 @@ CSPService::~CSPService()
   mAppStatusCache.Clear();
 }
 
-NS_IMPL_ISUPPORTS2(CSPService, nsIContentPolicy, nsIChannelEventSink)
+NS_IMPL_ISUPPORTS(CSPService, nsIContentPolicy, nsIChannelEventSink)
 
 /* nsIContentPolicy implementation */
 NS_IMETHODIMP

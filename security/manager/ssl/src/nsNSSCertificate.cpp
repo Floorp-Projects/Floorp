@@ -67,14 +67,14 @@ NSSCleanupAutoPtrClass_WithParam(PLArenaPool, PORT_FreeArena, FalseParam, false)
 // in the list to mean not yet initialized.
 #define CERT_TYPE_NOT_YET_INITIALIZED (1 << 30)
 
-NS_IMPL_ISUPPORTS7(nsNSSCertificate,
-                   nsIX509Cert,
-                   nsIX509Cert2,
-                   nsIX509Cert3,
-                   nsIIdentityInfo,
-                   nsISMimeCert,
-                   nsISerializable,
-                   nsIClassInfo)
+NS_IMPL_ISUPPORTS(nsNSSCertificate,
+                  nsIX509Cert,
+                  nsIX509Cert2,
+                  nsIX509Cert3,
+                  nsIIdentityInfo,
+                  nsISMimeCert,
+                  nsISerializable,
+                  nsIClassInfo)
 
 /*static*/ nsNSSCertificate*
 nsNSSCertificate::Create(CERTCertificate* cert, SECOidTag* evOidPolicy)
@@ -1566,7 +1566,7 @@ nsNSSCertificate::GetValidEVPolicyOid(nsACString& outDottedOid)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsNSSCertList, nsIX509CertList)
+NS_IMPL_ISUPPORTS(nsNSSCertList, nsIX509CertList)
 
 nsNSSCertList::nsNSSCertList(mozilla::pkix::ScopedCERTCertList& certList,
                              const nsNSSShutDownPreventionLock& proofOfLock)
@@ -1706,7 +1706,7 @@ nsNSSCertList::GetEnumerator(nsISimpleEnumerator** _retval)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsNSSCertListEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsNSSCertListEnumerator, nsISimpleEnumerator)
 
 nsNSSCertListEnumerator::nsNSSCertListEnumerator(
   CERTCertList* certList, const nsNSSShutDownPreventionLock& proofOfLock)

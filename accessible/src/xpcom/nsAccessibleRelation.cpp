@@ -24,7 +24,7 @@ nsAccessibleRelation::nsAccessibleRelation(uint32_t aType,
 }
 
 // nsISupports
-NS_IMPL_ISUPPORTS1(nsAccessibleRelation, nsIAccessibleRelation)
+NS_IMPL_ISUPPORTS(nsAccessibleRelation, nsIAccessibleRelation)
 
 // nsIAccessibleRelation
 NS_IMETHODIMP

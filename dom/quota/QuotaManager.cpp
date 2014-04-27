@@ -2195,7 +2195,7 @@ QuotaManager::GetInfoForChrome(nsACString* aGroup,
   }
 }
 
-NS_IMPL_ISUPPORTS2(QuotaManager, nsIQuotaManager, nsIObserver)
+NS_IMPL_ISUPPORTS(QuotaManager, nsIQuotaManager, nsIObserver)
 
 NS_IMETHODIMP
 QuotaManager::GetUsageForURI(nsIURI* aURI,
@@ -3766,7 +3766,7 @@ AsyncUsageRunnable::AddToUsage(QuotaManager* aQuotaManager,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(AsyncUsageRunnable, nsRunnable, nsIQuotaRequest)
+NS_IMPL_ISUPPORTS_INHERITED(AsyncUsageRunnable, nsRunnable, nsIQuotaRequest)
 
 NS_IMETHODIMP
 AsyncUsageRunnable::Run()

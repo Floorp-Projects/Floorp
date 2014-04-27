@@ -35,7 +35,7 @@ protected:
     uint32_t mIndex;
 };
 
-NS_IMPL_ISUPPORTS1(nsSimpleArrayEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsSimpleArrayEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsSimpleArrayEnumerator::HasMoreElements(bool* aResult)
@@ -125,7 +125,7 @@ protected:
     nsISupports* mValueArray[1];
 };
 
-NS_IMPL_ISUPPORTS1(nsCOMArrayEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsCOMArrayEnumerator, nsISimpleEnumerator)
 
 nsCOMArrayEnumerator::~nsCOMArrayEnumerator()
 {

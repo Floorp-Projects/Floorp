@@ -41,8 +41,8 @@ namespace dom {
 
 static bool sVideoStatsEnabled;
 
-NS_IMPL_ISUPPORTS_INHERITED2(HTMLVideoElement, HTMLMediaElement,
-                             nsIDOMHTMLMediaElement, nsIDOMHTMLVideoElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLVideoElement, HTMLMediaElement,
+                            nsIDOMHTMLMediaElement, nsIDOMHTMLVideoElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLVideoElement)
 

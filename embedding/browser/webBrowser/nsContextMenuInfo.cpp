@@ -34,7 +34,7 @@
 // class nsContextMenuInfo
 //*****************************************************************************
 
-NS_IMPL_ISUPPORTS1(nsContextMenuInfo, nsIContextMenuInfo)
+NS_IMPL_ISUPPORTS(nsContextMenuInfo, nsIContextMenuInfo)
 
 nsContextMenuInfo::nsContextMenuInfo()
 {

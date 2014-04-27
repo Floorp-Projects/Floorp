@@ -346,7 +346,7 @@ class nsReverseStringSQLFunction MOZ_FINAL : public mozIStorageFunction
   NS_DECL_MOZISTORAGEFUNCTION
 };
 
-NS_IMPL_ISUPPORTS1(nsReverseStringSQLFunction, mozIStorageFunction)
+NS_IMPL_ISUPPORTS(nsReverseStringSQLFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
 nsReverseStringSQLFunction::OnFunctionCall(

@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace widget {
 
-NS_IMPL_ISUPPORTS1(TaskbarTabPreview, nsITaskbarTabPreview)
+NS_IMPL_ISUPPORTS(TaskbarTabPreview, nsITaskbarTabPreview)
 
 const wchar_t *const kWindowClass = L"MozillaTaskbarPreviewClass";
 

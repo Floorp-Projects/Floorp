@@ -8,7 +8,7 @@
 #include "mozGenericWordUtils.h"
 #include "nsString.h"
 
-NS_IMPL_ISUPPORTS1(mozSpellI18NManager, mozISpellI18NManager)
+NS_IMPL_ISUPPORTS(mozSpellI18NManager, mozISpellI18NManager)
 
 mozSpellI18NManager::mozSpellI18NManager()
 {

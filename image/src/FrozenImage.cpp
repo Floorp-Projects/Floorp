@@ -10,7 +10,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace image {
 
-NS_IMPL_ISUPPORTS1(FrozenImage, imgIContainer)
+NS_IMPL_ISUPPORTS(FrozenImage, imgIContainer)
 
 nsIntRect
 FrozenImage::FrameRect(uint32_t /* aWhichFrame - ignored */)

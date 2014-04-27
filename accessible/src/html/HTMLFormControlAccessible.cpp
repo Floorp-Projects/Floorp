@@ -292,10 +292,10 @@ HTMLTextFieldAccessible::
   mType = eHTMLTextFieldType;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(HTMLTextFieldAccessible,
-                             Accessible,                             
-                             nsIAccessibleText,
-                             nsIAccessibleEditableText)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLTextFieldAccessible,
+                            Accessible,                            
+                            nsIAccessibleText,
+                            nsIAccessibleEditableText)
 
 role
 HTMLTextFieldAccessible::NativeRole()

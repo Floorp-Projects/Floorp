@@ -80,9 +80,9 @@ nsAppShellService::~nsAppShellService()
 /*
  * Implement the nsISupports methods...
  */
-NS_IMPL_ISUPPORTS2(nsAppShellService,
-                   nsIAppShellService,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(nsAppShellService,
+                  nsIAppShellService,
+                  nsIObserver)
 
 NS_IMETHODIMP
 nsAppShellService::CreateHiddenWindow()

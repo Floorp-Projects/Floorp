@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS1(DNSListenerProxy, nsIDNSListener)
+NS_IMPL_ISUPPORTS(DNSListenerProxy, nsIDNSListener)
 
 NS_IMETHODIMP
 DNSListenerProxy::OnLookupComplete(nsICancelable* aRequest,

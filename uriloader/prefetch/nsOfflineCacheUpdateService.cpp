@@ -160,9 +160,9 @@ private:
     bool mDidReleaseThis;
 };
 
-NS_IMPL_ISUPPORTS2(nsOfflineCachePendingUpdate,
-                   nsIWebProgressListener,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsOfflineCachePendingUpdate,
+                  nsIWebProgressListener,
+                  nsISupportsWeakReference)
 
 //-----------------------------------------------------------------------------
 // nsOfflineCacheUpdateService::nsIWebProgressListener
@@ -277,10 +277,10 @@ nsOfflineCachePendingUpdate::OnSecurityChange(nsIWebProgress *aWebProgress,
 // nsOfflineCacheUpdateService::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS3(nsOfflineCacheUpdateService,
-                   nsIOfflineCacheUpdateService,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsOfflineCacheUpdateService,
+                  nsIOfflineCacheUpdateService,
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 //-----------------------------------------------------------------------------
 // nsOfflineCacheUpdateService <public>

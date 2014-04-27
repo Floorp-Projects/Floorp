@@ -758,10 +758,10 @@ PresShell::PresShell()
   mPaintingIsFrozen = false;
 }
 
-NS_IMPL_ISUPPORTS7(PresShell, nsIPresShell, nsIDocumentObserver,
-                   nsISelectionController,
-                   nsISelectionDisplay, nsIObserver, nsISupportsWeakReference,
-                   nsIMutationObserver)
+NS_IMPL_ISUPPORTS(PresShell, nsIPresShell, nsIDocumentObserver,
+                  nsISelectionController,
+                  nsISelectionDisplay, nsIObserver, nsISupportsWeakReference,
+                  nsIMutationObserver)
 
 PresShell::~PresShell()
 {
@@ -3600,7 +3600,7 @@ private:
   PresShell* mShell;
 };
 
-NS_IMPL_ISUPPORTS1(PaintTimerCallBack, nsITimerCallback)
+NS_IMPL_ISUPPORTS(PaintTimerCallBack, nsITimerCallback)
 
 void
 PresShell::ScheduleViewManagerFlush(PaintType aType)

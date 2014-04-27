@@ -11,7 +11,7 @@ namespace mozilla {
 namespace dom {
 namespace mobilemessage {
 
-NS_IMPL_ISUPPORTS1(MobileMessageDatabaseService, nsIMobileMessageDatabaseService)
+NS_IMPL_ISUPPORTS(MobileMessageDatabaseService, nsIMobileMessageDatabaseService)
 
 NS_IMETHODIMP
 MobileMessageDatabaseService::GetMessageMoz(int32_t aMessageId,

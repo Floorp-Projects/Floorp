@@ -116,12 +116,12 @@ void nsPrincipal::dumpImpl()
 
 NS_IMPL_CLASSINFO(nsPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_PRINCIPAL_CID)
-NS_IMPL_QUERY_INTERFACE2_CI(nsPrincipal,
+NS_IMPL_QUERY_INTERFACE_CI(nsPrincipal,
+                           nsIPrincipal,
+                           nsISerializable)
+NS_IMPL_CI_INTERFACE_GETTER(nsPrincipal,
                             nsIPrincipal,
                             nsISerializable)
-NS_IMPL_CI_INTERFACE_GETTER2(nsPrincipal,
-                             nsIPrincipal,
-                             nsISerializable)
 NS_IMPL_ADDREF_INHERITED(nsPrincipal, nsBasePrincipal)
 NS_IMPL_RELEASE_INHERITED(nsPrincipal, nsBasePrincipal)
 
@@ -627,10 +627,10 @@ static const char EXPANDED_PRINCIPAL_SPEC[] = "[Expanded Principal]";
 
 NS_IMPL_CLASSINFO(nsExpandedPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_EXPANDEDPRINCIPAL_CID)
-NS_IMPL_QUERY_INTERFACE2_CI(nsExpandedPrincipal,
-                            nsIPrincipal,
-                            nsIExpandedPrincipal)
-NS_IMPL_CI_INTERFACE_GETTER2(nsExpandedPrincipal,
+NS_IMPL_QUERY_INTERFACE_CI(nsExpandedPrincipal,
+                           nsIPrincipal,
+                           nsIExpandedPrincipal)
+NS_IMPL_CI_INTERFACE_GETTER(nsExpandedPrincipal,
                              nsIPrincipal,
                              nsIExpandedPrincipal)
 NS_IMPL_ADDREF_INHERITED(nsExpandedPrincipal, nsBasePrincipal)

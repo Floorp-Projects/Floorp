@@ -135,7 +135,7 @@ nsEntityConverter:: GetVersionBundleInstance(uint32_t versionNumber)
 //
 // nsISupports methods
 //
-NS_IMPL_ISUPPORTS1(nsEntityConverter,nsIEntityConverter)
+NS_IMPL_ISUPPORTS(nsEntityConverter,nsIEntityConverter)
 
 
 //

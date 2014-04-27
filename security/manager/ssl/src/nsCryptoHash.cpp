@@ -55,7 +55,7 @@ void nsCryptoHash::destructorSafeDestroyNSSReference()
   mHashContext = nullptr;
 }
 
-NS_IMPL_ISUPPORTS1(nsCryptoHash, nsICryptoHash)
+NS_IMPL_ISUPPORTS(nsCryptoHash, nsICryptoHash)
 
 NS_IMETHODIMP 
 nsCryptoHash::Init(uint32_t algorithm)
@@ -208,7 +208,7 @@ nsCryptoHash::Finish(bool ascii, nsACString & _retval)
 // Implementing nsICryptoHMAC
 //---------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsCryptoHMAC, nsICryptoHMAC)
+NS_IMPL_ISUPPORTS(nsCryptoHMAC, nsICryptoHMAC)
 
 nsCryptoHMAC::nsCryptoHMAC()
 {

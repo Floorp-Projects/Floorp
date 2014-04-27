@@ -16,9 +16,9 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS2(ExternalHelperAppChild,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(ExternalHelperAppChild,
+                  nsIStreamListener,
+                  nsIRequestObserver)
 
 ExternalHelperAppChild::ExternalHelperAppChild()
   : mStatus(NS_OK)

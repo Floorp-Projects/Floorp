@@ -120,7 +120,7 @@ public:
 "closed this process.");
   }
 };
-NS_IMPL_ISUPPORTS1(ResidentUniqueReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(ResidentUniqueReporter, nsIMemoryReporter)
 
 #elif defined(__DragonFly__) || defined(__FreeBSD__) \
     || defined(__NetBSD__) || defined(__OpenBSD__) \
@@ -513,7 +513,7 @@ public:
       "memory.");
   }
 };
-NS_IMPL_ISUPPORTS1(VsizeMaxContiguousReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(VsizeMaxContiguousReporter, nsIMemoryReporter)
 #endif
 
 #ifdef HAVE_PRIVATE_REPORTER
@@ -535,7 +535,7 @@ public:
 "pages that have been written to.");
   }
 };
-NS_IMPL_ISUPPORTS1(PrivateReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(PrivateReporter, nsIMemoryReporter)
 #endif
 
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
@@ -562,7 +562,7 @@ public:
 "resources used by the process.");
   }
 };
-NS_IMPL_ISUPPORTS1(VsizeReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(VsizeReporter, nsIMemoryReporter)
 
 class ResidentReporter MOZ_FINAL : public nsIMemoryReporter
 {
@@ -586,7 +586,7 @@ public:
 "time.");
     }
 };
-NS_IMPL_ISUPPORTS1(ResidentReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(ResidentReporter, nsIMemoryReporter)
 
 #endif  // HAVE_VSIZE_AND_RESIDENT_REPORTERS
 
@@ -624,7 +624,7 @@ public:
 "they impact performance much less than hard page faults.");
   }
 };
-NS_IMPL_ISUPPORTS1(PageFaultsSoftReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(PageFaultsSoftReporter, nsIMemoryReporter)
 
 static nsresult
 PageFaultsHardDistinguishedAmount(int64_t* aAmount)
@@ -664,7 +664,7 @@ public:
 "second.");
   }
 };
-NS_IMPL_ISUPPORTS1(PageFaultsHardReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(PageFaultsHardReporter, nsIMemoryReporter)
 
 #endif  // HAVE_PAGE_FAULT_REPORTERS
 
@@ -755,7 +755,7 @@ public:
     return NS_OK;
   }
 };
-NS_IMPL_ISUPPORTS1(JemallocHeapReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(JemallocHeapReporter, nsIMemoryReporter)
 
 #endif  // HAVE_JEMALLOC_STATS
 
@@ -780,7 +780,7 @@ public:
       "Memory used by the dynamic and static atoms tables.");
   }
 };
-NS_IMPL_ISUPPORTS1(AtomTablesReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(AtomTablesReporter, nsIMemoryReporter)
 
 #ifdef MOZ_DMD
 
@@ -832,7 +832,7 @@ public:
     return NS_OK;
   }
 };
-NS_IMPL_ISUPPORTS1(DMDReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(DMDReporter, nsIMemoryReporter)
 
 } // namespace dmd
 } // namespace mozilla
@@ -843,7 +843,7 @@ NS_IMPL_ISUPPORTS1(DMDReporter, nsIMemoryReporter)
  ** nsMemoryReporterManager implementation
  **/
 
-NS_IMPL_ISUPPORTS1(nsMemoryReporterManager, nsIMemoryReporterManager)
+NS_IMPL_ISUPPORTS(nsMemoryReporterManager, nsIMemoryReporterManager)
 
 NS_IMETHODIMP
 nsMemoryReporterManager::Init()
@@ -1435,7 +1435,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(ExplicitCallback, nsIHandleReportCallback)
+NS_IMPL_ISUPPORTS(ExplicitCallback, nsIHandleReportCallback)
 
 NS_IMETHODIMP
 nsMemoryReporterManager::GetExplicit(int64_t* aAmount)
@@ -1881,7 +1881,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(DoNothingCallback, nsIHandleReportCallback)
+NS_IMPL_ISUPPORTS(DoNothingCallback, nsIHandleReportCallback)
 
 void
 RunReportersForThisProcess()

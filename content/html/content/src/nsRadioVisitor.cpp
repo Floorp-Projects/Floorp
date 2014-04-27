@@ -10,7 +10,7 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS1(nsRadioVisitor, nsIRadioVisitor)
+NS_IMPL_ISUPPORTS(nsRadioVisitor, nsIRadioVisitor)
 
 bool
 nsRadioSetCheckedChangedVisitor::Visit(nsIFormControl* aRadio)

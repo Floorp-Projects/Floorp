@@ -600,7 +600,7 @@ private:
   nsTArray<nsPropertiesTable> mPropertiesTableList;
 };
 
-NS_IMPL_ISUPPORTS1(nsGlyphTableList, nsIObserver)
+NS_IMPL_ISUPPORTS(nsGlyphTableList, nsIObserver)
 
 // -----------------------------------------------------------------------------
 // Here is the global list of applicable glyph tables that we will be using

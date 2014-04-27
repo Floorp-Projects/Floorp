@@ -502,7 +502,7 @@ private:
   nsGlobalWindow* mWindow;
 };
 
-NS_IMPL_ISUPPORTS2(nsGlobalWindowObserver, nsIObserver, nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS(nsGlobalWindowObserver, nsIObserver, nsIInterfaceRequestor)
 
 nsTimeout::nsTimeout()
   : mCleared(false),
@@ -2154,7 +2154,7 @@ WindowStateHolder::~WindowStateHolder()
   }
 }
 
-NS_IMPL_ISUPPORTS1(WindowStateHolder, WindowStateHolder)
+NS_IMPL_ISUPPORTS(WindowStateHolder, WindowStateHolder)
 
 // We need certain special behavior for remote XUL whitelisted domains, but we
 // don't want that behavior to take effect in automation, because we whitelist

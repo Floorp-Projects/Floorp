@@ -46,7 +46,7 @@ StaticRefPtr<GamepadService> gGamepadServiceSingleton;
 
 bool GamepadService::sShutdown = false;
 
-NS_IMPL_ISUPPORTS1(GamepadService, nsIObserver)
+NS_IMPL_ISUPPORTS(GamepadService, nsIObserver)
 
 GamepadService::GamepadService()
   : mStarted(false),
@@ -507,7 +507,7 @@ GamepadService::StartCleanupTimer()
  * of the GamepadService to JavaScript via XPCOM so that we can write Mochitests
  * that add and remove fake gamepads, avoiding the platform-specific backends.
  */
-NS_IMPL_ISUPPORTS1(GamepadServiceTest, nsIGamepadServiceTest)
+NS_IMPL_ISUPPORTS(GamepadServiceTest, nsIGamepadServiceTest)
 
 GamepadServiceTest* GamepadServiceTest::sSingleton = nullptr;
 

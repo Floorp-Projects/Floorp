@@ -15,8 +15,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_QUERY_INTERFACE_INHERITED1(SpeakerManager, DOMEventTargetHelper,
-                                   nsIDOMEventListener)
+NS_IMPL_QUERY_INTERFACE_INHERITED(SpeakerManager, DOMEventTargetHelper,
+                                  nsIDOMEventListener)
 NS_IMPL_ADDREF_INHERITED(SpeakerManager, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(SpeakerManager, DOMEventTargetHelper)
 

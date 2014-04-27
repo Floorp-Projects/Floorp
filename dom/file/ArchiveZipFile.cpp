@@ -82,9 +82,9 @@ private: // data
   } mData;
 };
 
-NS_IMPL_ISUPPORTS2(ArchiveInputStream,
-                   nsIInputStream,
-                   nsISeekableStream)
+NS_IMPL_ISUPPORTS(ArchiveInputStream,
+                  nsIInputStream,
+                  nsISeekableStream)
 
 nsresult
 ArchiveInputStream::Init()

@@ -51,8 +51,8 @@ HTMLOptionElement::~HTMLOptionElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLOptionElement, nsGenericHTMLElement,
-                             nsIDOMHTMLOptionElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLOptionElement, nsGenericHTMLElement,
+                            nsIDOMHTMLOptionElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLOptionElement)
 

@@ -42,7 +42,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(ShmemReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(ShmemReporter, nsIMemoryReporter)
 
 SharedMemory::SharedMemory()
   : mAllocSize(0)

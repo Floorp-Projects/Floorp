@@ -23,7 +23,7 @@ nsIconProtocolHandler::nsIconProtocolHandler()
 nsIconProtocolHandler::~nsIconProtocolHandler() 
 {}
 
-NS_IMPL_ISUPPORTS2(nsIconProtocolHandler, nsIProtocolHandler, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsIconProtocolHandler, nsIProtocolHandler, nsISupportsWeakReference)
 
     
 ////////////////////////////////////////////////////////////////////////////////

@@ -42,7 +42,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(Voicemail::Listener, nsIVoicemailListener)
+NS_IMPL_ISUPPORTS(Voicemail::Listener, nsIVoicemailListener)
 
 Voicemail::Voicemail(nsPIDOMWindow* aWindow,
                      nsIVoicemailProvider* aProvider)

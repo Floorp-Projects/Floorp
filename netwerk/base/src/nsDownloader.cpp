@@ -26,10 +26,10 @@ nsDownloader::~nsDownloader()
     }
 }
 
-NS_IMPL_ISUPPORTS3(nsDownloader,
-                   nsIDownloader,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(nsDownloader,
+                  nsIDownloader,
+                  nsIStreamListener,
+                  nsIRequestObserver)
 
 NS_IMETHODIMP
 nsDownloader::Init(nsIDownloadObserver *observer, nsIFile *location)

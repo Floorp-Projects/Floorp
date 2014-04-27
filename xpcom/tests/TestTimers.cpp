@@ -94,7 +94,7 @@ private:
   ReentrantMonitor* mReentrantMonitor;
 };
 
-NS_IMPL_ISUPPORTS1(TimerCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(TimerCallback, nsITimerCallback)
 
 nsresult
 TestTargetedTimers()

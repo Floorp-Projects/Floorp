@@ -15,7 +15,7 @@
 #include "nsTransactionStack.h"
 #include "nscore.h"
 
-NS_IMPL_ISUPPORTS1(nsTransactionList, nsITransactionList)
+NS_IMPL_ISUPPORTS(nsTransactionList, nsITransactionList)
 
 nsTransactionList::nsTransactionList(nsITransactionManager *aTxnMgr, nsTransactionStack *aTxnStack)
   : mTxnStack(aTxnStack)

@@ -5,7 +5,7 @@
 
 #include "nsCertificatePrincipal.h"
 
-NS_IMPL_ISUPPORTS1(nsCertificatePrincipal, nsICertificatePrincipal)
+NS_IMPL_ISUPPORTS(nsCertificatePrincipal, nsICertificatePrincipal)
 
 NS_IMETHODIMP
 nsCertificatePrincipal::GetFingerprint(nsACString& aFingerprint)

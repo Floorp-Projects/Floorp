@@ -44,7 +44,7 @@ nsSecurityNameSet::~nsSecurityNameSet()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsSecurityNameSet, nsIScriptExternalNameSet)
+NS_IMPL_ISUPPORTS(nsSecurityNameSet, nsIScriptExternalNameSet)
 
 static bool
 netscape_security_enablePrivilege(JSContext *cx, unsigned argc, JS::Value *vp)

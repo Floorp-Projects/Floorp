@@ -104,7 +104,7 @@ private:
     int64_t                     mContentLength;
 };
 
-NS_IMPL_ISUPPORTS1(nsJARInputThunk, nsIInputStream)
+NS_IMPL_ISUPPORTS(nsJARInputThunk, nsIInputStream)
 
 nsresult
 nsJARInputThunk::Init()
@@ -216,15 +216,15 @@ nsJARChannel::~nsJARChannel()
     NS_RELEASE(handler); // nullptr parameter
 }
 
-NS_IMPL_ISUPPORTS_INHERITED7(nsJARChannel,
-                             nsHashPropertyBag,
-                             nsIRequest,
-                             nsIChannel,
-                             nsIStreamListener,
-                             nsIRequestObserver,
-                             nsIDownloadObserver,
-                             nsIRemoteOpenFileListener,
-                             nsIJARChannel)
+NS_IMPL_ISUPPORTS_INHERITED(nsJARChannel,
+                            nsHashPropertyBag,
+                            nsIRequest,
+                            nsIChannel,
+                            nsIStreamListener,
+                            nsIRequestObserver,
+                            nsIDownloadObserver,
+                            nsIRemoteOpenFileListener,
+                            nsIJARChannel)
 
 nsresult 
 nsJARChannel::Init(nsIURI *uri)

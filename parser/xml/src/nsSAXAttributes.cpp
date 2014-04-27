@@ -5,7 +5,7 @@
 
 #include "nsSAXAttributes.h"
 
-NS_IMPL_ISUPPORTS2(nsSAXAttributes, nsISAXAttributes, nsISAXMutableAttributes)
+NS_IMPL_ISUPPORTS(nsSAXAttributes, nsISAXAttributes, nsISAXMutableAttributes)
 
 NS_IMETHODIMP
 nsSAXAttributes::GetIndexFromName(const nsAString &aURI,

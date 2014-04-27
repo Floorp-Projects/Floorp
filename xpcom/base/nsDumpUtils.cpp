@@ -63,7 +63,7 @@ DumpSignalHandler(int aSignum)
   }
 }
 
-NS_IMPL_ISUPPORTS1(FdWatcher, nsIObserver);
+NS_IMPL_ISUPPORTS(FdWatcher, nsIObserver);
 
 void FdWatcher::Init()
 {

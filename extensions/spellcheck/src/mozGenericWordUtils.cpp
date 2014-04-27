@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "mozGenericWordUtils.h"
 
-NS_IMPL_ISUPPORTS1(mozGenericWordUtils, mozISpellI18NUtil)
+NS_IMPL_ISUPPORTS(mozGenericWordUtils, mozISpellI18NUtil)
 
   // do something sensible but generic ... eventually.  For now whine.
 

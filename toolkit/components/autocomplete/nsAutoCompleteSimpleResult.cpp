@@ -4,9 +4,9 @@
 
 #include "nsAutoCompleteSimpleResult.h"
 
-NS_IMPL_ISUPPORTS2(nsAutoCompleteSimpleResult,
-                   nsIAutoCompleteResult,
-                   nsIAutoCompleteSimpleResult)
+NS_IMPL_ISUPPORTS(nsAutoCompleteSimpleResult,
+                  nsIAutoCompleteResult,
+                  nsIAutoCompleteSimpleResult)
 
 nsAutoCompleteSimpleResult::nsAutoCompleteSimpleResult() :
   mDefaultIndex(-1),

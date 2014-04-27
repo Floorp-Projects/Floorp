@@ -404,8 +404,8 @@ RtspMediaResource::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 //----------------------------------------------------------------------------
 // RtspMediaResource::Listener
 //----------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS2(RtspMediaResource::Listener,
-                   nsIInterfaceRequestor, nsIStreamingProtocolListener);
+NS_IMPL_ISUPPORTS(RtspMediaResource::Listener,
+                  nsIInterfaceRequestor, nsIStreamingProtocolListener);
 
 nsresult
 RtspMediaResource::Listener::OnMediaDataAvailable(uint8_t aTrackIdx,

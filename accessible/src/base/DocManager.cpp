@@ -118,10 +118,10 @@ DocManager::Shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS3(DocManager,
-                   nsIWebProgressListener,
-                   nsIDOMEventListener,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(DocManager,
+                  nsIWebProgressListener,
+                  nsIDOMEventListener,
+                  nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener

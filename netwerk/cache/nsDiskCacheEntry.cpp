@@ -68,7 +68,7 @@ nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
  *  nsDiskCacheEntryInfo
  *****************************************************************************/
 
-NS_IMPL_ISUPPORTS1(nsDiskCacheEntryInfo, nsICacheEntryInfo)
+NS_IMPL_ISUPPORTS(nsDiskCacheEntryInfo, nsICacheEntryInfo)
 
 NS_IMETHODIMP nsDiskCacheEntryInfo::GetClientID(char ** clientID)
 {

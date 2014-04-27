@@ -9,7 +9,7 @@
 #include "prmem.h"
 #include "nsString.h"
 
-NS_IMPL_ISUPPORTS1(nsCollationMacUC, nsICollation)
+NS_IMPL_ISUPPORTS(nsCollationMacUC, nsICollation)
 
 nsCollationMacUC::nsCollationMacUC() 
   : mInit(false)

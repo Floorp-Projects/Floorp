@@ -16,7 +16,7 @@
 // Note that the OS will return the path to the newest binary, if there is more than one.
 // The determination of 'newest' is complex and beyond the scope of this comment.
 
-NS_IMPL_ISUPPORTS1(nsMacWebAppUtils, nsIMacWebAppUtils)
+NS_IMPL_ISUPPORTS(nsMacWebAppUtils, nsIMacWebAppUtils)
 
 NS_IMETHODIMP nsMacWebAppUtils::PathForAppWithIdentifier(const nsAString& bundleIdentifier, nsAString& outPath) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;

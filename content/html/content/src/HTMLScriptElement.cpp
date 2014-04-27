@@ -46,11 +46,11 @@ HTMLScriptElement::~HTMLScriptElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED4(HTMLScriptElement, nsGenericHTMLElement,
-                             nsIDOMHTMLScriptElement,
-                             nsIScriptLoaderObserver,
-                             nsIScriptElement,
-                             nsIMutationObserver)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLScriptElement, nsGenericHTMLElement,
+                            nsIDOMHTMLScriptElement,
+                            nsIScriptLoaderObserver,
+                            nsIScriptElement,
+                            nsIMutationObserver)
 
 nsresult
 HTMLScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,

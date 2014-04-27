@@ -68,7 +68,7 @@ FontInfoLoadCompleteEvent::Run()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(FontInfoLoadCompleteEvent, nsIRunnable);
+NS_IMPL_ISUPPORTS(FontInfoLoadCompleteEvent, nsIRunnable);
 
 // runs on separate thread
 nsresult
@@ -84,9 +84,9 @@ AsyncFontInfoLoader::Run()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(AsyncFontInfoLoader, nsIRunnable);
+NS_IMPL_ISUPPORTS(AsyncFontInfoLoader, nsIRunnable);
 
-NS_IMPL_ISUPPORTS1(gfxFontInfoLoader::ShutdownObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(gfxFontInfoLoader::ShutdownObserver, nsIObserver)
 
 NS_IMETHODIMP
 gfxFontInfoLoader::ShutdownObserver::Observe(nsISupports *aSubject,

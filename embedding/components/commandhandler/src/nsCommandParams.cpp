@@ -25,7 +25,7 @@ const PLDHashTableOps nsCommandParams::sHashOps =
 };
 
 
-NS_IMPL_ISUPPORTS1(nsCommandParams, nsICommandParams)
+NS_IMPL_ISUPPORTS(nsCommandParams, nsICommandParams)
 
 nsCommandParams::nsCommandParams()
 : mCurEntry(0)

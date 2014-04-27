@@ -89,9 +89,9 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS2(MyListener,
-                   nsIRequestObserver,
-                   nsIStreamListener)
+NS_IMPL_ISUPPORTS(MyListener,
+                  nsIRequestObserver,
+                  nsIStreamListener)
 
 ////////////////////////////////////////////////////////////////////////////////
 

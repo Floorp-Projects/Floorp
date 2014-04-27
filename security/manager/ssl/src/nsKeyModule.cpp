@@ -11,7 +11,7 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-NS_IMPL_ISUPPORTS1(nsKeyObject, nsIKeyObject)
+NS_IMPL_ISUPPORTS(nsKeyObject, nsIKeyObject)
 
 nsKeyObject::nsKeyObject()
   : mKeyType(0), mSymKey(nullptr), mPrivateKey(nullptr),
@@ -124,7 +124,7 @@ nsKeyObject::GetType(int16_t *_retval)
 //////////////////////////////////////////////////////////////////////////////
 // nsIKeyObjectFactory
 
-NS_IMPL_ISUPPORTS1(nsKeyObjectFactory, nsIKeyObjectFactory)
+NS_IMPL_ISUPPORTS(nsKeyObjectFactory, nsIKeyObjectFactory)
 
 nsKeyObjectFactory::nsKeyObjectFactory()
 {

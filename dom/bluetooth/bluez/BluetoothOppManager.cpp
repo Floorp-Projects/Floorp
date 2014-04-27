@@ -1576,7 +1576,7 @@ BluetoothOppManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
   }
 }
 
-NS_IMPL_ISUPPORTS1(BluetoothOppManager, nsIObserver)
+NS_IMPL_ISUPPORTS(BluetoothOppManager, nsIObserver)
 
 bool
 BluetoothOppManager::AcquireSdcardMountLock()

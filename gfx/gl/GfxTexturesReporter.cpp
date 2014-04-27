@@ -10,7 +10,7 @@
 using namespace mozilla;
 using namespace mozilla::gl;
 
-NS_IMPL_ISUPPORTS1(GfxTexturesReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(GfxTexturesReporter, nsIMemoryReporter)
 
 int64_t GfxTexturesReporter::sAmount = 0;
 

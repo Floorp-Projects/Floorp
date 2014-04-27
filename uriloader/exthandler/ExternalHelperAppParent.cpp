@@ -27,13 +27,13 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS_INHERITED5(ExternalHelperAppParent,
-                             nsHashPropertyBag,
-                             nsIRequest,
-                             nsIChannel,
-                             nsIMultiPartChannel,
-                             nsIResumableChannel,
-                             nsIStreamListener)
+NS_IMPL_ISUPPORTS_INHERITED(ExternalHelperAppParent,
+                            nsHashPropertyBag,
+                            nsIRequest,
+                            nsIChannel,
+                            nsIMultiPartChannel,
+                            nsIResumableChannel,
+                            nsIStreamListener)
 
 ExternalHelperAppParent::ExternalHelperAppParent(
     const OptionalURIParams& uri,

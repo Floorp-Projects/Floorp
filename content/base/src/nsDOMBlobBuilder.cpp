@@ -21,8 +21,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsDOMMultipartFile, nsDOMFile,
-                             nsIJSNativeInitializer)
+NS_IMPL_ISUPPORTS_INHERITED(nsDOMMultipartFile, nsDOMFile,
+                            nsIJSNativeInitializer)
 
 NS_IMETHODIMP
 nsDOMMultipartFile::GetSize(uint64_t* aLength)

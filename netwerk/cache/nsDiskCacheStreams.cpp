@@ -57,7 +57,7 @@ private:
 };
 
 
-NS_IMPL_ISUPPORTS1(nsDiskCacheInputStream, nsIInputStream)
+NS_IMPL_ISUPPORTS(nsDiskCacheInputStream, nsIInputStream)
 
 
 nsDiskCacheInputStream::nsDiskCacheInputStream( nsDiskCacheStreamIO * parent,
@@ -190,7 +190,7 @@ nsDiskCacheInputStream::IsNonBlocking(bool * nonBlocking)
 /******************************************************************************
  *  nsDiskCacheStreamIO
  *****************************************************************************/
-NS_IMPL_ISUPPORTS1(nsDiskCacheStreamIO, nsIOutputStream)
+NS_IMPL_ISUPPORTS(nsDiskCacheStreamIO, nsIOutputStream)
 
 nsDiskCacheStreamIO::nsDiskCacheStreamIO(nsDiskCacheBinding *   binding)
     : mBinding(binding)

@@ -12,7 +12,7 @@ namespace mozilla {
 namespace dom {
 namespace time {
 
-NS_IMPL_ISUPPORTS1(TimeService, nsITimeService)
+NS_IMPL_ISUPPORTS(TimeService, nsITimeService)
 
 /* static */ StaticRefPtr<TimeService> TimeService::sSingleton;
 

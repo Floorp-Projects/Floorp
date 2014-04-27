@@ -71,14 +71,14 @@ FTPChannelChild::ReleaseIPDLReference()
 // FTPChannelChild::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED6(FTPChannelChild,
-                             nsBaseChannel,
-                             nsIFTPChannel,
-                             nsIUploadChannel,
-                             nsIResumableChannel,
-                             nsIProxiedChannel,
-                             nsIChildChannel,
-                             nsIDivertableChannel)
+NS_IMPL_ISUPPORTS_INHERITED(FTPChannelChild,
+                            nsBaseChannel,
+                            nsIFTPChannel,
+                            nsIUploadChannel,
+                            nsIResumableChannel,
+                            nsIProxiedChannel,
+                            nsIChildChannel,
+                            nsIDivertableChannel)
 
 //-----------------------------------------------------------------------------
 

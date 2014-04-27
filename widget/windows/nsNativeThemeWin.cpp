@@ -44,7 +44,7 @@ using namespace mozilla::widget;
 extern PRLogModuleInfo* gWindowsLog;
 #endif
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsNativeThemeWin, nsNativeTheme, nsITheme)
+NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeWin, nsNativeTheme, nsITheme)
 
 nsNativeThemeWin::nsNativeThemeWin() :
   mProgressDeterminateTimeStamp(TimeStamp::Now()),

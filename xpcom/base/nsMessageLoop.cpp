@@ -134,11 +134,11 @@ MessageLoopTimerCallback::Notify(nsITimer* aTimer)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(MessageLoopTimerCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(MessageLoopTimerCallback, nsITimerCallback)
 
 } // anonymous namespace
 
-NS_IMPL_ISUPPORTS1(nsMessageLoop, nsIMessageLoop)
+NS_IMPL_ISUPPORTS(nsMessageLoop, nsIMessageLoop)
 
 NS_IMETHODIMP
 nsMessageLoop::PostIdleTask(nsIRunnable* aTask, uint32_t aEnsureRunsAfterMS)

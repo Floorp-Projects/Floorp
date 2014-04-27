@@ -107,7 +107,7 @@ nsObserverList::UnmarkGrayStrongObservers()
     }
 }
 
-NS_IMPL_ISUPPORTS1(nsObserverEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsObserverEnumerator, nsISimpleEnumerator)
 
 nsObserverEnumerator::nsObserverEnumerator(nsObserverList* aObserverList)
     : mIndex(0)

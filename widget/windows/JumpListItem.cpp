@@ -23,16 +23,16 @@ namespace mozilla {
 namespace widget {
 
 // ISUPPORTS Impl's
-NS_IMPL_ISUPPORTS1(JumpListItem,
-                   nsIJumpListItem)
+NS_IMPL_ISUPPORTS(JumpListItem,
+                  nsIJumpListItem)
 
-NS_IMPL_ISUPPORTS_INHERITED1(JumpListSeparator,
-                             JumpListItem,
-                             nsIJumpListSeparator)
+NS_IMPL_ISUPPORTS_INHERITED(JumpListSeparator,
+                            JumpListItem,
+                            nsIJumpListSeparator)
 
-NS_IMPL_ISUPPORTS_INHERITED1(JumpListLink,
-                             JumpListItem,
-                             nsIJumpListLink)
+NS_IMPL_ISUPPORTS_INHERITED(JumpListLink,
+                            JumpListItem,
+                            nsIJumpListLink)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JumpListShortcut)
   NS_INTERFACE_MAP_ENTRY(nsIJumpListShortcut)

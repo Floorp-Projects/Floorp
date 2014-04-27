@@ -65,7 +65,7 @@ nsLayoutDebugger::~nsLayoutDebugger()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsLayoutDebugger, nsILayoutDebugger)
+NS_IMPL_ISUPPORTS(nsLayoutDebugger, nsILayoutDebugger)
 
 NS_IMETHODIMP
 nsLayoutDebugger::SetShowFrameBorders(bool aEnable)

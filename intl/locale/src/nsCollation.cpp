@@ -15,7 +15,7 @@
 
 NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
 
-NS_IMPL_ISUPPORTS1(nsCollationFactory, nsICollationFactory)
+NS_IMPL_ISUPPORTS(nsCollationFactory, nsICollationFactory)
 
 nsresult nsCollationFactory::CreateCollation(nsILocale* locale, nsICollation** instancePtr)
 {

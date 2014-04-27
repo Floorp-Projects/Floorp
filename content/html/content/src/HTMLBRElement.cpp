@@ -26,8 +26,8 @@ HTMLBRElement::~HTMLBRElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLBRElement, nsGenericHTMLElement,
-                             nsIDOMHTMLBRElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLBRElement, nsGenericHTMLElement,
+                            nsIDOMHTMLBRElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLBRElement)
 

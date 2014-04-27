@@ -309,8 +309,8 @@ private:
   nsString mParameter;
 };
 
-NS_IMPL_ISUPPORTS1(BluetoothHfpManager::GetVolumeTask,
-                   nsISettingsServiceCallback);
+NS_IMPL_ISUPPORTS(BluetoothHfpManager::GetVolumeTask,
+                  nsISettingsServiceCallback);
 
 /**
  *  Call
@@ -1426,4 +1426,4 @@ BluetoothHfpManager::GetAddress(nsAString& aDeviceAddress)
   aDeviceAddress = mDeviceAddress;
 }
 
-NS_IMPL_ISUPPORTS1(BluetoothHfpManager, nsIObserver)
+NS_IMPL_ISUPPORTS(BluetoothHfpManager, nsIObserver)

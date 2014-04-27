@@ -32,9 +32,9 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS2(RtspControllerParent,
-                   nsIInterfaceRequestor,
-                   nsIStreamingProtocolListener)
+NS_IMPL_ISUPPORTS(RtspControllerParent,
+                  nsIInterfaceRequestor,
+                  nsIStreamingProtocolListener)
 
 RtspControllerParent::RtspControllerParent()
   : mIPCOpen(true)

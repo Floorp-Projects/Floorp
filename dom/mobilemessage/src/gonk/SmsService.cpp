@@ -37,9 +37,9 @@ namespace mozilla {
 namespace dom {
 namespace mobilemessage {
 
-NS_IMPL_ISUPPORTS2(SmsService,
-                   nsISmsService,
-                   nsIObserver)
+NS_IMPL_ISUPPORTS(SmsService,
+                  nsISmsService,
+                  nsIObserver)
 
 SmsService::SmsService()
 {

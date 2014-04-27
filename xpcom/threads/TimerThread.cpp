@@ -19,7 +19,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS2(TimerThread, nsIRunnable, nsIObserver)
+NS_IMPL_ISUPPORTS(TimerThread, nsIRunnable, nsIObserver)
 
 TimerThread::TimerThread() :
   mInitInProgress(false),

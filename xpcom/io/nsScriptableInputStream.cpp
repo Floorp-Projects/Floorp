@@ -7,7 +7,7 @@
 #include "nsMemory.h"
 #include "nsString.h"
 
-NS_IMPL_ISUPPORTS1(nsScriptableInputStream, nsIScriptableInputStream)
+NS_IMPL_ISUPPORTS(nsScriptableInputStream, nsIScriptableInputStream)
 
 // nsIScriptableInputStream methods
 NS_IMETHODIMP

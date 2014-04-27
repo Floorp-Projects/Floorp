@@ -208,7 +208,7 @@ class DelayedPathSetter MOZ_FINAL: public nsIObserver
   DelayedPathSetter() {}
 };
 
-NS_IMPL_ISUPPORTS1(DelayedPathSetter, nsIObserver)
+NS_IMPL_ISUPPORTS(DelayedPathSetter, nsIObserver)
 
 NS_IMETHODIMP
 DelayedPathSetter::Observe(nsISupports*, const char * aTopic, const char16_t*)
@@ -987,7 +987,7 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
   return true;
 }
 
-NS_IMPL_ISUPPORTS1(OSFileConstantsService, nsIOSFileConstantsService)
+NS_IMPL_ISUPPORTS(OSFileConstantsService, nsIOSFileConstantsService)
 
 OSFileConstantsService::OSFileConstantsService()
 {

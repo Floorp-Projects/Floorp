@@ -366,7 +366,7 @@ private:
   nsCharsetMenu* mCharsetMenu;
 };
 
-NS_IMPL_ISUPPORTS1(nsCharsetMenuObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(nsCharsetMenuObserver, nsIObserver)
 
 NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *someData)
 {

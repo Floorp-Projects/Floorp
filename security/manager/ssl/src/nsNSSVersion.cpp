@@ -11,7 +11,7 @@
 #include "ssl.h"
 #include "smime.h"
 
-NS_IMPL_ISUPPORTS1(nsNSSVersion, nsINSSVersion)
+NS_IMPL_ISUPPORTS(nsNSSVersion, nsINSSVersion)
 
 nsNSSVersion::nsNSSVersion()
 {

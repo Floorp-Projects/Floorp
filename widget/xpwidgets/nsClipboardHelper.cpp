@@ -19,7 +19,7 @@
 #include "nsITransferable.h"
 #include "nsReadableUtils.h"
 
-NS_IMPL_ISUPPORTS1(nsClipboardHelper, nsIClipboardHelper)
+NS_IMPL_ISUPPORTS(nsClipboardHelper, nsIClipboardHelper)
 
 /*****************************************************************************
  * nsClipboardHelper ctor / dtor

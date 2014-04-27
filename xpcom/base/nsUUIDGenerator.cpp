@@ -17,7 +17,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS1(nsUUIDGenerator, nsIUUIDGenerator)
+NS_IMPL_ISUPPORTS(nsUUIDGenerator, nsIUUIDGenerator)
 
 nsUUIDGenerator::nsUUIDGenerator()
     : mLock("nsUUIDGenerator.mLock")

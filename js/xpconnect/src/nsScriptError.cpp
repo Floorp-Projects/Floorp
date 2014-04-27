@@ -16,7 +16,7 @@
 #include "nsILoadContext.h"
 #include "nsIDocShell.h"
 
-NS_IMPL_ISUPPORTS2(nsScriptError, nsIConsoleMessage, nsIScriptError)
+NS_IMPL_ISUPPORTS(nsScriptError, nsIConsoleMessage, nsIScriptError)
 
 nsScriptError::nsScriptError()
     :  mMessage(),

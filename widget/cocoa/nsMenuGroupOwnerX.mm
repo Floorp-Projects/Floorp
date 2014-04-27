@@ -26,7 +26,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS1(nsMenuGroupOwnerX, nsIMutationObserver)
+NS_IMPL_ISUPPORTS(nsMenuGroupOwnerX, nsIMutationObserver)
 
 
 nsMenuGroupOwnerX::nsMenuGroupOwnerX()

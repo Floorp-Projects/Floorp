@@ -111,8 +111,8 @@ nsContentDLF::~nsContentDLF()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsContentDLF,
-                   nsIDocumentLoaderFactory)
+NS_IMPL_ISUPPORTS(nsContentDLF,
+                  nsIDocumentLoaderFactory)
 
 bool
 MayUseXULXBL(nsIChannel* aChannel)

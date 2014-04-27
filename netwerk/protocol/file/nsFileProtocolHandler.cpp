@@ -39,10 +39,10 @@ nsFileProtocolHandler::Init()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS3(nsFileProtocolHandler,
-                   nsIFileProtocolHandler,
-                   nsIProtocolHandler,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsFileProtocolHandler,
+                  nsIFileProtocolHandler,
+                  nsIProtocolHandler,
+                  nsISupportsWeakReference)
 
 //-----------------------------------------------------------------------------
 // nsIProtocolHandler methods:

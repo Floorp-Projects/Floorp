@@ -38,7 +38,7 @@ extern PRLogModuleInfo* gPIPNSSLog;
  *****/
 
 // Standard ISupports implementation
-NS_IMPL_ISUPPORTS1(nsCMSSecureMessage, nsICMSSecureMessage)
+NS_IMPL_ISUPPORTS(nsCMSSecureMessage, nsICMSSecureMessage)
 
 // nsCMSSecureMessage constructor
 nsCMSSecureMessage::nsCMSSecureMessage()

@@ -44,10 +44,10 @@ static const char *kTypeString[] = {"other",
 #define NUMBER_OF_TYPES MOZ_ARRAY_LENGTH(kTypeString)
 uint8_t nsContentBlocker::mBehaviorPref[NUMBER_OF_TYPES];
 
-NS_IMPL_ISUPPORTS3(nsContentBlocker, 
-                   nsIContentPolicy,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsContentBlocker, 
+                  nsIContentPolicy,
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 nsContentBlocker::nsContentBlocker()
 {

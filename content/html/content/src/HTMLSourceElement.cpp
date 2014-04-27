@@ -21,8 +21,8 @@ HTMLSourceElement::~HTMLSourceElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(HTMLSourceElement, nsGenericHTMLElement,
-                             nsIDOMHTMLSourceElement)
+NS_IMPL_ISUPPORTS_INHERITED(HTMLSourceElement, nsGenericHTMLElement,
+                            nsIDOMHTMLSourceElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLSourceElement)
 

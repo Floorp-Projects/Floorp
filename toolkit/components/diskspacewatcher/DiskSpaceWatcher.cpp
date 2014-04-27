@@ -18,7 +18,7 @@ using namespace mozilla;
 
 StaticRefPtr<DiskSpaceWatcher> gDiskSpaceWatcher;
 
-NS_IMPL_ISUPPORTS2(DiskSpaceWatcher, nsIDiskSpaceWatcher, nsIObserver)
+NS_IMPL_ISUPPORTS(DiskSpaceWatcher, nsIDiskSpaceWatcher, nsIObserver)
 
 uint64_t DiskSpaceWatcher::sFreeSpace = 0;
 bool DiskSpaceWatcher::sIsDiskFull = false;

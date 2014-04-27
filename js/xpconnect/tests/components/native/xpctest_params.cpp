@@ -6,7 +6,7 @@
 #include "xpctest_interfaces.h"
 #include "js/Value.h"
 
-NS_IMPL_ISUPPORTS1(nsXPCTestParams, nsIXPCTestParams)
+NS_IMPL_ISUPPORTS(nsXPCTestParams, nsIXPCTestParams)
 
 nsXPCTestParams::nsXPCTestParams()
 {

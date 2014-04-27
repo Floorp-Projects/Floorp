@@ -170,7 +170,7 @@ private:
 };
 
 // MediaPermissionRequest
-NS_IMPL_ISUPPORTS1(MediaPermissionRequest, nsIContentPermissionRequest)
+NS_IMPL_ISUPPORTS(MediaPermissionRequest, nsIContentPermissionRequest)
 
 MediaPermissionRequest::MediaPermissionRequest(nsRefPtr<dom::GetUserMediaRequest> &aRequest,
                                                nsTArray<nsCOMPtr<nsIMediaDevice> > &aDevices)
@@ -385,7 +385,7 @@ private:
   nsRefPtr<dom::GetUserMediaRequest> mRequest;
 };
 
-NS_IMPL_ISUPPORTS1(MediaDeviceSuccessCallback, nsIGetUserMediaDevicesSuccessCallback)
+NS_IMPL_ISUPPORTS(MediaDeviceSuccessCallback, nsIGetUserMediaDevicesSuccessCallback)
 
 // nsIGetUserMediaDevicesSuccessCallback method
 NS_IMETHODIMP
@@ -485,7 +485,7 @@ private:
   const nsString mCallID;
 };
 
-NS_IMPL_ISUPPORTS1(MediaDeviceErrorCallback, nsIDOMGetUserMediaErrorCallback)
+NS_IMPL_ISUPPORTS(MediaDeviceErrorCallback, nsIDOMGetUserMediaErrorCallback)
 
 // nsIDOMGetUserMediaErrorCallback method
 NS_IMETHODIMP
@@ -497,7 +497,7 @@ MediaDeviceErrorCallback::OnError(const nsAString &aError)
 } // namespace anonymous
 
 // MediaPermissionManager
-NS_IMPL_ISUPPORTS1(MediaPermissionManager, nsIObserver)
+NS_IMPL_ISUPPORTS(MediaPermissionManager, nsIObserver)
 
 MediaPermissionManager*
 MediaPermissionManager::GetInstance()

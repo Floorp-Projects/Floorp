@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS1(TimeRanges, nsIDOMTimeRanges)
+NS_IMPL_ISUPPORTS(TimeRanges, nsIDOMTimeRanges)
 
 TimeRanges::TimeRanges()
 {

@@ -76,10 +76,10 @@ private:
     bool mIsUnicode;
 };
 
-NS_IMPL_ISUPPORTS3(nsStringEnumerator,
-                   nsIStringEnumerator,
-                   nsIUTF8StringEnumerator,
-                   nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsStringEnumerator,
+                  nsIStringEnumerator,
+                  nsIUTF8StringEnumerator,
+                  nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsStringEnumerator::HasMore(bool* aResult)

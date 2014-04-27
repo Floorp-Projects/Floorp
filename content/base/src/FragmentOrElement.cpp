@@ -375,7 +375,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_INTERFACE_TABLE_HEAD(nsChildContentList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_TABLE2(nsChildContentList, nsINodeList, nsIDOMNodeList)
+  NS_INTERFACE_TABLE(nsChildContentList, nsINodeList, nsIDOMNodeList)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsChildContentList)
 NS_INTERFACE_MAP_END
 
@@ -463,8 +463,8 @@ FragmentOrElement::Children()
 //----------------------------------------------------------------------
 
 
-NS_IMPL_ISUPPORTS1(nsNodeWeakReference,
-                   nsIWeakReference)
+NS_IMPL_ISUPPORTS(nsNodeWeakReference,
+                  nsIWeakReference)
 
 nsNodeWeakReference::~nsNodeWeakReference()
 {

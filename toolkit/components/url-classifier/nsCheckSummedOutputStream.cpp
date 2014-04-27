@@ -12,11 +12,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 // nsCheckSummedOutputStream
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsCheckSummedOutputStream,
-                             nsSafeFileOutputStream,
-                             nsISafeOutputStream,
-                             nsIOutputStream,
-                             nsIFileOutputStream)
+NS_IMPL_ISUPPORTS_INHERITED(nsCheckSummedOutputStream,
+                            nsSafeFileOutputStream,
+                            nsISafeOutputStream,
+                            nsIOutputStream,
+                            nsIFileOutputStream)
 
 NS_IMETHODIMP
 nsCheckSummedOutputStream::Init(nsIFile* file, int32_t ioFlags, int32_t perm,

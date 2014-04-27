@@ -56,7 +56,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS1(ConsumerContext, nsIEquals)
+NS_IMPL_ISUPPORTS(ConsumerContext, nsIEquals)
 
 class Consumer : public nsIStreamListener {
 public:
@@ -79,7 +79,7 @@ public:
 };
 
 // nsISupports implementation
-NS_IMPL_ISUPPORTS2(Consumer, nsIStreamListener, nsIRequestObserver)
+NS_IMPL_ISUPPORTS(Consumer, nsIStreamListener, nsIRequestObserver)
 
 
 // nsIRequestObserver implementation

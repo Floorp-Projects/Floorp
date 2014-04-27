@@ -33,7 +33,7 @@ private:
     bool PatternMatch(const nsACString& aHost, const nsACString& aOverride);
 };
 
-NS_IMPL_ISUPPORTS1(nsWindowsSystemProxySettings, nsISystemProxySettings)
+NS_IMPL_ISUPPORTS(nsWindowsSystemProxySettings, nsISystemProxySettings)
 
 NS_IMETHODIMP
 nsWindowsSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly)

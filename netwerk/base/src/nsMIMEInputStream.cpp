@@ -71,15 +71,15 @@ NS_IMPL_RELEASE(nsMIMEInputStream)
 NS_IMPL_CLASSINFO(nsMIMEInputStream, nullptr, nsIClassInfo::THREADSAFE,
                   NS_MIMEINPUTSTREAM_CID)
 
-NS_IMPL_QUERY_INTERFACE4_CI(nsMIMEInputStream,
+NS_IMPL_QUERY_INTERFACE_CI(nsMIMEInputStream,
+                           nsIMIMEInputStream,
+                           nsIInputStream,
+                           nsISeekableStream,
+                           nsIIPCSerializableInputStream)
+NS_IMPL_CI_INTERFACE_GETTER(nsMIMEInputStream,
                             nsIMIMEInputStream,
                             nsIInputStream,
-                            nsISeekableStream,
-                            nsIIPCSerializableInputStream)
-NS_IMPL_CI_INTERFACE_GETTER3(nsMIMEInputStream,
-                             nsIMIMEInputStream,
-                             nsIInputStream,
-                             nsISeekableStream)
+                            nsISeekableStream)
 
 nsMIMEInputStream::nsMIMEInputStream() : mAddContentLength(false),
                                          mStartedReading(false)

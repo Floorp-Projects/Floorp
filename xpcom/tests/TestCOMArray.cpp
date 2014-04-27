@@ -55,7 +55,7 @@ Foo::~Foo()
   --gCount;
 }
 
-NS_IMPL_ISUPPORTS1(Foo, IFoo)
+NS_IMPL_ISUPPORTS(Foo, IFoo)
 
 
 typedef nsCOMArray<IFoo> Array;
@@ -106,7 +106,7 @@ Bar::~Bar()
 }
 
 NS_IMPL_ADDREF(Bar)
-NS_IMPL_QUERY_INTERFACE1(Bar, IBar)
+NS_IMPL_QUERY_INTERFACE(Bar, IBar)
 
 NS_IMETHODIMP_(MozExternalRefCountType)
 Bar::Release(void)

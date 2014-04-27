@@ -39,10 +39,10 @@
 
 #define MAX_BYTES 512u
 
-NS_IMPL_ISUPPORTS3(nsFeedSniffer,
-                   nsIContentSniffer,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS(nsFeedSniffer,
+                  nsIContentSniffer,
+                  nsIStreamListener,
+                  nsIRequestObserver)
 
 nsresult
 nsFeedSniffer::ConvertEncodedData(nsIRequest* request,

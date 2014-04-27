@@ -1761,9 +1761,9 @@ nsNavHistoryContainerResultNode::GetChildrenReadOnly(bool *aChildrenReadOnly)
  * a message without doing a requery.  For complex changes or complex queries,
  * we give up and requery.
  */
-NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryQueryResultNode,
-                             nsNavHistoryContainerResultNode,
-                             nsINavHistoryQueryResultNode)
+NS_IMPL_ISUPPORTS_INHERITED(nsNavHistoryQueryResultNode,
+                            nsNavHistoryContainerResultNode,
+                            nsINavHistoryQueryResultNode)
 
 nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
     const nsACString& aTitle, const nsACString& aIconURI,
@@ -2998,9 +2998,9 @@ nsNavHistoryQueryResultNode::OnItemMoved(int64_t aFolder,
  * an up-to-date list for the entire bookmark menu structure in every place
  * it is used.
  */
-NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryFolderResultNode,
-                             nsNavHistoryContainerResultNode,
-                             nsINavHistoryQueryResultNode)
+NS_IMPL_ISUPPORTS_INHERITED(nsNavHistoryFolderResultNode,
+                            nsNavHistoryContainerResultNode,
+                            nsINavHistoryQueryResultNode)
 
 nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
     const nsACString& aTitle, nsNavHistoryQueryOptions* aOptions,

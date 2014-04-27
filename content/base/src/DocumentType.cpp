@@ -82,8 +82,8 @@ DocumentType::~DocumentType()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(DocumentType, nsGenericDOMDataNode, nsIDOMNode,
-                             nsIDOMDocumentType)
+NS_IMPL_ISUPPORTS_INHERITED(DocumentType, nsGenericDOMDataNode, nsIDOMNode,
+                            nsIDOMDocumentType)
 
 bool
 DocumentType::IsNodeOfType(uint32_t aFlags) const
