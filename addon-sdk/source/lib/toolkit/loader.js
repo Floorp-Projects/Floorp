@@ -40,7 +40,7 @@ const { notifyObservers } = Cc['@mozilla.org/observer-service;1'].
                         getService(Ci.nsIObserverService);
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const { Reflect } = Cu.import("resource://gre/modules/reflect.jsm", {});
-const { ConsoleAPI } = Cu.import("resource://gre/modules/devtools/Console.jsm");
+const { console } = Cu.import("resource://gre/modules/devtools/Console.jsm");
 const { join: pathJoin, normalize, dirname } = Cu.import("resource://gre/modules/osfile/ospath_unix.jsm");
 
 // Define some shortcuts.
@@ -688,10 +688,6 @@ exports.unload = unload;
 //   If `resolve` does not returns `uri` string exception will be thrown by
 //   an associated `require` call.
 const Loader = iced(function Loader(options) {
-  let console = new ConsoleAPI({
-    consoleID: options.id ? "addon/" + options.id : ""
-  });
-
   let {
     modules, globals, resolve, paths, rootURI, manifest, requireMap, isNative
   } = override({

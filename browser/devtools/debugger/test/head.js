@@ -22,7 +22,6 @@ let { BrowserToolboxProcess } = Cu.import("resource:///modules/devtools/ToolboxP
 let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 let { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
-let EventEmitter = require("devtools/toolkit/event-emitter");
 const { promiseInvoke } = require("devtools/async-utils");
 let TargetFactory = devtools.TargetFactory;
 let Toolbox = devtools.Toolbox;
@@ -523,8 +522,6 @@ function initAddonDebugger(aUrl) {
 
 function AddonDebugger() {
   this._onMessage = this._onMessage.bind(this);
-  this._onConsoleAPICall = this._onConsoleAPICall.bind(this);
-  EventEmitter.decorate(this);
 }
 
 AddonDebugger.prototype = {
@@ -551,11 +548,7 @@ AddonDebugger.prototype = {
     let addonActor = yield getAddonActorForUrl(this.client, aUrl);
 
     let targetOptions = {
-      form: {
-        addonActor: addonActor.actor,
-        consoleActor: addonActor.consoleActor,
-        title: addonActor.name
-      },
+      form: { addonActor: addonActor.actor, title: addonActor.name },
       client: this.client,
       chrome: true
     };
@@ -564,8 +557,8 @@ AddonDebugger.prototype = {
       customIframe: this.frame
     };
 
-    this.target = devtools.TargetFactory.forTab(targetOptions);
-    let toolbox = yield gDevTools.showToolbox(this.target, "jsdebugger", devtools.Toolbox.HostType.CUSTOM, toolboxOptions);
+    let target = devtools.TargetFactory.forTab(targetOptions);
+    let toolbox = yield gDevTools.showToolbox(target, "jsdebugger", devtools.Toolbox.HostType.CUSTOM, toolboxOptions);
 
     info("Addon debugger panel shown successfully.");
 
@@ -574,7 +567,6 @@ AddonDebugger.prototype = {
     // Wait for the initial resume...
     yield waitForClientEvents(this.debuggerPanel, "resumed");
     yield prepareDebugger(this.debuggerPanel);
-    yield this._attachConsole();
   }),
 
   destroy: Task.async(function*() {
@@ -585,27 +577,6 @@ AddonDebugger.prototype = {
     this.frame.remove();
     window.removeEventListener("message", this._onMessage);
   }),
-
-  _attachConsole: function() {
-    let deferred = promise.defer();
-    this.client.attachConsole(this.target.form.consoleActor, ["ConsoleAPI"], (aResponse, aWebConsoleClient) => {
-      if (aResponse.error) {
-        deferred.reject(aResponse);
-      }
-      else {
-        this.webConsole = aWebConsoleClient;
-        this.client.addListener("consoleAPICall", this._onConsoleAPICall);
-        deferred.resolve();
-      }
-    });
-    return deferred.promise;
-  },
-
-  _onConsoleAPICall: function(aType, aPacket) {
-    if (aPacket.from != this.webConsole.actor)
-      return;
-    this.emit("console", aPacket.message);
-  },
 
   /**
    * Returns a list of the groups and sources in the UI. The returned array
