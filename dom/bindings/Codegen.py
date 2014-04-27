@@ -9545,6 +9545,8 @@ if (""",
         if type.isObject():
             trace = CGGeneric('JS_CallObjectTracer(trc, %s, "%s");' %
                               ("&"+memberData, memberName))
+            if type.nullable():
+                trace = CGIfWrapper(trace, memberData)
         elif type.isAny():
             trace = CGGeneric('JS_CallValueTracer(trc, %s, "%s");' %
                               ("&"+memberData, memberName))
