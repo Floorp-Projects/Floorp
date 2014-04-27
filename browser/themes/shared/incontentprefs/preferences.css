@@ -342,7 +342,8 @@ html|a.inline-link {
 /* Checkboxes and radio buttons */
 
 checkbox {
-  margin: 7px 0;
+  -moz-margin-start: 0;
+  position: relative;
 }
 
 .checkbox-check {
@@ -415,6 +416,10 @@ checkbox[checked]::before {
   -moz-padding-start: 0;
 }
 
+radio {
+  position: relative;
+}
+
 radio:hover::before,
 radio[selected]::before {
   position: absolute;
@@ -422,7 +427,6 @@ radio[selected]::before {
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  margin-bottom: 1px;
   background-image: linear-gradient(rgba(76,177,255,0.25) 0%, rgba(23,146,229,0.25) 100%);
 }
 
@@ -678,11 +682,6 @@ radio[selected]::before {
   #header-advanced > .header-icon {
     -moz-image-region: rect(0, 560px, 80px, 480px);
   }
-}
-
-.indent {
-  margin-top: 7px;
-  margin-bottom: 7px;
 }
 
 /* General Pane */

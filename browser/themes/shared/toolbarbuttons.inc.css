@@ -85,6 +85,14 @@
   -moz-image-region: rect(0, 342px, 18px, 324px);
 }
 
+#e10s-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 342px, 18px, 324px);
+}
+
+#e10s-button > .toolbarbutton-icon {
+  transform: scaleY(-1);
+}
+
 #new-tab-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 360px, 18px, 342px);
 }
