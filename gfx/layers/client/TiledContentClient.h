@@ -483,7 +483,7 @@ public:
 
   virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
   {
-    return TextureInfo(CompositableType::BUFFER_TILED);
+    return TextureInfo(BUFFER_TILED);
   }
 
   virtual void ClearCachedResources() MOZ_OVERRIDE;

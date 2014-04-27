@@ -72,10 +72,10 @@ SimpleTextureClientPool::GetTextureClient(bool aAutoRecycle)
     // No unused clients in the pool, create one
     if (gfxPrefs::ForceShmemTiles()) {
       textureClient = TextureClient::CreateBufferTextureClient(mSurfaceAllocator,
-        mFormat, TextureFlags::IMMEDIATE_UPLOAD | TextureFlags::RECYCLE, gfx::BackendType::NONE);
+        mFormat, TEXTURE_IMMEDIATE_UPLOAD | TEXTURE_RECYCLE, gfx::BackendType::NONE);
     } else {
       textureClient = TextureClient::CreateTextureClientForDrawing(mSurfaceAllocator,
-        mFormat, TextureFlags::DEFAULT | TextureFlags::RECYCLE, gfx::BackendType::NONE, mSize);
+        mFormat, TEXTURE_FLAGS_DEFAULT | TEXTURE_RECYCLE, gfx::BackendType::NONE, mSize);
     }
     if (!textureClient->AllocateForSurface(mSize, ALLOC_DEFAULT)) {
       NS_WARNING("TextureClient::AllocateForSurface failed!");

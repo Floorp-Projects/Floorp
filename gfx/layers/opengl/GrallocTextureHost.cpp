@@ -19,9 +19,8 @@ using namespace android;
 
 static gfx::SurfaceFormat
 SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
-                                   TextureFlags aFlags)
+                                   bool swapRB = false)
 {
-  bool swapRB = bool(aFlags & TextureFlags::RB_SWAPPED);
   switch (aFormat) {
   case android::PIXEL_FORMAT_BGRA_8888:
     return swapRB ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::B8G8R8A8;
@@ -291,7 +290,7 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
   if (graphicBuffer) {
     format =
       SurfaceFormatForAndroidPixelFormat(graphicBuffer->getPixelFormat(),
-                                         aFlags);
+                                         aFlags & TEXTURE_RB_SWAPPED);
   }
   mTextureSource = new GrallocTextureSourceOGL(nullptr,
                                                graphicBuffer,
@@ -370,12 +369,12 @@ LayerRenderState
 GrallocTextureHostOGL::GetRenderState()
 {
   if (IsValid()) {
-    LayerRenderStateFlags flags = LayerRenderStateFlags::LAYER_RENDER_STATE_DEFAULT;
-    if (mFlags & TextureFlags::NEEDS_Y_FLIP) {
-      flags |= LayerRenderStateFlags::Y_FLIPPED;
+    uint32_t flags = 0;
+    if (mFlags & TEXTURE_NEEDS_Y_FLIP) {
+      flags |= LAYER_RENDER_STATE_Y_FLIPPED;
     }
-    if (mFlags & TextureFlags::RB_SWAPPED) {
-      flags |= LayerRenderStateFlags::FORMAT_RB_SWAP;
+    if (mFlags & TEXTURE_RB_SWAPPED) {
+      flags |= LAYER_RENDER_STATE_FORMAT_RB_SWAP;
     }
     return LayerRenderState(mTextureSource->mGraphicBuffer.get(),
                             gfx::ThebesIntSize(mSize),

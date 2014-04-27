@@ -23,7 +23,7 @@ SharedTextureClientOGL::SharedTextureClientOGL(TextureFlags aFlags)
   , mInverted(false)
 {
   // SharedTextureClient is always owned externally.
-  mFlags |= TextureFlags::DEALLOCATE_CLIENT;
+  mFlags |= TEXTURE_DEALLOCATE_CLIENT;
 }
 
 SharedTextureClientOGL::~SharedTextureClientOGL()
@@ -56,7 +56,7 @@ SharedTextureClientOGL::InitWith(gl::SharedTextureHandle aHandle,
   mShareType = aShareType;
   mInverted = aInverted;
   if (mInverted) {
-    AddFlags(TextureFlags::NEEDS_Y_FLIP);
+    AddFlags(TEXTURE_NEEDS_Y_FLIP);
   }
 }
 
