@@ -13,6 +13,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
+#include "nsIObserver.h"
 #include "nsXULAppAPI.h"
 
 BEGIN_FMRADIO_NAMESPACE
@@ -136,10 +137,10 @@ enum FMRadioState
 };
 
 class FMRadioService MOZ_FINAL : public IFMRadioService
-                               , public nsISupports
                                , public hal::FMRadioObserver
+                               , public nsIObserver
 {
-  friend class ReadRilSettingTask;
+  friend class ReadAirplaneModeSettingTask;
   friend class SetFrequencyRunnable;
 
 public:
@@ -171,6 +172,8 @@ public:
   /* FMRadioObserver */
   void Notify(const hal::FMRadioOperationInformation& aInfo) MOZ_OVERRIDE;
 
+  NS_DECL_NSIOBSERVER
+
 protected:
   FMRadioService();
 
@@ -191,8 +194,8 @@ private:
 
   FMRadioState mState;
 
-  bool mHasReadRilSetting;
-  bool mRilDisabled;
+  bool mHasReadAirplaneModeSetting;
+  bool mAirplaneModeEnabled;
 
   double mUpperBoundInKHz;
   double mLowerBoundInKHz;
