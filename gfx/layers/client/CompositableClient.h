@@ -75,7 +75,7 @@ protected:
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositableClient)
 
-  CompositableClient(CompositableForwarder* aForwarder, TextureFlags aFlags = TextureFlags::NO_FLAGS);
+  CompositableClient(CompositableForwarder* aForwarder, TextureFlags aFlags = 0);
 
   virtual TextureInfo GetTextureInfo() const = 0;
 
@@ -83,7 +83,7 @@ public:
 
   TemporaryRef<BufferTextureClient>
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
-                            TextureFlags aFlags = TextureFlags::DEFAULT,
+                            TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT,
                             gfx::BackendType aMoz2dBackend = gfx::BackendType::NONE);
 
   TemporaryRef<TextureClient>

@@ -151,7 +151,7 @@ void TestTextureClientSurface(TextureClient* texture, gfxImageSurface* surface) 
   texture->AllocateForSurface(ToIntSize(surface->GetSize()));
   ASSERT_TRUE(texture->IsAllocated());
 
-  ASSERT_TRUE(texture->Lock(OpenMode::OPEN_READ_WRITE));
+  ASSERT_TRUE(texture->Lock(OPEN_READ_WRITE));
   // client painting
   RefPtr<DrawTarget> dt = texture->GetAsDrawTarget();
   RefPtr<SourceSurface> source =
@@ -202,7 +202,7 @@ void TestTextureClientYCbCr(TextureClient* client, PlanarYCbCrData& ycbcrData) {
                             ycbcrData.mStereoMode);
   ASSERT_TRUE(client->IsAllocated());
 
-  ASSERT_TRUE(client->Lock(OpenMode::OPEN_READ_WRITE));
+  ASSERT_TRUE(client->Lock(OPEN_READ_WRITE));
   // client painting
   texture->UpdateYCbCr(ycbcrData);
   client->Unlock();
@@ -270,7 +270,7 @@ TEST(Layers, TextureSerialization) {
       = new MemoryTextureClient(nullptr,
                                 mozilla::gfx::ImageFormatToSurfaceFormat(surface->Format()),
                                 gfx::BackendType::CAIRO,
-                                TextureFlags::DEALLOCATE_CLIENT);
+                                TEXTURE_DEALLOCATE_CLIENT);
 
     TestTextureClientSurface(client, surface);
 
@@ -307,7 +307,7 @@ TEST(Layers, TextureYCbCrSerialization) {
     = new MemoryTextureClient(nullptr,
                               mozilla::gfx::SurfaceFormat::YUV,
                               gfx::BackendType::CAIRO,
-                              TextureFlags::DEALLOCATE_CLIENT);
+                              TEXTURE_DEALLOCATE_CLIENT);
 
   TestTextureClientYCbCr(client, clientData);
 

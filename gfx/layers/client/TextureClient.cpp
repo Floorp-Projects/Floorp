@@ -289,7 +289,7 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
       gfxWindowsPlatform::GetPlatform()->GetD2DDevice() &&
       aSizeHint.width <= maxTextureSize &&
       aSizeHint.height <= maxTextureSize &&
-      !(aTextureFlags & TextureFlags::ALLOC_FALLBACK)) {
+      !(aTextureFlags & TEXTURE_ALLOC_FALLBACK)) {
     result = new TextureClientD3D11(aFormat, aTextureFlags);
   }
   if (parentBackend == LayersBackend::LAYERS_D3D9 &&
@@ -297,7 +297,7 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
       aAllocator->IsSameProcess() &&
       aSizeHint.width <= maxTextureSize &&
       aSizeHint.height <= maxTextureSize &&
-      !(aTextureFlags & TextureFlags::ALLOC_FALLBACK)) {
+      !(aTextureFlags & TEXTURE_ALLOC_FALLBACK)) {
     if (!gfxWindowsPlatform::GetPlatform()->GetD3D9Device()) {
       result = new DIBTextureClientD3D9(aFormat, aTextureFlags);
     } else {
@@ -314,7 +314,7 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
   if (parentBackend == LayersBackend::LAYERS_BASIC &&
       aMoz2DBackend == gfx::BackendType::CAIRO &&
       type == gfxSurfaceType::Xlib &&
-      !(aTextureFlags & TextureFlags::ALLOC_FALLBACK))
+      !(aTextureFlags & TEXTURE_ALLOC_FALLBACK))
   {
     result = new TextureClientX11(aFormat, aTextureFlags);
   }
@@ -323,7 +323,7 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
   // Bug 977963: Disabled for black layers
   if (parentBackend == LayersBackend::LAYERS_OPENGL &&
       type == gfxSurfaceType::Xlib &&
-      !(aTextureFlags & TextureFlags::ALLOC_FALLBACK) &&
+      !(aTextureFlags & TEXTURE_ALLOC_FALLBACK) &&
       aFormat != SurfaceFormat::A8 &&
       gl::sGLXLibrary.UseTextureFromPixmap())
   {
@@ -461,7 +461,7 @@ TextureClient::~TextureClient()
 void TextureClient::ForceRemove()
 {
   if (mValid && mActor) {
-    if (GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
+    if (GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
       mActor->SetTextureData(DropTextureData());
       if (mActor->IPCOpen()) {
         mActor->SendRemoveTextureSync();
@@ -649,7 +649,7 @@ BufferTextureClient::BufferTextureClient(ISurfaceAllocator* aAllocator,
   , mAllocator(aAllocator)
   , mFormat(aFormat)
   , mBackend(aMoz2DBackend)
-  , mOpenMode(OpenMode::OPEN_NONE)
+  , mOpenMode(0)
   , mUsingFallbackDrawTarget(false)
   , mLocked(false)
 {}
@@ -716,7 +716,7 @@ BufferTextureClient::GetAsDrawTarget()
   }
 
   mUsingFallbackDrawTarget = true;
-  if (mOpenMode & OpenMode::OPEN_READ) {
+  if (mOpenMode & OPEN_READ) {
     RefPtr<DataSourceSurface> surface = serializer.GetAsSurface();
     IntRect rect(0, 0, surface->GetSize().width, surface->GetSize().height);
     mDrawTarget->CopySurface(surface, rect, IntPoint(0,0));
@@ -750,7 +750,7 @@ BufferTextureClient::Unlock()
   MOZ_ASSERT(mDrawTarget->refCount() == 1);
 
   mDrawTarget->Flush();
-  if (mUsingFallbackDrawTarget && (mOpenMode & OpenMode::OPEN_WRITE)) {
+  if (mUsingFallbackDrawTarget && (mOpenMode & OPEN_WRITE)) {
     // When we are using a fallback DrawTarget, it means we could not create
     // a DrawTarget wrapping the TextureClient's shared memory. In this scenario
     // we need to put the content of the fallback draw target back into our shared

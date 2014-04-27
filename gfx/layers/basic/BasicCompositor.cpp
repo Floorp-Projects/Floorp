@@ -126,7 +126,7 @@ BasicCompositor::CreateDataTextureSource(TextureFlags aFlags)
 bool
 BasicCompositor::SupportsEffect(EffectTypes aEffect)
 {
-  return static_cast<EffectTypes>(aEffect) != EffectTypes::YCBCR;
+  return static_cast<EffectTypes>(aEffect) != EFFECT_YCBCR;
 }
 
 static void
@@ -291,8 +291,8 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
 
   RefPtr<SourceSurface> sourceMask;
   Matrix maskTransform;
-  if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
-    EffectMask *effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EffectTypes::MASK].get());
+  if (aEffectChain.mSecondaryEffects[EFFECT_MASK]) {
+    EffectMask *effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EFFECT_MASK].get());
     sourceMask = effectMask->mMaskTexture->AsSourceBasic()->GetSurface();
     MOZ_ASSERT(effectMask->mMaskTransform.Is2D(), "How did we end up with a 3D transform here?!");
     MOZ_ASSERT(!effectMask->mIs3D);
@@ -301,7 +301,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
   }
 
   switch (aEffectChain.mPrimaryEffect->mType) {
-    case EffectTypes::SOLID_COLOR: {
+    case EFFECT_SOLID_COLOR: {
       EffectSolidColor* effectSolidColor =
         static_cast<EffectSolidColor*>(aEffectChain.mPrimaryEffect.get());
 
@@ -309,7 +309,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                        DrawOptions(aOpacity), sourceMask, &maskTransform);
       break;
     }
-    case EffectTypes::RGB: {
+    case EFFECT_RGB: {
       TexturedEffect* texturedEffect =
           static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
       TextureSourceBasic* source = texturedEffect->mTexture->AsSourceBasic();
@@ -321,11 +321,11 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                                    aOpacity, sourceMask, &maskTransform);
       break;
     }
-    case EffectTypes::YCBCR: {
+    case EFFECT_YCBCR: {
       NS_RUNTIMEABORT("Can't (easily) support component alpha with BasicCompositor!");
       break;
     }
-    case EffectTypes::RENDER_TARGET: {
+    case EFFECT_RENDER_TARGET: {
       EffectRenderTarget* effectRenderTarget =
         static_cast<EffectRenderTarget*>(aEffectChain.mPrimaryEffect.get());
       RefPtr<BasicCompositingRenderTarget> surface
@@ -339,7 +339,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                                    aOpacity, sourceMask, &maskTransform);
       break;
     }
-    case EffectTypes::COMPONENT_ALPHA: {
+    case EFFECT_COMPONENT_ALPHA: {
       NS_RUNTIMEABORT("Can't (easily) support component alpha with BasicCompositor!");
       break;
     }
