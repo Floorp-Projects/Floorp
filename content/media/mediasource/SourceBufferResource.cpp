@@ -105,7 +105,7 @@ SourceBufferResource::Seek(int32_t aWhence, int64_t aOffset)
     break;
   }
 
-  if (newOffset < 0 || newOffset > GetLength()) {
+  if (newOffset < 0 || uint64_t(newOffset) < mInputBuffer.GetOffset() || newOffset > GetLength()) {
     return NS_ERROR_FAILURE;
   }
 
