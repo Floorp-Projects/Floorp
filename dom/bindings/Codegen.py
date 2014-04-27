@@ -867,7 +867,7 @@ class CGIncludeGuard(CGWrapper):
     """
     def __init__(self, prefix, child):
         """|prefix| is the filename without the extension."""
-        define = 'mozilla_dom_%s_h__' % prefix
+        define = 'mozilla_dom_%s_h' % prefix
         CGWrapper.__init__(self, child,
                            declarePre='#ifndef %s\n#define %s\n\n' % (define, define),
                            declarePost='\n#endif // %s\n' % define)
@@ -11184,15 +11184,8 @@ class CGNativeMember(ClassMethod):
             return enumName, defaultValue, "return ${declName};\n"
         if type.isGeckoInterface():
             iface = type.unroll().inner
-            nativeType = self.descriptorProvider.getDescriptor(
-                iface.identifier.name).nativeType
-            # Now trim off unnecessary namespaces
-            nativeType = nativeType.split("::")
-            if nativeType[0] == "mozilla":
-                nativeType.pop(0)
-                if nativeType[0] == "dom":
-                    nativeType.pop(0)
-            result = CGGeneric("::".join(nativeType))
+            result = CGGeneric(self.descriptorProvider.getDescriptor(
+                iface.identifier.name).prettyNativeType)
             if self.resultAlreadyAddRefed:
                 if isMember:
                     holder = "nsRefPtr"
@@ -11362,7 +11355,7 @@ class CGNativeMember(ClassMethod):
                 else:
                     typeDecl = "%s&"
             return ((typeDecl %
-                     self.descriptorProvider.getDescriptor(iface.identifier.name).nativeType),
+                     self.descriptorProvider.getDescriptor(iface.identifier.name).prettyNativeType),
                     False, False)
 
         if type.isSpiderMonkeyInterface():
@@ -11815,10 +11808,9 @@ class CGExampleRoot(CGThing):
                                "nsCycleCollectionParticipant.h",
                                "mozilla/Attributes.h",
                                "mozilla/ErrorResult.h"],
-                              ["%s.h" % interfaceName,
+                              ["mozilla/dom/%s.h" % interfaceName,
                                ("mozilla/dom/%s" %
-                                CGHeaders.getDeclarationFilename(descriptor.interface)),
-                               "nsContentUtils.h"], "", self.root)
+                                CGHeaders.getDeclarationFilename(descriptor.interface))], "", self.root)
 
         # And now some include guards
         self.root = CGIncludeGuard(interfaceName, self.root)
