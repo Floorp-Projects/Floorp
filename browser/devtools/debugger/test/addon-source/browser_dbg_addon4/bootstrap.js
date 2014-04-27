@@ -1,21 +1,32 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { interfaces: Ci, classes: Cc } = Components;
+const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
+
+function notify() {
+  // Log objects so makeDebuggeeValue can get the global to use
+  console.log({ msg: "Hello again" });
+}
 
 function startup(aParams, aReason) {
-  Components.utils.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
   let res = Services.io.getProtocolHandler("resource")
                        .QueryInterface(Ci.nsIResProtocolHandler);
   res.setSubstitution("browser_dbg_addon4", aParams.resourceURI);
 
   // Load a JS module
-  Components.utils.import("resource://browser_dbg_addon4/test.jsm");
+  Cu.import("resource://browser_dbg_addon4/test.jsm");
+  // Log objects so makeDebuggeeValue can get the global to use
+  console.log({ msg: "Hello from the test add-on" });
+
+  Services.obs.addObserver(notify, "addon-test-ping", false);
 }
 
 function shutdown(aParams, aReason) {
+  Services.obs.removeObserver(notify, "addon-test-ping");
+
   // Unload the JS module
-  Components.utils.unload("resource://browser_dbg_addon4/test.jsm");
+  Cu.unload("resource://browser_dbg_addon4/test.jsm");
 
   let res = Services.io.getProtocolHandler("resource")
                        .QueryInterface(Ci.nsIResProtocolHandler);

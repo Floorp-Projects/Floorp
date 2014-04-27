@@ -1220,7 +1220,8 @@ BrowserAddonList.prototype.onUninstalled = function (aAddon) {
 function BrowserAddonActor(aConnection, aAddon) {
   this.conn = aConnection;
   this._addon = aAddon;
-  this._contextPool = null;
+  this._contextPool = new ActorPool(this.conn);
+  this.conn.addActorPool(this._contextPool);
   this._threadActor = null;
   this._global = null;
   AddonManager.addAddonListener(this);
@@ -1251,6 +1252,10 @@ BrowserAddonActor.prototype = {
 
   form: function BAA_form() {
     dbg_assert(this.actorID, "addon should have an actorID.");
+    if (!this._consoleActor) {
+      this._consoleActor = new AddonConsoleActor(this._addon, this.conn, this);
+      this._contextPool.addActor(this._consoleActor);
+    }
 
     return {
       actor: this.actorID,
@@ -1258,10 +1263,14 @@ BrowserAddonActor.prototype = {
       name: this._addon.name,
       url: this.url,
       debuggable: this._addon.isDebuggable,
+      consoleActor: this._consoleActor.actorID,
     };
   },
 
   disconnect: function BAA_disconnect() {
+    this.conn.removeActorPool(this._contextPool);
+    this._contextPool = null;
+    this._consoleActor = null;
     this._addon = null;
     this._global = null;
     AddonManager.removeAddonListener(this);
@@ -1300,9 +1309,6 @@ BrowserAddonActor.prototype = {
     }
 
     if (!this.attached) {
-      this._contextPool = new ActorPool(this.conn);
-      this.conn.addActorPool(this._contextPool);
-
       this._threadActor = new AddonThreadActor(this.conn, this,
                                                this._addon.id);
       this._contextPool.addActor(this._threadActor);
@@ -1316,8 +1322,7 @@ BrowserAddonActor.prototype = {
       return { error: "wrongState" };
     }
 
-    this.conn.removeActorPool(this._contextPool);
-    this._contextPool = null;
+    this._contextPool.remoteActor(this._threadActor);
 
     this._threadActor = null;
 
