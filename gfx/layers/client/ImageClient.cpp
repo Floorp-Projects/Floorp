@@ -48,17 +48,17 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
 {
   RefPtr<ImageClient> result = nullptr;
   switch (aCompositableHostType) {
-  case CompositableType::IMAGE:
-  case CompositableType::BUFFER_IMAGE_SINGLE:
-    result = new ImageClientSingle(aForwarder, aFlags, CompositableType::IMAGE);
+  case COMPOSITABLE_IMAGE:
+  case BUFFER_IMAGE_SINGLE:
+    result = new ImageClientSingle(aForwarder, aFlags, COMPOSITABLE_IMAGE);
     break;
-  case CompositableType::BUFFER_IMAGE_BUFFERED:
-    result = new ImageClientBuffered(aForwarder, aFlags, CompositableType::IMAGE);
+  case BUFFER_IMAGE_BUFFERED:
+    result = new ImageClientBuffered(aForwarder, aFlags, COMPOSITABLE_IMAGE);
     break;
-  case CompositableType::BUFFER_BRIDGE:
+  case BUFFER_BRIDGE:
     result = new ImageClientBridge(aForwarder, aFlags);
     break;
-  case CompositableType::BUFFER_UNKNOWN:
+  case BUFFER_UNKNOWN:
     result = nullptr;
     break;
   default:
@@ -86,7 +86,7 @@ ImageClientBuffered::ImageClientBuffered(CompositableForwarder* aFwd,
 
 TextureInfo ImageClientSingle::GetTextureInfo() const
 {
-  return TextureInfo(CompositableType::IMAGE);
+  return TextureInfo(COMPOSITABLE_IMAGE);
 }
 
 void
@@ -164,7 +164,7 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
 
     bool bufferCreated = false;
     if (!mFrontBuffer) {
-      mFrontBuffer = CreateBufferTextureClient(gfx::SurfaceFormat::YUV, TextureFlags::DEFAULT);
+      mFrontBuffer = CreateBufferTextureClient(gfx::SurfaceFormat::YUV, TEXTURE_FLAGS_DEFAULT);
       gfx::IntSize ySize(data->mYSize.width, data->mYSize.height);
       gfx::IntSize cbCrSize(data->mCbCrSize.width, data->mCbCrSize.height);
       if (!mFrontBuffer->AsTextureClientYCbCr()->AllocateForYCbCr(ySize, cbCrSize, data->mStereoMode)) {
@@ -174,7 +174,7 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
       bufferCreated = true;
     }
 
-    if (!mFrontBuffer->Lock(OpenMode::OPEN_WRITE_ONLY)) {
+    if (!mFrontBuffer->Lock(OPEN_WRITE_ONLY)) {
       mFrontBuffer = nullptr;
       return false;
     }
@@ -242,7 +242,7 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
       bufferCreated = true;
     }
 
-    if (!mFrontBuffer->Lock(OpenMode::OPEN_WRITE_ONLY)) {
+    if (!mFrontBuffer->Lock(OPEN_WRITE_ONLY)) {
       mFrontBuffer = nullptr;
       return false;
     }
@@ -335,7 +335,7 @@ ImageClient::UpdatePictureRect(nsIntRect aRect)
 
 ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
                                      TextureFlags aFlags)
-: ImageClient(aFwd, aFlags, CompositableType::BUFFER_BRIDGE)
+: ImageClient(aFwd, aFlags, BUFFER_BRIDGE)
 , mAsyncContainerID(0)
 , mLayer(nullptr)
 {

@@ -51,9 +51,9 @@ bool
 ImageLayerComposite::SetCompositableHost(CompositableHost* aHost)
 {
   switch (aHost->GetType()) {
-    case CompositableType::BUFFER_IMAGE_SINGLE:
-    case CompositableType::BUFFER_IMAGE_BUFFERED:
-    case CompositableType::IMAGE:
+    case BUFFER_IMAGE_SINGLE:
+    case BUFFER_IMAGE_BUFFERED:
+    case COMPOSITABLE_IMAGE:
       mImageHost = aHost;
       return true;
     default:

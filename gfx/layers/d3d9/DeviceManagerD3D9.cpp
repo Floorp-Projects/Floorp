@@ -569,7 +569,7 @@ LoadMaskTexture(Layer* aMask, IDirect3DDevice9* aDevice,
 uint32_t
 DeviceManagerD3D9::SetShaderMode(ShaderMode aMode, MaskType aMaskType)
 {
-  if (aMaskType == MaskType::MaskNone) {
+  if (aMaskType == MaskNone) {
     switch (aMode) {
       case RGBLAYER:
         mDevice->SetVertexShader(mLayerVS);
@@ -607,7 +607,7 @@ DeviceManagerD3D9::SetShaderMode(ShaderMode aMode, MaskType aMaskType)
       maskTexRegister = 1;
       break;
     case RGBALAYER:
-      if (aMaskType == MaskType::Mask2d) {
+      if (aMaskType == Mask2d) {
         mDevice->SetVertexShader(mLayerVSMask);
         mDevice->SetPixelShader(mRGBAPSMask);
       } else {
@@ -643,9 +643,9 @@ DeviceManagerD3D9::SetShaderMode(ShaderMode aMode, MaskType aMaskType)
 void
 DeviceManagerD3D9::SetShaderMode(ShaderMode aMode, Layer* aMask, bool aIs2D)
 {
-  MaskType maskType = MaskType::MaskNone;
+  MaskType maskType = MaskNone;
   if (aMask) {
-    maskType = aIs2D ? MaskType::Mask2d : MaskType::Mask3d;
+    maskType = aIs2D ? Mask2d : Mask3d;
   }
   uint32_t maskTexRegister = SetShaderMode(aMode, maskType);
   if (aMask) {
@@ -654,7 +654,7 @@ DeviceManagerD3D9::SetShaderMode(ShaderMode aMode, Layer* aMask, bool aIs2D)
     if (!LoadMaskTexture(aMask, mDevice, maskTexRegister)) {
       // if we can't load the mask, fall back to unmasked rendering
       NS_WARNING("Could not load texture for mask layer.");
-      SetShaderMode(aMode, MaskType::MaskNone);
+      SetShaderMode(aMode, MaskNone);
     }
   }
 }

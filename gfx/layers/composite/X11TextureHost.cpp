@@ -25,7 +25,7 @@ X11TextureHost::X11TextureHost(TextureFlags aFlags,
   mSurface = surface.get();
 
   // The host always frees the pixmap.
-  MOZ_ASSERT(!(aFlags & TextureFlags::DEALLOCATE_CLIENT));
+  MOZ_ASSERT(!(aFlags & TEXTURE_DEALLOCATE_CLIENT));
   mSurface->TakePixmap();
 }
 
