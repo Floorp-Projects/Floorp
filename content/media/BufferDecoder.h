@@ -72,7 +72,7 @@ public:
 
   virtual void OnReadMetadataCompleted() MOZ_FINAL MOZ_OVERRIDE;
 
-  virtual MediaDecoderOwner* GetOwner() MOZ_FINAL MOZ_OVERRIDE;
+  virtual MediaDecoderOwner* GetOwner() MOZ_OVERRIDE;
 
   virtual void NotifyWaitingForResourcesStatusChanged() MOZ_FINAL MOZ_OVERRIDE;
 

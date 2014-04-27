@@ -96,6 +96,12 @@ SubBufferDecoder::GetImageContainer()
   return mParentDecoder->GetImageContainer();
 }
 
+MediaDecoderOwner*
+SubBufferDecoder::GetOwner()
+{
+  return mParentDecoder->GetOwner();
+}
+
 int64_t
 SubBufferDecoder::ConvertToByteOffset(double aTime)
 {
