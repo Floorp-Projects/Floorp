@@ -2764,7 +2764,7 @@ jit::Invalidate(JSContext *cx, JSScript *script, ExecutionMode mode, bool resetU
             return false;
 
         // Construct the descriptive string.
-        JS_snprintf(buf, len, "Invalidate %s:%llu", filename, script->lineno());
+        JS_snprintf(buf, len, "Invalidate %s:%u", filename, (unsigned int)script->lineno());
         cx->runtime()->spsProfiler.markEvent(buf);
         js_free(buf);
     }
