@@ -639,7 +639,7 @@ SmsRequestParent::NotifyMessageSent(nsISupports *aMessage)
 }
 
 NS_IMETHODIMP
-SmsRequestParent::NotifySendMessageFailed(int32_t aError)
+SmsRequestParent::NotifySendMessageFailed(int32_t aError, nsISupports *aMessage)
 {
   return SendReply(ReplyMessageSendFail(aError));
 }
