@@ -130,12 +130,6 @@ public:
   void NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint, bool aScheduleComposite);
 
   /**
-   * Check rotation info and schedule a rendering task if needed.
-   * Only can be called from compositor thread.
-   */
-  void ScheduleRotationOnCompositorThread(const TargetConfig& aTargetConfig, bool aIsFirstPaint);
-
-  /**
    * Returns the unique layer tree identifier that corresponds to the root
    * tree of this compositor.
    */
