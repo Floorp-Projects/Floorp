@@ -1392,7 +1392,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     rv = nsContentUtils::WrapNative(jscontext, mRoot, mRoot, &v);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JS::Rooted<JSObject*> jselement(jscontext, JSVAL_TO_OBJECT(v));
+    JS::Rooted<JSObject*> jselement(jscontext, v.toObjectOrNull());
 
     if (mDB) {
         // database

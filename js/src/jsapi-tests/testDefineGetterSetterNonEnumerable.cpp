@@ -32,7 +32,7 @@ BEGIN_TEST(testDefineGetterSetterNonEnumerable)
     JS::RootedObject funSetObj(cx, JS_GetFunctionObject(funSet));
     JS::RootedValue vset(cx, OBJECT_TO_JSVAL(funSetObj));
 
-    JS::RootedObject vObject(cx, JSVAL_TO_OBJECT(vobj));
+    JS::RootedObject vObject(cx, vobj.toObjectOrNull());
     CHECK(JS_DefineProperty(cx, vObject, PROPERTY_NAME,
                             JS::UndefinedHandleValue,
                             JSPROP_GETTER | JSPROP_SETTER | JSPROP_ENUMERATE,

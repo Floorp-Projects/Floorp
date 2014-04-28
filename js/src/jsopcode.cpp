@@ -823,7 +823,7 @@ ToDisassemblySource(JSContext *cx, HandleValue v, JSAutoByteString *bytes)
     }
 
     if (!JSVAL_IS_PRIMITIVE(v)) {
-        JSObject *obj = JSVAL_TO_OBJECT(v);
+        JSObject *obj = v.toObjectOrNull();
         if (obj->is<StaticBlockObject>()) {
             Rooted<StaticBlockObject*> block(cx, &obj->as<StaticBlockObject>());
             char *source = JS_sprintf_append(nullptr, "depth %d {", block->localOffset());
