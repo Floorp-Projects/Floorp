@@ -6470,22 +6470,10 @@ nsHTMLEditRules::GetNodesFromPoint(::DOMPoint point,
                                    nsCOMArray<nsIDOMNode> &arrayOfNodes,
                                    bool dontTouchContent)
 {
-  nsresult res;
-
-  // get our point
-  nsCOMPtr<nsIDOMNode> node;
-  int32_t offset;
-  point.GetPoint(node, offset);
-  
-  // use it to make a range
-  nsCOMPtr<nsINode> nativeNode = do_QueryInterface(node);
-  NS_ENSURE_STATE(nativeNode);
-  nsRefPtr<nsRange> range = new nsRange(nativeNode);
-  res = range->SetStart(node, offset);
+  NS_ENSURE_STATE(point.node);
+  nsRefPtr<nsRange> range = new nsRange(point.node);
+  nsresult res = range->SetStart(point.node, point.offset);
   NS_ENSURE_SUCCESS(res, res);
-  /* SetStart() will also set the end for this new range
-  res = range->SetEnd(node, offset);
-  NS_ENSURE_SUCCESS(res, res); */
   
   // expand the range to include adjacent inlines
   res = PromoteRange(range, operation);
