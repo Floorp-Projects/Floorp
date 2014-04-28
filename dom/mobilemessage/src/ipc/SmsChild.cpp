@@ -192,7 +192,8 @@ SmsRequestChild::Recv__delete__(const MessageReply& aReply)
       }
       break;
     case MessageReply::TReplyMessageSendFail:
-      mReplyRequest->NotifySendMessageFailed(aReply.get_ReplyMessageSendFail().error());
+      mReplyRequest->NotifySendMessageFailed(
+        aReply.get_ReplyMessageSendFail().error(), nullptr);
       break;
     case MessageReply::TReplyGetMessage: {
         const MobileMessageData& data =
