@@ -713,11 +713,16 @@ nsGenericDOMDataNode::GetXBLInsertionParent() const
 void
 nsGenericDOMDataNode::SetXBLInsertionParent(nsIContent* aContent)
 {
-  nsDataSlots *slots = DataSlots();
   if (aContent) {
+    nsDataSlots *slots = DataSlots();
     SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
+    slots->mXBLInsertionParent = aContent;
+  } else {
+    nsDataSlots *slots = GetExistingDataSlots();
+    if (slots) {
+      slots->mXBLInsertionParent = nullptr;
+    }
   }
-  slots->mXBLInsertionParent = aContent;
 }
 
 CustomElementData *
