@@ -185,14 +185,14 @@ protected:
  * A TextureSource backed by a TextureImage.
  *
  * Depending on the underlying TextureImage, may support texture tiling, so
- * make sure to check AsTileIterator() and use the texture accordingly.
+ * make sure to check AsBigImageIterator() and use the texture accordingly.
  *
  * This TextureSource can be used without a TextureHost and manage it's own
  * GL texture(s).
  */
 class TextureImageTextureSourceOGL : public DataTextureSource
                                    , public TextureSourceOGL
-                                   , public TileIterator
+                                   , public BigImageIterator
 {
 public:
   TextureImageTextureSourceOGL(gl::GLContext* aGL,
@@ -242,17 +242,17 @@ public:
     return mTexImage->GetWrapMode();
   }
 
-  // TileIterator
+  // BigImageIterator
 
-  virtual TileIterator* AsTileIterator() MOZ_OVERRIDE { return this; }
+  virtual BigImageIterator* AsBigImageIterator() MOZ_OVERRIDE { return this; }
 
-  virtual void BeginTileIteration() MOZ_OVERRIDE
+  virtual void BeginBigImageIteration() MOZ_OVERRIDE
   {
-    mTexImage->BeginTileIteration();
+    mTexImage->BeginBigImageIteration();
     mIterating = true;
   }
 
-  virtual void EndTileIteration() MOZ_OVERRIDE
+  virtual void EndBigImageIteration() MOZ_OVERRIDE
   {
     mIterating = false;
   }

@@ -109,9 +109,9 @@ ImageHost::Composite(EffectChain& aEffectChain,
   //XXX: We might have multiple texture sources here (e.g. 3 YCbCr textures), and we're
   // only iterating over the tiles of the first one. Are we assuming that the tiling
   // will be identical? Can we ensure that somehow?
-  TileIterator* it = source->AsTileIterator();
+  BigImageIterator* it = source->AsBigImageIterator();
   if (it) {
-    it->BeginTileIteration();
+    it->BeginBigImageIteration();
     do {
       nsIntRect tileRect = it->GetTileRect();
       gfx::Rect rect(tileRect.x, tileRect.y, tileRect.width, tileRect.height);
@@ -129,7 +129,7 @@ ImageHost::Composite(EffectChain& aEffectChain,
       GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE|DIAGNOSTIC_BIGIMAGE,
                                        rect, aClipRect, aTransform, mFlashCounter);
     } while (it->NextTile());
-    it->EndTileIteration();
+    it->EndBigImageIteration();
     // layer border
     GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE,
                                      gfxPictureRect, aClipRect,

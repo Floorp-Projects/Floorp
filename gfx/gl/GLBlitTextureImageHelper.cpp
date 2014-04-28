@@ -52,7 +52,7 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
     float blitScaleY = float(aDstRect.height) / float(aSrcRect.height);
 
     // We start iterating over all destination tiles
-    aDst->BeginTileIteration();
+    aDst->BeginBigImageIteration();
     do {
         // calculate portion of the tile that is going to be painted to
         nsIntRect dstSubRect;
@@ -73,7 +73,7 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
         SetBlitFramebufferForDestTexture(aDst->GetTextureID());
         UseBlitProgram();
 
-        aSrc->BeginTileIteration();
+        aSrc->BeginBigImageIteration();
         // now iterate over all tiles in the source Image...
         do {
             // calculate portion of the source tile that is in the source rect
