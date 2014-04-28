@@ -381,7 +381,7 @@ JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant)
 {
   NS_ASSERTION(npp, "Must have an NPP to wrap a jsval!");
 
-  if (JSVAL_IS_PRIMITIVE(val)) {
+  if (val.isPrimitive()) {
     if (val == JSVAL_VOID) {
       VOID_TO_NPVARIANT(*variant);
     } else if (val.isNull()) {
@@ -593,7 +593,7 @@ nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier id)
   JS::Rooted<JS::Value> v(cx);
   bool ok = GetProperty(cx, npjsobj->mJSObj, id, &v);
 
-  return ok && !JSVAL_IS_PRIMITIVE(v) &&
+  return ok && !v.isPrimitive() &&
     ::JS_ObjectIsFunction(cx, v.toObjectOrNull());
 }
 
@@ -1594,10 +1594,10 @@ NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint, JS::
   JS::Rooted<JS::Value> v(cx, JSVAL_VOID);
   if (!JS_GetProperty(cx, obj, "toString", &v))
     return false;
-  if (!JSVAL_IS_PRIMITIVE(v) && JS_ObjectIsCallable(cx, v.toObjectOrNull())) {
+  if (!v.isPrimitive() && JS_ObjectIsCallable(cx, v.toObjectOrNull())) {
     if (!JS_CallFunctionValue(cx, obj, v, JS::HandleValueArray::empty(), vp))
       return false;
-    if (JSVAL_IS_PRIMITIVE(vp))
+    if (vp.isPrimitive())
       return true;
   }
 
@@ -2098,7 +2098,7 @@ NPObjectMember_Trace(JSTracer *trc, JSObject *obj)
   // Our NPIdentifier is not always interned, so we must root it explicitly.
   JS_CallHeapIdTracer(trc, &memberPrivate->methodName, "NPObjectMemberPrivate.methodName");
 
-  if (!JSVAL_IS_PRIMITIVE(memberPrivate->fieldValue)) {
+  if (!memberPrivate->fieldValue.isPrimitive()) {
     JS_CallHeapValueTracer(trc, &memberPrivate->fieldValue,
                            "NPObject Member => fieldValue");
   }

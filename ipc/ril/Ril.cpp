@@ -103,7 +103,7 @@ PostToRIL(JSContext *aCx,
 
         data = abs.ptr();
         size = abs.length();
-    } else if (!JSVAL_IS_PRIMITIVE(v)) {
+    } else if (!v.isPrimitive()) {
         JSObject *obj = v.toObjectOrNull();
         if (!JS_IsTypedArrayObject(obj)) {
             JS_ReportError(aCx, "Object passed in wasn't a typed array");

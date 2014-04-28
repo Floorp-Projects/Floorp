@@ -2386,7 +2386,7 @@ nsDOMWindowUtils::GetClassName(JS::Handle<JS::Value> aObject, JSContext* aCx,
   }
 
   // Our argument must be a non-null object.
-  if (JSVAL_IS_PRIMITIVE(aObject)) {
+  if (aObject.isPrimitive()) {
     return NS_ERROR_XPC_BAD_CONVERT_JS;
   }
 
@@ -3212,7 +3212,7 @@ nsDOMWindowUtils::GetFileId(JS::Handle<JS::Value> aFile, JSContext* aCx,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  if (!JSVAL_IS_PRIMITIVE(aFile)) {
+  if (!aFile.isPrimitive()) {
     JSObject* obj = aFile.toObjectOrNull();
 
     file::FileHandle* fileHandle;

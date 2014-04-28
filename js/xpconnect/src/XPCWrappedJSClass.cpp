@@ -191,7 +191,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
 
     // check upfront for the existence of the function property
     HandleId funid = mRuntime->GetStringID(XPCJSRuntime::IDX_QUERY_INTERFACE);
-    if (!JS_GetPropertyById(cx, jsobj, funid, &fun) || JSVAL_IS_PRIMITIVE(fun))
+    if (!JS_GetPropertyById(cx, jsobj, funid, &fun) || fun.isPrimitive())
         return nullptr;
 
     // Ensure that we are asking for a scriptable interface.
@@ -1265,7 +1265,7 @@ pre_call_clean_up:
         rval = *argv;
         success = JS_SetProperty(cx, obj, name, rval);
     } else {
-        if (!JSVAL_IS_PRIMITIVE(fval)) {
+        if (!fval.isPrimitive()) {
             AutoSaveContextOptions asco(cx);
             ContextOptionsRef(cx).setDontReportUncaught(true);
 

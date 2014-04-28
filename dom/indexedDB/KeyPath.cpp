@@ -96,7 +96,7 @@ GetJSValFromKeyPathString(JSContext* aCx,
   nsString targetObjectPropName;
   JS::Rooted<JSObject*> targetObject(aCx, nullptr);
   JS::Rooted<JSObject*> obj(aCx,
-    JSVAL_IS_PRIMITIVE(aValue) ? nullptr : aValue.toObjectOrNull());
+    aValue.isPrimitive() ? nullptr : aValue.toObjectOrNull());
 
   while (tokenizer.hasMoreTokens()) {
     const nsDependentSubstring& token = tokenizer.nextToken();
@@ -129,7 +129,7 @@ GetJSValFromKeyPathString(JSContext* aCx,
         }
         if (tokenizer.hasMoreTokens()) {
           // ...and walk to it if there are more steps...
-          if (JSVAL_IS_PRIMITIVE(intermediate)) {
+          if (intermediate.isPrimitive()) {
             return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
           }
           obj = intermediate.toObjectOrNull();

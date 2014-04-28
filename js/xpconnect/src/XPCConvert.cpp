@@ -1122,7 +1122,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
     AutoJSContext cx;
     AutoExceptionRestorer aer(cx, s);
 
-    if (!JSVAL_IS_PRIMITIVE(s)) {
+    if (!s.isPrimitive()) {
         // we have a JSObject
         RootedObject obj(cx, s.toObjectOrNull());
 
