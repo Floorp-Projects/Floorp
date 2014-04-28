@@ -308,7 +308,7 @@ JSBool SkJSDisplayable::SetProperty(JSContext *cx, JSObject *obj, jsval id, jsva
     jsval value = *vp;
     switch (infoType) {
         case SkType_Boolean:
-            s32 = JSVAL_TO_BOOLEAN(value);
+            s32 = value.toBoolean();
             break;
         case SkType_Color:
         case SkType_S32:

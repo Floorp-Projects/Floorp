@@ -147,7 +147,7 @@ jsd_GetValueBoolean(JSDContext* jsdc, JSDValue* jsdval)
     jsval val = jsdval->val;
     if(!JSVAL_IS_BOOLEAN(val))
         return false;
-    return JSVAL_TO_BOOLEAN(val);
+    return val.toBoolean();
 }
 
 int32_t
