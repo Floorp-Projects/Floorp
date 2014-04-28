@@ -91,7 +91,7 @@ SharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
   }
 
   MOZ_ASSERT(mTextureClient->AsTextureClientYCbCr());
-  if (!mTextureClient->Lock(OPEN_WRITE_ONLY)) {
+  if (!mTextureClient->Lock(OpenMode::OPEN_WRITE_ONLY)) {
     MOZ_ASSERT(false, "Failed to lock the texture.");
     return;
   }
