@@ -84,7 +84,7 @@ jsd_IsValueDouble(JSDContext* jsdc, JSDValue* jsdval)
 bool
 jsd_IsValueString(JSDContext* jsdc, JSDValue* jsdval)
 {
-    return JSVAL_IS_STRING(jsdval->val);
+    return jsdval->val.isString();
 }
 
 bool
@@ -179,7 +179,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
         return jsdval->string;
 
     /* Reuse the string without copying or re-rooting it */
-    if(JSVAL_IS_STRING(jsdval->val)) {
+    if(jsdval->val.isString()) {
         jsdval->string = JSVAL_TO_STRING(jsdval->val);
         return jsdval->string;
     }
@@ -253,7 +253,7 @@ jsd_NewValue(JSDContext* jsdc, jsval value)
         JSAutoCompartment ac(cx, jsdc->glob);
 
         ok = JS::AddNamedValueRoot(cx, &jsdval->val, "JSDValue");
-        if(ok && JSVAL_IS_STRING(val)) {
+        if(ok && val.isString()) {
             if(!JS_WrapValue(cx, &val)) {
                 ok = false;
             }
@@ -409,7 +409,7 @@ jsd_RefreshValue(JSDContext* jsdc, JSDValue* jsdval)
     if(jsdval->string)
     {
         /* if the jsval is a string, then we didn't need to root the string */
-        if(!JSVAL_IS_STRING(jsdval->val))
+        if(!jsdval->val.isString())
         {
             JSAutoCompartment ac(cx, jsdc->glob);
             JS::RemoveStringRoot(cx, &jsdval->string);

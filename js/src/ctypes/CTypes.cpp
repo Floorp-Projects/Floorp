@@ -1820,7 +1820,7 @@ jsvalToBigInteger(JSContext* cx,
     double d = val.toDouble();
     return ConvertExact(d, result);
   }
-  if (allowString && JSVAL_IS_STRING(val)) {
+  if (allowString && val.isString()) {
     // Allow conversion from base-10 or base-16 strings, provided the result
     // fits in IntegerType. (This allows an Int64 or UInt64 object to be passed
     // to the JS array element operator, which will automatically call
@@ -2312,7 +2312,7 @@ ImplicitConvert(JSContext* cx,
     /* Convert from a 1-character string, regardless of encoding, */           \
     /* or from an integer, provided the result fits in 'type'. */              \
     type result;                                                               \
-    if (JSVAL_IS_STRING(val)) {                                                \
+    if (val.isString()) {                                                \
       JSString* str = JSVAL_TO_STRING(val);                                    \
       if (str->length() != 1)                                                  \
         return TypeError(cx, #name, val);                                      \
@@ -2356,7 +2356,7 @@ ImplicitConvert(JSContext* cx,
         }
       }
 
-    } else if (isArgument && JSVAL_IS_STRING(val)) {
+    } else if (isArgument && val.isString()) {
       // Convert the string for the ffi call. This requires allocating space
       // which the caller assumes ownership of.
       // TODO: Extend this so we can safely convert strings at other times also.
@@ -2435,7 +2435,7 @@ ImplicitConvert(JSContext* cx,
     RootedObject baseType(cx, ArrayType::GetBaseType(targetType));
     size_t targetLength = ArrayType::GetLength(targetType);
 
-    if (JSVAL_IS_STRING(val)) {
+    if (val.isString()) {
       JSString* sourceString = JSVAL_TO_STRING(val);
       size_t sourceLength = sourceString->length();
       const jschar* sourceChars = sourceString->getChars(cx);
@@ -2651,7 +2651,7 @@ ExplicitConvert(JSContext* cx, HandleValue val, HandleObject targetType, void* b
     /* allow conversion from a base-10 or base-16 string. */                   \
     type result;                                                               \
     if (!jsvalToIntegerExplicit(val, &result) &&                               \
-        (!JSVAL_IS_STRING(val) ||                                              \
+        (!val.isString() ||                                              \
          !StringToInteger(cx, JSVAL_TO_STRING(val), &result)))                 \
       return TypeError(cx, #name, val);                                        \
     *static_cast<type*>(buffer) = result;                                      \
@@ -5410,7 +5410,7 @@ static MOZ_ALWAYS_INLINE bool
 IsEllipsis(JSContext* cx, jsval v, bool* isEllipsis)
 {
   *isEllipsis = false;
-  if (!JSVAL_IS_STRING(v))
+  if (!v.isString())
     return true;
   JSString* str = JSVAL_TO_STRING(v);
   if (str->length() != 3)

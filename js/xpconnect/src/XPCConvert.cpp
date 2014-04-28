@@ -726,8 +726,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
 
             variant.forget(static_cast<nsISupports**>(d));
             return true;
-        } else if (iid->Equals(NS_GET_IID(nsIAtom)) &&
-                   JSVAL_IS_STRING(s)) {
+        } else if (iid->Equals(NS_GET_IID(nsIAtom)) && s.isString()) {
             // We're trying to pass a string as an nsIAtom.  Let's atomize!
             JSString* str = JSVAL_TO_STRING(s);
             const char16_t* chars = JS_GetStringCharsZ(cx, str);

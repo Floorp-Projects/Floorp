@@ -398,7 +398,7 @@ JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant)
       } else {
         DOUBLE_TO_NPVARIANT(d, *variant);
       }
-    } else if (JSVAL_IS_STRING(val)) {
+    } else if (val.isString()) {
       JSString *jsstr = JSVAL_TO_STRING(val);
       size_t length;
       const jschar *chars = ::JS_GetStringCharsZAndLength(cx, jsstr, &length);
