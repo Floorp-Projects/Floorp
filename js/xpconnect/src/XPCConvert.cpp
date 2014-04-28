@@ -1216,7 +1216,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
                                   exceptn, cx, s.address());
     }
 
-    if (JSVAL_IS_NUMBER(s)) {
+    if (s.isNumber()) {
         // lets see if it looks like an nsresult
         nsresult rv;
         double number;
