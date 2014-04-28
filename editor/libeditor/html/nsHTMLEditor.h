@@ -963,7 +963,9 @@ private:
                          nsIContent* aChild, int32_t aIndexInContainer,
                          InsertedOrAppended aInsertedOrAppended);
   already_AddRefed<mozilla::dom::Element> GetElementOrParentByTagName(
-                                    const nsAString& aTagName, nsINode* aNode);
+      const nsAString& aTagName, nsINode* aNode);
+  already_AddRefed<mozilla::dom::Element> CreateElementWithDefaults(
+      const nsAString& aTagName);
 };
 #endif //nsHTMLEditor_h__
 
