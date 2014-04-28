@@ -1498,7 +1498,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp 
     break;
 
   case JSENUMERATE_NEXT:
-    state = (NPObjectEnumerateState *)JSVAL_TO_PRIVATE(*statep);
+    state = (NPObjectEnumerateState *)statep->toPrivate();
     enum_value = state->value;
     length = state->length;
     if (state->index != length) {
@@ -1509,7 +1509,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp 
     // FALL THROUGH
 
   case JSENUMERATE_DESTROY:
-    state = (NPObjectEnumerateState *)JSVAL_TO_PRIVATE(*statep);
+    state = (NPObjectEnumerateState *)statep->toPrivate();
     if (state->value)
       PR_Free(state->value);
     delete state;
