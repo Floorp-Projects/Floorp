@@ -46,7 +46,6 @@
 #include "nsISupportsArray.h"
 #include "nsContentUtils.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "SetDocTitleTxn.h"
@@ -70,6 +69,7 @@
 #include "nsIFrame.h"
 #include "nsIParserService.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HTMLBodyElement.h"
@@ -1163,42 +1163,36 @@ nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(
 }
 
 
-// This is mostly like InsertHTMLWithCharsetAndContext, 
-//  but we can't use that because it is selection-based and 
-//  the rules code won't let us edit under the <head> node
+/**
+ * This is mostly like InsertHTMLWithCharsetAndContext, but we can't use that
+ * because it is selection-based and the rules code won't let us edit under the
+ * <head> node
+ */
 NS_IMETHODIMP
 nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
 {
-  nsAutoRules beginRulesSniffing(this, EditAction::ignore, nsIEditor::eNone); // don't do any post processing, rules get confused
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  // don't do any post processing, rules get confused
+  nsAutoRules beginRulesSniffing(this, EditAction::ignore, nsIEditor::eNone);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   ForceCompositionEnd();
 
-  // Do not use nsAutoRules -- rules code won't let us insert in <head>
-  // Use the head node as a parent and delete/insert directly
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+  // Do not use nsAutoRules -- rules code won't let us insert in <head>.  Use
+  // the head node as a parent and delete/insert directly.
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsIDOMNodeList>nodeList; 
-  res = doc->GetElementsByTagName(NS_LITERAL_STRING("head"), getter_AddRefs(nodeList));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsContentList> nodeList =
+    doc->GetElementsByTagName(NS_LITERAL_STRING("head"));
   NS_ENSURE_TRUE(nodeList, NS_ERROR_NULL_POINTER);
 
-  uint32_t count; 
-  nodeList->GetLength(&count);
-  if (count < 1) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMNode> headNode;
-  res = nodeList->Item(0, getter_AddRefs(headNode)); 
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsIContent> headNode = nodeList->Item(0);
   NS_ENSURE_TRUE(headNode, NS_ERROR_NULL_POINTER);
 
-  // First, make sure there are no return chars in the source.
-  // Bad things happen if you insert returns (instead of dom newlines, \n)
-  // into an editor document.
+  // First, make sure there are no return chars in the source.  Bad things
+  // happen if you insert returns (instead of dom newlines, \n) into an editor
+  // document.
   nsAutoString inputString (aSourceToInsert);  // hope this does copy-on-write
  
   // Windows linebreaks: Map CRLF to LF:
@@ -1211,61 +1205,42 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
 
   nsAutoEditBatch beginBatching(this);
 
-  res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-
   // Get the first range in the selection, for context:
-  nsCOMPtr<nsIDOMRange> range;
-  res = selection->GetRangeAt(0, getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsRange> range = selection->GetRangeAt(0);
+  NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
-  res = range->CreateContextualFragment(inputString,
-                                        getter_AddRefs(docfrag));
+  ErrorResult err;
+  nsRefPtr<DocumentFragment> docfrag =
+    range->CreateContextualFragment(inputString, err);
 
-  //XXXX BUG 50965: This is not returning the text between <title> ... </title>
-  // Special code is needed in JS to handle title anyway, so it really doesn't matter!
+  // XXXX BUG 50965: This is not returning the text between <title>...</title>
+  // Special code is needed in JS to handle title anyway, so it doesn't matter!
 
-  if (NS_FAILED(res))
-  {
+  if (err.Failed()) {
 #ifdef DEBUG
     printf("Couldn't create contextual fragment: error was %X\n",
-           static_cast<uint32_t>(res));
+           static_cast<uint32_t>(err.ErrorCode()));
 #endif
-    return res;
+    return err.ErrorCode();
   }
   NS_ENSURE_TRUE(docfrag, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMNode> child;
-
   // First delete all children in head
-  do {
-    res = headNode->GetFirstChild(getter_AddRefs(child));
+  while (nsCOMPtr<nsIContent> child = headNode->GetFirstChild()) {
+    nsresult res = DeleteNode(child);
     NS_ENSURE_SUCCESS(res, res);
-    if (child)
-    {
-      res = DeleteNode(child);
-      NS_ENSURE_SUCCESS(res, res);
-    }
-  } while (child);
+  }
 
   // Now insert the new nodes
   int32_t offsetOfNewNode = 0;
-  nsCOMPtr<nsIDOMNode> fragmentAsNode (do_QueryInterface(docfrag));
 
   // Loop over the contents of the fragment and move into the document
-  do {
-    res = fragmentAsNode->GetFirstChild(getter_AddRefs(child));
+  while (nsCOMPtr<nsIContent> child = docfrag->GetFirstChild()) {
+    nsresult res = InsertNode(child, headNode, offsetOfNewNode++);
     NS_ENSURE_SUCCESS(res, res);
-    if (child)
-    {
-      res = InsertNode(child, headNode, offsetOfNewNode++);
-      NS_ENSURE_SUCCESS(res, res);
-    }
-  } while (child);
+  }
 
-  return res;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

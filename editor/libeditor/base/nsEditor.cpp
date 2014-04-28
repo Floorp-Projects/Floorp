@@ -1379,6 +1379,13 @@ NS_IMETHODIMP nsEditor::CreateNode(const nsAString& aTag,
 }
 
 
+nsresult
+nsEditor::InsertNode(nsIContent* aContent, nsINode* aParent, int32_t aPosition)
+{
+  MOZ_ASSERT(aContent && aParent);
+  return InsertNode(GetAsDOMNode(aContent), GetAsDOMNode(aParent), aPosition);
+}
+
 NS_IMETHODIMP nsEditor::InsertNode(nsIDOMNode * aNode,
                                    nsIDOMNode * aParent,
                                    int32_t      aPosition)
