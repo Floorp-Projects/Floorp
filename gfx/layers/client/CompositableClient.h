@@ -14,7 +14,6 @@
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend
-#include "mozilla/layers/PCompositableChild.h"  // for PCompositableChild
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 
 namespace mozilla {
@@ -28,7 +27,7 @@ class CompositableForwarder;
 class CompositableChild;
 class SurfaceDescriptor;
 class TextureClientData;
-
+class PCompositableChild;
 /**
  * CompositableClient manages the texture-specific logic for composite layers,
  * independently of the layer. It is the content side of a CompositableClient/
