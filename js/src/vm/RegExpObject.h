@@ -323,7 +323,7 @@ class RegExpCompartment
      * if there is a result. This is used in CreateRegExpMatchResult to set
      * the input/index properties faster.
      */
-    ReadBarriered<JSObject> matchResultTemplateObject_;
+    ReadBarrieredObject matchResultTemplateObject_;
 
     JSObject *createMatchResultTemplateObject(JSContext *cx);
 

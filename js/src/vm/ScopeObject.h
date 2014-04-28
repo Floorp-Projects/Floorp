@@ -817,7 +817,7 @@ class DebugScopes
      * corresponding debug scopes.
      */
     typedef HashMap<ScopeIterKey,
-                    ReadBarriered<DebugScopeObject>,
+                    ReadBarrieredDebugScopeObject,
                     ScopeIterKey,
                     RuntimeAllocPolicy> MissingScopeMap;
     MissingScopeMap missingScopes;

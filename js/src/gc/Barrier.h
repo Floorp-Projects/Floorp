@@ -292,6 +292,9 @@ ZoneOfValueFromAnyThread(const JS::Value &value)
     return static_cast<js::gc::Cell *>(value.toGCThing())->tenuredZoneFromAnyThread();
 }
 
+void
+ValueReadBarrier(const Value &value);
+
 template <typename T>
 struct InternalGCMethods {};
 
@@ -306,6 +309,8 @@ struct InternalGCMethods<T *>
     static void postBarrier(T **vp) { T::writeBarrierPost(*vp, vp); }
     static void postBarrierRelocate(T **vp) { T::writeBarrierPostRelocate(*vp, vp); }
     static void postBarrierRemove(T **vp) { T::writeBarrierPostRemove(*vp, vp); }
+
+    static void readBarrier(T *v) { T::readBarrier(v); }
 };
 
 template <>
@@ -367,6 +372,8 @@ struct InternalGCMethods<Value>
         shadowRuntime->gcStoreBufferPtr()->removeRelocatableValue(vp);
 #endif
     }
+
+    static void readBarrier(const Value &v) { ValueReadBarrier(v); }
 };
 
 template <>
@@ -679,58 +686,6 @@ BarrieredSetPair(Zone *zone,
     v2.post();
 }
 
-class ArrayBufferObject;
-class NestedScopeObject;
-class Shape;
-class BaseShape;
-class UnownedBaseShape;
-namespace jit {
-class JitCode;
-}
-namespace types {
-struct TypeObject;
-struct TypeObjectAddendum;
-}
-
-typedef BarrieredPtr<JSObject*> BarrieredPtrObject;
-typedef BarrieredPtr<JSScript*> BarrieredPtrScript;
-
-typedef PreBarriered<JSObject*> PreBarrieredObject;
-typedef PreBarriered<JSScript*> PreBarrieredScript;
-typedef PreBarriered<jit::JitCode*> PreBarrieredJitCode;
-
-typedef RelocatablePtr<JSObject*> RelocatablePtrObject;
-typedef RelocatablePtr<JSScript*> RelocatablePtrScript;
-typedef RelocatablePtr<NestedScopeObject*> RelocatablePtrNestedScopeObject;
-
-typedef HeapPtr<ArrayBufferObject*> HeapPtrArrayBufferObject;
-typedef HeapPtr<JSObject*> HeapPtrObject;
-typedef HeapPtr<JSFunction*> HeapPtrFunction;
-typedef HeapPtr<JSAtom*> HeapPtrAtom;
-typedef HeapPtr<JSString*> HeapPtrString;
-typedef HeapPtr<JSFlatString*> HeapPtrFlatString;
-typedef HeapPtr<JSLinearString*> HeapPtrLinearString;
-typedef HeapPtr<PropertyName*> HeapPtrPropertyName;
-typedef HeapPtr<JSScript*> HeapPtrScript;
-typedef HeapPtr<Shape*> HeapPtrShape;
-typedef HeapPtr<BaseShape*> HeapPtrBaseShape;
-typedef HeapPtr<UnownedBaseShape*> HeapPtrUnownedBaseShape;
-typedef HeapPtr<types::TypeObject*> HeapPtrTypeObject;
-typedef HeapPtr<types::TypeObjectAddendum*> HeapPtrTypeObjectAddendum;
-typedef HeapPtr<jit::JitCode*> HeapPtrJitCode;
-
-typedef BarrieredPtr<Value> BarrieredValue;
-typedef PreBarriered<Value> PreBarrieredValue;
-typedef RelocatablePtr<Value> RelocatableValue;
-typedef HeapPtr<Value> HeapValue;
-
-typedef BarrieredPtr<jsid> BarrieredId;
-typedef PreBarriered<jsid> PreBarrieredId;
-typedef RelocatablePtr<jsid> RelocatableId;
-typedef HeapPtr<jsid> HeapId;
-
-typedef ImmutableTenuredPtr<PropertyName*> ImmutablePropertyNamePtr;
-
 /* Useful for hashtables with a HeapPtr as key. */
 template <class T>
 struct HeapPtrHasher
@@ -760,6 +715,110 @@ struct PreBarrieredHasher
 
 template <class T>
 struct DefaultHasher< PreBarriered<T> > : PreBarrieredHasher<T> { };
+
+/*
+ * Incremental GC requires that weak pointers have read barriers. This is mostly
+ * an issue for empty shapes stored in JSCompartment. The problem happens when,
+ * during an incremental GC, some JS code stores one of the compartment's empty
+ * shapes into an object already marked black. Normally, this would not be a
+ * problem, because the empty shape would have been part of the initial snapshot
+ * when the GC started. However, since this is a weak pointer, it isn't. So we
+ * may collect the empty shape even though a live object points to it. To fix
+ * this, we mark these empty shapes black whenever they get read out.
+ */
+template <class T>
+class ReadBarriered
+{
+    T value;
+
+  public:
+    ReadBarriered() : value(nullptr) {}
+    ReadBarriered(T value) : value(value) {}
+    ReadBarriered(const Rooted<T> &rooted) : value(rooted) {}
+
+    T get() const {
+        if (!InternalGCMethods<T>::isMarkable(value))
+            return GCMethods<T>::initial();
+        InternalGCMethods<T>::readBarrier(value);
+        return value;
+    }
+
+    operator T() const { return get(); }
+
+    T &operator*() const { return *get(); }
+    T operator->() const { return get(); }
+
+    T *unsafeGet() { return &value; }
+    T const * unsafeGet() const { return &value; }
+
+    void set(T v) { value = v; }
+};
+
+class ArrayBufferObject;
+class NestedScopeObject;
+class DebugScopeObject;
+class GlobalObject;
+class Shape;
+class BaseShape;
+class UnownedBaseShape;
+namespace jit {
+class JitCode;
+}
+namespace types {
+struct TypeObject;
+struct TypeObjectAddendum;
+}
+
+typedef BarrieredPtr<JSObject*> BarrieredPtrObject;
+typedef BarrieredPtr<JSScript*> BarrieredPtrScript;
+
+typedef PreBarriered<JSObject*> PreBarrieredObject;
+typedef PreBarriered<JSScript*> PreBarrieredScript;
+typedef PreBarriered<jit::JitCode*> PreBarrieredJitCode;
+
+typedef RelocatablePtr<JSObject*> RelocatablePtrObject;
+typedef RelocatablePtr<JSScript*> RelocatablePtrScript;
+typedef RelocatablePtr<NestedScopeObject*> RelocatablePtrNestedScopeObject;
+
+typedef HeapPtr<ArrayBufferObject*> HeapPtrArrayBufferObject;
+typedef HeapPtr<BaseShape*> HeapPtrBaseShape;
+typedef HeapPtr<JSAtom*> HeapPtrAtom;
+typedef HeapPtr<JSFlatString*> HeapPtrFlatString;
+typedef HeapPtr<JSFunction*> HeapPtrFunction;
+typedef HeapPtr<JSLinearString*> HeapPtrLinearString;
+typedef HeapPtr<JSObject*> HeapPtrObject;
+typedef HeapPtr<JSScript*> HeapPtrScript;
+typedef HeapPtr<JSString*> HeapPtrString;
+typedef HeapPtr<PropertyName*> HeapPtrPropertyName;
+typedef HeapPtr<Shape*> HeapPtrShape;
+typedef HeapPtr<UnownedBaseShape*> HeapPtrUnownedBaseShape;
+typedef HeapPtr<jit::JitCode*> HeapPtrJitCode;
+typedef HeapPtr<types::TypeObject*> HeapPtrTypeObject;
+typedef HeapPtr<types::TypeObjectAddendum*> HeapPtrTypeObjectAddendum;
+
+typedef BarrieredPtr<Value> BarrieredValue;
+typedef PreBarriered<Value> PreBarrieredValue;
+typedef RelocatablePtr<Value> RelocatableValue;
+typedef HeapPtr<Value> HeapValue;
+
+typedef BarrieredPtr<jsid> BarrieredId;
+typedef PreBarriered<jsid> PreBarrieredId;
+typedef RelocatablePtr<jsid> RelocatableId;
+typedef HeapPtr<jsid> HeapId;
+
+typedef ImmutableTenuredPtr<PropertyName*> ImmutablePropertyNamePtr;
+
+typedef ReadBarriered<DebugScopeObject*> ReadBarrieredDebugScopeObject;
+typedef ReadBarriered<GlobalObject*> ReadBarrieredGlobalObject;
+typedef ReadBarriered<JSFunction*> ReadBarrieredFunction;
+typedef ReadBarriered<JSObject*> ReadBarrieredObject;
+typedef ReadBarriered<ScriptSourceObject*> ReadBarrieredScriptSourceObject;
+typedef ReadBarriered<Shape*> ReadBarrieredShape;
+typedef ReadBarriered<UnownedBaseShape*> ReadBarrieredUnownedBaseShape;
+typedef ReadBarriered<jit::JitCode*> ReadBarrieredJitCode;
+typedef ReadBarriered<types::TypeObject*> ReadBarrieredTypeObject;
+
+typedef ReadBarriered<Value> ReadBarrieredValue;
 
 // A pre- and post-barriered Value that is specialized to be aware that it
 // resides in a slots or elements vector. This allows it to be relocated in
@@ -886,61 +945,6 @@ class HeapSlotArray
 
     HeapSlotArray operator +(int offset) const { return HeapSlotArray(array + offset); }
     HeapSlotArray operator +(uint32_t offset) const { return HeapSlotArray(array + offset); }
-};
-
-/*
- * Incremental GC requires that weak pointers have read barriers. This is mostly
- * an issue for empty shapes stored in JSCompartment. The problem happens when,
- * during an incremental GC, some JS code stores one of the compartment's empty
- * shapes into an object already marked black. Normally, this would not be a
- * problem, because the empty shape would have been part of the initial snapshot
- * when the GC started. However, since this is a weak pointer, it isn't. So we
- * may collect the empty shape even though a live object points to it. To fix
- * this, we mark these empty shapes black whenever they get read out.
- */
-template <class T>
-class ReadBarriered
-{
-    T *value;
-
-  public:
-    ReadBarriered() : value(nullptr) {}
-    ReadBarriered(T *value) : value(value) {}
-    ReadBarriered(const Rooted<T*> &rooted) : value(rooted) {}
-
-    T *get() const {
-        if (!value)
-            return nullptr;
-        T::readBarrier(value);
-        return value;
-    }
-
-    operator T*() const { return get(); }
-
-    T &operator*() const { return *get(); }
-    T *operator->() const { return get(); }
-
-    T **unsafeGet() { return &value; }
-    T * const * unsafeGet() const { return &value; }
-
-    void set(T *v) { value = v; }
-
-    operator bool() { return !!value; }
-};
-
-class ReadBarrieredValue
-{
-    Value value;
-
-  public:
-    ReadBarrieredValue() : value(UndefinedValue()) {}
-    ReadBarrieredValue(const Value &value) : value(value) {}
-
-    inline const Value &get() const;
-    Value *unsafeGet() { return &value; }
-    inline operator const Value &() const;
-
-    inline JSObject &toObject() const;
 };
 
 /*
