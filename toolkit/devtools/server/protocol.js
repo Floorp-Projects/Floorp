@@ -11,6 +11,36 @@ let {Class} = require("sdk/core/heritage");
 let {EventTarget} = require("sdk/event/target");
 let events = require("sdk/event/core");
 let object = require("sdk/util/object");
+let {PrefsTarget} = require("sdk/preferences/event-target");
+
+
+let gActorLogTypes;
+let gFrontLogTypes;
+
+function updateLogging()
+{
+  let prefService = require("sdk/preferences/service");
+  let typeNames = prefService.get("devtools.log-actors", "").split(",");
+  gActorLogTypes = new Set();
+  for (let name of typeNames) {
+    gActorLogTypes.add(name);
+  }
+
+  typeNames = prefService.get("devtools.log-fronts", "").split(",");
+  gFrontLogTypes = new Set();
+  for (let name of typeNames) {
+    gFrontLogTypes.add(name);
+  }
+};
+updateLogging();
+
+let logTarget = PrefsTarget({ branchName: "devtools." });
+logTarget.on("log-actors", name => {
+  updateLogging();
+});
+logTarget.on("log-fronts", name => {
+  updateLogging();
+});
 
 // Waiting for promise.done() to be added, see bug 851321
 function promiseDone(err) {
@@ -824,6 +854,13 @@ let Actor = Class({
     }
   },
 
+  _sendPacket: function(packet) {
+    if (gActorLogTypes.has(this.typeName)) {
+      console.log("ACTOR SEND:" + this.actorID + ":" + JSON.stringify(packet, null, 2));
+    }
+    this.conn.send(packet);
+  },
+
   _sendEvent: function(name, ...args) {
     if (!this._actorSpec.events.has(name)) {
       // It's ok to emit events that don't go over the wire.
@@ -832,7 +869,7 @@ let Actor = Class({
     let request = this._actorSpec.events.get(name);
     let packet = request.write(args, this);
     packet.from = packet.from || this.actorID;
-    this.conn.send(packet);
+    this._sendPacket(packet);
   },
 
   destroy: function() {
@@ -851,11 +888,11 @@ let Actor = Class({
   },
 
   writeError: function(err) {
-    console.error(err);
+    DevToolsUtils.reportException(err);
     if (err.stack) {
       dump(err.stack);
     }
-    this.conn.send({
+    this._sendPacket({
       from: this.actorID,
       error: "unknownError",
       message: err.toString()
@@ -937,6 +974,9 @@ let actorProto = function(actorProto) {
   actorProto.requestTypes = Object.create(null);
   protoSpec.methods.forEach(spec => {
     let handler = function(packet, conn) {
+      if (gActorLogTypes.has(this.typeName)) {
+        console.log("ACTOR RECV:" + this.actorID + ":" + JSON.stringify(packet, null, 2));
+      }
       try {
         let args = spec.request.read(packet, this);
 
@@ -960,7 +1000,7 @@ let actorProto = function(actorProto) {
             }
           }
 
-          conn.send(response);
+          this._sendPacket(response);
         };
 
         this._queueResponse(p => {
@@ -1057,16 +1097,23 @@ let Front = Class({
    */
   form: function(form) {},
 
+  _sendPacket: function(packet) {
+    if (gFrontLogTypes.has(this.typeName)) {
+      console.log("FRONT SEND:" + this.actorID + ":" + JSON.stringify(packet, null, 2));
+    }
+    this.conn._transport.send(packet);
+  },
+
   /**
    * Send a packet on the connection.
    */
   send: function(packet) {
     if (packet.to) {
-      this.conn._transport.send(packet);
+      this._sendPacket(packet);
     } else {
       this.actor().then(actorID => {
         packet.to = actorID;
-        this.conn._transport.send(packet);
+        this._sendPacket(packet);
       });
     }
   },
@@ -1085,6 +1132,10 @@ let Front = Class({
    * Handler for incoming packets from the client's actor.
    */
   onPacket: function(packet) {
+    if (gFrontLogTypes.has(this.typeName)) {
+      console.log("FRONT RECV:" + this.actorID + ":" + JSON.stringify(packet, null, 2));
+    }
+
     // Pick off event packets
     if (this._clientSpec.events && this._clientSpec.events.has(packet.type)) {
       let event = this._clientSpec.events.get(packet.type);
