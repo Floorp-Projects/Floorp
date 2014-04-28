@@ -44,6 +44,7 @@ public:
   virtual void SetMediaSeekable(bool aMediaSeekable) MOZ_OVERRIDE;
   virtual void SetTransportSeekable(bool aTransportSeekable) MOZ_OVERRIDE;
   virtual layers::ImageContainer* GetImageContainer() MOZ_OVERRIDE;
+  virtual MediaDecoderOwner* GetOwner() MOZ_OVERRIDE;
 
   void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
   {

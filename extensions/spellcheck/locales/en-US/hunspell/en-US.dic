@@ -1,4 +1,4 @@
-57466
+57467
 0/nm
 0th/pt
 1/n1
@@ -24448,6 +24448,8 @@ corresponding/Y
 corridor/SM
 corrie/S
 corrigenda
+corrigibility/IM
+corrigible/I
 corroborate/GNVXDS
 corroborated/U
 corroboration/M
@@ -24462,6 +24464,7 @@ corrupt/DRYPSTG
 corrupted/U
 corruptibility/IM
 corruptible/I
+corruptibly/I
 corruption/SM
 corruptness/M
 corsage/MS
@@ -34696,10 +34699,8 @@ incorporated/U
 incorporation/AM
 incorporeal
 incorrect/Y
-incorrigibility/M
-incorrigible
+incorrigibleness
 incorrigibly
-incorruptibly
 increasing/Y
 increment/SMDG
 incremental/Y
