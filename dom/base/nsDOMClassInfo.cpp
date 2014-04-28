@@ -3844,8 +3844,7 @@ nsStorage2SH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  nsTArray<nsString> *keys =
-    (nsTArray<nsString> *)JSVAL_TO_PRIVATE(*statep);
+  nsTArray<nsString> *keys = (nsTArray<nsString> *)statep->toPrivate();
 
   if (enum_op == JSENUMERATE_NEXT && keys->Length() != 0) {
     nsString& key = keys->ElementAt(0);

@@ -178,7 +178,7 @@ Library::GetLibrary(JSObject* obj)
   JS_ASSERT(IsLibrary(obj));
 
   jsval slot = JS_GetReservedSlot(obj, SLOT_LIBRARY);
-  return static_cast<PRLibrary*>(JSVAL_TO_PRIVATE(slot));
+  return static_cast<PRLibrary*>(slot.toPrivate());
 }
 
 static void
