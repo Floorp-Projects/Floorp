@@ -1874,13 +1874,6 @@ BOOLEAN_TO_JSVAL(bool b)
     return IMPL_TO_JSVAL(BOOLEAN_TO_JSVAL_IMPL(b));
 }
 
-static inline void *
-JSVAL_TO_GCTHING(jsval v)
-{
-    MOZ_ASSERT(JSVAL_IS_GCTHING(v));
-    return JSVAL_TO_GCTHING_IMPL(JSVAL_TO_IMPL(v));
-}
-
 /* To be GC-safe, privates are tagged as doubles. */
 
 static inline jsval
