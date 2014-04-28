@@ -154,7 +154,9 @@ protected:
   nsTArray<GLuint> mUnusedTextures;
 };
 
-class CompositorOGL : public Compositor
+// If you want to make this class not MOZ_FINAL, first remove calls to virtual
+// methods (Destroy) that are made in the destructor.
+class CompositorOGL MOZ_FINAL : public Compositor
 {
   typedef mozilla::gl::GLContext GLContext;
 
