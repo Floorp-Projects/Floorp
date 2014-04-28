@@ -129,29 +129,29 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
     regionRects.Or(regionRects, regionRect);
   }
 
-  TileIterator* tileIter = source->AsTileIterator();
-  TileIterator* iterOnWhite = nullptr;
-  if (tileIter) {
-    tileIter->BeginTileIteration();
+  BigImageIterator* bigImgIter = source->AsBigImageIterator();
+  BigImageIterator* iterOnWhite = nullptr;
+  if (bigImgIter) {
+    bigImgIter->BeginBigImageIteration();
   }
 
   if (sourceOnWhite) {
-    iterOnWhite = sourceOnWhite->AsTileIterator();
-    MOZ_ASSERT(!tileIter || tileIter->GetTileCount() == iterOnWhite->GetTileCount(),
+    iterOnWhite = sourceOnWhite->AsBigImageIterator();
+    MOZ_ASSERT(!bigImgIter || bigImgIter->GetTileCount() == iterOnWhite->GetTileCount(),
                "Tile count mismatch on component alpha texture");
     if (iterOnWhite) {
-      iterOnWhite->BeginTileIteration();
+      iterOnWhite->BeginBigImageIteration();
     }
   }
 
-  bool usingTiles = (tileIter && tileIter->GetTileCount() > 1);
+  bool usingTiles = (bigImgIter && bigImgIter->GetTileCount() > 1);
   do {
     if (iterOnWhite) {
-      MOZ_ASSERT(iterOnWhite->GetTileRect() == tileIter->GetTileRect(),
+      MOZ_ASSERT(iterOnWhite->GetTileRect() == bigImgIter->GetTileRect(),
                  "component alpha textures should be the same size.");
     }
 
-    nsIntRect texRect = tileIter ? tileIter->GetTileRect()
+    nsIntRect texRect = bigImgIter ? bigImgIter->GetTileRect()
                                  : nsIntRect(0, 0,
                                              texSize.width,
                                              texSize.height);
@@ -210,13 +210,13 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
     if (iterOnWhite) {
       iterOnWhite->NextTile();
     }
-  } while (usingTiles && tileIter->NextTile());
+  } while (usingTiles && bigImgIter->NextTile());
 
-  if (tileIter) {
-    tileIter->EndTileIteration();
+  if (bigImgIter) {
+    bigImgIter->EndBigImageIteration();
   }
   if (iterOnWhite) {
-    iterOnWhite->EndTileIteration();
+    iterOnWhite->EndBigImageIteration();
   }
 
   DiagnosticTypes diagnostics = DIAGNOSTIC_CONTENT;
