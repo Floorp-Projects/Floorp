@@ -23,7 +23,7 @@ BEGIN_TEST(testLookup_bug522590)
 
     // Now make x.f a method.
     EVAL("mkobj()", &x);
-    JS::RootedObject xobj(cx, JSVAL_TO_OBJECT(x));
+    JS::RootedObject xobj(cx, x.toObjectOrNull());
 
     // This lookup must not return an internal function object.
     JS::RootedValue r(cx);

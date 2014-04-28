@@ -3071,7 +3071,7 @@ static bool
 resolver_enumerate(JSContext *cx, HandleObject obj)
 {
     jsval v = JS_GetReservedSlot(obj, 0);
-    RootedObject referent(cx, JSVAL_TO_OBJECT(v));
+    RootedObject referent(cx, v.toObjectOrNull());
 
     AutoIdArray ida(cx, JS_Enumerate(cx, referent));
     bool ok = !!ida;
@@ -4201,7 +4201,7 @@ Wrap(JSContext *cx, unsigned argc, jsval *vp)
         return true;
     }
 
-    RootedObject obj(cx, JSVAL_TO_OBJECT(v));
+    RootedObject obj(cx, v.toObjectOrNull());
     JSObject *wrapped = Wrapper::New(cx, obj, &obj->global(),
                                      &Wrapper::singleton);
     if (!wrapped)
@@ -4983,7 +4983,7 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
                 JS_ReportError(cx, "primitive arg");
                 return false;
             }
-            obj = JSVAL_TO_OBJECT(v);
+            obj = v.toObjectOrNull();
             if (!PrintHelp(cx, obj))
                 return false;
         }

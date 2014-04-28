@@ -435,7 +435,7 @@ JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant)
   JS::Rooted<JSObject*> obj(cx, val.toObjectOrNull());
   obj = js::CheckedUnwrap(obj);
   if (!obj) {
-    obj = JSVAL_TO_OBJECT(val);
+    obj = val.toObjectOrNull();
   }
 
   NPObject *npobj = nsJSObjWrapper::GetNewOrUsed(npp, cx, obj);
@@ -594,7 +594,7 @@ nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier id)
   bool ok = GetProperty(cx, npjsobj->mJSObj, id, &v);
 
   return ok && !JSVAL_IS_PRIMITIVE(v) &&
-    ::JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(v));
+    ::JS_ObjectIsFunction(cx, v.toObjectOrNull());
 }
 
 static bool
@@ -1352,7 +1352,7 @@ CallNPMethodInternal(JSContext *cx, JS::Handle<JSObject*> obj, unsigned argc,
   NPVariant v;
   VOID_TO_NPVARIANT(v);
 
-  JSObject *funobj = JSVAL_TO_OBJECT(argv[-2]);
+  JSObject *funobj = argv[-2].toObjectOrNull();
   bool ok;
   const char *msg = "Error calling method on NPObject!";
 
@@ -1594,7 +1594,7 @@ NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint, JS::
   JS::Rooted<JS::Value> v(cx, JSVAL_VOID);
   if (!JS_GetProperty(cx, obj, "toString", &v))
     return false;
-  if (!JSVAL_IS_PRIMITIVE(v) && JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(v))) {
+  if (!JSVAL_IS_PRIMITIVE(v) && JS_ObjectIsCallable(cx, v.toObjectOrNull())) {
     if (!JS_CallFunctionValue(cx, obj, v, JS::HandleValueArray::empty(), vp))
       return false;
     if (JSVAL_IS_PRIMITIVE(vp))

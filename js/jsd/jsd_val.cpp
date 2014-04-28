@@ -116,7 +116,7 @@ jsd_IsValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 {
     AutoSafeJSContext cx; // NB: Actually unused.
     return !JSVAL_IS_PRIMITIVE(jsdval->val) &&
-           JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(jsdval->val));
+           JS_ObjectIsCallable(cx, jsdval->val.toObjectOrNull());
 }
 
 bool
@@ -127,7 +127,7 @@ jsd_IsValueNative(JSDContext* jsdc, JSDValue* jsdval)
 
     if(jsd_IsValueFunction(jsdc, jsdval))
     {
-        JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(jsdval->val));
+        JSAutoCompartment ac(cx, jsdval->val.toObjectOrNull());
         AutoSaveExceptionState as(cx);
         bool ok = false;
         fun = JSD_GetValueFunction(jsdc, jsdval);
@@ -185,7 +185,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
     }
 
     /* Objects call JS_ValueToString in their own compartment. */
-    scopeObj = !JSVAL_IS_PRIMITIVE(jsdval->val) ? JSVAL_TO_OBJECT(jsdval->val) : jsdc->glob;
+    scopeObj = !JSVAL_IS_PRIMITIVE(jsdval->val) ? jsdval->val.toObjectOrNull() : jsdc->glob;
     {
         JSAutoCompartment ac(cx, scopeObj);
         AutoSaveExceptionState as(cx);
@@ -216,7 +216,7 @@ jsd_GetValueFunctionId(JSDContext* jsdc, JSDValue* jsdval)
 
     if(!jsdval->funName && jsd_IsValueFunction(jsdc, jsdval))
     {
-        JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(jsdval->val));
+        JSAutoCompartment ac(cx, jsdval->val.toObjectOrNull());
         AutoSaveExceptionState as(cx);
         fun = JSD_GetValueFunction(jsdc, jsdval);
         if(!fun)
@@ -367,7 +367,7 @@ static bool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
     if(JSVAL_IS_PRIMITIVE(jsdval->val))
         return false;
 
-    obj = JSVAL_TO_OBJECT(jsdval->val);
+    obj = jsdval->val.toObjectOrNull();
 
     JSAutoCompartment ac(cx, obj);
 
@@ -505,7 +505,7 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
     if(!JS_ValueToId(cx, nameval, &nameid))
         return nullptr;
 
-    if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
+    if(!(obj = jsdval->val.toObjectOrNull()))
         return nullptr;
 
     JS::Rooted<JSPropertyDescriptor> desc(cx);
@@ -570,7 +570,7 @@ jsd_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
     if (JSVAL_IS_PRIMITIVE(jsdval->val))
         return nullptr;
 
-    obj = js::UncheckedUnwrap(JSVAL_TO_OBJECT(jsdval->val));
+    obj = js::UncheckedUnwrap(jsdval->val.toObjectOrNull());
     JSAutoCompartment ac(cx, obj);
     JS::RootedValue funval(cx, JS::ObjectValue(*obj));
     fun = JS_ValueToFunction(cx, funval);
@@ -590,7 +590,7 @@ jsd_GetValuePrototype(JSDContext* jsdc, JSDValue* jsdval)
         SET_BIT_FLAG(jsdval->flags, GOT_PROTO);
         if(JSVAL_IS_PRIMITIVE(jsdval->val))
             return nullptr;
-        obj = JSVAL_TO_OBJECT(jsdval->val);
+        obj = jsdval->val.toObjectOrNull();
         if(!JS_GetPrototype(cx, obj, &proto))
             return nullptr;
         if(!proto)
@@ -614,7 +614,7 @@ jsd_GetValueParent(JSDContext* jsdc, JSDValue* jsdval)
         SET_BIT_FLAG(jsdval->flags, GOT_PARENT);
         if(JSVAL_IS_PRIMITIVE(jsdval->val))
             return nullptr;
-        obj = JSVAL_TO_OBJECT(jsdval->val);
+        obj = jsdval->val.toObjectOrNull();
         {
             JSAutoCompartment ac(cx, obj);
             parent = JS_GetParentOrScopeChain(cx, obj);
@@ -641,7 +641,7 @@ jsd_GetValueConstructor(JSDContext* jsdc, JSDValue* jsdval)
         SET_BIT_FLAG(jsdval->flags, GOT_CTOR);
         if(JSVAL_IS_PRIMITIVE(jsdval->val))
             return nullptr;
-        obj = JSVAL_TO_OBJECT(jsdval->val);
+        obj = jsdval->val.toObjectOrNull();
         if(!JS_GetPrototype(cx, obj, &proto))
             return nullptr;
         if(!proto)
@@ -665,7 +665,7 @@ jsd_GetValueClassName(JSDContext* jsdc, JSDValue* jsdval)
     jsval val = jsdval->val;
     if(!jsdval->className && !JSVAL_IS_PRIMITIVE(val))
     {
-        JS::RootedObject obj(jsdc->jsrt, JSVAL_TO_OBJECT(val));
+        JS::RootedObject obj(jsdc->jsrt, val.toObjectOrNull());
         AutoSafeJSContext cx;
         JSAutoCompartment ac(cx, obj);
         jsdval->className = JS_GetDebugClassName(obj);
@@ -685,7 +685,7 @@ jsd_GetScriptForValue(JSDContext* jsdc, JSDValue* jsdval)
         return nullptr;
 
     {
-        JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(val));
+        JSAutoCompartment ac(cx, val.toObjectOrNull());
         AutoSaveExceptionState as(cx);
         JS::RootedFunction fun(cx, JSD_GetValueFunction(jsdc, jsdval));
         if (fun)

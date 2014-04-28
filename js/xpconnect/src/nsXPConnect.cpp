@@ -835,7 +835,7 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
                "Bad return value from xpc_CreateSandboxObject()!");
 
     if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(rval)) {
-        *_retval = XPCJSObjectHolder::newHolder(JSVAL_TO_OBJECT(rval));
+        *_retval = XPCJSObjectHolder::newHolder(rval.toObjectOrNull());
         NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
 
         NS_ADDREF(*_retval);

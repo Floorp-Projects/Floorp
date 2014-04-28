@@ -1124,7 +1124,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
 
     if (!JSVAL_IS_PRIMITIVE(s)) {
         // we have a JSObject
-        RootedObject obj(cx, JSVAL_TO_OBJECT(s));
+        RootedObject obj(cx, s.toObjectOrNull());
 
         if (!obj) {
             NS_ERROR("when is an object not an object?");

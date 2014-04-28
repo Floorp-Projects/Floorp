@@ -9,11 +9,11 @@ BEGIN_TEST(testObjectIsRegExp)
     JS::RootedValue val(cx);
 
     EVAL("new Object", &val);
-    JS::RootedObject obj(cx, JSVAL_TO_OBJECT(val));
+    JS::RootedObject obj(cx, val.toObjectOrNull());
     CHECK(!JS_ObjectIsRegExp(cx, obj));
 
     EVAL("/foopy/", &val);
-    obj = JSVAL_TO_OBJECT(val);
+    obj = val.toObjectOrNull();
     CHECK(JS_ObjectIsRegExp(cx, obj));
 
     return true;
@@ -26,15 +26,15 @@ BEGIN_TEST(testGetRegExpFlags)
     JS::RootedObject obj(cx);
 
     EVAL("/foopy/", &val);
-    obj = JSVAL_TO_OBJECT(val);
+    obj = val.toObjectOrNull();
     CHECK_EQUAL(JS_GetRegExpFlags(cx, obj), 0);
 
     EVAL("/foopy/g", &val);
-    obj = JSVAL_TO_OBJECT(val);
+    obj = val.toObjectOrNull();
     CHECK_EQUAL(JS_GetRegExpFlags(cx, obj), JSREG_GLOB);
 
     EVAL("/foopy/gi", &val);
-    obj = JSVAL_TO_OBJECT(val);
+    obj = val.toObjectOrNull();
     CHECK_EQUAL(JS_GetRegExpFlags(cx, obj), (JSREG_FOLD | JSREG_GLOB));
 
     return true;
@@ -47,7 +47,7 @@ BEGIN_TEST(testGetRegExpSource)
     JS::RootedObject obj(cx);
 
     EVAL("/foopy/", &val);
-    obj = JSVAL_TO_OBJECT(val);
+    obj = val.toObjectOrNull();
     JSString *source = JS_GetRegExpSource(cx, obj);
     CHECK(JS_FlatStringEqualsAscii(JS_ASSERT_STRING_IS_FLAT(source), "foopy"));
 
