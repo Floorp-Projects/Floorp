@@ -22,19 +22,6 @@ enum GamepadMappingType
   StandardMapping = 1
 };
 
-// Per spec:
-// https://dvcs.w3.org/hg/gamepad/raw-file/default/gamepad.html#remapping
-const int kStandardGamepadButtons = 17;
-const int kStandardGamepadAxes = 4;
-
-const int kButtonLeftTrigger = 6;
-const int kButtonRightTrigger = 7;
-
-const int kLeftStickXAxis = 0;
-const int kLeftStickYAxis = 1;
-const int kRightStickXAxis = 2;
-const int kRightStickYAxis = 3;
-
 class Gamepad : public nsISupports,
                 public nsWrapperCache
 {
