@@ -371,6 +371,7 @@ TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
   switch (state_type)
   {
   case PCObserverStateType::ReadyState:
+    MOZ_ASSERT(NS_IsMainThread());
     rv = pc->ReadyState(&gotready);
     NS_ENSURE_SUCCESS(rv, rv);
     std::cout << "Ready State: "
@@ -378,6 +379,7 @@ TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
               << std::endl;
     break;
   case PCObserverStateType::IceConnectionState:
+    MOZ_ASSERT(NS_IsMainThread());
     rv = pc->IceConnectionState(&gotice);
     NS_ENSURE_SUCCESS(rv, rv);
     std::cout << "ICE Connection State: "
@@ -385,6 +387,7 @@ TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
               << std::endl;
     break;
   case PCObserverStateType::IceGatheringState:
+    MOZ_ASSERT(NS_IsMainThread());
     rv = pc->IceGatheringState(&goticegathering);
     NS_ENSURE_SUCCESS(rv, rv);
     std::cout
@@ -397,6 +400,7 @@ TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
     // NS_ENSURE_SUCCESS(rv, rv);
     break;
   case PCObserverStateType::SipccState:
+    MOZ_ASSERT(NS_IsMainThread());
     rv = pc->SipccState(&gotsipcc);
     NS_ENSURE_SUCCESS(rv, rv);
     std::cout << "SIPCC State: "
@@ -404,6 +408,7 @@ TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
               << std::endl;
     break;
   case PCObserverStateType::SignalingState:
+    MOZ_ASSERT(NS_IsMainThread());
     rv = pc->SignalingState(&gotsignaling);
     NS_ENSURE_SUCCESS(rv, rv);
     std::cout << "Signaling State: "
@@ -673,21 +678,282 @@ class ParsedSDP {
   int num_lines;
 };
 
-class SignalingAgent {
- public:
-  SignalingAgent(const std::string &aName) : pc(nullptr), name(aName) {
-    cfg_.addStunServer(g_stun_server_address, g_stun_server_port);
 
-    pc = sipcc::PeerConnectionImpl::CreatePeerConnection();
-    EXPECT_TRUE(pc);
+// This class wraps the PeerConnection object and ensures that all calls
+// into it happen on the main thread.
+class PCDispatchWrapper : public nsSupportsWeakReference
+{
+ public:
+  PCDispatchWrapper(sipcc::PeerConnectionImpl *peerConnection) {
+    pc_ = peerConnection;
   }
 
-  SignalingAgent(const std::string &aName, const std::string stun_addr,
-                 uint16_t stun_port) : pc(nullptr), name(aName) {
+  virtual ~PCDispatchWrapper() {}
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  sipcc::PeerConnectionImpl *pcImpl() const {
+    return pc_;
+  }
+
+  const nsRefPtr<sipcc::PeerConnectionMedia>& media() const {
+    return pc_->media();
+  }
+
+  NS_IMETHODIMP Initialize(TestObserver* aObserver,
+                      nsGlobalWindow* aWindow,
+                      const sipcc::IceConfiguration& aConfiguration,
+                      nsIThread* aThread) {
+    nsresult rv;
+
+    if (NS_IsMainThread()) {
+      rv = pc_->Initialize(*aObserver, aWindow, aConfiguration, aThread);
+    } else {
+      // It would have been preferable here to dispatch directly to
+      // PeerConnectionImpl::Initialize but since all the PC methods
+      // have overrides clang will throw a 'couldn't infer template
+      // argument' error.
+      // Instead we are dispatching back to the same method for
+      // all of these.
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::Initialize,
+          aObserver, aWindow, aConfiguration, aThread, &rv),
+        NS_DISPATCH_SYNC);
+      rv = NS_OK;
+    }
+
+    return rv;
+  }
+
+  NS_IMETHODIMP CreateOffer(const MediaConstraintsExternal& aConstraints) {
+    nsresult rv;
+
+    if (NS_IsMainThread()) {
+      rv = pc_->CreateOffer(aConstraints);
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::CreateOffer,
+          aConstraints, &rv),
+        NS_DISPATCH_SYNC);
+    }
+
+    return rv;
+  }
+
+  NS_IMETHODIMP CreateAnswer(const MediaConstraintsExternal& aConstraints) {
+    nsresult rv;
+
+    if (NS_IsMainThread()) {
+      rv = pc_->CreateAnswer(aConstraints);
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::CreateAnswer,
+          aConstraints, &rv),
+        NS_DISPATCH_SYNC);
+    }
+
+    return rv;
+  }
+
+  NS_IMETHODIMP SetLocalDescription (int32_t aAction, const char* aSDP) {
+    nsresult rv;
+
+    if (NS_IsMainThread()) {
+      rv = pc_->SetLocalDescription(aAction, aSDP);
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::SetLocalDescription,
+          aAction, aSDP, &rv),
+        NS_DISPATCH_SYNC);
+    }
+
+    return rv;
+  }
+
+  NS_IMETHODIMP SetRemoteDescription (int32_t aAction, const char* aSDP) {
+    nsresult rv;
+
+    if (NS_IsMainThread()) {
+      rv = pc_->SetRemoteDescription(aAction, aSDP);
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::SetRemoteDescription,
+          aAction, aSDP, &rv),
+        NS_DISPATCH_SYNC);
+    }
+
+    return rv;
+  }
+
+  NS_IMETHODIMP AddIceCandidate(const char* aCandidate, const char* aMid,
+                                unsigned short aLevel) {
+    nsresult rv;
+
+    if (NS_IsMainThread()) {
+      rv = pc_->AddIceCandidate(aCandidate, aMid, aLevel);
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::AddIceCandidate,
+          aCandidate, aMid, aLevel, &rv),
+        NS_DISPATCH_SYNC);
+    }
+    return rv;
+  }
+
+  NS_IMETHODIMP AddStream(DOMMediaStream *aMediaStream,
+    const MediaConstraintsExternal& aConstraints) {
+    nsresult rv;
+
+    if (NS_IsMainThread()) {
+      rv = pc_->AddStream(*aMediaStream, aConstraints);
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::AddStream,
+          aMediaStream, aConstraints, &rv),
+        NS_DISPATCH_SYNC);
+    }
+
+    return rv;
+  }
+
+  NS_IMETHODIMP RemoveStream(DOMMediaStream *aMediaStream) {
+    nsresult rv;
+
+    if (NS_IsMainThread()) {
+      rv = pc_->RemoveStream(*aMediaStream);
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::RemoveStream,
+          aMediaStream, &rv),
+        NS_DISPATCH_SYNC);
+    }
+
+    return rv;
+  }
+
+  NS_IMETHODIMP GetLocalDescription(char** aSDP) {
+    nsresult rv;
+
+    if (NS_IsMainThread()) {
+      rv = pc_->GetLocalDescription(aSDP);
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::GetLocalDescription,
+          aSDP, &rv),
+        NS_DISPATCH_SYNC);
+    }
+
+    return rv;
+  }
+
+  NS_IMETHODIMP GetRemoteDescription(char** aSDP) {
+    nsresult rv;
+
+    if (NS_IsMainThread()) {
+      rv = pc_->GetRemoteDescription(aSDP);
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::GetRemoteDescription,
+          aSDP, &rv),
+        NS_DISPATCH_SYNC);
+    }
+
+    return rv;
+  }
+
+  mozilla::dom::PCImplSignalingState SignalingState() {
+    mozilla::dom::PCImplSignalingState result;
+
+    if (NS_IsMainThread()) {
+      result = pc_->SignalingState();
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::SignalingState,
+          &result),
+        NS_DISPATCH_SYNC);
+    }
+
+    return result;
+  }
+
+  mozilla::dom::PCImplSipccState SipccState() {
+    mozilla::dom::PCImplSipccState result;
+
+    if (NS_IsMainThread()) {
+      result = pc_->SipccState();
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::SipccState,
+          &result),
+        NS_DISPATCH_SYNC);
+    }
+
+    return result;
+  }
+
+  mozilla::dom::PCImplIceConnectionState IceConnectionState() {
+    mozilla::dom::PCImplIceConnectionState result;
+
+    if (NS_IsMainThread()) {
+      result = pc_->IceConnectionState();
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::IceConnectionState,
+          &result),
+        NS_DISPATCH_SYNC);
+    }
+
+    return result;
+  }
+
+  mozilla::dom::PCImplIceGatheringState IceGatheringState() {
+    mozilla::dom::PCImplIceGatheringState result;
+
+    if (NS_IsMainThread()) {
+      result = pc_->IceGatheringState();
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::IceGatheringState,
+          &result),
+        NS_DISPATCH_SYNC);
+    }
+
+    return result;
+  }
+
+  NS_IMETHODIMP Close() {
+    nsresult rv;
+
+    if (NS_IsMainThread()) {
+      rv = pc_->Close();
+    } else {
+      gMainThread->Dispatch(
+        WrapRunnableRet(this, &PCDispatchWrapper::Close, &rv),
+        NS_DISPATCH_SYNC);
+    }
+
+    return rv;
+  }
+
+ private:
+  mozilla::RefPtr<sipcc::PeerConnectionImpl> pc_;
+};
+
+NS_IMPL_ISUPPORTS(PCDispatchWrapper, nsISupportsWeakReference)
+
+
+class SignalingAgent {
+ public:
+  SignalingAgent(const std::string &aName,
+    const std::string stun_addr = g_stun_server_address,
+    uint16_t stun_port = g_stun_server_port) : pc(nullptr), name(aName) {
     cfg_.addStunServer(stun_addr, stun_port);
 
-    pc = sipcc::PeerConnectionImpl::CreatePeerConnection();
-    EXPECT_TRUE(pc);
+    sipcc::PeerConnectionImpl *pcImpl =
+      sipcc::PeerConnectionImpl::CreatePeerConnection();
+    EXPECT_TRUE(pcImpl);
+
+    pc = new PCDispatchWrapper(pcImpl);
   }
 
 
@@ -698,10 +964,10 @@ class SignalingAgent {
 
   void Init_m(nsCOMPtr<nsIThread> thread)
   {
-    pObserver = new TestObserver(pc, name);
+    pObserver = new TestObserver(pc->pcImpl(), name);
     ASSERT_TRUE(pObserver);
 
-    ASSERT_EQ(pc->Initialize(*pObserver, nullptr, cfg_, thread), NS_OK);
+    ASSERT_EQ(pc->Initialize(pObserver, nullptr, cfg_, thread), NS_OK);
   }
 
   void Init(nsCOMPtr<nsIThread> thread)
@@ -827,7 +1093,7 @@ class SignalingAgent {
     }
 
     domMediaStream->SetHintContents(hint);
-    ASSERT_EQ(pc->AddStream(*domMediaStream, *constraints), NS_OK);
+    ASSERT_EQ(pc->AddStream(domMediaStream, *constraints), NS_OK);
     domMediaStream_ = domMediaStream;
   }
 
@@ -836,7 +1102,7 @@ class SignalingAgent {
   // parameter is absent, removes the stream that was most
   // recently added to the PeerConnection.
   void RemoveLastStreamAdded() {
-    ASSERT_EQ(pc->RemoveStream(*domMediaStream_), NS_OK);
+    ASSERT_EQ(pc->RemoveStream(domMediaStream_), NS_OK);
   }
 
   void CreateOffer(sipcc::MediaConstraints& constraints,
@@ -919,7 +1185,7 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
     // hints as were passed in.
     // When complete RemoveStream will remove and entire stream and its tracks
     // not just disable a track as this is currently doing
-    ASSERT_EQ(pc->RemoveStream(*domMediaStream_), NS_OK);
+    ASSERT_EQ(pc->RemoveStream(domMediaStream_), NS_OK);
 
     // Now call CreateOffer as JS would
     pObserver->state = TestObserver::stateNoResponse;
@@ -1131,7 +1397,7 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
   }
 
 public:
-  mozilla::RefPtr<sipcc::PeerConnectionImpl> pc;
+  nsRefPtr<PCDispatchWrapper> pc;
   nsRefPtr<TestObserver> pObserver;
   char* offer_;
   char* answer_;
