@@ -131,6 +131,6 @@
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="07f695559cf1834e908fce0ec2a8531582369bac"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="bc70af75eac79073c4c935bf1f71c0cb10e821b7"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="baaf899afb158b9530690002f3656e958e3eb047"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="83e1560bef0988bbdec49d15cb8eef402857d4ef"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="8b1365af38c9a653df97349ee53a3f5d64fd590a"/>
 </manifest>
