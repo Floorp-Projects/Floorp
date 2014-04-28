@@ -3526,27 +3526,29 @@ nsHTMLEditor::TagCanContainTag(nsIAtom* aParentTag, nsIAtom* aChildTag)
 }
 
 bool
-nsHTMLEditor::IsContainer(nsIDOMNode *aNode)
-{
-  if (!aNode) {
-    return false;
-  }
-
-  nsAutoString stringTag;
-
-  nsresult rv = aNode->GetNodeName(stringTag);
-  NS_ENSURE_SUCCESS(rv, false);
+nsHTMLEditor::IsContainer(nsINode* aNode) {
+  MOZ_ASSERT(aNode);
 
   int32_t tagEnum;
   // XXX Should this handle #cdata-section too?
-  if (stringTag.EqualsLiteral("#text")) {
+  if (aNode->IsNodeOfType(nsINode::eTEXT)) {
     tagEnum = eHTMLTag_text;
-  }
-  else {
-    tagEnum = nsContentUtils::GetParserService()->HTMLStringTagToId(stringTag);
+  } else {
+    tagEnum =
+      nsContentUtils::GetParserService()->HTMLStringTagToId(aNode->NodeName());
   }
 
   return nsHTMLEditUtils::IsContainer(tagEnum);
+}
+
+bool
+nsHTMLEditor::IsContainer(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  if (!node) {
+    return false;
+  }
+  return IsContainer(node);
 }
 
 
