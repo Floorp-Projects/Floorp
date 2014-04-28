@@ -118,7 +118,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **o
         path = JS_strdup(cx, path);
         if (!path)
             return JS_FALSE;
-        name = JS_GetStringBytes(JSVAL_TO_STRING(id));
+        name = JS_GetStringBytes(id.toString());
         ok = JS_TRUE;
         for (comp = strtok(path, ":"); comp; comp = strtok(NULL, ":")) {
             if (*comp != '\0') {

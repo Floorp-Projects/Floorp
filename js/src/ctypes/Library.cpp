@@ -59,9 +59,8 @@ Library::Name(JSContext* cx, unsigned argc, jsval *vp)
   Value arg = args[0];
   JSString* str = nullptr;
   if (arg.isString()) {
-    str = JSVAL_TO_STRING(arg);
-  }
-  else {
+    str = arg.toString();
+  } else {
     JS_ReportError(cx, "name argument must be a string");
     return false;
   }
@@ -102,7 +101,7 @@ Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
   }
 
   PRLibSpec libSpec;
-  RootedFlatString pathStr(cx, JS_FlattenString(cx, JSVAL_TO_STRING(path)));
+  RootedFlatString pathStr(cx, JS_FlattenString(cx, path.toString()));
   if (!pathStr)
     return nullptr;
 #ifdef XP_WIN

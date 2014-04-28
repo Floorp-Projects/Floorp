@@ -399,7 +399,7 @@ JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant)
         DOUBLE_TO_NPVARIANT(d, *variant);
       }
     } else if (val.isString()) {
-      JSString *jsstr = JSVAL_TO_STRING(val);
+      JSString *jsstr = val.toString();
       size_t length;
       const jschar *chars = ::JS_GetStringCharsZAndLength(cx, jsstr, &length);
       if (!chars) {

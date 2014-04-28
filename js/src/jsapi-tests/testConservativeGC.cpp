@@ -21,7 +21,7 @@ BEGIN_TEST(testConservativeGC)
     EVAL("String(Math.PI);", &v3);
     CHECK(v3.isString());
     char strCopy[sizeof(JSString)];
-    js_memcpy(&strCopy, JSVAL_TO_STRING(v3), sizeof(JSString));
+    js_memcpy(&strCopy, v3.toString(), sizeof(JSString));
 
     JS::RootedValue tmp(cx);
     EVAL("({foo2: 'bar2'});", &tmp);
@@ -32,7 +32,7 @@ BEGIN_TEST(testConservativeGC)
 
     EVAL("String(Math.sqrt(3));", &tmp);
     CHECK(tmp.isString());
-    JS::RootedString str2(cx, JSVAL_TO_STRING(tmp));
+    JS::RootedString str2(cx, tmp.toString());
     char str2Copy[sizeof(JSString)];
     js_memcpy(&str2Copy, str2, sizeof(JSString));
 
@@ -48,7 +48,7 @@ BEGIN_TEST(testConservativeGC)
     JS_GC(rt);
 
     checkObjectFields((JSObject *)objCopy, JSVAL_TO_OBJECT(v2));
-    CHECK(!memcmp(strCopy, JSVAL_TO_STRING(v3), sizeof(strCopy)));
+    CHECK(!memcmp(strCopy, v3.toString(), sizeof(strCopy)));
 
     checkObjectFields((JSObject *)obj2Copy, obj2);
     CHECK(!memcmp(str2Copy, str2, sizeof(str2Copy)));

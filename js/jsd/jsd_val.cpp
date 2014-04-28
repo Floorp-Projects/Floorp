@@ -180,7 +180,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
 
     /* Reuse the string without copying or re-rooting it */
     if(jsdval->val.isString()) {
-        jsdval->string = JSVAL_TO_STRING(jsdval->val);
+        jsdval->string = jsdval->val.toString();
         return jsdval->string;
     }
 
@@ -201,7 +201,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
         return nullptr;
     }
 
-    jsdval->string = JSVAL_TO_STRING(stringval);
+    jsdval->string = stringval.toString();
     if(!JS::AddNamedStringRoot(cx, &jsdval->string, "ValueString"))
         jsdval->string = nullptr;
 

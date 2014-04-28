@@ -1825,7 +1825,7 @@ jsvalToBigInteger(JSContext* cx,
     // fits in IntegerType. (This allows an Int64 or UInt64 object to be passed
     // to the JS array element operator, which will automatically call
     // toString() on the object for us.)
-    return StringToInteger(cx, JSVAL_TO_STRING(val), result);
+    return StringToInteger(cx, val.toString(), result);
   }
   if (!JSVAL_IS_PRIMITIVE(val)) {
     // Allow conversion from an Int64 or UInt64 object directly.
@@ -2313,7 +2313,7 @@ ImplicitConvert(JSContext* cx,
     /* or from an integer, provided the result fits in 'type'. */              \
     type result;                                                               \
     if (val.isString()) {                                                \
-      JSString* str = JSVAL_TO_STRING(val);                                    \
+      JSString* str = val.toString();                                    \
       if (str->length() != 1)                                                  \
         return TypeError(cx, #name, val);                                      \
       const jschar *chars = str->getChars(cx);                                 \
@@ -2360,7 +2360,7 @@ ImplicitConvert(JSContext* cx,
       // Convert the string for the ffi call. This requires allocating space
       // which the caller assumes ownership of.
       // TODO: Extend this so we can safely convert strings at other times also.
-      JSString* sourceString = JSVAL_TO_STRING(val);
+      JSString* sourceString = val.toString();
       size_t sourceLength = sourceString->length();
       const jschar* sourceChars = sourceString->getChars(cx);
       if (!sourceChars)
@@ -2436,7 +2436,7 @@ ImplicitConvert(JSContext* cx,
     size_t targetLength = ArrayType::GetLength(targetType);
 
     if (val.isString()) {
-      JSString* sourceString = JSVAL_TO_STRING(val);
+      JSString* sourceString = val.toString();
       size_t sourceLength = sourceString->length();
       const jschar* sourceChars = sourceString->getChars(cx);
       if (!sourceChars)
@@ -2652,7 +2652,7 @@ ExplicitConvert(JSContext* cx, HandleValue val, HandleObject targetType, void* b
     type result;                                                               \
     if (!jsvalToIntegerExplicit(val, &result) &&                               \
         (!val.isString() ||                                              \
-         !StringToInteger(cx, JSVAL_TO_STRING(val), &result)))                 \
+         !StringToInteger(cx, val.toString(), &result)))                 \
       return TypeError(cx, #name, val);                                        \
     *static_cast<type*>(buffer) = result;                                      \
     break;                                                                     \
@@ -3571,7 +3571,7 @@ CType::GetName(JSContext* cx, HandleObject obj)
 
   jsval string = JS_GetReservedSlot(obj, SLOT_NAME);
   if (!string.isUndefined())
-    return JSVAL_TO_STRING(string);
+    return string.toString();
 
   // Build the type name lazily.
   JSString* name = BuildTypeName(cx, obj);
@@ -4737,7 +4737,7 @@ StructType::Create(JSContext* cx, unsigned argc, jsval* vp)
   // non-instantiable as CData, will have no 'prototype' property, and will
   // have undefined size and alignment and no ffi_type.
   RootedObject result(cx, CType::Create(cx, typeProto, NullPtr(), TYPE_struct,
-                                        JSVAL_TO_STRING(name), JSVAL_VOID, JSVAL_VOID, nullptr));
+                                        name.toString(), JSVAL_VOID, JSVAL_VOID, nullptr));
   if (!result)
     return false;
 
@@ -5412,7 +5412,7 @@ IsEllipsis(JSContext* cx, jsval v, bool* isEllipsis)
   *isEllipsis = false;
   if (!v.isString())
     return true;
-  JSString* str = JSVAL_TO_STRING(v);
+  JSString* str = v.toString();
   if (str->length() != 3)
     return true;
   const jschar* chars = str->getChars(cx);
