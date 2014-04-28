@@ -319,7 +319,7 @@ JSBool SkJSDisplayable::SetProperty(JSContext *cx, JSObject *obj, jsval id, jsva
                 scalar = SkIntToScalar(JSVAL_TO_INT(value));
             else {
                 SkASSERT(value.isDouble());
-                scalar = (float) *(double*) JSVAL_TO_DOUBLE(value);
+                scalar = (float) *(double*) value.toDouble();
             }
             break;
         case SkType_String:

@@ -1585,7 +1585,7 @@ jsvalToBool(JSContext* cx, jsval val, bool* result)
     return i == 0 || i == 1;
   }
   if (val.isDouble()) {
-    double d = JSVAL_TO_DOUBLE(val);
+    double d = val.toDouble();
     *result = d != 0;
     // Allow -0.
     return d == 1 || d == 0;
@@ -1612,7 +1612,7 @@ jsvalToInteger(JSContext* cx, jsval val, IntegerType* result)
   if (val.isDouble()) {
     // Don't silently lose bits here -- check that val really is an
     // integer value, and has the right sign.
-    double d = JSVAL_TO_DOUBLE(val);
+    double d = val.toDouble();
     return ConvertExact(d, result);
   }
   if (!JSVAL_IS_PRIMITIVE(val)) {
@@ -1701,7 +1701,7 @@ jsvalToFloat(JSContext *cx, jsval val, FloatType* result)
     return true;
   }
   if (val.isDouble()) {
-    *result = FloatType(JSVAL_TO_DOUBLE(val));
+    *result = FloatType(val.toDouble());
     return true;
   }
   if (!JSVAL_IS_PRIMITIVE(val)) {
@@ -1817,7 +1817,7 @@ jsvalToBigInteger(JSContext* cx,
   if (val.isDouble()) {
     // Don't silently lose bits here -- check that val really is an
     // integer value, and has the right sign.
-    double d = JSVAL_TO_DOUBLE(val);
+    double d = val.toDouble();
     return ConvertExact(d, result);
   }
   if (allowString && JSVAL_IS_STRING(val)) {
@@ -1946,7 +1946,7 @@ jsvalToIntegerExplicit(jsval val, IntegerType* result)
 
   if (val.isDouble()) {
     // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
-    double d = JSVAL_TO_DOUBLE(val);
+    double d = val.toDouble();
     *result = mozilla::IsFinite(d) ? IntegerType(d) : 0;
     return true;
   }
@@ -1979,7 +1979,7 @@ jsvalToPtrExplicit(JSContext* cx, jsval val, uintptr_t* result)
     return true;
   }
   if (val.isDouble()) {
-    double d = JSVAL_TO_DOUBLE(val);
+    double d = val.toDouble();
     if (d < 0) {
       // Cast through an intptr_t intermediate to sign-extend.
       intptr_t i = Convert<intptr_t>(d);
@@ -3486,7 +3486,7 @@ CType::GetSafeSize(JSObject* obj, size_t* result)
     return true;
   }
   if (size.isDouble()) {
-    *result = Convert<size_t>(JSVAL_TO_DOUBLE(size));
+    *result = Convert<size_t>(size.toDouble());
     return true;
   }
 
@@ -3508,7 +3508,7 @@ CType::GetSize(JSObject* obj)
   // For callers who know it can never be JSVAL_VOID, return a size_t directly.
   if (JSVAL_IS_INT(size))
     return JSVAL_TO_INT(size);
-  return Convert<size_t>(JSVAL_TO_DOUBLE(size));
+  return Convert<size_t>(size.toDouble());
 }
 
 bool
