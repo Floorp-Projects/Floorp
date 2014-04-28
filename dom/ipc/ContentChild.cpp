@@ -29,6 +29,7 @@
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/PCompositorChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/Preferences.h"
@@ -686,6 +687,13 @@ ContentChild::AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
                                     base::ProcessId aOtherProcess)
 {
     return CompositorChild::Create(aTransport, aOtherProcess);
+}
+
+PSharedBufferManagerChild*
+ContentChild::AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,
+                                              base::ProcessId aOtherProcess)
+{
+    return SharedBufferManagerChild::StartUpInChildProcess(aTransport, aOtherProcess);
 }
 
 PImageBridgeChild*

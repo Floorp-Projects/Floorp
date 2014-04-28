@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include LayersSurfaces;
-include protocol PGrallocBuffer;
 include protocol PLayerTransaction;
 include "mozilla/GfxMessageUtils.h";
 include "nsRegion.h";
