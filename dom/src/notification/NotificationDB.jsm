@@ -272,6 +272,7 @@ let NotificationDB = {
     var id = data.id;
     if (!this.notifications[origin]) {
       if (DEBUG) { debug("No notifications found for origin: " + origin); }
+      callback();
       return;
     }
 
@@ -279,6 +280,7 @@ let NotificationDB = {
     var oldNotification = this.notifications[origin][id];
     if (!oldNotification) {
       if (DEBUG) { debug("No notification found with id: " + id); }
+      callback();
       return;
     }
 
