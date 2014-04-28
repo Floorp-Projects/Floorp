@@ -90,7 +90,7 @@ jsd_IsValueString(JSDContext* jsdc, JSDValue* jsdval)
 bool
 jsd_IsValueBoolean(JSDContext* jsdc, JSDValue* jsdval)
 {
-    return JSVAL_IS_BOOLEAN(jsdval->val);
+    return jsdval->val.isBoolean();
 }
 
 bool
@@ -145,7 +145,7 @@ bool
 jsd_GetValueBoolean(JSDContext* jsdc, JSDValue* jsdval)
 {
     jsval val = jsdval->val;
-    if(!JSVAL_IS_BOOLEAN(val))
+    if(!val.isBoolean())
         return false;
     return val.toBoolean();
 }

@@ -1905,12 +1905,6 @@ OBJECT_TO_JSVAL(JSObject *obj)
     return IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_NULL, 0));
 }
 
-static inline bool
-JSVAL_IS_BOOLEAN(jsval v)
-{
-    return JSVAL_IS_BOOLEAN_IMPL(JSVAL_TO_IMPL(v));
-}
-
 static inline jsval
 BOOLEAN_TO_JSVAL(bool b)
 {
