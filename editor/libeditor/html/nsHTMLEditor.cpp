@@ -3736,21 +3736,31 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
 
 ///////////////////////////////////////////////////////////////////////////
 // GetEnclosingTable: find ancestor who is a table, if any
-//                  
-nsCOMPtr<nsIDOMNode> 
+//
+already_AddRefed<Element>
+nsHTMLEditor::GetEnclosingTable(nsINode* aNode)
+{
+  MOZ_ASSERT(aNode);
+
+  for (nsCOMPtr<Element> block = GetBlockNodeParent(aNode);
+       block;
+       block = GetBlockNodeParent(block)) {
+    if (nsHTMLEditUtils::IsTable(block)) {
+      return block.forget();
+    }
+  }
+  return nullptr;
+}
+
+nsCOMPtr<nsIDOMNode>
 nsHTMLEditor::GetEnclosingTable(nsIDOMNode *aNode)
 {
   NS_PRECONDITION(aNode, "null node passed to nsHTMLEditor::GetEnclosingTable");
-  nsCOMPtr<nsIDOMNode> tbl, tmp, node = aNode;
-
-  while (!tbl)
-  {
-    tmp = GetBlockNodeParent(node);
-    if (!tmp) break;
-    if (nsHTMLEditUtils::IsTable(tmp)) tbl = tmp;
-    node = tmp;
-  }
-  return tbl;
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, nullptr);
+  nsCOMPtr<Element> table = GetEnclosingTable(node);
+  nsCOMPtr<nsIDOMNode> ret = do_QueryInterface(table);
+  return ret;
 }
 
 
