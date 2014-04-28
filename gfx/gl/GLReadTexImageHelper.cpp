@@ -507,7 +507,7 @@ ReadPixelsIntoImageSurface(GLContext* gl, gfxImageSurface* dest) {
 }
 
 void
-ReadPixelsIntoDataSourceSurface(GLContext* gl, DataSourceSurface* dest) {
+ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
     gl->MakeCurrent();
     MOZ_ASSERT(dest->GetSize().width != 0);
     MOZ_ASSERT(dest->GetSize().height != 0);
@@ -838,7 +838,7 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
         mGL->fDisableVertexAttribArray(0);
 
         /* Read-back draw results */
-        ReadPixelsIntoDataSourceSurface(mGL, isurf);
+        ReadPixelsIntoDataSurface(mGL, isurf);
         CLEANUP_IF_GLERROR_OCCURRED("when reading pixels into surface");
     } while (false);
 
