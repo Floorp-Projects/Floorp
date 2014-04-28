@@ -287,7 +287,8 @@ public:
   virtual bool TagCanContainTag(nsIAtom* aParentTag, nsIAtom* aChildTag);
   
   /** returns true if aNode is a container */
-  virtual bool IsContainer(nsIDOMNode *aNode);
+  virtual bool IsContainer(nsINode* aNode) MOZ_OVERRIDE;
+  virtual bool IsContainer(nsIDOMNode* aNode) MOZ_OVERRIDE;
 
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
