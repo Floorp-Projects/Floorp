@@ -40,11 +40,11 @@ public:
   GrallocTextureClientOGL(GrallocBufferActor* aActor,
                           gfx::IntSize aSize,
                           gfx::BackendType aMoz2dBackend,
-                          TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
+                          TextureFlags aFlags = TextureFlags::DEFAULT);
   GrallocTextureClientOGL(ISurfaceAllocator* aAllocator,
                           gfx::SurfaceFormat aFormat,
                           gfx::BackendType aMoz2dBackend,
-                          TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
+                          TextureFlags aFlags = TextureFlags::DEFAULT);
 
   ~GrallocTextureClientOGL();
 
