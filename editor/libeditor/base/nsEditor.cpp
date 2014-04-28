@@ -3481,8 +3481,14 @@ nsEditor::IsDescendantOfEditorRoot(nsINode* aNode)
   return nsContentUtils::ContentIsDescendantOf(aNode, root);
 }
 
-bool 
-nsEditor::IsContainer(nsIDOMNode *aNode)
+bool
+nsEditor::IsContainer(nsINode* aNode)
+{
+  return aNode ? true : false;
+}
+
+bool
+nsEditor::IsContainer(nsIDOMNode* aNode)
 {
   return aNode ? true : false;
 }
