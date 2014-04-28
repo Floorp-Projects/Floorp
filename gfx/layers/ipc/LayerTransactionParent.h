@@ -103,13 +103,6 @@ protected:
   virtual bool RecvSetAsyncScrollOffset(PLayerParent* aLayer,
                                         const int32_t& aX, const int32_t& aY) MOZ_OVERRIDE;
 
-  virtual PGrallocBufferParent*
-  AllocPGrallocBufferParent(const IntSize& aSize,
-                            const uint32_t& aFormat, const uint32_t& aUsage,
-                            MaybeMagicGrallocBufferHandle* aOutHandle) MOZ_OVERRIDE;
-  virtual bool
-  DeallocPGrallocBufferParent(PGrallocBufferParent* actor) MOZ_OVERRIDE;
-
   virtual PLayerParent* AllocPLayerParent() MOZ_OVERRIDE;
   virtual bool DeallocPLayerParent(PLayerParent* actor) MOZ_OVERRIDE;
 

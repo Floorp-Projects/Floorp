@@ -10,6 +10,7 @@
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
 
 #include "prlog.h"
@@ -375,6 +376,9 @@ gfxPlatform::Init()
         if (gfxPrefs::AsyncVideoEnabled()) {
             ImageBridgeChild::StartUp();
         }
+#ifdef MOZ_WIDGET_GONK
+        SharedBufferManagerChild::StartUp();
+#endif
     }
 
     nsresult rv;
@@ -496,7 +500,9 @@ gfxPlatform::Shutdown()
     // This will block this thread untill the ImageBridge protocol is completely
     // deleted.
     ImageBridgeChild::ShutDown();
-
+#ifdef MOZ_WIDGET_GONK
+    SharedBufferManagerChild::ShutDown();
+#endif
     CompositorParent::ShutDown();
 
     delete gGfxPlatformPrefsLock;

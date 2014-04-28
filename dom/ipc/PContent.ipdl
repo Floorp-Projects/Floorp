@@ -21,6 +21,7 @@ include protocol PImageBridge;
 include protocol PIndexedDB;
 include protocol PMemoryReportRequest;
 include protocol PNecko;
+include protocol PSharedBufferManager;
 include protocol PSms;
 include protocol PSpeechSynthesis;
 include protocol PStorage;
@@ -263,6 +264,7 @@ struct PrefSetting {
 intr protocol PContent
 {
     parent opens PCompositor;
+    parent opens PSharedBufferManager;
     parent opens PImageBridge;
     child opens PBackground;
 
