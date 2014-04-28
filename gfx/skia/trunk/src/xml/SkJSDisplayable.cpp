@@ -218,7 +218,7 @@ void SkJSDisplayable::Destructor(JSContext *cx, JSObject *obj) {
 JSBool SkJSDisplayable::GetProperty(JSContext *cx, JSObject *obj, jsval id,
                                  jsval *vp)
 {
-    if (JSVAL_IS_INT(id) == 0)
+    if (id.isInt32() == 0)
         return JS_TRUE;
     SkJSDisplayable *p = (SkJSDisplayable *) JS_GetPrivate(cx, obj);
     SkDisplayable* displayable = p->fDisplayable;
@@ -290,7 +290,7 @@ JSBool SkJSDisplayable::GetProperty(JSContext *cx, JSObject *obj, jsval id,
 }
 
 JSBool SkJSDisplayable::SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp) {
-    if (JSVAL_IS_INT(id) == 0)
+    if (id.isInt32() == 0)
         return JS_TRUE;
     SkJSDisplayable *p = (SkJSDisplayable *) JS_GetPrivate(cx, obj);
     SkDisplayable* displayable = p->fDisplayable;
@@ -315,7 +315,7 @@ JSBool SkJSDisplayable::SetProperty(JSContext *cx, JSObject *obj, jsval id, jsva
             s32 = JSVAL_TO_INT(value);
             break;
         case SkType_Scalar:
-            if (JSVAL_IS_INT(value))
+            if (value.isInt32())
                 scalar = SkIntToScalar(JSVAL_TO_INT(value));
             else {
                 SkASSERT(value.isDouble());

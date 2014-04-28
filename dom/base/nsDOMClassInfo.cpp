@@ -3547,7 +3547,7 @@ nsGenericArraySH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (!JSVAL_IS_INT(lenval)) {
+  if (!lenval.isInt32()) {
     // This can apparently happen with some sparse array impls falling back
     // onto this code.
     return NS_OK;
@@ -3584,7 +3584,7 @@ nsGenericArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   JS::Rooted<JS::Value> len_val(cx);
   bool ok = ::JS_GetProperty(cx, obj, "length", &len_val);
 
-  if (ok && JSVAL_IS_INT(len_val)) {
+  if (ok && len_val.isInt32()) {
     int32_t length = JSVAL_TO_INT(len_val);
 
     for (int32_t i = 0; ok && i < length; ++i) {
