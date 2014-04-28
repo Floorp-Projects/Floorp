@@ -74,7 +74,6 @@
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "nsTextFragment.h"
-#include "nsContentList.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -630,14 +629,18 @@ nsHTMLEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
         return NS_OK;
       }
 
-      nsRefPtr<Selection> selection = GetSelection();
-      NS_ENSURE_TRUE(selection && selection->RangeCount(), NS_ERROR_FAILURE);
+      nsCOMPtr<nsISelection> selection;
+      nsresult rv = GetSelection(getter_AddRefs(selection));
+      NS_ENSURE_SUCCESS(rv, rv);
+      int32_t offset;
+      nsCOMPtr<nsIDOMNode> node, blockParent;
+      rv = GetStartNodeAndOffset(selection, getter_AddRefs(node), &offset);
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsINode> node = selection->GetRangeAt(0)->GetStartParent();
-      MOZ_ASSERT(node);
-
-      nsCOMPtr<nsINode> blockParent;
-      if (IsBlockNode(node)) {
+      bool isBlock = false;
+      NodeIsBlock(node, &isBlock);
+      if (isBlock) {
         blockParent = node;
       } else {
         blockParent = GetBlockNodeParent(node);
@@ -648,16 +651,15 @@ nsHTMLEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
       }
 
       bool handled = false;
-      nsresult rv;
       if (nsHTMLEditUtils::IsTableElement(blockParent)) {
         rv = TabInTable(nativeKeyEvent->IsShift(), &handled);
         if (handled) {
           ScrollSelectionIntoView(false);
         }
       } else if (nsHTMLEditUtils::IsListItem(blockParent)) {
-        rv = Indent(nativeKeyEvent->IsShift()
-                    ? NS_LITERAL_STRING("outdent")
-                    : NS_LITERAL_STRING("indent"));
+        rv = Indent(nativeKeyEvent->IsShift() ?
+                      NS_LITERAL_STRING("outdent") :
+                      NS_LITERAL_STRING("indent"));
         handled = true;
       }
       NS_ENSURE_SUCCESS(rv, rv);
@@ -827,39 +829,31 @@ nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
 ///////////////////////////////////////////////////////////////////////////
 // GetBlockNodeParent: returns enclosing block level ancestor, if any
 //
-already_AddRefed<Element>
-nsHTMLEditor::GetBlockNodeParent(nsINode* aNode)
-{
-  MOZ_ASSERT(aNode);
-
-  nsCOMPtr<nsINode> p = aNode->GetParentNode();
-
-  while (p) {
-    if (p->IsElement() && NodeIsBlockStatic(p->AsElement())) {
-      return p.forget().downcast<Element>();
-    }
-    p = p->GetParentNode();
-  }
-
-  return nullptr;
-}
-
 already_AddRefed<nsIDOMNode>
 nsHTMLEditor::GetBlockNodeParent(nsIDOMNode *aNode)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-
-  if (!node) {
+  if (!aNode)
+  {
     NS_NOTREACHED("null node passed to GetBlockNodeParent()");
     return nullptr;
   }
 
-  nsCOMPtr<nsINode> parent = GetBlockNodeParent(node);
-  if (!parent) {
+  nsCOMPtr<nsIDOMNode> p;
+  if (NS_FAILED(aNode->GetParentNode(getter_AddRefs(p))))  // no parent, ran off top of tree
     return nullptr;
+
+  nsCOMPtr<nsIDOMNode> tmp;
+  while (p)
+  {
+    bool isBlock;
+    if (NS_FAILED(NodeIsBlockStatic(p, &isBlock)) || isBlock)
+      break;
+    if (NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp) // no parent, ran off top of tree
+      break;
+
+    p = tmp;
   }
-  nsCOMPtr<nsIDOMNode> ret = dont_AddRef(parent.forget().take()->AsDOMNode());
-  return ret.forget();
+  return p.forget();
 }
 
 static const char16_t nbsp = 160;
@@ -934,59 +928,42 @@ nsHTMLEditor::IsPrevCharInNodeWhitespace(nsIContent* aContent,
 /* ------------ End Block methods -------------- */
 
 
-bool
-nsHTMLEditor::IsVisBreak(nsINode* aNode)
+bool nsHTMLEditor::IsVisBreak(nsIDOMNode *aNode)
 {
-  MOZ_ASSERT(aNode);
-  if (!nsTextEditUtils::IsBreak(aNode)) {
+  NS_ENSURE_TRUE(aNode, false);
+  if (!nsTextEditUtils::IsBreak(aNode)) 
     return false;
-  }
-  // Check if there is a later node in block after br
-  nsCOMPtr<nsINode> priorNode = GetPriorHTMLNode(aNode, true);
-  if (priorNode && nsTextEditUtils::IsBreak(priorNode)) {
+  // check if there is a later node in block after br
+  nsCOMPtr<nsIDOMNode> priorNode, nextNode;
+  GetPriorHTMLNode(aNode, address_of(priorNode), true); 
+  GetNextHTMLNode(aNode, address_of(nextNode), true); 
+  // if we are next to another break, we are visible
+  if (priorNode && nsTextEditUtils::IsBreak(priorNode))
     return true;
-  }
-  nsCOMPtr<nsINode> nextNode = GetNextHTMLNode(aNode, true);
-  if (nextNode && nsTextEditUtils::IsBreak(nextNode)) {
+  if (nextNode && nsTextEditUtils::IsBreak(nextNode))
     return true;
-  }
   
-  // If we are right before block boundary, then br not visible
-  if (!nextNode) {
-    // This break is trailer in block, it's not visible
-    return false;
-  }
-  if (IsBlockNode(nextNode)) {
-    // Break is right before a block, it's not visible
-    return false;
-  }
+  // if we are right before block boundary, then br not visible
+  NS_ENSURE_TRUE(nextNode, false);  // this break is trailer in block, it's not visible
+  if (IsBlockNode(nextNode))
+    return false; // break is right before a block, it's not visible
     
-  // Sigh.  We have to use expensive whitespace calculation code to 
+  // sigh.  We have to use expensive whitespace calculation code to 
   // determine what is going on
+  nsCOMPtr<nsIDOMNode> selNode, tmp;
   int32_t selOffset;
-  nsCOMPtr<nsINode> selNode = GetNodeLocation(aNode, &selOffset);
-  // Let's look after the break
-  selOffset++;
-  nsWSRunObject wsObj(this, selNode->AsDOMNode(), selOffset);
+  selNode = GetNodeLocation(aNode, &selOffset);
+  selOffset++; // lets look after the break
+  nsWSRunObject wsObj(this, selNode, selOffset);
   nsCOMPtr<nsIDOMNode> visNode;
-  int32_t visOffset = 0;
+  int32_t visOffset=0;
   WSType visType;
-  wsObj.NextVisibleNode(selNode->AsDOMNode(), selOffset, address_of(visNode),
-                        &visOffset, &visType);
+  wsObj.NextVisibleNode(selNode, selOffset, address_of(visNode), &visOffset, &visType);
   if (visType & WSType::block) {
     return false;
   }
   
   return true;
-}
-
-
-bool
-nsHTMLEditor::IsVisBreak(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, false);
-  return IsVisBreak(node);
 }
 
 NS_IMETHODIMP
@@ -1019,16 +996,32 @@ bool nsHTMLEditor::IsModifiable()
 NS_IMETHODIMP
 nsHTMLEditor::UpdateBaseURL()
 {
-  nsCOMPtr<nsIDocument> doc = GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDOMDocument> domDoc = GetDOMDocument();
+  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
 
   // Look for an HTML <base> tag
-  nsRefPtr<nsContentList> nodeList =
-    doc->GetElementsByTagName(NS_LITERAL_STRING("base"));
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  nsresult rv = domDoc->GetElementsByTagName(NS_LITERAL_STRING("base"), getter_AddRefs(nodeList));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // If no base tag, then set baseURL to the document's URL.  This is very
-  // important, else relative URLs for links and images are wrong
-  if (!nodeList || !nodeList->Item(0)) {
+  nsCOMPtr<nsIDOMNode> baseNode;
+  if (nodeList)
+  {
+    uint32_t count;
+    nodeList->GetLength(&count);
+    if (count >= 1)
+    {
+      rv = nodeList->Item(0, getter_AddRefs(baseNode));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+  // If no base tag, then set baseURL to the document's URL
+  // This is very important, else relative URLs for links and images are wrong
+  if (!baseNode)
+  {
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
     return doc->SetBaseURI(doc->GetDocumentURI());
   }
   return NS_OK;

@@ -229,7 +229,6 @@ public:
   NS_IMETHOD SetHTMLBackgroundColor(const nsAString& aColor);
 
   /* ------------ Block methods moved from nsEditor -------------- */
-  static already_AddRefed<mozilla::dom::Element> GetBlockNodeParent(nsINode* aNode);
   static already_AddRefed<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
 
   void IsNextCharInNodeWhitespace(nsIContent* aContent,
@@ -609,7 +608,6 @@ protected:
   nsIDOMNode* GetArrayEndpoint(bool aEnd, nsCOMArray<nsIDOMNode>& aNodeArray);
 
   /* small utility routine to test if a break node is visible to user */
-  bool     IsVisBreak(nsINode* aNode);
   bool     IsVisBreak(nsIDOMNode *aNode);
 
   /* utility routine to possibly adjust the insertion position when 
