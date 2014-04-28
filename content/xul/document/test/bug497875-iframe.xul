@@ -1,6 +1,6 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml">
 <box onerror="document.loadOverlay('file:///does-not-exist', null);" >
-<html:script src="ftp://mozilla.org"/>
+<html:script src="ftp://some.website.that.will.cause.an.error"/>
 </box>
 </window>
