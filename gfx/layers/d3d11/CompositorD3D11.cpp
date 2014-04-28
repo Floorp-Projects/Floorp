@@ -16,6 +16,8 @@
 #include "nsWindowsHelpers.h"
 #include "gfxPrefs.h"
 
+#include "mozilla/EnumeratedArray.h"
+
 #ifdef MOZ_METRO
 #include <DXGI1_2.h>
 #endif
@@ -42,14 +44,20 @@ const FLOAT sBlendFactor[] = { 0, 0, 0, 0 };
 
 struct DeviceAttachmentsD3D11
 {
+  typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes, RefPtr<ID3D11VertexShader>>
+          VertexShaderArray;
+  typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes, RefPtr<ID3D11PixelShader>>
+          PixelShaderArray;
+
   RefPtr<ID3D11InputLayout> mInputLayout;
   RefPtr<ID3D11Buffer> mVertexBuffer;
-  RefPtr<ID3D11VertexShader> mVSQuadShader[3];
-  RefPtr<ID3D11PixelShader> mSolidColorShader[2];
-  RefPtr<ID3D11PixelShader> mRGBAShader[3];
-  RefPtr<ID3D11PixelShader> mRGBShader[2];
-  RefPtr<ID3D11PixelShader> mYCbCrShader[2];
-  RefPtr<ID3D11PixelShader> mComponentAlphaShader[2];
+
+  VertexShaderArray mVSQuadShader;
+  PixelShaderArray mSolidColorShader;
+  PixelShaderArray mRGBAShader;
+  PixelShaderArray mRGBShader;
+  PixelShaderArray mYCbCrShader;
+  PixelShaderArray mComponentAlphaShader;
   RefPtr<ID3D11Buffer> mPSConstantBuffer;
   RefPtr<ID3D11Buffer> mVSConstantBuffer;
   RefPtr<ID3D11RasterizerState> mRasterizerState;
