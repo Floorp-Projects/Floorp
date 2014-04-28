@@ -8,6 +8,8 @@
 
 #include "mozilla/MathAlgorithms.h"
 
+#include "jsanalyze.h"
+
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
 #include "jit/IonSpewer.h"

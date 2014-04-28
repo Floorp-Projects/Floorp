@@ -6,6 +6,8 @@
 
 #include "jit/IonAnalysis.h"
 
+#include "jsanalyze.h"
+
 #include "jit/BaselineInspector.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"

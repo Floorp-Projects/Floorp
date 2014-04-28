@@ -13,6 +13,8 @@
 
 #include "mozilla/PodOperations.h"
 
+#include "jsanalyze.h"
+
 #include "vm/ArrayObject.h"
 #include "vm/BooleanObject.h"
 #include "vm/NumberObject.h"
@@ -541,29 +543,26 @@ extern void TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc,
 /* static */ inline unsigned
 TypeScript::NumTypeSets(JSScript *script)
 {
-    size_t num = script->nTypeSets() + 1 /* this */;
-    if (JSFunction *fun = script->functionNonDelazifying())
-        num += fun->nargs();
-    return num;
+    return script->nTypeSets() + analyze::LocalSlot(script, 0);
 }
 
 /* static */ inline StackTypeSet *
 TypeScript::ThisTypes(JSScript *script)
 {
-    return script->types->typeArray() + script->nTypeSets();
+    return script->types->typeArray() + script->nTypeSets() + analyze::ThisSlot();
 }
 
 /*
- * Note: for non-escaping arguments, argTypes reflect only the initial type of
- * the variable (e.g. passed values for argTypes, or undefined for localTypes)
- * and not types from subsequent assignments.
+ * Note: for non-escaping arguments and locals, argTypes/localTypes reflect
+ * only the initial type of the variable (e.g. passed values for argTypes,
+ * or undefined for localTypes) and not types from subsequent assignments.
  */
 
 /* static */ inline StackTypeSet *
 TypeScript::ArgTypes(JSScript *script, unsigned i)
 {
     JS_ASSERT(i < script->functionNonDelazifying()->nargs());
-    return script->types->typeArray() + script->nTypeSets() + 1 + i;
+    return script->types->typeArray() + script->nTypeSets() + analyze::ArgSlot(i);
 }
 
 template <typename TYPESET>
