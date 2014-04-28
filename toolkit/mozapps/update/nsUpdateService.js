@@ -2933,7 +2933,7 @@ UpdateService.prototype = {
     for (var i = 0; i < this._incompatibleAddons.length; ++i) {
       if (this._incompatibleAddons[i].id == addon.id) {
         LOG("UpdateService:onCompatibilityUpdateAvailable - found update for " +
-			"add-on ID: " + addon.id);
+            "add-on ID: " + addon.id);
         this._incompatibleAddons.splice(i, 1);
       }
     }
