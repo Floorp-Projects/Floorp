@@ -1865,12 +1865,6 @@ UINT_TO_JSVAL(uint32_t i)
             : DOUBLE_TO_JSVAL((double)i));
 }
 
-static inline bool
-JSVAL_IS_NUMBER(jsval v)
-{
-    return JSVAL_IS_NUMBER_IMPL(JSVAL_TO_IMPL(v));
-}
-
 static inline jsval
 STRING_TO_JSVAL(JSString *str)
 {

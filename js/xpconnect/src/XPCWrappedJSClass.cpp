@@ -241,7 +241,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
                         rv == NS_NOINTERFACE) {
                         JS_ClearPendingException(cx);
                     }
-                } else if (JSVAL_IS_NUMBER(jsexception)) {
+                } else if (jsexception.isNumber()) {
                     // JS often throws an nsresult.
                     if (jsexception.isDouble())
                         // Visual Studio 9 doesn't allow casting directly from
