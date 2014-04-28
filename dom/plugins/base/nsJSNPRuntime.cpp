@@ -384,7 +384,7 @@ JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant)
   if (JSVAL_IS_PRIMITIVE(val)) {
     if (val == JSVAL_VOID) {
       VOID_TO_NPVARIANT(*variant);
-    } else if (JSVAL_IS_NULL(val)) {
+    } else if (val.isNull()) {
       NULL_TO_NPVARIANT(*variant);
     } else if (JSVAL_IS_BOOLEAN(val)) {
       BOOLEAN_TO_NPVARIANT(JSVAL_TO_BOOLEAN(val), *variant);

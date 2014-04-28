@@ -141,7 +141,7 @@ JSValToDashArray(JSContext* cx, const JS::Value& patternArray,
             // An all-zero pattern makes no sense.
             return NS_ERROR_ILLEGAL_VALUE;
         }
-    } else if (!(JSVAL_IS_VOID(patternArray) || JSVAL_IS_NULL(patternArray))) {
+    } else if (!(JSVAL_IS_VOID(patternArray) || patternArray.isNull())) {
         // undefined and null mean "reset to no dash".  Any other
         // random garbage is a type error.
         return NS_ERROR_INVALID_ARG;

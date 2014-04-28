@@ -63,7 +63,7 @@ XPCTraceableVariant::~XPCTraceableVariant()
     if (!JSVAL_IS_STRING(val))
         nsVariant::Cleanup(&mData);
 
-    if (!JSVAL_IS_NULL(val))
+    if (!val.isNull())
         RemoveFromRootSet();
 }
 

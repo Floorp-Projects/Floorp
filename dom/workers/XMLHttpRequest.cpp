@@ -1256,7 +1256,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   state->mResponseText = mResponseText;
 
   if (NS_SUCCEEDED(mResponseTextResult)) {
-    MOZ_ASSERT(JSVAL_IS_VOID(mResponse) || JSVAL_IS_NULL(mResponse));
+    MOZ_ASSERT(JSVAL_IS_VOID(mResponse) || mResponse.isNull());
     state->mResponseResult = mResponseTextResult;
     state->mResponse = mResponse;
   }
