@@ -411,7 +411,7 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
   JS::Rooted<JS::Value> result(cx, mOpenRequest->GetResult(cx, error));
   ENSURE_SUCCESS(error, error.ErrorCode());
 
-  MOZ_ASSERT(!JSVAL_IS_PRIMITIVE(result));
+  MOZ_ASSERT(!result.isPrimitive());
 
   IDBDatabase *database;
   rv = UNWRAP_OBJECT(IDBDatabase, &result.toObject(), database);

@@ -914,10 +914,7 @@ CanonicalizeNaN(double d)
  * - The JS::Value operations are preferred.  The JSVAL_* operations remain for
  *   compatibility; they may be removed at some point.  These operations mostly
  *   provide similar functionality.  But there are a few key differences.  One
- *   is that JS::Value gives null a separate type. Thus
- *
- *       !JSVAL_IS_PRIMITIVE(v) === v.isObject()
- *
+ *   is that JS::Value gives null a separate type.
  *   Also, to help prevent mistakenly boxing a nullable JSObject* as an object,
  *   Value::setObject takes a JSObject&. (Conversely, Value::toObject returns a
  *   JSObject&.)  A convenience member Value::setObjectOrNull is provided.
@@ -1875,12 +1872,6 @@ static inline jsval
 BOOLEAN_TO_JSVAL(bool b)
 {
     return IMPL_TO_JSVAL(BOOLEAN_TO_JSVAL_IMPL(b));
-}
-
-static inline bool
-JSVAL_IS_PRIMITIVE(jsval v)
-{
-    return JSVAL_IS_PRIMITIVE_IMPL(JSVAL_TO_IMPL(v));
 }
 
 static inline bool

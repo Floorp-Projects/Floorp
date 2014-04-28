@@ -103,14 +103,14 @@ BEGIN_TEST(testParseJSON_success)
     JS::RootedObject obj(cx);
 
     CHECK(Parse(cx, "[]", &v));
-    CHECK(!JSVAL_IS_PRIMITIVE(v));
+    CHECK(!v.isPrimitive());
     obj = v.toObjectOrNull();
     CHECK(JS_IsArrayObject(cx, obj));
     CHECK(JS_GetProperty(cx, obj, "length", &v2));
     CHECK_SAME(v2, JSVAL_ZERO);
 
     CHECK(Parse(cx, "[1]", &v));
-    CHECK(!JSVAL_IS_PRIMITIVE(v));
+    CHECK(!v.isPrimitive());
     obj = v.toObjectOrNull();
     CHECK(JS_IsArrayObject(cx, obj));
     CHECK(JS_GetProperty(cx, obj, "0", &v2));
@@ -121,12 +121,12 @@ BEGIN_TEST(testParseJSON_success)
 
     // Objects
     CHECK(Parse(cx, "{}", &v));
-    CHECK(!JSVAL_IS_PRIMITIVE(v));
+    CHECK(!v.isPrimitive());
     obj = v.toObjectOrNull();
     CHECK(!JS_IsArrayObject(cx, obj));
 
     CHECK(Parse(cx, "{ \"f\": 17 }", &v));
-    CHECK(!JSVAL_IS_PRIMITIVE(v));
+    CHECK(!v.isPrimitive());
     obj = v.toObjectOrNull();
     CHECK(!JS_IsArrayObject(cx, obj));
     CHECK(JS_GetProperty(cx, obj, "f", &v2));

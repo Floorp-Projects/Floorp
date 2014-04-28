@@ -644,7 +644,7 @@ GetIIDArg(uint32_t argc, const JS::Value& val, JSContext* cx)
     // If an IID was passed in then use it
     if (argc) {
         JSObject* iidobj;
-        if (JSVAL_IS_PRIMITIVE(val) ||
+        if (val.isPrimitive() ||
             !(iidobj = val.toObjectOrNull()) ||
             !(iid = xpc_JSObjectToID(cx, iidobj))) {
             return nullptr;

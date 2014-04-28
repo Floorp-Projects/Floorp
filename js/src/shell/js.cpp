@@ -1771,7 +1771,7 @@ GetScriptAndPCArgs(JSContext *cx, unsigned argc, jsval *argv, MutableHandleScrip
     if (argc != 0) {
         jsval v = argv[0];
         unsigned intarg = 0;
-        if (!JSVAL_IS_PRIMITIVE(v) &&
+        if (!v.isPrimitive() &&
             JS_GetClass(&v.toObject()) == Jsvalify(&JSFunction::class_)) {
             script = ValueToScript(cx, v);
             if (!script)
@@ -2569,7 +2569,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
 
     {
         Maybe<JSAutoCompartment> ac;
-        RootedObject obj(cx, JSVAL_IS_PRIMITIVE(args[0]) ? nullptr : &args[0].toObject());
+        RootedObject obj(cx, args[0].isPrimitive() ? nullptr : &args[0].toObject());
 
         if (obj && obj->is<CrossCompartmentWrapperObject>()) {
             obj = UncheckedUnwrap(obj);
@@ -3495,7 +3495,7 @@ Parent(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     Value v = args[0];
-    if (JSVAL_IS_PRIMITIVE(v)) {
+    if (v.isPrimitive()) {
         JS_ReportError(cx, "Only objects have parents!");
         return false;
     }
@@ -4196,7 +4196,7 @@ Wrap(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     Value v = args.get(0);
-    if (JSVAL_IS_PRIMITIVE(v)) {
+    if (v.isPrimitive()) {
         args.rval().set(v);
         return true;
     }
@@ -4979,7 +4979,7 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
             RootedId id(cx, ida[i]);
             if (!JS_LookupPropertyById(cx, global, id, &v))
                 return false;
-            if (JSVAL_IS_PRIMITIVE(v)) {
+            if (v.isPrimitive()) {
                 JS_ReportError(cx, "primitive arg");
                 return false;
             }

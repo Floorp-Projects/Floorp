@@ -397,7 +397,7 @@ CallArgsFromSp(unsigned argc, Value *sp)
 MOZ_ALWAYS_INLINE JS::Value
 JS_THIS(JSContext *cx, JS::Value *vp)
 {
-    return JSVAL_IS_PRIMITIVE(vp[1]) ? JS_ComputeThis(cx, vp) : vp[1];
+    return vp[1].isPrimitive() ? JS_ComputeThis(cx, vp) : vp[1];
 }
 
 /*
