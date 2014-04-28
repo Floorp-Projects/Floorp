@@ -585,7 +585,7 @@ JSVAL_IS_SPECIFIC_INT32_IMPL(jsval_layout l, int32_t i32)
 }
 
 static inline bool
-JSVAL_IS_SPECIFIC_BOOLEAN(jsval_layout l, bool b)
+JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(jsval_layout l, bool b)
 {
     return (l.s.tag == JSVAL_TAG_BOOLEAN) && (l.s.payload.boo == uint32_t(b));
 }
@@ -821,7 +821,7 @@ JSVAL_IS_SPECIFIC_INT32_IMPL(jsval_layout l, int32_t i32)
 }
 
 static inline bool
-JSVAL_IS_SPECIFIC_BOOLEAN(jsval_layout l, bool b)
+JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(jsval_layout l, bool b)
 {
     return l.asBits == (((uint64_t)(uint32_t)b) | JSVAL_SHIFTED_TAG_BOOLEAN);
 }
@@ -1080,11 +1080,11 @@ class Value
     }
 
     bool isTrue() const {
-        return JSVAL_IS_SPECIFIC_BOOLEAN(data, true);
+        return JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(data, true);
     }
 
     bool isFalse() const {
-        return JSVAL_IS_SPECIFIC_BOOLEAN(data, false);
+        return JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(data, false);
     }
 
     bool isMagic() const {
