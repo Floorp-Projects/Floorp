@@ -58,7 +58,7 @@ Library::Name(JSContext* cx, unsigned argc, jsval *vp)
 
   Value arg = args[0];
   JSString* str = nullptr;
-  if (JSVAL_IS_STRING(arg)) {
+  if (arg.isString()) {
     str = JSVAL_TO_STRING(arg);
   }
   else {
@@ -96,7 +96,7 @@ Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
   if (!JS_DefineFunctions(cx, libraryObj, sLibraryFunctions))
     return nullptr;
 
-  if (!JSVAL_IS_STRING(path)) {
+  if (!path.isString()) {
     JS_ReportError(cx, "open takes a string argument");
     return nullptr;
   }

@@ -90,7 +90,7 @@ PostToNFC(JSContext* aCx,
     JSAutoByteString abs;
     void* data;
     size_t size;
-    if (JSVAL_IS_STRING(v)) {
+    if (v.isString()) {
         JS::Rooted<JSString*> str(aCx, v.toString());
         if (!abs.encodeUtf8(aCx, str)) {
             return false;

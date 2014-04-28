@@ -316,7 +316,7 @@ GetJSValueAsString(JSContext* aCtx,
                    const JS::Value& aValue,
                    nsString& _string) {
   if (aValue.isUndefined() ||
-      !(aValue.isNull() || JSVAL_IS_STRING(aValue))) {
+      !(aValue.isNull() || aValue.isString())) {
     _string.SetIsVoid(true);
     return;
   }

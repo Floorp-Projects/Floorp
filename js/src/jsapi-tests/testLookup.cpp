@@ -57,7 +57,7 @@ document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
     JS::RootedValue v(cx);
     if (!JS_IdToValue(cx, id, &v))
         return false;
-    if (JSVAL_IS_STRING(v)) {
+    if (v.isString()) {
         JSString *str = JSVAL_TO_STRING(v);
         JSFlatString *flatStr = JS_FlattenString(cx, str);
         if (!flatStr)
