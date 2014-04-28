@@ -71,9 +71,14 @@
 
 
       switch (data.operation) {
+        case 'clear':
+          is (data.id, null, "'clear' operation wants a null id");
+          break;
+
         case 'done':
           is(/[0-9a-zA-Z]{8}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{12}/.test(data.revisionId), true, "done has a valid revisionId");
           is (data.revisionId, gRevisions[gRevisions.length-1], "Last revision matches");
+          is (data.id, null, "'done' operation wants a null id");
           break;
 
         case 'add':

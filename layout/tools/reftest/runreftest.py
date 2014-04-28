@@ -165,6 +165,10 @@ class RefTest(object):
       prefs['reftest.shuffle'] = True
     prefs['reftest.focusFilterMode'] = options.focusFilterMode
 
+    # Ensure that telemetry is disabled, so we don't connect to the telemetry
+    # server in the middle of the tests.
+    prefs['toolkit.telemetry.enabled'] = False
+
     if options.e10s:
       prefs['browser.tabs.remote.autostart'] = True
 

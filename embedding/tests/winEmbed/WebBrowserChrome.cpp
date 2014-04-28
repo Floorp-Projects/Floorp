@@ -447,7 +447,7 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, int3
     else if (!(strcmp(operation, "replace")))
     {
         status.Assign("Replacing HistoryIndex: ");
-        AppentIntToCString(info1, status);
+        AppendIntToCString(info1, status);
     }
 
     nsString wstatus;

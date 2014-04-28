@@ -219,7 +219,7 @@ public:
                  const nsIntRegion* aVisibleRegion = nullptr,
                  TiledLayerProperties* aLayerProperties = nullptr);
 
-  virtual CompositableType GetType() { return BUFFER_TILED; }
+  virtual CompositableType GetType() { return CompositableType::BUFFER_TILED; }
 
   virtual TiledLayerComposer* AsTiledLayerComposer() MOZ_OVERRIDE { return this; }
 

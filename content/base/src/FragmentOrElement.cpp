@@ -954,13 +954,16 @@ FragmentOrElement::SetXBLBinding(nsXBLBinding* aBinding,
     bindingManager->RemoveFromAttachedQueue(oldBinding);
   }
 
-  nsDOMSlots *slots = DOMSlots();
   if (aBinding) {
     SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
+    nsDOMSlots *slots = DOMSlots();
     slots->mXBLBinding = aBinding;
     bindingManager->AddBoundContent(this);
   } else {
-    slots->mXBLBinding = nullptr;
+    nsDOMSlots *slots = GetExistingDOMSlots();
+    if (slots) {
+      slots->mXBLBinding = nullptr;
+    }
     bindingManager->RemoveBoundContent(this);
     if (oldBinding) {
       oldBinding->SetBoundElement(nullptr);
@@ -1011,11 +1014,16 @@ FragmentOrElement::SetShadowRoot(ShadowRoot* aShadowRoot)
 void
 FragmentOrElement::SetXBLInsertionParent(nsIContent* aContent)
 {
-  nsDOMSlots *slots = DOMSlots();
   if (aContent) {
+    nsDOMSlots *slots = DOMSlots();
     SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
+    slots->mXBLInsertionParent = aContent;
+  } else {
+    nsDOMSlots *slots = GetExistingDOMSlots();
+    if (slots) {
+      slots->mXBLInsertionParent = nullptr;
+    }
   }
-  slots->mXBLInsertionParent = aContent;
 }
 
 CustomElementData*

@@ -362,7 +362,7 @@ TiledTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion
 
     bool result = true;
     int oldCurrentImage = mCurrentImage;
-    BeginTileIteration();
+    BeginBigImageIteration();
     do {
         nsIntRect tileRect = ThebesIntRect(GetSrcTileRect());
         int xPos = tileRect.x;
@@ -547,7 +547,7 @@ TiledTextureImage::EndUpdate()
     mTextureState = Valid;
 }
 
-void TiledTextureImage::BeginTileIteration()
+void TiledTextureImage::BeginBigImageIteration()
 {
     mCurrentImage = 0;
 }
@@ -567,7 +567,7 @@ bool TiledTextureImage::NextTile()
     return false;
 }
 
-void TiledTextureImage::SetIterationCallback(TileIterationCallback aCallback,
+void TiledTextureImage::SetIterationCallback(BigImageIterationCallback aCallback,
                                              void* aCallbackData)
 {
     mIterationCallback = aCallback;
