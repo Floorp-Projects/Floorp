@@ -43,7 +43,7 @@ interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 interface nsITranslationNodeList;
 
-[scriptable, uuid(9376bafe-e7b1-48e7-87e2-1e64a7b5d54d)]
+[scriptable, uuid(d68ea9fa-b1ea-4744-a78e-bb0e6ef95f55)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1672,6 +1672,12 @@ interface nsIDOMWindowUtils : nsISupports {
      * volume of all ancestor windows.
      */
     attribute float audioVolume;
+
+    /**
+     * This method doesn't do anything useful.  It was solely added for the
+     * purpose of the test for bug 503926.
+     */
+    void xpconnectArgument(in nsIDOMWindowUtils aThis);
 };
 
 [scriptable, uuid(c694e359-7227-4392-a138-33c0cc1f15a6)]
