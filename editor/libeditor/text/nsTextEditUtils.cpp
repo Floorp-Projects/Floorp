@@ -38,13 +38,6 @@ nsTextEditUtils::IsBreak(nsIDOMNode *node)
 {
   return nsEditor::NodeIsType(node, nsGkAtoms::br);
 }
- 
-bool 
-nsTextEditUtils::IsBreak(nsINode* aNode)
-{
-  MOZ_ASSERT(aNode);
-  return aNode->IsElement() && aNode->AsElement()->IsHTML(nsGkAtoms::br);
-}
 
 
 ///////////////////////////////////////////////////////////////////////////
