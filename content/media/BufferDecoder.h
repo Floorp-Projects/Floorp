@@ -32,7 +32,7 @@ public:
 
   virtual ReentrantMonitor& GetReentrantMonitor() MOZ_OVERRIDE;
 
-  virtual bool IsShutdown() const MOZ_FINAL MOZ_OVERRIDE;
+  virtual bool IsShutdown() const MOZ_OVERRIDE;
 
   virtual bool OnStateMachineThread() const MOZ_OVERRIDE;
 
@@ -40,11 +40,11 @@ public:
 
   virtual MediaResource* GetResource() const MOZ_OVERRIDE;
 
-  virtual void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) MOZ_OVERRIDE;
 
-  virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded) MOZ_OVERRIDE;
 
-  virtual int64_t GetEndMediaTime() const MOZ_FINAL MOZ_OVERRIDE;
+  virtual int64_t GetEndMediaTime() const MOZ_OVERRIDE;
 
   virtual int64_t GetMediaDuration() MOZ_OVERRIDE;
 
@@ -56,25 +56,25 @@ public:
 
   virtual void SetTransportSeekable(bool aTransportSeekable) MOZ_OVERRIDE;
 
-  virtual VideoFrameContainer* GetVideoFrameContainer() MOZ_FINAL MOZ_OVERRIDE;
+  virtual VideoFrameContainer* GetVideoFrameContainer() MOZ_OVERRIDE;
   virtual layers::ImageContainer* GetImageContainer() MOZ_OVERRIDE;
 
-  virtual bool IsTransportSeekable() MOZ_FINAL MOZ_OVERRIDE;
+  virtual bool IsTransportSeekable() MOZ_OVERRIDE;
 
-  virtual bool IsMediaSeekable() MOZ_FINAL MOZ_OVERRIDE;
+  virtual bool IsMediaSeekable() MOZ_OVERRIDE;
 
-  virtual void MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
-  virtual void QueueMetadata(int64_t aTime, int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags) MOZ_OVERRIDE;
+  virtual void QueueMetadata(int64_t aTime, int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags) MOZ_OVERRIDE;
 
-  virtual void SetMediaEndTime(int64_t aTime) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void SetMediaEndTime(int64_t aTime) MOZ_OVERRIDE;
 
-  virtual void UpdatePlaybackPosition(int64_t aTime) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void UpdatePlaybackPosition(int64_t aTime) MOZ_OVERRIDE;
 
-  virtual void OnReadMetadataCompleted() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void OnReadMetadataCompleted() MOZ_OVERRIDE;
 
   virtual MediaDecoderOwner* GetOwner() MOZ_OVERRIDE;
 
-  virtual void NotifyWaitingForResourcesStatusChanged() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void NotifyWaitingForResourcesStatusChanged() MOZ_OVERRIDE;
 
 protected:
   // This monitor object is not really used to synchronize access to anything.

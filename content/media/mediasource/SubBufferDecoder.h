@@ -40,6 +40,7 @@ public:
   virtual bool OnStateMachineThread() const MOZ_OVERRIDE;
   virtual bool OnDecodeThread() const MOZ_OVERRIDE;
   virtual SourceBufferResource* GetResource() const MOZ_OVERRIDE;
+  virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded) MOZ_OVERRIDE;
   virtual void SetMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
   virtual void UpdateEstimatedMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
   virtual void SetMediaSeekable(bool aMediaSeekable) MOZ_OVERRIDE;
