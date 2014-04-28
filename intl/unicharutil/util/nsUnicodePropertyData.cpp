@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Mon Oct 21 16:33:35 2013 from UCD data files with version info:
+ * Created on Mon Apr 28 11:24:35 2014 from UCD data files with version info:
  *
 
 # Date: 2013-09-27, 23:05:00 GMT [KW]
@@ -160,7 +160,8 @@ static const uint32_t sScriptCodeToTag[] = {
   HB_TAG('P','l','r','d'),
   HB_TAG('S','h','r','d'),
   HB_TAG('S','o','r','a'),
-  HB_TAG('T','a','k','r')
+  HB_TAG('T','a','k','r'),
+  HB_TAG('Z','m','t','h')
 };
 
 static const int16_t sMirrorOffsets[] = {

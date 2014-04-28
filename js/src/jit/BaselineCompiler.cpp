@@ -342,7 +342,7 @@ BaselineCompiler::emitPrologue()
     Register loggerReg = RegisterSet::Volatile().takeGeneral();
     masm.Push(loggerReg);
     masm.movePtr(ImmPtr(logger), loggerReg);
-    masm.tracelogStart(loggerReg, TraceLogCreateTextId(logger, script.get()));
+    masm.tracelogStart(loggerReg, TraceLogCreateTextId(logger, script));
     masm.tracelogStart(loggerReg, TraceLogger::Baseline);
     masm.Pop(loggerReg);
 #endif

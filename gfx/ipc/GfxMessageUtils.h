@@ -323,6 +323,35 @@ struct ParamTraits<mozilla::gfx::ColorSpace>
              mozilla::gfx::ColorSpace::Max>
 {};
 
+template <>
+struct ParamTraits<mozilla::layers::TextureFlags>
+  : public BitFlagsTypedEnumSerializer<
+            mozilla::layers::TextureFlags,
+            mozilla::layers::TextureFlags::ALL_BITS>
+{};
+
+template <>
+struct ParamTraits<mozilla::layers::TextureIdentifier>
+  : public ContiguousTypedEnumSerializer<
+             mozilla::layers::TextureIdentifier,
+             mozilla::layers::TextureIdentifier::Front,
+             mozilla::layers::TextureIdentifier::HighBound>
+{};
+
+template <>
+struct ParamTraits<mozilla::layers::DeprecatedTextureHostFlags>
+  : public BitFlagsTypedEnumSerializer<
+             mozilla::layers::DeprecatedTextureHostFlags,
+             mozilla::layers::DeprecatedTextureHostFlags::ALL_BITS>
+{};
+
+template <>
+struct ParamTraits<mozilla::layers::DiagnosticTypes>
+  : public BitFlagsTypedEnumSerializer<
+             mozilla::layers::DiagnosticTypes,
+             mozilla::layers::DiagnosticTypes::ALL_BITS>
+{};
+
 /*
 template <>
 struct ParamTraits<mozilla::PixelFormat>
@@ -809,10 +838,10 @@ struct ParamTraits<mozilla::layers::TextureInfo>
 
 template <>
 struct ParamTraits<mozilla::layers::CompositableType>
-  : public ContiguousEnumSerializer<
+  : public ContiguousTypedEnumSerializer<
              mozilla::layers::CompositableType,
-             mozilla::layers::BUFFER_UNKNOWN,
-             mozilla::layers::BUFFER_COUNT>
+             mozilla::layers::CompositableType::BUFFER_UNKNOWN,
+             mozilla::layers::CompositableType::BUFFER_COUNT>
 {};
 
 template <>

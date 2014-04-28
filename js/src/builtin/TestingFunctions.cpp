@@ -1002,24 +1002,51 @@ Terminate(JSContext *cx, unsigned arg, jsval *vp)
     return false;
 }
 
+#define SPS_PROFILING_STACK_MAX_SIZE 1000
+static ProfileEntry SPS_PROFILING_STACK[SPS_PROFILING_STACK_MAX_SIZE];
+static uint32_t SPS_PROFILING_STACK_SIZE = 0;
+
 static bool
-EnableSPSProfilingAssertions(JSContext *cx, unsigned argc, jsval *vp)
+EnableSPSProfiling(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.get(0).isBoolean()) {
-        RootedObject arg(cx, &args.callee());
-        ReportUsageError(cx, arg, "Must have one boolean argument");
-        return false;
-    }
-
-    static ProfileEntry stack[1000];
-    static uint32_t stack_size = 0;
 
     // Disable before re-enabling; see the assertion in |SPSProfiler::setProfilingStack|.
     if (cx->runtime()->spsProfiler.installed())
         cx->runtime()->spsProfiler.enable(false);
-    SetRuntimeProfilingStack(cx->runtime(), stack, &stack_size, 1000);
-    cx->runtime()->spsProfiler.enableSlowAssertions(args[0].toBoolean());
+
+    SetRuntimeProfilingStack(cx->runtime(), SPS_PROFILING_STACK, &SPS_PROFILING_STACK_SIZE,
+                             SPS_PROFILING_STACK_MAX_SIZE);
+    cx->runtime()->spsProfiler.enableSlowAssertions(false);
+    cx->runtime()->spsProfiler.enable(true);
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+EnableSPSProfilingWithSlowAssertions(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (cx->runtime()->spsProfiler.enabled()) {
+        // If profiling already enabled with slow assertions disabled,
+        // this is a no-op.
+        if (cx->runtime()->spsProfiler.slowAssertionsEnabled())
+            return true;
+
+        // Slow assertions are off.  Disable profiling before re-enabling
+        // with slow assertions on.
+        cx->runtime()->spsProfiler.enable(false);
+    }
+
+    // Disable before re-enabling; see the assertion in |SPSProfiler::setProfilingStack|.
+    if (cx->runtime()->spsProfiler.installed())
+        cx->runtime()->spsProfiler.enable(false);
+
+    SetRuntimeProfilingStack(cx->runtime(), SPS_PROFILING_STACK, &SPS_PROFILING_STACK_SIZE,
+                             SPS_PROFILING_STACK_MAX_SIZE);
+    cx->runtime()->spsProfiler.enableSlowAssertions(true);
     cx->runtime()->spsProfiler.enable(true);
 
     args.rval().setUndefined();
@@ -1703,14 +1730,17 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Terminate JavaScript execution, as if we had run out of\n"
 "  memory or been terminated by the slow script dialog."),
 
-    JS_FN_HELP("enableSPSProfilingAssertions", EnableSPSProfilingAssertions, 1, 0,
-"enableSPSProfilingAssertions(slow)",
-"  Enables SPS instrumentation and corresponding assertions. If 'slow' is\n"
-"  true, then even slower assertions are enabled for all generated JIT code.\n"
-"  When 'slow' is false, then instrumentation is enabled, but the slow\n"
-"  assertions are disabled."),
+    JS_FN_HELP("enableSPSProfiling", EnableSPSProfiling, 0, 0,
+"enableSPSProfiling()",
+"  Enables SPS instrumentation and corresponding assertions, with slow\n"
+"  assertions disabled.\n"),
 
-    JS_FN_HELP("disableSPSProfiling", DisableSPSProfiling, 1, 0,
+    JS_FN_HELP("enableSPSProfilingWithSlowAssertions", EnableSPSProfilingWithSlowAssertions, 0, 0,
+"enableSPSProfilingWithSlowAssertions()",
+"  Enables SPS instrumentation and corresponding assertions, with slow\n"
+"  assertions enabled.\n"),
+
+    JS_FN_HELP("disableSPSProfiling", DisableSPSProfiling, 0, 0,
 "disableSPSProfiling()",
 "  Disables SPS instrumentation"),
 
