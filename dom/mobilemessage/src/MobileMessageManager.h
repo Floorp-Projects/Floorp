@@ -38,7 +38,7 @@ private:
                 uint32_t aServiceId,
                 JS::Handle<JSString*> aNumber,
                 const nsAString& aMessage,
-                JS::Value* aRequest);
+                JS::MutableHandle<JS::Value> aRequest);
 
   nsresult DispatchTrustedSmsEventToSelf(const char* aTopic,
                                          const nsAString& aEventName,
