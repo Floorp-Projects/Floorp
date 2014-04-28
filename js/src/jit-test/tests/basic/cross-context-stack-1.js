@@ -6,16 +6,16 @@ function alpha() {
     beta();
 }
 alpha();
-assertEq(/alpha/.test(stack), true);
-assertEq(/beta/.test(stack), true);
-assertEq(/gamma/.test(stack), true);
-assertEq(/delta/.test(stack), false);
+assertEq(/alpha@/.test(stack), true);
+assertEq(/beta@/.test(stack), true);
+assertEq(/gamma@/.test(stack), true);
+assertEq(/delta@/.test(stack), false);
 
 function delta() {
     evaluate("stack = Error().stack", {newContext: true});
 }
 delta();
-assertEq(/alpha/.test(stack), false);
-assertEq(/beta/.test(stack), false);
-assertEq(/gamma/.test(stack), false);
-assertEq(/delta/.test(stack), true);
+assertEq(/alpha@/.test(stack), false);
+assertEq(/beta@/.test(stack), false);
+assertEq(/gamma@/.test(stack), false);
+assertEq(/delta@/.test(stack), true);
