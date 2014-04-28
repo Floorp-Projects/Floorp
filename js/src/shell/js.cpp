@@ -601,7 +601,7 @@ Version(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JSVersion origVersion = JS_GetVersion(cx);
-    if (args.length() == 0 || JSVAL_IS_VOID(args[0])) {
+    if (args.length() == 0 || args[0].isUndefined()) {
         /* Get version. */
         args.rval().setInt32(origVersion);
     } else {
@@ -4955,7 +4955,7 @@ PrintHelp(JSContext *cx, HandleObject obj)
     if (!JS_LookupProperty(cx, obj, "help", &help))
         return false;
 
-    if (JSVAL_IS_VOID(usage) || JSVAL_IS_VOID(help))
+    if (usage.isUndefined() || help.isUndefined())
         return true;
 
     return PrintHelpString(cx, usage) && PrintHelpString(cx, help);

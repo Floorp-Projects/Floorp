@@ -315,7 +315,7 @@ void
 GetJSValueAsString(JSContext* aCtx,
                    const JS::Value& aValue,
                    nsString& _string) {
-  if (JSVAL_IS_VOID(aValue) ||
+  if (aValue.isUndefined() ||
       !(aValue.isNull() || JSVAL_IS_STRING(aValue))) {
     _string.SetIsVoid(true);
     return;
@@ -387,7 +387,7 @@ GetIntFromJSObject(JSContext* aCtx,
   JS::Rooted<JS::Value> value(aCtx);
   bool rc = JS_GetProperty(aCtx, aObject, aProperty, &value);
   NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
-  if (JSVAL_IS_VOID(value)) {
+  if (value.isUndefined()) {
     return NS_ERROR_INVALID_ARG;
   }
   NS_ENSURE_ARG(JSVAL_IS_PRIMITIVE(value));

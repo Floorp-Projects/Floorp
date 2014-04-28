@@ -71,7 +71,7 @@ CoerceDouble(JS::Value v, double* d)
         *d = JSVAL_TO_DOUBLE(v);
     } else if (JSVAL_IS_INT(v)) {
         *d = double(JSVAL_TO_INT(v));
-    } else if (JSVAL_IS_VOID(v)) {
+    } else if (v.isUndefined()) {
         *d = 0.0;
     } else {
         return false;
