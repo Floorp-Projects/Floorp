@@ -1,0 +1,20 @@
+{
+  "name": "Stopwatch",
+  "description": "Simple stopwatch",
+  "launch_path": "/index.html",
+  "icons": {
+    "128": "/static/img/icon.png"
+  },
+  "developer": {
+    "name": "Andy McKay",
+    "url": "http://www.agmweb.ca/blog/andy/"
+  },
+  "locales": {
+    "fr": {
+      "description": "Simple chronomètre"
+   }
+  },
+  "installs_allowed_from": ["*"],
+  "default_locale": "en",
+  "package_path": "marketplace_reviewers_app.zip"
+}
