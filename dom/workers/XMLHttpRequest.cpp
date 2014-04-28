@@ -1160,7 +1160,7 @@ EventRunnable::PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     JS::Rooted<JS::Value> response(aCx);
     mResponseResult = xhr->GetResponse(aCx, &response);
     if (NS_SUCCEEDED(mResponseResult)) {
-      if (JSVAL_IS_UNIVERSAL(response)) {
+      if (!response.isGCThing()) {
         mResponse = response;
       }
       else {
