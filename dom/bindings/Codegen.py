@@ -12525,8 +12525,8 @@ class CallbackMember(CGNativeMember):
                 {
                     'result': result,
                     'successCode': "continue;\n" if arg.variadic else "break;\n",
-                    'jsvalRef': "argv.handleAt(%s)" % jsvalIndex,
-                    'jsvalHandle': "argv.handleAt(%s)" % jsvalIndex,
+                    'jsvalRef': "argv[%s]" % jsvalIndex,
+                    'jsvalHandle': "argv[%s]" % jsvalIndex,
                     # XXXbz we don't have anything better to use for 'obj',
                     # really...  It's OK to use CallbackPreserveColor because
                     # CallSetup already handled the unmark-gray bits for us.
@@ -12558,7 +12558,7 @@ class CallbackMember(CGNativeMember):
                   // This is our current trailing argument; reduce argc
                   --argc;
                 } else {
-                  argv[${i}] = JS::UndefinedValue();
+                  argv[${i}].setUndefined();
                 }
                 """,
                 argName=arg.identifier.name,
@@ -12816,7 +12816,7 @@ class CallbackSetter(CallbackAccessor):
         return fill(
             """
             MOZ_ASSERT(argv.length() == 1);
-            if (!JS_SetProperty(cx, CallbackPreserveColor(), "${attrName}", argv.handleAt(0))) {
+            if (!JS_SetProperty(cx, CallbackPreserveColor(), "${attrName}", argv[0])) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
               return${errorReturn};
             }

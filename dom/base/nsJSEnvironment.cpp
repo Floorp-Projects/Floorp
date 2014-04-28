@@ -1002,7 +1002,7 @@ nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, n
   // got the arguments, now attach them.
 
   for (uint32_t i = 0; i < args.length(); ++i) {
-    if (!JS_WrapValue(mContext, args.handleAt(i))) {
+    if (!JS_WrapValue(mContext, args[i])) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -1066,7 +1066,7 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports* aArgs,
   if (argsArray) {
     for (uint32_t argCtr = 0; argCtr < argCount && NS_SUCCEEDED(rv); argCtr++) {
       nsCOMPtr<nsISupports> arg;
-      JS::MutableHandle<JS::Value> thisVal = aArgsOut.handleAt(argCtr);
+      JS::MutableHandle<JS::Value> thisVal = aArgsOut[argCtr];
       argsArray->QueryElementAt(argCtr, NS_GET_IID(nsISupports),
                                 getter_AddRefs(arg));
       if (!arg) {
@@ -1099,7 +1099,7 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports* aArgs,
   } else {
     nsCOMPtr<nsIVariant> variant = do_QueryInterface(aArgs);
     if (variant) {
-      rv = xpc->VariantToJS(cx, aScope, variant, aArgsOut.handleAt(0));
+      rv = xpc->VariantToJS(cx, aScope, variant, aArgsOut[0]);
     } else {
       NS_ERROR("Not an array, not an interface?");
       rv = NS_ERROR_UNEXPECTED;
