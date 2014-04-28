@@ -390,7 +390,7 @@ JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant)
       BOOLEAN_TO_NPVARIANT(val.toBoolean(), *variant);
     } else if (JSVAL_IS_INT(val)) {
       INT32_TO_NPVARIANT(JSVAL_TO_INT(val), *variant);
-    } else if (JSVAL_IS_DOUBLE(val)) {
+    } else if (val.isDouble()) {
       double d = JSVAL_TO_DOUBLE(val);
       int i;
       if (JS_DoubleIsInt32(d, &i)) {

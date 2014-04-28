@@ -2162,7 +2162,7 @@ jsdValue::GetJsType (uint32_t *_rval)
         *_rval = TYPE_NULL;
     else if (JSVAL_IS_BOOLEAN(val))
         *_rval = TYPE_BOOLEAN;
-    else if (JSVAL_IS_DOUBLE(val))
+    else if (val.isDouble())
         *_rval = TYPE_DOUBLE;
     else if (JSVAL_IS_INT(val))
         *_rval = TYPE_INT;
