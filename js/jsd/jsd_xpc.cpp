@@ -2158,7 +2158,7 @@ jsdValue::GetJsType (uint32_t *_rval)
     ASSERT_VALID_EPHEMERAL;
     JS::RootedValue val(JSD_GetJSRuntime(mCx), JSD_GetValueWrappedJSVal (mCx, mValue));
 
-    if (JSVAL_IS_NULL(val))
+    if (val.isNull())
         *_rval = TYPE_NULL;
     else if (JSVAL_IS_BOOLEAN(val))
         *_rval = TYPE_BOOLEAN;
