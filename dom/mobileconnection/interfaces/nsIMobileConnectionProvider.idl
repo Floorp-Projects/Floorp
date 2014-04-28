@@ -11,7 +11,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMWindow;
 interface nsIVariant;
 
-[scriptable, uuid(5013f5cc-24f9-45dc-ba03-f5dc031a3a6b)]
+[scriptable, uuid(64eb8c1a-34b6-4ff8-ba47-23a5f9bea68c)]
 interface nsIMobileConnectionListener : nsISupports
 {
   void notifyVoiceChanged();
@@ -30,6 +30,7 @@ interface nsIMobileConnectionListener : nsISupports
   void notifyOtaStatusChanged(in DOMString status);
   void notifyIccChanged();
   void notifyRadioStateChanged();
+  void notifyClirModeChanged(in unsigned long mode);
 };
 
 /**

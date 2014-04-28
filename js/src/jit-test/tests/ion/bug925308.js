@@ -2,7 +2,7 @@
 
 var lfcode = new Array();
 lfcode.push("3");
-lfcode.push("enableSPSProfilingAssertions(false);foo();");
+lfcode.push("enableSPSProfiling();foo();");
 while (true) {
   var file = lfcode.shift(); if (file == undefined) { break; }
   loadFile(file)

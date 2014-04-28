@@ -41,6 +41,7 @@ using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
+using mozilla::layers::TextureIdentifier from "mozilla/layers/CompositorTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -311,7 +312,7 @@ struct OpPaintTextureRegion {
 
 struct OpPaintTextureIncremental {
   PCompositable compositable;
-  uint32_t textureId;
+  TextureIdentifier textureId;
   SurfaceDescriptor image;
   nsIntRegion updatedRegion;
   nsIntRect bufferRect;
@@ -409,7 +410,7 @@ struct OpContentBufferSwap {
 
 struct OpTextureSwap {
   PCompositable compositable;
-  uint32_t textureId;
+  TextureIdentifier textureId;
   SurfaceDescriptor image;
 };
 

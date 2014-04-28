@@ -43,7 +43,7 @@ CanvasClient::CreateCanvasClient(CanvasClientType aType,
 #endif
   if (aType == CanvasClientGLContext &&
       aForwarder->GetCompositorBackendType() == LayersBackend::LAYERS_OPENGL) {
-    aFlags |= TEXTURE_DEALLOCATE_CLIENT;
+    aFlags |= TextureFlags::DEALLOCATE_CLIENT;
     return new CanvasClientSurfaceStream(aForwarder, aFlags);
   }
   return new CanvasClient2D(aForwarder, aFlags);
@@ -66,9 +66,9 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
                                                 : gfxContentType::COLOR_ALPHA;
     gfxImageFormat format
       = gfxPlatform::GetPlatform()->OptimalFormatForContent(contentType);
-    uint32_t flags = TEXTURE_FLAGS_DEFAULT;
-    if (mTextureFlags & TEXTURE_NEEDS_Y_FLIP) {
-      flags |= TEXTURE_NEEDS_Y_FLIP;
+    TextureFlags flags = TextureFlags::DEFAULT;
+    if (mTextureFlags & TextureFlags::NEEDS_Y_FLIP) {
+      flags |= TextureFlags::NEEDS_Y_FLIP;
     }
     mBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format),
                                         flags,
@@ -79,7 +79,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     bufferCreated = true;
   }
 
-  if (!mBuffer->Lock(OPEN_WRITE_ONLY)) {
+  if (!mBuffer->Lock(OpenMode::OPEN_WRITE_ONLY)) {
     mBuffer = nullptr;
     return;
   }

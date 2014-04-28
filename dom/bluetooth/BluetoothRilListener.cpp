@@ -148,6 +148,12 @@ MobileConnectionListener::NotifyRadioStateChanged()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+MobileConnectionListener::NotifyClirModeChanged(uint32_t aMode)
+{
+  return NS_OK;
+}
+
 bool
 MobileConnectionListener::Listen(bool aStart)
 {
