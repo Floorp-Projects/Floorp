@@ -1385,7 +1385,7 @@ SizeOfDataIfCDataObject(mozilla::MallocSizeOf mallocSizeOf, JSObject *obj)
     size_t n = 0;
     jsval slot = JS_GetReservedSlot(obj, ctypes::SLOT_OWNS);
     if (!slot.isUndefined()) {
-        bool owns = JSVAL_TO_BOOLEAN(slot);
+        bool owns = slot.toBoolean();
         slot = JS_GetReservedSlot(obj, ctypes::SLOT_DATA);
         if (!slot.isUndefined()) {
             char** buffer = static_cast<char**>(JSVAL_TO_PRIVATE(slot));
@@ -1576,7 +1576,7 @@ static bool
 jsvalToBool(JSContext* cx, jsval val, bool* result)
 {
   if (JSVAL_IS_BOOLEAN(val)) {
-    *result = JSVAL_TO_BOOLEAN(val);
+    *result = val.toBoolean();
     return true;
   }
   if (JSVAL_IS_INT(val)) {
@@ -1675,7 +1675,7 @@ jsvalToInteger(JSContext* cx, jsval val, IntegerType* result)
   }
   if (JSVAL_IS_BOOLEAN(val)) {
     // Implicitly promote boolean values to 0 or 1, like C.
-    *result = JSVAL_TO_BOOLEAN(val);
+    *result = val.toBoolean();
     JS_ASSERT(*result == 0 || *result == 1);
     return true;
   }
@@ -6357,7 +6357,7 @@ CData::Finalize(JSFreeOp *fop, JSObject* obj)
   if (slot.isUndefined())
     return;
 
-  bool owns = JSVAL_TO_BOOLEAN(slot);
+  bool owns = slot.toBoolean();
 
   slot = JS_GetReservedSlot(obj, SLOT_DATA);
   if (slot.isUndefined())
