@@ -2542,66 +2542,67 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
   return res;
 }
 
-NS_IMETHODIMP
-nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName, nsIDOMElement** aReturn)
+already_AddRefed<Element>
+nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName)
 {
-  nsresult res=NS_ERROR_NOT_INITIALIZED;
-  if (aReturn)
-    *aReturn = nullptr;
+  MOZ_ASSERT(!aTagName.IsEmpty());
 
-//  NS_ENSURE_TRUE(aTagName && aReturn, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(!aTagName.IsEmpty() && aReturn, NS_ERROR_NULL_POINTER);
-    
-  nsAutoString TagName(aTagName);
-  ToLowerCase(TagName);
+  nsAutoString tagName(aTagName);
+  ToLowerCase(tagName);
   nsAutoString realTagName;
 
-  if (IsLinkTag(TagName) || IsNamedAnchorTag(TagName))
-  {
+  if (IsLinkTag(tagName) || IsNamedAnchorTag(tagName)) {
     realTagName.AssignLiteral("a");
   } else {
-    realTagName = TagName;
+    realTagName = tagName;
   }
-  //We don't use editor's CreateElement because we don't want to 
-  //  go through the transaction system
+  // We don't use editor's CreateElement because we don't want to go through
+  // the transaction system
 
-  nsCOMPtr<nsIDOMElement>newElement;
-  nsCOMPtr<dom::Element> newContent;
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
-  NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
-
+  // New call to use instead to get proper HTML element, bug 39919
   ErrorResult rv;
-  newContent = CreateHTMLContent(realTagName, rv);
-  newElement = do_QueryInterface(newContent);
+  nsCOMPtr<dom::Element> newElement = CreateHTMLContent(realTagName, rv);
   if (rv.Failed() || !newElement) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
 
   // Mark the new element dirty, so it will be formatted
-  newElement->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), EmptyString());
+  newElement->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), EmptyString(), rv);
 
   // Set default values for new elements
-  if (TagName.EqualsLiteral("table")) {
-    res = newElement->SetAttribute(NS_LITERAL_STRING("cellpadding"),NS_LITERAL_STRING("2"));
-    NS_ENSURE_SUCCESS(res, res);
-    res = newElement->SetAttribute(NS_LITERAL_STRING("cellspacing"),NS_LITERAL_STRING("2"));
-    NS_ENSURE_SUCCESS(res, res);
-    res = newElement->SetAttribute(NS_LITERAL_STRING("border"),NS_LITERAL_STRING("1"));
-  } else if (TagName.EqualsLiteral("td"))
-  {
-    res = SetAttributeOrEquivalent(newElement, NS_LITERAL_STRING("valign"),
-                                   NS_LITERAL_STRING("top"), true);
+  if (tagName.EqualsLiteral("table")) {
+    newElement->SetAttribute(NS_LITERAL_STRING("cellpadding"),
+                             NS_LITERAL_STRING("2"), rv);
+    NS_ENSURE_SUCCESS(rv.ErrorCode(), nullptr);
+    newElement->SetAttribute(NS_LITERAL_STRING("cellspacing"),
+                             NS_LITERAL_STRING("2"), rv);
+    NS_ENSURE_SUCCESS(rv.ErrorCode(), nullptr);
+    newElement->SetAttribute(NS_LITERAL_STRING("border"),
+                             NS_LITERAL_STRING("1"), rv);
+    NS_ENSURE_SUCCESS(rv.ErrorCode(), nullptr);
+  } else if (tagName.EqualsLiteral("td")) {
+    nsresult res = SetAttributeOrEquivalent(
+        static_cast<nsIDOMElement*>(newElement->AsDOMNode()),
+        NS_LITERAL_STRING("valign"), NS_LITERAL_STRING("top"), true);
+    NS_ENSURE_SUCCESS(res, nullptr);
   }
   // ADD OTHER TAGS HERE
 
-  if (NS_SUCCEEDED(res))
-  {
-    *aReturn = newElement;
-    // Getters must addref
-    NS_ADDREF(*aReturn);
-  }
+  return newElement.forget();
+}
 
-  return res;
+NS_IMETHODIMP
+nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName, nsIDOMElement** aReturn)
+{
+  NS_ENSURE_TRUE(!aTagName.IsEmpty() && aReturn, NS_ERROR_NULL_POINTER);
+  *aReturn = nullptr;
+
+  nsCOMPtr<Element> newElement = CreateElementWithDefaults(aTagName);
+  nsCOMPtr<nsIDOMElement> ret = do_QueryInterface(newElement);
+  NS_ENSURE_TRUE(ret, NS_ERROR_FAILURE);
+
+  ret.forget(aReturn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
