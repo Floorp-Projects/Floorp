@@ -668,7 +668,8 @@ nsWSRunObject::GetWSNodes()
             mLastNBSPOffset = pos;
           }
         }
-        start.SetPoint(mNode,pos);
+        start.node = do_QueryInterface(mNode);
+        start.offset = pos;
       }
     }
   }
@@ -683,7 +684,8 @@ nsWSRunObject::GetWSNodes()
     {
       if (IsBlockNode(priorNode))
       {
-        start.GetPoint(mStartNode, mStartOffset);
+        mStartNode = GetAsDOMNode(start.node);
+        mStartOffset = start.offset;
         mStartReason = WSType::otherBlock;
         mStartReasonNode = priorNode;
       }
@@ -744,7 +746,8 @@ nsWSRunObject::GetWSNodes()
       {
         // it's a break or a special node, like <img>, that is not a block and not
         // a break but still serves as a terminator to ws runs.
-        start.GetPoint(mStartNode, mStartOffset);
+        mStartNode = GetAsDOMNode(start.node);
+        mStartOffset = start.offset;
         if (nsTextEditUtils::IsBreak(priorNode))
           mStartReason = WSType::br;
         else
@@ -755,7 +758,8 @@ nsWSRunObject::GetWSNodes()
     else
     {
       // no prior node means we exhausted wsBoundingParent
-      start.GetPoint(mStartNode, mStartOffset);
+      mStartNode = GetAsDOMNode(start.node);
+      mStartOffset = start.offset;
       mStartReason = WSType::thisBlock;
       mStartReasonNode = wsBoundingParent;
     } 
@@ -817,7 +821,8 @@ nsWSRunObject::GetWSNodes()
       if (IsBlockNode(nextNode))
       {
         // we encountered a new block.  therefore no more ws.
-        end.GetPoint(mEndNode, mEndOffset);
+        mEndNode = GetAsDOMNode(end.node);
+        mEndOffset = end.offset;
         mEndReason = WSType::otherBlock;
         mEndReasonNode = nextNode;
       }
@@ -879,7 +884,8 @@ nsWSRunObject::GetWSNodes()
         // we encountered a break or a special node, like <img>, 
         // that is not a block and not a break but still 
         // serves as a terminator to ws runs.
-        end.GetPoint(mEndNode, mEndOffset);
+        mEndNode = GetAsDOMNode(end.node);
+        mEndOffset = end.offset;
         if (nsTextEditUtils::IsBreak(nextNode))
           mEndReason = WSType::br;
         else
@@ -890,7 +896,8 @@ nsWSRunObject::GetWSNodes()
     else
     {
       // no next node means we exhausted wsBoundingParent
-      end.GetPoint(mEndNode, mEndOffset);
+      mEndNode = GetAsDOMNode(end.node);
+      mEndOffset = end.offset;
       mEndReason = WSType::thisBlock;
       mEndReasonNode = wsBoundingParent;
     } 
@@ -1128,10 +1135,8 @@ nsWSRunObject::GetPreviousWSNode(DOMPoint aPoint,
                                  nsIDOMNode *aBlockParent, 
                                  nsCOMPtr<nsIDOMNode> *aPriorNode)
 {
-  nsCOMPtr<nsIDOMNode> node;
-  int32_t offset;
-  aPoint.GetPoint(node, offset);
-  return GetPreviousWSNode(node,offset,aBlockParent,aPriorNode);
+  return GetPreviousWSNode(GetAsDOMNode(aPoint.node), aPoint.offset, aBlockParent,
+                           aPriorNode);
 }
 
 nsresult 
@@ -1236,10 +1241,8 @@ nsWSRunObject::GetNextWSNode(DOMPoint aPoint,
                              nsIDOMNode *aBlockParent, 
                              nsCOMPtr<nsIDOMNode> *aNextNode)
 {
-  nsCOMPtr<nsIDOMNode> node;
-  int32_t offset;
-  aPoint.GetPoint(node, offset);
-  return GetNextWSNode(node,offset,aBlockParent,aNextNode);
+  return GetNextWSNode(GetAsDOMNode(aPoint.node), aPoint.offset, aBlockParent,
+                       aNextNode);
 }
 
 nsresult 
