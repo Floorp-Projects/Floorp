@@ -78,7 +78,7 @@ jsd_IsValueInt(JSDContext* jsdc, JSDValue* jsdval)
 bool
 jsd_IsValueDouble(JSDContext* jsdc, JSDValue* jsdval)
 {
-    return JSVAL_IS_DOUBLE(jsdval->val);
+    return jsdval->val.isDouble();
 }
 
 bool
@@ -162,7 +162,7 @@ jsd_GetValueInt(JSDContext* jsdc, JSDValue* jsdval)
 double
 jsd_GetValueDouble(JSDContext* jsdc, JSDValue* jsdval)
 {
-    if(!JSVAL_IS_DOUBLE(jsdval->val))
+    if(!jsdval->val.isDouble())
         return 0;
     return JSVAL_TO_DOUBLE(jsdval->val);
 }
