@@ -328,7 +328,7 @@ public class CodeGenerator {
         if (!aNoThrow) {
             wrapperMethodBodies.append(
                 "        AndroidBridge::HandleUncaughtException(env);\n" +
-                "        MOZ_ASSUME_UNREACHABLE(\"Exception should have caused crash.\");\n");
+                "        MOZ_CRASH(\"Exception should have caused crash.\");\n");
         } else {
             wrapperMethodBodies.append(
                 "        return").append(Utils.getFailureReturnForType(returnType)).append(";\n");
