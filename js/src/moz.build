@@ -123,6 +123,7 @@ UNIFIED_SOURCES += [
     'gc/Verifier.cpp',
     'gc/Zone.cpp',
     'jsalloc.cpp',
+    'jsanalyze.cpp',
     'jsapi.cpp',
     'jsbool.cpp',
     'jscntxt.cpp',

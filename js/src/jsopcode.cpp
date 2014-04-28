@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "jsanalyze.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
