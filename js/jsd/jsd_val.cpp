@@ -102,7 +102,7 @@ jsd_IsValueNull(JSDContext* jsdc, JSDValue* jsdval)
 bool
 jsd_IsValueVoid(JSDContext* jsdc, JSDValue* jsdval)
 {
-    return JSVAL_IS_VOID(jsdval->val);
+    return jsdval->val.isUndefined();
 }
 
 bool

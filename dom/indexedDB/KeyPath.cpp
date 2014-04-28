@@ -301,7 +301,7 @@ KeyPath::Parse(JSContext* aCx, const JS::Value& aValue_, KeyPath* aKeyPath)
     }
   }
   // Otherwise convert it to a string.
-  else if (!aValue.isNull() && !JSVAL_IS_VOID(aValue)) {
+  else if (!aValue.isNull() && !aValue.isUndefined()) {
     JSString* jsstr;
     nsDependentJSString str;
     if (!(jsstr = JS::ToString(aCx, aValue)) ||
@@ -435,7 +435,7 @@ KeyPath::ExtractOrCreateKey(JSContext* aCx, const JS::Value& aValue,
 
   if (NS_FAILED(aKey.AppendItem(aCx, false, value))) {
     NS_ASSERTION(aKey.IsUnset(), "Should be unset");
-    return JSVAL_IS_VOID(value) ? NS_OK : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+    return value.isUndefined() ? NS_OK : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
   aKey.FinishArray();

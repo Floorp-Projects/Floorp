@@ -1822,12 +1822,6 @@ static_assert(sizeof(jsval_layout) == sizeof(JS::Value),
 /************************************************************************/
 
 static inline bool
-JSVAL_IS_VOID(jsval v)
-{
-    return JSVAL_IS_UNDEFINED_IMPL(JSVAL_TO_IMPL(v));
-}
-
-static inline bool
 JSVAL_IS_INT(jsval v)
 {
     return JSVAL_IS_INT32_IMPL(JSVAL_TO_IMPL(v));
