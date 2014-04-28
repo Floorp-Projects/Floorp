@@ -16,6 +16,7 @@
 #include "xpcpublic.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArrayHelpers.h"
+#include "DOMMobileMessageError.h"
 
 namespace mozilla {
 namespace dom {
@@ -78,7 +79,7 @@ MobileMessageCallback::NotifySuccess(nsISupports *aMessage, bool aAsync)
 }
 
 nsresult
-MobileMessageCallback::NotifyError(int32_t aError, bool aAsync)
+MobileMessageCallback::NotifyError(int32_t aError, nsISupports *aData, bool aAsync)
 {
   nsAutoString errorStr;
   switch (aError) {
@@ -119,12 +120,33 @@ MobileMessageCallback::NotifyError(int32_t aError, bool aAsync)
       MOZ_CRASH("Should never get here!");
   }
 
+  if (aData && aAsync) {
+    MOZ_CRASH("No Support to FireDetailedErrorAsync() in nsIDOMRequestService!");
+  }
+
   if (aAsync) {
     nsCOMPtr<nsIDOMRequestService> rs =
       do_GetService(DOMREQUEST_SERVICE_CONTRACTID);
     NS_ENSURE_TRUE(rs, NS_ERROR_FAILURE);
 
     return rs->FireErrorAsync(mDOMRequest, errorStr);
+  }
+
+  if (aData) {
+    nsCOMPtr<nsISupports> domMobileMessageError;
+    nsCOMPtr<nsIDOMMozSmsMessage> smsMsg = do_QueryInterface(aData);
+    if (smsMsg) {
+      domMobileMessageError =
+        new DOMMobileMessageError(mDOMRequest->GetOwner(), errorStr, smsMsg);
+    }
+    else {
+      nsCOMPtr<nsIDOMMozMmsMessage> mmsMsg = do_QueryInterface(aData);
+      domMobileMessageError =
+        new DOMMobileMessageError(mDOMRequest->GetOwner(), errorStr, mmsMsg);
+    }
+    NS_ASSERTION(domMobileMessageError, "Invalid DOMMobileMessageError!");
+    mDOMRequest->FireDetailedError(domMobileMessageError);
+    return NS_OK;
   }
 
   mDOMRequest->FireError(errorStr);
@@ -140,7 +162,7 @@ MobileMessageCallback::NotifyMessageSent(nsISupports *aMessage)
 NS_IMETHODIMP
 MobileMessageCallback::NotifySendMessageFailed(int32_t aError, nsISupports *aMessage)
 {
-  return NotifyError(aError);
+  return NotifyError(aError, aMessage);
 }
 
 NS_IMETHODIMP
@@ -211,7 +233,7 @@ MobileMessageCallback::NotifySegmentInfoForTextGot(nsIDOMMozSmsSegmentInfo *aInf
 NS_IMETHODIMP
 MobileMessageCallback::NotifyGetSegmentInfoForTextFailed(int32_t aError)
 {
-  return NotifyError(aError, true);
+  return NotifyError(aError, nullptr, true);
 }
 
 NS_IMETHODIMP
