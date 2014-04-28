@@ -12,7 +12,6 @@
 #define UNICODE
 #endif
 #include <windows.h>
-#include <Xinput.h>
 
 #include "nsIComponentManager.h"
 #include "nsIObserver.h"
@@ -45,13 +44,6 @@ const unsigned kMaxAxes = 32;
 // Therefore, we wait a bit after receiving one before looking for
 // device changes.
 const uint32_t kDevicesChangedStableDelay = 200;
-// XInput is a purely polling-driven API, so we need to
-// poll it periodically. 50ms is arbitrarily chosen.
-const uint32_t kXInputPollInterval = 50;
-
-#ifndef XUSER_MAX_COUNT
-#define XUSER_MAX_COUNT 4
-#endif
 
 const struct {
   int usagePage;
@@ -62,31 +54,9 @@ const struct {
   { kDesktopUsagePage, 5 }   // Gamepad
 };
 
-const struct {
-  WORD button;
-  int mapped;
-} kXIButtonMap[] = {
-  { XINPUT_GAMEPAD_DPAD_UP, 12 },
-  { XINPUT_GAMEPAD_DPAD_DOWN, 13 },
-  { XINPUT_GAMEPAD_DPAD_LEFT, 14 },
-  { XINPUT_GAMEPAD_DPAD_RIGHT, 15 },
-  { XINPUT_GAMEPAD_START, 9 },
-  { XINPUT_GAMEPAD_BACK, 8 },
-  { XINPUT_GAMEPAD_LEFT_THUMB, 10 },
-  { XINPUT_GAMEPAD_RIGHT_THUMB, 11 },
-  { XINPUT_GAMEPAD_LEFT_SHOULDER, 4 },
-  { XINPUT_GAMEPAD_RIGHT_SHOULDER, 5 },
-  { XINPUT_GAMEPAD_A, 0 },
-  { XINPUT_GAMEPAD_B, 1 },
-  { XINPUT_GAMEPAD_X, 2 },
-  { XINPUT_GAMEPAD_Y, 3 }
-};
-const size_t kNumMappings = ArrayLength(kXIButtonMap);
-
 enum GamepadType {
   kNoGamepad = 0,
-  kRawInputGamepad,
-  kXInputGamepad
+  kRawInputGamepad
 };
 
 class WindowsGamepadService;
@@ -97,12 +67,6 @@ struct Gamepad {
 
   // Handle to raw input device
   HANDLE handle;
-
-  // XInput Index of the user's controller. Passed to XInputGetState.
-  DWORD userIndex;
-
-  // Last-known state of the controller.
-  XINPUT_STATE state;
 
   // ID from the GamepadService, also used as the index into
   // WindowsGamepadService::mGamepads.
@@ -122,55 +86,6 @@ struct Gamepad {
 
   // Used during rescan to find devices that were disconnected.
   bool present;
-};
-
-// Drop this in favor of decltype when we require a new enough SDK.
-typedef void (WINAPI *XInputEnable_func)(BOOL);
-
-// RAII class to wrap loading the XInput DLL
-class XInputLoader {
-public:
-  XInputLoader() : module(nullptr),
-                   mXInputEnable(nullptr),
-                   mXInputGetState(nullptr) {
-    // xinput1_4.dll exists on Windows 8
-    // xinput9_1_0.dll exists on Windows 7 and Vista
-    // xinput1_3.dll shipped with the DirectX SDK
-    const wchar_t* dlls[] = {L"xinput1_4.dll",
-                             L"xinput9_1_0.dll",
-                             L"xinput1_3.dll"};
-    const size_t kNumDLLs = ArrayLength(dlls);
-    for (size_t i = 0; i < kNumDLLs; ++i) {
-      module = LoadLibraryW(dlls[i]);
-      if (module) {
-        mXInputEnable = reinterpret_cast<XInputEnable_func>(
-         GetProcAddress(module, "XInputEnable"));
-        mXInputGetState = reinterpret_cast<decltype(XInputGetState)*>(
-         GetProcAddress(module, "XInputGetState"));
-        if (mXInputEnable) {
-          mXInputEnable(TRUE);
-        }
-        break;
-      }
-    }
-  }
-
-  ~XInputLoader() {
-    //mXInputEnable = nullptr;
-    mXInputGetState = nullptr;
-
-    if (module) {
-      FreeLibrary(module);
-    }
-  }
-
-  operator bool() {
-    return module && mXInputGetState;
-  }
-
-  HMODULE module;
-  decltype(XInputGetState) *mXInputGetState;
-  XInputEnable_func mXInputEnable;
 };
 
 bool
@@ -377,15 +292,6 @@ private:
   void ScanForDevices();
   // Look for connected raw input devices.
   void ScanForRawInputDevices();
-  // Look for connected XInput devices.
-  bool ScanForXInputDevices();
-  bool HaveXInputGamepad(int userIndex);
-
-  // Timer callback for XInput polling
-  static void XInputPollTimerCallback(nsITimer* aTimer, void* aClosure);
-  void PollXInput();
-  void CheckXInputChanges(Gamepad& gamepad, XINPUT_STATE& state);
-
   // Get information about a raw input gamepad.
   bool GetRawGamepad(HANDLE handle);
   void Cleanup();
@@ -394,17 +300,13 @@ private:
   nsTArray<Gamepad> mGamepads;
 
   nsRefPtr<Observer> mObserver;
-  nsCOMPtr<nsITimer> mXInputPollTimer;
 
   HIDLoader mHID;
-  XInputLoader mXInput;
 };
 
 
 WindowsGamepadService::WindowsGamepadService()
 {
-  nsresult rv;
-  mXInputPollTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   mObserver = new Observer(*this);
 }
 
@@ -434,59 +336,6 @@ WindowsGamepadService::ScanForRawInputDevices()
   }
 }
 
-bool
-WindowsGamepadService::HaveXInputGamepad(int userIndex)
-{
-  for (unsigned int i = 0; i < mGamepads.Length(); i++) {
-    if (mGamepads[i].type == kXInputGamepad
-        && mGamepads[i].userIndex == userIndex) {
-      mGamepads[i].present = true;
-      return true;
-    }
-  }
-  return false;
-}
-
-bool
-WindowsGamepadService::ScanForXInputDevices()
-{
-  MOZ_ASSERT(mXInput, "XInput should be present!");
-
-  nsRefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
-  if (!gamepadsvc) {
-    return false;
-  }
-
-  bool found = false;
-  for (int i = 0; i < XUSER_MAX_COUNT; i++) {
-    XINPUT_STATE state = {};
-    if (mXInput.mXInputGetState(i, &state) != ERROR_SUCCESS) {
-      continue;
-    }
-    found = true;
-    // See if this device is already present in our list.
-    if (HaveXInputGamepad(i)) {
-      continue;
-    }
-
-    // Not already present, add it.
-    Gamepad gamepad = {};
-    gamepad.type = kXInputGamepad;
-    gamepad.present = true;
-    gamepad.state = state;
-    gamepad.userIndex = i;
-    gamepad.numButtons = kStandardGamepadButtons;
-    gamepad.numAxes = kStandardGamepadAxes;
-    gamepad.id = gamepadsvc->AddGamepad("xinput",
-                                        mozilla::dom::StandardMapping,
-                                        kStandardGamepadButtons,
-                                        kStandardGamepadAxes);
-    mGamepads.AppendElement(gamepad);
-  }
-
-  return found;
-}
-
 void
 WindowsGamepadService::ScanForDevices()
 {
@@ -496,15 +345,6 @@ WindowsGamepadService::ScanForDevices()
 
   if (mHID) {
     ScanForRawInputDevices();
-  }
-  if (mXInput) {
-    mXInputPollTimer->Cancel();
-    if (ScanForXInputDevices()) {
-      mXInputPollTimer->InitWithFuncCallback(XInputPollTimerCallback,
-                                             this,
-                                             kXInputPollInterval,
-                                             nsITimer::TYPE_REPEATING_SLACK);
-    }
   }
 
   nsRefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
@@ -518,84 +358,6 @@ WindowsGamepadService::ScanForDevices()
       mGamepads.RemoveElementAt(i);
     }
   }
-}
-
-// static
-void
-WindowsGamepadService::XInputPollTimerCallback(nsITimer* aTimer,
-                                               void* aClosure)
-{
-  WindowsGamepadService* self =
-    reinterpret_cast<WindowsGamepadService*>(aClosure);
-  self->PollXInput();
-}
-
-void
-WindowsGamepadService::PollXInput()
-{
-  for (unsigned int i = 0; i < mGamepads.Length(); i++) {
-    if (mGamepads[i].type != kXInputGamepad) {
-      continue;
-    }
-
-    XINPUT_STATE state = {};
-    DWORD res = mXInput.mXInputGetState(mGamepads[i].userIndex, &state);
-    if (res == ERROR_SUCCESS
-        && state.dwPacketNumber != mGamepads[i].state.dwPacketNumber) {
-        CheckXInputChanges(mGamepads[i], state);
-    }
-  }
-}
-
-void WindowsGamepadService::CheckXInputChanges(Gamepad& gamepad,
-                                               XINPUT_STATE& state) {
-  nsRefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
-  // Handle digital buttons first
-  for (size_t b = 0; b < kNumMappings; b++) {
-    if (state.Gamepad.wButtons & kXIButtonMap[b].button &&
-        !(gamepad.state.Gamepad.wButtons & kXIButtonMap[b].button)) {
-      // Button pressed
-      gamepadsvc->NewButtonEvent(gamepad.id, kXIButtonMap[b].mapped, true);
-    } else if (!(state.Gamepad.wButtons & kXIButtonMap[b].button) &&
-               gamepad.state.Gamepad.wButtons & kXIButtonMap[b].button) {
-      // Button released
-      gamepadsvc->NewButtonEvent(gamepad.id, kXIButtonMap[b].mapped, false);
-    }
-  }
-
-  // Then triggers
-  if (state.Gamepad.bLeftTrigger != gamepad.state.Gamepad.bLeftTrigger) {
-    bool pressed =
-      state.Gamepad.bLeftTrigger >= XINPUT_GAMEPAD_TRIGGER_THRESHOLD;
-    gamepadsvc->NewButtonEvent(gamepad.id, kButtonLeftTrigger,
-                               pressed, state.Gamepad.bLeftTrigger / 255.0);
-  }
-  if (state.Gamepad.bRightTrigger != gamepad.state.Gamepad.bRightTrigger) {
-    bool pressed =
-      state.Gamepad.bRightTrigger >= XINPUT_GAMEPAD_TRIGGER_THRESHOLD;
-    gamepadsvc->NewButtonEvent(gamepad.id, kButtonRightTrigger,
-                               pressed, state.Gamepad.bRightTrigger / 255.0);
-  }
-
-  // Finally deal with analog sticks
-  // TODO: bug 1001955 - Support deadzones.
-  if (state.Gamepad.sThumbLX != gamepad.state.Gamepad.sThumbLX) {
-    gamepadsvc->NewAxisMoveEvent(gamepad.id, kLeftStickXAxis,
-                                 state.Gamepad.sThumbLX / 32767.0);
-  }
-  if (state.Gamepad.sThumbLY != gamepad.state.Gamepad.sThumbLY) {
-    gamepadsvc->NewAxisMoveEvent(gamepad.id, kLeftStickYAxis,
-                                 -1.0 * state.Gamepad.sThumbLY / 32767.0);
-  }
-  if (state.Gamepad.sThumbRX != gamepad.state.Gamepad.sThumbRX) {
-    gamepadsvc->NewAxisMoveEvent(gamepad.id, kRightStickXAxis,
-                                 state.Gamepad.sThumbRX / 32767.0);
-  }
-  if (state.Gamepad.sThumbRY != gamepad.state.Gamepad.sThumbRY) {
-    gamepadsvc->NewAxisMoveEvent(gamepad.id, kRightStickYAxis,
-                                 -1.0 * state.Gamepad.sThumbRY / 32767.0);
-  }
-  gamepad.state = state;
 }
 
 // Used to sort a list of axes by HID usage.
@@ -893,9 +655,6 @@ WindowsGamepadService::Shutdown()
 void
 WindowsGamepadService::Cleanup()
 {
-  if (mXInputPollTimer) {
-    mXInputPollTimer->Cancel();
-  }
   mGamepads.Clear();
 }
 
