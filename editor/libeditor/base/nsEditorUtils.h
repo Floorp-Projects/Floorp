@@ -232,6 +232,7 @@ struct MOZ_STACK_CLASS DOMPoint
 class nsEditorUtils
 {
   public:
+    static bool IsDescendantOf(nsINode* aNode, nsINode* aParent, int32_t* aOffset = 0);
     static bool IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t *aOffset = 0);
     static bool IsLeafNode(nsIDOMNode *aNode);
 };
