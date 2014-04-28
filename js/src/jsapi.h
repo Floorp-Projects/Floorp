@@ -844,7 +844,7 @@ INTERNED_STRING_TO_JSID(JSContext *cx, JSString *str);
 static MOZ_ALWAYS_INLINE bool
 JSVAL_IS_UNIVERSAL(jsval v)
 {
-    return !JSVAL_IS_GCTHING(v);
+    return !v.isGCThing();
 }
 
 namespace JS {

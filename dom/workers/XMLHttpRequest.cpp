@@ -2289,7 +2289,7 @@ void
 XMLHttpRequest::UpdateState(const StateData& aStateData)
 {
   mStateData = aStateData;
-  if (JSVAL_IS_GCTHING(mStateData.mResponse)) {
+  if (mStateData.mResponse.isGCThing()) {
     mozilla::HoldJSObjects(this);
   }
 }
