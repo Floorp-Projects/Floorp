@@ -69,7 +69,7 @@ public:
 
   NS_IMETHOD Handle(const nsAString& aName, JS::Handle<JS::Value> aResult)
   {
-    if (JSVAL_IS_BOOLEAN(aResult)) {
+    if (aResult.isBoolean()) {
       bool isSharingEnabled = aResult.toBoolean();
       SetAutoMounterSharingMode(mVolumeName, isSharingEnabled);
     }

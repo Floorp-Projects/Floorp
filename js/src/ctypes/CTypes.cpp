@@ -1575,7 +1575,7 @@ static MOZ_ALWAYS_INLINE bool IsNegative(Type i)
 static bool
 jsvalToBool(JSContext* cx, jsval val, bool* result)
 {
-  if (JSVAL_IS_BOOLEAN(val)) {
+  if (val.isBoolean()) {
     *result = val.toBoolean();
     return true;
   }
@@ -1673,7 +1673,7 @@ jsvalToInteger(JSContext* cx, jsval val, IntegerType* result)
 
     return false;
   }
-  if (JSVAL_IS_BOOLEAN(val)) {
+  if (val.isBoolean()) {
     // Implicitly promote boolean values to 0 or 1, like C.
     *result = val.toBoolean();
     JS_ASSERT(*result == 0 || *result == 1);
