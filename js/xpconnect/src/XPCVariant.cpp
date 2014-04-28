@@ -60,7 +60,7 @@ XPCTraceableVariant::~XPCTraceableVariant()
 
     // If val is JSVAL_STRING, we don't need to clean anything up; simply
     // removing the string from the root set is good.
-    if (!JSVAL_IS_STRING(val))
+    if (!val.isString())
         nsVariant::Cleanup(&mData);
 
     if (!val.isNull())

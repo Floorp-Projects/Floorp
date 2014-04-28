@@ -800,7 +800,7 @@ QuoteString(Sprinter *sp, JSString *str, uint32_t quote);
 static bool
 ToDisassemblySource(JSContext *cx, HandleValue v, JSAutoByteString *bytes)
 {
-    if (JSVAL_IS_STRING(v)) {
+    if (v.isString()) {
         Sprinter sprinter(cx);
         if (!sprinter.init())
             return false;

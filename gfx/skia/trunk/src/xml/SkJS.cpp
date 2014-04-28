@@ -110,7 +110,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **o
         JSBool ok, found;
         JSFunction *fun;
 
-        if (!JSVAL_IS_STRING(id))
+        if (!id.isString())
             return JS_TRUE;
         path = getenv("PATH");
         if (!path)

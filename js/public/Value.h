@@ -1877,16 +1877,10 @@ JSVAL_IS_NUMBER(jsval v)
     return JSVAL_IS_NUMBER_IMPL(JSVAL_TO_IMPL(v));
 }
 
-static inline bool
-JSVAL_IS_STRING(jsval v)
-{
-    return JSVAL_IS_STRING_IMPL(JSVAL_TO_IMPL(v));
-}
-
 static inline JSString *
 JSVAL_TO_STRING(jsval v)
 {
-    MOZ_ASSERT(JSVAL_IS_STRING(v));
+    MOZ_ASSERT(v.isString());
     return JSVAL_TO_STRING_IMPL(JSVAL_TO_IMPL(v));
 }
 

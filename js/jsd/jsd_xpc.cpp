@@ -2166,7 +2166,7 @@ jsdValue::GetJsType (uint32_t *_rval)
         *_rval = TYPE_DOUBLE;
     else if (JSVAL_IS_INT(val))
         *_rval = TYPE_INT;
-    else if (JSVAL_IS_STRING(val))
+    else if (val.isString())
         *_rval = TYPE_STRING;
     else if (val.isUndefined())
         *_rval = TYPE_VOID;
