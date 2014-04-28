@@ -1960,8 +1960,7 @@ CheckScriptSize(JSContext *cx, JSScript* script)
         return Method_CantCompile;
     }
 
-    uint32_t numLocalsAndArgs = NumLocalsAndArgs(script);
-
+    uint32_t numLocalsAndArgs = analyze::TotalSlots(script);
     if (cx->runtime()->isWorkerRuntime()) {
         // DOM Workers don't have off thread compilation enabled. Since workers
         // don't block the browser's event loop, allow them to compile larger
