@@ -3,6 +3,10 @@
 
 let pendingEmulatorCmdCount = 0;
 
+let Promise =
+  SpecialPowers.Cu.import("resource://gre/modules/Promise.jsm").Promise;
+let nfc = window.navigator.mozNfc;
+
 SpecialPowers.addPermission("nfc-manager", true, document);
 
 /**
@@ -35,7 +39,6 @@ let emulator = (function() {
 function toggleNFC(enabled, callback) {
   isnot(callback, null);
 
-  let nfc = window.navigator.mozNfc;
   let req;
   if (enabled) {
     req = nfc.startPoll();
