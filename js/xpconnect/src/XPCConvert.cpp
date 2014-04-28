@@ -1230,7 +1230,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
             else
                 number = (double) JSVAL_TO_INT(s);
         } else {
-            number = JSVAL_TO_DOUBLE(s);
+            number = s.toDouble();
             if (number > 0.0 &&
                 number < (double)0xffffffff &&
                 0.0 == fmod(number,1)) {

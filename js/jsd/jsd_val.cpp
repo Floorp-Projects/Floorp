@@ -164,7 +164,7 @@ jsd_GetValueDouble(JSDContext* jsdc, JSDValue* jsdval)
 {
     if(!jsdval->val.isDouble())
         return 0;
-    return JSVAL_TO_DOUBLE(jsdval->val);
+    return jsdval->val.toDouble();
 }
 
 JSString*

@@ -1335,7 +1335,7 @@ CanvasRenderingContext2D::GetMozCurrentTransformInverse(JSContext* cx,
   Matrix ctm = mTarget->GetTransform();
 
   if (!ctm.Invert()) {
-    double NaN = JSVAL_TO_DOUBLE(JS_GetNaNValue(cx));
+    double NaN = JS_GetNaNValue(cx).toDouble();
     ctm = Matrix(NaN, NaN, NaN, NaN, NaN, NaN);
   }
 

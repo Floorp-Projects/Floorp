@@ -247,7 +247,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
                         // Visual Studio 9 doesn't allow casting directly from
                         // a double to an enumeration type, contrary to
                         // 5.2.9(10) of C++11, so add an intermediate cast.
-                        rv = (nsresult)(uint32_t)(JSVAL_TO_DOUBLE(jsexception));
+                        rv = (nsresult)(uint32_t)(jsexception.toDouble());
                     else
                         rv = (nsresult)(JSVAL_TO_INT(jsexception));
 

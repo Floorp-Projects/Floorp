@@ -1840,15 +1840,6 @@ INT_TO_JSVAL(int32_t i)
     return IMPL_TO_JSVAL(INT32_TO_JSVAL_IMPL(i));
 }
 
-static inline double
-JSVAL_TO_DOUBLE(jsval v)
-{
-    jsval_layout l;
-    MOZ_ASSERT(v.isDouble());
-    l = JSVAL_TO_IMPL(v);
-    return l.asDouble;
-}
-
 static inline JS_VALUE_CONSTEXPR jsval
 DOUBLE_TO_JSVAL(double d)
 {
