@@ -54,7 +54,7 @@ X11TextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
     gl::sGLXLibrary.UpdateTexImage(mSurface->XDisplay(), mSurface->GetGLXPixmap());
   }
 
-  ApplyFilterToBoundTexture(gl(), aFilter, LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+  ApplyFilterToBoundTexture(gl(), aFilter, LOCAL_GL_TEXTURE_2D);
 }
 
 IntSize
