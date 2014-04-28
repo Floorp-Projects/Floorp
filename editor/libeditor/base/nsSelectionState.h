@@ -143,27 +143,50 @@ class MOZ_STACK_CLASS nsAutoTrackDOMPoint
 {
   private:
     nsRangeUpdater &mRU;
-    nsCOMPtr<nsIDOMNode> *mNode;
-    int32_t *mOffset;
+    // Allow tracking either nsIDOMNode or nsINode until nsIDOMNode is gone
+    nsCOMPtr<nsINode>* mNode;
+    nsCOMPtr<nsIDOMNode>* mDOMNode;
+    int32_t* mOffset;
     nsRefPtr<nsRangeStore> mRangeItem;
   public:
-    nsAutoTrackDOMPoint(nsRangeUpdater &aRangeUpdater, nsCOMPtr<nsIDOMNode> *aNode, int32_t *aOffset) :
-    mRU(aRangeUpdater)
-    ,mNode(aNode)
-    ,mOffset(aOffset)
+    nsAutoTrackDOMPoint(nsRangeUpdater &aRangeUpdater,
+                        nsCOMPtr<nsINode>* aNode, int32_t* aOffset)
+      : mRU(aRangeUpdater)
+      , mNode(aNode)
+      , mDOMNode(nullptr)
+      , mOffset(aOffset)
     {
       mRangeItem = new nsRangeStore();
-      mRangeItem->startNode = do_QueryInterface(*mNode);
-      mRangeItem->endNode = do_QueryInterface(*mNode);
+      mRangeItem->startNode = *mNode;
+      mRangeItem->endNode = *mNode;
       mRangeItem->startOffset = *mOffset;
       mRangeItem->endOffset = *mOffset;
       mRU.RegisterRangeItem(mRangeItem);
     }
-    
+
+    nsAutoTrackDOMPoint(nsRangeUpdater &aRangeUpdater,
+                        nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset)
+      : mRU(aRangeUpdater)
+      , mNode(nullptr)
+      , mDOMNode(aNode)
+      , mOffset(aOffset)
+    {
+      mRangeItem = new nsRangeStore();
+      mRangeItem->startNode = do_QueryInterface(*mDOMNode);
+      mRangeItem->endNode = do_QueryInterface(*mDOMNode);
+      mRangeItem->startOffset = *mOffset;
+      mRangeItem->endOffset = *mOffset;
+      mRU.RegisterRangeItem(mRangeItem);
+    }
+
     ~nsAutoTrackDOMPoint()
     {
       mRU.DropRangeItem(mRangeItem);
-      *mNode  = GetAsDOMNode(mRangeItem->startNode);
+      if (mNode) {
+        *mNode = mRangeItem->startNode;
+      } else {
+        *mDOMNode = GetAsDOMNode(mRangeItem->startNode);
+      }
       *mOffset = mRangeItem->startOffset;
     }
 };
