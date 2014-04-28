@@ -89,6 +89,11 @@ public:
     PCompositorChild*
     AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
                           base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+
+    PSharedBufferManagerChild*
+    AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,
+                                    base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+
     PImageBridgeChild*
     AllocPImageBridgeChild(mozilla::ipc::Transport* aTransport,
                            base::ProcessId aOtherProcess) MOZ_OVERRIDE;

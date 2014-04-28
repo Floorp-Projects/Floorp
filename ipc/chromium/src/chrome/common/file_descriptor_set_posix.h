@@ -30,7 +30,7 @@ class FileDescriptorSet : public base::RefCountedThreadSafe<FileDescriptorSet> {
   // In debugging mode, it's a fatal error to try and add more than this number
   // of descriptors to a FileDescriptorSet.
   enum {
-    MAX_DESCRIPTORS_PER_MESSAGE = 4
+    MAX_DESCRIPTORS_PER_MESSAGE = 7
   };
 
   // ---------------------------------------------------------------------------
