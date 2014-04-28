@@ -215,6 +215,13 @@ let SyncHandler = {
  */
 let SessionHistoryListener = {
   init: function () {
+    // The frame tree observer is needed to handle navigating away from
+    // an about page. Currently nsISHistoryListener does not have
+    // OnHistoryNewEntry() called for about pages because the history entry is
+    // modified to point at the new page. Once Bug 981900 lands the frame tree
+    // observer can be removed.
+    gFrameTree.addObserver(this);
+
     // By adding the SHistoryListener immediately, we will unfortunately be
     // notified of every history entry as the tab is restored. We don't bother
     // waiting to add the listener later because these notifications are cheap.
@@ -240,6 +247,14 @@ let SessionHistoryListener = {
     if (docShell) {
       MessageQueue.push("history", () => SessionHistory.collect(docShell));
     }
+  },
+
+  onFrameTreeCollected: function () {
+    this.collect();
+  },
+
+  onFrameTreeReset: function () {
+    this.collect();
   },
 
   OnHistoryNewEntry: function (newURI) {

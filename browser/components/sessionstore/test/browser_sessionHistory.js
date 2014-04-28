@@ -219,6 +219,7 @@ add_task(function test_pushstate_replacestate() {
   is(entries.length, 2, "there is another shistory entry");
   is(entries[1].url, "http://example.com/test-entry/", "url is correct");
 
+  // Disabled until replaceState invalidation is supported. See Bug 967028.
   browser.messageManager.
     sendAsyncMessage("ss-test:historyReplaceState", {url: 'test-entry2/'});
   yield promiseContentMessage(browser, "ss-test:historyReplaceState");
