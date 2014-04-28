@@ -1058,62 +1058,52 @@ nsHTMLEditor::TabInTable(bool inIsShift, bool* outHandled)
   *outHandled = false;
 
   // Find enclosing table cell from selection (cell may be selected element)
-  nsCOMPtr<nsIDOMElement> cellElement;
-  nsresult res = GetElementOrParentByTagName(NS_LITERAL_STRING("td"), nullptr, getter_AddRefs(cellElement));
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<Element> cellElement =
+    GetElementOrParentByTagName(NS_LITERAL_STRING("td"), nullptr);
   // Do nothing -- we didn't find a table cell
   NS_ENSURE_TRUE(cellElement, NS_OK);
 
   // find enclosing table
-  nsCOMPtr<nsIDOMNode> tbl = GetEnclosingTable(cellElement);
-  NS_ENSURE_TRUE(tbl, res);
+  nsCOMPtr<Element> table = GetEnclosingTable(cellElement);
+  NS_ENSURE_TRUE(table, NS_OK);
 
   // advance to next cell
   // first create an iterator over the table
-  nsCOMPtr<nsIContentIterator> iter =
-      do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(iter, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIContent> cTbl = do_QueryInterface(tbl);
-  nsCOMPtr<nsIContent> cBlock = do_QueryInterface(cellElement);
-  res = iter->Init(cTbl);
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+  nsresult res = iter->Init(table);
   NS_ENSURE_SUCCESS(res, res);
   // position iter at block
-  res = iter->PositionAt(cBlock);
+  res = iter->PositionAt(cellElement);
   NS_ENSURE_SUCCESS(res, res);
 
-  nsCOMPtr<nsIDOMNode> node;
-  do
-  {
-    if (inIsShift)
+  nsCOMPtr<nsINode> node;
+  do {
+    if (inIsShift) {
       iter->Prev();
-    else
+    } else {
       iter->Next();
+    }
 
-    node = do_QueryInterface(iter->GetCurrentNode());
+    node = iter->GetCurrentNode();
 
     if (node && nsHTMLEditUtils::IsTableCell(node) &&
-        GetEnclosingTable(node) == tbl)
-    {
-      CollapseSelectionToDeepestNonTableFirstChild(nullptr,
-                                                   iter->GetCurrentNode());
+        nsCOMPtr<Element>(GetEnclosingTable(node)) == table) {
+      CollapseSelectionToDeepestNonTableFirstChild(nullptr, node);
       *outHandled = true;
       return NS_OK;
     }
   } while (!iter->IsDone());
   
-  if (!(*outHandled) && !inIsShift)
-  {
-    // if we havent handled it yet then we must have run off the end of
-    // the table.  Insert a new row.
+  if (!(*outHandled) && !inIsShift) {
+    // If we haven't handled it yet, then we must have run off the end of the
+    // table.  Insert a new row.
     res = InsertTableRow(1, true);
     NS_ENSURE_SUCCESS(res, res);
     *outHandled = true;
-    // put selection in right place
-    // Use table code to get selection and index to new row...
-    nsCOMPtr<nsISelection>selection;
-    nsCOMPtr<nsIDOMElement> tblElement;
-    nsCOMPtr<nsIDOMElement> cell;
+    // Put selection in right place.  Use table code to get selection and index
+    // to new row...
+    nsCOMPtr<nsISelection> selection;
+    nsCOMPtr<nsIDOMElement> tblElement, cell;
     int32_t row;
     res = GetCellContext(getter_AddRefs(selection), 
                          getter_AddRefs(tblElement),
@@ -1124,15 +1114,15 @@ nsHTMLEditor::TabInTable(bool inIsShift, bool* outHandled)
     // ...so that we can ask for first cell in that row...
     res = GetCellAt(tblElement, row, 0, getter_AddRefs(cell));
     NS_ENSURE_SUCCESS(res, res);
-    // ...and then set selection there.
-    // (Note that normally you should use CollapseSelectionToDeepestNonTableFirstChild(),
-    //  but we know cell is an empty new cell, so this works fine)
-    node = do_QueryInterface(cell);
-    if (node) selection->Collapse(node,0);
-    return NS_OK;
+    // ...and then set selection there.  (Note that normally you should use
+    // CollapseSelectionToDeepestNonTableFirstChild(), but we know cell is an
+    // empty new cell, so this works fine)
+    if (cell) {
+      selection->Collapse(cell, 0);
+    }
   }
   
-  return res;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLEditor::CreateBR(nsIDOMNode *aNode, int32_t aOffset, nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect)
