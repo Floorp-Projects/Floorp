@@ -1771,7 +1771,7 @@ GetScriptAndPCArgs(JSContext *cx, unsigned argc, jsval *argv, MutableHandleScrip
     if (argc != 0) {
         jsval v = argv[0];
         unsigned intarg = 0;
-        if (!v.isPrimitive() &&
+        if (v.isObject() &&
             JS_GetClass(&v.toObject()) == Jsvalify(&JSFunction::class_)) {
             script = ValueToScript(cx, v);
             if (!script)

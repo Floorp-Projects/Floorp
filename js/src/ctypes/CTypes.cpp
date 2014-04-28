@@ -1615,8 +1615,8 @@ jsvalToInteger(JSContext* cx, jsval val, IntegerType* result)
     double d = val.toDouble();
     return ConvertExact(d, result);
   }
-  if (!val.isPrimitive()) {
-    JSObject* obj = val.toObjectOrNull();
+  if (val.isObject()) {
+    JSObject* obj = &val.toObject();
     if (CData::IsCData(obj)) {
       JSObject* typeObj = CData::GetCType(obj);
       void* data = CData::GetData(obj);
@@ -1704,8 +1704,8 @@ jsvalToFloat(JSContext *cx, jsval val, FloatType* result)
     *result = FloatType(val.toDouble());
     return true;
   }
-  if (!val.isPrimitive()) {
-    JSObject* obj = val.toObjectOrNull();
+  if (val.isObject()) {
+    JSObject* obj = &val.toObject();
     if (CData::IsCData(obj)) {
       JSObject* typeObj = CData::GetCType(obj);
       void* data = CData::GetData(obj);
@@ -1827,9 +1827,9 @@ jsvalToBigInteger(JSContext* cx,
     // toString() on the object for us.)
     return StringToInteger(cx, val.toString(), result);
   }
-  if (!val.isPrimitive()) {
+  if (val.isObject()) {
     // Allow conversion from an Int64 or UInt64 object directly.
-    JSObject* obj = val.toObjectOrNull();
+    JSObject* obj = &val.toObject();
 
     if (UInt64::IsUInt64(obj)) {
       // Make sure the integer fits in IntegerType.
@@ -1950,9 +1950,9 @@ jsvalToIntegerExplicit(jsval val, IntegerType* result)
     *result = mozilla::IsFinite(d) ? IntegerType(d) : 0;
     return true;
   }
-  if (!val.isPrimitive()) {
+  if (val.isObject()) {
     // Convert Int64 and UInt64 values by C-style cast.
-    JSObject* obj = val.toObjectOrNull();
+    JSObject* obj = &val.toObject();
     if (Int64::IsInt64(obj)) {
       int64_t i = Int64Base::GetInt(obj);
       *result = IntegerType(i);
@@ -1995,8 +1995,8 @@ jsvalToPtrExplicit(JSContext* cx, jsval val, uintptr_t* result)
     *result = Convert<uintptr_t>(d);
     return double(*result) == d;
   }
-  if (!val.isPrimitive()) {
-    JSObject* obj = val.toObjectOrNull();
+  if (val.isObject()) {
+    JSObject* obj = &val.toObject();
     if (Int64::IsInt64(obj)) {
       int64_t i = Int64Base::GetInt(obj);
       intptr_t p = intptr_t(i);
@@ -2242,8 +2242,8 @@ ImplicitConvert(JSContext* cx,
   JSObject* sourceData = nullptr;
   JSObject* sourceType = nullptr;
   RootedObject valObj(cx, nullptr);
-  if (!val.isPrimitive()) {
-    valObj = val.toObjectOrNull();
+  if (val.isObject()) {
+    valObj = &val.toObject();
     if (CData::IsCData(valObj)) {
       sourceData = valObj;
       sourceType = CData::GetCType(sourceData);
@@ -2409,7 +2409,7 @@ ImplicitConvert(JSContext* cx,
         return TypeError(cx, "string pointer", val);
       }
       break;
-    } else if (!val.isPrimitive() && JS_IsArrayBufferObject(valObj)) {
+    } else if (val.isObject() && JS_IsArrayBufferObject(valObj)) {
       // Convert ArrayBuffer to pointer without any copy.
       // Just as with C arrays, we make no effort to
       // keep the ArrayBuffer alive.
@@ -2418,7 +2418,7 @@ ImplicitConvert(JSContext* cx,
           return false;
       *static_cast<void**>(buffer) = p;
       break;
-    } if (!val.isPrimitive() && JS_IsTypedArrayObject(valObj)) {
+    } if (val.isObject() && JS_IsTypedArrayObject(valObj)) {
       if(!CanConvertTypedArrayItemTo(baseType, valObj, cx)) {
         return TypeError(cx, "typed array with the appropriate type", val);
       }
@@ -2484,7 +2484,7 @@ ImplicitConvert(JSContext* cx,
         return TypeError(cx, "array", val);
       }
 
-    } else if (!val.isPrimitive() && JS_IsArrayObject(cx, valObj)) {
+    } else if (val.isObject() && JS_IsArrayObject(cx, valObj)) {
       // Convert each element of the array by calling ImplicitConvert.
       uint32_t sourceLength;
       if (!JS_GetArrayLength(cx, valObj, &sourceLength) ||
@@ -2514,8 +2514,7 @@ ImplicitConvert(JSContext* cx,
 
       memcpy(buffer, intermediate.get(), arraySize);
 
-    } else if (!val.isPrimitive() &&
-               JS_IsArrayBufferObject(valObj)) {
+    } else if (val.isObject() && JS_IsArrayBufferObject(valObj)) {
       // Check that array is consistent with type, then
       // copy the array.
       uint32_t sourceLength = JS_GetArrayBufferByteLength(valObj);
@@ -2527,8 +2526,7 @@ ImplicitConvert(JSContext* cx,
       }
       memcpy(buffer, JS_GetArrayBufferData(valObj), sourceLength);
       break;
-    }  else if (!val.isPrimitive() &&
-               JS_IsTypedArrayObject(valObj)) {
+    } else if (val.isObject() && JS_IsTypedArrayObject(valObj)) {
       // Check that array is consistent with type, then
       // copy the array.
       if(!CanConvertTypedArrayItemTo(baseType, valObj, cx)) {
@@ -2552,7 +2550,7 @@ ImplicitConvert(JSContext* cx,
     break;
   }
   case TYPE_struct: {
-    if (!val.isPrimitive() && !sourceData) {
+    if (val.isObject() && !sourceData) {
       // Enumerate the properties of the object; if they match the struct
       // specification, convert the fields.
       RootedObject iter(cx, JS_NewPropertyIterator(cx, valObj));
@@ -3611,8 +3609,8 @@ CType::GetProtoFromType(JSContext* cx, JSObject* objArg, CTypeProtoSlot slot)
 
   // Get the requested ctypes.{Pointer,Array,Struct,Function}Type.prototype.
   jsval result = JS_GetReservedSlot(proto, slot);
-  JS_ASSERT(!result.isPrimitive());
-  return result.toObjectOrNull();
+  JS_ASSERT(result.isObject());
+  return &result.toObject();
 }
 
 bool
@@ -3809,7 +3807,7 @@ CType::GetGlobalCTypes(JSContext* cx, JSObject* objArg)
   JS_ASSERT(CType::IsCTypeProto(objTypeProto));
 
   jsval valCTypes = JS_GetReservedSlot(objTypeProto, SLOT_CTYPES);
-  JS_ASSERT(!valCTypes.isPrimitive());
+  JS_ASSERT(valCTypes.isObject());
   return &valCTypes.toObject();
 }
 
@@ -3992,7 +3990,7 @@ PointerType::ConstructData(JSContext* cx,
   if (args.length() >= 2) {
     if (args[1].isNull()) {
       thisObj = nullptr;
-    } else if (!args[1].isPrimitive()) {
+    } else if (args[1].isObject()) {
       thisObj = &args[1].toObject();
     } else if (!JS_ValueToObject(cx, args[1], &thisObj)) {
       return false;
@@ -4293,7 +4291,7 @@ ArrayType::ConstructData(JSContext* cx,
       // Have a length, rather than an object to initialize from.
       convertObject = false;
 
-    } else if (!args[0].isPrimitive()) {
+    } else if (args[0].isObject()) {
       // We were given an object with a .length property.
       // This could be a JS array, or a CData array.
       RootedObject arg(cx, &args[0].toObject());
@@ -5597,7 +5595,7 @@ FunctionType::Create(JSContext* cx, unsigned argc, jsval* vp)
 
   if (args.length() == 3) {
     // Prepare an array of jsvals for the arguments.
-    if (!args[2].isPrimitive())
+    if (args[2].isObject())
       arrayObj = &args[2].toObject();
     if (!arrayObj || !JS_IsArrayObject(cx, arrayObj)) {
       JS_ReportError(cx, "third argument must be an array");
@@ -6291,9 +6289,9 @@ CData::Create(JSContext* cx,
 
   // Get the 'prototype' property from the type.
   jsval slot = JS_GetReservedSlot(typeObj, SLOT_PROTO);
-  JS_ASSERT(!slot.isPrimitive());
+  JS_ASSERT(slot.isObject());
 
-  RootedObject proto(cx, slot.toObjectOrNull());
+  RootedObject proto(cx, &slot.toObject());
   RootedObject parent(cx, JS_GetParent(typeObj));
   JS_ASSERT(parent);
 
@@ -6986,7 +6984,7 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
   // This is the type that we should capture, not that
   // of the function, which may be less precise.
   JSObject *objBestArgType = objArgType;
-  if (!valData.isPrimitive()) {
+  if (valData.isObject()) {
     JSObject *objData = &valData.toObject();
     if (CData::IsCData(objData)) {
       objBestArgType = CData::GetCType(objData);
@@ -7166,14 +7164,14 @@ CDataFinalizer::Methods::Dispose(JSContext* cx, unsigned argc, jsval *vp)
   }
 
   jsval valType = JS_GetReservedSlot(obj, SLOT_DATAFINALIZER_VALTYPE);
-  JS_ASSERT(!valType.isPrimitive());
+  JS_ASSERT(valType.isObject());
 
   JSObject *objCTypes = CType::GetGlobalCTypes(cx, &valType.toObject());
   if (!objCTypes)
     return false;
 
   jsval valCodePtrType = JS_GetReservedSlot(obj, SLOT_DATAFINALIZER_CODETYPE);
-  JS_ASSERT(!valCodePtrType.isPrimitive());
+  JS_ASSERT(valCodePtrType.isObject());
   JSObject *objCodePtrType = &valCodePtrType.toObject();
 
   JSObject *objCodeType = PointerType::GetBaseType(objCodePtrType);
