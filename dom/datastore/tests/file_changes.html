@@ -66,11 +66,10 @@
   }
 
   function eventListener(evt) {
+    ok(evt instanceof DataStoreChangeEvent, "DataStoreChangeEvent has been received");
     ok(evt, "OnChangeListener is called with data");
     is(/[0-9a-zA-Z]{8}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{12}/.test(evt.revisionId), true, "event.revisionId returns something");
-    if (gChangeId) {
-      is(evt.id, gChangeId, "OnChangeListener is called with the right ID: " + evt.id);
-    }
+    is(evt.id, gChangeId, "OnChangeListener is called with the right ID: " + evt.id);
     is(evt.operation, gChangeOperation, "OnChangeListener is called with the right operation:" + evt.operation + " " + gChangeOperation);
     runTest();
   }
@@ -99,7 +98,7 @@
                  testStoreRemove(1, true); },
 
     // Clear
-    function() { gChangeId = 0; gChangeOperation = 'cleared';
+    function() { gChangeId = null; gChangeOperation = 'cleared';
                  testStoreClear(); },
 
     // Remove onchange function and replace it with addEventListener
@@ -122,7 +121,7 @@
                  testStoreRemove(2, true); },
 
     // Clear
-    function() { gChangeId = 0; gChangeOperation = 'cleared';
+    function() { gChangeId = null; gChangeOperation = 'cleared';
                  testStoreClear(); },
 
     // Remove event listener
