@@ -234,10 +234,16 @@ nsHTMLEditUtils::IsTableElementButNotTable(nsINode* aNode)
 ///////////////////////////////////////////////////////////////////////////
 // IsTable: true if node an html table
 //                  
-bool 
+bool
 nsHTMLEditUtils::IsTable(nsIDOMNode* aNode)
 {
   return nsEditor::NodeIsType(aNode, nsEditProperty::table);
+}
+
+bool
+nsHTMLEditUtils::IsTable(nsINode* aNode)
+{
+  return aNode && aNode->IsElement() && aNode->Tag() == nsGkAtoms::table;
 }
 
 ///////////////////////////////////////////////////////////////////////////
