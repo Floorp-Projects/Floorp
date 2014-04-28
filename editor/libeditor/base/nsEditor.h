@@ -67,6 +67,7 @@ class nsString;
 class nsTransactionManager;
 
 namespace mozilla {
+class ErrorResult;
 class TextComposition;
 
 namespace dom {
@@ -240,10 +241,9 @@ public:
   /* Method to replace certain CreateElementNS() calls. 
      Arguments:
       nsString& aTag          - tag you want
-      nsIContent** aContent   - returned Content that was created with above namespace.
   */
-  nsresult CreateHTMLContent(const nsAString& aTag,
-                             mozilla::dom::Element** aContent);
+  already_AddRefed<mozilla::dom::Element>
+    CreateHTMLContent(const nsAString& aTag, mozilla::ErrorResult& rv);
 
   // IME event handlers
   virtual nsresult BeginIMEComposition(mozilla::WidgetCompositionEvent* aEvent);

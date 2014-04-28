@@ -1578,15 +1578,16 @@ nsEditor::ReplaceContainer(nsINode* aNode,
   int32_t offset = parent->IndexOf(aNode);
 
   // create new container
-  //new call to use instead to get proper HTML element, bug# 39919
-  nsresult res = CreateHTMLContent(aNodeType, outNode);
-  NS_ENSURE_SUCCESS(res, res);
+  ErrorResult rv;
+  *outNode = CreateHTMLContent(aNodeType, rv).take();
+  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
 
   nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(*outNode);
   
   nsIDOMNode* inNode = aNode->AsDOMNode();
 
   // set attribute if needed
+  nsresult res;
   if (aAttribute && aValue && !aAttribute->IsEmpty()) {
     res = elem->SetAttribute(*aAttribute, *aValue);
     NS_ENSURE_SUCCESS(res, res);
@@ -1701,13 +1702,12 @@ nsEditor::InsertContainerAbove(nsIContent* aNode,
   int32_t offset = parent->IndexOf(aNode);
 
   // create new container
-  nsCOMPtr<dom::Element> newContent;
-
-  //new call to use instead to get proper HTML element, bug# 39919
-  nsresult res = CreateHTMLContent(aNodeType, getter_AddRefs(newContent));
-  NS_ENSURE_SUCCESS(res, res);
+  ErrorResult rv;
+  nsCOMPtr<Element> newContent = CreateHTMLContent(aNodeType, rv);
+  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
 
   // set attribute if needed
+  nsresult res;
   if (aAttribute && aValue && !aAttribute->IsEmpty()) {
     nsIDOMNode* elem = newContent->AsDOMNode();
     res = static_cast<nsIDOMElement*>(elem)->SetAttribute(*aAttribute, *aValue);
@@ -4749,22 +4749,31 @@ nsresult nsEditor::ClearSelection()
   return selection->RemoveAllRanges();  
 }
 
-nsresult
-nsEditor::CreateHTMLContent(const nsAString& aTag, dom::Element** aContent)
+already_AddRefed<Element>
+nsEditor::CreateHTMLContent(const nsAString& aTag, ErrorResult& rv)
 {
   nsCOMPtr<nsIDocument> doc = GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  if (!doc) {
+    rv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
   // XXX Wallpaper over editor bug (editor tries to create elements with an
   //     empty nodename).
   if (aTag.IsEmpty()) {
     NS_ERROR("Don't pass an empty tag to nsEditor::CreateHTMLContent, "
              "check caller.");
-    return NS_ERROR_FAILURE;
+    rv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
-  return doc->CreateElem(aTag, nullptr, kNameSpaceID_XHTML,
-                         reinterpret_cast<nsIContent**>(aContent));
+  nsCOMPtr<nsIContent> ret;
+  nsresult res = doc->CreateElem(aTag, nullptr, kNameSpaceID_XHTML,
+                                 getter_AddRefs(ret));
+  if (NS_FAILED(res)) {
+    rv.Throw(res);
+  }
+  return dont_AddRef(ret.forget().take()->AsElement());
 }
 
 nsresult
