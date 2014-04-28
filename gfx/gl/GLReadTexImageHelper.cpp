@@ -262,8 +262,7 @@ static void CopyDataSourceSurface(DataSourceSurface* aSource,
 
   bool needsRBSwap = false;
   if (aDest->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-      aDest->GetFormat() == SurfaceFormat::B8G8R8X8 ||
-      aDest->GetFormat() == SurfaceFormat::R5G6B5) {
+      aDest->GetFormat() == SurfaceFormat::B8G8R8X8) {
       needsRBSwap = true;
   }
 
