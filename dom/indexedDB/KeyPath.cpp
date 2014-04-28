@@ -301,7 +301,7 @@ KeyPath::Parse(JSContext* aCx, const JS::Value& aValue_, KeyPath* aKeyPath)
     }
   }
   // Otherwise convert it to a string.
-  else if (!JSVAL_IS_NULL(aValue) && !JSVAL_IS_VOID(aValue)) {
+  else if (!aValue.isNull() && !JSVAL_IS_VOID(aValue)) {
     JSString* jsstr;
     nsDependentJSString str;
     if (!(jsstr = JS::ToString(aCx, aValue)) ||

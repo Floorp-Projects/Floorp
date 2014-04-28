@@ -60,7 +60,7 @@ void JSD_ASSERT_VALID_PROPERTY(JSDProperty* jsdprop)
 bool
 jsd_IsValueObject(JSDContext* jsdc, JSDValue* jsdval)
 {
-    return !JSVAL_IS_PRIMITIVE(jsdval->val) || JSVAL_IS_NULL(jsdval->val);
+    return !JSVAL_IS_PRIMITIVE(jsdval->val) || jsdval->val.isNull();
 }
 
 bool
@@ -96,7 +96,7 @@ jsd_IsValueBoolean(JSDContext* jsdc, JSDValue* jsdval)
 bool
 jsd_IsValueNull(JSDContext* jsdc, JSDValue* jsdval)
 {
-    return JSVAL_IS_NULL(jsdval->val);
+    return jsdval->val.isNull();
 }
 
 bool

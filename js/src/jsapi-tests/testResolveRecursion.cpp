@@ -123,7 +123,7 @@ doResolve(JS::HandleObject obj, JS::HandleId id, JS::MutableHandleObject objp)
             EVAL("obj1.y", &v);
             CHECK(JSVAL_IS_VOID(v));
             EVAL("obj2.y", &v);
-            CHECK(JSVAL_IS_NULL(v));
+            CHECK(v.isNull());
             EVAL("obj2.x", &v);
             CHECK(JSVAL_IS_VOID(v));
             EVAL("obj1.y = 0", &v);

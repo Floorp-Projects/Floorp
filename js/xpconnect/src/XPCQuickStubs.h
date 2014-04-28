@@ -224,7 +224,7 @@ protected:
      * without doing anything else. Otherwise, the JSString* created
      * from |v| will be returned.  It'll be rooted, as needed, in
      * *pval.  nullBehavior and undefinedBehavior control what happens
-     * when |v| is JSVAL_IS_NULL and JSVAL_IS_VOID respectively.
+     * when v.isNull() and JSVAL_IS_VOID are respectively true.
      */
     template<class traits>
     JSString* InitOrStringify(JSContext* cx, JS::HandleValue v,
@@ -237,7 +237,7 @@ protected:
             s = JSVAL_TO_STRING(v);
         } else {
             StringificationBehavior behavior = eStringify;
-            if (JSVAL_IS_NULL(v)) {
+            if (v.isNull()) {
                 behavior = nullBehavior;
             } else if (JSVAL_IS_VOID(v)) {
                 behavior = undefinedBehavior;

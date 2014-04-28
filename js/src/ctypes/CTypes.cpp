@@ -2328,7 +2328,7 @@ ImplicitConvert(JSContext* cx,
   }
 #include "ctypes/typedefs.h"
   case TYPE_pointer: {
-    if (JSVAL_IS_NULL(val)) {
+    if (val.isNull()) {
       // Convert to a null pointer.
       *static_cast<void**>(buffer) = nullptr;
       break;
@@ -4366,7 +4366,7 @@ ArrayType::GetBaseType(JSObject* obj)
   JS_ASSERT(CType::GetTypeCode(obj) == TYPE_array);
 
   jsval type = JS_GetReservedSlot(obj, SLOT_ELEMENT_T);
-  JS_ASSERT(!JSVAL_IS_NULL(type));
+  JS_ASSERT(!type.isNull());
   return &type.toObject();
 }
 
