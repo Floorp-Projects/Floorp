@@ -75,16 +75,16 @@
  * With a prefix of 0.0, it expands to e.g. 0.04. If there are too many
  * arguments, it expands to the first argument over the limit. If this
  * exceeding argument is a number, the assertion will fail as there is no
- * number than can simultaneously be both > 10 and < 0.1. If the exceeding
- * argument is not a number, a compile-time error will still occur because the
- * exceeding argument is compared to an int and a double.
+ * number than can simultaneously be both > 10 and == 0. If the exceeding
+ * argument is not a number, a compile-time error should still occur due to
+ * the operations performed on it.
  */
 #define MOZ_MACROARGS_STRINGIFY_HELPER(x) #x
 #define MOZ_STATIC_ASSERT_VALID_ARG_COUNT(...) \
   static_assert( \
     sizeof(MOZ_MACROARGS_STRINGIFY_HELPER((__VA_ARGS__))) != sizeof("()") && \
       (MOZ_PASTE_PREFIX_AND_ARG_COUNT(1, __VA_ARGS__)) > 10 && \
-      (MOZ_PASTE_PREFIX_AND_ARG_COUNT(0.0, __VA_ARGS__)) < 0.1, \
+      (int)(MOZ_PASTE_PREFIX_AND_ARG_COUNT(0.0, __VA_ARGS__)) == 0, \
     "MOZ_STATIC_ASSERT_VALID_ARG_COUNT requires 1 to 50 arguments") /* ; */
 
 /*
