@@ -410,7 +410,7 @@ Reify(JSContext *cx, JSCompartment *origin, MutableHandleValue vp)
             if (!ValueToId<CanGC>(cx, v, &id))
                 return false;
             keys.infallibleAppend(id);
-            if (!origin->wrapId(cx, &keys[i]))
+            if (!origin->wrapId(cx, keys[i].address()))
                 return false;
         }
     }

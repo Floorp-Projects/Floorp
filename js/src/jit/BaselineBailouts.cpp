@@ -674,7 +674,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                 size_t argOffset = builder.framePushed() + IonJSFrameLayout::offsetOfActualArg(i);
                 *builder.valuePointerAtStackOffset(argOffset) = arg;
             } else {
-                startFrameFormals[i] = arg;
+                startFrameFormals[i].set(arg);
             }
         }
     }
@@ -758,7 +758,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             if (!savedCallerArgs.resize(inlined_args))
                 return false;
             for (uint32_t i = 0; i < inlined_args; i++)
-                savedCallerArgs[i] = iter.read();
+                savedCallerArgs[i].set(iter.read());
 
             if (IsSetPropPC(pc)) {
                 // We would love to just save all the arguments and leave them

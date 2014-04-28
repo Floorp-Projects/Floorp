@@ -3209,7 +3209,7 @@ nsObjectLoadingContent::LegacyCall(JSContext* aCx,
   }
 
   for (size_t i = 0; i < args.length(); i++) {
-    if (!JS_WrapValue(aCx, args.handleAt(i))) {
+    if (!JS_WrapValue(aCx, args[i])) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return JS::UndefinedValue();
     }
