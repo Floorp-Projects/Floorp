@@ -6,7 +6,6 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.NativeEventListener;
@@ -209,7 +208,6 @@ public final class EventDispatcher {
         }
     }
 
-    @RobocopTarget
     @Deprecated
     public static void sendResponse(JSONObject message, Object response) {
         sendResponseHelper(STATUS_SUCCESS, message, response);
