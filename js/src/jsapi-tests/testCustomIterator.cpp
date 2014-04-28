@@ -75,7 +75,7 @@ BEGIN_TEST(testCustomIterator_bug612523)
          "j;", &result);
 
     CHECK(result.isInt32());
-    CHECK_EQUAL(JSVAL_TO_INT(result), 100);
+    CHECK_EQUAL(result.toInt32(), 100);
     CHECK_EQUAL(iterCount, 101);
 
     return true;

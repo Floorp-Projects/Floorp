@@ -821,7 +821,7 @@ GetABICode(JSObject* obj)
     return INVALID_ABI;
 
   jsval result = JS_GetReservedSlot(obj, SLOT_ABICODE);
-  return ABICode(JSVAL_TO_INT(result));
+  return ABICode(result.toInt32());
 }
 
 static const JSErrorFormatString ErrorFormatString[CTYPESERR_LIMIT] = {
@@ -1580,7 +1580,7 @@ jsvalToBool(JSContext* cx, jsval val, bool* result)
     return true;
   }
   if (val.isInt32()) {
-    int32_t i = JSVAL_TO_INT(val);
+    int32_t i = val.toInt32();
     *result = i != 0;
     return i == 0 || i == 1;
   }
@@ -1606,7 +1606,7 @@ jsvalToInteger(JSContext* cx, jsval val, IntegerType* result)
   if (val.isInt32()) {
     // Make sure the integer fits in the alotted precision, and has the right
     // sign.
-    int32_t i = JSVAL_TO_INT(val);
+    int32_t i = val.toInt32();
     return ConvertExact(i, result);
   }
   if (val.isDouble()) {
@@ -1697,7 +1697,7 @@ jsvalToFloat(JSContext *cx, jsval val, FloatType* result)
   // argument be exactly representable as a 32-bit float is
   // unrealistic: it would allow 1/2 to pass but not 1/3.
   if (val.isInt32()) {
-    *result = FloatType(JSVAL_TO_INT(val));
+    *result = FloatType(val.toInt32());
     return true;
   }
   if (val.isDouble()) {
@@ -1811,7 +1811,7 @@ jsvalToBigInteger(JSContext* cx,
   if (val.isInt32()) {
     // Make sure the integer fits in the alotted precision, and has the right
     // sign.
-    int32_t i = JSVAL_TO_INT(val);
+    int32_t i = val.toInt32();
     return ConvertExact(i, result);
   }
   if (val.isDouble()) {
@@ -1974,7 +1974,7 @@ jsvalToPtrExplicit(JSContext* cx, jsval val, uintptr_t* result)
   if (val.isInt32()) {
     // int32_t always fits in intptr_t. If the integer is negative, cast through
     // an intptr_t intermediate to sign-extend.
-    int32_t i = JSVAL_TO_INT(val);
+    int32_t i = val.toInt32();
     *result = i < 0 ? uintptr_t(intptr_t(i)) : uintptr_t(i);
     return true;
   }
@@ -3296,7 +3296,7 @@ CType::Finalize(JSFreeOp *fop, JSObject* obj)
     return;
 
   // The contents of our slots depends on what kind of type we are.
-  switch (TypeCode(JSVAL_TO_INT(slot))) {
+  switch (TypeCode(slot.toInt32())) {
   case TYPE_function: {
     // Free the FunctionInfo.
     slot = JS_GetReservedSlot(obj, SLOT_FNINFO);
@@ -3341,7 +3341,7 @@ CType::Trace(JSTracer* trc, JSObject* obj)
     return;
 
   // The contents of our slots depends on what kind of type we are.
-  switch (TypeCode(JSVAL_TO_INT(slot))) {
+  switch (TypeCode(slot.toInt32())) {
   case TYPE_struct: {
     slot = obj->getReservedSlot(SLOT_FIELDINFO);
     if (slot.isUndefined())
@@ -3400,7 +3400,7 @@ CType::GetTypeCode(JSObject* typeObj)
   JS_ASSERT(IsCType(typeObj));
 
   jsval result = JS_GetReservedSlot(typeObj, SLOT_TYPECODE);
-  return TypeCode(JSVAL_TO_INT(result));
+  return TypeCode(result.toInt32());
 }
 
 bool
@@ -3482,7 +3482,7 @@ CType::GetSafeSize(JSObject* obj, size_t* result)
   // The "size" property can be an int, a double, or JSVAL_VOID
   // (for arrays of undefined length), and must always fit in a size_t.
   if (size.isInt32()) {
-    *result = JSVAL_TO_INT(size);
+    *result = size.toInt32();
     return true;
   }
   if (size.isDouble()) {
@@ -3507,7 +3507,7 @@ CType::GetSize(JSObject* obj)
   // (for arrays of undefined length), and must always fit in a size_t.
   // For callers who know it can never be JSVAL_VOID, return a size_t directly.
   if (size.isInt32())
-    return JSVAL_TO_INT(size);
+    return size.toInt32();
   return Convert<size_t>(size.toDouble());
 }
 
@@ -3530,7 +3530,7 @@ CType::GetAlignment(JSObject* obj)
   JS_ASSERT(CType::IsCType(obj));
 
   jsval slot = JS_GetReservedSlot(obj, SLOT_ALIGN);
-  return static_cast<size_t>(JSVAL_TO_INT(slot));
+  return static_cast<size_t>(slot.toInt32());
 }
 
 ffi_type*

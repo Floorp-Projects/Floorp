@@ -44,7 +44,7 @@ public:
   NS_IMETHOD Handle(const nsAString& aName, JS::Handle<JS::Value> aResult)
   {
     if (aResult.isInt32()) {
-      int32_t mode = JSVAL_TO_INT(aResult);
+      int32_t mode = aResult.toInt32();
       SetAutoMounterMode(mode);
     }
     return NS_OK;
