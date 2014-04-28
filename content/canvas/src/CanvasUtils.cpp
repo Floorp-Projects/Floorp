@@ -68,7 +68,7 @@ bool
 CoerceDouble(JS::Value v, double* d)
 {
     if (v.isDouble()) {
-        *d = JSVAL_TO_DOUBLE(v);
+        *d = v.toDouble();
     } else if (JSVAL_IS_INT(v)) {
         *d = double(JSVAL_TO_INT(v));
     } else if (v.isUndefined()) {
