@@ -1256,7 +1256,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   state->mResponseText = mResponseText;
 
   if (NS_SUCCEEDED(mResponseTextResult)) {
-    MOZ_ASSERT(JSVAL_IS_VOID(mResponse) || mResponse.isNull());
+    MOZ_ASSERT(mResponse.isUndefined() || mResponse.isNull());
     state->mResponseResult = mResponseTextResult;
     state->mResponse = mResponse;
   }
@@ -1265,7 +1265,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
     if (NS_SUCCEEDED(mResponseResult)) {
       if (mResponseBuffer.data()) {
-        MOZ_ASSERT(JSVAL_IS_VOID(mResponse));
+        MOZ_ASSERT(mResponse.isUndefined());
 
         JSAutoStructuredCloneBuffer responseBuffer(Move(mResponseBuffer));
 
@@ -2258,7 +2258,7 @@ jsval
 XMLHttpRequest::GetResponse(JSContext* /* unused */, ErrorResult& aRv)
 {
   if (NS_SUCCEEDED(mStateData.mResponseTextResult) &&
-      JSVAL_IS_VOID(mStateData.mResponse)) {
+      mStateData.mResponse.isUndefined()) {
     MOZ_ASSERT(mStateData.mResponseText.Length());
     MOZ_ASSERT(NS_SUCCEEDED(mStateData.mResponseResult));
 

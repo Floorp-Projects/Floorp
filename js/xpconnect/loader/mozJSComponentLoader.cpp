@@ -471,7 +471,7 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
 
     RootedValue NSGetFactory_val(cx);
     if (!JS_GetProperty(cx, entryObj, "NSGetFactory", &NSGetFactory_val) ||
-        JSVAL_IS_VOID(NSGetFactory_val)) {
+        NSGetFactory_val.isUndefined()) {
         return nullptr;
     }
 

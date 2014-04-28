@@ -1837,7 +1837,7 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
 
   // Return DATA_ERR if a key was passed in and this objectStore uses inline
   // keys.
-  if (!JSVAL_IS_VOID(aKeyVal) && HasValidKeyPath()) {
+  if (!aKeyVal.isUndefined() && HasValidKeyPath()) {
     return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
@@ -2615,7 +2615,7 @@ IDBObjectStore::GetKeyPath(JSContext* aCx, ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!JSVAL_IS_VOID(mCachedKeyPath)) {
+  if (!mCachedKeyPath.isUndefined()) {
     return mCachedKeyPath;
   }
 

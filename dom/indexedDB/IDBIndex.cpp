@@ -831,7 +831,7 @@ IDBIndex::GetKeyPath(JSContext* aCx, ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!JSVAL_IS_VOID(mCachedKeyPath)) {
+  if (!mCachedKeyPath.isUndefined()) {
     return mCachedKeyPath;
   }
 

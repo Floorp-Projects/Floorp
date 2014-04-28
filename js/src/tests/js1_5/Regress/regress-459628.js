@@ -5,7 +5,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 459628;
-var summary = 'Do not assert: JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, map->freeslot))';
+var summary = 'Do not assert: STOBJ_GET_SLOT(obj, map->freeslot).isUndefined()';
 var actual = '';
 var expect = '';
 
