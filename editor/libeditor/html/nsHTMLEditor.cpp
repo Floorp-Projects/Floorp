@@ -5427,7 +5427,7 @@ nsHTMLEditor::GetInputEventTargetContent()
 }
 
 bool
-nsHTMLEditor::IsEditable(nsIContent* aNode) {
+nsHTMLEditor::IsEditable(nsINode* aNode) {
   if (!nsPlaintextEditor::IsEditable(aNode)) {
     return false;
   }

@@ -3566,11 +3566,14 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
 }
 
 bool
-nsEditor::IsEditable(nsIContent *aNode)
+nsEditor::IsEditable(nsINode* aNode)
 {
   NS_ENSURE_TRUE(aNode, false);
 
-  if (IsMozEditorBogusNode(aNode) || !IsModifiableNode(aNode)) return false;
+  if (!aNode->IsNodeOfType(nsINode::eCONTENT) || IsMozEditorBogusNode(aNode) ||
+      !IsModifiableNode(aNode)) {
+    return false;
+  }
 
   // see if it has a frame.  If so, we'll edit it.
   // special case for textnodes: frame must have width.
@@ -3590,11 +3593,12 @@ nsEditor::IsEditable(nsIContent *aNode)
 }
 
 bool
-nsEditor::IsMozEditorBogusNode(nsIContent *element)
+nsEditor::IsMozEditorBogusNode(nsINode* element)
 {
-  return element &&
-         element->AttrValueIs(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
-                              kMOZEditorBogusNodeValue, eCaseMatters);
+  return element && element->IsElement() &&
+         element->AsElement()->AttrValueIs(kNameSpaceID_None,
+             kMOZEditorBogusNodeAttrAtom, kMOZEditorBogusNodeValue,
+             eCaseMatters);
 }
 
 uint32_t
