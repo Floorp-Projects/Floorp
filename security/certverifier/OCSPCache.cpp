@@ -214,6 +214,16 @@ OCSPCache::Put(const CERTCertificate* aCert,
       return SECSuccess;
     }
 
+    // Only known good responses or responses indicating an unknown
+    // or revoked certificate should replace previously known responses.
+    if (aErrorCode != 0 && aErrorCode != SEC_ERROR_OCSP_UNKNOWN_CERT &&
+        aErrorCode != SEC_ERROR_REVOKED_CERTIFICATE) {
+      LogWithCerts("OCSPCache::Put(%s, %s) already in cache - not replacing "
+                   "with less important status", aCert, aIssuerCert);
+      MakeMostRecentlyUsed(index, lock);
+      return SECSuccess;
+    }
+
     LogWithCerts("OCSPCache::Put(%s, %s) already in cache - replacing",
                  aCert, aIssuerCert);
     mEntries[index]->mErrorCode = aErrorCode;
