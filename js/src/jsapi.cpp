@@ -1111,7 +1111,7 @@ JS_TransplantObject(JSContext *cx, HandleObject origobj, HandleObject target)
         // There might already be a wrapper for the original object in
         // the new compartment. If there is, we use its identity and swap
         // in the contents of |target|.
-        newIdentity = &p->value().toObject();
+        newIdentity = &p->value().get().toObject();
 
         // When we remove origv from the wrapper map, its wrapper, newIdentity,
         // must immediately cease to be a cross-compartment wrapper. Neuter it.

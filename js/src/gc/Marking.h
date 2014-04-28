@@ -362,7 +362,7 @@ IsAboutToBeFinalized(const js::jit::VMFunction **vmfunc)
 }
 
 inline bool
-IsAboutToBeFinalized(ReadBarriered<js::jit::JitCode> code)
+IsAboutToBeFinalized(ReadBarrieredJitCode code)
 {
     return IsJitCodeAboutToBeFinalized(code.unsafeGet());
 }

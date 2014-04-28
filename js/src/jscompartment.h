@@ -141,7 +141,7 @@ struct JSCompartment
     friend struct JSRuntime;
     friend struct JSContext;
     friend class js::ExclusiveContext;
-    js::ReadBarriered<js::GlobalObject> global_;
+    js::ReadBarrieredGlobalObject global_;
 
     unsigned                     enterCompartmentDepth;
 
@@ -265,7 +265,7 @@ struct JSCompartment
      * Lazily initialized script source object to use for scripts cloned
      * from the self-hosting global.
      */
-    js::ReadBarriered<js::ScriptSourceObject> selfHostingScriptSource;
+    js::ReadBarrieredScriptSourceObject selfHostingScriptSource;
 
     /* During GC, stores the index of this compartment in rt->compartments. */
     unsigned                     gcIndex;

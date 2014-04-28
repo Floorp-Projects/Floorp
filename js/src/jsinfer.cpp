@@ -2558,8 +2558,8 @@ struct types::ObjectTableKey
 
 struct types::ObjectTableEntry
 {
-    ReadBarriered<TypeObject> object;
-    ReadBarriered<Shape> shape;
+    ReadBarrieredTypeObject object;
+    ReadBarrieredShape shape;
     Type *types;
 };
 
