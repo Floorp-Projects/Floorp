@@ -7,6 +7,7 @@
 #include "CertVerifier.h"
 #include "OCSPCache.h"
 #include "nss.h"
+#include "prerr.h"
 #include "prprf.h"
 #include "secerr.h"
 
@@ -247,4 +248,36 @@ TEST_F(OCSPCacheTest, Times)
 
   // SEC_ERROR_REVOKED_CERTIFICATE overrides everything
   PutAndGet(cache, &subject, &issuer, SEC_ERROR_REVOKED_CERTIFICATE, 50);
+}
+
+TEST_F(OCSPCacheTest, NetworkFailure)
+{
+  SCOPED_TRACE("");
+  CERTCertificate subject;
+  MakeFakeCert(&subject, "CN=subject1", "CN=issuer1", "001", "key001");
+  CERTCertificate issuer;
+  MakeFakeCert(&issuer, "CN=issuer1", "CN=issuer1", "000", "key000");
+  PutAndGet(cache, &subject, &issuer, PR_CONNECT_REFUSED_ERROR, 100);
+  PutAndGet(cache, &subject, &issuer, 0, 200);
+  // This should not override the already present entry.
+  SECStatus rv = cache.Put(&subject, &issuer, PR_CONNECT_REFUSED_ERROR, 300, 350);
+  ASSERT_TRUE(rv == SECSuccess);
+  PRErrorCode errorOut;
+  PRTime timeOut;
+  ASSERT_TRUE(cache.Get(&subject, &issuer, errorOut, timeOut));
+  ASSERT_TRUE(errorOut == 0 && timeOut == 200);
+
+  PutAndGet(cache, &subject, &issuer, SEC_ERROR_OCSP_UNKNOWN_CERT, 400);
+  // This should not override the already present entry.
+  rv = cache.Put(&subject, &issuer, PR_CONNECT_REFUSED_ERROR, 500, 550);
+  ASSERT_TRUE(rv == SECSuccess);
+  ASSERT_TRUE(cache.Get(&subject, &issuer, errorOut, timeOut));
+  ASSERT_TRUE(errorOut == SEC_ERROR_OCSP_UNKNOWN_CERT && timeOut == 400);
+
+  PutAndGet(cache, &subject, &issuer, SEC_ERROR_REVOKED_CERTIFICATE, 600);
+  // This should not override the already present entry.
+  rv = cache.Put(&subject, &issuer, PR_CONNECT_REFUSED_ERROR, 700, 750);
+  ASSERT_TRUE(rv == SECSuccess);
+  ASSERT_TRUE(cache.Get(&subject, &issuer, errorOut, timeOut));
+  ASSERT_TRUE(errorOut == SEC_ERROR_REVOKED_CERTIFICATE && timeOut == 600);
 }
