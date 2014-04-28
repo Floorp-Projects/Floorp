@@ -328,7 +328,7 @@ GetJSValueAsString(JSContext* aCtx,
   }
   size_t length;
   const jschar* chars =
-    JS_GetStringCharsZAndLength(aCtx, JSVAL_TO_STRING(aValue), &length);
+    JS_GetStringCharsZAndLength(aCtx, aValue.toString(), &length);
   if (!chars) {
     _string.SetIsVoid(true);
     return;
