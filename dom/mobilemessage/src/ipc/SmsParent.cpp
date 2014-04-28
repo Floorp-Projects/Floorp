@@ -641,7 +641,15 @@ SmsRequestParent::NotifyMessageSent(nsISupports *aMessage)
 NS_IMETHODIMP
 SmsRequestParent::NotifySendMessageFailed(int32_t aError, nsISupports *aMessage)
 {
-  return SendReply(ReplyMessageSendFail(aError));
+  NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
+
+  ContentParent *parent = static_cast<ContentParent*>(Manager()->Manager());
+  MobileMessageData data;
+  if (!GetMobileMessageDataFromMessage(parent, aMessage, data)) {
+    return SendReply(ReplyMessageSendFail(aError, OptionalMobileMessageData(void_t())));
+  }
+
+  return SendReply(ReplyMessageSendFail(aError, OptionalMobileMessageData(data)));
 }
 
 NS_IMETHODIMP
