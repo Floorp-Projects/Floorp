@@ -1,0 +1,50 @@
+{
+  "version": "0.2.2",
+  "name": "KitchenSink",
+  "description": "Tests and report APIs available on the device",
+  "launch_path": "/index.html",
+  "developer": {
+    "name": "Piotr Zalewa",
+    "url": "http://www.mozillalabs.com"
+  },
+  "icons": {
+    "16": "/img/icons/logo-16.png",
+    "32": "/img/icons/logo-32.png",
+    "64": "/img/icons/logo-64.png",
+    "128": "/img/icons/logo-128.png",
+    "256": "/img/icons/logo-256.png"
+  },
+  "type": "privileged",
+  "permissions": {
+    "alarms": {
+      "description": "Testing"
+    },
+    "browser": {
+      "description": "Testing"
+    },
+    "geolocation": {
+      "description": "Testing"
+	},
+    "contacts": {
+      "access": "readwrite",
+      "description": "Testing"
+    },
+    "device-storage:sdcard": {
+      "access": "readwrite",
+      "description": "Testing"
+    },
+    "fmradio": {
+      "description": "Testing"
+    },
+    "storage": {
+      "description": "Testing"
+    },
+    "systemXHR": {
+      "description": "Testing"
+    },
+    "tcp-socket": {
+      "description": "Testing"
+    }
+  },
+  "package_path": "marketplace_privileged_app.zip"
+}
