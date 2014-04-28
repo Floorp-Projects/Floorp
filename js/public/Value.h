@@ -1932,13 +1932,6 @@ JSVAL_IS_BOOLEAN(jsval v)
     return JSVAL_IS_BOOLEAN_IMPL(JSVAL_TO_IMPL(v));
 }
 
-static inline bool
-JSVAL_TO_BOOLEAN(jsval v)
-{
-    MOZ_ASSERT(JSVAL_IS_BOOLEAN(v));
-    return JSVAL_TO_BOOLEAN_IMPL(JSVAL_TO_IMPL(v));
-}
-
 static inline jsval
 BOOLEAN_TO_JSVAL(bool b)
 {
