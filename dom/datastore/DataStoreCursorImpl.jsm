@@ -151,7 +151,7 @@ this.DataStoreCursor.prototype = {
       self._revision = aEvent.target.result.value;
       self._objectId = 0;
       self._state = STATE_SEND_ALL;
-      aResolve(Cu.cloneInto({ operation: 'clear' }, self._window));
+      aResolve(self.createTask('clear', null, '', null));
     }
   },
 
@@ -291,7 +291,7 @@ this.DataStoreCursor.prototype = {
       if (self._revision.revisionId != aEvent.target.result.value.revisionId) {
         self._revision = aEvent.target.result.value;
         self._objectId = 0;
-        aResolve(Cu.cloneInto({ operation: 'clear' }, self._window));
+        aResolve(self.createTask('clear', null, '', null));
         return;
       }
 
@@ -305,8 +305,7 @@ this.DataStoreCursor.prototype = {
         }
 
         self._objectId = cursor.key;
-        aResolve(Cu.cloneInto({ operation: 'add', id: self._objectId,
-                                data: cursor.value }, self._window));
+        aResolve(self.createTask('add', self._objectId, '', cursor.value));
       };
     };
   },
@@ -324,8 +323,7 @@ this.DataStoreCursor.prototype = {
 
     switch (this._revision.operation) {
       case REVISION_REMOVED:
-        aResolve(Cu.cloneInto({ operation: 'remove', id: this._revision.objectId },
-                              this._window));
+        aResolve(this.createTask('remove', this._revision.objectId, '', null));
         break;
 
       case REVISION_ADDED: {
@@ -337,8 +335,8 @@ this.DataStoreCursor.prototype = {
             return;
           }
 
-          aResolve(Cu.cloneInto({ operation: 'add', id: self._revision.objectId,
-                                  data: aEvent.target.result }, self._window));
+          aResolve(self.createTask('add', self._revision.objectId, '',
+                                   aEvent.target.result));
         }
         break;
       }
@@ -357,8 +355,8 @@ this.DataStoreCursor.prototype = {
             return;
           }
 
-          aResolve(Cu.cloneInto({ operation: 'update', id: self._revision.objectId,
-                                  data: aEvent.target.result }, self._window));
+          aResolve(self.createTask('update', self._revision.objectId, '',
+                                   aEvent.target.result));
         }
         break;
       }
@@ -377,8 +375,7 @@ this.DataStoreCursor.prototype = {
 
   stateMachineDone: function(aStore, aRevisionStore, aResolve, aReject) {
     this.close();
-    aResolve(Cu.cloneInto({ revisionId: this._revision.revisionId,
-                            operation: 'done' }, this._window));
+    aResolve(this.createTask('done', null, this._revision.revisionId, null));
   },
 
   // public interface
@@ -405,5 +402,10 @@ this.DataStoreCursor.prototype = {
 
   close: function() {
     this._dataStore.syncTerminated(this);
+  },
+
+  createTask: function(aOperation, aId, aRevisionId, aData) {
+    return Cu.cloneInto({ operation: aOperation, id: aId,
+                          revisionId: aRevisionId, data: aData }, this._window);
   }
 };

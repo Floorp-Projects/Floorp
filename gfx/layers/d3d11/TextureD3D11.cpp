@@ -77,7 +77,7 @@ DataTextureSourceD3D11::DataTextureSourceD3D11(SurfaceFormat aFormat,
                                                ID3D11Texture2D* aTexture)
 : mCompositor(aCompositor)
 , mFormat(aFormat)
-, mFlags(0)
+, mFlags(TextureFlags::NO_FLAGS)
 , mCurrentTile(0)
 , mIsTiled(false)
 , mIterating(false)
@@ -361,7 +361,7 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
 
   int32_t maxSize = mCompositor->GetMaxTextureSize();
   if ((mSize.width <= maxSize && mSize.height <= maxSize) ||
-      (mFlags & TEXTURE_DISALLOW_BIGIMAGE)) {
+      (mFlags & TextureFlags::DISALLOW_BIGIMAGE)) {
     D3D11_SUBRESOURCE_DATA initData;
     initData.pSysMem = aSurface->GetData();
     initData.SysMemPitch = aSurface->Stride();
