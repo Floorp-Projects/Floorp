@@ -214,6 +214,13 @@ endif
 ifdef MOZ_METRO
 OS_LIBS += $(call EXPAND_LIBNAME,uiautomationcore runtimeobject)
 endif
+ifdef MOZ_GAMEPAD
+ifdef MOZ_HAS_WINSDK_WITH_D3D
+OS_LIBS += $(call EXPAND_LIBNAME,dxguid dinput8)
+else
+OS_LIBS += $(call EXPAND_LIBNAME_PATH,dxguid dinput8, '$(subst \,/,$(MOZ_DIRECTX_SDK_PATH))/Lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)')
+endif
+endif
 endif # WINNT
 
 ifdef MOZ_JPROF
