@@ -2172,7 +2172,7 @@ jsdValue::GetJsType (uint32_t *_rval)
         *_rval = TYPE_VOID;
     else if (JSD_IsValueFunction (mCx, mValue))
         *_rval = TYPE_FUNCTION;
-    else if (!JSVAL_IS_PRIMITIVE(val))
+    else if (!val.isPrimitive())
         *_rval = TYPE_OBJECT;
     else
         NS_ASSERTION (0, "Value has no discernible type.");

@@ -822,7 +822,7 @@ ToDisassemblySource(JSContext *cx, HandleValue v, JSAutoByteString *bytes)
         return true;
     }
 
-    if (!JSVAL_IS_PRIMITIVE(v)) {
+    if (!v.isPrimitive()) {
         JSObject *obj = v.toObjectOrNull();
         if (obj->is<StaticBlockObject>()) {
             Rooted<StaticBlockObject*> block(cx, &obj->as<StaticBlockObject>());

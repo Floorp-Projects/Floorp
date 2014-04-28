@@ -106,7 +106,7 @@ JSValToDashArray(JSContext* cx, const JS::Value& patternArray,
     // anybody...
     static const uint32_t MAX_NUM_DASHES = 1 << 14;
 
-    if (!JSVAL_IS_PRIMITIVE(patternArray)) {
+    if (!patternArray.isPrimitive()) {
         JS::Rooted<JSObject*> obj(cx, patternArray.toObjectOrNull());
         uint32_t length;
         if (!JS_GetArrayLength(cx, obj, &length)) {
