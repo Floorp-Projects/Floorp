@@ -835,7 +835,6 @@ ImageBridgeChild::AllocGrallocBufferNow(const gfx::IntSize& aSize,
                                         MaybeMagicGrallocBufferHandle* aHandle,
                                         PGrallocBufferChild** aChild)
 {
-  MOZ_ASSERT(!mShuttingDown);
 #ifdef MOZ_WIDGET_GONK
   *aChild = SendPGrallocBufferConstructor(aSize,
                                           aFormat,
