@@ -1095,8 +1095,8 @@ nsHTMLEditor::TabInTable(bool inIsShift, bool* outHandled)
     if (node && nsHTMLEditUtils::IsTableCell(node) &&
         GetEnclosingTable(node) == tbl)
     {
-      res = CollapseSelectionToDeepestNonTableFirstChild(nullptr, node);
-      NS_ENSURE_SUCCESS(res, res);
+      CollapseSelectionToDeepestNonTableFirstChild(nullptr,
+                                                   iter->GetCurrentNode());
       *outHandled = true;
       return NS_OK;
     }
@@ -1142,41 +1142,34 @@ NS_IMETHODIMP nsHTMLEditor::CreateBR(nsIDOMNode *aNode, int32_t aOffset, nsCOMPt
   return CreateBRImpl(address_of(parent), &offset, outBRNode, aSelect);
 }
 
-nsresult 
-nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelection, nsIDOMNode *aNode)
+void
+nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(
+                                         Selection* aSelection, nsINode* aNode)
 {
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
-  nsresult res;
+  MOZ_ASSERT(aNode);
 
-  nsCOMPtr<nsISelection> selection;
-  if (aSelection)
-  {
-    selection = aSelection;
-  } else {
-    res = GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(res, res);
-    NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
+  nsRefPtr<Selection> selection = aSelection;
+  if (!selection) {
+    selection = GetSelection();
   }
-  nsCOMPtr<nsIDOMNode> node = aNode;
-  nsCOMPtr<nsIDOMNode> child;
-  
-  do {
-    node->GetFirstChild(getter_AddRefs(child));
-    
-    if (child)
-    {
-      // Stop if we find a table
-      // don't want to go into nested tables
-      if (nsHTMLEditUtils::IsTable(child)) break;
-      // hey, it'g gotta be a container too!
-      if (!IsContainer(child)) break;
-      node = child;
+  if (!selection) {
+    // Nothing to do
+    return;
+  }
+
+  nsCOMPtr<nsINode> node = aNode;
+
+  for (nsCOMPtr<nsIContent> child = node->GetFirstChild();
+       child;
+       child = child->GetFirstChild()) {
+    // Stop if we find a table, don't want to go into nested tables
+    if (nsHTMLEditUtils::IsTable(child) || !IsContainer(child)) {
+      break;
     }
-  }
-  while (child);
+    node = child;
+  };
 
-  selection->Collapse(node,0);
-  return NS_OK;
+  selection->Collapse(node, 0);
 }
 
 

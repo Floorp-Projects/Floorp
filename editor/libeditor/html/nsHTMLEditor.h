@@ -344,7 +344,8 @@ public:
   // This will stop at a table, however, since we don't want to
   //  "drill down" into nested tables.
   // aSelection is optional -- if null, we get current seletion
-  nsresult CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelection, nsIDOMNode *aNode);
+  void CollapseSelectionToDeepestNonTableFirstChild(
+                          mozilla::dom::Selection* aSelection, nsINode* aNode);
 
   /**
    * aNode must be a non-null text node.
