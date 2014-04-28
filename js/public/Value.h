@@ -1821,13 +1821,6 @@ static_assert(sizeof(jsval_layout) == sizeof(JS::Value),
 
 /************************************************************************/
 
-static inline int32_t
-JSVAL_TO_INT(jsval v)
-{
-    MOZ_ASSERT(v.isInt32());
-    return JSVAL_TO_INT32_IMPL(JSVAL_TO_IMPL(v));
-}
-
 static inline JS_VALUE_CONSTEXPR jsval
 INT_TO_JSVAL(int32_t i)
 {

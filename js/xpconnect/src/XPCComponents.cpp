@@ -259,7 +259,7 @@ nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
         }
         case JSENUMERATE_NEXT:
         {
-            uint32_t idx = JSVAL_TO_INT(*statep);
+            uint32_t idx = statep->toInt32();
             nsIInterfaceInfo* interface = mInterfaces.SafeElementAt(idx);
             *statep = UINT_TO_JSVAL(idx + 1);
 
@@ -507,7 +507,7 @@ nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
         }
         case JSENUMERATE_NEXT:
         {
-            uint32_t idx = JSVAL_TO_INT(*statep);
+            uint32_t idx = statep->toInt32();
             nsIInterfaceInfo* interface = mInterfaces.SafeElementAt(idx);
             *statep = UINT_TO_JSVAL(idx + 1);
             if (interface) {

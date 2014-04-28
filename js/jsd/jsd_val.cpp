@@ -156,7 +156,7 @@ jsd_GetValueInt(JSDContext* jsdc, JSDValue* jsdval)
     jsval val = jsdval->val;
     if(!val.isInt32())
         return 0;
-    return JSVAL_TO_INT(val);
+    return val.toInt32();
 }
 
 double

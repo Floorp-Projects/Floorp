@@ -127,7 +127,7 @@ public:
       do_GetService(NS_AUDIOMANAGER_CONTRACTID);
     NS_ENSURE_TRUE(aResult.isInt32(), NS_OK);
 
-    int32_t volIndex = JSVAL_TO_INT(aResult);
+    int32_t volIndex = aResult.toInt32();
     if (aName.EqualsLiteral("audio.volume.content")) {
       audioManager->SetAudioChannelVolume((int32_t)AudioChannel::Content,
                                           volIndex);
