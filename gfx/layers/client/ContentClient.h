@@ -274,7 +274,7 @@ protected:
   virtual void DestroyFrontBuffer() {}
 
   bool CreateAndAllocateTextureClient(RefPtr<TextureClient>& aClient,
-                                      TextureFlags aFlags = 0);
+                                      TextureFlags aFlags = TextureFlags::NO_FLAGS);
 
   virtual void AbortTextureClientCreation()
   {
@@ -314,7 +314,7 @@ public:
   ContentClientDoubleBuffered(CompositableForwarder* aFwd)
     : ContentClientRemoteBuffer(aFwd)
   {
-    mTextureInfo.mCompositableType = COMPOSITABLE_CONTENT_DOUBLE;
+    mTextureInfo.mCompositableType = CompositableType::CONTENT_DOUBLE;
   }
   virtual ~ContentClientDoubleBuffered() {}
 
@@ -368,7 +368,7 @@ public:
   ContentClientSingleBuffered(CompositableForwarder* aFwd)
     : ContentClientRemoteBuffer(aFwd)
   {
-    mTextureInfo.mCompositableType = COMPOSITABLE_CONTENT_SINGLE;
+    mTextureInfo.mCompositableType = CompositableType::CONTENT_SINGLE;
   }
   virtual ~ContentClientSingleBuffered() {}
 
@@ -394,7 +394,7 @@ public:
     , mHasBuffer(false)
     , mHasBufferOnWhite(false)
   {
-    mTextureInfo.mCompositableType = BUFFER_CONTENT_INC;
+    mTextureInfo.mCompositableType = CompositableType::BUFFER_CONTENT_INC;
   }
 
   typedef RotatedContentBuffer::PaintState PaintState;
@@ -443,16 +443,7 @@ private:
     BUFFER_WHITE
   };
 
-  void NotifyBufferCreated(ContentType aType, uint32_t aFlags)
-  {
-    mTextureInfo.mTextureFlags = aFlags & ~TEXTURE_DEALLOCATE_CLIENT;
-    mContentType = aType;
-
-    mForwarder->CreatedIncrementalBuffer(this,
-                                         mTextureInfo,
-                                         mBufferRect);
-
-  }
+  void NotifyBufferCreated(ContentType aType, TextureFlags aFlags);
 
   TemporaryRef<gfx::DrawTarget> GetUpdateSurface(BufferType aType,
                                                  const nsIntRegion& aUpdateRegion);

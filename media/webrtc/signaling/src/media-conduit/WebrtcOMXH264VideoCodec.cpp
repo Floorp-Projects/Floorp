@@ -26,7 +26,6 @@ using namespace android;
 
 // Gecko
 #include "GonkNativeWindow.h"
-#include "GonkNativeWindowClient.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
@@ -88,29 +87,6 @@ public:
 
 private:
   RefPtr<layers::Image> mImage;
-};
-
-// Graphic buffer lifecycle management.
-// Return buffer to OMX codec when renderer is done with it.
-class RecycleCallback
-{
-public:
-  RecycleCallback(const sp<MediaCodec>& aOmx, uint32_t aBufferIndex)
-    : mOmx(aOmx)
-    , mBufferIndex(aBufferIndex)
-  {}
-  typedef void* CallbackPtr;
-  static void ReturnOMXBuffer(layers::TextureClient* aClient, CallbackPtr aClosure)
-  {
-    aClient->ClearRecycleCallback();
-    RecycleCallback* self = static_cast<RecycleCallback*>(aClosure);
-    self->mOmx->releaseOutputBuffer(self->mBufferIndex);
-    delete self;
-  }
-
-private:
-  sp<MediaCodec> mOmx;
-  uint32_t mBufferIndex;
 };
 
 struct EncodedFrame
@@ -229,14 +205,19 @@ private:
 };
 
 // H.264 decoder using stagefright.
-class WebrtcOMXDecoder MOZ_FINAL
+// It implements gonk native window callback to receive buffers from
+// MediaCodec::RenderOutputBufferAndRelease().
+class WebrtcOMXDecoder MOZ_FINAL : public GonkNativeWindowNewFrameCallback
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcOMXDecoder)
 public:
-  WebrtcOMXDecoder(const char* aMimeType)
+  WebrtcOMXDecoder(const char* aMimeType,
+                   webrtc::DecodedImageCallback* aCallback)
     : mWidth(0)
     , mHeight(0)
     , mStarted(false)
+    , mDecodedFrameLock("WebRTC decoded frame lock")
+    , mCallback(aCallback)
   {
     // Create binder thread pool required by stagefright.
     android::ProcessState::self()->startThreadPool();
@@ -290,10 +271,9 @@ public:
     sp<Surface> surface = nullptr;
     mNativeWindow = new GonkNativeWindow();
     if (mNativeWindow.get()) {
-      mNativeWindowClient = new GonkNativeWindowClient(mNativeWindow->getBufferQueue());
-      if (mNativeWindowClient.get()) {
-        surface = new Surface(mNativeWindowClient->getIGraphicBufferProducer());
-      }
+      // listen to buffers queued by MediaCodec::RenderOutputBufferAndRelease().
+      mNativeWindow->setNewFrameCallback(this);
+      surface = new Surface(mNativeWindow->getBufferQueue());
     }
     status_t result = mCodec->configure(config, surface, nullptr, 0);
     if (result == OK) {
@@ -304,7 +284,7 @@ public:
 
   status_t
   FillInput(const webrtc::EncodedImage& aEncoded, bool aIsFirstFrame,
-            int64_t& aRenderTimeMs, webrtc::DecodedImageCallback* aCallback)
+            int64_t& aRenderTimeMs)
   {
     MOZ_ASSERT(mCodec != nullptr);
     if (mCodec == nullptr) {
@@ -335,7 +315,7 @@ public:
     err = mCodec->queueInputBuffer(index, 0, size, inputTimeUs, flags);
     if (err == OK && !(flags & MediaCodec::BUFFER_FLAG_CODECCONFIG)) {
       if (mOutputDrain == nullptr) {
-        mOutputDrain = new OutputDrain(this, aCallback);
+        mOutputDrain = new OutputDrain(this);
         mOutputDrain->Start();
       }
       EncodedFrame frame;
@@ -350,7 +330,7 @@ public:
   }
 
   status_t
-  DrainOutput(const EncodedFrame& aFrame, webrtc::DecodedImageCallback* aCallback)
+  DrainOutput(const EncodedFrame& aFrame)
   {
     MOZ_ASSERT(mCodec != nullptr);
     if (mCodec == nullptr) {
@@ -390,39 +370,81 @@ public:
         return OK;
     }
 
-    sp<ABuffer> omxOut = mOutputBuffers.itemAt(index);
-    nsAutoPtr<webrtc::I420VideoFrame> videoFrame(GenerateVideoFrame(aFrame,
-                                                                    index,
-                                                                    omxOut));
-    if (videoFrame == nullptr) {
+    if (mCallback) {
+      {
+        // Store info of this frame. OnNewFrame() will need the timestamp later.
+        MutexAutoLock lock(mDecodedFrameLock);
+        mDecodedFrames.push(aFrame);
+      }
+      // Ask codec to queue buffer back to native window. OnNewFrame() will be
+      // called.
+      mCodec->renderOutputBufferAndRelease(index);
+      // Once consumed, buffer will be queued back to GonkNativeWindow for codec
+      // to dequeue/use.
+    } else {
       mCodec->releaseOutputBuffer(index);
-    } else if (aCallback) {
-      aCallback->Decoded(*videoFrame);
-      // OMX buffer will be released by RecycleCallback after rendered.
     }
 
     return err;
+  }
+
+  // Will be called when MediaCodec::RenderOutputBufferAndRelease() returns
+  // buffers back to native window for rendering.
+  void OnNewFrame() MOZ_OVERRIDE
+  {
+    RefPtr<layers::TextureClient> buffer = mNativeWindow->getCurrentBuffer();
+    MOZ_ASSERT(buffer != nullptr);
+
+    layers::GrallocImage::GrallocData grallocData;
+    grallocData.mPicSize = buffer->GetSize();
+    grallocData.mGraphicBuffer = buffer;
+
+    nsAutoPtr<layers::GrallocImage> grallocImage(new layers::GrallocImage());
+    grallocImage->SetData(grallocData);
+
+    // Get timestamp of the frame about to render.
+    int64_t timestamp = -1;
+    int64_t renderTimeMs = -1;
+    {
+      MutexAutoLock lock(mDecodedFrameLock);
+      if (mDecodedFrames.empty()) {
+        return;
+      }
+      EncodedFrame decoded = mDecodedFrames.front();
+      timestamp = decoded.mTimestamp;
+      renderTimeMs = decoded.mRenderTimeMs;
+      mDecodedFrames.pop();
+    }
+    MOZ_ASSERT(timestamp >= 0 && renderTimeMs >= 0);
+
+    nsAutoPtr<webrtc::I420VideoFrame> videoFrame(
+      new webrtc::TextureVideoFrame(new ImageNativeHandle(grallocImage.forget()),
+                                    grallocData.mPicSize.width,
+                                    grallocData.mPicSize.height,
+                                    timestamp,
+                                    renderTimeMs));
+    if (videoFrame != nullptr) {
+      mCallback->Decoded(*videoFrame);
+    }
   }
 
 private:
   class OutputDrain : public OMXOutputDrain
   {
   public:
-    OutputDrain(WebrtcOMXDecoder* aOMX, webrtc::DecodedImageCallback* aCallback)
+    OutputDrain(WebrtcOMXDecoder* aOMX)
       : OMXOutputDrain()
       , mOMX(aOMX)
-      , mCallback(aCallback)
     {}
 
   protected:
     virtual bool DrainOutput(const EncodedFrame& aFrame) MOZ_OVERRIDE
     {
-      return (mOMX->DrainOutput(aFrame, mCallback) == OK);
+      return (mOMX->DrainOutput(aFrame) == OK);
     }
 
   private:
     WebrtcOMXDecoder* mOMX;
-    webrtc::DecodedImageCallback* mCallback;
   };
 
   status_t Start()
@@ -448,6 +470,15 @@ private:
     if (!mStarted) {
       return OK;
     }
+
+    // Drop all 'pending to render' frames.
+    {
+      MutexAutoLock lock(mDecodedFrameLock);
+      while (!mDecodedFrames.empty()) {
+        mDecodedFrames.pop();
+      }
+    }
+
     if (mOutputDrain != nullptr) {
       mOutputDrain->Stop();
       mOutputDrain = nullptr;
@@ -465,49 +496,6 @@ private:
     return err;
   }
 
-  webrtc::I420VideoFrame*
-  GenerateVideoFrame(const EncodedFrame& aEncoded, uint32_t aBufferIndex,
-                     const sp<ABuffer>& aOMXBuffer)
-  {
-    // TODO: Get decoded frame buffer through native window to obsolete
-    //       changes to stagefright code.
-    sp<RefBase> obj;
-    bool hasGraphicBuffer = aOMXBuffer->meta()->findObject("graphic-buffer", &obj);
-    if (!hasGraphicBuffer) {
-      MOZ_ASSERT(false, "Decoder doesn't produce graphic buffer");
-      // Nothing to render.
-      return nullptr;
-    }
-
-    sp<GraphicBuffer> gb = static_cast<GraphicBuffer*>(obj.get());
-    if (!gb.get()) {
-      MOZ_ASSERT(false, "Null graphic buffer");
-      return nullptr;
-    }
-
-    RefPtr<mozilla::layers::TextureClient> textureClient =
-      mNativeWindow->getTextureClientFromBuffer(gb.get());
-    textureClient->SetRecycleCallback(RecycleCallback::ReturnOMXBuffer,
-                                      new RecycleCallback(mCodec, aBufferIndex));
-
-    int width = gb->getWidth();
-    int height = gb->getHeight();
-    layers::GrallocImage::GrallocData grallocData;
-    grallocData.mPicSize = gfx::IntSize(width, height);
-    grallocData.mGraphicBuffer = textureClient;
-
-    layers::GrallocImage* grallocImage = new layers::GrallocImage();
-    grallocImage->SetData(grallocData);
-
-    nsAutoPtr<webrtc::I420VideoFrame> videoFrame(
-      new webrtc::TextureVideoFrame(new ImageNativeHandle(grallocImage),
-                                    width, height,
-                                    aEncoded.mTimestamp,
-                                    aEncoded.mRenderTimeMs));
-
-    return videoFrame.forget();
-  }
-
   sp<ALooper> mLooper;
   sp<MediaCodec> mCodec; // OMXCodec
   int mWidth;
@@ -517,9 +505,12 @@ private:
   bool mStarted;
 
   sp<GonkNativeWindow> mNativeWindow;
-  sp<GonkNativeWindowClient> mNativeWindowClient;
 
   RefPtr<OutputDrain> mOutputDrain;
+  webrtc::DecodedImageCallback* mCallback;
+
+  Mutex mDecodedFrameLock; // To protect mDecodedFrames.
+  std::queue<EncodedFrame> mDecodedFrames;
 };
 
 class EncOutputDrain : public OMXOutputDrain
@@ -820,7 +811,8 @@ WebrtcOMXH264VideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
       // Cannot config decoder because SPS/PPS NALUs haven't been seen.
       return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
     }
-    RefPtr<WebrtcOMXDecoder> omx = new WebrtcOMXDecoder(MEDIA_MIMETYPE_VIDEO_AVC);
+    RefPtr<WebrtcOMXDecoder> omx = new WebrtcOMXDecoder(MEDIA_MIMETYPE_VIDEO_AVC,
+                                                        mCallback);
     status_t result = omx->ConfigureWithParamSets(paramSets);
     if (NS_WARN_IF(result != OK)) {
       return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
@@ -832,7 +824,7 @@ WebrtcOMXH264VideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
   bool feedFrame = true;
   while (feedFrame) {
     int64_t timeUs;
-    status_t err = mOMX->FillInput(aInputImage, !configured, aRenderTimeMs, mCallback);
+    status_t err = mOMX->FillInput(aInputImage, !configured, aRenderTimeMs);
     feedFrame = (err == -EAGAIN); // No input buffer available. Try again.
   }
 
