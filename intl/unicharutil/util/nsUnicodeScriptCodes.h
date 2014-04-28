@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Mon Oct 21 16:33:35 2013 from UCD data files with version info:
+ * Created on Mon Apr 28 11:24:35 2014 from UCD data files with version info:
  *
 
 # Date: 2013-09-27, 23:05:00 GMT [KW]
@@ -181,8 +181,9 @@ enum {
   MOZ_SCRIPT_SHARADA = 100,
   MOZ_SCRIPT_SORA_SOMPENG = 101,
   MOZ_SCRIPT_TAKRI = 102,
+  MOZ_SCRIPT_MATHEMATICAL_NOTATION = 103,
 
-  MOZ_NUM_SCRIPT_CODES = 103,
+  MOZ_NUM_SCRIPT_CODES = 104,
 
   MOZ_SCRIPT_INVALID = -1
 };
