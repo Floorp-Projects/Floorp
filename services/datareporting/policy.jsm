@@ -30,6 +30,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/UpdateChannel.jsm");
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -503,7 +504,7 @@ this.DataReportingPolicy.prototype = Object.freeze({
    */
   get minimumPolicyVersion() {
     // First check if the current channel has an ove
-    let channel = Services.appinfo.defaultUpdateChannel;
+    let channel = UpdateChannel.get(false);
     let channelPref = this._prefs.get("minimumPolicyVersion.channel-" + channel);
     return channelPref !== undefined ?
            channelPref : this._prefs.get("minimumPolicyVersion", 1);
