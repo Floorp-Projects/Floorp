@@ -8,8 +8,6 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jsanalyze.h"
-
 #include "jit/IonSpewer.h"
 #include "jit/LIR.h"
 #include "jit/MIR.h"
