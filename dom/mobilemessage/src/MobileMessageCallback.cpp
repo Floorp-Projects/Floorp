@@ -138,7 +138,7 @@ MobileMessageCallback::NotifyMessageSent(nsISupports *aMessage)
 }
 
 NS_IMETHODIMP
-MobileMessageCallback::NotifySendMessageFailed(int32_t aError)
+MobileMessageCallback::NotifySendMessageFailed(int32_t aError, nsISupports *aMessage)
 {
   return NotifyError(aError);
 }
