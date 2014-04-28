@@ -2524,8 +2524,14 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
     if (!mSpecifiedTransform != !aOther.mSpecifiedTransform ||
         (mSpecifiedTransform &&
          *mSpecifiedTransform != *aOther.mSpecifiedTransform)) {
-      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_UpdatePostTransformOverflow,
-                                         nsChangeHint_UpdateTransformLayer));
+      NS_UpdateHint(hint, nsChangeHint_UpdateTransformLayer);
+
+      if (mSpecifiedTransform &&
+          aOther.mSpecifiedTransform) {
+        NS_UpdateHint(hint, nsChangeHint_UpdatePostTransformOverflow);
+      } else {
+        NS_UpdateHint(hint, nsChangeHint_UpdateOverflow);
+      }
     }
 
     const nsChangeHint kUpdateOverflowAndRepaintHint =
