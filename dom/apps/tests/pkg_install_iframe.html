@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Cross Origin Helper</title>
+</head>
+<body>
+<script type="application/javascript">
+
+window.addEventListener("message", function onMessage(event) {
+  window.removeEventListener("message", onMessage, false);
+
+  var request = navigator.mozApps.installPackage(event.data);
+
+  request.onerror = function() {
+    parent.postMessage("Error: " + this.error.name, "*");
+  };
+
+  request.onsuccess = function() {
+    parent.postMessage("Application installed", "*");
+  };
+}, false);
+
+</script>
+</body>
+</html>
