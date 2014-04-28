@@ -3128,8 +3128,7 @@ else
 fi
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
-
-if test "$target" != "$host" -o -n "$CROSS_COMPILE"; then
+if test "$target" != "$host"; then
     echo "cross compiling from $host to $target"
     cross_compiling=yes
 
@@ -3984,7 +3983,7 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-if test "$target" != "$host" -o -n "$CROSS_COMPILE"; then
+if test "$target" != "$host"; then
     if test -n "$USE_CPLUS"; then
         for ac_prog in $CXX "${target_alias}-g++" "${target}-g++"
 do
