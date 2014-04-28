@@ -1057,7 +1057,7 @@ JSFunction::initBoundFunction(JSContext *cx, HandleValue thisArg,
     return true;
 }
 
-inline const js::Value &
+const js::Value &
 JSFunction::getBoundFunctionThis() const
 {
     JS_ASSERT(isBoundFunction());
@@ -1065,7 +1065,7 @@ JSFunction::getBoundFunctionThis() const
     return getSlot(JSSLOT_BOUND_FUNCTION_THIS);
 }
 
-inline const js::Value &
+const js::Value &
 JSFunction::getBoundFunctionArgument(unsigned which) const
 {
     JS_ASSERT(isBoundFunction());
@@ -1074,7 +1074,7 @@ JSFunction::getBoundFunctionArgument(unsigned which) const
     return getSlot(BOUND_FUNCTION_RESERVED_SLOTS + which);
 }
 
-inline size_t
+size_t
 JSFunction::getBoundFunctionArgumentCount() const
 {
     JS_ASSERT(isBoundFunction());
