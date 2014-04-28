@@ -137,7 +137,7 @@
  * For each of pointers, Values and jsids this file implements four classes,
  * illustrated here for the pointer (Ptr) classes:
  *
- * BarrieredPtr           abstract base class which provides common operations
+ * BarrieredBase          abstract base class which provides common operations
  *  |  |  |
  *  |  | PreBarriered     provides pre-barriers only
  *  |  |
@@ -411,13 +411,13 @@ struct InternalGCMethods<jsid>
  * Base class for barriered pointer types.
  */
 template <class T>
-class BarrieredPtr : public HeapBase<T>
+class BarrieredBase : public HeapBase<T>
 {
   protected:
     T value;
 
-    BarrieredPtr(T v) : value(v) {}
-    ~BarrieredPtr() { pre(); }
+    BarrieredBase(T v) : value(v) {}
+    ~BarrieredBase() { pre(); }
 
   public:
     void init(T v) {
@@ -458,13 +458,13 @@ class BarrieredPtr : public HeapBase<T>
  * of moving behavior, e.g. for HashMap keys.
  */
 template <class T>
-class PreBarriered : public BarrieredPtr<T>
+class PreBarriered : public BarrieredBase<T>
 {
   public:
-    PreBarriered() : BarrieredPtr<T>(GCMethods<T>::initial()) {}
-    PreBarriered(T v) : BarrieredPtr<T>(v) {}
+    PreBarriered() : BarrieredBase<T>(GCMethods<T>::initial()) {}
+    PreBarriered(T v) : BarrieredBase<T>(v) {}
     explicit PreBarriered(const PreBarriered<T> &v)
-      : BarrieredPtr<T>(v.value) {}
+      : BarrieredBase<T>(v.value) {}
 
     /* Use to set the pointer to nullptr. */
     void clear() {
@@ -500,12 +500,12 @@ class PreBarriered : public BarrieredPtr<T>
  * where it may be implicitly moved or deleted, e.g. most containers.
  */
 template <class T>
-class HeapPtr : public BarrieredPtr<T>
+class HeapPtr : public BarrieredBase<T>
 {
   public:
-    HeapPtr() : BarrieredPtr<T>(GCMethods<T>::initial()) {}
-    explicit HeapPtr(T v) : BarrieredPtr<T>(v) { post(); }
-    explicit HeapPtr(const HeapPtr<T> &v) : BarrieredPtr<T>(v) { post(); }
+    HeapPtr() : BarrieredBase<T>(GCMethods<T>::initial()) {}
+    explicit HeapPtr(T v) : BarrieredBase<T>(v) { post(); }
+    explicit HeapPtr(const HeapPtr<T> &v) : BarrieredBase<T>(v) { post(); }
 
     void init(T v) {
         JS_ASSERT(!GCMethods<T>::poisoned(v));
@@ -590,11 +590,11 @@ class ImmutableTenuredPtr
  * used in contexts where this ability is necessary.
  */
 template <class T>
-class RelocatablePtr : public BarrieredPtr<T>
+class RelocatablePtr : public BarrieredBase<T>
 {
   public:
-    RelocatablePtr() : BarrieredPtr<T>(GCMethods<T>::initial()) {}
-    explicit RelocatablePtr(T v) : BarrieredPtr<T>(v) {
+    RelocatablePtr() : BarrieredBase<T>(GCMethods<T>::initial()) {}
+    explicit RelocatablePtr(T v) : BarrieredBase<T>(v) {
         if (isMarkable(v))
             post();
     }
@@ -605,7 +605,7 @@ class RelocatablePtr : public BarrieredPtr<T>
      * function that will be used for both lvalue and rvalue copies, so we can
      * simply omit the rvalue variant.
      */
-    RelocatablePtr(const RelocatablePtr<T> &v) : BarrieredPtr<T>(v) {
+    RelocatablePtr(const RelocatablePtr<T> &v) : BarrieredBase<T>(v) {
         if (isMarkable(this->value))
             post();
     }
@@ -769,9 +769,6 @@ struct TypeObject;
 struct TypeObjectAddendum;
 }
 
-typedef BarrieredPtr<JSObject*> BarrieredPtrObject;
-typedef BarrieredPtr<JSScript*> BarrieredPtrScript;
-
 typedef PreBarriered<JSObject*> PreBarrieredObject;
 typedef PreBarriered<JSScript*> PreBarrieredScript;
 typedef PreBarriered<jit::JitCode*> PreBarrieredJitCode;
@@ -796,12 +793,10 @@ typedef HeapPtr<jit::JitCode*> HeapPtrJitCode;
 typedef HeapPtr<types::TypeObject*> HeapPtrTypeObject;
 typedef HeapPtr<types::TypeObjectAddendum*> HeapPtrTypeObjectAddendum;
 
-typedef BarrieredPtr<Value> BarrieredValue;
 typedef PreBarriered<Value> PreBarrieredValue;
 typedef RelocatablePtr<Value> RelocatableValue;
 typedef HeapPtr<Value> HeapValue;
 
-typedef BarrieredPtr<jsid> BarrieredId;
 typedef PreBarriered<jsid> PreBarrieredId;
 typedef RelocatablePtr<jsid> RelocatableId;
 typedef HeapPtr<jsid> HeapId;
@@ -823,7 +818,7 @@ typedef ReadBarriered<Value> ReadBarrieredValue;
 // A pre- and post-barriered Value that is specialized to be aware that it
 // resides in a slots or elements vector. This allows it to be relocated in
 // memory, but with substantially less overhead than a RelocatablePtr.
-class HeapSlot : public BarrieredValue
+class HeapSlot : public BarrieredBase<Value>
 {
   public:
     enum Kind {
@@ -834,14 +829,14 @@ class HeapSlot : public BarrieredValue
     explicit HeapSlot() MOZ_DELETE;
 
     explicit HeapSlot(JSObject *obj, Kind kind, uint32_t slot, const Value &v)
-      : BarrieredValue(v)
+      : BarrieredBase<Value>(v)
     {
         JS_ASSERT(!IsPoisonedValue(v));
         post(obj, kind, slot, v);
     }
 
     explicit HeapSlot(JSObject *obj, Kind kind, uint32_t slot, const HeapSlot &s)
-      : BarrieredValue(s.value)
+      : BarrieredBase<Value>(s.value)
     {
         JS_ASSERT(!IsPoisonedValue(s.value));
         post(obj, kind, slot, s);
@@ -918,7 +913,7 @@ class HeapSlot : public BarrieredValue
 };
 
 static inline const Value *
-Valueify(const BarrieredValue *array)
+Valueify(const BarrieredBase<Value> *array)
 {
     JS_STATIC_ASSERT(sizeof(HeapValue) == sizeof(Value));
     JS_STATIC_ASSERT(sizeof(HeapSlot) == sizeof(Value));
