@@ -101,7 +101,7 @@ protected:
  */
 class DataTextureSourceD3D9 : public DataTextureSource
                             , public TextureSourceD3D9
-                            , public TileIterator
+                            , public BigImageIterator
 {
 public:
   DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
@@ -139,9 +139,9 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
-  // TileIterator
+  // BigImageIterator
 
-  virtual TileIterator* AsTileIterator() MOZ_OVERRIDE { return mIsTiled ? this : nullptr; }
+  virtual BigImageIterator* AsBigImageIterator() MOZ_OVERRIDE { return mIsTiled ? this : nullptr; }
 
   virtual size_t GetTileCount() MOZ_OVERRIDE { return mTileTextures.size(); }
 
@@ -149,9 +149,9 @@ public:
 
   virtual nsIntRect GetTileRect() MOZ_OVERRIDE;
 
-  virtual void EndTileIteration() MOZ_OVERRIDE { mIterating = false; }
+  virtual void EndBigImageIteration() MOZ_OVERRIDE { mIterating = false; }
 
-  virtual void BeginTileIteration() MOZ_OVERRIDE
+  virtual void BeginBigImageIteration() MOZ_OVERRIDE
   {
     mIterating = true;
     mCurrentTile = 0;
