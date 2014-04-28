@@ -972,13 +972,24 @@ AESContext * AES_AllocateContext(void)
 /*
  * Adapted from the example code in "How to detect New Instruction support in
  * the 4th generation Intel Core processor family" by Max Locktyukhin.
+ *
+ * XGETBV:
+ *   Reads an extended control register (XCR) specified by ECX into EDX:EAX.
  */
 static PRBool
 check_xcr0_ymm()
 {
     PRUint32 xcr0;
 #if defined(_MSC_VER)
+#if defined(_M_IX86)
+    __asm {
+        mov ecx, 0
+        xgetbv
+        mov xcr0, eax
+    }
+#else
     xcr0 = (PRUint32)_xgetbv(0);  /* Requires VS2010 SP1 or later. */
+#endif
 #else
     __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx");
 #endif
