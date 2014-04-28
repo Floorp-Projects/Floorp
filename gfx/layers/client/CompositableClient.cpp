@@ -179,6 +179,5 @@ CompositableClient::OnTransaction()
 {
 }
 
-
 } // namespace layers
 } // namespace mozilla
