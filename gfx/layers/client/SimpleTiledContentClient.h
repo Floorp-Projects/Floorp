@@ -144,7 +144,7 @@ public:
 
   virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
   {
-    return TextureInfo(BUFFER_SIMPLE_TILED);
+    return TextureInfo(CompositableType::BUFFER_SIMPLE_TILED);
   }
 
   void UseTiledLayerBuffer();

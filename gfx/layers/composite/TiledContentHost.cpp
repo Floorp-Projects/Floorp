@@ -124,7 +124,7 @@ TiledLayerBufferComposite::Upload()
   if(!IsValid()) {
     return;
   }
-  // The TextureClients were created with the TEXTURE_IMMEDIATE_UPLOAD flag,
+  // The TextureClients were created with the TextureFlags::IMMEDIATE_UPLOAD flag,
   // so calling Update on all the texture hosts will perform the texture upload.
   Update(mValidRegion, mPaintedRegion);
   ClearPaintedRegion();
@@ -145,7 +145,7 @@ TiledLayerBufferComposite::ValidateTile(TileHost aTile,
   long start = PR_IntervalNow();
 #endif
 
-  MOZ_ASSERT(aTile.mTextureHost->GetFlags() & TEXTURE_IMMEDIATE_UPLOAD);
+  MOZ_ASSERT(aTile.mTextureHost->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD);
   // We possibly upload the entire texture contents here. This is a purposeful
   // decision, as sub-image upload can often be slow and/or unreliable, but
   // we may want to reevaluate this in the future.
@@ -380,7 +380,7 @@ TiledContentHost::RenderTile(const TileHost& aTile,
                                   textureRect.height / aTextureBounds.height);
     mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, aOpacity, aTransform);
   }
-  mCompositor->DrawDiagnostics(DIAGNOSTIC_CONTENT|DIAGNOSTIC_TILE,
+  mCompositor->DrawDiagnostics(DiagnosticFlags::CONTENT | DiagnosticFlags::TILE,
                                aScreenRegion, aClipRect, aTransform, mFlashCounter);
 }
 
@@ -471,7 +471,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
   }
   gfx::Rect rect(visibleRect.x, visibleRect.y,
                  visibleRect.width, visibleRect.height);
-  GetCompositor()->DrawDiagnostics(DIAGNOSTIC_CONTENT,
+  GetCompositor()->DrawDiagnostics(DiagnosticFlags::CONTENT,
                                    rect, aClipRect, aTransform, mFlashCounter);
 }
 

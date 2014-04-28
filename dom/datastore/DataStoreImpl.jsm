@@ -275,7 +275,7 @@ this.DataStore.prototype = {
         function() {
           debug("Revisions cleared");
 
-          self.addRevision(aRevisionStore, 0, REVISION_VOID,
+          self.addRevision(aRevisionStore, null, REVISION_VOID,
             function() {
               debug("ClearInternal - revisionId increased");
               aResolve();

@@ -178,6 +178,15 @@ TooManyArguments(unsigned nargs)
     return nargs >= SNAPSHOT_MAX_NARGS || nargs > js_JitOptions.maxStackArgs;
 }
 
+inline size_t
+NumLocalsAndArgs(JSScript *script)
+{
+    size_t num = 1 /* this */ + script->nfixed();
+    if (JSFunction *fun = script->functionNonDelazifying())
+        num += fun->nargs();
+    return num;
+}
+
 void ForbidCompilation(JSContext *cx, JSScript *script);
 void ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode);
 

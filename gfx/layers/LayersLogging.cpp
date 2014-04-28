@@ -180,13 +180,13 @@ AppendToString(nsACString& s, TextureFlags flags,
                const char* pfx, const char* sfx)
 {
   s += pfx;
-  if (!flags) {
+  if (flags == TextureFlags::NO_FLAGS) {
     s += "NoFlags";
   } else {
 
 #define AppendFlag(test) \
 { \
-  if (flags & test) { \
+  if (!!(flags & test)) { \
     if (previous) { \
       s += "|"; \
     } \
@@ -195,11 +195,11 @@ AppendToString(nsACString& s, TextureFlags flags,
   } \
 }
     bool previous = false;
-    AppendFlag(TEXTURE_USE_NEAREST_FILTER);
-    AppendFlag(TEXTURE_NEEDS_Y_FLIP);
-    AppendFlag(TEXTURE_DISALLOW_BIGIMAGE);
-    AppendFlag(TEXTURE_ALLOW_REPEAT);
-    AppendFlag(TEXTURE_NEW_TILE);
+    AppendFlag(TextureFlags::USE_NEAREST_FILTER);
+    AppendFlag(TextureFlags::NEEDS_Y_FLIP);
+    AppendFlag(TextureFlags::DISALLOW_BIGIMAGE);
+    AppendFlag(TextureFlags::ALLOW_REPEAT);
+    AppendFlag(TextureFlags::NEW_TILE);
 
 #undef AppendFlag
   }

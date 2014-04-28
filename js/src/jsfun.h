@@ -447,9 +447,9 @@ class JSFunction : public JSObject
         return getParent();
     }
 
-    inline const js::Value &getBoundFunctionThis() const;
-    inline const js::Value &getBoundFunctionArgument(unsigned which) const;
-    inline size_t getBoundFunctionArgumentCount() const;
+    const js::Value &getBoundFunctionThis() const;
+    const js::Value &getBoundFunctionArgument(unsigned which) const;
+    size_t getBoundFunctionArgumentCount() const;
 
   private:
     inline js::FunctionExtended *toExtended();

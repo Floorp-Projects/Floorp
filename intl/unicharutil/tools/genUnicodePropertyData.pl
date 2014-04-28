@@ -196,7 +196,37 @@ my %scriptCode = (
   MIAO => 99,
   SHARADA => 100,
   SORA_SOMPENG => 101,
-  TAKRI => 102
+  TAKRI => 102,
+
+# Expected unicode 7.0 additions, not yet supported; re-check when enabling
+# by comparison with harfbuzz and with PangoScript values
+#  BASSA_VAH => 103,
+#  CAUCASIAN_ALBANIAN => 104,
+#  DUPLOYAN => 105,
+#  ELBASAN => 106,
+#  GRANTHA => 107,
+#  KHOJKI => 108,
+#  KHUDAWADI => 109,
+#  LINEAR_A => 110,
+#  MAHAJANI => 111,
+#  MANICHAEAN => 112,
+#  MENDE_KIKAKUI => 113,
+#  MODI => 114,
+#  MRO => 115,
+#  NABATAEAN => 116,
+#  OLD_NORTH_ARABIAN => 117,
+#  OLD_PERMIC => 118,
+#  PAHAWH_HMONG => 119,
+#  PALMYRENE => 120,
+#  PAU_CIN_HAU => 121,
+#  PSALTER_PAHLAVI => 122,
+#  SIDDHAM => 123,
+#  TIRHUTA => 124,
+#  WARANG_CITI => 125,
+
+# additional "script" code, not from Unicode (but matches ISO 15924's Zmth tag)
+# XXX need to update this when the Unicode 7.0 scripts are enabled above
+  MATHEMATICAL_NOTATION => 103,
 );
 
 my $sc = -1;
@@ -210,6 +240,7 @@ sub readHarfBuzzHeader
     my $file = shift;
     open FH, "< $ARGV[0]/$file" or die "can't open harfbuzz header $ARGV[0]/$file\n";
     while (<FH>) {
+        s/CANADIAN_SYLLABICS/CANADIAN_ABORIGINAL/; # harfbuzz and unicode disagree on this name :(
         if (m/HB_SCRIPT_([A-Z_]+)\s*=\s*HB_TAG\s*\(('.','.','.','.')\)\s*,/) {
             unless (exists $scriptCode{$1}) {
                 warn "unknown script name $1 found in $file\n";
@@ -232,6 +263,11 @@ sub readHarfBuzzHeader
 
 die "didn't find HarfBuzz script codes\n" if $sc == -1;
 die "didn't find HarfBuzz category codes\n" if $cc == -1;
+
+# Additional code not present in HarfBuzz headers:
+$sc = $scriptCode{"MATHEMATICAL_NOTATION"};
+$scriptCodeToTag[$sc] = "'Z','m','t','h'";
+$scriptCodeToName[$sc] = "MATHEMATICAL_NOTATION";
 
 my %xidmodCode = (
 'inclusion'         => 0,

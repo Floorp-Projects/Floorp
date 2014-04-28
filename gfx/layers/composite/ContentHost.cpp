@@ -129,29 +129,29 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
     regionRects.Or(regionRects, regionRect);
   }
 
-  TileIterator* tileIter = source->AsTileIterator();
-  TileIterator* iterOnWhite = nullptr;
-  if (tileIter) {
-    tileIter->BeginTileIteration();
+  BigImageIterator* bigImgIter = source->AsBigImageIterator();
+  BigImageIterator* iterOnWhite = nullptr;
+  if (bigImgIter) {
+    bigImgIter->BeginBigImageIteration();
   }
 
   if (sourceOnWhite) {
-    iterOnWhite = sourceOnWhite->AsTileIterator();
-    MOZ_ASSERT(!tileIter || tileIter->GetTileCount() == iterOnWhite->GetTileCount(),
+    iterOnWhite = sourceOnWhite->AsBigImageIterator();
+    MOZ_ASSERT(!bigImgIter || bigImgIter->GetTileCount() == iterOnWhite->GetTileCount(),
                "Tile count mismatch on component alpha texture");
     if (iterOnWhite) {
-      iterOnWhite->BeginTileIteration();
+      iterOnWhite->BeginBigImageIteration();
     }
   }
 
-  bool usingTiles = (tileIter && tileIter->GetTileCount() > 1);
+  bool usingTiles = (bigImgIter && bigImgIter->GetTileCount() > 1);
   do {
     if (iterOnWhite) {
-      MOZ_ASSERT(iterOnWhite->GetTileRect() == tileIter->GetTileRect(),
+      MOZ_ASSERT(iterOnWhite->GetTileRect() == bigImgIter->GetTileRect(),
                  "component alpha textures should be the same size.");
     }
 
-    nsIntRect texRect = tileIter ? tileIter->GetTileRect()
+    nsIntRect texRect = bigImgIter ? bigImgIter->GetTileRect()
                                  : nsIntRect(0, 0,
                                              texSize.width,
                                              texSize.height);
@@ -198,8 +198,10 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
                                         Float(tileRegionRect.height) / texRect.height);
           GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain, aOpacity, aTransform);
           if (usingTiles) {
-            DiagnosticTypes diagnostics = DIAGNOSTIC_CONTENT | DIAGNOSTIC_BIGIMAGE;
-            diagnostics |= iterOnWhite ? DIAGNOSTIC_COMPONENT_ALPHA : 0;
+            DiagnosticFlags diagnostics = DiagnosticFlags::CONTENT | DiagnosticFlags::BIGIMAGE;
+            if (iterOnWhite) {
+              diagnostics |= DiagnosticFlags::COMPONENT_ALPHA;
+            }
             GetCompositor()->DrawDiagnostics(diagnostics, rect, aClipRect,
                                              aTransform, mFlashCounter);
           }
@@ -210,17 +212,19 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
     if (iterOnWhite) {
       iterOnWhite->NextTile();
     }
-  } while (usingTiles && tileIter->NextTile());
+  } while (usingTiles && bigImgIter->NextTile());
 
-  if (tileIter) {
-    tileIter->EndTileIteration();
+  if (bigImgIter) {
+    bigImgIter->EndBigImageIteration();
   }
   if (iterOnWhite) {
-    iterOnWhite->EndTileIteration();
+    iterOnWhite->EndBigImageIteration();
   }
 
-  DiagnosticTypes diagnostics = DIAGNOSTIC_CONTENT;
-  diagnostics |= iterOnWhite ? DIAGNOSTIC_COMPONENT_ALPHA : 0;
+  DiagnosticFlags diagnostics = DiagnosticFlags::CONTENT;
+  if (iterOnWhite) {
+    diagnostics |= DiagnosticFlags::COMPONENT_ALPHA;
+  }
   GetCompositor()->DrawDiagnostics(diagnostics, *aVisibleRegion, aClipRect,
                                    aTransform, mFlashCounter);
 }
@@ -488,7 +492,7 @@ ContentHostIncremental::TextureCreationRequest::Execute(ContentHostIncremental* 
     temp->AsSourceOGL()->AsTextureImageTextureSource();
 
   RefPtr<TextureImageTextureSourceOGL> newSourceOnWhite;
-  if (mTextureInfo.mTextureFlags & TEXTURE_COMPONENT_ALPHA) {
+  if (mTextureInfo.mTextureFlags & TextureFlags::COMPONENT_ALPHA) {
     temp =
       compositor->CreateDataTextureSource(mTextureInfo.mTextureFlags);
     MOZ_ASSERT(temp->AsSourceOGL() &&
@@ -496,7 +500,7 @@ ContentHostIncremental::TextureCreationRequest::Execute(ContentHostIncremental* 
     newSourceOnWhite = temp->AsSourceOGL()->AsTextureImageTextureSource();
   }
 
-  if (mTextureInfo.mDeprecatedTextureHostFlags & TEXTURE_HOST_COPY_PREVIOUS) {
+  if (mTextureInfo.mDeprecatedTextureHostFlags & DeprecatedTextureHostFlags::COPY_PREVIOUS) {
     nsIntRect bufferRect = aHost->mBufferRect;
     nsIntPoint bufferRotation = aHost->mBufferRotation;
     nsIntRect overlap;
@@ -646,7 +650,7 @@ ContentHostIncremental::TextureUpdateRequest::Execute(ContentHostIncremental* aH
 
   RefPtr<DataSourceSurface> surf = GetSurfaceForDescriptor(mDescriptor);
 
-  if (mTextureId == TextureFront) {
+  if (mTextureId == TextureIdentifier::Front) {
     aHost->mSource->Update(surf, &mUpdated, &offset);
   } else {
     aHost->mSourceOnWhite->Update(surf, &mUpdated, &offset);
@@ -685,7 +689,7 @@ ContentHostTexture::GetRenderState()
   LayerRenderState result = mTextureHost->GetRenderState();
 
   if (mBufferRotation != nsIntPoint()) {
-    result.mFlags |= LAYER_RENDER_STATE_BUFFER_ROTATION;
+    result.mFlags |= LayerRenderStateFlags::BUFFER_ROTATION;
   }
   result.SetOffset(GetOriginOffset());
   return result;
