@@ -64,7 +64,7 @@ nsresult getStatus(nsACString& desc)
   if(!gStatusReportProgress)
     desc.AssignLiteral("Init");
   else {
-    desc.AssignLiteral("Running:\nThere are ");
+    desc.AssignLiteral("Running: There are ");
     desc.AppendInt(gNumReporters);
     desc.AppendLiteral(" reporters");
   }
@@ -90,19 +90,22 @@ DumpReport(nsIFileOutputStream* aOStream, const nsCString& aProcess,
   if (aProcess.IsEmpty()) {
     pid = getpid();
     nsPrintfCString pidStr("PID %u", pid);
-    DUMP(aOStream, "\n    {\"Process\": \"");
+    DUMP(aOStream, "\n  {\n  \"Process\": \"");
     DUMP(aOStream, pidStr.get());
   } else {
     pid = 0;
-    DUMP(aOStream, "\n    {\"Unknown Process\": \"");
+    DUMP(aOStream, "\n  {  \"Unknown Process\": \"");
   }
 
-  DUMP(aOStream, "\", \"Reporter name\": \"");
+  DUMP(aOStream, "\",\n  \"Reporter name\": \"");
   DUMP(aOStream, aName.get());
 
-  DUMP(aOStream, "\", \"Status Description\": \"");
-  DUMP(aOStream, aDescription.get());
-  DUMP(aOStream, "\"}");
+  DUMP(aOStream, "\",\n  \"Status Description\": [\"");
+  nsCString desc = aDescription;
+  desc.ReplaceSubstring("|", "\",\"");
+  DUMP(aOStream, desc.get());
+
+  DUMP(aOStream, "\"]\n  }");
 
   return NS_OK;
 }
@@ -168,10 +171,11 @@ nsStatusReporterManager::DumpReports()
 
   //Write the reports to the file
 
-  DUMP(ostream, "  [Sysdump Report Start]: ");
+  DUMP(ostream, "{\n\"subject\":\"about:service reports\",\n");
+  DUMP(ostream, "\"reporters\": [ ");
 
   nsCOMPtr<nsISimpleEnumerator> e;
-  bool more;
+  bool more, first = true;
   EnumerateReporters(getter_AddRefs(e));
   while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
     nsCOMPtr<nsISupports> supports;
@@ -193,12 +197,17 @@ nsStatusReporterManager::DumpReports()
     if (NS_WARN_IF(NS_FAILED(rv)))
       return rv;
 
+    if (first) {
+      first = false;
+    } else {
+      DUMP(ostream, ",");
+    }
+
     rv = DumpReport(ostream, process, name, description);
     if (NS_WARN_IF(NS_FAILED(rv)))
       return rv;
   }
-
-  DUMP(ostream, "\n  [Sysdump Report End] ");
+  DUMP(ostream, "\n]\n}\n");
 
   rv = ostream->Close();
   if (NS_WARN_IF(NS_FAILED(rv)))
