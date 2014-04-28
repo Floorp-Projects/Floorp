@@ -482,45 +482,30 @@ void
 GLScreenBuffer::Readback(SharedSurface_GL* src, DataSourceSurface* dest)
 {
   MOZ_ASSERT(src && dest);
-  DataSourceSurface::MappedSurface ms;
-  dest->Map(DataSourceSurface::MapType::READ, &ms);
-  nsRefPtr<gfxImageSurface> wrappedDest =
-    new gfxImageSurface(ms.mData,
-                        ThebesIntSize(dest->GetSize()),
-                        ms.mStride,
-                        SurfaceFormatToImageFormat(dest->GetFormat()));
-  DeprecatedReadback(src, wrappedDest);
-  dest->Unmap();
-}
+  MOZ_ASSERT(dest->GetSize() == src->Size());
+  MOZ_ASSERT(dest->GetFormat() == (src->HasAlpha() ? SurfaceFormat::B8G8R8A8
+                                                   : SurfaceFormat::B8G8R8X8));
 
-void
-GLScreenBuffer::DeprecatedReadback(SharedSurface_GL* src, gfxImageSurface* dest)
-{
-    MOZ_ASSERT(src && dest);
-    MOZ_ASSERT(ToIntSize(dest->GetSize()) == src->Size());
-    MOZ_ASSERT(dest->Format() == (src->HasAlpha() ? gfxImageFormat::ARGB32
-                                                  : gfxImageFormat::RGB24));
+  mGL->MakeCurrent();
 
-    mGL->MakeCurrent();
+  bool needsSwap = src != SharedSurf();
+  if (needsSwap) {
+      SharedSurf()->UnlockProd();
+      src->LockProd();
+  }
 
-    bool needsSwap = src != SharedSurf();
-    if (needsSwap) {
-        SharedSurf()->UnlockProd();
-        src->LockProd();
-    }
+  ReadBuffer* buffer = CreateRead(src);
+  MOZ_ASSERT(buffer);
 
-    ReadBuffer* buffer = CreateRead(src);
-    MOZ_ASSERT(buffer);
+  ScopedBindFramebuffer autoFB(mGL, buffer->FB());
+  ReadPixelsIntoDataSurface(mGL, dest);
 
-    ScopedBindFramebuffer autoFB(mGL, buffer->FB());
-    ReadPixelsIntoImageSurface(mGL, dest);
+  delete buffer;
 
-    delete buffer;
-
-    if (needsSwap) {
-        src->UnlockProd();
-        SharedSurf()->LockProd();
-    }
+  if (needsSwap) {
+      src->UnlockProd();
+      SharedSurf()->LockProd();
+  }
 }
 
 DrawBuffer*

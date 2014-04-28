@@ -24,6 +24,8 @@ class DataSourceSurface;
 
 namespace gl {
 
+void ReadPixelsIntoDataSurface(GLContext* aGL,
+                               gfx::DataSourceSurface* aSurface);
 void ReadPixelsIntoImageSurface(GLContext* aGL, gfxImageSurface* aSurface);
 void ReadScreenIntoImageSurface(GLContext* aGL, gfxImageSurface* aSurface);
 

@@ -280,7 +280,6 @@ public:
     bool Resize(const gfx::IntSize& size);
 
     void Readback(SharedSurface_GL* src, gfx::DataSourceSurface* dest);
-    void DeprecatedReadback(SharedSurface_GL* src, gfxImageSurface* dest);
 
 protected:
     void Attach(SharedSurface* surface, const gfx::IntSize& size);
