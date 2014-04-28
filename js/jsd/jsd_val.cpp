@@ -66,7 +66,7 @@ jsd_IsValueObject(JSDContext* jsdc, JSDValue* jsdval)
 bool
 jsd_IsValueNumber(JSDContext* jsdc, JSDValue* jsdval)
 {
-    return JSVAL_IS_NUMBER(jsdval->val);
+    return jsdval->val.isNumber();
 }
 
 bool

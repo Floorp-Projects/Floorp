@@ -391,7 +391,7 @@ GetIntFromJSObject(JSContext* aCtx,
     return NS_ERROR_INVALID_ARG;
   }
   NS_ENSURE_ARG(JSVAL_IS_PRIMITIVE(value));
-  NS_ENSURE_ARG(JSVAL_IS_NUMBER(value));
+  NS_ENSURE_ARG(value.isNumber());
 
   double num;
   rc = JS::ToNumber(aCtx, value, &num);
