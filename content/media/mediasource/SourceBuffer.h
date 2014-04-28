@@ -149,6 +149,8 @@ private:
 
   SourceBufferAppendMode mAppendMode;
   bool mUpdating;
+
+  bool mDecoderInit;
 };
 
 } // namespace dom
