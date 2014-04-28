@@ -1294,20 +1294,20 @@ bool FlingAnimation::Sample(FrameMetrics& aFrameMetrics,
       velocity.y = 0;
     }
 
-    // To hand off the fling, we call APZCTreeManager::HandOffFling()
+    // To hand off the fling, we call APZCTreeManager::HandleFlingOverscroll()
     // which starts a new fling in the next APZC in the handoff chain with
     // the same velocity. For simplicity, the actual overscroll of the current
     // sample is discarded rather than being handed off. The compositor should
     // sample animations sufficiently frequently that this is not noticeable.
 
     // Make a local copy of the tree manager pointer and check if it's not
-    // null before calling HandOffFling(). This is necessary because
+    // null before calling HandleFlingOverscroll(). This is necessary because
     // Destroy(), which nulls out mTreeManager, could be called concurrently.
     APZCTreeManager* treeManagerLocal = mApzc.mTreeManager;
     if (treeManagerLocal) {
-      // APZC is holding mMonitor, so directly calling HandOffFling()
+      // APZC is holding mMonitor, so directly calling HandleFlingOverscroll()
       // (which acquires the tree lock) would violate the lock ordering. Instead
-      // we schedule HandOffFling() to be called after mMonitor is
+      // we schedule HandleFlingOverscroll() to be called after mMonitor is
       // released.
       mDeferredTasks.append(NewRunnableMethod(treeManagerLocal,
                                               &APZCTreeManager::HandOffFling,

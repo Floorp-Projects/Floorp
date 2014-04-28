@@ -295,6 +295,12 @@ public:
   void CancelAnimation();
 
   /**
+   * Take over a fling with the given velocity from another APZC. Used for
+   * during overscroll handoff for a fling.
+   */
+  void TakeOverFling(ScreenPoint aVelocity);
+
+  /**
    * Returns allowed touch behavior for the given point on the scrollable layer.
    * Internally performs a kind of hit testing based on the regions constructed
    * on the main thread and attached to the current scrollable layer. Each of such regions
@@ -494,6 +500,14 @@ protected:
    * Actually send the next pending paint request to gecko.
    */
   void DispatchRepaintRequest(const FrameMetrics& aFrameMetrics);
+
+  /**
+   * Advances a fling by an interpolated amount based on the passed in |aDelta|.
+   * This should be called whenever sampling the content transform for this
+   * frame. Returns true if the fling animation should be advanced by one frame,
+   * or false if there is no fling or the fling has ended.
+   */
+  bool DoFling(const TimeDuration& aDelta);
 
   /**
    * Gets the current frame metrics. This is *not* the Gecko copy stored in the
@@ -763,20 +777,6 @@ private:
   RefPtr<AsyncPanZoomAnimation> mAnimation;
 
   friend class Axis;
-
-
-  /* ===================================================================
-   * The functions and members in this section are used to manage
-   * fling animations.
-   */
-public:
-  /**
-   * Take over a fling with the given velocity from another APZC. Used for
-   * during overscroll handoff for a fling.
-   */
-  void TakeOverFling(ScreenPoint aVelocity);
-
-private:
   friend class FlingAnimation;
 
 
