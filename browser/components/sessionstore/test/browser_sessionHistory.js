@@ -219,7 +219,6 @@ add_task(function test_pushstate_replacestate() {
   is(entries.length, 2, "there is another shistory entry");
   is(entries[1].url, "http://example.com/test-entry/", "url is correct");
 
-  // Disabled until replaceState invalidation is supported. See Bug 967028.
   browser.messageManager.
     sendAsyncMessage("ss-test:historyReplaceState", {url: 'test-entry2/'});
   yield promiseContentMessage(browser, "ss-test:historyReplaceState");
@@ -229,6 +228,38 @@ add_task(function test_pushstate_replacestate() {
   let {entries} = JSON.parse(ss.getTabState(tab));
   is(entries.length, 2, "there is still two shistory entries");
   is(entries[1].url, "http://example.com/test-entry/test-entry2/", "url is correct");
+
+  // Cleanup.
+  gBrowser.removeTab(tab);
+});
+
+/**
+ * Ensure that slow loading subframes will invalidate shistory.
+ */
+add_task(function test_slow_subframe_load() {
+  const SLOW_URL = "http://mochi.test:8888/browser/browser/components/" +
+                   "sessionstore/test/browser_sessionHistory_slow.sjs";
+
+  const URL = "data:text/html;charset=utf-8," +
+              "<frameset cols=50%25,50%25>" +
+              "<frame src='" + SLOW_URL + "'>" +
+              "</frameset>";
+
+  // Add a new tab with a slow loading subframe
+  let tab = gBrowser.addTab(URL);
+  let browser = tab.linkedBrowser;
+  yield promiseBrowserLoaded(browser);
+
+  SyncHandlers.get(browser).flush();
+  let {entries} = JSON.parse(ss.getTabState(tab));
+
+  // Check the number of children.
+  is(entries.length, 1, "there is one root entry ...");
+  is(entries[0].children.length, 1, "... with one child entries");
+
+  // Check URLs.
+  ok(entries[0].url.startsWith("data:text/html"), "correct root url");
+  is(entries[0].children[0].url, SLOW_URL, "correct url for subframe");
 
   // Cleanup.
   gBrowser.removeTab(tab);
