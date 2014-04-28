@@ -870,7 +870,7 @@ BaseShape::BaseShape(const StackBaseShape &base)
     this->compartment_ = base.compartment;
 }
 
-typedef HashSet<ReadBarriered<UnownedBaseShape>,
+typedef HashSet<ReadBarrieredUnownedBaseShape,
                 StackBaseShape,
                 SystemAllocPolicy> BaseShapeSet;
 
@@ -1385,7 +1385,7 @@ struct InitialShapeEntry
      * certain classes (e.g. String, RegExp) which may add certain baked-in
      * properties.
      */
-    ReadBarriered<Shape> shape;
+    ReadBarrieredShape shape;
 
     /*
      * Matching prototype for the entry. The shape of an object determines its
@@ -1433,7 +1433,7 @@ struct InitialShapeEntry
     };
 
     inline InitialShapeEntry();
-    inline InitialShapeEntry(const ReadBarriered<Shape> &shape, TaggedProto proto);
+    inline InitialShapeEntry(const ReadBarrieredShape &shape, TaggedProto proto);
 
     inline Lookup getLookup() const;
 
