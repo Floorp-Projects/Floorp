@@ -547,7 +547,7 @@ js::ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
     if (usage.isUndefined()) {
         JS_ReportError(cx, "%s", msg);
     } else {
-        JSString *str = JSVAL_TO_STRING(usage);
+        JSString *str = usage.toString();
         JS::Anchor<JSString *> a_str(str);
         const jschar *chars = JS_GetStringCharsZ(cx, str);
         if (!chars)

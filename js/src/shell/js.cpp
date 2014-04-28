@@ -1797,7 +1797,7 @@ static JSTrapStatus
 TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rvalArg,
             jsval closure)
 {
-    RootedString str(cx, JSVAL_TO_STRING(closure));
+    RootedString str(cx, closure.toString());
     RootedValue rval(cx, *rvalArg);
 
     ScriptFrameIter iter(cx);
@@ -4931,7 +4931,7 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 static bool
 PrintHelpString(JSContext *cx, jsval v)
 {
-    JSString *str = JSVAL_TO_STRING(v);
+    JSString *str = v.toString();
     JS::Anchor<JSString *> a_str(str);
     const jschar *chars = JS_GetStringCharsZ(cx, str);
     if (!chars)

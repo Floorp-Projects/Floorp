@@ -234,7 +234,7 @@ protected:
                               StringificationBehavior undefinedBehavior) {
         JSString *s;
         if (v.isString()) {
-            s = JSVAL_TO_STRING(v);
+            s = v.toString();
         } else {
             StringificationBehavior behavior = eStringify;
             if (v.isNull()) {
