@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/TypedEnum.h"
 #include "mozilla/TypedEnumBits.h"
 
@@ -158,7 +159,8 @@ void
 TestNonConvertibilityForOneType()
 {
   using mozilla::IsConvertible;
-#ifdef MOZ_HAVE_CXX11_STRONG_ENUMS
+
+#if defined(MOZ_HAVE_CXX11_STRONG_ENUMS) && defined(MOZ_HAVE_EXPLICIT_CONVERSION)
   static_assert(!IsConvertible<T, bool>::value, "should not be convertible");
   static_assert(!IsConvertible<T, int>::value, "should not be convertible");
   static_assert(!IsConvertible<T, uint64_t>::value, "should not be convertible");
