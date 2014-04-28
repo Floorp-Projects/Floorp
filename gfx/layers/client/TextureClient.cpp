@@ -25,6 +25,7 @@
 #include "ImageContainer.h"             // for PlanarYCbCrImage, etc
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/TextureClientOGL.h"
+#include "mozilla/layers/PTextureChild.h"
 
 #ifdef XP_WIN
 #include "mozilla/layers/TextureD3D9.h"
