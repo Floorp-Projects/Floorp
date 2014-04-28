@@ -6,7 +6,10 @@
 
 dictionary DataStoreChangeEventInit : EventInit {
   DOMString revisionId = "";
-  DataStoreKey id = 0;
+
+  // When |operation| is "clear" or "done", this must return null.
+  DataStoreKey? id = null;
+
   DOMString operation = "";
   DOMString owner = "";
 };
@@ -15,7 +18,7 @@ dictionary DataStoreChangeEventInit : EventInit {
  Constructor(DOMString type, optional DataStoreChangeEventInit eventInitDict)]
 interface DataStoreChangeEvent : Event {
   readonly attribute DOMString revisionId;
-  readonly attribute DataStoreKey id;
+  readonly attribute DataStoreKey? id;
   readonly attribute DOMString operation;
   readonly attribute DOMString owner;
 };
