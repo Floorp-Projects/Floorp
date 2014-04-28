@@ -4,7 +4,6 @@
 MARIONETTE_TIMEOUT = 30000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-let nfc = window.navigator.mozNfc;
 function testEnableNFC() {
   log('Running \'testEnableNFC\'');
   let req = nfc.startPoll();
