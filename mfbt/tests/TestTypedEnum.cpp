@@ -275,7 +275,7 @@ void TestBinOp(const T1& t1, const T2& t2, const T3& t3)
     = Op<o>(UnsignedIntegerType(t1), UnsignedIntegerType(t2));
 
   MOZ_RELEASE_ASSERT(unsignedIntegerResult == UnsignedIntegerType(result));
-  MOZ_RELEASE_ASSERT(unsignedIntegerResult == UnsignedIntegerType(TypedEnum(result)));
+  MOZ_RELEASE_ASSERT(TypedEnum(unsignedIntegerResult) == TypedEnum(result));
   MOZ_RELEASE_ASSERT((!unsignedIntegerResult) == (!result));
   MOZ_RELEASE_ASSERT((!!unsignedIntegerResult) == (!!result));
   MOZ_RELEASE_ASSERT(bool(unsignedIntegerResult) == bool(result));
@@ -287,7 +287,7 @@ void TestBinOp(const T1& t1, const T2& t2, const T3& t3)
   OpAssign<o>(newResult, t3);
   UnsignedIntegerType unsignedIntegerNewResult = unsignedIntegerResult;
   OpAssign<o>(unsignedIntegerNewResult, UnsignedIntegerType(t3));
-  MOZ_RELEASE_ASSERT(unsignedIntegerNewResult == UnsignedIntegerType(newResult));
+  MOZ_RELEASE_ASSERT(TypedEnum(unsignedIntegerNewResult) == newResult);
 
   // Part 3:
   // Test additional boolean operators that we unfortunately had to add to
@@ -322,7 +322,7 @@ void TestTilde(const T& t)
   UnsignedIntegerType unsignedIntegerResult = ~(UnsignedIntegerType(t));
 
   MOZ_RELEASE_ASSERT(unsignedIntegerResult == UnsignedIntegerType(result));
-  MOZ_RELEASE_ASSERT(unsignedIntegerResult == UnsignedIntegerType(TypedEnum(result)));
+  MOZ_RELEASE_ASSERT(TypedEnum(unsignedIntegerResult) == TypedEnum(result));
   MOZ_RELEASE_ASSERT((!unsignedIntegerResult) == (!result));
   MOZ_RELEASE_ASSERT((!!unsignedIntegerResult) == (!!result));
   MOZ_RELEASE_ASSERT(bool(unsignedIntegerResult) == bool(result));

@@ -412,7 +412,7 @@ DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
   int32_t maxSize = mCompositor->GetMaxTextureSize();
   DeviceManagerD3D9* deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
   if ((mSize.width <= maxSize && mSize.height <= maxSize) ||
-      (mFlags & TEXTURE_DISALLOW_BIGIMAGE)) {
+      (mFlags & TextureFlags::DISALLOW_BIGIMAGE)) {
     mTexture = DataToTexture(deviceManager,
                              aSurface->GetData(), aSurface->Stride(),
                              IntSize(mSize), format, bpp);
@@ -487,7 +487,7 @@ DataTextureSourceD3D9::Update(gfxWindowsSurface* aSurface)
   int32_t maxSize = mCompositor->GetMaxTextureSize();
   DeviceManagerD3D9* deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
   if ((mSize.width <= maxSize && mSize.height <= maxSize) ||
-      (mFlags & TEXTURE_DISALLOW_BIGIMAGE)) {
+      (mFlags & TextureFlags::DISALLOW_BIGIMAGE)) {
     mTexture = SurfaceToTexture(deviceManager, aSurface, mSize, format);
 
     if (!mTexture) {

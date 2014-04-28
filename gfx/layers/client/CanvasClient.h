@@ -79,7 +79,7 @@ public:
 
   TextureInfo GetTextureInfo() const
   {
-    return TextureInfo(COMPOSITABLE_IMAGE);
+    return TextureInfo(CompositableType::IMAGE);
   }
 
   virtual void Clear() MOZ_OVERRIDE
@@ -113,7 +113,7 @@ public:
 
   TextureInfo GetTextureInfo() const
   {
-    return TextureInfo(COMPOSITABLE_IMAGE);
+    return TextureInfo(CompositableType::IMAGE);
   }
 
   virtual void Clear() MOZ_OVERRIDE
