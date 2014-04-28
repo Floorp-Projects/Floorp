@@ -30,14 +30,13 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/UpdateChannel.jsm");
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 // Used as a sanity lower bound for dates stored in prefs. This module was
 // implemented in 2012, so any earlier dates indicate an incorrect clock.
 const OLDEST_ALLOWED_YEAR = 2012;
-
-const CURRENT_POLICY_VERSION = 2;
 
 /**
  * Represents a request to display data policy.
@@ -291,8 +290,19 @@ this.DataReportingPolicy = function (prefs, healthReportPrefs, listener) {
   this._healthReportPrefs = healthReportPrefs;
   this._listener = listener;
 
-  // If we've never run before, record the current time.
-  if (!this.firstRunDate.getTime()) {
+  // If the policy version has changed, reset all preferences, so that
+  // the notification reappears.
+  let acceptedVersion = this._prefs.get("dataSubmissionPolicyAcceptedVersion");
+  if (typeof(acceptedVersion) == "number" &&
+      acceptedVersion < this.minimumPolicyVersion) {
+    this._log.info("policy version has changed - resetting all prefs");
+    // We don't want to delay the notification in this case.
+    let firstRunToRestore = this.firstRunDate;
+    this._prefs.resetBranch();
+    this.firstRunDate = firstRunToRestore.getTime() ?
+                        firstRunToRestore : this.now();
+  } else if (!this.firstRunDate.getTime()) {
+    // If we've never run before, record the current time.
     this.firstRunDate = this.now();
   }
 
@@ -503,7 +513,7 @@ this.DataReportingPolicy.prototype = Object.freeze({
    */
   get minimumPolicyVersion() {
     // First check if the current channel has an ove
-    let channel = Services.appinfo.defaultUpdateChannel;
+    let channel = UpdateChannel.get(false);
     let channelPref = this._prefs.get("minimumPolicyVersion.channel-" + channel);
     return channelPref !== undefined ?
            channelPref : this._prefs.get("minimumPolicyVersion", 1);
@@ -516,20 +526,17 @@ this.DataReportingPolicy.prototype = Object.freeze({
    */
   get dataSubmissionPolicyAccepted() {
     // Be conservative and default to false.
-    let enabled = this._prefs.get("dataSubmissionPolicyAccepted", false);
-    if (!enabled)
-      return false;
-
-    let acceptedVersion = this._prefs.get("dataSubmissionPolicyAcceptedVersion");
-    return acceptedVersion >= this.minimumPolicyVersion;
+    return this._prefs.get("dataSubmissionPolicyAccepted", false);
   },
 
   set dataSubmissionPolicyAccepted(value) {
     this._prefs.set("dataSubmissionPolicyAccepted", !!value);
-    if (!!value)
-      this._prefs.set("dataSubmissionPolicyAcceptedVersion", CURRENT_POLICY_VERSION);
-    else
+    if (!!value) {
+      let currentPolicyVersion = this._prefs.get("currentPolicyVersion", 1);
+      this._prefs.set("dataSubmissionPolicyAcceptedVersion", currentPolicyVersion);
+    } else {
       this._prefs.reset("dataSubmissionPolicyAcceptedVersion");
+    }
   },
 
   /**
