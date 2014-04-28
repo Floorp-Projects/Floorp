@@ -67,6 +67,12 @@ SubBufferDecoder::GetResource() const
 }
 
 void
+SubBufferDecoder::NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded)
+{
+  return mParentDecoder->NotifyDecodedFrames(aParsed, aDecoded);
+}
+
+void
 SubBufferDecoder::SetMediaDuration(int64_t aDuration)
 {
   mMediaDuration = aDuration;
