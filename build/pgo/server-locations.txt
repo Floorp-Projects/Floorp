@@ -212,5 +212,3 @@ http://example.cn:80                privileged
 http://example.co.jp:80             privileged
 http://example.fi:80                privileged
 
-# Hosts for testing marketplace apps installations
-https://marketplace.firefox.com:443       privileged
