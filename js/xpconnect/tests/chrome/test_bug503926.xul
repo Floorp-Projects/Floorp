@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=503926
                                getInterface(Components.interfaces.nsIDOMWindowUtils);
     var passed = false;
     var obj = { QueryInterface: function() { passed = true; } };
-    try { gWindowUtils.dispatchDOMEventViaPresShell(obj, obj, false); } catch (e) {}
+    gWindowUtils.xpconnectArgument(obj);
     ok(passed, "trusted QIs should be called");
 
     openDialog("bug503926.xul", "chromeDialog", "modal");
