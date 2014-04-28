@@ -6,9 +6,6 @@
 
 #include "base/basictypes.h"
 
-#include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/CompositorParent.h"
-
 #include "mozilla/Atomics.h"
 #include "mozilla/Poison.h"
 #include "mozilla/XPCOM.h"
@@ -18,6 +15,9 @@
 #include "nsXPCOMCIDInternal.h"
 
 #include "prlink.h"
+
+#include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/CompositorParent.h"
 
 #include "nsCycleCollector.h"
 #include "nsObserverList.h"
@@ -788,11 +788,6 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
                                     nullptr);
             }
         }
-
-        // This must happen after the shutdown of media and widgets, which
-        // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
-        mozilla::layers::ImageBridgeChild::ShutDown();
-        mozilla::layers::CompositorParent::ShutDown();
 
         NS_ProcessPendingEvents(thread);
         mozilla::scache::StartupCache::DeleteSingleton();
