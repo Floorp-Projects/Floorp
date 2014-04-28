@@ -1874,12 +1874,6 @@ BOOLEAN_TO_JSVAL(bool b)
     return IMPL_TO_JSVAL(BOOLEAN_TO_JSVAL_IMPL(b));
 }
 
-static inline bool
-JSVAL_IS_GCTHING(jsval v)
-{
-    return JSVAL_IS_GCTHING_IMPL(JSVAL_TO_IMPL(v));
-}
-
 static inline void *
 JSVAL_TO_GCTHING(jsval v)
 {

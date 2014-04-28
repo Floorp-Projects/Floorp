@@ -247,7 +247,7 @@ jsd_NewValue(JSDContext* jsdc, jsval value)
     if(!(jsdval = (JSDValue*) calloc(1, sizeof(JSDValue))))
         return nullptr;
 
-    if(JSVAL_IS_GCTHING(val))
+    if(val.isGCThing())
     {
         bool ok;
         JSAutoCompartment ac(cx, jsdc->glob);
@@ -279,7 +279,7 @@ jsd_DropValue(JSDContext* jsdc, JSDValue* jsdval)
     if(0 == --jsdval->nref)
     {
         jsd_RefreshValue(jsdc, jsdval);
-        if(JSVAL_IS_GCTHING(jsdval->val))
+        if(jsdval->val.isGCThing())
         {
             AutoSafeJSContext cx;
             JSAutoCompartment ac(cx, jsdc->glob);
