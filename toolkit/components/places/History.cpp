@@ -271,7 +271,7 @@ GetJSValueAsURI(JSContext* aCtx,
     nsCOMPtr<nsIXPConnect> xpc = mozilla::services::GetXPConnect();
 
     nsCOMPtr<nsIXPConnectWrappedNative> wrappedObj;
-    nsresult rv = xpc->GetWrappedNativeOfJSObject(aCtx, JSVAL_TO_OBJECT(aValue),
+    nsresult rv = xpc->GetWrappedNativeOfJSObject(aCtx, aValue.toObjectOrNull(),
                                                   getter_AddRefs(wrappedObj));
     NS_ENSURE_SUCCESS(rv, nullptr);
     nsCOMPtr<nsIURI> uri = do_QueryWrappedNative(wrappedObj);
@@ -2811,7 +2811,7 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
       bool rc = JS_GetProperty(aCtx, info, "visits", &visitsVal);
       NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
       if (!JSVAL_IS_PRIMITIVE(visitsVal)) {
-        visits = JSVAL_TO_OBJECT(visitsVal);
+        visits = visitsVal.toObjectOrNull();
         NS_ENSURE_ARG(JS_IsArrayObject(aCtx, visits));
       }
     }

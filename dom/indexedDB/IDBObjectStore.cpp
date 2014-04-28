@@ -837,7 +837,7 @@ public:
         return nullptr;
       }
 
-      return JSVAL_TO_OBJECT(wrappedBlob);
+      return wrappedBlob.toObjectOrNull();
     }
 
     nsCOMPtr<nsIDOMFile> domFile;
@@ -862,7 +862,7 @@ public:
       return nullptr;
     }
 
-    return JSVAL_TO_OBJECT(wrappedFile);
+    return wrappedFile.toObjectOrNull();
   }
 };
 

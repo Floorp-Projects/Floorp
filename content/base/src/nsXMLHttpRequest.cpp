@@ -2451,7 +2451,7 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult, uint64_t* aContentLe
 
     nsresult rv = aBody->GetAsJSVal(&realVal);
     if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(realVal)) {
-      JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(realVal));
+      JS::Rooted<JSObject*> obj(cx, realVal.toObjectOrNull());
       if (JS_IsArrayBufferObject(obj)) {
           ArrayBuffer buf(obj);
           return GetRequestBody(buf.Data(), buf.Length(), aResult,

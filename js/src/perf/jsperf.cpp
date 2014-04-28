@@ -267,7 +267,7 @@ ExtractPerfMeasurement(jsval wrapper)
 
     // This is what JS_GetInstancePrivate does internally.  We can't
     // call JS_anything from here, because we don't have a JSContext.
-    JSObject *obj = JSVAL_TO_OBJECT(wrapper);
+    JSObject *obj = wrapper.toObjectOrNull();
     if (obj->getClass() != js::Valueify(&pm_class))
         return 0;
 

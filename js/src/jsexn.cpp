@@ -758,7 +758,7 @@ js_ReportUncaughtException(JSContext *cx)
     if (JSVAL_IS_PRIMITIVE(exn)) {
         exnObject = nullptr;
     } else {
-        exnObject = JSVAL_TO_OBJECT(exn);
+        exnObject = exn.toObjectOrNull();
     }
 
     JS_ClearPendingException(cx);

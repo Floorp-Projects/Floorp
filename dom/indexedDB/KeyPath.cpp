@@ -96,7 +96,7 @@ GetJSValFromKeyPathString(JSContext* aCx,
   nsString targetObjectPropName;
   JS::Rooted<JSObject*> targetObject(aCx, nullptr);
   JS::Rooted<JSObject*> obj(aCx,
-    JSVAL_IS_PRIMITIVE(aValue) ? nullptr : JSVAL_TO_OBJECT(aValue));
+    JSVAL_IS_PRIMITIVE(aValue) ? nullptr : aValue.toObjectOrNull());
 
   while (tokenizer.hasMoreTokens()) {
     const nsDependentSubstring& token = tokenizer.nextToken();
@@ -132,7 +132,7 @@ GetJSValFromKeyPathString(JSContext* aCx,
           if (JSVAL_IS_PRIMITIVE(intermediate)) {
             return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
           }
-          obj = JSVAL_TO_OBJECT(intermediate);
+          obj = intermediate.toObjectOrNull();
         }
         else {
           // ...otherwise use it as key
@@ -272,7 +272,7 @@ KeyPath::Parse(JSContext* aCx, const JS::Value& aValue_, KeyPath* aKeyPath)
   // See if this is a JS array.
   if (JS_IsArrayObject(aCx, aValue)) {
 
-    JS::Rooted<JSObject*> obj(aCx, JSVAL_TO_OBJECT(aValue));
+    JS::Rooted<JSObject*> obj(aCx, aValue.toObjectOrNull());
 
     uint32_t length;
     if (!JS_GetArrayLength(aCx, obj, &length)) {

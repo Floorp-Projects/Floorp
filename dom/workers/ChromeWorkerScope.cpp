@@ -63,7 +63,7 @@ DefineChromeWorkerFunctions(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
       UnicodeToNative
     };
 
-    JS_SetCTypesCallbacks(JSVAL_TO_OBJECT(ctypes), &callbacks);
+    JS_SetCTypesCallbacks(ctypes.toObjectOrNull(), &callbacks);
   }
 #endif // BUILD_CTYPES
 

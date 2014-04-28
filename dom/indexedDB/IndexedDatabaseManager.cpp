@@ -655,7 +655,7 @@ IndexedDatabaseManager::InitWindowless(JS::Handle<JS::Value> aGlobal, JSContext*
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
-  JS::Rooted<JSObject*> global(aCx, JSVAL_TO_OBJECT(aGlobal));
+  JS::Rooted<JSObject*> global(aCx, aGlobal.toObjectOrNull());
   if (!(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL)) {
     NS_WARNING("Passed object is not a global object!");
     return NS_ERROR_FAILURE;
