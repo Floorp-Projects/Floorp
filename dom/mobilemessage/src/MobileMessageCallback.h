@@ -31,7 +31,7 @@ private:
 
   nsresult NotifySuccess(JS::Handle<JS::Value> aResult, bool aAsync = false);
   nsresult NotifySuccess(nsISupports *aMessage, bool aAsync = false);
-  nsresult NotifyError(int32_t aError, bool aAsync = false);
+  nsresult NotifyError(int32_t aError, nsISupports *aData = nullptr, bool aAsync = false);
 };
 
 } // namespace mobilemessage
