@@ -206,6 +206,8 @@ public:
 
   /* helper routines for node/parent manipulations */
   nsresult DeleteNode(nsINode* aNode);
+  nsresult InsertNode(nsIContent* aContent, nsINode* aParent,
+                      int32_t aPosition);
   nsresult ReplaceContainer(nsINode* inNode,
                             mozilla::dom::Element** outNode,
                             const nsAString& aNodeType,
