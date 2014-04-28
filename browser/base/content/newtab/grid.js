@@ -53,6 +53,11 @@ let gGrid = {
     });
     addEventListener("load", this);
     addEventListener("resize", this);
+
+    // The document may already be loaded if the user is toggling the page
+    if (document.readyState == "complete") {
+      this.handleEvent({type: "load"});
+    }
   },
 
   /**
