@@ -43,7 +43,6 @@ class BaseStructuredTest(unittest.TestCase):
         for key, value in all_expected.iteritems():
             self.assertEqual(actual[key], value)
 
-        self.assertAlmostEqual(actual["time"], time.time()*1000, delta=100)
         self.assertEquals(set(all_expected.keys()) | specials, set(actual.keys()))
 
 
