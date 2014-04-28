@@ -778,10 +778,6 @@ public:
 
 private:
   friend class FlingAnimation;
-  // The initial velocity of the most recent fling.
-  ScreenPoint mLastFlingVelocity;
-  // The time at which the most recent fling started.
-  TimeStamp mLastFlingTime;
 
 
   /* ===================================================================
