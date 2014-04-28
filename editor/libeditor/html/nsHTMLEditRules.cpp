@@ -304,26 +304,17 @@ nsHTMLEditRules::BeforeEdit(EditAction action,
     // remember where our selection was before edit action took place:
     
     // get selection
-    nsCOMPtr<nsISelection> selection;
     NS_ENSURE_STATE(mHTMLEditor);
-    nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(res, res);
-  
-    // get the selection start location
-    nsCOMPtr<nsIDOMNode> selStartNode, selEndNode;
-    int32_t selOffset;
-    NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->GetStartNodeAndOffset(selection, getter_AddRefs(selStartNode), &selOffset);
-    NS_ENSURE_SUCCESS(res, res);
-    mRangeItem->startNode = selStartNode;
-    mRangeItem->startOffset = selOffset;
+    nsRefPtr<Selection> selection = mHTMLEditor->GetSelection();
 
-    // get the selection end location
-    NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->GetEndNodeAndOffset(selection, getter_AddRefs(selEndNode), &selOffset);
-    NS_ENSURE_SUCCESS(res, res);
-    mRangeItem->endNode = selEndNode;
-    mRangeItem->endOffset = selOffset;
+    // get the selection location
+    NS_ENSURE_STATE(selection->GetRangeCount());
+    mRangeItem->startNode = selection->GetRangeAt(0)->GetStartParent();
+    mRangeItem->startOffset = selection->GetRangeAt(0)->StartOffset();
+    mRangeItem->endNode = selection->GetRangeAt(0)->GetEndParent();
+    mRangeItem->endOffset = selection->GetRangeAt(0)->EndOffset();
+    nsCOMPtr<nsIDOMNode> selStartNode = GetAsDOMNode(mRangeItem->startNode);
+    nsCOMPtr<nsIDOMNode> selEndNode = GetAsDOMNode(mRangeItem->endNode);
 
     // register this range with range updater to track this as we perturb the doc
     NS_ENSURE_STATE(mHTMLEditor);
@@ -352,7 +343,7 @@ nsHTMLEditRules::BeforeEdit(EditAction action,
       nsCOMPtr<nsIDOMNode> selNode = selStartNode;
       if (aDirection == nsIEditor::eNext)
         selNode = selEndNode;
-      res = CacheInlineStyles(selNode);
+      nsresult res = CacheInlineStyles(selNode);
       NS_ENSURE_SUCCESS(res, res);
     }
 
@@ -490,13 +481,13 @@ nsHTMLEditRules::AfterEditInner(EditAction action,
       
       // also do this for original selection endpoints. 
       NS_ENSURE_STATE(mHTMLEditor);
-      nsWSRunObject(mHTMLEditor, mRangeItem->startNode,
+      nsWSRunObject(mHTMLEditor, GetAsDOMNode(mRangeItem->startNode),
                     mRangeItem->startOffset).AdjustWhitespace();
       // we only need to handle old selection endpoint if it was different from start
       if (mRangeItem->startNode != mRangeItem->endNode ||
           mRangeItem->startOffset != mRangeItem->endOffset) {
         NS_ENSURE_STATE(mHTMLEditor);
-        nsWSRunObject(mHTMLEditor, mRangeItem->endNode,
+        nsWSRunObject(mHTMLEditor, GetAsDOMNode(mRangeItem->endNode),
                       mRangeItem->endOffset).AdjustWhitespace();
       }
     }
@@ -536,7 +527,7 @@ nsHTMLEditRules::AfterEditInner(EditAction action,
   NS_ENSURE_STATE(mHTMLEditor);
   
   res = mHTMLEditor->HandleInlineSpellCheck(action, selection, 
-                                            mRangeItem->startNode,
+                                            GetAsDOMNode(mRangeItem->startNode),
                                             mRangeItem->startOffset,
                                             rangeStartParent, rangeStartOffset,
                                             rangeEndParent, rangeEndOffset);
@@ -5942,7 +5933,7 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
     {
       opRange = inArrayOfRanges[0];
       rangeItemArray[i] = new nsRangeStore();
-      rangeItemArray[i]->StoreRange(opRange);
+      rangeItemArray[i]->StoreRange(static_cast<nsRange*>(opRange.get()));
       NS_ENSURE_STATE(mHTMLEditor);
       mHTMLEditor->mRangeUpdater.RegisterRangeItem(rangeItemArray[i]);
       inArrayOfRanges.RemoveObjectAt(0);
@@ -5959,14 +5950,7 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
       nsRangeStore* item = rangeItemArray[i];
       NS_ENSURE_STATE(mHTMLEditor);
       mHTMLEditor->mRangeUpdater.DropRangeItem(item);
-      nsRefPtr<nsRange> range;
-      nsresult res2 = item->GetRange(getter_AddRefs(range));
-      opRange = range;
-      if (NS_FAILED(res2) && NS_SUCCEEDED(res)) {
-        // Remember the failure, but keep going so we make sure to unregister
-        // all our range items.
-        res = res2;
-      }
+      opRange = item->GetRange();
       inArrayOfRanges.AppendObject(opRange);
     }
     NS_ENSURE_SUCCESS(res, res);
@@ -6331,7 +6315,8 @@ nsHTMLEditRules::BustUpInlinesAtRangeEndpoints(nsRangeStore &item)
   nsresult res = NS_OK;
   bool isCollapsed = ((item.startNode == item.endNode) && (item.startOffset == item.endOffset));
 
-  nsCOMPtr<nsIDOMNode> endInline = GetHighestInlineParent(item.endNode);
+  nsCOMPtr<nsIDOMNode> endInline =
+    GetHighestInlineParent(GetAsDOMNode(item.endNode));
   
   // if we have inline parents above range endpoints, split them
   if (endInline && !isCollapsed)
@@ -6340,14 +6325,16 @@ nsHTMLEditRules::BustUpInlinesAtRangeEndpoints(nsRangeStore &item)
     int32_t resultEndOffset;
     endInline->GetParentNode(getter_AddRefs(resultEndNode));
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->SplitNodeDeep(endInline, item.endNode, item.endOffset,
-                          &resultEndOffset, true);
+    res = mHTMLEditor->SplitNodeDeep(endInline, GetAsDOMNode(item.endNode),
+                                     item.endOffset, &resultEndOffset, true);
     NS_ENSURE_SUCCESS(res, res);
     // reset range
-    item.endNode = resultEndNode; item.endOffset = resultEndOffset;
+    item.endNode = do_QueryInterface(resultEndNode);
+    item.endOffset = resultEndOffset;
   }
 
-  nsCOMPtr<nsIDOMNode> startInline = GetHighestInlineParent(item.startNode);
+  nsCOMPtr<nsIDOMNode> startInline =
+    GetHighestInlineParent(GetAsDOMNode(item.startNode));
 
   if (startInline)
   {
@@ -6355,11 +6342,13 @@ nsHTMLEditRules::BustUpInlinesAtRangeEndpoints(nsRangeStore &item)
     int32_t resultStartOffset;
     startInline->GetParentNode(getter_AddRefs(resultStartNode));
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->SplitNodeDeep(startInline, item.startNode, item.startOffset,
-                          &resultStartOffset, true);
+    res = mHTMLEditor->SplitNodeDeep(startInline, GetAsDOMNode(item.startNode),
+                                     item.startOffset, &resultStartOffset,
+                                     true);
     NS_ENSURE_SUCCESS(res, res);
     // reset range
-    item.startNode = resultStartNode; item.startOffset = resultStartOffset;
+    item.startNode = do_QueryInterface(resultStartNode);
+    item.startOffset = resultStartOffset;
   }
   
   return res;
