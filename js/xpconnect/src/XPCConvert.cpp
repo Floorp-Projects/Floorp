@@ -1222,7 +1222,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
         double number;
         bool isResult = false;
 
-        if (JSVAL_IS_INT(s)) {
+        if (s.isInt32()) {
             rv = (nsresult) JSVAL_TO_INT(s);
             if (NS_FAILED(rv))
                 isResult = true;

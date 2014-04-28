@@ -72,7 +72,7 @@ jsd_IsValueNumber(JSDContext* jsdc, JSDValue* jsdval)
 bool
 jsd_IsValueInt(JSDContext* jsdc, JSDValue* jsdval)
 {
-    return JSVAL_IS_INT(jsdval->val);
+    return jsdval->val.isInt32();
 }
 
 bool
@@ -154,7 +154,7 @@ int32_t
 jsd_GetValueInt(JSDContext* jsdc, JSDValue* jsdval)
 {
     jsval val = jsdval->val;
-    if(!JSVAL_IS_INT(val))
+    if(!val.isInt32())
         return 0;
     return JSVAL_TO_INT(val);
 }

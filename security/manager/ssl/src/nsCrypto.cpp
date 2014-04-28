@@ -940,7 +940,7 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
   int    keySize;
   nsresult  rv;
 
-  if (!JSVAL_IS_INT(argv[0])) {
+  if (!argv[0].isInt32()) {
     JS_ReportError(cx, "%s%s", JS_ERROR,
                    "passed in non-integer for key size");
     return NS_ERROR_FAILURE;

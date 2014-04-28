@@ -24,7 +24,7 @@ BEGIN_TEST(test_BindCallable)
   bool called = JS_CallFunctionValue(cx, JS::NullPtr(), fun, JS::HandleValueArray::empty(), &retval);
   CHECK(called);
 
-  CHECK(JSVAL_IS_INT(retval));
+  CHECK(retval.isInt32());
 
   CHECK(JSVAL_TO_INT(retval) == 1717);
   return true;

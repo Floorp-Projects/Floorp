@@ -69,7 +69,7 @@ CoerceDouble(JS::Value v, double* d)
 {
     if (v.isDouble()) {
         *d = v.toDouble();
-    } else if (JSVAL_IS_INT(v)) {
+    } else if (v.isInt32()) {
         *d = double(JSVAL_TO_INT(v));
     } else if (v.isUndefined()) {
         *d = 0.0;
