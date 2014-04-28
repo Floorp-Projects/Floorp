@@ -1248,11 +1248,10 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
 {
   ForceCompositionEnd();
 
-  nsCOMPtr<nsISelection>selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMElement> bodyElement = do_QueryInterface(GetRoot());
+  nsCOMPtr<Element> bodyElement = GetRoot();
   NS_ENSURE_TRUE(bodyElement, NS_ERROR_NULL_POINTER);
 
   // Find where the <body> tag starts.
@@ -1261,17 +1260,18 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   aSourceString.BeginReading(beginbody);
   aSourceString.EndReading(endbody);
   bool foundbody = CaseInsensitiveFindInReadable(NS_LITERAL_STRING("<body"),
-                                                   beginbody, endbody);
+                                                 beginbody, endbody);
 
   nsReadingIterator<char16_t> beginhead;
   nsReadingIterator<char16_t> endhead;
   aSourceString.BeginReading(beginhead);
   aSourceString.EndReading(endhead);
   bool foundhead = CaseInsensitiveFindInReadable(NS_LITERAL_STRING("<head"),
-                                                   beginhead, endhead);
+                                                 beginhead, endhead);
   // a valid head appears before the body
-  if (foundbody && beginhead.get() > beginbody.get())
+  if (foundbody && beginhead.get() > beginbody.get()) {
     foundhead = false;
+  }
 
   nsReadingIterator<char16_t> beginclosehead;
   nsReadingIterator<char16_t> endclosehead;
@@ -1282,11 +1282,13 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   bool foundclosehead = CaseInsensitiveFindInReadable(
            NS_LITERAL_STRING("</head>"), beginclosehead, endclosehead);
   // a valid close head appears after a found head
-  if (foundhead && beginhead.get() > beginclosehead.get())
+  if (foundhead && beginhead.get() > beginclosehead.get()) {
     foundclosehead = false;
+  }
   // a valid close head appears before a found body
-  if (foundbody && beginclosehead.get() > beginbody.get())
+  if (foundbody && beginclosehead.get() > beginbody.get()) {
     foundclosehead = false;
+  }
   
   // Time to change the document
   nsAutoEditBatch beginBatching(this);
@@ -1294,29 +1296,34 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   nsReadingIterator<char16_t> endtotal;
   aSourceString.EndReading(endtotal);
 
+  nsresult res;
   if (foundhead) {
-    if (foundclosehead)
+    if (foundclosehead) {
       res = ReplaceHeadContentsWithHTML(Substring(beginhead, beginclosehead));
-    else if (foundbody)
+    } else if (foundbody) {
       res = ReplaceHeadContentsWithHTML(Substring(beginhead, beginbody));
-    else
-      // XXX Without recourse to some parser/content sink/docshell hackery
-      // we don't really know where the head ends and the body begins
-      // so we assume that there is no body
+    } else {
+      // XXX Without recourse to some parser/content sink/docshell hackery we
+      // don't really know where the head ends and the body begins so we assume
+      // that there is no body
       res = ReplaceHeadContentsWithHTML(Substring(beginhead, endtotal));
+    }
   } else {
     nsReadingIterator<char16_t> begintotal;
     aSourceString.BeginReading(begintotal);
     NS_NAMED_LITERAL_STRING(head, "<head>");
-    if (foundclosehead)
-      res = ReplaceHeadContentsWithHTML(head + Substring(begintotal, beginclosehead));
-    else if (foundbody)
-      res = ReplaceHeadContentsWithHTML(head + Substring(begintotal, beginbody));
-    else
-      // XXX Without recourse to some parser/content sink/docshell hackery
-      // we don't really know where the head ends and the body begins
-      // so we assume that there is no head
+    if (foundclosehead) {
+      res = ReplaceHeadContentsWithHTML(head + Substring(begintotal,
+                                                         beginclosehead));
+    } else if (foundbody) {
+      res = ReplaceHeadContentsWithHTML(head + Substring(begintotal,
+                                                         beginbody));
+    } else {
+      // XXX Without recourse to some parser/content sink/docshell hackery we
+      // don't really know where the head ends and the body begins so we assume
+      // that there is no head
       res = ReplaceHeadContentsWithHTML(head);
+    }
   }
   NS_ENSURE_SUCCESS(res, res);
 
@@ -1325,22 +1332,25 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
 
   if (!foundbody) {
     NS_NAMED_LITERAL_STRING(body, "<body>");
-    // XXX Without recourse to some parser/content sink/docshell hackery
-    // we don't really know where the head ends and the body begins
-    if (foundclosehead) // assume body starts after the head ends
+    // XXX Without recourse to some parser/content sink/docshell hackery we
+    // don't really know where the head ends and the body begins
+    if (foundclosehead) {
+      // assume body starts after the head ends
       res = LoadHTML(body + Substring(endclosehead, endtotal));
-    else if (foundhead) // assume there is no body
+    } else if (foundhead) {
+      // assume there is no body
       res = LoadHTML(body);
-    else // assume there is no head, the entire source is body
+    } else {
+      // assume there is no head, the entire source is body
       res = LoadHTML(body + aSourceString);
+    }
     NS_ENSURE_SUCCESS(res, res);
 
-    nsCOMPtr<nsIDOMElement> divElement;
-    res = CreateElementWithDefaults(NS_LITERAL_STRING("div"), getter_AddRefs(divElement));
-    NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<Element> divElement =
+      CreateElementWithDefaults(NS_LITERAL_STRING("div"));
+    NS_ENSURE_TRUE(divElement, NS_ERROR_FAILURE);
 
-    res = CloneAttributes(bodyElement, divElement);
-    NS_ENSURE_SUCCESS(res, res);
+    CloneAttributes(bodyElement->AsDOMNode(), divElement->AsDOMNode());
 
     return BeginningOfDocument();
   }
@@ -1349,40 +1359,37 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   NS_ENSURE_SUCCESS(res, res);
 
   // Now we must copy attributes user might have edited on the <body> tag
-  //  because InsertHTML (actually, CreateContextualFragment()) 
-  //  will never return a body node in the DOM fragment
+  // because InsertHTML (actually, CreateContextualFragment()) will never
+  // return a body node in the DOM fragment
   
   // We already know where "<body" begins
   nsReadingIterator<char16_t> beginclosebody = beginbody;
   nsReadingIterator<char16_t> endclosebody;
   aSourceString.EndReading(endclosebody);
-  if (!FindInReadable(NS_LITERAL_STRING(">"),beginclosebody,endclosebody))
+  if (!FindInReadable(NS_LITERAL_STRING(">"), beginclosebody, endclosebody)) {
     return NS_ERROR_FAILURE;
+  }
 
-  // Truncate at the end of the body tag
-  // Kludge of the year: fool the parser by replacing "body" with "div" so we get a node
+  // Truncate at the end of the body tag.  Kludge of the year: fool the parser
+  // by replacing "body" with "div" so we get a node
   nsAutoString bodyTag;
   bodyTag.AssignLiteral("<div ");
   bodyTag.Append(Substring(endbody, endclosebody));
 
-  nsCOMPtr<nsIDOMRange> range;
-  res = selection->GetRangeAt(0, getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsRange> range = selection->GetRangeAt(0);
+  NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
-  res = range->CreateContextualFragment(bodyTag, getter_AddRefs(docfrag));
-  NS_ENSURE_SUCCESS(res, res);
+  ErrorResult rv;
+  nsRefPtr<DocumentFragment> docfrag =
+    range->CreateContextualFragment(bodyTag, rv);
+  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+  NS_ENSURE_TRUE(docfrag, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMNode> fragmentAsNode (do_QueryInterface(docfrag));
-  NS_ENSURE_TRUE(fragmentAsNode, NS_ERROR_NULL_POINTER);
-  
-  nsCOMPtr<nsIDOMNode> child;
-  res = fragmentAsNode->GetFirstChild(getter_AddRefs(child));
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsIContent> child = docfrag->GetFirstChild();
   NS_ENSURE_TRUE(child, NS_ERROR_NULL_POINTER);
   
   // Copy all attributes from the div child to current body element
-  res = CloneAttributes(bodyElement, child);
+  res = CloneAttributes(bodyElement->AsDOMNode(), child->AsDOMNode());
   NS_ENSURE_SUCCESS(res, res);
   
   // place selection at first editable content
