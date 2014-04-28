@@ -74,13 +74,13 @@ function startTest(test, token) {
   v._timeupdateCount = 0;
   v._finished = false;
   v.gotEnded = 0;
-  v.autoplay = true;
   v.addEventListener("ended", ended, false);
   v.addEventListener("timeupdate", timeupdate, false);
   for (var i = 0; i < eventsToLog.length; ++i) {
     v.addEventListener(eventsToLog[i], logEvent, false);
   }
   document.body.appendChild(v);
+  v.play();
 }
 
 manager.runTests(gSmallTests, startTest);
