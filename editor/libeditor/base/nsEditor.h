@@ -592,10 +592,10 @@ public:
 
   /** returns true if aNode is an editable node */
   bool IsEditable(nsIDOMNode *aNode);
-  virtual bool IsEditable(nsIContent *aNode);
+  virtual bool IsEditable(nsINode* aNode);
 
   /** returns true if aNode is a MozEditorBogus node */
-  bool IsMozEditorBogusNode(nsIContent *aNode);
+  bool IsMozEditorBogusNode(nsINode* aNode);
 
   /** counts number of editable child nodes */
   uint32_t CountEditableChildren(nsINode* aNode);
