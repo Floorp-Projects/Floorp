@@ -102,8 +102,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericDOMDataNode)
   if (slots) {
     slots->Traverse(cb);
   }
-
-  tmp->OwnerDoc()->BindingManager()->Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericDOMDataNode)
