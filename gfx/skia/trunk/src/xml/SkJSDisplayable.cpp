@@ -318,7 +318,7 @@ JSBool SkJSDisplayable::SetProperty(JSContext *cx, JSObject *obj, jsval id, jsva
             if (JSVAL_IS_INT(value))
                 scalar = SkIntToScalar(JSVAL_TO_INT(value));
             else {
-                SkASSERT(JSVAL_IS_DOUBLE(value));
+                SkASSERT(value.isDouble());
                 scalar = (float) *(double*) JSVAL_TO_DOUBLE(value);
             }
             break;

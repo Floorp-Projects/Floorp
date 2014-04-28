@@ -1584,7 +1584,7 @@ jsvalToBool(JSContext* cx, jsval val, bool* result)
     *result = i != 0;
     return i == 0 || i == 1;
   }
-  if (JSVAL_IS_DOUBLE(val)) {
+  if (val.isDouble()) {
     double d = JSVAL_TO_DOUBLE(val);
     *result = d != 0;
     // Allow -0.
@@ -1609,7 +1609,7 @@ jsvalToInteger(JSContext* cx, jsval val, IntegerType* result)
     int32_t i = JSVAL_TO_INT(val);
     return ConvertExact(i, result);
   }
-  if (JSVAL_IS_DOUBLE(val)) {
+  if (val.isDouble()) {
     // Don't silently lose bits here -- check that val really is an
     // integer value, and has the right sign.
     double d = JSVAL_TO_DOUBLE(val);
@@ -1700,7 +1700,7 @@ jsvalToFloat(JSContext *cx, jsval val, FloatType* result)
     *result = FloatType(JSVAL_TO_INT(val));
     return true;
   }
-  if (JSVAL_IS_DOUBLE(val)) {
+  if (val.isDouble()) {
     *result = FloatType(JSVAL_TO_DOUBLE(val));
     return true;
   }
@@ -1814,7 +1814,7 @@ jsvalToBigInteger(JSContext* cx,
     int32_t i = JSVAL_TO_INT(val);
     return ConvertExact(i, result);
   }
-  if (JSVAL_IS_DOUBLE(val)) {
+  if (val.isDouble()) {
     // Don't silently lose bits here -- check that val really is an
     // integer value, and has the right sign.
     double d = JSVAL_TO_DOUBLE(val);
@@ -1944,7 +1944,7 @@ jsvalToIntegerExplicit(jsval val, IntegerType* result)
 {
   JS_STATIC_ASSERT(NumericLimits<IntegerType>::is_exact);
 
-  if (JSVAL_IS_DOUBLE(val)) {
+  if (val.isDouble()) {
     // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
     double d = JSVAL_TO_DOUBLE(val);
     *result = mozilla::IsFinite(d) ? IntegerType(d) : 0;
@@ -1978,7 +1978,7 @@ jsvalToPtrExplicit(JSContext* cx, jsval val, uintptr_t* result)
     *result = i < 0 ? uintptr_t(intptr_t(i)) : uintptr_t(i);
     return true;
   }
-  if (JSVAL_IS_DOUBLE(val)) {
+  if (val.isDouble()) {
     double d = JSVAL_TO_DOUBLE(val);
     if (d < 0) {
       // Cast through an intptr_t intermediate to sign-extend.
@@ -3485,7 +3485,7 @@ CType::GetSafeSize(JSObject* obj, size_t* result)
     *result = JSVAL_TO_INT(size);
     return true;
   }
-  if (JSVAL_IS_DOUBLE(size)) {
+  if (size.isDouble()) {
     *result = Convert<size_t>(JSVAL_TO_DOUBLE(size));
     return true;
   }
@@ -3520,7 +3520,7 @@ CType::IsSizeDefined(JSObject* obj)
 
   // The "size" property can be an int, a double, or JSVAL_VOID
   // (for arrays of undefined length), and must always fit in a size_t.
-  JS_ASSERT(JSVAL_IS_INT(size) || JSVAL_IS_DOUBLE(size) || size.isUndefined());
+  JS_ASSERT(JSVAL_IS_INT(size) || size.isDouble() || size.isUndefined());
   return !size.isUndefined();
 }
 

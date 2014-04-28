@@ -1840,17 +1840,11 @@ INT_TO_JSVAL(int32_t i)
     return IMPL_TO_JSVAL(INT32_TO_JSVAL_IMPL(i));
 }
 
-static inline bool
-JSVAL_IS_DOUBLE(jsval v)
-{
-    return JSVAL_IS_DOUBLE_IMPL(JSVAL_TO_IMPL(v));
-}
-
 static inline double
 JSVAL_TO_DOUBLE(jsval v)
 {
     jsval_layout l;
-    MOZ_ASSERT(JSVAL_IS_DOUBLE(v));
+    MOZ_ASSERT(v.isDouble());
     l = JSVAL_TO_IMPL(v);
     return l.asDouble;
 }
@@ -1968,7 +1962,7 @@ PRIVATE_TO_JSVAL(void *ptr)
 static inline void *
 JSVAL_TO_PRIVATE(jsval v)
 {
-    MOZ_ASSERT(JSVAL_IS_DOUBLE(v));
+    MOZ_ASSERT(v.isDouble());
     return JSVAL_TO_PRIVATE_PTR_IMPL(JSVAL_TO_IMPL(v));
 }
 

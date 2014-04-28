@@ -67,7 +67,7 @@ DoDrawImageSecurityCheck(dom::HTMLCanvasElement *aCanvasElement,
 bool
 CoerceDouble(JS::Value v, double* d)
 {
-    if (JSVAL_IS_DOUBLE(v)) {
+    if (v.isDouble()) {
         *d = JSVAL_TO_DOUBLE(v);
     } else if (JSVAL_IS_INT(v)) {
         *d = double(JSVAL_TO_INT(v));
