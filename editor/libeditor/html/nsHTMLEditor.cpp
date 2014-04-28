@@ -1051,14 +1051,14 @@ nsHTMLEditor::TypedText(const nsAString& aString, ETypingAction aAction)
   return nsPlaintextEditor::TypedText(aString, aAction);
 }
 
-NS_IMETHODIMP nsHTMLEditor::TabInTable(bool inIsShift, bool *outHandled)
+NS_IMETHODIMP
+nsHTMLEditor::TabInTable(bool inIsShift, bool* outHandled)
 {
   NS_ENSURE_TRUE(outHandled, NS_ERROR_NULL_POINTER);
   *outHandled = false;
 
-  // Find enclosing table cell from the selection (cell may be the selected element)
+  // Find enclosing table cell from selection (cell may be selected element)
   nsCOMPtr<nsIDOMElement> cellElement;
-    // can't use |NS_LITERAL_STRING| here until |GetElementOrParentByTagName| is fixed to accept readables
   nsresult res = GetElementOrParentByTagName(NS_LITERAL_STRING("td"), nullptr, getter_AddRefs(cellElement));
   NS_ENSURE_SUCCESS(res, res);
   // Do nothing -- we didn't find a table cell
@@ -2278,107 +2278,104 @@ nsHTMLEditor::Align(const nsAString& aAlignType)
   return res;
 }
 
+already_AddRefed<Element>
+nsHTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName,
+                                          nsINode* aNode)
+{
+  MOZ_ASSERT(!aTagName.IsEmpty());
+
+  nsCOMPtr<nsINode> node = aNode;
+  if (!node) {
+    // If no node supplied, get it from anchor node of current selection
+    nsRefPtr<Selection> selection = GetSelection();
+    NS_ENSURE_TRUE(selection, nullptr);
+
+    nsCOMPtr<nsINode> anchorNode = selection->GetAnchorNode();
+    NS_ENSURE_TRUE(anchorNode, nullptr);
+
+    // Try to get the actual selected node
+    if (anchorNode->HasChildNodes() && anchorNode->IsContent()) {
+      node = anchorNode->GetChildAt(selection->AnchorOffset());
+    }
+    // Anchor node is probably a text node - just use that
+    if (!node) {
+      node = anchorNode;
+    }
+  }
+
+  nsCOMPtr<Element> current;
+  if (node->IsElement()) {
+    current = node->AsElement();
+  } else if (node->GetParentElement()) {
+    current = node->GetParentElement();
+  } else {
+    // Neither aNode nor its parent is an element, so no ancestor is
+    MOZ_ASSERT(!node->GetParentNode() ||
+               !node->GetParentNode()->GetParentNode());
+    return nullptr;
+  }
+
+  nsAutoString tagName(aTagName);
+  ToLowerCase(tagName);
+  bool getLink = IsLinkTag(tagName);
+  bool getNamedAnchor = IsNamedAnchorTag(tagName);
+  if (getLink || getNamedAnchor) {
+    tagName.AssignLiteral("a");
+  }
+  bool findTableCell = tagName.EqualsLiteral("td");
+  bool findList = tagName.EqualsLiteral("list");
+
+  for (; current; current = current->GetParentElement()) {
+    // Test if we have a link (an anchor with href set)
+    if ((getLink && nsHTMLEditUtils::IsLink(current)) ||
+        (getNamedAnchor && nsHTMLEditUtils::IsNamedAnchor(current))) {
+      return current.forget();
+    }
+    if (findList) {
+      // Match "ol", "ul", or "dl" for lists
+      if (nsHTMLEditUtils::IsList(current)) {
+        return current.forget();
+      }
+    } else if (findTableCell) {
+      // Table cells are another special case: match either "td" or "th"
+      if (nsHTMLEditUtils::IsTableCell(current)) {
+        return current.forget();
+      }
+    } else if (current->NodeName().Equals(tagName,
+                   nsCaseInsensitiveStringComparator())) {
+      return current.forget();
+    }
+
+    // Stop searching if parent is a body tag.  Note: Originally used IsRoot to
+    // stop at table cells, but that's too messy when you are trying to find
+    // the parent table
+    if (current->GetParentElement() &&
+        current->GetParentElement()->Tag() == nsGkAtoms::body) {
+      break;
+    }
+  }
+
+  return nullptr;
+}
+
 NS_IMETHODIMP
-nsHTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)
+nsHTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName,
+                                          nsIDOMNode* aNode,
+                                          nsIDOMElement** aReturn)
 {
   NS_ENSURE_TRUE(!aTagName.IsEmpty(), NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(aReturn, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsINode> current = do_QueryInterface(aNode);
-  if (!current) {
-    // If no node supplied, get it from anchor node of current selection
-    nsRefPtr<Selection> selection = GetSelection();
-    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  nsCOMPtr<Element> parent =
+    GetElementOrParentByTagName(aTagName, node);
+  nsCOMPtr<nsIDOMElement> ret = do_QueryInterface(parent);
 
-    nsCOMPtr<nsINode> anchorNode = selection->GetAnchorNode();
-    NS_ENSURE_TRUE(anchorNode, NS_ERROR_FAILURE);
-
-    // Try to get the actual selected node
-    if (anchorNode->HasChildNodes() && anchorNode->IsContent()) {
-      uint32_t offset = selection->AnchorOffset();
-      current = anchorNode->GetChildAt(offset);
-    }
-    // anchor node is probably a text node - just use that
-    if (!current) {
-      current = anchorNode;
-    }
-  }
-
-  nsCOMPtr<nsIDOMNode> currentNode = current->AsDOMNode();
-
-  nsAutoString TagName(aTagName);
-  ToLowerCase(TagName);
-  bool getLink = IsLinkTag(TagName);
-  bool getNamedAnchor = IsNamedAnchorTag(TagName);
-  if ( getLink || getNamedAnchor)
-  {
-    TagName.AssignLiteral("a");  
-  }
-  bool findTableCell = TagName.EqualsLiteral("td");
-  bool findList = TagName.EqualsLiteral("list");
-
-  // default is null - no element found
-  *aReturn = nullptr;
-  
-  nsCOMPtr<nsIDOMNode> parent;
-  bool bNodeFound = false;
-
-  while (true)
-  {
-    nsAutoString currentTagName; 
-    // Test if we have a link (an anchor with href set)
-    if ( (getLink && nsHTMLEditUtils::IsLink(currentNode)) ||
-         (getNamedAnchor && nsHTMLEditUtils::IsNamedAnchor(currentNode)) )
-    {
-      bNodeFound = true;
-      break;
-    } else {
-      if (findList)
-      {
-        // Match "ol", "ul", or "dl" for lists
-        if (nsHTMLEditUtils::IsList(currentNode))
-          goto NODE_FOUND;
-
-      } else if (findTableCell)
-      {
-        // Table cells are another special case:
-        // Match either "td" or "th" for them
-        if (nsHTMLEditUtils::IsTableCell(currentNode))
-          goto NODE_FOUND;
-
-      } else {
-        currentNode->GetNodeName(currentTagName);
-        if (currentTagName.Equals(TagName, nsCaseInsensitiveStringComparator()))
-        {
-NODE_FOUND:
-          bNodeFound = true;
-          break;
-        } 
-      }
-    }
-    // Search up the parent chain
-    // We should never fail because of root test below, but lets be safe
-    // XXX: ERROR_HANDLING error return code lost
-    if (NS_FAILED(currentNode->GetParentNode(getter_AddRefs(parent))) || !parent)
-      break;
-
-    // Stop searching if parent is a body tag
-    nsAutoString parentTagName;
-    parent->GetNodeName(parentTagName);
-    // Note: Originally used IsRoot to stop at table cells,
-    //  but that's too messy when you are trying to find the parent table
-    if(parentTagName.LowerCaseEqualsLiteral("body"))
-      break;
-
-    currentNode = parent;
-  }
-
-  if (!bNodeFound) {
+  if (!ret) {
     return NS_EDITOR_ELEMENT_NOT_FOUND;
   }
 
-  nsCOMPtr<nsIDOMElement> currentElement = do_QueryInterface(currentNode);
-  currentElement.forget(aReturn);
+  ret.forget(aReturn);
   return NS_OK;
 }
 
