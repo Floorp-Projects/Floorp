@@ -175,6 +175,7 @@ add_task(function* test_telemetryBasics() {
 
   expectedLogLength += 2;
   let log = TelemetryPing.getPayload().log;
+  do_print("Telemetry log: " + JSON.stringify(log));
   Assert.equal(log.length, expectedLogLength, "Telemetry log should have " + expectedLogLength + " entries.");
   checkEvent(log[log.length-2], TLOG.ACTIVATION_KEY,
              [TLOG.ACTIVATION.REJECTED, EXPERIMENT1_ID, "startTime"]);
