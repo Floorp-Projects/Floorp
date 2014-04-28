@@ -1223,11 +1223,11 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
         bool isResult = false;
 
         if (s.isInt32()) {
-            rv = (nsresult) JSVAL_TO_INT(s);
+            rv = (nsresult) s.toInt32();
             if (NS_FAILED(rv))
                 isResult = true;
             else
-                number = (double) JSVAL_TO_INT(s);
+                number = (double) s.toInt32();
         } else {
             number = s.toDouble();
             if (number > 0.0 &&

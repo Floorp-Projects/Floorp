@@ -3553,7 +3553,7 @@ nsGenericArraySH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  int32_t slen = JSVAL_TO_INT(lenval);
+  int32_t slen = lenval.toInt32();
   if (slen < 0) {
     return NS_OK;
   }
@@ -3585,7 +3585,7 @@ nsGenericArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   bool ok = ::JS_GetProperty(cx, obj, "length", &len_val);
 
   if (ok && len_val.isInt32()) {
-    int32_t length = JSVAL_TO_INT(len_val);
+    int32_t length = len_val.toInt32();
 
     for (int32_t i = 0; ok && i < length; ++i) {
       ok = ::JS_DefineElement(cx, obj, i, JSVAL_VOID, nullptr, nullptr,

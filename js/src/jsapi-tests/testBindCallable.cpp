@@ -26,7 +26,7 @@ BEGIN_TEST(test_BindCallable)
 
   CHECK(retval.isInt32());
 
-  CHECK(JSVAL_TO_INT(retval) == 1717);
+  CHECK(retval.toInt32() == 1717);
   return true;
 }
 END_TEST(test_BindCallable)

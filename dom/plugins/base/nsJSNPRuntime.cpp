@@ -389,7 +389,7 @@ JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant)
     } else if (val.isBoolean()) {
       BOOLEAN_TO_NPVARIANT(val.toBoolean(), *variant);
     } else if (val.isInt32()) {
-      INT32_TO_NPVARIANT(JSVAL_TO_INT(val), *variant);
+      INT32_TO_NPVARIANT(val.toInt32(), *variant);
     } else if (val.isDouble()) {
       double d = val.toDouble();
       int i;
@@ -903,7 +903,7 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
     } else {
       NS_ASSERTION(v.isInt32(),
                    "The element in ida must be either string or int!\n");
-      id = IntToNPIdentifier(JSVAL_TO_INT(v));
+      id = IntToNPIdentifier(v.toInt32());
     }
 
     (*idarray)[i] = id;

@@ -249,7 +249,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
                         // 5.2.9(10) of C++11, so add an intermediate cast.
                         rv = (nsresult)(uint32_t)(jsexception.toDouble());
                     else
-                        rv = (nsresult)(JSVAL_TO_INT(jsexception));
+                        rv = (nsresult)(jsexception.toInt32());
 
                     if (rv == NS_NOINTERFACE)
                         JS_ClearPendingException(cx);

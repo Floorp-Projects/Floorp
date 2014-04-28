@@ -945,7 +945,7 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
                    "passed in non-integer for key size");
     return NS_ERROR_FAILURE;
   }
-  keySize = JSVAL_TO_INT(argv[0]);
+  keySize = argv[0].toInt32();
   if (!argv[1].isNull()) {
     JS::Rooted<JS::Value> v(cx, argv[1]);
     jsString = JS::ToString(cx, v);

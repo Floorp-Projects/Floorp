@@ -225,7 +225,7 @@ JSBool SkJSDisplayable::GetProperty(JSContext *cx, JSObject *obj, jsval id,
     SkDisplayTypes displayableType = displayable->getType();
     int members;
     const SkMemberInfo* info = SkDisplayType::GetMembers(NULL /* fMaker */, displayableType, &members);
-    int idIndex = JSVAL_TO_INT(id);
+    int idIndex = id.toInt32();
     SkASSERT(idIndex >= 0 && idIndex < members);
     info = &info[idIndex];
     SkDisplayTypes infoType = (SkDisplayTypes) info->fType;
@@ -297,7 +297,7 @@ JSBool SkJSDisplayable::SetProperty(JSContext *cx, JSObject *obj, jsval id, jsva
     SkDisplayTypes displayableType = displayable->getType();
     int members;
     const SkMemberInfo* info = SkDisplayType::GetMembers(NULL /* fMaker */, displayableType, &members);
-    int idIndex = JSVAL_TO_INT(id);
+    int idIndex = id.toInt32();
     SkASSERT(idIndex >= 0 && idIndex < members);
     info = &info[idIndex];
     SkDisplayTypes infoType = info->getType();
@@ -312,11 +312,11 @@ JSBool SkJSDisplayable::SetProperty(JSContext *cx, JSObject *obj, jsval id, jsva
             break;
         case SkType_Color:
         case SkType_S32:
-            s32 = JSVAL_TO_INT(value);
+            s32 = value.toInt32();
             break;
         case SkType_Scalar:
             if (value.isInt32())
-                scalar = SkIntToScalar(JSVAL_TO_INT(value));
+                scalar = SkIntToScalar(value.toInt32());
             else {
                 SkASSERT(value.isDouble());
                 scalar = (float) *(double*) value.toDouble();
