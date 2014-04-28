@@ -21,6 +21,12 @@ if test -z "$SCCACHE_DISABLE" -a -z "$no_sccache"; then
     try_*usw2.mozilla.com*)
         bucket=mozilla-releng-s3-cache-us-west-2-try
         ;;
+    b2g-inbound_*use1.mozilla.com*)
+        bucket=mozilla-releng-s3-cache-us-east-1-prod
+        ;;
+    b2g-inbound_*usw2.mozilla.com*)
+        bucket=mozilla-releng-s3-cache-us-west-2-prod
+        ;;
     esac
 fi
 
