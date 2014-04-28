@@ -783,8 +783,13 @@ MockProvider.prototype = {
    * Called when the provider should shutdown.
    */
   shutdown: function MP_shutdown() {
-    for (let timer of this.callbackTimers)
+    if (this.callbackTimers.length) {
+      info("MockProvider: pending callbacks at shutdown(): calling immediately");
+    }
+    for (let timer of this.callbackTimers) {
+      timer.callback();
       timer.cancel();
+    }
     this.callbackTimers = [];
 
     this.started = false;
@@ -968,17 +973,20 @@ MockProvider.prototype = {
    */
   _delayCallback: function MP_delayCallback(aCallback, ...aArgs) {
     if (!this.useAsyncCallbacks) {
-      aCallback.apply(null, params);
+      aCallback.apply(null, aArgs);
       return;
     }
 
     var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     // Need to keep a reference to the timer, so it doesn't get GC'ed
-    var pos = this.callbackTimers.length;
     this.callbackTimers.push(timer);
-    var self = this;
-    timer.initWithCallback(function() {
-      self.callbackTimers.splice(pos, 1);
+    timer.initWithCallback(() => {
+      let idx = this.callbackTimers.indexOf(timer);
+      if (idx == -1) {
+        info("MockProvider._delayCallback lost track of a timer.");
+      } else {
+        this.callbackTimers.splice(idx, 1);
+      }
       aCallback.apply(null, aArgs);
     }, this.apiDelay, timer.TYPE_ONE_SHOT);
   }
