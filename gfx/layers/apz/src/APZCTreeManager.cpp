@@ -728,7 +728,7 @@ APZCTreeManager::HandOffFling(AsyncPanZoomController* aPrev, ScreenPoint aVeloci
   // otherwise built on touch-start and cleared on touch-end, and a fling
   // happens after touch-end. Note that, unlike DispatchScroll() which is
   // called on every touch-move during overscroll panning,
-  // HandOffFling() is only called once during a fling handoff,
+  // HandleFlingOverscroll() is only called once during a fling handoff,
   // so it's not worth trying to avoid building the handoff chain here.
   BuildOverscrollHandoffChain(aPrev);
 
