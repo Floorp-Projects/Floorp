@@ -74,6 +74,10 @@ public final class HardwareUtils {
     }
 
     public static boolean isTelevision() {
+        if (Build.VERSION.SDK_INT < 16) {
+            // System feature not supported before Jelly Bean.
+            return false;
+        }
         if (sIsTelevision == null) {
             sIsTelevision = sContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEVISION);
         }
