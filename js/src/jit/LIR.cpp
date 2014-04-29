@@ -368,8 +368,6 @@ LInstruction::dump(FILE *fp)
     fprintf(fp, "} <- ");
 
     printName(fp);
-
-
     printInfo(fp);
 
     if (numTemps()) {
@@ -381,13 +379,13 @@ LInstruction::dump(FILE *fp)
         }
         fprintf(fp, ")");
     }
-    fprintf(fp, "\n");
 }
 
 void
 LInstruction::dump()
 {
-    return dump(stderr);
+    dump(stderr);
+    fprintf(stderr, "\n");
 }
 
 void
