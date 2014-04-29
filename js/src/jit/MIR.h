@@ -89,7 +89,14 @@ MIRType MIRTypeFromValue(const js::Value &vp)
      * Truncate Doubles. So every time removeUse is called, UseRemoved needs
      * to get set.
      */                                                                         \
-    _(UseRemoved)
+    _(UseRemoved)                                                               \
+                                                                                \
+    /* Marks if the current instruction should go to the bailout paths instead
+     * of producing code as part of the control flow.  This flag can only be set
+     * on instructions which are only used by ResumePoint or by other flagged
+     * instructions.
+     */                                                                         \
+    _(RecoveredOnBailout)
 
 class MDefinition;
 class MInstruction;
