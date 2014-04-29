@@ -25,6 +25,24 @@ let gManifestObject      = null;
 let gManifestHandlerURI  = null;
 let gTimerScheduleOffset = -1;
 
+function uninstallExperimentAddons() {
+  return Task.spawn(function* () {
+    let addons = yield getExperimentAddons();
+    for (let a of addons) {
+      yield AddonTestUtils.uninstallAddonByID(a.id);
+    }
+  });
+}
+
+function testCleanup(experimentsInstance) {
+  return Task.spawn(function* () {
+    yield experimentsInstance.uninit();
+    yield removeCacheFile();
+    yield uninstallExperimentAddons();
+    restartManager();
+  });
+}
+
 function run_test() {
   run_next_test();
 }
@@ -256,8 +274,7 @@ add_task(function* test_getExperiments() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // Test that we handle the experiments addon already being
@@ -337,8 +354,7 @@ add_task(function* test_addonAlreadyInstalled() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 add_task(function* test_lastActiveToday() {
@@ -364,8 +380,7 @@ add_task(function* test_lastActiveToday() {
   Assert.ok(lastActive, "Have a last active experiment");
   Assert.equal(lastActive, e[0], "Last active object is expected.");
 
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // Test explicitly disabling experiments.
@@ -450,10 +465,7 @@ add_task(function* test_disableExperiment() {
                  "Property " + k + " should match reference data.");
   }
 
-  // Cleanup.
-
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 add_task(function* test_disableExperimentsFeature() {
@@ -541,10 +553,7 @@ add_task(function* test_disableExperimentsFeature() {
                  "Property " + k + " should match reference data.");
   }
 
-  // Cleanup.
-
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // Test that after a failed experiment install:
@@ -676,11 +685,7 @@ add_task(function* test_installFailure() {
     }
   }
 
-  // Cleanup.
-
-  Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // Test that after an experiment was disabled by user action,
@@ -779,8 +784,7 @@ add_task(function* test_userDisabledAndUpdated() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // Test that changing the hash for an active experiments triggers an
@@ -871,8 +875,7 @@ add_task(function* test_updateActiveExperiment() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // Tests that setting the disable flag for an active experiment
@@ -963,8 +966,7 @@ add_task(function* test_disableActiveExperiment() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // Test that:
@@ -1044,8 +1046,7 @@ add_task(function* test_freezePendingExperiment() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // Test that setting the frozen flag for an active experiment doesn't
@@ -1125,8 +1126,7 @@ add_task(function* test_freezeActiveExperiment() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // Test that removing an active experiment from the manifest doesn't
@@ -1218,8 +1218,7 @@ add_task(function* test_removeActiveExperiment() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // Test that we correctly handle experiment start & install failures.
@@ -1274,8 +1273,7 @@ add_task(function* test_invalidUrl() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // Test that we handle it properly when active experiment addons are being
@@ -1353,8 +1351,7 @@ add_task(function* test_unexpectedUninstall() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // If the Addon Manager knows of an experiment that we don't, it should get
@@ -1387,8 +1384,7 @@ add_task(function* testUnknownExperimentsUninstalled() {
   addons = yield getExperimentAddons();
   Assert.equal(addons.length, 0, "Experiment 1 was uninstalled.");
 
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // If someone else installs an experiment add-on, we detect and stop that.
@@ -1415,8 +1411,7 @@ add_task(function* testForeignExperimentInstall() {
   addons = yield getExperimentAddons();
   Assert.equal(addons.length, 0, "Add-on install should have been cancelled.");
 
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
 });
 
 // Experiment add-ons will be disabled after Addon Manager restarts. Ensure
@@ -1441,7 +1436,7 @@ add_task(function* testEnabledAfterRestart() {
   };
 
   let addons = yield getExperimentAddons();
-  Assert.equal(addons.length, 0, "Precondition: No experimenta add-ons installed.");
+  Assert.equal(addons.length, 0, "Precondition: No experiment add-ons installed.");
 
   yield experiments.updateManifest();
   let fromManifest = yield experiments.getExperiments();
@@ -1464,6 +1459,65 @@ add_task(function* testEnabledAfterRestart() {
   yield experiments.updateManifest();
   Assert.ok(addons[0].isActive, "It activates when the manifest is evaluated.");
 
-  yield experiments.uninit();
-  yield removeCacheFile();
+  yield testCleanup(experiments);
+});
+
+// Test coverage for an add-on uninstall disabling the experiment and that it stays
+// disabled over restarts.
+add_task(function* test_foreignUninstallAndRestart() {
+  let experiments = new Experiments.Experiments(gPolicy);
+
+  gManifestObject = {
+    "version": 1,
+    experiments: [
+      {
+        id: EXPERIMENT1_ID,
+        xpiURL: gDataRoot + EXPERIMENT1_XPI_NAME,
+        xpiHash: EXPERIMENT1_XPI_SHA1,
+        startTime: gPolicy.now().getTime() / 1000 - 60,
+        endTime: gPolicy.now().getTime() / 1000 + 60,
+        maxActiveSeconds: 10 * SEC_IN_ONE_DAY,
+        appName: ["XPCShell"],
+        channel: ["nightly"],
+      },
+    ],
+  };
+
+  let addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 0, "Precondition: No experiment add-ons installed.");
+
+  yield experiments.updateManifest();
+  let experimentList = yield experiments.getExperiments();
+  Assert.equal(experimentList.length, 1, "A single experiment is known.");
+
+  addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 1, "A single experiment add-on is installed.");
+  Assert.ok(addons[0].isActive, "That experiment is active.");
+
+  yield AddonTestUtils.uninstallAddonByID(EXPERIMENT1_ID);
+  yield experiments._mainTask;
+
+  let addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 0, "Experiment add-on should have been removed.");
+
+  experimentList = yield experiments.getExperiments();
+  Assert.equal(experimentList.length, 1, "A single experiment is known.");
+  Assert.equal(experimentList[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
+  Assert.ok(!experimentList[0].active, "Experiment 1 should not be active anymore.");
+
+  // Fake restart behaviour.
+  experiments.uninit();
+  restartManager();
+  experiments = new Experiments.Experiments(gPolicy);
+  yield experiments.updateManifest();
+
+  let addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 0, "No experiment add-ons installed.");
+
+  experimentList = yield experiments.getExperiments();
+  Assert.equal(experimentList.length, 1, "A single experiment is known.");
+  Assert.equal(experimentList[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
+  Assert.ok(!experimentList[0].active, "Experiment 1 should not be active.");
+
+  yield testCleanup(experiments);
 });
