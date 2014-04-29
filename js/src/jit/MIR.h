@@ -208,6 +208,8 @@ class MNode : public TempObject
     inline MDefinition *toDefinition();
     inline MResumePoint *toResumePoint();
 
+    virtual bool writeRecoverData(CompactBufferWriter &writer) const;
+
   protected:
     // Sets an unset operand, updating use information.
     virtual void setOperand(size_t index, MDefinition *operand) = 0;
