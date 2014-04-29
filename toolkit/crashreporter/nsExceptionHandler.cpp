@@ -214,9 +214,17 @@ static const char kOOMAllocationSizeParameter[] = "OOMAllocationSize=";
 static const int kOOMAllocationSizeParameterLen =
   sizeof(kOOMAllocationSizeParameter)-1;
 
+static const char kTotalPageFileParameter[] = "TotalPageFile=";
+static const int kTotalPageFileParameterLen =
+  sizeof(kTotalPageFileParameter)-1;
+
 static const char kAvailablePageFileParameter[] = "AvailablePageFile=";
 static const int kAvailablePageFileParameterLen =
   sizeof(kAvailablePageFileParameter)-1;
+
+static const char kTotalPhysicalMemoryParameter[] = "TotalPhysicalMemory=";
+static const int kTotalPhysicalMemoryParameterLen =
+  sizeof(kTotalPhysicalMemoryParameter)-1;
 
 static const char kAvailablePhysicalMemoryParameter[] = "AvailablePhysicalMemory=";
 static const int kAvailablePhysicalMemoryParameterLen =
@@ -689,7 +697,9 @@ bool MinidumpCallback(
         WRITE_STATEX_FIELD(dwMemoryLoad, SysMemory, ltoa);
         WRITE_STATEX_FIELD(ullTotalVirtual, TotalVirtualMemory, _ui64toa);
         WRITE_STATEX_FIELD(ullAvailVirtual, AvailableVirtualMemory, _ui64toa);
+        WRITE_STATEX_FIELD(ullTotalPageFile, TotalPageFile, _ui64toa);
         WRITE_STATEX_FIELD(ullAvailPageFile, AvailablePageFile, _ui64toa);
+        WRITE_STATEX_FIELD(ullTotalPhys, TotalPhysicalMemory, _ui64toa);
         WRITE_STATEX_FIELD(ullAvailPhys, AvailablePhysicalMemory, _ui64toa);
 
 #undef WRITE_STATEX_FIELD
