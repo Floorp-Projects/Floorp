@@ -2258,10 +2258,15 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
     types::TypeScript::SetThis(cx, script, types::Type::ObjectType(type));
 
     MIRGraph graph(&temp);
+    InlineScriptTree *inlineScriptTree = InlineScriptTree::New(&temp, nullptr, nullptr, script);
+    if (!inlineScriptTree)
+        return false;
+
     CompileInfo info(script, fun,
                      /* osrPc = */ nullptr, /* constructing = */ false,
                      DefinitePropertiesAnalysis,
-                     script->needsArgsObj());
+                     script->needsArgsObj(),
+                     inlineScriptTree);
 
     AutoTempAllocatorRooter root(cx, &temp);
 
@@ -2422,10 +2427,14 @@ jit::AnalyzeArgumentsUsage(JSContext *cx, JSScript *scriptArg)
         return false;
 
     MIRGraph graph(&temp);
+    InlineScriptTree *inlineScriptTree = InlineScriptTree::New(&temp, nullptr, nullptr, script);
+    if (!inlineScriptTree)
+        return false;
     CompileInfo info(script, script->functionNonDelazifying(),
                      /* osrPc = */ nullptr, /* constructing = */ false,
                      ArgumentsUsageAnalysis,
-                     /* needsArgsObj = */ true);
+                     /* needsArgsObj = */ true,
+                     inlineScriptTree);
 
     AutoTempAllocatorRooter root(cx, &temp);
 

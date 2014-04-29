@@ -317,7 +317,7 @@ class MDefinition : public MNode
 
     // Track bailouts by storing the current pc in MIR instruction. Also used
     // for profiling and keeping track of what the last known pc was.
-    jsbytecode *trackedPc_;
+    BytecodeSite trackedSite_;
 
   private:
     enum Flag {
@@ -352,7 +352,7 @@ class MDefinition : public MNode
         resultTypeSet_(nullptr),
         flags_(0),
         dependency_(nullptr),
-        trackedPc_(nullptr)
+        trackedSite_()
     { }
 
     virtual Opcode op() const = 0;
@@ -372,12 +372,17 @@ class MDefinition : public MNode
     // be worthwhile.
     virtual bool possiblyCalls() const { return false; }
 
-    void setTrackedPc(jsbytecode *pc) {
-        trackedPc_ = pc;
+    void setTrackedSite(const BytecodeSite &site) {
+        trackedSite_ = site;
     }
-
+    const BytecodeSite &trackedSite() const {
+        return trackedSite_;
+    }
     jsbytecode *trackedPc() {
-        return trackedPc_;
+        return trackedSite_.pc();
+    }
+    InlineScriptTree *trackedTree() {
+        return trackedSite_.tree();
     }
 
     // Return the range of this value, *before* any bailout checks. Contrast
