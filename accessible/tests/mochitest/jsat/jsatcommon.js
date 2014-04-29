@@ -17,6 +17,18 @@ var gIterator;
 Components.utils.import('resource://gre/modules/Services.jsm');
 Components.utils.import("resource://gre/modules/accessibility/Utils.jsm");
 Components.utils.import("resource://gre/modules/accessibility/EventManager.jsm");
+Components.utils.import("resource://gre/modules/accessibility/Gestures.jsm");
+
+const dwellThreshold = GestureSettings.dwellThreshold;
+const swipeMaxDuration = GestureSettings.swipeMaxDuration;
+const maxConsecutiveGestureDelay = GestureSettings.maxConsecutiveGestureDelay;
+
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1001945 - sometimes
+// SimpleTest.executeSoon timeout is bigger than the timer settings in
+// GestureSettings that causes intermittents.
+GestureSettings.dwellThreshold = dwellThreshold * 10;
+GestureSettings.swipeMaxDuration = swipeMaxDuration * 10;
+GestureSettings.maxConsecutiveGestureDelay = maxConsecutiveGestureDelay * 10;
 
 var AccessFuTest = {
 
@@ -98,6 +110,10 @@ var AccessFuTest = {
     // Disable the console service logging.
     Logger.test = false;
     Logger.logLevel = Logger.INFO;
+    // Reset Gesture Settings.
+    GestureSettings.dwellThreshold = dwellThreshold;
+    GestureSettings.swipeMaxDuration = swipeMaxDuration;
+    GestureSettings.maxConsecutiveGestureDelay = maxConsecutiveGestureDelay;
     // Finish through idle callback to let AccessFu._disable complete.
     SimpleTest.executeSoon(function () {
       AccessFu.detach();
