@@ -2803,6 +2803,24 @@ MLoadSlot::mightAlias(const MDefinition *store) const
     return true;
 }
 
+bool
+MGuardShapePolymorphic::congruentTo(const MDefinition *ins) const
+{
+    if (!ins->isGuardShapePolymorphic())
+        return false;
+
+    const MGuardShapePolymorphic *other = ins->toGuardShapePolymorphic();
+    if (numShapes() != other->numShapes())
+        return false;
+
+    for (size_t i = 0; i < numShapes(); i++) {
+        if (getShape(i) != other->getShape(i))
+            return false;
+    }
+
+    return congruentIfOperandsEqual(ins);
+}
+
 void
 InlinePropertyTable::trimTo(ObjectVector &targets, BoolVector &choiceSet)
 {
