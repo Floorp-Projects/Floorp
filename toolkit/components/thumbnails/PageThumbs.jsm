@@ -73,38 +73,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
  */
 const TaskUtils = {
   /**
-   * Add logging to a promise.
-   *
-   * @param {Promise} promise
-   * @return {Promise} A promise behaving as |promise|, but with additional
-   * logging in case of uncaught error.
-   */
-  captureErrors: function captureErrors(promise) {
-    return promise.then(
-      null,
-      function onError(reason) {
-        Cu.reportError("Uncaught asynchronous error: " + reason + " at\n"
-          + reason.stack + "\n");
-        throw reason;
-      }
-    );
-  },
-
-  /**
-   * Spawn a new Task from a generator.
-   *
-   * This function behaves as |Task.spawn|, with the exception that it
-   * adds logging in case of uncaught error. For more information, see
-   * the documentation of |Task.jsm|.
-   *
-   * @param {generator} gen Some generator.
-   * @return {Promise} A promise built from |gen|, with the same semantics
-   * as |Task.spawn(gen)|.
-   */
-  spawn: function spawn(gen) {
-    return this.captureErrors(Task.spawn(gen));
-  },
-  /**
    * Read the bytes from a blob, asynchronously.
    *
    * @return {Promise}
@@ -298,7 +266,7 @@ this.PageThumbs = {
     // see if this was an error response.
     let wasError = this._isChannelErrorResponse(channel);
 
-    TaskUtils.spawn((function task() {
+    Task.spawn((function task() {
       let isSuccess = true;
       try {
         let blob = yield this.captureToBlob(aBrowser.contentWindow);
@@ -353,7 +321,7 @@ this.PageThumbs = {
    * @return {Promise}
    */
   _store: function PageThumbs__store(aOriginalURL, aFinalURL, aData, aNoOverwrite) {
-    return TaskUtils.spawn(function () {
+    return Task.spawn(function () {
       let telemetryStoreTime = new Date();
       yield PageThumbsStorage.writeData(aFinalURL, aData, aNoOverwrite);
       Services.telemetry.getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
