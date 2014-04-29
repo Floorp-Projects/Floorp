@@ -76,6 +76,9 @@ using namespace js::jit;
 //           first register/stack-offset correspond to the holder of the type,
 //           and the second correspond to the payload of the JS Value.
 //
+//         RECOVER_INSTRUCTION [INDEX]
+//           Index into the list of recovered instruction results.
+//
 //         TYPED_REG [PACKED_TAG, GPR_REG]:
 //           Value with statically known type, which payload is stored in a
 //           register.
@@ -219,6 +222,15 @@ RValueAllocation::layoutFromMode(Mode mode)
         return layout;
       }
 #endif
+      case RECOVER_INSTRUCTION: {
+        static const RValueAllocation::Layout layout = {
+            PAYLOAD_INDEX,
+            PAYLOAD_NONE,
+            "instruction"
+        };
+        return layout;
+      }
+
       default: {
         static const RValueAllocation::Layout regLayout = {
             PAYLOAD_PACKED_TAG,

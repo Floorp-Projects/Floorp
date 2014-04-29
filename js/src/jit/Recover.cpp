@@ -6,7 +6,10 @@
 
 #include "jit/Recover.h"
 
+#include "jscntxt.h"
+
 #include "jit/IonSpewer.h"
+#include "jit/JitFrameIterator.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 
@@ -25,9 +28,17 @@ RInstruction::readRecoverData(CompactBufferReader &reader, RInstructionStorage *
 {
     uint32_t op = reader.readUnsigned();
     switch (Opcode(op)) {
-      case Recover_ResumePoint:
-        new (raw->addr()) RResumePoint(reader);
+#   define MATCH_OPCODES_(op)                                           \
+      case Recover_##op:                                                \
+        static_assert(sizeof(R##op) <= sizeof(RInstructionStorage),     \
+                      "Storage space is too small to decode R" #op " instructions."); \
+        new (raw->addr()) R##op(reader);                                \
         break;
+
+        RECOVER_OPCODE_LIST(MATCH_OPCODES_)
+#   undef DEFINE_OPCODES_
+
+      case Recover_Invalid:
       default:
         MOZ_ASSUME_UNREACHABLE("Bad decoding of the previous instruction?");
         break;
@@ -108,10 +119,14 @@ MResumePoint::writeRecoverData(CompactBufferWriter &writer) const
 
 RResumePoint::RResumePoint(CompactBufferReader &reader)
 {
-    static_assert(sizeof(*this) <= sizeof(RInstructionStorage),
-                  "Storage space is too small to decode this recover instruction.");
     pcOffset_ = reader.readUnsigned();
     numOperands_ = reader.readUnsigned();
     IonSpew(IonSpew_Snapshots, "Read RResumePoint (pc offset %u, nslots %u)",
             pcOffset_, numOperands_);
+}
+
+bool
+RResumePoint::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    MOZ_ASSUME_UNREACHABLE("This instruction is not recoverable.");
 }

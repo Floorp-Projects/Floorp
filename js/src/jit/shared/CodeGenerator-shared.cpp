@@ -143,13 +143,31 @@ CodeGeneratorShared::encodeAllocation(LSnapshot *snapshot, MDefinition *mir,
     if (mir->isBox())
         mir = mir->toBox()->getOperand(0);
 
-    MIRType type = mir->isUnused()
-        ? MIRType_MagicOptimizedOut
-        : mir->type();
+    MIRType type =
+        mir->isRecoveredOnBailout() ? MIRType_None :
+        mir->isUnused() ? MIRType_MagicOptimizedOut :
+        mir->type();
 
     RValueAllocation alloc;
 
     switch (type) {
+      case MIRType_None:
+      {
+        MOZ_ASSERT(mir->isRecoveredOnBailout());
+        uint32_t index = 0;
+        LRecoverInfo *recoverInfo = snapshot->recoverInfo();
+        MNode **it = recoverInfo->begin(), **end = recoverInfo->end();
+        while (it != end && mir != *it) {
+            ++it;
+            ++index;
+        }
+
+        // This MDefinition is recovered, thus it should be listed in the
+        // LRecoverInfo.
+        MOZ_ASSERT(it != end && mir == *it);
+        alloc = RValueAllocation::RecoverInstruction(index);
+        break;
+      }
       case MIRType_Undefined:
         alloc = RValueAllocation::Undefined();
         break;
