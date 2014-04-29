@@ -2,7 +2,7 @@ import os
 from setuptools import setup, find_packages
 import sys
 
-version = '0.7.6'
+version = '0.7.7'
 
 # get documentation from the README
 try:
