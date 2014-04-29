@@ -613,6 +613,19 @@ private:
     while (getNextNALUnit(&data, &size, &nalStart, &nalSize, true) == OK) {
       nalu._buffer = const_cast<uint8_t*>(nalStart);
       nalu._length = nalSize;
+      // [Workaround] Jitter buffer code in WebRTC.org cannot correctly deliver
+      // SPS/PPS/I-frame NALUs that share same timestamp. Change timestamp value
+      // for SPS/PPS to avoid it.
+      // TODO: remove when bug 985254 lands. The patch there has same workaround.
+      switch (nalStart[0] & 0x1f) {
+        case 7:
+          nalu._timeStamp -= 100;
+        case 8:
+          nalu._timeStamp -= 50;
+          break;
+        default:
+          break;
+      }
       mCallback->Encoded(nalu, nullptr, nullptr);
     }
   }
