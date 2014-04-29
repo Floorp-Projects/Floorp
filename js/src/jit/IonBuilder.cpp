@@ -9423,11 +9423,17 @@ IonBuilder::jsop_regexp(RegExpObject *reobj)
     bool mustClone = true;
     types::TypeObjectKey *typeObj = types::TypeObjectKey::get(&script()->global());
     if (!typeObj->hasFlags(constraints(), types::OBJECT_FLAG_REGEXP_FLAGS_SET)) {
-        RegExpStatics *res = script()->global().getRegExpStatics();
-
-        DebugOnly<uint32_t> origFlags = reobj->getFlags();
-        DebugOnly<uint32_t> staticsFlags = res->getFlags();
-        JS_ASSERT((origFlags & staticsFlags) == staticsFlags);
+#ifdef DEBUG
+        // Only compare the statics if the one on script()->global() has been
+        // instantiated.
+        if (script()->global().hasRegExpStatics()) {
+            RegExpStatics *res = script()->global().getAlreadyCreatedRegExpStatics();
+            MOZ_ASSERT(res);
+            uint32_t origFlags = reobj->getFlags();
+            uint32_t staticsFlags = res->getFlags();
+            JS_ASSERT((origFlags & staticsFlags) == staticsFlags);
+        }
+#endif
 
         if (!reobj->global() && !reobj->sticky())
             mustClone = false;
