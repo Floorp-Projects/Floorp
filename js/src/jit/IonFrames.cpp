@@ -631,9 +631,8 @@ HandleException(ResumeFromException *rfe)
                 if (invalidated)
                     popSPSFrame = ionScript->hasSPSInstrumentation();
 
-                // If inline-frames are not profiled, then don't pop an SPS frame
-                // for them.
-                if (frames.more() && !js_JitOptions.profileInlineFrames)
+                // Don't pop an SPS frame for inlined frames, since they are not instrumented.
+                if (frames.more())
                     popSPSFrame = false;
 
                 // When profiling, each frame popped needs a notification that
