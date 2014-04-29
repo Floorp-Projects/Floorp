@@ -3384,7 +3384,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar > #notification-popup-box {
+@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box {
   padding-left: 7px;
 }
 
