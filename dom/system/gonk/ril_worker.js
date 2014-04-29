@@ -224,6 +224,8 @@ function RilObject(aContext) {
   this.v5Legacy = RILQUIRKS_V5_LEGACY;
   this.cellBroadcastDisabled = RIL_CELLBROADCAST_DISABLED;
   this.clirMode = RIL_CLIR_MODE;
+
+  this._hasHangUpPendingOutgoingCall = false;
 }
 RilObject.prototype = {
   context: null,
@@ -418,6 +420,11 @@ RilObject.prototype = {
       MMI: cbmmi || null
     };
     this.mergedCellBroadcastConfig = null;
+
+    /**
+     * True if the pending outgoing call is hung up by user.
+     */
+    this._hasHangUpPendingOutgoingCall = false;
   },
 
   /**
@@ -1547,6 +1554,7 @@ RilObject.prototype = {
     let callIndex = call.callIndex;
     if (callIndex === OUTGOING_PLACEHOLDER_CALL_INDEX) {
       if (DEBUG) this.context.debug("Hang up pending outgoing call.");
+      this._hasHangUpPendingOutgoingCall = true;
       this._removeVoiceCall(call, GECKO_CALL_ERROR_NORMAL_CALL_CLEARING);
       return;
     }
@@ -3870,21 +3878,27 @@ RilObject.prototype = {
 
     // Go through any remaining calls that are new to us.
     for each (let newCall in newCalls) {
-      if (newCall.isVoice) {
-        if (newCall.isMpty) {
-          conferenceChanged = true;
-        }
-        if (!pendingOutgoingCall &&
-            (newCall.state === CALL_STATE_DIALING ||
-             newCall.state === CALL_STATE_ALERTING)) {
-          // Receive a new outgoing call which is already hung up by user.
-          if (DEBUG) this.context.debug("Pending outgoing call is hung up by user.");
-          this.sendHangUpRequest(newCall.callIndex);
-        } else {
-          this._addNewVoiceCall(newCall);
-        }
+      if (!newCall.isVoice) {
+        continue;
+      }
+
+      if (newCall.isMpty) {
+        conferenceChanged = true;
+      }
+
+      if (this._hasHangUpPendingOutgoingCall &&
+          (newCall.state === CALL_STATE_DIALING ||
+           newCall.state === CALL_STATE_ALERTING)) {
+        // Receive a new outgoing call which is already hung up by user.
+        if (DEBUG) this.context.debug("Pending outgoing call is hung up by user.");
+        this._hasHangUpPendingOutgoingCall = false;
+        this.sendHangUpRequest(newCall.callIndex);
+      } else {
+        this._addNewVoiceCall(newCall);
       }
     }
+
+    this._hasHangUpPendingOutgoingCall = false;
 
     if (clearConferenceRequest) {
       this._hasConferenceRequest = false;
@@ -3961,7 +3975,7 @@ RilObject.prototype = {
     }
 
     if (DEBUG) this.context.debug("Remove pending outgoing call.");
-    this._removeVoiceCall(pendingOutgoingCall, failCause);
+    this._removeVoiceCall(call, failCause);
   },
 
   _ensureConference: function() {
@@ -5364,6 +5378,7 @@ RilObject.prototype[REQUEST_DIAL] = function REQUEST_DIAL(length, options) {
   if (options.rilRequestError) {
     this.getFailCauseCode((function(failCause) {
       this._removePendingOutgoingCall(failCause);
+      this._hasHangUpPendingOutgoingCall = false;
     }).bind(this));
   }
 };
