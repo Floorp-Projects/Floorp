@@ -802,9 +802,7 @@ SpecialPowersAPI.prototype = {
       if (aTopic == "perm-changed") {
         var permission = aSubject.QueryInterface(Ci.nsIPermission);
         if (permission.type == this._lastPermission.type) {
-          var os = Components.classes["@mozilla.org/observer-service;1"]
-                             .getService(Components.interfaces.nsIObserverService);
-          os.removeObserver(this, "perm-changed");
+          Services.obs.removeObserver(this, "perm-changed");
           content.window.setTimeout(this._callback, 0);
           content.window.setTimeout(this._nextCallback, 0);
         }
@@ -829,7 +827,6 @@ SpecialPowersAPI.prototype = {
     var lastPermission = pendingActions[pendingActions.length-1];
 
     var self = this;
-    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     this._permissionObserver._lastPermission = lastPermission;
     this._permissionObserver._callback = callback;
     this._permissionObserver._nextCallback = function () {
@@ -838,7 +835,7 @@ SpecialPowersAPI.prototype = {
         self._applyPermissions();
     }
 
-    os.addObserver(this._permissionObserver, "perm-changed", false);
+    Services.obs.addObserver(this._permissionObserver, "perm-changed", false);
 
     for (var idx in pendingActions) {
       var perm = pendingActions[idx];
@@ -876,8 +873,7 @@ SpecialPowersAPI.prototype = {
    *
    */
   pushPrefEnv: function(inPrefs, callback) {
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                           getService(Components.interfaces.nsIPrefBranch);
+    var prefs = Services.prefs;
 
     var pref_string = [];
     pref_string[prefs.PREF_INT] = "INT";
@@ -997,7 +993,7 @@ SpecialPowersAPI.prototype = {
 
     var lastPref = pendingActions[pendingActions.length-1];
 
-    var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    var pb = Services.prefs;
     var self = this;
     pb.addObserver(lastPref.name, function prefObs(subject, topic, data) {
       pb.removeObserver(lastPref.name, prefObs);
@@ -1068,20 +1064,14 @@ SpecialPowersAPI.prototype = {
     this._addObserverProxy(notification);
     if (typeof obs == 'object' && obs.observe.name != 'SpecialPowersCallbackWrapper')
       obs.observe = wrapCallback(obs.observe);
-    var obsvc = Cc['@mozilla.org/observer-service;1']
-                   .getService(Ci.nsIObserverService);
-    obsvc.addObserver(obs, notification, weak);
+    Services.obs.addObserver(obs, notification, weak);
   },
   removeObserver: function(obs, notification) {
     this._removeObserverProxy(notification);
-    var obsvc = Cc['@mozilla.org/observer-service;1']
-                   .getService(Ci.nsIObserverService);
-    obsvc.removeObserver(obs, notification);
+    Services.obs.removeObserver(obs, notification);
   },
   notifyObservers: function(subject, topic, data) {
-    var obsvc = Cc['@mozilla.org/observer-service;1']
-                   .getService(Ci.nsIObserverService);
-    obsvc.notifyObservers(subject, topic, data);
+    Services.obs.notifyObservers(subject, topic, data);
   },
 
   can_QI: function(obj) {
@@ -1418,8 +1408,7 @@ SpecialPowersAPI.prototype = {
   },
 
   getDOMRequestService: function() {
-    var serv = Cc["@mozilla.org/dom/dom-request-service;1"].
-      getService(Ci.nsIDOMRequestService);
+    var serv = Services.DOMRequest;
     var res = { __exposedProps__: {} };
     var props = ["createRequest", "createCursor", "fireError", "fireSuccess",
                  "fireDone", "fireDetailedError"];
@@ -1607,16 +1596,13 @@ SpecialPowersAPI.prototype = {
   },
 
   setFullscreenAllowed: function(document) {
-    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
-    pm.addFromPrincipal(document.nodePrincipal, "fullscreen", Ci.nsIPermissionManager.ALLOW_ACTION);
-    var obsvc = Cc['@mozilla.org/observer-service;1']
-                   .getService(Ci.nsIObserverService);
-    obsvc.notifyObservers(document, "fullscreen-approved", null);
+    Services.perms.addFromPrincipal(document.nodePrincipal, "fullscreen",
+				     Ci.nsIPermissionManager.ALLOW_ACTION);
+    Services.obs.notifyObservers(document, "fullscreen-approved", null);
   },
 
   removeFullscreenAllowed: function(document) {
-    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
-    pm.removeFromPrincipal(document.nodePrincipal, "fullscreen");
+    Services.perms.removeFromPrincipal(document.nodePrincipal, "fullscreen");
   },
 
   _getInfoFromPermissionArg: function(arg) {
