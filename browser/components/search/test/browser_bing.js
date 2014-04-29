@@ -34,6 +34,8 @@ function test() {
   is(url, base + "&form=MOZSBR", "Check search bar search URL for 'foo'");
   url = engine.getSubmission("foo", null, "homepage").uri.spec;
   is(url, base + "&form=MOZSPG", "Check homepage search URL for 'foo'");
+  url = engine.getSubmission("foo", null, "newtab").uri.spec;
+  is(url, base + "&form=MOZTSB", "Check newtab search URL for 'foo'");
 
   // Check search suggestion URL.
   url = engine.getSubmission("foo", "application/x-suggestions+json").uri.spec;
