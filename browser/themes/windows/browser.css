@@ -2275,7 +2275,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 @conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box {
-  padding-left: 5px;
+  padding-left: 7px;
 }
 
 #notification-popup-box:-moz-locale-dir(rtl),
