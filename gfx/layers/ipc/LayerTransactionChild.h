@@ -43,6 +43,13 @@ protected:
   {}
   ~LayerTransactionChild() { }
 
+  virtual PGrallocBufferChild*
+  AllocPGrallocBufferChild(const IntSize&,
+                           const uint32_t&, const uint32_t&,
+                           MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE;
+  virtual bool
+  DeallocPGrallocBufferChild(PGrallocBufferChild* actor) MOZ_OVERRIDE;
+
   virtual PLayerChild* AllocPLayerChild() MOZ_OVERRIDE;
   virtual bool DeallocPLayerChild(PLayerChild* actor) MOZ_OVERRIDE;
 
