@@ -3,11 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.tabspanel;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.PropertyAnimator.Property;
 import org.mozilla.gecko.animation.ViewHelper;
@@ -31,9 +37,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class TabsTray extends TwoWayView
+class TabsTray extends TwoWayView
     implements TabsPanel.PanelView {
-    private static final String LOGTAG = "GeckoTabsTray";
+    private static final String LOGTAG = "Gecko" + TabsTray.class.getSimpleName();
 
     private Context mContext;
     private TabsPanel mTabsPanel;
@@ -48,7 +54,6 @@ public class TabsTray extends TwoWayView
     // Time to animate non-flinged tabs of screen, in milliseconds
     private static final int ANIMATION_DURATION = 250;
 
-    private static final String ABOUT_HOME = "about:home";
     private int mOriginalSize = 0;
 
     public TabsTray(Context context, AttributeSet attrs) {
@@ -424,7 +429,6 @@ public class TabsTray extends TwoWayView
         private int mListHeight = 1;
 
         private View mSwipeView;
-        private int mSwipeViewPosition;
         private Runnable mPendingCheckForTap;
 
         private float mSwipeStartX;
@@ -434,7 +438,6 @@ public class TabsTray extends TwoWayView
 
         public TabSwipeGestureListener() {
             mSwipeView = null;
-            mSwipeViewPosition = TwoWayView.INVALID_POSITION;
             mSwiping = false;
             mEnabled = true;
 
@@ -486,7 +489,6 @@ public class TabsTray extends TwoWayView
                     if (mSwipeView != null) {
                         mSwipeStartX = e.getRawX();
                         mSwipeStartY = e.getRawY();
-                        mSwipeViewPosition = TabsTray.this.getPositionForView(mSwipeView);
 
                         mVelocityTracker = VelocityTracker.obtain();
                         mVelocityTracker.addMovement(e);
@@ -507,6 +509,9 @@ public class TabsTray extends TwoWayView
                         TabRow tab = (TabRow) mSwipeView.getTag();
                         Tabs.getInstance().selectTab(tab.id);
                         autoHidePanel();
+
+                        mVelocityTracker.recycle();
+                        mVelocityTracker = null;
                         break;
                     }
 
@@ -553,9 +558,9 @@ public class TabsTray extends TwoWayView
                     else
                         animateCancel(mSwipeView);
 
+                    mVelocityTracker.recycle();
                     mVelocityTracker = null;
                     mSwipeView = null;
-                    mSwipeViewPosition = TwoWayView.INVALID_POSITION;
 
                     mSwipeStartX = 0;
                     mSwipeStartY = 0;
@@ -598,6 +603,7 @@ public class TabsTray extends TwoWayView
                         cancelEvent.setAction(MotionEvent.ACTION_CANCEL |
                                 (e.getActionIndex() << MotionEvent.ACTION_POINTER_INDEX_SHIFT));
                         TabsTray.this.onTouchEvent(cancelEvent);
+                        cancelEvent.recycle();
                     }
 
                     if (mSwiping) {
