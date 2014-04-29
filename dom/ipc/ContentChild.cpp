@@ -1406,7 +1406,7 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
 {
 #if MOZ_PERMISSIONS
   nsCOMPtr<nsIPermissionManager> permissionManagerIface =
-      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+      services::GetPermissionManager();
   nsPermissionManager* permissionManager =
       static_cast<nsPermissionManager*>(permissionManagerIface.get());
   NS_ABORT_IF_FALSE(permissionManager, 

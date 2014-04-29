@@ -23,6 +23,7 @@
 #include "nsDOMJSUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/Services.h"
 #include "nsContentPermissionHelper.h"
 #ifdef MOZ_B2G
 #include "nsIDOMDesktopNotification.h"
@@ -674,7 +675,7 @@ Notification::GetPermissionInternal(nsISupports* aGlobal, ErrorResult& aRv)
   uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
 
   nsCOMPtr<nsIPermissionManager> permissionManager =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    services::GetPermissionManager();
 
   permissionManager->TestPermissionFromPrincipal(principal,
                                                  "desktop-notification",

@@ -18,6 +18,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/BluetoothManagerBinding.h"
+#include "mozilla/Services.h"
 
 using namespace mozilla;
 
@@ -199,8 +200,7 @@ BluetoothManager::CheckPermission(nsPIDOMWindow* aWindow)
 {
   NS_ASSERTION(aWindow, "Null pointer!");
 
-  nsCOMPtr<nsIPermissionManager> permMgr =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
   NS_ENSURE_TRUE(permMgr, false);
 
   uint32_t permission;
