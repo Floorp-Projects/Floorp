@@ -9,7 +9,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHomeUtils",
   "resource:///modules/AboutHome.jsm");
 
-const TEST_CONTENT_HELPER = "chrome://mochitests/content/browser/browser/base/content/test/general/aboutHome_content_script.js";
 let gRightsVersion = Services.prefs.getIntPref("browser.rights.version");
 
 registerCleanupFunction(function() {
@@ -111,19 +110,21 @@ let gTests = [
     let searchEventDeferred = Promise.defer();
     let doc = gBrowser.contentDocument;
     let engineName = doc.documentElement.getAttribute("searchEngineName");
-    let mm = gBrowser.selectedTab.linkedBrowser.messageManager;
 
-    mm.loadFrameScript(TEST_CONTENT_HELPER, false);
-
-    mm.addMessageListener("AboutHomeTest:CheckRecordedSearch", function (msg) {
-      let data = JSON.parse(msg.data);
+    doc.addEventListener("AboutHomeSearchEvent", function onSearch(e) {
+      let data = JSON.parse(e.detail);
       is(data.engineName, engineName, "Detail is search engine name");
 
-      getNumberOfSearches(engineName).then(num => {
-        is(num, numSearchesBefore + 1, "One more search recorded.");
-        searchEventDeferred.resolve();
+      // We use executeSoon() to ensure that this code runs after the
+      // count has been updated in browser.js, since it uses the same
+      // event.
+      executeSoon(function () {
+        getNumberOfSearches(engineName).then(num => {
+          is(num, numSearchesBefore + 1, "One more search recorded.");
+          searchEventDeferred.resolve();
+        });
       });
-    });
+    }, true, true);
 
     // Get the current number of recorded searches.
     let searchStr = "a search";
