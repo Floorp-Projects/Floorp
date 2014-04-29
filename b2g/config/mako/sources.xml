@@ -100,7 +100,7 @@
   <project name="platform/external/webrtc" path="external/webrtc" revision="1a1433203ddf6395516e065ada1dcdfc8bd5c654"/>
   <project name="platform/external/yaffs2" path="external/yaffs2" revision="d94a17182a88c2c2d865f50b728de8561d251efa"/>
   <project name="platform/external/zlib" path="external/zlib" revision="06608b270da9ec8a3e618f201d7356aad83f9ffe"/>
-  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="0d93be33c0ee226c7bf7be0d7d591981c57fa96f"/>
+  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="fa40716703edc8664365b46d206c11635d2b7a90"/>
   <project name="platform/frameworks/base" path="frameworks/base" revision="8fafbc6692a52d1f1417693f24f6349b4de5afbd"/>
   <project name="platform/frameworks/native" path="frameworks/native" revision="c135c11c422c1570fdae2e19336f06f39e723c5a"/>
   <project name="platform/frameworks/opt/emoji" path="frameworks/opt/emoji" revision="bc06a1779be6919a581a938e1c3118b3a4ab4c18"/>
