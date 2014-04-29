@@ -262,8 +262,7 @@ static void CopyDataSourceSurface(DataSourceSurface* aSource,
 
   bool needsRBSwap = false;
   if (aDest->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-      aDest->GetFormat() == SurfaceFormat::B8G8R8X8 ||
-      aDest->GetFormat() == SurfaceFormat::R5G6B5) {
+      aDest->GetFormat() == SurfaceFormat::B8G8R8X8) {
       needsRBSwap = true;
   }
 
@@ -508,7 +507,7 @@ ReadPixelsIntoImageSurface(GLContext* gl, gfxImageSurface* dest) {
 }
 
 void
-ReadPixelsIntoDataSourceSurface(GLContext* gl, DataSourceSurface* dest) {
+ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
     gl->MakeCurrent();
     MOZ_ASSERT(dest->GetSize().width != 0);
     MOZ_ASSERT(dest->GetSize().height != 0);
@@ -839,7 +838,7 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
         mGL->fDisableVertexAttribArray(0);
 
         /* Read-back draw results */
-        ReadPixelsIntoDataSourceSurface(mGL, isurf);
+        ReadPixelsIntoDataSurface(mGL, isurf);
         CLEANUP_IF_GLERROR_OCCURRED("when reading pixels into surface");
     } while (false);
 

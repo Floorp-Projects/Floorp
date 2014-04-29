@@ -47,7 +47,7 @@ class RegExpStatics
 
   public:
     RegExpStatics() : bufferLink(nullptr), copied(false) { clear(); }
-    static JSObject *create(JSContext *cx, GlobalObject *parent);
+    static JSObject *create(ExclusiveContext *cx, GlobalObject *parent);
 
   private:
     bool executeLazy(JSContext *cx);

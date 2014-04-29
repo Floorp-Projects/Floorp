@@ -88,6 +88,9 @@ public:
       MOZ_ASSERT(mPendingDecoders.IsEmpty());
       return false;
     }
+
+    MaybeSwitchVideoReaders(aTimeThreshold);
+
     bool rv = GetVideoReader()->DecodeVideoFrame(aKeyFrameSkip, aTimeThreshold);
 
     nsAutoTArray<VideoData*, 10> video;
@@ -103,16 +106,6 @@ public:
 
     MSE_DEBUG("%p MSR::DecodeVF %d (%p) returned false (readers=%u)",
               this, mActiveVideoDecoder, mDecoders[mActiveVideoDecoder].get(), mDecoders.Length());
-    if (SwitchVideoReaders(aTimeThreshold)) {
-      rv = GetVideoReader()->DecodeVideoFrame(aKeyFrameSkip, aTimeThreshold);
-
-      nsAutoTArray<VideoData*, 10> video;
-      GetVideoReader()->VideoQueue().GetElementsAfter(-1, &video);
-      for (uint32_t i = 0; i < video.Length(); ++i) {
-        VideoQueue().Push(video[i]);
-      }
-      GetVideoReader()->VideoQueue().Empty();
-    }
     return rv;
   }
 
@@ -136,14 +129,9 @@ public:
   void CallDecoderInitialization();
 
 private:
-  bool SwitchVideoReaders(int64_t aTimeThreshold) {
-    MOZ_ASSERT(mActiveVideoDecoder != -1);
-    // XXX: We switch when the first reader is depleted, but it might be
-    // better to switch as soon as the next reader is ready to decode and
-    // has data for the current media time.
+  void MaybeSwitchVideoReaders(int64_t aTimeThreshold) {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-
-    GetVideoReader()->SetIdle();
+    MOZ_ASSERT(mActiveVideoDecoder != -1);
 
     WaitForPendingDecoders();
 
@@ -151,15 +139,17 @@ private:
       if (!mDecoders[i]->GetReader()->GetMediaInfo().HasVideo()) {
         continue;
       }
-      mActiveVideoDecoder = i;
-      MSE_DEBUG("%p MSR::DecodeVF switching to %d", this, mActiveVideoDecoder);
+      if (aTimeThreshold >= mDecoders[i]->GetMediaStartTime()) {
+        GetVideoReader()->SetIdle();
 
-      GetVideoReader()->SetActive();
-      GetVideoReader()->DecodeToTarget(aTimeThreshold);
+        mActiveVideoDecoder = i;
+        MSE_DEBUG("%p MSR::DecodeVF switching to %d", this, mActiveVideoDecoder);
 
-      return true;
+        GetVideoReader()->SetActive();
+        GetVideoReader()->DecodeToTarget(aTimeThreshold);
+        break;
+      }
     }
-    return false;
   }
 
   MediaDecoderReader* GetAudioReader() {
@@ -337,9 +327,13 @@ MediaSourceReader::CallDecoderInitialization()
     MediaInfo mi;
     nsAutoPtr<MetadataTags> tags; // TODO: Handle metadata.
     nsresult rv;
+    int64_t startTime = 0;
     {
       ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
       rv = reader->ReadMetadata(&mi, getter_Transfers(tags));
+      if (NS_SUCCEEDED(rv)) {
+        reader->FindStartTime(startTime);
+      }
     }
     reader->SetIdle();
     if (NS_FAILED(rv)) {
@@ -347,10 +341,12 @@ MediaSourceReader::CallDecoderInitialization()
       MSE_DEBUG("%p: Reader %p failed to initialize, rv=%x", this, reader, rv);
       continue;
     }
+    decoder->SetMediaStartTime(startTime);
 
     bool active = false;
     if (mi.HasVideo() || mi.HasAudio()) {
-      MSE_DEBUG("%p: Reader %p has video=%d audio=%d", this, reader, mi.HasVideo(), mi.HasAudio());
+      MSE_DEBUG("%p: Reader %p has video=%d audio=%d startTime=%lld",
+                this, reader, mi.HasVideo(), mi.HasAudio(), startTime);
       active = true;
     }
 

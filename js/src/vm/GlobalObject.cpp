@@ -565,12 +565,6 @@ GlobalObject::create(JSContext *cx, const Class *clasp)
     if (!global->setDelegate(cx))
         return nullptr;
 
-    /* Construct a regexp statics object for this global object. */
-    JSObject *res = RegExpStatics::create(cx, global);
-    if (!res)
-        return nullptr;
-
-    global->initSlot(REGEXP_STATICS, ObjectValue(*res));
     return global;
 }
 
@@ -781,6 +775,41 @@ GlobalObject::getOrCreateForOfPICObject(JSContext *cx, Handle<GlobalObject *> gl
         return nullptr;
     global->setReservedSlot(FOR_OF_PIC_CHAIN, ObjectValue(*forOfPIC));
     return forOfPIC;
+}
+
+bool
+GlobalObject::hasRegExpStatics() const
+{
+    return !getSlot(REGEXP_STATICS).isUndefined();
+}
+
+RegExpStatics *
+GlobalObject::getRegExpStatics(ExclusiveContext *cx) const
+{
+    MOZ_ASSERT(cx);
+    Rooted<GlobalObject*> self(cx, const_cast<GlobalObject*>(this));
+
+    JSObject *resObj = nullptr;
+    const Value &val = this->getSlot(REGEXP_STATICS);
+    if (!val.isObject()) {
+        MOZ_ASSERT(val.isUndefined());
+        resObj = RegExpStatics::create(cx, self);
+        if (!resObj)
+            return nullptr;
+
+        self->initSlot(REGEXP_STATICS, ObjectValue(*resObj));
+    } else {
+        resObj = &val.toObject();
+    }
+    return static_cast<RegExpStatics*>(resObj->getPrivate(/* nfixed = */ 1));
+}
+
+RegExpStatics *
+GlobalObject::getAlreadyCreatedRegExpStatics() const
+{
+    const Value &val = this->getSlot(REGEXP_STATICS);
+    MOZ_ASSERT(val.isObject());
+    return static_cast<RegExpStatics*>(val.toObject().getPrivate(/* nfixed = */ 1));
 }
 
 bool

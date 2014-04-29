@@ -2115,7 +2115,10 @@ js::str_match(JSContext *cx, unsigned argc, Value *vp)
     if (!g.normalizeRegExp(cx, false, 1, args))
         return false;
 
-    RegExpStatics *res = cx->global()->getRegExpStatics();
+    RegExpStatics *res = cx->global()->getRegExpStatics(cx);
+    if (!res)
+        return false;
+
     Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
     if (!linearStr)
         return false;
@@ -2156,7 +2159,9 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
 
     const jschar *chars = linearStr->chars();
     size_t length = linearStr->length();
-    RegExpStatics *res = cx->global()->getRegExpStatics();
+    RegExpStatics *res = cx->global()->getRegExpStatics(cx);
+    if (!res)
+        return false;
 
     /* Per ECMAv5 15.5.4.12 (5) The last index property is ignored and left unchanged. */
     size_t i = 0;
@@ -2829,16 +2834,26 @@ StrReplaceRegexpRemove(JSContext *cx, HandleString str, RegExpShared &re, Mutabl
             break;
     }
 
+    RegExpStatics *res;
+
     /* If unmatched, return the input string. */
     if (!lastIndex) {
-        if (startIndex > 0)
-            cx->global()->getRegExpStatics()->updateLazily(cx, flatStr, &re, lazyIndex);
+        if (startIndex > 0) {
+            res = cx->global()->getRegExpStatics(cx);
+            if (!res)
+                return false;
+            res->updateLazily(cx, flatStr, &re, lazyIndex);
+        }
         rval.setString(str);
         return true;
     }
 
     /* The last successful match updates the RegExpStatics. */
-    cx->global()->getRegExpStatics()->updateLazily(cx, flatStr, &re, lazyIndex);
+    res = cx->global()->getRegExpStatics(cx);
+    if (!res)
+        return false;
+
+    res->updateLazily(cx, flatStr, &re, lazyIndex);
 
     /* Include any remaining part of the string. */
     if (lastIndex < charsLen) {
@@ -2866,7 +2881,10 @@ StrReplaceRegExp(JSContext *cx, ReplaceData &rdata, MutableHandleValue rval)
     rdata.leftIndex = 0;
     rdata.calledBack = false;
 
-    RegExpStatics *res = cx->global()->getRegExpStatics();
+    RegExpStatics *res = cx->global()->getRegExpStatics(cx);
+    if (!res)
+        return false;
+
     RegExpShared &re = rdata.g.regExp();
 
     // The spec doesn't describe this function very clearly, so we go ahead and
@@ -3283,7 +3301,10 @@ SplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit, const Ma
 
         /* Step 13(c)(iii)(6-7). */
         if (Matcher::returnsCaptures) {
-            RegExpStatics *res = cx->global()->getRegExpStatics();
+            RegExpStatics *res = cx->global()->getRegExpStatics(cx);
+            if (!res)
+                return nullptr;
+
             const MatchPairs &matches = res->getMatches();
             for (size_t i = 0; i < matches.parenCount(); i++) {
                 /* Steps 13(c)(iii)(7)(a-c). */
@@ -3494,7 +3515,10 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
             aobj = SplitHelper(cx, linearStr, limit, matcher, type);
         }
     } else {
-        SplitRegExpMatcher matcher(*re, cx->global()->getRegExpStatics());
+        RegExpStatics *res = cx->global()->getRegExpStatics(cx);
+        if (!res)
+            return false;
+        SplitRegExpMatcher matcher(*re, res);
         aobj = SplitHelper(cx, linearStr, limit, matcher, type);
     }
     if (!aobj)
