@@ -3,11 +3,12 @@
 
 function test() {
   let cw;
+  let win;
   let groupItemId;
   let prefix = 'start';
 
   let assertTabViewIsHidden = function () {
-    ok(!TabView.isVisible(), prefix + ': tabview is hidden');
+    ok(!win.TabView.isVisible(), prefix + ': tabview is hidden');
   }
 
   let assertNumberOfGroups = function (num) {
@@ -15,11 +16,11 @@ function test() {
   }
 
   let assertNumberOfTabs = function (num) {
-    is(gBrowser.visibleTabs.length, num, prefix + ': there should be ' + num + ' tabs');
+    is(win.gBrowser.visibleTabs.length, num, prefix + ': there should be ' + num + ' tabs');
   }
 
   let assertNumberOfPinnedTabs = function (num) {
-    is(gBrowser._numPinnedTabs, num, prefix + ': there should be ' + num + ' pinned tabs');
+    is(win.gBrowser._numPinnedTabs, num, prefix + ': there should be ' + num + ' pinned tabs');
   }
 
   let assertGroupItemPreserved = function () {
@@ -34,7 +35,7 @@ function test() {
   }
 
   let createTab = function (url) {
-    return gBrowser.loadOneTab(url || 'http://mochi.test:8888/', {inBackground: true});
+    return win.gBrowser.loadOneTab(url || 'http://mochi.test:8888/', {inBackground: true});
   }
 
   let createBlankTab = function () {
@@ -44,7 +45,7 @@ function test() {
   let finishTest = function () {
     prefix = 'finish';
     assertValidPrerequisites();
-    finish();
+    promiseWindowClosed(win).then(finish);
   }
 
   let testUndoCloseWithSelectedBlankTab = function () {
@@ -53,7 +54,7 @@ function test() {
     assertNumberOfTabs(2);
 
     afterAllTabsLoaded(function () {
-      gBrowser.removeTab(tab);
+      win.gBrowser.removeTab(tab);
       assertNumberOfTabs(1);
       assertNumberOfPinnedTabs(0);
 
@@ -63,9 +64,9 @@ function test() {
         assertGroupItemPreserved();
 
         createBlankTab();
-        afterAllTabsLoaded(testUndoCloseWithSelectedBlankPinnedTab);
-      });
-    });
+        afterAllTabsLoaded(testUndoCloseWithSelectedBlankPinnedTab, win);
+      }, 0, win);
+    }, win);
   }
 
   let testUndoCloseWithSelectedBlankPinnedTab = function () {
@@ -73,14 +74,8 @@ function test() {
     assertNumberOfTabs(2);
 
     afterAllTabsLoaded(function () {
-      gBrowser.removeTab(gBrowser.tabs[0]);
-      gBrowser.pinTab(gBrowser.tabs[0]);
-
-      registerCleanupFunction(function () {
-        let tab = gBrowser.tabs[0];
-        if (tab.pinned)
-          gBrowser.unpinTab(tab);
-      });
+      win.gBrowser.removeTab(win.gBrowser.tabs[0]);
+      win.gBrowser.pinTab(win.gBrowser.tabs[0]);
 
       assertNumberOfTabs(1);
       assertNumberOfPinnedTabs(1);
@@ -91,23 +86,24 @@ function test() {
         assertGroupItemPreserved();
 
         createBlankTab();
-        gBrowser.removeTab(gBrowser.tabs[0]);
+        win.gBrowser.removeTab(win.gBrowser.tabs[0]);
 
-        afterAllTabsLoaded(finishTest);
-      });
-    });
+        afterAllTabsLoaded(finishTest, win);
+      }, 0, win);
+    }, win);
   }
 
   waitForExplicitFinish();
-  registerCleanupFunction(function () TabView.hide());
 
-  showTabView(function () {
+  newWindowWithTabView(window => {
+    win = window;
+
     hideTabView(function () {
-      cw = TabView.getContentWindow();
+      cw = win.TabView.getContentWindow();
       groupItemId = cw.GroupItems.groupItems[0].id;
 
       assertValidPrerequisites();
       testUndoCloseWithSelectedBlankTab();
-    });
+    }, win);
   });
 }
