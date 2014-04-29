@@ -359,6 +359,20 @@ MDefinition::hasDefUses() const
     return false;
 }
 
+bool
+MDefinition::hasLiveDefUses() const
+{
+    for (MUseIterator i(uses_.begin()); i != uses_.end(); i++) {
+        MNode *ins = (*i)->consumer();
+        if (!ins->isDefinition())
+            continue;
+        if (!ins->toDefinition()->isRecoveredOnBailout())
+            return true;
+    }
+
+    return false;
+}
+
 MUseIterator
 MDefinition::removeUse(MUseIterator use)
 {
