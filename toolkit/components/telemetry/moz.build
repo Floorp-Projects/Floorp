@@ -32,11 +32,11 @@ EXTRA_JS_MODULES += [
     'TelemetryLog.jsm',
     'TelemetryStopwatch.jsm',
     'ThirdPartyCookieProbe.jsm',
+    'UITelemetry.jsm',
 ]
 
 EXTRA_PP_JS_MODULES += [
     'TelemetryPing.jsm',
-    'UITelemetry.jsm',
 ]
 
 FAIL_ON_WARNINGS = True
