@@ -17,7 +17,8 @@ namespace js {
 namespace jit {
 
 #define RECOVER_OPCODE_LIST(_)                  \
-    _(ResumePoint)
+    _(ResumePoint)                              \
+    _(Add)
 
 class RResumePoint;
 class SnapshotIterator;
@@ -82,6 +83,21 @@ class RResumePoint MOZ_FINAL : public RInstruction
     virtual uint32_t numOperands() const {
         return numOperands_;
     }
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RAdd MOZ_FINAL : public RInstruction
+{
+  private:
+    bool isFloatOperation_;
+
+  public:
+    RINSTRUCTION_HEADER_(Add)
+
+    virtual uint32_t numOperands() const {
+        return 2;
+    }
+
     bool recover(JSContext *cx, SnapshotIterator &iter) const;
 };
 

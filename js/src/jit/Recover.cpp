@@ -7,11 +7,14 @@
 #include "jit/Recover.h"
 
 #include "jscntxt.h"
+#include "jsmath.h"
 
 #include "jit/IonSpewer.h"
 #include "jit/JitFrameIterator.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
+
+#include "vm/Interpreter.h"
 
 using namespace js;
 using namespace js::jit;
@@ -129,4 +132,38 @@ bool
 RResumePoint::recover(JSContext *cx, SnapshotIterator &iter) const
 {
     MOZ_ASSUME_UNREACHABLE("This instruction is not recoverable.");
+}
+
+bool
+MAdd::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Add));
+    writer.writeByte(specialization_ == MIRType_Float32);
+    return true;
+}
+
+RAdd::RAdd(CompactBufferReader &reader)
+{
+    isFloatOperation_ = reader.readByte();
+}
+
+bool
+RAdd::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue lhs(cx, iter.read());
+    RootedValue rhs(cx, iter.read());
+    RootedValue result(cx);
+
+    MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
+    if (!js::AddValues(cx, &lhs, &rhs, &result))
+        return false;
+
+    // MIRType_Float32 is a specialization embedding the fact that the result is
+    // rounded to a Float32.
+    if (isFloatOperation_ && !RoundFloat32(cx, result, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
 }
