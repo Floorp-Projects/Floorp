@@ -940,7 +940,7 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                              aName, aFlags);
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_4(WebGLFramebuffer,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLFramebuffer,
   mColorAttachments,
   mDepthAttachment,
   mStencilAttachment,

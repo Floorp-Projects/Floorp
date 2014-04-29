@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(SpeechRecognitionResult, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SpeechRecognitionResult, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SpeechRecognitionResult)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechRecognitionResult)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechRecognitionResult)

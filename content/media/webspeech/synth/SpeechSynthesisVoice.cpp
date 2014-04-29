@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(SpeechSynthesisVoice, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SpeechSynthesisVoice, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SpeechSynthesisVoice)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechSynthesisVoice)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechSynthesisVoice)

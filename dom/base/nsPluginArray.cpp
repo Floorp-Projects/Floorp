@@ -66,10 +66,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPluginArray)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_3(nsPluginArray,
-                                        mWindow,
-                                        mPlugins,
-                                        mHiddenPlugins)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsPluginArray,
+                                      mWindow,
+                                      mPlugins,
+                                      mHiddenPlugins)
 
 static void
 GetPluginMimeTypes(const nsTArray<nsRefPtr<nsPluginElement> >& aPlugins,
@@ -356,7 +356,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPluginElement)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(nsPluginElement, mWindow, mMimeTypes)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsPluginElement, mWindow, mMimeTypes)
 
 nsPluginElement::nsPluginElement(nsPIDOMWindow* aWindow,
                                  nsPluginTag* aPluginTag)

@@ -29,7 +29,7 @@ nsDOMTokenList::nsDOMTokenList(Element* aElement, nsIAtom* aAttrAtom)
 
 nsDOMTokenList::~nsDOMTokenList() { }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMTokenList, mElement)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMTokenList, mElement)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMTokenList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
