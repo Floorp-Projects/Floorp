@@ -19,7 +19,7 @@ then
   cd marionette_auto_venv
   . bin/activate
 else
-  curl https://raw.github.com/pypa/virtualenv/${VIRTUAL_ENV_VERSION}/virtualenv.py | ${PYTHON} - marionette_auto_venv 
+  curl -L https://raw.github.com/pypa/virtualenv/${VIRTUAL_ENV_VERSION}/virtualenv.py | ${PYTHON} - marionette_auto_venv
   cd marionette_auto_venv
   . bin/activate
 

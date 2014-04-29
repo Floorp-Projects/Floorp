@@ -41,7 +41,7 @@ then
   . bin/activate
 else
   echo "Creating a virtual environment in $VENV_DIR"
-  curl https://raw.github.com/pypa/virtualenv/develop/virtualenv.py | ${PYTHON} - $VENV_DIR
+  curl -L https://raw.github.com/pypa/virtualenv/develop/virtualenv.py | ${PYTHON} - $VENV_DIR
   cd $VENV_DIR
   . bin/activate
   # set up mozbase
