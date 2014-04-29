@@ -54,6 +54,8 @@ class RValueAllocation
         UNTYPED_REG         = 0x06,
         UNTYPED_STACK       = 0x07,
 #endif
+        RECOVER_INSTRUCTION = 0x0a,
+
         // The JSValueType is packed in the Mode.
         TYPED_REG_MIN       = 0x10,
         TYPED_REG_MAX       = 0x17,
@@ -236,6 +238,11 @@ class RValueAllocation
         return RValueAllocation(CONSTANT, payloadOfIndex(index));
     }
 
+    // Recover instruction's index
+    static RValueAllocation RecoverInstruction(uint32_t index) {
+        return RValueAllocation(RECOVER_INSTRUCTION, payloadOfIndex(index));
+    }
+
     void writeHeader(CompactBufferWriter &writer, JSValueType type, uint32_t regCode) const;
   public:
     static RValueAllocation read(CompactBufferReader &reader);
@@ -360,19 +367,19 @@ class SnapshotWriter
     }
 };
 
-class MResumePoint;
+class MNode;
 
 class RecoverWriter
 {
     CompactBufferWriter writer_;
 
-    uint32_t nframes_;
-    uint32_t framesWritten_;
+    uint32_t instructionCount_;
+    uint32_t instructionsWritten_;
 
   public:
-    SnapshotOffset startRecover(uint32_t frameCount, bool resumeAfter);
+    SnapshotOffset startRecover(uint32_t instructionCount, bool resumeAfter);
 
-    bool writeFrame(const MResumePoint *rp);
+    bool writeInstruction(const MNode *rp);
 
     void endRecover();
 
@@ -472,6 +479,13 @@ class RecoverReader
 
   public:
     RecoverReader(SnapshotReader &snapshot, const uint8_t *recovers, uint32_t size);
+
+    uint32_t numInstructions() const {
+        return numInstructions_;
+    }
+    uint32_t numInstructionsRead() const {
+        return numInstructionsRead_;
+    }
 
     bool moreInstructions() const {
         return numInstructionsRead_ < numInstructions_;

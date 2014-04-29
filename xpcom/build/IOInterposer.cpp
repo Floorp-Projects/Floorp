@@ -11,15 +11,7 @@
 #include "MainThreadIOLogger.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
-#if defined(MOZILLA_INTERNAL_API)
-// We need to undefine MOZILLA_INTERNAL_API for RefPtr.h because IOInterposer
-// does not clean up its data before shutdown.
-#undef MOZILLA_INTERNAL_API
 #include "mozilla/RefPtr.h"
-#define MOZILLA_INTERNAL_API
-#else
-#include "mozilla/RefPtr.h"
-#endif // defined(MOZILLA_INTERNAL_API)
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
 #if !defined(XP_WIN)
@@ -49,8 +41,14 @@ void VectorRemove(std::vector<T>& vector, const T& element)
 }
 
 /** Lists of Observers */
-struct ObserverLists : public mozilla::AtomicRefCounted<ObserverLists>
+struct ObserverLists
 {
+private:
+  ~ObserverLists() {}
+
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ObserverLists)
+
   ObserverLists()
   {
   }
@@ -86,6 +84,12 @@ public:
     , mIsHandlingObservation(false)
     , mCurrentGeneration(0)
   {
+    MOZ_COUNT_CTOR(PerThreadData);
+  }
+
+  ~PerThreadData()
+  {
+    MOZ_COUNT_DTOR(PerThreadData);
   }
 
   void
@@ -174,6 +178,15 @@ public:
     mObserverLists = aNewLists;
   }
 
+  inline void
+  ClearObserverLists()
+  {
+    if (mObserverLists) {
+      mCurrentGeneration = 0;
+      mObserverLists = nullptr;
+    }
+  }
+
 private:
   bool                  mIsMainThread;
   bool                  mIsHandlingObservation;
@@ -188,10 +201,12 @@ public:
     : mObservedOperations(IOInterposeObserver::OpNone)
     , mIsEnabled(true)
   {
+    MOZ_COUNT_CTOR(MasterList);
   }
 
   ~MasterList()
   {
+    MOZ_COUNT_DTOR(MasterList);
   }
 
   inline void
@@ -313,7 +328,7 @@ public:
     mObserverLists = newLists;
     mCurrentGeneration++;
   }
- 
+
   void
   Update(PerThreadData &aPtd)
   {
@@ -474,7 +489,13 @@ IOInterposeObserver::IsMainThread()
 void
 IOInterposer::Clear()
 {
+  /* Clear() is a no-op on opt builds so that we may continue to trap I/O until
+     process termination. In debug builds we need to shut down IOInterposer so
+     that all references are properly released and refcnt log remains clean. */
+#if defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING)
+  UnregisterCurrentThread();
   sMasterList = nullptr;
+#endif
 }
 
 void
@@ -489,11 +510,6 @@ IOInterposer::Disable()
 void
 IOInterposer::Report(IOInterposeObserver::Observation& aObservation)
 {
-  MOZ_ASSERT(sMasterList);
-  if (!sMasterList) {
-    return;
-  }
-
   PerThreadData* ptd = sThreadLocalData.get();
   if (!ptd) {
     // In this case the current thread is not registered with IOInterposer.
@@ -501,6 +517,13 @@ IOInterposer::Report(IOInterposeObserver::Observation& aObservation)
     // we're not registered. That could potentially perform poorly, though.
     return;
   }
+
+  if (!sMasterList) {
+    // If there is no longer a master list then we should clear the local one.
+    ptd->ClearObserverLists();
+    return;
+  }
+
   sMasterList->Update(*ptd);
 
   // Don't try to report if there's nobody listening.

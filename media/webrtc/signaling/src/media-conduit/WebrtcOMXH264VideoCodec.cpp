@@ -45,6 +45,12 @@ using namespace android;
 
 namespace mozilla {
 
+static uint8_t kNALStartCode[] = { 0x00, 0x00, 0x00, 0x01 };
+enum {
+  kNALTypeSPS = 7,
+  kNALTypePPS = 8,
+};
+
 // NS_INLINE_DECL_THREADSAFE_REFCOUNTING() cannot be used directly in
 // ImageNativeHandle below because the return type of webrtc::NativeHandle
 // AddRef()/Release() conflicts with those defined in macro. To avoid another
@@ -151,13 +157,11 @@ public:
     MonitorAutoLock lock(mMonitor);
     while (true) {
       if (mInputFrames.empty()) {
-        ALOGE("Waiting OMXOutputDrain");
         // Wait for new input.
         lock.Wait();
       }
 
       if (mEnding) {
-        ALOGE("Ending OMXOutputDrain");
         // Stop draining.
         break;
       }
@@ -239,34 +243,35 @@ public:
     mLooper.clear();
   }
 
-  // Parse SPS/PPS NALUs.
-  static sp<MetaData> ParseParamSets(sp<ABuffer>& aParamSets)
+  // Find SPS in input data and extract picture width and height if found.
+  static status_t ExtractPicDimensions(uint8_t* aData, size_t aSize,
+                                       int32_t* aWidth, int32_t* aHeight)
   {
-    return MakeAVCCodecSpecificData(aParamSets);
+    MOZ_ASSERT(aData && aSize > 1);
+    if ((aData[0] & 0x1f) != kNALTypeSPS) {
+      return ERROR_MALFORMED;
+    }
+    sp<ABuffer> sps = new ABuffer(aData, aSize);
+    FindAVCDimensions(sps, aWidth, aHeight);
+    return OK;
   }
 
-  // Configure decoder using data returned by ParseParamSets().
-  status_t ConfigureWithParamSets(const sp<MetaData>& aParamSets)
+  // Configure decoder using image width/height.
+  status_t ConfigureWithPicDimensions(int32_t aWidth, int32_t aHeight)
   {
     MOZ_ASSERT(mCodec != nullptr);
     if (mCodec == nullptr) {
       return INVALID_OPERATION;
     }
 
-    int32_t width = 0;
-    bool ok = aParamSets->findInt32(kKeyWidth, &width);
-    MOZ_ASSERT(ok && width > 0);
-    int32_t height = 0;
-    ok = aParamSets->findInt32(kKeyHeight, &height);
-    MOZ_ASSERT(ok && height > 0);
-    CODEC_LOGD("OMX:%p decoder config width:%d height:%d", this, width, height);
+    CODEC_LOGD("OMX:%p decoder width:%d height:%d", this, aWidth, aHeight);
 
     sp<AMessage> config = new AMessage();
     config->setString("mime", MEDIA_MIMETYPE_VIDEO_AVC);
-    config->setInt32("width", width);
-    config->setInt32("height", height);
-    mWidth = width;
-    mHeight = height;
+    config->setInt32("width", aWidth);
+    config->setInt32("height", aHeight);
+    mWidth = aWidth;
+    mHeight = aHeight;
 
     sp<Surface> surface = nullptr;
     mNativeWindow = new GonkNativeWindow();
@@ -286,8 +291,8 @@ public:
   FillInput(const webrtc::EncodedImage& aEncoded, bool aIsFirstFrame,
             int64_t& aRenderTimeMs)
   {
-    MOZ_ASSERT(mCodec != nullptr);
-    if (mCodec == nullptr) {
+    MOZ_ASSERT(mCodec != nullptr && aEncoded._buffer && aEncoded._length > 0);
+    if (mCodec == nullptr || !aEncoded._buffer || aEncoded._length == 0) {
       return INVALID_OPERATION;
     }
 
@@ -299,19 +304,24 @@ public:
       return err;
     }
 
-    uint32_t flags = 0;
-    if (aEncoded._frameType == webrtc::kKeyFrame) {
-      flags = aIsFirstFrame ? MediaCodec::BUFFER_FLAG_CODECCONFIG : MediaCodec::BUFFER_FLAG_SYNCFRAME;
-    }
-    size_t size = aEncoded._length;
-    MOZ_ASSERT(size);
+    // Prepend start code to buffer.
+    size_t size = aEncoded._length + sizeof(kNALStartCode);
     const sp<ABuffer>& omxIn = mInputBuffers.itemAt(index);
     MOZ_ASSERT(omxIn->capacity() >= size);
     omxIn->setRange(0, size);
     // Copying is needed because MediaCodec API doesn't support externallay
     // allocated buffer as input.
-    memcpy(omxIn->data(), aEncoded._buffer, size);
+    uint8_t* dst = omxIn->data();
+    memcpy(dst, kNALStartCode, sizeof(kNALStartCode));
+    memcpy(dst + sizeof(kNALStartCode), aEncoded._buffer, aEncoded._length);
     int64_t inputTimeUs = aEncoded._timeStamp * 1000 / 90; // 90kHz -> us.
+    // Assign input flags according to input buffer NALU and frame types.
+    uint32_t flags = 0;
+    if (aEncoded._frameType == webrtc::kKeyFrame) {
+      int nalType = dst[sizeof(kNALStartCode)] & 0x1f;
+      flags = (nalType == kNALTypeSPS || nalType == kNALTypePPS) ?
+              MediaCodec::BUFFER_FLAG_CODECCONFIG : MediaCodec::BUFFER_FLAG_SYNCFRAME;
+    }
     err = mCodec->queueInputBuffer(index, 0, size, inputTimeUs, flags);
     if (err == OK && !(flags & MediaCodec::BUFFER_FLAG_CODECCONFIG)) {
       if (mOutputDrain == nullptr) {
@@ -563,8 +573,6 @@ protected:
       encoded.capture_time_ms_ = aInputFrame.mRenderTimeMs;
       encoded._completeFrame = true;
 
-      ALOGE("OMX:%p encode frame type:%d size:%u", mOMX, encoded._frameType, encoded._length);
-
       // Prepend SPS/PPS to I-frames unless they were sent last time.
       SendEncodedDataToCallback(encoded, isIFrame && !mIsPrevOutputParamSets);
       mIsPrevOutputParamSets = isParamSets;
@@ -605,6 +613,19 @@ private:
     while (getNextNALUnit(&data, &size, &nalStart, &nalSize, true) == OK) {
       nalu._buffer = const_cast<uint8_t*>(nalStart);
       nalu._length = nalSize;
+      // [Workaround] Jitter buffer code in WebRTC.org cannot correctly deliver
+      // SPS/PPS/I-frame NALUs that share same timestamp. Change timestamp value
+      // for SPS/PPS to avoid it.
+      // TODO: remove when bug 985254 lands. The patch there has same workaround.
+      switch (nalStart[0] & 0x1f) {
+        case 7:
+          nalu._timeStamp -= 100;
+        case 8:
+          nalu._timeStamp -= 50;
+          break;
+        default:
+          break;
+      }
       mCallback->Encoded(nalu, nullptr, nullptr);
     }
   }
@@ -800,20 +821,22 @@ WebrtcOMXH264VideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  ALOGE("WebrtcOMXH264VideoDecoder:%p will decode", this);
-
   bool configured = !!mOMX;
   if (!configured) {
-    // Search for SPS/PPS NALUs in input to get decoder config.
-    sp<ABuffer> input = new ABuffer(aInputImage._buffer, aInputImage._length);
-    sp<MetaData> paramSets = WebrtcOMXDecoder::ParseParamSets(input);
-    if (NS_WARN_IF(paramSets == nullptr)) {
-      // Cannot config decoder because SPS/PPS NALUs haven't been seen.
+    // Search for SPS NALU in input to get width/height config.
+    int32_t width;
+    int32_t height;
+    status_t result = WebrtcOMXDecoder::ExtractPicDimensions(aInputImage._buffer,
+                                                             aInputImage._length,
+                                                             &width, &height);
+    if (result != OK) {
+      // Cannot config decoder because SPS haven't been seen.
+      CODEC_LOGI("WebrtcOMXH264VideoDecoder:%p missing SPS in input");
       return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
     }
     RefPtr<WebrtcOMXDecoder> omx = new WebrtcOMXDecoder(MEDIA_MIMETYPE_VIDEO_AVC,
                                                         mCallback);
-    status_t result = omx->ConfigureWithParamSets(paramSets);
+    result = omx->ConfigureWithPicDimensions(width, height);
     if (NS_WARN_IF(result != OK)) {
       return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
     }

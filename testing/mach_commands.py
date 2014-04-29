@@ -62,10 +62,10 @@ TEST_SUITES = {
         'mach_command': 'jetpack-test',
         'kwargs': {},
     },
-    'jittest': {
-        'aliases': ('Jit', 'jit'),
-        'mach_command': 'jittest',
-        'kwargs': {'test_file': None},
+    'check-spidermonkey': {
+        'aliases': ('Sm', 'sm'),
+        'mach_command': 'check-spidermonkey',
+        'kwargs': {'valgrind': False},
     },
     'mochitest-a11y': {
         'mach_command': 'mochitest-a11y',
@@ -216,22 +216,41 @@ class MachCommands(MachCommandBase):
         return 0 if result else 1
 
 @CommandProvider
-class JittestCommand(MachCommandBase):
-    @Command('jittest', category='testing', description='Run jit-test tests.')
+class CheckSpiderMonkeyCommand(MachCommandBase):
+    @Command('check-spidermonkey', category='testing', description='Run SpiderMonkey tests.')
     @CommandArgument('--valgrind', action='store_true', help='Run jit-test suite with valgrind flag')
 
-    def run_jittest(self, **params):
+    def run_checkspidermonkey(self, **params):
         import subprocess
         import sys
 
+        bin_suffix = ''
         if sys.platform.startswith('win'):
-            js = os.path.join(self.bindir, 'js.exe')
-        else:
-            js = os.path.join(self.bindir, 'js')
-        cmd = [os.path.join(self.topsrcdir, 'js', 'src', 'jit-test', 'jit_test.py'),
-              js, '--no-slow', '--no-progress', '--tinderbox', '--tbpl']
+            bin_suffix = '.exe'
 
+        js = os.path.join(self.bindir, 'js%s' % bin_suffix)
+
+        print('Running jit-tests')
+        jittest_cmd = [os.path.join(self.topsrcdir, 'js', 'src', 'jit-test', 'jit_test.py'),
+              js, '--no-slow', '--tbpl']
         if params['valgrind']:
-            cmd.append('--valgrind')
+            jittest_cmd.append('--valgrind')
 
-        return subprocess.call(cmd)
+        jittest_result = subprocess.call(jittest_cmd)
+
+        print('running jstests')
+        jstest_cmd = [os.path.join(self.topsrcdir, 'js', 'src', 'tests', 'jstests.py'),
+              js, '--tbpl']
+        jstest_result = subprocess.call(jstest_cmd)
+
+        print('running jsapi-tests')
+        jsapi_tests_cmd = [os.path.join(self.bindir, 'jsapi-tests%s' % bin_suffix)]
+        jsapi_tests_result = subprocess.call(jsapi_tests_cmd)
+
+        print('running check-style')
+        check_style_cmd = [sys.executable, os.path.join(self.topsrcdir, 'config', 'check_spidermonkey_style.py')]
+        check_style_result = subprocess.call(check_style_cmd, cwd=os.path.join(self.topsrcdir, 'js', 'src'))
+
+        all_passed = jittest_result and jstest_result and jsapi_tests_result and check_style_result
+
+        return all_passed

@@ -6,6 +6,9 @@
 
 #include "mozilla/MacroArgs.h"
 
+MOZ_STATIC_ASSERT_VALID_ARG_COUNT(1);
+MOZ_STATIC_ASSERT_VALID_ARG_COUNT(1, 2);
+
 static_assert(MOZ_PASTE_PREFIX_AND_ARG_COUNT(100, a, b, c) == 1003, "");
 
 static_assert(MOZ_PASTE_PREFIX_AND_ARG_COUNT(, a, b, c) == 3, "");
