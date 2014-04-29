@@ -569,7 +569,7 @@ JitRuntime::Mark(JSTracer *trc)
 {
     JS_ASSERT(!trc->runtime()->isHeapMinorCollecting());
     Zone *zone = trc->runtime()->atomsCompartment()->zone();
-    for (gc::CellIterUnderGC i(zone, gc::FINALIZE_JITCODE); !i.done(); i.next()) {
+    for (gc::ZoneCellIterUnderGC i(zone, gc::FINALIZE_JITCODE); !i.done(); i.next()) {
         JitCode *code = i.get<JitCode>();
         MarkJitCodeRoot(trc, &code, "wrapper");
     }
@@ -1235,7 +1235,7 @@ jit::ToggleBarriers(JS::Zone *zone, bool needs)
 
     IonContext ictx(CompileRuntime::get(rt));
     AutoFlushCache afc("ToggleBarriers", rt->jitRuntime());
-    for (gc::CellIterUnderGC i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::ZoneCellIterUnderGC i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasIonScript())
             script->ionScript()->toggleBarriers(needs);
@@ -3094,7 +3094,7 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
         }
     }
 
-    for (gc::CellIter i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::ZoneCellIter i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->compartment() == comp_ || zone_) {
             FinishInvalidation<SequentialExecution>(fop, script);

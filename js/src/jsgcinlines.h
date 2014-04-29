@@ -165,7 +165,7 @@ class ArenaIter
     }
 };
 
-class CellIterImpl
+class ArenaCellIterImpl
 {
     size_t firstThingOffset;
     size_t thingSize;
@@ -176,7 +176,7 @@ class CellIterImpl
     Cell *cell;
 
   protected:
-    CellIterImpl() {
+    ArenaCellIterImpl() {
     }
 
     void initSpan(JS::Zone *zone, AllocKind kind) {
@@ -193,6 +193,77 @@ class CellIterImpl
         aiter.init(singleAheader);
         next();
         aiter.init();
+    }
+
+  public:
+    bool done() const {
+        return !cell;
+    }
+
+    template<typename T> T *get() const {
+        JS_ASSERT(!done());
+        return static_cast<T *>(cell);
+    }
+
+    Cell *getCell() const {
+        JS_ASSERT(!done());
+        return cell;
+    }
+
+    void next() {
+        for (;;) {
+            if (thing != span->first)
+                break;
+            if (MOZ_LIKELY(span->hasNext())) {
+                thing = span->last + thingSize;
+                span = span->nextSpan();
+                break;
+            }
+            if (aiter.done()) {
+                cell = nullptr;
+                return;
+            }
+            ArenaHeader *aheader = aiter.get();
+            firstSpan = aheader->getFirstFreeSpan();
+            span = &firstSpan;
+            thing = aheader->arenaAddress() | firstThingOffset;
+            aiter.next();
+        }
+        cell = reinterpret_cast<Cell *>(thing);
+        thing += thingSize;
+    }
+};
+
+class ArenaCellIterUnderGC : public ArenaCellIterImpl
+{
+  public:
+    ArenaCellIterUnderGC(ArenaHeader *aheader) {
+        JS_ASSERT(aheader->zone->runtimeFromAnyThread()->isHeapBusy());
+        init(aheader);
+    }
+};
+
+class ZoneCellIterImpl
+{
+    size_t firstThingOffset;
+    size_t thingSize;
+    ArenaIter aiter;
+    FreeSpan firstSpan;
+    const FreeSpan *span;
+    uintptr_t thing;
+    Cell *cell;
+
+  protected:
+    ZoneCellIterImpl() {
+    }
+
+    void initSpan(JS::Zone *zone, AllocKind kind) {
+        JS_ASSERT(zone->allocator.arenas.isSynchronizedFreeList(kind));
+        firstThingOffset = Arena::firstThingOffset(kind);
+        thingSize = Arena::thingSize(kind);
+        firstSpan.initAsEmpty();
+        span = &firstSpan;
+        thing = span->first;
     }
 
     void init(JS::Zone *zone, AllocKind kind) {
@@ -240,24 +311,19 @@ class CellIterImpl
     }
 };
 
-class CellIterUnderGC : public CellIterImpl
+class ZoneCellIterUnderGC : public ZoneCellIterImpl
 {
   public:
-    CellIterUnderGC(JS::Zone *zone, AllocKind kind) {
+    ZoneCellIterUnderGC(JS::Zone *zone, AllocKind kind) {
 #ifdef JSGC_GENERATIONAL
         JS_ASSERT(zone->runtimeFromAnyThread()->gcNursery.isEmpty());
 #endif
         JS_ASSERT(zone->runtimeFromAnyThread()->isHeapBusy());
         init(zone, kind);
     }
-
-    CellIterUnderGC(ArenaHeader *aheader) {
-        JS_ASSERT(aheader->zone->runtimeFromAnyThread()->isHeapBusy());
-        init(aheader);
-    }
 };
 
-class CellIter : public CellIterImpl
+class ZoneCellIter : public ZoneCellIterImpl
 {
     ArenaLists *lists;
     AllocKind kind;
@@ -265,7 +331,7 @@ class CellIter : public CellIterImpl
     size_t *counter;
 #endif
   public:
-    CellIter(JS::Zone *zone, AllocKind kind)
+    ZoneCellIter(JS::Zone *zone, AllocKind kind)
       : lists(&zone->allocator.arenas),
         kind(kind)
     {
@@ -296,7 +362,7 @@ class CellIter : public CellIterImpl
         }
 
 #ifdef DEBUG
-        /* Assert that no GCs can occur while a CellIter is live. */
+        /* Assert that no GCs can occur while a ZoneCellIter is live. */
         counter = &zone->runtimeFromAnyThread()->noGCOrAllocationCheck;
         ++*counter;
 #endif
@@ -304,7 +370,7 @@ class CellIter : public CellIterImpl
         init(zone, kind);
     }
 
-    ~CellIter() {
+    ~ZoneCellIter() {
 #ifdef DEBUG
         JS_ASSERT(*counter > 0);
         --*counter;

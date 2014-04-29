@@ -2717,7 +2717,7 @@ CheckForCompartmentMismatches(JSRuntime *rt)
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         trc.zone = zone;
         for (size_t thingKind = 0; thingKind < FINALIZE_LAST; thingKind++) {
-            for (CellIterUnderGC i(zone, AllocKind(thingKind)); !i.done(); i.next()) {
+            for (ZoneCellIterUnderGC i(zone, AllocKind(thingKind)); !i.done(); i.next()) {
                 trc.src = i.getCell();
                 trc.srcKind = MapAllocToTraceKind(AllocKind(thingKind));
                 trc.compartment = CompartmentOfCell(trc.src, trc.srcKind);
@@ -3886,7 +3886,7 @@ SweepPhase(JSRuntime *rt, SliceBudget &sliceBudget)
             for (; rt->gcSweepZone; rt->gcSweepZone = rt->gcSweepZone->nextNodeInGroup()) {
                 Zone *zone = rt->gcSweepZone;
                 while (ArenaHeader *arena = zone->allocator.arenas.gcShapeArenasToSweep) {
-                    for (CellIterUnderGC i(arena); !i.done(); i.next()) {
+                    for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
                         Shape *shape = i.get<Shape>();
                         if (!shape->isMarked())
                             shape->sweep();
@@ -4934,13 +4934,13 @@ gc::MergeCompartments(JSCompartment *source, JSCompartment *target)
 
     // Fixup compartment pointers in source to refer to target.
 
-    for (CellIter iter(source->zone(), FINALIZE_SCRIPT); !iter.done(); iter.next()) {
+    for (ZoneCellIter iter(source->zone(), FINALIZE_SCRIPT); !iter.done(); iter.next()) {
         JSScript *script = iter.get<JSScript>();
         JS_ASSERT(script->compartment() == source);
         script->compartment_ = target;
     }
 
-    for (CellIter iter(source->zone(), FINALIZE_BASE_SHAPE); !iter.done(); iter.next()) {
+    for (ZoneCellIter iter(source->zone(), FINALIZE_BASE_SHAPE); !iter.done(); iter.next()) {
         BaseShape *base = iter.get<BaseShape>();
         JS_ASSERT(base->compartment() == source);
         base->compartment_ = target;
@@ -5075,7 +5075,7 @@ js::ReleaseAllJITCode(FreeOp *fop)
 
 # ifdef DEBUG
         /* Assert no baseline scripts are marked as active. */
-        for (CellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        for (ZoneCellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             JS_ASSERT_IF(script->hasBaselineScript(), !script->baselineScript()->active());
         }
@@ -5086,7 +5086,7 @@ js::ReleaseAllJITCode(FreeOp *fop)
 
         jit::InvalidateAll(fop, zone);
 
-        for (CellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        for (ZoneCellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             jit::FinishInvalidation<SequentialExecution>(fop, script);
             jit::FinishInvalidation<ParallelExecution>(fop, script);
@@ -5174,7 +5174,7 @@ js::StopPCCountProfiling(JSContext *cx)
         return;
 
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-        for (CellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        for (ZoneCellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             if (script->hasScriptCounts() && script->types) {
                 ScriptAndCounts sac;
@@ -5206,7 +5206,7 @@ void
 js::PurgeJITCaches(Zone *zone)
 {
 #ifdef JS_ION
-    for (CellIterUnderGC i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (ZoneCellIterUnderGC i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
 
         /* Discard Ion caches. */

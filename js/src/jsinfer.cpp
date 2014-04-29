@@ -2321,7 +2321,7 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
 
     /* Mark type sets which contain obj as having a generic object types. */
 
-    for (gc::CellIter i(cx->zone(), gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
+    for (gc::ZoneCellIter i(cx->zone(), gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
         TypeObject *object = i.get<TypeObject>();
         unsigned count = object->getPropertyCount();
         for (unsigned i = 0; i < count; i++) {
@@ -2331,7 +2331,7 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
         }
     }
 
-    for (gc::CellIter i(cx->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::ZoneCellIter i(cx->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         RootedScript script(cx, i.get<JSScript>());
         if (script->types) {
             unsigned count = TypeScript::NumTypeSets(script);
@@ -2358,7 +2358,7 @@ TypeCompartment::print(JSContext *cx, bool force)
     if (!force && !InferSpewActive(ISpewResult))
         return;
 
-    for (gc::CellIter i(compartment->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::ZoneCellIter i(compartment->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         // Note: use cx->runtime() instead of cx to work around IsInRequest(cx)
         // assertion failures when we're called from DestroyContext.
         RootedScript script(cx->runtime(), i.get<JSScript>());
@@ -2366,7 +2366,7 @@ TypeCompartment::print(JSContext *cx, bool force)
             script->types->printTypes(cx, script);
     }
 
-    for (gc::CellIter i(compartment->zone(), gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
+    for (gc::ZoneCellIter i(compartment->zone(), gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
         TypeObject *object = i.get<TypeObject>();
         object->print();
     }
@@ -4402,7 +4402,7 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
     {
         gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_DISCARD_TI);
 
-        for (CellIterUnderGC i(zone(), FINALIZE_SCRIPT); !i.done(); i.next()) {
+        for (ZoneCellIterUnderGC i(zone(), FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             if (script->types) {
                 types::TypeScript::Sweep(fop, script, oom);
@@ -4444,7 +4444,7 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
     {
         gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_TYPES);
 
-        for (gc::CellIterUnderGC iter(zone(), gc::FINALIZE_TYPE_OBJECT);
+        for (gc::ZoneCellIterUnderGC iter(zone(), gc::FINALIZE_TYPE_OBJECT);
              !iter.done(); iter.next())
         {
             TypeObject *object = iter.get<TypeObject>();
@@ -4478,7 +4478,7 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
 void
 TypeZone::clearAllNewScriptAddendumsOnOOM()
 {
-    for (gc::CellIterUnderGC iter(zone(), gc::FINALIZE_TYPE_OBJECT);
+    for (gc::ZoneCellIterUnderGC iter(zone(), gc::FINALIZE_TYPE_OBJECT);
          !iter.done(); iter.next())
     {
         TypeObject *object = iter.get<TypeObject>();
