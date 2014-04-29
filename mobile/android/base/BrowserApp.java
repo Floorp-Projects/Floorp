@@ -48,6 +48,7 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
+import org.mozilla.gecko.tabspanel.TabsPanel;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.ToolbarProgressView;
