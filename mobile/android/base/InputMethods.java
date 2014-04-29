@@ -63,19 +63,6 @@ final public class InputMethods {
         return METHOD_HTC_TOUCH_INPUT.equals(inputMethod);
     }
 
-    @RobocopTarget
-    public static boolean shouldDisableUrlBarUpdate(Context context) {
-        String inputMethod = getCurrentInputMethod(context);
-        // HTC Touch Input does not react well to restarting during input (bug 909940)
-        return METHOD_HTC_TOUCH_INPUT.equals(inputMethod);
-    }
-
-    public static boolean shouldDelayUrlBarUpdate(Context context) {
-        String inputMethod = getCurrentInputMethod(context);
-        return METHOD_SAMSUNG.equals(inputMethod) ||
-               METHOD_SWIFTKEY.equals(inputMethod);
-    }
-
     public static boolean isGestureKeyboard(Context context) {
         // SwiftKey is a gesture keyboard, but it doesn't seem to need any special-casing
         // to do AwesomeBar auto-spacing.
