@@ -360,13 +360,13 @@ checkTextareaRequiredValidity();
 // The require attribute behavior depend of the input type.
 // First of all, checks for types that make the element barred from
 // constraint validation.
-var typeBarredFromConstraintValidation = ["hidden", "button", "reset", "submit", "image"];
+var typeBarredFromConstraintValidation = ["hidden", "button", "reset"];
 for (type of typeBarredFromConstraintValidation) {
   checkInputRequiredNotApply(type, true);
 }
 
 // Then, checks for the types which do not use the required attribute.
-var typeRequireNotApply = ['range', 'color'];
+var typeRequireNotApply = ['range', 'color', 'submit', 'image'];
 for (type of typeRequireNotApply) {
   checkInputRequiredNotApply(type, false);
 }
