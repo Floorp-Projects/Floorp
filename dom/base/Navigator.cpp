@@ -2209,7 +2209,7 @@ Navigator::HasFMRadioSupport(JSContext* /* unused */, JSObject* aGlobal)
 #ifdef MOZ_NFC
 /* static */
 bool
-Navigator::HasNfcSupport(JSContext* /* unused */, JSObject* aGlobal)
+Navigator::HasNFCSupport(JSContext* /* unused */, JSObject* aGlobal)
 {
   // Do not support NFC if NFC content helper does not exist.
   nsCOMPtr<nsISupports> contentHelper = do_GetService("@mozilla.org/nfc/content-helper;1");
@@ -2224,7 +2224,7 @@ Navigator::HasNfcSupport(JSContext* /* unused */, JSObject* aGlobal)
 
 /* static */
 bool
-Navigator::HasNfcPeerSupport(JSContext* /* unused */, JSObject* aGlobal)
+Navigator::HasNFCPeerSupport(JSContext* /* unused */, JSObject* aGlobal)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
   return win && CheckPermission(win, "nfc-write");
@@ -2232,7 +2232,7 @@ Navigator::HasNfcPeerSupport(JSContext* /* unused */, JSObject* aGlobal)
 
 /* static */
 bool
-Navigator::HasNfcManagerSupport(JSContext* /* unused */, JSObject* aGlobal)
+Navigator::HasNFCManagerSupport(JSContext* /* unused */, JSObject* aGlobal)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
   return win && CheckPermission(win, "nfc-manager");
