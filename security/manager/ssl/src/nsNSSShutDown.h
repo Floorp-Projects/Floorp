@@ -271,7 +271,7 @@ public:
     }
   }
   
-  bool isAlreadyShutDown() { return mAlreadyShutDown; }
+  bool isAlreadyShutDown() const { return mAlreadyShutDown; }
 
 protected:
   virtual void virtualDestroyNSSReference() = 0;
