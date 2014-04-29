@@ -505,7 +505,7 @@ js::gc::EndVerifyPostBarriers(JSRuntime *rt)
     trc->setTraceCallback(PostVerifierVisitEdge);
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         for (size_t kind = 0; kind < FINALIZE_LIMIT; ++kind) {
-            for (CellIterUnderGC cells(zone, AllocKind(kind)); !cells.done(); cells.next()) {
+            for (ZoneCellIterUnderGC cells(zone, AllocKind(kind)); !cells.done(); cells.next()) {
                 Cell *src = cells.getCell();
                 JS_TraceChildren(trc, src, MapAllocToTraceKind(AllocKind(kind)));
             }

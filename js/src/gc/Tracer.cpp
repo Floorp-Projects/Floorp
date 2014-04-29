@@ -508,7 +508,7 @@ GCMarker::markDelayedChildren(ArenaHeader *aheader)
         bool always = aheader->allocatedDuringIncremental;
         aheader->markOverflow = 0;
 
-        for (CellIterUnderGC i(aheader); !i.done(); i.next()) {
+        for (ArenaCellIterUnderGC i(aheader); !i.done(); i.next()) {
             Cell *t = i.getCell();
             if (always || t->isMarked()) {
                 t->markIfUnmarked();
