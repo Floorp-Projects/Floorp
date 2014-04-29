@@ -41,9 +41,9 @@ using namespace mozilla::services;
     }                                                                   \
     if (!g##NAME) {                                                     \
       nsCOMPtr<TYPE> os = do_GetService(CONTRACT_ID);                   \
-      g##NAME = os.forget().take();                            \
+      os.swap(g##NAME);                                                 \
     }                                                                   \
-    nsRefPtr<TYPE> ret = g##NAME;                                       \
+    nsCOMPtr<TYPE> ret = g##NAME;                                       \
     return ret.forget();                                                \
   }                                                                     \
   NS_EXPORT_(already_AddRefed<TYPE>)                                    \
