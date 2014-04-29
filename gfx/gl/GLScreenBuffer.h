@@ -46,11 +46,13 @@ protected:
     typedef struct gfx::SurfaceCaps SurfaceCaps;
 
 public:
-    // Infallible, may return null if unneeded.
-    static DrawBuffer* Create(GLContext* const gl,
-                              const SurfaceCaps& caps,
-                              const GLFormats& formats,
-                              const gfx::IntSize& size);
+    // Fallible!
+    // But it may return true with *out_buffer==nullptr if unneeded.
+    static bool Create(GLContext* const gl,
+                       const SurfaceCaps& caps,
+                       const GLFormats& formats,
+                       const gfx::IntSize& size,
+                       DrawBuffer** out_buffer);
 
 protected:
     GLContext* const mGL;
@@ -280,12 +282,11 @@ public:
     bool Resize(const gfx::IntSize& size);
 
     void Readback(SharedSurface_GL* src, gfx::DataSourceSurface* dest);
-    void DeprecatedReadback(SharedSurface_GL* src, gfxImageSurface* dest);
 
 protected:
-    void Attach(SharedSurface* surface, const gfx::IntSize& size);
+    bool Attach(SharedSurface* surface, const gfx::IntSize& size);
 
-    DrawBuffer* CreateDraw(const gfx::IntSize& size);
+    bool CreateDraw(const gfx::IntSize& size, DrawBuffer** out_buffer);
     ReadBuffer* CreateRead(SharedSurface_GL* surf);
 
 public:

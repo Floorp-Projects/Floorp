@@ -40,7 +40,8 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
             iframe.src = "%s";
             document.body.appendChild(iframe);
             """ % self.marionette.absolute_url("test.html"))
-        self.marionette.switch_to_frame("remote_iframe")
+        remote_iframe = self.marionette.find_element("id", "remote_iframe")
+        self.marionette.switch_to_frame(remote_iframe)
         main_process = self.marionette.execute_script("""
             return SpecialPowers.isMainProcess();
             """)
@@ -60,7 +61,8 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
             iframe.src = "%s";
             document.body.appendChild(iframe);
             """ % self.marionette.absolute_url("test.html"))
-        self.marionette.switch_to_frame("remote_iframe")
+        self.marionette.switch_to_frame(self.marionette.find_element("id",
+                                                                     "remote_iframe"))
         main_process = self.marionette.execute_script("""
             return SpecialPowers.isMainProcess();
             """)
@@ -70,7 +72,8 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
             return SpecialPowers.isMainProcess();
             """)
         self.assertTrue(main_process)
-        self.marionette.switch_to_frame("remote_iframe")
+        self.marionette.switch_to_frame(self.marionette.find_element("id",
+                                                                     "remote_iframe"))
         main_process = self.marionette.execute_script("""
             return SpecialPowers.isMainProcess();
             """)
