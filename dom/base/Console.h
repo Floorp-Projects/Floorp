@@ -87,12 +87,10 @@ public:
   TimeEnd(JSContext* aCx, const JS::Handle<JS::Value> aTime);
 
   void
-  Profile(JSContext* aCx, const Sequence<JS::Value>& aData,
-          ErrorResult& aRv);
+  Profile(JSContext* aCx, const Sequence<JS::Value>& aData);
 
   void
-  ProfileEnd(JSContext* aCx, const Sequence<JS::Value>& aData,
-             ErrorResult& aRv);
+  ProfileEnd(JSContext* aCx, const Sequence<JS::Value>& aData);
 
   void
   Assert(JSContext* aCx, bool aCondition, const Sequence<JS::Value>& aData);
@@ -181,8 +179,7 @@ private:
 
   void
   ProfileMethod(JSContext* aCx, const nsAString& aAction,
-                const Sequence<JS::Value>& aData,
-                ErrorResult& aRv);
+                const Sequence<JS::Value>& aData);
 
   JS::Value
   IncreaseCounter(JSContext* aCx, const ConsoleStackEntry& aFrame,
