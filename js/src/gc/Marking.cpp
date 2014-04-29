@@ -1288,7 +1288,7 @@ template<typename T>
 static void
 PushArenaTyped(GCMarker *gcmarker, ArenaHeader *aheader)
 {
-    for (CellIterUnderGC i(aheader); !i.done(); i.next())
+    for (ArenaCellIterUnderGC i(aheader); !i.done(); i.next())
         PushMarkStack(gcmarker, i.get<T>());
 }
 
