@@ -412,7 +412,7 @@ add_test(function(test_getAccount_existing_verified_session) {
   FxAccountsManager.getAccount().then(
     result => {
       do_check_false(FxAccountsManager._fxAccounts._getSignedInUserCalled);
-      do_check_eq(result.accountId, FxAccountsManager._user.accountId);
+      do_check_eq(result.email, FxAccountsManager._user.email);
       do_check_eq(result.verified, FxAccountsManager._user.verified);
       run_next_test();
     },
@@ -430,7 +430,7 @@ add_test(function(test_getAccount_existing_unverified_session_unverified_user) {
     result => {
       do_check_true(FakeFxAccountsClient._recoveryEmailStatusCalled);
       do_check_false(result.verified);
-      do_check_eq(result.accountId, FxAccountsManager._user.accountId);
+      do_check_eq(result.email, FxAccountsManager._user.email);
       FakeFxAccountsClient._reset();
       run_next_test();
     },
@@ -451,7 +451,7 @@ add_test(function(test_getAccount_existing_unverified_session_verified_user) {
     FxAccountsManager.getAccount().then(
       result => {
         do_check_true(result.verified);
-        do_check_eq(result.accountId, FxAccountsManager._user.accountId);
+        do_check_eq(result.email, FxAccountsManager._user.email);
         FakeFxAccountsClient._reset();
         run_next_test();
     });
@@ -474,34 +474,34 @@ add_test(function(test_signOut) {
   );
 });
 
-add_test(function(test_signUp_no_accountId) {
-  do_print("= signUp, no accountId=");
+add_test(function(test_signUp_no_email) {
+  do_print("= signUp, no email=");
   FxAccountsManager.signUp().then(
     () => {
       do_throw("Unexpected success");
     },
     error => {
-      do_check_eq(error.error, ERROR_INVALID_ACCOUNTID);
+      do_check_eq(error.error, ERROR_INVALID_EMAIL);
       run_next_test();
     }
   );
 });
 
-add_test(function(test_signIn_no_accountId) {
-  do_print("= signIn, no accountId=");
+add_test(function(test_signIn_no_email) {
+  do_print("= signIn, no email=");
   FxAccountsManager.signIn().then(
     () => {
       do_throw("Unexpected success");
     },
     error => {
-      do_check_eq(error.error, ERROR_INVALID_ACCOUNTID);
+      do_check_eq(error.error, ERROR_INVALID_EMAIL);
       run_next_test();
     }
   );
 });
 
 add_test(function(test_signUp_no_password) {
-  do_print("= signUp, no accountId=");
+  do_print("= signUp, no email=");
   FxAccountsManager.signUp("user@domain.org").then(
     () => {
       do_throw("Unexpected success");
@@ -513,8 +513,8 @@ add_test(function(test_signUp_no_password) {
   );
 });
 
-add_test(function(test_signIn_no_accountId) {
-  do_print("= signIn, no accountId=");
+add_test(function(test_signIn_no_email) {
+  do_print("= signIn, no email=");
   FxAccountsManager.signIn("user@domain.org").then(
     () => {
       do_throw("Unexpected success");
@@ -537,7 +537,7 @@ add_test(function(test_signUp) {
       do_check_eq(FxAccountsManager._fxAccounts._signedInUser.email, "user@domain.org");
       do_check_eq(FakeFxAccountsClient._password, "password");
       do_check_true(result.accountCreated);
-      do_check_eq(result.user.accountId, "user@domain.org");
+      do_check_eq(result.user.email, "user@domain.org");
       do_check_false(result.user.verified);
       FakeFxAccountsClient._reset();
       FxAccountsManager._fxAccounts._reset();
@@ -558,7 +558,7 @@ add_test(function(test_signUp_already_signed_user) {
     error => {
       do_check_false(FakeFxAccountsClient._signInCalled);
       do_check_eq(error.error, ERROR_ALREADY_SIGNED_IN_USER);
-      do_check_eq(error.details.user.accountId, "user@domain.org");
+      do_check_eq(error.details.user.email, "user@domain.org");
       do_check_false(error.details.user.verified);
       run_next_test();
     }
@@ -573,7 +573,7 @@ add_test(function(test_signIn_already_signed_user) {
     },
     error => {
       do_check_eq(error.error, ERROR_ALREADY_SIGNED_IN_USER);
-      do_check_eq(error.details.user.accountId, "user@domain.org");
+      do_check_eq(error.details.user.email, "user@domain.org");
       do_check_false(error.details.user.verified);
       run_next_test();
     }
@@ -633,14 +633,14 @@ add_test(function(test_queryAccount_exists) {
   );
 });
 
-add_test(function(test_queryAccount_no_accountId) {
-  do_print("= queryAccount, no accountId =");
+add_test(function(test_queryAccount_no_email) {
+  do_print("= queryAccount, no email =");
   FxAccountsManager.queryAccount().then(
     () => {
       do_throw("Unexpected success");
     },
     error => {
-      do_check_eq(error.error, ERROR_INVALID_ACCOUNTID);
+      do_check_eq(error.error, ERROR_INVALID_EMAIL);
       run_next_test();
     }
   );
