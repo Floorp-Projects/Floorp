@@ -47,7 +47,6 @@ class PJavaScriptParent;
 
 namespace layers {
 class PCompositorParent;
-class PSharedBufferManagerParent;
 } // namespace layers
 
 namespace dom {
@@ -328,9 +327,6 @@ private:
     AllocPImageBridgeParent(mozilla::ipc::Transport* aTransport,
                             base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
-    PSharedBufferManagerParent*
-    AllocPSharedBufferManagerParent(mozilla::ipc::Transport* aTranport,
-                                     base::ProcessId aOtherProcess) MOZ_OVERRIDE;
     PBackgroundParent*
     AllocPBackgroundParent(Transport* aTransport, ProcessId aOtherProcess)
                            MOZ_OVERRIDE;

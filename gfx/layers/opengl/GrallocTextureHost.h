@@ -125,8 +125,14 @@ public:
 
   virtual const char* Name() MOZ_OVERRIDE { return "GrallocTextureHostOGL"; }
 
+  // Forget buffer actor. Used only for hacky fix for bug 966446. 
+  virtual void ForgetBufferActor()
+  {
+    mGrallocActor = nullptr;
+  }
+
 private:
-  NewSurfaceDescriptorGralloc mGrallocHandle;
+  GrallocBufferActor* mGrallocActor;
   RefPtr<GrallocTextureSourceOGL> mTextureSource;
   gfx::IntSize mSize; // See comment in textureClientOGL.h
 };
