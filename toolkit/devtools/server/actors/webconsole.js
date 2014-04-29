@@ -6,16 +6,12 @@
 
 "use strict";
 
-let {Cc, Ci, Cu} = require("chrome");
+const { Cc, Ci, Cu } = require("chrome");
+const Debugger = require("Debugger");
+const { DebuggerServer, ActorPool } = require("devtools/server/main");
+const { EnvironmentActor, LongStringActor, ObjectActor, ThreadActor } = require("devtools/server/actors/script");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-let { DebuggerServer, ActorPool } = require("devtools/server/main");
-// Symbols from script.js
-let { ThreadActor, EnvironmentActor, ObjectActor, LongStringActor } = DebuggerServer;
-
-Cu.import("resource://gre/modules/jsdebugger.jsm");
-addDebuggerToGlobal(this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
