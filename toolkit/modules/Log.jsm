@@ -259,9 +259,15 @@ Logger.prototype = {
       throw "The params argument is required to be an object.";
     }
 
-    let level = params._level || this.level;
-    if ((typeof level == "string") && level in Log.Level.Numbers) {
-      level = Log.Level.Numbers[level];
+    let level = params._level;
+    if (level) {
+      let ulevel = level.toUpperCase();
+      if (ulevel in Log.Level.Numbers) {
+        level = Log.Level.Numbers[ulevel];
+      }
+    }
+    else {
+      level = this.level;
     }
 
     params.action = action;
@@ -438,7 +444,7 @@ BasicFormatter.prototype = {
     return message.time + "\t" +
       message.loggerName + "\t" +
       message.levelDesc + "\t" +
-      message.message + "\n";
+      message.message;
   }
 };
 
@@ -451,7 +457,7 @@ MessageOnlyFormatter.prototype = Object.freeze({
   __proto__: Formatter.prototype,
 
   format: function (message) {
-    return message.message + "\n";
+    return message.message;
   },
 });
 
@@ -504,10 +510,10 @@ Appender.prototype = {
     }
   },
   toString: function App_toString() {
-    return this._name + " [level=" + this._level +
+    return this._name + " [level=" + this.level +
       ", formatter=" + this._formatter + "]";
   },
-  doAppend: function App_doAppend(message) {}
+  doAppend: function App_doAppend(formatted) {}
 };
 
 /*
@@ -522,8 +528,8 @@ function DumpAppender(formatter) {
 DumpAppender.prototype = {
   __proto__: Appender.prototype,
 
-  doAppend: function DApp_doAppend(message) {
-    dump(message);
+  doAppend: function DApp_doAppend(formatted) {
+    dump(formatted + "\n");
   }
 };
 
@@ -539,13 +545,21 @@ function ConsoleAppender(formatter) {
 ConsoleAppender.prototype = {
   __proto__: Appender.prototype,
 
-  doAppend: function CApp_doAppend(message) {
-    if (message.level > Log.Level.Warn) {
-      Cu.reportError(message);
-      return;
+  // XXX this should be replaced with calls to the Browser Console
+  append: function App_append(message) {
+    if (message) {
+      let m = this._formatter.format(message);
+      if (message.level > Log.Level.Warn) {
+        Cu.reportError(m);
+        return;
+      }
+      this.doAppend(m);
     }
+  },
+
+  doAppend: function CApp_doAppend(formatted) {
     Cc["@mozilla.org/consoleservice;1"].
-      getService(Ci.nsIConsoleService).logStringMessage(message);
+      getService(Ci.nsIConsoleService).logStringMessage(formatted);
   }
 };
 
@@ -614,19 +628,19 @@ StorageStreamAppender.prototype = {
     this._ss = null;
   },
 
-  doAppend: function (message) {
-    if (!message) {
+  doAppend: function (formatted) {
+    if (!formatted) {
       return;
     }
     try {
-      this.outputStream.writeString(message);
+      this.outputStream.writeString(formatted + "\n");
     } catch(ex) {
       if (ex.result == Cr.NS_BASE_STREAM_CLOSED) {
         // The underlying output stream is closed, so let's open a new one
         // and try again.
         this._outputStream = null;
       } try {
-          this.outputStream.writeString(message);
+          this.outputStream.writeString(formatted + "\n");
       } catch (ex) {
         // Ah well, we tried, but something seems to be hosed permanently.
       }
@@ -682,8 +696,8 @@ FileAppender.prototype = {
     });
   },
 
-  doAppend: function (message) {
-    let array = this._encoder.encode(message);
+  doAppend: function (formatted) {
+    let array = this._encoder.encode(formatted + "\n");
     if (this._file) {
       this._lastWritePromise = this._file.write(array);
     } else {
@@ -709,7 +723,7 @@ FileAppender.prototype = {
  * Bounded File appender
  *
  * Writes output to file using OS.File. After the total message size
- * (as defined by message.length) exceeds maxSize, existing messages
+ * (as defined by formatted.length) exceeds maxSize, existing messages
  * will be discarded, and subsequent writes will be appended to a new log file.
  */
 function BoundedFileAppender(path, formatter, maxSize=2*ONE_MEGABYTE) {
@@ -723,17 +737,17 @@ function BoundedFileAppender(path, formatter, maxSize=2*ONE_MEGABYTE) {
 BoundedFileAppender.prototype = {
   __proto__: FileAppender.prototype,
 
-  doAppend: function (message) {
+  doAppend: function (formatted) {
     if (!this._removeFilePromise) {
       if (this._size < this._maxSize) {
-        this._size += message.length;
-        return FileAppender.prototype.doAppend.call(this, message);
+        this._size += formatted.length;
+        return FileAppender.prototype.doAppend.call(this, formatted);
       }
       this._removeFilePromise = this.reset();
     }
     this._removeFilePromise.then(_ => {
       this._removeFilePromise = null;
-      this.doAppend(message);
+      this.doAppend(formatted);
     });
   },
 

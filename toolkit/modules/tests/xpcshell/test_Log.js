@@ -12,7 +12,7 @@ let testFormatter = {
   format: function format(message) {
     return message.loggerName + "\t" +
       message.levelDesc + "\t" +
-      message.message + "\n";
+      message.message;
   }
 };
 
@@ -85,8 +85,8 @@ add_test(function test_LoggerWithMessagePrefix() {
 
   Assert.equal(appender.messages.length, 2, "2 messages were logged.");
   Assert.deepEqual(appender.messages, [
-    "no prefix\n",
-    "prefix: with prefix\n",
+    "no prefix",
+    "prefix: with prefix",
   ], "Prefix logger works.");
 
   run_next_test();
