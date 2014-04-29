@@ -809,45 +809,45 @@ var SelectionHandler = {
   },
 
   _moveCaret: function sh_moveCaret(aX, aY) {
-      // Get rect of text inside element
-      let range = document.createRange();
-      range.selectNodeContents(this._targetElement.QueryInterface(Ci.nsIDOMNSEditableElement).editor.rootElement);
-      let textBounds = range.getBoundingClientRect();
+    // Get rect of text inside element
+    let range = document.createRange();
+    range.selectNodeContents(this._targetElement.QueryInterface(Ci.nsIDOMNSEditableElement).editor.rootElement);
+    let textBounds = range.getBoundingClientRect();
 
-      // Get rect of editor
-      let editorBounds = this._domWinUtils.sendQueryContentEvent(this._domWinUtils.QUERY_EDITOR_RECT, 0, 0, 0, 0,
-                                                                 this._domWinUtils.QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
-      // the return value from sendQueryContentEvent is in LayoutDevice pixels and we want CSS pixels, so
-      // divide by the pixel ratio
-      let editorRect = new Rect(editorBounds.left / window.devicePixelRatio,
-                                editorBounds.top / window.devicePixelRatio,
-                                editorBounds.width / window.devicePixelRatio,
-                                editorBounds.height / window.devicePixelRatio);
+    // Get rect of editor
+    let editorBounds = this._domWinUtils.sendQueryContentEvent(this._domWinUtils.QUERY_EDITOR_RECT, 0, 0, 0, 0,
+                                                               this._domWinUtils.QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
+    // the return value from sendQueryContentEvent is in LayoutDevice pixels and we want CSS pixels, so
+    // divide by the pixel ratio
+    let editorRect = new Rect(editorBounds.left / window.devicePixelRatio,
+                              editorBounds.top / window.devicePixelRatio,
+                              editorBounds.width / window.devicePixelRatio,
+                              editorBounds.height / window.devicePixelRatio);
 
-      // Use intersection of the text rect and the editor rect
-      let rect = new Rect(textBounds.left, textBounds.top, textBounds.width, textBounds.height);
-      rect.restrictTo(editorRect);
+    // Use intersection of the text rect and the editor rect
+    let rect = new Rect(textBounds.left, textBounds.top, textBounds.width, textBounds.height);
+    rect.restrictTo(editorRect);
 
-      // Clamp vertically and scroll if handle is at bounds. The top and bottom
-      // must be restricted by an additional pixel since clicking on the top
-      // edge of an input field moves the cursor to the beginning of that
-      // field's text (and clicking the bottom moves the cursor to the end).
-      if (aY < rect.y + 1) {
-        aY = rect.y + 1;
-        this._getSelectionController().scrollLine(false);
-      } else if (aY > rect.y + rect.height - 1) {
-        aY = rect.y + rect.height - 1;
-        this._getSelectionController().scrollLine(true);
-      }
+    // Clamp vertically and scroll if handle is at bounds. The top and bottom
+    // must be restricted by an additional pixel since clicking on the top
+    // edge of an input field moves the cursor to the beginning of that
+    // field's text (and clicking the bottom moves the cursor to the end).
+    if (aY < rect.y + 1) {
+      aY = rect.y + 1;
+      this._getSelectionController().scrollLine(false);
+    } else if (aY > rect.y + rect.height - 1) {
+      aY = rect.y + rect.height - 1;
+      this._getSelectionController().scrollLine(true);
+    }
 
-      // Clamp horizontally and scroll if handle is at bounds
-      if (aX < rect.x) {
-        aX = rect.x;
-        this._getSelectionController().scrollCharacter(false);
-      } else if (aX > rect.x + rect.width) {
-        aX = rect.x + rect.width;
-        this._getSelectionController().scrollCharacter(true);
-      }
+    // Clamp horizontally and scroll if handle is at bounds
+    if (aX < rect.x) {
+      aX = rect.x;
+      this._getSelectionController().scrollCharacter(false);
+    } else if (aX > rect.x + rect.width) {
+      aX = rect.x + rect.width;
+      this._getSelectionController().scrollCharacter(true);
+    }
 
     this._domWinUtils.sendMouseEventToWindow("mousedown", aX, aY, 0, 0, 0, true);
     this._domWinUtils.sendMouseEventToWindow("mouseup", aX, aY, 0, 0, 0, true);
