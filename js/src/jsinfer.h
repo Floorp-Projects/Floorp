@@ -584,6 +584,12 @@ class TypeSet
      */
     bool isSubset(TypeSet *other);
 
+    /*
+     * Get whether the objects in this TypeSet are a subset of the objects
+     * in other.
+     */
+    bool objectsAreSubset(TypeSet *other);
+
     /* Forward all types in this set to the specified constraint. */
     bool addTypesToConstraint(JSContext *cx, TypeConstraint *constraint);
 

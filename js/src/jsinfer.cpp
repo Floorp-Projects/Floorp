@@ -352,6 +352,26 @@ TypeSet::mightBeMIRType(jit::MIRType type)
 }
 
 bool
+TypeSet::objectsAreSubset(TypeSet *other)
+{
+    if (other->unknownObject())
+        return true;
+
+    if (unknownObject())
+        return false;
+
+    for (unsigned i = 0; i < getObjectCount(); i++) {
+        TypeObjectKey *obj = getObject(i);
+        if (!obj)
+            continue;
+        if (!other->hasType(Type::ObjectType(obj)))
+            return false;
+    }
+
+    return true;
+}
+
+bool
 TypeSet::isSubset(TypeSet *other)
 {
     if ((baseFlags() & other->baseFlags()) != baseFlags())
