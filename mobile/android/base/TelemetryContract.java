@@ -29,13 +29,19 @@ public interface TelemetryContract {
 
         // Set default panel.
         public static final String PANEL_SET_DEFAULT = "setdefault.1";
+
+        // Sanitizing private data.
+        public static final String SANITIZE = "sanitize.1";
     }
 
     /**
      * Holds event methods. Intended for use in
      * Telemetry.sendUIEvent() as the "method" parameter.
      */
-    public interface Method {}
+    public interface Method {
+        // Action triggered from a dialog.
+        public static final String DIALOG = "dialog";
+    }
 
     /**
      * Holds session names. Intended for use with
