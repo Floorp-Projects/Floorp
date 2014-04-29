@@ -33,7 +33,7 @@ import android.widget.RelativeLayout;
 public class TabsPanel extends LinearLayout
                        implements LightweightTheme.OnChangeListener,
                                   IconTabWidget.OnTabChangedListener {
-    private static final String LOGTAG = "GeckoTabsPanel";
+    private static final String LOGTAG = "Gecko" + TabsPanel.class.getSimpleName();
 
     public static enum Panel {
         NORMAL_TABS,
@@ -78,8 +78,8 @@ public class TabsPanel extends LinearLayout
         mActivity = (GeckoApp) context;
         mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
-        setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
-                                                      LinearLayout.LayoutParams.FILL_PARENT));
+        setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                                                      LinearLayout.LayoutParams.MATCH_PARENT));
         setOrientation(LinearLayout.VERTICAL);
 
         mCurrentPanel = Panel.NORMAL_TABS;
@@ -127,10 +127,11 @@ public class TabsPanel extends LinearLayout
     }
 
     public void addTab() {
-        if (mCurrentPanel == Panel.NORMAL_TABS)
+        if (mCurrentPanel == Panel.NORMAL_TABS) {
            mActivity.addTab();
-        else
+        } else {
            mActivity.addPrivateTab();
+        }
 
         mActivity.autoHideTabs();
     }
@@ -180,6 +181,7 @@ public class TabsPanel extends LinearLayout
     }
 
     @Override
+    @SuppressWarnings("deprecation") // setBackgroundDrawable deprecated by API level 16
     public void onLightweightThemeChanged() {
         final int background = getResources().getColor(R.color.background_tabs);
         final LightweightThemeDrawable drawable = mTheme.getColorDrawable(this, background, true);
@@ -241,7 +243,7 @@ public class TabsPanel extends LinearLayout
             super(context, attrs);
             mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
-            setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
+            setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                                                           (int) context.getResources().getDimension(R.dimen.browser_toolbar_height)));
 
             setOrientation(LinearLayout.HORIZONTAL);
@@ -260,6 +262,7 @@ public class TabsPanel extends LinearLayout
         }
 
         @Override
+        @SuppressWarnings("deprecation") // setBackgroundDrawable deprecated by API level 16
         public void onLightweightThemeChanged() {
             final int background = getResources().getColor(R.color.background_tabs);
             final LightweightThemeDrawable drawable = mTheme.getColorDrawable(this, background);
@@ -286,7 +289,7 @@ public class TabsPanel extends LinearLayout
         show(panel, true);
     }
 
-    public void show(Panel panel, boolean shouldResize) {
+    public void show(Panel panelToShow, boolean shouldResize) {
         if (!isShown())
             setVisibility(View.VISIBLE);
 
@@ -297,19 +300,25 @@ public class TabsPanel extends LinearLayout
 
         final boolean showAnimation = !mVisible;
         mVisible = true;
-        mCurrentPanel = panel;
+        mCurrentPanel = panelToShow;
 
-        int index = panel.ordinal();
+        int index = panelToShow.ordinal();
         mTabWidget.setCurrentTab(index);
 
-        if (index == 0) {
-            mPanel = mPanelNormal;
-        } else if (index == 1) {
-            mPanel = mPanelPrivate;
-        } else {
-            mPanel = mPanelRemote;
-        }
+        switch (panelToShow) {
+            case NORMAL_TABS:
+                mPanel = mPanelNormal;
+                break;
+            case PRIVATE_TABS:
+                mPanel = mPanelPrivate;
+                break;
+            case REMOTE_TABS:
+                mPanel = mPanelRemote;
+                break;
 
+            default:
+                throw new IllegalArgumentException("Unknown panel type " + panelToShow);
+        }
         mPanel.show();
 
         if (mCurrentPanel == Panel.REMOTE_TABS) {

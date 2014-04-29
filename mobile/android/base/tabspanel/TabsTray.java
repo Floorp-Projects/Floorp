@@ -39,7 +39,7 @@ import android.widget.TextView;
 
 class TabsTray extends TwoWayView
     implements TabsPanel.PanelView {
-    private static final String LOGTAG = "GeckoTabsTray";
+    private static final String LOGTAG = "Gecko" + TabsTray.class.getSimpleName();
 
     private Context mContext;
     private TabsPanel mTabsPanel;
@@ -54,7 +54,6 @@ class TabsTray extends TwoWayView
     // Time to animate non-flinged tabs of screen, in milliseconds
     private static final int ANIMATION_DURATION = 250;
 
-    private static final String ABOUT_HOME = "about:home";
     private int mOriginalSize = 0;
 
     public TabsTray(Context context, AttributeSet attrs) {
@@ -430,7 +429,6 @@ class TabsTray extends TwoWayView
         private int mListHeight = 1;
 
         private View mSwipeView;
-        private int mSwipeViewPosition;
         private Runnable mPendingCheckForTap;
 
         private float mSwipeStartX;
@@ -440,7 +438,6 @@ class TabsTray extends TwoWayView
 
         public TabSwipeGestureListener() {
             mSwipeView = null;
-            mSwipeViewPosition = TwoWayView.INVALID_POSITION;
             mSwiping = false;
             mEnabled = true;
 
@@ -492,7 +489,6 @@ class TabsTray extends TwoWayView
                     if (mSwipeView != null) {
                         mSwipeStartX = e.getRawX();
                         mSwipeStartY = e.getRawY();
-                        mSwipeViewPosition = TabsTray.this.getPositionForView(mSwipeView);
 
                         mVelocityTracker = VelocityTracker.obtain();
                         mVelocityTracker.addMovement(e);
@@ -513,6 +509,9 @@ class TabsTray extends TwoWayView
                         TabRow tab = (TabRow) mSwipeView.getTag();
                         Tabs.getInstance().selectTab(tab.id);
                         autoHidePanel();
+
+                        mVelocityTracker.recycle();
+                        mVelocityTracker = null;
                         break;
                     }
 
@@ -559,9 +558,9 @@ class TabsTray extends TwoWayView
                     else
                         animateCancel(mSwipeView);
 
+                    mVelocityTracker.recycle();
                     mVelocityTracker = null;
                     mSwipeView = null;
-                    mSwipeViewPosition = TwoWayView.INVALID_POSITION;
 
                     mSwipeStartX = 0;
                     mSwipeStartY = 0;
@@ -604,6 +603,7 @@ class TabsTray extends TwoWayView
                         cancelEvent.setAction(MotionEvent.ACTION_CANCEL |
                                 (e.getActionIndex() << MotionEvent.ACTION_POINTER_INDEX_SHIFT));
                         TabsTray.this.onTouchEvent(cancelEvent);
+                        cancelEvent.recycle();
                     }
 
                     if (mSwiping) {
