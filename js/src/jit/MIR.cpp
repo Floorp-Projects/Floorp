@@ -3089,7 +3089,7 @@ jit::DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinit
     return elementType;
 }
 
-static BarrierKind
+static bool
 PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
                              types::TypeObjectKey *object, PropertyName *name,
                              types::TypeSet *observed)
@@ -3105,20 +3105,13 @@ PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
     if (object->unknownProperties() || observed->empty() ||
         object->clasp()->isProxy())
     {
-        return BarrierKind::TypeSet;
+        return true;
     }
 
     jsid id = name ? NameToId(name) : JSID_VOID;
     types::HeapTypeSetKey property = object->property(id);
-    if (property.maybeTypes()) {
-        if (!TypeSetIncludes(observed, MIRType_Value, property.maybeTypes())) {
-            // If all possible objects have been observed, we don't have to
-            // guard on the specific object types.
-            if (property.maybeTypes()->objectsAreSubset(observed))
-                return BarrierKind::TypeTagOnly;
-            return BarrierKind::TypeSet;
-        }
-    }
+    if (property.maybeTypes() && !TypeSetIncludes(observed, MIRType_Value, property.maybeTypes()))
+        return true;
 
     // Type information for global objects is not required to reflect the
     // initial 'undefined' value for properties, in particular global
@@ -3128,15 +3121,15 @@ PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
         if (name && types::CanHaveEmptyPropertyTypesForOwnProperty(obj) &&
             (!property.maybeTypes() || property.maybeTypes()->empty()))
         {
-            return BarrierKind::TypeSet;
+            return true;
         }
     }
 
     property.freeze(constraints);
-    return BarrierKind::NoBarrier;
+    return false;
 }
 
-BarrierKind
+bool
 jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   types::TypeObjectKey *object, PropertyName *name,
@@ -3184,55 +3177,45 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
     return PropertyReadNeedsTypeBarrier(constraints, object, name, observed);
 }
 
-BarrierKind
+bool
 jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   MDefinition *obj, PropertyName *name,
                                   types::TemporaryTypeSet *observed)
 {
     if (observed->unknown())
-        return BarrierKind::NoBarrier;
+        return false;
 
     types::TypeSet *types = obj->resultTypeSet();
     if (!types || types->unknownObject())
-        return BarrierKind::TypeSet;
-
-    BarrierKind res = BarrierKind::NoBarrier;
+        return true;
 
     bool updateObserved = types->getObjectCount() == 1;
     for (size_t i = 0; i < types->getObjectCount(); i++) {
         types::TypeObjectKey *object = types->getObject(i);
         if (object) {
-            BarrierKind kind = PropertyReadNeedsTypeBarrier(propertycx, constraints, object, name,
-                                                            observed, updateObserved);
-            if (kind == BarrierKind::TypeSet)
-                return BarrierKind::TypeSet;
-
-            if (kind == BarrierKind::TypeTagOnly) {
-                MOZ_ASSERT(res == BarrierKind::NoBarrier || res == BarrierKind::TypeTagOnly);
-                res = BarrierKind::TypeTagOnly;
-            } else {
-                MOZ_ASSERT(kind == BarrierKind::NoBarrier);
+            if (PropertyReadNeedsTypeBarrier(propertycx, constraints, object, name,
+                                             observed, updateObserved))
+            {
+                return true;
             }
         }
     }
 
-    return res;
+    return false;
 }
 
-BarrierKind
+bool
 jit::PropertyReadOnPrototypeNeedsTypeBarrier(types::CompilerConstraintList *constraints,
                                              MDefinition *obj, PropertyName *name,
                                              types::TemporaryTypeSet *observed)
 {
     if (observed->unknown())
-        return BarrierKind::NoBarrier;
+        return false;
 
     types::TypeSet *types = obj->resultTypeSet();
     if (!types || types->unknownObject())
-        return BarrierKind::TypeSet;
-
-    BarrierKind res = BarrierKind::NoBarrier;
+        return true;
 
     for (size_t i = 0; i < types->getObjectCount(); i++) {
         types::TypeObjectKey *object = types->getObject(i);
@@ -3240,24 +3223,16 @@ jit::PropertyReadOnPrototypeNeedsTypeBarrier(types::CompilerConstraintList *cons
             continue;
         while (true) {
             if (!object->hasTenuredProto())
-                return BarrierKind::TypeSet;
+                return true;
             if (!object->proto().isObject())
                 break;
             object = types::TypeObjectKey::get(object->proto().toObject());
-            BarrierKind kind = PropertyReadNeedsTypeBarrier(constraints, object, name, observed);
-            if (kind == BarrierKind::TypeSet)
-                return BarrierKind::TypeSet;
-
-            if (kind == BarrierKind::TypeTagOnly) {
-                MOZ_ASSERT(res == BarrierKind::NoBarrier || res == BarrierKind::TypeTagOnly);
-                res = BarrierKind::TypeTagOnly;
-            } else {
-                MOZ_ASSERT(kind == BarrierKind::NoBarrier);
-            }
+            if (PropertyReadNeedsTypeBarrier(constraints, object, name, observed))
+                return true;
         }
     }
 
-    return res;
+    return false;
 }
 
 bool
@@ -3407,13 +3382,7 @@ TryAddTypeBarrierForWrite(TempAllocator &alloc, types::CompilerConstraintList *c
     if (!types)
         return false;
 
-    // If all possible objects can be stored without a barrier, we don't have to
-    // guard on the specific object types.
-    BarrierKind kind = BarrierKind::TypeSet;
-    if ((*pvalue)->resultTypeSet() && (*pvalue)->resultTypeSet()->objectsAreSubset(types))
-        kind = BarrierKind::TypeTagOnly;
-
-    MInstruction *ins = MMonitorTypes::New(alloc, *pvalue, types, kind);
+    MInstruction *ins = MMonitorTypes::New(alloc, *pvalue, types);
     current->add(ins);
     return true;
 }

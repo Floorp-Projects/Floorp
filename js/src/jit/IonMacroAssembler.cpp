@@ -69,10 +69,9 @@ class TypeWrapper {
 } /* anonymous namespace */
 
 template <typename Source, typename TypeSet> void
-MacroAssembler::guardTypeSet(const Source &address, const TypeSet *types, BarrierKind kind,
+MacroAssembler::guardTypeSet(const Source &address, const TypeSet *types,
                              Register scratch, Label *miss)
 {
-    JS_ASSERT(kind == BarrierKind::TypeTagOnly || kind == BarrierKind::TypeSet);
     JS_ASSERT(!types->unknown());
 
     Label matched;
@@ -127,10 +126,8 @@ MacroAssembler::guardTypeSet(const Source &address, const TypeSet *types, Barrie
     // Test specific objects.
     JS_ASSERT(scratch != InvalidReg);
     branchTestObject(NotEqual, tag, miss);
-    if (kind != BarrierKind::TypeTagOnly) {
-        Register obj = extractObject(address, scratch);
-        guardObjectType(obj, types, scratch, miss);
-    }
+    Register obj = extractObject(address, scratch);
+    guardObjectType(obj, types, scratch, miss);
 
     bind(&matched);
 }
@@ -206,30 +203,30 @@ MacroAssembler::guardType(const Source &address, types::Type type,
                           Register scratch, Label *miss)
 {
     TypeWrapper wrapper(type);
-    guardTypeSet(address, &wrapper, BarrierKind::TypeSet, scratch, miss);
+    guardTypeSet(address, &wrapper, scratch, miss);
 }
 
 template void MacroAssembler::guardTypeSet(const Address &address, const types::TemporaryTypeSet *types,
-                                           BarrierKind kind, Register scratch, Label *miss);
+                                           Register scratch, Label *miss);
 template void MacroAssembler::guardTypeSet(const ValueOperand &value, const types::TemporaryTypeSet *types,
-                                           BarrierKind kind, Register scratch, Label *miss);
+                                           Register scratch, Label *miss);
 
 template void MacroAssembler::guardTypeSet(const Address &address, const types::HeapTypeSet *types,
-                                           BarrierKind kind, Register scratch, Label *miss);
+                                           Register scratch, Label *miss);
 template void MacroAssembler::guardTypeSet(const ValueOperand &value, const types::HeapTypeSet *types,
-                                           BarrierKind kind, Register scratch, Label *miss);
+                                           Register scratch, Label *miss);
 template void MacroAssembler::guardTypeSet(const TypedOrValueRegister &reg, const types::HeapTypeSet *types,
-                                           BarrierKind kind, Register scratch, Label *miss);
+                                           Register scratch, Label *miss);
 
 template void MacroAssembler::guardTypeSet(const Address &address, const types::TypeSet *types,
-                                           BarrierKind kind, Register scratch, Label *miss);
+                                           Register scratch, Label *miss);
 template void MacroAssembler::guardTypeSet(const ValueOperand &value, const types::TypeSet *types,
-                                           BarrierKind kind, Register scratch, Label *miss);
+                                           Register scratch, Label *miss);
 
 template void MacroAssembler::guardTypeSet(const Address &address, const TypeWrapper *types,
-                                           BarrierKind kind, Register scratch, Label *miss);
+                                           Register scratch, Label *miss);
 template void MacroAssembler::guardTypeSet(const ValueOperand &value, const TypeWrapper *types,
-                                           BarrierKind kind, Register scratch, Label *miss);
+                                           Register scratch, Label *miss);
 
 template void MacroAssembler::guardObjectType(Register obj, const types::TemporaryTypeSet *types,
                                               Register scratch, Label *miss);
