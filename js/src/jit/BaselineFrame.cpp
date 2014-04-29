@@ -111,7 +111,7 @@ BaselineFrame::copyRawFrameSlots(AutoValueVector *vec) const
 
     mozilla::PodCopy(vec->begin(), argv(), nformals);
     for (unsigned i = 0; i < nfixed; i++)
-        (*vec)[nformals + i] = *valueSlot(i);
+        (*vec)[nformals + i].set(*valueSlot(i));
     return true;
 }
 

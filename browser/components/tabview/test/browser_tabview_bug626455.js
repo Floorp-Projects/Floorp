@@ -18,18 +18,18 @@ let activeGroup;
 function test() {
   waitForExplicitFinish();
 
-  showTabView(function () {
-    contentWindow = TabView.getContentWindow();
+  newWindowWithTabView(win => {
+    contentWindow = win.TabView.getContentWindow();
     activeGroup = contentWindow.GroupItems.getActiveGroupItem();
 
-    gBrowser.browsers[0].loadURI("data:text/html,<p>test for bug 626455, tab1");
+    win.gBrowser.browsers[0].loadURI("data:text/html,<p>test for bug 626455, tab1");
 
-    let tab = gBrowser.addTab(TEST_URL);
-    afterAllTabsLoaded(() => testStayOnPage(tab));
+    let tab = win.gBrowser.addTab(TEST_URL);
+    afterAllTabsLoaded(() => testStayOnPage(win, tab));
   });
 }
 
-function testStayOnPage(blockingTab) {
+function testStayOnPage(win, blockingTab) {
   let browser = blockingTab.linkedBrowser;
   waitForOnBeforeUnloadDialog(browser, function (btnLeave, btnStay) {
     // stay on page
@@ -37,12 +37,12 @@ function testStayOnPage(blockingTab) {
 
     executeSoon(function () {
       showTabView(function () {
-        is(gBrowser.tabs.length, 1,
+        is(win.gBrowser.tabs.length, 1,
            "The total number of tab is 1 when staying on the page");
 
         // The other initial tab has been closed when trying to close the tab
         // group. The only tab left is the one with the onbeforeunload dialog.
-        let url = gBrowser.browsers[0].currentURI.spec;
+        let url = win.gBrowser.browsers[0].currentURI.spec;
         ok(url.contains("onbeforeunload"), "The open tab is the expected one");
 
         is(contentWindow.GroupItems.getActiveGroupItem(), activeGroup,
@@ -52,32 +52,32 @@ function testStayOnPage(blockingTab) {
            "Only one group is open");
 
         // start the next test
-        testLeavePage(gBrowser.tabs[0]);
-      });
+        testLeavePage(win, win.gBrowser.tabs[0]);
+      }, win);
     });
   });
 
   closeGroupItem(activeGroup);
 }
 
-function testLeavePage(blockingTab) {
+function testLeavePage(win, blockingTab) {
   let browser = blockingTab.linkedBrowser;
   waitForOnBeforeUnloadDialog(browser, function (btnLeave, btnStay) {
     // Leave page
     btnLeave.click();
   });
 
-  whenGroupClosed(activeGroup, finishTest);
+  whenGroupClosed(activeGroup, () => finishTest(win));
   closeGroupItem(activeGroup);
 }
 
-function finishTest() {
-  is(gBrowser.tabs.length, 1,
+function finishTest(win) {
+  is(win.gBrowser.tabs.length, 1,
      "The total number of tab is 1 after leaving the page");
   is(contentWindow.TabItems.getItems().length, 1,
      "The total number of tab items is 1 after leaving the page");
 
-  let location = gBrowser.browsers[0].currentURI.spec;
+  let location = win.gBrowser.browsers[0].currentURI.spec;
   is(location, BROWSER_NEW_TAB_URL, "The open tab is the expected one");
 
   isnot(contentWindow.GroupItems.getActiveGroupItem(), activeGroup,
@@ -88,7 +88,7 @@ function finishTest() {
 
   contentWindow = null;
   activeGroup = null;
-  finish();
+  promiseWindowClosed(win).then(finish);
 }
 
 // ----------

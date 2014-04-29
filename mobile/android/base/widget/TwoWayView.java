@@ -1329,7 +1329,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             if (maybeStartScrolling(delta)) {
                 return true;
             }
-            
+
             break;
         }
 
@@ -1448,6 +1448,8 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         }
 
         case MotionEvent.ACTION_CANCEL:
+            // If this MotionEvent has been created by us, be sure not to store
+            // pointers to it outside of this method call because we recycle it.
             cancelCheckForTap();
             mTouchMode = TOUCH_MODE_REST;
             reportScrollStateChange(OnScrollListener.SCROLL_STATE_IDLE);
@@ -2384,7 +2386,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             if (mFirstPosition == 0) {
                 final View firstChild = getChildAt(0);
-                final int firstChildStart = (mIsVertical ? firstChild.getTop() : firstChild.getLeft()); 
+                final int firstChildStart = (mIsVertical ? firstChild.getTop() : firstChild.getLeft());
 
                 // First is first in list -> make sure we don't scroll past it
                 final int max = start - firstChildStart;

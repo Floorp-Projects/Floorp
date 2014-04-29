@@ -258,6 +258,7 @@ class SnapshotIterator
     IonJSFrameLayout *fp_;
     MachineState machine_;
     IonScript *ionScript_;
+    AutoValueVector *instructionResults_;
 
   private:
     // Read a spilled register from the machine state.
@@ -280,6 +281,11 @@ class SnapshotIterator
         return true;
     }
     uintptr_t fromStack(int32_t offset) const;
+
+    bool hasInstructionResult(uint32_t index) const {
+        return instructionResults_;
+    }
+    Value fromInstructionResult(uint32_t index) const;
 
     Value allocationValue(const RValueAllocation &a);
     bool allocationReadable(const RValueAllocation &a);
@@ -337,6 +343,14 @@ class SnapshotIterator
     inline bool moreInstructions() const {
         return recover_.moreInstructions();
     }
+
+    // Register a vector used for storing the results of the evaluation of
+    // recover instructions. This vector should be registered before the
+    // beginning of the iteration. This function is in charge of allocating
+    // enough space for all instructions results, and return false iff it fails.
+    bool initIntructionResults(AutoValueVector &results);
+
+    void storeInstructionResult(Value v);
 
   public:
     // Handle iterating over frames of the snapshots.

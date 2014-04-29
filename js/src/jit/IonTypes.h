@@ -7,6 +7,8 @@
 #ifndef jit_IonTypes_h
 #define jit_IonTypes_h
 
+#include "mozilla/TypedEnum.h"
+
 #include "jstypes.h"
 
 #include "js/Value.h"
@@ -323,6 +325,19 @@ enum ABIFunctionType
         (ArgType_Double << (ArgType_Shift * 1)) |
         (ArgType_General << (ArgType_Shift * 2))
 };
+
+MOZ_BEGIN_ENUM_CLASS(BarrierKind, uint32_t)
+    // No barrier is needed.
+    NoBarrier,
+
+    // The barrier only has to check the value's type tag is in the TypeSet.
+    // Specific object types don't have to be checked.
+    TypeTagOnly,
+
+    // Check if the value is in the TypeSet, including the object type if it's
+    // an object.
+    TypeSet
+MOZ_END_ENUM_CLASS(BarrierKind)
 
 } // namespace jit
 } // namespace js

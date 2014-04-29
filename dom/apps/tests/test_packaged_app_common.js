@@ -12,31 +12,18 @@ var PackagedTestHelper = (function PackagedTestHelper() {
   var gAppName = "appname";
   var gApp = null;
   var gInstallOrigin = "http://mochi.test:8888";
-  var timeoutID;
-
-  function timeoutError() {
-    ok(false, "Timeout! Probably waiting on a app installation event");
-    info("Finishing this test suite!");
-    finish();
-  }
 
   function debug(aMsg) {
     //dump("== PackageTestHelper debug == " + aMsg + "\n");
   }
 
   function next() {
-    if (timeoutID) {
-      clearTimeout(timeoutID);
-    }
     index += 1;
     if (index >= steps.length) {
       ok(false, "Shouldn't get here!");
       return;
     }
     try {
-      // There's nothing here that should take more than 30 seconds, even on
-      // heavy loads. So there's no need to stop further tests for five minutes.
-      timeoutID = setTimeout(timeoutError, 30000);
       steps[index]();
     } catch(ex) {
       ok(false, "Caught exception", ex);
@@ -48,10 +35,8 @@ var PackagedTestHelper = (function PackagedTestHelper() {
   }
 
   function finish() {
-    if (timeoutID) {
-      clearTimeout(timeoutID);
-    }
     SpecialPowers.removePermission("webapps-manage", document);
+    SpecialPowers.removePermission("browser", document);
     SimpleTest.finish();
   }
 
@@ -165,7 +150,7 @@ var PackagedTestHelper = (function PackagedTestHelper() {
       is(aApp.manifest.size, aExpectedApp.size, "Check size");
     }
     if (aApp.manifest) {
-      is(aApp.manifest.launch_path, gSJSPath, "Check launch path");
+      is(aApp.manifest.launch_path, aExpectedApp.launch_path || gSJSPath, "Check launch path");
     }
     if (aExpectedApp.manifestURL) {
       is(aApp.manifestURL, aExpectedApp.manifestURL, "Check manifestURL");

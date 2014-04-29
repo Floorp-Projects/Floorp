@@ -140,10 +140,7 @@ private:
 
   nsAutoPtr<ContainerParser> mParser;
 
-  // XXX: We only want to keep the current decoder alive, but need a way to
-  // query @buffered for everything this SourceBuffer is responsible for.
-  nsTArray<nsRefPtr<SubBufferDecoder>> mDecoders;
-  nsRefPtr<SubBufferDecoder> mCurrentDecoder;
+  nsRefPtr<SubBufferDecoder> mDecoder;
 
   double mAppendWindowStart;
   double mAppendWindowEnd;
@@ -152,6 +149,8 @@ private:
 
   SourceBufferAppendMode mAppendMode;
   bool mUpdating;
+
+  bool mDecoderInit;
 };
 
 } // namespace dom
