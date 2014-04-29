@@ -120,6 +120,8 @@ CompositorD3D11::Initialize()
     return false;
   }
 
+  mFeatureLevel = mDevice->GetFeatureLevel();
+
   mHwnd = (HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW);
 
   memset(&mVSConstants, 0, sizeof(VertexShaderConstants));
