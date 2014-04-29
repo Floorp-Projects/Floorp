@@ -260,7 +260,7 @@ CodeGeneratorShared::encode(LRecoverInfo *recover)
          it != end;
          ++it)
     {
-        if (!recovers_.writeFrame(*it))
+        if (!recovers_.writeInstruction(*it))
             return false;
     }
 
