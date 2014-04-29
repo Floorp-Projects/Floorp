@@ -89,7 +89,7 @@ HTMLOptionsCollection::GetOptionIndex(Element* aOption,
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(HTMLOptionsCollection, mElements)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(HTMLOptionsCollection, mElements)
 
 // nsISupports
 

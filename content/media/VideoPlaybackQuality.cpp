@@ -43,7 +43,7 @@ VideoPlaybackQuality::WrapObject(JSContext *aCx)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(VideoPlaybackQuality, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(VideoPlaybackQuality, Release)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(VideoPlaybackQuality, mElement)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(VideoPlaybackQuality, mElement)
 
 } // namespace dom
 } // namespace mozilla

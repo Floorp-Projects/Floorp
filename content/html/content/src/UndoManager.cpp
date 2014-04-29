@@ -820,7 +820,7 @@ protected:
 // UndoManager
 /////////////////////////////////////////////////
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(UndoManager, mTxnManager, mHostNode)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(UndoManager, mTxnManager, mHostNode)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(UndoManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(UndoManager)
 

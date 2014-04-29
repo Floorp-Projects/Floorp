@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_3(MessageChannel, mWindow, mPort1, mPort2)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MessageChannel, mWindow, mPort1, mPort2)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MessageChannel)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MessageChannel)
 
