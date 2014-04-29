@@ -8053,7 +8053,7 @@ CodeGenerator::visitProfilerStackOp(LProfilerStackOp *lir)
 
         case MProfilerStackOp::Enter:
             if (gen->options.spsSlowAssertionsEnabled()) {
-                if (!inlinedFunction || js_JitOptions.profileInlineFrames) {
+                if (!inlinedFunction) {
                     saveLive(lir);
                     pushArg(ImmGCPtr(lir->script()));
                     if (!callVM(SPSEnterInfo, lir))
@@ -8076,7 +8076,7 @@ CodeGenerator::visitProfilerStackOp(LProfilerStackOp *lir)
 
         case MProfilerStackOp::Exit:
             if (gen->options.spsSlowAssertionsEnabled()) {
-                if (!inlinedFunction || js_JitOptions.profileInlineFrames) {
+                if (!inlinedFunction) {
                     saveLive(lir);
                     pushArg(ImmGCPtr(lir->script()));
                     // Once we've exited, then we shouldn't emit instrumentation for
