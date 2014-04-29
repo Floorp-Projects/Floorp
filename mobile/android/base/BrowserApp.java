@@ -48,6 +48,7 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
+import org.mozilla.gecko.tabspanel.TabsPanel;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.ToolbarProgressView;
@@ -418,6 +419,31 @@ abstract public class BrowserApp extends GeckoApp
         });
     }
 
+    private void handleReaderFaviconRequest(final String url) {
+        (new UiAsyncTask<Void, Void, String>(ThreadUtils.getBackgroundHandler()) {
+            @Override
+            public String doInBackground(Void... params) {
+                return Favicons.getFaviconURLForPageURL(url);
+            }
+
+            @Override
+            public void onPostExecute(String faviconUrl) {
+                JSONObject args = new JSONObject();
+
+                if (faviconUrl != null) {
+                    try {
+                        args.put("url", url);
+                        args.put("faviconUrl", faviconUrl);
+                    } catch (JSONException e) {
+                        Log.w(LOGTAG, "Error building JSON favicon arguments.", e);
+                    }
+                }
+
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:FaviconReturn", args.toString()));
+            }
+        }).execute();
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         mAboutHomeStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_ABOUTHOME");
@@ -497,6 +523,11 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Accounts:Create");
         registerEventListener("Accounts:Exist");
         registerEventListener("Prompt:ShowTop");
+        registerEventListener("Reader:ListStatusRequest");
+        registerEventListener("Reader:Added");
+        registerEventListener("Reader:Removed");
+        registerEventListener("Reader:Share");
+        registerEventListener("Reader:FaviconRequest");
 
         Distribution.init(this);
         JavaAddonManager.getInstance().init(getApplicationContext());
@@ -843,6 +874,11 @@ abstract public class BrowserApp extends GeckoApp
         unregisterEventListener("Menu:Update");
         unregisterEventListener("Accounts:Create");
         unregisterEventListener("Accounts:Exist");
+        unregisterEventListener("Reader:ListStatusRequest");
+        unregisterEventListener("Reader:Added");
+        unregisterEventListener("Reader:Removed");
+        unregisterEventListener("Reader:Share");
+        unregisterEventListener("Reader:FaviconRequest");
 
         if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -1206,6 +1242,9 @@ abstract public class BrowserApp extends GeckoApp
                 final String url = message.getString("url");
                 GeckoAppShell.openUriExternal(url, "text/plain", "", "",
                                               Intent.ACTION_SEND, title);
+            } else if (event.equals("Reader:FaviconRequest")) {
+                final String url = message.getString("url");
+                handleReaderFaviconRequest(url);
             } else if (event.equals("Settings:Show")) {
                 // null strings return "null" (http://code.google.com/p/android/issues/detail?id=13830)
                 String resource = null;

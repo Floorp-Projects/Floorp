@@ -105,7 +105,7 @@
                 onget="return this._contentTitle"
                 readonly="true"/>
 
-      <field name="_characterSet">null</field>
+      <field name="_characterSet">""</field>
 
       <property name="characterSet"
                 onget="return this._characterSet"
