@@ -117,9 +117,80 @@ this.Log = {
     }
 
     return properties;
+  },
+
+  _formatError: function _formatError(e) {
+    let result = e.toString();
+    if (e.fileName) {
+      result +=  " (" + e.fileName;
+      if (e.lineNumber) {
+        result += ":" + e.lineNumber;
+      }
+      if (e.columnNumber) {
+        result += ":" + e.columnNumber;
+      }
+      result += ")";
+    }
+    return result + " " + Log.stackTrace(e);
+  },
+
+  // This is for back compatibility with toolkit/services/utils.js; we duplicate
+  // some of the logic in ParameterFormatter
+  exceptionStr: function exceptionStr(e) {
+    if (!e) {
+      return "" + e;
+    }
+    if (e instanceof Ci.nsIException) {
+      return e.toString() + " " + Log.stackTrace(e);
+    }
+    else if (isError(e)) {
+      return Log._formatError(e);
+    }
+    // else
+    let message = e.message ? e.message : e;
+    return message + " " + Log.stackTrace(e);
+  },
+
+  stackTrace: function stackTrace(e) {
+    // Wrapped nsIException
+    if (e.location) {
+      let frame = e.location;
+      let output = [];
+      while (frame) {
+        // Works on frames or exceptions, munges file:// URIs to shorten the paths
+        // FIXME: filename munging is sort of hackish, might be confusing if
+        // there are multiple extensions with similar filenames
+        let str = "<file:unknown>";
+
+        let file = frame.filename || frame.fileName;
+        if (file) {
+          str = file.replace(/^(?:chrome|file):.*?([^\/\.]+\.\w+)$/, "$1");
+        }
+
+        if (frame.lineNumber) {
+          str += ":" + frame.lineNumber;
+        }
+
+        if (frame.name) {
+          str = frame.name + "()@" + str;
+        }
+
+        if (str) {
+          output.push(str);
+        }
+        frame = frame.caller;
+      }
+      return "Stack trace: " + output.join(" < ");
+    }
+    // Standard JS exception
+    if (e.stack) {
+      return "JS Stack trace: " + e.stack.trim().replace(/\n/g, " < ").
+        replace(/@[^@]*?([^\/\.]+\.\w+:)/g, "@$1");
+    }
+
+    return "No traceback available";
   }
 };
-
 
 /*
  * LogMessage
@@ -143,7 +214,7 @@ LogMessage.prototype = {
     return "UNKNOWN";
   },
 
-  toString: function LogMsg_toString(){
+  toString: function LogMsg_toString() {
     let msg = "LogMessage [" + this.time + " " + this.level + " " +
       this.message;
     if (this.params) {
