@@ -20,6 +20,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
+const INTERNAL_FIELDS = new Set(["_level", "_message", "_time", "_namespace"]);
+
+
+/*
+ * Dump a message everywhere we can if we have a failure.
+ */
+function dumpError(text) {
+  dump(text + "\n");
+  Cu.reportError(text);
+}
 
 this.Log = {
   Level: {
@@ -80,6 +90,7 @@ this.Log = {
   FileAppender: FileAppender,
   BoundedFileAppender: BoundedFileAppender,
 
+  ParameterFormatter: ParameterFormatter,
   // Logging helper:
   // let logger = Log.repository.getLogger("foo");
   // logger.info(Log.enumerateInterfaces(someObject).join(","));
@@ -100,14 +111,13 @@ this.Log = {
   // Logging helper:
   // let logger = Log.repository.getLogger("foo");
   // logger.info(Log.enumerateProperties(someObject).join(","));
-  enumerateProperties: function Log_enumerateProps(aObject,
-                                                       aExcludeComplexTypes) {
+  enumerateProperties: function (aObject, aExcludeComplexTypes) {
     let properties = [];
 
     for (p in aObject) {
       try {
         if (aExcludeComplexTypes &&
-            (typeof aObject[p] == "object" || typeof aObject[p] == "function"))
+            (typeof(aObject[p]) == "object" || typeof(aObject[p]) == "function"))
           continue;
         properties.push(p + " = " + aObject[p]);
       }
@@ -134,7 +144,7 @@ this.Log = {
     return result + " " + Log.stackTrace(e);
   },
 
-  // This is for back compatibility with toolkit/services/utils.js; we duplicate
+  // This is for back compatibility with services/common/utils.js; we duplicate
   // some of the logic in ParameterFormatter
   exceptionStr: function exceptionStr(e) {
     if (!e) {
@@ -199,8 +209,21 @@ this.Log = {
 function LogMessage(loggerName, level, message, params) {
   this.loggerName = loggerName;
   this.level = level;
-  this.message = message;
-  this.params = params;
+  /*
+   * Special case to handle "log./level/(object)", for example logging a caught exception
+   * without providing text or params like: catch(e) { logger.warn(e) }
+   * Treating this as an empty text with the object in the 'params' field causes the
+   * object to be formatted properly by BasicFormatter.
+   */
+  if (!params && message && (typeof(message) == "object") &&
+      (typeof(message.valueOf()) != "string")) {
+    this.message = null;
+    this.params = message;
+  } else {
+    // If the message text is empty, or a string, or a String object, normal handling
+    this.message = message;
+    this.params = params;
+  }
 
   // The _structured field will correspond to whether this message is to
   // be interpreted as a structured message.
@@ -249,7 +272,7 @@ Logger.prototype = {
       return this._level;
     if (this.parent)
       return this.parent.level;
-    dump("Log warning: root logger configuration error: no level defined\n");
+    dumpError("Log warning: root logger configuration error: no level defined");
     return Log.Level.All;
   },
   set level(level) {
@@ -317,7 +340,8 @@ Logger.prototype = {
    *        (object) Parameters to be included in the message.
    *          If _level is included as a key and the corresponding value
    *          is a number or known level name, the message will be logged
-   *          at the indicated level.
+   *          at the indicated level. If _message is included as a key, the
+   *          value is used as the descriptive text for the message.
    */
   logStructured: function (action, params) {
     if (!action) {
@@ -326,7 +350,7 @@ Logger.prototype = {
     if (!params) {
       return this.log(this.level, undefined, {"action": action});
     }
-    if (typeof params != "object") {
+    if (typeof(params) != "object") {
       throw "The params argument is required to be an object.";
     }
 
@@ -336,8 +360,7 @@ Logger.prototype = {
       if (ulevel in Log.Level.Numbers) {
         level = Log.Level.Numbers[ulevel];
       }
-    }
-    else {
+    } else {
       level = this.level;
     }
 
@@ -505,17 +528,69 @@ Formatter.prototype = {
 
 // Basic formatter that doesn't do anything fancy.
 function BasicFormatter(dateFormat) {
-  if (dateFormat)
+  if (dateFormat) {
     this.dateFormat = dateFormat;
+  }
+  this.parameterFormatter = new ParameterFormatter();
 }
 BasicFormatter.prototype = {
   __proto__: Formatter.prototype,
+
+  /**
+   * Format the text of a message with optional parameters.
+   * If the text contains ${identifier}, replace that with
+   * the value of params[identifier]; if ${}, replace that with
+   * the entire params object. If no params have been substituted
+   * into the text, format the entire object and append that
+   * to the message.
+   */
+  formatText: function (message) {
+    let params = message.params;
+    if (!params) {
+      return message.message || "";
+    }
+    // Defensive handling of non-object params
+    // We could add a special case for NSRESULT values here...
+    let pIsObject = (typeof(params) == 'object' || typeof(params) == 'function');
+
+    // if we have params, try and find substitutions.
+    if (message.params && this.parameterFormatter) {
+      // have we successfully substituted any parameters into the message?
+      // in the log message
+      let subDone = false;
+      let regex = /\$\{(\S*)\}/g;
+      let textParts = [];
+      if (message.message) {
+        textParts.push(message.message.replace(regex, (_, sub) => {
+          // ${foo} means use the params['foo']
+          if (sub) {
+            if (pIsObject && sub in message.params) {
+              subDone = true;
+              return this.parameterFormatter.format(message.params[sub]);
+            }
+            return '${' + sub + '}';
+          }
+          // ${} means use the entire params object.
+          subDone = true;
+          return this.parameterFormatter.format(message.params);
+        }));
+      }
+      if (!subDone) {
+        // There were no substitutions in the text, so format the entire params object
+        let rest = this.parameterFormatter.format(message.params);
+        if (rest !== null && rest != "{}") {
+          textParts.push(rest);
+        }
+      }
+      return textParts.join(': ');
+    }
+  },
 
   format: function BF_format(message) {
     return message.time + "\t" +
       message.loggerName + "\t" +
       message.levelDesc + "\t" +
-      message.message;
+      this.formatText(message);
   }
 };
 
@@ -559,6 +634,67 @@ StructuredFormatter.prototype = {
     }
 
     return JSON.stringify(output);
+  }
+}
+
+/**
+ * Test an object to see if it is a Mozilla JS Error.
+ */
+function isError(aObj) {
+  return (aObj && typeof(aObj) == 'object' && "name" in aObj && "message" in aObj &&
+          "fileName" in aObj && "lineNumber" in aObj && "stack" in aObj);
+};
+
+/*
+ * Parameter Formatters
+ * These massage an object used as a parameter for a LogMessage into
+ * a string representation of the object.
+ */
+
+function ParameterFormatter() {
+  this._name = "ParameterFormatter"
+}
+ParameterFormatter.prototype = {
+  format: function(ob) {
+    try {
+      if (ob === undefined) {
+        return "undefined";
+      }
+      if (ob === null) {
+        return "null";
+      }
+      // Pass through primitive types and objects that unbox to primitive types.
+      if ((typeof(ob) != "object" || typeof(ob.valueOf()) != "object") &&
+          typeof(ob) != "function") {
+        return ob;
+      }
+      if (ob instanceof Ci.nsIException) {
+        return ob.toString() + " " + Log.stackTrace(ob);
+      }
+      else if (isError(ob)) {
+        return Log._formatError(ob);
+      }
+      // Just JSONify it. Filter out our internal fields and those the caller has
+      // already handled.
+      return JSON.stringify(ob, (key, val) => {
+        if (INTERNAL_FIELDS.has(key)) {
+          return undefined;
+        }
+        return val;
+      });
+    }
+    catch (e) {
+      dumpError("Exception trying to format object for log message: " + Log.exceptionStr(e));
+    }
+    // Fancy formatting failed. Just toSource() it - but even this may fail!
+    try {
+      return ob.toSource();
+    } catch (_) { }
+    try {
+      return "" + ob;
+    } catch (_) {
+      return "[object]"
+    }
   }
 }
 
