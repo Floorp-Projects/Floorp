@@ -2,7 +2,7 @@ import os
 from setuptools import setup, find_packages
 import sys
 
-version = '0.7.6'
+version = '0.7.7'
 
 # get documentation from the README
 try:
@@ -27,7 +27,7 @@ if os.path.exists(transport_dir) and method:
     try:
         subprocess.check_call(cmd, cwd=transport_dir)
     except subprocess.CalledProcessError:
-        print "Error running setup.py in %s" % directory
+        print "Error running setup.py in %s" % transport_dir
         raise
 else:
     deps += ['marionette-transport == 0.1']

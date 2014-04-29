@@ -3,8 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.tabspanel;
 
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApplication;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.LightweightTheme;
+import org.mozilla.gecko.LightweightThemeDrawable;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.widget.IconTabWidget;
@@ -26,7 +33,7 @@ import android.widget.RelativeLayout;
 public class TabsPanel extends LinearLayout
                        implements LightweightTheme.OnChangeListener,
                                   IconTabWidget.OnTabChangedListener {
-    private static final String LOGTAG = "GeckoTabsPanel";
+    private static final String LOGTAG = "Gecko" + TabsPanel.class.getSimpleName();
 
     public static enum Panel {
         NORMAL_TABS,
@@ -71,8 +78,8 @@ public class TabsPanel extends LinearLayout
         mActivity = (GeckoApp) context;
         mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
-        setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
-                                                      LinearLayout.LayoutParams.FILL_PARENT));
+        setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                                                      LinearLayout.LayoutParams.MATCH_PARENT));
         setOrientation(LinearLayout.VERTICAL);
 
         mCurrentPanel = Panel.NORMAL_TABS;
@@ -120,10 +127,11 @@ public class TabsPanel extends LinearLayout
     }
 
     public void addTab() {
-        if (mCurrentPanel == Panel.NORMAL_TABS)
+        if (mCurrentPanel == Panel.NORMAL_TABS) {
            mActivity.addTab();
-        else
+        } else {
            mActivity.addPrivateTab();
+        }
 
         mActivity.autoHideTabs();
     }
@@ -171,8 +179,9 @@ public class TabsPanel extends LinearLayout
         super.onDetachedFromWindow();
         mTheme.removeListener(this);
     }
-    
+
     @Override
+    @SuppressWarnings("deprecation") // setBackgroundDrawable deprecated by API level 16
     public void onLightweightThemeChanged() {
         final int background = getResources().getColor(R.color.background_tabs);
         final LightweightThemeDrawable drawable = mTheme.getColorDrawable(this, background, true);
@@ -195,7 +204,7 @@ public class TabsPanel extends LinearLayout
     }
 
     // Tabs List Container holds the ListView
-    public static class TabsListContainer extends FrameLayout {
+    static class TabsListContainer extends FrameLayout {
         public TabsListContainer(Context context, AttributeSet attrs) {
             super(context, attrs);
         }
@@ -226,15 +235,15 @@ public class TabsPanel extends LinearLayout
     }
 
     // Tabs Panel Toolbar contains the Buttons
-    public static class TabsPanelToolbar extends LinearLayout 
-                                         implements LightweightTheme.OnChangeListener {
+    static class TabsPanelToolbar extends LinearLayout
+                                  implements LightweightTheme.OnChangeListener {
         private final LightweightTheme mTheme;
 
         public TabsPanelToolbar(Context context, AttributeSet attrs) {
             super(context, attrs);
             mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
-            setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
+            setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                                                           (int) context.getResources().getDimension(R.dimen.browser_toolbar_height)));
 
             setOrientation(LinearLayout.HORIZONTAL);
@@ -251,8 +260,9 @@ public class TabsPanel extends LinearLayout
             super.onDetachedFromWindow();
             mTheme.removeListener(this);
         }
-    
+
         @Override
+        @SuppressWarnings("deprecation") // setBackgroundDrawable deprecated by API level 16
         public void onLightweightThemeChanged() {
             final int background = getResources().getColor(R.color.background_tabs);
             final LightweightThemeDrawable drawable = mTheme.getColorDrawable(this, background);
@@ -279,7 +289,7 @@ public class TabsPanel extends LinearLayout
         show(panel, true);
     }
 
-    public void show(Panel panel, boolean shouldResize) {
+    public void show(Panel panelToShow, boolean shouldResize) {
         if (!isShown())
             setVisibility(View.VISIBLE);
 
@@ -290,19 +300,25 @@ public class TabsPanel extends LinearLayout
 
         final boolean showAnimation = !mVisible;
         mVisible = true;
-        mCurrentPanel = panel;
+        mCurrentPanel = panelToShow;
 
-        int index = panel.ordinal();
+        int index = panelToShow.ordinal();
         mTabWidget.setCurrentTab(index);
 
-        if (index == 0) {
-            mPanel = mPanelNormal;
-        } else if (index == 1) {
-            mPanel = mPanelPrivate;
-        } else {
-            mPanel = mPanelRemote;
-        }
+        switch (panelToShow) {
+            case NORMAL_TABS:
+                mPanel = mPanelNormal;
+                break;
+            case PRIVATE_TABS:
+                mPanel = mPanelPrivate;
+                break;
+            case REMOTE_TABS:
+                mPanel = mPanelRemote;
+                break;
 
+            default:
+                throw new IllegalArgumentException("Unknown panel type " + panelToShow);
+        }
         mPanel.show();
 
         if (mCurrentPanel == Panel.REMOTE_TABS) {

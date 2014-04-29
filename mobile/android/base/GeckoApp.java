@@ -496,31 +496,6 @@ public abstract class GeckoApp
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
     }
 
-    void handleFaviconRequest(final String url) {
-        (new UiAsyncTask<Void, Void, String>(ThreadUtils.getBackgroundHandler()) {
-            @Override
-            public String doInBackground(Void... params) {
-                return Favicons.getFaviconURLForPageURL(url);
-            }
-
-            @Override
-            public void onPostExecute(String faviconUrl) {
-                JSONObject args = new JSONObject();
-
-                if (faviconUrl != null) {
-                    try {
-                        args.put("url", url);
-                        args.put("faviconUrl", faviconUrl);
-                    } catch (JSONException e) {
-                        Log.w(LOGTAG, "Error building JSON favicon arguments.", e);
-                    }
-                }
-
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:FaviconReturn", args.toString()));
-            }
-        }).execute();
-    }
-
     void handleClearHistory() {
         BrowserDB.clearHistory(getContentResolver());
     }
@@ -565,9 +540,6 @@ public abstract class GeckoApp
                 // generic log listener
                 final String msg = message.getString("msg");
                 Log.d(LOGTAG, "Log: " + msg);
-            } else if (event.equals("Reader:FaviconRequest")) {
-                final String url = message.getString("url");
-                handleFaviconRequest(url);
             } else if (event.equals("Gecko:DelayedStartup")) {
                 ThreadUtils.postToBackgroundThread(new UninstallListener.DelayedStartupTask(this));
             } else if (event.equals("Gecko:Ready")) {
@@ -1573,11 +1545,6 @@ public abstract class GeckoApp
 
         //register for events
         registerEventListener("log");
-        registerEventListener("Reader:ListStatusRequest");
-        registerEventListener("Reader:Added");
-        registerEventListener("Reader:Removed");
-        registerEventListener("Reader:Share");
-        registerEventListener("Reader:FaviconRequest");
         registerEventListener("onCameraCapture");
         registerEventListener("Gecko:Ready");
         registerEventListener("Gecko:DelayedStartup");
@@ -2114,11 +2081,6 @@ public abstract class GeckoApp
     public void onDestroy()
     {
         unregisterEventListener("log");
-        unregisterEventListener("Reader:ListStatusRequest");
-        unregisterEventListener("Reader:Added");
-        unregisterEventListener("Reader:Removed");
-        unregisterEventListener("Reader:Share");
-        unregisterEventListener("Reader:FaviconRequest");
         unregisterEventListener("onCameraCapture");
         unregisterEventListener("Gecko:Ready");
         unregisterEventListener("Gecko:DelayedStartup");

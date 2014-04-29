@@ -57,7 +57,7 @@ PersistenceTypeFromText(const nsACString& aText)
 
 inline nsresult
 NullablePersistenceTypeFromText(const nsACString& aText,
-                                Nullable<PersistenceType> *aPersistenceType)
+                                Nullable<PersistenceType>* aPersistenceType)
 {
   if (aText.IsVoid()) {
     *aPersistenceType = Nullable<PersistenceType>();
@@ -74,7 +74,7 @@ NullablePersistenceTypeFromText(const nsACString& aText,
     return NS_OK;
   }
 
-  return NS_ERROR_UNEXPECTED;
+  return NS_ERROR_FAILURE;
 }
 
 inline mozilla::dom::StorageType

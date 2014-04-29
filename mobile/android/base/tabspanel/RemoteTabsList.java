@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.tabspanel;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -16,14 +16,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.TabsAccessor;
+
 /**
  * The actual list of synced tabs. This serves as the only child view of {@link RemoteTabsContainer}
  * so it can be refreshed using a swipe-to-refresh gesture.
  */
 class RemoteTabsList extends ExpandableListView
-                            implements ExpandableListView.OnGroupClickListener,
-                                       ExpandableListView.OnChildClickListener,
-                                       TabsAccessor.OnQueryTabsCompleteListener {
+                     implements ExpandableListView.OnGroupClickListener,
+                                ExpandableListView.OnChildClickListener,
+                                TabsAccessor.OnQueryTabsCompleteListener {
     private static final String[] CLIENT_KEY = new String[] { "name" };
     private static final String[] TAB_KEY = new String[] { "title", "url" };
     private static final int[] CLIENT_RESOURCE = new int[] { R.id.client };

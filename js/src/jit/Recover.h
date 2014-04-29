@@ -11,30 +11,62 @@
 
 #include "jit/Snapshots.h"
 
+class JSContext;
+
 namespace js {
 namespace jit {
 
+#define RECOVER_OPCODE_LIST(_)                  \
+    _(ResumePoint)                              \
+    _(Add)
+
 class RResumePoint;
+class SnapshotIterator;
 
 class RInstruction
 {
   public:
     enum Opcode
     {
-        Recover_ResumePoint = 0
+#   define DEFINE_OPCODES_(op) Recover_##op,
+        RECOVER_OPCODE_LIST(DEFINE_OPCODES_)
+#   undef DEFINE_OPCODES_
+        Recover_Invalid
     };
 
     virtual Opcode opcode() const = 0;
 
+    // As opposed to the MIR, there is no need to add more methods as every
+    // other instruction is well abstracted under the "recover" method.
     bool isResumePoint() const {
         return opcode() == Recover_ResumePoint;
     }
     inline const RResumePoint *toResumePoint() const;
 
+    // Number of allocations which are encoded in the Snapshot for recovering
+    // the current instruction.
     virtual uint32_t numOperands() const = 0;
 
+    // Function used to recover the value computed by this instruction. This
+    // function reads its arguments from the allocations listed on the snapshot
+    // iterator and stores its returned value on the snapshot iterator too.
+    virtual bool recover(JSContext *cx, SnapshotIterator &iter) const = 0;
+
+    // Decode an RInstruction on top of the reserved storage space, based on the
+    // tag written by the writeRecoverData function of the corresponding MIR
+    // instruction.
     static void readRecoverData(CompactBufferReader &reader, RInstructionStorage *raw);
 };
+
+#define RINSTRUCTION_HEADER_(op)                                        \
+  private:                                                              \
+    friend class RInstruction;                                          \
+    R##op(CompactBufferReader &reader);                                 \
+                                                                        \
+  public:                                                               \
+    Opcode opcode() const {                                             \
+        return RInstruction::Recover_##op;                              \
+    }
 
 class RResumePoint MOZ_FINAL : public RInstruction
 {
@@ -42,13 +74,8 @@ class RResumePoint MOZ_FINAL : public RInstruction
     uint32_t pcOffset_;           // Offset from script->code.
     uint32_t numOperands_;        // Number of slots.
 
-    friend class RInstruction;
-    RResumePoint(CompactBufferReader &reader);
-
   public:
-    virtual Opcode opcode() const {
-        return Recover_ResumePoint;
-    }
+    RINSTRUCTION_HEADER_(ResumePoint)
 
     uint32_t pcOffset() const {
         return pcOffset_;
@@ -56,7 +83,25 @@ class RResumePoint MOZ_FINAL : public RInstruction
     virtual uint32_t numOperands() const {
         return numOperands_;
     }
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
 };
+
+class RAdd MOZ_FINAL : public RInstruction
+{
+  private:
+    bool isFloatOperation_;
+
+  public:
+    RINSTRUCTION_HEADER_(Add)
+
+    virtual uint32_t numOperands() const {
+        return 2;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+#undef RINSTRUCTION_HEADER_
 
 const RResumePoint *
 RInstruction::toResumePoint() const

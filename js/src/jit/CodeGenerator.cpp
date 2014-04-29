@@ -1728,7 +1728,7 @@ CodeGenerator::visitTypeBarrierV(LTypeBarrierV *lir)
     Register scratch = ToTempRegisterOrInvalid(lir->temp());
 
     Label miss;
-    masm.guardTypeSet(operand, lir->mir()->resultTypeSet(), scratch, &miss);
+    masm.guardTypeSet(operand, lir->mir()->resultTypeSet(), lir->mir()->barrierKind(), scratch, &miss);
     if (!bailoutFrom(&miss, lir->snapshot()))
         return false;
     return true;
@@ -1737,6 +1737,8 @@ CodeGenerator::visitTypeBarrierV(LTypeBarrierV *lir)
 bool
 CodeGenerator::visitTypeBarrierO(LTypeBarrierO *lir)
 {
+    MOZ_ASSERT(lir->mir()->barrierKind() != BarrierKind::TypeTagOnly);
+
     Register obj = ToRegister(lir->object());
     Register scratch = ToTempRegisterOrInvalid(lir->temp());
 
@@ -1754,7 +1756,7 @@ CodeGenerator::visitMonitorTypes(LMonitorTypes *lir)
     Register scratch = ToTempUnboxRegister(lir->temp());
 
     Label matched, miss;
-    masm.guardTypeSet(operand, lir->mir()->typeSet(), scratch, &miss);
+    masm.guardTypeSet(operand, lir->mir()->typeSet(), lir->mir()->barrierKind(), scratch, &miss);
     if (!bailoutFrom(&miss, lir->snapshot()))
         return false;
     return true;
@@ -2710,7 +2712,7 @@ CodeGenerator::generateArgumentsChecks(bool bailout)
         // ... * sizeof(Value)          - Scale by value size.
         // ArgToStackOffset(...)        - Compute displacement within arg vector.
         int32_t offset = ArgToStackOffset((i - info.startArgSlot()) * sizeof(Value));
-        masm.guardTypeSet(Address(StackPointer, offset), types, temp, &miss);
+        masm.guardTypeSet(Address(StackPointer, offset), types, BarrierKind::TypeSet, temp, &miss);
     }
 
     if (miss.used()) {
@@ -3186,7 +3188,7 @@ CodeGenerator::emitValueResultChecks(LInstruction *lir, MDefinition *mir)
     if (mir->resultTypeSet() && !mir->resultTypeSet()->unknown()) {
         // We have a result TypeSet, assert this value is in it.
         Label miss, ok;
-        masm.guardTypeSet(output, mir->resultTypeSet(), temp1, &miss);
+        masm.guardTypeSet(output, mir->resultTypeSet(), BarrierKind::TypeSet, temp1, &miss);
         masm.jump(&ok);
 
         masm.bind(&miss);
@@ -8051,7 +8053,7 @@ CodeGenerator::visitProfilerStackOp(LProfilerStackOp *lir)
 
         case MProfilerStackOp::Enter:
             if (gen->options.spsSlowAssertionsEnabled()) {
-                if (!inlinedFunction || js_JitOptions.profileInlineFrames) {
+                if (!inlinedFunction) {
                     saveLive(lir);
                     pushArg(ImmGCPtr(lir->script()));
                     if (!callVM(SPSEnterInfo, lir))
@@ -8074,7 +8076,7 @@ CodeGenerator::visitProfilerStackOp(LProfilerStackOp *lir)
 
         case MProfilerStackOp::Exit:
             if (gen->options.spsSlowAssertionsEnabled()) {
-                if (!inlinedFunction || js_JitOptions.profileInlineFrames) {
+                if (!inlinedFunction) {
                     saveLive(lir);
                     pushArg(ImmGCPtr(lir->script()));
                     // Once we've exited, then we shouldn't emit instrumentation for

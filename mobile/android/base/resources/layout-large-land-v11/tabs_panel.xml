@@ -10,7 +10,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/browser_toolbar_height">
 
-        <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
+        <view class="org.mozilla.gecko.tabspanel.TabsPanel$TabsPanelToolbar"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
               android:background="@color/background_tabs">
@@ -26,42 +26,42 @@
 
     </RelativeLayout>
 
-    <view class="org.mozilla.gecko.TabsPanel$TabsListContainer"
+    <view class="org.mozilla.gecko.tabspanel.TabsPanel$TabsListContainer"
           android:id="@+id/tabs_container"
           android:layout_width="fill_parent"
           android:layout_height="0dip"
           android:layout_weight="1.0">
 
-        <org.mozilla.gecko.TabsTray android:id="@+id/normal_tabs"
-                                    style="@style/TabsList"
-                                    android:layout_width="fill_parent"
-                                    android:layout_height="fill_parent"
-                                    android:choiceMode="singleChoice"
-                                    android:visibility="gone"
-                                    gecko:tabs="tabs_normal"/>
+        <org.mozilla.gecko.tabspanel.TabsTray android:id="@+id/normal_tabs"
+                                              style="@style/TabsList"
+                                              android:layout_width="fill_parent"
+                                              android:layout_height="fill_parent"
+                                              android:choiceMode="singleChoice"
+                                              android:visibility="gone"
+                                              gecko:tabs="tabs_normal"/>
 
-        <org.mozilla.gecko.TabsTray android:id="@+id/private_tabs"
-                                    style="@style/TabsList"
-                                    android:layout_width="fill_parent"
-                                    android:layout_height="fill_parent"
-                                    android:choiceMode="singleChoice"
-                                    android:visibility="gone"
-                                    gecko:tabs="tabs_private"/>
+        <org.mozilla.gecko.tabspanel.TabsTray android:id="@+id/private_tabs"
+                                              style="@style/TabsList"
+                                              android:layout_width="fill_parent"
+                                              android:layout_height="fill_parent"
+                                              android:choiceMode="singleChoice"
+                                              android:visibility="gone"
+                                              gecko:tabs="tabs_private"/>
 
-        <org.mozilla.gecko.RemoteTabsContainer android:id="@+id/synced_tabs"
-                                               android:layout_width="fill_parent"
-                                               android:layout_height="fill_parent"
-                                               android:visibility="gone">
+        <org.mozilla.gecko.tabspanel.RemoteTabsContainer android:id="@+id/synced_tabs"
+                                                         android:layout_width="fill_parent"
+                                                         android:layout_height="fill_parent"
+                                                         android:visibility="gone">
 
-            <org.mozilla.gecko.RemoteTabsList android:id="@+id/synced_tabs_list"
-                                          style="@style/RemoteTabsList"
-                                          android:layout_width="fill_parent"
-                                          android:layout_height="fill_parent"
-                                          android:paddingLeft="@dimen/tabs_panel_list_padding"
-                                          android:paddingRight="@dimen/tabs_panel_list_padding"
-                                          android:scrollbarStyle="outsideOverlay"/>
+            <org.mozilla.gecko.tabspanel.RemoteTabsList android:id="@+id/synced_tabs_list"
+                                                        style="@style/RemoteTabsList"
+                                                        android:layout_width="fill_parent"
+                                                        android:layout_height="fill_parent"
+                                                        android:paddingLeft="@dimen/tabs_panel_list_padding"
+                                                        android:paddingRight="@dimen/tabs_panel_list_padding"
+                                                        android:scrollbarStyle="outsideOverlay"/>
 
-        </org.mozilla.gecko.RemoteTabsContainer>
+        </org.mozilla.gecko.tabspanel.RemoteTabsContainer>
 
     </view>
 
@@ -69,7 +69,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/browser_toolbar_height">
 
-        <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
+        <view class="org.mozilla.gecko.tabspanel.TabsPanel$TabsPanelToolbar"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
               android:background="@color/background_tabs">

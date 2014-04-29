@@ -296,8 +296,9 @@ add_task(function test_category_manager_registration_error() {
   do_check_eq(errorCount, 1);
 
   let msg = yield deferred.promise;
-  do_check_true(msg.contains("Provider error: DummyThrowOnInitProvider: " +
-                             "Error registering provider from category manager: Dummy Error"));
+  do_check_true(msg.contains("Provider error: DummyThrowOnInitProvider: "
+                             + "Error registering provider from category manager: "
+                             + "Error: Dummy Error"));
 
   yield storage.close();
 });
@@ -322,7 +323,7 @@ add_task(function test_pull_only_registration_error() {
 
   let msg = yield deferred.promise;
   do_check_true(msg.contains("Provider error: DummyPullOnlyThrowsOnInitProvider: " +
-                             "Error registering pull-only provider: Dummy Error"));
+                             "Error registering pull-only provider: Error: Dummy Error"));
 
   yield storage.close();
 });
@@ -350,7 +351,7 @@ add_task(function test_error_during_shutdown() {
   do_check_eq(errorCount, 1);
   let msg = yield deferred.promise;
   do_check_true(msg.contains("Provider error: DummyThrowOnShutdownProvider: " +
-                             "Error when shutting down provider: Dummy shutdown error"));
+                             "Error when shutting down provider: Error: Dummy shutdown error"));
 
   yield storage.close();
 });

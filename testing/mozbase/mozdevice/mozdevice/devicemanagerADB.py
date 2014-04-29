@@ -457,7 +457,10 @@ class DeviceManagerADB(DeviceManager):
                     raise
             return
 
-        paths = [('/mnt/sdcard', 'tests'),
+        paths = [('/storage/sdcard0', 'tests'),
+                 ('/storage/sdcard1', 'tests'),
+                 ('/sdcard', 'tests'),
+                 ('/mnt/sdcard', 'tests'),
                  ('/data/local', 'tests')]
         for (basePath, subPath) in paths:
             if self.dirExists(basePath):

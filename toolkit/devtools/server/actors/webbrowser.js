@@ -6,12 +6,13 @@
 
 "use strict";
 
-let {Ci,Cu} = require("chrome");
-let {createExtraActors, appendExtraActors} = require("devtools/server/actors/common");
+let { Ci, Cu } = require("chrome");
+let Services = require("Services");
+let { createExtraActors, appendExtraActors } = require("devtools/server/actors/common");
+let { AddonThreadActor, ThreadActor } = require("devtools/server/actors/script");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
