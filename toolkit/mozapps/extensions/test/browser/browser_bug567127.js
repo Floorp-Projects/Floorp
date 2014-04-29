@@ -98,27 +98,9 @@ function test_confirmation(aWindow, aExpectedURLs) {
   aWindow.document.documentElement.cancelDialog();
 }
 
+add_task(function* test_install_from_file() {
+  gManagerWindow = yield open_manager("addons://list/extension");
 
-function test() {
-  waitForExplicitFinish();
-  
-  open_manager("addons://list/extension", function(aWindow) {
-    gManagerWindow = aWindow;
-    run_next_test();
-  });
-}
-
-function end_test() {
-  is(gSawInstallNotification, true, "Should have seen addon-install-started notification.");
-
-  MockFilePicker.cleanup();
-  close_manager(gManagerWindow, function() {
-    finish();
-  });
-}
-
-
-add_test(function() {
   var filePaths = [
                    get_addon_file_url("browser_bug567127_1.xpi"),
                    get_addon_file_url("browser_bug567127_2.xpi")
@@ -128,9 +110,24 @@ add_test(function() {
   Services.obs.addObserver(gInstallNotificationObserver,
                            "addon-install-started", false);
 
-  new WindowOpenListener(INSTALL_URI, function(aWindow) {
-    test_confirmation(aWindow, filePaths.map(function(aPath) aPath.spec));
-  }, run_next_test);
+  // Set handler that executes the core test after the window opens,
+  // and resolves the promise when the window closes
+  let pInstallURIClosed = new Promise((resolve, reject) => {
+    new WindowOpenListener(INSTALL_URI, function(aWindow) {
+      try {
+        test_confirmation(aWindow, filePaths.map(function(aPath) aPath.spec));
+      } catch(e) {
+        reject(e);
+      }
+    }, resolve);
+  });
 
   gManagerWindow.gViewController.doCommand("cmd_installFromFile");
+
+  yield pInstallURIClosed;
+
+  is(gSawInstallNotification, true, "Should have seen addon-install-started notification.");
+
+  MockFilePicker.cleanup();
+  yield close_manager(gManagerWindow);
 });
