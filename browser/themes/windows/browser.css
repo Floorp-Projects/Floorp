@@ -2274,8 +2274,8 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-margin-end: -8px;
 }
 
-@conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper > #urlbar > #notification-popup-box {
-  padding-left: 5px;
+@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box {
+  padding-left: 7px;
 }
 
 #notification-popup-box:-moz-locale-dir(rtl),

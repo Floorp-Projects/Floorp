@@ -639,7 +639,7 @@
 
       <hbox id="nav-bar-customization-target" flex="1">
         <toolbaritem id="urlbar-container" flex="400" persist="width"
-                     forwarddisabled="true" title="&locationItem.title;" removable="false"
+                     title="&locationItem.title;" removable="false"
                      cui-areatype="toolbar"
                      class="chromeclass-location" overflows="false">
           <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
