@@ -4036,8 +4036,6 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   GeckoProfilerInitRAII profilerGuard(&aLocal);
   PROFILER_LABEL("Startup", "XRE_Main");
 
-  mozilla::IOInterposerInit ioInterposerGuard;
-
   nsresult rv = NS_OK;
 
   gArgc = argc;
@@ -4052,6 +4050,8 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   gAppData = mAppData;
 
   ScopedLogging log;
+
+  mozilla::IOInterposerInit ioInterposerGuard;
 
 #if defined(MOZ_WIDGET_GTK)
 #if defined(MOZ_MEMORY) || defined(__FreeBSD__) || defined(__NetBSD__)
