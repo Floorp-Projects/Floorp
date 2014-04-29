@@ -587,7 +587,6 @@ AsyncExecuteStatements::Run()
     return notifyComplete();
 
   if (statementsNeedTransaction()) {
-    Connection* rawConnection = static_cast<Connection*>(mConnection.get());
     if (NS_SUCCEEDED(mConnection->beginTransactionInternal(mNativeConnection,
                                                            mozIStorageConnection::TRANSACTION_IMMEDIATE))) {
       mHasTransaction = true;
