@@ -678,6 +678,7 @@ MediaEngineWebRTCVideoSource::Shutdown()
 void
 MediaEngineWebRTCVideoSource::AllocImpl() {
   MOZ_ASSERT(NS_IsMainThread());
+  ReentrantMonitorAutoEnter sync(mCallbackMonitor);
 
   mCameraControl = ICameraControl::Create(mCaptureIndex);
   if (mCameraControl) {
@@ -818,6 +819,7 @@ MediaEngineWebRTCVideoSource::OnError(CameraErrorContext aContext, CameraError a
 void
 MediaEngineWebRTCVideoSource::OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType)
 {
+  ReentrantMonitorAutoEnter sync(mCallbackMonitor);
   mLastCapture =
     static_cast<nsIDOMFile*>(new nsDOMMemoryFile(static_cast<void*>(aData),
                                                  static_cast<uint64_t>(aLength),
