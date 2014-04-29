@@ -35,6 +35,7 @@ extern "C" {
 #include "nsIServiceManager.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 
 using namespace mozilla;
 
@@ -61,7 +62,7 @@ nsToolkit::~nsToolkit()
 void
 nsToolkit::PostSleepWakeNotification(const char* aNotification)
 {
-  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService)
     observerService->NotifyObservers(nullptr, aNotification, nullptr);
 }
