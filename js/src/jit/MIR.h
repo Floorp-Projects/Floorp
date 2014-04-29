@@ -7468,6 +7468,52 @@ class MGuardShape
     }
 };
 
+// Bail if the object's shape is not one of the shapes in shapes_.
+class MGuardShapePolymorphic
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+    Vector<Shape *, 4, IonAllocPolicy> shapes_;
+
+    MGuardShapePolymorphic(TempAllocator &alloc, MDefinition *obj)
+      : MUnaryInstruction(obj),
+        shapes_(alloc)
+    {
+        setGuard();
+        setMovable();
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(GuardShapePolymorphic)
+
+    static MGuardShapePolymorphic *New(TempAllocator &alloc, MDefinition *obj) {
+        return new(alloc) MGuardShapePolymorphic(alloc, obj);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *obj() const {
+        return getOperand(0);
+    }
+    bool addShape(Shape *shape) {
+        return shapes_.append(shape);
+    }
+    size_t numShapes() const {
+        return shapes_.length();
+    }
+    Shape *getShape(size_t i) const {
+        return shapes_[i];
+    }
+
+    bool congruentTo(const MDefinition *ins) const;
+
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
+};
+
 // Guard on an object's type, inclusively or exclusively.
 class MGuardObjectType
   : public MUnaryInstruction,

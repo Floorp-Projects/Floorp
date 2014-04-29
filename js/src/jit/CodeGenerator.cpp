@@ -1504,7 +1504,15 @@ CodeGenerator::emitGetPropertyPolymorphic(LInstruction *ins, Register obj, Regis
     Label done;
     for (size_t i = 0; i < mir->numShapes(); i++) {
         Label next;
-        masm.branchPtr(Assembler::NotEqual, scratch, ImmGCPtr(mir->objShape(i)), &next);
+        if (i == mir->numShapes() - 1) {
+            if (!bailoutCmpPtr(Assembler::NotEqual, scratch, ImmGCPtr(mir->objShape(i)),
+                               ins->snapshot()))
+            {
+                return false;
+            }
+        } else {
+            masm.branchPtr(Assembler::NotEqual, scratch, ImmGCPtr(mir->objShape(i)), &next);
+        }
 
         Shape *shape = mir->shape(i);
         if (shape->slot() < shape->numFixedSlots()) {
@@ -1518,13 +1526,10 @@ CodeGenerator::emitGetPropertyPolymorphic(LInstruction *ins, Register obj, Regis
             masm.loadTypedOrValue(Address(scratch, offset), output);
         }
 
-        masm.jump(&done);
+        if (i != mir->numShapes() - 1)
+            masm.jump(&done);
         masm.bind(&next);
     }
-
-    // Bailout if no shape matches.
-    if (!bailout(ins->snapshot()))
-        return false;
 
     masm.bind(&done);
     return true;
@@ -1561,7 +1566,15 @@ CodeGenerator::emitSetPropertyPolymorphic(LInstruction *ins, Register obj, Regis
     Label done;
     for (size_t i = 0; i < mir->numShapes(); i++) {
         Label next;
-        masm.branchPtr(Assembler::NotEqual, scratch, ImmGCPtr(mir->objShape(i)), &next);
+        if (i == mir->numShapes() - 1) {
+            if (!bailoutCmpPtr(Assembler::NotEqual, scratch, ImmGCPtr(mir->objShape(i)),
+                               ins->snapshot()))
+            {
+                return false;
+            }
+        } else {
+            masm.branchPtr(Assembler::NotEqual, scratch, ImmGCPtr(mir->objShape(i)), &next);
+        }
 
         Shape *shape = mir->shape(i);
         if (shape->slot() < shape->numFixedSlots()) {
@@ -1579,13 +1592,10 @@ CodeGenerator::emitSetPropertyPolymorphic(LInstruction *ins, Register obj, Regis
             masm.storeConstantOrRegister(value, addr);
         }
 
-        masm.jump(&done);
+        if (i != mir->numShapes() - 1)
+            masm.jump(&done);
         masm.bind(&next);
     }
-
-    // Bailout if no shape matches.
-    if (!bailout(ins->snapshot()))
-        return false;
 
     masm.bind(&done);
     return true;
@@ -1719,6 +1729,32 @@ CodeGenerator::visitGuardObjectIdentity(LGuardObjectIdentity *guard)
     Assembler::Condition cond =
         guard->mir()->bailOnEquality() ? Assembler::Equal : Assembler::NotEqual;
     return bailoutCmpPtr(cond, obj, ImmGCPtr(guard->mir()->singleObject()), guard->snapshot());
+}
+
+bool
+CodeGenerator::visitGuardShapePolymorphic(LGuardShapePolymorphic *lir)
+{
+    const MGuardShapePolymorphic *mir = lir->mir();
+    Register obj = ToRegister(lir->object());
+    Register temp = ToRegister(lir->temp());
+
+    MOZ_ASSERT(mir->numShapes() > 1);
+
+    Label done;
+    masm.loadObjShape(obj, temp);
+
+    for (size_t i = 0; i < mir->numShapes(); i++) {
+        Shape *shape = mir->getShape(i);
+        if (i == mir->numShapes() - 1) {
+            if (!bailoutCmpPtr(Assembler::NotEqual, temp, ImmGCPtr(shape), lir->snapshot()))
+                return false;
+        } else {
+            masm.branchPtr(Assembler::Equal, temp, ImmGCPtr(shape), &done);
+        }
+    }
+
+    masm.bind(&done);
+    return true;
 }
 
 bool
