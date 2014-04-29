@@ -135,13 +135,6 @@ else
     ifdef BUILD_OPT
 	OPTIMIZER += -Ox  # maximum optimization for freebl
     endif
-    # The Intel AES assembly code requires Visual C++ 2010.
-    # if $(_MSC_VER) >= 1600 (Visual C++ 2010)
-    ifeq ($(firstword $(sort $(_MSC_VER) 1600)),1600)
-	DEFINES += -DUSE_HW_AES -DINTEL_GCM
-	ASFILES += intel-aes-x86-masm.asm intel-gcm-x86-masm.asm
-	EXTRA_SRCS += intel-gcm-wrap.c
-    endif
 endif
 else
     # -DMP_NO_MP_WORD
@@ -157,13 +150,6 @@ else
     ASFILES  = arcfour-amd64-masm.asm mpi_amd64_masm.asm mp_comba_amd64_masm.asm
     DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
     DEFINES += -DNSS_USE_COMBA
-    # The Intel AES assembly code requires Visual C++ 2010 (10.0). The _xgetbv
-    # compiler intrinsic function requires Visual C++ 2010 (10.0) SP1.
-    ifeq ($(_MSC_VER_GE_10SP1),1)
-	DEFINES += -DUSE_HW_AES -DINTEL_GCM
-	ASFILES += intel-aes-x64-masm.asm intel-gcm-x64-masm.asm
-	EXTRA_SRCS += intel-gcm-wrap.c
-    endif
     MPI_SRCS += mpi_amd64.c
 endif
 endif
