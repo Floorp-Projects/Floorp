@@ -3044,6 +3044,21 @@ LIRGenerator::visitGuardString(MGuardString *ins)
 }
 
 bool
+LIRGenerator::visitGuardShapePolymorphic(MGuardShapePolymorphic *ins)
+{
+    MOZ_ASSERT(ins->obj()->type() == MIRType_Object);
+    MOZ_ASSERT(ins->type() == MIRType_Object);
+
+    LGuardShapePolymorphic *guard =
+        new(alloc()) LGuardShapePolymorphic(useRegister(ins->obj()), temp());
+    if (!assignSnapshot(guard, Bailout_ShapeGuard))
+        return false;
+    if (!add(guard, ins))
+        return false;
+    return redefine(ins, ins->obj());
+}
+
+bool
 LIRGenerator::visitAssertRange(MAssertRange *ins)
 {
     MDefinition *input = ins->input();

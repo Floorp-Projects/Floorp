@@ -111,6 +111,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitConvertElementsToDoubles(LConvertElementsToDoubles *lir);
     bool visitMaybeToDoubleElement(LMaybeToDoubleElement *lir);
     bool visitGuardObjectIdentity(LGuardObjectIdentity *guard);
+    bool visitGuardShapePolymorphic(LGuardShapePolymorphic *lir);
     bool visitTypeBarrierV(LTypeBarrierV *lir);
     bool visitTypeBarrierO(LTypeBarrierO *lir);
     bool visitMonitorTypes(LMonitorTypes *lir);
