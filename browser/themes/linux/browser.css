@@ -1265,7 +1265,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   position: relative;
   background-color: #fff;
   background-clip: padding-box;
-  padding-left: 4px;
+  padding-left: 3px;
   border-radius: 2.5px 0 0 2.5px;
   border-width: 0 8px 0 0;
   border-style: solid;
@@ -1273,6 +1273,10 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   -moz-margin-end: -8px;
   margin-top: -1px;
   margin-bottom: -1px;
+}
+
+@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box {
+  padding-left: 7px;
 }
 
 #notification-popup-box:not([hidden]) + #identity-box {
