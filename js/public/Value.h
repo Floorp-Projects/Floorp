@@ -236,7 +236,7 @@ typedef enum JSWhyMagic
     JS_BLOCK_NEEDS_CLONE,        /* value of static block object slot */
     JS_HASH_KEY_EMPTY,           /* see class js::HashableValue */
     JS_ION_ERROR,                /* error while running Ion code */
-    JS_ION_BAILOUT,              /* status code to signal EnterIon will OSR into Interpret */
+    JS_ION_BAILOUT,              /* missing recover instruction result */
     JS_OPTIMIZED_OUT,            /* optimized out slot */
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;

@@ -34,3 +34,4 @@ LOCAL_INCLUDES += [
     '/dom/ipc',
 ]
 
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

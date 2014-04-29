@@ -385,9 +385,9 @@ IonBuilder::inlineArrayPopShift(CallInfo &callInfo, MArrayPopShift::Mode mode)
     bool needsHoleCheck = thisTypes->hasObjectFlags(constraints(), types::OBJECT_FLAG_NON_PACKED);
     bool maybeUndefined = returnTypes->hasType(types::Type::UndefinedType());
 
-    bool barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
-                                                callInfo.thisArg(), nullptr, returnTypes);
-    if (barrier)
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
+                                                       callInfo.thisArg(), nullptr, returnTypes);
+    if (barrier != BarrierKind::NoBarrier)
         returnType = MIRType_Value;
 
     MArrayPopShift *ins = MArrayPopShift::New(alloc(), callInfo.thisArg(), mode,
@@ -1231,7 +1231,7 @@ IonBuilder::inlineRegExpExec(CallInfo &callInfo)
     if (!resumeAfter(exec))
         return InliningStatus_Error;
 
-    if (!pushTypeBarrier(exec, getInlineReturnTypeSet(), true))
+    if (!pushTypeBarrier(exec, getInlineReturnTypeSet(), BarrierKind::TypeSet))
         return InliningStatus_Error;
 
     return InliningStatus_Inlined;
@@ -1782,7 +1782,7 @@ IonBuilder::inlineUnsafeGetReservedSlot(CallInfo &callInfo)
     current->push(load);
 
     // We don't track reserved slot types, so always emit a barrier.
-    if (!pushTypeBarrier(load, getInlineReturnTypeSet(), true))
+    if (!pushTypeBarrier(load, getInlineReturnTypeSet(), BarrierKind::TypeSet))
         return InliningStatus_Error;
 
     return InliningStatus_Inlined;

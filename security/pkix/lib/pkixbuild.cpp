@@ -122,7 +122,6 @@ BuildForwardInner(TrustDomain& trustDomain,
                   SECOidTag requiredEKUIfPresent,
                   SECOidTag requiredPolicy,
                   CERTCertificate* potentialIssuerCertToDup,
-                  /*optional*/ const SECItem* stapledOCSPResponse,
                   unsigned int subCACount,
                   ScopedCERTCertList& results)
 {
@@ -252,14 +251,12 @@ BuildForward(TrustDomain& trustDomain,
        !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
     rv = BuildForwardInner(trustDomain, subject, time, endEntityOrCA,
                            requiredEKUIfPresent, requiredPolicy,
-                           n->cert, stapledOCSPResponse, subCACount,
-                           results);
+                           n->cert, subCACount, results);
     if (rv == Success) {
       // If we found a valid chain but deferred reporting an error with the
       // end-entity certificate, report it now.
       if (deferredEndEntityError != 0) {
-        PR_SetError(deferredEndEntityError, 0);
-        return FatalError;
+        return Fail(FatalError, deferredEndEntityError);
       }
 
       SECStatus srv = trustDomain.CheckRevocation(endEntityOrCA,
@@ -281,8 +278,7 @@ BuildForward(TrustDomain& trustDomain,
     switch (currentError) {
       case 0:
         PR_NOT_REACHED("Error code not set!");
-        PR_SetError(PR_INVALID_STATE_ERROR, 0);
-        return FatalError;
+        return Fail(FatalError, PR_INVALID_STATE_ERROR);
       case SEC_ERROR_UNTRUSTED_CERT:
         currentError = SEC_ERROR_UNTRUSTED_ISSUER;
         break;

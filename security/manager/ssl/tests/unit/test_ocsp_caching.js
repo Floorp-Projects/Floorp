@@ -107,13 +107,10 @@ function add_tests_in_mode(useMozillaPKIX) {
                       clearSessionCache);
   add_test(function() { do_check_eq(gFetchCount, 1); run_next_test(); });
 
-  // TODO(bug 977865): implement this for mozilla::pkix
-  if (!useMozillaPKIX) {
-    // The error entry will prevent a fetch from happening for a while.
-    add_connection_test("ocsp-stapling-none.example.com", Cr.NS_OK,
-                        clearSessionCache);
-    add_test(function() { do_check_eq(gFetchCount, 1); run_next_test(); });
-  }
+  // The error entry will prevent a fetch from happening for a while.
+  add_connection_test("ocsp-stapling-none.example.com", Cr.NS_OK,
+                      clearSessionCache);
+  add_test(function() { do_check_eq(gFetchCount, 1); run_next_test(); });
 
   // The error entry must not prevent a stapled OCSP response from being
   // honored.
