@@ -1793,7 +1793,7 @@ Navigator::CheckPermission(nsPIDOMWindow* aWindow, const char* aType)
   }
 
   nsCOMPtr<nsIPermissionManager> permMgr =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    services::GetPermissionManager();
   NS_ENSURE_TRUE(permMgr, false);
 
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
@@ -2189,7 +2189,7 @@ Navigator::HasWifiManagerSupport(JSContext* /* unused */,
   nsIPrincipal* principal = nsContentUtils::GetObjectPrincipal(aGlobal);
 
   nsCOMPtr<nsIPermissionManager> permMgr =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    services::GetPermissionManager();
   NS_ENSURE_TRUE(permMgr, false);
 
   uint32_t permission = nsIPermissionManager::DENY_ACTION;

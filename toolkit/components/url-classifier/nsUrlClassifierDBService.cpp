@@ -1270,7 +1270,7 @@ nsUrlClassifierDBService::LookupURI(nsIPrincipal* aPrincipal,
 
     if (!clean) {
       nsCOMPtr<nsIPermissionManager> permissionManager =
-        do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+        services::GetPermissionManager();
 
       if (permissionManager) {
         uint32_t perm;
