@@ -244,7 +244,7 @@ ToJSValue(JSContext* aCx,
     return false;
   }
   for (size_t i = 0; i < aLength; ++i) {
-    if (!ToJSValue(aCx, aArguments[i], v.handleAt(i))) {
+    if (!ToJSValue(aCx, aArguments[i], v[i])) {
       return false;
     }
   }

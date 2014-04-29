@@ -156,11 +156,6 @@ pref("browser.search.suggest.enabled", true);
 // tell the search service that we don't really expose the "current engine"
 pref("browser.search.noCurrentEngine", true);
 
-// Enable sparse localization by setting a few package locale overrides
-pref("chrome.override_package.global", "b2g-l10n");
-pref("chrome.override_package.mozapps", "b2g-l10n");
-pref("chrome.override_package.passwordmgr", "b2g-l10n");
-
 // enable xul error pages
 pref("browser.xul.error_pages.enabled", true);
 
@@ -899,9 +894,9 @@ pref("osfile.reset_worker_delay", 5000);
 pref("apz.asyncscroll.throttle", 40);
 pref("apz.pan_repaint_interval", 16);
 
-// Maximum fling velocity in inches/ms.  Slower devices may need to reduce this
-// to avoid checkerboarding.  Note, float value must be set as a string.
-pref("apz.max_velocity_inches_per_ms", "0.0375");
+// APZ physics settings, tuned by UX designers
+pref("apz.max_velocity_inches_per_ms", "0.07");
+pref("apz.fling_friction", "0.003");
 
 // Tweak default displayport values to reduce the risk of running out of
 // memory when zooming in
