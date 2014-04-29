@@ -41,8 +41,14 @@ void VectorRemove(std::vector<T>& vector, const T& element)
 }
 
 /** Lists of Observers */
-struct ObserverLists : public mozilla::AtomicRefCounted<ObserverLists>
+struct ObserverLists
 {
+private:
+  ~ObserverLists() {}
+
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ObserverLists)
+
   ObserverLists()
   {
   }
