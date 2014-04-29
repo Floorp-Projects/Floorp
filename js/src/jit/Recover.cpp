@@ -13,6 +13,13 @@
 using namespace js;
 using namespace js::jit;
 
+bool
+MNode::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSUME_UNREACHABLE("This instruction is not serializable");
+    return false;
+}
+
 void
 RInstruction::readRecoverData(CompactBufferReader &reader, RInstructionStorage *raw)
 {

@@ -360,19 +360,19 @@ class SnapshotWriter
     }
 };
 
-class MResumePoint;
+class MNode;
 
 class RecoverWriter
 {
     CompactBufferWriter writer_;
 
-    uint32_t nframes_;
-    uint32_t framesWritten_;
+    uint32_t instructionCount_;
+    uint32_t instructionsWritten_;
 
   public:
-    SnapshotOffset startRecover(uint32_t frameCount, bool resumeAfter);
+    SnapshotOffset startRecover(uint32_t instructionCount, bool resumeAfter);
 
-    bool writeFrame(const MResumePoint *rp);
+    bool writeInstruction(const MNode *rp);
 
     void endRecover();
 

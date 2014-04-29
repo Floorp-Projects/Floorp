@@ -662,20 +662,20 @@ SnapshotWriter::endSnapshot()
 }
 
 RecoverOffset
-RecoverWriter::startRecover(uint32_t frameCount, bool resumeAfter)
+RecoverWriter::startRecover(uint32_t instructionCount, bool resumeAfter)
 {
-    MOZ_ASSERT(frameCount);
-    nframes_ = frameCount;
-    framesWritten_ = 0;
+    MOZ_ASSERT(instructionCount);
+    instructionCount_ = instructionCount;
+    instructionsWritten_ = 0;
 
-    IonSpew(IonSpew_Snapshots, "starting recover with frameCount %u",
-            frameCount);
+    IonSpew(IonSpew_Snapshots, "starting recover with %u instruction(s)",
+            instructionCount);
 
     MOZ_ASSERT(!(uint32_t(resumeAfter) &~ RECOVER_RESUMEAFTER_MASK));
-    MOZ_ASSERT(frameCount < uint32_t(1 << RECOVER_RINSCOUNT_BITS));
+    MOZ_ASSERT(instructionCount < uint32_t(1 << RECOVER_RINSCOUNT_BITS));
     uint32_t bits =
         (uint32_t(resumeAfter) << RECOVER_RESUMEAFTER_SHIFT) |
-        (frameCount << RECOVER_RINSCOUNT_SHIFT);
+        (instructionCount << RECOVER_RINSCOUNT_SHIFT);
 
     RecoverOffset recoverOffset = writer_.length();
     writer_.writeUnsigned(bits);
@@ -683,16 +683,16 @@ RecoverWriter::startRecover(uint32_t frameCount, bool resumeAfter)
 }
 
 bool
-RecoverWriter::writeFrame(const MResumePoint *rp)
+RecoverWriter::writeInstruction(const MNode *rp)
 {
     if (!rp->writeRecoverData(writer_))
         return false;
-    framesWritten_++;
+    instructionsWritten_++;
     return true;
 }
 
 void
 RecoverWriter::endRecover()
 {
-    JS_ASSERT(nframes_ == framesWritten_);
+    MOZ_ASSERT(instructionCount_ == instructionsWritten_);
 }
