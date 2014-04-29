@@ -140,7 +140,7 @@
 .ruleview-colorswatch,
 .computedview-colorswatch,
 .markupview-colorswatch {
-  box-shadow: 0 0 0 1px #EFEFEF;
+  box-shadow: 0 0 0 1px #c4c4c4;
 }
 
 /* CodeMirror specific styles.
