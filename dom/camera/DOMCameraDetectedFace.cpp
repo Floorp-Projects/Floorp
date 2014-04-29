@@ -8,7 +8,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(DOMCameraPoint, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMCameraPoint, mParent)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMCameraPoint)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMCameraPoint)
@@ -17,8 +17,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMCameraPoint)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_5(DOMCameraDetectedFace, mParent,
-                                        mBounds, mLeftEye, mRightEye, mMouth)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMCameraDetectedFace, mParent,
+                                      mBounds, mLeftEye, mRightEye, mMouth)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMCameraDetectedFace)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMCameraDetectedFace)

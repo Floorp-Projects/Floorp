@@ -1396,7 +1396,7 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WebGLContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLContext)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_13(WebGLContext,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLContext,
   mCanvasElement,
   mExtensions,
   mBound2DTextures,

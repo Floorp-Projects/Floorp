@@ -42,11 +42,11 @@ nsWindowRoot::~nsWindowRoot()
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_4(nsWindowRoot,
-                                        mWindow,
-                                        mListenerManager,
-                                        mPopupNode,
-                                        mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsWindowRoot,
+                                      mWindow,
+                                      mListenerManager,
+                                      mPopupNode,
+                                      mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsWindowRoot)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

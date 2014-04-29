@@ -9,7 +9,7 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(PerformanceEntry, mPerformance)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PerformanceEntry, mPerformance)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PerformanceEntry)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PerformanceEntry)

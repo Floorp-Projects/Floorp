@@ -22,7 +22,7 @@ nsFormData::nsFormData(nsISupports* aOwner)
 // -------------------------------------------------------------------------
 // nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsFormData, mOwner)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsFormData, mOwner)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFormData)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFormData)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormData)

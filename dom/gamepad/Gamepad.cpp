@@ -19,7 +19,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Gamepad)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(Gamepad, mParent, mButtons)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Gamepad, mParent, mButtons)
 
 Gamepad::Gamepad(nsISupports* aParent,
                  const nsAString& aID, uint32_t aIndex,

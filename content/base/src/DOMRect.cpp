@@ -12,7 +12,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(DOMRectReadOnly, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMRectReadOnly, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMRectReadOnly)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMRectReadOnly)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMRectReadOnly)
@@ -72,7 +72,7 @@ DOMRect::Constructor(const GlobalObject& aGlobal, double aX, double aY,
 
 // -----------------------------------------------------------------------------
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(DOMRectList, mParent, mArray)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMRectList, mParent, mArray)
 
 NS_INTERFACE_TABLE_HEAD(DOMRectList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

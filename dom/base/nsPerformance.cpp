@@ -22,7 +22,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsPerformanceTiming, mPerformance)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsPerformanceTiming, mPerformance)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsPerformanceTiming, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsPerformanceTiming, Release)
@@ -337,7 +337,7 @@ nsPerformanceTiming::WrapObject(JSContext *cx)
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsPerformanceNavigation, mPerformance)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsPerformanceNavigation, mPerformance)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsPerformanceNavigation, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsPerformanceNavigation, Release)
@@ -360,10 +360,10 @@ nsPerformanceNavigation::WrapObject(JSContext *cx)
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_5(nsPerformance,
-                                        mWindow, mTiming,
-                                        mNavigation, mEntries,
-                                        mParentPerformance)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsPerformance,
+                                      mWindow, mTiming,
+                                      mNavigation, mEntries,
+                                      mParentPerformance)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPerformance)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPerformance)
 

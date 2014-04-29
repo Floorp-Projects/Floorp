@@ -415,12 +415,12 @@ CanvasGradient::AddColorStop(float offset, const nsAString& colorstr, ErrorResul
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(CanvasGradient, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CanvasGradient, Release)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(CanvasGradient, mContext)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CanvasGradient, mContext)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(CanvasPattern, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CanvasPattern, Release)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(CanvasPattern, mContext)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CanvasPattern, mContext)
 
 class CanvasRenderingContext2DUserData : public LayerUserData {
 public:
