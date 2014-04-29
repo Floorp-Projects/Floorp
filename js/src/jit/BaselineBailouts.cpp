@@ -1336,7 +1336,11 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
         return BAILOUT_RETURN_FATAL_ERROR;
     IonSpew(IonSpew_BaselineBailouts, "  Incoming frame ptr = %p", builder.startFrame());
 
+    AutoValueVector instructionResults(cx);
     SnapshotIterator snapIter(iter);
+
+    if (!snapIter.initIntructionResults(instructionResults))
+        return BAILOUT_RETURN_FATAL_ERROR;
 
     RootedFunction callee(cx, iter.maybeCallee());
     RootedScript scr(cx, iter.script());
@@ -1365,7 +1369,12 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     jsbytecode *topCallerPC = nullptr;
 
     while (true) {
-        MOZ_ASSERT(snapIter.instruction()->isResumePoint());
+        if (!snapIter.instruction()->isResumePoint()) {
+            if (!snapIter.instruction()->recover(cx, snapIter))
+                return BAILOUT_RETURN_FATAL_ERROR;
+            snapIter.nextInstruction();
+            continue;
+        }
 
         if (frameNo > 0) {
             TraceLogStartEvent(logger, TraceLogCreateTextId(logger, scr));
