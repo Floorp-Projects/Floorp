@@ -220,7 +220,7 @@ BluetoothHfpManager::Notify(const hal::BatteryInformation& aBatteryInfo)
 {
   // Range of battery level: [0, 1], double
   // Range of CIND::BATTCHG: [0, 5], int
-  int level = ceil(aBatteryInfo.level() * 5.0);
+  int level = round(aBatteryInfo.level() * 5.0);
   if (level != sCINDItems[CINDType::BATTCHG].value) {
     sCINDItems[CINDType::BATTCHG].value = level;
     SendCommand(RESPONSE_CIEV, CINDType::BATTCHG);
@@ -425,6 +425,10 @@ BluetoothHfpManager::Init()
   }
 
   hal::RegisterBatteryObserver(this);
+  // Update to the latest battery level
+  hal::BatteryInformation batteryInfo;
+  hal::GetCurrentBatteryInformation(&batteryInfo);
+  Notify(batteryInfo);
 
 #ifdef MOZ_B2G_RIL
   mListener = new BluetoothRilListener();
