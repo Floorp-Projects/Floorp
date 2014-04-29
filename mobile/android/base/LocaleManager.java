@@ -18,4 +18,5 @@ public interface LocaleManager {
     void updateConfiguration(Context context, Locale locale);
     String setSelectedLocale(Context context, String localeCode);
     boolean systemLocaleDidChange();
+    void resetToSystemLocale(Context context);
 }

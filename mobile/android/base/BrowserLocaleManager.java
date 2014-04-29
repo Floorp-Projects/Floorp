@@ -50,9 +50,10 @@ public class BrowserLocaleManager implements LocaleManager {
 
     private static final String FALLBACK_LOCALE_TAG = "en-US";
 
-    // This is volatile because we don't impose restrictions
+    // These are volatile because we don't impose restrictions
     // over which thread calls our methods.
     private volatile Locale currentLocale = null;
+    private volatile Locale systemLocale = Locale.getDefault();
 
     private AtomicBoolean inited = new AtomicBoolean(false);
     private boolean systemLocaleDidChange = false;
@@ -131,6 +132,12 @@ public class BrowserLocaleManager implements LocaleManager {
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                // We don't trust Locale.getDefault() here, because we make a
+                // habit of mutating it! Use the one Android supplies, because
+                // that gets regularly reset.
+                // The default value of systemLocale is fine, because we haven't
+                // yet swizzled Locale during static initialization.
+                systemLocale = context.getResources().getConfiguration().locale;
                 systemLocaleDidChange = true;
             }
         };
@@ -220,6 +227,20 @@ public class BrowserLocaleManager implements LocaleManager {
         return resultant;
     }
 
+    @Override
+    public void resetToSystemLocale(Context context) {
+        // Wipe the pref.
+        final SharedPreferences settings = getSharedPreferences(context);
+        settings.edit().remove(PREF_LOCALE).commit();
+
+        // Apply the system locale.
+        updateLocale(context, systemLocale);
+
+        // Tell Gecko.
+        GeckoEvent ev = GeckoEvent.createBroadcastEvent(EVENT_LOCALE_CHANGED, "");
+        GeckoAppShell.sendEventToGecko(ev);
+    }
+
     /**
      * This is public to allow for an activity to force the
      * current locale to be applied if necessary (e.g., when
@@ -284,8 +305,12 @@ public class BrowserLocaleManager implements LocaleManager {
 
         final Locale locale = parseLocaleCode(localeCode);
 
+        return updateLocale(context, locale);
+    }
+
+    private String updateLocale(Context context, final Locale locale) {
         // Fast path.
-        if (defaultLocale.equals(locale)) {
+        if (Locale.getDefault().equals(locale)) {
             return null;
         }
 
