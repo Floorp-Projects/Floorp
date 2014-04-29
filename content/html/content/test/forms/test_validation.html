@@ -119,8 +119,8 @@ function checkDefaultPseudoClass()
      ":valid pseudo-class should apply");
 
   is(window.getComputedStyle(document.getElementById('b'), null)
-       .getPropertyValue('background-color'), "rgb(0, 0, 0)",
-     ":valid pseudo-class should not apply");
+       .getPropertyValue('background-color'), "rgb(0, 255, 0)",
+     ":valid pseudo-class should apply");
 }
 
 function checkSpecificWillValidate()
@@ -147,13 +147,13 @@ function checkSpecificWillValidate()
   is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
      "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   i.type = "image";
-  ok(!i.willValidate, "Image state input should be barred from constraint validation");
+  ok(i.willValidate, "Image state input should not be barred from constraint validation");
   is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
-     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+     "rgb(0, 255, 0)", ":valid and :invalid should apply");
   i.type = "submit";
-  ok(!i.willValidate, "Submit state input should be barred from constraint validation");
+  ok(i.willValidate, "Submit state input should not be barred from constraint validation");
   is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
-     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+     "rgb(0, 255, 0)", ":valid and :invalid should apply");
   i.type = "number";
   ok(i.willValidate, "Number state input should not be barred from constraint validation");
   is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
@@ -179,13 +179,13 @@ function checkSpecificWillValidate()
   is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
      "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   b.type = "submit";
-  ok(!b.willValidate, "Submit state button should be barred from constraint validation");
+  ok(b.willValidate, "Submit state button should not be barred from constraint validation");
   is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
-     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+     "rgb(0, 255, 0)", ":valid and :invalid should apply");
   b.type = "";
-  ok(!b.willValidate, "Default button element should be barred from constraint validation");
+  ok(b.willValidate, "Default button element should not be barred from constraint validation");
   is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
-     "rgb(0, 0, 0)", ":valid pseudo-class should apply");
+     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
 
   // textarea element
   t = document.getElementById('t');
@@ -332,7 +332,7 @@ checkCustomError(document.getElementById('i'), false);
 checkCustomError(document.getElementById('s'), false);
 checkCustomError(document.getElementById('t'), false);
 checkCustomError(document.getElementById('o'), false);
-checkCustomError(document.getElementById('b'), true);
+checkCustomError(document.getElementById('b'), false);
 checkCustomError(document.getElementById('f'), true);
 checkCustomError(document.getElementById('obj'), true);
 
