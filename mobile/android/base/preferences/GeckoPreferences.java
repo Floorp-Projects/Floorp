@@ -717,11 +717,6 @@ public class GeckoPreferences
      * onActivityResult mechanism: see {@link BrowserApp#onActivityResult(int, int, Intent)}.
      */
     private boolean onLocaleSelected(final String newValue) {
-        if (newValue.equals("")) {
-            // TODO: reset our locale to match system.
-            return false;
-        }
-
         final Context context = getApplicationContext();
 
         // LocaleManager operations need to occur on the background thread.
@@ -731,8 +726,13 @@ public class GeckoPreferences
             @Override
             public void run() {
                 final LocaleManager localeManager = BrowserLocaleManager.getInstance();
-                if (null == localeManager.setSelectedLocale(context, newValue)) {
-                    localeManager.updateConfiguration(context, Locale.getDefault());
+
+                if (newValue.equals("")) {
+                    BrowserLocaleManager.getInstance().resetToSystemLocale(context);
+                } else {
+                    if (null == localeManager.setSelectedLocale(context, newValue)) {
+                        localeManager.updateConfiguration(context, Locale.getDefault());
+                    }
                 }
 
                 ThreadUtils.postToUiThread(new Runnable() {
