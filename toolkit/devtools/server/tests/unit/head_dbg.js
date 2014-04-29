@@ -8,10 +8,10 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const Services = devtools.require("Services");
-const { ActorPool, createExtraActors, appendExtraActors } = devtools.require("devtools/server/actors/common");
-const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+
+const Services = devtools.require("Services");
+const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
 
 // Always log packets when running tests. runxpcshelltests.py will throw
 // the output away anyway, unless you give it the --verbose flag.
@@ -33,6 +33,8 @@ tryImport("resource://gre/modules/devtools/dbg-server.jsm");
 tryImport("resource://gre/modules/devtools/dbg-client.jsm");
 tryImport("resource://gre/modules/devtools/Loader.jsm");
 tryImport("resource://gre/modules/devtools/Console.jsm");
+
+let { BreakpointStore, LongStringActor, ThreadActor } = devtools.require("devtools/server/actors/script");
 
 function testExceptionHook(ex) {
   try {
@@ -182,7 +184,7 @@ function attachTestTabAndResume(aClient, aTitle, aCallback) {
 function initTestDebuggerServer()
 {
   DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/root.js");
-  DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/script.js");
+  DebuggerServer.registerModule("devtools/server/actors/script");
   DebuggerServer.addActors("resource://test/testactors.js");
   // Allow incoming connections.
   DebuggerServer.init(function () { return true; });
@@ -191,7 +193,7 @@ function initTestDebuggerServer()
 function initTestTracerServer()
 {
   DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/root.js");
-  DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/script.js");
+  DebuggerServer.registerModule("devtools/server/actors/script");
   DebuggerServer.addActors("resource://test/testactors.js");
   DebuggerServer.registerModule("devtools/server/actors/tracer");
   // Allow incoming connections.

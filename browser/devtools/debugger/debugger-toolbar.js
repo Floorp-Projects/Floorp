@@ -509,12 +509,13 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     if (stackframeItem) {
       // The container is not empty and an actual item was selected.
       let depth = stackframeItem.attachment.depth;
-      DebuggerController.StackFrames.selectFrame(depth);
 
       // Mirror the selected item in the classic list.
       this.suppressSelectionEvents = true;
       this._mirror.selectedItem = e => e.attachment.depth == depth;
       this.suppressSelectionEvents = false;
+
+      DebuggerController.StackFrames.selectFrame(depth);
     }
   },
 
