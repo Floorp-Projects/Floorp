@@ -1324,7 +1324,7 @@ IonBuilder::traverseBytecode()
 #endif
 
         pc += js_CodeSpec[op].length;
-        current->updateTrackedPc(pc);
+        current->updateTrackedSite(bytecodeSite(pc));
     }
 
     return true;
@@ -3987,10 +3987,15 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
 
     // Start inlining.
     LifoAlloc *lifoAlloc = alloc_->lifoAlloc();
+    InlineScriptTree *inlineScriptTree =
+        info().inlineScriptTree()->addCallee(alloc_, pc, calleeScript);
+    if (!inlineScriptTree)
+        return false;
     CompileInfo *info = lifoAlloc->new_<CompileInfo>(calleeScript, target,
                                                      (jsbytecode *)nullptr, callInfo.constructing(),
                                                      this->info().executionMode(),
-                                                     /* needsArgsObj = */ false);
+                                                     /* needsArgsObj = */ false,
+                                                     inlineScriptTree);
     if (!info)
         return false;
 
@@ -5727,31 +5732,32 @@ IonBuilder::addBlock(MBasicBlock *block, uint32_t loopDepth)
 MBasicBlock *
 IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 {
-    MBasicBlock *block = MBasicBlock::New(graph(), &analysis(), info(),
-                                          predecessor, pc, MBasicBlock::NORMAL);
+    MBasicBlock *block = MBasicBlock::New(graph(), &analysis(), info(), predecessor,
+                                          bytecodeSite(pc), MBasicBlock::NORMAL);
     return addBlock(block, loopDepth_);
 }
 
 MBasicBlock *
 IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc, MResumePoint *priorResumePoint)
 {
-    MBasicBlock *block = MBasicBlock::NewWithResumePoint(graph(), info(), predecessor, pc,
-                                                         priorResumePoint);
+    MBasicBlock *block = MBasicBlock::NewWithResumePoint(graph(), info(), predecessor,
+                                                         bytecodeSite(pc), priorResumePoint);
     return addBlock(block, loopDepth_);
 }
 
 MBasicBlock *
 IonBuilder::newBlockPopN(MBasicBlock *predecessor, jsbytecode *pc, uint32_t popped)
 {
-    MBasicBlock *block = MBasicBlock::NewPopN(graph(), info(), predecessor, pc, MBasicBlock::NORMAL, popped);
+    MBasicBlock *block = MBasicBlock::NewPopN(graph(), info(), predecessor, bytecodeSite(pc),
+                                              MBasicBlock::NORMAL, popped);
     return addBlock(block, loopDepth_);
 }
 
 MBasicBlock *
 IonBuilder::newBlockAfter(MBasicBlock *at, MBasicBlock *predecessor, jsbytecode *pc)
 {
-    MBasicBlock *block = MBasicBlock::New(graph(), &analysis(), info(),
-                                          predecessor, pc, MBasicBlock::NORMAL);
+    MBasicBlock *block = MBasicBlock::New(graph(), &analysis(), info(), predecessor,
+                                          bytecodeSite(pc), MBasicBlock::NORMAL);
     if (!block)
         return nullptr;
     graph().insertBlockAfter(at, block);
@@ -5761,8 +5767,8 @@ IonBuilder::newBlockAfter(MBasicBlock *at, MBasicBlock *predecessor, jsbytecode 
 MBasicBlock *
 IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc, uint32_t loopDepth)
 {
-    MBasicBlock *block = MBasicBlock::New(graph(), &analysis(), info(),
-                                          predecessor, pc, MBasicBlock::NORMAL);
+    MBasicBlock *block = MBasicBlock::New(graph(), &analysis(), info(), predecessor,
+                                          bytecodeSite(pc), MBasicBlock::NORMAL);
     return addBlock(block, loopDepth);
 }
 
@@ -5943,8 +5949,8 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool 
     // If this site can OSR, all values on the expression stack are part of the loop.
     if (canOsr)
         stackPhiCount = predecessor->stackDepth() - info().firstStackSlot();
-    MBasicBlock *block = MBasicBlock::NewPendingLoopHeader(graph(), info(), predecessor, pc,
-                                                           stackPhiCount);
+    MBasicBlock *block = MBasicBlock::NewPendingLoopHeader(graph(), info(), predecessor,
+                                                           bytecodeSite(pc), stackPhiCount);
     if (!addBlock(block, loopDepth_))
         return nullptr;
 

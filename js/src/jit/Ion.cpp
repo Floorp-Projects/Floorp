@@ -1828,9 +1828,13 @@ IonCompile(JSContext *cx, JSScript *script,
     if (!graph)
         return AbortReason_Alloc;
 
+    InlineScriptTree *inlineScriptTree = InlineScriptTree::New(temp, nullptr, nullptr, script);
+    if (!inlineScriptTree)
+        return AbortReason_Alloc;
+
     CompileInfo *info = alloc->new_<CompileInfo>(script, script->functionNonDelazifying(), osrPc,
                                                  constructing, executionMode,
-                                                 script->needsArgsObj());
+                                                 script->needsArgsObj(), inlineScriptTree);
     if (!info)
         return AbortReason_Alloc;
 
