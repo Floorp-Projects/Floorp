@@ -23,16 +23,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "nsIMessageListenerManager");
 
 XPCOMUtils.defineLazyServiceGetter(this,
-                                   "permissionManager",
-                                   "@mozilla.org/permissionmanager;1",
-                                   "nsIPermissionManager");
-
-XPCOMUtils.defineLazyServiceGetter(this,
-                                   "secMan",
-                                   "@mozilla.org/scriptsecuritymanager;1",
-                                   "nsIScriptSecurityManager");
-
-XPCOMUtils.defineLazyServiceGetter(this,
                                    "appsService",
                                    "@mozilla.org/AppsService;1",
                                    "nsIAppsService");
@@ -59,7 +49,7 @@ this.PermissionSettingsModule = {
     // if the permission is actually explicit (and thus modifiable) or not
     // on permissionManager also but we currently don't.
     let perm =
-      permissionManager.testExactPermissionFromPrincipal(aPrincipal,aPermName);
+      Services.perms.testExactPermissionFromPrincipal(aPrincipal,aPermName);
     let isExplicit = isExplicitInPermissionsTable(aPermName, aPrincipal.appStatus);
 
     return (aAction === "unknown" &&
@@ -79,7 +69,7 @@ this.PermissionSettingsModule = {
   _internalAddPermission: function _internalAddPermission(aData, aAllowAllChanges, aCallbacks) {
     let uri = Services.io.newURI(aData.origin, null, null);
     let appID = appsService.getAppLocalIdByManifestURL(aData.manifestURL);
-    let principal = secMan.getAppCodebasePrincipal(uri, appID, aData.browserFlag);
+    let principal = Services.scriptSecurityManager.getAppCodebasePrincipal(uri, appID, aData.browserFlag);
 
     let action;
     switch (aData.value)
@@ -104,7 +94,7 @@ this.PermissionSettingsModule = {
     if (aAllowAllChanges ||
         this._isChangeAllowed(principal, aData.type, aData.value)) {
       debug("add: " + aData.origin + " " + appID + " " + action);
-      permissionManager.addFromPrincipal(principal, aData.type, action);
+      Services.perms.addFromPrincipal(principal, aData.type, action);
       return true;
     } else {
       debug("add Failure: " + aData.origin + " " + appID + " " + action);
@@ -116,8 +106,8 @@ this.PermissionSettingsModule = {
     debug("getPermission: " + aPermName + ", " + aManifestURL + ", " + aOrigin);
     let uri = Services.io.newURI(aOrigin, null, null);
     let appID = appsService.getAppLocalIdByManifestURL(aManifestURL);
-    let principal = secMan.getAppCodebasePrincipal(uri, appID, aBrowserFlag);
-    let result = permissionManager.testExactPermissionFromPrincipal(principal, aPermName);
+    let principal = Services.scriptSecurityManager.getAppCodebasePrincipal(uri, appID, aBrowserFlag);
+    let result = Services.perms.testExactPermissionFromPrincipal(principal, aPermName);
 
     switch (result)
     {
