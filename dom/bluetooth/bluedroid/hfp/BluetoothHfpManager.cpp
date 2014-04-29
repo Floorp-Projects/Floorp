@@ -406,6 +406,10 @@ BluetoothHfpManager::Init()
   }
 
   hal::RegisterBatteryObserver(this);
+  // Update to the latest battery level
+  hal::BatteryInformation batteryInfo;
+  hal::GetCurrentBatteryInformation(&batteryInfo);
+  Notify(batteryInfo);
 
   mListener = new BluetoothRilListener();
   NS_ENSURE_TRUE(mListener->Listen(true), false);
@@ -521,7 +525,7 @@ BluetoothHfpManager::Notify(const hal::BatteryInformation& aBatteryInfo)
 {
   // Range of battery level: [0, 1], double
   // Range of CIND::BATTCHG: [0, 5], int
-  mBattChg = (int) ceil(aBatteryInfo.level() * 5.0);
+  mBattChg = (int) round(aBatteryInfo.level() * 5.0);
   UpdateDeviceCIND();
 }
 
