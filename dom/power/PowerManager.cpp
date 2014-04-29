@@ -17,6 +17,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsError.h"
 #include "mozilla/dom/MozPowerManagerBinding.h"
+#include "mozilla/Services.h"
 
 namespace mozilla {
 namespace dom {
@@ -185,7 +186,7 @@ bool
 PowerManager::CheckPermission(nsPIDOMWindow* aWindow)
 {
   nsCOMPtr<nsIPermissionManager> permMgr =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    services::GetPermissionManager();
   NS_ENSURE_TRUE(permMgr, false);
 
   uint32_t permission = nsIPermissionManager::DENY_ACTION;

@@ -13653,7 +13653,7 @@ nsGlobalWindow::EnableNetworkEvent(uint32_t aType)
   MOZ_ASSERT(IsInnerWindow());
 
   nsCOMPtr<nsIPermissionManager> permMgr =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    services::GetPermissionManager();
   if (!permMgr) {
     NS_ERROR("No PermissionManager available!");
     return;

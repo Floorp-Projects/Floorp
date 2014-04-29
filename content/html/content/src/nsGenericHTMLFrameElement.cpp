@@ -418,7 +418,7 @@ nsGenericHTMLFrameElement::GetReallyIsBrowserOrApp(bool *aOut)
   // Fail if the node principal isn't trusted.
   nsIPrincipal *principal = NodePrincipal();
   nsCOMPtr<nsIPermissionManager> permMgr =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    services::GetPermissionManager();
   NS_ENSURE_TRUE(permMgr, NS_OK);
 
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
@@ -464,7 +464,7 @@ nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
   // Check permission.
   nsIPrincipal *principal = NodePrincipal();
   nsCOMPtr<nsIPermissionManager> permMgr =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    services::GetPermissionManager();
   NS_ENSURE_TRUE(permMgr, NS_OK);
 
   uint32_t permission = nsIPermissionManager::DENY_ACTION;

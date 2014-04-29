@@ -17,6 +17,7 @@
 #include "GeneratedEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Services.h"
 #include "nsIPermissionManager.h"
 #include "mozilla/dom/DeviceLightEvent.h"
 #include "mozilla/dom/DeviceProximityEvent.h"
@@ -181,7 +182,7 @@ WindowCannotReceiveSensorEvent (nsPIDOMWindow* aWindow)
 
   if (aWindow->GetOuterWindow()->IsBackground()) {
     nsCOMPtr<nsIPermissionManager> permMgr =
-      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+      services::GetPermissionManager();
     NS_ENSURE_TRUE(permMgr, false);
     uint32_t permission = nsIPermissionManager::DENY_ACTION;
     permMgr->TestPermissionFromWindow(aWindow, "background-sensors", &permission);

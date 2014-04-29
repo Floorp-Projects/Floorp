@@ -618,7 +618,7 @@ nsHttpChannel::RetrieveSSLOptions()
         return;
 
     nsCOMPtr<nsIPermissionManager> permMgr =
-        do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+        services::GetPermissionManager();
     if (!permMgr)
         return;
 
@@ -1180,7 +1180,7 @@ nsHttpChannel::ProcessSSLInformation()
     // use via RetrieveSSLOptions(()
 
     nsCOMPtr<nsIPermissionManager> permMgr =
-        do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+        services::GetPermissionManager();
     if (!permMgr)
         return;
 
