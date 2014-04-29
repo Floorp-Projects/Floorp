@@ -41,6 +41,9 @@ let WebappRT = {
     pref("dom.mozTCPSocket.enabled", true),
     // Don't check for updates in webapp processes to avoid duplicate notifications.
     pref("browser.webapps.checkForUpdates", 0),
+
+    // Enabled system messages for web activity support
+    pref("dom.sysmsg.enabled", true),
   ],
 
   init: function(aStatus, aUrl, aCallback) {

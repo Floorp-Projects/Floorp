@@ -584,8 +584,6 @@ pref("image.mem.min_discard_timeout_ms", 10000);
 #ifdef NIGHTLY_BUILD
 // Shumway component (SWF player) is disabled by default. Also see bug 904346.
 pref("shumway.disabled", true);
-// Enabled system messages for web activity support
-pref("dom.sysmsg.enabled", true);
 #endif
 
 // enable touch events interfaces
