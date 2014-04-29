@@ -117,7 +117,9 @@ CompositorChild::DeallocPLayerTransactionChild(PLayerTransactionChild* actor)
 bool
 CompositorChild::RecvInvalidateAll()
 {
-  FrameLayerBuilder::InvalidateAllLayers(mLayerManager);
+  if (mLayerManager) {
+    FrameLayerBuilder::InvalidateAllLayers(mLayerManager);
+  }
   return true;
 }
 
