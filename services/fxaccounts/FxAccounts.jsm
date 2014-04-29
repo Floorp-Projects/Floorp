@@ -698,8 +698,14 @@ FxAccountsInternal.prototype = {
     // Login is truly complete once keys have been fetched, so once getKeys()
     // obtains and stores kA and kB, it will fire the onverified observer
     // notification.
-    return this.whenVerified(data)
-      .then(() => this.getKeys());
+
+    // The callers of startVerifiedCheck never consume a returned promise (ie,
+    // this is simply kicking off a background fetch) so we must add a rejection
+    // handler to avoid runtime warnings about the rejection not being handled.
+    this.whenVerified(data).then(
+      () => this.getKeys(),
+      err => log.info("startVerifiedCheck promise was rejected: " + err)
+    );
   },
 
   whenVerified: function(data) {
