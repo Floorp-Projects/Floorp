@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 995411 moves some files around in gfx/layers and widget/xpwidget
+Bug 958889 moves files into the new mobile/android/base/tabspanel/ package.
