@@ -1702,10 +1702,15 @@ Experiments.ExperimentEntry.prototype = {
     this._enabled = false;
 
     let changes = yield this.reconcileAddonState();
+    this._logTermination(terminationKind, terminationReason);
+
     let now = this._policy.now();
     this._lastChangedDate = now;
     this._endDate = now;
-    this._logTermination(terminationKind, terminationReason);
+
+    if (terminationKind == TELEMETRY_LOG.TERMINATION.ADDON_UNINSTALLED) {
+      changes |= this.ADDON_CHANGE_UNINSTALL;
+    }
 
     return changes;
   }),
