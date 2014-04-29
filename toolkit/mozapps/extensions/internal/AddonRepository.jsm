@@ -50,7 +50,6 @@ const FILE_DATABASE         = "addons.json";
 const DB_SCHEMA             = 5;
 const DB_MIN_JSON_SCHEMA    = 5;
 const DB_BATCH_TIMEOUT_MS   = 50;
-const DB_DATA_WRITTEN_TOPIC = "addon-repository-data-written"
 
 const BLANK_DB = function() {
   return {
@@ -1430,6 +1429,7 @@ this.AddonRepository = {
     this._request.addEventListener("error", aEvent => this._reportFailure(), false);
     this._request.addEventListener("timeout", aEvent => this._reportFailure(), false);
     this._request.addEventListener("load", aEvent => {
+      logger.debug("Got metadata search load event");
       let request = aEvent.target;
       let responseXML = request.responseXML;
 
@@ -1518,8 +1518,11 @@ this.AddonRepository = {
       }
     }
     return null;
-  }
+  },
 
+  flush: function() {
+    return AddonDatabase.flush();
+  }
 };
 
 var AddonDatabase = {
@@ -1680,13 +1683,14 @@ var AddonDatabase = {
   delete: function AD_delete(aCallback) {
     this.DB = BLANK_DB();
 
-    this.Writer.flush()
+    this._deleting = this.Writer.flush()
       .then(null, () => {})
       // shutdown(true) never rejects
       .then(() => this.shutdown(true))
       .then(() => OS.File.remove(this.jsonFile.path, {}))
       .then(null, error => logger.error("Unable to delete Addon Repository file " +
                                  this.jsonFile.path, error))
+      .then(() => this._deleting = null)
       .then(aCallback);
   },
 
@@ -1715,6 +1719,19 @@ var AddonDatabase = {
       DB_BATCH_TIMEOUT_MS
     );
     return this.Writer;
+  },
+
+  /**
+   * Flush any pending I/O on the addons.json file
+   * @return: Promise{null}
+   *          Resolves when the pending I/O (writing out or deleting
+   *          addons.json) completes
+   */
+  flush: function() {
+    if (this._deleting) {
+      return this._deleting;
+    }
+    return this.Writer.flush();
   },
 
   /**
@@ -1919,8 +1936,8 @@ var AddonDatabase = {
    */
   _saveDBToDisk: function() {
     return this.Writer.saveChanges().then(
-      function() Services.obs.notifyObservers(null, DB_DATA_WRITTEN_TOPIC, null),
-      logger.error);
+      null,
+      e => logger.error("SaveDBToDisk failed", e));
   },
 
   /**
