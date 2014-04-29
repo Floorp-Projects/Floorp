@@ -1402,6 +1402,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_mov(Imm32(0), reg, NoSetCond, Signed);
     }
 
+    void incrementInt32Value(const Address &addr) {
+        add32(Imm32(1), ToPayload(addr));
+    }
+
     void cmp32(const Register &lhs, const Imm32 &rhs);
     void cmp32(const Register &lhs, const Register &rhs);
     void cmp32(const Operand &lhs, const Imm32 &rhs);

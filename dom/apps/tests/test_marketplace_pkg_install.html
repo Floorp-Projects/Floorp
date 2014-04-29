@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=989806
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 989806</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="test_packaged_app_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=989806">Mozilla Bug 989806</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+"use strict";
+
+let gApp = null;
+
+let gExternalInstallOrigin = "http://mochi.test:8888/";
+let gExternalAppsPath = gExternalInstallOrigin + "tests/dom/apps/tests/marketplace/";
+
+let gMarketplaceInstallOrigin = "https://marketplace.firefox.com/";
+let gMarketplaceAppsPath = gMarketplaceInstallOrigin + "tests/dom/apps/tests/marketplace/";
+
+SimpleTest.waitForExplicitFinish();
+
+function checkAppOnInstallSuccess(aExpected) {
+  navigator.mozApps.mgmt.oninstall = function(evt) {
+    info("Got oninstall event");
+    gApp = evt.application;
+    gApp.ondownloaderror = function() {
+      ok(false, "Download should succeed (got error: " +
+                gApp.downloadError.name + ")");
+      PackagedTestHelper.finish();
+    };
+    gApp.ondownloadsuccess = function() {
+      info("App downloaded");
+      PackagedTestHelper.checkAppState(gApp, aExpected.version, aExpected,
+                                       true, true, PackagedTestHelper.next);
+    };
+  };
+}
+
+function checkAppOnInstallError(aExpectedError) {
+  navigator.mozApps.mgmt.oninstall = function(evt) {
+    info("Got oninstall event");
+    gApp = evt.application;
+    gApp.ondownloaderror = function() {
+      is(gApp.downloadError.name, aExpectedError,
+        "Download fails with expected error: " + aExpectedError);
+      if (gApp.downloadError.name != aExpectedError) {
+        PackagedTestHelper.finish();
+      } else {
+        PackagedTestHelper.next();
+      }
+    };
+    gApp.ondownloadsuccess = function() {
+      ok(false, "App download should fail");
+      PackagedTestHelper.finish();
+    };
+  };
+}
+
+function checkUninstallApp(aApp) {
+  let req = navigator.mozApps.mgmt.uninstall(aApp);
+
+  req.onsuccess = function() {
+    info("App uninstalled");
+    aApp.ondownloadsuccess = null;
+    aApp.ondownloaderror = null;
+    aApp.onprogress = null;
+    PackagedTestHelper.next();
+  };
+  req.onerror = function(evt) {
+    ok(false, "App uninstallation should succeed (got unexpected " +
+              evt.target.error.name + ")");
+    PackagedTestHelper.finish();
+  };
+}
+
+function installApp(installOrigin, manifestURL) {
+  let domParent = document.getElementById('container');
+
+  let ifr = document.createElement('iframe');
+  ifr.setAttribute('mozbrowser', 'true');
+  ifr.setAttribute("src", installOrigin + "tests/dom/apps/tests/pkg_install_iframe.html");
+
+  ifr.addEventListener("load", function onIFrameLoad() {
+    ifr.removeEventListener("load", onIFrameLoad, false);
+
+    ifr.contentWindow.postMessage(manifestURL, "*");
+  }, false);
+
+  ifr.addEventListener("mozbrowsererror", function onCertError(e) {
+    ifr.removeEventListener("mozbrowsererror", onCertError);
+
+    ok(false, "mozbrowsererror: " + e.detail.type);
+    domParent.removeChild(ifr);
+    PackagedTestHelper.finish();
+  });
+
+  window.addEventListener("message", function onMessage(event) {
+    window.removeEventListener("message", onMessage);
+
+    is(event.data, "Application installed", "Application installed");
+
+    domParent.removeChild(ifr);
+  });
+
+  domParent.appendChild(ifr);
+}
+
+PackagedTestHelper.setSteps([
+  function() {
+    SpecialPowers.setAllAppsLaunchable(true);
+    SpecialPowers.addPermission("webapps-manage", true, document);
+    SpecialPowers.addPermission("browser", true, document);
+    SpecialPowers.autoConfirmAppInstall(() =>
+      SpecialPowers.pushPrefEnv({set: [["dom.mozBrowserFramesEnabled", true]]},
+                                PackagedTestHelper.next));
+  },
+  function() {
+    info("== TEST == Marketplace packaged app from https://marketplace.firefox.com/");
+    let miniManifestURL = gMarketplaceAppsPath + "marketplace_app.webapp"
+    let expected = {
+      name: "Flashlight (Linterna)",
+      manifestURL: miniManifestURL,
+      installOrigin: gMarketplaceInstallOrigin.slice(0, -1),
+      progress: 0,
+      installState: "installed",
+      downloadAvailable: false,
+      downloading: false,
+      readyToApplyDownload: false,
+      launch_path: "/index.html",
+      version: "2.0",
+    };
+    checkAppOnInstallSuccess(expected);
+    installApp(gMarketplaceInstallOrigin, miniManifestURL);
+  },
+  function() {
+    info("== TEST == Marketplace privileged app from https://marketplace.firefox.com/");
+    let miniManifestURL = gMarketplaceAppsPath + "marketplace_privileged_app.webapp"
+    let expected = {
+      name: "KitchenSink",
+      manifestURL: miniManifestURL,
+      installOrigin: gMarketplaceInstallOrigin.slice(0, -1),
+      progress: 0,
+      installState: "installed",
+      downloadAvailable: false,
+      downloading: false,
+      readyToApplyDownload: false,
+      launch_path: "/index.html",
+      version: "0.2.2",
+    };
+    checkAppOnInstallSuccess(expected);
+    installApp(gMarketplaceInstallOrigin, miniManifestURL);
+  },
+  function() {
+    info("== TEST == Marketplace reviewers packaged app from https://marketplace.firefox.com/");
+    checkAppOnInstallError("INVALID_SIGNATURE");
+    installApp(gMarketplaceInstallOrigin, gMarketplaceAppsPath + "marketplace_reviewers_app.webapp");
+  },
+  function() {
+    info("== TEST == Marketplace packaged app not from https://marketplace.firefox.com/");
+    checkAppOnInstallError("INSTALL_FROM_DENIED");
+    installApp(gExternalInstallOrigin, gExternalAppsPath + "marketplace_app.webapp");
+  },
+  function() {
+    info("== TEST == Marketplace privileged app not from https://marketplace.firefox.com/");
+    checkAppOnInstallError("INSTALL_FROM_DENIED");
+    installApp(gExternalInstallOrigin, gExternalAppsPath + "marketplace_privileged_app.webapp");
+  },
+  function() {
+    info("== TEST == Marketplace reviewers packaged app not from https://marketplace.firefox.com/");
+    checkAppOnInstallError("INVALID_SIGNATURE");
+    installApp(gExternalInstallOrigin, gExternalAppsPath + "marketplace_reviewers_app.webapp");
+  },
+  function() {
+    PackagedTestHelper.finish();
+  }
+]);
+
+addLoadEvent(PackagedTestHelper.start);
+
+</script>
+</pre>
+<div id="container"></div>
+</body>
+</html>

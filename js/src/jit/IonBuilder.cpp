@@ -5049,7 +5049,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
             return false;
 
         types::TemporaryTypeSet *types = bytecodeTypes(pc);
-        return pushTypeBarrier(apply, types, true);
+        return pushTypeBarrier(apply, types, BarrierKind::TypeSet);
     }
 
     // When inlining we have the arguments the function gets called with
@@ -5378,7 +5378,7 @@ IonBuilder::makeCall(JSFunction *target, CallInfo &callInfo, bool cloneAtCallsit
     if (call->isCallDOMNative())
         return pushDOMTypeBarrier(call, types, call->getSingleTarget());
 
-    return pushTypeBarrier(call, types, true);
+    return pushTypeBarrier(call, types, BarrierKind::TypeSet);
 }
 
 bool
@@ -5426,7 +5426,7 @@ IonBuilder::jsop_eval(uint32_t argc)
         if (!string->mightBeType(MIRType_String)) {
             current->push(string);
             types::TemporaryTypeSet *types = bytecodeTypes(pc);
-            return pushTypeBarrier(string, types, true);
+            return pushTypeBarrier(string, types, BarrierKind::TypeSet);
         }
 
         current->pushSlot(info().thisSlot());
@@ -5465,7 +5465,7 @@ IonBuilder::jsop_eval(uint32_t argc)
         current->push(ins);
 
         types::TemporaryTypeSet *types = bytecodeTypes(pc);
-        return resumeAfter(ins) && pushTypeBarrier(ins, types, true);
+        return resumeAfter(ins) && pushTypeBarrier(ins, types, BarrierKind::TypeSet);
     }
 
     return jsop_call(argc, /* constructing = */ false);
@@ -6274,7 +6274,7 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, Pr
 //     instruction replaces the top of the stack.
 // (5) Lastly, a type barrier instruction replaces the top of the stack.
 bool
-IonBuilder::pushTypeBarrier(MDefinition *def, types::TemporaryTypeSet *observed, bool needsBarrier)
+IonBuilder::pushTypeBarrier(MDefinition *def, types::TemporaryTypeSet *observed, BarrierKind kind)
 {
     // Barriers are never needed for instructions whose result will not be used.
     if (BytecodeIsPopped(pc))
@@ -6286,7 +6286,7 @@ IonBuilder::pushTypeBarrier(MDefinition *def, types::TemporaryTypeSet *observed,
     // must be a resume point capturing the original def, and resuming
     // to that point will explicitly monitor the new type.
 
-    if (!needsBarrier) {
+    if (kind == BarrierKind::NoBarrier) {
         MDefinition *replace = ensureDefiniteType(def, observed->getKnownMIRType());
         if (replace != def) {
             current->pop();
@@ -6301,7 +6301,7 @@ IonBuilder::pushTypeBarrier(MDefinition *def, types::TemporaryTypeSet *observed,
 
     current->pop();
 
-    MInstruction *barrier = MTypeBarrier::New(alloc(), def, observed);
+    MInstruction *barrier = MTypeBarrier::New(alloc(), def, observed, kind);
     current->add(barrier);
 
     if (barrier->type() == MIRType_Undefined)
@@ -6342,7 +6342,8 @@ IonBuilder::pushDOMTypeBarrier(MInstruction *ins, types::TemporaryTypeSet *obser
         JS_ASSERT(barrier);
     }
 
-    return pushTypeBarrier(replace, observed, barrier);
+    return pushTypeBarrier(replace, observed,
+                           barrier ? BarrierKind::TypeSet : BarrierKind::NoBarrier);
 }
 
 MDefinition *
@@ -6449,13 +6450,13 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
     }
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
-    bool barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), staticType,
-                                                name, types, /* updateObserved = */ true);
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), staticType,
+                                                       name, types, /* updateObserved = */ true);
 
     JSObject *singleton = types->getSingleton();
 
     MIRType knownType = types->getKnownMIRType();
-    if (!barrier) {
+    if (barrier == BarrierKind::NoBarrier) {
         if (singleton) {
             // Try to inline a known constant value.
             if (testSingletonProperty(staticObject, name) == singleton)
@@ -6470,7 +6471,7 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
     MInstruction *obj = constant(ObjectValue(*staticObject));
 
     MIRType rvalType = types->getKnownMIRType();
-    if (barrier)
+    if (barrier != BarrierKind::NoBarrier)
         rvalType = MIRType_Value;
 
     return loadSlot(obj, property.maybeTypes()->definiteSlot(), NumFixedSlots(staticObject),
@@ -6612,7 +6613,7 @@ IonBuilder::jsop_getname(PropertyName *name)
         return false;
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
-    return pushTypeBarrier(ins, types, true);
+    return pushTypeBarrier(ins, types, BarrierKind::TypeSet);
 }
 
 bool
@@ -6631,7 +6632,7 @@ IonBuilder::jsop_intrinsic(PropertyName *name)
         if (!resumeAfter(ins))
             return false;
 
-        return pushTypeBarrier(ins, types, true);
+        return pushTypeBarrier(ins, types, BarrierKind::TypeSet);
     }
 
     // Bake in the intrinsic. Make sure that TI agrees with us on the type.
@@ -6696,7 +6697,7 @@ IonBuilder::jsop_getelem()
             return false;
 
         types::TemporaryTypeSet *types = bytecodeTypes(pc);
-        return pushTypeBarrier(ins, types, true);
+        return pushTypeBarrier(ins, types, BarrierKind::TypeSet);
     }
 
     bool emitted = false;
@@ -6738,7 +6739,7 @@ IonBuilder::jsop_getelem()
         return false;
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
-    return pushTypeBarrier(ins, types, true);
+    return pushTypeBarrier(ins, types, BarrierKind::TypeSet);
 }
 
 bool
@@ -7004,7 +7005,7 @@ IonBuilder::pushDerivedTypedObject(bool *emitted,
     {
         derivedTypedObj->setResultTypeSet(observedTypes);
     } else {
-        if (!pushTypeBarrier(derivedTypedObj, observedTypes, true))
+        if (!pushTypeBarrier(derivedTypedObj, observedTypes, BarrierKind::TypeSet))
             return false;
     }
 
@@ -7186,7 +7187,7 @@ IonBuilder::getElemTryArguments(bool *emitted, MDefinition *obj, MDefinition *in
     current->push(load);
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
-    if (!pushTypeBarrier(load, types, true))
+    if (!pushTypeBarrier(load, types, BarrierKind::TypeSet))
         return false;
 
     *emitted = true;
@@ -7255,18 +7256,19 @@ IonBuilder::getElemTryCache(bool *emitted, MDefinition *obj, MDefinition *index)
     // Emit GetElementCache.
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
-    bool barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), obj, nullptr, types);
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), obj,
+                                                       nullptr, types);
 
     // Always add a barrier if the index might be a string, so that the cache
     // can attach stubs for particular properties.
     if (index->mightBeType(MIRType_String))
-        barrier = true;
+        barrier = BarrierKind::TypeSet;
 
     // See note about always needing a barrier in jsop_getprop.
     if (needsToMonitorMissingProperties(types))
-        barrier = true;
+        barrier = BarrierKind::TypeSet;
 
-    MInstruction *ins = MGetElementCache::New(alloc(), obj, index, barrier);
+    MInstruction *ins = MGetElementCache::New(alloc(), obj, index, barrier != BarrierKind::NoBarrier);
 
     current->add(ins);
     current->push(ins);
@@ -7275,7 +7277,7 @@ IonBuilder::getElemTryCache(bool *emitted, MDefinition *obj, MDefinition *index)
         return false;
 
     // Spice up type information.
-    if (index->type() == MIRType_Int32 && !barrier) {
+    if (index->type() == MIRType_Int32 && barrier == BarrierKind::NoBarrier) {
         bool needHoleCheck = !ElementAccessIsPacked(constraints(), obj);
         MIRType knownType = GetElemKnownType(needHoleCheck, types);
 
@@ -7302,7 +7304,8 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
         AddObjectsForPropertyRead(obj, nullptr, types);
     }
 
-    bool barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), obj, nullptr, types);
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), obj,
+                                                       nullptr, types);
     bool needsHoleCheck = !ElementAccessIsPacked(constraints(), obj);
 
     // Reads which are on holes in the object do not have to bail out if
@@ -7313,7 +7316,7 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
         !ElementAccessHasExtraIndexedProperty(constraints(), obj);
 
     MIRType knownType = MIRType_Value;
-    if (!barrier)
+    if (barrier == BarrierKind::NoBarrier)
         knownType = GetElemKnownType(needsHoleCheck, types);
 
     // Ensure index is an integer.
@@ -7341,7 +7344,7 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
     ExecutionMode executionMode = info().executionMode();
     bool loadDouble =
         executionMode == SequentialExecution &&
-        !barrier &&
+        barrier == BarrierKind::NoBarrier &&
         loopDepth_ &&
         !readOutOfBounds &&
         !needsHoleCheck &&
@@ -7392,7 +7395,7 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
     // NB: we have not added a MConvertElementsToDoubles MIR, so we
     // cannot *assume* the result is a double.
     if (executionMode == ParallelExecution &&
-        barrier &&
+        barrier != BarrierKind::NoBarrier &&
         types->getKnownMIRType() == MIRType_Int32 &&
         objTypes &&
         objTypes->convertDoubleElements(constraints()) == types::TemporaryTypeSet::AlwaysConvertToDoubles)
@@ -7402,7 +7405,7 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
         if (!types)
             return false;
 
-        barrier = false; // Don't need a barrier anymore
+        barrier = BarrierKind::NoBarrier; // Don't need a barrier anymore
     }
 
     if (knownType != MIRType_Value)
@@ -7561,7 +7564,7 @@ IonBuilder::jsop_getelem_typed(MDefinition *obj, MDefinition *index,
         // observed (we've only read out-of-bounds values). Note that for
         // Uint32Array, we only check for int32: if allowDouble is false we
         // will bailout when we read a double.
-        bool needsBarrier = true;
+        BarrierKind barrier = BarrierKind::TypeSet;
         switch (arrayType) {
           case ScalarTypeDescr::TYPE_INT8:
           case ScalarTypeDescr::TYPE_UINT8:
@@ -7571,12 +7574,12 @@ IonBuilder::jsop_getelem_typed(MDefinition *obj, MDefinition *index,
           case ScalarTypeDescr::TYPE_INT32:
           case ScalarTypeDescr::TYPE_UINT32:
             if (types->hasType(types::Type::Int32Type()))
-                needsBarrier = false;
+                barrier = BarrierKind::NoBarrier;
             break;
           case ScalarTypeDescr::TYPE_FLOAT32:
           case ScalarTypeDescr::TYPE_FLOAT64:
             if (allowDouble)
-                needsBarrier = false;
+                barrier = BarrierKind::NoBarrier;
             break;
           default:
             MOZ_ASSUME_UNREACHABLE("Unknown typed array type");
@@ -7590,7 +7593,7 @@ IonBuilder::jsop_getelem_typed(MDefinition *obj, MDefinition *index,
         current->add(load);
         current->push(load);
 
-        return pushTypeBarrier(load, types, needsBarrier);
+        return pushTypeBarrier(load, types, barrier);
     }
 }
 
@@ -8494,7 +8497,7 @@ IonBuilder::invalidatedIdempotentCache()
 
 bool
 IonBuilder::loadSlot(MDefinition *obj, size_t slot, size_t nfixed, MIRType rvalType,
-                     bool barrier, types::TemporaryTypeSet *types)
+                     BarrierKind barrier, types::TemporaryTypeSet *types)
 {
     if (slot < nfixed) {
         MLoadFixedSlot *load = MLoadFixedSlot::New(alloc(), obj, slot);
@@ -8518,7 +8521,7 @@ IonBuilder::loadSlot(MDefinition *obj, size_t slot, size_t nfixed, MIRType rvalT
 
 bool
 IonBuilder::loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType,
-                     bool barrier, types::TemporaryTypeSet *types)
+                     BarrierKind barrier, types::TemporaryTypeSet *types)
 {
     return loadSlot(obj, shape->slot(), shape->numFixedSlots(), rvalType, barrier, types);
 }
@@ -8568,8 +8571,8 @@ IonBuilder::jsop_getprop(PropertyName *name)
         return emitted;
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
-    bool barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
-                                                current->peek(-1), name, types);
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
+                                                       current->peek(-1), name, types);
 
     // Always use a call if we are performing analysis and
     // not actually emitting code, to simplify later analysis. Also skip deeper
@@ -8591,7 +8594,7 @@ IonBuilder::jsop_getprop(PropertyName *name)
 
         current->pop();
         current->push(call);
-        return resumeAfter(call) && pushTypeBarrier(call, types, true);
+        return resumeAfter(call) && pushTypeBarrier(call, types, BarrierKind::TypeSet);
     }
 
     // Try to hardcode known constants.
@@ -8626,7 +8629,7 @@ IonBuilder::jsop_getprop(PropertyName *name)
     if (!resumeAfter(call))
         return false;
 
-    return pushTypeBarrier(call, types, true);
+    return pushTypeBarrier(call, types, BarrierKind::TypeSet);
 }
 
 bool
@@ -8765,7 +8768,7 @@ IonBuilder::getPropTryComplexPropOfTypedObject(bool *emitted,
 
 bool
 IonBuilder::getPropTryDefiniteSlot(bool *emitted, PropertyName *name,
-                                   bool barrier, types::TemporaryTypeSet *types)
+                                   BarrierKind barrier, types::TemporaryTypeSet *types)
 {
     JS_ASSERT(*emitted == false);
     types::HeapTypeSetKey property;
@@ -8781,7 +8784,7 @@ IonBuilder::getPropTryDefiniteSlot(bool *emitted, PropertyName *name,
     }
 
     MLoadFixedSlot *fixed = MLoadFixedSlot::New(alloc(), useObj, property.maybeTypes()->definiteSlot());
-    if (!barrier)
+    if (barrier == BarrierKind::NoBarrier)
         fixed->setResultType(types->getKnownMIRType());
 
     current->add(fixed);
@@ -8903,7 +8906,7 @@ CanInlinePropertyOpShapes(const BaselineInspector::ShapeVector &shapes)
 
 bool
 IonBuilder::getPropTryInlineAccess(bool *emitted, PropertyName *name,
-                                   bool barrier, types::TemporaryTypeSet *types)
+                                   BarrierKind barrier, types::TemporaryTypeSet *types)
 {
     JS_ASSERT(*emitted == false);
     if (current->peek(-1)->type() != MIRType_Object)
@@ -8917,7 +8920,7 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, PropertyName *name,
         return true;
 
     MIRType rvalType = types->getKnownMIRType();
-    if (barrier || IsNullOrUndefined(rvalType))
+    if (barrier != BarrierKind::NoBarrier || IsNullOrUndefined(rvalType))
         rvalType = MIRType_Value;
 
     MDefinition *obj = current->pop();
@@ -8964,7 +8967,7 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, PropertyName *name,
 
 bool
 IonBuilder::getPropTryCache(bool *emitted, PropertyName *name,
-                            bool barrier, types::TemporaryTypeSet *types)
+                            BarrierKind barrier, types::TemporaryTypeSet *types)
 {
     JS_ASSERT(*emitted == false);
 
@@ -8981,18 +8984,19 @@ IonBuilder::getPropTryCache(bool *emitted, PropertyName *name,
     // Since getters have no guaranteed return values, we must barrier in order to be
     // able to attach stubs for them.
     if (inspector->hasSeenAccessedGetter(pc))
-        barrier = true;
+        barrier = BarrierKind::TypeSet;
 
     if (needsToMonitorMissingProperties(types))
-        barrier = true;
+        barrier = BarrierKind::TypeSet;
 
     // Caches can read values from prototypes, so update the barrier to
     // reflect such possible values.
-    if (!barrier)
+    if (barrier == BarrierKind::NoBarrier)
         barrier = PropertyReadOnPrototypeNeedsTypeBarrier(constraints(), obj, name, types);
 
     current->pop();
-    MGetPropertyCache *load = MGetPropertyCache::New(alloc(), obj, name, barrier);
+    MGetPropertyCache *load = MGetPropertyCache::New(alloc(), obj, name,
+                                                     barrier != BarrierKind::NoBarrier);
 
     // Try to mark the cache as idempotent.
     //
@@ -9019,7 +9023,7 @@ IonBuilder::getPropTryCache(bool *emitted, PropertyName *name,
         return false;
 
     MIRType rvalType = types->getKnownMIRType();
-    if (barrier || IsNullOrUndefined(rvalType))
+    if (barrier != BarrierKind::NoBarrier || IsNullOrUndefined(rvalType))
         rvalType = MIRType_Value;
     load->setResultType(rvalType);
 
@@ -9863,7 +9867,7 @@ IonBuilder::jsop_getaliasedvar(ScopeCoordinate sc)
     current->push(load);
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
-    return pushTypeBarrier(load, types, true);
+    return pushTypeBarrier(load, types, BarrierKind::TypeSet);
 }
 
 bool

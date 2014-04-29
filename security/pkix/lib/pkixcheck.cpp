@@ -42,15 +42,15 @@ CheckTimes(const CERTCertificate* cert, PRTime time)
 // Modeled after GetKeyUsage in certdb.c
 Result
 CheckKeyUsage(EndEntityOrCA endEntityOrCA,
-              bool isTrustAnchor,
               const SECItem* encodedKeyUsage,
               KeyUsages requiredKeyUsagesIfPresent,
               PLArenaPool* arena)
 {
   if (!encodedKeyUsage) {
-    // TODO: Reject certificates that are being used to verify certificate
-    // signatures unless the certificate is a trust anchor, to reduce the
-    // chances of an end-entity certificate being abused as a CA certificate.
+    // TODO(bug 970196): Reject certificates that are being used to verify
+    // certificate signatures unless the certificate is a trust anchor, to
+    // reduce the chances of an end-entity certificate being abused as a CA
+    // certificate.
     // if (endEntityOrCA == MustBeCA && !isTrustAnchor) {
     //   return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
     // }
@@ -122,8 +122,7 @@ CheckCertificatePolicies(BackCert& cert, EndEntityOrCA endEntityOrCA,
   // inhibitAnyPolicy extension is present and we need to evaluate certificate
   // policies.
   if (cert.encodedInhibitAnyPolicy) {
-    PR_SetError(SEC_ERROR_POLICY_VALIDATION_FAILED, 0);
-    return RecoverableError;
+    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
   }
 
   // The root CA certificate may omit the policies that it has been
@@ -135,8 +134,7 @@ CheckCertificatePolicies(BackCert& cert, EndEntityOrCA endEntityOrCA,
   }
 
   if (!cert.encodedCertificatePolicies) {
-    PR_SetError(SEC_ERROR_POLICY_VALIDATION_FAILED, 0);
-    return RecoverableError;
+    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
   }
 
   ScopedPtr<CERTCertificatePolicies, CERT_DestroyCertificatePoliciesExtension>
@@ -158,8 +156,7 @@ CheckCertificatePolicies(BackCert& cert, EndEntityOrCA endEntityOrCA,
     }
   }
 
-  PR_SetError(SEC_ERROR_POLICY_VALIDATION_FAILED, 0);
-  return RecoverableError;
+  return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
 }
 
 //  BasicConstraints ::= SEQUENCE {
@@ -354,8 +351,7 @@ CheckNameConstraints(BackCert& cert)
         // PR_SetError when it fails. We set the error code here, though this
         // may be papering over some fatal errors. NSS's
         // cert_VerifyCertChainOld does something similar.
-        PR_SetError(SEC_ERROR_CERT_NOT_IN_NAME_SPACE, 0);
-        return RecoverableError;
+        return Fail(RecoverableError, SEC_ERROR_CERT_NOT_IN_NAME_SPACE);
       }
       currentName = CERT_GetNextGeneralName(currentName);
     } while (currentName != names);
@@ -415,8 +411,7 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
     // If the EKU extension was included, then the required EKU must be in the
     // list.
     if (!found) {
-      PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
-      return RecoverableError;
+      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
     }
   }
 
@@ -479,8 +474,7 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
     return rv;
   }
   if (trustLevel == TrustDomain::ActivelyDistrusted) {
-    PORT_SetError(SEC_ERROR_UNTRUSTED_CERT);
-    return RecoverableError;
+    return Fail(RecoverableError, SEC_ERROR_UNTRUSTED_CERT);
   }
   if (trustLevel != TrustDomain::TrustAnchor &&
       trustLevel != TrustDomain::InheritsTrust) {
@@ -505,7 +499,7 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   // 4.2.1.2. Subject Key Identifier is ignored (see bug 965136).
 
   // 4.2.1.3. Key Usage
-  rv = CheckKeyUsage(endEntityOrCA, isTrustAnchor, cert.encodedKeyUsage,
+  rv = CheckKeyUsage(endEntityOrCA, cert.encodedKeyUsage,
                      requiredKeyUsagesIfPresent, arena);
   if (rv != Success) {
     return rv;

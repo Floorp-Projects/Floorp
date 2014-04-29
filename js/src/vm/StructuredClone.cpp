@@ -1250,7 +1250,7 @@ JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Val
         return false;
     vp->setObject(*obj);
 
-    allObjs[placeholderIndex] = *vp;
+    allObjs[placeholderIndex].set(*vp);
 
     return true;
 }

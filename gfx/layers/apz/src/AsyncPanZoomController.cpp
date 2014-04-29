@@ -66,7 +66,7 @@
 #define APZC_LOG_FM(fm, prefix, ...) \
   APZC_LOG(prefix ":" \
            " i=(%ld %lld) cb=(%d %d %d %d) rcs=(%.3f %.3f) dp=(%.3f %.3f %.3f %.3f) dpm=(%.3f %.3f %.3f %.3f) um=%d " \
-           "v=(%.3f %.3f %.3f %.3f) s=(%.3f %.3f) sr=(%.3f %.3f %.3f %.3f) z=(%.3f %.3f %.3f %.3f) u=(%d %lu)\n", \
+           "v=(%.3f %.3f %.3f %.3f) s=(%.3f %.3f) sr=(%.3f %.3f %.3f %.3f) z(ld=%.3f r=%.3f cr=%.3f z=%.3f ts=%.3f) u=(%d %lu)\n", \
            __VA_ARGS__, \
            fm.mPresShellId, fm.GetScrollId(), \
            fm.mCompositionBounds.x, fm.mCompositionBounds.y, fm.mCompositionBounds.width, fm.mCompositionBounds.height, \
@@ -77,7 +77,7 @@
            fm.mViewport.x, fm.mViewport.y, fm.mViewport.width, fm.mViewport.height, \
            fm.GetScrollOffset().x, fm.GetScrollOffset().y, \
            fm.mScrollableRect.x, fm.mScrollableRect.y, fm.mScrollableRect.width, fm.mScrollableRect.height, \
-           fm.mDevPixelsPerCSSPixel.scale, fm.mResolution.scale, fm.mCumulativeResolution.scale, fm.GetZoom().scale, \
+           fm.mDevPixelsPerCSSPixel.scale, fm.mResolution.scale, fm.mCumulativeResolution.scale, fm.GetZoom().scale, fm.mTransformScale.scale, \
            fm.GetScrollOffsetUpdated(), fm.GetScrollGeneration()); \
 
 // Static helper functions
@@ -162,6 +162,20 @@ typedef GeckoContentController::APZStateChange APZStateChange;
  * Pref that enables enlarging of the displayport along one axis when the
  * generated displayport's size is beyond that of the scrollable rect on the
  * opposite axis.
+ *
+ * "apz.fling_accel_interval_ms"
+ * The time in milliseconds that determines whether a second fling will be
+ * treated as accelerated. If two flings are started within this interval,
+ * the second one will be accelerated. Setting an interval of 0 means that
+ * acceleration will be disabled.
+ *
+ * "apz.fling_accel_base_mult"
+ * "apz.fling_accel_supplemental_mult"
+ * When applying an acceleration on a fling, the new computed velocity is
+ * (new_fling_velocity * base_mult) + (old_velocity * supplemental_mult).
+ * The base_mult and supplemental_mult multiplier values are controlled by
+ * these prefs. Note that "old_velocity" here is the initial velocity of the
+ * previous fling _after_ acceleration was applied to it (if applicable).
  *
  * "apz.fling_friction"
  * Amount of friction applied during flings.
@@ -330,10 +344,40 @@ GetFrameTime() {
 
 class FlingAnimation: public AsyncPanZoomAnimation {
 public:
-  FlingAnimation(AsyncPanZoomController& aApzc)
+  FlingAnimation(AsyncPanZoomController& aApzc, bool aApplyAcceleration)
     : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(gfxPrefs::APZFlingRepaintInterval()))
     , mApzc(aApzc)
-  {}
+  {
+    TimeStamp now = GetFrameTime();
+    ScreenPoint velocity(mApzc.mX.GetVelocity(), mApzc.mY.GetVelocity());
+
+    // If the last fling was very recent and in the same direction as this one,
+    // boost the velocity to be the sum of the two. Check separate axes separately
+    // because we could have two vertical flings with small horizontal components
+    // on the opposite side of zero, and we still want the y-fling to get accelerated.
+    // Note that the acceleration code is only applied on the APZC that receives the
+    // actual touch event; the accelerated velocities are then handed off using the
+    // normal HandOffFling codepath.
+    if (aApplyAcceleration && !mApzc.mLastFlingTime.IsNull()
+        && (now - mApzc.mLastFlingTime).ToMilliseconds() < gfxPrefs::APZFlingAccelInterval()) {
+      if (SameDirection(velocity.x, mApzc.mLastFlingVelocity.x)) {
+        velocity.x = Accelerate(velocity.x, mApzc.mLastFlingVelocity.x);
+        APZC_LOG("%p Applying fling x-acceleration from %f to %f (delta %f)\n",
+                 &mApzc, mApzc.mX.GetVelocity(), velocity.x, mApzc.mLastFlingVelocity.x);
+        mApzc.mX.SetVelocity(velocity.x);
+      }
+      if (SameDirection(velocity.y, mApzc.mLastFlingVelocity.y)) {
+        velocity.y = Accelerate(velocity.y, mApzc.mLastFlingVelocity.y);
+        APZC_LOG("%p Applying fling y-acceleration from %f to %f (delta %f)\n",
+                 &mApzc, mApzc.mY.GetVelocity(), velocity.y, mApzc.mLastFlingVelocity.y);
+        mApzc.mY.SetVelocity(velocity.y);
+      }
+    }
+
+    mApzc.mLastFlingTime = now;
+    mApzc.mLastFlingVelocity = velocity;
+  }
+
   /**
    * Advances a fling by an interpolated amount based on the passed in |aDelta|.
    * This should be called whenever sampling the content transform for this
@@ -344,6 +388,19 @@ public:
                       const TimeDuration& aDelta);
 
 private:
+  static bool SameDirection(float aVelocity1, float aVelocity2)
+  {
+    return (aVelocity1 == 0.0f)
+        || (aVelocity2 == 0.0f)
+        || (IsNegative(aVelocity1) == IsNegative(aVelocity2));
+  }
+
+  static float Accelerate(float aBase, float aSupplemental)
+  {
+    return (aBase * gfxPrefs::APZFlingAccelBaseMultiplier())
+         + (aSupplemental * gfxPrefs::APZFlingAccelSupplementalMultiplier());
+  }
+
   AsyncPanZoomController& mApzc;
 };
 
@@ -755,7 +812,7 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     mX.EndTouch();
     mY.EndTouch();
     SetState(FLING);
-    StartAnimation(new FlingAnimation(*this));
+    StartAnimation(new FlingAnimation(*this, true));
     return nsEventStatus_eConsumeNoDefault;
 
   case PINCHING:
@@ -1183,7 +1240,7 @@ void AsyncPanZoomController::TakeOverFling(ScreenPoint aVelocity) {
   mX.SetVelocity(mX.GetVelocity() + aVelocity.x);
   mY.SetVelocity(mY.GetVelocity() + aVelocity.y);
   SetState(FLING);
-  StartAnimation(new FlingAnimation(*this));
+  StartAnimation(new FlingAnimation(*this, false));
 }
 
 void AsyncPanZoomController::CallDispatchScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
@@ -1294,20 +1351,20 @@ bool FlingAnimation::Sample(FrameMetrics& aFrameMetrics,
       velocity.y = 0;
     }
 
-    // To hand off the fling, we call APZCTreeManager::HandleFlingOverscroll()
+    // To hand off the fling, we call APZCTreeManager::HandOffFling()
     // which starts a new fling in the next APZC in the handoff chain with
     // the same velocity. For simplicity, the actual overscroll of the current
     // sample is discarded rather than being handed off. The compositor should
     // sample animations sufficiently frequently that this is not noticeable.
 
     // Make a local copy of the tree manager pointer and check if it's not
-    // null before calling HandleFlingOverscroll(). This is necessary because
+    // null before calling HandOffFling(). This is necessary because
     // Destroy(), which nulls out mTreeManager, could be called concurrently.
     APZCTreeManager* treeManagerLocal = mApzc.mTreeManager;
     if (treeManagerLocal) {
-      // APZC is holding mMonitor, so directly calling HandleFlingOverscroll()
+      // APZC is holding mMonitor, so directly calling HandOffFling()
       // (which acquires the tree lock) would violate the lock ordering. Instead
-      // we schedule HandleFlingOverscroll() to be called after mMonitor is
+      // we schedule HandOffFling() to be called after mMonitor is
       // released.
       mDeferredTasks.append(NewRunnableMethod(treeManagerLocal,
                                               &APZCTreeManager::HandOffFling,
@@ -1718,11 +1775,11 @@ gfx3DMatrix AsyncPanZoomController::GetTransformToLastDispatchedPaint() {
 
 void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint) {
   ReentrantMonitorAutoEnter lock(mMonitor);
+  bool isDefault = mFrameMetrics.IsDefault();
 
   mLastContentPaintMetrics = aLayerMetrics;
   UpdateTransformScale();
 
-  bool isDefault = mFrameMetrics.IsDefault();
   mFrameMetrics.mMayHaveTouchListeners = aLayerMetrics.mMayHaveTouchListeners;
   APZC_LOG_FM(aLayerMetrics, "%p got a NotifyLayersUpdated with aIsFirstPaint=%d", this, aIsFirstPaint);
 

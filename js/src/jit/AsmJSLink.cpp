@@ -239,7 +239,7 @@ ValidateFFI(JSContext *cx, AsmJSModule::Global &global, HandleValue importVal,
     if (!v.isObject() || !v.toObject().is<JSFunction>())
         return LinkFail(cx, "FFI imports must be functions");
 
-    (*ffis)[global.ffiIndex()] = &v.toObject().as<JSFunction>();
+    (*ffis)[global.ffiIndex()].set(&v.toObject().as<JSFunction>());
     return true;
 }
 
