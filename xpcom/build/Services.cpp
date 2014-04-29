@@ -22,6 +22,7 @@
 #include "IHistory.h"
 #include "nsIXPConnect.h"
 #include "inIDOMUtils.h"
+#include "nsIPermissionManager.h"
 
 using namespace mozilla;
 using namespace mozilla::services;
