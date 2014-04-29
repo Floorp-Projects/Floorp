@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
-  <!-- Test: if input is of button type, it is barred from constraint validation
-             and should not be affected by :valid pseudo-class. -->
+  <!-- Test: if input is of button type, has no custom error and is not barred
+             from constraint validation, it should be affected by :valid pseudo-class -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
-    <input class='notvalid' type='submit'>
+    <input class='valid' type='submit'>
   </body>
 </html>
