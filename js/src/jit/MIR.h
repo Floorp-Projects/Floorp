@@ -9070,10 +9070,15 @@ class MTypeBarrier
   : public MUnaryInstruction,
     public TypeBarrierPolicy
 {
-    MTypeBarrier(MDefinition *def, types::TemporaryTypeSet *types)
-      : MUnaryInstruction(def)
+    BarrierKind barrierKind_;
+
+    MTypeBarrier(MDefinition *def, types::TemporaryTypeSet *types, BarrierKind kind)
+      : MUnaryInstruction(def),
+        barrierKind_(kind)
     {
-        JS_ASSERT(!types->unknown());
+        MOZ_ASSERT(kind == BarrierKind::TypeTagOnly || kind == BarrierKind::TypeSet);
+
+        MOZ_ASSERT(!types->unknown());
         setResultType(types->getKnownMIRType());
         setResultTypeSet(types);
 
@@ -9084,8 +9089,9 @@ class MTypeBarrier
   public:
     INSTRUCTION_HEADER(TypeBarrier)
 
-    static MTypeBarrier *New(TempAllocator &alloc, MDefinition *def, types::TemporaryTypeSet *types) {
-        return new(alloc) MTypeBarrier(def, types);
+    static MTypeBarrier *New(TempAllocator &alloc, MDefinition *def, types::TemporaryTypeSet *types,
+                             BarrierKind kind = BarrierKind::TypeSet) {
+        return new(alloc) MTypeBarrier(def, types, kind);
     }
 
     void printOpcode(FILE *fp) const;
@@ -9102,6 +9108,9 @@ class MTypeBarrier
     }
     virtual bool neverHoist() const {
         return resultTypeSet()->empty();
+    }
+    BarrierKind barrierKind() const {
+        return barrierKind_;
     }
 
     bool alwaysBails() const {
@@ -9122,20 +9131,25 @@ class MTypeBarrier
 class MMonitorTypes : public MUnaryInstruction, public BoxInputsPolicy
 {
     const types::TemporaryTypeSet *typeSet_;
+    BarrierKind barrierKind_;
 
-    MMonitorTypes(MDefinition *def, const types::TemporaryTypeSet *types)
+    MMonitorTypes(MDefinition *def, const types::TemporaryTypeSet *types, BarrierKind kind)
       : MUnaryInstruction(def),
-        typeSet_(types)
+        typeSet_(types),
+        barrierKind_(kind)
     {
+        MOZ_ASSERT(kind == BarrierKind::TypeTagOnly || kind == BarrierKind::TypeSet);
+
         setGuard();
-        JS_ASSERT(!types->unknown());
+        MOZ_ASSERT(!types->unknown());
     }
 
   public:
     INSTRUCTION_HEADER(MonitorTypes)
 
-    static MMonitorTypes *New(TempAllocator &alloc, MDefinition *def, const types::TemporaryTypeSet *types) {
-        return new(alloc) MMonitorTypes(def, types);
+    static MMonitorTypes *New(TempAllocator &alloc, MDefinition *def, const types::TemporaryTypeSet *types,
+                              BarrierKind kind) {
+        return new(alloc) MMonitorTypes(def, types, kind);
     }
 
     TypePolicy *typePolicy() {
@@ -9145,6 +9159,10 @@ class MMonitorTypes : public MUnaryInstruction, public BoxInputsPolicy
     const types::TemporaryTypeSet *typeSet() const {
         return typeSet_;
     }
+    BarrierKind barrierKind() const {
+        return barrierKind_;
+    }
+
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
@@ -10094,17 +10112,17 @@ bool ElementAccessIsPacked(types::CompilerConstraintList *constraints, MDefiniti
 bool ElementAccessHasExtraIndexedProperty(types::CompilerConstraintList *constraints,
                                           MDefinition *obj);
 MIRType DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinition *obj);
-bool PropertyReadNeedsTypeBarrier(JSContext *propertycx,
-                                  types::CompilerConstraintList *constraints,
-                                  types::TypeObjectKey *object, PropertyName *name,
-                                  types::TemporaryTypeSet *observed, bool updateObserved);
-bool PropertyReadNeedsTypeBarrier(JSContext *propertycx,
-                                  types::CompilerConstraintList *constraints,
-                                  MDefinition *obj, PropertyName *name,
-                                  types::TemporaryTypeSet *observed);
-bool PropertyReadOnPrototypeNeedsTypeBarrier(types::CompilerConstraintList *constraints,
-                                             MDefinition *obj, PropertyName *name,
-                                             types::TemporaryTypeSet *observed);
+BarrierKind PropertyReadNeedsTypeBarrier(JSContext *propertycx,
+                                         types::CompilerConstraintList *constraints,
+                                         types::TypeObjectKey *object, PropertyName *name,
+                                         types::TemporaryTypeSet *observed, bool updateObserved);
+BarrierKind PropertyReadNeedsTypeBarrier(JSContext *propertycx,
+                                         types::CompilerConstraintList *constraints,
+                                         MDefinition *obj, PropertyName *name,
+                                         types::TemporaryTypeSet *observed);
+BarrierKind PropertyReadOnPrototypeNeedsTypeBarrier(types::CompilerConstraintList *constraints,
+                                                    MDefinition *obj, PropertyName *name,
+                                                    types::TemporaryTypeSet *observed);
 bool PropertyReadIsIdempotent(types::CompilerConstraintList *constraints,
                               MDefinition *obj, PropertyName *name);
 void AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,

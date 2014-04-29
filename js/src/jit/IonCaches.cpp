@@ -1969,7 +1969,7 @@ GenerateSetSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &att
             Register scratchReg = object;
             masm.push(scratchReg);
 
-            masm.guardTypeSet(valReg, propTypes, scratchReg, &barrierFailure);
+            masm.guardTypeSet(valReg, propTypes, BarrierKind::TypeSet, scratchReg, &barrierFailure);
             masm.pop(object);
         }
     }
@@ -2521,7 +2521,7 @@ GenerateAddSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &att
         JS_ASSERT(!propTypes->unknown());
 
         Register scratchReg = object;
-        masm.guardTypeSet(valReg, propTypes, scratchReg, &failuresPopObject);
+        masm.guardTypeSet(valReg, propTypes, BarrierKind::TypeSet, scratchReg, &failuresPopObject);
         masm.loadPtr(Address(StackPointer, 0), object);
     }
 
