@@ -29,6 +29,12 @@ var MemoryObserver = {
       }
     }
     Telemetry.addData("FENNEC_LOWMEM_TAB_COUNT", tabs.length);
+
+    // Change some preferences temporarily for only this session
+    let defaults = Services.prefs.getDefaultBranch(null);
+
+    // Reduce the amount of decoded image data we keep around
+    defaults.setIntPref("image.mem.max_decoded_image_kb", 0);
   },
 
   zombify: function(tab) {
