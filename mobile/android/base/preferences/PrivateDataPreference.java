@@ -7,6 +7,8 @@ package org.mozilla.gecko.preferences;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,11 +21,8 @@ class PrivateDataPreference extends MultiChoicePreference {
     private static final String LOGTAG = "GeckoPrivateDataPreference";
     private static final String PREF_KEY_PREFIX = "private.data.";
 
-    private Context mContext;
-
     public PrivateDataPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mContext = context;
     }
 
     @Override
@@ -32,6 +31,8 @@ class PrivateDataPreference extends MultiChoicePreference {
 
         if (!positiveResult)
             return;
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.SANITIZE, TelemetryContract.Method.DIALOG);
 
         CharSequence keys[] = getEntryKeys();
         boolean values[] = getValues();
