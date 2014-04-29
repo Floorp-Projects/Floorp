@@ -128,7 +128,7 @@ add_test(function test_invalidEmailCase_signIn() {
       case "getAccounts":
         Services.obs.removeObserver(onMessage, "mozFxAccountsChromeEvent");
 
-        do_check_eq(message.data.accountId, canonicalEmail);
+        do_check_eq(message.data.email, canonicalEmail);
 
         do_test_finished();
         server.stop(run_next_test);
@@ -151,7 +151,7 @@ add_test(function test_invalidEmailCase_signIn() {
       id: "signIn",
       data: {
         method: "signIn",
-        accountId: clientEmail,
+        email: clientEmail,
         password: "123456",
       },
     },
