@@ -70,10 +70,7 @@ public:
                                               const TextureFlags& aFlags) MOZ_OVERRIDE;
   virtual bool DeallocPTextureParent(PTextureParent* actor) MOZ_OVERRIDE;
 
-  // Shutdown step 1
-  virtual bool RecvWillStop() MOZ_OVERRIDE;
-  // Shutdown step 2
-  virtual bool RecvStop() MOZ_OVERRIDE;
+  bool RecvStop() MOZ_OVERRIDE;
 
   MessageLoop * GetMessageLoop();
 
