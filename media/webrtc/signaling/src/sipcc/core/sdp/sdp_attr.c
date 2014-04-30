@@ -492,7 +492,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
      * default value will be assumed for remote sdp. If remote sdp does specify
      * any value for these parameters, then default value will be overridden.
     */
-    fmtp_p->packetization_mode = 0;
+    fmtp_p->packetization_mode = SDP_DEFAULT_PACKETIZATION_MODE_VALUE;
     fmtp_p->level_asymmetry_allowed = SDP_DEFAULT_LEVEL_ASYMMETRY_ALLOWED_VALUE;
 
     /* BEGIN - a typical macro fn to replace '/' with ';' from fmtp line*/
