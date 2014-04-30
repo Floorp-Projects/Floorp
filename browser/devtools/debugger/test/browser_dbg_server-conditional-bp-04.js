@@ -58,7 +58,7 @@ function test() {
   function setDummyConditional(aClient) {
     // This happens when a conditional expression input popup is shown
     // but the user doesn't type anything into it.
-    aClient.condition = "";
+    return gBreakpoints.updateCondition(aClient.location, '');
   }
 
   function toggleBreakpoint() {
