@@ -145,6 +145,7 @@ class RegExpShared
 
     RegExpFlag         flags;
     unsigned           parenCount;
+    bool               canStringMatch;
 
 #if ENABLE_YARR_JIT
     /* Note: Native code is valid only if |codeBlock.isFallBack() == false|. */

@@ -1173,6 +1173,13 @@ js::StringHasPattern(const jschar *text, uint32_t textlen,
     return StringMatch(text, textlen, pat, patlen) != -1;
 }
 
+int
+js::StringFindPattern(const jschar *text, uint32_t textlen,
+                      const jschar *pat, uint32_t patlen)
+{
+    return StringMatch(text, textlen, pat, patlen);
+}
+
 // When an algorithm does not need a string represented as a single linear
 // array of characters, this range utility may be used to traverse the string a
 // sequence of linear arrays of characters. This avoids flattening ropes.
@@ -1735,6 +1742,12 @@ HasRegExpMetaChars(const jschar *chars, size_t length)
             return true;
     }
     return false;
+}
+
+bool
+js::StringHasRegExpMetaChars(const jschar *chars, size_t length)
+{
+    return HasRegExpMetaChars(chars, length);
 }
 
 namespace {

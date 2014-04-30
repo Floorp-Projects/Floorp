@@ -213,6 +213,13 @@ extern bool
 StringHasPattern(const jschar *text, uint32_t textlen,
                  const jschar *pat, uint32_t patlen);
 
+extern int
+StringFindPattern(const jschar *text, uint32_t textlen,
+                  const jschar *pat, uint32_t patlen);
+
+extern bool
+StringHasRegExpMetaChars(const jschar *chars, size_t length);
+
 } /* namespace js */
 
 extern size_t
