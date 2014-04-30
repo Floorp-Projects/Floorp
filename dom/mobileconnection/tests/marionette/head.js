@@ -388,6 +388,23 @@ function selectNetworkAutomaticallyAndWait() {
 }
 
 /**
+ * Send a MMI message.
+ *
+ * Fulfill params: An object contains MMI result.
+ * Reject params: A DOMMMIError.
+ *
+ * @param aMmi
+ *        A MMI string.
+ *
+ * @return A deferred promise.
+ */
+function sendMMI(aMmi) {
+  let request = mobileConnection.sendMMI(aMmi);
+  return wrapDomRequestAsPromise(request)
+    .then(() => request.result, () => { throw request.error });
+}
+
+/**
  * Set data connection enabling state and wait for "datachange" event.
  *
  * Resolve if data connection state changed to the expected one.  Never reject.
