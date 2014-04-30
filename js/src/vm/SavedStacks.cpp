@@ -509,4 +509,14 @@ SavedStacks::createFrameFromLookup(JSContext *cx, SavedFrame::Lookup &lookup)
     return &f;
 }
 
+bool
+SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata)
+{
+    Rooted<SavedFrame *> frame(cx);
+    if (!cx->compartment()->savedStacks().saveCurrentStack(cx, &frame))
+        return false;
+    *pmetadata = frame;
+    return true;
+}
+
 } /* namespace js */

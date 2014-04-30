@@ -870,6 +870,20 @@ SaveStack(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static bool
+EnableTrackAllocations(JSContext *cx, unsigned argc, jsval *vp)
+{
+    SetObjectMetadataCallback(cx, SavedStacksMetadataCallback);
+    return true;
+}
+
+static bool
+DisableTrackAllocations(JSContext *cx, unsigned argc, jsval *vp)
+{
+    SetObjectMetadataCallback(cx, nullptr);
+    return true;
+}
+
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 static bool
 OOMAfterAllocations(JSContext *cx, unsigned argc, jsval *vp)
@@ -1630,6 +1644,16 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("saveStack", SaveStack, 0, 0,
 "saveStack()",
 "  Capture a stack.\n"),
+
+    JS_FN_HELP("enableTrackAllocations", EnableTrackAllocations, 0, 0,
+"enableTrackAllocations()",
+"  Start capturing the JS stack at every allocation. Note that this sets an "
+"  object metadata callback that will override any other object metadata "
+"  callback that may be set."),
+
+    JS_FN_HELP("disableTrackAllocations", DisableTrackAllocations, 0, 0,
+"disableTrackAllocations()",
+"  Stop capturing the JS stack at every allocation."),
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     JS_FN_HELP("oomAfterAllocations", OOMAfterAllocations, 1, 0,
