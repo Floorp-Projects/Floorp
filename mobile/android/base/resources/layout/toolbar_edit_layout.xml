@@ -27,10 +27,4 @@
           android:gravity="center_vertical|left"
           gecko:autoUpdateTheme="false"/>
 
-    <ImageButton android:id="@+id/go"
-                 style="@style/UrlBar.ImageButton.Icon"
-                 android:src="@drawable/ic_url_bar_go"
-                 android:contentDescription="@string/go"
-                 android:visibility="gone"/>
-
 </merge>

@@ -15,19 +15,18 @@
     <!-- Note: any layout parameters setting the right edge of
          this View should be matched in the url_bar_translating_edge.
 
-         Note 2: On devices where the editing mode cancel items are
-         wider than the tabs and similar buttons (e.g. hardware menu
-         button), the url bar will shrink, in which case the LayoutParams
-         of this View are changed dynamically. -->
+         Note 2: On devices where the editing mode cancel button is
+         wider than the tabs counter and nearby buttons, the url bar will
+         shrink, in which case the LayoutParams of this View are
+         changed dynamically. -->
     <ImageView android:id="@+id/url_bar_entry"
                style="@style/UrlBar.Button"
                android:layout_marginLeft="4dp"
-               android:layout_marginRight="-19dp"
+               android:layout_marginRight="-15dp"
                android:layout_marginTop="5dp"
                android:layout_marginBottom="5dp"
                android:layout_centerVertical="true"
                android:layout_toLeftOf="@+id/tabs"
-               android:paddingRight="4dp"
                android:duplicateParentState="true"
                android:clickable="false"
                android:focusable="false"
@@ -43,8 +42,7 @@
                android:layout_toLeftOf="@+id/tabs"
                android:layout_alignTop="@id/url_bar_entry"
                android:layout_alignBottom="@id/url_bar_entry"
-               android:layout_marginRight="-19dp"
-               android:paddingRight="4dp"
+               android:layout_marginRight="-15dp"
                android:duplicateParentState="true"
                android:clickable="false"
                android:focusable="false"
@@ -103,27 +101,22 @@
                style="@style/UrlBar.ImageButton.Icon"
                android:layout_alignParentRight="true"
                android:src="@drawable/close_edit_mode"
+               android:layout_marginLeft="2dp"
+               android:layout_marginRight="2dp"
                android:contentDescription="@string/edit_mode_cancel"
                android:visibility="invisible"/>
 
-    <org.mozilla.gecko.widget.ThemedView android:id="@+id/edit_separator"
-                                         android:layout_toLeftOf="@id/edit_cancel"
-                                         android:layout_width="1dip"
-                                         android:layout_height="match_parent"
-                                         android:layout_marginTop="12dp"
-                                         android:layout_marginBottom="12dp"
-                                         android:layout_marginLeft="8dp"
-                                         android:layout_marginRight="2dp"
-                                         android:background="@drawable/toolbar_separator_selector"
-                                         android:visibility="invisible"/>
-
+    <!-- The left margin of the cancel button is larger than the right because
+         the url bar drawable contains some whitespace, so we compensate by adding
+         a negative right margin (value determined through experimentation). -->
     <org.mozilla.gecko.toolbar.ToolbarEditLayout android:id="@+id/edit_layout"
                   style="@style/UrlBar.Button"
-                  android:layout_toLeftOf="@id/edit_separator"
+                  android:layout_toLeftOf="@id/edit_cancel"
                   android:layout_marginLeft="4dp"
-                  android:layout_marginRight="4dp"
+                  android:layout_marginRight="-2dp"
                   android:paddingLeft="8dp"
-                  android:visibility="gone"/>
+                  android:paddingRight="8dp"
+                  android:visibility="invisible"/>
 
     <org.mozilla.gecko.toolbar.ToolbarDisplayLayout android:id="@+id/display_layout"
                   style="@style/UrlBar.Button"
