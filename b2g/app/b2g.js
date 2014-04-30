@@ -512,7 +512,7 @@ pref("marionette.force-local", true);
 #ifdef MOZ_UPDATER
 // When we're applying updates, we can't let anything hang us on
 // quit+restart.  The user has no recourse.
-pref("shutdown.watchdog.timeoutSecs", 5);
+pref("shutdown.watchdog.timeoutSecs", 10);
 // Timeout before the update prompt automatically installs the update
 pref("b2g.update.apply-prompt-timeout", 60000); // milliseconds
 // Amount of time to wait after the user is idle before prompting to apply an update
