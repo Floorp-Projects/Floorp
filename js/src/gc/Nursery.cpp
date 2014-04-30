@@ -53,7 +53,7 @@ js::Nursery::init()
     if (!hugeSlots.init())
         return false;
 
-    void *heap = MapAlignedPages(runtime(), NurserySize, Alignment);
+    void *heap = runtime()->pageAllocator.mapAlignedPages(NurserySize, Alignment);
     if (!heap)
         return false;
 
@@ -79,7 +79,23 @@ js::Nursery::init()
 js::Nursery::~Nursery()
 {
     if (start())
-        UnmapPages(runtime(), (void *)start(), NurserySize);
+        runtime()->pageAllocator.unmapPages((void *)start(), NurserySize);
+}
+
+void
+js::Nursery::updateDecommittedRegion()
+{
+#ifndef JS_GC_ZEAL
+    if (numActiveChunks_ < NumNurseryChunks) {
+        // Bug 994054: madvise on MacOS is too slow to make this
+        //             optimization worthwhile.
+# ifndef XP_MACOSX
+        uintptr_t decommitStart = chunk(numActiveChunks_).start();
+        JS_ASSERT(decommitStart == AlignBytes(decommitStart, 1 << 20));
+        runtime()->pageAllocator.markPagesUnused((void *)decommitStart, heapEnd() - decommitStart);
+# endif
+    }
+#endif
 }
 
 void
