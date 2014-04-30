@@ -34,6 +34,7 @@ tryImport("resource://gre/modules/devtools/dbg-client.jsm");
 tryImport("resource://gre/modules/devtools/Loader.jsm");
 tryImport("resource://gre/modules/devtools/Console.jsm");
 
+let { RootActor } = devtools.require("devtools/server/actors/root");
 let { BreakpointStore, LongStringActor, ThreadActor } = devtools.require("devtools/server/actors/script");
 
 function testExceptionHook(ex) {
@@ -183,7 +184,6 @@ function attachTestTabAndResume(aClient, aTitle, aCallback) {
  */
 function initTestDebuggerServer()
 {
-  DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/root.js");
   DebuggerServer.registerModule("devtools/server/actors/script");
   DebuggerServer.addActors("resource://test/testactors.js");
   // Allow incoming connections.
@@ -192,7 +192,6 @@ function initTestDebuggerServer()
 
 function initTestTracerServer()
 {
-  DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/root.js");
   DebuggerServer.registerModule("devtools/server/actors/script");
   DebuggerServer.addActors("resource://test/testactors.js");
   DebuggerServer.registerModule("devtools/server/actors/tracer");
