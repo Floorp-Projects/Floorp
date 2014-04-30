@@ -452,8 +452,7 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
     FreeSpan newListHead;
     FreeSpan *newListTail = &newListHead;
     uintptr_t newFreeSpanStart = 0;
-    bool allClear = true;
-    DebugOnly<size_t> nmarked = 0;
+    size_t nmarked = 0;
     for (;; thing += thingSize) {
         JS_ASSERT(thing <= lastByte + 1);
         if (thing == nextFree.first) {
@@ -469,7 +468,6 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
         } else {
             T *t = reinterpret_cast<T *>(thing);
             if (t->isMarked()) {
-                allClear = false;
                 nmarked++;
                 if (newFreeSpanStart) {
                     JS_ASSERT(thing >= thingsStart(thingKind) + thingSize);
@@ -487,7 +485,7 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
         }
     }
 
-    if (allClear) {
+    if (nmarked == 0) {
         JS_ASSERT(newListTail == &newListHead);
         JS_ASSERT(!newFreeSpanStart ||
                   newFreeSpanStart == thingsStart(thingKind));
