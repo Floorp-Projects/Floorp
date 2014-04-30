@@ -20,6 +20,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.jayway.android.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Solo;
 
 /**
  * A class representing any interactions that take place on the Toolbar.
@@ -67,13 +68,6 @@ public class ToolbarComponent extends BaseComponent {
 
     private TextView getUrlTitleText() {
         return (TextView) getToolbarView().findViewById(R.id.url_bar_title);
-    }
-
-    /**
-     * Returns the View for the go button in the browser toolbar.
-     */
-    private ImageButton getGoButton() {
-        return (ImageButton) getToolbarView().findViewById(R.id.go);
     }
 
     private ImageButton getBackButton() {
@@ -141,7 +135,7 @@ public class ToolbarComponent extends BaseComponent {
         WaitHelper.waitForPageLoad(new Runnable() {
             @Override
             public void run() {
-                mSolo.clickOnView(getGoButton());
+                mSolo.sendKey(Solo.ENTER);
             }
         });
         waitForNotEditing();
