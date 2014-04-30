@@ -159,7 +159,7 @@ class ArenaIter
 
 class ArenaCellIterImpl
 {
-    // These three are set in init().
+    // These three are set in initUnsynchronized().
     size_t firstThingOffset;
     size_t thingSize;
 #ifdef DEBUG
@@ -188,15 +188,22 @@ class ArenaCellIterImpl
   public:
     ArenaCellIterImpl() {}
 
-    void init(ArenaHeader *aheader) {
+    void initUnsynchronized(ArenaHeader *aheader) {
         AllocKind kind = aheader->getAllocKind();
 #ifdef DEBUG
-        JS_ASSERT(aheader->zone->allocator.arenas.isSynchronizedFreeList(kind));
         isInited = true;
 #endif
         firstThingOffset = Arena::firstThingOffset(kind);
         thingSize = Arena::thingSize(kind);
         reset(aheader);
+    }
+
+    void init(ArenaHeader *aheader) {
+#ifdef DEBUG
+        AllocKind kind = aheader->getAllocKind();
+        JS_ASSERT(aheader->zone->allocator.arenas.isSynchronizedFreeList(kind));
+#endif
+        initUnsynchronized(aheader);
     }
 
     // Use this to move from an Arena of a particular kind to another Arena of
@@ -238,6 +245,14 @@ class ArenaCellIterUnderGC : public ArenaCellIterImpl
     ArenaCellIterUnderGC(ArenaHeader *aheader) {
         JS_ASSERT(aheader->zone->runtimeFromAnyThread()->isHeapBusy());
         init(aheader);
+    }
+};
+
+class ArenaCellIterUnderFinalize : public ArenaCellIterImpl
+{
+  public:
+    ArenaCellIterUnderFinalize(ArenaHeader *aheader) {
+        initUnsynchronized(aheader);
     }
 };
 
