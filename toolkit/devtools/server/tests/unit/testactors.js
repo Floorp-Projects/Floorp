@@ -3,6 +3,8 @@
 
 const Cu = Components.utils;
 const devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+const { ActorPool, appendExtraActors, createExtraActors } = require("devtools/server/actors/common");
+const { RootActor } = devtools.require("devtools/server/actors/root");
 const { ThreadActor } = devtools.require("devtools/server/actors/script");
 
 var gTestGlobals = [];

@@ -37,7 +37,7 @@ function newConnection(aPrefix)
   var conn;
   DebuggerServer.createRootActor = function (aConn) {
     conn = aConn;
-    return new DebuggerServer.RootActor(aConn, {});
+    return new RootActor(aConn, {});
   };
 
   var transport = DebuggerServer.connectPipe(aPrefix);
