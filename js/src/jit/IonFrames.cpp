@@ -965,7 +965,7 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
     for (GeneralRegisterBackwardIterator iter(safepoint.allGprSpills()); iter.more(); iter++) {
         --spill;
         if (slotsRegs.has(*iter))
-            trc->runtime()->gcNursery.forwardBufferPointer(reinterpret_cast<HeapSlot **>(spill));
+            trc->runtime()->gc.nursery.forwardBufferPointer(reinterpret_cast<HeapSlot **>(spill));
     }
 
     // Skip to the right place in the safepoint
@@ -979,7 +979,7 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
 
     while (safepoint.getSlotsOrElementsSlot(&slot)) {
         HeapSlot **slots = reinterpret_cast<HeapSlot **>(layout->slotRef(slot));
-        trc->runtime()->gcNursery.forwardBufferPointer(slots);
+        trc->runtime()->gc.nursery.forwardBufferPointer(slots);
     }
 }
 #endif
@@ -1302,7 +1302,7 @@ GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     if (MOZ_UNLIKELY(rt->ionPcScriptCache == nullptr)) {
         rt->ionPcScriptCache = (PcScriptCache *)js_malloc(sizeof(struct PcScriptCache));
         if (rt->ionPcScriptCache)
-            rt->ionPcScriptCache->clear(rt->gcNumber);
+            rt->ionPcScriptCache->clear(rt->gc.number);
     }
 
     // Attempt to lookup address in cache.

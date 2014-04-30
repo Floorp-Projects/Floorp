@@ -3917,7 +3917,7 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSFunction *
 
 #ifdef JSGC_GENERATIONAL
     if (proto.isObject() && hasNursery() && nursery().isInside(proto.toObject())) {
-        asJSContext()->runtime()->gcStoreBuffer.putGeneric(
+        asJSContext()->runtime()->gc.storeBuffer.putGeneric(
             NewTypeObjectsSetRef(&newTypeObjects, clasp, proto.toObject(), fun));
     }
 #endif
@@ -4255,7 +4255,7 @@ TypeCompartment::sweep(FreeOp *fop)
 void
 JSCompartment::sweepNewTypeObjectTable(TypeObjectWithNewScriptSet &table)
 {
-    gcstats::AutoPhase ap(runtimeFromMainThread()->gcStats,
+    gcstats::AutoPhase ap(runtimeFromMainThread()->gc.stats,
                           gcstats::PHASE_SWEEP_TABLES_TYPE_OBJECT);
 
     JS_ASSERT(zone()->isGCSweeping());
@@ -4400,7 +4400,7 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
 #endif
 
     {
-        gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_DISCARD_TI);
+        gcstats::AutoPhase ap2(rt->gc.stats, gcstats::PHASE_DISCARD_TI);
 
         for (ZoneCellIterUnderGC i(zone(), FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
@@ -4442,7 +4442,7 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
     }
 
     {
-        gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_TYPES);
+        gcstats::AutoPhase ap2(rt->gc.stats, gcstats::PHASE_SWEEP_TYPES);
 
         for (gc::ZoneCellIterUnderGC iter(zone(), gc::FINALIZE_TYPE_OBJECT);
              !iter.done(); iter.next())
@@ -4470,7 +4470,7 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
     }
 
     {
-        gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_FREE_TI_ARENA);
+        gcstats::AutoPhase ap2(rt->gc.stats, gcstats::PHASE_FREE_TI_ARENA);
         rt->freeLifoAlloc.transferFrom(&oldAlloc);
     }
 }

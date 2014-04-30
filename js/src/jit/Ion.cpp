@@ -1753,7 +1753,7 @@ OffThreadCompilationAvailable(JSContext *cx)
     // when running off thread.
     return cx->runtime()->canUseParallelIonCompilation()
         && WorkerThreadState().cpuCount > 1
-        && cx->runtime()->gcIncrementalState == gc::NO_INCREMENTAL
+        && cx->runtime()->gc.incrementalState == gc::NO_INCREMENTAL
         && !cx->runtime()->profilingScripts;
 #else
     return false;
@@ -2868,13 +2868,13 @@ jit::FinishInvalidation<ParallelExecution>(FreeOp *fop, JSScript *script);
 void
 jit::MarkValueFromIon(JSRuntime *rt, Value *vp)
 {
-    gc::MarkValueUnbarriered(&rt->gcMarker, vp, "write barrier");
+    gc::MarkValueUnbarriered(&rt->gc.marker, vp, "write barrier");
 }
 
 void
 jit::MarkShapeFromIon(JSRuntime *rt, Shape **shapep)
 {
-    gc::MarkShapeUnbarriered(&rt->gcMarker, shapep, "write barrier");
+    gc::MarkShapeUnbarriered(&rt->gc.marker, shapep, "write barrier");
 }
 
 void

@@ -814,7 +814,7 @@ ToDisassemblySource(JSContext *cx, HandleValue v, JSAutoByteString *bytes)
         return true;
     }
 
-    if (cx->runtime()->isHeapBusy() || cx->runtime()->noGCOrAllocationCheck) {
+    if (cx->runtime()->isHeapBusy() || cx->runtime()->gc.noGCOrAllocationCheck) {
         char *source = JS_sprintf_append(nullptr, "<value>");
         if (!source)
             return false;
@@ -1936,10 +1936,10 @@ js::GetPCCountScriptCount(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime();
 
-    if (!rt->scriptAndCountsVector)
+    if (!rt->gc.scriptAndCountsVector)
         return 0;
 
-    return rt->scriptAndCountsVector->length();
+    return rt->gc.scriptAndCountsVector->length();
 }
 
 enum MaybeComma {NO_COMMA, COMMA};
@@ -1974,12 +1974,12 @@ js::GetPCCountScriptSummary(JSContext *cx, size_t index)
 {
     JSRuntime *rt = cx->runtime();
 
-    if (!rt->scriptAndCountsVector || index >= rt->scriptAndCountsVector->length()) {
+    if (!rt->gc.scriptAndCountsVector || index >= rt->gc.scriptAndCountsVector->length()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
         return nullptr;
     }
 
-    const ScriptAndCounts &sac = (*rt->scriptAndCountsVector)[index];
+    const ScriptAndCounts &sac = (*rt->gc.scriptAndCountsVector)[index];
     RootedScript script(cx, sac.script);
 
     /*
@@ -2234,12 +2234,12 @@ js::GetPCCountScriptContents(JSContext *cx, size_t index)
 {
     JSRuntime *rt = cx->runtime();
 
-    if (!rt->scriptAndCountsVector || index >= rt->scriptAndCountsVector->length()) {
+    if (!rt->gc.scriptAndCountsVector || index >= rt->gc.scriptAndCountsVector->length()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
         return nullptr;
     }
 
-    const ScriptAndCounts &sac = (*rt->scriptAndCountsVector)[index];
+    const ScriptAndCounts &sac = (*rt->gc.scriptAndCountsVector)[index];
     JSScript *script = sac.script;
 
     StringBuffer buf(cx);
