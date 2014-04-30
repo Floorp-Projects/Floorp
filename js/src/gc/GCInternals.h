@@ -124,11 +124,11 @@ class AutoStopVerifyingBarriers
                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : runtime(rt)
     {
-        restartPreVerifier = !isShutdown && rt->gcVerifyPreData;
-        restartPostVerifier = !isShutdown && rt->gcVerifyPostData && JS::IsGenerationalGCEnabled(rt);
-        if (rt->gcVerifyPreData)
+        restartPreVerifier = !isShutdown && rt->gc.verifyPreData;
+        restartPostVerifier = !isShutdown && rt->gc.verifyPostData && JS::IsGenerationalGCEnabled(rt);
+        if (rt->gc.verifyPreData)
             EndVerifyPreBarriers(rt);
-        if (rt->gcVerifyPostData)
+        if (rt->gc.verifyPostData)
             EndVerifyPostBarriers(rt);
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }

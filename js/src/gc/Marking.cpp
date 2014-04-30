@@ -169,7 +169,7 @@ CheckMarkedThing(JSTracer *trc, T *thing)
 
     DebugOnly<JSRuntime *> rt = trc->runtime();
 
-    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && rt->gcManipulatingDeadZones,
+    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && rt->gc.manipulatingDeadZones,
                  !thing->zone()->scheduledForDestruction);
 
     JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
@@ -181,7 +181,7 @@ CheckMarkedThing(JSTracer *trc, T *thing)
 
     JS_ASSERT(MapTypeToTraceKind<T>::kind == GetGCThingTraceKind(thing));
 
-    JS_ASSERT_IF(rt->gcStrictCompartmentChecking,
+    JS_ASSERT_IF(rt->gc.strictCompartmentChecking,
                  thing->zone()->isCollecting() || rt->isAtomsZone(thing->zone()));
 
     JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && AsGCMarker(trc)->getMarkColor() == GRAY,
@@ -247,8 +247,8 @@ MarkInternal(JSTracer *trc, T **thingp)
 
 #define JS_ROOT_MARKING_ASSERT(trc)                                     \
     JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc),                             \
-                 trc->runtime()->gcIncrementalState == NO_INCREMENTAL ||  \
-                 trc->runtime()->gcIncrementalState == MARK_ROOTS);
+                 trc->runtime()->gc.incrementalState == NO_INCREMENTAL ||       \
+                 trc->runtime()->gc.incrementalState == MARK_ROOTS);
 
 namespace js {
 namespace gc {
@@ -339,7 +339,7 @@ IsMarked(T **thingp)
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
 #ifdef JSGC_GENERATIONAL
-    Nursery &nursery = (*thingp)->runtimeFromMainThread()->gcNursery;
+    Nursery &nursery = (*thingp)->runtimeFromMainThread()->gc.nursery;
     if (nursery.isInside(*thingp))
         return nursery.getForwardedPointer(thingp);
 #endif
@@ -364,7 +364,7 @@ IsAboutToBeFinalized(T **thingp)
         return false;
 
 #ifdef JSGC_GENERATIONAL
-    Nursery &nursery = rt->gcNursery;
+    Nursery &nursery = rt->gc.nursery;
     JS_ASSERT_IF(!rt->isHeapMinorCollecting(), !nursery.isInside(thing));
     if (rt->isHeapMinorCollecting()) {
         if (nursery.isInside(thing))
@@ -394,8 +394,8 @@ UpdateIfRelocated(JSRuntime *rt, T **thingp)
 {
     JS_ASSERT(thingp);
 #ifdef JSGC_GENERATIONAL
-    if (*thingp && rt->isHeapMinorCollecting() && rt->gcNursery.isInside(*thingp))
-        rt->gcNursery.getForwardedPointer(thingp);
+    if (*thingp && rt->isHeapMinorCollecting() && rt->gc.nursery.isInside(*thingp))
+        rt->gc.nursery.getForwardedPointer(thingp);
 #endif
     return *thingp;
 }
@@ -784,7 +784,7 @@ ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Cell *cell)
          */
         if (cell->isMarked(GRAY)) {
             JS_ASSERT(!zone->isCollecting());
-            trc->runtime()->gcFoundBlackGrayEdges = true;
+            trc->runtime()->gc.foundBlackGrayEdges = true;
         }
         return zone->isGCMarking();
     } else {
@@ -1540,7 +1540,7 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
             // if the gloal has no custom trace hook of it's own, or has been moved to a different
             // compartment, and so can't have one.
             JS_ASSERT_IF(runtime()->gcMode() == JSGC_MODE_INCREMENTAL &&
-                         runtime()->gcIncrementalEnabled &&
+                         runtime()->gc.incrementalEnabled &&
                          !(clasp->trace == JS_GlobalObjectTraceHook &&
                            (!obj->compartment()->options().getTrace() ||
                             !obj->isOwnGlobal())),
@@ -1586,10 +1586,10 @@ GCMarker::drainMarkStack(SliceBudget &budget)
     struct AutoCheckCompartment {
         JSRuntime *runtime;
         AutoCheckCompartment(JSRuntime *rt) : runtime(rt) {
-            JS_ASSERT(!rt->gcStrictCompartmentChecking);
-            runtime->gcStrictCompartmentChecking = true;
+            JS_ASSERT(!rt->gc.strictCompartmentChecking);
+            runtime->gc.strictCompartmentChecking = true;
         }
-        ~AutoCheckCompartment() { runtime->gcStrictCompartmentChecking = false; }
+        ~AutoCheckCompartment() { runtime->gc.strictCompartmentChecking = false; }
     } acc(rt);
 #endif
 
@@ -1739,7 +1739,7 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
          * If we run out of stack, we take a more drastic measure: require that
          * we GC again before the next CC.
          */
-        trc->runtime()->gcGrayBitsValid = false;
+        trc->runtime()->gc.grayBitsValid = false;
         return;
     }
 
