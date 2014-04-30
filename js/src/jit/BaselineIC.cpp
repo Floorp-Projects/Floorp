@@ -671,20 +671,6 @@ ICStubCompiler::leaveStubFrame(MacroAssembler &masm, bool calledIntoIon)
 }
 
 void
-ICStubCompiler::leaveStubFrameHead(MacroAssembler &masm, bool calledIntoIon)
-{
-    JS_ASSERT(entersStubFrame_);
-    EmitLeaveStubFrameHead(masm, calledIntoIon);
-}
-
-void
-ICStubCompiler::leaveStubFrameCommonTail(MacroAssembler &masm)
-{
-    JS_ASSERT(entersStubFrame_);
-    EmitLeaveStubFrameCommonTail(masm);
-}
-
-void
 ICStubCompiler::guardProfilingEnabled(MacroAssembler &masm, Register scratch, Label *skip)
 {
     // This should only be called from the following stubs.
@@ -6499,27 +6485,17 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     if (!tailCallVM(DoGetPropFallbackInfo, masm))
         return false;
 
-    // What follows is bailout for inlined scripted getters or for on-stack
-    // debug mode recompile. The return address pointed to by the baseline
-    // stack points here.
-    //
+    // What follows is bailout for inlined scripted getters.
+    // The return address pointed to by the baseline stack points here.
+    returnOffset_ = masm.currentOffset();
+
     // Even though the fallback frame doesn't enter a stub frame, the CallScripted
     // frame that we are emulating does. Again, we lie.
 #ifdef DEBUG
     entersStubFrame_ = true;
 #endif
 
-    Label leaveStubCommon;
-
-    returnFromStubOffset_ = masm.currentOffset();
-    leaveStubFrameHead(masm, false);
-    masm.jump(&leaveStubCommon);
-
-    returnFromIonOffset_ = masm.currentOffset();
-    leaveStubFrameHead(masm, true);
-
-    masm.bind(&leaveStubCommon);
-    leaveStubFrameCommonTail(masm);
+    leaveStubFrame(masm, true);
 
     // When we get here, BaselineStubReg contains the ICGetProp_Fallback stub,
     // which we can't use to enter the TypeMonitor IC, because it's a MonitoredFallbackStub
@@ -6534,16 +6510,9 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 bool
 ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler &masm, Handle<JitCode *> code)
 {
-    JitCompartment *comp = cx->compartment()->jitCompartment();
-
-    CodeOffsetLabel fromIon(returnFromIonOffset_);
-    fromIon.fixup(&masm);
-    comp->initBaselineGetPropReturnFromIonAddr(code->raw() + fromIon.offset());
-
-    CodeOffsetLabel fromVM(returnFromStubOffset_);
-    fromVM.fixup(&masm);
-    comp->initBaselineGetPropReturnFromStubAddr(code->raw() + fromVM.offset());
-
+    CodeOffsetLabel offset(returnOffset_);
+    offset.fixup(&masm);
+    cx->compartment()->jitCompartment()->initBaselineGetPropReturnAddr(code->raw() + offset.offset());
     return true;
 }
 
@@ -7444,27 +7413,17 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     if (!tailCallVM(DoSetPropFallbackInfo, masm))
         return false;
 
-    // What follows is bailout debug mode recompile code for inlined scripted
-    // getters The return address pointed to by the baseline stack points
-    // here.
-    //
+    // What follows is bailout-only code for inlined script getters.
+    // The return address pointed to by the baseline stack points here.
+    returnOffset_ = masm.currentOffset();
+
     // Even though the fallback frame doesn't enter a stub frame, the CallScripted
     // frame that we are emulating does. Again, we lie.
 #ifdef DEBUG
     entersStubFrame_ = true;
 #endif
 
-    Label leaveStubCommon;
-
-    returnFromStubOffset_ = masm.currentOffset();
-    leaveStubFrameHead(masm, false);
-    masm.jump(&leaveStubCommon);
-
-    returnFromIonOffset_ = masm.currentOffset();
-    leaveStubFrameHead(masm, true);
-
-    masm.bind(&leaveStubCommon);
-    leaveStubFrameCommonTail(masm);
+    leaveStubFrame(masm, true);
 
     // Retrieve the stashed initial argument from the caller's frame before returning
     EmitUnstowICValues(masm, 1);
@@ -7476,16 +7435,9 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 bool
 ICSetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler &masm, Handle<JitCode *> code)
 {
-    JitCompartment *comp = cx->compartment()->jitCompartment();
-
-    CodeOffsetLabel fromIon(returnFromIonOffset_);
-    fromIon.fixup(&masm);
-    comp->initBaselineSetPropReturnFromIonAddr(code->raw() + fromIon.offset());
-
-    CodeOffsetLabel fromVM(returnFromStubOffset_);
-    fromVM.fixup(&masm);
-    comp->initBaselineSetPropReturnFromStubAddr(code->raw() + fromVM.offset());
-
+    CodeOffsetLabel offset(returnOffset_);
+    offset.fixup(&masm);
+    cx->compartment()->jitCompartment()->initBaselineSetPropReturnAddr(code->raw() + offset.offset());
     return true;
 }
 
@@ -8506,35 +8458,17 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     leaveStubFrame(masm);
     EmitReturnFromIC(masm);
 
-    // The following asmcode is only used either when an Ion inlined frame
-    // bails out into baseline jitcode or we need to do on-stack script
-    // replacement for debug mode recompile.
-    Label leaveStubCommon;
-    returnFromStubOffset_ = masm.currentOffset();
+    // The following asmcode is only used when an Ion inlined frame bails out
+    // into into baseline jitcode. The return address pushed onto the
+    // reconstructed baseline stack points here.
+    returnOffset_ = masm.currentOffset();
 
     // Load passed-in ThisV into R1 just in case it's needed.  Need to do this before
     // we leave the stub frame since that info will be lost.
     // Current stack:  [...., ThisV, ActualArgc, CalleeToken, Descriptor ]
     masm.loadValue(Address(BaselineStackReg, 3 * sizeof(size_t)), R1);
 
-    // Emit the coming-from-VM specific part of the stub-leaving code.
-    leaveStubFrameHead(masm, /* calledIntoIon = */ false);
-
-    // Jump to the common leave stub tail.
-    masm.jump(&leaveStubCommon);
-
-    // For Ion bailouts, the return address pushed onto the reconstructed
-    // baseline stack points here.
-    returnFromIonOffset_ = masm.currentOffset();
-
-    masm.loadValue(Address(BaselineStackReg, 3 * sizeof(size_t)), R1);
-
-    // Emit the coming-from-Ion specific part of the stub-leaving code.
-    leaveStubFrameHead(masm, /* calledIntoIon = */ true);
-
-    // Emit the common stub-leaving tail.
-    masm.bind(&leaveStubCommon);
-    leaveStubFrameCommonTail(masm);
+    leaveStubFrame(masm, true);
 
     // R1 and R0 are taken.
     regs = availableGeneralRegs(2);
@@ -8569,16 +8503,9 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 bool
 ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler &masm, Handle<JitCode *> code)
 {
-    JitCompartment *comp = cx->compartment()->jitCompartment();
-
-    CodeOffsetLabel fromIon(returnFromIonOffset_);
-    fromIon.fixup(&masm);
-    comp->initBaselineCallReturnFromIonAddr(code->raw() + fromIon.offset());
-
-    CodeOffsetLabel fromVM(returnFromStubOffset_);
-    fromVM.fixup(&masm);
-    comp->initBaselineCallReturnFromStubAddr(code->raw() + fromVM.offset());
-
+    CodeOffsetLabel offset(returnOffset_);
+    offset.fixup(&masm);
+    cx->compartment()->jitCompartment()->initBaselineCallReturnAddr(code->raw() + offset.offset());
     return true;
 }
 

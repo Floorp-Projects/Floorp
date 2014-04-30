@@ -182,22 +182,6 @@ CollectOnStackScripts(JSContext *cx, const JitActivationIterator &activation,
     return true;
 }
 
-static inline uint8_t *
-GetStubReturnFromStubAddress(JSContext *cx, jsbytecode *pc)
-{
-    JitCompartment *comp = cx->compartment()->jitCompartment();
-    void *addr;
-    if (IsGetPropPC(pc)) {
-        addr = comp->baselineGetPropReturnFromStubAddr();
-    } else if (IsSetPropPC(pc)) {
-        addr = comp->baselineSetPropReturnFromStubAddr();
-    } else {
-        JS_ASSERT(IsCallPC(pc));
-        addr = comp->baselineCallReturnFromStubAddr();
-    }
-    return reinterpret_cast<uint8_t *>(addr);
-}
-
 static const char *
 ICEntryKindToString(ICEntry::Kind kind)
 {
