@@ -23,7 +23,8 @@
     ],
     "env": {
         "VARIANT": "user",
-        "MOZILLA_OFFICIAL": "1"
+        "MOZILLA_OFFICIAL": "1",
+        "MOZ_TELEMETRY_REPORTING": "1"
     },
     "gecko_l10n_root": "https://hg.mozilla.org/l10n-central",
     "gaia": {
