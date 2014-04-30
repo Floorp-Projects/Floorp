@@ -1,7 +1,7 @@
 node-http2
 ==========
 
-An HTTP/2 ([draft-ietf-httpbis-http2-10](http://tools.ietf.org/html/draft-ietf-httpbis-http2-10))
+An HTTP/2 ([draft-ietf-httpbis-http2-11](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11))
 client and server implementation for node.js.
 
 Installation
@@ -114,12 +114,12 @@ point to understand the code.
 ### Test coverage ###
 
 To generate a code coverage report, run `npm test --coverage` (which runs very slowly, be patient).
-Code coverage summary as of version 1.0.1:
+Code coverage summary as of version 2.3.0:
 ```
-Statements   : 93.26% ( 1563/1676 )
-Branches     : 84.85% ( 605/713 )
-Functions    : 94.81% ( 201/212 )
-Lines        : 93.23% ( 1557/1670 )
+Statements   : 94% ( 392/417 )
+Branches     : 80.63% ( 129/160 )
+Functions    : 93.65% ( 59/63 )
+Lines        : 94% ( 392/417 )
 ```
 
 There's a hosted version of the detailed (line-by-line) coverage report
@@ -153,6 +153,7 @@ Code contributions are always welcome! People who contributed to node-http2 so f
 
 * Nick Hurley
 * Mike Belshe
+* Yoshihiro Iwanaga
 
 Special thanks to Google for financing the development of this module as part of their [Summer of
 Code program](https://developers.google.com/open-source/soc/) (project: [HTTP/2 prototype server
