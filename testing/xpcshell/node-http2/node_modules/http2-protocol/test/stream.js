@@ -184,8 +184,11 @@ describe('stream.js', function() {
         Object.keys(invalid_incoming_frames).forEach(function(state) {
           invalid_incoming_frames[state].forEach(function(invalid_frame) {
             var stream = createStream();
+            var connectionErrorHappened = false
             stream.state = state;
-            expect(stream._transition.bind(stream, false, invalid_frame)).to.throw('Uncaught, unspecified "error" event.');
+            stream.once('connectionError', function() { connectionErrorHappened = true; });
+            stream._transition(false, invalid_frame)
+            expect(connectionErrorHappened)
           });
         });
 
