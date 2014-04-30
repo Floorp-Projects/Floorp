@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="65fba428f8d76336b33ddd9e15900357953600ba">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="a3437e7e204e32f0f93880a43bfc0cef909cb84d"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="8873166797fecfa65c0afa644d2ebcc7d7cb4ed3"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="f313e6d3aaaefe8c82eaed15912a09b120fb7260"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
@@ -56,7 +56,6 @@
   <project name="platform/external/gtest" path="external/gtest" revision="0e87f7087bead3fbba86ad24fb888b23c25b35d3"/>
   <project name="platform/external/harfbuzz" path="external/harfbuzz" revision="77bfb851261572216aeba5a5e1bb1d910d40ecb9"/>
   <project name="platform/external/harfbuzz_ng" path="external/harfbuzz_ng" revision="6e3a3edf0a9ae09a7b92637c2a7131df0bde4760"/>
-  <project name="platform/external/icu4c" path="external/icu4c" remote="aosp" revision="b4c6379528887dc25ca9991a535a8d92a61ad6b6"/>
   <project name="platform/external/iproute2" path="external/iproute2" revision="b438b9c63d6f79cb08391f0b0f12b8457ea99395"/>
   <project name="platform/external/ipsec-tools" path="external/ipsec-tools" revision="c493b85a54d27cbcb1dcb91bb86545254cf28684"/>
   <project name="platform/external/iptables" path="external/iptables" revision="fe8cf0795af508d6bd413d0ab729ed6afabd237e"/>
@@ -119,6 +118,9 @@
   <project name="platform/system/netd" path="system/netd" revision="36704b0da24debcab8090156568ac236315036bb"/>
   <project name="platform/system/security" path="system/security" revision="583374f69f531ba68fc3dcbff1f74893d2a96406"/>
   <project name="platform/system/vold" path="system/vold" revision="d4455b8cf361f8353e8aebac15ffd64b4aedd2b9"/>
+  <project name="platform/external/icu4c" path="external/icu4c" remote="aosp" revision="b4c6379528887dc25ca9991a535a8d92a61ad6b6"/>
+  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="6c67114dfa109f31d37e880b9c009f2965a22261"/>
+  <project name="platform_system_core" path="system/core" remote="b2g" revision="9395eb5aa885cf6d305a202de6e9694a58a89717"/>
   <default remote="caf" revision="refs/tags/android-4.4.2_r1" sync-j="4"/>
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
@@ -126,8 +128,6 @@
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="606dd627fad312cb79284fa38e44f0ed4bd42bfa"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="694cecf256122d0cb3b6a1a4efb4b5c7401db223"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="aa430bd055bf7e1003d78e9bf0c0abbe32f33e45"/>
-  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="6c67114dfa109f31d37e880b9c009f2965a22261"/>
-  <project name="platform_system_core" path="system/core" remote="b2g" revision="9395eb5aa885cf6d305a202de6e9694a58a89717"/>
   <project name="platform/development" path="development" revision="5968ff4e13e0d696ad8d972281fc27ae5a12829b"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="0951179277915335251c5e11d242e4e1a8c2236f"/>
 </manifest>
