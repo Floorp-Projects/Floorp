@@ -21,6 +21,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
   "resource://gre/modules/TelemetryStopwatch.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
+  "resource://gre/modules/Deprecated.jsm");
 
 // A text encoder to UTF8, used whenever we commit the
 // engine metadata to disk.
@@ -2877,8 +2879,7 @@ SearchService.prototype = {
       "Search service falling back to synchronous initialization. " +
       "This is generally the consequence of an add-on using a deprecated " +
       "search service API.";
-    // Bug 785487 - Disable warning until our own callers are fixed.
-    //Deprecated.warning(warning, "https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsIBrowserSearchService#async_warning");
+    Deprecated.warning(warning, "https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsIBrowserSearchService#async_warning");
     LOG(warning);
 
     engineMetadataService.syncInit();
