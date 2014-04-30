@@ -23,6 +23,10 @@ static const char kDigiCert_Global_Root_CAFingerprint[]=
 static const char kDigiCert_High_Assurance_EV_Root_CAFingerprint[]=
   "WoiWRyIOVNa9ihaBciRSC7XHjliYS9VwUGOIud4PB18=";
 
+/* End Entity Test Cert */
+static const char kEnd_Entity_Test_CertFingerprint[]=
+  "97H5CNFJ2u3u1NvH3ru67t5OiCO8KydOyNh9GCEyAeM=";
+
 /* Equifax Secure CA */
 static const char kEquifax_Secure_CAFingerprint[]=
   "/1aAzXOlcD2gSBegdf1GJQanNQbEuBoVg+9UlHjSZHY=";
@@ -174,6 +178,11 @@ static const char* const kPinSet_mozilla_cdn_Data[] = {
 };
 const StaticPinset kPinSet_mozilla_cdn = { 28, kPinSet_mozilla_cdn_Data};
 
+static const char* const kPinSet_mozilla_test_Data[] = {
+    kEnd_Entity_Test_CertFingerprint,
+};
+const StaticPinset kPinSet_mozilla_test = { 1, kPinSet_mozilla_test_Data};
+
 /*Domainlist*/
 typedef struct {
   const char *mHost;
@@ -186,10 +195,11 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "addons.mozilla.org",	true,	&kPinSet_mozilla },
   { "cdn.mozilla.net",	true,	&kPinSet_mozilla_cdn },
   { "cdn.mozilla.org",	true,	&kPinSet_mozilla_cdn },
-  { "getpersonas.org",	true,	&kPinSet_mozilla_cdn },
+  { "exclude-subdomains.pinning.example.com",	false,	&kPinSet_mozilla_test },
+  { "include-subdomain.pinning.example.com",	true,	&kPinSet_mozilla_test },
   { "media.mozilla.com",	true,	&kPinSet_mozilla_cdn },
 };
 
-static const int kPublicKeyPinningPreloadListLength = 6;
+static const int kPublicKeyPinningPreloadListLength = 7;
 
-const PRTime kPreloadPKPinsExpirationTime = INT64_C(1409688371834000);
+const PRTime kPreloadPKPinsExpirationTime = INT64_C(1409763023059000);
