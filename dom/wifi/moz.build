@@ -9,6 +9,7 @@ XPIDL_SOURCES += [
     'nsIDOMMozWifiP2pStatusChangeEvent.idl',
     'nsIDOMMozWifiStatusChangeEvent.idl',
     'nsIWifi.idl',
+    'nsIWifiCertService.idl',
     'nsIWifiService.idl',
 ]
 
