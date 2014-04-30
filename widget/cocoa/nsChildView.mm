@@ -3272,6 +3272,31 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return mIsPluginView;
 }
 
+- (NSView *)hitTest:(NSPoint)aPoint
+{
+  NSView* target = [super hitTest:aPoint];
+  if ((target == self) && [self isPluginView] && mGeckoChild) {
+    nsAutoRetainCocoaObject kungFuDeathGrip(self);
+
+    NSPoint cocoaLoc = [[self superview] convertPoint:aPoint toView:self];
+    LayoutDeviceIntPoint widgetLoc = LayoutDeviceIntPoint::FromUntyped(
+      mGeckoChild->CocoaPointsToDevPixels(cocoaLoc));
+
+    WidgetQueryContentEvent hitTest(true, NS_QUERY_DOM_WIDGET_HITTEST,
+                                    mGeckoChild);
+    hitTest.InitForQueryDOMWidgetHittest(widgetLoc);
+    // This might destroy our widget.
+    mGeckoChild->DispatchWindowEvent(hitTest);
+    if (!mGeckoChild) {
+      return nil;
+    }
+    if (hitTest.mSucceeded && !hitTest.mReply.mWidgetIsHit) {
+      return nil;
+    }
+  }
+  return target;
+}
+
 // Are we processing an NSLeftMouseDown event that will fail to click through?
 // If so, we shouldn't focus or unfocus a plugin.
 - (BOOL)isInFailingLeftClickThrough
@@ -5528,65 +5553,10 @@ static int32_t RoundUp(double aDouble)
   return !mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
 
-// Don't focus a plugin if the user has clicked on a DOM element above it.
-// In this case the user has actually clicked on the plugin's ChildView
-// (underneath the non-plugin DOM element).  But we shouldn't allow the
-// ChildView to be focused.  See bug 627649.
-- (BOOL)currentEventShouldFocusPlugin
-{
-  if (!mGeckoChild)
-    return NO;
-
-  NSEvent* currentEvent = [NSApp currentEvent];
-  if ([currentEvent type] != NSLeftMouseDown)
-    return YES;
-
-  nsAutoRetainCocoaObject kungFuDeathGrip(self);
-
-  // hitTest needs coordinates in device pixels
-  NSPoint eventLoc = nsCocoaUtils::ScreenLocationForEvent(currentEvent);
-  eventLoc.y = nsCocoaUtils::FlippedScreenY(eventLoc.y);
-  LayoutDeviceIntPoint widgetLoc = LayoutDeviceIntPoint::FromUntyped(
-    mGeckoChild->CocoaPointsToDevPixels(eventLoc) -
-    mGeckoChild->WidgetToScreenOffset());
-
-  WidgetQueryContentEvent hitTest(true, NS_QUERY_DOM_WIDGET_HITTEST,
-                                  mGeckoChild);
-  hitTest.InitForQueryDOMWidgetHittest(widgetLoc);
-  // This might destroy our widget (and null out mGeckoChild).
-  mGeckoChild->DispatchWindowEvent(hitTest);
-  if (!mGeckoChild)
-    return NO;
-  if (hitTest.mSucceeded && !hitTest.mReply.mWidgetIsHit)
-    return NO;
-
-  return YES;
-}
-
-// Don't focus a plugin if we're in a left click-through that will fail (see
-// [ChildView isInFailingLeftClickThrough] above).
-- (BOOL)shouldFocusPlugin:(BOOL)getFocus
-{
-  if (!mGeckoChild)
-    return NO;
-
-  nsCocoaWindow* windowWidget = mGeckoChild->GetXULWindowWidget();
-  if (windowWidget && !windowWidget->ShouldFocusPlugin())
-    return NO;
-
-  if (getFocus && ![self currentEventShouldFocusPlugin])
-    return NO;
-
-  return YES;
-}
-
 // Returns NO if the plugin shouldn't be focused/unfocused.
 - (BOOL)updatePluginFocusStatus:(BOOL)getFocus
 {
   if (!mGeckoChild)
-    return NO;
-
-  if (![self shouldFocusPlugin:getFocus])
     return NO;
 
   if (mPluginEventModel == NPEventModelCocoa) {
