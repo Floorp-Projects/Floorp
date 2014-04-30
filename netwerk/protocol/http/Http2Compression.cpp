@@ -907,6 +907,15 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
   output.Truncate();
   mParsedContentLength = -1;
 
+  // first thing's first - context size updates (if necessary)
+  if (mBufferSizeChangeWaiting) {
+    if (mLowestBufferSizeWaiting < mMaxBufferSetting) {
+      EncodeTableSizeChange(mLowestBufferSizeWaiting);
+    }
+    EncodeTableSizeChange(mMaxBufferSetting);
+    mBufferSizeChangeWaiting = false;
+  }
+
   // colon headers first
   ProcessHeader(nvPair(NS_LITERAL_CSTRING(":method"), method), false);
   ProcessHeader(nvPair(NS_LITERAL_CSTRING(":path"), path), false);
@@ -1387,10 +1396,25 @@ Http2Compressor::ProcessHeader(const nvPair inputPair, bool neverIndex)
 }
 
 void
+Http2Compressor::EncodeTableSizeChange(uint32_t newMaxSize)
+{
+  uint32_t offset = mOutput->Length();
+  EncodeInteger(4, newMaxSize);
+  uint8_t *startByte = reinterpret_cast<uint8_t *>(mOutput->BeginWriting()) + offset;
+  *startByte = *startByte | 0x20;
+}
+
+void
 Http2Compressor::SetMaxBufferSize(uint32_t maxBufferSize)
 {
   mMaxBufferSetting = maxBufferSize;
   SetMaxBufferSizeInternal(maxBufferSize);
+  if (!mBufferSizeChangeWaiting) {
+    mBufferSizeChangeWaiting = true;
+    mLowestBufferSizeWaiting = maxBufferSize;
+  } else if (maxBufferSize < mLowestBufferSizeWaiting) {
+    mLowestBufferSizeWaiting = maxBufferSize;
+  }
 }
 
 nsresult
