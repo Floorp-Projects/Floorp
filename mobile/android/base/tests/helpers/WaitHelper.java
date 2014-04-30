@@ -7,6 +7,7 @@ package org.mozilla.gecko.tests.helpers;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotNull;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
+import android.os.SystemClock;
 import java.util.regex.Pattern;
 
 import org.mozilla.gecko.Actions;
@@ -84,15 +85,20 @@ public final class WaitHelper {
         }
 
         // Wait for the page load and title changed event.
-        final EventExpecter contentEventExpecter = sActions.expectGeckoEvent("DOMContentLoaded");
-        final EventExpecter titleEventExpecter = sActions.expectGeckoEvent("DOMTitleChanged");
+        final EventExpecter[] eventExpecters = new EventExpecter[] {
+            sActions.expectGeckoEvent("DOMContentLoaded"),
+            sActions.expectGeckoEvent("DOMTitleChanged")
+        };
 
         initiatingAction.run();
 
-        contentEventExpecter.blockForEventDataWithTimeout(PAGE_LOAD_WAIT_MS);
-        contentEventExpecter.unregisterListener();
-        titleEventExpecter.blockForEventDataWithTimeout(PAGE_LOAD_WAIT_MS);
-        titleEventExpecter.unregisterListener();
+        // PAGE_LOAD_WAIT_MS is the total time we wait for all events to finish.
+        final long expecterStartMillis = SystemClock.uptimeMillis();
+        for (final EventExpecter expecter : eventExpecters) {
+            final int eventWaitTimeMillis = PAGE_LOAD_WAIT_MS - (int)(SystemClock.uptimeMillis() - expecterStartMillis);
+            expecter.blockForEventDataWithTimeout(eventWaitTimeMillis);
+            expecter.unregisterListener();
+        }
 
         // Verify remaining state has changed.
         for (final ChangeVerifier verifier : pageLoadVerifiers) {
