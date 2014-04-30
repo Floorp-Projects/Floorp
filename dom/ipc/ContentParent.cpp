@@ -598,9 +598,9 @@ ContentParent::GetNewOrUsed(bool aForBrowserElement)
                               aForBrowserElement,
                               /* isForPreallocated = */ false,
                               PROCESS_PRIORITY_FOREGROUND);
+        p->Init();
     }
 
-    p->Init();
     sNonAppContentParents->AppendElement(p);
     return p.forget();
 }
