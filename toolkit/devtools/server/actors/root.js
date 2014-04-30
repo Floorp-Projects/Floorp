@@ -6,6 +6,7 @@
 
 "use strict";
 
+const { Ci } = require("chrome");
 const Services = require("Services");
 const { ActorPool, appendExtraActors, createExtraActors } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main");
