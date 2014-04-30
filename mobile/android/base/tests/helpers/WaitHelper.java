@@ -100,17 +100,21 @@ public final class WaitHelper {
             expecter.unregisterListener();
         }
 
+        // The timeout wait time should be the aggregate time for all ChangeVerifiers.
+        final long verifierStartMillis = SystemClock.uptimeMillis();
+
         // Verify remaining state has changed.
         for (final ChangeVerifier verifier : pageLoadVerifiers) {
             // If we timeout, either the state is set to the same value (which is fine), or
             // the state has not yet changed. Since we can't be sure it will ever change, move
             // on and let the assertions fail if applicable.
+            final int verifierWaitMillis = CHANGE_WAIT_MS - (int)(SystemClock.uptimeMillis() - verifierStartMillis);
             final boolean hasTimedOut = !sSolo.waitForCondition(new Condition() {
                 @Override
                 public boolean isSatisfied() {
                     return verifier.hasStateChanged();
                 }
-            }, CHANGE_WAIT_MS);
+            }, verifierWaitMillis);
 
             sContext.dumpLog(verifier.getLogTag(),
                     (hasTimedOut ? "timed out." : "was satisfied."));
