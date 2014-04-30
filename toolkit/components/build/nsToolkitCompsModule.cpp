@@ -20,7 +20,6 @@
 #include "nsDownloadManager.h"
 #include "DownloadPlatform.h"
 #include "nsDownloadProxy.h"
-#include "nsCharsetMenu.h"
 #include "rdf.h"
 
 #include "nsTypeAheadFind.h"
@@ -111,7 +110,6 @@ NS_DEFINE_NAMED_CID(NS_URLCLASSIFIERSTREAMUPDATER_CID);
 NS_DEFINE_NAMED_CID(NS_URLCLASSIFIERUTILS_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_BROWSERSTATUSFILTER_CID);
-NS_DEFINE_NAMED_CID(NS_CHARSETMENU_CID);
 #if defined(USE_MOZ_UPDATER)
 NS_DEFINE_NAMED_CID(NS_UPDATEPROCESSOR_CID);
 #endif
@@ -138,7 +136,6 @@ static const Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_URLCLASSIFIERUTILS_CID, false, nullptr, nsUrlClassifierUtilsConstructor },
 #endif
   { &kNS_BROWSERSTATUSFILTER_CID, false, nullptr, nsBrowserStatusFilterConstructor },
-  { &kNS_CHARSETMENU_CID, false, nullptr, NS_NewCharsetMenu },
 #if defined(USE_MOZ_UPDATER)
   { &kNS_UPDATEPROCESSOR_CID, false, nullptr, nsUpdateProcessorConstructor },
 #endif
@@ -168,7 +165,6 @@ static const Module::ContractIDEntry kToolkitContracts[] = {
   { NS_URLCLASSIFIERUTILS_CONTRACTID, &kNS_URLCLASSIFIERUTILS_CID },
 #endif
   { NS_BROWSERSTATUSFILTER_CONTRACTID, &kNS_BROWSERSTATUSFILTER_CID },
-  { NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID, &kNS_CHARSETMENU_CID },
 #if defined(USE_MOZ_UPDATER)
   { NS_UPDATEPROCESSOR_CONTRACTID, &kNS_UPDATEPROCESSOR_CID },
 #endif
