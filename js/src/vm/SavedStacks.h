@@ -139,6 +139,8 @@ class SavedStacks {
     SavedFrame *createFrameFromLookup(JSContext *cx, SavedFrame::Lookup &lookup);
 };
 
+bool SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata);
+
 } /* namespace js */
 
 #endif /* vm_SavedStacks_h */
