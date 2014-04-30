@@ -148,7 +148,7 @@ Deserializer.prototype._transform = function _transform(chunk, encoding, done) {
   done();
 };
 
-// [Frame Header](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-4.1)
+// [Frame Header](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-4.1)
 // --------------------------------------------------------------
 //
 // HTTP/2.0 frames share a common base format consisting of an 8-byte header followed by 0 to 65535
@@ -262,7 +262,7 @@ Deserializer.commonHeader = function readCommonHeader(buffer, frame) {
 // * `typeSpecificAttributes`: a register of frame specific frame object attributes (used by
 //   logging code and also serves as documentation for frame objects)
 
-// [DATA Frames](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-6.1)
+// [DATA Frames](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.1)
 // ------------------------------------------------------------
 //
 // DATA frames (type=0x0) convey arbitrary, variable-length sequences of octets associated with a
@@ -278,15 +278,17 @@ Deserializer.commonHeader = function readCommonHeader(buffer, frame) {
 //   MUST NOT coalesce frames across a segment boundary and MUST preserve segment boundaries when
 //   forwarding frames.
 // * PAD_LOW (0x08):
-//   Bit 5 being set indicates that the Pad Low field is present.
+//   Bit 4 being set indicates that the Pad Low field is present.
 // * PAD_HIGH (0x10):
-//   Bit 6 being set indicates that the Pad High field is present. This bit MUST NOT be set unless
+//   Bit 5 being set indicates that the Pad High field is present. This bit MUST NOT be set unless
 //   the PAD_LOW flag is also set. Endpoints that receive a frame with PAD_HIGH set and PAD_LOW
 //   cleared MUST treat this as a connection error of type PROTOCOL_ERROR.
+// * COMPRESSED (0x20):
+//   Bit 6 being set indicates that the data in the frame has been compressed with GZIP compression.
 
 frameTypes[0x0] = 'DATA';
 
-frameFlags.DATA = ['END_STREAM', 'END_SEGMENT', 'RESERVED4', 'PAD_LOW', 'PAD_HIGH'];
+frameFlags.DATA = ['END_STREAM', 'END_SEGMENT', 'RESERVED4', 'PAD_LOW', 'PAD_HIGH', 'COMPRESSED'];
 
 typeSpecificAttributes.DATA = ['data'];
 
@@ -307,6 +309,11 @@ Deserializer.DATA = function readData(buffer, frame) {
   } else if (frame.flags.PAD_HIGH) {
     return 'DATA frame got PAD_HIGH without PAD_LOW';
   }
+
+  if (frame.flags.COMPRESSED) {
+    return 'DATA frame received COMPRESSED data (unsupported)';
+  }
+
   if (paddingLength) {
     frame.data = buffer.slice(dataOffset, -1 * paddingLength);
   } else {
@@ -314,7 +321,7 @@ Deserializer.DATA = function readData(buffer, frame) {
   }
 };
 
-// [HEADERS](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-6.2)
+// [HEADERS](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.2)
 // --------------------------------------------------------------
 //
 // The HEADERS frame (type=0x1) allows the sender to create a stream.
@@ -340,21 +347,19 @@ Deserializer.DATA = function readData(buffer, frame) {
 
 frameTypes[0x1] = 'HEADERS';
 
-frameFlags.HEADERS = ['END_STREAM', 'END_SEGMENT', 'END_HEADERS', 'PAD_LOW', 'PAD_HIGH', 'PRIORITY_GROUP', 'PRIORITY_DEPENDENCY'];
+frameFlags.HEADERS = ['END_STREAM', 'END_SEGMENT', 'END_HEADERS', 'PAD_LOW', 'PAD_HIGH', 'PRIORITY'];
 
-typeSpecificAttributes.HEADERS = ['priorityGroup', 'groupWeight', 'priorityDependency', 'exclusiveDependency', 'headers', 'data'];
+typeSpecificAttributes.HEADERS = ['priorityDependency', 'priorityWeight', 'exclusiveDependency', 'headers', 'data'];
 
 //      0                   1                   2                   3
 //      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 //     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //     | Pad High? (8) |  Pad Low? (8) |
 //     +-+-------------+---------------+-------------------------------+
-//     |R|              Priority Group Identifier? (31)                |
+//     |E|                 Stream Dependency? (31)                     |
 //     +-+-------------+-----------------------------------------------+
 //     |  Weight? (8)  |
 //     +-+-------------+-----------------------------------------------+
-//     |E|                 Stream Dependency? (31)                     |
-//     +-+-------------------------------------------------------------+
 //     |                   Header Block Fragment (*)                 ...
 //     +---------------------------------------------------------------+
 //     |                           Padding (*)                       ...
@@ -363,20 +368,15 @@ typeSpecificAttributes.HEADERS = ['priorityGroup', 'groupWeight', 'priorityDepen
 // The payload of a HEADERS frame contains a Headers Block
 
 Serializer.HEADERS = function writeHeadersPriority(frame, buffers) {
-  if (frame.flags.PRIORITY_GROUP) {
+  if (frame.flags.PRIORITY) {
     var buffer = new Buffer(5);
-    assert((0 <= frame.priorityGroup) && (frame.priorityGroup <= 0x7fffffff), frame.priorityGroup);
-    buffer.writeUInt32BE(frame.priorityGroup, 0);
-    assert((0 <= frame.groupWeight) && (frame.groupWeight <= 0xff), frame.groupWeight);
-    buffer.writeUInt8(frame.groupWeight, 4);
-    buffers.push(buffer);
-  } else if (frame.flags.PRIORITY_DEPENDENCY) {
-    var buffer = new Buffer(4);
     assert((0 <= frame.priorityDependency) && (frame.priorityDependency <= 0x7fffffff), frame.priorityDependency);
     buffer.writeUInt32BE(frame.priorityDependency, 0);
     if (frame.exclusiveDependency) {
       buffer[0] |= 0x80;
     }
+    assert((0 <= frame.priorityWeight) && (frame.priorityWeight <= 0xff), frame.priorityWeight);
+    buffer.writeUInt8(frame.priorityWeight, 4);
     buffers.push(buffer);
   }
   buffers.push(frame.data);
@@ -396,21 +396,15 @@ Deserializer.HEADERS = function readHeadersPriority(buffer, frame) {
     return 'HEADERS frame got PAD_HIGH without PAD_LOW';
   }
 
-  if (frame.flags.PRIORITY_GROUP) {
-    if (frame.flags.PRIORITY_DEPENDENCY) {
-      return 'HEADERS frame got both PRIORITY_GROUP and PRIORITY_DEPENDENCY';
-    }
-    frame.priorityGroup = buffer.readUInt32BE(dataOffset) & 0x7fffffff;
-    dataOffset += 4;
-    frame.groupWeight = buffer.readUInt8(dataOffset);
-    dataOffset += 1;
-  } else if (frame.flags.PRIORITY_DEPENDENCY) {
+  if (frame.flags.PRIORITY) {
     var dependencyData = new Buffer(4);
     buffer.copy(dependencyData, 0, dataOffset, dataOffset + 4);
     dataOffset += 4;
     frame.exclusiveDependency = !!(dependencyData[0] & 0x80);
     dependencyData[0] &= 0x7f;
     frame.priorityDependency = dependencyData.readUInt32BE(0);
+    frame.priorityWeight = buffer.readUInt8(dataOffset);
+    dataOffset += 1;
   }
 
   if (paddingLength) {
@@ -420,7 +414,7 @@ Deserializer.HEADERS = function readHeadersPriority(buffer, frame) {
   }
 };
 
-// [PRIORITY](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-6.3)
+// [PRIORITY](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.3)
 // -------------------------------------------------------
 //
 // The PRIORITY frame (type=0x2) specifies the sender-advised priority of a stream.
@@ -429,66 +423,43 @@ Deserializer.HEADERS = function readHeadersPriority(buffer, frame) {
 
 frameTypes[0x2] = 'PRIORITY';
 
-frameFlags.PRIORITY = ['RESERVED1', 'RESERVED2', 'RESERVED4', 'RESERVED8', 'RESERVED16', 'PRIORITY_GROUP', 'PRIORITY_DEPENDENCY'];
+frameFlags.PRIORITY = [];
 
-typeSpecificAttributes.PRIORITY = ['priorityGroup', 'groupWeight', 'priorityDependency', 'exclusiveDependency'];
+typeSpecificAttributes.PRIORITY = ['priorityDependency', 'priorityWeight', 'exclusiveDependency'];
 
 //      0                   1                   2                   3
 //      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 //     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//     |R|              Priority Group Identifier? (31)                |
+//     |E|                 Stream Dependency? (31)                     |
 //     +-+-------------+-----------------------------------------------+
 //     |  Weight? (8)  |
-//     +-+-------------+-----------------------------------------------+
-//     |E|                 Stream Dependency? (31)                     |
-//     +-+-------------------------------------------------------------+
+//     +-+-------------+
 //
-// The payload of a PRIORITY frame contains a single reserved bit and a 31-bit priority.
+// The payload of a PRIORITY frame contains an exclusive bit, a 31-bit dependency, and an 8-bit weight
 
 Serializer.PRIORITY = function writePriority(frame, buffers) {
-  var buffer;
-
-  assert((frame.flags.PRIORITY_GROUP || frame.flags.PRIORITY_DEPENDENCY) &&
-          !(frame.flags.PRIORITY_GROUP && frame.flags.PRIORITY_DEPENDENCY),
-         frame.flags.PRIORITY_GROUP && frame.flags.PRIORITY_DEPENDENCY);
-
-  if (frame.flags.PRIORITY_GROUP) {
-    buffer = new Buffer(5);
-    assert((0 <= frame.priorityGroup) && (frame.priorityGroup <= 0x7fffffff), frame.priorityGroup);
-    buffer.writeUInt32BE(frame.priorityGroup, 0);
-    assert((0 <= frame.groupWeight) && (frame.groupWeight <= 0xff), frame.groupWeight);
-    buffer.writeUInt8(frame.groupWeight, 4);
-  } else { // frame.flags.PRIORITY_DEPENDENCY
-    buffer = new Buffer(4);
-    assert((0 <= frame.priorityDependency) && (frame.priorityDependency <= 0x7fffffff), frame.priorityDependency);
-    buffer.writeUInt32BE(frame.priorityDependency, 0);
-    if (frame.exclusiveDependency) {
-      buffer[0] |= 0x80;
-    }
+  var buffer = new Buffer(5);
+  assert((0 <= frame.priorityDependency) && (frame.priorityDependency <= 0x7fffffff), frame.priorityDependency);
+  buffer.writeUInt32BE(frame.priorityDependency, 0);
+  if (frame.exclusiveDependency) {
+    buffer[0] |= 0x80;
   }
+  assert((0 <= frame.priorityWeight) && (frame.priorityWeight <= 0xff), frame.priorityWeight);
+  buffer.writeUInt8(frame.priorityWeight, 4);
 
   buffers.push(buffer);
 };
 
 Deserializer.PRIORITY = function readPriority(buffer, frame) {
-  if (frame.flags.PRIORITY_GROUP) {
-    if (frame.flags.PRIORITY_DEPENDENCY) {
-      return 'PRIORITY frame got both PRIORITY_GROUP and PRIORITY_DEPENDENCY';
-    }
-    frame.priorityGroup = buffer.readUInt32BE(0) & 0x7fffffff;
-    frame.groupWeight = buffer.readUInt8(4);
-  } else if (frame.flags.PRIORITY_DEPENDENCY) {
-    var dependencyData = new Buffer(4);
-    buffer.copy(dependencyData, 0, 0, 4);
-    frame.exclusiveDependency = !!(dependencyData[0] & 0x80);
-    dependencyData[0] &= 0x7f;
-    frame.priorityDependency = dependencyData.readUInt32BE(0);
-  } else {
-    return 'PRIORITY frame got neither PRIORITY_GROUP nor PRIORITY_DEPENDENCY';
-  }
+  var dependencyData = new Buffer(4);
+  buffer.copy(dependencyData, 0, 0, 4);
+  frame.exclusiveDependency = !!(dependencyData[0] & 0x80);
+  dependencyData[0] &= 0x7f;
+  frame.priorityDependency = dependencyData.readUInt32BE(0);
+  frame.priorityWeight = buffer.readUInt8(4);
 };
 
-// [RST_STREAM](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-6.4)
+// [RST_STREAM](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.4)
 // -----------------------------------------------------------
 //
 // The RST_STREAM frame (type=0x3) allows for abnormal termination of a stream.
@@ -522,7 +493,7 @@ Deserializer.RST_STREAM = function readRstStream(buffer, frame) {
   frame.error = errorCodes[buffer.readUInt32BE(0)];
 };
 
-// [SETTINGS](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-6.5)
+// [SETTINGS](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.5)
 // -------------------------------------------------------
 //
 // The SETTINGS frame (type=0x4) conveys configuration parameters that affect how endpoints
@@ -620,15 +591,21 @@ definedSettings[1] = { name: 'SETTINGS_HEADER_TABLE_SIZE', flag: false };
 //   push is permitted.
 definedSettings[2] = { name: 'SETTINGS_ENABLE_PUSH', flag: true };
 
-// * SETTINGS_MAX_CONCURRENT_STREAMS (4):
+// * SETTINGS_MAX_CONCURRENT_STREAMS (3):
 //   indicates the maximum number of concurrent streams that the sender will allow.
 definedSettings[3] = { name: 'SETTINGS_MAX_CONCURRENT_STREAMS', flag: false };
 
-// * SETTINGS_INITIAL_WINDOW_SIZE (7):
+// * SETTINGS_INITIAL_WINDOW_SIZE (4):
 //   indicates the sender's initial stream window size (in bytes) for new streams.
 definedSettings[4] = { name: 'SETTINGS_INITIAL_WINDOW_SIZE', flag: false };
 
-// [PUSH_PROMISE](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-6.6)
+// * SETTINGS_COMPRESS_DATA (5):
+//   this setting is used to enable GZip compression of DATA frames. A value of 1 indicates that
+//   DATA frames MAY be compressed. A value of 0 indicates that compression is not permitted.
+//   The initial value is 0.
+definedSettings[5] = { name: 'SETTINGS_COMPRESS_DATA', flag: true };
+
+// [PUSH_PROMISE](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.6)
 // ---------------------------------------------------------------
 //
 // The PUSH_PROMISE frame (type=0x5) is used to notify the peer endpoint in advance of streams the
@@ -691,7 +668,7 @@ Deserializer.PUSH_PROMISE = function readPushPromise(buffer, frame) {
   }
 };
 
-// [PING](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-6.7)
+// [PING](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.7)
 // -----------------------------------------------
 //
 // The PING frame (type=0x6) is a mechanism for measuring a minimal round-trip time from the
@@ -721,7 +698,7 @@ Deserializer.PING = function readPing(buffer, frame) {
   frame.data = buffer;
 };
 
-// [GOAWAY](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-6.8)
+// [GOAWAY](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.8)
 // ---------------------------------------------------
 //
 // The GOAWAY frame (type=0x7) informs the remote peer to stop creating streams on this connection.
@@ -768,7 +745,7 @@ Deserializer.GOAWAY = function readGoaway(buffer, frame) {
   frame.error = errorCodes[buffer.readUInt32BE(4)];
 };
 
-// [WINDOW_UPDATE](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-6.9)
+// [WINDOW_UPDATE](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.9)
 // -----------------------------------------------------------------
 //
 // The WINDOW_UPDATE frame (type=0x8) is used to implement flow control.
@@ -803,7 +780,7 @@ Deserializer.WINDOW_UPDATE = function readWindowUpdate(buffer, frame) {
   frame.window_size = buffer.readUInt32BE(0) & 0x7fffffff;
 };
 
-// [CONTINUATION](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-6.10)
+// [CONTINUATION](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.10)
 // ------------------------------------------------------------
 //
 // The CONTINUATION frame (type=0x9) is used to continue a sequence of header block fragments.
@@ -850,7 +827,7 @@ Deserializer.CONTINUATION = function readContinuation(buffer, frame) {
   }
 };
 
-// [ALTSVC](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-6.11)
+// [ALTSVC](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.11)
 // ------------------------------------------------------------
 //
 // The ALTSVC frame (type=0xA) advertises the availability of an alternative service to the client.
@@ -939,7 +916,27 @@ Deserializer.ALTSVC = function readAltSvc(buffer, frame) {
   frame.origin = buffer.toString('ascii', 9 + pidLength + hostLength);
 };
 
-// [Error Codes](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-7)
+// [BLOCKED](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.12)
+// ------------------------------------------------------------
+//
+// The BLOCKED frame (type=0xB) indicates that the sender is unable to send data
+// due to a closed flow control window.
+//
+// The BLOCKED frame does not define any flags and contains no payload.
+
+frameTypes[0xB] = 'BLOCKED';
+
+frameFlags.BLOCKED = [];
+
+typeSpecificAttributes.BLOCKED = [];
+
+Serializer.BLOCKED = function writeBlocked(frame, buffers) {
+};
+
+Deserializer.BLOCKED = function readBlocked(buffer, frame) {
+};
+
+// [Error Codes](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-7)
 // ------------------------------------------------------------
 
 var errorCodes = [

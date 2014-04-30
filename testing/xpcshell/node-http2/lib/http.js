@@ -121,7 +121,7 @@
 //
 // [1]: http://nodejs.org/api/https.html
 // [2]: http://nodejs.org/api/http.html
-// [3]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-8.1.3.2
+// [3]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-8.1.3.2
 // [expect-continue]: https://github.com/http2/http2-spec/issues/18
 // [connect]: https://github.com/http2/http2-spec/issues/230
 
@@ -204,7 +204,7 @@ function IncomingMessage(stream) {
 }
 IncomingMessage.prototype = Object.create(PassThrough.prototype, { constructor: { value: IncomingMessage } });
 
-// [Request Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-8.1.3.1)
+// [Request Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-8.1.3.1)
 // * `headers` argument: HTTP/2.0 request and response header fields carry information as a series
 //   of key-value pairs. This includes the target URI for the request, the status code for the
 //   response, as well as HTTP header fields.
@@ -516,7 +516,7 @@ function IncomingRequest(stream) {
 }
 IncomingRequest.prototype = Object.create(IncomingMessage.prototype, { constructor: { value: IncomingRequest } });
 
-// [Request Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-8.1.3.1)
+// [Request Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-8.1.3.1)
 // * `headers` argument: HTTP/2.0 request and response header fields carry information as a series
 //   of key-value pairs. This includes the target URI for the request, the status code for the
 //   response, as well as HTTP header fields.
@@ -947,7 +947,7 @@ function IncomingResponse(stream) {
 }
 IncomingResponse.prototype = Object.create(IncomingMessage.prototype, { constructor: { value: IncomingResponse } });
 
-// [Response Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-11#section-8.1.3.2)
+// [Response Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-8.1.3.2)
 // * `headers` argument: HTTP/2.0 request and response header fields carry information as a series
 //   of key-value pairs. This includes the target URI for the request, the status code for the
 //   response, as well as HTTP header fields.
