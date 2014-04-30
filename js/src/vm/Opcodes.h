@@ -100,7 +100,26 @@
      */ \
     macro(JSOP_UNDEFINED, 1,  js_undefined_str, "",       1,  0,  1, JOF_BYTE) \
     macro(JSOP_UNUSED2,   2,  "unused2",    NULL,         1,  1,  0, JOF_BYTE) \
+    /*
+     * Pops the top of stack value, converts it to an object, and adds a
+     * 'DynamicWithObject' wrapping that object to the scope chain.
+     *
+     * There is a matching JSOP_LEAVEWITH instruction later. All name
+     * lookups between the two that may need to consult the With object
+     * are deoptimized.
+     *   Category: Statements
+     *   Type: With Statement
+     *   Operands: uint32_t staticWithIndex
+     *   Stack: val =>
+     */ \
     macro(JSOP_ENTERWITH, 3,  "enterwith",  NULL,         5,  1,  0, JOF_OBJECT) \
+    /*
+     * Pops the scope chain object pushed by JSOP_ENTERWITH.
+     *   Category: Statements
+     *   Type: With Statement
+     *   Operands:
+     *   Stack: =>
+     */ \
     macro(JSOP_LEAVEWITH, 4,  "leavewith",  NULL,         1,  0,  0, JOF_BYTE) \
     /*
      * Pops the top of stack value as 'rval', stops interpretation of current
@@ -111,8 +130,35 @@
      *   Stack: rval =>
      */ \
     macro(JSOP_RETURN,    5,  "return",     NULL,         1,  1,  0, JOF_BYTE) \
+    /*
+     * Jumps to a 32-bit offset from the current bytecode.
+     *   Category: Statements
+     *   Type: Jumps
+     *   Operands: int32_t offset
+     *   Stack: =>
+     */ \
     macro(JSOP_GOTO,      6,  "goto",       NULL,         5,  0,  0, JOF_JUMP) \
+    /*
+     * Pops the top of stack value, converts it into a boolean, if the result is
+     * 'false', jumps to a 32-bit offset from the current bytecode.
+     *
+     * The idea is that a sequence like
+     * JSOP_ZERO; JSOP_ZERO; JSOP_EQ; JSOP_IFEQ; JSOP_RETURN;
+     * reads like a nice linear sequence that will execute the return.
+     *   Category: Statements
+     *   Type: Jumps
+     *   Operands: int32_t offset
+     *   Stack: cond =>
+     */ \
     macro(JSOP_IFEQ,      7,  "ifeq",       NULL,         5,  1,  0, JOF_JUMP|JOF_DETECTING) \
+    /*
+     * Pops the top of stack value, converts it into a boolean, if the result is
+     * 'true', jumps to a 32-bit offset from the current bytecode.
+     *   Category: Statements
+     *   Type: Jumps
+     *   Operands: int32_t offset
+     *   Stack: cond =>
+     */ \
     macro(JSOP_IFNE,      8,  "ifne",       NULL,         5,  1,  0, JOF_JUMP) \
     \
     /*
@@ -491,10 +537,38 @@
      */ \
     macro(JSOP_FALSE,     66, js_false_str, js_false_str, 1,  0,  1, JOF_BYTE) \
     macro(JSOP_TRUE,      67, js_true_str,  js_true_str,  1,  0,  1, JOF_BYTE) \
+    /*
+     * Converts the top of stack value into a boolean, if the result is 'true',
+     * jumps to a 32-bit offset from the current bytecode.
+     *   Category: Statements
+     *   Type: Jumps
+     *   Operands: int32_t offset
+     *   Stack: cond => cond
+     */ \
     macro(JSOP_OR,        68, "or",         NULL,         5,  1,  1, JOF_JUMP|JOF_DETECTING|JOF_LEFTASSOC) \
+    /*
+     * Converts the top of stack value into a boolean, if the result is 'false',
+     * jumps to a 32-bit offset from the current bytecode.
+     *   Category: Statements
+     *   Type: Jumps
+     *   Operands: int32_t offset
+     *   Stack: cond => cond
+     */ \
     macro(JSOP_AND,       69, "and",        NULL,         5,  1,  1, JOF_JUMP|JOF_DETECTING|JOF_LEFTASSOC) \
     \
-    /* The switch bytecodes have variable length. */ \
+    /*
+     * Pops the top of stack value as 'i', if 'low <= i <= high',
+     * jumps to a 32-bit offset: 'offset[i - low]' from the current bytecode,
+     * jumps to a 32-bit offset: 'len' from the current bytecode if not.
+     *
+     * This opcode has variable length.
+     *   Category: Statements
+     *   Type: Switch Statement
+     *   Operands: int32_t len, int32_t low, int32_t high,
+     *             int32_t offset[0], ..., int32_t offset[high-low]
+     *   Stack: i =>
+     *   len: len
+     */ \
     macro(JSOP_TABLESWITCH, 70, "tableswitch", NULL,     -1,  1,  0,  JOF_TABLESWITCH|JOF_DETECTING) \
     \
     /*
@@ -531,20 +605,48 @@
     macro(JSOP_SETCALL,   74, "setcall",    NULL,         1,  0,  0, JOF_BYTE) \
     \
     /*
-     * JSOP_ITER sets up a for-in or for-each-in loop using the JSITER_* flag bits
-     * in this op's uint8_t immediate operand. It replaces the top of stack value
-     * with an iterator for that value.
-     *
-     * JSOP_MOREITER stores the next iterated value into cx->iterValue and pushes
-     * true if another value is available, and false otherwise. It is followed
-     * immediately by JSOP_IFNE.
-     *
-     * JSOP_ENDITER cleans up after the loop. It uses the slot above the iterator
-     * for temporary GC rooting.
+     * Sets up a for-in or for-each-in loop using the JSITER_* flag bits in
+     * this op's uint8_t immediate operand. It pops the top of stack value as
+     * 'val' and pushes 'iter' which is an iterator for 'val'.
+     *   Category: Statements
+     *   Type: For-In Statement
+     *   Operands: uint8_t flags
+     *   Stack: val => iter
      */ \
     macro(JSOP_ITER,      75, "iter",       NULL,         2,  1,  1,  JOF_UINT8) \
+    /*
+     * Stores the next iterated value into 'cx->iterValue' and pushes 'true'
+     * onto the stack if another value is available, and 'false' otherwise.
+     * It is followed immediately by JSOP_IFNE.
+     *
+     * This opcode increments iterator cursor if current iteration has
+     * JSITER_FOREACH flag.
+     *   Category: Statements
+     *   Type: For-In Statement
+     *   Operands:
+     *   Stack: iter => iter, cond
+     */ \
     macro(JSOP_MOREITER,  76, "moreiter",   NULL,         1,  1,  2,  JOF_BYTE) \
+    /*
+     * Pushes the value produced by the preceding JSOP_MOREITER operation
+     * ('cx->iterValue') onto the stack
+     *
+     * This opcode increments iterator cursor if current iteration does not have
+     * JSITER_FOREACH flag.
+     *   Category: Statements
+     *   Type: For-In Statement
+     *   Operands:
+     *   Stack: iter => iter, val
+     */ \
     macro(JSOP_ITERNEXT,  77, "iternext",   "<next>",     1,  0,  1,  JOF_BYTE) \
+    /*
+     * Exits a for-in loop by popping the iterator object from the stack and
+     * closing it.
+     *   Category: Statements
+     *   Type: For-In Statement
+     *   Operands:
+     *   Stack: iter =>
+     */ \
     macro(JSOP_ENDITER,   78, "enditer",    NULL,         1,  1,  0,  JOF_BYTE) \
     \
     /*
@@ -799,7 +901,16 @@
     macro(JSOP_UNUSED104,  104, "unused104",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED105,  105, "unused105",   NULL,         1,  0,  0,  JOF_BYTE) \
     \
-    /* The argument is the offset to the next statement and is used by IonMonkey. */ \
+    /*
+     * This opcode precedes every labeled statement. It's a no-op.
+     *
+     * 'offset' is the offset to the next instruction after this statement,
+     * the one 'break LABEL;' would jump to. IonMonkey uses this.
+     *   Category: Statements
+     *   Type: Jumps
+     *   Operands: int32_t offset
+     *   Stack: =>
+     */ \
     macro(JSOP_LABEL,     106,"label",     NULL,          5,  0,  0,  JOF_JUMP) \
     \
     macro(JSOP_UNUSED107, 107,"unused107",  NULL,         1,  0,  0,  JOF_BYTE) \
@@ -822,7 +933,15 @@
      */ \
     macro(JSOP_FUNCALL,   108,"funcall",    NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
     \
-    /* This opcode is the target of the backwards jump for some loop. */ \
+    /*
+     * Another no-op.
+     *
+     * This opcode is the target of the backwards jump for some loop.
+     *   Category: Statements
+     *   Type: Jumps
+     *   Operands:
+     *   Stack: =>
+     */ \
     macro(JSOP_LOOPHEAD,  109,"loophead",   NULL,         1,  0,  0,  JOF_BYTE) \
     \
     /* ECMA-compliant assignment ops. */ \
@@ -847,6 +966,14 @@
     macro(JSOP_SETNAME,   111,"setname",    NULL,         5,  2,  1,  JOF_ATOM|JOF_NAME|JOF_SET|JOF_DETECTING) \
     \
     /* Exception handling ops. */ \
+    /*
+     * Pops the top of stack value as 'v', sets pending exception as 'v', then
+     * raises error.
+     *   Category: Statements
+     *   Type: Exception Handling
+     *   Operands:
+     *   Stack: v =>
+     */ \
     macro(JSOP_THROW,     112,js_throw_str, NULL,         1,  1,  0,  JOF_BYTE) \
     \
     /*
@@ -880,11 +1007,41 @@
      */ \
     macro(JSOP_DEBUGGER,  115,"debugger",   NULL,         1,  0,  0, JOF_BYTE) \
     \
-    /* gosub/retsub for finally handling */ \
+    /*
+     * Pushes 'false' and next bytecode's PC onto the stack, and jumps to
+     * a 32-bit offset from the current bytecode.
+     *
+     * This opcode is used for entering 'finally' block.
+     *   Category: Statements
+     *   Type: Exception Handling
+     *   Operands: int32_t offset
+     *   Stack: => false, (next bytecode's PC)
+     */ \
     macro(JSOP_GOSUB,     116,"gosub",      NULL,         5,  0,  0,  JOF_JUMP) \
+    /*
+     * Pops the top two values on the stack as 'rval' and 'lval', converts
+     * 'lval' into a boolean, raises error if the result is 'true',
+     * jumps to a 32-bit absolute PC: 'rval' if 'false'.
+     *
+     * This opcode is used for returning from 'finally' block.
+     *   Category: Statements
+     *   Type: Exception Handling
+     *   Operands:
+     *   Stack: lval, rval =>
+     */ \
     macro(JSOP_RETSUB,    117,"retsub",     NULL,         1,  2,  0,  JOF_BYTE) \
     \
     /* More exception handling ops. */ \
+    /*
+     * Pushes the current pending exception onto the stack and clears the
+     * pending exception. This is only emitted at the beginning of code for a
+     * catch-block, so it is known that an exception is pending. It is used to
+     * implement catch-blocks and 'yield*'.
+     *   Category: Statements
+     *   Type: Exception Handling
+     *   Operands:
+     *   Stack: => exception
+     */ \
     macro(JSOP_EXCEPTION, 118,"exception",  NULL,         1,  0,  1,  JOF_BYTE) \
     \
     /*
@@ -896,12 +1053,58 @@
     macro(JSOP_LINENO,    119,"lineno",     NULL,         3,  0,  0,  JOF_UINT16) \
     \
     /*
-     * ECMA-compliant switch statement ops.
-     * CONDSWITCH is a decompilable NOP; CASE is ===, POP, jump if true, re-push
-     * lval if false; and DEFAULT is POP lval and GOTO.
+     * This no-op appears after the bytecode for EXPR in 'switch (EXPR) {...}'
+     * if the switch cannot be optimized using JSOP_TABLESWITCH.
+     * For a non-optimized switch statement like this:
+     *
+     *     switch (EXPR) {
+     *       case V0:
+     *         C0;
+     *       ...
+     *       default:
+     *         D;
+     *     }
+     *
+     * the bytecode looks like this:
+     *
+     *     (EXPR)
+     *     condswitch
+     *     (V0)
+     *     case ->C0
+     *     ...
+     *     default ->D
+     *     (C0)
+     *     ...
+     *     (D)
+     *
+     * Note that code for all case-labels is emitted first, then code for
+     * the body of each case clause.
+     *   Category: Statements
+     *   Type: Switch Statement
+     *   Operands:
+     *   Stack: =>
      */ \
     macro(JSOP_CONDSWITCH,120,"condswitch", NULL,         1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pops the top two values on the stack as 'rval' and 'lval', compare them
+     * with '===', if the result is 'true', jumps to a 32-bit offset from the
+     * current bytecode, re-pushes 'lval' onto the stack if 'false'.
+     *   Category: Statements
+     *   Type: Switch Statement
+     *   Operands: int32_t offset
+     *   Stack: lval, rval => lval(if lval !== rval)
+     */ \
     macro(JSOP_CASE,      121,"case",       NULL,         5,  2,  1,  JOF_JUMP) \
+    /*
+     * This appears after all cases in a JSOP_CONDSWITCH, whether there is a
+     * 'default:' label in the switch statement or not. Pop the switch operand
+     * from the stack and jump to a 32-bit offset from the current bytecode.
+     * offset from the current bytecode.
+     *   Category: Statements
+     *   Type: Switch Statement
+     *   Operands: int32_t offset
+     *   Stack: lval =>
+     */ \
     macro(JSOP_DEFAULT,   122,"default",    NULL,         5,  1,  0,  JOF_JUMP) \
     \
     /* ECMA-compliant call to eval op. */ \
@@ -1000,10 +1203,24 @@
     macro(JSOP_PICK,        133, "pick",      NULL,       2,  0,  0,  JOF_UINT8|JOF_TMPSLOT2) \
     \
     /*
-     * Exception handling no-op, for more economical byte-coding than SRC_TRYFIN
-     * srcnote-annotated JSOP_NOPs and to simply stack balance handling.
+     * This no-op appears at the top of the bytecode for a 'TryStatement'.
+     *
+     * Location information for catch/finally blocks is stored in a
+     * side table, 'script->trynotes()'.
+     *   Category: Statements
+     *   Type: Exception Handling
+     *   Operands:
+     *   Stack: =>
      */ \
     macro(JSOP_TRY,         134,"try",        NULL,       1,  0,  0,  JOF_BYTE) \
+    /*
+     * This opcode has a def count of 2, but these values are already on the
+     * stack (they're pushed by JSOP_GOSUB).
+     *   Category: Statements
+     *   Type: Exception Handling
+     *   Operands:
+     *   Stack: => false, (next bytecode's PC)
+     */ \
     macro(JSOP_FINALLY,     135,"finally",    NULL,       1,  0,  2,  JOF_BYTE) \
     \
     /*
@@ -1080,11 +1297,27 @@
     macro(JSOP_UNUSED147,     147,"unused147", NULL,      1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED148,     148,"unused148", NULL,      1,  0,  0,  JOF_BYTE) \
     \
-    /* Placeholders for a real jump opcode set during backpatch chain fixup. */ \
+    /*
+     * Placeholder opcode used during bytecode generation. This never
+     * appears in a finished script. FIXME: bug 473671.
+     *   Category: Statements
+     *   Type: Jumps
+     *   Operands: int32_t offset
+     *   Stack: =>
+     */ \
     macro(JSOP_BACKPATCH,     149,"backpatch", NULL,      5,  0,  0,  JOF_JUMP) \
     macro(JSOP_UNUSED150,     150,"unused150", NULL,      1,  0,  0,  JOF_BYTE) \
     \
-    /* Set pending exception from the stack, to trigger rethrow. */ \
+    /*
+     * Pops the top of stack value as 'v', sets pending exception as 'v',
+     * to trigger rethrow.
+     *
+     * This opcode is used in conditional catch clauses.
+     *   Category: Statements
+     *   Type: Exception Handling
+     *   Operands:
+     *   Stack: v =>
+     */ \
     macro(JSOP_THROWING,      151,"throwing", NULL,       1,  1,  0,  JOF_BYTE) \
     \
     /*
@@ -1411,6 +1644,10 @@
      * loops all have the same value.  The upper bit is set if Ion should be
      * able to OSR at this point, which is true unless there is non-loop state
      * on the stack.
+     *   Category: Statements
+     *   Type: Jumps
+     *   Operands: uint8_t BITFIELD
+     *   Stack: =>
      */ \
     macro(JSOP_LOOPENTRY,     227, "loopentry",    NULL,  2,  0,  0,  JOF_UINT8)
 
