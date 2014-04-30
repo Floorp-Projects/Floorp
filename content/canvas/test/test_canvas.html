@@ -15108,7 +15108,7 @@ var img = new Image();
 todo(img.complete === false, "img.complete === false");
 var _thrown = undefined; try {
   ctx.createPattern(img, 'repeat');
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "InvalidStateError" && _thrown.code == DOMException.INVALID_STATE_ERR, "should throw InvalidStateError");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "InvalidStateError" && _thrown.code == DOMException.INVALID_STATE_ERR, "should throw InvalidStateError");
 
 
 }
