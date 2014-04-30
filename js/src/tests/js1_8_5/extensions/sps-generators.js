@@ -23,7 +23,10 @@ function turnoff() {
 
 for (var slowAsserts of [ true, false ]) {
   // The slowAssertions setting is not expected to matter
-  enableSPSProfilingAssertions(slowAsserts);
+  if (slowAsserts)
+    enableSPSProfilingWithSlowAssertions();
+  else
+    enableSPSProfiling();
 
   g = gen();
   assertEq(g.next(), 'hi');
