@@ -11,8 +11,7 @@ pref("startup.homepage_welcome_url","");
 pref("app.update.interval", 28800); // 8 hours
 // The time interval between the downloading of mar file chunks in the
 // background (in seconds)
-// 0 means "download everything at once"
-pref("app.update.download.backgroundInterval", 0);
+pref("app.update.download.backgroundInterval", 60);
 // Give the user x seconds to react before showing the big UI. default=24 hours
 pref("app.update.promptWaitTime", 86400);
 // URL user can browse to manually if for some reason all update installation
