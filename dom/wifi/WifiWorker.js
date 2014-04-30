@@ -1061,7 +1061,7 @@ var WifiManager = (function() {
     "ssid", "bssid", "psk", "wep_key0", "wep_key1", "wep_key2", "wep_key3",
     "wep_tx_keyidx", "priority", "key_mgmt", "scan_ssid", "disabled",
     "identity", "password", "auth_alg", "phase1", "phase2", "eap", "pin",
-    "pcsc"
+    "pcsc", "ca_cert"
   ];
 
   manager.getNetworkConfiguration = function(config, callback) {
@@ -1081,16 +1081,17 @@ var WifiManager = (function() {
     var netId = config.netId;
     var done = 0;
     var errors = 0;
+
+    function hasValidProperty(name) {
+      return ((name in config) &&
+               config[name] != null &&
+               (["password", "wep_key0", "psk"].indexOf(name) !== -1 ||
+                config[name] !== '*'));
+    }
+
     for (var n = 0; n < networkConfigurationFields.length; ++n) {
       let fieldName = networkConfigurationFields[n];
-      if (!(fieldName in config) ||
-          // These fields are special: We can't retrieve them from the
-          // supplicant, and often we have a star in our config. In that case,
-          // we need to avoid overwriting the correct password with a *.
-          (fieldName === "password" ||
-           fieldName === "wep_key0" ||
-           fieldName === "psk") &&
-          config[fieldName] === '*') {
+      if (!hasValidProperty(fieldName)) {
         ++done;
       } else {
         wifiCommand.setNetworkVariable(netId, fieldName, config[fieldName], function(ok) {
@@ -1532,7 +1533,8 @@ Network.api = {
   eap: "rw",
   pin: "rw",
   phase1: "rw",
-  phase2: "rw"
+  phase2: "rw",
+  serverCertificate: "rw"
 };
 
 // Note: We never use ScanResult.prototype, so the fact that it's unrelated to
@@ -1763,6 +1765,10 @@ function WifiWorker() {
       pub.known = true;
     if (net.scan_ssid === 1)
       pub.hidden = true;
+    if ("ca_cert" in net && net.ca_cert &&
+        net.ca_cert.indexOf("keystore://WIFI_SERVERCERT_" === 0)) {
+      pub.serverCertificate = net.ca_cert.substr(27);
+    }
     return pub;
   };
 
@@ -1825,15 +1831,29 @@ function WifiWorker() {
       configured.auth_alg = net.auth_alg = "OPEN SHARED";
     }
 
-    if ("pin" in net) {
-      net.pin = quote(net.pin);
+    function hasValidProperty(name) {
+      return ((name in net) && net[name] != null);
     }
 
-    if ("phase1" in net)
-      net.phase1 = quote(net.phase1);
+    if (hasValidProperty("eap")) {
+      if (hasValidProperty("pin")) {
+        net.pin = quote(net.pin);
+      }
 
-    if ("phase2" in net)
-      net.phase2 = quote(net.phase2);
+      if (hasValidProperty("phase1"))
+        net.phase1 = quote(net.phase1);
+
+      if (hasValidProperty("phase2")) {
+        if (net.eap === "PEAP") {
+          net.phase2 = quote("auth=" + net.phase2);
+        } else {  // TLS, TTLS
+          net.phase2 = quote("autheap=" + net.phase2);
+        }
+      }
+
+      if (hasValidProperty("serverCertificate"))
+        net.ca_cert = quote("keystore://WIFI_SERVERCERT_" + net.serverCertificate);
+    }
 
     return net;
   };
