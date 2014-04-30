@@ -15,10 +15,10 @@
     <!-- Note: any layout parameters setting the right edge of
          this View should be matched in the url_bar_translating_edge.
 
-         Note 2: On devices where the editing mode cancel items are
-         wider than the tabs and similar buttons (e.g. hardware menu
-         button), the url bar will shrink, in which case the LayoutParams
-         of this View are changed dynamically. -->
+         Note 2: On devices where the editing mode cancel button is
+         wider than the tabs counter and nearby buttons, the url bar will
+         shrink, in which case the LayoutParams of this View are
+         changed dynamically. -->
     <ImageView android:id="@+id/url_bar_entry"
                style="@style/UrlBar.Button"
                android:layout_marginLeft="4dp"
