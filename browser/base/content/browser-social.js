@@ -233,6 +233,9 @@ SocialUI = {
         if (provider.sidebarURL) {
           SocialSidebar.show(provider.origin);
         }
+        if (provider.postActivationURL) {
+          openUILinkIn(provider.postActivationURL, "tab");
+        }
       });
     });
   },
