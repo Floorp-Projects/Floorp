@@ -106,20 +106,9 @@
                android:contentDescription="@string/edit_mode_cancel"
                android:visibility="invisible"/>
 
-    <org.mozilla.gecko.widget.ThemedView android:id="@+id/edit_separator"
-                                         android:layout_toLeftOf="@id/edit_cancel"
-                                         android:layout_width="1dip"
-                                         android:layout_height="match_parent"
-                                         android:layout_marginTop="12dp"
-                                         android:layout_marginBottom="12dp"
-                                         android:layout_marginLeft="8dp"
-                                         android:layout_marginRight="2dp"
-                                         android:background="@drawable/toolbar_separator_selector"
-                                         android:visibility="invisible"/>
-
     <org.mozilla.gecko.toolbar.ToolbarEditLayout android:id="@+id/edit_layout"
                   style="@style/UrlBar.Button"
-                  android:layout_toLeftOf="@id/edit_separator"
+                  android:layout_toLeftOf="@id/edit_cancel"
                   android:layout_marginLeft="4dp"
                   android:layout_marginRight="4dp"
                   android:paddingLeft="8dp"
