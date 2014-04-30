@@ -447,7 +447,7 @@ ClearByMask(WebGLContext* context, GLbitfield mask)
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE)
         return false;
 
-    bool colorAttachmentsMask[context->sMaxColorAttachments] = {false};
+    bool colorAttachmentsMask[WebGLContext::kMaxColorAttachments] = {false};
     if (mask & LOCAL_GL_COLOR_BUFFER_BIT) {
         colorAttachmentsMask[0] = true;
     }
@@ -574,6 +574,7 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
     GLenum error = mContext->GetAndFlushUnderlyingGLErrors();
     if (error) {
         // Should only be OUT_OF_MEMORY. Anyway, there's no good way to recover from this here.
+        printf_stderr("Error: 0x%4x\n", error);
         MOZ_CRASH(); // errors on texture upload have been related to video memory exposure in the past.
     }
 
