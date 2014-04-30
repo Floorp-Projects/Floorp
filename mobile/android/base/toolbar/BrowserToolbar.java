@@ -37,6 +37,8 @@ import org.mozilla.gecko.widget.ThemedRelativeLayout;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
@@ -136,7 +138,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
     private MenuPopup menuPopup;
     private List<View> focusOrder;
 
-    private final View editCancel;
+    private final ImageView editCancel;
 
     private boolean shouldShrinkURLBar = false;
 
@@ -218,7 +220,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
         actionItemBar = (LinearLayout) findViewById(R.id.menu_items);
         hasSoftMenuButton = !HardwareUtils.hasMenuButton();
 
-        editCancel = findViewById(R.id.edit_cancel);
+        editCancel = (ImageView) findViewById(R.id.edit_cancel);
 
         // We use different layouts on phones and tablets, so adjust the focus
         // order appropriately.
@@ -603,10 +605,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
             return 0;
         }
 
-        // We would ideally use the right-most point of the edit layout instead of the
-        // edit separator and its margin, but it is not inflated when this code initially runs.
-        final LayoutParams lp = (LayoutParams) editCancel.getLayoutParams();
-        return editCancel.getLeft() - lp.leftMargin - urlBarEntry.getRight();
+        // Subtract the right margin because it's negative.
+        final LayoutParams lp = (LayoutParams) urlEditLayout.getLayoutParams();
+        return urlEditLayout.getRight() - lp.rightMargin - urlBarEntry.getRight();
     }
 
     private int getUrlBarCurveTranslation() {
@@ -1101,6 +1102,10 @@ public class BrowserToolbar extends ThemedRelativeLayout
         }
 
         updateProgressVisibility();
+
+        // The animation looks cleaner if the text in the URL bar is
+        // not selected so clear the selection by clearing focus.
+        urlEditLayout.clearFocus();
 
         if (Build.VERSION.SDK_INT < 11) {
             stopEditingWithoutAnimation();
