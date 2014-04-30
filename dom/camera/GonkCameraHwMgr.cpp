@@ -113,7 +113,7 @@ GonkCameraHardware::notify(int32_t aMsgType, int32_t ext1, int32_t ext2)
       break;
 
     case CAMERA_MSG_ERROR:
-      OnError(mTarget, CameraControlListener::kErrorServiceFailed, ext1, ext2);
+      OnSystemError(mTarget, CameraControlListener::kSystemService, ext1, ext2);
       break;
 
     default:
@@ -148,7 +148,7 @@ GonkCameraHardware::Init()
   int rv = Camera::getCameraInfo(mCameraId, &info);
   if (rv != 0) {
     DOM_CAMERA_LOGE("%s: failed to get CameraInfo mCameraId %d\n", __func__, mCameraId);
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_INITIALIZED;
    }
 
   mRawSensorOrientation = info.orientation;
