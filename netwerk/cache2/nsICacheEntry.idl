@@ -14,9 +14,9 @@ typedef long nsCacheStoragePolicy;
 
 interface nsICacheListener;
 interface nsIFile;
-interface nsICacheMetaDataVisitor;
+interface nsICacheEntryMetaDataVisitor;
 
-[scriptable, uuid(3058bf1e-5116-41cf-826b-e6981308d414)]
+[scriptable, uuid(972dc51d-df01-4b1e-b7f3-76dbcc603b1e)]
 interface nsICacheEntry : nsISupports
 {
   /**
@@ -125,6 +125,16 @@ interface nsICacheEntry : nsISupports
   void   setMetaDataElement(in string key, in string value);
 
   /**
+   * Obtain the list of metadata keys this entry keeps.
+   *
+   * NOTE: The callback is invoked under the CacheFile's lock.  It means
+   * there should not be made any calls to the entry from the visitor and
+   * if the values need to be processed somehow, it's better to cache them
+   * and process outside the callback.
+   */
+  void visitMetaData(in nsICacheEntryMetaDataVisitor visitor);
+
+  /**
    * Claims that all metadata on this entry are up-to-date and this entry
    * now can be delivered to other waiting consumers.
    *
@@ -206,4 +216,17 @@ interface nsICacheEntry : nsISupports
    *    false otherwise
    */
   boolean hasWriteAccess(in boolean aWriteAllowed);
+};
+
+/**
+ * Argument for nsICacheEntry.visitMetaData, provides access to all metadata
+ * keys and values stored on the entry.
+ */
+[scriptable, uuid(fea3e276-6ba5-4ceb-a581-807d1f43f6d0)]
+interface nsICacheEntryMetaDataVisitor : nsISupports
+{
+  /**
+   * Called over each key / value pair.
+   */
+  void onMetaDataElement(in string key, in string value);
 };
