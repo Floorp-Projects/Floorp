@@ -1916,21 +1916,6 @@ SweepScriptData(JSRuntime *rt);
 extern void
 FreeScriptData(JSRuntime *rt);
 
-struct ScriptAndCounts
-{
-    /* This structure is stored and marked from the JSRuntime. */
-    JSScript *script;
-    ScriptCounts scriptCounts;
-
-    PCCounts &getPCCounts(jsbytecode *pc) const {
-        return scriptCounts.pcCountsVector[script->pcToOffset(pc)];
-    }
-
-    jit::IonScriptCounts *getIonCounts() const {
-        return scriptCounts.ionCounts;
-    }
-};
-
 struct GSNCache;
 
 jssrcnote *
