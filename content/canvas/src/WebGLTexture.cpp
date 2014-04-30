@@ -549,8 +549,10 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
     bool cleared = ClearWithTempFB(mContext, GLName(),
                                    imageTarget, level,
                                    format, imageInfo.mHeight, imageInfo.mWidth);
-    if (cleared)
+    if (cleared) {
+        SetImageDataStatus(imageTarget, level, WebGLImageDataStatus::InitializedImageData);
         return;
+    }
 
     // That didn't work. Try uploading zeros then.
     gl::ScopedBindTexture autoBindTex(mContext->gl, GLName(), mTarget);
@@ -584,8 +586,8 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
 void
 WebGLTexture::SetFakeBlackStatus(WebGLTextureFakeBlackStatus x)
 {
-	mFakeBlackStatus = x;
-	mContext->SetFakeBlackStatus(WebGLContextFakeBlackStatus::Unknown);
+    mFakeBlackStatus = x;
+    mContext->SetFakeBlackStatus(WebGLContextFakeBlackStatus::Unknown);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLTexture)
