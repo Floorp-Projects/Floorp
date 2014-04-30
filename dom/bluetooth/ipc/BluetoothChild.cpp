@@ -75,7 +75,9 @@ BluetoothChild::RecvNotify(const BluetoothSignal& aSignal)
 {
   MOZ_ASSERT(sBluetoothService);
 
-  sBluetoothService->DistributeSignal(aSignal);
+  if (sBluetoothService) {
+    sBluetoothService->DistributeSignal(aSignal);
+  }
   return true;
 }
 
@@ -84,7 +86,9 @@ BluetoothChild::RecvEnabled(const bool& aEnabled)
 {
   MOZ_ASSERT(sBluetoothService);
 
-  sBluetoothService->SetEnabled(aEnabled);
+  if (sBluetoothService) {
+    sBluetoothService->SetEnabled(aEnabled);
+  }
   return true;
 }
 
