@@ -9,7 +9,8 @@ Expect: var enc = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntr
 <channel>
 <item>
 
-<media:content fileSize="24986239" type="video/mpeg" url="http://dallas.example.com/joebob_050689.mpeg" /> 
+<media:content fileSize="24986239" type="video/mpeg" url="http://dallas.example.com/joebob_050689.mpeg" />
+<media:thumbnail url="http://dallas.example.com/joebob_050689.jpg"  width="75" height="50"/>
 <author>jbb@dallas.example.com (Joe Bob Briggs)</author>
 <comments>http://example.org</comments>
 <title>test</title>

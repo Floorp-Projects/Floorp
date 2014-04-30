@@ -101,6 +101,10 @@
                 accesskey="&moveToNewWindow.accesskey;"
                 tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
+      <menuitem id="context_openNonRemoteWindow" label="Open in new non-e10s window"
+                tbattr="tabbrowser-remote"
+                hidden="true"
+                oncommand="gBrowser.openNonRemoteWindow(TabContextMenu.contextTab);"/>
       <menuseparator/>
       <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
                 tbattr="tabbrowser-multiple-visible"
