@@ -13,8 +13,6 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
-class nsICacheEntryMetaDataVisitor;
-
 namespace mozilla {
 namespace net {
 
@@ -24,7 +22,7 @@ namespace net {
 // the frecency value to a correct internal representation again.
 // It might not be 100% accurate, but for the purpose it suffice.
 #define FRECENCY2INT(aFrecency) \
-  ((uint32_t)((aFrecency) * CacheObserver::HalfLifeSeconds()))
+  ((uint32_t)(aFrecency * CacheObserver::HalfLifeSeconds()))
 #define INT2FRECENCY(aInt) \
   ((double)(aInt) / (double)CacheObserver::HalfLifeSeconds())
 
@@ -131,7 +129,6 @@ public:
 
   const char * GetElement(const char *aKey);
   nsresult     SetElement(const char *aKey, const char *aValue);
-  nsresult     Visit(nsICacheEntryMetaDataVisitor *aVisitor);
 
   CacheHash::Hash16_t GetHash(uint32_t aIndex);
   nsresult            SetHash(uint32_t aIndex, CacheHash::Hash16_t aHash);
