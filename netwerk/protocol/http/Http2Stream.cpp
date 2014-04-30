@@ -375,7 +375,7 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
 
   // Determine whether to put the fin bit on the header frame or whether
   // to wait for a data packet to put it on.
-  uint8_t firstFrameFlags =  Http2Session::kFlag_PRIORITY_GROUP;
+  uint8_t firstFrameFlags =  Http2Session::kFlag_PRIORITY;
 
   if (mTransaction->RequestHead()->IsGet() ||
       mTransaction->RequestHead()->IsConnect() ||
@@ -427,9 +427,8 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
                              mTxInlineFrameSize);
 
   mTxInlineFrameUsed += messageSize;
-  LOG3(("%p Generating %d bytes of HEADERS for stream 0x%X with priority group %u weight %u frames %u\n",
-        this, mTxInlineFrameUsed, mStreamID, mPriorityGroup,
-        mPriorityGroupWeight, numFrames));
+  LOG3(("%p Generating %d bytes of HEADERS for stream 0x%X with priority weight %u frames %u\n",
+        this, mTxInlineFrameUsed, mStreamID, mPriorityWeight, numFrames));
 
   uint32_t outputOffset = 0;
   uint32_t compressedDataOffset = 0;
@@ -458,9 +457,10 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
     outputOffset += 8;
 
     if (!idx) {
-      uint32_t priorityGroup = PR_htonl(mPriorityGroup);
-      memcpy(mTxInlineFrame.get() + outputOffset, &priorityGroup, 4);
-      memcpy(mTxInlineFrame.get() + outputOffset + 4, &mPriorityGroupWeight, 1);
+      // Priority - Dependency is 0, weight is our gecko-calculated weight,
+      // non-exclusive dependency
+      memset(mTxInlineFrame.get() + outputOffset, 0, 4);
+      memcpy(mTxInlineFrame.get() + outputOffset + 4, &mPriorityWeight, 1);
       outputOffset += 5;
     }
 
@@ -590,16 +590,15 @@ Http2Stream::AdjustPushedPriority()
 
   mSession->CreateFrameHeader(packet, 5,
                               Http2Session::FRAME_TYPE_PRIORITY,
-                              Http2Session::kFlag_PRIORITY_GROUP,
+                              Http2Session::kFlag_PRIORITY,
                               mPushSource->mStreamID);
 
-  mPushSource->SetPriority(mPriorityGroup);
-  uint32_t newPriority = PR_htonl(mPriorityGroup);
-  memcpy(packet + 8, &newPriority, 4);
-  memcpy(packet + 12, &mPriorityGroupWeight, 1);
+  mPushSource->SetPriority(mPriority);
+  memset(packet + 8, 0, 4);
+  memcpy(packet + 12, &mPriorityWeight, 1);
 
-  LOG3(("AdjustPushedPriority %p id 0x%X to %X\n", this, mPushSource->mStreamID,
-        newPriority));
+  LOG3(("AdjustPushedPriority %p id 0x%X to weight %X\n", this, mPushSource->mStreamID,
+        mPriorityWeight));
 }
 
 void
@@ -916,25 +915,27 @@ Http2Stream::UpdateServerReceiveWindow(int32_t delta)
 }
 
 void
-Http2Stream::SetPriority(uint32_t newGroup)
+Http2Stream::SetPriority(uint32_t newPriority)
 {
-  int32_t httpPriority = static_cast<int32_t>(newGroup);
-  uint8_t newWeight = (nsISupportsPriority::PRIORITY_LOWEST + 1) -
+  int32_t httpPriority = static_cast<int32_t>(newPriority);
+  if (httpPriority > kWorstPriority) {
+    httpPriority = kWorstPriority;
+  } else if (httpPriority < kBestPriority) {
+    httpPriority = kBestPriority;
+  }
+  mPriority = static_cast<uint32_t>(httpPriority);
+  mPriorityWeight = (nsISupportsPriority::PRIORITY_LOWEST + 1) -
     (httpPriority - kNormalPriority);
-  SetPriorityGroup(newGroup, newWeight);
 }
 
 void
-Http2Stream::SetPriorityGroup(uint32_t newGroup, uint8_t newWeight)
+Http2Stream::SetPriorityDependency(uint32_t newDependency, uint8_t newWeight,
+                                   bool exclusive)
 {
-  mPriorityGroup = newGroup;
-  mPriorityGroupWeight = newWeight;
-}
-
-void
-Http2Stream::SetPriorityDependency(uint32_t newDependency, bool exclusive)
-{
-  // TODO
+  // XXX - we ignore this for now... why is the server sending priority frames?!
+  LOG3(("Http2Stream::SetPriorityDependency %p 0x%X received dependency=0x%X "
+        "weight=%u exclusive=%d", this, mStreamID, newDependency, newWeight,
+        exclusive));
 }
 
 void
