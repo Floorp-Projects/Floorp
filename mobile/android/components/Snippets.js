@@ -198,6 +198,7 @@ function updateBanner(messages) {
     let id = Home.banner.add({
       text: message.text,
       icon: message.icon,
+      weight: message.weight,
       onclick: function() {
         let parentId = gChromeWin.BrowserApp.selectedTab.id;
         gChromeWin.BrowserApp.addTab(message.url, { parentId: parentId });
