@@ -493,12 +493,6 @@ gfxPlatform::Shutdown()
     mozilla::gl::GLContextProviderEGL::Shutdown();
 #endif
 
-    // This will block this thread untill the ImageBridge protocol is completely
-    // deleted.
-    ImageBridgeChild::ShutDown();
-
-    CompositorParent::ShutDown();
-
     delete gGfxPlatformPrefsLock;
 
     gfxPrefs::DestroySingleton();
