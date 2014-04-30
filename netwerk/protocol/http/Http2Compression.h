@@ -117,7 +117,9 @@ private:
   nsresult DoIndexed();
   nsresult DoLiteralWithoutIndex();
   nsresult DoLiteralWithIncremental();
-  nsresult DoLiteralInternal(nsACString &, nsACString &);
+  nsresult DoLiteralInternal(nsACString &, nsACString &, uint32_t);
+  nsresult DoLiteralNeverIndexed();
+  nsresult DoContextUpdate();
 
   nsresult DecodeInteger(uint32_t prefixLen, uint32_t &result);
   nsresult OutputHeader(uint32_t index);
@@ -173,6 +175,7 @@ protected:
 
 private:
   enum outputCode {
+    kNeverIndexedLiteral,
     kPlainLiteral,
     kIndexedLiteral,
     kToggleOff,
@@ -183,7 +186,7 @@ private:
   void DoOutput(Http2Compressor::outputCode code,
                 const class nvPair *pair, uint32_t index);
   void EncodeInteger(uint32_t prefixLen, uint32_t val);
-  void ProcessHeader(const nvPair inputPair);
+  void ProcessHeader(const nvPair inputPair, bool neverIndex);
   void HuffmanAppend(const nsCString &value);
 
   int64_t mParsedContentLength;
