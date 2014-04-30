@@ -811,8 +811,7 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
    * This should be called on all instances or the SQLite layer may complain
    * loudly. After this has been called, the connection cannot be used.
    *
-   * @return Promise<> A promise fulfilled once the connection is closed.
-   * This promise never rejects.
+   * @return Promise<>
    */
   close: function () {
     return Task.spawn(function doClose() {
