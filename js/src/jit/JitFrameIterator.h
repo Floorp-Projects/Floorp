@@ -355,6 +355,7 @@ class SnapshotIterator
   public:
     // Handle iterating over frames of the snapshots.
     void nextFrame();
+    void settleOnFrame();
 
     inline bool moreFrames() const {
         // The last instruction is recovering the innermost frame, so as long as
