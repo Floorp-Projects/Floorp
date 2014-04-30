@@ -153,7 +153,18 @@ NS_IMETHODIMP AppCacheStorage::AsyncVisitStorage(nsICacheStorageVisitor* aVisito
 
   LOG(("AppCacheStorage::AsyncVisitStorage [this=%p, cb=%p]", this, aVisitor));
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
+
+  nsCOMPtr<nsICacheService> serv =
+    do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<_OldVisitCallbackWrapper> cb = new _OldVisitCallbackWrapper(
+    "offline", aVisitor, aVisitEntries, LoadInfo());
+  rv = serv->VisitEntries(cb);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 } // net

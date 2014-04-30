@@ -16,8 +16,8 @@ function run_test()
         new VisitCallback(1, 12, ["http://mem1/"], function() {
           storage = getCacheStorage("disk");
           storage.asyncVisitStorage(
-            // Previous tests should store 4 disk entries + 1 memory entry
-            new VisitCallback(5, 60, ["http://a/", "http://b/", "http://c/", "http://d/", "http://mem1/"], function() {
+            // Previous tests should store 4 disk entries
+            new VisitCallback(4, 4096, ["http://a/", "http://b/", "http://c/", "http://d/"], function() {
               finish_cache2_test();
             }),
             true

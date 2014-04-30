@@ -9,8 +9,13 @@ function run_test()
         storage.asyncVisitStorage(
           new VisitCallback(0, 0, [], function() {
             var storage = getCacheStorage("disk");
+
+            var expectedConsumption = newCacheBackEndUsed()
+              ? 2048
+              : 24;
+
             storage.asyncVisitStorage(
-              new VisitCallback(2, 24, ["http://a/", "http://b/"], function() {
+              new VisitCallback(2, expectedConsumption, ["http://a/", "http://b/"], function() {
                 finish_cache2_test();
               }),
               true
