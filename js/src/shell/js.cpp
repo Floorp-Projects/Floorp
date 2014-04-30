@@ -2439,7 +2439,7 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     JSAutoByteString fileName;
-    if (args.hasDefined(0)) {
+    if (args.hasDefined(0) && !args[0].isNull()) {
         RootedString str(cx, JS::ToString(cx, args[0]));
         if (!str)
             return false;
