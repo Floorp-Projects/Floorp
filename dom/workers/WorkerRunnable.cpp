@@ -399,9 +399,12 @@ NS_IMETHODIMP
 StopSyncLoopRunnable::Cancel()
 {
   nsresult rv = Run();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Run() failed");
 
-  return NS_OK;
+  nsresult rv2 = WorkerSyncRunnable::Cancel();
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv2), "Cancel() failed");
+
+  return NS_FAILED(rv) ? rv : rv2;
 }
 
 bool
