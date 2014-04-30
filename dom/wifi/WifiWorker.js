@@ -11,6 +11,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/systemlibs.js");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/WifiCommand.jsm");
 Cu.import("resource://gre/modules/WifiNetUtil.jsm");
 Cu.import("resource://gre/modules/WifiP2pManager.jsm");
@@ -1359,6 +1360,25 @@ var WifiManager = (function() {
     return capabilities;
   }
 
+  // Cert Services
+  let wifiCertService = Cc["@mozilla.org/wifi/certservice;1"];
+  if (wifiCertService) {
+    wifiCertService = wifiCertService.getService(Ci.nsIWifiCertService);
+    wifiCertService.start(wifiListener);
+  } else {
+    debug("No wifi CA service component available");
+  }
+
+  manager.importCert = function(caInfo, callback) {
+    var id = idgen++;
+    if (callback) {
+      controlCallbacks[id] = callback;
+    }
+
+    wifiCertService.importCert(id, caInfo.certBlob, caInfo.certPassword,
+                               caInfo.certNickname);
+  }
+
   return manager;
 })();
 
@@ -1625,6 +1645,7 @@ function WifiWorker() {
                     "WifiManager:setPowerSavingMode",
                     "WifiManager:setHttpProxy",
                     "WifiManager:setStaticIpMode",
+                    "WifiManager:importCert",
                     "child-process-shutdown"];
 
   messages.forEach((function(msgName) {
@@ -2577,6 +2598,9 @@ WifiWorker.prototype = {
       case "WifiManager:setStaticIpMode":
         this.setStaticIpMode(msg);
         break;
+      case "WifiManager:importCert":
+        this.importCert(msg);
+        break;
       case "WifiManager:getState": {
         let i;
         if ((i = this._domManagers.indexOf(msg.manager)) === -1) {
@@ -3063,6 +3087,30 @@ WifiWorker.prototype = {
         self._sendMessage(message, true, true, msg);
       } else {
         self._sendMessage(message, false, "Set static ip mode failed", msg);
+      }
+    });
+  },
+
+  importCert: function importCert(msg) {
+    const message = "WifiManager:importCert:Return";
+    let self = this;
+
+    WifiManager.importCert(msg.data, function(data) {
+      if (data.status === 0) {
+        let usageString = ["ServerCert"];
+        let usageArray = [];
+        for (let i = 0; i < usageString.length; i++) {
+          if (data.usageFlag & (0x01 << i)) {
+            usageArray.push(usageString[i]);
+          }
+        }
+
+        self._sendMessage(message, true, {
+          nickname: data.nickname,
+          usage: usageArray
+        }, msg);
+      } else {
+        self._sendMessage(message, false, "Import Cert failed", msg);
       }
     });
   },

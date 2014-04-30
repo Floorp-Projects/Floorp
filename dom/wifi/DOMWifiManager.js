@@ -94,6 +94,7 @@ DOMWifiManager.prototype = {
                       "WifiManager:setPowerSavingMode:Return:OK", "WifiManager:setPowerSavingMode:Return:NO",
                       "WifiManager:setHttpProxy:Return:OK", "WifiManager:setHttpProxy:Return:NO",
                       "WifiManager:setStaticIpMode:Return:OK", "WifiManager:setStaticIpMode:Return:NO",
+                      "WifiManager:importCert:Return:OK", "WifiManager:importCert:Return:NO",
                       "WifiManager:wifiDown", "WifiManager:wifiUp",
                       "WifiManager:onconnecting", "WifiManager:onassociate",
                       "WifiManager:onconnect", "WifiManager:ondisconnect",
@@ -152,6 +153,25 @@ DOMWifiManager.prototype = {
 
   _convertConnectionInfo: function(aInfo) {
     let info = aInfo ? new MozWifiConnectionInfo(aInfo) : null;
+    return info;
+  },
+
+  _genReadonlyPropDesc: function(value) {
+    return {
+      enumerable: true, configurable: false, writable: false, value: value
+    };
+  },
+
+  _convertWifiCertificateInfo: function(aInfo) {
+    let propList = {};
+    for (let k in aInfo) {
+      propList[k] = this._genReadonlyPropDesc(aInfo[k]);
+    }
+
+    let info = Cu.createObjectIn(this._window);
+    Object.defineProperties(info, propList);
+    Cu.makeObjectPropsNormal(info);
+
     return info;
   },
 
@@ -235,6 +255,14 @@ DOMWifiManager.prototype = {
         break;
 
       case "WifiManager:setStaticIpMode:Return:NO":
+        Services.DOMRequest.fireError(request, msg.data);
+        break;
+
+      case "WifiManager:importCert:Return:OK":
+        Services.DOMRequest.fireSuccess(request, this._convertWifiCertificateInfo(msg.data));
+        break;
+
+      case "WifiManager:importCert:Return:NO":
         Services.DOMRequest.fireError(request, msg.data);
         break;
 
@@ -382,6 +410,17 @@ DOMWifiManager.prototype = {
     var request = this.createRequest();
     this._sendMessageForRequest("WifiManager:setStaticIpMode",
                                 { network: this._convertWifiNetworkToJSON(network), info: info}, request);
+    return request;
+  },
+
+  importCert: function nsIDOMWifiManager_importCert(certBlob, certPassword, certNickname) {
+    var request = this.createRequest();
+    this._sendMessageForRequest("WifiManager:importCert",
+                                {
+                                  certBlob: certBlob,
+                                  certPassword: certPassword,
+                                  certNickname: certNickname
+                                }, request);
     return request;
   },
 
