@@ -358,7 +358,7 @@ IsAboutToBeFinalized(const js::jit::VMFunction **vmfunc)
      * Preserves entries in the WeakCache<VMFunction, JitCode>
      * iff the JitCode has been marked.
      */
-    return true;
+    return false;
 }
 
 inline bool
