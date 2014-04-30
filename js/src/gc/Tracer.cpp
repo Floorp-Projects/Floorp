@@ -531,8 +531,8 @@ bool
 GCMarker::markDelayedChildren(SliceBudget &budget)
 {
     gcstats::MaybeAutoPhase ap;
-    if (runtime()->gcIncrementalState == MARK)
-        ap.construct(runtime()->gcStats, gcstats::PHASE_MARK_DELAYED);
+    if (runtime()->gc.incrementalState == MARK)
+        ap.construct(runtime()->gc.stats, gcstats::PHASE_MARK_DELAYED);
 
     JS_ASSERT(unmarkedArenaStackTop);
     do {
@@ -669,6 +669,6 @@ js::SetMarkStackLimit(JSRuntime *rt, size_t limit)
 {
     JS_ASSERT(!rt->isHeapBusy());
     AutoStopVerifyingBarriers pauseVerification(rt, false);
-    rt->gcMarker.setMaxCapacity(limit);
+    rt->gc.marker.setMaxCapacity(limit);
 }
 

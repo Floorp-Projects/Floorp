@@ -479,7 +479,7 @@ ForkJoinActivation::ForkJoinActivation(JSContext *cx)
 
     MinorGC(cx->runtime(), JS::gcreason::API);
 
-    cx->runtime()->gcHelperThread.waitBackgroundSweepEnd();
+    cx->runtime()->gc.helperThread.waitBackgroundSweepEnd();
 
     JS_ASSERT(!cx->runtime()->needsBarrier());
     JS_ASSERT(!cx->zone()->needsBarrier());
@@ -1558,7 +1558,7 @@ ForkJoinShared::setAbortFlagDueToInterrupt(ForkJoinContext &cx)
     // The GC Needed flag should not be set during parallel
     // execution.  Instead, one of the requestGC() or
     // requestZoneGC() methods should be invoked.
-    JS_ASSERT(!cx_->runtime()->gcIsNeeded);
+    JS_ASSERT(!cx_->runtime()->gc.isNeeded);
 
     if (!abort_) {
         cx.bailoutRecord->setCause(ParallelBailoutInterrupt);
