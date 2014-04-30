@@ -39,8 +39,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=682592
 */
 
 SimpleTest.waitForExplicitFinish();
-if (navigator.platform.startsWith("Linux arm")) {
-  SimpleTest.expectAssertions(0, 2);
+if (navigator.platform.startsWith("Linux arm")) { /* bugs 982875, 999429 */
+  SimpleTest.expectAssertions(0, 4);
 }
 
 var refFrame = document.getElementById("iframe-ref")
