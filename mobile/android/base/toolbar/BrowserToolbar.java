@@ -328,6 +328,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
         urlEditLayout.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
+                // This will select the url bar when entering editing mode.
                 setSelected(hasFocus);
                 if (focusChangeListener != null) {
                     focusChangeListener.onFocusChange(v, hasFocus);
@@ -850,7 +851,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
     }
 
     private void setUrlEditLayoutVisibility(final boolean showEditLayout, PropertyAnimator animator) {
-        urlEditLayout.prepareAnimation(showEditLayout, animator);
+        if (showEditLayout) {
+            urlEditLayout.prepareShowAnimation(animator);
+        }
 
         final View viewToShow = (showEditLayout ? urlEditLayout : urlDisplayLayout);
         final View viewToHide = (showEditLayout ? urlDisplayLayout : urlEditLayout);
@@ -1020,9 +1023,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
             final int entryTranslation, final int curveTranslation) {
         if (isAnimatingEntry)
             return;
-
-        // Highlight the toolbar from the start of the animation.
-        setSelected(true);
 
         urlDisplayLayout.prepareStartEditingAnimation();
 
