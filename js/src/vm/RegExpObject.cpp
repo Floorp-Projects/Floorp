@@ -731,7 +731,7 @@ RegExpCompartment::sweep(JSRuntime *rt)
 
     for (PendingSet::Enum e(inUse_); !e.empty(); e.popFront()) {
         RegExpShared *shared = e.front();
-        if (shared->activeUseCount == 0 && shared->gcNumberWhenUsed < rt->gc.startNumber) {
+        if (shared->activeUseCount == 0 && shared->gcNumberWhenUsed < rt->gcStartNumber) {
             js_delete(shared);
             e.removeFront();
         }
