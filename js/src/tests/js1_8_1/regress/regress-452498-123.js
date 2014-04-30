@@ -45,7 +45,7 @@ function test()
 // =====
   (function(){ eval("for (x in ['', {}, '', {}]) { this; }" )})();
 
-// Assertion failure: fp->thisp == JSVAL_TO_OBJECT(fp->argv[-1]), at ../jstracer.cpp:4172
+// Assertion failure: fp->thisp == fp->argv[-1].toObjectOrNull(), at ../jstracer.cpp:4172
 // =====
   for each (let x in ['', '', '']) { (new function(){} )}
 

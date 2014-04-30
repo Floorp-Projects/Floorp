@@ -43,8 +43,8 @@ public:
 
   NS_IMETHOD Handle(const nsAString& aName, JS::Handle<JS::Value> aResult)
   {
-    if (JSVAL_IS_INT(aResult)) {
-      int32_t mode = JSVAL_TO_INT(aResult);
+    if (aResult.isInt32()) {
+      int32_t mode = aResult.toInt32();
       SetAutoMounterMode(mode);
     }
     return NS_OK;
@@ -69,8 +69,8 @@ public:
 
   NS_IMETHOD Handle(const nsAString& aName, JS::Handle<JS::Value> aResult)
   {
-    if (JSVAL_IS_BOOLEAN(aResult)) {
-      bool isSharingEnabled = JSVAL_TO_BOOLEAN(aResult);
+    if (aResult.isBoolean()) {
+      bool isSharingEnabled = aResult.toBoolean();
       SetAutoMounterSharingMode(mVolumeName, isSharingEnabled);
     }
     return NS_OK;

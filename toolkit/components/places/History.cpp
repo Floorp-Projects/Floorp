@@ -267,11 +267,11 @@ GetJSArrayFromJSValue(JS::Handle<JS::Value> aValue,
 already_AddRefed<nsIURI>
 GetJSValueAsURI(JSContext* aCtx,
                 const JS::Value& aValue) {
-  if (!JSVAL_IS_PRIMITIVE(aValue)) {
+  if (!aValue.isPrimitive()) {
     nsCOMPtr<nsIXPConnect> xpc = mozilla::services::GetXPConnect();
 
     nsCOMPtr<nsIXPConnectWrappedNative> wrappedObj;
-    nsresult rv = xpc->GetWrappedNativeOfJSObject(aCtx, JSVAL_TO_OBJECT(aValue),
+    nsresult rv = xpc->GetWrappedNativeOfJSObject(aCtx, aValue.toObjectOrNull(),
                                                   getter_AddRefs(wrappedObj));
     NS_ENSURE_SUCCESS(rv, nullptr);
     nsCOMPtr<nsIURI> uri = do_QueryWrappedNative(wrappedObj);
@@ -315,20 +315,20 @@ void
 GetJSValueAsString(JSContext* aCtx,
                    const JS::Value& aValue,
                    nsString& _string) {
-  if (JSVAL_IS_VOID(aValue) ||
-      !(JSVAL_IS_NULL(aValue) || JSVAL_IS_STRING(aValue))) {
+  if (aValue.isUndefined() ||
+      !(aValue.isNull() || aValue.isString())) {
     _string.SetIsVoid(true);
     return;
   }
 
   // |null| in JS maps to the empty string.
-  if (JSVAL_IS_NULL(aValue)) {
+  if (aValue.isNull()) {
     _string.Truncate();
     return;
   }
   size_t length;
   const jschar* chars =
-    JS_GetStringCharsZAndLength(aCtx, JSVAL_TO_STRING(aValue), &length);
+    JS_GetStringCharsZAndLength(aCtx, aValue.toString(), &length);
   if (!chars) {
     _string.SetIsVoid(true);
     return;
@@ -387,11 +387,11 @@ GetIntFromJSObject(JSContext* aCtx,
   JS::Rooted<JS::Value> value(aCtx);
   bool rc = JS_GetProperty(aCtx, aObject, aProperty, &value);
   NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
-  if (JSVAL_IS_VOID(value)) {
+  if (value.isUndefined()) {
     return NS_ERROR_INVALID_ARG;
   }
-  NS_ENSURE_ARG(JSVAL_IS_PRIMITIVE(value));
-  NS_ENSURE_ARG(JSVAL_IS_NUMBER(value));
+  NS_ENSURE_ARG(value.isPrimitive());
+  NS_ENSURE_ARG(value.isNumber());
 
   double num;
   rc = JS::ToNumber(aCtx, value, &num);
@@ -2763,7 +2763,7 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
                       JSContext* aCtx)
 {
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_UNEXPECTED);
-  NS_ENSURE_TRUE(!JSVAL_IS_PRIMITIVE(aPlaceInfos), NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(!aPlaceInfos.isPrimitive(), NS_ERROR_INVALID_ARG);
 
   uint32_t infosLength;
   JS::Rooted<JSObject*> infos(aCtx);
@@ -2810,8 +2810,8 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
       JS::Rooted<JS::Value> visitsVal(aCtx);
       bool rc = JS_GetProperty(aCtx, info, "visits", &visitsVal);
       NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
-      if (!JSVAL_IS_PRIMITIVE(visitsVal)) {
-        visits = JSVAL_TO_OBJECT(visitsVal);
+      if (!visitsVal.isPrimitive()) {
+        visits = visitsVal.toObjectOrNull();
         NS_ENSURE_ARG(JS_IsArrayObject(aCtx, visits));
       }
     }

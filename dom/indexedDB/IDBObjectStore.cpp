@@ -837,7 +837,7 @@ public:
         return nullptr;
       }
 
-      return JSVAL_TO_OBJECT(wrappedBlob);
+      return wrappedBlob.toObjectOrNull();
     }
 
     nsCOMPtr<nsIDOMFile> domFile;
@@ -862,7 +862,7 @@ public:
       return nullptr;
     }
 
-    return JSVAL_TO_OBJECT(wrappedFile);
+    return wrappedFile.toObjectOrNull();
   }
 };
 
@@ -1837,7 +1837,7 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
 
   // Return DATA_ERR if a key was passed in and this objectStore uses inline
   // keys.
-  if (!JSVAL_IS_VOID(aKeyVal) && HasValidKeyPath()) {
+  if (!aKeyVal.isUndefined() && HasValidKeyPath()) {
     return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
@@ -2615,14 +2615,14 @@ IDBObjectStore::GetKeyPath(JSContext* aCx, ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!JSVAL_IS_VOID(mCachedKeyPath)) {
+  if (!mCachedKeyPath.isUndefined()) {
     return mCachedKeyPath;
   }
 
   aRv = GetKeyPath().ToJSVal(aCx, mCachedKeyPath);
   ENSURE_SUCCESS(aRv, JSVAL_VOID);
 
-  if (JSVAL_IS_GCTHING(mCachedKeyPath)) {
+  if (mCachedKeyPath.isGCThing()) {
     mozilla::HoldJSObjects(this);
     mRooted = true;
   }

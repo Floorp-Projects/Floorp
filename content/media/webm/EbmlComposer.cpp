@@ -88,7 +88,10 @@ void EbmlComposer::FinishCluster()
   EbmlGlobal ebml;
   EbmlLoc ebmlLoc;
   ebmlLoc.offset = mClusterLengthLoc;
-  ebml.offset = mClusterBuffs[mClusterHeaderIndex].Length();
+  ebml.offset = 0;
+  for (uint32_t i = mClusterHeaderIndex; i < mClusterBuffs.Length(); i++) {
+    ebml.offset += mClusterBuffs[i].Length();
+  }
   ebml.buf = mClusterBuffs[mClusterHeaderIndex].Elements();
   Ebml_EndSubElement(&ebml, &ebmlLoc);
   // Move the mClusterBuffs data from mClusterHeaderIndex that we can skip

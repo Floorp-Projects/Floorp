@@ -14,8 +14,8 @@ BEGIN_TEST(test_BindCallable)
   EVAL("(function() { return this.somename; })", &func);
   CHECK(func.isObject());
 
-  JS::RootedObject funcObj(cx, JSVAL_TO_OBJECT(func));
-  JS::RootedObject vObj(cx, JSVAL_TO_OBJECT(v));
+  JS::RootedObject funcObj(cx, func.toObjectOrNull());
+  JS::RootedObject vObj(cx, v.toObjectOrNull());
   JSObject* newCallable = JS_BindCallable(cx, funcObj, vObj);
   CHECK(newCallable);
 
@@ -24,9 +24,9 @@ BEGIN_TEST(test_BindCallable)
   bool called = JS_CallFunctionValue(cx, JS::NullPtr(), fun, JS::HandleValueArray::empty(), &retval);
   CHECK(called);
 
-  CHECK(JSVAL_IS_INT(retval));
+  CHECK(retval.isInt32());
 
-  CHECK(JSVAL_TO_INT(retval) == 1717);
+  CHECK(retval.toInt32() == 1717);
   return true;
 }
 END_TEST(test_BindCallable)

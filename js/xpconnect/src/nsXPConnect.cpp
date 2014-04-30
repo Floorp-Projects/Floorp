@@ -831,11 +831,11 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
     RootedValue rval(cx);
     SandboxOptions options;
     nsresult rv = CreateSandboxObject(cx, &rval, principal, options);
-    MOZ_ASSERT(NS_FAILED(rv) || !JSVAL_IS_PRIMITIVE(rval),
+    MOZ_ASSERT(NS_FAILED(rv) || !rval.isPrimitive(),
                "Bad return value from xpc_CreateSandboxObject()!");
 
-    if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(rval)) {
-        *_retval = XPCJSObjectHolder::newHolder(JSVAL_TO_OBJECT(rval));
+    if (NS_SUCCEEDED(rv) && !rval.isPrimitive()) {
+        *_retval = XPCJSObjectHolder::newHolder(rval.toObjectOrNull());
         NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
 
         NS_ADDREF(*_retval);

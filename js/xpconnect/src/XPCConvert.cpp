@@ -473,7 +473,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
 
     case nsXPTType::T_ASTRING:
     {
-        if (JSVAL_IS_VOID(s)) {
+        if (s.isUndefined()) {
             if (useAllocator)
                 *((const nsAString**)d) = &NullString();
             else
@@ -484,7 +484,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     }
     case nsXPTType::T_DOMSTRING:
     {
-        if (JSVAL_IS_NULL(s)) {
+        if (s.isNull()) {
             if (useAllocator)
                 *((const nsAString**)d) = &NullString();
             else
@@ -494,7 +494,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         size_t length = 0;
         const char16_t* chars = nullptr;
         JSString* str = nullptr;
-        if (!JSVAL_IS_VOID(s)) {
+        if (!s.isUndefined()) {
             str = ToString(cx, s);
             if (!str)
                 return false;
@@ -543,7 +543,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
 
     case nsXPTType::T_CHAR_STR:
     {
-        if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
+        if (s.isUndefined() || s.isNull()) {
             *((char**)d) = nullptr;
             return true;
         }
@@ -584,7 +584,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         const jschar* chars=nullptr;
         JSString* str;
 
-        if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
+        if (s.isUndefined() || s.isNull()) {
             *((jschar**)d) = nullptr;
             return true;
         }
@@ -614,7 +614,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         size_t length;
         JSString* str;
 
-        if (JSVAL_IS_NULL(s) || JSVAL_IS_VOID(s)) {
+        if (s.isNull() || s.isUndefined()) {
             if (useAllocator) {
                 *((const nsACString**)d) = &NullCString();
             } else {
@@ -658,7 +658,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
 
     case nsXPTType::T_CSTRING:
     {
-        if (JSVAL_IS_NULL(s) || JSVAL_IS_VOID(s)) {
+        if (s.isNull() || s.isUndefined()) {
             if (useAllocator) {
                 nsACString *rs = new nsCString();
                 if (!rs)
@@ -726,10 +726,9 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
 
             variant.forget(static_cast<nsISupports**>(d));
             return true;
-        } else if (iid->Equals(NS_GET_IID(nsIAtom)) &&
-                   JSVAL_IS_STRING(s)) {
+        } else if (iid->Equals(NS_GET_IID(nsIAtom)) && s.isString()) {
             // We're trying to pass a string as an nsIAtom.  Let's atomize!
-            JSString* str = JSVAL_TO_STRING(s);
+            JSString* str = s.toString();
             const char16_t* chars = JS_GetStringCharsZ(cx, str);
             if (!chars) {
                 if (pErr)
@@ -1123,9 +1122,9 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
     AutoJSContext cx;
     AutoExceptionRestorer aer(cx, s);
 
-    if (!JSVAL_IS_PRIMITIVE(s)) {
+    if (!s.isPrimitive()) {
         // we have a JSObject
-        RootedObject obj(cx, JSVAL_TO_OBJECT(s));
+        RootedObject obj(cx, s.toObjectOrNull());
 
         if (!obj) {
             NS_ERROR("when is an object not an object?");
@@ -1211,26 +1210,26 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
         }
     }
 
-    if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
+    if (s.isUndefined() || s.isNull()) {
         return ConstructException(NS_ERROR_XPC_JS_THREW_NULL,
                                   nullptr, ifaceName, methodName, nullptr,
                                   exceptn, cx, s.address());
     }
 
-    if (JSVAL_IS_NUMBER(s)) {
+    if (s.isNumber()) {
         // lets see if it looks like an nsresult
         nsresult rv;
         double number;
         bool isResult = false;
 
-        if (JSVAL_IS_INT(s)) {
-            rv = (nsresult) JSVAL_TO_INT(s);
+        if (s.isInt32()) {
+            rv = (nsresult) s.toInt32();
             if (NS_FAILED(rv))
                 isResult = true;
             else
-                number = (double) JSVAL_TO_INT(s);
+                number = (double) s.toInt32();
         } else {
-            number = JSVAL_TO_DOUBLE(s);
+            number = s.toDouble();
             if (number > 0.0 &&
                 number < (double)0xffffffff &&
                 0.0 == fmod(number,1)) {
@@ -1759,7 +1758,7 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
                                     uint32_t count, const nsXPTType& type,
                                     nsresult* pErr)
 {
-    NS_PRECONDITION(!JSVAL_IS_NULL(s), "bad param");
+    NS_PRECONDITION(!s.isNull(), "bad param");
     NS_PRECONDITION(d, "bad param");
 
     AutoJSContext cx;
@@ -1771,7 +1770,7 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
     switch (type.TagPart()) {
         case nsXPTType::T_PSTRING_SIZE_IS:
         {
-            if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
+            if (s.isUndefined() || s.isNull()) {
                 if (0 != count) {
                     if (pErr)
                         *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
@@ -1825,7 +1824,7 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
             const jschar* chars=nullptr;
             JSString* str;
 
-            if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
+            if (s.isUndefined() || s.isNull()) {
                 if (0 != count) {
                     if (pErr)
                         *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
