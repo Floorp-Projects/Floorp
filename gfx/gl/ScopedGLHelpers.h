@@ -120,6 +120,40 @@ protected:
 };
 
 
+struct ScopedFramebuffer
+    : public ScopedGLWrapper<ScopedFramebuffer>
+{
+    friend struct ScopedGLWrapper<ScopedFramebuffer>;
+
+protected:
+    GLuint mFB;
+
+public:
+    ScopedFramebuffer(GLContext* aGL);
+    GLuint FB() { return mFB; }
+
+protected:
+    void UnwrapImpl();
+};
+
+
+struct ScopedRenderbuffer
+    : public ScopedGLWrapper<ScopedRenderbuffer>
+{
+    friend struct ScopedGLWrapper<ScopedRenderbuffer>;
+
+protected:
+    GLuint mRB;
+
+public:
+    ScopedRenderbuffer(GLContext* aGL);
+    GLuint RB() { return mRB; }
+
+protected:
+    void UnwrapImpl();
+};
+
+
 struct ScopedBindTexture
     : public ScopedGLWrapper<ScopedBindTexture>
 {
