@@ -27,8 +27,8 @@ struct AutoMarkInDeadZone
         scheduled(zone->scheduledForDestruction)
     {
         JSRuntime *rt = zone->runtimeFromMainThread();
-        if (rt->gcManipulatingDeadZones && zone->scheduledForDestruction) {
-            rt->gcObjectsMarkedInDeadZones++;
+        if (rt->gc.manipulatingDeadZones && zone->scheduledForDestruction) {
+            rt->gc.objectsMarkedInDeadZones++;
             zone->scheduledForDestruction = false;
         }
     }
@@ -106,12 +106,12 @@ GetGCThingTraceKind(const void *thing)
 static inline void
 GCPoke(JSRuntime *rt)
 {
-    rt->gcPoke = true;
+    rt->gc.poke = true;
 
 #ifdef JS_GC_ZEAL
     /* Schedule a GC to happen "soon" after a GC poke. */
     if (rt->gcZeal() == js::gc::ZealPokeValue)
-        rt->gcNextScheduled = 1;
+        rt->gc.nextScheduled = 1;
 #endif
 }
 
@@ -245,7 +245,7 @@ class CellIterUnderGC : public CellIterImpl
   public:
     CellIterUnderGC(JS::Zone *zone, AllocKind kind) {
 #ifdef JSGC_GENERATIONAL
-        JS_ASSERT(zone->runtimeFromAnyThread()->gcNursery.isEmpty());
+        JS_ASSERT(zone->runtimeFromAnyThread()->gc.nursery.isEmpty());
 #endif
         JS_ASSERT(zone->runtimeFromAnyThread()->isHeapBusy());
         init(zone, kind);
@@ -284,7 +284,7 @@ class CellIter : public CellIterImpl
 #ifdef JSGC_GENERATIONAL
         /* Evict the nursery before iterating so we can see all things. */
         JSRuntime *rt = zone->runtimeFromMainThread();
-        if (!rt->gcNursery.isEmpty())
+        if (!rt->gc.nursery.isEmpty())
             MinorGC(rt, JS::gcreason::EVICT_NURSERY);
 #endif
 
@@ -297,7 +297,7 @@ class CellIter : public CellIterImpl
 
 #ifdef DEBUG
         /* Assert that no GCs can occur while a CellIter is live. */
-        counter = &zone->runtimeFromAnyThread()->noGCOrAllocationCheck;
+        counter = &zone->runtimeFromAnyThread()->gc.noGCOrAllocationCheck;
         ++*counter;
 #endif
 
@@ -353,7 +353,7 @@ class GCZoneGroupIter {
   public:
     GCZoneGroupIter(JSRuntime *rt) {
         JS_ASSERT(rt->isHeapBusy());
-        current = rt->gcCurrentZoneGroup;
+        current = rt->gc.currentZoneGroup;
     }
 
     bool done() const { return !current; }
@@ -387,7 +387,7 @@ TryNewNurseryObject(ThreadSafeContext *cxArg, size_t thingSize, size_t nDynamicS
 
     JS_ASSERT(!IsAtomsCompartment(cx->compartment()));
     JSRuntime *rt = cx->runtime();
-    Nursery &nursery = rt->gcNursery;
+    Nursery &nursery = rt->gc.nursery;
     JSObject *obj = nursery.allocateObject(cx, thingSize, nDynamicSlots);
     if (obj)
         return obj;
@@ -427,7 +427,7 @@ CheckAllocatorState(ThreadSafeContext *cx, AllocKind kind)
                  kind == FINALIZE_FAT_INLINE_STRING ||
                  kind == FINALIZE_JITCODE);
     JS_ASSERT(!rt->isHeapBusy());
-    JS_ASSERT(!rt->noGCOrAllocationCheck);
+    JS_ASSERT(!rt->gc.noGCOrAllocationCheck);
 #endif
 
     // For testing out of memory conditions
