@@ -126,6 +126,7 @@
   <project name="platform/external/bluetooth/bluez" path="external/bluetooth/bluez" revision="f0689ac1914cdbc59e53bdc9edd9013dc157c299"/>
   <project name="platform/external/bluetooth/glib" path="external/bluetooth/glib" revision="dd925f76e4f149c3d5571b80e12f7e24bbe89c59"/>
   <project name="platform/external/dbus" path="external/dbus" revision="ea87119c843116340f5df1d94eaf8275e1055ae8"/>
+  <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="494c177966fdc31183a5f7af82dc9130f523da4b"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="320b05a5761eb2a4816f7529c91ea49422979b55"/>
   <project name="platform/frameworks/av" path="frameworks/av" revision="1df6dac11d7370a2fffca8e31d65b80f537faec5"/>
   <project name="platform/frameworks/base" path="frameworks/base" revision="807d87d5ff66cb5e0664f6924f612fcdb5e2c453"/>
@@ -140,6 +141,7 @@
   <project name="platform/hardware/ril" path="hardware/ril" revision="c4e2ac95907a5519a0e09f01a0d8e27fec101af0"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="e1eb226fa3ad3874ea7b63c56a9dc7012d7ff3c2"/>
   <project name="platform/system/core" path="system/core" revision="e284280277c1312017a9450956a9676584441cdf"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="83e1560bef0988bbdec49d15cb8eef402857d4ef"/>
   <project name="platform/system/qcom" path="system/qcom" revision="1cdab258b15258b7f9657da70e6f06ebd5a2fc25"/>
   <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="b3001d5f1686f89995b7bf70963cf69c8faebd83"/>
 </manifest>
