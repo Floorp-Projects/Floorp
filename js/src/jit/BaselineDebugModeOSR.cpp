@@ -413,6 +413,8 @@ RecompileBaselineScriptForDebugMode(JSContext *cx, JSScript *script)
     IonSpew(IonSpew_BaselineDebugModeOSR, "Recompiling (%s:%d) for debug mode %s",
             script->filename(), script->lineno(), expectedDebugMode ? "ON" : "OFF");
 
+    CancelOffThreadIonCompile(cx->compartment(), script);
+
     if (script->hasIonScript())
         Invalidate(cx, script, /* resetUses = */ false);
 
