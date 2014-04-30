@@ -114,7 +114,7 @@ static const JSWrapObjectCallbacks DefaultWrapObjectCallbacks = {
 JSRuntime::JSRuntime(JSRuntime *parentRuntime, JSUseHelperThreads useHelperThreads)
   : JS::shadow::Runtime(
 #ifdef JSGC_GENERATIONAL
-        &gcStoreBuffer
+        &gc.storeBuffer
 #endif
     ),
     mainThread(this),
@@ -135,7 +135,6 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime, JSUseHelperThreads useHelperThrea
 #else
     interruptLockTaken(false),
 #endif
-    systemZone(nullptr),
     numCompartments(0),
     localeCallbacks(nullptr),
     defaultLocale(nullptr),
@@ -166,89 +165,11 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime, JSUseHelperThreads useHelperThrea
 #ifdef DEBUG
     activeContext(nullptr),
 #endif
+    gc(thisFromCtor()),
     gcInitialized(false),
-    gcSystemAvailableChunkListHead(nullptr),
-    gcUserAvailableChunkListHead(nullptr),
-    gcBytes(0),
-    gcMaxBytes(0),
-    gcMaxMallocBytes(0),
-    gcNumArenasFreeCommitted(0),
-    gcMarker(this),
-    gcVerifyPreData(nullptr),
-    gcVerifyPostData(nullptr),
-    gcChunkAllocationSinceLastGC(false),
-    gcNextFullGCTime(0),
-    gcLastGCTime(0),
-    gcJitReleaseTime(0),
-    gcAllocationThreshold(30 * 1024 * 1024),
-    gcHighFrequencyGC(false),
-    gcHighFrequencyTimeThreshold(1000),
-    gcHighFrequencyLowLimitBytes(100 * 1024 * 1024),
-    gcHighFrequencyHighLimitBytes(500 * 1024 * 1024),
-    gcHighFrequencyHeapGrowthMax(3.0),
-    gcHighFrequencyHeapGrowthMin(1.5),
-    gcLowFrequencyHeapGrowth(1.5),
-    gcDynamicHeapGrowth(false),
-    gcDynamicMarkSlice(false),
-    gcDecommitThreshold(32 * 1024 * 1024),
-    gcShouldCleanUpEverything(false),
-    gcGrayBitsValid(false),
-    gcIsNeeded(0),
-    gcStats(thisFromCtor()),
-    gcNumber(0),
-    gcStartNumber(0),
-    gcIsFull(false),
-    gcTriggerReason(JS::gcreason::NO_REASON),
-    gcStrictCompartmentChecking(false),
-#ifdef DEBUG
-    gcDisableStrictProxyCheckingCount(0),
-#endif
-    gcIncrementalState(gc::NO_INCREMENTAL),
-    gcLastMarkSlice(false),
-    gcSweepOnBackgroundThread(false),
-    gcFoundBlackGrayEdges(false),
-    gcSweepingZones(nullptr),
-    gcZoneGroupIndex(0),
-    gcZoneGroups(nullptr),
-    gcCurrentZoneGroup(nullptr),
-    gcSweepPhase(0),
-    gcSweepZone(nullptr),
-    gcSweepKindIndex(0),
-    gcAbortSweepAfterCurrentGroup(false),
-    gcArenasAllocatedDuringSweep(nullptr),
-#ifdef DEBUG
-    gcMarkingValidator(nullptr),
-#endif
-    gcInterFrameGC(0),
-    gcSliceBudget(SliceBudget::Unlimited),
-    gcIncrementalEnabled(true),
-    gcGenerationalDisabled(0),
-    gcManipulatingDeadZones(false),
-    gcObjectsMarkedInDeadZones(0),
-    gcPoke(false),
-    heapState(Idle),
-#ifdef JSGC_GENERATIONAL
-    gcNursery(thisFromCtor()),
-    gcStoreBuffer(thisFromCtor(), gcNursery),
-#endif
-#ifdef JS_GC_ZEAL
-    gcZeal_(0),
-    gcZealFrequency(0),
-    gcNextScheduled(0),
-    gcDeterministicOnly(false),
-    gcIncrementalLimit(0),
-#endif
-    gcValidate(true),
-    gcFullCompartmentChecks(false),
-    gcCallback(nullptr),
-    gcSliceCallback(nullptr),
-    gcFinalizeCallback(nullptr),
-    gcMallocBytes(0),
-    gcMallocGCTriggered(false),
 #ifdef JS_ARM_SIMULATOR
     simulatorRuntime_(nullptr),
 #endif
-    scriptAndCountsVector(nullptr),
     NaNValue(DoubleNaNValue()),
     negativeInfinityValue(DoubleValue(NegativeInfinity<double>())),
     positiveInfinityValue(DoubleValue(PositiveInfinity<double>())),
@@ -256,13 +177,9 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime, JSUseHelperThreads useHelperThrea
     debugMode(false),
     spsProfiler(thisFromCtor()),
     profilingScripts(false),
-    alwaysPreserveCode(false),
     hadOutOfMemory(false),
     haveCreatedContext(false),
     data(nullptr),
-    gcLock(nullptr),
-    gcLockOwner(nullptr),
-    gcHelperThread(thisFromCtor()),
     signalHandlersInstalled_(false),
     defaultFreeOp_(thisFromCtor(), false),
     debuggerMutations(0),
@@ -289,9 +206,6 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime, JSUseHelperThreads useHelperThrea
     permanentAtoms(nullptr),
     wrapObjectCallbacks(&DefaultWrapObjectCallbacks),
     preserveWrapperCallback(nullptr),
-#ifdef DEBUG
-    noGCOrAllocationCheck(0),
-#endif
     jitSupportsFloatingPoint(false),
     ionPcScriptCache(nullptr),
     threadPool(this),
@@ -353,8 +267,8 @@ JSRuntime::init(uint32_t maxbytes)
     if (!interruptLock)
         return false;
 
-    gcLock = PR_NewLock();
-    if (!gcLock)
+    gc.lock = PR_NewLock();
+    if (!gc.lock)
         return false;
 
     exclusiveAccessLock = PR_NewLock();
@@ -373,7 +287,7 @@ JSRuntime::init(uint32_t maxbytes)
     if (!js_InitGC(this, maxbytes))
         return false;
 
-    if (!gcMarker.init(gcMode()))
+    if (!gc.marker.init(gcMode()))
         return false;
 
     const char *size = getenv("JSGC_MARK_STACK_LIMIT");
@@ -389,7 +303,7 @@ JSRuntime::init(uint32_t maxbytes)
     if (!atomsCompartment || !atomsCompartment->init(nullptr))
         return false;
 
-    zones.append(atomsZone.get());
+    gc.zones.append(atomsZone.get());
     atomsZone->compartments.append(atomsCompartment.get());
 
     atomsCompartment->isSystem = true;
@@ -524,8 +438,8 @@ JSRuntime::~JSRuntime()
     atomsCompartment_ = nullptr;
 
 #ifdef JS_THREADSAFE
-    if (gcLock)
-        PR_DestroyLock(gcLock);
+    if (gc.lock)
+        PR_DestroyLock(gc.lock);
 #endif
 
     js_free(defaultLocale);
@@ -539,8 +453,8 @@ JSRuntime::~JSRuntime()
     js_delete(ionPcScriptCache);
 
 #ifdef JSGC_GENERATIONAL
-    gcStoreBuffer.disable();
-    gcNursery.disable();
+    gc.storeBuffer.disable();
+    gc.nursery.disable();
 #endif
 
 #ifdef JS_ARM_SIMULATOR
@@ -628,12 +542,12 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
     }
 #endif
 
-    rtSizes->gc.marker += gcMarker.sizeOfExcludingThis(mallocSizeOf);
+    rtSizes->gc.marker += gc.marker.sizeOfExcludingThis(mallocSizeOf);
 #ifdef JSGC_GENERATIONAL
-    rtSizes->gc.nurseryCommitted += gcNursery.sizeOfHeapCommitted();
-    rtSizes->gc.nurseryDecommitted += gcNursery.sizeOfHeapDecommitted();
-    rtSizes->gc.nurseryHugeSlots += gcNursery.sizeOfHugeSlots(mallocSizeOf);
-    gcStoreBuffer.addSizeOfExcludingThis(mallocSizeOf, &rtSizes->gc);
+    rtSizes->gc.nurseryCommitted += gc.nursery.sizeOfHeapCommitted();
+    rtSizes->gc.nurseryDecommitted += gc.nursery.sizeOfHeapDecommitted();
+    rtSizes->gc.nurseryHugeSlots += gc.nursery.sizeOfHugeSlots(mallocSizeOf);
+    gc.storeBuffer.addSizeOfExcludingThis(mallocSizeOf, &rtSizes->gc);
 #endif
 }
 
@@ -785,7 +699,7 @@ JSRuntime::setGCMaxMallocBytes(size_t value)
      * For compatibility treat any value that exceeds PTRDIFF_T_MAX to
      * mean that value.
      */
-    gcMaxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
+    gc.maxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
     resetGCMallocBytes();
     for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next())
         zone->setGCMaxMallocBytes(value);
@@ -801,8 +715,8 @@ void
 JSRuntime::updateMallocCounter(JS::Zone *zone, size_t nbytes)
 {
     /* We tolerate any thread races when updating gcMallocBytes. */
-    gcMallocBytes -= ptrdiff_t(nbytes);
-    if (MOZ_UNLIKELY(gcMallocBytes <= 0))
+    gc.mallocBytes -= ptrdiff_t(nbytes);
+    if (MOZ_UNLIKELY(gc.mallocBytes <= 0))
         onTooMuchMalloc();
     else if (zone)
         zone->updateMallocCounter(nbytes);
@@ -814,8 +728,8 @@ JSRuntime::onTooMuchMalloc()
     if (!CurrentThreadCanAccessRuntime(this))
         return;
 
-    if (!gcMallocGCTriggered)
-        gcMallocGCTriggered = TriggerGC(this, JS::gcreason::TOO_MUCH_MALLOC);
+    if (!gc.mallocGCTriggered)
+        gc.mallocGCTriggered = TriggerGC(this, JS::gcreason::TOO_MUCH_MALLOC);
 }
 
 JS_FRIEND_API(void *)
@@ -835,7 +749,7 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
      * all the allocations and released the empty GC chunks.
      */
     JS::ShrinkGCBuffers(this);
-    gcHelperThread.waitBackgroundSweepOrAllocEnd();
+    gc.helperThread.waitBackgroundSweepOrAllocEnd();
     if (!p)
         p = js_malloc(nbytes);
     else if (p == reinterpret_cast<void *>(1))
@@ -930,7 +844,7 @@ JSRuntime::assertCanLock(RuntimeLock which)
       case InterruptLock:
         JS_ASSERT(!currentThreadOwnsInterruptLock());
       case GCLock:
-        JS_ASSERT(gcLockOwner != PR_GetCurrentThread());
+        JS_ASSERT(gc.lockOwner != PR_GetCurrentThread());
         break;
       default:
         MOZ_CRASH();

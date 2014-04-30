@@ -1503,7 +1503,7 @@ static void
 GeneratorWriteBarrierPost(JSContext *cx, JSGenerator *gen)
 {
 #ifdef JSGC_GENERATIONAL
-    cx->runtime()->gcStoreBuffer.putWholeCell(gen->obj);
+    cx->runtime()->gc.storeBuffer.putWholeCell(gen->obj);
 #endif
 }
 

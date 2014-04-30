@@ -357,8 +357,8 @@ class ZonesIter {
 
   public:
     ZonesIter(JSRuntime *rt, ZoneSelector selector) {
-        it = rt->zones.begin();
-        end = rt->zones.end();
+        it = rt->gc.zones.begin();
+        end = rt->gc.zones.end();
 
         if (selector == SkipAtoms) {
             JS_ASSERT(rt->isAtomsZone(*it));

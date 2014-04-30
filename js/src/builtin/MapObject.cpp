@@ -1136,7 +1136,7 @@ WriteBarrierPost(JSRuntime *rt, ValueMap *map, const HashableValue &key)
 {
 #ifdef JSGC_GENERATIONAL
     typedef OrderedHashMap<Value, Value, UnbarrieredHashPolicy, RuntimeAllocPolicy> UnbarrieredMap;
-    rt->gcStoreBuffer.putGeneric(OrderedHashTableRef<UnbarrieredMap>(
+    rt->gc.storeBuffer.putGeneric(OrderedHashTableRef<UnbarrieredMap>(
                 reinterpret_cast<UnbarrieredMap *>(map), key.get()));
 #endif
 }
@@ -1146,7 +1146,7 @@ WriteBarrierPost(JSRuntime *rt, ValueSet *set, const HashableValue &key)
 {
 #ifdef JSGC_GENERATIONAL
     typedef OrderedHashSet<Value, UnbarrieredHashPolicy, RuntimeAllocPolicy> UnbarrieredSet;
-    rt->gcStoreBuffer.putGeneric(OrderedHashTableRef<UnbarrieredSet>(
+    rt->gc.storeBuffer.putGeneric(OrderedHashTableRef<UnbarrieredSet>(
                 reinterpret_cast<UnbarrieredSet *>(set), key.get()));
 #endif
 }

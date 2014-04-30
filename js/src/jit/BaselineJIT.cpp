@@ -456,7 +456,7 @@ BaselineScript::Destroy(FreeOp *fop, BaselineScript *script)
      * in invalid store buffer entries. Assert that if we do destroy scripts
      * outside of a GC that we at least emptied the nursery first.
      */
-    JS_ASSERT(fop->runtime()->gcNursery.isEmpty());
+    JS_ASSERT(fop->runtime()->gc.nursery.isEmpty());
 #endif
     fop->delete_(script);
 }

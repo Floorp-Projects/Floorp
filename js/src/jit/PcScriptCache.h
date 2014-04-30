@@ -45,8 +45,8 @@ struct PcScriptCache
              JSScript **scriptRes, jsbytecode **pcRes)
     {
         // If a GC occurred, lazily clear the cache now.
-        if (gcNumber != rt->gcNumber) {
-            clear(rt->gcNumber);
+        if (gcNumber != rt->gc.number) {
+            clear(rt->gc.number);
             return false;
         }
 
