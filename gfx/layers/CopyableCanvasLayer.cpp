@@ -95,9 +95,6 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
   }
 
   if (mGLContext) {
-    RefPtr<DataSourceSurface> readSurf;
-    RefPtr<SourceSurface> resultSurf;
-
     SharedSurface_GL* sharedSurf = nullptr;
     if (mStream) {
       sharedSurf = SharedSurface_GL::Cast(mStream->SwapConsumer());
@@ -114,60 +111,51 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
     SurfaceFormat format = (GetContentFlags() & CONTENT_OPAQUE)
                             ? SurfaceFormat::B8G8R8X8
                             : SurfaceFormat::B8G8R8A8;
+    bool needsPremult = sharedSurf->HasAlpha() && !mIsGLAlphaPremult;
 
+    // Try to read back directly into aDestTarget's output buffer
     if (aDestTarget) {
-      resultSurf = aDestTarget->Snapshot();
-      if (!resultSurf) {
-        resultSurf = GetTempSurface(readSize, format);
+      uint8_t* destData;
+      IntSize destSize;
+      int32_t destStride;
+      SurfaceFormat destFormat;
+      if (aDestTarget->LockBits(&destData, &destSize, &destStride, &destFormat)) {
+        if (destSize == readSize && destFormat == format) {
+          RefPtr<DataSourceSurface> data =
+            Factory::CreateWrappingDataSourceSurface(destData, destStride, destSize, destFormat);
+          mGLContext->Screen()->Readback(sharedSurf, data);
+          if (needsPremult) {
+            PremultiplySurface(data);
+          }
+          aDestTarget->ReleaseBits(destData);
+          return;
+        }
+        aDestTarget->ReleaseBits(destData);
       }
+    }
+
+    RefPtr<SourceSurface> resultSurf;
+    if (sharedSurf->Type() == SharedSurfaceType::Basic && !needsPremult) {
+      SharedSurface_Basic* sharedSurf_Basic = SharedSurface_Basic::Cast(sharedSurf);
+      resultSurf = sharedSurf_Basic->GetData();
     } else {
-      resultSurf = GetTempSurface(readSize, format);
+      RefPtr<DataSourceSurface> data = GetTempSurface(readSize, format);
+      // Readback handles Flush/MarkDirty.
+      mGLContext->Screen()->Readback(sharedSurf, data);
+      if (needsPremult) {
+        PremultiplySurface(data);
+      }
+      resultSurf = data;
     }
     MOZ_ASSERT(resultSurf);
-    MOZ_ASSERT(sharedSurf->APIType() == APITypeT::OpenGL);
-    SharedSurface_GL* surfGL = SharedSurface_GL::Cast(sharedSurf);
 
-    if (surfGL->Type() == SharedSurfaceType::Basic) {
-      // sharedSurf_Basic->mData must outlive readSurf. Alas, readSurf may not
-      // leave the scope it was declared in.
-      SharedSurface_Basic* sharedSurf_Basic = SharedSurface_Basic::Cast(surfGL);
-      readSurf = sharedSurf_Basic->GetData();
+    if (aDestTarget) {
+      aDestTarget->CopySurface(resultSurf,
+                               IntRect(0, 0, readSize.width, readSize.height),
+                               IntPoint(0, 0));
     } else {
-      if (resultSurf->GetSize() != readSize ||
-          !(readSurf = resultSurf->GetDataSurface()) ||
-          readSurf->GetFormat() != format)
-      {
-        readSurf = GetTempSurface(readSize, format);
-      }
-
-      // Readback handles Flush/MarkDirty.
-      mGLContext->Screen()->Readback(surfGL, readSurf);
-    }
-    MOZ_ASSERT(readSurf);
-
-    bool needsPremult = surfGL->HasAlpha() && !mIsGLAlphaPremult;
-    if (needsPremult) {
-      PremultiplySurface(readSurf);
-    }
-
-    if (readSurf != resultSurf) {
-      RefPtr<DataSourceSurface> resultDataSurface =
-        resultSurf->GetDataSurface();
-      RefPtr<DrawTarget> dt =
-        Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                         resultDataSurface->GetData(),
-                                         resultDataSurface->GetSize(),
-                                         resultDataSurface->Stride(),
-                                         resultDataSurface->GetFormat());
-      IntSize readSize = readSurf->GetSize();
-      dt->CopySurface(readSurf,
-                      IntRect(0, 0, readSize.width, readSize.height),
-                      IntPoint(0, 0));
-    }
-
-    // If !aDestSurface then we will end up painting using mSurface, so
-    // stick our surface into mSurface, so that the Paint() path is the same.
-    if (!aDestTarget) {
+      // If !aDestSurface then we will end up painting using mSurface, so
+      // stick our surface into mSurface, so that the Paint() path is the same.
       mSurface = resultSurf;
     }
   }
@@ -178,13 +166,10 @@ CopyableCanvasLayer::GetTempSurface(const IntSize& aSize,
                                     const SurfaceFormat aFormat)
 {
   if (!mCachedTempSurface ||
-      aSize.width != mCachedSize.width ||
-      aSize.height != mCachedSize.height ||
-      aFormat != mCachedFormat)
+      aSize != mCachedTempSurface->GetSize() ||
+      aFormat != mCachedTempSurface->GetFormat())
   {
     mCachedTempSurface = Factory::CreateDataSourceSurface(aSize, aFormat);
-    mCachedSize = aSize;
-    mCachedFormat = aFormat;
   }
 
   return mCachedTempSurface;
