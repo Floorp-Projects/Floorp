@@ -55,7 +55,7 @@ this.FxAccountsManager = {
     }
 
     return {
-      accountId: this._activeSession.email,
+      email: this._activeSession.email,
       verified: this._activeSession.verified
     }
   },
@@ -93,13 +93,13 @@ this.FxAccountsManager = {
     return this._fxAccounts.getAccountsClient();
   },
 
-  _signInSignUp: function(aMethod, aAccountId, aPassword) {
+  _signInSignUp: function(aMethod, aEmail, aPassword) {
     if (Services.io.offline) {
       return this._error(ERROR_OFFLINE);
     }
 
-    if (!aAccountId) {
-      return this._error(ERROR_INVALID_ACCOUNTID);
+    if (!aEmail) {
+      return this._error(ERROR_INVALID_EMAIL);
     }
 
     if (!aPassword) {
@@ -121,7 +121,7 @@ this.FxAccountsManager = {
             user: this._user
           });
         }
-        return client[aMethod](aAccountId, aPassword);
+        return client[aMethod](aEmail, aPassword);
       }
     ).then(
       user => {
@@ -135,7 +135,7 @@ this.FxAccountsManager = {
         // If the user object includes an email field, it may differ in
         // capitalization from what we sent down.  This is the server's
         // canonical capitalization and should be used instead.
-        user.email = user.email || aAccountId;
+        user.email = user.email || aEmail;
         return this._fxAccounts.setSignedInUser(user).then(
           () => {
             this._activeSession = user;
@@ -226,12 +226,12 @@ this.FxAccountsManager = {
 
   // -- API --
 
-  signIn: function(aAccountId, aPassword) {
-    return this._signInSignUp("signIn", aAccountId, aPassword);
+  signIn: function(aEmail, aPassword) {
+    return this._signInSignUp("signIn", aEmail, aPassword);
   },
 
-  signUp: function(aAccountId, aPassword) {
-    return this._signInSignUp("signUp", aAccountId, aPassword);
+  signUp: function(aEmail, aPassword) {
+    return this._signInSignUp("signUp", aEmail, aPassword);
   },
 
   signOut: function() {
@@ -286,20 +286,20 @@ this.FxAccountsManager = {
     );
   },
 
-  queryAccount: function(aAccountId) {
-    log.debug("queryAccount " + aAccountId);
+  queryAccount: function(aEmail) {
+    log.debug("queryAccount " + aEmail);
     if (Services.io.offline) {
       return this._error(ERROR_OFFLINE);
     }
 
     let deferred = Promise.defer();
 
-    if (!aAccountId) {
-      return this._error(ERROR_INVALID_ACCOUNTID);
+    if (!aEmail) {
+      return this._error(ERROR_INVALID_EMAIL);
     }
 
     let client = this._getFxAccountsClient();
-    return client.accountExists(aAccountId).then(
+    return client.accountExists(aEmail).then(
       result => {
         log.debug("Account " + result ? "" : "does not" + " exists");
         let error = this._getError(result);
@@ -398,7 +398,7 @@ this.FxAccountsManager = {
               // will return the assertion. Otherwise, we will return an error.
               this._refreshing = true;
               return this._uiRequest(UI_REQUEST_REFRESH_AUTH,
-                                     aAudience, user.accountId).then(
+                                     aAudience, user.email).then(
                 (assertion) => {
                   this._refreshing = false;
                   return assertion;

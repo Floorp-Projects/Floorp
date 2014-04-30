@@ -120,3 +120,7 @@ category update-timer WebappsUpdateTimer @mozilla.org/webapps-update-timer;1,get
 # ColorPicker.js
 component {430b987f-bb9f-46a3-99a5-241749220b29} ColorPicker.js
 contract @mozilla.org/colorpicker;1 {430b987f-bb9f-46a3-99a5-241749220b29}
+
+# ActivitiesGlue.js
+component {e4deb5f6-d5e3-4fce-bc53-901dd9951c48} ActivitiesGlue.js
+contract @mozilla.org/dom/activities/ui-glue;1 {e4deb5f6-d5e3-4fce-bc53-901dd9951c48}

@@ -1903,7 +1903,7 @@ IonBuilder::inlineAssertFloat32(CallInfo &callInfo)
     JS_ASSERT(secondArg->type() == MIRType_Boolean);
     JS_ASSERT(secondArg->isConstant());
 
-    bool mustBeFloat32 = JSVAL_TO_BOOLEAN(secondArg->toConstant()->value());
+    bool mustBeFloat32 = secondArg->toConstant()->value().toBoolean();
     current->add(MAssertFloat32::New(alloc(), callInfo.getArg(0), mustBeFloat32));
 
     MConstant *undefined = MConstant::New(alloc(), UndefinedValue());

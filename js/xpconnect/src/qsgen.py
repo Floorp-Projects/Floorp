@@ -563,7 +563,7 @@ def writeArgumentUnboxing(f, i, name, type, optional, rvdeclared,
             f.write("    if (NS_FAILED(rv)) {\n")
             if isSetter:
                 assert(propIndex is not None)
-                f.write("        xpc_qsThrowBadSetterValue(cx, rv, JSVAL_TO_OBJECT(vp[1]), (uint16_t)%s);\n" %
+                f.write("        xpc_qsThrowBadSetterValue(cx, rv, vp[1].toObjectOrNull(), (uint16_t)%s);\n" %
                         propIndex)
             else:
                 f.write("        xpc_qsThrowBadArg(cx, rv, vp, %d);\n" % i)
@@ -986,7 +986,7 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
                     "cx, rv, vp);\n")
         else:
             f.write("        return xpc_qsThrowGetterSetterFailed(cx, rv, " +
-                    "JSVAL_TO_OBJECT(vp[1]), (uint16_t)%d);\n" %
+                    "vp[1].toObjectOrNull(), (uint16_t)%d);\n" %
                     stringtable.stringIndex(member.name))
 
     # Convert the return value.

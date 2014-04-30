@@ -13,7 +13,7 @@
 //
 // [node-transform]: http://nodejs.org/api/stream.html#stream_class_stream_transform
 // [node-objectmode]: http://nodejs.org/api/stream.html#stream_new_stream_readable_options
-// [http2-compression]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05
+// [http2-compression]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07
 
 exports.HeaderTable = HeaderTable;
 exports.HuffmanTable = HuffmanTable;
@@ -35,8 +35,8 @@ var util = require('util');
 // The [Header Table] is a component used to associate headers to index values. It is basically an
 // ordered list of `[name, value]` pairs, so it's implemented as a subclass of `Array`.
 // In this implementation, the Header Table and the [Static Table] are handled as a single table.
-// [Header Table]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#section-3.1.2
-// [Static Table]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#appendix-B
+// [Header Table]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#section-3.1.2
+// [Static Table]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#appendix-B
 function HeaderTable(log, limit) {
   var self = HeaderTable.staticTable.map(entryFromPair);
   self._log = log;
@@ -59,7 +59,7 @@ function HeaderTable(log, limit) {
 // * Headers to be kept: headers that should not be removed as the last step of the encoding process
 //   (not part of the spec, `keep` flag)
 //
-// [referenceset]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#section-3.1.3
+// [referenceset]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#section-3.1.3
 //
 // Relations of the sets:
 //
@@ -99,7 +99,7 @@ function size(entry) {
 }
 
 // The `add(index, entry)` can be used to [manage the header table][tablemgmt]:
-// [tablemgmt]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#section-3.3
+// [tablemgmt]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#section-3.3
 //
 // * it pushes the new `entry` at the beggining of the table
 // * before doing such a modification, it has to be ensured that the header table size will stay
@@ -146,9 +146,9 @@ HeaderTable.prototype.setSizeLimit = function setSizeLimit(limit) {
   this._enforceLimit(this._limit);
 };
 
-// [The Static Table](http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#appendix-B)
+// [The Static Table](http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#appendix-B)
 // ------------------
-// [statictable]:http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#appendix-B
+// [statictable]:http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#appendix-B
 
 // The table is generated with feeding the table from the spec to the following sed command:
 //
@@ -163,11 +163,12 @@ HeaderTable.staticTable  = [
   [ ':scheme'                     , 'http'        ],
   [ ':scheme'                     , 'https'       ],
   [ ':status'                     , '200'         ],
-  [ ':status'                     , '500'         ],
-  [ ':status'                     , '404'         ],
-  [ ':status'                     , '403'         ],
+  [ ':status'                     , '204'         ],
+  [ ':status'                     , '206'         ],
+  [ ':status'                     , '304'         ],
   [ ':status'                     , '400'         ],
-  [ ':status'                     , '401'         ],
+  [ ':status'                     , '404'         ],
+  [ ':status'                     , '500'         ],
   [ 'accept-charset'              , ''            ],
   [ 'accept-encoding'             , ''            ],
   [ 'accept-language'             , ''            ],
@@ -245,7 +246,7 @@ HeaderSetDecompressor.prototype._transform = function _transform(chunk, encoding
 };
 
 // `execute(rep)` executes the given [header representation][representation].
-// [representation]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#section-3.1.4
+// [representation]: http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#section-3.1.4
 
 // The *JavaScript object representation* of a header representation:
 //
@@ -272,10 +273,16 @@ HeaderSetDecompressor.prototype._execute = function _execute(rep) {
 
   var entry, pair;
 
-  // * An _indexed representation_ with an index value of 0 (in our representation, it means -1)
-  //   entails the following actions:
-  //   * If the following byte starts with a set bit, the reference set is emptied.
-  //   * Else, reduce the size of the header table to the value encoded with a 7-bit prefix
+  if (rep.contextUpdate) {
+    if (rep.clearReferenceSet) {
+      for (var i = 0; i < this._table.length; i++) {
+        this._table[i].reference = false;
+      }
+    } else {
+      this.setTableSizeLimit(rep.newMaxSize);
+    }
+  }
+
   // * An _indexed representation_ corresponding to an entry _present_ in the reference set
   //   entails the following actions:
   //   * The entry is removed from the reference set.
@@ -289,22 +296,11 @@ HeaderSetDecompressor.prototype._execute = function _execute(rep) {
   //   * If referencing an element of the header table:
   //     * The header field corresponding to the referenced entry is emitted
   //     * The referenced header table entry is added to the reference set
-  if (typeof rep.value === 'number') {
+  else if (typeof rep.value === 'number') {
     var index = rep.value;
     entry = this._table[index];
 
-    if (index == -1) {
-      if (rep.index) {
-        for (var i = 0; i < this._table.length; i++) {
-          this._table[i].reference = false;
-        }
-      } else {
-        // Set a new maximum size
-        this.setTableSizeLimit(rep.name);
-      }
-    }
-
-    else if (entry.reference) {
+    if (entry.reference) {
       entry.reference = false;
     }
 
@@ -360,7 +356,7 @@ HeaderSetDecompressor.prototype._flush = function _flush(callback) {
     this._execute(HeaderSetDecompressor.header(buffer));
   }
 
-  // * [emits the reference set](http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#section-3.2.2)
+  // * [emits the reference set](http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#section-3.2.2)
   for (var index = 0; index < this._table.length; index++) {
     var entry = this._table[index];
     if (entry.reference && !entry.emitted) {
@@ -425,6 +421,8 @@ HeaderSetCompressor.prototype._transform = function _transform(pair, encoding, c
     }
   }
 
+  var mustNeverIndex = (name === 'cookie' || name === 'set-cookie' || name === 'authorization');
+
   // * if there's full match, it will be an indexed representation (or more than one) depending
   //   on its presence in the reference, the emitted and the keep set:
   //
@@ -449,7 +447,7 @@ HeaderSetCompressor.prototype._transform = function _transform(pair, encoding, c
   //   * If it's in the reference set, but outside the keep set and the emitted set, then this
   //     header is common with the previous header set, and is still untouched. We mark it to keep
   //     in the reference set (that means don't remove at the end of the encoding process).
-  if (fullMatch !== -1) {
+  if (fullMatch !== -1 && !mustNeverIndex) {
     rep = { name: fullMatch, value: fullMatch, index: false };
 
     if (!entry.reference) {
@@ -486,7 +484,7 @@ HeaderSetCompressor.prototype._transform = function _transform(pair, encoding, c
     entry = entryFromPair(pair);
     entry.emitted = true;
 
-    var indexing = (entry._size < this._table._limit / 2);
+    var indexing = (entry._size < this._table._limit / 2) && !mustNeverIndex;
 
     if (indexing) {
       entry.reference = true;
@@ -502,7 +500,7 @@ HeaderSetCompressor.prototype._transform = function _transform(pair, encoding, c
       }
     }
 
-    this.send({ name: (nameMatch !== -1) ? nameMatch : name, value: value, index: indexing });
+    this.send({ name: (nameMatch !== -1) ? nameMatch : name, value: value, index: indexing, mustNeverIndex: mustNeverIndex, contextUpdate: false });
   }
 
   callback();
@@ -526,7 +524,7 @@ HeaderSetCompressor.prototype._flush = function _flush(callback) {
   callback();
 };
 
-// [Detailed Format](http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#section-4)
+// [Detailed Format](http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#section-4)
 // -----------------
 
 // ### Integer representation ###
@@ -710,228 +708,6 @@ HuffmanTable.prototype.decode = function decode(buffer) {
 //     sed -e "s/^.* [|]//g" -e "s/|//g" -e "s/ .*//g" -e "s/^/  '/g" -e "s/$/',/g"
 
 HuffmanTable.huffmanTable = new HuffmanTable([
-  '111111111111111111110111010',
-  '111111111111111111110111011',
-  '111111111111111111110111100',
-  '111111111111111111110111101',
-  '111111111111111111110111110',
-  '111111111111111111110111111',
-  '111111111111111111111000000',
-  '111111111111111111111000001',
-  '111111111111111111111000010',
-  '111111111111111111111000011',
-  '111111111111111111111000100',
-  '111111111111111111111000101',
-  '111111111111111111111000110',
-  '111111111111111111111000111',
-  '111111111111111111111001000',
-  '111111111111111111111001001',
-  '111111111111111111111001010',
-  '111111111111111111111001011',
-  '111111111111111111111001100',
-  '111111111111111111111001101',
-  '111111111111111111111001110',
-  '111111111111111111111001111',
-  '111111111111111111111010000',
-  '111111111111111111111010001',
-  '111111111111111111111010010',
-  '111111111111111111111010011',
-  '111111111111111111111010100',
-  '111111111111111111111010101',
-  '111111111111111111111010110',
-  '111111111111111111111010111',
-  '111111111111111111111011000',
-  '111111111111111111111011001',
-  '11101000',
-  '111111111100',
-  '11111111111010',
-  '111111111111100',
-  '111111111111101',
-  '100100',
-  '1101110',
-  '111111111111110',
-  '11111111010',
-  '11111111011',
-  '1111111010',
-  '11111111100',
-  '11101001',
-  '100101',
-  '00100',
-  '0000',
-  '00101',
-  '00110',
-  '00111',
-  '100110',
-  '100111',
-  '101000',
-  '101001',
-  '101010',
-  '101011',
-  '101100',
-  '111101100',
-  '11101010',
-  '111111111111111110',
-  '101101',
-  '11111111111111100',
-  '111101101',
-  '11111111111011',
-  '1101111',
-  '11101011',
-  '11101100',
-  '11101101',
-  '11101110',
-  '1110000',
-  '111101110',
-  '111101111',
-  '111110000',
-  '111110001',
-  '1111111011',
-  '111110010',
-  '11101111',
-  '111110011',
-  '111110100',
-  '111110101',
-  '111110110',
-  '111110111',
-  '11110000',
-  '11110001',
-  '111111000',
-  '111111001',
-  '111111010',
-  '111111011',
-  '111111100',
-  '1111111100',
-  '11111111111100',
-  '111111111111111111111011010',
-  '1111111111100',
-  '11111111111101',
-  '101110',
-  '1111111111111111110',
-  '01000',
-  '101111',
-  '01001',
-  '110000',
-  '0001',
-  '110001',
-  '110010',
-  '110011',
-  '01010',
-  '1110001',
-  '1110010',
-  '01011',
-  '110100',
-  '01100',
-  '01101',
-  '01110',
-  '11110010',
-  '01111',
-  '10000',
-  '10001',
-  '110101',
-  '1110011',
-  '110110',
-  '11110011',
-  '11110100',
-  '11110101',
-  '11111111111111101',
-  '11111111101',
-  '11111111111111110',
-  '111111111101',
-  '111111111111111111111011011',
-  '111111111111111111111011100',
-  '111111111111111111111011101',
-  '111111111111111111111011110',
-  '111111111111111111111011111',
-  '111111111111111111111100000',
-  '111111111111111111111100001',
-  '111111111111111111111100010',
-  '111111111111111111111100011',
-  '111111111111111111111100100',
-  '111111111111111111111100101',
-  '111111111111111111111100110',
-  '111111111111111111111100111',
-  '111111111111111111111101000',
-  '111111111111111111111101001',
-  '111111111111111111111101010',
-  '111111111111111111111101011',
-  '111111111111111111111101100',
-  '111111111111111111111101101',
-  '111111111111111111111101110',
-  '111111111111111111111101111',
-  '111111111111111111111110000',
-  '111111111111111111111110001',
-  '111111111111111111111110010',
-  '111111111111111111111110011',
-  '111111111111111111111110100',
-  '111111111111111111111110101',
-  '111111111111111111111110110',
-  '111111111111111111111110111',
-  '111111111111111111111111000',
-  '111111111111111111111111001',
-  '111111111111111111111111010',
-  '111111111111111111111111011',
-  '111111111111111111111111100',
-  '111111111111111111111111101',
-  '111111111111111111111111110',
-  '111111111111111111111111111',
-  '11111111111111111110000000',
-  '11111111111111111110000001',
-  '11111111111111111110000010',
-  '11111111111111111110000011',
-  '11111111111111111110000100',
-  '11111111111111111110000101',
-  '11111111111111111110000110',
-  '11111111111111111110000111',
-  '11111111111111111110001000',
-  '11111111111111111110001001',
-  '11111111111111111110001010',
-  '11111111111111111110001011',
-  '11111111111111111110001100',
-  '11111111111111111110001101',
-  '11111111111111111110001110',
-  '11111111111111111110001111',
-  '11111111111111111110010000',
-  '11111111111111111110010001',
-  '11111111111111111110010010',
-  '11111111111111111110010011',
-  '11111111111111111110010100',
-  '11111111111111111110010101',
-  '11111111111111111110010110',
-  '11111111111111111110010111',
-  '11111111111111111110011000',
-  '11111111111111111110011001',
-  '11111111111111111110011010',
-  '11111111111111111110011011',
-  '11111111111111111110011100',
-  '11111111111111111110011101',
-  '11111111111111111110011110',
-  '11111111111111111110011111',
-  '11111111111111111110100000',
-  '11111111111111111110100001',
-  '11111111111111111110100010',
-  '11111111111111111110100011',
-  '11111111111111111110100100',
-  '11111111111111111110100101',
-  '11111111111111111110100110',
-  '11111111111111111110100111',
-  '11111111111111111110101000',
-  '11111111111111111110101001',
-  '11111111111111111110101010',
-  '11111111111111111110101011',
-  '11111111111111111110101100',
-  '11111111111111111110101101',
-  '11111111111111111110101110',
-  '11111111111111111110101111',
-  '11111111111111111110110000',
-  '11111111111111111110110001',
-  '11111111111111111110110010',
-  '11111111111111111110110011',
-  '11111111111111111110110100',
-  '11111111111111111110110101',
-  '11111111111111111110110110',
-  '11111111111111111110110111',
-  '11111111111111111110111000',
-  '11111111111111111110111001',
   '11111111111111111110111010',
   '11111111111111111110111011',
   '11111111111111111110111100',
@@ -964,9 +740,231 @@ HuffmanTable.huffmanTable = new HuffmanTable([
   '11111111111111111111010111',
   '11111111111111111111011000',
   '11111111111111111111011001',
+  '00110',
+  '1111111111100',
+  '111110000',
+  '11111111111100',
+  '111111111111100',
+  '011110',
+  '1100100',
+  '1111111111101',
+  '1111111010',
+  '111110001',
+  '1111111011',
+  '1111111100',
+  '1100101',
+  '1100110',
+  '011111',
+  '00111',
+  '0000',
+  '0001',
+  '0010',
+  '01000',
+  '100000',
+  '100001',
+  '100010',
+  '100011',
+  '100100',
+  '100101',
+  '100110',
+  '11101100',
+  '11111111111111100',
+  '100111',
+  '111111111111101',
+  '1111111101',
+  '111111111111110',
+  '1100111',
+  '11101101',
+  '11101110',
+  '1101000',
+  '11101111',
+  '1101001',
+  '1101010',
+  '111110010',
+  '11110000',
+  '111110011',
+  '111110100',
+  '111110101',
+  '1101011',
+  '1101100',
+  '11110001',
+  '11110010',
+  '111110110',
+  '111110111',
+  '1101101',
+  '101000',
+  '11110011',
+  '111111000',
+  '111111001',
+  '11110100',
+  '111111010',
+  '111111011',
+  '11111111100',
   '11111111111111111111011010',
+  '11111111101',
+  '11111111111101',
+  '1101110',
+  '111111111111111110',
+  '01001',
+  '1101111',
+  '01010',
+  '101001',
+  '01011',
+  '1110000',
+  '101010',
+  '101011',
+  '01100',
+  '11110101',
+  '11110110',
+  '101100',
+  '101101',
+  '101110',
+  '01101',
+  '101111',
+  '111111100',
+  '110000',
+  '110001',
+  '01110',
+  '1110001',
+  '1110010',
+  '1110011',
+  '1110100',
+  '1110101',
+  '11110111',
+  '11111111111111101',
+  '111111111100',
+  '11111111111111110',
+  '111111111101',
   '11111111111111111111011011',
-  '11111111111111111111011100'
+  '11111111111111111111011100',
+  '11111111111111111111011101',
+  '11111111111111111111011110',
+  '11111111111111111111011111',
+  '11111111111111111111100000',
+  '11111111111111111111100001',
+  '11111111111111111111100010',
+  '11111111111111111111100011',
+  '11111111111111111111100100',
+  '11111111111111111111100101',
+  '11111111111111111111100110',
+  '11111111111111111111100111',
+  '11111111111111111111101000',
+  '11111111111111111111101001',
+  '11111111111111111111101010',
+  '11111111111111111111101011',
+  '11111111111111111111101100',
+  '11111111111111111111101101',
+  '11111111111111111111101110',
+  '11111111111111111111101111',
+  '11111111111111111111110000',
+  '11111111111111111111110001',
+  '11111111111111111111110010',
+  '11111111111111111111110011',
+  '11111111111111111111110100',
+  '11111111111111111111110101',
+  '11111111111111111111110110',
+  '11111111111111111111110111',
+  '11111111111111111111111000',
+  '11111111111111111111111001',
+  '11111111111111111111111010',
+  '11111111111111111111111011',
+  '11111111111111111111111100',
+  '11111111111111111111111101',
+  '11111111111111111111111110',
+  '11111111111111111111111111',
+  '1111111111111111110000000',
+  '1111111111111111110000001',
+  '1111111111111111110000010',
+  '1111111111111111110000011',
+  '1111111111111111110000100',
+  '1111111111111111110000101',
+  '1111111111111111110000110',
+  '1111111111111111110000111',
+  '1111111111111111110001000',
+  '1111111111111111110001001',
+  '1111111111111111110001010',
+  '1111111111111111110001011',
+  '1111111111111111110001100',
+  '1111111111111111110001101',
+  '1111111111111111110001110',
+  '1111111111111111110001111',
+  '1111111111111111110010000',
+  '1111111111111111110010001',
+  '1111111111111111110010010',
+  '1111111111111111110010011',
+  '1111111111111111110010100',
+  '1111111111111111110010101',
+  '1111111111111111110010110',
+  '1111111111111111110010111',
+  '1111111111111111110011000',
+  '1111111111111111110011001',
+  '1111111111111111110011010',
+  '1111111111111111110011011',
+  '1111111111111111110011100',
+  '1111111111111111110011101',
+  '1111111111111111110011110',
+  '1111111111111111110011111',
+  '1111111111111111110100000',
+  '1111111111111111110100001',
+  '1111111111111111110100010',
+  '1111111111111111110100011',
+  '1111111111111111110100100',
+  '1111111111111111110100101',
+  '1111111111111111110100110',
+  '1111111111111111110100111',
+  '1111111111111111110101000',
+  '1111111111111111110101001',
+  '1111111111111111110101010',
+  '1111111111111111110101011',
+  '1111111111111111110101100',
+  '1111111111111111110101101',
+  '1111111111111111110101110',
+  '1111111111111111110101111',
+  '1111111111111111110110000',
+  '1111111111111111110110001',
+  '1111111111111111110110010',
+  '1111111111111111110110011',
+  '1111111111111111110110100',
+  '1111111111111111110110101',
+  '1111111111111111110110110',
+  '1111111111111111110110111',
+  '1111111111111111110111000',
+  '1111111111111111110111001',
+  '1111111111111111110111010',
+  '1111111111111111110111011',
+  '1111111111111111110111100',
+  '1111111111111111110111101',
+  '1111111111111111110111110',
+  '1111111111111111110111111',
+  '1111111111111111111000000',
+  '1111111111111111111000001',
+  '1111111111111111111000010',
+  '1111111111111111111000011',
+  '1111111111111111111000100',
+  '1111111111111111111000101',
+  '1111111111111111111000110',
+  '1111111111111111111000111',
+  '1111111111111111111001000',
+  '1111111111111111111001001',
+  '1111111111111111111001010',
+  '1111111111111111111001011',
+  '1111111111111111111001100',
+  '1111111111111111111001101',
+  '1111111111111111111001110',
+  '1111111111111111111001111',
+  '1111111111111111111010000',
+  '1111111111111111111010001',
+  '1111111111111111111010010',
+  '1111111111111111111010011',
+  '1111111111111111111010100',
+  '1111111111111111111010101',
+  '1111111111111111111010110',
+  '1111111111111111111010111',
+  '1111111111111111111011000',
+  '1111111111111111111011001',
+  '1111111111111111111011010',
+  '1111111111111111111011011',
+  '1111111111111111111011100'
 ]);
 
 // ### String literal representation ###
@@ -1040,7 +1038,7 @@ HeaderSetDecompressor.string = function readString(buffer) {
 //       0   1   2   3   4   5   6   7
 //     +---+---+---+---+---+---+---+---+
 //     | 0 | 1 |      Index (6+)       |
-//     +---+---+---+-------------------+  Literal w/o Indexing
+//     +---+---+---+-------------------+  Literal w/ Indexing
 //     |       Value Length (8+)       |
 //     +-------------------------------+  w/ Indexed Name
 //     | Value String (Length octets)  |
@@ -1051,7 +1049,7 @@ HeaderSetDecompressor.string = function readString(buffer) {
 //     | 0 | 1 |           0           |
 //     +---+---+---+-------------------+
 //     |       Name Length (8+)        |
-//     +-------------------------------+  Literal w/o Indexing
+//     +-------------------------------+  Literal w/ Indexing
 //     |  Name String (Length octets)  |
 //     +-------------------------------+  w/ New Name
 //     |       Value Length (8+)       |
@@ -1061,8 +1059,8 @@ HeaderSetDecompressor.string = function readString(buffer) {
 //
 //       0   1   2   3   4   5   6   7
 //     +---+---+---+---+---+---+---+---+
-//     | 0 | 0 |      Index (6+)       |
-//     +---+---+---+-------------------+  Literal w/ Incremental Indexing
+//     | 0 | 0 | 0 | 0 |  Index (4+)   |
+//     +---+---+---+-------------------+  Literal w/o Incremental Indexing
 //     |       Value Length (8+)       |
 //     +-------------------------------+  w/ Indexed Name
 //     | Value String (Length octets)  |
@@ -1070,10 +1068,32 @@ HeaderSetDecompressor.string = function readString(buffer) {
 //
 //       0   1   2   3   4   5   6   7
 //     +---+---+---+---+---+---+---+---+
-//     | 0 | 0 |           0           |
+//     | 0 | 0 | 0 | 0 |       0       |
 //     +---+---+---+-------------------+
 //     |       Name Length (8+)        |
-//     +-------------------------------+  Literal w/ Incremental Indexing
+//     +-------------------------------+  Literal w/o Incremental Indexing
+//     |  Name String (Length octets)  |
+//     +-------------------------------+  w/ New Name
+//     |       Value Length (8+)       |
+//     +-------------------------------+
+//     | Value String (Length octets)  |
+//     +-------------------------------+
+//
+//       0   1   2   3   4   5   6   7
+//     +---+---+---+---+---+---+---+---+
+//     | 0 | 0 | 0 | 1 |  Index (4+)   |
+//     +---+---+---+-------------------+  Literal never indexed
+//     |       Value Length (8+)       |
+//     +-------------------------------+  w/ Indexed Name
+//     | Value String (Length octets)  |
+//     +-------------------------------+
+//
+//       0   1   2   3   4   5   6   7
+//     +---+---+---+---+---+---+---+---+
+//     | 0 | 0 | 0 | 1 |       0       |
+//     +---+---+---+-------------------+
+//     |       Name Length (8+)        |
+//     +-------------------------------+  Literal never indexed
 //     |  Name String (Length octets)  |
 //     +-------------------------------+  w/ New Name
 //     |       Value Length (8+)       |
@@ -1093,30 +1113,38 @@ HeaderSetDecompressor.string = function readString(buffer) {
 
 var representations = {
   indexed             : { prefix: 7, pattern: 0x80 },
-  literal             : { prefix: 6, pattern: 0x40 },
-  literalIncremental  : { prefix: 6, pattern: 0x00 }
+  literalIncremental  : { prefix: 6, pattern: 0x40 },
+  contextUpdate       : { prefix: 0, pattern: 0x20 },
+  literalNeverIndexed : { prefix: 4, pattern: 0x10 },
+  literal             : { prefix: 4, pattern: 0x00 }
 };
 
 HeaderSetCompressor.header = function writeHeader(header) {
   var representation, buffers = [];
 
-  if (typeof header.value === 'number') {
+  if (header.contextUpdate) {
+    representation = representations.contextUpdate;
+  } else if (typeof header.value === 'number') {
     representation = representations.indexed;
   } else if (header.index) {
     representation = representations.literalIncremental;
+  } else if (header.mustNeverIndex) {
+    representation = representations.literalNeverIndexed;
   } else {
     representation = representations.literal;
   }
 
-  if (representation === representations.indexed) {
-    buffers.push(HeaderSetCompressor.integer(header.value + 1, representation.prefix));
-    if (header.value == -1) {
-      if (header.index) {
-        buffers.push(HeaderSetCompressor.integer(0x80, 8));
-      } else {
-        buffers.push(HeaderSetCompressor.integer(header.name, 7));
-      }
+  if (representation === representations.contextUpdate) {
+    if (header.clearReferenceSet) {
+      var buffer = new Buffer('10', 'hex');
+      buffers.push([buffer]);
+    } else {
+      buffers.push(HeaderSetCompressor.integer(header.newMaxSize, 4));
     }
+  }
+
+  else if (representation === representations.indexed) {
+    buffers.push(HeaderSetCompressor.integer(header.value + 1, representation.prefix));
   }
 
   else {
@@ -1141,22 +1169,34 @@ HeaderSetDecompressor.header = function readHeader(buffer) {
   if (firstByte & 0x80) {
     representation = representations.indexed;
   } else if (firstByte & 0x40) {
-    representation = representations.literal;
-  } else {
     representation = representations.literalIncremental;
+  } else if (firstByte & 0x20) {
+    representation = representations.contextUpdate;
+  } else if (firstByte & 0x10) {
+    representation = representations.literalNeverIndexed;
+  } else {
+    representation = representations.literal;
   }
 
-  if (representation === representations.indexed) {
-    header.value = header.name = HeaderSetDecompressor.integer(buffer, representation.prefix) - 1;
-    header.index = false;
-    if (header.value === -1) {
-      if (buffer[buffer.cursor] & 0x80) {
-        header.index = true;
-        buffer.cursor += 1;
-      } else {
-        header.name = HeaderSetDecompressor.integer(buffer, 7);
-      }
+  header.value = header.name = -1;
+  header.index = false;
+  header.contextUpdate = false;
+  header.clearReferenceSet = false;
+  header.newMaxSize = 0;
+  header.mustNeverIndex = false;
+
+  if (representation === representations.contextUpdate) {
+    header.contextUpdate = true;
+    if (firstByte & 0x10) {
+      header.clearReferenceSet = true;
+      buffer.cursor += 1;
+    } else {
+      header.newMaxSize = HeaderSetDecompressor.integer(buffer, 4);
     }
+  }
+
+  else if (representation === representations.indexed) {
+    header.value = header.name = HeaderSetDecompressor.integer(buffer, representation.prefix) - 1;
   }
 
   else {
@@ -1166,6 +1206,7 @@ HeaderSetDecompressor.header = function readHeader(buffer) {
     }
     header.value = HeaderSetDecompressor.string(buffer);
     header.index = (representation === representations.literalIncremental);
+    header.mustNeverIndex = (representation === representations.literalNeverIndexed);
   }
 
   return header;

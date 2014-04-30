@@ -21,11 +21,12 @@ for line in sys.stdin:
     obracket = line.rfind('[')
     nbits = int(line[obracket + 1:-1])
 
-    ascii = int(line[10:13].strip())
+    oparen = line.find(' (')
+    ascii = int(line[oparen + 2:oparen + 5].strip())
 
-    bar = line.find('|', 9)
-    obracket = line.find('[', bar)
-    bpat = line[bar + 1:obracket - 1].strip().rstrip('|')
+    bar = line.find('|', oparen)
+    space = line.find(' ', bar)
+    bpat = line[bar + 1:space].strip().rstrip('|')
 
     characters.append({'ascii': ascii, 'nbits': nbits, 'bpat': bpat})
 

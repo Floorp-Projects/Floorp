@@ -56,14 +56,14 @@ XPCTraceableVariant::~XPCTraceableVariant()
 {
     jsval val = GetJSValPreserveColor();
 
-    MOZ_ASSERT(JSVAL_IS_GCTHING(val), "Must be traceable or unlinked");
+    MOZ_ASSERT(val.isGCThing(), "Must be traceable or unlinked");
 
     // If val is JSVAL_STRING, we don't need to clean anything up; simply
     // removing the string from the root set is good.
-    if (!JSVAL_IS_STRING(val))
+    if (!val.isString())
         nsVariant::Cleanup(&mData);
 
-    if (!JSVAL_IS_NULL(val))
+    if (!val.isNull())
         RemoveFromRootSet();
 }
 
@@ -87,7 +87,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
     JS::Value val = tmp->GetJSValPreserveColor();
     if (val.isObjectOrNull()) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mJSVal");
-        cb.NoteJSChild(JSVAL_TO_OBJECT(val));
+        cb.NoteJSChild(val.toObjectOrNull());
     }
 
     nsVariant::Traverse(tmp->mData, cb);
@@ -384,7 +384,7 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
     nsresult rv = variant->GetAsJSVal(&realVal);
 
     if (NS_SUCCEEDED(rv) &&
-        (JSVAL_IS_PRIMITIVE(realVal) ||
+        (realVal.isPrimitive() ||
          type == nsIDataType::VTYPE_ARRAY ||
          type == nsIDataType::VTYPE_EMPTY_ARRAY ||
          type == nsIDataType::VTYPE_ID)) {

@@ -11,5 +11,5 @@ interface nsIFxAccountsUIGlue : nsISupports
   jsval signInFlow();
 
   // Returns a Promise.
-  jsval refreshAuthentication(in DOMString accountId);
+  jsval refreshAuthentication(in DOMString email);
 };

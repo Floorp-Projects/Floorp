@@ -152,6 +152,30 @@ CanLazilyParse(ExclusiveContext *cx, const ReadOnlyCompileOptions &options)
           cx->compartment()->runtimeFromAnyThread()->debugHooks.newScriptHook);
 }
 
+static void
+MarkFunctionsWithinEvalScript(JSScript *script)
+{
+    // Mark top level functions in an eval script as being within an eval and,
+    // if applicable, inside a with statement.
+
+    if (!script->hasObjects())
+        return;
+
+    ObjectArray *objects = script->objects();
+    size_t start = script->innerObjectsStart();
+
+    for (size_t i = start; i < objects->length; i++) {
+        JSObject *obj = objects->vector[i];
+        if (obj->is<JSFunction>()) {
+            JSFunction *fun = &obj->as<JSFunction>();
+            if (fun->hasScript())
+                fun->nonLazyScript()->setDirectlyInsideEval();
+            else if (fun->isInterpretedLazy())
+                fun->lazyScript()->setDirectlyInsideEval();
+        }
+    }
+}
+
 void
 frontend::MaybeCallSourceHandler(JSContext *cx, const ReadOnlyCompileOptions &options,
                                  SourceBufferHolder &srcBuf)
@@ -419,6 +443,12 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
 
     if (!JSScript::fullyInitFromEmitter(cx, script, &bce))
         return nullptr;
+
+    // Note that this marking must happen before we tell Debugger
+    // about the new script, in case Debugger delazifies the script's
+    // inner functions.
+    if (options.forEval)
+        MarkFunctionsWithinEvalScript(script);
 
     bce.tellDebuggerAboutCompiledScript(cx);
 

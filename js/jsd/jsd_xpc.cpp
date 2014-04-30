@@ -2158,21 +2158,21 @@ jsdValue::GetJsType (uint32_t *_rval)
     ASSERT_VALID_EPHEMERAL;
     JS::RootedValue val(JSD_GetJSRuntime(mCx), JSD_GetValueWrappedJSVal (mCx, mValue));
 
-    if (JSVAL_IS_NULL(val))
+    if (val.isNull())
         *_rval = TYPE_NULL;
-    else if (JSVAL_IS_BOOLEAN(val))
+    else if (val.isBoolean())
         *_rval = TYPE_BOOLEAN;
-    else if (JSVAL_IS_DOUBLE(val))
+    else if (val.isDouble())
         *_rval = TYPE_DOUBLE;
-    else if (JSVAL_IS_INT(val))
+    else if (val.isInt32())
         *_rval = TYPE_INT;
-    else if (JSVAL_IS_STRING(val))
+    else if (val.isString())
         *_rval = TYPE_STRING;
-    else if (JSVAL_IS_VOID(val))
+    else if (val.isUndefined())
         *_rval = TYPE_VOID;
     else if (JSD_IsValueFunction (mCx, mValue))
         *_rval = TYPE_FUNCTION;
-    else if (!JSVAL_IS_PRIMITIVE(val))
+    else if (!val.isPrimitive())
         *_rval = TYPE_OBJECT;
     else
         NS_ASSERTION (0, "Value has no discernible type.");
