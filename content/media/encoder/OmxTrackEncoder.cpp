@@ -184,7 +184,7 @@ OmxAudioTrackEncoder::AppendEncodedFrames(EncodedFrameContainer& aContainer)
       audiodata->SetFrameType(isCSD ?
         EncodedFrame::AMR_AUDIO_CSD : EncodedFrame::AMR_AUDIO_FRAME);
     } else {
-      MOZ_ASSERT("audio codec not supported");
+      MOZ_ASSERT(false, "audio codec not supported");
     }
     audiodata->SetTimeStamp(outTimeUs);
     rv = audiodata->SwapInFrameData(frameData);
