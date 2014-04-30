@@ -443,42 +443,30 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
     JS_ASSERT(!aheader.markOverflow);
     JS_ASSERT(!aheader.allocatedDuringIncremental);
 
-    uintptr_t thing = thingsStart(thingKind);
-    uintptr_t firstThingOrSuccessorOfLastMarkedThing = thing;
+    uintptr_t firstThing = thingsStart(thingKind);
+    uintptr_t firstThingOrSuccessorOfLastMarkedThing = firstThing;
     uintptr_t lastByte = thingsEnd() - 1;
-
-    FreeSpan nextFree(aheader.getFirstFreeSpan());
-    nextFree.checkSpan();
 
     FreeSpan newListHead;
     FreeSpan *newListTail = &newListHead;
     size_t nmarked = 0;
-    for (;; thing += thingSize) {
-        JS_ASSERT(thing <= lastByte + 1);
-        if (thing == nextFree.first) {
-            JS_ASSERT(nextFree.last <= lastByte);
-            if (nextFree.last == lastByte)
-                break;
-            JS_ASSERT(Arena::isAligned(nextFree.last, thingSize));
-            thing = nextFree.last;
-            nextFree = *nextFree.nextSpan();
-            nextFree.checkSpan();
-        } else {
-            T *t = reinterpret_cast<T *>(thing);
-            if (t->isMarked()) {
-                if (thing != firstThingOrSuccessorOfLastMarkedThing) {
-                    // We just finished passing over one or more free things,
-                    // so record a new FreeSpan.
-                    newListTail->first = firstThingOrSuccessorOfLastMarkedThing;
-                    newListTail->last = thing - thingSize;
-                    newListTail = newListTail->nextSpanUnchecked(thingSize);
-                }
-                firstThingOrSuccessorOfLastMarkedThing = thing + thingSize;
-                nmarked++;
-            } else {
-                t->finalize(fop);
-                JS_POISON(t, JS_SWEPT_TENURED_PATTERN, thingSize);
+
+    for (ArenaCellIterUnderFinalize i(&aheader); !i.done(); i.next()) {
+        T *t = i.get<T>();
+        if (t->isMarked()) {
+            uintptr_t thing = reinterpret_cast<uintptr_t>(t);
+            if (thing != firstThingOrSuccessorOfLastMarkedThing) {
+                // We just finished passing over one or more free things,
+                // so record a new FreeSpan.
+                newListTail->first = firstThingOrSuccessorOfLastMarkedThing;
+                newListTail->last = thing - thingSize;
+                newListTail = newListTail->nextSpanUnchecked(thingSize);
             }
+            firstThingOrSuccessorOfLastMarkedThing = thing + thingSize;
+            nmarked++;
+        } else {
+            t->finalize(fop);
+            JS_POISON(t, JS_SWEPT_TENURED_PATTERN, thingSize);
         }
     }
 
