@@ -471,8 +471,9 @@ RegExpShared::compile(JSContext *cx, bool matchOnly)
 bool
 RegExpShared::compile(JSContext *cx, JSLinearString &pattern, bool matchOnly)
 {
-    if (!StringHasRegExpMetaChars(pattern.chars(), pattern.length())) {
+    if (!ignoreCase() && !StringHasRegExpMetaChars(pattern.chars(), pattern.length())) {
         canStringMatch = true;
+        parenCount = 0;
         return true;
     }
 
