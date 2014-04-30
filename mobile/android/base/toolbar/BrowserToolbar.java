@@ -853,10 +853,10 @@ public class BrowserToolbar extends ThemedRelativeLayout
             urlEditLayout.prepareShowAnimation(animator);
         }
 
-        final View viewToShow = (showEditLayout ? urlEditLayout : urlDisplayLayout);
-        final View viewToHide = (showEditLayout ? urlDisplayLayout : urlEditLayout);
-
         if (animator == null) {
+            final View viewToShow = (showEditLayout ? urlEditLayout : urlDisplayLayout);
+            final View viewToHide = (showEditLayout ? urlDisplayLayout : urlEditLayout);
+
             viewToHide.setVisibility(View.GONE);
             viewToShow.setVisibility(View.VISIBLE);
 
@@ -865,29 +865,23 @@ public class BrowserToolbar extends ThemedRelativeLayout
             return;
         }
 
-        ViewHelper.setAlpha(viewToShow, 0.0f);
-        animator.attach(viewToShow,
-                        PropertyAnimator.Property.ALPHA,
-                        1.0f);
-
-        animator.attach(viewToHide,
-                        PropertyAnimator.Property.ALPHA,
-                        0.0f);
-
         animator.addPropertyAnimationListener(new PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() {
-                viewToShow.setVisibility(View.VISIBLE);
                 if (!showEditLayout) {
+                    urlEditLayout.setVisibility(View.GONE);
+                    urlDisplayLayout.setVisibility(View.VISIBLE);
+
                     setCancelVisibility(View.INVISIBLE);
                 }
             }
 
             @Override
             public void onPropertyAnimationEnd() {
-                viewToHide.setVisibility(View.GONE);
-                ViewHelper.setAlpha(viewToHide, 1.0f);
                 if (showEditLayout) {
+                    urlDisplayLayout.setVisibility(View.GONE);
+                    urlEditLayout.setVisibility(View.VISIBLE);
+
                     setCancelVisibility(View.VISIBLE);
                 }
             }
