@@ -501,7 +501,8 @@ this.SocialService = {
   },
 
   _manifestFromData: function(type, data, principal) {
-    let sameOriginRequired = ['workerURL', 'sidebarURL', 'shareURL', 'statusURL', 'markURL'];
+    let featureURLs = ['workerURL', 'sidebarURL', 'shareURL', 'statusURL', 'markURL'];
+    let resolveURLs = featureURLs.concat(['postActivationURL']);
 
     if (type == 'directory') {
       // directory provided manifests must have origin in manifest, use that
@@ -515,11 +516,10 @@ this.SocialService = {
     // force/fixup origin
     data.origin = principal.origin;
 
-    // workerURL, sidebarURL is required and must be same-origin
     // iconURL and name are required
     // iconURL may be a different origin (CDN or data url support) if this is
     // a whitelisted or directory listed provider
-    let providerHasFeatures = [url for (url of sameOriginRequired) if (data[url])].length > 0;
+    let providerHasFeatures = [url for (url of featureURLs) if (data[url])].length > 0;
     if (!providerHasFeatures) {
       Cu.reportError("SocialService.manifestFromData manifest missing required urls.");
       return null;
@@ -528,12 +528,17 @@ this.SocialService = {
       Cu.reportError("SocialService.manifestFromData manifest missing name or iconURL.");
       return null;
     }
-    for (let url of sameOriginRequired) {
+    for (let url of resolveURLs) {
       if (data[url]) {
         try {
-          data[url] = Services.io.newURI(principal.URI.resolve(data[url]), null, null).spec;
+          let resolved = Services.io.newURI(principal.URI.resolve(data[url]), null, null);
+          if (!(resolved.schemeIs("http") || resolved.schemeIs("https"))) {
+            Cu.reportError("SocialService.manifestFromData unsupported scheme '" + resolved.scheme + "' for " + principal.origin);
+            return null;
+          }
+          data[url] = resolved.spec;
         } catch(e) {
-          Cu.reportError("SocialService.manifestFromData same-origin missmatch in manifest for " + principal.origin);
+          Cu.reportError("SocialService.manifestFromData unable to resolve '" + url + "' for " + principal.origin);
           return null;
         }
       }
@@ -737,6 +742,7 @@ function SocialProvider(input) {
   this.markURL = input.markURL;
   this.markedIcon = input.markedIcon;
   this.unmarkedIcon = input.unmarkedIcon;
+  this.postActivationURL = input.postActivationURL;
   this.origin = input.origin;
   let originUri = Services.io.newURI(input.origin, null, null);
   this.principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(originUri);
