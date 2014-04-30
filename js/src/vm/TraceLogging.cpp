@@ -835,6 +835,10 @@ TraceLogging::lazyInit()
         enabledTextIds[TraceLogger::EliminateDeadCode] = true;
         enabledTextIds[TraceLogger::EdgeCaseAnalysis] = true;
         enabledTextIds[TraceLogger::EliminateRedundantChecks] = true;
+        enabledTextIds[TraceLogger::GenerateLIR] = true;
+        enabledTextIds[TraceLogger::RegisterAllocation] = true;
+        enabledTextIds[TraceLogger::UnsplitEdges] = true;
+        enabledTextIds[TraceLogger::GenerateCode] = true;
     }
 
     const char *options = getenv("TLOPTIONS");
