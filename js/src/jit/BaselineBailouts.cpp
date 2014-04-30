@@ -387,12 +387,12 @@ static inline void*
 GetStubReturnAddress(JSContext *cx, jsbytecode *pc)
 {
     if (IsGetPropPC(pc))
-        return cx->compartment()->jitCompartment()->baselineGetPropReturnFromIonAddr();
+        return cx->compartment()->jitCompartment()->baselineGetPropReturnAddr();
     if (IsSetPropPC(pc))
-        return cx->compartment()->jitCompartment()->baselineSetPropReturnFromIonAddr();
+        return cx->compartment()->jitCompartment()->baselineSetPropReturnAddr();
     // This should be a call op of some kind, now.
     JS_ASSERT(IsCallPC(pc));
-    return cx->compartment()->jitCompartment()->baselineCallReturnFromIonAddr();
+    return cx->compartment()->jitCompartment()->baselineCallReturnAddr();
 }
 
 static inline jsbytecode *
