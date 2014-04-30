@@ -751,18 +751,7 @@ public:
     eventInit.mBubbles = false;
     eventInit.mCancelable = false;
     eventInit.mRevisionId = mRevisionId;
-
-    // TODO Bug 981984: OwningStringOrUnsignedLong union value cannot be set if
-    // the type is not matched.
-    //
-    // This is a work-around to clean up the OwningStringOrUnsignedLong value
-    // initialized by DataStoreChangeEventInit, which will always set |mId| to
-    // a UnsignedLong type by default (see DataStoreChangeEvent.webidl). This
-    // will fail the later assignment when the type of value we want to assign
-    // is actually String.
-    // eventInit.mId.~OwningStringOrUnsignedLong();
     eventInit.mId = mId;
-
     eventInit.mOperation = mOperation;
     eventInit.mOwner = mOwner;
 
