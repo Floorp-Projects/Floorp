@@ -12,7 +12,10 @@
 #
 # NB: This will cause the following files to be overwritten if they are in
 # the output directory:
-#  cert8.db, key3.db, secmod.db, ocsp-ca.der, ocsp-other-ca.der
+#  cert8.db, key3.db, secmod.db, ocsp-ca.der, ocsp-other-ca.der, default-ee.der
+# NB: You must run genHPKPStaticPins.js after running this file, since its
+# output (StaticHPKPins.h) depends on default-ee.der
+
 set -x
 set -e
 
@@ -25,11 +28,13 @@ OBJDIR=${1}
 OUTPUT_DIR=${2}
 RUN_MOZILLA="$OBJDIR/dist/bin/run-mozilla.sh"
 CERTUTIL="$OBJDIR/dist/bin/certutil"
+# On BSD, mktemp requires either a template or a prefix.
+MKTEMP="mktemp temp.XXXX"
 
-NOISE_FILE=`mktemp`
+NOISE_FILE=`$MKTEMP`
 # Make a good effort at putting something unique in the noise file.
 date +%s%N  > "$NOISE_FILE"
-PASSWORD_FILE=`mktemp`
+PASSWORD_FILE=`$MKTEMP`
 
 function cleanup {
   rm -f "$NOISE_FILE" "$PASSWORD_FILE"
@@ -134,7 +139,8 @@ function make_delegated {
 
 make_CA testCA 'CN=Test CA' test-ca.der
 make_CA otherCA 'CN=Other test CA' other-test-ca.der
-make_EE localhostAndExampleCom 'CN=Test End-entity' testCA "localhost,*.example.com"
+make_EE localhostAndExampleCom 'CN=Test End-entity' testCA "localhost,*.example.com,*.pinning.example.com"
+
 $RUN_MOZILLA $CERTUTIL -d $OUTPUT_DIR -L -n localhostAndExampleCom -r > $OUTPUT_DIR/default-ee.der
 # A cert that is like localhostAndExampleCom, but with a different serial number for
 # testing the "OCSP response is from the right issuer, but it is for the wrong cert"
