@@ -152,7 +152,11 @@ private:
 class Http2Compressor MOZ_FINAL : public Http2BaseCompressor
 {
 public:
-  Http2Compressor() : mParsedContentLength(-1) { };
+  Http2Compressor() : mParsedContentLength(-1),
+                      mMaxBufferSetting(kDefaultMaxBuffer),
+                      mBufferSizeChangeWaiting(false),
+                      mLowestBufferSizeWaiting(0)
+  { };
   virtual ~Http2Compressor() { }
 
   // HTTP/1 formatted header block as input - HTTP/2 formatted
@@ -188,9 +192,12 @@ private:
   void EncodeInteger(uint32_t prefixLen, uint32_t val);
   void ProcessHeader(const nvPair inputPair, bool neverIndex);
   void HuffmanAppend(const nsCString &value);
+  void EncodeTableSizeChange(uint32_t newMaxSize);
 
   int64_t mParsedContentLength;
   uint32_t mMaxBufferSetting;
+  bool mBufferSizeChangeWaiting;
+  uint32_t mLowestBufferSizeWaiting;
 
   nsAutoTArray<uint32_t, 64> mImpliedReferenceSet;
 };
