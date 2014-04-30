@@ -70,6 +70,7 @@ gujar.sources += [
     'util/StringUtils.java',
     'util/ThreadUtils.java',
     'util/UiAsyncTask.java',
+    'util/WebActivityMapper.java',
 ]
 gujar.extra_jars = [
     'gecko-mozglue.jar'
@@ -287,6 +288,7 @@ gbjar.sources += [
     'home/TopSitesThumbnailView.java',
     'home/TwoLinePageRow.java',
     'InputMethods.java',
+    'IntentHelper.java',
     'JavaAddonManager.java',
     'LightweightTheme.java',
     'LightweightThemeDrawable.java',
