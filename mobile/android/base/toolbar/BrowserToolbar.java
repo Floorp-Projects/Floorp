@@ -34,7 +34,6 @@ import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.widget.ThemedImageButton;
 import org.mozilla.gecko.widget.ThemedImageView;
 import org.mozilla.gecko.widget.ThemedRelativeLayout;
-import org.mozilla.gecko.widget.ThemedView;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -137,7 +136,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
     private MenuPopup menuPopup;
     private List<View> focusOrder;
 
-    private final ThemedView editSeparator;
     private final View editCancel;
 
     private boolean shouldShrinkURLBar = false;
@@ -220,7 +218,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
         actionItemBar = (LinearLayout) findViewById(R.id.menu_items);
         hasSoftMenuButton = !HardwareUtils.hasMenuButton();
 
-        editSeparator = (ThemedView) findViewById(R.id.edit_separator);
         editCancel = findViewById(R.id.edit_cancel);
 
         // We use different layouts on phones and tablets, so adjust the focus
@@ -601,15 +598,15 @@ public class BrowserToolbar extends ThemedRelativeLayout
     }
 
     private int getUrlBarEntryTranslation() {
-        if (editSeparator == null) {
+        if (editCancel == null) {
             // We are on tablet, and there is no animation so return a translation of 0.
             return 0;
         }
 
         // We would ideally use the right-most point of the edit layout instead of the
         // edit separator and its margin, but it is not inflated when this code initially runs.
-        final LayoutParams lp = (LayoutParams) editSeparator.getLayoutParams();
-        return editSeparator.getLeft() - lp.leftMargin - urlBarEntry.getRight();
+        final LayoutParams lp = (LayoutParams) editCancel.getLayoutParams();
+        return editCancel.getLeft() - lp.leftMargin - urlBarEntry.getRight();
     }
 
     private int getUrlBarCurveTranslation() {
@@ -897,8 +894,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
     }
 
     private void setCancelVisibility(final int visibility) {
-        if (editSeparator != null && editCancel != null) {
-            editSeparator.setVisibility(visibility);
+        if (editCancel != null) {
             editCancel.setVisibility(visibility);
         }
     }
@@ -1338,9 +1334,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
         menuButton.setPrivateMode(isPrivate);
         menuIcon.setPrivateMode(isPrivate);
         urlEditLayout.setPrivateMode(isPrivate);
-        if (editSeparator != null) {
-            editSeparator.setPrivateMode(isPrivate);
-        }
 
         if (backButton instanceof BackButton) {
             ((BackButton) backButton).setPrivateMode(isPrivate);
