@@ -139,15 +139,16 @@ class ArenaIter
         }
     }
 
-    bool done() {
+    bool done() const {
         return !aheader;
     }
 
-    ArenaHeader *get() {
+    ArenaHeader *get() const {
         return aheader;
     }
 
     void next() {
+        JS_ASSERT(!done());
         aheader = aheader->next;
         if (!aheader) {
             aheader = remainingHeader;
@@ -242,69 +243,43 @@ class ArenaCellIterUnderGC : public ArenaCellIterImpl
 
 class ZoneCellIterImpl
 {
-    size_t firstThingOffset;
-    size_t thingSize;
-    ArenaIter aiter;
-    FreeSpan firstSpan;
-    const FreeSpan *span;
-    uintptr_t thing;
-    Cell *cell;
+    ArenaIter arenaIter;
+    ArenaCellIterImpl cellIter;
 
   protected:
-    ZoneCellIterImpl() {
-    }
-
-    void initSpan(JS::Zone *zone, AllocKind kind) {
-        JS_ASSERT(zone->allocator.arenas.isSynchronizedFreeList(kind));
-        firstThingOffset = Arena::firstThingOffset(kind);
-        thingSize = Arena::thingSize(kind);
-        firstSpan.initAsEmpty();
-        span = &firstSpan;
-        thing = span->first;
-    }
+    ZoneCellIterImpl() {}
 
     void init(JS::Zone *zone, AllocKind kind) {
-        initSpan(zone, kind);
-        aiter.init(zone, kind);
-        next();
+        JS_ASSERT(zone->allocator.arenas.isSynchronizedFreeList(kind));
+        arenaIter.init(zone, kind);
+        if (!arenaIter.done())
+            cellIter.init(arenaIter.get());
     }
 
   public:
     bool done() const {
-        return !cell;
+        return arenaIter.done();
     }
 
     template<typename T> T *get() const {
         JS_ASSERT(!done());
-        return static_cast<T *>(cell);
+        return cellIter.get<T>();
     }
 
     Cell *getCell() const {
         JS_ASSERT(!done());
-        return cell;
+        return cellIter.getCell();
     }
 
     void next() {
-        for (;;) {
-            if (thing != span->first)
-                break;
-            if (MOZ_LIKELY(span->hasNext())) {
-                thing = span->last + thingSize;
-                span = span->nextSpan();
-                break;
-            }
-            if (aiter.done()) {
-                cell = nullptr;
-                return;
-            }
-            ArenaHeader *aheader = aiter.get();
-            firstSpan = aheader->getFirstFreeSpan();
-            span = &firstSpan;
-            thing = aheader->arenaAddress() | firstThingOffset;
-            aiter.next();
+        JS_ASSERT(!done());
+        cellIter.next();
+        if (cellIter.done()) {
+            JS_ASSERT(!arenaIter.done());
+            arenaIter.next();
+            if (!arenaIter.done())
+                cellIter.reset(arenaIter.get());
         }
-        cell = reinterpret_cast<Cell *>(thing);
-        thing += thingSize;
     }
 };
 
