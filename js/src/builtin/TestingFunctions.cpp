@@ -1127,10 +1127,14 @@ ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
     }
 
     int stackIndex = 0;
+    RootedId id(cx);
+    RootedValue callee(cx);
     for (NonBuiltinScriptFrameIter iter(cx); !iter.done(); ++iter) {
         if (iter.isFunctionFrame() && iter.compartment() == cx->compartment()) {
-            if (!JS_DefinePropertyById(cx, stack, INT_TO_JSID(stackIndex), ObjectValue(*iter.callee()),
-                                       JS_PropertyStub, JS_StrictPropertyStub, 0))
+            id = INT_TO_JSID(stackIndex);
+            RootedObject callee(cx, iter.callee());
+            if (!JS_DefinePropertyById(cx, stack, id, callee, 0,
+                                       JS_PropertyStub, JS_StrictPropertyStub))
             {
                 return false;
             }

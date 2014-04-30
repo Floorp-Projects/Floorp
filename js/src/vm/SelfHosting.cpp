@@ -1085,7 +1085,7 @@ CloneProperties(JSContext *cx, HandleObject selfHostedObject, HandleObject clone
         if (!GetUnclonedValue(cx, selfHostedObject, id, &selfHostedValue))
             return false;
         if (!CloneValue(cx, selfHostedValue, &val) ||
-            !JS_DefinePropertyById(cx, clone, id, val.get(), nullptr, nullptr, 0))
+            !JS_DefinePropertyById(cx, clone, id, val, 0))
         {
             return false;
         }

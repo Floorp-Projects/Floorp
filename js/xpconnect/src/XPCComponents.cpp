@@ -323,9 +323,7 @@ nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
                     // Assign, not compare
                     (idobj = holder->GetJSObject())) {
                     *objp = obj;
-                    *_retval = JS_DefinePropertyById(cx, obj, id,
-                                                     OBJECT_TO_JSVAL(idobj),
-                                                     nullptr, nullptr,
+                    *_retval = JS_DefinePropertyById(cx, obj, id, idobj,
                                                      JSPROP_ENUMERATE |
                                                      JSPROP_READONLY |
                                                      JSPROP_PERMANENT);
@@ -579,9 +577,7 @@ nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
                 (idobj = holder->GetJSObject())) {
                 *objp = obj;
                 *_retval =
-                    JS_DefinePropertyById(cx, obj, id,
-                                          OBJECT_TO_JSVAL(idobj),
-                                          nullptr, nullptr,
+                    JS_DefinePropertyById(cx, obj, id, idobj,
                                           JSPROP_ENUMERATE |
                                           JSPROP_READONLY |
                                           JSPROP_PERMANENT);
@@ -821,9 +817,7 @@ nsXPCComponents_Classes::NewResolve(nsIXPConnectWrappedNative *wrapper,
                     // Assign, not compare
                         (idobj = holder->GetJSObject())) {
                     *objp = obj;
-                    *_retval = JS_DefinePropertyById(cx, obj, id,
-                                                     OBJECT_TO_JSVAL(idobj),
-                                                     nullptr, nullptr,
+                    *_retval = JS_DefinePropertyById(cx, obj, id, idobj,
                                                      JSPROP_ENUMERATE |
                                                      JSPROP_READONLY |
                                                      JSPROP_PERMANENT);
@@ -1082,9 +1076,7 @@ nsXPCComponents_ClassesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
                     // Assign, not compare
                     (idobj = holder->GetJSObject())) {
                     *objp = obj;
-                    *_retval = JS_DefinePropertyById(cx, obj, id,
-                                                     ObjectValue(*idobj),
-                                                     nullptr, nullptr,
+                    *_retval = JS_DefinePropertyById(cx, obj, id, idobj,
                                                      JSPROP_ENUMERATE |
                                                      JSPROP_READONLY |
                                                      JSPROP_PERMANENT);
@@ -1303,11 +1295,8 @@ nsXPCComponents_Results::NewResolve(nsIXPConnectWrappedNative *wrapper,
         nsresult rv;
         while (nsXPCException::IterateNSResults(&rv, &rv_name, nullptr, &iter)) {
             if (!strcmp(name.ptr(), rv_name)) {
-                jsval val = JS_NumberValue((double)rv);
-
                 *objp = obj;
-                if (!JS_DefinePropertyById(cx, obj, id, val,
-                                           nullptr, nullptr,
+                if (!JS_DefinePropertyById(cx, obj, id, (uint32_t)rv,
                                            JSPROP_ENUMERATE |
                                            JSPROP_READONLY |
                                            JSPROP_PERMANENT)) {
@@ -2962,9 +2951,8 @@ xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &opti
             return false;
 
         if (define) {
-            if (!JS_DefinePropertyById(cx, scope, options.defineAs, ObjectValue(*obj),
-                                       JS_PropertyStub, JS_StrictPropertyStub,
-                                       JSPROP_ENUMERATE))
+            if (!JS_DefinePropertyById(cx, scope, options.defineAs, obj, JSPROP_ENUMERATE,
+                                       JS_PropertyStub, JS_StrictPropertyStub))
                 return false;
         }
     }
