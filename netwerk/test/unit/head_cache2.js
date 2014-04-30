@@ -289,9 +289,9 @@ VisitCallback.prototype =
     if (!this.entries)
       this.notify();
   },
-  onCacheEntryInfo: function(aURI, aIdEnhance, aDataSize, aFetchCount, aLastModifiedTime, aExpirationTime)
+  onCacheEntryInfo: function(entry)
   {
-    var key = (aIdEnhance ? (aIdEnhance + ":") : "") + aURI.asciiSpec;
+    var key = entry.key;
     LOG_C2(this, "onCacheEntryInfo: key=" + key);
 
     do_check_true(!!this.entries);

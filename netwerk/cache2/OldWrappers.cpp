@@ -5,9 +5,9 @@
 #include "CacheStorage.h"
 #include "CacheStorageService.h"
 #include "LoadContextInfo.h"
-#include "nsCacheService.h"
 
 #include "nsIURI.h"
+#include "nsICacheService.h"
 #include "nsICacheSession.h"
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheService.h"
@@ -19,7 +19,6 @@
 
 #include "nsServiceManagerUtils.h"
 #include "nsNetCID.h"
-#include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "mozilla/Telemetry.h"
 
@@ -125,31 +124,43 @@ NS_IMETHODIMP DoomCallbackWrapper::OnCacheEntryDoomed(nsresult status)
   return NS_OK;
 }
 
-} // anon
-
-// _OldVisitCallbackWrapper
 // Receives visit callbacks from the old API and forwards it to the new API
 
-NS_IMPL_ISUPPORTS(_OldVisitCallbackWrapper, nsICacheVisitor)
-
-_OldVisitCallbackWrapper::~_OldVisitCallbackWrapper()
+class VisitCallbackWrapper : public nsICacheVisitor
 {
-  if (!mHit) {
-    // The device has not been found, to not break the chain, simulate
-    // storage info callback.
-    mCB->OnCacheStorageInfo(0, 0, 0, nullptr);
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSICACHEVISITOR
+
+  VisitCallbackWrapper(char* const deviceID,
+                       nsICacheStorageVisitor* cb,
+                       bool visitEntries)
+  : mCB(cb)
+  , mVisitEntries(visitEntries)
+  , mDeviceID(deviceID)
+  {
+    MOZ_COUNT_CTOR(VisitCallbackWrapper);
   }
 
-  if (mVisitEntries) {
+private:
+  virtual ~VisitCallbackWrapper();
+  nsCOMPtr<nsICacheStorageVisitor> mCB;
+  bool mVisitEntries;
+  char* const mDeviceID;
+};
+
+NS_IMPL_ISUPPORTS(VisitCallbackWrapper, nsICacheVisitor)
+
+VisitCallbackWrapper::~VisitCallbackWrapper()
+{
+  if (mVisitEntries)
     mCB->OnCacheEntryVisitCompleted();
-  }
 
-  MOZ_COUNT_DTOR(_OldVisitCallbackWrapper);
+  MOZ_COUNT_DTOR(VisitCallbackWrapper);
 }
 
-NS_IMETHODIMP _OldVisitCallbackWrapper::VisitDevice(const char * deviceID,
-                                                    nsICacheDeviceInfo *deviceInfo,
-                                                    bool *_retval)
+NS_IMETHODIMP VisitCallbackWrapper::VisitDevice(const char * deviceID,
+                                                nsICacheDeviceInfo *deviceInfo,
+                                                bool *_retval)
 {
   if (!mCB)
     return NS_ERROR_NULL_POINTER;
@@ -160,119 +171,37 @@ NS_IMETHODIMP _OldVisitCallbackWrapper::VisitDevice(const char * deviceID,
     return NS_OK;
   }
 
-  mHit = true;
-
   nsresult rv;
 
-  uint32_t capacity;
-  rv = deviceInfo->GetMaximumSize(&capacity);
+  uint32_t entryCount;
+  rv = deviceInfo->GetEntryCount(&entryCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIFile> dir;
-  if (!strcmp(mDeviceID, "disk")) {
-    nsCacheService::GetDiskCacheDirectory(getter_AddRefs(dir));
-  } else if (!strcmp(mDeviceID, "offline")) {
-    nsCacheService::GetAppCacheDirectory(getter_AddRefs(dir));
-  }
+  uint32_t totalSize;
+  rv = deviceInfo->GetTotalSize(&totalSize);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mLoadInfo->IsAnonymous()) {
-    // Anonymous visiting reports 0, 0 since we cannot count that
-    // early the number of anon entries.
-    mCB->OnCacheStorageInfo(0, 0, capacity, dir);
-  } else {
-    // Non-anon visitor counts all non-anon + ALL ANON entries,
-    // there is no way to determine the number of entries when
-    // using the old cache APIs - there is no concept of anonymous
-    // storage.
-    uint32_t entryCount;
-    rv = deviceInfo->GetEntryCount(&entryCount);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint32_t totalSize;
-    rv = deviceInfo->GetTotalSize(&totalSize);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mCB->OnCacheStorageInfo(entryCount, totalSize, capacity, dir);
-  }
-
+  mCB->OnCacheStorageInfo(entryCount, totalSize);
   *_retval = mVisitEntries;
+
   return NS_OK;
 }
 
-NS_IMETHODIMP _OldVisitCallbackWrapper::VisitEntry(const char * deviceID,
-                                                   nsICacheEntryInfo *entryInfo,
-                                                   bool *_retval)
+NS_IMETHODIMP VisitCallbackWrapper::VisitEntry(const char * deviceID,
+                                               nsICacheEntryInfo *entryInfo,
+                                               bool *_retval)
 {
   MOZ_ASSERT(!strcmp(deviceID, mDeviceID));
 
-  nsresult rv;
-
-  *_retval = true;
-
-  // Read all informative properties from the entry.
-  nsXPIDLCString clientId;
-  rv = entryInfo->GetClientID(getter_Copies(clientId));
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  if (mLoadInfo->IsPrivate() !=
-      StringBeginsWith(clientId, NS_LITERAL_CSTRING("HTTP-memory-only-PB"))) {
-    return NS_OK;
-  }
-
-  nsAutoCString cacheKey, enhanceId;
-  rv = entryInfo->GetKey(cacheKey);
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  if (StringBeginsWith(cacheKey, NS_LITERAL_CSTRING("anon&"))) {
-    if (!mLoadInfo->IsAnonymous())
-      return NS_OK;
-
-    cacheKey = Substring(cacheKey, 5, cacheKey.Length());
-  } else if (mLoadInfo->IsAnonymous()) {
-    return NS_OK;
-  }
-
-  if (StringBeginsWith(cacheKey, NS_LITERAL_CSTRING("id="))) {
-    int32_t uriSpecEnd = cacheKey.Find("&uri=");
-    if (uriSpecEnd == kNotFound) // Corrupted, ignore
-      return NS_OK;
-
-    enhanceId = Substring(cacheKey, 3, uriSpecEnd - 3);
-    cacheKey = Substring(cacheKey, uriSpecEnd + 1, cacheKey.Length());
-  }
-
-  if (StringBeginsWith(cacheKey, NS_LITERAL_CSTRING("uri="))) {
-    cacheKey = Substring(cacheKey, 4, cacheKey.Length());
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  // cacheKey is strip of any prefixes
-  rv = NS_NewURI(getter_AddRefs(uri), cacheKey);
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  uint32_t dataSize;
-  if (NS_FAILED(entryInfo->GetDataSize(&dataSize)))
-    dataSize = 0;
-  int32_t fetchCount;
-  if (NS_FAILED(entryInfo->GetFetchCount(&fetchCount)))
-    fetchCount = 0;
-  uint32_t expirationTime;
-  if (NS_FAILED(entryInfo->GetExpirationTime(&expirationTime)))
-    expirationTime = 0;
-  uint32_t lastModified;
-  if (NS_FAILED(entryInfo->GetLastModified(&lastModified)))
-    lastModified = 0;
-
-  // Send them to the consumer.
-  rv = mCB->OnCacheEntryInfo(
-    uri, enhanceId, (int64_t)dataSize, fetchCount, lastModified, expirationTime);
-
+  nsRefPtr<_OldCacheEntryWrapper> wrapper = new _OldCacheEntryWrapper(entryInfo);
+  nsresult rv = mCB->OnCacheEntryInfo(wrapper);
   *_retval = NS_SUCCEEDED(rv);
+
   return NS_OK;
 }
+
+} // anon
+
 
 // _OldGetDiskConsumption
 
@@ -478,35 +407,6 @@ NS_IMETHODIMP _OldCacheEntryWrapper::HasWriteAccess(bool aWriteAllowed_unused, b
   return NS_OK;
 }
 
-namespace { // anon
-
-class MetaDataVisitorWrapper : public nsICacheMetaDataVisitor
-{
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICACHEMETADATAVISITOR
-  MetaDataVisitorWrapper(nsICacheEntryMetaDataVisitor* cb) : mCB(cb) {}
-  virtual ~MetaDataVisitorWrapper() {}
-  nsCOMPtr<nsICacheEntryMetaDataVisitor> mCB;
-};
-
-NS_IMPL_ISUPPORTS(MetaDataVisitorWrapper, nsICacheMetaDataVisitor)
-
-NS_IMETHODIMP
-MetaDataVisitorWrapper::VisitMetaDataElement(char const * key,
-                                             char const * value,
-                                             bool *goon)
-{
-  *goon = true;
-  return mCB->OnMetaDataElement(key, value);
-}
-
-} // anon
-
-NS_IMETHODIMP _OldCacheEntryWrapper::VisitMetaData(nsICacheEntryMetaDataVisitor* cb)
-{
-  nsRefPtr<MetaDataVisitorWrapper> w = new MetaDataVisitorWrapper(cb);
-  return mOldDesc->VisitMetaData(w);
-}
 
 namespace { // anon
 
@@ -1056,10 +956,23 @@ NS_IMETHODIMP _OldStorage::AsyncVisitStorage(nsICacheStorageVisitor* aVisitor,
 
   NS_ENSURE_ARG(aVisitor);
 
+  if (mLoadInfo->IsAnonymous()) {
+    // There is no concept of 'anonymous' storage in the old cache
+    // since anon cache entries are stored in 'non-anon' storage
+    // with a special prefix.
+    // Just fake we have 0 items with 0 consumption.  This at least
+    // prevents displaying double size in the advanced section of
+    // the Options dialog.
+    aVisitor->OnCacheStorageInfo(0, 0);
+    if (aVisitEntries)
+      aVisitor->OnCacheEntryVisitCompleted();
+    return NS_OK;
+  }
+
   nsresult rv;
 
   nsCOMPtr<nsICacheService> serv =
-    do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
+      do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   char* deviceID;
@@ -1071,8 +984,8 @@ NS_IMETHODIMP _OldStorage::AsyncVisitStorage(nsICacheStorageVisitor* aVisitor,
     deviceID = const_cast<char*>("disk");
   }
 
-  nsRefPtr<_OldVisitCallbackWrapper> cb = new _OldVisitCallbackWrapper(
-    deviceID, aVisitor, aVisitEntries, mLoadInfo);
+  nsRefPtr<VisitCallbackWrapper> cb = new VisitCallbackWrapper(
+    deviceID, aVisitor, aVisitEntries);
   rv = serv->VisitEntries(cb);
   NS_ENSURE_SUCCESS(rv, rv);
 

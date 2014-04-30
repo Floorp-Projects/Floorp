@@ -4,19 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsAboutCacheEntry.h"
-#include "nsAboutCache.h"
-#include "nsICacheStorage.h"
-#include "CacheObserver.h"
+#include "nsICacheService.h"
+#include "nsICacheSession.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
 #include "nsEscape.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsAboutProtocolUtils.h"
-#include "nsInputStreamPump.h"
 #include <algorithm>
-
-using namespace mozilla::net;
 
 #define HEXDUMP_MAX_ROWS 16
 
@@ -78,9 +74,7 @@ HexDump(uint32_t *state, const char *buf, int32_t n, nsCString &result)
 
 NS_IMPL_ISUPPORTS(nsAboutCacheEntry,
                   nsIAboutModule,
-                  nsICacheEntryOpenCallback,
-                  nsICacheEntryMetaDataVisitor,
-                  nsIStreamListener)
+                  nsICacheMetaDataVisitor)
 
 //-----------------------------------------------------------------------------
 // nsAboutCacheEntry::nsIAboutModule
@@ -152,158 +146,32 @@ nsresult
 nsAboutCacheEntry::OpenCacheEntry(nsIURI *uri)
 {
     nsresult rv;
+    nsAutoCString clientID, key;
+    bool streamBased = true;
 
-    rv = ParseURI(uri, mStorageName, getter_AddRefs(mLoadInfo),
-                       mEnhanceId, getter_AddRefs(mCacheURI));
+    rv = ParseURI(uri, clientID, streamBased, key);
     if (NS_FAILED(rv)) return rv;
 
-    if (!CacheObserver::UseNewCache() &&
-        mLoadInfo->IsPrivate() &&
-        mStorageName == NS_LITERAL_CSTRING("disk")) {
-        // The cache v1 is storing all private entries in the memory-only
-        // cache, so it would not be found in the v1 disk cache.
-        mStorageName = NS_LITERAL_CSTRING("memory");
-    }
-
-    return OpenCacheEntry();
-}
-
-nsresult
-nsAboutCacheEntry::OpenCacheEntry()
-{
-    nsresult rv;
-
-    nsCOMPtr<nsICacheStorage> storage;
-    rv = nsAboutCache::GetStorage(mStorageName, mLoadInfo, getter_AddRefs(storage));
+    nsCOMPtr<nsICacheService> serv =
+        do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    // Invokes OnCacheEntryAvailable()
-    rv = storage->AsyncOpenURI(mCacheURI, mEnhanceId,
-                               nsICacheStorage::OPEN_READONLY, this);
+    nsCOMPtr<nsICacheSession> session;
+    rv = serv->CreateSession(clientID.get(),
+                             nsICache::STORE_ANYWHERE,
+                             streamBased,
+                             getter_AddRefs(session));
     if (NS_FAILED(rv)) return rv;
 
-    return NS_OK;
+    rv = session->SetDoomEntriesIfExpired(false);
+    if (NS_FAILED(rv)) return rv;
+
+    return session->AsyncOpenCacheEntry(key, nsICache::ACCESS_READ, this, true);
 }
 
-nsresult
-nsAboutCacheEntry::ParseURI(nsIURI *uri,
-                            nsACString &storageName,
-                            nsILoadContextInfo **loadInfo,
-                            nsCString &enahnceID,
-                            nsIURI **cacheUri)
-{
-    //
-    // about:cache-entry?storage=[string]&contenxt=[string]&eid=[string]&uri=[string]
-    //
-    nsresult rv;
-
-    nsAutoCString path;
-    rv = uri->GetPath(path);
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsACString::const_iterator keyBegin, keyEnd, valBegin, begin, end;
-    path.BeginReading(begin);
-    path.EndReading(end);
-
-    keyBegin = begin; keyEnd = end;
-    if (!FindInReadable(NS_LITERAL_CSTRING("?storage="), keyBegin, keyEnd))
-        return NS_ERROR_FAILURE;
-
-    valBegin = keyEnd; // the value of the storage key starts after the key
-
-    keyBegin = keyEnd; keyEnd = end;
-    if (!FindInReadable(NS_LITERAL_CSTRING("&context="), keyBegin, keyEnd))
-        return NS_ERROR_FAILURE;
-
-    storageName.Assign(Substring(valBegin, keyBegin));
-    valBegin = keyEnd; // the value of the context key starts after the key
-
-    keyBegin = keyEnd; keyEnd = end;
-    if (!FindInReadable(NS_LITERAL_CSTRING("&eid="), keyBegin, keyEnd))
-        return NS_ERROR_FAILURE;
-
-    nsAutoCString contextKey(Substring(valBegin, keyBegin));
-    valBegin = keyEnd; // the value of the eid key starts after the key
-
-    keyBegin = keyEnd; keyEnd = end;
-    if (!FindInReadable(NS_LITERAL_CSTRING("&uri="), keyBegin, keyEnd))
-        return NS_ERROR_FAILURE;
-
-    enahnceID.Assign(Substring(valBegin, keyBegin));
-
-    valBegin = keyEnd; // the value of the uri key starts after the key
-    nsAutoCString uriSpec(Substring(valBegin, end)); // uri is the last one
-
-    // Uf... parsing done, now get some objects from it...
-
-    nsCOMPtr<nsILoadContextInfo> info =
-      CacheFileUtils::ParseKey(contextKey);
-    if (!info)
-        return NS_ERROR_FAILURE;
-    info.forget(loadInfo);
-
-    rv = NS_NewURI(cacheUri, uriSpec);
-    if (NS_FAILED(rv))
-        return rv;
-
-    return NS_OK;
-}
 
 //-----------------------------------------------------------------------------
-// nsICacheEntryOpenCallback implementation
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsAboutCacheEntry::OnCacheEntryCheck(nsICacheEntry *aEntry,
-                                     nsIApplicationCache *aApplicationCache,
-                                     uint32_t *result)
-{
-    *result = nsICacheEntryOpenCallback::ENTRY_WANTED;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntry *entry,
-                                         bool isNew,
-                                         nsIApplicationCache *aApplicationCache,
-                                         nsresult status)
-{
-    nsresult rv;
-
-    mWaitingForData = false;
-    if (entry) {
-        rv = WriteCacheEntryDescription(entry);
-    } else if (!CacheObserver::UseNewCache() &&
-               !mLoadInfo->IsPrivate() &&
-               mStorageName == NS_LITERAL_CSTRING("memory")) {
-        // If we were not able to find the entry in the memory storage
-        // try again in the disk storage.
-        // This is a workaround for cache v1: when an originally disk
-        // cache entry is recreated as memory-only, it's clientID doesn't
-        // change and we cannot find it in "HTTP-memory-only" session.
-        // "Disk" cache storage looks at "HTTP".
-        mStorageName = NS_LITERAL_CSTRING("disk");
-        rv = OpenCacheEntry();
-        if (NS_SUCCEEDED(rv)) {
-            return NS_OK;
-        }
-    } else {
-        rv = WriteCacheEntryUnavailable();
-    }
-    if (NS_FAILED(rv)) return rv;
-
-
-    if (!mWaitingForData) {
-        // Data is not expected, close the output of content now.
-        CloseContent();
-    }
-
-    return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// Print-out helper methods
+// helper methods
 //-----------------------------------------------------------------------------
 
 #define APPEND_ROW(label, value) \
@@ -319,7 +187,7 @@ nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntry *entry,
     PR_END_MACRO
 
 nsresult
-nsAboutCacheEntry::WriteCacheEntryDescription(nsICacheEntry *entry)
+nsAboutCacheEntry::WriteCacheEntryDescription(nsICacheEntryDescriptor *descriptor)
 {
     nsresult rv;
     nsCString buffer;
@@ -327,7 +195,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsICacheEntry *entry)
 
     nsAutoCString str;
 
-    rv = entry->GetKey(str);
+    rv = descriptor->GetKey(str);
     if (NS_FAILED(rv)) return rv;
 
     buffer.SetCapacity(4096);
@@ -356,9 +224,9 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsICacheEntry *entry)
         buffer.Append(escapedStr);
         buffer.AppendLiteral("</a>");
         uri = 0;
-    } else {
-        buffer.Append(escapedStr);
     }
+    else
+        buffer.Append(escapedStr);
     nsMemory::Free(escapedStr);
     buffer.AppendLiteral("</td>\n"
                          "  </tr>\n");
@@ -371,30 +239,30 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsICacheEntry *entry)
 
     // Fetch Count
     s.Truncate();
-    entry->GetFetchCount(&i);
+    descriptor->GetFetchCount(&i);
     s.AppendInt(i);
     APPEND_ROW("fetch count", s);
 
     // Last Fetched
-    entry->GetLastFetched(&u);
+    descriptor->GetLastFetched(&u);
     if (u) {
         PrintTimeString(timeBuf, sizeof(timeBuf), u);
         APPEND_ROW("last fetched", timeBuf);
     } else {
-        APPEND_ROW("last fetched", "No last fetch time (bug 1000338)");
+        APPEND_ROW("last fetched", "No last fetch time");
     }
 
     // Last Modified
-    entry->GetLastModified(&u);
+    descriptor->GetLastModified(&u);
     if (u) {
         PrintTimeString(timeBuf, sizeof(timeBuf), u);
         APPEND_ROW("last modified", timeBuf);
     } else {
-        APPEND_ROW("last modified", "No last modified time (bug 1000338)");
+        APPEND_ROW("last modified", "No last modified time");
     }
 
     // Expiration Time
-    entry->GetExpirationTime(&u);
+    descriptor->GetExpirationTime(&u);
     if (u < 0xFFFFFFFF) {
         PrintTimeString(timeBuf, sizeof(timeBuf), u);
         APPEND_ROW("expires", timeBuf);
@@ -405,24 +273,29 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsICacheEntry *entry)
     // Data Size
     s.Truncate();
     uint32_t dataSize;
-    if (NS_FAILED(entry->GetStorageDataSize(&dataSize)))
-        dataSize = 0;
+    descriptor->GetStorageDataSize(&dataSize);
     s.AppendInt((int32_t)dataSize);     // XXX nsICacheEntryInfo interfaces should be fixed.
-    s.Append(NS_LITERAL_CSTRING(" B"));
     APPEND_ROW("Data size", s);
 
-    // TODO - mayhemer
-    // Here used to be a link to the disk file (in the old cache for entries that
-    // did not fit any of the block files, in the new cache every time).
-    // I'd rather have a small set of buttons here to action on the entry:
-    // 1. save the content
-    // 2. save as a complete HTTP response (response head, headers, content)
-    // 3. doom the entry
-    // A new bug(s) should be filed here.
+    // Storage Policy
+
+    // XXX Stream Based?
+
+    // XXX Cache Device
+    // File on disk
+    nsCOMPtr<nsIFile> cacheFile;
+    rv = descriptor->GetFile(getter_AddRefs(cacheFile));
+    if (NS_SUCCEEDED(rv)) {
+        nsAutoString filePath;
+        cacheFile->GetPath(filePath);
+        APPEND_ROW("file on disk", NS_ConvertUTF16toUTF8(filePath));
+    }
+    else
+        APPEND_ROW("file on disk", "none");
 
     // Security Info
     nsCOMPtr<nsISupports> securityInfo;
-    entry->GetSecurityInfo(getter_AddRefs(securityInfo));
+    descriptor->GetSecurityInfo(getter_AddRefs(securityInfo));
     if (securityInfo) {
         APPEND_ROW("Security", "This is a secure document.");
     } else {
@@ -433,38 +306,47 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsICacheEntry *entry)
     buffer.AppendLiteral("</table>\n"
                          "<hr/>\n"
                          "<table>\n");
+    // Meta Data
+    // let's just look for some well known (HTTP) meta data tags, for now.
 
-    mBuffer = &buffer;  // make it available for OnMetaDataElement().
-    entry->VisitMetaData(this);
+    // Client ID
+    nsXPIDLCString str2;
+    descriptor->GetClientID(getter_Copies(str2));
+    if (!str2.IsEmpty())  APPEND_ROW("Client", str2);
+
+
+    mBuffer = &buffer;  // make it available for VisitMetaDataElement().
+    // nsCacheEntryDescriptor::VisitMetaData calls
+    // nsCacheEntry.h VisitMetaDataElements, which returns
+    // nsCacheMetaData::VisitElements, which calls
+    // nsAboutCacheEntry::VisitMetaDataElement (below) in a loop.
+    descriptor->VisitMetaData(this);
     mBuffer = nullptr;
 
     buffer.AppendLiteral("</table>\n");
     mOutputStream->Write(buffer.get(), buffer.Length(), &n);
+
     buffer.Truncate();
 
     // Provide a hexdump of the data
-    if (!dataSize) {
-        return NS_OK;
+    if (dataSize) { // don't draw an <hr> if the Data Size is 0.
+        nsCOMPtr<nsIInputStream> stream;
+        descriptor->OpenInputStream(0, getter_AddRefs(stream));
+        if (stream) {
+            buffer.AssignLiteral("<hr/>\n"
+                                 "<pre>");
+            uint32_t hexDumpState = 0;
+            char chunk[4096];
+            while(NS_SUCCEEDED(stream->Read(chunk, sizeof(chunk), &n)) && 
+                  n > 0) {
+                HexDump(&hexDumpState, chunk, n, buffer);
+                mOutputStream->Write(buffer.get(), buffer.Length(), &n);
+                buffer.Truncate();
+            }
+            buffer.AssignLiteral("</pre>\n");
+            mOutputStream->Write(buffer.get(), buffer.Length(), &n);
+      }
     }
-
-    nsCOMPtr<nsIInputStream> stream;
-    entry->OpenInputStream(0, getter_AddRefs(stream));
-    if (!stream) {
-        return NS_OK;
-    }
-
-    nsRefPtr<nsInputStreamPump> pump;
-    rv = nsInputStreamPump::Create(getter_AddRefs(pump), stream);
-    if (NS_FAILED(rv)) {
-        return NS_OK; // just ignore
-    }
-
-    rv = pump->AsyncRead(this, nullptr);
-    if (NS_FAILED(rv)) {
-        return NS_OK; // just ignore
-    }
-
-    mWaitingForData = true;
     return NS_OK;
 }
 
@@ -478,12 +360,59 @@ nsAboutCacheEntry::WriteCacheEntryUnavailable()
     return NS_OK;
 }
 
+nsresult
+nsAboutCacheEntry::ParseURI(nsIURI *uri, nsCString &clientID,
+                            bool &streamBased, nsCString &key)
+{
+    //
+    // about:cache-entry?client=[string]&sb=[boolean]&key=[string]
+    //
+    nsresult rv;
+
+    nsAutoCString path;
+    rv = uri->GetPath(path);
+    if (NS_FAILED(rv)) return rv;
+
+    nsACString::const_iterator i1, i2, i3, end;
+    path.BeginReading(i1);
+    path.EndReading(end);
+
+    i2 = end;
+    if (!FindInReadable(NS_LITERAL_CSTRING("?client="), i1, i2))
+        return NS_ERROR_FAILURE;
+    // i2 points to the start of clientID
+
+    i1 = i2;
+    i3 = end;
+    if (!FindInReadable(NS_LITERAL_CSTRING("&sb="), i1, i3))
+        return NS_ERROR_FAILURE;
+    // i1 points to the end of clientID
+    // i3 points to the start of isStreamBased
+
+    clientID.Assign(Substring(i2, i1));
+
+    i1 = i3;
+    i2 = end;
+    if (!FindInReadable(NS_LITERAL_CSTRING("&key="), i1, i2))
+        return NS_ERROR_FAILURE;
+    // i1 points to the end of isStreamBased
+    // i2 points to the start of key
+
+    streamBased = FindCharInReadable('1', i3, i1);
+    key.Assign(Substring(i2, end));
+
+    return NS_OK;
+}
+
+
 //-----------------------------------------------------------------------------
-// nsICacheEntryMetaDataVisitor implementation
+// nsICacheMetaDataVisitor implementation
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsAboutCacheEntry::OnMetaDataElement(char const * key, char const * value)
+nsAboutCacheEntry::VisitMetaDataElement(const char * key,
+                                        const char * value,
+                                        bool *     keepGoing)
 {
     mBuffer->AppendLiteral("  <tr>\n"
                            "    <th>");
@@ -496,76 +425,38 @@ nsAboutCacheEntry::OnMetaDataElement(char const * key, char const * value)
     mBuffer->AppendLiteral("</td>\n"
                            "  </tr>\n");
 
+    *keepGoing = true;
     return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
-// nsIStreamListener implementation
+// nsICacheListener implementation
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsAboutCacheEntry::OnStartRequest(nsIRequest *request, nsISupports *ctx)
+nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
+                                         nsCacheAccessMode access,
+                                         nsresult status)
 {
-    mHexDumpState = 0;
+    nsresult rv;
 
-    NS_NAMED_LITERAL_CSTRING(buffer, "<hr/>\n<pre>");
-    uint32_t n;
-    return mOutputStream->Write(buffer.get(), buffer.Length(), &n);
-}
-
-NS_IMETHODIMP
-nsAboutCacheEntry::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
-                                   nsIInputStream *aInputStream,
-                                   uint64_t aOffset,
-                                   uint32_t aCount)
-{
-    uint32_t n;
-    return aInputStream->ReadSegments(
-        &nsAboutCacheEntry::PrintCacheData, this, aCount, &n);
-}
-
-// static
-NS_METHOD
-nsAboutCacheEntry::PrintCacheData(nsIInputStream *aInStream,
-                                  void *aClosure,
-                                  const char *aFromSegment,
-                                  uint32_t aToOffset,
-                                  uint32_t aCount,
-                                  uint32_t *aWriteCount)
-{
-    nsAboutCacheEntry *a = static_cast<nsAboutCacheEntry*>(aClosure);
-
-    nsCString buffer;
-    HexDump(&a->mHexDumpState, aFromSegment, aCount, buffer);
+    if (entry)
+        rv = WriteCacheEntryDescription(entry);
+    else
+        rv = WriteCacheEntryUnavailable();
+    if (NS_FAILED(rv)) return rv;
 
     uint32_t n;
-    a->mOutputStream->Write(buffer.get(), buffer.Length(), &n);
-
-    *aWriteCount = aCount;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAboutCacheEntry::OnStopRequest(nsIRequest *request, nsISupports *ctx,
-                                 nsresult result)
-{
-    NS_NAMED_LITERAL_CSTRING(buffer, "</pre>\n");
-    uint32_t n;
-    mOutputStream->Write(buffer.get(), buffer.Length(), &n);
-
-    CloseContent();
-
-    return NS_OK;
-}
-
-void
-nsAboutCacheEntry::CloseContent()
-{
     NS_NAMED_LITERAL_CSTRING(buffer, "</body>\n</html>\n");
-    uint32_t n;
     mOutputStream->Write(buffer.get(), buffer.Length(), &n);
-
     mOutputStream->Close();
     mOutputStream = nullptr;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAboutCacheEntry::OnCacheEntryDoomed(nsresult status)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

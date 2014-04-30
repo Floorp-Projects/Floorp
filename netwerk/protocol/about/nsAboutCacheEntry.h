@@ -7,8 +7,8 @@
 #define nsAboutCacheEntry_h__
 
 #include "nsIAboutModule.h"
-#include "nsICacheEntryOpenCallback.h"
-#include "nsICacheEntry.h"
+#include "nsICacheListener.h"
+#include "nsICacheEntryDescriptor.h"
 #include "nsCOMPtr.h"
 
 class nsIAsyncOutputStream;
@@ -17,22 +17,17 @@ class nsIURI;
 class nsCString;
 
 class nsAboutCacheEntry : public nsIAboutModule
-                        , public nsICacheEntryOpenCallback
-                        , public nsICacheEntryMetaDataVisitor
-                        , public nsIStreamListener
+                        , public nsICacheMetaDataVisitor
+                        , public nsICacheListener
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIABOUTMODULE
-    NS_DECL_NSICACHEENTRYOPENCALLBACK
-    NS_DECL_NSICACHEENTRYMETADATAVISITOR
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSICACHEMETADATAVISITOR
+    NS_DECL_NSICACHELISTENER
 
     nsAboutCacheEntry()
         : mBuffer(nullptr)
-        , mWaitingForData(false)
-        , mHexDumpState(0)
     {}
 
     virtual ~nsAboutCacheEntry() {}
@@ -40,31 +35,13 @@ public:
 private:
     nsresult GetContentStream(nsIURI *, nsIInputStream **);
     nsresult OpenCacheEntry(nsIURI *);
-    nsresult OpenCacheEntry();
-    nsresult WriteCacheEntryDescription(nsICacheEntry *);
+    nsresult WriteCacheEntryDescription(nsICacheEntryDescriptor *);
     nsresult WriteCacheEntryUnavailable();
-    nsresult ParseURI(nsIURI *uri, nsACString &storageName,
-                      nsILoadContextInfo **loadInfo,
-                      nsCString &enahnceID, nsIURI **cacheUri);
-    void CloseContent();
-
-    static NS_METHOD
-    PrintCacheData(nsIInputStream *aInStream,
-                   void *aClosure,
-                   const char *aFromSegment,
-                   uint32_t aToOffset,
-                   uint32_t aCount,
-                   uint32_t *aWriteCount);
+    nsresult ParseURI(nsIURI *, nsCString &, bool &, nsCString &);
 
 private:
-    nsAutoCString mStorageName, mEnhanceId;
-    nsCOMPtr<nsILoadContextInfo> mLoadInfo;
-    nsCOMPtr<nsIURI> mCacheURI;
-
     nsCString *mBuffer;
     nsCOMPtr<nsIAsyncOutputStream> mOutputStream;
-    bool mWaitingForData;
-    uint32_t mHexDumpState;
 };
 
 #define NS_ABOUT_CACHE_ENTRY_MODULE_CID              \
