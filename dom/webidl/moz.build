@@ -84,7 +84,6 @@ WEBIDL_FILES = [
     'DOMError.webidl',
     'DOMException.webidl',
     'DOMImplementation.webidl',
-    'DOMMMIError.webidl',
     'DOMParser.webidl',
     'DOMPoint.webidl',
     'DOMQuad.webidl',
@@ -544,6 +543,7 @@ if CONFIG['MOZ_B2G_BT']:
 
 if CONFIG['MOZ_B2G_RIL']:
     WEBIDL_FILES += [
+        'DOMMMIError.webidl',
         'IccCardLockError.webidl',
         'MozCellBroadcast.webidl',
         'MozCellBroadcastEvent.webidl',
