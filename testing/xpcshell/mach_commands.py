@@ -34,7 +34,10 @@ If you have a B2G build, this can be found in
 '%s/out/host/<platform>/bin'.
 '''.lstrip()
 
-BUSYBOX_URL = 'http://www.busybox.net/downloads/binaries/latest/busybox-armv7l'
+BUSYBOX_URLS = {
+    'arm': 'http://www.busybox.net/downloads/binaries/latest/busybox-armv7l',
+    'x86': 'http://www.busybox.net/downloads/binaries/latest/busybox-i686'
+}
 
 
 if sys.version_info[0] < 3:
@@ -303,8 +306,11 @@ class B2GXPCShellRunner(MozbuildObject):
         self.xpcshell_dir = os.path.join(self.tests_dir, 'xpcshell')
         self.bin_dir = os.path.join(self.distdir, 'bin')
 
-    def _download_busybox(self, b2g_home):
-        system_bin = os.path.join(b2g_home, 'out', 'target', 'product', 'generic', 'system', 'bin')
+    def _download_busybox(self, b2g_home, emulator):
+        target_device = 'generic'
+        if emulator == 'x86':
+            target_device = 'generic_x86'
+        system_bin = os.path.join(b2g_home, 'out', 'target', 'product', target_device, 'system', 'bin')
         busybox_path = os.path.join(system_bin, 'busybox')
 
         if os.path.isfile(busybox_path):
@@ -314,7 +320,7 @@ class B2GXPCShellRunner(MozbuildObject):
             os.makedirs(system_bin)
 
         try:
-            data = urllib2.urlopen(BUSYBOX_URL)
+            data = urllib2.urlopen(BUSYBOX_URLS[emulator])
         except urllib2.URLError:
             print('There was a problem downloading busybox. Proceeding without it,' \
                   'initial setup will be slow.')
@@ -324,7 +330,7 @@ class B2GXPCShellRunner(MozbuildObject):
             f.write(data.read())
         return busybox_path
 
-    def run_test(self, test_paths, b2g_home=None, busybox=None,
+    def run_test(self, test_paths, b2g_home=None, busybox=None, device_name=None,
                  # ignore parameters from other platforms' options
                  **kwargs):
         try:
@@ -348,7 +354,6 @@ class B2GXPCShellRunner(MozbuildObject):
 
         options.b2g_path = b2g_home
         options.busybox = busybox or os.environ.get('BUSYBOX')
-        options.emulator = 'arm'
         options.localLib = self.bin_dir
         options.localBin = self.bin_dir
         options.logcat_dir = self.xpcshell_dir
@@ -361,8 +366,13 @@ class B2GXPCShellRunner(MozbuildObject):
         options.testPath = test_path
         options.use_device_libs = True
 
+        options.emulator = 'arm'
+        if device_name.startswith('emulator'):
+            if 'x86' in device_name:
+                options.emulator = 'x86'
+
         if not options.busybox:
-            options.busybox = self._download_busybox(b2g_home)
+            options.busybox = self._download_busybox(b2g_home, options.emulator)
 
         return runtestsb2g.run_remote_xpcshell(parser, options, args)
 
@@ -436,6 +446,7 @@ class MachCommands(MachCommandBase):
         elif conditions.is_b2g(self):
             xpcshell = self._spawn(B2GXPCShellRunner)
             params['b2g_home'] = self.b2g_home
+            params['device_name'] = self.device_name
         else:
             xpcshell = self._spawn(XPCShellRunner)
         xpcshell.cwd = self._mach_context.cwd

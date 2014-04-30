@@ -552,10 +552,6 @@ def B2GCommand(func):
         help='Define size of sdcard: 1MB, 50MB...etc')
     func = sdcard(func)
 
-    emulator = CommandArgument('--emulator', default='arm',
-        help='Architecture of emulator to use: x86 or arm')
-    func = emulator(func)
-
     marionette = CommandArgument('--marionette', default=None,
         help='host:port to use when connecting to Marionette')
     func = marionette(func)
@@ -659,7 +655,7 @@ class MachCommands(MachCommandBase):
 # they should be modified to work with all devices.
 def is_emulator(cls):
     """Emulator needs to be configured."""
-    return cls.device_name.find('emulator') == 0
+    return cls.device_name.startswith('emulator')
 
 
 @CommandProvider
@@ -680,6 +676,12 @@ class B2GCommands(MachCommandBase):
     @B2GCommand
     def run_mochitest_remote(self, test_paths, **kwargs):
         from mozbuild.controller.building import BuildDriver
+
+        if self.device_name.startswith('emulator'):
+            emulator = 'arm'
+            if 'x86' in self.device_name:
+                emulator = 'x86'
+            kwargs['emulator'] = emulator
 
         self._ensure_state_subdir_exists('.')
 

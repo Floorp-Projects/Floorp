@@ -69,16 +69,18 @@ class B2GCommands(MachCommandBase):
     @Command('marionette-webapi', category='testing',
         description='Run a Marionette webapi test',
         conditions=[conditions.is_b2g])
-    @CommandArgument('--emulator', choices=['x86', 'arm'],
-        help='Run an emulator of the specified architecture.')
     @CommandArgument('--type', dest='testtype',
         help='Test type, usually one of: browser, b2g, b2g-qemu.',
         default='b2g')
     @CommandArgument('tests', nargs='*', metavar='TESTS',
         help='Path to test(s) to run.')
-    def run_marionette_webapi(self, tests, emulator=None, testtype=None):
-        if not emulator and self.device_name.find('emulator') == 0:
-            emulator='arm'
+    def run_marionette_webapi(self, tests, testtype=None):
+        emulator = None
+        if self.device_name:
+            if self.device_name.startswith('emulator'):
+                emulator = 'arm'
+                if 'x86' in self.device_name:
+                    emulator = 'x86'
 
         if self.substs.get('ENABLE_MARIONETTE') != '1':
             print(MARIONETTE_DISABLED_B2G % 'marionette-webapi')

@@ -47,16 +47,14 @@ function test() {
 }
 
 function testRestoreWithHiddenTabs() {
-  let checked = false;
-  let ssReady = false;
-  let tabsRestored = false;
+  TabsProgressListener.setCallback(function (needsRestore, isRestoring) {
+    if (needsRestore <= 4) {
+      TabsProgressListener.unsetCallback();
+      is(needsRestore, 4, "4/8 tabs restored");
+    }
+  });
 
-  let check = function () {
-    if (checked || !ssReady || !tabsRestored)
-      return;
-
-    checked = true;
-
+  waitForBrowserState(state, 4, function () {
     is(gBrowser.tabs.length, 8, "there are now eight tabs");
     is(gBrowser.visibleTabs.length, 4, "four visible tabs");
 
@@ -64,25 +62,7 @@ function testRestoreWithHiddenTabs() {
     is(cw.GroupItems.groupItems.length, 2, "there are now two groupItems");
 
     testSwitchToInactiveGroup();
-  }
-
-  whenSessionStoreReady(function () {
-    ssReady = true;
-    check();
   });
-
-  TabsProgressListener.setCallback(function (needsRestore, isRestoring) {
-    if (4 < needsRestore)
-      return;
-
-    TabsProgressListener.unsetCallback();
-    is(needsRestore, 4, "4/8 tabs restored");
-
-    tabsRestored = true;
-    check();
-  });
-
-  ss.setBrowserState(JSON.stringify(state));
 }
 
 function testSwitchToInactiveGroup() {
@@ -108,11 +88,16 @@ function testSwitchToInactiveGroup() {
   gBrowser.selectedTab = gBrowser.tabs[4];
 }
 
-function whenSessionStoreReady(callback) {
-  window.addEventListener("SSWindowStateReady", function onReady() {
-    window.removeEventListener("SSWindowStateReady", onReady, false);
-    executeSoon(callback);
-  }, false);
+function waitForBrowserState(state, numTabs, callback) {
+  let tabContainer = gBrowser.tabContainer;
+  tabContainer.addEventListener("SSTabRestored", function onRestored() {
+    if (--numTabs <= 0) {
+      tabContainer.removeEventListener("SSTabRestored", onRestored, true);
+      executeSoon(callback);
+    }
+  }, true);
+
+  ss.setBrowserState(JSON.stringify(state));
 }
 
 function countTabs() {
