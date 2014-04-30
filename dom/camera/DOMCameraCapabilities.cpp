@@ -180,11 +180,10 @@ CameraCapabilities::Populate(ICameraControl* aCameraControl)
     JS::Rooted<JSObject*> o(js);
     nsresult rv = mRecorderProfileManager->GetJsObject(js, o.address());
     if (NS_FAILED(rv)) {
-      DOM_CAMERA_LOGE("Failed to JS-objectify profile manager (%d)\n", rv);
-      return rv;
+      DOM_CAMERA_LOGE("Failed to JS-objectify profile manager (0x%x)\n", rv);
+    } else {
+      mRecorderProfiles = JS::ObjectValue(*o);
     }
-
-    mRecorderProfiles = JS::ObjectValue(*o);
   }
 
   // For now, always return success, since the presence or absence of capabilities

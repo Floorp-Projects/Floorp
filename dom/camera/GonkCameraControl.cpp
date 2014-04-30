@@ -53,8 +53,9 @@ using namespace android;
 #define RETURN_IF_NO_CAMERA_HW()                                          \
   do {                                                                    \
     if (!mCameraHw.get()) {                                               \
+      NS_WARNING("Camera hardware is not initialized");                   \
       DOM_CAMERA_LOGE("%s:%d : mCameraHw is null\n", __func__, __LINE__); \
-      return NS_ERROR_NOT_AVAILABLE;                                      \
+      return NS_ERROR_NOT_INITIALIZED;                                    \
     }                                                                     \
   } while(0)
 
@@ -107,7 +108,7 @@ nsGonkCameraControl::StartImpl(const Configuration* aInitialConfig)
 
   nsresult rv = Initialize();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   if (aInitialConfig) {
@@ -126,10 +127,15 @@ nsGonkCameraControl::StartImpl(const Configuration* aInitialConfig)
 nsresult
 nsGonkCameraControl::Initialize()
 {
+  if (mCameraHw.get()) {
+    DOM_CAMERA_LOGI("Camera %d already connected (this=%p)\n", mCameraId, this);
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
+
   mCameraHw = GonkCameraHardware::Connect(this, mCameraId);
   if (!mCameraHw.get()) {
     DOM_CAMERA_LOGE("Failed to connect to camera %d (this=%p)\n", mCameraId, this);
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   DOM_CAMERA_LOGI("Initializing camera %d (this=%p, mCameraHw=%p)\n", mCameraId, this, mCameraHw.get());
@@ -696,8 +702,7 @@ nsGonkCameraControl::SetThumbnailSize(const Size& aSize)
     {
       nsresult rv = mCameraControl->SetThumbnailSizeImpl(mSize);
       if (NS_FAILED(rv)) {
-        mCameraControl->OnError(CameraControlListener::kInUnspecified,
-                                CameraControlListener::kErrorSetThumbnailSizeFailed);
+        mCameraControl->OnUserError(CameraControlListener::kInSetThumbnailSize, rv);
       }
       return NS_OK;
     }
@@ -832,8 +837,7 @@ nsGonkCameraControl::SetPictureSize(const Size& aSize)
     {
       nsresult rv = mCameraControl->SetPictureSizeImpl(mSize);
       if (NS_FAILED(rv)) {
-        mCameraControl->OnError(CameraControlListener::kInUnspecified,
-                                CameraControlListener::kErrorSetPictureSizeFailed);
+        mCameraControl->OnUserError(CameraControlListener::kInSetPictureSize, rv);
       }
       return NS_OK;
     }
@@ -951,7 +955,9 @@ nsGonkCameraControl::StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescri
    * The camera app needs to provide the file extension '.3gp' for now.
    * See bug 795202.
    */
-  NS_ENSURE_TRUE(aFileDescriptor, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!aFileDescriptor)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   nsAutoString fullPath;
   mVideoFile = aFileDescriptor->mDSFile;
   mVideoFile->GetFullPath(fullPath);
@@ -1206,8 +1212,8 @@ nsGonkCameraControl::OnTakePictureComplete(uint8_t* aData, uint32_t aLength)
 void
 nsGonkCameraControl::OnTakePictureError()
 {
-  CameraControlImpl::OnError(CameraControlListener::kInTakePicture,
-                             CameraControlListener::kErrorApiFailed);
+  CameraControlImpl::OnUserError(CameraControlListener::kInTakePicture,
+                                 NS_ERROR_FAILURE);
 }
 
 nsresult
@@ -1642,15 +1648,15 @@ nsGonkCameraControl::OnNewPreviewFrame(layers::TextureClient* aBuffer)
 }
 
 void
-nsGonkCameraControl::OnError(CameraControlListener::CameraErrorContext aWhere,
-                             CameraControlListener::CameraError aError)
+nsGonkCameraControl::OnSystemError(CameraControlListener::SystemContext aWhere,
+                                   nsresult aError)
 {
-  if (aError == CameraControlListener::kErrorServiceFailed) {
+  if (aWhere == CameraControlListener::kSystemService) {
     OnPreviewStateChange(CameraControlListener::kPreviewStopped);
     OnHardwareStateChange(CameraControlListener::kHardwareClosed);
   }
 
-  CameraControlImpl::OnError(aWhere, aError);
+  CameraControlImpl::OnSystemError(aWhere, aError);
 }
 
 // Gonk callback handlers.
@@ -1705,16 +1711,17 @@ OnClosed(nsGonkCameraControl* gc)
 }
 
 void
-OnError(nsGonkCameraControl* gc, CameraControlListener::CameraError aError,
-        int32_t aArg1, int32_t aArg2)
+OnSystemError(nsGonkCameraControl* gc,
+              CameraControlListener::SystemContext aWhere,
+              int32_t aArg1, int32_t aArg2)
 {
 #ifdef PR_LOGGING
-  DOM_CAMERA_LOGE("OnError : aError=%d, aArg1=%d, aArg2=%d\n", aError, aArg1, aArg2);
+  DOM_CAMERA_LOGE("OnSystemError : aWhere=%d, aArg1=%d, aArg2=%d\n", aWhere, aArg1, aArg2);
 #else
   unused << aArg1;
   unused << aArg2;
 #endif
-  gc->OnError(CameraControlListener::kInUnspecified, aError);
+  gc->OnSystemError(aWhere, NS_ERROR_FAILURE);
 }
 
 } // namespace mozilla
