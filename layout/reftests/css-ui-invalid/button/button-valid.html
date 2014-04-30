@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
-  <!-- Test: button element is never affected by :-moz-ui-invalid. -->
+  <!-- Test: if button has no custom error and is not barred from constraint
+             validation, it should be affected by :invalid pseudo-class.  -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
     <button class='notinvalid'</button>

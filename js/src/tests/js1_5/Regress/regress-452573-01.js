@@ -5,7 +5,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 452573;
-var summary = 'Do not assert with JIT: JSVAL_IS_VOID(boxed) || JSVAL_IS_BOOLEAN(boxed)';
+var summary = 'Do not assert with JIT: boxed.isUndefined() || boxed.isBoolean()';
 var actual = 'No Crash';
 var expect = 'No Crash';
 

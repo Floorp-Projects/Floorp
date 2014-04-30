@@ -128,7 +128,7 @@ bool TestCloneObject()
     CHECK(cloned_buffer.write(cx, v1, callbacks, nullptr));
     JS::RootedValue v2(cx);
     CHECK(cloned_buffer.read(cx, &v2, callbacks, nullptr));
-    JS::RootedObject obj2(cx, JSVAL_TO_OBJECT(v2));
+    JS::RootedObject obj2(cx, v2.toObjectOrNull());
     CHECK(VerifyObject(obj2, 8, 12, false));
 
     return true;
@@ -164,7 +164,7 @@ bool TestTransferObject()
     CHECK(cloned_buffer.write(cx, v1, transferable, callbacks, nullptr));
     JS::RootedValue v2(cx);
     CHECK(cloned_buffer.read(cx, &v2, callbacks, nullptr));
-    JS::RootedObject obj2(cx, JSVAL_TO_OBJECT(v2));
+    JS::RootedObject obj2(cx, v2.toObjectOrNull());
     CHECK(VerifyObject(obj2, 8, 12, true));
     CHECK(isNeutered(obj1));
 

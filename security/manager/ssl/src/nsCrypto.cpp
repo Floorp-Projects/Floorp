@@ -940,13 +940,13 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
   int    keySize;
   nsresult  rv;
 
-  if (!JSVAL_IS_INT(argv[0])) {
+  if (!argv[0].isInt32()) {
     JS_ReportError(cx, "%s%s", JS_ERROR,
                    "passed in non-integer for key size");
     return NS_ERROR_FAILURE;
   }
-  keySize = JSVAL_TO_INT(argv[0]);
-  if (!JSVAL_IS_NULL(argv[1])) {
+  keySize = argv[0].toInt32();
+  if (!argv[1].isNull()) {
     JS::Rooted<JS::Value> v(cx, argv[1]);
     jsString = JS::ToString(cx, v);
     NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
@@ -955,7 +955,7 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
     NS_ENSURE_TRUE(!!params, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  if (JSVAL_IS_NULL(argv[2])) {
+  if (argv[2].isNull()) {
     JS_ReportError(cx,"%s%s", JS_ERROR,
              "key generation type not specified");
     return NS_ERROR_FAILURE;

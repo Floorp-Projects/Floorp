@@ -117,7 +117,7 @@ public:
 
   nsAutoJSValHolder &operator=(JS::Value aOther) {
 #ifdef DEBUG
-    if (JSVAL_IS_GCTHING(aOther) && !JSVAL_IS_NULL(aOther)) {
+    if (aOther.isGCThing() && !aOther.isNull()) {
       MOZ_ASSERT(IsHeld(), "Not rooted!");
     }
 #endif

@@ -110,7 +110,7 @@ doResolve(JS::HandleObject obj, JS::HandleId id, JS::MutableHandleObject objp)
             CHECK_EQUAL(resolveEntryCount, 2);
             CHECK(JS_DefinePropertyById(cx, obj, id, JSVAL_NULL, nullptr, nullptr, 0));
             EVAL("obj1.x", &v);
-            CHECK(JSVAL_IS_VOID(v));
+            CHECK(v.isUndefined());
             EVAL("obj1.y", &v);
             CHECK_SAME(v, JSVAL_ZERO);
             objp.set(obj);
@@ -119,13 +119,13 @@ doResolve(JS::HandleObject obj, JS::HandleId id, JS::MutableHandleObject objp)
         if (obj == obj1) {
             CHECK_EQUAL(resolveEntryCount, 3);
             EVAL("obj1.x", &v);
-            CHECK(JSVAL_IS_VOID(v));
+            CHECK(v.isUndefined());
             EVAL("obj1.y", &v);
-            CHECK(JSVAL_IS_VOID(v));
+            CHECK(v.isUndefined());
             EVAL("obj2.y", &v);
-            CHECK(JSVAL_IS_NULL(v));
+            CHECK(v.isNull());
             EVAL("obj2.x", &v);
-            CHECK(JSVAL_IS_VOID(v));
+            CHECK(v.isUndefined());
             EVAL("obj1.y = 0", &v);
             CHECK_SAME(v, JSVAL_ZERO);
             objp.set(obj);

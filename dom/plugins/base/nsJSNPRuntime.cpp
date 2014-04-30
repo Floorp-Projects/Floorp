@@ -381,25 +381,25 @@ JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant)
 {
   NS_ASSERTION(npp, "Must have an NPP to wrap a jsval!");
 
-  if (JSVAL_IS_PRIMITIVE(val)) {
+  if (val.isPrimitive()) {
     if (val == JSVAL_VOID) {
       VOID_TO_NPVARIANT(*variant);
-    } else if (JSVAL_IS_NULL(val)) {
+    } else if (val.isNull()) {
       NULL_TO_NPVARIANT(*variant);
-    } else if (JSVAL_IS_BOOLEAN(val)) {
-      BOOLEAN_TO_NPVARIANT(JSVAL_TO_BOOLEAN(val), *variant);
-    } else if (JSVAL_IS_INT(val)) {
-      INT32_TO_NPVARIANT(JSVAL_TO_INT(val), *variant);
-    } else if (JSVAL_IS_DOUBLE(val)) {
-      double d = JSVAL_TO_DOUBLE(val);
+    } else if (val.isBoolean()) {
+      BOOLEAN_TO_NPVARIANT(val.toBoolean(), *variant);
+    } else if (val.isInt32()) {
+      INT32_TO_NPVARIANT(val.toInt32(), *variant);
+    } else if (val.isDouble()) {
+      double d = val.toDouble();
       int i;
       if (JS_DoubleIsInt32(d, &i)) {
         INT32_TO_NPVARIANT(i, *variant);
       } else {
         DOUBLE_TO_NPVARIANT(d, *variant);
       }
-    } else if (JSVAL_IS_STRING(val)) {
-      JSString *jsstr = JSVAL_TO_STRING(val);
+    } else if (val.isString()) {
+      JSString *jsstr = val.toString();
       size_t length;
       const jschar *chars = ::JS_GetStringCharsZAndLength(cx, jsstr, &length);
       if (!chars) {
@@ -435,7 +435,7 @@ JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant)
   JS::Rooted<JSObject*> obj(cx, val.toObjectOrNull());
   obj = js::CheckedUnwrap(obj);
   if (!obj) {
-    obj = JSVAL_TO_OBJECT(val);
+    obj = val.toObjectOrNull();
   }
 
   NPObject *npobj = nsJSObjWrapper::GetNewOrUsed(npp, cx, obj);
@@ -593,8 +593,8 @@ nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier id)
   JS::Rooted<JS::Value> v(cx);
   bool ok = GetProperty(cx, npjsobj->mJSObj, id, &v);
 
-  return ok && !JSVAL_IS_PRIMITIVE(v) &&
-    ::JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(v));
+  return ok && !v.isPrimitive() &&
+    ::JS_ObjectIsFunction(cx, v.toObjectOrNull());
 }
 
 static bool
@@ -901,9 +901,9 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
       }
       id = StringToNPIdentifier(cx, str);
     } else {
-      NS_ASSERTION(JSVAL_IS_INT(v),
+      NS_ASSERTION(v.isInt32(),
                    "The element in ida must be either string or int!\n");
-      id = IntToNPIdentifier(JSVAL_TO_INT(v));
+      id = IntToNPIdentifier(v.toInt32());
     }
 
     (*idarray)[i] = id;
@@ -1352,7 +1352,7 @@ CallNPMethodInternal(JSContext *cx, JS::Handle<JSObject*> obj, unsigned argc,
   NPVariant v;
   VOID_TO_NPVARIANT(v);
 
-  JSObject *funobj = JSVAL_TO_OBJECT(argv[-2]);
+  JSObject *funobj = argv[-2].toObjectOrNull();
   bool ok;
   const char *msg = "Error calling method on NPObject!";
 
@@ -1498,7 +1498,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp 
     break;
 
   case JSENUMERATE_NEXT:
-    state = (NPObjectEnumerateState *)JSVAL_TO_PRIVATE(*statep);
+    state = (NPObjectEnumerateState *)statep->toPrivate();
     enum_value = state->value;
     length = state->length;
     if (state->index != length) {
@@ -1509,7 +1509,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp 
     // FALL THROUGH
 
   case JSENUMERATE_DESTROY:
-    state = (NPObjectEnumerateState *)JSVAL_TO_PRIVATE(*statep);
+    state = (NPObjectEnumerateState *)statep->toPrivate();
     if (state->value)
       PR_Free(state->value);
     delete state;
@@ -1594,10 +1594,10 @@ NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint, JS::
   JS::Rooted<JS::Value> v(cx, JSVAL_VOID);
   if (!JS_GetProperty(cx, obj, "toString", &v))
     return false;
-  if (!JSVAL_IS_PRIMITIVE(v) && JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(v))) {
+  if (!v.isPrimitive() && JS_ObjectIsCallable(cx, v.toObjectOrNull())) {
     if (!JS_CallFunctionValue(cx, obj, v, JS::HandleValueArray::empty(), vp))
       return false;
-    if (JSVAL_IS_PRIMITIVE(vp))
+    if (vp.isPrimitive())
       return true;
   }
 
@@ -2098,7 +2098,7 @@ NPObjectMember_Trace(JSTracer *trc, JSObject *obj)
   // Our NPIdentifier is not always interned, so we must root it explicitly.
   JS_CallHeapIdTracer(trc, &memberPrivate->methodName, "NPObjectMemberPrivate.methodName");
 
-  if (!JSVAL_IS_PRIMITIVE(memberPrivate->fieldValue)) {
+  if (!memberPrivate->fieldValue.isPrimitive()) {
     JS_CallHeapValueTracer(trc, &memberPrivate->fieldValue,
                            "NPObject Member => fieldValue");
   }

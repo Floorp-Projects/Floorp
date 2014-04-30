@@ -65,6 +65,26 @@ ResolveHost(const nsACString &host, nsIDNSListener *listener)
 }
 
 //-----------------------------------------------------------------------------
+
+class SetSocketOptionRunnable : public nsRunnable
+{
+public:
+  SetSocketOptionRunnable(nsUDPSocket* aSocket, const PRSocketOptionData& aOpt)
+    : mSocket(aSocket)
+    , mOpt(aOpt)
+  {}
+
+  NS_IMETHOD Run()
+  {
+    return mSocket->SetSocketOption(mOpt);
+  }
+
+private:
+  nsRefPtr<nsUDPSocket> mSocket;
+  PRSocketOptionData    mOpt;
+};
+
+//-----------------------------------------------------------------------------
 // nsUDPOutputStream impl
 //-----------------------------------------------------------------------------
 NS_IMPL_ISUPPORTS(nsUDPOutputStream, nsIOutputStream)
@@ -922,5 +942,250 @@ nsUDPSocket::SendWithAddress(const NetAddr *aAddr, const uint8_t *aData,
     NS_ENSURE_SUCCESS(rv, rv);
     *_retval = aDataLength;
   }
+  return NS_OK;
+}
+
+nsresult
+nsUDPSocket::SetSocketOption(const PRSocketOptionData& aOpt)
+{
+  bool onSTSThread = false;
+  mSts->IsOnCurrentThread(&onSTSThread);
+
+  if (!onSTSThread) {
+    // Dispatch to STS thread and re-enter this method there
+    nsCOMPtr<nsIRunnable> runnable = new SetSocketOptionRunnable(this, aOpt);
+    nsresult rv = mSts->Dispatch(runnable, NS_DISPATCH_NORMAL);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  if (NS_WARN_IF(!mFD)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  if (PR_SetSocketOption(mFD, &aOpt) != PR_SUCCESS) {
+    SOCKET_LOG(("nsUDPSocket::SetSocketOption [this=%p] failed for type %d, "
+      "error %d\n", this, aOpt.option, PR_GetError()));
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUDPSocket::JoinMulticast(const nsACString& aAddr, const nsACString& aIface)
+{
+  if (NS_WARN_IF(aAddr.IsEmpty())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  if (NS_WARN_IF(!mFD)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  PRNetAddr prAddr;
+  if (PR_StringToNetAddr(aAddr.BeginReading(), &prAddr) != PR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRNetAddr prIface;
+  if (aIface.IsEmpty()) {
+    PR_InitializeNetAddr(PR_IpAddrAny, 0, &prIface);
+  } else {
+    if (PR_StringToNetAddr(aIface.BeginReading(), &prIface) != PR_SUCCESS) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return JoinMulticastInternal(prAddr, prIface);
+}
+
+NS_IMETHODIMP
+nsUDPSocket::JoinMulticastAddr(const NetAddr aAddr, const NetAddr* aIface)
+{
+  if (NS_WARN_IF(!mFD)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  PRNetAddr prAddr;
+  NetAddrToPRNetAddr(&aAddr, &prAddr);
+
+  PRNetAddr prIface;
+  if (!aIface) {
+    PR_InitializeNetAddr(PR_IpAddrAny, 0, &prIface);
+  } else {
+    NetAddrToPRNetAddr(aIface, &prIface);
+  }
+
+  return JoinMulticastInternal(prAddr, prIface);
+}
+
+nsresult
+nsUDPSocket::JoinMulticastInternal(const PRNetAddr& aAddr,
+                                   const PRNetAddr& aIface)
+{
+  PRSocketOptionData opt;
+
+  opt.option = PR_SockOpt_AddMember;
+  opt.value.add_member.mcaddr = aAddr;
+  opt.value.add_member.ifaddr = aIface;
+
+  nsresult rv = SetSocketOption(opt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUDPSocket::LeaveMulticast(const nsACString& aAddr, const nsACString& aIface)
+{
+  if (NS_WARN_IF(aAddr.IsEmpty())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  if (NS_WARN_IF(!mFD)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  PRNetAddr prAddr;
+  if (PR_StringToNetAddr(aAddr.BeginReading(), &prAddr) != PR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRNetAddr prIface;
+  if (aIface.IsEmpty()) {
+    PR_InitializeNetAddr(PR_IpAddrAny, 0, &prIface);
+  } else {
+    if (PR_StringToNetAddr(aIface.BeginReading(), &prIface) != PR_SUCCESS) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return LeaveMulticastInternal(prAddr, prIface);
+}
+
+NS_IMETHODIMP
+nsUDPSocket::LeaveMulticastAddr(const NetAddr aAddr, const NetAddr* aIface)
+{
+  if (NS_WARN_IF(!mFD)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  PRNetAddr prAddr;
+  NetAddrToPRNetAddr(&aAddr, &prAddr);
+
+  PRNetAddr prIface;
+  if (!aIface) {
+    PR_InitializeNetAddr(PR_IpAddrAny, 0, &prIface);
+  } else {
+    NetAddrToPRNetAddr(aIface, &prIface);
+  }
+
+  return LeaveMulticastInternal(prAddr, prIface);
+}
+
+nsresult
+nsUDPSocket::LeaveMulticastInternal(const PRNetAddr& aAddr,
+                                    const PRNetAddr& aIface)
+{
+  PRSocketOptionData opt;
+
+  opt.option = PR_SockOpt_DropMember;
+  opt.value.drop_member.mcaddr = aAddr;
+  opt.value.drop_member.ifaddr = aIface;
+
+  nsresult rv = SetSocketOption(opt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUDPSocket::GetMulticastLoopback(bool* aLoopback)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUDPSocket::SetMulticastLoopback(bool aLoopback)
+{
+  if (NS_WARN_IF(!mFD)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  PRSocketOptionData opt;
+
+  opt.option = PR_SockOpt_McastLoopback;
+  opt.value.mcast_loopback = aLoopback;
+
+  nsresult rv = SetSocketOption(opt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUDPSocket::GetMulticastInterface(nsACString& aIface)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUDPSocket::GetMulticastInterfaceAddr(NetAddr* aIface)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUDPSocket::SetMulticastInterface(const nsACString& aIface)
+{
+  if (NS_WARN_IF(!mFD)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  PRNetAddr prIface;
+  if (aIface.IsEmpty()) {
+    PR_InitializeNetAddr(PR_IpAddrAny, 0, &prIface);
+  } else {
+    if (PR_StringToNetAddr(aIface.BeginReading(), &prIface) != PR_SUCCESS) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return SetMulticastInterfaceInternal(prIface);
+}
+
+NS_IMETHODIMP
+nsUDPSocket::SetMulticastInterfaceAddr(NetAddr aIface)
+{
+  if (NS_WARN_IF(!mFD)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  PRNetAddr prIface;
+  NetAddrToPRNetAddr(&aIface, &prIface);
+
+  return SetMulticastInterfaceInternal(prIface);
+}
+
+nsresult
+nsUDPSocket::SetMulticastInterfaceInternal(const PRNetAddr& aIface)
+{
+  PRSocketOptionData opt;
+
+  opt.option = PR_SockOpt_McastInterface;
+  opt.value.mcast_if = aIface;
+
+  nsresult rv = SetSocketOption(opt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }

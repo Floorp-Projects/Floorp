@@ -111,6 +111,7 @@ public:
 
   uint32_t Priority() { return mPriority; }
   void SetPriority(uint32_t);
+  void SetPriorityDependency(uint32_t, uint8_t, bool);
 
   // A pull stream has an implicit sink, a pushed stream has a sink
   // once it is matched to a pull stream.
@@ -236,8 +237,8 @@ private:
   // problems with the google servers.
   int64_t                      mRequestBodyLenRemaining;
 
-  // 0 is highest.. up to 2^31 - 1 as lowest
   uint32_t                     mPriority;
+  uint8_t                      mPriorityWeight;
 
   // mClientReceiveWindow, mServerReceiveWindow, and mLocalUnacked are for flow control.
   // *window are signed because the race conditions in asynchronous SETTINGS

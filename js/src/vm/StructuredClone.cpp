@@ -719,7 +719,7 @@ JSStructuredCloneWriter::parseTransferable()
 {
     MOZ_ASSERT(transferableObjects.empty(), "parseTransferable called with stale data");
 
-    if (JSVAL_IS_NULL(transferable) || JSVAL_IS_VOID(transferable))
+    if (transferable.isNull() || transferable.isUndefined())
         return true;
 
     if (!transferable.isObject())

@@ -12,7 +12,7 @@ BEGIN_TEST(testFunctionProperties)
     JS::RootedValue x(cx);
     EVAL("(function f() {})", &x);
 
-    JS::RootedObject obj(cx, JSVAL_TO_OBJECT(x));
+    JS::RootedObject obj(cx, x.toObjectOrNull());
 
     JS::RootedValue y(cx);
     CHECK(JS_GetProperty(cx, obj, "arguments", &y));
