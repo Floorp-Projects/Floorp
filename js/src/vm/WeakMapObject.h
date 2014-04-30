@@ -12,7 +12,7 @@
 
 namespace js {
 
-typedef WeakMap<EncapsulatedPtrObject, RelocatableValue> ObjectValueMap;
+typedef WeakMap<PreBarrieredObject, RelocatableValue> ObjectValueMap;
 
 class WeakMapObject : public JSObject
 {

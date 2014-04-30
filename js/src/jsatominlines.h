@@ -158,7 +158,7 @@ TypeName(JSType type, const JSAtomState &names)
 {
     JS_ASSERT(type < JSTYPE_LIMIT);
     JS_STATIC_ASSERT(offsetof(JSAtomState, undefined) +
-                     JSTYPE_LIMIT * sizeof(FixedHeapPtr<PropertyName>) <=
+                     JSTYPE_LIMIT * sizeof(ImmutablePropertyNamePtr) <=
                      sizeof(JSAtomState));
     JS_STATIC_ASSERT(JSTYPE_VOID == 0);
     return (&names.undefined)[type];
@@ -169,7 +169,7 @@ ClassName(JSProtoKey key, JSAtomState &atomState)
 {
     JS_ASSERT(key < JSProto_LIMIT);
     JS_STATIC_ASSERT(offsetof(JSAtomState, Null) +
-                     JSProto_LIMIT * sizeof(FixedHeapPtr<PropertyName>) <=
+                     JSProto_LIMIT * sizeof(ImmutablePropertyNamePtr) <=
                      sizeof(JSAtomState));
     JS_STATIC_ASSERT(JSProto_Null == 0);
     return (&atomState.Null)[key];

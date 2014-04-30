@@ -55,7 +55,7 @@ static const gc::AllocKind ITERATOR_FINALIZE_KIND = gc::FINALIZE_OBJECT2_BACKGRO
 void
 NativeIterator::mark(JSTracer *trc)
 {
-    for (HeapPtr<JSFlatString> *str = begin(); str < end(); str++)
+    for (HeapPtrFlatString *str = begin(); str < end(); str++)
         MarkString(trc, str, "prop");
     if (obj)
         MarkObject(trc, &obj, "obj");
@@ -426,7 +426,7 @@ NativeIterator::allocateIterator(JSContext *cx, uint32_t slength, const AutoIdVe
     if (!ni)
         return nullptr;
     AutoValueVector strings(cx);
-    ni->props_array = ni->props_cursor = (HeapPtr<JSFlatString> *) (ni + 1);
+    ni->props_array = ni->props_cursor = (HeapPtrFlatString *) (ni + 1);
     ni->props_end = ni->props_array + plength;
     if (plength) {
         for (size_t i = 0; i < plength; i++) {
@@ -1044,9 +1044,9 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
         /* This only works for identified suppressed keys, not values. */
         if (ni->isKeyIter() && ni->obj == obj && ni->props_cursor < ni->props_end) {
             /* Check whether id is still to come. */
-            HeapPtr<JSFlatString> *props_cursor = ni->current();
-            HeapPtr<JSFlatString> *props_end = ni->end();
-            for (HeapPtr<JSFlatString> *idp = props_cursor; idp < props_end; ++idp) {
+            HeapPtrFlatString *props_cursor = ni->current();
+            HeapPtrFlatString *props_end = ni->end();
+            for (HeapPtrFlatString *idp = props_cursor; idp < props_end; ++idp) {
                 if (predicate(*idp)) {
                     /*
                      * Check whether another property along the prototype chain
@@ -1091,7 +1091,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                     if (idp == props_cursor) {
                         ni->incCursor();
                     } else {
-                        for (HeapPtr<JSFlatString> *p = idp; p + 1 != props_end; p++)
+                        for (HeapPtrFlatString *p = idp; p + 1 != props_end; p++)
                             *p = *(p + 1);
                         ni->props_end = ni->end() - 1;
 
@@ -1757,7 +1757,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
              */
             HeapValue::writeBarrierPre(gen->regs.sp[-1]);
             gen->regs.sp[-1] = arg;
-            HeapValue::writeBarrierPost(cx->runtime(), gen->regs.sp[-1], &gen->regs.sp[-1]);
+            HeapValue::writeBarrierPost(gen->regs.sp[-1], &gen->regs.sp[-1]);
         }
         futureState = JSGEN_RUNNING;
         break;

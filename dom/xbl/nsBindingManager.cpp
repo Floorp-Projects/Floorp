@@ -216,17 +216,22 @@ nsBindingManager::RemovedFromDocumentInternal(nsIContent* aContent,
 {
   NS_PRECONDITION(aOldDocument != nullptr, "no old document");
 
-  if (mDestroyed)
-    return;
-
   nsRefPtr<nsXBLBinding> binding = aContent->GetXBLBinding();
   if (binding) {
-    binding->PrototypeBinding()->BindingDetached(binding->GetBoundElement());
-    binding->ChangeDocument(aOldDocument, nullptr);
+    // The binding manager may have been destroyed before a runnable
+    // has had a chance to reach this point. If so, we bail out on calling
+    // BindingDetached (which may invoke a XBL destructor) and
+    // ChangeDocument, but we still want to clear out the binding
+    // and insertion parent that may hold references.
+    if (!mDestroyed) {
+      binding->PrototypeBinding()->BindingDetached(binding->GetBoundElement());
+      binding->ChangeDocument(aOldDocument, nullptr);
+    }
+
     aContent->SetXBLBinding(nullptr, this);
   }
 
-  // Clear out insertion parents and content lists.
+  // Clear out insertion parent and content lists.
   aContent->SetXBLInsertionParent(nullptr);
 }
 

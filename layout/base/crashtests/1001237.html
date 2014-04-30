@@ -1,0 +1,10 @@
+<html>
+  <body>
+    <br id="x" style="transform-style: preserve-3d;">
+    <script>
+      document.addEventListener("MozReftestInvalidate", function() {
+        document.getElementById("x").style.transform = "scale(2, 2)";
+      });
+    </script>
+  </body>
+</html>

@@ -25,22 +25,22 @@ struct DataType
 template<>
 struct DataType<JSObject*>
 {
-    typedef EncapsulatedPtrObject Encapsulated;
+    typedef PreBarrieredObject PreBarriered;
     static JSObject *NullValue() { return nullptr; }
 };
 
 template<>
 struct DataType<JS::Value>
 {
-    typedef EncapsulatedValue Encapsulated;
+    typedef PreBarrieredValue PreBarriered;
     static JS::Value NullValue() { return JS::UndefinedValue(); }
 };
 
 template <typename K, typename V>
 struct Utils
 {
-    typedef typename DataType<K>::Encapsulated KeyType;
-    typedef typename DataType<V>::Encapsulated ValueType;
+    typedef typename DataType<K>::PreBarriered KeyType;
+    typedef typename DataType<V>::PreBarriered ValueType;
     typedef WeakMap<KeyType, ValueType> Type;
     typedef Type* PtrType;
     static PtrType cast(void *ptr) { return static_cast<PtrType>(ptr); }

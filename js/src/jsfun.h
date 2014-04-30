@@ -216,8 +216,8 @@ class JSFunction : public JSObject
     }
 
     void setGuessedAtom(JSAtom *atom) {
-        JS_ASSERT(atom_ == nullptr);
-        JS_ASSERT(atom != nullptr);
+        JS_ASSERT(!atom_);
+        JS_ASSERT(atom);
         JS_ASSERT(!hasGuessedAtom());
         atom_ = atom;
         flags_ |= HAS_GUESSED_ATOM;
