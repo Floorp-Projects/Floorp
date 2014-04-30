@@ -44,6 +44,113 @@ GetWifiP2pSupported()
   return (0 == strcmp(propP2pSupported, "1"));
 }
 
+int
+hex2num(char c)
+{
+  if (c >= '0' && c <= '9')
+    return c - '0';
+  if (c >= 'a' && c <= 'f')
+    return c - 'a' + 10;
+  if (c >= 'A' && c <= 'F')
+    return c - 'A' + 10;
+  return -1;
+}
+
+int
+hex2byte(const char* hex)
+{
+  int a, b;
+  a = hex2num(*hex++);
+  if (a < 0)
+    return -1;
+  b = hex2num(*hex++);
+  if (b < 0)
+    return -1;
+  return (a << 4) | b;
+}
+
+// This function is equivalent to printf_decode() at src/utils/common.c in
+// the supplicant.
+
+uint32_t
+convertToBytes(char* buf, uint32_t maxlen, const char* str)
+{
+  const char *pos = str;
+  uint32_t len = 0;
+  int val;
+
+  while (*pos) {
+    if (len == maxlen)
+      break;
+    switch (*pos) {
+    case '\\':
+      pos++;
+      switch (*pos) {
+      case '\\':
+        buf[len++] = '\\';
+        pos++;
+        break;
+      case '"':
+        buf[len++] = '"';
+        pos++;
+        break;
+      case 'n':
+        buf[len++] = '\n';
+        pos++;
+        break;
+      case 'r':
+        buf[len++] = '\r';
+        pos++;
+        break;
+      case 't':
+        buf[len++] = '\t';
+        pos++;
+        break;
+      case 'e':
+        buf[len++] = '\e';
+        pos++;
+        break;
+      case 'x':
+        pos++;
+        val = hex2byte(pos);
+        if (val < 0) {
+          val = hex2num(*pos);
+          if (val < 0)
+            break;
+          buf[len++] = val;
+          pos++;
+        } else {
+          buf[len++] = val;
+          pos += 2;
+        }
+        break;
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+        val = *pos++ - '0';
+        if (*pos >= '0' && *pos <= '7')
+          val = val * 8 + (*pos++ - '0');
+        if (*pos >= '0' && *pos <= '7')
+          val = val * 8 + (*pos++ - '0');
+        buf[len++] = val;
+        break;
+      default:
+        break;
+      }
+      break;
+    default:
+      buf[len++] = *pos++;
+	  break;
+    }
+  }
+  return len;
+}
+
 // This is the same algorithm as in InflateUTF8StringToBuffer with Copy and
 // while ignoring invalids.
 // https://mxr.mozilla.org/mozilla-central/source/js/src/vm/CharacterEncoding.cpp#231
@@ -426,8 +533,27 @@ void
 WpaSupplicant::CheckBuffer(char* buffer, int32_t length,
                            nsAString& aEvent)
 {
-  if (length > 0 && length < BUFFER_SIZE) {
+  if (length <= 0 || length >= (BUFFER_SIZE - 1)) {
+    NS_WARNING("WpaSupplicant::CheckBuffer: Invalid buffer length");
+    return;
+  }
+
+  if (NetUtils::SdkVersion() < 18) {
     buffer[length] = 0;
     LossyConvertUTF8toUTF16(buffer, length, aEvent);
+    return;
   }
+
+  // After Android JB4.3, the SSIDs have been converted into printable form.
+  // In most of cases, SSIDs do not use unprintable characters, but IEEE 802.11
+  // standard does not limit the used character set, so anything could be used
+  // in an SSID. Convert it to raw data form here.
+  char bytesBuffer[BUFFER_SIZE];
+  uint32_t bytes = convertToBytes(bytesBuffer, length, buffer);
+  if (bytes <= 0 || bytes >= BUFFER_SIZE) {
+    NS_WARNING("WpaSupplicant::CheckBuffer: Invalid bytesbuffer length");
+    return;
+  }
+  bytesBuffer[bytes] = 0;
+  LossyConvertUTF8toUTF16(bytesBuffer, bytes, aEvent);
 }
