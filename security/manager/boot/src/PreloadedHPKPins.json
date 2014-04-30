@@ -11,7 +11,7 @@
 //   name: (string) the name of the pinset
 //   static_spki_hashes: (list of strings) the set of allowed SPKIs hashes
 //
-// For a given pinset, a certifiacte is accepted if at least one of the
+// For a given pinset, a certificate is accepted if at least one of the
 // "static_spki_hashes" SPKIs is found in the chain.
 // SPKIs are specified as names, which must match up with the name given
 // in the Mozilla root store.
@@ -81,8 +81,14 @@
         "thawte Primary Root CA - G3",
         "Baltimore CyberTrust Root"
       ]
-    }
-  ],
+    },
+    // For pinning tests on pinning.example.com, the issuer must be testCA.
+    {
+      "name": "mozilla_test",
+      "static_spki_hashes": [
+        "End Entity Test Cert"
+      ]
+    }  ],
 
   "entries": [
     { "name": "addons.mozilla.org", "include_subdomains": true, "pins": "mozilla" },
@@ -90,6 +96,7 @@
     { "name": "cdn.mozilla.net", "include_subdomains": true, "pins": "mozilla_cdn" },
     { "name": "cdn.mozilla.org", "include_subdomains": true, "pins": "mozilla_cdn" },
     { "name": "media.mozilla.com", "include_subdomains": true, "pins": "mozilla_cdn" },
-    { "name": "getpersonas.org", "include_subdomains": true, "pins": "mozilla_cdn" }
+    { "name": "include-subdomain.pinning.example.com", "include_subdomains": true, "pins": "mozilla_test" },
+    { "name": "exclude-subdomains.pinning.example.com", "include_subdomains": false, "pins": "mozilla_test" }
   ]
 }
