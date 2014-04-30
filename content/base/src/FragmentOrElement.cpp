@@ -1250,6 +1250,9 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(FragmentOrElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
   nsINode::Unlink(tmp);
 
+  // The XBL binding is removed by RemoveFromBindingManagerRunnable
+  // which is dispatched in UnbindFromTree.
+
   if (tmp->HasProperties()) {
     if (tmp->IsHTML()) {
       nsIAtom*** props = nsGenericHTMLElement::PropertiesToTraverseAndUnlink();

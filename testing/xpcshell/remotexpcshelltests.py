@@ -363,9 +363,24 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         remoteFile = remoteJoin(self.remoteScriptsDir, "head.js")
         self.device.pushFile(local, remoteFile)
 
-        local = os.path.join(self.localBin, "xpcshell")
-        remoteFile = remoteJoin(self.remoteBinDir, "xpcshell")
-        self.device.pushFile(local, remoteFile)
+        # The xpcshell binary is required for all tests. Additional binaries
+        # are required for some tests. This list should be similar to
+        # TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
+        binaries = ["xpcshell",
+                    "ssltunnel",
+                    "certutil",
+                    "pk12util",
+                    "BadCertServer",
+                    "OCSPStaplingServer",
+                    "GenerateOCSPResponse"]
+        for fname in binaries:
+            local = os.path.join(self.localBin, fname)
+            if os.path.isfile(local):
+                print >> sys.stderr, "Pushing %s.." % fname
+                remoteFile = remoteJoin(self.remoteBinDir, fname)
+                self.device.pushFile(local, remoteFile)
+            else:
+                print >> sys.stderr, "*** Expected binary %s not found in %s!" % (fname, self.localBin)
 
         local = os.path.join(self.localBin, "components/httpd.js")
         remoteFile = remoteJoin(self.remoteComponentsDir, "httpd.js")

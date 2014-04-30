@@ -219,7 +219,6 @@ var DebuggerServer = {
 
     this.xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
     this.initTransport(aAllowConnectionCallback);
-    this.addActors("resource://gre/modules/devtools/server/actors/root.js");
 
     this._initialized = true;
   },

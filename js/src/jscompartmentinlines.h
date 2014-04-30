@@ -9,7 +9,7 @@
 
 #include "jscompartment.h"
 
-#include "gc/Barrier-inl.h"
+#include "gc/Barrier.h"
 
 inline void
 JSCompartment::initGlobal(js::GlobalObject &global)

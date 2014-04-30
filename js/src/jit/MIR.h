@@ -317,7 +317,7 @@ class MDefinition : public MNode
 
     // Track bailouts by storing the current pc in MIR instruction. Also used
     // for profiling and keeping track of what the last known pc was.
-    jsbytecode *trackedPc_;
+    BytecodeSite trackedSite_;
 
   private:
     enum Flag {
@@ -352,7 +352,7 @@ class MDefinition : public MNode
         resultTypeSet_(nullptr),
         flags_(0),
         dependency_(nullptr),
-        trackedPc_(nullptr)
+        trackedSite_()
     { }
 
     virtual Opcode op() const = 0;
@@ -372,12 +372,17 @@ class MDefinition : public MNode
     // be worthwhile.
     virtual bool possiblyCalls() const { return false; }
 
-    void setTrackedPc(jsbytecode *pc) {
-        trackedPc_ = pc;
+    void setTrackedSite(const BytecodeSite &site) {
+        trackedSite_ = site;
     }
-
+    const BytecodeSite &trackedSite() const {
+        return trackedSite_;
+    }
     jsbytecode *trackedPc() {
-        return trackedPc_;
+        return trackedSite_.pc();
+    }
+    InlineScriptTree *trackedTree() {
+        return trackedSite_.tree();
     }
 
     // Return the range of this value, *before* any bailout checks. Contrast
@@ -7463,6 +7468,52 @@ class MGuardShape
             return false;
         return congruentIfOperandsEqual(ins);
     }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
+};
+
+// Bail if the object's shape is not one of the shapes in shapes_.
+class MGuardShapePolymorphic
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+    Vector<Shape *, 4, IonAllocPolicy> shapes_;
+
+    MGuardShapePolymorphic(TempAllocator &alloc, MDefinition *obj)
+      : MUnaryInstruction(obj),
+        shapes_(alloc)
+    {
+        setGuard();
+        setMovable();
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(GuardShapePolymorphic)
+
+    static MGuardShapePolymorphic *New(TempAllocator &alloc, MDefinition *obj) {
+        return new(alloc) MGuardShapePolymorphic(alloc, obj);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *obj() const {
+        return getOperand(0);
+    }
+    bool addShape(Shape *shape) {
+        return shapes_.append(shape);
+    }
+    size_t numShapes() const {
+        return shapes_.length();
+    }
+    Shape *getShape(size_t i) const {
+        return shapes_[i];
+    }
+
+    bool congruentTo(const MDefinition *ins) const;
+
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::ObjectFields);
     }

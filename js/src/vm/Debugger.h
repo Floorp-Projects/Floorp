@@ -219,15 +219,15 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     FrameMap frames;
 
     /* An ephemeral map from JSScript* to Debugger.Script instances. */
-    typedef DebuggerWeakMap<EncapsulatedPtrScript, RelocatablePtrObject> ScriptWeakMap;
+    typedef DebuggerWeakMap<PreBarrieredScript, RelocatablePtrObject> ScriptWeakMap;
     ScriptWeakMap scripts;
 
     /* The map from debuggee source script objects to their Debugger.Source instances. */
-    typedef DebuggerWeakMap<EncapsulatedPtrObject, RelocatablePtrObject, true> SourceWeakMap;
+    typedef DebuggerWeakMap<PreBarrieredObject, RelocatablePtrObject, true> SourceWeakMap;
     SourceWeakMap sources;
 
     /* The map from debuggee objects to their Debugger.Object instances. */
-    typedef DebuggerWeakMap<EncapsulatedPtrObject, RelocatablePtrObject> ObjectWeakMap;
+    typedef DebuggerWeakMap<PreBarrieredObject, RelocatablePtrObject> ObjectWeakMap;
     ObjectWeakMap objects;
 
     /* The map from debuggee Envs to Debugger.Environment instances. */
@@ -637,7 +637,7 @@ class Breakpoint {
     BreakpointSite * const site;
   private:
     /* |handler| is marked unconditionally during minor GC. */
-    js::EncapsulatedPtrObject handler;
+    js::PreBarrieredObject handler;
     JSCList debuggerLinks;
     JSCList siteLinks;
 
@@ -648,8 +648,8 @@ class Breakpoint {
     void destroy(FreeOp *fop);
     Breakpoint *nextInDebugger();
     Breakpoint *nextInSite();
-    const EncapsulatedPtrObject &getHandler() const { return handler; }
-    EncapsulatedPtrObject &getHandlerRef() { return handler; }
+    const PreBarrieredObject &getHandler() const { return handler; }
+    PreBarrieredObject &getHandlerRef() { return handler; }
 };
 
 Breakpoint *

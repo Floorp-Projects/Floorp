@@ -648,7 +648,6 @@ BufferTextureClient::BufferTextureClient(ISurfaceAllocator* aAllocator,
   , mFormat(aFormat)
   , mBackend(aMoz2DBackend)
   , mOpenMode(OpenMode::OPEN_NONE)
-  , mUsingFallbackDrawTarget(false)
   , mLocked(false)
 {}
 
@@ -699,26 +698,13 @@ BufferTextureClient::GetAsDrawTarget()
     return nullptr;
   }
 
-  MOZ_ASSERT(mUsingFallbackDrawTarget == false);
   mDrawTarget = serializer.GetAsDrawTarget(mBackend);
   if (mDrawTarget) {
     return mDrawTarget;
   }
 
-  // fallback path, probably because the Moz2D backend can't create a
-  // DrawTarget around raw memory. This is going to be slow :(
-  mDrawTarget = gfx::Factory::CreateDrawTarget(mBackend, serializer.GetSize(),
-                                               serializer.GetFormat());
-  if (!mDrawTarget) {
-    return nullptr;
-  }
+  mDrawTarget = serializer.GetAsDrawTarget(BackendType::CAIRO);
 
-  mUsingFallbackDrawTarget = true;
-  if (mOpenMode & OpenMode::OPEN_READ) {
-    RefPtr<DataSourceSurface> surface = serializer.GetAsSurface();
-    IntRect rect(0, 0, surface->GetSize().width, surface->GetSize().height);
-    mDrawTarget->CopySurface(surface, rect, IntPoint(0,0));
-  }
   return mDrawTarget;
 }
 
@@ -737,7 +723,6 @@ BufferTextureClient::Unlock()
   MOZ_ASSERT(mLocked, "The TextureClient is already Unlocked!");
   mLocked = false;
   if (!mDrawTarget) {
-    mUsingFallbackDrawTarget = false;
     return;
   }
 
@@ -748,31 +733,7 @@ BufferTextureClient::Unlock()
   MOZ_ASSERT(mDrawTarget->refCount() == 1);
 
   mDrawTarget->Flush();
-  if (mUsingFallbackDrawTarget && (mOpenMode & OpenMode::OPEN_WRITE)) {
-    // When we are using a fallback DrawTarget, it means we could not create
-    // a DrawTarget wrapping the TextureClient's shared memory. In this scenario
-    // we need to put the content of the fallback draw target back into our shared
-    // memory.
-    RefPtr<SourceSurface> snapshot = mDrawTarget->Snapshot();
-    RefPtr<DataSourceSurface> surface = snapshot->GetDataSurface();
-    ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
-    if (!serializer.IsValid() || serializer.GetSize() != surface->GetSize()) {
-      NS_WARNING("Could not write the data back into the texture.");
-      mDrawTarget = nullptr;
-      mUsingFallbackDrawTarget = false;
-      return;
-    }
-    MOZ_ASSERT(surface->GetSize() == serializer.GetSize());
-    MOZ_ASSERT(surface->GetFormat() == serializer.GetFormat());
-    int bpp = BytesPerPixel(surface->GetFormat());
-    for (int i = 0; i < surface->GetSize().height; ++i) {
-      memcpy(serializer.GetData() + i*serializer.GetStride(),
-             surface->GetData() + i*surface->Stride(),
-             surface->GetSize().width * bpp);
-    }
-  }
   mDrawTarget = nullptr;
-  mUsingFallbackDrawTarget = false;
 }
 
 bool

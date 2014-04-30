@@ -263,7 +263,7 @@ MarkUnbarriered(JSTracer *trc, T **thingp, const char *name)
 
 template <typename T>
 static void
-Mark(JSTracer *trc, BarrieredPtr<T> *thing, const char *name)
+Mark(JSTracer *trc, BarrieredBase<T*> *thing, const char *name)
 {
     trc->setTracingName(name);
     MarkInternal(trc, thing->unsafeGet());
@@ -306,7 +306,7 @@ MarkRoot(JSTracer *trc, T **thingp, const char *name)
 
 template <typename T>
 static void
-MarkRange(JSTracer *trc, size_t len, HeapPtr<T> *vec, const char *name)
+MarkRange(JSTracer *trc, size_t len, HeapPtr<T*> *vec, const char *name)
 {
     for (size_t i = 0; i < len; ++i) {
         if (vec[i].get()) {
@@ -402,7 +402,7 @@ UpdateIfRelocated(JSRuntime *rt, T **thingp)
 
 #define DeclMarkerImpl(base, type)                                                                \
 void                                                                                              \
-Mark##base(JSTracer *trc, BarrieredPtr<type> *thing, const char *name)                            \
+Mark##base(JSTracer *trc, BarrieredBase<type*> *thing, const char *name)                          \
 {                                                                                                 \
     Mark<type>(trc, thing, name);                                                                 \
 }                                                                                                 \
@@ -419,13 +419,13 @@ Mark##base##Unbarriered(JSTracer *trc, type **thingp, const char *name)         
     MarkUnbarriered<type>(trc, thingp, name);                                                     \
 }                                                                                                 \
                                                                                                   \
-/* Explicitly instantiate MarkUnbarriered<type>. It is referenced from */                         \
+/* Explicitly instantiate MarkUnbarriered<type*>. It is referenced from */                        \
 /* other translation units and the instantiation might otherwise get */                           \
 /* inlined away. */                                                                               \
 template void MarkUnbarriered<type>(JSTracer *, type **, const char *);                           \
                                                                                                   \
 void                                                                                              \
-Mark##base##Range(JSTracer *trc, size_t len, HeapPtr<type> *vec, const char *name)                \
+Mark##base##Range(JSTracer *trc, size_t len, HeapPtr<type*> *vec, const char *name)               \
 {                                                                                                 \
     MarkRange<type>(trc, len, vec, name);                                                         \
 }                                                                                                 \
@@ -443,7 +443,7 @@ Is##base##Marked(type **thingp)                                                 
 }                                                                                                 \
                                                                                                   \
 bool                                                                                              \
-Is##base##Marked(BarrieredPtr<type> *thingp)                                                      \
+Is##base##Marked(BarrieredBase<type*> *thingp)                                                    \
 {                                                                                                 \
     return IsMarked<type>(thingp->unsafeGet());                                                   \
 }                                                                                                 \
@@ -455,13 +455,13 @@ Is##base##AboutToBeFinalized(type **thingp)                                     
 }                                                                                                 \
                                                                                                   \
 bool                                                                                              \
-Is##base##AboutToBeFinalized(BarrieredPtr<type> *thingp)                                          \
+Is##base##AboutToBeFinalized(BarrieredBase<type*> *thingp)                                        \
 {                                                                                                 \
     return IsAboutToBeFinalized<type>(thingp->unsafeGet());                                       \
 }                                                                                                 \
                                                                                                   \
 type *                                                                                            \
-Update##base##IfRelocated(JSRuntime *rt, BarrieredPtr<type> *thingp)                              \
+Update##base##IfRelocated(JSRuntime *rt, BarrieredBase<type*> *thingp)                            \
 {                                                                                                 \
     return UpdateIfRelocated<type>(rt, thingp->unsafeGet());                                      \
 }                                                                                                 \
@@ -581,7 +581,7 @@ MarkIdInternal(JSTracer *trc, jsid *id)
 }
 
 void
-gc::MarkId(JSTracer *trc, BarrieredId *id, const char *name)
+gc::MarkId(JSTracer *trc, BarrieredBase<jsid> *id, const char *name)
 {
     trc->setTracingName(name);
     MarkIdInternal(trc, id->unsafeGet());
@@ -642,7 +642,7 @@ MarkValueInternal(JSTracer *trc, Value *v)
 }
 
 void
-gc::MarkValue(JSTracer *trc, BarrieredValue *v, const char *name)
+gc::MarkValue(JSTracer *trc, BarrieredBase<Value> *v, const char *name)
 {
     trc->setTracingName(name);
     MarkValueInternal(trc, v->unsafeGet());
@@ -673,7 +673,7 @@ gc::MarkTypeRoot(JSTracer *trc, types::Type *v, const char *name)
 }
 
 void
-gc::MarkValueRange(JSTracer *trc, size_t len, BarrieredValue *vec, const char *name)
+gc::MarkValueRange(JSTracer *trc, size_t len, BarrieredBase<Value> *vec, const char *name)
 {
     for (size_t i = 0; i < len; ++i) {
         trc->setTracingIndex(name, i);
@@ -827,13 +827,6 @@ gc::MarkCrossCompartmentSlot(JSTracer *trc, JSObject *src, HeapSlot *dst, const 
 /*** Special Marking ***/
 
 void
-gc::MarkObject(JSTracer *trc, HeapPtr<GlobalObject, JSScript *> *thingp, const char *name)
-{
-    trc->setTracingName(name);
-    MarkInternal(trc, thingp->unsafeGet());
-}
-
-void
 gc::MarkValueUnbarriered(JSTracer *trc, Value *v, const char *name)
 {
     trc->setTracingName(name);
@@ -982,7 +975,7 @@ ScanShape(GCMarker *gcmarker, Shape *shape)
   restart:
     PushMarkStack(gcmarker, shape->base());
 
-    const BarrieredId &id = shape->propidRef();
+    const BarrieredBase<jsid> &id = shape->propidRef();
     if (JSID_IS_STRING(id))
         PushMarkStack(gcmarker, JSID_TO_STRING(id));
     else if (MOZ_UNLIKELY(JSID_IS_OBJECT(id)))
