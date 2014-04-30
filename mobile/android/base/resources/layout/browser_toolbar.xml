@@ -123,6 +123,7 @@
                   android:layout_marginLeft="4dp"
                   android:layout_marginRight="4dp"
                   android:paddingLeft="8dp"
+                  android:paddingRight="8dp"
                   android:visibility="gone"/>
 
     <org.mozilla.gecko.toolbar.ToolbarDisplayLayout android:id="@+id/display_layout"
