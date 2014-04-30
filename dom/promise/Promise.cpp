@@ -626,9 +626,9 @@ public:
 
       AutoDontReportUncaught silenceReporting(cx);
       JS::Rooted<JS::Value> value(cx, aValue);
+      JS::Rooted<JSObject*> values(cx, mValues);
       if (!JS_WrapValue(cx, &value) ||
-          !JS_DefineElement(cx, mValues, index, value, nullptr, nullptr,
-                            JSPROP_ENUMERATE)) {
+          !JS_DefineElement(cx, values, index, value, JSPROP_ENUMERATE)) {
         MOZ_ASSERT(JS_IsExceptionPending(cx));
         JS::Rooted<JS::Value> exn(cx);
         JS_GetPendingException(cx, &exn);

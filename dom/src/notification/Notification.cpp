@@ -76,8 +76,8 @@ public:
     JS::Rooted<JSObject*> element(aCx, notification->WrapObject(aCx));
     NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
 
-    if (!JS_DefineElement(aCx, mNotifications, mCount++,
-                          JS::ObjectValue(*element), nullptr, nullptr, 0)) {
+    JS::Rooted<JSObject*> notifications(aCx, mNotifications);
+    if (!JS_DefineElement(aCx, notifications, mCount++, element, 0)) {
       return NS_ERROR_FAILURE;
     }
     return NS_OK;

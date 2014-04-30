@@ -829,7 +829,7 @@ static bool
 env_resolve(JSContext *cx, HandleObject obj, HandleId id,
             JS::MutableHandleObject objp)
 {
-    JSString *idstr, *valstr;
+    JSString *idstr;
 
     RootedValue idval(cx);
     if (!JS_IdToValue(cx, id, &idval))
@@ -843,11 +843,10 @@ env_resolve(JSContext *cx, HandleObject obj, HandleId id,
         return false;
     const char *value = getenv(name.ptr());
     if (value) {
-        valstr = JS_NewStringCopyZ(cx, value);
+        RootedString valstr(cx, JS_NewStringCopyZ(cx, value));
         if (!valstr)
             return false;
-        if (!JS_DefinePropertyById(cx, obj, id, STRING_TO_JSVAL(valstr),
-                                   nullptr, nullptr, JSPROP_ENUMERATE)) {
+        if (!JS_DefinePropertyById(cx, obj, id, valstr, JSPROP_ENUMERATE)) {
             return false;
         }
         objp.set(obj);
@@ -1094,11 +1093,9 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
         return 1;
 
     for (size_t j = 0, length = argc - i; j < length; j++) {
-        JSString *str = JS_NewStringCopyZ(cx, argv[i++]);
-        if (!str)
-            return 1;
-        if (!JS_DefineElement(cx, argsObj, j, STRING_TO_JSVAL(str),
-                              nullptr, nullptr, JSPROP_ENUMERATE)) {
+        RootedString str(cx, JS_NewStringCopyZ(cx, argv[i++]));
+        if (!str ||
+            !JS_DefineElement(cx, argsObj, j, str, JSPROP_ENUMERATE)) {
             return 1;
         }
     }
@@ -1572,7 +1569,7 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
             }
 
             JS::Rooted<JSObject*> envobj(cx);
-            envobj = JS_DefineObject(cx, glob, "environment", &env_class, nullptr, 0);
+            envobj = JS_DefineObject(cx, glob, "environment", &env_class);
             if (!envobj) {
                 JS_EndRequest(cx);
                 return 1;

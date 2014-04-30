@@ -1133,9 +1133,9 @@ JS_GetArrayBufferViewData(JSObject *obj)
 }
 
 JS_FRIEND_API(JSObject *)
-JS_GetArrayBufferViewBuffer(JSContext *cx, JSObject *obj)
+JS_GetArrayBufferViewBuffer(JSContext *cx, HandleObject objArg)
 {
-    obj = CheckedUnwrap(obj);
+    JSObject *obj = CheckedUnwrap(objArg);
     if (!obj)
         return nullptr;
     Rooted<ArrayBufferViewObject *> viewObject(cx, &obj->as<ArrayBufferViewObject>());
