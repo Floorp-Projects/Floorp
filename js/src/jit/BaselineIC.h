@@ -1092,8 +1092,6 @@ class ICStubCompiler
     // to pc mapping to work.
     void enterStubFrame(MacroAssembler &masm, Register scratch);
     void leaveStubFrame(MacroAssembler &masm, bool calledIntoIon = false);
-    void leaveStubFrameHead(MacroAssembler &masm, bool calledIntoIon = false);
-    void leaveStubFrameCommonTail(MacroAssembler &masm);
 
     // Some stubs need to emit SPS profiler updates.  This emits the guarding
     // jitcode for those stubs.  If profiling is not enabled, jumps to the
@@ -4114,8 +4112,7 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
 
     class Compiler : public ICStubCompiler {
       protected:
-        uint32_t returnFromIonOffset_;
-        uint32_t returnFromStubOffset_;
+        uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler &masm);
         bool postGenerateStubCode(MacroAssembler &masm, Handle<JitCode *> code);
 
@@ -5037,8 +5034,7 @@ class ICSetProp_Fallback : public ICFallbackStub
 
     class Compiler : public ICStubCompiler {
       protected:
-        uint32_t returnFromIonOffset_;
-        uint32_t returnFromStubOffset_;
+        uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler &masm);
         bool postGenerateStubCode(MacroAssembler &masm, Handle<JitCode *> code);
 
@@ -5468,8 +5464,7 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
     class Compiler : public ICCallStubCompiler {
       protected:
         bool isConstructing_;
-        uint32_t returnFromIonOffset_;
-        uint32_t returnFromStubOffset_;
+        uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler &masm);
         bool postGenerateStubCode(MacroAssembler &masm, Handle<JitCode *> code);
 
