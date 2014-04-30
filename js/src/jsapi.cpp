@@ -158,7 +158,7 @@ namespace js {
 void
 AssertHeapIsIdle(JSRuntime *rt)
 {
-    JS_ASSERT(rt->gc.heapState == js::Idle);
+    JS_ASSERT(rt->heapState == js::Idle);
 }
 
 void
@@ -718,7 +718,7 @@ StopRequest(JSContext *cx)
     if (rt->requestDepth != 1) {
         rt->requestDepth--;
     } else {
-        rt->gc.conservativeGC.updateForRequestEnd();
+        rt->conservativeGC.updateForRequestEnd();
         rt->requestDepth = 0;
         rt->triggerActivityCallback(false);
     }
@@ -1613,17 +1613,17 @@ JS_PUBLIC_API(bool)
 JS_AddExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
     AssertHeapIsIdle(rt);
-    return !!rt->gc.blackRootTracers.append(ExtraTracer(traceOp, data));
+    return !!rt->gcBlackRootTracers.append(JSRuntime::ExtraTracer(traceOp, data));
 }
 
 JS_PUBLIC_API(void)
 JS_RemoveExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
     AssertHeapIsIdle(rt);
-    for (size_t i = 0; i < rt->gc.blackRootTracers.length(); i++) {
-        ExtraTracer *e = &rt->gc.blackRootTracers[i];
+    for (size_t i = 0; i < rt->gcBlackRootTracers.length(); i++) {
+        JSRuntime::ExtraTracer *e = &rt->gcBlackRootTracers[i];
         if (e->op == traceOp && e->data == data) {
-            rt->gc.blackRootTracers.erase(e);
+            rt->gcBlackRootTracers.erase(e);
             break;
         }
     }
@@ -1897,15 +1897,15 @@ JS_PUBLIC_API(void)
 JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb, void *data)
 {
     AssertHeapIsIdle(rt);
-    rt->gc.callback = cb;
-    rt->gc.callbackData = data;
+    rt->gcCallback = cb;
+    rt->gcCallbackData = data;
 }
 
 JS_PUBLIC_API(void)
 JS_SetFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb)
 {
     AssertHeapIsIdle(rt);
-    rt->gc.finalizeCallback = cb;
+    rt->gcFinalizeCallback = cb;
 }
 
 JS_PUBLIC_API(bool)
@@ -1925,51 +1925,51 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
 {
     switch (key) {
       case JSGC_MAX_BYTES: {
-        JS_ASSERT(value >= rt->gc.bytes);
-        rt->gc.maxBytes = value;
+        JS_ASSERT(value >= rt->gcBytes);
+        rt->gcMaxBytes = value;
         break;
       }
       case JSGC_MAX_MALLOC_BYTES:
         rt->setGCMaxMallocBytes(value);
         break;
       case JSGC_SLICE_TIME_BUDGET:
-        rt->gc.sliceBudget = SliceBudget::TimeBudget(value);
+        rt->gcSliceBudget = SliceBudget::TimeBudget(value);
         break;
       case JSGC_MARK_STACK_LIMIT:
         js::SetMarkStackLimit(rt, value);
         break;
       case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
-        rt->gc.highFrequencyTimeThreshold = value;
+        rt->gcHighFrequencyTimeThreshold = value;
         break;
       case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
-        rt->gc.highFrequencyLowLimitBytes = value * 1024 * 1024;
+        rt->gcHighFrequencyLowLimitBytes = value * 1024 * 1024;
         break;
       case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
-        rt->gc.highFrequencyHighLimitBytes = value * 1024 * 1024;
+        rt->gcHighFrequencyHighLimitBytes = value * 1024 * 1024;
         break;
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
-        rt->gc.highFrequencyHeapGrowthMax = value / 100.0;
-        MOZ_ASSERT(rt->gc.highFrequencyHeapGrowthMax / 0.85 > 1.0);
+        rt->gcHighFrequencyHeapGrowthMax = value / 100.0;
+        MOZ_ASSERT(rt->gcHighFrequencyHeapGrowthMax / 0.85 > 1.0);
         break;
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
-        rt->gc.highFrequencyHeapGrowthMin = value / 100.0;
-        MOZ_ASSERT(rt->gc.highFrequencyHeapGrowthMin / 0.85 > 1.0);
+        rt->gcHighFrequencyHeapGrowthMin = value / 100.0;
+        MOZ_ASSERT(rt->gcHighFrequencyHeapGrowthMin / 0.85 > 1.0);
         break;
       case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
-        rt->gc.lowFrequencyHeapGrowth = value / 100.0;
-        MOZ_ASSERT(rt->gc.lowFrequencyHeapGrowth / 0.9 > 1.0);
+        rt->gcLowFrequencyHeapGrowth = value / 100.0;
+        MOZ_ASSERT(rt->gcLowFrequencyHeapGrowth / 0.9 > 1.0);
         break;
       case JSGC_DYNAMIC_HEAP_GROWTH:
-        rt->gc.dynamicHeapGrowth = value;
+        rt->gcDynamicHeapGrowth = value;
         break;
       case JSGC_DYNAMIC_MARK_SLICE:
-        rt->gc.dynamicMarkSlice = value;
+        rt->gcDynamicMarkSlice = value;
         break;
       case JSGC_ALLOCATION_THRESHOLD:
-        rt->gc.allocationThreshold = value * 1024 * 1024;
+        rt->gcAllocationThreshold = value * 1024 * 1024;
         break;
       case JSGC_DECOMMIT_THRESHOLD:
-        rt->gc.decommitThreshold = value * 1024 * 1024;
+        rt->gcDecommitThreshold = value * 1024 * 1024;
         break;
       default:
         JS_ASSERT(key == JSGC_MODE);
@@ -1986,42 +1986,42 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
 {
     switch (key) {
       case JSGC_MAX_BYTES:
-        return uint32_t(rt->gc.maxBytes);
+        return uint32_t(rt->gcMaxBytes);
       case JSGC_MAX_MALLOC_BYTES:
-        return rt->gc.maxMallocBytes;
+        return rt->gcMaxMallocBytes;
       case JSGC_BYTES:
-        return uint32_t(rt->gc.bytes);
+        return uint32_t(rt->gcBytes);
       case JSGC_MODE:
         return uint32_t(rt->gcMode());
       case JSGC_UNUSED_CHUNKS:
-        return uint32_t(rt->gc.chunkPool.getEmptyCount());
+        return uint32_t(rt->gcChunkPool.getEmptyCount());
       case JSGC_TOTAL_CHUNKS:
-        return uint32_t(rt->gc.chunkSet.count() + rt->gc.chunkPool.getEmptyCount());
+        return uint32_t(rt->gcChunkSet.count() + rt->gcChunkPool.getEmptyCount());
       case JSGC_SLICE_TIME_BUDGET:
-        return uint32_t(rt->gc.sliceBudget > 0 ? rt->gc.sliceBudget / PRMJ_USEC_PER_MSEC : 0);
+        return uint32_t(rt->gcSliceBudget > 0 ? rt->gcSliceBudget / PRMJ_USEC_PER_MSEC : 0);
       case JSGC_MARK_STACK_LIMIT:
-        return rt->gc.marker.maxCapacity();
+        return rt->gcMarker.maxCapacity();
       case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
-        return rt->gc.highFrequencyTimeThreshold;
+        return rt->gcHighFrequencyTimeThreshold;
       case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
-        return rt->gc.highFrequencyLowLimitBytes / 1024 / 1024;
+        return rt->gcHighFrequencyLowLimitBytes / 1024 / 1024;
       case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
-        return rt->gc.highFrequencyHighLimitBytes / 1024 / 1024;
+        return rt->gcHighFrequencyHighLimitBytes / 1024 / 1024;
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
-        return uint32_t(rt->gc.highFrequencyHeapGrowthMax * 100);
+        return uint32_t(rt->gcHighFrequencyHeapGrowthMax * 100);
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
-        return uint32_t(rt->gc.highFrequencyHeapGrowthMin * 100);
+        return uint32_t(rt->gcHighFrequencyHeapGrowthMin * 100);
       case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
-        return uint32_t(rt->gc.lowFrequencyHeapGrowth * 100);
+        return uint32_t(rt->gcLowFrequencyHeapGrowth * 100);
       case JSGC_DYNAMIC_HEAP_GROWTH:
-        return rt->gc.dynamicHeapGrowth;
+        return rt->gcDynamicHeapGrowth;
       case JSGC_DYNAMIC_MARK_SLICE:
-        return rt->gc.dynamicMarkSlice;
+        return rt->gcDynamicMarkSlice;
       case JSGC_ALLOCATION_THRESHOLD:
-        return rt->gc.allocationThreshold / 1024 / 1024;
+        return rt->gcAllocationThreshold / 1024 / 1024;
       default:
         JS_ASSERT(key == JSGC_NUMBER);
-        return uint32_t(rt->gc.number);
+        return uint32_t(rt->gcNumber);
     }
 }
 
@@ -2501,7 +2501,7 @@ JS_NewGlobalObject(JSContext *cx, const JSClass *clasp, JSPrincipals *principals
 
     Zone *zone;
     if (options.zoneSpecifier() == JS::SystemZone)
-        zone = rt->gc.systemZone;
+        zone = rt->systemZone;
     else if (options.zoneSpecifier() == JS::FreshZone)
         zone = nullptr;
     else
@@ -2512,9 +2512,9 @@ JS_NewGlobalObject(JSContext *cx, const JSClass *clasp, JSPrincipals *principals
         return nullptr;
 
     // Lazily create the system zone.
-    if (!rt->gc.systemZone && options.zoneSpecifier() == JS::SystemZone) {
-        rt->gc.systemZone = compartment->zone();
-        rt->gc.systemZone->isSystem = true;
+    if (!rt->systemZone && options.zoneSpecifier() == JS::SystemZone) {
+        rt->systemZone = compartment->zone();
+        rt->systemZone->isSystem = true;
     }
 
     Rooted<GlobalObject *> global(cx);
@@ -6203,7 +6203,7 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
 JS_PUBLIC_API(void)
 JS_ScheduleGC(JSContext *cx, uint32_t count)
 {
-    cx->runtime()->gc.nextScheduled = count;
+    cx->runtime()->gcNextScheduled = count;
 }
 #endif
 
