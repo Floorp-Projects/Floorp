@@ -734,7 +734,7 @@ inline bool
 ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, ValueOperand val,
                                          Register scratch, GeneralRegisterSet saveRegs)
 {
-    Nursery &nursery = cx->runtime()->gc.nursery;
+    Nursery &nursery = cx->runtime()->gcNursery;
 
     Label skipBarrier;
     masm.branchTestObject(Assembler::NotEqual, val, &skipBarrier);
@@ -3433,7 +3433,7 @@ IsCacheableGetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *sh
 #ifdef JSGC_GENERATIONAL
     // Information from get prop call ICs may be used directly from Ion code,
     // and should not be nursery allocated.
-    if (cx->runtime()->gc.nursery.isInside(holder) || cx->runtime()->gc.nursery.isInside(func))
+    if (cx->runtime()->gcNursery.isInside(holder) || cx->runtime()->gcNursery.isInside(func))
         return false;
 #endif
 
@@ -3552,7 +3552,7 @@ IsCacheableSetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *sh
 #ifdef JSGC_GENERATIONAL
     // Information from set prop call ICs may be used directly from Ion code,
     // and should not be nursery allocated.
-    if (cx->runtime()->gc.nursery.isInside(holder) || cx->runtime()->gc.nursery.isInside(func))
+    if (cx->runtime()->gcNursery.isInside(holder) || cx->runtime()->gcNursery.isInside(func))
         return false;
 #endif
 
