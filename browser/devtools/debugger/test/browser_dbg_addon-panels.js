@@ -25,6 +25,7 @@ function test() {
       return original;
     });
 
+    // Check only valid tabs are shown
     let tabs = addonDebugger.frame.contentDocument.getElementById("toolbox-tabs").children;
     let expectedTabs = ["options", "webconsole", "jsdebugger", "scratchpad"];
 
@@ -33,6 +34,10 @@ function test() {
       let toolName = expectedTabs[i];
       is(tab.getAttribute("toolid"), toolName, "displaying " + toolName);
     });
+
+    // Check no toolbox buttons are shown
+    let buttons = addonDebugger.frame.contentDocument.getElementById("toolbox-buttons").children;
+    is(buttons.length, 0, "no toolbox buttons for the addon debugger");
 
     yield addonDebugger.destroy();
     yield removeAddon(addon);
