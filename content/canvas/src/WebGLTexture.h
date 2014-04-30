@@ -11,6 +11,7 @@
 
 #include "nsWrapperCache.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/LinkedList.h"
 #include <algorithm>
 
@@ -273,10 +274,8 @@ public:
 
     bool IsMipmapCubeComplete() const;
 
-    void SetFakeBlackStatus(WebGLTextureFakeBlackStatus x) {
-        mFakeBlackStatus = x;
-        mContext->SetFakeBlackStatus(WebGLContextFakeBlackStatus::Unknown);
-    }
+    void SetFakeBlackStatus(WebGLTextureFakeBlackStatus x);
+    
     // Returns the current fake-black-status, except if it was Unknown,
     // in which case this function resolves it first, so it never returns Unknown.
     WebGLTextureFakeBlackStatus ResolvedFakeBlackStatus();
