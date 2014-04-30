@@ -43,10 +43,7 @@ Http2PushedStream::Http2PushedStream(Http2PushTransactionBuffer *aTransaction,
   mBufferedPush->SetPushStream(this);
   mLoadGroupCI = aAssociatedStream->LoadGroupConnectionInfo();
   mLastRead = TimeStamp::Now();
-  uint32_t priorityGroup = aAssociatedStream->Priority() + 1;
-  uint8_t priorityGroupWeight = (nsISupportsPriority::PRIORITY_LOWEST + 1) -
-    (priorityGroup - kNormalPriority);
-  SetPriorityGroup(priorityGroup, priorityGroupWeight);
+  SetPriority(aAssociatedStream->Priority() + 1);
 }
 
 bool
