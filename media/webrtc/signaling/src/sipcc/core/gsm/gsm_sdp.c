@@ -4545,7 +4545,7 @@ gsmsdp_add_rtcp_fb (int level, sdp_t *sdp_p,
     for (pt_index = 1; pt_index <= num_pts; pt_index++) {
         pt_codec = sdp_get_media_payload_type (sdp_p, level, pt_index,
                                                &indicator);
-        if ((pt_codec & 0xFF) == codec) {
+        if (codec == RTP_NONE || (pt_codec & 0xFF) == codec) {
             int pt = GET_DYN_PAYLOAD_TYPE_VALUE(pt_codec);
 
             /* Add requested a=rtcp-fb:nack attributes */
@@ -4665,7 +4665,11 @@ gsmsdp_negotiate_rtcp_fb (cc_sdp_t *cc_sdp_p,
          * Mask out the types that we do not support
          */
         switch (codec) {
+            /* Really should be all video codecs... */
             case RTP_VP8:
+            case RTP_H263:
+            case RTP_H264_P0:
+            case RTP_H264_P1:
             case RTP_I420:
                 fb_types &=
                   sdp_rtcp_fb_nack_to_bitmap(SDP_RTCP_FB_NACK_BASIC) |
@@ -4674,6 +4678,7 @@ gsmsdp_negotiate_rtcp_fb (cc_sdp_t *cc_sdp_p,
                 break;
             default:
                 fb_types = 0;
+                break;
         }
 
         /*
@@ -5688,7 +5693,7 @@ gsmsdp_add_media_line (fsmdef_dcb_t *dcb_p, const cc_media_cap_t *media_cap,
           }
 
           /*
-           * Setup the local soruce address.
+           * Setup the local source address.
            */
           if (addr_type == CPR_IP_ADDR_IPV6) {
               gsmsdp_get_local_source_v6_address(media);
@@ -5719,7 +5724,7 @@ gsmsdp_add_media_line (fsmdef_dcb_t *dcb_p, const cc_media_cap_t *media_cap,
 
           /* Add supported rtcp-fb types */
           if (media_cap->type == SDP_MEDIA_VIDEO) {
-              gsmsdp_add_rtcp_fb (level, dcb_p->sdp->src_sdp, RTP_VP8,
+              gsmsdp_add_rtcp_fb (level, dcb_p->sdp->src_sdp, RTP_NONE, /* RTP_NONE == all */
                   sdp_rtcp_fb_nack_to_bitmap(SDP_RTCP_FB_NACK_BASIC) |
                   sdp_rtcp_fb_nack_to_bitmap(SDP_RTCP_FB_NACK_PLI) |
                   sdp_rtcp_fb_ccm_to_bitmap(SDP_RTCP_FB_CCM_FIR));
