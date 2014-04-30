@@ -110,7 +110,7 @@ private:
     unsigned char m_overflowed;
 };
 
-template <typename T, class OverflowHandler = CrashOnOverflow> class Checked;
+template <typename T, class OverflowHandler = RecordOverflow> class Checked;
 template <typename T> struct RemoveChecked;
 template <typename T> struct RemoveChecked<Checked<T> >;
 
