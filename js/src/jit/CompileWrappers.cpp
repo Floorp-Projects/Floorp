@@ -68,7 +68,7 @@ CompileRuntime::addressOfLastCachedNativeIterator()
 const void *
 CompileRuntime::addressOfGCZeal()
 {
-    return &runtime()->gcZeal_;
+    return &runtime()->gc.zealMode;
 }
 #endif
 
@@ -170,7 +170,7 @@ CompileRuntime::maybeGetMathCache()
 const Nursery &
 CompileRuntime::gcNursery()
 {
-    return runtime()->gcNursery;
+    return runtime()->gc.nursery;
 }
 #endif
 

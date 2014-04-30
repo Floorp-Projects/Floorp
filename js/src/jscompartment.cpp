@@ -258,7 +258,7 @@ JSCompartment::putWrapper(JSContext *cx, const CrossCompartmentKey &wrapped, con
 
     if (success && (nursery.isInside(wrapped.wrapped) || nursery.isInside(wrapped.debugger))) {
         WrapperMapRef ref(&crossCompartmentWrappers, wrapped);
-        cx->runtime()->gcStoreBuffer.putGeneric(ref);
+        cx->runtime()->gc.storeBuffer.putGeneric(ref);
     }
 #endif
 
@@ -557,7 +557,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
     JSRuntime *rt = runtimeFromMainThread();
 
     {
-        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES);
+        gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_SWEEP_TABLES);
 
         /* Remove dead references held weakly by the compartment. */
 
@@ -616,8 +616,8 @@ JSCompartment::sweepCrossCompartmentWrappers()
 {
     JSRuntime *rt = runtimeFromMainThread();
 
-    gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_SWEEP_TABLES);
-    gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_WRAPPER);
+    gcstats::AutoPhase ap1(rt->gc.stats, gcstats::PHASE_SWEEP_TABLES);
+    gcstats::AutoPhase ap2(rt->gc.stats, gcstats::PHASE_SWEEP_TABLES_WRAPPER);
 
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
