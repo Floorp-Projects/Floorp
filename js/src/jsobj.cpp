@@ -507,7 +507,7 @@ Reject(JSContext *cx, HandleId id, unsigned errorNumber, bool throwError, bool *
 //
 JS_FRIEND_API(bool)
 js::CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                        PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
+                        unsigned attrs, PropertyOp getter, StrictPropertyOp setter)
 {
     if (!obj->isNative())
         return true;

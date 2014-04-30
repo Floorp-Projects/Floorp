@@ -475,9 +475,8 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
     // This is broken, and will be fixed at some point, but for now we need to
     // cache the value explicitly. See the corresponding call to
     // JS_GetPropertyById at the top of this function.
-    return JS_DefinePropertyById(cx, holder, id,
-                                 ObjectValue(*JS_GetFunctionObject(fun)),
-                                 nullptr, nullptr, 0) &&
+    RootedValue value(cx, ObjectValue(*JS_GetFunctionObject(fun)));
+    return JS_DefinePropertyById(cx, holder, id, value, 0) &&
            JS_GetPropertyDescriptorById(cx, holder, id, desc);
 }
 
@@ -1102,8 +1101,8 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
         desc.setSetterObject(&fval.toObject());
 
     // Define the property.
-    return JS_DefinePropertyById(cx, holder, id, desc.value(),
-                                 desc.getter(), desc.setter(), desc.attributes());
+    return JS_DefinePropertyById(cx, holder, id, desc.value(), desc.attributes(),
+                                 desc.getter(), desc.setter());
 }
 
 static bool
@@ -1174,9 +1173,9 @@ XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
     {
         if (!JS_AlreadyHasOwnPropertyById(cx, holder, id, &found))
             return false;
-        if (!found && !JS_DefinePropertyById(cx, holder, id, UndefinedValue(),
-                                             wrappedJSObject_getter, nullptr,
-                                             JSPROP_ENUMERATE | JSPROP_SHARED)) {
+        if (!found && !JS_DefinePropertyById(cx, holder, id, UndefinedHandleValue,
+                                             JSPROP_ENUMERATE | JSPROP_SHARED,
+                                             wrappedJSObject_getter)) {
             return false;
         }
         if (!JS_GetPropertyDescriptorById(cx, holder, id, desc))
@@ -1284,7 +1283,7 @@ XPCWrappedNativeXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, 
                                            Handle<JSPropertyDescriptor> existingDesc, bool *defined)
 {
     *defined = false;
-    JSObject *holder = singleton.ensureHolder(cx, wrapper);
+    RootedObject holder(cx, singleton.ensureHolder(cx, wrapper));
     if (isResolving(cx, holder, id)) {
         if (!desc.hasAttributes(JSPROP_GETTER | JSPROP_SETTER)) {
             if (!desc.getter())
@@ -1294,8 +1293,8 @@ XPCWrappedNativeXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, 
         }
 
         *defined = true;
-        return JS_DefinePropertyById(cx, holder, id, desc.value(), desc.getter(), desc.setter(),
-                                     desc.attributes());
+        return JS_DefinePropertyById(cx, holder, id, desc.value(), desc.attributes(),
+                                     desc.getter(), desc.setter());
     }
 
     // Check for an indexed property on a Window.  If that's happening, do
@@ -1888,8 +1887,8 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
     if (!desc.object())
         return true;
 
-    if (!JS_DefinePropertyById(cx, holder, id, desc.value(), desc.getter(),
-                               desc.setter(), desc.attributes()) ||
+    if (!JS_DefinePropertyById(cx, holder, id, desc.value(), desc.attributes(),
+                               desc.getter(), desc.setter()) ||
         !JS_GetPropertyDescriptorById(cx, holder, id, desc))
     {
         return false;
@@ -2021,8 +2020,8 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
         return false;
 
     return JS_DefinePropertyById(cx, expandoObject, id, wrappedDesc.value(),
-                                 wrappedDesc.getter(), wrappedDesc.setter(),
-                                 wrappedDesc.get().attrs);
+                                 wrappedDesc.get().attrs,
+                                 wrappedDesc.getter(), wrappedDesc.setter());
 }
 
 template <typename Base, typename Traits>

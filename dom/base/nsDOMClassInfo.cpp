@@ -1434,8 +1434,9 @@ nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *aObj,
     // window.classname, just fall through and let the JS engine
     // return the Object constructor.
 
-    if (!::JS_DefinePropertyById(cx, obj, sConstructor_id, val, JS_PropertyStub,
-                                 JS_StrictPropertyStub, JSPROP_ENUMERATE)) {
+    JS::Rooted<jsid> id(cx, sConstructor_id);
+    if (!::JS_DefinePropertyById(cx, obj, id, val, JSPROP_ENUMERATE,
+                                 JS_PropertyStub, JS_StrictPropertyStub)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -1670,8 +1671,8 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
   if (!contentDefinedProperty && desc.object() && !desc.value().isUndefined() &&
       !JS_DefineUCProperty(cx, global, mData->mNameUTF16,
                            NS_strlen(mData->mNameUTF16),
-                           desc.value(), desc.getter(), desc.setter(),
-                           desc.attributes())) {
+                           desc.value(), desc.attributes(),
+                           desc.getter(), desc.setter())) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -3263,9 +3264,9 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     rv = WrapNative(cx, location, &NS_GET_IID(nsIDOMLocation), true, &v);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool ok = JS_DefinePropertyById(cx, obj, id, v, JS_PropertyStub,
-                                    LocationSetterUnwrapper,
-                                    JSPROP_PERMANENT | JSPROP_ENUMERATE);
+    bool ok = JS_DefinePropertyById(cx, obj, id, v,
+                                    JSPROP_PERMANENT | JSPROP_ENUMERATE,
+                                    JS_PropertyStub, LocationSetterUnwrapper);
 
     if (!ok) {
       return NS_ERROR_FAILURE;
@@ -3291,9 +3292,10 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     // Hold on to the top window object as a global property so we
     // don't need to worry about losing expando properties etc.
-    if (!JS_DefinePropertyById(cx, obj, id, v, JS_PropertyStub, JS_StrictPropertyStub,
+    if (!JS_DefinePropertyById(cx, obj, id, v,
                                JSPROP_READONLY | JSPROP_PERMANENT |
-                               JSPROP_ENUMERATE)) {
+                               JSPROP_ENUMERATE,
+                               JS_PropertyStub, JS_StrictPropertyStub)) {
       return NS_ERROR_FAILURE;
     }
     *objp = obj;
@@ -3322,8 +3324,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // also already defined it, so we don't have to.
     if (desc.object() && !desc.value().isUndefined() &&
         !JS_DefinePropertyById(cx, global, id, desc.value(),
-                               desc.getter(), desc.setter(),
-                               desc.attributes())) {
+                               desc.attributes(),
+                               desc.getter(), desc.setter())) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -3340,8 +3342,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     MOZ_ASSERT_IF(isXray, !desc.value().isUndefined());
     if (!desc.value().isUndefined() &&
         !JS_DefinePropertyById(cx, obj, id, desc.value(),
-                               desc.getter(), desc.setter(),
-                               desc.attributes())) {
+                               desc.attributes(),
+                               desc.getter(), desc.setter())) {
       return NS_ERROR_FAILURE;
     }
 
@@ -3527,7 +3529,7 @@ nsGenericArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     uint32_t index = uint32_t(n);
     if (index < length) {
-      *_retval = ::JS_DefineElement(cx, obj, index, JSVAL_VOID, nullptr, nullptr,
+      *_retval = ::JS_DefineElement(cx, obj, index, JS::UndefinedHandleValue,
                                     JSPROP_ENUMERATE | JSPROP_SHARED);
       *objp = obj;
     }
@@ -3588,7 +3590,7 @@ nsGenericArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     int32_t length = len_val.toInt32();
 
     for (int32_t i = 0; ok && i < length; ++i) {
-      ok = ::JS_DefineElement(cx, obj, i, JSVAL_VOID, nullptr, nullptr,
+      ok = ::JS_DefineElement(cx, obj, i, JS::UndefinedHandleValue,
                               JSPROP_ENUMERATE | JSPROP_SHARED);
     }
   }
@@ -3719,8 +3721,8 @@ nsStorage2SH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!DOMStringIsNull(data)) {
-    if (!::JS_DefinePropertyById(cx, realObj, id, JSVAL_VOID, nullptr,
-                                 nullptr, JSPROP_ENUMERATE)) {
+    if (!::JS_DefinePropertyById(cx, realObj, id, JS::UndefinedHandleValue,
+                                 JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
 

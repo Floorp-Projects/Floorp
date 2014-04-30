@@ -114,11 +114,10 @@ nsXBLProtoImplMethod::InstallMember(JSContext* aCx,
     JS::Rooted<JSObject*> method(aCx, JS_CloneFunctionObject(aCx, jsMethodObject, globalObject));
     NS_ENSURE_TRUE(method, NS_ERROR_OUT_OF_MEMORY);
 
-    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*method));
     if (!::JS_DefineUCProperty(aCx, aTargetClassObject,
                                static_cast<const jschar*>(mName),
-                               name.Length(), value,
-                               nullptr, nullptr, JSPROP_ENUMERATE)) {
+                               name.Length(), method,
+                               JSPROP_ENUMERATE)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
