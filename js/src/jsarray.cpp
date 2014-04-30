@@ -89,7 +89,7 @@ js::GetLengthProperty(JSContext *cx, HandleObject obj, uint32_t *lengthp)
  *
  * This means the largest allowed index is actually 2^32-2 (4294967294).
  *
- * In our implementation, it would be sufficient to check for JSVAL_IS_INT(id)
+ * In our implementation, it would be sufficient to check for id.isInt32()
  * except that by using signed 31-bit integers we miss the top half of the
  * valid range. This function checks the string representation itself; note
  * that calling a standard conversion routine might allow strings such as

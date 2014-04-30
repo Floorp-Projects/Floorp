@@ -29,34 +29,34 @@ var test_integers = [{
 
 var test_strings = [{
   string: 'www.foo.com',
-  buffer: new Buffer('88db6d898b5a44b74f', 'hex')
+  buffer: new Buffer('89e7cf9bfc1ad7d4db7f', 'hex')
 }, {
   string: 'éáűőúöüó€',
-  buffer: new Buffer('13C3A9C3A1C5B1C591C3BAC3B6C3BCC3B3E282AC', 'hex')
+  buffer: new Buffer('13c3a9c3a1c5b1c591c3bac3b6c3bcc3b3e282ac', 'hex')
 }];
 
 test_huffman_request = {
-  'GET': 'f77778ff',
-  'http': 'ce3177',
-  '/': '0f',
-  'www.foo.com': 'db6d898b5a44b74f',
-  'https': 'ce31743f',
-  'www.bar.com': 'db6d897a1e44b74f',
-  'no-cache': '63654a1398ff',
-  '/custom-path.css': '04eb08b7495c88e644c21f',
-  'custom-key': '4eb08b749790fa7f',
-  'custom-value': '4eb08b74979a17a8ff'
+  'GET': 'd5df47',
+  'http': 'adcebf',
+  '/': '3f',
+  'www.foo.com': 'e7cf9bfc1ad7d4db7f',
+  'https': 'adcebf1f',
+  'www.bar.com': 'e7cf9bfbd383ea6dbf',
+  'no-cache': 'b9b9949556bf',
+  '/custom-path.css': '3ab8e2e6db9af4bab7d58e3f',
+  'custom-key': '571c5cdb737b2faf',
+  'custom-value': '571c5cdb73724d9c57'
 };
 
 test_huffman_response = {
-  '302': '98a7',
-  'private': '73d5cd111f',
-  'Mon, 21 OCt 2013 20:13:21 GMT': 'ef6b3a7a0e6e8fa7647a0e534dd072fb0d37b0e6e8f777f8ff',
-  ': https://www.bar.com': 'f6746718ba1ec00db6d897a1e44b74',
-  '200': '394b',
-  'Mon, 21 OCt 2013 20:13:22 GMT': 'ef6b3a7a0e6e8fa7647a0e534dd072fb0d37b0e7e8f777f8ff',
-  'https://www.bar.com': 'ce31743d801b6db12f43c896e9',
-  'gzip': 'cbd54e',
+  '302': '4017',
+  'private': 'bf06724b97',
+  'Mon, 21 OCt 2013 20:13:21 GMT': 'd6dbb29884de3dce3100a0c4130a262136ad747f',
+  ': https://www.bar.com': '98d5b9d7e331cfcf9f37f7a707d4db7f',
+  '200': '200f',
+  'Mon, 21 OCt 2013 20:13:22 GMT': 'd6dbb29884de3dce3100a0c4130a262236ad747f',
+  'https://www.bar.com': 'adcebf198e7e7cf9bfbd383ea6db',
+  'gzip': 'abdd97ff',
   'foo=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
 AAAAAAAAAAAAAAAAAAAAAAAAAALASDJKHQKBZXOQWEOPIUAXQWEOIUAXLJKHQWOEIUAL\
 QWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234LASDJKHQKBZXOQWEOPIUAXQWEOIUAXLJKH\
@@ -64,22 +64,7 @@ QWOEIUALQWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234LASDJKHQKBZXOQWEOPIUAXQWEO\
 IUAXLJKHQWOEIUALQWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234LASDJKHQKBZXOQWEOP\
 IUAXQWEOIUAXLJKHQWOEIUALQWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234ZZZZZZZZZZ\
 ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ1234 m\
-ax-age=3600; version=1': 'c5adb77efdfbf7efdfbf7efdfbf7efdfbf7efdfbf7\
-efdfbf7efdfbf7efdfbf7efdfbf7efdfbf7efdfbf7efdfbf7efdfbf7efdfbf7efdfb\
-f7efdfbf7efdfbf7efdfbfe5bfc3b7e3fdfbfedfdf5ff9fbfa7dbf5ddf4fafc3f1bf\
-f7f6fd777d3e1f8dffbf97c7fbf7fdbf5f4eef87e37fcbedfaeefa7c3f1bff7f2fb7\
-77e37fefe5f2fefe3bfc3b7edfaeefa7e3e1bff7f331e69fe5bfc3b7e3fdfbfedfdf\
-5ff9fbfa7dbf5ddf4fafc3f1bff7f6fd777d3e1f8dffbf97c7fbf7fdbf5f4eef87e3\
-7fcbedfaeefa7c3f1bff7f2fb777e37fefe5f2fefe3bfc3b7edfaeefa7e3e1bff7f3\
-31e69fe5bfc3b7e3fdfbfedfdf5ff9fbfa7dbf5ddf4fafc3f1bff7f6fd777d3e1f8d\
-ffbf97c7fbf7fdbf5f4eef87e37fcbedfaeefa7c3f1bff7f2fb777e37fefe5f2fefe\
-3bfc3b7edfaeefa7e3e1bff7f331e69fe5bfc3b7e3fdfbfedfdf5ff9fbfa7dbf5ddf\
-4fafc3f1bff7f6fd777d3e1f8dffbf97c7fbf7fdbf5f4eef87e37fcbedfaeefa7c3f\
-1bff7f2fb777e37fefe5f2fefe3bfc3b7edfaeefa7e3e1bff7f331e69ffcff3fcff3\
-fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcf\
-f3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3f\
-cff3fcff3fcff3fcff3fcff3fcff3fcff0c79a7e8d11e72a321b66a4a5eae8e62f82\
-9acb4d',
+ax-age=3600; version=1': 'e0d6cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cff5cfb747cfe9f2fb7d3b7f7e9e3f6fcf7f8f97879e7f4fb7e7bfc7c3cf3fa7d7e7f4f97dbf3e3dfe1e79febf6fcf7f8f879e7f4fafdbbfcf3fa7d7ebf4f9e7dba3edf9eff1f3f0cfe9b049107d73edd1f3fa7cbedf4edfdfa78fdbf3dfe3e5e1e79fd3edf9eff1f0f3cfe9f5f9fd3e5f6fcf8f7f879e7fafdbf3dfe3e1e79fd3ebf6eff3cfe9f5fafd3e79f6e8fb7e7bfc7cfc33fa6c12441f5cfb747cfe9f2fb7d3b7f7e9e3f6fcf7f8f97879e7f4fb7e7bfc7c3cf3fa7d7e7f4f97dbf3e3dfe1e79febf6fcf7f8f879e7f4fafdbbfcf3fa7d7ebf4f9e7dba3edf9eff1f3f0cfe9b049107d73edd1f3fa7cbedf4edfdfa78fdbf3dfe3e5e1e79fd3edf9eff1f0f3cfe9f5f9fd3e5f6fcf8f7f879e7fafdbf3dfe3e1e79fd3ebf6eff3cfe9f5fafd3e79f6e8fb7e7bfc7cfc33fa6c12441fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff624880d6a7a664d4b9d1100761b92f0c58dba71',
   'foo=ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\
 ZZZZZZZZZZZZZZZZZZZZZZZZZZLASDJKHQKBZXOQWEOPIUAXQWEOIUAXLJKHQWOEIUAL\
 QWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234LASDJKHQKBZXOQWEOPIUAXQWEOIUAXLJKH\
@@ -87,122 +72,235 @@ QWOEIUALQWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234LASDJKHQKBZXOQWEOPIUAXQWEO\
 IUAXLJKHQWOEIUALQWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234LASDJKHQKBZXOQWEOP\
 IUAXQWEOIUAXLJKHQWOEIUALQWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234AAAAAAAAAA\
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1234 m\
-ax-age=3600; version=1': 'c5adb7fcff3fcff3fcff3fcff3fcff3fcff3fcff3f\
-cff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff\
-3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fcff3fc\
-ff3fcff3e5bfc3b7e3fdfbfedfdf5ff9fbfa7dbf5ddf4fafc3f1bff7f6fd777d3e1f\
-8dffbf97c7fbf7fdbf5f4eef87e37fcbedfaeefa7c3f1bff7f2fb777e37fefe5f2fe\
-fe3bfc3b7edfaeefa7e3e1bff7f331e69fe5bfc3b7e3fdfbfedfdf5ff9fbfa7dbf5d\
-df4fafc3f1bff7f6fd777d3e1f8dffbf97c7fbf7fdbf5f4eef87e37fcbedfaeefa7c\
-3f1bff7f2fb777e37fefe5f2fefe3bfc3b7edfaeefa7e3e1bff7f331e69fe5bfc3b7\
-e3fdfbfedfdf5ff9fbfa7dbf5ddf4fafc3f1bff7f6fd777d3e1f8dffbf97c7fbf7fd\
-bf5f4eef87e37fcbedfaeefa7c3f1bff7f2fb777e37fefe5f2fefe3bfc3b7edfaeef\
-a7e3e1bff7f331e69fe5bfc3b7e3fdfbfedfdf5ff9fbfa7dbf5ddf4fafc3f1bff7f6\
-fd777d3e1f8dffbf97c7fbf7fdbf5f4eef87e37fcbedfaeefa7c3f1bff7f2fb777e3\
-7fefe5f2fefe3bfc3b7edfaeefa7e3e1bff7f331e69f7efdfbf7efdfbf7efdfbf7ef\
-dfbf7efdfbf7efdfbf7efdfbf7efdfbf7efdfbf7efdfbf7efdfbf7efdfbf7efdfbf7\
-efdfbf7efdfbf7efdfbf7efdfbf7efdfbcc79a7e8d11e72a321b66a4a5eae8e62f82\
-9acb4d'
+ax-age=3600; version=1': 'e0d6cffbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7f5cfb747cfe9f2fb7d3b7f7e9e3f6fcf7f8f97879e7f4fb7e7bfc7c3cf3fa7d7e7f4f97dbf3e3dfe1e79febf6fcf7f8f879e7f4fafdbbfcf3fa7d7ebf4f9e7dba3edf9eff1f3f0cfe9b049107d73edd1f3fa7cbedf4edfdfa78fdbf3dfe3e5e1e79fd3edf9eff1f0f3cfe9f5f9fd3e5f6fcf8f7f879e7fafdbf3dfe3e1e79fd3ebf6eff3cfe9f5fafd3e79f6e8fb7e7bfc7cfc33fa6c12441f5cfb747cfe9f2fb7d3b7f7e9e3f6fcf7f8f97879e7f4fb7e7bfc7c3cf3fa7d7e7f4f97dbf3e3dfe1e79febf6fcf7f8f879e7f4fafdbbfcf3fa7d7ebf4f9e7dba3edf9eff1f3f0cfe9b049107d73edd1f3fa7cbedf4edfdfa78fdbf3dfe3e5e1e79fd3edf9eff1f0f3cfe9f5f9fd3e5f6fcf8f7f879e7fafdbf3dfe3e1e79fd3ebf6eff3cfe9f5fafd3e79f6e8fb7e7bfc7cfc33fa6c124419f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7ce24880d6a7a664d4b9d1100761b92f0c58dba71'
 };
 
 var test_headers = [{
+  // literal w/index, name index
   header: {
     name: 1,
     value: 'GET',
-    index: true
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
   },
-  buffer: new Buffer('02' + '03474554', 'hex')
+  buffer: new Buffer('42' + '03474554', 'hex')
 }, {
+  // literal w/index, name index
   header: {
     name: 6,
     value: 'http',
-    index: true
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
   },
-  buffer: new Buffer('07' + '83ce3177', 'hex')
+  buffer: new Buffer('47' + '83ADCEBF', 'hex')
 }, {
+  // literal w/index, name index
   header: {
     name: 5,
     value: '/',
-    index: true
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
   },
-  buffer: new Buffer('06' + '012f', 'hex')
+  buffer: new Buffer('46' + '012F', 'hex')
 }, {
+  // literal w/index, name index
   header: {
     name: 3,
     value: 'www.foo.com',
-    index: true
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
   },
-  buffer: new Buffer('04' + '88db6d898b5a44b74f', 'hex')
+  buffer: new Buffer('44' + '89E7CF9BFC1AD7D4DB7F', 'hex')
 }, {
+  // literal w/index, name index
   header: {
     name: 2,
     value: 'https',
-    index: true
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
   },
-  buffer: new Buffer('03' + '84ce31743f', 'hex')
+  buffer: new Buffer('43' + '84ADCEBF1F', 'hex')
 }, {
+  // literal w/index, name index
   header: {
     name: 1,
     value: 'www.bar.com',
-    index: true
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
   },
-  buffer: new Buffer('02' + '88db6d897a1e44b74f', 'hex')
+  buffer: new Buffer('42' + '89E7CF9BFBD383EA6DBF', 'hex')
 }, {
+  // literal w/index, name index
   header: {
-    name: 28,
+    name: 29,
     value: 'no-cache',
-    index: true
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
   },
-  buffer: new Buffer('1d' + '8663654a1398ff', 'hex')
+  buffer: new Buffer('5e' + '86B9B9949556BF', 'hex')
 }, {
+  // indexed
   header: {
     name: 3,
     value: 3,
-    index: false
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
   },
   buffer: new Buffer('84', 'hex')
 }, {
+  // indexed
   header: {
     name: 5,
     value: 5,
-    index: false
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
   },
   buffer: new Buffer('86', 'hex')
 }, {
+  // literal w/index, name index
   header: {
     name: 4,
     value: '/custom-path.css',
-    index: true
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
   },
-  buffer: new Buffer('05' + '8b04eb08b7495c88e644c21f', 'hex')
+  buffer: new Buffer('45' + '8C3AB8E2E6DB9AF4BAB7D58E3F', 'hex')
 }, {
+  // literal w/index, new name & value
   header: {
     name: 'custom-key',
     value: 'custom-value',
-    index: true
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
   },
-  buffer: new Buffer('00' + '884eb08b749790fa7f' + '894eb08b74979a17a8ff', 'hex')
+  buffer: new Buffer('40' + '88571C5CDB737B2FAF' + '89571C5CDB73724D9C57', 'hex')
 }, {
+  // indexed
   header: {
     name: 2,
     value: 2,
-    index: false
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
   },
   buffer: new Buffer('83', 'hex')
 }, {
+  // indexed
   header: {
     name: 6,
     value: 6,
-    index: false
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
   },
   buffer: new Buffer('87', 'hex')
+}, {
+  // Literal w/o index, name index
+  header: {
+    name: 6,
+    value: "whatever",
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('07' + '86E75A5CBE4BC3', 'hex')
+}, {
+  // Literal w/o index, new name & value
+  header: {
+    name: "foo",
+    value: "bar",
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('00' + '03666F6F' + '03626172', 'hex')
+}, {
+  // Literal never indexed, name index
+  header: {
+    name: 6,
+    value: "whatever",
+    index: false,
+    mustNeverIndex: true,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('17' + '86E75A5CBE4BC3', 'hex')
+}, {
+  // Literal never indexed, new name & value
+  header: {
+    name: "foo",
+    value: "bar",
+    index: false,
+    mustNeverIndex: true,
+    contextUpdate: false,
+    clearReferenceSet: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('10' + '03666F6F' + '03626172', 'hex')
 }, {
   header: {
     name: -1,
     value: -1,
-    index: true
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: true,
+    clearReferenceSet: true,
+    newMaxSize: 0
   },
-  buffer: new Buffer('8080', 'hex')
+  buffer: new Buffer('30', 'hex')
+}, {
+  header: {
+    name: -1,
+    value: -1,
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: true,
+    clearReferenceSet: false,
+    newMaxSize: 100
+  },
+  buffer: new Buffer('2F55', 'hex')
 }];
 
 var test_header_sets = [{
@@ -240,9 +338,6 @@ var test_header_sets = [{
     'custom-key': 'custom-value'
   },
   buffer: test_headers[3].buffer
-}, {
-  headers: {},
-  buffer: test_headers[13].buffer
 }, {
   headers: {
     ':status': '200',
@@ -356,7 +451,7 @@ describe('compressor.js', function() {
     describe('method decompress(buffer)', function() {
       it('should return the parsed header set in { name1: value1, name2: [value2, value3], ... } format', function() {
         var decompressor = new Decompressor(util.log, 'REQUEST');
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < test_header_sets.length - 1; i++) {
           var header_set = test_header_sets[i];
           expect(decompressor.decompress(header_set.buffer)).to.deep.equal(header_set.headers);
         }

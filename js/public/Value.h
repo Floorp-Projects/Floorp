@@ -585,7 +585,7 @@ JSVAL_IS_SPECIFIC_INT32_IMPL(jsval_layout l, int32_t i32)
 }
 
 static inline bool
-JSVAL_IS_SPECIFIC_BOOLEAN(jsval_layout l, bool b)
+JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(jsval_layout l, bool b)
 {
     return (l.s.tag == JSVAL_TAG_BOOLEAN) && (l.s.payload.boo == uint32_t(b));
 }
@@ -821,7 +821,7 @@ JSVAL_IS_SPECIFIC_INT32_IMPL(jsval_layout l, int32_t i32)
 }
 
 static inline bool
-JSVAL_IS_SPECIFIC_BOOLEAN(jsval_layout l, bool b)
+JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(jsval_layout l, bool b)
 {
     return l.asBits == (((uint64_t)(uint32_t)b) | JSVAL_SHIFTED_TAG_BOOLEAN);
 }
@@ -914,11 +914,7 @@ CanonicalizeNaN(double d)
  * - The JS::Value operations are preferred.  The JSVAL_* operations remain for
  *   compatibility; they may be removed at some point.  These operations mostly
  *   provide similar functionality.  But there are a few key differences.  One
- *   is that JS::Value gives null a separate type. Thus
- *
- *           JSVAL_IS_OBJECT(v) === v.isObjectOrNull()
- *       !JSVAL_IS_PRIMITIVE(v) === v.isObject()
- *
+ *   is that JS::Value gives null a separate type.
  *   Also, to help prevent mistakenly boxing a nullable JSObject* as an object,
  *   Value::setObject takes a JSObject&. (Conversely, Value::toObject returns a
  *   JSObject&.)  A convenience member Value::setObjectOrNull is provided.
@@ -1084,11 +1080,11 @@ class Value
     }
 
     bool isTrue() const {
-        return JSVAL_IS_SPECIFIC_BOOLEAN(data, true);
+        return JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(data, true);
     }
 
     bool isFalse() const {
-        return JSVAL_IS_SPECIFIC_BOOLEAN(data, false);
+        return JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(data, false);
     }
 
     bool isMagic() const {
@@ -1821,50 +1817,10 @@ static_assert(sizeof(jsval_layout) == sizeof(JS::Value),
 
 /************************************************************************/
 
-static inline bool
-JSVAL_IS_NULL(jsval v)
-{
-    return JSVAL_IS_NULL_IMPL(JSVAL_TO_IMPL(v));
-}
-
-static inline bool
-JSVAL_IS_VOID(jsval v)
-{
-    return JSVAL_IS_UNDEFINED_IMPL(JSVAL_TO_IMPL(v));
-}
-
-static inline bool
-JSVAL_IS_INT(jsval v)
-{
-    return JSVAL_IS_INT32_IMPL(JSVAL_TO_IMPL(v));
-}
-
-static inline int32_t
-JSVAL_TO_INT(jsval v)
-{
-    MOZ_ASSERT(JSVAL_IS_INT(v));
-    return JSVAL_TO_INT32_IMPL(JSVAL_TO_IMPL(v));
-}
-
 static inline JS_VALUE_CONSTEXPR jsval
 INT_TO_JSVAL(int32_t i)
 {
     return IMPL_TO_JSVAL(INT32_TO_JSVAL_IMPL(i));
-}
-
-static inline bool
-JSVAL_IS_DOUBLE(jsval v)
-{
-    return JSVAL_IS_DOUBLE_IMPL(JSVAL_TO_IMPL(v));
-}
-
-static inline double
-JSVAL_TO_DOUBLE(jsval v)
-{
-    jsval_layout l;
-    MOZ_ASSERT(JSVAL_IS_DOUBLE(v));
-    l = JSVAL_TO_IMPL(v);
-    return l.asDouble;
 }
 
 static inline JS_VALUE_CONSTEXPR jsval
@@ -1898,36 +1854,10 @@ UINT_TO_JSVAL(uint32_t i)
             : DOUBLE_TO_JSVAL((double)i));
 }
 
-static inline bool
-JSVAL_IS_NUMBER(jsval v)
-{
-    return JSVAL_IS_NUMBER_IMPL(JSVAL_TO_IMPL(v));
-}
-
-static inline bool
-JSVAL_IS_STRING(jsval v)
-{
-    return JSVAL_IS_STRING_IMPL(JSVAL_TO_IMPL(v));
-}
-
-static inline JSString *
-JSVAL_TO_STRING(jsval v)
-{
-    MOZ_ASSERT(JSVAL_IS_STRING(v));
-    return JSVAL_TO_STRING_IMPL(JSVAL_TO_IMPL(v));
-}
-
 static inline jsval
 STRING_TO_JSVAL(JSString *str)
 {
     return IMPL_TO_JSVAL(STRING_TO_JSVAL_IMPL(str));
-}
-
-static inline JSObject *
-JSVAL_TO_OBJECT(jsval v)
-{
-    MOZ_ASSERT(JSVAL_IS_OBJECT_OR_NULL_IMPL(JSVAL_TO_IMPL(v)));
-    return JSVAL_TO_OBJECT_IMPL(JSVAL_TO_IMPL(v));
 }
 
 static inline jsval
@@ -1938,42 +1868,10 @@ OBJECT_TO_JSVAL(JSObject *obj)
     return IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_NULL, 0));
 }
 
-static inline bool
-JSVAL_IS_BOOLEAN(jsval v)
-{
-    return JSVAL_IS_BOOLEAN_IMPL(JSVAL_TO_IMPL(v));
-}
-
-static inline bool
-JSVAL_TO_BOOLEAN(jsval v)
-{
-    MOZ_ASSERT(JSVAL_IS_BOOLEAN(v));
-    return JSVAL_TO_BOOLEAN_IMPL(JSVAL_TO_IMPL(v));
-}
-
 static inline jsval
 BOOLEAN_TO_JSVAL(bool b)
 {
     return IMPL_TO_JSVAL(BOOLEAN_TO_JSVAL_IMPL(b));
-}
-
-static inline bool
-JSVAL_IS_PRIMITIVE(jsval v)
-{
-    return JSVAL_IS_PRIMITIVE_IMPL(JSVAL_TO_IMPL(v));
-}
-
-static inline bool
-JSVAL_IS_GCTHING(jsval v)
-{
-    return JSVAL_IS_GCTHING_IMPL(JSVAL_TO_IMPL(v));
-}
-
-static inline void *
-JSVAL_TO_GCTHING(jsval v)
-{
-    MOZ_ASSERT(JSVAL_IS_GCTHING(v));
-    return JSVAL_TO_GCTHING_IMPL(JSVAL_TO_IMPL(v));
 }
 
 /* To be GC-safe, privates are tagged as doubles. */
@@ -1982,13 +1880,6 @@ static inline jsval
 PRIVATE_TO_JSVAL(void *ptr)
 {
     return IMPL_TO_JSVAL(PRIVATE_PTR_TO_JSVAL_IMPL(ptr));
-}
-
-static inline void *
-JSVAL_TO_PRIVATE(jsval v)
-{
-    MOZ_ASSERT(JSVAL_IS_DOUBLE(v));
-    return JSVAL_TO_PRIVATE_PTR_IMPL(JSVAL_TO_IMPL(v));
 }
 
 // JS constants. For efficiency, prefer predicates (e.g. v.isNull()) and

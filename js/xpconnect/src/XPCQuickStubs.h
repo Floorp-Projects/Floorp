@@ -224,7 +224,7 @@ protected:
      * without doing anything else. Otherwise, the JSString* created
      * from |v| will be returned.  It'll be rooted, as needed, in
      * *pval.  nullBehavior and undefinedBehavior control what happens
-     * when |v| is JSVAL_IS_NULL and JSVAL_IS_VOID respectively.
+     * when v.isNull() and v.isUndefined() are respectively true.
      */
     template<class traits>
     JSString* InitOrStringify(JSContext* cx, JS::HandleValue v,
@@ -233,13 +233,13 @@ protected:
                               StringificationBehavior nullBehavior,
                               StringificationBehavior undefinedBehavior) {
         JSString *s;
-        if (JSVAL_IS_STRING(v)) {
-            s = JSVAL_TO_STRING(v);
+        if (v.isString()) {
+            s = v.toString();
         } else {
             StringificationBehavior behavior = eStringify;
-            if (JSVAL_IS_NULL(v)) {
+            if (v.isNull()) {
                 behavior = nullBehavior;
-            } else if (JSVAL_IS_VOID(v)) {
+            } else if (v.isUndefined()) {
                 behavior = undefinedBehavior;
             }
 
@@ -597,7 +597,7 @@ PropertyOpForwarder(JSContext *cx, unsigned argc, jsval *vp)
 
     JS::RootedValue v(cx, js::GetFunctionNativeReserved(callee, 0));
 
-    JSObject *ptrobj = JSVAL_TO_OBJECT(v);
+    JSObject *ptrobj = v.toObjectOrNull();
     Op *popp = static_cast<Op *>(JS_GetPrivate(ptrobj));
 
     v = js::GetFunctionNativeReserved(callee, 1);

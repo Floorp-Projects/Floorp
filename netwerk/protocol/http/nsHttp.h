@@ -33,14 +33,14 @@ namespace net {
         // 24 was a internal spdy/3.1
         // 25 was spdy/4a2
         // 26 was http/2-draft08 and http/2-draft07 (they were the same)
-        // 27 was also http/2-draft09
-        HTTP2_VERSION_DRAFT10 = 27
+        // 27 was http/2-draft09, h2-10, and h2-11
+        HTTP2_VERSION_DRAFT12 = 28
     };
 
 typedef uint8_t nsHttpVersion;
 
-#define NS_HTTP2_DRAFT_VERSION HTTP2_VERSION_DRAFT10
-#define NS_HTTP2_DRAFT_TOKEN "h2-10"
+#define NS_HTTP2_DRAFT_VERSION HTTP2_VERSION_DRAFT12
+#define NS_HTTP2_DRAFT_TOKEN "h2-12"
 
 //-----------------------------------------------------------------------------
 // http connection capabilities

@@ -825,7 +825,7 @@ CanvasRenderingContext2D::RemoveDemotableContext(CanvasRenderingContext2D* conte
 }
 
 bool
-CheckSizeForSkiaGL(IntSize size) {
+CanvasRenderingContext2D::CheckSizeForSkiaGL(IntSize size) {
   MOZ_ASSERT(NS_IsMainThread());
 
   int minsize = Preferences::GetInt("gfx.canvas.min-size-for-skia-gl", 128);
@@ -852,6 +852,11 @@ CheckSizeForSkiaGL(IntSize size) {
   // Cache the number of pixels on the primary screen
   static int32_t gScreenPixels = -1;
   if (gScreenPixels < 0) {
+    // Default to historical mobile screen size of 980x480.  In addition,
+    // allow skia use up to this size even if the screen is smaller.  A lot
+    // content expects this size to work well.
+    gScreenPixels = 980 * 480;
+
     nsCOMPtr<nsIScreenManager> screenManager =
       do_GetService("@mozilla.org/gfx/screenmanager;1");
     if (screenManager) {
@@ -861,13 +866,33 @@ CheckSizeForSkiaGL(IntSize size) {
         int32_t x, y, width, height;
         primaryScreen->GetRect(&x, &y, &width, &height);
 
-        gScreenPixels = width * height;
+        gScreenPixels = std::max(gScreenPixels, width * height);
       }
     }
   }
 
+  // On high DPI devices the screen pixels may be scaled up.  Make
+  // sure to apply that scaling here as well if we are hooked up
+  // to a widget.
+  static double gDefaultScale = 0.0;
+  if (gDefaultScale < 1.0) {
+    nsIPresShell* ps = GetPresShell();
+    if (ps) {
+      nsIFrame* frame = ps->GetRootFrame();
+      if (frame) {
+        nsIWidget* widget = frame->GetNearestWidget();
+        if (widget) {
+          gDefaultScale = widget->GetDefaultScale().scale;
+        }
+      }
+    }
+  }
+
+  int32_t threshold = gDefaultScale > 0 ? ceil(gDefaultScale * gScreenPixels)
+                                        : gScreenPixels;
+
   // screen size acts as max threshold
-  return gScreenPixels < 0 || (size.width * size.height) <= gScreenPixels;
+  return threshold < 0 || (size.width * size.height) <= threshold;
 }
 
 void
@@ -1335,7 +1360,7 @@ CanvasRenderingContext2D::GetMozCurrentTransformInverse(JSContext* cx,
   Matrix ctm = mTarget->GetTransform();
 
   if (!ctm.Invert()) {
-    double NaN = JSVAL_TO_DOUBLE(JS_GetNaNValue(cx));
+    double NaN = JS_GetNaNValue(cx).toDouble();
     ctm = Matrix(NaN, NaN, NaN, NaN, NaN, NaN);
   }
 

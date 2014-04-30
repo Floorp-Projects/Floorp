@@ -5,7 +5,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 452960;
-var summary = 'Do not assert with JIT: !JSVAL_IS_PRIMITIVE(v)';
+var summary = 'Do not assert with JIT: !v.isPrimitive()';
 var actual = 'No Crash';
 var expect = 'No Crash';
 

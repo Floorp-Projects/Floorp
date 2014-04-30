@@ -31,7 +31,7 @@ function test()
   }
   f();
 
-// Assertion failure: !JSVAL_IS_PRIMITIVE(regs.sp[-2]), at ../jsinterp.cpp:3243
+// Assertion failure: !regs.sp[-2].isPrimitive(), at ../jsinterp.cpp:3243
 // Opt crash [@ JS_GetMethodById] near null
 // =====
   new Function("for(x1 in ((function (){ yield x } )())){var c, x = []} function x(){} ");

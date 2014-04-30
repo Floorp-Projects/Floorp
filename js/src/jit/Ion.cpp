@@ -458,12 +458,9 @@ jit::RequestInterruptForIonCode(JSRuntime *rt, JSRuntime::InterruptMode mode)
 
 JitCompartment::JitCompartment()
   : stubCodes_(nullptr),
-    baselineCallReturnFromIonAddr_(nullptr),
-    baselineGetPropReturnFromIonAddr_(nullptr),
-    baselineSetPropReturnFromIonAddr_(nullptr),
-    baselineCallReturnFromStubAddr_(nullptr),
-    baselineGetPropReturnFromStubAddr_(nullptr),
-    baselineSetPropReturnFromStubAddr_(nullptr),
+    baselineCallReturnAddr_(nullptr),
+    baselineGetPropReturnAddr_(nullptr),
+    baselineSetPropReturnAddr_(nullptr),
     stringConcatStub_(nullptr),
     parallelStringConcatStub_(nullptr),
     activeParallelEntryScripts_(nullptr)
@@ -626,19 +623,13 @@ JitCompartment::sweep(FreeOp *fop)
     stubCodes_->sweep(fop);
 
     // If the sweep removed the ICCall_Fallback stub, nullptr the baselineCallReturnAddr_ field.
-    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::Call_Fallback))) {
-        baselineCallReturnFromIonAddr_ = nullptr;
-        baselineCallReturnFromStubAddr_ = nullptr;
-    }
+    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::Call_Fallback)))
+        baselineCallReturnAddr_ = nullptr;
     // Similarly for the ICGetProp_Fallback stub.
-    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::GetProp_Fallback))) {
-        baselineGetPropReturnFromIonAddr_ = nullptr;
-        baselineGetPropReturnFromStubAddr_ = nullptr;
-    }
-    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::SetProp_Fallback))) {
-        baselineSetPropReturnFromIonAddr_ = nullptr;
-        baselineSetPropReturnFromStubAddr_ = nullptr;
-    }
+    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::GetProp_Fallback)))
+        baselineGetPropReturnAddr_ = nullptr;
+    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::SetProp_Fallback)))
+        baselineSetPropReturnAddr_ = nullptr;
 
     if (stringConcatStub_ && !IsJitCodeMarked(stringConcatStub_.unsafeGet()))
         stringConcatStub_ = nullptr;

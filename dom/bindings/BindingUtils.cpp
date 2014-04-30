@@ -352,7 +352,7 @@ InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
   const JSClass* clasp = static_cast<const JSClass*>(v.toPrivate());
 
   v = js::GetFunctionNativeReserved(callee, TOSTRING_NAME_RESERVED_SLOT);
-  JSString* jsname = static_cast<JSString*>(JSVAL_TO_STRING(v));
+  JSString* jsname = static_cast<JSString*>(v.toString());
   size_t length;
   const jschar* name = JS_GetInternedStringCharsAndLength(jsname, &length);
 

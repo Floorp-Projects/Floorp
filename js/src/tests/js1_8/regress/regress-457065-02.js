@@ -5,7 +5,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 457065;
-var summary = 'Do not assert: !fp->callee || fp->thisp == JSVAL_TO_OBJECT(fp->argv[-1])';
+var summary = 'Do not assert: !fp->callee || fp->thisp == fp->argv[-1].toObjectOrNull()';
 var actual = '';
 var expect = '';
 

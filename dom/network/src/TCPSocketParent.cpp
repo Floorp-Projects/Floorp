@@ -240,8 +240,8 @@ TCPSocketParent::SendEvent(const nsAString& aType, JS::Handle<JS::Value> aDataVa
       JS::Rooted<JS::Value> val(aCx);
       if (!JS_GetProperty(aCx, obj, "name", &val)) {
         NS_ERROR("No name property on supposed error object");
-      } else if (JSVAL_IS_STRING(val)) {
-        if (!name.init(aCx, JSVAL_TO_STRING(val))) {
+      } else if (val.isString()) {
+        if (!name.init(aCx, val.toString())) {
           NS_WARNING("couldn't initialize string");
         }
       }

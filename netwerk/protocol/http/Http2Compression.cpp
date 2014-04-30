@@ -59,11 +59,12 @@ InitializeStaticHeaders()
     AddStaticElement(NS_LITERAL_CSTRING(":scheme"), NS_LITERAL_CSTRING("http"));
     AddStaticElement(NS_LITERAL_CSTRING(":scheme"), NS_LITERAL_CSTRING("https"));
     AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("200"));
-    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("500"));
-    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("404"));
-    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("403"));
+    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("204"));
+    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("206"));
+    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("304"));
     AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("400"));
-    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("401"));
+    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("404"));
+    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("500"));
     AddStaticElement(NS_LITERAL_CSTRING("accept-charset"));
     AddStaticElement(NS_LITERAL_CSTRING("accept-encoding"));
     AddStaticElement(NS_LITERAL_CSTRING("accept-language"));
@@ -298,9 +299,13 @@ Http2Decompressor::DecodeHeaderBlock(const uint8_t *data, uint32_t datalen,
     if (mData[mOffset] & 0x80) {
       rv = DoIndexed();
     } else if (mData[mOffset] & 0x40) {
-      rv = DoLiteralWithoutIndex();
-    } else {
       rv = DoLiteralWithIncremental();
+    } else if (mData[mOffset] & 0x20) {
+      rv = DoContextUpdate();
+    } else if (mData[mOffset] & 0x10) {
+      rv = DoLiteralNeverIndexed();
+    } else {
+      rv = DoLiteralWithoutIndex();
     }
   }
 
@@ -643,6 +648,11 @@ Http2Decompressor::CopyHuffmanStringFromInput(uint32_t bytes, nsACString &val)
     }
   }
 
+  if (bitsLeft > 7) {
+    LOG3(("CopyHuffmanStringFromInput more than 7 bits of padding"));
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   if (bitsLeft) {
     // Any bits left at this point must belong to the EOS symbol, so make sure
     // they make sense (ie, are all ones)
@@ -694,23 +704,7 @@ Http2Decompressor::DoIndexed()
   LOG3(("HTTP decompressor indexed entry %u\n", index));
 
   if (index == 0) {
-    // Index 0 is a special case - it has extra data tacked on the end to
-    // determine what kind of change to make to the encoding context.
-    //
-    if (mData[mOffset] & 0x80) {
-      // This means we have to clear out the reference set
-      mReferenceSet.Clear();
-      mAlternateReferenceSet.Clear();
-      ++mOffset;
-      return NS_OK;
-    }
-
-    // Getting here means we have to adjust the max table size
-    uint32_t newMaxSize;
-    rv = DecodeInteger(7, newMaxSize);
-    if (NS_FAILED(rv))
-      return rv;
-    return mCompressor->SetMaxBufferSizeInternal(newMaxSize);
+    return NS_ERROR_ILLEGAL_VALUE;
   }
   index--; // Internally, we 0-index everything, since this is, y'know, C++
 
@@ -747,15 +741,17 @@ Http2Decompressor::DoIndexed()
 }
 
 nsresult
-Http2Decompressor::DoLiteralInternal(nsACString &name, nsACString &value)
+Http2Decompressor::DoLiteralInternal(nsACString &name, nsACString &value,
+                                     uint32_t namePrefixLen)
 {
   // guts of doliteralwithoutindex and doliteralwithincremental
-  MOZ_ASSERT(((mData[mOffset] & 0xC0) == 0x40) ||  // withoutindex
-             ((mData[mOffset] & 0xC0) == 0x00));   // withincremental
+  MOZ_ASSERT(((mData[mOffset] & 0xF0) == 0x00) ||  // withoutindex
+             ((mData[mOffset] & 0xF0) == 0x10) ||  // neverindexed
+             ((mData[mOffset] & 0xC0) == 0x40));   // withincremental
 
   // first let's get the name
   uint32_t index;
-  nsresult rv = DecodeInteger(6, index);
+  nsresult rv = DecodeInteger(namePrefixLen, index);
   if (NS_FAILED(rv))
     return rv;
 
@@ -799,13 +795,13 @@ Http2Decompressor::DoLiteralInternal(nsACString &name, nsACString &value)
 nsresult
 Http2Decompressor::DoLiteralWithoutIndex()
 {
-  // this starts with 01 bit pattern
-  MOZ_ASSERT((mData[mOffset] & 0xC0) == 0x40);
+  // this starts with 0000 bit pattern
+  MOZ_ASSERT((mData[mOffset] & 0xF0) == 0x00);
 
   // This is not indexed so there is no adjustment to the
   // persistent reference set
   nsAutoCString name, value;
-  nsresult rv = DoLiteralInternal(name, value);
+  nsresult rv = DoLiteralInternal(name, value, 4);
 
   LOG3(("HTTP decompressor literal without index %s %s\n",
         name.get(), value.get()));
@@ -820,11 +816,11 @@ Http2Decompressor::DoLiteralWithoutIndex()
 nsresult
 Http2Decompressor::DoLiteralWithIncremental()
 {
-  // this starts with 00 bit pattern
-  MOZ_ASSERT((mData[mOffset] & 0xC0) == 0x00);
+  // this starts with 01 bit pattern
+  MOZ_ASSERT((mData[mOffset] & 0xC0) == 0x40);
 
   nsAutoCString name, value;
-  nsresult rv = DoLiteralInternal(name, value);
+  nsresult rv = DoLiteralInternal(name, value, 6);
   if (NS_SUCCEEDED(rv))
     rv = OutputHeader(name, value);
   if (NS_FAILED(rv))
@@ -853,6 +849,49 @@ Http2Decompressor::DoLiteralWithIncremental()
   return NS_OK;
 }
 
+nsresult
+Http2Decompressor::DoLiteralNeverIndexed()
+{
+  // This starts with 0001 bit pattern
+  MOZ_ASSERT((mData[mOffset] & 0xF0) == 0x10);
+
+  // This is not indexed so there is no adjustment to the
+  // persistent reference set
+  nsAutoCString name, value;
+  nsresult rv = DoLiteralInternal(name, value, 4);
+
+  LOG3(("HTTP decompressor literal never indexed %s %s\n",
+        name.get(), value.get()));
+
+  // Output the header now because we don't keep void
+  // indicies in the reference set
+  if (NS_SUCCEEDED(rv))
+    rv = OutputHeader(name, value);
+  return rv;
+}
+
+nsresult
+Http2Decompressor::DoContextUpdate()
+{
+  // This starts with 001 bit pattern
+  MOZ_ASSERT((mData[mOffset] & 0xE0) == 0x20);
+
+  if (mData[mOffset] & 0x10) {
+    // This means we have to clear out the reference set
+    mReferenceSet.Clear();
+    mAlternateReferenceSet.Clear();
+    ++mOffset;
+    return NS_OK;
+  }
+
+  // Getting here means we have to adjust the max table size
+  uint32_t newMaxSize;
+  nsresult rv = DecodeInteger(4, newMaxSize);
+  if (NS_FAILED(rv))
+    return rv;
+  return mCompressor->SetMaxBufferSizeInternal(newMaxSize);
+}
+
 /////////////////////////////////////////////////////////////////
 
 nsresult
@@ -868,15 +907,25 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
   output.Truncate();
   mParsedContentLength = -1;
 
+  // first thing's first - context size updates (if necessary)
+  if (mBufferSizeChangeWaiting) {
+    if (mLowestBufferSizeWaiting < mMaxBufferSetting) {
+      EncodeTableSizeChange(mLowestBufferSizeWaiting);
+    }
+    EncodeTableSizeChange(mMaxBufferSetting);
+    mBufferSizeChangeWaiting = false;
+  }
+
   // colon headers first
-  ProcessHeader(nvPair(NS_LITERAL_CSTRING(":method"), method));
-  ProcessHeader(nvPair(NS_LITERAL_CSTRING(":path"), path));
-  ProcessHeader(nvPair(NS_LITERAL_CSTRING(":authority"), host));
-  ProcessHeader(nvPair(NS_LITERAL_CSTRING(":scheme"), scheme));
+  ProcessHeader(nvPair(NS_LITERAL_CSTRING(":method"), method), false);
+  ProcessHeader(nvPair(NS_LITERAL_CSTRING(":path"), path), false);
+  ProcessHeader(nvPair(NS_LITERAL_CSTRING(":authority"), host), false);
+  ProcessHeader(nvPair(NS_LITERAL_CSTRING(":scheme"), scheme), false);
 
   // now the non colon headers
   const char *beginBuffer = nvInput.BeginReading();
 
+  // This strips off the HTTP/1 method+path+version
   int32_t crlfIndex = nvInput.Find("\r\n");
   while (true) {
     int32_t startIndex = crlfIndex + 2;
@@ -961,11 +1010,11 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
         }
         nsDependentCSubstring cookie = Substring(beginBuffer + nextCookie,
                                                  beginBuffer + semiSpaceIndex);
-        ProcessHeader(nvPair(name, cookie));
+        ProcessHeader(nvPair(name, cookie), true);
         nextCookie = semiSpaceIndex + 2;
       }
     } else {
-      ProcessHeader(nvPair(name, value));
+      ProcessHeader(nvPair(name, value), name.Equals("authorization") ? true : false);
     }
   }
 
@@ -997,15 +1046,32 @@ Http2Compressor::DoOutput(Http2Compressor::outputCode code,
   uint8_t *startByte;
 
   switch (code) {
+  case kNeverIndexedLiteral:
+    LOG3(("HTTP compressor %p neverindex literal with name reference %u %s: %s\n",
+          this, index, pair->mName.get(), pair->mValue.get()));
+
+    // In this case, the index will have already been adjusted to be 1-based
+    // instead of 0-based.
+    EncodeInteger(4, index); // 0001 4 bit prefix
+    startByte = reinterpret_cast<unsigned char *>(mOutput->BeginWriting()) + offset;
+    *startByte = (*startByte & 0x0f) | 0x10;
+
+    if (!index) {
+      HuffmanAppend(pair->mName);
+    }
+
+    HuffmanAppend(pair->mValue);
+    break;
+
   case kPlainLiteral:
     LOG3(("HTTP compressor %p noindex literal with name reference %u %s: %s\n",
           this, index, pair->mName.get(), pair->mValue.get()));
 
     // In this case, the index will have already been adjusted to be 1-based
     // instead of 0-based.
-    EncodeInteger(6, index); // 01 2 bit prefix
+    EncodeInteger(4, index); // 0000 4 bit prefix
     startByte = reinterpret_cast<unsigned char *>(mOutput->BeginWriting()) + offset;
-    *startByte = (*startByte & 0x3f) | 0x40;
+    *startByte = *startByte & 0x0f;
 
     if (!index) {
       HuffmanAppend(pair->mName);
@@ -1020,9 +1086,9 @@ Http2Compressor::DoOutput(Http2Compressor::outputCode code,
 
     // In this case, the index will have already been adjusted to be 1-based
     // instead of 0-based.
-    EncodeInteger(6, index); // 00 2 bit prefix
+    EncodeInteger(6, index); // 01 2 bit prefix
     startByte = reinterpret_cast<unsigned char *>(mOutput->BeginWriting()) + offset;
-    *startByte = *startByte & 0x3f;
+    *startByte = (*startByte & 0x3f) | 0x40;
 
     if (!index) {
       HuffmanAppend(pair->mName);
@@ -1182,6 +1248,9 @@ Http2Compressor::HuffmanAppend(const nsCString &value)
     uint8_t idx = static_cast<uint8_t>(value[i]);
     uint8_t huffLength = HuffmanOutgoing[idx].mLength;
     uint32_t huffValue = HuffmanOutgoing[idx].mValue;
+    LOG3(("Http2Compressor::HuffmanAppend %p character=%c (%d) value=%X "
+          "length=%d offset=%d bitsLeft=%d\n", this, value[i], idx, huffValue,
+          huffLength, offset, bitsLeft));
 
     if (bitsLeft < 8) {
       // Fill in the least significant <bitsLeft> bits of the previous byte
@@ -1195,6 +1264,8 @@ Http2Compressor::HuffmanAppend(const nsCString &value)
       }
       val &= ((1 << bitsLeft) - 1);
       offset = buf.Length() - 1;
+      LOG3(("Http2Compressor::HuffmanAppend %p appending %X to byte %d.",
+            this, val, offset));
       startByte = reinterpret_cast<unsigned char *>(buf.BeginWriting()) + offset;
       *startByte = *startByte | static_cast<uint8_t>(val & 0xFF);
       if (huffLength >= bitsLeft) {
@@ -1204,13 +1275,17 @@ Http2Compressor::HuffmanAppend(const nsCString &value)
         bitsLeft -= huffLength;
         huffLength = 0;
       }
+      LOG3(("Http2Compressor::HuffmanAppend %p encoded length remaining=%d, "
+            "bitsLeft=%d\n", this, huffLength, bitsLeft));
     }
 
-    while (huffLength > 8) {
+    while (huffLength >= 8) {
       uint32_t mask = ~((1 << (huffLength - 8)) - 1);
       uint8_t val = ((huffValue & mask) >> (huffLength - 8)) & 0xFF;
       buf.Append(reinterpret_cast<char *>(&val), 1);
       huffLength -= 8;
+      LOG3(("Http2Compressor::HuffmanAppend %p appended byte %X, encoded "
+            "length remaining=%d\n", this, val, huffLength));
     }
 
     if (huffLength) {
@@ -1218,6 +1293,8 @@ Http2Compressor::HuffmanAppend(const nsCString &value)
       bitsLeft = 8 - huffLength;
       uint8_t val = (huffValue & ((1 << huffLength) - 1)) << bitsLeft;
       buf.Append(reinterpret_cast<char *>(&val), 1);
+      LOG3(("Http2Compressor::HuffmanAppend %p setting high %d bits of last "
+            "byte to %X. bitsLeft=%d.\n", this, huffLength, val, bitsLeft));
     }
   }
 
@@ -1228,6 +1305,8 @@ Http2Compressor::HuffmanAppend(const nsCString &value)
     offset = buf.Length() - 1;
     startByte = reinterpret_cast<unsigned char *>(buf.BeginWriting()) + offset;
     *startByte = *startByte | val;
+    LOG3(("Http2Compressor::HuffmanAppend %p padded low %d bits of last byte "
+          "with %X", this, bitsLeft, val));
   }
 
   // Now we know how long our encoded string is, we can fill in our length
@@ -1239,10 +1318,12 @@ Http2Compressor::HuffmanAppend(const nsCString &value)
 
   // Finally, we can add our REAL data!
   mOutput->Append(buf);
+  LOG3(("Http2Compressor::HuffmanAppend %p encoded %d byte original on %d "
+        "bytes.\n", this, length, bufLength));
 }
 
 void
-Http2Compressor::ProcessHeader(const nvPair inputPair)
+Http2Compressor::ProcessHeader(const nvPair inputPair, bool neverIndex)
 {
   uint32_t newSize = inputPair.Size();
   uint32_t headerTableSize = mHeaderTable.Length();
@@ -1262,7 +1343,12 @@ Http2Compressor::ProcessHeader(const nvPair inputPair)
   }
 
   // We need to emit a new literal
-  if (!match) {
+  if (!match || neverIndex) {
+    if (neverIndex) {
+      DoOutput(kNeverIndexedLiteral, &inputPair, nameReference);
+      return;
+    }
+
     if ((newSize > (mMaxBuffer / 2)) || (mMaxBuffer < 128)) {
       DoOutput(kPlainLiteral, &inputPair, nameReference);
       return;
@@ -1310,10 +1396,25 @@ Http2Compressor::ProcessHeader(const nvPair inputPair)
 }
 
 void
+Http2Compressor::EncodeTableSizeChange(uint32_t newMaxSize)
+{
+  uint32_t offset = mOutput->Length();
+  EncodeInteger(4, newMaxSize);
+  uint8_t *startByte = reinterpret_cast<uint8_t *>(mOutput->BeginWriting()) + offset;
+  *startByte = *startByte | 0x20;
+}
+
+void
 Http2Compressor::SetMaxBufferSize(uint32_t maxBufferSize)
 {
   mMaxBufferSetting = maxBufferSize;
   SetMaxBufferSizeInternal(maxBufferSize);
+  if (!mBufferSizeChangeWaiting) {
+    mBufferSizeChangeWaiting = true;
+    mLowestBufferSizeWaiting = maxBufferSize;
+  } else if (maxBufferSize < mLowestBufferSizeWaiting) {
+    mLowestBufferSizeWaiting = maxBufferSize;
+  }
 }
 
 nsresult

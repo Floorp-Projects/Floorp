@@ -111,7 +111,7 @@ StatementParams::NewEnumerate(nsIXPConnectWrappedNative *aWrapper,
       NS_ASSERTION(*_statep != JSVAL_NULL, "Internal state is null!");
 
       // Make sure we are in range first.
-      uint32_t index = static_cast<uint32_t>(JSVAL_TO_INT(*_statep));
+      uint32_t index = static_cast<uint32_t>(_statep->toInt32());
       if (index >= mParamCount) {
         *_statep = JSVAL_NULL;
         return NS_OK;

@@ -5,7 +5,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 355829;
-var summary = 'Do not assert: !argc || JSVAL_IS_NULL(argv[0]) || JSVAL_IS_VOID(argv[0])';
+var summary = 'Do not assert: !argc || argv[0].isNull() || argv[0].isUndefined()';
 var actual = '';
 var expect = '';
 

@@ -48,7 +48,7 @@ nonStrictThisHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, 
         bool *allWrapped = (bool *) closure;
         JS::RootedValue thisv(cx);
         frame.getThisValue(cx, &thisv);
-        *allWrapped = *allWrapped && !JSVAL_IS_PRIMITIVE(thisv);
+        *allWrapped = *allWrapped && !thisv.isPrimitive();
     }
     return nullptr;
 }
@@ -87,7 +87,7 @@ strictThisHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, boo
         bool *anyWrapped = (bool *) closure;
         JS::RootedValue thisv(cx);
         frame.getThisValue(cx, &thisv);
-        *anyWrapped = *anyWrapped || !JSVAL_IS_PRIMITIVE(thisv);
+        *anyWrapped = *anyWrapped || !thisv.isPrimitive();
     }
     return nullptr;
 }

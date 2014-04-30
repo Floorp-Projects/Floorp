@@ -620,6 +620,7 @@ private:
       switch (nalStart[0] & 0x1f) {
         case 7:
           nalu._timeStamp -= 100;
+          break;
         case 8:
           nalu._timeStamp -= 50;
           break;

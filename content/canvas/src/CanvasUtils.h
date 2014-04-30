@@ -106,8 +106,8 @@ JSValToDashArray(JSContext* cx, const JS::Value& patternArray,
     // anybody...
     static const uint32_t MAX_NUM_DASHES = 1 << 14;
 
-    if (!JSVAL_IS_PRIMITIVE(patternArray)) {
-        JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(patternArray));
+    if (!patternArray.isPrimitive()) {
+        JS::Rooted<JSObject*> obj(cx, patternArray.toObjectOrNull());
         uint32_t length;
         if (!JS_GetArrayLength(cx, obj, &length)) {
             // Not an array-like thing
@@ -141,7 +141,7 @@ JSValToDashArray(JSContext* cx, const JS::Value& patternArray,
             // An all-zero pattern makes no sense.
             return NS_ERROR_ILLEGAL_VALUE;
         }
-    } else if (!(JSVAL_IS_VOID(patternArray) || JSVAL_IS_NULL(patternArray))) {
+    } else if (!(patternArray.isUndefined() || patternArray.isNull())) {
         // undefined and null mean "reset to no dash".  Any other
         // random garbage is a type error.
         return NS_ERROR_INVALID_ARG;

@@ -259,7 +259,7 @@ nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
         }
         case JSENUMERATE_NEXT:
         {
-            uint32_t idx = JSVAL_TO_INT(*statep);
+            uint32_t idx = statep->toInt32();
             nsIInterfaceInfo* interface = mInterfaces.SafeElementAt(idx);
             *statep = UINT_TO_JSVAL(idx + 1);
 
@@ -507,7 +507,7 @@ nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
         }
         case JSENUMERATE_NEXT:
         {
-            uint32_t idx = JSVAL_TO_INT(*statep);
+            uint32_t idx = statep->toInt32();
             nsIInterfaceInfo* interface = mInterfaces.SafeElementAt(idx);
             *statep = UINT_TO_JSVAL(idx + 1);
             if (interface) {
@@ -764,7 +764,7 @@ nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
         {
             nsCOMPtr<nsISupports> isup;
             bool hasMore;
-            e = (nsISimpleEnumerator*) JSVAL_TO_PRIVATE(*statep);
+            e = (nsISimpleEnumerator*) statep->toPrivate();
 
             if (NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore &&
                 NS_SUCCEEDED(e->GetNext(getter_AddRefs(isup))) && isup) {
@@ -786,7 +786,7 @@ nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
 
         case JSENUMERATE_DESTROY:
         default:
-            e = (nsISimpleEnumerator*) JSVAL_TO_PRIVATE(*statep);
+            e = (nsISimpleEnumerator*) statep->toPrivate();
             NS_IF_RELEASE(e);
             *statep = JSVAL_NULL;
             return NS_OK;
@@ -1004,7 +1004,7 @@ nsXPCComponents_ClassesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
         {
             nsCOMPtr<nsISupports> isup;
             bool hasMore;
-            e = (nsISimpleEnumerator*) JSVAL_TO_PRIVATE(*statep);
+            e = (nsISimpleEnumerator*) statep->toPrivate();
 
             if (NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore &&
                 NS_SUCCEEDED(e->GetNext(getter_AddRefs(isup))) && isup) {
@@ -1027,7 +1027,7 @@ nsXPCComponents_ClassesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
 
         case JSENUMERATE_DESTROY:
         default:
-            e = (nsISimpleEnumerator*) JSVAL_TO_PRIVATE(*statep);
+            e = (nsISimpleEnumerator*) statep->toPrivate();
             NS_IF_RELEASE(e);
             *statep = JSVAL_NULL;
             return NS_OK;
@@ -1264,7 +1264,7 @@ nsXPCComponents_Results::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
         case JSENUMERATE_NEXT:
         {
             const char* name;
-            iter = (const void**) JSVAL_TO_PRIVATE(*statep);
+            iter = (const void**) statep->toPrivate();
             if (nsXPCException::IterateNSResults(nullptr, &name, nullptr, iter)) {
                 RootedString idstr(cx, JS_NewStringCopyZ(cx, name));
                 JS::RootedId id(cx);
@@ -1278,7 +1278,7 @@ nsXPCComponents_Results::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
 
         case JSENUMERATE_DESTROY:
         default:
-            iter = (const void**) JSVAL_TO_PRIVATE(*statep);
+            iter = (const void**) statep->toPrivate();
             delete [] (char*) iter;
             *statep = JSVAL_NULL;
             return NS_OK;
@@ -2469,7 +2469,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
             return ThrowAndFail(NS_ERROR_XPC_BAD_CID, cx, _retval);
 
         nsCOMPtr<nsIXPConnectWrappedNative> wn;
-        if (NS_FAILED(xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(val),
+        if (NS_FAILED(xpc->GetWrappedNativeOfJSObject(cx, val.toObjectOrNull(),
                                                       getter_AddRefs(wn))) || !wn ||
             !(cClassID = do_QueryWrappedNative(wn))) {
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);

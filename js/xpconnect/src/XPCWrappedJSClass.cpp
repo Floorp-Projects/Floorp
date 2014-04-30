@@ -191,7 +191,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
 
     // check upfront for the existence of the function property
     HandleId funid = mRuntime->GetStringID(XPCJSRuntime::IDX_QUERY_INTERFACE);
-    if (!JS_GetPropertyById(cx, jsobj, funid, &fun) || JSVAL_IS_PRIMITIVE(fun))
+    if (!JS_GetPropertyById(cx, jsobj, funid, &fun) || fun.isPrimitive())
         return nullptr;
 
     // Ensure that we are asking for a scriptable interface.
@@ -241,15 +241,15 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
                         rv == NS_NOINTERFACE) {
                         JS_ClearPendingException(cx);
                     }
-                } else if (JSVAL_IS_NUMBER(jsexception)) {
+                } else if (jsexception.isNumber()) {
                     // JS often throws an nsresult.
-                    if (JSVAL_IS_DOUBLE(jsexception))
+                    if (jsexception.isDouble())
                         // Visual Studio 9 doesn't allow casting directly from
                         // a double to an enumeration type, contrary to
                         // 5.2.9(10) of C++11, so add an intermediate cast.
-                        rv = (nsresult)(uint32_t)(JSVAL_TO_DOUBLE(jsexception));
+                        rv = (nsresult)(uint32_t)(jsexception.toDouble());
                     else
-                        rv = (nsresult)(JSVAL_TO_INT(jsexception));
+                        rv = (nsresult)(jsexception.toInt32());
 
                     if (rv == NS_NOINTERFACE)
                         JS_ClearPendingException(cx);
@@ -1084,7 +1084,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                                 if (!ok) {
                                     goto pre_call_clean_up;
                                 }
-                                thisObj = JSVAL_TO_OBJECT(v);
+                                thisObj = v.toObjectOrNull();
                                 if (!JS_WrapObject(cx, &thisObj))
                                     goto pre_call_clean_up;
                             }
@@ -1265,7 +1265,7 @@ pre_call_clean_up:
         rval = *argv;
         success = JS_SetProperty(cx, obj, name, rval);
     } else {
-        if (!JSVAL_IS_PRIMITIVE(fval)) {
+        if (!fval.isPrimitive()) {
             AutoSaveContextOptions asco(cx);
             ContextOptionsRef(cx).setDontReportUncaught(true);
 

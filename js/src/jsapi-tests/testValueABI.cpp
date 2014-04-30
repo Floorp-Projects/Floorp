@@ -38,7 +38,7 @@ BEGIN_TEST(testValueABI_retparam)
     CHECK(equal);
 
     v = C_GetEmptyStringValue(cx);
-    CHECK(JSVAL_IS_STRING(v));
+    CHECK(v.isString());
 
     return true;
 }
