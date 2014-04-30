@@ -444,6 +444,7 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
     JS_ASSERT(!aheader.allocatedDuringIncremental);
 
     uintptr_t thing = thingsStart(thingKind);
+    uintptr_t firstThingOrSuccessorOfLastMarkedThing = thing;
     uintptr_t lastByte = thingsEnd() - 1;
 
     FreeSpan nextFree(aheader.getFirstFreeSpan());
@@ -451,7 +452,6 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
 
     FreeSpan newListHead;
     FreeSpan *newListTail = &newListHead;
-    uintptr_t newFreeSpanStart = 0;
     size_t nmarked = 0;
     for (;; thing += thingSize) {
         JS_ASSERT(thing <= lastByte + 1);
@@ -460,42 +460,38 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
             if (nextFree.last == lastByte)
                 break;
             JS_ASSERT(Arena::isAligned(nextFree.last, thingSize));
-            if (!newFreeSpanStart)
-                newFreeSpanStart = thing;
             thing = nextFree.last;
             nextFree = *nextFree.nextSpan();
             nextFree.checkSpan();
         } else {
             T *t = reinterpret_cast<T *>(thing);
             if (t->isMarked()) {
-                nmarked++;
-                if (newFreeSpanStart) {
-                    JS_ASSERT(thing >= thingsStart(thingKind) + thingSize);
-                    newListTail->first = newFreeSpanStart;
+                if (thing != firstThingOrSuccessorOfLastMarkedThing) {
+                    // We just finished passing over one or more free things,
+                    // so record a new FreeSpan.
+                    newListTail->first = firstThingOrSuccessorOfLastMarkedThing;
                     newListTail->last = thing - thingSize;
                     newListTail = newListTail->nextSpanUnchecked(thingSize);
-                    newFreeSpanStart = 0;
                 }
+                firstThingOrSuccessorOfLastMarkedThing = thing + thingSize;
+                nmarked++;
             } else {
-                if (!newFreeSpanStart)
-                    newFreeSpanStart = thing;
                 t->finalize(fop);
                 JS_POISON(t, JS_SWEPT_TENURED_PATTERN, thingSize);
             }
         }
     }
 
+    // Complete the last FreeSpan.
+    newListTail->first = firstThingOrSuccessorOfLastMarkedThing;
+    newListTail->last = lastByte;
+
     if (nmarked == 0) {
         JS_ASSERT(newListTail == &newListHead);
-        JS_ASSERT(!newFreeSpanStart ||
-                  newFreeSpanStart == thingsStart(thingKind));
+        JS_ASSERT(newListTail->first == thingsStart(thingKind));
         JS_EXTRA_POISON(data, JS_SWEPT_TENURED_PATTERN, sizeof(data));
         return true;
     }
-
-    newListTail->first = newFreeSpanStart ? newFreeSpanStart : nextFree.first;
-    JS_ASSERT(Arena::isAligned(newListTail->first, thingSize));
-    newListTail->last = lastByte;
 
 #ifdef DEBUG
     size_t nfree = 0;
@@ -504,13 +500,13 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
         JS_ASSERT(Arena::isAligned(span->first, thingSize));
         JS_ASSERT(Arena::isAligned(span->last, thingSize));
         nfree += (span->last - span->first) / thingSize + 1;
-        JS_ASSERT(nfree + nmarked <= thingsPerArena(thingSize));
     }
+    JS_ASSERT(Arena::isAligned(newListTail->first, thingSize));
+    JS_ASSERT(newListTail->last == lastByte);
     nfree += (newListTail->last + 1 - newListTail->first) / thingSize;
     JS_ASSERT(nfree + nmarked == thingsPerArena(thingSize));
 #endif
     aheader.setFirstFreeSpan(&newListHead);
-
     return false;
 }
 
