@@ -82,7 +82,9 @@ public:
     FRAME_TYPE_GOAWAY = 7,
     FRAME_TYPE_WINDOW_UPDATE = 8,
     FRAME_TYPE_CONTINUATION = 9,
-    FRAME_TYPE_LAST = 10
+    FRAME_TYPE_ALTSVC = 10,
+    FRAME_TYPE_BLOCKED = 11,
+    FRAME_TYPE_LAST = 12
   };
 
   // NO_ERROR is a macro defined on windows, so we'll name the HTTP2 goaway
@@ -107,18 +109,20 @@ public:
   // used on frames other than the comments indicate they MUST be ignored.
   const static uint8_t kFlag_END_STREAM = 0x01; // data, headers
   const static uint8_t kFlag_END_HEADERS = 0x04; // headers, continuation
-  const static uint8_t kFlag_PRIORITY = 0x08; //headers
   const static uint8_t kFlag_END_PUSH_PROMISE = 0x04; // push promise
   const static uint8_t kFlag_ACK = 0x01; // ping and settings
   const static uint8_t kFlag_END_SEGMENT = 0x02; // data
-  const static uint8_t kFlag_PAD_LOW = 0x10; // data, headers, continuation
-  const static uint8_t kFlag_PAD_HIGH = 0x20; // data, headers, continuation
+  const static uint8_t kFlag_PAD_LOW = 0x08; // data, headers, push promise, continuation
+  const static uint8_t kFlag_PAD_HIGH = 0x10; // data, headers, push promise, continuation
+  const static uint8_t kFlag_COMPRESSED = 0x20; // data
+  const static uint8_t kFlag_PRIORITY = 0x20; // headers
 
   enum {
     SETTINGS_TYPE_HEADER_TABLE_SIZE = 1, // compression table size
     SETTINGS_TYPE_ENABLE_PUSH = 2,     // can be used to disable push
     SETTINGS_TYPE_MAX_CONCURRENT = 3,  // streams recvr allowed to initiate
-    SETTINGS_TYPE_INITIAL_WINDOW = 4  // bytes for flow control default
+    SETTINGS_TYPE_INITIAL_WINDOW = 4,  // bytes for flow control default
+    SETTINGS_TYPE_COMPRESS_DATA = 5 // whether other side allowes compressed DATA
   };
 
   // This should be big enough to hold all of your control packets,
@@ -159,6 +163,8 @@ public:
   static nsresult RecvGoAway(Http2Session *);
   static nsresult RecvWindowUpdate(Http2Session *);
   static nsresult RecvContinuation(Http2Session *);
+  static nsresult RecvAltSvc(Http2Session *);
+  static nsresult RecvBlocked(Http2Session *);
 
   template<typename T>
   static void EnsureBuffer(nsAutoArrayPtr<T> &,
@@ -230,7 +236,7 @@ private:
   nsresult    UncompressAndDiscard();
   void        GeneratePing(bool);
   void        GenerateSettingsAck();
-  void        GeneratePriority(uint32_t, uint32_t);
+  void        GeneratePriority(uint32_t, uint8_t);
   void        GenerateRstStream(uint32_t, uint32_t);
   void        GenerateGoAway(uint32_t);
   void        CleanupStream(Http2Stream *, nsresult, errorType);

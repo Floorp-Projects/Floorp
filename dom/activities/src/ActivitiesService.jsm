@@ -206,65 +206,79 @@ let Activities = {
     let successCb = function successCb(aResults) {
       debug(JSON.stringify(aResults));
 
-      // We have no matching activity registered, let's fire an error.
-      if (aResults.options.length === 0) {
-        Activities.callers[aMsg.id].mm.sendAsyncMessage("Activity:FireError", {
-          "id": aMsg.id,
-          "error": "NO_PROVIDER"
-        });
-        delete Activities.callers[aMsg.id];
-        return;
-      }
+      function getActivityChoice(aResultType, aResult) {
+        switch(aResultType) {
+          case Ci.nsIActivityUIGlueCallback.NATIVE_ACTIVITY: {
+            Activities.callers[aMsg.id].mm.sendAsyncMessage("Activity:FireSuccess", {
+              "id": aMsg.id,
+              "result": aResult
+            });
+            break;
+          }
+          case Ci.nsIActivityUIGlueCallback.WEBAPPS_ACTIVITY: {
+            debug("Activity choice: " + aResult);
 
-      function getActivityChoice(aChoice) {
-        debug("Activity choice: " + aChoice);
+            // We have no matching activity registered, let's fire an error.
+            // Don't do this check until we have passed to UIGlue so the glue can choose to launch
+            // its own activity if needed.
+            if (aResults.options.length === 0) {
+              Activities.callers[aMsg.id].mm.sendAsyncMessage("Activity:FireError", {
+                "id": aMsg.id,
+                "error": "NO_PROVIDER"
+              });
+              delete Activities.callers[aMsg.id];
+              return;
+            }
 
-        // The user has cancelled the choice, fire an error.
-        if (aChoice === -1) {
-          Activities.callers[aMsg.id].mm.sendAsyncMessage("Activity:FireError", {
-            "id": aMsg.id,
-            "error": "ActivityCanceled"
-          });
-          delete Activities.callers[aMsg.id];
-          return;
-        }
+            // The user has cancelled the choice, fire an error.
+            if (aResult === -1) {
+              Activities.callers[aMsg.id].mm.sendAsyncMessage("Activity:FireError", {
+                "id": aMsg.id,
+                "error": "ActivityCanceled"
+              });
+              delete Activities.callers[aMsg.id];
+              return;
+            }
 
-        let sysmm = Cc["@mozilla.org/system-message-internal;1"]
-                      .getService(Ci.nsISystemMessagesInternal);
-        if (!sysmm) {
-          // System message is not present, what should we do?
-          delete Activities.callers[aMsg.id];
-          return;
-        }
+            let sysmm = Cc["@mozilla.org/system-message-internal;1"]
+                          .getService(Ci.nsISystemMessagesInternal);
+            if (!sysmm) {
+              // System message is not present, what should we do?
+              delete Activities.callers[aMsg.id];
+              return;
+            }
 
-        debug("Sending system message...");
-        let result = aResults.options[aChoice];
-        sysmm.sendMessage("activity", {
-            "id": aMsg.id,
-            "payload": aMsg.options,
-            "target": result.description
-          },
-          Services.io.newURI(result.description.href, null, null),
-          Services.io.newURI(result.manifest, null, null),
-          {
-            "manifestURL": Activities.callers[aMsg.id].manifestURL,
-            "pageURL": Activities.callers[aMsg.id].pageURL
-          });
+            debug("Sending system message...");
+            let result = aResults.options[aResult];
+            sysmm.sendMessage("activity", {
+                "id": aMsg.id,
+                "payload": aMsg.options,
+                "target": result.description
+              },
+              Services.io.newURI(result.description.href, null, null),
+              Services.io.newURI(result.manifest, null, null),
+              {
+                "manifestURL": Activities.callers[aMsg.id].manifestURL,
+                "pageURL": Activities.callers[aMsg.id].pageURL
+              });
 
-        if (!result.description.returnValue) {
-          Activities.callers[aMsg.id].mm.sendAsyncMessage("Activity:FireSuccess", {
-            "id": aMsg.id,
-            "result": null
-          });
-          // No need to notify observers, since we don't want the caller
-          // to be raised on the foreground that quick.
-          delete Activities.callers[aMsg.id];
+            if (!result.description.returnValue) {
+              Activities.callers[aMsg.id].mm.sendAsyncMessage("Activity:FireSuccess", {
+                "id": aMsg.id,
+                "result": null
+              });
+              // No need to notify observers, since we don't want the caller
+              // to be raised on the foreground that quick.
+              delete Activities.callers[aMsg.id];
+            }
+            break;
+          }
         }
       };
 
       let glue = Cc["@mozilla.org/dom/activities/ui-glue;1"]
                    .createInstance(Ci.nsIActivityUIGlue);
-      glue.chooseActivity(aResults.name, aResults.options, getActivityChoice);
+      glue.chooseActivity(aMsg.options, aResults.options, getActivityChoice);
     };
 
     let errorCb = function errorCb(aError) {

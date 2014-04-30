@@ -63,8 +63,8 @@ struct LooseEqualityData
 #ifdef XP_WIN
 # define copysign _copysign
 #endif
-        JS_ASSERT(copysign(1.0, JSVAL_TO_DOUBLE(poszero)) == 1.0);
-        JS_ASSERT(copysign(1.0, JSVAL_TO_DOUBLE(negzero)) == -1.0);
+        JS_ASSERT(copysign(1.0, poszero.toDouble()) == 1.0);
+        JS_ASSERT(copysign(1.0, negzero.toDouble()) == -1.0);
 #ifdef XP_WIN
 # undef copysign
 #endif

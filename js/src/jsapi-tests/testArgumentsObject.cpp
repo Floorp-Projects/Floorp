@@ -83,7 +83,7 @@ ExhaustiveTest(const char funcode[])
     EVAL(funcode, &v);
 
     EVAL(CALL_CODES[ArgCount], &v);
-    Rooted<ArgumentsObject*> argsobj(cx, &JSVAL_TO_OBJECT(v)->as<ArgumentsObject>());
+    Rooted<ArgumentsObject*> argsobj(cx, &v.toObjectOrNull()->as<ArgumentsObject>());
 
     JS::AutoValueArray<MAX_ELEMS> elems(cx);
 

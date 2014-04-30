@@ -210,7 +210,7 @@ JavaScriptShared::toVariant(JSContext *cx, JS::HandleValue from, JSVariant *to)
       }
 
       case JSTYPE_NUMBER:
-        if (JSVAL_IS_INT(from))
+        if (from.isInt32())
             *to = double(from.toInt32());
         else
             *to = from.toDouble();

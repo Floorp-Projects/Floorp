@@ -98,7 +98,7 @@ BEGIN_TEST(testChromeBuffer)
 
         JS::RootedValue rval(cx);
         CHECK(JS_CallFunction(cx, JS::NullPtr(), fun, v, &rval));
-        CHECK(JSVAL_TO_INT(rval) == 100);
+        CHECK(rval.toInt32() == 100);
     }
 
     /*
@@ -139,7 +139,7 @@ BEGIN_TEST(testChromeBuffer)
         JS::RootedValue rval(cx);
         CHECK(JS_CallFunction(cx, JS::NullPtr(), fun, v, &rval));
         bool match;
-        CHECK(JS_StringEqualsAscii(cx, JSVAL_TO_STRING(rval), "From trusted: InternalError: too much recursion", &match));
+        CHECK(JS_StringEqualsAscii(cx, rval.toString(), "From trusted: InternalError: too much recursion", &match));
         CHECK(match);
     }
 
@@ -176,7 +176,7 @@ BEGIN_TEST(testChromeBuffer)
         JS::RootedValue arg(cx, JS::ObjectValue(*callTrusted));
         JS::RootedValue rval(cx);
         CHECK(JS_CallFunction(cx, JS::NullPtr(), fun, arg, &rval));
-        CHECK(JSVAL_TO_INT(rval) == 42);
+        CHECK(rval.toInt32() == 42);
     }
 
     return true;

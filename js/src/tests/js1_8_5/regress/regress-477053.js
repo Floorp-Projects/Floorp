@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-var summary = 'Do not assert: JSVAL_IS_STRING(v)';
+var summary = 'Do not assert: v.isString()';
 var BUGNUMBER = 477053;
 var actual = '';
 var expect = '';

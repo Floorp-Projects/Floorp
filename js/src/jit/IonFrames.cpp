@@ -227,6 +227,13 @@ JitFrameIterator::baselineScriptAndPc(JSScript **scriptRes, jsbytecode **pcRes) 
         *scriptRes = script;
     uint8_t *retAddr = returnAddressToFp();
 
+    // If we have unwound the scope due to exception handling to a different
+    // pc, the frame should behave as if it were settled on that pc.
+    if (jsbytecode *overridePc = baselineFrame()->getUnwoundScopeOverridePc()) {
+        *pcRes = overridePc;
+        return;
+    }
+
     // If we are in the middle of a recompile handler, get the real return
     // address as stashed in the RecompileInfo.
     if (BaselineDebugModeOSRInfo *info = baselineFrame()->getDebugModeOSRInfo())
@@ -520,8 +527,19 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
             continue;
 
         // Unwind scope chain (pop block objects).
-        if (cx->isExceptionPending())
-            UnwindScope(cx, si, script->main() + tn->start);
+        if (cx->isExceptionPending()) {
+            jsbytecode *unwindPc = script->main() + tn->start;
+            UnwindScope(cx, si, unwindPc);
+
+            // If we still need to call DebugEpilogue, we must remember the pc
+            // we unwound the scope chain to, as it will be out of sync with
+            // the frame's actual pc.
+            if (tn->kind != JSTRY_CATCH && tn->kind != JSTRY_FINALLY &&
+                cx->compartment()->debugMode() && !*calledDebugEpilogue)
+            {
+                frame.baselineFrame()->setUnwoundScopeOverridePc(unwindPc);
+            }
+        }
 
         // Compute base pointer and stack pointer.
         rfe->framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
