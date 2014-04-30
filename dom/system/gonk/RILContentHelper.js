@@ -57,8 +57,6 @@ const CELLBROADCASTMESSAGE_CID =
   Components.ID("{29474c96-3099-486f-bb4a-3c9a1da834e4}");
 const CELLBROADCASTETWSINFO_CID =
   Components.ID("{59f176ee-9dcd-4005-9d47-f6be0cd08e17}");
-const DOMMMIERROR_CID =
-  Components.ID("{6b204c42-7928-4e71-89ad-f90cd82aff96}");
 const ICCCARDLOCKERROR_CID =
   Components.ID("{08a71987-408c-44ff-93fd-177c0a85c3dd}");
 
@@ -420,20 +418,6 @@ function DOMCLIRStatus(option) {
 DOMCLIRStatus.prototype = {
   __exposedProps__ : {n: 'r',
                       m: 'r'}
-};
-
-function DOMMMIError() {
-}
-DOMMMIError.prototype = {
-  classDescription: "DOMMMIError",
-  classID:          DOMMMIERROR_CID,
-  contractID:       "@mozilla.org/dom/mmi-error;1",
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsISupports]),
-  __init: function(serviceCode, name, message, additionalInformation) {
-    this.__DOM_IMPL__.init(name, message);
-    this.serviceCode = serviceCode;
-    this.additionalInformation = additionalInformation;
-  },
 };
 
 function IccCardLockError() {
@@ -2128,7 +2112,7 @@ RILContentHelper.prototype = {
     }
 
     let result = {
-      serviceCode: message.mmiServiceCode,
+      serviceCode: message.mmiServiceCode || "",
       additionalInformation: message.additionalInformation
     };
 
@@ -2139,7 +2123,7 @@ RILContentHelper.prototype = {
     } else {
       let mmiError = new requestWindow.DOMMMIError(result.serviceCode,
                                                    message.errorMsg,
-                                                   null,
+                                                   "",
                                                    result.additionalInformation);
       Services.DOMRequest.fireDetailedError(request, mmiError);
     }
@@ -2239,5 +2223,4 @@ RILContentHelper.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RILContentHelper,
-                                                     DOMMMIError,
                                                      IccCardLockError]);

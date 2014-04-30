@@ -706,7 +706,7 @@ jsd_TrapHandler(JSContext *cx, JSScript *script_, jsbytecode *pc, jsval *rval,
                 jsval closure)
 {
     JS::RootedScript script(cx, script_);
-    JSDExecHook* jsdhook = (JSDExecHook*) JSVAL_TO_PRIVATE(closure);
+    JSDExecHook* jsdhook = (JSDExecHook*) closure.toPrivate();
     JSD_ExecutionHookProc hook;
     void* hookData;
     JSDContext*  jsdc;

@@ -388,7 +388,7 @@ CallArgsFromSp(unsigned argc, Value *sp)
  * take a const JS::CallArgs&.
  */
 
-#define JS_THIS_OBJECT(cx,vp)   (JSVAL_TO_OBJECT(JS_THIS(cx,vp)))
+#define JS_THIS_OBJECT(cx,vp)   (JS_THIS(cx,vp).toObjectOrNull())
 
 /*
  * Note: if this method returns null, an error has occurred and must be
@@ -397,7 +397,7 @@ CallArgsFromSp(unsigned argc, Value *sp)
 MOZ_ALWAYS_INLINE JS::Value
 JS_THIS(JSContext *cx, JS::Value *vp)
 {
-    return JSVAL_IS_PRIMITIVE(vp[1]) ? JS_ComputeThis(cx, vp) : vp[1];
+    return vp[1].isPrimitive() ? JS_ComputeThis(cx, vp) : vp[1];
 }
 
 /*

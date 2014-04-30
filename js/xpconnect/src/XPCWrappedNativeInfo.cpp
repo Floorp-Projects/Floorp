@@ -30,8 +30,8 @@ XPCNativeMember::GetCallInfo(JSObject* funobj,
     jsval ifaceVal = js::GetFunctionNativeReserved(funobj, 0);
     jsval memberVal = js::GetFunctionNativeReserved(funobj, 1);
 
-    *pInterface = (XPCNativeInterface*) JSVAL_TO_PRIVATE(ifaceVal);
-    *pMember = (XPCNativeMember*) JSVAL_TO_PRIVATE(memberVal);
+    *pInterface = (XPCNativeInterface*) ifaceVal.toPrivate();
+    *pMember = (XPCNativeMember*) memberVal.toPrivate();
 
     return true;
 }

@@ -58,10 +58,9 @@ Library::Name(JSContext* cx, unsigned argc, jsval *vp)
 
   Value arg = args[0];
   JSString* str = nullptr;
-  if (JSVAL_IS_STRING(arg)) {
-    str = JSVAL_TO_STRING(arg);
-  }
-  else {
+  if (arg.isString()) {
+    str = arg.toString();
+  } else {
     JS_ReportError(cx, "name argument must be a string");
     return false;
   }
@@ -96,13 +95,13 @@ Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
   if (!JS_DefineFunctions(cx, libraryObj, sLibraryFunctions))
     return nullptr;
 
-  if (!JSVAL_IS_STRING(path)) {
+  if (!path.isString()) {
     JS_ReportError(cx, "open takes a string argument");
     return nullptr;
   }
 
   PRLibSpec libSpec;
-  RootedFlatString pathStr(cx, JS_FlattenString(cx, JSVAL_TO_STRING(path)));
+  RootedFlatString pathStr(cx, JS_FlattenString(cx, path.toString()));
   if (!pathStr)
     return nullptr;
 #ifdef XP_WIN
@@ -179,7 +178,7 @@ Library::GetLibrary(JSObject* obj)
   JS_ASSERT(IsLibrary(obj));
 
   jsval slot = JS_GetReservedSlot(obj, SLOT_LIBRARY);
-  return static_cast<PRLibrary*>(JSVAL_TO_PRIVATE(slot));
+  return static_cast<PRLibrary*>(slot.toPrivate());
 }
 
 static void

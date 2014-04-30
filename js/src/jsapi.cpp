@@ -5983,7 +5983,7 @@ JS_SaveExceptionState(JSContext *cx)
     if (state) {
         state->throwing =
             JS_GetPendingException(cx, MutableHandleValue::fromMarkedLocation(&state->exception));
-        if (state->throwing && JSVAL_IS_GCTHING(state->exception))
+        if (state->throwing && state->exception.isGCThing())
             AddValueRoot(cx, &state->exception, "JSExceptionState.exception");
     }
     return state;
@@ -6009,7 +6009,7 @@ JS_DropExceptionState(JSContext *cx, JSExceptionState *state)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     if (state) {
-        if (state->throwing && JSVAL_IS_GCTHING(state->exception)) {
+        if (state->throwing && state->exception.isGCThing()) {
             assertSameCompartment(cx, state->exception);
             RemoveRoot(cx->runtime(), &state->exception);
         }

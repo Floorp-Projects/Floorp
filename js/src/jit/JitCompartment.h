@@ -364,16 +364,9 @@ class JitCompartment
 
     // Keep track of offset into various baseline stubs' code at return
     // point from called script.
-    void *baselineCallReturnFromIonAddr_;
-    void *baselineGetPropReturnFromIonAddr_;
-    void *baselineSetPropReturnFromIonAddr_;
-
-    // Same as above, but is used for return from a baseline stub. This is
-    // used for recompiles of on-stack baseline scripts (e.g., for debug
-    // mode).
-    void *baselineCallReturnFromStubAddr_;
-    void *baselineGetPropReturnFromStubAddr_;
-    void *baselineSetPropReturnFromStubAddr_;
+    void *baselineCallReturnAddr_;
+    void *baselineGetPropReturnAddr_;
+    void *baselineSetPropReturnAddr_;
 
     // Stub to concatenate two strings inline. Note that it can't be
     // stored in JitRuntime because masm.newGCString bakes in zone-specific
@@ -405,54 +398,29 @@ class JitCompartment
         ICStubCodeMap::AddPtr p = stubCodes_->lookupForAdd(key);
         return stubCodes_->add(p, key, stubCode.get());
     }
-    void initBaselineCallReturnFromIonAddr(void *addr) {
-        JS_ASSERT(baselineCallReturnFromIonAddr_ == nullptr);
-        baselineCallReturnFromIonAddr_ = addr;
+    void initBaselineCallReturnAddr(void *addr) {
+        JS_ASSERT(baselineCallReturnAddr_ == nullptr);
+        baselineCallReturnAddr_ = addr;
     }
-    void *baselineCallReturnFromIonAddr() {
-        JS_ASSERT(baselineCallReturnFromIonAddr_ != nullptr);
-        return baselineCallReturnFromIonAddr_;
+    void *baselineCallReturnAddr() {
+        JS_ASSERT(baselineCallReturnAddr_ != nullptr);
+        return baselineCallReturnAddr_;
     }
-    void initBaselineGetPropReturnFromIonAddr(void *addr) {
-        JS_ASSERT(baselineGetPropReturnFromIonAddr_ == nullptr);
-        baselineGetPropReturnFromIonAddr_ = addr;
+    void initBaselineGetPropReturnAddr(void *addr) {
+        JS_ASSERT(baselineGetPropReturnAddr_ == nullptr);
+        baselineGetPropReturnAddr_ = addr;
     }
-    void *baselineGetPropReturnFromIonAddr() {
-        JS_ASSERT(baselineGetPropReturnFromIonAddr_ != nullptr);
-        return baselineGetPropReturnFromIonAddr_;
+    void *baselineGetPropReturnAddr() {
+        JS_ASSERT(baselineGetPropReturnAddr_ != nullptr);
+        return baselineGetPropReturnAddr_;
     }
-    void initBaselineSetPropReturnFromIonAddr(void *addr) {
-        JS_ASSERT(baselineSetPropReturnFromIonAddr_ == nullptr);
-        baselineSetPropReturnFromIonAddr_ = addr;
+    void initBaselineSetPropReturnAddr(void *addr) {
+        JS_ASSERT(baselineSetPropReturnAddr_ == nullptr);
+        baselineSetPropReturnAddr_ = addr;
     }
-    void *baselineSetPropReturnFromIonAddr() {
-        JS_ASSERT(baselineSetPropReturnFromIonAddr_ != nullptr);
-        return baselineSetPropReturnFromIonAddr_;
-    }
-
-    void initBaselineCallReturnFromStubAddr(void *addr) {
-        MOZ_ASSERT(baselineCallReturnFromStubAddr_ == nullptr);
-        baselineCallReturnFromStubAddr_ = addr;;
-    }
-    void *baselineCallReturnFromStubAddr() {
-        JS_ASSERT(baselineCallReturnFromStubAddr_ != nullptr);
-        return baselineCallReturnFromStubAddr_;
-    }
-    void initBaselineGetPropReturnFromStubAddr(void *addr) {
-        JS_ASSERT(baselineGetPropReturnFromStubAddr_ == nullptr);
-        baselineGetPropReturnFromStubAddr_ = addr;
-    }
-    void *baselineGetPropReturnFromStubAddr() {
-        JS_ASSERT(baselineGetPropReturnFromStubAddr_ != nullptr);
-        return baselineGetPropReturnFromStubAddr_;
-    }
-    void initBaselineSetPropReturnFromStubAddr(void *addr) {
-        JS_ASSERT(baselineSetPropReturnFromStubAddr_ == nullptr);
-        baselineSetPropReturnFromStubAddr_ = addr;
-    }
-    void *baselineSetPropReturnFromStubAddr() {
-        JS_ASSERT(baselineSetPropReturnFromStubAddr_ != nullptr);
-        return baselineSetPropReturnFromStubAddr_;
+    void *baselineSetPropReturnAddr() {
+        JS_ASSERT(baselineSetPropReturnAddr_ != nullptr);
+        return baselineSetPropReturnAddr_;
     }
 
     bool notifyOfActiveParallelEntryScript(JSContext *cx, HandleScript script);

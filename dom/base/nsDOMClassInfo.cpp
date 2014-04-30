@@ -1428,7 +1428,7 @@ nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *aObj,
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (!JSVAL_IS_PRIMITIVE(val)) {
+  if (!val.isPrimitive()) {
     // If val is not an (non-null) object there either is no
     // constructor for this class, or someone messed with
     // window.classname, just fall through and let the JS engine
@@ -2273,7 +2273,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
 {
   // No need to look these up in the hash.
   *bp = false;
-  if (JSVAL_IS_PRIMITIVE(v)) {
+  if (v.isPrimitive()) {
     return NS_OK;
   }
 
@@ -2305,7 +2305,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
       return NS_ERROR_UNEXPECTED;
     }
 
-    if (JSVAL_IS_PRIMITIVE(val)) {
+    if (val.isPrimitive()) {
       return NS_OK;
     }
 
@@ -3034,7 +3034,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    if (JSVAL_IS_PRIMITIVE(prop_val) && !JSVAL_IS_NULL(prop_val)) {
+    if (prop_val.isPrimitive() && !prop_val.isNull()) {
       if (aWin->IsOuterWindow()) {
         nsGlobalWindow *inner = aWin->GetCurrentInnerWindowInternal();
         NS_ENSURE_TRUE(inner, NS_ERROR_UNEXPECTED);
@@ -3547,13 +3547,13 @@ nsGenericArraySH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (!JSVAL_IS_INT(lenval)) {
+  if (!lenval.isInt32()) {
     // This can apparently happen with some sparse array impls falling back
     // onto this code.
     return NS_OK;
   }
 
-  int32_t slen = JSVAL_TO_INT(lenval);
+  int32_t slen = lenval.toInt32();
   if (slen < 0) {
     return NS_OK;
   }
@@ -3584,8 +3584,8 @@ nsGenericArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   JS::Rooted<JS::Value> len_val(cx);
   bool ok = ::JS_GetProperty(cx, obj, "length", &len_val);
 
-  if (ok && JSVAL_IS_INT(len_val)) {
-    int32_t length = JSVAL_TO_INT(len_val);
+  if (ok && len_val.isInt32()) {
+    int32_t length = len_val.toInt32();
 
     for (int32_t i = 0; ok && i < length; ++i) {
       ok = ::JS_DefineElement(cx, obj, i, JSVAL_VOID, nullptr, nullptr,
@@ -3844,8 +3844,7 @@ nsStorage2SH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  nsTArray<nsString> *keys =
-    (nsTArray<nsString> *)JSVAL_TO_PRIVATE(*statep);
+  nsTArray<nsString> *keys = (nsTArray<nsString> *)statep->toPrivate();
 
   if (enum_op == JSENUMERATE_NEXT && keys->Length() != 0) {
     nsString& key = keys->ElementAt(0);

@@ -43,6 +43,14 @@ private:
   // try attaching our socket (mFD) to the STS's poll list.
   nsresult TryAttach();
 
+  friend class SetSocketOptionRunnable;
+  nsresult SetSocketOption(const PRSocketOptionData& aOpt);
+  nsresult JoinMulticastInternal(const PRNetAddr& aAddr,
+                                 const PRNetAddr& aIface);
+  nsresult LeaveMulticastInternal(const PRNetAddr& aAddr,
+                                  const PRNetAddr& aIface);
+  nsresult SetMulticastInterfaceInternal(const PRNetAddr& aIface);
+
   // lock protects access to mListener;
   // so mListener is not cleared while being used/locked.
   mozilla::Mutex                       mLock;

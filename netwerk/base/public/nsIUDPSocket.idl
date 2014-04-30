@@ -28,7 +28,7 @@ native NetAddr(mozilla::net::NetAddr);
  *
  * An interface to a UDP socket that can accept incoming connections.
  */
-[scriptable, uuid(6EFE692D-F0B0-4A9E-9E63-837C7452446D)]
+[scriptable, uuid(3240F793-80FA-4088-987A-9C7378F0AC88)]
 interface nsIUDPSocket : nsISupports
 {
     /**
@@ -144,6 +144,66 @@ interface nsIUDPSocket : nsISupports
     [noscript] unsigned long sendWithAddress([const] in NetAddrPtr addr,
                                              [const, array, size_is(dataLength)]in uint8_t data,
                                              in unsigned long dataLength);
+
+    /**
+     * joinMulticast
+     *
+     * Join the multicast group specified by |addr|.  You are then able to
+     * receive future datagrams addressed to the group.
+     *
+     * @param addr
+     *        The multicast group address.
+     * @param iface
+     *        The local address of the interface on which to join the group.  If
+     *        this is not specified, the OS may join the group on all interfaces
+     *        or only the primary interface.
+     */
+    void joinMulticast(in AUTF8String addr, [optional] in AUTF8String iface);
+    [noscript] void joinMulticastAddr([const] in NetAddr addr,
+                                      [const, optional] in NetAddrPtr iface);
+
+    /**
+     * leaveMulticast
+     *
+     * Leave the multicast group specified by |addr|.  You will no longer
+     * receive future datagrams addressed to the group.
+     *
+     * @param addr
+     *        The multicast group address.
+     * @param iface
+     *        The local address of the interface on which to leave the group.
+     *        If this is not specified, the OS may leave the group on all
+     *        interfaces or only the primary interface.
+     */
+    void leaveMulticast(in AUTF8String addr, [optional] in AUTF8String iface);
+    [noscript] void leaveMulticastAddr([const] in NetAddr addr,
+                                       [const, optional] in NetAddrPtr iface);
+
+    /**
+     * multicastLoopback
+     *
+     * Whether multicast datagrams sent via this socket should be looped back to
+     * this host (assuming this host has joined the relevant group).  Defaults
+     * to true.
+     * Note: This is currently write-only.
+     */
+    attribute boolean multicastLoopback;
+
+    /**
+     * multicastInterface
+     *
+     * The interface that should be used for sending future multicast datagrams.
+     * Note: This is currently write-only.
+     */
+    attribute AUTF8String multicastInterface;
+
+    /**
+     * multicastInterfaceAddr
+     *
+     * The interface that should be used for sending future multicast datagrams.
+     * Note: This is currently write-only.
+     */
+    [noscript] attribute NetAddr multicastInterfaceAddr;
 };
 
 /**

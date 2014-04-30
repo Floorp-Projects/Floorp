@@ -222,7 +222,7 @@ jsd_GetJSDObjectForJSObject(JSDContext* jsdc, JSObject* jsobj)
 JSDObject*
 jsd_GetObjectForValue(JSDContext* jsdc, JSDValue* jsdval)
 {
-    return jsd_GetJSDObjectForJSObject(jsdc, JSVAL_TO_OBJECT(jsdval->val));
+    return jsd_GetJSDObjectForJSObject(jsdc, jsdval->val.toObjectOrNull());
 }
 
 JSDValue*

@@ -48,6 +48,8 @@ public:
   bool RestoreState(nsPresState* aState) MOZ_OVERRIDE;
   virtual bool IsDisabledForEvents(uint32_t aMessage) MOZ_OVERRIDE;
 
+  virtual void FieldSetDisabledChanged(bool aNotify) MOZ_OVERRIDE; 
+
   // nsIDOMEventTarget
   virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
   virtual nsresult PostHandleEvent(
@@ -65,6 +67,7 @@ public:
                               bool aNullParent = true) MOZ_OVERRIDE;
   virtual void DoneCreatingElement() MOZ_OVERRIDE;
 
+  void UpdateBarredFromConstraintValidation();
   // Element
   EventStates IntrinsicState() const MOZ_OVERRIDE;
   /**

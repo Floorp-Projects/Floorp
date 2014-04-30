@@ -296,7 +296,7 @@ CallJSNativeConstructor(JSContext *cx, Native native, const CallArgs &args)
                  native != js::CallOrConstructBoundFunction &&
                  native != js::IteratorConstructor &&
                  (!callee->is<JSFunction>() || callee->as<JSFunction>().native() != obj_construct),
-                 !args.rval().isPrimitive() && callee != &args.rval().toObject());
+                 args.rval().isObject() && callee != &args.rval().toObject());
 
     return true;
 }
