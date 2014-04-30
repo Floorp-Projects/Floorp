@@ -460,7 +460,7 @@ ShouldPreserveParallelJITCode(JSRuntime *rt, JSScript *script, bool increase = f
 {
     IonScript *parallelIon = script->parallelIonScript();
     uint32_t age = increase ? parallelIon->increaseParallelAge() : parallelIon->parallelAge();
-    return age < jit::IonScript::MAX_PARALLEL_AGE && !rt->gc.shouldCleanUpEverything;
+    return age < jit::IonScript::MAX_PARALLEL_AGE && !rt->gcShouldCleanUpEverything;
 }
 
 // On windows systems, really large frames need to be incrementally touched.

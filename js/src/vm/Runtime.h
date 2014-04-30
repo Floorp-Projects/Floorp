@@ -19,6 +19,7 @@
 
 #include "jsatom.h"
 #include "jsclist.h"
+#include "jsgc.h"
 #ifdef DEBUG
 # include "jsproxy.h"
 #endif
@@ -26,7 +27,13 @@
 
 #include "ds/FixedSizeHash.h"
 #include "frontend/ParseMaps.h"
-#include "gc/GCRuntime.h"
+#ifdef JSGC_GENERATIONAL
+# include "gc/Nursery.h"
+#endif
+#include "gc/Statistics.h"
+#ifdef JSGC_GENERATIONAL
+# include "gc/StoreBuffer.h"
+#endif
 #include "gc/Tracer.h"
 #ifdef XP_MACOSX
 # include "jit/AsmJSSignalHandlers.h"
@@ -126,6 +133,48 @@ struct ScopeCoordinateNameCache {
 
     ScopeCoordinateNameCache() : shape(nullptr) {}
     void purge();
+};
+
+typedef Vector<ScriptAndCounts, 0, SystemAllocPolicy> ScriptAndCountsVector;
+
+struct ConservativeGCData
+{
+    /*
+     * The GC scans conservatively between ThreadData::nativeStackBase and
+     * nativeStackTop unless the latter is nullptr.
+     */
+    uintptr_t           *nativeStackTop;
+
+    union {
+        jmp_buf         jmpbuf;
+        uintptr_t       words[JS_HOWMANY(sizeof(jmp_buf), sizeof(uintptr_t))];
+    } registerSnapshot;
+
+    ConservativeGCData() {
+        mozilla::PodZero(this);
+    }
+
+    ~ConservativeGCData() {
+#ifdef JS_THREADSAFE
+        /*
+         * The conservative GC scanner should be disabled when the thread leaves
+         * the last request.
+         */
+        JS_ASSERT(!hasStackToScan());
+#endif
+    }
+
+    MOZ_NEVER_INLINE void recordStackTop();
+
+#ifdef JS_THREADSAFE
+    void updateForRequestEnd() {
+        nativeStackTop = nullptr;
+    }
+#endif
+
+    bool hasStackToScan() const {
+        return !!nativeStackTop;
+    }
 };
 
 struct EvalCacheEntry
@@ -606,6 +655,12 @@ class PerThreadData : public PerThreadDataFriendFields
 #endif
 };
 
+namespace gc {
+class MarkingValidator;
+} // namespace gc
+
+typedef Vector<JS::Zone *, 4, SystemAllocPolicy> ZoneVector;
+
 class AutoLockForExclusiveAccess;
 
 void RecomputeStackLimit(JSRuntime *rt, StackKind kind);
@@ -750,6 +805,12 @@ struct JSRuntime : public JS::shadow::Runtime,
         return false;
 #endif
     }
+
+    /* Embedders can use this zone however they wish. */
+    JS::Zone            *systemZone;
+
+    /* List of compartments and zones (protected by the GC lock). */
+    js::ZoneVector      zones;
 
     /* How many compartments there are across all zones. */
     size_t              numCompartments;
@@ -914,37 +975,259 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
 
     /* Garbage collector state, used by jsgc.c. */
-    js::gc::GCRuntime   gc;
 
     /* Garbase collector state has been sucessfully initialized. */
     bool                gcInitialized;
 
-    JSGCMode gcMode() const { return gc.mode; }
+    /*
+     * Set of all GC chunks with at least one allocated thing. The
+     * conservative GC uses it to quickly check if a possible GC thing points
+     * into an allocated chunk.
+     */
+    js::GCChunkSet      gcChunkSet;
+
+    /*
+     * Doubly-linked lists of chunks from user and system compartments. The GC
+     * allocates its arenas from the corresponding list and when all arenas
+     * in the list head are taken, then the chunk is removed from the list.
+     * During the GC when all arenas in a chunk become free, that chunk is
+     * removed from the list and scheduled for release.
+     */
+    js::gc::Chunk       *gcSystemAvailableChunkListHead;
+    js::gc::Chunk       *gcUserAvailableChunkListHead;
+    js::gc::ChunkPool   gcChunkPool;
+
+    js::RootedValueMap  gcRootsHash;
+
+    /* This is updated by both the main and GC helper threads. */
+    mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gcBytes;
+
+    size_t              gcMaxBytes;
+    size_t              gcMaxMallocBytes;
+
+    /*
+     * Number of the committed arenas in all GC chunks including empty chunks.
+     */
+    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> gcNumArenasFreeCommitted;
+    js::GCMarker        gcMarker;
+    void                *gcVerifyPreData;
+    void                *gcVerifyPostData;
+    bool                gcChunkAllocationSinceLastGC;
+    int64_t             gcNextFullGCTime;
+    int64_t             gcLastGCTime;
+    int64_t             gcJitReleaseTime;
+  private:
+    JSGCMode            gcMode_;
+
+  public:
+    JSGCMode gcMode() const { return gcMode_; }
     void setGCMode(JSGCMode mode) {
-        gc.mode = mode;
-        gc.marker.setGCMode(mode);
+        gcMode_ = mode;
+        gcMarker.setGCMode(mode);
     }
 
-    bool isHeapBusy() { return gc.heapState != js::Idle; }
-    bool isHeapMajorCollecting() { return gc.heapState == js::MajorCollecting; }
-    bool isHeapMinorCollecting() { return gc.heapState == js::MinorCollecting; }
+    size_t              gcAllocationThreshold;
+    bool                gcHighFrequencyGC;
+    uint64_t            gcHighFrequencyTimeThreshold;
+    uint64_t            gcHighFrequencyLowLimitBytes;
+    uint64_t            gcHighFrequencyHighLimitBytes;
+    double              gcHighFrequencyHeapGrowthMax;
+    double              gcHighFrequencyHeapGrowthMin;
+    double              gcLowFrequencyHeapGrowth;
+    bool                gcDynamicHeapGrowth;
+    bool                gcDynamicMarkSlice;
+    uint64_t            gcDecommitThreshold;
+
+    /* During shutdown, the GC needs to clean up every possible object. */
+    bool                gcShouldCleanUpEverything;
+
+    /*
+     * The gray bits can become invalid if UnmarkGray overflows the stack. A
+     * full GC will reset this bit, since it fills in all the gray bits.
+     */
+    bool                gcGrayBitsValid;
+
+    /*
+     * These flags must be kept separate so that a thread requesting a
+     * compartment GC doesn't cancel another thread's concurrent request for a
+     * full GC.
+     */
+    volatile uintptr_t  gcIsNeeded;
+
+    js::gcstats::Statistics gcStats;
+
+    /* Incremented on every GC slice. */
+    uint64_t            gcNumber;
+
+    /* The gcNumber at the time of the most recent GC's first slice. */
+    uint64_t            gcStartNumber;
+
+    /* Whether the currently running GC can finish in multiple slices. */
+    bool                gcIsIncremental;
+
+    /* Whether all compartments are being collected in first GC slice. */
+    bool                gcIsFull;
+
+    /* The reason that an interrupt-triggered GC should be called. */
+    JS::gcreason::Reason gcTriggerReason;
+
+    /*
+     * If this is true, all marked objects must belong to a compartment being
+     * GCed. This is used to look for compartment bugs.
+     */
+    bool                gcStrictCompartmentChecking;
+
+#ifdef DEBUG
+    /*
+     * If this is 0, all cross-compartment proxies must be registered in the
+     * wrapper map. This checking must be disabled temporarily while creating
+     * new wrappers. When non-zero, this records the recursion depth of wrapper
+     * creation.
+     */
+    uintptr_t           gcDisableStrictProxyCheckingCount;
+#else
+    uintptr_t           unused1;
+#endif
+
+    /*
+     * The current incremental GC phase. This is also used internally in
+     * non-incremental GC.
+     */
+    js::gc::State       gcIncrementalState;
+
+    /* Indicates that the last incremental slice exhausted the mark stack. */
+    bool                gcLastMarkSlice;
+
+    /* Whether any sweeping will take place in the separate GC helper thread. */
+    bool                gcSweepOnBackgroundThread;
+
+    /* Whether any black->gray edges were found during marking. */
+    bool                gcFoundBlackGrayEdges;
+
+    /* List head of zones to be swept in the background. */
+    JS::Zone            *gcSweepingZones;
+
+    /* Index of current zone group (for stats). */
+    unsigned            gcZoneGroupIndex;
+
+    /*
+     * Incremental sweep state.
+     */
+    JS::Zone            *gcZoneGroups;
+    JS::Zone            *gcCurrentZoneGroup;
+    int                 gcSweepPhase;
+    JS::Zone            *gcSweepZone;
+    int                 gcSweepKindIndex;
+    bool                gcAbortSweepAfterCurrentGroup;
+
+    /*
+     * List head of arenas allocated during the sweep phase.
+     */
+    js::gc::ArenaHeader *gcArenasAllocatedDuringSweep;
+
+#ifdef DEBUG
+    js::gc::MarkingValidator *gcMarkingValidator;
+#endif
+
+    /*
+     * Indicates that a GC slice has taken place in the middle of an animation
+     * frame, rather than at the beginning. In this case, the next slice will be
+     * delayed so that we don't get back-to-back slices.
+     */
+    volatile uintptr_t  gcInterFrameGC;
+
+    /* Default budget for incremental GC slice. See SliceBudget in jsgc.h. */
+    int64_t             gcSliceBudget;
+
+    /*
+     * We disable incremental GC if we encounter a js::Class with a trace hook
+     * that does not implement write barriers.
+     */
+    bool                gcIncrementalEnabled;
+
+    /*
+     * GGC can be enabled from the command line while testing.
+     */
+    unsigned            gcGenerationalDisabled;
+
+    /*
+     * This is true if we are in the middle of a brain transplant (e.g.,
+     * JS_TransplantObject) or some other operation that can manipulate
+     * dead zones.
+     */
+    bool                gcManipulatingDeadZones;
+
+    /*
+     * This field is incremented each time we mark an object inside a
+     * zone with no incoming cross-compartment pointers. Typically if
+     * this happens it signals that an incremental GC is marking too much
+     * stuff. At various times we check this counter and, if it has changed, we
+     * run an immediate, non-incremental GC to clean up the dead
+     * zones. This should happen very rarely.
+     */
+    unsigned            gcObjectsMarkedInDeadZones;
+
+    bool                gcPoke;
+
+    volatile js::HeapState heapState;
+
+    bool isHeapBusy() { return heapState != js::Idle; }
+    bool isHeapMajorCollecting() { return heapState == js::MajorCollecting; }
+    bool isHeapMinorCollecting() { return heapState == js::MinorCollecting; }
     bool isHeapCollecting() { return isHeapMajorCollecting() || isHeapMinorCollecting(); }
 
+#ifdef JSGC_GENERATIONAL
+    js::Nursery                  gcNursery;
+    js::gc::StoreBuffer          gcStoreBuffer;
+#endif
+
+    /*
+     * These options control the zealousness of the GC. The fundamental values
+     * are gcNextScheduled and gcDebugCompartmentGC. At every allocation,
+     * gcNextScheduled is decremented. When it reaches zero, we do either a
+     * full or a compartmental GC, based on gcDebugCompartmentGC.
+     *
+     * At this point, if gcZeal_ is one of the types that trigger periodic
+     * collection, then gcNextScheduled is reset to the value of
+     * gcZealFrequency. Otherwise, no additional GCs take place.
+     *
+     * You can control these values in several ways:
+     *   - Pass the -Z flag to the shell (see the usage info for details)
+     *   - Call gczeal() or schedulegc() from inside shell-executed JS code
+     *     (see the help for details)
+     *
+     * If gzZeal_ == 1 then we perform GCs in select places (during MaybeGC and
+     * whenever a GC poke happens). This option is mainly useful to embedders.
+     *
+     * We use gcZeal_ == 4 to enable write barrier verification. See the comment
+     * in jsgc.cpp for more information about this.
+     *
+     * gcZeal_ values from 8 to 10 periodically run different types of
+     * incremental GC.
+     */
 #ifdef JS_GC_ZEAL
-    int gcZeal() { return gc.zealMode; }
+    int                 gcZeal_;
+    int                 gcZealFrequency;
+    int                 gcNextScheduled;
+    bool                gcDeterministicOnly;
+    int                 gcIncrementalLimit;
+
+    js::Vector<JSObject *, 0, js::SystemAllocPolicy> gcSelectedForMarking;
+
+    int gcZeal() { return gcZeal_; }
 
     bool upcomingZealousGC() {
-        return gc.nextScheduled == 1;
+        return gcNextScheduled == 1;
     }
 
     bool needZealousGC() {
-        if (gc.nextScheduled > 0 && --gc.nextScheduled == 0) {
+        if (gcNextScheduled > 0 && --gcNextScheduled == 0) {
             if (gcZeal() == js::gc::ZealAllocValue ||
                 gcZeal() == js::gc::ZealGenerationalGCValue ||
                 (gcZeal() >= js::gc::ZealIncrementalRootsThenFinish &&
                  gcZeal() <= js::gc::ZealIncrementalMultipleSlices))
             {
-                gc.nextScheduled = gc.zealFrequency;
+                gcNextScheduled = gcZealFrequency;
             }
             return true;
         }
@@ -956,24 +1239,27 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool needZealousGC() { return false; }
 #endif
 
-    void lockGC() {
-#ifdef JS_THREADSAFE
-        assertCanLock(js::GCLock);
-        PR_Lock(gc.lock);
-        JS_ASSERT(!gc.lockOwner);
-#ifdef DEBUG
-        gc.lockOwner = PR_GetCurrentThread();
-#endif
-#endif
-    }
+    bool                gcValidate;
+    bool                gcFullCompartmentChecks;
 
-    void unlockGC() {
-#ifdef JS_THREADSAFE
-        JS_ASSERT(gc.lockOwner == PR_GetCurrentThread());
-        gc.lockOwner = nullptr;
-        PR_Unlock(gc.lock);
-#endif
-    }
+    JSGCCallback        gcCallback;
+    JS::GCSliceCallback gcSliceCallback;
+    JSFinalizeCallback  gcFinalizeCallback;
+
+    void                *gcCallbackData;
+
+  private:
+    /*
+     * Malloc counter to measure memory pressure for GC scheduling. It runs
+     * from gcMaxMallocBytes down to zero.
+     */
+    mozilla::Atomic<ptrdiff_t, mozilla::ReleaseAcquire> gcMallocBytes;
+
+    /*
+     * Whether a GC has been triggered as a result of gcMallocBytes falling
+     * below zero.
+     */
+    mozilla::Atomic<bool, mozilla::ReleaseAcquire> gcMallocGCTriggered;
 
 #ifdef JS_ARM_SIMULATOR
     js::jit::SimulatorRuntime *simulatorRuntime_;
@@ -984,10 +1270,37 @@ struct JSRuntime : public JS::shadow::Runtime,
         needsBarrier_ = needs;
     }
 
+    struct ExtraTracer {
+        JSTraceDataOp op;
+        void *data;
+
+        ExtraTracer()
+          : op(nullptr), data(nullptr)
+        {}
+        ExtraTracer(JSTraceDataOp op, void *data)
+          : op(op), data(data)
+        {}
+    };
+
 #ifdef JS_ARM_SIMULATOR
     js::jit::SimulatorRuntime *simulatorRuntime() const;
     void setSimulatorRuntime(js::jit::SimulatorRuntime *srt);
 #endif
+
+    /*
+     * The trace operations to trace embedding-specific GC roots. One is for
+     * tracing through black roots and the other is for tracing through gray
+     * roots. The black/gray distinction is only relevant to the cycle
+     * collector.
+     */
+    typedef js::Vector<ExtraTracer, 4, js::SystemAllocPolicy> ExtraTracerVector;
+    ExtraTracerVector   gcBlackRootTracers;
+    ExtraTracer         gcGrayRootTracer;
+
+    js::gc::SystemPageAllocator pageAllocator;
+
+    /* Strong references on scripts held for PCCount profiling API. */
+    js::ScriptAndCountsVector *scriptAndCountsVector;
 
     /* Well-known numbers held for use by this runtime's contexts. */
     const js::Value     NaNValue;
@@ -1017,6 +1330,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* If true, new scripts must be created with PC counter information. */
     bool                profilingScripts;
 
+    /* Always preserve JIT code during GCs, for testing. */
+    bool                alwaysPreserveCode;
+
     /* Had an out-of-memory error which did not populate an exception. */
     bool                hadOutOfMemory;
 
@@ -1036,6 +1352,33 @@ struct JSRuntime : public JS::shadow::Runtime,
     void                *data;
 
   private:
+    /* Synchronize GC heap access between main thread and GCHelperThread. */
+    PRLock *gcLock;
+    mozilla::DebugOnly<PRThread *> gcLockOwner;
+
+    friend class js::GCHelperThread;
+  public:
+
+    void lockGC() {
+#ifdef JS_THREADSAFE
+        assertCanLock(js::GCLock);
+        PR_Lock(gcLock);
+        JS_ASSERT(!gcLockOwner);
+#ifdef DEBUG
+        gcLockOwner = PR_GetCurrentThread();
+#endif
+#endif
+    }
+
+    void unlockGC() {
+#ifdef JS_THREADSAFE
+        JS_ASSERT(gcLockOwner == PR_GetCurrentThread());
+        gcLockOwner = nullptr;
+        PR_Unlock(gcLock);
+#endif
+    }
+
+    js::GCHelperThread  gcHelperThread;
 
 #if defined(XP_MACOSX) && defined(JS_ION)
     js::AsmJSMachExceptionHandler asmJSMachExceptionHandler;
@@ -1107,6 +1450,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::LazyScriptCache lazyScriptCache;
 
     js::DateTimeInfo    dateTimeInfo;
+
+    js::ConservativeGCData conservativeGC;
 
     // Pool of maps used during parse/emit. This may be modified by threads
     // with an ExclusiveContext and requires a lock. Active compilations
@@ -1227,6 +1572,10 @@ struct JSRuntime : public JS::shadow::Runtime,
         return scriptDataTable_;
     }
 
+#ifdef DEBUG
+    size_t              noGCOrAllocationCheck;
+#endif
+
     bool                jitSupportsFloatingPoint;
 
     // Used to reset stack limit after a signaled interrupt (i.e. jitStackLimit_ = -1)
@@ -1295,8 +1644,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     void setGCMaxMallocBytes(size_t value);
 
     void resetGCMallocBytes() {
-        gc.mallocBytes = ptrdiff_t(gc.maxMallocBytes);
-        gc.mallocGCTriggered = false;
+        gcMallocBytes = ptrdiff_t(gcMaxMallocBytes);
+        gcMallocGCTriggered = false;
     }
 
     /*
@@ -1313,7 +1662,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     void reportAllocationOverflow() { js_ReportAllocationOverflow(nullptr); }
 
     bool isTooMuchMalloc() const {
-        return gc.mallocBytes <= 0;
+        return gcMallocBytes <= 0;
     }
 
     /*
@@ -1500,7 +1849,7 @@ inline void
 FreeOp::free_(void *p)
 {
     if (shouldFreeLater()) {
-        runtime()->gc.helperThread.freeLater(p);
+        runtime()->gcHelperThread.freeLater(p);
         return;
     }
     js_free(p);
