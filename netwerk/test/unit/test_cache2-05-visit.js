@@ -5,17 +5,12 @@ function run_test()
   var storage = getCacheStorage("disk");
   var mc = new MultipleCallbacks(4, function() {
     syncWithCacheIOThread(function() {
-
-      var expectedConsumption = newCacheBackEndUsed()
-        ? 4096
-        : 48;
-
       storage.asyncVisitStorage(
         // Test should store 4 entries
-        new VisitCallback(4, expectedConsumption, ["http://a/", "http://b/", "http://c/", "http://d/"], function() {
+        new VisitCallback(4, 48, ["http://a/", "http://b/", "http://c/", "http://d/"], function() {
           storage.asyncVisitStorage(
             // Still 4 entries expected, now don't walk them
-            new VisitCallback(4, expectedConsumption, null, function() {
+            new VisitCallback(4, 48, null, function() {
               finish_cache2_test();
             }),
             false

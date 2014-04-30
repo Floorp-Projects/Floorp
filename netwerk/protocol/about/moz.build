@@ -30,5 +30,4 @@ FINAL_LIBRARY = 'necko'
 
 LOCAL_INCLUDES += [
     '../../base/src',
-    '../../cache2',
 ]
