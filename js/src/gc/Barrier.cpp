@@ -13,18 +13,18 @@
 
 namespace js {
 
-#ifdef DEBUG
-
-bool
-HeapValue::preconditionForSet(Zone *zone)
+void
+ValueReadBarrier(const Value &value)
 {
-    if (!value.isMarkable())
-        return true;
-
-    return ZoneOfValue(value) == zone ||
-           zone->runtimeFromAnyThread()->isAtomsZone(ZoneOfValue(value));
+    if (value.isObject())
+        JSObject::readBarrier(&value.toObject());
+    else if (value.isString())
+        JSString::readBarrier(value.toString());
+    else
+        JS_ASSERT(!value.isMarkable());
 }
 
+#ifdef DEBUG
 bool
 HeapSlot::preconditionForSet(JSObject *owner, Kind kind, uint32_t slot)
 {

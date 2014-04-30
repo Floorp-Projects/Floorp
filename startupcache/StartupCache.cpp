@@ -93,7 +93,7 @@ StartupCache::GetSingleton()
     if (XRE_GetProcessType() != GeckoProcessType_Default) {
       return nullptr;
     }
-#ifdef MOZ_B2G
+#ifdef MOZ_DISABLE_STARTUP_CACHE
     return nullptr;
 #endif
 

@@ -1,4 +1,8 @@
 . "$topsrcdir/b2g/config/mozconfigs/common"
+
+# Use sccache
+no_sccache=
+
 . $topsrcdir/build/macosx/mozconfig.common
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
@@ -22,7 +26,6 @@ ac_add_options --enable-warnings-as-errors
 ac_add_options --enable-application=b2g
 ac_add_options --enable-debug-symbols
 ac_add_options --enable-debug
-ac_add_options --with-ccache
 ENABLE_MARIONETTE=1
 
 export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP

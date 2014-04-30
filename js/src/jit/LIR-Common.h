@@ -5463,6 +5463,26 @@ class LGuardThreadExclusive : public LCallInstructionHelper<0, 2, 1>
     }
 };
 
+class LGuardShapePolymorphic : public LInstructionHelper<0, 1, 1>
+{
+  public:
+    LIR_HEADER(GuardShapePolymorphic)
+
+    LGuardShapePolymorphic(const LAllocation &in, const LDefinition &temp) {
+        setOperand(0, in);
+        setTemp(0, temp);
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    const MGuardShapePolymorphic *mir() const {
+        return mir_->toGuardShapePolymorphic();
+    }
+};
+
 // Guard that a value is in a TypeSet.
 class LTypeBarrierV : public LInstructionHelper<0, BOX_PIECES, 1>
 {

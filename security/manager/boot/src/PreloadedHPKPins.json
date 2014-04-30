@@ -1,0 +1,95 @@
+// -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+// The top-level element is a dictionary with two keys: "pinsets" maps details
+// of certificate pinning to a name and "entries" contains the HPKP details for
+// each host.
+//
+// "pinsets" is a list of objects. Each object has the following members:
+//   name: (string) the name of the pinset
+//   static_spki_hashes: (list of strings) the set of allowed SPKIs hashes
+//
+// For a given pinset, a certifiacte is accepted if at least one of the
+// "static_spki_hashes" SPKIs is found in the chain.
+// SPKIs are specified as names, which must match up with the name given
+// in the Mozilla root store.
+//
+// "entries" is a list of objects. Each object has the following members:
+//   name: (string) the DNS name of the host in question
+//   include_subdomains: (optional bool) whether subdomains of |name| are also covered
+//   pins: (string) the |name| member of an object in |pinsets|
+
+
+// equifax -> aus3
+// Geotrust Primary -> www.mozilla.org
+// Geotrust Global -> *. addons.mozilla.org
+
+// From bug 77646, mozilla uses GeoTrust, Digicert and Thawte
+// geotrust ca info: http://www.geotrust.com/resources/root-certificates/index.html
+{
+  "pinsets": [
+    {
+      "name": "mozilla",
+      "static_spki_hashes": [
+        "Equifax Secure CA",
+        "GeoTrust Primary Certification Authority",
+        "GeoTrust Global CA",
+        "GeoTrust Global CA 2",
+        "GeoTrust Universal CA",
+        "GeoTrust Universal CA 2",
+        "GeoTrust Primary Certification Authority - G2",
+        "GeoTrust Primary Certification Authority - G3",
+        "DigiCert High Assurance EV Root CA",
+        "DigiCert Assured ID Root CA",
+        "DigiCert Global Root CA",
+        "thawte Primary Root CA",
+        "thawte Primary Root CA - G2",
+        "thawte Primary Root CA - G3"
+      ]
+    },
+    {
+      "name": "mozilla_cdn",
+      "static_spki_hashes": [
+        "GTE CyberTrust Global Root",
+        "Verisign Class 3 Public Primary Certification Authority",
+        "Verisign Class 1 Public Primary Certification Authority - G2",
+        "Verisign Class 2 Public Primary Certification Authority - G2",
+        "Verisign Class 3 Public Primary Certification Authority - G2",
+        "Verisign Class 1 Public Primary Certification Authority - G3",
+        "Verisign Class 2 Public Primary Certification Authority - G3",
+        "Verisign Class 3 Public Primary Certification Authority - G3",
+        "Verisign Class 4 Public Primary Certification Authority - G3",
+        "VeriSign Class 3 Public Primary Certification Authority - G5",
+        "VeriSign Universal Root Certification Authority",
+        "VeriSign Class 3 Public Primary Certification Authority - G4",
+        "Verisign Class 1 Public Primary Certification Authority",
+        "Equifax Secure CA",
+        "GeoTrust Primary Certification Authority",
+        "GeoTrust Global CA",
+        "GeoTrust Global CA 2",
+        "GeoTrust Universal CA",
+        "GeoTrust Universal CA 2",
+        "GeoTrust Primary Certification Authority - G2",
+        "GeoTrust Primary Certification Authority - G3",
+        "DigiCert High Assurance EV Root CA",
+        "DigiCert Assured ID Root CA",
+        "DigiCert Global Root CA",
+        "thawte Primary Root CA",
+        "thawte Primary Root CA - G2",
+        "thawte Primary Root CA - G3",
+        "Baltimore CyberTrust Root"
+      ]
+    }
+  ],
+
+  "entries": [
+    { "name": "addons.mozilla.org", "include_subdomains": true, "pins": "mozilla" },
+    { "name": "addons.mozilla.net", "include_subdomains": true, "pins": "mozilla" },
+    { "name": "cdn.mozilla.net", "include_subdomains": true, "pins": "mozilla_cdn" },
+    { "name": "cdn.mozilla.org", "include_subdomains": true, "pins": "mozilla_cdn" },
+    { "name": "media.mozilla.com", "include_subdomains": true, "pins": "mozilla_cdn" },
+    { "name": "getpersonas.org", "include_subdomains": true, "pins": "mozilla_cdn" }
+  ]
+}

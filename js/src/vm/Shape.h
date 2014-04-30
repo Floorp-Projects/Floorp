@@ -602,7 +602,7 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
     };
 
     /* For owned BaseShapes, the canonical unowned BaseShape. */
-    HeapPtr<UnownedBaseShape> unowned_;
+    HeapPtrUnownedBaseShape unowned_;
 
     /* For owned BaseShapes, the shape's shape table. */
     ShapeTable       *table_;
@@ -870,7 +870,7 @@ BaseShape::BaseShape(const StackBaseShape &base)
     this->compartment_ = base.compartment;
 }
 
-typedef HashSet<ReadBarriered<UnownedBaseShape>,
+typedef HashSet<ReadBarrieredUnownedBaseShape,
                 StackBaseShape,
                 SystemAllocPolicy> BaseShapeSet;
 
@@ -889,7 +889,7 @@ class Shape : public gc::BarrieredCell<Shape>
 
   protected:
     HeapPtrBaseShape    base_;
-    EncapsulatedId      propid_;
+    PreBarrieredId      propid_;
 
     JS_ENUM_HEADER(SlotInfo, uint32_t)
     {
@@ -1192,12 +1192,12 @@ class Shape : public gc::BarrieredCell<Shape>
         slotInfo = slotInfo | ((count + 1) << LINEAR_SEARCHES_SHIFT);
     }
 
-    const EncapsulatedId &propid() const {
+    const PreBarrieredId &propid() const {
         JS_ASSERT(!isEmptyShape());
         JS_ASSERT(!JSID_IS_VOID(propid_));
         return propid_;
     }
-    EncapsulatedId &propidRef() { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
+    PreBarrieredId &propidRef() { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
     jsid propidRaw() const {
         // Return the actual jsid, not an internal reference.
         return propid();
@@ -1385,7 +1385,7 @@ struct InitialShapeEntry
      * certain classes (e.g. String, RegExp) which may add certain baked-in
      * properties.
      */
-    ReadBarriered<Shape> shape;
+    ReadBarrieredShape shape;
 
     /*
      * Matching prototype for the entry. The shape of an object determines its
@@ -1433,7 +1433,7 @@ struct InitialShapeEntry
     };
 
     inline InitialShapeEntry();
-    inline InitialShapeEntry(const ReadBarriered<Shape> &shape, TaggedProto proto);
+    inline InitialShapeEntry(const ReadBarrieredShape &shape, TaggedProto proto);
 
     inline Lookup getLookup() const;
 

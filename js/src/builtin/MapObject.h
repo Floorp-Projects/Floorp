@@ -22,7 +22,7 @@ namespace js {
  * All values except ropes are hashable as-is.
  */
 class HashableValue {
-    EncapsulatedValue value;
+    PreBarrieredValue value;
 
   public:
     struct Hasher {

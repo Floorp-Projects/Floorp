@@ -452,10 +452,10 @@ struct RuntimeSizes;
 /* Various built-in or commonly-used names pinned on first context. */
 struct JSAtomState
 {
-#define PROPERTYNAME_FIELD(idpart, id, text) js::FixedHeapPtr<js::PropertyName> id;
+#define PROPERTYNAME_FIELD(idpart, id, text) js::ImmutablePropertyNamePtr id;
     FOR_EACH_COMMON_PROPERTYNAME(PROPERTYNAME_FIELD)
 #undef PROPERTYNAME_FIELD
-#define PROPERTYNAME_FIELD(name, code, init, clasp) js::FixedHeapPtr<js::PropertyName> name;
+#define PROPERTYNAME_FIELD(name, code, init, clasp) js::ImmutablePropertyNamePtr name;
     JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD)
 #undef PROPERTYNAME_FIELD
 };
@@ -467,7 +467,7 @@ namespace js {
 inline HandlePropertyName
 AtomStateOffsetToName(const JSAtomState &atomState, size_t offset)
 {
-    return *(js::FixedHeapPtr<js::PropertyName>*)((char*)&atomState + offset);
+    return *reinterpret_cast<js::ImmutablePropertyNamePtr *>((char*)&atomState + offset);
 }
 
 // There are several coarse locks in the enum below. These may be either
