@@ -116,7 +116,7 @@ function emitTouchEventForIFrame(message) {
   let message = message.json;
   let frames = curFrame.document.getElementsByTagName("iframe");
   let iframe = frames[message.index];
-  let identifier = touchId = nextTouchId++;
+  let identifier = nextTouchId;
   let tabParent = iframe.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.tabParent;
   tabParent.injectTouchEvent(message.type, [identifier],
                              [message.clientX], [message.clientY],
