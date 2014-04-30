@@ -16,6 +16,9 @@
 
 #include "prlink.h"
 
+#include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/CompositorParent.h"
+
 #include "nsCycleCollector.h"
 #include "nsObserverList.h"
 #include "nsObserverService.h"
@@ -125,9 +128,6 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 #include "mozilla/AvailableMemoryTracker.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SystemMemoryReporter.h"
-
-#include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/CompositorParent.h"
 
 #ifdef MOZ_VISUAL_EVENT_TRACER
 #include "mozilla/VisualEventTracer.h"
