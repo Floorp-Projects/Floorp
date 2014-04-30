@@ -2401,86 +2401,6 @@ let SessionStoreInternal = {
   },
 
   /**
-   * Sets the tabs restoring order with the following priority:
-   * Selected tab, pinned tabs, optimized visible tabs, other visible tabs and
-   * hidden tabs.
-   * @param aTabBrowser
-   *        Tab browser object
-   * @param aTabs
-   *        Array of tab references
-   * @param aTabData
-   *        Array of tab data
-   * @param aSelectedTab
-   *        Index of selected tab (1 is first tab, 0 no selected tab)
-   */
-  _setTabsRestoringOrder : function ssi__setTabsRestoringOrder(
-    aTabBrowser, aTabs, aTabData, aSelectedTab) {
-
-    // Store the selected tab. Need to substract one to get the index in aTabs.
-    let selectedTab;
-    if (aSelectedTab > 0 && aTabs[aSelectedTab - 1]) {
-      selectedTab = aTabs[aSelectedTab - 1];
-    }
-
-    // Store the pinned tabs and hidden tabs.
-    let pinnedTabs = [];
-    let pinnedTabsData = [];
-    let hiddenTabs = [];
-    let hiddenTabsData = [];
-    if (aTabs.length > 1) {
-      for (let t = aTabs.length - 1; t >= 0; t--) {
-        if (aTabData[t].pinned) {
-          pinnedTabs.unshift(aTabs.splice(t, 1)[0]);
-          pinnedTabsData.unshift(aTabData.splice(t, 1)[0]);
-        } else if (aTabData[t].hidden) {
-          hiddenTabs.unshift(aTabs.splice(t, 1)[0]);
-          hiddenTabsData.unshift(aTabData.splice(t, 1)[0]);
-        }
-      }
-    }
-
-    // Optimize the visible tabs only if there is a selected tab.
-    if (selectedTab) {
-      let selectedTabIndex = aTabs.indexOf(selectedTab);
-      if (selectedTabIndex > 0) {
-        let scrollSize = aTabBrowser.tabContainer.mTabstrip.scrollClientSize;
-        let tabWidth = aTabs[0].getBoundingClientRect().width;
-        let maxVisibleTabs = Math.ceil(scrollSize / tabWidth);
-        if (maxVisibleTabs < aTabs.length) {
-          let firstVisibleTab = 0;
-          let nonVisibleTabsCount = aTabs.length - maxVisibleTabs;
-          if (nonVisibleTabsCount >= selectedTabIndex) {
-            // Selected tab is leftmost since we scroll to it when possible.
-            firstVisibleTab = selectedTabIndex;
-          } else {
-            // Selected tab is rightmost or no more room to scroll right.
-            firstVisibleTab = nonVisibleTabsCount;
-          }
-          aTabs = aTabs.splice(firstVisibleTab, maxVisibleTabs).concat(aTabs);
-          aTabData =
-            aTabData.splice(firstVisibleTab, maxVisibleTabs).concat(aTabData);
-        }
-      }
-    }
-
-    // Merge the stored tabs in order.
-    aTabs = pinnedTabs.concat(aTabs, hiddenTabs);
-    aTabData = pinnedTabsData.concat(aTabData, hiddenTabsData);
-
-    // Load the selected tab to the first position and select it.
-    if (selectedTab) {
-      let selectedTabIndex = aTabs.indexOf(selectedTab);
-      if (selectedTabIndex > 0) {
-        aTabs = aTabs.splice(selectedTabIndex, 1).concat(aTabs);
-        aTabData = aTabData.splice(selectedTabIndex, 1).concat(aTabData);
-      }
-      aTabBrowser.selectedTab = selectedTab;
-    }
-
-    return [aTabs, aTabData];
-  },
-
-  /**
    * Manage history restoration for a window
    * @param aWindow
    *        Window to restore the tabs into
@@ -2489,7 +2409,9 @@ let SessionStoreInternal = {
    * @param aTabData
    *        Array of tab data
    * @param aSelectTab
-   *        Index of selected tab
+   *        Index of the tab to select. This is a 1-based index where "1"
+   *        indicates the first tab should be selected, and "0" indicates that
+   *        the currently selected tab will not be changed.
    * @param aRestoreImmediately
    *        Flag to indicate whether the given set of tabs aTabs should be
    *        restored/loaded immediately even if restore_on_demand = true
@@ -2525,9 +2447,10 @@ let SessionStoreInternal = {
       return;
     }
 
-    // Sets the tabs restoring order.
-    [aTabs, aTabData] =
-      this._setTabsRestoringOrder(tabbrowser, aTabs, aTabData, aSelectTab);
+    // If provided, set the selected tab.
+    if (aSelectTab > 0 && aSelectTab <= aTabs.length) {
+      tabbrowser.selectedTab = aTabs[aSelectTab - 1];
+    }
 
     // Prepare the tabs so that they can be properly restored. We'll pin/unpin
     // and show/hide tabs as necessary. We'll also set the labels, user typed
