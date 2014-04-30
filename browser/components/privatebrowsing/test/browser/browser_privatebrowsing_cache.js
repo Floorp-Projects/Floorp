@@ -87,10 +87,11 @@ function getStorageEntryCount(device, goon) {
     entryCount: 0,
     onCacheStorageInfo: function (aEntryCount, aConsumption) {
     },
-    onCacheEntryInfo: function(entry)
+    onCacheEntryInfo: function(uri)
     {
-      info(device + ":" + entry.key + "\n");
-      if (entry.key.match(/^http:\/\/example.org\//))
+      var urispec = uri.asciiSpec;
+      info(device + ":" + urispec + "\n");
+      if (urispec.match(/^http:\/\/example.org\//))
         ++this.entryCount;
     },
     onCacheEntryVisitCompleted: function()

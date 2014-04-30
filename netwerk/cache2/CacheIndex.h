@@ -205,7 +205,11 @@ public:
     mRec->mFlags |= aFileSize;
   }
   // Returns filesize in kilobytes.
-  uint32_t GetFileSize() { return mRec->mFlags & kFileSizeMask; }
+  uint32_t GetFileSize() { return GetFileSize(mRec); }
+  static uint32_t GetFileSize(CacheIndexRecord *aRec)
+  {
+    return aRec->mFlags & kFileSizeMask;
+  }
   bool     IsFileEmpty() { return GetFileSize() == 0; }
 
   void WriteToBuf(void *aBuf)
@@ -562,6 +566,10 @@ public:
 
   // Returns cache size in kB.
   static nsresult GetCacheSize(uint32_t *_retval);
+
+  // Synchronously returns the disk occupation and number of entries per-context.
+  // Callable on any thread.
+  static nsresult GetCacheStats(nsILoadContextInfo *aInfo, uint32_t *aSize, uint32_t *aCount);
 
   // Asynchronously gets the disk cache size, used for display in the UI.
   static nsresult AsyncGetDiskConsumption(nsICacheStorageConsumptionObserver* aObserver);

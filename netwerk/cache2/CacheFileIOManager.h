@@ -6,6 +6,7 @@
 #define CacheFileIOManager__h__
 
 #include "CacheIOThread.h"
+#include "CacheStorageService.h"
 #include "nsIEventTarget.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
@@ -22,6 +23,7 @@ class nsIFile;
 class nsITimer;
 class nsIDirectoryEnumerator;
 class nsILoadContextInfo;
+class nsICacheStorageVisitor;
 
 namespace mozilla {
 namespace net {
@@ -277,6 +279,13 @@ public:
   };
 
   static void GetCacheDirectory(nsIFile** result);
+
+  // Calls synchronously OnEntryInfo for an entry with the given hash.
+  // Tries to find an existing entry in the service hashtables first, if not
+  // found, loads synchronously from disk file.
+  // Callable on the IO thread only.
+  static nsresult GetEntryInfo(const SHA1Sum::Hash *aHash,
+                               CacheStorageService::EntryInfoCallback *aCallback);
 
   // Memory reporting
   static size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);

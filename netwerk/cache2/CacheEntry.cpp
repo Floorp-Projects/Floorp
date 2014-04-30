@@ -1165,6 +1165,13 @@ NS_IMETHODIMP CacheEntry::SetMetaDataElement(const char * aKey, const char * aVa
   return mFile->SetElement(aKey, aValue);
 }
 
+NS_IMETHODIMP CacheEntry::VisitMetaData(nsICacheEntryMetaDataVisitor *aVisitor)
+{
+  NS_ENSURE_SUCCESS(mFileStatus, NS_ERROR_NOT_AVAILABLE);
+
+  return mFile->VisitMetaData(aVisitor);
+}
+
 NS_IMETHODIMP CacheEntry::MetaDataReady()
 {
   mozilla::MutexAutoLock lock(mLock);
@@ -1467,7 +1474,7 @@ void CacheEntry::BackgroundOp(uint32_t aOperations, bool aForceAsync)
     #endif
 
     // Half-life is dynamic, in seconds.
-     static double half_life = CacheObserver::HalfLifeSeconds();
+    static double half_life = CacheObserver::HalfLifeSeconds();
     // Must convert from seconds to milliseconds since PR_Now() gives usecs.
     static double const decay = (M_LN2 / half_life) / static_cast<double>(PR_USEC_PER_SEC);
 
