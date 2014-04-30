@@ -30,8 +30,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
-                                  "resource://gre/modules/AsyncShutdown.jsm");
 
 // Oldest year to allow in date preferences. This module was implemented in
 // 2012 and no dates older than that should be encountered.
@@ -50,6 +48,7 @@ const TELEMETRY_JSON_PAYLOAD_SERIALIZE = "HEALTHREPORT_JSON_PAYLOAD_SERIALIZE_MS
 const TELEMETRY_PAYLOAD_SIZE_UNCOMPRESSED = "HEALTHREPORT_PAYLOAD_UNCOMPRESSED_BYTES";
 const TELEMETRY_PAYLOAD_SIZE_COMPRESSED = "HEALTHREPORT_PAYLOAD_COMPRESSED_BYTES";
 const TELEMETRY_UPLOAD = "HEALTHREPORT_UPLOAD_MS";
+const TELEMETRY_SHUTDOWN_DELAY = "HEALTHREPORT_SHUTDOWN_DELAY_MS";
 const TELEMETRY_COLLECT_CONSTANT = "HEALTHREPORT_COLLECT_CONSTANT_DATA_MS";
 const TELEMETRY_COLLECT_DAILY = "HEALTHREPORT_COLLECT_DAILY_MS";
 const TELEMETRY_SHUTDOWN = "HEALTHREPORT_SHUTDOWN_MS";
@@ -130,7 +129,13 @@ HealthReporterState.prototype = Object.freeze({
 
   init: function () {
     return Task.spawn(function init() {
-      OS.File.makeDir(this._stateDir);
+      try {
+        OS.File.makeDir(this._stateDir);
+      } catch (ex if ex instanceof OS.FileError) {
+        if (!ex.becauseExists) {
+          throw ex;
+        }
+      }
 
       let resetObjectState = function () {
         this._s = {
@@ -153,8 +158,11 @@ HealthReporterState.prototype = Object.freeze({
 
       try {
         this._s = yield CommonUtils.readJSON(this._filename);
-      } catch (ex if ex instanceof OS.File.Error &&
-               ex.becauseNoSuchFile) {
+      } catch (ex if ex instanceof OS.File.Error) {
+        if (!ex.becauseNoSuchFile) {
+          throw ex;
+        }
+
         this._log.warn("Saved state file does not exist.");
         resetObjectState();
       } catch (ex) {
@@ -341,8 +349,7 @@ function AbstractHealthReporter(branch, policy, sessionRecorder) {
   this._shutdownRequested = false;
   this._shutdownInitiated = false;
   this._shutdownComplete = false;
-  this._deferredShutdown = Promise.defer();
-  this._promiseShutdown = this._deferredShutdown.promise;
+  this._shutdownCompleteCallback = null;
 
   this._errors = [];
 
@@ -379,59 +386,12 @@ AbstractHealthReporter.prototype = Object.freeze({
 
     this._initializeStarted = true;
 
-    return Task.spawn(function*() {
-      TelemetryStopwatch.start(this._initHistogram, this);
+    TelemetryStopwatch.start(this._initHistogram, this);
 
-      try {
-        yield this._state.init();
+    this._initializeState().then(this._onStateInitialized.bind(this),
+                                 this._onInitError.bind(this));
 
-        if (!this._state._s.removedOutdatedLastpayload) {
-          yield this._deleteOldLastPayload();
-          this._state._s.removedOutdatedLastpayload = true;
-          // Normally we should save this to a file but it directly conflicts with
-          // the "application re-upgrade" decision in HealthReporterState::init()
-          // which specifically does not save the state to a file.
-        }
-      } catch (ex) {
-        this._log.error("Error deleting last payload: " +
-                        CommonUtils.exceptionStr(ex));
-      }
-
-      // As soon as we have could have storage, we need to register cleanup or
-      // else bad things happen on shutdown.
-      Services.obs.addObserver(this, "quit-application", false);
-
-      // The database needs to be shut down by the end of shutdown
-      // phase profileBeforeChange.
-      AsyncShutdown.profileBeforeChange.
-        addBlocker("FHR: Flushing storage shutdown", this._promiseShutdown);
-
-      try {
-        this._storageInProgress = true;
-        TelemetryStopwatch.start(this._dbOpenHistogram, this);
-        let storage = yield Metrics.Storage(this._dbName);
-        TelemetryStopwatch.finish(this._dbOpenHistogram, this);
-        yield this._onStorageCreated();
-
-        delete this._dbOpenHistogram;
-        this._log.info("Storage initialized.");
-        this._storage = storage;
-        this._storageInProgress = false;
-
-        if (this._shutdownRequested) {
-          this._initiateShutdown();
-          return null;
-        }
-
-        yield this._initializeProviderManager();
-        yield this._onProviderManagerInitialized();
-        this._initializedDeferred.resolve();
-        return this.onInit();
-      } catch (ex) {
-        yield this._onInitError(ex);
-        this._initializedDeferred.reject(ex);
-      }
-    }.bind(this));
+    return this.onInit();
   },
 
   //----------------------------------------------------
@@ -449,10 +409,41 @@ AbstractHealthReporter.prototype = Object.freeze({
     this._recordError("Error during initialization", error);
     this._initializeHadError = true;
     this._initiateShutdown();
-    return Promise.reject(error);
+    this._initializedDeferred.reject(error);
 
     // FUTURE consider poisoning prototype's functions so calls fail with a
     // useful error message.
+  },
+
+  _initializeState: function () {
+    return Promise.resolve();
+  },
+
+  _onStateInitialized: function () {
+    return Task.spawn(function onStateInitialized () {
+      try {
+        if (!this._state._s.removedOutdatedLastpayload) {
+          yield this._deleteOldLastPayload();
+          this._state._s.removedOutdatedLastpayload = true;
+          // Normally we should save this to a file but it directly conflicts with
+          //  the "application re-upgrade" decision in HealthReporterState::init()
+          //  which specifically does not save the state to a file.
+        }
+      } catch (ex) {
+        this._log.error("Error deleting last payload: " +
+                        CommonUtils.exceptionStr(ex));
+      }
+      // As soon as we have could storage, we need to register cleanup or
+      // else bad things happen on shutdown.
+      Services.obs.addObserver(this, "quit-application", false);
+      Services.obs.addObserver(this, "profile-before-change", false);
+
+      this._storageInProgress = true;
+      TelemetryStopwatch.start(this._dbOpenHistogram, this);
+
+      Metrics.Storage(this._dbName).then(this._onStorageCreated.bind(this),
+                                         this._onInitError.bind(this));
+    }.bind(this));
   },
 
 
@@ -475,6 +466,24 @@ AbstractHealthReporter.prototype = Object.freeze({
         }
       }
     }.bind(this));
+  },
+
+  // Called when storage has been opened.
+  _onStorageCreated: function (storage) {
+    TelemetryStopwatch.finish(this._dbOpenHistogram, this);
+    delete this._dbOpenHistogram;
+    this._log.info("Storage initialized.");
+    this._storage = storage;
+    this._storageInProgress = false;
+
+    if (this._shutdownRequested) {
+      this._initiateShutdown();
+      return;
+    }
+
+    Task.spawn(this._initializeProviderManager.bind(this))
+        .then(this._onProviderManagerInitialized.bind(this),
+              this._onInitError.bind(this));
   },
 
   _initializeProviderManager: function () {
@@ -542,6 +551,7 @@ AbstractHealthReporter.prototype = Object.freeze({
 
     // Clean up caches and reduce memory usage.
     this._storage.compact();
+    this._initializedDeferred.resolve(this);
   },
 
   // nsIObserver to handle shutdown.
@@ -550,6 +560,11 @@ AbstractHealthReporter.prototype = Object.freeze({
       case "quit-application":
         Services.obs.removeObserver(this, "quit-application");
         this._initiateShutdown();
+        break;
+
+      case "profile-before-change":
+        Services.obs.removeObserver(this, "profile-before-change");
+        this._waitForShutdown();
         break;
 
       case "idle-daily":
@@ -602,60 +617,80 @@ AbstractHealthReporter.prototype = Object.freeze({
       Services.obs.removeObserver(this, "idle-daily");
     } catch (ex) { }
 
-    Task.spawn(function*() {
+    if (this._providerManager) {
+      let onShutdown = this._onProviderManagerShutdown.bind(this);
+      Task.spawn(this._shutdownProviderManager.bind(this))
+          .then(onShutdown, onShutdown);
+      return;
+    }
+
+    this._log.warn("Don't have provider manager. Proceeding to storage shutdown.");
+    this._shutdownStorage();
+  },
+
+  _shutdownProviderManager: function () {
+    this._log.info("Shutting down provider manager.");
+    for (let provider of this._providerManager.providers) {
       try {
-        if (this._providerManager) {
-          this._log.info("Shutting down provider manager.");
-          for (let provider of this._providerManager.providers) {
-            try {
-              yield provider.shutdown();
-            } catch (ex) {
-              this._log.warn("Error when shutting down provider: " +
-                             CommonUtils.exceptionStr(ex));
-            }
-          }
-          this._log.info("Provider manager shut down.");
-          this._providerManager = null;
-          this._onProviderManagerShutdown();
-        }
-        if (this._storage) {
-          this._log.info("Shutting down storage.");
-          try {
-            yield this._storage.close();
-            yield this._onStorageClose();
-          } catch (error) {
-            this._log.warn("Error when closing storage: " +
-                           CommonUtils.exceptionStr(error));
-          }
-          this._storage = null;
-        }
-
-        this._log.warn("Shutdown complete.");
-        this._shutdownComplete = true;
-      } finally {
-        this._deferredShutdown.resolve();
-        TelemetryStopwatch.finish(TELEMETRY_SHUTDOWN, this);
+        yield provider.shutdown();
+      } catch (ex) {
+        this._log.warn("Error when shutting down provider: " +
+                       CommonUtils.exceptionStr(ex));
       }
-    }.bind(this));
+    }
   },
 
-  onInit: function() {
-    return this._initializedDeferred.promise;
+  _onProviderManagerShutdown: function () {
+    this._log.info("Provider manager shut down.");
+    this._providerManager = null;
+    this._shutdownStorage();
   },
 
-  _onStorageCreated: function() {
-    // Do nothing.
-    // This method provides a hook point for the test suite.
+  _shutdownStorage: function () {
+    if (!this._storage) {
+      this._onShutdownComplete();
+    }
+
+    this._log.info("Shutting down storage.");
+    let onClose = this._onStorageClose.bind(this);
+    this._storage.close().then(onClose, onClose);
   },
 
-  _onStorageClose: function() {
-    // Do nothing.
-    // This method provides a hook point for the test suite.
+  _onStorageClose: function (error) {
+    this._log.info("Storage has been closed.");
+
+    if (error) {
+      this._log.warn("Error when closing storage: " +
+                     CommonUtils.exceptionStr(error));
+    }
+
+    this._storage = null;
+    this._onShutdownComplete();
   },
 
-  _onProviderManagerShutdown: function() {
-    // Do nothing.
-    // This method provides a hook point for the test suite.
+  _onShutdownComplete: function () {
+    this._log.warn("Shutdown complete.");
+    this._shutdownComplete = true;
+    TelemetryStopwatch.finish(TELEMETRY_SHUTDOWN, this);
+
+    if (this._shutdownCompleteCallback) {
+      this._shutdownCompleteCallback();
+    }
+  },
+
+  _waitForShutdown: function () {
+    if (this._shutdownComplete) {
+      return;
+    }
+
+    TelemetryStopwatch.start(TELEMETRY_SHUTDOWN_DELAY, this);
+    try {
+      this._shutdownCompleteCallback = Async.makeSpinningCallback();
+      this._shutdownCompleteCallback.wait();
+      this._shutdownCompleteCallback = null;
+    } finally {
+      TelemetryStopwatch.finish(TELEMETRY_SHUTDOWN_DELAY, this);
+    }
   },
 
   /**
@@ -665,7 +700,22 @@ AbstractHealthReporter.prototype = Object.freeze({
    */
   _shutdown: function () {
     this._initiateShutdown();
-    return this._promiseShutdown;
+    this._waitForShutdown();
+  },
+
+  /**
+   * Return a promise that is resolved once the service has been initialized.
+   */
+  onInit: function () {
+    if (this._initializeHadError) {
+      throw new Error("Service failed to initialize.");
+    }
+
+    if (this._initialized) {
+      return CommonUtils.laterTickResolvingPromise(this);
+    }
+
+    return this._initializedDeferred.promise;
   },
 
   _performDailyMaintenance: function () {
@@ -1295,6 +1345,10 @@ this.HealthReporter.prototype = Object.freeze({
     }
 
     return this._policy.deleteRemoteData(reason);
+  },
+
+  _initializeState: function() {
+    return this._state.init();
   },
 
   /**
