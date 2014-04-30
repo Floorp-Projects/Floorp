@@ -298,71 +298,6 @@ function limitURILength(str, len) {
 }
 
 /**
- * Utilities for dealing with promises and Task.jsm
- */
-const TaskUtils = {
-  /**
-   * Add logging to a promise.
-   *
-   * @param {Promise} promise
-   * @return {Promise} A promise behaving as |promise|, but with additional
-   * logging in case of uncaught error.
-   */
-  captureErrors: function captureErrors(promise) {
-    return promise.then(
-      null,
-      function onError(reason) {
-        LOG("Uncaught asynchronous error: " + reason + " at\n" + reason.stack);
-        throw reason;
-      }
-    );
-  },
-  /**
-   * Spawn a new Task from a generator.
-   *
-   * This function behaves as |Task.spawn|, with the exception that it
-   * adds logging in case of uncaught error. For more information, see
-   * the documentation of |Task.jsm|.
-   *
-   * @param {generator} gen Some generator.
-   * @return {Promise} A promise built from |gen|, with the same semantics
-   * as |Task.spawn(gen)|.
-   */
-  spawn: function spawn(gen) {
-    return this.captureErrors(Task.spawn(gen));
-  },
-  /**
-   * Execute a mozIStorage statement asynchronously, wrapping the
-   * result in a promise.
-   *
-   * @param {mozIStorageStaement} statement A statement to be executed
-   * asynchronously. The semantics are the same as these of |statement.execute|.
-   * @param {function*} onResult A callback, called for each successive result.
-   *
-   * @return {Promise} A promise, resolved successfully if |statement.execute|
-   * succeeds, rejected if it fails.
-   */
-  executeStatement: function executeStatement(statement, onResult) {
-    let deferred = Promise.defer();
-    onResult = onResult || function() {};
-    statement.executeAsync({
-      handleResult: onResult,
-      handleError: function handleError(aError) {
-        deferred.reject(aError);
-      },
-      handleCompletion: function handleCompletion(aReason) {
-        statement.finalize();
-        // Note that, in case of error, deferred.reject(aError)
-        // has already been called by this point, so the call to
-        // |deferred.resolve| is simply ignored.
-        deferred.resolve(aReason);
-      }
-    });
-    return deferred.promise;
-  }
-};
-
-/**
  * Ensures an assertion is met before continuing. Should be used to indicate
  * fatal errors.
  * @param  assertion
@@ -1227,7 +1162,7 @@ Engine.prototype = {
    * data succeeds, rejected if it fails.
    */
   _asyncInitFromFile: function SRCH_ENG__asyncInitFromFile() {
-    return TaskUtils.spawn(function() {
+    return Task.spawn(function() {
       if (!this._file || !(yield OS.File.exists(this._file.path)))
         FAIL("File must exist before calling initFromFile!", Cr.NS_ERROR_UNEXPECTED);
 
@@ -1276,7 +1211,7 @@ Engine.prototype = {
    * succeeds.
    */
   _asyncInitFromURI: function SRCH_ENG__asyncInitFromURI() {
-    return TaskUtils.spawn(function() {
+    return Task.spawn(function() {
       LOG("_asyncInitFromURI: Loading engine from: \"" + this._uri.spec + "\".");
       yield this._retrieveSearchXMLData(this._uri.spec);
       // Now that the data is loaded, initialize the engine object
@@ -2919,7 +2854,7 @@ SearchService.prototype = {
    * succeeds.
    */
   _asyncInit: function SRCH_SVC__asyncInit() {
-    return TaskUtils.spawn(function() {
+    return Task.spawn(function() {
       LOG("_asyncInit start");
       try {
         yield checkForSyncCompletion(this._asyncLoadEngines());
@@ -3116,7 +3051,7 @@ SearchService.prototype = {
    * succeeds.
    */
   _asyncLoadEngines: function SRCH_SVC__asyncLoadEngines() {
-    return TaskUtils.spawn(function() {
+    return Task.spawn(function() {
       LOG("_asyncLoadEngines: start");
       // See if we have a cache file so we don't have to parse a bunch of XML.
       let cache = {};
@@ -3156,7 +3091,7 @@ SearchService.prototype = {
 
       let toLoad = chromeFiles.concat(loadDirs);
       function hasModifiedDir(aList) {
-        return TaskUtils.spawn(function() {
+        return Task.spawn(function() {
           let modifiedDir = false;
 
           for (let dir of aList) {
@@ -3243,7 +3178,7 @@ SearchService.prototype = {
    * succeeds.
    */
   _asyncReadCacheFile: function SRCH_SVC__asyncReadCacheFile(aPath) {
-    return TaskUtils.spawn(function() {
+    return Task.spawn(function() {
       let json;
       try {
         let bytes = yield OS.File.read(aPath);
@@ -3407,7 +3342,7 @@ SearchService.prototype = {
     // Check whether aDir is the user profile dir
     let isInProfile = aDir.equals(getDir(NS_APP_USER_SEARCH_DIR));
     let iterator = new OS.File.DirectoryIterator(aDir.path);
-    return TaskUtils.spawn(function() {
+    return Task.spawn(function() {
       let osfiles = yield iterator.nextBatch();
       iterator.close();
 
@@ -3467,7 +3402,7 @@ SearchService.prototype = {
    * succeeds.
    */
   _asyncLoadFromChromeURLs: function SRCH_SVC__asyncLoadFromChromeURLs(aURLs) {
-    return TaskUtils.spawn(function() {
+    return Task.spawn(function() {
       let engines = [];
       for (let url of aURLs) {
         try {
@@ -3551,7 +3486,7 @@ SearchService.prototype = {
    * succeeds.
    */
   _asyncFindJAREngines: function SRCH_SVC__asyncFindJAREngines() {
-    return TaskUtils.spawn(function() {
+    return Task.spawn(function() {
       LOG("_asyncFindJAREngines: looking for engines in JARs")
 
       let rootURIPref = "";
@@ -3756,7 +3691,7 @@ SearchService.prototype = {
     if (!this._initStarted) {
       TelemetryStopwatch.start("SEARCH_SERVICE_INIT_MS");
       this._initStarted = true;
-      TaskUtils.spawn(function task() {
+      Task.spawn(function task() {
         try {
           yield checkForSyncCompletion(engineMetadataService.init());
           // Complete initialization by calling asynchronous initializer.
@@ -3773,7 +3708,7 @@ SearchService.prototype = {
       });
     }
     if (observer) {
-      TaskUtils.captureErrors(this._initObservers.promise.then(
+      this._initObservers.promise.then(
         function onSuccess() {
           observer.onInitComplete(self._initRV);
         },
@@ -3781,7 +3716,7 @@ SearchService.prototype = {
           Components.utils.reportError("Internal error while initializing SearchService: " + aReason);
           observer.onInitComplete(Components.results.NS_ERROR_UNEXPECTED);
         }
-      ));
+      );
     }
   },
 
@@ -4301,7 +4236,7 @@ var engineMetadataService = {
     if (!this._initializer) {
       // Launch asynchronous initialization
       let initializer = this._initializer = Promise.defer();
-      TaskUtils.spawn((function task_init() {
+      Task.spawn((function task_init() {
         LOG("metadata init: starting");
         switch (this._initState) {
           case engineMetadataService._InitStates.NOT_STARTED:
@@ -4342,7 +4277,7 @@ var engineMetadataService = {
         }
       );
     }
-    return TaskUtils.captureErrors(this._initializer.promise);
+    return this._initializer.promise;
   },
 
   /**
@@ -4500,8 +4435,7 @@ var engineMetadataService = {
             LOG("metadata writeCommit: done");
           }
         );
-        // Use our error logging instead of the default one.
-        return TaskUtils.captureErrors(promise).then(null, () => {});
+        return promise;
       }
       this._lazyWriter = new DeferredTask(writeCommit, LAZY_SERIALIZE_DELAY);
     }
