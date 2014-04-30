@@ -122,21 +122,12 @@ class ArenaIter
 
   public:
     ArenaIter() {
-        init();
-    }
-
-    ArenaIter(JS::Zone *zone, AllocKind kind) {
-        init(zone, kind);
-    }
-
-    void init() {
         aheader = nullptr;
         remainingHeader = nullptr;
     }
 
-    void init(ArenaHeader *aheaderArg) {
-        aheader = aheaderArg;
-        remainingHeader = nullptr;
+    ArenaIter(JS::Zone *zone, AllocKind kind) {
+        init(zone, kind);
     }
 
     void init(JS::Zone *zone, AllocKind kind) {
@@ -167,70 +158,76 @@ class ArenaIter
 
 class ArenaCellIterImpl
 {
+    // These three are set in init().
     size_t firstThingOffset;
     size_t thingSize;
-    ArenaIter aiter;
-    FreeSpan firstSpan;
-    const FreeSpan *span;
+#ifdef DEBUG
+    bool isInited;
+#endif
+
+    // These three are set in reset() (which is called by init()).
+    FreeSpan span;
     uintptr_t thing;
-    Cell *cell;
+    uintptr_t limit;
 
-  protected:
-    ArenaCellIterImpl() {
-    }
-
-    void initSpan(JS::Zone *zone, AllocKind kind) {
-        JS_ASSERT(zone->allocator.arenas.isSynchronizedFreeList(kind));
-        firstThingOffset = Arena::firstThingOffset(kind);
-        thingSize = Arena::thingSize(kind);
-        firstSpan.initAsEmpty();
-        span = &firstSpan;
-        thing = span->first;
-    }
-
-    void init(ArenaHeader *singleAheader) {
-        initSpan(singleAheader->zone, singleAheader->getAllocKind());
-        aiter.init(singleAheader);
-        next();
-        aiter.init();
+    // Upon entry, |thing| points to any thing (free or used) and finds the
+    // first used thing, which may be |thing|.
+    void moveForwardIfFree() {
+        JS_ASSERT(!done());
+        if (thing == span.first) {
+            if (span.hasNext()) {
+                thing = span.last + thingSize;
+                span = *span.nextSpan();
+            } else {
+                thing = limit;
+            }
+        }
     }
 
   public:
-    bool done() const {
-        return !cell;
+    ArenaCellIterImpl() {}
+
+    void init(ArenaHeader *aheader) {
+        AllocKind kind = aheader->getAllocKind();
+#ifdef DEBUG
+        JS_ASSERT(aheader->zone->allocator.arenas.isSynchronizedFreeList(kind));
+        isInited = true;
+#endif
+        firstThingOffset = Arena::firstThingOffset(kind);
+        thingSize = Arena::thingSize(kind);
+        reset(aheader);
     }
 
-    template<typename T> T *get() const {
-        JS_ASSERT(!done());
-        return static_cast<T *>(cell);
+    // Use this to move from an Arena of a particular kind to another Arena of
+    // the same kind.
+    void reset(ArenaHeader *aheader) {
+        JS_ASSERT(isInited);
+        span = aheader->getFirstFreeSpan();
+        uintptr_t arenaAddr = aheader->arenaAddress();
+        thing = arenaAddr + firstThingOffset;
+        limit = arenaAddr + ArenaSize;
+        moveForwardIfFree();
+    }
+
+    bool done() const {
+        return thing == limit;
     }
 
     Cell *getCell() const {
         JS_ASSERT(!done());
-        return cell;
+        return reinterpret_cast<Cell *>(thing);
+    }
+
+    template<typename T> T *get() const {
+        JS_ASSERT(!done());
+        return static_cast<T *>(getCell());
     }
 
     void next() {
-        for (;;) {
-            if (thing != span->first)
-                break;
-            if (MOZ_LIKELY(span->hasNext())) {
-                thing = span->last + thingSize;
-                span = span->nextSpan();
-                break;
-            }
-            if (aiter.done()) {
-                cell = nullptr;
-                return;
-            }
-            ArenaHeader *aheader = aiter.get();
-            firstSpan = aheader->getFirstFreeSpan();
-            span = &firstSpan;
-            thing = aheader->arenaAddress() | firstThingOffset;
-            aiter.next();
-        }
-        cell = reinterpret_cast<Cell *>(thing);
+        MOZ_ASSERT(!done());
         thing += thingSize;
+        if (thing < limit)
+            moveForwardIfFree();
     }
 };
 
