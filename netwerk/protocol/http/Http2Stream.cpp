@@ -79,9 +79,9 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
 
   PR_STATIC_ASSERT(nsISupportsPriority::PRIORITY_LOWEST <= kNormalPriority);
 
-  // values of priority closer to 0 are higher priority for both
-  // mPriority and the priority argument. They are relative but not
-  // proportional.
+  // values of priority closer to 0 are higher priority for the priority
+  // argument. This value is used as a group, which maps to a
+  // weight that is related to the nsISupportsPriority that we are given.
   int32_t httpPriority;
   if (priority >= nsISupportsPriority::PRIORITY_LOWEST) {
     httpPriority = kWorstPriority;
@@ -91,7 +91,7 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
     httpPriority = kNormalPriority + priority;
   }
   MOZ_ASSERT(httpPriority >= 0);
-  mPriority = static_cast<uint32_t>(httpPriority);
+  SetPriority(static_cast<uint32_t>(httpPriority));
 }
 
 Http2Stream::~Http2Stream()
@@ -375,7 +375,7 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
 
   // Determine whether to put the fin bit on the header frame or whether
   // to wait for a data packet to put it on.
-  uint8_t firstFrameFlags =  Http2Session::kFlag_PRIORITY;
+  uint8_t firstFrameFlags =  Http2Session::kFlag_PRIORITY_GROUP;
 
   if (mTransaction->RequestHead()->IsGet() ||
       mTransaction->RequestHead()->IsConnect() ||
@@ -406,7 +406,7 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
   MOZ_ASSERT(!mTxInlineFrameUsed);
 
   uint32_t dataLength = compressedData.Length();
-  uint32_t maxFrameData = Http2Session::kMaxFrameData - 4; // 4 byes for priority
+  uint32_t maxFrameData = Http2Session::kMaxFrameData - 5; // 5 bytes for priority
   uint32_t numFrames = 1;
 
   if (dataLength > maxFrameData) {
@@ -418,8 +418,8 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
   // note that we could still have 1 frame for 0 bytes of data. that's ok.
 
   uint32_t messageSize = dataLength;
-  messageSize += 12; // header frame overhead
-  messageSize += (numFrames - 1) * 8; // continuation frames overhead
+  messageSize += 13; // frame header + priority overhead in HEADERS frame
+  messageSize += (numFrames - 1) * 8; // frame header overhead in CONTINUATION frames
 
   Http2Session::EnsureBuffer(mTxInlineFrame,
                              dataLength + messageSize,
@@ -427,8 +427,9 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
                              mTxInlineFrameSize);
 
   mTxInlineFrameUsed += messageSize;
-  LOG3(("%p Generating %d bytes of HEADERS for stream 0x%X at priority %u frames %u\n",
-        this, mTxInlineFrameUsed, mStreamID, mPriority, numFrames));
+  LOG3(("%p Generating %d bytes of HEADERS for stream 0x%X with priority group %u weight %u frames %u\n",
+        this, mTxInlineFrameUsed, mStreamID, mPriorityGroup,
+        mPriorityGroupWeight, numFrames));
 
   uint32_t outputOffset = 0;
   uint32_t compressedDataOffset = 0;
@@ -451,15 +452,16 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
 
     mSession->CreateFrameHeader(
       mTxInlineFrame.get() + outputOffset,
-      frameLen + (idx ? 0 : 4),
+      frameLen + (idx ? 0 : 5),
       (idx) ? Http2Session::FRAME_TYPE_CONTINUATION : Http2Session::FRAME_TYPE_HEADERS,
       flags, mStreamID);
     outputOffset += 8;
 
     if (!idx) {
-      uint32_t priority = PR_htonl(mPriority);
-      memcpy (mTxInlineFrame.get() + outputOffset, &priority, 4);
-      outputOffset += 4;
+      uint32_t priorityGroup = PR_htonl(mPriorityGroup);
+      memcpy(mTxInlineFrame.get() + outputOffset, &priorityGroup, 4);
+      memcpy(mTxInlineFrame.get() + outputOffset + 4, &mPriorityGroupWeight, 1);
+      outputOffset += 5;
     }
 
     memcpy(mTxInlineFrame.get() + outputOffset,
@@ -581,18 +583,20 @@ Http2Stream::AdjustPushedPriority()
 
   uint8_t *packet = mTxInlineFrame.get() + mTxInlineFrameUsed;
   Http2Session::EnsureBuffer(mTxInlineFrame,
-                             mTxInlineFrameUsed + 12,
+                             mTxInlineFrameUsed + 13,
                              mTxInlineFrameUsed,
                              mTxInlineFrameSize);
-  mTxInlineFrameUsed += 12;
+  mTxInlineFrameUsed += 13;
 
-  mSession->CreateFrameHeader(packet, 4,
-                              Http2Session::FRAME_TYPE_PRIORITY, 0,
+  mSession->CreateFrameHeader(packet, 5,
+                              Http2Session::FRAME_TYPE_PRIORITY,
+                              Http2Session::kFlag_PRIORITY_GROUP,
                               mPushSource->mStreamID);
 
-  uint32_t newPriority = PR_htonl(mPriority);
-  mPushSource->SetPriority(newPriority);
+  mPushSource->SetPriority(mPriorityGroup);
+  uint32_t newPriority = PR_htonl(mPriorityGroup);
   memcpy(packet + 8, &newPriority, 4);
+  memcpy(packet + 12, &mPriorityGroupWeight, 1);
 
   LOG3(("AdjustPushedPriority %p id 0x%X to %X\n", this, mPushSource->mStreamID,
         newPriority));
@@ -912,9 +916,25 @@ Http2Stream::UpdateServerReceiveWindow(int32_t delta)
 }
 
 void
-Http2Stream::SetPriority(uint32_t newVal)
+Http2Stream::SetPriority(uint32_t newGroup)
 {
-  mPriority = std::min(newVal, 0x7fffffffU);
+  int32_t httpPriority = static_cast<int32_t>(newGroup);
+  uint8_t newWeight = (nsISupportsPriority::PRIORITY_LOWEST + 1) -
+    (httpPriority - kNormalPriority);
+  SetPriorityGroup(newGroup, newWeight);
+}
+
+void
+Http2Stream::SetPriorityGroup(uint32_t newGroup, uint8_t newWeight)
+{
+  mPriorityGroup = newGroup;
+  mPriorityGroupWeight = newWeight;
+}
+
+void
+Http2Stream::SetPriorityDependency(uint32_t newDependency, bool exclusive)
+{
+  // TODO
 }
 
 void
