@@ -402,10 +402,6 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
       }
 
-      case ID:
-        MarkIdRoot(trc, &static_cast<AutoIdRooter *>(this)->id_, "JS::AutoIdRooter.id_");
-        return;
-
       case VALVECTOR: {
         AutoValueVector::VectorImpl &vector = static_cast<AutoValueVector *>(this)->vector;
         MarkValueRootRange(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
