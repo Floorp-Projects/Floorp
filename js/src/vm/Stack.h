@@ -1356,6 +1356,7 @@ class JitActivation : public Activation
 
   public:
     JitActivation(JSContext *cx, bool firstFrameIsConstructing, bool active = true);
+    JitActivation(ForkJoinContext *cx);
     ~JitActivation();
 
     bool isActive() const {

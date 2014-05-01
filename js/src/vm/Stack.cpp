@@ -1538,6 +1538,19 @@ jit::JitActivation::JitActivation(JSContext *cx, bool firstFrameIsConstructing, 
     }
 }
 
+jit::JitActivation::JitActivation(ForkJoinContext *cx)
+  : Activation(cx, Jit),
+    firstFrameIsConstructing_(false),
+    active_(true)
+#ifdef JS_ION
+  , rematerializedFrames_(nullptr)
+#endif
+{
+    prevIonTop_ = cx->perThreadData->ionTop;
+    prevJitJSContext_ = cx->perThreadData->jitJSContext;
+    cx->perThreadData->jitJSContext = nullptr;
+}
+
 jit::JitActivation::~JitActivation()
 {
     if (active_) {
@@ -1714,10 +1727,10 @@ AsmJSActivation::~AsmJSActivation()
         profiler_->exitNative();
 
     JSContext *cx = cx_->asJSContext();
-    JS_ASSERT(cx->runtime()->mainThread.asmJSActivationStack_ == this);
+    JS_ASSERT(cx->mainThread().asmJSActivationStack_ == this);
 
     JSRuntime::AutoLockForInterrupt lock(cx->runtime());
-    cx->runtime()->mainThread.asmJSActivationStack_ = prevAsmJS_;
+    cx->mainThread().asmJSActivationStack_ = prevAsmJS_;
 }
 
 InterpreterFrameIterator &
