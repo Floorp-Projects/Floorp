@@ -141,7 +141,7 @@ protected: // mix-in bits are protected
   NS_IMETHOD ExecuteAsync(mozIStorageStatementCallback *aCallback,
                           mozIStoragePendingStatement **_stmt);
   NS_IMETHOD EscapeStringForLIKE(const nsAString &aValue,
-                                 const char16_t aEscapeChar,
+                                 char16_t aEscapeChar,
                                  nsAString &_escapedString);
 
   // Needs access to internalAsyncFinalize
@@ -189,7 +189,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(StorageBaseStatementInternal,
            (aCallback, _stmt))                                          \
   MIX_IMPL(_class, _optionalGuard,                                      \
            EscapeStringForLIKE,                                         \
-           (const nsAString &aValue, const char16_t aEscapeChar,       \
+           (const nsAString &aValue, char16_t aEscapeChar,              \
             nsAString &_escapedString),                                 \
            (aValue, aEscapeChar, _escapedString))
 
