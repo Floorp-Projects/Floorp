@@ -91,6 +91,11 @@ public:
     return amount;
   }
 
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 private:
   AutoFallibleTArray<Storage,2> mContents;
 };

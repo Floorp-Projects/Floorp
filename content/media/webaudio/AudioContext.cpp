@@ -664,7 +664,7 @@ AudioContext::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   amount += mDecoder.SizeOfExcludingThis(aMallocSizeOf);
   amount += mDecodeJobs.SizeOfExcludingThis(aMallocSizeOf);
   for (uint32_t i = 0; i < mDecodeJobs.Length(); ++i) {
-    amount += mDecodeJobs[i]->SizeOfExcludingThis(aMallocSizeOf);
+    amount += mDecodeJobs[i]->SizeOfIncludingThis(aMallocSizeOf);
   }
   amount += mActiveNodes.SizeOfExcludingThis(nullptr, aMallocSizeOf);
   amount += mPannerNodes.SizeOfExcludingThis(nullptr, aMallocSizeOf);
