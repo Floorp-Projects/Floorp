@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PGrallocBuffer;
-
-
 using struct gfxPoint from "gfxPoint.h";
 using struct nsIntRect from "nsRect.h";
 using nsIntRegion from "nsRegion.h";
 using struct nsIntSize from "nsSize.h";
 using struct mozilla::layers::MagicGrallocBufferHandle from "gfxipc/ShadowLayerUtils.h";
+using struct mozilla::layers::GrallocBufferRef from "gfxipc/ShadowLayerUtils.h";
 using struct mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
@@ -25,6 +23,7 @@ namespace layers {
 
 union MaybeMagicGrallocBufferHandle {
   MagicGrallocBufferHandle;
+  GrallocBufferRef;
   null_t;
 };
 
@@ -58,7 +57,7 @@ struct SharedTextureDescriptor {
 };
 
 struct NewSurfaceDescriptorGralloc {
-  PGrallocBuffer buffer;
+  MaybeMagicGrallocBufferHandle buffer;
   /**
    * android::GraphicBuffer has a size information. But there are cases
    * that GraphicBuffer's size and actual video's size are different.

@@ -740,33 +740,6 @@ LayerTransactionParent::RecvForceComposite()
   return true;
 }
 
-
-PGrallocBufferParent*
-LayerTransactionParent::AllocPGrallocBufferParent(const IntSize& aSize,
-                                                  const uint32_t& aFormat,
-                                                  const uint32_t& aUsage,
-                                                  MaybeMagicGrallocBufferHandle* aOutHandle)
-{
-#ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  return GrallocBufferActor::Create(aSize, aFormat, aUsage, aOutHandle);
-#else
-  NS_RUNTIMEABORT("No gralloc buffers for you");
-  return nullptr;
-#endif
-}
-
-bool
-LayerTransactionParent::DeallocPGrallocBufferParent(PGrallocBufferParent* actor)
-{
-#ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  delete actor;
-  return true;
-#else
-  NS_RUNTIMEABORT("Um, how did we get here?");
-  return false;
-#endif
-}
-
 PLayerParent*
 LayerTransactionParent::AllocPLayerParent()
 {

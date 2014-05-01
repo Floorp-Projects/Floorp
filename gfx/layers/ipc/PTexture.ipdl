@@ -8,7 +8,6 @@
 include LayersSurfaces;
 include protocol PLayerTransaction;
 include protocol PImageBridge;
-include protocol PGrallocBuffer;
 include "mozilla/GfxMessageUtils.h";
 
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
