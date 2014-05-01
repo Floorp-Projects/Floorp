@@ -5886,6 +5886,15 @@ if test "$MOZ_GAMEPAD"; then
         MOZ_GAMEPAD_BACKEND=cocoa
         ;;
     WINNT)
+        case "$MOZ_WINSDK_MAXVER" in
+        # We support building with the Windows 7 SDK otherwise, but
+        # Gamepad support requires the Windows 8 SDK for some HID headers.
+        0x0601*)
+          AC_MSG_ERROR([The Windows 8 SDK or newer is required to build Gamepad support. Please install a newer Windows SDK or reconfigure with --disable-gamepad to disable gamepad support.])
+          ;;
+        *)
+          ;;
+        esac
         MOZ_GAMEPAD_BACKEND=windows
         ;;
     Linux)
