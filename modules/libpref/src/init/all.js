@@ -524,6 +524,8 @@ pref("accessibility.typeaheadfind.enabletimeout", true);
 pref("accessibility.typeaheadfind.soundURL", "beep");
 pref("accessibility.typeaheadfind.enablesound", true);
 pref("accessibility.typeaheadfind.prefillwithselection", true);
+pref("accessibility.typeaheadfind.matchesCountTimeout", 250);
+pref("accessibility.typeaheadfind.matchesCountLimit", 100);
 
 // use Mac OS X Appearance panel text smoothing setting when rendering text, disabled by default
 pref("gfx.use_text_smoothing_setting", false);

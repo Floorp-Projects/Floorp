@@ -150,7 +150,8 @@ findbar[hidden] {
   -moz-margin-start: 5px;
 }
 
-.findbar-find-status {
+.findbar-find-status,
+.findbar-matches {
   color: GrayText;
   margin: 0 !important;
   -moz-margin-start: 12px !important;
