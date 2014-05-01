@@ -25,7 +25,7 @@ static const char kDigiCert_High_Assurance_EV_Root_CAFingerprint[]=
 
 /* End Entity Test Cert */
 static const char kEnd_Entity_Test_CertFingerprint[]=
-  "97H5CNFJ2u3u1NvH3ru67t5OiCO8KydOyNh9GCEyAeM=";
+  "sEIYDccDj1ULE64YxhvqV7ASqc2qfIofVyArzg+62hU=";
 
 /* Equifax Secure CA */
 static const char kEquifax_Secure_CAFingerprint[]=
@@ -196,10 +196,10 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "cdn.mozilla.net",	true,	&kPinSet_mozilla_cdn },
   { "cdn.mozilla.org",	true,	&kPinSet_mozilla_cdn },
   { "exclude-subdomains.pinning.example.com",	false,	&kPinSet_mozilla_test },
-  { "include-subdomain.pinning.example.com",	true,	&kPinSet_mozilla_test },
+  { "include-subdomains.pinning.example.com",	true,	&kPinSet_mozilla_test },
   { "media.mozilla.com",	true,	&kPinSet_mozilla_cdn },
 };
 
 static const int kPublicKeyPinningPreloadListLength = 7;
 
-const PRTime kPreloadPKPinsExpirationTime = INT64_C(1409763023059000);
+const PRTime kPreloadPKPinsExpirationTime = INT64_C(1409782406553000);
