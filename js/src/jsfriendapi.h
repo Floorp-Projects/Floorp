@@ -1453,6 +1453,12 @@ typedef enum {
 
 /*
  * Set an ArrayBuffer's length to 0 and neuter all of its views.
+ *
+ * The |changeData| argument is a hint to inform internal behavior with respect
+ * to the internal pointer to the ArrayBuffer's data after being neutered.
+ * There is no guarantee it will be respected.  But if it is respected, the
+ * ArrayBuffer's internal data pointer will, or will not, have changed
+ * accordingly.
  */
 extern JS_FRIEND_API(bool)
 JS_NeuterArrayBuffer(JSContext *cx, JS::HandleObject obj,
