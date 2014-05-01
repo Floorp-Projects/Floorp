@@ -414,6 +414,13 @@ nsIGlobalObject *
 GetNativeForGlobal(JSObject *global);
 
 /**
+ * Returns the nsISupports native behind a given reflector (either DOM or
+ * XPCWN).
+ */
+nsISupports *
+UnwrapReflectorToISupports(JSObject *reflector);
+
+/**
  * In some cases a native object does not really belong to any compartment (XBL,
  * document created from by XHR of a worker, etc.). But when for some reason we
  * have to wrap these natives (because of an event for example) instead of just
