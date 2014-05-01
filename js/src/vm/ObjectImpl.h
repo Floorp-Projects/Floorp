@@ -840,12 +840,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
 
     void privateWriteBarrierPost(void **pprivate) {
 #ifdef JSGC_GENERATIONAL
-        js::gc::Cell **cellp = reinterpret_cast<js::gc::Cell **>(pprivate);
-        JS_ASSERT(cellp);
-        JS_ASSERT(*cellp);
-        js::gc::StoreBuffer *storeBuffer = (*cellp)->storeBuffer();
-        if (storeBuffer)
-            storeBuffer->putCellFromAnyThread(cellp);
+        shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->putCell(reinterpret_cast<js::gc::Cell **>(pprivate));
 #endif
     }
 
@@ -949,43 +944,30 @@ BarrieredCell<ObjectImpl>::isNullLike(ObjectImpl *obj)
 
 template<>
 /* static */ inline void
-BarrieredCell<ObjectImpl>::writeBarrierPost(ObjectImpl *obj, void *cellp)
+BarrieredCell<ObjectImpl>::writeBarrierPost(ObjectImpl *obj, void *addr)
 {
-    JS_ASSERT(cellp);
 #ifdef JSGC_GENERATIONAL
     if (IsNullTaggedPointer(obj))
         return;
-    JS_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
-    gc::StoreBuffer *storeBuffer = obj->storeBuffer();
-    if (storeBuffer)
-        storeBuffer->putCellFromAnyThread(static_cast<Cell **>(cellp));
+    obj->shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->putCell((Cell **)addr);
 #endif
 }
 
 template<>
 /* static */ inline void
-BarrieredCell<ObjectImpl>::writeBarrierPostRelocate(ObjectImpl *obj, void *cellp)
+BarrieredCell<ObjectImpl>::writeBarrierPostRelocate(ObjectImpl *obj, void *addr)
 {
-    JS_ASSERT(cellp);
-    JS_ASSERT(obj);
-    JS_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
 #ifdef JSGC_GENERATIONAL
-    gc::StoreBuffer *storeBuffer = obj->storeBuffer();
-    if (storeBuffer)
-        storeBuffer->putRelocatableCellFromAnyThread(static_cast<Cell **>(cellp));
+    obj->shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->putRelocatableCell((Cell **)addr);
 #endif
 }
 
 template<>
 /* static */ inline void
-BarrieredCell<ObjectImpl>::writeBarrierPostRemove(ObjectImpl *obj, void *cellp)
+BarrieredCell<ObjectImpl>::writeBarrierPostRemove(ObjectImpl *obj, void *addr)
 {
-    JS_ASSERT(cellp);
-    JS_ASSERT(obj);
-    JS_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
 #ifdef JSGC_GENERATIONAL
-    obj->shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->removeRelocatableCellFromAnyThread(
-        static_cast<Cell **>(cellp));
+    obj->shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->removeRelocatableCell((Cell **)addr);
 #endif
 }
 

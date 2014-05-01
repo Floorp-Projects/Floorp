@@ -789,7 +789,6 @@ Chunk::init(JSRuntime *rt)
 
     /* Initialize the chunk info. */
     info.age = 0;
-    info.trailer.storeBuffer = nullptr;
     info.trailer.location = ChunkLocationTenuredHeap;
     info.trailer.runtime = rt;
 

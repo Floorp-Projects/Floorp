@@ -139,15 +139,15 @@ InterpreterFrame::writeBarrierPost()
 {
     /* This needs to follow the same rules as in InterpreterFrame::mark. */
     if (scopeChain_)
-        JSObject::writeBarrierPost(scopeChain_, &scopeChain_);
+        JSObject::writeBarrierPost(scopeChain_, (void *)&scopeChain_);
     if (flags_ & HAS_ARGS_OBJ)
-        JSObject::writeBarrierPost(argsObj_, &argsObj_);
+        JSObject::writeBarrierPost(argsObj_, (void *)&argsObj_);
     if (isFunctionFrame()) {
-        JSFunction::writeBarrierPost(exec.fun, &exec.fun);
+        JSFunction::writeBarrierPost(exec.fun, (void *)&exec.fun);
         if (isEvalFrame())
-            JSScript::writeBarrierPost(u.evalScript, &u.evalScript);
+            JSScript::writeBarrierPost(u.evalScript, (void *)&u.evalScript);
     } else {
-        JSScript::writeBarrierPost(exec.script, &exec.script);
+        JSScript::writeBarrierPost(exec.script, (void *)&exec.script);
     }
     if (hasReturnValue())
         HeapValue::writeBarrierPost(rval_, &rval_);
