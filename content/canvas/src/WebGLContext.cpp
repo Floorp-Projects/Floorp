@@ -607,6 +607,8 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     MOZ_ASSERT(gl->Caps().antialias == caps.antialias || !gl->Caps().antialias);
     MOZ_ASSERT(gl->Caps().preserve == caps.preserve);
 
+    AssertCachedState();
+
     reporter.SetSuccessful();
     return NS_OK;
 }
@@ -972,19 +974,6 @@ WebGLContext::ClearScreen()
     ForceClearFramebufferWithDefaultValues(clearMask, colorAttachmentsMask);
 }
 
-#ifdef DEBUG
-// For NaNs, etc.
-static bool IsShadowCorrect(float shadow, float actual) {
-    if (IsNaN(shadow)) {
-        // GL is allowed to do anything it wants for NaNs, so if we're shadowing
-        // a NaN, then whatever `actual` is might be correct.
-        return true;
-    }
-
-    return shadow == actual;
-}
-#endif
-
 void
 WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool colorAttachmentsMask[kMaxColorAttachments])
 {
@@ -999,67 +988,7 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool
 
     // Fun GL fact: No need to worry about the viewport here, glViewport is just
     // setting up a coordinates transformation, it doesn't affect glClear at all.
-
-#ifdef DEBUG
-    // Scope to hide our variables.
-    {
-        // Sanity-check that all our state is set properly. Otherwise, when we
-        // reset out state to what we *think* it is, we'll get it wrong.
-
-        // Dither shouldn't matter when we're clearing to {0,0,0,0}.
-        MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST) == mScissorTestEnabled);
-
-        if (initializeColorBuffer) {
-            realGLboolean colorWriteMask[4] = {2, 2, 2, 2};
-            GLfloat colorClearValue[4] = {-1.0f, -1.0f, -1.0f, -1.0f};
-
-            gl->fGetBooleanv(LOCAL_GL_COLOR_WRITEMASK, colorWriteMask);
-            gl->fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, colorClearValue);
-
-            MOZ_ASSERT(colorWriteMask[0] == mColorWriteMask[0] &&
-                       colorWriteMask[1] == mColorWriteMask[1] &&
-                       colorWriteMask[2] == mColorWriteMask[2] &&
-                       colorWriteMask[3] == mColorWriteMask[3]);
-            MOZ_ASSERT(IsShadowCorrect(mColorClearValue[0], colorClearValue[0]) &&
-                       IsShadowCorrect(mColorClearValue[1], colorClearValue[1]) &&
-                       IsShadowCorrect(mColorClearValue[2], colorClearValue[2]) &&
-                       IsShadowCorrect(mColorClearValue[3], colorClearValue[3]));
-        }
-
-        if (initializeDepthBuffer) {
-            realGLboolean depthWriteMask = 2;
-            GLfloat depthClearValue = -1.0f;
-
-
-            gl->fGetBooleanv(LOCAL_GL_DEPTH_WRITEMASK, &depthWriteMask);
-            gl->fGetFloatv(LOCAL_GL_DEPTH_CLEAR_VALUE, &depthClearValue);
-
-            MOZ_ASSERT(depthWriteMask == mDepthWriteMask);
-            MOZ_ASSERT(IsShadowCorrect(mDepthClearValue, depthClearValue));
-        }
-
-        if (initializeStencilBuffer) {
-            GLuint stencilWriteMaskFront = 0xdeadbad1;
-            GLuint stencilWriteMaskBack  = 0xdeadbad1;
-            GLuint stencilClearValue     = 0xdeadbad1;
-
-            gl->GetUIntegerv(LOCAL_GL_STENCIL_WRITEMASK,      &stencilWriteMaskFront);
-            gl->GetUIntegerv(LOCAL_GL_STENCIL_BACK_WRITEMASK, &stencilWriteMaskBack);
-            gl->GetUIntegerv(LOCAL_GL_STENCIL_CLEAR_VALUE,    &stencilClearValue);
-
-            GLuint stencilBits = 0;
-            gl->GetUIntegerv(LOCAL_GL_STENCIL_BITS, &stencilBits);
-            GLuint stencilMask = (GLuint(1) << stencilBits) - 1;
-
-            MOZ_ASSERT( ( stencilWriteMaskFront & stencilMask) ==
-                        (mStencilWriteMaskFront & stencilMask) );
-            MOZ_ASSERT( ( stencilWriteMaskBack & stencilMask) ==
-                        (mStencilWriteMaskBack & stencilMask) );
-            MOZ_ASSERT( ( stencilClearValue & stencilMask) ==
-                        (mStencilClearValue & stencilMask) );
-        }
-    }
-#endif
+    AssertCachedState();
 
     // Prepare GL state for clearing.
     gl->fDisable(LOCAL_GL_SCISSOR_TEST);
