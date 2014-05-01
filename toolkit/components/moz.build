@@ -9,6 +9,7 @@ if CONFIG['MOZ_ENABLE_XREMOTE']:
     PARALLEL_DIRS += ['remote']
 
 PARALLEL_DIRS += [
+    'aboutcache',
     'aboutmemory',
     'alerts',
     'apppicker',

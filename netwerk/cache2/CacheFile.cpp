@@ -840,6 +840,17 @@ CacheFile::SetElement(const char *aKey, const char *aValue)
 }
 
 nsresult
+CacheFile::VisitMetaData(nsICacheEntryMetaDataVisitor *aVisitor)
+{
+  CacheFileAutoLock lock(this);
+  MOZ_ASSERT(mMetadata);
+  MOZ_ASSERT(mReady);
+  NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
+
+  return mMetadata->Visit(aVisitor);
+}
+
+nsresult
 CacheFile::ElementsSize(uint32_t *_retval)
 {
   CacheFileAutoLock lock(this);
