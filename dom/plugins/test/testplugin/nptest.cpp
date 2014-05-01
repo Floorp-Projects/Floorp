@@ -839,7 +839,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   TestNPObject* scriptableObject = (TestNPObject*)NPN_CreateObject(instance, &sNPClass);
   if (!scriptableObject) {
     printf("NPN_CreateObject failed to create an object, can't create a plugin instance\n");
-    free(instanceData);
+    delete instanceData;
     return NPERR_GENERIC_ERROR;
   }
   scriptableObject->npp = instance;
