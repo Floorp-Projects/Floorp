@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(AudioListener, mContext)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AudioListener, mContext)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AudioListener, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioListener, Release)

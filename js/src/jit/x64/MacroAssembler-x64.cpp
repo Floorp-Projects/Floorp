@@ -370,27 +370,33 @@ MacroAssemblerX64::handleFailureWithHandlerTail()
 #ifdef JSGC_GENERATIONAL
 
 void
-MacroAssemblerX64::branchPtrInNurseryRange(Register ptr, Register temp, Label *label)
+MacroAssemblerX64::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label *label)
 {
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     JS_ASSERT(ptr != temp);
     JS_ASSERT(ptr != ScratchReg);
 
     const Nursery &nursery = GetIonContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), ScratchReg);
     addPtr(ptr, ScratchReg);
-    branchPtr(Assembler::Below, ScratchReg, Imm32(Nursery::NurserySize), label);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              ScratchReg, Imm32(Nursery::NurserySize), label);
 }
 
 void
-MacroAssemblerX64::branchValueIsNurseryObject(ValueOperand value, Register temp, Label *label)
+MacroAssemblerX64::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
+                                              Label *label)
 {
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
     // 'Value' representing the start of the nursery tagged as a JSObject
     const Nursery &nursery = GetIonContext()->runtime->gcNursery();
     Value start = ObjectValue(*reinterpret_cast<JSObject *>(nursery.start()));
 
     movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), ScratchReg);
     addPtr(value.valueReg(), ScratchReg);
-    branchPtr(Assembler::Below, ScratchReg, Imm32(Nursery::NurserySize), label);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              ScratchReg, Imm32(Nursery::NurserySize), label);
 }
 
 #endif

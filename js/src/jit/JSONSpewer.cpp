@@ -228,6 +228,8 @@ JSONSpewer::spewMResumePoint(MResumePoint *rp)
     for (MResumePoint *iter = rp; iter; iter = iter->caller()) {
         for (int i = iter->numOperands() - 1; i >= 0; i--)
             integerValue(iter->getOperand(i)->id());
+        if (iter->caller())
+            stringValue("|");
     }
     endList();
 

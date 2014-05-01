@@ -343,6 +343,17 @@ this.Utils = {
     }
 
     return null;
+  },
+
+  isListItemDecorator: function isListItemDecorator(aStaticText,
+                                                    aExcludeOrdered) {
+    let parent = aStaticText.parent;
+    if (aExcludeOrdered && parent.parent.DOMNode.nodeName === 'OL') {
+      return false;
+    }
+
+    return parent.role === Roles.LISTITEM && parent.childCount > 1 &&
+      aStaticText.indexInParent === 0;
   }
 };
 

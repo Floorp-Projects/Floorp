@@ -163,7 +163,8 @@ JitRuntime::JitRuntime()
     functionWrappers_(nullptr),
     osrTempData_(nullptr),
     flusher_(nullptr),
-    ionCodeProtected_(false)
+    ionCodeProtected_(false),
+    ionReturnOverride_(MagicValue(JS_ARG_POISON))
 {
 }
 
@@ -569,7 +570,7 @@ JitRuntime::Mark(JSTracer *trc)
 {
     JS_ASSERT(!trc->runtime()->isHeapMinorCollecting());
     Zone *zone = trc->runtime()->atomsCompartment()->zone();
-    for (gc::CellIterUnderGC i(zone, gc::FINALIZE_JITCODE); !i.done(); i.next()) {
+    for (gc::ZoneCellIterUnderGC i(zone, gc::FINALIZE_JITCODE); !i.done(); i.next()) {
         JitCode *code = i.get<JitCode>();
         MarkJitCodeRoot(trc, &code, "wrapper");
     }
@@ -1235,7 +1236,7 @@ jit::ToggleBarriers(JS::Zone *zone, bool needs)
 
     IonContext ictx(CompileRuntime::get(rt));
     AutoFlushCache afc("ToggleBarriers", rt->jitRuntime());
-    for (gc::CellIterUnderGC i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::ZoneCellIterUnderGC i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasIonScript())
             script->ionScript()->toggleBarriers(needs);
@@ -1533,19 +1534,30 @@ GenerateLIR(MIRGenerator *mir)
 {
     MIRGraph &graph = mir->graph();
 
+    TraceLogger *logger;
+    if (GetIonContext()->runtime->onMainThread())
+        logger = TraceLoggerForMainThread(GetIonContext()->runtime);
+    else
+        logger = TraceLoggerForCurrentThread();
+
     LIRGraph *lir = mir->alloc().lifoAlloc()->new_<LIRGraph>(&graph);
     if (!lir || !lir->init())
         return nullptr;
 
     LIRGenerator lirgen(mir, graph, *lir);
-    if (!lirgen.generate())
-        return nullptr;
-    IonSpewPass("Generate LIR");
+    {
+        AutoTraceLog log(logger, TraceLogger::GenerateLIR);
+        if (!lirgen.generate())
+            return nullptr;
+        IonSpewPass("Generate LIR");
 
-    if (mir->shouldCancel("Generate LIR"))
-        return nullptr;
+        if (mir->shouldCancel("Generate LIR"))
+            return nullptr;
+    }
 
     AllocationIntegrityState integrity(*lir);
+
+    TraceLogStartEvent(logger, TraceLogger::RegisterAllocation);
 
     switch (mir->optimizationInfo().registerAllocator()) {
       case RegisterAllocator_LSRA: {
@@ -1608,12 +1620,17 @@ GenerateLIR(MIRGenerator *mir)
     if (mir->shouldCancel("Allocate Registers"))
         return nullptr;
 
-    // Now that all optimization and register allocation is done, re-introduce
-    // critical edges to avoid unnecessary jumps.
-    if (!UnsplitEdges(lir))
-        return nullptr;
-    IonSpewPass("Unsplit Critical Edges");
-    AssertBasicGraphCoherency(graph);
+    TraceLogStopEvent(logger, TraceLogger::RegisterAllocation);
+
+    {
+        AutoTraceLog log(logger, TraceLogger::UnsplitEdges);
+        // Now that all optimization and register allocation is done, re-introduce
+        // critical edges to avoid unnecessary jumps.
+        if (!UnsplitEdges(lir))
+            return nullptr;
+        IonSpewPass("Unsplit Critical Edges");
+        AssertBasicGraphCoherency(graph);
+    }
 
     return lir;
 }
@@ -1621,6 +1638,13 @@ GenerateLIR(MIRGenerator *mir)
 CodeGenerator *
 GenerateCode(MIRGenerator *mir, LIRGraph *lir)
 {
+    TraceLogger *logger;
+    if (GetIonContext()->runtime->onMainThread())
+        logger = TraceLoggerForMainThread(GetIonContext()->runtime);
+    else
+        logger = TraceLoggerForCurrentThread();
+    AutoTraceLog log(logger, TraceLogger::GenerateCode);
+
     CodeGenerator *codegen = js_new<CodeGenerator>(mir, lir);
     if (!codegen)
         return nullptr;
@@ -1730,7 +1754,7 @@ OffThreadCompilationAvailable(JSContext *cx)
     // when running off thread.
     return cx->runtime()->canUseParallelIonCompilation()
         && WorkerThreadState().cpuCount > 1
-        && cx->runtime()->gcIncrementalState == gc::NO_INCREMENTAL
+        && cx->runtime()->gc.incrementalState == gc::NO_INCREMENTAL
         && !cx->runtime()->profilingScripts;
 #else
     return false;
@@ -2383,7 +2407,7 @@ EnterIon(JSContext *cx, EnterJitData &data)
                             /* scopeChain = */ nullptr, 0, data.result.address());
     }
 
-    JS_ASSERT(!cx->runtime()->hasIonReturnOverride());
+    JS_ASSERT(!cx->runtime()->jitRuntime()->hasIonReturnOverride());
 
     // Jit callers wrap primitive constructor return.
     if (!data.result.isMagic() && data.constructing && data.result.isPrimitive())
@@ -2491,7 +2515,7 @@ jit::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
     CALL_GENERATED_CODE(enter, jitcode, args.length() + 1, args.array() - 1, /* osrFrame = */nullptr,
                         calleeToken, /* scopeChain = */ nullptr, 0, result.address());
 
-    JS_ASSERT(!cx->runtime()->hasIonReturnOverride());
+    JS_ASSERT(!cx->runtime()->jitRuntime()->hasIonReturnOverride());
 
     args.rval().set(result);
 
@@ -2500,13 +2524,13 @@ jit::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
 }
 
 static void
-InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
+InvalidateActivation(FreeOp *fop, uint8_t *jitTop, bool invalidateAll)
 {
     IonSpew(IonSpew_Invalidate, "BEGIN invalidating activation");
 
     size_t frameno = 1;
 
-    for (JitFrameIterator it(ionTop, SequentialExecution); !it.done(); ++it, ++frameno) {
+    for (JitFrameIterator it(jitTop, SequentialExecution); !it.done(); ++it, ++frameno) {
         JS_ASSERT_IF(frameno == 1, it.type() == JitFrame_Exit);
 
 #ifdef DEBUG
@@ -2845,13 +2869,13 @@ jit::FinishInvalidation<ParallelExecution>(FreeOp *fop, JSScript *script);
 void
 jit::MarkValueFromIon(JSRuntime *rt, Value *vp)
 {
-    gc::MarkValueUnbarriered(&rt->gcMarker, vp, "write barrier");
+    gc::MarkValueUnbarriered(&rt->gc.marker, vp, "write barrier");
 }
 
 void
 jit::MarkShapeFromIon(JSRuntime *rt, Shape **shapep)
 {
-    gc::MarkShapeUnbarriered(&rt->gcMarker, shapep, "write barrier");
+    gc::MarkShapeUnbarriered(&rt->gc.marker, shapep, "write barrier");
 }
 
 void
@@ -3071,7 +3095,7 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
         }
     }
 
-    for (gc::CellIter i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::ZoneCellIter i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->compartment() == comp_ || zone_) {
             FinishInvalidation<SequentialExecution>(fop, script);

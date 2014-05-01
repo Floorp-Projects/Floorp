@@ -507,7 +507,7 @@ Reject(JSContext *cx, HandleId id, unsigned errorNumber, bool throwError, bool *
 //
 JS_FRIEND_API(bool)
 js::CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                        PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
+                        unsigned attrs, PropertyOp getter, StrictPropertyOp setter)
 {
     if (!obj->isNative())
         return true;
@@ -1290,7 +1290,7 @@ NewObject(ExclusiveContext *cx, types::TypeObject *type_, JSObject *parent, gc::
         if (!cx->shouldBeJSContext())
             return nullptr;
         JSRuntime *rt = cx->asJSContext()->runtime();
-        rt->gcIncrementalEnabled = false;
+        rt->gc.incrementalEnabled = false;
 
 #ifdef DEBUG
         if (rt->gcMode() == JSGC_MODE_INCREMENTAL) {
@@ -2710,7 +2710,7 @@ AllocateSlots(ThreadSafeContext *cx, JSObject *obj, uint32_t nslots)
 {
 #ifdef JSGC_GENERATIONAL
     if (cx->isJSContext())
-        return cx->asJSContext()->runtime()->gcNursery.allocateSlots(cx->asJSContext(), obj, nslots);
+        return cx->asJSContext()->runtime()->gc.nursery.allocateSlots(cx->asJSContext(), obj, nslots);
 #endif
     return cx->pod_malloc<HeapSlot>(nslots);
 }
@@ -2721,9 +2721,9 @@ ReallocateSlots(ThreadSafeContext *cx, JSObject *obj, HeapSlot *oldSlots,
 {
 #ifdef JSGC_GENERATIONAL
     if (cx->isJSContext()) {
-        return cx->asJSContext()->runtime()->gcNursery.reallocateSlots(cx->asJSContext(),
-                                                                       obj, oldSlots,
-                                                                       oldCount, newCount);
+        return cx->asJSContext()->runtime()->gc.nursery.reallocateSlots(cx->asJSContext(),
+                                                                          obj, oldSlots,
+                                                                          oldCount, newCount);
     }
 #endif
     return (HeapSlot *)cx->realloc_(oldSlots, oldCount * sizeof(HeapSlot),
@@ -2798,7 +2798,7 @@ FreeSlots(ThreadSafeContext *cx, HeapSlot *slots)
     // Note: threads without a JSContext do not have access to nursery allocated things.
 #ifdef JSGC_GENERATIONAL
     if (cx->isJSContext())
-        return cx->asJSContext()->runtime()->gcNursery.freeSlots(cx->asJSContext(), slots);
+        return cx->asJSContext()->runtime()->gc.nursery.freeSlots(cx->asJSContext(), slots);
 #endif
     js_free(slots);
 }
@@ -3020,7 +3020,7 @@ AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
 {
 #ifdef JSGC_GENERATIONAL
     if (cx->isJSContext())
-        return cx->asJSContext()->runtime()->gcNursery.allocateElements(cx->asJSContext(), obj, nelems);
+        return cx->asJSContext()->runtime()->gc.nursery.allocateElements(cx->asJSContext(), obj, nelems);
 #endif
 
     return static_cast<js::ObjectElements *>(cx->malloc_(nelems * sizeof(HeapValue)));
@@ -3032,9 +3032,9 @@ ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHead
 {
 #ifdef JSGC_GENERATIONAL
     if (cx->isJSContext()) {
-        return cx->asJSContext()->runtime()->gcNursery.reallocateElements(cx->asJSContext(), obj,
-                                                                          oldHeader, oldCount,
-                                                                          newCount);
+        return cx->asJSContext()->runtime()->gc.nursery.reallocateElements(cx->asJSContext(), obj,
+                                                                             oldHeader, oldCount,
+                                                                             newCount);
     }
 #endif
 

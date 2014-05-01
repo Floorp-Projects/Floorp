@@ -1444,7 +1444,7 @@ JS_GetArrayBufferViewData(JSObject *obj);
  * object that would return true for JS_IsArrayBufferViewObject().
  */
 extern JS_FRIEND_API(JSObject *)
-JS_GetArrayBufferViewBuffer(JSContext *cx, JSObject *obj);
+JS_GetArrayBufferViewBuffer(JSContext *cx, JS::HandleObject obj);
 
 typedef enum {
     ChangeData,
@@ -2060,7 +2060,8 @@ DefaultValue(JSContext *cx, JS::HandleObject obj, JSType hint, JS::MutableHandle
  */
 extern JS_FRIEND_API(bool)
 CheckDefineProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
-                    JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
+                    unsigned attrs,
+                    JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
 
 } /* namespace js */
 

@@ -258,7 +258,7 @@ JSCompartment::putWrapper(JSContext *cx, const CrossCompartmentKey &wrapped, con
 
     if (success && (nursery.isInside(wrapped.wrapped) || nursery.isInside(wrapped.debugger))) {
         WrapperMapRef ref(&crossCompartmentWrappers, wrapped);
-        cx->runtime()->gcStoreBuffer.putGeneric(ref);
+        cx->runtime()->gc.storeBuffer.putGeneric(ref);
     }
 #endif
 
@@ -557,7 +557,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
     JSRuntime *rt = runtimeFromMainThread();
 
     {
-        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES);
+        gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_SWEEP_TABLES);
 
         /* Remove dead references held weakly by the compartment. */
 
@@ -616,8 +616,8 @@ JSCompartment::sweepCrossCompartmentWrappers()
 {
     JSRuntime *rt = runtimeFromMainThread();
 
-    gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_SWEEP_TABLES);
-    gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_WRAPPER);
+    gcstats::AutoPhase ap1(rt->gc.stats, gcstats::PHASE_SWEEP_TABLES);
+    gcstats::AutoPhase ap2(rt->gc.stats, gcstats::PHASE_SWEEP_TABLES_WRAPPER);
 
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
@@ -721,7 +721,7 @@ CreateLazyScriptsForCompartment(JSContext *cx)
     // which do not have an uncompiled enclosing script. The last condition is
     // so that we don't compile lazy scripts whose enclosing scripts failed to
     // compile, indicating that the lazy script did not escape the script.
-    for (gc::CellIter i(cx->zone(), gc::FINALIZE_LAZY_SCRIPT); !i.done(); i.next()) {
+    for (gc::ZoneCellIter i(cx->zone(), gc::FINALIZE_LAZY_SCRIPT); !i.done(); i.next()) {
         LazyScript *lazy = i.get<LazyScript>();
         JSFunction *fun = lazy->functionNonDelazifying();
         if (fun->compartment() == cx->compartment() &&
@@ -894,7 +894,7 @@ JSCompartment::removeDebuggeeUnderGC(FreeOp *fop,
 void
 JSCompartment::clearBreakpointsIn(FreeOp *fop, js::Debugger *dbg, JSObject *handler)
 {
-    for (gc::CellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::ZoneCellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->compartment() == this && script->hasAnyBreakpointsOrStepMode())
             script->clearBreakpointsIn(fop, dbg, handler);
@@ -905,7 +905,7 @@ void
 JSCompartment::clearTraps(FreeOp *fop)
 {
     MinorGC(fop->runtime(), JS::gcreason::EVICT_NURSERY);
-    for (gc::CellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::ZoneCellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->compartment() == this && script->hasAnyBreakpointsOrStepMode())
             script->clearTraps(fop);

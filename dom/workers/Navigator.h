@@ -10,6 +10,16 @@
 #include "nsString.h"
 #include "nsWrapperCache.h"
 
+// Need this to use Navigator::HasDataStoreSupport() in
+// WorkerNavigatorBinding.cpp
+#include "mozilla/dom/Navigator.h"
+
+namespace mozilla {
+namespace dom {
+class Promise;
+}
+}
+
 BEGIN_WORKERS_NAMESPACE
 
 class WorkerNavigator MOZ_FINAL : public nsWrapperCache
@@ -97,6 +107,10 @@ public:
   {
     mOnline = aOnline;
   }
+
+  already_AddRefed<Promise> GetDataStores(JSContext* aCx,
+                                          const nsAString& aName,
+                                          ErrorResult& aRv);
 };
 
 END_WORKERS_NAMESPACE

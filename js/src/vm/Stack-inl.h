@@ -890,22 +890,22 @@ AbstractFramePtr::popWith(JSContext *cx) const
 #endif
 }
 
-Activation::Activation(JSContext *cx, Kind kind)
+Activation::Activation(ThreadSafeContext *cx, Kind kind)
   : cx_(cx),
-    compartment_(cx->compartment()),
-    prev_(cx->mainThread().activation_),
+    compartment_(cx->compartment_),
+    prev_(cx->perThreadData->activation_),
     savedFrameChain_(0),
     hideScriptedCallerCount_(0),
     kind_(kind)
 {
-    cx->mainThread().activation_ = this;
+    cx->perThreadData->activation_ = this;
 }
 
 Activation::~Activation()
 {
-    JS_ASSERT(cx_->mainThread().activation_ == this);
+    JS_ASSERT(cx_->perThreadData->activation_ == this);
     JS_ASSERT(hideScriptedCallerCount_ == 0);
-    cx_->mainThread().activation_ = prev_;
+    cx_->perThreadData->activation_ = prev_;
 }
 
 InterpreterActivation::InterpreterActivation(RunState &state, JSContext *cx,
@@ -915,7 +915,7 @@ InterpreterActivation::InterpreterActivation(RunState &state, JSContext *cx,
     entryFrame_(entryFrame),
     opMask_(0)
 #ifdef DEBUG
-  , oldFrameCount_(cx_->runtime()->interpreterStack().frameCount_)
+  , oldFrameCount_(cx->runtime()->interpreterStack().frameCount_)
 #endif
 {
     if (!state.isGenerator()) {
@@ -934,8 +934,9 @@ InterpreterActivation::~InterpreterActivation()
     while (regs_.fp() != entryFrame_)
         popInlineFrame(regs_.fp());
 
-    JS_ASSERT(oldFrameCount_ == cx_->runtime()->interpreterStack().frameCount_);
-    JS_ASSERT_IF(oldFrameCount_ == 0, cx_->runtime()->interpreterStack().allocator_.used() == 0);
+    JSContext *cx = cx_->asJSContext();
+    JS_ASSERT(oldFrameCount_ == cx->runtime()->interpreterStack().frameCount_);
+    JS_ASSERT_IF(oldFrameCount_ == 0, cx->runtime()->interpreterStack().allocator_.used() == 0);
 
     if (state_.isGenerator()) {
         JSGenerator *gen = state_.asGenerator()->gen();
@@ -945,16 +946,17 @@ InterpreterActivation::~InterpreterActivation()
     }
 
     if (entryFrame_)
-        cx_->runtime()->interpreterStack().releaseFrame(entryFrame_);
+        cx->runtime()->interpreterStack().releaseFrame(entryFrame_);
 }
 
 inline bool
 InterpreterActivation::pushInlineFrame(const CallArgs &args, HandleScript script,
                                        InitialFrameFlags initial)
 {
-    if (!cx_->runtime()->interpreterStack().pushInlineFrame(cx_, regs_, args, script, initial))
+    JSContext *cx = cx_->asJSContext();
+    if (!cx->runtime()->interpreterStack().pushInlineFrame(cx, regs_, args, script, initial))
         return false;
-    JS_ASSERT(regs_.fp()->script()->compartment() == compartment_);
+    JS_ASSERT(regs_.fp()->script()->compartment() == compartment());
     return true;
 }
 
@@ -965,7 +967,13 @@ InterpreterActivation::popInlineFrame(InterpreterFrame *frame)
     JS_ASSERT(regs_.fp() == frame);
     JS_ASSERT(regs_.fp() != entryFrame_);
 
-    cx_->runtime()->interpreterStack().popInlineFrame(regs_);
+    cx_->asJSContext()->runtime()->interpreterStack().popInlineFrame(regs_);
+}
+
+inline JSContext *
+AsmJSActivation::cx()
+{
+    return cx_->asJSContext();
 }
 
 } /* namespace js */

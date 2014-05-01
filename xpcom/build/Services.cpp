@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Likely.h"
 #include "mozilla/Services.h"
 #include "nsComponentManager.h"
 #include "nsIIOService.h"
@@ -21,6 +22,7 @@
 #include "IHistory.h"
 #include "nsIXPConnect.h"
 #include "inIDOMUtils.h"
+#include "nsIPermissionManager.h"
 
 using namespace mozilla;
 using namespace mozilla::services;
@@ -35,11 +37,14 @@ using namespace mozilla::services;
   already_AddRefed<TYPE>                                                \
   mozilla::services::Get##NAME()                                        \
   {                                                                     \
+    if (MOZ_UNLIKELY(gXPCOMShuttingDown)) {                             \
+      return nullptr;                                                   \
+    }                                                                   \
     if (!g##NAME) {                                                     \
       nsCOMPtr<TYPE> os = do_GetService(CONTRACT_ID);                   \
-      g##NAME = os.forget().take();                            \
+      os.swap(g##NAME);                                                 \
     }                                                                   \
-    nsRefPtr<TYPE> ret = g##NAME;                                       \
+    nsCOMPtr<TYPE> ret = g##NAME;                                       \
     return ret.forget();                                                \
   }                                                                     \
   NS_EXPORT_(already_AddRefed<TYPE>)                                    \

@@ -517,7 +517,7 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
     if (extantSlots) {
 #ifdef JSGC_GENERATIONAL
         if (cx->isJSContext())
-            cx->asJSContext()->runtime()->gcNursery.notifyInitialSlots(obj, extantSlots);
+            cx->asJSContext()->runtime()->gc.nursery.notifyInitialSlots(obj, extantSlots);
 #endif
         obj->slots = extantSlots;
     }

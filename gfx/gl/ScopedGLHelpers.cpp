@@ -102,6 +102,7 @@ ScopedBindTextureUnit::UnwrapImpl() {
 ScopedTexture::ScopedTexture(GLContext* aGL)
     : ScopedGLWrapper<ScopedTexture>(aGL)
 {
+    MOZ_ASSERT(mGL->IsCurrent());
     mGL->fGenTextures(1, &mTexture);
 }
 
@@ -111,8 +112,45 @@ ScopedTexture::UnwrapImpl()
     // Check that we're not falling out of scope after
     // the current context changed.
     MOZ_ASSERT(mGL->IsCurrent());
-
     mGL->fDeleteTextures(1, &mTexture);
+}
+
+
+/* ScopedFramebuffer **************************************************************/
+
+ScopedFramebuffer::ScopedFramebuffer(GLContext* aGL)
+    : ScopedGLWrapper<ScopedFramebuffer>(aGL)
+{
+    MOZ_ASSERT(mGL->IsCurrent());
+    mGL->fGenFramebuffers(1, &mFB);
+}
+
+void
+ScopedFramebuffer::UnwrapImpl()
+{
+    // Check that we're not falling out of scope after
+    // the current context changed.
+    MOZ_ASSERT(mGL->IsCurrent());
+    mGL->fDeleteFramebuffers(1, &mFB);
+}
+
+
+/* ScopedRenderbuffer **************************************************************/
+
+ScopedRenderbuffer::ScopedRenderbuffer(GLContext* aGL)
+    : ScopedGLWrapper<ScopedRenderbuffer>(aGL)
+{
+    MOZ_ASSERT(mGL->IsCurrent());
+    mGL->fGenRenderbuffers(1, &mRB);
+}
+
+void
+ScopedRenderbuffer::UnwrapImpl()
+{
+    // Check that we're not falling out of scope after
+    // the current context changed.
+    MOZ_ASSERT(mGL->IsCurrent());
+    mGL->fDeleteRenderbuffers(1, &mRB);
 }
 
 /* ScopedBindTexture **********************************************************/

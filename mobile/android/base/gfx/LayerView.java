@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.AndroidGamepadManager;
 import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
@@ -291,6 +292,9 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
 
     @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
+        if (AndroidGamepadManager.handleMotionEvent(event)) {
+            return true;
+        }
         if (mPanZoomController != null && mPanZoomController.onMotionEvent(event)) {
             return true;
         }

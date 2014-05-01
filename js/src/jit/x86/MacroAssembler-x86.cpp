@@ -390,24 +390,30 @@ MacroAssemblerX86::branchTestValue(Condition cond, const ValueOperand &value, co
 #ifdef JSGC_GENERATIONAL
 
 void
-MacroAssemblerX86::branchPtrInNurseryRange(Register ptr, Register temp, Label *label)
+MacroAssemblerX86::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
+                                           Label *label)
 {
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     JS_ASSERT(ptr != temp);
     JS_ASSERT(temp != InvalidReg);  // A temp register is required for x86.
 
     const Nursery &nursery = GetIonContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
     addPtr(ptr, temp);
-    branchPtr(Assembler::Below, temp, Imm32(Nursery::NurserySize), label);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              temp, Imm32(Nursery::NurserySize), label);
 }
 
 void
-MacroAssemblerX86::branchValueIsNurseryObject(ValueOperand value, Register temp, Label *label)
+MacroAssemblerX86::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
+                                              Label *label)
 {
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
     Label done;
 
-    branchTestObject(Assembler::NotEqual, value, &done);
-    branchPtrInNurseryRange(value.payloadReg(), temp, label);
+    branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
+    branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
 
     bind(&done);
 }
