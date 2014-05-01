@@ -39,6 +39,8 @@ SOURCES += [
     'mozStorageConnection.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+
 FINAL_LIBRARY = 'storagecomps'
 
 # Don't use the jemalloc allocator on Android, because we can't guarantee
