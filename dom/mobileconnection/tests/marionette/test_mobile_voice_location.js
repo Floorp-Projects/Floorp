@@ -26,10 +26,7 @@ function testVoiceCellLocationUpdate(aLac, aCid) {
   // Set emulator's lac/cid and wait for 'onvoicechange' event.
   log("Test cell location with lac=" + aLac + " and cid=" + aCid);
 
-  let promises = [];
-  promises.push(waitForManagerEvent("voicechange"));
-  promises.push(setEmulatorGsmLocation(aLac, aCid));
-  return Promise.all(promises)
+  return setEmulatorGsmLocationAndWait(aLac, aCid, true, false)
     .then(() => verifyVoiceCellLocationInfo(aLac, aCid));
 }
 

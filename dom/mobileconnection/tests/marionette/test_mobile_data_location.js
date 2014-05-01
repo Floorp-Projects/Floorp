@@ -26,10 +26,7 @@ function testDataCellLocationUpdate(aLac, aCid) {
   // Set emulator's lac/cid and wait for 'ondatachange' event.
   log("Test cell location with lac=" + aLac + " and cid=" + aCid);
 
-  let promises = [];
-  promises.push(waitForManagerEvent("datachange"));
-  promises.push(setEmulatorGsmLocation(aLac, aCid));
-  return Promise.all(promises)
+  return setEmulatorGsmLocationAndWait(aLac, aCid, false, true)
     .then(() => verifyDataCellLocationInfo(aLac, aCid));
 }
 
