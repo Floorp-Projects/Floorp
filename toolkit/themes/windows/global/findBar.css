@@ -143,7 +143,8 @@ findbar[hidden] {
   display: none;
 }
 
-.findbar-find-status {
+.findbar-find-status,
+.found-matches {
   color: GrayText;
   margin: 0 !important;
   -moz-margin-start: 12px !important;
