@@ -28,7 +28,8 @@ struct CopyValueToRematerializedFrame
     }
 };
 
-RematerializedFrame::RematerializedFrame(JSContext *cx, uint8_t *top, InlineFrameIterator &iter)
+RematerializedFrame::RematerializedFrame(ThreadSafeContext *cx, uint8_t *top,
+                                         InlineFrameIterator &iter)
   : prevUpToDate_(false),
     top_(top),
     frameNo_(iter.frameNo()),
@@ -41,7 +42,7 @@ RematerializedFrame::RematerializedFrame(JSContext *cx, uint8_t *top, InlineFram
 }
 
 /* static */ RematerializedFrame *
-RematerializedFrame::New(JSContext *cx, uint8_t *top, InlineFrameIterator &iter)
+RematerializedFrame::New(ThreadSafeContext *cx, uint8_t *top, InlineFrameIterator &iter)
 {
     unsigned numFormals = iter.isFunctionFrame() ? iter.callee()->nargs() : 0;
     size_t numBytes = sizeof(RematerializedFrame) +

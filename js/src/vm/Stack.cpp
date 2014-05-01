@@ -675,7 +675,7 @@ FrameIter::FrameIter(ThreadSafeContext *cx, ContextOption contextOption,
                      SavedOption savedOption)
   : data_(cx, savedOption, contextOption, nullptr)
 #ifdef JS_ION
-  , ionInlineFrames_(cx, (js::jit::IonFrameIterator*) nullptr)
+  , ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
 #endif
 {
     settleOnActivation();
@@ -1081,11 +1081,11 @@ FrameIter::isConstructing() const
 }
 
 bool
-FrameIter::ensureHasRematerializedFrame()
+FrameIter::ensureHasRematerializedFrame(ThreadSafeContext *cx)
 {
 #ifdef JS_ION
     MOZ_ASSERT(isIon());
-    return !!activation()->asJit()->getRematerializedFrame(activation()->cx(), data_.jitFrames_);
+    return !!activation()->asJit()->getRematerializedFrame(cx, data_.jitFrames_);
 #else
     return true;
 #endif
@@ -1525,7 +1525,7 @@ jit::JitActivation::JitActivation(JSContext *cx, bool firstFrameIsConstructing, 
     firstFrameIsConstructing_(firstFrameIsConstructing),
     active_(active)
 #ifdef JS_ION
-  , rematerializedFrames_(cx)
+  , rematerializedFrames_(nullptr)
 #endif
 {
     if (active) {
@@ -1541,12 +1541,13 @@ jit::JitActivation::JitActivation(JSContext *cx, bool firstFrameIsConstructing, 
 jit::JitActivation::~JitActivation()
 {
     if (active_) {
-        cx_->mainThread().ionTop = prevIonTop_;
-        cx_->mainThread().jitJSContext = prevJitJSContext_;
+        cx_->perThreadData->ionTop = prevIonTop_;
+        cx_->perThreadData->jitJSContext = prevJitJSContext_;
     }
 
 #ifdef JS_ION
     clearRematerializedFrames();
+    js_delete(rematerializedFrames_);
 #endif
 }
 
@@ -1588,36 +1589,43 @@ jit::JitActivation::freeRematerializedFramesInVector(RematerializedFrameVector &
 void
 jit::JitActivation::removeRematerializedFrame(uint8_t *top)
 {
-    if (!rematerializedFrames_.initialized())
+    if (!rematerializedFrames_)
         return;
 
-    if (RematerializedFrameTable::Ptr p = rematerializedFrames_.lookup(top)) {
+    if (RematerializedFrameTable::Ptr p = rematerializedFrames_->lookup(top)) {
         freeRematerializedFramesInVector(p->value());
-        rematerializedFrames_.remove(p);
+        rematerializedFrames_->remove(p);
     }
 }
 
 void
 jit::JitActivation::clearRematerializedFrames()
 {
-    if (!rematerializedFrames_.initialized())
+    if (!rematerializedFrames_)
         return;
 
-    for (RematerializedFrameTable::Enum e(rematerializedFrames_); !e.empty(); e.popFront()) {
+    for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty(); e.popFront()) {
         freeRematerializedFramesInVector(e.front().value());
         e.removeFront();
     }
 }
 
 jit::RematerializedFrame *
-jit::JitActivation::getRematerializedFrame(JSContext *cx, JitFrameIterator &iter,
+jit::JitActivation::getRematerializedFrame(ThreadSafeContext *cx, JitFrameIterator &iter,
                                            size_t inlineDepth)
 {
+    // Only allow rematerializing from the same thread.
+    MOZ_ASSERT(cx->perThreadData == cx_->perThreadData);
     MOZ_ASSERT(iter.activation() == this);
     MOZ_ASSERT(iter.isIonJS());
 
-    if (!rematerializedFrames_.initialized() && !rematerializedFrames_.init())
-        return nullptr;
+    if (!rematerializedFrames_) {
+        rematerializedFrames_ = cx->new_<RematerializedFrameTable>(cx);
+        if (!rematerializedFrames_ || !rematerializedFrames_->init()) {
+            rematerializedFrames_ = nullptr;
+            return nullptr;
+        }
+    }
 
     // The unit of rematerialization is an uninlined frame and its inlined
     // frames. Since inlined frames do not exist outside of snapshots, it is
@@ -1626,10 +1634,10 @@ jit::JitActivation::getRematerializedFrame(JSContext *cx, JitFrameIterator &iter
     // its inlined frames at once.
 
     uint8_t *top = iter.fp();
-    RematerializedFrameTable::AddPtr p = rematerializedFrames_.lookupForAdd(top);
+    RematerializedFrameTable::AddPtr p = rematerializedFrames_->lookupForAdd(top);
     if (!p) {
         RematerializedFrameVector empty(cx);
-        if (!rematerializedFrames_.add(p, top, Move(empty)))
+        if (!rematerializedFrames_->add(p, top, Move(empty)))
             return nullptr;
 
         InlineFrameIterator inlineIter(cx, &iter);
@@ -1654,9 +1662,9 @@ jit::JitActivation::getRematerializedFrame(JSContext *cx, JitFrameIterator &iter
 jit::RematerializedFrame *
 jit::JitActivation::lookupRematerializedFrame(uint8_t *top, size_t inlineDepth)
 {
-    if (!rematerializedFrames_.initialized())
+    if (!rematerializedFrames_)
         return nullptr;
-    if (RematerializedFrameTable::Ptr p = rematerializedFrames_.lookup(top))
+    if (RematerializedFrameTable::Ptr p = rematerializedFrames_->lookup(top))
         return inlineDepth < p->value().length() ? p->value()[inlineDepth] : nullptr;
     return nullptr;
 }
@@ -1664,9 +1672,9 @@ jit::JitActivation::lookupRematerializedFrame(uint8_t *top, size_t inlineDepth)
 void
 jit::JitActivation::markRematerializedFrames(JSTracer *trc)
 {
-    if (!rematerializedFrames_.initialized())
+    if (!rematerializedFrames_)
         return;
-    for (RematerializedFrameTable::Enum e(rematerializedFrames_); !e.empty(); e.popFront()) {
+    for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty(); e.popFront()) {
         RematerializedFrameVector &frames = e.front().value();
         for (size_t i = 0; i < frames.length(); i++)
             frames[i]->mark(trc);
