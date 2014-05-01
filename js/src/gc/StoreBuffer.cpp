@@ -26,7 +26,7 @@ StoreBuffer::SlotsEdge::mark(JSTracer *trc)
 {
     JSObject *obj = object();
 
-    if (trc->runtime()->gcNursery.isInside(obj))
+    if (trc->runtime()->gc.nursery.isInside(obj))
         return;
 
     if (!obj->isNative()) {
@@ -337,7 +337,7 @@ JS::HeapCellPostBarrier(js::gc::Cell **cellp)
 {
     JS_ASSERT(*cellp);
     JSRuntime *runtime = (*cellp)->runtimeFromMainThread();
-    runtime->gcStoreBuffer.putRelocatableCell(cellp);
+    runtime->gc.storeBuffer.putRelocatableCell(cellp);
 }
 
 JS_PUBLIC_API(void)
@@ -346,7 +346,7 @@ JS::HeapCellRelocate(js::gc::Cell **cellp)
     /* Called with old contents of *pp before overwriting. */
     JS_ASSERT(*cellp);
     JSRuntime *runtime = (*cellp)->runtimeFromMainThread();
-    runtime->gcStoreBuffer.removeRelocatableCell(cellp);
+    runtime->gc.storeBuffer.removeRelocatableCell(cellp);
 }
 
 JS_PUBLIC_API(void)
@@ -356,7 +356,7 @@ JS::HeapValuePostBarrier(JS::Value *valuep)
     if (valuep->isString() && StringIsPermanentAtom(valuep->toString()))
         return;
     JSRuntime *runtime = static_cast<js::gc::Cell *>(valuep->toGCThing())->runtimeFromMainThread();
-    runtime->gcStoreBuffer.putRelocatableValue(valuep);
+    runtime->gc.storeBuffer.putRelocatableValue(valuep);
 }
 
 JS_PUBLIC_API(void)
@@ -367,7 +367,7 @@ JS::HeapValueRelocate(JS::Value *valuep)
     if (valuep->isString() && StringIsPermanentAtom(valuep->toString()))
         return;
     JSRuntime *runtime = static_cast<js::gc::Cell *>(valuep->toGCThing())->runtimeFromMainThread();
-    runtime->gcStoreBuffer.removeRelocatableValue(valuep);
+    runtime->gc.storeBuffer.removeRelocatableValue(valuep);
 }
 
 template class StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>;

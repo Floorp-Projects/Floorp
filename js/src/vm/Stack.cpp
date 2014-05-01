@@ -557,7 +557,8 @@ FrameIter::settleOnActivation()
         // If the caller supplied principals, only show activations which are subsumed (of the same
         // origin or of an origin accessible) by these principals.
         if (data_.principals_) {
-            if (JSSubsumesOp subsumes = data_.cx_->runtime()->securityCallbacks->subsumes) {
+            JSContext *cx = data_.cx_->asJSContext();
+            if (JSSubsumesOp subsumes = cx->runtime()->securityCallbacks->subsumes) {
                 JS::AutoAssertNoGC nogc;
                 if (!subsumes(data_.principals_, activation->compartment()->principals)) {
                     ++data_.activations_;
@@ -627,15 +628,15 @@ FrameIter::settleOnActivation()
     }
 }
 
-FrameIter::Data::Data(JSContext *cx, SavedOption savedOption, ContextOption contextOption,
-                      JSPrincipals *principals)
+FrameIter::Data::Data(ThreadSafeContext *cx, SavedOption savedOption,
+                      ContextOption contextOption, JSPrincipals *principals)
   : cx_(cx),
     savedOption_(savedOption),
     contextOption_(contextOption),
     principals_(principals),
     pc_(nullptr),
     interpFrames_(nullptr),
-    activations_(cx->runtime())
+    activations_(cx->perThreadData)
 #ifdef JS_ION
   , jitFrames_((uint8_t *)nullptr, SequentialExecution)
   , ionInlineFrameNo_(0)
@@ -661,8 +662,18 @@ FrameIter::Data::Data(const FrameIter::Data &other)
 {
 }
 
-FrameIter::FrameIter(JSContext *cx, SavedOption savedOption)
+FrameIter::FrameIter(ThreadSafeContext *cx, SavedOption savedOption)
   : data_(cx, savedOption, CURRENT_CONTEXT, nullptr)
+#ifdef JS_ION
+  , ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
+#endif
+{
+    settleOnActivation();
+}
+
+FrameIter::FrameIter(ThreadSafeContext *cx, ContextOption contextOption,
+                     SavedOption savedOption)
+  : data_(cx, savedOption, contextOption, nullptr)
 #ifdef JS_ION
   , ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
 #endif
@@ -1070,11 +1081,11 @@ FrameIter::isConstructing() const
 }
 
 bool
-FrameIter::ensureHasRematerializedFrame()
+FrameIter::ensureHasRematerializedFrame(ThreadSafeContext *cx)
 {
 #ifdef JS_ION
     MOZ_ASSERT(isIon());
-    return !!activation()->asJit()->getRematerializedFrame(activation()->cx(), data_.jitFrames_);
+    return !!activation()->asJit()->getRematerializedFrame(cx, data_.jitFrames_);
 #else
     return true;
 #endif
@@ -1156,9 +1167,9 @@ FrameIter::updatePcQuadratic()
             jit::BaselineFrame *frame = data_.jitFrames_.baselineFrame();
             jit::JitActivation *activation = data_.activations_->asJit();
 
-            // ActivationIterator::ionTop_ may be invalid, so create a new
+            // ActivationIterator::jitTop_ may be invalid, so create a new
             // activation iterator.
-            data_.activations_ = ActivationIterator(data_.cx_->runtime());
+            data_.activations_ = ActivationIterator(data_.cx_->perThreadData);
             while (data_.activations_.activation() != activation)
                 ++data_.activations_;
 
@@ -1514,28 +1525,42 @@ jit::JitActivation::JitActivation(JSContext *cx, bool firstFrameIsConstructing, 
     firstFrameIsConstructing_(firstFrameIsConstructing),
     active_(active)
 #ifdef JS_ION
-  , rematerializedFrames_(cx)
+  , rematerializedFrames_(nullptr)
 #endif
 {
     if (active) {
-        prevIonTop_ = cx->mainThread().ionTop;
+        prevJitTop_ = cx->mainThread().jitTop;
         prevJitJSContext_ = cx->mainThread().jitJSContext;
         cx->mainThread().jitJSContext = cx;
     } else {
-        prevIonTop_ = nullptr;
+        prevJitTop_ = nullptr;
         prevJitJSContext_ = nullptr;
     }
+}
+
+jit::JitActivation::JitActivation(ForkJoinContext *cx)
+  : Activation(cx, Jit),
+    firstFrameIsConstructing_(false),
+    active_(true)
+#ifdef JS_ION
+  , rematerializedFrames_(nullptr)
+#endif
+{
+    prevJitTop_ = cx->perThreadData->jitTop;
+    prevJitJSContext_ = cx->perThreadData->jitJSContext;
+    cx->perThreadData->jitJSContext = nullptr;
 }
 
 jit::JitActivation::~JitActivation()
 {
     if (active_) {
-        cx_->mainThread().ionTop = prevIonTop_;
-        cx_->mainThread().jitJSContext = prevJitJSContext_;
+        cx_->perThreadData->jitTop = prevJitTop_;
+        cx_->perThreadData->jitJSContext = prevJitJSContext_;
     }
 
 #ifdef JS_ION
     clearRematerializedFrames();
+    js_delete(rematerializedFrames_);
 #endif
 }
 
@@ -1552,11 +1577,11 @@ jit::JitActivation::setActive(JSContext *cx, bool active)
     active_ = active;
 
     if (active) {
-        prevIonTop_ = cx->mainThread().ionTop;
+        prevJitTop_ = cx->mainThread().jitTop;
         prevJitJSContext_ = cx->mainThread().jitJSContext;
         cx->mainThread().jitJSContext = cx;
     } else {
-        cx->mainThread().ionTop = prevIonTop_;
+        cx->mainThread().jitTop = prevJitTop_;
         cx->mainThread().jitJSContext = prevJitJSContext_;
     }
 }
@@ -1577,36 +1602,43 @@ jit::JitActivation::freeRematerializedFramesInVector(RematerializedFrameVector &
 void
 jit::JitActivation::removeRematerializedFrame(uint8_t *top)
 {
-    if (!rematerializedFrames_.initialized())
+    if (!rematerializedFrames_)
         return;
 
-    if (RematerializedFrameTable::Ptr p = rematerializedFrames_.lookup(top)) {
+    if (RematerializedFrameTable::Ptr p = rematerializedFrames_->lookup(top)) {
         freeRematerializedFramesInVector(p->value());
-        rematerializedFrames_.remove(p);
+        rematerializedFrames_->remove(p);
     }
 }
 
 void
 jit::JitActivation::clearRematerializedFrames()
 {
-    if (!rematerializedFrames_.initialized())
+    if (!rematerializedFrames_)
         return;
 
-    for (RematerializedFrameTable::Enum e(rematerializedFrames_); !e.empty(); e.popFront()) {
+    for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty(); e.popFront()) {
         freeRematerializedFramesInVector(e.front().value());
         e.removeFront();
     }
 }
 
 jit::RematerializedFrame *
-jit::JitActivation::getRematerializedFrame(JSContext *cx, JitFrameIterator &iter,
+jit::JitActivation::getRematerializedFrame(ThreadSafeContext *cx, JitFrameIterator &iter,
                                            size_t inlineDepth)
 {
+    // Only allow rematerializing from the same thread.
+    MOZ_ASSERT(cx->perThreadData == cx_->perThreadData);
     MOZ_ASSERT(iter.activation() == this);
     MOZ_ASSERT(iter.isIonJS());
 
-    if (!rematerializedFrames_.initialized() && !rematerializedFrames_.init())
-        return nullptr;
+    if (!rematerializedFrames_) {
+        rematerializedFrames_ = cx->new_<RematerializedFrameTable>(cx);
+        if (!rematerializedFrames_ || !rematerializedFrames_->init()) {
+            rematerializedFrames_ = nullptr;
+            return nullptr;
+        }
+    }
 
     // The unit of rematerialization is an uninlined frame and its inlined
     // frames. Since inlined frames do not exist outside of snapshots, it is
@@ -1615,10 +1647,10 @@ jit::JitActivation::getRematerializedFrame(JSContext *cx, JitFrameIterator &iter
     // its inlined frames at once.
 
     uint8_t *top = iter.fp();
-    RematerializedFrameTable::AddPtr p = rematerializedFrames_.lookupForAdd(top);
+    RematerializedFrameTable::AddPtr p = rematerializedFrames_->lookupForAdd(top);
     if (!p) {
         RematerializedFrameVector empty(cx);
-        if (!rematerializedFrames_.add(p, top, Move(empty)))
+        if (!rematerializedFrames_->add(p, top, Move(empty)))
             return nullptr;
 
         InlineFrameIterator inlineIter(cx, &iter);
@@ -1643,9 +1675,9 @@ jit::JitActivation::getRematerializedFrame(JSContext *cx, JitFrameIterator &iter
 jit::RematerializedFrame *
 jit::JitActivation::lookupRematerializedFrame(uint8_t *top, size_t inlineDepth)
 {
-    if (!rematerializedFrames_.initialized())
+    if (!rematerializedFrames_)
         return nullptr;
-    if (RematerializedFrameTable::Ptr p = rematerializedFrames_.lookup(top))
+    if (RematerializedFrameTable::Ptr p = rematerializedFrames_->lookup(top))
         return inlineDepth < p->value().length() ? p->value()[inlineDepth] : nullptr;
     return nullptr;
 }
@@ -1653,9 +1685,9 @@ jit::JitActivation::lookupRematerializedFrame(uint8_t *top, size_t inlineDepth)
 void
 jit::JitActivation::markRematerializedFrames(JSTracer *trc)
 {
-    if (!rematerializedFrames_.initialized())
+    if (!rematerializedFrames_)
         return;
-    for (RematerializedFrameTable::Enum e(rematerializedFrames_); !e.empty(); e.popFront()) {
+    for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty(); e.popFront()) {
         RematerializedFrameVector &frames = e.front().value();
         for (size_t i = 0; i < frames.length(); i++)
             frames[i]->mark(trc);
@@ -1681,10 +1713,10 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
         profiler_->enterNative("asm.js code :0", this);
     }
 
-    prevAsmJS_ = cx_->runtime()->mainThread.asmJSActivationStack_;
+    prevAsmJS_ = cx->mainThread().asmJSActivationStack_;
 
-    JSRuntime::AutoLockForInterrupt lock(cx_->runtime());
-    cx_->runtime()->mainThread.asmJSActivationStack_ = this;
+    JSRuntime::AutoLockForInterrupt lock(cx->runtime());
+    cx->mainThread().asmJSActivationStack_ = this;
 
     (void) errorRejoinSP_;  // squelch GCC warning
 }
@@ -1694,10 +1726,11 @@ AsmJSActivation::~AsmJSActivation()
     if (profiler_)
         profiler_->exitNative();
 
-    JS_ASSERT(cx_->runtime()->mainThread.asmJSActivationStack_ == this);
+    JSContext *cx = cx_->asJSContext();
+    JS_ASSERT(cx->mainThread().asmJSActivationStack_ == this);
 
-    JSRuntime::AutoLockForInterrupt lock(cx_->runtime());
-    cx_->runtime()->mainThread.asmJSActivationStack_ = prevAsmJS_;
+    JSRuntime::AutoLockForInterrupt lock(cx->runtime());
+    cx->mainThread().asmJSActivationStack_ = prevAsmJS_;
 }
 
 InterpreterFrameIterator &
@@ -1717,8 +1750,15 @@ InterpreterFrameIterator::operator++()
 }
 
 ActivationIterator::ActivationIterator(JSRuntime *rt)
-  : jitTop_(rt->mainThread.ionTop),
+  : jitTop_(rt->mainThread.jitTop),
     activation_(rt->mainThread.activation_)
+{
+    settle();
+}
+
+ActivationIterator::ActivationIterator(PerThreadData *perThreadData)
+  : jitTop_(perThreadData->jitTop),
+    activation_(perThreadData->activation_)
 {
     settle();
 }
@@ -1728,7 +1768,7 @@ ActivationIterator::operator++()
 {
     JS_ASSERT(activation_);
     if (activation_->isJit() && activation_->asJit()->isActive())
-        jitTop_ = activation_->asJit()->prevIonTop();
+        jitTop_ = activation_->asJit()->prevJitTop();
     activation_ = activation_->prev();
     settle();
     return *this;

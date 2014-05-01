@@ -230,7 +230,7 @@ function add_distrust_override_test(certFileName, hostName,
   let certToDistrust = constructCertFromFile(certFileName);
 
   add_test(function () {
-    // "pu" means the cert is actively distrusted.
+    // Add an entry to the NSS certDB that says to distrust the cert
     setCertTrust(certToDistrust, "pu,,");
     clearSessionCache();
     run_next_test();

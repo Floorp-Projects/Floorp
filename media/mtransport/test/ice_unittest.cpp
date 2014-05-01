@@ -248,8 +248,7 @@ class IceTestPeer : public sigslot::has_slots<> {
 
     RUN_ON_THREAD(
         test_utils->sts_target(),
-        WrapRunnableRet(this, &IceTestPeer::GetCandidates_s, stream, &v),
-        NS_DISPATCH_SYNC);
+        WrapRunnableRet(this, &IceTestPeer::GetCandidates_s, stream, &v));
 
     return v;
   }

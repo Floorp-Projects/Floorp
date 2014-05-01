@@ -238,7 +238,7 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
     }
 
 #ifndef JS_MORE_DETERMINISTIC
-    size_t preBytes = cx->runtime()->gcBytes;
+    size_t preBytes = cx->runtime()->gc.bytes;
 #endif
 
     if (compartment)
@@ -250,7 +250,7 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
     char buf[256] = { '\0' };
 #ifndef JS_MORE_DETERMINISTIC
     JS_snprintf(buf, sizeof(buf), "before %lu, after %lu\n",
-                (unsigned long)preBytes, (unsigned long)cx->runtime()->gcBytes);
+                (unsigned long)preBytes, (unsigned long)cx->runtime()->gc.bytes);
 #endif
     JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)
@@ -265,7 +265,7 @@ MinorGC(JSContext *cx, unsigned argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef JSGC_GENERATIONAL
     if (args.get(0) == BooleanValue(true))
-        cx->runtime()->gcStoreBuffer.setAboutToOverflow();
+        cx->runtime()->gc.storeBuffer.setAboutToOverflow();
 
     MinorGC(cx, gcreason::API);
 #endif
@@ -445,7 +445,7 @@ GCPreserveCode(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    cx->runtime()->alwaysPreserveCode = true;
+    cx->runtime()->gc.alwaysPreserveCode = true;
 
     args.rval().setUndefined();
     return true;
@@ -513,7 +513,7 @@ SelectForGC(JSContext *cx, unsigned argc, Value *vp)
     JSRuntime *rt = cx->runtime();
     for (unsigned i = 0; i < args.length(); i++) {
         if (args[i].isObject()) {
-            if (!rt->gcSelectedForMarking.append(&args[i].toObject()))
+            if (!rt->gc.selectedForMarking.append(&args[i].toObject()))
                 return false;
         }
     }
@@ -564,7 +564,7 @@ GCState(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     const char *state;
-    gc::State globalState = cx->runtime()->gcIncrementalState;
+    gc::State globalState = cx->runtime()->gc.incrementalState;
     if (globalState == gc::NO_INCREMENTAL)
         state = "none";
     else if (globalState == gc::MARK)
@@ -1127,10 +1127,14 @@ ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
     }
 
     int stackIndex = 0;
+    RootedId id(cx);
+    RootedValue callee(cx);
     for (NonBuiltinScriptFrameIter iter(cx); !iter.done(); ++iter) {
         if (iter.isFunctionFrame() && iter.compartment() == cx->compartment()) {
-            if (!JS_DefinePropertyById(cx, stack, INT_TO_JSID(stackIndex), ObjectValue(*iter.callee()),
-                                       JS_PropertyStub, JS_StrictPropertyStub, 0))
+            id = INT_TO_JSID(stackIndex);
+            RootedObject callee(cx, iter.callee());
+            if (!JS_DefinePropertyById(cx, stack, id, callee, 0,
+                                       JS_PropertyStub, JS_StrictPropertyStub))
             {
                 return false;
             }

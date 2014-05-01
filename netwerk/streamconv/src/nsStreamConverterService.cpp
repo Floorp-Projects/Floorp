@@ -38,27 +38,17 @@
 ///////////////////////////////////////////////////////////////////
 // Breadth-First-Search (BFS) algorithm state classes and types.
 
-// Adjacency list data class.
-typedef nsCOMArray<nsIAtom> SCTableData;
-
-// Delete all the entries in the adjacency list
-static bool DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
-    SCTableData *entry = (SCTableData*)aData;
-    delete entry;
-    return true;
-}
-
 // Used to establish discovered verticies.
 enum BFScolors {white, gray, black};
 
 // BFS hashtable data class.
 struct BFSTableData {
-    nsCStringKey *key;
+    nsCString key;
     BFScolors color;
     int32_t distance;
-    nsAutoPtr<nsCStringKey> predecessor;
+    nsAutoPtr<nsCString> predecessor;
 
-    explicit BFSTableData(nsCStringKey* aKey)
+    explicit BFSTableData(const nsACString& aKey)
       : key(aKey), color(white), distance(-1)
     {
     }
@@ -75,7 +65,6 @@ NS_IMPL_ISUPPORTS(nsStreamConverterService, nsIStreamConverterService)
 ////////////////////////////////////////////////////////////
 // nsStreamConverterService methods
 nsStreamConverterService::nsStreamConverterService()
-  : mAdjacencyList(nullptr, nullptr, DeleteAdjacencyEntry, nullptr)
 {
 }
 
@@ -151,18 +140,16 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
     // Each MIME-type is a vertex in the graph, so first lets make sure
     // each MIME-type is represented as a key in our hashtable.
 
-    nsCStringKey fromKey(fromStr);
-    SCTableData *fromEdges = (SCTableData*)mAdjacencyList.Get(&fromKey);
+    nsCOMArray<nsIAtom> *fromEdges = mAdjacencyList.Get(fromStr);
     if (!fromEdges) {
         // There is no fromStr vertex, create one.
-        fromEdges = new SCTableData();
-        mAdjacencyList.Put(&fromKey, fromEdges);
+        fromEdges = new nsCOMArray<nsIAtom>();
+        mAdjacencyList.Put(fromStr, fromEdges);
     }
 
-    nsCStringKey toKey(toStr);
-    if (!mAdjacencyList.Get(&toKey)) {
+    if (!mAdjacencyList.Get(toStr)) {
         // There is no toStr vertex, create one.
-        mAdjacencyList.Put(&toKey, new SCTableData());
+        mAdjacencyList.Put(toStr, new nsCOMArray<nsIAtom>());
     }
 
     // Now we know the FROM and TO types are represented as keys in the hashtable.
@@ -201,32 +188,29 @@ nsStreamConverterService::ParseFromTo(const char *aContractID, nsCString &aFromR
     return NS_OK;
 }
 
+typedef nsClassHashtable<nsCStringHashKey, BFSTableData> BFSHashTable;
+
+
 // nsObjectHashtable enumerator functions.
 
 // Initializes the BFS state table.
-static bool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
-    NS_ASSERTION((SCTableData*)aData, "no data in the table enumeration");
+static PLDHashOperator
+InitBFSTable(const nsACString &aKey, nsCOMArray<nsIAtom> *aData, void* aClosure) {
+    MOZ_ASSERT(aData, "no data in the table enumeration");
 
-    nsHashtable *BFSTable = (nsHashtable*)closure;
-    if (!BFSTable) return false;
+    BFSHashTable *bfsTable = static_cast<BFSHashTable*>(aClosure);
+    if (!bfsTable) return PL_DHASH_STOP;
 
-    BFSTable->Put(aKey, new BFSTableData(static_cast<nsCStringKey*>(aKey)));
-    return true;
-}
-
-// cleans up the BFS state table
-static bool DeleteBFSEntry(nsHashKey *aKey, void *aData, void *closure) {
-    BFSTableData *data = (BFSTableData*)aData;
-    data->key = nullptr;
-    delete data;
-    return true;
+    BFSTableData *data = new BFSTableData(aKey);
+    bfsTable->Put(aKey, data);
+    return PL_DHASH_NEXT;
 }
 
 class CStreamConvDeallocator : public nsDequeFunctor {
 public:
     virtual void* operator()(void* anObject) {
-        nsCStringKey *key = (nsCStringKey*)anObject;
-        delete key;
+        nsCString *string = (nsCString*)anObject;
+        delete string;
         return 0;
     }
 };
@@ -244,12 +228,12 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
 
     // walk the graph in search of the appropriate converter.
 
-    int32_t vertexCount = mAdjacencyList.Count();
+    uint32_t vertexCount = mAdjacencyList.Count();
     if (0 >= vertexCount) return NS_ERROR_FAILURE;
 
     // Create a corresponding color table for each vertex in the graph.
-    nsObjectHashtable lBFSTable(nullptr, nullptr, DeleteBFSEntry, nullptr);
-    mAdjacencyList.Enumerate(InitBFSTable, &lBFSTable);
+    BFSHashTable lBFSTable;
+    mAdjacencyList.EnumerateRead(InitBFSTable, &lBFSTable);
 
     NS_ASSERTION(lBFSTable.Count() == vertexCount, "strmconv BFS table init problem");
 
@@ -258,11 +242,8 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
     rv = ParseFromTo(aContractID, fromC, toC);
     if (NS_FAILED(rv)) return rv;
 
-    nsCStringKey *source = new nsCStringKey(fromC.get());
-
-    BFSTableData *data = (BFSTableData*)lBFSTable.Get(source);
+    BFSTableData *data = lBFSTable.Get(fromC);
     if (!data) {
-        delete source;
         return NS_ERROR_FAILURE;
     }
 
@@ -273,15 +254,15 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
     nsDeque grayQ(dtorFunc);
 
     // Now generate the shortest path tree.
-    grayQ.Push(source);
+    grayQ.Push(new nsCString(fromC));
     while (0 < grayQ.GetSize()) {
-        nsCStringKey *currentHead = (nsCStringKey*)grayQ.PeekFront();
-        SCTableData *data2 = (SCTableData*)mAdjacencyList.Get(currentHead);
+        nsCString *currentHead = (nsCString*)grayQ.PeekFront();
+        nsCOMArray<nsIAtom> *data2 = mAdjacencyList.Get(*currentHead);
         if (!data2) return NS_ERROR_FAILURE;
 
         // Get the state of the current head to calculate the distance of each
         // reachable vertex in the loop.
-        BFSTableData *headVertexState = (BFSTableData*)lBFSTable.Get(currentHead);
+        BFSTableData *headVertexState = lBFSTable.Get(*currentHead);
         if (!headVertexState) return NS_ERROR_FAILURE;
 
         int32_t edgeCount = data2->Count();
@@ -290,10 +271,10 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
             nsIAtom* curVertexAtom = data2->ObjectAt(i);
             nsAutoString curVertexStr;
             curVertexAtom->ToString(curVertexStr);
-            nsCStringKey *curVertex = new nsCStringKey(ToNewCString(curVertexStr), 
-                                        curVertexStr.Length(), nsCStringKey::OWN);
+            nsCString *curVertex = nullptr;
+            CopyUTF16toUTF8(curVertexStr, *curVertex);
 
-            BFSTableData *curVertexState = (BFSTableData*)lBFSTable.Get(curVertex);
+            BFSTableData *curVertexState = lBFSTable.Get(*curVertex);
             if (!curVertexState) {
                 delete curVertex;
                 return NS_ERROR_FAILURE;
@@ -302,11 +283,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
             if (white == curVertexState->color) {
                 curVertexState->color = gray;
                 curVertexState->distance = headVertexState->distance + 1;
-                curVertexState->predecessor = (nsCStringKey*)currentHead->Clone();
-                if (!curVertexState->predecessor) {
-                    delete curVertex;
-                    return NS_ERROR_OUT_OF_MEMORY;
-                }
+                curVertexState->predecessor = new nsCString(*currentHead);
                 grayQ.Push(curVertex);
             } else {
                 delete curVertex; // if this vertex has already been discovered, we don't want
@@ -315,7 +292,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
             }
         }
         headVertexState->color = black;
-        nsCStringKey *cur = (nsCStringKey*)grayQ.PopFront();
+        nsCString *cur = (nsCString*)grayQ.PopFront();
         delete cur;
         cur = nullptr;
     }
@@ -324,16 +301,15 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
 
     // first parse out the FROM and TO MIME-types being registered.
 
-    nsAutoCString fromStr, toStr;
-    rv = ParseFromTo(aContractID, fromStr, toStr);
+    nsAutoCString fromStr, toMIMEType;
+    rv = ParseFromTo(aContractID, fromStr, toMIMEType);
     if (NS_FAILED(rv)) return rv;
 
     // get the root CONTRACTID
     nsAutoCString ContractIDPrefix(NS_ISTREAMCONVERTER_KEY);
     nsTArray<nsCString> *shortestPath = new nsTArray<nsCString>();
 
-    nsCStringKey toMIMEType(toStr);
-    data = (BFSTableData*)lBFSTable.Get(&toMIMEType);
+    data = lBFSTable.Get(toMIMEType);
     if (!data) {
         // If this vertex isn't in the BFSTable, then no-one has registered for it,
         // therefore we can't do the conversion.
@@ -342,9 +318,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
     }
 
     while (data) {
-        nsCStringKey *key = data->key;
-
-        if (fromStr.Equals(key->GetString())) {
+        if (fromStr.Equals(data->key)) {
             // found it. We're done here.
             *aEdgeList = shortestPath;
             return NS_OK;
@@ -353,7 +327,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
         // reconstruct the CONTRACTID.
         // Get the predecessor.
         if (!data->predecessor) break; // no predecessor
-        BFSTableData *predecessorData = (BFSTableData*)lBFSTable.Get(data->predecessor);
+        BFSTableData *predecessorData = lBFSTable.Get(*data->predecessor);
 
         if (!predecessorData) break; // no predecessor, chain doesn't exist.
 
@@ -361,11 +335,10 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
         nsAutoCString newContractID(ContractIDPrefix);
         newContractID.AppendLiteral("?from=");
 
-        nsCStringKey *predecessorKey = predecessorData->key;
-        newContractID.Append(predecessorKey->GetString());
+        newContractID.Append(predecessorData->key);
 
         newContractID.AppendLiteral("&to=");
-        newContractID.Append(key->GetString());
+        newContractID.Append(data->key);
 
         // Add this CONTRACTID to the chain.
         rv = shortestPath->AppendElement(newContractID) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool

@@ -12,6 +12,7 @@
 
 #include "mozilla/Atomics.h"
 #include "nsISupportsImpl.h"
+#include "nsThreadUtils.h" /* nsRunnable */
 
 class JSContext;
 class nsIEventTarget;
@@ -340,6 +341,28 @@ protected:
   virtual void
   PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
           bool aRunResult) MOZ_OVERRIDE;
+};
+
+// Base class for the runnable objects, which makes a synchronous call to
+// dispatch the tasks from the worker thread to the main thread.
+//
+// Note that the derived class must override MainThreadRun.
+class WorkerMainThreadRunnable : public nsRunnable
+{
+protected:
+  WorkerPrivate* mWorkerPrivate;
+  nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
+
+  WorkerMainThreadRunnable(WorkerPrivate* aWorkerPrivate);
+  ~WorkerMainThreadRunnable() {}
+
+  virtual bool MainThreadRun() = 0;
+
+public:
+  bool Dispatch(JSContext* aCx);
+
+private:
+  NS_IMETHOD Run() MOZ_OVERRIDE;  
 };
 
 END_WORKERS_NAMESPACE

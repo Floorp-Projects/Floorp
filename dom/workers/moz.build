@@ -19,6 +19,8 @@ EXPORTS.mozilla.dom.workers += [
 
 # Stuff needed for the bindings, not really public though.
 EXPORTS.mozilla.dom.workers.bindings += [
+    'DataStore.h',
+    'DataStoreCursor.h',
     'FileReaderSync.h',
     'Location.h',
     'MessagePort.h',
@@ -32,6 +34,8 @@ EXPORTS.mozilla.dom.workers.bindings += [
 
 SOURCES += [
     'ChromeWorkerScope.cpp',
+    'DataStore.cpp',
+    'DataStoreCursor.cpp',
     'File.cpp',
     'FileReaderSync.cpp',
     'Location.cpp',

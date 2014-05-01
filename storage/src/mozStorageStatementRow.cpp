@@ -141,8 +141,8 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
       return NS_OK;
     }
 
-    *_retval = ::JS_DefinePropertyById(aCtx, scopeObj, aId, JSVAL_VOID,
-                                     nullptr, nullptr, 0);
+    JS::Rooted<jsid> id(aCtx, aId);
+    *_retval = ::JS_DefinePropertyById(aCtx, scopeObj, id, JS::UndefinedHandleValue, 0);
     *_objp = scopeObj;
     return NS_OK;
   }
