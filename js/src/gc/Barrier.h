@@ -233,9 +233,9 @@ class BarrieredCell : public gc::Cell
 #endif
     }
 
-    static void writeBarrierPost(T *thing, void *addr) {}
-    static void writeBarrierPostRelocate(T *thing, void *addr) {}
-    static void writeBarrierPostRemove(T *thing, void *addr) {}
+    static void writeBarrierPost(T *thing, void *cellp) {}
+    static void writeBarrierPostRelocate(T *thing, void *cellp) {}
+    static void writeBarrierPostRemove(T *thing, void *cellp) {}
 };
 
 } // namespace gc
@@ -339,6 +339,7 @@ struct InternalGCMethods<Value>
             preBarrier(ZoneOfValueFromAnyThread(v), v);
 #endif
     }
+
     static void preBarrier(Zone *zone, Value v) {
 #ifdef JSGC_INCREMENTAL
         if (v.isString() && StringIsPermanentAtom(v.toString()))
@@ -352,24 +353,34 @@ struct InternalGCMethods<Value>
         }
 #endif
     }
+
     static void postBarrier(Value *vp) {
 #ifdef JSGC_GENERATIONAL
-        if (vp->isObject())
-            shadowRuntimeFromAnyThread(*vp)->gcStoreBufferPtr()->putValue(vp);
+        if (vp->isObject()) {
+            gc::StoreBuffer *sb = reinterpret_cast<gc::Cell *>(&vp->toObject())->storeBuffer();
+            if (sb)
+                sb->putValueFromAnyThread(vp);
+        }
 #endif
     }
 
     static void postBarrierRelocate(Value *vp) {
 #ifdef JSGC_GENERATIONAL
-        shadowRuntimeFromAnyThread(*vp)->gcStoreBufferPtr()->putRelocatableValue(vp);
+        if (vp->isObject()) {
+            gc::StoreBuffer *sb = reinterpret_cast<gc::Cell *>(&vp->toObject())->storeBuffer();
+            if (sb)
+                sb->putRelocatableValueFromAnyThread(vp);
+        }
 #endif
     }
 
     static void postBarrierRemove(Value *vp) {
 #ifdef JSGC_GENERATIONAL
+        JS_ASSERT(vp);
+        JS_ASSERT(vp->isMarkable());
         JSRuntime *rt = static_cast<js::gc::Cell *>(vp->toGCThing())->runtimeFromAnyThread();
         JS::shadow::Runtime *shadowRuntime = JS::shadow::Runtime::asShadowRuntime(rt);
-        shadowRuntime->gcStoreBufferPtr()->removeRelocatableValue(vp);
+        shadowRuntime->gcStoreBufferPtr()->removeRelocatableValueFromAnyThread(vp);
 #endif
     }
 
@@ -851,64 +862,43 @@ class HeapSlot : public BarrieredBase<Value>
         post(owner, kind, slot, v);
     }
 
-    void init(JSRuntime *rt, JSObject *owner, Kind kind, uint32_t slot, const Value &v) {
-        value = v;
-        post(rt, owner, kind, slot, v);
-    }
-
 #ifdef DEBUG
     bool preconditionForSet(JSObject *owner, Kind kind, uint32_t slot);
     bool preconditionForSet(Zone *zone, JSObject *owner, Kind kind, uint32_t slot);
-    static void preconditionForWriteBarrierPost(JSObject *obj, Kind kind, uint32_t slot,
-                                                Value target);
+    bool preconditionForWriteBarrierPost(JSObject *obj, Kind kind, uint32_t slot, Value target) const;
 #endif
 
     void set(JSObject *owner, Kind kind, uint32_t slot, const Value &v) {
         JS_ASSERT(preconditionForSet(owner, kind, slot));
-        pre();
         JS_ASSERT(!IsPoisonedValue(v));
+        pre();
         value = v;
         post(owner, kind, slot, v);
     }
 
     void set(Zone *zone, JSObject *owner, Kind kind, uint32_t slot, const Value &v) {
         JS_ASSERT(preconditionForSet(zone, owner, kind, slot));
-        JS::shadow::Zone *shadowZone = JS::shadow::Zone::asShadowZone(zone);
-        pre(zone);
         JS_ASSERT(!IsPoisonedValue(v));
+        pre(zone);
         value = v;
-        post(shadowZone->runtimeFromAnyThread(), owner, kind, slot, v);
+        post(owner, kind, slot, v);
     }
 
-    static void writeBarrierPost(JSObject *obj, Kind kind, uint32_t slot, const Value &target)
-    {
-#ifdef JSGC_GENERATIONAL
-        js::gc::Cell *cell = reinterpret_cast<js::gc::Cell*>(obj);
-        writeBarrierPost(cell->runtimeFromAnyThread(), obj, kind, slot, target);
-#endif
-    }
-
-    static void writeBarrierPost(JSRuntime *rt, JSObject *obj, Kind kind, uint32_t slot,
-                                 const Value &target)
-    {
-#ifdef DEBUG
-        preconditionForWriteBarrierPost(obj, kind, slot, target);
-#endif
-#ifdef JSGC_GENERATIONAL
-        if (target.isObject()) {
-            JS::shadow::Runtime *shadowRuntime = JS::shadow::Runtime::asShadowRuntime(rt);
-            shadowRuntime->gcStoreBufferPtr()->putSlot(obj, kind, slot, 1);
-        }
-#endif
+    /* For users who need to manually barrier the raw types. */
+    static void writeBarrierPost(JSObject *owner, Kind kind, uint32_t slot, const Value &target) {
+        reinterpret_cast<HeapSlot *>(const_cast<Value *>(&target))->post(owner, kind, slot, target);
     }
 
   private:
-    void post(JSObject *owner, Kind kind, uint32_t slot, Value target) {
-        HeapSlot::writeBarrierPost(owner, kind, slot, target);
-    }
-
-    void post(JSRuntime *rt, JSObject *owner, Kind kind, uint32_t slot, Value target) {
-        HeapSlot::writeBarrierPost(rt, owner, kind, slot, target);
+    void post(JSObject *owner, Kind kind, uint32_t slot, const Value &target) {
+        JS_ASSERT(preconditionForWriteBarrierPost(owner, kind, slot, target));
+#ifdef JSGC_GENERATIONAL
+        if (this->value.isObject()) {
+            gc::Cell *cell = reinterpret_cast<gc::Cell *>(&this->value.toObject());
+            if (cell->storeBuffer())
+                cell->storeBuffer()->putSlotFromAnyThread(owner, kind, slot, 1);
+        }
+#endif
     }
 };
 
