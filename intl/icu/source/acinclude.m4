@@ -471,6 +471,9 @@ AC_DEFUN([AC_CHECK_STRICT_COMPILE],
             esac
             
             CFLAGS="$CFLAGS -Wall -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wwrite-strings"
+
+            # Suppress clang C warnings:
+            CFLAGS="$CFLAGS -Wno-sign-compare -Wno-unused"
         else
             case "${host}" in
             *-*-cygwin)
@@ -485,6 +488,9 @@ AC_DEFUN([AC_CHECK_STRICT_COMPILE],
         if test "$GXX" = yes
         then
             CXXFLAGS="$CXXFLAGS -W -Wall -pedantic -Wpointer-arith -Wwrite-strings -Wno-long-long"
+
+            # Suppress clang C++ warnings:
+            CXXFLAGS="$CXXFLAGS -Wno-unused -Wno-unused-parameter"
         else
             case "${host}" in
             *-*-cygwin)
