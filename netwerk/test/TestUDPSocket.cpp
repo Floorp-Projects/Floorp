@@ -330,7 +330,10 @@ main(int32_t argc, char *argv[])
 #ifdef XP_WIN
   OSVERSIONINFO OsVersion;
   OsVersion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+#pragma warning(push)
+#pragma warning(disable:4996) // 'GetVersionExA': was declared deprecated
   GetVersionEx(&OsVersion);
+#pragma warning(pop)
   if (OsVersion.dwMajorVersion == 5 && OsVersion.dwMinorVersion == 1) {
     goto close;
   }
