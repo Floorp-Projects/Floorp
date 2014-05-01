@@ -641,7 +641,7 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
         }
         nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_FROZEN);
 
-        if(r=nr_ice_candidate_pair_insert(&comp->stream->check_list,pair)) {
+        if(r=nr_ice_component_insert_pair(comp,pair)) {
           *error=(r==R_NO_MEMORY)?500:400;
           nr_ice_candidate_pair_destroy(&pair);
           ABORT(r);
@@ -805,8 +805,7 @@ int nr_ice_component_pair_candidate(nr_ice_peer_ctx *pctx, nr_ice_component *pco
         if(r=nr_ice_candidate_pair_create(pctx,lcand,pcand,&pair))
           ABORT(r);
 
-        if(r=nr_ice_candidate_pair_insert(&pcomp->stream->check_list,
-                                          pair))
+        if(r=nr_ice_component_insert_pair(pcomp, pair))
           ABORT(r);
       }
 
@@ -1084,3 +1083,33 @@ int nr_ice_component_finalize(nr_ice_component *lcomp, nr_ice_component *rcomp)
 
     return(_status);
   }
+
+
+int nr_ice_component_insert_pair(nr_ice_component *pcomp, nr_ice_cand_pair *pair)
+  {
+    int r,_status;
+
+    /* Pairs for peer reflexive are marked SUCCEEDED immediately */
+    if (pair->state != NR_ICE_PAIR_STATE_FROZEN &&
+        pair->state != NR_ICE_PAIR_STATE_SUCCEEDED){
+      assert(0);
+      ABORT(R_BAD_ARGS);
+    }
+
+    if(r=nr_ice_candidate_pair_insert(&pair->remote->stream->check_list,pair))
+      ABORT(r);
+
+    /* Make sure the check timer is running, if the stream was previously
+     * started. We will not start streams just because a pair was created. */
+    if(pair->remote->stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE){
+      if(nr_ice_media_stream_start_checks(pair->remote->stream->pctx, pair->remote->stream)) {
+        r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s)/CAND-PAIR(%s): Could not restart checks for new pair %s.",pair->remote->stream->pctx->label, pair->codeword, pair->as_string);
+        ABORT(R_INTERNAL);
+      }
+    }
+
+    _status=0;
+  abort:
+    return(_status);
+  }
+
