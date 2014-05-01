@@ -380,23 +380,6 @@ class FreeList
         return reinterpret_cast<void *>(thing);
     }
 
-    /* A version of allocate when we know that the span is not empty. */
-    MOZ_ALWAYS_INLINE void *infallibleAllocate(size_t thingSize) {
-        JS_ASSERT(!isEmpty());
-        JS_ASSERT(thingSize % CellSize == 0);
-        head.checkSpan(thingSize);
-        uintptr_t thing = head.first;
-        if (thing < head.last) {
-            head.first = thing + thingSize;
-        } else {
-            JS_ASSERT(thing);
-            setHead(reinterpret_cast<FreeSpan *>(thing));
-        }
-        head.checkSpan(thingSize);
-        JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
-        return reinterpret_cast<void *>(thing);
-    }
-
     /*
      * Allocate from a newly allocated arena. The arena will have been set up
      * as fully used during the initialization so to allocate we simply return
