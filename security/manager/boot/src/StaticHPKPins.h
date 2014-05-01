@@ -4,7 +4,7 @@
 
 /*****************************************************************************/
 /* This is an automatically generated file. If you're not                    */
-/* PublicKeyPinningSerice.cpp, you shouldn't be #including it.               */
+/* PublicKeyPinningService.cpp, you shouldn't be #including it.              */
 /*****************************************************************************/
 #include <stdint.h>
 /* Baltimore CyberTrust Root */
@@ -202,4 +202,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int kPublicKeyPinningPreloadListLength = 7;
 
-const PRTime kPreloadPKPinsExpirationTime = INT64_C(1409782406553000);
+const PRTime kPreloadPKPinsExpirationTime = INT64_C(1409867186821000);
