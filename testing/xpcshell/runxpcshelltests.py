@@ -358,8 +358,10 @@ class XPCShellTestThread(Thread):
 
                 yield path
 
-        return (list(sanitize_list(test_object['head'], 'head')),
-                list(sanitize_list(test_object['tail'], 'tail')))
+        headlist = test_object['head'] if 'head' in test_object else ''
+        taillist = test_object['tail'] if 'tail' in test_object else ''
+        return (list(sanitize_list(headlist, 'head')),
+                list(sanitize_list(taillist, 'tail')))
 
     def buildXpcsCmd(self, testdir):
         """
