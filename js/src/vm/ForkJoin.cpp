@@ -1331,10 +1331,11 @@ class ParallelIonInvoke
         calleeToken_ = CalleeToToken(callee);
     }
 
-    bool invoke(PerThreadData *perThread) {
-        RootedValue result(perThread);
+    bool invoke(ForkJoinContext *cx) {
+        JitActivation activation(cx);
+        Value result;
         CALL_GENERATED_CODE(enter_, jitcode_, argc_ + 1, argv_ + 1, nullptr, calleeToken_,
-                            nullptr, 0, result.address());
+                            nullptr, 0, &result);
         return !result.isMagic();
     }
 };
@@ -1535,13 +1536,13 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
         cx.bailoutRecord->setCause(ParallelBailoutMainScriptNotPresent);
         setAbortFlagAndRequestInterrupt(false);
     } else {
-        ParallelIonInvoke<3> fii(cx_->runtime(), fun_, 3);
+        ParallelIonInvoke<3> fii(runtime(), fun_, 3);
 
         fii.args[0] = Int32Value(worker->id());
         fii.args[1] = Int32Value(sliceStart_);
         fii.args[2] = Int32Value(sliceEnd_);
 
-        bool ok = fii.invoke(perThread);
+        bool ok = fii.invoke(&cx);
         JS_ASSERT(ok == !cx.bailoutRecord->topScript);
         if (!ok)
             setAbortFlagAndRequestInterrupt(false);
