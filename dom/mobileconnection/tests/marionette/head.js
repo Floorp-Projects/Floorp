@@ -523,10 +523,7 @@ function getEmulatorGsmLocation() {
       is(aResults[1].substring(0,2), "ci", "ci output");
 
       let lac = parseInt(aResults[0].substring(5));
-      lac = (lac < 0 ? 65535 : lac);
       let cid = parseInt(aResults[1].substring(4));
-      cid = (cid < 0 ? 268435455 : cid);
-
       return { lac: lac, cid: cid };
     });
 }
