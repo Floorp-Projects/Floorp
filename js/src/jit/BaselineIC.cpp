@@ -734,16 +734,9 @@ inline bool
 ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, ValueOperand val,
                                          Register scratch, GeneralRegisterSet saveRegs)
 {
-    Nursery &nursery = cx->runtime()->gc.nursery;
-
     Label skipBarrier;
-    masm.branchTestObject(Assembler::NotEqual, val, &skipBarrier);
-
-    masm.branchPtrInNurseryRange(obj, scratch, &skipBarrier);
-
-    Register valReg = masm.extractObject(val, scratch);
-    masm.branchPtr(Assembler::Below, valReg, ImmWord(nursery.start()), &skipBarrier);
-    masm.branchPtr(Assembler::AboveOrEqual, valReg, ImmWord(nursery.heapEnd()), &skipBarrier);
+    masm.branchPtrInNurseryRange(Assembler::Equal, obj, scratch, &skipBarrier);
+    masm.branchValueIsNurseryObject(Assembler::NotEqual, val, scratch, &skipBarrier);
 
     // void PostWriteBarrier(JSRuntime *rt, JSObject *obj);
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)

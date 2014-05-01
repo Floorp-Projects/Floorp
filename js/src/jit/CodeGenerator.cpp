@@ -1875,10 +1875,11 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
 #endif
     } else {
-        masm.branchPtrInNurseryRange(ToRegister(lir->object()), temp, ool->rejoin());
+        masm.branchPtrInNurseryRange(Assembler::Equal, ToRegister(lir->object()), temp,
+                                     ool->rejoin());
     }
 
-    masm.branchPtrInNurseryRange(ToRegister(lir->value()), temp, ool->entry());
+    masm.branchPtrInNurseryRange(Assembler::Equal, ToRegister(lir->value()), temp, ool->entry());
 
     masm.bind(ool->rejoin());
 #endif
@@ -1901,11 +1902,12 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
 #endif
     } else {
-        masm.branchPtrInNurseryRange(ToRegister(lir->object()), temp, ool->rejoin());
+        masm.branchPtrInNurseryRange(Assembler::Equal, ToRegister(lir->object()), temp,
+                                     ool->rejoin());
     }
 
     ValueOperand value = ToValue(lir, LPostWriteBarrierV::Input);
-    masm.branchValueIsNurseryObject(value, temp, ool->entry());
+    masm.branchValueIsNurseryObject(Assembler::Equal, value, temp, ool->entry());
 
     masm.bind(ool->rejoin());
 #endif
