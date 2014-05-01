@@ -464,7 +464,7 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
 
 static void
 HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFromException *rfe,
-                        bool *calledDebugEpilogue)
+                        jsbytecode **unwoundScopeToPc, bool *calledDebugEpilogue)
 {
     JS_ASSERT(frame.isBaselineJS());
     JS_ASSERT(!*calledDebugEpilogue);
@@ -528,17 +528,8 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
 
         // Unwind scope chain (pop block objects).
         if (cx->isExceptionPending()) {
-            jsbytecode *unwindPc = script->main() + tn->start;
-            UnwindScope(cx, si, unwindPc);
-
-            // If we still need to call DebugEpilogue, we must remember the pc
-            // we unwound the scope chain to, as it will be out of sync with
-            // the frame's actual pc.
-            if (tn->kind != JSTRY_CATCH && tn->kind != JSTRY_FINALLY &&
-                cx->compartment()->debugMode() && !*calledDebugEpilogue)
-            {
-                frame.baselineFrame()->setUnwoundScopeOverridePc(unwindPc);
-            }
+            *unwoundScopeToPc = script->main() + tn->start;
+            UnwindScope(cx, si, *unwoundScopeToPc);
         }
 
         // Compute base pointer and stack pointer.
@@ -670,7 +661,10 @@ HandleException(ResumeFromException *rfe)
             // It's invalid to call DebugEpilogue twice for the same frame.
             bool calledDebugEpilogue = false;
 
-            HandleExceptionBaseline(cx, iter, rfe, &calledDebugEpilogue);
+            // Remember the pc we unwound the scope to.
+            jsbytecode *unwoundScopeToPc = nullptr;
+
+            HandleExceptionBaseline(cx, iter, rfe, &unwoundScopeToPc, &calledDebugEpilogue);
 
             // If we are propagating an exception through a frame with
             // on-stack recompile info, we should free the allocated
@@ -694,6 +688,12 @@ HandleException(ResumeFromException *rfe)
             iter.baselineFrame()->unsetPushedSPSFrame();
 
             if (cx->compartment()->debugMode() && !calledDebugEpilogue) {
+                // If we still need to call the DebugEpilogue, we must
+                // remember the pc we unwound the scope chain to, as it will
+                // be out of sync with the frame's actual pc.
+                if (unwoundScopeToPc)
+                    iter.baselineFrame()->setUnwoundScopeOverridePc(unwoundScopeToPc);
+
                 // If DebugEpilogue returns |true|, we have to perform a forced
                 // return, e.g. return frame->returnValue() to the caller.
                 BaselineFrame *frame = iter.baselineFrame();
