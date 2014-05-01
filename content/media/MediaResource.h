@@ -422,7 +422,7 @@ public:
     // Not owned:
     // - mDecoder
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    size += mContentType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    size += mContentType.SizeOfIncludingThisIfUnshared(aMallocSizeOf);
 
     return size;
   }
