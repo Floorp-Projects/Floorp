@@ -5,8 +5,7 @@
 
 const gDashboard = Cc['@mozilla.org/network/dashboard;1']
   .getService(Ci.nsIDashboard);
-const serverSocket = Components.classes["@mozilla.org/network/server-socket;1"]
-    .createInstance(Ci.nsIServerSocket);
+
 function connectionFailed(status) {
   let status_ok = [
                     "NS_NET_STATUS_RESOLVING_HOST"
@@ -23,10 +22,11 @@ function connectionFailed(status) {
   return true;
 }
 
-function test_sockets() {
+function test_sockets(serverSocket) {
   do_test_pending();
   gDashboard.requestSockets(function(data) {
     let index = -1;
+    do_print("requestSockets: " + JSON.stringify(data.sockets));
     for (let i = 0; i < data.sockets.length; i++) {
       if (data.sockets[i].host == "127.0.0.1") {
         index = i;
@@ -37,13 +37,13 @@ function test_sockets() {
     do_check_eq(data.sockets[index].port, serverSocket.port);
     do_check_eq(data.sockets[index].tcp, 1);
 
-    serverSocket.close();
-
     do_test_finished();
   });
 }
 
 function run_test() {
+  let serverSocket = Components.classes["@mozilla.org/network/server-socket;1"]
+    .createInstance(Ci.nsIServerSocket);
   serverSocket.init(-1, true, -1);
 
   do_test_pending();
@@ -53,6 +53,7 @@ function run_test() {
       do_test_pending();
       gDashboard.requestDNSInfo(function(data) {
         let found = false;
+        do_print("requestDNSInfo: " + JSON.stringify(data.entries));
         for (let i = 0; i < data.entries.length; i++) {
           if (data.entries[i].hostname == "localhost") {
             found = true;
@@ -62,8 +63,7 @@ function run_test() {
         do_check_eq(found, true);
 
         do_test_finished();
-
-        test_sockets();
+        test_sockets(serverSocket);
       });
 
       do_test_finished();
