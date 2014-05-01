@@ -257,14 +257,14 @@ JavaScriptChild::AnswerDefineProperty(const ObjectId &objId, const nsString &id,
     if (!toDescriptor(cx, descriptor, &desc))
         return false;
 
-    if (!js::CheckDefineProperty(cx, obj, internedId, desc.value(), desc.getter(),
-                                 desc.setter(), desc.attributes()))
+    if (!js::CheckDefineProperty(cx, obj, internedId, desc.value(), desc.attributes(),
+                                 desc.getter(), desc.setter()))
     {
         return fail(cx, rs);
     }
 
-    if (!JS_DefinePropertyById(cx, obj, internedId, desc.value(), desc.getter(),
-                               desc.setter(), desc.attributes()))
+    if (!JS_DefinePropertyById(cx, obj, internedId, desc.value(), desc.attributes(),
+                               desc.getter(), desc.setter()))
     {
         return fail(cx, rs);
     }

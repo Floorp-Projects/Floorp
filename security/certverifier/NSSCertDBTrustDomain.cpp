@@ -42,11 +42,13 @@ typedef ScopedPtr<SECMODModule, SECMOD_DestroyModule> ScopedSECMODModule;
 NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            OCSPFetching ocspFetching,
                                            OCSPCache& ocspCache,
-                                           void* pinArg)
+                                           void* pinArg,
+                                           CERTChainVerifyCallback* checkChainCallback)
   : mCertDBTrustType(certDBTrustType)
   , mOCSPFetching(ocspFetching)
   , mOCSPCache(ocspCache)
   , mPinArg(pinArg)
+  , mCheckChainCallback(checkChainCallback)
 {
 }
 
@@ -403,6 +405,37 @@ NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
     PR_SetError(error, 0);
   }
   return rv;
+}
+
+SECStatus
+NSSCertDBTrustDomain::IsChainValid(const CERTCertList* certChain) {
+  SECStatus rv = SECFailure;
+
+  PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+      ("NSSCertDBTrustDomain: Top of IsChainValid mCheckCallback=%p",
+       mCheckChainCallback));
+
+  if (!mCheckChainCallback) {
+    return SECSuccess;
+  }
+  if (!mCheckChainCallback->isChainValid) {
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
+    return SECFailure;
+  }
+  PRBool chainOK;
+  rv = (mCheckChainCallback->isChainValid)(mCheckChainCallback->isChainValidArg,
+                                           certChain, &chainOK);
+  if (rv != SECSuccess) {
+    return rv;
+  }
+  // rv = SECSuccess only implies successful call, now is time
+  // to check the chain check status
+  // we should only return success if the chain is valid
+  if (chainOK) {
+    return SECSuccess;
+  }
+  PR_SetError(SEC_ERROR_APPLICATION_CALLBACK_ERROR, 0);
+  return SECFailure;
 }
 
 namespace {

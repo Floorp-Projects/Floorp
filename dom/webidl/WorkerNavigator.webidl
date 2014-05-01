@@ -7,3 +7,4 @@ interface WorkerNavigator {
 
 WorkerNavigator implements NavigatorID;
 WorkerNavigator implements NavigatorOnLine;
+WorkerNavigator implements NavigatorDataStore;

@@ -27,6 +27,7 @@ class nsIDOMNavigatorSystemMessages;
 class nsDOMCameraManager;
 class nsDOMDeviceStorage;
 class nsIDOMBlob;
+class nsIPrincipal;
 
 namespace mozilla {
 namespace dom {
@@ -156,6 +157,11 @@ public:
   // The XPCOM GetDoNotTrack is ok
   Geolocation* GetGeolocation(ErrorResult& aRv);
   battery::BatteryManager* GetBattery(ErrorResult& aRv);
+
+  static already_AddRefed<Promise> GetDataStores(nsPIDOMWindow* aWindow,
+                                                 const nsAString& aName,
+                                                 ErrorResult& aRv);
+
   already_AddRefed<Promise> GetDataStores(const nsAString &aName,
                                           ErrorResult& aRv);
   bool Vibrate(uint32_t aDuration);
@@ -298,6 +304,8 @@ public:
                                           JSObject* aGlobal);
 
   static bool HasInputMethodSupport(JSContext* /* unused */, JSObject* aGlobal);
+
+  static bool HasDataStoreSupport(nsIPrincipal* aPrincipal);
 
   static bool HasDataStoreSupport(JSContext* cx, JSObject* aGlobal);
 

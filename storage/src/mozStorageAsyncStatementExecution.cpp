@@ -19,6 +19,7 @@
 #include "mozStorageStatementData.h"
 #include "mozStorageAsyncStatementExecution.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Telemetry.h"
 
 namespace mozilla {
@@ -453,7 +454,9 @@ AsyncExecuteStatements::notifyComplete()
       }
     }
     else {
-      NS_WARN_IF(NS_FAILED(mConnection->rollbackTransactionInternal(mNativeConnection)));
+      DebugOnly<nsresult> rv =
+        mConnection->rollbackTransactionInternal(mNativeConnection);
+      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Transaction failed to rollback");
     }
     mHasTransaction = false;
   }
@@ -584,7 +587,6 @@ AsyncExecuteStatements::Run()
     return notifyComplete();
 
   if (statementsNeedTransaction()) {
-    Connection* rawConnection = static_cast<Connection*>(mConnection.get());
     if (NS_SUCCEEDED(mConnection->beginTransactionInternal(mNativeConnection,
                                                            mozIStorageConnection::TRANSACTION_IMMEDIATE))) {
       mHasTransaction = true;

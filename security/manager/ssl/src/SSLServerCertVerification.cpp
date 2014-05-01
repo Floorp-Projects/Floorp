@@ -634,8 +634,9 @@ NSSDetermineCertOverrideErrors(CertVerifier& certVerifier,
   //                     possible failure.
   // XXX TODO: convert to VerifySSLServerCert
   // XXX TODO: get rid of error log
-  certVerifier.VerifyCert(cert, stapledOCSPResponse, certificateUsageSSLServer,
-                          now, infoObject, 0, nullptr, nullptr, verify_log);
+  certVerifier.VerifyCert(cert, certificateUsageSSLServer,
+                          now, infoObject, infoObject->GetHostNameRaw(),
+                          0, stapledOCSPResponse, nullptr, nullptr, verify_log);
 
   // Check the name field against the desired hostname.
   if (CERT_VerifyCertName(cert, infoObject->GetHostNameRaw()) != SECSuccess) {

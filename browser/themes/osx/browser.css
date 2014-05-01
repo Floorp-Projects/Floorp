@@ -4316,6 +4316,12 @@ window > chatbox {
   border-bottom-width: 0;
 }
 
+/* Compensate for the border set above for this horizontal line. */
+#main-window[customize-entered] #navigator-toolbox::after {
+  margin-left: 3px;
+  margin-right: 3px;
+}
+
 #main-window[customize-entered] #TabsToolbar {
   background-clip: padding-box;
   border-right: 3px solid transparent;

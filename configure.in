@@ -2548,120 +2548,32 @@ dnl Check for .hidden assembler directive and visibility attribute.
 dnl Borrowed from glibc configure.in
 dnl ===============================================================
 if test "$GNU_CC"; then
-  AC_CACHE_CHECK(for visibility(hidden) attribute,
-                 ac_cv_visibility_hidden,
-                 [cat > conftest.c <<EOF
-                  int foo __attribute__ ((visibility ("hidden"))) = 1;
-EOF
-                  ac_cv_visibility_hidden=no
-                  if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
-                    if egrep '\.(hidden|private_extern).*foo' conftest.s >/dev/null; then
-                      ac_cv_visibility_hidden=yes
-                    fi
-                  fi
-                  rm -f conftest.[cs]
-                 ])
-  if test "$ac_cv_visibility_hidden" = "yes"; then
-    AC_DEFINE(HAVE_VISIBILITY_HIDDEN_ATTRIBUTE)
-
-    AC_CACHE_CHECK(for visibility(default) attribute,
-                   ac_cv_visibility_default,
-                   [cat > conftest.c <<EOF
-                    int foo __attribute__ ((visibility ("default"))) = 1;
-EOF
-                    ac_cv_visibility_default=no
-                    if ${CC-cc} -fvisibility=hidden -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
-                      if ! egrep '\.(hidden|private_extern).*foo' conftest.s >/dev/null; then
-                        ac_cv_visibility_default=yes
-                      fi
-                    fi
-                    rm -f conftest.[cs]
-                   ])
-    if test "$ac_cv_visibility_default" = "yes"; then
-      AC_DEFINE(HAVE_VISIBILITY_ATTRIBUTE)
-
-      AC_CACHE_CHECK(for visibility pragma support,
-                     ac_cv_visibility_pragma,
-                     [cat > conftest.c <<EOF
-#pragma GCC visibility push(hidden)
-                      int foo_hidden = 1;
-#pragma GCC visibility push(default)
-                      int foo_default = 1;
-EOF
-                      ac_cv_visibility_pragma=no
-                      if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
-                        if egrep '\.(hidden|private_extern).*foo_hidden' conftest.s >/dev/null; then
-                          if ! egrep '\.(hidden|private_extern).*foo_default' conftest.s > /dev/null; then
-                            ac_cv_visibility_pragma=yes
-                          fi
-                        fi
-                      fi
-                      rm -f conftest.[cs]
-                    ])
-      if test "$ac_cv_visibility_pragma" = "yes"; then
-        AC_CACHE_CHECK(For gcc visibility bug with class-level attributes (GCC bug 26905),
-                       ac_cv_have_visibility_class_bug,
-                       [cat > conftest.c <<EOF
-#pragma GCC visibility push(hidden)
-struct __attribute__ ((visibility ("default"))) TestStruct {
-  static void Init();
-};
-__attribute__ ((visibility ("default"))) void TestFunc() {
-  TestStruct::Init();
-}
-EOF
-                       ac_cv_have_visibility_class_bug=no
-                       if ! ${CXX-g++} ${CXXFLAGS} ${DSO_PIC_CFLAGS} ${DSO_LDOPTS} -S -o conftest.S conftest.c > /dev/null 2>&1 ; then
-                         ac_cv_have_visibility_class_bug=yes
-                       else
-                         if test `egrep -c '@PLT|\\$stub' conftest.S` = 0; then
-                           ac_cv_have_visibility_class_bug=yes
-                         fi
-                       fi
-                       rm -rf conftest.{c,S}
-                       ])
-
-        AC_CACHE_CHECK(For x86_64 gcc visibility bug with builtins (GCC bug 20297),
-                       ac_cv_have_visibility_builtin_bug,
-                       [cat > conftest.c <<EOF
-#pragma GCC visibility push(hidden)
-#pragma GCC visibility push(default)
-#include <string.h>
-#pragma GCC visibility pop
-
-__attribute__ ((visibility ("default"))) void Func() {
-  char c[[100]];
-  memset(c, 0, sizeof(c));
-}
-EOF
-                       ac_cv_have_visibility_builtin_bug=no
-                       if ! ${CC-cc} ${CFLAGS} ${DSO_PIC_CFLAGS} ${DSO_LDOPTS} -O2 -S -o conftest.S conftest.c > /dev/null 2>&1 ; then
-                         ac_cv_have_visibility_builtin_bug=yes
-                       else
-                         if test `grep -c "@PLT" conftest.S` = 0; then
-                           ac_cv_visibility_builtin_bug=yes
-                         fi
-                       fi
-                       rm -f conftest.{c,S}
-                       ])
-        if test "$ac_cv_have_visibility_builtin_bug" = "no" -a \
-                "$ac_cv_have_visibility_class_bug" = "no"; then
-          VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
-          WRAP_SYSTEM_INCLUDES=1
-          STL_FLAGS='-I$(DIST)/stl_wrappers'
-          WRAP_STL_INCLUDES=1
-        else
-          VISIBILITY_FLAGS='-fvisibility=hidden'
-        fi # have visibility pragma bug
-      fi   # have visibility pragma
-    fi     # have visibility(default) attribute
-  fi       # have visibility(hidden) attribute
+  AC_DEFINE(HAVE_VISIBILITY_HIDDEN_ATTRIBUTE)
+  AC_DEFINE(HAVE_VISIBILITY_ATTRIBUTE)
+  case "${OS_TARGET}" in
+  Darwin|Android)
+    VISIBILITY_FLAGS='-fvisibility=hidden'
+    ;;
+  *)
+    VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
+    WRAP_SYSTEM_INCLUDES=1
+    ;;
+  esac
 fi         # GNU_CC
 
 # visibility hidden flag for Sun Studio on Solaris
 if test "$SOLARIS_SUNPRO_CC"; then
 VISIBILITY_FLAGS='-xldscope=hidden'
 fi         # Sun Studio on Solaris
+
+case "${OS_TARGET}" in
+WINNT|Darwin|Android)
+  ;;
+*)
+  STL_FLAGS='-I$(DIST)/stl_wrappers'
+  WRAP_STL_INCLUDES=1
+  ;;
+esac
 
 AC_SUBST(WRAP_SYSTEM_INCLUDES)
 AC_SUBST(VISIBILITY_FLAGS)
@@ -3975,6 +3887,7 @@ LIBJPEG_TURBO_ASFLAGS=
 LIBJPEG_TURBO_X86_ASM=
 LIBJPEG_TURBO_X64_ASM=
 LIBJPEG_TURBO_ARM_ASM=
+MOZ_LOOP=$NIGHTLY_BUILD
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
 MOZ_SOCIAL=1
@@ -5954,6 +5867,11 @@ case "$OS_TARGET" in
      Darwin|WINNT|Linux)
        MOZ_GAMEPAD=1
        ;;
+     Android)
+       if test "$MOZ_WIDGET_TOOLKIT" != "gonk"; then
+         MOZ_GAMEPAD=1
+       fi
+       ;;
      *)
        ;;
 esac
@@ -5977,6 +5895,9 @@ if test "$MOZ_GAMEPAD"; then
           AC_MSG_ERROR([Can't find header linux/joystick.h, needed for gamepad support. Please install Linux kernel headers or reconfigure with --disable-gamepad to disable gamepad support.])
         fi
         MOZ_GAMEPAD_BACKEND=linux
+        ;;
+    Android)
+        MOZ_GAMEPAD_BACKEND=android
         ;;
     *)
         ;;
@@ -8375,6 +8296,12 @@ MOZ_ARG_DISABLE_BOOL(ctypes,
 AC_SUBST(BUILD_CTYPES)
 if test "$BUILD_CTYPES"; then
     AC_DEFINE(BUILD_CTYPES)
+fi
+
+dnl Build Loop if required
+AC_SUBST(MOZ_LOOP)
+if test "$MOZ_LOOP"; then
+  AC_DEFINE(MOZ_LOOP)
 fi
 
 dnl Build Places if required

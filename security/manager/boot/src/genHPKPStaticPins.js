@@ -7,13 +7,14 @@
 // 2. [build/obtain firefox binaries]
 // 3. run `[path to]/run-mozilla.sh [path to]/xpcshell \
 //                                  [path to]/genHPKPStaticpins.js
+// Files PreloadedHPKPins.json and default-ee.der must be in the current
+// working directory.
 
 const { 'classes': Cc, 'interfaces': Ci, 'utils': Cu, 'results': Cr } = Components;
 
 let { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 let { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-let { XPCOMUtils } = Cu.import("resource:///modules/XPCOMUtils.jsm", {});
 
 const certdb2 = Cc["@mozilla.org/security/x509certdb;1"]
                    .getService(Ci.nsIX509CertDB2);
@@ -48,8 +49,7 @@ function writeTo(string, fos) {
   fos.write(string, string.length);
 }
 
-function readFile(filename) {
-  print("filename =" + filename)
+function readFileToString(filename) {
   let path = filename;
 
   let lf = Components.classes["@mozilla.org/file/directory_service;1"]
@@ -67,26 +67,23 @@ function readFile(filename) {
       }
     }
   }
-  let file = lf;
-  let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
-                  .createInstance(Ci.nsIFileInputStream);
-  fstream.init(file, -1, 0, 0);
-  var line = {};
+  let stream = Cc["@mozilla.org/network/file-input-stream;1"]
+                 .createInstance(Ci.nsIFileInputStream);
+  stream.init(lf, -1, 0, 0);
+  let buf = NetUtil.readInputStreamToString(stream, stream.available());
+  return buf;
+}
+
+function stripComments(buf) {
+  var lines = buf.split("\n");
   let entryRegex = /^\s*\/\//;
   let data = "";
-  while(fstream.readLine(line)) {
-    let match = entryRegex.exec(line.value);
+  for (let i = 0; i < lines.length; ++i) {
+    let match = entryRegex.exec(lines[i]);
     if (!match) {
-      data = data + line.value;
+      data = data + lines[i];
     }
   }
-  // The last line of the read is a false, but content can be there
-  // so: repeat the logic
-  let match = entryRegex.exec(line.value);
-  if (!match) {
-    data = data + line.value;
-  }
-  fstream.close();
   return data;
 }
 
@@ -124,11 +121,25 @@ function loadNSSCertinfo() {
     certNameToSKD[name] = SDK;
     certSDKToName[SDK] = name;
   }
+  {
+    // A certificate for *.example.com.
+    let der = readFileToString("default-ee.der");
+    // XPCOM is too dumb to automatically query the parent interface of
+    // nsIX509CertDB2 without a hint.
+    let certdb = certdb2.QueryInterface(Ci.nsIX509CertDB);
+    let testCert = certdb.constructX509(der, der.length);
+    // We can't include this cert in the previous loop, because it skips
+    // non-builtin certs and the nickname is not built-in to the cert.
+    let name = "End Entity Test Cert";
+    let SDK  = testCert.sha256SubjectPublicKeyInfoDigest;
+    certNameToSKD[name] = SDK;
+    certSDKToName[SDK] = name;
+  }
   return [certNameToSKD, certSDKToName];
 }
 
 function parseMozFile() {
-  mozFile = readFile(MOZINPUT);
+  mozFile = stripComments(readFileToString(MOZINPUT));
   mozJSON = JSON.parse(mozFile);
   return mozJSON;
 }
@@ -221,8 +232,7 @@ function writeFile(certNameToSDK, certSDKToName, jsonPins) {
 
     FileUtils.closeSafeFileOutputStream(fos);
 
-  }
-  catch (e) {
+  } catch (e) {
     dump("ERROR: problem writing output to '" + OUTPUT + "': " + e + "\n");
   }
 }

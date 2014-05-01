@@ -145,6 +145,7 @@ struct ThreadSafeContext : ContextFriendFields,
                            public MallocProvider<ThreadSafeContext>
 {
     friend struct StackBaseShape;
+    friend class Activation;
     friend UnownedBaseShape *BaseShape::lookupUnowned(ThreadSafeContext *cx,
                                                       const StackBaseShape &base);
     friend Shape *JSObject::lookupChildProperty(ThreadSafeContext *cx,
@@ -223,7 +224,7 @@ struct ThreadSafeContext : ContextFriendFields,
 
     inline js::Nursery &nursery() {
         JS_ASSERT(hasNursery());
-        return runtime_->gcNursery;
+        return runtime_->gc.nursery;
     }
 #endif
 
@@ -289,7 +290,7 @@ struct ThreadSafeContext : ContextFriendFields,
     void *runtimeAddressForJit() { return runtime_; }
     void *stackLimitAddress(StackKind kind) { return &runtime_->mainThread.nativeStackLimit[kind]; }
     void *stackLimitAddressForJitCode(StackKind kind);
-    size_t gcSystemPageSize() { return runtime_->gcSystemPageSize; }
+    size_t gcSystemPageSize() { return runtime_->gc.pageAllocator.systemPageSize(); }
     bool signalHandlersInstalled() const { return runtime_->signalHandlersInstalled(); }
     bool jitSupportsFloatingPoint() const { return runtime_->jitSupportsFloatingPoint; }
 

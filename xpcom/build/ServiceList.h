@@ -15,6 +15,7 @@ MOZ_SERVICE(ObserverService, nsIObserverService, "@mozilla.org/observer-service;
 MOZ_SERVICE(StringBundleService, nsIStringBundleService, "@mozilla.org/intl/stringbundle;1")
 MOZ_SERVICE(XPConnect, nsIXPConnect, "@mozilla.org/js/xpc/XPConnect;1")
 MOZ_SERVICE(InDOMUtils, inIDOMUtils, "@mozilla.org/inspector/dom-utils;1")
+MOZ_SERVICE(PermissionManager, nsIPermissionManager, "@mozilla.org/permissionmanager;1");
 
 #ifdef MOZ_USE_NAMESPACE
 namespace mozilla

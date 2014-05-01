@@ -16,6 +16,9 @@ Cu.import("resource://gre/modules/Messaging.jsm");
 // Keep this in sync with the constant defined in PanelAuthCache.java
 const PREFS_PANEL_AUTH_PREFIX = "home_panels_auth_";
 
+// Default weight for a banner message.
+const DEFAULT_WEIGHT = 100;
+
 // See bug 915424
 function resolveGeckoURI(aURI) {
   if (!aURI)
@@ -49,6 +52,9 @@ function BannerMessage(options) {
 
   if ("ondismiss" in options && typeof options.ondismiss === "function")
     this.ondismiss = options.ondismiss;
+
+  let weight = parseInt(options.weight, 10);
+  this.weight = weight > 0 ? weight : DEFAULT_WEIGHT;
 }
 
 // We need this object to have access to the HomeBanner
@@ -62,7 +68,9 @@ let HomeBanner = (function () {
   // Functions used to handle messages sent from Java.
   HomeBannerMessageHandlers = {
     "HomeBanner:Get": function handleBannerGet(data) {
-      if (!_sendBannerData()) {
+      if (Object.keys(_messages).length > 0) {
+        _sendBannerData();
+      } else {
         _pendingRequest = true;
       }
     }
@@ -71,23 +79,30 @@ let HomeBanner = (function () {
   // Holds the messages that will rotate through the banner.
   let _messages = {};
 
+  // Choose a random message from the set of messages, biasing towards those with higher weight.
+  // Weight logic copied from desktop snippets:
+  // https://github.com/mozilla/snippets-service/blob/7d80edb8b1cddaed075275c2fc7cdf69a10f4003/snippets/base/templates/base/includes/snippet_js.html#L119
   let _sendBannerData = function() {
-    let keys = Object.keys(_messages);
-    if (!keys.length) {
-      return false;
+    let totalWeight = 0;
+    for (let key in _messages) {
+      let message = _messages[key];
+      totalWeight += message.weight;
+      message.totalWeight = totalWeight;
     }
 
-    // Choose a message at random.
-    let randomId = keys[Math.floor(Math.random() * keys.length)];
-    let message = _messages[randomId];
-
-    sendMessageToJava({
-      type: "HomeBanner:Data",
-      id: message.id,
-      text: message.text,
-      iconURI: message.iconURI
-    });
-    return true;
+    let threshold = Math.random() * totalWeight;
+    for (let key in _messages) {
+      let message = _messages[key];
+      if (threshold < message.totalWeight) {
+        sendMessageToJava({
+          type: "HomeBanner:Data",
+          id: message.id,
+          text: message.text,
+          iconURI: message.iconURI
+        });
+        return;
+      }
+    }
   };
 
   let _handleShown = function(id) {

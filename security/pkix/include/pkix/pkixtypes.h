@@ -100,6 +100,11 @@ public:
                                     PRTime time,
                        /*optional*/ const SECItem* stapledOCSPresponse) = 0;
 
+  // Called as soon as we think we have a valid chain but before revocation
+  // checks are done. Called to compute additional chain level checks, by the
+  // TrustDomain.
+  virtual SECStatus IsChainValid(const CERTCertList* certChain) = 0;
+
 protected:
   TrustDomain() { }
 

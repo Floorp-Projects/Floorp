@@ -202,11 +202,11 @@ ArchiveReader::GenerateArchiveRequest()
   return ArchiveRequest::Create(mWindow, this);
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_4(ArchiveReader,
-                                        mBlob,
-                                        mWindow,
-                                        mData.fileList,
-                                        mRequests)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ArchiveReader,
+                                      mBlob,
+                                      mWindow,
+                                      mData.fileList,
+                                      mRequests)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ArchiveReader)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
