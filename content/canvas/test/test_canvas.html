@@ -15093,6 +15093,27 @@ var _thrown = undefined; try {
 </script>
 <img src="image_broken.png" id="broken_2.png" class="resource">
 
+<!-- [[[ test_2d.pattern.image.incomplete.html ]]] -->
+
+<p>Canvas test: 2d.pattern.image.incomplete</p>
+<canvas id="c466" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_pattern_image_incomplete() {
+
+var canvas = document.getElementById('c466');
+var ctx = canvas.getContext('2d');
+
+var img = new Image();
+todo(img.complete === false, "img.complete === false");
+var _thrown = undefined; try {
+  ctx.createPattern(img, 'repeat');
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "InvalidStateError" && _thrown.code == DOMException.INVALID_STATE_ERR, "should throw InvalidStateError");
+
+
+}
+</script>
+
 <!-- [[[ test_2d.pattern.image.null.html ]]] -->
 
 <p>Canvas test: 2d.pattern.image.null</p>
@@ -23767,6 +23788,11 @@ function runTests() {
   test_2d_pattern_image_broken();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_pattern_image_broken");
+ }
+ try {
+  test_2d_pattern_image_incomplete();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_pattern_image_incomplete");
  }
  try {
   test_2d_pattern_image_null();
