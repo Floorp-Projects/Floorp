@@ -2,10 +2,13 @@
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
+
+// IMPORTANT: Do not change the list below without review from a DOM peer!
 var supportedProps = [
   "appCodeName",
   "appName",
   "appVersion",
+  { name: "getDataStores", b2g: true },
   "platform",
   "product",
   "taintEnabled",
@@ -13,26 +16,55 @@ var supportedProps = [
   "onLine"
 ];
 
+var isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
+var isB2G = !isDesktop && !navigator.userAgent.contains("Android");
+
+// Prepare the interface map showing if a propery should exist in this build.
+// For example, if interfaceMap[foo] = true means navigator.foo should exist.
+var interfaceMap = {};
+
+for (var prop of supportedProps) {
+  if (typeof(prop) === "string") {
+    interfaceMap[prop] = true;
+    continue;
+  }
+
+  if (prop.b2g === !isB2G) {
+    interfaceMap[prop.name] = false;
+    continue;
+  }
+
+  interfaceMap[prop.name] = true;
+}
+
 for (var prop in navigator) {
   // Make sure the list is current!
-  if (supportedProps.indexOf(prop) == -1) {
+  if (!interfaceMap[prop]) {
     throw "Navigator has the '" + prop + "' property that isn't in the list!";
   }
 }
 
 var obj;
 
-for (var index = 0; index < supportedProps.length; index++) {
-  var prop = supportedProps[index];
+for (var prop in interfaceMap) {
+  // Skip the property that is not supposed to exist in this build.
+  if (!interfaceMap[prop]) {
+    continue;
+  }
 
   if (typeof navigator[prop] == "undefined") {
     throw "Navigator has no '" + prop + "' property!";
   }
 
-  obj = {
-    name:  prop,
-    value: prop === "taintEnabled" ? navigator[prop]() : navigator[prop]
-  };
+  obj = { name:  prop };
+
+  if (prop === "taintEnabled") {
+    obj.value = navigator[prop]();
+  } else if (prop === "getDataStores") {
+    obj.value = typeof navigator[prop];
+  } else {
+    obj.value = navigator[prop];
+  }
 
   postMessage(JSON.stringify(obj));
 }

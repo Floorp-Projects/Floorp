@@ -33,8 +33,8 @@ class CompileRuntime
 
     js::PerThreadData *mainThread();
 
-    // &mainThread.ionTop
-    const void *addressOfIonTop();
+    // &mainThread.jitTop
+    const void *addressOfJitTop();
 
     // rt->mainThread.jitStackLimit;
     const void *addressOfJitStackLimit();

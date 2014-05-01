@@ -956,7 +956,7 @@ WebGLContext::MozGetUnderlyingParamString(uint32_t pname, nsAString& retval)
 void
 WebGLContext::ClearScreen()
 {
-    bool colorAttachmentsMask[WebGLContext::sMaxColorAttachments] = {false};
+    bool colorAttachmentsMask[WebGLContext::kMaxColorAttachments] = {false};
 
     MakeContextCurrent();
     ScopedBindFramebuffer autoFB(gl, 0);
@@ -986,7 +986,7 @@ static bool IsShadowCorrect(float shadow, float actual) {
 #endif
 
 void
-WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool colorAttachmentsMask[sMaxColorAttachments])
+WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool colorAttachmentsMask[kMaxColorAttachments])
 {
     MakeContextCurrent();
 
@@ -995,7 +995,7 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool
     bool initializeStencilBuffer = 0 != (mask & LOCAL_GL_STENCIL_BUFFER_BIT);
     bool drawBuffersIsEnabled = IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers);
 
-    GLenum currentDrawBuffers[WebGLContext::sMaxColorAttachments];
+    GLenum currentDrawBuffers[WebGLContext::kMaxColorAttachments];
 
     // Fun GL fact: No need to worry about the viewport here, glViewport is just
     // setting up a coordinates transformation, it doesn't affect glClear at all.
@@ -1068,7 +1068,7 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool
 
         if (drawBuffersIsEnabled) {
 
-            GLenum drawBuffersCommand[WebGLContext::sMaxColorAttachments] = { LOCAL_GL_NONE };
+            GLenum drawBuffersCommand[WebGLContext::kMaxColorAttachments] = { LOCAL_GL_NONE };
 
             for(int32_t i = 0; i < mGLMaxDrawBuffers; i++) {
                 GLint temp;
@@ -1396,7 +1396,7 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WebGLContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLContext)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_13(WebGLContext,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLContext,
   mCanvasElement,
   mExtensions,
   mBound2DTextures,

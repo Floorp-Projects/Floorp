@@ -7,6 +7,7 @@ package org.mozilla.gecko.tests.helpers;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotNull;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
+import android.os.SystemClock;
 import java.util.regex.Pattern;
 
 import org.mozilla.gecko.Actions;
@@ -84,27 +85,36 @@ public final class WaitHelper {
         }
 
         // Wait for the page load and title changed event.
-        final EventExpecter contentEventExpecter = sActions.expectGeckoEvent("DOMContentLoaded");
-        final EventExpecter titleEventExpecter = sActions.expectGeckoEvent("DOMTitleChanged");
+        final EventExpecter[] eventExpecters = new EventExpecter[] {
+            sActions.expectGeckoEvent("DOMContentLoaded"),
+            sActions.expectGeckoEvent("DOMTitleChanged")
+        };
 
         initiatingAction.run();
 
-        contentEventExpecter.blockForEventDataWithTimeout(PAGE_LOAD_WAIT_MS);
-        contentEventExpecter.unregisterListener();
-        titleEventExpecter.blockForEventDataWithTimeout(PAGE_LOAD_WAIT_MS);
-        titleEventExpecter.unregisterListener();
+        // PAGE_LOAD_WAIT_MS is the total time we wait for all events to finish.
+        final long expecterStartMillis = SystemClock.uptimeMillis();
+        for (final EventExpecter expecter : eventExpecters) {
+            final int eventWaitTimeMillis = PAGE_LOAD_WAIT_MS - (int)(SystemClock.uptimeMillis() - expecterStartMillis);
+            expecter.blockForEventDataWithTimeout(eventWaitTimeMillis);
+            expecter.unregisterListener();
+        }
+
+        // The timeout wait time should be the aggregate time for all ChangeVerifiers.
+        final long verifierStartMillis = SystemClock.uptimeMillis();
 
         // Verify remaining state has changed.
         for (final ChangeVerifier verifier : pageLoadVerifiers) {
             // If we timeout, either the state is set to the same value (which is fine), or
             // the state has not yet changed. Since we can't be sure it will ever change, move
             // on and let the assertions fail if applicable.
+            final int verifierWaitMillis = CHANGE_WAIT_MS - (int)(SystemClock.uptimeMillis() - verifierStartMillis);
             final boolean hasTimedOut = !sSolo.waitForCondition(new Condition() {
                 @Override
                 public boolean isSatisfied() {
                     return verifier.hasStateChanged();
                 }
-            }, CHANGE_WAIT_MS);
+            }, verifierWaitMillis);
 
             sContext.dumpLog(verifier.getLogTag(),
                     (hasTimedOut ? "timed out." : "was satisfied."));

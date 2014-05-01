@@ -46,13 +46,14 @@ class JSFunction : public JSObject
         SELF_HOSTED_CTOR = 0x0200,  /* function is self-hosted builtin constructor and
                                        must be constructible but not decompilable. */
         HAS_REST         = 0x0400,  /* function has a rest (...) parameter */
-        // 0x0800 is available
+        ASMJS            = 0x0800,  /* function is an asm.js module or exported function */
         INTERPRETED_LAZY = 0x1000,  /* function is interpreted but doesn't have a script yet */
         ARROW            = 0x2000,  /* ES6 '(args) => body' syntax */
 
         /* Derived Flags values for convenience: */
         NATIVE_FUN = 0,
-        NATIVE_LAMBDA_FUN = NATIVE_FUN | LAMBDA,
+        ASMJS_CTOR = ASMJS | NATIVE_CTOR,
+        ASMJS_LAMBDA_CTOR = ASMJS | NATIVE_CTOR | LAMBDA,
         INTERPRETED_LAMBDA = INTERPRETED | LAMBDA,
         INTERPRETED_LAMBDA_ARROW = INTERPRETED | LAMBDA | ARROW
     };
@@ -118,6 +119,7 @@ class JSFunction : public JSObject
 
     /* Possible attributes of a native function: */
     bool isNativeConstructor()      const { return flags() & NATIVE_CTOR; }
+    bool isAsmJSNative()            const { return flags() & ASMJS; }
 
     /* Possible attributes of an interpreted function: */
     bool isFunctionPrototype()      const { return flags() & IS_FUN_PROTO; }
@@ -147,7 +149,7 @@ class JSFunction : public JSObject
 
     /* Compound attributes: */
     bool isBuiltin() const {
-        return isNative() || isSelfHostedBuiltin();
+        return (isNative() && !isAsmJSNative()) || isSelfHostedBuiltin();
     }
     bool isInterpretedConstructor() const {
         // Note: the JITs inline this check, so be careful when making changes

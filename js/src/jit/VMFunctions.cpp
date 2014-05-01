@@ -554,7 +554,7 @@ NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot 
     // the initializing writes. The interpreter, however, may have allocated
     // the call object tenured, so barrier as needed before re-entering.
     if (!IsInsideNursery(cx->runtime(), obj))
-        cx->runtime()->gcStoreBuffer.putWholeCell(obj);
+        cx->runtime()->gc.storeBuffer.putWholeCell(obj);
 #endif
 
     return obj;
@@ -573,7 +573,7 @@ NewSingletonCallObject(JSContext *cx, HandleShape shape, HeapSlot *slots)
     // the call object tenured, so barrier as needed before re-entering.
     MOZ_ASSERT(!IsInsideNursery(cx->runtime(), obj),
                "singletons are created in the tenured heap");
-    cx->runtime()->gcStoreBuffer.putWholeCell(obj);
+    cx->runtime()->gc.storeBuffer.putWholeCell(obj);
 #endif
 
     return obj;
@@ -714,7 +714,7 @@ void
 PostWriteBarrier(JSRuntime *rt, JSObject *obj)
 {
     JS_ASSERT(!IsInsideNursery(rt, obj));
-    rt->gcStoreBuffer.putWholeCell(obj);
+    rt->gc.storeBuffer.putWholeCell(obj);
 }
 
 void
@@ -804,12 +804,12 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
     }
 
     if (!ok) {
-        // Pop this frame by updating ionTop, so that the exception handling
+        // Pop this frame by updating jitTop, so that the exception handling
         // code will start at the previous frame.
 
         IonJSFrameLayout *prefix = frame->framePrefix();
         EnsureExitFrame(prefix);
-        cx->mainThread().ionTop = (uint8_t *)prefix;
+        cx->mainThread().jitTop = (uint8_t *)prefix;
     }
 
     return ok;
@@ -1094,6 +1094,12 @@ SetDenseElement(JSContext *cx, HandleObject obj, int32_t index, HandleValue valu
 
     RootedValue indexVal(cx, Int32Value(index));
     return SetObjectElement(cx, obj, indexVal, value, strict);
+}
+
+void
+AutoDetectInvalidation::setReturnOverride()
+{
+    cx_->runtime()->jitRuntime()->setIonReturnOverride(*rval_);
 }
 
 #ifdef DEBUG

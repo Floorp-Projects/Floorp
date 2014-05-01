@@ -779,7 +779,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         Value v;
 
         if (!iter.moreFrames() && i == exprStackSlots - 1 &&
-            cx->runtime()->hasIonReturnOverride())
+            cx->runtime()->jitRuntime()->hasIonReturnOverride())
         {
             // If coming from an invalidation bailout, and this is the topmost
             // value, and a value override has been specified, don't read from the
@@ -787,7 +787,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             JS_ASSERT(invalidate);
             iter.skip();
             IonSpew(IonSpew_BaselineBailouts, "      [Return Override]");
-            v = cx->runtime()->takeIonReturnOverride();
+            v = cx->runtime()->jitRuntime()->takeIonReturnOverride();
         } else if (excInfo && excInfo->propagatingIonExceptionForDebugMode()) {
             // If we are in the middle of propagating an exception from Ion by
             // bailing to baseline due to debug mode, we might not have all

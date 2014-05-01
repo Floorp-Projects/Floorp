@@ -5044,7 +5044,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                   $*{innerTemplate}
                 } while (0);
                 if (!JS_DefineElement(cx, returnArray, ${index}, tmp,
-                                      nullptr, nullptr, JSPROP_ENUMERATE)) {
+                                      JSPROP_ENUMERATE)) {
                   $*{exceptionCode}
                 }
               }
@@ -6787,8 +6787,8 @@ class CGNewResolveHook(CGAbstractBindingMethod):
             // define it.
             if (!desc.value().isUndefined() &&
                 !JS_DefinePropertyById(cx, obj, id, desc.value(),
-                                       desc.getter(), desc.setter(),
-                                       desc.attributes())) {
+                                       desc.attributes(),
+                                       desc.getter(), desc.setter())) {
               return false;
             }
             objp.set(obj);
@@ -8688,8 +8688,8 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
               if (objDesc.object() &&
                   !objDesc.value().isUndefined() &&
                   !JS_DefinePropertyById(cx, obj, id, objDesc.value(),
-                                         objDesc.getter(), objDesc.setter(),
-                                         objDesc.attributes())) {
+                                         objDesc.attributes(),
+                                         objDesc.getter(), objDesc.setter())) {
                 return false;
               }
             }
@@ -10570,7 +10570,7 @@ class CGDictionary(CGThing):
                              member.location))
 
         propDef = (
-            'JS_DefinePropertyById(cx, obj, atomsCache->%s, temp, nullptr, nullptr, JSPROP_ENUMERATE)' %
+            'JS_DefinePropertyById(cx, obj, atomsCache->%s, temp, JSPROP_ENUMERATE)' %
             self.makeIdName(member.identifier.name))
 
         innerTemplate = wrapForType(

@@ -27,10 +27,10 @@ public:
   { }
 
   virtual void
-  ResolvedCallback(JS::Handle<JS::Value> aValue) = 0;
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) = 0;
 
   virtual void
-  RejectedCallback(JS::Handle<JS::Value> aValue) = 0;
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) = 0;
 };
 
 } // namespace dom

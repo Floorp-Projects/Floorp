@@ -322,7 +322,7 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JS::Handle<JSObject*> obj
   bool ok = true;
 
   if (v.get() != JSVAL_VOID) {
-    ok = ::JS_DefinePropertyById(cx, obj, id, v, nullptr, nullptr, 0);
+    ok = ::JS_DefinePropertyById(cx, obj, id, v, 0);
     objp.set(obj);
   }
 

@@ -5779,10 +5779,10 @@ BindScriptArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 
     for (size_t i = 0; !msr.empty(); msr.popFront(), ++i) {
         const char *scriptArg = msr.front();
-        JSString *str = JS_NewStringCopyZ(cx, scriptArg);
+        JS::RootedString str(cx, JS_NewStringCopyZ(cx, scriptArg));
         if (!str ||
-            !JS_DefineElement(cx, scriptArgs, i, STRING_TO_JSVAL(str), nullptr, nullptr,
-                              JSPROP_ENUMERATE)) {
+            !JS_DefineElement(cx, scriptArgs, i, str, JSPROP_ENUMERATE))
+        {
             return false;
         }
     }
@@ -6040,7 +6040,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
     JSAutoCompartment ac(cx, glob);
     js::SetDefaultObjectForContext(cx, glob);
 
-    JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class, nullptr, 0);
+    JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class);
     if (!envobj)
         return 1;
     JS_SetPrivate(envobj, envp);

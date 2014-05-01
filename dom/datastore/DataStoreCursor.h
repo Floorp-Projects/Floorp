@@ -22,11 +22,11 @@ class DataStore;
 class GlobalObject;
 class DataStoreCursorImpl;
 
-class DataStoreCursor MOZ_FINAL
+class DataStoreCursor MOZ_FINAL : public nsISupports
 {
 public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DataStoreCursor)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(DataStoreCursor)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(DataStoreCursor)
 
   // WebIDL (internal functions)
 
@@ -47,9 +47,6 @@ public:
   // keep a reference to the DataStoreCursorImpl which really implements the
   // API's logic in JS.
   void SetDataStoreCursorImpl(DataStoreCursorImpl& aCursor);
-
-protected:
-  virtual ~DataStoreCursor() {}
 
 private:
   nsRefPtr<DataStoreCursorImpl> mCursor;
