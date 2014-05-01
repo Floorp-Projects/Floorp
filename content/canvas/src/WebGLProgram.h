@@ -8,13 +8,11 @@
 
 #include "WebGLObjectModel.h"
 
-#include <map>
-
-#include "mozilla/CheckedInt.h"
-#include "mozilla/LinkedList.h"
 #include "nsWrapperCache.h"
-#include "WebGLShader.h"
-#include "WebGLUniformInfo.h"
+
+#include "mozilla/LinkedList.h"
+#include "mozilla/CheckedInt.h"
+#include <map>
 
 namespace mozilla {
 
