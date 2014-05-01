@@ -525,12 +525,8 @@ static inline void
 GetterSetterWriteBarrierPost(JSRuntime *rt, JSObject **objp)
 {
 #ifdef JSGC_GENERATIONAL
-    JS_ASSERT(objp);
-    JS_ASSERT(*objp);
-    gc::Cell **cellp = reinterpret_cast<gc::Cell **>(objp);
-    gc::StoreBuffer *storeBuffer = (*cellp)->storeBuffer();
-    if (storeBuffer)
-        storeBuffer->putRelocatableCellFromAnyThread(cellp);
+    JS::shadow::Runtime *shadowRuntime = JS::shadow::Runtime::asShadowRuntime(rt);
+    shadowRuntime->gcStoreBufferPtr()->putRelocatableCell(reinterpret_cast<gc::Cell **>(objp));
 #endif
 }
 
@@ -539,7 +535,7 @@ GetterSetterWriteBarrierPostRemove(JSRuntime *rt, JSObject **objp)
 {
 #ifdef JSGC_GENERATIONAL
     JS::shadow::Runtime *shadowRuntime = JS::shadow::Runtime::asShadowRuntime(rt);
-    shadowRuntime->gcStoreBufferPtr()->removeRelocatableCellFromAnyThread(reinterpret_cast<gc::Cell **>(objp));
+    shadowRuntime->gcStoreBufferPtr()->removeRelocatableCell(reinterpret_cast<gc::Cell **>(objp));
 #endif
 }
 
