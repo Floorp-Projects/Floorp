@@ -859,7 +859,7 @@ gfxFontEntry::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
     }
     if (mFontTableCache) {
         aSizes->mFontTableCacheSize +=
-            mFontTableCache->SizeOfExcludingThis(
+            mFontTableCache->SizeOfIncludingThis(
                 FontTableHashEntry::SizeOfEntryExcludingThis,
                 aMallocSizeOf);
     }
@@ -4396,7 +4396,7 @@ gfxFont::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
     }
     if (mWordCache) {
         aSizes->mShapedWords +=
-            mWordCache->SizeOfExcludingThis(WordCacheEntrySizeOfExcludingThis,
+            mWordCache->SizeOfIncludingThis(WordCacheEntrySizeOfExcludingThis,
                                             aMallocSizeOf);
     }
 }
