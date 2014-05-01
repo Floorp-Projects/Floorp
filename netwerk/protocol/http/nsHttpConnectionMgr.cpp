@@ -2366,6 +2366,13 @@ nsHttpConnectionMgr::OnMsgReclaimConnection(int32_t, void *param)
             ConditionallyStopTimeoutTick();
         }
 
+        // a connection that still holds a reference to a transaction was
+        // not closed naturally (i.e. it was reset or aborted) and is
+        // therefore not something that should be reused.
+        if (conn->Transaction()) {
+            conn->DontReuse();
+        }
+
         if (conn->CanReuse()) {
             LOG(("  adding connection to idle list\n"));
             // Keep The idle connection list sorted with the connections that
