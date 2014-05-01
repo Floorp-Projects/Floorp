@@ -107,7 +107,7 @@ class JitFrameIterator
         mode_(mode)
     { }
 
-    explicit JitFrameIterator(JSContext *cx);
+    explicit JitFrameIterator(ThreadSafeContext *cx);
     explicit JitFrameIterator(const ActivationIterator &activations);
     explicit JitFrameIterator(IonJSFrameLayout *fp, ExecutionMode mode);
 
@@ -492,7 +492,7 @@ class InlineFrameIteratorMaybeGC
     }
 
   public:
-    InlineFrameIteratorMaybeGC(JSContext *cx, const JitFrameIterator *iter)
+    InlineFrameIteratorMaybeGC(ThreadSafeContext *cx, const JitFrameIterator *iter)
       : callee_(cx),
         script_(cx)
     {
@@ -506,9 +506,9 @@ class InlineFrameIteratorMaybeGC
         resetOn(iter);
     }
 
-    InlineFrameIteratorMaybeGC(JSContext *cx, const IonBailoutIterator *iter);
+    InlineFrameIteratorMaybeGC(ThreadSafeContext *cx, const IonBailoutIterator *iter);
 
-    InlineFrameIteratorMaybeGC(JSContext *cx, const InlineFrameIteratorMaybeGC *iter)
+    InlineFrameIteratorMaybeGC(ThreadSafeContext *cx, const InlineFrameIteratorMaybeGC *iter)
       : frame_(iter ? iter->frame_ : nullptr),
         framesRead_(0),
         frameCount_(iter ? iter->frameCount_ : UINT32_MAX),
@@ -548,7 +548,7 @@ class InlineFrameIteratorMaybeGC
     }
 
     template <class ArgOp, class LocalOp>
-    void readFrameArgsAndLocals(JSContext *cx, ArgOp &argOp, LocalOp &localOp,
+    void readFrameArgsAndLocals(ThreadSafeContext *cx, ArgOp &argOp, LocalOp &localOp,
                                 JSObject **scopeChain, Value *rval,
                                 ArgumentsObject **argsObj, Value *thisv,
                                 ReadFrameArgsBehavior behavior) const
@@ -617,7 +617,9 @@ class InlineFrameIteratorMaybeGC
     }
 
     template <class Op>
-    void unaliasedForEachActual(JSContext *cx, Op op, ReadFrameArgsBehavior behavior) const {
+    void unaliasedForEachActual(ThreadSafeContext *cx, Op op,
+                                ReadFrameArgsBehavior behavior) const
+    {
         Nop nop;
         readFrameArgsAndLocals(cx, op, nop, nullptr, nullptr, nullptr, nullptr, behavior);
     }
