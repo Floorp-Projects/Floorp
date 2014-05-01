@@ -378,11 +378,32 @@ class MDefinition : public MNode
     const BytecodeSite &trackedSite() const {
         return trackedSite_;
     }
-    jsbytecode *trackedPc() {
+    jsbytecode *trackedPc() const {
         return trackedSite_.pc();
     }
-    InlineScriptTree *trackedTree() {
+    InlineScriptTree *trackedTree() const {
         return trackedSite_.tree();
+    }
+
+    JSScript *profilerLeaveScript() const {
+        return trackedTree()->outermostCaller()->script();
+    }
+
+    jsbytecode *profilerLeavePc() const {
+        // If this is in a top-level function, use the pc directly.
+        if (trackedTree()->isOutermostCaller())
+            return trackedPc();
+
+        // Walk up the InlineScriptTree chain to find the top-most callPC
+        InlineScriptTree *curTree = trackedTree();
+        InlineScriptTree *callerTree = curTree->caller();
+        while (!callerTree->isOutermostCaller()) {
+            curTree = callerTree;
+            callerTree = curTree->caller();
+        }
+
+        // Return the callPc of the topmost inlined script.
+        return curTree->callerPc();
     }
 
     // Return the range of this value, *before* any bailout checks. Contrast
