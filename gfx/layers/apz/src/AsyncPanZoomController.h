@@ -185,11 +185,12 @@ public:
   void SetCompositorParent(CompositorParent* aCompositorParent);
 
   /**
-   * Inform this APZC that it will be sharing its FrameMetrics with a cross-process
-   * compositor so that the associated content process can access it. This is only
-   * relevant when progressive painting is enabled.
+   * The platform implementation must set the cross process compositor if
+   * there is one associated with the layer tree. The cross process compositor
+   * allows the APZC to share its FrameMetrics with the content process.
+   * The shared FrameMetrics is used in progressive paint updates.
    */
-  void ShareFrameMetricsAcrossProcesses();
+  void SetCrossProcessCompositorParent(PCompositorParent* aCrossProcessCompositorParent);
 
   // --------------------------------------------------------------------------
   // These methods can be called from any thread.
@@ -652,6 +653,7 @@ private:
 
   uint64_t mLayersId;
   nsRefPtr<CompositorParent> mCompositorParent;
+  PCompositorParent* mCrossProcessCompositorParent;
   TaskThrottler mPaintThrottler;
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
@@ -664,12 +666,6 @@ private:
   /* Utility functions that return a addrefed pointer to the corresponding fields. */
   already_AddRefed<GeckoContentController> GetGeckoContentController();
   already_AddRefed<GestureEventListener> GetGestureEventListener();
-
-  // If we are sharing our frame metrics with content across processes
-  bool mSharingFrameMetricsAcrossProcesses;
-  /* Utility function to get the Compositor with which we share the FrameMetrics.
-     This function is only callable from the compositor thread. */
-  PCompositorParent* GetSharedFrameMetricsCompositor();
 
 protected:
   // Both |mFrameMetrics| and |mLastContentPaintMetrics| are protected by the
