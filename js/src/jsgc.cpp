@@ -1537,7 +1537,9 @@ ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind)
                     PushArenaAllocatedDuringSweep(zone->runtimeFromMainThread(), aheader);
                 }
             }
-            return freeLists[thingKind].infallibleAllocate(Arena::thingSize(thingKind));
+            void *thing = freeLists[thingKind].allocate(Arena::thingSize(thingKind));
+            JS_ASSERT(thing);   // This allocation is infallible.
+            return thing;
         }
 
         /* Make sure we hold the GC lock before we call PickChunk. */
