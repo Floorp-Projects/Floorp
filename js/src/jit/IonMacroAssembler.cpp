@@ -463,9 +463,9 @@ MacroAssembler::newGCThing(Register result, Register temp, gc::AllocKind allocKi
 
     CompileZone *zone = GetIonContext()->compartment->zone();
 
-    // Inline FreeSpan::allocate.
-    // There is always exactly one FreeSpan per allocKind per JSCompartment.
-    // If a FreeSpan is replaced, its members are updated in the freeLists table,
+    // Inline FreeList::allocate.
+    // There is always exactly one FreeList per allocKind per JSCompartment.
+    // If a FreeList is replaced, its members are updated in the freeLists table,
     // which the code below always re-reads.
     loadPtr(AbsoluteAddress(zone->addressOfFreeListFirst(allocKind)), result);
     branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(zone->addressOfFreeListLast(allocKind)), result, fail);
@@ -515,7 +515,7 @@ MacroAssembler::newGCThingPar(Register result, Register cx, Register tempReg1, R
             tempReg1);
 
     // Get a pointer to the relevant free list:
-    // tempReg1 = (FreeSpan*) &tempReg1->arenas.freeLists[(allocKind)]
+    // tempReg1 = (FreeList*) &tempReg1->arenas.freeLists[(allocKind)]
     uint32_t offset = (offsetof(Allocator, arenas) +
                        js::gc::ArenaLists::getFreeListOffset(allocKind));
     addPtr(Imm32(offset), tempReg1);

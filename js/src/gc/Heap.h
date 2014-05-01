@@ -206,13 +206,6 @@ struct FreeSpan
         return FreeSpan(arenaAddr + firstOffset, arenaAddr | lastOffset);
     }
 
-    void initAsEmpty(uintptr_t arenaAddr = 0) {
-        JS_ASSERT(!(arenaAddr & ArenaMask));
-        first = arenaAddr + ArenaSize;
-        last = arenaAddr | (ArenaSize  - 1);
-        JS_ASSERT(isEmpty());
-    }
-
     bool isEmpty() const {
         checkSpan();
         return first > last;
@@ -246,16 +239,6 @@ struct FreeSpan
         return arenaAddressUnchecked();
     }
 
-    ArenaHeader *arenaHeader() const {
-        return reinterpret_cast<ArenaHeader *>(arenaAddress());
-    }
-
-    bool isSameNonEmptySpan(const FreeSpan *another) const {
-        JS_ASSERT(!isEmpty());
-        JS_ASSERT(!another->isEmpty());
-        return first == another->first && last == another->last;
-    }
-
     bool isWithinArena(uintptr_t arenaAddr) const {
         JS_ASSERT(!(arenaAddr & ArenaMask));
 
@@ -270,61 +253,6 @@ struct FreeSpan
          */
         uintptr_t arenaAddr = arenaAddress();
         return encodeOffsets(first - arenaAddr, last & ArenaMask);
-    }
-
-    /* See comments before FreeSpan for details. */
-    MOZ_ALWAYS_INLINE void *allocate(size_t thingSize) {
-        JS_ASSERT(thingSize % CellSize == 0);
-        checkSpan();
-        uintptr_t thing = first;
-        if (thing < last) {
-            /* Bump-allocate from the current span. */
-            first = thing + thingSize;
-        } else if (MOZ_LIKELY(thing == last)) {
-            /*
-             * Move to the next span. We use MOZ_LIKELY as without PGO
-             * compilers mis-predict == here as unlikely to succeed.
-             */
-            *this = *reinterpret_cast<FreeSpan *>(thing);
-        } else {
-            return nullptr;
-        }
-        checkSpan();
-        JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
-        return reinterpret_cast<void *>(thing);
-    }
-
-    /* A version of allocate when we know that the span is not empty. */
-    MOZ_ALWAYS_INLINE void *infallibleAllocate(size_t thingSize) {
-        JS_ASSERT(thingSize % CellSize == 0);
-        checkSpan();
-        uintptr_t thing = first;
-        if (thing < last) {
-            first = thing + thingSize;
-        } else {
-            JS_ASSERT(thing == last);
-            *this = *reinterpret_cast<FreeSpan *>(thing);
-        }
-        checkSpan();
-        JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
-        return reinterpret_cast<void *>(thing);
-    }
-
-    /*
-     * Allocate from a newly allocated arena. We do not move the free list
-     * from the arena. Rather we set the arena up as fully used during the
-     * initialization so to allocate we simply return the first thing in the
-     * arena and set the free list to point to the second.
-     */
-    MOZ_ALWAYS_INLINE void *allocateFromNewArena(uintptr_t arenaAddr, size_t firstThingOffset,
-                                                size_t thingSize) {
-        JS_ASSERT(!(arenaAddr & ArenaMask));
-        uintptr_t thing = arenaAddr | firstThingOffset;
-        first = thing + thingSize;
-        last = arenaAddr | ArenaMask;
-        checkSpan();
-        JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
-        return reinterpret_cast<void *>(thing);
     }
 
     void checkSpan() const {
@@ -388,7 +316,90 @@ struct FreeSpan
         }
 #endif
     }
+};
 
+struct FreeList : public FreeSpan
+{
+    FreeList() {}
+
+    void initAsEmpty(uintptr_t arenaAddr = 0) {
+        JS_ASSERT(!(arenaAddr & ArenaMask));
+        first = arenaAddr + ArenaSize;
+        last = arenaAddr | (ArenaSize  - 1);
+        JS_ASSERT(isEmpty());
+    }
+
+    void setHead(FreeSpan *span) {
+        first = span->first;
+        last = span->last;
+    }
+
+    ArenaHeader *arenaHeader() const {
+        return reinterpret_cast<ArenaHeader *>(arenaAddress());
+    }
+
+#ifdef DEBUG
+    bool isSameNonEmptySpan(const FreeSpan &another) const {
+        JS_ASSERT(!isEmpty());
+        JS_ASSERT(!another.isEmpty());
+        return first == another.first && last == another.last;
+    }
+#endif
+
+    /* See comments before FreeSpan for details. */
+    MOZ_ALWAYS_INLINE void *allocate(size_t thingSize) {
+        JS_ASSERT(thingSize % CellSize == 0);
+        checkSpan();
+        uintptr_t thing = first;
+        if (thing < last) {
+            /* Bump-allocate from the current span. */
+            first = thing + thingSize;
+        } else if (MOZ_LIKELY(thing == last)) {
+            /*
+             * Move to the next span. We use MOZ_LIKELY as without PGO
+             * compilers mis-predict == here as unlikely to succeed.
+             */
+            setHead(reinterpret_cast<FreeSpan *>(thing));
+        } else {
+            return nullptr;
+        }
+        checkSpan();
+        JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
+        return reinterpret_cast<void *>(thing);
+    }
+
+    /* A version of allocate when we know that the span is not empty. */
+    MOZ_ALWAYS_INLINE void *infallibleAllocate(size_t thingSize) {
+        JS_ASSERT(thingSize % CellSize == 0);
+        checkSpan();
+        uintptr_t thing = first;
+        if (thing < last) {
+            first = thing + thingSize;
+        } else {
+            JS_ASSERT(thing == last);
+            setHead(reinterpret_cast<FreeSpan *>(thing));
+        }
+        checkSpan();
+        JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
+        return reinterpret_cast<void *>(thing);
+    }
+
+    /*
+     * Allocate from a newly allocated arena. We do not move the free list
+     * from the arena. Rather we set the arena up as fully used during the
+     * initialization so to allocate we simply return the first thing in the
+     * arena and set the free list to point to the second.
+     */
+    MOZ_ALWAYS_INLINE void *allocateFromNewArena(uintptr_t arenaAddr, size_t firstThingOffset,
+                                                size_t thingSize) {
+        JS_ASSERT(!(arenaAddr & ArenaMask));
+        uintptr_t thing = arenaAddr | firstThingOffset;
+        first = thing + thingSize;
+        last = arenaAddr | ArenaMask;
+        checkSpan();
+        JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
+        return reinterpret_cast<void *>(thing);
+    }
 };
 
 /* Every arena has a header. */
