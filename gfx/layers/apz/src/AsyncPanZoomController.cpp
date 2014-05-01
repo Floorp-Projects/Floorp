@@ -324,7 +324,7 @@ static inline void LogRendertraceRect(const ScrollableLayerGuid& aGuid, const ch
   static const TimeStamp sRenderStart = TimeStamp::Now();
   TimeDuration delta = TimeStamp::Now() - sRenderStart;
   printf_stderr("(%llu,%lu,%llu)%s RENDERTRACE %f rect %s %f %f %f %f\n",
-    aGuid.mLayersId, aGuid.mPresShellId, aGuid.GetScrollId(),
+    aGuid.mLayersId, aGuid.mPresShellId, aGuid.mScrollId,
     aDesc, delta.ToMilliseconds(), aColor,
     aRect.x, aRect.y, aRect.width, aRect.height);
 #endif
@@ -1796,8 +1796,12 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
   APZC_LOG_FM(aLayerMetrics, "%p got a NotifyLayersUpdated with aIsFirstPaint=%d", this, aIsFirstPaint);
 
   LogRendertraceRect(GetGuid(), "page", "brown", aLayerMetrics.mScrollableRect);
-  LogRendertraceRect(GetGuid(), "painted displayport", "green",
+  LogRendertraceRect(GetGuid(), "painted displayport", "lightgreen",
     aLayerMetrics.mDisplayPort + aLayerMetrics.GetScrollOffset());
+  if (!aLayerMetrics.mCriticalDisplayPort.IsEmpty()) {
+    LogRendertraceRect(GetGuid(), "painted critical displayport", "darkgreen",
+      aLayerMetrics.mCriticalDisplayPort + aLayerMetrics.GetScrollOffset());
+  }
 
   mPaintThrottler.TaskComplete(GetFrameTime());
   bool needContentRepaint = false;
