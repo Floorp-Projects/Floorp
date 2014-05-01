@@ -190,7 +190,7 @@ class MochitestRunner(MozbuildObject):
         jsdebugger=False, debug_on_failure=False, start_at=None, end_at=None,
         e10s=False, dmd=False, dump_output_directory=None,
         dump_about_memory_after_test=False, dump_dmd_after_test=False,
-        install_extension=None, quiet=False, environment=[], **kwargs):
+        install_extension=None, quiet=False, environment=[], app_override=None, **kwargs):
         """Runs a mochitest.
 
         test_paths are path to tests. They can be a relative path from the
@@ -351,6 +351,11 @@ class MochitestRunner(MozbuildObject):
                 print("--debugger-args passed, but no debugger specified.")
                 return 1
             options.debuggerArgs = debugger_args
+
+        if app_override == "dist":
+            options.app = self.get_binary_path(where='staged-package')
+        elif app_override:
+            options.app = app_override
 
         options = opts.verifyOptions(options, runner)
 
@@ -520,6 +525,13 @@ def MochitestCommand(func):
                              metavar='NAME=VALUE', dest='environment',
                              help="Sets the given variable in the application's environment")
     func = setenv(func)
+
+    app_override = CommandArgument('--app-override', default=None, action='store',
+        help="Override the default binary used to run tests with the path you provide, e.g. " \
+            " --app-override /usr/bin/firefox . " \
+            "If you have run ./mach package beforehand, you can specify 'dist' to " \
+            "run tests against the distribution bundle's binary.");
+    func = app_override(func)
 
     return func
 

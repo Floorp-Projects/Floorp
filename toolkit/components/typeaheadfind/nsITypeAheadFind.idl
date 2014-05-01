@@ -17,7 +17,7 @@ interface nsIDocShell;
 
 /****************************** nsTypeAheadFind ******************************/
 
-[scriptable, uuid(0749a445-19d3-4eb9-9d66-78eca8c6f604)]
+[scriptable, uuid(f4411c5b-761b-498c-8050-dcfc8311f69e)]
 interface nsITypeAheadFind : nsISupports
 {
   /****************************** Initializer ******************************/
@@ -37,6 +37,9 @@ interface nsITypeAheadFind : nsISupports
   /* Find another match in the page. */
   unsigned short findAgain(in boolean findBackwards, in boolean aLinksOnly);
 
+  /* Return the range of the most recent match. */
+  nsIDOMRange getFoundRange();
+
 
   /**************************** Helper functions ***************************/
 
@@ -53,6 +56,8 @@ interface nsITypeAheadFind : nsISupports
    * necessarily happen automatically. */
   void collapseSelection();
 
+  /* Check if a range is visible */
+  boolean isRangeVisible(in nsIDOMRange aRange, in boolean aMustBeInViewPort);
 
   /******************************* Attributes ******************************/
 
