@@ -23,7 +23,6 @@ PARALLEL_DIRS += [
     'filepicker',
     'finalizationwitness',
     'find',
-    'intl',
     'jsdownloads',
     'mediasniffer',
     'microformats',

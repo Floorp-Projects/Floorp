@@ -225,7 +225,7 @@ CheckPermission(PContentParent* aActor,
   }
 
   nsCOMPtr<nsIPermissionManager> pm =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    services::GetPermissionManager();
   NS_ENSURE_TRUE(pm, nsIPermissionManager::DENY_ACTION);
 
   // Make sure that `aPermission' is an app permission before checking the origin.

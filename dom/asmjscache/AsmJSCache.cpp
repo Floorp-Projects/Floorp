@@ -36,6 +36,7 @@
 #include "nsXULAppAPI.h"
 #include "prio.h"
 #include "private/pprio.h"
+#include "mozilla/Services.h"
 
 #define ASMJSCACHE_METADATA_FILE_NAME "metadata"
 #define ASMJSCACHE_ENTRY_FILE_NAME_BASE "module"
@@ -688,7 +689,7 @@ MainProcessRunnable::InitOnMainThread()
       MOZ_ASSERT(isApp);
 
       nsCOMPtr<nsIPermissionManager> pm =
-        do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+        services::GetPermissionManager();
       NS_ENSURE_TRUE(pm, NS_ERROR_UNEXPECTED);
 
       uint32_t permission;

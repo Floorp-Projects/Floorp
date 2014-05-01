@@ -228,7 +228,7 @@ sdp_result_e sdp_add_new_attr (void *sdp_ptr, u16 level, u8 cap_num,
         fmtp_p = &(new_attr_p->attr.fmtp);
         fmtp_p->fmtp_format = SDP_FMTP_UNKNOWN_TYPE;
         // set to invalid value
-        fmtp_p->packetization_mode = 0xff;
+        fmtp_p->packetization_mode = SDP_INVALID_PACKETIZATION_MODE_VALUE;
         fmtp_p->level_asymmetry_allowed = SDP_INVALID_LEVEL_ASYMMETRY_ALLOWED_VALUE;
         fmtp_p->annexb_required = FALSE;
         fmtp_p->annexa_required = FALSE;
@@ -7972,7 +7972,12 @@ sdp_result_e sdp_attr_get_fmtp_pack_mode (void *sdp_ptr, u16 level,
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
     } else {
-        *val = attr_p->attr.fmtp.packetization_mode;
+        if (SDP_INVALID_PACKETIZATION_MODE_VALUE == attr_p->attr.fmtp.packetization_mode) {
+            /* packetization mode unspecified (optional) */
+            *val = SDP_DEFAULT_PACKETIZATION_MODE_VALUE;
+        } else {
+            *val = attr_p->attr.fmtp.packetization_mode;
+        }
         return (SDP_SUCCESS);
     }
 }

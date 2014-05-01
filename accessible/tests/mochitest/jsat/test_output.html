@@ -92,6 +92,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             ["1.", "list one"],
             ["1.", "list one"]
           ]
+        },
+        {
+          accOrElmOrID: "li_two",
+          expectedUtterance: [
+            ["list 1 item", "First item", "list two"],
+            ["list two", "First item", "list 1 item"]
+          ],
+          expectedBraille: [
+            ["*", "list two"],
+            ["*", "list two"]
+          ]
         }, {
           accOrElmOrID: "cell",
           expectedUtterance: [[
@@ -339,8 +350,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
                               ["I am pressed!", "pressed toggle button"]],
           expectedBraille: [["(x)", "I am pressed!"],
                             ["I am pressed!", "(x)"]]
-        }
-        ];
+        }, {
+          accOrElmOrID: "listbox-option",
+          expectedUtterance: [["list box", "option", "Search suggestion"],
+            ["Search suggestion", "option", "list box"]],
+          expectedBraille: [["option", "Search suggestion"],
+            ["Search suggestion", "option"]]
+        }];
 
         // Test all possible utterance order preference values.
         tests.forEach(function run(test) {
@@ -402,6 +418,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       <ol id="list">
         <li id="li_one">list one</li>
       </ol>
+      <ul id="unorderd_list">
+        <li id="li_two">list two</li>
+      </ul>
       <dl id="dlist">
         <dd id="dd_one">
           dd one
@@ -454,6 +473,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       <label>Points: <input id="range" type="range" name="points" min="1" max="10" value="3"></label>
       <div id="togglebutton_notpressed" aria-pressed="false" role="button" tabindex="-1">I ain't pressed</div>
       <div id="togglebutton_pressed" aria-pressed="true" role="button" tabindex="-1">I am pressed!</div>
+      <ul role="listbox" style="list-style-type: none;">
+        <li role="option" id="listbox-option">Search suggestion</li>
+      </ul>
     </div>
   </body>
 </html>

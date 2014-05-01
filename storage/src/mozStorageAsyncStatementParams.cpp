@@ -104,16 +104,15 @@ AsyncStatementParams::NewResolve(
     uint32_t idx = JSID_TO_INT(aId);
     // All indexes are good because we don't know how many parameters there
     // really are.
-    ok = ::JS_DefineElement(aCtx, scopeObj, idx, JSVAL_VOID, nullptr,
-                            nullptr, 0);
+    ok = ::JS_DefineElement(aCtx, scopeObj, idx, JS::UndefinedHandleValue, 0);
     resolved = true;
   }
   else if (JSID_IS_STRING(aId)) {
     // We are unable to tell if there's a parameter with this name and so
     // we must assume that there is.  This screws the rest of the prototype
     // chain, but people really shouldn't be depending on this anyways.
-    ok = ::JS_DefinePropertyById(aCtx, scopeObj, aId, JSVAL_VOID, nullptr,
-                                 nullptr, 0);
+    JS::Rooted<jsid> id(aCtx, aId);
+    ok = ::JS_DefinePropertyById(aCtx, scopeObj, id, JS::UndefinedHandleValue, 0);
     resolved = true;
   }
 

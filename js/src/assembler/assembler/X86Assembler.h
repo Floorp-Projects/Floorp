@@ -1956,7 +1956,7 @@ public:
 
     JmpSrc movl_ripr(RegisterID dst)
     {
-        spew("movl       \?(%%rip), %s",
+        spew("movl       ?(%%rip), %s",
              nameIReg(dst));
         m_formatter.oneByteRipOp(OP_MOV_GvEv, (RegisterID)dst, 0);
         return JmpSrc(m_formatter.size());
@@ -1964,7 +1964,7 @@ public:
 
     JmpSrc movl_rrip(RegisterID src)
     {
-        spew("movl       %s, \?(%%rip)",
+        spew("movl       %s, ?(%%rip)",
              nameIReg(src));
         m_formatter.oneByteRipOp(OP_MOV_EvGv, (RegisterID)src, 0);
         return JmpSrc(m_formatter.size());
@@ -1972,7 +1972,7 @@ public:
 
     JmpSrc movq_ripr(RegisterID dst)
     {
-        spew("movl       \?(%%rip), %s",
+        spew("movl       ?(%%rip), %s",
              nameIReg(dst));
         m_formatter.oneByteRipOp64(OP_MOV_GvEv, dst, 0);
         return JmpSrc(m_formatter.size());
@@ -2184,7 +2184,7 @@ public:
 
     JmpSrc leaq_rip(RegisterID dst)
     {
-        spew("leaq       \?(%%rip), %s",
+        spew("leaq       ?(%%rip), %s",
              nameIReg(dst));
         m_formatter.oneByteRipOp64(OP_LEA, dst, 0);
         return JmpSrc(m_formatter.size());
@@ -2781,7 +2781,7 @@ public:
 #else
     JmpSrc movsd_ripr(XMMRegisterID dst)
     {
-        spew("movsd      \?(%%rip), %s",
+        spew("movsd      ?(%%rip), %s",
              nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteRipOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, 0);
@@ -2789,7 +2789,7 @@ public:
     }
     JmpSrc movss_ripr(XMMRegisterID dst)
     {
-        spew("movss      \?(%%rip), %s",
+        spew("movss      ?(%%rip), %s",
              nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F3);
         m_formatter.twoByteRipOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, 0);
@@ -2797,7 +2797,7 @@ public:
     }
     JmpSrc movsd_rrip(XMMRegisterID src)
     {
-        spew("movsd      %s, \?(%%rip)",
+        spew("movsd      %s, ?(%%rip)",
              nameFPReg(src));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteRipOp(OP2_MOVSD_WsdVsd, (RegisterID)src, 0);

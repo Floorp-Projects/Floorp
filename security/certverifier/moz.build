@@ -16,6 +16,7 @@ if not CONFIG['NSS_NO_EV_CERTS']:
     ]
 
 LOCAL_INCLUDES += [
+    '../manager/boot/src',
     '../pkix/include',
 ]
 

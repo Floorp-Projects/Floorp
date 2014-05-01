@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global PrefCache, Roles, Prefilters, States, Filters, Utils,
+   TraversalRules */
+/* exported TraversalRules */
+
 'use strict';
 
 const Cc = Components.classes;
@@ -9,17 +13,17 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-this.EXPORTED_SYMBOLS = ['TraversalRules'];
+this.EXPORTED_SYMBOLS = ['TraversalRules']; // jshint ignore:line
 
 Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Roles',
+XPCOMUtils.defineLazyModuleGetter(this, 'Roles',  // jshint ignore:line
   'resource://gre/modules/accessibility/Constants.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Filters',
+XPCOMUtils.defineLazyModuleGetter(this, 'Filters',  // jshint ignore:line
   'resource://gre/modules/accessibility/Constants.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'States',
+XPCOMUtils.defineLazyModuleGetter(this, 'States',  // jshint ignore:line
   'resource://gre/modules/accessibility/Constants.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Prefilters',
+XPCOMUtils.defineLazyModuleGetter(this, 'Prefilters',  // jshint ignore:line
   'resource://gre/modules/accessibility/Constants.jsm');
 
 let gSkipEmptyImages = new PrefCache('accessibility.accessfu.skip_empty_images');
@@ -30,7 +34,7 @@ function BaseTraversalRule(aRoles, aMatchFunc, aPreFilter) {
   if (aRoles.indexOf(Roles.LABEL) < 0) {
     this._matchRoles.push(Roles.LABEL);
   }
-  this._matchFunc = aMatchFunc || function (acc) { return Filters.MATCH; };
+  this._matchFunc = aMatchFunc || function() { return Filters.MATCH; };
   this.preFilter = aPreFilter || gSimplePreFilter;
 }
 
@@ -91,17 +95,28 @@ var gSimpleTraversalRoles =
    Roles.SLIDER,
    Roles.SPINBUTTON,
    Roles.OPTION,
+   Roles.LISTITEM,
    // Used for traversing in to child OOP frames.
    Roles.INTERNAL_FRAME];
 
 var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
-  function hasZeroOrSingleChildDescendants () {
-    for (let acc = aAccessible; acc.childCount > 0; acc = acc.firstChild) {
-      if (acc.childCount > 1) {
+  // An object is simple, if it either has a single child lineage,
+  // or has a flat subtree.
+  function isSingleLineage(acc) {
+    for (let child = acc; child; child = child.firstChild) {
+      if (child.childCount > 1) {
         return false;
       }
     }
+    return true;
+  }
 
+  function isFlatSubtree(acc) {
+    for (let child = acc.firstChild; child; child = child.nextSibling) {
+      if (child.childCount > 0) {
+        return false;
+      }
+    }
     return true;
   }
 
@@ -114,30 +129,28 @@ var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
     {
       // Nameless text leaves are boring, skip them.
       let name = aAccessible.name;
-      if (name && name.trim())
-        return Filters.MATCH;
-      else
-        return Filters.IGNORE;
+      return (name && name.trim()) ? Filters.MATCH : Filters.IGNORE;
     }
   case Roles.STATICTEXT:
-    {
-      let parent = aAccessible.parent;
-      // Ignore prefix static text in list items. They are typically bullets or numbers.
-      if (parent.childCount > 1 && aAccessible.indexInParent == 0 &&
-          parent.role == Roles.LISTITEM)
-        return Filters.IGNORE;
-
-      return Filters.MATCH;
-    }
+    // Ignore prefix static text in list items. They are typically bullets or numbers.
+    return Utils.isListItemDecorator(aAccessible) ?
+      Filters.IGNORE : Filters.MATCH;
   case Roles.GRAPHIC:
     return TraversalRules._shouldSkipImage(aAccessible);
   case Roles.HEADER:
   case Roles.HEADING:
     if ((aAccessible.childCount > 0 || aAccessible.name) &&
-        hasZeroOrSingleChildDescendants()) {
+        (isSingleLineage(aAccessible) || isFlatSubtree(aAccessible))) {
       return Filters.MATCH | Filters.IGNORE_SUBTREE;
-    } else {
-      return Filters.IGNORE;
+    }
+    return Filters.IGNORE;
+  case Roles.LISTITEM:
+    {
+      let item = aAccessible.childCount === 2 &&
+        aAccessible.firstChild.role === Roles.STATICTEXT ?
+        aAccessible.lastChild : aAccessible;
+        return isSingleLineage(item) || isFlatSubtree(item) ?
+          Filters.MATCH | Filters.IGNORE_SUBTREE : Filters.IGNORE;
     }
   default:
     // Ignore the subtree, if there is one. So that we don't land on
@@ -152,7 +165,7 @@ var gSimplePreFilter = Prefilters.DEFUNCT |
   Prefilters.ARIA_HIDDEN |
   Prefilters.TRANSPARENT;
 
-this.TraversalRules = {
+this.TraversalRules = { // jshint ignore:line
   Simple: new BaseTraversalRule(gSimpleTraversalRoles, gSimpleMatchFunc),
 
   SimpleOnScreen: new BaseTraversalRule(

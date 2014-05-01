@@ -3,12 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebGLContext.h"
 #include "WebGLTexture.h"
+
 #include "GLContext.h"
-#include "ScopedGLHelpers.h"
-#include "WebGLTexelConversions.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "mozilla/Scoped.h"
+#include "ScopedGLHelpers.h"
+#include "WebGLContext.h"
+#include "WebGLTexelConversions.h"
+
 #include <algorithm>
 
 using namespace mozilla;
@@ -433,6 +436,104 @@ WebGLTexture::ResolvedFakeBlackStatus() {
     return mFakeBlackStatus;
 }
 
+
+static bool
+ClearByMask(WebGLContext* context, GLbitfield mask)
+{
+    gl::GLContext* gl = context->GL();
+    MOZ_ASSERT(gl->IsCurrent());
+
+    GLenum status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE)
+        return false;
+
+    bool colorAttachmentsMask[WebGLContext::kMaxColorAttachments] = {false};
+    if (mask & LOCAL_GL_COLOR_BUFFER_BIT) {
+        colorAttachmentsMask[0] = true;
+    }
+
+    context->ForceClearFramebufferWithDefaultValues(mask, colorAttachmentsMask);
+    return true;
+}
+
+// `mask` from glClear.
+static bool
+ClearWithTempFB(WebGLContext* context, GLuint tex,
+                GLenum texImageTarget, GLint level,
+                GLenum baseInternalFormat,
+                GLsizei width, GLsizei height)
+{
+    if (texImageTarget != LOCAL_GL_TEXTURE_2D)
+        return false;
+
+    gl::GLContext* gl = context->GL();
+    MOZ_ASSERT(gl->IsCurrent());
+
+    gl::ScopedFramebuffer fb(gl);
+    gl::ScopedBindFramebuffer autoFB(gl, fb.FB());
+    GLbitfield mask = 0;
+
+    switch (baseInternalFormat) {
+    case LOCAL_GL_LUMINANCE:
+    case LOCAL_GL_LUMINANCE_ALPHA:
+    case LOCAL_GL_ALPHA:
+    case LOCAL_GL_RGB:
+    case LOCAL_GL_RGBA:
+    case LOCAL_GL_BGR:
+    case LOCAL_GL_BGRA:
+        mask = LOCAL_GL_COLOR_BUFFER_BIT;
+        gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
+                                  texImageTarget, tex, level);
+        break;
+
+    case LOCAL_GL_DEPTH_COMPONENT:
+        mask = LOCAL_GL_DEPTH_BUFFER_BIT;
+        gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
+                                  texImageTarget, tex, level);
+        break;
+
+    case LOCAL_GL_DEPTH_STENCIL:
+        mask = LOCAL_GL_DEPTH_BUFFER_BIT |
+               LOCAL_GL_STENCIL_BUFFER_BIT;
+        gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
+                                  texImageTarget, tex, level);
+        gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
+                                  texImageTarget, tex, level);
+        break;
+
+    default:
+        return false;
+    }
+    MOZ_ASSERT(mask);
+
+    if (ClearByMask(context, mask))
+        return true;
+
+    // Failed to simply build an FB from the tex, but maybe it needs a
+    // color buffer to be complete.
+
+    if (mask & LOCAL_GL_COLOR_BUFFER_BIT) {
+        // Nope, it already had one.
+        return false;
+    }
+
+    gl::ScopedRenderbuffer rb(gl);
+    {
+        gl::ScopedBindRenderbuffer(gl, rb.RB());
+        gl->fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
+                                 LOCAL_GL_RGBA4,
+                                 width, height);
+    }
+
+    gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
+                                 LOCAL_GL_RENDERBUFFER, rb.RB());
+    mask |= LOCAL_GL_COLOR_BUFFER_BIT;
+
+    // Last chance!
+    return ClearByMask(context, mask);
+}
+
+
 void
 WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
 {
@@ -440,9 +541,22 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
     MOZ_ASSERT(imageInfo.mImageDataStatus == WebGLImageDataStatus::UninitializedImageData);
 
     mContext->MakeContextCurrent();
+
+    // Try to clear with glCLear.
+    WebGLTexelFormat texelformat = GetWebGLTexelFormat(imageInfo.mInternalFormat, imageInfo.mType);
+    GLenum format = WebGLTexelConversions::GLFormatForTexelFormat(texelformat);
+
+    bool cleared = ClearWithTempFB(mContext, GLName(),
+                                   imageTarget, level,
+                                   format, imageInfo.mHeight, imageInfo.mWidth);
+    if (cleared) {
+        SetImageDataStatus(imageTarget, level, WebGLImageDataStatus::InitializedImageData);
+        return;
+    }
+
+    // That didn't work. Try uploading zeros then.
     gl::ScopedBindTexture autoBindTex(mContext->gl, GLName(), mTarget);
 
-    WebGLTexelFormat texelformat = GetWebGLTexelFormat(imageInfo.mInternalFormat, imageInfo.mType);
     uint32_t texelsize = WebGLTexelConversions::TexelBytesForFormat(texelformat);
     CheckedUint32 checked_byteLength
         = WebGLContext::GetImageSize(
@@ -451,24 +565,29 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
                         texelsize,
                         mContext->mPixelStoreUnpackAlignment);
     MOZ_ASSERT(checked_byteLength.isValid()); // should have been checked earlier
-    void *zeros = calloc(1, checked_byteLength.value());
+    ScopedFreePtr<void> zeros;
+    zeros = calloc(1, checked_byteLength.value());
 
-    GLenum format = WebGLTexelConversions::GLFormatForTexelFormat(texelformat);
     mContext->GetAndFlushUnderlyingGLErrors();
     mContext->gl->fTexImage2D(imageTarget, level, imageInfo.mInternalFormat,
                               imageInfo.mWidth, imageInfo.mHeight,
                               0, format, imageInfo.mType,
                               zeros);
     GLenum error = mContext->GetAndFlushUnderlyingGLErrors();
-
-    free(zeros);
-    SetImageDataStatus(imageTarget, level, WebGLImageDataStatus::InitializedImageData);
-
     if (error) {
-      // Should only be OUT_OF_MEMORY. Anyway, there's no good way to recover from this here.
-      MOZ_CRASH(); // errors on texture upload have been related to video memory exposure in the past.
-      return;
+        // Should only be OUT_OF_MEMORY. Anyway, there's no good way to recover from this here.
+        printf_stderr("Error: 0x%4x\n", error);
+        MOZ_CRASH(); // errors on texture upload have been related to video memory exposure in the past.
     }
+
+    SetImageDataStatus(imageTarget, level, WebGLImageDataStatus::InitializedImageData);
+}
+
+void
+WebGLTexture::SetFakeBlackStatus(WebGLTextureFakeBlackStatus x)
+{
+    mFakeBlackStatus = x;
+    mContext->SetFakeBlackStatus(WebGLContextFakeBlackStatus::Unknown);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLTexture)

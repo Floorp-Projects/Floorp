@@ -69,27 +69,40 @@ def gen_types(args, member):
     return ", ".join(ret)
 
 
-def generate_class_template(args, ret = False, member = True):
-    print "// %d arguments --"%args
+def runnable_class_name(args, ret=False, member=True):
     if member:
         nm = "m"
     else:
         nm = "nm"
 
-    if not ret:
-        print "template<"+ gen_typenames(args, member) + "> class runnable_args_%s_%d : public runnable_args_base {"%(nm, args)
+    if ret:
+        class_suffix = "_ret"
+        enum_specializer = "detail::ReturnsResult"
     else:
-        print "template<"+ gen_typenames(args, member) + ", typename R> class runnable_args_%s_%d_ret : public runnable_args_base {"%(nm, args)
+        class_suffix = ""
+        enum_specializer = "detail::NoResult"
+
+    return "runnable_args_%s_%d%s" % (nm, args, class_suffix), enum_specializer
+
+def generate_class_template(args, ret = False, member = True):
+    print "// %d arguments --"%args
+
+    class_name, specializer = runnable_class_name(args, ret, member)
+    base_class = "detail::runnable_args_base<%s>" % specializer
+
+    if not ret:
+        print "template<"+ gen_typenames(args, member) + "> class %s : public %s {" % (class_name, base_class)
+    else:
+        print "template<"+ gen_typenames(args, member) + ", typename R> class %s : public %s {" % (class_name, base_class)
 
     print " public:"
 
     if not ret:
-        print "  runnable_args_%s_%d("%(nm, args) + gen_args_type(args, member) + ") :"
+        print "  %s(" % class_name + gen_args_type(args, member) + ") :"
         print "    " + gen_init(args, False, member) + "  {}"
     else:
-        print "  runnable_args_%s_%d_ret("%(nm, args) + gen_args_type(args, member) + ", R *r) :"
+        print "  %s(" % class_name + gen_args_type(args, member) + ", R *r) :"
         print "    " + gen_init(args, True, member) + "  {}"
-        print "  virtual bool returns_value() const { return true; }"
     print
     print "  NS_IMETHOD Run() {"
     if ret:
@@ -119,31 +132,32 @@ def generate_class_template(args, ret = False, member = True):
 
 def generate_function_template(args, member):
     if member:
-        nm = "m"
         NM = "";
     else:
-        nm = "nm"
         NM = "NM";
-        
+
+    class_name, _ = runnable_class_name(args, False, member)
+
     print "// %d arguments --"%args
     print "template<" + gen_typenames(args, member) + ">"
-    print "runnable_args_%s_%d<"%(nm, args) + gen_types(args, member) + ">* WrapRunnable%s("%NM + gen_args_type(args, member) + ") {"
-    print "  return new runnable_args_%s_%d<"%(nm, args) + gen_types(args, member) + ">"
+    print "%s<" % class_name + gen_types(args, member) + ">* WrapRunnable%s("%NM + gen_args_type(args, member) + ") {"
+    print "  return new %s<" % class_name + gen_types(args, member) + ">"
     print "    (" + gen_args(args, member) + ");"
     print "}"
     print
 
 def generate_function_template_ret(args, member):
     if member:
-        nm = "m"
         NM = "";
     else:
-        nm = "nm"
         NM = "NM";
+
+    class_name, _ = runnable_class_name(args, True, member)
+
     print "// %d arguments --"%args
     print "template<" + gen_typenames(args, member) + ", typename R>"
-    print "runnable_args_%s_%d_ret<"%(nm, args) + gen_types(args, member) + ", R>* WrapRunnable%sRet("%NM + gen_args_type(args, member) + ", R* r) {"
-    print "  return new runnable_args_%s_%d_ret<"%(nm, args) + gen_types(args, member) + ", R>"
+    print "%s<" % class_name + gen_types(args, member) + ", R>* WrapRunnable%sRet("%NM + gen_args_type(args, member) + ", R* r) {"
+    print "  return new %s<" % class_name + gen_types(args, member) + ", R>"
     print "    (" + gen_args(args, member) + ", r);"
     print "}"
     print

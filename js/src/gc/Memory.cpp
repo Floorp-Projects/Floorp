@@ -12,35 +12,34 @@
 using namespace js;
 using namespace js::gc;
 
-static bool
-DecommitEnabled(JSRuntime *rt)
+bool
+SystemPageAllocator::decommitEnabled()
 {
-    return rt->gcSystemPageSize == ArenaSize;
+    return pageSize == ArenaSize;
 }
 
 #if defined(XP_WIN)
 #include "jswin.h"
 #include <psapi.h>
 
-void
-gc::InitMemorySubsystem(JSRuntime *rt)
+SystemPageAllocator::SystemPageAllocator()
 {
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
-    rt->gcSystemPageSize = sysinfo.dwPageSize;
-    rt->gcSystemAllocGranularity = sysinfo.dwAllocationGranularity;
+    pageSize = sysinfo.dwPageSize;
+    allocGranularity = sysinfo.dwAllocationGranularity;
 }
 
 void *
-gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
+SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
 {
     JS_ASSERT(size >= alignment);
     JS_ASSERT(size % alignment == 0);
-    JS_ASSERT(size % rt->gcSystemPageSize == 0);
-    JS_ASSERT(alignment % rt->gcSystemAllocGranularity == 0);
+    JS_ASSERT(size % pageSize == 0);
+    JS_ASSERT(alignment % allocGranularity == 0);
 
     /* Special case: If we want allocation alignment, no further work is needed. */
-    if (alignment == rt->gcSystemAllocGranularity) {
+    if (alignment == allocGranularity) {
         return VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     }
 
@@ -60,12 +59,12 @@ gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
          * Since we're going to unmap the whole thing anyway, the first
          * mapping doesn't have to commit pages.
          */
-        size_t reserveSize = size + alignment - rt->gcSystemPageSize;
+        size_t reserveSize = size + alignment - pageSize;
         p = VirtualAlloc(nullptr, reserveSize, MEM_RESERVE, PAGE_READWRITE);
         if (!p)
             return nullptr;
         void *chunkStart = (void *)AlignBytes(uintptr_t(p), alignment);
-        UnmapPages(rt, p, reserveSize);
+        unmapPages(p, reserveSize);
         p = VirtualAlloc(chunkStart, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
         /* Failure here indicates a race with another thread, so try again. */
@@ -76,31 +75,31 @@ gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
 }
 
 void
-gc::UnmapPages(JSRuntime *rt, void *p, size_t size)
+SystemPageAllocator::unmapPages(void *p, size_t size)
 {
     JS_ALWAYS_TRUE(VirtualFree(p, 0, MEM_RELEASE));
 }
 
 bool
-gc::MarkPagesUnused(JSRuntime *rt, void *p, size_t size)
+SystemPageAllocator::markPagesUnused(void *p, size_t size)
 {
-    if (!DecommitEnabled(rt))
+    if (!decommitEnabled())
         return true;
 
-    JS_ASSERT(uintptr_t(p) % rt->gcSystemPageSize == 0);
+    JS_ASSERT(uintptr_t(p) % pageSize == 0);
     LPVOID p2 = VirtualAlloc(p, size, MEM_RESET, PAGE_READWRITE);
     return p2 == p;
 }
 
 bool
-gc::MarkPagesInUse(JSRuntime *rt, void *p, size_t size)
+SystemPageAllocator::markPagesInUse(void *p, size_t size)
 {
-    JS_ASSERT(uintptr_t(p) % rt->gcSystemPageSize == 0);
+    JS_ASSERT(uintptr_t(p) % pageSize == 0);
     return true;
 }
 
 size_t
-gc::GetPageFaultCount()
+SystemPageAllocator::GetPageFaultCount()
 {
     PROCESS_MEMORY_COUNTERS pmc;
     if (!GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
@@ -109,7 +108,7 @@ gc::GetPageFaultCount()
 }
 
 void *
-gc::AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
+SystemPageAllocator::AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
 {
     // TODO: Bug 988813 - Support memory mapped array buffer for Windows platform.
     return nullptr;
@@ -117,7 +116,7 @@ gc::AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment
 
 // Deallocate mapped memory for object.
 void
-gc::DeallocateMappedContent(void *p, size_t length)
+SystemPageAllocator::DeallocateMappedContent(void *p, size_t length)
 {
     // TODO: Bug 988813 - Support memory mapped array buffer for Windows platform.
 }
@@ -131,19 +130,18 @@ gc::DeallocateMappedContent(void *p, size_t length)
 # define MAP_NOSYNC 0
 #endif
 
-void
-gc::InitMemorySubsystem(JSRuntime *rt)
+SystemPageAllocator::SystemPageAllocator()
 {
-    rt->gcSystemPageSize = rt->gcSystemAllocGranularity = size_t(sysconf(_SC_PAGESIZE));
+    pageSize = allocGranularity = size_t(sysconf(_SC_PAGESIZE));
 }
 
 void *
-gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
+SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
 {
     JS_ASSERT(size >= alignment);
     JS_ASSERT(size % alignment == 0);
-    JS_ASSERT(size % rt->gcSystemPageSize == 0);
-    JS_ASSERT(alignment % rt->gcSystemAllocGranularity == 0);
+    JS_ASSERT(size % pageSize == 0);
+    JS_ASSERT(alignment % allocGranularity == 0);
 
     int prot = PROT_READ | PROT_WRITE;
     int flags = MAP_PRIVATE | MAP_ANON | MAP_ALIGN | MAP_NOSYNC;
@@ -155,33 +153,33 @@ gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
 }
 
 void
-gc::UnmapPages(JSRuntime *rt, void *p, size_t size)
+SystemPageAllocator::unmapPages(void *p, size_t size)
 {
     JS_ALWAYS_TRUE(0 == munmap((caddr_t)p, size));
 }
 
 bool
-gc::MarkPagesUnused(JSRuntime *rt, void *p, size_t size)
+SystemPageAllocator::markPagesUnused(void *p, size_t size)
 {
-    JS_ASSERT(uintptr_t(p) % rt->gcSystemPageSize == 0);
+    JS_ASSERT(uintptr_t(p) % pageSize == 0);
     return true;
 }
 
 bool
-gc::MarkPagesInUse(JSRuntime *rt, void *p, size_t size)
+SystemPageAllocator::markPagesInUse(void *p, size_t size)
 {
-    JS_ASSERT(uintptr_t(p) % rt->gcSystemPageSize == 0);
+    JS_ASSERT(uintptr_t(p) % pageSize == 0);
     return true;
 }
 
 size_t
-gc::GetPageFaultCount()
+SystemPageAllocator::GetPageFaultCount()
 {
     return 0;
 }
 
 void *
-gc::AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
+SystemPageAllocator::AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
 {
     // Not implemented.
     return nullptr;
@@ -189,7 +187,7 @@ gc::AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment
 
 // Deallocate mapped memory for object.
 void
-gc::DeallocateMappedContent(void *p, size_t length)
+SystemPageAllocator::DeallocateMappedContent(void *p, size_t length)
 {
     // Not implemented.
 }
@@ -203,10 +201,9 @@ gc::DeallocateMappedContent(void *p, size_t length)
 #include <sys/types.h>
 #include <unistd.h>
 
-void
-gc::InitMemorySubsystem(JSRuntime *rt)
+SystemPageAllocator::SystemPageAllocator()
 {
-    rt->gcSystemPageSize = rt->gcSystemAllocGranularity = size_t(sysconf(_SC_PAGESIZE));
+    pageSize = allocGranularity = size_t(sysconf(_SC_PAGESIZE));
 }
 
 static inline void *
@@ -244,18 +241,18 @@ MapMemory(size_t length, int prot, int flags, int fd, off_t offset)
 }
 
 void *
-gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
+SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
 {
     JS_ASSERT(size >= alignment);
     JS_ASSERT(size % alignment == 0);
-    JS_ASSERT(size % rt->gcSystemPageSize == 0);
-    JS_ASSERT(alignment % rt->gcSystemAllocGranularity == 0);
+    JS_ASSERT(size % pageSize == 0);
+    JS_ASSERT(alignment % allocGranularity == 0);
 
     int prot = PROT_READ | PROT_WRITE;
     int flags = MAP_PRIVATE | MAP_ANON;
 
     /* Special case: If we want page alignment, no further work is needed. */
-    if (alignment == rt->gcSystemAllocGranularity) {
+    if (alignment == allocGranularity) {
         void *region = MapMemory(size, prot, flags, -1, 0);
         if (region == MAP_FAILED)
             return nullptr;
@@ -284,31 +281,31 @@ gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
 }
 
 void
-gc::UnmapPages(JSRuntime *rt, void *p, size_t size)
+SystemPageAllocator::unmapPages(void *p, size_t size)
 {
     JS_ALWAYS_TRUE(0 == munmap(p, size));
 }
 
 bool
-gc::MarkPagesUnused(JSRuntime *rt, void *p, size_t size)
+SystemPageAllocator::markPagesUnused(void *p, size_t size)
 {
-    if (!DecommitEnabled(rt))
+    if (!decommitEnabled())
         return false;
 
-    JS_ASSERT(uintptr_t(p) % rt->gcSystemPageSize == 0);
+    JS_ASSERT(uintptr_t(p) % pageSize == 0);
     int result = madvise(p, size, MADV_DONTNEED);
     return result != -1;
 }
 
 bool
-gc::MarkPagesInUse(JSRuntime *rt, void *p, size_t size)
+SystemPageAllocator::markPagesInUse(void *p, size_t size)
 {
-    JS_ASSERT(uintptr_t(p) % rt->gcSystemPageSize == 0);
+    JS_ASSERT(uintptr_t(p) % pageSize == 0);
     return true;
 }
 
 size_t
-gc::GetPageFaultCount()
+SystemPageAllocator::GetPageFaultCount()
 {
     struct rusage usage;
     int err = getrusage(RUSAGE_SELF, &usage);
@@ -318,7 +315,7 @@ gc::GetPageFaultCount()
 }
 
 void *
-gc::AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
+SystemPageAllocator::AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
 {
 #define NEED_PAGE_ALIGNED 0
     size_t pa_start; // Page aligned starting
@@ -367,7 +364,7 @@ gc::AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment
 }
 
 void
-gc::DeallocateMappedContent(void *p, size_t length)
+SystemPageAllocator::DeallocateMappedContent(void *p, size_t length)
 {
     void *pa_start; // Page aligned starting
     size_t page_size = sysconf(_SC_PAGESIZE); // Page size

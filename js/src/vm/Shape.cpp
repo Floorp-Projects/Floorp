@@ -1526,7 +1526,7 @@ BaseShape::assertConsistency()
 void
 JSCompartment::sweepBaseShapeTable()
 {
-    gcstats::AutoPhase ap(runtimeFromMainThread()->gcStats,
+    gcstats::AutoPhase ap(runtimeFromMainThread()->gc.stats,
                           gcstats::PHASE_SWEEP_TABLES_BASE_SHAPE);
 
     if (baseShapes.initialized()) {
@@ -1736,7 +1736,7 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProt
         {
             InitialShapeSetRef ref(
                 &table, clasp, protoRoot, parentRoot, metadataRoot, nfixed, objectFlags);
-            cx->asJSContext()->runtime()->gcStoreBuffer.putGeneric(ref);
+            cx->asJSContext()->runtime()->gc.storeBuffer.putGeneric(ref);
         }
     }
 #endif
@@ -1814,7 +1814,7 @@ EmptyShape::insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleOb
 void
 JSCompartment::sweepInitialShapeTable()
 {
-    gcstats::AutoPhase ap(runtimeFromMainThread()->gcStats,
+    gcstats::AutoPhase ap(runtimeFromMainThread()->gc.stats,
                           gcstats::PHASE_SWEEP_TABLES_INITIAL_SHAPE);
 
     if (initialShapes.initialized()) {

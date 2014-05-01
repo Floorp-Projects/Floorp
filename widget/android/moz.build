@@ -49,6 +49,7 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '/docshell/base',
+    '/dom/base',
     '/dom/system/android',
     '/netwerk/cache',
     '/widget/android/android',

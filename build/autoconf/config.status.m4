@@ -181,11 +181,12 @@ EOF
 fi
 
 changequote([, ])
+
+chmod +x $CONFIG_STATUS
 ])
 
 define([MOZ_RUN_CONFIG_STATUS],
 [
-chmod +x $CONFIG_STATUS
 rm -fr confdefs* $ac_clean_files
 dnl Execute config.status, unless --no-create was passed to configure.
 if test "$no_create" != yes && ! ${PYTHON} $CONFIG_STATUS; then

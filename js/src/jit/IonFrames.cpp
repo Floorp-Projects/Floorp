@@ -75,14 +75,14 @@ ReadFrameBooleanSlot(IonJSFrameLayout *fp, int32_t slot)
     return *(bool *)((char *)fp + OffsetOfFrameSlot(slot));
 }
 
-JitFrameIterator::JitFrameIterator(JSContext *cx)
-  : current_(cx->mainThread().ionTop),
+JitFrameIterator::JitFrameIterator(ThreadSafeContext *cx)
+  : current_(cx->perThreadData->jitTop),
     type_(JitFrame_Exit),
     returnAddressToFp_(nullptr),
     frameSize_(0),
     cachedSafepointIndex_(nullptr),
     activation_(nullptr),
-    mode_(SequentialExecution)
+    mode_(cx->isForkJoinContext() ? ParallelExecution : SequentialExecution)
 {
 }
 
@@ -93,7 +93,7 @@ JitFrameIterator::JitFrameIterator(const ActivationIterator &activations)
       frameSize_(0),
       cachedSafepointIndex_(nullptr),
       activation_(activations->asJit()),
-      mode_(SequentialExecution)
+      mode_(activation_->cx()->isForkJoinContext() ? ParallelExecution : SequentialExecution)
 {
 }
 
@@ -615,8 +615,8 @@ HandleException(ResumeFromException *rfe)
     // This may happen if a callVM function causes an invalidation (setting the
     // override), and then fails, bypassing the bailout handlers that would
     // otherwise clear the return override.
-    if (cx->runtime()->hasIonReturnOverride())
-        cx->runtime()->takeIonReturnOverride();
+    if (cx->runtime()->jitRuntime()->hasIonReturnOverride())
+        cx->runtime()->jitRuntime()->takeIonReturnOverride();
 
     JitFrameIterator iter(cx);
     while (!iter.isEntry()) {
@@ -715,13 +715,13 @@ HandleException(ResumeFromException *rfe)
         ++iter;
 
         if (current) {
-            // Unwind the frame by updating ionTop. This is necessary so that
+            // Unwind the frame by updating jitTop. This is necessary so that
             // (1) debugger exception unwind and leave frame hooks don't see this
             // frame when they use ScriptFrameIter, and (2) ScriptFrameIter does
             // not crash when accessing an IonScript that's destroyed by the
             // ionScript->decref call.
             EnsureExitFrame(current);
-            cx->mainThread().ionTop = (uint8_t *)current;
+            cx->mainThread().jitTop = (uint8_t *)current;
         }
 
         if (overrecursed) {
@@ -737,7 +737,7 @@ void
 HandleParallelFailure(ResumeFromException *rfe)
 {
     ForkJoinContext *cx = ForkJoinContext::current();
-    JitFrameIterator iter(cx->perThreadData->ionTop, ParallelExecution);
+    JitFrameIterator iter(cx->perThreadData->jitTop, ParallelExecution);
 
     parallel::Spew(parallel::SpewBailouts, "Bailing from VM reentry");
 
@@ -965,7 +965,7 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
     for (GeneralRegisterBackwardIterator iter(safepoint.allGprSpills()); iter.more(); iter++) {
         --spill;
         if (slotsRegs.has(*iter))
-            trc->runtime()->gcNursery.forwardBufferPointer(reinterpret_cast<HeapSlot **>(spill));
+            trc->runtime()->gc.nursery.forwardBufferPointer(reinterpret_cast<HeapSlot **>(spill));
     }
 
     // Skip to the right place in the safepoint
@@ -979,7 +979,7 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
 
     while (safepoint.getSlotsOrElementsSlot(&slot)) {
         HeapSlot **slots = reinterpret_cast<HeapSlot **>(layout->slotRef(slot));
-        trc->runtime()->gcNursery.forwardBufferPointer(slots);
+        trc->runtime()->gc.nursery.forwardBufferPointer(slots);
     }
 }
 #endif
@@ -1275,7 +1275,7 @@ GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     JSRuntime *rt = cx->runtime();
 
     // Recover the return address.
-    JitFrameIterator it(rt->mainThread.ionTop, SequentialExecution);
+    JitFrameIterator it(rt->mainThread.jitTop, SequentialExecution);
 
     // If the previous frame is a rectifier frame (maybe unwound),
     // skip past it.
@@ -1302,7 +1302,7 @@ GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     if (MOZ_UNLIKELY(rt->ionPcScriptCache == nullptr)) {
         rt->ionPcScriptCache = (PcScriptCache *)js_malloc(sizeof(struct PcScriptCache));
         if (rt->ionPcScriptCache)
-            rt->ionPcScriptCache->clear(rt->gcNumber);
+            rt->ionPcScriptCache->clear(rt->gc.number);
     }
 
     // Attempt to lookup address in cache.
@@ -1629,11 +1629,19 @@ SnapshotIterator::fromInstructionResult(uint32_t index) const
 }
 
 void
+SnapshotIterator::settleOnFrame()
+{
+    // Check that the current instruction can still be use.
+    MOZ_ASSERT(snapshot_.numAllocationsRead() == 0);
+    while (!instruction()->isResumePoint())
+        skipInstruction();
+}
+
+void
 SnapshotIterator::nextFrame()
 {
     nextInstruction();
-    while (!instruction()->isResumePoint())
-        skipInstruction();
+    settleOnFrame();
 }
 
 IonScript *
@@ -1699,8 +1707,7 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
 
     // Settle on the outermost frame without evaluating any instructions before
     // looking for a pc.
-    if (!si_.instruction()->isResumePoint())
-        si_.nextFrame();
+    si_.settleOnFrame();
 
     pc_ = script_->offsetToPC(si_.pcOffset());
 #ifdef DEBUG

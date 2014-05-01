@@ -462,7 +462,7 @@ class AutoSetForkJoinContext
 
 ForkJoinActivation::ForkJoinActivation(JSContext *cx)
   : Activation(cx, ForkJoin),
-    prevIonTop_(cx->mainThread().ionTop),
+    prevJitTop_(cx->mainThread().jitTop),
     av_(cx->runtime(), false)
 {
     // Note: we do not allow GC during parallel sections.
@@ -479,7 +479,7 @@ ForkJoinActivation::ForkJoinActivation(JSContext *cx)
 
     MinorGC(cx->runtime(), JS::gcreason::API);
 
-    cx->runtime()->gcHelperThread.waitBackgroundSweepEnd();
+    cx->runtime()->gc.helperThread.waitBackgroundSweepEnd();
 
     JS_ASSERT(!cx->runtime()->needsBarrier());
     JS_ASSERT(!cx->zone()->needsBarrier());
@@ -487,7 +487,7 @@ ForkJoinActivation::ForkJoinActivation(JSContext *cx)
 
 ForkJoinActivation::~ForkJoinActivation()
 {
-    cx_->mainThread().ionTop = prevIonTop_;
+    cx_->perThreadData->jitTop = prevJitTop_;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1331,10 +1331,11 @@ class ParallelIonInvoke
         calleeToken_ = CalleeToToken(callee);
     }
 
-    bool invoke(PerThreadData *perThread) {
-        RootedValue result(perThread);
+    bool invoke(ForkJoinContext *cx) {
+        JitActivation activation(cx);
+        Value result;
         CALL_GENERATED_CODE(enter_, jitcode_, argc_ + 1, argv_ + 1, nullptr, calleeToken_,
-                            nullptr, 0, result.address());
+                            nullptr, 0, &result);
         return !result.isMagic();
     }
 };
@@ -1535,13 +1536,13 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
         cx.bailoutRecord->setCause(ParallelBailoutMainScriptNotPresent);
         setAbortFlagAndRequestInterrupt(false);
     } else {
-        ParallelIonInvoke<3> fii(cx_->runtime(), fun_, 3);
+        ParallelIonInvoke<3> fii(runtime(), fun_, 3);
 
         fii.args[0] = Int32Value(worker->id());
         fii.args[1] = Int32Value(sliceStart_);
         fii.args[2] = Int32Value(sliceEnd_);
 
-        bool ok = fii.invoke(perThread);
+        bool ok = fii.invoke(&cx);
         JS_ASSERT(ok == !cx.bailoutRecord->topScript);
         if (!ok)
             setAbortFlagAndRequestInterrupt(false);
@@ -1557,7 +1558,7 @@ ForkJoinShared::setAbortFlagDueToInterrupt(ForkJoinContext &cx)
     // The GC Needed flag should not be set during parallel
     // execution.  Instead, one of the requestGC() or
     // requestZoneGC() methods should be invoked.
-    JS_ASSERT(!cx_->runtime()->gcIsNeeded);
+    JS_ASSERT(!cx_->runtime()->gc.isNeeded);
 
     if (!abort_) {
         cx.bailoutRecord->setCause(ParallelBailoutInterrupt);
