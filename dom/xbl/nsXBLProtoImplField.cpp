@@ -365,10 +365,10 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!::JS_DefinePropertyById(aCx, aTargetClassObject, id, JS::UndefinedValue(),
+  if (!::JS_DefinePropertyById(aCx, aTargetClassObject, id, JS::UndefinedHandleValue,
+                               AccessorAttributes(),
                                JS_DATA_TO_FUNC_PTR(JSPropertyOp, get.get()),
-                               JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, set.get()),
-                               AccessorAttributes())) {
+                               JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, set.get()))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -444,8 +444,7 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
   if (!JS_WrapValue(cx, &result) ||
       !::JS_DefineUCProperty(cx, aBoundNode,
                              reinterpret_cast<const jschar*>(mName),
-                             name.Length(), result, nullptr, nullptr,
-                             mJSAttributes)) {
+                             name.Length(), result, mJSAttributes)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

@@ -17,5 +17,7 @@ namespace JS {
 
 const HandleValue NullHandleValue = HandleValue::fromMarkedLocation(&JSVAL_NULL);
 const HandleValue UndefinedHandleValue = HandleValue::fromMarkedLocation(&JSVAL_VOID);
+const HandleValue TrueHandleValue = HandleValue::fromMarkedLocation(&JSVAL_TRUE);
+const HandleValue FalseHandleValue = HandleValue::fromMarkedLocation(&JSVAL_FALSE);
 
 } // namespace JS

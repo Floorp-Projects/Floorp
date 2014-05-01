@@ -230,13 +230,13 @@ public:
     // Returns null if the current bound FB is not likely complete.
     const WebGLRectangleObject* CurValidFBRectObject() const;
 
-    static const size_t sMaxColorAttachments = 16;
+    static const size_t kMaxColorAttachments = 16;
 
     // This is similar to GLContext::ClearSafely, but tries to minimize the
     // amount of work it does.
     // It only clears the buffers we specify, and can reset its state without
     // first having to query anything, as WebGL knows its state at all times.
-    void ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool colorAttachmentsMask[sMaxColorAttachments]);
+    void ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool colorAttachmentsMask[kMaxColorAttachments]);
 
     // Calls ForceClearFramebufferWithDefaultValues() for the Context's 'screen'.
     void ClearScreen();

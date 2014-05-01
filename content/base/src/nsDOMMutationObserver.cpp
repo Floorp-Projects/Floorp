@@ -52,11 +52,11 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMMutationRecord)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMMutationRecord)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_7(nsDOMMutationRecord,
-                                        mTarget,
-                                        mPreviousSibling, mNextSibling,
-                                        mAddedNodes, mRemovedNodes,
-                                        mNext, mOwner)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMMutationRecord,
+                                      mTarget,
+                                      mPreviousSibling, mNextSibling,
+                                      mAddedNodes, mRemovedNodes,
+                                      mNext, mOwner)
 
 // Observer
 

@@ -147,6 +147,9 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
         ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_TRANSLITERATION"
         ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_REGULAR_EXPRESSIONS"
         ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_BREAK_ITERATION"
+        ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_IDNA"
+        # we don't need to pass data to and from legacy char* APIs
+        ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_CHARSET_IS_UTF8"
         # make sure to not accidentally pick up system-icu headers
         ICU_CPPFLAGS="$ICU_CPPFLAGS -I$icudir/common -I$icudir/i18n"
 

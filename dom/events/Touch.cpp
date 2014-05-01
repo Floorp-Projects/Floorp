@@ -79,7 +79,7 @@ Touch::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
   return TouchEvent::PrefEnabled(aCx, aGlobal);
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(Touch, mTarget)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Touch, mTarget)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Touch)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

@@ -24,6 +24,7 @@ struct BadCertHost
   const char *mCertName;
 };
 
+// Hostname, cert nickname pairs.
 const BadCertHost sBadCertHosts[] =
 {
   { "expired.example.com", "expired" },
@@ -42,6 +43,15 @@ const BadCertHost sBadCertHosts[] =
   { "inadequatekeyusage.example.com", "inadequatekeyusage" },
   { "selfsigned-inadequateEKU.example.com", "selfsigned-inadequateEKU" },
   { "self-signed-end-entity-with-cA-true.example.com", "self-signed-EE-with-cA-true" },
+  // All of include-subdomains.pinning.example.com is pinned to End Entity Test
+  // Cert with nick localhostAndExampleCom. Any other nick will only pass
+  // pinning when security.cert_pinning.enforcement.level != strict and otherCA
+  // is added as a user-specified trust anchor. See StaticHPKPins.h.
+  { "include-subdomains.pinning.example.com", "localhostAndExampleCom" },
+  { "good.include-subdomains.pinning.example.com", "localhostAndExampleCom" },
+  { "bad.include-subdomains.pinning.example.com", "otherIssuerEE" },
+  { "exclude-subdomains.pinning.example.com", "localhostAndExampleCom" },
+  { "sub.exclude-subdomains.pinning.example.com", "otherIssuerEE" },
   { nullptr, nullptr }
 };
 

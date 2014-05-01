@@ -288,7 +288,7 @@ WeakMapPostWriteBarrier(JSRuntime *rt, ObjectValueMap *weakMap, JSObject *key)
 
     typedef gc::HashKeyRef<UnbarrieredMap, JSObject *> Ref;
     if (key && IsInsideNursery(rt, key))
-        rt->gcStoreBuffer.putGeneric(Ref((unbarrieredMap), key));
+        rt->gc.storeBuffer.putGeneric(Ref((unbarrieredMap), key));
 #endif
 }
 

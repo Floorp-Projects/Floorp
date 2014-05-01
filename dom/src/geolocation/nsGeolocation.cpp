@@ -240,7 +240,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PositionError)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionError)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(PositionError, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PositionError, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PositionError)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PositionError)
 
@@ -1032,11 +1032,11 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Geolocation)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Geolocation)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_4(Geolocation,
-                                        mCachedPosition,
-                                        mPendingCallbacks,
-                                        mWatchingCallbacks,
-                                        mPendingRequests)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Geolocation,
+                                      mCachedPosition,
+                                      mPendingCallbacks,
+                                      mWatchingCallbacks,
+                                      mPendingRequests)
 
 Geolocation::Geolocation()
 : mLastWatchId(0)

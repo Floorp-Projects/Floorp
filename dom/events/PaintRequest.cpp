@@ -16,7 +16,7 @@ namespace dom {
  * mozilla::dom::PaintRequest
  *****************************************************************************/
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(PaintRequest, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PaintRequest, mParent)
 
 NS_INTERFACE_TABLE_HEAD(PaintRequest)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -60,7 +60,7 @@ PaintRequest::GetXPCOMReason(nsAString& aResult)
  * mozilla::dom::PaintRequestList
  *****************************************************************************/
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(PaintRequestList, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PaintRequestList, mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PaintRequestList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

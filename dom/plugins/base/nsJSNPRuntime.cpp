@@ -1545,8 +1545,8 @@ NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsi
   if (hasProperty) {
     NS_ASSERTION(JSID_IS_STRING(id) || JSID_IS_INT(id),
                  "id must be either string or int!\n");
-    if (!::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, nullptr,
-                                 nullptr, JSPROP_ENUMERATE | JSPROP_SHARED)) {
+    if (!::JS_DefinePropertyById(cx, obj, id, JS::UndefinedHandleValue,
+                                 JSPROP_ENUMERATE | JSPROP_SHARED)) {
         return false;
     }
 

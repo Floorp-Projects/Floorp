@@ -30,7 +30,7 @@ WebGLExtensionDrawBuffers::WebGLExtensionDrawBuffers(WebGLContext* context)
     gl->fGetIntegerv(LOCAL_GL_MAX_DRAW_BUFFERS, &maxDrawBuffers);
 
     // WEBGL_draw_buffers specifications don't give a maximal value reachable by MAX_COLOR_ATTACHMENTS.
-    maxColorAttachments = std::min(maxColorAttachments, GLint(WebGLContext::sMaxColorAttachments));
+    maxColorAttachments = std::min(maxColorAttachments, GLint(WebGLContext::kMaxColorAttachments));
 
     if (context->MinCapabilityMode())
     {

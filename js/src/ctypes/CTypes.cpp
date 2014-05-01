@@ -4701,7 +4701,7 @@ AddFieldToArray(JSContext* cx,
 
   if (!JS_DefineUCProperty(cx, fieldObj,
          name->chars(), name->length(),
-         OBJECT_TO_JSVAL(typeObj), nullptr, nullptr,
+         typeObj,
          JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
 
@@ -4833,9 +4833,9 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
 
       // Add the field to the StructType's 'prototype' property.
       if (!JS_DefineUCProperty(cx, prototype,
-             name->chars(), name->length(), JSVAL_VOID,
-             StructType::FieldGetter, StructType::FieldSetter,
-             JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT))
+             name->chars(), name->length(), UndefinedHandleValue,
+             JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT,
+             StructType::FieldGetter, StructType::FieldSetter))
         return false;
 
       size_t fieldSize = CType::GetSize(fieldType);

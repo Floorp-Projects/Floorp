@@ -22,7 +22,7 @@ SVGRect::SVGRect(nsIContent* aParent, float x, float y, float w, float h)
 //----------------------------------------------------------------------
 // nsISupports methods:
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(SVGRect, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SVGRect, mParent)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGRect)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGRect)

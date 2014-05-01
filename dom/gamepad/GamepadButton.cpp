@@ -16,7 +16,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GamepadButton)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(GamepadButton, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GamepadButton, mParent)
 
 /* virtual */ JSObject*
 GamepadButton::WrapObject(JSContext* aCx)

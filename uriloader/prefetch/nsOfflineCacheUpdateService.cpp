@@ -695,7 +695,7 @@ OfflineAppPermForPrincipal(nsIPrincipal *aPrincipal,
     }
 
     nsCOMPtr<nsIPermissionManager> permissionManager =
-        do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+        services::GetPermissionManager();
     if (!permissionManager) {
         return NS_OK;
     }
@@ -767,7 +767,7 @@ nsOfflineCacheUpdateService::AllowOfflineApp(nsIDOMWindow *aWindow,
     }
     else {
         nsCOMPtr<nsIPermissionManager> permissionManager =
-            do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+            services::GetPermissionManager();
         if (!permissionManager)
             return NS_ERROR_NOT_AVAILABLE;
 

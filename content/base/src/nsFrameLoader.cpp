@@ -2616,7 +2616,7 @@ nsFrameLoader::ResetPermissionManagerStatus()
     return;
   }
 
-  nsCOMPtr<nsIPermissionManager> permMgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
   if (!permMgr) {
     NS_ERROR("No PermissionManager available!");
     return;

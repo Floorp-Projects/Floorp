@@ -75,7 +75,7 @@ XBLChildrenElement::ParseAttribute(int32_t aNamespaceID,
 
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsAnonymousContentList, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsAnonymousContentList, mParent)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsAnonymousContentList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsAnonymousContentList)

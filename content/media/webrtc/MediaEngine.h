@@ -154,13 +154,23 @@ public:
   }
 private:
   static int32_t GetDefWidth(bool aHD = false) {
-    return aHD ? MediaEngine::DEFAULT_169_VIDEO_WIDTH :
-                 MediaEngine::DEFAULT_43_VIDEO_WIDTH;
+    // It'd be nice if we could use the ternary operator here, but we can't
+    // because of bug 1002729.
+    if (aHD) {
+      return MediaEngine::DEFAULT_169_VIDEO_WIDTH;
+    }
+
+    return MediaEngine::DEFAULT_43_VIDEO_WIDTH;
   }
 
   static int32_t GetDefHeight(bool aHD = false) {
-    return aHD ? MediaEngine::DEFAULT_169_VIDEO_HEIGHT :
-                 MediaEngine::DEFAULT_43_VIDEO_HEIGHT;
+    // It'd be nice if we could use the ternary operator here, but we can't
+    // because of bug 1002729.
+    if (aHD) {
+      return MediaEngine::DEFAULT_169_VIDEO_HEIGHT;
+    }
+
+    return MediaEngine::DEFAULT_43_VIDEO_HEIGHT;
   }
 };
 

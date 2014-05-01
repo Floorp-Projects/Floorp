@@ -25,10 +25,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsMimeTypeArray)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_3(nsMimeTypeArray,
-                                        mWindow,
-                                        mMimeTypes,
-                                        mHiddenMimeTypes)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeTypeArray,
+                                      mWindow,
+                                      mMimeTypes,
+                                      mHiddenMimeTypes)
 
 nsMimeTypeArray::nsMimeTypeArray(nsPIDOMWindow* aWindow)
   : mWindow(aWindow)
@@ -224,7 +224,7 @@ nsMimeTypeArray::EnsurePluginMimeTypes()
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsMimeType, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsMimeType, Release)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(nsMimeType, mWindow, mPluginElement)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeType, mWindow, mPluginElement)
 
 nsMimeType::nsMimeType(nsPIDOMWindow* aWindow, nsPluginElement* aPluginElement,
                        uint32_t aPluginTagMimeIndex, const nsAString& aType)
