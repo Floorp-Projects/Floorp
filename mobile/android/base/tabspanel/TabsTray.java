@@ -366,9 +366,11 @@ class TabsTray extends TwoWayView
 
         TabRow tab = (TabRow)view.getTag();
         final int tabId = tab.id;
+
         // Caching this assumes that all rows are the same height
-	if (mOriginalSize == 0)
+        if (mOriginalSize == 0) {
             mOriginalSize = (isVertical ? view.getHeight() : view.getWidth());
+        }
 
         animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
@@ -377,7 +379,7 @@ class TabsTray extends TwoWayView
             public void onPropertyAnimationEnd() {
                 Tabs tabs = Tabs.getInstance();
                 Tab tab = tabs.getTab(tabId);
-                tabs.closeTab(tab);
+                tabs.closeTab(tab, true);
             }
         });
 
