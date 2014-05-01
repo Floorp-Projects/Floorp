@@ -8,10 +8,10 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.util.StringUtils;
 
+import android.database.Cursor;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
-
 
 /**
  * A ContextMenuInfo for HomeListView
@@ -51,5 +51,12 @@ public class HomeContextMenuInfo extends AdapterContextMenuInfo {
             return title;
         }
         return StringUtils.stripCommonSubdomains(StringUtils.stripScheme(url, StringUtils.UrlFlags.STRIP_HTTPS));
+    }
+
+    /*
+     * Interface for creating ContextMenuInfo from cursors
+     */
+    public interface Factory {
+        public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor);
     }
 }
