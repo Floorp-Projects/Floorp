@@ -7,9 +7,7 @@
 #include "CacheFileIOManager.h"
 #include "CacheObserver.h"
 #include "CacheIndex.h"
-
-#include "nsICacheStorageVisitor.h"
-#include "nsIObserverService.h"
+#include "CacheIndexIterator.h"
 #include "CacheStorage.h"
 #include "AppCacheStorage.h"
 #include "CacheEntry.h"
@@ -19,12 +17,16 @@
 #include "nsCacheService.h"
 #include "nsDeleteDir.h"
 
+#include "nsICacheStorageVisitor.h"
+#include "nsIObserverService.h"
 #include "nsIFile.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
+#include "nsWeakReference.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/VisualEventTracer.h"
@@ -163,35 +165,57 @@ void CacheStorageService::ShutdownBackground()
 
 namespace { // anon
 
-// WalkRunnable
-// Responsible to visit the storage and walk all entries on it asynchronously
-
-class WalkRunnable : public nsRunnable
+// WalkCacheRunnable
+// Base class for particular storage entries visiting
+class WalkCacheRunnable : public nsRunnable
+                        , public CacheStorageService::EntryInfoCallback
 {
-public:
-  WalkRunnable(nsCSubstring const & aContextKey, bool aVisitEntries,
-               bool aUsingDisk,
-               nsICacheStorageVisitor* aVisitor)
-    : mContextKey(aContextKey)
+protected:
+  WalkCacheRunnable(nsICacheStorageVisitor* aVisitor,
+                    bool aVisitEntries)
+    : mService(CacheStorageService::Self())
     , mCallback(aVisitor)
     , mSize(0)
     , mNotifyStorage(true)
     , mVisitEntries(aVisitEntries)
-    , mUsingDisk(aUsingDisk)
   {
+  }
+
+  nsRefPtr<CacheStorageService> mService;
+  nsCOMPtr<nsICacheStorageVisitor> mCallback;
+
+  uint64_t mSize;
+
+  bool mNotifyStorage : 1;
+  bool mVisitEntries : 1;
+};
+
+// WalkMemoryCacheRunnable
+// Responsible to visit memory storage and walk
+// all entries on it asynchronously.
+class WalkMemoryCacheRunnable : public WalkCacheRunnable
+{
+public:
+  WalkMemoryCacheRunnable(nsILoadContextInfo *aLoadInfo,
+                          bool aVisitEntries,
+                          nsICacheStorageVisitor* aVisitor)
+    : WalkCacheRunnable(aVisitor, aVisitEntries)
+  {
+    CacheFileUtils::AppendKeyPrefix(aLoadInfo, mContextKey);
     MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  nsresult Walk()
+  {
+    return mService->Dispatch(this);
   }
 
 private:
   NS_IMETHODIMP Run()
   {
     if (CacheStorageService::IsOnManagementThread()) {
-      LOG(("WalkRunnable::Run - collecting [this=%p, disk=%d]", this, (bool)mUsingDisk));
+      LOG(("WalkMemoryCacheRunnable::Run - collecting [this=%p]", this));
       // First, walk, count and grab all entries from the storage
-      // TODO
-      // - walk files on disk, when the storage is not private
-      //    - should create representative entries only for the time
-      //      of need
 
       mozilla::MutexAutoLock lock(CacheStorageService::Self()->Lock());
 
@@ -200,37 +224,42 @@ private:
 
       CacheEntryTable* entries;
       if (sGlobalEntryTables->Get(mContextKey, &entries))
-        entries->EnumerateRead(&WalkRunnable::WalkStorage, this);
+        entries->EnumerateRead(&WalkMemoryCacheRunnable::WalkStorage, this);
 
       // Next, we dispatch to the main thread
-    }
-    else if (NS_IsMainThread()) {
-      LOG(("WalkRunnable::Run - notifying [this=%p, disk=%d]", this, (bool)mUsingDisk));
+    } else if (NS_IsMainThread()) {
+      LOG(("WalkMemoryCacheRunnable::Run - notifying [this=%p]", this));
+
       if (mNotifyStorage) {
         LOG(("  storage"));
+
         // Second, notify overall storage info
-        mCallback->OnCacheStorageInfo(mEntryArray.Length(), mSize);
+        mCallback->OnCacheStorageInfo(mEntryArray.Length(), mSize,
+                                      CacheObserver::MemoryCacheCapacity(), nullptr);
         if (!mVisitEntries)
           return NS_OK; // done
 
         mNotifyStorage = false;
-      }
-      else {
+
+      } else {
         LOG(("  entry [left=%d]", mEntryArray.Length()));
-        // Third, notify each entry until depleted.
+
+        // Third, notify each entry until depleted
         if (!mEntryArray.Length()) {
           mCallback->OnCacheEntryVisitCompleted();
           return NS_OK; // done
         }
 
-        mCallback->OnCacheEntryInfo(mEntryArray[0]);
+        // Grab the next entry
+        nsRefPtr<CacheEntry> entry = mEntryArray[0];
         mEntryArray.RemoveElementAt(0);
 
-        // Dispatch to the main thread again
+        // Invokes this->OnEntryInfo, that calls the callback with all
+        // information of the entry.
+        CacheStorageService::GetCacheEntryInfo(entry, this);
       }
-    }
-    else {
-      MOZ_ASSERT(false);
+    } else {
+      MOZ_CRASH("Bad thread");
       return NS_ERROR_FAILURE;
     }
 
@@ -238,7 +267,7 @@ private:
     return NS_OK;
   }
 
-  virtual ~WalkRunnable()
+  virtual ~WalkMemoryCacheRunnable()
   {
     if (mCallback)
       ProxyReleaseMainThread(mCallback);
@@ -249,9 +278,11 @@ private:
               CacheEntry* aEntry,
               void* aClosure)
   {
-    WalkRunnable* walker = static_cast<WalkRunnable*>(aClosure);
+    WalkMemoryCacheRunnable* walker =
+      static_cast<WalkMemoryCacheRunnable*>(aClosure);
 
-    if (!walker->mUsingDisk && aEntry->IsUsingDiskLocked())
+    // Ignore disk entries
+    if (aEntry->IsUsingDiskLocked())
       return PL_DHASH_NEXT;
 
     walker->mSize += aEntry->GetMetadataMemoryConsumption();
@@ -264,15 +295,196 @@ private:
     return PL_DHASH_NEXT;
   }
 
+  virtual void OnEntryInfo(const nsACString & aURISpec, const nsACString & aIdEnhance,
+                           int64_t aDataSize, int32_t aFetchCount,
+                           uint32_t aLastModifiedTime, uint32_t aExpirationTime)
+  {
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), aURISpec);
+    if (NS_FAILED(rv))
+      return;
+
+    mCallback->OnCacheEntryInfo(uri, aIdEnhance, aDataSize, aFetchCount,
+                                aLastModifiedTime, aExpirationTime);
+  }
+
+private:
   nsCString mContextKey;
-  nsCOMPtr<nsICacheStorageVisitor> mCallback;
   nsTArray<nsRefPtr<CacheEntry> > mEntryArray;
+};
 
-  uint64_t mSize;
+// WalkDiskCacheRunnable
+// Using the cache index information to get the list of files per context.
+class WalkDiskCacheRunnable : public WalkCacheRunnable
+{
+public:
+  WalkDiskCacheRunnable(nsILoadContextInfo *aLoadInfo,
+                        bool aVisitEntries,
+                        nsICacheStorageVisitor* aVisitor)
+    : WalkCacheRunnable(aVisitor, aVisitEntries)
+    , mLoadInfo(aLoadInfo)
+    , mPass(COLLECT_STATS)
+  {
+  }
 
-  bool mNotifyStorage : 1;
-  bool mVisitEntries : 1;
-  bool mUsingDisk : 1;
+  nsresult Walk()
+  {
+    // TODO, bug 998693
+    // Initial index build should be forced here so that about:cache soon
+    // after startup gives some meaningfull results.
+
+    // Dispatch to the INDEX level in hope that very recent cache entries
+    // information gets to the index list before we grab the index iterator
+    // for the first time.  This tries to avoid miss of entries that has
+    // been created right before the visit is required.
+    nsRefPtr<CacheIOThread> thread = CacheFileIOManager::IOThread();
+    NS_ENSURE_TRUE(thread, NS_ERROR_NOT_INITIALIZED);
+
+    return thread->Dispatch(this, CacheIOThread::INDEX);
+  }
+
+private:
+  // Invokes OnCacheEntryInfo callback for each single found entry.
+  // There is one instance of this class per one entry.
+  class OnCacheEntryInfoRunnable : public nsRunnable
+  {
+  public:
+    OnCacheEntryInfoRunnable(WalkDiskCacheRunnable* aWalker)
+      : mWalker(aWalker)
+    {
+    }
+
+    NS_IMETHODIMP Run()
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      nsCOMPtr<nsIURI> uri;
+      nsresult rv = NS_NewURI(getter_AddRefs(uri), mURISpec);
+      if (NS_FAILED(rv))
+        return NS_OK;
+
+      mWalker->mCallback->OnCacheEntryInfo(
+        uri, mIdEnhance, mDataSize, mFetchCount,
+        mLastModifiedTime, mExpirationTime);
+      return NS_OK;
+    }
+
+    nsRefPtr<WalkDiskCacheRunnable> mWalker;
+
+    nsCString mURISpec;
+    nsCString mIdEnhance;
+    int64_t mDataSize;
+    int32_t mFetchCount;
+    uint32_t mLastModifiedTime;
+    uint32_t mExpirationTime;
+  };
+
+  NS_IMETHODIMP Run()
+  {
+    // The main loop
+    nsresult rv;
+
+    if (CacheStorageService::IsOnManagementThread()) {
+      switch (mPass) {
+      case COLLECT_STATS:
+        // Get quickly the cache stats.
+        uint32_t size;
+        rv = CacheIndex::GetCacheStats(mLoadInfo, &size, &mCount);
+        if (NS_FAILED(rv)) {
+          if (mVisitEntries) {
+            // both onStorageInfo and onCompleted are expected
+            NS_DispatchToMainThread(this);
+          }
+          return NS_DispatchToMainThread(this);
+        }
+
+        mSize = size << 10;
+
+        // Invoke onCacheStorageInfo with valid information.
+        NS_DispatchToMainThread(this);
+
+        if (!mVisitEntries) {
+          return NS_OK; // done
+        }
+
+        mPass = ITERATE_METADATA;
+        // no break
+
+      case ITERATE_METADATA:
+        // Now grab the context iterator.
+        if (!mIter) {
+          rv = CacheIndex::GetIterator(mLoadInfo, true, getter_AddRefs(mIter));
+          if (NS_FAILED(rv)) {
+            // Invoke onCacheEntryVisitCompleted now
+            return NS_DispatchToMainThread(this);
+          }
+        }
+
+        while (true) {
+          if (CacheIOThread::YieldAndRerun())
+            return NS_OK;
+
+          SHA1Sum::Hash hash;
+          rv = mIter->GetNextHash(&hash);
+          if (NS_FAILED(rv))
+            break; // done (or error?)
+
+          // This synchronously invokes onCacheEntryInfo on this class where we
+          // redispatch to the main thread for the consumer callback.
+          CacheFileIOManager::GetEntryInfo(&hash, this);
+        }
+
+        // Invoke onCacheEntryVisitCompleted on the main thread
+        NS_DispatchToMainThread(this);
+      }
+    } else if (NS_IsMainThread()) {
+      if (mNotifyStorage) {
+        nsCOMPtr<nsIFile> dir;
+        CacheFileIOManager::GetCacheDirectory(getter_AddRefs(dir));
+        mCallback->OnCacheStorageInfo(mCount, mSize, CacheObserver::DiskCacheCapacity(), dir);
+        mNotifyStorage = false;
+      } else {
+        mCallback->OnCacheEntryVisitCompleted();
+      }
+    } else {
+      MOZ_CRASH("Bad thread");
+      return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+  }
+
+  virtual void OnEntryInfo(const nsACString & aURISpec, const nsACString & aIdEnhance,
+                           int64_t aDataSize, int32_t aFetchCount,
+                           uint32_t aLastModifiedTime, uint32_t aExpirationTime)
+  {
+    // Called directly from CacheFileIOManager::GetEntryInfo.
+
+    // Invoke onCacheEntryInfo on the main thread for this entry.
+    nsRefPtr<OnCacheEntryInfoRunnable> info = new OnCacheEntryInfoRunnable(this);
+    info->mURISpec = aURISpec;
+    info->mIdEnhance = aIdEnhance;
+    info->mDataSize = aDataSize;
+    info->mFetchCount = aFetchCount;
+    info->mLastModifiedTime = aLastModifiedTime;
+    info->mExpirationTime = aExpirationTime;
+
+    NS_DispatchToMainThread(info);
+  }
+
+  nsRefPtr<nsILoadContextInfo> mLoadInfo;
+  enum {
+    // First, we collect stats for the load context.
+    COLLECT_STATS,
+
+    // Second, if demanded, we iterate over the entries gethered
+    // from the iterator and call CacheFileIOManager::GetEntryInfo
+    // for each found entry.
+    ITERATE_METADATA,
+  } mPass;
+
+  nsRefPtr<CacheIndexIterator> mIter;
+  uint32_t mCount;
 };
 
 PLDHashOperator CollectPrivateContexts(const nsACString& aKey,
@@ -1264,12 +1476,15 @@ CacheStorageService::WalkStorageEntries(CacheStorage const* aStorage,
 
   NS_ENSURE_ARG(aStorage);
 
-  nsAutoCString contextKey;
-  CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
+  if (aStorage->WriteToDisk()) {
+    nsRefPtr<WalkDiskCacheRunnable> event =
+      new WalkDiskCacheRunnable(aStorage->LoadInfo(), aVisitEntries, aVisitor);
+    return event->Walk();
+  }
 
-  nsRefPtr<WalkRunnable> event = new WalkRunnable(
-    contextKey, aVisitEntries, aStorage->WriteToDisk(), aVisitor);
-  return Dispatch(event);
+  nsRefPtr<WalkMemoryCacheRunnable> event =
+    new WalkMemoryCacheRunnable(aStorage->LoadInfo(), aVisitEntries, aVisitor);
+  return event->Walk();
 }
 
 void
@@ -1306,6 +1521,73 @@ CacheStorageService::CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
   // to duplication of the entry per its key.
   RemoveExactEntry(entries, entryKey, entry, false);
   entry->DoomAlreadyRemoved();
+}
+
+bool
+CacheStorageService::GetCacheEntryInfo(nsILoadContextInfo* aLoadContextInfo,
+                                       const nsACString & aIdExtension,
+                                       const nsACString & aURISpec,
+                                       EntryInfoCallback *aCallback)
+{
+  nsAutoCString contextKey;
+  CacheFileUtils::AppendKeyPrefix(aLoadContextInfo, contextKey);
+
+  nsAutoCString entryKey;
+  CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURISpec, entryKey);
+
+  nsRefPtr<CacheEntry> entry;
+  {
+    mozilla::MutexAutoLock lock(mLock);
+
+    if (mShutdown) {
+      return false;
+    }
+
+    CacheEntryTable* entries;
+    if (!sGlobalEntryTables->Get(contextKey, &entries)) {
+      return false;
+    }
+
+    if (!entries->Get(entryKey, getter_AddRefs(entry))) {
+      return false;
+    }
+  }
+
+  GetCacheEntryInfo(entry, aCallback);
+  return true;
+}
+
+// static
+void
+CacheStorageService::GetCacheEntryInfo(CacheEntry* aEntry,
+                                       EntryInfoCallback *aCallback)
+{
+  nsIURI* uri = aEntry->GetURI();
+  nsAutoCString uriSpec;
+  if (uri) {
+    uri->GetAsciiSpec(uriSpec);
+  }
+
+  nsCString const enhanceId = aEntry->GetEnhanceID();
+  uint32_t dataSize;
+  if (NS_FAILED(aEntry->GetStorageDataSize(&dataSize))) {
+    dataSize = 0;
+  }
+  int32_t fetchCount;
+  if (NS_FAILED(aEntry->GetFetchCount(&fetchCount))) {
+    fetchCount = 0;
+  }
+  uint32_t lastModified;
+  if (NS_FAILED(aEntry->GetLastModified(&lastModified))) {
+    lastModified = 0;
+  }
+  uint32_t expirationTime;
+  if (NS_FAILED(aEntry->GetExpirationTime(&expirationTime))) {
+    expirationTime = 0;
+  }
+
+  aCallback->OnEntryInfo(uriSpec, enhanceId, dataSize,
+                         fetchCount, lastModified, expirationTime);
 }
 
 // nsIMemoryReporter

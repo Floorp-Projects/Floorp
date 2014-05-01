@@ -8,10 +8,10 @@ function run_test()
   {
     var storage = getCacheStorage("disk", LoadContextInfo.default);
     storage.asyncVisitStorage(
-      new VisitCallback(1, 12, ["http://an2/"], function() {
+      new VisitCallback(1, 1024, ["http://an2/"], function() {
         storage = getCacheStorage("disk", LoadContextInfo.anonymous);
         storage.asyncVisitStorage(
-          new VisitCallback(1, 12, ["http://an2/"], function() {
+          new VisitCallback(1, 1024, ["http://an2/"], function() {
             finish_cache2_test();
           }),
           true
@@ -26,10 +26,10 @@ function run_test()
     syncWithCacheIOThread(function() {
       var storage = getCacheStorage("disk", LoadContextInfo.default);
       storage.asyncVisitStorage(
-        new VisitCallback(2, 24, ["http://an2/", "anon&uri=http://an2/"], function() {
+        new VisitCallback(2, 24, ["http://an2/"], function() {
           storage = getCacheStorage("disk", LoadContextInfo.anonymous);
           storage.asyncVisitStorage(
-            new VisitCallback(0, 0, [], function() {
+            new VisitCallback(0, 0, ["http://an2/"], function() {
               finish_cache2_test();
             }),
             true
