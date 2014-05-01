@@ -168,7 +168,11 @@ EXTRA_DSO_LDOPTS += $(MOZ_DBUS_GLIB_LIBS)
 endif
 
 ifdef MOZ_WIDGET_GTK
+ifdef MOZ_ENABLE_GTK3
+EXTRA_DSO_LDOPTS += $(filter-out -lgtk-3 -lgdk-3,$(TK_LIBS)) -lmozgtk_stub
+else
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
+endif
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS) $(XCOMPOSITE_LIBS) $(MOZ_PANGO_LIBS) $(XT_LIBS) -lgthread-2.0
 EXTRA_DSO_LDOPTS += $(FT2_LIBS)
 endif
