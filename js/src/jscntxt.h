@@ -145,6 +145,7 @@ struct ThreadSafeContext : ContextFriendFields,
                            public MallocProvider<ThreadSafeContext>
 {
     friend struct StackBaseShape;
+    friend class Activation;
     friend UnownedBaseShape *BaseShape::lookupUnowned(ThreadSafeContext *cx,
                                                       const StackBaseShape &base);
     friend Shape *JSObject::lookupChildProperty(ThreadSafeContext *cx,
