@@ -175,13 +175,14 @@ class ArenaCellIterImpl
     // first used thing, which may be |thing|.
     void moveForwardIfFree() {
         JS_ASSERT(!done());
+        JS_ASSERT(thing);
+        // Note: if |span| is empty, this test will fail, which is what we want
+        // -- |span| being empty means that we're past the end of the last free
+        // thing, all the remaining things in the arena are used, and we'll
+        // never need to move forward.
         if (thing == span.first) {
-            if (span.hasNext()) {
-                thing = span.last + thingSize;
-                span = *span.nextSpan();
-            } else {
-                thing = limit;
-            }
+            thing = span.last + thingSize;
+            span = *span.nextSpan();
         }
     }
 
