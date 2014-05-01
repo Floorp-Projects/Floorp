@@ -107,7 +107,6 @@ class JS_PUBLIC_API(AutoGCRooter) {
         SHAPEVECTOR =  -4, /* js::AutoShapeVector */
         IDARRAY =      -6, /* js::AutoIdArray */
         DESCRIPTORS =  -7, /* js::AutoPropDescArrayRooter */
-        ID =           -9, /* js::AutoIdRooter */
         VALVECTOR =   -10, /* js::AutoValueVector */
         IDVECTOR =    -13, /* js::AutoIdVector */
         OBJVECTOR =   -14, /* js::AutoObjectVector */
@@ -838,31 +837,6 @@ JS_PUBLIC_API(jsid)
 INTERNED_STRING_TO_JSID(JSContext *cx, JSString *str);
 
 namespace JS {
-
-class AutoIdRooter : private AutoGCRooter
-{
-  public:
-    explicit AutoIdRooter(JSContext *cx, jsid aId = INT_TO_JSID(0)
-                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, ID), id_(aId)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    jsid id() {
-        return id_;
-    }
-
-    jsid * addr() {
-        return &id_;
-    }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-
-  private:
-    jsid id_;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
 
 // Container class for passing in script source buffers to the JS engine.  This
 // not only groups the buffer and length values, it also provides a way to
