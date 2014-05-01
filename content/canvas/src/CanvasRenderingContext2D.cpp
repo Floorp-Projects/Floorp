@@ -888,8 +888,8 @@ CanvasRenderingContext2D::CheckSizeForSkiaGL(IntSize size) {
     }
   }
 
-  int32_t threshold = gDefaultScale > 0 ? ceil(gDefaultScale * gScreenPixels)
-                                        : gScreenPixels;
+  double scale = gDefaultScale > 0 ? gDefaultScale : 1.0;
+  int32_t threshold = ceil(scale * scale * gScreenPixels);
 
   // screen size acts as max threshold
   return threshold < 0 || (size.width * size.height) <= threshold;
