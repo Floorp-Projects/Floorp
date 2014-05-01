@@ -1162,6 +1162,22 @@ HyperTextAccessible::CaretOffset() const
     return -1;
   }
 
+  // Check cached value.
+  int32_t caretOffset = -1;
+  HyperTextAccessible* text = SelectionMgr()->AccessibleWithCaret(&caretOffset);
+
+  // Use cached value if it corresponds to this accessible.
+  if (caretOffset != -1) {
+    if (text == this)
+      return caretOffset;
+
+    nsINode* textNode = text->GetNode();
+    // Ignore offset if cached accessible isn't a text leaf.
+    if (nsCoreUtils::IsAncestorOf(GetNode(), textNode))
+      return TransformOffset(text,
+        textNode->IsNodeOfType(nsINode::eTEXT) ? caretOffset : 0, false);
+  }
+
   // No caret if the focused node is not inside this DOM node and this DOM node
   // is not inside of focused node.
   FocusManager::FocusDisposition focusDisp =

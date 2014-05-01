@@ -364,6 +364,11 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
     logging::FocusNotificationTarget("fire focus event", "Target", target);
 #endif
 
+  // Reset cached caret value. The cache will be updated upon processing the
+  // next caret move event. This ensures that we will return the correct caret
+  // offset before the caret move event is handled.
+  SelectionMgr()->ResetCaretOffset();
+
   nsRefPtr<AccEvent> focusEvent =
     new AccEvent(nsIAccessibleEvent::EVENT_FOCUS, target, aEvent->FromUserInput());
   nsEventShell::FireEvent(focusEvent);
