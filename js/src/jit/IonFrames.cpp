@@ -75,14 +75,14 @@ ReadFrameBooleanSlot(IonJSFrameLayout *fp, int32_t slot)
     return *(bool *)((char *)fp + OffsetOfFrameSlot(slot));
 }
 
-JitFrameIterator::JitFrameIterator(JSContext *cx)
-  : current_(cx->mainThread().ionTop),
+JitFrameIterator::JitFrameIterator(ThreadSafeContext *cx)
+  : current_(cx->perThreadData->ionTop),
     type_(JitFrame_Exit),
     returnAddressToFp_(nullptr),
     frameSize_(0),
     cachedSafepointIndex_(nullptr),
     activation_(nullptr),
-    mode_(SequentialExecution)
+    mode_(cx->isForkJoinContext() ? ParallelExecution : SequentialExecution)
 {
 }
 
@@ -93,7 +93,7 @@ JitFrameIterator::JitFrameIterator(const ActivationIterator &activations)
       frameSize_(0),
       cachedSafepointIndex_(nullptr),
       activation_(activations->asJit()),
-      mode_(SequentialExecution)
+      mode_(activation_->cx()->isForkJoinContext() ? ParallelExecution : SequentialExecution)
 {
 }
 

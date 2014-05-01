@@ -487,7 +487,7 @@ ForkJoinActivation::ForkJoinActivation(JSContext *cx)
 
 ForkJoinActivation::~ForkJoinActivation()
 {
-    cx_->mainThread().ionTop = prevIonTop_;
+    cx_->perThreadData->ionTop = prevIonTop_;
 }
 
 ///////////////////////////////////////////////////////////////////////////
