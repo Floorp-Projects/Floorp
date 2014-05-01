@@ -14,6 +14,7 @@
 
 class nsIInputStream;
 class nsIOutputStream;
+class nsICacheEntryMetaDataVisitor;
 
 namespace mozilla {
 namespace net {
@@ -85,6 +86,7 @@ public:
   // metadata forwarders
   nsresult GetElement(const char *aKey, char **_retval);
   nsresult SetElement(const char *aKey, const char *aValue);
+  nsresult VisitMetaData(nsICacheEntryMetaDataVisitor *aVisitor);
   nsresult ElementsSize(uint32_t *_retval);
   nsresult SetExpirationTime(uint32_t aExpirationTime);
   nsresult GetExpirationTime(uint32_t *_retval);

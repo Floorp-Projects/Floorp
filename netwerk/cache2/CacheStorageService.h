@@ -88,6 +88,19 @@ public:
   already_AddRefed<nsIEventTarget> Thread() const;
   mozilla::Mutex& Lock() { return mLock; }
 
+  // Helper thread-safe interface to pass entry info, only difference from
+  // nsICacheStorageVisitor is that instead of nsIURI only the uri spec is
+  // passed.
+  class EntryInfoCallback {
+  public:
+    virtual void OnEntryInfo(const nsACString & aURISpec, const nsACString & aIdEnhance,
+                             int64_t aDataSize, int32_t aFetchCount,
+                             uint32_t aLastModifiedTime, uint32_t aExpirationTime) = 0;
+  };
+
+  // Invokes OnEntryInfo for the given aEntry, synchronously.
+  static void GetCacheEntryInfo(CacheEntry* aEntry, EntryInfoCallback *aVisitor);
+
   // Memory reporting
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -178,6 +191,19 @@ private:
   void CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
                        const nsACString & aIdExtension,
                        const nsACString & aURISpec);
+
+  /**
+   * Tries to find an existing entry in the hashtables and synchronously call
+   * OnCacheEntryInfo of the aVisitor callback when found.
+   * @retuns
+   *   true, when the entry has been found that also implies the callbacks has
+   *        beem invoked
+   *   false, when an entry has not been found
+   */
+  bool GetCacheEntryInfo(nsILoadContextInfo* aLoadContextInfo,
+                         const nsACString & aIdExtension,
+                         const nsACString & aURISpec,
+                         EntryInfoCallback *aCallback);
 
 private:
   friend class CacheMemoryConsumer;
