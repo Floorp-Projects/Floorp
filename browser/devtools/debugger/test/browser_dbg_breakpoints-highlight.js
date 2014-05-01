@@ -26,8 +26,7 @@ function test() {
       .then(() => clickBreakpointAndCheck(2, 1, 7))
       .then(() => clickBreakpointAndCheck(3, 1, 8))
       .then(() => clickBreakpointAndCheck(4, 1, 9))
-      .then(() => ensureThreadClientState(gPanel, "resumed"))
-      .then(() => closeDebuggerAndFinish(gPanel))
+      .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
