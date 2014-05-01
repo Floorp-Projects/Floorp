@@ -437,11 +437,10 @@ Arena::staticAsserts()
 void
 Arena::setAsFullyUnused(AllocKind thingKind)
 {
-    FreeSpan entireList;
-    entireList.first = thingsStart(thingKind);
-    uintptr_t arenaAddr = aheader.arenaAddress();
-    entireList.last = arenaAddr | ArenaMask;
-    aheader.setFirstFreeSpan(&entireList);
+    FreeSpan fullSpan;
+    size_t thingSize = Arena::thingSize(thingKind);
+    fullSpan.initFinal(thingsStart(thingKind), thingsEnd() - thingSize, thingSize);
+    aheader.setFirstFreeSpan(&fullSpan);
 }
 
 template<typename T>
@@ -461,7 +460,7 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
 
     uintptr_t firstThing = thingsStart(thingKind);
     uintptr_t firstThingOrSuccessorOfLastMarkedThing = firstThing;
-    uintptr_t lastByte = thingsEnd() - 1;
+    uintptr_t lastThing = thingsEnd() - thingSize;
 
     FreeSpan newListHead;
     FreeSpan *newListTail = &newListHead;
@@ -474,9 +473,9 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
             if (thing != firstThingOrSuccessorOfLastMarkedThing) {
                 // We just finished passing over one or more free things,
                 // so record a new FreeSpan.
-                newListTail->first = firstThingOrSuccessorOfLastMarkedThing;
-                newListTail->last = thing - thingSize;
-                newListTail = newListTail->nextSpanUnchecked(thingSize);
+                newListTail->initBoundsUnchecked(firstThingOrSuccessorOfLastMarkedThing,
+                                                 thing - thingSize);
+                newListTail = newListTail->nextSpanUnchecked();
             }
             firstThingOrSuccessorOfLastMarkedThing = thing + thingSize;
             nmarked++;
@@ -486,28 +485,28 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
         }
     }
 
-    // Complete the last FreeSpan.
-    newListTail->first = firstThingOrSuccessorOfLastMarkedThing;
-    newListTail->last = lastByte;
-
     if (nmarked == 0) {
+        // Do nothing. The caller will update the arena header appropriately.
         JS_ASSERT(newListTail == &newListHead);
-        JS_ASSERT(newListTail->first == thingsStart(thingKind));
         JS_EXTRA_POISON(data, JS_SWEPT_TENURED_PATTERN, sizeof(data));
         return true;
     }
 
+    JS_ASSERT(firstThingOrSuccessorOfLastMarkedThing != firstThing);
+    uintptr_t lastMarkedThing = firstThingOrSuccessorOfLastMarkedThing - thingSize;
+    if (lastThing == lastMarkedThing) {
+        // If the last thing was marked, we will have already set the bounds of
+        // the final span, and we just need to terminate the list.
+        newListTail->initAsEmpty();
+    } else {
+        // Otherwise, end the list with a span that covers the final stretch of free things.
+        newListTail->initFinal(firstThingOrSuccessorOfLastMarkedThing, lastThing, thingSize);
+    }
+
 #ifdef DEBUG
     size_t nfree = 0;
-    for (const FreeSpan *span = &newListHead; span != newListTail; span = span->nextSpan()) {
-        span->checkSpan();
-        JS_ASSERT(Arena::isAligned(span->first, thingSize));
-        JS_ASSERT(Arena::isAligned(span->last, thingSize));
-        nfree += (span->last - span->first) / thingSize + 1;
-    }
-    JS_ASSERT(Arena::isAligned(newListTail->first, thingSize));
-    JS_ASSERT(newListTail->last == lastByte);
-    nfree += (newListTail->last + 1 - newListTail->first) / thingSize;
+    for (const FreeSpan *span = &newListHead; !span->isEmpty(); span = span->nextSpan())
+        nfree += span->length(thingSize);
     JS_ASSERT(nfree + nmarked == thingsPerArena(thingSize));
 #endif
     aheader.setFirstFreeSpan(&newListHead);
