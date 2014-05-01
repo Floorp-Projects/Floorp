@@ -6834,6 +6834,7 @@ CodeGenerator::visitCallsiteCloneCache(LCallsiteCloneCache *ins)
     Register output = ToRegister(ins->output());
 
     CallsiteCloneIC cache(callee, mir->block()->info().script(), mir->callPc(), output);
+    cache.setProfilerLeavePC(mir->profilerLeavePc());
     return addCache(ins, allocateCache(cache));
 }
 
@@ -6867,6 +6868,7 @@ CodeGenerator::visitGetNameCache(LGetNameCache *ins)
     bool isTypeOf = ins->mir()->accessKind() != MGetNameCache::NAME;
 
     NameIC cache(liveRegs, isTypeOf, scopeChain, ins->mir()->name(), output);
+    cache.setProfilerLeavePC(ins->mir()->profilerLeavePc());
     return addCache(ins, allocateCache(cache));
 }
 
@@ -6893,15 +6895,17 @@ CodeGenerator::visitNameIC(OutOfLineUpdateCache *ool, DataPtr<NameIC> &ic)
 bool
 CodeGenerator::addGetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Register objReg,
                                    PropertyName *name, TypedOrValueRegister output,
-                                   bool monitoredResult)
+                                   bool monitoredResult, jsbytecode *profilerLeavePc)
 {
     switch (gen->info().executionMode()) {
       case SequentialExecution: {
         GetPropertyIC cache(liveRegs, objReg, name, output, monitoredResult);
+        cache.setProfilerLeavePC(profilerLeavePc);
         return addCache(ins, allocateCache(cache));
       }
       case ParallelExecution: {
         GetPropertyParIC cache(objReg, name, output);
+        cache.setProfilerLeavePC(profilerLeavePc);
         return addCache(ins, allocateCache(cache));
       }
       default:
@@ -6912,15 +6916,17 @@ CodeGenerator::addGetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Regi
 bool
 CodeGenerator::addSetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Register objReg,
                                    PropertyName *name, ConstantOrRegister value, bool strict,
-                                   bool needsTypeBarrier)
+                                   bool needsTypeBarrier, jsbytecode *profilerLeavePc)
 {
     switch (gen->info().executionMode()) {
       case SequentialExecution: {
           SetPropertyIC cache(liveRegs, objReg, name, value, strict, needsTypeBarrier);
+            cache.setProfilerLeavePC(profilerLeavePc);
           return addCache(ins, allocateCache(cache));
       }
       case ParallelExecution: {
           SetPropertyParIC cache(objReg, name, value, strict, needsTypeBarrier);
+            cache.setProfilerLeavePC(profilerLeavePc);
           return addCache(ins, allocateCache(cache));
       }
       default:
@@ -6931,17 +6937,20 @@ CodeGenerator::addSetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Regi
 bool
 CodeGenerator::addSetElementCache(LInstruction *ins, Register obj, Register unboxIndex,
                                   Register temp, FloatRegister tempFloat, ValueOperand index,
-                                  ConstantOrRegister value, bool strict, bool guardHoles)
+                                  ConstantOrRegister value, bool strict, bool guardHoles,
+                                  jsbytecode *profilerLeavePc)
 {
     switch (gen->info().executionMode()) {
       case SequentialExecution: {
         SetElementIC cache(obj, unboxIndex, temp, tempFloat, index, value, strict,
                            guardHoles);
+        cache.setProfilerLeavePC(profilerLeavePc);
         return addCache(ins, allocateCache(cache));
       }
       case ParallelExecution: {
         SetElementParIC cache(obj, unboxIndex, temp, tempFloat, index, value, strict,
                               guardHoles);
+        cache.setProfilerLeavePC(profilerLeavePc);
         return addCache(ins, allocateCache(cache));
       }
       default:
@@ -6958,7 +6967,8 @@ CodeGenerator::visitGetPropertyCacheV(LGetPropertyCacheV *ins)
     bool monitoredResult = ins->mir()->monitoredResult();
     TypedOrValueRegister output = TypedOrValueRegister(GetValueOutput(ins));
 
-    return addGetPropertyCache(ins, liveRegs, objReg, name, output, monitoredResult);
+    return addGetPropertyCache(ins, liveRegs, objReg, name, output, monitoredResult,
+                               ins->mir()->profilerLeavePc());
 }
 
 bool
@@ -6970,7 +6980,8 @@ CodeGenerator::visitGetPropertyCacheT(LGetPropertyCacheT *ins)
     bool monitoredResult = ins->mir()->monitoredResult();
     TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->getDef(0)));
 
-    return addGetPropertyCache(ins, liveRegs, objReg, name, output, monitoredResult);
+    return addGetPropertyCache(ins, liveRegs, objReg, name, output, monitoredResult,
+                               ins->mir()->profilerLeavePc());
 }
 
 typedef bool (*GetPropertyICFn)(JSContext *, size_t, HandleObject, MutableHandleValue);
@@ -7026,16 +7037,18 @@ CodeGenerator::visitGetPropertyParIC(OutOfLineUpdateCache *ool, DataPtr<GetPrope
 bool
 CodeGenerator::addGetElementCache(LInstruction *ins, Register obj, ConstantOrRegister index,
                                   TypedOrValueRegister output, bool monitoredResult,
-                                  bool allowDoubleResult)
+                                  bool allowDoubleResult, jsbytecode *profilerLeavePc)
 {
     switch (gen->info().executionMode()) {
       case SequentialExecution: {
         RegisterSet liveRegs = ins->safepoint()->liveRegs();
         GetElementIC cache(liveRegs, obj, index, output, monitoredResult, allowDoubleResult);
+        cache.setProfilerLeavePC(profilerLeavePc);
         return addCache(ins, allocateCache(cache));
       }
       case ParallelExecution: {
         GetElementParIC cache(obj, index, output, monitoredResult, allowDoubleResult);
+        cache.setProfilerLeavePC(profilerLeavePc);
         return addCache(ins, allocateCache(cache));
       }
       default:
@@ -7051,7 +7064,8 @@ CodeGenerator::visitGetElementCacheV(LGetElementCacheV *ins)
     TypedOrValueRegister output = TypedOrValueRegister(GetValueOutput(ins));
     const MGetElementCache *mir = ins->mir();
 
-    return addGetElementCache(ins, obj, index, output, mir->monitoredResult(), mir->allowDoubleResult());
+    return addGetElementCache(ins, obj, index, output, mir->monitoredResult(),
+                              mir->allowDoubleResult(), mir->profilerLeavePc());
 }
 
 bool
@@ -7062,7 +7076,8 @@ CodeGenerator::visitGetElementCacheT(LGetElementCacheT *ins)
     TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->output()));
     const MGetElementCache *mir = ins->mir();
 
-    return addGetElementCache(ins, obj, index, output, mir->monitoredResult(), mir->allowDoubleResult());
+    return addGetElementCache(ins, obj, index, output, mir->monitoredResult(),
+                              mir->allowDoubleResult(), mir->profilerLeavePc());
 }
 
 typedef bool (*GetElementICFn)(JSContext *, size_t, HandleObject, HandleValue, MutableHandleValue);
@@ -7098,7 +7113,8 @@ CodeGenerator::visitSetElementCacheV(LSetElementCacheV *ins)
     ConstantOrRegister value = TypedOrValueRegister(ToValue(ins, LSetElementCacheV::Value));
 
     return addSetElementCache(ins, obj, unboxIndex, temp, tempFloat, index, value,
-                              ins->mir()->strict(), ins->mir()->guardHoles());
+                              ins->mir()->strict(), ins->mir()->guardHoles(),
+                              ins->mir()->profilerLeavePc());
 }
 
 bool
@@ -7117,7 +7133,8 @@ CodeGenerator::visitSetElementCacheT(LSetElementCacheT *ins)
         value = TypedOrValueRegister(ins->mir()->value()->type(), ToAnyRegister(tmp));
 
     return addSetElementCache(ins, obj, unboxIndex, temp, tempFloat, index, value,
-                              ins->mir()->strict(), ins->mir()->guardHoles());
+                              ins->mir()->strict(), ins->mir()->guardHoles(),
+                              ins->mir()->profilerLeavePc());
 }
 
 typedef bool (*SetElementICFn)(JSContext *, size_t, HandleObject, HandleValue, HandleValue);
@@ -7193,6 +7210,7 @@ CodeGenerator::visitBindNameCache(LBindNameCache *ins)
     Register scopeChain = ToRegister(ins->scopeChain());
     Register output = ToRegister(ins->output());
     BindNameIC cache(scopeChain, ins->mir()->name(), output);
+    cache.setProfilerLeavePC(ins->mir()->profilerLeavePc());
 
     return addCache(ins, allocateCache(cache));
 }
@@ -7287,7 +7305,8 @@ CodeGenerator::visitSetPropertyCacheV(LSetPropertyCacheV *ins)
     ConstantOrRegister value = TypedOrValueRegister(ToValue(ins, LSetPropertyCacheV::Value));
 
     return addSetPropertyCache(ins, liveRegs, objReg, ins->mir()->name(), value,
-                               ins->mir()->strict(), ins->mir()->needsTypeBarrier());
+                               ins->mir()->strict(), ins->mir()->needsTypeBarrier(),
+                               ins->mir()->profilerLeavePc());
 }
 
 bool
@@ -7303,7 +7322,8 @@ CodeGenerator::visitSetPropertyCacheT(LSetPropertyCacheT *ins)
         value = TypedOrValueRegister(ins->valueType(), ToAnyRegister(ins->getOperand(1)));
 
     return addSetPropertyCache(ins, liveRegs, objReg, ins->mir()->name(), value,
-                               ins->mir()->strict(), ins->mir()->needsTypeBarrier());
+                               ins->mir()->strict(), ins->mir()->needsTypeBarrier(),
+                               ins->mir()->profilerLeavePc());
 }
 
 typedef bool (*SetPropertyICFn)(JSContext *, size_t, HandleObject, HandleValue);
