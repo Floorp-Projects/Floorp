@@ -41,6 +41,7 @@ if CONFIG['MOZ_UPDATER']:
     ]
 
 EXTRA_JS_MODULES += [
+    'AlertsHelper.jsm',
     'ErrorPage.jsm',
     'SignInToWebsite.jsm',
     'SystemAppProxy.jsm',
