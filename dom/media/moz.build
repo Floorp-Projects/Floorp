@@ -60,6 +60,7 @@ FAIL_ON_WARNINGS = True
 LOCAL_INCLUDES += [
     '../base',
     '../camera',
+    '/caps/include',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
