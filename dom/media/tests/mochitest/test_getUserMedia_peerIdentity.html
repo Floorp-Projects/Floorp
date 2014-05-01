@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=942367
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test mozGetUserMedia peerIdentity Constraint</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="blacksilence.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=942367">Test mozGetUserMedia peerIdentity Constraint</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+function theTest() {
+  function testPeerIdentityConstraint(withConstraint, done) {
+    var config = { audio: true, video: true, fake: true };
+    if (withConstraint) {
+      config.peerIdentity = 'user@example.com';
+    }
+    info('getting media with constraints: ' + JSON.stringify(config));
+    navigator.mozGetUserMedia(config, function(stream) {
+      var oneDone = false;
+      function checkDone() {
+        if (oneDone) {
+          done();
+        }
+        oneDone = true;
+      }
+      var cancelAudioCheck = audioIsSilence(withConstraint, stream, checkDone);
+      var cancelVideoCheck = videoIsBlack(withConstraint, stream, checkDone);
+      setTimeout(cancelAudioCheck, 20000);
+      setTimeout(cancelVideoCheck, 20000);
+    }, function(e) {
+      ok(false, 'gUM error: ' + e);
+    });
+  };
+
+  // without constraint
+  testPeerIdentityConstraint(false, function() {
+    // with the constraint
+    testPeerIdentityConstraint(true, SimpleTest.finish.bind(SimpleTest));
+  });
+}
+
+runTest(theTest);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
