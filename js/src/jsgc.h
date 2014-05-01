@@ -664,7 +664,7 @@ class ArenaLists
         FreeList *freeList = &freeLists[i];
         if (!freeList->isEmpty()) {
             ArenaHeader *aheader = freeList->arenaHeader();
-            aheader->setFirstFreeSpan(freeList);
+            aheader->setFirstFreeSpan(freeList->getHead());
             freeList->initAsEmpty();
         }
     }
@@ -686,7 +686,7 @@ class ArenaLists
         if (!freeList->isEmpty()) {
             ArenaHeader *aheader = freeList->arenaHeader();
             JS_ASSERT(!aheader->hasFreeThings());
-            aheader->setFirstFreeSpan(freeList);
+            aheader->setFirstFreeSpan(freeList->getHead());
         }
     }
 
