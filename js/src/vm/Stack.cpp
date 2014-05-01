@@ -557,7 +557,8 @@ FrameIter::settleOnActivation()
         // If the caller supplied principals, only show activations which are subsumed (of the same
         // origin or of an origin accessible) by these principals.
         if (data_.principals_) {
-            if (JSSubsumesOp subsumes = data_.cx_->runtime()->securityCallbacks->subsumes) {
+            JSContext *cx = data_.cx_->asJSContext();
+            if (JSSubsumesOp subsumes = cx->runtime()->securityCallbacks->subsumes) {
                 JS::AutoAssertNoGC nogc;
                 if (!subsumes(data_.principals_, activation->compartment()->principals)) {
                     ++data_.activations_;
@@ -627,15 +628,15 @@ FrameIter::settleOnActivation()
     }
 }
 
-FrameIter::Data::Data(JSContext *cx, SavedOption savedOption, ContextOption contextOption,
-                      JSPrincipals *principals)
+FrameIter::Data::Data(ThreadSafeContext *cx, SavedOption savedOption,
+                      ContextOption contextOption, JSPrincipals *principals)
   : cx_(cx),
     savedOption_(savedOption),
     contextOption_(contextOption),
     principals_(principals),
     pc_(nullptr),
     interpFrames_(nullptr),
-    activations_(cx->runtime())
+    activations_(cx->perThreadData)
 #ifdef JS_ION
   , jitFrames_((uint8_t *)nullptr, SequentialExecution)
   , ionInlineFrameNo_(0)
@@ -661,10 +662,20 @@ FrameIter::Data::Data(const FrameIter::Data &other)
 {
 }
 
-FrameIter::FrameIter(JSContext *cx, SavedOption savedOption)
+FrameIter::FrameIter(ThreadSafeContext *cx, SavedOption savedOption)
   : data_(cx, savedOption, CURRENT_CONTEXT, nullptr)
 #ifdef JS_ION
   , ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
+#endif
+{
+    settleOnActivation();
+}
+
+FrameIter::FrameIter(ThreadSafeContext *cx, ContextOption contextOption,
+                     SavedOption savedOption)
+  : data_(cx, savedOption, contextOption, nullptr)
+#ifdef JS_ION
+  , ionInlineFrames_(cx, (js::jit::IonFrameIterator*) nullptr)
 #endif
 {
     settleOnActivation();
@@ -1158,7 +1169,7 @@ FrameIter::updatePcQuadratic()
 
             // ActivationIterator::ionTop_ may be invalid, so create a new
             // activation iterator.
-            data_.activations_ = ActivationIterator(data_.cx_->runtime());
+            data_.activations_ = ActivationIterator(data_.cx_->perThreadData);
             while (data_.activations_.activation() != activation)
                 ++data_.activations_;
 
@@ -1681,10 +1692,10 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
         profiler_->enterNative("asm.js code :0", this);
     }
 
-    prevAsmJS_ = cx_->runtime()->mainThread.asmJSActivationStack_;
+    prevAsmJS_ = cx->mainThread().asmJSActivationStack_;
 
-    JSRuntime::AutoLockForInterrupt lock(cx_->runtime());
-    cx_->runtime()->mainThread.asmJSActivationStack_ = this;
+    JSRuntime::AutoLockForInterrupt lock(cx->runtime());
+    cx->mainThread().asmJSActivationStack_ = this;
 
     (void) errorRejoinSP_;  // squelch GCC warning
 }
@@ -1694,10 +1705,11 @@ AsmJSActivation::~AsmJSActivation()
     if (profiler_)
         profiler_->exitNative();
 
-    JS_ASSERT(cx_->runtime()->mainThread.asmJSActivationStack_ == this);
+    JSContext *cx = cx_->asJSContext();
+    JS_ASSERT(cx->runtime()->mainThread.asmJSActivationStack_ == this);
 
-    JSRuntime::AutoLockForInterrupt lock(cx_->runtime());
-    cx_->runtime()->mainThread.asmJSActivationStack_ = prevAsmJS_;
+    JSRuntime::AutoLockForInterrupt lock(cx->runtime());
+    cx->runtime()->mainThread.asmJSActivationStack_ = prevAsmJS_;
 }
 
 InterpreterFrameIterator &
@@ -1719,6 +1731,13 @@ InterpreterFrameIterator::operator++()
 ActivationIterator::ActivationIterator(JSRuntime *rt)
   : jitTop_(rt->mainThread.ionTop),
     activation_(rt->mainThread.activation_)
+{
+    settle();
+}
+
+ActivationIterator::ActivationIterator(PerThreadData *perThreadData)
+  : jitTop_(perThreadData->ionTop),
+    activation_(perThreadData->activation_)
 {
     settle();
 }
