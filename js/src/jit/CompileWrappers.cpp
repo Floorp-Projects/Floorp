@@ -35,9 +35,9 @@ CompileRuntime::mainThread()
 }
 
 const void *
-CompileRuntime::addressOfIonTop()
+CompileRuntime::addressOfJitTop()
 {
-    return &runtime()->mainThread.ionTop;
+    return &runtime()->mainThread.jitTop;
 }
 
 const void *

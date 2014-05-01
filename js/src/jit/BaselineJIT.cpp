@@ -128,7 +128,7 @@ EnterBaseline(JSContext *cx, EnterJitData &data)
             data.osrFrame->clearRunningInJit();
     }
 
-    JS_ASSERT(!cx->runtime()->hasIonReturnOverride());
+    JS_ASSERT(!cx->runtime()->jitRuntime()->hasIonReturnOverride());
 
     // Jit callers wrap primitive constructor return.
     if (!data.result.isMagic() && data.constructing && data.result.isPrimitive())

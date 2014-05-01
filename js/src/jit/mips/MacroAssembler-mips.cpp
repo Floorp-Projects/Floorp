@@ -2834,7 +2834,7 @@ MacroAssemblerMIPSCompat::storeTypeTag(ImmTag tag, Register base, Register index
 void
 MacroAssemblerMIPSCompat::linkExitFrame()
 {
-    uint8_t *dest = (uint8_t*)GetIonContext()->runtime->addressOfIonTop();
+    uint8_t *dest = (uint8_t*)GetIonContext()->runtime->addressOfJitTop();
     movePtr(ImmPtr(dest), ScratchRegister);
     ma_sw(StackPointer, Address(ScratchRegister, 0));
 }
@@ -2842,7 +2842,7 @@ MacroAssemblerMIPSCompat::linkExitFrame()
 void
 MacroAssemblerMIPSCompat::linkParallelExitFrame(const Register &pt)
 {
-    ma_sw(StackPointer, Address(pt, offsetof(PerThreadData, ionTop)));
+    ma_sw(StackPointer, Address(pt, offsetof(PerThreadData, jitTop)));
 }
 
 // This macrosintruction calls the ion code and pushes the return address to

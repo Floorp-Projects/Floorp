@@ -76,7 +76,7 @@ ReadFrameBooleanSlot(IonJSFrameLayout *fp, int32_t slot)
 }
 
 JitFrameIterator::JitFrameIterator(ThreadSafeContext *cx)
-  : current_(cx->perThreadData->ionTop),
+  : current_(cx->perThreadData->jitTop),
     type_(JitFrame_Exit),
     returnAddressToFp_(nullptr),
     frameSize_(0),
@@ -615,8 +615,8 @@ HandleException(ResumeFromException *rfe)
     // This may happen if a callVM function causes an invalidation (setting the
     // override), and then fails, bypassing the bailout handlers that would
     // otherwise clear the return override.
-    if (cx->runtime()->hasIonReturnOverride())
-        cx->runtime()->takeIonReturnOverride();
+    if (cx->runtime()->jitRuntime()->hasIonReturnOverride())
+        cx->runtime()->jitRuntime()->takeIonReturnOverride();
 
     JitFrameIterator iter(cx);
     while (!iter.isEntry()) {
@@ -715,13 +715,13 @@ HandleException(ResumeFromException *rfe)
         ++iter;
 
         if (current) {
-            // Unwind the frame by updating ionTop. This is necessary so that
+            // Unwind the frame by updating jitTop. This is necessary so that
             // (1) debugger exception unwind and leave frame hooks don't see this
             // frame when they use ScriptFrameIter, and (2) ScriptFrameIter does
             // not crash when accessing an IonScript that's destroyed by the
             // ionScript->decref call.
             EnsureExitFrame(current);
-            cx->mainThread().ionTop = (uint8_t *)current;
+            cx->mainThread().jitTop = (uint8_t *)current;
         }
 
         if (overrecursed) {
@@ -737,7 +737,7 @@ void
 HandleParallelFailure(ResumeFromException *rfe)
 {
     ForkJoinContext *cx = ForkJoinContext::current();
-    JitFrameIterator iter(cx->perThreadData->ionTop, ParallelExecution);
+    JitFrameIterator iter(cx->perThreadData->jitTop, ParallelExecution);
 
     parallel::Spew(parallel::SpewBailouts, "Bailing from VM reentry");
 
@@ -1275,7 +1275,7 @@ GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     JSRuntime *rt = cx->runtime();
 
     // Recover the return address.
-    JitFrameIterator it(rt->mainThread.ionTop, SequentialExecution);
+    JitFrameIterator it(rt->mainThread.jitTop, SequentialExecution);
 
     // If the previous frame is a rectifier frame (maybe unwound),
     // skip past it.
