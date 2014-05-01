@@ -109,6 +109,7 @@ class ParticularProcessPriorityManager;
  */
 class ProcessPriorityManagerImpl MOZ_FINAL
   : public nsIObserver
+  , public WakeLockObserver
 {
 public:
   /**
@@ -157,6 +158,12 @@ public:
     ParticularProcessPriorityManager* aParticularManager,
     hal::ProcessPriority aOldPriority);
 
+  /**
+   * Implements WakeLockObserver, used to monitor wake lock changes in the
+   * main process.
+   */
+  virtual void Notify(const WakeLockInformation& aInfo) MOZ_OVERRIDE;
+
 private:
   static bool sPrefListenersRegistered;
   static bool sInitialized;
@@ -165,7 +172,7 @@ private:
   static void PrefChangedCallback(const char* aPref, void* aClosure);
 
   ProcessPriorityManagerImpl();
-  ~ProcessPriorityManagerImpl() {}
+  ~ProcessPriorityManagerImpl();
   DISALLOW_EVIL_CONSTRUCTORS(ProcessPriorityManagerImpl);
 
   void Init();
@@ -175,10 +182,12 @@ private:
 
   void ObserveContentParentCreated(nsISupports* aContentParent);
   void ObserveContentParentDestroyed(nsISupports* aSubject);
+  void ResetAllCPUPriorities();
 
   nsDataHashtable<nsUint64HashKey, nsRefPtr<ParticularProcessPriorityManager> >
     mParticularManagers;
 
+  bool mHighPriority;
   nsTHashtable<nsUint64HashKey> mHighPriorityChildIDs;
 };
 
@@ -411,8 +420,15 @@ ProcessPriorityManagerImpl::GetSingleton()
 }
 
 ProcessPriorityManagerImpl::ProcessPriorityManagerImpl()
+    : mHighPriority(false)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  RegisterWakeLockObserver(this);
+}
+
+ProcessPriorityManagerImpl::~ProcessPriorityManagerImpl()
+{
+  UnregisterWakeLockObserver(this);
 }
 
 void
@@ -526,14 +542,20 @@ ProcessPriorityManagerImpl::ObserveContentParentDestroyed(nsISupports* aSubject)
     mHighPriorityChildIDs.RemoveEntry(childID);
 
     // We just lost a high-priority process; reset everyone's CPU priorities.
-    nsTArray<nsRefPtr<ParticularProcessPriorityManager> > pppms;
-    mParticularManagers.EnumerateRead(
-      &EnumerateParticularProcessPriorityManagers,
-      &pppms);
+    ResetAllCPUPriorities();
+  }
+}
 
-    for (uint32_t i = 0; i < pppms.Length(); i++) {
-      pppms[i]->ResetCPUPriorityNow();
-    }
+void
+ProcessPriorityManagerImpl::ResetAllCPUPriorities( void )
+{
+  nsTArray<nsRefPtr<ParticularProcessPriorityManager> > pppms;
+  mParticularManagers.EnumerateRead(
+    &EnumerateParticularProcessPriorityManagers,
+    &pppms);
+
+  for (uint32_t i = 0; i < pppms.Length(); i++) {
+    pppms[i]->ResetCPUPriorityNow();
   }
 }
 
@@ -541,7 +563,9 @@ bool
 ProcessPriorityManagerImpl::OtherProcessHasHighPriority(
   ParticularProcessPriorityManager* aParticularManager)
 {
-  if (mHighPriorityChildIDs.Contains(aParticularManager->ChildID())) {
+  if (mHighPriority) {
+    return true;
+  } else if (mHighPriorityChildIDs.Contains(aParticularManager->ChildID())) {
     return mHighPriorityChildIDs.Count() > 1;
   }
   return mHighPriorityChildIDs.Count() > 0;
@@ -586,6 +610,29 @@ ProcessPriorityManagerImpl::NotifyProcessPriorityChanged(
     }
   }
 }
+
+/* virtual */ void
+ProcessPriorityManagerImpl::Notify(const WakeLockInformation& aInfo)
+{
+  /* The main process always has an ID of 0, if it is present in the wake-lock
+   * information then we explicitly requested a high-priority wake-lock for the
+   * main process. */
+  if (aInfo.topic().EqualsLiteral("high-priority")) {
+    if (aInfo.lockingProcesses().Contains((uint64_t)0)) {
+      mHighPriority = true;
+    } else {
+      mHighPriority = false;
+    }
+
+    /* The main process got a high-priority wakelock change; reset everyone's
+     * CPU priorities. */
+    ResetAllCPUPriorities();
+
+    LOG("Got wake lock changed event. "
+        "Now mHighPriorityParent = %d\n", mHighPriority);
+  }
+}
+
 
 NS_IMPL_ISUPPORTS(ParticularProcessPriorityManager,
                   nsIObserver,
