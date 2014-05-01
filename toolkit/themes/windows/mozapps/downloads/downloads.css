@@ -23,10 +23,6 @@ richlistitem[type="download"] {
   border-bottom: 1px solid ThreeDLightShadow;
 }
 
-richlistitem[type="download"][selected="true"] {
-  background-image: url(chrome://mozapps/skin/extensions/itemEnabledFader.png);
-}
-
 richlistitem[type="download"] .name {
   font-size: larger;
 }
