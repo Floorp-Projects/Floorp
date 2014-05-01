@@ -1098,9 +1098,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     // Save an exit frame (which must be aligned to the stack pointer) to
-    // ThreadData::ionTop of the main thread.
+    // PerThreadData::jitTop of the main thread.
     void linkExitFrame() {
-        movl(StackPointer, Operand(AbsoluteAddress(GetIonContext()->runtime->addressOfIonTop())));
+        movl(StackPointer, Operand(AbsoluteAddress(GetIonContext()->runtime->addressOfJitTop())));
     }
 
     void callWithExitFrame(JitCode *target, Register dynStack) {
@@ -1120,7 +1120,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Save an exit frame to the thread data of the current thread, given a
     // register that holds a PerThreadData *.
     void linkParallelExitFrame(const Register &pt) {
-        movl(StackPointer, Operand(pt, offsetof(PerThreadData, ionTop)));
+        movl(StackPointer, Operand(pt, offsetof(PerThreadData, jitTop)));
     }
 
 #ifdef JSGC_GENERATIONAL

@@ -462,7 +462,7 @@ class AutoSetForkJoinContext
 
 ForkJoinActivation::ForkJoinActivation(JSContext *cx)
   : Activation(cx, ForkJoin),
-    prevIonTop_(cx->mainThread().ionTop),
+    prevJitTop_(cx->mainThread().jitTop),
     av_(cx->runtime(), false)
 {
     // Note: we do not allow GC during parallel sections.
@@ -487,7 +487,7 @@ ForkJoinActivation::ForkJoinActivation(JSContext *cx)
 
 ForkJoinActivation::~ForkJoinActivation()
 {
-    cx_->perThreadData->ionTop = prevIonTop_;
+    cx_->perThreadData->jitTop = prevJitTop_;
 }
 
 ///////////////////////////////////////////////////////////////////////////
