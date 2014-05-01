@@ -74,6 +74,13 @@ ifdef MOZ_JEMALLOC3
 DEFINES += -DMOZ_JEMALLOC3
 endif
 
+ifdef MOZ_WIDGET_GTK
+DEFINES += -DMOZ_GTK=1
+ifdef MOZ_ENABLE_GTK3
+DEFINES += -DMOZ_GTK3=1
+endif
+endif
+
 ifdef MOZ_PKG_MANIFEST_P
 $(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) FORCE
 	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $< -o $@)
