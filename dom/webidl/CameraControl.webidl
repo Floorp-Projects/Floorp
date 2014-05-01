@@ -366,19 +366,6 @@ interface CameraControl : MediaStream
   void resumeContinuousFocus();
 };
 
-/* The coordinates of a point, relative to the camera sensor, of the center of
-   detected facial features. As with CameraRegions:
-     { x: -1000, y: -1000 } is the top-left corner
-     { x:  1000, y:  1000 } is the bottom-right corner
-   x and y can range from -1000 to 1000.
-*/
-[Pref="camera.control.face_detection.enabled", Func="DOMCameraPoint::HasSupport"]
-interface CameraPoint
-{
-  attribute long x;
-  attribute long y;
-};
-
 /* The information of the each face detected by a camera device, e.g.
      {
        id: 1,
@@ -408,13 +395,16 @@ interface CameraPoint
    'leftEye' is the coordinates of the centre of the left eye. The coordinates
    are in the same space as the ones for 'bounds'. This is an optional field
    and may not be supported on all devices. If it is not supported or detected,
-   the value will be set to null.
+   the value will be set to null. The x and y coordinates are bounded by the
+   range (-1000, 1000) where:
+       { x: -1000, y: -1000 } is the top-left corner
+       { x:  1000, y:  1000 } is the bottom-right corner
 
    'rightEye' is the coordinates of the detected right eye; null if not
-   supported or detected.
+   supported or detected. Same boundary conditions as 'leftEye'.
 
    'mouth' is the coordinates of the detected mouth; null if not supported or
-   detected.
+   detected. Same boundary conditions as 'leftEye'.
 */
 [Pref="camera.control.face_detection.enabled", Func="DOMCameraDetectedFace::HasSupport"]
 interface CameraDetectedFace
@@ -426,13 +416,13 @@ interface CameraDetectedFace
   readonly attribute DOMRect bounds;
 
   readonly attribute boolean hasLeftEye;
-  readonly attribute CameraPoint? leftEye;
+  readonly attribute DOMPoint? leftEye;
 
   readonly attribute boolean hasRightEye;
-  readonly attribute CameraPoint? rightEye;
+  readonly attribute DOMPoint? rightEye;
 
   readonly attribute boolean hasMouth;
-  readonly attribute CameraPoint? mouth;
+  readonly attribute DOMPoint? mouth;
 };
 
 callback CameraFaceDetectionCallback = void (sequence<CameraDetectedFace> faces);
