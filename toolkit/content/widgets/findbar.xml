@@ -191,7 +191,6 @@
                          type="checkbox"
                          xbl:inherits="accesskey=matchcaseaccesskey"/>
       <xul:label anonid="match-case-status" class="findbar-find-fast"/>
-      <xul:label anonid="found-matches" class="findbar-find-fast found-matches" hidden="true"/>
       <xul:image anonid="find-status-icon" class="findbar-find-fast find-status-icon"/>
       <xul:description anonid="find-status"
                        control="findbar-textbox"
@@ -319,7 +318,6 @@
       <constructor><![CDATA[
         // These elements are accessed frequently and are therefore cached
         this._findField = this.getElement("findbar-textbox");
-        this._foundMatches = this.getElement("found-matches");
         this._findStatusIcon = this.getElement("find-status-icon");
         this._findStatusDesc = this.getElement("find-status");
 
@@ -333,10 +331,6 @@
           prefsvc.getIntPref("accessibility.typeaheadfind.timeout");
         this._flashFindBar =
           prefsvc.getIntPref("accessibility.typeaheadfind.flashBar");
-        this._matchesCountTimeoutLength =
-          prefsvc.getIntPref("accessibility.typeaheadfind.matchesCountTimeout");
-        this._matchesCountLimit =
-          prefsvc.getIntPref("accessibility.typeaheadfind.matchesCountLimit");
 
         prefsvc.addObserver("accessibility.typeaheadfind",
                             this._observer, false);
@@ -436,54 +430,6 @@
         ]]></body>
       </method>
 
-      <field name="_pluralForm">null</field>
-      <property name="pluralForm">
-        <getter><![CDATA[
-          if (!this._pluralForm) {
-            this._pluralForm = Components.utils.import(
-                               "resource://gre/modules/PluralForm.jsm", {}).PluralForm;
-          }
-          return this._pluralForm;
-        ]]></getter>
-      </property>
-
-      <method name="_updateMatchesCountWorker">
-        <parameter name="aRes"/>
-        <body><![CDATA[
-          let word = this._findField.value;
-          if (aRes == this.nsITypeAheadFind.FIND_NOTFOUND || !word) {
-            this._foundMatches.hidden = true;
-            this._foundMatches.value = "";
-          } else {
-            let matchesCount = this.browser.finder.requestMatchesCount(
-              word, this._matchesCountLimit, this._findMode == this.FIND_LINKS);
-            window.clearTimeout(this._updateMatchesCountTimeout);
-            this._updateMatchesCountTimeout = null;
-          }
-        ]]></body>
-      </method>
-
-      <!--
-        - Updates the search match count after each find operation on a new string.
-        - @param aRes
-        -        the result of the find operation
-        -->
-      <method name="_updateMatchesCount">
-        <parameter name="aRes"/>
-        <body><![CDATA[
-          if (this._matchesCountLimit == 0 || !this._dispatchFindEvent("matchescount"))
-            return;
-
-          if (this._updateMatchesCountTimeout) {
-            window.clearTimeout(this._updateMatchesCountTimeout);
-            this._updateMatchesCountTimeout = null;
-          }
-          this._updateMatchesCountTimeout =
-            window.setTimeout(() => this._updateMatchesCountWorker(aRes),
-                              this._matchesCountTimeoutLength);
-        ]]></body>
-      </method>
-
       <!--
         - Turns highlight on or off.
         - @param aHighlight (boolean)
@@ -502,9 +448,6 @@
 
           this.browser._lastSearchHighlight = aHighlight;
           this.browser.finder.highlight(aHighlight, word);
-
-          // Update the matches count
-          this._updateMatchesCount(this.nsITypeAheadFind.FIND_FOUND);
         ]]></body>
       </method>
 
@@ -560,19 +503,6 @@
         ]]></body>
       </method>
 
-      <field name="_strBundle">null</field>
-      <property name="strBundle">
-        <getter><![CDATA[
-          if (!this._strBundle) {
-            this._strBundle =
-              Components.classes["@mozilla.org/intl/stringbundle;1"]
-                        .getService(Components.interfaces.nsIStringBundleService)
-                        .createBundle("chrome://global/locale/findbar.properties");
-          }
-          return this._strBundle;
-        ]]></getter>
-      </property>
-
       <!--
         - Opens and displays the find bar.
         -
@@ -589,7 +519,10 @@
             this._findMode = aMode;
 
           if (!this._notFoundStr) {
-            var stringsBundle = this.strBundle;
+            let stringsBundle =
+              Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService)
+                        .createBundle("chrome://global/locale/findbar.properties");
             this._notFoundStr = stringsBundle.GetStringFromName("NotFound");
             this._wrappedToTopStr =
               stringsBundle.GetStringFromName("WrappedToTop");
@@ -1020,7 +953,6 @@
               this._findField.removeAttribute("status");
               break;
           }
-          this._updateMatchesCount(res);
         ]]></body>
       </method>
 
@@ -1234,36 +1166,6 @@
 
           if (this._findMode != this.FIND_NORMAL)
             this._setFindCloseTimeout();
-        ]]></body>
-      </method>
-
-      <!--
-        - This handles all the result changes for matches counts.
-        - @param aResult
-        -   Result Object, containing the total amount of matches and a vector
-        -   of the current result.
-        -->
-      <method name="onMatchesCountResult">
-        <parameter name="aResult"/>
-        <body><![CDATA[
-          if (aResult.total !== 0) {
-            if (aResult.total == -1) {
-              this._foundMatches.value = this.pluralForm.get(
-                this._matchesCountLimit,
-                this.strBundle.GetStringFromName("FoundTooManyMatches")
-              ).replace("#1", this._matchesCountLimit);
-            } else {
-              this._foundMatches.value = this.pluralForm.get(
-                aResult.total,
-                this.strBundle.GetStringFromName("FoundMatches")
-              ).replace("#1", aResult.current)
-               .replace("#2", aResult.total);
-            }
-            this._foundMatches.hidden = false;
-          } else {
-            this._foundMatches.hidden = true;
-            this._foundMatches.value = "";
-          }
         ]]></body>
       </method>
 

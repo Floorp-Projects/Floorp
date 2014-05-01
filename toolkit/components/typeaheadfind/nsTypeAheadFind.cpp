@@ -66,7 +66,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTypeAheadFind)
 NS_IMPL_CYCLE_COLLECTION(nsTypeAheadFind, mFoundLink, mFoundEditable,
                          mCurrentWindow, mStartFindRange, mSearchRange,
                          mStartPointRange, mEndPointRange, mSoundInterface,
-                         mFind, mFoundRange)
+                         mFind)
 
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
@@ -176,7 +176,6 @@ nsTypeAheadFind::SetDocShell(nsIDocShell* aDocShell)
 
   mFoundLink = nullptr;
   mFoundEditable = nullptr;
-  mFoundRange = nullptr;
   mCurrentWindow = nullptr;
 
   mSelectionController = nullptr;
@@ -276,7 +275,6 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
   *aResult = FIND_NOTFOUND;
   mFoundLink = nullptr;
   mFoundEditable = nullptr;
-  mFoundRange = nullptr;
   mCurrentWindow = nullptr;
   nsCOMPtr<nsIPresShell> startingPresShell (GetPresShell());
   if (!startingPresShell) {    
@@ -438,8 +436,6 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
         }
         continue;
       }
-
-      mFoundRange = returnRange;
 
       // ------ Success! -------
       // Hide old selection (new one may be on a different controller)
@@ -1095,44 +1091,6 @@ nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
   }
 }
 
-NS_IMETHODIMP
-nsTypeAheadFind::GetFoundRange(nsIDOMRange** aFoundRange)
-{
-  NS_ENSURE_ARG_POINTER(aFoundRange);
-  if (mFoundRange == nullptr) {
-    *aFoundRange = nullptr;
-    return NS_OK;
-  }
-
-  mFoundRange->CloneRange(aFoundRange);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTypeAheadFind::IsRangeVisible(nsIDOMRange *aRange,
-                                bool aMustBeInViewPort,
-                                bool *aResult)
-{
-  // Jump through hoops to extract the docShell from the range.
-  nsCOMPtr<nsIDOMNode> node;
-  aRange->GetStartContainer(getter_AddRefs(node));
-  nsCOMPtr<nsIDOMDocument> document;
-  node->GetOwnerDocument(getter_AddRefs(document));
-  nsCOMPtr<nsIDOMWindow> window;
-  document->GetDefaultView(getter_AddRefs(window));
-  nsCOMPtr<nsIWebNavigation> navNav (do_GetInterface(window));
-  nsCOMPtr<nsIDocShell> docShell (do_GetInterface(navNav));
-
-  // Set up the arguments needed to check if a range is visible.
-  nsCOMPtr<nsIPresShell> presShell (docShell->GetPresShell());
-  nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
-  nsCOMPtr<nsIDOMRange> startPointRange = new nsRange(presShell->GetDocument());
-  *aResult = IsRangeVisible(presShell, presContext, aRange,
-                            aMustBeInViewPort, false,
-                            getter_AddRefs(startPointRange),
-                            nullptr);
-  return NS_OK;
-}
 
 bool
 nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
