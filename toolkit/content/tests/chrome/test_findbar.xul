@@ -4,16 +4,19 @@
   href="chrome://mochikit/content/tests/SimpleTest/test.css"
   type="text/css"?>
 <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=257061
 https://bugzilla.mozilla.org/show_bug.cgi?id=288254
 -->
-<window title="Mozilla Bug 288254"
+<window title="Mozilla Bug 257061 and Bug 288254"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript" 
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
-<a target="_blank" 
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=257061">Mozilla Bug 257061</a>
+<a target="_blank"
    href="https://bugzilla.mozilla.org/show_bug.cgi?id=288254">Mozilla Bug 288254</a>
 <p id="display"></p>
 <div id="content" style="display: none">
@@ -26,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=288254
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-/** Test for Bug 288254 **/
+/** Test for Bug 257061 and Bug 288254 **/
 SimpleTest.waitForExplicitFinish();
 window.open("findbar_window.xul", "findbartest", 
             "chrome,width=600,height=600");
