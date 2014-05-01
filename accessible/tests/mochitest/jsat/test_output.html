@@ -92,6 +92,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             ["1.", "list one"],
             ["1.", "list one"]
           ]
+        },
+        {
+          accOrElmOrID: "li_two",
+          expectedUtterance: [
+            ["list 1 item", "First item", "list two"],
+            ["list two", "First item", "list 1 item"]
+          ],
+          expectedBraille: [
+            ["*", "list two"],
+            ["*", "list two"]
+          ]
         }, {
           accOrElmOrID: "cell",
           expectedUtterance: [[
@@ -407,6 +418,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       <ol id="list">
         <li id="li_one">list one</li>
       </ol>
+      <ul id="unorderd_list">
+        <li id="li_two">list two</li>
+      </ul>
       <dl id="dlist">
         <dd id="dd_one">
           dd one
