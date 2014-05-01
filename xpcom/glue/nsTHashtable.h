@@ -275,6 +275,17 @@ public:
     return PL_DHashTableSizeOfExcludingThis(&mTable, nullptr, mallocSizeOf);
   }
 
+  /**
+   * Like SizeOfExcludingThis, but includes sizeof(*this).
+   */
+  size_t SizeOfIncludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
+                             mozilla::MallocSizeOf mallocSizeOf,
+                             void *userArg = nullptr) const
+  {
+    return mallocSizeOf(this) +
+        SizeOfExcludingThis(sizeOfEntryExcludingThis, mallocSizeOf, userArg);
+  }
+
 #ifdef DEBUG
   /**
    * Mark the table as constant after initialization.
