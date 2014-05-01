@@ -6939,6 +6939,10 @@ fi
 dnl ========================================================
 dnl = Enable dynamic replacement of malloc implementation
 dnl ========================================================
+if test -n "$NIGHTLY_BUILD" -a -n "$MOZ_MEMORY"; then
+  # Enable on central for the debugging opportunities it adds.
+  MOZ_REPLACE_MALLOC=1
+fi
 MOZ_ARG_ENABLE_BOOL(replace-malloc,
 [  --enable-replace-malloc   Enable ability to dynamically replace the malloc implementation],
     MOZ_REPLACE_MALLOC=1,
