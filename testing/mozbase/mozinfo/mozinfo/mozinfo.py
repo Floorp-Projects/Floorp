@@ -31,6 +31,7 @@ unknown = unknown() # singleton
 info = {'os': unknown,
         'processor': unknown,
         'version': unknown,
+        'os_version': unknown,
         'bits': unknown }
 (system, node, release, version, machine, processor) = platform.uname()
 (bits, linkage) = platform.architecture()
@@ -45,28 +46,34 @@ if system in ["Microsoft", "Windows"]:
     else:
         processor = os.environ.get('PROCESSOR_ARCHITECTURE', processor)
     system = os.environ.get("OS", system).replace('_', ' ')
-    service_pack = os.sys.getwindowsversion()[4]
+    (major, minor, _, _, service_pack) = os.sys.getwindowsversion()
     info['service_pack'] = service_pack
+    os_version = "%d.%d" % (major, minor)
 elif system == "Linux":
     if hasattr(platform, "linux_distribution"):
-        (distro, version, codename) = platform.linux_distribution()
+        (distro, os_version, codename) = platform.linux_distribution()
     else:
-        (distro, version, codename) = platform.dist()
-    version = "%s %s" % (distro, version)
+        (distro, os_version, codename) = platform.dist()
     if not processor:
         processor = machine
+    version = "%s %s" % (distro, os_version)
     info['os'] = 'linux'
+    info['linux_distro'] = distro
 elif system in ['DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD']:
     info['os'] = 'bsd'
-    version = sys.platform
+    version = os_version = sys.platform
 elif system == "Darwin":
     (release, versioninfo, machine) = platform.mac_ver()
     version = "OS X %s" % release
+    versionNums = release.split('.')[:2]
+    os_version = "%s.%s" % (versionNums[0], versionNums[1])
     info['os'] = 'mac'
 elif sys.platform in ('solaris', 'sunos5'):
     info['os'] = 'unix'
-    version = sys.platform
-info['version'] = version # os version
+    os_version = version = sys.platform
+
+info['version'] = version
+info['os_version'] = os_version
 
 # processor type and bits
 if processor in ["i386", "i686"]:
@@ -140,13 +147,15 @@ def find_and_update_from_json(*dirs):
     """
     # First, see if we're in an objdir
     try:
-        from mozbuild.base import MozbuildObject
+        from mozbuild.base import MozbuildObject, BuildEnvironmentNotFoundException
         build = MozbuildObject.from_environment()
         json_path = _os.path.join(build.topobjdir, "mozinfo.json")
         if _os.path.isfile(json_path):
             update(json_path)
             return json_path
     except ImportError:
+        pass
+    except BuildEnvironmentNotFoundException:
         pass
 
     for d in dirs:
