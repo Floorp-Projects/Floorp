@@ -8,6 +8,7 @@ UNIFIED_SOURCES += [
     'CertVerifier.cpp',
     'NSSCertDBTrustDomain.cpp',
     'OCSPCache.cpp',
+    'OCSPRequestor.cpp',
 ]
 
 if not CONFIG['NSS_NO_EV_CERTS']:
@@ -16,6 +17,7 @@ if not CONFIG['NSS_NO_EV_CERTS']:
     ]
 
 LOCAL_INCLUDES += [
+    '../manager/ssl/src',
     '../pkix/include',
 ]
 
