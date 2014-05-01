@@ -41,10 +41,10 @@ const size_t CellSize = size_t(1) << CellShift;
 const size_t CellMask = CellSize - 1;
 
 /* These are magic constants derived from actual offsets in gc/Heap.h. */
-const size_t ChunkMarkBitmapOffset = 1032352;
+const size_t ChunkMarkBitmapOffset = 1032360;
 const size_t ChunkMarkBitmapBits = 129024;
 const size_t ChunkRuntimeOffset = ChunkSize - sizeof(void*);
-const size_t ChunkLocationOffset = ChunkSize - 2 * sizeof(void*) - sizeof(uint64_t);
+const size_t ChunkLocationOffset = ChunkSize - sizeof(void*) - sizeof(uintptr_t);
 
 /*
  * Live objects are marked black. How many other additional colors are available
