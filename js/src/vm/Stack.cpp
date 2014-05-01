@@ -1167,7 +1167,7 @@ FrameIter::updatePcQuadratic()
             jit::BaselineFrame *frame = data_.jitFrames_.baselineFrame();
             jit::JitActivation *activation = data_.activations_->asJit();
 
-            // ActivationIterator::ionTop_ may be invalid, so create a new
+            // ActivationIterator::jitTop_ may be invalid, so create a new
             // activation iterator.
             data_.activations_ = ActivationIterator(data_.cx_->perThreadData);
             while (data_.activations_.activation() != activation)
@@ -1529,11 +1529,11 @@ jit::JitActivation::JitActivation(JSContext *cx, bool firstFrameIsConstructing, 
 #endif
 {
     if (active) {
-        prevIonTop_ = cx->mainThread().ionTop;
+        prevJitTop_ = cx->mainThread().jitTop;
         prevJitJSContext_ = cx->mainThread().jitJSContext;
         cx->mainThread().jitJSContext = cx;
     } else {
-        prevIonTop_ = nullptr;
+        prevJitTop_ = nullptr;
         prevJitJSContext_ = nullptr;
     }
 }
@@ -1546,7 +1546,7 @@ jit::JitActivation::JitActivation(ForkJoinContext *cx)
   , rematerializedFrames_(nullptr)
 #endif
 {
-    prevIonTop_ = cx->perThreadData->ionTop;
+    prevJitTop_ = cx->perThreadData->jitTop;
     prevJitJSContext_ = cx->perThreadData->jitJSContext;
     cx->perThreadData->jitJSContext = nullptr;
 }
@@ -1554,7 +1554,7 @@ jit::JitActivation::JitActivation(ForkJoinContext *cx)
 jit::JitActivation::~JitActivation()
 {
     if (active_) {
-        cx_->perThreadData->ionTop = prevIonTop_;
+        cx_->perThreadData->jitTop = prevJitTop_;
         cx_->perThreadData->jitJSContext = prevJitJSContext_;
     }
 
@@ -1577,11 +1577,11 @@ jit::JitActivation::setActive(JSContext *cx, bool active)
     active_ = active;
 
     if (active) {
-        prevIonTop_ = cx->mainThread().ionTop;
+        prevJitTop_ = cx->mainThread().jitTop;
         prevJitJSContext_ = cx->mainThread().jitJSContext;
         cx->mainThread().jitJSContext = cx;
     } else {
-        cx->mainThread().ionTop = prevIonTop_;
+        cx->mainThread().jitTop = prevJitTop_;
         cx->mainThread().jitJSContext = prevJitJSContext_;
     }
 }
@@ -1750,14 +1750,14 @@ InterpreterFrameIterator::operator++()
 }
 
 ActivationIterator::ActivationIterator(JSRuntime *rt)
-  : jitTop_(rt->mainThread.ionTop),
+  : jitTop_(rt->mainThread.jitTop),
     activation_(rt->mainThread.activation_)
 {
     settle();
 }
 
 ActivationIterator::ActivationIterator(PerThreadData *perThreadData)
-  : jitTop_(perThreadData->ionTop),
+  : jitTop_(perThreadData->jitTop),
     activation_(perThreadData->activation_)
 {
     settle();
@@ -1768,7 +1768,7 @@ ActivationIterator::operator++()
 {
     JS_ASSERT(activation_);
     if (activation_->isJit() && activation_->asJit()->isActive())
-        jitTop_ = activation_->asJit()->prevIonTop();
+        jitTop_ = activation_->asJit()->prevJitTop();
     activation_ = activation_->prev();
     settle();
     return *this;

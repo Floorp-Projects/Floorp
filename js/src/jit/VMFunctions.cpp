@@ -804,12 +804,12 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
     }
 
     if (!ok) {
-        // Pop this frame by updating ionTop, so that the exception handling
+        // Pop this frame by updating jitTop, so that the exception handling
         // code will start at the previous frame.
 
         IonJSFrameLayout *prefix = frame->framePrefix();
         EnsureExitFrame(prefix);
-        cx->mainThread().ionTop = (uint8_t *)prefix;
+        cx->mainThread().jitTop = (uint8_t *)prefix;
     }
 
     return ok;

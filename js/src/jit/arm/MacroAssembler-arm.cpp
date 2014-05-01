@@ -3503,8 +3503,9 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Register base, Register index,
 }
 
 void
-MacroAssemblerARMCompat::linkExitFrame() {
-    uint8_t *dest = (uint8_t*)GetIonContext()->runtime->addressOfIonTop();
+MacroAssemblerARMCompat::linkExitFrame()
+{
+    uint8_t *dest = (uint8_t*)GetIonContext()->runtime->addressOfJitTop();
     movePtr(ImmPtr(dest), ScratchRegister);
     ma_str(StackPointer, Operand(ScratchRegister, 0));
 }
@@ -3512,7 +3513,7 @@ MacroAssemblerARMCompat::linkExitFrame() {
 void
 MacroAssemblerARMCompat::linkParallelExitFrame(const Register &pt)
 {
-    ma_str(StackPointer, Operand(pt, offsetof(PerThreadData, ionTop)));
+    ma_str(StackPointer, Operand(pt, offsetof(PerThreadData, jitTop)));
 }
 
 // ARM says that all reads of pc will return 8 higher than the

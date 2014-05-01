@@ -163,7 +163,8 @@ JitRuntime::JitRuntime()
     functionWrappers_(nullptr),
     osrTempData_(nullptr),
     flusher_(nullptr),
-    ionCodeProtected_(false)
+    ionCodeProtected_(false),
+    ionReturnOverride_(MagicValue(JS_ARG_POISON))
 {
 }
 
@@ -2406,7 +2407,7 @@ EnterIon(JSContext *cx, EnterJitData &data)
                             /* scopeChain = */ nullptr, 0, data.result.address());
     }
 
-    JS_ASSERT(!cx->runtime()->hasIonReturnOverride());
+    JS_ASSERT(!cx->runtime()->jitRuntime()->hasIonReturnOverride());
 
     // Jit callers wrap primitive constructor return.
     if (!data.result.isMagic() && data.constructing && data.result.isPrimitive())
@@ -2514,7 +2515,7 @@ jit::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
     CALL_GENERATED_CODE(enter, jitcode, args.length() + 1, args.array() - 1, /* osrFrame = */nullptr,
                         calleeToken, /* scopeChain = */ nullptr, 0, result.address());
 
-    JS_ASSERT(!cx->runtime()->hasIonReturnOverride());
+    JS_ASSERT(!cx->runtime()->jitRuntime()->hasIonReturnOverride());
 
     args.rval().set(result);
 
@@ -2523,13 +2524,13 @@ jit::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
 }
 
 static void
-InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
+InvalidateActivation(FreeOp *fop, uint8_t *jitTop, bool invalidateAll)
 {
     IonSpew(IonSpew_Invalidate, "BEGIN invalidating activation");
 
     size_t frameno = 1;
 
-    for (JitFrameIterator it(ionTop, SequentialExecution); !it.done(); ++it, ++frameno) {
+    for (JitFrameIterator it(jitTop, SequentialExecution); !it.done(); ++it, ++frameno) {
         JS_ASSERT_IF(frameno == 1, it.type() == JitFrame_Exit);
 
 #ifdef DEBUG
