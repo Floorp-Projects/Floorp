@@ -82,13 +82,15 @@
         "Baltimore CyberTrust Root"
       ]
     },
-    // For pinning tests on pinning.example.com, the issuer must be testCA.
+    // For pinning tests on pinning.example.com, the certificate must be 'End
+    // Entity Test Cert'
     {
       "name": "mozilla_test",
       "static_spki_hashes": [
         "End Entity Test Cert"
       ]
-    }  ],
+    }
+  ],
 
   "entries": [
     { "name": "addons.mozilla.org", "include_subdomains": true, "pins": "mozilla" },
@@ -96,7 +98,7 @@
     { "name": "cdn.mozilla.net", "include_subdomains": true, "pins": "mozilla_cdn" },
     { "name": "cdn.mozilla.org", "include_subdomains": true, "pins": "mozilla_cdn" },
     { "name": "media.mozilla.com", "include_subdomains": true, "pins": "mozilla_cdn" },
-    { "name": "include-subdomain.pinning.example.com", "include_subdomains": true, "pins": "mozilla_test" },
+    { "name": "include-subdomains.pinning.example.com", "include_subdomains": true, "pins": "mozilla_test" },
     { "name": "exclude-subdomains.pinning.example.com", "include_subdomains": false, "pins": "mozilla_test" }
   ]
 }
