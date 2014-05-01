@@ -7,20 +7,23 @@
 #define nsAboutCache_h__
 
 #include "nsIAboutModule.h"
+#include "nsICacheStorageVisitor.h"
+#include "nsICacheStorage.h"
 
 #include "nsString.h"
 #include "nsIOutputStream.h"
+#include "nsILoadContextInfo.h"
 
-#include "nsICacheVisitor.h"
 #include "nsCOMPtr.h"
+#include "nsTArray.h"
 
 class nsAboutCache : public nsIAboutModule 
-                   , public nsICacheVisitor
+                   , public nsICacheStorageVisitor
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIABOUTMODULE
-    NS_DECL_NSICACHEVISITOR
+    NS_DECL_NSICACHESTORAGEVISITOR
 
     nsAboutCache() {}
     virtual ~nsAboutCache() {}
@@ -28,12 +31,50 @@ public:
     static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-protected:
-    nsresult  ParseURI(nsIURI * uri, nsCString &deviceID);
+    static nsresult
+    GetStorage(nsACString const & storageName, nsILoadContextInfo* loadInfo,
+               nsICacheStorage **storage);
 
-    nsCOMPtr<nsIOutputStream> mStream;
-    nsCString                 mDeviceID;
+protected:
+    nsresult ParseURI(nsIURI * uri, nsACString & storage);
+
+    // Finds a next storage we wish to visit (we use this method
+    // even there is a specified storage name, which is the only
+    // one in the list then.)  Posts FireVisitStorage() when found.
+    nsresult VisitNextStorage();
+    // Helper method that calls VisitStorage() for the current storage.
+    // When it fails, OnCacheEntryVisitCompleted is simlated to close
+    // the output stream and thus the about:cache channel.
+    void FireVisitStorage();
+    // Kiks the visit cycle for the given storage, names can be:
+    // "disk", "memory", "appcache"
+    // Note: any newly added storage type has to be manually handled here.
+    nsresult VisitStorage(nsACString const & storageName);
+
+    // Writes content of mBuffer to mStream and truncates
+    // the buffer.
+    void FlushBuffer();
+
+    // Whether we are showing overview status of all available
+    // storages.
+    bool mOverview;
+
+    // Flag initially false, that indicates the entries header has
+    // been added to the output HTML.
+    bool mEntriesHeaderAdded;
+
+    // The context we are working with.
+    nsCOMPtr<nsILoadContextInfo> mLoadInfo;
+    nsCString mContextString;
+
+    // The list of all storage names we want to visit
+    nsTArray<nsCString> mStorageList;
+    nsCString mStorageName;
+    nsCOMPtr<nsICacheStorage> mStorage;
+
+    // Output data buffering and streaming output
     nsCString mBuffer;
+    nsCOMPtr<nsIOutputStream> mStream;
 };
 
 #define NS_ABOUT_CACHE_MODULE_CID                    \

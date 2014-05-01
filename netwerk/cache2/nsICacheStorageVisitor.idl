@@ -4,18 +4,27 @@
 
 #include "nsISupports.idl"
 
-interface nsICacheEntry;
+interface nsIURI;
+interface nsIFile;
 
-[scriptable, uuid(692dda47-3b21-4d0d-853a-f4d27cc324d0)]
+[scriptable, uuid(946bd799-9410-4945-9085-79c7fe019e83)]
 interface nsICacheStorageVisitor : nsISupports
 {
   /**
    */
-  void onCacheStorageInfo(in uint32_t aEntryCount, in uint64_t aConsumption);
+  void onCacheStorageInfo(in uint32_t aEntryCount,
+                          in uint64_t aConsumption,
+                          in uint64_t aCapacity,
+                          in nsIFile aDiskDirectory);
 
   /**
    */
-  void onCacheEntryInfo(in nsICacheEntry aEntry);
+  void onCacheEntryInfo(in nsIURI aURI,
+                        in ACString aIdEnhance,
+                        in int64_t aDataSize,
+                        in long aFetchCount,
+                        in uint32_t aLastModifiedTime,
+                        in uint32_t aExpirationTime);
 
   /**
    */

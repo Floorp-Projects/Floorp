@@ -20,10 +20,11 @@ function test() {
       {
         info("disk storage contains " + num + " entries");
       },
-      onCacheEntryInfo: function(entry)
+      onCacheEntryInfo: function(uri)
       {
-        info(entry.key);
-        is(entry.key.contains(filename), false, "web content present in disk cache");
+        var urispec = uri.asciiSpec;
+        info(urispec);
+        is(urispec.contains(filename), false, "web content present in disk cache");
       },
       onCacheEntryVisitCompleted: function()
       {
