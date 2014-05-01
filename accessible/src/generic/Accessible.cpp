@@ -2453,6 +2453,8 @@ Accessible::Shutdown()
 
   mContent = nullptr;
   mDoc = nullptr;
+  if (SelectionMgr()->AccessibleWithCaret(nullptr) == this)
+    SelectionMgr()->ResetCaretOffset();
 }
 
 // Accessible protected
