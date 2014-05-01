@@ -2293,8 +2293,8 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
          * below, in common with the other case.
          */
         for (size_t i = 0; i < a->numFixedSlots(); ++i) {
-            HeapSlot::writeBarrierPost(cx->runtime(), a, HeapSlot::Slot, i, a->getSlot(i));
-            HeapSlot::writeBarrierPost(cx->runtime(), b, HeapSlot::Slot, i, b->getSlot(i));
+            HeapSlot::writeBarrierPost(a, HeapSlot::Slot, i, a->getSlot(i));
+            HeapSlot::writeBarrierPost(b, HeapSlot::Slot, i, b->getSlot(i));
         }
 #endif
     } else {
