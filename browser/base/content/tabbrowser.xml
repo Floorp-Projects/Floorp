@@ -3369,11 +3369,12 @@
 # button, necessary due to the previous hack.
         <children/>
         <xul:toolbarbutton class="tabs-newtab-button"
+                           anonid="tabs-newtab-button"
                            command="cmd_newNavigatorTab"
                            onclick="checkForMiddleClick(this, event);"
                            onmouseover="document.getBindingParent(this)._enterNewTab();"
                            onmouseout="document.getBindingParent(this)._leaveNewTab();"
-                           tooltiptext="&newTabButton.tooltip;"/>
+                           tooltip="dynamic-shortcut-tooltip"/>
         <xul:spacer class="closing-tabs-spacer" anonid="closing-tabs-spacer"
                     style="width: 0;"/>
       </xul:arrowscrollbox>
