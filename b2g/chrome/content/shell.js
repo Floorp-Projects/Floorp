@@ -16,6 +16,7 @@ Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import('resource://gre/modules/UserAgentOverrides.jsm');
 Cu.import('resource://gre/modules/Keyboard.jsm');
 Cu.import('resource://gre/modules/ErrorPage.jsm');
+Cu.import('resource://gre/modules/AlertsHelper.jsm');
 #ifdef MOZ_WIDGET_GONK
 Cu.import('resource://gre/modules/NetworkStatsService.jsm');
 #endif
@@ -343,8 +344,6 @@ var shell = {
     window.addEventListener('unload', this);
     this.contentBrowser.addEventListener('mozbrowserloadstart', this, true);
 
-    SystemAppProxy.registerFrame(this.contentBrowser);
-
     CustomEventManager.init();
     WebappsHelper.init();
     UserAgentOverrides.init();
@@ -358,7 +357,6 @@ var shell = {
     ppmm.addMessageListener("dial-handler", this);
     ppmm.addMessageListener("sms-handler", this);
     ppmm.addMessageListener("mail-handler", this);
-    ppmm.addMessageListener("app-notification-send", AlertsHelper);
     ppmm.addMessageListener("file-picker", this);
     ppmm.addMessageListener("getProfD", function(message) {
       return Services.dirsvc.get("ProfD", Ci.nsIFile).path;
@@ -653,6 +651,8 @@ var shell = {
 
     this.reportCrash(true);
 
+    SystemAppProxy.registerFrame(shell.contentBrowser);
+
     this.sendEvent(window, 'ContentStart');
 
     Services.obs.notifyObservers(null, 'content-start', null);
@@ -752,11 +752,6 @@ var CustomEventManager = {
     dump('XXX FIXME : Got a mozContentEvent: ' + detail.type + "\n");
 
     switch(detail.type) {
-      case 'desktop-notification-show':
-      case 'desktop-notification-click':
-      case 'desktop-notification-close':
-        AlertsHelper.handleEvent(detail);
-        break;
       case 'webapps-install-granted':
       case 'webapps-install-denied':
         WebappsHelper.handleEvent(detail);
@@ -785,190 +780,6 @@ var CustomEventManager = {
         break;
     }
   }
-}
-
-var AlertsHelper = {
-  _listeners: {},
-  _count: 0,
-
-  handleEvent: function alert_handleEvent(detail) {
-    if (!detail || !detail.id)
-      return;
-
-    let uid = detail.id;
-    let listener = this._listeners[uid];
-    if (!listener)
-     return;
-
-    let topic;
-    if (detail.type == "desktop-notification-click") {
-      topic = "alertclickcallback";
-    } else if (detail.type == "desktop-notification-show") {
-      topic = "alertshow";
-    } else {
-      /* desktop-notification-close */
-      topic = "alertfinished";
-    }
-
-    if (uid.startsWith("alert")) {
-      try {
-        listener.observer.observe(null, topic, listener.cookie);
-      } catch (e) { }
-    } else {
-      try {
-        listener.mm.sendAsyncMessage("app-notification-return", {
-          uid: uid,
-          topic: topic,
-          target: listener.target
-        });
-      } catch (e) {
-        // we get an exception if the app is not launched yet
-        gSystemMessenger.sendMessage("notification", {
-            clicked: (detail.type === "desktop-notification-click"),
-            title: listener.title,
-            body: listener.text,
-            imageURL: listener.imageURL,
-            lang: listener.lang,
-            dir: listener.dir,
-            id: listener.id,
-            tag: listener.tag
-          },
-          Services.io.newURI(listener.target, null, null),
-          Services.io.newURI(listener.manifestURL, null, null)
-        );
-      }
-    }
-
-    // we're done with this notification
-    if (topic === "alertfinished") {
-      delete this._listeners[uid];
-    }
-  },
-
-  registerListener: function alert_registerListener(alertId, cookie, alertListener) {
-    this._listeners[alertId] = { observer: alertListener, cookie: cookie };
-  },
-
-  registerAppListener: function alert_registerAppListener(uid, listener) {
-    this._listeners[uid] = listener;
-
-    let app = DOMApplicationRegistry.getAppByManifestURL(listener.manifestURL);
-    DOMApplicationRegistry.getManifestFor(app.manifestURL).then((manifest) => {
-      let helper = new ManifestHelper(manifest, app.origin);
-      let getNotificationURLFor = function(messages) {
-        if (!messages)
-          return null;
-
-        for (let i = 0; i < messages.length; i++) {
-          let message = messages[i];
-          if (message === "notification") {
-            return helper.fullLaunchPath();
-          } else if (typeof message == "object" && "notification" in message) {
-            return helper.resolveFromOrigin(message["notification"]);
-          }
-        }
-
-        // No message found...
-        return null;
-      }
-
-      listener.target = getNotificationURLFor(manifest.messages);
-
-      // Bug 816944 - Support notification messages for entry_points.
-    });
-  },
-
-  showNotification: function alert_showNotification(imageURL,
-                                                    title,
-                                                    text,
-                                                    textClickable,
-                                                    cookie,
-                                                    uid,
-                                                    bidi,
-                                                    lang,
-                                                    manifestURL) {
-    function send(appName, appIcon) {
-      shell.sendChromeEvent({
-        type: "desktop-notification",
-        id: uid,
-        icon: imageURL,
-        title: title,
-        text: text,
-        bidi: bidi,
-        lang: lang,
-        appName: appName,
-        appIcon: appIcon,
-        manifestURL: manifestURL
-      });
-    }
-
-    if (!manifestURL || !manifestURL.length) {
-      send(null, null);
-      return;
-    }
-
-    // If we have a manifest URL, get the icon and title from the manifest
-    // to prevent spoofing.
-    let app = DOMApplicationRegistry.getAppByManifestURL(manifestURL);
-    DOMApplicationRegistry.getManifestFor(manifestURL).then((aManifest) => {
-      let helper = new ManifestHelper(aManifest, app.origin);
-      send(helper.name, helper.iconURLForSize(128));
-    });
-  },
-
-  showAlertNotification: function alert_showAlertNotification(imageURL,
-                                                              title,
-                                                              text,
-                                                              textClickable,
-                                                              cookie,
-                                                              alertListener,
-                                                              name,
-                                                              bidi,
-                                                              lang) {
-    let currentListener = this._listeners[name];
-    if (currentListener) {
-      currentListener.observer.observe(null, "alertfinished", currentListener.cookie);
-    }
-
-    this.registerListener(name, cookie, alertListener);
-    this.showNotification(imageURL, title, text, textClickable, cookie,
-                          name, bidi, lang, null);
-  },
-
-  closeAlert: function alert_closeAlert(name) {
-    shell.sendChromeEvent({
-      type: "desktop-notification-close",
-      id: name
-    });
-  },
-
-  receiveMessage: function alert_receiveMessage(aMessage) {
-    if (!aMessage.target.assertAppHasPermission("desktop-notification")) {
-      Cu.reportError("Desktop-notification message " + aMessage.name +
-                     " from a content process with no desktop-notification privileges.");
-      return;
-    }
-
-    let data = aMessage.data;
-    let details = data.details;
-    let listener = {
-      mm: aMessage.target,
-      title: data.title,
-      text: data.text,
-      manifestURL: details.manifestURL,
-      imageURL: data.imageURL,
-      lang: details.lang || undefined,
-      id: details.id || undefined,
-      dir: details.dir || undefined,
-      tag: details.tag || undefined
-    };
-    this.registerAppListener(data.uid, listener);
-
-    this.showNotification(data.imageURL, data.title, data.text,
-                          details.textClickable, null,
-                          data.uid, details.dir,
-                          details.lang, details.manifestURL);
-  },
 }
 
 var WebappsHelper = {
