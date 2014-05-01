@@ -8,8 +8,6 @@ function verifyVoiceCellLocationInfo(aLac, aCid) {
   let cell = mobileConnection.voice.cell;
   ok(cell, "location available");
 
-  // Initial LAC/CID. Android emulator initializes both value to
-  // 0xffff/0xffffffff.
   is(cell.gsmLocationAreaCode, aLac, "check voice.cell.gsmLocationAreaCode");
   is(cell.gsmCellId, aCid, "check voice.cell.gsmCellId");
   is(cell.cdmaBaseStationId, -1, "check voice.cell.cdmaBaseStationId");
