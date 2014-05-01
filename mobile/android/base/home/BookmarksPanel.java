@@ -65,7 +65,7 @@ public class BookmarksPanel extends HomeFragment {
 
         mList = (BookmarksListView) view.findViewById(R.id.bookmarks_list);
 
-        mList.setContextMenuInfoFactory(new HomeListView.ContextMenuInfoFactory() {
+        mList.setContextMenuInfoFactory(new HomeContextMenuInfo.Factory() {
             @Override
             public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor) {
                 final int type = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE));

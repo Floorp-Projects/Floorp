@@ -6,6 +6,7 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract.HomeItems;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.HomeConfig.EmptyViewConfig;
 import org.mozilla.gecko.home.HomeConfig.ItemHandler;
@@ -79,6 +80,7 @@ abstract class PanelLayout extends FrameLayout {
     private final PanelConfig mPanelConfig;
     private final DatasetHandler mDatasetHandler;
     private final OnUrlOpenListener mUrlOpenListener;
+    private final ContextMenuRegistry mContextMenuRegistry;
 
     /**
      * To be used by panel views to express that they are
@@ -219,6 +221,7 @@ abstract class PanelLayout extends FrameLayout {
     public interface PanelView {
         public void setOnItemOpenListener(OnItemOpenListener listener);
         public void setOnKeyListener(OnKeyListener listener);
+        public void setContextMenuInfoFactory(HomeContextMenuInfo.Factory factory);
     }
 
     public interface FilterManager {
@@ -227,12 +230,18 @@ abstract class PanelLayout extends FrameLayout {
         public void goBack();
     }
 
-    public PanelLayout(Context context, PanelConfig panelConfig, DatasetHandler datasetHandler, OnUrlOpenListener urlOpenListener) {
+    public interface ContextMenuRegistry {
+        public void register(View view);
+    }
+
+    public PanelLayout(Context context, PanelConfig panelConfig, DatasetHandler datasetHandler,
+            OnUrlOpenListener urlOpenListener, ContextMenuRegistry contextMenuRegistry) {
         super(context);
         mViewStates = new SparseArray<ViewState>();
         mPanelConfig = panelConfig;
         mDatasetHandler = datasetHandler;
         mUrlOpenListener = urlOpenListener;
+        mContextMenuRegistry = contextMenuRegistry;
     }
 
     @Override
@@ -369,6 +378,17 @@ abstract class PanelLayout extends FrameLayout {
             PanelView panelView = (PanelView) view;
             panelView.setOnItemOpenListener(new PanelOnItemOpenListener(viewState));
             panelView.setOnKeyListener(new PanelKeyListener(viewState));
+            panelView.setContextMenuInfoFactory(new HomeContextMenuInfo.Factory() {
+                @Override
+                public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor) {
+                    final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
+                    info.url = cursor.getString(cursor.getColumnIndexOrThrow(HomeItems.URL));
+                    info.title = cursor.getString(cursor.getColumnIndexOrThrow(HomeItems.TITLE));
+                    return info;
+                }
+            });
+
+            mContextMenuRegistry.register(view);
 
             if (view instanceof DatasetBacked) {
                 DatasetBacked datasetBacked = (DatasetBacked) view;
