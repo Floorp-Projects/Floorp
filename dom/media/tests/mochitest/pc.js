@@ -1116,6 +1116,9 @@ function PeerConnectionWrapper(label, configuration) {
 
   this.dataChannels = [ ];
 
+  this.onAddStreamFired = false;
+  this.addStreamCallbacks = {};
+
   info("Creating " + this);
   this._pc = new mozRTCPeerConnection(this.configuration);
   is(this._pc.iceConnectionState, "new", "iceConnectionState starts at 'new'");
@@ -1152,6 +1155,8 @@ function PeerConnectionWrapper(label, configuration) {
    */
   this._pc.onaddstream = function (event) {
     info(self + ": 'onaddstream' event fired for " + JSON.stringify(event.stream));
+    // TODO: remove this once Bugs 998552 and 998546 are closed
+    self.onAddStreamFired = true;
 
     var type = '';
     if (event.stream.getAudioTracks().length > 0) {
@@ -1161,6 +1166,11 @@ function PeerConnectionWrapper(label, configuration) {
       type += 'video';
     }
     self.attachMedia(event.stream, type, 'remote');
+
+    Object.keys(self.addStreamCallbacks).forEach(function(name) {
+      info(this + " calling addStreamCallback " + name);
+      self.addStreamCallbacks[name]();
+    });
    };
 
   /**
@@ -1324,8 +1334,14 @@ PeerConnectionWrapper.prototype = {
       }
     }
 
-    info("Get " + this.constraints.length + " local streams");
-    _getAllUserMedia(this.constraints, 0);
+    if (this.constraints.length === 0) {
+      info("Skipping GUM: no UserMedia requested");
+      onSuccess();
+    }
+    else {
+      info("Get " + this.constraints.length + " local streams");
+      _getAllUserMedia(this.constraints, 0);
+    }
   },
 
   /**
@@ -1562,18 +1578,150 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
-   * Checks that we are getting the media streams we expect.
+   * Counts the amount of audio tracks in a given media constraint.
+   *
+   * @param constraints
+   *        The contraint to be examined.
+   */
+  countAudioTracksInMediaConstraint : function
+    PCW_countAudioTracksInMediaConstraint(constraints) {
+    if ((!constraints) || (constraints.length === 0)) {
+      return 0;
+    }
+    var audioTracks = 0;
+    for (var i = 0; i < constraints.length; i++) {
+      if (constraints[i].audio) {
+        audioTracks++;
+      }
+    }
+    return audioTracks;
+  },
+
+  /**
+   * Counts the amount of video tracks in a given media constraint.
+   *
+   * @param constraint
+   *        The contraint to be examined.
+   */
+  countVideoTracksInMediaConstraint : function
+    PCW_countVideoTracksInMediaConstraint(constraints) {
+    if ((!constraints) || (constraints.length === 0)) {
+      return 0;
+    }
+    var videoTracks = 0;
+    for (var i = 0; i < constraints.length; i++) {
+      if (constraints[i].video) {
+        videoTracks++;
+      }
+    }
+    return videoTracks;
+  },
+
+  /*
+   * Counts the amount of audio tracks in a given set of streams.
+   *
+   * @param streams
+   *        An array of streams (as returned by getLocalStreams()) to be
+   *        examined.
+   */
+  countAudioTracksInStreams : function PCW_countAudioTracksInStreams(streams) {
+    if (!streams || (streams.length === 0)) {
+      return 0;
+    }
+    var audioTracks = 0;
+    streams.forEach(function(st) {
+      audioTracks += st.getAudioTracks().length;
+    });
+    return audioTracks;
+  },
+
+  /*
+   * Counts the amount of video tracks in a given set of streams.
+   *
+   * @param streams
+   *        An array of streams (as returned by getLocalStreams()) to be
+   *        examined.
+   */
+  countVideoTracksInStreams: function PCW_countVideoTracksInStreams(streams) {
+    if (!streams || (streams.length === 0)) {
+      return 0;
+    }
+    var videoTracks = 0;
+    streams.forEach(function(st) {
+      videoTracks += st.getVideoTracks().length;
+    });
+    return videoTracks;
+  },
+
+  /**
+   * Checks that we are getting the media tracks we expect.
    *
    * @param {object} constraintsRemote
-   *        The media constraints of the remote peer connection object
+   *        The media constraints of the local and remote peer connection object
    */
-  checkMediaStreams : function PCW_checkMediaStreams(constraintsRemote) {
-    is(this._pc.getLocalStreams().length, this.constraints.length,
-       this + ' has ' + this.constraints.length + ' local streams');
+  checkMediaTracks : function PCW_checkMediaTracks(constraintsRemote, onSuccess) {
+    var self = this;
+    var addStreamTimeout = null;
 
-    // TODO: change this when multiple incoming streams are supported (bug 834835)
-    is(this._pc.getRemoteStreams().length, 1,
-       this + ' has ' + 1 + ' remote streams');
+    function _checkMediaTracks(constraintsRemote, onSuccess) {
+      if (self.addStreamTimeout === null) {
+        clearTimeout(self.addStreamTimeout);
+      }
+
+      var localConstraintAudioTracks =
+        self.countAudioTracksInMediaConstraint(self.constraints);
+      var localStreams = self._pc.getLocalStreams();
+      var localAudioTracks = self.countAudioTracksInStreams(localStreams, false);
+      is(localAudioTracks, localConstraintAudioTracks, self + ' has ' +
+        localAudioTracks + ' local audio tracks');
+
+      var localConstraintVideoTracks =
+        self.countVideoTracksInMediaConstraint(self.constraints);
+      var localVideoTracks = self.countVideoTracksInStreams(localStreams, false);
+      is(localVideoTracks, localConstraintVideoTracks, self + ' has ' +
+        localVideoTracks + ' local video tracks');
+
+      var remoteConstraintAudioTracks =
+        self.countAudioTracksInMediaConstraint(constraintsRemote);
+      var remoteStreams = self._pc.getRemoteStreams();
+      var remoteAudioTracks = self.countAudioTracksInStreams(remoteStreams, false);
+      is(remoteAudioTracks, remoteConstraintAudioTracks, self + ' has ' +
+        remoteAudioTracks + ' remote audio tracks');
+
+      var remoteConstraintVideoTracks =
+        self.countVideoTracksInMediaConstraint(constraintsRemote);
+      var remoteVideoTracks = self.countVideoTracksInStreams(remoteStreams, false);
+      is(remoteVideoTracks, remoteConstraintVideoTracks, self + ' has ' +
+        remoteVideoTracks + ' remote video tracks');
+
+      onSuccess();
+    }
+
+    function __checkMediaTracksTimeout(onSuccess) {
+      ok(false, self + " checkMediaTracks() timed out waiting for onaddstream event to fire");
+      onSuccess();
+    }
+
+    // we have to do this check as the onaddstream never fires if the remote
+    // stream has no track at all!
+    var expectedRemoteTracks =
+      self.countAudioTracksInMediaConstraint(constraintsRemote) +
+      self.countVideoTracksInMediaConstraint(constraintsRemote);
+
+    // TODO: remove this once Bugs 998552 and 998546 are closed
+    if ((self.onAddStreamFired) || (expectedRemoteTracks == 0)) {
+      _checkMediaTracks(constraintsRemote, onSuccess);
+    } else {
+      info(self + " checkMediaTracks() got called before onAddStream fired");
+      // we rely on the outer mochitest timeout to catch the case where
+      // onaddstream never fires
+      self.addStreamCallbacks.checkMediaTracks = function() {
+        _checkMediaTracks(constraintsRemote, onSuccess);
+      };
+      addStreamTimeout = setTimeout(function () {
+        self._checkMediaTracksTimeout(onSuccess);
+      }, 60000);
+    }
   },
 
   /**
