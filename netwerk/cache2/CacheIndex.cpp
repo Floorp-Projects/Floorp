@@ -1207,6 +1207,43 @@ CacheIndex::GetCacheSize(uint32_t *_retval)
 
 // static
 nsresult
+CacheIndex::GetCacheStats(nsILoadContextInfo *aInfo, uint32_t *aSize, uint32_t *aCount)
+{
+  LOG(("CacheIndex::GetCacheStats() [info=%p]", aInfo));
+
+  nsRefPtr<CacheIndex> index = gInstance;
+
+  if (!index) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  CacheIndexAutoLock lock(index);
+
+  if (!index->IsIndexUsable()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!aInfo) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *aSize = 0;
+  *aCount = 0;
+
+  for (uint32_t i = 0; i < index->mFrecencyArray.Length(); ++i) {
+    CacheIndexRecord* record = index->mFrecencyArray[i];
+    if (!CacheIndexEntry::RecordMatchesLoadContextInfo(record, aInfo))
+      continue;
+
+    *aSize += CacheIndexEntry::GetFileSize(record);
+    ++*aCount;
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
 CacheIndex::AsyncGetDiskConsumption(nsICacheStorageConsumptionObserver* aObserver)
 {
   LOG(("CacheIndex::AsyncGetDiskConsumption()"));

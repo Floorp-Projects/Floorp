@@ -85,10 +85,11 @@ function checkDiskCacheFor(host, done)
     {
       info("disk storage contains " + num + " entries");
     },
-    onCacheEntryInfo: function(entry)
+    onCacheEntryInfo: function(uri)
     {
-      info(entry.key);
-      foundPrivateData |= entry.key.contains(host);
+      var urispec = uri.asciiSpec;
+      info(urispec);
+      foundPrivateData |= urispec.contains(host);
     },
     onCacheEntryVisitCompleted: function()
     {
