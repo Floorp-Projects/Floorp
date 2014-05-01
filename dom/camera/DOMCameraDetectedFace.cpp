@@ -8,15 +8,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMCameraPoint, mParent)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMCameraPoint)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMCameraPoint)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMCameraPoint)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMCameraDetectedFace, mParent,
                                       mBounds, mLeftEye, mRightEye, mMouth)
 
@@ -29,22 +20,9 @@ NS_INTERFACE_MAP_END
 
 /* static */
 bool
-DOMCameraPoint::HasSupport(JSContext* aCx, JSObject* aGlobal)
-{
-  return Navigator::HasCameraSupport(aCx, aGlobal);
-}
-
-/* static */
-bool
 DOMCameraDetectedFace::HasSupport(JSContext* aCx, JSObject* aGlobal)
 {
   return Navigator::HasCameraSupport(aCx, aGlobal);
-}
-
-JSObject*
-DOMCameraPoint::WrapObject(JSContext* aCx)
-{
-  return CameraPointBinding::Wrap(aCx, this);
 }
 
 JSObject*
@@ -66,13 +44,13 @@ DOMCameraDetectedFace::DOMCameraDetectedFace(nsISupports* aParent,
                    aFace.bound.bottom - aFace.bound.top);
 
   if (aFace.hasLeftEye) {
-    mLeftEye = new DOMCameraPoint(this, aFace.leftEye);
+    mLeftEye = new DOMPoint(this, aFace.leftEye.x, aFace.leftEye.y);
   }
   if (aFace.hasRightEye) {
-    mRightEye = new DOMCameraPoint(this, aFace.rightEye);
+    mRightEye = new DOMPoint(this, aFace.rightEye.x, aFace.rightEye.y);
   }
   if (aFace.hasMouth) {
-    mMouth = new DOMCameraPoint(this, aFace.mouth);
+    mMouth = new DOMPoint(this, aFace.mouth.x, aFace.mouth.y);
   }
 
   SetIsDOMBinding();
