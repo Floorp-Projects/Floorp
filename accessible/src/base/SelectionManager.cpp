@@ -6,6 +6,8 @@
 #include "mozilla/a11y/SelectionManager.h"
 
 #include "DocAccessible-inl.h"
+#include "HyperTextAccessible.h"
+#include "HyperTextAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
@@ -35,6 +37,12 @@ private:
   // Private destructor, to discourage deletion outside of Release():
   ~SelData() {}
 };
+
+SelectionManager::SelectionManager() :
+  mCaretOffset(-1), mAccWithCaret(nullptr)
+{
+
+}
 
 void
 SelectionManager::ClearControlSelectionListener()
@@ -144,10 +152,13 @@ SelectionManager::ProcessTextSelChangeEvent(AccEvent* aEvent)
   if (!caretCntr)
     return;
 
-  int32_t caretOffset = caretCntr->CaretOffset();
-  if (caretOffset != -1) {
+  Selection* selection = caretCntr->DOMSelection();
+  mCaretOffset = caretCntr->DOMPointToOffset(selection->GetFocusNode(),
+                                             selection->FocusOffset());
+  mAccWithCaret = caretCntr;
+  if (mCaretOffset != -1) {
     nsRefPtr<AccCaretMoveEvent> caretMoveEvent =
-      new AccCaretMoveEvent(caretCntr, caretOffset, aEvent->FromUserInput());
+      new AccCaretMoveEvent(caretCntr, mCaretOffset, aEvent->FromUserInput());
     nsEventShell::FireEvent(caretMoveEvent);
   }
 }

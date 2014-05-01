@@ -20,6 +20,7 @@ class Element;
 namespace a11y {
 
 class AccEvent;
+class HyperTextAccessible;
 
 /**
  * This special accessibility class is for the caret and selection management.
@@ -81,7 +82,38 @@ public:
    */
   void ProcessTextSelChangeEvent(AccEvent* aEvent);
 
+  /**
+   * Gets the current caret offset/hypertext accessible pair. If there is no
+   * current pair, then returns -1 for the offset and a nullptr for the
+   * accessible.
+   */
+  inline HyperTextAccessible* AccessibleWithCaret(int32_t* aCaret)
+  {
+    if (aCaret)
+      *aCaret = mCaretOffset;
+
+    return mAccWithCaret;
+  }
+
+  /**
+   * Update caret offset when it doesn't go through a caret move event.
+   */
+  inline void UpdateCaretOffset(HyperTextAccessible* aItem, int32_t aOffset)
+  {
+    mAccWithCaret = aItem;
+    mCaretOffset = aOffset;
+  }
+
+  inline void ResetCaretOffset()
+  {
+    mCaretOffset = -1;
+    mAccWithCaret = nullptr;
+  }
+
 protected:
+
+  SelectionManager();
+
   /**
    * Process DOM selection change. Fire selection and caret move events.
    */
@@ -90,6 +122,8 @@ protected:
 private:
   // Currently focused control.
   nsWeakFrame mCurrCtrlFrame;
+  int32_t mCaretOffset;
+  HyperTextAccessible* mAccWithCaret;
 };
 
 } // namespace a11y
