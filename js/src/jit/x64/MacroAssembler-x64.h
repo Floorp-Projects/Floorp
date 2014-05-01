@@ -1334,8 +1334,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
 #ifdef JSGC_GENERATIONAL
-    void branchPtrInNurseryRange(Register ptr, Register temp, Label *label);
-    void branchValueIsNurseryObject(ValueOperand value, Register temp, Label *label);
+    void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label *label);
+    void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label *label);
 #endif
 };
 
