@@ -34,9 +34,9 @@ public class LoadFaviconResult {
 
     /**
      * Return a representation of this result suitable for storing in the database.
-     * For
      *
-     * @return A byte array containing the bytes from which this result was decoded.
+     * @return A byte array containing the bytes from which this result was decoded,
+     *         or null if re-encoding failed.
      */
     public byte[] getBytesForDatabaseStorage() {
         // Begin by normalising the buffer.
@@ -47,28 +47,30 @@ public class LoadFaviconResult {
             faviconBytes = normalised;
         }
 
-        // For results containing a single image, we re-encode the result as a PNG in an effort to
-        // save space.
-        if (!isICO) {
-            Bitmap favicon = ((FaviconDecoder.SingleBitmapIterator) bitmapsDecoded).peek();
-            byte[] data = null;
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-
-            if (favicon.compress(Bitmap.CompressFormat.PNG, 100, stream)) {
-                data = stream.toByteArray();
-            } else {
-                Log.w(LOGTAG, "Favicon compression failed.");
-            }
-
-            return data;
-        }
-
         // For results containing multiple images, we store the result verbatim. (But cutting the
         // buffer to size first).
         // We may instead want to consider re-encoding the entire ICO as a collection of efficiently
         // encoded PNGs. This may not be worth the CPU time (Indeed, the encoding of single-image
         // favicons may also not be worth the time/space tradeoff.).
-        return faviconBytes;
+        if (isICO) {
+            return faviconBytes;
+        }
+
+        // For results containing a single image, we re-encode the
+        // result as a PNG in an effort to save space.
+        final Bitmap favicon = ((FaviconDecoder.SingleBitmapIterator) bitmapsDecoded).peek();
+        final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+        try {
+            if (favicon.compress(Bitmap.CompressFormat.PNG, 100, stream)) {
+                return stream.toByteArray();
+            }
+        } catch (OutOfMemoryError e) {
+            Log.w(LOGTAG, "Out of memory re-compressing favicon.");
+        }
+
+        Log.w(LOGTAG, "Favicon re-compression failed.");
+        return null;
     }
 
 }
