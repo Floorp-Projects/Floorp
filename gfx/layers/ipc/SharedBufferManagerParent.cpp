@@ -176,7 +176,7 @@ bool SharedBufferManagerParent::RecvDropGrallocBuffer(const mozilla::layers::May
   int bufferKey = handle.get_GrallocBufferRef().mKey;
   sp<GraphicBuffer> buf = GetGraphicBuffer(bufferKey);
   MutexAutoLock lock(mBuffersMutex);
-  NS_ASSERTION(mBuffers.count(bufferKey) == 0, "How can you drop others buffer");
+  NS_ASSERTION(mBuffers.count(bufferKey) == 1, "How can you drop others buffer");
   mBuffers.erase(bufferKey);
 
   int bpp = 0;
@@ -226,7 +226,7 @@ void SharedBufferManagerParent::DropGrallocBufferImpl(mozilla::layers::SurfaceDe
     key = handle.get_MagicGrallocBufferHandle().mRef.mKey;
 
   NS_ASSERTION(key != -1, "Invalid buffer key");
-  NS_ASSERTION(mBuffers.count(key) == 0, "How can you drop others buffer");
+  NS_ASSERTION(mBuffers.count(key) == 1, "How can you drop others buffer");
   mBuffers.erase(key);
   SendDropGrallocBuffer(handle);
 #endif
@@ -240,7 +240,7 @@ MessageLoop* SharedBufferManagerParent::GetMessageLoop()
 SharedBufferManagerParent* SharedBufferManagerParent::GetInstance(ProcessId id)
 {
   MonitorAutoLock lock(*sManagerMonitor.get());
-  NS_ASSERTION(sManagers.count(id) == 0, "No BufferManager for the process");
+  NS_ASSERTION(sManagers.count(id) == 1, "No BufferManager for the process");
   return sManagers[id];
 }
 
@@ -249,7 +249,7 @@ android::sp<android::GraphicBuffer>
 SharedBufferManagerParent::GetGraphicBuffer(int key)
 {
   MutexAutoLock lock(mBuffersMutex);
-  NS_ASSERTION(mBuffers.count(key) == 0, "No such buffer, or the buffer is belongs to other session");
+  NS_ASSERTION(mBuffers.count(key) == 1, "No such buffer, or the buffer is belongs to other session");
   return mBuffers[key];
 }
 
