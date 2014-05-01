@@ -1096,6 +1096,12 @@ SetDenseElement(JSContext *cx, HandleObject obj, int32_t index, HandleValue valu
     return SetObjectElement(cx, obj, indexVal, value, strict);
 }
 
+void
+AutoDetectInvalidation::setReturnOverride()
+{
+    cx_->runtime()->jitRuntime()->setIonReturnOverride(*rval_);
+}
+
 #ifdef DEBUG
 void
 AssertValidObjectPtr(JSContext *cx, JSObject *obj)
