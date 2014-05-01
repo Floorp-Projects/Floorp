@@ -653,20 +653,20 @@ MacroAssembler::newGCThingPar(Register result, Register cx, Register tempReg1, R
     // tempReg2 = tempReg1->head.first
     loadPtr(Address(tempReg1, gc::FreeList::offsetOfFirst()), tempReg2);
 
-    // Check whether list is empty
+    // Check whether bump-allocation is possible.
     // if tempReg1->head.last <= tempReg2, fail
     branchPtr(Assembler::BelowOrEqual,
               Address(tempReg1, gc::FreeList::offsetOfLast()),
               tempReg2,
               fail);
 
-    // If not, take first and advance pointer by thingSize bytes.
+    // If so, take |first| and advance pointer by thingSize bytes.
     // result = tempReg2;
     // tempReg2 += thingSize;
     movePtr(tempReg2, result);
     addPtr(Imm32(thingSize), tempReg2);
 
-    // Update `first`
+    // Update |first|.
     // tempReg1->head.first = tempReg2;
     storePtr(tempReg2, Address(tempReg1, gc::FreeList::offsetOfFirst()));
 }
