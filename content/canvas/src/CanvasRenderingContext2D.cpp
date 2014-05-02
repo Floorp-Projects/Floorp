@@ -1862,7 +1862,10 @@ bool CanvasRenderingContext2D::DrawCustomFocusRing(mozilla::dom::Element& aEleme
     nsCOMPtr<nsIDOMElement> focusedElement;
     fm->GetFocusedElement(getter_AddRefs(focusedElement));
     if (SameCOMIdentity(aElement.AsDOMNode(), focusedElement)) {
-      return true;
+      nsPIDOMWindow *window = aElement.OwnerDoc()->GetWindow();
+      if (window) {
+        return window->ShouldShowFocusRing();
+      }
     }
   }
 
