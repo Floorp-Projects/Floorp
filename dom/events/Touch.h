@@ -62,7 +62,7 @@ public:
 
   // WebIDL
   int32_t Identifier() const { return mIdentifier; }
-  EventTarget* Target() const;
+  EventTarget* GetTarget() const;
   int32_t ScreenX() const { return mScreenPoint.x; }
   int32_t ScreenY() const { return mScreenPoint.y; }
   int32_t ClientX() const { return mClientPoint.x; }
