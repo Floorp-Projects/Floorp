@@ -73,7 +73,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         mAction = action;
         mUri = uri;
         setName("Gecko");
-        GeckoAppShell.getEventDispatcher().registerEventListener("Gecko:Ready", this);
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Gecko:Ready");
     }
 
     public static boolean isCreated() {
@@ -179,7 +179,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     @Override
     public void handleMessage(String event, JSONObject message) {
         if ("Gecko:Ready".equals(event)) {
-            GeckoAppShell.getEventDispatcher().unregisterEventListener(event, this);
+            EventDispatcher.getInstance().unregisterGeckoThreadListener(this, event);
             setLaunchState(LaunchState.GeckoRunning);
             GeckoAppShell.sendPendingEventsToGecko();
         }

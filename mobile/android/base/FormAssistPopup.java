@@ -85,15 +85,17 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
 
         setFocusable(false);
 
-        registerEventListener("FormAssist:AutoComplete");
-        registerEventListener("FormAssist:ValidationMessage");
-        registerEventListener("FormAssist:Hide");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+            "FormAssist:AutoComplete",
+            "FormAssist:ValidationMessage",
+            "FormAssist:Hide");
     }
 
     void destroy() {
-        unregisterEventListener("FormAssist:AutoComplete");
-        unregisterEventListener("FormAssist:ValidationMessage");
-        unregisterEventListener("FormAssist:Hide");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+            "FormAssist:AutoComplete",
+            "FormAssist:ValidationMessage",
+            "FormAssist:Hide");
     }
 
     @Override
@@ -396,13 +398,5 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
 
             return convertView;
         }
-    }
-
-    private void registerEventListener(String event) {
-        GeckoAppShell.getEventDispatcher().registerEventListener(event, this);
-    }
-
-    private void unregisterEventListener(String event) {
-        GeckoAppShell.getEventDispatcher().unregisterEventListener(event, this);
     }
 }
