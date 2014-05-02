@@ -225,16 +225,15 @@ class MOZ_STACK_CLASS nsWSRunObject
                         int32_t *aInOutOffset,
                         nsIDOMDocument *aDoc);
 
-    // DeleteWSBackward deletes a single visible piece of ws before
-    // the ws point (the point to create the wsRunObject, passed to 
-    // its constructor).  It makes any needed conversion to adjacent
-    // ws to retain its significance.
+    // DeleteWSBackward deletes a single visible piece of ws before the ws
+    // point (the point to create the wsRunObject, passed to its constructor).
+    // It makes any needed conversion to adjacent ws to retain its
+    // significance.
     nsresult DeleteWSBackward();
 
-    // DeleteWSForward deletes a single visible piece of ws after
-    // the ws point (the point to create the wsRunObject, passed to 
-    // its constructor).  It makes any needed conversion to adjacent
-    // ws to retain its significance.
+    // DeleteWSForward deletes a single visible piece of ws after the ws point
+    // (the point to create the wsRunObject, passed to its constructor).  It
+    // makes any needed conversion to adjacent ws to retain its significance.
     nsresult DeleteWSForward();
 
     // PriorVisibleNode returns the first piece of visible thing
