@@ -56,6 +56,12 @@ using namespace mozilla::plugins;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
 
+void
+StreamNotifyParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Implement me! Bug 1005162
+}
+
 bool
 StreamNotifyParent::RecvRedirectNotifyResponse(const bool& allow)
 {

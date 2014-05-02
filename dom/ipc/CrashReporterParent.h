@@ -77,6 +77,8 @@ public:
   AnnotateCrashReport(const nsCString& key, const nsCString& data);
 
  protected:
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
   virtual bool
     RecvAnnotateCrashReport(const nsCString& key, const nsCString& data) MOZ_OVERRIDE {
     AnnotateCrashReport(key, data);

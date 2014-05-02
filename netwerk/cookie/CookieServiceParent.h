@@ -28,7 +28,9 @@ protected:
                        bool& aIsInBrowserElement,
                        bool& aIsPrivate);
 
-   virtual bool RecvGetCookieString(const URIParams& aHost,
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
+  virtual bool RecvGetCookieString(const URIParams& aHost,
                                    const bool& aIsForeign,
                                    const bool& aFromHttp,
                                    const IPC::SerializedLoadContext&

@@ -309,6 +309,8 @@ public:
     MemoryReportRequestParent();
     virtual ~MemoryReportRequestParent();
 
+    virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
     virtual bool Recv__delete__(const uint32_t& generation, const InfallibleTArray<MemoryReport>& report);
 private:
     ContentParent* Owner()
@@ -320,6 +322,12 @@ private:
 MemoryReportRequestParent::MemoryReportRequestParent()
 {
     MOZ_COUNT_CTOR(MemoryReportRequestParent);
+}
+
+void
+MemoryReportRequestParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Implement me! Bug 1005154
 }
 
 bool

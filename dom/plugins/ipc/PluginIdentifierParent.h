@@ -64,6 +64,8 @@ protected:
     MOZ_COUNT_DTOR(PluginIdentifierParent);
   }
 
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
   virtual bool RecvRetain() MOZ_OVERRIDE;
 
   void AddTemporaryRef() {
