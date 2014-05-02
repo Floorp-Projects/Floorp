@@ -27,6 +27,12 @@
 
 const char16_t nbsp = 160;
 
+static bool IsBlockNode(nsINode* node)
+{
+  return node && node->IsElement() &&
+         nsHTMLEditor::NodeIsBlockStatic(node->AsElement());
+}
+
 static bool IsBlockNode(nsIDOMNode* node)
 {
   bool isBlock (false);
@@ -633,17 +639,16 @@ nsWSRunObject::AdjustWhitespace()
 //   protected methods
 //--------------------------------------------------------------------------------------------
 
-already_AddRefed<nsIDOMNode>
+already_AddRefed<nsINode>
 nsWSRunObject::GetWSBoundingParent()
 {
   NS_ENSURE_TRUE(mNode, nullptr);
-  nsCOMPtr<nsIDOMNode> wsBoundingParent = GetAsDOMNode(mNode);
-  while (!IsBlockNode(wsBoundingParent))
-  {
-    nsCOMPtr<nsIDOMNode> parent;
-    wsBoundingParent->GetParentNode(getter_AddRefs(parent));
-    if (!parent || !mHTMLEditor->IsEditable(parent))
+  nsCOMPtr<nsINode> wsBoundingParent = mNode;
+  while (!IsBlockNode(wsBoundingParent)) {
+    nsCOMPtr<nsINode> parent = wsBoundingParent->GetParentNode();
+    if (!parent || !mHTMLEditor->IsEditable(parent)) {
       break;
+    }
     wsBoundingParent.swap(parent);
   }
   return wsBoundingParent.forget();
@@ -658,34 +663,27 @@ nsWSRunObject::GetWSNodes()
   nsresult res = NS_OK;
   
   DOMPoint start(mNode, mOffset), end(mNode, mOffset);
-  nsCOMPtr<nsIDOMNode> wsBoundingParent = GetWSBoundingParent();
+  nsCOMPtr<nsINode> wsBoundingParent = GetWSBoundingParent();
 
   // first look backwards to find preceding ws nodes
-  if (mHTMLEditor->IsTextNode(mNode))
-  {
+  if (mNode->NodeType() == nsIDOMNode::TEXT_NODE) {
     nsCOMPtr<nsIContent> textNode(do_QueryInterface(mNode));
-    const nsTextFragment *textFrag = textNode->GetText();
+    const nsTextFragment* textFrag = textNode->GetText();
     
-    res = PrependNodeToList(GetAsDOMNode(mNode));
+    res = PrependNodeToList(mNode);
     NS_ENSURE_SUCCESS(res, res);
-    if (mOffset)
-    {
-      int32_t pos;
-      for (pos=mOffset-1; pos>=0; pos--)
-      {
+    if (mOffset) {
+      for (int32_t pos = mOffset - 1; pos >= 0; pos--) {
         // sanity bounds check the char position.  bug 136165
-        if (uint32_t(pos) >= textFrag->GetLength())
-        {
+        if (uint32_t(pos) >= textFrag->GetLength()) {
           NS_NOTREACHED("looking beyond end of text fragment");
           continue;
         }
         char16_t theChar = textFrag->CharAt(pos);
-        if (!nsCRT::IsAsciiSpace(theChar))
-        {
-          if (theChar != nbsp)
-          {
+        if (!nsCRT::IsAsciiSpace(theChar)) {
+          if (theChar != nbsp) {
             mStartNode = mNode;
-            mStartOffset = pos+1;
+            mStartOffset = pos + 1;
             mStartReason = WSType::text;
             mStartReasonNode = mNode;
             break;
@@ -694,35 +692,32 @@ nsWSRunObject::GetWSNodes()
           mFirstNBSPNode = mNode;
           mFirstNBSPOffset = pos;
           // also keep track of latest nbsp so far
-          if (!mLastNBSPNode)
-          {
+          if (!mLastNBSPNode) {
             mLastNBSPNode = mNode;
             mLastNBSPOffset = pos;
           }
         }
-        start.node = do_QueryInterface(mNode);
+        start.node = mNode;
         start.offset = pos;
       }
     }
   }
 
-  nsCOMPtr<nsIDOMNode> priorNode;
-  while (!mStartNode)
-  {
+  while (!mStartNode) {
     // we haven't found the start of ws yet.  Keep looking
-    res = GetPreviousWSNode(start, wsBoundingParent, address_of(priorNode));
+    nsCOMPtr<nsIDOMNode> priorDOMNode;
+    res = GetPreviousWSNode(start, GetAsDOMNode(wsBoundingParent),
+                            address_of(priorDOMNode));
     NS_ENSURE_SUCCESS(res, res);
-    if (priorNode)
-    {
-      if (IsBlockNode(priorNode))
-      {
+    nsCOMPtr<nsINode> priorNode = do_QueryInterface(priorDOMNode);
+    if (priorNode) {
+      if (IsBlockNode(priorNode)) {
         mStartNode = start.node;
         mStartOffset = start.offset;
         mStartReason = WSType::otherBlock;
-        mStartReasonNode = do_QueryInterface(priorNode);
+        mStartReasonNode = priorNode;
       }
-      else if (mHTMLEditor->IsTextNode(priorNode))
-      {
+      else if (priorNode->NodeType() == nsIDOMNode::TEXT_NODE) {
         res = PrependNodeToList(priorNode);
         NS_ENSURE_SUCCESS(res, res);
         nsCOMPtr<nsIContent> textNode(do_QueryInterface(priorNode));
@@ -732,95 +727,76 @@ nsWSRunObject::GetWSNodes()
         }
         uint32_t len = textNode->TextLength();
 
-        if (len < 1)
-        {
+        if (len < 1) {
           // Zero length text node. Set start point to it
           // so we can get past it!
-          start.SetPoint(priorNode,0);
-        }
-        else
-        {
-          int32_t pos;
-          for (pos=len-1; pos>=0; pos--)
-          {
+          start.SetPoint(priorNode, 0);
+        } else {
+          for (int32_t pos = len - 1; pos >= 0; pos--) {
             // sanity bounds check the char position.  bug 136165
-            if (uint32_t(pos) >= textFrag->GetLength())
-            {
+            if (uint32_t(pos) >= textFrag->GetLength()) {
               NS_NOTREACHED("looking beyond end of text fragment");
               continue;
             }
             char16_t theChar = textFrag->CharAt(pos);
-            if (!nsCRT::IsAsciiSpace(theChar))
-            {
-              if (theChar != nbsp)
-              {
-                mStartNode = do_QueryInterface(priorNode);
-                mStartOffset = pos+1;
+            if (!nsCRT::IsAsciiSpace(theChar)) {
+              if (theChar != nbsp) {
+                mStartNode = priorNode;
+                mStartOffset = pos + 1;
                 mStartReason = WSType::text;
-                mStartReasonNode = do_QueryInterface(priorNode);
+                mStartReasonNode = priorNode;
                 break;
               }
               // as we look backwards update our earliest found nbsp
-              mFirstNBSPNode = do_QueryInterface(priorNode);
+              mFirstNBSPNode = priorNode;
               mFirstNBSPOffset = pos;
               // also keep track of latest nbsp so far
-              if (!mLastNBSPNode)
-              {
-                mLastNBSPNode = do_QueryInterface(priorNode);
+              if (!mLastNBSPNode) {
+                mLastNBSPNode = priorNode;
                 mLastNBSPOffset = pos;
               }
             }
-            start.SetPoint(priorNode,pos);
+            start.SetPoint(priorNode, pos);
           }
         }
-      }
-      else
-      {
+      } else {
         // it's a break or a special node, like <img>, that is not a block and not
         // a break but still serves as a terminator to ws runs.
         mStartNode = start.node;
         mStartOffset = start.offset;
-        if (nsTextEditUtils::IsBreak(priorNode))
+        if (nsTextEditUtils::IsBreak(priorNode)) {
           mStartReason = WSType::br;
-        else
+        } else {
           mStartReason = WSType::special;
-        mStartReasonNode = do_QueryInterface(priorNode);
+        }
+        mStartReasonNode = priorNode;
       }
-    }
-    else
-    {
+    } else {
       // no prior node means we exhausted wsBoundingParent
       mStartNode = start.node;
       mStartOffset = start.offset;
       mStartReason = WSType::thisBlock;
-      mStartReasonNode = do_QueryInterface(wsBoundingParent);
+      mStartReasonNode = wsBoundingParent;
     } 
   }
   
   // then look ahead to find following ws nodes
-  if (mHTMLEditor->IsTextNode(mNode))
-  {
+  if (mNode->NodeType() == nsIDOMNode::TEXT_NODE) {
     // don't need to put it on list. it already is from code above
     nsCOMPtr<nsIContent> textNode(do_QueryInterface(mNode));
     const nsTextFragment *textFrag = textNode->GetText();
 
     uint32_t len = textNode->TextLength();
-    if (uint16_t(mOffset)<len)
-    {
-      int32_t pos;
-      for (pos=mOffset; uint32_t(pos)<len; pos++)
-      {
+    if (uint16_t(mOffset)<len) {
+      for (uint32_t pos = mOffset; pos < len; pos++) {
         // sanity bounds check the char position.  bug 136165
-        if ((pos<0) || (uint32_t(pos)>=textFrag->GetLength()))
-        {
+        if (pos >= textFrag->GetLength()) {
           NS_NOTREACHED("looking beyond end of text fragment");
           continue;
         }
         char16_t theChar = textFrag->CharAt(pos);
-        if (!nsCRT::IsAsciiSpace(theChar))
-        {
-          if (theChar != nbsp)
-          {
+        if (!nsCRT::IsAsciiSpace(theChar)) {
+          if (theChar != nbsp) {
             mEndNode = mNode;
             mEndOffset = pos;
             mEndReason = WSType::text;
@@ -831,35 +807,31 @@ nsWSRunObject::GetWSNodes()
           mLastNBSPNode = mNode;
           mLastNBSPOffset = pos;
           // also keep track of earliest nbsp so far
-          if (!mFirstNBSPNode)
-          {
+          if (!mFirstNBSPNode) {
             mFirstNBSPNode = mNode;
             mFirstNBSPOffset = pos;
           }
         }
-        end.SetPoint(mNode,pos+1);
+        end.SetPoint(mNode, pos + 1);
       }
     }
   }
 
-  nsCOMPtr<nsIDOMNode> nextNode;
-  while (!mEndNode)
-  {
+  while (!mEndNode) {
     // we haven't found the end of ws yet.  Keep looking
-    res = GetNextWSNode(end, wsBoundingParent, address_of(nextNode));
+    nsCOMPtr<nsIDOMNode> nextDOMNode;
+    res = GetNextWSNode(end, GetAsDOMNode(wsBoundingParent),
+                        address_of(nextDOMNode));
     NS_ENSURE_SUCCESS(res, res);
-    if (nextNode)
-    {
-      if (IsBlockNode(nextNode))
-      {
+    nsCOMPtr<nsINode> nextNode = do_QueryInterface(nextDOMNode);
+    if (nextNode) {
+      if (IsBlockNode(nextNode)) {
         // we encountered a new block.  therefore no more ws.
         mEndNode = end.node;
         mEndOffset = end.offset;
         mEndReason = WSType::otherBlock;
-        mEndReasonNode = do_QueryInterface(nextNode);
-      }
-      else if (mHTMLEditor->IsTextNode(nextNode))
-      {
+        mEndReasonNode = nextNode;
+      } else if (mHTMLEditor->IsTextNode(nextNode)) {
         res = AppendNodeToList(nextNode);
         NS_ENSURE_SUCCESS(res, res);
         nsCOMPtr<nsIContent> textNode(do_QueryInterface(nextNode));
@@ -869,69 +841,57 @@ nsWSRunObject::GetWSNodes()
         }
         uint32_t len = textNode->TextLength();
 
-        if (len < 1)
-        {
+        if (len < 1) {
           // Zero length text node. Set end point to it
           // so we can get past it!
           end.SetPoint(nextNode,0);
-        }
-        else
-        {
-          int32_t pos;
-          for (pos=0; uint32_t(pos)<len; pos++)
-          {
+        } else {
+          for (uint32_t pos = 0; pos < len; pos++) {
             // sanity bounds check the char position.  bug 136165
-            if (uint32_t(pos) >= textFrag->GetLength())
-            {
+            if (pos >= textFrag->GetLength()) {
               NS_NOTREACHED("looking beyond end of text fragment");
               continue;
             }
             char16_t theChar = textFrag->CharAt(pos);
-            if (!nsCRT::IsAsciiSpace(theChar))
-            {
-              if (theChar != nbsp)
-              {
-                mEndNode = do_QueryInterface(nextNode);
+            if (!nsCRT::IsAsciiSpace(theChar)) {
+              if (theChar != nbsp) {
+                mEndNode = nextNode;
                 mEndOffset = pos;
                 mEndReason = WSType::text;
-                mEndReasonNode = do_QueryInterface(nextNode);
+                mEndReasonNode = nextNode;
                 break;
               }
               // as we look forwards update our latest found nbsp
-              mLastNBSPNode = do_QueryInterface(nextNode);
+              mLastNBSPNode = nextNode;
               mLastNBSPOffset = pos;
               // also keep track of earliest nbsp so far
-              if (!mFirstNBSPNode)
-              {
-                mFirstNBSPNode = do_QueryInterface(nextNode);
+              if (!mFirstNBSPNode) {
+                mFirstNBSPNode = nextNode;
                 mFirstNBSPOffset = pos;
               }
             }
-            end.SetPoint(nextNode,pos+1);
+            end.SetPoint(nextNode, pos + 1);
           }
         }
-      }
-      else
-      {
+      } else {
         // we encountered a break or a special node, like <img>, 
         // that is not a block and not a break but still 
         // serves as a terminator to ws runs.
         mEndNode = end.node;
         mEndOffset = end.offset;
-        if (nsTextEditUtils::IsBreak(nextNode))
+        if (nsTextEditUtils::IsBreak(nextNode)) {
           mEndReason = WSType::br;
-        else
+        } else {
           mEndReason = WSType::special;
-        mEndReasonNode = do_QueryInterface(nextNode);
+        }
+        mEndReasonNode = nextNode;
       }
-    }
-    else
-    {
+    } else {
       // no next node means we exhausted wsBoundingParent
       mEndNode = end.node;
       mEndOffset = end.offset;
       mEndReason = WSType::thisBlock;
-      mEndReasonNode = do_QueryInterface(wsBoundingParent);
+      mEndReasonNode = wsBoundingParent;
     } 
   }
 
@@ -1100,22 +1060,22 @@ nsWSRunObject::MakeSingleWSRun(WSType aType)
 }
 
 nsresult 
-nsWSRunObject::PrependNodeToList(nsIDOMNode *aNode)
+nsWSRunObject::PrependNodeToList(nsINode *aNode)
 {
-  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-  if (!mNodeArray.InsertObjectAt(node, 0))
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+  if (!mNodeArray.InsertObjectAt(aNode, 0)) {
     return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
 nsresult 
-nsWSRunObject::AppendNodeToList(nsIDOMNode *aNode)
+nsWSRunObject::AppendNodeToList(nsINode* aNode)
 {
-  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-  if (!mNodeArray.AppendObject(node))
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+  if (!mNodeArray.AppendObject(aNode)) {
     return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
@@ -2002,7 +1962,7 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
         rightCheck = true;
       }
       if ((aRun->mRightType & WSType::block) &&
-          IsBlockNode(nsCOMPtr<nsIDOMNode>(GetWSBoundingParent()))) {
+          IsBlockNode(nsCOMPtr<nsINode>(GetWSBoundingParent()))) {
         // we are at a block boundary.  Insert a <br>.  Why?  Well, first note that
         // the br will have no visible effect since it is up against a block boundary.
         // |foo<br><p>bar|  renders like |foo<p>bar| and similarly

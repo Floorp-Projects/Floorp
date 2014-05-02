@@ -322,14 +322,14 @@ class MOZ_STACK_CLASS nsWSRunObject
      * closest block within the DOM subtree we're editing, or if none is
      * found, the (inline) root of the editable subtree.
      */
-    already_AddRefed<nsIDOMNode> GetWSBoundingParent();
+    already_AddRefed<nsINode> GetWSBoundingParent();
 
     nsresult GetWSNodes();
     void     GetRuns();
     void     ClearRuns();
     void     MakeSingleWSRun(WSType aType);
-    nsresult PrependNodeToList(nsIDOMNode *aNode);
-    nsresult AppendNodeToList(nsIDOMNode *aNode);
+    nsresult PrependNodeToList(nsINode* aNode);
+    nsresult AppendNodeToList(nsINode* aNode);
     nsresult GetPreviousWSNode(nsIDOMNode *aStartNode, 
                                nsIDOMNode *aBlockParent, 
                                nsCOMPtr<nsIDOMNode> *aPriorNode);
