@@ -99,21 +99,23 @@ public class ContactService implements GeckoEventListener {
         mContentResolver = mActivity.getContentResolver();
         mGotDeviceAccount = false;
 
-        registerEventListener("Android:Contacts:Clear");
-        registerEventListener("Android:Contacts:Find");
-        registerEventListener("Android:Contacts:GetAll");
-        registerEventListener("Android:Contacts:GetCount");
-        registerEventListener("Android:Contact:Remove");
-        registerEventListener("Android:Contact:Save");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+            "Android:Contacts:Clear",
+            "Android:Contacts:Find",
+            "Android:Contacts:GetAll",
+            "Android:Contacts:GetCount",
+            "Android:Contact:Remove",
+            "Android:Contact:Save");
     }
 
     public void destroy() {
-        unregisterEventListener("Android:Contacts:Clear");
-        unregisterEventListener("Android:Contacts:Find");
-        unregisterEventListener("Android:Contacts:GetAll");
-        unregisterEventListener("Android:Contacts:GetCount");
-        unregisterEventListener("Android:Contact:Remove");
-        unregisterEventListener("Android:Contact:Save");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+            "Android:Contacts:Clear",
+            "Android:Contacts:Find",
+            "Android:Contacts:GetAll",
+            "Android:Contacts:GetCount",
+            "Android:Contact:Remove",
+            "Android:Contact:Save");
     }
 
     @Override
@@ -1505,14 +1507,6 @@ public class ContactService implements GeckoEventListener {
         } catch (JSONException e) {
             throw new IllegalArgumentException(e);
         }
-    }
-
-    private void registerEventListener(final String event) {
-        mEventDispatcher.registerEventListener(event, this);
-    }
-
-    private void unregisterEventListener(final String event) {
-        mEventDispatcher.unregisterEventListener(event, this);
     }
 
     private ContentProviderResult[] applyBatch(ArrayList<ContentProviderOperation> operations) {

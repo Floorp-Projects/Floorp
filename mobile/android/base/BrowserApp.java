@@ -526,25 +526,26 @@ abstract public class BrowserApp extends GeckoApp
         mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
         mMediaCastingBar = (MediaCastingBar) findViewById(R.id.media_casting);
 
-        registerEventListener("CharEncoding:Data");
-        registerEventListener("CharEncoding:State");
-        registerEventListener("Feedback:LastUrl");
-        registerEventListener("Feedback:OpenPlayStore");
-        registerEventListener("Feedback:MaybeLater");
-        registerEventListener("Telemetry:Gather");
-        registerEventListener("Settings:Show");
-        registerEventListener("Updater:Launch");
-        registerEventListener("Menu:Add");
-        registerEventListener("Menu:Remove");
-        registerEventListener("Menu:Update");
-        registerEventListener("Accounts:Create");
-        registerEventListener("Accounts:Exist");
-        registerEventListener("Prompt:ShowTop");
-        registerEventListener("Reader:ListStatusRequest");
-        registerEventListener("Reader:Added");
-        registerEventListener("Reader:Removed");
-        registerEventListener("Reader:Share");
-        registerEventListener("Reader:FaviconRequest");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+            "CharEncoding:Data",
+            "CharEncoding:State",
+            "Feedback:LastUrl",
+            "Feedback:OpenPlayStore",
+            "Feedback:MaybeLater",
+            "Telemetry:Gather",
+            "Settings:Show",
+            "Updater:Launch",
+            "Menu:Add",
+            "Menu:Remove",
+            "Menu:Update",
+            "Accounts:Create",
+            "Accounts:Exist",
+            "Prompt:ShowTop",
+            "Reader:ListStatusRequest",
+            "Reader:Added",
+            "Reader:Removed",
+            "Reader:Share",
+            "Reader:FaviconRequest");
 
         Distribution.init(this);
         JavaAddonManager.getInstance().init(getApplicationContext());
@@ -606,14 +607,14 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onResume() {
         super.onResume();
-        unregisterEventListener("Prompt:ShowTop");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Prompt:ShowTop");
     }
 
     @Override
     public void onPause() {
         super.onPause();
         // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
-        registerEventListener("Prompt:ShowTop");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Prompt:ShowTop");
     }
 
     private void setBrowserToolbarListeners() {
@@ -885,24 +886,26 @@ abstract public class BrowserApp extends GeckoApp
             mBrowserHealthReporter = null;
         }
 
-        unregisterEventListener("CharEncoding:Data");
-        unregisterEventListener("CharEncoding:State");
-        unregisterEventListener("Feedback:LastUrl");
-        unregisterEventListener("Feedback:OpenPlayStore");
-        unregisterEventListener("Feedback:MaybeLater");
-        unregisterEventListener("Telemetry:Gather");
-        unregisterEventListener("Settings:Show");
-        unregisterEventListener("Updater:Launch");
-        unregisterEventListener("Menu:Add");
-        unregisterEventListener("Menu:Remove");
-        unregisterEventListener("Menu:Update");
-        unregisterEventListener("Accounts:Create");
-        unregisterEventListener("Accounts:Exist");
-        unregisterEventListener("Reader:ListStatusRequest");
-        unregisterEventListener("Reader:Added");
-        unregisterEventListener("Reader:Removed");
-        unregisterEventListener("Reader:Share");
-        unregisterEventListener("Reader:FaviconRequest");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+            "CharEncoding:Data",
+            "CharEncoding:State",
+            "Feedback:LastUrl",
+            "Feedback:OpenPlayStore",
+            "Feedback:MaybeLater",
+            "Telemetry:Gather",
+            "Settings:Show",
+            "Updater:Launch",
+            "Menu:Add",
+            "Menu:Remove",
+            "Menu:Update",
+            "Accounts:Create",
+            "Accounts:Exist",
+            "Prompt:ShowTop",
+            "Reader:ListStatusRequest",
+            "Reader:Added",
+            "Reader:Removed",
+            "Reader:Share",
+            "Reader:FaviconRequest");
 
         if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -1687,7 +1690,7 @@ abstract public class BrowserApp extends GeckoApp
             message.put("type", BrowserHealthRecorder.EVENT_SEARCH);
             message.put("location", where);
             message.put("identifier", identifier);
-            GeckoAppShell.getEventDispatcher().dispatchEvent(message, null);
+            EventDispatcher.getInstance().dispatchEvent(message, null);
         } catch (Exception e) {
             Log.w(LOGTAG, "Error recording search.", e);
         }
