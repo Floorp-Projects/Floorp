@@ -75,6 +75,7 @@ class DataTransfer;
 class Element;
 class EventTarget;
 class Selection;
+class Text;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -196,6 +197,10 @@ public:
                                nsCOMPtr<nsIDOMNode> *aInOutNode, 
                                int32_t *aInOutOffset,
                                nsIDOMDocument *aDoc);
+  nsresult InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
+                                      mozilla::dom::Text* aTextNode,
+                                      int32_t aOffset,
+                                      bool aSuppressIME = false);
   nsresult InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert, 
                                       nsIDOMCharacterData *aTextNode, 
                                       int32_t aOffset,

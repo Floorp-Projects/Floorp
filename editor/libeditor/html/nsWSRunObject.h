@@ -343,6 +343,11 @@ class MOZ_STACK_CLASS nsWSRunObject
     WSPoint  GetCharBefore(const WSPoint &aPoint);
     nsresult ConvertToNBSP(WSPoint aPoint,
                            AreaRestriction aAR = eAnywhere);
+    void     GetAsciiWSBounds(int16_t aDir, nsINode* aNode, int32_t aOffset,
+                              mozilla::dom::Text** outStartNode,
+                              int32_t* outStartOffset,
+                              mozilla::dom::Text** outEndNode,
+                              int32_t* outEndOffset);
     void     GetAsciiWSBounds(int16_t aDir, nsIDOMNode *aNode, int32_t aOffset,
                                 nsCOMPtr<nsIDOMNode> *outStartNode, int32_t *outStartOffset,
                                 nsCOMPtr<nsIDOMNode> *outEndNode, int32_t *outEndOffset);
