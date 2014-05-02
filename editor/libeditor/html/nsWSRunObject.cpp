@@ -226,7 +226,7 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
     } else if (afterRun->mType == WSType::normalWS) {
       // Need to determine if break at front of non-nbsp run.  If so, convert
       // run to nbsp.
-      WSPoint thePoint = GetCharAfter(GetAsDOMNode(*aInOutParent), *aInOutOffset);
+      WSPoint thePoint = GetCharAfter(*aInOutParent, *aInOutOffset);
       if (thePoint.mTextNode && nsCRT::IsAsciiSpace(thePoint.mChar)) {
         WSPoint prevPoint = GetCharBefore(thePoint);
         if (prevPoint.mTextNode && !nsCRT::IsAsciiSpace(prevPoint.mChar)) {
@@ -334,7 +334,7 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
       if (beforeRun->mType & WSType::leadingWS) {
         theString.SetCharAt(nbsp, 0);
       } else if (beforeRun->mType & WSType::normalWS) {
-        WSPoint wspoint = GetCharBefore(GetAsDOMNode(*aInOutParent), *aInOutOffset);
+        WSPoint wspoint = GetCharBefore(*aInOutParent, *aInOutOffset);
         if (wspoint.mTextNode && nsCRT::IsAsciiSpace(wspoint.mChar)) {
           theString.SetCharAt(nbsp, 0);
         }
@@ -353,7 +353,7 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
       if (afterRun->mType & WSType::trailingWS) {
         theString.SetCharAt(nbsp, lastCharIndex);
       } else if (afterRun->mType & WSType::normalWS) {
-        WSPoint wspoint = GetCharAfter(GetAsDOMNode(*aInOutParent), *aInOutOffset);
+        WSPoint wspoint = GetCharAfter(*aInOutParent, *aInOutOffset);
         if (wspoint.mTextNode && nsCRT::IsAsciiSpace(wspoint.mChar)) {
           theString.SetCharAt(nbsp, lastCharIndex);
         }
@@ -393,7 +393,7 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
 nsresult
 nsWSRunObject::DeleteWSBackward()
 {
-  WSPoint point = GetCharBefore(GetAsDOMNode(mNode), mOffset);
+  WSPoint point = GetCharBefore(mNode, mOffset);
   NS_ENSURE_TRUE(point.mTextNode, NS_OK);  // nothing to delete
 
   if (mPRE) {
@@ -445,7 +445,7 @@ nsWSRunObject::DeleteWSBackward()
 nsresult
 nsWSRunObject::DeleteWSForward()
 {
-  WSPoint point = GetCharAfter(GetAsDOMNode(mNode), mOffset);
+  WSPoint point = GetCharAfter(mNode, mOffset);
   NS_ENSURE_TRUE(point.mTextNode, NS_OK); // nothing to delete
 
   if (mPRE) {
@@ -506,7 +506,7 @@ nsWSRunObject::PriorVisibleNode(nsINode* aNode,
   // Is there a visible run there or earlier?
   for (; run; run = run->mLeft) {
     if (run->mType == WSType::normalWS) {
-      WSPoint point = GetCharBefore(GetAsDOMNode(aNode), aOffset);
+      WSPoint point = GetCharBefore(aNode, aOffset);
       if (point.mTextNode) {
         *outVisNode = point.mTextNode;
         *outVisOffset = point.mOffset + 1;
@@ -550,7 +550,7 @@ nsWSRunObject::NextVisibleNode(nsINode* aNode,
   // Is there a visible run there or later?
   for (; run; run = run->mRight) {
     if (run->mType == WSType::normalWS) {
-      WSPoint point = GetCharAfter(GetAsDOMNode(aNode), aOffset);
+      WSPoint point = GetCharAfter(aNode, aOffset);
       if (point.mTextNode) {
         *outVisNode = point.mTextNode;
         *outVisOffset = point.mOffset;
@@ -1251,7 +1251,7 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
         (!beforeRun && ((mStartReason & WSType::block) ||
                         mStartReason == WSType::br))) {
       // make sure leading char of following ws is an nbsp, so that it will show up
-      WSPoint point = aEndObject->GetCharAfter(GetAsDOMNode(aEndObject->mNode),
+      WSPoint point = aEndObject->GetCharAfter(aEndObject->mNode,
                                                aEndObject->mOffset);
       if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar))
       {
@@ -1270,7 +1270,7 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
         (afterRun && afterRun->mType == WSType::normalWS) ||
         (!afterRun && (aEndObject->mEndReason & WSType::block))) {
       // make sure trailing char of starting ws is an nbsp, so that it will show up
-      WSPoint point = GetCharBefore(GetAsDOMNode(mNode), mOffset);
+      WSPoint point = GetCharBefore(mNode, mOffset);
       if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar))
       {
         nsCOMPtr<nsIDOMNode> wsStartNode, wsEndNode;
@@ -1303,7 +1303,7 @@ nsWSRunObject::PrepareToSplitAcrossBlocksPriv()
   // adjust normal ws in afterRun if needed
   if (afterRun && afterRun->mType == WSType::normalWS) {
     // make sure leading char of following ws is an nbsp, so that it will show up
-    WSPoint point = GetCharAfter(GetAsDOMNode(mNode), mOffset);
+    WSPoint point = GetCharAfter(mNode, mOffset);
     if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar))
     {
       res = ConvertToNBSP(point);
@@ -1314,7 +1314,7 @@ nsWSRunObject::PrepareToSplitAcrossBlocksPriv()
   // adjust normal ws in beforeRun if needed
   if (beforeRun && beforeRun->mType == WSType::normalWS) {
     // make sure trailing char of starting ws is an nbsp, so that it will show up
-    WSPoint point = GetCharBefore(GetAsDOMNode(mNode), mOffset);
+    WSPoint point = GetCharBefore(mNode, mOffset);
     if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar))
     {
       nsCOMPtr<nsIDOMNode> wsStartNode, wsEndNode;
@@ -1438,42 +1438,32 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, int32_t aStartOffset,
 }
 
 nsWSRunObject::WSPoint
-nsWSRunObject::GetCharAfter(nsIDOMNode *aNode, int32_t aOffset)
+nsWSRunObject::GetCharAfter(nsINode* aNode, int32_t aOffset)
 {
   MOZ_ASSERT(aNode);
 
-  nsCOMPtr<nsIContent> node(do_QueryInterface(aNode));
-  int32_t idx = mNodeArray.IndexOf(node);
-  if (idx == -1) 
-  {
-    // use range comparisons to get right ws node
-    return GetWSPointAfter(aNode, aOffset);
-  }
-  else
-  {
-    // use wspoint version of GetCharAfter()
-    WSPoint point(node, aOffset, 0);
-    return GetCharAfter(point);
+  int32_t idx = mNodeArray.IndexOf(aNode);
+  if (idx == -1) {
+    // Use range comparisons to get right ws node
+    return GetWSPointAfter(GetAsDOMNode(aNode), aOffset);
+  } else {
+    // Use WSPoint version of GetCharAfter()
+    return GetCharAfter(WSPoint(static_cast<Text*>(aNode), aOffset, 0));
   }
 }
 
 nsWSRunObject::WSPoint
-nsWSRunObject::GetCharBefore(nsIDOMNode *aNode, int32_t aOffset)
+nsWSRunObject::GetCharBefore(nsINode* aNode, int32_t aOffset)
 {
   MOZ_ASSERT(aNode);
 
-  nsCOMPtr<nsIContent> node(do_QueryInterface(aNode));
-  int32_t idx = mNodeArray.IndexOf(node);
-  if (idx == -1) 
-  {
-    // use range comparisons to get right ws node
-    return GetWSPointBefore(aNode, aOffset);
-  }
-  else
-  {
-    // use wspoint version of GetCharBefore()
-    WSPoint point(node, aOffset, 0);
-    return GetCharBefore(point);
+  int32_t idx = mNodeArray.IndexOf(aNode);
+  if (idx == -1) {
+    // Use range comparisons to get right ws node
+    return GetWSPointBefore(GetAsDOMNode(aNode), aOffset);
+  } else {
+    // Use WSPoint version of GetCharBefore()
+    return GetCharBefore(WSPoint(static_cast<Text*>(aNode), aOffset, 0));
   }
 }
 
@@ -1481,7 +1471,7 @@ nsWSRunObject::WSPoint
 nsWSRunObject::GetCharAfter(const WSPoint &aPoint)
 {
   MOZ_ASSERT(aPoint.mTextNode);
-  
+
   WSPoint outPoint;
   outPoint.mTextNode = nullptr;
   outPoint.mOffset = 0;
@@ -1489,20 +1479,18 @@ nsWSRunObject::GetCharAfter(const WSPoint &aPoint)
 
   int32_t idx = mNodeArray.IndexOf(aPoint.mTextNode);
   if (idx == -1) {
-    // can't find point, but it's not an error
+    // Can't find point, but it's not an error
     return outPoint;
   }
   int32_t numNodes = mNodeArray.Count();
-  
-  if (uint16_t(aPoint.mOffset) < aPoint.mTextNode->TextLength())
-  {
+
+  if (uint16_t(aPoint.mOffset) < aPoint.mTextNode->TextLength()) {
     outPoint = aPoint;
     outPoint.mChar = GetCharAt(aPoint.mTextNode, aPoint.mOffset);
     return outPoint;
-  } else if (idx + 1 < (int32_t)numNodes) {
-    nsIDOMNode* node = GetAsDOMNode(mNodeArray[idx+1]);
-    MOZ_ASSERT(node);
-    outPoint.mTextNode = do_QueryInterface(node);
+  } else if (idx + 1 < numNodes) {
+    outPoint.mTextNode = do_QueryInterface(mNodeArray[idx + 1]);
+    MOZ_ASSERT(outPoint.mTextNode);
     outPoint.mOffset = 0;
     outPoint.mChar = GetCharAt(outPoint.mTextNode, 0);
   }
@@ -1513,37 +1501,30 @@ nsWSRunObject::WSPoint
 nsWSRunObject::GetCharBefore(const WSPoint &aPoint)
 {
   MOZ_ASSERT(aPoint.mTextNode);
-  
+
   WSPoint outPoint;
   outPoint.mTextNode = nullptr;
   outPoint.mOffset = 0;
   outPoint.mChar = 0;
-  
+
   int32_t idx = mNodeArray.IndexOf(aPoint.mTextNode);
   if (idx == -1) {
-    // can't find point, but it's not an error
+    // Can't find point, but it's not an error
     return outPoint;
   }
-  
-  if (aPoint.mOffset != 0)
-  {
+
+  if (aPoint.mOffset != 0) {
     outPoint = aPoint;
     outPoint.mOffset--;
-    outPoint.mChar = GetCharAt(aPoint.mTextNode, aPoint.mOffset-1);
+    outPoint.mChar = GetCharAt(aPoint.mTextNode, aPoint.mOffset - 1);
     return outPoint;
-  }
-  else if (idx)
-  {
-    nsIDOMNode* node = GetAsDOMNode(mNodeArray[idx-1]);
-    MOZ_ASSERT(node);
-    outPoint.mTextNode = do_QueryInterface(node);
+  } else if (idx) {
+    outPoint.mTextNode = do_QueryInterface(mNodeArray[idx - 1]);
 
     uint32_t len = outPoint.mTextNode->TextLength();
-
-    if (len)
-    {
-      outPoint.mOffset = len-1;
-      outPoint.mChar = GetCharAt(outPoint.mTextNode, len-1);
+    if (len) {
+      outPoint.mOffset = len - 1;
+      outPoint.mChar = GetCharAt(outPoint.mTextNode, len - 1);
     }
   }
   return outPoint;
@@ -1618,9 +1599,10 @@ nsWSRunObject::GetAsciiWSBounds(int16_t aDir, nsIDOMNode *aNode, int32_t aOffset
   nsCOMPtr<nsIDOMNode> startNode, endNode;
   int32_t startOffset=0, endOffset=0;
   
+  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
   if (aDir & eAfter)
   {
-    WSPoint point = GetCharAfter(aNode, aOffset);
+    WSPoint point = GetCharAfter(node, aOffset);
     if (point.mTextNode) {
       // we found a text node, at least
       endNode = do_QueryInterface(point.mTextNode);
@@ -1644,7 +1626,7 @@ nsWSRunObject::GetAsciiWSBounds(int16_t aDir, nsIDOMNode *aNode, int32_t aOffset
   
   if (aDir & eBefore)
   {
-    WSPoint point = GetCharBefore(aNode, aOffset);
+    WSPoint point = GetCharBefore(node, aOffset);
     if (point.mTextNode) {
       // we found a text node, at least
       startNode = do_QueryInterface(point.mTextNode);
@@ -1872,7 +1854,7 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
   }
 
   // first check for trailing nbsp
-  WSPoint thePoint = GetCharBefore(GetAsDOMNode(aRun->mEndNode), aRun->mEndOffset);
+  WSPoint thePoint = GetCharBefore(aRun->mEndNode, aRun->mEndOffset);
   if (thePoint.mTextNode && thePoint.mChar == nbsp) {
     // now check that what is to the left of it is compatible with replacing nbsp with space
     WSPoint prevPoint = GetCharBefore(thePoint);
@@ -1922,7 +1904,7 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
         NS_ENSURE_TRUE(brNode, NS_ERROR_FAILURE);
 
         // Refresh thePoint, prevPoint
-        thePoint = GetCharBefore(GetAsDOMNode(aRun->mEndNode), aRun->mEndOffset);
+        thePoint = GetCharBefore(aRun->mEndNode, aRun->mEndOffset);
         prevPoint = GetCharBefore(thePoint);
         rightCheck = true;
       }
@@ -1979,7 +1961,8 @@ nsWSRunObject::CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aO
   // end up after the inserted object.   
   NS_ENSURE_TRUE(aRun && aNode, NS_ERROR_NULL_POINTER);
   bool canConvert = false;
-  WSPoint thePoint = GetCharBefore(aNode, aOffset);
+  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
+  WSPoint thePoint = GetCharBefore(node, aOffset);
   if (thePoint.mTextNode && thePoint.mChar == nbsp) {
     WSPoint prevPoint = GetCharBefore(thePoint);
     if (prevPoint.mTextNode) {
@@ -2018,7 +2001,8 @@ nsWSRunObject::CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aOf
   // text, so we don't have to worry about what is before it.  What is before it now will 
   // end up before the inserted text.   
   bool canConvert = false;
-  WSPoint thePoint = GetCharAfter(aNode, aOffset);
+  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
+  WSPoint thePoint = GetCharAfter(node, aOffset);
   if (thePoint.mChar == nbsp) {
     WSPoint tmp = thePoint;
     tmp.mOffset++; // we want to be after thePoint
