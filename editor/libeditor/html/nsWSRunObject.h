@@ -330,26 +330,12 @@ class MOZ_STACK_CLASS nsWSRunObject
     void     MakeSingleWSRun(WSType aType);
     nsresult PrependNodeToList(nsINode* aNode);
     nsresult AppendNodeToList(nsINode* aNode);
-    nsresult GetPreviousWSNode(nsIDOMNode *aStartNode, 
-                               nsIDOMNode *aBlockParent, 
-                               nsCOMPtr<nsIDOMNode> *aPriorNode);
-    nsresult GetPreviousWSNode(nsIDOMNode *aStartNode,
-                               int32_t      aOffset,
-                               nsIDOMNode  *aBlockParent, 
-                               nsCOMPtr<nsIDOMNode> *aPriorNode);
     nsresult GetPreviousWSNode(::DOMPoint aPoint,
-                               nsIDOMNode  *aBlockParent, 
-                               nsCOMPtr<nsIDOMNode> *aPriorNode);
-    nsresult GetNextWSNode(nsIDOMNode *aStartNode, 
-                           nsIDOMNode *aBlockParent, 
-                           nsCOMPtr<nsIDOMNode> *aNextNode);
-    nsresult GetNextWSNode(nsIDOMNode *aStartNode,
-                           int32_t     aOffset,
-                           nsIDOMNode *aBlockParent, 
-                           nsCOMPtr<nsIDOMNode> *aNextNode);
+                               nsINode* aBlockParent,
+                               nsCOMPtr<nsINode>* aPriorNode);
     nsresult GetNextWSNode(::DOMPoint aPoint,
-                           nsIDOMNode  *aBlockParent, 
-                           nsCOMPtr<nsIDOMNode> *aNextNode);
+                           nsINode* aBlockParent,
+                           nsCOMPtr<nsINode>* aNextNode);
     nsresult PrepareToDeleteRangePriv(nsWSRunObject* aEndObject);
     nsresult PrepareToSplitAcrossBlocksPriv();
     nsresult DeleteChars(nsIDOMNode *aStartNode, int32_t aStartOffset, 
@@ -376,6 +362,10 @@ class MOZ_STACK_CLASS nsWSRunObject
                                        nsCOMPtr<nsIDOMNode> *aBlock,
                                        BlockBoundary aBoundary);
     nsresult Scrub();
+    nsresult GetPreviousWSNodeInner(nsINode* aStartNode, nsINode* aBlockParent,
+                                    nsCOMPtr<nsINode>* aPriorNode);
+    nsresult GetNextWSNodeInner(nsINode* aStartNode, nsINode* aBlockParent,
+                                nsCOMPtr<nsINode>* aNextNode);
     
     // member variables ---------------------------------------------------------
     
