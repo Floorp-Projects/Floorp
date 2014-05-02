@@ -362,7 +362,8 @@ function _setupTLSServerTest(serverBinName)
   let certDir = directoryService.get("CurWorkD", Ci.nsILocalFile);
   certDir.append("tlsserver");
   do_check_true(certDir.exists());
-  process.run(false, [certDir.path], 1);
+  // Using "sql:" causes the SQL DB to be used so we can run tests on Android.
+  process.run(false, [ "sql:" + certDir.path ], 1);
 
   do_register_cleanup(function() {
     process.kill();
@@ -383,7 +384,8 @@ function generateOCSPResponses(ocspRespArray, nssDBlocation)
     let argArray = new Array();
     let ocspFilepre = do_get_file(i.toString() + ".ocsp", true);
     let filename = ocspFilepre.path;
-    argArray.push(nssDBlocation);
+    // Using "sql:" causes the SQL DB to be used so we can run tests on Android.
+    argArray.push("sql:" + nssDBlocation);
     argArray.push(ocspRespArray[i][0]); // ocsRespType;
     argArray.push(ocspRespArray[i][1]); // nick;
     argArray.push(ocspRespArray[i][2]); // extranickname
