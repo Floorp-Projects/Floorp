@@ -127,6 +127,11 @@ abstract class HomeFragment extends Fragment {
         final Context context = getActivity();
 
         final int itemId = item.getItemId();
+
+        // Track the menu action. We don't know much about the context, but we can use this to determine
+        // the frequency of use for various actions.
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU, getResources().getResourceEntryName(itemId));
+
         if (itemId == R.id.home_share) {
             if (info.url == null) {
                 Log.e(LOGTAG, "Can't share because URL is null");
