@@ -180,6 +180,11 @@ class MOZ_STACK_CLASS nsWSRunObject
     // adjusting ws.
     // example of fixup: trailingws before {aStartNode,aStartOffset}
     //                   needs to be removed.
+    static nsresult PrepareToDeleteRange(nsHTMLEditor* aHTMLEd,
+                                         nsCOMPtr<nsINode>* aStartNode,
+                                         int32_t* aStartOffset,
+                                         nsCOMPtr<nsINode>* aEndNode,
+                                         int32_t* aEndOffset);
     static nsresult PrepareToDeleteRange(nsHTMLEditor *aHTMLEd, 
                                          nsCOMPtr<nsIDOMNode> *aStartNode,
                                          int32_t *aStartOffset, 
