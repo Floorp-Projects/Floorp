@@ -2668,7 +2668,6 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onSearch(SearchEngine engine, String text) {
         recordSearch(engine, "barsuggest");
-        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, "search");
         openUrlAndStopEditing(text, engine.name);
     }
 
