@@ -210,7 +210,8 @@ label.findbar-find-fast:-moz-lwtheme,
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
-.findbar-find-status {
+.findbar-find-status,
+.found-matches {
   color: rgba(0,0,0,.5);
   margin: 0 !important;
   -moz-margin-start: 12px !important;

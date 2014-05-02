@@ -527,7 +527,9 @@ Toolbox.prototype = {
    * Add buttons to the UI as specified in the devtools.toolbox.toolbarSpec pref
    */
   _buildButtons: function() {
-    this._buildPickerButton();
+    if (!this.target.isAddon) {
+      this._buildPickerButton();
+    }
 
     if (!this.target.isLocalTab) {
       return;

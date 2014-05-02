@@ -773,7 +773,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         try {
             c = cr.query(mFaviconsUriWithProfile,
                          new String[] { Favicons.DATA },
-                         Favicons.URL + " = ?",
+                         Favicons.URL + " = ? AND " + Favicons.DATA + " IS NOT NULL",
                          new String[] { faviconURL },
                          null);
 
@@ -866,18 +866,21 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         byte[] b = null;
         try {
             c = cr.query(mThumbnailsUriWithProfile,
-                         new String[]{Thumbnails.DATA},
-                         Thumbnails.URL + " = ?",
-                         new String[]{uri},
+                         new String[]{ Thumbnails.DATA },
+                         Thumbnails.URL + " = ? AND " + Thumbnails.DATA + " IS NOT NULL",
+                         new String[]{ uri },
                          null);
 
-            if (c.moveToFirst()) {
-                int thumbnailIndex = c.getColumnIndexOrThrow(Thumbnails.DATA);
-                b = c.getBlob(thumbnailIndex);
+            if (!c.moveToFirst()) {
+                return null;
             }
+
+            int thumbnailIndex = c.getColumnIndexOrThrow(Thumbnails.DATA);
+            b = c.getBlob(thumbnailIndex);
         } finally {
-            if (c != null)
+            if (c != null) {
                 c.close();
+            }
         }
 
         return b;
