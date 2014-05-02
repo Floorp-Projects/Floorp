@@ -318,3 +318,23 @@ exports.dbg_assert = function dbg_assert(cond, e) {
     return e;
   }
 }
+
+
+/**
+ * Utility function for updating an object with the properties of another
+ * object.
+ *
+ * @param aTarget Object
+ *        The object being updated.
+ * @param aNewAttrs Object
+ *        The new attributes being set on the target.
+ */
+exports.update = function update(aTarget, aNewAttrs) {
+  for (let key in aNewAttrs) {
+    let desc = Object.getOwnPropertyDescriptor(aNewAttrs, key);
+
+    if (desc) {
+      Object.defineProperty(aTarget, key, desc);
+    }
+  }
+}
