@@ -554,6 +554,15 @@ template<typename T, typename V>
 struct Shuffle {
     static inline int32_t apply(int32_t l, int32_t mask) { return V::toType((mask >> l) & 0x3); }
 };
+struct ShiftLeft {
+    static inline int32_t apply(int32_t v, int32_t bits) { return v << bits; }
+};
+struct ShiftRight {
+    static inline int32_t apply(int32_t v, int32_t bits) { return v >> bits; }
+};
+struct ShiftRightLogical {
+    static inline int32_t apply(int32_t v, int32_t bits) { return uint32_t(v) >> (bits & 31); }
+};
 }
 
 static inline bool
@@ -692,6 +701,34 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
     }
 
     RootedObject obj(cx, Create<Vret>(cx, result));
+    if (!obj)
+        return false;
+
+    args.rval().setObject(*obj);
+    return true;
+}
+
+template<typename Op>
+static bool
+Int32x4BinaryScalar(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 2)
+        return ErrorBadArgs(cx);
+
+    int32_t result[4];
+    if (!IsVectorObject<Int32x4>(args[0]) || !args[1].isNumber())
+        return ErrorBadArgs(cx);
+
+    int32_t *val = TypedObjectMemory<int32_t *>(args[0]);;
+    int32_t bits;
+    if (!ToInt32(cx, args[1], &bits))
+        return false;
+
+    for (unsigned i = 0; i < 4; i++)
+        result[i] = Op::apply(val[i], bits);
+
+    RootedObject obj(cx, Create<Int32x4>(cx, result));
     if (!obj)
         return false;
 
