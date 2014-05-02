@@ -23,15 +23,6 @@ inline bool is_pot_assuming_nonnegative(GLsizei x)
     return x && (x & (x-1)) == 0;
 }
 
-inline bool FormatHasAlpha(GLenum format)
-{
-    return format == LOCAL_GL_RGBA ||
-           format == LOCAL_GL_LUMINANCE_ALPHA ||
-           format == LOCAL_GL_ALPHA ||
-           format == LOCAL_GL_RGBA4 ||
-           format == LOCAL_GL_RGB5_A1;
-}
-
 // NOTE: When this class is switched to new DOM bindings, update the (then-slow)
 // WrapObject calls in GetParameter and GetFramebufferAttachmentParameter.
 class WebGLTexture MOZ_FINAL
@@ -82,16 +73,19 @@ public:
     {
     public:
         ImageInfo()
-            : mInternalFormat(0)
-            , mType(0)
+            : mWebGLFormat(LOCAL_GL_NONE)
+            , mWebGLType(LOCAL_GL_NONE)
             , mImageDataStatus(WebGLImageDataStatus::NoImageData)
         {}
 
-        ImageInfo(GLsizei width, GLsizei height,
-                  GLenum format, GLenum type, WebGLImageDataStatus status)
+        ImageInfo(GLsizei width,
+                  GLsizei height,
+                  GLenum webGLFormat,
+                  GLenum webGLType,
+                  WebGLImageDataStatus status)
             : WebGLRectangleObject(width, height)
-            , mInternalFormat(format)
-            , mType(type)
+            , mWebGLFormat(webGLFormat)
+            , mWebGLType(webGLType)
             , mImageDataStatus(status)
         {
             // shouldn't use this constructor to construct a null ImageInfo
@@ -100,10 +94,10 @@ public:
 
         bool operator==(const ImageInfo& a) const {
             return mImageDataStatus == a.mImageDataStatus &&
-                   mWidth  == a.mWidth &&
+                   mWidth == a.mWidth &&
                    mHeight == a.mHeight &&
-                   mInternalFormat == a.mInternalFormat &&
-                   mType   == a.mType;
+                   mWebGLFormat == a.mWebGLFormat &&
+                   mWebGLType == a.mWebGLType;
         }
         bool operator!=(const ImageInfo& a) const {
             return !(*this == a);
@@ -122,10 +116,20 @@ public:
             return mImageDataStatus == WebGLImageDataStatus::UninitializedImageData;
         }
         int64_t MemoryUsage() const;
-        GLenum InternalFormat() const { return mInternalFormat; }
-        GLenum Type() const { return mType; }
+        /*! This is the format passed from JS to WebGL.
+         * It can be converted to a value to be passed to driver with
+         * DriverFormatsFromFormatAndType().
+         */
+        GLenum WebGLFormat() const { return mWebGLFormat; }
+        /*! This is the type passed from JS to WebGL.
+         * It can be converted to a value to be passed to driver with
+         * DriverTypeFromType().
+         */
+        GLenum WebGLType() const { return mWebGLType; }
+
     protected:
-        GLenum mInternalFormat, mType;
+        GLenum mWebGLFormat; //!< This is the WebGL/GLES format
+        GLenum mWebGLType;   //!< This is the WebGL/GLES type
         WebGLImageDataStatus mImageDataStatus;
 
         friend class WebGLTexture;

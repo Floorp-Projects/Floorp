@@ -12,8 +12,12 @@
 
 namespace mozilla {
 
-bool IsGLDepthFormat(GLenum internalFormat);
-bool IsGLDepthStencilFormat(GLenum internalFormat);
+bool IsGLDepthFormat(GLenum webGLFormat);
+bool IsGLDepthStencilFormat(GLenum webGLFormat);
+bool FormatHasAlpha(GLenum webGLFormat);
+void DriverFormatsFromFormatAndType(gl::GLContext* gl, GLenum webGLFormat, GLenum webGLType,
+                                    GLenum* out_driverInternalFormat, GLenum* out_driverFormat);
+GLenum DriverTypeFromType(gl::GLContext* gl, GLenum webGLType);
 
 template <typename WebGLObjectType>
 JS::Value
