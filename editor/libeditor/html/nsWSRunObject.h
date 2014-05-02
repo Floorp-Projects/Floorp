@@ -325,8 +325,8 @@ class MOZ_STACK_CLASS nsWSRunObject
                            nsCOMPtr<nsINode>* aNextNode);
     nsresult PrepareToDeleteRangePriv(nsWSRunObject* aEndObject);
     nsresult PrepareToSplitAcrossBlocksPriv();
-    nsresult DeleteChars(nsIDOMNode *aStartNode, int32_t aStartOffset, 
-                         nsIDOMNode *aEndNode, int32_t aEndOffset,
+    nsresult DeleteChars(nsINode* aStartNode, int32_t aStartOffset,
+                         nsINode* aEndNode, int32_t aEndOffset,
                          AreaRestriction aAR = eAnywhere);
     WSPoint  GetCharAfter(nsINode* aNode, int32_t aOffset);
     WSPoint  GetCharBefore(nsINode* aNode, int32_t aOffset);
