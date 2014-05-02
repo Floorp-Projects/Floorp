@@ -877,6 +877,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 /* unified back/forward button */
 
 #forward-button {
+  -moz-box-align: stretch; /* let the button shape grow vertically with the location bar */
   padding: 0 !important;
 }
 
@@ -1116,7 +1117,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 #urlbar,
 .searchbar-textbox {
   -moz-appearance: none;
-  margin: 1px 3px;
+  margin: 0 3px;
   padding: 0;
   background-clip: padding-box;
   border: 1px solid ThreeDShadow;
