@@ -6630,7 +6630,7 @@ nsHTMLEditRules::ReturnInHeader(nsISelection *aSelection,
   nsCOMPtr<nsIDOMNode> headerParent = nsEditor::GetNodeLocation(aHeader, &offset);
 
   // get ws code to adjust any ws
-  nsCOMPtr<nsIDOMNode> selNode = aNode;
+  nsCOMPtr<nsINode> selNode(do_QueryInterface(aNode));
   NS_ENSURE_STATE(mHTMLEditor);
   nsresult res = nsWSRunObject::PrepareToSplitAcrossBlocks(mHTMLEditor,
                                                            address_of(selNode),
@@ -6640,7 +6640,7 @@ nsHTMLEditRules::ReturnInHeader(nsISelection *aSelection,
   // split the header
   int32_t newOffset;
   NS_ENSURE_STATE(mHTMLEditor);
-  res = mHTMLEditor->SplitNodeDeep( aHeader, selNode, aOffset, &newOffset);
+  res = mHTMLEditor->SplitNodeDeep(aHeader, GetAsDOMNode(selNode), aOffset, &newOffset);
   NS_ENSURE_SUCCESS(res, res);
 
   // if the leftand heading is empty, put a mozbr in it
@@ -6836,7 +6836,9 @@ nsHTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
   // get ws code to adjust any ws
   nsCOMPtr<nsIDOMNode> leftPara, rightPara;
   NS_ENSURE_STATE(mHTMLEditor);
-  res = nsWSRunObject::PrepareToSplitAcrossBlocks(mHTMLEditor, aSelNode, aOffset);
+  nsCOMPtr<nsINode> selNode(do_QueryInterface(*aSelNode));
+  res = nsWSRunObject::PrepareToSplitAcrossBlocks(mHTMLEditor, address_of(selNode), aOffset);
+  *aSelNode = GetAsDOMNode(selNode);
   NS_ENSURE_SUCCESS(res, res);
   // split the paragraph
   NS_ENSURE_STATE(mHTMLEditor);
@@ -6974,14 +6976,14 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
   
   // else we want a new list item at the same list level.
   // get ws code to adjust any ws
-  nsCOMPtr<nsIDOMNode> selNode = aNode;
+  nsCOMPtr<nsINode> selNode(do_QueryInterface(aNode));
   NS_ENSURE_STATE(mHTMLEditor);
   res = nsWSRunObject::PrepareToSplitAcrossBlocks(mHTMLEditor, address_of(selNode), &aOffset);
   NS_ENSURE_SUCCESS(res, res);
   // now split list item
   int32_t newOffset;
   NS_ENSURE_STATE(mHTMLEditor);
-  res = mHTMLEditor->SplitNodeDeep( aListItem, selNode, aOffset, &newOffset, false);
+  res = mHTMLEditor->SplitNodeDeep(aListItem, GetAsDOMNode(selNode), aOffset, &newOffset, false);
   NS_ENSURE_SUCCESS(res, res);
   // hack: until I can change the damaged doc range code back to being
   // extra inclusive, I have to manually detect certain list items that

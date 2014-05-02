@@ -192,16 +192,14 @@ class MOZ_STACK_CLASS nsWSRunObject
     static nsresult PrepareToDeleteNode(nsHTMLEditor *aHTMLEd,
                                         nsIContent* aContent);
 
-    // PrepareToSplitAcrossBlocks fixes up ws before and after 
-    // {aSplitNode,aSplitOffset} in preperation for a block
-    // parent to be split.  Note that the aSplitNode and aSplitOffset
-    // are adjusted in response to any dom changes we make while 
-    // adjusting ws.
-    // example of fixup: normalws before {aSplitNode,aSplitOffset} 
-    //                   needs to end with nbsp.
-    static nsresult PrepareToSplitAcrossBlocks(nsHTMLEditor *aHTMLEd, 
-                                               nsCOMPtr<nsIDOMNode> *aSplitNode, 
-                                               int32_t *aSplitOffset);
+    // PrepareToSplitAcrossBlocks fixes up ws before and after
+    // {aSplitNode,aSplitOffset} in preparation for a block parent to be split.
+    // Note that the aSplitNode and aSplitOffset are adjusted in response to
+    // any DOM changes we make while adjusting ws.  Example of fixup: normalws
+    // before {aSplitNode,aSplitOffset} needs to end with nbsp.
+    static nsresult PrepareToSplitAcrossBlocks(nsHTMLEditor* aHTMLEd,
+                                               nsCOMPtr<nsINode>* aSplitNode,
+                                               int32_t* aSplitOffset);
 
     // InsertBreak inserts a br node at {aInOutParent,aInOutOffset}
     // and makes any needed adjustments to ws around that point.
