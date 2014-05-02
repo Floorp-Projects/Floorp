@@ -2829,13 +2829,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ret=actortype,
                 virtual=1, pure=1)))
 
-        # optional ActorDestroy() method; default is no-op
+        # ActorDestroy() method; default is no-op
         self.cls.addstmts([
             Whitespace.NL,
             MethodDefn(MethodDecl(
                 _destroyMethod().name,
                 params=[ Decl(_DestroyReason.Type(), 'why') ],
-                virtual=1)),
+                ret=Type.VOID,
+                virtual=1, pure=(self.side == 'parent'))),
             Whitespace.NL
         ])
 
@@ -5459,6 +5460,7 @@ def _splitMethodDefn(md, clsname):
     md.decl.static = 0
     md.decl.warn_unused = 0
     md.decl.never_inline = 0
+    md.decl.pure = 0
     md.decl.only_for_definition = True
     for param in md.decl.params:
         if isinstance(param, Param):
@@ -5515,7 +5517,7 @@ class _GenerateSkeletonImpl(Visitor):
                                              ret=md.ret))
         if md.ret.ptr:
             impl.addstmt(StmtReturn(ExprLiteral.ZERO))
-        else:
+        elif md.ret == Type.BOOL:
             impl.addstmt(StmtReturn(ExprVar('false')))
 
         self.cls.addstmts([ StmtDecl(decl), Whitespace.NL ])
