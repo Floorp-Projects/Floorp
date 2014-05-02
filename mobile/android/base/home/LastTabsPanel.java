@@ -115,7 +115,7 @@ public class LastTabsPanel extends HomeFragment {
             }
         });
 
-        mList.setContextMenuInfoFactory(new HomeListView.ContextMenuInfoFactory() {
+        mList.setContextMenuInfoFactory(new HomeContextMenuInfo.Factory() {
             @Override
             public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor) {
                 final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);

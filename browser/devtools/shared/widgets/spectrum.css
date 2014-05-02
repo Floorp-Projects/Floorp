@@ -144,15 +144,15 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
 }
 
 .spectrum-sat {
-  background-image: -moz-linear-gradient(left, #FFF, rgba(204, 154, 129, 0));
+  background-image: linear-gradient(to right, #FFF, rgba(204, 154, 129, 0));
 }
 
 .spectrum-val {
-  background-image: -moz-linear-gradient(bottom, #000000, rgba(204, 154, 129, 0));
+  background-image: linear-gradient(to top, #000000, rgba(204, 154, 129, 0));
 }
 
 .spectrum-hue {
-  background: -moz-linear-gradient(top, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+  background: linear-gradient(to bottom, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
 }
 
 .spectrum-dragger {

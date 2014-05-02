@@ -12,7 +12,7 @@ const { Cc, Ci, Cu, components } = require("chrome");
 const { ActorPool } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-const { dbg_assert, dumpn } = DevToolsUtils;
+const { dbg_assert, dumpn, update } = DevToolsUtils;
 const { SourceMapConsumer, SourceMapGenerator } = require("source-map");
 const { all, defer, resolve } = promise;
 
@@ -5354,25 +5354,6 @@ function getFrameLocation(aFrame) {
     url: aFrame.script.url,
     line: aFrame.script.getOffsetLine(aFrame.offset),
     column: getOffsetColumn(aFrame.offset, aFrame.script)
-  }
-}
-
-/**
- * Utility function for updating an object with the properties of another
- * object.
- *
- * @param aTarget Object
- *        The object being updated.
- * @param aNewAttrs Object
- *        The new attributes being set on the target.
- */
-function update(aTarget, aNewAttrs) {
-  for (let key in aNewAttrs) {
-    let desc = Object.getOwnPropertyDescriptor(aNewAttrs, key);
-
-    if (desc) {
-      Object.defineProperty(aTarget, key, desc);
-    }
   }
 }
 
