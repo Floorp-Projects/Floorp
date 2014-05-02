@@ -441,7 +441,9 @@ BasicResponse(der::Input& input, Context& context)
 
   CERTSignedData signedData;
 
-  input.GetSECItem(siBuffer, mark, signedData.data);
+  if (input.GetSECItem(siBuffer, mark, signedData.data) != der::Success) {
+    return der::Failure;
+  }
 
   if (der::Nested(input, der::SEQUENCE,
                   bind(der::AlgorithmIdentifier, _1,
@@ -502,7 +504,9 @@ BasicResponse(der::Input& input, Context& context)
         return der::Failure;
       }
 
-      input.GetSECItem(siBuffer, mark, certs[numCerts]);
+      if (input.GetSECItem(siBuffer, mark, certs[numCerts]) != der::Success) {
+        return der::Failure;
+      }
       ++numCerts;
     }
   }
