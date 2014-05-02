@@ -153,6 +153,7 @@ class MOZ_STACK_CLASS nsWSRunObject
     enum {eBoth   = eBefore | eAfter};
 
     // constructor / destructor -----------------------------------------------
+    nsWSRunObject(nsHTMLEditor* aEd, nsINode* aNode, int32_t aOffset);
     nsWSRunObject(nsHTMLEditor *aEd, nsIDOMNode *aNode, int32_t aOffset);
     ~nsWSRunObject();
     
@@ -295,7 +296,7 @@ class MOZ_STACK_CLASS nsWSRunObject
       char16_t mChar;
 
       WSPoint() : mTextNode(0),mOffset(0),mChar(0) {}
-      WSPoint(nsIDOMNode *aNode, int32_t aOffset, char16_t aChar) : 
+      WSPoint(nsINode* aNode, int32_t aOffset, char16_t aChar) :
                      mTextNode(do_QueryInterface(aNode)),mOffset(aOffset),mChar(aChar)
       {
         if (!mTextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
