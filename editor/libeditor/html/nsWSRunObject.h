@@ -8,11 +8,11 @@
 
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsIEditor.h"
 #include "nsINode.h"
 #include "nscore.h"
+#include "mozilla/dom/Text.h"
 
 class nsHTMLEditor;
 class nsIDOMDocument;
@@ -291,7 +291,7 @@ class MOZ_STACK_CLASS nsWSRunObject
     // stored in the struct.
     struct MOZ_STACK_CLASS WSPoint
     {
-      nsCOMPtr<nsIContent> mTextNode;
+      nsCOMPtr<mozilla::dom::Text> mTextNode;
       uint32_t mOffset;
       char16_t mChar;
 
@@ -299,13 +299,9 @@ class MOZ_STACK_CLASS nsWSRunObject
       WSPoint(nsINode* aNode, int32_t aOffset, char16_t aChar) :
                      mTextNode(do_QueryInterface(aNode)),mOffset(aOffset),mChar(aChar)
       {
-        if (!mTextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-          // Not sure if this is needed, but it'll maintain the same
-          // functionality
-          mTextNode = nullptr;
-        }
+        MOZ_ASSERT(mTextNode->IsNodeOfType(nsINode::eTEXT));
       }
-      WSPoint(nsIContent *aTextNode, int32_t aOffset, char16_t aChar) : 
+      WSPoint(mozilla::dom::Text* aTextNode, int32_t aOffset, char16_t aChar) :
                      mTextNode(aTextNode),mOffset(aOffset),mChar(aChar) {}
     };    
 

@@ -1306,11 +1306,6 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
         GetAsciiWSBounds(eBoth, GetAsDOMNode(mNode), mOffset, address_of(wsStartNode),
                          &wsStartOffset, address_of(wsEndNode), &wsEndOffset);
         point.mTextNode = do_QueryInterface(wsStartNode);
-        if (!point.mTextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-          // Not sure if this is needed, but it'll maintain the same
-          // functionality
-          point.mTextNode = nullptr;
-        }
         point.mOffset = wsStartOffset;
         res = ConvertToNBSP(point, eOutsideUserSelectAll);
         NS_ENSURE_SUCCESS(res, res);
@@ -1355,11 +1350,6 @@ nsWSRunObject::PrepareToSplitAcrossBlocksPriv()
       GetAsciiWSBounds(eBoth, GetAsDOMNode(mNode), mOffset, address_of(wsStartNode),
                        &wsStartOffset, address_of(wsEndNode), &wsEndOffset);
       point.mTextNode = do_QueryInterface(wsStartNode);
-      if (!point.mTextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-        // Not sure if this is needed, but it'll maintain the same
-        // functionality
-        point.mTextNode = nullptr;
-      }
       point.mOffset = wsStartOffset;
       res = ConvertToNBSP(point);
       NS_ENSURE_SUCCESS(res, res);
@@ -1541,11 +1531,6 @@ nsWSRunObject::GetCharAfter(const WSPoint &aPoint)
     nsIDOMNode* node = GetAsDOMNode(mNodeArray[idx+1]);
     MOZ_ASSERT(node);
     outPoint.mTextNode = do_QueryInterface(node);
-    if (!outPoint.mTextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-      // Not sure if this is needed, but it'll maintain the same
-      // functionality
-      outPoint.mTextNode = nullptr;
-    }
     outPoint.mOffset = 0;
     outPoint.mChar = GetCharAt(outPoint.mTextNode, 0);
   }
