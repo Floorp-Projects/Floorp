@@ -278,13 +278,6 @@ public:
    */
   bool Matches(const ScrollableLayerGuid& aGuid);
 
-  /**
-   * Sync panning and zooming animation using a fixed frame time.
-   * This will ensure that we animate the APZC correctly with other external
-   * animations to the same timestamp.
-   */
-  static void SetFrameTime(const TimeStamp& aMilliseconds);
-
   void StartAnimation(AsyncPanZoomAnimation* aAnimation);
 
   /**
@@ -319,14 +312,6 @@ public:
    * attribute.
    */
   bool HasScrollgrab() const { return mFrameMetrics.mHasScrollgrab; }
-
-  /**
-   * Set an extra offset for testing async scrolling.
-   */
-  void SetTestAsyncScrollOffset(const CSSPoint& aPoint)
-  {
-    mTestAsyncScrollOffset = aPoint;
-  }
 
   /**
    * Returns whether this APZC has room to be panned (in any direction).
@@ -757,9 +742,6 @@ private:
   // Stores information about the current touch block.
   TouchBlockState mTouchBlockState;
 
-  // Extra offset to add in SampleContentTransformForFrame for testing
-  CSSPoint mTestAsyncScrollOffset;
-
   RefPtr<AsyncPanZoomAnimation> mAnimation;
 
   friend class Axis;
@@ -937,6 +919,37 @@ private:
    * for use in progressive tiled update calculations.
    */
   void ShareCompositorFrameMetrics();
+
+
+  /* ===================================================================
+   * The functions and members in this section are used for testing
+   * purposes only.
+   */
+public:
+  /**
+   * Sync panning and zooming animation using a fixed frame time.
+   * This will ensure that we animate the APZC correctly with other external
+   * animations to the same timestamp.
+   */
+  static void SetFrameTime(const TimeStamp& aMilliseconds);
+  /**
+   * In the gtest environment everything runs on one thread, so we
+   * shouldn't assert that we're on a particular thread. This enables
+   * that behaviour.
+   */
+  static void SetThreadAssertionsEnabled(bool aEnabled);
+  static bool GetThreadAssertionsEnabled();
+  /**
+   * Set an extra offset for testing async scrolling.
+   */
+  void SetTestAsyncScrollOffset(const CSSPoint& aPoint)
+  {
+    mTestAsyncScrollOffset = aPoint;
+  }
+
+private:
+  // Extra offset to add in SampleContentTransformForFrame for testing
+  CSSPoint mTestAsyncScrollOffset;
 };
 
 class AsyncPanZoomAnimation {
