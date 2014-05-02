@@ -179,5 +179,5 @@ TEST(JSStreamWriter, Complex2) {
         b.EndObject();
       b.EndArray();
   b.EndObject();
-  ASSERT_TRUE(ss.str().compare("{\"a\":[{\"b\":\"c\",\"d\":[{\"e\":[{\"f\":\"g\"},{\"h\":\"i\"}]}]}]}") 
+  ASSERT_TRUE(ss.str().compare("{\"a\":[{\"b\":\"c\",\"d\":[{\"e\":[{\"f\":\"g\"},{\"h\":\"i\"}]}]}]}") == 0);
 }
