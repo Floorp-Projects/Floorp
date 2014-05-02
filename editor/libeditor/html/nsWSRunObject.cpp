@@ -33,13 +33,6 @@ static bool IsBlockNode(nsINode* node)
          nsHTMLEditor::NodeIsBlockStatic(node->AsElement());
 }
 
-static bool IsBlockNode(nsIDOMNode* node)
-{
-  bool isBlock (false);
-  nsHTMLEditor::NodeIsBlockStatic(node, &isBlock);
-  return isBlock;
-}
-
 //- constructor / destructor -----------------------------------------------
 nsWSRunObject::nsWSRunObject(nsHTMLEditor* aEd, nsINode* aNode, int32_t aOffset)
   : mNode(aNode)
@@ -705,11 +698,9 @@ nsWSRunObject::GetWSNodes()
 
   while (!mStartNode) {
     // we haven't found the start of ws yet.  Keep looking
-    nsCOMPtr<nsIDOMNode> priorDOMNode;
-    res = GetPreviousWSNode(start, GetAsDOMNode(wsBoundingParent),
-                            address_of(priorDOMNode));
+    nsCOMPtr<nsINode> priorNode;
+    res = GetPreviousWSNode(start, wsBoundingParent, address_of(priorNode));
     NS_ENSURE_SUCCESS(res, res);
-    nsCOMPtr<nsINode> priorNode = do_QueryInterface(priorDOMNode);
     if (priorNode) {
       if (IsBlockNode(priorNode)) {
         mStartNode = start.node;
@@ -819,11 +810,9 @@ nsWSRunObject::GetWSNodes()
 
   while (!mEndNode) {
     // we haven't found the end of ws yet.  Keep looking
-    nsCOMPtr<nsIDOMNode> nextDOMNode;
-    res = GetNextWSNode(end, GetAsDOMNode(wsBoundingParent),
-                        address_of(nextDOMNode));
+    nsCOMPtr<nsINode> nextNode;
+    res = GetNextWSNode(end, wsBoundingParent, address_of(nextNode));
     NS_ENSURE_SUCCESS(res, res);
-    nsCOMPtr<nsINode> nextNode = do_QueryInterface(nextDOMNode);
     if (nextNode) {
       if (IsBlockNode(nextNode)) {
         // we encountered a new block.  therefore no more ws.
@@ -1080,44 +1069,40 @@ nsWSRunObject::AppendNodeToList(nsINode* aNode)
 }
 
 nsresult 
-nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode, 
-                                 nsIDOMNode *aBlockParent, 
-                                 nsCOMPtr<nsIDOMNode> *aPriorNode)
+nsWSRunObject::GetPreviousWSNodeInner(nsINode* aStartNode,
+                                      nsINode* aBlockParent,
+                                      nsCOMPtr<nsINode>* aPriorNode)
 {
-  // can't really recycle various getnext/prior routines because we
-  // have special needs here.  Need to step into inline containers but
-  // not block containers.
+  // can't really recycle various getnext/prior routines because we have
+  // special needs here.  Need to step into inline containers but not block
+  // containers.
   NS_ENSURE_TRUE(aStartNode && aBlockParent && aPriorNode, NS_ERROR_NULL_POINTER);
   
-  nsresult res = aStartNode->GetPreviousSibling(getter_AddRefs(*aPriorNode));
-  NS_ENSURE_SUCCESS(res, res);
-  nsCOMPtr<nsIDOMNode> temp, curNode = aStartNode;
-  while (!*aPriorNode)
-  {
+  *aPriorNode = aStartNode->GetPreviousSibling();
+  nsCOMPtr<nsINode> temp, curNode(aStartNode);
+  while (!*aPriorNode) {
     // we have exhausted nodes in parent of aStartNode.
-    res = curNode->GetParentNode(getter_AddRefs(temp));
-    NS_ENSURE_SUCCESS(res, res);
+    temp = curNode->GetParentNode();
     NS_ENSURE_TRUE(temp, NS_ERROR_NULL_POINTER);
-    if (temp == aBlockParent)
-    {
-      // we have exhausted nodes in the block parent.  The convention here is to return null.
+    if (temp == aBlockParent) {
+      // we have exhausted nodes in the block parent.  The convention here is
+      // to return null.
       *aPriorNode = nullptr;
       return NS_OK;
     }
     // we have a parent: look for previous sibling
-    res = temp->GetPreviousSibling(getter_AddRefs(*aPriorNode));
-    NS_ENSURE_SUCCESS(res, res);
+    *aPriorNode = temp->GetPreviousSibling();
     curNode = temp;
   }
   // we have a prior node.  If it's a block, return it.
-  if (IsBlockNode(*aPriorNode))
+  if (IsBlockNode(*aPriorNode)) {
     return NS_OK;
-  // else if it's a container, get deep rightmost child
-  else if (mHTMLEditor->IsContainer(*aPriorNode))
-  {
+  } else if (mHTMLEditor->IsContainer(*aPriorNode)) {
+    // else if it's a container, get deep rightmost child
     temp = mHTMLEditor->GetRightmostChild(*aPriorNode);
-    if (temp)
+    if (temp) {
       *aPriorNode = temp;
+    }
     return NS_OK;
   }
   // else return the node itself
@@ -1126,57 +1111,48 @@ nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode,
 
 nsresult 
 nsWSRunObject::GetPreviousWSNode(DOMPoint aPoint,
-                                 nsIDOMNode *aBlockParent, 
-                                 nsCOMPtr<nsIDOMNode> *aPriorNode)
-{
-  return GetPreviousWSNode(GetAsDOMNode(aPoint.node), aPoint.offset, aBlockParent,
-                           aPriorNode);
-}
-
-nsresult 
-nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode,
-                                 int32_t aOffset,
-                                 nsIDOMNode *aBlockParent, 
-                                 nsCOMPtr<nsIDOMNode> *aPriorNode)
+                                 nsINode* aBlockParent,
+                                 nsCOMPtr<nsINode>* aPriorNode)
 {
   // can't really recycle various getnext/prior routines because we
   // have special needs here.  Need to step into inline containers but
   // not block containers.
-  NS_ENSURE_TRUE(aStartNode && aBlockParent && aPriorNode, NS_ERROR_NULL_POINTER);
-  *aPriorNode = 0;
+  NS_ENSURE_TRUE(aPoint.node && aBlockParent && aPriorNode,
+                 NS_ERROR_NULL_POINTER);
+  *aPriorNode = nullptr;
 
-  if (mHTMLEditor->IsTextNode(aStartNode))
-    return GetPreviousWSNode(aStartNode, aBlockParent, aPriorNode);
-  if (!mHTMLEditor->IsContainer(aStartNode))
-    return GetPreviousWSNode(aStartNode, aBlockParent, aPriorNode);
+  if (aPoint.node->NodeType() == nsIDOMNode::TEXT_NODE) {
+    return GetPreviousWSNodeInner(aPoint.node, aBlockParent, aPriorNode);
+  }
+  if (!mHTMLEditor->IsContainer(aPoint.node)) {
+    return GetPreviousWSNodeInner(aPoint.node, aBlockParent, aPriorNode);
+  }
   
-  if (!aOffset)
-  {
-    if (aStartNode==aBlockParent)
-    {
+  if (!aPoint.offset) {
+    if (aPoint.node == aBlockParent) {
       // we are at start of the block.
       return NS_OK;
     }
 
     // we are at start of non-block container
-    return GetPreviousWSNode(aStartNode, aBlockParent, aPriorNode);
+    return GetPreviousWSNodeInner(aPoint.node, aBlockParent, aPriorNode);
   }
 
-  nsCOMPtr<nsIContent> startContent( do_QueryInterface(aStartNode) );
+  nsCOMPtr<nsIContent> startContent(do_QueryInterface(aPoint.node));
   NS_ENSURE_STATE(startContent);
-  nsIContent *priorContent = startContent->GetChildAt(aOffset - 1);
+  nsIContent* priorContent = startContent->GetChildAt(aPoint.offset - 1);
   NS_ENSURE_TRUE(priorContent, NS_ERROR_NULL_POINTER);
-  *aPriorNode = do_QueryInterface(priorContent);
+  *aPriorNode = priorContent;
   // we have a prior node.  If it's a block, return it.
-  if (IsBlockNode(*aPriorNode))
+  if (IsBlockNode(*aPriorNode)) {
     return NS_OK;
-  // else if it's a container, get deep rightmost child
-  else if (mHTMLEditor->IsContainer(*aPriorNode))
-  {
-    nsCOMPtr<nsIDOMNode> temp;
+  } else if (mHTMLEditor->IsContainer(*aPriorNode)) {
+    // else if it's a container, get deep rightmost child
+    nsCOMPtr<nsINode> temp;
     temp = mHTMLEditor->GetRightmostChild(*aPriorNode);
-    if (temp)
+    if (temp) {
       *aPriorNode = temp;
+    }
     return NS_OK;
   }
   // else return the node itself
@@ -1184,46 +1160,41 @@ nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode,
 }
 
 nsresult 
-nsWSRunObject::GetNextWSNode(nsIDOMNode *aStartNode, 
-                             nsIDOMNode *aBlockParent, 
-                             nsCOMPtr<nsIDOMNode> *aNextNode)
+nsWSRunObject::GetNextWSNodeInner(nsINode* aStartNode,
+                                  nsINode* aBlockParent,
+                                  nsCOMPtr<nsINode>* aNextNode)
 {
-  // can't really recycle various getnext/prior routines because we
-  // have special needs here.  Need to step into inline containers but
-  // not block containers.
-  NS_ENSURE_TRUE(aStartNode && aBlockParent && aNextNode, NS_ERROR_NULL_POINTER);
+  // can't really recycle various getnext/prior routines because we have
+  // special needs here.  Need to step into inline containers but not block
+  // containers.
+  NS_ENSURE_TRUE(aStartNode && aBlockParent && aNextNode,
+                 NS_ERROR_NULL_POINTER);
   
-  *aNextNode = 0;
-  nsresult res = aStartNode->GetNextSibling(getter_AddRefs(*aNextNode));
-  NS_ENSURE_SUCCESS(res, res);
-  nsCOMPtr<nsIDOMNode> temp, curNode = aStartNode;
-  while (!*aNextNode)
-  {
+  *aNextNode = aStartNode->GetNextSibling();
+  nsCOMPtr<nsINode> temp, curNode(aStartNode);
+  while (!*aNextNode) {
     // we have exhausted nodes in parent of aStartNode.
-    res = curNode->GetParentNode(getter_AddRefs(temp));
-    NS_ENSURE_SUCCESS(res, res);
+    temp = curNode->GetParentNode();
     NS_ENSURE_TRUE(temp, NS_ERROR_NULL_POINTER);
-    if (temp == aBlockParent)
-    {
-      // we have exhausted nodes in the block parent.  The convention
-      // here is to return null.
+    if (temp == aBlockParent) {
+      // we have exhausted nodes in the block parent.  The convention here is
+      // to return null.
       *aNextNode = nullptr;
       return NS_OK;
     }
     // we have a parent: look for next sibling
-    res = temp->GetNextSibling(getter_AddRefs(*aNextNode));
-    NS_ENSURE_SUCCESS(res, res);
+    *aNextNode = temp->GetNextSibling();
     curNode = temp;
   }
   // we have a next node.  If it's a block, return it.
-  if (IsBlockNode(*aNextNode))
+  if (IsBlockNode(*aNextNode)) {
     return NS_OK;
-  // else if it's a container, get deep leftmost child
-  else if (mHTMLEditor->IsContainer(*aNextNode))
-  {
+  } else if (mHTMLEditor->IsContainer(*aNextNode)) {
+    // else if it's a container, get deep leftmost child
     temp = mHTMLEditor->GetLeftmostChild(*aNextNode);
-    if (temp)
+    if (temp) {
       *aNextNode = temp;
+    }
     return NS_OK;
   }
   // else return the node itself
@@ -1232,55 +1203,46 @@ nsWSRunObject::GetNextWSNode(nsIDOMNode *aStartNode,
 
 nsresult 
 nsWSRunObject::GetNextWSNode(DOMPoint aPoint,
-                             nsIDOMNode *aBlockParent, 
-                             nsCOMPtr<nsIDOMNode> *aNextNode)
+                             nsINode* aBlockParent,
+                             nsCOMPtr<nsINode>* aNextNode)
 {
-  return GetNextWSNode(GetAsDOMNode(aPoint.node), aPoint.offset, aBlockParent,
-                       aNextNode);
-}
+  // can't really recycle various getnext/prior routines because we have
+  // special needs here.  Need to step into inline containers but not block
+  // containers.
+  NS_ENSURE_TRUE(aPoint.node && aBlockParent && aNextNode,
+                 NS_ERROR_NULL_POINTER);
+  *aNextNode = nullptr;
 
-nsresult 
-nsWSRunObject::GetNextWSNode(nsIDOMNode *aStartNode,
-                             int32_t aOffset,
-                             nsIDOMNode *aBlockParent, 
-                             nsCOMPtr<nsIDOMNode> *aNextNode)
-{
-  // can't really recycle various getnext/prior routines because we have special needs
-  // here.  Need to step into inline containers but not block containers.
-  NS_ENSURE_TRUE(aStartNode && aBlockParent && aNextNode, NS_ERROR_NULL_POINTER);
-  *aNextNode = 0;
-
-  if (mHTMLEditor->IsTextNode(aStartNode))
-    return GetNextWSNode(aStartNode, aBlockParent, aNextNode);
-  if (!mHTMLEditor->IsContainer(aStartNode))
-    return GetNextWSNode(aStartNode, aBlockParent, aNextNode);
+  if (aPoint.node->NodeType() == nsIDOMNode::TEXT_NODE) {
+    return GetNextWSNodeInner(aPoint.node, aBlockParent, aNextNode);
+  }
+  if (!mHTMLEditor->IsContainer(aPoint.node)) {
+    return GetNextWSNodeInner(aPoint.node, aBlockParent, aNextNode);
+  }
   
-  nsCOMPtr<nsIContent> startContent( do_QueryInterface(aStartNode) );
+  nsCOMPtr<nsIContent> startContent(do_QueryInterface(aPoint.node));
   NS_ENSURE_STATE(startContent);
-  nsIContent *nextContent = startContent->GetChildAt(aOffset);
-  if (!nextContent)
-  {
-    if (aStartNode==aBlockParent)
-    {
+  nsIContent *nextContent = startContent->GetChildAt(aPoint.offset);
+  if (!nextContent) {
+    if (aPoint.node == aBlockParent) {
       // we are at end of the block.
       return NS_OK;
     }
 
     // we are at end of non-block container
-    return GetNextWSNode(aStartNode, aBlockParent, aNextNode);
+    return GetNextWSNodeInner(aPoint.node, aBlockParent, aNextNode);
   }
   
-  *aNextNode = do_QueryInterface(nextContent);
+  *aNextNode = nextContent;
   // we have a next node.  If it's a block, return it.
-  if (IsBlockNode(*aNextNode))
+  if (IsBlockNode(*aNextNode)) {
     return NS_OK;
-  // else if it's a container, get deep leftmost child
-  else if (mHTMLEditor->IsContainer(*aNextNode))
-  {
-    nsCOMPtr<nsIDOMNode> temp;
-    temp = mHTMLEditor->GetLeftmostChild(*aNextNode);
-    if (temp)
+  } else if (mHTMLEditor->IsContainer(*aNextNode)) {
+    // else if it's a container, get deep leftmost child
+    nsCOMPtr<nsINode> temp = mHTMLEditor->GetLeftmostChild(*aNextNode);
+    if (temp) {
       *aNextNode = temp;
+    }
     return NS_OK;
   }
   // else return the node itself
