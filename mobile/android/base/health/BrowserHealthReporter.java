@@ -9,6 +9,7 @@ import android.content.ContentProviderClient;
 import android.content.Context;
 import android.util.Log;
 
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
@@ -42,7 +43,7 @@ public class BrowserHealthReporter implements GeckoEventListener {
     protected final Context context;
 
     public BrowserHealthReporter() {
-        GeckoAppShell.registerEventListener(EVENT_REQUEST, this);
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, EVENT_REQUEST);
 
         context = GeckoAppShell.getContext();
         if (context == null) {
@@ -51,7 +52,7 @@ public class BrowserHealthReporter implements GeckoEventListener {
     }
 
     public void uninit() {
-        GeckoAppShell.unregisterEventListener(EVENT_REQUEST, this);
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, EVENT_REQUEST);
     }
 
     /**

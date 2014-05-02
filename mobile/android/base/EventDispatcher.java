@@ -6,6 +6,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.NativeEventListener;
@@ -21,12 +22,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@RobocopTarget
 public final class EventDispatcher {
     private static final String LOGTAG = "GeckoEventDispatcher";
     private static final String GUID = "__guid__";
     private static final String STATUS_CANCEL = "cancel";
     private static final String STATUS_ERROR = "error";
     private static final String STATUS_SUCCESS = "success";
+
+    private static final EventDispatcher INSTANCE = new EventDispatcher();
 
     /**
      * The capacity of a HashMap is rounded up to the next power-of-2. Every time the size
@@ -41,6 +45,13 @@ public final class EventDispatcher {
         new HashMap<String, List<NativeEventListener>>(GECKO_NATIVE_EVENTS_COUNT);
     private final Map<String, List<GeckoEventListener>> mGeckoThreadJSONListeners =
         new HashMap<String, List<GeckoEventListener>>(GECKO_JSON_EVENTS_COUNT);
+
+    public static EventDispatcher getInstance() {
+        return INSTANCE;
+    }
+
+    private EventDispatcher() {
+    }
 
     private <T> void registerListener(final Class<? extends List<T>> listType,
                                       final Map<String, List<T>> listenersMap,
@@ -109,8 +120,8 @@ public final class EventDispatcher {
 
     @Deprecated // Use NativeEventListener instead
     @SuppressWarnings("unchecked")
-    private void registerGeckoThreadListener(final GeckoEventListener listener,
-                                             final String... events) {
+    public void registerGeckoThreadListener(final GeckoEventListener listener,
+                                            final String... events) {
         checkNotRegistered(mGeckoThreadNativeListeners, events);
 
         registerListener((Class)CopyOnWriteArrayList.class,
@@ -123,19 +134,9 @@ public final class EventDispatcher {
     }
 
     @Deprecated // Use NativeEventListener instead
-    private void unregisterGeckoThreadListener(final GeckoEventListener listener,
-                                               final String... events) {
+    public void unregisterGeckoThreadListener(final GeckoEventListener listener,
+                                              final String... events) {
         unregisterListener(mGeckoThreadJSONListeners, listener, events);
-    }
-
-    @Deprecated // Use one of the variants above.
-    public void registerEventListener(final String event, final GeckoEventListener listener) {
-        registerGeckoThreadListener(listener, event);
-    }
-
-    @Deprecated // Use one of the variants above
-    public void unregisterEventListener(final String event, final GeckoEventListener listener) {
-        unregisterGeckoThreadListener(listener, event);
     }
 
     public void dispatchEvent(final NativeJSContainer message) {
