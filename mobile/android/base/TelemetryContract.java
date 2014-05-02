@@ -30,8 +30,22 @@ public interface TelemetryContract {
         // Set default panel.
         public static final String PANEL_SET_DEFAULT = "setdefault.1";
 
+        // Sharing content.
+        public static final String SHARE = "share.1";
+
         // Sanitizing private data.
         public static final String SANITIZE = "sanitize.1";
+
+        // Saving a resource (reader, bookmark, etc) for viewing later.
+        // Note: Only used in JavaScript for now, but here for completeness.
+        public static final String SAVE = "save.1";
+
+        // Stop holding a resource (reader, bookmark, etc) for viewing later.
+        // Note: Only used in JavaScript for now, but here for completeness.
+        public static final String UNSAVE = "unsave.1";
+
+        // Loading a URL.
+        public static final String LOAD_URL = "loadurl.1";
     }
 
     /**
@@ -39,8 +53,29 @@ public interface TelemetryContract {
      * Telemetry.sendUIEvent() as the "method" parameter.
      */
     public interface Method {
+        // Action triggered from a list.
+        public static final String LIST = "list";
+
+        // Action triggered from a button.
+        public static final String BUTTON = "button";
+
         // Action triggered from a dialog.
         public static final String DIALOG = "dialog";
+
+        // Action occurred via an intent.
+        public static final String INTENT = "intent";
+
+        // Action occurred via a context menu.
+        public static final String CONTEXT_MENU = "contextmenu";
+
+        // Action triggered from a view grid item, like a thumbnail.
+        public static final String GRID_ITEM = "griditem";
+
+        // Action triggered from a view list item, like a row of a list.
+        public static final String LIST_ITEM = "listitem";
+
+        // Action triggered from a suggestion provided to the user.
+        public static final String SUGGESTION = "suggestion";
     }
 
     /**
@@ -54,6 +89,16 @@ public interface TelemetryContract {
         // Started when a user enters a given home panel.
         // Session name is dynamic, encoded as "homepanel.1:<panel_id>"
         public static final String HOME_PANEL = "homepanel.1:";
+
+        // Started when a Reader viewer becomes active in the foreground.
+        // Note: Only used in JavaScript for now, but here for completeness.
+        public static final String READER = "reader.1";
+
+        // URL bar focused.
+        public static final String URLBAR_FOCUSED = "urlbar.1:";
+
+        // Awesomescreen frecency search is active.
+        public static final String FRECENCY = "frecency.1:";
     }
 
     /**
