@@ -84,6 +84,9 @@
   V(mul, (Func<Int32x4, Mul<int32_t, Int32x4>, Int32x4>), 2, 0, Mul)                                              \
   V(or, (Func<Int32x4, Or<int32_t, Int32x4>, Int32x4>), 2, 0, Or)                                                 \
   V(sub, (Func<Int32x4, Sub<int32_t, Int32x4>, Int32x4>), 2, 0, Sub)                                              \
+  V(shiftLeft, (Int32x4BinaryScalar<ShiftLeft>), 2, 0, ShiftLeft)                                                 \
+  V(shiftRight, (Int32x4BinaryScalar<ShiftRight>), 2, 0, ShiftRight)                                              \
+  V(shiftRightLogical, (Int32x4BinaryScalar<ShiftRightLogical>), 2, 0, ShiftRightLogical)                         \
   V(shuffle, (FuncShuffle<Int32x4, Shuffle<int32_t, Int32x4>, Int32x4>), 2, 0, Shuffle)                           \
   V(withFlagX, (FuncWith<Int32x4, WithFlagX<int32_t, Int32x4>, Int32x4>), 2, 0, WithFlagX)                        \
   V(withFlagY, (FuncWith<Int32x4, WithFlagY<int32_t, Int32x4>, Int32x4>), 2, 0, WithFlagY)                        \
