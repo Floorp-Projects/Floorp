@@ -74,6 +74,9 @@
 #define INT32X4_BINARY_FUNCTION_LIST(V)                                                                           \
   V(add, (Func<Int32x4, Add<int32_t, Int32x4>, Int32x4>), 2, 0, Add)                                              \
   V(and, (Func<Int32x4, And<int32_t, Int32x4>, Int32x4>), 2, 0, And)                                              \
+  V(equal, (Func<Int32x4, Equal<int32_t, Int32x4>, Int32x4>), 2, 0, Equal)                                        \
+  V(greaterThan, (Func<Int32x4, GreaterThan<int32_t, Int32x4>, Int32x4>), 2, 0, GreaterThan)                      \
+  V(lessThan, (Func<Int32x4, LessThan<int32_t, Int32x4>, Int32x4>), 2, 0, LessThan)                               \
   V(mul, (Func<Int32x4, Mul<int32_t, Int32x4>, Int32x4>), 2, 0, Mul)                                              \
   V(or, (Func<Int32x4, Or<int32_t, Int32x4>, Int32x4>), 2, 0, Or)                                                 \
   V(sub, (Func<Int32x4, Sub<int32_t, Int32x4>, Int32x4>), 2, 0, Sub)                                              \
