@@ -131,6 +131,23 @@ nsWSRunObject::PrepareToJoinBlocks(nsHTMLEditor *aHTMLEd,
   return leftWSObj.PrepareToDeleteRangePriv(&rightWSObj);
 }
 
+nsresult
+nsWSRunObject::PrepareToDeleteRange(nsHTMLEditor* aHTMLEd,
+                                    nsCOMPtr<nsINode>* aStartNode,
+                                    int32_t* aStartOffset,
+                                    nsCOMPtr<nsINode>* aEndNode,
+                                    int32_t* aEndOffset)
+{
+  nsCOMPtr<nsIDOMNode> startNode(GetAsDOMNode(*aStartNode));
+  nsCOMPtr<nsIDOMNode> endNode(GetAsDOMNode(*aEndNode));
+  nsresult res =
+    PrepareToDeleteRange(aHTMLEd, address_of(startNode), aStartOffset,
+                         address_of(endNode), aEndOffset);
+  *aStartNode = do_QueryInterface(startNode);
+  *aEndNode = do_QueryInterface(endNode);
+  return res;
+}
+
 nsresult 
 nsWSRunObject::PrepareToDeleteRange(nsHTMLEditor *aHTMLEd, 
                                     nsCOMPtr<nsIDOMNode> *aStartNode,
@@ -402,51 +419,51 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
 nsresult 
 nsWSRunObject::DeleteWSBackward()
 {
-  nsresult res = NS_OK;
   WSPoint point = GetCharBefore(GetAsDOMNode(mNode), mOffset);
   NS_ENSURE_TRUE(point.mTextNode, NS_OK);  // nothing to delete
   
-  if (mPRE)  // easy case, preformatted ws
-  {
-    if (nsCRT::IsAsciiSpace(point.mChar) || (point.mChar == nbsp))
-    {
-      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(point.mTextNode));
-      int32_t startOffset = point.mOffset;
-      int32_t endOffset = point.mOffset+1;
-      return DeleteChars(node, startOffset, node, endOffset);
+  if (mPRE) {
+    // easy case, preformatted ws
+    if (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == nbsp) {
+      return DeleteChars(GetAsDOMNode(point.mTextNode), point.mOffset,
+                         GetAsDOMNode(point.mTextNode), point.mOffset + 1);
     }
   }
   
-  // callers job to insure that previous char is really ws.
-  // If it is normal ws, we need to delete the whole run
-  if (nsCRT::IsAsciiSpace(point.mChar))
-  {
-    nsCOMPtr<nsIDOMNode> startNode, endNode, node(do_QueryInterface(point.mTextNode));
+  // Caller's job to ensure that previous char is really ws.  If it is normal
+  // ws, we need to delete the whole run.
+  if (nsCRT::IsAsciiSpace(point.mChar)) {
+    nsCOMPtr<Text> startNodeText, endNodeText;
     int32_t startOffset, endOffset;
-    GetAsciiWSBounds(eBoth, node, point.mOffset+1, address_of(startNode),
-                     &startOffset, address_of(endNode), &endOffset);
+    GetAsciiWSBounds(eBoth, point.mTextNode, point.mOffset + 1,
+                     getter_AddRefs(startNodeText), &startOffset,
+                     getter_AddRefs(endNodeText), &endOffset);
     
     // adjust surrounding ws
-    res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor, address_of(startNode), &startOffset, 
-                                              address_of(endNode), &endOffset);
+    nsCOMPtr<nsINode> startNode = startNodeText.get();
+    nsCOMPtr<nsINode> endNode = endNodeText.get();
+    nsresult res =
+      nsWSRunObject::PrepareToDeleteRange(mHTMLEditor,
+                                          address_of(startNode), &startOffset,
+                                          address_of(endNode), &endOffset);
     NS_ENSURE_SUCCESS(res, res);
     
     // finally, delete that ws
-    return DeleteChars(startNode, startOffset, endNode, endOffset);
-  }
-  else if (point.mChar == nbsp)
-  {
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(point.mTextNode));
+    return DeleteChars(GetAsDOMNode(startNode), startOffset,
+                       GetAsDOMNode(endNode), endOffset);
+  } else if (point.mChar == nbsp) {
+    nsCOMPtr<nsINode> node(point.mTextNode);
     // adjust surrounding ws
     int32_t startOffset = point.mOffset;
-    int32_t endOffset = point.mOffset+1;
-    res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor, address_of(node), &startOffset, 
-                                              address_of(node), &endOffset);
+    int32_t endOffset = point.mOffset + 1;
+    nsresult res =
+      nsWSRunObject::PrepareToDeleteRange(mHTMLEditor,
+                                          address_of(node), &startOffset,
+                                          address_of(node), &endOffset);
     NS_ENSURE_SUCCESS(res, res);
     
     // finally, delete that ws
-    return DeleteChars(node, startOffset, node, endOffset);
-  
+    return DeleteChars(GetAsDOMNode(node), startOffset, GetAsDOMNode(node), endOffset);
   }
   return NS_OK;
 }
