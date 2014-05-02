@@ -15,6 +15,7 @@
 #include "nsHTMLEditor.h"
 #include "nsIContent.h"
 #include "nsIDOMCharacterData.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
 #include "nsISupportsImpl.h"
@@ -257,14 +258,15 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
   return mHTMLEditor->CreateBRImpl(aInOutParent, aInOutOffset, aSelect);
 }
 
-nsresult 
-nsWSRunObject::InsertText(const nsAString& aStringToInsert, 
-                          nsCOMPtr<nsIDOMNode> *aInOutParent, 
-                          int32_t *aInOutOffset,
-                          nsIDOMDocument *aDoc)
+nsresult
+nsWSRunObject::InsertText(const nsAString& aStringToInsert,
+                          nsCOMPtr<nsINode>* aInOutParent,
+                          int32_t* aInOutOffset,
+                          nsIDocument* aDoc)
 {
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
-  // meanwhile, the pre case is handled in WillInsertText in nsHTMLEditRules.cpp
+  // meanwhile, the pre case is handled in WillInsertText in
+  // nsHTMLEditRules.cpp
 
   // MOOSE: for now, just getting the ws logic straight.  This implementation
   // is very slow.  Will need to replace edit rules impl with a more efficient
@@ -272,132 +274,119 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
 
   NS_ENSURE_TRUE(aInOutParent && aInOutOffset && aDoc, NS_ERROR_NULL_POINTER);
 
-  nsresult res = NS_OK;
-  if (aStringToInsert.IsEmpty()) return res;
-  
-  // string copying sux.  
-  nsAutoString theString(aStringToInsert);
-  
-  WSFragment *beforeRun, *afterRun;
-  FindRun(*aInOutParent, *aInOutOffset, &beforeRun, false);
-  FindRun(*aInOutParent, *aInOutOffset, &afterRun, true);
-  
-  {
-    // some scoping for nsAutoTrackDOMPoint.  This will track our insertion point
-    // while we tweak any surrounding whitespace
-    nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, aInOutParent, aInOutOffset);
+  if (aStringToInsert.IsEmpty()) {
+    return NS_OK;
+  }
 
-    // handle any changes needed to ws run after inserted text
-    if (!afterRun) {
-      // don't need to do anything.  just insert text.  ws won't change.
-    } else if (afterRun->mType & WSType::trailingWS) {
-      // don't need to do anything.  just insert text.  ws won't change.
+  nsAutoString theString(aStringToInsert);
+
+  WSFragment *beforeRun, *afterRun;
+  FindRun(GetAsDOMNode(*aInOutParent), *aInOutOffset, &beforeRun, false);
+  FindRun(GetAsDOMNode(*aInOutParent), *aInOutOffset, &afterRun, true);
+
+  nsresult res;
+  {
+    // Some scoping for nsAutoTrackDOMPoint.  This will track our insertion
+    // point while we tweak any surrounding whitespace
+    nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, aInOutParent,
+                                aInOutOffset);
+
+    // Handle any changes needed to ws run after inserted text
+    if (!afterRun || afterRun->mType & WSType::trailingWS) {
+      // Don't need to do anything.  Just insert text.  ws won't change.
     } else if (afterRun->mType & WSType::leadingWS) {
-      // delete the leading ws that is after insertion point, because it 
+      // Delete the leading ws that is after insertion point, because it
       // would become significant after text inserted.
-      res = DeleteChars(*aInOutParent, *aInOutOffset, GetAsDOMNode(afterRun->mEndNode), afterRun->mEndOffset,
-                         eOutsideUserSelectAll);
+      res = DeleteChars(GetAsDOMNode(*aInOutParent), *aInOutOffset, GetAsDOMNode(afterRun->mEndNode),
+                        afterRun->mEndOffset, eOutsideUserSelectAll);
       NS_ENSURE_SUCCESS(res, res);
     } else if (afterRun->mType == WSType::normalWS) {
-      // try to change an nbsp to a space, if possible, just to prevent nbsp proliferation
-      res = CheckLeadingNBSP(afterRun, *aInOutParent, *aInOutOffset);
+      // Try to change an nbsp to a space, if possible, just to prevent nbsp
+      // proliferation
+      res = CheckLeadingNBSP(afterRun, GetAsDOMNode(*aInOutParent), *aInOutOffset);
       NS_ENSURE_SUCCESS(res, res);
     }
-    
-    // handle any changes needed to ws run before inserted text
-    if (!beforeRun) {
-      // don't need to do anything.  just insert text.  ws won't change.
-    } else if (beforeRun->mType & WSType::leadingWS) {
-      // don't need to do anything.  just insert text.  ws won't change.
+
+    // Handle any changes needed to ws run before inserted text
+    if (!beforeRun || beforeRun->mType & WSType::leadingWS) {
+      // Don't need to do anything.  Just insert text.  ws won't change.
     } else if (beforeRun->mType & WSType::trailingWS) {
-      // need to delete the trailing ws that is before insertion point, because it 
-      // would become significant after text inserted.
-      res = DeleteChars(GetAsDOMNode(beforeRun->mStartNode), beforeRun->mStartOffset, *aInOutParent, *aInOutOffset,
-                        eOutsideUserSelectAll);
+      // Need to delete the trailing ws that is before insertion point, because
+      // it would become significant after text inserted.
+      res = DeleteChars(GetAsDOMNode(beforeRun->mStartNode), beforeRun->mStartOffset,
+                        GetAsDOMNode(*aInOutParent), *aInOutOffset, eOutsideUserSelectAll);
       NS_ENSURE_SUCCESS(res, res);
     } else if (beforeRun->mType == WSType::normalWS) {
-      // try to change an nbsp to a space, if possible, just to prevent nbsp proliferation
-      res = CheckTrailingNBSP(beforeRun, *aInOutParent, *aInOutOffset);
+      // Try to change an nbsp to a space, if possible, just to prevent nbsp
+      // proliferation
+      res = CheckTrailingNBSP(beforeRun, GetAsDOMNode(*aInOutParent), *aInOutOffset);
       NS_ENSURE_SUCCESS(res, res);
     }
   }
-  
-  // next up, tweak head and tail of string as needed.
-  // first the head:
-  // there are a variety of circumstances that would require us to convert a 
-  // leading ws char into an nbsp:
-  
-  if (nsCRT::IsAsciiSpace(theString[0]))
-  {
-    // we have a leading space
+
+  // Next up, tweak head and tail of string as needed.  First the head: there
+  // are a variety of circumstances that would require us to convert a leading
+  // ws char into an nbsp:
+
+  if (nsCRT::IsAsciiSpace(theString[0])) {
+    // We have a leading space
     if (beforeRun) {
       if (beforeRun->mType & WSType::leadingWS) {
         theString.SetCharAt(nbsp, 0);
       } else if (beforeRun->mType & WSType::normalWS) {
-        WSPoint wspoint = GetCharBefore(*aInOutParent, *aInOutOffset);
+        WSPoint wspoint = GetCharBefore(GetAsDOMNode(*aInOutParent), *aInOutOffset);
         if (wspoint.mTextNode && nsCRT::IsAsciiSpace(wspoint.mChar)) {
           theString.SetCharAt(nbsp, 0);
         }
       }
-    } else {
-      if (mStartReason & WSType::block || mStartReason == WSType::br) {
-        theString.SetCharAt(nbsp, 0);
-      }
+    } else if (mStartReason & WSType::block || mStartReason == WSType::br) {
+      theString.SetCharAt(nbsp, 0);
     }
   }
 
-  // then the tail
-  uint32_t lastCharIndex = theString.Length()-1;
+  // Then the tail
+  uint32_t lastCharIndex = theString.Length() - 1;
 
-  if (nsCRT::IsAsciiSpace(theString[lastCharIndex]))
-  {
-    // we have a leading space
-    if (afterRun)
-    {
+  if (nsCRT::IsAsciiSpace(theString[lastCharIndex])) {
+    // We have a leading space
+    if (afterRun) {
       if (afterRun->mType & WSType::trailingWS) {
         theString.SetCharAt(nbsp, lastCharIndex);
       } else if (afterRun->mType & WSType::normalWS) {
-        WSPoint wspoint = GetCharAfter(*aInOutParent, *aInOutOffset);
+        WSPoint wspoint = GetCharAfter(GetAsDOMNode(*aInOutParent), *aInOutOffset);
         if (wspoint.mTextNode && nsCRT::IsAsciiSpace(wspoint.mChar)) {
           theString.SetCharAt(nbsp, lastCharIndex);
         }
       }
-    }
-    else
-    {
-      if (mEndReason & WSType::block) {
-        theString.SetCharAt(nbsp, lastCharIndex);
-      }
+    } else if (mEndReason & WSType::block) {
+      theString.SetCharAt(nbsp, lastCharIndex);
     }
   }
-  
-  // next scan string for adjacent ws and convert to nbsp/space combos
-  // MOOSE: don't need to convert tabs here since that is done by WillInsertText() 
-  // before we are called.  Eventually, all that logic will be pushed down into
-  // here and made more efficient.
-  uint32_t j;
+
+  // Next, scan string for adjacent ws and convert to nbsp/space combos
+  // MOOSE: don't need to convert tabs here since that is done by
+  // WillInsertText() before we are called.  Eventually, all that logic will be
+  // pushed down into here and made more efficient.
   bool prevWS = false;
-  for (j=0; j<=lastCharIndex; j++)
-  {
-    if (nsCRT::IsAsciiSpace(theString[j]))
-    {
-      if (prevWS)
-      {
-        theString.SetCharAt(nbsp, j-1);  // j-1 can't be negative because prevWS starts out false
-      }
-      else
-      {
+  for (uint32_t i = 0; i <= lastCharIndex; i++) {
+    if (nsCRT::IsAsciiSpace(theString[i])) {
+      if (prevWS) {
+        // i - 1 can't be negative because prevWS starts out false
+        theString.SetCharAt(nbsp, i - 1);
+      } else {
         prevWS = true;
       }
-    }
-    else
-    {
+    } else {
       prevWS = false;
     }
   }
-  
-  // ready, aim, fire!
-  res = mHTMLEditor->InsertTextImpl(theString, aInOutParent, aInOutOffset, aDoc);
+
+  // Ready, aim, fire!
+  nsCOMPtr<nsIDOMNode> parent(GetAsDOMNode(*aInOutParent));
+  nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(aDoc));
+  res = mHTMLEditor->InsertTextImpl(theString, address_of(parent),
+                                    aInOutOffset, doc);
+  *aInOutParent = do_QueryInterface(parent);
   return NS_OK;
 }
 
