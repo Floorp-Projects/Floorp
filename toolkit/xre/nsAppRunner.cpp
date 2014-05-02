@@ -2917,19 +2917,8 @@ XREMain::XRE_mainInit(bool* aExitFlag)
 #endif
 
 #ifdef MOZ_ACCESSIBILITY_ATK
-  // Reset GTK_MODULES, strip atk-bridge if exists
-  // Mozilla will load libatk-bridge.so later if necessary
-  const char* gtkModules = PR_GetEnv("GTK_MODULES");
-  if (gtkModules && *gtkModules) {
-    nsCString gtkModulesStr(gtkModules);
-    gtkModulesStr.ReplaceSubstring("atk-bridge", "");
-    char* expr = PR_smprintf("GTK_MODULES=%s", gtkModulesStr.get());
-    if (expr)
-      PR_SetEnv(expr);
-    // We intentionally leak |expr| here since it is required by PR_SetEnv.
-  }
-
-  // Suppress atk-bridge init at startup, it works after GNOME 2.24.2
+  // Suppress atk-bridge init at startup, until mozilla accessibility is
+  // initialized.  This works after gnome 2.24.2.
   SaveToEnv("NO_AT_BRIDGE=1");
 #endif
 
