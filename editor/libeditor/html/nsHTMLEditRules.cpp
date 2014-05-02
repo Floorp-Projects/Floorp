@@ -2748,16 +2748,21 @@ nsHTMLEditRules::JoinBlocks(nsIDOMNode *aLeftNode,
     // Do ws adjustment.  This just destroys non-visible ws at boundaries we will be joining.
     rightOffset++;
     NS_ENSURE_STATE(mHTMLEditor);
+    nsCOMPtr<nsINode> leftBlock(do_QueryInterface(aLeftBlock));
     res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor,
-                                            address_of(aLeftBlock),
-                                            nsWSRunObject::kBlockEnd);
+                                            nsWSRunObject::kBlockEnd,
+                                            leftBlock);
     NS_ENSURE_SUCCESS(res, res);
-    NS_ENSURE_STATE(mHTMLEditor);
-    res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor,
-                                            address_of(aRightBlock),
-                                            nsWSRunObject::kAfterBlock,
-                                            &rightOffset);
-    NS_ENSURE_SUCCESS(res, res);
+
+    {
+      nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
+                                  address_of(aRightBlock), &rightOffset);
+      nsCOMPtr<nsINode> rightBlock(do_QueryInterface(aRightBlock));
+      res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor,
+                                              nsWSRunObject::kAfterBlock,
+                                              rightBlock, rightOffset);
+      NS_ENSURE_SUCCESS(res, res);
+    }
     // Do br adjustment.
     nsCOMPtr<nsIDOMNode> brNode;
     res = CheckForInvisibleBR(aLeftBlock, kBlockEnd, address_of(brNode));
@@ -2793,16 +2798,21 @@ nsHTMLEditRules::JoinBlocks(nsIDOMNode *aLeftNode,
     // tricky case.  right block is inside left block.
     // Do ws adjustment.  This just destroys non-visible ws at boundaries we will be joining.
     NS_ENSURE_STATE(mHTMLEditor);
+    nsCOMPtr<nsINode> rightBlock(do_QueryInterface(aRightBlock));
     res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor,
-                                            address_of(aRightBlock),
-                                            nsWSRunObject::kBlockStart);
+                                            nsWSRunObject::kBlockStart,
+                                            rightBlock);
     NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_STATE(mHTMLEditor);
-    res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor,
-                                            address_of(aLeftBlock),
-                                            nsWSRunObject::kBeforeBlock,
-                                            &leftOffset);
-    NS_ENSURE_SUCCESS(res, res);
+    {
+      nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
+                                  address_of(aLeftBlock), &leftOffset);
+      nsCOMPtr<nsINode> leftBlock(do_QueryInterface(aLeftBlock));
+      res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor,
+                                              nsWSRunObject::kBeforeBlock,
+                                              leftBlock, leftOffset);
+      NS_ENSURE_SUCCESS(res, res);
+    }
     // Do br adjustment.
     nsCOMPtr<nsIDOMNode> brNode;
     res = CheckForInvisibleBR(aLeftBlock, kBeforeBlock, address_of(brNode),

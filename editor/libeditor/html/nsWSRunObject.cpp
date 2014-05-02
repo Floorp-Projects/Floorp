@@ -99,20 +99,26 @@ nsWSRunObject::~nsWSRunObject()
 //--------------------------------------------------------------------------------------------
 
 nsresult
-nsWSRunObject::ScrubBlockBoundary(nsHTMLEditor *aHTMLEd, 
-                                  nsCOMPtr<nsIDOMNode> *aBlock,
+nsWSRunObject::ScrubBlockBoundary(nsHTMLEditor* aHTMLEd,
                                   BlockBoundary aBoundary,
-                                  int32_t *aOffset)
+                                  nsINode* aBlock,
+                                  int32_t aOffset)
 {
-  NS_ENSURE_TRUE(aBlock && aHTMLEd, NS_ERROR_NULL_POINTER);
-  if ((aBoundary == kBlockStart) || (aBoundary == kBlockEnd))
-    return ScrubBlockBoundaryInner(aHTMLEd, aBlock, aBoundary);
+  NS_ENSURE_TRUE(aHTMLEd && aBlock, NS_ERROR_NULL_POINTER);
+
+  int32_t offset;
+  if (aBoundary == kBlockStart) {
+    offset = 0;
+  } else if (aBoundary == kBlockEnd) {
+    offset = aBlock->Length();
+  } else {
+    // Else we are scrubbing an outer boundary - just before or after a block
+    // element.
+    NS_ENSURE_STATE(aOffset >= 0);
+    offset = aOffset;
+  }
   
-  // else we are scrubbing an outer boundary - just before or after
-  // a block element.
-  NS_ENSURE_TRUE(aOffset, NS_ERROR_NULL_POINTER);
-  nsAutoTrackDOMPoint tracker(aHTMLEd->mRangeUpdater, aBlock, aOffset);
-  nsWSRunObject theWSObj(aHTMLEd, *aBlock, *aOffset);
+  nsWSRunObject theWSObj(aHTMLEd, aBlock, offset);
   return theWSObj.Scrub();
 }
 
@@ -2098,24 +2104,6 @@ nsWSRunObject::CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aOf
     NS_ENSURE_SUCCESS(res, res);
   }
   return NS_OK;
-}
-
-
-nsresult
-nsWSRunObject::ScrubBlockBoundaryInner(nsHTMLEditor *aHTMLEd, 
-                                       nsCOMPtr<nsIDOMNode> *aBlock,
-                                       BlockBoundary aBoundary)
-{
-  NS_ENSURE_TRUE(aBlock && aHTMLEd, NS_ERROR_NULL_POINTER);
-  int32_t offset=0;
-  if (aBoundary == kBlockEnd)
-  {
-    uint32_t uOffset;
-    aHTMLEd->GetLengthOfDOMNode(*aBlock, uOffset); 
-    offset = uOffset;
-  }
-  nsWSRunObject theWSObj(aHTMLEd, *aBlock, offset);
-  return theWSObj.Scrub();    
 }
 
 
