@@ -29,7 +29,7 @@ else
 ifdef MOZ_HAS_WINSDK_WITH_D3D
 EXTRA_DSO_LDOPTS = d3d9.lib "$(DIST)/lib/libGLESv2.lib" delayimp.lib
 else
-EXTRA_DSO_LDOPTS = '$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3d9.lib' \
+EXTRA_DSO_LDOPTS = '$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_D3D_CPU_SUFFIX)/d3d9.lib' \
                    '$(DIST)/lib/libGLESv2.lib' \
                    delayimp.lib
 endif
