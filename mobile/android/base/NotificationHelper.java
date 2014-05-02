@@ -78,13 +78,10 @@ public final class NotificationHelper implements GeckoEventListener {
         mInstance = new NotificationHelper();
         mContext = context;
         mClearableNotifications = new HashSet<String>();
-        registerEventListener("Notification:Show");
-        registerEventListener("Notification:Hide");
+        EventDispatcher.getInstance().registerGeckoThreadListener(mInstance,
+            "Notification:Show",
+            "Notification:Hide");
         registerReceiver(context);
-    }
-
-    private static void registerEventListener(String event) {
-        GeckoAppShell.getEventDispatcher().registerEventListener(event, mInstance);
     }
 
     @Override
