@@ -116,7 +116,7 @@ class SIMDObject : public JSObject
 
 struct Float32x4 {
     typedef float Elem;
-    static const int32_t lanes = 4;
+    static const unsigned lanes = 4;
     static const X4TypeDescr::Type type = X4TypeDescr::TYPE_FLOAT32;
 
     static TypeDescr &GetTypeDescr(GlobalObject &global) {
@@ -136,7 +136,7 @@ struct Float32x4 {
 
 struct Int32x4 {
     typedef int32_t Elem;
-    static const int32_t lanes = 4;
+    static const unsigned lanes = 4;
     static const X4TypeDescr::Type type = X4TypeDescr::TYPE_INT32;
 
     static TypeDescr &GetTypeDescr(GlobalObject &global) {
