@@ -118,7 +118,8 @@ AppCacheUtils.prototype = {
     for (let neturi of parsed.uris) {
       if (neturi.section == "NETWORK") {
         for (let parsedUri of parsed.uris) {
-          if (parsedUri.uri.startsWith(neturi.uri)) {
+          if (parsedUri.section !== "NETWORK" &&
+              parsedUri.uri.startsWith(neturi.uri)) {
             this._addError(neturi.line, "networkBlocksURI", neturi.line,
                            neturi.original, parsedUri.line, parsedUri.original,
                            parsedUri.section);
@@ -164,7 +165,7 @@ AppCacheUtils.prototype = {
             this._addError(parsedUri.line, "cacheControlNoStore",
                            parsedUri.original, parsedUri.line);
           }
-        } else {
+        } else if (parsedUri.original !== "*") {
           this._addError(parsedUri.line, "notAvailable",
                          parsedUri.original, parsedUri.line);
         }
