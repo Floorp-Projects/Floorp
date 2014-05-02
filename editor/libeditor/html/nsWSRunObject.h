@@ -161,10 +161,10 @@ class MOZ_STACK_CLASS nsWSRunObject
 
     // ScrubBlockBoundary removes any non-visible whitespace at the specified
     // location relative to a block node.  
-    static nsresult ScrubBlockBoundary(nsHTMLEditor *aHTMLEd, 
-                                       nsCOMPtr<nsIDOMNode> *aBlock,
+    static nsresult ScrubBlockBoundary(nsHTMLEditor* aHTMLEd,
                                        BlockBoundary aBoundary,
-                                       int32_t *aOffset = 0);
+                                       nsINode* aBlock,
+                                       int32_t aOffset = -1);
     
     // PrepareToJoinBlocks fixes up ws at the end of aLeftParent and the
     // beginning of aRightParent in preperation for them to be joined.
@@ -363,9 +363,6 @@ class MOZ_STACK_CLASS nsWSRunObject
     nsresult CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aOffset);
     nsresult CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aOffset);
     
-    static nsresult ScrubBlockBoundaryInner(nsHTMLEditor *aHTMLEd, 
-                                       nsCOMPtr<nsIDOMNode> *aBlock,
-                                       BlockBoundary aBoundary);
     nsresult Scrub();
     nsresult GetPreviousWSNodeInner(nsINode* aStartNode, nsINode* aBlockParent,
                                     nsCOMPtr<nsINode>* aPriorNode);
