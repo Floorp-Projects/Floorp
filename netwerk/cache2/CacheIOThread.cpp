@@ -56,6 +56,9 @@ nsresult CacheIOThread::Dispatch(nsIRunnable* aRunnable, uint32_t aLevel)
 {
   NS_ENSURE_ARG(aLevel < LAST_LEVEL);
 
+  // Runnable is always expected to be non-null, hard null-check bellow.
+  MOZ_ASSERT(aRunnable);
+
   MonitorAutoLock lock(mMonitor);
 
   if (mShutdown && (PR_GetCurrentThread() != mThread))
@@ -66,6 +69,9 @@ nsresult CacheIOThread::Dispatch(nsIRunnable* aRunnable, uint32_t aLevel)
 
 nsresult CacheIOThread::DispatchAfterPendingOpens(nsIRunnable* aRunnable)
 {
+  // Runnable is always expected to be non-null, hard null-check bellow.
+  MOZ_ASSERT(aRunnable);
+
   MonitorAutoLock lock(mMonitor);
 
   if (mShutdown && (PR_GetCurrentThread() != mThread))
@@ -81,6 +87,9 @@ nsresult CacheIOThread::DispatchAfterPendingOpens(nsIRunnable* aRunnable)
 
 nsresult CacheIOThread::DispatchInternal(nsIRunnable* aRunnable, uint32_t aLevel)
 {
+  if (NS_WARN_IF(!aRunnable))
+    return NS_ERROR_NULL_POINTER;
+
   mMonitor.AssertCurrentThreadOwns();
 
   mEventQueue[aLevel].AppendElement(aRunnable);
