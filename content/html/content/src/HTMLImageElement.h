@@ -12,6 +12,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "imgRequestProxy.h"
 #include "Units.h"
+#include "mozilla/dom/ResponsiveImageSelector.h"
 
 namespace mozilla {
 class EventChainPreVisitor;
@@ -78,6 +79,8 @@ public:
   nsresult CopyInnerTo(Element* aDest);
 
   void MaybeLoadImage();
+
+  static bool IsSrcsetEnabled();
 
   bool IsMap()
   {
@@ -175,7 +178,16 @@ public:
   void SetForm(nsIDOMHTMLFormElement* aForm);
   void ClearForm(bool aRemoveFromForm);
 
+  virtual void DestroyContent() MOZ_OVERRIDE;
+
 protected:
+  // Resolve and load the current mResponsiveSelector (responsive mode) or src
+  // attr image.
+  nsresult LoadSelectedImage(bool aForce, bool aNotify);
+
+  // Update/create/destroy mResponsiveSelector
+  void UpdateSourceSet(const nsAString & aSrcset);
+
   CSSIntPoint GetXY();
   virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
@@ -192,6 +204,9 @@ protected:
   // This is a weak reference that this element and the HTMLFormElement
   // cooperate in maintaining.
   HTMLFormElement* mForm;
+
+  // Created when we're tracking responsive image state
+  nsRefPtr<ResponsiveImageSelector> mResponsiveSelector;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
