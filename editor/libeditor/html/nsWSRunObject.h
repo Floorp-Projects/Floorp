@@ -209,14 +209,13 @@ class MOZ_STACK_CLASS nsWSRunObject
       InsertBreak(nsCOMPtr<nsINode>* aInOutParent, int32_t* aInOutOffset,
                   nsIEditor::EDirection aSelect);
 
-    // InsertText inserts a string at {aInOutParent,aInOutOffset}
-    // and makes any needed adjustments to ws around that point.
-    // example of fixup: trailingws before {aInOutParent,aInOutOffset}
-    //                   needs to be removed.
-    nsresult InsertText(const nsAString& aStringToInsert, 
-                        nsCOMPtr<nsIDOMNode> *aInOutNode, 
-                        int32_t *aInOutOffset,
-                        nsIDOMDocument *aDoc);
+    // InsertText inserts a string at {aInOutParent,aInOutOffset} and makes any
+    // needed adjustments to ws around that point.  Example of fixup:
+    // trailingws before {aInOutParent,aInOutOffset} needs to be removed.
+    nsresult InsertText(const nsAString& aStringToInsert,
+                        nsCOMPtr<nsINode>* aInOutNode,
+                        int32_t* aInOutOffset,
+                        nsIDocument* aDoc);
 
     // DeleteWSBackward deletes a single visible piece of ws before the ws
     // point (the point to create the wsRunObject, passed to its constructor).
