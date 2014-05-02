@@ -13622,7 +13622,7 @@ ICCUtilsHelperObject.prototype = {
     let iccInfo = RIL.iccInfo;
     let pnnEntry;
 
-    if (!mcc || !mnc || !lac) {
+    if (!mcc || !mnc || lac == null || lac < 0) {
       return null;
     }
 

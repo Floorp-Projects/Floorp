@@ -8,8 +8,6 @@ function verifyVoiceCellLocationInfo(aLac, aCid) {
   let cell = mobileConnection.voice.cell;
   ok(cell, "location available");
 
-  // Initial LAC/CID. Android emulator initializes both value to
-  // 0xffff/0xffffffff.
   is(cell.gsmLocationAreaCode, aLac, "check voice.cell.gsmLocationAreaCode");
   is(cell.gsmCellId, aCid, "check voice.cell.gsmCellId");
   is(cell.cdmaBaseStationId, -1, "check voice.cell.cdmaBaseStationId");
@@ -26,10 +24,7 @@ function testVoiceCellLocationUpdate(aLac, aCid) {
   // Set emulator's lac/cid and wait for 'onvoicechange' event.
   log("Test cell location with lac=" + aLac + " and cid=" + aCid);
 
-  let promises = [];
-  promises.push(waitForManagerEvent("voicechange"));
-  promises.push(setEmulatorGsmLocation(aLac, aCid));
-  return Promise.all(promises)
+  return setEmulatorGsmLocationAndWait(aLac, aCid, true, false)
     .then(() => verifyVoiceCellLocationInfo(aLac, aCid));
 }
 

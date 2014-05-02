@@ -523,10 +523,7 @@ function getEmulatorGsmLocation() {
       is(aResults[1].substring(0,2), "ci", "ci output");
 
       let lac = parseInt(aResults[0].substring(5));
-      lac = (lac < 0 ? 65535 : lac);
       let cid = parseInt(aResults[1].substring(4));
-      cid = (cid < 0 ? 268435455 : cid);
-
       return { lac: lac, cid: cid };
     });
 }
@@ -545,6 +542,33 @@ function getEmulatorGsmLocation() {
 function setEmulatorGsmLocation(aLac, aCid) {
   let cmd = "gsm location " + aLac + " " + aCid;
   return runEmulatorCmdSafe(cmd);
+}
+
+/**
+ * Set GSM location and wait for voice and/or data state change.
+ *
+ * Fulfill params: (none)
+ *
+ * @param aLac
+ * @param aCid
+ * @param aWaitVoice [optional]
+ *        A boolean value.  Default true.
+ * @param aWaitData [optional]
+ *        A boolean value.  Default false.
+ *
+ * @return A deferred promise.
+ */
+function setEmulatorGsmLocationAndWait(aLac, aCid,
+                                       aWaitVoice = true, aWaitData = false) {
+  let promises = [];
+  if (aWaitVoice) {
+    promises.push(waitForManagerEvent("voicechange"));
+  }
+  if (aWaitData) {
+    promises.push(waitForManagerEvent("datachange"));
+  }
+  promises.push(setEmulatorGsmLocation(aLac, aCid));
+  return Promise.all(promises);
 }
 
 /**
@@ -620,6 +644,43 @@ function setEmulatorOperatorNames(aOperator, aLongName, aShortName, aMcc, aMnc) 
       ok(aResults[index].match(new RegExp(exp)),
          "Long/short name and/or mcc/mnc should be changed.");
     });
+}
+
+/**
+ * Set emulator operators info and wait for voice and/or data state change.
+ *
+ * Fulfill params: (none)
+ *
+ * @param aOperator
+ *        "home" or "roaming".
+ * @param aLongName
+ *        A string.
+ * @param aShortName
+ *        A string.
+ * @param aMcc [optional]
+ *        A string.
+ * @param aMnc [optional]
+ *        A string.
+ * @param aWaitVoice [optional]
+ *        A boolean value.  Default true.
+ * @param aWaitData [optional]
+ *        A boolean value.  Default false.
+ *
+ * @return A deferred promise.
+ */
+function setEmulatorOperatorNamesAndWait(aOperator, aLongName, aShortName,
+                                         aMcc, aMnc,
+                                         aWaitVoice = true, aWaitData = false) {
+  let promises = [];
+  if (aWaitVoice) {
+    promises.push(waitForManagerEvent("voicechange"));
+  }
+  if (aWaitData) {
+    promises.push(waitForManagerEvent("datachange"));
+  }
+  promises.push(setEmulatorOperatorNames(aOperator, aLongName, aShortName,
+                                         aMcc, aMnc));
+  return Promise.all(promises);
 }
 
 let _networkManager;
