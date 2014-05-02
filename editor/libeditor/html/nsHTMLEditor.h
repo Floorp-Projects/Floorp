@@ -420,6 +420,8 @@ protected:
 
   // key event helpers
   NS_IMETHOD TabInTable(bool inIsShift, bool *outHandled);
+  already_AddRefed<mozilla::dom::Element> CreateBR(nsINode* aNode,
+      int32_t aOffset, EDirection aSelect = eNone);
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, int32_t aOffset, 
                       nsCOMPtr<nsIDOMNode> *outBRNode, nsIEditor::EDirection aSelect = nsIEditor::eNone);
 
