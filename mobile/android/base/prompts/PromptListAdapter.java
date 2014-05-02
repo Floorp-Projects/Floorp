@@ -1,9 +1,11 @@
 package org.mozilla.gecko.prompts;
 
-import org.mozilla.gecko.menu.MenuItemActionView;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.menu.MenuItemActionView;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import org.json.JSONArray;
@@ -197,6 +199,9 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
                     @Override
                     public void onIntentSelected(final Intent intent, final int p) {
                         provider.chooseActivity(p);
+
+                        // Context: Sharing via content contextmenu list (no explicit session is active)
+                        Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST);
                     }
 
                     @Override

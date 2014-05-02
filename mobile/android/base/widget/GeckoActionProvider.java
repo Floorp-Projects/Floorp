@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.widget;
 
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.menu.MenuItemActionView;
 
 import android.content.Context;
@@ -194,6 +196,9 @@ public class GeckoActionProvider {
         @Override
         public boolean onMenuItemClick(MenuItem item) {
             chooseActivity(item.getItemId());
+
+            // Context: Sharing via chrome mainmenu list (no explicit session is active)
+            Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST);
             return true;
         }
 
@@ -201,6 +206,9 @@ public class GeckoActionProvider {
         public void onClick(View view) {
             Integer index = (Integer) view.getTag();
             chooseActivity(index);
+
+            // Context: Sharing via chrome mainmenu and content contextmenu quickshare (no explicit session is active)
+            Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.BUTTON);
         }
     }
 }
