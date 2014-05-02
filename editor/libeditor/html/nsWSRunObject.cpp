@@ -203,8 +203,8 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
 
   nsresult res = NS_OK;
   WSFragment *beforeRun, *afterRun;
-  FindRun(GetAsDOMNode(*aInOutParent), *aInOutOffset, &beforeRun, false);
-  FindRun(GetAsDOMNode(*aInOutParent), *aInOutOffset, &afterRun, true);
+  FindRun(*aInOutParent, *aInOutOffset, &beforeRun, false);
+  FindRun(*aInOutParent, *aInOutOffset, &afterRun, true);
 
   {
     // Some scoping for nsAutoTrackDOMPoint.  This will track our insertion
@@ -281,8 +281,8 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
   nsAutoString theString(aStringToInsert);
 
   WSFragment *beforeRun, *afterRun;
-  FindRun(GetAsDOMNode(*aInOutParent), *aInOutOffset, &beforeRun, false);
-  FindRun(GetAsDOMNode(*aInOutParent), *aInOutOffset, &afterRun, true);
+  FindRun(*aInOutParent, *aInOutOffset, &beforeRun, false);
+  FindRun(*aInOutParent, *aInOutOffset, &afterRun, true);
 
   nsresult res;
   {
@@ -501,7 +501,7 @@ nsWSRunObject::PriorVisibleNode(nsINode* aNode,
   MOZ_ASSERT(aNode && outVisNode && outVisOffset && outType);
 
   WSFragment* run;
-  FindRun(GetAsDOMNode(aNode), aOffset, &run, false);
+  FindRun(aNode, aOffset, &run, false);
 
   // Is there a visible run there or earlier?
   for (; run; run = run->mLeft) {
@@ -545,7 +545,7 @@ nsWSRunObject::NextVisibleNode(nsINode* aNode,
   MOZ_ASSERT(aNode && outVisNode && outVisOffset && outType);
 
   WSFragment* run;
-  FindRun(GetAsDOMNode(aNode), aOffset, &run, true);
+  FindRun(aNode, aOffset, &run, true);
 
   // Is there a visible run there or later?
   for (; run; run = run->mRight) {
@@ -1236,8 +1236,8 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
   
   // get the runs before and after selection
   WSFragment *beforeRun, *afterRun;
-  FindRun(GetAsDOMNode(mNode), mOffset, &beforeRun, false);
-  aEndObject->FindRun(GetAsDOMNode(aEndObject->mNode), aEndObject->mOffset, &afterRun, true);
+  FindRun(mNode, mOffset, &beforeRun, false);
+  aEndObject->FindRun(aEndObject->mNode, aEndObject->mOffset, &afterRun, true);
   
   // trim after run of any leading ws
   if (afterRun && (afterRun->mType & WSType::leadingWS)) {
@@ -1297,8 +1297,8 @@ nsWSRunObject::PrepareToSplitAcrossBlocksPriv()
   
   // get the runs before and after selection
   WSFragment *beforeRun, *afterRun;
-  FindRun(GetAsDOMNode(mNode), mOffset, &beforeRun, false);
-  FindRun(GetAsDOMNode(mNode), mOffset, &afterRun, true);
+  FindRun(mNode, mOffset, &beforeRun, false);
+  FindRun(mNode, mOffset, &afterRun, true);
   
   // adjust normal ws in afterRun if needed
   if (afterRun && afterRun->mType == WSType::normalWS) {
@@ -1656,62 +1656,52 @@ nsWSRunObject::GetAsciiWSBounds(int16_t aDir, nsIDOMNode *aNode, int32_t aOffset
   *outEndOffset = endOffset;
 }
 
+/**
+ * Given a dompoint, find the ws run that is before or after it, as caller
+ * needs
+ */
 void
-nsWSRunObject::FindRun(nsIDOMNode *aNode, int32_t aOffset, WSFragment **outRun, bool after)
+nsWSRunObject::FindRun(nsINode* aNode, int32_t aOffset, WSFragment** outRun,
+                       bool after)
 {
-  *outRun = nullptr;
-  // given a dompoint, find the ws run that is before or after it, as caller needs
   MOZ_ASSERT(aNode && outRun);
-    
-  WSFragment *run = mStartRun;
-  while (run)
-  {
-    int16_t comp = nsContentUtils::ComparePoints(aNode, aOffset, GetAsDOMNode(run->mStartNode),
-                                                 run->mStartOffset);
-    if (comp <= 0)
-    {
-      if (after)
-      {
+  *outRun = nullptr;
+
+  for (WSFragment* run = mStartRun; run; run = run->mRight) {
+    int32_t comp = run->mStartNode ? nsContentUtils::ComparePoints(aNode,
+        aOffset, run->mStartNode, run->mStartOffset) : -1;
+    if (comp <= 0) {
+      if (after) {
         *outRun = run;
-      }
-      else // before
-      {
+      } else {
+        // before
         *outRun = nullptr;
       }
       return;
     }
-    comp = nsContentUtils::ComparePoints(aNode, aOffset,
-                                         GetAsDOMNode(run->mEndNode), run->mEndOffset);
-    if (comp < 0)
-    {
+    comp = run->mEndNode ? nsContentUtils::ComparePoints(aNode, aOffset,
+        run->mEndNode, run->mEndOffset) : -1;
+    if (comp < 0) {
       *outRun = run;
       return;
-    }
-    else if (comp == 0)
-    {
-      if (after)
-      {
+    } else if (comp == 0) {
+      if (after) {
         *outRun = run->mRight;
-      }
-      else // before
-      {
+      } else {
+        // before
         *outRun = run;
       }
       return;
     }
-    if (!run->mRight)
-    {
-      if (after)
-      {
+    if (!run->mRight) {
+      if (after) {
         *outRun = nullptr;
-      }
-      else // before
-      {
+      } else {
+        // before
         *outRun = run;
       }
       return;
     }
-    run = run->mRight;
   }
 }
 
