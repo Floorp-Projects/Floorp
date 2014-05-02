@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<!--
+  XUL Widget Test for preferences window with onsyncfrompreference
+  This test ensures that onsyncfrompreference handlers are called after all the
+  values of the corresponding preference element have been set correctly
+-->
+<prefwindow xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            title="preferences window"
+            width="300" height="300"
+            windowtype="test:preferences">
+
+  <prefpane id="sample_pane" label="Sample Prefpane">
+    <preferences id="sample_preferences">
+      <preference id="tests.onsyncfrompreference.pref1"
+                  name="tests.onsyncfrompreference.pref1"
+                  type="int"/>
+      <preference id="tests.onsyncfrompreference.pref2"
+                  name="tests.onsyncfrompreference.pref2"
+                  type="int"/>
+      <preference id="tests.onsyncfrompreference.pref3"
+                  name="tests.onsyncfrompreference.pref3"
+                  type="int"/>
+    </preferences>
+  </prefpane>
+  <label>Test Prefpane</label>
+        <checkbox id="check1" label="Label1"
+                preference="tests.onsyncfrompreference.pref1"
+                onsyncfrompreference="return window.arguments[0]();"
+                onsynctopreference="return 1;"/>
+        <checkbox id="check2" label="Label2"
+                preference="tests.onsyncfrompreference.pref2"
+                onsyncfrompreference="return window.arguments[0]();"
+                onsynctopreference="return 1;"/>
+        <checkbox id="check3" label="Label3"
+                preference="tests.onsyncfrompreference.pref3"
+                onsyncfrompreference="return window.arguments[0]();"
+                onsynctopreference="return 1;"/>
+</prefwindow>
