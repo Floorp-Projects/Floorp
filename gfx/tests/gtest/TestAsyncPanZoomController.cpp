@@ -34,6 +34,7 @@ class AsyncPanZoomControllerTester : public ::testing::Test {
 protected:
   virtual void SetUp() {
     gfxPrefs::GetSingleton();
+    AsyncPanZoomController::SetThreadAssertionsEnabled(false);
   }
   virtual void TearDown() {
     gfxPrefs::DestroySingleton();
@@ -44,6 +45,7 @@ class APZCTreeManagerTester : public ::testing::Test {
 protected:
   virtual void SetUp() {
     gfxPrefs::GetSingleton();
+    AsyncPanZoomController::SetThreadAssertionsEnabled(false);
   }
   virtual void TearDown() {
     gfxPrefs::DestroySingleton();
@@ -140,9 +142,6 @@ public:
 };
 
 class TestAPZCTreeManager : public APZCTreeManager {
-protected:
-  void AssertOnCompositorThread() MOZ_OVERRIDE { /* no-op */ }
-
 public:
   // Expose this so test code can call it directly.
   void BuildOverscrollHandoffChain(AsyncPanZoomController* aApzc) {
