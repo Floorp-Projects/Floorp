@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<window title="Preferences Window beforeaccept Tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+    const PREFS = ['tests.onsyncfrompreference.pref1',
+                   'tests.onsyncfrompreference.pref2',
+                   'tests.onsyncfrompreference.pref3'];
+
+    SimpleTest.waitForExplicitFinish();
+
+    for (let pref of PREFS) {
+      SpecialPowers.setIntPref(pref, 1);
+    }
+
+    let counter = 0;
+    let prefWindow = openDialog("window_preferences_onsyncfrompreference.xul", "", "", onSync);
+
+    SimpleTest.registerCleanupFunction(() => {
+      for (let pref of PREFS) {
+        SpecialPowers.clearUserPref(pref);
+      }
+      prefWindow.close();
+    });
+
+    // Onsyncfrompreference handler for the prefs
+    function onSync() {
+      for (let pref of PREFS) {
+        // The `value` field of each <preference> element should be initialized by now.
+
+        is(SpecialPowers.getIntPref(pref), prefWindow.document.getElementById(pref).value,
+           "Pref constructor was called correctly")
+      }
+
+      counter++;
+
+      if (counter == PREFS.length) {
+        SimpleTest.finish();
+      }
+      return true;
+    }
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+
+</window>
