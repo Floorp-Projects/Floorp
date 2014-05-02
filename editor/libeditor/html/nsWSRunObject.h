@@ -186,11 +186,11 @@ class MOZ_STACK_CLASS nsWSRunObject
                                          nsCOMPtr<nsINode>* aEndNode,
                                          int32_t* aEndOffset);
 
-    // PrepareToDeleteNode fixes up ws before and after aNode in preperation 
-    // for aNode to be deleted.
-    // example of fixup: trailingws before aNode needs to be removed.
-    static nsresult PrepareToDeleteNode(nsHTMLEditor *aHTMLEd, 
-                                        nsIDOMNode *aNode);
+    // PrepareToDeleteNode fixes up ws before and after aContent in preparation
+    // for aContent to be deleted.  Example of fixup: trailingws before
+    // aContent needs to be removed.
+    static nsresult PrepareToDeleteNode(nsHTMLEditor *aHTMLEd,
+                                        nsIContent* aContent);
 
     // PrepareToSplitAcrossBlocks fixes up ws before and after 
     // {aSplitNode,aSplitOffset} in preperation for a block
