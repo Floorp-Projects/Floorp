@@ -307,6 +307,24 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
               (event === (NFC.NFC_PEER_EVENT_READY | NFC.NFC_PEER_EVENT_LOST)));
     },
 
+    checkP2PRegistration: function checkP2PRegistration(msg) {
+      // Check if the session and application id yeild a valid registered
+      // target.  It should have registered for NFC_PEER_EVENT_READY
+      let isValid = !!this.nfc.sessionTokenMap[this.nfc._currentSessionId] &&
+                    this.isRegisteredP2PTarget(msg.json.appId,
+                                               NFC.NFC_PEER_EVENT_READY);
+      // Remember the current AppId if registered.
+      this.currentPeerAppId = (isValid) ? msg.json.appId : null;
+      let status = (isValid) ? NFC.GECKO_NFC_ERROR_SUCCESS :
+                               NFC.GECKO_NFC_ERROR_GENERIC_FAILURE;
+
+      // Notify the content process immediately of the status
+      msg.target.sendAsyncMessage(msg.name + "Response", {
+        status: status,
+        requestId: msg.json.requestId
+      });
+    },
+
     /**
      * nsIMessageListener interface methods.
      */
@@ -360,19 +378,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
           this.unregisterPeerTarget(msg);
           return null;
         case "NFC:CheckP2PRegistration":
-          // Check if the application id is a valid registered target.
-          // (It should have registered for NFC_PEER_EVENT_READY).
-          let isRegistered = this.isRegisteredP2PTarget(msg.json.appId,
-                                                        NFC.NFC_PEER_EVENT_READY);
-          // Remember the current AppId if registered.
-          this.currentPeerAppId = (isRegistered) ? msg.json.appId : null;
-          let status = (isRegistered) ? NFC.GECKO_NFC_ERROR_SUCCESS :
-                                        NFC.GECKO_NFC_ERROR_GENERIC_FAILURE;
-          // Notify the content process immediately of the status
-          msg.target.sendAsyncMessage(msg.name + "Response", {
-            status: status,
-            requestId: msg.json.requestId
-          });
+          this.checkP2PRegistration(msg);
           return null;
         case "NFC:NotifyUserAcceptedP2P":
           // Notify the 'NFC_PEER_EVENT_READY' since user has acknowledged
