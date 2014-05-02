@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.PrefsHelper;
@@ -250,7 +251,8 @@ public class BrowserSearch extends HomeFragment
     public void onDestroyView() {
         super.onDestroyView();
 
-        unregisterEventListener("SearchEngines:Data");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+            "SearchEngines:Data");
 
         mList.setAdapter(null);
         mList = null;
@@ -321,7 +323,8 @@ public class BrowserSearch extends HomeFragment
         });
 
         registerForContextMenu(mList);
-        registerEventListener("SearchEngines:Data");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+            "SearchEngines:Data");
 
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:GetVisible", null));
     }
@@ -705,14 +708,6 @@ public class BrowserSearch extends HomeFragment
 
     private int getSuggestEngineCount() {
         return (TextUtils.isEmpty(mSearchTerm) || mSuggestClient == null || !mSuggestionsEnabled) ? 0 : 1;
-    }
-
-    private void registerEventListener(String eventName) {
-        GeckoAppShell.registerEventListener(eventName, this);
-    }
-
-    private void unregisterEventListener(String eventName) {
-        GeckoAppShell.unregisterEventListener(eventName, this);
     }
 
     private void restartSearchLoader() {

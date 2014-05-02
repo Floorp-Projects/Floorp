@@ -13,6 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -38,13 +39,13 @@ public class SearchPreferenceCategory extends CustomListCategory implements Geck
         super.onAttachedToActivity();
 
         // Register for SearchEngines messages and request list of search engines from Gecko.
-        GeckoAppShell.registerEventListener("SearchEngines:Data", this);
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, "SearchEngines:Data");
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:GetVisible", null));
     }
 
     @Override
     protected void onPrepareForRemoval() {
-        GeckoAppShell.unregisterEventListener("SearchEngines:Data", this);
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "SearchEngines:Data");
     }
 
     @Override

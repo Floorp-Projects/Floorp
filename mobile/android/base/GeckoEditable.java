@@ -766,13 +766,13 @@ final class GeckoEditable
             // cases, and we don't want to unregister an event that was not registered.
             mGeckoFocused = false;
             mSuppressCompositions = false;
-            GeckoAppShell.getEventDispatcher().
-                unregisterEventListener("TextSelection:DraggingHandle", this);
+            EventDispatcher.getInstance().
+                unregisterGeckoThreadListener(this, "TextSelection:DraggingHandle");
         } else if (type == NOTIFY_IME_OF_FOCUS) {
             mGeckoFocused = true;
             mSuppressCompositions = false;
-            GeckoAppShell.getEventDispatcher().
-                registerEventListener("TextSelection:DraggingHandle", this);
+            EventDispatcher.getInstance().
+                registerGeckoThreadListener(this, "TextSelection:DraggingHandle");
         }
     }
 
