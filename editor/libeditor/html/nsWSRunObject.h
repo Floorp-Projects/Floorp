@@ -185,11 +185,6 @@ class MOZ_STACK_CLASS nsWSRunObject
                                          int32_t* aStartOffset,
                                          nsCOMPtr<nsINode>* aEndNode,
                                          int32_t* aEndOffset);
-    static nsresult PrepareToDeleteRange(nsHTMLEditor *aHTMLEd, 
-                                         nsCOMPtr<nsIDOMNode> *aStartNode,
-                                         int32_t *aStartOffset, 
-                                         nsCOMPtr<nsIDOMNode> *aEndNode,
-                                         int32_t *aEndOffset);
 
     // PrepareToDeleteNode fixes up ws before and after aNode in preperation 
     // for aNode to be deleted.
