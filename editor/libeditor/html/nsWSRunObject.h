@@ -207,10 +207,9 @@ class MOZ_STACK_CLASS nsWSRunObject
     // and makes any needed adjustments to ws around that point.
     // example of fixup: normalws after {aInOutParent,aInOutOffset}
     //                   needs to begin with nbsp.
-    nsresult InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent, 
-                         int32_t *aInOutOffset, 
-                         nsCOMPtr<nsIDOMNode> *outBRNode, 
-                         nsIEditor::EDirection aSelect);
+    already_AddRefed<mozilla::dom::Element>
+      InsertBreak(nsCOMPtr<nsINode>* aInOutParent, int32_t* aInOutOffset,
+                  nsIEditor::EDirection aSelect);
 
     // InsertText inserts a string at {aInOutParent,aInOutOffset}
     // and makes any needed adjustments to ws around that point.
