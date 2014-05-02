@@ -339,9 +339,6 @@ class MOZ_STACK_CLASS nsWSRunObject
                               int32_t* outStartOffset,
                               nsIContent** outEndNode,
                               int32_t* outEndOffset);
-    void     GetAsciiWSBounds(int16_t aDir, nsIDOMNode *aNode, int32_t aOffset,
-                                nsCOMPtr<nsIDOMNode> *outStartNode, int32_t *outStartOffset,
-                                nsCOMPtr<nsIDOMNode> *outEndNode, int32_t *outEndOffset);
     void     FindRun(nsINode* aNode, int32_t aOffset, WSFragment** outRun,
                      bool after);
     char16_t GetCharAt(nsIContent *aTextNode, int32_t aOffset);
