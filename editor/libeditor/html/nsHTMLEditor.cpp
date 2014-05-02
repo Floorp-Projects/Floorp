@@ -532,16 +532,16 @@ nsHTMLEditor::BeginningOfDocument()
   while (!done)
   {
     nsWSRunObject wsObj(this, curNode, curOffset);
-    nsCOMPtr<nsIDOMNode> visNode;
     int32_t visOffset=0;
     WSType visType;
-    wsObj.NextVisibleNode(curNode, curOffset, address_of(visNode), &visOffset, &visType);
+    nsCOMPtr<nsINode> visNode, curNode_(do_QueryInterface(curNode));
+    wsObj.NextVisibleNode(curNode_, curOffset, address_of(visNode), &visOffset, &visType);
     if (visType == WSType::normalWS || visType == WSType::text) {
-      selNode = visNode;
+      selNode = GetAsDOMNode(visNode);
       selOffset = visOffset;
       done = true;
     } else if (visType == WSType::br || visType == WSType::special) {
-      selNode = GetNodeLocation(visNode, &selOffset);
+      selNode = GetNodeLocation(GetAsDOMNode(visNode), &selOffset);
       done = true;
     } else if (visType == WSType::otherBlock) {
       // By definition of nsWSRunObject, a block element terminates 
@@ -559,22 +559,22 @@ nsHTMLEditor::BeginningOfDocument()
         // like a <hr>
         // We want to place the caret in front of that block.
 
-        selNode = GetNodeLocation(visNode, &selOffset);
+        selNode = GetNodeLocation(GetAsDOMNode(visNode), &selOffset);
         done = true;
       }
       else
       {
         bool isEmptyBlock;
-        if (NS_SUCCEEDED(IsEmptyNode(visNode, &isEmptyBlock)) &&
+        if (NS_SUCCEEDED(IsEmptyNode(GetAsDOMNode(visNode), &isEmptyBlock)) &&
             isEmptyBlock)
         {
           // skip the empty block
-          curNode = GetNodeLocation(visNode, &curOffset);
+          curNode = GetNodeLocation(GetAsDOMNode(visNode), &curOffset);
           ++curOffset;
         }
         else
         {
-          curNode = visNode;
+          curNode = GetAsDOMNode(visNode);
           curOffset = 0;
         }
         // keep looping
@@ -971,10 +971,10 @@ nsHTMLEditor::IsVisBreak(nsINode* aNode)
   // Let's look after the break
   selOffset++;
   nsWSRunObject wsObj(this, selNode, selOffset);
-  nsCOMPtr<nsIDOMNode> visNode;
+  nsCOMPtr<nsINode> unused;
   int32_t visOffset = 0;
   WSType visType;
-  wsObj.NextVisibleNode(selNode->AsDOMNode(), selOffset, address_of(visNode),
+  wsObj.NextVisibleNode(selNode, selOffset, address_of(unused),
                         &visOffset, &visType);
   if (visType & WSType::block) {
     return false;
@@ -1453,14 +1453,14 @@ nsHTMLEditor::NormalizeEOLInsertPosition(nsIDOMNode *firstNodeToInsert,
     return;
 
   nsWSRunObject wsObj(this, *insertParentNode, *insertOffset);
-  nsCOMPtr<nsIDOMNode> nextVisNode;
-  nsCOMPtr<nsIDOMNode> prevVisNode;
+  nsCOMPtr<nsINode> nextVisNode, prevVisNode;
   int32_t nextVisOffset=0;
   WSType nextVisType;
   int32_t prevVisOffset=0;
   WSType prevVisType;
 
-  wsObj.NextVisibleNode(*insertParentNode, *insertOffset, address_of(nextVisNode), &nextVisOffset, &nextVisType);
+  nsCOMPtr<nsINode> parent(do_QueryInterface(*insertParentNode));
+  wsObj.NextVisibleNode(parent, *insertOffset, address_of(nextVisNode), &nextVisOffset, &nextVisType);
   if (!nextVisNode)
     return;
 
@@ -1468,7 +1468,7 @@ nsHTMLEditor::NormalizeEOLInsertPosition(nsIDOMNode *firstNodeToInsert,
     return;
   }
 
-  wsObj.PriorVisibleNode(*insertParentNode, *insertOffset, address_of(prevVisNode), &prevVisOffset, &prevVisType);
+  wsObj.PriorVisibleNode(parent, *insertOffset, address_of(prevVisNode), &prevVisOffset, &prevVisType);
   if (!prevVisNode)
     return;
 
@@ -1481,7 +1481,7 @@ nsHTMLEditor::NormalizeEOLInsertPosition(nsIDOMNode *firstNodeToInsert,
   }
 
   int32_t brOffset=0;
-  nsCOMPtr<nsIDOMNode> brNode = GetNodeLocation(nextVisNode, &brOffset);
+  nsCOMPtr<nsIDOMNode> brNode = GetNodeLocation(GetAsDOMNode(nextVisNode), &brOffset);
 
   *insertParentNode = brNode;
   *insertOffset = brOffset + 1;
@@ -4384,15 +4384,14 @@ nsHTMLEditor::IsVisTextNode(nsIContent* aNode,
   {
     if (aNode->TextIsOnlyWhitespace())
     {
-      nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
-      nsWSRunObject wsRunObj(this, node, 0);
-      nsCOMPtr<nsIDOMNode> visNode;
+      nsWSRunObject wsRunObj(this, aNode, 0);
+      nsCOMPtr<nsINode> visNode;
       int32_t outVisOffset=0;
       WSType visType;
-      wsRunObj.NextVisibleNode(node, 0, address_of(visNode),
+      wsRunObj.NextVisibleNode(aNode, 0, address_of(visNode),
                                &outVisOffset, &visType);
       if (visType == WSType::normalWS || visType == WSType::text) {
-        *outIsEmptyNode = (node != visNode);
+        *outIsEmptyNode = (aNode != visNode);
       }
     }
     else
