@@ -4,6 +4,9 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -63,6 +66,8 @@ class RemoteTabsList extends ExpandableListView
             autoHidePanel();
             return true;
         }
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, "", "remote");
 
         Tabs.getInstance().loadUrl(tab.get("url"), Tabs.LOADURL_NEW_TAB);
         autoHidePanel();
