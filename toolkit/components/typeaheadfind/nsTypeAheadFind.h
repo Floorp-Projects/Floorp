@@ -80,6 +80,7 @@ protected:
   bool mCaretBrowsingOn;
   nsCOMPtr<nsIDOMElement> mFoundLink;     // Most recent elem found, if a link
   nsCOMPtr<nsIDOMElement> mFoundEditable; // Most recent elem found, if editable
+  nsCOMPtr<nsIDOMRange> mFoundRange;      // Most recent range found
   nsCOMPtr<nsIDOMWindow> mCurrentWindow;
   // mLastFindLength is the character length of the last find string.  It is used for
   // disabling the "not found" sound when using backspace or delete

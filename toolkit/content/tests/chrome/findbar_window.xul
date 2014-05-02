@@ -101,8 +101,17 @@
       testDrop();
       testQuickFindLink();
       if (gHasFindClipboard)
-        testStatusText();
-      testQuickFindClose();
+        testStatusText(afterStatusText);
+      else
+        afterStatusText();
+
+      function afterStatusText() {
+        testFindCountUI(function() {
+          gFindBar.close();
+          ok(gFindBar.hidden, "Failed to close findbar after testFindCountUI");
+          testQuickFindClose();
+        });
+      }
     }
 
     function testFindbarSelection() {
@@ -163,9 +172,10 @@
       setTimeout(_isClosedCallback, gFindBar._quickFindTimeoutLength + 100);
     }
 
-    function testStatusText() {
+    function testStatusText(aCallback) {
       var _delayedCheckStatusText = function() {
         ok(gStatusText == SAMPLE_URL, "testStatusText: Failed to set status text of found link");
+        aCallback();
       };
       setTimeout(_delayedCheckStatusText, 100);
     }
@@ -382,6 +392,100 @@
       ok(gBrowser.contentWindow.getSelection() == SEARCH_TEXT,
          "testQuickFindText: failed to find '" + SEARCH_TEXT + "'");
       testClipboardSearchString(SEARCH_TEXT);
+    }
+
+    // Perform an async function in serial on each of the list items.
+    function asyncForEach(list, async, callback) {
+      let i = 0;
+      let len = list.length;
+
+      if (!len)
+        return callback();
+
+      async(list[i], function handler() {
+          i++;
+          if (i < len) {
+            async(list[i], handler, i);
+          } else {
+            callback();
+          }
+      }, i);
+    }
+
+    function testFindCountUI(callback) {
+      clearFocus();
+      document.getElementById("cmd_find").doCommand();
+
+      ok(!gFindBar.hidden, "testFindCountUI: failed to open findbar");
+      ok(document.commandDispatcher.focusedElement == gFindBar._findField.inputField,
+         "testFindCountUI: find field is not focused");
+
+      let matchCase = gFindBar.getElement("find-case-sensitive");
+      if (matchCase.checked)
+        matchCase.click();
+
+      let foundMatches = gFindBar._foundMatches;
+      let tests = [{
+        text: "t",
+        current: 5,
+        total: 10,
+      }, {
+        text: "te",
+        current: 3,
+        total: 5,
+      }, {
+        text: "tes",
+        current: 1,
+        total: 2,
+      }, {
+        text: "texxx",
+        current: 0,
+        total: 0
+      }];
+      let regex = /([\d]*)\sof\s([\d]*)/;
+      let timeout = gFindBar._matchesCountTimeoutLength + 20;
+
+      function assertMatches(aTest, aMatches) {
+        window.opener.wrappedJSObject.SimpleTest.is(aTest.current, aMatches[1],
+          "Currently highlighted match should be at " + aTest.current);
+        window.opener.wrappedJSObject.SimpleTest.is(aTest.total, aMatches[2],
+          "Total amount of matches should be " + aTest.total);
+      }
+
+      function testString(aTest, aNext) {
+        gFindBar.clear();
+        enterStringIntoFindField(aTest.text);
+
+        setTimeout(function() {
+          let matches = foundMatches.value.match(regex);
+          if (!aTest.total) {
+            ok(!matches, "No message should be shown when 0 matches are expected");
+            aNext();
+          } else {
+            assertMatches(aTest, matches);
+            let cycleTests = [];
+            let cycles = aTest.total;
+            while (--cycles) {
+              aTest.current++;
+              if (aTest.current > aTest.total)
+                aTest.current = 1;
+              cycleTests.push({
+                current: aTest.current,
+                total: aTest.total
+              });
+            }
+            asyncForEach(cycleTests, function(aCycleTest, aNextCycle) {
+              gFindBar.onFindAgainCommand();
+              setTimeout(function() {
+                assertMatches(aCycleTest, foundMatches.value.match(regex));
+                aNextCycle();
+              }, timeout);
+            }, aNext);
+          }
+        }, timeout);
+      }
+
+      asyncForEach(tests, testString, callback);
     }
 
     function testClipboardSearchString(aExpected) {
