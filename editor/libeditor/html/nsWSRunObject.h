@@ -330,10 +330,10 @@ class MOZ_STACK_CLASS nsWSRunObject
     nsresult DeleteChars(nsIDOMNode *aStartNode, int32_t aStartOffset, 
                          nsIDOMNode *aEndNode, int32_t aEndOffset,
                          AreaRestriction aAR = eAnywhere);
-    WSPoint  GetCharAfter(nsIDOMNode *aNode, int32_t aOffset);
-    WSPoint  GetCharBefore(nsIDOMNode *aNode, int32_t aOffset);
-    WSPoint  GetCharAfter(const WSPoint &aPoint);
-    WSPoint  GetCharBefore(const WSPoint &aPoint);
+    WSPoint  GetCharAfter(nsINode* aNode, int32_t aOffset);
+    WSPoint  GetCharBefore(nsINode* aNode, int32_t aOffset);
+    WSPoint  GetCharAfter(const WSPoint& aPoint);
+    WSPoint  GetCharBefore(const WSPoint& aPoint);
     nsresult ConvertToNBSP(WSPoint aPoint,
                            AreaRestriction aAR = eAnywhere);
     void     GetAsciiWSBounds(int16_t aDir, nsINode* aNode, int32_t aOffset,
