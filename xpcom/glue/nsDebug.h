@@ -391,6 +391,7 @@ inline void NS_ABORT_OOM(size_t)
 }
 #endif
 
+typedef void (*StderrCallback)(const char *fmt, va_list args);
 /* When compiling the XPCOM Glue on Windows, we pretend that it's going to
  * be linked with a static CRT (-MT) even when it's not. This means that we
  * cannot link to data exports from the CRT, only function exports. So,
@@ -409,6 +410,11 @@ vprintf_stderr(const char *fmt, va_list args);
 // fprintf with special handling for stderr to print to the console
 NS_COM_GLUE void
 fprintf_stderr(FILE* aFile, const char *fmt, ...);
+
+// used by the profiler to log stderr in the profiler for more
+// advanced performance debugging and display/layers visualization.
+NS_COM_GLUE void
+set_stderr_callback(StderrCallback aCallback);
 
 #ifdef __cplusplus
 }
