@@ -109,7 +109,7 @@ public:
     }
 
 protected:
-    NS_IMETHOD Fill() { return NS_OK; } // no-op for input streams
+    NS_IMETHOD Fill() { return NS_OK; } // no-op for output streams
 
     nsCOMPtr<nsISafeOutputStream> mSafeStream; // QI'd from mStream
 };
