@@ -350,8 +350,10 @@ class MOZ_STACK_CLASS nsWSRunObject
     WSPoint  GetWSPointAfter(nsIDOMNode *aNode, int32_t aOffset);
     WSPoint  GetWSPointBefore(nsIDOMNode *aNode, int32_t aOffset);
     nsresult CheckTrailingNBSPOfRun(WSFragment *aRun);
-    nsresult CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aOffset);
-    nsresult CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aOffset);
+    nsresult CheckTrailingNBSP(WSFragment* aRun, nsINode* aNode,
+                               int32_t aOffset);
+    nsresult CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
+                              int32_t aOffset);
     
     nsresult Scrub();
     nsresult GetPreviousWSNodeInner(nsINode* aStartNode, nsINode* aBlockParent,
