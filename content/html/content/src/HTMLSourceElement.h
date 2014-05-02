@@ -17,6 +17,7 @@ class nsMediaList;
 namespace mozilla {
 namespace dom {
 
+class ResponsiveImageSelector;
 class HTMLSourceElement MOZ_FINAL : public nsGenericHTMLElement,
                                     public nsIDOMHTMLSourceElement
 {
@@ -39,6 +40,7 @@ public:
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers) MOZ_OVERRIDE;
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent) MOZ_OVERRIDE;
 
   // If this element's media attr matches for its owner document.  Returns true
   // if no media attr was set.

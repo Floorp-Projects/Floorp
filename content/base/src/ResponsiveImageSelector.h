@@ -37,6 +37,10 @@ public:
   nsresult SetDefaultSource(const nsAString & aSpec);
   void SetDefaultSource(nsIURI *aURL);
 
+  uint32_t NumCandidates(bool aIncludeDefault = true);
+
+  nsIContent *Content() { return mContent; }
+
   // Get the URL for the selected best candidate
   already_AddRefed<nsIURI> GetSelectedImageURL();
   double GetSelectedImageDensity();
