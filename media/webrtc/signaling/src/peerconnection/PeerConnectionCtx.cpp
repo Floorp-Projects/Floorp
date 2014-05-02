@@ -193,23 +193,14 @@ nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread,
     CSF::VcmSIPCCBinding::setMainThread(gMainThread);
     init_thread_monitor(&thread_ended_dispatcher, &join_waiter);
   } else {
-#ifdef MOZILLA_INTERNAL_API
     MOZ_ASSERT(gMainThread == mainThread);
-#endif
   }
 
   CSF::VcmSIPCCBinding::setSTSThread(stsThread);
 
   nsresult res;
 
-#ifdef MOZILLA_INTERNAL_API
-  // This check fails on the unit tests because they do not
-  // have the right thread behavior.
-  bool on;
-  res = gMainThread->IsOnCurrentThread(&on);
-  NS_ENSURE_SUCCESS(res, res);
-  MOZ_ASSERT(on);
-#endif
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (!gInstance) {
     CSFLogDebug(logTag, "Creating PeerConnectionCtx");

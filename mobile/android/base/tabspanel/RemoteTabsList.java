@@ -19,6 +19,8 @@ import java.util.List;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.TabsAccessor;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 
 /**
  * The actual list of synced tabs. This serves as the only child view of {@link RemoteTabsContainer}
@@ -67,6 +69,8 @@ class RemoteTabsList extends ExpandableListView
             autoHidePanel();
             return true;
         }
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, "", "remote");
 
         Tabs.getInstance().loadUrl(tab.get("url"), Tabs.LOADURL_NEW_TAB);
         autoHidePanel();

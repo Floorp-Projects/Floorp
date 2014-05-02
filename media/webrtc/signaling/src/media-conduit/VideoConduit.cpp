@@ -39,10 +39,7 @@ const unsigned int WebrtcVideoConduit::CODEC_PLNAME_SIZE = 32;
  */
 mozilla::RefPtr<VideoSessionConduit> VideoSessionConduit::Create(VideoSessionConduit *aOther)
 {
-#ifdef MOZILLA_INTERNAL_API
-  // unit tests create their own "main thread"
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-#endif
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
 
   WebrtcVideoConduit* obj = new WebrtcVideoConduit();
@@ -58,10 +55,7 @@ mozilla::RefPtr<VideoSessionConduit> VideoSessionConduit::Create(VideoSessionCon
 
 WebrtcVideoConduit::~WebrtcVideoConduit()
 {
-#ifdef MOZILLA_INTERNAL_API
-  // unit tests create their own "main thread"
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-#endif
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
 
   for(std::vector<VideoCodecConfig*>::size_type i=0;i < mRecvCodecList.size();i++)

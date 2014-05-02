@@ -187,7 +187,7 @@ DenseRangeWriteBarrierPost(JSRuntime *rt, JSObject *obj, uint32_t start, uint32_
 #ifdef JSGC_GENERATIONAL
     if (count > 0) {
         JS::shadow::Runtime *shadowRuntime = JS::shadow::Runtime::asShadowRuntime(rt);
-        shadowRuntime->gcStoreBufferPtr()->putSlotFromAnyThread(obj, HeapSlot::Element, start, count);
+        shadowRuntime->gcStoreBufferPtr()->putSlot(obj, HeapSlot::Element, start, count);
     }
 #endif
 }

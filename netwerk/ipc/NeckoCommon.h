@@ -17,7 +17,7 @@ namespace mozilla { namespace dom {
 class TabChild;
 }}
 
-#if defined(DEBUG) || defined(ENABLE_TESTS)
+#if defined(DEBUG)
 # define NECKO_ERRORS_ARE_FATAL_DEFAULT true
 #else
 # define NECKO_ERRORS_ARE_FATAL_DEFAULT false

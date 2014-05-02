@@ -18,6 +18,7 @@
 #ifndef mozilla_pkix__pkixder_h
 #define mozilla_pkix__pkixder_h
 
+#include "pkix/enumclass.h"
 #include "pkix/nullptr.h"
 
 #include "prerror.h"
@@ -61,7 +62,7 @@ enum Result
   Success = 0
 };
 
-enum EmptyAllowed { MayBeEmpty = 0, MustNotBeEmpty = 1 };
+MOZILLA_PKIX_ENUM_CLASS EmptyAllowed { No = 0, Yes = 1 };
 
 Result Fail(PRErrorCode errorCode);
 
@@ -324,7 +325,7 @@ NestedOf(Input& input, uint8_t outerTag, uint8_t innerTag,
   }
 
   if (inner.AtEnd()) {
-    if (mayBeEmpty != MayBeEmpty) {
+    if (mayBeEmpty != EmptyAllowed::Yes) {
       return Fail(SEC_ERROR_BAD_DER);
     }
     return Success;
@@ -417,7 +418,7 @@ GeneralizedTime(Input& input, PRTime& time)
   if (ExpectTagAndGetLength(input, GENERALIZED_TIME, length) != Success) {
     return Failure;
   }
-  if (input.Skip(length, encoded)) {
+  if (input.Skip(length, encoded) != Success) {
     return Failure;
   }
   if (DER_GeneralizedTimeToTime(&time, &encoded) != SECSuccess) {
@@ -464,7 +465,7 @@ Null(Input& input)
   return ExpectTagAndLength(input, NULLTag, 0);
 }
 
-template <uint16_t Len>
+template <uint8_t Len>
 Result
 OID(Input& input, const uint8_t (&expectedOid)[Len])
 {

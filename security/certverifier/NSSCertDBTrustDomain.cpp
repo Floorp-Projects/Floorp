@@ -9,12 +9,13 @@
 #include <stdint.h>
 
 #include "ExtendedValidation.h"
+#include "OCSPRequestor.h"
 #include "certdb.h"
-#include "pkix/pkix.h"
 #include "mozilla/Telemetry.h"
 #include "nss.h"
 #include "ocsp.h"
 #include "pk11pub.h"
+#include "pkix/pkix.h"
 #include "prerror.h"
 #include "prmem.h"
 #include "prprf.h"
@@ -100,11 +101,12 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     // CERTDB_TERMINAL_RECORD means "stop trying to inherit trust" so if the
     // relevant trust bit isn't set then that means the cert must be considered
     // distrusted.
-    PRUint32 relevantTrustBit = endEntityOrCA == MustBeCA ? CERTDB_TRUSTED_CA
-                                                          : CERTDB_TRUSTED;
+    PRUint32 relevantTrustBit =
+      endEntityOrCA == EndEntityOrCA::MustBeCA ? CERTDB_TRUSTED_CA
+                                               : CERTDB_TRUSTED;
     if (((flags & (relevantTrustBit|CERTDB_TERMINAL_RECORD)))
             == CERTDB_TERMINAL_RECORD) {
-      *trustLevel = ActivelyDistrusted;
+      *trustLevel = TrustLevel::ActivelyDistrusted;
       return SECSuccess;
     }
 
@@ -113,19 +115,19 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     // Gecko implemented nsICertOverrideService.
     if (flags & CERTDB_TRUSTED_CA) {
       if (policy == SEC_OID_X509_ANY_POLICY) {
-        *trustLevel = TrustAnchor;
+        *trustLevel = TrustLevel::TrustAnchor;
         return SECSuccess;
       }
 #ifndef MOZ_NO_EV_CERTS
       if (CertIsAuthoritativeForEVPolicy(candidateCert, policy)) {
-        *trustLevel = TrustAnchor;
+        *trustLevel = TrustLevel::TrustAnchor;
         return SECSuccess;
       }
 #endif
     }
   }
 
-  *trustLevel = InheritsTrust;
+  *trustLevel = TrustLevel::InheritsTrust;
   return SECSuccess;
 }
 
@@ -134,6 +136,26 @@ NSSCertDBTrustDomain::VerifySignedData(const CERTSignedData* signedData,
                                        const CERTCertificate* cert)
 {
   return ::mozilla::pkix::VerifySignedData(signedData, cert, mPinArg);
+}
+
+static PRIntervalTime
+OCSPFetchingTypeToTimeoutTime(NSSCertDBTrustDomain::OCSPFetching ocspFetching)
+{
+  switch (ocspFetching) {
+    case NSSCertDBTrustDomain::FetchOCSPForDVSoftFail:
+      return PR_SecondsToInterval(2);
+    case NSSCertDBTrustDomain::FetchOCSPForEV:
+    case NSSCertDBTrustDomain::FetchOCSPForDVHardFail:
+      return PR_SecondsToInterval(10);
+    // The rest of these are error cases. Assert in debug builds, but return
+    // the default value corresponding to 2 seconds in release builds.
+    case NSSCertDBTrustDomain::NeverFetchOCSP:
+    case NSSCertDBTrustDomain::LocalOnlyOCSPForEV:
+      PR_NOT_REACHED("we should never see this OCSPFetching type here");
+    default:
+      PR_NOT_REACHED("we're not handling every OCSPFetching type");
+  }
+  return PR_SecondsToInterval(2);
 }
 
 SECStatus
@@ -165,7 +187,7 @@ NSSCertDBTrustDomain::CheckRevocation(
   // exception for expired responses because some servers, nginx in particular,
   // are known to serve expired responses due to bugs.
   if (stapledOCSPResponse) {
-    PR_ASSERT(endEntityOrCA == MustBeEndEntity);
+    PR_ASSERT(endEntityOrCA == EndEntityOrCA::MustBeEndEntity);
     SECStatus rv = VerifyAndMaybeCacheEncodedOCSPResponse(cert, issuerCert,
                                                           time,
                                                           stapledOCSPResponse,
@@ -250,8 +272,9 @@ NSSCertDBTrustDomain::CheckRevocation(
   // you to ever fetch OCSP."
 
   if ((mOCSPFetching == NeverFetchOCSP) ||
-      (endEntityOrCA == MustBeCA && (mOCSPFetching == FetchOCSPForDVHardFail ||
-                                     mOCSPFetching == FetchOCSPForDVSoftFail))) {
+      (endEntityOrCA == EndEntityOrCA::MustBeCA &&
+       (mOCSPFetching == FetchOCSPForDVHardFail ||
+        mOCSPFetching == FetchOCSPForDVSoftFail))) {
     // We're not going to be doing any fetching, so if there was a cached
     // "unknown" response, say so.
     if (cachedResponseErrorCode == SEC_ERROR_OCSP_UNKNOWN_CERT) {
@@ -314,7 +337,8 @@ NSSCertDBTrustDomain::CheckRevocation(
       return SECFailure;
     }
 
-    response = CERT_PostOCSPRequest(arena.get(), url.get(), request);
+    response = DoOCSPRequest(arena.get(), url.get(), request,
+                             OCSPFetchingTypeToTimeoutTime(mOCSPFetching));
   }
 
   if (!response) {
@@ -330,20 +354,20 @@ NSSCertDBTrustDomain::CheckRevocation(
     if (mOCSPFetching != FetchOCSPForDVSoftFail) {
       PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
              ("NSSCertDBTrustDomain: returning SECFailure after "
-              "CERT_PostOCSPRequest failure"));
+              "OCSP request failure"));
       return SECFailure;
     }
     if (cachedResponseErrorCode == SEC_ERROR_OCSP_UNKNOWN_CERT) {
       PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
              ("NSSCertDBTrustDomain: returning SECFailure from cached "
-              "response after CERT_PostOCSPRequest failure"));
+              "response after OCSP request failure"));
       PR_SetError(cachedResponseErrorCode, 0);
       return SECFailure;
     }
 
     PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
            ("NSSCertDBTrustDomain: returning SECSuccess after "
-            "CERT_PostOCSPRequest failure"));
+            "OCSP request failure"));
     return SECSuccess; // Soft fail -> success :(
   }
 

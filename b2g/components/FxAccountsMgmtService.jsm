@@ -48,20 +48,16 @@ this.FxAccountsMgmtService = {
   },
 
   init: function() {
-    Services.obs.addObserver(this, "content-start", false);
     Services.obs.addObserver(this, ONLOGIN_NOTIFICATION, false);
     Services.obs.addObserver(this, ONVERIFIED_NOTIFICATION, false);
     Services.obs.addObserver(this, ONLOGOUT_NOTIFICATION, false);
+    SystemAppProxy.addEventListener("mozFxAccountsContentEvent",
+                                    FxAccountsMgmtService);
   },
 
   observe: function(aSubject, aTopic, aData) {
     log.debug("Observed " + aTopic);
     switch (aTopic) {
-      case "content-start":
-        SystemAppProxy.addEventListener("mozFxAccountsContentEvent",
-                                        FxAccountsMgmtService);
-        Services.obs.removeObserver(this, "content-start");
-        break;
       case ONLOGIN_NOTIFICATION:
       case ONVERIFIED_NOTIFICATION:
       case ONLOGOUT_NOTIFICATION:

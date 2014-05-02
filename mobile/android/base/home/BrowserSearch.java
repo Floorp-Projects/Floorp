@@ -11,6 +11,8 @@ import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.SearchEngine;
@@ -221,6 +223,20 @@ public class BrowserSearch extends HomeFragment
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+
+        Telemetry.startUISession(TelemetryContract.Session.FRECENCY);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        Telemetry.stopUISession(TelemetryContract.Session.FRECENCY);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // All list views are styled to look the same with a global activity theme.
         // If the style of the list changes, inflate it from an XML.
@@ -263,6 +279,11 @@ public class BrowserSearch extends HomeFragment
                 position -= getSuggestEngineCount();
                 final Cursor c = mAdapter.getCursor(position);
                 final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
+
+                // The "urlbar" and "frecency" sessions can be open at the same time. Use the LIST_ITEM
+                // method to set this LOAD_URL event apart from the case where the user commits what's in
+                // the url bar.
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM);
 
                 // This item is a TwoLinePageRow, so we allow switch-to-tab.
                 mUrlOpenListener.onUrlOpen(url, EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
