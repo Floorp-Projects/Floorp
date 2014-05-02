@@ -183,7 +183,7 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent,
       // delete the leading ws that is after insertion point.  We don't
       // have to (it would still not be significant after br), but it's 
       // just more aesthetically pleasing to.
-      res = DeleteChars(*aInOutParent, *aInOutOffset, afterRun->mEndNode, afterRun->mEndOffset,
+      res = DeleteChars(*aInOutParent, *aInOutOffset, GetAsDOMNode(afterRun->mEndNode), afterRun->mEndOffset,
                         eOutsideUserSelectAll);
       NS_ENSURE_SUCCESS(res, res);
     } else if (afterRun->mType == WSType::normalWS) {
@@ -208,7 +208,7 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent,
     } else if (beforeRun->mType & WSType::trailingWS) {
       // need to delete the trailing ws that is before insertion point, because it 
       // would become significant after break inserted.
-      res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, *aInOutParent, *aInOutOffset,
+      res = DeleteChars(GetAsDOMNode(beforeRun->mStartNode), beforeRun->mStartOffset, *aInOutParent, *aInOutOffset,
                         eOutsideUserSelectAll);
       NS_ENSURE_SUCCESS(res, res);
     } else if (beforeRun->mType == WSType::normalWS) {
@@ -260,7 +260,7 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
     } else if (afterRun->mType & WSType::leadingWS) {
       // delete the leading ws that is after insertion point, because it 
       // would become significant after text inserted.
-      res = DeleteChars(*aInOutParent, *aInOutOffset, afterRun->mEndNode, afterRun->mEndOffset,
+      res = DeleteChars(*aInOutParent, *aInOutOffset, GetAsDOMNode(afterRun->mEndNode), afterRun->mEndOffset,
                          eOutsideUserSelectAll);
       NS_ENSURE_SUCCESS(res, res);
     } else if (afterRun->mType == WSType::normalWS) {
@@ -277,7 +277,7 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
     } else if (beforeRun->mType & WSType::trailingWS) {
       // need to delete the trailing ws that is before insertion point, because it 
       // would become significant after text inserted.
-      res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, *aInOutParent, *aInOutOffset,
+      res = DeleteChars(GetAsDOMNode(beforeRun->mStartNode), beforeRun->mStartOffset, *aInOutParent, *aInOutOffset,
                         eOutsideUserSelectAll);
       NS_ENSURE_SUCCESS(res, res);
     } else if (beforeRun->mType == WSType::normalWS) {
@@ -941,13 +941,13 @@ nsWSRunObject::GetRuns()
   
   // otherwise a little trickier.  shucks.
   mStartRun = new WSFragment();
-  mStartRun->mStartNode = GetAsDOMNode(mStartNode);
+  mStartRun->mStartNode = mStartNode;
   mStartRun->mStartOffset = mStartOffset;
   
   if (mStartReason & WSType::block || mStartReason == WSType::br) {
     // set up mStartRun
     mStartRun->mType = WSType::leadingWS;
-    mStartRun->mEndNode = GetAsDOMNode(mFirstNBSPNode);
+    mStartRun->mEndNode = mFirstNBSPNode;
     mStartRun->mEndOffset = mFirstNBSPOffset;
     mStartRun->mLeftType = mStartReason;
     mStartRun->mRightType = WSType::normalWS;
@@ -956,14 +956,14 @@ nsWSRunObject::GetRuns()
     WSFragment *normalRun = new WSFragment();
     mStartRun->mRight = normalRun;
     normalRun->mType = WSType::normalWS;
-    normalRun->mStartNode = GetAsDOMNode(mFirstNBSPNode);
+    normalRun->mStartNode = mFirstNBSPNode;
     normalRun->mStartOffset = mFirstNBSPOffset;
     normalRun->mLeftType = WSType::leadingWS;
     normalRun->mLeft = mStartRun;
     if (mEndReason != WSType::block) {
       // then no trailing ws.  this normal run ends the overall ws run.
       normalRun->mRightType = mEndReason;
-      normalRun->mEndNode   = GetAsDOMNode(mEndNode);
+      normalRun->mEndNode   = mEndNode;
       normalRun->mEndOffset = mEndOffset;
       mEndRun = normalRun;
     }
@@ -977,22 +977,22 @@ nsWSRunObject::GetRuns()
       {
         // normal ws runs right up to adjacent block (nbsp next to block)
         normalRun->mRightType = mEndReason;
-        normalRun->mEndNode   = GetAsDOMNode(mEndNode);
+        normalRun->mEndNode   = mEndNode;
         normalRun->mEndOffset = mEndOffset;
         mEndRun = normalRun;
       }
       else
       {
-        normalRun->mEndNode = GetAsDOMNode(mLastNBSPNode);
+        normalRun->mEndNode = mLastNBSPNode;
         normalRun->mEndOffset = mLastNBSPOffset+1;
         normalRun->mRightType = WSType::trailingWS;
         
         // set up next run
         WSFragment *lastRun = new WSFragment();
         lastRun->mType = WSType::trailingWS;
-        lastRun->mStartNode = GetAsDOMNode(mLastNBSPNode);
+        lastRun->mStartNode = mLastNBSPNode;
         lastRun->mStartOffset = mLastNBSPOffset+1;
-        lastRun->mEndNode = GetAsDOMNode(mEndNode);
+        lastRun->mEndNode = mEndNode;
         lastRun->mEndOffset = mEndOffset;
         lastRun->mLeftType = WSType::normalWS;
         lastRun->mLeft = normalRun;
@@ -1004,7 +1004,7 @@ nsWSRunObject::GetRuns()
   } else {
     // mStartReason is not WSType::block or WSType::br; set up mStartRun
     mStartRun->mType = WSType::normalWS;
-    mStartRun->mEndNode = GetAsDOMNode(mLastNBSPNode);
+    mStartRun->mEndNode = mLastNBSPNode;
     mStartRun->mEndOffset = mLastNBSPOffset+1;
     mStartRun->mLeftType = mStartReason;
 
@@ -1015,7 +1015,7 @@ nsWSRunObject::GetRuns()
     if ((mLastNBSPNode == mEndNode) && (mLastNBSPOffset == (mEndOffset-1)))
     {
       mStartRun->mRightType = mEndReason;
-      mStartRun->mEndNode   = GetAsDOMNode(mEndNode);
+      mStartRun->mEndNode   = mEndNode;
       mStartRun->mEndOffset = mEndOffset;
       mEndRun = mStartRun;
     }
@@ -1024,7 +1024,7 @@ nsWSRunObject::GetRuns()
       // set up next run
       WSFragment *lastRun = new WSFragment();
       lastRun->mType = WSType::trailingWS;
-      lastRun->mStartNode = GetAsDOMNode(mLastNBSPNode);
+      lastRun->mStartNode = mLastNBSPNode;
       lastRun->mStartOffset = mLastNBSPOffset+1;
       lastRun->mLeftType = WSType::normalWS;
       lastRun->mLeft = mStartRun;
@@ -1056,10 +1056,10 @@ nsWSRunObject::MakeSingleWSRun(WSType aType)
 {
   mStartRun = new WSFragment();
 
-  mStartRun->mStartNode   = GetAsDOMNode(mStartNode);
+  mStartRun->mStartNode   = mStartNode;
   mStartRun->mStartOffset = mStartOffset;
   mStartRun->mType        = aType;
-  mStartRun->mEndNode     = GetAsDOMNode(mEndNode);
+  mStartRun->mEndNode     = mEndNode;
   mStartRun->mEndOffset   = mEndOffset;
   mStartRun->mLeftType    = mStartReason;
   mStartRun->mRightType   = mEndReason;
@@ -1315,7 +1315,7 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
   
   // trim after run of any leading ws
   if (afterRun && (afterRun->mType & WSType::leadingWS)) {
-    res = aEndObject->DeleteChars(GetAsDOMNode(aEndObject->mNode), aEndObject->mOffset, afterRun->mEndNode, afterRun->mEndOffset,
+    res = aEndObject->DeleteChars(GetAsDOMNode(aEndObject->mNode), aEndObject->mOffset, GetAsDOMNode(afterRun->mEndNode), afterRun->mEndOffset,
                                   eOutsideUserSelectAll);
     NS_ENSURE_SUCCESS(res, res);
   }
@@ -1336,7 +1336,7 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
   }
   // trim before run of any trailing ws
   if (beforeRun && (beforeRun->mType & WSType::trailingWS)) {
-    res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, GetAsDOMNode(mNode), mOffset,
+    res = DeleteChars(GetAsDOMNode(beforeRun->mStartNode), beforeRun->mStartOffset, GetAsDOMNode(mNode), mOffset,
                       eOutsideUserSelectAll);
     NS_ENSURE_SUCCESS(res, res);
   } else if (beforeRun && beforeRun->mType == WSType::normalWS && !mPRE) {
@@ -1758,7 +1758,7 @@ nsWSRunObject::FindRun(nsIDOMNode *aNode, int32_t aOffset, WSFragment **outRun, 
   WSFragment *run = mStartRun;
   while (run)
   {
-    int16_t comp = nsContentUtils::ComparePoints(aNode, aOffset, run->mStartNode,
+    int16_t comp = nsContentUtils::ComparePoints(aNode, aOffset, GetAsDOMNode(run->mStartNode),
                                                  run->mStartOffset);
     if (comp <= 0)
     {
@@ -1773,7 +1773,7 @@ nsWSRunObject::FindRun(nsIDOMNode *aNode, int32_t aOffset, WSFragment **outRun, 
       return;
     }
     comp = nsContentUtils::ComparePoints(aNode, aOffset,
-                                         run->mEndNode, run->mEndOffset);
+                                         GetAsDOMNode(run->mEndNode), run->mEndOffset);
     if (comp < 0)
     {
       *outRun = run;
@@ -1945,7 +1945,7 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
   }
   
   // first check for trailing nbsp
-  WSPoint thePoint = GetCharBefore(aRun->mEndNode, aRun->mEndOffset);
+  WSPoint thePoint = GetCharBefore(GetAsDOMNode(aRun->mEndNode), aRun->mEndOffset);
   if (thePoint.mTextNode && thePoint.mChar == nbsp) {
     // now check that what is to the left of it is compatible with replacing nbsp with space
     WSPoint prevPoint = GetCharBefore(thePoint);
@@ -1990,11 +1990,11 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
         // soft wrapped lines, and lets the user see 2 spaces when they type 2 spaces.
 
         nsCOMPtr<nsIDOMNode> brNode;
-        res = mHTMLEditor->CreateBR(aRun->mEndNode, aRun->mEndOffset, address_of(brNode));
+        res = mHTMLEditor->CreateBR(GetAsDOMNode(aRun->mEndNode), aRun->mEndOffset, address_of(brNode));
         NS_ENSURE_SUCCESS(res, res);
 
         // refresh thePoint, prevPoint
-        thePoint = GetCharBefore(aRun->mEndNode, aRun->mEndOffset);
+        thePoint = GetCharBefore(GetAsDOMNode(aRun->mEndNode), aRun->mEndOffset);
         prevPoint = GetCharBefore(thePoint);
         rightCheck = true;
       }
@@ -2153,7 +2153,7 @@ nsWSRunObject::Scrub()
   while (run)
   {
     if (run->mType & (WSType::leadingWS | WSType::trailingWS)) {
-      nsresult res = DeleteChars(run->mStartNode, run->mStartOffset, run->mEndNode, run->mEndOffset);
+      nsresult res = DeleteChars(GetAsDOMNode(run->mStartNode), run->mStartOffset, GetAsDOMNode(run->mEndNode), run->mEndOffset);
       NS_ENSURE_SUCCESS(res, res);
     }
     run = run->mRight;
