@@ -543,7 +543,8 @@ CacheFileInputStream::EnsureCorrectChunk(bool aReleaseOnly)
     return;
   }
 
-  rv = mFile->GetChunkLocked(chunkIdx, false, this, getter_AddRefs(mChunk));
+  rv = mFile->GetChunkLocked(chunkIdx, CacheFile::READER, this,
+                             getter_AddRefs(mChunk));
   if (NS_FAILED(rv)) {
     LOG(("CacheFileInputStream::EnsureCorrectChunk() - GetChunkLocked failed. "
          "[this=%p, idx=%d, rv=0x%08x]", this, chunkIdx, rv));

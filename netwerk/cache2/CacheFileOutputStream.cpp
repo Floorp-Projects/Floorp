@@ -345,7 +345,8 @@ CacheFileOutputStream::EnsureCorrectChunk(bool aReleaseOnly)
     return;
 
   nsresult rv;
-  rv = mFile->GetChunkLocked(chunkIdx, true, nullptr, getter_AddRefs(mChunk));
+  rv = mFile->GetChunkLocked(chunkIdx, CacheFile::WRITER, nullptr,
+                             getter_AddRefs(mChunk));
   if (NS_FAILED(rv)) {
     LOG(("CacheFileOutputStream::EnsureCorrectChunk() - GetChunkLocked failed. "
          "[this=%p, idx=%d, rv=0x%08x]", this, chunkIdx, rv));
