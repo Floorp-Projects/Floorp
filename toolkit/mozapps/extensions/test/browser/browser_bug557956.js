@@ -75,7 +75,7 @@ function install_test_addons(aCallback) {
         // Switch to the test update URL
         Services.prefs.setCharPref(PREF_UPDATEURL, TESTROOT + "browser_bug557956.rdf");
 
-        aCallback();
+        executeSoon(aCallback);
       }
     }
   };

@@ -566,7 +566,7 @@ add_test(function() {
 
       is(installBtn.hidden, true, "Install button should be hidden after install ended");
       check_filtered_results(QUERY, "relevancescore", false);
-      run_next_test();
+      executeSoon(run_next_test);
     }
   }
 
