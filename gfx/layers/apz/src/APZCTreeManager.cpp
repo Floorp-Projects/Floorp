@@ -83,12 +83,6 @@ APZCTreeManager::SetAllowedTouchBehavior(const ScrollableLayerGuid& aGuid,
   }
 }
 
-void
-APZCTreeManager::AssertOnCompositorThread()
-{
-  Compositor::AssertOnCompositorThread();
-}
-
 /* Flatten the tree of APZC instances into the given nsTArray */
 static void
 Collect(AsyncPanZoomController* aApzc, nsTArray< nsRefPtr<AsyncPanZoomController> >* aCollection)
@@ -104,7 +98,9 @@ void
 APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor, Layer* aRoot,
                                              bool aIsFirstPaint, uint64_t aFirstPaintLayersId)
 {
-  AssertOnCompositorThread();
+  if (AsyncPanZoomController::GetThreadAssertionsEnabled()) {
+    Compositor::AssertOnCompositorThread();
+  }
 
   MonitorAutoLock lock(mTreeLock);
 

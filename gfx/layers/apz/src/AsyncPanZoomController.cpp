@@ -330,6 +330,7 @@ static inline void LogRendertraceRect(const ScrollableLayerGuid& aGuid, const ch
 }
 
 static TimeStamp sFrameTime;
+static bool sThreadAssertionsEnabled = true;
 
 // Counter used to give each APZC a unique id
 static uint32_t sAsyncPanZoomControllerCount = 0;
@@ -437,6 +438,16 @@ private:
 void
 AsyncPanZoomController::SetFrameTime(const TimeStamp& aTime) {
   sFrameTime = aTime;
+}
+
+void
+AsyncPanZoomController::SetThreadAssertionsEnabled(bool aEnabled) {
+  sThreadAssertionsEnabled = aEnabled;
+}
+
+bool
+AsyncPanZoomController::GetThreadAssertionsEnabled() {
+  return sThreadAssertionsEnabled;
 }
 
 /*static*/ void
