@@ -25,19 +25,172 @@ using namespace mozilla;
 
 namespace mozilla {
 
+using namespace gl;
+
 bool
-IsGLDepthFormat(GLenum internalFormat)
+IsGLDepthFormat(GLenum webGLFormat)
 {
-    return (internalFormat == LOCAL_GL_DEPTH_COMPONENT ||
-            internalFormat == LOCAL_GL_DEPTH_COMPONENT16 ||
-            internalFormat == LOCAL_GL_DEPTH_COMPONENT32);
+    return (webGLFormat == LOCAL_GL_DEPTH_COMPONENT ||
+            webGLFormat == LOCAL_GL_DEPTH_COMPONENT16 ||
+            webGLFormat == LOCAL_GL_DEPTH_COMPONENT32);
 }
 
 bool
-IsGLDepthStencilFormat(GLenum internalFormat)
+IsGLDepthStencilFormat(GLenum webGLFormat)
 {
-    return (internalFormat == LOCAL_GL_DEPTH_STENCIL ||
-            internalFormat == LOCAL_GL_DEPTH24_STENCIL8);
+    return (webGLFormat == LOCAL_GL_DEPTH_STENCIL ||
+            webGLFormat == LOCAL_GL_DEPTH24_STENCIL8);
+}
+
+bool
+FormatHasAlpha(GLenum webGLFormat)
+{
+    return webGLFormat == LOCAL_GL_RGBA ||
+           webGLFormat == LOCAL_GL_LUMINANCE_ALPHA ||
+           webGLFormat == LOCAL_GL_ALPHA ||
+           webGLFormat == LOCAL_GL_RGBA4 ||
+           webGLFormat == LOCAL_GL_RGB5_A1 ||
+           webGLFormat == LOCAL_GL_SRGB_ALPHA;
+}
+
+/**
+ * Convert WebGL/ES format and type into GL format and GL internal
+ * format valid for underlying driver.
+ */
+void
+DriverFormatsFromFormatAndType(GLContext* gl, GLenum webGLFormat, GLenum webGLType,
+                               GLenum* out_driverInternalFormat, GLenum* out_driverFormat)
+{
+    MOZ_ASSERT(out_driverInternalFormat, "out_driverInternalFormat can't be nullptr.");
+    MOZ_ASSERT(out_driverFormat, "out_driverFormat can't be nullptr.");
+    if (!out_driverInternalFormat || !out_driverFormat)
+        return;
+
+    // ES2 requires that format == internalformat; floating-point is
+    // indicated purely by the type that's loaded.  For desktop GL, we
+    // have to specify a floating point internal format.
+    if (gl->IsGLES()) {
+        *out_driverInternalFormat = webGLFormat;
+        *out_driverFormat = webGLFormat;
+
+        return;
+    }
+
+    GLenum format = webGLFormat;
+    GLenum internalFormat = LOCAL_GL_NONE;
+
+    if (format == LOCAL_GL_DEPTH_COMPONENT) {
+        if (webGLType == LOCAL_GL_UNSIGNED_SHORT)
+            internalFormat = LOCAL_GL_DEPTH_COMPONENT16;
+        else if (webGLType == LOCAL_GL_UNSIGNED_INT)
+            internalFormat = LOCAL_GL_DEPTH_COMPONENT32;
+    } else if (format == LOCAL_GL_DEPTH_STENCIL) {
+        if (webGLType == LOCAL_GL_UNSIGNED_INT_24_8_EXT)
+            internalFormat = LOCAL_GL_DEPTH24_STENCIL8;
+    } else {
+        switch (webGLType) {
+        case LOCAL_GL_UNSIGNED_BYTE:
+        case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
+        case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
+        case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
+            internalFormat = format;
+            break;
+
+        case LOCAL_GL_FLOAT:
+            switch (format) {
+            case LOCAL_GL_RGBA:
+                internalFormat = LOCAL_GL_RGBA32F;
+                break;
+
+            case LOCAL_GL_RGB:
+                internalFormat = LOCAL_GL_RGB32F;
+                break;
+
+            case LOCAL_GL_ALPHA:
+                internalFormat = LOCAL_GL_ALPHA32F_ARB;
+                break;
+
+            case LOCAL_GL_LUMINANCE:
+                internalFormat = LOCAL_GL_LUMINANCE32F_ARB;
+                break;
+
+            case LOCAL_GL_LUMINANCE_ALPHA:
+                internalFormat = LOCAL_GL_LUMINANCE_ALPHA32F_ARB;
+                break;
+            }
+            break;
+
+        case LOCAL_GL_HALF_FLOAT_OES:
+            switch (format) {
+            case LOCAL_GL_RGBA:
+                internalFormat = LOCAL_GL_RGBA16F;
+                break;
+
+            case LOCAL_GL_RGB:
+                internalFormat = LOCAL_GL_RGB16F;
+                break;
+
+            case LOCAL_GL_ALPHA:
+                internalFormat = LOCAL_GL_ALPHA16F_ARB;
+                break;
+
+            case LOCAL_GL_LUMINANCE:
+                internalFormat = LOCAL_GL_LUMINANCE16F_ARB;
+                break;
+
+            case LOCAL_GL_LUMINANCE_ALPHA:
+                internalFormat = LOCAL_GL_LUMINANCE_ALPHA16F_ARB;
+                break;
+            }
+            break;
+
+        default:
+            break;
+        }
+
+        // Handle ES2 and GL differences when supporting sRGB internal formats. GL ES
+        // requires that format == internalformat, but GL will fail in this case.
+        // GL requires:
+        //      format  ->  internalformat
+        //      GL_RGB      GL_SRGB_EXT
+        //      GL_RGBA     GL_SRGB_ALPHA_EXT
+        switch (format) {
+        case LOCAL_GL_SRGB:
+            internalFormat = format;
+            format = LOCAL_GL_RGB;
+            break;
+
+        case LOCAL_GL_SRGB_ALPHA:
+            internalFormat = format;
+            format = LOCAL_GL_RGBA;
+            break;
+        }
+    }
+
+    MOZ_ASSERT(format != LOCAL_GL_NONE && internalFormat != LOCAL_GL_NONE,
+               "Coding mistake -- bad format/type passed?");
+
+    *out_driverInternalFormat = internalFormat;
+    *out_driverFormat = format;
+}
+
+GLenum
+DriverTypeFromType(GLContext* gl, GLenum webGLType)
+{
+    if (gl->IsGLES())
+        return webGLType;
+
+    // convert type for half float if not on GLES2
+    GLenum type = webGLType;
+    if (type == LOCAL_GL_HALF_FLOAT_OES) {
+        if (gl->IsSupported(gl::GLFeature::texture_half_float)) {
+            return LOCAL_GL_HALF_FLOAT;
+        } else {
+            MOZ_ASSERT(gl->IsExtensionSupported(gl::GLContext::OES_texture_half_float));
+        }
+    }
+
+    return webGLType;
 }
 
 } // namespace mozilla
