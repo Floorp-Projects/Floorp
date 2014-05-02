@@ -59,7 +59,7 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
         });
 
         mInflated = true;
-        GeckoAppShell.getEventDispatcher().registerEventListener("TextSelection:Data", this);
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, "TextSelection:Data");
     }
 
     public void show() {
@@ -88,7 +88,7 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
         if (!mInflated) {
             return;
         }
-        GeckoAppShell.getEventDispatcher().unregisterEventListener("TextSelection:Data", this);
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "TextSelection:Data");
     }
 
     // TextWatcher implementation

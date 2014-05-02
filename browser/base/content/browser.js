@@ -1206,8 +1206,6 @@ var gBrowserInit = {
 
       SocialUI.init();
       TabView.init();
-
-      setTimeout(function () { BrowserChromeTest.markAsReady(); }, 0);
     });
     this.delayedStartupFinished = true;
 
@@ -4786,8 +4784,11 @@ const nodeToTooltipMap = {
   "print-button": "printButton.tooltip",
 #endif
   "new-window-button": "newWindowButton.tooltip",
+  "new-tab-button": "newTabButton.tooltip",
+  "tabs-newtab-button": "newTabButton.tooltip",
   "fullscreen-button": "fullscreenButton.tooltip",
   "tabview-button": "tabviewButton.tooltip",
+  "downloads-button": "downloads.tooltip",
 };
 const nodeToShortcutMap = {
   "bookmarks-menu-button": "manBookmarkKb",
@@ -4795,12 +4796,15 @@ const nodeToShortcutMap = {
   "print-button": "printKb",
 #endif
   "new-window-button": "key_newNavigator",
+  "new-tab-button": "key_newNavigatorTab",
+  "tabs-newtab-button": "key_newNavigatorTab",
   "fullscreen-button": "key_fullScreen",
   "tabview-button": "key_tabview",
+  "downloads-button": "key_openDownloads"
 };
 const gDynamicTooltipCache = new Map();
 function UpdateDynamicShortcutTooltipText(aTooltip) {
-  let nodeId = aTooltip.triggerNode.id;
+  let nodeId = aTooltip.triggerNode.id || aTooltip.triggerNode.getAttribute("anonid");
   if (!gDynamicTooltipCache.has(nodeId) && nodeId in nodeToTooltipMap) {
     let strId = nodeToTooltipMap[nodeId];
     let args = [];
@@ -7178,23 +7182,6 @@ function focusNextFrame(event) {
   if (element.ownerDocument == document)
     focusAndSelectUrlBar();
 }
-let BrowserChromeTest = {
-  _cb: null,
-  _ready: false,
-  markAsReady: function () {
-    this._ready = true;
-    if (this._cb) {
-      this._cb();
-      this._cb = null;
-    }
-  },
-  runWhenReady: function (cb) {
-    if (this._ready)
-      cb();
-    else
-      this._cb = cb;
-  }
-};
 
 function BrowserOpenNewTabOrWindow(event) {
   if (event.shiftKey) {

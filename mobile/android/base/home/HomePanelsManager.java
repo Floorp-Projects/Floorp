@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.db.HomeProvider;
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.PanelInfoManager.PanelInfo;
 import org.mozilla.gecko.home.PanelInfoManager.RequestCallback;
@@ -85,10 +85,11 @@ public class HomePanelsManager implements GeckoEventListener {
         mContext = context;
         mHomeConfig = HomeConfig.getDefault(context);
 
-        GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_INSTALL, this);
-        GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_UNINSTALL, this);
-        GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_UPDATE, this);
-        GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_REFRESH, this);
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+            EVENT_HOMEPANELS_INSTALL,
+            EVENT_HOMEPANELS_UNINSTALL,
+            EVENT_HOMEPANELS_UPDATE,
+            EVENT_HOMEPANELS_REFRESH);
     }
 
     public void onLocaleReady(final String locale) {

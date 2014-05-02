@@ -11,6 +11,7 @@ import java.util.List;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.DataReportingNotification;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoActivityStatus;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
@@ -145,7 +146,8 @@ public class GeckoPreferences
             addPreferencesFromResource(res);
         }
 
-        registerEventListener("Sanitize:Finished");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+            "Sanitize:Finished");
 
         // Add handling for long-press click.
         // This is only for Android 3.0 and below (which use the long-press-context-menu paradigm).
@@ -223,7 +225,8 @@ public class GeckoPreferences
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterEventListener("Sanitize:Finished");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+            "Sanitize:Finished");
         if (mPrefsRequestId > 0) {
             PrefsHelper.removeObserver(mPrefsRequestId);
         }
@@ -898,14 +901,6 @@ public class GeckoPreferences
                 });
             }
         });
-    }
-
-    private void registerEventListener(String event) {
-        GeckoAppShell.getEventDispatcher().registerEventListener(event, this);
-    }
-
-    private void unregisterEventListener(String event) {
-        GeckoAppShell.getEventDispatcher().unregisterEventListener(event, this);
     }
 
     @Override
