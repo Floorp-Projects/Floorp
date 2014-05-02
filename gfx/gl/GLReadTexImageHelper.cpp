@@ -301,27 +301,27 @@ static void CopyDataSourceSurface(DataSourceSurface* aSource,
 }
 
 static int
-CalcStride(int width, int pixelSize, int alignment)
+CalcRowStride(int width, int pixelSize, int alignment)
 {
     MOZ_ASSERT(alignment);
 
-    int stride = width * pixelSize;
-    if (stride % alignment) { // Extra at the end of the line?
-        int alignmentCount = stride / alignment;
-        stride = (alignmentCount+1) * alignment;
+    int rowStride = width * pixelSize;
+    if (rowStride % alignment) { // Extra at the end of the line?
+        int alignmentCount = rowStride / alignment;
+        rowStride = (alignmentCount+1) * alignment;
     }
-    return stride;
+    return rowStride;
 }
 
 static int
-GuessAlignment(int width, int pixelSize, int stride)
+GuessAlignment(int width, int pixelSize, int rowStride)
 {
     int alignment = 8; // Max GLES allows.
-    while (CalcStride(width, pixelSize, alignment) != stride) {
+    while (CalcRowStride(width, pixelSize, alignment) != rowStride) {
         alignment /= 2;
         if (!alignment) {
-            MOZ_ASSERT(alignment);
-            return 1;
+            NS_WARNING("Bad alignment for GLES. Will use temp surf for readback.");
+            return 0;
         }
     }
     return alignment;
@@ -375,8 +375,18 @@ ReadPixelsIntoImageSurface(GLContext* gl, gfxImageSurface* dest) {
 
     nsAutoPtr<gfxImageSurface> tempSurf;
     gfxImageSurface* readSurf = nullptr;
-    int readAlignment = 0;
-    if (needsTempSurf) {
+
+    // Figure out alignment. We don't need to know why, we just need it
+    // to be valid.
+    int readAlignment = GuessAlignment(dest->Width(),
+                                       destPixelSize,
+                                       dest->Stride());
+    if (!readAlignment) // Couldn't calculate a valid alignment.
+        needsTempSurf = true;
+
+    if (!needsTempSurf) {
+        readSurf = dest;
+    } else {
         if (gl->DebugMode()) {
             NS_WARNING("Needing intermediary surface for ReadPixels. This will be slow!");
         }
@@ -425,13 +435,6 @@ ReadPixelsIntoImageSurface(GLContext* gl, gfxImageSurface* dest) {
                                        SurfaceFormatToImageFormat(readFormatGFX),
                                        false);
         readSurf = tempSurf;
-    } else {
-        // Figure out alignment. We don't need to know why, we just need it
-        // to be valid.
-        readAlignment = GuessAlignment(dest->Width(),
-                                       destPixelSize,
-                                       dest->Stride());
-        readSurf = dest;
     }
     MOZ_ASSERT(readAlignment);
 
