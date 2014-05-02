@@ -48,11 +48,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef struct nr_socket_buffered_stun_ {
   nr_socket *inner;
   nr_transport_addr remote_addr;
+  int connected;
 
   /* Read state */
   int read_state;
-#define NR_ICE_SOCKET_READ_NONE 0
-#define NR_ICE_SOCKET_READ_HDR  1
+#define NR_ICE_SOCKET_READ_NONE   0
+#define NR_ICE_SOCKET_READ_HDR    1
 #define NR_ICE_SOCKET_READ_FAILED 2
   UCHAR *buffer;
   size_t buffer_size;
@@ -91,6 +92,21 @@ static nr_socket_vtbl nr_socket_buffered_stun_vtbl={
   nr_socket_buffered_stun_close
 };
 
+int nr_socket_buffered_set_connected_to(nr_socket *sock, nr_transport_addr *remote_addr)
+{
+  nr_socket_buffered_stun *buf_sock = (nr_socket_buffered_stun *)sock->obj;
+  int r, _status;
+
+  if ((r=nr_transport_addr_copy(&buf_sock->remote_addr, remote_addr)))
+    ABORT(r);
+
+  buf_sock->connected = 1;
+
+  _status=0;
+abort:
+  return(_status);
+}
+
 int nr_socket_buffered_stun_create(nr_socket *inner, int max_pending, nr_socket **sockp)
 {
   int r, _status;
@@ -107,9 +123,11 @@ int nr_socket_buffered_stun_create(nr_socket *inner, int max_pending, nr_socket 
   /* TODO(ekr@rtfm.com): Check this */
   if (!(sock->buffer = RMALLOC(NR_STUN_MAX_MESSAGE_SIZE)))
     ABORT(R_NO_MEMORY);
+
   sock->read_state = NR_ICE_SOCKET_READ_NONE;
   sock->buffer_size = NR_STUN_MAX_MESSAGE_SIZE;
   sock->bytes_needed = sizeof(nr_stun_message_header);
+  sock->connected = 0;
 
   STAILQ_INIT(&sock->pending_writes);
   if ((r=nr_p_buf_ctx_create(NR_STUN_MAX_MESSAGE_SIZE, &sock->p_bufs)))
@@ -284,8 +302,25 @@ static int nr_socket_buffered_stun_getaddr(void *obj, nr_transport_addr *addrp)
 static int nr_socket_buffered_stun_close(void *obj)
 {
   nr_socket_buffered_stun *sock = (nr_socket_buffered_stun *)obj;
+  NR_SOCKET fd;
+
+  /* Cancel waiting on the socket */
+  if (sock->inner && !nr_socket_getfd(sock->inner, &fd)) {
+    NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_WRITE);
+  }
 
   return nr_socket_close(sock->inner);
+}
+
+static void nr_socket_buffered_stun_connected_cb(NR_SOCKET s, int how, void *arg)
+{
+  nr_socket_buffered_stun *sock = (nr_socket_buffered_stun *)arg;
+
+  assert(!sock->connected);
+
+  sock->connected = 1;
+  if (sock->pending)
+    nr_socket_buffered_stun_writable_cb(s, how, arg);
 }
 
 static int nr_socket_buffered_stun_connect(void *obj, nr_transport_addr *addr)
@@ -296,8 +331,20 @@ static int nr_socket_buffered_stun_connect(void *obj, nr_transport_addr *addr)
   if ((r=nr_transport_addr_copy(&sock->remote_addr, addr)))
     ABORT(r);
 
-  if ((r=nr_socket_connect(sock->inner, addr)))
+  if ((r=nr_socket_connect(sock->inner, addr))) {
+    if (r == R_WOULDBLOCK) {
+      NR_SOCKET fd;
+
+      if ((r=nr_socket_getfd(sock->inner, &fd)))
+        ABORT(r);
+
+      NR_ASYNC_WAIT(fd, NR_ASYNC_WAIT_WRITE, nr_socket_buffered_stun_connected_cb, sock);
+      ABORT(R_WOULDBLOCK);
+    }
     ABORT(r);
+  } else {
+    sock->connected = 1;
+  }
 
   _status=0;
 abort:
@@ -320,7 +367,7 @@ static int nr_socket_buffered_stun_write(void *obj,const void *msg, size_t len, 
   }
 
 
-  if (!sock->pending) {
+  if (sock->connected && !sock->pending) {
     r = nr_socket_write(sock->inner, msg, len, &written2, 0);
     if (r) {
       if (r != R_WOULDBLOCK)
