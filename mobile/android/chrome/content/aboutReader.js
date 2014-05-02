@@ -322,6 +322,10 @@ AboutReader.prototype = {
       url: this._article.url,
       title: this._article.title
     });
+
+    // Create a relative timestamp for telemetry
+    let uptime = Date.now() - Services.startup.getStartupInfo().linkerInitialized;
+    UITelemetry.addEvent("share.1", "list", uptime);
   },
 
   _setFontSize: function Reader_setFontSize(newFontSize) {
