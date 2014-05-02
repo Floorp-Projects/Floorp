@@ -643,7 +643,7 @@ nsBufferedOutputStream::Flush()
     // |<-------------->|<---|----->|
     // b                a    c      s
     uint32_t rem = mFillPoint - amt;
-    memcpy(mBuffer, mBuffer + amt, rem);
+    memmove(mBuffer, mBuffer + amt, rem);
     mFillPoint = mCursor = rem;
     return NS_ERROR_FAILURE;        // didn't flush all
 }
@@ -698,7 +698,7 @@ nsBufferedOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, u
         if (left == 0) {
             rv = Flush();
             if (NS_FAILED(rv))
-              return rv;
+                return (*_retval > 0) ? NS_OK : rv;
 
             continue;
         }
