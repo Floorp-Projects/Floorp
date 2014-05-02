@@ -17,6 +17,12 @@
 namespace mozilla {
 namespace net {
 
+void
+RemoteOpenFileParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Implement me! Bug 1005186
+}
+
 bool
 RemoteOpenFileParent::OpenSendCloseDelete()
 {

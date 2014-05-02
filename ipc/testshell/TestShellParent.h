@@ -24,6 +24,8 @@ class TestShellCommandParent;
 class TestShellParent : public PTestShellParent
 {
 public:
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
   PTestShellCommandParent*
   AllocPTestShellCommandParent(const nsString& aCommand);
 

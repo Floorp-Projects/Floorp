@@ -26,6 +26,8 @@ public:
 
   virtual bool IsBrowserStream() MOZ_OVERRIDE { return false; }
 
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
   virtual bool AnswerNPN_Write(const Buffer& data, int32_t* written) MOZ_OVERRIDE;
 
   virtual bool Answer__delete__(const NPError& reason, const bool& artificial) MOZ_OVERRIDE;

@@ -171,6 +171,7 @@ public:
 
 private:
   // IPC
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
   bool RecvAsyncPreload(const nsCString& aScope, const bool& aPriority);
   bool RecvPreload(const nsCString& aScope, const uint32_t& aAlreadyLoadedCount,
                    InfallibleTArray<nsString>* aKeys, InfallibleTArray<nsString>* aValues,

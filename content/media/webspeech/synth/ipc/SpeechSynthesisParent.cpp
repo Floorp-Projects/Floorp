@@ -18,6 +18,12 @@ SpeechSynthesisParent::~SpeechSynthesisParent()
   MOZ_COUNT_DTOR(SpeechSynthesisParent);
 }
 
+void
+SpeechSynthesisParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Implement me! Bug 1005141
+}
+
 bool
 SpeechSynthesisParent::RecvReadVoiceList(InfallibleTArray<RemoteVoice>* aVoices,
                                          InfallibleTArray<nsString>* aDefaults)
@@ -79,6 +85,12 @@ SpeechSynthesisRequestParent::~SpeechSynthesisRequestParent()
   }
 
   MOZ_COUNT_DTOR(SpeechSynthesisRequestParent);
+}
+
+void
+SpeechSynthesisRequestParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Implement me! Bug 1005141
 }
 
 bool

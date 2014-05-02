@@ -22,6 +22,8 @@ class SpeechSynthesisParent : public PSpeechSynthesisParent
   friend class SpeechSynthesisRequestParent;
 
 public:
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
   bool RecvReadVoiceList(InfallibleTArray<RemoteVoice>* aVoices,
                          InfallibleTArray<nsString>* aDefaults) MOZ_OVERRIDE;
 
@@ -56,6 +58,8 @@ public:
   nsRefPtr<SpeechTaskParent> mTask;
 
 protected:
+
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   virtual bool RecvPause() MOZ_OVERRIDE;
 

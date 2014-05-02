@@ -34,6 +34,8 @@ public:
     mDestructionFlag = nullptr;
   }
 
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
 private:
   bool RecvRedirectNotifyResponse(const bool& allow) MOZ_OVERRIDE;
 

@@ -80,6 +80,8 @@ public:
   virtual bool IsSameProcess() const MOZ_OVERRIDE;
 
 protected:
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
   virtual bool RecvUpdate(const EditArray& cset,
                           const TargetConfig& targetConfig,
                           const bool& isFirstPaint,
