@@ -489,104 +489,89 @@ nsWSRunObject::DeleteWSForward()
 }
 
 void
-nsWSRunObject::PriorVisibleNode(nsIDOMNode *aNode, 
-                                int32_t aOffset, 
-                                nsCOMPtr<nsIDOMNode> *outVisNode, 
-                                int32_t *outVisOffset,
-                                WSType *outType)
+nsWSRunObject::PriorVisibleNode(nsINode* aNode,
+                                int32_t aOffset,
+                                nsCOMPtr<nsINode>* outVisNode,
+                                int32_t* outVisOffset,
+                                WSType* outType)
 {
-  // Find first visible thing before the point.  position outVisNode/outVisOffset
-  // just _after_ that thing.  If we don't find anything return start of ws.
+  // Find first visible thing before the point.  Position
+  // outVisNode/outVisOffset just _after_ that thing.  If we don't find
+  // anything return start of ws.
   MOZ_ASSERT(aNode && outVisNode && outVisOffset && outType);
-    
-  *outType = WSType::none;
-  WSFragment *run;
-  FindRun(aNode, aOffset, &run, false);
-  
-  // is there a visible run there or earlier?
-  while (run)
-  {
+
+  WSFragment* run;
+  FindRun(GetAsDOMNode(aNode), aOffset, &run, false);
+
+  // Is there a visible run there or earlier?
+  for (; run; run = run->mLeft) {
     if (run->mType == WSType::normalWS) {
-      WSPoint point = GetCharBefore(aNode, aOffset);
-      if (point.mTextNode)
-      {
-        *outVisNode = do_QueryInterface(point.mTextNode);
-        *outVisOffset = point.mOffset+1;
-        if (nsCRT::IsAsciiSpace(point.mChar) || (point.mChar==nbsp))
-        {
+      WSPoint point = GetCharBefore(GetAsDOMNode(aNode), aOffset);
+      if (point.mTextNode) {
+        *outVisNode = point.mTextNode;
+        *outVisOffset = point.mOffset + 1;
+        if (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == nbsp) {
           *outType = WSType::normalWS;
-        }
-        else if (!point.mChar)
-        {
+        } else if (!point.mChar) {
           // MOOSE: not possible?
           *outType = WSType::none;
-        }
-        else
-        {
+        } else {
           *outType = WSType::text;
         }
         return;
       }
-      // else if no text node then keep looking.  We should eventually fall out of loop
+      // If no text node, keep looking.  We should eventually fall out of loop
     }
-
-    run = run->mLeft;
   }
-  
-  // if we get here then nothing in ws data to find.  return start reason
-  *outVisNode = GetAsDOMNode(mStartReasonNode);
-  *outVisOffset = mStartOffset;  // this really isn't meaningful if mStartReasonNode!=mStartNode
+
+  // If we get here, then nothing in ws data to find.  Return start reason.
+  *outVisNode = mStartReasonNode;
+  // This really isn't meaningful if mStartReasonNode != mStartNode
+  *outVisOffset = mStartOffset;
   *outType = mStartReason;
 }
 
 
 void
-nsWSRunObject::NextVisibleNode (nsIDOMNode *aNode, 
-                                int32_t aOffset, 
-                                nsCOMPtr<nsIDOMNode> *outVisNode, 
-                                int32_t *outVisOffset,
-                                WSType *outType)
+nsWSRunObject::NextVisibleNode(nsINode* aNode,
+                               int32_t aOffset,
+                               nsCOMPtr<nsINode>* outVisNode,
+                               int32_t* outVisOffset,
+                               WSType* outType)
 {
-  // Find first visible thing after the point.  position outVisNode/outVisOffset
-  // just _before_ that thing.  If we don't find anything return end of ws.
+  // Find first visible thing after the point.  Position
+  // outVisNode/outVisOffset just _before_ that thing.  If we don't find
+  // anything return end of ws.
   MOZ_ASSERT(aNode && outVisNode && outVisOffset && outType);
-    
-  WSFragment *run;
-  FindRun(aNode, aOffset, &run, true);
-  
-  // is there a visible run there or later?
-  while (run)
-  {
+
+  WSFragment* run;
+  FindRun(GetAsDOMNode(aNode), aOffset, &run, true);
+
+  // Is there a visible run there or later?
+  for (; run; run = run->mRight) {
     if (run->mType == WSType::normalWS) {
-      WSPoint point = GetCharAfter(aNode, aOffset);
-      if (point.mTextNode)
-      {
-        *outVisNode = do_QueryInterface(point.mTextNode);
+      WSPoint point = GetCharAfter(GetAsDOMNode(aNode), aOffset);
+      if (point.mTextNode) {
+        *outVisNode = point.mTextNode;
         *outVisOffset = point.mOffset;
-        if (nsCRT::IsAsciiSpace(point.mChar) || (point.mChar==nbsp))
-        {
+        if (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == nbsp) {
           *outType = WSType::normalWS;
-        }
-        else if (!point.mChar)
-        {
+        } else if (!point.mChar) {
           // MOOSE: not possible?
           *outType = WSType::none;
-        }
-        else
-        {
+        } else {
           *outType = WSType::text;
         }
         return;
       }
-      // else if no text node then keep looking.  We should eventually fall out of loop
+      // If no text node, keep looking.  We should eventually fall out of loop
     }
-
-    run = run->mRight;
   }
-  
-  // if we get here then nothing in ws data to find.  return end reason
-  *outVisNode = GetAsDOMNode(mEndReasonNode);
-  *outVisOffset = mEndOffset; // this really isn't meaningful if mEndReasonNode!=mEndNode
+
+  // If we get here, then nothing in ws data to find.  Return end reason
+  *outVisNode = mEndReasonNode;
+  // This really isn't meaningful if mEndReasonNode != mEndNode
+  *outVisOffset = mEndOffset;
   *outType = mEndReason;
 }
 
