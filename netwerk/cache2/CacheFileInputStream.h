@@ -38,6 +38,8 @@ public:
   // Memory reporting
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
+  uint32_t GetPosition() const { return mPos; };
+
 private:
   virtual ~CacheFileInputStream();
 
