@@ -35,21 +35,21 @@ public final class OrderedBroadcastHelper
     public OrderedBroadcastHelper(Context context) {
         mContext = context;
 
-        EventDispatcher dispatcher = GeckoAppShell.getEventDispatcher();
+        EventDispatcher dispatcher = EventDispatcher.getInstance();
         if (dispatcher == null) {
             Log.e(LOGTAG, "Gecko event dispatcher must not be null", new RuntimeException());
             return;
         }
-        dispatcher.registerEventListener(SEND_EVENT, this);
+        dispatcher.registerGeckoThreadListener(this, SEND_EVENT);
     }
 
     public synchronized void uninit() {
-        EventDispatcher dispatcher = GeckoAppShell.getEventDispatcher();
+        EventDispatcher dispatcher = EventDispatcher.getInstance();
         if (dispatcher == null) {
             Log.e(LOGTAG, "Gecko event dispatcher must not be null", new RuntimeException());
             return;
         }
-        dispatcher.unregisterEventListener(SEND_EVENT, this);
+        dispatcher.unregisterGeckoThreadListener(this, SEND_EVENT);
     }
 
     @Override

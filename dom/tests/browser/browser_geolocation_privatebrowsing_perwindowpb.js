@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 function test() {
   var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
   let baseProvider = "http://mochi.test:8888/browser/dom/tests/browser/network_geolocation.sjs";
@@ -19,30 +22,35 @@ function test() {
   function testOnWindow(aIsPrivate, aCallback) {
     let win = OpenBrowserWindow({private: aIsPrivate});
     let gotLoad = false;
-    let gotActivate = 
-      (Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager).activeWindow == win);
+    let gotActivate = Services.focus.activeWindow == win;
+
+    function maybeRunCallback() {
+      if (gotLoad && gotActivate) {
+        windowsToClose.push(win);
+        executeSoon(function() { aCallback(win); });
+      }
+    }
+
     if (!gotActivate) {
       win.addEventListener("activate", function onActivate() {
         info("got activate");
         win.removeEventListener("activate", onActivate, true);
         gotActivate = true;
-        if (gotLoad) {
-          windowsToClose.push(win);
-          win.BrowserChromeTest.runWhenReady(function() { aCallback(win) });
-        }
+        maybeRunCallback();
       }, true);
     } else {
       info("Was activated");
     }
-    win.addEventListener("load", function onLoad() {
-      info("Got load");
-      win.removeEventListener("load", onLoad, true);
-      gotLoad = true;
-      if (gotActivate) {
-        windowsToClose.push(win);
-        setTimeout(function() { aCallback(win) }, 1000);
+
+    Services.obs.addObserver(function observer(aSubject, aTopic) {
+      if (win == aSubject) {
+        info("Delayed startup finished");
+        Services.obs.removeObserver(observer, aTopic);
+        gotLoad = true;
+        maybeRunCallback();
       }
-    }, true);
+    }, "browser-delayed-startup-finished", false);
+
   }
 
   testOnWindow(false, function(aNormalWindow) {
