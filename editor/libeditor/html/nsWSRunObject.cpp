@@ -188,72 +188,71 @@ nsWSRunObject::PrepareToSplitAcrossBlocks(nsHTMLEditor *aHTMLEd,
 //   public instance methods
 //--------------------------------------------------------------------------------------------
 
-nsresult 
-nsWSRunObject::InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent, 
-                           int32_t *aInOutOffset, 
-                           nsCOMPtr<nsIDOMNode> *outBRNode, 
+already_AddRefed<Element>
+nsWSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
+                           int32_t* aInOutOffset,
                            nsIEditor::EDirection aSelect)
 {
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
-  // meanwhile, the pre case is handled in WillInsertText in nsHTMLEditRules.cpp
-  NS_ENSURE_TRUE(aInOutParent && aInOutOffset && outBRNode, NS_ERROR_NULL_POINTER);
+  // meanwhile, the pre case is handled in WillInsertText in
+  // nsHTMLEditRules.cpp
+  NS_ENSURE_TRUE(aInOutParent && aInOutOffset, nullptr);
 
   nsresult res = NS_OK;
   WSFragment *beforeRun, *afterRun;
-  FindRun(*aInOutParent, *aInOutOffset, &beforeRun, false);
-  FindRun(*aInOutParent, *aInOutOffset, &afterRun, true);
-  
-  {
-    // some scoping for nsAutoTrackDOMPoint.  This will track our insertion point
-    // while we tweak any surrounding whitespace
-    nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, aInOutParent, aInOutOffset);
+  FindRun(GetAsDOMNode(*aInOutParent), *aInOutOffset, &beforeRun, false);
+  FindRun(GetAsDOMNode(*aInOutParent), *aInOutOffset, &afterRun, true);
 
-    // handle any changes needed to ws run after inserted br
-    if (!afterRun) {
-      // don't need to do anything.  just insert break.  ws won't change.
-    } else if (afterRun->mType & WSType::trailingWS) {
-      // don't need to do anything.  just insert break.  ws won't change.
+  {
+    // Some scoping for nsAutoTrackDOMPoint.  This will track our insertion
+    // point while we tweak any surrounding whitespace
+    nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, aInOutParent,
+                                aInOutOffset);
+
+    // Handle any changes needed to ws run after inserted br
+    if (!afterRun || (afterRun->mType & WSType::trailingWS)) {
+      // Don't need to do anything.  Just insert break.  ws won't change.
     } else if (afterRun->mType & WSType::leadingWS) {
-      // delete the leading ws that is after insertion point.  We don't
-      // have to (it would still not be significant after br), but it's 
+      // Delete the leading ws that is after insertion point.  We don't
+      // have to (it would still not be significant after br), but it's
       // just more aesthetically pleasing to.
-      res = DeleteChars(*aInOutParent, *aInOutOffset, GetAsDOMNode(afterRun->mEndNode), afterRun->mEndOffset,
+      res = DeleteChars(GetAsDOMNode(*aInOutParent), *aInOutOffset,
+                        GetAsDOMNode(afterRun->mEndNode), afterRun->mEndOffset,
                         eOutsideUserSelectAll);
-      NS_ENSURE_SUCCESS(res, res);
+      NS_ENSURE_SUCCESS(res, nullptr);
     } else if (afterRun->mType == WSType::normalWS) {
-      // need to determine if break at front of non-nbsp run.  if so
-      // convert run to nbsp.
-      WSPoint thePoint = GetCharAfter(*aInOutParent, *aInOutOffset);
+      // Need to determine if break at front of non-nbsp run.  If so, convert
+      // run to nbsp.
+      WSPoint thePoint = GetCharAfter(GetAsDOMNode(*aInOutParent), *aInOutOffset);
       if (thePoint.mTextNode && nsCRT::IsAsciiSpace(thePoint.mChar)) {
         WSPoint prevPoint = GetCharBefore(thePoint);
         if (prevPoint.mTextNode && !nsCRT::IsAsciiSpace(prevPoint.mChar)) {
-          // we are at start of non-nbsps.  convert to a single nbsp.
+          // We are at start of non-nbsps.  Convert to a single nbsp.
           res = ConvertToNBSP(thePoint);
-          NS_ENSURE_SUCCESS(res, res);
+          NS_ENSURE_SUCCESS(res, nullptr);
         }
       }
     }
-    
-    // handle any changes needed to ws run before inserted br
-    if (!beforeRun) {
-      // don't need to do anything.  just insert break.  ws won't change.
-    } else if (beforeRun->mType & WSType::leadingWS) {
-      // don't need to do anything.  just insert break.  ws won't change.
+
+    // Handle any changes needed to ws run before inserted br
+    if (!beforeRun || (beforeRun->mType & WSType::leadingWS)) {
+      // Don't need to do anything.  Just insert break.  ws won't change.
     } else if (beforeRun->mType & WSType::trailingWS) {
-      // need to delete the trailing ws that is before insertion point, because it 
+      // Need to delete the trailing ws that is before insertion point, because it
       // would become significant after break inserted.
-      res = DeleteChars(GetAsDOMNode(beforeRun->mStartNode), beforeRun->mStartOffset, *aInOutParent, *aInOutOffset,
+      res = DeleteChars(GetAsDOMNode(beforeRun->mStartNode), beforeRun->mStartOffset,
+                        GetAsDOMNode(*aInOutParent), *aInOutOffset,
                         eOutsideUserSelectAll);
-      NS_ENSURE_SUCCESS(res, res);
+      NS_ENSURE_SUCCESS(res, nullptr);
     } else if (beforeRun->mType == WSType::normalWS) {
-      // try to change an nbsp to a space, if possible, just to prevent nbsp proliferation
-      res = CheckTrailingNBSP(beforeRun, *aInOutParent, *aInOutOffset);
-      NS_ENSURE_SUCCESS(res, res);
+      // Try to change an nbsp to a space, just to prevent nbsp proliferation
+      res = CheckTrailingNBSP(beforeRun, GetAsDOMNode(*aInOutParent), *aInOutOffset);
+      NS_ENSURE_SUCCESS(res, nullptr);
     }
   }
-  
+
   // ready, aim, fire!
-  return mHTMLEditor->CreateBRImpl(aInOutParent, aInOutOffset, outBRNode, aSelect);
+  return mHTMLEditor->CreateBRImpl(aInOutParent, aInOutOffset, aSelect);
 }
 
 nsresult 

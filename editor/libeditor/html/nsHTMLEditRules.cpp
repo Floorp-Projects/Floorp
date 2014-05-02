@@ -1480,8 +1480,11 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
         // is it a return?
         else if (subStr.Equals(newlineStr))
         {
-          res = wsObj.InsertBreak(address_of(curNode), &curOffset, address_of(unused), nsIEditor::eNone);
-          NS_ENSURE_SUCCESS(res, res);
+          nsCOMPtr<nsINode> node(do_QueryInterface(curNode));
+          nsCOMPtr<Element> br =
+            wsObj.InsertBreak(address_of(node), &curOffset, nsIEditor::eNone);
+          NS_ENSURE_TRUE(br, NS_ERROR_FAILURE);
+          curNode = GetAsDOMNode(node);
           pos++;
         }
         else
@@ -1696,8 +1699,12 @@ nsHTMLEditRules::StandardBreakImpl(nsIDOMNode* aNode, int32_t aOffset,
       node = linkParent;
       aOffset = newOffset;
     }
-    res = wsObj.InsertBreak(address_of(node), &aOffset,
-                            address_of(brNode), nsIEditor::eNone);
+    nsCOMPtr<nsINode> node_ = do_QueryInterface(node);
+    nsCOMPtr<Element> br =
+      wsObj.InsertBreak(address_of(node_), &aOffset, nsIEditor::eNone);
+    node = GetAsDOMNode(node_);
+    brNode = GetAsDOMNode(br);
+    NS_ENSURE_TRUE(brNode, NS_ERROR_FAILURE);
   }
   NS_ENSURE_SUCCESS(res, res);
   node = nsEditor::GetNodeLocation(brNode, &aOffset);
