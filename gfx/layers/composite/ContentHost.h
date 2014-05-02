@@ -279,6 +279,8 @@ public:
     return false;
   }
 
+  virtual void PrintInfo(nsACString& aTo, const char* aPrefix) MOZ_OVERRIDE;
+
   virtual void DestroyTextures();
 
   virtual bool Lock() {
