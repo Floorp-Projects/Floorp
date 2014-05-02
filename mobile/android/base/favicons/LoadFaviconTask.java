@@ -97,6 +97,10 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
 
     // Runs in background thread
     private void saveFaviconToDb(final byte[] encodedFavicon) {
+        if (encodedFavicon == null) {
+            return;
+        }
+
         if ((flags & FLAG_PERSIST) == 0) {
             return;
         }
@@ -376,6 +380,9 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
         }
 
         if (loadedBitmaps != null) {
+            // Fetching bytes to store can fail. saveFaviconToDb will
+            // do the right thing, but we still choose to cache the
+            // downloaded icon in memory.
             saveFaviconToDb(loadedBitmaps.getBytesForDatabaseStorage());
             return pushToCacheAndGetResult(loadedBitmaps);
         }

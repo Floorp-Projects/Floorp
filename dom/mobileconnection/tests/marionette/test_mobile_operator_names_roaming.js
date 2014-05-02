@@ -13,13 +13,6 @@ function check(aLongName, aShortName, aRoaming) {
   is(voice.roaming, aRoaming, "voice.roaming");
 }
 
-function setEmulatorOperatorNamesAndWait(aWhich, aLongName, aShortName) {
-  let promises = [];
-  promises.push(waitForManagerEvent("voicechange"));
-  promises.push(setEmulatorOperatorNames(aWhich, aLongName, aShortName));
-  return Promise.all(promises);
-}
-
 // See bug 797972 - B2G RIL: False roaming situation
 //
 // Steps to test:
@@ -34,7 +27,8 @@ function test(aLongName, aShortName, aRoaming) {
   return Promise.resolve()
 
     // We should not have voicechange here, but, yes, we do.
-    .then(() => setEmulatorOperatorNamesAndWait("roaming", aLongName, aShortName))
+    .then(() => setEmulatorOperatorNamesAndWait("roaming", aLongName, aShortName,
+                                                null, null, true, false))
 
     .then(() => setEmulatorVoiceDataStateAndWait("voice", "roaming"))
     .then(() => check(aLongName, aShortName, aRoaming))
