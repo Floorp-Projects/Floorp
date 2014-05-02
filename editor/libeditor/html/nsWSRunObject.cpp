@@ -35,6 +35,31 @@ static bool IsBlockNode(nsIDOMNode* node)
 }
 
 //- constructor / destructor -----------------------------------------------
+nsWSRunObject::nsWSRunObject(nsHTMLEditor* aEd, nsINode* aNode, int32_t aOffset)
+  : mNode(aNode)
+  , mOffset(aOffset)
+  , mPRE(false)
+  , mStartNode()
+  , mStartOffset(0)
+  , mStartReason()
+  , mStartReasonNode()
+  , mEndNode()
+  , mEndOffset(0)
+  , mEndReason()
+  , mEndReasonNode()
+  , mFirstNBSPNode()
+  , mFirstNBSPOffset(0)
+  , mLastNBSPNode()
+  , mLastNBSPOffset(0)
+  , mNodeArray()
+  , mStartRun(nullptr)
+  , mEndRun(nullptr)
+  , mHTMLEditor(aEd)
+{
+  GetWSNodes();
+  GetRuns();
+}
+
 nsWSRunObject::nsWSRunObject(nsHTMLEditor *aEd, nsIDOMNode *aNode, int32_t aOffset) :
 mNode(do_QueryInterface(aNode))
 ,mOffset(aOffset)
@@ -94,11 +119,12 @@ nsWSRunObject::PrepareToJoinBlocks(nsHTMLEditor *aHTMLEd,
                                    nsIDOMNode *aLeftParent, 
                                    nsIDOMNode *aRightParent)
 {
-  NS_ENSURE_TRUE(aLeftParent && aRightParent && aHTMLEd, NS_ERROR_NULL_POINTER);
-  uint32_t count;
-  aHTMLEd->GetLengthOfDOMNode(aLeftParent, count);
-  nsWSRunObject leftWSObj(aHTMLEd, aLeftParent, count);
-  nsWSRunObject rightWSObj(aHTMLEd, aRightParent, 0);
+  nsCOMPtr<nsINode> leftParent(do_QueryInterface(aLeftParent));
+  nsCOMPtr<nsINode> rightParent(do_QueryInterface(aRightParent));
+  NS_ENSURE_TRUE(leftParent && rightParent && aHTMLEd, NS_ERROR_NULL_POINTER);
+
+  nsWSRunObject leftWSObj(aHTMLEd, leftParent, leftParent->Length());
+  nsWSRunObject rightWSObj(aHTMLEd, rightParent, 0);
 
   return leftWSObj.PrepareToDeleteRangePriv(&rightWSObj);
 }
@@ -110,13 +136,17 @@ nsWSRunObject::PrepareToDeleteRange(nsHTMLEditor *aHTMLEd,
                                     nsCOMPtr<nsIDOMNode> *aEndNode,
                                     int32_t *aEndOffset)
 {
-  NS_ENSURE_TRUE(aStartNode && aEndNode && *aStartNode && *aEndNode && aStartOffset && aEndOffset && aHTMLEd, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aStartNode && aEndNode && aStartOffset && aEndOffset &&
+                 aHTMLEd, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> startNode(do_QueryInterface(*aStartNode));
+  nsCOMPtr<nsINode> endNode(do_QueryInterface(*aEndNode));
+  NS_ENSURE_TRUE(startNode && endNode, NS_ERROR_NULL_POINTER);
 
   nsAutoTrackDOMPoint trackerStart(aHTMLEd->mRangeUpdater, aStartNode, aStartOffset);
   nsAutoTrackDOMPoint trackerEnd(aHTMLEd->mRangeUpdater, aEndNode, aEndOffset);
   
-  nsWSRunObject leftWSObj(aHTMLEd, *aStartNode, *aStartOffset);
-  nsWSRunObject rightWSObj(aHTMLEd, *aEndNode, *aEndOffset);
+  nsWSRunObject leftWSObj(aHTMLEd, startNode, *aStartOffset);
+  nsWSRunObject rightWSObj(aHTMLEd, endNode, *aEndOffset);
 
   return leftWSObj.PrepareToDeleteRangePriv(&rightWSObj);
 }
@@ -125,11 +155,13 @@ nsresult
 nsWSRunObject::PrepareToDeleteNode(nsHTMLEditor *aHTMLEd, 
                                    nsIDOMNode *aNode)
 {
-  NS_ENSURE_TRUE(aNode && aHTMLEd, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
+  NS_ENSURE_TRUE(node && aHTMLEd, NS_ERROR_NULL_POINTER);
   
-  int32_t offset;
-  nsCOMPtr<nsIDOMNode> parent = aHTMLEd->GetNodeLocation(aNode, &offset);
-  
+  nsCOMPtr<nsINode> parent = node->GetParentNode();
+  NS_ENSURE_STATE(parent);
+  int32_t offset = parent->IndexOf(node);
+
   nsWSRunObject leftWSObj(aHTMLEd, parent, offset);
   nsWSRunObject rightWSObj(aHTMLEd, parent, offset+1);
 
@@ -1536,7 +1568,7 @@ nsWSRunObject::GetCharAfter(nsIDOMNode *aNode, int32_t aOffset)
   else
   {
     // use wspoint version of GetCharAfter()
-    WSPoint point(aNode,aOffset,0);
+    WSPoint point(node, aOffset, 0);
     return GetCharAfter(point);
   }
 }
@@ -1556,7 +1588,7 @@ nsWSRunObject::GetCharBefore(nsIDOMNode *aNode, int32_t aOffset)
   else
   {
     // use wspoint version of GetCharBefore()
-    WSPoint point(aNode,aOffset,0);
+    WSPoint point(node, aOffset, 0);
     return GetCharBefore(point);
   }
 }
