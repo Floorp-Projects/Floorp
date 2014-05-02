@@ -29,6 +29,9 @@ skip-if(B2G||Android) == number-min-height-2.html number-min-height-2-ref.html
 skip-if(B2G||Android) == number-max-height-1.html number-max-height-1-ref.html
 skip-if(B2G||Android) == number-max-height-2.html number-max-height-2-ref.html
 
+# number of significant fractional digits:
+== number-significant-fractional-digits.html number-significant-fractional-digits-ref.html
+
 # focus
 # autofocus is disabled on B2G
 # https://bugzilla.mozilla.org/show_bug.cgi?id=965763
