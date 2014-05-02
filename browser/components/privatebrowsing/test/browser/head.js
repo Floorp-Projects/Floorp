@@ -1,13 +1,14 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 function whenNewWindowLoaded(aOptions, aCallback) {
   let win = OpenBrowserWindow(aOptions);
   let gotLoad = false;
-  let gotActivate = (Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager).activeWindow == win);
+  let gotActivate = Services.focus.activeWindow == win;
 
   function maybeRunCallback() {
     if (gotLoad && gotActivate) {
-      win.BrowserChromeTest.runWhenReady(function() {
-        executeSoon(function() { aCallback(win); });
-      });
+      executeSoon(function() { aCallback(win); });
     }
   }
 
@@ -22,12 +23,15 @@ function whenNewWindowLoaded(aOptions, aCallback) {
     info("Was activated.");
   }
 
-  win.addEventListener("load", function onLoad() {
-    info("Got load");
-    win.removeEventListener("load", onLoad, false);
-    gotLoad = true;
-    maybeRunCallback();
-  }, false);
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (win == aSubject) {
+      info("Delayed startup finished");
+      Services.obs.removeObserver(observer, aTopic);
+      gotLoad = true;
+      maybeRunCallback();
+    }
+  }, "browser-delayed-startup-finished", false);
+
   return win;
 }
 
