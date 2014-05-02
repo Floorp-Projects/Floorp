@@ -563,42 +563,53 @@ ErrorBadArgs(JSContext *cx)
     return false;
 }
 
-template<typename V, typename Op, typename Vret>
+// Coerces the inputs of type In to the type Coercion, apply the operator Op
+// and converts the result to the type Out.
+template<typename In, typename Coercion, typename Op, typename Out>
 static bool
-Func(JSContext *cx, unsigned argc, Value *vp)
+CoercedFunc(JSContext *cx, unsigned argc, Value *vp)
 {
-    typedef typename V::Elem Elem;
-    typedef typename Vret::Elem RetElem;
+    typedef typename Coercion::Elem CoercionElem;
+    typedef typename Out::Elem RetElem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 1 && args.length() != 2)
         return ErrorBadArgs(cx);
 
-    RetElem result[Vret::lanes];
+    CoercionElem result[Coercion::lanes];
     if (args.length() == 1) {
-        if (!IsVectorObject<V>(args[0]))
+        if (!IsVectorObject<In>(args[0]))
             return ErrorBadArgs(cx);
 
-        Elem *val = TypedObjectMemory<Elem *>(args[0]);
-        for (unsigned i = 0; i < Vret::lanes; i++)
+        CoercionElem *val = TypedObjectMemory<CoercionElem *>(args[0]);
+        for (unsigned i = 0; i < Coercion::lanes; i++)
             result[i] = Op::apply(val[i], 0);
     } else {
         JS_ASSERT(args.length() == 2);
-        if (!IsVectorObject<V>(args[0]) || !IsVectorObject<V>(args[1]))
+        if (!IsVectorObject<In>(args[0]) || !IsVectorObject<In>(args[1]))
             return ErrorBadArgs(cx);
 
-        Elem *left = TypedObjectMemory<Elem *>(args[0]);
-        Elem *right = TypedObjectMemory<Elem *>(args[1]);
-        for (unsigned i = 0; i < Vret::lanes; i++)
+        CoercionElem *left = TypedObjectMemory<CoercionElem *>(args[0]);
+        CoercionElem *right = TypedObjectMemory<CoercionElem *>(args[1]);
+        for (unsigned i = 0; i < Coercion::lanes; i++)
             result[i] = Op::apply(left[i], right[i]);
     }
 
-    RootedObject obj(cx, Create<Vret>(cx, result));
+    RetElem *coercedResult = reinterpret_cast<RetElem *>(result);
+    RootedObject obj(cx, Create<Out>(cx, coercedResult));
     if (!obj)
         return false;
 
     args.rval().setObject(*obj);
     return true;
+}
+
+// Same as above, with Coercion == Out
+template<typename In, typename Op, typename Out>
+static bool
+Func(JSContext *cx, unsigned argc, Value *vp)
+{
+    return CoercedFunc<In, Out, Op, Out>(cx, argc, vp);
 }
 
 template<typename V, typename OpWith, typename Vret>
