@@ -182,7 +182,6 @@ AppCacheUtils.prototype = {
     let inputStream = Cc["@mozilla.org/scriptableinputstream;1"]
                         .createInstance(Ci.nsIScriptableInputStream);
     let deferred = promise.defer();
-    let channelCharset = "";
     let buffer = "";
     let channel = Services.io.newChannel(uri, null, null);
 
@@ -203,7 +202,7 @@ AppCacheUtils.prototype = {
       },
 
       onStopRequest: function onStartRequest(request, context, statusCode) {
-        if (statusCode == 0) {
+        if (statusCode === 0) {
           request.QueryInterface(Ci.nsIHttpChannel);
 
           let result = {
@@ -279,7 +278,7 @@ AppCacheUtils.prototype = {
       }
     });
 
-    if (entries.length == 0) {
+    if (entries.length === 0) {
       throw new Error(l10n.GetStringFromName("noResults"));
     }
     return entries;
@@ -320,17 +319,23 @@ AppCacheUtils.prototype = {
   _getManifestURI: function ACU__getManifestURI() {
     let deferred = promise.defer();
 
-    let getURI = node => {
+    let getURI = () => {
       let htmlNode = this.doc.querySelector("html[manifest]");
       if (htmlNode) {
         let pageUri = this.doc.location ? this.doc.location.href : this.uri;
         let origin = pageUri.substr(0, pageUri.lastIndexOf("/") + 1);
-        return origin + htmlNode.getAttribute("manifest");
+        let manifestURI = htmlNode.getAttribute("manifest");
+
+        if (manifestURI.startsWith("/")) {
+          manifestURI = manifestURI.substr(1);
+        }
+
+        return origin + manifestURI;
       }
     };
 
     if (this.doc) {
-      let uri = getURI(this.doc);
+      let uri = getURI();
       return promise.resolve(uri);
     } else {
       this._getURIInfo(this.uri).then(uriInfo => {
@@ -338,7 +343,7 @@ AppCacheUtils.prototype = {
           let html = uriInfo.text;
           let parser = _DOMParser;
           this.doc = parser.parseFromString(html, "text/html");
-          let uri = getURI(this.doc);
+          let uri = getURI();
           deferred.resolve(uri);
         } else {
           this.errors.push({
@@ -394,10 +399,10 @@ ManifestParser.prototype = {
     this.currSection = "CACHE";
 
     for (let i = 0; i < lines.length; i++) {
-      let text = this.text = lines[i].replace(/^\s+|\s+$/g);
+      let text = this.text = lines[i].trim();
       this.currentLine = i + 1;
 
-      if (i == 0 && text != "CACHE MANIFEST") {
+      if (i === 0 && text !== "CACHE MANIFEST") {
         this._addError(1, "firstLineMustBeCacheManifest", 1);
       }
 
@@ -453,7 +458,7 @@ ManifestParser.prototype = {
 
     if (/\s/.test(text)) {
       this._addError(this.currentLine, "escapeSpaces", this.currentLine);
-      text = text.replace(/\s/g, "%20")
+      text = text.replace(/\s/g, "%20");
     }
 
     if (text[0] == "/") {
@@ -506,7 +511,7 @@ ManifestParser.prototype = {
 
     if (/\s/.test(namespace)) {
       this._addError(this.currentLine, "escapeSpaces", this.currentLine);
-      namespace = namespace.replace(/\s/g, "%20")
+      namespace = namespace.replace(/\s/g, "%20");
     }
 
     if (namespace.substr(0, 4) == "/../") {
