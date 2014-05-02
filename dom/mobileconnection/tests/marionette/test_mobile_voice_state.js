@@ -13,8 +13,8 @@ const INITIAL_STATES = {
   relSignalStrength: 44,
 
   cell: {
-    gsmLocationAreaCode: 65535,
-    gsmCellId: 268435455,
+    gsmLocationAreaCode: 0,
+    gsmCellId: 0,
     cdmaBaseStationId: -1,
     cdmaBaseStationLatitude: -2147483648,
     cdmaBaseStationLongitude: -2147483648,
@@ -70,8 +70,8 @@ const TEST_DATA = [{
       signalStrength: -99,
       relSignalStrength: 44,
       cell: {
-        gsmLocationAreaCode: 65535,
-        gsmCellId: 268435455
+        gsmLocationAreaCode: 0,
+        gsmCellId: 0
       }
     }
   }, {
@@ -85,8 +85,8 @@ const TEST_DATA = [{
       signalStrength: -99,
       relSignalStrength: 44,
       cell: {
-        gsmLocationAreaCode: 65535,
-        gsmCellId: 268435455
+        gsmLocationAreaCode: 0,
+        gsmCellId: 0
       }
     }
   }

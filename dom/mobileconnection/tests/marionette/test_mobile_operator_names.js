@@ -16,10 +16,8 @@ function check(aLongName, aShortName) {
 function test(aLongName, aShortName) {
   log("Testing '" + aLongName + "', '" + aShortName + "':");
 
-  let promises = [];
-  promises.push(waitForManagerEvent("voicechange"));
-  promises.push(setEmulatorOperatorNames("home", aLongName, aShortName));
-  return Promise.all(promises)
+  return setEmulatorOperatorNamesAndWait("home", aLongName, aShortName,
+                                         null, null, true, false)
     .then(() => check(aLongName, aShortName));
 }
 
