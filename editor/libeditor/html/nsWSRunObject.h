@@ -378,33 +378,33 @@ class MOZ_STACK_CLASS nsWSRunObject
     
     // member variables ---------------------------------------------------------
     
-    nsCOMPtr<nsIDOMNode> mNode;           // the node passed to our constructor
-    int32_t mOffset;                      // the offset passed to our contructor
+    nsCOMPtr<nsINode> mNode;           // the node passed to our constructor
+    int32_t mOffset;                   // the offset passed to our contructor
     // together, the above represent the point at which we are building up ws info.
     
-    bool    mPRE;                         // true if we are in preformatted whitespace context
-    nsCOMPtr<nsIDOMNode> mStartNode;      // node/offset where ws starts
-    int32_t mStartOffset;                 // ...
-    WSType mStartReason;                  // reason why ws starts (eText, eOtherBlock, etc)
-    nsCOMPtr<nsIDOMNode> mStartReasonNode;// the node that implicated by start reason
+    bool    mPRE;                      // true if we are in preformatted whitespace context
+    nsCOMPtr<nsINode> mStartNode;      // node/offset where ws starts
+    int32_t mStartOffset;              // ...
+    WSType mStartReason;               // reason why ws starts (eText, eOtherBlock, etc)
+    nsCOMPtr<nsINode> mStartReasonNode;// the node that implicated by start reason
     
-    nsCOMPtr<nsIDOMNode> mEndNode;        // node/offset where ws ends
-    int32_t mEndOffset;                   // ...
-    WSType mEndReason;                    // reason why ws ends (eText, eOtherBlock, etc)
-    nsCOMPtr<nsIDOMNode> mEndReasonNode;  // the node that implicated by end reason
+    nsCOMPtr<nsINode> mEndNode;        // node/offset where ws ends
+    int32_t mEndOffset;                // ...
+    WSType mEndReason;                 // reason why ws ends (eText, eOtherBlock, etc)
+    nsCOMPtr<nsINode> mEndReasonNode;  // the node that implicated by end reason
     
-    nsCOMPtr<nsIDOMNode> mFirstNBSPNode;  // location of first nbsp in ws run, if any
-    int32_t mFirstNBSPOffset;             // ...
+    nsCOMPtr<nsINode> mFirstNBSPNode;  // location of first nbsp in ws run, if any
+    int32_t mFirstNBSPOffset;          // ...
     
-    nsCOMPtr<nsIDOMNode> mLastNBSPNode;   // location of last nbsp in ws run, if any
-    int32_t mLastNBSPOffset;              // ...
+    nsCOMPtr<nsINode> mLastNBSPNode;   // location of last nbsp in ws run, if any
+    int32_t mLastNBSPOffset;           // ...
     
-    nsCOMArray<nsIDOMNode> mNodeArray;//the list of nodes containing ws in this run
+    nsCOMArray<nsINode> mNodeArray;    //the list of nodes containing ws in this run
     
-    WSFragment *mStartRun;                // the first WSFragment in the run
-    WSFragment *mEndRun;                  // the last WSFragment in the run, may be same as first
+    WSFragment *mStartRun;             // the first WSFragment in the run
+    WSFragment *mEndRun;               // the last WSFragment in the run, may be same as first
     
-    nsHTMLEditor *mHTMLEditor;            // non-owning.
+    nsHTMLEditor *mHTMLEditor;         // non-owning.
     
     friend class nsHTMLEditRules;  // opening this class up for pillaging
     friend class nsHTMLEditor;     // opening this class up for more pillaging

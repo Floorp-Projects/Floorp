@@ -5186,7 +5186,7 @@ nsHTMLEditRules::CheckForInvisibleBR(nsIDOMNode *aBlock,
   {
     nsWSRunObject wsTester(mHTMLEditor, testNode, testOffset);
     if (WSType::br == wsTester.mStartReason) {
-      *outBRNode = wsTester.mStartReasonNode;
+      *outBRNode = GetAsDOMNode(wsTester.mStartReasonNode);
     }
   }
 
@@ -5298,15 +5298,14 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
       if (wsType == WSType::thisBlock) {
         // we want to keep looking up.  But stop if we are crossing table element
         // boundaries, or if we hit the root.
-        if ( nsHTMLEditUtils::IsTableElement(wsObj.mStartReasonNode) ||
-            (selCommon == wsObj.mStartReasonNode)                    ||
-            (rootElement == wsObj.mStartReasonNode) )
-        {
+        if (nsHTMLEditUtils::IsTableElement(wsObj.mStartReasonNode) ||
+            selCommon == GetAsDOMNode(wsObj.mStartReasonNode) ||
+            rootElement == GetAsDOMNode(wsObj.mStartReasonNode)) {
           stillLooking = false;
         }
         else
         { 
-          selStartNode = nsEditor::GetNodeLocation(wsObj.mStartReasonNode,
+          selStartNode = nsEditor::GetNodeLocation(GetAsDOMNode(wsObj.mStartReasonNode),
                                                    &selStartOffset);
         }
       }
@@ -5338,21 +5337,20 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
             firstBRParent = selEndNode;
             firstBROffset = selEndOffset;
           }
-          selEndNode = nsEditor::GetNodeLocation(wsObj.mEndReasonNode, &selEndOffset);
+          selEndNode = nsEditor::GetNodeLocation(GetAsDOMNode(wsObj.mEndReasonNode), &selEndOffset);
           ++selEndOffset;
         }
       } else if (wsType == WSType::thisBlock) {
         // we want to keep looking up.  But stop if we are crossing table element
         // boundaries, or if we hit the root.
-        if ( nsHTMLEditUtils::IsTableElement(wsObj.mEndReasonNode) ||
-            (selCommon == wsObj.mEndReasonNode)                    ||
-            (rootElement == wsObj.mEndReasonNode) )
-        {
+        if (nsHTMLEditUtils::IsTableElement(wsObj.mEndReasonNode) ||
+            selCommon == GetAsDOMNode(wsObj.mEndReasonNode) ||
+            rootElement == GetAsDOMNode(wsObj.mEndReasonNode)) {
           stillLooking = false;
         }
         else
         { 
-          selEndNode = nsEditor::GetNodeLocation(wsObj.mEndReasonNode, &selEndOffset);
+          selEndNode = nsEditor::GetNodeLocation(GetAsDOMNode(wsObj.mEndReasonNode), &selEndOffset);
           ++selEndOffset;
         }
        }
@@ -5475,7 +5473,7 @@ nsHTMLEditRules::NormalizeSelection(nsISelection *inSelection)
     // of going "down" into a block and "up" out of a block.
     if (wsEndObj.mStartReason == WSType::otherBlock) {
       // endpoint is just after the close of a block.
-      nsCOMPtr<nsIDOMNode> child = mHTMLEditor->GetRightmostChild(wsEndObj.mStartReasonNode, true);
+      nsCOMPtr<nsIDOMNode> child = mHTMLEditor->GetRightmostChild(GetAsDOMNode(wsEndObj.mStartReasonNode), true);
       if (child)
       {
         newEndNode = nsEditor::GetNodeLocation(child, &newEndOffset);
@@ -5495,7 +5493,7 @@ nsHTMLEditRules::NormalizeSelection(nsISelection *inSelection)
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsEndObj.mStartReason == WSType::br) {
       // endpoint is just after break.  lets adjust it to before it.
-      newEndNode = nsEditor::GetNodeLocation(wsEndObj.mStartReasonNode,
+      newEndNode = nsEditor::GetNodeLocation(GetAsDOMNode(wsEndObj.mStartReasonNode),
                                              &newEndOffset);
     }
   }
@@ -5512,7 +5510,7 @@ nsHTMLEditRules::NormalizeSelection(nsISelection *inSelection)
     // of going "down" into a block and "up" out of a block.
     if (wsStartObj.mEndReason == WSType::otherBlock) {
       // startpoint is just before the start of a block.
-      nsCOMPtr<nsIDOMNode> child = mHTMLEditor->GetLeftmostChild(wsStartObj.mEndReasonNode, true);
+      nsCOMPtr<nsIDOMNode> child = mHTMLEditor->GetLeftmostChild(GetAsDOMNode(wsStartObj.mEndReasonNode), true);
       if (child)
       {
         newStartNode = nsEditor::GetNodeLocation(child, &newStartOffset);
@@ -5530,7 +5528,7 @@ nsHTMLEditRules::NormalizeSelection(nsISelection *inSelection)
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsStartObj.mEndReason == WSType::br) {
       // startpoint is just before a break.  lets adjust it to after it.
-      newStartNode = nsEditor::GetNodeLocation(wsStartObj.mEndReasonNode,
+      newStartNode = nsEditor::GetNodeLocation(GetAsDOMNode(wsStartObj.mEndReasonNode),
                                                &newStartOffset);
       ++newStartOffset; // offset *after* break
     }
