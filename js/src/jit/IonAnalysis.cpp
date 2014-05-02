@@ -135,11 +135,23 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
                     continue;
                 }
 
+                // Function.arguments can be used to access all arguments in
+                // non-strict scripts, so we can't optimize out any arguments.
+                CompileInfo &info = block->info();
+                if (!info.script()->strict()) {
+                    uint32_t slot = uses->index();
+                    uint32_t firstArgSlot = info.firstArgSlot();
+                    if (firstArgSlot <= slot && slot - firstArgSlot < info.nargs()) {
+                        uses++;
+                        continue;
+                    }
+                }
+
                 // Store an optimized out magic value in place of all dead
                 // resume point operands. Making any such substitution can in
                 // general alter the interpreter's behavior, even though the
                 // code is dead, as the interpreter will still execute opcodes
-                // whose effects cannot be observed. If the undefined value
+                // whose effects cannot be observed. If the magic value value
                 // were to flow to, say, a dead property access the
                 // interpreter could throw an exception; we avoid this problem
                 // by removing dead operands before removing dead code.
