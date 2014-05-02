@@ -54,7 +54,7 @@ jit::SplitCriticalEdges(MIRGraph &graph)
 }
 
 // Operands to a resume point which are dead at the point of the resume can be
-// replaced with undefined values. This analysis supports limited detection of
+// replaced with a magic value. This analysis supports limited detection of
 // dead operands, pruning those which are defined in the resume point's basic
 // block and have no uses outside the block or at points later than the resume
 // point.
@@ -92,6 +92,14 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             // than doing a more sophisticated analysis, just ignore these.
             if (ins->isUnbox() || ins->isParameter() || ins->isTypeBarrier() || ins->isComputeThis())
                 continue;
+
+            // TypedObject intermediate values captured by resume points may
+            // be legitimately dead in Ion code, but are still needed if we
+            // bail out. They can recover on bailout.
+            if (ins->isNewDerivedTypedObject()) {
+                MOZ_ASSERT(ins->canRecoverOnBailout());
+                continue;
+            }
 
             // If the instruction's behavior has been constant folded into a
             // separate instruction, we can't determine precisely where the
