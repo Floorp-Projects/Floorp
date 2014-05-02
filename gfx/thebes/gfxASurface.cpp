@@ -895,7 +895,7 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
        }
      }
 #endif
-    fprintf(aFile, "%s", string.BeginReading());
+    fprintf_stderr(aFile, "%s", string.BeginReading());
   } else {
     nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
     if (clipboard) {
