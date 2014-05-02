@@ -165,13 +165,13 @@ class MOZ_STACK_CLASS nsWSRunObject
                                        BlockBoundary aBoundary,
                                        nsINode* aBlock,
                                        int32_t aOffset = -1);
-    
-    // PrepareToJoinBlocks fixes up ws at the end of aLeftParent and the
-    // beginning of aRightParent in preperation for them to be joined.
-    // example of fixup: trailingws in aLeftParent needs to be removed.
-    static nsresult PrepareToJoinBlocks(nsHTMLEditor *aEd, 
-                                        nsIDOMNode *aLeftParent,
-                                        nsIDOMNode *aRightParent);
+ 
+    // PrepareToJoinBlocks fixes up ws at the end of aLeftBlock and the
+    // beginning of aRightBlock in preperation for them to be joined.  Example
+    // of fixup: trailingws in aLeftBlock needs to be removed.
+    static nsresult PrepareToJoinBlocks(nsHTMLEditor* aEd,
+                                        mozilla::dom::Element* aLeftBlock,
+                                        mozilla::dom::Element* aRightBlock);
 
     // PrepareToDeleteRange fixes up ws before {aStartNode,aStartOffset}
     // and after {aEndNode,aEndOffset} in preperation for content
