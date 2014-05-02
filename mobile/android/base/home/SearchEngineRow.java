@@ -86,6 +86,11 @@ class SearchEngineRow extends AnimatedHeightLayout {
                         mUrlOpenListener.onUrlOpen(suggestion, EnumSet.noneOf(OnUrlOpenListener.Flags.class));
                     }
                 } else if (mSearchListener != null) {
+                    if (v == mUserEnteredView) {
+                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, "user");
+                    } else {
+                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, "engine");
+                    }
                     mSearchListener.onSearch(mSearchEngine, suggestion);
                 }
             }
@@ -139,6 +144,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
     public void performUserEnteredSearch() {
         String searchTerm = getSuggestionTextFromView(mUserEnteredView);
         if (mSearchListener != null) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, "user");
             mSearchListener.onSearch(mSearchEngine, searchTerm);
         }
     }
