@@ -20,10 +20,6 @@ richlistitem[type="download"] {
   min-height: 46px;
 }
 
-richlistitem[type="download"][selected="true"] {
-  background-image: url(chrome://mozapps/skin/extensions/itemEnabledFader.png);
-}
-
 richlistitem[type="download"]:not([selected="true"]):nth-child(odd) {
   background-color: -moz-oddtreerow;
 }
