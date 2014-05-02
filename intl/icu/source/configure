@@ -4094,6 +4094,9 @@ $as_echo "$ac_use_strict_options" >&6; }
             esac
 
             CFLAGS="$CFLAGS -Wall -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wwrite-strings"
+
+            # Suppress clang C warnings:
+            CFLAGS="$CFLAGS -Wno-sign-compare -Wno-unused"
         else
             case "${host}" in
             *-*-cygwin)
@@ -4108,6 +4111,9 @@ $as_echo "$ac_use_strict_options" >&6; }
         if test "$GXX" = yes
         then
             CXXFLAGS="$CXXFLAGS -W -Wall -pedantic -Wpointer-arith -Wwrite-strings -Wno-long-long"
+
+            # Suppress clang C++ warnings:
+            CXXFLAGS="$CXXFLAGS -Wno-unused -Wno-unused-parameter"
         else
             case "${host}" in
             *-*-cygwin)

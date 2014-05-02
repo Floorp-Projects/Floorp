@@ -31,6 +31,8 @@ function runTest() {
 
   var highPriorityIframe = null;
   var childID = null;
+  var lock = null;
+  var p = null;
 
   expectProcessCreated().then(function(chid) {
     childID = chid;
@@ -44,23 +46,34 @@ function runTest() {
     highPriorityIframe.setAttribute('mozapp', 'http://example.org/manifest.webapp');
     highPriorityIframe.src = browserElementTestHelpers.emptyPage2;
 
-    var p = expectPriorityChange(childID, 'FOREGROUND', 'CPU_LOW');
+    p = expectPriorityChange(childID, 'FOREGROUND', 'CPU_LOW');
 
     document.body.appendChild(highPriorityIframe);
 
     return p;
   }).then(function() {
     return expectPriorityChange(childID, 'FOREGROUND', 'CPU_NORMAL');
+  }).then(function() {
+    p = expectPriorityChange(childID, 'FOREGROUND', 'CPU_LOW');
+    lock = navigator.requestWakeLock('high-priority');
+    return p;
+  }).then(function() {
+    p = expectPriorityChange(childID, 'FOREGROUND', 'CPU_NORMAL');
+    lock.unlock();
+    return p;
   }).then(SimpleTest.finish);
 
   document.body.appendChild(iframe);
 }
 
 addEventListener('testready', function() {
-  // Cause the CPU wake lock taken on behalf of the high-priority process to
-  // time out after 1s.
   SpecialPowers.pushPrefEnv(
-    {set: [["dom.ipc.systemMessageCPULockTimeoutSec", 1]]},
+    {set: [
+      /* Cause the CPU wake lock taken on behalf of the high-priority process
+       * to time out after 1s. */
+       ["dom.ipc.systemMessageCPULockTimeoutSec", 1],
+       ["dom.wakelock.enabled", true]
+    ]},
     runTest);
 });
 

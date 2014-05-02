@@ -962,18 +962,18 @@ class SignalingAgent {
       WrapRunnable(this, &SignalingAgent::Close));
   }
 
-  void Init_m(nsCOMPtr<nsIThread> thread)
+  void Init_m()
   {
     pObserver = new TestObserver(pc->pcImpl(), name);
     ASSERT_TRUE(pObserver);
 
-    ASSERT_EQ(pc->Initialize(pObserver, nullptr, cfg_, thread), NS_OK);
+    ASSERT_EQ(pc->Initialize(pObserver, nullptr, cfg_, gMainThread), NS_OK);
   }
 
-  void Init(nsCOMPtr<nsIThread> thread)
+  void Init()
   {
-    mozilla::SyncRunnable::DispatchToThread(thread,
-      WrapRunnable(this, &SignalingAgent::Init_m, thread));
+    mozilla::SyncRunnable::DispatchToThread(gMainThread,
+      WrapRunnable(this, &SignalingAgent::Init_m));
 
     ASSERT_TRUE_WAIT(sipcc_state() == PCImplSipccState::Started,
                      kDefaultTimeout);
@@ -1555,7 +1555,7 @@ class SignalingAgentTest : public ::testing::Test {
     ScopedDeletePtr<SignalingAgent> agent(
         new SignalingAgent("agent", stun_addr, stun_port));
 
-    agent->Init(gMainThread);
+    agent->Init();
 
     if (wait_for_gather) {
       if (!agent->WaitForGatherAllowFail())
@@ -1609,8 +1609,8 @@ public:
     a1_ = new SignalingAgent(callerName, stun_addr_, stun_port_);
     a2_ = new SignalingAgent(calleeName, stun_addr_, stun_port_);
 
-    a1_->Init(gMainThread);
-    a2_->Init(gMainThread);
+    a1_->Init();
+    a2_->Init();
 
     if (wait_for_gather_) {
       WaitForGather();

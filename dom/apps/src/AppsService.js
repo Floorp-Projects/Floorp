@@ -14,17 +14,18 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 
 const APPS_SERVICE_CID = Components.ID("{05072afa-92fe-45bf-ae22-39b69c117058}");
 
 function AppsService()
 {
   debug("AppsService Constructor");
-  let inParent = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
-                   .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-  debug("inParent: " + inParent);
-  Cu.import(inParent ? "resource://gre/modules/Webapps.jsm" :
-                       "resource://gre/modules/AppsServiceChild.jsm");
+  this.inParent = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+                    .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+  debug("inParent: " + this.inParent);
+  Cu.import(this.inParent ? "resource://gre/modules/Webapps.jsm" :
+                            "resource://gre/modules/AppsServiceChild.jsm");
 }
 
 AppsService.prototype = {
@@ -37,6 +38,16 @@ AppsService.prototype = {
   getAppByManifestURL: function getAppByManifestURL(aManifestURL) {
     debug("GetAppByManifestURL( " + aManifestURL + " )");
     return DOMApplicationRegistry.getAppByManifestURL(aManifestURL);
+  },
+
+  getManifestFor: function getManifestFor(aManifestURL) {
+    debug("getManifestFor(" + aManifestURL + ")");
+    if (this.inParent) {
+      return DOMApplicationRegistry.getManifestFor(aManifestURL);
+    } else {
+      return Promise.reject(
+        new Error("Calling getManifestFor() from child is not supported"));
+    }
   },
 
   getAppLocalIdByManifestURL: function getAppLocalIdByManifestURL(aManifestURL) {

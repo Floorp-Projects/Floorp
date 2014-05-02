@@ -108,12 +108,10 @@
 #endif
           </vbox>
 
-#if MOZ_UPDATE_CHANNEL != release
 #ifdef MOZ_UPDATER
           <description class="text-blurb" id="currentChannelText">
             &channel.description.start;<label id="currentChannel"/>&channel.description.end;
           </description>
-#endif
 #endif
           <vbox id="experimental" hidden="true">
             <description class="text-blurb" id="warningDesc">

@@ -13,6 +13,7 @@
 #include "JSStreamWriter.h"
 #include "ProfilerBacktrace.h"
 #include "mozilla/Mutex.h"
+#include "gtest/MozGtestFriend.h"
 
 class ThreadProfile;
 
@@ -46,6 +47,11 @@ public:
   char getTagName() const { return mTagName; }
 
 private:
+  FRIEND_TEST(ThreadProfile, InsertOneTag);
+  FRIEND_TEST(ThreadProfile, InsertOneTagWithTinyBuffer);
+  FRIEND_TEST(ThreadProfile, InsertTagsNoWrap);
+  FRIEND_TEST(ThreadProfile, InsertTagsWrap);
+  FRIEND_TEST(ThreadProfile, MemoryMeasure);
   friend class ThreadProfile;
   union {
     const char* mTagData;
@@ -100,6 +106,11 @@ public:
   void* GetStackTop() const { return mStackTop; }
   void DuplicateLastSample();
 private:
+  FRIEND_TEST(ThreadProfile, InsertOneTag);
+  FRIEND_TEST(ThreadProfile, InsertOneTagWithTinyBuffer);
+  FRIEND_TEST(ThreadProfile, InsertTagsNoWrap);
+  FRIEND_TEST(ThreadProfile, InsertTagsWrap);
+  FRIEND_TEST(ThreadProfile, MemoryMeasure);
   // Circular buffer 'Keep One Slot Open' implementation
   // for simplicity
   ProfileEntry*  mEntries;
