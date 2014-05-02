@@ -171,15 +171,16 @@ nsWSRunObject::PrepareToDeleteNode(nsHTMLEditor* aHTMLEd,
   return leftWSObj.PrepareToDeleteRangePriv(&rightWSObj);
 }
 
-nsresult 
-nsWSRunObject::PrepareToSplitAcrossBlocks(nsHTMLEditor *aHTMLEd, 
-                                          nsCOMPtr<nsIDOMNode> *aSplitNode, 
-                                          int32_t *aSplitOffset)
+nsresult
+nsWSRunObject::PrepareToSplitAcrossBlocks(nsHTMLEditor* aHTMLEd,
+                                          nsCOMPtr<nsINode>* aSplitNode,
+                                          int32_t* aSplitOffset)
 {
-  NS_ENSURE_TRUE(aSplitNode && aSplitOffset && *aSplitNode && aHTMLEd, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aHTMLEd && aSplitNode && *aSplitNode && aSplitOffset,
+                 NS_ERROR_NULL_POINTER);
 
   nsAutoTrackDOMPoint tracker(aHTMLEd->mRangeUpdater, aSplitNode, aSplitOffset);
-  
+
   nsWSRunObject wsObj(aHTMLEd, *aSplitNode, *aSplitOffset);
 
   return wsObj.PrepareToSplitAcrossBlocksPriv();
