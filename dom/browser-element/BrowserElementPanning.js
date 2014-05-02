@@ -50,9 +50,9 @@ const ContentPanning = {
   },
 
   _setupListenersForPanning: function cp_setupListenersForPanning() {
-    var events;
-    try {
-      content.document.createEvent('TouchEvent');
+    let events;
+
+    if (content.TouchEvent) {
       events = ['touchstart', 'touchend', 'touchmove'];
       this.watchedEventsType = 'touch';
 #ifdef MOZ_WIDGET_GONK
@@ -65,7 +65,7 @@ const ContentPanning = {
                            .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
       this.hybridEvents = isParentProcess;
 #endif
-    } catch(e) {
+    } else {
       // Touch events aren't supported, so fall back on mouse.
       events = ['mousedown', 'mouseup', 'mousemove'];
       this.watchedEventsType = 'mouse';
