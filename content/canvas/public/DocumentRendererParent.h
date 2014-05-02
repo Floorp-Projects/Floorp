@@ -26,8 +26,10 @@ public:
     void DrawToCanvas(const nsIntSize& renderedSize,
 		      const nsCString& aData);
 
+    virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
     virtual bool Recv__delete__(const nsIntSize& renderedSize,
-                                const nsCString& data);
+                                const nsCString& data) MOZ_OVERRIDE;
 
 private:
     nsCOMPtr<nsICanvasRenderingContextInternal> mCanvas;

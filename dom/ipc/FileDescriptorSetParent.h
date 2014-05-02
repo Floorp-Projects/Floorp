@@ -36,6 +36,8 @@ private:
   FileDescriptorSetParent(const FileDescriptor& aFileDescriptor);
   ~FileDescriptorSetParent();
 
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
   virtual bool
   RecvAddFileDescriptor(const FileDescriptor& aFileDescriptor) MOZ_OVERRIDE;
 

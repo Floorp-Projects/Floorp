@@ -64,6 +64,12 @@ CookieServiceParent::~CookieServiceParent()
 {
 }
 
+void
+CookieServiceParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Implement me! Bug 1005181
+}
+
 bool
 CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
                                          const bool& aIsForeign,

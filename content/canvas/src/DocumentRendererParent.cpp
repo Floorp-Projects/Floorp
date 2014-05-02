@@ -48,6 +48,12 @@ void DocumentRendererParent::DrawToCanvas(const nsIntSize& aSize,
     mCanvas->Redraw(damageRect);
 }
 
+void
+DocumentRendererParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Implement me! Bug 1005139
+}
+
 bool
 DocumentRendererParent::Recv__delete__(const nsIntSize& renderedSize,
                                        const nsCString& data)

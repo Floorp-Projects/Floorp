@@ -27,6 +27,12 @@ FileDescriptorSetParent::ForgetFileDescriptors(
   mFileDescriptors.SwapElements(aFileDescriptors);
 }
 
+void
+FileDescriptorSetParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Implement me! Bug 1005157
+}
+
 bool
 FileDescriptorSetParent::RecvAddFileDescriptor(
                                           const FileDescriptor& aFileDescriptor)

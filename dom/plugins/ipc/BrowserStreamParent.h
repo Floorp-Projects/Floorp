@@ -26,6 +26,8 @@ public:
 
   virtual bool IsBrowserStream() MOZ_OVERRIDE { return true; }
 
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
   virtual bool AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                      NPError* result) MOZ_OVERRIDE;
 

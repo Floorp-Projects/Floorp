@@ -61,5 +61,11 @@ ChannelDiverterParent::DivertTo(nsIStreamListener* newListener)
   mDivertableChannelParent->DivertTo(newListener);
 }
 
+void
+ChannelDiverterParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Implement me! Bug 1005179
+}
+
 } // namespace net
 } // namespace mozilla

@@ -17,6 +17,12 @@ using namespace mozilla::plugins::parent;
 namespace mozilla {
 namespace plugins {
 
+void
+PluginIdentifierParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Implement me! Bug 1005161
+}
+
 bool
 PluginIdentifierParent::RecvRetain()
 {

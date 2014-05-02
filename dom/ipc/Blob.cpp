@@ -474,6 +474,9 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
   }
 
+protected:
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
 private:
   // This method is only called by the IPDL message machinery.
   virtual bool
@@ -2158,6 +2161,12 @@ InputStreamChild::Recv__delete__(const InputStreamParams& aParams,
 
   mRemoteStream->SetStream(stream);
   return true;
+}
+
+void
+InputStreamParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Implement me! Bug 1005150
 }
 
 bool

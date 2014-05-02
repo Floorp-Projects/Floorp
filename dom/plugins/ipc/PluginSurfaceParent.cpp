@@ -24,5 +24,11 @@ PluginSurfaceParent::~PluginSurfaceParent()
 {
 }
 
+void
+PluginSurfaceParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Implement me! Bug 1005167
+}
+
 }
 }
