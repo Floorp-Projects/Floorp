@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1003539
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1003539</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1003539 **/
+// Refering to this specification: http://www.whatwg.org/specs/web-apps/current-work/multipage/tabular-data.html#dom-table-insertrow
+var tab;
+tab = document.createElement("table");
+tab.createTHead();
+tab.insertRow();
+is(tab.innerHTML, '<thead></thead><tbody><tr></tr></tbody>', "Row should be inserted in the tbody.");
+
+tab = document.createElement("table");
+tab.createTBody();
+tab.createTBody();
+tab.insertRow();
+is(tab.innerHTML, '<tbody></tbody><tbody><tr></tr></tbody>', "Row should be inserted in the last tbody.");
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1003539">Mozilla Bug 1003539</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
