@@ -18,7 +18,8 @@ namespace jit {
 
 #define RECOVER_OPCODE_LIST(_)                  \
     _(ResumePoint)                              \
-    _(Add)
+    _(Add)                                      \
+    _(NewDerivedTypedObject)
 
 class RResumePoint;
 class SnapshotIterator;
@@ -96,6 +97,18 @@ class RAdd MOZ_FINAL : public RInstruction
 
     virtual uint32_t numOperands() const {
         return 2;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RNewDerivedTypedObject MOZ_FINAL : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_(NewDerivedTypedObject)
+
+    virtual uint32_t numOperands() const {
+        return 3;
     }
 
     bool recover(JSContext *cx, SnapshotIterator &iter) const;

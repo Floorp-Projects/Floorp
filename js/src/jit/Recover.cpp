@@ -9,6 +9,8 @@
 #include "jscntxt.h"
 #include "jsmath.h"
 
+#include "builtin/TypedObject.h"
+
 #include "jit/IonSpewer.h"
 #include "jit/JitFrameIterator.h"
 #include "jit/MIR.h"
@@ -164,6 +166,33 @@ RAdd::recover(JSContext *cx, SnapshotIterator &iter) const
     if (isFloatOperation_ && !RoundFloat32(cx, result, &result))
         return false;
 
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
+MNewDerivedTypedObject::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_NewDerivedTypedObject));
+    return true;
+}
+
+RNewDerivedTypedObject::RNewDerivedTypedObject(CompactBufferReader &reader)
+{ }
+
+bool
+RNewDerivedTypedObject::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    Rooted<SizedTypeDescr *> descr(cx, &iter.read().toObject().as<SizedTypeDescr>());
+    Rooted<TypedObject *> owner(cx, &iter.read().toObject().as<TypedObject>());
+    int32_t offset = iter.read().toInt32();
+
+    JSObject *obj = TypedObject::createDerived(cx, descr, owner, offset);
+    if (!obj)
+        return false;
+
+    RootedValue result(cx, ObjectValue(*obj));
     iter.storeInstructionResult(result);
     return true;
 }
