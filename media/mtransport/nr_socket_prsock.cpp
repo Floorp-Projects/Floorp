@@ -584,7 +584,9 @@ int NrSocket::recvfrom(void * buf, size_t maxlen,
 
   status = PR_RecvFrom(fd_, buf, maxlen, flags, &nfrom, PR_INTERVAL_NO_WAIT);
   if (status <= 0) {
-    r_log(LOG_GENERIC,LOG_ERR,"Error in recvfrom");
+    if (PR_GetError() == PR_WOULD_BLOCK_ERROR)
+      ABORT(R_WOULDBLOCK);
+    r_log(LOG_GENERIC, LOG_INFO, "Error in recvfrom");
     ABORT(R_IO_ERROR);
   }
   *len=status;
