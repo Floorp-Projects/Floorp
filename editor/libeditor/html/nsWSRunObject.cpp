@@ -25,6 +25,9 @@
 #include "nsTextFragment.h"
 #include "nsWSRunObject.h"
 
+using namespace mozilla;
+using namespace mozilla::dom;
+
 const char16_t nbsp = 160;
 
 static bool IsBlockNode(nsINode* node)
@@ -655,7 +658,7 @@ nsWSRunObject::GetWSNodes()
   // block boundary.
   nsresult res = NS_OK;
   
-  DOMPoint start(mNode, mOffset), end(mNode, mOffset);
+  ::DOMPoint start(mNode, mOffset), end(mNode, mOffset);
   nsCOMPtr<nsINode> wsBoundingParent = GetWSBoundingParent();
 
   // first look backwards to find preceding ws nodes
@@ -1110,7 +1113,7 @@ nsWSRunObject::GetPreviousWSNodeInner(nsINode* aStartNode,
 }
 
 nsresult 
-nsWSRunObject::GetPreviousWSNode(DOMPoint aPoint,
+nsWSRunObject::GetPreviousWSNode(::DOMPoint aPoint,
                                  nsINode* aBlockParent,
                                  nsCOMPtr<nsINode>* aPriorNode)
 {
@@ -1202,7 +1205,7 @@ nsWSRunObject::GetNextWSNodeInner(nsINode* aStartNode,
 }
 
 nsresult 
-nsWSRunObject::GetNextWSNode(DOMPoint aPoint,
+nsWSRunObject::GetNextWSNode(::DOMPoint aPoint,
                              nsINode* aBlockParent,
                              nsCOMPtr<nsINode>* aNextNode)
 {
@@ -1622,6 +1625,21 @@ nsWSRunObject::ConvertToNBSP(WSPoint aPoint, AreaRestriction aAR)
 }
 
 void
+nsWSRunObject::GetAsciiWSBounds(int16_t aDir, nsINode* aNode, int32_t aOffset,
+                                Text** outStartNode, int32_t* outStartOffset,
+                                Text** outEndNode, int32_t* outEndOffset)
+{
+  nsCOMPtr<nsIDOMNode> outStartDOMNode, outEndDOMNode;
+  GetAsciiWSBounds(aDir, GetAsDOMNode(aNode), aOffset,
+                   address_of(outStartDOMNode), outStartOffset,
+                   address_of(outEndDOMNode), outEndOffset);
+  nsCOMPtr<Text> start(do_QueryInterface(outStartDOMNode));
+  nsCOMPtr<Text> end(do_QueryInterface(outEndDOMNode));
+  start.forget(outStartNode);
+  end.forget(outEndNode);
+}
+
+void
 nsWSRunObject::GetAsciiWSBounds(int16_t aDir, nsIDOMNode *aNode, int32_t aOffset,
                                 nsCOMPtr<nsIDOMNode> *outStartNode, int32_t *outStartOffset,
                                 nsCOMPtr<nsIDOMNode> *outEndNode, int32_t *outEndOffset)
@@ -1869,114 +1887,114 @@ nsWSRunObject::GetWSPointBefore(nsIDOMNode *aNode, int32_t aOffset)
 
 nsresult
 nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
-{    
-  // try to change an nbsp to a space, if possible, just to prevent nbsp proliferation. 
-  // examine what is before and after the trailing nbsp, if any.
+{
+  // Try to change an nbsp to a space, if possible, just to prevent nbsp
+  // proliferation.  Examine what is before and after the trailing nbsp, if
+  // any.
   NS_ENSURE_TRUE(aRun, NS_ERROR_NULL_POINTER);
   nsresult res;
   bool leftCheck = false;
   bool spaceNBSP = false;
   bool rightCheck = false;
-  
+
   // confirm run is normalWS
   if (aRun->mType != WSType::normalWS) {
     return NS_ERROR_FAILURE;
   }
-  
+
   // first check for trailing nbsp
   WSPoint thePoint = GetCharBefore(GetAsDOMNode(aRun->mEndNode), aRun->mEndOffset);
   if (thePoint.mTextNode && thePoint.mChar == nbsp) {
     // now check that what is to the left of it is compatible with replacing nbsp with space
     WSPoint prevPoint = GetCharBefore(thePoint);
     if (prevPoint.mTextNode) {
-      if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) leftCheck = true;
-      else spaceNBSP = true;
-    } else if (aRun->mLeftType == WSType::text) {
-      leftCheck = true;
-    } else if (aRun->mLeftType == WSType::special) {
+      if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) {
+        leftCheck = true;
+      } else {
+        spaceNBSP = true;
+      }
+    } else if (aRun->mLeftType == WSType::text ||
+               aRun->mLeftType == WSType::special) {
       leftCheck = true;
     }
-    if (leftCheck || spaceNBSP)
-    {
-      // now check that what is to the right of it is compatible with replacing nbsp with space
-      if (aRun->mRightType == WSType::text) {
-        rightCheck = true;
-      }
-      if (aRun->mRightType == WSType::special) {
-        rightCheck = true;
-      }
-      if (aRun->mRightType == WSType::br) {
+    if (leftCheck || spaceNBSP) {
+      // now check that what is to the right of it is compatible with replacing
+      // nbsp with space
+      if (aRun->mRightType == WSType::text ||
+          aRun->mRightType == WSType::special ||
+          aRun->mRightType == WSType::br) {
         rightCheck = true;
       }
       if ((aRun->mRightType & WSType::block) &&
           IsBlockNode(nsCOMPtr<nsINode>(GetWSBoundingParent()))) {
-        // we are at a block boundary.  Insert a <br>.  Why?  Well, first note that
-        // the br will have no visible effect since it is up against a block boundary.
-        // |foo<br><p>bar|  renders like |foo<p>bar| and similarly
-        // |<p>foo<br></p>bar| renders like |<p>foo</p>bar|.  What this <br> addition
-        // gets us is the ability to convert a trailing nbsp to a space.  Consider:
-        // |<body>foo. '</body>|, where ' represents selection.  User types space attempting
-        // to put 2 spaces after the end of their sentence.  We used to do this as:
-        // |<body>foo. &nbsp</body>|  This caused problems with soft wrapping: the nbsp
-        // would wrap to the next line, which looked attrocious.  If you try to do:
-        // |<body>foo.&nbsp </body>| instead, the trailing space is invisible because it 
-        // is against a block boundary.  If you do: |<body>foo.&nbsp&nbsp</body>| then
-        // you get an even uglier soft wrapping problem, where foo is on one line until
-        // you type the final space, and then "foo  " jumps down to the next line.  Ugh.
-        // The best way I can find out of this is to throw in a harmless <br>
-        // here, which allows us to do: |<body>foo.&nbsp <br></body>|, which doesn't
-        // cause foo to jump lines, doesn't cause spaces to show up at the beginning of 
-        // soft wrapped lines, and lets the user see 2 spaces when they type 2 spaces.
+        // We are at a block boundary.  Insert a <br>.  Why?  Well, first note
+        // that the br will have no visible effect since it is up against a
+        // block boundary.  |foo<br><p>bar| renders like |foo<p>bar| and
+        // similarly |<p>foo<br></p>bar| renders like |<p>foo</p>bar|.  What
+        // this <br> addition gets us is the ability to convert a trailing nbsp
+        // to a space.  Consider: |<body>foo. '</body>|, where ' represents
+        // selection.  User types space attempting to put 2 spaces after the
+        // end of their sentence.  We used to do this as: |<body>foo.
+        // &nbsp</body>|  This caused problems with soft wrapping: the nbsp
+        // would wrap to the next line, which looked attrocious.  If you try to
+        // do: |<body>foo.&nbsp </body>| instead, the trailing space is
+        // invisible because it is against a block boundary.  If you do:
+        // |<body>foo.&nbsp&nbsp</body>| then you get an even uglier soft
+        // wrapping problem, where foo is on one line until you type the final
+        // space, and then "foo  " jumps down to the next line.  Ugh.  The best
+        // way I can find out of this is to throw in a harmless <br> here,
+        // which allows us to do: |<body>foo.&nbsp <br></body>|, which doesn't
+        // cause foo to jump lines, doesn't cause spaces to show up at the
+        // beginning of soft wrapped lines, and lets the user see 2 spaces when
+        // they type 2 spaces.
 
-        nsCOMPtr<nsIDOMNode> brNode;
-        res = mHTMLEditor->CreateBR(GetAsDOMNode(aRun->mEndNode), aRun->mEndOffset, address_of(brNode));
-        NS_ENSURE_SUCCESS(res, res);
+        nsCOMPtr<Element> brNode =
+          mHTMLEditor->CreateBR(aRun->mEndNode, aRun->mEndOffset);
+        NS_ENSURE_TRUE(brNode, NS_ERROR_FAILURE);
 
-        // refresh thePoint, prevPoint
+        // Refresh thePoint, prevPoint
         thePoint = GetCharBefore(GetAsDOMNode(aRun->mEndNode), aRun->mEndOffset);
         prevPoint = GetCharBefore(thePoint);
         rightCheck = true;
       }
     }
-    if (leftCheck && rightCheck)
-    {
-      // now replace nbsp with space
-      // first, insert a space
-      nsCOMPtr<nsIDOMCharacterData> textNode(do_QueryInterface(thePoint.mTextNode));
-      NS_ENSURE_TRUE(textNode, NS_ERROR_NULL_POINTER);
+    if (leftCheck && rightCheck) {
+      // Now replace nbsp with space.  First, insert a space
       nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
       nsAutoString spaceStr(char16_t(32));
-      res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset, true);
+      res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr,
+                                                    thePoint.mTextNode,
+                                                    thePoint.mOffset, true);
       NS_ENSURE_SUCCESS(res, res);
-  
-      // finally, delete that nbsp
-      nsCOMPtr<nsIDOMNode> delNode(do_QueryInterface(thePoint.mTextNode));
-      res = DeleteChars(delNode, thePoint.mOffset+1, delNode, thePoint.mOffset+2);
+
+      // Finally, delete that nbsp
+      res = DeleteChars(GetAsDOMNode(thePoint.mTextNode), thePoint.mOffset + 1,
+                        GetAsDOMNode(thePoint.mTextNode), thePoint.mOffset + 2);
       NS_ENSURE_SUCCESS(res, res);
-    }
-    else if (!mPRE && spaceNBSP && rightCheck)  // don't mess with this preformatted for now.
-    {
-      // we have a run of ascii whitespace (which will render as one space)
-      // followed by an nbsp (which is at the end of the whitespace run).  Let's
-      // switch their order.  This will insure that if someone types two spaces
-      // after a sentence, and the editor softwraps at this point, the spaces wont
-      // be split across lines, which looks ugly and is bad for the moose.
-      
-      nsCOMPtr<nsIDOMNode> startNode, endNode, thenode(do_QueryInterface(prevPoint.mTextNode));
+    } else if (!mPRE && spaceNBSP && rightCheck) {
+      // Don't mess with this preformatted for now.  We have a run of ASCII
+      // whitespace (which will render as one space) followed by an nbsp (which
+      // is at the end of the whitespace run).  Let's switch their order.  This
+      // will ensure that if someone types two spaces after a sentence, and the
+      // editor softwraps at this point, the spaces won't be split across lines,
+      // which looks ugly and is bad for the moose.
+
+      nsCOMPtr<Text> startNode, endNode;
       int32_t startOffset, endOffset;
-      GetAsciiWSBounds(eBoth, thenode, prevPoint.mOffset+1, address_of(startNode),
-                       &startOffset, address_of(endNode), &endOffset);
-      
-      //  delete that nbsp
-      nsCOMPtr<nsIDOMNode> delNode(do_QueryInterface(thePoint.mTextNode));
-      res = DeleteChars(delNode, thePoint.mOffset, delNode, thePoint.mOffset+1);
+      GetAsciiWSBounds(eBoth, prevPoint.mTextNode, prevPoint.mOffset + 1,
+                       getter_AddRefs(startNode), &startOffset,
+                       getter_AddRefs(endNode), &endOffset);
+
+      // Delete that nbsp
+      res = DeleteChars(GetAsDOMNode(thePoint.mTextNode), thePoint.mOffset,
+                        GetAsDOMNode(thePoint.mTextNode), thePoint.mOffset + 1);
       NS_ENSURE_SUCCESS(res, res);
-      
-      // finally, insert that nbsp before the ascii ws run
+
+      // Finally, insert that nbsp before the ASCII ws run
       nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
       nsAutoString nbspStr(nbsp);
-      nsCOMPtr<nsIDOMCharacterData> textNode(do_QueryInterface(startNode));
-      res = mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr, textNode, startOffset, true);
+      res = mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr, startNode,
+                                                    startOffset, true);
       NS_ENSURE_SUCCESS(res, res);
     }
   }
