@@ -6,6 +6,8 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.home.BrowserSearch.OnEditSuggestionListener;
 import org.mozilla.gecko.home.BrowserSearch.OnSearchListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
@@ -79,9 +81,16 @@ class SearchEngineRow extends AnimatedHeightLayout {
                 // search for the term.
                 if (v != mUserEnteredView && !StringUtils.isSearchQuery(suggestion, false)) {
                     if (mUrlOpenListener != null) {
+                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, "url");
+
                         mUrlOpenListener.onUrlOpen(suggestion, EnumSet.noneOf(OnUrlOpenListener.Flags.class));
                     }
                 } else if (mSearchListener != null) {
+                    if (v == mUserEnteredView) {
+                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, "user");
+                    } else {
+                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, "engine");
+                    }
                     mSearchListener.onSearch(mSearchEngine, suggestion);
                 }
             }
@@ -135,6 +144,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
     public void performUserEnteredSearch() {
         String searchTerm = getSuggestionTextFromView(mUserEnteredView);
         if (mSearchListener != null) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, "user");
             mSearchListener.onSearch(mSearchEngine, searchTerm);
         }
     }
