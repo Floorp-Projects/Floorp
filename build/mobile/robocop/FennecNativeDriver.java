@@ -234,7 +234,7 @@ public class FennecNativeDriver implements Driver {
     }
 
     public void setupScrollHandling() {
-        GeckoAppShell.registerEventListener("robocop:scroll", new GeckoEventListener() {
+        EventDispatcher.getInstance().registerGeckoThreadListener(new GeckoEventListener() {
             @Override
             public void handleMessage(final String event, final JSONObject message) {
                 try {
@@ -250,7 +250,7 @@ public class FennecNativeDriver implements Driver {
                             "expected fields: " + e);
                 }
             }
-        });
+        }, "robocop:scroll");
     }
 
     /**
