@@ -141,7 +141,6 @@ this.UITelemetry = {
     delete this._activeSessions[aName];
 
     if (!sessionStart) {
-      Services.console.logStringMessage("UITelemetry error: no session [" + aName + "] to stop!");
       return;
     }
 
