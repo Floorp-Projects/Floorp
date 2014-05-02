@@ -29,7 +29,7 @@ assertEq(arg[2], 3);
 
 /* Test funapply with arguments */
 function return0(a, b, c) { return 0; }
-function funapply() { return return0.apply({}, arguments); }
+function funapply() { return return0.apply(undefined, arguments); }
 function test4() { return funapply(1,2,3) }
 
 assertEq(test4("a","b","c","d","e"), 0);
@@ -41,7 +41,7 @@ function apply3(a, b, c) {
   assertEq(b,2)
   assertEq(c,3)
 }
-function funapply2() { return apply3.apply({}, arguments); }
+function funapply2() { return apply3.apply(undefined, arguments); }
 function test5() { return funapply2(1,2,3) }
 
 test5("a","b","c","d","e");
@@ -49,7 +49,7 @@ test5("a","b","c","d","e");
 
 /* Test funapply when argument vector has less args than callee and callee known */
 function apply_fun1(a, b, c) { assertEq(c, undefined) }
-function funapply3() { return apply_fun1.apply({}, arguments); }
+function funapply3() { return apply_fun1.apply(undefined, arguments); }
 function test7() { return funapply3(1,2) }
 
 test7("a","b","c","d","e");
@@ -58,7 +58,7 @@ test7("a","b","c","d","e");
 /* Test funapply when argument vector has less args than callee and callee unknown */
 var fun;
 function apply_fun2(a, b, c) { assertEq(c, undefined) }
-function funapply4() { return fun.apply({}, arguments); }
+function funapply4() { return fun.apply(undefined, arguments); }
 function test8() { return funapply4(1,2) }
 
 fun = apply_fun1;
@@ -73,7 +73,7 @@ test8("a","b","c","d","e");
 ////////////
 
 function dumpArgs(i) { if (i == 90) return funapply5.arguments.length; return [i]; }
-function funapply5() { return dumpArgs.apply({}, arguments); }
+function funapply5() { return dumpArgs.apply(undefined, arguments); }
 function test9(i) { return funapply5(i); }
 
 assertEq(test9(89)[0], 89);
@@ -126,7 +126,7 @@ function arg_len2() { assertEq(arguments.length, 4); }
 function bailing_arg_len(a) {
     if (a == 90) {
         bailout();
-        arg_len.apply({}, arguments);
+        arg_len.apply(undefined, arguments);
     }
     assertEq(arguments.length, 4);
     return arguments;
