@@ -2039,8 +2039,11 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
         NS_ENSURE_SUCCESS(res, res);
       }
       NS_ENSURE_STATE(mHTMLEditor);
-      res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor, address_of(visNode), &so, address_of(visNode), &eo);
+      nsCOMPtr<nsINode> visNode_(do_QueryInterface(visNode));
+      res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor,
+          address_of(visNode_), &so, address_of(visNode_), &eo);
       NS_ENSURE_SUCCESS(res, res);
+      visNode = GetAsDOMNode(visNode_);
       nsCOMPtr<nsIDOMCharacterData> nodeAsText(do_QueryInterface(visNode));
       NS_ENSURE_STATE(mHTMLEditor);
       res = mHTMLEditor->DeleteText(nodeAsText, std::min(so, eo), DeprecatedAbs(eo - so));
@@ -2337,10 +2340,14 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
   {
     NS_ENSURE_STATE(mHTMLEditor);
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+    nsCOMPtr<nsINode> startNode_(do_QueryInterface(startNode)),
+      endNode_(do_QueryInterface(endNode));
     res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor,
-                                            address_of(startNode), &startOffset, 
-                                            address_of(endNode), &endOffset);
+                                            address_of(startNode_), &startOffset,
+                                            address_of(endNode_), &endOffset);
     NS_ENSURE_SUCCESS(res, res); 
+    startNode = GetAsDOMNode(startNode_);
+    endNode = GetAsDOMNode(endNode_);
   }
   
   {
