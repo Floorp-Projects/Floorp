@@ -1589,6 +1589,11 @@ class MNewDerivedTypedObject
     virtual AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return true;
+    }
 };
 
 // Abort parallel execution.
