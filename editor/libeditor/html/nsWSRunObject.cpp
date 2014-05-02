@@ -420,12 +420,12 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
   return NS_OK;
 }
 
-nsresult 
+nsresult
 nsWSRunObject::DeleteWSBackward()
 {
   WSPoint point = GetCharBefore(GetAsDOMNode(mNode), mOffset);
   NS_ENSURE_TRUE(point.mTextNode, NS_OK);  // nothing to delete
-  
+
   if (mPRE) {
     // easy case, preformatted ws
     if (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == nbsp) {
@@ -433,7 +433,7 @@ nsWSRunObject::DeleteWSBackward()
                          GetAsDOMNode(point.mTextNode), point.mOffset + 1);
     }
   }
-  
+
   // Caller's job to ensure that previous char is really ws.  If it is normal
   // ws, we need to delete the whole run.
   if (nsCRT::IsAsciiSpace(point.mChar)) {
@@ -442,7 +442,7 @@ nsWSRunObject::DeleteWSBackward()
     GetAsciiWSBounds(eBoth, point.mTextNode, point.mOffset + 1,
                      getter_AddRefs(startNodeText), &startOffset,
                      getter_AddRefs(endNodeText), &endOffset);
-    
+
     // adjust surrounding ws
     nsCOMPtr<nsINode> startNode = startNodeText.get();
     nsCOMPtr<nsINode> endNode = endNodeText.get();
@@ -451,7 +451,7 @@ nsWSRunObject::DeleteWSBackward()
                                           address_of(startNode), &startOffset,
                                           address_of(endNode), &endOffset);
     NS_ENSURE_SUCCESS(res, res);
-    
+
     // finally, delete that ws
     return DeleteChars(GetAsDOMNode(startNode), startOffset,
                        GetAsDOMNode(endNode), endOffset);
@@ -465,61 +465,55 @@ nsWSRunObject::DeleteWSBackward()
                                           address_of(node), &startOffset,
                                           address_of(node), &endOffset);
     NS_ENSURE_SUCCESS(res, res);
-    
+
     // finally, delete that ws
     return DeleteChars(GetAsDOMNode(node), startOffset, GetAsDOMNode(node), endOffset);
   }
   return NS_OK;
 }
 
-nsresult 
+nsresult
 nsWSRunObject::DeleteWSForward()
 {
-  nsresult res = NS_OK;
   WSPoint point = GetCharAfter(GetAsDOMNode(mNode), mOffset);
-  NS_ENSURE_TRUE(point.mTextNode, NS_OK);  // nothing to delete
-  
-  if (mPRE)  // easy case, preformatted ws
-  {
-    if (nsCRT::IsAsciiSpace(point.mChar) || (point.mChar == nbsp))
-    {
-      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(point.mTextNode));
-      int32_t startOffset = point.mOffset;
-      int32_t endOffset = point.mOffset+1;
-      return DeleteChars(node, startOffset, node, endOffset);
+  NS_ENSURE_TRUE(point.mTextNode, NS_OK); // nothing to delete
+
+  if (mPRE) {
+    // easy case, preformatted ws
+    if (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == nbsp) {
+      return DeleteChars(GetAsDOMNode(point.mTextNode), point.mOffset,
+                         GetAsDOMNode(point.mTextNode), point.mOffset + 1);
     }
   }
-  
-  // callers job to insure that next char is really ws.
-  // If it is normal ws, we need to delete the whole run
-  if (nsCRT::IsAsciiSpace(point.mChar))
-  {
-    nsCOMPtr<nsIDOMNode> startNode, endNode, node(do_QueryInterface(point.mTextNode));
+
+  // Caller's job to ensure that next char is really ws.  If it is normal ws,
+  // we need to delete the whole run.
+  if (nsCRT::IsAsciiSpace(point.mChar)) {
+    nsCOMPtr<nsIContent> startNodeText, endNodeText;
     int32_t startOffset, endOffset;
-    GetAsciiWSBounds(eBoth, node, point.mOffset+1, address_of(startNode),
-                     &startOffset, address_of(endNode), &endOffset);
-    
-    // adjust surrounding ws
-    res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor, address_of(startNode), &startOffset, 
-                                              address_of(endNode), &endOffset);
+    GetAsciiWSBounds(eBoth, point.mTextNode, point.mOffset + 1,
+                     getter_AddRefs(startNodeText), &startOffset,
+                     getter_AddRefs(endNodeText), &endOffset);
+
+    // Adjust surrounding ws
+    nsCOMPtr<nsINode> startNode(startNodeText), endNode(endNodeText);
+    nsresult res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor,
+        address_of(startNode), &startOffset, address_of(endNode), &endOffset);
     NS_ENSURE_SUCCESS(res, res);
-    
-    // finally, delete that ws
-    return DeleteChars(startNode, startOffset, endNode, endOffset);
-  }
-  else if (point.mChar == nbsp)
-  {
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(point.mTextNode));
-    // adjust surrounding ws
+
+    // Finally, delete that ws
+    return DeleteChars(GetAsDOMNode(startNode), startOffset, GetAsDOMNode(endNode), endOffset);
+  } else if (point.mChar == nbsp) {
+    nsCOMPtr<nsINode> node(point.mTextNode);
+    // Adjust surrounding ws
     int32_t startOffset = point.mOffset;
     int32_t endOffset = point.mOffset+1;
-    res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor, address_of(node), &startOffset, 
-                                              address_of(node), &endOffset);
+    nsresult res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor,
+        address_of(node), &startOffset, address_of(node), &endOffset);
     NS_ENSURE_SUCCESS(res, res);
-    
-    // finally, delete that ws
-    return DeleteChars(node, startOffset, node, endOffset);
-  
+
+    // Finally, delete that ws
+    return DeleteChars(GetAsDOMNode(node), startOffset, GetAsDOMNode(node), endOffset);
   }
   return NS_OK;
 }
