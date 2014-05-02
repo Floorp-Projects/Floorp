@@ -46,6 +46,9 @@ public interface TelemetryContract {
 
         // Loading a URL.
         public static final String LOAD_URL = "loadurl.1";
+
+        // Generic action, usually for tracking menu and toolbar actions.
+        public static final String ACTION = "action.1";
     }
 
     /**
@@ -64,6 +67,9 @@ public interface TelemetryContract {
 
         // Action occurred via an intent.
         public static final String INTENT = "intent";
+
+        // Action occurred via the main menu.
+        public static final String MENU = "menu";
 
         // Action occurred via a context menu.
         public static final String CONTEXT_MENU = "contextmenu";
