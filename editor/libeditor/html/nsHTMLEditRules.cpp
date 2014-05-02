@@ -491,13 +491,13 @@ nsHTMLEditRules::AfterEditInner(EditAction action,
       
       // also do this for original selection endpoints. 
       NS_ENSURE_STATE(mHTMLEditor);
-      nsWSRunObject(mHTMLEditor, GetAsDOMNode(mRangeItem->startNode),
+      nsWSRunObject(mHTMLEditor, mRangeItem->startNode,
                     mRangeItem->startOffset).AdjustWhitespace();
       // we only need to handle old selection endpoint if it was different from start
       if (mRangeItem->startNode != mRangeItem->endNode ||
           mRangeItem->startOffset != mRangeItem->endOffset) {
         NS_ENSURE_STATE(mHTMLEditor);
-        nsWSRunObject(mHTMLEditor, GetAsDOMNode(mRangeItem->endNode),
+        nsWSRunObject(mHTMLEditor, mRangeItem->endNode,
                       mRangeItem->endOffset).AdjustWhitespace();
       }
     }
@@ -2901,7 +2901,9 @@ nsHTMLEditRules::JoinBlocks(nsIDOMNode *aLeftNode,
     
     // adjust whitespace at block boundaries
     NS_ENSURE_STATE(mHTMLEditor);
-    res = nsWSRunObject::PrepareToJoinBlocks(mHTMLEditor, aLeftBlock, aRightBlock);
+    nsCOMPtr<Element> leftBlock(do_QueryInterface(aLeftBlock));
+    nsCOMPtr<Element> rightBlock(do_QueryInterface(aRightBlock));
+    res = nsWSRunObject::PrepareToJoinBlocks(mHTMLEditor, leftBlock, rightBlock);
     NS_ENSURE_SUCCESS(res, res);
     // Do br adjustment.
     nsCOMPtr<nsIDOMNode> brNode;

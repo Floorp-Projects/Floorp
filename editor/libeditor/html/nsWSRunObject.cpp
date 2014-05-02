@@ -122,17 +122,15 @@ nsWSRunObject::ScrubBlockBoundary(nsHTMLEditor* aHTMLEd,
   return theWSObj.Scrub();
 }
 
-nsresult 
-nsWSRunObject::PrepareToJoinBlocks(nsHTMLEditor *aHTMLEd, 
-                                   nsIDOMNode *aLeftParent, 
-                                   nsIDOMNode *aRightParent)
+nsresult
+nsWSRunObject::PrepareToJoinBlocks(nsHTMLEditor* aHTMLEd,
+                                   Element* aLeftBlock,
+                                   Element* aRightBlock)
 {
-  nsCOMPtr<nsINode> leftParent(do_QueryInterface(aLeftParent));
-  nsCOMPtr<nsINode> rightParent(do_QueryInterface(aRightParent));
-  NS_ENSURE_TRUE(leftParent && rightParent && aHTMLEd, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aLeftBlock && aRightBlock && aHTMLEd, NS_ERROR_NULL_POINTER);
 
-  nsWSRunObject leftWSObj(aHTMLEd, leftParent, leftParent->Length());
-  nsWSRunObject rightWSObj(aHTMLEd, rightParent, 0);
+  nsWSRunObject leftWSObj(aHTMLEd, aLeftBlock, aLeftBlock->Length());
+  nsWSRunObject rightWSObj(aHTMLEd, aRightBlock, 0);
 
   return leftWSObj.PrepareToDeleteRangePriv(&rightWSObj);
 }
