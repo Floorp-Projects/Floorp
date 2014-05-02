@@ -523,11 +523,7 @@ pref("accessibility.typeaheadfind.timeout", 4000);
 pref("accessibility.typeaheadfind.enabletimeout", true);
 pref("accessibility.typeaheadfind.soundURL", "beep");
 pref("accessibility.typeaheadfind.enablesound", true);
-#ifdef XP_MACOSX
-pref("accessibility.typeaheadfind.prefillwithselection", false);
-#else
 pref("accessibility.typeaheadfind.prefillwithselection", true);
-#endif
 pref("accessibility.typeaheadfind.matchesCountTimeout", 250);
 pref("accessibility.typeaheadfind.matchesCountLimit", 100);
 
