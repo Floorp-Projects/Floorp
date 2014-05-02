@@ -108,6 +108,10 @@ ICUUtils::LocalizeNumber(double aValue,
                                             langTag.get(), nullptr, &status));
     unum_setAttribute(format, UNUM_GROUPING_USED,
                       LocaleNumberGroupingIsEnabled());
+    // ICU default is a maximum of 3 significant fractional digits. We don't
+    // want that limit, so we set it to the maximum that a double can represent
+    // (14-16 decimal fractional digits).
+    unum_setAttribute(format, UNUM_MAX_FRACTION_DIGITS, 16);
     int32_t length = unum_formatDouble(format, aValue, buffer, kBufferSize,
                                        nullptr, &status);
     NS_ASSERTION(length < kBufferSize &&
