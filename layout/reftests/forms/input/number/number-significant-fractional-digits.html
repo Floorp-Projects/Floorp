@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script>
+
+document.addEventListener("MozReftestInvalidate", function() {
+  document.getElementById("i").stepUp();
+  document.documentElement.className = "";
+}, false);
+
+    </script>
+  </head>
+  <body>
+    <input id="i" type="number" value="1.001" step="0.00000000000001"
+           style="width:100%;">
+  </body>
+</html>
