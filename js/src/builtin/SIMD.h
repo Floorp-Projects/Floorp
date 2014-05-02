@@ -25,6 +25,7 @@
   V(abs, (Func<Float32x4, Abs<float, Float32x4>, Float32x4>), 1, 0, Abs)                                          \
   V(bitsToInt32x4, (FuncConvertBits<Float32x4, Int32x4>), 1, 0, BitsToInt32x4)                                    \
   V(neg, (Func<Float32x4, Neg<float, Float32x4>, Float32x4>), 1, 0, Neg)                                          \
+  V(not, (CoercedFunc<Float32x4, Int32x4, Not<int32_t, Int32x4>, Float32x4>), 1, 0, Not)                          \
   V(reciprocal, (Func<Float32x4, Rec<float, Float32x4>, Float32x4>), 1, 0, Reciprocal)                            \
   V(reciprocalSqrt, (Func<Float32x4, RecSqrt<float, Float32x4>, Float32x4>), 1, 0, ReciprocalSqrt)                \
   V(splat, (FuncSplat<Float32x4>), 1, 0, Splat)                                                                   \
@@ -33,6 +34,7 @@
 
 #define FLOAT32X4_BINARY_FUNCTION_LIST(V)                                                                         \
   V(add, (Func<Float32x4, Add<float, Float32x4>, Float32x4>), 2, 0, Add)                                          \
+  V(and, (CoercedFunc<Float32x4, Int32x4, And<int32_t, Int32x4>, Float32x4>), 2, 0, And)                          \
   V(div, (Func<Float32x4, Div<float, Float32x4>, Float32x4>), 2, 0, Div)                                          \
   V(equal, (Func<Float32x4, Equal<float, Int32x4>, Int32x4>), 2, 0, Equal)                                        \
   V(greaterThan, (Func<Float32x4, GreaterThan<float, Int32x4>, Int32x4>), 2, 0, GreaterThan)                      \
@@ -43,13 +45,15 @@
   V(min, (Func<Float32x4, Minimum<float, Float32x4>, Float32x4>), 2, 0, Min)                                      \
   V(mul, (Func<Float32x4, Mul<float, Float32x4>, Float32x4>), 2, 0, Mul)                                          \
   V(notEqual, (Func<Float32x4, NotEqual<float, Int32x4>, Int32x4>), 2, 0, NotEqual)                               \
+  V(or, (CoercedFunc<Float32x4, Int32x4, Or<int32_t, Int32x4>, Float32x4>), 2, 0, Or)                             \
   V(shuffle, (FuncShuffle<Float32x4, Shuffle<float, Float32x4>, Float32x4>), 2, 0, Shuffle)                       \
   V(scale, (FuncWith<Float32x4, Scale<float, Float32x4>, Float32x4>), 2, 0, Scale)                                \
   V(sub, (Func<Float32x4, Sub<float, Float32x4>, Float32x4>), 2, 0, Sub)                                          \
   V(withX, (FuncWith<Float32x4, WithX<float, Float32x4>, Float32x4>), 2, 0, WithX)                                \
   V(withY, (FuncWith<Float32x4, WithY<float, Float32x4>, Float32x4>), 2, 0, WithY)                                \
   V(withZ, (FuncWith<Float32x4, WithZ<float, Float32x4>, Float32x4>), 2, 0, WithZ)                                \
-  V(withW, (FuncWith<Float32x4, WithW<float, Float32x4>, Float32x4>), 2, 0, WithW)
+  V(withW, (FuncWith<Float32x4, WithW<float, Float32x4>, Float32x4>), 2, 0, WithW)                                \
+  V(xor, (CoercedFunc<Float32x4, Int32x4, Xor<int32_t, Int32x4>, Float32x4>), 2, 0, Xor)
 
 #define FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                                                        \
   V(clamp, Float32x4Clamp, 3, 0, Clamp)                                                                           \
@@ -74,9 +78,15 @@
 #define INT32X4_BINARY_FUNCTION_LIST(V)                                                                           \
   V(add, (Func<Int32x4, Add<int32_t, Int32x4>, Int32x4>), 2, 0, Add)                                              \
   V(and, (Func<Int32x4, And<int32_t, Int32x4>, Int32x4>), 2, 0, And)                                              \
+  V(equal, (Func<Int32x4, Equal<int32_t, Int32x4>, Int32x4>), 2, 0, Equal)                                        \
+  V(greaterThan, (Func<Int32x4, GreaterThan<int32_t, Int32x4>, Int32x4>), 2, 0, GreaterThan)                      \
+  V(lessThan, (Func<Int32x4, LessThan<int32_t, Int32x4>, Int32x4>), 2, 0, LessThan)                               \
   V(mul, (Func<Int32x4, Mul<int32_t, Int32x4>, Int32x4>), 2, 0, Mul)                                              \
   V(or, (Func<Int32x4, Or<int32_t, Int32x4>, Int32x4>), 2, 0, Or)                                                 \
   V(sub, (Func<Int32x4, Sub<int32_t, Int32x4>, Int32x4>), 2, 0, Sub)                                              \
+  V(shiftLeft, (Int32x4BinaryScalar<ShiftLeft>), 2, 0, ShiftLeft)                                                 \
+  V(shiftRight, (Int32x4BinaryScalar<ShiftRight>), 2, 0, ShiftRight)                                              \
+  V(shiftRightLogical, (Int32x4BinaryScalar<ShiftRightLogical>), 2, 0, ShiftRightLogical)                         \
   V(shuffle, (FuncShuffle<Int32x4, Shuffle<int32_t, Int32x4>, Int32x4>), 2, 0, Shuffle)                           \
   V(withFlagX, (FuncWith<Int32x4, WithFlagX<int32_t, Int32x4>, Int32x4>), 2, 0, WithFlagX)                        \
   V(withFlagY, (FuncWith<Int32x4, WithFlagY<int32_t, Int32x4>, Int32x4>), 2, 0, WithFlagY)                        \
@@ -116,7 +126,7 @@ class SIMDObject : public JSObject
 
 struct Float32x4 {
     typedef float Elem;
-    static const int32_t lanes = 4;
+    static const unsigned lanes = 4;
     static const X4TypeDescr::Type type = X4TypeDescr::TYPE_FLOAT32;
 
     static TypeDescr &GetTypeDescr(GlobalObject &global) {
@@ -136,7 +146,7 @@ struct Float32x4 {
 
 struct Int32x4 {
     typedef int32_t Elem;
-    static const int32_t lanes = 4;
+    static const unsigned lanes = 4;
     static const X4TypeDescr::Type type = X4TypeDescr::TYPE_INT32;
 
     static TypeDescr &GetTypeDescr(GlobalObject &global) {

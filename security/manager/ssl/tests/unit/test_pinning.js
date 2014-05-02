@@ -83,6 +83,17 @@ function test_disabled() {
   add_connection_test("sub.exclude-subdomains.pinning.example.com", Cr.NS_OK);
 };
 
+function check_pinning_telemetry() {
+  let histogram = Cc["@mozilla.org/base/telemetry;1"]
+                    .getService(Ci.nsITelemetry)
+                    .getHistogramById("CERT_PINNING_EVALUATION_RESULTS")
+                    .snapshot();
+   // Currently only strict mode gets evaluated
+   do_check_eq(histogram.counts[0], 1); // Failure count
+   do_check_eq(histogram.counts[1], 3); // Success count
+   run_next_test();
+}
+
 function run_test() {
   add_tls_server_setup("BadCertServer");
 
@@ -92,5 +103,9 @@ function run_test() {
   test_strict();
   test_mitm();
   test_disabled();
+
+  add_test(function () {
+    check_pinning_telemetry();
+  });
   run_next_test();
 }

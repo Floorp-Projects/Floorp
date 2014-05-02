@@ -193,12 +193,13 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
         if (state != State.INITIALIZED) {
             return;
         }
-        this.dispatcher.unregisterEventListener(EVENT_SNAPSHOT, this);
-        this.dispatcher.unregisterEventListener(EVENT_ADDONS_CHANGE, this);
-        this.dispatcher.unregisterEventListener(EVENT_ADDONS_UNINSTALLING, this);
-        this.dispatcher.unregisterEventListener(EVENT_PREF_CHANGE, this);
-        this.dispatcher.unregisterEventListener(EVENT_KEYWORD_SEARCH, this);
-        this.dispatcher.unregisterEventListener(EVENT_SEARCH, this);
+        dispatcher.unregisterGeckoThreadListener(this,
+            EVENT_SNAPSHOT,
+            EVENT_ADDONS_CHANGE,
+            EVENT_ADDONS_UNINSTALLING,
+            EVENT_PREF_CHANGE,
+            EVENT_KEYWORD_SEARCH,
+            EVENT_SEARCH);
     }
 
     public void onAppLocaleChanged(String to) {
@@ -459,9 +460,10 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
 
                     try {
                         // Listen for add-ons and prefs changes.
-                        dispatcher.registerEventListener(EVENT_ADDONS_UNINSTALLING, self);
-                        dispatcher.registerEventListener(EVENT_ADDONS_CHANGE, self);
-                        dispatcher.registerEventListener(EVENT_PREF_CHANGE, self);
+                        dispatcher.registerGeckoThreadListener(self,
+                            EVENT_ADDONS_UNINSTALLING,
+                            EVENT_ADDONS_CHANGE,
+                            EVENT_PREF_CHANGE);
 
                         // Initialize each provider here.
                         initializeSessionsProvider();
@@ -526,7 +528,7 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
                     profileCache.setDistributionString(desc.id, desc.version);
                 }
                 Log.d(LOG_TAG, "Requesting all add-ons and FHR prefs from Gecko.");
-                dispatcher.registerEventListener(EVENT_SNAPSHOT, self);
+                dispatcher.registerGeckoThreadListener(self, EVENT_SNAPSHOT);
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HealthReport:RequestSnapshot", null));
             }
         });
@@ -669,8 +671,9 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
         // Do this here, rather than in a centralized registration spot, in
         // case the above throws and we wind up handling events that we can't
         // store.
-        this.dispatcher.registerEventListener(EVENT_KEYWORD_SEARCH, this);
-        this.dispatcher.registerEventListener(EVENT_SEARCH, this);
+        this.dispatcher.registerGeckoThreadListener(this,
+            EVENT_KEYWORD_SEARCH,
+            EVENT_SEARCH);
     }
 
     /**

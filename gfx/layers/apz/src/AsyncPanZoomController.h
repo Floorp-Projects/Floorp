@@ -185,12 +185,11 @@ public:
   void SetCompositorParent(CompositorParent* aCompositorParent);
 
   /**
-   * The platform implementation must set the cross process compositor if
-   * there is one associated with the layer tree. The cross process compositor
-   * allows the APZC to share its FrameMetrics with the content process.
-   * The shared FrameMetrics is used in progressive paint updates.
+   * Inform this APZC that it will be sharing its FrameMetrics with a cross-process
+   * compositor so that the associated content process can access it. This is only
+   * relevant when progressive painting is enabled.
    */
-  void SetCrossProcessCompositorParent(PCompositorParent* aCrossProcessCompositorParent);
+  void ShareFrameMetricsAcrossProcesses();
 
   // --------------------------------------------------------------------------
   // These methods can be called from any thread.
@@ -278,13 +277,6 @@ public:
    */
   bool Matches(const ScrollableLayerGuid& aGuid);
 
-  /**
-   * Sync panning and zooming animation using a fixed frame time.
-   * This will ensure that we animate the APZC correctly with other external
-   * animations to the same timestamp.
-   */
-  static void SetFrameTime(const TimeStamp& aMilliseconds);
-
   void StartAnimation(AsyncPanZoomAnimation* aAnimation);
 
   /**
@@ -319,14 +311,6 @@ public:
    * attribute.
    */
   bool HasScrollgrab() const { return mFrameMetrics.mHasScrollgrab; }
-
-  /**
-   * Set an extra offset for testing async scrolling.
-   */
-  void SetTestAsyncScrollOffset(const CSSPoint& aPoint)
-  {
-    mTestAsyncScrollOffset = aPoint;
-  }
 
   /**
    * Returns whether this APZC has room to be panned (in any direction).
@@ -653,7 +637,6 @@ private:
 
   uint64_t mLayersId;
   nsRefPtr<CompositorParent> mCompositorParent;
-  PCompositorParent* mCrossProcessCompositorParent;
   TaskThrottler mPaintThrottler;
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
@@ -666,6 +649,12 @@ private:
   /* Utility functions that return a addrefed pointer to the corresponding fields. */
   already_AddRefed<GeckoContentController> GetGeckoContentController();
   already_AddRefed<GestureEventListener> GetGestureEventListener();
+
+  // If we are sharing our frame metrics with content across processes
+  bool mSharingFrameMetricsAcrossProcesses;
+  /* Utility function to get the Compositor with which we share the FrameMetrics.
+     This function is only callable from the compositor thread. */
+  PCompositorParent* GetSharedFrameMetricsCompositor();
 
 protected:
   // Both |mFrameMetrics| and |mLastContentPaintMetrics| are protected by the
@@ -756,9 +745,6 @@ private:
 
   // Stores information about the current touch block.
   TouchBlockState mTouchBlockState;
-
-  // Extra offset to add in SampleContentTransformForFrame for testing
-  CSSPoint mTestAsyncScrollOffset;
 
   RefPtr<AsyncPanZoomAnimation> mAnimation;
 
@@ -937,6 +923,37 @@ private:
    * for use in progressive tiled update calculations.
    */
   void ShareCompositorFrameMetrics();
+
+
+  /* ===================================================================
+   * The functions and members in this section are used for testing
+   * purposes only.
+   */
+public:
+  /**
+   * Sync panning and zooming animation using a fixed frame time.
+   * This will ensure that we animate the APZC correctly with other external
+   * animations to the same timestamp.
+   */
+  static void SetFrameTime(const TimeStamp& aMilliseconds);
+  /**
+   * In the gtest environment everything runs on one thread, so we
+   * shouldn't assert that we're on a particular thread. This enables
+   * that behaviour.
+   */
+  static void SetThreadAssertionsEnabled(bool aEnabled);
+  static bool GetThreadAssertionsEnabled();
+  /**
+   * Set an extra offset for testing async scrolling.
+   */
+  void SetTestAsyncScrollOffset(const CSSPoint& aPoint)
+  {
+    mTestAsyncScrollOffset = aPoint;
+  }
+
+private:
+  // Extra offset to add in SampleContentTransformForFrame for testing
+  CSSPoint mTestAsyncScrollOffset;
 };
 
 class AsyncPanZoomAnimation {

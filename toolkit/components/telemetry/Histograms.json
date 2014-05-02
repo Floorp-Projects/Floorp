@@ -5916,5 +5916,11 @@
     "high": "5000",
     "n_buckets": 10,
     "extended_statistics_ok": true
+  },
+  "CERT_PINNING_EVALUATION_RESULTS": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "Certificate pinning evalutation results(pinned host)(0 = failure, 1 = success)"
   }
 }
