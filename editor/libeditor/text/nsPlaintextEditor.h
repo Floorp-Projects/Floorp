@@ -176,6 +176,9 @@ protected:
   // key event helpers
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, int32_t aOffset, 
                       nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect = eNone);
+  already_AddRefed<mozilla::dom::Element>
+      CreateBRImpl(nsCOMPtr<nsINode>* aInOutParent, int32_t* aInOutOffset,
+                   EDirection aSelect);
   nsresult CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
                         int32_t* aInOutOffset,
                         nsCOMPtr<nsIDOMNode>* outBRNode,
