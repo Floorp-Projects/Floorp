@@ -249,7 +249,7 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
       NS_ENSURE_SUCCESS(res, nullptr);
     } else if (beforeRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, just to prevent nbsp proliferation
-      res = CheckTrailingNBSP(beforeRun, GetAsDOMNode(*aInOutParent), *aInOutOffset);
+      res = CheckTrailingNBSP(beforeRun, *aInOutParent, *aInOutOffset);
       NS_ENSURE_SUCCESS(res, nullptr);
     }
   }
@@ -303,7 +303,7 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
     } else if (afterRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, if possible, just to prevent nbsp
       // proliferation
-      res = CheckLeadingNBSP(afterRun, GetAsDOMNode(*aInOutParent), *aInOutOffset);
+      res = CheckLeadingNBSP(afterRun, *aInOutParent, *aInOutOffset);
       NS_ENSURE_SUCCESS(res, res);
     }
 
@@ -319,7 +319,7 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
     } else if (beforeRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, if possible, just to prevent nbsp
       // proliferation
-      res = CheckTrailingNBSP(beforeRun, GetAsDOMNode(*aInOutParent), *aInOutOffset);
+      res = CheckTrailingNBSP(beforeRun, *aInOutParent, *aInOutOffset);
       NS_ENSURE_SUCCESS(res, res);
     }
   }
@@ -1530,48 +1530,43 @@ nsWSRunObject::GetCharBefore(const WSPoint &aPoint)
   return outPoint;
 }
 
-nsresult 
+nsresult
 nsWSRunObject::ConvertToNBSP(WSPoint aPoint, AreaRestriction aAR)
 {
   // MOOSE: this routine needs to be modified to preserve the integrity of the
   // wsFragment info.
   NS_ENSURE_TRUE(aPoint.mTextNode, NS_ERROR_NULL_POINTER);
 
-  if (aAR == eOutsideUserSelectAll)
-  {
-    nsCOMPtr<nsIDOMNode> domnode = do_QueryInterface(aPoint.mTextNode);
-    if (domnode)
-    {
-      nsCOMPtr<nsIDOMNode> san = mHTMLEditor->FindUserSelectAllNode(domnode);
-      if (san)
-        return NS_OK;
+  if (aAR == eOutsideUserSelectAll) {
+    nsCOMPtr<nsIDOMNode> san =
+      mHTMLEditor->FindUserSelectAllNode(GetAsDOMNode(aPoint.mTextNode));
+    if (san) {
+      return NS_OK;
     }
   }
 
-  nsCOMPtr<nsIDOMCharacterData> textNode(do_QueryInterface(aPoint.mTextNode));
-  NS_ENSURE_TRUE(textNode, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(textNode));
-  
-  // first, insert an nbsp
+  // First, insert an nbsp
   nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
   nsAutoString nbspStr(nbsp);
-  nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr, textNode, aPoint.mOffset, true);
+  nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr,
+      aPoint.mTextNode, aPoint.mOffset, true);
   NS_ENSURE_SUCCESS(res, res);
-  
-  // next, find range of ws it will replace
-  nsCOMPtr<nsIDOMNode> startNode, endNode;
-  int32_t startOffset=0, endOffset=0;
-  
-  GetAsciiWSBounds(eAfter, node, aPoint.mOffset+1, address_of(startNode),
-                   &startOffset, address_of(endNode), &endOffset);
-  
-  // finally, delete that replaced ws, if any
-  if (startNode)
-  {
-    res = DeleteChars(startNode, startOffset, endNode, endOffset);
+
+  // Next, find range of ws it will replace
+  nsCOMPtr<nsIContent> startNode, endNode;
+  int32_t startOffset = 0, endOffset = 0;
+
+  GetAsciiWSBounds(eAfter, aPoint.mTextNode, aPoint.mOffset + 1,
+                   getter_AddRefs(startNode), &startOffset,
+                   getter_AddRefs(endNode), &endOffset);
+
+  // Finally, delete that replaced ws, if any
+  if (startNode) {
+    res = DeleteChars(GetAsDOMNode(startNode), startOffset, GetAsDOMNode(endNode), endOffset);
+    NS_ENSURE_SUCCESS(res, res);
   }
-  
-  return res;
+
+  return NS_OK;
 }
 
 void
@@ -1943,85 +1938,80 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
 }
 
 nsresult
-nsWSRunObject::CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aOffset)
-{    
-  // try to change an nbsp to a space, if possible, just to prevent nbsp proliferation. 
-  // this routine is called when we about to make this point in the ws abut an inserted break
-  // or text, so we don't have to worry about what is after it.  What is after it now will 
-  // end up after the inserted object.   
+nsWSRunObject::CheckTrailingNBSP(WSFragment* aRun, nsINode* aNode,
+                                 int32_t aOffset)
+{
+  // Try to change an nbsp to a space, if possible, just to prevent nbsp
+  // proliferation.  This routine is called when we are about to make this
+  // point in the ws abut an inserted break or text, so we don't have to worry
+  // about what is after it.  What is after it now will end up after the
+  // inserted object.
   NS_ENSURE_TRUE(aRun && aNode, NS_ERROR_NULL_POINTER);
   bool canConvert = false;
-  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
-  WSPoint thePoint = GetCharBefore(node, aOffset);
+  WSPoint thePoint = GetCharBefore(aNode, aOffset);
   if (thePoint.mTextNode && thePoint.mChar == nbsp) {
     WSPoint prevPoint = GetCharBefore(thePoint);
     if (prevPoint.mTextNode) {
-      if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) canConvert = true;
-    } else if (aRun->mLeftType == WSType::text) {
-      canConvert = true;
-    } else if (aRun->mLeftType == WSType::special) {
+      if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) {
+        canConvert = true;
+      }
+    } else if (aRun->mLeftType == WSType::text ||
+               aRun->mLeftType == WSType::special) {
       canConvert = true;
     }
   }
-  if (canConvert)
-  {
-    // first, insert a space
-    nsCOMPtr<nsIDOMCharacterData> textNode(do_QueryInterface(thePoint.mTextNode));
-    NS_ENSURE_TRUE(textNode, NS_ERROR_NULL_POINTER);
+  if (canConvert) {
+    // First, insert a space
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsAutoString spaceStr(char16_t(32));
-    nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode,
-                                                           thePoint.mOffset,
-                                                           true);
+    nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr,
+        thePoint.mTextNode, thePoint.mOffset, true);
     NS_ENSURE_SUCCESS(res, res);
-  
-    // finally, delete that nbsp
-    nsCOMPtr<nsIDOMNode> delNode(do_QueryInterface(thePoint.mTextNode));
-    res = DeleteChars(delNode, thePoint.mOffset+1, delNode, thePoint.mOffset+2);
+
+    // Finally, delete that nbsp
+    res = DeleteChars(GetAsDOMNode(thePoint.mTextNode), thePoint.mOffset + 1,
+                      GetAsDOMNode(thePoint.mTextNode), thePoint.mOffset + 2);
     NS_ENSURE_SUCCESS(res, res);
   }
   return NS_OK;
 }
 
 nsresult
-nsWSRunObject::CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aOffset)
-{    
-  // try to change an nbsp to a space, if possible, just to prevent nbsp proliferation    
-  // this routine is called when we about to make this point in the ws abut an inserted
-  // text, so we don't have to worry about what is before it.  What is before it now will 
-  // end up before the inserted text.   
+nsWSRunObject::CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
+                                int32_t aOffset)
+{
+  // Try to change an nbsp to a space, if possible, just to prevent nbsp
+  // proliferation This routine is called when we are about to make this point
+  // in the ws abut an inserted text, so we don't have to worry about what is
+  // before it.  What is before it now will end up before the inserted text.
   bool canConvert = false;
-  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
-  WSPoint thePoint = GetCharAfter(node, aOffset);
+  WSPoint thePoint = GetCharAfter(aNode, aOffset);
   if (thePoint.mChar == nbsp) {
     WSPoint tmp = thePoint;
-    tmp.mOffset++; // we want to be after thePoint
+    // we want to be after thePoint
+    tmp.mOffset++;
     WSPoint nextPoint = GetCharAfter(tmp);
     if (nextPoint.mTextNode) {
-      if (!nsCRT::IsAsciiSpace(nextPoint.mChar)) canConvert = true;
-    } else if (aRun->mRightType == WSType::text) {
-      canConvert = true;
-    } else if (aRun->mRightType == WSType::special) {
-      canConvert = true;
-    } else if (aRun->mRightType == WSType::br) {
+      if (!nsCRT::IsAsciiSpace(nextPoint.mChar)) {
+        canConvert = true;
+      }
+    } else if (aRun->mRightType == WSType::text ||
+               aRun->mRightType == WSType::special ||
+               aRun->mRightType == WSType::br) {
       canConvert = true;
     }
   }
-  if (canConvert)
-  {
-    // first, insert a space
-    nsCOMPtr<nsIDOMCharacterData> textNode(do_QueryInterface(thePoint.mTextNode));
-    NS_ENSURE_TRUE(textNode, NS_ERROR_NULL_POINTER);
+  if (canConvert) {
+    // First, insert a space
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsAutoString spaceStr(char16_t(32));
-    nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode,
-                                                           thePoint.mOffset,
-                                                           true);
+    nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr,
+        thePoint.mTextNode, thePoint.mOffset, true);
     NS_ENSURE_SUCCESS(res, res);
-  
-    // finally, delete that nbsp
-    nsCOMPtr<nsIDOMNode> delNode(do_QueryInterface(thePoint.mTextNode));
-    res = DeleteChars(delNode, thePoint.mOffset+1, delNode, thePoint.mOffset+2);
+
+    // Finally, delete that nbsp
+    res = DeleteChars(GetAsDOMNode(thePoint.mTextNode), thePoint.mOffset + 1,
+                      GetAsDOMNode(thePoint.mTextNode), thePoint.mOffset + 2);
     NS_ENSURE_SUCCESS(res, res);
   }
   return NS_OK;
