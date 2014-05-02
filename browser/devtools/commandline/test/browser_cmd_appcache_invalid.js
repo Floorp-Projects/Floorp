@@ -51,7 +51,6 @@ function spawnTest() {
           /"CACHE MANIFEST" is only valid on the first line but was found at line 3\./,
           /images\/sound-icon\.png points to a resource that is not available at line 9\./,
           /images\/background\.png points to a resource that is not available at line 10\./,
-          /NETWORK section line 13 \(\/checking\.cgi\) prevents caching of line 13 \(\/checking\.cgi\) in the NETWORK section\./,
           /\/checking\.cgi points to a resource that is not available at line 13\./,
           /Asterisk \(\*\) incorrectly used in the NETWORK section at line 14\. If a line in the NETWORK section contains only a single asterisk character, then any URI not listed in the manifest will be treated as if the URI was listed in the NETWORK section\. Otherwise such URIs will be treated as unavailable\. Other uses of the \* character are prohibited/,
           /\.\.\/rel\.html points to a resource that is not available at line 17\./,
