@@ -30,6 +30,9 @@ public interface TelemetryContract {
         // Set default panel.
         public static final String PANEL_SET_DEFAULT = "setdefault.1";
 
+        // Sharing content.
+        public static final String SHARE = "share.1";
+
         // Sanitizing private data.
         public static final String SANITIZE = "sanitize.1";
     }
@@ -39,6 +42,12 @@ public interface TelemetryContract {
      * Telemetry.sendUIEvent() as the "method" parameter.
      */
     public interface Method {
+        // Action triggered from a list.
+        public static final String LIST = "list";
+
+        // Action triggered from a button.
+        public static final String BUTTON = "button";
+
         // Action triggered from a dialog.
         public static final String DIALOG = "dialog";
     }
