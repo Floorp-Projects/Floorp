@@ -121,12 +121,22 @@ private:
   void     AssertOwnsLock() const;
   void     ReleaseOutsideLock(nsISupports *aObject);
 
-  nsresult GetChunk(uint32_t aIndex, bool aWriter,
+  enum ECallerType {
+    READER    = 0,
+    WRITER    = 1,
+    PRELOADER = 2
+  };
+
+  nsresult GetChunk(uint32_t aIndex, ECallerType aCaller,
                     CacheFileChunkListener *aCallback,
                     CacheFileChunk **_retval);
-  nsresult GetChunkLocked(uint32_t aIndex, bool aWriter,
+  nsresult GetChunkLocked(uint32_t aIndex, ECallerType aCaller,
                           CacheFileChunkListener *aCallback,
                           CacheFileChunk **_retval);
+
+  void     PreloadChunks(uint32_t aIndex);
+  bool     ShouldKeepChunk(uint32_t aIndex);
+
   nsresult RemoveChunk(CacheFileChunk *aChunk);
   void     RemoveChunkInternal(CacheFileChunk *aChunk, bool aCacheChunk);
 
@@ -162,6 +172,11 @@ private:
                                              nsRefPtr<CacheFileChunk>& aChunk,
                                              void* aClosure);
 
+  static PLDHashOperator CleanUpPreloadedChunks(
+                           const uint32_t& aIdx,
+                           nsRefPtr<CacheFileChunk>& aChunk,
+                           void* aClosure);
+
   nsresult PadChunkWithZeroes(uint32_t aChunkIdx);
 
   void SetError(nsresult aStatus);
@@ -176,6 +191,7 @@ private:
   bool           mDataAccessed;
   bool           mDataIsDirty;
   bool           mWritingMetadata;
+  bool           mPreloadWithoutInputStreams;
   nsresult       mStatus;
   int64_t        mDataSize;
   nsCString      mKey;
