@@ -297,9 +297,6 @@ DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
   JS::CompartmentOptions options;
   mWorkerPrivate->CopyJSCompartmentOptions(options);
 
-  // We're wrapping the global, so the scope is undefined.
-  JS::Rooted<JSObject*> scope(aCx);
-
   return DedicatedWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this,
                                                          options,
                                                          GetWorkerPrincipal());
@@ -337,9 +334,6 @@ SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
 
   JS::CompartmentOptions options;
   mWorkerPrivate->CopyJSCompartmentOptions(options);
-
-  // We're wrapping the global, so the scope is undefined.
-  JS::Rooted<JSObject*> scope(aCx);
 
   return SharedWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this, options,
                                                       GetWorkerPrincipal());
