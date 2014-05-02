@@ -43,7 +43,7 @@ ActiveElementManager::SetTargetElement(nsIDOMEventTarget* aTarget)
     // Multiple fingers on screen (since HandleTouchEnd clears mTarget).
     CancelTask();
     ResetActive();
-    mTarget = nullptr;
+    ResetTouchBlockState();
     return;
   }
 
@@ -54,6 +54,14 @@ ActiveElementManager::SetTargetElement(nsIDOMEventTarget* aTarget)
 void
 ActiveElementManager::HandleTouchStart(bool aCanBePan)
 {
+  if (mCanBePanSet) {
+    // Multiple fingers on screen (since HandleTouchEnd clears mCanBePanSet).
+    CancelTask();
+    ResetActive();
+    ResetTouchBlockState();
+    return;
+  }
+
   mCanBePan = aCanBePan;
   mCanBePanSet = true;
   TriggerElementActivation();
@@ -74,6 +82,7 @@ ActiveElementManager::TriggerElementActivation()
   if (!mCanBePan) {
     SetActive(mTarget);
   } else {
+    MOZ_ASSERT(mSetActiveTask == nullptr);
     mSetActiveTask = NewRunnableMethod(
         this, &ActiveElementManager::SetActiveTask, mTarget);
     MessageLoop::current()->PostDelayedTask(
@@ -101,8 +110,7 @@ ActiveElementManager::HandleTouchEnd(bool aWasClick)
     SetActive(mTarget);
   }
 
-  // Clear mTarget for next touch.
-  mTarget = nullptr;
+  ResetTouchBlockState();
 }
 
 void
@@ -128,6 +136,13 @@ ActiveElementManager::ResetActive()
       }
     }
   }
+}
+
+void
+ActiveElementManager::ResetTouchBlockState()
+{
+  mTarget = nullptr;
+  mCanBePanSet = false;
 }
 
 void
