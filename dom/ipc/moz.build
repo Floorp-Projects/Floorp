@@ -130,7 +130,6 @@ for var in ('MOZ_PERMISSIONS', 'MOZ_CHILD_PERMISSIONS'):
         DEFINES[var] = True
 
 if CONFIG['ENABLE_TESTS']:
-    DEFINES['ENABLE_TESTS'] = 1
     LOCAL_INCLUDES += [
       'ipc/glue',
     ]

@@ -6,9 +6,16 @@
 // 1. [obtain firefox source code]
 // 2. [build/obtain firefox binaries]
 // 3. run `[path to]/run-mozilla.sh [path to]/xpcshell \
-//                                  [path to]/genHPKPStaticpins.js
-// Files PreloadedHPKPins.json and default-ee.der must be in the current
-// working directory.
+//                                  [path to]/genHPKPStaticpins.js \
+//                                  [absolute path to]/PreloadedHPKPins.json \
+//                                  [absolute path to]/default-ee.der \
+//                                  [absolute path to]/StaticHPKPins.h
+
+if (arguments.length != 3) {
+  throw "Usage: genHPKPins.js <absolute path to PreloadedHPKPins.json> " +
+        "<absolute path to default-ee.der> " +
+        "<absolute path to StaticHPKPins.h>";
+}
 
 const { 'classes': Cc, 'interfaces': Ci, 'utils': Cu, 'results': Cr } = Components;
 
@@ -19,8 +26,7 @@ let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const certdb2 = Cc["@mozilla.org/security/x509certdb;1"]
                    .getService(Ci.nsIX509CertDB2);
 
-const OUTPUT = "StaticHPKPins.h";
-const MOZINPUT = "PreloadedHPKPins.json";
+// Pins expire in 18 weeks
 const PINNING_MINIMUM_REQUIRED_MAX_AGE = 60 * 60 * 24 * 7 * 18;
 const FILE_HEADER = "/* This Source Code Form is subject to the terms of the Mozilla Public\n" +
 " * License, v. 2.0. If a copy of the MPL was not distributed with this\n" +
@@ -28,7 +34,7 @@ const FILE_HEADER = "/* This Source Code Form is subject to the terms of the Moz
 "\n" +
 "/*****************************************************************************/\n" +
 "/* This is an automatically generated file. If you're not                    */\n" +
-"/* PublicKeyPinningSerice.cpp, you shouldn't be #including it.               */\n" +
+"/* PublicKeyPinningService.cpp, you shouldn't be #including it.              */\n" +
 "/*****************************************************************************/\n" +
 "#include <stdint.h>" +
 "\n";
@@ -45,31 +51,21 @@ const PINSETDEF ="/*Now the pinsets, each is an ordered list by the actual value
 "  const char* const* data;\n"+
 "} StaticPinset;\n";
 
+// Command-line arguments
+var gStaticPins = parseJson(arguments[0]);
+var gTestCertFile = arguments[1];
+var gOutputFile = arguments[2];
+
 function writeTo(string, fos) {
   fos.write(string, string.length);
 }
 
 function readFileToString(filename) {
-  let path = filename;
-
-  let lf = Components.classes["@mozilla.org/file/directory_service;1"]
-             .getService(Components.interfaces.nsIProperties)
-             .get("CurWorkD", Components.interfaces.nsILocalFile);
-
-  let bits = path.split("/");
-  for (let i = 0; i < bits.length; i++) {
-    if (bits[i]) {
-      if (bits[i] == "..") {
-        lf = lf.parent;
-      }
-      else {
-        lf.append(bits[i]);
-      }
-    }
-  }
+  let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+  file.initWithPath(filename);
   let stream = Cc["@mozilla.org/network/file-input-stream;1"]
                  .createInstance(Ci.nsIFileInputStream);
-  stream.init(lf, -1, 0, 0);
+  stream.init(file, -1, 0, 0);
   let buf = NetUtil.readInputStreamToString(stream, stream.available());
   return buf;
 }
@@ -105,7 +101,7 @@ function isCertBuiltIn(cert) {
 
 // Returns a pair of maps [certNameToSKD, certSDKToName] between cert
 // nicknames and digests of the SPKInfo for the mozilla trust store
-function loadNSSCertinfo() {
+function loadNSSCertinfo(derTestFile) {
   let allCerts = certdb2.getCerts();
   let enumerator = allCerts.getEnumerator();
   let certNameToSKD = {};
@@ -123,7 +119,7 @@ function loadNSSCertinfo() {
   }
   {
     // A certificate for *.example.com.
-    let der = readFileToString("default-ee.der");
+    let der = readFileToString(derTestFile);
     // XPCOM is too dumb to automatically query the parent interface of
     // nsIX509CertDB2 without a hint.
     let certdb = certdb2.QueryInterface(Ci.nsIX509CertDB);
@@ -138,10 +134,9 @@ function loadNSSCertinfo() {
   return [certNameToSKD, certSDKToName];
 }
 
-function parseMozFile() {
-  mozFile = stripComments(readFileToString(MOZINPUT));
-  mozJSON = JSON.parse(mozFile);
-  return mozJSON;
+function parseJson(filename) {
+  let json = stripComments(readFileToString(filename));
+  return JSON.parse(json);
 }
 
 function nameToAlias(certName) {
@@ -169,7 +164,8 @@ function genExpirationTime() {
 
 function writeFile(certNameToSDK, certSDKToName, jsonPins) {
   try {
-    let file = FileUtils.getFile("CurWorkD", [OUTPUT]);
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    file.initWithPath(gOutputFile);
     let fos = FileUtils.openSafeFileOutputStream(file);
 
     writeTo(FILE_HEADER, fos);
@@ -233,13 +229,11 @@ function writeFile(certNameToSDK, certSDKToName, jsonPins) {
     FileUtils.closeSafeFileOutputStream(fos);
 
   } catch (e) {
-    dump("ERROR: problem writing output to '" + OUTPUT + "': " + e + "\n");
+    dump("ERROR: problem writing output to '" + gOutputFile + "': " + e + "\n");
   }
 }
 
 // ****************************************************************************
 // This is where the action happens:
-
-let [certNameToSKD, certSDKToName] = loadNSSCertinfo();
-let mozJSON = parseMozFile();
-writeFile(certNameToSKD, certSDKToName, mozJSON);
+let [ certNameToSKD, certSDKToName ] = loadNSSCertinfo(gTestCertFile);
+writeFile(certNameToSKD, certSDKToName, gStaticPins);

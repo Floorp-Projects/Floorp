@@ -798,10 +798,10 @@ interface WebGLExtensionCompressedTextureETC1
 [NoInterfaceObject]
 interface WebGLExtensionCompressedTexturePVRTC
 {
-    const GLenum COMPRESSED_RGB_PVRTC_4BPPV1  = 0x8C00;
-    const GLenum COMPRESSED_RGB_PVRTC_2BPPV1  = 0x8C01;
-    const GLenum COMPRESSED_RGBA_PVRTC_4BPPV1 = 0x8C02;
-    const GLenum COMPRESSED_RGBA_PVRTC_2BPPV1 = 0x8C03;
+    const GLenum COMPRESSED_RGB_PVRTC_4BPPV1_IMG  = 0x8C00;
+    const GLenum COMPRESSED_RGB_PVRTC_2BPPV1_IMG  = 0x8C01;
+    const GLenum COMPRESSED_RGBA_PVRTC_4BPPV1_IMG = 0x8C02;
+    const GLenum COMPRESSED_RGBA_PVRTC_2BPPV1_IMG = 0x8C03;
 };
 
 [NoInterfaceObject]

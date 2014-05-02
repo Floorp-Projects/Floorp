@@ -548,17 +548,12 @@ HTMLTableElement::InsertRow(int32_t aIndex, ErrorResult& aError)
     }
   } else {
     // the row count was 0, so 
-    // find the first row group and insert there as first child
+    // find the last row group and insert there as first child
     nsCOMPtr<nsIContent> rowGroup;
-    for (nsIContent* child = nsINode::GetFirstChild();
+    for (nsIContent* child = nsINode::GetLastChild();
          child;
-         child = child->GetNextSibling()) {
-      nsINodeInfo *childInfo = child->NodeInfo();
-      nsIAtom *localName = childInfo->NameAtom();
-      if (childInfo->NamespaceID() == kNameSpaceID_XHTML &&
-          (localName == nsGkAtoms::thead ||
-           localName == nsGkAtoms::tbody ||
-           localName == nsGkAtoms::tfoot)) {
+         child = child->GetPreviousSibling()) {
+      if (child->IsHTML(nsGkAtoms::tbody)) {
         rowGroup = child;
         break;
       }

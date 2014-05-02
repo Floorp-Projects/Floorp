@@ -550,7 +550,7 @@ TEST_F(pkixder_input_tests, NestedOf)
 
   std::vector<uint8_t> readValues;
   ASSERT_EQ(Success,
-    NestedOf(input, SEQUENCE, INTEGER, MustNotBeEmpty,
+    NestedOf(input, SEQUENCE, INTEGER, EmptyAllowed::No,
              mozilla::pkix::bind(NestedOfHelper, mozilla::pkix::_1,
                                  mozilla::pkix::ref(readValues))));
   ASSERT_EQ((size_t) 3, readValues.size());
@@ -568,7 +568,7 @@ TEST_F(pkixder_input_tests, NestedOfWithTruncatedData)
 
   std::vector<uint8_t> readValues;
   ASSERT_EQ(Failure,
-    NestedOf(input, SEQUENCE, INTEGER, MustNotBeEmpty,
+    NestedOf(input, SEQUENCE, INTEGER, EmptyAllowed::No,
              mozilla::pkix::bind(NestedOfHelper, mozilla::pkix::_1,
                                  mozilla::pkix::ref(readValues))));
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());

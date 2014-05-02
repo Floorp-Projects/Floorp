@@ -17,4 +17,8 @@ LOCAL_INCLUDES += [
     '/tools/profiler',
 ]
 
+UNIFIED_SOURCES += [
+    'ThreadProfileTest.cpp',
+]
+
 FINAL_LIBRARY = 'xul-gtest'
