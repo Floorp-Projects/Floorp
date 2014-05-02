@@ -63,7 +63,7 @@ public final class PrefsHelper {
             return;
         }
 
-        GeckoAppShell.getEventDispatcher().registerEventListener("Preferences:Data", new GeckoEventListener() {
+        EventDispatcher.getInstance().registerGeckoThreadListener(new GeckoEventListener() {
             @Override public void handleMessage(String event, JSONObject message) {
                 try {
                     PrefHandler callback;
@@ -107,7 +107,7 @@ public final class PrefsHelper {
                     Log.e(LOGTAG, "Error handling Preferences:Data message", e);
                 }
             }
-        });
+        }, "Preferences:Data");
         sRegistered = true;
     }
 
