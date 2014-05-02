@@ -138,8 +138,6 @@ function testMozAccessFuGesture(aExpectedGestures) {
  * duration.
  */
 function setTimers(aTimeStamp, aRemoveDwellThreshold, aRemoveSwipeMaxDuration) {
-  GestureSettings.dwellThreshold = originalDwellThreshold;
-  GestureSettings.swipeMaxDuration = originalSwipeMaxDuration;
   if (!aRemoveDwellThreshold && !aRemoveSwipeMaxDuration) {
     return;
   }
@@ -151,6 +149,11 @@ function setTimers(aTimeStamp, aRemoveDwellThreshold, aRemoveSwipeMaxDuration) {
   }
   GestureTracker.current.clearTimer();
   GestureTracker.current.startTimer(aTimeStamp);
+}
+
+function resetTimers() {
+  GestureSettings.dwellThreshold = originalDwellThreshold;
+  GestureSettings.swipeMaxDuration = originalSwipeMaxDuration;
 }
 
 /**
@@ -169,6 +172,7 @@ AccessFuTest.addSequence = function AccessFuTest_addSequence(aSequence) {
         type: aEvent.type
       };
       var timeStamp = Date.now();
+      resetTimers();
       GestureTracker.handle(event, timeStamp);
       setTimers(timeStamp, aEvent.removeDwellThreshold,
         aEvent.removeSwipeMaxDuration);

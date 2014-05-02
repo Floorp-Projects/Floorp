@@ -75,6 +75,7 @@ private:
   void TriggerElementActivation();
   void SetActive(nsIDOMElement* aTarget);
   void ResetActive();
+  void ResetTouchBlockState();
   void SetActiveTask(nsIDOMElement* aTarget);
   void CancelTask();
 };

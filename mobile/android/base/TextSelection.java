@@ -91,20 +91,22 @@ class TextSelection extends Layer implements GeckoEventListener {
         if (mStartHandle == null || mMiddleHandle == null || mEndHandle == null) {
             Log.e(LOGTAG, "Failed to initialize text selection because at least one handle is null");
         } else {
-            registerEventListener("TextSelection:ShowHandles");
-            registerEventListener("TextSelection:HideHandles");
-            registerEventListener("TextSelection:PositionHandles");
-            registerEventListener("TextSelection:Update");
-            registerEventListener("TextSelection:DraggingHandle");
+            EventDispatcher.getInstance().registerGeckoThreadListener(this,
+                "TextSelection:ShowHandles",
+                "TextSelection:HideHandles",
+                "TextSelection:PositionHandles",
+                "TextSelection:Update",
+                "TextSelection:DraggingHandle");
         }
     }
 
     void destroy() {
-        unregisterEventListener("TextSelection:ShowHandles");
-        unregisterEventListener("TextSelection:HideHandles");
-        unregisterEventListener("TextSelection:PositionHandles");
-        unregisterEventListener("TextSelection:Update");
-        unregisterEventListener("TextSelection:DraggingHandle");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+            "TextSelection:ShowHandles",
+            "TextSelection:HideHandles",
+            "TextSelection:PositionHandles",
+            "TextSelection:Update",
+            "TextSelection:DraggingHandle");
     }
 
     private TextSelectionHandle getHandle(String name) {
@@ -241,14 +243,6 @@ class TextSelection extends Layer implements GeckoEventListener {
                 mEndHandle.repositionWithViewport(viewLeft, viewTop, viewZoom);
             }
         });
-    }
-
-    private void registerEventListener(String event) {
-        mEventDispatcher.registerEventListener(event, this);
-    }
-
-    private void unregisterEventListener(String event) {
-        mEventDispatcher.unregisterEventListener(event, this);
     }
 
     private class TextSelectionActionModeCallback implements Callback {

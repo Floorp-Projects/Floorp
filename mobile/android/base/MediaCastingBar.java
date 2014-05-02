@@ -32,8 +32,9 @@ public class MediaCastingBar extends RelativeLayout implements View.OnClickListe
     public MediaCastingBar(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        GeckoAppShell.getEventDispatcher().registerEventListener("Casting:Started", this);
-        GeckoAppShell.getEventDispatcher().registerEventListener("Casting:Stopped", this);
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+            "Casting:Started",
+            "Casting:Stopped");
     }
 
     public void inflateContent() {
@@ -68,8 +69,9 @@ public class MediaCastingBar extends RelativeLayout implements View.OnClickListe
     }
 
     public void onDestroy() {
-        GeckoAppShell.getEventDispatcher().unregisterEventListener("Casting:Started", this);
-        GeckoAppShell.getEventDispatcher().unregisterEventListener("Casting:Stopped", this);
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+            "Casting:Started",
+            "Casting:Stopped");
     }
 
     // View.OnClickListener implementation
