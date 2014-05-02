@@ -35,6 +35,14 @@ public interface TelemetryContract {
 
         // Sanitizing private data.
         public static final String SANITIZE = "sanitize.1";
+
+        // Saving a resource (reader, bookmark, etc) for viewing later.
+        // Note: Only used in JavaScript for now, but here for completeness.
+        public static final String SAVE = "save.1";
+
+        // Stop holding a resource (reader, bookmark, etc) for viewing later.
+        // Note: Only used in JavaScript for now, but here for completeness.
+        public static final String UNSAVE = "unsave.1";
     }
 
     /**
@@ -63,6 +71,10 @@ public interface TelemetryContract {
         // Started when a user enters a given home panel.
         // Session name is dynamic, encoded as "homepanel.1:<panel_id>"
         public static final String HOME_PANEL = "homepanel.1:";
+
+        // Started when a Reader viewer becomes active in the foreground.
+        // Note: Only used in JavaScript for now, but here for completeness.
+        public static final String READER = "reader.1";
     }
 
     /**
