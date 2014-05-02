@@ -266,10 +266,10 @@ class MOZ_STACK_CLASS nsWSRunObject
     // still span multiple nodes.
     struct WSFragment
     {
-      nsCOMPtr<nsIDOMNode> mStartNode;  // node where ws run starts
-      nsCOMPtr<nsIDOMNode> mEndNode;    // node where ws run ends
-      int32_t mStartOffset;             // offset where ws run starts
-      int32_t mEndOffset;               // offset where ws run ends
+      nsCOMPtr<nsINode> mStartNode;  // node where ws run starts
+      nsCOMPtr<nsINode> mEndNode;    // node where ws run ends
+      int32_t mStartOffset;          // offset where ws run starts
+      int32_t mEndOffset;            // offset where ws run ends
       // type of ws, and what is to left and right of it
       WSType mType, mLeftType, mRightType;
       // other ws runs to left or right.  may be null.
