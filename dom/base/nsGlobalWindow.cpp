@@ -1955,8 +1955,7 @@ nsGlobalWindow::TraceGlobalJSObject(JSTracer* aTrc)
 JSObject*
 nsGlobalWindow::OuterObject(JSContext* aCx, JS::Handle<JSObject*> aObj)
 {
-  nsGlobalWindow* origWin;
-  UNWRAP_OBJECT(Window, aObj, origWin);
+  nsGlobalWindow* origWin = UnwrapDOMObject<nsGlobalWindow>(aObj);
   nsGlobalWindow* win = origWin->GetOuterWindowInternal();
 
   if (!win) {
@@ -1966,6 +1965,7 @@ nsGlobalWindow::OuterObject(JSContext* aCx, JS::Handle<JSObject*> aObj)
     // null to prevent leaking an inner window to code in a different
     // window.
     NS_WARNING("nsGlobalWindow::OuterObject shouldn't fail!");
+    Throw(aCx, NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
@@ -1978,6 +1978,7 @@ nsGlobalWindow::OuterObject(JSContext* aCx, JS::Handle<JSObject*> aObj)
   // need to wrap here.
   if (!JS_WrapObject(aCx, &winObj)) {
     NS_WARNING("nsGlobalWindow::OuterObject shouldn't fail!");
+    Throw(aCx, NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
