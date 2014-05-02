@@ -13,26 +13,65 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
 
+let Scope = Object.freeze({
+  APP:          "app",
+  PROFILE:      "profile",
+  GLOBAL:       "global"
+});
+
+/**
+ * Public API to getting a SharedPreferencesImpl instance. These scopes mirror GeckoSharedPrefs.
+ */
+let SharedPreferences = {
+  forApp: function() {
+    return new SharedPreferencesImpl({ scope: Scope.APP });
+  },
+
+  forProfile: function() {
+    return new SharedPreferencesImpl({ scope: Scope.PROFILE });
+  },
+
+  forProfileName: function(profileName) {
+    return new SharedPreferencesImpl({ scope: Scope.PROFILE, profileName: profileName });
+  },
+
+  forAndroid: function(branch) {
+    return new SharedPreferencesImpl({ scope: Scope.GLOBAL, branch: branch });
+  }
+}
+
 /**
  * Create an interface to an Android SharedPreferences branch.
  *
- * branch {String} should be a string describing a preferences branch,
- * like "UpdateService" or "background.data", or null to access the
- * default preferences branch for the application.
+ * options {Object} with the following valid keys:
+ *   - scope {String} (required) specifies the scope of preferences that should be accessed.
+ *   - branch {String} (only when using Scope.GLOBAL) should be a string describing a preferences branch,
+ *     like "UpdateService" or "background.data", or null to access the
+ *     default preferences branch for the application.
+ *   - profileName {String} (optional, only valid when using Scope.PROFILE)
  */
-function SharedPreferences(branch) {
-  if (!(this instanceof SharedPreferences)) {
-    return new SharedPreferences(branch);
+function SharedPreferencesImpl(options = {}) {
+  if (!(this instanceof SharedPreferencesImpl)) {
+    return new SharedPreferencesImpl(level);
   }
-  this._branch = branch || null;
-  this._observers = {};
-};
 
-SharedPreferences.prototype = Object.freeze({
+  if (options.scope == null || options.scope == undefined) {
+    throw "Shared Preferences must specifiy a scope.";
+  }
+
+  this._scope = options.scope;
+  this._profileName = options.profileName;
+  this._branch = options.branch;
+  this._observers = {};
+}
+
+SharedPreferencesImpl.prototype = Object.freeze({
   _set: function _set(prefs) {
     sendMessageToJava({
       type: "SharedPreferences:Set",
       preferences: prefs,
+      scope: this._scope,
+      profileName: this._profileName,
       branch: this._branch,
     });
   },
@@ -64,6 +103,8 @@ SharedPreferences.prototype = Object.freeze({
     sendMessageToJava({
       type: "SharedPreferences:Get",
       preferences: prefs,
+      scope: this._scope,
+      profileName: this._profileName,
       branch: this._branch,
     }, (data) => {
       result = data.values;
@@ -159,6 +200,8 @@ SharedPreferences.prototype = Object.freeze({
     sendMessageToJava({
       type: "SharedPreferences:Observe",
       enable: true,
+      scope: this._scope,
+      profileName: this._profileName,
       branch: this._branch,
     });
   },
@@ -169,7 +212,9 @@ SharedPreferences.prototype = Object.freeze({
     }
 
     let msg = JSON.parse(data);
-    if (msg.branch != this._branch) {
+    if (msg.scope !== this._scope ||
+        (this._scope === Scope.PROFILE) && (msg.profileName !== this._profileName) ||
+        (this._scope === Scope.GLOBAL)  && (msg.branch !== this._branch)) {
       return;
     }
 
@@ -192,6 +237,8 @@ SharedPreferences.prototype = Object.freeze({
     sendMessageToJava({
       type: "SharedPreferences:Observe",
       enable: false,
+      scope: this._scope,
+      profileName: this._profileName,
       branch: this._branch,
     });
   },
