@@ -159,6 +159,23 @@ enum ExecutionMode {
     ArgumentsUsageAnalysis
 };
 
+inline const char *
+ExecutionModeString(ExecutionMode mode)
+{
+    switch (mode) {
+      case SequentialExecution:
+        return "SequentialExecution";
+      case ParallelExecution:
+        return "ParallelExecution";
+      case DefinitePropertiesAnalysis:
+        return "DefinitePropertiesAnalysis";
+      case ArgumentsUsageAnalysis:
+        return "ArgumentsUsageAnalysis";
+      default:
+        MOZ_ASSUME_UNREACHABLE("Invalid ExecutionMode");
+    }
+}
+
 /*
  * Not as part of the enum so we don't get warnings about unhandled enum
  * values.
