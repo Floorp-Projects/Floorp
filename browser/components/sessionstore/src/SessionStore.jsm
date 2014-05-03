@@ -30,7 +30,7 @@ const MAX_CONCURRENT_TAB_RESTORES = 3;
 
 // global notifications observed
 const OBSERVING = [
-  "domwindowopened", "domwindowclosed",
+  "browser-window-before-show", "domwindowclosed",
   "quit-application-requested", "quit-application-granted",
   "browser-lastwindow-close-granted",
   "quit-application", "browser:purge-session-history",
@@ -540,8 +540,8 @@ let SessionStoreInternal = {
    */
   observe: function ssi_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "domwindowopened": // catch new windows
-        this.onOpen(aSubject);
+      case "browser-window-before-show": // catch new windows
+        this.onBeforeBrowserWindowShown(aSubject);
         break;
       case "domwindowclosed": // catch closed windows
         this.onClose(aSubject);
@@ -919,71 +919,59 @@ let SessionStoreInternal = {
   },
 
   /**
-   * On window open
+   * Called right before a new browser window is shown.
    * @param aWindow
    *        Window reference
    */
-  onOpen: function ssi_onOpen(aWindow) {
-    let onload = () => {
-      aWindow.removeEventListener("load", onload);
+  onBeforeBrowserWindowShown: function (aWindow) {
+    // Just call onLoad() directly if we're initialized already.
+    if (this._sessionInitialized) {
+      this.onLoad(aWindow);
+      return;
+    }
 
-      let windowType = aWindow.document.documentElement.getAttribute("windowtype");
+    // The very first window that is opened creates a promise that is then
+    // re-used by all subsequent windows. The promise will be used to tell
+    // when we're ready for initialization.
+    if (!this._promiseReadyForInitialization) {
+      let deferred = Promise.defer();
 
-      // Ignore non-browser windows.
-      if (windowType != "navigator:browser") {
+      // Wait for the given window's delayed startup to be finished.
+      Services.obs.addObserver(function obs(subject, topic) {
+        if (aWindow == subject) {
+          Services.obs.removeObserver(obs, topic);
+          deferred.resolve();
+        }
+      }, "browser-delayed-startup-finished", false);
+
+      // We are ready for initialization as soon as the session file has been
+      // read from disk and the initial window's delayed startup has finished.
+      this._promiseReadyForInitialization =
+        Promise.all([deferred.promise, gSessionStartup.onceInitialized]);
+    }
+
+    // We can't call this.onLoad since initialization
+    // hasn't completed, so we'll wait until it is done.
+    // Even if additional windows are opened and wait
+    // for initialization as well, the first opened
+    // window should execute first, and this.onLoad
+    // will be called with the initialState.
+    this._promiseReadyForInitialization.then(() => {
+      if (aWindow.closed) {
         return;
       }
 
       if (this._sessionInitialized) {
         this.onLoad(aWindow);
-        return;
+      } else {
+        let initialState = this.initSession();
+        this._sessionInitialized = true;
+        this.onLoad(aWindow, initialState);
+
+        // Let everyone know we're done.
+        this._deferredInitialized.resolve();
       }
-
-      // The very first window that is opened creates a promise that is then
-      // re-used by all subsequent windows. The promise will be used to tell
-      // when we're ready for initialization.
-      if (!this._promiseReadyForInitialization) {
-        let deferred = Promise.defer();
-
-        // Wait for the given window's delayed startup to be finished.
-        Services.obs.addObserver(function obs(subject, topic) {
-          if (aWindow == subject) {
-            Services.obs.removeObserver(obs, topic);
-            deferred.resolve();
-          }
-        }, "browser-delayed-startup-finished", false);
-
-        // We are ready for initialization as soon as the session file has been
-        // read from disk and the initial window's delayed startup has finished.
-        this._promiseReadyForInitialization =
-          Promise.all([deferred.promise, gSessionStartup.onceInitialized]);
-      }
-
-      // We can't call this.onLoad since initialization
-      // hasn't completed, so we'll wait until it is done.
-      // Even if additional windows are opened and wait
-      // for initialization as well, the first opened
-      // window should execute first, and this.onLoad
-      // will be called with the initialState.
-      this._promiseReadyForInitialization.then(() => {
-        if (aWindow.closed) {
-          return;
-        }
-
-        if (this._sessionInitialized) {
-          this.onLoad(aWindow);
-        } else {
-          let initialState = this.initSession();
-          this._sessionInitialized = true;
-          this.onLoad(aWindow, initialState);
-
-          // Let everyone know we're done.
-          this._deferredInitialized.resolve();
-        }
-      }, console.error);
-    };
-
-    aWindow.addEventListener("load", onload);
+    }, console.error);
   },
 
   /**
