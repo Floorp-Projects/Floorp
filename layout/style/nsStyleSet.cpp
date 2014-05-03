@@ -794,12 +794,13 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
 
   if (!result) {
     result = NS_NewStyleContext(aParentContext, aPseudoTag, aPseudoType,
-                                aRuleNode, aFlags & eSkipFlexItemStyleFixup);
+                                aRuleNode,
+                                aFlags & eSkipFlexOrGridItemStyleFixup);
     if (aVisitedRuleNode) {
       nsRefPtr<nsStyleContext> resultIfVisited =
         NS_NewStyleContext(parentIfVisited, aPseudoTag, aPseudoType,
                            aVisitedRuleNode,
-                           aFlags & eSkipFlexItemStyleFixup);
+                           aFlags & eSkipFlexOrGridItemStyleFixup);
       if (!parentIfVisited) {
         mRoots.AppendElement(resultIfVisited);
       }
@@ -1214,8 +1215,8 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
                             HasState(NS_EVENT_STATE_VISITED)) {
     flags |= eIsVisitedLink;
   }
-  if (aTreeMatchContext.mSkippingFlexItemStyleFixup) {
-    flags |= eSkipFlexItemStyleFixup;
+  if (aTreeMatchContext.mSkippingFlexOrGridItemStyleFixup) {
+    flags |= eSkipFlexOrGridItemStyleFixup;
   }
 
   return GetContext(aParentContext, ruleNode, visitedRuleNode,
@@ -1378,10 +1379,11 @@ nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
       aType == nsCSSPseudoElements::ePseudo_after) {
     flags |= eDoAnimation;
   } else {
-    // Flex containers don't expect to have any pseudo-element children aside
-    // from ::before and ::after.  So if we have such a child, we're not
-    // actually in a flex container, and we should skip flex-item style fixup.
-    flags |= eSkipFlexItemStyleFixup;
+    // Flex and grid containers don't expect to have any pseudo-element children
+    // aside from ::before and ::after.  So if we have such a child, we're not
+    // actually in a flex/grid container, and we should skip flex/grid item
+    // style fixup.
+    flags |= eSkipFlexOrGridItemStyleFixup;
   }
 
   return GetContext(aParentContext, ruleNode, visitedRuleNode,
@@ -1449,10 +1451,11 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
       aType == nsCSSPseudoElements::ePseudo_after) {
     flags |= eDoAnimation;
   } else {
-    // Flex containers don't expect to have any pseudo-element children aside
-    // from ::before and ::after.  So if we have such a child, we're not
-    // actually in a flex container, and we should skip flex-item style fixup.
-    flags |= eSkipFlexItemStyleFixup;
+    // Flex and grid containers don't expect to have any pseudo-element children
+    // aside from ::before and ::after.  So if we have such a child, we're not
+    // actually in a flex/grid container, and we should skip flex/grid item
+    // style fixup.
+    flags |= eSkipFlexOrGridItemStyleFixup;
   }
 
   nsRefPtr<nsStyleContext> result =
@@ -1856,11 +1859,11 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
   }
 
   if (aElement && aElement->IsRootOfAnonymousSubtree()) {
-    // For anonymous subtree roots, don't tweak "display" value based on
-    // whether or not the parent is styled as a flex container. (If the parent
+    // For anonymous subtree roots, don't tweak "display" value based on whether
+    // or not the parent is styled as a flex/grid container. (If the parent
     // has anonymous-subtree kids, then we know it's not actually going to get
-    // a flex container frame, anyway.)
-    flags |= eSkipFlexItemStyleFixup;
+    // a flex/grid container frame, anyway.)
+    flags |= eSkipFlexOrGridItemStyleFixup;
   }
 
   return GetContext(aNewParentContext, ruleNode, visitedRuleNode,
