@@ -3881,8 +3881,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
       FrameConstructionItemList items;
       {
         // Skip flex item style-fixup during our AddFrameConstructionItems() call:
-        TreeMatchContext::AutoFlexItemStyleFixupSkipper
-          flexItemStyleFixupSkipper(aState.mTreeMatchContext);
+        TreeMatchContext::AutoFlexOrGridItemStyleFixupSkipper
+          flexOrGridItemStyleFixupSkipper(aState.mTreeMatchContext);
 
         AddFrameConstructionItems(aState, content, true, aParentFrame, items);
       }
@@ -9273,8 +9273,8 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
                       "Why is someone creating garbage anonymous content");
 
     nsRefPtr<nsStyleContext> styleContext;
-    TreeMatchContext::AutoFlexItemStyleFixupSkipper
-      flexItemStyleFixupSkipper(aState.mTreeMatchContext);
+    TreeMatchContext::AutoFlexOrGridItemStyleFixupSkipper
+      flexOrGridItemStyleFixupSkipper(aState.mTreeMatchContext);
     if (aAnonymousItems[i].mStyleContext) {
       styleContext = aAnonymousItems[i].mStyleContext.forget();
     } else {

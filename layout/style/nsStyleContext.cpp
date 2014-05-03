@@ -35,7 +35,7 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                                nsIAtom* aPseudoTag,
                                nsCSSPseudoElements::Type aPseudoType,
                                nsRuleNode* aRuleNode,
-                               bool aSkipFlexItemStyleFixup)
+                               bool aSkipFlexOrGridItemStyleFixup)
   : mParent(aParent),
     mChild(nullptr),
     mEmptyChild(nullptr),
@@ -71,7 +71,7 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   mRuleNode->AddRef();
   mRuleNode->SetUsedDirectly(); // before ApplyStyleFixups()!
 
-  ApplyStyleFixups(aSkipFlexItemStyleFixup);
+  ApplyStyleFixups(aSkipFlexOrGridItemStyleFixup);
 
   #define eStyleStruct_LastItem (nsStyleStructID_Length - 1)
   NS_ASSERTION(NS_STYLE_INHERIT_MASK & NS_STYLE_INHERIT_BIT(LastItem),
@@ -294,7 +294,7 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
 }
 
 void
-nsStyleContext::ApplyStyleFixups(bool aSkipFlexItemStyleFixup)
+nsStyleContext::ApplyStyleFixups(bool aSkipFlexOrGridItemStyleFixup)
 {
   // See if we have any text decorations.
   // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
@@ -359,7 +359,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipFlexItemStyleFixup)
   //   # The computed 'display' of a flex item is determined
   //   # by applying the table in CSS 2.1 Chapter 9.7.
   // ...which converts inline-level elements to their block-level equivalents.
-  if (!aSkipFlexItemStyleFixup && mParent) {
+  if (!aSkipFlexOrGridItemStyleFixup && mParent) {
     const nsStyleDisplay* parentDisp = mParent->StyleDisplay();
     if ((parentDisp->mDisplay == NS_STYLE_DISPLAY_FLEX ||
          parentDisp->mDisplay == NS_STYLE_DISPLAY_INLINE_FLEX ||
@@ -382,10 +382,11 @@ nsStyleContext::ApplyStyleFixups(bool aSkipFlexItemStyleFixup)
           NS_STYLE_DISPLAY_TABLE_CELL         != displayVal) {
 
         // NOTE: Technically, we shouldn't modify the 'display' value of
-        // positioned elements, since they aren't flex items. However, we don't
-        // need to worry about checking for that, because if we're positioned,
-        // we'll have already been through a call to EnsureBlockDisplay() in
-        // nsRuleNode, so this call here won't change anything. So we're OK.
+        // positioned elements, since they aren't flex/grid items. However,
+        // we don't need to worry about checking for that, because if we're
+        // positioned, we'll have already been through a call to
+        // EnsureBlockDisplay() in nsRuleNode, so this call here won't change
+        // anything. So we're OK.
         nsRuleNode::EnsureBlockDisplay(displayVal);
         if (displayVal != disp->mDisplay) {
           NS_ASSERTION(!disp->IsAbsolutelyPositionedStyle(),
@@ -735,12 +736,12 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    nsCSSPseudoElements::Type aPseudoType,
                    nsRuleNode* aRuleNode,
-                   bool aSkipFlexItemStyleFixup)
+                   bool aSkipFlexOrGridItemStyleFixup)
 {
   nsRefPtr<nsStyleContext> context =
     new (aRuleNode->PresContext())
     nsStyleContext(aParentContext, aPseudoTag, aPseudoType, aRuleNode,
-                   aSkipFlexItemStyleFixup);
+                   aSkipFlexOrGridItemStyleFixup);
   return context.forget();
 }
 
