@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1398202482000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1398899403000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -113,6 +113,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i578" id="jid1-XLjasWL55iEE1Q@jetpack">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i529" id="/^(torntv@torntv\.com|trtv3@trtv\.com|torntv2@torntv\.com|e2fd07a6-e282-4f2e-8965-85565fcb6384@b69158e6-3c3b-476c-9d98-ae5838c5b707\.com)$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -139,8 +145,13 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i10" id="{8CE11043-9A15-4207-A565-0C94C42D590D}">
-                          <prefs>
+      <emItem  blockID="i4" id="{4B3803EA-5230-4DC3-A7FC-33638F3D3542}">
+                        <versionRange  minVersion="1.2" maxVersion="1.2">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="3.0a1" maxVersion="*" />
+                          </targetApplication>
+                    </versionRange>
+                    <prefs>
               </prefs>
     </emItem>
       <emItem  blockID="i492" id="{af95cc15-3b9b-45ae-8d9b-98d08eda3111}">
@@ -245,8 +256,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i84" id="pink@rosaplugin.info">
-                        <versionRange  minVersion="0" maxVersion="*">
+      <emItem  blockID="i582" id="discoverypro@discoverypro.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -562,11 +573,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i4" id="{4B3803EA-5230-4DC3-A7FC-33638F3D3542}">
-                        <versionRange  minVersion="1.2" maxVersion="1.2">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.0a1" maxVersion="*" />
-                          </targetApplication>
+      <emItem  blockID="i101" id="{3a12052a-66ef-49db-8c39-e5b0bd5c83fa}">
+                        <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -730,6 +738,10 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i10" id="{8CE11043-9A15-4207-A565-0C94C42D590D}">
+                          <prefs>
               </prefs>
     </emItem>
       <emItem  blockID="i548" id="/^firefox@(jumpflip|webconnect|browsesmart|mybuzzsearch|outobox|greygray|lemurleap|divapton|secretsauce|batbrowse|whilokii|linkswift|qualitink|browsefox|kozaka|diamondata|glindorus|saltarsmart|bizzybolt|websparkle)\.(com?|net|org|info|biz)$/">
@@ -1356,7 +1368,7 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i101" id="{3a12052a-66ef-49db-8c39-e5b0bd5c83fa}">
+      <emItem  blockID="i84" id="pink@rosaplugin.info">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                     <prefs>
@@ -1518,6 +1530,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i497" id="{872b5b88-9db5-4310-bdd0-ac189557e5f5}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i580" id="{51c77233-c0ad-4220-8388-47c11c18b355}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
