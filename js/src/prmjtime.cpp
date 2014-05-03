@@ -72,10 +72,10 @@ static const int64_t win2un = 0x19DB1DED53E8000;
 
 #define FILETIME2INT64(ft) (((int64_t)ft.dwHighDateTime) << 32LL | (int64_t)ft.dwLowDateTime)
 
-typedef struct CalibrationData {
-    long double freq;         /* The performance counter frequency */
-    long double offset;       /* The low res 'epoch' */
-    long double timer_offset; /* The high res 'epoch' */
+struct CalibrationData {
+    double freq;         /* The performance counter frequency */
+    double offset;       /* The low res 'epoch' */
+    double timer_offset; /* The high res 'epoch' */
 
     /* The last high res time that we returned since recalibrating */
     int64_t last;
@@ -86,7 +86,7 @@ typedef struct CalibrationData {
     CRITICAL_SECTION data_lock;
     CRITICAL_SECTION calibration_lock;
 #endif
-} CalibrationData;
+};
 
 static CalibrationData calibration = { 0 };
 
@@ -101,7 +101,7 @@ NowCalibrate()
             /* High-performance timer is unavailable */
             calibration.freq = -1.0;
         } else {
-            calibration.freq = (long double) liFreq.QuadPart;
+            calibration.freq = double(liFreq.QuadPart);
         }
     }
     if (calibration.freq > 0.0) {
@@ -123,8 +123,8 @@ NowCalibrate()
 
         QueryPerformanceCounter(&now);
 
-        calibration.offset = (long double) FILETIME2INT64(ft);
-        calibration.timer_offset = (long double) now.QuadPart;
+        calibration.offset = double(FILETIME2INT64(ft));
+        calibration.timer_offset = double(now.QuadPart);
 
         /* The windows epoch is around 1600. The unix epoch is around
            1970. win2un is the difference (in windows time units which
@@ -180,7 +180,7 @@ static PRCallOnceType calibrationOnce = { 0 };
 
 #if defined(XP_UNIX)
 int64_t
-PRMJ_Now(void)
+PRMJ_Now()
 {
     struct timeval tv;
 
@@ -258,16 +258,15 @@ def PRMJ_Now():
 */
 
 int64_t
-PRMJ_Now(void)
+PRMJ_Now()
 {
-    static int nCalls = 0;
-    long double lowresTime, highresTimerValue;
+    double lowresTime, highresTimerValue;
     FILETIME ft;
     LARGE_INTEGER now;
     bool calibrated = false;
     bool needsCalibration = false;
     int64_t returnedTime;
-    long double cachedOffset = 0.0;
+    double cachedOffset = 0.0;
 
     /* For non threadsafe platforms, NowInit is not necessary */
 #ifdef JS_THREADSAFE
@@ -298,19 +297,19 @@ PRMJ_Now(void)
 
         /* Calculate a low resolution time */
         GetSystemTimeAsFileTime(&ft);
-        lowresTime = 0.1*(long double)(FILETIME2INT64(ft) - win2un);
+        lowresTime = 0.1 * double(FILETIME2INT64(ft) - win2un);
 
         if (calibration.freq > 0.0) {
-            long double highresTime, diff;
+            double highresTime, diff;
 
             DWORD timeAdjustment, timeIncrement;
             BOOL timeAdjustmentDisabled;
 
             /* Default to 15.625 ms if the syscall fails */
-            long double skewThreshold = 15625.25;
+            double skewThreshold = 15625.25;
             /* Grab high resolution time */
             QueryPerformanceCounter(&now);
-            highresTimerValue = (long double)now.QuadPart;
+            highresTimerValue = double(now.QuadPart);
 
             MUTEX_LOCK(&calibration.data_lock);
             highresTime = calibration.offset + PRMJ_USEC_PER_SEC*
