@@ -289,6 +289,14 @@ class IonBuilder : public MIRGenerator
         return newBlockAfter(at, nullptr, pc);
     }
 
+    // We want to make sure that our MTest instructions all check whether the
+    // thing being tested might emulate undefined.  So we funnel their creation
+    // through this method, to make sure that happens.  We don't want to just do
+    // the check in MTest::New, because that can run on background compilation
+    // threads, and we're not sure it's safe to touch that part of the typeset
+    // from a background thread.
+    MTest *newTest(MDefinition *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse);
+
     // Given a list of pending breaks, creates a new block and inserts a Goto
     // linking each break to the new block.
     MBasicBlock *createBreakCatchBlock(DeferredEdge *edge, jsbytecode *pc);
