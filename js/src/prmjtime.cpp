@@ -351,24 +351,22 @@ PRMJ_Now()
                     // behavior for this call. It's possible that in the
                     // future, the user will want the high resolution timer, so
                     // we don't disable it entirely.
-                    returnedTime = int64_t(lowresTime);
-                    needsCalibration = false;
-                } else {
-                    // It is possible that when we recalibrate, we will return a
-                    // value less than what we have returned before; this is
-                    // unavoidable. We cannot tell the different between a
-                    // faulty QueryPerformanceCounter implementation and user
-                    // changes to the operating system time. Since we must
-                    // respect user changes to the operating system time, we
-                    // cannot maintain the invariant that Date.now() never
-                    // decreases; the old implementation has this behavior as
-                    // well.
-                    needsCalibration = true;
+                    return int64_t(lowresTime);
                 }
+
+                // It is possible that when we recalibrate, we will return a
+                // value less than what we have returned before; this is
+                // unavoidable. We cannot tell the different between a
+                // faulty QueryPerformanceCounter implementation and user
+                // changes to the operating system time. Since we must
+                // respect user changes to the operating system time, we
+                // cannot maintain the invariant that Date.now() never
+                // decreases; the old implementation has this behavior as
+                // well.
+                needsCalibration = true;
             } else {
                 // No detectable clock skew.
-                returnedTime = int64_t(highresTime);
-                needsCalibration = false;
+                return int64_t(highresTime);
             }
         } else {
             // No high resolution timer is available, so fall back.
