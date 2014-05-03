@@ -232,10 +232,6 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime, JSUseHelperThreads useHelperThrea
     PodZero(&debugHooks);
     PodArrayZero(nativeStackQuota);
     PodZero(&asmJSCacheOps);
-
-#if JS_STACK_GROWTH_DIRECTION > 0
-    mainThread.nativeStackLimit = UINTPTR_MAX;
-#endif
 }
 
 static bool
