@@ -278,6 +278,10 @@ class JitRuntime
         return ionAlloc_;
     }
 
+    bool hasIonAlloc() const {
+        return !!ionAlloc_;
+    }
+
     bool ionCodeProtected() {
         return ionCodeProtected_;
     }
