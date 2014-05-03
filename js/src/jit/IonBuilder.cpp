@@ -4179,10 +4179,6 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
     types::TypeObjectKey *targetType = types::TypeObjectKey::get(target);
     targetType->watchStateChangeForInlinedCall(constraints());
 
-    // We mustn't relazify functions that have been inlined, because there's
-    // no way to tell if it safe to do so.
-    script()->setHasBeenInlined();
-
     return InliningDecision_Inline;
 }
 
