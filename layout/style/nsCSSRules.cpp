@@ -135,7 +135,7 @@ class GroupRuleRuleList MOZ_FINAL : public nsICSSRuleList
 public:
   GroupRuleRuleList(GroupRule *aGroupRule);
 
-  NS_DECL_ISUPPORTS
+  virtual nsCSSStyleSheet* GetParentObject() MOZ_OVERRIDE;
 
   virtual nsIDOMCSSRule*
   IndexedGetter(uint32_t aIndex, bool& aFound) MOZ_OVERRIDE;
@@ -162,17 +162,15 @@ GroupRuleRuleList::~GroupRuleRuleList()
 {
 }
 
-// QueryInterface implementation for GroupRuleRuleList
-NS_INTERFACE_MAP_BEGIN(GroupRuleRuleList)
-  NS_INTERFACE_MAP_ENTRY(nsICSSRuleList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRuleList)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSRuleList)
-NS_INTERFACE_MAP_END
+nsCSSStyleSheet*
+GroupRuleRuleList::GetParentObject()
+{
+  if (!mGroupRule) {
+    return nullptr;
+  }
 
-
-NS_IMPL_ADDREF(GroupRuleRuleList)
-NS_IMPL_RELEASE(GroupRuleRuleList)
+  return mGroupRule->GetStyleSheet();
+}
 
 uint32_t
 GroupRuleRuleList::Length()

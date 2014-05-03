@@ -85,7 +85,6 @@
 // CSS related includes
 #include "nsCSSRules.h"
 #include "nsIDOMCSSRule.h"
-#include "nsICSSRuleList.h"
 #include "nsAutoPtr.h"
 #include "nsMemory.h"
 
@@ -312,8 +311,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSNameSpaceRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CSSRuleList, nsCSSRuleListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSStyleSheet, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -926,10 +923,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(CSSNameSpaceRule, nsIDOMCSSRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(CSSRuleList, nsIDOMCSSRuleList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRuleList)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSStyleSheet, nsIDOMCSSStyleSheet)
@@ -3499,168 +3492,6 @@ nsEventTargetSH::PreserveWrapper(nsISupports *aNative)
   DOMEventTargetHelper* target = DOMEventTargetHelper::FromSupports(aNative);
   target->PreserveWrapper(aNative);
 }
-
-// Generic array scriptable helper.
-
-NS_IMETHODIMP
-nsGenericArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                             JSObject *aObj, jsid aId, JSObject **objp,
-                             bool *_retval)
-{
-  JS::Rooted<JSObject*> obj(cx, aObj);
-  JS::Rooted<jsid> id(cx, aId);
-  if (id == sLength_id) {
-    // Bail early; this isn't something we're interested in
-    return NS_OK;
-  }
-
-  bool is_number = false;
-  int32_t n = GetArrayIndexFromId(cx, id, &is_number);
-
-  if (is_number && n >= 0) {
-    // XXX The following is a cheap optimization to avoid hitting xpconnect to
-    // get the length. We may want to consider asking our concrete
-    // implementation for the length, and falling back onto the GetProperty if
-    // it doesn't provide one.
-
-    uint32_t length;
-    nsresult rv = GetLength(wrapper, cx, obj, &length);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint32_t index = uint32_t(n);
-    if (index < length) {
-      *_retval = ::JS_DefineElement(cx, obj, index, JS::UndefinedHandleValue,
-                                    JSPROP_ENUMERATE | JSPROP_SHARED);
-      *objp = obj;
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericArraySH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JS::Handle<JSObject*> obj, uint32_t *length)
-{
-  *length = 0;
-
-  JS::Rooted<JS::Value> lenval(cx);
-  if (!JS_GetProperty(cx, obj, "length", &lenval)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (!lenval.isInt32()) {
-    // This can apparently happen with some sparse array impls falling back
-    // onto this code.
-    return NS_OK;
-  }
-
-  int32_t slen = lenval.toInt32();
-  if (slen < 0) {
-    return NS_OK;
-  }
-
-  *length = (uint32_t)slen;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *aObj, bool *_retval)
-{
-  // Recursion protection in case someone tries to be smart and call
-  // the enumerate hook from a user defined .length getter, or
-  // somesuch.
-
-  JS::Rooted<JSObject*> obj(cx, aObj);
-  static bool sCurrentlyEnumerating;
-
-  if (sCurrentlyEnumerating) {
-    // Don't recurse to death.
-    return NS_OK;
-  }
-
-  sCurrentlyEnumerating = true;
-
-  JS::Rooted<JS::Value> len_val(cx);
-  bool ok = ::JS_GetProperty(cx, obj, "length", &len_val);
-
-  if (ok && len_val.isInt32()) {
-    int32_t length = len_val.toInt32();
-
-    for (int32_t i = 0; ok && i < length; ++i) {
-      ok = ::JS_DefineElement(cx, obj, i, JS::UndefinedHandleValue,
-                              JSPROP_ENUMERATE | JSPROP_SHARED);
-    }
-  }
-
-  sCurrentlyEnumerating = false;
-
-  return ok ? NS_OK : NS_ERROR_UNEXPECTED;
-}
-
-// Array scriptable helper
-
-NS_IMETHODIMP
-nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JSObject *aObj, jsid aId, jsval *vp, bool *_retval)
-{
-  JS::Rooted<JSObject*> obj(cx, aObj);
-  JS::Rooted<jsid> id(cx, aId);
-  bool is_number = false;
-  int32_t n = GetArrayIndexFromId(cx, id, &is_number);
-
-  nsresult rv = NS_OK;
-
-  if (is_number) {
-    if (n < 0) {
-      return NS_ERROR_DOM_INDEX_SIZE_ERR;
-    }
-
-    // Make sure rv == NS_OK here, so GetItemAt implementations that never fail
-    // don't have to set rv.
-    rv = NS_OK;
-    nsWrapperCache *cache = nullptr;
-    nsISupports* array_item =
-      GetItemAt(GetNative(wrapper, obj), n, &cache, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (array_item) {
-      JS::Rooted<JS::Value> rval(cx);
-      rv = WrapNative(cx, array_item, cache, true, &rval);
-      NS_ENSURE_SUCCESS(rv, rv);
-      *vp = rval;
-
-      rv = NS_SUCCESS_I_DID_SOMETHING;
-    }
-  }
-
-  return rv;
-}
-
-
-// CSSRuleList scriptable helper
-
-nsISupports*
-nsCSSRuleListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                           nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsICSSRuleList* list = static_cast<nsICSSRuleList*>(aNative);
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsICSSRuleList> list_qi = do_QueryInterface(aNative);
-
-    // If this assertion fires the QI implementation for the object in
-    // question doesn't use the nsICSSRuleList pointer as the nsISupports
-    // pointer. That must be fixed, or we'll crash...
-    NS_ABORT_IF_FALSE(list_qi == list, "Uh, fix QI!");
-  }
-#endif
-
-  return list->Item(aIndex);
-}
-
 
 // Storage2SH
 
