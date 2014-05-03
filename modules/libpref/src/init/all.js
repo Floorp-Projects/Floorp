@@ -1898,6 +1898,9 @@ pref("layout.css.variables.enabled", true);
 // Is support for CSS overflow-clip-box enabled for non-UA sheets?
 pref("layout.css.overflow-clip-box.enabled", false);
 
+// Is support for CSS grid enabled?
+pref("layout.css.grid.enabled", false);
+
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction
