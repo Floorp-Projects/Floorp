@@ -560,10 +560,6 @@ nsDocumentViewer::LoadStart(nsIDocument* aDocument)
 
   if (!mDocument) {
     mDocument = aDocument;
-  } else if (mDocument == aDocument) {
-    // Reset the document viewer's state back to what it was
-    // when the document load started.
-    PrepareToStartLoad();
   }
 }
 
