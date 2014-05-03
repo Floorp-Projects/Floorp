@@ -273,17 +273,17 @@ PRMJ_Now()
             MUTEX_LOCK(&calibration.calibration_lock);
             MUTEX_LOCK(&calibration.data_lock);
 
-            /* Recalibrate only if no one else did before us */
-            if(calibration.offset == cachedOffset) {
-                /* Since calibration can take a while, make any other
-                   threads immediately wait */
+            // Recalibrate only if no one else did before us.
+            if (calibration.offset == cachedOffset) {
+                // Since calibration can take a while, make any other
+                // threads immediately wait.
                 MUTEX_SETSPINCOUNT(&calibration.data_lock, 0);
 
                 NowCalibrate();
 
                 calibrated = true;
 
-                /* Restore spin count */
+                // Restore spin count.
                 MUTEX_SETSPINCOUNT(&calibration.data_lock, DATALOCK_SPINCOUNT);
             }
             MUTEX_UNLOCK(&calibration.data_lock);
@@ -340,34 +340,34 @@ PRMJ_Now()
             // itself, but I have only seen it triggered by another program
             // doing some kind of file I/O. The symptoms are a negative diff
             // followed by an equally large positive diff.
-            if (mozilla::Abs(diff) > 2 * skewThreshold) {
-                if (calibrated) {
-                    // If we already calibrated once this instance, and the
-                    // clock is still skewed, then either the processor(s) are
-                    // wildly changing clockspeed or the system is so busy that
-                    // we get switched out for long periods of time. In either
-                    // case, it would be infeasible to make use of high
-                    // resolution results for anything, so let's resort to old
-                    // behavior for this call. It's possible that in the
-                    // future, the user will want the high resolution timer, so
-                    // we don't disable it entirely.
-                    return int64_t(lowresTime);
-                }
-
-                // It is possible that when we recalibrate, we will return a
-                // value less than what we have returned before; this is
-                // unavoidable. We cannot tell the different between a
-                // faulty QueryPerformanceCounter implementation and user
-                // changes to the operating system time. Since we must
-                // respect user changes to the operating system time, we
-                // cannot maintain the invariant that Date.now() never
-                // decreases; the old implementation has this behavior as
-                // well.
-                needsCalibration = true;
-            } else {
+            if (mozilla::Abs(diff) <= 2 * skewThreshold) {
                 // No detectable clock skew.
                 return int64_t(highresTime);
             }
+
+            if (calibrated) {
+                // If we already calibrated once this instance, and the
+                // clock is still skewed, then either the processor(s) are
+                // wildly changing clockspeed or the system is so busy that
+                // we get switched out for long periods of time. In either
+                // case, it would be infeasible to make use of high
+                // resolution results for anything, so let's resort to old
+                // behavior for this call. It's possible that in the
+                // future, the user will want the high resolution timer, so
+                // we don't disable it entirely.
+                return int64_t(lowresTime);
+            }
+
+            // It is possible that when we recalibrate, we will return a
+            // value less than what we have returned before; this is
+            // unavoidable. We cannot tell the different between a
+            // faulty QueryPerformanceCounter implementation and user
+            // changes to the operating system time. Since we must
+            // respect user changes to the operating system time, we
+            // cannot maintain the invariant that Date.now() never
+            // decreases; the old implementation has this behavior as
+            // well.
+            needsCalibration = true;
         } else {
             // No high resolution timer is available, so fall back.
             returnedTime = int64_t(lowresTime);
