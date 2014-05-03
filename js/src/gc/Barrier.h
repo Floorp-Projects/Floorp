@@ -407,11 +407,14 @@ struct InternalGCMethods<jsid>
     static void postBarrierRemove(jsid *idp) {}
 };
 
+template <typename T>
+class BarrieredBaseMixins {};
+
 /*
  * Base class for barriered pointer types.
  */
 template <class T>
-class BarrieredBase : public HeapBase<T>
+class BarrieredBase : public BarrieredBaseMixins<T>
 {
   protected:
     T value;
@@ -436,6 +439,7 @@ class BarrieredBase : public HeapBase<T>
      * Obviously this is dangerous unless you know the barrier is not needed.
      */
     T *unsafeGet() { return &value; }
+    const T *unsafeGet() const { return &value; }
     void unsafeSet(T v) { value = v; }
 
     T operator->() const { return value; }
@@ -449,6 +453,15 @@ class BarrieredBase : public HeapBase<T>
   protected:
     void pre() { InternalGCMethods<T>::preBarrier(value); }
     void pre(Zone *zone) { InternalGCMethods<T>::preBarrier(zone, value); }
+};
+
+template <>
+class BarrieredBaseMixins<JS::Value> : public ValueOperations<BarrieredBase<JS::Value> >
+{
+    friend class ValueOperations<BarrieredBase<JS::Value> >;
+    const JS::Value * extract() const {
+        return static_cast<const BarrieredBase<JS::Value>*>(this)->unsafeGet();
+    }
 };
 
 /*

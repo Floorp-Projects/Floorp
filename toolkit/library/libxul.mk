@@ -99,7 +99,7 @@ ifdef MOZ_WEBRTC
 ifeq (WINNT,$(OS_TARGET))
 ifndef MOZ_HAS_WINSDK_WITH_D3D
 EXTRA_DSO_LDOPTS += \
-  -LIBPATH:'$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)' \
+  -LIBPATH:'$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_D3D_CPU_SUFFIX)' \
   $(NULL)
 endif
 OS_LIBS += $(call EXPAND_LIBNAME,secur32 crypt32 iphlpapi strmiids dmoguids wmcodecdspuuid amstrmid msdmo wininet)

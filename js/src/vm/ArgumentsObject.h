@@ -295,7 +295,7 @@ class NormalArgumentsObject : public ArgumentsObject
 
     /* Clear the location storing arguments.callee's initial value. */
     void clearCallee() {
-        data()->callee.setMagic(JS_OVERWRITTEN_CALLEE);
+        data()->callee = MagicValue(JS_OVERWRITTEN_CALLEE);
     }
 };
 
