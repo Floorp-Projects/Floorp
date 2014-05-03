@@ -622,60 +622,42 @@ HTMLImageElement::Image(const GlobalObject& aGlobal,
 uint32_t
 HTMLImageElement::NaturalHeight()
 {
-  if (!mCurrentRequest) {
+  uint32_t height;
+  nsresult rv = nsImageLoadingContent::GetNaturalHeight(&height);
+
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT(false, "GetNaturalHeight should not fail");
     return 0;
   }
 
-  nsCOMPtr<imgIContainer> image;
-  mCurrentRequest->GetImage(getter_AddRefs(image));
-  if (!image) {
-    return 0;
-  }
-
-  int32_t height;
-  if (NS_SUCCEEDED(image->GetHeight(&height))) {
-    return height;
-  }
-  return 0;
+  return height;
 }
 
 NS_IMETHODIMP
 HTMLImageElement::GetNaturalHeight(uint32_t* aNaturalHeight)
 {
-  NS_ENSURE_ARG_POINTER(aNaturalHeight);
-
   *aNaturalHeight = NaturalHeight();
-
   return NS_OK;
 }
 
 uint32_t
 HTMLImageElement::NaturalWidth()
 {
-  if (!mCurrentRequest) {
+  uint32_t width;
+  nsresult rv = nsImageLoadingContent::GetNaturalWidth(&width);
+
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT(false, "GetNaturalWidth should not fail");
     return 0;
   }
 
-  nsCOMPtr<imgIContainer> image;
-  mCurrentRequest->GetImage(getter_AddRefs(image));
-  if (!image) {
-    return 0;
-  }
-
-  int32_t width;
-  if (NS_SUCCEEDED(image->GetWidth(&width))) {
-    return width;
-  }
-  return 0;
+  return width;
 }
 
 NS_IMETHODIMP
 HTMLImageElement::GetNaturalWidth(uint32_t* aNaturalWidth)
 {
-  NS_ENSURE_ARG_POINTER(aNaturalWidth);
-
   *aNaturalWidth = NaturalWidth();
-
   return NS_OK;
 }
 
