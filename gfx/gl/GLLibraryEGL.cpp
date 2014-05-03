@@ -78,7 +78,7 @@ static PRLibrary*
 LoadLibraryForEGLOnWindows(const nsAString& filename)
 {
     nsCOMPtr<nsIFile> file;
-	nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(file));
+    nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(file));
     if (NS_FAILED(rv))
         return nullptr;
 
@@ -112,21 +112,31 @@ GLLibraryEGL::EnsureInitialized()
         // libraries. This matters especially for WebRT apps which are in a different directory.
         // See bug 760323 and bug 749459
 
-#ifndef MOZ_D3DCOMPILER_DLL
-#error MOZ_D3DCOMPILER_DLL should have been defined by the Makefile
+        // Also note that we intentionally leak the libs we load.
+
+        do {
+            // Windows 8.1 has d3dcompiler_47.dll in the system directory.
+            // Try it first. Note that _46 will never be in the system
+            // directory and we ship with at least _43. So there is no point
+            // trying _46 and _43 in the system directory.
+
+            if (LoadLibrarySystem32(L"d3dcompiler_47.dll"))
+                break;
+
+#ifdef MOZ_D3DCOMPILER_VISTA_DLL
+            if (LoadLibraryForEGLOnWindows(NS_LITERAL_STRING(NS_STRINGIFY(MOZ_D3DCOMPILER_VISTA_DLL))))
+                break;
 #endif
-        // Windows 8.1 has d3dcompiler_47.dll in the system directory.
-        // Try it first. Note that _46 will never be in the system
-        // directory and we ship with at least _43. So there is no point
-        // trying _46 and _43 in the system directory.
-        if (!LoadLibrarySystem32(L"d3dcompiler_47.dll")) {
-            // Fall back to the version that we shipped with.
-            LoadLibraryForEGLOnWindows(NS_LITERAL_STRING(NS_STRINGIFY(MOZ_D3DCOMPILER_DLL)));
-        }
-        // intentionally leak the D3DCOMPILER_DLL library
+
+#ifdef MOZ_D3DCOMPILER_XP_DLL
+            if (LoadLibraryForEGLOnWindows(NS_LITERAL_STRING(NS_STRINGIFY(MOZ_D3DCOMPILER_XP_DLL))))
+                break;
+#endif
+
+            MOZ_ASSERT(false, "d3dcompiler DLL loading failed.");
+        } while (false);
 
         LoadLibraryForEGLOnWindows(NS_LITERAL_STRING("libGLESv2.dll"));
-        // intentionally leak the libGLESv2.dll library
 
         mEGLLibrary = LoadLibraryForEGLOnWindows(NS_LITERAL_STRING("libEGL.dll"));
 
@@ -206,7 +216,7 @@ GLLibraryEGL::EnsureInitialized()
     if (vendor && (strstr(vendor, "TransGaming") != 0 || strstr(vendor, "Google Inc.") != 0)) {
         mIsANGLE = true;
     }
-    
+
     InitExtensions();
 
     GLLibraryLoader::PlatformLookupFunction lookupFunction =
