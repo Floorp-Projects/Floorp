@@ -68,9 +68,21 @@ extern int gettimeofday(struct timeval *tv);
 
 #if defined(XP_WIN)
 
-static const int64_t win2un = 0x19DB1DED53E8000;
+// Returns the number of microseconds since the Unix epoch.
+static double
+FileTimeToUnixMicroseconds(const FILETIME &ft)
+{
+    // Get the time in 100ns intervals.
+    int64_t t = (int64_t(ft.dwHighDateTime) << 32) | int64_t(ft.dwLowDateTime);
 
-#define FILETIME2INT64(ft) (((int64_t)ft.dwHighDateTime) << 32LL | (int64_t)ft.dwLowDateTime)
+    // The Windows epoch is around 1600. The Unix epoch is around 1970.
+    // Subtract the difference.
+    static const int64_t TimeToEpochIn100ns = 0x19DB1DED53E8000;
+    t -= TimeToEpochIn100ns;
+
+    // Divide by 10 to convert to microseconds.
+    return double(t) * 0.1;
+}
 
 struct CalibrationData {
     double freq;         /* The performance counter frequency */
@@ -93,44 +105,31 @@ static CalibrationData calibration = { 0 };
 static void
 NowCalibrate()
 {
-    FILETIME ft, ftStart;
-    LARGE_INTEGER liFreq, now;
-
     if (calibration.freq == 0.0) {
-        if(!QueryPerformanceFrequency(&liFreq)) {
-            /* High-performance timer is unavailable */
+        LARGE_INTEGER liFreq;
+        if (!QueryPerformanceFrequency(&liFreq)) {
+            // High-performance timer is unavailable.
             calibration.freq = -1.0;
-        } else {
-            calibration.freq = double(liFreq.QuadPart);
+            return;
         }
+        calibration.freq = double(liFreq.QuadPart);
     }
     if (calibration.freq > 0.0) {
-        int64_t calibrationDelta = 0;
-
-        /* By wrapping a timeBegin/EndPeriod pair of calls around this loop,
-           the loop seems to take much less time (1 ms vs 15ms) on Vista. */
+        // By wrapping a timeBegin/EndPeriod pair of calls around this loop,
+        // the loop seems to take much less time (1 ms vs 15ms) on Vista.
         timeBeginPeriod(1);
+        FILETIME ft, ftStart;
         GetSystemTimeAsFileTime(&ftStart);
         do {
             GetSystemTimeAsFileTime(&ft);
         } while (memcmp(&ftStart,&ft, sizeof(ft)) == 0);
         timeEndPeriod(1);
 
-        /*
-        calibrationDelta = (FILETIME2INT64(ft) - FILETIME2INT64(ftStart))/10;
-        fprintf(stderr, "Calibration delta was %I64d us\n", calibrationDelta);
-        */
-
+        LARGE_INTEGER now;
         QueryPerformanceCounter(&now);
 
-        calibration.offset = double(FILETIME2INT64(ft));
+        calibration.offset = FileTimeToUnixMicroseconds(ft);
         calibration.timer_offset = double(now.QuadPart);
-
-        /* The windows epoch is around 1600. The unix epoch is around
-           1970. win2un is the difference (in windows time units which
-           are 10 times more highres than the JS time unit) */
-        calibration.offset -= win2un;
-        calibration.offset *= 0.1;
         calibration.last = 0;
 
         calibration.calibrated = true;
@@ -297,7 +296,7 @@ PRMJ_Now()
 
         /* Calculate a low resolution time */
         GetSystemTimeAsFileTime(&ft);
-        lowresTime = 0.1 * double(FILETIME2INT64(ft) - win2un);
+        lowresTime = FileTimeToUnixMicroseconds(ft);
 
         if (calibration.freq > 0.0) {
             double highresTime, diff;
