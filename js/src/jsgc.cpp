@@ -4043,6 +4043,12 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
         /* Clear out any small pools that we're hanging on to. */
         if (JSC::ExecutableAllocator *execAlloc = rt->maybeExecAlloc())
             execAlloc->purge();
+#ifdef JS_ION
+        if (rt->jitRuntime() && rt->jitRuntime()->hasIonAlloc()) {
+            JSRuntime::AutoLockForInterrupt lock(rt);
+            rt->jitRuntime()->ionAlloc(rt)->purge();
+        }
+#endif
 
         /*
          * This removes compartments from rt->compartment, so we do it last to make
