@@ -630,6 +630,13 @@ HTMLImageElement::NaturalHeight()
     return 0;
   }
 
+  if (mResponsiveSelector) {
+    double density = mResponsiveSelector->GetSelectedImageDensity();
+    MOZ_ASSERT(IsFinite(density) && density > 0.0);
+    height = NSToIntRound(double(height) / density);
+    height = std::max(height, 0u);
+  }
+
   return height;
 }
 
@@ -649,6 +656,13 @@ HTMLImageElement::NaturalWidth()
   if (NS_FAILED(rv)) {
     MOZ_ASSERT(false, "GetNaturalWidth should not fail");
     return 0;
+  }
+
+  if (mResponsiveSelector) {
+    double density = mResponsiveSelector->GetSelectedImageDensity();
+    MOZ_ASSERT(IsFinite(density) && density > 0.0);
+    width = NSToIntRound(double(width) / density);
+    width = std::max(width, 0u);
   }
 
   return width;
