@@ -2350,6 +2350,10 @@ abstract public class BrowserApp extends GeckoApp
 
         final int itemId = item.getItemId();
 
+        // Track the menu action. We don't know much about the context, but we can use this to determine
+        // the frequency of use for various actions.
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, getResources().getResourceEntryName(itemId));
+
         if (itemId == R.id.bookmark) {
             tab = Tabs.getInstance().getSelectedTab();
             if (tab != null) {
