@@ -683,10 +683,11 @@ bool
 CodeGenerator::visitTestVAndBranch(LTestVAndBranch *lir)
 {
     OutOfLineTestObject *ool = nullptr;
-    // XXXbz operandMightEmulateUndefined lies a lot.  See bug 1004169.  In
-    // practice, we don't need the OutOfLineTestObject if the input to our test
-    // is not an object.
     MDefinition* input = lir->mir()->input();
+    // Unfortunately, it's possible that someone (e.g. phi elimination) switched
+    // out our input after we did cacheOperandMightEmulateUndefined.  So we
+    // might think it can emulate undefined _and_ know that it can't be an
+    // object.
     if (lir->mir()->operandMightEmulateUndefined() && input->mightBeType(MIRType_Object)) {
         ool = new(alloc()) OutOfLineTestObject();
         if (!addOutOfLineCode(ool))
