@@ -1668,7 +1668,7 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
 
       // STRATEGY: On each item, we compute & store its "share" of the total
       // flex weight that we've seen so far:
-      //   curFlexWeight / runningFlexWeightSum
+      //   curFlexWeight / flexWeightSum
       //
       // Then, when we go to actually distribute the space (in the next loop),
       // we can simply walk backwards through the elements and give each item
@@ -1680,20 +1680,20 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
       // simply treat the flex item(s) with the largest flex weights as if
       // their weights were infinite (dwarfing all the others), and we
       // distribute all of the available space among them.
-      float runningFlexWeightSum = 0.0f;
+      float flexWeightSum = 0.0f;
       float largestFlexWeight = 0.0f;
       uint32_t numItemsWithLargestFlexWeight = 0;
       for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
         float curFlexWeight = item->GetFlexWeightToUse(isUsingFlexGrow);
         MOZ_ASSERT(curFlexWeight >= 0.0f, "weights are non-negative");
 
-        runningFlexWeightSum += curFlexWeight;
-        if (NS_finite(runningFlexWeightSum)) {
+        flexWeightSum += curFlexWeight;
+        if (NS_finite(flexWeightSum)) {
           if (curFlexWeight == 0.0f) {
             item->SetShareOfFlexWeightSoFar(0.0f);
           } else {
             item->SetShareOfFlexWeightSoFar(curFlexWeight /
-                                            runningFlexWeightSum);
+                                            flexWeightSum);
           }
         } // else, the sum of weights overflows to infinity, in which
           // case we don't bother with "SetShareOfFlexWeightSoFar" since
@@ -1709,7 +1709,7 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
         }
       }
 
-      if (runningFlexWeightSum != 0.0f) { // no distribution if no flexibility
+      if (flexWeightSum != 0.0f) { // no distribution if no flexibility
         PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
                (" Distributing available space:"));
         // NOTE: It's important that we traverse our items in *reverse* order
@@ -1722,7 +1722,7 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
             // To avoid rounding issues, we compute the change in size for this
             // item, and then subtract it from the remaining available space.
             nscoord sizeDelta = 0;
-            if (NS_finite(runningFlexWeightSum)) {
+            if (NS_finite(flexWeightSum)) {
               float myShareOfRemainingSpace =
                 item->GetShareOfFlexWeightSoFar();
 
