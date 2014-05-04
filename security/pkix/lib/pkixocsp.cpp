@@ -965,11 +965,11 @@ CreateEncodedOCSPRequest(PLArenaPool* arena,
   }
 
   uint8_t* d = encodedRequest->data;
-  *d++ = 0x30; *d++ = totalLen - 2;  // OCSPRequest (SEQUENCE)
-  *d++ = 0x30; *d++ = totalLen - 4;  //   tbsRequest (SEQUENCE)
-  *d++ = 0x30; *d++ = totalLen - 6;  //     requestList (SEQUENCE OF)
-  *d++ = 0x30; *d++ = totalLen - 8;  //       Request (SEQUENCE)
-  *d++ = 0x30; *d++ = totalLen - 10; //         reqCert (CertID SEQUENCE)
+  *d++ = 0x30; *d++ = totalLen - 2u;  // OCSPRequest (SEQUENCE)
+  *d++ = 0x30; *d++ = totalLen - 4u;  //   tbsRequest (SEQUENCE)
+  *d++ = 0x30; *d++ = totalLen - 6u;  //     requestList (SEQUENCE OF)
+  *d++ = 0x30; *d++ = totalLen - 8u;  //       Request (SEQUENCE)
+  *d++ = 0x30; *d++ = totalLen - 10u; //         reqCert (CertID SEQUENCE)
 
   // reqCert.hashAlgorithm
   for (size_t i = 0; i < PR_ARRAY_SIZE(hashAlgorithm); ++i) {
