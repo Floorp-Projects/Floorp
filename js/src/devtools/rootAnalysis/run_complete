@@ -199,6 +199,12 @@ sub get_manager_address
     return $1;
 }
 
+sub logging_suffix {
+    my ($show_logs, $log_file) = @_;
+    return $show_logs ? "2>&1 | tee $log_file"
+                      : "> $log_file 2>&1";
+}
+
 sub run_build
 {
     print "build started: ";
@@ -214,7 +220,8 @@ sub run_build
     if (!$pid) {
         # this is the child process, fork another process to run a manager.
         defined(my $pid = fork) or die;
-        exec("$xmanager -terminate-on-assert > $manager_log_file 2>&1") if (!$pid);
+        my $logging = logging_suffix($suppress_logs, $manager_log_file);
+        exec("$xmanager -terminate-on-assert $logging") if (!$pid);
         $kill_on_exit{$pid} = 1;
 
         if (!$suppress_logs) {
@@ -286,7 +293,8 @@ sub run_pass
 
     # fork off a manager process for the analysis.
     defined(my $pid = fork) or die;
-    exec("$xmanager $manager_extra > $log_file 2>&1") if (!$pid);
+    my $logging = logging_suffix($suppress_logs, $log_file);
+    exec("$xmanager $manager_extra $logging") if (!$pid);
 
     my $address = get_manager_address($log_file);
 

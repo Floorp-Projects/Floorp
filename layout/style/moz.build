@@ -112,6 +112,7 @@ UNIFIED_SOURCES += [
     'nsDOMCSSValueList.cpp',
     'nsHTMLCSSStyleSheet.cpp',
     'nsHTMLStyleSheet.cpp',
+    'nsICSSRuleList.cpp',
     'nsLayoutStylesheetCache.cpp',
     'nsMediaFeatures.cpp',
     'nsNthIndexCache.cpp',
