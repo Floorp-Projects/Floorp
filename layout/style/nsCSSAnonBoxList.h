@@ -62,9 +62,13 @@ CSS_ANON_BOX(columnContent, ":-moz-column-content")
 CSS_ANON_BOX(viewport, ":-moz-viewport")
 CSS_ANON_BOX(viewportScroll, ":-moz-viewport-scroll")
 
-// Inside a flex container, a contiguous run of non-replaced inline children
-// gets wrapped in an anonymous block, which is then treated as a flex item.
+// Inside a flex container, a contiguous run of text gets wrapped in
+// an anonymous block, which is then treated as a flex item.
 CSS_ANON_BOX(anonymousFlexItem, ":-moz-anonymous-flex-item")
+
+// Inside a grid container, a contiguous run of text gets wrapped in
+// an anonymous block, which is then treated as a grid item.
+CSS_ANON_BOX(anonymousGridItem, ":-moz-anonymous-grid-item")
 
 #ifdef MOZ_XUL
 CSS_ANON_BOX(moztreecolumn, ":-moz-tree-column")

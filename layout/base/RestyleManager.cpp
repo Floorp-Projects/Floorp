@@ -2448,9 +2448,9 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
       NS_ASSERTION(aSelf->GetContent(),
                    "non pseudo-element frame without content node");
       // Skip flex-item style fixup for anonymous subtrees:
-      TreeMatchContext::AutoFlexItemStyleFixupSkipper
-        flexFixupSkipper(mTreeMatchContext,
-                         element->IsRootOfNativeAnonymousSubtree());
+      TreeMatchContext::AutoFlexOrGridItemStyleFixupSkipper
+        flexOrGridFixupSkipper(mTreeMatchContext,
+                               element->IsRootOfNativeAnonymousSubtree());
       newContext = styleSet->ResolveStyleFor(element, parentContext,
                                              mTreeMatchContext);
     }

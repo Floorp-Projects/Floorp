@@ -1,0 +1,7 @@
+default-preferences pref(layout.css.grid.enabled,true)
+
+# TODO these are only for detecting assertions/crashes for now since
+# grid layout is not implemented yet
+fails == grid-whitespace-handling-1a.xhtml grid-whitespace-handling-1-ref.xhtml
+fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
+== grid-whitespace-handling-2.xhtml  grid-whitespace-handling-2-ref.xhtml
