@@ -8,6 +8,9 @@
 
 #include "mozilla/DebugOnly.h"
 
+#if defined XP_MACOSX
+#include <libkern/OSByteOrder.h>
+#endif
 #include <string.h>
 
 #include "jsapi.h"
@@ -24,6 +27,14 @@ using namespace js;
 # else
 #  define TRACE_LOG_DIR "/tmp/"
 # endif
+#endif
+
+#if defined XP_MACOSX
+#define htobe32(x) OSSwapHostToBigInt32(x)
+#define be32toh(x) OSSwapBigToHostInt32(x)
+
+#define htobe64(x) OSSwapHostToBigInt64(x)
+#define be64toh(x) OSSwapBigToHostInt64(x)
 #endif
 
 #if defined(__i386__)
@@ -379,11 +390,11 @@ TraceLogger::createTextId(JSScript *script)
 
     int written;
     if (textId > 0) {
-        written = fprintf(dictFile, ",\n\"script %s:%d:%d\"", script->filename(),
-                          script->lineno(), script->column());
+        written = fprintf(dictFile, ",\n\"script %s:%u:%u\"", script->filename(),
+                          (unsigned)script->lineno(), (unsigned)script->column());
     } else {
-        written = fprintf(dictFile, "\"script %s:%d:%d\"", script->filename(),
-                          script->lineno(), script->column());
+        written = fprintf(dictFile, "\"script %s:%u:%u\"", script->filename(),
+                          (unsigned)script->lineno(), (unsigned)script->column());
     }
 
     if (written < 0)

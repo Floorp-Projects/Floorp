@@ -1873,7 +1873,7 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  TLOPTIONS=disableMainThread"),
 
     JS_FN_HELP("stopTraceLogger", DisableTraceLogger, 0, 0,
-"startTraceLogger()",
+"stopTraceLogger()",
 "  Stop logging the mainThread."),
     JS_FS_HELP_END
 };

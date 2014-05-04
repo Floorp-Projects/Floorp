@@ -55,7 +55,7 @@ class CSSRuleListImpl : public nsICSSRuleList
 public:
   CSSRuleListImpl(nsCSSStyleSheet *aStyleSheet);
 
-  NS_DECL_ISUPPORTS
+  virtual nsCSSStyleSheet* GetParentObject() MOZ_OVERRIDE;
 
   virtual nsIDOMCSSRule*
   IndexedGetter(uint32_t aIndex, bool& aFound) MOZ_OVERRIDE;
@@ -81,20 +81,11 @@ CSSRuleListImpl::~CSSRuleListImpl()
 {
 }
 
-DOMCI_DATA(CSSRuleList, CSSRuleListImpl)
-
-// QueryInterface implementation for CSSRuleList
-NS_INTERFACE_MAP_BEGIN(CSSRuleListImpl)
-  NS_INTERFACE_MAP_ENTRY(nsICSSRuleList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRuleList)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSRuleList)
-NS_INTERFACE_MAP_END
-
-
-NS_IMPL_ADDREF(CSSRuleListImpl)
-NS_IMPL_RELEASE(CSSRuleListImpl)
-
+nsCSSStyleSheet*
+CSSRuleListImpl::GetParentObject()
+{
+  return mStyleSheet;
+}
 
 uint32_t
 CSSRuleListImpl::Length()
@@ -1790,7 +1781,7 @@ nsCSSStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
   return rv.ErrorCode();
 }
 
-nsIDOMCSSRuleList*
+nsICSSRuleList*
 nsCSSStyleSheet::GetCssRules(ErrorResult& aRv)
 {
   // No doing this on incomplete sheets!

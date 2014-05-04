@@ -8,16 +8,32 @@
 
 #include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSRuleList.h"
+#include "nsWrapperCache.h"
+
+class nsCSSStyleSheet;
 
 // IID for the nsICSSRuleList interface
 #define NS_ICSSRULELIST_IID \
-{ 0xccc0135a, 0xbcb6, 0x4654, \
-  { 0x8c, 0x78, 0x74, 0x35, 0x97, 0x9b, 0x88, 0x19 } }
+{ 0x56ac8d1c, 0xc1ed, 0x45fe, \
+  { 0x9a, 0x4d, 0x3a, 0xdc, 0xf9, 0xd1, 0xb9, 0x3f } }
 
 class nsICSSRuleList : public nsIDOMCSSRuleList
+                     , public nsWrapperCache
 {
 public:
+  nsICSSRuleList()
+  {
+    SetIsDOMBinding();
+  }
+  virtual ~nsICSSRuleList() {}
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSSRULELIST_IID)
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsICSSRuleList)
+
+  virtual nsCSSStyleSheet* GetParentObject() = 0;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE MOZ_FINAL;
 
   NS_IMETHOD
   GetLength(uint32_t* aLength) MOZ_OVERRIDE MOZ_FINAL
