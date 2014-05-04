@@ -181,9 +181,10 @@
   height: 100%;
 }
 
-*|*::-moz-anonymous-flex-item {
-  /* Anonymous blocks that wrap contiguous runs of inline non-replaced
-   * content inside of a flex container. */
+*|*::-moz-anonymous-flex-item,
+*|*::-moz-anonymous-grid-item {
+  /* Anonymous blocks that wrap contiguous runs of text
+   * inside of a flex or grid container. */
   display: block;
 }
 

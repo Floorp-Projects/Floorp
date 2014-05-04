@@ -2966,6 +2966,9 @@ class CGWrapGlobalMethod(CGAbstractMethod):
                                                      aOptions,
                                                      aPrincipal);
 
+              // obj is a new global, so has a new compartment.  Enter it
+              // before doing anything with it.
+              JSAutoCompartment ac(aCx, obj);
               $*{unforgeable}
 
               $*{slots}

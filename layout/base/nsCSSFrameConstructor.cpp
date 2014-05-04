@@ -302,13 +302,37 @@ static int32_t FFWC_recursions=0;
 static int32_t FFWC_nextInFlows=0;
 #endif
 
-// Returns true if aFrame is an anonymous flex item
+// Returns true if aFrame is an anonymous flex/grid item.
 static inline bool
-IsAnonymousFlexItem(const nsIFrame* aFrame)
+IsAnonymousFlexOrGridItem(const nsIFrame* aFrame)
 {
   const nsIAtom* pseudoType = aFrame->StyleContext()->GetPseudo();
-  return pseudoType == nsCSSAnonBoxes::anonymousFlexItem;
+  return pseudoType == nsCSSAnonBoxes::anonymousFlexItem ||
+         pseudoType == nsCSSAnonBoxes::anonymousGridItem;
 }
+
+#if DEBUG
+static void
+AssertAnonymousFlexOrGridItemParent(const nsIFrame* aChild,
+                                    const nsIFrame* aParent)
+{
+  MOZ_ASSERT(IsAnonymousFlexOrGridItem(aChild),
+             "expected an anonymous flex or grid item child frame");
+  MOZ_ASSERT(aParent, "expected a parent frame");
+  const nsIAtom* pseudoType = aChild->StyleContext()->GetPseudo();
+  if (pseudoType == nsCSSAnonBoxes::anonymousFlexItem) {
+    MOZ_ASSERT(aParent->GetType() == nsGkAtoms::flexContainerFrame,
+               "anonymous flex items should only exist as children "
+               "of flex container frames");
+  } else {
+    MOZ_ASSERT(aParent->GetType() == nsGkAtoms::gridContainerFrame,
+               "anonymous grid items should only exist as children "
+               "of grid container frames");
+  }
+}
+#else
+#define AssertAnonymousFlexOrGridItemParent(x, y) do { /* nothing */ } while(0)
+#endif
 
 static inline nsIFrame*
 GetFieldSetBlockFrame(nsIFrame* aFieldsetFrame)
@@ -3857,8 +3881,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
       FrameConstructionItemList items;
       {
         // Skip flex item style-fixup during our AddFrameConstructionItems() call:
-        TreeMatchContext::AutoFlexItemStyleFixupSkipper
-          flexItemStyleFixupSkipper(aState.mTreeMatchContext);
+        TreeMatchContext::AutoFlexOrGridItemStyleFixupSkipper
+          flexOrGridItemStyleFixupSkipper(aState.mTreeMatchContext);
 
         AddFrameConstructionItems(aState, content, true, aParentFrame, items);
       }
@@ -8541,10 +8565,8 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   // we're only interested in anonymous flex items here, and those can never
   // be adjacent to whitespace, since they absorb contiguous runs of inline
   // non-replaced content (including whitespace).
-  if (nextSibling && IsAnonymousFlexItem(nextSibling)) {
-    NS_ABORT_IF_FALSE(parent->GetType() == nsGkAtoms::flexContainerFrame,
-                      "anonymous flex items should only exist as children "
-                      "of flex container frames");
+  if (nextSibling && IsAnonymousFlexOrGridItem(nextSibling)) {
+    AssertAnonymousFlexOrGridItemParent(nextSibling, parent);
 #ifdef DEBUG
     if (gNoisyContentUpdates) {
       printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
@@ -8561,11 +8583,8 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   // Might need to reconstruct things if the removed frame's nextSibling is
   // null and its parent is an anonymous flex item. (This might be the last
   // remaining child of that anonymous flex item, which can then go away.)
-  if (!nextSibling && IsAnonymousFlexItem(parent)) {
-    NS_ABORT_IF_FALSE(parent->GetParent() &&
-                      parent->GetParent()->GetType() == nsGkAtoms::flexContainerFrame,
-                      "anonymous flex items should only exist as children "
-                      "of flex container frames");
+  if (!nextSibling && IsAnonymousFlexOrGridItem(parent)) {
+    AssertAnonymousFlexOrGridItemParent(parent, parent->GetParent());
 #ifdef DEBUG
     if (gNoisyContentUpdates) {
       printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
@@ -8875,20 +8894,24 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
 };
 
 void
-nsCSSFrameConstructor::CreateNeededAnonFlexItems(
+nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
   nsFrameConstructorState& aState,
   FrameConstructionItemList& aItems,
   nsIFrame* aParentFrame)
 {
-  if (aItems.IsEmpty() ||
-      aParentFrame->GetType() != nsGkAtoms::flexContainerFrame) {
+  if (aItems.IsEmpty()) {
+    return;
+  }
+  nsIAtom* containerType = aParentFrame->GetType();
+  if (containerType != nsGkAtoms::flexContainerFrame &&
+      containerType != nsGkAtoms::gridContainerFrame) {
     return;
   }
 
   FCItemIterator iter(aItems);
   do {
     // Advance iter past children that don't want to be wrapped
-    if (iter.SkipItemsThatDontNeedAnonFlexItem(aState)) {
+    if (iter.SkipItemsThatDontNeedAnonFlexOrGridItem(aState)) {
       // Hit the end of the items without finding any remaining children that
       // need to be wrapped. We're finished!
       return;
@@ -8897,22 +8920,22 @@ nsCSSFrameConstructor::CreateNeededAnonFlexItems(
     // If our next potentially-wrappable child is whitespace, then see if
     // there's anything wrappable immediately after it. If not, we just drop
     // the whitespace and move on. (We're not supposed to create any anonymous
-    // flex items that _only_ contain whitespace).
+    // flex/grid items that _only_ contain whitespace).
     // (BUT if this is generated content, then we don't give whitespace nodes
     // any special treatment, because they're probably not really whitespace --
     // they're just temporarily empty, waiting for their generated text.)
     // XXXdholbert If this node's generated text will *actually end up being
     // entirely whitespace*, then we technically should still skip over it, per
-    // the flexbox spec. I'm not bothering with that at this point, since it's
-    // a pretty extreme edge case.
+    // the CSS grid & flexbox specs. I'm not bothering with that at this point,
+    // since it's a pretty extreme edge case.
     if (!aParentFrame->IsGeneratedContentFrame() &&
         iter.item().IsWhitespace(aState)) {
       FCItemIterator afterWhitespaceIter(iter);
       bool hitEnd = afterWhitespaceIter.SkipWhitespace(aState);
-      bool nextChildNeedsAnonFlexItem =
-        !hitEnd && afterWhitespaceIter.item().NeedsAnonFlexItem(aState);
+      bool nextChildNeedsAnonItem =
+        !hitEnd && afterWhitespaceIter.item().NeedsAnonFlexOrGridItem(aState);
 
-      if (!nextChildNeedsAnonFlexItem) {
+      if (!nextChildNeedsAnonItem) {
         // There's nothing after the whitespace that we need to wrap, so we
         // just drop this run of whitespace.
         iter.DeleteItemsTo(afterWhitespaceIter);
@@ -8924,24 +8947,25 @@ nsCSSFrameConstructor::CreateNeededAnonFlexItems(
         // we jump back to the beginning of the loop to skip over that child
         // (and anything else non-wrappable after it)
         NS_ABORT_IF_FALSE(!iter.IsDone() &&
-                          !iter.item().NeedsAnonFlexItem(aState),
-                          "hitEnd and/or nextChildNeedsAnonFlexItem lied");
+                          !iter.item().NeedsAnonFlexOrGridItem(aState),
+                          "hitEnd and/or nextChildNeedsAnonItem lied");
         continue;
       }
     }
 
     // Now |iter| points to the first child that needs to be wrapped in an
-    // anonymous flex item. Now we see how many children after it also want
-    // to be wrapped in an anonymous flex item.
+    // anonymous flex/grid item. Now we see how many children after it also want
+    // to be wrapped in an anonymous flex/grid item.
     FCItemIterator endIter(iter); // iterator to find the end of the group
-    endIter.SkipItemsThatNeedAnonFlexItem(aState);
+    endIter.SkipItemsThatNeedAnonFlexOrGridItem(aState);
 
     NS_ASSERTION(iter != endIter,
                  "Should've had at least one wrappable child to seek past");
 
-    // Now, we create the anonymous flex item to contain the children
+    // Now, we create the anonymous flex or grid item to contain the children
     // between |iter| and |endIter|.
-    nsIAtom* pseudoType = nsCSSAnonBoxes::anonymousFlexItem;
+    nsIAtom* pseudoType = containerType == nsGkAtoms::flexContainerFrame ?
+      nsCSSAnonBoxes::anonymousFlexItem : nsCSSAnonBoxes::anonymousGridItem;
     nsStyleContext* parentStyle = aParentFrame->StyleContext();
     nsIContent* parentContent = aParentFrame->GetContent();
     already_AddRefed<nsStyleContext> wrapperStyle =
@@ -8968,11 +8992,11 @@ nsCSSFrameConstructor::CreateNeededAnonFlexItems(
     newItem->mIsBlock = !newItem->mIsAllInline;
 
     NS_ABORT_IF_FALSE(!newItem->mIsAllInline && newItem->mIsBlock,
-                      "expecting anonymous flex items to be block-level "
+                      "expecting anonymous flex/grid items to be block-level "
                       "(this will make a difference when we encounter "
-                      "'flex-align: baseline')");
+                      "'align-items: baseline')");
 
-    // Anonymous flex items induce line boundaries around their
+    // Anonymous flex and grid items induce line boundaries around their
     // contents.
     newItem->mChildItems.SetLineBoundaryAtStart(true);
     newItem->mChildItems.SetLineBoundaryAtEnd(true);
@@ -9205,7 +9229,7 @@ nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aSta
                                                    nsFrameItems& aFrameItems)
 {
   CreateNeededTablePseudos(aState, aItems, aParentFrame);
-  CreateNeededAnonFlexItems(aState, aItems, aParentFrame);
+  CreateNeededAnonFlexOrGridItems(aState, aItems, aParentFrame);
 
   aItems.SetTriedConstructingFrames();
   for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
@@ -9249,8 +9273,8 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
                       "Why is someone creating garbage anonymous content");
 
     nsRefPtr<nsStyleContext> styleContext;
-    TreeMatchContext::AutoFlexItemStyleFixupSkipper
-      flexItemStyleFixupSkipper(aState.mTreeMatchContext);
+    TreeMatchContext::AutoFlexOrGridItemStyleFixupSkipper
+      flexOrGridItemStyleFixupSkipper(aState.mTreeMatchContext);
     if (aAnonymousItems[i].mStyleContext) {
       styleContext = aAnonymousItems[i].mStyleContext.forget();
     } else {
@@ -10785,56 +10809,53 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     FCItemIterator iter(aItems);
 
     // Check if we're adding to-be-wrapped content right *after* an existing
-    // anonymous flex item (which would need to absorb this content).
-    if (aPrevSibling && IsAnonymousFlexItem(aPrevSibling) &&
-        iter.item().NeedsAnonFlexItem(aState)) {
+    // anonymous flex or grid item (which would need to absorb this content).
+    if (aPrevSibling && IsAnonymousFlexOrGridItem(aPrevSibling) &&
+        iter.item().NeedsAnonFlexOrGridItem(aState)) {
       RecreateFramesForContent(aFrame->GetContent(), true);
       return true;
     }
 
     // Check if we're adding to-be-wrapped content right *before* an existing
-    // anonymous flex item (which would need to absorb this content).
-    if (nextSibling && IsAnonymousFlexItem(nextSibling)) {
+    // anonymous flex or grid item (which would need to absorb this content).
+    if (nextSibling && IsAnonymousFlexOrGridItem(nextSibling)) {
       // Jump to the last entry in the list
       iter.SetToEnd();
       iter.Prev();
-      if (iter.item().NeedsAnonFlexItem(aState)) {
+      if (iter.item().NeedsAnonFlexOrGridItem(aState)) {
         RecreateFramesForContent(aFrame->GetContent(), true);
         return true;
       }
     }
   }
 
-  // Situation #3 is an anonymous flex item that's getting new children who
-  // don't want to be wrapped.
-  if (IsAnonymousFlexItem(aFrame)) {
-    nsIFrame* flexContainerFrame = aFrame->GetParent();
-    NS_ABORT_IF_FALSE(flexContainerFrame &&
-                      flexContainerFrame->GetType() == nsGkAtoms::flexContainerFrame,
-                      "anonymous flex items should only exist as children "
-                      "of flex container frames");
+  // Situation #3 is an anonymous flex or grid item that's getting new children
+  // who don't want to be wrapped.
+  if (IsAnonymousFlexOrGridItem(aFrame)) {
+    AssertAnonymousFlexOrGridItemParent(aFrame, aFrame->GetParent());
 
     // We need to push a null float containing block to be sure that
-    // "NeedsAnonFlexItem" will know we're not honoring floats for this
+    // "NeedsAnonFlexOrGridItem" will know we're not honoring floats for this
     // inserted content. (In particular, this is necessary in order for
-    // NeedsAnonFlexItem's "GetGeometricParent" call to return the correct
-    // result.) We're not honoring floats on this content because it has the
-    // _flex container_ as its parent in the content tree.
+    // its "GetGeometricParent" call to return the correct result.)
+    // We're not honoring floats on this content because it has the
+    // _flex/grid container_ as its parent in the content tree.
     nsFrameConstructorSaveState floatSaveState;
     aState.PushFloatContainingBlock(nullptr, floatSaveState);
 
     FCItemIterator iter(aItems);
     // Skip over things that _do_ need an anonymous flex item, because
     // they're perfectly happy to go here -- they won't cause a reframe.
-    if (!iter.SkipItemsThatNeedAnonFlexItem(aState)) {
+    if (!iter.SkipItemsThatNeedAnonFlexOrGridItem(aState)) {
       // We hit something that _doesn't_ need an anonymous flex item!
       // Rebuild the flex container to bust it out.
-      RecreateFramesForContent(flexContainerFrame->GetContent(), true);
+      nsIFrame* containerFrame = aFrame->GetParent();
+      RecreateFramesForContent(containerFrame->GetContent(), true);
       return true;
     }
 
     // If we get here, then everything in |aItems| needs to be wrapped in
-    // an anonymous flex item.  That's where it's already going - good!
+    // an anonymous flex or grid item.  That's where it's already going - good!
   }
 
   // Situation #4 is a case when table pseudo-frames don't work out right
@@ -11239,7 +11260,7 @@ Iterator::SkipItemsWantingParentType(ParentType aParentType)
 
 bool
 nsCSSFrameConstructor::FrameConstructionItem::
-  NeedsAnonFlexItem(const nsFrameConstructorState& aState)
+  NeedsAnonFlexOrGridItem(const nsFrameConstructorState& aState)
 {
   if (mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) {
     // This will be an inline non-replaced box.
@@ -11260,11 +11281,11 @@ nsCSSFrameConstructor::FrameConstructionItem::
 
 inline bool
 nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::SkipItemsThatNeedAnonFlexItem(
+Iterator::SkipItemsThatNeedAnonFlexOrGridItem(
   const nsFrameConstructorState& aState)
 {
   NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
-  while (item().NeedsAnonFlexItem(aState)) {
+  while (item().NeedsAnonFlexOrGridItem(aState)) {
     Next();
     if (IsDone()) {
       return true;
@@ -11275,11 +11296,11 @@ Iterator::SkipItemsThatNeedAnonFlexItem(
 
 inline bool
 nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::SkipItemsThatDontNeedAnonFlexItem(
+Iterator::SkipItemsThatDontNeedAnonFlexOrGridItem(
   const nsFrameConstructorState& aState)
 {
   NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
-  while (!(item().NeedsAnonFlexItem(aState))) {
+  while (!(item().NeedsAnonFlexOrGridItem(aState))) {
     Next();
     if (IsDone()) {
       return true;
