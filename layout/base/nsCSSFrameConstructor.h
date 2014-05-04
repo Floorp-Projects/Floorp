@@ -791,13 +791,13 @@ private:
       // Skip over non-replaced inline frames and positioned frames.
       // Return whether the iterator is done after doing that.
       // The iterator must not be done when this is called.
-      inline bool SkipItemsThatNeedAnonFlexItem(
+      inline bool SkipItemsThatNeedAnonFlexOrGridItem(
         const nsFrameConstructorState& aState);
 
       // Skip to the first frame that is a non-replaced inline or is
       // positioned.  Return whether the iterator is done after doing that.
       // The iterator must not be done when this is called.
-      inline bool SkipItemsThatDontNeedAnonFlexItem(
+      inline bool SkipItemsThatDontNeedAnonFlexOrGridItem(
         const nsFrameConstructorState& aState);
 
       // Skip over whitespace.  Return whether the iterator is done after doing
@@ -928,9 +928,9 @@ private:
       return FCDATA_DESIRED_PARENT_TYPE(mFCData->mBits);
     }
 
-    // Indicates whether (when in a flexbox container) this item needs to be
-    // wrapped in an anonymous block.
-    bool NeedsAnonFlexItem(const nsFrameConstructorState& aState);
+    // Indicates whether (when in a flex or grid container) this item needs
+    // to be wrapped in an anonymous block.
+    bool NeedsAnonFlexOrGridItem(const nsFrameConstructorState& aState);
 
     // Don't call this unless the frametree really depends on the answer!
     // Especially so for generated content, where we don't want to reframe
@@ -1020,14 +1020,15 @@ private:
   };
 
   /**
-   * Function to create the anonymous flex items that we need.
-   * If aParentFrame is not a nsFlexContainerFrame then this method is a NOP.
+   * Function to create the anonymous flex or grid items that we need.
+   * If aParentFrame is not a nsFlexContainerFrame or nsGridContainerFrame then
+   * this method is a NOP.
    * @param aItems the child frame construction items before pseudo creation
    * @param aParentFrame the parent frame
    */
-  void CreateNeededAnonFlexItems(nsFrameConstructorState& aState,
-                                    FrameConstructionItemList& aItems,
-                                    nsIFrame* aParentFrame);
+  void CreateNeededAnonFlexOrGridItems(nsFrameConstructorState& aState,
+                                       FrameConstructionItemList& aItems,
+                                       nsIFrame* aParentFrame);
 
   /**
    * Function to create the table pseudo items we need.

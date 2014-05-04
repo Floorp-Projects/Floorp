@@ -155,6 +155,9 @@ include first-line/reftest.list
 # flexbox (display: flex, display: inline-flex)
 include flexbox/reftest.list
 
+# CSS Grid (display: grid, display: inline-grid)
+include css-grid/reftest.list
+
 # floats/
 include floats/reftest.list
 

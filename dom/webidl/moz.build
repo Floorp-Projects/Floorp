@@ -63,6 +63,7 @@ WEBIDL_FILES = [
     'Coordinates.webidl',
     'CSS.webidl',
     'CSSPrimitiveValue.webidl',
+    'CSSRuleList.webidl',
     'CSSStyleDeclaration.webidl',
     'CSSStyleSheet.webidl',
     'CSSValue.webidl',

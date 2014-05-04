@@ -397,12 +397,12 @@ class nsStyleSet
     eIsVisitedLink =    1 << 1,
     eDoAnimation =      1 << 2,
 
-    // Indicates that we should skip the flex-item-specific chunk of
+    // Indicates that we should skip the flex/grid item specific chunk of
     // ApplyStyleFixups().  This is useful if our parent has "display: flex"
-    // but we can tell it's not going to actually be a flex container (e.g. if
+    // or "display: grid" but we can tell we're not going to honor that (e.g. if
     // it's the outer frame of a button widget, and we're the inline frame for
     // the button's label).
-    eSkipFlexItemStyleFixup = 1 << 3
+    eSkipFlexOrGridItemStyleFixup = 1 << 3
   };
 
   already_AddRefed<nsStyleContext>
