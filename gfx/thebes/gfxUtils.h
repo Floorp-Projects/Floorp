@@ -226,7 +226,8 @@ public:
      */
     static void CopyAsDataURL(mozilla::gfx::DrawTarget* aDT);
 
-    static bool sDumpPaintList;
+    static bool DumpPaintList();
+
     static bool sDumpPainting;
     static bool sDumpPaintingToFile;
     static FILE* sDumpPaintFile;
