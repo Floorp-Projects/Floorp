@@ -530,7 +530,7 @@ Extension(PLArenaPool* arena, SECOidTag extnIDTag,
 
   if (criticality == ExtensionCriticality::Critical) {
     SECItem* critical(Boolean(arena, true));
-    if (!output.Add(critical) != der::Success) {
+    if (output.Add(critical) != der::Success) {
       return nullptr;
     }
   }
