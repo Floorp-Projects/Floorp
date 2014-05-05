@@ -90,7 +90,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(Touch)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Touch)
 
 EventTarget*
-Touch::GetTarget() const
+Touch::Target() const
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(mTarget);
   if (content && content->ChromeOnlyAccess() &&
