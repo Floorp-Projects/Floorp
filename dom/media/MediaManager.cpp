@@ -24,6 +24,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "mozilla/Types.h"
+#include "mozilla/PeerIdentity.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
@@ -38,6 +39,8 @@
 #include "nsJSUtils.h"
 #include "nsDOMFile.h"
 #include "nsGlobalWindow.h"
+
+#include "mozilla/Preferences.h"
 
 /* Using WebRTC backend on Desktops (Mac, Windows, Linux), otherwise default */
 #include "MediaEngineDefault.h"
@@ -494,11 +497,13 @@ public:
     uint64_t aWindowID,
     GetUserMediaCallbackMediaStreamListener* aListener,
     MediaEngineSource* aAudioSource,
-    MediaEngineSource* aVideoSource)
+    MediaEngineSource* aVideoSource,
+    PeerIdentity* aPeerIdentity)
     : mAudioSource(aAudioSource)
     , mVideoSource(aVideoSource)
     , mWindowID(aWindowID)
     , mListener(aListener)
+    , mPeerIdentity(aPeerIdentity)
     , mManager(MediaManager::GetInstance())
   {
     mSuccess.swap(aSuccess);
@@ -621,9 +626,16 @@ public:
                reinterpret_cast<uint64_t>(stream.get()),
                reinterpret_cast<int64_t>(trackunion->GetStream()));
 
-    trackunion->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
+    nsCOMPtr<nsIPrincipal> principal;
+    if (mPeerIdentity) {
+      principal = do_CreateInstance("@mozilla.org/nullprincipal;1");
+      trackunion->SetPeerIdentity(mPeerIdentity.forget());
+    } else {
+      principal = window->GetExtantDoc()->NodePrincipal();
+    }
+    trackunion->CombineWithPrincipal(principal);
 
-    // The listener was added at the begining in an inactive state.
+    // The listener was added at the beginning in an inactive state.
     // Activate our listener. We'll call Start() on the source when get a callback
     // that the MediaStream has started consuming. The listener is freed
     // when the page is invalidated (on navigation or close).
@@ -662,6 +674,7 @@ private:
   nsRefPtr<MediaEngineSource> mVideoSource;
   uint64_t mWindowID;
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener;
+  nsAutoPtr<PeerIdentity> mPeerIdentity;
   nsRefPtr<MediaManager> mManager; // get ref to this when creating the runnable
 };
 
@@ -1055,9 +1068,14 @@ public:
         return;
       }
     }
+    PeerIdentity* peerIdentity = nullptr;
+    if (!mConstraints.mPeerIdentity.IsEmpty()) {
+      peerIdentity = new PeerIdentity(mConstraints.mPeerIdentity);
+    }
 
     NS_DispatchToMainThread(new GetUserMediaStreamRunnable(
-      mSuccess, mError, mWindowID, mListener, aAudioSource, aVideoSource
+      mSuccess, mError, mWindowID, mListener, aAudioSource, aVideoSource,
+      peerIdentity
     ));
 
     MOZ_ASSERT(!mSuccess);
@@ -1296,8 +1314,8 @@ MediaManager::NotifyRecordingStatusChange(nsPIDOMWindow* aWindow,
   props->SetPropertyAsAString(NS_LITERAL_STRING("requestURL"), requestURL);
 
   obs->NotifyObservers(static_cast<nsIPropertyBag2*>(props),
-		       "recording-device-events",
-		       aMsg.get());
+                       "recording-device-events",
+                       aMsg.get());
 
   // Forward recording events to parent process.
   // The events are gathered in chrome process and used for recording indicator
@@ -1676,8 +1694,7 @@ MediaManager::RemoveFromWindowList(uint64_t aWindowID,
         // Notify the UI that this window no longer has gUM active
         char windowBuffer[32];
         PR_snprintf(windowBuffer, sizeof(windowBuffer), "%llu", outerID);
-        nsAutoString data;
-        data.Append(NS_ConvertUTF8toUTF16(windowBuffer));
+        nsString data = NS_ConvertUTF8toUTF16(windowBuffer);
 
         nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
         obs->NotifyObservers(nullptr, "recording-window-ended", data.get());

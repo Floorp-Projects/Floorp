@@ -95,15 +95,6 @@ function test() {
       }
     },
     {
-      name: "border-top-left-color",
-      value: "rgba(14, 255, 20, .5)",
-      test: fragment => {
-        is(countAll(fragment), 1);
-        is(countColors(fragment), 1);
-        is(fragment.textContent, "rgba(14, 255, 20, .5)");
-      }
-    },
-    {
       name: "border",
       value: "80em dotted pink",
       test: fragment => {
