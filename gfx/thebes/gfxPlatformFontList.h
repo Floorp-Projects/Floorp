@@ -189,6 +189,8 @@ public:
         mUserFontSetList.RemoveEntry(aUserFontSet);
     }
 
+    static const gfxFontEntry::ScriptRange sComplexScriptRanges[];
+
 protected:
     class MemoryReporter MOZ_FINAL : public nsIMemoryReporter
     {

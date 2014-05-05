@@ -52,7 +52,6 @@
 #include "gfxMacFont.h"
 #include "gfxUserFontSet.h"
 #include "harfbuzz/hb.h"
-#include "harfbuzz/hb-ot.h"
 
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
@@ -157,71 +156,6 @@ static NSString* GetNSStringForString(const nsAString& aSrc)
 // cmap-masking on other platforms to avoid using fonts that won't shape
 // properly.
 
-struct ScriptRange {
-    uint32_t         rangeStart;
-    uint32_t         rangeEnd;
-    hb_tag_t         tags[3]; // one or two OpenType script tags to check,
-                              // plus a NULL terminator
-};
-
-static const ScriptRange sComplexScripts[] = {
-    // Actually, now that harfbuzz supports presentation-forms shaping for
-    // Arabic, we can render it without layout tables. So maybe we don't
-    // want to mask the basic Arabic block here?
-    // This affects the arabic-fallback-*.html reftests, which rely on
-    // loading a font that *doesn't* have any GSUB table.
-    { 0x0600, 0x06FF, { TRUETYPE_TAG('a','r','a','b'), 0, 0 } },
-    { 0x0700, 0x074F, { TRUETYPE_TAG('s','y','r','c'), 0, 0 } },
-    { 0x0750, 0x077F, { TRUETYPE_TAG('a','r','a','b'), 0, 0 } },
-    { 0x08A0, 0x08FF, { TRUETYPE_TAG('a','r','a','b'), 0, 0 } },
-    { 0x0900, 0x097F, { TRUETYPE_TAG('d','e','v','2'),
-                        TRUETYPE_TAG('d','e','v','a'), 0 } },
-    { 0x0980, 0x09FF, { TRUETYPE_TAG('b','n','g','2'),
-                        TRUETYPE_TAG('b','e','n','g'), 0 } },
-    { 0x0A00, 0x0A7F, { TRUETYPE_TAG('g','u','r','2'),
-                        TRUETYPE_TAG('g','u','r','u'), 0 } },
-    { 0x0A80, 0x0AFF, { TRUETYPE_TAG('g','j','r','2'),
-                        TRUETYPE_TAG('g','u','j','r'), 0 } },
-    { 0x0B00, 0x0B7F, { TRUETYPE_TAG('o','r','y','2'),
-                        TRUETYPE_TAG('o','r','y','a'), 0 } },
-    { 0x0B80, 0x0BFF, { TRUETYPE_TAG('t','m','l','2'),
-                        TRUETYPE_TAG('t','a','m','l'), 0 } },
-    { 0x0C00, 0x0C7F, { TRUETYPE_TAG('t','e','l','2'),
-                        TRUETYPE_TAG('t','e','l','u'), 0 } },
-    { 0x0C80, 0x0CFF, { TRUETYPE_TAG('k','n','d','2'),
-                        TRUETYPE_TAG('k','n','d','a'), 0 } },
-    { 0x0D00, 0x0D7F, { TRUETYPE_TAG('m','l','m','2'),
-                        TRUETYPE_TAG('m','l','y','m'), 0 } },
-    { 0x0D80, 0x0DFF, { TRUETYPE_TAG('s','i','n','h'), 0, 0 } },
-    { 0x0E80, 0x0EFF, { TRUETYPE_TAG('l','a','o',' '), 0, 0 } },
-    { 0x0F00, 0x0FFF, { TRUETYPE_TAG('t','i','b','t'), 0, 0 } },
-    { 0x1000, 0x109f, { TRUETYPE_TAG('m','y','m','r'),
-                        TRUETYPE_TAG('m','y','m','2'), 0 } },
-    { 0x1780, 0x17ff, { TRUETYPE_TAG('k','h','m','r'), 0, 0 } },
-    // Khmer Symbols (19e0..19ff) don't seem to need any special shaping
-    { 0xaa60, 0xaa7f, { TRUETYPE_TAG('m','y','m','r'),
-                        TRUETYPE_TAG('m','y','m','2'), 0 } },
-    // Thai seems to be "renderable" without AAT morphing tables
-};
-
-static bool
-SupportsScriptInGSUB(gfxFontEntry* aFontEntry, const hb_tag_t* aScriptTags)
-{
-    hb_face_t *face = aFontEntry->GetHBFace();
-    if (!face) {
-        return false;
-    }
-
-    unsigned int index;
-    hb_tag_t     chosenScript;
-    bool found =
-        hb_ot_layout_table_choose_script(face, TRUETYPE_TAG('G','S','U','B'),
-                                         aScriptTags, &index, &chosenScript);
-    hb_face_destroy(face);
-
-    return found && chosenScript != TRUETYPE_TAG('D','F','L','T');
-}
-
 nsresult
 MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 {
@@ -273,12 +207,10 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
             mRequiresAAT = true; // prefer CoreText if font has no OTL tables
         }
 
-        uint32_t numScripts = ArrayLength(sComplexScripts);
-
-        for (uint32_t s = 0; s < numScripts; s++) {
+        for (const ScriptRange* sr = gfxPlatformFontList::sComplexScriptRanges;
+             sr->rangeStart; sr++) {
             // check to see if the cmap includes complex script codepoints
-            const ScriptRange& sr = sComplexScripts[s];
-            if (charmap->TestRange(sr.rangeStart, sr.rangeEnd)) {
+            if (charmap->TestRange(sr->rangeStart, sr->rangeEnd)) {
                 if (hasAATLayout) {
                     // prefer CoreText for Apple's complex-script fonts,
                     // even if they also have some OpenType tables
@@ -290,11 +222,11 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
                 }
 
                 // We check for GSUB here, as GPOS alone would not be ok.
-                if (hasGSUB && SupportsScriptInGSUB(this, sr.tags)) {
+                if (hasGSUB && SupportsScriptInGSUB(sr->tags)) {
                     continue;
                 }
 
-                charmap->ClearRange(sr.rangeStart, sr.rangeEnd);
+                charmap->ClearRange(sr->rangeStart, sr->rangeEnd);
             }
         }
     }
