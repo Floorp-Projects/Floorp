@@ -164,6 +164,7 @@ nsSpeechTask::SendAudio(JS::Handle<JS::Value> aData, JS::Handle<JS::Value> aLand
   NS_ENSURE_TRUE(mStream, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_FALSE(mStream->IsDestroyed(), NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mChannels, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aData.isObject(), NS_ERROR_INVALID_ARG);
 
   if (mIndirectAudio) {
     NS_WARNING("Can't call SendAudio from an indirect audio speech service.");
