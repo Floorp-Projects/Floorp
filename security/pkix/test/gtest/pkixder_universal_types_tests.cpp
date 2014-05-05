@@ -22,14 +22,16 @@
  * limitations under the License.
  */
 
-#include <functional>
+#include <limits>
 #include <vector>
 #include <gtest/gtest.h>
 
 #include "pkix/bind.h"
 #include "pkixder.h"
+#include "stdint.h"
 
 using namespace mozilla::pkix::der;
+using namespace std;
 
 namespace {
 
@@ -76,17 +78,17 @@ TEST_F(pkixder_universal_types_tests, BooleanTrue42)
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
+static const uint8_t DER_BOOLEAN_TRUE[] = {
+  0x01,                       // INTEGER
+  0x01,                       // length
+  0xff                        // true
+};
+
 TEST_F(pkixder_universal_types_tests, BooleanTrueFF)
 {
-  const uint8_t DER_BOOLEAN_TRUE_FF[] = {
-    0x01,                       // INTEGER
-    0x01,                       // length
-    0xff                        // true
-  };
-
   Input input;
   ASSERT_EQ(Success,
-            input.Init(DER_BOOLEAN_TRUE_FF, sizeof DER_BOOLEAN_TRUE_FF));
+            input.Init(DER_BOOLEAN_TRUE, sizeof DER_BOOLEAN_TRUE));
 
   bool value = false;
   ASSERT_EQ(Success, Boolean(input, value));
@@ -265,55 +267,118 @@ TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidZeroLength)
   ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, Integer)
+TEST_F(pkixder_universal_types_tests, Integer_0_127)
 {
-  const uint8_t DER_INTEGUR[] = {
+  for (uint8_t i = 0; i <= 127; ++i) {
+    const uint8_t DER[] = {
+      0x02, // INTEGER
+      0x01, // length
+      i,    // value
+    };
+
+    Input input;
+    ASSERT_EQ(Success, input.Init(DER, sizeof DER));
+
+    uint8_t value = i + 1; // initialize with a value that is NOT i.
+    ASSERT_EQ(Success, Integer(input, value));
+    ASSERT_EQ(i, value);
+  }
+}
+
+TEST_F(pkixder_universal_types_tests, Integer_Negative1)
+{
+  // This is a valid integer value but our integer parser cannot parse
+  // negative values.
+
+  static const uint8_t DER[] = {
+    0x02, // INTEGER
+    0x01, // length
+    0xff, // -1 (two's complement)
+  };
+
+  Input input;
+  ASSERT_EQ(Success, input.Init(DER, sizeof DER));
+
+  uint8_t value;
+  ASSERT_EQ(Failure, Integer(input, value));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
+
+TEST_F(pkixder_universal_types_tests, Integer_Negative128)
+{
+  // This is a valid integer value but our integer parser cannot parse
+  // negative values.
+
+  static const uint8_t DER[] = {
+    0x02, // INTEGER
+    0x01, // length
+    0x80, // -128 (two's complement)
+  };
+
+  Input input;
+  ASSERT_EQ(Success, input.Init(DER, sizeof DER));
+
+  uint8_t value;
+  ASSERT_EQ(Failure, Integer(input, value));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
+
+TEST_F(pkixder_universal_types_tests, Integer_128)
+{
+  // This is a valid integer value but our integer parser cannot parse
+  // values that require more than one byte to encode.
+
+  static const uint8_t DER[] = {
+    0x02, // INTEGER
+    0x02, // length
+    0x00, 0x80 // 128
+  };
+
+  Input input;
+  ASSERT_EQ(Success, input.Init(DER, sizeof DER));
+
+  uint8_t value;
+  ASSERT_EQ(Failure, Integer(input, value));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
+
+TEST_F(pkixder_universal_types_tests, Integer11223344)
+{
+  // This is a valid integer value but our integer parser cannot parse
+  // values that require more than one byte to be encoded.
+
+  static const uint8_t DER[] = {
     0x02,                       // INTEGER
     0x04,                       // length
     0x11, 0x22, 0x33, 0x44      // 0x11223344
   };
 
   Input input;
-  ASSERT_EQ(Success, input.Init(DER_INTEGUR, sizeof DER_INTEGUR));
+  ASSERT_EQ(Success, input.Init(DER, sizeof DER));
 
-  const uint8_t expectedItemData[] = { 0x11, 0x22, 0x33, 0x44 };
-
-  SECItem item;
-  memset(&item, 0x00, sizeof item);
-
-  ASSERT_EQ(Success, Integer(input, item));
-
-  ASSERT_EQ(siBuffer, item.type);
-  ASSERT_EQ((size_t) 4, item.len);
-  ASSERT_TRUE(item.data);
-  ASSERT_EQ(0, memcmp(item.data, expectedItemData, sizeof expectedItemData));
+  uint8_t value;
+  ASSERT_EQ(Failure, Integer(input, value));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, OneByte)
+TEST_F(pkixder_universal_types_tests, IntegerTruncatedOneByte)
 {
-  const uint8_t DER_INTEGUR[] = {
+  const uint8_t DER_INTEGER_TRUNCATED[] = {
     0x02,                       // INTEGER
     0x01,                       // length
-    0x11                        // 0x11
+    // MISSING DATA HERE
   };
 
   Input input;
-  ASSERT_EQ(Success, input.Init(DER_INTEGUR, sizeof DER_INTEGUR));
+  ASSERT_EQ(Success,
+            input.Init(DER_INTEGER_TRUNCATED, sizeof DER_INTEGER_TRUNCATED));
 
-  const uint8_t expectedItemData[] = { 0x11 };
-
-  SECItem item;
-  memset(&item, 0x00, sizeof item);
-
-  ASSERT_EQ(Success, Integer(input, item));
-
-  ASSERT_EQ(siBuffer, item.type);
-  ASSERT_EQ((size_t) 1, item.len);
-  ASSERT_TRUE(item.data);
-  ASSERT_EQ(0, memcmp(item.data, expectedItemData, sizeof expectedItemData));
+  uint8_t value;
+  ASSERT_EQ(Failure, Integer(input, value));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, IntegerTruncated)
+TEST_F(pkixder_universal_types_tests, IntegerTruncatedLarge)
 {
   const uint8_t DER_INTEGER_TRUNCATED[] = {
     0x02,                       // INTEGER
@@ -326,14 +391,9 @@ TEST_F(pkixder_universal_types_tests, IntegerTruncated)
   ASSERT_EQ(Success,
             input.Init(DER_INTEGER_TRUNCATED, sizeof DER_INTEGER_TRUNCATED));
 
-  SECItem item;
-  memset(&item, 0x00, sizeof item);
-
-  ASSERT_EQ(Failure, Integer(input, item));
+  uint8_t value;
+  ASSERT_EQ(Failure, Integer(input, value));
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
-
-  ASSERT_EQ(0, item.type);
-  ASSERT_EQ(0, item.len);
 }
 
 TEST_F(pkixder_universal_types_tests, IntegerZeroLength)
@@ -346,9 +406,8 @@ TEST_F(pkixder_universal_types_tests, IntegerZeroLength)
   Input input;
   ASSERT_EQ(Success, input.Init(DER_INTEGER_ZERO_LENGTH,
                                 sizeof DER_INTEGER_ZERO_LENGTH));
-
-  SECItem item;
-  ASSERT_EQ(Failure, Integer(input, item));
+  uint8_t value;
+  ASSERT_EQ(Failure, Integer(input, value));
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
@@ -363,9 +422,9 @@ TEST_F(pkixder_universal_types_tests, IntegerOverlyLong1)
   Input input;
   ASSERT_EQ(Success, input.Init(DER_INTEGER_OVERLY_LONG1,
                                 sizeof DER_INTEGER_OVERLY_LONG1));
-
-  SECItem item;
-  ASSERT_EQ(Failure, Integer(input, item));
+  uint8_t value;
+  ASSERT_EQ(Failure, Integer(input, value));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
 TEST_F(pkixder_universal_types_tests, IntegerOverlyLong2)
@@ -379,9 +438,60 @@ TEST_F(pkixder_universal_types_tests, IntegerOverlyLong2)
   Input input;
   ASSERT_EQ(Success, input.Init(DER_INTEGER_OVERLY_LONG2,
                                 sizeof DER_INTEGER_OVERLY_LONG2));
+  uint8_t value;
+  ASSERT_EQ(Failure, Integer(input, value));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
 
-  SECItem item;
-  ASSERT_EQ(Failure, Integer(input, item));
+TEST_F(pkixder_universal_types_tests, OptionalIntegerSupportedDefault)
+{
+  // The input is a BOOLEAN and not INTEGER for the input so we'll not parse
+  // anything and instead use the default value.
+  Input input;
+  ASSERT_EQ(Success, input.Init(DER_BOOLEAN_TRUE, sizeof DER_BOOLEAN_TRUE));
+  long value = 1;
+  ASSERT_EQ(Success, OptionalInteger(input, -1, value));
+  ASSERT_EQ(-1, value);
+  bool boolValue;
+  ASSERT_EQ(Success, Boolean(input, boolValue));
+}
+
+TEST_F(pkixder_universal_types_tests, OptionalIntegerUnsupportedDefault)
+{
+  // The same as the previous test, except with an unsupported default value
+  // passed in.
+  Input input;
+  ASSERT_EQ(Success, input.Init(DER_BOOLEAN_TRUE, sizeof DER_BOOLEAN_TRUE));
+  long value;
+  ASSERT_EQ(Failure, OptionalInteger(input, 0, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_ARGS, PR_GetError());
+}
+
+TEST_F(pkixder_universal_types_tests, OptionalIntegerSupportedDefaultAtEnd)
+{
+  static const uint8_t dummy = 1;
+
+  Input input;
+  ASSERT_EQ(Success, input.Init(&dummy, 0));
+  long value = 1;
+  ASSERT_EQ(Success, OptionalInteger(input, -1, value));
+  ASSERT_EQ(-1, value);
+}
+
+TEST_F(pkixder_universal_types_tests, OptionalIntegerNonDefaultValue)
+{
+  static const uint8_t DER[] = {
+    0x02, // INTEGER
+    0x01, // length
+    0x00
+  };
+
+  Input input;
+  ASSERT_EQ(Success, input.Init(DER, sizeof DER));
+  long value = 2;
+  ASSERT_EQ(Success, OptionalInteger(input, -1, value));
+  ASSERT_EQ(0, value);
+  ASSERT_TRUE(input.AtEnd());
 }
 
 TEST_F(pkixder_universal_types_tests, Null)

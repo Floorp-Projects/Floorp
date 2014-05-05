@@ -24,11 +24,11 @@
 
 #include <limits>
 
+#include "pkix/bind.h"
 #include "pkix/pkix.h"
 #include "pkixcheck.h"
 #include "pkixder.h"
 #include "pkixutil.h"
-#include "secder.h"
 
 namespace mozilla { namespace pkix {
 
@@ -166,32 +166,15 @@ CheckCertificatePolicies(BackCert& cert, EndEntityOrCA endEntityOrCA,
   return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
 }
 
+static const long UNLIMITED_PATH_LEN = -1; // must be less than zero
+
 //  BasicConstraints ::= SEQUENCE {
 //          cA                      BOOLEAN DEFAULT FALSE,
 //          pathLenConstraint       INTEGER (0..MAX) OPTIONAL }
-der::Result
-DecodeBasicConstraints(const SECItem* encodedBasicConstraints,
-                       CERTBasicConstraints& basicConstraints)
+static der::Result
+DecodeBasicConstraints(der::Input& input, /*out*/ bool& isCA,
+                       /*out*/ long& pathLenConstraint)
 {
-  PR_ASSERT(encodedBasicConstraints);
-  if (!encodedBasicConstraints) {
-    return der::Fail(SEC_ERROR_INVALID_ARGS);
-  }
-
-  basicConstraints.isCA = false;
-  basicConstraints.pathLenConstraint = 0;
-
-  der::Input input;
-  if (input.Init(encodedBasicConstraints->data, encodedBasicConstraints->len)
-        != der::Success) {
-    return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
-  }
-
-  if (der::ExpectTagAndIgnoreLength(input, der::SEQUENCE) != der::Success) {
-    return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
-  }
-
-  bool isCA = false;
   // TODO(bug 989518): cA is by default false. According to DER, default
   // values must not be explicitly encoded in a SEQUENCE. So, if this
   // value is present and false, it is an encoding error. However, Go Daddy
@@ -201,30 +184,15 @@ DecodeBasicConstraints(const SECItem* encodedBasicConstraints,
   if (der::OptionalBoolean(input, true, isCA) != der::Success) {
     return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
   }
-  basicConstraints.isCA = isCA;
 
-  if (input.Peek(der::INTEGER)) {
-    SECItem pathLenConstraintEncoded;
-    if (der::Integer(input, pathLenConstraintEncoded) != der::Success) {
-      return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
-    }
-    long pathLenConstraint = DER_GetInteger(&pathLenConstraintEncoded);
-    if (pathLenConstraint >= std::numeric_limits<int>::max() ||
-        pathLenConstraint < 0) {
-      return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
-    }
-    basicConstraints.pathLenConstraint = static_cast<int>(pathLenConstraint);
-    // TODO(bug 985025): If isCA is false, pathLenConstraint MUST NOT
-    // be included (as per RFC 5280 section 4.2.1.9), but for compatibility
-    // reasons, we don't check this for now.
-  } else if (basicConstraints.isCA) {
-    // If this is a CA but the path length is omitted, it is unlimited.
-    basicConstraints.pathLenConstraint = CERT_UNLIMITED_PATH_CONSTRAINT;
-  }
-
-  if (der::End(input) != der::Success) {
+  // TODO(bug 985025): If isCA is false, pathLenConstraint MUST NOT
+  // be included (as per RFC 5280 section 4.2.1.9), but for compatibility
+  // reasons, we don't check this for now.
+  if (OptionalInteger(input, UNLIMITED_PATH_LEN, pathLenConstraint)
+        != der::Success) {
     return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
   }
+
   return der::Success;
 }
 
@@ -235,17 +203,24 @@ CheckBasicConstraints(const BackCert& cert,
                       bool isTrustAnchor,
                       unsigned int subCACount)
 {
-  CERTBasicConstraints basicConstraints;
+  bool isCA = false;
+  long pathLenConstraint = UNLIMITED_PATH_LEN;
+
   if (cert.encodedBasicConstraints) {
-    if (DecodeBasicConstraints(cert.encodedBasicConstraints,
-                               basicConstraints) != der::Success) {
-      return RecoverableError;
+    der::Input input;
+    if (input.Init(cert.encodedBasicConstraints->data,
+                   cert.encodedBasicConstraints->len) != der::Success) {
+      return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
+    }
+    if (der::Nested(input, der::SEQUENCE,
+                    bind(DecodeBasicConstraints, _1, ref(isCA),
+                         ref(pathLenConstraint))) != der::Success) {
+      return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
+    }
+    if (der::End(input) != der::Success) {
+      return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
     }
   } else {
-    // Synthesize a non-CA basic constraints by default
-    basicConstraints.isCA = false;
-    basicConstraints.pathLenConstraint = 0;
-
     // "If the basic constraints extension is not present in a version 3
     //  certificate, or the extension is present but the cA boolean is not
     //  asserted, then the certified public key MUST NOT be used to verify
@@ -261,8 +236,7 @@ CheckBasicConstraints(const BackCert& cert,
       // basicConstraints extension if they are v1. v1 is encoded
       // implicitly.
       if (!nssCert->version.data && !nssCert->version.len) {
-        basicConstraints.isCA = true;
-        basicConstraints.pathLenConstraint = CERT_UNLIMITED_PATH_CONSTRAINT;
+        isCA = true;
       }
     }
   }
@@ -270,7 +244,7 @@ CheckBasicConstraints(const BackCert& cert,
   if (endEntityOrCA == EndEntityOrCA::MustBeEndEntity) {
     // CA certificates are not trusted as EE certs.
 
-    if (basicConstraints.isCA) {
+    if (isCA) {
       // XXX: We use SEC_ERROR_CA_CERT_INVALID here so we can distinguish
       // this error from other errors, given that NSS does not have a "CA cert
       // used as end-entity" error code since it doesn't have such a
@@ -290,15 +264,13 @@ CheckBasicConstraints(const BackCert& cert,
   PORT_Assert(endEntityOrCA == EndEntityOrCA::MustBeCA);
 
   // End-entity certificates are not allowed to act as CA certs.
-  if (!basicConstraints.isCA) {
+  if (!isCA) {
     return Fail(RecoverableError, SEC_ERROR_CA_CERT_INVALID);
   }
 
-  if (basicConstraints.pathLenConstraint >= 0) {
-    if (subCACount >
-           static_cast<unsigned int>(basicConstraints.pathLenConstraint)) {
-      return Fail(RecoverableError, SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID);
-    }
+  if (pathLenConstraint >= 0 &&
+      static_cast<long>(subCACount) > pathLenConstraint) {
+    return Fail(RecoverableError, SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID);
   }
 
   return Success;

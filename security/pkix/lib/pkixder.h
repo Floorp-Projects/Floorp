@@ -372,6 +372,32 @@ Skip(Input& input, uint8_t tag, /*out*/ SECItem& value)
 
 // Universal types
 
+namespace internal {
+
+// This parser will only parse values between 0..127. If this range is
+// increased then callers will need to be changed.
+template <typename T> inline Result
+IntegralValue(Input& input, uint8_t tag, T& value)
+{
+  // Conveniently, all the Integers that we actually have to be able to parse
+  // are positive and very small. Consequently, this parser is *much* simpler
+  // than a general Integer parser would need to be.
+  if (ExpectTagAndLength(input, tag, 1) != Success) {
+    return Failure;
+  }
+  uint8_t valueByte;
+  if (input.Read(valueByte) != Success) {
+    return Failure;
+  }
+  if (valueByte & 0x80) { // negative
+    return Fail(SEC_ERROR_BAD_DER);
+  }
+  value = valueByte;
+  return Success;
+}
+
+} // namespace internal
+
 inline Result
 Boolean(Input& input, /*out*/ bool& value)
 {
@@ -411,13 +437,12 @@ OptionalBoolean(Input& input, bool allowInvalidExplicitEncoding,
   return Success;
 }
 
+// This parser will only parse values between 0..127. If this range is
+// increased then callers will need to be changed.
 inline Result
 Enumerated(Input& input, uint8_t& value)
 {
-  if (ExpectTagAndLength(input, ENUMERATED | 0, 1) != Success) {
-    return Failure;
-  }
-  return input.Read(value);
+  return internal::IntegralValue(input, ENUMERATED | 0, value);
 }
 
 inline Result
@@ -438,34 +463,40 @@ GeneralizedTime(Input& input, PRTime& time)
   return Success;
 }
 
+// This parser will only parse values between 0..127. If this range is
+// increased then callers will need to be changed.
 inline Result
-Integer(Input& input, /*out*/ SECItem& value)
+Integer(Input& input, /*out*/ uint8_t& value)
 {
-  uint16_t length;
-  if (ExpectTagAndGetLength(input, INTEGER, length) != Success) {
+  if (internal::IntegralValue(input, INTEGER, value) != Success) {
     return Failure;
   }
+  return Success;
+}
 
-  if (input.Skip(length, value) != Success) {
+// This parser will only parse values between 0..127. If this range is
+// increased then callers will need to be changed. The default value must be
+// -1; defaultValue is only a parameter to make it clear in the calling code
+// what the default value is.
+inline Result
+OptionalInteger(Input& input, long defaultValue, /*out*/ long& value)
+{
+  // If we need to support a different default value in the future, we need to
+  // test that parsedValue != defaultValue.
+  if (defaultValue != -1) {
+    return Fail(SEC_ERROR_INVALID_ARGS);
+  }
+
+  if (!input.Peek(INTEGER)) {
+    value = defaultValue;
+    return Success;
+  }
+
+  uint8_t parsedValue;
+  if (Integer(input, parsedValue) != Success) {
     return Failure;
   }
-
-  if (value.len == 0) {
-    return Fail(SEC_ERROR_BAD_DER);
-  }
-
-  // Check for overly-long encodings. If the first byte is 0x00 then the high
-  // bit on the second byte must be 1; otherwise the same *positive* value
-  // could be encoded without the leading 0x00 byte. If the first byte is 0xFF
-  // then the second byte must NOT have its high bit set; otherwise the same
-  // *negative* value could be encoded without the leading 0xFF byte.
-  if (value.len > 1) {
-    if ((value.data[0] == 0x00 && (value.data[1] & 0x80) == 0) ||
-        (value.data[0] == 0xff && (value.data[1] & 0x80) != 0)) {
-      return Fail(SEC_ERROR_BAD_DER);
-    }
-  }
-
+  value = parsedValue;
   return Success;
 }
 
@@ -506,7 +537,7 @@ AlgorithmIdentifier(Input& input, SECAlgorithmID& algorithmID)
 }
 
 inline Result
-CertificateSerialNumber(Input& input, /*out*/ SECItem& serialNumber)
+CertificateSerialNumber(Input& input, /*out*/ SECItem& value)
 {
   // http://tools.ietf.org/html/rfc5280#section-4.1.2.2:
   //
@@ -519,7 +550,32 @@ CertificateSerialNumber(Input& input, /*out*/ SECItem& serialNumber)
   //   that are negative or zero.  Certificate users SHOULD be prepared to
   //   gracefully handle such certificates."
 
-  return Integer(input, serialNumber);
+  uint16_t length;
+  if (ExpectTagAndGetLength(input, INTEGER, length) != Success) {
+    return Failure;
+  }
+
+  if (input.Skip(length, value) != Success) {
+    return Failure;
+  }
+
+  if (value.len == 0) {
+    return Fail(SEC_ERROR_BAD_DER);
+  }
+
+  // Check for overly-long encodings. If the first byte is 0x00 then the high
+  // bit on the second byte must be 1; otherwise the same *positive* value
+  // could be encoded without the leading 0x00 byte. If the first byte is 0xFF
+  // then the second byte must NOT have its high bit set; otherwise the same
+  // *negative* value could be encoded without the leading 0xFF byte.
+  if (value.len > 1) {
+    if ((value.data[0] == 0x00 && (value.data[1] & 0x80) == 0) ||
+        (value.data[0] == 0xff && (value.data[1] & 0x80) != 0)) {
+      return Fail(SEC_ERROR_BAD_DER);
+    }
+  }
+
+  return Success;
 }
 
 // x.509 and OCSP both use this same version numbering scheme, though OCSP
