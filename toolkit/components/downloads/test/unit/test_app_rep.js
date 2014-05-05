@@ -12,6 +12,10 @@ const gAppRep = Cc["@mozilla.org/downloads/application-reputation-service;1"].
 let gHttpServ = null;
 let gTables = {};
 
+let ALLOW_LIST = 0;
+let BLOCK_LIST = 1;
+let NO_LIST = 2;
+
 function readFileToString(aFilename) {
   let f = do_get_file(aFilename);
   let stream = Cc["@mozilla.org/network/file-input-stream;1"]
@@ -77,18 +81,64 @@ function run_test() {
   run_next_test();
 }
 
+function check_telemetry(aCount,
+                         aShouldBlockCount,
+                         aListCounts) {
+  let count = Cc["@mozilla.org/base/telemetry;1"]
+                .getService(Ci.nsITelemetry)
+                .getHistogramById("APPLICATION_REPUTATION_COUNT")
+                .snapshot();
+  do_check_eq(count.counts[1], aCount);
+  let local = Cc["@mozilla.org/base/telemetry;1"]
+                .getService(Ci.nsITelemetry)
+                .getHistogramById("APPLICATION_REPUTATION_LOCAL")
+                .snapshot();
+  do_check_eq(local.counts[ALLOW_LIST], aListCounts[ALLOW_LIST]);
+  do_check_eq(local.counts[BLOCK_LIST], aListCounts[BLOCK_LIST]);
+  do_check_eq(local.counts[NO_LIST], aListCounts[NO_LIST]);
+  let shouldBlock = Cc["@mozilla.org/base/telemetry;1"]
+                .getService(Ci.nsITelemetry)
+                .getHistogramById("APPLICATION_REPUTATION_SHOULD_BLOCK")
+                .snapshot();
+  // SHOULD_BLOCK = true
+  do_check_eq(shouldBlock.counts[1], aShouldBlockCount);
+  // Sanity check that SHOULD_BLOCK total adds up to the COUNT.
+  do_check_eq(shouldBlock.counts[0] + shouldBlock.counts[1], aCount);
+}
+
+function get_telemetry_counts() {
+  let count = Cc["@mozilla.org/base/telemetry;1"]
+                .getService(Ci.nsITelemetry)
+                .getHistogramById("APPLICATION_REPUTATION_COUNT")
+                .snapshot();
+  let local = Cc["@mozilla.org/base/telemetry;1"]
+                .getService(Ci.nsITelemetry)
+                .getHistogramById("APPLICATION_REPUTATION_LOCAL")
+                .snapshot();
+  let shouldBlock = Cc["@mozilla.org/base/telemetry;1"]
+                .getService(Ci.nsITelemetry)
+                .getHistogramById("APPLICATION_REPUTATION_SHOULD_BLOCK")
+                .snapshot();
+  return { total: count.counts[1],
+           shouldBlock: shouldBlock.counts[1],
+           listCounts: local.counts };
+}
+
 add_test(function test_nullSourceURI() {
+  let counts = get_telemetry_counts();
   gAppRep.queryReputation({
     // No source URI
     fileSize: 12,
   }, function onComplete(aShouldBlock, aStatus) {
     do_check_eq(Cr.NS_ERROR_UNEXPECTED, aStatus);
     do_check_false(aShouldBlock);
+    check_telemetry(counts.total + 1, counts.shouldBlock, counts.listCounts);
     run_next_test();
   });
 });
 
 add_test(function test_nullCallback() {
+  let counts = get_telemetry_counts();
   try {
     gAppRep.queryReputation({
       sourceURI: createURI("http://example.com"),
@@ -96,11 +146,14 @@ add_test(function test_nullCallback() {
     }, null);
     do_throw("Callback cannot be null");
   } catch (ex if ex.result == Cr.NS_ERROR_INVALID_POINTER) {
+    // We don't even increment the count here, because there's no callback.
+    check_telemetry(counts.total, counts.shouldBlock, counts.listCounts);
     run_next_test();
   }
 });
 
 add_test(function test_disabled() {
+  let counts = get_telemetry_counts();
   Services.prefs.setCharPref("browser.safebrowsing.appRepURL", "");
   gAppRep.queryReputation({
     sourceURI: createURI("http://example.com"),
@@ -109,6 +162,7 @@ add_test(function test_disabled() {
     // We should be getting NS_ERROR_NOT_AVAILABLE if the service is disabled
     do_check_eq(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
     do_check_false(aShouldBlock);
+    check_telemetry(counts.total + 1, counts.shouldBlock, counts.listCounts);
     run_next_test();
   });
 });
@@ -168,12 +222,16 @@ add_test(function test_local_list() {
 add_test(function test_unlisted() {
   Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
                              "http://localhost:4444/download");
+  let counts = get_telemetry_counts();
+  let listCounts = counts.listCounts;
+  listCounts[NO_LIST]++;
   gAppRep.queryReputation({
     sourceURI: createURI("http://example.com"),
     fileSize: 12,
   }, function onComplete(aShouldBlock, aStatus) {
     do_check_eq(Cr.NS_OK, aStatus);
     do_check_false(aShouldBlock);
+    check_telemetry(counts.total + 1, counts.shouldBlock, listCounts);
     run_next_test();
   });
 });
@@ -181,12 +239,16 @@ add_test(function test_unlisted() {
 add_test(function test_local_blacklist() {
   Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
                              "http://localhost:4444/download");
+  let counts = get_telemetry_counts();
+  let listCounts = counts.listCounts;
+  listCounts[BLOCK_LIST]++;
   gAppRep.queryReputation({
     sourceURI: createURI("http://blocklisted.com"),
     fileSize: 12,
   }, function onComplete(aShouldBlock, aStatus) {
     do_check_eq(Cr.NS_OK, aStatus);
     do_check_true(aShouldBlock);
+    check_telemetry(counts.total + 1, counts.shouldBlock + 1, listCounts);
     run_next_test();
   });
 });
@@ -194,6 +256,9 @@ add_test(function test_local_blacklist() {
 add_test(function test_referer_blacklist() {
   Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
                              "http://localhost:4444/download");
+  let counts = get_telemetry_counts();
+  let listCounts = counts.listCounts;
+  listCounts[BLOCK_LIST]++;
   gAppRep.queryReputation({
     sourceURI: createURI("http://example.com"),
     referrerURI: createURI("http://blocklisted.com"),
@@ -201,6 +266,7 @@ add_test(function test_referer_blacklist() {
   }, function onComplete(aShouldBlock, aStatus) {
     do_check_eq(Cr.NS_OK, aStatus);
     do_check_true(aShouldBlock);
+    check_telemetry(counts.total + 1, counts.shouldBlock + 1, listCounts);
     run_next_test();
   });
 });
@@ -208,6 +274,9 @@ add_test(function test_referer_blacklist() {
 add_test(function test_blocklist_trumps_allowlist() {
   Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
                              "http://localhost:4444/download");
+  let counts = get_telemetry_counts();
+  let listCounts = counts.listCounts;
+  listCounts[BLOCK_LIST]++;
   gAppRep.queryReputation({
     sourceURI: createURI("http://whitelisted.com"),
     referrerURI: createURI("http://blocklisted.com"),
@@ -215,6 +284,7 @@ add_test(function test_blocklist_trumps_allowlist() {
   }, function onComplete(aShouldBlock, aStatus) {
     do_check_eq(Cr.NS_OK, aStatus);
     do_check_true(aShouldBlock);
+    check_telemetry(counts.total + 1, counts.shouldBlock + 1, listCounts);
     run_next_test();
   });
 });
