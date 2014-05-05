@@ -755,7 +755,11 @@ pref("network.activity.blipIntervalMilliseconds", 250);
 // can be flipped to false.
 pref("network.gonk.manage-offline-status", true);
 
+// On Firefox Mulet, we can't enable shared JSM scope
+// as it breaks most Firefox JSMs (see bug 961777)
+#ifndef MOZ_MULET
 pref("jsloader.reuseGlobal", true);
+#endif
 
 // Enable font inflation for browser tab content.
 pref("font.size.inflation.minTwips", 120);
