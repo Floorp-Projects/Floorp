@@ -7,6 +7,7 @@
 
 #include "vm/SavedStacks.h"
 
+#include "jsapi.h"
 #include "jscompartment.h"
 #include "jsnum.h"
 
@@ -339,6 +340,7 @@ SavedFrame::toStringMethod(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /* static */ const JSFunctionSpec SavedFrame::methods[] = {
+    JS_FN("constructor", SavedFrame::construct, 0, 0),
     JS_FN("toString", SavedFrame::toStringMethod, 0, 0),
     JS_FS_END
 };
@@ -445,7 +447,7 @@ SavedStacks::insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandle<Sa
                               thisFrame.compartment()->principals);
 
     frame.set(getOrCreateSavedFrame(cx, lookup));
-    return frame.address() != nullptr;
+    return frame.get() != nullptr;
 }
 
 SavedFrame *
@@ -475,9 +477,15 @@ SavedStacks::getOrCreateSavedFramePrototype(JSContext *cx)
     if (!global)
         return nullptr;
 
-    savedFrameProto = js_InitClass(cx, global, global->getOrCreateObjectPrototype(cx),
-                                   &SavedFrame::class_, SavedFrame::construct, 0,
-                                   SavedFrame::properties, SavedFrame::methods, nullptr, nullptr);
+    RootedObject proto(cx, NewObjectWithGivenProto(cx, &SavedFrame::class_,
+                                                   global->getOrCreateObjectPrototype(cx),
+                                                   global));
+    if (!proto
+        || !JS_DefineProperties(cx, proto, SavedFrame::properties)
+        || !JS_DefineFunctions(cx, proto, SavedFrame::methods))
+        return nullptr;
+
+    savedFrameProto = proto;
     // The only object with the SavedFrame::class_ that doesn't have a source
     // should be the prototype.
     savedFrameProto->setReservedSlot(SavedFrame::JSSLOT_SOURCE, NullValue());
