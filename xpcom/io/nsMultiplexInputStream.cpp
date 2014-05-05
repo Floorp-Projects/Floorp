@@ -76,6 +76,43 @@ NS_IMPL_CI_INTERFACE_GETTER(nsMultiplexInputStream,
                             nsIInputStream,
                             nsISeekableStream)
 
+static nsresult
+AvailableMaybeSeek(nsIInputStream *stream, uint64_t *_retval)
+{
+    nsresult rv = stream->Available(_retval);
+    if (rv == NS_BASE_STREAM_CLOSED) {
+        // Blindly seek to the current position if Available() returns
+        // NS_BASE_STREAM_CLOSED.
+        // If nsIFileInputStream is closed in Read() due to CLOSE_ON_EOF flag,
+        // Seek() could reopen the file if REOPEN_ON_REWIND flag is set.
+        nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(stream);
+        if (seekable) {
+            nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_CUR, 0);
+            if (NS_SUCCEEDED(rv)) {
+                rv = stream->Available(_retval);
+            }
+        }
+    }
+    return rv;
+}
+
+static nsresult
+TellMaybeSeek(nsISeekableStream *seekable, int64_t *_retval)
+{
+    nsresult rv = seekable->Tell(_retval);
+    if (rv == NS_BASE_STREAM_CLOSED) {
+        // Blindly seek to the current position if Tell() returns
+        // NS_BASE_STREAM_CLOSED.
+        // If nsIFileInputStream is closed in Read() due to CLOSE_ON_EOF flag,
+        // Seek() could reopen the file if REOPEN_ON_REWIND flag is set.
+        nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_CUR, 0);
+        if (NS_SUCCEEDED(rv)) {
+            rv = seekable->Tell(_retval);
+        }
+    }
+    return rv;
+}
+
 nsMultiplexInputStream::nsMultiplexInputStream()
     : mCurrentStream(0),
       mStartedReadingCurrent(false),
@@ -180,7 +217,7 @@ nsMultiplexInputStream::Available(uint64_t *_retval)
     uint32_t len = mStreams.Length();
     for (uint32_t i = mCurrentStream; i < len; i++) {
         uint64_t streamAvail;
-        rv = mStreams[i]->Available(&streamAvail);
+        rv = AvailableMaybeSeek(mStreams[i], &streamAvail);
         if (NS_WARN_IF(NS_FAILED(rv)))
             return rv;
         avail += streamAvail;
@@ -385,7 +422,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
                 streamPos = 0;
             }
             else {
-                rv = stream->Tell(&streamPos);
+                rv = TellMaybeSeek(stream, &streamPos);
                 if (NS_WARN_IF(NS_FAILED(rv)))
                     return rv;
             }
@@ -409,7 +446,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
                 }
                 else {
                     uint64_t avail;
-                    rv = mStreams[i]->Available(&avail);
+                    rv = AvailableMaybeSeek(mStreams[i], &avail);
                     if (NS_WARN_IF(NS_FAILED(rv)))
                         return rv;
 
@@ -442,7 +479,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
                 do_QueryInterface(mStreams[i]);
 
             uint64_t avail;
-            rv = mStreams[i]->Available(&avail);
+            rv = AvailableMaybeSeek(mStreams[i], &avail);
             if (NS_WARN_IF(NS_FAILED(rv)))
                 return rv;
 
@@ -468,7 +505,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
                 do_QueryInterface(mStreams[i]);
 
             int64_t pos;
-            rv = stream->Tell(&pos);
+            rv = TellMaybeSeek(stream, &pos);
             if (NS_WARN_IF(NS_FAILED(rv)))
                 return rv;
 
@@ -520,7 +557,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
                 streamPos = 0;
             } else {
                 uint64_t avail;
-                rv = mStreams[i]->Available(&avail);
+                rv = AvailableMaybeSeek(mStreams[i], &avail);
                 if (NS_WARN_IF(NS_FAILED(rv)))
                     return rv;
 
@@ -544,7 +581,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
                     remaining += streamPos;
                 } else {
                     int64_t avail;
-                    rv = stream->Tell(&avail);
+                    rv = TellMaybeSeek(stream, &avail);
                     if (NS_WARN_IF(NS_FAILED(rv)))
                         return rv;
 
@@ -590,7 +627,7 @@ nsMultiplexInputStream::Tell(int64_t *_retval)
             return NS_ERROR_NO_INTERFACE;
 
         int64_t pos;
-        rv = stream->Tell(&pos);
+        rv = TellMaybeSeek(stream, &pos);
         if (NS_WARN_IF(NS_FAILED(rv)))
             return rv;
         ret64 += pos;

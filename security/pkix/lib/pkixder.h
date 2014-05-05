@@ -183,21 +183,24 @@ public:
   {
   private:
     friend class Input;
-    explicit Mark(const uint8_t* mark) : mMark(mark) { }
-    const uint8_t* const mMark;
+    Mark(const Input& input, const uint8_t* mark) : input(input), mark(mark) { }
+    const Input& input;
+    const uint8_t* const mark;
     void operator=(const Mark&) /* = delete */;
   };
 
-  Mark GetMark() const { return Mark(input); }
+  Mark GetMark() const { return Mark(*this, input); }
 
-  bool GetSECItem(SECItemType type, const Mark& mark, /*out*/ SECItem& item)
+  Result GetSECItem(SECItemType type, const Mark& mark, /*out*/ SECItem& item)
   {
-    PR_ASSERT(mark.mMark < input);
+    if (&mark.input != this || mark.mark > input) {
+      PR_NOT_REACHED("invalid mark");
+      return Fail(SEC_ERROR_INVALID_ARGS);
+    }
     item.type = type;
-    item.data = const_cast<uint8_t*>(mark.mMark);
-    // TODO: Return false if bounds check fails
-    item.len = input - mark.mMark;
-    return true;
+    item.data = const_cast<uint8_t*>(mark.mark);
+    item.len = static_cast<decltype(item.len)>(input - mark.mark);
+    return Success;
   }
 
 private:

@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=696253
 
   * { flex-grow: 10; flex-shrink: 20 }
 
-  /* These animations SHOULD affect computed style */
+  /* Animations that we'll test (individually) in the script below: */
   @keyframes flexGrowTwoToThree {
      0%   { flex-grow: 2 }
      100% { flex-grow: 3 }
@@ -33,9 +33,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=696253
      0%   { flex-shrink: 0 }
      100% { flex-shrink: 0 }
   }
-
-  /* These animations SHOULD NOT affect computed style. (flex-grow and
-     flex-shrink are animatable "except between '0' and other values") */
   @keyframes flexGrowZeroToOne {
      0%   { flex-grow: 0 }
      100% { flex-grow: 1 }
@@ -136,41 +133,43 @@ advance_clock(1000);
 is(cs.flexShrink, 20, "flexShrinkZeroToZero at 1.5s");
 done_div();
 
-// ANIMATIONS THAT SHOULD NOT AFFECT COMPUTED STYLE
-// ------------------------------------------------
+// ANIMATIONS THAT DIDN'T USED TO AFFECT COMPUTED STYLE, BUT NOW DO
+// ----------------------------------------------------------------
+// (In an older version of the flexbox spec, flex-grow & flex-shrink were not
+// allowed to animate between 0 and other values. But now that's allowed.)
 
-// flexGrowZeroToOne: no effect on computed style. 10 all the way through.
+// flexGrowZeroToOne: 0 at 0%, 0.5 at 50%, 10 after animation is over.
 new_div("animation: flexGrowZeroToOne linear 1s");
-is(cs.flexGrow, 10, "flexGrowZeroToOne at 0.0s");
+is(cs.flexGrow, 0, "flexGrowZeroToOne at 0.0s");
 advance_clock(500);
-is(cs.flexGrow, 10, "flexGrowZeroToOne at 0.5s");
+is(cs.flexGrow, 0.5, "flexGrowZeroToOne at 0.5s");
 advance_clock(1000);
 is(cs.flexGrow, 10, "flexGrowZeroToOne at 1.5s");
 done_div();
 
-// flexShrinkZeroToOne: no effect on computed style. 20 all the way through.
+// flexShrinkZeroToOne: 0 at 0%, 0.5 at 50%, 20 after animation is over.
 new_div("animation: flexShrinkZeroToOne linear 1s");
-is(cs.flexShrink, 20,  "flexShrinkZeroToOne at 0.0s");
+is(cs.flexShrink, 0,  "flexShrinkZeroToOne at 0.0s");
 advance_clock(500);
-is(cs.flexShrink, 20, "flexShrinkZeroToOne at 0.5s");
+is(cs.flexShrink, 0.5, "flexShrinkZeroToOne at 0.5s");
 advance_clock(1000);
 is(cs.flexShrink, 20, "flexShrinkZeroToOne at 1.5s");
 done_div();
 
-// flexGrowOneToZero: no effect on computed style. 10 all the way through.
+// flexGrowOneToZero: 1 at 0%, 0.5 at 50%, 10 after animation is over.
 new_div("animation: flexGrowOneToZero linear 1s");
-is(cs.flexGrow, 10, "flexGrowOneToZero at 0.0s");
+is(cs.flexGrow, 1, "flexGrowOneToZero at 0.0s");
 advance_clock(500);
-is(cs.flexGrow, 10, "flexGrowOneToZero at 0.5s");
+is(cs.flexGrow, 0.5, "flexGrowOneToZero at 0.5s");
 advance_clock(1000);
 is(cs.flexGrow, 10, "flexGrowOneToZero at 1.5s");
 done_div();
 
-// flexShrinkOneToZero: no effect on computed style. 20 all the way through.
+// flexShrinkOneToZero: 1 at 0%, 0.5 at 50%, 20 after animation is over.
 new_div("animation: flexShrinkOneToZero linear 1s");
-is(cs.flexShrink, 20,  "flexShrinkOneToZero at 0.0s");
+is(cs.flexShrink, 1,  "flexShrinkOneToZero at 0.0s");
 advance_clock(500);
-is(cs.flexShrink, 20, "flexShrinkOneToZero at 0.5s");
+is(cs.flexShrink, 0.5, "flexShrinkOneToZero at 0.5s");
 advance_clock(1000);
 is(cs.flexShrink, 20, "flexShrinkOneToZero at 1.5s");
 done_div();

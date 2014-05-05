@@ -11,6 +11,11 @@
  * elevated privileges; the method implementations should contain the
  * necessary security checks.  Access this interface by calling
  * getInterface on a DOMWindow.
+ *
+ * WARNING: Do not use 'out jsval' parameters in this file.
+ *          SpecialPowers, which is used to access nsIDOMWindowUtils
+ *          in plain mochitests, does not know how to handle them.
+ *          (Use 'jsval' return values instead.)
  */
 
 %{C++

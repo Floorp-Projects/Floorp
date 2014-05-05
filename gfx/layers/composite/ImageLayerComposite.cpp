@@ -164,8 +164,8 @@ nsACString&
 ImageLayerComposite::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   ImageLayer::PrintInfo(aTo, aPrefix);
-  aTo += "\n";
   if (mImageHost && mImageHost->IsAttached()) {
+    aTo += "\n";
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
     mImageHost->PrintInfo(aTo, pfx.get());

@@ -18,11 +18,85 @@
 #ifndef mozilla_pkix_test__pkixtestutils_h
 #define mozilla_pkix_test__pkixtestutils_h
 
-#include "pkix/ScopedPtr.h"
+#include <stdint.h>
+#include <stdio.h>
+
+#include "pkix/enumclass.h"
 #include "pkix/pkixtypes.h"
+#include "pkix/ScopedPtr.h"
 #include "seccomon.h"
 
 namespace mozilla { namespace pkix { namespace test {
+
+namespace {
+
+inline void
+fclose_void(FILE* file) {
+  (void) fclose(file);
+}
+
+inline void
+SECITEM_FreeItem_true(SECItem* item)
+{
+  SECITEM_FreeItem(item, true);
+}
+
+} // unnamed namespace
+
+typedef mozilla::pkix::ScopedPtr<FILE, fclose_void> ScopedFILE;
+typedef mozilla::pkix::ScopedPtr<SECItem, SECITEM_FreeItem_true> ScopedSECItem;
+typedef mozilla::pkix::ScopedPtr<SECKEYPrivateKey, SECKEY_DestroyPrivateKey>
+  ScopedSECKEYPrivateKey;
+
+FILE* OpenFile(const char* dir, const char* filename, const char* mode);
+
+extern const PRTime ONE_DAY;
+
+SECStatus GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
+                          /*out*/ ScopedSECKEYPrivateKey& privateKey);
+
+///////////////////////////////////////////////////////////////////////////////
+// Encode Certificates
+
+enum Version { v1 = 0, v2 = 1, v3 = 2 };
+
+// If extensions is null, then no extensions will be encoded. Otherwise,
+// extensions must point to a null-terminated array of SECItem*. If the first
+// item of the array is null then an empty Extensions sequence will be encoded.
+//
+// If issuerPrivateKey is null, then the certificate will be self-signed.
+// Parameter order is based on the order of the attributes of the certificate
+// in RFC 5280.
+//
+// The return value, if non-null, is owned by the arena in the context and
+// MUST NOT be freed.
+SECItem* CreateEncodedCertificate(PLArenaPool* arena, long version,
+                                  SECOidTag signature, long serialNumber,
+                                  const char* issuerASCII, PRTime notBefore,
+                                  PRTime notAfter, const char* subjectASCII,
+                     /*optional*/ SECItem const* const* extensions,
+                     /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
+                                  SECOidTag signatureHashAlg,
+                          /*out*/ ScopedSECKEYPrivateKey& privateKey);
+
+MOZILLA_PKIX_ENUM_CLASS ExtensionCriticality { NotCritical = 0, Critical = 1 };
+
+// The return value, if non-null, is owned by the arena and MUST NOT be freed.
+SECItem* CreateEncodedBasicConstraints(PLArenaPool* arena, bool isCA,
+                                       long pathLenConstraint,
+                                       ExtensionCriticality criticality);
+
+// ekus must be non-null and must must point to a SEC_OID_UNKNOWN-terminated
+// array of SECOidTags. If the first item of the array is SEC_OID_UNKNOWN then
+// an empty EKU extension will be encoded.
+//
+// The return value, if non-null, is owned by the arena and MUST NOT be freed.
+SECItem* CreateEncodedEKUExtension(PLArenaPool* arena,
+                                   const SECOidTag* ekus, size_t ekusCount,
+                                   ExtensionCriticality criticality);
+
+///////////////////////////////////////////////////////////////////////////////
+// Encode OCSP responses
 
 class OCSPResponseExtension
 {
@@ -41,35 +115,62 @@ public:
   PLArenaPool* arena;
   // TODO(bug 980538): add a way to specify what certificates are included.
   pkix::ScopedCERTCertificate cert; // The subject of the OCSP response
-  pkix::ScopedCERTCertificate issuerCert; // The issuer of the subject
-  pkix::ScopedCERTCertificate signerCert; // This cert signs the response
-  uint8_t responseStatus; // See the OCSPResponseStatus enum in rfc 6960
+
+  // The fields below are in the order that they appear in an OCSP response.
+
+  // By directly using the issuer name & SPKI and signer name & private key,
+  // instead of extracting those things out of CERTCertificate objects, we
+  // avoid poor interactions with the NSS CERTCertificate caches. In
+  // particular, there are some tests in which it is important that we know
+  // that the issuer and/or signer certificates are NOT in the NSS caches
+  // because we ant to make sure that our path building logic will find them
+  // or we want to test what happens when those certificates cannot be found.
+  // This concern doesn't apply to |cert| above because our verification code
+  // for certificate chains and for OCSP responses take the end-entity cert
+  // as a CERTCertificate anyway.
+
+  enum OCSPResponseStatus {
+    successful = 0,
+    malformedRequest = 1,
+    internalError = 2,
+    tryLater = 3,
+    // 4 is not used
+    sigRequired = 5,
+    unauthorized = 6,
+  };
+  uint8_t responseStatus; // an OCSPResponseStatus or an invalid value
   bool skipResponseBytes; // If true, don't include responseBytes
 
-  static const uint32_t MaxIncludedCertificates = 4;
-  pkix::ScopedCERTCertificate includedCertificates[MaxIncludedCertificates];
+  // responderID
+  const SECItem* issuerNameDER; // non-owning
+  const CERTSubjectPublicKeyInfo* issuerSPKI; // non-owning pointer
+  const SECItem* signerNameDER; // If set, responderID will use the byName
+                                // form; otherwise responderID will use the
+                                // byKeyHash form.
 
-  // The following fields are on a per-SingleResponse basis. In the future we
-  // may support including multiple SingleResponses per response.
   PRTime producedAt;
-  PRTime thisUpdate;
-  PRTime nextUpdate;
-  bool includeNextUpdate;
-  SECOidTag certIDHashAlg;
-  uint8_t certStatus;     // See the CertStatus choice in rfc 6960
-  PRTime revocationTime; // For certStatus == revoked
-  bool badSignature; // If true, alter the signature to fail verification
-
-  enum ResponderIDType {
-    ByName = 1,
-    ByKeyHash = 2
-  };
-  ResponderIDType responderIDType;
 
   OCSPResponseExtension* extensions;
   bool includeEmptyExtensions; // If true, include the extension wrapper
                                // regardless of if there are any actual
                                // extensions.
+  ScopedSECKEYPrivateKey signerPrivateKey;
+  bool badSignature; // If true, alter the signature to fail verification
+  SECItem const* const* certs; // non-owning pointer to certs to embed
+
+  // The following fields are on a per-SingleResponse basis. In the future we
+  // may support including multiple SingleResponses per response.
+  SECOidTag certIDHashAlg;
+  enum CertStatus {
+    good = 0,
+    revoked = 1,
+    unknown = 2,
+  };
+  uint8_t certStatus; // CertStatus or an invalid value
+  PRTime revocationTime; // For certStatus == revoked
+  PRTime thisUpdate;
+  PRTime nextUpdate;
+  bool includeNextUpdate;
 };
 
 // The return value, if non-null, is owned by the arena in the context

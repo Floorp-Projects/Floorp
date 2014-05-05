@@ -1801,7 +1801,7 @@ pref("layout.css.masking.enabled", true);
 #endif
 
 // Is support for mix-blend-mode enabled?
-pref("layout.css.mix-blend-mode.enabled", false);
+pref("layout.css.mix-blend-mode.enabled", true);
 
 // Is support for the the @supports rule enabled?
 pref("layout.css.supports-rule.enabled", true);
@@ -1920,6 +1920,11 @@ pref("layout.interruptible-reflow.enabled", true);
 // automatically based on knowledge of the platform (or 60Hz if no platform-
 // specific information is available).
 pref("layout.frame_rate", -1);
+
+// pref to dump the display list to the log. Useful for debugging invalidation problems.
+#ifdef MOZ_DUMP_PAINTING
+pref("layout.display-list.dump", false);
+#endif
 
 // pref to control precision of the frame rate timer. When true,
 // we use a "precise" timer, which means each notification fires
