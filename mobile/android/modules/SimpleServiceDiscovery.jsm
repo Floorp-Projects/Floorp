@@ -37,11 +37,17 @@ const SSDP_DISCOVER_PACKET =
 
 const SSDP_DISCOVER_TIMEOUT = 10000;
 
+const EVENT_SERVICE_FOUND = "ssdp-service-found";
+const EVENT_SERVICE_LOST = "ssdp-service-lost";
+
 /*
  * SimpleServiceDiscovery manages any discovered SSDP services. It uses a UDP
  * broadcast to locate available services on the local network.
  */
 var SimpleServiceDiscovery = {
+  get EVENT_SERVICE_FOUND() { return EVENT_SERVICE_FOUND; },
+  get EVENT_SERVICE_LOST() { return EVENT_SERVICE_LOST; },
+
   _targets: new Map(),
   _services: new Map(),
   _searchSocket: null,
@@ -210,7 +216,7 @@ var SimpleServiceDiscovery = {
       // Clean out any stale services
       for (let [key, service] of this._services) {
         if (service.lastPing != this._searchTimestamp) {
-          Services.obs.notifyObservers(null, "ssdp-service-lost", service.location);
+          Services.obs.notifyObservers(null, EVENT_SERVICE_LOST, service.location);
           this._services.delete(service.location);
         }
       }
@@ -273,7 +279,7 @@ var SimpleServiceDiscovery = {
         // Only add and notify if we don't already know about this service
         if (!this._services.has(aService.location)) {
           this._services.set(aService.location, aService);
-          Services.obs.notifyObservers(null, "ssdp-service-found", aService.location);
+          Services.obs.notifyObservers(null, EVENT_SERVICE_FOUND, aService.location);
         }
 
         // Make sure we remember this service is not stale
