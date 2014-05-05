@@ -38,4 +38,16 @@ tv = {
 
   // Truncated form of the PKCS#8 stucture above
   negative_spki: util.hex2abv("30819F300D06092A864886F70D010101050003"),
+
+  // From the NESSIE project
+  // https://www.cosic.esat.kuleuven.be/nessie/testvectors/hash
+  //        /sha/Sha-2-256.unverified.test-vectors
+  // Set 1, vector# 5
+  sha256: {
+    data: util.hex2abv("616263646263646563646566646566676566676866676" +
+                       "8696768696a68696a6b696a6b6c6a6b6c6d6b6c6d6e6c" +
+                       "6d6e6f6d6e6f706e6f7071"),
+    result: util.hex2abv("248D6A61D20638B8E5C026930C3E6039A33CE45964F" +
+                         "F2167F6ECEDD419DB06C1"),
+  },
 }
