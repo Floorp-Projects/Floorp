@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -20,13 +21,13 @@ public:
   };
 
   static nsresult DumpStatistics(StatisticsType type = ALL_STATS,
-                                        FILE* out = 0);
+                                 FILE* out = 0);
 
   static void ResetStatistics(void);
 
   static void DemangleSymbol(const char * aSymbol,
-                                    char * aBuffer,
-                                    int aBufLen);
+                             char * aBuffer,
+                             int aBufLen);
 
   static void WalkTheStack(FILE* aStream);
   /**

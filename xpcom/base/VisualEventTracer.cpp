@@ -43,14 +43,14 @@ mozilla::TimeDuration * gMaxBacklogTime;
 // Record of a single event
 class Record {
 public:
-  Record() 
+  Record()
     : mType(::mozilla::eventtracer::eNone)
     , mItem(nullptr)
     , mText(nullptr)
-    , mText2(nullptr) 
+    , mText2(nullptr)
   {
     MOZ_COUNT_CTOR(Record);
-  } 
+  }
 
   Record& operator=(const Record & aOther)
   {
@@ -62,10 +62,10 @@ public:
     return *this;
   }
 
-  ~Record() 
+  ~Record()
   {
     PL_strfree(mText2);
-    PL_strfree(mText); 
+    PL_strfree(mText);
     MOZ_COUNT_DTOR(Record);
   }
 
@@ -354,7 +354,7 @@ EventFilter::Build(const char * filterVar)
 
   // Read up to a comma or EOF -> get name of an event first in the list
   count = sscanf(filterVar, "%63[^,]%n", eventName, &delta);
-  if (count == 0) 
+  if (count == 0)
     return nullptr;
 
   pos = delta;
@@ -382,7 +382,7 @@ EventFilter::EventPasses(const char * eventName)
   return false;
 }
 
-// State and control variables, initialized in Init() method, after it 
+// State and control variables, initialized in Init() method, after it
 // immutable and read concurently.
 EventFilter * gEventFilter = nullptr;
 unsigned gThreadPrivateIndex;
@@ -403,7 +403,7 @@ bool CheckEventFilters(uint32_t aType, void * aItem, const char * aText)
 
 #endif //MOZ_VISUAL_EVENT_TRACER
 
-// static 
+// static
 void Init()
 {
 #ifdef MOZ_VISUAL_EVENT_TRACER
@@ -426,7 +426,7 @@ void Init()
 #endif
 }
 
-// static 
+// static
 void Shutdown()
 {
 #ifdef MOZ_VISUAL_EVENT_TRACER
@@ -457,7 +457,7 @@ void Shutdown()
 #endif
 }
 
-// static 
+// static
 void Mark(uint32_t aType, void * aItem, const char * aText, const char * aText2)
 {
 #ifdef MOZ_VISUAL_EVENT_TRACER
@@ -471,7 +471,7 @@ void Mark(uint32_t aType, void * aItem, const char * aText, const char * aText2)
     return;
 
   RecordBatch * threadLogPrivate = static_cast<RecordBatch *>(
-      PR_GetThreadPrivate(gThreadPrivateIndex));
+    PR_GetThreadPrivate(gThreadPrivateIndex));
   if (!threadLogPrivate) {
     threadLogPrivate = RecordBatch::Register();
     if (!threadLogPrivate)
@@ -589,7 +589,7 @@ VisualEventTracerLog::WriteToProfilingFile()
   }
 
   PRFileDesc* fd = PR_Open(filename, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
-			   0644);
+                           0644);
   if (!fd) {
     return NS_ERROR_FILE_ACCESS_DENIED;
   }

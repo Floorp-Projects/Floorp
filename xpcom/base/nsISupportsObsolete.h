@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -23,13 +25,13 @@
  * NS_FREE_XPCOM_POINTER_ARRAY directly and using NS_RELEASE as your
  * free function.
  *
- * @param size      Number of elements in the array.  If not a constant, this 
- *                  should be a int32_t.  Note that this means this macro 
+ * @param size      Number of elements in the array.  If not a constant, this
+ *                  should be a int32_t.  Note that this means this macro
  *                  will not work if size >= 2^31.
  * @param array     The array to be freed.
  */
 #define NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(size, array)                    \
-    NS_FREE_XPCOM_POINTER_ARRAY((size), (array), NS_IF_RELEASE)
+  NS_FREE_XPCOM_POINTER_ARRAY((size), (array), NS_IF_RELEASE)
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,16 +43,16 @@
 #define NS_METHOD_GETTER(_method, _type, _member) \
 _method(_type* aResult) \
 {\
-    if (!aResult) return NS_ERROR_NULL_POINTER; \
-    *aResult = _member; \
-    return NS_OK; \
+  if (!aResult) return NS_ERROR_NULL_POINTER; \
+  *aResult = _member; \
+  return NS_OK; \
 }
-    
+
 #define NS_METHOD_SETTER(_method, _type, _member) \
 _method(_type aResult) \
 { \
-    _member = aResult; \
-    return NS_OK; \
+  _member = aResult; \
+  return NS_OK; \
 }
 
 /*
@@ -60,21 +62,21 @@ _method(_type aResult) \
 #define NS_METHOD_GETTER_STR(_method,_member)   \
 _method(char* *aString)                         \
 {                                               \
-    if (!aString) return NS_ERROR_NULL_POINTER; \
-    if (!(*aString = PL_strdup(_member)))       \
-      return NS_ERROR_OUT_OF_MEMORY;            \
-    return NS_OK;                               \
+  if (!aString) return NS_ERROR_NULL_POINTER;   \
+  if (!(*aString = PL_strdup(_member)))         \
+    return NS_ERROR_OUT_OF_MEMORY;              \
+  return NS_OK;                                 \
 }
 
 #define NS_METHOD_SETTER_STR(_method, _member) \
 _method(const char *aString)                   \
 {                                              \
-    if (_member) PR_Free(_member);             \
-    if (!aString)                              \
-      _member = nullptr;                        \
-    else if (!(_member = PL_strdup(aString)))  \
-      return NS_ERROR_OUT_OF_MEMORY;           \
-    return NS_OK;                              \
+  if (_member) PR_Free(_member);               \
+  if (!aString)                                \
+    _member = nullptr;                         \
+  else if (!(_member = PL_strdup(aString)))    \
+    return NS_ERROR_OUT_OF_MEMORY;             \
+  return NS_OK;                                \
 }
 
 /* Getter/Setter macros.
@@ -82,7 +84,7 @@ _method(const char *aString)                   \
    NS_IMPL_[CLASS_]GETTER[_<type>](method, [type,] member);
    NS_IMPL_[CLASS_]SETTER[_<type>](method, [type,] member);
    NS_IMPL_[CLASS_]GETSET[_<type>]([class, ]postfix, [type,] member);
-   
+
    where:
    CLASS_  - implementation is inside a class definition
              (otherwise the class name is needed)
@@ -96,14 +98,14 @@ _method(const char *aString)                   \
    member  - class member variable such as m_width or mColor
    class   - the class name, such as Window or MyObject
    postfix - Method part after Get/Set such as "Width" for "GetWidth"
-   
+
    Example:
    class Window {
    public:
      NS_IMPL_CLASS_GETSET(Width, int, m_width);
      NS_IMPL_CLASS_GETTER_STR(GetColor, m_color);
      NS_IMETHOD SetColor(char *color);
-     
+
    private:
      int m_width;     // read/write
      char *m_color;   // readonly
@@ -115,7 +117,7 @@ _method(const char *aString)                   \
    Questions/Comments to alecf@netscape.com
 */
 
-   
+
 /*
  * Getter/Setter implementation within a class definition
  */
