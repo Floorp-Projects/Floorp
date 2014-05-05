@@ -70,26 +70,26 @@ StringUnicharInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
 
   nsresult rv;
   aCount = XPCOM_MIN(mString.Length() - mPos, aCount);
-  
+
   nsAString::const_iterator iter;
   mString.BeginReading(iter);
-  
+
   while (aCount) {
     rv = aWriter(this, aClosure, iter.get() + mPos,
                  totalBytesWritten, aCount, &bytesWritten);
-    
+
     if (NS_FAILED(rv)) {
       // don't propagate errors to the caller
       break;
     }
-    
+
     aCount -= bytesWritten;
     totalBytesWritten += bytesWritten;
     mPos += bytesWritten;
   }
-  
+
   *aReadCount = totalBytesWritten;
-  
+
   return NS_OK;
 }
 
@@ -140,7 +140,7 @@ protected:
   nsCOMPtr<nsIInputStream> mInput;
   FallibleTArray<char> mByteData;
   FallibleTArray<char16_t> mUnicharData;
-  
+
   uint32_t mByteDataOffset;
   uint32_t mUnicharDataOffset;
   uint32_t mUnicharDataLength;
@@ -153,7 +153,7 @@ UTF8InputStream::UTF8InputStream() :
 {
 }
 
-nsresult 
+nsresult
 UTF8InputStream::Init(nsIInputStream* aStream)
 {
   if (!mByteData.SetCapacity(STRING_BUFFER_SIZE) ||
@@ -223,10 +223,10 @@ UTF8InputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
     }
     bytesToWrite = bytesRead;
   }
-  
+
   if (bytesToWrite > aCount)
     bytesToWrite = aCount;
-  
+
   uint32_t bytesWritten;
   uint32_t totalBytesWritten = 0;
 
@@ -239,14 +239,14 @@ UTF8InputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
       // don't propagate errors to the caller
       break;
     }
-    
+
     bytesToWrite -= bytesWritten;
     totalBytesWritten += bytesWritten;
     mUnicharDataOffset += bytesWritten;
   }
 
   *aReadCount = totalBytesWritten;
-  
+
   return NS_OK;
 }
 
@@ -310,22 +310,22 @@ int32_t UTF8InputStream::Fill(nsresult * aErrorCode)
   NS_ASSERTION(dstLen <= mUnicharData.Capacity(),
                "Ouch. I would overflow my buffer if I wasn't so careful.");
   if (dstLen > mUnicharData.Capacity()) return 0;
-  
+
   ConvertUTF8toUTF16 converter(mUnicharData.Elements());
-  
+
   nsASingleFragmentCString::const_char_iterator start = mByteData.Elements();
   nsASingleFragmentCString::const_char_iterator end = mByteData.Elements() + srcLen;
-            
+
   copy_string(start, end, converter);
   if (converter.Length() != dstLen) {
     *aErrorCode = NS_BASE_STREAM_BAD_CONVERSION;
     return -1;
   }
-               
+
   mUnicharDataOffset = 0;
   mUnicharDataLength = dstLen;
   mByteDataOffset = srcLen;
-  
+
   return dstLen;
 }
 
@@ -339,7 +339,7 @@ UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, uint32_t aMaxBytes, ui
   while (c < end && *c) {
     lastchar = c;
     utf16length++;
-    
+
     if (UTF8traits::isASCII(*c))
       c++;
     else if (UTF8traits::is2byte(*c))
@@ -378,7 +378,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) nsSimpleUnicharStreamFactory::Release() 
 
 NS_IMETHODIMP
 nsSimpleUnicharStreamFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
-                                            void **aResult)
+                                             void **aResult)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -391,7 +391,7 @@ nsSimpleUnicharStreamFactory::LockFactory(bool aLock)
 
 NS_IMETHODIMP
 nsSimpleUnicharStreamFactory::CreateInstanceFromString(const nsAString& aString,
-                                                      nsIUnicharInputStream* *aResult)
+                                                       nsIUnicharInputStream* *aResult)
 {
   StringUnicharInputStream* it = new StringUnicharInputStream(aString);
   if (!it) {

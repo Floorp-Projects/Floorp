@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -92,40 +93,40 @@ class
 nsDirEnumeratorUnix MOZ_FINAL : public nsISimpleEnumerator,
                                 public nsIDirectoryEnumerator
 {
-    public:
-    nsDirEnumeratorUnix();
+public:
+  nsDirEnumeratorUnix();
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
 
-    // nsISimpleEnumerator interface
-    NS_DECL_NSISIMPLEENUMERATOR
+  // nsISimpleEnumerator interface
+  NS_DECL_NSISIMPLEENUMERATOR
 
-    // nsIDirectoryEnumerator interface
-    NS_DECL_NSIDIRECTORYENUMERATOR
+  // nsIDirectoryEnumerator interface
+  NS_DECL_NSIDIRECTORYENUMERATOR
 
-    NS_IMETHOD Init(nsLocalFile *parent, bool ignored);
+  NS_IMETHOD Init(nsLocalFile *parent, bool ignored);
 
-    private:
-    ~nsDirEnumeratorUnix();
+private:
+  ~nsDirEnumeratorUnix();
 
-    protected:
-    NS_IMETHOD GetNextEntry();
+protected:
+  NS_IMETHOD GetNextEntry();
 
-    DIR           *mDir;
-    struct dirent *mEntry;
-    nsCString      mParentPath;
+  DIR           *mDir;
+  struct dirent *mEntry;
+  nsCString      mParentPath;
 };
 
 nsDirEnumeratorUnix::nsDirEnumeratorUnix() :
-                         mDir(nullptr), 
-                         mEntry(nullptr)
+  mDir(nullptr),
+  mEntry(nullptr)
 {
 }
 
 nsDirEnumeratorUnix::~nsDirEnumeratorUnix()
 {
-    Close();
+  Close();
 }
 
 NS_IMPL_ISUPPORTS(nsDirEnumeratorUnix, nsISimpleEnumerator, nsIDirectoryEnumerator)
@@ -133,87 +134,87 @@ NS_IMPL_ISUPPORTS(nsDirEnumeratorUnix, nsISimpleEnumerator, nsIDirectoryEnumerat
 NS_IMETHODIMP
 nsDirEnumeratorUnix::Init(nsLocalFile *parent, bool resolveSymlinks /*ignored*/)
 {
-    nsAutoCString dirPath;
-    if (NS_FAILED(parent->GetNativePath(dirPath)) ||
-        dirPath.IsEmpty()) {
-        return NS_ERROR_FILE_INVALID_PATH;
-    }
+  nsAutoCString dirPath;
+  if (NS_FAILED(parent->GetNativePath(dirPath)) ||
+      dirPath.IsEmpty()) {
+    return NS_ERROR_FILE_INVALID_PATH;
+  }
 
-    if (NS_FAILED(parent->GetNativePath(mParentPath)))
-        return NS_ERROR_FAILURE;
+  if (NS_FAILED(parent->GetNativePath(mParentPath)))
+    return NS_ERROR_FAILURE;
 
-    mDir = opendir(dirPath.get());
-    if (!mDir)
-        return NSRESULT_FOR_ERRNO();
-    return GetNextEntry();
+  mDir = opendir(dirPath.get());
+  if (!mDir)
+    return NSRESULT_FOR_ERRNO();
+  return GetNextEntry();
 }
 
 NS_IMETHODIMP
 nsDirEnumeratorUnix::HasMoreElements(bool *result)
 {
-    *result = mDir && mEntry;
-    if (!*result)
-        Close();
-    return NS_OK;
+  *result = mDir && mEntry;
+  if (!*result)
+    Close();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDirEnumeratorUnix::GetNext(nsISupports **_retval)
 {
-    nsCOMPtr<nsIFile> file;
-    nsresult rv = GetNextFile(getter_AddRefs(file));
-    if (NS_FAILED(rv))
-        return rv;
-    NS_IF_ADDREF(*_retval = file);
-    return NS_OK;
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = GetNextFile(getter_AddRefs(file));
+  if (NS_FAILED(rv))
+    return rv;
+  NS_IF_ADDREF(*_retval = file);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDirEnumeratorUnix::GetNextEntry()
 {
-    do {
-        errno = 0;
-        mEntry = readdir(mDir);
+  do {
+    errno = 0;
+    mEntry = readdir(mDir);
 
-        // end of dir or error
-        if (!mEntry)
-            return NSRESULT_FOR_ERRNO();
+    // end of dir or error
+    if (!mEntry)
+      return NSRESULT_FOR_ERRNO();
 
-        // keep going past "." and ".."
-    } while (mEntry->d_name[0] == '.'     &&
-            (mEntry->d_name[1] == '\0'    ||   // .\0
+    // keep going past "." and ".."
+  } while (mEntry->d_name[0] == '.'     &&
+           (mEntry->d_name[1] == '\0'    ||   // .\0
             (mEntry->d_name[1] == '.'     &&
-            mEntry->d_name[2] == '\0')));      // ..\0
-    return NS_OK;
+             mEntry->d_name[2] == '\0')));      // ..\0
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDirEnumeratorUnix::GetNextFile(nsIFile **_retval)
 {
-    nsresult rv;
-    if (!mDir || !mEntry) {
-        *_retval = nullptr;
-        return NS_OK;
-    }
+  nsresult rv;
+  if (!mDir || !mEntry) {
+    *_retval = nullptr;
+    return NS_OK;
+  }
 
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
 
-    if (NS_FAILED(rv = file->InitWithNativePath(mParentPath)) ||
-        NS_FAILED(rv = file->AppendNative(nsDependentCString(mEntry->d_name))))
-        return rv;
+  if (NS_FAILED(rv = file->InitWithNativePath(mParentPath)) ||
+      NS_FAILED(rv = file->AppendNative(nsDependentCString(mEntry->d_name))))
+    return rv;
 
-    file.forget(_retval);
-    return GetNextEntry();
+  file.forget(_retval);
+  return GetNextEntry();
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsDirEnumeratorUnix::Close()
 {
-    if (mDir) {
-        closedir(mDir);
-        mDir = nullptr;
-    }
-    return NS_OK;
+  if (mDir) {
+    closedir(mDir);
+    mDir = nullptr;
+  }
+  return NS_OK;
 }
 
 nsLocalFile::nsLocalFile()
@@ -239,824 +240,824 @@ NS_IMPL_ISUPPORTS(nsLocalFile,
 #endif
 
 nsresult
-nsLocalFile::nsLocalFileConstructor(nsISupports *outer, 
+nsLocalFile::nsLocalFileConstructor(nsISupports *outer,
                                     const nsIID &aIID,
                                     void **aInstancePtr)
 {
-    if (NS_WARN_IF(!aInstancePtr))
-        return NS_ERROR_INVALID_ARG;
-    if (NS_WARN_IF(outer))
-        return NS_ERROR_NO_AGGREGATION;
+  if (NS_WARN_IF(!aInstancePtr))
+    return NS_ERROR_INVALID_ARG;
+  if (NS_WARN_IF(outer))
+    return NS_ERROR_NO_AGGREGATION;
 
-    *aInstancePtr = nullptr;
+  *aInstancePtr = nullptr;
 
-    nsCOMPtr<nsIFile> inst = new nsLocalFile();
-    return inst->QueryInterface(aIID, aInstancePtr);
+  nsCOMPtr<nsIFile> inst = new nsLocalFile();
+  return inst->QueryInterface(aIID, aInstancePtr);
 }
 
-bool 
+bool
 nsLocalFile::FillStatCache() {
-    if (STAT(mPath.get(), &mCachedStat) == -1) {
-        // try lstat it may be a symlink
-        if (LSTAT(mPath.get(), &mCachedStat) == -1) {
-            return false;
-        }
+  if (STAT(mPath.get(), &mCachedStat) == -1) {
+    // try lstat it may be a symlink
+    if (LSTAT(mPath.get(), &mCachedStat) == -1) {
+      return false;
     }
-    return true;
+  }
+  return true;
 }
 
 NS_IMETHODIMP
 nsLocalFile::Clone(nsIFile **file)
 {
-    // Just copy-construct ourselves
-    nsRefPtr<nsLocalFile> copy = new nsLocalFile(*this);
-    copy.forget(file);
-    return NS_OK;
+  // Just copy-construct ourselves
+  nsRefPtr<nsLocalFile> copy = new nsLocalFile(*this);
+  copy.forget(file);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::InitWithNativePath(const nsACString &filePath)
 {
-    if (filePath.Equals("~") || Substring(filePath, 0, 2).EqualsLiteral("~/")) {
-        nsCOMPtr<nsIFile> homeDir;
-        nsAutoCString homePath;
-        if (NS_FAILED(NS_GetSpecialDirectory(NS_OS_HOME_DIR,
-                                             getter_AddRefs(homeDir))) ||
-            NS_FAILED(homeDir->GetNativePath(homePath))) {
-            return NS_ERROR_FAILURE;
-        }
- 
-        mPath = homePath;
-        if (filePath.Length() > 2)
-          mPath.Append(Substring(filePath, 1, filePath.Length() - 1));
-    } else {
-        if (filePath.IsEmpty() || filePath.First() != '/')
-            return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-        mPath = filePath;
+  if (filePath.Equals("~") || Substring(filePath, 0, 2).EqualsLiteral("~/")) {
+    nsCOMPtr<nsIFile> homeDir;
+    nsAutoCString homePath;
+    if (NS_FAILED(NS_GetSpecialDirectory(NS_OS_HOME_DIR,
+                                         getter_AddRefs(homeDir))) ||
+        NS_FAILED(homeDir->GetNativePath(homePath))) {
+      return NS_ERROR_FAILURE;
     }
 
-    // trim off trailing slashes
-    ssize_t len = mPath.Length();
-    while ((len > 1) && (mPath[len - 1] == '/'))
-        --len;
-    mPath.SetLength(len);
+    mPath = homePath;
+    if (filePath.Length() > 2)
+      mPath.Append(Substring(filePath, 1, filePath.Length() - 1));
+  } else {
+    if (filePath.IsEmpty() || filePath.First() != '/')
+      return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+    mPath = filePath;
+  }
 
-    return NS_OK;
+  // trim off trailing slashes
+  ssize_t len = mPath.Length();
+  while ((len > 1) && (mPath[len - 1] == '/'))
+    --len;
+  mPath.SetLength(len);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::CreateAllAncestors(uint32_t permissions)
 {
-    // <jband> I promise to play nice
-    char *buffer = mPath.BeginWriting(),
-         *slashp = buffer;
+  // <jband> I promise to play nice
+  char *buffer = mPath.BeginWriting(),
+        *slashp = buffer;
 
 #ifdef DEBUG_NSIFILE
-    fprintf(stderr, "nsIFile: before: %s\n", buffer);
+  fprintf(stderr, "nsIFile: before: %s\n", buffer);
 #endif
 
-    while ((slashp = strchr(slashp + 1, '/'))) {
-        /*
-         * Sequences of '/' are equivalent to a single '/'.
-         */
-        if (slashp[1] == '/')
-            continue;
+  while ((slashp = strchr(slashp + 1, '/'))) {
+    /*
+     * Sequences of '/' are equivalent to a single '/'.
+     */
+    if (slashp[1] == '/')
+      continue;
 
-        /*
-         * If the path has a trailing slash, don't make the last component,
-         * because we'll get EEXIST in Create when we try to build the final
-         * component again, and it's easier to condition the logic here than
-         * there.
-         */
-        if (slashp[1] == '\0')
-            break;
+    /*
+     * If the path has a trailing slash, don't make the last component,
+     * because we'll get EEXIST in Create when we try to build the final
+     * component again, and it's easier to condition the logic here than
+     * there.
+     */
+    if (slashp[1] == '\0')
+      break;
 
-        /* Temporarily NUL-terminate here */
-        *slashp = '\0';
+    /* Temporarily NUL-terminate here */
+    *slashp = '\0';
 #ifdef DEBUG_NSIFILE
-        fprintf(stderr, "nsIFile: mkdir(\"%s\")\n", buffer);
+    fprintf(stderr, "nsIFile: mkdir(\"%s\")\n", buffer);
 #endif
-        int mkdir_result = mkdir(buffer, permissions);
-        int mkdir_errno  = errno;
-        if (mkdir_result == -1) {
-            /*
-             * Always set |errno| to EEXIST if the dir already exists
-             * (we have to do this here since the errno value is not consistent
-             * in all cases - various reasons like different platform,
-             * automounter-controlled dir, etc. can affect it (see bug 125489
-             * for details)).
-             */
-            if (access(buffer, F_OK) == 0) {
-                mkdir_errno = EEXIST;
-            }
-        }
-
-        /* Put the / back before we (maybe) return */
-        *slashp = '/';
-
-        /*
-         * We could get EEXIST for an existing file -- not directory --
-         * with the name of one of our ancestors, but that's OK: we'll get
-         * ENOTDIR when we try to make the next component in the path,
-         * either here on back in Create, and error out appropriately.
-         */
-        if (mkdir_result == -1 && mkdir_errno != EEXIST)
-            return nsresultForErrno(mkdir_errno);
+    int mkdir_result = mkdir(buffer, permissions);
+    int mkdir_errno  = errno;
+    if (mkdir_result == -1) {
+      /*
+       * Always set |errno| to EEXIST if the dir already exists
+       * (we have to do this here since the errno value is not consistent
+       * in all cases - various reasons like different platform,
+       * automounter-controlled dir, etc. can affect it (see bug 125489
+       * for details)).
+       */
+      if (access(buffer, F_OK) == 0) {
+        mkdir_errno = EEXIST;
+      }
     }
 
+    /* Put the / back before we (maybe) return */
+    *slashp = '/';
+
+    /*
+     * We could get EEXIST for an existing file -- not directory --
+     * with the name of one of our ancestors, but that's OK: we'll get
+     * ENOTDIR when we try to make the next component in the path,
+     * either here on back in Create, and error out appropriately.
+     */
+    if (mkdir_result == -1 && mkdir_errno != EEXIST)
+      return nsresultForErrno(mkdir_errno);
+  }
+
 #ifdef DEBUG_NSIFILE
-    fprintf(stderr, "nsIFile: after: %s\n", buffer);
+  fprintf(stderr, "nsIFile: after: %s\n", buffer);
 #endif
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::OpenNSPRFileDesc(int32_t flags, int32_t mode, PRFileDesc **_retval)
 {
-    *_retval = PR_Open(mPath.get(), flags, mode);
-    if (! *_retval)
-        return NS_ErrorAccordingToNSPR();
+  *_retval = PR_Open(mPath.get(), flags, mode);
+  if (! *_retval)
+    return NS_ErrorAccordingToNSPR();
 
-    if (flags & DELETE_ON_CLOSE) {
-        PR_Delete(mPath.get());
-    }
+  if (flags & DELETE_ON_CLOSE) {
+    PR_Delete(mPath.get());
+  }
 
 #if defined(HAVE_POSIX_FADVISE)
-    if (flags & OS_READAHEAD) {
-        posix_fadvise(PR_FileDesc2NativeHandle(*_retval), 0, 0,
-                      POSIX_FADV_SEQUENTIAL);
-    }
+  if (flags & OS_READAHEAD) {
+    posix_fadvise(PR_FileDesc2NativeHandle(*_retval), 0, 0,
+                  POSIX_FADV_SEQUENTIAL);
+  }
 #endif
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::OpenANSIFileDesc(const char *mode, FILE **_retval)
 {
-    *_retval = fopen(mPath.get(), mode);
-    if (! *_retval)
-        return NS_ERROR_FAILURE;
+  *_retval = fopen(mPath.get(), mode);
+  if (! *_retval)
+    return NS_ERROR_FAILURE;
 
-    return NS_OK;
+  return NS_OK;
 }
 
 static int
 do_create(const char *path, int flags, mode_t mode, PRFileDesc **_retval)
 {
-    *_retval = PR_Open(path, flags, mode);
-    return *_retval ? 0 : -1;
+  *_retval = PR_Open(path, flags, mode);
+  return *_retval ? 0 : -1;
 }
 
 static int
 do_mkdir(const char *path, int flags, mode_t mode, PRFileDesc **_retval)
 {
-    *_retval = nullptr;
-    return mkdir(path, mode);
+  *_retval = nullptr;
+  return mkdir(path, mode);
 }
 
 nsresult
 nsLocalFile::CreateAndKeepOpen(uint32_t type, int flags,
                                uint32_t permissions, PRFileDesc **_retval)
 {
-    if (type != NORMAL_FILE_TYPE && type != DIRECTORY_TYPE)
-        return NS_ERROR_FILE_UNKNOWN_TYPE;
+  if (type != NORMAL_FILE_TYPE && type != DIRECTORY_TYPE)
+    return NS_ERROR_FILE_UNKNOWN_TYPE;
 
-    int result;
-    int (*createFunc)(const char *, int, mode_t, PRFileDesc **) =
-        (type == NORMAL_FILE_TYPE) ? do_create : do_mkdir;
+  int result;
+  int (*createFunc)(const char *, int, mode_t, PRFileDesc **) =
+    (type == NORMAL_FILE_TYPE) ? do_create : do_mkdir;
 
+  result = createFunc(mPath.get(), flags, permissions, _retval);
+  if (result == -1 && errno == ENOENT) {
+    /*
+     * If we failed because of missing ancestor components, try to create
+     * them and then retry the original creation.
+     *
+     * Ancestor directories get the same permissions as the file we're
+     * creating, with the X bit set for each of (user,group,other) with
+     * an R bit in the original permissions.    If you want to do anything
+     * fancy like setgid or sticky bits, do it by hand.
+     */
+    int dirperm = permissions;
+    if (permissions & S_IRUSR)
+      dirperm |= S_IXUSR;
+    if (permissions & S_IRGRP)
+      dirperm |= S_IXGRP;
+    if (permissions & S_IROTH)
+      dirperm |= S_IXOTH;
+
+#ifdef DEBUG_NSIFILE
+    fprintf(stderr, "nsIFile: perm = %o, dirperm = %o\n", permissions,
+            dirperm);
+#endif
+
+    if (NS_FAILED(CreateAllAncestors(dirperm)))
+      return NS_ERROR_FAILURE;
+
+#ifdef DEBUG_NSIFILE
+    fprintf(stderr, "nsIFile: Create(\"%s\") again\n", mPath.get());
+#endif
     result = createFunc(mPath.get(), flags, permissions, _retval);
-    if (result == -1 && errno == ENOENT) {
-        /*
-         * If we failed because of missing ancestor components, try to create
-         * them and then retry the original creation.
-         *
-         * Ancestor directories get the same permissions as the file we're
-         * creating, with the X bit set for each of (user,group,other) with
-         * an R bit in the original permissions.    If you want to do anything
-         * fancy like setgid or sticky bits, do it by hand.
-         */
-        int dirperm = permissions;
-        if (permissions & S_IRUSR)
-            dirperm |= S_IXUSR;
-        if (permissions & S_IRGRP)
-            dirperm |= S_IXGRP;
-        if (permissions & S_IROTH)
-            dirperm |= S_IXOTH;
-
-#ifdef DEBUG_NSIFILE
-        fprintf(stderr, "nsIFile: perm = %o, dirperm = %o\n", permissions,
-                dirperm);
-#endif
-
-        if (NS_FAILED(CreateAllAncestors(dirperm)))
-            return NS_ERROR_FAILURE;
-
-#ifdef DEBUG_NSIFILE
-        fprintf(stderr, "nsIFile: Create(\"%s\") again\n", mPath.get());
-#endif
-        result = createFunc(mPath.get(), flags, permissions, _retval);
-    }
-    return NSRESULT_FOR_RETURN(result);
+  }
+  return NSRESULT_FOR_RETURN(result);
 }
 
 NS_IMETHODIMP
 nsLocalFile::Create(uint32_t type, uint32_t permissions)
 {
-    PRFileDesc *junk = nullptr;
-    nsresult rv = CreateAndKeepOpen(type,
-                                    PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE |
-                                    PR_EXCL,
-                                    permissions,
-                                    &junk);
-    if (junk)
-        PR_Close(junk);
-    return rv;
+  PRFileDesc *junk = nullptr;
+  nsresult rv = CreateAndKeepOpen(type,
+                                  PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE |
+                                  PR_EXCL,
+                                  permissions,
+                                  &junk);
+  if (junk)
+    PR_Close(junk);
+  return rv;
 }
 
 NS_IMETHODIMP
 nsLocalFile::AppendNative(const nsACString &fragment)
 {
-    if (fragment.IsEmpty())
-        return NS_OK;
+  if (fragment.IsEmpty())
+    return NS_OK;
 
-    // only one component of path can be appended
-    nsACString::const_iterator begin, end;
-    if (FindCharInReadable('/', fragment.BeginReading(begin),
-                                fragment.EndReading(end)))
-        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+  // only one component of path can be appended
+  nsACString::const_iterator begin, end;
+  if (FindCharInReadable('/', fragment.BeginReading(begin),
+                         fragment.EndReading(end)))
+    return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    return AppendRelativeNativePath(fragment);
+  return AppendRelativeNativePath(fragment);
 }
 
 NS_IMETHODIMP
 nsLocalFile::AppendRelativeNativePath(const nsACString &fragment)
 {
-    if (fragment.IsEmpty())
-        return NS_OK;
-
-    // No leading '/' 
-    if (fragment.First() == '/')
-        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-
-    if (mPath.EqualsLiteral("/"))
-        mPath.Append(fragment);
-    else
-        mPath.Append(NS_LITERAL_CSTRING("/") + fragment);
-
+  if (fragment.IsEmpty())
     return NS_OK;
+
+  // No leading '/'
+  if (fragment.First() == '/')
+    return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+
+  if (mPath.EqualsLiteral("/"))
+    mPath.Append(fragment);
+  else
+    mPath.Append(NS_LITERAL_CSTRING("/") + fragment);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::Normalize()
 {
-    char    resolved_path[PATH_MAX] = "";
-    char *resolved_path_ptr = nullptr;
+  char resolved_path[PATH_MAX] = "";
+  char *resolved_path_ptr = nullptr;
 
-    resolved_path_ptr = realpath(mPath.get(), resolved_path);
+  resolved_path_ptr = realpath(mPath.get(), resolved_path);
 
-    // if there is an error, the return is null.
-    if (!resolved_path_ptr)
-        return NSRESULT_FOR_ERRNO();
+  // if there is an error, the return is null.
+  if (!resolved_path_ptr)
+    return NSRESULT_FOR_ERRNO();
 
-    mPath = resolved_path;
-    return NS_OK;
+  mPath = resolved_path;
+  return NS_OK;
 }
 
 void
-nsLocalFile::LocateNativeLeafName(nsACString::const_iterator &begin, 
+nsLocalFile::LocateNativeLeafName(nsACString::const_iterator &begin,
                                   nsACString::const_iterator &end)
 {
-    // XXX perhaps we should cache this??
+  // XXX perhaps we should cache this??
 
-    mPath.BeginReading(begin);
-    mPath.EndReading(end);
-    
-    nsACString::const_iterator it = end;
-    nsACString::const_iterator stop = begin;
-    --stop;
-    while (--it != stop) {
-        if (*it == '/') {
-            begin = ++it;
-            return;
-        }
+  mPath.BeginReading(begin);
+  mPath.EndReading(end);
+
+  nsACString::const_iterator it = end;
+  nsACString::const_iterator stop = begin;
+  --stop;
+  while (--it != stop) {
+    if (*it == '/') {
+      begin = ++it;
+      return;
     }
-    // else, the entire path is the leaf name (which means this
-    // isn't an absolute path... unexpected??)
+  }
+  // else, the entire path is the leaf name (which means this
+  // isn't an absolute path... unexpected??)
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetNativeLeafName(nsACString &aLeafName)
 {
-    nsACString::const_iterator begin, end;
-    LocateNativeLeafName(begin, end);
-    aLeafName = Substring(begin, end);
-    return NS_OK;
+  nsACString::const_iterator begin, end;
+  LocateNativeLeafName(begin, end);
+  aLeafName = Substring(begin, end);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::SetNativeLeafName(const nsACString &aLeafName)
 {
-    nsACString::const_iterator begin, end;
-    LocateNativeLeafName(begin, end);
-    mPath.Replace(begin.get() - mPath.get(), Distance(begin, end), aLeafName);
-    return NS_OK;
+  nsACString::const_iterator begin, end;
+  LocateNativeLeafName(begin, end);
+  mPath.Replace(begin.get() - mPath.get(), Distance(begin, end), aLeafName);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetNativePath(nsACString &_retval)
 {
-    _retval = mPath;
-    return NS_OK;
+  _retval = mPath;
+  return NS_OK;
 }
 
 nsresult
-nsLocalFile::GetNativeTargetPathName(nsIFile *newParent, 
+nsLocalFile::GetNativeTargetPathName(nsIFile *newParent,
                                      const nsACString &newName,
                                      nsACString &_retval)
 {
-    nsresult rv;
-    nsCOMPtr<nsIFile> oldParent;
+  nsresult rv;
+  nsCOMPtr<nsIFile> oldParent;
 
-    if (!newParent) {
-        if (NS_FAILED(rv = GetParent(getter_AddRefs(oldParent))))
-            return rv;
-        newParent = oldParent.get();
-    } else {
-        // check to see if our target directory exists
-        bool targetExists;
-        if (NS_FAILED(rv = newParent->Exists(&targetExists)))
-            return rv;
+  if (!newParent) {
+    if (NS_FAILED(rv = GetParent(getter_AddRefs(oldParent))))
+      return rv;
+    newParent = oldParent.get();
+  } else {
+    // check to see if our target directory exists
+    bool targetExists;
+    if (NS_FAILED(rv = newParent->Exists(&targetExists)))
+      return rv;
 
-        if (!targetExists) {
-            // XXX create the new directory with some permissions
-            rv = newParent->Create(DIRECTORY_TYPE, 0755);
-            if (NS_FAILED(rv))
-                return rv;
-        } else {
-            // make sure that the target is actually a directory
-            bool targetIsDirectory;
-            if (NS_FAILED(rv = newParent->IsDirectory(&targetIsDirectory)))
-                return rv;
-            if (!targetIsDirectory)
-                return NS_ERROR_FILE_DESTINATION_NOT_DIR;
-        }
-    }
-
-    nsACString::const_iterator nameBegin, nameEnd;
-    if (!newName.IsEmpty()) {
-        newName.BeginReading(nameBegin);
-        newName.EndReading(nameEnd);
-    }
-    else
-        LocateNativeLeafName(nameBegin, nameEnd);
-
-    nsAutoCString dirName;
-    if (NS_FAILED(rv = newParent->GetNativePath(dirName)))
+    if (!targetExists) {
+      // XXX create the new directory with some permissions
+      rv = newParent->Create(DIRECTORY_TYPE, 0755);
+      if (NS_FAILED(rv))
         return rv;
+    } else {
+      // make sure that the target is actually a directory
+      bool targetIsDirectory;
+      if (NS_FAILED(rv = newParent->IsDirectory(&targetIsDirectory)))
+        return rv;
+      if (!targetIsDirectory)
+        return NS_ERROR_FILE_DESTINATION_NOT_DIR;
+    }
+  }
 
-    _retval = dirName
-            + NS_LITERAL_CSTRING("/")
-            + Substring(nameBegin, nameEnd);
-    return NS_OK;
+  nsACString::const_iterator nameBegin, nameEnd;
+  if (!newName.IsEmpty()) {
+    newName.BeginReading(nameBegin);
+    newName.EndReading(nameEnd);
+  }
+  else
+    LocateNativeLeafName(nameBegin, nameEnd);
+
+  nsAutoCString dirName;
+  if (NS_FAILED(rv = newParent->GetNativePath(dirName)))
+    return rv;
+
+  _retval = dirName
+    + NS_LITERAL_CSTRING("/")
+    + Substring(nameBegin, nameEnd);
+  return NS_OK;
 }
 
 nsresult
 nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
 {
-    nsresult rv;
-    /*
-     * dirCheck is used for various boolean test results such as from Equals,
-     * Exists, isDir, etc.
-     */
-    bool dirCheck, isSymlink;
-    uint32_t oldPerms;
+  nsresult rv;
+  /*
+   * dirCheck is used for various boolean test results such as from Equals,
+   * Exists, isDir, etc.
+   */
+  bool dirCheck, isSymlink;
+  uint32_t oldPerms;
 
-    if (NS_FAILED(rv = IsDirectory(&dirCheck)))
-        return rv;
-    if (!dirCheck)
-        return CopyToNative(newParent, EmptyCString());
-    
-    if (NS_FAILED(rv = Equals(newParent, &dirCheck)))
-        return rv;
-    if (dirCheck) { 
-        // can't copy dir to itself
-        return NS_ERROR_INVALID_ARG;
-    }
-    
-    if (NS_FAILED(rv = newParent->Exists(&dirCheck))) 
-        return rv;
-    // get the dirs old permissions
-    if (NS_FAILED(rv = GetPermissions(&oldPerms)))
-        return rv;
-    if (!dirCheck) {
-        if (NS_FAILED(rv = newParent->Create(DIRECTORY_TYPE, oldPerms)))
-            return rv;
-    } else {    // dir exists lets try to use leaf
-        nsAutoCString leafName;
-        if (NS_FAILED(rv = GetNativeLeafName(leafName)))
-            return rv;
-        if (NS_FAILED(rv = newParent->AppendNative(leafName)))
-            return rv;
-        if (NS_FAILED(rv = newParent->Exists(&dirCheck)))
-            return rv;
-        if (dirCheck) 
-            return NS_ERROR_FILE_ALREADY_EXISTS; // dest exists
-        if (NS_FAILED(rv = newParent->Create(DIRECTORY_TYPE, oldPerms)))
-            return rv;
-    }
+  if (NS_FAILED(rv = IsDirectory(&dirCheck)))
+    return rv;
+  if (!dirCheck)
+    return CopyToNative(newParent, EmptyCString());
 
-    nsCOMPtr<nsISimpleEnumerator> dirIterator;
-    if (NS_FAILED(rv = GetDirectoryEntries(getter_AddRefs(dirIterator))))
-        return rv;
+  if (NS_FAILED(rv = Equals(newParent, &dirCheck)))
+    return rv;
+  if (dirCheck) {
+    // can't copy dir to itself
+    return NS_ERROR_INVALID_ARG;
+  }
 
-    bool hasMore = false;
-    while (dirIterator->HasMoreElements(&hasMore), hasMore) {
-        nsCOMPtr<nsISupports> supports;
-        nsCOMPtr<nsIFile> entry;
-        rv = dirIterator->GetNext(getter_AddRefs(supports));
-        entry = do_QueryInterface(supports);
-        if (NS_FAILED(rv) || !entry)
-            continue;
-        if (NS_FAILED(rv = entry->IsSymlink(&isSymlink)))
-            return rv;
-        if (NS_FAILED(rv = entry->IsDirectory(&dirCheck)))
-            return rv;
-        if (dirCheck && !isSymlink) {
-            nsCOMPtr<nsIFile> destClone;
-            rv = newParent->Clone(getter_AddRefs(destClone));
-            if (NS_SUCCEEDED(rv)) {
-                if (NS_FAILED(rv = entry->CopyToNative(destClone, EmptyCString()))) {
+  if (NS_FAILED(rv = newParent->Exists(&dirCheck)))
+    return rv;
+  // get the dirs old permissions
+  if (NS_FAILED(rv = GetPermissions(&oldPerms)))
+    return rv;
+  if (!dirCheck) {
+    if (NS_FAILED(rv = newParent->Create(DIRECTORY_TYPE, oldPerms)))
+      return rv;
+  } else {    // dir exists lets try to use leaf
+    nsAutoCString leafName;
+    if (NS_FAILED(rv = GetNativeLeafName(leafName)))
+      return rv;
+    if (NS_FAILED(rv = newParent->AppendNative(leafName)))
+      return rv;
+    if (NS_FAILED(rv = newParent->Exists(&dirCheck)))
+      return rv;
+    if (dirCheck)
+      return NS_ERROR_FILE_ALREADY_EXISTS; // dest exists
+    if (NS_FAILED(rv = newParent->Create(DIRECTORY_TYPE, oldPerms)))
+      return rv;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> dirIterator;
+  if (NS_FAILED(rv = GetDirectoryEntries(getter_AddRefs(dirIterator))))
+    return rv;
+
+  bool hasMore = false;
+  while (dirIterator->HasMoreElements(&hasMore), hasMore) {
+    nsCOMPtr<nsISupports> supports;
+    nsCOMPtr<nsIFile> entry;
+    rv = dirIterator->GetNext(getter_AddRefs(supports));
+    entry = do_QueryInterface(supports);
+    if (NS_FAILED(rv) || !entry)
+      continue;
+    if (NS_FAILED(rv = entry->IsSymlink(&isSymlink)))
+      return rv;
+    if (NS_FAILED(rv = entry->IsDirectory(&dirCheck)))
+      return rv;
+    if (dirCheck && !isSymlink) {
+      nsCOMPtr<nsIFile> destClone;
+      rv = newParent->Clone(getter_AddRefs(destClone));
+      if (NS_SUCCEEDED(rv)) {
+        if (NS_FAILED(rv = entry->CopyToNative(destClone, EmptyCString()))) {
 #ifdef DEBUG
-                    nsresult rv2;
-                    nsAutoCString pathName;
-                    if (NS_FAILED(rv2 = entry->GetNativePath(pathName)))
-                        return rv2;
-                    printf("Operation not supported: %s\n", pathName.get());
+          nsresult rv2;
+          nsAutoCString pathName;
+          if (NS_FAILED(rv2 = entry->GetNativePath(pathName)))
+            return rv2;
+          printf("Operation not supported: %s\n", pathName.get());
 #endif
-                    if (rv == NS_ERROR_OUT_OF_MEMORY) 
-                        return rv;
-                    continue;
-                }
-            }
-        } else {
-            if (NS_FAILED(rv = entry->CopyToNative(newParent, EmptyCString()))) {
-#ifdef DEBUG
-                nsresult rv2;
-                nsAutoCString pathName;
-                if (NS_FAILED(rv2 = entry->GetNativePath(pathName)))
-                    return rv2;
-                printf("Operation not supported: %s\n", pathName.get());
-#endif
-                if (rv == NS_ERROR_OUT_OF_MEMORY) 
-                    return rv;
-                continue;
-            }
+          if (rv == NS_ERROR_OUT_OF_MEMORY)
+            return rv;
+          continue;
         }
+      }
+    } else {
+      if (NS_FAILED(rv = entry->CopyToNative(newParent, EmptyCString()))) {
+#ifdef DEBUG
+        nsresult rv2;
+        nsAutoCString pathName;
+        if (NS_FAILED(rv2 = entry->GetNativePath(pathName)))
+          return rv2;
+        printf("Operation not supported: %s\n", pathName.get());
+#endif
+        if (rv == NS_ERROR_OUT_OF_MEMORY)
+          return rv;
+        continue;
+      }
     }
-    return NS_OK;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::CopyToNative(nsIFile *newParent, const nsACString &newName)
 {
-    nsresult rv;
-    // check to make sure that this has been initialized properly
-    CHECK_mPath();
+  nsresult rv;
+  // check to make sure that this has been initialized properly
+  CHECK_mPath();
 
-    // we copy the parent here so 'newParent' remains immutable
-    nsCOMPtr <nsIFile> workParent;
-    if (newParent) {
-        if (NS_FAILED(rv = newParent->Clone(getter_AddRefs(workParent))))
-            return rv;
-    } else {
-        if (NS_FAILED(rv = GetParent(getter_AddRefs(workParent))))
-            return rv;
-    }
-    
-    // check to see if we are a directory or if we are a file
-    bool isDirectory;
-    if (NS_FAILED(rv = IsDirectory(&isDirectory)))
-        return rv;
+  // we copy the parent here so 'newParent' remains immutable
+  nsCOMPtr <nsIFile> workParent;
+  if (newParent) {
+    if (NS_FAILED(rv = newParent->Clone(getter_AddRefs(workParent))))
+      return rv;
+  } else {
+    if (NS_FAILED(rv = GetParent(getter_AddRefs(workParent))))
+      return rv;
+  }
 
-    nsAutoCString newPathName;
-    if (isDirectory) {
-        if (!newName.IsEmpty()) {
-            if (NS_FAILED(rv = workParent->AppendNative(newName)))
-                return rv;
-        } else {
-            if (NS_FAILED(rv = GetNativeLeafName(newPathName)))
-                return rv;
-            if (NS_FAILED(rv = workParent->AppendNative(newPathName)))
-                return rv;
-        }
-        if (NS_FAILED(rv = CopyDirectoryTo(workParent)))
-            return rv;
-    } else {
-        rv = GetNativeTargetPathName(workParent, newName, newPathName);
-        if (NS_FAILED(rv)) 
-            return rv;
-
-#ifdef DEBUG_blizzard
-        printf("nsLocalFile::CopyTo() %s -> %s\n", mPath.get(), newPathName.get());
-#endif
-
-        // actually create the file.
-        nsLocalFile *newFile = new nsLocalFile();
-        if (!newFile)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        nsCOMPtr<nsIFile> fileRef(newFile); // release on exit
-
-        rv = newFile->InitWithNativePath(newPathName);
-        if (NS_FAILED(rv))
-            return rv;
-
-        // get the old permissions
-        uint32_t myPerms;
-        GetPermissions(&myPerms);
-
-        // Create the new file with the old file's permissions, even if write
-        // permission is missing.  We can't create with write permission and
-        // then change back to myPerm on all filesystems (FAT on Linux, e.g.).
-        // But we can write to a read-only file on all Unix filesystems if we
-        // open it successfully for writing.
-
-        PRFileDesc *newFD;
-        rv = newFile->CreateAndKeepOpen(NORMAL_FILE_TYPE,
-                                        PR_WRONLY|PR_CREATE_FILE|PR_TRUNCATE,
-                                        myPerms,
-                                        &newFD);
-        if (NS_FAILED(rv))
-            return rv;
-
-        // open the old file, too
-        bool specialFile;
-        if (NS_FAILED(rv = IsSpecial(&specialFile))) {
-            PR_Close(newFD);
-            return rv;
-        }
-        if (specialFile) {
-#ifdef DEBUG
-            printf("Operation not supported: %s\n", mPath.get());
-#endif
-            // make sure to clean up properly
-            PR_Close(newFD);
-            return NS_OK;
-        }
-               
-        PRFileDesc *oldFD;
-        rv = OpenNSPRFileDesc(PR_RDONLY, myPerms, &oldFD);
-        if (NS_FAILED(rv)) {
-            // make sure to clean up properly
-            PR_Close(newFD);
-            return rv;
-        }
-
-#ifdef DEBUG_blizzard
-        int32_t totalRead = 0;
-        int32_t totalWritten = 0;
-#endif
-        char buf[BUFSIZ];
-        int32_t bytesRead;
-
-        // record PR_Write() error for better error message later.
-        nsresult saved_write_error = NS_OK;
-        nsresult saved_read_error = NS_OK;
-        nsresult saved_read_close_error = NS_OK;
-        nsresult saved_write_close_error = NS_OK;
-
-        // DONE: Does PR_Read() return bytesRead < 0 for error?
-        // Yes., The errors from PR_Read are not so common and
-        // the value may not have correspondence in NS_ERROR_*, but
-        // we do catch it still, immediately after while() loop.
-        // We can differentiate errors pf PR_Read and PR_Write by
-        // looking at saved_write_error value. If PR_Write error occurs (and not
-        // PR_Read() error), save_write_error is not NS_OK.
-
-        while ((bytesRead = PR_Read(oldFD, buf, BUFSIZ)) > 0) {
-#ifdef DEBUG_blizzard
-            totalRead += bytesRead;
-#endif
-
-            // PR_Write promises never to do a short write
-            int32_t bytesWritten = PR_Write(newFD, buf, bytesRead);
-            if (bytesWritten < 0) {
-                saved_write_error = NSRESULT_FOR_ERRNO();
-                bytesRead = -1;
-                break;
-            }
-            NS_ASSERTION(bytesWritten == bytesRead, "short PR_Write?");
-
-#ifdef DEBUG_blizzard
-            totalWritten += bytesWritten;
-#endif
-        }
-
-        // TODO/FIXME: If CIFS (and NFS?) may force read/write to return EINTR,
-        // we are better off to prepare for retrying. But we need confirmation if
-        // EINTR is returned.
-
-        // Record error if PR_Read() failed.
-        // Must be done before any other I/O which may reset errno.
-        if ( (bytesRead < 0) && (saved_write_error == NS_OK)) {
-            saved_read_error = NSRESULT_FOR_ERRNO();
-        }
-
-#ifdef DEBUG_blizzard
-        printf("read %d bytes, wrote %d bytes\n",
-                 totalRead, totalWritten);
-#endif
-
-        // DONE: Errors of close can occur.  Read man page of
-        // close(2);
-        // This is likely to happen if the file system is remote file
-        // system (NFS, CIFS, etc.) and network outage occurs.
-        // At least, we should tell the user that filesystem/disk is
-        // hosed (possibly due to network error, hard disk failure,
-        // etc.) so that users can take remedial action.
-
-        // close the files
-        if (PR_Close(newFD) < 0) {
-            saved_write_close_error = NSRESULT_FOR_ERRNO();
-#if DEBUG
-            // This error merits printing.
-            fprintf(stderr, "ERROR: PR_Close(newFD) returned error. errno = %d\n", errno);
-#endif
-        }
-
-        if (PR_Close(oldFD) < 0) {
-            saved_read_close_error = NSRESULT_FOR_ERRNO();
-#if DEBUG
-            fprintf(stderr, "ERROR: PR_Close(oldFD) returned error. errno = %d\n", errno);
-#endif
-        }
-
-        // Let us report the failure to write and read.
-        // check for write/read error after cleaning up
-        if (bytesRead < 0) {
-            if (saved_write_error != NS_OK)
-                return saved_write_error;
-            else if (saved_read_error != NS_OK)
-                return saved_read_error;
-#if DEBUG
-            else                // sanity check. Die and debug.
-                MOZ_ASSERT(0);
-#endif
-        }
-
-        if (saved_write_close_error != NS_OK)
-            return saved_write_close_error;
-        if (saved_read_close_error != NS_OK)
-            return saved_read_close_error;
-    }
+  // check to see if we are a directory or if we are a file
+  bool isDirectory;
+  if (NS_FAILED(rv = IsDirectory(&isDirectory)))
     return rv;
+
+  nsAutoCString newPathName;
+  if (isDirectory) {
+    if (!newName.IsEmpty()) {
+      if (NS_FAILED(rv = workParent->AppendNative(newName)))
+        return rv;
+    } else {
+      if (NS_FAILED(rv = GetNativeLeafName(newPathName)))
+        return rv;
+      if (NS_FAILED(rv = workParent->AppendNative(newPathName)))
+        return rv;
+    }
+    if (NS_FAILED(rv = CopyDirectoryTo(workParent)))
+      return rv;
+  } else {
+    rv = GetNativeTargetPathName(workParent, newName, newPathName);
+    if (NS_FAILED(rv))
+      return rv;
+
+#ifdef DEBUG_blizzard
+    printf("nsLocalFile::CopyTo() %s -> %s\n", mPath.get(), newPathName.get());
+#endif
+
+    // actually create the file.
+    nsLocalFile *newFile = new nsLocalFile();
+    if (!newFile)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCOMPtr<nsIFile> fileRef(newFile); // release on exit
+
+    rv = newFile->InitWithNativePath(newPathName);
+    if (NS_FAILED(rv))
+      return rv;
+
+    // get the old permissions
+    uint32_t myPerms;
+    GetPermissions(&myPerms);
+
+    // Create the new file with the old file's permissions, even if write
+    // permission is missing.  We can't create with write permission and
+    // then change back to myPerm on all filesystems (FAT on Linux, e.g.).
+    // But we can write to a read-only file on all Unix filesystems if we
+    // open it successfully for writing.
+
+    PRFileDesc *newFD;
+    rv = newFile->CreateAndKeepOpen(NORMAL_FILE_TYPE,
+                                    PR_WRONLY|PR_CREATE_FILE|PR_TRUNCATE,
+                                    myPerms,
+                                    &newFD);
+    if (NS_FAILED(rv))
+      return rv;
+
+    // open the old file, too
+    bool specialFile;
+    if (NS_FAILED(rv = IsSpecial(&specialFile))) {
+      PR_Close(newFD);
+      return rv;
+    }
+    if (specialFile) {
+#ifdef DEBUG
+      printf("Operation not supported: %s\n", mPath.get());
+#endif
+      // make sure to clean up properly
+      PR_Close(newFD);
+      return NS_OK;
+    }
+
+    PRFileDesc *oldFD;
+    rv = OpenNSPRFileDesc(PR_RDONLY, myPerms, &oldFD);
+    if (NS_FAILED(rv)) {
+      // make sure to clean up properly
+      PR_Close(newFD);
+      return rv;
+    }
+
+#ifdef DEBUG_blizzard
+    int32_t totalRead = 0;
+    int32_t totalWritten = 0;
+#endif
+    char buf[BUFSIZ];
+    int32_t bytesRead;
+
+    // record PR_Write() error for better error message later.
+    nsresult saved_write_error = NS_OK;
+    nsresult saved_read_error = NS_OK;
+    nsresult saved_read_close_error = NS_OK;
+    nsresult saved_write_close_error = NS_OK;
+
+    // DONE: Does PR_Read() return bytesRead < 0 for error?
+    // Yes., The errors from PR_Read are not so common and
+    // the value may not have correspondence in NS_ERROR_*, but
+    // we do catch it still, immediately after while() loop.
+    // We can differentiate errors pf PR_Read and PR_Write by
+    // looking at saved_write_error value. If PR_Write error occurs (and not
+    // PR_Read() error), save_write_error is not NS_OK.
+
+    while ((bytesRead = PR_Read(oldFD, buf, BUFSIZ)) > 0) {
+#ifdef DEBUG_blizzard
+      totalRead += bytesRead;
+#endif
+
+      // PR_Write promises never to do a short write
+      int32_t bytesWritten = PR_Write(newFD, buf, bytesRead);
+      if (bytesWritten < 0) {
+        saved_write_error = NSRESULT_FOR_ERRNO();
+        bytesRead = -1;
+        break;
+      }
+      NS_ASSERTION(bytesWritten == bytesRead, "short PR_Write?");
+
+#ifdef DEBUG_blizzard
+      totalWritten += bytesWritten;
+#endif
+    }
+
+    // TODO/FIXME: If CIFS (and NFS?) may force read/write to return EINTR,
+    // we are better off to prepare for retrying. But we need confirmation if
+    // EINTR is returned.
+
+    // Record error if PR_Read() failed.
+    // Must be done before any other I/O which may reset errno.
+    if ( (bytesRead < 0) && (saved_write_error == NS_OK)) {
+      saved_read_error = NSRESULT_FOR_ERRNO();
+    }
+
+#ifdef DEBUG_blizzard
+    printf("read %d bytes, wrote %d bytes\n",
+           totalRead, totalWritten);
+#endif
+
+    // DONE: Errors of close can occur.  Read man page of
+    // close(2);
+    // This is likely to happen if the file system is remote file
+    // system (NFS, CIFS, etc.) and network outage occurs.
+    // At least, we should tell the user that filesystem/disk is
+    // hosed (possibly due to network error, hard disk failure,
+    // etc.) so that users can take remedial action.
+
+    // close the files
+    if (PR_Close(newFD) < 0) {
+      saved_write_close_error = NSRESULT_FOR_ERRNO();
+#if DEBUG
+      // This error merits printing.
+      fprintf(stderr, "ERROR: PR_Close(newFD) returned error. errno = %d\n", errno);
+#endif
+    }
+
+    if (PR_Close(oldFD) < 0) {
+      saved_read_close_error = NSRESULT_FOR_ERRNO();
+#if DEBUG
+      fprintf(stderr, "ERROR: PR_Close(oldFD) returned error. errno = %d\n", errno);
+#endif
+    }
+
+    // Let us report the failure to write and read.
+    // check for write/read error after cleaning up
+    if (bytesRead < 0) {
+      if (saved_write_error != NS_OK)
+        return saved_write_error;
+      else if (saved_read_error != NS_OK)
+        return saved_read_error;
+#if DEBUG
+      else                // sanity check. Die and debug.
+        MOZ_ASSERT(0);
+#endif
+    }
+
+    if (saved_write_close_error != NS_OK)
+      return saved_write_close_error;
+    if (saved_read_close_error != NS_OK)
+      return saved_read_close_error;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
 nsLocalFile::CopyToFollowingLinksNative(nsIFile *newParent, const nsACString &newName)
 {
-    return CopyToNative(newParent, newName);
+  return CopyToNative(newParent, newName);
 }
 
 NS_IMETHODIMP
 nsLocalFile::MoveToNative(nsIFile *newParent, const nsACString &newName)
 {
-    nsresult rv;
+  nsresult rv;
 
-    // check to make sure that this has been initialized properly
-    CHECK_mPath();
+  // check to make sure that this has been initialized properly
+  CHECK_mPath();
 
-    // check to make sure that we have a new parent
-    nsAutoCString newPathName;
-    rv = GetNativeTargetPathName(newParent, newName, newPathName);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // try for atomic rename, falling back to copy/delete
-    if (rename(mPath.get(), newPathName.get()) < 0) {
-#ifdef VMS
-        if (errno == EXDEV || errno == ENXIO) {
-#else
-        if (errno == EXDEV) {
-#endif
-            rv = CopyToNative(newParent, newName);
-            if (NS_SUCCEEDED(rv))
-                rv = Remove(true);
-        } else {
-            rv = NSRESULT_FOR_ERRNO();
-        }
-    }
-
-    if (NS_SUCCEEDED(rv)) {
-        // Adjust this
-        mPath = newPathName;
-    }
+  // check to make sure that we have a new parent
+  nsAutoCString newPathName;
+  rv = GetNativeTargetPathName(newParent, newName, newPathName);
+  if (NS_FAILED(rv))
     return rv;
+
+  // try for atomic rename, falling back to copy/delete
+  if (rename(mPath.get(), newPathName.get()) < 0) {
+#ifdef VMS
+    if (errno == EXDEV || errno == ENXIO) {
+#else
+    if (errno == EXDEV) {
+#endif
+      rv = CopyToNative(newParent, newName);
+      if (NS_SUCCEEDED(rv))
+        rv = Remove(true);
+    } else {
+      rv = NSRESULT_FOR_ERRNO();
+    }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    // Adjust this
+    mPath = newPathName;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
 nsLocalFile::Remove(bool recursive)
 {
-    CHECK_mPath();
-    ENSURE_STAT_CACHE();
+  CHECK_mPath();
+  ENSURE_STAT_CACHE();
 
-    bool isSymLink;
+  bool isSymLink;
 
-    nsresult rv = IsSymlink(&isSymLink);
+  nsresult rv = IsSymlink(&isSymLink);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (isSymLink || !S_ISDIR(mCachedStat.st_mode))
+    return NSRESULT_FOR_RETURN(unlink(mPath.get()));
+
+  if (recursive) {
+    nsDirEnumeratorUnix *dir = new nsDirEnumeratorUnix();
+
+    nsCOMPtr<nsISimpleEnumerator> dirRef(dir); // release on exit
+
+    rv = dir->Init(this, false);
     if (NS_FAILED(rv))
-        return rv;
+      return rv;
 
-    if (isSymLink || !S_ISDIR(mCachedStat.st_mode))
-        return NSRESULT_FOR_RETURN(unlink(mPath.get()));
+    bool more;
+    while (dir->HasMoreElements(&more), more) {
+      nsCOMPtr<nsISupports> item;
+      rv = dir->GetNext(getter_AddRefs(item));
+      if (NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
 
-    if (recursive) {
-        nsDirEnumeratorUnix *dir = new nsDirEnumeratorUnix();
-
-        nsCOMPtr<nsISimpleEnumerator> dirRef(dir); // release on exit
-
-        rv = dir->Init(this, false);
-        if (NS_FAILED(rv))
-            return rv;
-
-        bool more;
-        while (dir->HasMoreElements(&more), more) {
-            nsCOMPtr<nsISupports> item;
-            rv = dir->GetNext(getter_AddRefs(item));
-            if (NS_FAILED(rv))
-                return NS_ERROR_FAILURE;
-
-            nsCOMPtr<nsIFile> file = do_QueryInterface(item, &rv);
-            if (NS_FAILED(rv))
-                return NS_ERROR_FAILURE;
-            rv = file->Remove(recursive);
+      nsCOMPtr<nsIFile> file = do_QueryInterface(item, &rv);
+      if (NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
+      rv = file->Remove(recursive);
 
 #ifdef ANDROID
-            // See bug 580434 - Bionic gives us just deleted files
-            if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
-                continue;
+      // See bug 580434 - Bionic gives us just deleted files
+      if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+        continue;
 #endif
-            if (NS_FAILED(rv))
-                return rv;
-        }
+      if (NS_FAILED(rv))
+        return rv;
     }
+  }
 
-    return NSRESULT_FOR_RETURN(rmdir(mPath.get()));
+  return NSRESULT_FOR_RETURN(rmdir(mPath.get()));
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetLastModifiedTime(PRTime *aLastModTime)
 {
-    CHECK_mPath();
-    if (NS_WARN_IF(!aLastModTime))
-        return NS_ERROR_INVALID_ARG;
+  CHECK_mPath();
+  if (NS_WARN_IF(!aLastModTime))
+    return NS_ERROR_INVALID_ARG;
 
-    PRFileInfo64 info;
-    if (PR_GetFileInfo64(mPath.get(), &info) != PR_SUCCESS)
-        return NSRESULT_FOR_ERRNO();
-    PRTime modTime = info.modifyTime;
-    if (modTime == 0)
-        *aLastModTime = 0;
-    else
-        *aLastModTime = modTime / PR_USEC_PER_MSEC;
+  PRFileInfo64 info;
+  if (PR_GetFileInfo64(mPath.get(), &info) != PR_SUCCESS)
+    return NSRESULT_FOR_ERRNO();
+  PRTime modTime = info.modifyTime;
+  if (modTime == 0)
+    *aLastModTime = 0;
+  else
+    *aLastModTime = modTime / PR_USEC_PER_MSEC;
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::SetLastModifiedTime(PRTime aLastModTime)
 {
-    CHECK_mPath();
+  CHECK_mPath();
 
-    int result;
-    if (aLastModTime != 0) {
-        ENSURE_STAT_CACHE();
-        struct utimbuf ut;
-        ut.actime = mCachedStat.st_atime;
+  int result;
+  if (aLastModTime != 0) {
+    ENSURE_STAT_CACHE();
+    struct utimbuf ut;
+    ut.actime = mCachedStat.st_atime;
 
-        // convert milliseconds to seconds since the unix epoch
-        ut.modtime = (time_t)(aLastModTime / PR_MSEC_PER_SEC);
-        result = utime(mPath.get(), &ut);
-    } else {
-        result = utime(mPath.get(), nullptr);
-    }
-    return NSRESULT_FOR_RETURN(result);
+    // convert milliseconds to seconds since the unix epoch
+    ut.modtime = (time_t)(aLastModTime / PR_MSEC_PER_SEC);
+    result = utime(mPath.get(), &ut);
+  } else {
+    result = utime(mPath.get(), nullptr);
+  }
+  return NSRESULT_FOR_RETURN(result);
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetLastModifiedTimeOfLink(PRTime *aLastModTimeOfLink)
 {
-    CHECK_mPath();
-    if (NS_WARN_IF(!aLastModTimeOfLink))
-        return NS_ERROR_INVALID_ARG;
+  CHECK_mPath();
+  if (NS_WARN_IF(!aLastModTimeOfLink))
+    return NS_ERROR_INVALID_ARG;
 
-    struct STAT sbuf;
-    if (LSTAT(mPath.get(), &sbuf) == -1)
-        return NSRESULT_FOR_ERRNO();
-    *aLastModTimeOfLink = PRTime(sbuf.st_mtime) * PR_MSEC_PER_SEC;
+  struct STAT sbuf;
+  if (LSTAT(mPath.get(), &sbuf) == -1)
+    return NSRESULT_FOR_ERRNO();
+  *aLastModTimeOfLink = PRTime(sbuf.st_mtime) * PR_MSEC_PER_SEC;
 
-    return NS_OK;
+  return NS_OK;
 }
 
 /*
@@ -1065,7 +1066,7 @@ nsLocalFile::GetLastModifiedTimeOfLink(PRTime *aLastModTimeOfLink)
 NS_IMETHODIMP
 nsLocalFile::SetLastModifiedTimeOfLink(PRTime aLastModTimeOfLink)
 {
-    return SetLastModifiedTime(aLastModTimeOfLink);
+  return SetLastModifiedTime(aLastModTimeOfLink);
 }
 
 /*
@@ -1078,127 +1079,127 @@ nsLocalFile::SetLastModifiedTimeOfLink(PRTime aLastModTimeOfLink)
 NS_IMETHODIMP
 nsLocalFile::GetPermissions(uint32_t *aPermissions)
 {
-    if (NS_WARN_IF(!aPermissions))
-        return NS_ERROR_INVALID_ARG;
-    ENSURE_STAT_CACHE();
-    *aPermissions = NORMALIZE_PERMS(mCachedStat.st_mode);
-    return NS_OK;
+  if (NS_WARN_IF(!aPermissions))
+    return NS_ERROR_INVALID_ARG;
+  ENSURE_STAT_CACHE();
+  *aPermissions = NORMALIZE_PERMS(mCachedStat.st_mode);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetPermissionsOfLink(uint32_t *aPermissionsOfLink)
 {
-    CHECK_mPath();
-    if (NS_WARN_IF(!aPermissionsOfLink))
-        return NS_ERROR_INVALID_ARG;
+  CHECK_mPath();
+  if (NS_WARN_IF(!aPermissionsOfLink))
+    return NS_ERROR_INVALID_ARG;
 
-    struct STAT sbuf;
-    if (LSTAT(mPath.get(), &sbuf) == -1)
-        return NSRESULT_FOR_ERRNO();
-    *aPermissionsOfLink = NORMALIZE_PERMS(sbuf.st_mode);
-    return NS_OK;
+  struct STAT sbuf;
+  if (LSTAT(mPath.get(), &sbuf) == -1)
+    return NSRESULT_FOR_ERRNO();
+  *aPermissionsOfLink = NORMALIZE_PERMS(sbuf.st_mode);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::SetPermissions(uint32_t aPermissions)
 {
-    CHECK_mPath();
+  CHECK_mPath();
 
-    /*
-     * Race condition here: we should use fchmod instead, there's no way to 
-     * guarantee the name still refers to the same file.
-     */
-    if (chmod(mPath.get(), aPermissions) >= 0)
-        return NS_OK;
+  /*
+   * Race condition here: we should use fchmod instead, there's no way to
+   * guarantee the name still refers to the same file.
+   */
+  if (chmod(mPath.get(), aPermissions) >= 0)
+    return NS_OK;
 #if defined(ANDROID) && defined(STATFS)
-    // For the time being, this is restricted for use by Android, but we 
-    // will figure out what to do for all platforms in bug 638503
-    struct STATFS sfs;
-    if (STATFS(mPath.get(), &sfs) < 0)
-         return NSRESULT_FOR_ERRNO();
-
-    // if this is a FAT file system we can't set file permissions
-    if (sfs.f_type == MSDOS_SUPER_MAGIC )
-        return NS_OK;
-#endif
+  // For the time being, this is restricted for use by Android, but we
+  // will figure out what to do for all platforms in bug 638503
+  struct STATFS sfs;
+  if (STATFS(mPath.get(), &sfs) < 0)
     return NSRESULT_FOR_ERRNO();
+
+  // if this is a FAT file system we can't set file permissions
+  if (sfs.f_type == MSDOS_SUPER_MAGIC )
+    return NS_OK;
+#endif
+  return NSRESULT_FOR_ERRNO();
 }
 
 NS_IMETHODIMP
 nsLocalFile::SetPermissionsOfLink(uint32_t aPermissions)
 {
-    // There isn't a consistent mechanism for doing this on UNIX platforms. We
-    // might want to carefully implement this in the future though.
-    return NS_ERROR_NOT_IMPLEMENTED;
+  // There isn't a consistent mechanism for doing this on UNIX platforms. We
+  // might want to carefully implement this in the future though.
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetFileSize(int64_t *aFileSize)
 {
-    if (NS_WARN_IF(!aFileSize))
-        return NS_ERROR_INVALID_ARG;
-    *aFileSize = 0;
-    ENSURE_STAT_CACHE();
+  if (NS_WARN_IF(!aFileSize))
+    return NS_ERROR_INVALID_ARG;
+  *aFileSize = 0;
+  ENSURE_STAT_CACHE();
 
 #if defined(VMS)
-    /* Only two record formats can report correct file content size */
-    if ((mCachedStat.st_fab_rfm != FAB$C_STMLF) &&
-        (mCachedStat.st_fab_rfm != FAB$C_STMCR)) {
-        return NS_ERROR_FAILURE;
-    }
+  /* Only two record formats can report correct file content size */
+  if ((mCachedStat.st_fab_rfm != FAB$C_STMLF) &&
+      (mCachedStat.st_fab_rfm != FAB$C_STMCR)) {
+    return NS_ERROR_FAILURE;
+  }
 #endif
 
-    if (!S_ISDIR(mCachedStat.st_mode)) {
-        *aFileSize = (int64_t)mCachedStat.st_size;
-    }
-    return NS_OK;
+  if (!S_ISDIR(mCachedStat.st_mode)) {
+    *aFileSize = (int64_t)mCachedStat.st_size;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::SetFileSize(int64_t aFileSize)
 {
-    CHECK_mPath();
+  CHECK_mPath();
 
 #if defined(ANDROID)
-    /* no truncate on bionic */
-    int fd = open(mPath.get(), O_WRONLY);
-    if (fd == -1)
-        return NSRESULT_FOR_ERRNO();
+  /* no truncate on bionic */
+  int fd = open(mPath.get(), O_WRONLY);
+  if (fd == -1)
+    return NSRESULT_FOR_ERRNO();
 
-    int ret = ftruncate(fd, (off_t)aFileSize);
-    close(fd);
+  int ret = ftruncate(fd, (off_t)aFileSize);
+  close(fd);
 
-    if (ret == -1)
-        return NSRESULT_FOR_ERRNO();
+  if (ret == -1)
+    return NSRESULT_FOR_ERRNO();
 #elif defined(HAVE_TRUNCATE64)
-    if (truncate64(mPath.get(), (off64_t)aFileSize) == -1)
-        return NSRESULT_FOR_ERRNO();
+  if (truncate64(mPath.get(), (off64_t)aFileSize) == -1)
+    return NSRESULT_FOR_ERRNO();
 #else
-    off_t size = (off_t)aFileSize;
-    if (truncate(mPath.get(), size) == -1)
-        return NSRESULT_FOR_ERRNO();
+  off_t size = (off_t)aFileSize;
+  if (truncate(mPath.get(), size) == -1)
+    return NSRESULT_FOR_ERRNO();
 #endif
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetFileSizeOfLink(int64_t *aFileSize)
 {
-    CHECK_mPath();
-    if (NS_WARN_IF(!aFileSize))
-        return NS_ERROR_INVALID_ARG;
+  CHECK_mPath();
+  if (NS_WARN_IF(!aFileSize))
+    return NS_ERROR_INVALID_ARG;
 
-    struct STAT sbuf;
-    if (LSTAT(mPath.get(), &sbuf) == -1)
-        return NSRESULT_FOR_ERRNO();
+  struct STAT sbuf;
+  if (LSTAT(mPath.get(), &sbuf) == -1)
+    return NSRESULT_FOR_ERRNO();
 
-    *aFileSize = (int64_t)sbuf.st_size;
-    return NS_OK;
+  *aFileSize = (int64_t)sbuf.st_size;
+  return NS_OK;
 }
 
 #if defined(USE_LINUX_QUOTACTL)
 /*
- * Searches /proc/self/mountinfo for given device (Major:Minor), 
+ * Searches /proc/self/mountinfo for given device (Major:Minor),
  * returns exported name from /dev
  *
  * Fails when /proc/self/mountinfo or diven device don't exist.
@@ -1206,128 +1207,128 @@ nsLocalFile::GetFileSizeOfLink(int64_t *aFileSize)
 static bool
 GetDeviceName(int deviceMajor, int deviceMinor, nsACString &deviceName)
 {
-    bool ret = false;
-    
-    const int kMountInfoLineLength = 200;
-    const int kMountInfoDevPosition = 6;
+  bool ret = false;
 
-    char mountinfo_line[kMountInfoLineLength];
-    char device_num[kMountInfoLineLength];
-    
-    snprintf(device_num,kMountInfoLineLength,"%d:%d", deviceMajor, deviceMinor);
-    
-    FILE *f = fopen("/proc/self/mountinfo","rt");
-    if(!f)
-        return ret;
+  const int kMountInfoLineLength = 200;
+  const int kMountInfoDevPosition = 6;
 
-    // Expects /proc/self/mountinfo in format:
-    // 'ID ID major:minor root mountpoint flags - type devicename flags'
-    while(fgets(mountinfo_line,kMountInfoLineLength,f)) {
-        char *p_dev = strstr(mountinfo_line,device_num);
-    
-        int i;
-        for(i = 0; i < kMountInfoDevPosition && p_dev != nullptr; i++) {
-            p_dev = strchr(p_dev,' ');
-            if(p_dev)
-              p_dev++;
-        }
-    
-        if(p_dev) {
-            char *p_dev_end = strchr(p_dev,' ');
-            if(p_dev_end) {
-                *p_dev_end = '\0';
-                deviceName.Assign(p_dev);
-                ret = true;
-                break;
-            }
-        }
+  char mountinfo_line[kMountInfoLineLength];
+  char device_num[kMountInfoLineLength];
+
+  snprintf(device_num,kMountInfoLineLength,"%d:%d", deviceMajor, deviceMinor);
+
+  FILE *f = fopen("/proc/self/mountinfo","rt");
+  if(!f)
+    return ret;
+
+  // Expects /proc/self/mountinfo in format:
+  // 'ID ID major:minor root mountpoint flags - type devicename flags'
+  while(fgets(mountinfo_line,kMountInfoLineLength,f)) {
+    char *p_dev = strstr(mountinfo_line,device_num);
+
+    int i;
+    for(i = 0; i < kMountInfoDevPosition && p_dev != nullptr; i++) {
+      p_dev = strchr(p_dev,' ');
+      if(p_dev)
+        p_dev++;
     }
-    
-    fclose(f);
-    return ret; 
+
+    if(p_dev) {
+      char *p_dev_end = strchr(p_dev,' ');
+      if(p_dev_end) {
+        *p_dev_end = '\0';
+        deviceName.Assign(p_dev);
+        ret = true;
+        break;
+      }
+    }
+  }
+
+  fclose(f);
+  return ret;
 }
 #endif
 
 NS_IMETHODIMP
 nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
 {
-    if (NS_WARN_IF(!aDiskSpaceAvailable))
-        return NS_ERROR_INVALID_ARG;
+  if (NS_WARN_IF(!aDiskSpaceAvailable))
+    return NS_ERROR_INVALID_ARG;
 
-    // These systems have the operations necessary to check disk space.
+  // These systems have the operations necessary to check disk space.
 
 #ifdef STATFS
 
-    // check to make sure that mPath is properly initialized
-    CHECK_mPath();
+  // check to make sure that mPath is properly initialized
+  CHECK_mPath();
 
-    struct STATFS fs_buf;
+  struct STATFS fs_buf;
 
-    /* 
-     * Members of the STATFS struct that you should know about:
-     * F_BSIZE = block size on disk.
-     * f_bavail = number of free blocks available to a non-superuser.
-     * f_bfree = number of total free blocks in file system.
-     */
+  /*
+   * Members of the STATFS struct that you should know about:
+   * F_BSIZE = block size on disk.
+   * f_bavail = number of free blocks available to a non-superuser.
+   * f_bfree = number of total free blocks in file system.
+   */
 
-    if (STATFS(mPath.get(), &fs_buf) < 0) {
-        // The call to STATFS failed.
+  if (STATFS(mPath.get(), &fs_buf) < 0) {
+    // The call to STATFS failed.
 #ifdef DEBUG
-        printf("ERROR: GetDiskSpaceAvailable: STATFS call FAILED. \n");
+    printf("ERROR: GetDiskSpaceAvailable: STATFS call FAILED. \n");
 #endif
-        return NS_ERROR_FAILURE;
-    }
+    return NS_ERROR_FAILURE;
+  }
 
-    *aDiskSpaceAvailable = (int64_t) fs_buf.F_BSIZE * fs_buf.f_bavail;
+  *aDiskSpaceAvailable = (int64_t) fs_buf.F_BSIZE * fs_buf.f_bavail;
 
 #ifdef DEBUG_DISK_SPACE
-    printf("DiskSpaceAvailable: %lu bytes\n",
+  printf("DiskSpaceAvailable: %lu bytes\n",
          *aDiskSpaceAvailable);
 #endif
 
 #if defined(USE_LINUX_QUOTACTL)
 
-    if(!FillStatCache()) {
-        // Return available size from statfs
-        return NS_OK;
-    }
-
-    nsCString deviceName;
-    if(!GetDeviceName(major(mCachedStat.st_dev), minor(mCachedStat.st_dev), deviceName)) {
-        return NS_OK;
-    }
-
-    struct dqblk dq;
-    if(!quotactl(QCMD(Q_GETQUOTA, USRQUOTA), deviceName.get(), getuid(), (caddr_t)&dq)
-#ifdef QIF_BLIMITS
-       && dq.dqb_valid & QIF_BLIMITS
-#endif
-       && dq.dqb_bhardlimit)
-    {
-        int64_t QuotaSpaceAvailable = 0;
-        if (dq.dqb_bhardlimit > dq.dqb_curspace)
-            QuotaSpaceAvailable = int64_t(fs_buf.F_BSIZE * (dq.dqb_bhardlimit - dq.dqb_curspace));
-        if(QuotaSpaceAvailable < *aDiskSpaceAvailable) {
-            *aDiskSpaceAvailable = QuotaSpaceAvailable;
-        }
-    }
-#endif
-
+  if(!FillStatCache()) {
+    // Return available size from statfs
     return NS_OK;
+  }
+
+  nsCString deviceName;
+  if(!GetDeviceName(major(mCachedStat.st_dev), minor(mCachedStat.st_dev), deviceName)) {
+    return NS_OK;
+  }
+
+  struct dqblk dq;
+  if(!quotactl(QCMD(Q_GETQUOTA, USRQUOTA), deviceName.get(), getuid(), (caddr_t)&dq)
+#ifdef QIF_BLIMITS
+      && dq.dqb_valid & QIF_BLIMITS
+#endif
+      && dq.dqb_bhardlimit)
+  {
+    int64_t QuotaSpaceAvailable = 0;
+    if (dq.dqb_bhardlimit > dq.dqb_curspace)
+      QuotaSpaceAvailable = int64_t(fs_buf.F_BSIZE * (dq.dqb_bhardlimit - dq.dqb_curspace));
+    if(QuotaSpaceAvailable < *aDiskSpaceAvailable) {
+      *aDiskSpaceAvailable = QuotaSpaceAvailable;
+    }
+  }
+#endif
+
+  return NS_OK;
 
 #else
-    /*
-     * This platform doesn't have statfs or statvfs.  I'm sure that there's
-     * a way to check for free disk space on platforms that don't have statfs
-     * (I'm SURE they have df, for example).
-     *
-     * Until we figure out how to do that, lets be honest and say that this
-     * command isn't implemented properly for these platforms yet.
-     */
+  /*
+   * This platform doesn't have statfs or statvfs.  I'm sure that there's
+   * a way to check for free disk space on platforms that don't have statfs
+   * (I'm SURE they have df, for example).
+   *
+   * Until we figure out how to do that, lets be honest and say that this
+   * command isn't implemented properly for these platforms yet.
+   */
 #ifdef DEBUG
-    printf("ERROR: GetDiskSpaceAvailable: Not implemented for plaforms without statfs.\n");
+  printf("ERROR: GetDiskSpaceAvailable: Not implemented for plaforms without statfs.\n");
 #endif
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 
 #endif /* STATFS */
 
@@ -1336,46 +1337,46 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
 NS_IMETHODIMP
 nsLocalFile::GetParent(nsIFile **aParent)
 {
-    CHECK_mPath();
-    if (NS_WARN_IF(!aParent))
-        return NS_ERROR_INVALID_ARG;
-    *aParent = nullptr;
+  CHECK_mPath();
+  if (NS_WARN_IF(!aParent))
+    return NS_ERROR_INVALID_ARG;
+  *aParent = nullptr;
 
-    // if '/' we are at the top of the volume, return null
-    if (mPath.Equals("/"))
-        return  NS_OK;
- 
-    // <brendan, after jband> I promise to play nice
-    char *buffer   = mPath.BeginWriting(),
-         *slashp   = buffer;
+  // if '/' we are at the top of the volume, return null
+  if (mPath.Equals("/"))
+    return  NS_OK;
 
-    // find the last significant slash in buffer
-    slashp = strrchr(buffer, '/');
-    NS_ASSERTION(slashp, "non-canonical path?");
-    if (!slashp)
-        return NS_ERROR_FILE_INVALID_PATH;
+  // <brendan, after jband> I promise to play nice
+  char *buffer   = mPath.BeginWriting(),
+        *slashp   = buffer;
 
-    // for the case where we are at '/'
-    if (slashp == buffer)
-        slashp++;
+  // find the last significant slash in buffer
+  slashp = strrchr(buffer, '/');
+  NS_ASSERTION(slashp, "non-canonical path?");
+  if (!slashp)
+    return NS_ERROR_FILE_INVALID_PATH;
 
-    // temporarily terminate buffer at the last significant slash
-    char c = *slashp;
-    *slashp = '\0';
+  // for the case where we are at '/'
+  if (slashp == buffer)
+    slashp++;
 
-    nsCOMPtr<nsIFile> localFile;
-    nsresult rv = NS_NewNativeLocalFile(nsDependentCString(buffer), true,
-                                        getter_AddRefs(localFile));
+  // temporarily terminate buffer at the last significant slash
+  char c = *slashp;
+  *slashp = '\0';
 
-    // make buffer whole again
-    *slashp = c;
+  nsCOMPtr<nsIFile> localFile;
+  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(buffer), true,
+                                      getter_AddRefs(localFile));
 
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
+  // make buffer whole again
+  *slashp = c;
 
-    localFile.forget(aParent);
-    return NS_OK;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  localFile.forget(aParent);
+  return NS_OK;
 }
 
 /*
@@ -1386,434 +1387,434 @@ nsLocalFile::GetParent(nsIFile **aParent)
 NS_IMETHODIMP
 nsLocalFile::Exists(bool *_retval)
 {
-    CHECK_mPath();
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
+  CHECK_mPath();
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
 
-    *_retval = (access(mPath.get(), F_OK) == 0);
-    return NS_OK;
+  *_retval = (access(mPath.get(), F_OK) == 0);
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsLocalFile::IsWritable(bool *_retval)
 {
-    CHECK_mPath();
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
+  CHECK_mPath();
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
 
-    *_retval = (access(mPath.get(), W_OK) == 0);
-    if (*_retval || errno == EACCES)
-        return NS_OK;
-    return NSRESULT_FOR_ERRNO();
+  *_retval = (access(mPath.get(), W_OK) == 0);
+  if (*_retval || errno == EACCES)
+    return NS_OK;
+  return NSRESULT_FOR_ERRNO();
 }
 
 NS_IMETHODIMP
 nsLocalFile::IsReadable(bool *_retval)
 {
-    CHECK_mPath();
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
+  CHECK_mPath();
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
 
-    *_retval = (access(mPath.get(), R_OK) == 0);
-    if (*_retval || errno == EACCES)
-        return NS_OK;
-    return NSRESULT_FOR_ERRNO();
+  *_retval = (access(mPath.get(), R_OK) == 0);
+  if (*_retval || errno == EACCES)
+    return NS_OK;
+  return NSRESULT_FOR_ERRNO();
 }
 
 NS_IMETHODIMP
 nsLocalFile::IsExecutable(bool *_retval)
 {
-    CHECK_mPath();
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
+  CHECK_mPath();
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
 
-    // Check extension (bug 663899). On certain platforms, the file
-    // extension may cause the OS to treat it as executable regardless of
-    // the execute bit, such as .jar on Mac OS X. We borrow the code from
-    // nsLocalFileWin, slightly modified.
+  // Check extension (bug 663899). On certain platforms, the file
+  // extension may cause the OS to treat it as executable regardless of
+  // the execute bit, such as .jar on Mac OS X. We borrow the code from
+  // nsLocalFileWin, slightly modified.
 
-    // Don't be fooled by symlinks.
-    bool symLink;
-    nsresult rv = IsSymlink(&symLink);
-    if (NS_FAILED(rv))
-        return rv;
+  // Don't be fooled by symlinks.
+  bool symLink;
+  nsresult rv = IsSymlink(&symLink);
+  if (NS_FAILED(rv))
+    return rv;
 
-    nsAutoString path;
-    if (symLink)
-        GetTarget(path);
-    else
-        GetPath(path);
+  nsAutoString path;
+  if (symLink)
+    GetTarget(path);
+  else
+    GetPath(path);
 
-    int32_t dotIdx = path.RFindChar(char16_t('.'));
-    if (dotIdx != kNotFound) {
-        // Convert extension to lower case.
-        char16_t *p = path.BeginWriting();
-        for(p += dotIdx + 1; *p; p++)
-            *p +=  (*p >= L'A' && *p <= L'Z') ? 'a' - 'A' : 0; 
-        
-        // Search for any of the set of executable extensions.
-        static const char * const executableExts[] = {
-            "air",         // Adobe AIR installer
-            "jar"};        // java application bundle
-        nsDependentSubstring ext = Substring(path, dotIdx + 1);
-        for (size_t i = 0; i < ArrayLength(executableExts); i++) {
-            if (ext.EqualsASCII(executableExts[i])) {
-                // Found a match.  Set result and quit.
-                *_retval = true;
-                return NS_OK;
-            }
-        }
-    }
+  int32_t dotIdx = path.RFindChar(char16_t('.'));
+  if (dotIdx != kNotFound) {
+    // Convert extension to lower case.
+    char16_t *p = path.BeginWriting();
+    for(p += dotIdx + 1; *p; p++)
+      *p +=  (*p >= L'A' && *p <= L'Z') ? 'a' - 'A' : 0;
 
-    // On OS X, then query Launch Services.
-#ifdef MOZ_WIDGET_COCOA
-    // Certain Mac applications, such as Classic applications, which
-    // run under Rosetta, might not have the +x mode bit but are still
-    // considered to be executable by Launch Services (bug 646748).
-    CFURLRef url;
-    if (NS_FAILED(GetCFURL(&url))) {
-        return NS_ERROR_FAILURE;
-    }
-
-    LSRequestedInfo theInfoRequest = kLSRequestAllInfo;
-    LSItemInfoRecord theInfo;
-    OSStatus result = ::LSCopyItemInfoForURL(url, theInfoRequest, &theInfo);
-    ::CFRelease(url);
-    if (result == noErr) {
-        if ((theInfo.flags & kLSItemInfoIsApplication) != 0) {
-            *_retval = true;
-            return NS_OK;
-        }
-    }
-#endif
-
-    // Then check the execute bit.
-    *_retval = (access(mPath.get(), X_OK) == 0);
-#ifdef SOLARIS
-    // On Solaris, access will always return 0 for root user, however
-    // the file is only executable if S_IXUSR | S_IXGRP | S_IXOTH is set.
-    // See bug 351950, https://bugzilla.mozilla.org/show_bug.cgi?id=351950
-    if (*_retval) {
-        struct STAT buf;
-
-        *_retval = (STAT(mPath.get(), &buf) == 0);
-        if (*_retval || errno == EACCES) {
-            *_retval = *_retval &&
-                       (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH ));
-            return NS_OK;
-        }
-
-        return NSRESULT_FOR_ERRNO();
-    }
-#endif
-    if (*_retval || errno == EACCES)
+    // Search for any of the set of executable extensions.
+    static const char * const executableExts[] = {
+      "air",         // Adobe AIR installer
+      "jar"};        // java application bundle
+    nsDependentSubstring ext = Substring(path, dotIdx + 1);
+    for (size_t i = 0; i < ArrayLength(executableExts); i++) {
+      if (ext.EqualsASCII(executableExts[i])) {
+        // Found a match.  Set result and quit.
+        *_retval = true;
         return NS_OK;
+      }
+    }
+  }
+
+  // On OS X, then query Launch Services.
+#ifdef MOZ_WIDGET_COCOA
+  // Certain Mac applications, such as Classic applications, which
+  // run under Rosetta, might not have the +x mode bit but are still
+  // considered to be executable by Launch Services (bug 646748).
+  CFURLRef url;
+  if (NS_FAILED(GetCFURL(&url))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  LSRequestedInfo theInfoRequest = kLSRequestAllInfo;
+  LSItemInfoRecord theInfo;
+  OSStatus result = ::LSCopyItemInfoForURL(url, theInfoRequest, &theInfo);
+  ::CFRelease(url);
+  if (result == noErr) {
+    if ((theInfo.flags & kLSItemInfoIsApplication) != 0) {
+      *_retval = true;
+      return NS_OK;
+    }
+  }
+#endif
+
+  // Then check the execute bit.
+  *_retval = (access(mPath.get(), X_OK) == 0);
+#ifdef SOLARIS
+  // On Solaris, access will always return 0 for root user, however
+  // the file is only executable if S_IXUSR | S_IXGRP | S_IXOTH is set.
+  // See bug 351950, https://bugzilla.mozilla.org/show_bug.cgi?id=351950
+  if (*_retval) {
+    struct STAT buf;
+
+    *_retval = (STAT(mPath.get(), &buf) == 0);
+    if (*_retval || errno == EACCES) {
+      *_retval = *_retval &&
+        (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH ));
+      return NS_OK;
+    }
+
     return NSRESULT_FOR_ERRNO();
+  }
+#endif
+  if (*_retval || errno == EACCES)
+    return NS_OK;
+  return NSRESULT_FOR_ERRNO();
 }
 
 NS_IMETHODIMP
 nsLocalFile::IsDirectory(bool *_retval)
 {
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
-    *_retval = false;
-    ENSURE_STAT_CACHE();
-    *_retval = S_ISDIR(mCachedStat.st_mode);
-    return NS_OK;
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
+  *_retval = false;
+  ENSURE_STAT_CACHE();
+  *_retval = S_ISDIR(mCachedStat.st_mode);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::IsFile(bool *_retval)
 {
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
-    *_retval = false;
-    ENSURE_STAT_CACHE();
-    *_retval = S_ISREG(mCachedStat.st_mode);
-    return NS_OK;
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
+  *_retval = false;
+  ENSURE_STAT_CACHE();
+  *_retval = S_ISREG(mCachedStat.st_mode);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::IsHidden(bool *_retval)
 {
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
-    nsACString::const_iterator begin, end;
-    LocateNativeLeafName(begin, end);
-    *_retval = (*begin == '.');
-    return NS_OK;
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
+  nsACString::const_iterator begin, end;
+  LocateNativeLeafName(begin, end);
+  *_retval = (*begin == '.');
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::IsSymlink(bool *_retval)
 {
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
-    CHECK_mPath();
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
+  CHECK_mPath();
 
-    struct STAT symStat;
-    if (LSTAT(mPath.get(), &symStat) == -1)
-        return NSRESULT_FOR_ERRNO();
-    *_retval=S_ISLNK(symStat.st_mode);
-    return NS_OK;
+  struct STAT symStat;
+  if (LSTAT(mPath.get(), &symStat) == -1)
+    return NSRESULT_FOR_ERRNO();
+  *_retval=S_ISLNK(symStat.st_mode);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::IsSpecial(bool *_retval)
 {
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
-    ENSURE_STAT_CACHE();
-    *_retval = S_ISCHR(mCachedStat.st_mode)      ||
-                 S_ISBLK(mCachedStat.st_mode)    ||
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
+  ENSURE_STAT_CACHE();
+  *_retval = S_ISCHR(mCachedStat.st_mode)   ||
+             S_ISBLK(mCachedStat.st_mode)   ||
 #ifdef S_ISSOCK
-                 S_ISSOCK(mCachedStat.st_mode)   ||
+             S_ISSOCK(mCachedStat.st_mode)  ||
 #endif
-                 S_ISFIFO(mCachedStat.st_mode);
+             S_ISFIFO(mCachedStat.st_mode);
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::Equals(nsIFile *inFile, bool *_retval)
 {
-    if (NS_WARN_IF(!inFile))
-        return NS_ERROR_INVALID_ARG;
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
-    *_retval = false;
+  if (NS_WARN_IF(!inFile))
+    return NS_ERROR_INVALID_ARG;
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
+  *_retval = false;
 
-    nsAutoCString inPath;
-    nsresult rv = inFile->GetNativePath(inPath);
-    if (NS_FAILED(rv))
-        return rv;
+  nsAutoCString inPath;
+  nsresult rv = inFile->GetNativePath(inPath);
+  if (NS_FAILED(rv))
+    return rv;
 
-    // We don't need to worry about "/foo/" vs. "/foo" here
-    // because trailing slashes are stripped on init.
-    *_retval = !strcmp(inPath.get(), mPath.get());
-    return NS_OK;
+  // We don't need to worry about "/foo/" vs. "/foo" here
+  // because trailing slashes are stripped on init.
+  *_retval = !strcmp(inPath.get(), mPath.get());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::Contains(nsIFile *inFile, bool recur, bool *_retval)
 {
-    CHECK_mPath();
-    if (NS_WARN_IF(!inFile))
-        return NS_ERROR_INVALID_ARG;
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
+  CHECK_mPath();
+  if (NS_WARN_IF(!inFile))
+    return NS_ERROR_INVALID_ARG;
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
 
-    nsAutoCString inPath;
-    nsresult rv;
+  nsAutoCString inPath;
+  nsresult rv;
 
-    if (NS_FAILED(rv = inFile->GetNativePath(inPath)))
-        return rv;
+  if (NS_FAILED(rv = inFile->GetNativePath(inPath)))
+    return rv;
 
-    *_retval = false;
+  *_retval = false;
 
-    ssize_t len = mPath.Length();
-    if (strncmp(mPath.get(), inPath.get(), len) == 0) {
-        // Now make sure that the |inFile|'s path has a separator at len,
-        // which implies that it has more components after len.
-        if (inPath[len] == '/')
-            *_retval = true;
-    }
+  ssize_t len = mPath.Length();
+  if (strncmp(mPath.get(), inPath.get(), len) == 0) {
+    // Now make sure that the |inFile|'s path has a separator at len,
+    // which implies that it has more components after len.
+    if (inPath[len] == '/')
+      *_retval = true;
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetNativeTarget(nsACString &_retval)
 {
-    CHECK_mPath();
-    _retval.Truncate();
+  CHECK_mPath();
+  _retval.Truncate();
 
-    struct STAT symStat;
-    if (LSTAT(mPath.get(), &symStat) == -1)
-        return NSRESULT_FOR_ERRNO();
+  struct STAT symStat;
+  if (LSTAT(mPath.get(), &symStat) == -1)
+    return NSRESULT_FOR_ERRNO();
 
-    if (!S_ISLNK(symStat.st_mode))
-        return NS_ERROR_FILE_INVALID_PATH;
+  if (!S_ISLNK(symStat.st_mode))
+    return NS_ERROR_FILE_INVALID_PATH;
 
-    int32_t size = (int32_t)symStat.st_size;
-    char *target = (char *)nsMemory::Alloc(size + 1);
-    if (!target)
-        return NS_ERROR_OUT_OF_MEMORY;
+  int32_t size = (int32_t)symStat.st_size;
+  char *target = (char *)nsMemory::Alloc(size + 1);
+  if (!target)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-    if (readlink(mPath.get(), target, (size_t)size) < 0) {
-        nsMemory::Free(target);
-        return NSRESULT_FOR_ERRNO();
-    }
-    target[size] = '\0';
-
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIFile> self(this);
-    int32_t maxLinks = 40;
-    while (true) {
-        if (maxLinks-- == 0) {
-            rv = NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
-            break;
-        }
-
-        if (target[0] != '/') {
-            nsCOMPtr<nsIFile> parent;
-            if (NS_FAILED(rv = self->GetParent(getter_AddRefs(parent))))
-                break;
-            if (NS_FAILED(rv = parent->AppendRelativeNativePath(nsDependentCString(target))))
-                break;
-            if (NS_FAILED(rv = parent->GetNativePath(_retval)))
-                break;
-            self = parent;
-        } else {
-            _retval = target;
-        }
-
-        const nsPromiseFlatCString &flatRetval = PromiseFlatCString(_retval);
-
-        // Any failure in testing the current target we'll just interpret
-        // as having reached our destiny.
-        if (LSTAT(flatRetval.get(), &symStat) == -1)
-            break;
-
-        // And of course we're done if it isn't a symlink.
-        if (!S_ISLNK(symStat.st_mode))
-            break;
-
-        int32_t newSize = (int32_t)symStat.st_size;
-        if (newSize > size) {
-            char *newTarget = (char *)nsMemory::Realloc(target, newSize + 1);
-            if (!newTarget) {
-                rv = NS_ERROR_OUT_OF_MEMORY;
-                break;
-            }
-            target = newTarget;
-            size = newSize;
-        }
-
-        int32_t linkLen = readlink(flatRetval.get(), target, size);
-        if (linkLen == -1) {
-            rv = NSRESULT_FOR_ERRNO();
-            break;
-        }
-        target[linkLen] = '\0';
-    }
-
+  if (readlink(mPath.get(), target, (size_t)size) < 0) {
     nsMemory::Free(target);
+    return NSRESULT_FOR_ERRNO();
+  }
+  target[size] = '\0';
 
-    if (NS_FAILED(rv))
-        _retval.Truncate();
-    return rv;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIFile> self(this);
+  int32_t maxLinks = 40;
+  while (true) {
+    if (maxLinks-- == 0) {
+      rv = NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
+      break;
+    }
+
+    if (target[0] != '/') {
+      nsCOMPtr<nsIFile> parent;
+      if (NS_FAILED(rv = self->GetParent(getter_AddRefs(parent))))
+        break;
+      if (NS_FAILED(rv = parent->AppendRelativeNativePath(nsDependentCString(target))))
+        break;
+      if (NS_FAILED(rv = parent->GetNativePath(_retval)))
+        break;
+      self = parent;
+    } else {
+      _retval = target;
+    }
+
+    const nsPromiseFlatCString &flatRetval = PromiseFlatCString(_retval);
+
+    // Any failure in testing the current target we'll just interpret
+    // as having reached our destiny.
+    if (LSTAT(flatRetval.get(), &symStat) == -1)
+      break;
+
+    // And of course we're done if it isn't a symlink.
+    if (!S_ISLNK(symStat.st_mode))
+      break;
+
+    int32_t newSize = (int32_t)symStat.st_size;
+    if (newSize > size) {
+      char *newTarget = (char *)nsMemory::Realloc(target, newSize + 1);
+      if (!newTarget) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        break;
+      }
+      target = newTarget;
+      size = newSize;
+    }
+
+    int32_t linkLen = readlink(flatRetval.get(), target, size);
+    if (linkLen == -1) {
+      rv = NSRESULT_FOR_ERRNO();
+      break;
+    }
+    target[linkLen] = '\0';
+  }
+
+  nsMemory::Free(target);
+
+  if (NS_FAILED(rv))
+    _retval.Truncate();
+  return rv;
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetFollowLinks(bool *aFollowLinks)
 {
-    *aFollowLinks = true;
-    return NS_OK;
+  *aFollowLinks = true;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::SetFollowLinks(bool aFollowLinks)
 {
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator **entries)
 {
-    nsRefPtr<nsDirEnumeratorUnix> dir = new nsDirEnumeratorUnix();
+  nsRefPtr<nsDirEnumeratorUnix> dir = new nsDirEnumeratorUnix();
 
-    nsresult rv = dir->Init(this, false);
-    if (NS_FAILED(rv)) {
-        *entries = nullptr;
-    } else {
-        dir.forget(entries);
-    }
+  nsresult rv = dir->Init(this, false);
+  if (NS_FAILED(rv)) {
+    *entries = nullptr;
+  } else {
+    dir.forget(entries);
+  }
 
-    return rv;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsLocalFile::Load(PRLibrary **_retval)
 {
-    CHECK_mPath();
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
+  CHECK_mPath();
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcnt::SetActivityIsLegal(false);
+  nsTraceRefcnt::SetActivityIsLegal(false);
 #endif
 
-    *_retval = PR_LoadLibrary(mPath.get());
+  *_retval = PR_LoadLibrary(mPath.get());
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcnt::SetActivityIsLegal(true);
+  nsTraceRefcnt::SetActivityIsLegal(true);
 #endif
 
-    if (!*_retval)
-        return NS_ERROR_FAILURE;
-    return NS_OK;
+  if (!*_retval)
+    return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetPersistentDescriptor(nsACString &aPersistentDescriptor)
 {
-    return GetNativePath(aPersistentDescriptor);
+  return GetNativePath(aPersistentDescriptor);
 }
 
 NS_IMETHODIMP
 nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 {
 #ifdef MOZ_WIDGET_COCOA
-    if (aPersistentDescriptor.IsEmpty())
-        return NS_ERROR_INVALID_ARG;
+  if (aPersistentDescriptor.IsEmpty())
+    return NS_ERROR_INVALID_ARG;
 
-    // Support pathnames as user-supplied descriptors if they begin with '/'
-    // or '~'.  These characters do not collide with the base64 set used for
-    // encoding alias records.
-    char first = aPersistentDescriptor.First();
-    if (first == '/' || first == '~')
-        return InitWithNativePath(aPersistentDescriptor);
-
-    uint32_t dataSize = aPersistentDescriptor.Length();    
-    char* decodedData = PL_Base64Decode(PromiseFlatCString(aPersistentDescriptor).get(), dataSize, nullptr);
-    if (!decodedData) {
-        NS_ERROR("SetPersistentDescriptor was given bad data");
-        return NS_ERROR_FAILURE;
-    }
-
-    // Cast to an alias record and resolve.
-    AliasRecord aliasHeader = *(AliasPtr)decodedData;
-    int32_t aliasSize = ::GetAliasSizeFromPtr(&aliasHeader);
-    if (aliasSize > ((int32_t)dataSize * 3) / 4) { // be paranoid about having too few data
-        PR_Free(decodedData);
-        return NS_ERROR_FAILURE;
-    }
-
-    nsresult rv = NS_OK;
-
-    // Move the now-decoded data into the Handle.
-    // The size of the decoded data is 3/4 the size of the encoded data. See plbase64.h
-    Handle  newHandle = nullptr;
-    if (::PtrToHand(decodedData, &newHandle, aliasSize) != noErr)
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    PR_Free(decodedData);
-    if (NS_FAILED(rv))
-        return rv;
-
-    Boolean changed;
-    FSRef resolvedFSRef;
-    OSErr err = ::FSResolveAlias(nullptr, (AliasHandle)newHandle, &resolvedFSRef, &changed);
-
-    rv = MacErrorMapper(err);
-    DisposeHandle(newHandle);
-    if (NS_FAILED(rv))
-        return rv;
-
-    return InitWithFSRef(&resolvedFSRef);  
-#else
+  // Support pathnames as user-supplied descriptors if they begin with '/'
+  // or '~'.  These characters do not collide with the base64 set used for
+  // encoding alias records.
+  char first = aPersistentDescriptor.First();
+  if (first == '/' || first == '~')
     return InitWithNativePath(aPersistentDescriptor);
+
+  uint32_t dataSize = aPersistentDescriptor.Length();
+  char* decodedData = PL_Base64Decode(PromiseFlatCString(aPersistentDescriptor).get(), dataSize, nullptr);
+  if (!decodedData) {
+    NS_ERROR("SetPersistentDescriptor was given bad data");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Cast to an alias record and resolve.
+  AliasRecord aliasHeader = *(AliasPtr)decodedData;
+  int32_t aliasSize = ::GetAliasSizeFromPtr(&aliasHeader);
+  if (aliasSize > ((int32_t)dataSize * 3) / 4) { // be paranoid about having too few data
+    PR_Free(decodedData);
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = NS_OK;
+
+  // Move the now-decoded data into the Handle.
+  // The size of the decoded data is 3/4 the size of the encoded data. See plbase64.h
+  Handle  newHandle = nullptr;
+  if (::PtrToHand(decodedData, &newHandle, aliasSize) != noErr)
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  PR_Free(decodedData);
+  if (NS_FAILED(rv))
+    return rv;
+
+  Boolean changed;
+  FSRef resolvedFSRef;
+  OSErr err = ::FSResolveAlias(nullptr, (AliasHandle)newHandle, &resolvedFSRef, &changed);
+
+  rv = MacErrorMapper(err);
+  DisposeHandle(newHandle);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return InitWithFSRef(&resolvedFSRef);
+#else
+  return InitWithNativePath(aPersistentDescriptor);
 #endif
 }
 
@@ -1821,46 +1822,46 @@ NS_IMETHODIMP
 nsLocalFile::Reveal()
 {
 #ifdef MOZ_WIDGET_GTK
-    nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
-    nsCOMPtr<nsIGnomeVFSService> gnomevfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
-    if (!giovfs && !gnomevfs)
-        return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
+  nsCOMPtr<nsIGnomeVFSService> gnomevfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
+  if (!giovfs && !gnomevfs)
+    return NS_ERROR_FAILURE;
 
-    bool isDirectory;
-    if (NS_FAILED(IsDirectory(&isDirectory)))
-        return NS_ERROR_FAILURE;
+  bool isDirectory;
+  if (NS_FAILED(IsDirectory(&isDirectory)))
+    return NS_ERROR_FAILURE;
 
-    if (isDirectory) {
-        if (giovfs)
-            return giovfs->ShowURIForInput(mPath);
-        else 
-            /* Fallback to GnomeVFS */
-            return gnomevfs->ShowURIForInput(mPath);
-    } else if (giovfs && NS_SUCCEEDED(giovfs->OrgFreedesktopFileManager1ShowItems(mPath))) {
-        return NS_OK;
-    } else {
-        nsCOMPtr<nsIFile> parentDir;
-        nsAutoCString dirPath;
-        if (NS_FAILED(GetParent(getter_AddRefs(parentDir))))
-            return NS_ERROR_FAILURE;
-        if (NS_FAILED(parentDir->GetNativePath(dirPath)))
-            return NS_ERROR_FAILURE;
+  if (isDirectory) {
+    if (giovfs)
+      return giovfs->ShowURIForInput(mPath);
+    else
+      /* Fallback to GnomeVFS */
+      return gnomevfs->ShowURIForInput(mPath);
+  } else if (giovfs && NS_SUCCEEDED(giovfs->OrgFreedesktopFileManager1ShowItems(mPath))) {
+    return NS_OK;
+  } else {
+    nsCOMPtr<nsIFile> parentDir;
+    nsAutoCString dirPath;
+    if (NS_FAILED(GetParent(getter_AddRefs(parentDir))))
+      return NS_ERROR_FAILURE;
+    if (NS_FAILED(parentDir->GetNativePath(dirPath)))
+      return NS_ERROR_FAILURE;
 
-        if (giovfs)
-            return giovfs->ShowURIForInput(dirPath);
-        else 
-            return gnomevfs->ShowURIForInput(dirPath);        
-    }
+    if (giovfs)
+      return giovfs->ShowURIForInput(dirPath);
+    else
+      return gnomevfs->ShowURIForInput(dirPath);
+  }
 #elif defined(MOZ_WIDGET_COCOA)
-    CFURLRef url;
-    if (NS_SUCCEEDED(GetCFURL(&url))) {
-      nsresult rv = CocoaFileUtils::RevealFileInFinder(url);
-      ::CFRelease(url);
-      return rv;
-    }
-    return NS_ERROR_FAILURE;
+  CFURLRef url;
+  if (NS_SUCCEEDED(GetCFURL(&url))) {
+    nsresult rv = CocoaFileUtils::RevealFileInFinder(url);
+    ::CFRelease(url);
+    return rv;
+  }
+  return NS_ERROR_FAILURE;
 #else
-    return NS_ERROR_FAILURE;
+  return NS_ERROR_FAILURE;
 #endif
 }
 
@@ -1868,66 +1869,66 @@ NS_IMETHODIMP
 nsLocalFile::Launch()
 {
 #ifdef MOZ_WIDGET_GTK
-    nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
-    nsCOMPtr<nsIGnomeVFSService> gnomevfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
-    if (giovfs) {
-      return giovfs->ShowURIForInput(mPath);
-    } else if (gnomevfs) {
-      /* GnomeVFS fallback */
-      return gnomevfs->ShowURIForInput(mPath);
-    }
-    
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
+  nsCOMPtr<nsIGnomeVFSService> gnomevfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
+  if (giovfs) {
+    return giovfs->ShowURIForInput(mPath);
+  } else if (gnomevfs) {
+    /* GnomeVFS fallback */
+    return gnomevfs->ShowURIForInput(mPath);
+  }
+
+  return NS_ERROR_FAILURE;
 #elif defined(MOZ_ENABLE_CONTENTACTION)
-    QUrl uri = QUrl::fromLocalFile(QString::fromUtf8(mPath.get()));
-    ContentAction::Action action =
-        ContentAction::Action::defaultActionForFile(uri);
+  QUrl uri = QUrl::fromLocalFile(QString::fromUtf8(mPath.get()));
+  ContentAction::Action action =
+    ContentAction::Action::defaultActionForFile(uri);
 
-    if (action.isValid()) {
-      action.trigger();
-      return NS_OK;
-    }
+  if (action.isValid()) {
+    action.trigger();
+    return NS_OK;
+  }
 
-    return NS_ERROR_FAILURE;
+  return NS_ERROR_FAILURE;
 #elif defined(MOZ_WIDGET_ANDROID)
-    // Try to get a mimetype, if this fails just use the file uri alone
-    nsresult rv;
-    nsAutoCString type;
-    nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1", &rv));
-    if (NS_SUCCEEDED(rv))
-        rv = mimeService->GetTypeFromFile(this, type);
+  // Try to get a mimetype, if this fails just use the file uri alone
+  nsresult rv;
+  nsAutoCString type;
+  nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1", &rv));
+  if (NS_SUCCEEDED(rv))
+    rv = mimeService->GetTypeFromFile(this, type);
 
-    nsAutoCString fileUri = NS_LITERAL_CSTRING("file://") + mPath;
-    return mozilla::widget::android::GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(fileUri),
-      NS_ConvertUTF8toUTF16(type)) ? NS_OK : NS_ERROR_FAILURE;
+  nsAutoCString fileUri = NS_LITERAL_CSTRING("file://") + mPath;
+  return mozilla::widget::android::GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(fileUri),
+    NS_ConvertUTF8toUTF16(type)) ? NS_OK : NS_ERROR_FAILURE;
 #elif defined(MOZ_WIDGET_COCOA)
-    CFURLRef url;
-    if (NS_SUCCEEDED(GetCFURL(&url))) {
-        nsresult rv = CocoaFileUtils::OpenURL(url);
-        ::CFRelease(url);
-        return rv;
-    }
-    return NS_ERROR_FAILURE;
+  CFURLRef url;
+  if (NS_SUCCEEDED(GetCFURL(&url))) {
+    nsresult rv = CocoaFileUtils::OpenURL(url);
+    ::CFRelease(url);
+    return rv;
+  }
+  return NS_ERROR_FAILURE;
 #else
-    return NS_ERROR_FAILURE;
+  return NS_ERROR_FAILURE;
 #endif
 }
 
 nsresult
 NS_NewNativeLocalFile(const nsACString &path, bool followSymlinks, nsIFile **result)
 {
-    nsRefPtr<nsLocalFile> file = new nsLocalFile();
+  nsRefPtr<nsLocalFile> file = new nsLocalFile();
 
-    file->SetFollowLinks(followSymlinks);
+  file->SetFollowLinks(followSymlinks);
 
-    if (!path.IsEmpty()) {
-        nsresult rv = file->InitWithNativePath(path);
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
+  if (!path.IsEmpty()) {
+    nsresult rv = file->InitWithNativePath(path);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
-    file.forget(result);
-    return NS_OK;
+  }
+  file.forget(result);
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -1961,50 +1962,50 @@ NS_NewNativeLocalFile(const nsACString &path, bool followSymlinks, nsIFile **res
     }
 
 // Unicode interface Wrapper
-nsresult  
+nsresult
 nsLocalFile::InitWithPath(const nsAString &filePath)
 {
-    SET_UCS(InitWithNativePath, filePath);
+  SET_UCS(InitWithNativePath, filePath);
 }
-nsresult  
+nsresult
 nsLocalFile::Append(const nsAString &node)
 {
-    SET_UCS(AppendNative, node);
+  SET_UCS(AppendNative, node);
 }
-nsresult  
+nsresult
 nsLocalFile::AppendRelativePath(const nsAString &node)
 {
-    SET_UCS(AppendRelativeNativePath, node);
+  SET_UCS(AppendRelativeNativePath, node);
 }
-nsresult  
+nsresult
 nsLocalFile::GetLeafName(nsAString &aLeafName)
 {
-    GET_UCS(GetNativeLeafName, aLeafName);
+  GET_UCS(GetNativeLeafName, aLeafName);
 }
-nsresult  
+nsresult
 nsLocalFile::SetLeafName(const nsAString &aLeafName)
 {
-    SET_UCS(SetNativeLeafName, aLeafName);
+  SET_UCS(SetNativeLeafName, aLeafName);
 }
-nsresult  
+nsresult
 nsLocalFile::GetPath(nsAString &_retval)
 {
-    return NS_CopyNativeToUnicode(mPath, _retval);
+  return NS_CopyNativeToUnicode(mPath, _retval);
 }
-nsresult  
+nsresult
 nsLocalFile::CopyTo(nsIFile *newParentDir, const nsAString &newName)
 {
-    SET_UCS_2ARGS_2(CopyToNative , newParentDir, newName);
+  SET_UCS_2ARGS_2(CopyToNative , newParentDir, newName);
 }
-nsresult  
+nsresult
 nsLocalFile::CopyToFollowingLinks(nsIFile *newParentDir, const nsAString &newName)
 {
-    SET_UCS_2ARGS_2(CopyToFollowingLinksNative , newParentDir, newName);
+  SET_UCS_2ARGS_2(CopyToFollowingLinksNative , newParentDir, newName);
 }
-nsresult  
+nsresult
 nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString &newName)
 {
-    SET_UCS_2ARGS_2(MoveToNative, newParentDir, newName);
+  SET_UCS_2ARGS_2(MoveToNative, newParentDir, newName);
 }
 
 NS_IMETHODIMP
@@ -2045,8 +2046,8 @@ nsLocalFile::RenameTo(nsIFile *newParentDir, const nsAString &newName)
 
 nsresult
 nsLocalFile::GetTarget(nsAString &_retval)
-{   
-    GET_UCS(GetNativeTarget, _retval);
+{
+  GET_UCS(GetNativeTarget, _retval);
 }
 
 // nsIHashable
@@ -2054,30 +2055,30 @@ nsLocalFile::GetTarget(nsAString &_retval)
 NS_IMETHODIMP
 nsLocalFile::Equals(nsIHashable* aOther, bool *aResult)
 {
-    nsCOMPtr<nsIFile> otherFile(do_QueryInterface(aOther));
-    if (!otherFile) {
-        *aResult = false;
-        return NS_OK;
-    }
+  nsCOMPtr<nsIFile> otherFile(do_QueryInterface(aOther));
+  if (!otherFile) {
+    *aResult = false;
+    return NS_OK;
+  }
 
-    return Equals(otherFile, aResult);
+  return Equals(otherFile, aResult);
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetHashCode(uint32_t *aResult)
 {
-    *aResult = HashString(mPath);
-    return NS_OK;
+  *aResult = HashString(mPath);
+  return NS_OK;
 }
 
-nsresult 
+nsresult
 NS_NewLocalFile(const nsAString &path, bool followLinks, nsIFile* *result)
 {
-    nsAutoCString buf;
-    nsresult rv = NS_CopyUnicodeToNative(path, buf);
-    if (NS_FAILED(rv))
-        return rv;
-    return NS_NewNativeLocalFile(buf, followLinks, result);
+  nsAutoCString buf;
+  nsresult rv = NS_CopyUnicodeToNative(path, buf);
+  if (NS_FAILED(rv))
+    return rv;
+  return NS_NewNativeLocalFile(buf, followLinks, result);
 }
 
 //-----------------------------------------------------------------------------
@@ -2187,7 +2188,7 @@ NS_IMETHODIMP
 nsLocalFile::InitWithFSRef(const FSRef *aFSRef)
 {
   if (NS_WARN_IF(!aFSRef))
-      return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_INVALID_ARG;
 
   CFURLRef newURLRef = ::CFURLCreateFromFSRef(kCFAllocatorDefault, aFSRef);
   if (newURLRef) {
@@ -2218,7 +2219,7 @@ NS_IMETHODIMP
 nsLocalFile::GetFSRef(FSRef *_retval)
 {
   if (NS_WARN_IF(!_retval))
-      return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_INVALID_ARG;
 
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -2237,7 +2238,7 @@ NS_IMETHODIMP
 nsLocalFile::GetFSSpec(FSSpec *_retval)
 {
   if (NS_WARN_IF(!_retval))
-      return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_INVALID_ARG;
 
   FSRef fsRef;
   nsresult rv = GetFSRef(&fsRef);
@@ -2253,7 +2254,7 @@ NS_IMETHODIMP
 nsLocalFile::GetFileSizeWithResFork(int64_t *aFileSizeWithResFork)
 {
   if (NS_WARN_IF(!aFileSizeWithResFork))
-      return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_INVALID_ARG;
 
   FSRef fsRef;
   nsresult rv = GetFSRef(&fsRef);
@@ -2281,7 +2282,7 @@ nsLocalFile::GetFileType(OSType *aFileType)
   }
   return NS_ERROR_FAILURE;
 }
-  
+
 NS_IMETHODIMP
 nsLocalFile::SetFileType(OSType aFileType)
 {
@@ -2293,7 +2294,7 @@ nsLocalFile::SetFileType(OSType aFileType)
   }
   return NS_ERROR_FAILURE;
 }
-  
+
 NS_IMETHODIMP
 nsLocalFile::GetFileCreator(OSType *aFileCreator)
 {
@@ -2317,10 +2318,10 @@ nsLocalFile::SetFileCreator(OSType aFileCreator)
   }
   return NS_ERROR_FAILURE;
 }
-  
+
 NS_IMETHODIMP
 nsLocalFile::LaunchWithDoc(nsIFile *aDocToLoad, bool aLaunchInBackground)
-{    
+{
   bool isExecutable;
   nsresult rv = IsExecutable(&isExecutable);
   if (NS_FAILED(rv))
@@ -2413,7 +2414,7 @@ NS_IMETHODIMP
 nsLocalFile::IsPackage(bool *_retval)
 {
   if (NS_WARN_IF(!_retval))
-      return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_INVALID_ARG;
   *_retval = false;
 
   CFURLRef url;
@@ -2485,7 +2486,7 @@ nsLocalFile::GetBundleContentsLastModifiedTime(int64_t *aLastModTime)
 {
   CHECK_mPath();
   if (NS_WARN_IF(!aLastModTime))
-      return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_INVALID_ARG;
 
   bool isPackage = false;
   nsresult rv = IsPackage(&isPackage);
@@ -2512,7 +2513,7 @@ nsLocalFile::GetBundleContentsLastModifiedTime(int64_t *aLastModTime)
 NS_IMETHODIMP nsLocalFile::InitWithFile(nsIFile *aFile)
 {
   if (NS_WARN_IF(!aFile))
-      return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_INVALID_ARG;
 
   nsAutoCString nativePath;
   nsresult rv = aFile->GetNativePath(nativePath);

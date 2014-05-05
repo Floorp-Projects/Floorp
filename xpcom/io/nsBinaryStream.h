@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -27,36 +28,36 @@
 class nsBinaryOutputStream : public nsIObjectOutputStream
 {
 public:
-    nsBinaryOutputStream() {}
-    // virtual dtor since subclasses call our Release()
-    virtual ~nsBinaryOutputStream() {}
+  nsBinaryOutputStream() {}
+  // virtual dtor since subclasses call our Release()
+  virtual ~nsBinaryOutputStream() {}
 
 protected:
-    // nsISupports methods
-    NS_DECL_ISUPPORTS
+  // nsISupports methods
+  NS_DECL_ISUPPORTS
 
-    // nsIOutputStream methods
-    NS_DECL_NSIOUTPUTSTREAM
+  // nsIOutputStream methods
+  NS_DECL_NSIOUTPUTSTREAM
 
-    // nsIBinaryOutputStream methods
-    NS_DECL_NSIBINARYOUTPUTSTREAM
+  // nsIBinaryOutputStream methods
+  NS_DECL_NSIBINARYOUTPUTSTREAM
 
-    // nsIObjectOutputStream methods
-    NS_DECL_NSIOBJECTOUTPUTSTREAM
+  // nsIObjectOutputStream methods
+  NS_DECL_NSIOBJECTOUTPUTSTREAM
 
-    // Call Write(), ensuring that all proffered data is written
-    nsresult WriteFully(const char *aBuf, uint32_t aCount);
+  // Call Write(), ensuring that all proffered data is written
+  nsresult WriteFully(const char *aBuf, uint32_t aCount);
 
-    nsCOMPtr<nsIOutputStream>       mOutputStream;
-    nsCOMPtr<nsIStreamBufferAccess> mBufferAccess;
+  nsCOMPtr<nsIOutputStream>       mOutputStream;
+  nsCOMPtr<nsIStreamBufferAccess> mBufferAccess;
 };
 
 #define NS_BINARYINPUTSTREAM_CID        \
-{ /* c521a612-2aad-46db-b6ab-3b821fb150b1 */         \
-     0xc521a612,                                     \
-     0x2aad,                                         \
-     0x46db,                                         \
-    {0xb6, 0xab, 0x3b, 0x82, 0x1f, 0xb1, 0x50, 0xb1} \
+{ /* c521a612-2aad-46db-b6ab-3b821fb150b1 */       \
+   0xc521a612,                                     \
+   0x2aad,                                         \
+   0x46db,                                         \
+  {0xb6, 0xab, 0x3b, 0x82, 0x1f, 0xb1, 0x50, 0xb1} \
 }
 
 #define NS_BINARYINPUTSTREAM_CONTRACTID "@mozilla.org/binaryinputstream;1"
@@ -66,25 +67,25 @@ protected:
 class nsBinaryInputStream : public nsIObjectInputStream
 {
 public:
-    nsBinaryInputStream() {}
-    // virtual dtor since subclasses call our Release()
-    virtual ~nsBinaryInputStream() {}
+  nsBinaryInputStream() {}
+  // virtual dtor since subclasses call our Release()
+  virtual ~nsBinaryInputStream() {}
 
 protected:
-    // nsISupports methods
-    NS_DECL_ISUPPORTS
+  // nsISupports methods
+  NS_DECL_ISUPPORTS
 
-    // nsIInputStream methods
-    NS_DECL_NSIINPUTSTREAM
+  // nsIInputStream methods
+  NS_DECL_NSIINPUTSTREAM
 
-    // nsIBinaryInputStream methods
-    NS_DECL_NSIBINARYINPUTSTREAM
+  // nsIBinaryInputStream methods
+  NS_DECL_NSIBINARYINPUTSTREAM
 
-    // nsIObjectInputStream methods
-    NS_DECL_NSIOBJECTINPUTSTREAM
+  // nsIObjectInputStream methods
+  NS_DECL_NSIOBJECTINPUTSTREAM
 
-    nsCOMPtr<nsIInputStream>        mInputStream;
-    nsCOMPtr<nsIStreamBufferAccess> mBufferAccess;
+  nsCOMPtr<nsIInputStream>        mInputStream;
+  nsCOMPtr<nsIStreamBufferAccess> mBufferAccess;
 };
 
 #endif // nsBinaryStream_h___
