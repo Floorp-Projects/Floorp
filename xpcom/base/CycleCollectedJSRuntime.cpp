@@ -123,7 +123,7 @@ TraceWeakMappingChild(JSTracer* trc, void** thingp, JSGCTraceKind kind);
 struct NoteWeakMapChildrenTracer : public JSTracer
 {
   NoteWeakMapChildrenTracer(JSRuntime *rt, nsCycleCollectionNoteRootCallback& cb)
-  : JSTracer(rt, TraceWeakMappingChild), mCb(cb)
+    : JSTracer(rt, TraceWeakMappingChild), mCb(cb)
   {
   }
   nsCycleCollectionNoteRootCallback& mCb;
@@ -161,7 +161,7 @@ struct NoteWeakMapsTracer : public js::WeakMapTracer
 {
   NoteWeakMapsTracer(JSRuntime* rt, js::WeakMapTraceCallback cb,
                      nsCycleCollectionNoteRootCallback& cccb)
-  : js::WeakMapTracer(rt, cb), mCb(cccb), mChildTracer(rt, cccb)
+    : js::WeakMapTracer(rt, cb), mCb(cccb), mChildTracer(rt, cccb)
   {
   }
   nsCycleCollectionNoteRootCallback& mCb;
@@ -170,8 +170,8 @@ struct NoteWeakMapsTracer : public js::WeakMapTracer
 
 static void
 TraceWeakMapping(js::WeakMapTracer* trc, JSObject* m,
-               void* k, JSGCTraceKind kkind,
-               void* v, JSGCTraceKind vkind)
+                 void* k, JSGCTraceKind kkind,
+                 void* v, JSGCTraceKind vkind)
 {
   MOZ_ASSERT(trc->callback == TraceWeakMapping);
   NoteWeakMapsTracer* tracer = static_cast<NoteWeakMapsTracer* >(trc);
@@ -691,7 +691,7 @@ CycleCollectedJSRuntime::TraverseZone(JS::Zone* aZone,
 CycleCollectedJSRuntime::TraverseObjectShim(void* aData, void* aThing)
 {
   TraverseObjectShimClosure* closure =
-      static_cast<TraverseObjectShimClosure*>(aData);
+    static_cast<TraverseObjectShimClosure*>(aData);
 
   MOZ_ASSERT(js::GCThingTraceKind(aThing) == JSTRACE_OBJECT);
   closure->self->TraverseGCThing(CycleCollectedJSRuntime::TRAVERSE_CPP, aThing,
@@ -887,13 +887,13 @@ CycleCollectedJSRuntime::SetPendingException(nsIException* aException)
 nsCycleCollectionParticipant*
 CycleCollectedJSRuntime::GCThingParticipant()
 {
-    return &mGCThingCycleCollectorGlobal;
+  return &mGCThingCycleCollectorGlobal;
 }
 
 nsCycleCollectionParticipant*
 CycleCollectedJSRuntime::ZoneParticipant()
 {
-    return &mJSZoneCycleCollectorGlobal;
+  return &mJSZoneCycleCollectorGlobal;
 }
 
 nsresult

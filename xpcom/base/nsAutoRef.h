@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set shiftwidth=4 tabstop=8 autoindent cindent expandtab: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -108,109 +108,109 @@ template <class T>
 class nsAutoRef : public nsAutoRefBase<T>
 {
 protected:
-    typedef nsAutoRef<T> ThisClass;
-    typedef nsAutoRefBase<T> BaseClass;
-    typedef nsSimpleRef<T> SimpleRef;
-    typedef typename BaseClass::RawRefOnly RawRefOnly;
-    typedef typename BaseClass::LocalSimpleRef LocalSimpleRef;
+  typedef nsAutoRef<T> ThisClass;
+  typedef nsAutoRefBase<T> BaseClass;
+  typedef nsSimpleRef<T> SimpleRef;
+  typedef typename BaseClass::RawRefOnly RawRefOnly;
+  typedef typename BaseClass::LocalSimpleRef LocalSimpleRef;
 
 public:
-    nsAutoRef()
-    {
-    }
+  nsAutoRef()
+  {
+  }
 
-    // Explicit construction is required so as not to risk unintentionally
-    // releasing the resource associated with a raw ref.
-    explicit nsAutoRef(RawRefOnly aRefToRelease)
-        : BaseClass(aRefToRelease)
-    {
-    }
+  // Explicit construction is required so as not to risk unintentionally
+  // releasing the resource associated with a raw ref.
+  explicit nsAutoRef(RawRefOnly aRefToRelease)
+    : BaseClass(aRefToRelease)
+  {
+  }
 
-    // Construction from a nsReturnRef<T> function return value, which expects
-    // to give up ownership, transfers ownership.
-    // (nsReturnRef<T> is converted to const nsReturningRef<T>.)
-    explicit nsAutoRef(const nsReturningRef<T>& aReturning)
-        : BaseClass(aReturning)
-    {
-    }
+  // Construction from a nsReturnRef<T> function return value, which expects
+  // to give up ownership, transfers ownership.
+  // (nsReturnRef<T> is converted to const nsReturningRef<T>.)
+  explicit nsAutoRef(const nsReturningRef<T>& aReturning)
+    : BaseClass(aReturning)
+  {
+  }
 
-    // The only assignment operator provided is for transferring from an
-    // nsReturnRef smart reference, which expects to pass its ownership to
-    // another object.
-    //
-    // With raw references and other smart references, the type of the lhs and
-    // its taking and releasing nature is often not obvious from an assignment
-    // statement.  Assignment from a raw ptr especially is not normally
-    // expected to release the reference.
-    //
-    // Use |steal| for taking ownership from other smart refs.
-    //
-    // For raw references, use |own| to indicate intention to have the
-    // resource released.
-    //
-    // Or, to create another owner of the same reference, use an nsCountedRef.
+  // The only assignment operator provided is for transferring from an
+  // nsReturnRef smart reference, which expects to pass its ownership to
+  // another object.
+  //
+  // With raw references and other smart references, the type of the lhs and
+  // its taking and releasing nature is often not obvious from an assignment
+  // statement.  Assignment from a raw ptr especially is not normally
+  // expected to release the reference.
+  //
+  // Use |steal| for taking ownership from other smart refs.
+  //
+  // For raw references, use |own| to indicate intention to have the
+  // resource released.
+  //
+  // Or, to create another owner of the same reference, use an nsCountedRef.
 
-    ThisClass& operator=(const nsReturningRef<T>& aReturning)
-    {
-        BaseClass::steal(aReturning.mReturnRef);
-        return *this;
-    }
+  ThisClass& operator=(const nsReturningRef<T>& aReturning)
+  {
+    BaseClass::steal(aReturning.mReturnRef);
+    return *this;
+  }
 
-    // Conversion to a raw reference allow the nsAutoRef<T> to often be used
-    // like a raw reference.
-    operator typename SimpleRef::RawRef() const
-    {
-        return this->get();
-    }
+  // Conversion to a raw reference allow the nsAutoRef<T> to often be used
+  // like a raw reference.
+  operator typename SimpleRef::RawRef() const
+  {
+    return this->get();
+  }
 
-    // Transfer ownership from another smart reference.
-    void steal(ThisClass& aOtherRef)
-    {
-        BaseClass::steal(aOtherRef);
-    }
+  // Transfer ownership from another smart reference.
+  void steal(ThisClass& aOtherRef)
+  {
+    BaseClass::steal(aOtherRef);
+  }
 
-    // Assume ownership of a raw ref.
-    //
-    // |own| has similar function to |steal|, and is useful for receiving
-    // ownership from a return value of a function.  It is named differently
-    // because |own| requires more care to ensure that the function intends to
-    // give away ownership, and so that |steal| can be safely used, knowing
-    // that it won't steal ownership from any methods returning raw ptrs to
-    // data owned by a foreign object.
-    void own(RawRefOnly aRefToRelease)
-    {
-        BaseClass::own(aRefToRelease);
-    }
+  // Assume ownership of a raw ref.
+  //
+  // |own| has similar function to |steal|, and is useful for receiving
+  // ownership from a return value of a function.  It is named differently
+  // because |own| requires more care to ensure that the function intends to
+  // give away ownership, and so that |steal| can be safely used, knowing
+  // that it won't steal ownership from any methods returning raw ptrs to
+  // data owned by a foreign object.
+  void own(RawRefOnly aRefToRelease)
+  {
+    BaseClass::own(aRefToRelease);
+  }
 
-    // Exchange ownership with |aOther|
-    void swap(ThisClass& aOther)
-    {
-        LocalSimpleRef temp;
-        temp.SimpleRef::operator=(*this);
-        SimpleRef::operator=(aOther);
-        aOther.SimpleRef::operator=(temp);
-    }
+  // Exchange ownership with |aOther|
+  void swap(ThisClass& aOther)
+  {
+    LocalSimpleRef temp;
+    temp.SimpleRef::operator=(*this);
+    SimpleRef::operator=(aOther);
+    aOther.SimpleRef::operator=(temp);
+  }
 
-    // Release the reference now.
-    void reset()
-    {
-        this->SafeRelease();
-        LocalSimpleRef empty;
-        SimpleRef::operator=(empty);
-    }
+  // Release the reference now.
+  void reset()
+  {
+    this->SafeRelease();
+    LocalSimpleRef empty;
+    SimpleRef::operator=(empty);
+  }
 
-    // Pass out the reference for a function return values.
-    nsReturnRef<T> out()
-    {
-        return nsReturnRef<T>(this->disown());
-    }
+  // Pass out the reference for a function return values.
+  nsReturnRef<T> out()
+  {
+    return nsReturnRef<T>(this->disown());
+  }
 
-    // operator->() and disown() are provided by nsAutoRefBase<T>.
-    // The default nsSimpleRef<T> provides get().
+  // operator->() and disown() are provided by nsAutoRefBase<T>.
+  // The default nsSimpleRef<T> provides get().
 
 private:
-    // No copy constructor
-    explicit nsAutoRef(ThisClass& aRefToSteal);
+  // No copy constructor
+  explicit nsAutoRef(ThisClass& aRefToSteal);
 };
 
 /**
@@ -232,68 +232,68 @@ template <class T>
 class nsCountedRef : public nsAutoRef<T>
 {
 protected:
-    typedef nsCountedRef<T> ThisClass;
-    typedef nsAutoRef<T> BaseClass;
-    typedef nsSimpleRef<T> SimpleRef;
-    typedef typename BaseClass::RawRef RawRef;
+  typedef nsCountedRef<T> ThisClass;
+  typedef nsAutoRef<T> BaseClass;
+  typedef nsSimpleRef<T> SimpleRef;
+  typedef typename BaseClass::RawRef RawRef;
 
 public:
-    nsCountedRef()
-    {
-    }
+  nsCountedRef()
+  {
+  }
 
-    // Construction and assignment from a another nsCountedRef
-    // or a raw ref copies and increments the ref count.
-    nsCountedRef(const ThisClass& aRefToCopy)
-    {
-        SimpleRef::operator=(aRefToCopy);
-        SafeAddRef();
-    }
-    ThisClass& operator=(const ThisClass& aRefToCopy)
-    {
-        if (this == &aRefToCopy)
-            return *this;
+  // Construction and assignment from a another nsCountedRef
+  // or a raw ref copies and increments the ref count.
+  nsCountedRef(const ThisClass& aRefToCopy)
+  {
+    SimpleRef::operator=(aRefToCopy);
+    SafeAddRef();
+  }
+  ThisClass& operator=(const ThisClass& aRefToCopy)
+  {
+    if (this == &aRefToCopy)
+      return *this;
 
-        this->SafeRelease();
-        SimpleRef::operator=(aRefToCopy);
-        SafeAddRef();
-        return *this;
-    }
+    this->SafeRelease();
+    SimpleRef::operator=(aRefToCopy);
+    SafeAddRef();
+    return *this;
+  }
 
-    // Implicit conversion from another smart ref argument (to a raw ref) is
-    // accepted here because construction and assignment safely creates a new
-    // reference without interfering with the reference to copy.
-    explicit nsCountedRef(RawRef aRefToCopy)
-        : BaseClass(aRefToCopy)
-    {
-        SafeAddRef();
-    }
-    ThisClass& operator=(RawRef aRefToCopy)
-    {
-        this->own(aRefToCopy);
-        SafeAddRef();
-        return *this;
-    }
+  // Implicit conversion from another smart ref argument (to a raw ref) is
+  // accepted here because construction and assignment safely creates a new
+  // reference without interfering with the reference to copy.
+  explicit nsCountedRef(RawRef aRefToCopy)
+    : BaseClass(aRefToCopy)
+  {
+    SafeAddRef();
+  }
+  ThisClass& operator=(RawRef aRefToCopy)
+  {
+    this->own(aRefToCopy);
+    SafeAddRef();
+    return *this;
+  }
 
-    // Construction and assignment from an nsReturnRef function return value,
-    // which expects to give up ownership, transfers ownership.
-    explicit nsCountedRef(const nsReturningRef<T>& aReturning)
-        : BaseClass(aReturning)
-    {
-    }
-    ThisClass& operator=(const nsReturningRef<T>& aReturning)
-    {
-        BaseClass::operator=(aReturning);
-        return *this;
-    }
+  // Construction and assignment from an nsReturnRef function return value,
+  // which expects to give up ownership, transfers ownership.
+  explicit nsCountedRef(const nsReturningRef<T>& aReturning)
+    : BaseClass(aReturning)
+  {
+  }
+  ThisClass& operator=(const nsReturningRef<T>& aReturning)
+  {
+    BaseClass::operator=(aReturning);
+    return *this;
+  }
 
 protected:
-    // Increase the reference count if there is a resource.
-    void SafeAddRef()
-    {
-        if (this->HaveResource())
-            this->AddRef(this->get());
-    }
+  // Increase the reference count if there is a resource.
+  void SafeAddRef()
+  {
+    if (this->HaveResource())
+      this->AddRef(this->get());
+  }
 };
 
 /**
@@ -307,48 +307,48 @@ template <class T>
 class nsReturnRef : public nsAutoRefBase<T>
 {
 protected:
-    typedef nsAutoRefBase<T> BaseClass;
-    typedef typename BaseClass::RawRefOnly RawRefOnly;
+  typedef nsAutoRefBase<T> BaseClass;
+  typedef typename BaseClass::RawRefOnly RawRefOnly;
 
 public:
-    // For constructing a return value with no resource
-    nsReturnRef()
-    {
-    }
+  // For constructing a return value with no resource
+  nsReturnRef()
+  {
+  }
 
-    // For returning a smart reference from a raw reference that must be
-    // released.  Explicit construction is required so as not to risk
-    // unintentionally releasing the resource associated with a raw ref.
-    explicit nsReturnRef(RawRefOnly aRefToRelease)
-        : BaseClass(aRefToRelease)
-    {
-    }
+  // For returning a smart reference from a raw reference that must be
+  // released.  Explicit construction is required so as not to risk
+  // unintentionally releasing the resource associated with a raw ref.
+  explicit nsReturnRef(RawRefOnly aRefToRelease)
+    : BaseClass(aRefToRelease)
+  {
+  }
 
-    // Copy construction transfers ownership
-    nsReturnRef(nsReturnRef<T>& aRefToSteal)
-        : BaseClass(aRefToSteal)
-    {
-    }
+  // Copy construction transfers ownership
+  nsReturnRef(nsReturnRef<T>& aRefToSteal)
+    : BaseClass(aRefToSteal)
+  {
+  }
 
-    nsReturnRef(const nsReturningRef<T>& aReturning)
-        : BaseClass(aReturning)
-    {
-    }
+  nsReturnRef(const nsReturningRef<T>& aReturning)
+    : BaseClass(aReturning)
+  {
+  }
 
-    // Conversion to a temporary (const) object referring to this object so
-    // that the reference may be passed from a function return value
-    // (temporary) to another smart reference.  There is no need to use this
-    // explicitly.  Simply assign a nsReturnRef<T> function return value to a
-    // smart reference.
-    operator nsReturningRef<T>()
-    {
-        return nsReturningRef<T>(*this);
-    }
+  // Conversion to a temporary (const) object referring to this object so
+  // that the reference may be passed from a function return value
+  // (temporary) to another smart reference.  There is no need to use this
+  // explicitly.  Simply assign a nsReturnRef<T> function return value to a
+  // smart reference.
+  operator nsReturningRef<T>()
+  {
+    return nsReturningRef<T>(*this);
+  }
 
-    // No conversion to RawRef operator is provided on nsReturnRef, to ensure
-    // that the return value is not carelessly assigned to a raw ptr (and the
-    // resource then released).  If passing to a function that takes a raw
-    // ptr, use get or disown as appropriate.
+  // No conversion to RawRef operator is provided on nsReturnRef, to ensure
+  // that the return value is not carelessly assigned to a raw ptr (and the
+  // resource then released).  If passing to a function that takes a raw
+  // ptr, use get or disown as appropriate.
 };
 
 /**
@@ -370,14 +370,14 @@ template <class T>
 class nsReturningRef
 {
 private:
-    friend class nsReturnRef<T>;
+  friend class nsReturnRef<T>;
 
-    explicit nsReturningRef(nsReturnRef<T>& aReturnRef)
-        : mReturnRef(aReturnRef)
-    {
-    }
+  explicit nsReturningRef(nsReturnRef<T>& aReturnRef)
+    : mReturnRef(aReturnRef)
+  {
+  }
 public:
-    nsReturnRef<T>& mReturnRef;
+  nsReturnRef<T>& mReturnRef;
 };
 
 /**
@@ -464,10 +464,10 @@ template <class T>
 class nsPointerRefTraits
 {
 public:
-    // The handle is a pointer to T.
-    typedef T* RawRef;
-    // A nullptr does not have a resource.
-    static RawRef Void() { return nullptr; }
+  // The handle is a pointer to T.
+  typedef T* RawRef;
+  // A nullptr does not have a resource.
+  static RawRef Void() { return nullptr; }
 };
 
 /**
@@ -490,49 +490,49 @@ template <class T>
 class nsSimpleRef : protected nsAutoRefTraits<T>
 {
 protected:
-    // The default implementation uses nsAutoRefTrait<T>.
-    // Specializations need not define this typedef.
-    typedef nsAutoRefTraits<T> Traits;
-    // The type of the handle to the resource.
-    // A specialization must provide a typedef for RawRef.
-    typedef typename Traits::RawRef RawRef;
+  // The default implementation uses nsAutoRefTrait<T>.
+  // Specializations need not define this typedef.
+  typedef nsAutoRefTraits<T> Traits;
+  // The type of the handle to the resource.
+  // A specialization must provide a typedef for RawRef.
+  typedef typename Traits::RawRef RawRef;
 
-    // Construct with no resource.
-    //
-    // If this constructor is not accessible then some limited nsAutoRef
-    // functionality will still be available, but the default constructor,
-    // |reset|, and most transfer of ownership methods will not be available.
-    nsSimpleRef()
-        : mRawRef(Traits::Void())
-    {
-    }
-    // Construct with a handle to a resource.
-    // A specialization must provide this. 
-    nsSimpleRef(RawRef aRawRef)
-        : mRawRef(aRawRef)
-    {
-    }
+  // Construct with no resource.
+  //
+  // If this constructor is not accessible then some limited nsAutoRef
+  // functionality will still be available, but the default constructor,
+  // |reset|, and most transfer of ownership methods will not be available.
+  nsSimpleRef()
+    : mRawRef(Traits::Void())
+  {
+  }
+  // Construct with a handle to a resource.
+  // A specialization must provide this.
+  nsSimpleRef(RawRef aRawRef)
+    : mRawRef(aRawRef)
+  {
+  }
 
-    // Test whether there is an associated resource.  A specialization must
-    // provide this.  The function is permitted to always return true if the
-    // default constructor is not accessible, or if Release (and AddRef) can
-    // deal with void handles.
-    bool HaveResource() const
-    {
-        return mRawRef != Traits::Void();
-    }
+  // Test whether there is an associated resource.  A specialization must
+  // provide this.  The function is permitted to always return true if the
+  // default constructor is not accessible, or if Release (and AddRef) can
+  // deal with void handles.
+  bool HaveResource() const
+  {
+    return mRawRef != Traits::Void();
+  }
 
 public:
-    // A specialization must provide get() or loose some functionality.  This
-    // is inherited by derived classes and the specialization may choose
-    // whether it is public or protected.
-    RawRef get() const
-    {
-        return mRawRef;
-    }
+  // A specialization must provide get() or loose some functionality.  This
+  // is inherited by derived classes and the specialization may choose
+  // whether it is public or protected.
+  RawRef get() const
+  {
+    return mRawRef;
+  }
 
 private:
-    RawRef mRawRef;
+  RawRef mRawRef;
 };
 
 
@@ -547,120 +547,120 @@ template <class T>
 class nsAutoRefBase : public nsSimpleRef<T>
 {
 protected:
-    typedef nsAutoRefBase<T> ThisClass;
-    typedef nsSimpleRef<T> SimpleRef;
-    typedef typename SimpleRef::RawRef RawRef;
+  typedef nsAutoRefBase<T> ThisClass;
+  typedef nsSimpleRef<T> SimpleRef;
+  typedef typename SimpleRef::RawRef RawRef;
 
-    nsAutoRefBase()
+  nsAutoRefBase()
+  {
+  }
+
+  // A type for parameters that should be passed a raw ref but should not
+  // accept implicit conversions (from another smart ref).  (The only
+  // conversion to this type is from a raw ref so only raw refs will be
+  // accepted.)
+  class RawRefOnly
+  {
+  public:
+    RawRefOnly(RawRef aRawRef)
+      : mRawRef(aRawRef)
     {
     }
-
-    // A type for parameters that should be passed a raw ref but should not
-    // accept implicit conversions (from another smart ref).  (The only
-    // conversion to this type is from a raw ref so only raw refs will be
-    // accepted.)
-    class RawRefOnly
+    operator RawRef() const
     {
-    public:
-        RawRefOnly(RawRef aRawRef)
-            : mRawRef(aRawRef)
-        {
-        }
-        operator RawRef() const
-        {
-            return mRawRef;
-        }
-    private:
-        RawRef mRawRef;
-    };
+      return mRawRef;
+    }
+  private:
+    RawRef mRawRef;
+  };
 
-    // Construction from a raw ref assumes ownership
-    explicit nsAutoRefBase(RawRefOnly aRefToRelease)
-        : SimpleRef(aRefToRelease)
+  // Construction from a raw ref assumes ownership
+  explicit nsAutoRefBase(RawRefOnly aRefToRelease)
+    : SimpleRef(aRefToRelease)
+  {
+  }
+
+  // Constructors that steal ownership
+  explicit nsAutoRefBase(ThisClass& aRefToSteal)
+    : SimpleRef(aRefToSteal.disown())
+  {
+  }
+  explicit nsAutoRefBase(const nsReturningRef<T>& aReturning)
+    : SimpleRef(aReturning.mReturnRef.disown())
+  {
+  }
+
+  ~nsAutoRefBase()
+  {
+    SafeRelease();
+  }
+
+  // An internal class providing access to protected nsSimpleRef<T>
+  // constructors for construction of temporary simple references (that are
+  // not ThisClass).
+  class LocalSimpleRef : public SimpleRef
+  {
+  public:
+    LocalSimpleRef()
     {
     }
-
-    // Constructors that steal ownership
-    explicit nsAutoRefBase(ThisClass& aRefToSteal)
-        : SimpleRef(aRefToSteal.disown())
+    explicit LocalSimpleRef(RawRef aRawRef)
+      : SimpleRef(aRawRef)
     {
     }
-    explicit nsAutoRefBase(const nsReturningRef<T>& aReturning)
-        : SimpleRef(aReturning.mReturnRef.disown())
-    {
-    }
-
-    ~nsAutoRefBase()
-    {
-        SafeRelease();
-    }
-
-    // An internal class providing access to protected nsSimpleRef<T>
-    // constructors for construction of temporary simple references (that are
-    // not ThisClass).
-    class LocalSimpleRef : public SimpleRef
-    {
-    public:
-        LocalSimpleRef()
-        {
-        }
-        explicit LocalSimpleRef(RawRef aRawRef)
-            : SimpleRef(aRawRef)
-        {
-        }
-    };
+  };
 
 private:
-    ThisClass& operator=(const ThisClass& aSmartRef) MOZ_DELETE;
-    
-public:
-    RawRef operator->() const
-    {
-        return this->get();
-    }
+  ThisClass& operator=(const ThisClass& aSmartRef) MOZ_DELETE;
 
-    // Transfer ownership to a raw reference.
-    //
-    // THE CALLER MUST ENSURE THAT THE REFERENCE IS EXPLICITLY RELEASED.
-    //
-    // Is this really what you want to use?  Using this removes any guarantee
-    // of release.  Use nsAutoRef<T>::out() for return values, or an
-    // nsAutoRef<T> modifiable lvalue for an out parameter.  Use disown() when
-    // the reference must be stored in a POD type object, such as may be
-    // preferred for a namespace-scope object with static storage duration,
-    // for example.
-    RawRef disown()
-    {
-        RawRef temp = this->get();
-        LocalSimpleRef empty;
-        SimpleRef::operator=(empty);
-        return temp;
-    }
+public:
+  RawRef operator->() const
+  {
+    return this->get();
+  }
+
+  // Transfer ownership to a raw reference.
+  //
+  // THE CALLER MUST ENSURE THAT THE REFERENCE IS EXPLICITLY RELEASED.
+  //
+  // Is this really what you want to use?  Using this removes any guarantee
+  // of release.  Use nsAutoRef<T>::out() for return values, or an
+  // nsAutoRef<T> modifiable lvalue for an out parameter.  Use disown() when
+  // the reference must be stored in a POD type object, such as may be
+  // preferred for a namespace-scope object with static storage duration,
+  // for example.
+  RawRef disown()
+  {
+    RawRef temp = this->get();
+    LocalSimpleRef empty;
+    SimpleRef::operator=(empty);
+    return temp;
+  }
 
 protected:
-    // steal and own are protected because they make no sense on nsReturnRef,
-    // but steal is implemented on this class for access to aOtherRef.disown()
-    // when aOtherRef is an nsReturnRef;
+  // steal and own are protected because they make no sense on nsReturnRef,
+  // but steal is implemented on this class for access to aOtherRef.disown()
+  // when aOtherRef is an nsReturnRef;
 
-    // Transfer ownership from another smart reference.
-    void steal(ThisClass& aOtherRef)
-    {
-        own(aOtherRef.disown());
-    }
-    // Assume ownership of a raw ref.
-    void own(RawRefOnly aRefToRelease)
-    {
-        SafeRelease();
-        LocalSimpleRef ref(aRefToRelease);
-        SimpleRef::operator=(ref);
-    }
+  // Transfer ownership from another smart reference.
+  void steal(ThisClass& aOtherRef)
+  {
+    own(aOtherRef.disown());
+  }
+  // Assume ownership of a raw ref.
+  void own(RawRefOnly aRefToRelease)
+  {
+    SafeRelease();
+    LocalSimpleRef ref(aRefToRelease);
+    SimpleRef::operator=(ref);
+  }
 
-    // Release a resource if there is one.
-    void SafeRelease()
-    {
-        if (this->HaveResource())
-            this->Release(this->get());
-    }
+  // Release a resource if there is one.
+  void SafeRelease()
+  {
+    if (this->HaveResource())
+      this->Release(this->get());
+  }
 };
 
 #endif // !defined(nsAutoRef_h_)

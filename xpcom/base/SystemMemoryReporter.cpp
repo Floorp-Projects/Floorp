@@ -130,7 +130,7 @@ public:
   } while (0)
 
 #define REPORT(_path, _amount, _desc) \
-    REPORT_WITH_CLEANUP(_path, UNITS_BYTES, _amount, _desc, (void)0)
+  REPORT_WITH_CLEANUP(_path, UNITS_BYTES, _amount, _desc, (void)0)
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData)
@@ -626,16 +626,16 @@ private:
   uint64_t
   ReadSizeFromFile(const char* aFilename)
   {
-      FILE* sizeFile = fopen(aFilename, "r");
-      if (NS_WARN_IF(!sizeFile)) {
-        return 0;
-      }
+    FILE* sizeFile = fopen(aFilename, "r");
+    if (NS_WARN_IF(!sizeFile)) {
+      return 0;
+    }
 
-      uint64_t size = 0;
-      fscanf(sizeFile, "%" SCNu64, &size);
-      fclose(sizeFile);
+    uint64_t size = 0;
+    fscanf(sizeFile, "%" SCNu64, &size);
+    fclose(sizeFile);
 
-      return size;
+    return size;
   }
 
   nsresult
@@ -681,16 +681,16 @@ private:
 
       nsPrintfCString diskUsedPath("zram-disksize/%s/used", name);
       nsPrintfCString diskUsedDesc(
-                           "The uncompressed size of data stored in \"%s.\" "
-                           "This excludes zero-filled pages since "
-                           "no memory is allocated for them.", name);
+        "The uncompressed size of data stored in \"%s.\" "
+        "This excludes zero-filled pages since "
+        "no memory is allocated for them.", name);
       REPORT_WITH_CLEANUP(diskUsedPath, UNITS_BYTES, origSize,
                           diskUsedDesc, closedir(d));
 
       nsPrintfCString diskUnusedPath("zram-disksize/%s/unused", name);
       nsPrintfCString diskUnusedDesc(
-                           "The amount of uncompressed data that can still be "
-                           "be stored in \"%s\"", name);
+        "The amount of uncompressed data that can still be "
+        "be stored in \"%s\"", name);
       REPORT_WITH_CLEANUP(diskUnusedPath, UNITS_BYTES, unusedSize,
                           diskUnusedDesc, closedir(d));
 
@@ -702,15 +702,15 @@ private:
       uint64_t writes = ReadSizeFromFile(writesFile.get());
 
       nsPrintfCString readsDesc(
-                           "The number of reads (failed or successful) done on "
-                           "\"%s\"", name);
+        "The number of reads (failed or successful) done on "
+        "\"%s\"", name);
       nsPrintfCString readsPath("zram-accesses/%s/reads", name);
       REPORT_WITH_CLEANUP(readsPath, UNITS_COUNT_CUMULATIVE, reads,
                           readsDesc, closedir(d));
 
       nsPrintfCString writesDesc(
-                           "The number of writes (failed or successful) done "
-                           "on \"%s\"", name);
+        "The number of writes (failed or successful) done "
+        "on \"%s\"", name);
       nsPrintfCString writesPath("zram-accesses/%s/writes", name);
       REPORT_WITH_CLEANUP(writesPath, UNITS_COUNT_CUMULATIVE, writes,
                           writesDesc, closedir(d));
@@ -720,8 +720,8 @@ private:
       uint64_t comprSize = ReadSizeFromFile(comprSizeFile.get());
 
       nsPrintfCString comprSizeDesc(
-                           "The compressed size of data stored in \"%s\"",
-                            name);
+        "The compressed size of data stored in \"%s\"",
+        name);
       nsPrintfCString comprSizePath("zram-compr-data-size/%s", name);
       REPORT_WITH_CLEANUP(comprSizePath, UNITS_BYTES, comprSize,
                           comprSizeDesc, closedir(d));
@@ -816,15 +816,15 @@ NS_IMPL_ISUPPORTS(SystemReporter, nsIMemoryReporter)
 
 // Keep this in sync with SystemReporter::ProcessSizeKind!
 const char* SystemReporter::kindPathSuffixes[] = {
-    "anonymous/outside-brk",
-    "anonymous/brk-heap",
-    "shared-libraries/read-executable",
-    "shared-libraries/read-write",
-    "shared-libraries/read-only",
-    "shared-libraries/other",
-    "other-files",
-    "main-thread-stack",
-    "vdso"
+  "anonymous/outside-brk",
+  "anonymous/brk-heap",
+  "shared-libraries/read-executable",
+  "shared-libraries/read-write",
+  "shared-libraries/read-only",
+  "shared-libraries/other",
+  "other-files",
+  "main-thread-stack",
+  "vdso"
 };
 
 void Init()
