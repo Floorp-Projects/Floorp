@@ -717,6 +717,11 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     }
   }
 
+  LayoutDeviceToParentLayerScale layoutToParentLayerScale =
+    // The ScreenToParentLayerScale should be mTransformScale which is not calculated yet,
+    // but we don't yet handle CSS transforms, so we assume it's 1 here.
+    metrics.mCumulativeResolution * LayerToScreenScale(1.0) * ScreenToParentLayerScale(1.0);
+
   // Calculate the composition bounds as the size of the scroll frame and
   // its origin relative to the reference frame.
   // If aScrollFrame is null, we are in a document without a root scroll frame,
@@ -725,7 +730,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   nsRect compositionBounds(frameForCompositionBoundsCalculation->GetOffsetToCrossDoc(aReferenceFrame),
                            frameForCompositionBoundsCalculation->GetSize());
   metrics.mCompositionBounds = RoundedToInt(LayoutDeviceRect::FromAppUnits(compositionBounds, auPerDevPixel)
-                                            * metrics.GetParentResolution());
+                                            * layoutToParentLayerScale);
+
 
   // For the root scroll frame of the root content document, the above calculation
   // will yield the size of the viewport frame as the composition bounds, which
@@ -742,7 +748,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
       if (nsView* view = rootFrame->GetView()) {
         nsRect viewBoundsAppUnits = view->GetBounds() + rootFrame->GetOffsetToCrossDoc(aReferenceFrame);
         ParentLayerIntRect viewBounds = RoundedToInt(LayoutDeviceRect::FromAppUnits(viewBoundsAppUnits, auPerDevPixel)
-                                                     * metrics.GetParentResolution());
+                                                     * layoutToParentLayerScale);
+
         // On Android, we need to do things a bit differently to get things
         // right (see bug 983208, bug 988882). We use the bounds of the nearest
         // widget, but clamp the height to the view bounds height. This clamping
