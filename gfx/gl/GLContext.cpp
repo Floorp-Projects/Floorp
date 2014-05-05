@@ -465,7 +465,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
     if (mInitialized) {
         unsigned int version = 0;
 
-        bool parseSuccess = ParseGLVersion(this, &version);
+        ParseGLVersion(this, &version);
 
 #ifdef DEBUG
         printf_stderr("OpenGL version detected: %u\n", version);
@@ -475,10 +475,10 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
         if (version >= mVersion) {
             mVersion = version;
-        } else if (parseSuccess) {
-            NS_WARNING("Parsed version less than expected.");
-            mInitialized = false;
         }
+        // Don't fail if version < mVersion, see bug 999445,
+        // Mac OSX 10.6/10.7 machines with Intel GPUs claim only OpenGL 1.4 but
+        // have all the GL2+ extensions that we need.
     }
 
     // Load OpenGL ES 2.0 symbols, or desktop if we aren't using ES 2.
