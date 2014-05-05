@@ -103,8 +103,7 @@ NetworkStats.prototype = {
 }
 
 // NetworkStatsAlarm
-const NETWORKSTATSALARM_CID      = Components.ID("{a93ea13e-409c-4189-9b1e-95fff220be55}");
-const nsIDOMMozNetworkStatsAlarm = Ci.nsIDOMMozNetworkStatsAlarm;
+const NETWORKSTATSALARM_CID = Components.ID("{a93ea13e-409c-4189-9b1e-95fff220be55}");
 
 function NetworkStatsAlarm(aWindow, aAlarm) {
   this.alarmId = aAlarm.id;
@@ -115,21 +114,9 @@ function NetworkStatsAlarm(aWindow, aAlarm) {
 }
 
 NetworkStatsAlarm.prototype = {
-  __exposedProps__: {
-    alarmId: 'r',
-    network: 'r',
-    threshold: 'r',
-    data: 'r',
-  },
-
   classID : NETWORKSTATSALARM_CID,
-  classInfo : XPCOMUtils.generateCI({classID: NETWORKSTATSALARM_CID,
-                                     contractID:"@mozilla.org/networkstatsalarm;1",
-                                     classDescription: "NetworkStatsAlarm",
-                                     interfaces: [nsIDOMMozNetworkStatsAlarm],
-                                     flags: nsIClassInfo.DOM_OBJECT}),
 
-  QueryInterface : XPCOMUtils.generateQI([nsIDOMMozNetworkStatsAlarm])
+  QueryInterface : XPCOMUtils.generateQI([])
 };
 
 // NetworkStatsManager
@@ -385,7 +372,13 @@ NetworkStatsManager.prototype = {
 
         let alarms = new this._window.Array();
         for (let i = 0; i < msg.result.length; i++) {
-          alarms.push(new NetworkStatsAlarm(msg.result[i]));
+          // The WebIDL type of data is any, so we should manually clone it
+          // into the content window.
+          if ("data" in msg.result[i]) {
+            msg.result[i].data = Cu.cloneInto(msg.result[i].data, this._window);
+          }
+          let alarm = new NetworkStatsAlarm(this._window, msg.result[i]);
+          alarms.push(this._window.MozNetworkStatsAlarm._create(this._window, alarm));
         }
 
         Services.DOMRequest.fireSuccess(req, alarms);
