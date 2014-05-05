@@ -15,7 +15,7 @@ LoadManager* LoadManagerBuild(void)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#if defined(ANDROID) || defined(LINUX)
+#if defined(ANDROID) || defined(LINUX) || defined(XP_MACOSX)
   int loadMeasurementInterval =
     mozilla::Preferences::GetInt("media.navigator.load_adapt.measure_interval", 1000);
   int averagingSeconds =
