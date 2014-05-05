@@ -178,8 +178,8 @@ let AlertsHelper = {
             return helper.fullLaunchPath();
           } else if (typeof message === "object" &&
                      kNotificationSystemMessageName in message) {
-            return
-              helper.resolveFromOrigin(message[kNotificationSystemMessageName]);
+            return helper.resolveFromOrigin(
+              message[kNotificationSystemMessageName]);
           }
         }
 
