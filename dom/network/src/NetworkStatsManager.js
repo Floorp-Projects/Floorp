@@ -27,9 +27,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "nsISyncMessageSender");
 
 // NetworkStatsData
-const nsIClassInfo              = Ci.nsIClassInfo;
-const NETWORKSTATSDATA_CID      = Components.ID("{3b16fe17-5583-483a-b486-b64a3243221c}");
-const nsIDOMMozNetworkStatsData = Ci.nsIDOMMozNetworkStatsData;
+const nsIClassInfo         = Ci.nsIClassInfo;
+const NETWORKSTATSDATA_CID = Components.ID("{3b16fe17-5583-483a-b486-b64a3243221c}");
 
 function NetworkStatsData(aWindow, aData) {
   this.rxBytes = aData.rxBytes;
@@ -38,20 +37,9 @@ function NetworkStatsData(aWindow, aData) {
 }
 
 NetworkStatsData.prototype = {
-  __exposedProps__: {
-    rxBytes: 'r',
-    txBytes: 'r',
-    date:  'r',
-  },
-
   classID : NETWORKSTATSDATA_CID,
-  classInfo : XPCOMUtils.generateCI({classID: NETWORKSTATSDATA_CID,
-                                     contractID:"@mozilla.org/networkstatsdata;1",
-                                     classDescription: "NetworkStatsData",
-                                     interfaces: [nsIDOMMozNetworkStatsData],
-                                     flags: nsIClassInfo.DOM_OBJECT}),
 
-  QueryInterface : XPCOMUtils.generateQI([nsIDOMMozNetworkStatsData])
+  QueryInterface : XPCOMUtils.generateQI([])
 };
 
 // NetworkStatsInterface
@@ -100,7 +88,8 @@ function NetworkStats(aWindow, aStats) {
 
   let samples = this.data = new aWindow.Array();
   for (let i = 0; i < aStats.data.length; i++) {
-    samples.push(new NetworkStatsData(aWindow, aStats.data[i]));
+    samples.push(aWindow.MozNetworkStatsData._create(
+      aWindow, new NetworkStatsData(aWindow, aStats.data[i])));
   }
 }
 
@@ -122,7 +111,6 @@ NetworkStats.prototype = {
                                      flags: nsIClassInfo.DOM_OBJECT}),
 
   QueryInterface : XPCOMUtils.generateQI([nsIDOMMozNetworkStats,
-                                          nsIDOMMozNetworkStatsData,
                                           nsIDOMMozNetworkStatsInterface])
 }
 
