@@ -405,11 +405,7 @@ nsDeviceContext::CreateRenderingContext(nsRenderingContext *&aContext)
 #endif
     nsRefPtr<nsRenderingContext> pContext = new nsRenderingContext();
 
-    RefPtr<gfx::DrawTarget> dt =
-      gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(printingSurface,
-                                                             gfx::IntSize(mWidth, mHeight));
-
-    pContext->Init(this, dt);
+    pContext->Init(this, printingSurface);
     pContext->Scale(mPrintingScale, mPrintingScale);
     aContext = pContext;
     NS_ADDREF(aContext);
