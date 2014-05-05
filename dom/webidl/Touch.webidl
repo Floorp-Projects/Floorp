@@ -12,16 +12,16 @@
 
 [Func="mozilla::dom::Touch::PrefEnabled"]
 interface Touch {
-  readonly    attribute long         identifier;
-  readonly    attribute EventTarget? target;
-  readonly    attribute long         screenX;
-  readonly    attribute long         screenY;
-  readonly    attribute long         clientX;
-  readonly    attribute long         clientY;
-  readonly    attribute long         pageX;
-  readonly    attribute long         pageY;
-  readonly    attribute long         radiusX;
-  readonly    attribute long         radiusY;
-  readonly    attribute float        rotationAngle;
-  readonly    attribute float        force;
+  readonly    attribute long        identifier;
+  readonly    attribute EventTarget target;
+  readonly    attribute long        screenX;
+  readonly    attribute long        screenY;
+  readonly    attribute long        clientX;
+  readonly    attribute long        clientY;
+  readonly    attribute long        pageX;
+  readonly    attribute long        pageY;
+  readonly    attribute long        radiusX;
+  readonly    attribute long        radiusY;
+  readonly    attribute float       rotationAngle;
+  readonly    attribute float       force;
 };
