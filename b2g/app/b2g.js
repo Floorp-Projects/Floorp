@@ -10,6 +10,11 @@ pref("browser.chromeURL", "chrome://b2g/content/");
 #endif
 
 #ifdef MOZ_MULET
+// Set FxOS as the default homepage
+// bug 1000122: this pref is fetched as a complex value,
+// so that it can't be set a just a string.
+// data: url is a workaround this.
+pref("browser.startup.homepage", "data:text/plain,browser.startup.homepage=chrome://b2g/content/shell.html");
 // Prevent having the firstrun page
 pref("startup.homepage_welcome_url", "");
 pref("browser.shell.checkDefaultBrowser", false);
