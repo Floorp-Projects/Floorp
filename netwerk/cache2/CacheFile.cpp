@@ -1528,8 +1528,6 @@ CacheFile::DataSize(int64_t* aSize)
 bool
 CacheFile::IsDoomed()
 {
-  CacheFileAutoLock lock(this);
-
   if (!mHandle)
     return false;
 
