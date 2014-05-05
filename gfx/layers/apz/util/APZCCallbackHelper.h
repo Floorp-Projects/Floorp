@@ -58,11 +58,13 @@ public:
        element. This might be an iframe inside the tab, for instance. */
     static already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(const nsIContent* aContent);
 
-    /* Get the presShellId and view ID for the given content element, if they can be
-       found. Returns false if the values could not be found, true if they could. */
-    static bool GetScrollIdentifiers(const nsIContent* aContent,
-                                     uint32_t* aPresShellIdOut,
-                                     FrameMetrics::ViewID* aViewIdOut);
+    /* Get the presShellId and view ID for the given content element.
+     * If the view ID does not exist, one is created.
+     * The pres shell ID should generally already exist; if it doesn't for some
+     * reason, false is returned. */
+    static bool GetOrCreateScrollIdentifiers(nsIContent* aContent,
+                                             uint32_t* aPresShellIdOut,
+                                             FrameMetrics::ViewID* aViewIdOut);
 
     /* Tell layout that we received the scroll offset update for the given view ID, so
        that it accepts future scroll offset updates from APZ. */
