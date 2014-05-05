@@ -1328,6 +1328,7 @@ public:
     mIceCandidatePairStats.Construct();
     mIceCandidateStats.Construct();
     mCodecStats.Construct();
+    mTimestamp.Construct(now);
   }
 };
 

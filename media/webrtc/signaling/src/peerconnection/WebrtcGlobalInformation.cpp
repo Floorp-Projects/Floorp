@@ -35,6 +35,15 @@ namespace dom {
 
 typedef Vector<nsAutoPtr<RTCStatsQuery>> RTCStatsQueries;
 
+static sipcc::PeerConnectionCtx* GetPeerConnectionCtx()
+{
+  if(PeerConnectionCtx::isActive()) {
+    MOZ_ASSERT(PeerConnectionCtx::GetInstance());
+    return PeerConnectionCtx::GetInstance();
+  }
+  return nullptr;
+}
+
 static void OnStatsReport_m(
   nsMainThreadPtrHandle<WebrtcGlobalStatisticsCallback> aStatsCallback,
   nsAutoPtr<RTCStatsQueries> aQueryList)
@@ -44,9 +53,17 @@ static void OnStatsReport_m(
 
   WebrtcGlobalStatisticsReport report;
   report.mReports.Construct();
+
+  // Reports for the currently active PeerConnections
   for (auto q = aQueryList->begin(); q != aQueryList->end(); ++q) {
     MOZ_ASSERT(*q);
     report.mReports.Value().AppendElement((*q)->report);
+  }
+
+  PeerConnectionCtx* ctx = GetPeerConnectionCtx();
+  if (ctx) {
+    // Reports for closed/destroyed PeerConnections
+    report.mReports.Value().AppendElements(ctx->mStatsForClosedPeerConnections);
   }
 
   ErrorResult rv;
@@ -140,9 +157,8 @@ WebrtcGlobalInformation::GetAllStats(
 
   // If there is no PeerConnectionCtx, go through the same motions, since
   // the API consumer doesn't care why there are no PeerConnectionImpl.
-  if (PeerConnectionCtx::isActive()) {
-    PeerConnectionCtx *ctx = PeerConnectionCtx::GetInstance();
-    MOZ_ASSERT(ctx);
+  PeerConnectionCtx *ctx = GetPeerConnectionCtx();
+  if (ctx) {
     for (auto p = ctx->mPeerConnections.begin();
          p != ctx->mPeerConnections.end();
          ++p) {
@@ -227,6 +243,8 @@ static void StoreLongTermICEStatisticsImpl_m(
       !query->report.mIceCandidateStats.WasPassed()) {
     return;
   }
+
+  query->report.mClosed.Construct(true);
 
   // First, store stuff in telemetry
   enum {
@@ -322,6 +340,11 @@ static void StoreLongTermICEStatisticsImpl_m(
       Telemetry::Accumulate(Telemetry::WEBRTC_CANDIDATE_TYPES_GIVEN_FAILURE,
                             i->second.candidateTypeBitpattern);
     }
+  }
+
+  PeerConnectionCtx *ctx = GetPeerConnectionCtx();
+  if (ctx) {
+    ctx->mStatsForClosedPeerConnections.AppendElement(query->report);
   }
 }
 
