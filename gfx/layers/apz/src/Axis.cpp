@@ -100,11 +100,12 @@ void Axis::CancelTouch() {
   }
 }
 
-bool Axis::Scrollable() {
-    if (mAxisLocked) {
-        return false;
-    }
-    return GetCompositionLength() < GetPageLength();
+bool Axis::CanScroll() const {
+  return GetCompositionLength() < GetPageLength();
+}
+
+bool Axis::CanScrollNow() const {
+  return !mAxisLocked && CanScroll();
 }
 
 bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta) {
@@ -212,11 +213,6 @@ bool Axis::ScaleWillOverscrollBothSides(float aScale) {
   CSSRect cssCompositionBounds = metrics.mCompositionBounds / scale;
 
   return GetRectLength(metrics.GetExpandedScrollableRect()) < GetRectLength(cssCompositionBounds);
-}
-
-bool Axis::HasRoomToPan() const {
-  return GetOrigin() > GetPageStart()
-      || GetCompositionEnd() < GetPageEnd();
 }
 
 const FrameMetrics& Axis::GetFrameMetrics() const {

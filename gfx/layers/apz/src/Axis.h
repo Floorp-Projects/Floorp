@@ -101,11 +101,16 @@ public:
    */
   bool FlingApplyFrictionOrCancel(const TimeDuration& aDelta);
 
-  /*
-   * Returns true if the page is zoomed in to some degree along this axis such that scrolling is
-   * possible and this axis has not been scroll locked while panning. Otherwise, returns false.
+  /**
+   * Returns true if the page has room to be scrolled along this axis.
    */
-  bool Scrollable();
+  bool CanScroll() const;
+
+  /**
+   * Returns true if the page has room to be scrolled along this axis
+   * and this axis is not scroll-locked.
+   */
+  bool CanScrollNow() const;
 
   void SetAxisLocked(bool aAxisLocked) { mAxisLocked = aAxisLocked; }
 
@@ -155,11 +160,6 @@ public:
    * This gets called by ScaleWillOverscroll().
    */
   bool ScaleWillOverscrollBothSides(float aScale);
-
-  /**
-   * Returns whether there is room to pan on this axis in either direction.
-   */
-  bool HasRoomToPan() const;
 
   float GetOrigin() const;
   float GetCompositionLength() const;
