@@ -897,6 +897,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged(uint32_t aClientId)
   voiceInfo->GetType(type);
   mPhoneType = GetPhoneType(type);
 
+  // Roam
   bool roaming;
   voiceInfo->GetRoaming(&roaming);
   mRoam = (roaming) ? 1 : 0;
@@ -904,7 +905,13 @@ BluetoothHfpManager::HandleVoiceConnectionChanged(uint32_t aClientId)
   // Service
   nsString regState;
   voiceInfo->GetState(regState);
-  mService = (regState.EqualsLiteral("registered")) ? 1 : 0;
+
+  int service = (regState.EqualsLiteral("registered")) ? 1 : 0;
+  if (service != mService) {
+    // Notify BluetoothRilListener of service change
+    mListener->ServiceChanged(aClientId, service);
+  }
+  mService = service;
 
   // Signal
   JSContext* cx = nsContentUtils::GetSafeJSContext();
