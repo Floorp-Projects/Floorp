@@ -457,7 +457,7 @@ let HomePanels = (function () {
       _assertPanelExists(id);
 
       let authKey = PREFS_PANEL_AUTH_PREFIX + id;
-      let sharedPrefs = SharedPreferences.forProfile();
+      let sharedPrefs = new SharedPreferences();
       sharedPrefs.setBoolPref(authKey, isAuthenticated);
     }
   });

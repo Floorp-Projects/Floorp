@@ -50,9 +50,6 @@ public final class GeckoSharedPrefs {
     // Name for app-scoped prefs
     public static final String APP_PREFS_NAME = "GeckoApp";
 
-    // Used when fetching profile-scoped prefs.
-    public static final String PROFILE_PREFS_NAME_PREFIX = "GeckoProfile-";
-
     // The prefs key that holds the current migration
     private static final String PREFS_VERSION_KEY = "gecko_shared_prefs_migration";
 
@@ -75,6 +72,9 @@ public final class GeckoSharedPrefs {
     public enum Flags {
         DISABLE_MIGRATIONS
     }
+
+    // Used when fetching profile-scoped prefs.
+    private static final String PROFILE_PREFS_NAME_PREFIX = "GeckoProfile-";
 
     public static SharedPreferences forApp(Context context) {
         return forApp(context, EnumSet.noneOf(Flags.class));
