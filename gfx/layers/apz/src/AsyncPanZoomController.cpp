@@ -1122,7 +1122,7 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle, TouchBe
   // Handling of cross sliding will need to be added in this method after touch-action released
   // enabled by default.
   if ((aBehavior & AllowedTouchBehavior::VERTICAL_PAN) && (aBehavior & AllowedTouchBehavior::HORIZONTAL_PAN)) {
-    if (mX.Scrollable() && mY.Scrollable()) {
+    if (mX.CanScrollNow() && mY.CanScrollNow()) {
       if (IsCloseToHorizontal(aAngle, AXIS_LOCK_ANGLE)) {
         mY.SetAxisLocked(true);
         SetState(PANNING_LOCKED_X);
@@ -1132,7 +1132,7 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle, TouchBe
       } else {
         SetState(PANNING);
       }
-    } else if (mX.Scrollable() || mY.Scrollable()) {
+    } else if (mX.CanScrollNow() || mY.CanScrollNow()) {
       SetState(PANNING);
     } else {
       SetState(NOTHING);
@@ -1163,11 +1163,11 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle, TouchBe
 }
 
 void AsyncPanZoomController::HandlePanning(double aAngle) {
-  if (!gfxPrefs::APZCrossSlideEnabled() && (!mX.Scrollable() || !mY.Scrollable())) {
+  if (!gfxPrefs::APZCrossSlideEnabled() && (!mX.CanScrollNow() || !mY.CanScrollNow())) {
     SetState(PANNING);
   } else if (IsCloseToHorizontal(aAngle, AXIS_LOCK_ANGLE)) {
     mY.SetAxisLocked(true);
-    if (mX.Scrollable()) {
+    if (mX.CanScrollNow()) {
       SetState(PANNING_LOCKED_X);
     } else {
       SetState(CROSS_SLIDING_X);
@@ -1175,7 +1175,7 @@ void AsyncPanZoomController::HandlePanning(double aAngle) {
     }
   } else if (IsCloseToVertical(aAngle, AXIS_LOCK_ANGLE)) {
     mX.SetAxisLocked(true);
-    if (mY.Scrollable()) {
+    if (mY.CanScrollNow()) {
       SetState(PANNING_LOCKED_Y);
     } else {
       SetState(CROSS_SLIDING_Y);
@@ -1562,7 +1562,7 @@ void AsyncPanZoomController::FlushRepaintForOverscrollHandoff() {
 
 bool AsyncPanZoomController::IsPannable() const {
   ReentrantMonitorAutoEnter lock(mMonitor);
-  return mX.HasRoomToPan() || mY.HasRoomToPan();
+  return mX.CanScroll() || mY.CanScroll();
 }
 
 void AsyncPanZoomController::RequestContentRepaint() {
