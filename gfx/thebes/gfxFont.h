@@ -496,6 +496,16 @@ public:
     virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                         FontListSizes* aSizes) const;
 
+    // Used when checking for complex script support, to mask off cmap ranges
+    struct ScriptRange {
+        uint32_t         rangeStart;
+        uint32_t         rangeEnd;
+        hb_tag_t         tags[3]; // one or two OpenType script tags to check,
+                                  // plus a NULL terminator
+    };
+
+    bool SupportsScriptInGSUB(const hb_tag_t* aScriptTags);
+
     nsString         mName;
     nsString         mFamilyName;
 
