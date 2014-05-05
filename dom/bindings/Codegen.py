@@ -5582,8 +5582,6 @@ class CGCallGenerator(CGThing):
             self.cgRoot.append(CGIndenter(errorReport))
             self.cgRoot.append(CGGeneric("}\n"))
 
-        self.cgRoot.append(CGGeneric("MOZ_ASSERT(!JS_IsExceptionPending(cx));\n"))
-
     def define(self):
         return self.cgRoot.define()
 
