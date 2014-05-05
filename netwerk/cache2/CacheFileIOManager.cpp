@@ -114,6 +114,7 @@ CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash, bool aPriority)
   , mIsDoomed(false)
   , mPriority(aPriority)
   , mClosed(false)
+  , mSpecialFile(false)
   , mInvalid(false)
   , mFileExists(false)
   , mFileSize(-1)
@@ -128,6 +129,7 @@ CacheFileHandle::CacheFileHandle(const nsACString &aKey, bool aPriority)
   , mIsDoomed(false)
   , mPriority(aPriority)
   , mClosed(false)
+  , mSpecialFile(true)
   , mInvalid(false)
   , mFileExists(false)
   , mFileSize(-1)
@@ -145,7 +147,7 @@ CacheFileHandle::~CacheFileHandle()
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
 
   nsRefPtr<CacheFileIOManager> ioMan = CacheFileIOManager::gInstance;
-  if (ioMan) {
+  if (!IsClosed() && ioMan) {
     ioMan->CloseHandleInternal(this);
   }
 }
@@ -158,19 +160,17 @@ CacheFileHandle::Log()
     mFile->GetNativeLeafName(leafName);
   }
 
-  if (!mHash) {
-    // special file
-    LOG(("CacheFileHandle::Log() [this=%p, hash=nullptr, isDoomed=%d, "
-         "priority=%d, closed=%d, invalid=%d, "
-         "fileExists=%d, fileSize=%lld, leafName=%s, key=%s]",
-         this, mIsDoomed, mPriority, mClosed, mInvalid,
+  if (mSpecialFile) {
+    LOG(("CacheFileHandle::Log() - special file [this=%p, isDoomed=%d, "
+         "priority=%d, closed=%d, invalid=%d, fileExists=%d, fileSize=%lld, "
+         "leafName=%s, key=%s]", this, mIsDoomed, mPriority, mClosed, mInvalid,
          mFileExists, mFileSize, leafName.get(), mKey.get()));
   } else {
-    LOG(("CacheFileHandle::Log() [this=%p, hash=%08x%08x%08x%08x%08x, "
-         "isDoomed=%d, priority=%d, closed=%d, invalid=%d, "
-         "fileExists=%d, fileSize=%lld, leafName=%s, key=%s]",
-         this, LOGSHA1(mHash), mIsDoomed, mPriority, mClosed,
-         mInvalid, mFileExists, mFileSize, leafName.get(), mKey.get()));
+    LOG(("CacheFileHandle::Log() - entry file [this=%p, hash=%08x%08x%08x%08x"
+         "%08x, isDoomed=%d, priority=%d, closed=%d, invalid=%d, fileExists=%d,"
+         " fileSize=%lld, leafName=%s, key=%s]", this, LOGSHA1(mHash),
+         mIsDoomed, mPriority, mClosed, mInvalid, mFileExists, mFileSize,
+         leafName.get(), mKey.get()));
   }
 }
 
@@ -1297,6 +1297,13 @@ CacheFileIOManager::ShutdownInternal()
     } else {
       mHandles.RemoveHandle(h);
     }
+
+    // Pointer to the hash is no longer valid once the last handle with the
+    // given hash is released. Null out the pointer so that we crash if there
+    // is a bug in this code and we dereference the pointer after this point.
+    if (!h->IsSpecialFile()) {
+      h->mHash = nullptr;
+    }
   }
 
   // Assert the table is empty. When we are here, no new handles can be added
@@ -1785,6 +1792,9 @@ nsresult
 CacheFileIOManager::CloseHandleInternal(CacheFileHandle *aHandle)
 {
   LOG(("CacheFileIOManager::CloseHandleInternal() [handle=%p]", aHandle));
+
+  MOZ_ASSERT(!aHandle->IsClosed());
+
   aHandle->Log();
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
