@@ -363,6 +363,12 @@ SetProcessPriority(int aPid,
 }
 
 void
+SetCurrentThreadPriority(ThreadPriority aThreadPriority)
+{
+  NS_RUNTIMEABORT("Setting thread priority cannot be called from sandboxed contexts.");
+}
+
+void
 EnableFMRadio(const hal::FMRadioSettings& aSettings)
 {
   NS_RUNTIMEABORT("FM radio cannot be called from sandboxed contexts.");
