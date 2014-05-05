@@ -1,110 +1,110 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // IWYU pragma: private, include "nsString.h"
 
-  /**
-   * nsTDependentSubstring_CharT
-   *
-   * A string class which wraps an external array of string characters. It
-   * is the client code's responsibility to ensure that the external buffer
-   * remains valid for a long as the string is alive.
-   *
-   * NAMES:
-   *   nsDependentSubstring for wide characters
-   *   nsDependentCSubstring for narrow characters
-   */
+/**
+ * nsTDependentSubstring_CharT
+ *
+ * A string class which wraps an external array of string characters. It
+ * is the client code's responsibility to ensure that the external buffer
+ * remains valid for a long as the string is alive.
+ *
+ * NAMES:
+ *   nsDependentSubstring for wide characters
+ *   nsDependentCSubstring for narrow characters
+ */
 class nsTDependentSubstring_CharT : public nsTSubstring_CharT
+{
+public:
+
+  typedef nsTDependentSubstring_CharT    self_type;
+
+public:
+
+  void Rebind( const substring_type&, uint32_t startPos, uint32_t length = size_type(-1) );
+
+  void Rebind( const char_type* data, size_type length );
+
+  void Rebind( const char_type* start, const char_type* end )
   {
-    public:
+    Rebind(start, size_type(end - start));
+  }
 
-      typedef nsTDependentSubstring_CharT    self_type;
+  nsTDependentSubstring_CharT( const substring_type& str, uint32_t startPos, uint32_t length = size_type(-1) )
+    : substring_type()
+  {
+    Rebind(str, startPos, length);
+  }
 
-    public:
+  nsTDependentSubstring_CharT( const char_type* data, size_type length )
+    : substring_type(const_cast<char_type*>(data), length, F_NONE) {}
 
-      void Rebind( const substring_type&, uint32_t startPos, uint32_t length = size_type(-1) );
-
-      void Rebind( const char_type* data, size_type length );
-
-      void Rebind( const char_type* start, const char_type* end )
-        {
-          Rebind(start, size_type(end - start));
-        }
-
-      nsTDependentSubstring_CharT( const substring_type& str, uint32_t startPos, uint32_t length = size_type(-1) )
-        : substring_type()
-        {
-          Rebind(str, startPos, length);
-        }
-
-      nsTDependentSubstring_CharT( const char_type* data, size_type length )
-        : substring_type(const_cast<char_type*>(data), length, F_NONE) {}
-
-      nsTDependentSubstring_CharT( const char_type* start, const char_type* end )
-        : substring_type(const_cast<char_type*>(start), uint32_t(end - start), F_NONE) {}
+  nsTDependentSubstring_CharT( const char_type* start, const char_type* end )
+    : substring_type(const_cast<char_type*>(start), uint32_t(end - start), F_NONE) {}
 
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-      nsTDependentSubstring_CharT( char16ptr_t data, size_type length )
-        : nsTDependentSubstring_CharT(static_cast<const char16_t*>(data), length) {}
+  nsTDependentSubstring_CharT( char16ptr_t data, size_type length )
+    : nsTDependentSubstring_CharT(static_cast<const char16_t*>(data), length) {}
 
-      nsTDependentSubstring_CharT( char16ptr_t start, char16ptr_t end )
-        : nsTDependentSubstring_CharT(static_cast<const char16_t*>(start), static_cast<const char16_t*>(end)) {}
+  nsTDependentSubstring_CharT( char16ptr_t start, char16ptr_t end )
+    : nsTDependentSubstring_CharT(static_cast<const char16_t*>(start), static_cast<const char16_t*>(end)) {}
 #endif
 
-      nsTDependentSubstring_CharT( const const_iterator& start, const const_iterator& end )
-        : substring_type(const_cast<char_type*>(start.get()), uint32_t(end.get() - start.get()), F_NONE) {}
+  nsTDependentSubstring_CharT( const const_iterator& start, const const_iterator& end )
+    : substring_type(const_cast<char_type*>(start.get()), uint32_t(end.get() - start.get()), F_NONE) {}
 
-      // Create a nsTDependentSubstring to be bound later
-      nsTDependentSubstring_CharT()
-        : substring_type() {}
+  // Create a nsTDependentSubstring to be bound later
+  nsTDependentSubstring_CharT()
+    : substring_type() {}
 
-      // auto-generated copy-constructor OK (XXX really?? what about base class copy-ctor?)
+  // auto-generated copy-constructor OK (XXX really?? what about base class copy-ctor?)
 
-    private:
-        // NOT USED
-      void operator=( const self_type& );        // we're immutable, you can't assign into a substring
-  };
+private:
+  // NOT USED
+  void operator=( const self_type& );        // we're immutable, you can't assign into a substring
+};
 
 inline
 const nsTDependentSubstring_CharT
 Substring( const nsTSubstring_CharT& str, uint32_t startPos, uint32_t length = uint32_t(-1) )
-  {
-    return nsTDependentSubstring_CharT(str, startPos, length);
-  }
+{
+  return nsTDependentSubstring_CharT(str, startPos, length);
+}
 
 inline
 const nsTDependentSubstring_CharT
 Substring( const nsReadingIterator<CharT>& start, const nsReadingIterator<CharT>& end )
-  {
-    return nsTDependentSubstring_CharT(start.get(), end.get());
-  }
+{
+  return nsTDependentSubstring_CharT(start.get(), end.get());
+}
 
 inline
 const nsTDependentSubstring_CharT
 Substring( const CharT* data, uint32_t length )
-  {
-    return nsTDependentSubstring_CharT(data, length);
-  }
+{
+  return nsTDependentSubstring_CharT(data, length);
+}
 
 inline
 const nsTDependentSubstring_CharT
 Substring( const CharT* start, const CharT* end )
-  {
-    return nsTDependentSubstring_CharT(start, end);
-  }
+{
+  return nsTDependentSubstring_CharT(start, end);
+}
 
 inline
 const nsTDependentSubstring_CharT
 StringHead( const nsTSubstring_CharT& str, uint32_t count )
-  {
-    return nsTDependentSubstring_CharT(str, 0, count);
-  }
+{
+  return nsTDependentSubstring_CharT(str, 0, count);
+}
 
 inline
 const nsTDependentSubstring_CharT
 StringTail( const nsTSubstring_CharT& str, uint32_t count )
-  {
-    return nsTDependentSubstring_CharT(str, str.Length() - count, count);
-  }
+{
+  return nsTDependentSubstring_CharT(str, str.Length() - count, count);
+}
