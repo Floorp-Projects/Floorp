@@ -143,7 +143,7 @@ partial interface HTMLInputElement {
   [Throws]
   void setSelectionRange(long start, long end, optional DOMString direction);
 
-  [GetterThrows]
+  [GetterThrows, ChromeOnly]
   readonly attribute nsIControllers        controllers;
   [GetterThrows]
   readonly attribute long                  textLength;
