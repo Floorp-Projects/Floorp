@@ -1386,16 +1386,26 @@ nsresult OggReader::Seek(int64_t aTarget,
     // When doing fastSeek we display the first frame after the seek, so
     // we need to advance the decode to the keyframe otherwise we'll get
     // visual artifacts in the first frame output after the seek.
-    bool skip = true;
-    while (DecodeVideoFrame(skip, 0) && skip) {
-      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      if (mDecoder->IsShutdown()) {
-        return NS_ERROR_FAILURE;
+    // First, we must check to see if there's already a keyframe in the frames
+    // that we may have already decoded, and discard frames up to the
+    // keyframe.
+    VideoData* v;
+    while ((v = mVideoQueue.PeekFront()) && !v->mKeyframe) {
+      delete mVideoQueue.PopFront();
+    }
+    if (mVideoQueue.GetSize() == 0) {
+      // We didn't find a keyframe in the frames already here, so decode
+      // forwards until we find a keyframe.
+      bool skip = true;
+      while (DecodeVideoFrame(skip, 0) && skip) {
+        ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+        if (mDecoder->IsShutdown()) {
+          return NS_ERROR_FAILURE;
+        }
       }
     }
-
 #ifdef DEBUG
-    const VideoData* v = mVideoQueue.PeekFront();
+    v = mVideoQueue.PeekFront();
     if (!v || !v->mKeyframe) {
       NS_WARNING("Ogg seek didn't end up before a key frame!");
     }

@@ -40,8 +40,9 @@
 #include "mozilla/layers/TextureClient.h"
 
 struct nsIntRect;
- 
-using namespace base;
+
+using base::Thread;
+using base::ProcessHandle;
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
 

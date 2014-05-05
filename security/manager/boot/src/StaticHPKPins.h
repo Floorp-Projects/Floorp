@@ -191,15 +191,10 @@ typedef struct {
 } TransportSecurityPreload;
 
 static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
-  { "addons.mozilla.net",	true,	&kPinSet_mozilla },
-  { "addons.mozilla.org",	true,	&kPinSet_mozilla },
-  { "cdn.mozilla.net",	true,	&kPinSet_mozilla_cdn },
-  { "cdn.mozilla.org",	true,	&kPinSet_mozilla_cdn },
   { "exclude-subdomains.pinning.example.com",	false,	&kPinSet_mozilla_test },
   { "include-subdomains.pinning.example.com",	true,	&kPinSet_mozilla_test },
-  { "media.mozilla.com",	true,	&kPinSet_mozilla_cdn },
 };
 
-static const int kPublicKeyPinningPreloadListLength = 7;
+static const int kPublicKeyPinningPreloadListLength = 2;
 
-const PRTime kPreloadPKPinsExpirationTime = INT64_C(1409867186821000);
+const PRTime kPreloadPKPinsExpirationTime = INT64_C(1410109244157000);
