@@ -378,14 +378,6 @@ operator!=( const U* lhs, const nsHtml5RefPtr<T>& rhs )
     return static_cast<const U*>(lhs) != static_cast<const T*>(rhs.get());
   }
 
-  // To avoid ambiguities caused by the presence of builtin |operator==|s
-  // creating a situation where one of the |operator==| defined above
-  // has a better conversion for one argument and the builtin has a
-  // better conversion for the other argument, define additional
-  // |operator==| without the |const| on the raw pointer.
-  // See bug 65664 for details.
-
-#ifndef NSCAP_DONT_PROVIDE_NONCONST_OPEQ
 template <class T, class U>
 inline
 bool
@@ -417,7 +409,6 @@ operator!=( U* lhs, const nsHtml5RefPtr<T>& rhs )
   {
     return const_cast<const U*>(lhs) != static_cast<const T*>(rhs.get());
   }
-#endif
 
 
 
