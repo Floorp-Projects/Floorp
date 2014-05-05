@@ -6,14 +6,6 @@
 
 interface nsIDOMMozNetworkStatsInterface;
 
-[scriptable, builtinclass, uuid(3b16fe17-5583-483a-b486-b64a3243221c)]
-interface nsIDOMMozNetworkStatsData : nsISupports
-{
-  readonly attribute unsigned long   rxBytes;   // Received bytes.
-  readonly attribute unsigned long   txBytes;   // Sent bytes.
-  readonly attribute jsval           date;      // Date.
-};
-
 [scriptable, builtinclass, uuid(f1996e44-1057-4d4b-8ff8-919e76c4cfa9)]
 interface nsIDOMMozNetworkStats : nsISupports
 {
