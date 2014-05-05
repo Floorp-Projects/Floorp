@@ -93,11 +93,12 @@
   ],
 
   "entries": [
-    { "name": "addons.mozilla.org", "include_subdomains": true, "pins": "mozilla" },
-    { "name": "addons.mozilla.net", "include_subdomains": true, "pins": "mozilla" },
-    { "name": "cdn.mozilla.net", "include_subdomains": true, "pins": "mozilla_cdn" },
-    { "name": "cdn.mozilla.org", "include_subdomains": true, "pins": "mozilla_cdn" },
-    { "name": "media.mozilla.com", "include_subdomains": true, "pins": "mozilla_cdn" },
+    // Disable until bug 1005653 is fixed.
+    // { "name": "addons.mozilla.org", "include_subdomains": true, "pins": "mozilla" },
+    // { "name": "addons.mozilla.net", "include_subdomains": true, "pins": "mozilla" },
+    // { "name": "cdn.mozilla.net", "include_subdomains": true, "pins": "mozilla_cdn" },
+    // { "name": "cdn.mozilla.org", "include_subdomains": true, "pins": "mozilla_cdn" },
+    // { "name": "media.mozilla.com", "include_subdomains": true, "pins": "mozilla_cdn" },
     { "name": "include-subdomains.pinning.example.com", "include_subdomains": true, "pins": "mozilla_test" },
     { "name": "exclude-subdomains.pinning.example.com", "include_subdomains": false, "pins": "mozilla_test" }
   ]
