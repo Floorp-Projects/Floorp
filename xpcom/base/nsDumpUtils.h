@@ -91,8 +91,8 @@ public:
     MOZ_ASSERT(!strcmp(aTopic, "xpcom-shutdown"));
 
     XRE_GetIOMessageLoop()->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(this, &FdWatcher::StopWatching));
+      FROM_HERE,
+      NewRunnableMethod(this, &FdWatcher::StopWatching));
 
     return NS_OK;
   }
@@ -190,8 +190,8 @@ public:
    * instead.
    */
   static nsresult OpenTempFile(const nsACString& aFilename,
-                        nsIFile** aFile,
-                        const nsACString& aFoldername = EmptyCString());
+                               nsIFile** aFile,
+                               const nsACString& aFoldername = EmptyCString());
 };
 
 #endif
