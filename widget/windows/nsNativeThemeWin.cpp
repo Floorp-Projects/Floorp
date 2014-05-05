@@ -1775,9 +1775,43 @@ RENDER_AGAIN:
 
     DrawThemeBackground(theme, hdc, MENU_POPUPSEPARATOR, /* state */ 0, &sepRect, &clipRect);
   }
+  else if (aWidgetType == NS_THEME_MENUARROW)
+  {
+    // We're dpi aware and as such on systems that have dpi > 96 set, the
+    // theme library expects us to do proper positioning and scaling of glyphs.
+    // For NS_THEME_MENUARROW, layout may hand us a widget rect larger than the
+    // glyph rect we request in GetMinimumWidgetSize. To prevent distortion we
+    // have to position and scale what we draw.
+
+    SIZE glyphSize;
+    GetThemePartSize(theme, hdc, part, state, nullptr, TS_TRUE, &glyphSize);
+
+    int32_t widgetHeight = widgetRect.bottom - widgetRect.top;
+
+    RECT renderRect = widgetRect;
+
+    // We request (glyph width * 2, glyph height) in GetMinimumWidgetSize. In
+    // Firefox some menu items provide the full height of the item to us, in
+    // others our widget rect is the exact dims of our arrow glyph. Adjust the
+    // vertical position by the added space, if any exists.
+    renderRect.top += ((widgetHeight - glyphSize.cy) / 2);
+    renderRect.bottom = renderRect.top + glyphSize.cy;
+    // I'm using the width of the arrow glyph for the arrow-side padding.
+    // AFAICT there doesn't appear to be a theme constant we can query
+    // for this value. Generally this looks correct, and has the added
+    // benefit of being a dpi adjusted value.
+    if (!IsFrameRTL(aFrame)) {
+      renderRect.right = widgetRect.right - glyphSize.cx;
+      renderRect.left = renderRect.right - glyphSize.cx;
+    } else {
+      renderRect.left = glyphSize.cx;
+      renderRect.right = renderRect.left + glyphSize.cx;
+    }
+    DrawThemeBGRTLAware(theme, hdc, part, state, &renderRect, &clipRect,
+                        IsFrameRTL(aFrame));
+  }
   // The following widgets need to be RTL-aware
-  else if (aWidgetType == NS_THEME_MENUARROW ||
-           aWidgetType == NS_THEME_RESIZER ||
+  else if (aWidgetType == NS_THEME_RESIZER ||
            aWidgetType == NS_THEME_DROPDOWN_BUTTON)
   {
     DrawThemeBGRTLAware(theme, hdc, part, state,
@@ -2239,11 +2273,6 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* a
     case NS_THEME_MENUITEMTEXT:
       return NS_OK;
 
-    case NS_THEME_MENUARROW:
-      aResult->width = 26;
-      aResult->height = 16;
-      return NS_OK;
-
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
       // Best-fit size for progress meters is too large for most 
@@ -2401,6 +2430,14 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* a
     {
       SIZE gutterSize(GetGutterSize(theme, hdc));
       aResult->width += gutterSize.cx;
+      break;
+    }
+
+    case NS_THEME_MENUARROW:
+    {
+      // Use the width of the arrow glyph as padding. See the drawing
+      // code for details.
+      aResult->width *= 2;
       break;
     }
   }
