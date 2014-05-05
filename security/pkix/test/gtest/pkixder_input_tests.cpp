@@ -417,12 +417,31 @@ TEST_F(pkixder_input_tests, MarkAndGetSECItem)
   SECItem item;
   memset(&item, 0x00, sizeof item);
 
-  ASSERT_TRUE(input.GetSECItem(siBuffer, mark, item));
+  ASSERT_EQ(Success, input.GetSECItem(siBuffer, mark, item));
   ASSERT_EQ(siBuffer, item.type);
   ASSERT_EQ(sizeof expectedItemData, item.len);
   ASSERT_TRUE(item.data);
   ASSERT_EQ(0, memcmp(item.data, expectedItemData, sizeof expectedItemData));
 }
+
+// Cannot run this test on debug builds because of the PR_NOT_REACHED
+#ifndef DEBUG
+TEST_F(pkixder_input_tests, MarkAndGetSECItemDifferentInput)
+{
+  Input input;
+  const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
+  ASSERT_EQ(Success, input.Init(der, sizeof der));
+
+  Input another;
+  Input::Mark mark = another.GetMark();
+
+  ASSERT_EQ(Success, input.Skip(3));
+
+  SECItem item;
+  ASSERT_EQ(Failure, input.GetSECItem(siBuffer, mark, item));
+  ASSERT_EQ(SEC_ERROR_INVALID_ARGS, PR_GetError());
+}
+#endif
 
 TEST_F(pkixder_input_tests, ExpectTagAndLength)
 {
