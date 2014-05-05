@@ -11,9 +11,8 @@ Cu.import("resource://gre/modules/Services.jsm"); /*global Services */
 Cu.import("resource://gre/modules/Messaging.jsm");
 Cu.import("resource://gre/modules/SimpleServiceDiscovery.jsm"); /*global SimpleServiceDiscovery */
 
-// TODO: Export these from SimpleServiceDiscovery.
-const EVENT_SERVICE_FOUND = "ssdp-service-found";
-const EVENT_SERVICE_LOST = "ssdp-service-lost";
+const EVENT_SERVICE_FOUND = SimpleServiceDiscovery.EVENT_SERVICE_FOUND;
+const EVENT_SERVICE_LOST = SimpleServiceDiscovery.EVENT_SERVICE_LOST;
 
 // We want to keep this page fresh while it is open, so we decrease
 // our time between searches when it is opened, and revert to the
