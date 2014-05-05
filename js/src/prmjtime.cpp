@@ -93,7 +93,6 @@ struct CalibrationData {
 
 #ifdef JS_THREADSAFE
     CRITICAL_SECTION data_lock;
-    CRITICAL_SECTION calibration_lock;
 #endif
 };
 
@@ -122,7 +121,6 @@ NowCalibrate()
     calibration.calibrated = true;
 }
 
-static const unsigned CalibrationLockSpinCount = 0;
 static const unsigned DataLockSpinCount = 4096;
 
 void
@@ -141,7 +139,6 @@ PRMJ_NowInit()
     MOZ_ASSERT(calibration.freq > 0.0);
 
 #ifdef JS_THREADSAFE
-    InitializeCriticalSectionAndSpinCount(&calibration.calibration_lock, CalibrationLockSpinCount);
     InitializeCriticalSectionAndSpinCount(&calibration.data_lock, DataLockSpinCount);
 #endif
 }
@@ -150,7 +147,6 @@ PRMJ_NowInit()
 void
 PRMJ_NowShutdown()
 {
-    DeleteCriticalSection(&calibration.calibration_lock);
     DeleteCriticalSection(&calibration.data_lock);
 }
 
@@ -171,11 +167,10 @@ int64_t
 PRMJ_Now()
 {
     bool calibrated = false;
-    bool needsCalibration = false;
+    bool needsCalibration = !calibration.calibrated;
     double cachedOffset = 0.0;
     while (true) {
-        if (!calibration.calibrated || needsCalibration) {
-            MUTEX_LOCK(&calibration.calibration_lock);
+        if (needsCalibration) {
             MUTEX_LOCK(&calibration.data_lock);
 
             // Recalibrate only if no one else did before us.
@@ -193,7 +188,6 @@ PRMJ_Now()
             }
 
             MUTEX_UNLOCK(&calibration.data_lock);
-            MUTEX_UNLOCK(&calibration.calibration_lock);
         }
 
         // Calculate a low resolution time.
@@ -207,8 +201,8 @@ PRMJ_Now()
         double highresTimerValue = double(now.QuadPart);
 
         MUTEX_LOCK(&calibration.data_lock);
-        double highresTime = calibration.offset + PRMJ_USEC_PER_SEC *
-            (highresTimerValue-calibration.timer_offset)/calibration.freq;
+        double highresTime = calibration.offset +
+            PRMJ_USEC_PER_SEC * (highresTimerValue - calibration.timer_offset) / calibration.freq;
         cachedOffset = calibration.offset;
         MUTEX_UNLOCK(&calibration.data_lock);
 
