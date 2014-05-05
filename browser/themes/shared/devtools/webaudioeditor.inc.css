@@ -113,8 +113,16 @@ text {
  */
 
 .web-audio-inspector .error {
-  background-image: url(chrome://browser/skin/devtools/alerticon-warning.png);
+  background-image: url(alerticon-warning.png);
+  background-size: 13px 12px;
   -moz-appearance: none;
   opacity: 0;
   transition: opacity .5s ease-out 0s;
 }
+
+@media (min-resolution: 2dppx) {
+  .web-audio-inspector .error {
+    background-image: url(alerticon-warning@2x.png);
+  }
+}
+
