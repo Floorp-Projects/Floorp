@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
 #include "nsIFormControlFrame.h"
+#include "nsITextControlFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsCOMPtr.h"
 
@@ -27,6 +28,7 @@ class HTMLInputElement;
  */
 class nsNumberControlFrame MOZ_FINAL : public nsContainerFrame
                                      , public nsIAnonymousContentCreator
+                                     , public nsITextControlFrame
 {
   friend nsIFrame*
   NS_NewNumberControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -82,6 +84,38 @@ public:
     return nsContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
+
+  // nsITextControlFrame
+  NS_IMETHOD    GetEditor(nsIEditor **aEditor) MOZ_OVERRIDE;
+
+  NS_IMETHOD    SetSelectionStart(int32_t aSelectionStart) MOZ_OVERRIDE;
+  NS_IMETHOD    SetSelectionEnd(int32_t aSelectionEnd) MOZ_OVERRIDE;
+
+  NS_IMETHOD    SetSelectionRange(int32_t aSelectionStart,
+                                  int32_t aSelectionEnd,
+                                  SelectionDirection aDirection = eNone) MOZ_OVERRIDE;
+
+  NS_IMETHOD    GetSelectionRange(int32_t* aSelectionStart,
+                                  int32_t* aSelectionEnd,
+                                  SelectionDirection* aDirection = nullptr) MOZ_OVERRIDE;
+
+  NS_IMETHOD    GetOwnedSelectionController(nsISelectionController** aSelCon) MOZ_OVERRIDE;
+  virtual nsFrameSelection* GetOwnedFrameSelection() MOZ_OVERRIDE;
+
+  virtual nsresult GetPhonetic(nsAString& aPhonetic) MOZ_OVERRIDE;
+
+  /**
+   * Ensure mEditor is initialized with the proper flags and the default value.
+   * @throws NS_ERROR_NOT_INITIALIZED if mEditor has not been created
+   * @throws various and sundry other things
+   */
+  virtual nsresult EnsureEditorInitialized() MOZ_OVERRIDE;
+
+  virtual nsresult ScrollSelectionIntoView() MOZ_OVERRIDE;
+
+  // nsIFormControlFrame
+  virtual void SetFocus(bool aOn, bool aRepaint) MOZ_OVERRIDE;
+  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) MOZ_OVERRIDE;
 
   /**
    * This method attempts to localizes aValue and then sets the result as the
@@ -158,6 +192,7 @@ public:
 
 private:
 
+  nsITextControlFrame* GetTextFieldFrame();
   nsresult MakeAnonymousElement(Element** aResult,
                                 nsTArray<ContentInfo>& aElements,
                                 nsIAtom* aTagName,

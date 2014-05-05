@@ -20,6 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
 <input type="url" id="input_url"></input>
 <input type="tel" id="input_tel"></input>
 <input type="password" id="input_password"></input>
+<input type="number" id="input_number"></input>
 <textarea id="input_textarea"></textarea>
 
 <!-- "SetRangeText() non-supported types" -->
@@ -39,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
 
   /** Tests for Bug 850364 && Bug 918940**/
 
-  var SupportedTypes = ["text", "search", "url", "tel", "password", "textarea"];
+  var SupportedTypes = ["text", "search", "url", "tel", "password", "textarea", "number"];
   var NonSupportedTypes = ["button", "submit", "image", "reset", "radio",
                            "checkbox", "range", "file", "email"];
 
@@ -92,58 +93,58 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       }, false);
 
       var test = " setRange(replacement), shrink";
-      elem.value = "0123456789ABCDEF";
+      elem.value = "0123456789123456";
       elem.setSelectionRange(1, 6);
-      elem.setRangeText("xyz");
-      is(elem.value, "0xyz6789ABCDEF", msg + test);
+      elem.setRangeText("999");
+      is(elem.value, "09996789123456", msg + test);
       is(elem.selectionStart, 1, msg + test);
       is(elem.selectionEnd, 4, msg + test);
-      elem.setRangeText("mnk");
-      is(elem.value, "0mnk6789ABCDEF", msg + test);
+      elem.setRangeText("222");
+      is(elem.value, "02226789123456", msg + test);
       expectedNumOfSelectCalls += 3;
 
       test = " setRange(replacement), expand";
-      elem.value = "0123456789ABCDEF";
+      elem.value = "0123456789123456";
       elem.setSelectionRange(1, 2);
-      elem.setRangeText("xyz");
-      is(elem.value, "0xyz23456789ABCDEF", msg + test);
+      elem.setRangeText("999");
+      is(elem.value, "099923456789123456", msg + test);
       is(elem.selectionStart, 1, msg + test);
       is(elem.selectionEnd, 4, msg + test);
-      elem.setRangeText("mnk");
-      is(elem.value, "0mnk23456789ABCDEF", msg + test);
+      elem.setRangeText("222");
+      is(elem.value, "022223456789123456", msg + test);
       expectedNumOfSelectCalls += 3;
 
       test = " setRange(replacement) pure insertion at start";
-      elem.value = "0123456789ABCDEF";
+      elem.value = "0123456789123456";
       elem.setSelectionRange(0, 0);
-      elem.setRangeText("xyz");
-      is(elem.value, "xyz0123456789ABCDEF", msg + test);
+      elem.setRangeText("999");
+      is(elem.value, "9990123456789123456", msg + test);
       is(elem.selectionStart, 0, msg + test);
       is(elem.selectionEnd, 0, msg + test);
-      elem.setRangeText("mnk");
-      is(elem.value, "mnkxyz0123456789ABCDEF", msg + test);
+      elem.setRangeText("222");
+      is(elem.value, "2229990123456789123456", msg + test);
       expectedNumOfSelectCalls += 3;
 
       test = " setRange(replacement) pure insertion in the middle";
-      elem.value = "0123456789ABCDEF";
+      elem.value = "0123456789123456";
       elem.setSelectionRange(4, 4);
-      elem.setRangeText("xyz");
-      is(elem.value, "0123xyz456789ABCDEF", msg + test);
+      elem.setRangeText("999");
+      is(elem.value, "0123999456789123456", msg + test);
       is(elem.selectionStart, 4, msg + test);
       is(elem.selectionEnd, 4, msg + test);
-      elem.setRangeText("mnk");
-      is(elem.value, "0123mnkxyz456789ABCDEF", msg + test);
+      elem.setRangeText("222");
+      is(elem.value, "0123222999456789123456", msg + test);
       expectedNumOfSelectCalls += 3;
 
       test = " setRange(replacement) pure insertion at the end";
-      elem.value = "0123456789ABCDEF";
+      elem.value = "1123456789123456";
       elem.setSelectionRange(16, 16);
-      elem.setRangeText("xyz");
-      is(elem.value, "0123456789ABCDEFxyz", msg + test);
+      elem.setRangeText("999");
+      is(elem.value, "1123456789123456999", msg + test);
       is(elem.selectionStart, 16, msg + test);
       is(elem.selectionEnd, 16, msg + test);
-      elem.setRangeText("mnk");
-      is(elem.value, "0123456789ABCDEFmnkxyz", msg + test);
+      elem.setRangeText("222");
+      is(elem.value, "1123456789123456222999", msg + test);
       expectedNumOfSelectCalls += 3;
 
       //test SetRange(replacement, start, end, mode) with start > end
@@ -155,43 +156,43 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(opThrows, true, msg + " should throw IndexSizeError");
 
       //test SelectionMode 'select'
-      elem.value = "0123456789ABCDEF";
-      elem.setRangeText("xyz", 4, 9, "select");
-      is(elem.value, "0123xyz9ABCDEF", msg + ".value == \"0123xyz9ABCDEF\"");
+      elem.value = "1023456789123456";
+      elem.setRangeText("999", 4, 9, "select");
+      is(elem.value, "10239999123456", msg + ".value == \"10239999123456\"");
       is(elem.selectionStart, 4, msg + ".selectionStart == 4, with \"select\"");
       is(elem.selectionEnd, 7, msg + ".selectionEnd == 7, with \"select\"");
       expectedNumOfSelectCalls += 1;
 
-      elem.setRangeText("pqm", 6, 25, "select");
-      is(elem.value, "0123xypqm", msg + ".value == \"0123xypqm\"");
+      elem.setRangeText("888", 6, 25, "select");
+      is(elem.value, "102399888", msg + ".value == \"102399888\"");
       is(elem.selectionStart, 6, msg + ".selectionStart == 6, with \"select\"");
       is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"select\"");
       expectedNumOfSelectCalls += 1;
 
       //test SelectionMode 'start'
-      elem.value = "0123456789ABCDEF";
-      elem.setRangeText("xyz", 4, 9, "start");
-      is(elem.value, "0123xyz9ABCDEF", msg + ".value == \"0123xyz9ABCDEF\"");
+      elem.value = "0123456789123456";
+      elem.setRangeText("999", 4, 9, "start");
+      is(elem.value, "01239999123456", msg + ".value == \"01239999123456\"");
       is(elem.selectionStart, 4, msg + ".selectionStart == 4, with \"start\"");
       is(elem.selectionEnd, 4, msg + ".selectionEnd == 4, with \"start\"");
       expectedNumOfSelectCalls += 1;
 
-      elem.setRangeText("pqm", 6, 25, "start");
-      is(elem.value, "0123xypqm", msg + ".value == \"0123xypqm\"");
+      elem.setRangeText("888", 6, 25, "start");
+      is(elem.value, "012399888", msg + ".value == \"012399888\"");
       is(elem.selectionStart, 6, msg + ".selectionStart == 6, with \"start\"");
       is(elem.selectionEnd, 6, msg + ".selectionEnd == 6, with \"start\"");
       expectedNumOfSelectCalls += 1;
 
       //test SelectionMode 'end'
-      elem.value = "0123456789ABCDEF";
-      elem.setRangeText("xyz", 4, 9, "end");
-      is(elem.value, "0123xyz9ABCDEF", msg + ".value == \"0123xyz9ABCDEF\"");
+      elem.value = "1023456789123456";
+      elem.setRangeText("999", 4, 9, "end");
+      is(elem.value, "10239999123456", msg + ".value == \"10239999123456\"");
       is(elem.selectionStart, 7, msg + ".selectionStart == 7, with \"end\"");
       is(elem.selectionEnd, 7, msg + ".selectionEnd == 7, with \"end\"");
       expectedNumOfSelectCalls += 1;
 
-      elem.setRangeText("pqm", 6, 25, "end");
-      is(elem.value, "0123xypqm", msg + ".value == \"0123xypqm\"");
+      elem.setRangeText("888", 6, 25, "end");
+      is(elem.value, "102399888", msg + ".value == \"102399888\"");
       is(elem.selectionStart, 9, msg + ".selectionStart == 9, with \"end\"");
       is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"end\"");
       expectedNumOfSelectCalls += 1;
@@ -201,8 +202,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       //subcase: selection{Start|End} > end
       elem.value = "0123456789";
       elem.setSelectionRange(6, 9);
-      elem.setRangeText("Z", 1, 2, "preserve");
-      is(elem.value, "0Z23456789", msg + ".value == \"0Z23456789\"");
+      elem.setRangeText("7", 1, 2, "preserve");
+      is(elem.value, "0723456789", msg + ".value == \"0723456789\"");
       is(elem.selectionStart, 6, msg + ".selectionStart == 6, with \"preserve\"");
       is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"preserve\"");
       expectedNumOfSelectCalls += 2;
@@ -210,8 +211,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       //subcase: selection{Start|End} < end
       elem.value = "0123456789";
       elem.setSelectionRange(4, 5);
-      elem.setRangeText("QRST", 2, 9, "preserve");
-      is(elem.value, "01QRST9", msg + ".value == \"01QRST9\"");
+      elem.setRangeText("3456", 2, 9, "preserve");
+      is(elem.value, "0134569", msg + ".value == \"0134569\"");
       is(elem.selectionStart, 2, msg + ".selectionStart == 2, with \"preserve\"");
       is(elem.selectionEnd, 6, msg + ".selectionEnd == 6, with \"preserve\"");
       expectedNumOfSelectCalls += 2;
@@ -219,8 +220,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       //subcase: selectionStart > end, selectionEnd < end
       elem.value = "0123456789";
       elem.setSelectionRange(8, 4);
-      elem.setRangeText("QRST", 1, 5);
-      is(elem.value, "0QRST56789", msg + ".value == \"0QRST56789\"");
+      elem.setRangeText("3456", 1, 5);
+      is(elem.value, "0345656789", msg + ".value == \"0345656789\"");
       is(elem.selectionStart, 1, msg + ".selectionStart == 1, with \"default\"");
       is(elem.selectionEnd, 5, msg + ".selectionEnd == 5, with \"default\"");
       expectedNumOfSelectCalls += 2;
@@ -228,8 +229,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       //subcase: selectionStart < end, selectionEnd > end
       elem.value = "0123456789";
       elem.setSelectionRange(4, 9);
-      elem.setRangeText("QRST", 2, 6);
-      is(elem.value, "01QRST6789", msg + ".value == \"01QRST6789\"");
+      elem.setRangeText("3456", 2, 6);
+      is(elem.value, "0134566789", msg + ".value == \"0134566789\"");
       is(elem.selectionStart, 2, msg + ".selectionStart == 2, with \"default\"");
       is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"default\"");
       expectedNumOfSelectCalls += 2;
