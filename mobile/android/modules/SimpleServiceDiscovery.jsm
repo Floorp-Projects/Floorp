@@ -113,12 +113,15 @@ var SimpleServiceDiscovery = {
 
   // Start a search. Make it continuous by passing an interval (in milliseconds).
   // This will stop a current search loop because the timer resets itself.
+  // Returns the existing search interval.
   search: function search(aInterval) {
+    let existingSearchInterval = this._searchInterval;
     if (aInterval > 0) {
       this._searchInterval = aInterval || 0;
       this._searchRepeat.initWithCallback(this._search.bind(this), this._searchInterval, Ci.nsITimer.TYPE_REPEATING_SLACK);
     }
     this._search();
+    return existingSearchInterval;
   },
 
   // Stop the current continuous search
