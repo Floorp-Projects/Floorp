@@ -29,6 +29,13 @@
 #include <unistd.h>
 #endif
 
+#if defined(XP_MACOSX)
+#include <sys/time.h>
+#include <mach/mach_host.h>
+#include <mach/mach_init.h>
+#include <mach/host_info.h>
+#endif
+
 // NSPR_LOG_MODULES=LoadManager:5
 #undef LOG
 #undef LOG_ENABLED
@@ -180,7 +187,7 @@ private:
 LoadInfo::LoadInfo(int aLoadUpdateInterval)
   : mLoadUpdateInterval(aLoadUpdateInterval)
 {
-#if defined(ANDROID) || defined(LINUX)
+#if defined(ANDROID) || defined(LINUX) || defined(XP_MACOSX)
   mTicksPerInterval = (sysconf(_SC_CLK_TCK) * mLoadUpdateInterval) / 1000;
 #endif
 }
@@ -254,6 +261,27 @@ nsresult LoadInfo::UpdateSystemLoad()
                 cpu_times,
                 &mSystemLoad);
   return NS_OK;
+#elif defined(XP_MACOSX)
+  mach_msg_type_number_t info_cnt = HOST_CPU_LOAD_INFO_COUNT;
+  host_cpu_load_info_data_t load_info;
+  kern_return_t rv = host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO,
+                                     (host_info_t)(&load_info), &info_cnt);
+
+  if (rv != KERN_SUCCESS || info_cnt != HOST_CPU_LOAD_INFO_COUNT) {
+    LOG(("Error from mach/host_statistics call"));
+    return NS_ERROR_FAILURE;
+  }
+
+  const uint64_t cpu_times = load_info.cpu_ticks[CPU_STATE_NICE]
+                           + load_info.cpu_ticks[CPU_STATE_SYSTEM]
+                           + load_info.cpu_ticks[CPU_STATE_USER];
+  const uint64_t total_times = cpu_times + load_info.cpu_ticks[CPU_STATE_IDLE];
+
+  UpdateCpuLoad(mTicksPerInterval,
+                total_times,
+                cpu_times,
+                &mSystemLoad);
+  return NS_OK;
 #else
   // Not implemented
   return NS_OK;
@@ -261,7 +289,7 @@ nsresult LoadInfo::UpdateSystemLoad()
 }
 
 nsresult LoadInfo::UpdateProcessLoad() {
-#if defined(LINUX) || defined(ANDROID)
+#if defined(LINUX) || defined(ANDROID) || defined(XP_MACOSX)
   struct timeval tv;
   gettimeofday(&tv, nullptr);
   const uint64_t total_times = tv.tv_sec * PR_USEC_PER_SEC + tv.tv_usec;
@@ -280,7 +308,7 @@ nsresult LoadInfo::UpdateProcessLoad() {
                 total_times,
                 cpu_times,
                 &mProcessLoad);
-#endif // defined(LINUX) || defined(ANDROID)
+#endif // defined(LINUX) || defined(ANDROID) || defined(XP_MACOSX)
   return NS_OK;
 }
 
@@ -362,7 +390,7 @@ LoadMonitor::Init(nsRefPtr<LoadMonitor> &self)
 {
   LOG(("Initializing LoadMonitor"));
 
-#if defined(ANDROID) || defined(LINUX)
+#if defined(ANDROID) || defined(LINUX) || defined(XP_MACOSX)
   nsRefPtr<LoadMonitorAddObserver> addObsRunner = new LoadMonitorAddObserver(self);
   NS_DispatchToMainThread(addObsRunner, NS_DISPATCH_NORMAL);
 

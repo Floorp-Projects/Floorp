@@ -24,7 +24,7 @@ if CONFIG['MOZ_WEBRTC']:
         'MediaEngineWebRTCAudio.cpp',
         'MediaEngineWebRTCVideo.cpp',
     ]
-    if CONFIG['OS_ARCH'] == 'Android' or CONFIG['OS_ARCH'] == 'Linux':
+    if CONFIG['OS_ARCH'] == 'Android' or CONFIG['OS_ARCH'] == 'Linux' or CONFIG['OS_ARCH'] == 'Darwin':
         UNIFIED_SOURCES += [
             'LoadManager.cpp',
             'LoadMonitor.cpp',
