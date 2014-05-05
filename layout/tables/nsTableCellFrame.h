@@ -298,7 +298,10 @@ public:
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
   virtual nsMargin GetUsedBorder() const MOZ_OVERRIDE;
-  virtual bool GetBorderRadii(nscoord aRadii[8]) const MOZ_OVERRIDE;
+  virtual bool GetBorderRadii(const nsSize& aFrameSize,
+                              const nsSize& aBorderArea,
+                              int aSkipSides,
+                              nscoord aRadii[8]) const MOZ_OVERRIDE;
 
   // Get the *inner half of the border only*, in twips.
   virtual nsMargin* GetBorderWidth(nsMargin& aBorder) const MOZ_OVERRIDE;
