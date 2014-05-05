@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,13 +17,13 @@
 inline nsresult
 NS_GetSpecialDirectory(const char* specialDirName, nsIFile* *result)
 {
-    nsresult rv;
-    nsCOMPtr<nsIProperties> serv(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return rv;
+  nsresult rv;
+  nsCOMPtr<nsIProperties> serv(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
 
-    return serv->Get(specialDirName, NS_GET_IID(nsIFile),
-                     reinterpret_cast<void**>(result));
+  return serv->Get(specialDirName, NS_GET_IID(nsIFile),
+                   reinterpret_cast<void**>(result));
 }
 
 #endif

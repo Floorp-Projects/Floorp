@@ -13,12 +13,12 @@ class nsIInputStream;
 namespace mozilla {
 
 nsresult
-Base64EncodeInputStream(nsIInputStream *aInputStream, 
+Base64EncodeInputStream(nsIInputStream *aInputStream,
                         nsACString &aDest,
                         uint32_t aCount,
                         uint32_t aOffset = 0);
 nsresult
-Base64EncodeInputStream(nsIInputStream *aInputStream, 
+Base64EncodeInputStream(nsIInputStream *aInputStream,
                         nsAString &aDest,
                         uint32_t aCount,
                         uint32_t aOffset = 0);

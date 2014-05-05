@@ -25,7 +25,7 @@
  * crashes or the computer power cycles unexpectedly, so unopened temporary
  * files are purged at some time after application startup.
  *
- */ 
+ */
 nsresult
 NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc);
 
