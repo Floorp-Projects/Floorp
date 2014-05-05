@@ -20,8 +20,6 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
-#define PRMJ_DO_MILLISECONDS 1
-
 #ifdef XP_WIN
 #include <windef.h>
 #include <winbase.h>
@@ -51,25 +49,24 @@ extern int gettimeofday(struct timeval *tv);
 
 #endif /* XP_UNIX */
 
-#define PRMJ_YEAR_DAYS 365L
-#define PRMJ_FOUR_YEARS_DAYS (4 * PRMJ_YEAR_DAYS + 1)
-#define PRMJ_CENTURY_DAYS (25 * PRMJ_FOUR_YEARS_DAYS - 1)
-#define PRMJ_FOUR_CENTURIES_DAYS (4 * PRMJ_CENTURY_DAYS + 1)
-#define PRMJ_HOUR_SECONDS  3600L
-#define PRMJ_DAY_SECONDS  (24L * PRMJ_HOUR_SECONDS)
-#define PRMJ_YEAR_SECONDS (PRMJ_DAY_SECONDS * PRMJ_YEAR_DAYS)
-#define PRMJ_MAX_UNIX_TIMET 2145859200L /*time_t value equiv. to 12/31/2037 */
-
-/* Constants for GMT offset from 1970 */
-#define G1970GMTMICROHI        0x00dcdcad /* micro secs to 1970 hi */
-#define G1970GMTMICROLOW       0x8b3fa000 /* micro secs to 1970 low */
-
-#define G2037GMTMICROHI        0x00e45fab /* micro secs to 2037 high */
-#define G2037GMTMICROLOW       0x7a238000 /* micro secs to 2037 low */
-
 using mozilla::DebugOnly;
 
-#if defined(XP_WIN)
+#if defined(XP_UNIX)
+int64_t
+PRMJ_Now()
+{
+    struct timeval tv;
+
+#ifdef _SVID_GETTOD   /* Defined only on Solaris, see Solaris <sys/types.h> */
+    gettimeofday(&tv);
+#else
+    gettimeofday(&tv, 0);
+#endif /* _SVID_GETTOD */
+
+    return int64_t(tv.tv_sec) * PRMJ_USEC_PER_SEC + int64_t(tv.tv_usec);
+}
+
+#else
 
 // Returns the number of microseconds since the Unix epoch.
 static double
@@ -114,7 +111,7 @@ NowCalibrate()
     GetSystemTimeAsFileTime(&ftStart);
     do {
         GetSystemTimeAsFileTime(&ft);
-    } while (memcmp(&ftStart,&ft, sizeof(ft)) == 0);
+    } while (memcmp(&ftStart, &ft, sizeof(ft)) == 0);
     timeEndPeriod(1);
 
     LARGE_INTEGER now;
@@ -125,9 +122,8 @@ NowCalibrate()
     calibration.calibrated = true;
 }
 
-#define CALIBRATIONLOCK_SPINCOUNT 0
-#define DATALOCK_SPINCOUNT 4096
-#define LASTLOCK_SPINCOUNT 4096
+static const unsigned CalibrationLockSpinCount = 0;
+static const unsigned DataLockSpinCount = 4096;
 
 void
 PRMJ_NowInit()
@@ -145,8 +141,8 @@ PRMJ_NowInit()
     MOZ_ASSERT(calibration.freq > 0.0);
 
 #ifdef JS_THREADSAFE
-    InitializeCriticalSectionAndSpinCount(&calibration.calibration_lock, CALIBRATIONLOCK_SPINCOUNT);
-    InitializeCriticalSectionAndSpinCount(&calibration.data_lock, DATALOCK_SPINCOUNT);
+    InitializeCriticalSectionAndSpinCount(&calibration.calibration_lock, CalibrationLockSpinCount);
+    InitializeCriticalSectionAndSpinCount(&calibration.data_lock, DataLockSpinCount);
 #endif
 }
 
@@ -159,38 +155,16 @@ PRMJ_NowShutdown()
 }
 
 #define MUTEX_LOCK(m) EnterCriticalSection(m)
-#define MUTEX_TRYLOCK(m) TryEnterCriticalSection(m)
 #define MUTEX_UNLOCK(m) LeaveCriticalSection(m)
 #define MUTEX_SETSPINCOUNT(m, c) SetCriticalSectionSpinCount((m),(c))
 
 #else
 
 #define MUTEX_LOCK(m)
-#define MUTEX_TRYLOCK(m) 1
 #define MUTEX_UNLOCK(m)
 #define MUTEX_SETSPINCOUNT(m, c)
 
 #endif
-
-#endif /* XP_WIN */
-
-
-#if defined(XP_UNIX)
-int64_t
-PRMJ_Now()
-{
-    struct timeval tv;
-
-#ifdef _SVID_GETTOD   /* Defined only on Solaris, see Solaris <sys/types.h> */
-    gettimeofday(&tv);
-#else
-    gettimeofday(&tv, 0);
-#endif /* _SVID_GETTOD */
-
-    return int64_t(tv.tv_sec) * PRMJ_USEC_PER_SEC + int64_t(tv.tv_usec);
-}
-
-#else
 
 // Please see bug 363258 for why the win32 timing code is so complex.
 int64_t
@@ -215,8 +189,9 @@ PRMJ_Now()
                 calibrated = true;
 
                 // Restore spin count.
-                MUTEX_SETSPINCOUNT(&calibration.data_lock, DATALOCK_SPINCOUNT);
+                MUTEX_SETSPINCOUNT(&calibration.data_lock, DataLockSpinCount);
             }
+
             MUTEX_UNLOCK(&calibration.data_lock);
             MUTEX_UNLOCK(&calibration.calibration_lock);
         }
