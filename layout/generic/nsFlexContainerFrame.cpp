@@ -369,12 +369,14 @@ public:
   uint8_t GetAlignSelf() const     { return mAlignSelf; }
 
   // Returns the flex factor (flex-grow or flex-shrink), depending on
-  // 'aIsUsingFlexGrow'. Returns 0 for frozen items.
+  // 'aIsUsingFlexGrow'.
+  //
+  // Asserts fatally if called on a frozen item (since frozen items are not
+  // flexible).
   float GetFlexFactor(bool aIsUsingFlexGrow)
   {
-    if (IsFrozen()) {
-      return 0.0f;
-    }
+    MOZ_ASSERT(!IsFrozen(), "shouldn't need flex factor after item is frozen");
+
     return aIsUsingFlexGrow ? mFlexGrow : mFlexShrink;
   }
 
@@ -387,11 +389,12 @@ public:
   // I'm calling this a "weight" instead of a "[scaled] flex-[grow|shrink]
   // factor", to more clearly distinguish it from the actual flex-grow &
   // flex-shrink factors.
+  //
+  // Asserts fatally if called on a frozen item (since frozen items are not
+  // flexible).
   float GetWeight(bool aIsUsingFlexGrow)
   {
-    if (IsFrozen()) {
-      return 0.0f;
-    }
+    MOZ_ASSERT(!IsFrozen(), "shouldn't need weight after item is frozen");
 
     if (aIsUsingFlexGrow) {
       return mFlexGrow;
@@ -613,6 +616,7 @@ class nsFlexContainerFrame::FlexLine : public LinkedListElement<FlexLine>
 public:
   FlexLine()
   : mNumItems(0),
+    mNumFrozenItems(0),
     mTotalInnerHypotheticalMainSize(0),
     mTotalOuterHypotheticalMainSize(0),
     mLineCrossSize(0),
@@ -668,7 +672,12 @@ public:
     } else {
       mItems.insertBack(aItem);
     }
+
+    // Update our various bookkeeping member-vars:
     mNumItems++;
+    if (aItem->IsFrozen()) {
+      mNumFrozenItems++;
+    }
     mTotalInnerHypotheticalMainSize += aItemInnerHypotheticalMainSize;
     mTotalOuterHypotheticalMainSize += aItemOuterHypotheticalMainSize;
   }
@@ -725,6 +734,11 @@ private:
                       // with this line -- at least, not until we add support
                       // for splitting lines across continuations. Then we can
                       // update this count carefully.)
+
+  // Number of *frozen* FlexItems in this line, based on FlexItem::IsFrozen().
+  // Mostly used for optimization purposes, e.g. to bail out early from loops
+  // when we can tell they have nothing left to do.
+  uint32_t mNumFrozenItems;
 
   nscoord mTotalInnerHypotheticalMainSize;
   nscoord mTotalOuterHypotheticalMainSize;
@@ -1601,11 +1615,18 @@ FlexLine::FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
     freezeType = eFreezeMaxViolations;
   }
 
-  for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
-    MOZ_ASSERT(!item->HadMinViolation() || !item->HadMaxViolation(),
-               "Can have either min or max violation, but not both");
-
+  // Since this loop only operates on unfrozen flex items, we can break as
+  // soon as we have seen all of them.
+  uint32_t numUnfrozenItemsToBeSeen = mNumItems - mNumFrozenItems;
+  for (FlexItem* item = mItems.getFirst();
+       numUnfrozenItemsToBeSeen > 0; item = item->getNext()) {
+    MOZ_ASSERT(item, "numUnfrozenItemsToBeSeen says items remain to be seen");
     if (!item->IsFrozen()) {
+      numUnfrozenItemsToBeSeen--;
+
+      MOZ_ASSERT(!item->HadMinViolation() || !item->HadMaxViolation(),
+                 "Can have either min or max violation, but not both");
+
       if (eFreezeEverything == freezeType ||
           (eFreezeMinViolations == freezeType && item->HadMinViolation()) ||
           (eFreezeMaxViolations == freezeType && item->HadMaxViolation())) {
@@ -1616,12 +1637,14 @@ FlexLine::FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
                    "Freezing item at a size above its maximum");
 
         item->Freeze();
+        mNumFrozenItems++;
       } else if (MOZ_UNLIKELY(aIsFinalIteration)) {
         // XXXdholbert If & when bug 765861 is fixed, we should upgrade this
         // assertion to be fatal except in documents with enormous lengths.
         NS_ERROR("Final iteration still has unfrozen items, this shouldn't"
                  " happen unless there was nscoord under/overflow.");
         item->Freeze();
+        mNumFrozenItems++;
       } // else, we'll reset this item's main size to its flex base size on the
         // next iteration of this algorithm.
 
@@ -1635,9 +1658,12 @@ void
 FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
 {
   PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG, ("ResolveFlexibleLengths\n"));
-  if (IsEmpty()) {
+  if (mNumFrozenItems == mNumItems) {
+    // All our items are frozen, so we have no flexible lengths to resolve.
     return;
   }
+
+  MOZ_ASSERT(!IsEmpty(), "empty lines should take the early-return above");
 
   // Subtract space occupied by our items' margins/borders/padding, so we can
   // just be dealing with the space available for our flex items' content
@@ -1707,32 +1733,43 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
       float flexFactorSum = 0.0f;
       float largestWeight = 0.0f;
       uint32_t numItemsWithLargestWeight = 0;
-      for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
-        float curWeight = item->GetWeight(isUsingFlexGrow);
-        float curFlexFactor = item->GetFlexFactor(isUsingFlexGrow);
-        MOZ_ASSERT(curWeight >= 0.0f, "weights are non-negative");
-        MOZ_ASSERT(curFlexFactor >= 0.0f, "flex factors are non-negative");
 
-        weightSum += curWeight;
-        flexFactorSum += curFlexFactor;
+      // Since this loop only operates on unfrozen flex items, we can break as
+      // soon as we have seen all of them.
+      uint32_t numUnfrozenItemsToBeSeen = mNumItems - mNumFrozenItems;
+      for (FlexItem* item = mItems.getFirst();
+           numUnfrozenItemsToBeSeen > 0; item = item->getNext()) {
+        MOZ_ASSERT(item,
+                   "numUnfrozenItemsToBeSeen says items remain to be seen");
+        if (!item->IsFrozen()) {
+          numUnfrozenItemsToBeSeen--;
 
-        if (NS_finite(weightSum)) {
-          if (curWeight == 0.0f) {
-            item->SetShareOfWeightSoFar(0.0f);
-          } else {
-            item->SetShareOfWeightSoFar(curWeight / weightSum);
+          float curWeight = item->GetWeight(isUsingFlexGrow);
+          float curFlexFactor = item->GetFlexFactor(isUsingFlexGrow);
+          MOZ_ASSERT(curWeight >= 0.0f, "weights are non-negative");
+          MOZ_ASSERT(curFlexFactor >= 0.0f, "flex factors are non-negative");
+
+          weightSum += curWeight;
+          flexFactorSum += curFlexFactor;
+
+          if (NS_finite(weightSum)) {
+            if (curWeight == 0.0f) {
+              item->SetShareOfWeightSoFar(0.0f);
+            } else {
+              item->SetShareOfWeightSoFar(curWeight / weightSum);
+            }
+          } // else, the sum of weights overflows to infinity, in which
+            // case we don't bother with "SetShareOfWeightSoFar" since
+            // we know we won't use it. (instead, we'll just give every
+            // item with the largest weight an equal share of space.)
+
+          // Update our largest-weight tracking vars
+          if (curWeight > largestWeight) {
+            largestWeight = curWeight;
+            numItemsWithLargestWeight = 1;
+          } else if (curWeight == largestWeight) {
+            numItemsWithLargestWeight++;
           }
-        } // else, the sum of weights overflows to infinity, in which
-          // case we don't bother with "SetShareOfWeightSoFar" since
-          // we know we won't use it. (instead, we'll just give every
-          // item with the largest weight an equal share of space.)
-
-        // Update our largest-weight tracking vars
-        if (curWeight > largestWeight) {
-          largestWeight = curWeight;
-          numItemsWithLargestWeight = 1;
-        } else if (curWeight == largestWeight) {
-          numItemsWithLargestWeight++;
         }
       }
 
@@ -1769,13 +1806,20 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
 
         PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
                (" Distributing available space:"));
+        // Since this loop only operates on unfrozen flex items, we can break as
+        // soon as we have seen all of them.
+        numUnfrozenItemsToBeSeen = mNumItems - mNumFrozenItems;
+
         // NOTE: It's important that we traverse our items in *reverse* order
         // here, for correct width distribution according to the items'
         // "ShareOfWeightSoFar" progressively-calculated values.
-        for (FlexItem* item = mItems.getLast(); item;
-             item = item->getPrevious()) {
-
+        for (FlexItem* item = mItems.getLast();
+             numUnfrozenItemsToBeSeen > 0; item = item->getPrevious()) {
+          MOZ_ASSERT(item,
+                     "numUnfrozenItemsToBeSeen says items remain to be seen");
           if (!item->IsFrozen()) {
+            numUnfrozenItemsToBeSeen--;
+
             // To avoid rounding issues, we compute the change in size for this
             // item, and then subtract it from the remaining available space.
             nscoord sizeDelta = 0;
@@ -1821,8 +1865,15 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
     PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" Checking for violations:"));
 
-    for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
+    // Since this loop only operates on unfrozen flex items, we can break as
+    // soon as we have seen all of them.
+    uint32_t numUnfrozenItemsToBeSeen = mNumItems - mNumFrozenItems;
+    for (FlexItem* item = mItems.getFirst();
+         numUnfrozenItemsToBeSeen > 0; item = item->getNext()) {
+      MOZ_ASSERT(item, "numUnfrozenItemsToBeSeen says items remain to be seen");
       if (!item->IsFrozen()) {
+        numUnfrozenItemsToBeSeen--;
+
         if (item->GetMainSize() < item->GetMainMinSize()) {
           // min violation
           totalViolation += item->GetMainMinSize() - item->GetMainSize();
@@ -1843,16 +1894,22 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
     PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" Total violation: %d\n", totalViolation));
 
-    if (totalViolation == 0) {
+    if (mNumFrozenItems == mNumItems) {
       break;
     }
+
+    MOZ_ASSERT(totalViolation != 0,
+               "Zero violation should've made us freeze all items & break");
   }
 
-  // Post-condition: all lengths should've been frozen.
 #ifdef DEBUG
+  // Post-condition: all items should've been frozen.
+  // Make sure the counts match:
+  MOZ_ASSERT(mNumFrozenItems == mNumItems, "All items should be frozen");
+
+  // For good measure, check each item directly, in case our counts are busted:
   for (const FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
-    MOZ_ASSERT(item->IsFrozen(),
-               "All flexible lengths should've been resolved");
+    MOZ_ASSERT(item->IsFrozen(), "All items should be frozen");
   }
 #endif // DEBUG
 }
