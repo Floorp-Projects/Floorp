@@ -120,35 +120,6 @@ bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta) {
   return true;
 }
 
-Axis::Overscroll Axis::GetOverscroll() {
-  // If the current pan takes the window to the left of or above the current
-  // page rect.
-  bool minus = GetOrigin() < GetPageStart();
-  // If the current pan takes the window to the right of or below the current
-  // page rect.
-  bool plus = GetCompositionEnd() > GetPageEnd();
-  if (minus && plus) {
-    return OVERSCROLL_BOTH;
-  }
-  if (minus) {
-    return OVERSCROLL_MINUS;
-  }
-  if (plus) {
-    return OVERSCROLL_PLUS;
-  }
-  return OVERSCROLL_NONE;
-}
-
-float Axis::GetExcess() {
-  switch (GetOverscroll()) {
-  case OVERSCROLL_MINUS: return GetOrigin() - GetPageStart();
-  case OVERSCROLL_PLUS: return GetCompositionEnd() - GetPageEnd();
-  case OVERSCROLL_BOTH: return (GetCompositionEnd() - GetPageEnd()) +
-                               (GetPageStart() - GetOrigin());
-  default: return 0;
-  }
-}
-
 Axis::Overscroll Axis::DisplacementWillOverscroll(float aDisplacement) {
   // If the current pan plus a displacement takes the window to the left of or
   // above the current page rect.
