@@ -820,9 +820,7 @@ public:
   }
 
   ~gfxContextAutoSaveRestore() {
-    if (mContext) {
-      mContext->Restore();
-    }
+    Restore();
   }
 
   void SetContext(gfxContext *aContext) {
@@ -836,6 +834,13 @@ public:
     if (!mContext) {
         mContext = aContext;
         mContext->Save();
+    }
+  }
+
+  void Restore() {
+    if (mContext) {
+      mContext->Restore();
+      mContext = nullptr;
     }
   }
 

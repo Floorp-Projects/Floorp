@@ -2726,7 +2726,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
           // already called GetBackgroundClip above and it stored its results
           // in clipState.
           if (clipSet) {
-            autoSR = gfxContextAutoSaveRestore(); // reset the previous one
+            autoSR.Restore(); // reset the previous one
             GetBackgroundClip(ctx, currentBackgroundClip, layer.mAttachment, aForFrame,
                               clipBorderArea, aDirtyRect, haveRoundedCorners,
                               bgRadii, appUnitsPerPixel, &clipState);
