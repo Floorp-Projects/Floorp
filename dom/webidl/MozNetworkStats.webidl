@@ -23,3 +23,38 @@ dictionary NetworkStatsAlarmOptions
   Date startTime;
   Date data;
 };
+
+[JSImplementation="@mozilla.org/networkstats;1",
+ ChromeOnly,
+ Pref="dom.mozNetworkStats.enabled",
+ Func="Navigator::HasNetworkStatsSupport"]
+interface MozNetworkStats {
+  /**
+   * App manifest URL of an application for specifying the per-app stats of the
+   * specified app.
+   */
+  readonly attribute DOMString    appManifestURL;
+
+  /**
+   * Service type is used to retrieve the corresponding "system-only" stats.
+   * E.g., "Tethering", "OTA", etc.
+   */
+  readonly attribute DOMString    serviceType;
+
+  /**
+   * Network the returned data belongs to.
+   */
+  readonly attribute MozNetworkStatsInterface network;
+
+  /**
+   * Stats for a network.
+   */
+  [Cached, Pure]
+  readonly attribute sequence<MozNetworkStatsData> data;
+
+  /**
+   * Dates
+   */
+  readonly attribute object start;
+  readonly attribute object end;
+};
