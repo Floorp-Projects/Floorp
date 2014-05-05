@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>background-break: each-box</title>
+  <title>box-decoration-break: slice</title>
   <style type="text/css">
 @font-face
 {
@@ -21,14 +21,14 @@
   white-space: pre;
   background-image: url(blue-8x20-green-8x20.png);
   background-repeat: no-repeat;
-  -moz-background-inline-policy: each-box;
+  box-decoration-break: slice;
 }
 </style>
 </head>
 <body>
 <div id="outer">
 <span id="ahem-lines">      <!-- EOL -->
-        <!-- mix it up for each-box and bounding-box --><!-- EOL -->
+        <!-- mix it up for slice --><!-- EOL -->
       <!-- EOL -->
       <!-- EOL -->
       </span></div>
