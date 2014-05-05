@@ -21,6 +21,7 @@
 #include <linux/android_alarm.h>
 #include <math.h>
 #include <regex.h>
+#include <sched.h>
 #include <stdio.h>
 #include <sys/klog.h>
 #include <sys/syscall.h>
@@ -38,6 +39,7 @@
 #include "hardware_legacy/vibrator.h"
 #include "hardware_legacy/power.h"
 #include "libdisplay/GonkDisplay.h"
+#include "utils/threads.h"
 
 #include "base/message_loop.h"
 
@@ -1357,6 +1359,14 @@ SetNiceForPid(int aPid, int aNice)
 
     int tid = static_cast<int>(tidlong);
 
+    // Do not set the priority of threads running with a real-time policy
+    // as part of the bulk process adjustment.  These threads need to run
+    // at their specified priority in order to meet timing guarantees.
+    int schedPolicy = sched_getscheduler(tid);
+    if (schedPolicy == SCHED_FIFO || schedPolicy == SCHED_RR) {
+      continue;
+    }
+
     errno = 0;
     // Get and set the task's new priority.
     int origtaskpriority = getpriority(PRIO_PROCESS, tid);
@@ -1369,6 +1379,15 @@ SetNiceForPid(int aPid, int aNice)
 
     int newtaskpriority =
       std::max(origtaskpriority - origProcPriority + aNice, aNice);
+
+    // Do not reduce priority of threads already running at priorities greater
+    // than normal.  These threads are likely special service threads that need
+    // elevated priorities to process audio, display composition, etc.
+    if (newtaskpriority > origtaskpriority &&
+        origtaskpriority < ANDROID_PRIORITY_NORMAL) {
+      continue;
+    }
+
     rv = setpriority(PRIO_PROCESS, tid, newtaskpriority);
 
     if (rv) {
@@ -1460,6 +1479,134 @@ SetProcessPriority(int aPid,
   if (NS_SUCCEEDED(rv)) {
     LOG("Setting nice for pid %d to %d", aPid, nice);
     SetNiceForPid(aPid, nice);
+  }
+}
+
+static bool
+IsValidRealTimePriority(int aValue, int aSchedulePolicy)
+{
+  return (aValue >= sched_get_priority_min(aSchedulePolicy)) &&
+         (aValue <= sched_get_priority_max(aSchedulePolicy));
+}
+
+static void
+SetThreadNiceValue(pid_t aTid, ThreadPriority aThreadPriority, int aValue)
+{
+  MOZ_ASSERT(aThreadPriority < NUM_THREAD_PRIORITY);
+  MOZ_ASSERT(aThreadPriority >= 0);
+
+  LOG("Setting thread %d to priority level %s; nice level %d",
+      aTid, ThreadPriorityToString(aThreadPriority), aValue);
+  int rv = setpriority(PRIO_PROCESS, aTid, aValue);
+
+  if (rv) {
+    LOG("Failed to set thread %d to priority level %s; error %s",
+        aTid, ThreadPriorityToString(aThreadPriority), strerror(errno));
+  }
+}
+
+static void
+SetRealTimeThreadPriority(pid_t aTid,
+                          ThreadPriority aThreadPriority,
+                          int aValue)
+{
+  int policy = SCHED_FIFO;
+
+  MOZ_ASSERT(aThreadPriority < NUM_THREAD_PRIORITY);
+  MOZ_ASSERT(aThreadPriority >= 0);
+  MOZ_ASSERT(IsValidRealTimePriority(aValue, policy), "Invalid real time priority");
+
+  // Setting real time priorities requires using sched_setscheduler
+  LOG("Setting thread %d to priority level %s; Real Time priority %d, Schedule FIFO",
+      aTid, ThreadPriorityToString(aThreadPriority), aValue);
+  sched_param schedParam;
+  schedParam.sched_priority = aValue;
+  int rv = sched_setscheduler(aTid, policy, &schedParam);
+
+  if (rv) {
+    LOG("Failed to set thread %d to real time priority level %s; error %s",
+        aTid, ThreadPriorityToString(aThreadPriority), strerror(errno));
+  }
+}
+
+static void
+SetThreadPriority(pid_t aTid, hal::ThreadPriority aThreadPriority)
+{
+  // See bug 999115, we can only read preferences on the main thread otherwise
+  // we create a race condition in HAL
+  MOZ_ASSERT(NS_IsMainThread(), "Can only set thread priorities on main thread");
+  MOZ_ASSERT(aThreadPriority >= 0);
+
+  const char* threadPriorityStr;
+  switch (aThreadPriority) {
+    case THREAD_PRIORITY_COMPOSITOR:
+      threadPriorityStr = ThreadPriorityToString(aThreadPriority);
+      break;
+    default:
+      LOG("Unrecognized thread priority %d; Doing nothing", aThreadPriority);
+      return;
+  }
+
+  int realTimePriority = Preferences::GetInt(
+    nsPrintfCString("hal.gonk.%s.rt_priority", threadPriorityStr).get());
+
+  if (IsValidRealTimePriority(realTimePriority, SCHED_FIFO)) {
+    SetRealTimeThreadPriority(aTid, aThreadPriority, realTimePriority);
+    return;
+  }
+
+  int niceValue = Preferences::GetInt(
+    nsPrintfCString("hal.gonk.%s.nice", threadPriorityStr).get());
+
+  SetThreadNiceValue(aTid, aThreadPriority, niceValue);
+}
+
+namespace {
+
+/**
+ * This class sets the priority of threads given the kernel thread's id and a
+ * value taken from hal::ThreadPriority.
+ *
+ * This runnable must always be dispatched to the main thread otherwise it will fail.
+ * We have to run this from the main thread since preferences can only be read on
+ * main thread.
+ */
+class SetThreadPriorityRunnable : public nsRunnable
+{
+public:
+  SetThreadPriorityRunnable(pid_t aThreadId, hal::ThreadPriority aThreadPriority)
+    : mThreadId(aThreadId)
+    , mThreadPriority(aThreadPriority)
+  { }
+
+  NS_IMETHOD Run()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Can only set thread priorities on main thread");
+    hal_impl::SetThreadPriority(mThreadId, mThreadPriority);
+    return NS_OK;
+  }
+
+private:
+  pid_t mThreadId;
+  hal::ThreadPriority mThreadPriority;
+};
+
+} // anonymous namespace
+
+void
+SetCurrentThreadPriority(ThreadPriority aThreadPriority)
+{
+  switch (aThreadPriority) {
+    case THREAD_PRIORITY_COMPOSITOR: {
+      pid_t threadId = gettid();
+      nsCOMPtr<nsIRunnable> runnable =
+        new SetThreadPriorityRunnable(threadId, aThreadPriority);
+      NS_DispatchToMainThread(runnable);
+      break;
+    }
+    default:
+      LOG("Unrecognized thread priority %d; Doing nothing", aThreadPriority);
+      return;
   }
 }
 
