@@ -3,38 +3,40 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsParentalControlsServiceWin_h__
-#define nsParentalControlsServiceWin_h__
+#ifndef nsParentalControlsService_h__
+#define nsParentalControlsService_h__
 
 #include "nsIParentalControlsService.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIURI.h"
 
+#if defined(XP_WIN)
 // wpcevents.h requires this be elevated
 #if (WINVER < 0x0600)
 # undef WINVER
 # define WINVER 0x0600
 #endif
-
 #include <wpcapi.h>
 #include <wpcevent.h>
+#endif
 
-class nsParentalControlsServiceWin : public nsIParentalControlsService
+class nsParentalControlsService : public nsIParentalControlsService
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPARENTALCONTROLSSERVICE
 
-  nsParentalControlsServiceWin();
-  virtual ~nsParentalControlsServiceWin();
+  nsParentalControlsService();
+  virtual ~nsParentalControlsService();
 
 private:
   bool mEnabled;
+#if defined(XP_WIN)
   REGHANDLE mProvider;
   IWindowsParentalControls * mPC;
-
   void LogFileDownload(bool blocked, nsIURI *aSource, nsIFile *aTarget);
+#endif
 };
 
-#endif /* nsParentalControlsServiceWin_h__ */
+#endif /* nsParentalControlsService_h__ */
