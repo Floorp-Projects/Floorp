@@ -995,7 +995,7 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
   }
 
   CertVerifier::pinning_enforcement_config
-    pinningEnforcementLevel = CertVerifier::pinningAllowUserCAMITM;
+    pinningEnforcementLevel = CertVerifier::pinningDisabled;
   int prefPinningEnforcementLevel = Preferences::GetInt("security.cert_pinning.enforcement_level",
                                                          pinningEnforcementLevel);
   switch (prefPinningEnforcementLevel) {
@@ -1009,7 +1009,7 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
       pinningEnforcementLevel = CertVerifier::pinningStrict;
       break;
     default:
-      pinningEnforcementLevel = CertVerifier::pinningAllowUserCAMITM;
+      pinningEnforcementLevel = CertVerifier::pinningDisabled;
   }
 
   CertVerifier::ocsp_download_config odc;
