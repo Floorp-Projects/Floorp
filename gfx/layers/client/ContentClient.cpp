@@ -27,6 +27,7 @@
 #include "nsISupportsImpl.h"            // for gfxContext::Release, etc
 #include "nsIWidget.h"                  // for nsIWidget
 #include "prenv.h"                      // for PR_GetEnv
+#include "nsLayoutUtils.h"
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
 #endif
@@ -655,6 +656,17 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
     if (mHasBuffer &&
         (mContentType != contentType ||
          (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) != mHasBufferOnWhite)) {
+#ifdef MOZ_DUMP_PAINTING
+      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+        if (mContentType != contentType) {
+          printf_stderr("Layer's content type has changed\n");
+        }
+        if ((mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) != mHasBufferOnWhite) {
+          printf_stderr("Layer's component alpha status has changed\n");
+        }
+        printf_stderr("Invalidating entire layer %p\n", aLayer);
+      }
+#endif
       // We're effectively clearing the valid region, so we need to draw
       // the entire needed region now.
       result.mRegionToInvalidate = aLayer->GetValidRegion();
