@@ -1,4 +1,5 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,24 +19,24 @@
 
 class nsScriptableInputStream MOZ_FINAL : public nsIScriptableInputStream {
 public:
-    // nsISupports methods
-    NS_DECL_ISUPPORTS
+  // nsISupports methods
+  NS_DECL_ISUPPORTS
 
-    // nsIScriptableInputStream methods
-    NS_DECL_NSISCRIPTABLEINPUTSTREAM
+  // nsIScriptableInputStream methods
+  NS_DECL_NSISCRIPTABLEINPUTSTREAM
 
-    // nsScriptableInputStream methods
-    nsScriptableInputStream() {}
+  // nsScriptableInputStream methods
+  nsScriptableInputStream() {}
 
-    static nsresult
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult
+  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 private:
-    ~nsScriptableInputStream() {}
+  ~nsScriptableInputStream() {}
 
-    nsresult ReadHelper(char* aBuffer, uint32_t aCount);
+  nsresult ReadHelper(char* aBuffer, uint32_t aCount);
 
-    nsCOMPtr<nsIInputStream> mInputStream;
+  nsCOMPtr<nsIInputStream> mInputStream;
 };
 
 #endif // ___nsscriptableinputstream___h_
