@@ -8,6 +8,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=981249
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
   <script type="application/javascript" src="head.js"/>
 
   <!-- test results are displayed in the html:body -->
@@ -30,16 +32,32 @@ Cu.import("resource://gre/modules/NativeApp.jsm");
 Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
+const PR_RDWR        = 0x04;
+const PR_CREATE_FILE = 0x08;
+const PR_TRUNCATE    = 0x20;
+
 let manifest = {
-  name: "test_desktop_hosted_launch_no_registry",
-  launch_path: "/chrome/toolkit/webapps/tests/app.sjs?appreq",
+  name: "test_desktop_packaged_launch",
+  version: "0.1a",
+  size: 777,
+  package_path: "/data/app.zip",
+  launch_path: "/doesntexist.html",
+};
+
+let updatedManifest = {
+  name: "test_desktop_packaged_launch",
+  version: "0.2a",
+  size: 777,
+  package_path: "/data/app.zip",
+  launch_path: "/index.html",
 };
 
 let app = {
-  name: "test_desktop_hosted_launch_no_registry",
-  manifestURL: "http://127.0.0.1:8888/sample_no_registry.manifest",
+  name: "test_desktop_packaged_launch",
+  manifestURL: "http://127.0.0.1:8888/sample.manifest",
   manifest: manifest,
-  origin: "http://127.0.0.1:8888/",
+  updateManifest: manifest,
+  origin: "app://test_desktop_packaged_launch/",
   categories: [],
   installOrigin: "http://127.0.0.1:8888/",
   receipts: [],
@@ -85,10 +103,10 @@ if (LINUX) {
   };
 } else if (WIN) {
   installPath = OS.Path.join(OS.Constants.Path.winAppDataDir, WebappOSUtils.getUniqueName(app));
-  exePath = OS.Path.join(installPath, "test_desktop_hosted_launch_no_registry.exe");
+  exePath = OS.Path.join(installPath, "test_desktop_packaged_launch.exe");
 
-  let desktopShortcut = OS.Path.join(OS.Constants.Path.desktopDir, "test_desktop_hosted_launch_no_registry.lnk");
-  let startMenuShortcut = OS.Path.join(OS.Constants.Path.winStartMenuProgsDir, "test_desktop_hosted_launch_no_registry.lnk");
+  let desktopShortcut = OS.Path.join(OS.Constants.Path.desktopDir, "test_desktop_packaged_launch.lnk");
+  let startMenuShortcut = OS.Path.join(OS.Constants.Path.winStartMenuProgsDir, "test_desktop_packaged_launch.lnk");
 
   cleanup = function() {
     return Task.spawn(function*() {
@@ -124,7 +142,7 @@ if (LINUX) {
     });
   };
 } else if (MAC) {
-  installPath = OS.Path.join(OS.Constants.Path.homeDir, "Applications", "test_desktop_hosted_launch_no_registry.app");
+  installPath = OS.Path.join(OS.Constants.Path.homeDir, "Applications", "test_desktop_packaged_launch.app");
   exePath = OS.Path.join(installPath, "Contents", "MacOS", "webapprt");
 
   let appProfileDir = OS.Path.join(OS.Constants.Path.macUserLibDir, "Application Support",
@@ -155,6 +173,8 @@ let runTest = Task.async(function*() {
 
   setDryRunPref();
 
+  let zipPath = buildAppPackage(manifest);
+
   let nativeApp = new NativeApp(app, manifest, app.categories);
   ok(nativeApp, "NativeApp object created");
 
@@ -170,11 +190,26 @@ let runTest = Task.async(function*() {
 
   // Install application
   info("Test installation");
-  yield nativeApp.install(manifest);
+  yield nativeApp.install(manifest, zipPath);
   while (!WebappOSUtils.isLaunchable(app)) {
     yield wait(1000);
   }
   ok(true, "App launchable");
+
+  // Prepare update
+  info("Test update");
+
+  zipPath = buildAppPackage(updatedManifest);
+
+  yield nativeApp.prepareUpdate(updatedManifest, zipPath);
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
+  }
+  ok(true, "App launchable");
+
+  // Let the webapp runtime apply the update. The app.sjs?appreq page is
+  // accessed only if the app is actually updated (because the old manifest
+  // contained a different launch path).
 
   let exeFile = getFile(exePath);
 
