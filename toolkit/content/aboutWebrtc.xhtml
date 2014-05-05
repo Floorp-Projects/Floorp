@@ -175,7 +175,16 @@ function buildPcDiv(stats, pcDivHeading) {
   var newPcDiv = document.createElement('div');
 
   var heading = document.createElement('h3');
+
+  if (stats.closed) {
+    heading.appendChild(document.createTextNode("Closed "));
+  }
+
   heading.appendChild(document.createTextNode(pcDivHeading));
+
+  heading.appendChild(document.createTextNode(" " +
+    new Date(stats.timestamp).toTimeString()));
+
   newPcDiv.appendChild(heading);
 
   // First, ICE stats
