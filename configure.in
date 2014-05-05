@@ -7801,49 +7801,6 @@ AC_SUBST(PROFILE_GEN_LDFLAGS)
 AC_SUBST(PROFILE_USE_CFLAGS)
 AC_SUBST(PROFILE_USE_LDFLAGS)
 
-AC_LANG_CPLUSPLUS
-
-dnl ========================================================
-dnl Autoconf test for gcc 2.7.2.x (and maybe others?) so that we don't
-dnl provide non-const forms of the operator== for comparing nsCOMPtrs to
-dnl raw pointers in nsCOMPtr.h.  (VC++ has the same bug.)
-dnl ========================================================
-_SAVE_CXXFLAGS=$CXXFLAGS
-CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS}"
-AC_CACHE_CHECK(for correct overload resolution with const and templates,
-    ac_nscap_nonconst_opeq_bug,
-    [AC_TRY_COMPILE([
-                      template <class T>
-                      class Pointer
-                        {
-                        public:
-                          T* myPtr;
-                        };
-
-                      template <class T, class U>
-                      int operator==(const Pointer<T>& rhs, U* lhs)
-                        {
-                          return rhs.myPtr == lhs;
-                        }
-
-                      template <class T, class U>
-                      int operator==(const Pointer<T>& rhs, const U* lhs)
-                        {
-                          return rhs.myPtr == lhs;
-                        }
-                    ],
-                    [
-                      Pointer<int> foo;
-                      const int* bar;
-                      return foo == bar;
-                    ],
-                    ac_nscap_nonconst_opeq_bug="no",
-                    ac_nscap_nonconst_opeq_bug="yes")])
-CXXFLAGS="$_SAVE_CXXFLAGS"
-
-if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
-    AC_DEFINE(NSCAP_DONT_PROVIDE_NONCONST_OPEQ)
-fi
 fi # ! SKIP_COMPILER_CHECKS
 
 AC_DEFINE(CPP_THROW_NEW, [throw()])
