@@ -105,52 +105,52 @@ static CalibrationData calibration = { 0 };
 static void
 NowCalibrate()
 {
-    if (calibration.freq == 0.0) {
-        // According to the documentation, QueryPerformanceFrequency will never
-        // return false or return a non-zero frequency on systems that run
-        // Windows XP or later.
-        LARGE_INTEGER liFreq;
-        DebugOnly<BOOL> res = QueryPerformanceFrequency(&liFreq);
-        MOZ_ASSERT(res);
-        calibration.freq = double(liFreq.QuadPart);
-        MOZ_ASSERT(calibration.freq > 0.0);
-    }
-    if (calibration.freq > 0.0) {
-        // By wrapping a timeBegin/EndPeriod pair of calls around this loop,
-        // the loop seems to take much less time (1 ms vs 15ms) on Vista.
-        timeBeginPeriod(1);
-        FILETIME ft, ftStart;
-        GetSystemTimeAsFileTime(&ftStart);
-        do {
-            GetSystemTimeAsFileTime(&ft);
-        } while (memcmp(&ftStart,&ft, sizeof(ft)) == 0);
-        timeEndPeriod(1);
+    MOZ_ASSERT(calibration.freq > 0);
 
-        LARGE_INTEGER now;
-        QueryPerformanceCounter(&now);
+    // By wrapping a timeBegin/EndPeriod pair of calls around this loop,
+    // the loop seems to take much less time (1 ms vs 15ms) on Vista.
+    timeBeginPeriod(1);
+    FILETIME ft, ftStart;
+    GetSystemTimeAsFileTime(&ftStart);
+    do {
+        GetSystemTimeAsFileTime(&ft);
+    } while (memcmp(&ftStart,&ft, sizeof(ft)) == 0);
+    timeEndPeriod(1);
 
-        calibration.offset = FileTimeToUnixMicroseconds(ft);
-        calibration.timer_offset = double(now.QuadPart);
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
 
-        calibration.calibrated = true;
-    }
+    calibration.offset = FileTimeToUnixMicroseconds(ft);
+    calibration.timer_offset = double(now.QuadPart);
+    calibration.calibrated = true;
 }
 
 #define CALIBRATIONLOCK_SPINCOUNT 0
 #define DATALOCK_SPINCOUNT 4096
 #define LASTLOCK_SPINCOUNT 4096
 
-#ifdef JS_THREADSAFE
-static PRStatus
-NowInit(void)
+void
+PRMJ_NowInit()
 {
     memset(&calibration, 0, sizeof(calibration));
-    NowCalibrate();
+
+    // According to the documentation, QueryPerformanceFrequency will never
+    // return false or return a non-zero frequency on systems that run
+    // Windows XP or later. Also, the frequency is fixed so we only have to
+    // query it once.
+    LARGE_INTEGER liFreq;
+    DebugOnly<BOOL> res = QueryPerformanceFrequency(&liFreq);
+    MOZ_ASSERT(res);
+    calibration.freq = double(liFreq.QuadPart);
+    MOZ_ASSERT(calibration.freq > 0.0);
+
+#ifdef JS_THREADSAFE
     InitializeCriticalSectionAndSpinCount(&calibration.calibration_lock, CALIBRATIONLOCK_SPINCOUNT);
     InitializeCriticalSectionAndSpinCount(&calibration.data_lock, DATALOCK_SPINCOUNT);
-    return PR_SUCCESS;
+#endif
 }
 
+#ifdef JS_THREADSAFE
 void
 PRMJ_NowShutdown()
 {
@@ -162,8 +162,6 @@ PRMJ_NowShutdown()
 #define MUTEX_TRYLOCK(m) TryEnterCriticalSection(m)
 #define MUTEX_UNLOCK(m) LeaveCriticalSection(m)
 #define MUTEX_SETSPINCOUNT(m, c) SetCriticalSectionSpinCount((m),(c))
-
-static PRCallOnceType calibrationOnce = { 0 };
 
 #else
 
@@ -201,11 +199,6 @@ PRMJ_Now()
     bool calibrated = false;
     bool needsCalibration = false;
     double cachedOffset = 0.0;
-
-    /* For non threadsafe platforms, NowInit is not necessary */
-#ifdef JS_THREADSAFE
-    PR_CallOnce(&calibrationOnce, NowInit);
-#endif
     while (true) {
         if (!calibration.calibrated || needsCalibration) {
             MUTEX_LOCK(&calibration.calibration_lock);

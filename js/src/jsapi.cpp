@@ -568,6 +568,8 @@ JS_Init(void)
     MOZ_ASSERT(!JSRuntime::hasLiveRuntimes(),
                "how do we have live runtimes before JS_Init?");
 
+    PRMJ_NowInit();
+
 #ifdef DEBUG
     CheckMessageNumbering();
     CheckMessageParameterCounts();
