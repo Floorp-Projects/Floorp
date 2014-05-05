@@ -206,22 +206,12 @@ PRMJ_Now()
         cachedOffset = calibration.offset;
         MUTEX_UNLOCK(&calibration.data_lock);
 
-        // Rather than assume the NT kernel ticks every 15.6ms, ask it.
-        double skewThreshold;
-        DWORD timeAdjustment, timeIncrement;
-        BOOL timeAdjustmentDisabled;
-        if (GetSystemTimeAdjustment(&timeAdjustment, &timeIncrement, &timeAdjustmentDisabled)) {
-            if (timeAdjustmentDisabled) {
-                // timeAdjustment is in units of 100ns.
-                skewThreshold = timeAdjustment / 10.0;
-            } else {
-                // timeIncrement is in units of 100ns.
-                skewThreshold = timeIncrement / 10.0;
-            }
-        } else {
-            // Default to 15.625 ms if the syscall fails.
-            skewThreshold = 15625.25;
-        }
+        // Assume the NT kernel ticks every 15.6 ms. Unfortunately there's no
+        // good way to determine this (NtQueryTimerResolution is an undocumented
+        // API), but 15.6 ms seems to be the max possible value. Hardcoding 15.6
+        // means we'll recalibrate if the highres and lowres timers diverge by
+        // more than 30 ms.
+        static const double KernelTickInMicroseconds = 15625.25;
 
         // Check for clock skew.
         double diff = lowresTime - highresTime;
@@ -231,7 +221,7 @@ PRMJ_Now()
         // itself, but I have only seen it triggered by another program
         // doing some kind of file I/O. The symptoms are a negative diff
         // followed by an equally large positive diff.
-        if (mozilla::Abs(diff) <= 2 * skewThreshold) {
+        if (mozilla::Abs(diff) <= 2 * KernelTickInMicroseconds) {
             // No detectable clock skew.
             return int64_t(highresTime);
         }
