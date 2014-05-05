@@ -48,6 +48,11 @@ XPIDL_SOURCES += [
 
 UNIFIED_SOURCES += [
     'MediaEngineDefault.cpp',
+    'PeerIdentity.cpp',
+]
+
+EXPORTS.mozilla += [
+    'PeerIdentity.h',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
