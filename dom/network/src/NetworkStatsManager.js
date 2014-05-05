@@ -60,9 +60,7 @@ NetworkStatsInterface.prototype = {
 }
 
 // NetworkStats
-const NETWORKSTATS_CONTRACTID = "@mozilla.org/networkstats;1";
-const NETWORKSTATS_CID        = Components.ID("{28904f59-8497-4ac0-904f-2af14b7fd3de}");
-const nsIDOMMozNetworkStats   = Ci.nsIDOMMozNetworkStats;
+const NETWORKSTATS_CID = Components.ID("{28904f59-8497-4ac0-904f-2af14b7fd3de}");
 
 function NetworkStats(aWindow, aStats) {
   if (DEBUG) {
@@ -83,23 +81,9 @@ function NetworkStats(aWindow, aStats) {
 }
 
 NetworkStats.prototype = {
-  __exposedProps__: {
-    appManifestURL: 'r',
-    serviceType: 'r',
-    network: 'r',
-    start: 'r',
-    end:  'r',
-    data:  'r',
-  },
-
   classID : NETWORKSTATS_CID,
-  classInfo : XPCOMUtils.generateCI({classID: NETWORKSTATS_CID,
-                                     contractID: NETWORKSTATS_CONTRACTID,
-                                     classDescription: "NetworkStats",
-                                     interfaces: [nsIDOMMozNetworkStats],
-                                     flags: nsIClassInfo.DOM_OBJECT}),
 
-  QueryInterface : XPCOMUtils.generateQI([nsIDOMMozNetworkStats])
+  QueryInterface : XPCOMUtils.generateQI()
 }
 
 // NetworkStatsAlarm
@@ -307,7 +291,8 @@ NetworkStatsManager.prototype = {
           return;
         }
 
-        let result = new NetworkStats(this._window, msg.result);
+        let result = this._window.MozNetworkStats._create(
+          this._window, new NetworkStats(this._window, msg.result));
         if (DEBUG) {
           debug("result: " + JSON.stringify(result));
         }
