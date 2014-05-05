@@ -2074,16 +2074,6 @@ nsComputedDOMStyle::DoGetBackgroundImage()
 }
 
 CSSValue*
-nsComputedDOMStyle::DoGetBackgroundInlinePolicy()
-{
-  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
-  val->SetIdent(nsCSSProps::ValueToKeywordEnum(
-                  StyleBackground()->mBackgroundInlinePolicy,
-                  nsCSSProps::kBackgroundInlinePolicyKTable));
-  return val;
-}
-
-CSSValue*
 nsComputedDOMStyle::DoGetBackgroundBlendMode()
 {
   return GetBackgroundList(&nsStyleBackground::Layer::mBlendMode,

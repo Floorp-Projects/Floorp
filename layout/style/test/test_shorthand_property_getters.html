@@ -139,10 +139,6 @@ isnot(e.style.background, "", "should have background shorthand (size:100% auto)
 e.setAttribute("style", "background: red; background-size: auto 100%");
 isnot(e.style.background, "", "should have background shorthand (size:auto 100%)");
 
-// Test background-inline-policy not interacting with the background shorthand.
-e.setAttribute("style", "background: red; -moz-background-inline-policy: each-box");
-isnot(e.style.background, "", "should have background shorthand (-moz-background-inline-policy not relevant)");
-
 // Check that we only serialize background when the lists (of layers) for
 // the subproperties are the same length.
 e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");

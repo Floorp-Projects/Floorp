@@ -648,14 +648,6 @@ var gCSSProperties = {
 		other_values: [ "radio", "menulist" ],
 		invalid_values: []
 	},
-	"-moz-background-inline-policy": {
-		domProp: "MozBackgroundInlinePolicy",
-		inherited: false,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "continuous" ],
-		other_values: ["bounding-box", "each-box" ],
-		invalid_values: []
-	},
 	"-moz-binding": {
 		domProp: "MozBinding",
 		inherited: false,
