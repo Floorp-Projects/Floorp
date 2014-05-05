@@ -8,6 +8,8 @@
 
 #include "mozilla/MemoryReporting.h"
 
+#include "jsstr.h"
+
 #include "frontend/TokenStream.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpStatics.h"
@@ -377,7 +379,7 @@ RegExpObject::toString(JSContext *cx) const
 /* RegExpShared */
 
 RegExpShared::RegExpShared(JSAtom *source, RegExpFlag flags, uint64_t gcNumber)
-  : source(source), flags(flags), parenCount(0),
+  : source(source), flags(flags), parenCount(0), canStringMatch(false),
 #if ENABLE_YARR_JIT
     codeBlock(),
 #endif
@@ -438,6 +440,9 @@ RegExpShared::checkSyntax(ExclusiveContext *cx, TokenStream *tokenStream, JSLine
 bool
 RegExpShared::compile(JSContext *cx, bool matchOnly)
 {
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    AutoTraceLog logCompile(logger, TraceLogger::YarrCompile);
+
     if (!sticky())
         return compile(cx, *source, matchOnly);
 
@@ -466,6 +471,12 @@ RegExpShared::compile(JSContext *cx, bool matchOnly)
 bool
 RegExpShared::compile(JSContext *cx, JSLinearString &pattern, bool matchOnly)
 {
+    if (!ignoreCase() && !StringHasRegExpMetaChars(pattern.chars(), pattern.length())) {
+        canStringMatch = true;
+        parenCount = 0;
+        return true;
+    }
+
     /* Parse the pattern. */
     ErrorCode yarrError;
     YarrPattern yarrPattern(pattern, ignoreCase(), multiline(), &yarrError);
@@ -507,7 +518,7 @@ RegExpShared::compile(JSContext *cx, JSLinearString &pattern, bool matchOnly)
 bool
 RegExpShared::compileIfNecessary(JSContext *cx)
 {
-    if (hasCode() || hasBytecode())
+    if (hasCode() || hasBytecode() || canStringMatch)
         return true;
     return compile(cx, false);
 }
@@ -515,7 +526,7 @@ RegExpShared::compileIfNecessary(JSContext *cx)
 bool
 RegExpShared::compileMatchOnlyIfNecessary(JSContext *cx)
 {
-    if (hasMatchOnlyCode() || hasBytecode())
+    if (hasMatchOnlyCode() || hasBytecode() || canStringMatch)
         return true;
     return compile(cx, true);
 }
@@ -526,12 +537,9 @@ RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length,
 {
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
 
-    {
-        /* Compile the code at point-of-use. */
-        AutoTraceLog logCompile(logger, TraceLogger::YarrCompile);
-        if (!compileIfNecessary(cx))
-            return RegExpRunStatus_Error;
-    }
+    /* Compile the code at point-of-use. */
+    if (!compileIfNecessary(cx))
+        return RegExpRunStatus_Error;
 
     /* Ensure sufficient memory for output vector. */
     if (!matches.initArray(pairCount()))
@@ -554,6 +562,20 @@ RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length,
 
     unsigned *outputBuf = matches.rawBuf();
     unsigned result;
+
+    if (canStringMatch) {
+        int res = StringFindPattern(chars+start, length-start, source->chars(), source->length());
+        if (res == -1)
+            return RegExpRunStatus_Success_NotFound;
+
+        outputBuf[0] = res + start;
+        outputBuf[1] = outputBuf[0] + source->length();
+
+        matches.displace(displacement);
+        matches.checkAgainst(origLength);
+        *lastIndex = matches[0].limit;
+        return RegExpRunStatus_Success;
+    }
 
 #if ENABLE_YARR_JIT
     if (codeBlock.isFallBack()) {
@@ -590,12 +612,9 @@ RegExpShared::executeMatchOnly(JSContext *cx, const jschar *chars, size_t length
 {
     TraceLogger *logger = js::TraceLoggerForMainThread(cx->runtime());
 
-    {
-        /* Compile the code at point-of-use. */
-        AutoTraceLog logCompile(logger, TraceLogger::YarrCompile);
-        if (!compileMatchOnlyIfNecessary(cx))
-            return RegExpRunStatus_Error;
-    }
+    /* Compile the code at point-of-use. */
+    if (!compileMatchOnlyIfNecessary(cx))
+        return RegExpRunStatus_Error;
 
 #ifdef DEBUG
     const size_t origLength = length;
@@ -608,6 +627,17 @@ RegExpShared::executeMatchOnly(JSContext *cx, const jschar *chars, size_t length
         chars += displacement;
         length -= displacement;
         start = 0;
+    }
+
+    if (canStringMatch) {
+        int res = StringFindPattern(chars+start, length-start, source->chars(), source->length());
+        if (res == -1)
+            return RegExpRunStatus_Success_NotFound;
+
+        match = MatchPair(res + start, res + start + source->length());
+        match.displace(displacement);
+        *lastIndex = match.limit;
+        return RegExpRunStatus_Success;
     }
 
 #if ENABLE_YARR_JIT
