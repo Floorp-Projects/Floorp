@@ -3330,6 +3330,22 @@
     "extended_statistics_ok": true,
     "description": "Widget: Time it takes for the message before a UI message (ms)"
   },
+  "FX_SESSION_RESTORE_STARTUP_INIT_SESSION_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Session restore: Time it takes to prepare the data structures for restoring a session (ms)"
+  },
+  "FX_SESSION_RESTORE_STARTUP_ONLOAD_INITIAL_WINDOW_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Session restore: Time it takes to finish restoration once we have first opened a window (ms)"
+  },
   "FX_SESSION_RESTORE_COLLECT_ALL_WINDOWS_DATA_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
