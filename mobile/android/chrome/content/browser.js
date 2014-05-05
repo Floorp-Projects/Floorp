@@ -4204,20 +4204,26 @@ Tab.prototype = {
     sendMessageToJava(message);
   },
 
+  _getGeckoZoom: function() {
+    let res = {x: {}, y: {}};
+    let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    cwu.getResolution(res.x, res.y);
+    let zoom = res.x.value * window.devicePixelRatio;
+    return zoom;
+  },
+
   saveSessionZoom: function(aZoom) {
     let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     cwu.setResolution(aZoom / window.devicePixelRatio, aZoom / window.devicePixelRatio);
   },
 
   restoredSessionZoom: function() {
-    if (!this._restoreZoom) {
-      return null;
-    }
-
     let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    let res = {x: {}, y: {}};
-    cwu.getResolution(res.x, res.y);
-    return res.x.value * window.devicePixelRatio;
+
+    if (this._restoreZoom && cwu.isHistoryRestored) {
+      return this._getGeckoZoom();
+    }
+    return null;
   },
 
   OnHistoryNewEntry: function(aUri) {
