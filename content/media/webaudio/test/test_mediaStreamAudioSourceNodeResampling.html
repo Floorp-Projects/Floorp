@@ -17,6 +17,7 @@ function test() {
   var node = context.createMediaStreamSource(audio.mozCaptureStreamUntilEnded());
   var sp = context.createScriptProcessor(2048, 1);
   node.connect(sp);
+  sp.connect(context.destination); // work around bug 916387
   var expectedMinNonzeroSampleCount;
   var expectedMaxNonzeroSampleCount;
   var nonzeroSampleCount = 0;
