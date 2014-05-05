@@ -47,7 +47,7 @@
   },
   "APPLICATION_REPUTATION_COUNT": {
     "expires_in_version": "never",
-    "kind": "flag",
+    "kind": "boolean",
     "description": "Application reputation query count (both local and remote)"
   },
   "BACKGROUNDFILESAVER_THREAD_COUNT": {

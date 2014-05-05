@@ -926,6 +926,8 @@ ApplicationReputationService::QueryReputation(
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_COUNT, true);
   nsresult rv = QueryReputationInternal(aQuery, aCallback);
   if (NS_FAILED(rv)) {
+    Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SHOULD_BLOCK,
+      false);
     aCallback->OnComplete(false, rv);
   }
   return NS_OK;
