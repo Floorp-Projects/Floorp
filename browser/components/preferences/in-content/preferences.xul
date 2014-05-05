@@ -78,46 +78,74 @@
 
     <!-- category list -->
     <richlistbox id="categories">
-      <richlistitem id="category-general" class="category" align="center"
-                    value="paneGeneral" tooltiptext="&paneGeneral.title;">
+      <richlistitem id="category-general"
+                    class="category"
+                    value="paneGeneral"
+                    helpTopic="prefs-main"
+                    tooltiptext="&paneGeneral.title;"
+                    align="center">
         <image class="category-icon"/>
         <label class="category-name" flex="1" value="&paneGeneral.title;"/>
       </richlistitem>
 
-      <richlistitem id="category-content" class="category" align="center"
-                    value="paneContent" tooltiptext="&paneContent.title;">
+      <richlistitem id="category-content"
+                    class="category"
+                    value="paneContent"
+                    helpTopic="prefs-content"
+                    tooltiptext="&paneContent.title;"
+                    align="center">
         <image class="category-icon"/>
         <label class="category-name" flex="1" value="&paneContent.title;"/>
       </richlistitem>
 
-      <richlistitem id="category-application" class="category" align="center"
-                    value="paneApplications" tooltiptext="&paneApplications.title;">
+      <richlistitem id="category-application"
+                    class="category"
+                    value="paneApplications"
+                    helpTopic="prefs-applications"
+                    tooltiptext="&paneApplications.title;"
+                    align="center">
         <image class="category-icon"/>
         <label class="category-name" flex="1" value="&paneApplications.title;"/>
       </richlistitem>
 
-      <richlistitem id="category-privacy" class="category" align="center"
-                    value="panePrivacy" tooltiptext="&panePrivacy.title;">
+      <richlistitem id="category-privacy"
+                    class="category"
+                    value="panePrivacy"
+                    helpTopic="prefs-privacy"
+                    tooltiptext="&panePrivacy.title;"
+                    align="center">
         <image class="category-icon"/>
         <label class="category-name" flex="1" value="&panePrivacy.title;"/>
       </richlistitem>
 
-      <richlistitem id="category-security" class="category" align="center"
-                    value="paneSecurity" tooltiptext="&paneSecurity.title;">
+      <richlistitem id="category-security"
+                    class="category"
+                    value="paneSecurity"
+                    helpTopic="prefs-security"
+                    tooltiptext="&paneSecurity.title;"
+                    align="center">
         <image class="category-icon"/>
         <label class="category-name" flex="1" value="&paneSecurity.title;"/>
       </richlistitem>
 
 #ifdef MOZ_SERVICES_SYNC
-      <richlistitem id="category-sync" class="category" align="center"
-                    value="paneSync" tooltiptext="&paneSync.title;">
+      <richlistitem id="category-sync"
+                    class="category"
+                    value="paneSync"
+                    helpTopic="prefs-weave"
+                    tooltiptext="&paneSync.title;"
+                    align="center">
         <image class="category-icon"/>
         <label class="category-name" flex="1" value="&paneSync.title;"/>
       </richlistitem>
 #endif
 
-      <richlistitem id="category-advanced" class="category" align="center"
-                    value="paneAdvanced" tooltiptext="&paneAdvanced.title;">
+      <richlistitem id="category-advanced"
+                    class="category"
+                    value="paneAdvanced"
+                    helpTopic="prefs-advanced-general"
+                    tooltiptext="&paneAdvanced.title;"
+                    align="center">
         <image class="category-icon"/>
         <label class="category-name" flex="1" value="&paneAdvanced.title;"/>
       </richlistitem>
@@ -134,6 +162,11 @@
 #ifdef MOZ_SERVICES_SYNC
 #include sync.xul
 #endif
+        <hbox pack="end">
+          <button class="help-button"
+                  aria-label="&helpButton.label;"
+                  oncommand="helpButtonCommand();"/>
+        </hbox>
       </prefpane>
     </box>
 
