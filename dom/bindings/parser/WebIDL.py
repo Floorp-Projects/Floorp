@@ -968,14 +968,6 @@ class IDLInterface(IDLObjectWithScope):
                     raise WebIDLError("[ArrayClass] must not be specified on "
                                       "an interface with inherited interfaces",
                                       [attr.location, self.location])
-            elif (identifier == "ExceptionClass"):
-                if not attr.noArguments():
-                    raise WebIDLError("[ExceptionClass] must take no arguments",
-                                      [attr.location])
-                if self.parent:
-                    raise WebIDLError("[ExceptionClass] must not be specified on "
-                                      "an interface with inherited interfaces",
-                                      [attr.location, self.location])
             elif identifier == "Global":
                 if not attr.noArguments():
                     raise WebIDLError("[Global] must take no arguments",

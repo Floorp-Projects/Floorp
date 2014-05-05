@@ -2328,8 +2328,6 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             parentProtoType = "Rooted"
             if self.descriptor.interface.getExtendedAttribute("ArrayClass"):
                 getParentProto = "aCx, JS_GetArrayPrototype(aCx, aGlobal)"
-            elif self.descriptor.interface.getExtendedAttribute("ExceptionClass"):
-                getParentProto = "aCx, JS_GetErrorPrototype(aCx)"
             else:
                 getParentProto = "aCx, JS_GetObjectPrototype(aCx, aGlobal)"
         else:
