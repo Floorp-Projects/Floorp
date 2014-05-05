@@ -43,24 +43,19 @@ NetworkStatsData.prototype = {
 };
 
 // NetworkStatsInterface
-const NETWORKSTATSINTERFACE_CONTRACTID = "@mozilla.org/networkstatsinterface;1";
 const NETWORKSTATSINTERFACE_CID = Components.ID("{f540615b-d803-43ff-8200-2a9d145a5645}");
 
-function NetworkStatsInterface() {
+function NetworkStatsInterface(aNetwork) {
   if (DEBUG) {
     debug("NetworkStatsInterface Constructor");
   }
+  this.type = aNetwork.type;
+  this.id = aNetwork.id;
 }
 
 NetworkStatsInterface.prototype = {
-  __init: function(aNetwork) {
-    this.type = aNetwork.type;
-    this.id = aNetwork.id;
-  },
-
   classID : NETWORKSTATSINTERFACE_CID,
 
-  contractID: NETWORKSTATSINTERFACE_CONTRACTID,
   QueryInterface : XPCOMUtils.generateQI([])
 }
 
@@ -73,7 +68,8 @@ function NetworkStats(aWindow, aStats) {
   }
   this.appManifestURL = aStats.appManifestURL || null;
   this.serviceType = aStats.serviceType || null;
-  this.network = new aWindow.MozNetworkStatsInterface(aStats.network);
+  this.network = aWindow.MozNetworkStatsInterface._create(
+    aWindow, new NetworkStatsInterface(aStats.network));
   this.start = aStats.start ? new aWindow.Date(aStats.start.getTime()) : null;
   this.end = aStats.end ? new aWindow.Date(aStats.end.getTime()) : null;
 
@@ -95,7 +91,8 @@ const NETWORKSTATSALARM_CID = Components.ID("{a93ea13e-409c-4189-9b1e-95fff220be
 
 function NetworkStatsAlarm(aWindow, aAlarm) {
   this.alarmId = aAlarm.id;
-  this.network = new aWindow.MozNetworkStatsInterface(aAlarm.network);
+  this.network = aWindow.MozNetworkStatsInterface._create(
+    aWindow, new NetworkStatsInterface(aAlarm.network));
   this.threshold = aAlarm.threshold;
   this.data = aAlarm.data;
 }
@@ -310,7 +307,8 @@ NetworkStatsManager.prototype = {
 
         let networks = new this._window.Array();
         for (let i = 0; i < msg.result.length; i++) {
-          let network = new this._window.MozNetworkStatsInterface(msg.result[i]);
+          let network = this._window.MozNetworkStatsInterface._create(
+            this._window, new NetworkStatsInterface(msg.result[i]));
           networks.push(network);
         }
 
