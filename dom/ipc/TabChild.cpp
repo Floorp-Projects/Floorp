@@ -1980,7 +1980,7 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
   }
 
   if (aEvent.message == NS_TOUCH_START && localEvent.touches.Length() > 0) {
-    mActiveElementManager->SetTargetElement(localEvent.touches[0]->Target());
+    mActiveElementManager->SetTargetElement(localEvent.touches[0]->GetTarget());
   }
 
   nsCOMPtr<nsPIDOMWindow> outerWindow = do_GetInterface(WebNavigation());
