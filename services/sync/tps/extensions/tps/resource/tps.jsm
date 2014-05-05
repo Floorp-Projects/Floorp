@@ -106,8 +106,8 @@ let TPS = {
   _tabsAdded: 0,
   _tabsFinished: 0,
   _test: null,
+  _triggeredSync: false,
   _usSinceEpoch: 0,
-  _waitingForSync: false,
 
   _init: function TPS__init() {
     // Check if Firefox Accounts is enabled
@@ -115,6 +115,8 @@ let TPS = {
                   .getService(Components.interfaces.nsISupports)
                   .wrappedJSObject;
     this.fxaccounts_enabled = service.fxAccountsEnabled;
+
+    this.delayAutoSync();
 
     OBSERVER_TOPICS.forEach(function (aTopic) {
       Services.obs.addObserver(this, aTopic, true);
@@ -180,35 +182,43 @@ let TPS = {
         case "weave:service:sync:error":
           this._syncActive = false;
 
-          if (this._waitingForSync && this._syncErrors == 0) {
-            // if this is the first sync error, retry...
-            Logger.logInfo("sync error; retrying...");
+          this.delayAutoSync();
+
+          // If this is the first sync error, retry...
+          if (this._syncErrors === 0) {
+            Logger.logInfo("Sync error; retrying...");
             this._syncErrors++;
-            this._waitingForSync = false;
             Utils.nextTick(this.RunNextTestAction, this);
           }
-          else if (this._waitingForSync) {
-            // ...otherwise abort the test
-            this.DumpError("sync error; aborting test");
+          else {
+            this._triggeredSync = false;
+            this.DumpError("Sync error; aborting test");
             return;
           }
+
           break;
 
         case "weave:service:sync:finish":
           this._syncActive = false;
           this._syncErrors = 0;
+          this._triggeredSync = false;
 
-          if (this._waitingForSync) {
-            this._waitingForSync = false;
-            // Wait a second before continuing, otherwise we can get
-            // 'sync not complete' errors.
-            Utils.namedTimer(function() {
-              this.FinishAsyncOperation();
-            }, 1000, this, "postsync");
-          }
+          this.delayAutoSync();
+
+          // Wait a second before continuing, otherwise we can get
+          // 'sync not complete' errors.
+          Utils.namedTimer(function () {
+            this.FinishAsyncOperation();
+          }, 1000, this, "postsync");
+
           break;
 
         case "weave:service:sync:start":
+          // Ensure that the sync operation has been started by TPS
+          if (!this._triggeredSync) {
+            this.DumpError("Automatic sync got triggered, which is not allowed.")
+          }
+
           this._syncActive = true;
           break;
 
@@ -225,6 +235,19 @@ let TPS = {
       this.DumpError("Exception caught: " + Utils.exceptionStr(e));
       return;
     }
+  },
+
+  /**
+   * Given that we cannot complely disable the automatic sync operations, we
+   * massively delay the next sync. Sync operations have to only happen when
+   * directly called via TPS.Sync()!
+   */
+  delayAutoSync: function TPS_delayAutoSync() {
+    Weave.Svc.Prefs.set("scheduler.eolInterval", 7200);
+    Weave.Svc.Prefs.set("scheduler.immediateInterval", 7200);
+    Weave.Svc.Prefs.set("scheduler.idleInterval", 7200);
+    Weave.Svc.Prefs.set("scheduler.activeInterval", 7200);
+    Weave.Svc.Prefs.set("syncThreshold", 10000000);
   },
 
   StartAsyncOperation: function TPS__StartAsyncOperation() {
@@ -865,7 +888,7 @@ let TPS = {
 
     this.Login(false);
 
-    this._waitingForSync = true;
+    this._triggeredSync = true;
     this.StartAsyncOperation();
     Weave.Service.sync();
   },
