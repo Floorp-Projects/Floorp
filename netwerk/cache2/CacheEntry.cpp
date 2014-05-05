@@ -322,15 +322,15 @@ bool CacheEntry::Load(bool aTruncate, bool aPriority)
     }
   }
 
+  mFile = new CacheFile();
+
+  BackgroundOp(Ops::REGISTER);
+
   bool directLoad = aTruncate || !mUseDisk;
   if (directLoad)
     mFileStatus = NS_OK;
   else
     mLoadStart = TimeStamp::Now();
-
-  mFile = new CacheFile();
-
-  BackgroundOp(Ops::REGISTER);
 
   {
     mozilla::MutexAutoUnlock unlock(mLock);
@@ -859,8 +859,6 @@ bool CacheEntry::IsReferenced() const
 
 bool CacheEntry::IsFileDoomed()
 {
-  mozilla::MutexAutoLock lock(mLock);
-
   if (NS_SUCCEEDED(mFileStatus)) {
     return mFile->IsDoomed();
   }
