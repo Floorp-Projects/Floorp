@@ -2,21 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-body, html {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-}
-
 body {
-  margin: 0;
+  max-width: 320px;
+  position: relative;
+  margin: 0px auto;
   padding: 0;
 }
 
 #header {
   box-sizing: border-box;
   width: 100%;
-  padding: 6px 9px;
+  padding: 4px 13px;
   display: -moz-box;
   vertical-align: top;
 }
@@ -38,20 +34,11 @@ body {
 }
 
 #main {
-  margin: 0 10px 10px 10px;
+  margin: 0 14px 10px 14px;
   box-sizing: border-box;
-  width: calc(100% - 2 * 10px);
+  width: calc(100% - 2 * 14px);
   position: absolute;
   border-width: 1px;
-}
-
-@media (min-width: 320px) {
-  body {
-    position: absolute;
-    width: 320px;
-    left: -160px;
-    margin-left: 50%;
-  }
 }
 
 #content,
@@ -193,4 +180,84 @@ body.dim > #header > #element-position,
 body.dim > #main > p,
 body.dim > #main > .tooltip {
   visibility: hidden;
+}
+
+@media (max-height: 228px) {
+  #header {
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 10px;
+    margin-bottom: 8px;
+  }
+
+  #margins,
+  #padding {
+    border-width: 21px;
+  }
+  #borders {
+    padding: 21px;
+  }
+
+  #content {
+    height: 21px;
+  }
+
+  .padding.top {
+    top: 46px;
+  }
+
+  .padding.bottom {
+    bottom: 46px;
+  }
+
+  .border.top {
+    top: 25px;
+  }
+
+  .border.bottom {
+    bottom: 25px;
+  }
+
+  .margin.top {
+    top: 4px;
+  }
+
+  .margin.bottom {
+    bottom: 4px;
+  }
+
+  .size,
+  .margin.left,
+  .margin.right,
+  .border.left,
+  .border.right,
+  .padding.left,
+  .padding.right {
+    line-height: 106px;
+  }
+
+  .margin.right,
+  .margin.left,
+  .border.left,
+  .border.right,
+  .padding.right,
+  .padding.left {
+    width: 21px;
+  }
+
+  .padding.left {
+    left: 43px;
+  }
+
+  .padding.right {
+    right: 43px;
+  }
+
+  .border.left {
+    left: 22px;
+  }
+
+  .border.right {
+    right: 22px;
+  }
 }
