@@ -295,7 +295,7 @@ public:
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() { return nullptr; }
 #endif
 
-  virtual void PrintInfo(nsACString& aTo, const char* aPrefix) { }
+  virtual void PrintInfo(nsACString& aTo, const char* aPrefix) = 0;
 
   virtual void UseTextureHost(TextureHost* aTexture);
   virtual void UseComponentAlphaTextures(TextureHost* aTextureOnBlack,

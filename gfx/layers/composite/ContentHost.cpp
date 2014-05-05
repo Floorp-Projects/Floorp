@@ -658,6 +658,17 @@ ContentHostIncremental::TextureUpdateRequest::Execute(ContentHostIncremental* aH
 }
 
 void
+ContentHostIncremental::PrintInfo(nsACString& aTo, const char* aPrefix)
+{
+  aTo += aPrefix;
+  aTo += nsPrintfCString("ContentHostIncremental (0x%p)", this);
+
+  if (PaintWillResample()) {
+    aTo += " [paint-will-resample]";
+  }
+}
+
+void
 ContentHostTexture::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   aTo += aPrefix;
@@ -669,10 +680,10 @@ ContentHostTexture::PrintInfo(nsACString& aTo, const char* aPrefix)
     aTo += " [paint-will-resample]";
   }
 
-  nsAutoCString pfx(aPrefix);
-  pfx += "  ";
-
   if (mTextureHost) {
+    nsAutoCString pfx(aPrefix);
+    pfx += "  ";
+
     aTo += "\n";
     mTextureHost->PrintInfo(aTo, pfx.get());
   }

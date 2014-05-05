@@ -131,9 +131,6 @@ LayerManagerComposite::Destroy()
       RootLayer()->Destroy();
     }
     mRoot = nullptr;
-
-    mCompositor->Destroy();
-
     mDestroyed = true;
   }
 }
