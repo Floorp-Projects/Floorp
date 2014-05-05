@@ -109,21 +109,6 @@ public:
   void SetAxisLocked(bool aAxisLocked) { mAxisLocked = aAxisLocked; }
 
   /**
-   * Gets the overscroll state of the axis in its current position.
-   */
-  Overscroll GetOverscroll();
-
-  /**
-   * If there is overscroll, returns the amount. Sign depends on in what
-   * direction it is overscrolling. Positive excess means that it is
-   * overscrolling in the positive direction, whereas negative excess means
-   * that it is overscrolling in the negative direction. If there is overscroll
-   * in both directions, this returns 0; it assumes that you check
-   * GetOverscroll() first.
-   */
-  float GetExcess();
-
-  /**
    * Gets the raw velocity of this axis at this moment.
    */
   float GetVelocity();
