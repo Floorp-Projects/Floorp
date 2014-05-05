@@ -8,6 +8,7 @@
 
 #include "prmjtime.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
 #ifdef SOLARIS
@@ -66,6 +67,8 @@ extern int gettimeofday(struct timeval *tv);
 #define G2037GMTMICROHI        0x00e45fab /* micro secs to 2037 high */
 #define G2037GMTMICROLOW       0x7a238000 /* micro secs to 2037 low */
 
+using mozilla::DebugOnly;
+
 #if defined(XP_WIN)
 
 // Returns the number of microseconds since the Unix epoch.
@@ -106,13 +109,14 @@ static void
 NowCalibrate()
 {
     if (calibration.freq == 0.0) {
+        // According to the documentation, QueryPerformanceFrequency will never
+        // return false or return a non-zero frequency on systems that run
+        // Windows XP or later.
         LARGE_INTEGER liFreq;
-        if (!QueryPerformanceFrequency(&liFreq)) {
-            // High-performance timer is unavailable.
-            calibration.freq = -1.0;
-            return;
-        }
+        DebugOnly<BOOL> res = QueryPerformanceFrequency(&liFreq);
+        MOZ_ASSERT(res);
         calibration.freq = double(liFreq.QuadPart);
+        MOZ_ASSERT(calibration.freq > 0.0);
     }
     if (calibration.freq > 0.0) {
         // By wrapping a timeBegin/EndPeriod pair of calls around this loop,
@@ -193,69 +197,8 @@ PRMJ_Now()
 }
 
 #else
-/*
 
-Win32 python-esque pseudo code
-Please see bug 363258 for why the win32 timing code is so complex.
-
-calibration mutex : Win32CriticalSection(spincount=0)
-data mutex : Win32CriticalSection(spincount=4096)
-
-def NowInit():
-  init mutexes
-  PRMJ_NowCalibration()
-
-def NowCalibration():
-  expensive up-to-15ms call
-
-def PRMJ_Now():
-  returnedTime = 0
-  needCalibration = False
-  cachedOffset = 0.0
-  calibrated = False
-  PR_CallOnce(PRMJ_NowInit)
-  do
-    if not global.calibrated or needCalibration:
-      acquire calibration mutex
-        acquire data mutex
-
-          // Only recalibrate if someone didn't already
-          if cachedOffset == calibration.offset:
-            // Have all waiting threads immediately wait
-            set data mutex spin count = 0
-            PRMJ_NowCalibrate()
-            calibrated = 1
-
-            set data mutex spin count = default
-        release data mutex
-      release calibration mutex
-
-    calculate lowres time
-
-    if highres timer available:
-      acquire data mutex
-        calculate highres time
-        cachedOffset = calibration.offset
-        highres time = calibration.last = max(highres time, calibration.last)
-      release data mutex
-
-      get kernel tick interval
-
-      if abs(highres - lowres) < kernel tick:
-        returnedTime = highres time
-        needCalibration = False
-      else:
-        if calibrated:
-          returnedTime = lowres
-          needCalibration = False
-        else:
-          needCalibration = True
-    else:
-      returnedTime = lowres
-  while needCalibration
-
-*/
-
+// Please see bug 363258 for why the win32 timing code is so complex.
 int64_t
 PRMJ_Now()
 {
@@ -268,7 +211,7 @@ PRMJ_Now()
 #ifdef JS_THREADSAFE
     PR_CallOnce(&calibrationOnce, NowInit);
 #endif
-    do {
+    while (true) {
         if (!calibration.calibrated || needsCalibration) {
             MUTEX_LOCK(&calibration.calibration_lock);
             MUTEX_LOCK(&calibration.data_lock);
@@ -290,91 +233,85 @@ PRMJ_Now()
             MUTEX_UNLOCK(&calibration.calibration_lock);
         }
 
-
         // Calculate a low resolution time.
         FILETIME ft;
         GetSystemTimeAsFileTime(&ft);
         double lowresTime = FileTimeToUnixMicroseconds(ft);
 
-        if (calibration.freq > 0.0) {
-            // Grab high resolution time.
-            LARGE_INTEGER now;
-            QueryPerformanceCounter(&now);
-            double highresTimerValue = double(now.QuadPart);
+        // Grab high resolution time.
+        LARGE_INTEGER now;
+        QueryPerformanceCounter(&now);
+        double highresTimerValue = double(now.QuadPart);
 
-            MUTEX_LOCK(&calibration.data_lock);
-            double highresTime = calibration.offset + PRMJ_USEC_PER_SEC *
-                 (highresTimerValue-calibration.timer_offset)/calibration.freq;
-            cachedOffset = calibration.offset;
+        MUTEX_LOCK(&calibration.data_lock);
+        double highresTime = calibration.offset + PRMJ_USEC_PER_SEC *
+            (highresTimerValue-calibration.timer_offset)/calibration.freq;
+        cachedOffset = calibration.offset;
 
-            // On some dual processor/core systems, we might get an earlier time
-            // so we cache the last time that we returned.
-            calibration.last = js::Max(calibration.last, int64_t(highresTime));
-            returnedTime = calibration.last;
-            MUTEX_UNLOCK(&calibration.data_lock);
+        // On some dual processor/core systems, we might get an earlier time
+        // so we cache the last time that we returned.
+        calibration.last = js::Max(calibration.last, int64_t(highresTime));
+        returnedTime = calibration.last;
+        MUTEX_UNLOCK(&calibration.data_lock);
 
-            // Rather than assume the NT kernel ticks every 15.6ms, ask it.
-            double skewThreshold;
-            DWORD timeAdjustment, timeIncrement;
-            BOOL timeAdjustmentDisabled;
-            if (GetSystemTimeAdjustment(&timeAdjustment,
-                                        &timeIncrement,
-                                        &timeAdjustmentDisabled)) {
-                if (timeAdjustmentDisabled) {
-                    /* timeAdjustment is in units of 100ns */
-                    skewThreshold = timeAdjustment/10.0;
-                } else {
-                    /* timeIncrement is in units of 100ns */
-                    skewThreshold = timeIncrement/10.0;
-                }
+        // Rather than assume the NT kernel ticks every 15.6ms, ask it.
+        double skewThreshold;
+        DWORD timeAdjustment, timeIncrement;
+        BOOL timeAdjustmentDisabled;
+        if (GetSystemTimeAdjustment(&timeAdjustment,
+                                    &timeIncrement,
+                                    &timeAdjustmentDisabled)) {
+            if (timeAdjustmentDisabled) {
+                // timeAdjustment is in units of 100ns.
+                skewThreshold = timeAdjustment/10.0;
             } else {
-                // Default to 15.625 ms if the syscall fails.
-                skewThreshold = 15625.25;
+                // timeIncrement is in units of 100ns.
+                skewThreshold = timeIncrement/10.0;
             }
-
-            // Check for clock skew.
-            double diff = lowresTime - highresTime;
-
-            // For some reason that I have not determined, the skew can be
-            // up to twice a kernel tick. This does not seem to happen by
-            // itself, but I have only seen it triggered by another program
-            // doing some kind of file I/O. The symptoms are a negative diff
-            // followed by an equally large positive diff.
-            if (mozilla::Abs(diff) <= 2 * skewThreshold) {
-                // No detectable clock skew.
-                return int64_t(highresTime);
-            }
-
-            if (calibrated) {
-                // If we already calibrated once this instance, and the
-                // clock is still skewed, then either the processor(s) are
-                // wildly changing clockspeed or the system is so busy that
-                // we get switched out for long periods of time. In either
-                // case, it would be infeasible to make use of high
-                // resolution results for anything, so let's resort to old
-                // behavior for this call. It's possible that in the
-                // future, the user will want the high resolution timer, so
-                // we don't disable it entirely.
-                return int64_t(lowresTime);
-            }
-
-            // It is possible that when we recalibrate, we will return a
-            // value less than what we have returned before; this is
-            // unavoidable. We cannot tell the different between a
-            // faulty QueryPerformanceCounter implementation and user
-            // changes to the operating system time. Since we must
-            // respect user changes to the operating system time, we
-            // cannot maintain the invariant that Date.now() never
-            // decreases; the old implementation has this behavior as
-            // well.
-            needsCalibration = true;
         } else {
-            // No high resolution timer is available, so fall back.
-            returnedTime = int64_t(lowresTime);
+            // Default to 15.625 ms if the syscall fails.
+            skewThreshold = 15625.25;
         }
-    } while (needsCalibration);
 
-    return returnedTime;
+        // Check for clock skew.
+        double diff = lowresTime - highresTime;
+
+        // For some reason that I have not determined, the skew can be
+        // up to twice a kernel tick. This does not seem to happen by
+        // itself, but I have only seen it triggered by another program
+        // doing some kind of file I/O. The symptoms are a negative diff
+        // followed by an equally large positive diff.
+        if (mozilla::Abs(diff) <= 2 * skewThreshold) {
+            // No detectable clock skew.
+            return int64_t(highresTime);
+        }
+
+        if (calibrated) {
+            // If we already calibrated once this instance, and the
+            // clock is still skewed, then either the processor(s) are
+            // wildly changing clockspeed or the system is so busy that
+            // we get switched out for long periods of time. In either
+            // case, it would be infeasible to make use of high
+            // resolution results for anything, so let's resort to old
+            // behavior for this call. It's possible that in the
+            // future, the user will want the high resolution timer, so
+            // we don't disable it entirely.
+            return int64_t(lowresTime);
+        }
+
+        // It is possible that when we recalibrate, we will return a
+        // value less than what we have returned before; this is
+        // unavoidable. We cannot tell the different between a
+        // faulty QueryPerformanceCounter implementation and user
+        // changes to the operating system time. Since we must
+        // respect user changes to the operating system time, we
+        // cannot maintain the invariant that Date.now() never
+        // decreases; the old implementation has this behavior as
+        // well.
+        needsCalibration = true;
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Shouldn't get here");
 }
 #endif
 
