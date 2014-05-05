@@ -270,7 +270,7 @@ public:
   /**
    * Was the current presentation state for this frame restored from history?
    */
-  virtual bool DidHistoryRestore() = 0;
+  virtual bool DidHistoryRestore() const = 0;
   /**
    * Clear the flag so that DidHistoryRestore() returns false until the next
    * RestoreState call.
