@@ -36,10 +36,7 @@ var Devices = {
       this.updateDeviceList();
     }, false);
 
-    // TODO: Don't break encapsulation here: have search() return the
-    // old interval.
-    this._savedSearchInterval = SimpleServiceDiscovery._searchInterval;
-    SimpleServiceDiscovery.search(SEARCH_INTERVAL_IN_MILLISECONDS);
+    this._savedSearchInterval = SimpleServiceDiscovery.search(SEARCH_INTERVAL_IN_MILLISECONDS);
 
     this.updateDeviceList();
   },
