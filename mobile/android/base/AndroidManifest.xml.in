@@ -75,7 +75,7 @@
 		 android:icon="@drawable/icon"
                  android:name="org.mozilla.gecko.GeckoApplication"
 		 android:hardwareAccelerated="true"
-#if MOZILLA_OFFICIAL
+#ifdef MOZILLA_OFFICIAL
 		 android:debuggable="false">
 #else
 		 android:debuggable="true">
