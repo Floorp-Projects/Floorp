@@ -308,3 +308,27 @@ TestArray.addTest(
       .then(doIndexedDB, error(that));
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "SHA-256 digest",
+  function() {
+    var that = this;
+    crypto.subtle.digest("SHA-256", tv.sha256.data).then(
+      memcmp_complete(that, tv.sha256.result),
+      error(that)
+    );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Fail cleanly on unknown hash algorithm",
+  function() {
+    var that = this;
+    crypto.subtle.digest("GOST-34_311-95", tv.sha256.data).then(
+      error(that),
+      complete(that, function() { return true; })
+    );
+  }
+);

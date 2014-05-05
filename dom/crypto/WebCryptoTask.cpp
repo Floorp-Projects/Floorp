@@ -107,6 +107,63 @@ private:
   }
 };
 
+class SimpleDigestTask : public ReturnArrayBufferViewTask
+{
+public:
+  SimpleDigestTask(JSContext* aCx,
+                   const ObjectOrString& aAlgorithm,
+                   const CryptoOperationData& aData)
+  {
+    if (!mData.Assign(aData)) {
+      mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR;
+      return;
+    }
+
+    nsString algName;
+    mEarlyRv = GetAlgorithmName(aCx, aAlgorithm, algName);
+    if (NS_FAILED(mEarlyRv)) {
+      return;
+    }
+
+    if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA1))   {
+      mOidTag = SEC_OID_SHA1;
+    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA224)) {
+      mOidTag = SEC_OID_SHA224;
+    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
+      mOidTag = SEC_OID_SHA256;
+    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
+      mOidTag = SEC_OID_SHA384;
+    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA512)) {
+      mOidTag = SEC_OID_SHA512;
+    } else {
+      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+      return;
+    }
+  }
+
+private:
+  SECOidTag mOidTag;
+  CryptoBuffer mData;
+
+  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  {
+    // Resize the result buffer
+    uint32_t hashLen = HASH_ResultLenByOidTag(mOidTag);
+    if (!mResult.SetLength(hashLen)) {
+      return NS_ERROR_DOM_UNKNOWN_ERR;
+    }
+
+    // Compute the hash
+    nsresult rv = MapSECStatus(PK11_HashBuf(mOidTag, mResult.Elements(),
+                                            mData.Elements(), mData.Length()));
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_DOM_UNKNOWN_ERR;
+    }
+
+    return rv;
+  }
+};
+
 class ImportKeyTask : public WebCryptoTask
 {
 public:
@@ -475,7 +532,7 @@ WebCryptoTask::DigestTask(JSContext* aCx,
                           const ObjectOrString& aAlgorithm,
                           const CryptoOperationData& aData)
 {
-  return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  return new SimpleDigestTask(aCx, aAlgorithm, aData);
 }
 
 WebCryptoTask*
