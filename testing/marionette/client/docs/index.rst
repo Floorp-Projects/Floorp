@@ -8,7 +8,8 @@ Marionette Python Client
 
 The Marionette python client library allows you to remotely control a
 Gecko-based browser or device which is running a Marionette_
-server.
+server. This includes desktop Firefox and FirefoxOS (support for
+Firefox for Android is planned, but not yet fully implemented).
 
 .. _Marionette: https://developer.mozilla.org/en-US/docs/Marionette
 
