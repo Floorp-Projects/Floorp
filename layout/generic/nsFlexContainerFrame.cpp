@@ -346,7 +346,7 @@ public:
   nscoord GetBaselineOffsetFromOuterCrossEdge(AxisOrientationType aCrossAxis,
                                               AxisEdgeType aEdge) const;
 
-  float GetShareOfFlexWeightSoFar() const { return mShareOfFlexWeightSoFar; }
+  float GetShareOfWeightSoFar() const { return mShareOfWeightSoFar; }
 
   bool IsFrozen() const            { return mIsFrozen; }
 
@@ -368,12 +368,26 @@ public:
 
   uint8_t GetAlignSelf() const     { return mAlignSelf; }
 
-  // Returns the flex weight that we should use in the "resolving flexible
-  // lengths" algorithm.  If we're using flex grow, we just return that;
-  // otherwise, we use the "scaled flex shrink weight" (scaled by our flex
-  // base size, so that when both large and small items are shrinking,
-  // the large items shrink more).
-  float GetFlexWeightToUse(bool aIsUsingFlexGrow)
+  // Returns the flex factor (flex-grow or flex-shrink), depending on
+  // 'aIsUsingFlexGrow'. Returns 0 for frozen items.
+  float GetFlexFactor(bool aIsUsingFlexGrow)
+  {
+    if (IsFrozen()) {
+      return 0.0f;
+    }
+    return aIsUsingFlexGrow ? mFlexGrow : mFlexShrink;
+  }
+
+  // Returns the weight that we should use in the "resolving flexible lengths"
+  // algorithm.  If we're using the flex grow factor, we just return that;
+  // otherwise, we return the "scaled flex shrink factor" (scaled by our flex
+  // base size, so that when both large and small items are shrinking, the large
+  // items shrink more).
+  //
+  // I'm calling this a "weight" instead of a "[scaled] flex-[grow|shrink]
+  // factor", to more clearly distinguish it from the actual flex-grow &
+  // flex-shrink factors.
+  float GetWeight(bool aIsUsingFlexGrow)
   {
     if (IsFrozen()) {
       return 0.0f;
@@ -466,12 +480,12 @@ public:
     mMainSize = aNewMainSize;
   }
 
-  void SetShareOfFlexWeightSoFar(float aNewShare)
+  void SetShareOfWeightSoFar(float aNewShare)
   {
     MOZ_ASSERT(!mIsFrozen || aNewShare == 0.0f,
                "shouldn't be giving this item any share of the weight "
                "after it's frozen");
-    mShareOfFlexWeightSoFar = aNewShare;
+    mShareOfWeightSoFar = aNewShare;
   }
 
   void Freeze() { mIsFrozen = true; }
@@ -574,7 +588,7 @@ protected:
   // overlay the same memory as some other member vars that aren't touched
   // until after main-size has been resolved. In particular, these could share
   // memory with mMainPosn through mAscent, and mIsStretched.
-  float mShareOfFlexWeightSoFar;
+  float mShareOfWeightSoFar;
   bool mIsFrozen;
   bool mHadMinViolation;
   bool mHadMaxViolation;
@@ -1133,7 +1147,7 @@ FlexItem::FlexItem(nsIFrame* aChildFrame,
     mCrossSize(0),
     mCrossPosn(0),
     mAscent(0),
-    mShareOfFlexWeightSoFar(0.0f),
+    mShareOfWeightSoFar(0.0f),
     mIsFrozen(false),
     mHadMinViolation(false),
     mHadMaxViolation(false),
@@ -1205,7 +1219,7 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize)
     mCrossSize(aCrossSize),
     mCrossPosn(0),
     mAscent(0),
-    mShareOfFlexWeightSoFar(0.0f),
+    mShareOfWeightSoFar(0.0f),
     mIsFrozen(true),
     mHadMinViolation(false),
     mHadMaxViolation(false),
@@ -1638,6 +1652,9 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
   const bool isUsingFlexGrow =
     (mTotalOuterHypotheticalMainSize < aFlexContainerMainSize);
 
+  nscoord origAvailableFreeSpace;
+  bool isOrigAvailFreeSpaceInitialized = false;
+
   // NOTE: I claim that this chunk of the algorithm (the looping part) needs to
   // run the loop at MOST mNumItems times.  This claim should hold up
   // because we'll freeze at least one item on each loop iteration, and once
@@ -1666,55 +1683,95 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
     if ((availableFreeSpace > 0 && isUsingFlexGrow) ||
         (availableFreeSpace < 0 && !isUsingFlexGrow)) {
 
+      // The first time we do this, we initialize origAvailableFreeSpace.
+      if (!isOrigAvailFreeSpaceInitialized) {
+        origAvailableFreeSpace = availableFreeSpace;
+        isOrigAvailFreeSpaceInitialized = true;
+      }
+
       // STRATEGY: On each item, we compute & store its "share" of the total
-      // flex weight that we've seen so far:
-      //   curFlexWeight / runningFlexWeightSum
+      // weight that we've seen so far:
+      //   curWeight / weightSum
       //
       // Then, when we go to actually distribute the space (in the next loop),
       // we can simply walk backwards through the elements and give each item
       // its "share" multiplied by the remaining available space.
       //
-      // SPECIAL CASE: If the sum of the flex weights is larger than the
+      // SPECIAL CASE: If the sum of the weights is larger than the
       // maximum representable float (overflowing to infinity), then we can't
       // sensibly divide out proportional shares anymore. In that case, we
-      // simply treat the flex item(s) with the largest flex weights as if
+      // simply treat the flex item(s) with the largest weights as if
       // their weights were infinite (dwarfing all the others), and we
       // distribute all of the available space among them.
-      float runningFlexWeightSum = 0.0f;
-      float largestFlexWeight = 0.0f;
-      uint32_t numItemsWithLargestFlexWeight = 0;
+      float weightSum = 0.0f;
+      float flexFactorSum = 0.0f;
+      float largestWeight = 0.0f;
+      uint32_t numItemsWithLargestWeight = 0;
       for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
-        float curFlexWeight = item->GetFlexWeightToUse(isUsingFlexGrow);
-        MOZ_ASSERT(curFlexWeight >= 0.0f, "weights are non-negative");
+        float curWeight = item->GetWeight(isUsingFlexGrow);
+        float curFlexFactor = item->GetFlexFactor(isUsingFlexGrow);
+        MOZ_ASSERT(curWeight >= 0.0f, "weights are non-negative");
+        MOZ_ASSERT(curFlexFactor >= 0.0f, "flex factors are non-negative");
 
-        runningFlexWeightSum += curFlexWeight;
-        if (NS_finite(runningFlexWeightSum)) {
-          if (curFlexWeight == 0.0f) {
-            item->SetShareOfFlexWeightSoFar(0.0f);
+        weightSum += curWeight;
+        flexFactorSum += curFlexFactor;
+
+        if (NS_finite(weightSum)) {
+          if (curWeight == 0.0f) {
+            item->SetShareOfWeightSoFar(0.0f);
           } else {
-            item->SetShareOfFlexWeightSoFar(curFlexWeight /
-                                            runningFlexWeightSum);
+            item->SetShareOfWeightSoFar(curWeight / weightSum);
           }
         } // else, the sum of weights overflows to infinity, in which
-          // case we don't bother with "SetShareOfFlexWeightSoFar" since
+          // case we don't bother with "SetShareOfWeightSoFar" since
           // we know we won't use it. (instead, we'll just give every
-          // item with the largest flex weight an equal share of space.)
+          // item with the largest weight an equal share of space.)
 
-        // Update our largest-flex-weight tracking vars
-        if (curFlexWeight > largestFlexWeight) {
-          largestFlexWeight = curFlexWeight;
-          numItemsWithLargestFlexWeight = 1;
-        } else if (curFlexWeight == largestFlexWeight) {
-          numItemsWithLargestFlexWeight++;
+        // Update our largest-weight tracking vars
+        if (curWeight > largestWeight) {
+          largestWeight = curWeight;
+          numItemsWithLargestWeight = 1;
+        } else if (curWeight == largestWeight) {
+          numItemsWithLargestWeight++;
         }
       }
 
-      if (runningFlexWeightSum != 0.0f) { // no distribution if no flexibility
+      if (weightSum != 0.0f) {
+        MOZ_ASSERT(flexFactorSum != 0.0f,
+                   "flex factor sum can't be 0, if a weighted sum "
+                   "of its components (weightSum) is nonzero");
+        if (flexFactorSum < 1.0f) {
+          // Our unfrozen flex items don't want all of the original free space!
+          // (Their flex factors add up to something less than 1.)
+          // Hence, make sure we don't distribute any more than the portion of
+          // our original free space that these items actually want.
+          nscoord totalDesiredPortionOfOrigFreeSpace =
+            NSToCoordRound(origAvailableFreeSpace * flexFactorSum);
+
+          // Clamp availableFreeSpace to be no larger than that ^^.
+          // (using min or max, depending on sign).
+          // This should not change the sign of availableFreeSpace (except
+          // possibly by setting it to 0), as enforced by this assertion:
+          MOZ_ASSERT(totalDesiredPortionOfOrigFreeSpace == 0 ||
+                     ((totalDesiredPortionOfOrigFreeSpace > 0) ==
+                      (availableFreeSpace > 0)),
+                     "When we reduce available free space for flex factors < 1,"
+                     "we shouldn't change the sign of the free space...");
+
+          if (availableFreeSpace > 0) {
+            availableFreeSpace = std::min(availableFreeSpace,
+                                          totalDesiredPortionOfOrigFreeSpace);
+          } else {
+            availableFreeSpace = std::max(availableFreeSpace,
+                                          totalDesiredPortionOfOrigFreeSpace);
+          }
+        }
+
         PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
                (" Distributing available space:"));
         // NOTE: It's important that we traverse our items in *reverse* order
         // here, for correct width distribution according to the items'
-        // "ShareOfFlexWeightSoFar" progressively-calculated values.
+        // "ShareOfWeightSoFar" progressively-calculated values.
         for (FlexItem* item = mItems.getLast(); item;
              item = item->getPrevious()) {
 
@@ -1722,9 +1779,9 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
             // To avoid rounding issues, we compute the change in size for this
             // item, and then subtract it from the remaining available space.
             nscoord sizeDelta = 0;
-            if (NS_finite(runningFlexWeightSum)) {
+            if (NS_finite(weightSum)) {
               float myShareOfRemainingSpace =
-                item->GetShareOfFlexWeightSoFar();
+                item->GetShareOfWeightSoFar();
 
               MOZ_ASSERT(myShareOfRemainingSpace >= 0.0f &&
                          myShareOfRemainingSpace <= 1.0f,
@@ -1738,15 +1795,14 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
                 sizeDelta = NSToCoordRound(availableFreeSpace *
                                            myShareOfRemainingSpace);
               }
-            } else if (item->GetFlexWeightToUse(isUsingFlexGrow) ==
-                       largestFlexWeight) {
+            } else if (item->GetWeight(isUsingFlexGrow) == largestWeight) {
               // Total flexibility is infinite, so we're just distributing
               // the available space equally among the items that are tied for
               // having the largest weight (and this is one of those items).
               sizeDelta =
                 NSToCoordRound(availableFreeSpace /
-                               float(numItemsWithLargestFlexWeight));
-              numItemsWithLargestFlexWeight--;
+                               float(numItemsWithLargestWeight));
+              numItemsWithLargestWeight--;
             }
 
             availableFreeSpace -= sizeDelta;
