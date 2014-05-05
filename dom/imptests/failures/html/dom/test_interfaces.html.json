@@ -1,5 +1,4 @@
 {
-  "DOMException exception: existence and properties of exception interface prototype object": true,
   "DOMException exception: existence and properties of exception interface prototype object's \"name\" property": true,
   "CustomEvent interface: existence and properties of interface object": true,
   "EventListener interface: existence and properties of interface prototype object": true,
