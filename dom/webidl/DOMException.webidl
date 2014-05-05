@@ -18,11 +18,18 @@ interface StackFrame;
 [NoInterfaceObject]
 interface ExceptionMembers
 {
-  // A custom message set by the thrower.
+  // A custom message set by the thrower.  LenientThis so it can be
+  // gotten on the prototype, which Error.prototype.toString will do
+  // if someone tries to stringify DOMException.prototype.
+  [LenientThis]
   readonly attribute DOMString               message;
   // The nsresult associated with this exception.
   readonly attribute unsigned long           result;
-  // The name of the error code (ie, a string repr of |result|)
+  // The name of the error code (ie, a string repr of |result|).
+  // LenientThis so it can be gotten on the prototype, which
+  // Error.prototype.toString will do if someone tries to stringify
+  // DOMException.prototype.
+  [LenientThis]
   readonly attribute DOMString               name;
 
   // Filename location.  This is the location that caused the
@@ -49,13 +56,12 @@ interface ExceptionMembers
 
   // Arbitary data for the implementation.
   readonly attribute nsISupports?            data;
-
-  // A generic formatter - make it suitable to print, etc.
-  stringifier;
 };
 
 [NoInterfaceObject]
 interface Exception {
+  // A generic formatter - make it suitable to print, etc.
+  stringifier;
 };
 
 Exception implements ExceptionMembers;
