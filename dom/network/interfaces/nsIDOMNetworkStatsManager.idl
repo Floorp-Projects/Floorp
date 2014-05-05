@@ -6,15 +6,6 @@
 
 interface nsIDOMDOMRequest;
 
-[scriptable, builtinclass, uuid(a93ea13e-409c-4189-9b1e-95fff220be55)]
-interface nsIDOMMozNetworkStatsAlarm : nsISupports
-{
-  readonly attribute unsigned long alarmId;
-  readonly attribute nsISupports network;
-  readonly attribute long threshold;
-  readonly attribute jsval data;
-};
-
 [scriptable,  uuid(ceb874cd-cc1a-4e65-b404-cc2d3e42425f)]
 interface nsIDOMMozNetworkStatsManager : nsISupports
 {
