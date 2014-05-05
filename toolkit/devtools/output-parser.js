@@ -294,16 +294,12 @@ OutputParser.prototype = {
     let win = Services.appShell.hiddenDOMWindow;
     let doc = win.document;
 
-    name = name.replace(/-\w{1}/g, function(match) {
-      return match.charAt(1).toUpperCase();
-    });
-
     value = value.replace("!important", "");
 
     let div = doc.createElement("div");
-    div.style[name] = value;
+    div.style.setProperty(name, value);
 
-    return !!div.style[name];
+    return !!div.style.getPropertyValue(name);
   },
 
   /**
