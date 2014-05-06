@@ -2422,12 +2422,6 @@ nsFrameLoader::EnsureMessageManager()
     return NS_OK;
   }
 
-  nsIScriptContext* sctx = mOwnerContent->GetContextForEventHandlers(&rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (NS_WARN_IF(!sctx || !(sctx->GetNativeContext()))) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow =
     do_QueryInterface(GetOwnerDoc()->GetWindow());
   nsCOMPtr<nsIMessageBroadcaster> parentManager;
