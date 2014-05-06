@@ -18,12 +18,13 @@
 
 #define A_RTP_CONNECTION_H_
 
+#include "mozilla/Types.h"
 #include <media/stagefright/foundation/AHandler.h>
 #include <utils/List.h>
 
 namespace android {
 
-struct ABuffer;
+struct MOZ_EXPORT ABuffer;
 struct ARTPSource;
 struct ASessionDescription;
 

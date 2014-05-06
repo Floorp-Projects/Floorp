@@ -34,7 +34,7 @@ inline int sigaltstack(const stack_t *ss, stack_t *oss) {
 #endif /* ANDROID */
 
 #ifdef __ARM_EABI__
-extern "C" const void *
+extern "C" MOZ_EXPORT const void *
 __gnu_Unwind_Find_exidx(void *pc, int *pcount) __attribute__((weak));
 #endif
 
