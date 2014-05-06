@@ -1246,7 +1246,7 @@ struct ScopedCacheEntryOpenedForWrite
 
     ~ScopedCacheEntryOpenedForWrite() {
         if (memory)
-            cx->asmJSCacheOps().closeEntryForWrite(cx->global(), serializedSize, memory, handle);
+            cx->asmJSCacheOps().closeEntryForWrite(serializedSize, memory, handle);
     }
 };
 
@@ -1303,7 +1303,7 @@ struct ScopedCacheEntryOpenedForRead
 
     ~ScopedCacheEntryOpenedForRead() {
         if (memory)
-            cx->asmJSCacheOps().closeEntryForRead(cx->global(), serializedSize, memory, handle);
+            cx->asmJSCacheOps().closeEntryForRead(serializedSize, memory, handle);
     }
 };
 

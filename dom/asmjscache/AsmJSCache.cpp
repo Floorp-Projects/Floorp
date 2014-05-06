@@ -1629,8 +1629,7 @@ OpenEntryForRead(nsIPrincipal* aPrincipal,
 }
 
 void
-CloseEntryForRead(JS::Handle<JSObject*> global,
-                  size_t aSize,
+CloseEntryForRead(size_t aSize,
                   const uint8_t* aMemory,
                   intptr_t aFile)
 {
@@ -1683,8 +1682,7 @@ OpenEntryForWrite(nsIPrincipal* aPrincipal,
 }
 
 void
-CloseEntryForWrite(JS::Handle<JSObject*> global,
-                   size_t aSize,
+CloseEntryForWrite(size_t aSize,
                    uint8_t* aMemory,
                    intptr_t aFile)
 {
