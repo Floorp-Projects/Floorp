@@ -459,7 +459,14 @@ already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(bool aMemoryOnly,
   newEntry->TransferCallbacks(*this);
   mCallbacks.Clear();
 
-  return handle.forget();
+  // Must return a new write handle, since the consumer is expected to
+  // write to this newly recreated entry.  The |handle| is only a common
+  // reference counter and doesn't revert entry state back when write
+  // fails and also doesn't update the entry frecency.  Not updating
+  // frecency causes entries to not be purged from our memory pools.
+  nsRefPtr<CacheEntryHandle> writeHandle =
+    newEntry->NewWriteHandle();
+  return writeHandle.forget();
 }
 
 void CacheEntry::TransferCallbacks(CacheEntry & aFromEntry)
@@ -770,7 +777,7 @@ CacheEntryHandle* CacheEntry::NewWriteHandle()
   mozilla::MutexAutoLock lock(mLock);
 
   BackgroundOp(Ops::FRECENCYUPDATE);
-  return (mWriter = new CacheEntryHandle(this));
+  return (mWriter = NewHandle());
 }
 
 void CacheEntry::OnHandleClosed(CacheEntryHandle const* aHandle)
