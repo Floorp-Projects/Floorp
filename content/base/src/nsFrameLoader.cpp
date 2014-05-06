@@ -33,7 +33,6 @@
 #include "nsIDOMApplicationRegistry.h"
 #include "nsIBaseWindow.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsIXPConnect.h"
 #include "nsUnicharUtils.h"
 #include "nsIScriptGlobalObject.h"
@@ -2425,9 +2424,9 @@ nsFrameLoader::EnsureMessageManager()
 
   nsIScriptContext* sctx = mOwnerContent->GetContextForEventHandlers(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_STATE(sctx);
-  AutoPushJSContext cx(sctx->GetNativeContext());
-  NS_ENSURE_STATE(cx);
+  if (NS_WARN_IF(!sctx || !(sctx->GetNativeContext()))) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow =
     do_QueryInterface(GetOwnerDoc()->GetWindow());
