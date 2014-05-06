@@ -1578,45 +1578,19 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
 bool
 nsContentUtils::CanCallerAccess(nsINode* aNode)
 {
-  // XXXbz why not check the IsCapabilityEnabled thing up front, and not bother
-  // with the system principal games?  But really, there should be a simpler
-  // API here, dammit.
-  nsCOMPtr<nsIPrincipal> subjectPrincipal;
-  nsresult rv = sSecurityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (!subjectPrincipal) {
-    // we're running as system, grant access to the node.
-
-    return true;
-  }
-
-  return CanCallerAccess(subjectPrincipal, aNode->NodePrincipal());
+  return CanCallerAccess(GetSubjectPrincipal(), aNode->NodePrincipal());
 }
 
 // static
 bool
 nsContentUtils::CanCallerAccess(nsPIDOMWindow* aWindow)
 {
-  // XXXbz why not check the IsCapabilityEnabled thing up front, and not bother
-  // with the system principal games?  But really, there should be a simpler
-  // API here, dammit.
-  nsCOMPtr<nsIPrincipal> subjectPrincipal;
-  nsresult rv = sSecurityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (!subjectPrincipal) {
-    // we're running as system, grant access to the node.
-
-    return true;
-  }
-
   nsCOMPtr<nsIScriptObjectPrincipal> scriptObject =
     do_QueryInterface(aWindow->IsOuterWindow() ?
                       aWindow->GetCurrentInnerWindow() : aWindow);
   NS_ENSURE_TRUE(scriptObject, false);
 
-  return CanCallerAccess(subjectPrincipal, scriptObject->GetPrincipal());
+  return CanCallerAccess(GetSubjectPrincipal(), scriptObject->GetPrincipal());
 }
 
 //static
