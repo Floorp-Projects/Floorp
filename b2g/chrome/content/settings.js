@@ -600,38 +600,6 @@ SettingsListener.observe("accessibility.screenreader", false, function(value) {
   });
 })();
 
-// =================== AsyncPanZoom ======================
-SettingsListener.observe('apz.displayport.heuristics', 'default', function(value) {
-  // first reset everything to default
-  Services.prefs.clearUserPref('apz.velocity_bias');
-  Services.prefs.clearUserPref('apz.use_paint_duration');
-  Services.prefs.clearUserPref('apz.x_skate_size_multiplier');
-  Services.prefs.clearUserPref('apz.y_skate_size_multiplier');
-  Services.prefs.clearUserPref('apz.allow-checkerboarding');
-  // and then set the things that we want to change
-  switch (value) {
-  case 'default':
-    break;
-  case 'center-displayport':
-    Services.prefs.setCharPref('apz.velocity_bias', '0.0');
-    break;
-  case 'perfect-paint-times':
-    Services.prefs.setBoolPref('apz.use_paint_duration', false);
-    Services.prefs.setCharPref('apz.velocity_bias', '0.32'); // 16/50 (assumes 16ms paint times instead of 50ms)
-    break;
-  case 'taller-displayport':
-    Services.prefs.setCharPref('apz.y_skate_size_multiplier', '3.5');
-    break;
-  case 'faster-paint':
-    Services.prefs.setCharPref('apz.x_skate_size_multiplier', '1.0');
-    Services.prefs.setCharPref('apz.y_skate_size_multiplier', '1.5');
-    break;
-  case 'no-checkerboard':
-    Services.prefs.setBoolPref('apz.allow-checkerboarding', false);
-    break;
-  }
-});
-
 // =================== Various simple mapping  ======================
 let settingsToObserve = {
   'ril.mms.retrieval_mode': {
@@ -666,7 +634,6 @@ let settingsToObserve = {
   },
   'layers.enable-tiles': true,
   'layers.simple-tiles': false,
-  'layers.progressive-paint': false,
   'layers.draw-tile-borders': false,
   'layers.dump': false,
   'debug.fps.enabled': {

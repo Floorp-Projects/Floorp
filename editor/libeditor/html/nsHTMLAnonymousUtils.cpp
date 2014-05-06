@@ -49,6 +49,7 @@ class nsIDOMEventListener;
 class nsISelection;
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // retrieve an integer stored into a CSS computed float value
 static int32_t GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
@@ -146,14 +147,15 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   // Create a new node through the element factory
-  nsCOMPtr<dom::Element> newContent;
-  nsresult res = CreateHTMLContent(aTag, getter_AddRefs(newContent));
-  NS_ENSURE_SUCCESS(res, res);
+  ErrorResult rv;
+  nsCOMPtr<Element> newContent = CreateHTMLContent(aTag, rv);
+  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
 
   nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newContent);
   NS_ENSURE_TRUE(newElement, NS_ERROR_FAILURE);
 
   // add the "hidden" class if needed
+  nsresult res;
   if (aIsCreatedHidden) {
     res = newElement->SetAttribute(NS_LITERAL_STRING("class"),
                                    NS_LITERAL_STRING("hidden"));

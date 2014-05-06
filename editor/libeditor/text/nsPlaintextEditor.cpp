@@ -438,6 +438,20 @@ nsPlaintextEditor::TypedText(const nsAString& aString, ETypingAction aAction)
   }
 }
 
+already_AddRefed<Element>
+nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsINode>* aInOutParent,
+                                int32_t* aInOutOffset,
+                                EDirection aSelect)
+{
+  nsCOMPtr<nsIDOMNode> parent(GetAsDOMNode(*aInOutParent));
+  nsCOMPtr<nsIDOMNode> br;
+  // We ignore the retval, and assume it's fine if the br is non-null
+  CreateBRImpl(address_of(parent), aInOutOffset, address_of(br), aSelect);
+  *aInOutParent = do_QueryInterface(parent);
+  nsCOMPtr<Element> ret(do_QueryInterface(br));
+  return ret.forget();
+}
+
 nsresult
 nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
                                 int32_t* aInOutOffset,
