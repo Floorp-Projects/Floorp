@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1006595
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1006595</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1006595 **/
+  function arraysEqual(arr1, arr2, message) {
+    is(arr1.length, arr2.length, message + " length");
+    for (var i = 0; i < arr1.length; ++i) {
+      is(arr1[i], arr2[i], message + " element at index " + i);
+    }
+  }
+  var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+    .getService(SpecialPowers.Ci.inIDOMUtils);
+
+  var paddingSubProps = utils.getSubpropertiesForCSSProperty("padding");
+  arraysEqual(paddingSubProps,
+              [ "padding-top",
+                "padding-right-value",
+                "padding-bottom",
+                "padding-left-value",
+                "padding-left-ltr-source", "padding-left-rtl-source",
+                "padding-right-ltr-source", "padding-right-rtl-source" ],
+              "'padding' subproperties");
+
+  var displaySubProps = utils.getSubpropertiesForCSSProperty("color");
+  arraysEqual(displaySubProps, [ "color" ],
+              "'color' subproperties");
+
+  ok(utils.cssPropertyIsShorthand("padding"), "'padding' is a shorthand")
+  ok(!utils.cssPropertyIsShorthand("color"), "'color' is not a shorthand")
+
+  ok(utils.cssPropertySupportsType("padding", utils.TYPE_LENGTH),
+     "'padding' can be a length");
+  ok(!utils.cssPropertySupportsType("padding", utils.TYPE_COLOR),
+     "'padding' can't be a color");
+
+  ok(utils.cssPropertySupportsType("padding", utils.TYPE_PERCENTAGE),
+     "'padding' can be a percentage");
+  ok(!utils.cssPropertySupportsType("color", utils.TYPE_PERCENTAGE),
+     "'color' can't be a percentage");
+
+  ok(utils.cssPropertySupportsType("color", utils.TYPE_COLOR),
+     "'color' can be a color");
+  ok(utils.cssPropertySupportsType("background", utils.TYPE_COLOR),
+     "'background' can be a color");
+  ok(!utils.cssPropertySupportsType("background-image", utils.TYPE_COLOR),
+     "'background-image' can't be a color");
+
+  ok(utils.cssPropertySupportsType("background-image", utils.TYPE_URL),
+     "'background-image' can be a URL");
+  ok(utils.cssPropertySupportsType("background", utils.TYPE_URL),
+     "'background' can be a URL");
+  ok(!utils.cssPropertySupportsType("background-color", utils.TYPE_URL),
+     "'background-color' can't be a URL");
+
+  // There are no properties claiming to be of TYPE_ANGLE.  image-orientation
+  // would be, but it doesn't use table-driven parsing.
+
+  // There are no properties claiming to be of TYPE_FREQUENCY
+
+  ok(utils.cssPropertySupportsType("transition", utils.TYPE_TIME),
+     "'transition' can be a time");
+  ok(utils.cssPropertySupportsType("transition-duration", utils.TYPE_TIME),
+     "'transition-duration' can be a time");
+  ok(!utils.cssPropertySupportsType("background-color", utils.TYPE_TIME),
+     "'background-color' can't be a time");
+
+  ok(utils.cssPropertySupportsType("background-image", utils.TYPE_GRADIENT),
+     "'background-image' can be a gradient");
+  ok(utils.cssPropertySupportsType("background", utils.TYPE_GRADIENT),
+     "'background' can be a gradient");
+  ok(!utils.cssPropertySupportsType("background-color", utils.TYPE_GRADIENT),
+     "'background-color' can't be a gradient");
+
+  ok(utils.cssPropertySupportsType("transition", utils.TYPE_TIMING_FUNCTION),
+     "'transition' can be a timing function");
+  ok(utils.cssPropertySupportsType("transition-timing-function",
+                                   utils.TYPE_TIMING_FUNCTION),
+     "'transition-duration' can be a timing function");
+  ok(!utils.cssPropertySupportsType("background-color",
+                                    utils.TYPE_TIMING_FUNCTION),
+     "'background-color' can't be a timing function");
+
+  ok(utils.cssPropertySupportsType("background-image", utils.TYPE_IMAGE_RECT),
+     "'background-image' can be an image rect");
+  ok(utils.cssPropertySupportsType("background", utils.TYPE_IMAGE_RECT),
+     "'background' can be an image rect");
+  ok(!utils.cssPropertySupportsType("background-color", utils.TYPE_IMAGE_RECT),
+     "'background-color' can't be an image rect");
+
+  ok(utils.cssPropertySupportsType("z-index", utils.TYPE_NUMBER),
+     "'z-index' can be a number");
+  ok(utils.cssPropertySupportsType("line-height", utils.TYPE_NUMBER),
+     "'line-height' can be a number");
+  ok(!utils.cssPropertySupportsType("background-color", utils.TYPE_NUMBER),
+     "'background-color' can't be a number");
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1006595">Mozilla Bug 1006595</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
