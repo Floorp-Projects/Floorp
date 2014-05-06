@@ -144,6 +144,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   // XP topcrash with F-Secure, bug 970362
   { "fs_ccf_ni_umh32.dll", MAKE_VERSION(1, 42, 101, 0), DllBlockInfo::BLOCK_XP_ONLY },
 
+  // Topcrash with V-bates, bug 1002748
+  { "libinject.dll", UNVERSIONED },
+
   { nullptr, 0 }
 };
 
