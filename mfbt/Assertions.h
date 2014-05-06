@@ -9,10 +9,17 @@
 #ifndef mozilla_Assertions_h
 #define mozilla_Assertions_h
 
+#if defined(MOZILLA_INTERNAL_API) && defined(__cplusplus)
+#define MOZ_DUMP_ASSERTION_STACK
+#endif
+
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"
+#ifdef MOZ_DUMP_ASSERTION_STACK
+#include "nsTraceRefcnt.h"
+#endif
 
 #include <stddef.h>
 #include <stdio.h>
@@ -132,6 +139,9 @@ MOZ_ReportAssertionFailure(const char* s, const char* file, int ln)
                       "Assertion failure: %s, at %s:%d\n", s, file, ln);
 #else
   fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
+#ifdef MOZ_DUMP_ASSERTION_STACK
+  nsTraceRefcnt::WalkTheStack(stderr);
+#endif
   fflush(stderr);
 #endif
 }
@@ -144,6 +154,9 @@ MOZ_ReportCrash(const char* s, const char* file, int ln)
                         "Hit MOZ_CRASH(%s) at %s:%d\n", s, file, ln);
 #else
   fprintf(stderr, "Hit MOZ_CRASH(%s) at %s:%d\n", s, file, ln);
+#ifdef MOZ_DUMP_ASSERTION_STACK
+  nsTraceRefcnt::WalkTheStack(stderr);
+#endif
   fflush(stderr);
 #endif
 }
@@ -483,5 +496,7 @@ void ValidateAssertConditionType()
 #  define MOZ_ALWAYS_TRUE(expr)      ((void)(expr))
 #  define MOZ_ALWAYS_FALSE(expr)     ((void)(expr))
 #endif
+
+#undef MOZ_DUMP_ASSERTION_STACK
 
 #endif /* mozilla_Assertions_h */
