@@ -31,36 +31,57 @@ window.addEventListener('load', function() {
   }
 
   runAppObj = new AppRunner(appname);
-  Services.obs.addObserver(runAppObj, 'browser-ui-startup-complete', false);
+  Services.obs.addObserver(runAppObj, 'remote-browser-shown', false);
+  Services.obs.addObserver(runAppObj, 'inprocess-browser-shown', false);
 });
 
 window.addEventListener('unload', function() {
   if (runAppObj) {
-    Services.obs.removeObserver(runAppObj, 'browser-ui-startup-complete');
+    Services.obs.removeObserver(runAppObj, 'remote-browser-shown');
+    Services.obs.removeObserver(runAppObj, 'inprocess-browser-shown');
   }
 });
 
 function AppRunner(aName) {
-  this._req = null;
   this._appName = aName;
+  this._apps = [];
 }
 AppRunner.prototype = {
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == 'browser-ui-startup-complete') {
-      this.doRunApp();
+    let frameLoader = aSubject;
+    // get a ref to the app <iframe>
+    frameLoader.QueryInterface(Ci.nsIFrameLoader);
+    // Ignore notifications that aren't from a BrowserOrApp
+    if (!frameLoader.ownerIsBrowserOrAppFrame) {
+      return;
+    }
+
+    let frame = frameLoader.ownerElement;
+    if (!frame.appManifestURL) { // Ignore all frames but app frames
+      return;
+    }
+
+    if (aTopic == 'remote-browser-shown' ||
+        aTopic == 'inprocess-browser-shown') {
+      this.doRunApp(frame);
     }
   },
 
-  doRunApp: function() {
+  doRunApp: function(currentFrame) {
     // - Get the list of apps since the parameter was specified
-    this._req = navigator.mozApps.mgmt.getAll();
-    this._req.onsuccess = this.getAllSuccess.bind(this);
-    this._req.onerror = this.getAllError.bind(this);
+    if (this._apps.length) {
+      this.getAllSuccess(this._apps, currentFrame)
+    } else {
+      var req = navigator.mozApps.mgmt.getAll();
+      req.onsuccess = function() {
+        this._apps = req.result;
+        this.getAllSuccess(this._apps, currentFrame)
+      }.bind(this);
+      req.onerror = this.getAllError.bind(this);
+    }
   },
 
-  getAllSuccess: function() {
-    let apps = this._req.result;
-
+  getAllSuccess: function(apps, currentFrame) {
     function findAppWithName(name) {
       let normalizedSearchName = name.replace(/[- ]+/g, '').toLowerCase();
 
@@ -98,6 +119,13 @@ AppRunner.prototype = {
       return;
     }
 
+    let appsService = Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
+    let currentApp = appsService.getAppByManifestURL(currentFrame.appManifestURL);
+
+    if (!currentApp || currentApp.role !== 'homescreen') {
+      return;
+    }
+
     let app = findAppWithName(this._appName);
     if (!app) {
       dump('Could not find app: "' + this._appName + '". Maybe you meant one of:\n');
@@ -105,21 +133,31 @@ AppRunner.prototype = {
       return;
     }
 
-    let setReq =
-      navigator.mozSettings.createLock().set({'lockscreen.enabled': false});
-    setReq.onsuccess = function() {
-      // give the event loop 100ms to disable the lock screen
-      window.setTimeout(function() {
-        dump('--runapp launching app: ' + app.manifest.name + '\n');
-        app.launch();
-      }, 100);
-    };
-    setReq.onerror = function() {
-      dump('--runapp failed to disable lock-screen.  Giving up.\n');
-    };
+    currentFrame.addEventListener('mozbrowserloadend', launchApp);
 
-    dump('--runapp found app: ' + app.manifest.name +
-         ', disabling lock screen...\n');
+    function launchApp() {
+      currentFrame.removeEventListener('mozbrowserloadend', launchApp);
+
+      let setReq =
+        navigator.mozSettings.createLock().set({'lockscreen.enabled': false});
+      setReq.onsuccess = function() {
+        // give the event loop 100ms to disable the lock screen
+        window.setTimeout(function() {
+          dump('--runapp launching app: ' + app.manifest.name + '\n');
+          app.launch();
+        }, 100);
+      };
+      setReq.onerror = function() {
+        dump('--runapp failed to disable lock-screen.  Giving up.\n');
+      };
+
+      dump('--runapp found app: ' + app.manifest.name +
+           ', disabling lock screen...\n');
+
+      // Disable observers once we have made the request to launch the app.
+      Services.obs.removeObserver(runAppObj, 'remote-browser-shown');
+      Services.obs.removeObserver(runAppObj, 'inprocess-browser-shown');
+    }
   },
 
   getAllError: function() {

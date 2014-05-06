@@ -67,7 +67,7 @@ class Linker
         masm.link(code);
 #ifdef JSGC_GENERATIONAL
         if (masm.embedsNurseryPointers())
-            cx->runtime()->gc.storeBuffer.putWholeCell(code);
+            cx->runtime()->gc.storeBuffer.putWholeCellFromMainThread(code);
 #endif
         return code;
     }

@@ -112,6 +112,16 @@
 #endif
 
 /*
+ * When built with clang analyzer (a.k.a scan-build), define MOZ_HAVE_NORETURN
+ * to mark some false positives
+ */
+#ifdef __clang_analyzer__
+#  if __has_extension(attribute_analyzer_noreturn)
+#    define MOZ_HAVE_ANALYZER_NORETURN __attribute__((analyzer_noreturn))
+#  endif
+#endif
+
+/*
  * The MOZ_CONSTEXPR specifier declares that a C++11 compiler can evaluate a
  * function at compile time. A constexpr function cannot examine any values
  * except its arguments and can have no side effects except its return value.
@@ -183,6 +193,27 @@
 #  define MOZ_NORETURN          MOZ_HAVE_NORETURN
 #else
 #  define MOZ_NORETURN          /* no support */
+#endif
+
+/*
+ * MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS, specified at the end of a function
+ * declaration, indicates that for the purposes of static analysis, this
+ * function does not return.  (The function definition does not need to be
+ * annotated.)
+ *
+ * MOZ_ReportCrash(const char* s, const char* file, int ln) MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
+ *
+ * Some static analyzers, like scan-build from clang, can use this information
+ * to eliminate false positives.  From the upstream documentation of scan-build:
+ * "This attribute is useful for annotating assertion handlers that actually
+ * can return, but for the purpose of using the analyzer we want to pretend
+ * that such functions do not return."
+ *
+ */
+#if defined(MOZ_HAVE_ANALYZER_NORETURN)
+#  define MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS          MOZ_HAVE_ANALYZER_NORETURN
+#else
+#  define MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS          /* no support */
 #endif
 
 /*
