@@ -15,6 +15,7 @@
 
 #include "jspubtd.h"
 
+#include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
@@ -665,7 +666,9 @@ struct GCMethods<JSObject *>
     static JSObject *initial() { return nullptr; }
     static ThingRootKind kind() { return RootKind<JSObject *>::rootKind(); }
     static bool poisoned(JSObject *v) { return JS::IsPoisonedPtr(v); }
-    static bool needsPostBarrier(JSObject *v) { return v; }
+    static bool needsPostBarrier(JSObject *v) {
+        return v != nullptr && gc::IsInsideNursery(reinterpret_cast<gc::Cell *>(v));
+    }
 #ifdef JSGC_GENERATIONAL
     static void postBarrier(JSObject **vp) {
         JS::HeapCellPostBarrier(reinterpret_cast<js::gc::Cell **>(vp));

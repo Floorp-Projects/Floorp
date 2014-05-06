@@ -772,8 +772,6 @@ BluetoothServiceBluedroid::GetDefaultAdapterPathInternal(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<BluetoothReplyRunnable> runnable(aRunnable);
-
   BluetoothValue v = InfallibleTArray<BluetoothNamedValue>();
 
   BT_APPEND_NAMED_VALUE(v.get_ArrayOfBluetoothNamedValue(),
@@ -791,10 +789,7 @@ BluetoothServiceBluedroid::GetDefaultAdapterPathInternal(
   BT_APPEND_NAMED_VALUE(v.get_ArrayOfBluetoothNamedValue(),
                         "Devices", sAdapterBondedAddressArray);
 
-  nsAutoString replyError;
-  DispatchBluetoothReply(runnable.get(), v, replyError);
-
-  unused << runnable.forget(); // picked up in DispatchBluetoothReply
+  DispatchBluetoothReply(aRunnable, v, EmptyString());
 
   return NS_OK;
 }
