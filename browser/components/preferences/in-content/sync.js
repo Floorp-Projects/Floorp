@@ -259,9 +259,7 @@ let gSyncPane = {
       gSyncUtils._openLink(url);
       return;
     }
-    win.switchToTabHavingURI(url, true);
-    // seeing as we are doing this in a tab we close the prefs dialog.
-    window.close();
+    win.openUILinkIn(url, "tab");
   },
 
   signUp: function() {

@@ -95,6 +95,7 @@ DOMWifiManager.prototype = {
                       "WifiManager:setHttpProxy:Return:OK", "WifiManager:setHttpProxy:Return:NO",
                       "WifiManager:setStaticIpMode:Return:OK", "WifiManager:setStaticIpMode:Return:NO",
                       "WifiManager:importCert:Return:OK", "WifiManager:importCert:Return:NO",
+                      "WifiManager:getImportedCerts:Return:OK", "WifiManager:getImportedCerts:Return:NO",
                       "WifiManager:wifiDown", "WifiManager:wifiUp",
                       "WifiManager:onconnecting", "WifiManager:onassociate",
                       "WifiManager:onconnect", "WifiManager:ondisconnect",
@@ -173,6 +174,19 @@ DOMWifiManager.prototype = {
     Cu.makeObjectPropsNormal(info);
 
     return info;
+  },
+
+  _convertWifiCertificateList: function(aList) {
+    let propList = {};
+    for (let k in aList) {
+      propList[k] = this._genReadonlyPropDesc(aList[k]);
+    }
+
+    let list = Cu.createObjectIn(this._window);
+    Object.defineProperties(list, propList);
+    Cu.makeObjectPropsNormal(list);
+
+    return list;
   },
 
   _sendMessageForRequest: function(name, data, request) {
@@ -263,6 +277,14 @@ DOMWifiManager.prototype = {
         break;
 
       case "WifiManager:importCert:Return:NO":
+        Services.DOMRequest.fireError(request, msg.data);
+        break;
+
+      case "WifiManager:getImportedCerts:Return:OK":
+        Services.DOMRequest.fireSuccess(request, this._convertWifiCertificateList(msg.data));
+        break;
+
+      case "WifiManager:getImportedCerts:Return:NO":
         Services.DOMRequest.fireError(request, msg.data);
         break;
 
@@ -421,6 +443,12 @@ DOMWifiManager.prototype = {
                                   certPassword: certPassword,
                                   certNickname: certNickname
                                 }, request);
+    return request;
+  },
+
+  getImportedCerts: function nsIDOMWifiManager_getImportedCerts() {
+    var request = this.createRequest();
+    this._sendMessageForRequest("WifiManager:getImportedCerts", null, request);
     return request;
   },
 
