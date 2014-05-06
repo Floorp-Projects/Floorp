@@ -4,7 +4,6 @@
 
 // the "exported" symbols
 let SocialUI,
-    SocialChatBar,
     SocialFlyout,
     SocialMarks,
     SocialShare,
@@ -294,19 +293,6 @@ SocialUI = {
     SocialMarks.update();
     SocialShare.update();
   }
-}
-
-SocialChatBar = {
-  get chatbar() {
-    return document.getElementById("pinnedchats");
-  },
-  openChat: function(aProvider, aURL, aCallback, aMode) {
-    // Until we refactor the tests we can't remove this.
-    // Reach into the social API.
-    let openChatWindow = Cu.import("resource://gre/modules/MozSocialAPI.jsm", {}).openChatWindow;
-    openChatWindow(window, aProvider, aURL, aCallback, aMode);
-    return true;
-  },
 }
 
 SocialFlyout = {

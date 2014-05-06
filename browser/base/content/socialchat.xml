@@ -515,22 +515,6 @@
         ]]></body>
       </method>
 
-      <!-- XXX - we should remove this - it is currently used only by tests.
-           No-one has any business removing all chats.  Chat.jsm exposes a
-           method to close all chats from a specific origin which is all that
-           should be necessary.
-      -->
-      <method name="removeAll">
-        <body><![CDATA[
-          this.selectedChat = null;
-          while (this.firstElementChild) {
-            this._remove(this.firstElementChild);
-          }
-          // and the nub/popup must also die.
-          this.nub.collapsed = true;
-        ]]></body>
-      </method>
-
       <method name="openChat">
         <parameter name="aOrigin"/>
         <parameter name="aTitle"/>
