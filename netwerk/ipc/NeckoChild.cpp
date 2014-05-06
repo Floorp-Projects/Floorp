@@ -236,9 +236,7 @@ NeckoChild::DeallocPTCPServerSocketChild(PTCPServerSocketChild* child)
 }
 
 PUDPSocketChild*
-NeckoChild::AllocPUDPSocketChild(const nsCString& aHost,
-                                 const uint16_t& aPort,
-                                 const nsCString& aFilter)
+NeckoChild::AllocPUDPSocketChild(const nsCString& aFilter)
 {
   NS_NOTREACHED("AllocPUDPSocket should not be called");
   return nullptr;

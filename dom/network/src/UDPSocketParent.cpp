@@ -9,52 +9,15 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIUDPSocket.h"
 #include "nsINetAddr.h"
+#include "mozilla/AppProcessChecker.h"
 #include "mozilla/unused.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/net/DNS.h"
+#include "mozilla/net/NeckoCommon.h"
+#include "mozilla/net/PNeckoParent.h"
 
 namespace mozilla {
 namespace dom {
-
-static void
-FireInternalError(mozilla::net::PUDPSocketParent *aActor, uint32_t aLineNo)
-{
-  mozilla::unused <<
-      aActor->SendCallback(NS_LITERAL_CSTRING("onerror"),
-                          UDPError(NS_LITERAL_CSTRING("Internal error"),
-                                   NS_LITERAL_CSTRING(__FILE__), aLineNo, 0),
-                          NS_LITERAL_CSTRING("connecting"));
-}
-
-static nsresult
-ConvertNetAddrToString(mozilla::net::NetAddr &netAddr, nsACString *address, uint16_t *port)
-{
-  NS_ENSURE_ARG_POINTER(address);
-  NS_ENSURE_ARG_POINTER(port);
-
-  *port = 0;
-  uint32_t bufSize = 0;
-
-  switch(netAddr.raw.family) {
-  case AF_INET:
-    *port = PR_ntohs(netAddr.inet.port);
-    bufSize = mozilla::net::kIPv4CStrBufSize;
-    break;
-  case AF_INET6:
-    *port = PR_ntohs(netAddr.inet6.port);
-    bufSize = mozilla::net::kIPv6CStrBufSize;
-    break;
-  default:
-    //impossible
-    MOZ_ASSERT(false, "Unexpected address family");
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  address->SetCapacity(bufSize);
-  NetAddrToString(&netAddr, address->BeginWriting(), bufSize);
-  address->SetLength(strlen(address->BeginReading()));
-
-  return NS_OK;
-}
 
 NS_IMPL_ISUPPORTS(UDPSocketParent, nsIUDPSocketListener)
 
@@ -62,128 +25,263 @@ UDPSocketParent::~UDPSocketParent()
 {
 }
 
+bool
+UDPSocketParent::Init(const nsACString& aFilter)
+{
+  if (!aFilter.IsEmpty()) {
+    nsAutoCString contractId(NS_NETWORK_UDP_SOCKET_FILTER_HANDLER_PREFIX);
+    contractId.Append(aFilter);
+    nsCOMPtr<nsIUDPSocketFilterHandler> filterHandler =
+      do_GetService(contractId.get());
+    if (filterHandler) {
+      nsresult rv = filterHandler->NewFilter(getter_AddRefs(mFilter));
+      if (NS_FAILED(rv)) {
+        printf_stderr("Cannot create filter that content specified. "
+                      "filter name: %s, error code: %d.", aFilter.BeginReading(), rv);
+        return false;
+      }
+    } else {
+      printf_stderr("Content doesn't have a valid filter. "
+                    "filter name: %s.", aFilter.BeginReading());
+      return false;
+    }
+  }
+  return true;
+}
+
 // PUDPSocketParent methods
 
 bool
-UDPSocketParent::Init(const nsCString &aHost, const uint16_t aPort)
+UDPSocketParent::RecvBind(const UDPAddressInfo& aAddressInfo,
+                          const bool& aAddressReuse, const bool& aLoopback)
 {
-  nsresult rv;
-  NS_ASSERTION(mFilter, "No packet filter");
+  // We don't have browser actors in xpcshell, and hence can't run automated
+  // tests without this loophole.
+  if (net::UsingNeckoIPCSecurity() && !mFilter &&
+      !AssertAppProcessPermission(Manager()->Manager(), "udp-socket")) {
+    FireInternalError(__LINE__);
+    return false;
+  }
 
-  nsCOMPtr<nsIUDPSocket> sock =
-      do_CreateInstance("@mozilla.org/network/udp-socket;1", &rv);
-  if (NS_FAILED(rv)) {
-    FireInternalError(this, __LINE__);
+  if (NS_FAILED(BindInternal(aAddressInfo.addr(), aAddressInfo.port(), aAddressReuse, aLoopback))) {
+    FireInternalError(__LINE__);
     return true;
   }
 
+  nsCOMPtr<nsINetAddr> localAddr;
+  mSocket->GetLocalAddr(getter_AddRefs(localAddr));
+
+  nsCString addr;
+  if (NS_FAILED(localAddr->GetAddress(addr))) {
+    FireInternalError(__LINE__);
+    return true;
+  }
+
+  uint16_t port;
+  if (NS_FAILED(localAddr->GetPort(&port))) {
+    FireInternalError(__LINE__);
+    return true;
+  }
+
+  mozilla::unused << SendCallbackOpened(UDPAddressInfo(addr, port));
+
+  return true;
+}
+
+nsresult
+UDPSocketParent::BindInternal(const nsCString& aHost, const uint16_t& aPort,
+                              const bool& aAddressReuse, const bool& aLoopback)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIUDPSocket> sock =
+      do_CreateInstance("@mozilla.org/network/udp-socket;1", &rv);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   if (aHost.IsEmpty()) {
-    rv = sock->Init(aPort, false);
+    rv = sock->Init(aPort, false, aAddressReuse, /* optional_argc = */ 1);
   } else {
     PRNetAddr prAddr;
     PR_InitializeNetAddr(PR_IpAddrAny, aPort, &prAddr);
     PRStatus status = PR_StringToNetAddr(aHost.BeginReading(), &prAddr);
     if (status != PR_SUCCESS) {
-      FireInternalError(this, __LINE__);
-      return true;
+      return NS_ERROR_FAILURE;
     }
 
     mozilla::net::NetAddr addr;
     PRNetAddrToNetAddr(&prAddr, &addr);
-    rv = sock->InitWithAddress(&addr);
+    rv = sock->InitWithAddress(&addr, aAddressReuse, /* optional_argc = */ 1);
   }
 
-  if (NS_FAILED(rv)) {
-    FireInternalError(this, __LINE__);
-    return true;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = sock->SetMulticastLoopback(aLoopback);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // register listener
+  rv = sock->AsyncListen(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   mSocket = sock;
 
-  net::NetAddr localAddr;
-  mSocket->GetAddress(&localAddr);
+  return NS_OK;
+}
 
-  uint16_t port;
-  nsCString addr;
-  rv = ConvertNetAddrToString(localAddr, &addr, &port);
+bool
+UDPSocketParent::RecvOutgoingData(const UDPData& aData,
+                                  const UDPSocketAddr& aAddr)
+{
+  MOZ_ASSERT(mSocket);
 
-  if (NS_FAILED(rv)) {
-    FireInternalError(this, __LINE__);
-    return true;
+  nsresult rv;
+  if (mFilter) {
+    // TODO, Bug 933102, filter packets that are sent with hostname.
+    // Until then we simply throw away packets that are sent to a hostname.
+    if (aAddr.type() != UDPSocketAddr::TNetAddr) {
+      return true;
+    }
+
+    // TODO, Packet filter doesn't support input stream yet.
+    if (aData.type() != UDPData::TArrayOfuint8_t) {
+      return true;
+    }
+
+    bool allowed;
+    const InfallibleTArray<uint8_t>& data(aData.get_ArrayOfuint8_t());
+    rv = mFilter->FilterPacket(&aAddr.get_NetAddr(), data.Elements(),
+                               data.Length(), nsIUDPSocketFilter::SF_OUTGOING,
+                               &allowed);
+
+    // Sending unallowed data, kill content.
+    if (NS_WARN_IF(NS_FAILED(rv)) || !allowed) {
+      return false;
+    }
   }
 
-  // register listener
-  mSocket->AsyncListen(this);
-  mozilla::unused <<
-      PUDPSocketParent::SendCallback(NS_LITERAL_CSTRING("onopen"),
-                                     UDPAddressInfo(addr, port),
-                                     NS_LITERAL_CSTRING("connected"));
+  switch(aData.type()) {
+    case UDPData::TArrayOfuint8_t:
+      Send(aData.get_ArrayOfuint8_t(), aAddr);
+      break;
+    case UDPData::TInputStreamParams:
+      Send(aData.get_InputStreamParams(), aAddr);
+      break;
+    default:
+      MOZ_ASSERT(false, "Invalid data type!");
+      return true;
+  }
 
   return true;
 }
 
-bool
-UDPSocketParent::RecvData(const InfallibleTArray<uint8_t> &aData,
-                          const nsCString& aRemoteAddress,
-                          const uint16_t& aPort)
+void
+UDPSocketParent::Send(const InfallibleTArray<uint8_t>& aData,
+                      const UDPSocketAddr& aAddr)
 {
-  NS_ENSURE_TRUE(mSocket, true);
-  NS_ASSERTION(mFilter, "No packet filter");
-  // TODO, Bug 933102, filter packets that are sent with hostname.
-  // Until then we simply throw away packets that are sent to a hostname.
-  return true;
-
-#if 0
-  // Enable this once we have filtering working with hostname delivery.
-  uint32_t count;
-  nsresult rv = mSocket->Send(aRemoteAddress,
-                              aPort, aData.Elements(),
-                              aData.Length(), &count);
-  mozilla::unused <<
-      PUDPSocketParent::SendCallback(NS_LITERAL_CSTRING("onsent"),
-                                     UDPSendResult(rv),
-                                     NS_LITERAL_CSTRING("connected"));
-  NS_ENSURE_SUCCESS(rv, true);
-  NS_ENSURE_TRUE(count > 0, true);
-  return true;
-#endif
-}
-
-bool
-UDPSocketParent::RecvDataWithAddress(const InfallibleTArray<uint8_t>& aData,
-                                     const mozilla::net::NetAddr& aAddr)
-{
-  NS_ENSURE_TRUE(mSocket, true);
-  NS_ASSERTION(mFilter, "No packet filter");
-
-  uint32_t count;
   nsresult rv;
-  bool allowed;
-  rv = mFilter->FilterPacket(&aAddr, aData.Elements(),
-                             aData.Length(), nsIUDPSocketFilter::SF_OUTGOING,
-                             &allowed);
-  // Sending unallowed data, kill content.
-  NS_ENSURE_SUCCESS(rv, false);
-  NS_ENSURE_TRUE(allowed, false);
+  uint32_t count;
+  switch(aAddr.type()) {
+    case UDPSocketAddr::TUDPAddressInfo: {
+      const UDPAddressInfo& addrInfo(aAddr.get_UDPAddressInfo());
+      rv = mSocket->Send(addrInfo.addr(), addrInfo.port(),
+                         aData.Elements(), aData.Length(), &count);
+      break;
+    }
+    case UDPSocketAddr::TNetAddr: {
+      const NetAddr& addr(aAddr.get_NetAddr());
+      rv = mSocket->SendWithAddress(&addr, aData.Elements(),
+                                    aData.Length(), &count);
+      break;
+    }
+    default:
+      MOZ_ASSERT(false, "Invalid address type!");
+      return;
+  }
 
-  rv = mSocket->SendWithAddress(&aAddr, aData.Elements(),
-                                aData.Length(), &count);
-  mozilla::unused <<
-      PUDPSocketParent::SendCallback(NS_LITERAL_CSTRING("onsent"),
-                                     UDPSendResult(rv),
-                                     NS_LITERAL_CSTRING("connected"));
-  NS_ENSURE_SUCCESS(rv, true);
-  NS_ENSURE_TRUE(count > 0, true);
+  if (NS_WARN_IF(NS_FAILED(rv)) || count == 0) {
+    FireInternalError(__LINE__);
+  }
+}
+
+void
+UDPSocketParent::Send(const InputStreamParams& aStream,
+                      const UDPSocketAddr& aAddr)
+{
+  nsTArray<mozilla::ipc::FileDescriptor> fds;
+  nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aStream, fds);
+
+  if (NS_WARN_IF(!stream)) {
+    return;
+  }
+
+  nsresult rv;
+  switch(aAddr.type()) {
+    case UDPSocketAddr::TUDPAddressInfo: {
+      const UDPAddressInfo& addrInfo(aAddr.get_UDPAddressInfo());
+      rv = mSocket->SendBinaryStream(addrInfo.addr(), addrInfo.port(), stream);
+      break;
+    }
+    case UDPSocketAddr::TNetAddr: {
+      const NetAddr& addr(aAddr.get_NetAddr());
+      rv = mSocket->SendBinaryStreamWithAddress(&addr, stream);
+      break;
+    }
+    default:
+      MOZ_ASSERT(false, "Invalid address type!");
+      return;
+  }
+
+  if (NS_FAILED(rv)) {
+    FireInternalError(__LINE__);
+  }
+}
+
+bool
+UDPSocketParent::RecvJoinMulticast(const nsCString& aMulticastAddress,
+                                   const nsCString& aInterface)
+{
+  nsresult rv = mSocket->JoinMulticast(aMulticastAddress, aInterface);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FireInternalError(__LINE__);
+  }
+
+  return true;
+}
+
+bool
+UDPSocketParent::RecvLeaveMulticast(const nsCString& aMulticastAddress,
+                                    const nsCString& aInterface)
+{
+  nsresult rv = mSocket->LeaveMulticast(aMulticastAddress, aInterface);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FireInternalError(__LINE__);
+  }
+
   return true;
 }
 
 bool
 UDPSocketParent::RecvClose()
 {
-  NS_ENSURE_TRUE(mSocket, true);
+  if (!mSocket) {
+    return true;
+  }
+
   nsresult rv = mSocket->Close();
   mSocket = nullptr;
-  NS_ENSURE_SUCCESS(rv, true);
+
+  mozilla::unused << NS_WARN_IF(NS_FAILED(rv));
+
   return true;
 }
 
@@ -214,7 +312,6 @@ UDPSocketParent::OnPacketReceived(nsIUDPSocket* aSocket, nsIUDPMessage* aMessage
   if (!mIPCOpen) {
     return NS_OK;
   }
-  NS_ASSERTION(mFilter, "No packet filter");
 
   uint16_t port;
   nsCString ip;
@@ -229,30 +326,30 @@ UDPSocketParent::OnPacketReceived(nsIUDPSocket* aSocket, nsIUDPMessage* aMessage
   const char* buffer = data.get();
   uint32_t len = data.Length();
 
-  bool allowed;
-  mozilla::net::NetAddr addr;
-  fromAddr->GetNetAddr(&addr);
-  nsresult rv = mFilter->FilterPacket(&addr,
-                                      (const uint8_t*)buffer, len,
-                                      nsIUDPSocketFilter::SF_INCOMING,
-                                      &allowed);
-  // Receiving unallowed data, drop.
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-  NS_ENSURE_TRUE(allowed, NS_OK);
+  if (mFilter) {
+    bool allowed;
+    mozilla::net::NetAddr addr;
+    fromAddr->GetNetAddr(&addr);
+    nsresult rv = mFilter->FilterPacket(&addr,
+                                        (const uint8_t*)buffer, len,
+                                        nsIUDPSocketFilter::SF_INCOMING,
+                                        &allowed);
+    // Receiving unallowed data, drop.
+    if (NS_WARN_IF(NS_FAILED(rv)) || !allowed) {
+      return NS_OK;
+    }
+  }
 
   FallibleTArray<uint8_t> fallibleArray;
   if (!fallibleArray.InsertElementsAt(0, buffer, len)) {
-    FireInternalError(this, __LINE__);
+    FireInternalError(__LINE__);
     return NS_ERROR_OUT_OF_MEMORY;
   }
   InfallibleTArray<uint8_t> infallibleArray;
   infallibleArray.SwapElements(fallibleArray);
 
   // compose callback
-  mozilla::unused <<
-      PUDPSocketParent::SendCallback(NS_LITERAL_CSTRING("ondata"),
-                                     UDPMessage(ip, port, infallibleArray),
-                                     NS_LITERAL_CSTRING("connected"));
+  mozilla::unused << SendCallbackReceivedData(UDPAddressInfo(ip, port), infallibleArray);
 
   return NS_OK;
 }
@@ -262,12 +359,20 @@ UDPSocketParent::OnStopListening(nsIUDPSocket* aSocket, nsresult aStatus)
 {
   // underlying socket is dead, send state update to child process
   if (mIPCOpen) {
-    mozilla::unused <<
-        PUDPSocketParent::SendCallback(NS_LITERAL_CSTRING("onclose"),
-                                       mozilla::void_t(),
-                                       NS_LITERAL_CSTRING("closed"));
+    mozilla::unused << SendCallbackClosed();
   }
   return NS_OK;
+}
+
+void
+UDPSocketParent::FireInternalError(uint32_t aLineNo)
+{
+  if (!mIPCOpen) {
+    return;
+  }
+
+  mozilla::unused << SendCallbackError(NS_LITERAL_CSTRING("Internal error"),
+                                       NS_LITERAL_CSTRING(__FILE__), aLineNo);
 }
 
 } // namespace dom
