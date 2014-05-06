@@ -1814,11 +1814,7 @@ pref("layout.css.supports-rule.enabled", true);
 pref("layout.css.filters.enabled", false);
 
 // Is support for CSS sticky positioning enabled?
-#ifdef RELEASE_BUILD
-pref("layout.css.sticky.enabled", false);
-#else
 pref("layout.css.sticky.enabled", true);
-#endif
 
 // Is support for CSS "will-change" enabled?
 pref("layout.css.will-change.enabled", false);
