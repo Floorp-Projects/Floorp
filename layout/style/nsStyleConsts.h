@@ -544,9 +544,9 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_FONT_FIELD                     16
 
 // grid-auto-flow keywords
-#define NS_STYLE_GRID_AUTO_FLOW_NONE            (1 << 0)
-#define NS_STYLE_GRID_AUTO_FLOW_COLUMN          (1 << 1)
-#define NS_STYLE_GRID_AUTO_FLOW_ROW             (1 << 2)
+#define NS_STYLE_GRID_AUTO_FLOW_STACK           (1 << 0)
+#define NS_STYLE_GRID_AUTO_FLOW_ROW             (1 << 1)
+#define NS_STYLE_GRID_AUTO_FLOW_COLUMN          (1 << 2)
 #define NS_STYLE_GRID_AUTO_FLOW_DENSE           (1 << 3)
 
 // 'subgrid' keyword in grid-template-{columns,rows}

@@ -4802,22 +4802,26 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
     domProp: "gridAutoFlow",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "none" ],
+    initial_values: [ "row" ],
     other_values: [
       "column",
-      "row",
       "column dense",
       "row dense",
       "dense column",
       "dense row",
+      "stack column",
+      "stack row",
+      "stack",
     ],
     invalid_values: [
       "",
       "auto",
+      "none",
       "10px",
       "dense",
-      "none row",
-      "none dense",
+      "stack dense",
+      "stack stack",
+      "stack row stack",
       "column row",
       "dense row dense",
     ]
@@ -5046,12 +5050,9 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
     initial_values: [
       "none",
       "none / none",
-      "none auto",
-      "none auto / auto",
     ],
     other_values: [
-      "row",
-      "none 40px",
+      "stack 40px",
       "column dense auto",
       "dense row minmax(min-content, 2fr)",
       "row 40px / 100px",
@@ -5067,6 +5068,7 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
     ].concat(
       gCSSProperties["grid-template"].invalid_values,
       gCSSProperties["grid-auto-flow"].invalid_values
+        .filter((v) => v != 'none')
     )
   };
 
