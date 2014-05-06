@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,7 +22,7 @@ DeleteCString(nsHashKey *aKey, void *aData, void* closure)
 }
 
 nsInt2StrHashtable::nsInt2StrHashtable()
-    : mHashtable(CloneCString, nullptr, DeleteCString, nullptr, 16)
+  : mHashtable(CloneCString, nullptr, DeleteCString, nullptr, 16)
 {
 }
 
@@ -38,7 +39,7 @@ nsInt2StrHashtable::Put(uint32_t key, const char* aData)
   return NS_OK;
 }
 
-char* 
+char*
 nsInt2StrHashtable::Get(uint32_t key)
 {
   nsPRUint32Key k(key);
@@ -65,32 +66,32 @@ NS_IMPL_ISUPPORTS(nsErrorService, nsIErrorService)
 nsresult
 nsErrorService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
-    if (NS_WARN_IF(outer))
-        return NS_ERROR_NO_AGGREGATION;
-    nsRefPtr<nsErrorService> serv = new nsErrorService();
-    return serv->QueryInterface(aIID, aInstancePtr);
+  if (NS_WARN_IF(outer))
+    return NS_ERROR_NO_AGGREGATION;
+  nsRefPtr<nsErrorService> serv = new nsErrorService();
+  return serv->QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
 nsErrorService::RegisterErrorStringBundle(int16_t errorModule, const char *stringBundleURL)
 {
-    return mErrorStringBundleURLMap.Put(errorModule, stringBundleURL);
+  return mErrorStringBundleURLMap.Put(errorModule, stringBundleURL);
 }
 
 NS_IMETHODIMP
 nsErrorService::UnregisterErrorStringBundle(int16_t errorModule)
 {
-    return mErrorStringBundleURLMap.Remove(errorModule);
+  return mErrorStringBundleURLMap.Remove(errorModule);
 }
 
 NS_IMETHODIMP
 nsErrorService::GetErrorStringBundle(int16_t errorModule, char **result)
 {
-    char* value = mErrorStringBundleURLMap.Get(errorModule);
-    if (value == nullptr)
-        return NS_ERROR_OUT_OF_MEMORY;
-    *result = value;
-    return NS_OK;
+  char* value = mErrorStringBundleURLMap.Get(errorModule);
+  if (value == nullptr)
+    return NS_ERROR_OUT_OF_MEMORY;
+  *result = value;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

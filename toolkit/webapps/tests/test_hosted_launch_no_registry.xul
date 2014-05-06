@@ -147,25 +147,6 @@ if (LINUX) {
   };
 }
 
-function wasAppSJSAccessed() {
-  let deferred = Promise.defer();
-
-  var xhr = new XMLHttpRequest();
-
-  xhr.addEventListener("load", function() {
-    let ret = (xhr.responseText == "done") ? true : false;
-    deferred.resolve(ret);
-  });
-
-  xhr.addEventListener("error", aError => deferred.reject(aError));
-  xhr.addEventListener("abort", aError => deferred.reject(aError));
-
-  xhr.open('GET', 'http://test/chrome/toolkit/webapps/tests/app.sjs?testreq', true);
-  xhr.send();
-
-  return deferred.promise;
-}
-
 let runTest = Task.async(function*() {
   // Get to a clean state before the test
   yield cleanup();

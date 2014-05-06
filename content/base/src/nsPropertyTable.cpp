@@ -362,6 +362,12 @@ nsPropertyTable::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
+size_t
+nsPropertyTable::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}
+
 /* static */
 void
 nsPropertyTable::SupportsDtorFunc(void *aObject, nsIAtom *aPropertyName,

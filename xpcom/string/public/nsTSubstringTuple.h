@@ -1,78 +1,78 @@
-//* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // IWYU pragma: private, include "nsString.h"
 
-  /**
-   * nsTSubstringTuple_CharT
-   *
-   * Represents a tuple of string fragments.  Built as a recursive binary tree.
-   * It is used to implement the concatenation of two or more string objects.
-   *
-   * NOTE: This class is a private implementation detail and should never be 
-   * referenced outside the string code.
-   */
+/**
+ * nsTSubstringTuple_CharT
+ *
+ * Represents a tuple of string fragments.  Built as a recursive binary tree.
+ * It is used to implement the concatenation of two or more string objects.
+ *
+ * NOTE: This class is a private implementation detail and should never be
+ * referenced outside the string code.
+ */
 class nsTSubstringTuple_CharT
-  {
-    public:
+{
+public:
 
-      typedef CharT                      char_type;
-      typedef nsCharTraits<char_type>    char_traits;
+  typedef CharT                      char_type;
+  typedef nsCharTraits<char_type>    char_traits;
 
-      typedef nsTSubstringTuple_CharT    self_type;
-      typedef nsTSubstring_CharT         substring_type;
-      typedef nsTSubstring_CharT         base_string_type;
-      typedef uint32_t                   size_type;
+  typedef nsTSubstringTuple_CharT    self_type;
+  typedef nsTSubstring_CharT         substring_type;
+  typedef nsTSubstring_CharT         base_string_type;
+  typedef uint32_t                   size_type;
 
-    public:
+public:
 
-      nsTSubstringTuple_CharT(const base_string_type* a, const base_string_type* b)
-        : mHead(nullptr)
-        , mFragA(a)
-        , mFragB(b) {}
+  nsTSubstringTuple_CharT(const base_string_type* a, const base_string_type* b)
+    : mHead(nullptr)
+    , mFragA(a)
+    , mFragB(b) {}
 
-      nsTSubstringTuple_CharT(const self_type& head, const base_string_type* b)
-        : mHead(&head)
-        , mFragA(nullptr) // this fragment is ignored when head != nullptr
-        , mFragB(b) {}
+  nsTSubstringTuple_CharT(const self_type& head, const base_string_type* b)
+    : mHead(&head)
+    , mFragA(nullptr) // this fragment is ignored when head != nullptr
+    , mFragB(b) {}
 
-        /**
-         * computes the aggregate string length
-         */
-      size_type Length() const;
+  /**
+   * computes the aggregate string length
+   */
+  size_type Length() const;
 
-        /**
-         * writes the aggregate string to the given buffer.  bufLen is assumed
-         * to be equal to or greater than the value returned by the Length()
-         * method.  the string written to |buf| is not null-terminated.
-         */
-      void WriteTo(char_type *buf, uint32_t bufLen) const;
+  /**
+   * writes the aggregate string to the given buffer.  bufLen is assumed
+   * to be equal to or greater than the value returned by the Length()
+   * method.  the string written to |buf| is not null-terminated.
+   */
+  void WriteTo(char_type *buf, uint32_t bufLen) const;
 
-        /**
-         * returns true if this tuple is dependent on (i.e., overlapping with)
-         * the given char sequence.
-         */
-      bool IsDependentOn(const char_type *start, const char_type *end) const;
+  /**
+   * returns true if this tuple is dependent on (i.e., overlapping with)
+   * the given char sequence.
+   */
+  bool IsDependentOn(const char_type *start, const char_type *end) const;
 
-    private:
+private:
 
-      const self_type*        mHead;
-      const base_string_type* mFragA;
-      const base_string_type* mFragB;
-  };
+  const self_type*        mHead;
+  const base_string_type* mFragA;
+  const base_string_type* mFragB;
+};
 
 inline
 const nsTSubstringTuple_CharT
 operator+(const nsTSubstringTuple_CharT::base_string_type& a, const nsTSubstringTuple_CharT::base_string_type& b)
-  {
-    return nsTSubstringTuple_CharT(&a, &b);
-  }
+{
+  return nsTSubstringTuple_CharT(&a, &b);
+}
 
 inline
 const nsTSubstringTuple_CharT
 operator+(const nsTSubstringTuple_CharT& head, const nsTSubstringTuple_CharT::base_string_type& b)
-  {
-    return nsTSubstringTuple_CharT(head, &b);
-  }
+{
+  return nsTSubstringTuple_CharT(head, &b);
+}

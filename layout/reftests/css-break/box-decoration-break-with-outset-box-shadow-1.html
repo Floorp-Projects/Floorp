@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>CSS Test: Testing box-decoration-break:clone with outset box-shadow</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=613659">
+  <link rel="help" href="http://dev.w3.org/csswg/css-break/#break-decoration">
+  <link rel="match" href="box-decoration-break-with-outset-box-shadow-1-ref.html">
+  <meta charset="utf-8">
+<style>
+span { border:3px dashed pink; line-height:80px; box-decoration-break:clone; }
+
+span {
+  font-family:monospace;
+  padding:1em 1em;
+  background-image: url(green-circle-alpha-32x32.png);
+}
+.o0 {
+  border-radius: 12px;
+  -webkit-box-shadow: 0px 0px 0px 10px #00F;
+          box-shadow: 0px 0px 0px 10px #00F;
+}
+.o10 {
+  border-radius: 12px;
+  -webkit-box-shadow: 0px 0px 7px 10px #00F;
+          box-shadow: 0px 0px 7px 10px #00F;
+}
+.o10x {
+  border-radius: 12px;
+  -webkit-box-shadow: 0px 0px 7px 0px #00F;
+          box-shadow: 0px 0px 7px 0px #00F;
+}
+.p0 {
+  border-radius: 12px;
+  -webkit-box-shadow: 15px 9px 0px 10px #00F;
+          box-shadow: 15px 9px 0px 10px #00F;
+}
+.p10 {
+  border-radius: 12px;
+  -webkit-box-shadow: 15px 9px 7px 10px #00F;
+          box-shadow: 15px 9px 7px 10px #00F;
+}
+.p10x {
+  border-radius: 12px;
+  -webkit-box-shadow: 15px 9px 7px 0px #00F;
+          box-shadow: 15px 9px 7px 0px #00F;
+}
+.so0 {
+  border-radius: 0px;
+  -webkit-box-shadow: 0px 0px 0px 10px #00F;
+          box-shadow: 0px 0px 0px 10px #00F;
+}
+.so10 {
+  border-radius: 0px;
+  -webkit-box-shadow: 0px 0px 7px 10px #00F;
+          box-shadow: 0px 0px 7px 10px #00F;
+}
+.so10x {
+  border-radius: 0px;
+  -webkit-box-shadow: 0px 0px 7px 0px #00F;
+          box-shadow: 0px 0px 7px 0px #00F;
+}
+.sp0 {
+  border-radius: 0px;
+  -webkit-box-shadow: 15px 9px 0px 10px #00F;
+          box-shadow: 15px 9px 0px 10px #00F;
+}
+.sp10 {
+  border-radius: 0px;
+  -webkit-box-shadow: 15px 9px 7px 10px #00F;
+          box-shadow: 15px 9px 7px 10px #00F;
+}
+.sp10x {
+  border-radius: 0px;
+  -webkit-box-shadow: 15px 9px 7px 0px #00F;
+          box-shadow: 15px 9px 7px 0px #00F;
+}
+
+.m b { visibility:hidden; }
+.m { box-shadow:none; background:none; border-style:solid; border-radius:0; border-color:transparent; }
+.m.o0, .m.o10, .m.o10x, .m.p0, .m.p10, .m.p10x { border-bottom-color: black; }
+</style>
+</head>
+<body style="margin:49px 50px;">
+
+<div style="position:relative">
+<table border=1 cellpadding=50 ><tr><td>
+<span class="o0"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="o10"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="o10x"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+</td><td>
+<span class="p0"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="p10"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="p10x"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+</td><td>
+<span class="so0"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="so10"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="so10x"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+</td><td>
+<span class="sp0"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="sp10"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="sp10x"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+</td></tr>
+</table>
+
+<div style="position:absolute; top:0px;left:0;">
+<!-- mask out 1px of outer edge of the rounded borders at some places due to rounding errors -->
+<table border=1 cellpadding=50 ><tr><td>
+<span class="m o0"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="m o10"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="m o10x"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+</td><td>
+<span class="m p0"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="m p10"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="m p10x"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+</td><td>
+<span class="m so0"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="m so10"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="m so10x"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+</td><td>
+<span class="m sp0"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="m sp10"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+<span class="m sp10x"><b>&nbsp;&nbsp;a&nbsp;&nbsp;<br>&nbsp;&nbsp;b&nbsp;&nbsp;<br>&nbsp;&nbsp;c&nbsp;&nbsp;</b></span><br>
+</td></tr>
+</table>
+</div>
+
+</div>
+</body>
+

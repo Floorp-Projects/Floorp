@@ -595,9 +595,8 @@ skip-if(B2G) == 367247-l-scroll.html 367247-l-auto.html
 != 367612-1g.html 367612-1-ref.html
 skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == 368020-1.html 368020-1-ref.html
 == 368020-2.html 368020-2-ref.html
-fails == 368020-3.html 368020-3-ref.html # bug 368085
-fails == 368020-4.html 368020-4-ref.html # bug 368085
-== 368020-5.html 368020-5-ref.html
+== 368020-3.html 368020-3-ref.html
+pref(layout.css.box-decoration-break.enabled,true) == 368020-5.html 368020-5-ref.html
 == 368155-1.xhtml 368155-1-ref.xhtml
 asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html # bug 387205 / bug 457397
 # we can't test this because there's antialiasing involved, and our comparison

@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,67 +20,67 @@ template <typename T>
 static void
 Encode3to4(const unsigned char *src, T *dest)
 {
-    uint32_t b32 = (uint32_t)0;
-    int i, j = 18;
+  uint32_t b32 = (uint32_t)0;
+  int i, j = 18;
 
-    for( i = 0; i < 3; i++ )
-    {
-        b32 <<= 8;
-        b32 |= (uint32_t)src[i];
-    }
+  for( i = 0; i < 3; i++ )
+  {
+    b32 <<= 8;
+    b32 |= (uint32_t)src[i];
+  }
 
-    for( i = 0; i < 4; i++ )
-    {
-        dest[i] = base[ (uint32_t)((b32>>j) & 0x3F) ];
-        j -= 6;
-    }
+  for( i = 0; i < 4; i++ )
+  {
+    dest[i] = base[ (uint32_t)((b32>>j) & 0x3F) ];
+    j -= 6;
+  }
 }
 
 template <typename T>
 static void
 Encode2to4(const unsigned char *src, T *dest)
 {
-    dest[0] = base[ (uint32_t)((src[0]>>2) & 0x3F) ];
-    dest[1] = base[ (uint32_t)(((src[0] & 0x03) << 4) | ((src[1] >> 4) & 0x0F)) ];
-    dest[2] = base[ (uint32_t)((src[1] & 0x0F) << 2) ];
-    dest[3] = (unsigned char)'=';
+  dest[0] = base[ (uint32_t)((src[0]>>2) & 0x3F) ];
+  dest[1] = base[ (uint32_t)(((src[0] & 0x03) << 4) | ((src[1] >> 4) & 0x0F)) ];
+  dest[2] = base[ (uint32_t)((src[1] & 0x0F) << 2) ];
+  dest[3] = (unsigned char)'=';
 }
 
 template <typename T>
 static void
 Encode1to4(const unsigned char *src, T *dest)
 {
-    dest[0] = base[ (uint32_t)((src[0]>>2) & 0x3F) ];
-    dest[1] = base[ (uint32_t)((src[0] & 0x03) << 4) ];
-    dest[2] = (unsigned char)'=';
-    dest[3] = (unsigned char)'=';
+  dest[0] = base[ (uint32_t)((src[0]>>2) & 0x3F) ];
+  dest[1] = base[ (uint32_t)((src[0] & 0x03) << 4) ];
+  dest[2] = (unsigned char)'=';
+  dest[3] = (unsigned char)'=';
 }
 
 template <typename T>
 static void
 Encode(const unsigned char *src, uint32_t srclen, T *dest)
 {
-    while( srclen >= 3 )
-    {
-        Encode3to4(src, dest);
-        src += 3;
-        dest += 4;
-        srclen -= 3;
-    }
+  while( srclen >= 3 )
+  {
+    Encode3to4(src, dest);
+    src += 3;
+    dest += 4;
+    srclen -= 3;
+  }
 
-    switch( srclen )
-    {
-        case 2:
-            Encode2to4(src, dest);
-            break;
-        case 1:
-            Encode1to4(src, dest);
-            break;
-        case 0:
-            break;
-        default:
-            NS_NOTREACHED("coding error");
-    }
+  switch( srclen )
+  {
+    case 2:
+      Encode2to4(src, dest);
+      break;
+    case 1:
+      Encode1to4(src, dest);
+      break;
+    case 0:
+      break;
+    default:
+      NS_NOTREACHED("coding error");
+  }
 }
 
 // END base64 encode code copied and modified from NSPR.
@@ -128,7 +129,7 @@ EncodeInputStream_Encoder(nsIInputStream *aStream,
     state->charsOnStack = 0;
   }
 
-  // Encode the bulk of the 
+  // Encode the bulk of the
   uint32_t encodeLength = countRemaining - countRemaining % 3;
   NS_ABORT_IF_FALSE(encodeLength % 3 == 0,
                     "Should have an exact number of triplets!");
@@ -153,7 +154,7 @@ EncodeInputStream_Encoder(nsIInputStream *aStream,
 
 template <typename T>
 nsresult
-EncodeInputStream(nsIInputStream *aInputStream, 
+EncodeInputStream(nsIInputStream *aInputStream,
                   T &aDest,
                   uint32_t aCount,
                   uint32_t aOffset)
@@ -222,7 +223,7 @@ EncodeInputStream(nsIInputStream *aInputStream,
 namespace mozilla {
 
 nsresult
-Base64EncodeInputStream(nsIInputStream *aInputStream, 
+Base64EncodeInputStream(nsIInputStream *aInputStream,
                         nsACString &aDest,
                         uint32_t aCount,
                         uint32_t aOffset)
@@ -231,7 +232,7 @@ Base64EncodeInputStream(nsIInputStream *aInputStream,
 }
 
 nsresult
-Base64EncodeInputStream(nsIInputStream *aInputStream, 
+Base64EncodeInputStream(nsIInputStream *aInputStream,
                         nsAString &aDest,
                         uint32_t aCount,
                         uint32_t aOffset)
@@ -259,8 +260,8 @@ Base64Encode(const nsACString &aBinaryData, nsACString &aString)
 
   // Add one byte for null termination.
   if (aString.SetCapacity(stringLen + 1, fallible_t()) &&
-    (buffer = aString.BeginWriting()) &&
-    PL_Base64Encode(aBinaryData.BeginReading(), aBinaryData.Length(), buffer)) {
+      (buffer = aString.BeginWriting()) &&
+      PL_Base64Encode(aBinaryData.BeginReading(), aBinaryData.Length(), buffer)) {
     // PL_Base64Encode doesn't null terminate the buffer for us when we pass
     // the buffer in. Do that manually.
     buffer[stringLen] = '\0';
@@ -309,8 +310,8 @@ Base64Decode(const nsACString &aString, nsACString &aBinaryData)
 
   // Add one byte for null termination.
   if (aBinaryData.SetCapacity(binaryDataLen + 1, fallible_t()) &&
-    (buffer = aBinaryData.BeginWriting()) &&
-    PL_Base64Decode(aString.BeginReading(), aString.Length(), buffer)) {
+      (buffer = aBinaryData.BeginWriting()) &&
+      PL_Base64Decode(aString.BeginReading(), aString.Length(), buffer)) {
     // PL_Base64Decode doesn't null terminate the buffer for us when we pass
     // the buffer in. Do that manually, taking into account the number of '='
     // characters we were passed.
