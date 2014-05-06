@@ -11,7 +11,7 @@ interface nsIChannel;
 interface nsIDocShell;
 interface nsIDomainPolicy;
 
-[scriptable, uuid(c3d2839a-b23d-4d18-92fd-4c43183dc8fe)]
+[scriptable, uuid(2565769a-eaec-47a1-a076-605f5294d286)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     /**
@@ -143,12 +143,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * @deprecated use getNoAppCodebasePrincipal instead.
      */
     [deprecated] nsIPrincipal getCodebasePrincipal(in nsIURI uri);
-
-    /**
-     * Returns true if the principal of the currently running script is the
-     * system principal, false otherwise.
-     */
-    [noscript] boolean subjectPrincipalIsSystem();
 
     /**
      * Returns OK if aJSContext and target have the same "origin"

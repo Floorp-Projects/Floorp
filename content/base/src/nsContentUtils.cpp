@@ -195,6 +195,7 @@ const char kLoadAsData[] = "loadAsData";
 
 nsIXPConnect *nsContentUtils::sXPConnect;
 nsIScriptSecurityManager *nsContentUtils::sSecurityManager;
+nsIPrincipal *nsContentUtils::sSystemPrincipal;
 nsIParserService *nsContentUtils::sParserService = nullptr;
 nsNameSpaceManager *nsContentUtils::sNameSpaceManager;
 nsIIOService *nsContentUtils::sIOService;
@@ -375,6 +376,9 @@ nsContentUtils::Init()
   if(!sSecurityManager)
     return NS_ERROR_FAILURE;
   NS_ADDREF(sSecurityManager);
+
+  sSecurityManager->GetSystemPrincipal(&sSystemPrincipal);
+  MOZ_ASSERT(sSystemPrincipal);
 
   // Getting the first context can trigger GC, so do this non-lazily.
   sXPConnect->InitSafeJSContext();
@@ -1434,6 +1438,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sConsoleService);
   sXPConnect = nullptr;
   NS_IF_RELEASE(sSecurityManager);
+  NS_IF_RELEASE(sSystemPrincipal);
   NS_IF_RELEASE(sParserService);
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sLineBreaker);
@@ -1514,14 +1519,7 @@ nsContentUtils::CheckSameOrigin(const nsINode* aTrustedNode,
 {
   MOZ_ASSERT(aTrustedNode);
   MOZ_ASSERT(unTrustedNode);
-
-  bool isSystem = false;
-  nsresult rv = sSecurityManager->SubjectPrincipalIsSystem(&isSystem);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (isSystem) {
-    // we're running as system, grant access to the node.
-
+  if (IsCallerChrome()) {
     return NS_OK;
   }
 
@@ -1692,12 +1690,7 @@ bool
 nsContentUtils::IsCallerChrome()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  bool is_caller_chrome = false;
-  nsresult rv = sSecurityManager->SubjectPrincipalIsSystem(&is_caller_chrome);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-  if (is_caller_chrome) {
+  if (GetSubjectPrincipal() == sSystemPrincipal) {
     return true;
   }
 
@@ -3116,11 +3109,7 @@ nsContentUtils::IsChromeDoc(nsIDocument *aDocument)
   if (!aDocument) {
     return false;
   }
-  
-  nsCOMPtr<nsIPrincipal> systemPrincipal;
-  sSecurityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-
-  return aDocument->NodePrincipal() == systemPrincipal;
+  return aDocument->NodePrincipal() == sSystemPrincipal;
 }
 
 bool
@@ -4326,10 +4315,7 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
 {
   NS_PRECONDITION(aLoadingPrincipal, "Must have a loading principal here");
 
-  bool isSystemPrin = false;
-  if (NS_SUCCEEDED(sSecurityManager->IsSystemPrincipal(aLoadingPrincipal,
-                                                       &isSystemPrin)) &&
-      isSystemPrin) {
+  if (aLoadingPrincipal == sSystemPrincipal) {
     return NS_OK;
   }
   
@@ -4368,9 +4354,7 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
 bool
 nsContentUtils::IsSystemPrincipal(nsIPrincipal* aPrincipal)
 {
-  bool isSystem;
-  nsresult rv = sSecurityManager->IsSystemPrincipal(aPrincipal, &isSystem);
-  return NS_SUCCEEDED(rv) && isSystem;
+  return aPrincipal == sSystemPrincipal;
 }
 
 bool
@@ -4383,11 +4367,7 @@ nsContentUtils::IsExpandedPrincipal(nsIPrincipal* aPrincipal)
 nsIPrincipal*
 nsContentUtils::GetSystemPrincipal()
 {
-  nsCOMPtr<nsIPrincipal> sysPrin;
-  DebugOnly<nsresult> rv =
-    sSecurityManager->GetSystemPrincipal(getter_AddRefs(sysPrin));
-  MOZ_ASSERT(NS_SUCCEEDED(rv) && sysPrin);
-  return sysPrin;
+  return sSystemPrincipal;
 }
 
 bool
@@ -4409,7 +4389,7 @@ nsContentUtils::CombineResourcePrincipals(nsCOMPtr<nsIPrincipal>* aResourcePrinc
       subsumes) {
     return false;
   }
-  sSecurityManager->GetSystemPrincipal(getter_AddRefs(*aResourcePrincipal));
+  *aResourcePrincipal = sSystemPrincipal;
   return true;
 }
 

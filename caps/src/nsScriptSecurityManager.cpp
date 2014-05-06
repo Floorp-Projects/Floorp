@@ -81,11 +81,7 @@ bool nsScriptSecurityManager::sStrictFileOriginPolicy = true;
 bool
 nsScriptSecurityManager::SubjectIsPrivileged()
 {
-    JSContext *cx = GetCurrentJSContext();
-    if (cx && xpc::IsUniversalXPConnectEnabled(cx))
-        return true;
-    bool isSystem = false;
-    return NS_SUCCEEDED(SubjectPrincipalIsSystem(&isSystem)) && isSystem;
+    return nsContentUtils::IsCallerChrome();
 }
 
 ///////////////////////////
@@ -892,19 +888,6 @@ nsScriptSecurityManager::GetSystemPrincipal(nsIPrincipal **result)
     NS_ADDREF(*result = mSystemPrincipal);
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::SubjectPrincipalIsSystem(bool* aIsSystem)
-{
-    NS_ENSURE_ARG_POINTER(aIsSystem);
-    *aIsSystem = false;
-
-    if (!mSystemPrincipal)
-        return NS_OK;
-
-    nsCOMPtr<nsIPrincipal> subject = nsContentUtils::GetSubjectPrincipal();
-    return mSystemPrincipal->Equals(subject, aIsSystem);
 }
 
 nsresult

@@ -92,12 +92,7 @@ AccessCheck::isChrome(JSObject *obj)
 bool
 AccessCheck::callerIsChrome()
 {
-    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
-    if (!ssm)
-        return false;
-    bool subjectIsSystem;
-    nsresult rv = ssm->SubjectPrincipalIsSystem(&subjectIsSystem);
-    return NS_SUCCEEDED(rv) && subjectIsSystem;
+    return nsContentUtils::IsCallerChrome();
 }
 
 nsIPrincipal *
