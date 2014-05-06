@@ -33,6 +33,12 @@
     var gClipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
     var gHasFindClipboard = gClipboard.supportsFindClipboard();
 
+    // Since bug 978861, this pref is set to `false` on OSX. For this test, we'll
+    // set it `true` to disable the find clipboard on OSX, which interferes with
+    // our tests.
+    let prefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    prefsvc.setBoolPref("accessibility.typeaheadfind.prefillwithselection", true);
+
     var gStatusText;
     var gXULBrowserWindow = {
       QueryInterface: function(aIID) {
@@ -359,12 +365,10 @@
       highlightButton.click();
       ok(highlightButton.checked, "testFindWithHighlight 3: Highlight All should be checked.");
 
-      if (!gHasFindClipboard) {
-        a = gFindBar._findField.value;
-        b = gFindBar._browser.finder._fastFind.searchString;
-        c = gFindBar._browser.finder.searchString;
-        ok(a == searchStr && b == c, "testFindWithHighlight 4: " + a + ", " + b + ", " + c + ".");
-      }
+      a = gFindBar._findField.value;
+      b = gFindBar._browser.finder._fastFind.searchString;
+      c = gFindBar._browser.finder.searchString;
+      ok(a == searchStr && b == c, "testFindWithHighlight 4: " + a + ", " + b + ", " + c + ".");
 
       gFindBar.onFindAgainCommand();
       a = gFindBar._findField.value;
@@ -489,9 +493,6 @@
     }
 
     function testClipboardSearchString(aExpected) {
-      if (!gHasFindClipboard)
-        return;
-
       if (!aExpected)
         aExpected = "";
       var searchStr = gFindBar.browser.finder.clipboardSearchString;
