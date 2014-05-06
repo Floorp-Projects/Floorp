@@ -40,6 +40,7 @@ let WebAudioGraphView = {
   initialize: function() {
     this._onGraphNodeClick = this._onGraphNodeClick.bind(this);
     this.draw = debounce(this.draw.bind(this), GRAPH_DEBOUNCE_TIMER);
+    $('#graph-target').addEventListener('click', this._onGraphNodeClick, false);
   },
 
   /**
@@ -49,6 +50,7 @@ let WebAudioGraphView = {
     if (this._zoomBinding) {
       this._zoomBinding.on("zoom", null);
     }
+    $('#graph-target').removeEventListener('click', this._onGraphNodeClick, false);
   },
 
   /**
@@ -140,7 +142,7 @@ let WebAudioGraphView = {
       let svgNodes = oldDrawNodes(graph, root);
       svgNodes.attr("class", (n) => {
         let node = graph.node(n);
-        return "type-" + node.label;
+        return "audionode type-" + node.label;
       });
       svgNodes.attr("data-id", (n) => {
         let node = graph.node(n);
@@ -214,12 +216,16 @@ let WebAudioGraphView = {
   /**
    * Fired when a node in the svg graph is clicked. Used to handle triggering the AudioNodePane.
    *
-   * @param Object AudioNodeView
-   *        The object stored in `AudioNodes` which contains render information, but most importantly,
-   *        the actorID under `id` property.
+   * @param Event e
+   *        Click event.
    */
-  _onGraphNodeClick: function (node) {
-    WebAudioParamView.focusNode(node.id);
+  _onGraphNodeClick: function (e) {
+    let node = findGraphNodeParent(e.target);
+    // If node not found (clicking outside of an audio node in the graph),
+    // then ignore this event
+    if (!node)
+      return;
+    WebAudioParamView.focusNode(node.getAttribute('data-id'));
   }
 };
 
@@ -370,3 +376,19 @@ let WebAudioParamView = {
 
   })
 };
+
+/**
+ * Takes an element in an SVG graph and iterates over
+ * ancestors until it finds the graph node container. If not found,
+ * returns null.
+ */
+
+function findGraphNodeParent (el) {
+  while (!el.classList.contains("nodes")) {
+    if (el.classList.contains("audionode"))
+      return el;
+    else
+      el = el.parentNode;
+  }
+  return null;
+}
