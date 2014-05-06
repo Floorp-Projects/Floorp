@@ -5146,46 +5146,21 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
     invalid_values: gridLineInvalidValues
   };
 
-  var gridAutoPositionOtherValues = [];
-  gridLineOtherValues.concat([ "auto" ]).forEach(function(val) {
-    gridAutoPositionOtherValues.push(" foo / " + val);
-    gridAutoPositionOtherValues.push(val + "/2");
-  });
-  var gridAutoPositionInvalidValues = [
-    "foo",
-    "foo, bar",
-    "foo / bar / baz",
-  ];
-  gridLineInvalidValues.forEach(function(val) {
-    gridAutoPositionInvalidValues.push("span 3 / " + val);
-    gridAutoPositionInvalidValues.push(val + " / foo");
-  });
-  gCSSProperties["grid-auto-position"] = {
-    domProp: "gridAutoPosition",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "1 / 1" ],
-    other_values: gridAutoPositionOtherValues,
-    invalid_values: gridAutoPositionInvalidValues
-  };
-
   // The grid-column and grid-row shorthands take values of the form
   //   <grid-line> [ / <grid-line> ]?
-  // which is equivalent to:
-  //   <grid-line> | [ <grid-line> / <grid-line> ]
-  // which is equivalent to:
-  //   <grid-line> | <'grid-auto-position'>
-  var gridColumnRowOtherValues = [].concat(
-    gridLineOtherValues,
-    gridAutoPositionOtherValues);
-  var gridColumnRowInvalidValues = [].concat(
-    gridLineInvalidValues,
-    gridAutoPositionInvalidValues);
-  // A single <grid-line> is invalid for grid-auto-position,
-  // but not for grid-column or grid-row:
-  gridColumnRowInvalidValues.splice(
-    gridColumnRowInvalidValues.indexOf("foo"),
-    1);
+  var gridColumnRowOtherValues = [].concat(gridLineOtherValues);
+  gridLineOtherValues.concat([ "auto" ]).forEach(function(val) {
+    gridColumnRowOtherValues.push(" foo / " + val);
+    gridColumnRowOtherValues.push(val + "/2");
+  });
+  var gridColumnRowInvalidValues = [
+    "foo, bar",
+    "foo / bar / baz",
+  ].concat(gridLineInvalidValues);
+  gridLineInvalidValues.forEach(function(val) {
+    gridColumnRowInvalidValues.push("span 3 / " + val);
+    gridColumnRowInvalidValues.push(val + " / foo");
+  });
   gCSSProperties["grid-column"] = {
     domProp: "gridColumn",
     inherited: false,

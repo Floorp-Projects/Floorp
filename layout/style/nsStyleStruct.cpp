@@ -1255,8 +1255,6 @@ nsStylePosition::nsStylePosition(void)
   mFlexGrow = 0.0f;
   mFlexShrink = 1.0f;
   mZIndex.SetAutoValue();
-  mGridAutoPositionColumn.SetToInteger(1);
-  mGridAutoPositionRow.SetToInteger(1);
   // Other members get their default constructors
   // which initialize them to representations of their respective initial value.
   // mGridTemplateAreas: nullptr for 'none'
@@ -1273,8 +1271,6 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   : mGridTemplateColumns(aSource.mGridTemplateColumns)
   , mGridTemplateRows(aSource.mGridTemplateRows)
   , mGridTemplateAreas(aSource.mGridTemplateAreas)
-  , mGridAutoPositionColumn(aSource.mGridAutoPositionColumn)
-  , mGridAutoPositionRow(aSource.mGridAutoPositionRow)
   , mGridColumnStart(aSource.mGridColumnStart)
   , mGridColumnEnd(aSource.mGridColumnEnd)
   , mGridRowStart(aSource.mGridRowStart)
@@ -1292,8 +1288,6 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
                 sizeof(mGridTemplateColumns) +
                 sizeof(mGridTemplateRows) +
                 sizeof(mGridTemplateAreas) +
-                sizeof(mGridAutoPositionColumn) +
-                sizeof(mGridAutoPositionRow) +
                 sizeof(mGridColumnStart) +
                 sizeof(mGridColumnEnd) +
                 sizeof(mGridRowStart) +

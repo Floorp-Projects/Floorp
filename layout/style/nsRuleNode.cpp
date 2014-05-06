@@ -7545,33 +7545,6 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
                        parentPos->mGridTemplateAreas,
                        canStoreInRuleTree);
 
-  // grid-auto-position
-  const nsCSSValue& gridAutoPosition = *aRuleData->ValueForGridAutoPosition();
-  switch (gridAutoPosition.GetUnit()) {
-    case eCSSUnit_Null:
-      break;
-    case eCSSUnit_Inherit:
-      canStoreInRuleTree = false;
-      pos->mGridAutoPositionColumn = parentPos->mGridAutoPositionColumn;
-      pos->mGridAutoPositionRow = parentPos->mGridAutoPositionRow;
-      break;
-    case eCSSUnit_Initial:
-    case eCSSUnit_Unset:
-      // '1 / 1'
-      pos->mGridAutoPositionColumn.SetToInteger(1);
-      pos->mGridAutoPositionRow.SetToInteger(1);
-      break;
-    default:
-      SetGridLine(gridAutoPosition.GetPairValue().mXValue,
-                  pos->mGridAutoPositionColumn,
-                  parentPos->mGridAutoPositionColumn,
-                  canStoreInRuleTree);
-      SetGridLine(gridAutoPosition.GetPairValue().mYValue,
-                  pos->mGridAutoPositionRow,
-                  parentPos->mGridAutoPositionRow,
-                  canStoreInRuleTree);
-  }
-
   // grid-column-start
   SetGridLine(*aRuleData->ValueForGridColumnStart(),
               pos->mGridColumnStart,

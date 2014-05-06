@@ -404,7 +404,7 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
     "font-variant-alternates", "font-variant-caps", "font-variant-east-asian",
     "font-variant-ligatures", "font-variant-numeric", "font-variant-position",
     "font-weight", "grid", "grid-area", "grid-auto-columns", "grid-auto-flow",
-    "grid-auto-position", "grid-auto-rows", "grid-column", "grid-column-end",
+    "grid-auto-rows", "grid-column", "grid-column-end",
     "grid-column-start", "grid-row", "grid-row-end", "grid-row-start",
     "grid-template", "grid-template-areas", "grid-template-columns",
     "grid-template-rows", "hanging-punctuation", "height", "hyphens",
