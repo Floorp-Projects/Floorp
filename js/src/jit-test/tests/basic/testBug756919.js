@@ -1,4 +1,4 @@
-// |jit-test| allow-oom
+// |jit-test| allow-oom; allow-overrecursed
 
 gcparam("maxBytes", gcparam("gcBytes") + 1024);
 test();
