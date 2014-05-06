@@ -167,10 +167,10 @@ InvokeFromAsmJS_ToNumber(JSContext *cx, int32_t exitIndex, int32_t argc, Value *
 #if defined(JS_CODEGEN_ARM)
 extern "C" {
 
-extern int64_t
+extern MOZ_EXPORT int64_t
 __aeabi_idivmod(int, int);
 
-extern int64_t
+extern MOZ_EXPORT int64_t
 __aeabi_uidivmod(int, int);
 
 }

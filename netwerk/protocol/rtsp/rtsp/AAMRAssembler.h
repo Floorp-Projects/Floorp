@@ -18,6 +18,7 @@
 
 #define A_AMR_ASSEMBLER_H_
 
+#include "mozilla/Types.h"
 #include "ARTPAssembler.h"
 
 #include <utils/List.h>
@@ -26,8 +27,8 @@
 
 namespace android {
 
-struct AMessage;
-struct AString;
+struct MOZ_EXPORT AMessage;
+struct MOZ_EXPORT AString;
 
 struct AAMRAssembler : public ARTPAssembler {
     AAMRAssembler(
