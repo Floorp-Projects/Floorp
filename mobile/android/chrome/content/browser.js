@@ -346,12 +346,19 @@ var BrowserApp = {
       });
     }, false);
 
-    window.addEventListener("mozfullscreenchange", function() {
+    window.addEventListener("mozfullscreenchange", function(e) {
+      // This event gets fired on the document and its entire ancestor chain
+      // of documents. When enabling fullscreen, it is fired on the top-level
+      // document first and goes down; when disabling the order is reversed
+      // (per spec). This means the last event on enabling will be for the innermost
+      // document, which will have mozFullScreenElement set correctly.
+      let doc = e.target;
       sendMessageToJava({
-        type: document.mozFullScreen ? "DOMFullScreen:Start" : "DOMFullScreen:Stop"
+        type: doc.mozFullScreen ? "DOMFullScreen:Start" : "DOMFullScreen:Stop",
+        rootElement: (doc.mozFullScreen && doc.mozFullScreenElement == doc.documentElement)
       });
 
-      if (document.mozFullScreen)
+      if (doc.mozFullScreen)
         showFullScreenWarning();
     }, false);
 

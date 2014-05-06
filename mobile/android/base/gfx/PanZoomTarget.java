@@ -13,7 +13,7 @@ import android.graphics.RectF;
 public interface PanZoomTarget {
     public ImmutableViewportMetrics getViewportMetrics();
     public ZoomConstraints getZoomConstraints();
-    public boolean isFullScreen();
+    public FullScreenState getFullScreenState();
     public RectF getMaxMargins();
 
     public void setAnimationTarget(ImmutableViewportMetrics viewport);
