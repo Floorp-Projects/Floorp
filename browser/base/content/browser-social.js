@@ -173,7 +173,6 @@ SocialUI = {
   _providersChanged: function() {
     SocialSidebar.clearProviderMenus();
     SocialSidebar.update();
-    SocialChatBar.update();
     SocialShare.populateProviderMenu();
     SocialStatus.populateToolbarPalette();
     SocialMarks.populateToolbarPalette();
@@ -301,39 +300,13 @@ SocialChatBar = {
   get chatbar() {
     return document.getElementById("pinnedchats");
   },
-  // Whether the chatbar is available for this window.  Note that in full-screen
-  // mode chats are available, but not shown.
-  get isAvailable() {
-    return SocialUI.enabled;
-  },
-  // Does this chatbar have any chats (whether minimized, collapsed or normal)
-  get hasChats() {
-    return !!this.chatbar.firstElementChild;
-  },
   openChat: function(aProvider, aURL, aCallback, aMode) {
-    this.update();
-    if (!this.isAvailable)
-      return false;
-    this.chatbar.openChat(aProvider, aURL, aCallback, aMode);
-    // We only want to focus the chat if it is as a result of user input.
-    let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
-    if (dwu.isHandlingUserInput)
-      this.chatbar.focus();
+    // Until we refactor the tests we can't remove this.
+    // Reach into the social API.
+    let openChatWindow = Cu.import("resource://gre/modules/MozSocialAPI.jsm", {}).openChatWindow;
+    openChatWindow(window, aProvider, aURL, aCallback, aMode);
     return true;
   },
-  update: function() {
-    let command = document.getElementById("Social:FocusChat");
-    if (!this.isAvailable) {
-      this.chatbar.hidden = command.hidden = true;
-    } else {
-      this.chatbar.hidden = command.hidden = false;
-    }
-    command.setAttribute("disabled", command.hidden ? "true" : "false");
-  },
-  focus: function SocialChatBar_focus() {
-    this.chatbar.focus();
-  }
 }
 
 SocialFlyout = {
