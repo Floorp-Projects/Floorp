@@ -11,15 +11,9 @@ include protocol PImageBridge;
 include "mozilla/GfxMessageUtils.h";
 
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
-using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
 
 namespace mozilla {
 namespace layers {
-
-union MaybeFenceHandle {
-  FenceHandle;
-  null_t;
-};
 
 /**
  * PTexture is the IPDL glue between a TextureClient and a TextureHost.
@@ -30,7 +24,7 @@ sync protocol PTexture {
 child:
     async __delete__();
 
-    async CompositorRecycle(MaybeFenceHandle aFence);
+    async CompositorRecycle();
 
 parent:
 
