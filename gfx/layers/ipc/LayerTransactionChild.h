@@ -18,6 +18,7 @@ namespace mozilla {
 
 namespace layout {
 class RenderFrameChild;
+class ShadowLayerForwarder;
 }
 
 namespace layers {
@@ -37,6 +38,11 @@ public:
 
   bool IPCOpen() const { return mIPCOpen; }
 
+  void SetForwarder(ShadowLayerForwarder* aForwarder)
+  {
+    mForwarder = aForwarder;
+  }
+
 protected:
   LayerTransactionChild()
     : mIPCOpen(false)
@@ -52,6 +58,9 @@ protected:
   virtual PTextureChild* AllocPTextureChild(const SurfaceDescriptor& aSharedData,
                                             const TextureFlags& aFlags) MOZ_OVERRIDE;
   virtual bool DeallocPTextureChild(PTextureChild* actor) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvParentAsyncMessage(const mozilla::layers::AsyncParentMessageData& aMessage) MOZ_OVERRIDE;
 
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
@@ -69,6 +78,7 @@ protected:
   friend class layout::RenderFrameChild;
 
   bool mIPCOpen;
+  ShadowLayerForwarder* mForwarder;
 };
 
 } // namespace layers

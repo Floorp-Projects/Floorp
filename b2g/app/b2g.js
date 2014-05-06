@@ -842,6 +842,7 @@ pref("general.useragent.updates.retry", 86400); // 1 day
 pref("media.useAudioChannelService", true);
 
 pref("b2g.version", @MOZ_B2G_VERSION@);
+pref("b2g.osName", @MOZ_B2G_OS_NAME@);
 
 // Disable console buffering to save memory.
 pref("consoleservice.buffered", false);

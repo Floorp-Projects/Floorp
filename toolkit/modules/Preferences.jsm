@@ -322,7 +322,7 @@ Preferences.prototype = {
     }
   },
 
-  resetBranch: function(prefBranch) {
+  resetBranch: function(prefBranch = "") {
     try {
       this._prefSvc.resetBranch(prefBranch);
     }
