@@ -395,7 +395,6 @@ nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start, int32_t lengt
               case NS_HTML5TREE_BUILDER_IN_FRAMESET: {
                 if (start < i) {
                   accumulateCharacters(buf, start, i - start);
-                  start = i;
                 }
                 errNonSpaceInFrameset();
                 start = i + 1;
@@ -404,7 +403,6 @@ nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start, int32_t lengt
               case NS_HTML5TREE_BUILDER_AFTER_FRAMESET: {
                 if (start < i) {
                   accumulateCharacters(buf, start, i - start);
-                  start = i;
                 }
                 errNonSpaceAfterFrameset();
                 start = i + 1;
@@ -417,9 +415,11 @@ nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start, int32_t lengt
                 continue;
               }
               case NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET: {
+                if (start < i) {
+                  accumulateCharacters(buf, start, i - start);
+                }
                 errNonSpaceInTrailer();
-                mode = NS_HTML5TREE_BUILDER_IN_FRAMESET;
-                i--;
+                start = i + 1;
                 continue;
               }
             }
