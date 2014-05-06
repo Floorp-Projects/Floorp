@@ -97,6 +97,290 @@ void nsRegion::SimplifyOutward (uint32_t aMaxRects)
   }
 }
 
+// compute the covered area difference between two rows.
+// by iterating over both rows simultaneously and adding up
+// the additional increase in area caused by extending each
+// of the rectangles to the combined height of both rows
+static uint32_t ComputeMergedAreaIncrease(pixman_box32_t *topRects,
+		                     pixman_box32_t *topRectsEnd,
+		                     pixman_box32_t *bottomRects,
+		                     pixman_box32_t *bottomRectsEnd)
+{
+  uint32_t totalArea = 0;
+  struct pt {
+    int32_t x, y;
+  };
+
+
+  pt *i = (pt*)topRects;
+  pt *end_i = (pt*)topRectsEnd;
+  pt *j = (pt*)bottomRects;
+  pt *end_j = (pt*)bottomRectsEnd;
+  bool top = false;
+  bool bottom = false;
+
+  int cur_x = i->x;
+  bool top_next = top;
+  bool bottom_next = bottom;
+  //XXX: we could probably simplify this condition and perhaps move it into the loop below
+  if (j->x < cur_x) {
+    cur_x = j->x;
+    j++;
+    bottom_next = !bottom;
+  } else if (j->x == cur_x) {
+    i++;
+    top_next = !top;
+    bottom_next = !bottom;
+    j++;
+  } else {
+    top_next = !top;
+    i++;
+  }
+
+  int topRectsHeight = topRects->y2 - topRects->y1;
+  int bottomRectsHeight = bottomRects->y2 - bottomRects->y1;
+  int inbetweenHeight = bottomRects->y1 - topRects->y2;
+  int width = cur_x;
+  // top and bottom are the in-status to the left of cur_x
+  do {
+    if (top && !bottom) {
+      totalArea += (inbetweenHeight+bottomRectsHeight)*width;
+    } else if (bottom && !top) {
+      totalArea += (inbetweenHeight+topRectsHeight)*width;
+    } else if (bottom && top) {
+      totalArea += (inbetweenHeight)*width;
+    }
+    top = top_next;
+    bottom = bottom_next;
+    // find the next edge
+    if (i->x < j->x) {
+      top_next = !top;
+      width = i->x - cur_x;
+      cur_x = i->x;
+      i++;
+    } else if (j->x < i->x) {
+      bottom_next = !bottom;
+      width = j->x - cur_x;
+      cur_x = j->x;
+      j++;
+    } else { // i->x == j->x
+      top_next = !top;
+      bottom_next = !bottom;
+      width = i->x - cur_x;
+      cur_x = i->x;
+      i++;
+      j++;
+    }
+  } while (i < end_i && j < end_j);
+
+  // handle any remaining rects
+  while (i < end_i) {
+    width = i->x - cur_x;
+    cur_x = i->x;
+    i++;
+    if (top)
+      totalArea += (inbetweenHeight+bottomRectsHeight)*width;
+    top = !top;
+  }
+
+  while (j < end_j) {
+    width = j->x - cur_x;
+    cur_x = j->x;
+    j++;
+    if (bottom)
+      totalArea += (inbetweenHeight+topRectsHeight)*width;
+    bottom = !bottom;
+  }
+  return totalArea;
+}
+
+static pixman_box32_t *
+CopyRow(pixman_box32_t *dest_it, pixman_box32_t *src_start, pixman_box32_t *src_end)
+{
+    // XXX: std::copy
+    pixman_box32_t *src_it = src_start;
+    while (src_it < src_end) {
+        *dest_it++ = *src_it++;
+    }
+    return dest_it;
+}
+
+static pixman_box32_t *
+MergeRects(pixman_box32_t *topRects, pixman_box32_t *topRectsEnd,
+           pixman_box32_t *bottomRects, pixman_box32_t *bottomRectsEnd,
+           pixman_box32_t *tmpRect)
+{
+    struct pt {
+        int32_t x, y;
+    };
+
+    pixman_box32_t *rect;
+      // merge the two spans of rects
+      pt *i = (pt*)topRects;
+      pt *end_i = (pt*)topRectsEnd;
+      pt *j = (pt*)bottomRects;
+      pt *end_j = (pt*)bottomRectsEnd;
+      bool top;
+      bool bottom;
+
+      int cur_x = i->x;
+      int32_t y1 = topRects->y1;
+      int32_t y2 = bottomRects->y2;
+      if (j->x < cur_x) {
+        top = false;
+        bottom = true;
+        cur_x = j->x;
+        j++;
+      } else if (j->x == cur_x) {
+        top = true;
+        bottom = true;
+        i++;
+        j++;
+      } else {
+        top = true;
+        bottom = false;
+        i++;
+      }
+
+      rect = tmpRect;
+      bool started = false;
+      do {
+        if (started && !top && !bottom) {
+          rect->x2 = cur_x;
+          rect->y2 = y2;
+          rect++;
+          started = false;
+        } else if (!started) {
+          rect->x1 = cur_x;
+          rect->y1 = y1;
+          started = true;
+        }
+
+        if (i >= end_i || j >= end_j)
+          break;
+
+        if (i->x < j->x) {
+          top = !top;
+          cur_x = i->x;
+          i++;
+        } else if (j->x < i->x) {
+          bottom = !bottom;
+          cur_x = j->x;
+          j++;
+        } else { // i->x == j->x
+          top = !top;
+          bottom = !bottom;
+          cur_x = i->x;
+          i++;
+          j++;
+        }
+      } while (true);
+
+      // handle any remaining rects
+      while (i < end_i) {
+        top = !top;
+        cur_x = i->x;
+        i++;
+        if (!top) {
+          rect->x2 = cur_x;
+          rect->y2 = y2;
+          rect++;
+        } else {
+          rect->x1 = cur_x;
+          rect->y1 = y1;
+        }
+      }
+
+      while (j < end_j) {
+        bottom = !bottom;
+        cur_x = j->x;
+        j++;
+        if (!bottom) {
+          rect->x2 = cur_x;
+          rect->y2 = y2;
+          rect++;
+        } else {
+          rect->x1 = cur_x;
+          rect->y1 = y1;
+        }
+      }
+      return rect;
+}
+
+void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
+{
+
+  pixman_box32_t *boxes;
+  int n;
+  boxes = pixman_region32_rectangles(&mImpl, &n);
+  pixman_box32_t *end = boxes + n;
+  pixman_box32_t *topRectsEnd = boxes+1;
+  pixman_box32_t *topRects = boxes;
+
+  // we need some temporary storage for merging both rows of rectangles
+  nsAutoTArray<pixman_box32_t, 10> tmpStorage;
+  tmpStorage.SetCapacity(n);
+  pixman_box32_t *tmpRect = tmpStorage.Elements();
+
+  pixman_box32_t *destRect = boxes;
+  pixman_box32_t *rect = tmpRect;
+  // find the end of the first span of rectangles
+  while (topRectsEnd < end && topRectsEnd->y1 == topRects->y1) {
+    topRectsEnd++;
+  }
+
+  // if we only have one row we are done
+  if (topRectsEnd == end)
+    return;
+
+  pixman_box32_t *bottomRects = topRectsEnd;
+  pixman_box32_t *bottomRectsEnd = bottomRects+1;
+  do {
+    // find the end of the bottom span of rectangles
+    while (bottomRectsEnd < end && bottomRectsEnd->y1 == bottomRects->y1) {
+      bottomRectsEnd++;
+    }
+    uint32_t totalArea = ComputeMergedAreaIncrease(topRects, topRectsEnd,
+                                                   bottomRects, bottomRectsEnd);
+
+    if (totalArea <= aThreshold) {
+      // merge the rects into tmpRect
+      rect = MergeRects(topRects, topRectsEnd, bottomRects, bottomRectsEnd, tmpRect);
+
+      // copy the merged rects back into the destination
+      topRectsEnd = CopyRow(destRect, tmpRect, rect);
+      topRects = destRect;
+      bottomRects = bottomRectsEnd;
+      destRect = topRects;
+    } else {
+      // copy the unmerged rects
+      destRect = CopyRow(destRect, topRects, topRectsEnd);
+
+      topRects = bottomRects;
+      topRectsEnd = bottomRectsEnd;
+      bottomRects = bottomRectsEnd;
+      if (bottomRectsEnd == end) {
+        // copy the last row when we are done
+        topRectsEnd = CopyRow(destRect, topRects, topRectsEnd);
+      }
+    }
+  } while (bottomRectsEnd != end);
+
+
+  uint32_t reducedCount = topRectsEnd - pixman_region32_rectangles(&this->mImpl, &n);
+  // pixman has a special representation for
+  // regions of 1 rectangle. So just use the
+  // bounds in that case
+  if (reducedCount > 1) {
+    // reach into pixman and lower the number
+    // of rects stored in data.
+    this->mImpl.data->numRects = reducedCount;
+  } else {
+    *this = GetBounds();
+  }
+}
+
+
 void nsRegion::SimplifyInward (uint32_t aMaxRects)
 {
   NS_ASSERTION(aMaxRects >= 1, "Invalid max rect count");
