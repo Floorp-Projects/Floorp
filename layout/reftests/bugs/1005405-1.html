@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <body>
+    <table id="thetable" width="150" style="top: -100px; position: relative;">
+      <tbody id="thebody">
+        <tr>
+          <td>Hello</td>
+        </tr>
+      </tbody>
+    </table>
+    <script>
+      function doTest() {
+        document.getElementById("thetable").style.top="0px";
+        document.documentElement.className = "";
+      }
+      document.addEventListener("MozReftestInvalidate", doTest, false);
+    </script>
+  </body>
+</html>
