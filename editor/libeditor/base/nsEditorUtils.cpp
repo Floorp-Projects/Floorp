@@ -138,36 +138,33 @@ nsDOMSubtreeIterator::Init(nsIDOMRange* aRange)
  * some general purpose editor utils
  *****************************************************************************/
 
-bool 
-nsEditorUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t *aOffset) 
+bool
+nsEditorUtils::IsDescendantOf(nsINode* aNode, nsINode* aParent, int32_t* aOffset)
 {
-  NS_ENSURE_TRUE(aNode || aParent, false);
-  if (aNode == aParent) return false;
-  
-  nsCOMPtr<nsIDOMNode> parent, node = do_QueryInterface(aNode);
-  nsresult res;
-  
-  do
-  {
-    res = node->GetParentNode(getter_AddRefs(parent));
-    NS_ENSURE_SUCCESS(res, false);
-    if (parent == aParent) 
-    {
-      if (aOffset)
-      {
-        nsCOMPtr<nsIContent> pCon(do_QueryInterface(parent));
-        nsCOMPtr<nsIContent> cCon(do_QueryInterface(node));
-        if (pCon)
-        {
-          *aOffset = pCon->IndexOf(cCon);
-        }
+  MOZ_ASSERT(aNode && aParent);
+  if (aNode == aParent) {
+    return false;
+  }
+
+  for (nsCOMPtr<nsINode> node = aNode; node; node = node->GetParentNode()) {
+    if (node->GetParentNode() == aParent) {
+      if (aOffset) {
+        *aOffset = aParent->IndexOf(node);
       }
       return true;
     }
-    node = parent;
-  } while (parent);
-  
+  }
+
   return false;
+}
+
+bool
+nsEditorUtils::IsDescendantOf(nsIDOMNode* aNode, nsIDOMNode* aParent, int32_t* aOffset)
+{
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
+  NS_ENSURE_TRUE(node && parent, false);
+  return IsDescendantOf(node, parent, aOffset);
 }
 
 bool

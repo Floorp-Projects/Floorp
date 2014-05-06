@@ -25,6 +25,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "powerManagerService",
                                    "@mozilla.org/power/powermanagerservice;1",
                                    "nsIPowerManagerService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "appsService",
+                                   "@mozilla.org/AppsService;1",
+                                   "nsIAppsService");
+
 // Limit the number of pending messages for a given page.
 let kMaxPendingMessages;
 try {
@@ -83,6 +87,7 @@ function SystemMessageInternal() {
   Services.obs.addObserver(this, "xpcom-shutdown", false);
   Services.obs.addObserver(this, "webapps-registry-start", false);
   Services.obs.addObserver(this, "webapps-registry-ready", false);
+  Services.obs.addObserver(this, "webapps-clear-data", false);
   kMessages.forEach(function(aMsg) {
     ppmm.addMessageListener(aMsg, this);
   }, this);
@@ -499,6 +504,7 @@ SystemMessageInternal.prototype = {
         Services.obs.removeObserver(this, "xpcom-shutdown");
         Services.obs.removeObserver(this, "webapps-registry-start");
         Services.obs.removeObserver(this, "webapps-registry-ready");
+        Services.obs.removeObserver(this, "webapps-clear-data");
         ppmm = null;
         this._pages = null;
         this._bufferedSysMsgs = null;
@@ -523,6 +529,35 @@ SystemMessageInternal.prototype = {
           }
         }, this);
         this._bufferedSysMsgs.length = 0;
+        break;
+      case "webapps-clear-data":
+        let params =
+          aSubject.QueryInterface(Ci.mozIApplicationClearPrivateDataParams);
+        if (!params) {
+          debug("Error updating registered pages for an uninstalled app.");
+          return;
+        }
+
+        // Only update registered pages for apps.
+        if (params.browserOnly) {
+          return;
+        }
+
+        let manifestURL = appsService.getManifestURLByLocalId(params.appId);
+        if (!manifestURL) {
+          debug("Error updating registered pages for an uninstalled app.");
+          return;
+        }
+
+        for (let i = this._pages.length - 1; i >= 0; i--) {
+          let page = this._pages[i];
+          if (page.manifestURL === manifestURL) {
+            this._pages.splice(i, 1);
+            debug("Remove " + page.pageURL + " @ " + page.manifestURL +
+                  " from registered pages due to app uninstallation.");
+          }
+        }
+        debug("Finish updating registered pages for an uninstalled app.");
         break;
     }
   },

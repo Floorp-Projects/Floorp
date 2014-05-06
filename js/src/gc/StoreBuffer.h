@@ -399,6 +399,16 @@ class StoreBuffer
         buffer.unput(this, edge);
     }
 
+    template <typename Buffer, typename Edge>
+    void putFromMainThread(Buffer &buffer, const Edge &edge) {
+        if (!isEnabled())
+            return;
+        JS_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+        mozilla::ReentrancyGuard g(*this);
+        if (edge.maybeInRememberedSet(nursery_))
+            buffer.put(this, edge);
+    }
+
     MonoTypeBuffer<ValueEdge> bufferVal;
     MonoTypeBuffer<CellPtrEdge> bufferCell;
     MonoTypeBuffer<SlotsEdge> bufferSlot;
@@ -438,9 +448,9 @@ class StoreBuffer
     void putSlotFromAnyThread(JSObject *obj, int kind, int32_t start, int32_t count) {
         putFromAnyThread(bufferSlot, SlotsEdge(obj, kind, start, count));
     }
-    void putWholeCell(Cell *cell) {
+    void putWholeCellFromMainThread(Cell *cell) {
         JS_ASSERT(cell->isTenured());
-        putFromAnyThread(bufferWholeCell, WholeCellEdges(cell));
+        putFromMainThread(bufferWholeCell, WholeCellEdges(cell));
     }
 
     /* Insert or update a single edge in the Relocatable buffer. */

@@ -2035,16 +2035,6 @@ CSS_PROP_POSITION(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_POSITION(
-    grid-auto-position,
-    grid_auto_position,
-    GridAutoPosition,
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "layout.css.grid.enabled",
-    0,
-    nullptr,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-CSS_PROP_POSITION(
     grid-template-areas,
     grid_template_areas,
     GridTemplateAreas,
