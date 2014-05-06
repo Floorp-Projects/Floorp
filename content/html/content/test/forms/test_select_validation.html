@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=942321
+-->
+<head>
+  <title>Test for Bug 942321</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=942321">Mozilla Bug 942321</a>
+<p id="display"></p>
+<form id="form" href="">
+  <select required id="testselect">
+    <option id="placeholder" value="" selected>placeholder</option>
+    <option value="test" id="actualvalue">test</option>
+  <select>
+  <input type="submit" />
+</form>
+<script class="testbody" type="text/javascript">
+/** Test for Bug 942321 **/
+var option = document.getElementById("actualvalue");
+option.selected = true;
+is(form.checkValidity(), true, "Select is required and should be valid");
+
+var placeholder = document.getElementById("placeholder");
+placeholder.selected = true;
+is(form.checkValidity(), false, "Select is required and should be invalid");
+
+placeholder.value = "not-invalid-anymore";
+is(form.checkValidity(), true, "Select is required and should be valid when option's value is changed by javascript");
+</script>
+</pre>
+</body>
+</html>
+
