@@ -57,11 +57,10 @@ var SimpleServiceDiscovery = {
   _searchRepeat: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
 
   _forceTrailingSlash: function(aURL) {
-    // Some devices add the trailing '/' and some don't. Let's make sure
-    // it's there for consistency.
-    if (!aURL.endsWith("/")) {
-      aURL += "/";
-    }
+    // Cleanup the URL to make it consistent across devices
+    try {
+      aURL = Services.io.newURI(aURL, null, null).spec;
+    } catch(e) {}
     return aURL;
   },
 
