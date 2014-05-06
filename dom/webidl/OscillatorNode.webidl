@@ -11,9 +11,6 @@
  */
 
 enum OscillatorType {
-  // Hack: Use numbers to support alternate enum values
-  "0", "1", "2", "3", "4",
-
   "sine",
   "square",
   "sawtooth",
@@ -37,30 +34,5 @@ interface OscillatorNode : AudioNode {
 
     attribute EventHandler onended;
 
-};
-
-/*
- * The origin of this IDL file is
- * https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AlternateNames
- */
-partial interface OscillatorNode {
-    // Same as start()
-    [Throws,Pref="media.webaudio.legacy.OscillatorNode"]
-    void noteOn(double when);
-
-    // Same as stop()
-    [Throws,Pref="media.webaudio.legacy.OscillatorNode"]
-    void noteOff(double when);
-
-    [Pref="media.webaudio.legacy.OscillatorNode"]
-    const unsigned short SINE = 0;
-    [Pref="media.webaudio.legacy.OscillatorNode"]
-    const unsigned short SQUARE = 1;
-    [Pref="media.webaudio.legacy.OscillatorNode"]
-    const unsigned short SAWTOOTH = 2;
-    [Pref="media.webaudio.legacy.OscillatorNode"]
-    const unsigned short TRIANGLE = 3;
-    [Pref="media.webaudio.legacy.OscillatorNode"]
-    const unsigned short CUSTOM = 4;
 };
 

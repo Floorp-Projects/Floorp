@@ -62,7 +62,9 @@ sync_testing_modules := \
   fxa_utils.js \
   $(NULL)
 
-PREF_JS_EXPORTS := $(srcdir)/services-sync.js
+JS_EXPORTS_FILES := $(srcdir)/services-sync.js
+JS_EXPORTS_DEST = $(FINAL_TARGET)/$(PREF_DIR)
+INSTALL_TARGETS += JS_EXPORTS
 
 # Install JS module files.
 SYNC_MAIN_FILES := $(addprefix modules/,$(sync_modules))
