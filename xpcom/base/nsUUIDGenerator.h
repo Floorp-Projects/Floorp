@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 50; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,24 +14,24 @@
 
 class nsUUIDGenerator MOZ_FINAL : public nsIUUIDGenerator {
 public:
-    nsUUIDGenerator();
+  nsUUIDGenerator();
 
-    NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
-    NS_DECL_NSIUUIDGENERATOR
+  NS_DECL_NSIUUIDGENERATOR
 
-    nsresult Init();
+  nsresult Init();
 
 private:
-    ~nsUUIDGenerator();
+  ~nsUUIDGenerator();
 
 protected:
 
-    mozilla::Mutex mLock;
+  mozilla::Mutex mLock;
 #if !defined(XP_WIN) && !defined(XP_MACOSX) && !defined(ANDROID)
-    char mState[128];
-    char *mSavedState;
-    uint8_t mRBytes;
+  char mState[128];
+  char *mSavedState;
+  uint8_t mRBytes;
 #endif
 };
 

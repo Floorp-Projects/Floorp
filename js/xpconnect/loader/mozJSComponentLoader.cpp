@@ -351,7 +351,8 @@ mozJSComponentLoader::ReallyInit()
 
     // XXXkhuey B2G child processes have some sort of preferences race that
     // results in getting the wrong value.
-#ifdef MOZ_B2G
+    // But we don't want that on Firefox Mulet as it break most Firefox JSMs...
+#if defined(MOZ_B2G) && !defined(MOZ_MULET)
     mReuseLoaderGlobal = true;
 #endif
 

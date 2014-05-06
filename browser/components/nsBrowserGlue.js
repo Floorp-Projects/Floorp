@@ -1407,19 +1407,6 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 6) {
-      // convert tabsontop attribute to pref
-      let toolboxResource = this._rdf.GetResource(BROWSER_DOCURL + "navigator-toolbox");
-      let tabsOnTopResource = this._rdf.GetResource("tabsontop");
-      let tabsOnTopAttribute = this._getPersist(toolboxResource, tabsOnTopResource);
-      if (tabsOnTopAttribute)
-        Services.prefs.setBoolPref("browser.tabs.onTop", tabsOnTopAttribute == "true");
-    }
-
-    // Migration at version 7 only occurred for users who wanted to try the new
-    // Downloads Panel feature before its release. Since migration at version
-    // 9 adds the button by default, this step has been removed.
-
     if (currentUIVersion < 8) {
       // Reset homepage pref for users who have it set to google.com/firefox
       let uri = Services.prefs.getComplexValue("browser.startup.homepage",
@@ -1511,8 +1498,6 @@ BrowserGlue.prototype = {
                               "chromeappsstore.sqlite");
       OS.File.remove(path);
     }
-
-    // Version 15 was obsoleted in favour of 18.
 
     if (currentUIVersion < 16) {
       let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");

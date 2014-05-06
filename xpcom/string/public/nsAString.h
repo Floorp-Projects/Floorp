@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,41 +18,41 @@
 
 #define kNotFound -1
 
-  // declare nsAString
+// declare nsAString
 #include "string-template-def-unichar.h"
 #include "nsTSubstring.h"
 #include "string-template-undef.h"
 
-  // declare nsACString
+// declare nsACString
 #include "string-template-def-char.h"
 #include "nsTSubstring.h"
 #include "string-template-undef.h"
 
 
-  /**
-   * ASCII case-insensitive comparator.  (for Unicode case-insensitive
-   * comparision, see nsUnicharUtils.h)
-   */
+/**
+ * ASCII case-insensitive comparator.  (for Unicode case-insensitive
+ * comparision, see nsUnicharUtils.h)
+ */
 class nsCaseInsensitiveCStringComparator
-    : public nsCStringComparator
-  {
-    public:
-      nsCaseInsensitiveCStringComparator() {}
-      typedef char char_type;
+  : public nsCStringComparator
+{
+public:
+  nsCaseInsensitiveCStringComparator() {}
+  typedef char char_type;
 
-      virtual int operator()( const char_type*, const char_type*, uint32_t, uint32_t ) const;
-  };
+  virtual int operator()( const char_type*, const char_type*, uint32_t, uint32_t ) const;
+};
 
 class nsCaseInsensitiveCStringArrayComparator
-  {
-    public:
-      template<class A, class B>
-      bool Equals(const A& a, const B& b) const {
-        return a.Equals(b, nsCaseInsensitiveCStringComparator());
-      }
-  };
+{
+public:
+  template<class A, class B>
+  bool Equals(const A& a, const B& b) const {
+    return a.Equals(b, nsCaseInsensitiveCStringComparator());
+  }
+};
 
-  // included here for backwards compatibility
+// included here for backwards compatibility
 #ifndef nsSubstringTuple_h___
 #include "nsSubstringTuple.h"
 #endif

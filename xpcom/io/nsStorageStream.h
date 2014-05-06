@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -35,31 +36,31 @@ class nsStorageStream MOZ_FINAL : public nsIStorageStream,
                                   public nsIOutputStream
 {
 public:
-    nsStorageStream();
-    
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSISTORAGESTREAM
-    NS_DECL_NSIOUTPUTSTREAM
+  nsStorageStream();
 
-    friend class nsStorageInputStream;
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSISTORAGESTREAM
+  NS_DECL_NSIOUTPUTSTREAM
+
+  friend class nsStorageInputStream;
 
 private:
-    ~nsStorageStream();
+  ~nsStorageStream();
 
-    nsSegmentedBuffer* mSegmentedBuffer;
-    uint32_t           mSegmentSize;       // All segments, except possibly the last, are of this size
-                                           //   Must be power-of-2
-    uint32_t           mSegmentSizeLog2;   // log2(mSegmentSize)
-    bool               mWriteInProgress;   // true, if an un-Close'ed output stream exists
-    int32_t            mLastSegmentNum;    // Last segment # in use, -1 initially
-    char*              mWriteCursor;       // Pointer to next byte to be written
-    char*              mSegmentEnd;        // Pointer to one byte after end of segment
-                                           //   containing the write cursor
-    uint32_t           mLogicalLength;     // Number of bytes written to stream
+  nsSegmentedBuffer* mSegmentedBuffer;
+  uint32_t           mSegmentSize;       // All segments, except possibly the last, are of this size
+                                         //   Must be power-of-2
+  uint32_t           mSegmentSizeLog2;   // log2(mSegmentSize)
+  bool               mWriteInProgress;   // true, if an un-Close'ed output stream exists
+  int32_t            mLastSegmentNum;    // Last segment # in use, -1 initially
+  char*              mWriteCursor;       // Pointer to next byte to be written
+  char*              mSegmentEnd;        // Pointer to one byte after end of segment
+                                         //   containing the write cursor
+  uint32_t           mLogicalLength;     // Number of bytes written to stream
 
-    NS_METHOD Seek(int32_t aPosition);
-    uint32_t SegNum(uint32_t aPosition)    {return aPosition >> mSegmentSizeLog2;}
-    uint32_t SegOffset(uint32_t aPosition) {return aPosition & (mSegmentSize - 1);}
+  NS_METHOD Seek(int32_t aPosition);
+  uint32_t SegNum(uint32_t aPosition)    {return aPosition >> mSegmentSizeLog2;}
+  uint32_t SegOffset(uint32_t aPosition) {return aPosition & (mSegmentSize - 1);}
 };
 
 #endif //  _nsStorageStream_h_

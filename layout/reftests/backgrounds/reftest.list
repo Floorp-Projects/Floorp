@@ -90,19 +90,15 @@ fails-if(smallScreen&&Android) != background-size-body-contain-no-repeat.html ba
 skip-if(B2G) == background-layers-1a.html background-layers-1-ref.html # bug 773482
 == background-layers-1b.html background-layers-1-ref.html
 
-# -moz-background-inline-policy is touchy and hard to test due to stretching
-# artifacts and the difficulty of covering exact lines, and its CSS3 analog is
-# on the chopping block at the moment, so just make sure background-size results
-# in a different rendering when present.
-!= background-size-cover-continuous.html background-size-continuous.html
-!= background-size-cover-each-box.html background-size-each-box.html
-!= background-size-cover-bounding-box.html background-size-bounding-box.html
+# box-decoration-break's effect on backgrounds is touchy and hard to test due to stretching
+# artifacts and the difficulty of covering exact lines, so just make sure
+# background-size results in a different rendering when present.
+pref(layout.css.box-decoration-break.enabled,true) != background-size-cover-slice.html background-size-slice.html
+pref(layout.css.box-decoration-break.enabled,true) != background-size-cover-clone.html background-size-clone.html
 
 # ...and make sure each rendering with background-size is different from the
-# others
-!= background-size-cover-continuous.html background-size-cover-each-box.html
-!= background-size-cover-continuous.html background-size-cover-bounding-box.html
-!= background-size-cover-each-box.html background-size-cover-bounding-box.html
+# other
+pref(layout.css.box-decoration-break.enabled,true) != background-size-cover-slice.html background-size-cover-clone.html
 
 == background-size-monster-ch.html background-size-monster-ref.html
 == background-size-monster-cm.html background-size-monster-ref.html
@@ -162,3 +158,5 @@ fails-if(Android&&AndroidVersion==15) fuzzy-if(!Android||(Android&&AndroidVersio
 fails-if(Android&&AndroidVersion==15) == attachment-local-clipping-image-4.html attachment-local-clipping-image-4-ref.html #Bug 959165
 fails-if(Android&&AndroidVersion==15) == attachment-local-clipping-image-5.html attachment-local-clipping-image-4-ref.html  # Same ref as the previous test. #Bug 959165
 fails-if(Android&&AndroidVersion==15) fuzzy-if(!Android||(Android&&AndroidVersion!=15),80,500) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html #Bug 959165
+
+== background-multiple-with-border-radius.html background-multiple-with-border-radius-ref.html
