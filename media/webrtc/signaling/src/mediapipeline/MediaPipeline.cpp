@@ -653,6 +653,11 @@ nsresult MediaPipelineTransmit::Init() {
     listener_->direct_connect_ = true;
   }
 
+#ifndef MOZILLA_INTERNAL_API
+  // this enables the unit tests that can't fiddle with principals and the like
+  listener_->SetEnabled(true);
+#endif
+
   return MediaPipeline::Init();
 }
 

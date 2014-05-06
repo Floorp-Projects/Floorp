@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 <input type="text" id="input_text" onchange="++textInputChange[0];"></input>
 <input type="email" id="input_email" onchange="++textInputChange[1];"></input>
 <input type="search" id="input_search" onchange="++textInputChange[2];"></input>
-<input type="tel" id="input_telephone" onchange="++textInputChange[3];"></input>
+<input type="tel" id="input_tel" onchange="++textInputChange[3];"></input>
 <input type="url" id="input_url" onchange="++textInputChange[4];"></input>
 <input type="password" id="input_password" onchange="++textInputChange[5];"></input>
  
@@ -43,7 +43,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
   var textareaChange = 0;
   var fileInputChange = 0;
 
-  var textInputTypes = ["text", "email", "search", "telephone", "url", "password"];
+  var textInputTypes = ["text", "email", "search", "tel", "url", "password"];
   var textInputChange = [0, 0, 0, 0, 0, 0];
 
   var NonTextInputTypes = ["button", "submit", "image", "reset", "radio", "checkbox"];

@@ -203,6 +203,7 @@ class Nursery
 
     MOZ_ALWAYS_INLINE void initChunk(int chunkno) {
         NurseryChunkLayout &c = chunk(chunkno);
+        c.trailer.storeBuffer = JS::shadow::Runtime::asShadowRuntime(runtime())->gcStoreBufferPtr();
         c.trailer.location = gc::ChunkLocationNursery;
         c.trailer.runtime = runtime();
     }

@@ -244,7 +244,8 @@ class StoreBuffer
         bool operator!=(const CellPtrEdge &other) const { return edge != other.edge; }
 
         bool maybeInRememberedSet(const Nursery &nursery) const {
-            return !nursery.isInside(edge) && nursery.isInside(*edge);
+            JS_ASSERT(nursery.isInside(*edge));
+            return !nursery.isInside(edge);
         }
 
         void mark(JSTracer *trc);
@@ -267,7 +268,8 @@ class StoreBuffer
         void *deref() const { return edge->isGCThing() ? edge->toGCThing() : nullptr; }
 
         bool maybeInRememberedSet(const Nursery &nursery) const {
-            return !nursery.isInside(edge) && nursery.isInside(deref());
+            JS_ASSERT(nursery.isInside(deref()));
+            return !nursery.isInside(edge);
         }
 
         void mark(JSTracer *trc);
@@ -362,8 +364,7 @@ class StoreBuffer
         void *data;
     };
 
-    template <typename Edge>
-    bool isOkayToUseBuffer(const Edge &edge) const {
+    bool isOkayToUseBuffer() const {
         /*
          * Disabled store buffers may not have a valid state; e.g. when stored
          * inline in the ChunkTrailer.
@@ -382,8 +383,8 @@ class StoreBuffer
     }
 
     template <typename Buffer, typename Edge>
-    void put(Buffer &buffer, const Edge &edge) {
-        if (!isOkayToUseBuffer(edge))
+    void putFromAnyThread(Buffer &buffer, const Edge &edge) {
+        if (!isOkayToUseBuffer())
             return;
         mozilla::ReentrancyGuard g(*this);
         if (edge.maybeInRememberedSet(nursery_))
@@ -391,8 +392,8 @@ class StoreBuffer
     }
 
     template <typename Buffer, typename Edge>
-    void unput(Buffer &buffer, const Edge &edge) {
-        if (!isOkayToUseBuffer(edge))
+    void unputFromAnyThread(Buffer &buffer, const Edge &edge) {
+        if (!isOkayToUseBuffer())
             return;
         mozilla::ReentrancyGuard g(*this);
         buffer.unput(this, edge);
@@ -432,30 +433,38 @@ class StoreBuffer
     bool isAboutToOverflow() const { return aboutToOverflow_; }
 
     /* Insert a single edge into the buffer/remembered set. */
-    void putValue(JS::Value *valuep) { put(bufferVal, ValueEdge(valuep)); }
-    void putCell(Cell **cellp) { put(bufferCell, CellPtrEdge(cellp)); }
-    void putSlot(JSObject *obj, int kind, int32_t start, int32_t count) {
-        put(bufferSlot, SlotsEdge(obj, kind, start, count));
+    void putValueFromAnyThread(JS::Value *valuep) { putFromAnyThread(bufferVal, ValueEdge(valuep)); }
+    void putCellFromAnyThread(Cell **cellp) { putFromAnyThread(bufferCell, CellPtrEdge(cellp)); }
+    void putSlotFromAnyThread(JSObject *obj, int kind, int32_t start, int32_t count) {
+        putFromAnyThread(bufferSlot, SlotsEdge(obj, kind, start, count));
     }
     void putWholeCell(Cell *cell) {
         JS_ASSERT(cell->isTenured());
-        put(bufferWholeCell, WholeCellEdges(cell));
+        putFromAnyThread(bufferWholeCell, WholeCellEdges(cell));
     }
 
     /* Insert or update a single edge in the Relocatable buffer. */
-    void putRelocatableValue(JS::Value *valuep) { put(bufferRelocVal, ValueEdge(valuep)); }
-    void putRelocatableCell(Cell **cellp) { put(bufferRelocCell, CellPtrEdge(cellp)); }
-    void removeRelocatableValue(JS::Value *valuep) { unput(bufferRelocVal, ValueEdge(valuep)); }
-    void removeRelocatableCell(Cell **cellp) { unput(bufferRelocCell, CellPtrEdge(cellp)); }
+    void putRelocatableValueFromAnyThread(JS::Value *valuep) {
+        putFromAnyThread(bufferRelocVal, ValueEdge(valuep));
+    }
+    void removeRelocatableValueFromAnyThread(JS::Value *valuep) {
+        unputFromAnyThread(bufferRelocVal, ValueEdge(valuep));
+    }
+    void putRelocatableCellFromAnyThread(Cell **cellp) {
+        putFromAnyThread(bufferRelocCell, CellPtrEdge(cellp));
+    }
+    void removeRelocatableCellFromAnyThread(Cell **cellp) {
+        unputFromAnyThread(bufferRelocCell, CellPtrEdge(cellp));
+    }
 
     /* Insert an entry into the generic buffer. */
     template <typename T>
-    void putGeneric(const T &t) { put(bufferGeneric, t);}
+    void putGeneric(const T &t) { putFromAnyThread(bufferGeneric, t);}
 
     /* Insert or update a callback entry. */
     template <typename Key>
     void putCallback(void (*callback)(JSTracer *trc, Key *key, void *data), Key *key, void *data) {
-        put(bufferGeneric, CallbackRef<Key>(callback, key, data));
+        putFromAnyThread(bufferGeneric, CallbackRef<Key>(callback, key, data));
     }
 
     /* Methods to mark the source of all edges in the store buffer. */

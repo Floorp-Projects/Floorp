@@ -260,7 +260,7 @@ public:
     static void InitStubs(JNIEnv *jEnv);
     static ThumbnailHelper* Wrap(jobject obj);
     ThumbnailHelper(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
-    static void SendThumbnail(jobject a0, int32_t a1, bool a2);
+    static void SendThumbnail(jobject a0, int32_t a1, bool a2, bool a3);
     ThumbnailHelper() : AutoGlobalWrappedJavaObject() {};
 protected:
     static jclass mThumbnailHelperClass;

@@ -169,6 +169,23 @@ bool IsVideoContentType(const nsCString& aContentType);
 bool IsValidVideoRegion(const nsIntSize& aFrame, const nsIntRect& aPicture,
                         const nsIntSize& aDisplay);
 
+// Template to automatically set a variable to a value on scope exit.
+// Useful for unsetting flags, etc.
+template<typename T>
+class AutoSetOnScopeExit {
+public:
+  AutoSetOnScopeExit(T& aVar, T aValue)
+    : mVar(aVar)
+    , mValue(aValue)
+  {}
+  ~AutoSetOnScopeExit() {
+    mVar = mValue;
+  }
+private:
+  T& mVar;
+  const T mValue;
+};
+
 } // end namespace mozilla
 
 #endif

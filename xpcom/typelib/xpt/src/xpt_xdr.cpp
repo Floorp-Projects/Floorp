@@ -167,7 +167,7 @@ XPT_NewXDRState(XPTMode mode, char *data, uint32_t len)
         state->pool->data = data;
         state->pool->allocated = len;
     } else {
-        state->pool->data = XPT_MALLOC(arena, XPT_GROW_CHUNK);
+        state->pool->data = (char*)XPT_MALLOC(arena, XPT_GROW_CHUNK);
         if (!state->pool->data)
             goto err_free_hash;
         state->pool->allocated = XPT_GROW_CHUNK;
@@ -249,7 +249,7 @@ GrowPool(XPTArena *arena, XPTDatapool *pool, uint32_t old_size,
             total_size = at_least;
     }
 
-    newdata = XPT_MALLOC(arena, total_size);
+    newdata = (char*)XPT_MALLOC(arena, total_size);
     if (!newdata)
         return PR_FALSE;
     if (pool->data) {
@@ -312,7 +312,7 @@ XPT_NewString(XPTArena *arena, uint16_t length, char *bytes)
         return NULL;
     str->length = length;
     /* Alloc one extra to store the trailing nul. */
-    str->bytes = XPT_MALLOC(arena, length + 1u);
+    str->bytes = (char*)XPT_MALLOC(arena, length + 1u);
     if (!str->bytes) {
         XPT_DELETE(arena, str);
         return NULL;
@@ -350,7 +350,7 @@ XPT_DoStringInline(XPTArena *arena, XPTCursor *cursor, XPTString **strp)
         goto error;
 
     if (mode == XPT_DECODE)
-        if (!(str->bytes = XPT_MALLOC(arena, str->length + 1u)))
+        if (!(str->bytes = (char*)XPT_MALLOC(arena, str->length + 1u)))
             goto error;
 
     for (i = 0; i < str->length; i++)
@@ -415,7 +415,7 @@ XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **identp)
         len = end - start;
         XPT_ASSERT(len > 0);
 
-        ident = XPT_MALLOC(arena, len + 1u);
+        ident = (char*)XPT_MALLOC(arena, len + 1u);
         if (!ident)
             return PR_FALSE;
 

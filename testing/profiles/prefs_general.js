@@ -144,11 +144,6 @@ user_pref("network.http.bypass-cachelock-threshold", 200000);
 user_pref("dom.gamepad.enabled", true);
 user_pref("dom.gamepad.non_standard_events.enabled", true);
 
-// Enable Web Audio legacy APIs
-user_pref("media.webaudio.legacy.BiquadFilterNode", true);
-user_pref("media.webaudio.legacy.PannerNode", true);
-user_pref("media.webaudio.legacy.OscillatorNode", true);
-
 // Always use network provider for geolocation tests
 // so we bypass the OSX dialog raised by the corelocation provider
 user_pref("geo.provider.testing", true);
