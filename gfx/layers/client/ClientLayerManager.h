@@ -232,6 +232,10 @@ private:
   bool mCompositorMightResample;
   bool mNeedsComposite;
 
+  // An incrementing sequence number for paints.
+  // Incremented in BeginTransaction(), but not for repeat transactions.
+  uint32_t mPaintSequenceNumber;
+
   RefPtr<ShadowLayerForwarder> mForwarder;
   nsAutoTArray<RefPtr<TextureClientPool>,2> mTexturePools;
   nsAutoTArray<dom::OverfillCallback*,0> mOverfillCallbacks;

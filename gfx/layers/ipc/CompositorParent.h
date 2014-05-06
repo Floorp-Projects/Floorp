@@ -97,7 +97,8 @@ public:
   virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                    const TargetConfig& aTargetConfig,
                                    bool aIsFirstPaint,
-                                   bool aScheduleComposite) MOZ_OVERRIDE;
+                                   bool aScheduleComposite,
+                                   uint32_t aPaintSequenceNumber) MOZ_OVERRIDE;
   virtual void ForceComposite(LayerTransactionParent* aLayerTree) MOZ_OVERRIDE;
   virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
                                  const TimeStamp& aTime) MOZ_OVERRIDE;
@@ -128,7 +129,8 @@ public:
   bool ScheduleResumeOnCompositorThread(int width, int height);
 
   virtual void ScheduleComposition();
-  void NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint, bool aScheduleComposite);
+  void NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint,
+      bool aScheduleComposite, uint32_t aPaintSequenceNumber);
 
   /**
    * Check rotation info and schedule a rendering task if needed.

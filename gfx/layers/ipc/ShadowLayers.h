@@ -292,6 +292,7 @@ public:
   bool EndTransaction(InfallibleTArray<EditReply>* aReplies,
                       const nsIntRegion& aRegionToClear,
                       bool aScheduleComposite,
+                      uint32_t aPaintSequenceNumber,
                       bool* aSent);
 
   /**
