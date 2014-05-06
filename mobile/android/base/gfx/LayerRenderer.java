@@ -504,9 +504,11 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             // Run through pre-render tasks
             runRenderTasks(mTasks, false, mFrameStartTime);
 
-            if (!mPageContext.fuzzyEquals(mLastPageContext) && !mView.isFullScreen()) {
+            boolean hideScrollbars = (mView.getFullScreenState() == FullScreenState.NON_ROOT_ELEMENT);
+            if (!mPageContext.fuzzyEquals(mLastPageContext) && !hideScrollbars) {
                 // The viewport or page changed, so show the scrollbars again
-                // as per UX decision. Don't do this if we're in full-screen mode though.
+                // as per UX decision. Don't do this if we're disabling scrolling due to
+                // full-screen mode though.
                 mVertScrollLayer.unfade();
                 mHorizScrollLayer.unfade();
                 mFadeRunnable.scheduleStartFade(ScrollbarLayer.FADE_DELAY);
