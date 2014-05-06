@@ -521,13 +521,15 @@ CompositorParent::ScheduleTask(CancelableTask* task, int time)
 }
 
 void
-CompositorParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint, bool aScheduleComposite)
+CompositorParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint,
+    bool aScheduleComposite, uint32_t aPaintSequenceNumber)
 {
   if (mApzcTreeManager &&
       mLayerManager &&
       mLayerManager->GetRoot()) {
     AutoResolveRefLayers resolve(mCompositionManager);
-    mApzcTreeManager->UpdatePanZoomControllerTree(this, mLayerManager->GetRoot(), aIsFirstPaint, aId);
+    mApzcTreeManager->UpdatePanZoomControllerTree(this, mLayerManager->GetRoot(),
+        aIsFirstPaint, aId, aPaintSequenceNumber);
 
     mLayerManager->NotifyShadowTreeTransaction();
   }
@@ -768,7 +770,8 @@ void
 CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                       const TargetConfig& aTargetConfig,
                                       bool aIsFirstPaint,
-                                      bool aScheduleComposite)
+                                      bool aScheduleComposite,
+                                      uint32_t aPaintSequenceNumber)
 {
   ScheduleRotationOnCompositorThread(aTargetConfig, aIsFirstPaint);
 
@@ -784,7 +787,8 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
 
   if (mApzcTreeManager) {
     AutoResolveRefLayers resolve(mCompositionManager);
-    mApzcTreeManager->UpdatePanZoomControllerTree(this, root, aIsFirstPaint, mRootLayerTreeID);
+    mApzcTreeManager->UpdatePanZoomControllerTree(this, root, aIsFirstPaint,
+        mRootLayerTreeID, aPaintSequenceNumber);
   }
 
   if (root) {
@@ -1131,7 +1135,8 @@ public:
   virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                    const TargetConfig& aTargetConfig,
                                    bool aIsFirstPaint,
-                                   bool aScheduleComposite) MOZ_OVERRIDE;
+                                   bool aScheduleComposite,
+                                   uint32_t aPaintSequenceNumber) MOZ_OVERRIDE;
   virtual void ForceComposite(LayerTransactionParent* aLayerTree) MOZ_OVERRIDE;
   virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
                                  const TimeStamp& aTime) MOZ_OVERRIDE;
@@ -1291,7 +1296,8 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   LayerTransactionParent* aLayerTree,
   const TargetConfig& aTargetConfig,
   bool aIsFirstPaint,
-  bool aScheduleComposite)
+  bool aScheduleComposite,
+  uint32_t aPaintSequenceNumber)
 {
   uint64_t id = aLayerTree->GetId();
 
@@ -1310,7 +1316,8 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   }
   UpdateIndirectTree(id, shadowRoot, aTargetConfig);
 
-  state->mParent->NotifyShadowTreeTransaction(id, aIsFirstPaint, aScheduleComposite);
+  state->mParent->NotifyShadowTreeTransaction(id, aIsFirstPaint, aScheduleComposite,
+      aPaintSequenceNumber);
 }
 
 void

@@ -95,8 +95,11 @@ Collect(AsyncPanZoomController* aApzc, nsTArray< nsRefPtr<AsyncPanZoomController
 }
 
 void
-APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor, Layer* aRoot,
-                                             bool aIsFirstPaint, uint64_t aFirstPaintLayersId)
+APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
+                                             Layer* aRoot,
+                                             bool aIsFirstPaint,
+                                             uint64_t aFirstPaintLayersId,
+                                             uint32_t aPaintSequenceNumber)
 {
   if (AsyncPanZoomController::GetThreadAssertionsEnabled()) {
     Compositor::AssertOnCompositorThread();
@@ -144,7 +147,8 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                              gfx3DMatrix aTransform,
                                              AsyncPanZoomController* aParent,
                                              AsyncPanZoomController* aNextSibling,
-                                             bool aIsFirstPaint, uint64_t aFirstPaintLayersId,
+                                             bool aIsFirstPaint,
+                                             uint64_t aFirstPaintLayersId,
                                              nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy)
 {
   mTreeLock.AssertCurrentThreadOwns();
@@ -298,7 +302,8 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
   for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
     gfx::TreeAutoIndent indent(mApzcTreeLog);
     next = UpdatePanZoomControllerTree(aCompositor, child, childLayersId, aTransform, aParent, next,
-                                       aIsFirstPaint, aFirstPaintLayersId, aApzcsToDestroy);
+                                       aIsFirstPaint, aFirstPaintLayersId,
+                                       aPaintSequenceNumber, aApzcsToDestroy);
   }
 
   // Return the APZC that should be the sibling of other APZCs as we continue

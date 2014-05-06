@@ -439,6 +439,7 @@ bool
 ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
                                      const nsIntRegion& aRegionToClear,
                                      bool aScheduleComposite,
+                                     uint32_t aPaintSequenceNumber,
                                      bool* aSent)
 {
   *aSent = false;
@@ -549,7 +550,8 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     if (!HasShadowManager() ||
         !mShadowManager->IPCOpen() ||
         !mShadowManager->SendUpdate(cset, targetConfig, mIsFirstPaint,
-                                    aScheduleComposite, aReplies)) {
+                                    aScheduleComposite, aPaintSequenceNumber,
+                                    aReplies)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }
@@ -560,7 +562,8 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     RenderTraceScope rendertrace3("Forward NoSwap Transaction", "000093");
     if (!HasShadowManager() ||
         !mShadowManager->IPCOpen() ||
-        !mShadowManager->SendUpdateNoSwap(cset, targetConfig, mIsFirstPaint, aScheduleComposite)) {
+        !mShadowManager->SendUpdateNoSwap(cset, targetConfig, mIsFirstPaint,
+                                          aPaintSequenceNumber, aScheduleComposite)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }
