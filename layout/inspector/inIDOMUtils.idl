@@ -16,7 +16,7 @@ interface nsIDOMFontFaceList;
 interface nsIDOMRange;
 interface nsIDOMCSSStyleSheet;
 
-[scriptable, uuid(948792a7-b786-4a2c-910d-f55b0773c2ca)]
+[scriptable, uuid(5d8a1458-4b76-4aee-bf46-4eca223a01b2)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -67,6 +67,38 @@ interface inIDOMUtils : nsISupports
   [implicit_jscontext]
   jsval colorNameToRGB(in DOMString aColorName);
   AString rgbToColorName(in octet aR, in octet aG, in octet aB);
+
+  // Utilities for obtaining information about a CSS property.
+
+  // Get a list of the longhands corresponding to the given CSS property.  If
+  // the property is a longhand already, just returns the property itself.
+  // Throws on unsupported property names.
+  void getSubpropertiesForCSSProperty(in AString aProperty,
+                                      [optional] out unsigned long aLength,
+                                      [array, size_is(aLength), retval] out wstring aValues);
+  // Check whether a given CSS property is a shorthand.  Throws on unsupported
+  // property names.
+  bool cssPropertyIsShorthand(in AString aProperty);
+
+  // Check whether values of the given type are valid values for the property.
+  // For shorthands, checks whether there's a corresponding longhand property
+  // that accepts values of this type.  Throws on unsupported properties or
+  // unknown types.
+  //
+  // This function may incorrectly return false for properties that use custom
+  // parsing functions instead of table-driven parsing.
+  const unsigned long TYPE_LENGTH = 0;
+  const unsigned long TYPE_PERCENTAGE = 1;
+  const unsigned long TYPE_COLOR = 2;
+  const unsigned long TYPE_URL = 3;
+  const unsigned long TYPE_ANGLE = 4;
+  const unsigned long TYPE_FREQUENCY = 5;
+  const unsigned long TYPE_TIME = 6;
+  const unsigned long TYPE_GRADIENT = 7;
+  const unsigned long TYPE_TIMING_FUNCTION = 8;
+  const unsigned long TYPE_IMAGE_RECT = 9;
+  const unsigned long TYPE_NUMBER = 10;
+  bool cssPropertySupportsType(in AString aProperty, in unsigned long type);
 
   // DOM Node utilities
   boolean isIgnorableWhitespace(in nsIDOMCharacterData aDataNode);

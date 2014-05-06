@@ -581,6 +581,125 @@ static void GetOtherValuesForProperty(const uint32_t aParserVariant,
 }
 
 NS_IMETHODIMP
+inDOMUtils::GetSubpropertiesForCSSProperty(const nsAString& aProperty,
+                                           uint32_t* aLength,
+                                           char16_t*** aValues)
+{
+  nsCSSProperty propertyID =
+    nsCSSProps::LookupProperty(aProperty, nsCSSProps::eEnabledForAllContent);
+
+  if (propertyID == eCSSProperty_UNKNOWN) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsTArray<nsString> array;
+  if (!nsCSSProps::IsShorthand(propertyID)) {
+    *aValues = static_cast<char16_t**>(nsMemory::Alloc(sizeof(char16_t*)));
+    (*aValues)[0] = ToNewUnicode(nsCSSProps::GetStringValue(propertyID));
+    *aLength = 1;
+    return NS_OK;
+  }
+
+  // Count up how many subproperties we have.
+  size_t subpropCount = 0;
+  for (const nsCSSProperty *props = nsCSSProps::SubpropertyEntryFor(propertyID);
+       *props != eCSSProperty_UNKNOWN; ++props) {
+    ++subpropCount;
+  }
+
+  *aValues =
+    static_cast<char16_t**>(nsMemory::Alloc(subpropCount * sizeof(char16_t*)));
+  *aLength = subpropCount;
+  for (const nsCSSProperty *props = nsCSSProps::SubpropertyEntryFor(propertyID),
+                           *props_start = props;
+       *props != eCSSProperty_UNKNOWN; ++props) {
+    (*aValues)[props-props_start] = ToNewUnicode(nsCSSProps::GetStringValue(*props));
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMUtils::CssPropertyIsShorthand(const nsAString& aProperty, bool *_retval)
+{
+  nsCSSProperty propertyID =
+    nsCSSProps::LookupProperty(aProperty, nsCSSProps::eEnabledForAllContent);
+  if (propertyID == eCSSProperty_UNKNOWN) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *_retval = nsCSSProps::IsShorthand(propertyID);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMUtils::CssPropertySupportsType(const nsAString& aProperty, uint32_t aType,
+                                    bool *_retval)
+{
+  nsCSSProperty propertyID =
+    nsCSSProps::LookupProperty(aProperty, nsCSSProps::eEnabledForAllContent);
+  if (propertyID == eCSSProperty_UNKNOWN) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t variant;
+  switch (aType) {
+  case TYPE_LENGTH:
+    variant = VARIANT_LENGTH;
+    break;
+  case TYPE_PERCENTAGE:
+    variant = VARIANT_PERCENT;
+    break;
+  case TYPE_COLOR:
+    variant = VARIANT_COLOR;
+    break;
+  case TYPE_URL:
+    variant = VARIANT_URL;
+    break;
+  case TYPE_ANGLE:
+    variant = VARIANT_ANGLE;
+    break;
+  case TYPE_FREQUENCY:
+    variant = VARIANT_FREQUENCY;
+    break;
+  case TYPE_TIME:
+    variant = VARIANT_TIME;
+    break;
+  case TYPE_GRADIENT:
+    variant = VARIANT_GRADIENT;
+    break;
+  case TYPE_TIMING_FUNCTION:
+    variant = VARIANT_TIMING_FUNCTION;
+    break;
+  case TYPE_IMAGE_RECT:
+    variant = VARIANT_IMAGE_RECT;
+    break;
+  case TYPE_NUMBER:
+    // Include integers under "number"?
+    variant = VARIANT_NUMBER | VARIANT_INTEGER;
+    break;
+  default:
+    // Unknown type
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!nsCSSProps::IsShorthand(propertyID)) {
+    *_retval = nsCSSProps::ParserVariant(propertyID) & variant;
+    return NS_OK;
+  }
+
+  for (const nsCSSProperty* props = nsCSSProps::SubpropertyEntryFor(propertyID);
+       *props != eCSSProperty_UNKNOWN; ++props) {
+    if (nsCSSProps::ParserVariant(*props) & variant) {
+      *_retval = true;
+      return NS_OK;
+    }
+  }
+
+  *_retval = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
                                     uint32_t* aLength,
                                     char16_t*** aValues)
