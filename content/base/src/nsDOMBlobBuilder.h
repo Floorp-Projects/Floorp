@@ -32,7 +32,6 @@ public:
       mBlobs(aBlobs),
       mIsFromNsiFile(false)
   {
-    SetLengthAndModifiedDate();
   }
 
   // Create as a blob
@@ -42,7 +41,6 @@ public:
       mBlobs(aBlobs),
       mIsFromNsiFile(false)
   {
-    SetLengthAndModifiedDate();
   }
 
   // Create as a file to be later initialized
@@ -111,8 +109,6 @@ protected:
   nsresult ParseBlobArrayArgument(JSContext* aCx, JS::Value& aValue,
                                   bool aNativeEOL, UnwrapFuncPtr aUnwrapFunc);
 
-  void SetLengthAndModifiedDate();
-
   nsTArray<nsCOMPtr<nsIDOMBlob> > mBlobs;
   bool mIsFromNsiFile;
 };
@@ -174,7 +170,7 @@ protected:
       // and put it on the stack
 
       nsCOMPtr<nsIDOMBlob> blob =
-        new nsDOMMemoryFile(mData, mDataLen, EmptyString());
+        new nsDOMMemoryFile(mData, mDataLen, EmptyString(), EmptyString());
       mBlobs.AppendElement(blob);
       mData = nullptr; // The nsDOMMemoryFile takes ownership of the buffer
       mDataLen = 0;
