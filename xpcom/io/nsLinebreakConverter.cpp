@@ -10,8 +10,8 @@
 
 
 /*----------------------------------------------------------------------------
-	GetLinebreakString 
-	
+	GetLinebreakString
+
 	Could make this inline
 ----------------------------------------------------------------------------*/
 static const char* GetLinebreakString(nsLinebreakConverter::ELinebreakType aBreakType)
@@ -25,16 +25,16 @@ static const char* GetLinebreakString(nsLinebreakConverter::ELinebreakType aBrea
     LFSTR,          // Unix
     CRLF,           // Windows
     " ",            // space
-    nullptr  
+    nullptr
   };
-  
+
   return sLinebreaks[aBreakType];
 }
 
 
 /*----------------------------------------------------------------------------
-	AppendLinebreak 
-	
+	AppendLinebreak
+
 	Wee inline method to append a line break. Modifies ioDest.
 ----------------------------------------------------------------------------*/
 template<class T>
@@ -47,8 +47,8 @@ void AppendLinebreak(T*& ioDest, const char* lineBreakStr)
 }
 
 /*----------------------------------------------------------------------------
-	CountChars 
-	
+	CountChars
+
 	Counts occurrences of breakStr in aSrc
 ----------------------------------------------------------------------------*/
 template<class T>
@@ -82,23 +82,23 @@ int32_t CountLinebreaks(const T* aSrc, int32_t inLen, const char* breakStr)
       src++;
     }
   }
-  
+
   return theCount;
 }
 
 
 /*----------------------------------------------------------------------------
-	ConvertBreaks 
-	
+	ConvertBreaks
+
 	ioLen *includes* a terminating null, if any
 ----------------------------------------------------------------------------*/
 template<class T>
 static T* ConvertBreaks(const T* inSrc, int32_t& ioLen, const char* srcBreak, const char* destBreak)
 {
   NS_ASSERTION(inSrc && srcBreak && destBreak, "Got a null string");
-  
+
   T* resultString = nullptr;
-   
+
   // handle the no conversion case
   if (nsCRT::strcmp(srcBreak, destBreak) == 0)
   {
@@ -107,7 +107,7 @@ static T* ConvertBreaks(const T* inSrc, int32_t& ioLen, const char* srcBreak, co
     memcpy(resultString, inSrc, sizeof(T) * ioLen); // includes the null, if any
     return resultString;
   }
-    
+
   int32_t srcBreakLen = strlen(srcBreak);
   int32_t destBreakLen = strlen(destBreak);
 
@@ -117,14 +117,14 @@ static T* ConvertBreaks(const T* inSrc, int32_t& ioLen, const char* srcBreak, co
   {
     resultString = (T *)nsMemory::Alloc(sizeof(T) * ioLen);
     if (!resultString) return nullptr;
-    
+
     const T* src = inSrc;
     const T* srcEnd = inSrc + ioLen;		// includes null, if any
     T*       dst = resultString;
-    
+
     char srcBreakChar = *srcBreak;        // we know it's one char long already
     char dstBreakChar = *destBreak;
-    
+
     while (src < srcEnd)
     {
       if (*src == srcBreakChar)
@@ -143,18 +143,18 @@ static T* ConvertBreaks(const T* inSrc, int32_t& ioLen, const char* srcBreak, co
   else
   {
     // src and dest termination is different length. Do it a slower way.
-    
+
     // count linebreaks in src. Assumes that chars in 2-char linebreaks are unique.
     int32_t numLinebreaks = CountLinebreaks(inSrc, ioLen, srcBreak);
-    
+
     int32_t newBufLen = ioLen - (numLinebreaks * srcBreakLen) + (numLinebreaks * destBreakLen);
     resultString = (T *)nsMemory::Alloc(sizeof(T) * newBufLen);
     if (!resultString) return nullptr;
-    
+
     const T* src = inSrc;
     const T* srcEnd = inSrc + ioLen;		// includes null, if any
     T*       dst = resultString;
-    
+
     while (src < srcEnd)
     {
       if (*src == *srcBreak)
@@ -162,7 +162,7 @@ static T* ConvertBreaks(const T* inSrc, int32_t& ioLen, const char* srcBreak, co
         *dst++ = *destBreak;
         if (destBreak[1])
           *dst++ = destBreak[1];
-      
+
         src++;
         if (src < srcEnd && srcBreak[1] && *src == srcBreak[1])
           src++;
@@ -172,17 +172,17 @@ static T* ConvertBreaks(const T* inSrc, int32_t& ioLen, const char* srcBreak, co
         *dst++ = *src++;
       }
     }
-    
+
     ioLen = newBufLen;
   }
-  
+
   return resultString;
 }
 
 
 /*----------------------------------------------------------------------------
-  ConvertBreaksInSitu 
-	
+  ConvertBreaksInSitu
+
   Convert breaks in situ. Can only do this if the linebreak length
   does not change.
 ----------------------------------------------------------------------------*/
@@ -196,17 +196,17 @@ static void ConvertBreaksInSitu(T* inSrc, int32_t inLen, char srcBreak, char des
   {
     if (*src == srcBreak)
       *src = destBreak;
-    
+
     src++;
   }
 }
 
 
 /*----------------------------------------------------------------------------
-  ConvertUnknownBreaks 
-	
+  ConvertUnknownBreaks
+
   Convert unknown line breaks to the specified break.
-	
+
   This will convert CRLF pairs to one break, and single CR or LF to a break.
 ----------------------------------------------------------------------------*/
 template<class T>
@@ -214,7 +214,7 @@ static T* ConvertUnknownBreaks(const T* inSrc, int32_t& ioLen, const char* destB
 {
   const T* src = inSrc;
   const T* srcEnd = inSrc + ioLen;		// includes null, if any
-  
+
   int32_t destBreakLen = strlen(destBreak);
   int32_t finalLen = 0;
 
@@ -245,7 +245,7 @@ static T* ConvertUnknownBreaks(const T* inSrc, int32_t& ioLen, const char* destB
     }
     src++;
   }
-  
+
   T* resultString = (T *)nsMemory::Alloc(sizeof(T) * finalLen);
   if (!resultString) return nullptr;
 
@@ -253,7 +253,7 @@ static T* ConvertUnknownBreaks(const T* inSrc, int32_t& ioLen, const char* destB
   srcEnd = inSrc + ioLen;		// includes null, if any
 
   T* dst = resultString;
-  
+
   while (src < srcEnd)
   {
     if (*src == nsCRT::CR)
@@ -288,16 +288,16 @@ static T* ConvertUnknownBreaks(const T* inSrc, int32_t& ioLen, const char* destB
 
 
 /*----------------------------------------------------------------------------
-	ConvertLineBreaks 
-	
+	ConvertLineBreaks
+
 ----------------------------------------------------------------------------*/
 char* nsLinebreakConverter::ConvertLineBreaks(const char* aSrc,
-            ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks, int32_t aSrcLen, int32_t* outLen)
+    ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks, int32_t aSrcLen, int32_t* outLen)
 {
   NS_ASSERTION(aDestBreaks != eLinebreakAny &&
                aSrcBreaks != eLinebreakSpace, "Invalid parameter");
   if (!aSrc) return nullptr;
-  
+
   int32_t sourceLen = (aSrcLen == kIgnoreLen) ? strlen(aSrc) + 1 : aSrcLen;
 
   char* resultString;
@@ -305,7 +305,7 @@ char* nsLinebreakConverter::ConvertLineBreaks(const char* aSrc,
     resultString = ConvertUnknownBreaks(aSrc, sourceLen, GetLinebreakString(aDestBreaks));
   else
     resultString = ConvertBreaks(aSrc, sourceLen, GetLinebreakString(aSrcBreaks), GetLinebreakString(aDestBreaks));
-  
+
   if (outLen)
     *outLen = sourceLen;
   return resultString;
@@ -313,24 +313,24 @@ char* nsLinebreakConverter::ConvertLineBreaks(const char* aSrc,
 
 
 /*----------------------------------------------------------------------------
-	ConvertLineBreaksInSitu 
-	
+	ConvertLineBreaksInSitu
+
 ----------------------------------------------------------------------------*/
 nsresult nsLinebreakConverter::ConvertLineBreaksInSitu(char **ioBuffer, ELinebreakType aSrcBreaks,
-            ELinebreakType aDestBreaks, int32_t aSrcLen, int32_t* outLen)
+    ELinebreakType aDestBreaks, int32_t aSrcLen, int32_t* outLen)
 {
   NS_ASSERTION(ioBuffer && *ioBuffer, "Null pointer passed");
   if (!ioBuffer || !*ioBuffer) return NS_ERROR_NULL_POINTER;
-  
+
   NS_ASSERTION(aDestBreaks != eLinebreakAny &&
                aSrcBreaks != eLinebreakSpace, "Invalid parameter");
 
   int32_t sourceLen = (aSrcLen == kIgnoreLen) ? strlen(*ioBuffer) + 1 : aSrcLen;
-  
+
   // can we convert in-place?
   const char* srcBreaks = GetLinebreakString(aSrcBreaks);
   const char* dstBreaks = GetLinebreakString(aDestBreaks);
-  
+
   if ( (aSrcBreaks != eLinebreakAny) &&
        (strlen(srcBreaks) == 1) &&
        (strlen(dstBreaks) == 1) )
@@ -342,7 +342,7 @@ nsresult nsLinebreakConverter::ConvertLineBreaksInSitu(char **ioBuffer, ELinebre
   else
   {
     char* destBuffer;
-    
+
     if (aSrcBreaks == eLinebreakAny)
       destBuffer = ConvertUnknownBreaks(*ioBuffer, sourceLen, dstBreaks);
     else
@@ -353,22 +353,22 @@ nsresult nsLinebreakConverter::ConvertLineBreaksInSitu(char **ioBuffer, ELinebre
     if (outLen)
       *outLen = sourceLen;
   }
-  
+
   return NS_OK;
 }
 
 
 /*----------------------------------------------------------------------------
-	ConvertUnicharLineBreaks 
-	
+	ConvertUnicharLineBreaks
+
 ----------------------------------------------------------------------------*/
 char16_t* nsLinebreakConverter::ConvertUnicharLineBreaks(const char16_t* aSrc,
-            ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks, int32_t aSrcLen, int32_t* outLen)
+    ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks, int32_t aSrcLen, int32_t* outLen)
 {
   NS_ASSERTION(aDestBreaks != eLinebreakAny &&
                aSrcBreaks != eLinebreakSpace, "Invalid parameter");
   if (!aSrc) return nullptr;
-  
+
   int32_t bufLen = (aSrcLen == kIgnoreLen) ? NS_strlen(aSrc) + 1 : aSrcLen;
 
   char16_t* resultString;
@@ -376,7 +376,7 @@ char16_t* nsLinebreakConverter::ConvertUnicharLineBreaks(const char16_t* aSrc,
     resultString = ConvertUnknownBreaks(aSrc, bufLen, GetLinebreakString(aDestBreaks));
   else
     resultString = ConvertBreaks(aSrc, bufLen, GetLinebreakString(aSrcBreaks), GetLinebreakString(aDestBreaks));
-  
+
   if (outLen)
     *outLen = bufLen;
   return resultString;
@@ -384,11 +384,11 @@ char16_t* nsLinebreakConverter::ConvertUnicharLineBreaks(const char16_t* aSrc,
 
 
 /*----------------------------------------------------------------------------
-	ConvertStringLineBreaks 
-	
+	ConvertStringLineBreaks
+
 ----------------------------------------------------------------------------*/
 nsresult nsLinebreakConverter::ConvertUnicharLineBreaksInSitu(char16_t **ioBuffer,
-            ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks, int32_t aSrcLen, int32_t* outLen)
+    ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks, int32_t aSrcLen, int32_t* outLen)
 {
   NS_ASSERTION(ioBuffer && *ioBuffer, "Null pointer passed");
   if (!ioBuffer || !*ioBuffer) return NS_ERROR_NULL_POINTER;
@@ -400,7 +400,7 @@ nsresult nsLinebreakConverter::ConvertUnicharLineBreaksInSitu(char16_t **ioBuffe
   // can we convert in-place?
   const char* srcBreaks = GetLinebreakString(aSrcBreaks);
   const char* dstBreaks = GetLinebreakString(aDestBreaks);
-  
+
   if ( (aSrcBreaks != eLinebreakAny) &&
        (strlen(srcBreaks) == 1) &&
        (strlen(dstBreaks) == 1) )
@@ -412,7 +412,7 @@ nsresult nsLinebreakConverter::ConvertUnicharLineBreaksInSitu(char16_t **ioBuffe
   else
   {
     char16_t* destBuffer;
-    
+
     if (aSrcBreaks == eLinebreakAny)
       destBuffer = ConvertUnknownBreaks(*ioBuffer, sourceLen, dstBreaks);
     else
@@ -423,16 +423,16 @@ nsresult nsLinebreakConverter::ConvertUnicharLineBreaksInSitu(char16_t **ioBuffe
     if (outLen)
       *outLen = sourceLen;
   }
-  
+
   return NS_OK;
 }
 
 /*----------------------------------------------------------------------------
-	ConvertStringLineBreaks 
-	
+	ConvertStringLineBreaks
+
 ----------------------------------------------------------------------------*/
 nsresult nsLinebreakConverter::ConvertStringLineBreaks(nsString& ioString,
-          ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks)
+    ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks)
 {
 
   NS_ASSERTION(aDestBreaks != eLinebreakAny &&
@@ -440,16 +440,16 @@ nsresult nsLinebreakConverter::ConvertStringLineBreaks(nsString& ioString,
 
   // nothing to do
   if (ioString.IsEmpty()) return NS_OK;
-  
+
   nsresult rv;
-  
+
   // remember the old buffer in case
   // we blow it away later
   nsString::char_iterator stringBuf;
   ioString.BeginWriting(stringBuf);
-  
+
   int32_t    newLen;
-    
+
   rv = ConvertUnicharLineBreaksInSitu(&stringBuf,
                                       aSrcBreaks, aDestBreaks,
                                       ioString.Length() + 1, &newLen);
@@ -457,7 +457,7 @@ nsresult nsLinebreakConverter::ConvertStringLineBreaks(nsString& ioString,
 
   if (stringBuf != ioString.get())
     ioString.Adopt(stringBuf);
-  
+
   return NS_OK;
 }
 

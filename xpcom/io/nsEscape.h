@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,10 +19,10 @@
  * in sync.
  */
 typedef enum {
- 	url_All       = 0       /**< %-escape every byte unconditionally */
-,	url_XAlphas   = 1u << 0 /**< Normal escape - leave alphas intact, escape the rest */
-,	url_XPAlphas  = 1u << 1 /**< As url_XAlphas, but convert spaces (0x20) to '+' and plus to %2B */
-,	url_Path      = 1u << 2 /**< As url_XAlphas, but don't escape slash ('/') */
+  url_All       = 0       /**< %-escape every byte unconditionally */
+, url_XAlphas   = 1u << 0 /**< Normal escape - leave alphas intact, escape the rest */
+, url_XPAlphas  = 1u << 1 /**< As url_XAlphas, but convert spaces (0x20) to '+' and plus to %2B */
+, url_Path      = 1u << 2 /**< As url_XAlphas, but don't escape slash ('/') */
 } nsEscapeMask;
 
 #ifdef __cplusplus
@@ -38,15 +39,15 @@ extern "C" {
 char * nsEscape(const char * str, nsEscapeMask mask);
 
 char * nsUnescape(char * str);
-	/* decode % escaped hex codes into character values,
-	 * modifies the parameter, returns the same buffer
-	 */
+/* decode % escaped hex codes into character values,
+ * modifies the parameter, returns the same buffer
+ */
 
 int32_t nsUnescapeCount (char * str);
-	/* decode % escaped hex codes into character values,
-	 * modifies the parameter buffer, returns the length of the result
-	 * (result may contain \0's).
-	 */
+/* decode % escaped hex codes into character values,
+ * modifies the parameter buffer, returns the length of the result
+ * (result may contain \0's).
+ */
 
 char *
 nsEscapeHTML(const char * string);
@@ -54,9 +55,9 @@ nsEscapeHTML(const char * string);
 char16_t *
 nsEscapeHTML2(const char16_t *aSourceBuffer,
               int32_t aSourceBufferLen = -1);
- /*
-  * Escape problem char's for HTML display 
-  */
+/*
+ * Escape problem char's for HTML display
+ */
 
 
 #ifdef __cplusplus
@@ -84,10 +85,10 @@ enum EscapeMask {
   esc_Query          = 1u << 8,
   esc_Ref            = 1u << 9,
   /** special flags **/
-  esc_Minimal        = esc_Scheme | esc_Username | esc_Password | esc_Host | esc_FilePath | esc_Param | esc_Query | esc_Ref, 
+  esc_Minimal        = esc_Scheme | esc_Username | esc_Password | esc_Host | esc_FilePath | esc_Param | esc_Query | esc_Ref,
   esc_Forced         = 1u << 10, /* forces escaping of existing escape sequences */
   esc_OnlyASCII      = 1u << 11, /* causes non-ascii octets to be skipped */
-  esc_OnlyNonASCII   = 1u << 12, /* causes _graphic_ ascii octets (0x20-0x7E) 
+  esc_OnlyNonASCII   = 1u << 12, /* causes _graphic_ ascii octets (0x20-0x7E)
                                     * to be skipped when escaping. causes all
                                     * ascii octets (<= 0x7F) to be skipped when unescaping */
   esc_AlwaysCopy     = 1u << 13, /* copy input to result buf even if escaping is unnecessary */
@@ -110,29 +111,29 @@ enum EscapeMask {
  * @return TRUE if escaping was performed, FALSE otherwise.
  */
 bool NS_EscapeURL(const char *str,
-                           int32_t len,
-                           uint32_t flags,
-                           nsACString &result);
+                  int32_t len,
+                  uint32_t flags,
+                  nsACString &result);
 
 /**
  * Expands URL escape sequences... beware embedded null bytes!
  *
  * @param  str     url string to unescape
  * @param  len     length of |str|
- * @param  flags   only esc_OnlyNonASCII, esc_SkipControl and esc_AlwaysCopy 
+ * @param  flags   only esc_OnlyNonASCII, esc_SkipControl and esc_AlwaysCopy
  *                 are recognized
  * @param  result  result buffer, untouched if |str| is already unescaped
  *
  * @return TRUE if unescaping was performed, FALSE otherwise.
  */
 bool NS_UnescapeURL(const char *str,
-                             int32_t len,
-                             uint32_t flags,
-                             nsACString &result);
+                    int32_t len,
+                    uint32_t flags,
+                    nsACString &result);
 
 /** returns resultant string length **/
 inline int32_t NS_UnescapeURL(char *str) {
-    return nsUnescapeCount(str);
+  return nsUnescapeCount(str);
 }
 
 /**
@@ -140,15 +141,15 @@ inline int32_t NS_UnescapeURL(char *str) {
  */
 inline const nsCSubstring &
 NS_EscapeURL(const nsCSubstring &str, uint32_t flags, nsCSubstring &result) {
-    if (NS_EscapeURL(str.Data(), str.Length(), flags, result))
-        return result;
-    return str;
+  if (NS_EscapeURL(str.Data(), str.Length(), flags, result))
+    return result;
+  return str;
 }
 inline const nsCSubstring &
 NS_UnescapeURL(const nsCSubstring &str, uint32_t flags, nsCSubstring &result) {
-    if (NS_UnescapeURL(str.Data(), str.Length(), flags, result))
-        return result;
-    return str;
+  if (NS_UnescapeURL(str.Data(), str.Length(), flags, result))
+    return result;
+  return str;
 }
 
 /**
@@ -172,8 +173,8 @@ NS_Escape(const nsCString& aOriginal, nsCString& aEscaped,
 inline nsCString &
 NS_UnescapeURL(nsCString &str)
 {
-    str.SetLength(nsUnescapeCount(str.BeginWriting()));
-    return str;
+  str.SetLength(nsUnescapeCount(str.BeginWriting()));
+  return str;
 }
 
 #endif //  _ESCAPE_H_

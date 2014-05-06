@@ -1042,12 +1042,16 @@ public:
   static void OutsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets);
 
   /**
-   * Fill in border radii for this frame.  Return whether any are
-   * nonzero.
-   *
+   * Fill in border radii for this frame.  Return whether any are nonzero.
    * Indices into aRadii are the NS_CORNER_* constants in nsStyleConsts.h
+   * aSkipSides is a union of SIDE_BIT_LEFT/RIGHT/TOP/BOTTOM bits that says
+   * which side(s) to skip.
    */
-  virtual bool GetBorderRadii(nscoord aRadii[8]) const;
+  virtual bool GetBorderRadii(const nsSize& aFrameSize,
+                              const nsSize& aBorderArea,
+                              int aSkipSides,
+                              nscoord aRadii[8]) const;
+  bool GetBorderRadii(nscoord aRadii[8]) const;
 
   bool GetPaddingBoxBorderRadii(nscoord aRadii[8]) const;
   bool GetContentBoxBorderRadii(nscoord aRadii[8]) const;

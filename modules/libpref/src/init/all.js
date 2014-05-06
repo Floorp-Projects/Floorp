@@ -1312,7 +1312,7 @@ pref("network.dir.format", 2);
 pref("network.prefetch-next", true);
 
 // enables the predictive service
-pref("network.seer.enabled", true);
+pref("network.seer.enabled", false);
 pref("network.seer.enable-hover-on-ssl", false);
 pref("network.seer.page-degradation.day", 0);
 pref("network.seer.page-degradation.week", 5);
@@ -1900,6 +1900,9 @@ pref("layout.css.overflow-clip-box.enabled", false);
 
 // Is support for CSS grid enabled?
 pref("layout.css.grid.enabled", false);
+
+// Is support for CSS box-decoration-break enabled?
+pref("layout.css.box-decoration-break.enabled", false);
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction

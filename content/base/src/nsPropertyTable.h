@@ -178,6 +178,7 @@ class nsPropertyTable
   class PropertyList;
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
  private:
   NS_HIDDEN_(void) DestroyPropertyList();
