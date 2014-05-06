@@ -888,6 +888,24 @@ PreliminaryHandshakeDone(PRFileDesc* fd)
   SSLChannelInfo channelInfo;
   if (SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo)) == SECSuccess) {
     infoObject->SetSSLVersionUsed(channelInfo.protocolVersion);
+
+    SSLCipherSuiteInfo cipherInfo;
+    if (SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
+                               sizeof cipherInfo) == SECSuccess) {
+      /* Set the SSL Status information */
+      RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
+      if (!status) {
+        status = new nsSSLStatus();
+        infoObject->SetSSLStatus(status);
+      }
+
+      status->mHaveKeyLengthAndCipher = true;
+      status->mKeyLength = cipherInfo.symKeyBits;
+      status->mSecretKeyLength = cipherInfo.effectiveKeyBits;
+      status->mCipherName.Assign(cipherInfo.cipherSuiteName);
+      infoObject->SetKEAUsed(cipherInfo.keaType);
+      infoObject->SetKEAKeyBits(channelInfo.keaKeyBits);
+    }
   }
 
   // Get the NPN value.
@@ -1253,18 +1271,16 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                 sizeof cipherInfo);
     MOZ_ASSERT(rv == SECSuccess);
     if (rv == SECSuccess) {
-      status->mHaveKeyLengthAndCipher = true;
-      status->mKeyLength = cipherInfo.symKeyBits;
-      status->mSecretKeyLength = cipherInfo.effectiveKeyBits;
-      status->mCipherName.Assign(cipherInfo.cipherSuiteName);
-
       // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
       Telemetry::Accumulate(
         infoObject->IsFullHandshake()
           ? Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_FULL
           : Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_RESUMED,
         cipherInfo.keaType);
-      infoObject->SetKEAUsed(cipherInfo.keaType);
+
+      DebugOnly<int16_t> KEAUsed;
+      MOZ_ASSERT(NS_SUCCEEDED(infoObject->GetKEAUsed(&KEAUsed)) &&
+                 (KEAUsed == cipherInfo.keaType));
 
       if (infoObject->IsFullHandshake()) {
         switch (cipherInfo.keaType) {
