@@ -1534,7 +1534,7 @@ void ThumbnailHelper::InitStubs(JNIEnv *jEnv) {
     initInit();
 
     mThumbnailHelperClass = getClassGlobalRef("org/mozilla/gecko/ThumbnailHelper");
-    jSendThumbnail = getStaticMethod("notifyThumbnail", "(Ljava/nio/ByteBuffer;IZ)V");
+    jSendThumbnail = getStaticMethod("notifyThumbnail", "(Ljava/nio/ByteBuffer;IZZ)V");
 }
 
 ThumbnailHelper* ThumbnailHelper::Wrap(jobject obj) {
@@ -1544,17 +1544,18 @@ ThumbnailHelper* ThumbnailHelper::Wrap(jobject obj) {
     return ret;
 }
 
-void ThumbnailHelper::SendThumbnail(jobject a0, int32_t a1, bool a2) {
+void ThumbnailHelper::SendThumbnail(jobject a0, int32_t a1, bool a2, bool a3) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (env->PushLocalFrame(1) != 0) {
         AndroidBridge::HandleUncaughtException(env);
         MOZ_CRASH("Exception should have caused crash.");
     }
 
-    jvalue args[3];
+    jvalue args[4];
     args[0].l = a0;
     args[1].i = a1;
     args[2].z = a2;
+    args[3].z = a3;
 
     env->CallStaticVoidMethodA(mThumbnailHelperClass, jSendThumbnail, args);
     AndroidBridge::HandleUncaughtException(env);
