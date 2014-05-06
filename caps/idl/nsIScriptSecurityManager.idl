@@ -11,7 +11,7 @@ interface nsIChannel;
 interface nsIDocShell;
 interface nsIDomainPolicy;
 
-[scriptable, uuid(176f2aed-fb78-4420-b372-07ab2c4c04c3)]
+[scriptable, uuid(c3d2839a-b23d-4d18-92fd-4c43183dc8fe)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     /**
@@ -99,12 +99,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     [noscript,notxpcom] boolean scriptAllowed(in JSObjectPtr aGlobal);
 
     ///////////////// Principals ///////////////////////
-    /**
-     * Return the principal of the innermost frame of the currently
-     * executing script. Will return null if there is no script
-     * currently executing.
-     */
-    [noscript] nsIPrincipal getSubjectPrincipal();
 
     /**
      * Return the all-powerful system principal.

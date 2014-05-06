@@ -885,28 +885,6 @@ nsScriptSecurityManager::ScriptAllowed(JSObject *aGlobal)
 }
 
 ///////////////// Principals ///////////////////////
-NS_IMETHODIMP
-nsScriptSecurityManager::GetSubjectPrincipal(nsIPrincipal **aSubjectPrincipal)
-{
-    nsresult rv;
-    *aSubjectPrincipal = doGetSubjectPrincipal(&rv);
-    if (NS_SUCCEEDED(rv))
-        NS_IF_ADDREF(*aSubjectPrincipal);
-    return rv;
-}
-
-nsIPrincipal*
-nsScriptSecurityManager::doGetSubjectPrincipal(nsresult* rv)
-{
-    NS_PRECONDITION(rv, "Null out param");
-    JSContext *cx = GetCurrentJSContext();
-    if (!cx)
-    {
-        *rv = NS_OK;
-        return nullptr;
-    }
-    return GetSubjectPrincipal(cx, rv);
-}
 
 NS_IMETHODIMP
 nsScriptSecurityManager::GetSystemPrincipal(nsIPrincipal **result)
@@ -1035,21 +1013,6 @@ nsScriptSecurityManager::GetCodebasePrincipalInternal(nsIURI *aURI,
     NS_IF_ADDREF(*result = principal);
 
     return NS_OK;
-}
-
-nsIPrincipal*
-nsScriptSecurityManager::GetSubjectPrincipal(JSContext *cx,
-                                             nsresult* rv)
-{
-    *rv = NS_OK;
-    JSCompartment *compartment = js::GetContextCompartment(cx);
-
-    // The context should always be in a compartment, either one it has entered
-    // or the one associated with its global.
-    MOZ_ASSERT(!!compartment);
-
-    JSPrincipals *principals = JS_GetCompartmentPrincipals(compartment);
-    return nsJSPrincipals::get(principals);
 }
 
 // static

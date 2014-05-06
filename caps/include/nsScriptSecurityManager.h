@@ -118,11 +118,6 @@ private:
     // should error out at that point.
     static nsIPrincipal* doGetObjectPrincipal(JSObject* obj);
 
-    // Returns null if a principal cannot be found.  Note that rv can be NS_OK
-    // when this happens -- this means that there was no JS running.
-    nsIPrincipal*
-    doGetSubjectPrincipal(nsresult* rv);
-
     nsresult
     GetCodebasePrincipalInternal(nsIURI* aURI, uint32_t aAppId,
                                  bool aInMozBrowser,
@@ -131,12 +126,6 @@ private:
     nsresult
     CreateCodebasePrincipal(nsIURI* aURI, uint32_t aAppId, bool aInMozBrowser,
                             nsIPrincipal** result);
-
-    // Returns null if a principal cannot be found.  Note that rv can be NS_OK
-    // when this happens -- this means that there was no script for the
-    // context.  Callers MUST pass in a non-null rv here.
-    nsIPrincipal*
-    GetSubjectPrincipal(JSContext* cx, nsresult* rv);
 
     nsresult
     Init();
