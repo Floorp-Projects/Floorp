@@ -48,6 +48,7 @@ public:
   }
 
   size_t SizeOfExcludingThisIfNotShared(MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThisIfNotShared(MallocSizeOf aMallocSizeOf) const;
 
 private:
   nsRefPtr<AudioContext> mContext;

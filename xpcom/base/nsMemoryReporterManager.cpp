@@ -799,15 +799,15 @@ public:
     dmd::SizeOf(&sizes);
 
 #define REPORT(_path, _amount, _desc)                                         \
-    do {                                                                      \
-      nsresult rv;                                                            \
-      rv = aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
-                                   KIND_HEAP, UNITS_BYTES, _amount,           \
-                                   NS_LITERAL_CSTRING(_desc), aData);         \
-      if (NS_WARN_IF(NS_FAILED(rv))) {                                        \
-        return rv;                                                            \
-      }                                                                       \
-    } while (0)
+  do {                                                                        \
+    nsresult rv;                                                              \
+    rv = aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path),   \
+                                 KIND_HEAP, UNITS_BYTES, _amount,             \
+                                 NS_LITERAL_CSTRING(_desc), aData);           \
+    if (NS_WARN_IF(NS_FAILED(rv))) {                                          \
+      return rv;                                                              \
+    }                                                                         \
+  } while (0)
 
     REPORT("explicit/dmd/stack-traces/used",
            sizes.mStackTracesUsed,
@@ -1513,11 +1513,11 @@ nsMemoryReporterManager::GetResidentFast(int64_t* aAmount)
 int64_t nsMemoryReporterManager::ResidentFast()
 {
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
-    int64_t amount;
-    ResidentFastDistinguishedAmount(&amount);
-    return amount;
+  int64_t amount;
+  ResidentFastDistinguishedAmount(&amount);
+  return amount;
 #else
-    return 0;
+  return 0;
 #endif
 }
 
@@ -1744,14 +1744,14 @@ nsMemoryReporterManager::SizeOfTab(nsIDOMWindow* aTopWindow,
   TimeStamp t3 = TimeStamp::Now();
 
   *aTotalSize = 0;
-  #define DO(aN, n) { *aN = (n); *aTotalSize += (n); }
+#define DO(aN, n) { *aN = (n); *aTotalSize += (n); }
   DO(aJSObjectsSize, jsObjectsSize);
   DO(aJSStringsSize, jsStringsSize);
   DO(aJSOtherSize,   jsOtherSize);
   DO(aDomSize,       jsPrivateSize + domSize);
   DO(aStyleSize,     styleSize);
   DO(aOtherSize,     otherSize);
-  #undef DO
+#undef DO
 
   *aJSMilliseconds    = (t2 - t1).ToMilliseconds();
   *aNonJSMilliseconds = (t3 - t2).ToMilliseconds();

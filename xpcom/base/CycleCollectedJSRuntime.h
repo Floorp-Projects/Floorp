@@ -146,8 +146,8 @@ private:
   }
 
   enum TraverseSelect {
-      TRAVERSE_CPP,
-      TRAVERSE_FULL
+    TRAVERSE_CPP,
+    TRAVERSE_FULL
   };
 
   void

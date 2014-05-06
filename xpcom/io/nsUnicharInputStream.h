@@ -14,7 +14,7 @@
 { 0x428dca6f, 0x1a0f, 0x4cda, { 0xb5, 0x16, 0xd, 0x52, 0x44, 0x74, 0x5a, 0x6a } }
 
 class nsSimpleUnicharStreamFactory :
-  public nsIFactory, 
+  public nsIFactory,
   private nsISimpleUnicharStreamFactory
 {
 public:

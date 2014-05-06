@@ -1774,6 +1774,7 @@ public:
                                     JS::Handle<JSObject *> aCpows,
                                     nsIPrincipal* aPrincipal)
     : nsSameProcessAsyncMessageBase(aCx, aMessage, aData, aCpows, aPrincipal)
+    , mDelivered(false)
   {
   }
 
@@ -1782,10 +1783,16 @@ public:
     if (nsFrameMessageManager::sPendingSameProcessAsyncMessages) {
       nsFrameMessageManager::sPendingSameProcessAsyncMessages->RemoveElement(this);
     }
-    nsFrameMessageManager* ppm = nsFrameMessageManager::sSameProcessParentManager;
-    ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), ppm);
+    if (!mDelivered) {
+      mDelivered = true;
+      nsFrameMessageManager* ppm = nsFrameMessageManager::sSameProcessParentManager;
+      ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), ppm);
+    }
     return NS_OK;
   }
+
+private:
+  bool mDelivered;
 };
 
 /**

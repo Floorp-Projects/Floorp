@@ -1,4 +1,5 @@
-/* vim: set shiftwidth=4 tabstop=8 autoindent cindent expandtab: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -65,26 +66,26 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
              void *aPlatformData);
 
 typedef struct {
-    /*
-     * The name of the shared library or executable containing an
-     * address and the address's offset within that library, or empty
-     * string and zero if unknown.
-     */
-    char library[256];
-    ptrdiff_t loffset;
-    /*
-     * The name of the file name and line number of the code
-     * corresponding to the address, or empty string and zero if
-     * unknown.
-     */
-    char filename[256];
-    unsigned long lineno;
-    /*
-     * The name of the function containing an address and the address's
-     * offset within that function, or empty string and zero if unknown.
-     */
-    char function[256];
-    ptrdiff_t foffset;
+  /*
+   * The name of the shared library or executable containing an
+   * address and the address's offset within that library, or empty
+   * string and zero if unknown.
+   */
+  char library[256];
+  ptrdiff_t loffset;
+  /*
+   * The name of the file name and line number of the code
+   * corresponding to the address, or empty string and zero if
+   * unknown.
+   */
+  char filename[256];
+  unsigned long lineno;
+  /*
+   * The name of the function containing an address and the address's
+   * offset within that function, or empty string and zero if unknown.
+   */
+  char function[256];
+  ptrdiff_t foffset;
 } nsCodeAddressDetails;
 
 /**

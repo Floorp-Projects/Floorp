@@ -370,6 +370,9 @@ pref("content.ime.strict_policy", true);
 // $ adb shell start
 pref("browser.dom.window.dump.enabled", false);
 
+// Turn on the CSP 1.0 parser for Content Security Policy headers
+pref("security.csp.speccompliant", true);
+
 // Default Content Security Policy to apply to privileged and certified apps
 pref("security.apps.privileged.CSP.default", "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'");
 // If you change this CSP, make sure to update the fast path in nsCSPService.cpp
@@ -686,6 +689,19 @@ pref("hal.processPriorityManager.gonk.BACKGROUND.Nice", 18);
 // Processes get this niceness when they have low CPU priority.
 pref("hal.processPriorityManager.gonk.LowCPUNice", 18);
 
+// By default the compositor thread on gonk runs without real-time priority.  RT
+// priority can be enabled by setting this pref to a value between 1 and 99.
+// Note that audio processing currently runs at RT priority 2 or 3 at most.
+//
+// If RT priority is disabled, then the compositor nice value is used.  The
+// code will default to ANDROID_PRIORITY_URGENT_DISPLAY which is -8.  Per gfx
+// request we are keeping the compositor at nice level 0 until we can complete
+// the investigation in bug 982972.
+//
+// Do not change these values without gfx team review.
+pref("hal.gonk.COMPOSITOR.rt_priority", 0);
+pref("hal.gonk.COMPOSITOR.nice", 0);
+
 // Fire a memory pressure event when the system has less than Xmb of memory
 // remaining.  You should probably set this just above Y.KillUnderKB for
 // the highest priority class Y that you want to make an effort to keep alive.
@@ -755,7 +771,11 @@ pref("network.activity.blipIntervalMilliseconds", 250);
 // can be flipped to false.
 pref("network.gonk.manage-offline-status", true);
 
+// On Firefox Mulet, we can't enable shared JSM scope
+// as it breaks most Firefox JSMs (see bug 961777)
+#ifndef MOZ_MULET
 pref("jsloader.reuseGlobal", true);
+#endif
 
 // Enable font inflation for browser tab content.
 pref("font.size.inflation.minTwips", 120);
