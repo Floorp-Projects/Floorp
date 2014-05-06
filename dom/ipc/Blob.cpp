@@ -1821,10 +1821,15 @@ BlobParent::Create(ContentParent* aManager,
 
   const ChildBlobConstructorParams& blobParams = aParams.blobParams();
 
+  MOZ_ASSERT(blobParams.type() !=
+             ChildBlobConstructorParams::TMysteryBlobConstructorParams);
+
   switch (blobParams.type()) {
+    case ChildBlobConstructorParams::TMysteryBlobConstructorParams:
+      return nullptr;
+
     case ChildBlobConstructorParams::TNormalBlobConstructorParams:
     case ChildBlobConstructorParams::TFileBlobConstructorParams:
-    case ChildBlobConstructorParams::TMysteryBlobConstructorParams:
       return new BlobParent(aManager, aParams);
 
     case ChildBlobConstructorParams::TSlicedBlobConstructorParams: {
