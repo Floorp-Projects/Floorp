@@ -27,6 +27,26 @@ NS_IMPL_ISUPPORTS_INHERITED(nsDOMMultipartFile, nsDOMFile,
 NS_IMETHODIMP
 nsDOMMultipartFile::GetSize(uint64_t* aLength)
 {
+  if (mLength == UINT64_MAX) {
+    CheckedUint64 length = 0;
+  
+    uint32_t i;
+    uint32_t len = mBlobs.Length();
+    for (i = 0; i < len; i++) {
+      nsIDOMBlob* blob = mBlobs.ElementAt(i).get();
+      uint64_t l = 0;
+  
+      nsresult rv = blob->GetSize(&l);
+      NS_ENSURE_SUCCESS(rv, rv);
+  
+      length += l;
+    }
+  
+    NS_ENSURE_TRUE(length.isValid(), NS_ERROR_FAILURE);
+
+    mLength = length.value();
+  }
+
   *aLength = mLength;
   return NS_OK;
 }
@@ -194,8 +214,6 @@ nsDOMMultipartFile::InitBlob(JSContext* aCx,
     return ParseBlobArrayArgument(aCx, aArgv[0], nativeEOL, aUnwrapFunc);
   }
 
-  SetLengthAndModifiedDate();
-
   return NS_OK;
 }
 
@@ -261,46 +279,7 @@ nsDOMMultipartFile::ParseBlobArrayArgument(JSContext* aCx, JS::Value& aValue,
   }
 
   mBlobs = blobSet.GetBlobs();
-
-  SetLengthAndModifiedDate();
-
   return NS_OK;
-}
-
-void
-nsDOMMultipartFile::SetLengthAndModifiedDate()
-{
-  MOZ_ASSERT(mLength == UINT64_MAX);
-  MOZ_ASSERT(mLastModificationDate == UINT64_MAX);
-
-  uint64_t totalLength = 0;
-
-  for (uint32_t index = 0, count = mBlobs.Length(); index < count; index++) {
-    nsCOMPtr<nsIDOMBlob>& blob = mBlobs[index];
-
-#ifdef DEBUG
-    {
-      // XXX This is only safe so long as all blob implementations in our tree
-      //     inherit nsDOMFileBase.
-      const auto* blobBase = static_cast<nsDOMFileBase*>(blob.get());
-
-      MOZ_ASSERT(!blobBase->IsSizeUnknown());
-      MOZ_ASSERT(!blobBase->IsDateUnknown());
-    }
-#endif
-
-    uint64_t subBlobLength;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blob->GetSize(&subBlobLength)));
-
-    MOZ_ASSERT(UINT64_MAX - subBlobLength >= totalLength);
-    totalLength += subBlobLength;
-  }
-
-  mLength = totalLength;
-
-  if (mIsFile) {
-    mLastModificationDate = PR_Now();
-  }
 }
 
 NS_IMETHODIMP
@@ -395,18 +374,7 @@ nsDOMMultipartFile::InitChromeFile(JSContext* aCx,
       file->GetLeafName(mName);
     }
 
-    nsRefPtr<nsDOMFileFile> domFile = new nsDOMFileFile(file);
-
-    // Pre-cache size.
-    uint64_t unused;
-    rv = domFile->GetSize(&unused);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Pre-cache modified date.
-    rv = domFile->GetMozLastModifiedDate(&unused);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    blob = domFile.forget();
+    blob = new nsDOMFileFile(file);
   }
 
   // XXXkhuey this is terrible
@@ -417,8 +385,6 @@ nsDOMMultipartFile::InitChromeFile(JSContext* aCx,
   BlobSet blobSet;
   blobSet.AppendBlob(blob);
   mBlobs = blobSet.GetBlobs();
-
-  SetLengthAndModifiedDate();
 
   return NS_OK;
 }
