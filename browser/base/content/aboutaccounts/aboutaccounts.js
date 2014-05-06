@@ -344,6 +344,14 @@ function showManage() {
 document.addEventListener("DOMContentLoaded", function onload() {
   document.removeEventListener("DOMContentLoaded", onload, true);
   init();
+  var buttonGetStarted = document.getElementById('buttonGetStarted');
+  buttonGetStarted.addEventListener('click', getStarted);
+
+  var oldsync = document.getElementById('oldsync');
+  oldsync.addEventListener('click', handleOldSync);
+
+  var buttonOpenPrefs = document.getElementById('buttonOpenPrefs')
+  buttonOpenPrefs.addEventListener('click', openPrefs);
 }, true);
 
 function initObservers() {

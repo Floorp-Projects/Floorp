@@ -10,6 +10,9 @@
   locale/@AB_CD@/browser/aboutAddons.dtd          (%chrome/aboutAddons.dtd)
   locale/@AB_CD@/browser/aboutAddons.properties   (%chrome/aboutAddons.properties)
   locale/@AB_CD@/browser/aboutApps.dtd            (%chrome/aboutApps.dtd)
+#ifdef MOZ_DEVICES
+  locale/@AB_CD@/browser/aboutDevices.dtd         (%chrome/aboutDevices.dtd)
+#endif
   locale/@AB_CD@/browser/aboutCertError.dtd       (%chrome/aboutCertError.dtd)
   locale/@AB_CD@/browser/aboutDownloads.dtd       (%chrome/aboutDownloads.dtd)
   locale/@AB_CD@/browser/aboutDownloads.properties (%chrome/aboutDownloads.properties)
