@@ -7,6 +7,7 @@
 #include "CacheStorageService.h"
 #include "CacheObserver.h"
 #include "CacheFileUtils.h"
+#include "CacheIndex.h"
 
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -305,23 +306,34 @@ bool CacheEntry::Load(bool aTruncate, bool aPriority)
 
   MOZ_ASSERT(!mFile);
 
+  nsresult rv;
+
+  nsAutoCString fileKey;
+  rv = HashingKeyWithStorage(fileKey);
+
+  if (!aTruncate && NS_SUCCEEDED(rv)) {
+    // Check the index right now to know we have or have not the entry
+    // as soon as possible.
+    CacheIndex::EntryStatus status;
+    if (NS_SUCCEEDED(CacheIndex::HasEntry(fileKey, &status)) &&
+        status == CacheIndex::DOES_NOT_EXIST) {
+      LOG(("  entry doesn't exist according information from the index, truncating"));
+      aTruncate = true;
+    }
+  }
+
+  mFile = new CacheFile();
+
+  BackgroundOp(Ops::REGISTER);
+
   bool directLoad = aTruncate || !mUseDisk;
   if (directLoad)
     mFileStatus = NS_OK;
   else
     mLoadStart = TimeStamp::Now();
 
-  mFile = new CacheFile();
-
-  BackgroundOp(Ops::REGISTER);
-
   {
     mozilla::MutexAutoUnlock unlock(mLock);
-
-    nsresult rv;
-
-    nsAutoCString fileKey;
-    rv = HashingKeyWithStorage(fileKey);
 
     LOG(("  performing load, file=%p", mFile.get()));
     if (NS_SUCCEEDED(rv)) {
@@ -847,8 +859,6 @@ bool CacheEntry::IsReferenced() const
 
 bool CacheEntry::IsFileDoomed()
 {
-  mozilla::MutexAutoLock lock(mLock);
-
   if (NS_SUCCEEDED(mFileStatus)) {
     return mFile->IsDoomed();
   }

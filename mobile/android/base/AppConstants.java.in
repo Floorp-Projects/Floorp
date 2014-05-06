@@ -164,4 +164,14 @@ public class AppConstants {
 #else
     false;
 #endif
+
+    // Official corresponds, roughly, to whether this build is performed on
+    // Mozilla's continuous integration infrastructure. You should disable
+    // developer-only functionality when this flag is set.
+    public static final boolean MOZILLA_OFFICIAL =
+#ifdef MOZILLA_OFFICIAL
+    true;
+#else
+    false;
+#endif
 }

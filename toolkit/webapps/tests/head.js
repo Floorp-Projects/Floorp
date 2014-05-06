@@ -77,3 +77,43 @@ function setDryRunPref() {
     }
   });
 }
+
+function buildAppPackage(aManifest) {
+  let zipFile = getFile(OS.Constants.Path.profileDir, "sample.zip");
+
+  let zipWriter = Cc["@mozilla.org/zipwriter;1"].createInstance(Ci.nsIZipWriter);
+  zipWriter.open(zipFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
+  zipWriter.addEntryFile("index.html",
+                         Ci.nsIZipWriter.COMPRESSION_NONE,
+                         getFile(getTestFilePath("data/app/index.html")),
+                         false);
+
+  var manStream = Cc["@mozilla.org/io/string-input-stream;1"].
+                  createInstance(Ci.nsIStringInputStream);
+  manStream.setData(aManifest, aManifest.length);
+  zipWriter.addEntryStream("manifest.webapp", Date.now(),
+                           Ci.nsIZipWriter.COMPRESSION_NONE,
+                           manStream, false);
+  zipWriter.close();
+
+  return zipFile.path;
+}
+
+function wasAppSJSAccessed() {
+  let deferred = Promise.defer();
+
+  var xhr = new XMLHttpRequest();
+
+  xhr.addEventListener("load", function() {
+    let ret = (xhr.responseText == "done") ? true : false;
+    deferred.resolve(ret);
+  });
+
+  xhr.addEventListener("error", aError => deferred.reject(aError));
+  xhr.addEventListener("abort", aError => deferred.reject(aError));
+
+  xhr.open('GET', 'http://test/chrome/toolkit/webapps/tests/app.sjs?testreq', true);
+  xhr.send();
+
+  return deferred.promise;
+}

@@ -68,7 +68,7 @@ GetTempDir(nsIFile** aTempDir)
   if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_WARN_IF(NS_FAILED(rv)))
     return rv;
 #endif
- 
+
   tmpFile.forget(aTempDir);
 
   return NS_OK;
@@ -106,7 +106,7 @@ NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc)
   rv = tmpFile->OpenNSPRFileDesc(PR_RDWR | nsIFile::DELETE_ON_CLOSE,
                                  PR_IRWXU, aOutFileDesc);
 
-  return rv;    
+  return rv;
 }
 
 #ifdef XP_WIN
@@ -157,8 +157,8 @@ public:
     if (NS_WARN_IF(!mTimer))
       return NS_ERROR_FAILURE;
     nsresult rv = mTimer->Init(this,
-                         SCHEDULE_TIMEOUT_MS,
-                         nsITimer::TYPE_ONE_SHOT);
+                               SCHEDULE_TIMEOUT_MS,
+                               nsITimer::TYPE_ONE_SHOT);
     if (NS_WARN_IF(NS_FAILED(rv)))
       return rv;
 
@@ -175,12 +175,12 @@ public:
     if (mTimer) {
       mTimer->Cancel();
       mTimer = nullptr;
-    }    
+    }
     // Remove idle service observer.
     nsCOMPtr<nsIIdleService> idleSvc =
       do_GetService("@mozilla.org/widget/idleservice;1");
     if (idleSvc) {
-      idleSvc->RemoveIdleObserver(this, TEMP_FILE_IDLE_TIME_S);    
+      idleSvc->RemoveIdleObserver(this, TEMP_FILE_IDLE_TIME_S);
     }
     // Remove shutdown observer.
     nsCOMPtr<nsIObserverService> obsSrv = services::GetObserverService();
@@ -188,7 +188,7 @@ public:
       obsSrv->RemoveObserver(this, XPCOM_SHUTDOWN_TOPIC);
     }
   }
-  
+
   NS_IMETHODIMP Observe(nsISupports *aSubject,
                         const char *aTopic,
                         const char16_t *aData)
@@ -209,7 +209,7 @@ public:
   }
 
   nsresult RegisterIdleObserver() {
-    // Add this as an idle observer. When we've been idle for 
+    // Add this as an idle observer. When we've been idle for
     // TEMP_FILE_IDLE_TIME_S seconds, we'll get a notification, and we'll then
     // try to delete any stray temp files.
     nsCOMPtr<nsIIdleService> idleSvc =

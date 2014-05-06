@@ -1157,10 +1157,6 @@ ContentParent::OnChannelConnected(int32_t pid)
         }
 #endif
     }
-
-    // Set a reply timeout. The only time the parent process will actually
-    // timeout is through urgent messages (which are used by CPOWs).
-    SetReplyTimeoutMs(Preferences::GetInt("dom.ipc.cpow.timeout", 3000));
 }
 
 void

@@ -820,9 +820,7 @@ public:
   }
 
   ~gfxContextAutoSaveRestore() {
-    if (mContext) {
-      mContext->Restore();
-    }
+    Restore();
   }
 
   void SetContext(gfxContext *aContext) {
@@ -831,14 +829,19 @@ public:
     mContext->Save();    
   }
 
-  void Reset(gfxContext *aContext) {
-    // Do the equivalent of destroying and re-creating this object.
-    NS_PRECONDITION(aContext, "must provide a context");
+  void EnsureSaved(gfxContext *aContext) {
+    MOZ_ASSERT(!mContext || mContext == aContext, "wrong context");
+    if (!mContext) {
+        mContext = aContext;
+        mContext->Save();
+    }
+  }
+
+  void Restore() {
     if (mContext) {
       mContext->Restore();
+      mContext = nullptr;
     }
-    mContext = aContext;
-    mContext->Save();
   }
 
 private:

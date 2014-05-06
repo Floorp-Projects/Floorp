@@ -336,6 +336,7 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
     }
   });
 
+  // The promise resolves with the manager window, so it is passed to the callback
   return log_callback(p, aCallback);
 }
 
@@ -347,13 +348,19 @@ function close_manager(aManagerWindow, aCallback, aLongerTimeout) {
     is(aManagerWindow.location, MANAGER_URI, "Should be closing window with correct URI");
 
     aManagerWindow.addEventListener("unload", function() {
-      info("Manager window unloaded");
-      this.removeEventListener("unload", arguments.callee, false);
-      resolve();
+      try {
+        dump("Manager window unload handler");
+        this.removeEventListener("unload", arguments.callee, false);
+        resolve();
+      } catch(e) {
+        reject(e);
+      }
     }, false);
   });
 
+  info("Telling manager window to close");
   aManagerWindow.close();
+  info("Manager window close() call returned");
 
   return log_callback(p, aCallback);
 }

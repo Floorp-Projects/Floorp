@@ -244,6 +244,23 @@ uint16_t gfxFontEntry::GetUVSGlyph(uint32_t aCh, uint32_t aVS)
     return 0;
 }
 
+bool gfxFontEntry::SupportsScriptInGSUB(const hb_tag_t* aScriptTags)
+{
+    hb_face_t *face = GetHBFace();
+    if (!face) {
+        return false;
+    }
+
+    unsigned int index;
+    hb_tag_t     chosenScript;
+    bool found =
+        hb_ot_layout_table_choose_script(face, TRUETYPE_TAG('G','S','U','B'),
+                                         aScriptTags, &index, &chosenScript);
+    hb_face_destroy(face);
+
+    return found && chosenScript != TRUETYPE_TAG('D','F','L','T');
+}
+
 nsresult gfxFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 {
     NS_ASSERTION(false, "using default no-op implementation of ReadCMAP");
@@ -842,7 +859,7 @@ gfxFontEntry::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
     }
     if (mFontTableCache) {
         aSizes->mFontTableCacheSize +=
-            mFontTableCache->SizeOfExcludingThis(
+            mFontTableCache->SizeOfIncludingThis(
                 FontTableHashEntry::SizeOfEntryExcludingThis,
                 aMallocSizeOf);
     }
@@ -4379,7 +4396,7 @@ gfxFont::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
     }
     if (mWordCache) {
         aSizes->mShapedWords +=
-            mWordCache->SizeOfExcludingThis(WordCacheEntrySizeOfExcludingThis,
+            mWordCache->SizeOfIncludingThis(WordCacheEntrySizeOfExcludingThis,
                                             aMallocSizeOf);
     }
 }

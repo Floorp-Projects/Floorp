@@ -56,3 +56,5 @@ pref("security.OCSP.require", false);
 pref("security.OCSP.GET.enabled", false);
 
 pref("security.use_mozillapkix_verification", true);
+
+pref("security.cert_pinning.enforcement_level", 0);
