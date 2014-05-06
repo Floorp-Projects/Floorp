@@ -25,6 +25,7 @@
 #include "mozilla/layers/PImageBridgeParent.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
+#include "mozilla/unused.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT, etc
 #include "nsISupportsImpl.h"            // for ImageBridgeParent::Release, etc
@@ -184,6 +185,37 @@ bool
 ImageBridgeParent::DeallocPTextureParent(PTextureParent* actor)
 {
   return TextureHost::DestroyIPDLActor(actor);
+}
+
+void
+ImageBridgeParent::SendFenceHandle(AsyncTransactionTracker* aTracker,
+                                   PTextureParent* aTexture,
+                                   const FenceHandle& aFence)
+{
+  HoldUntilComplete(aTracker);
+  mozilla::unused << SendParentAsyncMessage(OpDeliverFence(aTracker->GetId(),
+                                        aTexture, nullptr,
+                                        aFence));
+}
+
+bool
+ImageBridgeParent::RecvChildAsyncMessages(const InfallibleTArray<AsyncChildMessageData>& aMessages)
+{
+  for (AsyncChildMessageArray::index_type i = 0; i < aMessages.Length(); ++i) {
+    const AsyncChildMessageData& message = aMessages[i];
+
+    switch (message.type()) {
+      case AsyncChildMessageData::TOpReplyDeliverFence: {
+        const OpReplyDeliverFence& op = message.get_OpReplyDeliverFence();
+        TransactionCompleteted(op.transactionId());
+        break;
+      }
+      default:
+        NS_ERROR("unknown AsyncChildMessageData type");
+        return false;
+    }
+  }
+  return true;
 }
 
 MessageLoop * ImageBridgeParent::GetMessageLoop() {

@@ -43,6 +43,7 @@ class LayerTransactionParent : public PLayerTransactionParent,
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
   typedef InfallibleTArray<Edit> EditArray;
   typedef InfallibleTArray<EditReply> EditReplyArray;
+  typedef InfallibleTArray<AsyncChildMessageData> AsyncChildMessageArray;
 
 public:
   LayerTransactionParent(LayerManagerComposite* aManager,
@@ -79,9 +80,11 @@ public:
 
   virtual bool IsSameProcess() const MOZ_OVERRIDE;
 
+  // CompositableParentManager
+  virtual void SendFenceHandle(AsyncTransactionTracker* aTracker,
+                               PTextureParent* aTexture,
+                               const FenceHandle& aFence) MOZ_OVERRIDE;
 protected:
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
-
   virtual bool RecvUpdate(const EditArray& cset,
                           const TargetConfig& targetConfig,
                           const bool& isFirstPaint,
@@ -114,6 +117,11 @@ protected:
   virtual PTextureParent* AllocPTextureParent(const SurfaceDescriptor& aSharedData,
                                               const TextureFlags& aFlags) MOZ_OVERRIDE;
   virtual bool DeallocPTextureParent(PTextureParent* actor) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvChildAsyncMessages(const InfallibleTArray<AsyncChildMessageData>& aMessages) MOZ_OVERRIDE;
+
+  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   bool Attach(ShadowLayerParent* aLayerParent,
               CompositableHost* aCompositable,

@@ -10,6 +10,7 @@
 
 #include <vector>                       // for vector
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/LayersMessages.h"  // for EditReply, etc
 
@@ -17,6 +18,7 @@ namespace mozilla {
 namespace layers {
 
 class CompositableHost;
+class PTextureChild;
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 
@@ -25,7 +27,13 @@ typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 // so both manager protocols implement this and we keep a reference to them
 // through this interface.
 class CompositableParentManager : public ISurfaceAllocator
+                                , public AsyncTransactionTrackersHolder
 {
+public:
+  virtual void SendFenceHandle(AsyncTransactionTracker* aTracker,
+                               PTextureParent* aTexture,
+                               const FenceHandle& aFence) = 0;
+
 protected:
   /**
    * Handle the IPDL messages that affect PCompositable actors.
