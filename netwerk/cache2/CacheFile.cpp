@@ -8,7 +8,6 @@
 #include "CacheFileChunk.h"
 #include "CacheFileInputStream.h"
 #include "CacheFileOutputStream.h"
-#include "CacheIndex.h"
 #include "nsThreadUtils.h"
 #include "mozilla/DebugOnly.h"
 #include <algorithm>
@@ -237,33 +236,8 @@ CacheFile::Init(const nsACString &aKey,
       mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mKey);
       mReady = true;
       mDataSize = mMetadata->Offset();
-    }
-    else {
+    } else {
       flags = CacheFileIOManager::CREATE;
-
-      // Have a look into index and change to CREATE_NEW when we are sure
-      // that the entry does not exist.
-      CacheIndex::EntryStatus status;
-      rv = CacheIndex::HasEntry(mKey, &status);
-      if (status == CacheIndex::DOES_NOT_EXIST) {
-        LOG(("CacheFile::Init() - Forcing CREATE_NEW flag since we don't have"
-             " this entry according to index"));
-        flags = CacheFileIOManager::CREATE_NEW;
-
-        // make sure we can use this entry immediately
-        mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mKey);
-        mReady = true;
-        mDataSize = mMetadata->Offset();
-
-        // Notify callback now and don't store it in mListener, no further
-        // operation can change the result.
-        nsRefPtr<NotifyCacheFileListenerEvent> ev;
-        ev = new NotifyCacheFileListenerEvent(aCallback, NS_OK, true);
-        rv = NS_DispatchToCurrentThread(ev);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        aCallback = nullptr;
-      }
     }
 
     if (aPriority)
@@ -1554,8 +1528,6 @@ CacheFile::DataSize(int64_t* aSize)
 bool
 CacheFile::IsDoomed()
 {
-  CacheFileAutoLock lock(this);
-
   if (!mHandle)
     return false;
 
