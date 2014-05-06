@@ -2409,6 +2409,14 @@ Navigator::HasPermissionSettingsSupport(JSContext* /* unused */, JSObject* aGlob
 }
 
 /* static */
+bool
+Navigator::HasNetworkStatsSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return CheckPermission(win, "networkstats-manage");
+}
+
+/* static */
 already_AddRefed<nsPIDOMWindow>
 Navigator::GetWindowFromGlobal(JSObject* aGlobal)
 {
