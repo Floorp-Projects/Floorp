@@ -77,7 +77,6 @@ var testCases = [
                                              { type: 'text/plain' })
                             }
                 },
-    todo: true,
     fileName: 'test6.txt'}
 ];
 
@@ -96,12 +95,8 @@ function handleMessage(data) {
       fileInput.click();
       break;
     case 'file-picked-posted':
-      if (activeTestCase.todo) {
-        todo_is(fileInput.value, activeTestCase.fileName,
-                'DOMFile should be able to send through message.');
-      } else {
-        is(fileInput.value, activeTestCase.fileName);
-      }
+      is(fileInput.value, activeTestCase.fileName,
+         'DOMFile should be able to send through message.');
       processTestCase();
       break;
   }
