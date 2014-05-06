@@ -243,6 +243,13 @@ public:
    */
   void SimplifyOutward (uint32_t aMaxRects);
   /**
+   * Simplify the region by adding at most aThreshold area between spans of
+   * rects.  The simplified region will be a superset of the original region.
+   * The simplified region's bounding box will be the same as for the current
+   * region.
+   */
+  void SimplifyOutwardByArea(uint32_t aThreshold);
+  /**
    * Make sure the region has at most aMaxRects by removing area from
    * it if necessary. The simplified region will be a subset of the
    * original region.
@@ -538,6 +545,10 @@ public:
   void SimplifyOutward (uint32_t aMaxRects)
   {
     mImpl.SimplifyOutward (aMaxRects);
+  }
+  void SimplifyOutwardByArea (uint32_t aThreshold)
+  {
+    mImpl.SimplifyOutwardByArea (aThreshold);
   }
   /**
    * Make sure the region has at most aMaxRects by removing area from
