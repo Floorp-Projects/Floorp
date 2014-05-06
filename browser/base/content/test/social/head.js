@@ -514,23 +514,19 @@ function resizeWindowToChatAreaWidth(desired, cb, count = 0) {
     return;
   }
   function resize_handler(event) {
-    // for whatever reason, sometimes we get called twice for different event
-    // phases, only handle one of them.
-    if (event.eventPhase != event.AT_TARGET)
-      return;
     // we did resize - but did we get far enough to be able to continue?
     let newSize = window.SocialChatBar.chatbar.getBoundingClientRect().width;
     let sizedOk = widthDeltaCloseEnough(newSize - desired);
     if (!sizedOk)
       return;
-    window.removeEventListener("resize", resize_handler);
+    window.removeEventListener("resize", resize_handler, true);
     info(count + ": resized window width is " + newSize);
     executeSoon(function() {
       cb(sizedOk);
     });
   }
   // Otherwise we request resize and expect a resize event
-  window.addEventListener("resize", resize_handler);
+  window.addEventListener("resize", resize_handler, true);
   window.resizeBy(delta, 0);
 }
 
