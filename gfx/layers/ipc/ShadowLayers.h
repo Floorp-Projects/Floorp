@@ -299,6 +299,14 @@ public:
    */
   void SetShadowManager(PLayerTransactionChild* aShadowManager);
 
+  void StopReceiveAsyncParentMessge();
+
+  void ClearCachedResources();
+
+  void Composite();
+
+  void SendPendingAsyncMessge();
+
   /**
    * True if this is forwarding to a LayerManagerComposite.
    */
