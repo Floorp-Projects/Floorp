@@ -658,7 +658,7 @@ public:
   virtual void ResetScrollPositionForLayerPixelAlignment() MOZ_OVERRIDE {
     mHelper.ResetScrollPositionForLayerPixelAlignment();
   }
-  virtual bool DidHistoryRestore() MOZ_OVERRIDE {
+  virtual bool DidHistoryRestore() const MOZ_OVERRIDE {
     return mHelper.mDidHistoryRestore;
   }
   virtual void ClearDidHistoryRestore() MOZ_OVERRIDE {
@@ -972,7 +972,7 @@ public:
   virtual void ResetScrollPositionForLayerPixelAlignment() MOZ_OVERRIDE {
     mHelper.ResetScrollPositionForLayerPixelAlignment();
   }
-  virtual bool DidHistoryRestore() MOZ_OVERRIDE {
+  virtual bool DidHistoryRestore() const MOZ_OVERRIDE {
     return mHelper.mDidHistoryRestore;
   }
   virtual void ClearDidHistoryRestore() MOZ_OVERRIDE {

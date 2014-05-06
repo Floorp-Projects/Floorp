@@ -4802,22 +4802,26 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
     domProp: "gridAutoFlow",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "none" ],
+    initial_values: [ "row" ],
     other_values: [
       "column",
-      "row",
       "column dense",
       "row dense",
       "dense column",
       "dense row",
+      "stack column",
+      "stack row",
+      "stack",
     ],
     invalid_values: [
       "",
       "auto",
+      "none",
       "10px",
       "dense",
-      "none row",
-      "none dense",
+      "stack dense",
+      "stack stack",
+      "stack row stack",
       "column row",
       "dense row dense",
     ]
@@ -5046,12 +5050,9 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
     initial_values: [
       "none",
       "none / none",
-      "none auto",
-      "none auto / auto",
     ],
     other_values: [
-      "row",
-      "none 40px",
+      "stack 40px",
       "column dense auto",
       "dense row minmax(min-content, 2fr)",
       "row 40px / 100px",
@@ -5067,6 +5068,7 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
     ].concat(
       gCSSProperties["grid-template"].invalid_values,
       gCSSProperties["grid-auto-flow"].invalid_values
+        .filter((v) => v != 'none')
     )
   };
 
@@ -5144,46 +5146,21 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
     invalid_values: gridLineInvalidValues
   };
 
-  var gridAutoPositionOtherValues = [];
-  gridLineOtherValues.concat([ "auto" ]).forEach(function(val) {
-    gridAutoPositionOtherValues.push(" foo / " + val);
-    gridAutoPositionOtherValues.push(val + "/2");
-  });
-  var gridAutoPositionInvalidValues = [
-    "foo",
-    "foo, bar",
-    "foo / bar / baz",
-  ];
-  gridLineInvalidValues.forEach(function(val) {
-    gridAutoPositionInvalidValues.push("span 3 / " + val);
-    gridAutoPositionInvalidValues.push(val + " / foo");
-  });
-  gCSSProperties["grid-auto-position"] = {
-    domProp: "gridAutoPosition",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "1 / 1" ],
-    other_values: gridAutoPositionOtherValues,
-    invalid_values: gridAutoPositionInvalidValues
-  };
-
   // The grid-column and grid-row shorthands take values of the form
   //   <grid-line> [ / <grid-line> ]?
-  // which is equivalent to:
-  //   <grid-line> | [ <grid-line> / <grid-line> ]
-  // which is equivalent to:
-  //   <grid-line> | <'grid-auto-position'>
-  var gridColumnRowOtherValues = [].concat(
-    gridLineOtherValues,
-    gridAutoPositionOtherValues);
-  var gridColumnRowInvalidValues = [].concat(
-    gridLineInvalidValues,
-    gridAutoPositionInvalidValues);
-  // A single <grid-line> is invalid for grid-auto-position,
-  // but not for grid-column or grid-row:
-  gridColumnRowInvalidValues.splice(
-    gridColumnRowInvalidValues.indexOf("foo"),
-    1);
+  var gridColumnRowOtherValues = [].concat(gridLineOtherValues);
+  gridLineOtherValues.concat([ "auto" ]).forEach(function(val) {
+    gridColumnRowOtherValues.push(" foo / " + val);
+    gridColumnRowOtherValues.push(val + "/2");
+  });
+  var gridColumnRowInvalidValues = [
+    "foo, bar",
+    "foo / bar / baz",
+  ].concat(gridLineInvalidValues);
+  gridLineInvalidValues.forEach(function(val) {
+    gridColumnRowInvalidValues.push("span 3 / " + val);
+    gridColumnRowInvalidValues.push(val + " / foo");
+  });
   gCSSProperties["grid-column"] = {
     domProp: "gridColumn",
     inherited: false,

@@ -1243,7 +1243,7 @@ nsStylePosition::nsStylePosition(void)
   mGridAutoRowsMax.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT,
                                eStyleUnit_Enumerated);
 
-  mGridAutoFlow = NS_STYLE_GRID_AUTO_FLOW_NONE;
+  mGridAutoFlow = NS_STYLE_GRID_AUTO_FLOW_ROW;
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
   mAlignContent = NS_STYLE_ALIGN_CONTENT_STRETCH;
   mAlignItems = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
@@ -1255,8 +1255,6 @@ nsStylePosition::nsStylePosition(void)
   mFlexGrow = 0.0f;
   mFlexShrink = 1.0f;
   mZIndex.SetAutoValue();
-  mGridAutoPositionColumn.SetToInteger(1);
-  mGridAutoPositionRow.SetToInteger(1);
   // Other members get their default constructors
   // which initialize them to representations of their respective initial value.
   // mGridTemplateAreas: nullptr for 'none'
@@ -1273,8 +1271,6 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   : mGridTemplateColumns(aSource.mGridTemplateColumns)
   , mGridTemplateRows(aSource.mGridTemplateRows)
   , mGridTemplateAreas(aSource.mGridTemplateAreas)
-  , mGridAutoPositionColumn(aSource.mGridAutoPositionColumn)
-  , mGridAutoPositionRow(aSource.mGridAutoPositionRow)
   , mGridColumnStart(aSource.mGridColumnStart)
   , mGridColumnEnd(aSource.mGridColumnEnd)
   , mGridRowStart(aSource.mGridRowStart)
@@ -1292,8 +1288,6 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
                 sizeof(mGridTemplateColumns) +
                 sizeof(mGridTemplateRows) +
                 sizeof(mGridTemplateAreas) +
-                sizeof(mGridAutoPositionColumn) +
-                sizeof(mGridAutoPositionRow) +
                 sizeof(mGridColumnStart) +
                 sizeof(mGridColumnEnd) +
                 sizeof(mGridRowStart) +

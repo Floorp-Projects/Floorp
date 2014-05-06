@@ -2398,7 +2398,7 @@ nsComputedDOMStyle::DoGetGridAutoFlow()
   nsAutoString str;
   nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_grid_auto_flow,
                                      StylePosition()->mGridAutoFlow,
-                                     NS_STYLE_GRID_AUTO_FLOW_NONE,
+                                     NS_STYLE_GRID_AUTO_FLOW_STACK,
                                      NS_STYLE_GRID_AUTO_FLOW_DENSE,
                                      str);
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
@@ -2465,24 +2465,6 @@ nsComputedDOMStyle::GetGridLine(const nsStyleGridLine& aGridLine)
 
   NS_ASSERTION(valueList->Length() > 0,
                "Should have appended at least one value");
-  return valueList;
-}
-
-CSSValue*
-nsComputedDOMStyle::DoGetGridAutoPosition()
-{
-  nsDOMCSSValueList* valueList = GetROCSSValueList(false);
-
-  valueList->AppendCSSValue(
-    GetGridLine(StylePosition()->mGridAutoPositionColumn));
-
-  nsROCSSPrimitiveValue* slash = new nsROCSSPrimitiveValue;
-  slash->SetString(NS_LITERAL_STRING("/"));
-  valueList->AppendCSSValue(slash);
-
-  valueList->AppendCSSValue(
-    GetGridLine(StylePosition()->mGridAutoPositionRow));
-
   return valueList;
 }
 

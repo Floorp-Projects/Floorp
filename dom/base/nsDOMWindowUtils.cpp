@@ -577,6 +577,23 @@ nsDOMWindowUtils::GetResolution(float* aXResolution, float* aYResolution)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetIsHistoryRestored(bool* aIsHistoryRestored) {
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  const nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+  *aIsHistoryRestored = sf && sf->DidHistoryRestore();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SetIsFirstPaint(bool aIsFirstPaint)
 {
   if (!nsContentUtils::IsCallerChrome()) {
