@@ -284,12 +284,8 @@ add_task(function testDeactivateExperiment() {
   Assert.equal(addons[0].id, "experiment-1", "Add-on ID matches expected.");
 
   // Verify the UI looks sane.
-  // TODO remove the pane cycle once the UI refreshes automatically.
-  yield gCategoryUtilities.openType("extension");
 
   Assert.ok(gCategoryUtilities.isTypeVisible("experiment"), "Experiment tab visible.");
-  yield gCategoryUtilities.openType("experiment");
-
   let item = get_addon_element(gManagerWindow, "experiment-1");
   Assert.ok(item, "Got add-on element.");
   Assert.ok(!item.active, "Element should not be active.");
