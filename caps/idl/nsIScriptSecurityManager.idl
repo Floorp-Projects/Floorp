@@ -11,7 +11,7 @@ interface nsIChannel;
 interface nsIDocShell;
 interface nsIDomainPolicy;
 
-[scriptable, uuid(4c087cc3-e0cc-4ec3-88df-8d68f3023b45)]
+[scriptable, uuid(176f2aed-fb78-4420-b372-07ab2c4c04c3)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     /**
@@ -192,14 +192,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
       return isSystem;
     }
 %}
-
-    /**
-     * Same as getSubjectPrincipal(), only faster. cx must *never* be
-     * passed null, and it must be the context on the top of the
-     * context stack. Does *not* reference count the returned
-     * principal.
-     */
-    [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipal(in JSContextPtr cx);
 
     const unsigned long NO_APP_ID = 0;
     const unsigned long UNKNOWN_APP_ID = 4294967295; // UINT32_MAX
