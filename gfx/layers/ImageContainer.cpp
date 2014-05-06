@@ -613,6 +613,10 @@ CairoImage::~CairoImage()
 TextureClient*
 CairoImage::GetTextureClient(CompositableClient *aClient)
 {
+  if (!aClient) {
+    return nullptr;
+  }
+
   CompositableForwarder* forwarder = aClient->GetForwarder();
   RefPtr<TextureClient> textureClient = mTextureClients.Get(forwarder->GetSerial());
   if (textureClient) {
@@ -621,12 +625,18 @@ CairoImage::GetTextureClient(CompositableClient *aClient)
 
   RefPtr<SourceSurface> surface = GetAsSourceSurface();
   MOZ_ASSERT(surface);
+  if (!surface) {
+    return nullptr;
+  }
 
   // gfx::BackendType::NONE means default to content backend
   textureClient = aClient->CreateTextureClientForDrawing(surface->GetFormat(),
                                                          TextureFlags::DEFAULT,
                                                          gfx::BackendType::NONE,
                                                          surface->GetSize());
+  if (!textureClient) {
+    return nullptr;
+  }
   MOZ_ASSERT(textureClient->CanExposeDrawTarget());
   if (!textureClient->AllocateForSurface(surface->GetSize()) ||
       !textureClient->Lock(OpenMode::OPEN_WRITE_ONLY)) {
