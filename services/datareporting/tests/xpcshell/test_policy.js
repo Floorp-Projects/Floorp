@@ -8,10 +8,26 @@ const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
 Cu.import("resource://testing-common/services/datareporting/mocks.jsm");
+Cu.import("resource://gre/modules/UpdateChannel.jsm");
 
-
-function getPolicy(name) {
+function getPolicy(name,
+                   aCurrentPolicyVersion = 1,
+                   aMinimumPolicyVersion = 1,
+                   aBranchMinimumVersionOverride) {
   let branch = "testing.datareporting." + name;
+
+  // The version prefs should not be removed on reset, so set them in the
+  // default branch.
+  let defaultPolicyPrefs = new Preferences({ branch: branch + ".policy."
+                                           , defaultBranch: true });
+  defaultPolicyPrefs.set("currentPolicyVersion", aCurrentPolicyVersion);
+  defaultPolicyPrefs.set("minimumPolicyVersion", aMinimumPolicyVersion);
+  let branchOverridePrefName = "minimumPolicyVersion.channel-" + UpdateChannel.get(false);
+  if (aBranchMinimumVersionOverride !== undefined)
+    defaultPolicyPrefs.set(branchOverridePrefName, aBranchMinimumVersionOverride);
+  else
+    defaultPolicyPrefs.reset(branchOverridePrefName);
+
   let policyPrefs = new Preferences(branch + ".policy.");
   let healthReportPrefs = new Preferences(branch + ".healthreport.");
 
@@ -776,3 +792,72 @@ add_test(function test_pref_change_initiates_deletion() {
   hrPrefs.set("uploadEnabled", false);
 });
  
+add_task(function* test_policy_version() {
+  let policy, policyPrefs, hrPrefs, listener, now, firstRunTime;
+  function createPolicy(shouldBeAccepted = false,
+                        currentPolicyVersion = 1, minimumPolicyVersion = 1,
+                        branchMinimumVersionOverride) {
+    [policy, policyPrefs, hrPrefs, listener] =
+      getPolicy("policy_version_test", currentPolicyVersion,
+                minimumPolicyVersion, branchMinimumVersionOverride);
+    let firstRun = now === undefined;
+    if (firstRun) {
+      firstRunTime = policy.firstRunDate.getTime();
+      do_check_true(firstRunTime > 0);
+      now = new Date(policy.firstRunDate.getTime() +
+                     policy.SUBMISSION_NOTIFY_INTERVAL_MSEC);
+    }
+    else {
+      // The first-run time should not be reset even after policy-version
+      // upgrades.
+      do_check_eq(policy.firstRunDate.getTime(), firstRunTime);
+    }
+    defineNow(policy, now);
+    do_check_eq(policy.dataSubmissionPolicyAccepted, shouldBeAccepted);
+  }
+
+  function* triggerPolicyCheckAndEnsureNotified(notified = true, accept = true) {
+    policy.checkStateAndTrigger();
+    do_check_eq(listener.notifyUserCount, Number(notified));
+    if (notified) {
+      yield listener.lastNotifyRequest.onUserNotifyComplete();
+      if (accept) {
+        listener.lastNotifyRequest.onUserAccept("because,");
+        do_check_true(policy.dataSubmissionPolicyAccepted);
+        do_check_eq(policyPrefs.get("dataSubmissionPolicyAcceptedVersion"),
+                    policyPrefs.get("currentPolicyVersion"));
+      }
+      else {
+        do_check_false(policyPrefs.has("dataSubmissionPolicyAcceptedVersion"));
+      }
+    }
+  }
+
+  createPolicy();
+  yield triggerPolicyCheckAndEnsureNotified();
+
+  // We shouldn't be notified again if the current version is still valid;
+  createPolicy(true);
+  yield triggerPolicyCheckAndEnsureNotified(false);
+
+  // Just increasing the current version isn't enough. The minimum
+  // version must be changed.
+  let currentPolicyVersion = policyPrefs.get("currentPolicyVersion");
+  let minimumPolicyVersion = policyPrefs.get("minimumPolicyVersion");
+  createPolicy(true, ++currentPolicyVersion, minimumPolicyVersion);
+  yield triggerPolicyCheckAndEnsureNotified(false);
+  do_check_true(policy.dataSubmissionPolicyAccepted);
+  do_check_eq(policyPrefs.get("dataSubmissionPolicyAcceptedVersion"),
+              minimumPolicyVersion);
+
+  // Increase the minimum policy version and check if we're notified.
+  createPolicy(false, currentPolicyVersion, ++minimumPolicyVersion);
+  do_check_false(policyPrefs.has("dataSubmissionPolicyAcceptedVersion"));
+  yield triggerPolicyCheckAndEnsureNotified();
+
+  // Test increasing the minimum version just on the current channel.
+  createPolicy(true, currentPolicyVersion, minimumPolicyVersion);
+  yield triggerPolicyCheckAndEnsureNotified(false);
+  createPolicy(false, ++currentPolicyVersion, minimumPolicyVersion, minimumPolicyVersion + 1);
+  yield triggerPolicyCheckAndEnsureNotified(true);
+});
