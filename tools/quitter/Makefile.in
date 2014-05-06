@@ -8,6 +8,9 @@ NO_JS_MANIFEST = 1
 
 DIST_FILES = \
   install.rdf \
+  $(NULL)
+
+DIST_FILES_NO_PP = \
   chrome.manifest \
   $(NULL)
 
