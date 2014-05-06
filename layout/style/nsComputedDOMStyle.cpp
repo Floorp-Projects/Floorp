@@ -2469,24 +2469,6 @@ nsComputedDOMStyle::GetGridLine(const nsStyleGridLine& aGridLine)
 }
 
 CSSValue*
-nsComputedDOMStyle::DoGetGridAutoPosition()
-{
-  nsDOMCSSValueList* valueList = GetROCSSValueList(false);
-
-  valueList->AppendCSSValue(
-    GetGridLine(StylePosition()->mGridAutoPositionColumn));
-
-  nsROCSSPrimitiveValue* slash = new nsROCSSPrimitiveValue;
-  slash->SetString(NS_LITERAL_STRING("/"));
-  valueList->AppendCSSValue(slash);
-
-  valueList->AppendCSSValue(
-    GetGridLine(StylePosition()->mGridAutoPositionRow));
-
-  return valueList;
-}
-
-CSSValue*
 nsComputedDOMStyle::DoGetGridColumnStart()
 {
   return GetGridLine(StylePosition()->mGridColumnStart);

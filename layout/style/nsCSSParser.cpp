@@ -694,7 +694,6 @@ protected:
   bool ParseGrid();
   bool ParseGridShorthandAutoProps();
   bool ParseGridLine(nsCSSValue& aValue);
-  bool ParseGridAutoPosition();
   bool ParseGridColumnRowStartEnd(nsCSSProperty aPropID);
   bool ParseGridColumnRow(nsCSSProperty aStartPropID,
                           nsCSSProperty aEndPropID);
@@ -7992,26 +7991,6 @@ CSSParserImpl::ParseGridLine(nsCSSValue& aValue)
 }
 
 bool
-CSSParserImpl::ParseGridAutoPosition()
-{
-  nsCSSValue value;
-  if (ParseVariant(value, VARIANT_INHERIT, nullptr)) {
-    AppendValue(eCSSProperty_grid_auto_position, value);
-    return true;
-  }
-  nsCSSValue columnStartValue;
-  nsCSSValue rowStartValue;
-  if (ParseGridLine(columnStartValue) &&
-      ExpectSymbol('/', true) &&
-      ParseGridLine(rowStartValue)) {
-    value.SetPairValue(columnStartValue, rowStartValue);
-    AppendValue(eCSSProperty_grid_auto_position, value);
-    return true;
-  }
-  return false;
-}
-
-bool
 CSSParserImpl::ParseGridColumnRowStartEnd(nsCSSProperty aPropID)
 {
   nsCSSValue value;
@@ -9160,8 +9139,6 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseGridTemplate();
   case eCSSProperty_grid:
     return ParseGrid();
-  case eCSSProperty_grid_auto_position:
-    return ParseGridAutoPosition();
   case eCSSProperty_grid_column_start:
   case eCSSProperty_grid_column_end:
   case eCSSProperty_grid_row_start:
