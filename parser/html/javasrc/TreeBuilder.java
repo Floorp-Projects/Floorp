@@ -1281,7 +1281,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                     if (start < i) {
                                         accumulateCharacters(buf, start, i
                                                 - start);
-                                        start = i;
+                                        // start index is adjusted below.
                                     }
                                     /*
                                      * Parse error.
@@ -1296,7 +1296,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                     if (start < i) {
                                         accumulateCharacters(buf, start, i
                                                 - start);
-                                        start = i;
+                                        // start index is adjusted below.
                                     }
                                     /*
                                      * Parse error.
@@ -1320,13 +1320,19 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                     i--;
                                     continue;
                                 case AFTER_AFTER_FRAMESET:
+                                    if (start < i) {
+                                        accumulateCharacters(buf, start, i
+                                                - start);
+                                        // start index is adjusted below.
+                                    }
+                                    /*
+                                     * Parse error.
+                                     */
                                     errNonSpaceInTrailer();
                                     /*
-                                     * Switch back to the main mode and
-                                     * reprocess the token.
+                                     * Ignore the token.
                                      */
-                                    mode = IN_FRAMESET;
-                                    i--;
+                                    start = i + 1;
                                     continue;
                             }
                     }
