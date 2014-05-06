@@ -246,7 +246,6 @@ WEBIDL_FILES = [
     'MozMmsMessage.webidl',
     'MozMobileConnection.webidl',
     'MozNamedAttrMap.webidl',
-    'MozNetworkStats.webidl',
     'MozPowerManager.webidl',
     'MozTimeManager.webidl',
     'MozWakeLock.webidl',
@@ -565,6 +564,10 @@ if CONFIG['MOZ_NFC']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     WEBIDL_FILES += [
+        'MozNetworkStats.webidl',
+        'MozNetworkStatsAlarm.webidl',
+        'MozNetworkStatsData.webidl',
+        'MozNetworkStatsInterface.webidl',
         'MozSpeakerManager.webidl',
         'MozWifiConnectionInfoEvent.webidl',
         'MozWifiManager.webidl',

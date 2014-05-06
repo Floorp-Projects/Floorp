@@ -56,3 +56,17 @@ dictionary WifiResultOptions
   long      dns2 = 0;
   long      server = 0;
 };
+
+
+/**
+  * This dictionary holds the callback parameter sent back from WifiCertService
+  * to WifiWorker, and should only be passed around in chrome process.
+  */
+dictionary WifiCertServiceResultOptions
+{
+  long            id = 0;         // request id in WifiWorker.
+  long            status = 0;     // error code of the request, 0 indicates success.
+  unsigned short  usageFlag = 0;  // usage flag of certificate, the flag is defined
+                                  // in nsIWifiCertService.idl
+  DOMString       nickname = "";  // nickname of certificate of the request.
+};
