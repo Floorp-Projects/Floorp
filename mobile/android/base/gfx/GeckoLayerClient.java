@@ -801,8 +801,8 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     /** Implementation of PanZoomTarget */
     @Override
-    public FullScreenState getFullScreenState() {
-        return mView.getFullScreenState();
+    public boolean isFullScreen() {
+        return mView.isFullScreen();
     }
 
     /** Implementation of PanZoomTarget */

@@ -199,7 +199,6 @@ gbjar.sources += [
     'gfx/DisplayPortMetrics.java',
     'gfx/DrawTimingQueue.java',
     'gfx/FloatSize.java',
-    'gfx/FullScreenState.java',
     'gfx/GeckoLayerClient.java',
     'gfx/GLController.java',
     'gfx/ImmutableViewportMetrics.java',
