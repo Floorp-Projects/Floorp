@@ -153,13 +153,8 @@ protected:
                                                const uint16_t& aBacklog,
                                                const nsString& aBinaryType) MOZ_OVERRIDE;
   virtual bool DeallocPTCPServerSocketParent(PTCPServerSocketParent*) MOZ_OVERRIDE;
-  virtual PUDPSocketParent* AllocPUDPSocketParent(const nsCString& aHost,
-                                                  const uint16_t& aPort,
-                                                  const nsCString& aFilter) MOZ_OVERRIDE;
-  virtual bool RecvPUDPSocketConstructor(PUDPSocketParent*,
-                                         const nsCString& aHost,
-                                         const uint16_t& aPort,
-                                         const nsCString& aFilter) MOZ_OVERRIDE;
+  virtual PUDPSocketParent* AllocPUDPSocketParent(const nsCString& aFilter) MOZ_OVERRIDE;
+  virtual bool RecvPUDPSocketConstructor(PUDPSocketParent*, const nsCString& aFilter) MOZ_OVERRIDE;
   virtual bool DeallocPUDPSocketParent(PUDPSocketParent*) MOZ_OVERRIDE;
   virtual PDNSRequestParent* AllocPDNSRequestParent(const nsCString& aHost,
                                                     const uint32_t& aFlags) MOZ_OVERRIDE;
