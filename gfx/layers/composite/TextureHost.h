@@ -41,6 +41,7 @@ namespace layers {
 class Compositor;
 class CompositableHost;
 class CompositableBackendSpecificData;
+class CompositableParentManager;
 class SurfaceDescriptor;
 class ISurfaceAllocator;
 class TextureHostOGL;
@@ -392,7 +393,7 @@ public:
    * are for use with the managing IPDL protocols only (so that they can
    * implement AllocPTextureParent and DeallocPTextureParent).
    */
-  static PTextureParent* CreateIPDLActor(ISurfaceAllocator* aAllocator,
+  static PTextureParent* CreateIPDLActor(CompositableParentManager* aManager,
                                          const SurfaceDescriptor& aSharedData,
                                          TextureFlags aFlags);
   static bool DestroyIPDLActor(PTextureParent* actor);

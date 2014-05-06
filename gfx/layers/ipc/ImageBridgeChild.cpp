@@ -474,6 +474,7 @@ ImageBridgeChild::EndTransaction()
       NS_RUNTIMEABORT("not reached");
     }
   }
+  SendPendingAsyncMessge();
 }
 
 
@@ -751,6 +752,29 @@ ImageBridgeChild::DeallocPTextureChild(PTextureChild* actor)
   return TextureClient::DestroyIPDLActor(actor);
 }
 
+bool
+ImageBridgeChild::RecvParentAsyncMessage(const mozilla::layers::AsyncParentMessageData& aMessage)
+{
+  switch (aMessage.type()) {
+    case AsyncParentMessageData::TOpDeliverFence: {
+      const OpDeliverFence& op = aMessage.get_OpDeliverFence();
+      FenceHandle fence = op.fence();
+      PTextureChild* child = op.textureChild();
+
+      RefPtr<TextureClient> texture = TextureClient::AsTextureClient(child);
+      if (texture) {
+        texture->SetReleaseFenceHandle(fence);
+      }
+      HoldTransactionsToRespond(op.transactionId());
+      break;
+    }
+    default:
+      NS_ERROR("unknown AsyncParentMessageData type");
+      return false;
+  }
+  return true;
+}
+
 PTextureChild*
 ImageBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
                                 TextureFlags aFlags)
@@ -807,6 +831,22 @@ void ImageBridgeChild::RemoveTexture(TextureClient* aTexture)
 bool ImageBridgeChild::IsSameProcess() const
 {
   return OtherProcess() == ipc::kInvalidProcessHandle;
+}
+
+void ImageBridgeChild::SendPendingAsyncMessge()
+{
+  if (!IsCreated() ||
+      mTransactionsToRespond.empty()) {
+    return;
+  }
+  // Send OpReplyDeliverFence messages
+  InfallibleTArray<AsyncChildMessageData> replies;
+  replies.SetCapacity(mTransactionsToRespond.size());
+  for (size_t i = 0; i < mTransactionsToRespond.size(); i++) {
+    replies.AppendElement(OpReplyDeliverFence(mTransactionsToRespond[i]));
+  }
+  mTransactionsToRespond.clear();
+  SendChildAsyncMessages(replies);
 }
 
 } // layers
