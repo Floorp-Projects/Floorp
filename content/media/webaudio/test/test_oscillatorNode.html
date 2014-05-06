@@ -23,9 +23,6 @@ addLoadEvent(function() {
   expectException(function() {
     osc.type = "custom";
   }, DOMException.INVALID_STATE_ERR);
-  expectException(function() {
-    osc.type = osc.CUSTOM;
-  }, DOMException.INVALID_STATE_ERR);
   is(osc.type, "sine", "Cannot set the type to custom");
   is(osc.frequency.value, 440, "Correct default frequency value");
   is(osc.detune.value, 0, "Correct default detine value");
@@ -38,8 +35,6 @@ addLoadEvent(function() {
     "triangle",
   ];
   for (var i = 0; i < types.length; ++i) {
-    osc.type = osc[types[i].toUpperCase()];
-    is(osc.type, types[i], "Correct alternname type enum value");
     osc.type = types[i];
   }
 
