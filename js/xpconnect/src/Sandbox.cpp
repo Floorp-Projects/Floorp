@@ -203,10 +203,6 @@ CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
     if (!ssm)
         return false;
 
-    nsIPrincipal *subjectPrincipal = ssm->GetCxSubjectPrincipal(cx);
-    if (!subjectPrincipal)
-        return false;
-
     RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
     MOZ_ASSERT(global);
 
@@ -215,7 +211,8 @@ CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
     nsCOMPtr<nsIGlobalObject> iglobal = do_QueryInterface(sop);
 
     nsCOMPtr<nsIXMLHttpRequest> xhr = new nsXMLHttpRequest();
-    nsresult rv = xhr->Init(subjectPrincipal, nullptr, iglobal, nullptr);
+    nsresult rv = xhr->Init(nsContentUtils::GetSubjectPrincipal(), nullptr,
+                            iglobal, nullptr);
     if (NS_FAILED(rv))
         return false;
 
