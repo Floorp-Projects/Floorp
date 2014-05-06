@@ -1271,7 +1271,7 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
 
           _sm.pause();
           if (WPS_METHOD_PBC === _savedConfig.wpsMethod) {
-            aP2pCommand.wpsPbc(_groupInfo.ifname, onWpsCommandSent);
+            aP2pCommand.wpsPbc(onWpsCommandSent, _groupInfo.ifname);
           } else {
             let detail = { pin: _savedConfig.pin, iface: _groupInfo.ifname };
             aP2pCommand.wpsPin(detail, onWpsCommandSent);
