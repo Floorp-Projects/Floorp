@@ -189,6 +189,9 @@ function getRadioDisabledState() {
 function MmsConnection(aServiceId) {
   this.serviceId = aServiceId;
   this.radioInterface = gRil.getRadioInterface(aServiceId);
+  this.pendingCallbacks = [];
+  this.connectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  this.disconnectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 };
 
 MmsConnection.prototype = {
@@ -232,14 +235,14 @@ MmsConnection.prototype = {
   //A queue to buffer the MMS HTTP requests when the MMS network
   //is not yet connected. The buffered requests will be cleared
   //if the MMS network fails to be connected within a timer.
-  pendingCallbacks: [],
+  pendingCallbacks: null,
 
   /** MMS network connection reference count. */
   refCount: 0,
 
-  connectTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
+  connectTimer: null,
 
-  disconnectTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
+  disconnectTimer: null,
 
   /**
    * Callback when |connectTimer| is timeout or cancelled by shutdown.
@@ -1324,6 +1327,9 @@ SendTransaction.prototype = Object.create(CancellableTransaction.prototype, {
         }
 
         let response = MMS.PduHelper.parse(data, null);
+        if (DEBUG) {
+          debug("Parsed M-Send.conf: " + JSON.stringify(response));
+        }
         if (!response || (response.type != MMS.MMS_PDU_TYPE_SEND_CONF)) {
           callback(MMS.MMS_PDU_RESPONSE_ERROR_UNSUPPORTED_MESSAGE, null);
           return;
