@@ -2327,14 +2327,15 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 nsIPrincipal*
 nsContentUtils::GetSubjectPrincipal()
 {
-  nsCOMPtr<nsIPrincipal> subject;
-  sSecurityManager->GetSubjectPrincipal(getter_AddRefs(subject));
+  JSContext* cx = GetCurrentJSContext();
+  if (!cx) {
+    return GetSystemPrincipal();
+  }
 
-  // When the ssm says the subject is null, that means system principal.
-  if (!subject)
-    sSecurityManager->GetSystemPrincipal(getter_AddRefs(subject));
-
-  return subject;
+  JSCompartment* compartment = js::GetContextCompartment(cx);
+  MOZ_ASSERT(compartment);
+  JSPrincipals* principals = JS_GetCompartmentPrincipals(compartment);
+  return nsJSPrincipals::get(principals);
 }
 
 // static
