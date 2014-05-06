@@ -532,7 +532,7 @@ this.DataReportingPolicy.prototype = Object.freeze({
   set dataSubmissionPolicyAccepted(value) {
     this._prefs.set("dataSubmissionPolicyAccepted", !!value);
     if (!!value) {
-      let currentPolicyVersion = this._prefs.get("currentPolicyVersion");
+      let currentPolicyVersion = this._prefs.get("currentPolicyVersion", 1);
       this._prefs.set("dataSubmissionPolicyAcceptedVersion", currentPolicyVersion);
     } else {
       this._prefs.reset("dataSubmissionPolicyAcceptedVersion");
