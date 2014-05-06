@@ -205,6 +205,14 @@ public:
     return mCompositionBounds / GetZoomToParent();
   }
 
+  CSSSize CalculateBoundedCompositedSizeInCssPixels() const
+  {
+    CSSSize size = CalculateCompositedSizeInCssPixels();
+    size.width = std::min(size.width, mRootCompositionSize.width);
+    size.height = std::min(size.height, mRootCompositionSize.height);
+    return size;
+  }
+
   void ScrollBy(const CSSPoint& aPoint)
   {
     mScrollOffset += aPoint;
