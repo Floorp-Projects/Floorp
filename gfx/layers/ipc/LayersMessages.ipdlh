@@ -357,6 +357,16 @@ struct OpUpdateTexture {
   MaybeRegion region;
 };
 
+struct OpDeliverFence {
+  uint64_t transactionId;
+  PTexture texture;
+  FenceHandle fence;
+};
+
+struct OpReplyDeliverFence {
+  uint64_t transactionId;
+};
+
 union CompositableOperation {
   OpUpdatePictureRect;
 
@@ -426,6 +436,14 @@ union EditReply {
   OpTextureSwap;
 
   ReturnReleaseFence;
+};
+
+union AsyncParentMessageData {
+  OpDeliverFence;
+};
+
+union AsyncChildMessageData {
+  OpReplyDeliverFence;
 };
 
 } // namespace

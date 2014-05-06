@@ -192,6 +192,9 @@ public:
   virtual bool
   DeallocPTextureChild(PTextureChild* actor) MOZ_OVERRIDE;
 
+  virtual bool
+  RecvParentAsyncMessage(const mozilla::layers::AsyncParentMessageData& aMessage) MOZ_OVERRIDE;
+
   TemporaryRef<ImageClient> CreateImageClient(CompositableType aType);
   TemporaryRef<ImageClient> CreateImageClientNow(CompositableType aType);
 
@@ -301,6 +304,8 @@ public:
                                        TextureFlags aFlags) MOZ_OVERRIDE;
 
   virtual bool IsSameProcess() const MOZ_OVERRIDE;
+
+  void SendPendingAsyncMessge();
 
 protected:
   ImageBridgeChild();

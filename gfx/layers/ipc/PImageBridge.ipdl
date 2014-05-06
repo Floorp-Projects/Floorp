@@ -28,6 +28,9 @@ intr protocol PImageBridge
   manages PCompositable;
   manages PTexture;
 
+child:
+  async ParentAsyncMessage(AsyncParentMessageData aMessage);
+
 parent:
 
   sync Update(CompositableOperation[] ops) returns (EditReply[] reply);
@@ -44,6 +47,8 @@ parent:
 
   sync PCompositable(TextureInfo aInfo) returns (uint64_t id);
   async PTexture(SurfaceDescriptor aSharedData, TextureFlags aTextureFlags);
+
+  async ChildAsyncMessages(AsyncChildMessageData[] aMessages);
 };
 
 

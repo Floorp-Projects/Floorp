@@ -177,6 +177,9 @@ ShadowLayerForwarder::~ShadowLayerForwarder()
 {
   NS_ABORT_IF_FALSE(mTxn->Finished(), "unfinished transaction?");
   delete mTxn;
+  if (mShadowManager) {
+    mShadowManager->SetForwarder(nullptr);
+  }
 }
 
 void
@@ -572,7 +575,8 @@ ShadowLayerForwarder::AllocShmem(size_t aSize,
                                  ipc::Shmem* aShmem)
 {
   NS_ABORT_IF_FALSE(HasShadowManager(), "no shadow manager");
-  if (!mShadowManager->IPCOpen()) {
+  if (!HasShadowManager() ||
+      !mShadowManager->IPCOpen()) {
     return false;
   }
   return mShadowManager->AllocShmem(aSize, aType, aShmem);
@@ -583,7 +587,8 @@ ShadowLayerForwarder::AllocUnsafeShmem(size_t aSize,
                                           ipc::Shmem* aShmem)
 {
   NS_ABORT_IF_FALSE(HasShadowManager(), "no shadow manager");
-  if (!mShadowManager->IPCOpen()) {
+  if (!HasShadowManager() ||
+      !mShadowManager->IPCOpen()) {
     return false;
   }
   return mShadowManager->AllocUnsafeShmem(aSize, aType, aShmem);
@@ -592,7 +597,8 @@ void
 ShadowLayerForwarder::DeallocShmem(ipc::Shmem& aShmem)
 {
   NS_ABORT_IF_FALSE(HasShadowManager(), "no shadow manager");
-  if (!mShadowManager->IPCOpen()) {
+  if (!HasShadowManager() ||
+      !mShadowManager->IPCOpen()) {
     return;
   }
   mShadowManager->DeallocShmem(aShmem);
@@ -622,7 +628,8 @@ PLayerChild*
 ShadowLayerForwarder::ConstructShadowFor(ShadowableLayer* aLayer)
 {
   NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
-  if (!mShadowManager->IPCOpen()) {
+  if (!HasShadowManager() ||
+      !mShadowManager->IPCOpen()) {
     return nullptr;
   }
   return mShadowManager->SendPLayerConstructor(new ShadowLayerChild(aLayer));
@@ -645,7 +652,8 @@ ShadowLayerForwarder::Connect(CompositableClient* aCompositable)
 #endif
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(mShadowManager);
-  if (!mShadowManager->IPCOpen()) {
+  if (!HasShadowManager() ||
+      !mShadowManager->IPCOpen()) {
     return;
   }
   PCompositableChild* actor =
@@ -687,7 +695,8 @@ PTextureChild*
 ShadowLayerForwarder::CreateTexture(const SurfaceDescriptor& aSharedData,
                                     TextureFlags aFlags)
 {
-  if (!mShadowManager->IPCOpen()) {
+  if (!HasShadowManager() ||
+      !mShadowManager->IPCOpen()) {
     return nullptr;
   }
   return mShadowManager->SendPTextureConstructor(aSharedData, aFlags);
@@ -697,8 +706,54 @@ ShadowLayerForwarder::CreateTexture(const SurfaceDescriptor& aSharedData,
 void ShadowLayerForwarder::SetShadowManager(PLayerTransactionChild* aShadowManager)
 {
   mShadowManager = static_cast<LayerTransactionChild*>(aShadowManager);
+  mShadowManager->SetForwarder(this);
 }
 
+void ShadowLayerForwarder::StopReceiveAsyncParentMessge()
+{
+  if (!HasShadowManager() ||
+      !mShadowManager->IPCOpen()) {
+    return;
+  }
+  SendPendingAsyncMessge();
+  mShadowManager->SetForwarder(nullptr);
+}
+
+void ShadowLayerForwarder::ClearCachedResources()
+{
+  if (!HasShadowManager() ||
+      !mShadowManager->IPCOpen()) {
+    return;
+  }
+  SendPendingAsyncMessge();
+  mShadowManager->SendClearCachedResources();
+}
+
+void ShadowLayerForwarder::Composite()
+{
+  if (!HasShadowManager() ||
+      !mShadowManager->IPCOpen()) {
+    return;
+  }
+  mShadowManager->SendForceComposite();
+}
+
+void ShadowLayerForwarder::SendPendingAsyncMessge()
+{
+  if (!HasShadowManager() ||
+      !mShadowManager->IPCOpen() ||
+      mTransactionsToRespond.empty()) {
+    return;
+  }
+  // Send OpReplyDeliverFence messages
+  InfallibleTArray<AsyncChildMessageData> replies;
+  replies.SetCapacity(mTransactionsToRespond.size());
+  for (size_t i = 0; i < mTransactionsToRespond.size(); i++) {
+    replies.AppendElement(OpReplyDeliverFence(mTransactionsToRespond[i]));
+  }
+  mTransactionsToRespond.clear();
+  mShadowManager->SendChildAsyncMessages(replies);
+}
 
 } // namespace layers
 } // namespace mozilla
