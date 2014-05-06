@@ -166,7 +166,7 @@ public:
         if (parent && parent != mSubtreeRoot) {
           Entry* parentEntry = mEntryList.find(Entry(parent, entry->mDepth - 1));
           if (parentEntry) {
-            parentEntry->mChangeKind = CHILDREN_CHANGED;
+            parentEntry->mChangeKind = std::max(parentEntry->mChangeKind, CHILDREN_CHANGED);
           } else {
             mEntryList.insert(new Entry(parent, entry->mDepth - 1, CHILDREN_CHANGED));
           }
