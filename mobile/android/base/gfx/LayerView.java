@@ -64,7 +64,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
     /* Must be a PAINT_xxx constant */
     private int mPaintState;
     private int mBackgroundColor;
-    private FullScreenState mFullScreenState;
+    private boolean mFullScreen;
 
     private SurfaceView mSurfaceView;
     private TextureView mTextureView;
@@ -692,16 +692,12 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         GeckoAccessibility.onLayerViewFocusChanged(this, gainFocus);
     }
 
-    public void setFullScreenState(FullScreenState state) {
-        mFullScreenState = state;
+    public void setFullScreen(boolean fullScreen) {
+        mFullScreen = fullScreen;
     }
 
     public boolean isFullScreen() {
-        return mFullScreenState != FullScreenState.NONE;
-    }
-
-    public FullScreenState getFullScreenState() {
-        return mFullScreenState;
+        return mFullScreen;
     }
 
     @Override
