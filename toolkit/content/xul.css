@@ -429,11 +429,11 @@ panel[type="arrow"] {
 %ifndef MOZ_WIDGET_GTK
 
 panel[type="arrow"]:not([animate="false"]) {
-  transform: scale(.7);
+  transform: scale(.4);
   opacity: 0;
   transition-property: transform, opacity;
   transition-duration: 0.15s;
-  transition-timing-function: ease;
+  transition-timing-function: ease-out;
 }
 
 panel[type="arrow"][animate="open"] {
@@ -477,14 +477,14 @@ panel[arrowposition="after_start"][animate="cancel"],
 panel[arrowposition="before_end"][animate="cancel"],
 panel[arrowposition="end_before"][animate="cancel"],
 panel[arrowposition="start_after"][animate="cancel"] {
-  transform: scale(.7) skew(10deg, 10deg);
+  transform: none;
 }
 
 panel[arrowposition="after_end"][animate="cancel"],
 panel[arrowposition="before_start"][animate="cancel"],
 panel[arrowposition="start_before"][animate="cancel"],
 panel[arrowposition="end_after"][animate="cancel"] {
-  transform: scale(.7) skew(-10deg, -10deg);
+  transform: none;
 }
 
 %endif
