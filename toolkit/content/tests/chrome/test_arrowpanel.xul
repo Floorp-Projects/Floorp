@@ -176,23 +176,27 @@ function nextTest()
     $("bottomright").removeAttribute("right");
   }
 
-  var transitions = 0;
-  function transitionEnded(event) {
-    transitions++;
-    // Two properties transition so continue on the second one finishing.
-    if (!(transitions % 2)) {
-      SimpleTest.executeSoon(() => runNextTest.next());
+  // Test that a transition occurs when opening or closing the popup. The transition is
+  // disabled on Linux.
+  if (navigator.platform.indexOf("Linux") == -1) {
+    var transitions = 0;
+    function transitionEnded(event) {
+      transitions++;
+      // Two properties transition so continue on the second one finishing.
+      if (!(transitions % 2)) {
+        SimpleTest.executeSoon(() => runNextTest.next());
+      }
     }
-  }
 
-  // Check that the transition occurs for an arrow panel with animate="true"
-  window.addEventListener("transitionend", transitionEnded, false);
-  $("animatepanel").openPopup($("topleft"), "after_start", 0, 0, false, false, null, "start");
-  yield;
-  window.removeEventListener("transitionend", transitionEnded, false);
-  synthesizeKey("VK_ESCAPE", { });
-  ok(!animatedPopupHidden, "animated popup not hidden yet");
-  yield;
+    // Check that the transition occurs for an arrow panel with animate="true"
+    window.addEventListener("transitionend", transitionEnded, false);
+    $("animatepanel").openPopup($("topleft"), "after_start", 0, 0, false, false, null, "start");
+    yield;
+    window.removeEventListener("transitionend", transitionEnded, false);
+    synthesizeKey("VK_ESCAPE", { });
+    ok(!animatedPopupHidden, "animated popup not hidden yet");
+    yield;
+  }
 
   SimpleTest.finish()
   yield;
