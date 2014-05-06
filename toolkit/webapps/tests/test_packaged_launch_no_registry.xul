@@ -157,43 +157,6 @@ if (LINUX) {
   };
 }
 
-function buildAppPackage() {
-  let zipFile = getFile(OS.Constants.Path.profileDir, "sample.zip");
-
-  let zipWriter = Cc["@mozilla.org/zipwriter;1"].createInstance(Ci.nsIZipWriter);
-  zipWriter.open(zipFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
-  zipWriter.addEntryFile("index.html",
-                         Ci.nsIZipWriter.COMPRESSION_NONE,
-                         getFile(getTestFilePath("data/app/index.html")),
-                         false);
-  zipWriter.addEntryFile("manifest.webapp",
-                         Ci.nsIZipWriter.COMPRESSION_NONE,
-                         getFile(getTestFilePath("data/app/manifest.webapp")),
-                         false);
-  zipWriter.close();
-
-  return zipFile.path;
-}
-
-function wasAppSJSAccessed() {
-  let deferred = Promise.defer();
-
-  var xhr = new XMLHttpRequest();
-
-  xhr.addEventListener("load", function() {
-    let ret = (xhr.responseText == "done") ? true : false;
-    deferred.resolve(ret);
-  });
-
-  xhr.addEventListener("error", aError => deferred.reject(aError));
-  xhr.addEventListener("abort", aError => deferred.reject(aError));
-
-  xhr.open('GET', 'http://test/chrome/toolkit/webapps/tests/app.sjs?testreq', true);
-  xhr.send();
-
-  return deferred.promise;
-}
-
 let runTest = Task.async(function*() {
   // Get to a clean state before the test
   yield cleanup();
@@ -202,7 +165,7 @@ let runTest = Task.async(function*() {
 
   setDryRunPref();
 
-  let zipPath = buildAppPackage();
+  let zipPath = buildAppPackage(manifest);
 
   let nativeApp = new NativeApp(app, manifest, app.categories);
   ok(nativeApp, "NativeApp object created");

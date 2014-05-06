@@ -74,13 +74,13 @@ nsresult getStatus(nsACString& desc)
 NS_STATUS_REPORTER_IMPLEMENT(StatusReporter, "StatusReporter State", getStatus)
 
 #define DUMP(o, s) \
-    do { \
-        const char* s2 = (s); \
-        uint32_t dummy; \
-        nsresult rv = (o)->Write((s2), strlen(s2), &dummy); \
-        if (NS_WARN_IF(NS_FAILED(rv))) \
-          return rv; \
-    } while (0)
+  do { \
+    const char* s2 = (s); \
+    uint32_t dummy; \
+    nsresult rv = (o)->Write((s2), strlen(s2), &dummy); \
+    if (NS_WARN_IF(NS_FAILED(rv))) \
+      return rv; \
+  } while (0)
 
 static nsresult
 DumpReport(nsIFileOutputStream* aOStream, const nsCString& aProcess,
@@ -157,9 +157,9 @@ nsStatusReporterManager::DumpReports()
   // begining, it will be rename as "status-reports-pid-number.json" in the end.
   nsCOMPtr<nsIFile> tmpFile;
   rv = nsDumpUtils::OpenTempFile(NS_LITERAL_CSTRING("incomplete-") +
-                    filename,
-                    getter_AddRefs(tmpFile),
-                    NS_LITERAL_CSTRING("status-reports"));
+                                 filename,
+                                 getter_AddRefs(tmpFile),
+                                 NS_LITERAL_CSTRING("status-reports"));
   if (NS_WARN_IF(NS_FAILED(rv)))
     return rv;
 

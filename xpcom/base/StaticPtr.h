@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et ft=cpp : */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -37,62 +37,62 @@ namespace mozilla {
 template<class T>
 class StaticAutoPtr
 {
-  public:
-    // In debug builds, check that mRawPtr is initialized for us as we expect
-    // by the compiler.  In non-debug builds, don't declare a constructor
-    // so that the compiler can see that the constructor is trivial.
+public:
+  // In debug builds, check that mRawPtr is initialized for us as we expect
+  // by the compiler.  In non-debug builds, don't declare a constructor
+  // so that the compiler can see that the constructor is trivial.
 #ifdef DEBUG
-    StaticAutoPtr()
-    {
-      MOZ_ASSERT(!mRawPtr);
-    }
+  StaticAutoPtr()
+  {
+    MOZ_ASSERT(!mRawPtr);
+  }
 #endif
 
-    StaticAutoPtr<T>& operator=(T* rhs)
-    {
-      Assign(rhs);
-      return *this;
-    }
+  StaticAutoPtr<T>& operator=(T* rhs)
+  {
+    Assign(rhs);
+    return *this;
+  }
 
-    T* get() const
-    {
-      return mRawPtr;
-    }
+  T* get() const
+  {
+    return mRawPtr;
+  }
 
-    operator T*() const
-    {
-      return get();
-    }
+  operator T*() const
+  {
+    return get();
+  }
 
-    T* operator->() const
-    {
-      MOZ_ASSERT(mRawPtr);
-      return get();
-    }
+  T* operator->() const
+  {
+    MOZ_ASSERT(mRawPtr);
+    return get();
+  }
 
-    T& operator*() const
-    {
-      return *get();
-    }
+  T& operator*() const
+  {
+    return *get();
+  }
 
-  private:
-    // Disallow copy constructor, but only in debug mode.  We only define
-    // a default constructor in debug mode (see above); if we declared
-    // this constructor always, the compiler wouldn't generate a trivial
-    // default constructor for us in non-debug mode.
+private:
+  // Disallow copy constructor, but only in debug mode.  We only define
+  // a default constructor in debug mode (see above); if we declared
+  // this constructor always, the compiler wouldn't generate a trivial
+  // default constructor for us in non-debug mode.
 #ifdef DEBUG
-    StaticAutoPtr(StaticAutoPtr<T> &other);
+  StaticAutoPtr(StaticAutoPtr<T> &other);
 #endif
 
-    void Assign(T* newPtr)
-    {
-      MOZ_ASSERT(!newPtr || mRawPtr != newPtr);
-      T* oldPtr = mRawPtr;
-      mRawPtr = newPtr;
-      delete oldPtr;
-    }
+  void Assign(T* newPtr)
+  {
+    MOZ_ASSERT(!newPtr || mRawPtr != newPtr);
+    T* oldPtr = mRawPtr;
+    mRawPtr = newPtr;
+    delete oldPtr;
+  }
 
-    T* mRawPtr;
+  T* mRawPtr;
 };
 
 template<class T>

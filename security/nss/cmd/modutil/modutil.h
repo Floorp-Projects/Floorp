@@ -6,17 +6,18 @@
 #define MODUTIL_H
 
 #include <stdio.h>
+#include <string.h>
+
 #include <prio.h>
 #include <prprf.h>
 #include <prinit.h>
+#include <prlock.h>
 #include <prmem.h>
 #include <plarena.h>
-#include <string.h>
-#include <seccomon.h>
-#include <secmod.h>
-#include <secutil.h>
 
-#include <prlock.h>
+#include "seccomon.h"
+#include "secmod.h"
+#include "secutil.h"
 
 #include "error.h"
 

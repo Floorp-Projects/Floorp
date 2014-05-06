@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -33,7 +35,7 @@ NS_NewInputStreamReadyEvent(nsIInputStreamCallback  *aNotify,
  * A "one-shot" proxy of the OnOutputStreamReady callback.  The resulting
  * proxy object's OnOutputStreamReady function may only be called once!  The
  * proxy object ensures that the real notify object will be free'd on the
- * thread corresponding to the given event target regardless of what thread 
+ * thread corresponding to the given event target regardless of what thread
  * the proxy object is destroyed on.
  *
  * This function is designed to be used to implement AsyncWait when the
@@ -46,8 +48,8 @@ NS_NewOutputStreamReadyEvent(nsIOutputStreamCallback  *aNotify,
 /* ------------------------------------------------------------------------- */
 
 enum nsAsyncCopyMode {
-    NS_ASYNCCOPY_VIA_READSEGMENTS,
-    NS_ASYNCCOPY_VIA_WRITESEGMENTS
+  NS_ASYNCCOPY_VIA_READSEGMENTS,
+  NS_ASYNCCOPY_VIA_WRITESEGMENTS
 };
 
 /**

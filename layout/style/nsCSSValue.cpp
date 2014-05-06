@@ -2416,6 +2416,6 @@ size_t
 mozilla::css::GridTemplateAreasValue::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = mNamedAreas.SizeOfExcludingThis(aMallocSizeOf);
-  n += mTemplates.SizeOfIncludingThis(aMallocSizeOf);
+  n += mTemplates.SizeOfExcludingThis(aMallocSizeOf);
   return n;
 }

@@ -56,8 +56,8 @@ class DumpMemoryInfoToTempDirRunnable : public nsRunnable
 public:
   DumpMemoryInfoToTempDirRunnable(const nsAString& aIdentifier,
                                   bool aMinimizeMemoryUsage)
-      : mIdentifier(aIdentifier)
-      , mMinimizeMemoryUsage(aMinimizeMemoryUsage)
+    : mIdentifier(aIdentifier)
+    , mMinimizeMemoryUsage(aMinimizeMemoryUsage)
   {}
 
   NS_IMETHOD Run()
@@ -152,9 +152,9 @@ void doGCCCDump(const uint8_t recvSig)
   // Dump GC and CC logs (from the main thread).
   nsRefPtr<GCAndCCLogDumpRunnable> runnable =
     new GCAndCCLogDumpRunnable(
-        /* identifier = */ EmptyString(),
-        /* allTraces = */ true,
-        /* dumpChildProcesses = */ true);
+      /* identifier = */ EmptyString(),
+      /* allTraces = */ true,
+      /* dumpChildProcesses = */ true);
   NS_DispatchToMainThread(runnable);
 }
 
@@ -180,8 +180,8 @@ void doGCCCDump(const nsCString& inputStr)
   LOG("FifoWatcher(command:%s) dispatching GC/CC log runnable.", inputStr.get());
   nsRefPtr<GCAndCCLogDumpRunnable> runnable =
     new GCAndCCLogDumpRunnable(/* identifier = */ EmptyString(),
-                              doAllTracesGCCCDump,
-                              /* dumpChildProcesses = */ true);
+                               doAllTracesGCCCDump,
+                               /* dumpChildProcesses = */ true);
   NS_DispatchToMainThread(runnable);
 }
 
@@ -336,9 +336,9 @@ public:
   {}
 
   NS_IMETHOD Callback(const nsACString &aProcess, const nsACString &aPath,
-      int32_t aKind, int32_t aUnits, int64_t aAmount,
-      const nsACString &aDescription,
-      nsISupports *aData)
+                      int32_t aKind, int32_t aUnits, int64_t aAmount,
+                      const nsACString &aDescription,
+                      nsISupports *aData)
   {
     if (mIsFirst) {
       DUMP(mWriter, "[");
