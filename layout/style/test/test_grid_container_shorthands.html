@@ -16,7 +16,7 @@ var initial_values = {
     gridTemplateAreas: "none",
     gridTemplateColumns: "none",
     gridTemplateRows: "none",
-    gridAutoFlow: "none",
+    gridAutoFlow: "row",
     // Computed value for 'auto'
     gridAutoColumns: "minmax(min-content, max-content)",
     gridAutoRows: "minmax(min-content, max-content)",
@@ -179,8 +179,13 @@ grid_test_cases = grid_template_test_cases.concat([
         gridAutoFlow: "row",
     },
     {
-        specified: "none 40px",
-        gridAutoFlow: "none",
+        specified: "stack 40px",
+        gridAutoFlow: "stack row",
+        gridAutoColumns: "40px",
+    },
+    {
+        specified: "stack column 40px",
+        gridAutoFlow: "stack column",
         gridAutoColumns: "40px",
     },
     {
