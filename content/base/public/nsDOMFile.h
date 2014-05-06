@@ -34,7 +34,6 @@
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsDOMMultipartFile;
 class nsIFile;
 class nsIInputStream;
 class nsIClassInfo;
@@ -43,8 +42,6 @@ class nsDOMFileBase : public nsIDOMFile,
                       public nsIXHRSendable,
                       public nsIMutable
 {
-  friend class nsDOMMultipartFile;
-
 public:
   typedef mozilla::dom::indexedDB::FileInfo FileInfo;
 
@@ -364,9 +361,8 @@ public:
   nsDOMMemoryFile(void *aMemoryBuffer,
                   uint64_t aLength,
                   const nsAString& aName,
-                  const nsAString& aContentType,
-                  uint64_t aLastModifiedDate)
-    : nsDOMFile(aName, aContentType, aLength, aLastModifiedDate),
+                  const nsAString& aContentType)
+    : nsDOMFile(aName, aContentType, aLength, UINT64_MAX),
       mDataOwner(new DataOwner(aMemoryBuffer, aLength))
   {
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
