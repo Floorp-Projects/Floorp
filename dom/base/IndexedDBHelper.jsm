@@ -19,8 +19,10 @@ const Ci = Components.interfaces;
 this.EXPORTED_SYMBOLS = ["IndexedDBHelper"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.importGlobalProperties(["indexedDB"]);
+
+XPCOMUtils.defineLazyModuleGetter(this, 'Services',
+  'resource://gre/modules/Services.jsm');
 
 this.IndexedDBHelper = function IndexedDBHelper() {}
 
@@ -88,7 +90,10 @@ IndexedDBHelper.prototype = {
   ensureDB: function ensureDB(aSuccessCb, aFailureCb) {
     if (this._db) {
       if (DEBUG) debug("ensureDB: already have a database, returning early.");
-      aSuccessCb && aSuccessCb();
+      if (aSuccessCb) {
+        Services.tm.currentThread.dispatch(aSuccessCb,
+                                           Ci.nsIThread.DISPATCH_NORMAL);
+      }
       return;
     }
     this.open(aSuccessCb, aFailureCb);
