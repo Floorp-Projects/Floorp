@@ -8,6 +8,7 @@
 
 #include <android/log.h>
 #include <dlfcn.h>
+#include <math.h>
 
 #include "mozilla/Hal.h"
 #include "nsXULAppAPI.h"
@@ -40,6 +41,7 @@
 #include "NativeJSContainer.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
+#include "nsIHttpChannel.h"
 
 using namespace mozilla;
 using namespace mozilla::widget::android;
@@ -303,6 +305,68 @@ void AutoGlobalWrappedJavaObject::Dispose() {
 
 AutoGlobalWrappedJavaObject::~AutoGlobalWrappedJavaObject() {
     Dispose();
+}
+
+// Decides if we should store thumbnails for a given docshell based on the presence
+// of a Cache-Control: no-store header and the "browser.cache.disk_cache_ssl" pref.
+static bool ShouldStoreThumbnail(nsIDocShell* docshell) {
+    if (!docshell) {
+        return false;
+    }
+
+    nsresult rv;
+    nsCOMPtr<nsIChannel> channel;
+
+    docshell->GetCurrentDocumentChannel(getter_AddRefs(channel));
+    if (!channel) {
+        return false;
+    }
+
+    nsCOMPtr<nsIHttpChannel> httpChannel;
+    rv = channel->QueryInterface(NS_GET_IID(nsIHttpChannel), getter_AddRefs(httpChannel));
+    if (!NS_SUCCEEDED(rv)) {
+        return false;
+    }
+
+    // Don't store thumbnails for sites that didn't load
+    uint32_t responseStatus;
+    rv = httpChannel->GetResponseStatus(&responseStatus);
+    if (!NS_SUCCEEDED(rv) || floor((double) (responseStatus / 100)) != 2) {
+        return false;
+    }
+
+    // Cache-Control: no-store.
+    bool isNoStoreResponse = false;
+    httpChannel->IsNoStoreResponse(&isNoStoreResponse);
+    if (isNoStoreResponse) {
+        return false;
+    }
+
+    // Deny storage if we're viewing a HTTPS page with a
+    // 'Cache-Control' header having a value that is not 'public'.
+    nsCOMPtr<nsIURI> uri;
+    rv = channel->GetURI(getter_AddRefs(uri));
+    if (!NS_SUCCEEDED(rv)) {
+        return false;
+    }
+
+    // Don't capture HTTPS pages unless the user enabled it
+    // or the page has a Cache-Control:public header.
+    bool isHttps = false;
+    uri->SchemeIs("https", &isHttps);
+    if (isHttps && !Preferences::GetBool("browser.cache.disk_cache_ssl", false)) {
+        nsAutoCString cacheControl;
+        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Cache-Control"), cacheControl);
+        if (!NS_SUCCEEDED(rv)) {
+            return false;
+        }
+
+        if (!cacheControl.IsEmpty() && !cacheControl.LowerCaseEqualsLiteral("public")) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 static void
@@ -1694,7 +1758,7 @@ AndroidBridge::GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId,
     return true;
 }
 
-nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int32_t bufH, int32_t tabId, jobject buffer)
+nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int32_t bufH, int32_t tabId, jobject buffer, bool &shouldStore)
 {
     nsresult rv;
     float scale = 1.0;
@@ -1744,10 +1808,16 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
     if (!win)
         return NS_ERROR_FAILURE;
     nsRefPtr<nsPresContext> presContext;
+
     nsIDocShell* docshell = win->GetDocShell();
+
+    // Decide if callers should store this thumbnail for later use.
+    shouldStore = ShouldStoreThumbnail(docshell);
+
     if (docshell) {
         docshell->GetPresContext(getter_AddRefs(presContext));
     }
+
     if (!presContext)
         return NS_ERROR_FAILURE;
     nscolor bgColor = NS_RGB(255, 255, 255);

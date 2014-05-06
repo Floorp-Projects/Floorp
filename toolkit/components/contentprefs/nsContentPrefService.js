@@ -11,28 +11,7 @@ const CACHE_MAX_GROUP_ENTRIES = 100;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-/**
- * Remotes the service. All the remoting/electrolysis code is in here,
- * so the regular service code below remains uncluttered and maintainable.
- */
-function electrolify(service) {
-  // FIXME: For now, use the wrappedJSObject hack, until bug
-  //        593407 which will clean that up.
-  //        Note that we also use this in the xpcshell tests, separately.
-  service.wrappedJSObject = service;
-
-  var appInfo = Cc["@mozilla.org/xre/app-info;1"];
-  if (appInfo && appInfo.getService(Ci.nsIXULRuntime).processType !=
-      Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
-  {
-    // Child process
-    service._dbInit = function(){}; // No local DB
-  }
-}
-
 function ContentPrefService() {
-  electrolify(this);
-
   // If this throws an exception, it causes the getService call to fail,
   // but the next time a consumer tries to retrieve the service, we'll try
   // to initialize the database again, which might work if the failure
@@ -72,7 +51,6 @@ ContentPrefService.prototype = {
   QueryInterface: function CPS_QueryInterface(iid) {
     let supportedIIDs = [
       Ci.nsIContentPrefService,
-      Ci.nsIFrameMessageListener,
       Ci.nsISupports,
     ];
     if (supportedIIDs.some(function (i) iid.equals(i)))

@@ -5,12 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'hnjstdio.cpp',
     'nsHyphenationManager.cpp',
     'nsHyphenator.cpp',
 ]
 
+# These files cannot be built in unified mode because they include hnjalloc.h.
 SOURCES += [
+    'hnjstdio.cpp',
     'hyphen.c',
 ]
 

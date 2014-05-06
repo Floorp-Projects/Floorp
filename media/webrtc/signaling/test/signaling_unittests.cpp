@@ -1330,12 +1330,17 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
 
   mozilla::RefPtr<mozilla::MediaPipeline> GetMediaPipeline(
     bool local, int stream, int track) {
-    sipcc::SourceStreamInfo *streamInfo;
-
+    sipcc::SourceStreamInfo* streamInfo;
     if (local) {
-      streamInfo = pc->media()->GetLocalStream(stream);
+      mozilla::SyncRunnable::DispatchToThread(
+        gMainThread, WrapRunnableRet(
+          pc->media(), &sipcc::PeerConnectionMedia::GetLocalStream,
+          stream, &streamInfo));
     } else {
-      streamInfo = pc->media()->GetRemoteStream(stream);
+      mozilla::SyncRunnable::DispatchToThread(
+        gMainThread, WrapRunnableRet(
+          pc->media(), &sipcc::PeerConnectionMedia::GetRemoteStream,
+          stream, &streamInfo));
     }
 
     if (!streamInfo) {

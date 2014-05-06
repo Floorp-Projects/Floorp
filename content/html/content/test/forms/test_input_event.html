@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
 <input type="text" id="input_text" oninput="++textInput[0];"></input>
 <input type="email" id="input_email" oninput="++textInput[1];"></input>
 <input type="search" id="input_search" oninput="++textInput[2];"></input>
-<input type="tel" id="input_telephone" oninput="++textInput[3];"></input>
+<input type="tel" id="input_tel" oninput="++textInput[3];"></input>
 <input type="url" id="input_url" oninput="++textInput[4];"></input>
 <input type="password" id="input_password" oninput="++textInput[5];"></input>
 
@@ -43,7 +43,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
   var textareaInput = 0;
 
   // Those are types were the input event apply.
-  var textTypes = ["text", "email", "search", "telephone", "url", "password"];
+  var textTypes = ["text", "email", "search", "tel", "url", "password"];
   var textInput = [0, 0, 0, 0, 0, 0];
 
   // Those are events were the input event does not apply.
