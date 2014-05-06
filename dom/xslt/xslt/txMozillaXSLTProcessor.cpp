@@ -1252,15 +1252,8 @@ NS_IMETHODIMP
 txMozillaXSLTProcessor::Initialize(nsISupports* aOwner, JSContext* cx,
                                    JSObject* obj, const JS::CallArgs& args)
 {
-    nsCOMPtr<nsIPrincipal> prin;
-    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-    NS_ENSURE_TRUE(secMan, NS_ERROR_UNEXPECTED);
-
-    nsresult rv = secMan->GetSubjectPrincipal(getter_AddRefs(prin));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(prin, NS_ERROR_UNEXPECTED);
-
-    return Init(prin);
+    MOZ_ASSERT(nsContentUtils::GetCurrentJSContext());
+    return Init(nsContentUtils::GetSubjectPrincipal());
 }
 
 NS_IMETHODIMP
