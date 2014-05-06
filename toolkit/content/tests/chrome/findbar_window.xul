@@ -359,12 +359,10 @@
       highlightButton.click();
       ok(highlightButton.checked, "testFindWithHighlight 3: Highlight All should be checked.");
 
-      if (!gHasFindClipboard) {
-        a = gFindBar._findField.value;
-        b = gFindBar._browser.finder._fastFind.searchString;
-        c = gFindBar._browser.finder.searchString;
-        ok(a == searchStr && b == c, "testFindWithHighlight 4: " + a + ", " + b + ", " + c + ".");
-      }
+      a = gFindBar._findField.value;
+      b = gFindBar._browser.finder._fastFind.searchString;
+      c = gFindBar._browser.finder.searchString;
+      ok(a == searchStr && b == c, "testFindWithHighlight 4: " + a + ", " + b + ", " + c + ".");
 
       gFindBar.onFindAgainCommand();
       a = gFindBar._findField.value;

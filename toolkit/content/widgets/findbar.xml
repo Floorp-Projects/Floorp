@@ -1198,6 +1198,13 @@
 
       <method name="_onFindFieldFocus">
         <body><![CDATA[
+          let prefsvc =
+            Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefBranch);
+          const kPref = "accessibility.typeaheadfind.prefillwithselection";
+          if (this.prefillWithSelection && prefsvc.getBoolPref(kPref))
+            return;
+
           let clipboardSearchString = this._browser.finder.clipboardSearchString;
           if (clipboardSearchString && this._findField.value != clipboardSearchString) {
             this._findField.value = clipboardSearchString;
