@@ -90,17 +90,9 @@ public:
 
   bool Recv__delete__() MOZ_OVERRIDE;
 
-  bool RecvCompositorRecycle(const MaybeFenceHandle& aFence)
+  bool RecvCompositorRecycle()
   {
     RECYCLE_LOG("Receive recycle %p (%p)\n", mTextureClient, mWaitForRecycle.get());
-    if (aFence.type() != aFence.Tnull_t) {
-      FenceHandle fence = aFence.get_FenceHandle();
-      if (fence.IsValid() && mTextureClient) {
-        mTextureClient->SetReleaseFenceHandle(aFence);
-        // HWC might not provide Fence.
-        // In this case, HWC implicitly handles buffer's fence.
-      }
-    }
     mWaitForRecycle = nullptr;
     return true;
   }
