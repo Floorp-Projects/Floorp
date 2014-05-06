@@ -838,6 +838,13 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     @Override
     public void updateThumbnailForUrl(ContentResolver cr, String uri,
             BitmapDrawable thumbnail) {
+
+        // If a null thumbnail was passed in, delete the stored thumbnail for this url.
+        if (thumbnail == null) {
+            cr.delete(mThumbnailsUriWithProfile, Thumbnails.URL + " == ?", new String[] { uri });
+            return;
+        }
+
         Bitmap bitmap = thumbnail.getBitmap();
 
         byte[] data = null;
@@ -849,8 +856,8 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         }
 
         ContentValues values = new ContentValues();
-        values.put(Thumbnails.DATA, data);
         values.put(Thumbnails.URL, uri);
+        values.put(Thumbnails.DATA, data);
 
         Uri thumbnailsUri = mThumbnailsUriWithProfile.buildUpon().
                 appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true").build();
