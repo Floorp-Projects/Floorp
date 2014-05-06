@@ -69,7 +69,7 @@ parent:
 
   PWebSocket(PBrowserOrId browser, SerializedLoadContext loadContext);
   PTCPServerSocket(uint16_t localPort, uint16_t backlog, nsString binaryType);
-  PUDPSocket(nsCString host, uint16_t port, nsCString filter);
+  PUDPSocket(nsCString filter);
 
   PDNSRequest(nsCString hostName, uint32_t flags);
 
