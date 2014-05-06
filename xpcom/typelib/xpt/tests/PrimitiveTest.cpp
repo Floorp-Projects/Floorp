@@ -38,7 +38,7 @@ struct TestData {
   output = {0, 0, {0, 0}, NULL, NULL };
 
 void
-dump_struct(char *label, struct TestData *str)
+dump_struct(const char *label, struct TestData *str)
 {
     fprintf(stderr, "%s: {%#08x, %#04x, {%#02x, %#02x}, %s, %d/%s}\n",
 	    label, str->bit32, str->bit16, str->bit8[0], str->bit8[1],
@@ -96,7 +96,7 @@ main(int argc, char **argv)
 		(uint8_t)data[i]);
     fprintf(stderr, "\n");
 
-    whole = malloc(dlen + hlen);
+    whole = (char*)malloc(dlen + hlen);
     if (!whole) {
 	fprintf(stderr, "malloc %d failed!\n", dlen + hlen);
 	return 1;

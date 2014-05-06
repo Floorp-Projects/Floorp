@@ -105,7 +105,7 @@ struct XPTArena
 XPT_PUBLIC_API(XPTArena *)
 XPT_NewArena(uint32_t block_size, size_t alignment, const char* name)
 {
-    XPTArena *arena = calloc(1, sizeof(XPTArena));
+    XPTArena *arena = (XPTArena*)calloc(1, sizeof(XPTArena));
     if (arena) {
         XPT_ASSERT(alignment);
         if (alignment > sizeof(double))
@@ -244,7 +244,7 @@ XPT_ArenaStrDup(XPTArena *arena, const char * s)
         return NULL;
 
     len = strlen(s)+1;
-    cur = XPT_ArenaMalloc(arena, len);
+    cur = (char*)XPT_ArenaMalloc(arena, len);
     memcpy(cur, s, len);
     return cur;
 }

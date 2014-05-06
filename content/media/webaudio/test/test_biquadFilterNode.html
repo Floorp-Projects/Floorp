@@ -55,8 +55,6 @@ addLoadEvent(function() {
     "allpass",
   ];
   for (var i = 0; i < types.length; ++i) {
-    filter.type = filter[types[i].toUpperCase()];
-    is(filter.type, types[i], "Correct alternname type enum value");
     filter.type = types[i];
   }
 
