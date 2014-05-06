@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Console API test bug 1004814</title>
+  </head>
+  <body>
+    <script>
+
+var w = new Worker('worker_bug1004814.js');
+w.postMessage(true);
+
+    </script>
+  </body>
+</html>
