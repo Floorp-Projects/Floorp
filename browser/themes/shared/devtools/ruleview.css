@@ -52,12 +52,20 @@
 }
 
 .ruleview-warning {
-  background: url("chrome://browser/skin/devtools/alerticon-warning.png");
+  background-image: url(alerticon-warning.png);
+  background-size: 13px 12px;
   -moz-margin-start: 5px;
   display: inline-block;
   vertical-align: top;
   width: 13px;
   height: 12px;
+}
+
+
+@media (min-resolution: 2dppx) {
+  .ruleview-warning {
+    background-image: url(alerticon-warning@2x.png);
+  }
 }
 
 .ruleview-ruleopen {

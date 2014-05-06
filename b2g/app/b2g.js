@@ -4,8 +4,29 @@
 
 #filter substitution
 
+#ifndef MOZ_MULET
 pref("toolkit.defaultChromeURI", "chrome://b2g/content/shell.html");
 pref("browser.chromeURL", "chrome://b2g/content/");
+#endif
+
+#ifdef MOZ_MULET
+// Set FxOS as the default homepage
+// bug 1000122: this pref is fetched as a complex value,
+// so that it can't be set a just a string.
+// data: url is a workaround this.
+pref("browser.startup.homepage", "data:text/plain,browser.startup.homepage=chrome://b2g/content/shell.html");
+// Prevent having the firstrun page
+pref("startup.homepage_welcome_url", "");
+pref("browser.shell.checkDefaultBrowser", false);
+// Automatically open devtools on the firefox os panel
+pref("devtools.toolbox.host", "side");
+pref("devtools.toolbox.sidebar.width", 800);
+// Disable session store to ensure having only one tab opened
+pref("browser.sessionstore.max_tabs_undo", 0);
+pref("browser.sessionstore.max_windows_undo", 0);
+pref("browser.sessionstore.restore_on_demand", false);
+pref("browser.sessionstore.resume_from_crash", false);
+#endif
 
 // Bug 945235: Prevent all bars to be considered visible:
 pref("toolkit.defaultChromeFeatures", "chrome,dialog=no,close,resizable,scrollbars,extrachrome");

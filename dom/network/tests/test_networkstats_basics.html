@@ -88,7 +88,7 @@ var steps = [
     }
   },
   function () {
-    // Check if getSamples launch exception when start is greather than end
+    // Check if getSamples throws exception when start is greather than end
 
     // Prepare get params
     req = netStats.getAvailableNetworks();
@@ -102,12 +102,12 @@ var steps = [
       try {
         netStats.getSamples(network, startDate, endDate);
       } catch(ex) {
-        ok(true, "getSamples launch exception when start is greater than end");
+        ok(true, "getSamples throws exception when start is greater than end");
         next();
         return;
       }
 
-      ok(false, "getSamples launch exception when start is greater than end");
+      ok(false, "getSamples throws exception when start is greater than end");
       next();
       return;
     };
@@ -117,7 +117,7 @@ var steps = [
   },
   function () {
     // Test if call getSamples with network of type different than
-    // nsIDOMMozNetworkStatsInterface launch an exception
+    // MozNetworkStatsInterface throws an exception
 
     // Prepare get params
     var network = "wifi";
@@ -127,17 +127,17 @@ var steps = [
     try {
       netStats.getSamples(network, new Date(), new Date());
     } catch(ex) {
-      ok(true, "getSamples launch exception if network is not " +
-               "a nsIDOMMozNetworkStatsInterface");
+      ok(true, "getSamples throws exception if network is not " +
+               "a MozNetworkStatsInterface");
       next();
       return;
     }
 
-    ok(false, "getSamples launch exception if network is not " +
-              "a nsIDOMMozNetworkStatsInterface");
+    ok(false, "getSamples throws exception if network is not " +
+              "a MozNetworkStatsInterface");
   },
   function () {
-    // Test if call getSamples with start parameter type different than Date launch an exception
+    // Test if call getSamples with start parameter type different than Date throws an exception
 
     // Prepare get params
     req = netStats.getAvailableNetworks();
@@ -151,19 +151,19 @@ var steps = [
       try {
         netStats.getSamples(network, startDate, endDate);
       } catch(ex) {
-        ok(true, "getSamples launch exception when start param is not a Date");
+        ok(true, "getSamples throws exception when start param is not a Date");
         next();
         return;
       }
 
-      ok(false, "getSamples launch exception when start param is not a Date");
+      ok(false, "getSamples throws exception when start param is not a Date");
     };
     req.onerror = function () {
       ok(false, "Error getting networks!");
     };
   },
   function () {
-    // Test if call getSamples with end parameter type different than Date launch an exception
+    // Test if call getSamples with end parameter type different than Date throws an exception
 
     // Prepare get params
     req = netStats.getAvailableNetworks();
@@ -177,12 +177,12 @@ var steps = [
       try {
         netStats.getSamples(network, startDate, endDate);
       } catch(ex) {
-        ok(true, "getSamples launch exception when end param is not a Date");
+        ok(true, "getSamples throws exception when end param is not a Date");
         next();
         return;
       }
 
-      ok(false, "getSamples launch exception when end param is not a Date");
+      ok(false, "getSamples throws exception when end param is not a Date");
     };
     req.onerror = function () {
       ok(false, "Error getting networks!");

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+<!ENTITY % aboutDTD SYSTEM "chrome://browser/locale/aboutDevices.dtd" >
+%aboutDTD;
+]>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>&aboutDevices.title;</title>
+  <meta name="viewport" content="width=device-width; user-scalable=0" />
+  <link rel="icon" type="image/png" sizes="64x64" href="chrome://branding/content/favicon64.png" />
+  <link rel="stylesheet" href="chrome://browser/skin/aboutBase.css" type="text/css"/>
+  <link rel="stylesheet" href="chrome://browser/skin/aboutDevices.css" type="text/css"/>
+</head>
+
+<body>
+  <h1>&aboutDevices.header;</h1>
+
+  <ul id="devices-list"></ul>
+
+  <button id="refresh">&aboutDevices.refresh;</button>
+
+  <script type="text/javascript;version=1.8" src="chrome://browser/content/aboutDevices.js"></script>
+</body>
+</html>

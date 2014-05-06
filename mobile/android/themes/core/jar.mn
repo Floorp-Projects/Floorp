@@ -11,6 +11,9 @@ chrome.jar:
 * skin/aboutAddons.css                      (aboutAddons.css)
   skin/aboutApps.css                        (aboutApps.css)
 * skin/aboutBase.css                        (aboutBase.css)
+#ifdef MOZ_DEVICES
+  skin/aboutDevices.css                     (aboutDevices.css)
+#endif
 * skin/aboutDownloads.css                   (aboutDownloads.css)
   skin/aboutFeedback.css                    (aboutFeedback.css)
 #ifdef MOZ_SERVICES_HEALTHREPORT
