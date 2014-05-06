@@ -132,7 +132,7 @@ extern "C" {
  * for use in implementing release-build assertions.
  */
 static MOZ_ALWAYS_INLINE void
-MOZ_ReportAssertionFailure(const char* s, const char* file, int ln)
+MOZ_ReportAssertionFailure(const char* s, const char* file, int ln) MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
 {
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_FATAL, "MOZ_Assert",
@@ -147,7 +147,7 @@ MOZ_ReportAssertionFailure(const char* s, const char* file, int ln)
 }
 
 static MOZ_ALWAYS_INLINE void
-MOZ_ReportCrash(const char* s, const char* file, int ln)
+MOZ_ReportCrash(const char* s, const char* file, int ln) MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
 {
 #ifdef ANDROID
     __android_log_print(ANDROID_LOG_FATAL, "MOZ_CRASH",
