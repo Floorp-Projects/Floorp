@@ -3,11 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIST_FILES = \
-  install.rdf \
-  $(NULL)
-
-DIST_FILES_NO_PP = \
   bootstrap.js \
+  install.rdf \
   $(NULL)
 
 TEST_EXTENSIONS_DIR = $(DEPTH)/_tests/testing/mochitest/extensions
