@@ -31,8 +31,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=288254
 
 /** Test for Bug 257061 and Bug 288254 **/
 SimpleTest.waitForExplicitFinish();
-window.open("findbar_window.xul", "findbartest", 
-            "chrome,width=600,height=600");
+
+// Since bug 978861, this pref is set to `false` on OSX. For this test, we'll
+// set it `true` to disable the find clipboard on OSX, which interferes with
+// our tests.
+SpecialPowers.pushPrefEnv({
+  set: [["accessibility.typeaheadfind.prefillwithselection", true]]
+}, () => {
+  window.open("findbar_window.xul", "findbartest", "chrome,width=600,height=600");
+});
 
 ]]>
 </script>
