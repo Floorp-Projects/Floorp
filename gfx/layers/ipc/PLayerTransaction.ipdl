@@ -41,6 +41,9 @@ sync protocol PLayerTransaction {
   manages PCompositable;
   manages PTexture;
 
+child:
+  async ParentAsyncMessage(AsyncParentMessageData aMessage);
+
 parent:
   async PLayer();
   async PCompositable(TextureInfo aTextureInfo);
@@ -80,9 +83,11 @@ parent:
   // Drop any front buffers that might be retained on the compositor
   // side.
   async ClearCachedResources();
-  
+
   // Schedule a composite if one isn't already scheduled.
   async ForceComposite();
+
+  async ChildAsyncMessages(AsyncChildMessageData[] aMessages);
 
   async __delete__();
 };
