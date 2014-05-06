@@ -303,16 +303,31 @@ this.WebappManager = {
         return;
       }
 
-      let names = [manifestUrlToApp[url].name for (url of outdatedApps)].join(", ");
-      let accepted = yield this._notify({
-        title: PluralForm.get(outdatedApps.length, Strings.GetStringFromName("downloadUpdateTitle")).
-               replace("#1", outdatedApps.length),
-        message: Strings.formatStringFromName("downloadUpdateMessage", [names], 1),
-        icon: "drawable://alert_download",
-      }).dismissed;
+      let usingLan = function() {
+        let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
+        return (network.linkType == network.LINK_TYPE_WIFI || network.linkType == network.LINK_TYPE_ETHERNET);
+      };
 
-      if (accepted) {
+      let updateAllowed = function() {
+        let autoUpdatePref = Services.prefs.getCharPref("app.update.autodownload");
+
+        return (autoUpdatePref == "enabled") || (autoUpdatePref == "wifi" && usingLan());
+      };
+
+      if (updateAllowed()) {
         yield this._updateApks([manifestUrlToApp[url] for (url of outdatedApps)]);
+      } else {
+        let names = [manifestUrlToApp[url].name for (url of outdatedApps)].join(", ");
+        let accepted = yield this._notify({
+          title: PluralForm.get(outdatedApps.length, Strings.GetStringFromName("downloadUpdateTitle")).
+                 replace("#1", outdatedApps.length),
+          message: Strings.formatStringFromName("downloadUpdateMessage", [names], 1),
+          icon: "drawable://alert_download",
+        }).dismissed;
+
+        if (accepted) {
+          yield this._updateApks([manifestUrlToApp[url] for (url of outdatedApps)]);
+        }
       }
     }
     // There isn't a catch block because we want the error to propagate through
