@@ -595,8 +595,10 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
     return 0;
   }
 
+#if defined(XP_WIN) || defined(ANDROID)
   uint64_t driverVersion;
   ParseDriverVersion(adapterDriverVersionString, &driverVersion);
+#endif
 
   uint32_t i = 0;
   for (; i < info.Length(); i++) {
@@ -746,9 +748,6 @@ GfxInfoBase::GetFeatureStatusImpl(int32_t aFeature,
   {
     return NS_OK;
   }
-
-  uint64_t driverVersion;
-  ParseDriverVersion(adapterDriverVersionString, &driverVersion);
 
   // Check if the device is blocked from the downloaded blocklist. If not, check
   // the static list after that. This order is used so that we can later escape
