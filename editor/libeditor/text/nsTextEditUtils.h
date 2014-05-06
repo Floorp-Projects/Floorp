@@ -23,6 +23,7 @@ public:
   // from nsTextEditRules:
   static bool IsBody(nsIDOMNode* aNode);
   static bool IsBreak(nsIDOMNode* aNode);
+  static bool IsBreak(nsINode* aNode);
   static bool IsMozBR(nsIDOMNode* aNode);
   static bool IsMozBR(nsINode* aNode);
   static bool HasMozAttr(nsIDOMNode* aNode);

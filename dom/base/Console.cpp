@@ -900,17 +900,27 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
   }
 
   // Monotonic timer for 'time' and 'timeEnd'
-  if ((aMethodName == MethodTime || aMethodName == MethodTimeEnd) && mWindow) {
-    nsGlobalWindow *win = static_cast<nsGlobalWindow*>(mWindow.get());
-    MOZ_ASSERT(win);
+  if ((aMethodName == MethodTime || aMethodName == MethodTimeEnd)) {
+    if (mWindow) {
+      nsGlobalWindow *win = static_cast<nsGlobalWindow*>(mWindow.get());
+      MOZ_ASSERT(win);
 
-    ErrorResult rv;
-    nsRefPtr<nsPerformance> performance = win->GetPerformance(rv);
-    if (rv.Failed()) {
-      return;
+      ErrorResult rv;
+      nsRefPtr<nsPerformance> performance = win->GetPerformance(rv);
+      if (rv.Failed()) {
+        return;
+      }
+
+      callData->mMonotonicTimer = performance->Now();
+    } else {
+      WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+      MOZ_ASSERT(workerPrivate);
+
+      TimeDuration duration =
+        mozilla::TimeStamp::Now() - workerPrivate->CreationTimeStamp();
+
+      callData->mMonotonicTimer = duration.ToMilliseconds();
     }
-
-    callData->mMonotonicTimer = performance->Now();
   }
 
   // The operation is completed. RAII class has to be disabled.

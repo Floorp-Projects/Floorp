@@ -111,7 +111,7 @@ public:
   virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode);
   virtual bool IsAcceptableInputEvent(nsIDOMEvent* aEvent);
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent();
-  virtual bool IsEditable(nsIContent *aNode);
+  virtual bool IsEditable(nsINode* aNode) MOZ_OVERRIDE;
   using nsEditor::IsEditable;
 
   /* ------------ nsStubMutationObserver overrides --------- */
@@ -229,6 +229,7 @@ public:
   NS_IMETHOD SetHTMLBackgroundColor(const nsAString& aColor);
 
   /* ------------ Block methods moved from nsEditor -------------- */
+  static already_AddRefed<mozilla::dom::Element> GetBlockNodeParent(nsINode* aNode);
   static already_AddRefed<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
 
   void IsNextCharInNodeWhitespace(nsIContent* aContent,
@@ -286,7 +287,8 @@ public:
   virtual bool TagCanContainTag(nsIAtom* aParentTag, nsIAtom* aChildTag);
   
   /** returns true if aNode is a container */
-  virtual bool IsContainer(nsIDOMNode *aNode);
+  virtual bool IsContainer(nsINode* aNode) MOZ_OVERRIDE;
+  virtual bool IsContainer(nsIDOMNode* aNode) MOZ_OVERRIDE;
 
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
@@ -342,7 +344,8 @@ public:
   // This will stop at a table, however, since we don't want to
   //  "drill down" into nested tables.
   // aSelection is optional -- if null, we get current seletion
-  nsresult CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelection, nsIDOMNode *aNode);
+  void CollapseSelectionToDeepestNonTableFirstChild(
+                          mozilla::dom::Selection* aSelection, nsINode* aNode);
 
   /**
    * aNode must be a non-null text node.
@@ -417,6 +420,8 @@ protected:
 
   // key event helpers
   NS_IMETHOD TabInTable(bool inIsShift, bool *outHandled);
+  already_AddRefed<mozilla::dom::Element> CreateBR(nsINode* aNode,
+      int32_t aOffset, EDirection aSelect = eNone);
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, int32_t aOffset, 
                       nsCOMPtr<nsIDOMNode> *outBRNode, nsIEditor::EDirection aSelect = nsIEditor::eNone);
 
@@ -485,6 +490,8 @@ protected:
 
 // End of Table Editing utilities
   
+  static already_AddRefed<mozilla::dom::Element>
+    GetEnclosingTable(nsINode* aNode);
   static nsCOMPtr<nsIDOMNode> GetEnclosingTable(nsIDOMNode *aNode);
 
   /** content-based query returns true if <aProperty aAttribute=aValue> effects aNode
@@ -608,6 +615,7 @@ protected:
   nsIDOMNode* GetArrayEndpoint(bool aEnd, nsCOMArray<nsIDOMNode>& aNodeArray);
 
   /* small utility routine to test if a break node is visible to user */
+  bool     IsVisBreak(nsINode* aNode);
   bool     IsVisBreak(nsIDOMNode *aNode);
 
   /* utility routine to possibly adjust the insertion position when 
@@ -956,6 +964,10 @@ private:
   void DoContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
                          nsIContent* aChild, int32_t aIndexInContainer,
                          InsertedOrAppended aInsertedOrAppended);
+  already_AddRefed<mozilla::dom::Element> GetElementOrParentByTagName(
+      const nsAString& aTagName, nsINode* aNode);
+  already_AddRefed<mozilla::dom::Element> CreateElementWithDefaults(
+      const nsAString& aTagName);
 };
 #endif //nsHTMLEditor_h__
 
