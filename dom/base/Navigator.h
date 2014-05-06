@@ -313,6 +313,8 @@ public:
 
   static bool HasPermissionSettingsSupport(JSContext* aCx, JSObject* aGlobal);
 
+  static bool HasNetworkStatsSupport(JSContext* aCx, JSObject* aGlobal);
+
   nsPIDOMWindow* GetParentObject() const
   {
     return GetWindow();
