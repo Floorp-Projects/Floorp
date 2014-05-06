@@ -942,11 +942,11 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 %ifndef MOZ_WIDGET_GTK
 
 #BMB_bookmarksPopup {
-  transform: scale(.7);
+  transform: scale(.4);
   opacity: 0;
   transition-property: transform, opacity;
   transition-duration: 0.15s;
-  transition-timing-function: ease;
+  transition-timing-function: ease-out;
 }
 
 #BMB_bookmarksPopup[animate="open"] {
@@ -972,12 +972,12 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 
 #BMB_bookmarksPopup[arrowposition="after_start"][animate="cancel"],
 #BMB_bookmarksPopup[arrowposition="before_end"][animate="cancel"] {
-  transform: scale(.7) skew(30deg, 20deg);
+  transform: none;
 }
 
 #BMB_bookmarksPopup[arrowposition="after_end"][animate="cancel"],
 #BMB_bookmarksPopup[arrowposition="before_start"][animate="cancel"] {
-  transform: scale(.7) skew(-30deg, -20deg);
+  transform: none;
 }
 
 %endif
