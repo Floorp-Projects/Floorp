@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMBlob;
+interface nsIWifiEventListener;
+
+[scriptable, uuid(49e8e04e-eb05-4c92-84a6-7af32310f0c3)]
+interface nsIWifiCertService : nsISupports
+{
+  const unsigned short WIFI_CERT_USAGE_FLAG_SERVER = 0x01;
+  const unsigned short WIFI_CERT_USAGE_FLAG_USER   = 0x02;
+
+  void start(in nsIWifiEventListener listener);
+  void shutdown();
+
+  /**
+   * Import a certificate file.
+   *
+   * @param id
+   *        Request ID.
+   * @param certBlob
+   *        A Blob object containing raw data of certificate to be imported.
+   * @param certPassword
+   *        Password of certificate.
+   * @param certNickname
+   *        User assigned nickname for imported certificate.
+   */
+  void importCert(in long id,
+                  in nsIDOMBlob certBlob,
+                  in DOMString certPassword,
+                  in DOMString certNickname);
+};

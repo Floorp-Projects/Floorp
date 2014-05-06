@@ -6,30 +6,7 @@
 
 interface nsIDOMDOMRequest;
 
-/**
- * Represents a data interface for which the manager is recording statistics.
- */
-[scriptable, uuid(f540615b-d803-43ff-8200-2a9d145a5645)]
-interface nsIDOMMozNetworkStatsInterface : nsISupports
-{
-  readonly attribute long type;
-
-  /**
-   * Id value is '0' for wifi or the iccid for mobile (SIM).
-   */
-  readonly attribute DOMString id;
-};
-
-[scriptable, builtinclass, uuid(063ebeb2-5c6e-47ae-bdcd-5e6ebdc7a68c)]
-interface nsIDOMMozNetworkStatsAlarm : nsISupports
-{
-  readonly attribute unsigned long alarmId;
-  readonly attribute nsIDOMMozNetworkStatsInterface network;
-  readonly attribute long threshold;
-  readonly attribute jsval data;
-};
-
-[scriptable,  uuid(8a66f4c1-0c25-4a66-9fc5-0106947b91f9)]
+[scriptable,  uuid(ceb874cd-cc1a-4e65-b404-cc2d3e42425f)]
 interface nsIDOMMozNetworkStatsManager : nsISupports
 {
   /**
@@ -46,7 +23,7 @@ interface nsIDOMMozNetworkStatsManager : nsISupports
    *
    * If success, the request result will be an nsIDOMMozNetworkStats object.
    */
-  nsIDOMDOMRequest getSamples(in nsIDOMMozNetworkStatsInterface network,
+  nsIDOMDOMRequest getSamples(in nsISupports network,
                               in jsval start,
                               in jsval end,
                    [optional] in jsval options /* NetworkStatsGetOptions */);
@@ -62,7 +39,7 @@ interface nsIDOMMozNetworkStatsManager : nsISupports
    *
    * If success, the |result| field of the DOMRequest keeps the alarm Id.
    */
-  nsIDOMDOMRequest addAlarm(in nsIDOMMozNetworkStatsInterface network,
+  nsIDOMDOMRequest addAlarm(in nsISupports network,
                             in long threshold,
                             [optional] in jsval options /* NetworkStatsAlarmOptions */);
 
@@ -78,7 +55,7 @@ interface nsIDOMMozNetworkStatsManager : nsISupports
    *  - threshold
    *  - data
    */
-  nsIDOMDOMRequest getAllAlarms([optional] in nsIDOMMozNetworkStatsInterface network);
+  nsIDOMDOMRequest getAllAlarms([optional] in nsISupports network);
 
   /**
    * Remove all network alarms. If an |alarmId| is provided, then only that
@@ -89,7 +66,7 @@ interface nsIDOMMozNetworkStatsManager : nsISupports
   /**
    * Remove all stats related with the provided network from DB.
    */
-  nsIDOMDOMRequest clearStats(in nsIDOMMozNetworkStatsInterface network);
+  nsIDOMDOMRequest clearStats(in nsISupports network);
 
   /**
    * Remove all stats in the database.
@@ -99,7 +76,7 @@ interface nsIDOMMozNetworkStatsManager : nsISupports
   /**
    * Return available networks that used to be saved in the database.
    */
-  nsIDOMDOMRequest getAvailableNetworks(); // array of nsIDOMMozNetworkStatsInterface.
+  nsIDOMDOMRequest getAvailableNetworks(); // array of MozNetworkStatsInterface.
 
   /**
    * Return available service types that used to be saved in the database.

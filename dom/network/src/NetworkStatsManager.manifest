@@ -1,15 +1,15 @@
 component {3b16fe17-5583-483a-b486-b64a3243221c} NetworkStatsManager.js
 contract @mozilla.org/networkStatsdata;1 {3b16fe17-5583-483a-b486-b64a3243221c}
 
-component {f1996e44-1057-4d4b-8ff8-919e76c4cfa9} NetworkStatsManager.js
-contract @mozilla.org/networkStats;1 {f1996e44-1057-4d4b-8ff8-919e76c4cfa9}
+component {28904f59-8497-4ac0-904f-2af14b7fd3de} NetworkStatsManager.js
+contract @mozilla.org/networkStats;1 {28904f59-8497-4ac0-904f-2af14b7fd3de}
 
 component {f540615b-d803-43ff-8200-2a9d145a5645} NetworkStatsManager.js
 contract @mozilla.org/networkstatsinterface;1 {f540615b-d803-43ff-8200-2a9d145a5645}
 
-component {063ebeb2-5c6e-47ae-bdcd-5e6ebdc7a68c} NetworkStatsManager.js
-contract @mozilla.org/networkstatsalarm;1 {063ebeb2-5c6e-47ae-bdcd-5e6ebdc7a68c}
+component {a93ea13e-409c-4189-9b1e-95fff220be55} NetworkStatsManager.js
+contract @mozilla.org/networkstatsalarm;1 {a93ea13e-409c-4189-9b1e-95fff220be55}
 
-component {8a66f4c1-0c25-4a66-9fc5-0106947b91f9} NetworkStatsManager.js
-contract @mozilla.org/networkStatsManager;1 {8a66f4c1-0c25-4a66-9fc5-0106947b91f9}
+component {ceb874cd-cc1a-4e65-b404-cc2d3e42425f} NetworkStatsManager.js
+contract @mozilla.org/networkStatsManager;1 {ceb874cd-cc1a-4e65-b404-cc2d3e42425f}
 category JavaScript-navigator-property mozNetworkStats @mozilla.org/networkStatsManager;1
