@@ -1826,6 +1826,11 @@ protected:
   nsSlots* mSlots;
 };
 
+inline nsIDOMNode* GetAsDOMNode(nsINode* aNode)
+{
+  return aNode ? aNode->AsDOMNode() : nullptr;
+}
+
 // Useful inline function for getting a node given an nsIContent and an
 // nsIDocument.  Returns the first argument cast to nsINode if it is non-null,
 // otherwise returns the second (which may be null).  We use type variables

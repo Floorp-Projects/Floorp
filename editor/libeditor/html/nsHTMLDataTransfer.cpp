@@ -568,10 +568,9 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
           curNode->GetFirstChild(getter_AddRefs(child));
         }
 
-      }
-      // Check for pre's going into pre's.
-      else if (nsHTMLEditUtils::IsPre(parentBlock) && nsHTMLEditUtils::IsPre(curNode))
-      {
+      } else if (parentBlock && nsHTMLEditUtils::IsPre(parentBlock) &&
+                 nsHTMLEditUtils::IsPre(curNode)) {
+        // Check for pre's going into pre's.
         nsCOMPtr<nsIDOMNode> child, tmp;
         curNode->GetFirstChild(getter_AddRefs(child));
         while (child)
@@ -677,7 +676,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
         {
           // don't leave selection past an invisible break;
           // reset {selNode,selOffset} to point before break
-          selNode = GetNodeLocation(wsRunObj.mStartReasonNode, &selOffset);
+          selNode = GetNodeLocation(GetAsDOMNode(wsRunObj.mStartReasonNode), &selOffset);
           // we want to be inside any inline style prior to break
           nsWSRunObject wsRunObj(this, selNode, selOffset);
           wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode),
@@ -688,7 +687,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
           } else if (visType == WSType::special) {
             // prior visible thing is an image or some other non-text thingy.  
             // We want to be right after it.
-            selNode = GetNodeLocation(wsRunObj.mStartReasonNode, &selOffset);
+            selNode = GetNodeLocation(GetAsDOMNode(wsRunObj.mStartReasonNode), &selOffset);
             ++selOffset;
           }
         }

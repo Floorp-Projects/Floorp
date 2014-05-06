@@ -16,7 +16,7 @@ var initial_values = {
     gridTemplateAreas: "none",
     gridTemplateColumns: "none",
     gridTemplateRows: "none",
-    gridAutoFlow: "none",
+    gridAutoFlow: "row",
     gridAutoColumns: "auto",
     gridAutoRows: "auto",
 };
@@ -88,7 +88,7 @@ grid_test_cases = grid_template_test_cases.concat([
     },
     {
         gridAutoColumns: "40px",
-        shorthand: "none 40px / auto",
+        shorthand: "row 40px / auto",
     },
     {
         gridAutoFlow: "column dense",

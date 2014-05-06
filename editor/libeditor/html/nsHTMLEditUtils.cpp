@@ -234,10 +234,16 @@ nsHTMLEditUtils::IsTableElementButNotTable(nsINode* aNode)
 ///////////////////////////////////////////////////////////////////////////
 // IsTable: true if node an html table
 //                  
-bool 
+bool
 nsHTMLEditUtils::IsTable(nsIDOMNode* aNode)
 {
   return nsEditor::NodeIsType(aNode, nsEditProperty::table);
+}
+
+bool
+nsHTMLEditUtils::IsTable(nsINode* aNode)
+{
+  return aNode && aNode->IsElement() && aNode->Tag() == nsGkAtoms::table;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -359,13 +365,22 @@ nsHTMLEditUtils::IsImage(nsIDOMNode* aNode)
 bool 
 nsHTMLEditUtils::IsLink(nsIDOMNode *aNode)
 {
-  NS_ENSURE_TRUE(aNode, false);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  return node && IsLink(node);
+}
+
+bool
+nsHTMLEditUtils::IsLink(nsINode* aNode)
+{
+  MOZ_ASSERT(aNode);
+
   nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aNode);
   if (anchor)
   {
     nsAutoString tmpText;
-    if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && !tmpText.IsEmpty())
+    if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && !tmpText.IsEmpty()) {
       return true;
+    }
   }
   return false;
 }
