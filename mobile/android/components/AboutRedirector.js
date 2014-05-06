@@ -78,6 +78,12 @@ let modules = {
     privileged: true
   },
 #endif
+#ifdef MOZ_DEVICES
+  devices: {
+    uri: "chrome://browser/content/aboutDevices.xhtml",
+    privileged: true
+  },
+#endif
 }
 
 function AboutRedirector() {}

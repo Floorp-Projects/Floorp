@@ -863,9 +863,11 @@ var gBrowserInit = {
       }
     }
 
-    // Certain kinds of automigration rely on this notification to complete their
-    // tasks BEFORE the browser window is shown.
-    Services.obs.notifyObservers(null, "browser-window-before-show", "");
+    // Certain kinds of automigration rely on this notification to complete
+    // their tasks BEFORE the browser window is shown. SessionStore uses it to
+    // restore tabs into windows AFTER important parts like gMultiProcessBrowser
+    // have been initialized.
+    Services.obs.notifyObservers(window, "browser-window-before-show", "");
 
     // Set a sane starting width/height for all resolutions on new profiles.
     if (!document.documentElement.hasAttribute("width")) {

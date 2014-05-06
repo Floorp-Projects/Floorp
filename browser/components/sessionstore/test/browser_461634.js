@@ -31,9 +31,7 @@ function test() {
 
   // open a window and add the above closed tab list
   let newWin = openDialog(location, "", "chrome,all,dialog=no");
-  newWin.addEventListener("load", function(aEvent) {
-    newWin.removeEventListener("load", arguments.callee, false);
-
+  promiseWindowLoaded(newWin).then(() => {
     gPrefService.setIntPref("browser.sessionstore.max_tabs_undo",
                             test_state.windows[0]._closedTabs.length);
     ss.setWindowState(newWin, JSON.stringify(test_state), true);
@@ -71,5 +69,5 @@ function test() {
     newWin.close();
     gPrefService.clearUserPref("browser.sessionstore.max_tabs_undo");
     finish();
-  }, false);
+  });
 }

@@ -15,9 +15,7 @@ function test() {
 
   // open a window and set a value on it
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no");
-  newWin.addEventListener("load", function(aEvent) {
-    newWin.removeEventListener("load", arguments.callee, false);
-
+  promiseWindowLoaded(newWin).then(() => {
     ss.setWindowValue(newWin, uniqueKey1, uniqueValue1);
 
     let newState = { windows: [{ tabs:[{ entries: [] }], extData: {} }] };
@@ -44,5 +42,5 @@ function test() {
     // clean up
     newWin.close();
     finish();
-  }, false);
+  });
 }
