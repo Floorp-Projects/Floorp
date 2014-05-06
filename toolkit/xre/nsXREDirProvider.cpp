@@ -934,6 +934,11 @@ GetRegWindowsAppDataFolder(bool aLocal, nsAString& _retval)
   // |size| includes room for the terminating null character
   DWORD resultLen = size / 2 - 1;
 
+  if (!resultLen) {
+    _retval.Truncate();
+    return NS_OK;
+  }
+
   _retval.SetLength(resultLen);
   nsAString::iterator begin;
   _retval.BeginWriting(begin);
