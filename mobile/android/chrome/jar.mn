@@ -56,6 +56,10 @@ chrome.jar:
   content/aboutHealthReport.xhtml      (content/aboutHealthReport.xhtml)
 * content/aboutHealthReport.js         (content/aboutHealthReport.js)
 #endif
+#ifdef MOZ_DEVICES
+  content/aboutDevices.xhtml           (content/aboutDevices.xhtml)
+  content/aboutDevices.js              (content/aboutDevices.js)
+#endif
 
 % content branding %content/branding/
 

@@ -8390,6 +8390,12 @@ if test -n "$MOZ_CAPTIVEDETECT"; then
   AC_DEFINE(MOZ_CAPTIVEDETECT)
 fi
 
+dnl Build second screen and casting features for external devices if required
+AC_SUBST(MOZ_DEVICES)
+if test -n "$MOZ_DEVICES"; then
+  AC_DEFINE(MOZ_DEVICES)
+fi
+
 dnl ========================================================
 if test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC" -o "$MOZ_DMD"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=

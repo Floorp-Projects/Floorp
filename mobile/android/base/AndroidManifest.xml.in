@@ -75,11 +75,13 @@
 		 android:icon="@drawable/icon"
                  android:name="org.mozilla.gecko.GeckoApplication"
 		 android:hardwareAccelerated="true"
-#if MOZILLA_OFFICIAL
+#ifdef MOZILLA_OFFICIAL
 		 android:debuggable="false">
 #else
 		 android:debuggable="true">
 #endif
+
+        <meta-data android:name="com.sec.android.support.multiwindow" android:value="true"/>
 
         <!-- If the windowSoftInputMode adjust* flag changes below, the
              setSoftInputMode call in BrowserSearch#onStop must also be updated. -->
@@ -91,10 +93,19 @@
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
                   android:launchMode="singleTask"
                   android:theme="@style/Gecko.App">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER"/>
             </intent-filter>
+
+            <meta-data android:name="com.sec.minimode.icon.portrait.normal"
+                       android:resource="@drawable/icon"/>
+
+            <meta-data android:name="com.sec.minimode.icon.landscape.normal"
+                       android:resource="@drawable/icon" />
+
             <intent-filter>
                 <action android:name="org.mozilla.gecko.ACTION_ALERT_CALLBACK" />
             </intent-filter>

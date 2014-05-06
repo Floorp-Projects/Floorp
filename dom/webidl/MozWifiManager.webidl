@@ -214,6 +214,28 @@ interface MozWifiManager : EventTarget {
   DOMRequest setHttpProxy(MozWifiNetwork network, any info);
 
   /**
+   * Import a certificate file, only support CA certificate now.
+   * @param certBlob A Blob object containing raw data of certificate to be imported.
+   *                 Supported format: binary/base64 encoded DER certificates.
+   *                                   (.der/.crt/.cer/.pem)
+   *                 Cause error if importing certificates already imported.
+   * @param certPassword Password of certificate.
+   * @param certNickname User assigned nickname for imported certificate.
+   *                     Nickname must be unique, it causes error on redundant nickname.
+   * onsuccess: We have successfully imported certificate. request.result is an
+   *            object, containing information of imported CA:
+   *            {
+   *              nickname:  Nickname of imported CA, String.
+   *              usage:     Supported usage of imported CA, Array of String,
+   *                         includes: "ServerCert".
+   *            }
+   * onerror: We have failed to import certificate.
+   */
+  DOMRequest importCert(Blob certBlob,
+                        DOMString certPassword,
+                        DOMString certNickname);
+
+  /**
    * Returns whether or not wifi is currently enabled.
    */
   readonly attribute boolean enabled;
