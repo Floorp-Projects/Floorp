@@ -7505,7 +7505,7 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
       break;
     case eCSSUnit_Initial:
     case eCSSUnit_Unset:
-      pos->mGridAutoFlow = NS_STYLE_GRID_AUTO_FLOW_NONE;
+      pos->mGridAutoFlow = NS_STYLE_GRID_AUTO_FLOW_ROW;
       break;
     default:
       NS_ASSERTION(gridAutoFlow.GetUnit() == eCSSUnit_Enumerated,

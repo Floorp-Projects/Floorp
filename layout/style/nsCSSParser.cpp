@@ -6952,7 +6952,8 @@ CSSParserImpl::ParseGridAutoFlow()
   }
 
   static const int32_t mask[] = {
-    NS_STYLE_GRID_AUTO_FLOW_COLUMN | NS_STYLE_GRID_AUTO_FLOW_ROW,
+    NS_STYLE_GRID_AUTO_FLOW_ROW | NS_STYLE_GRID_AUTO_FLOW_COLUMN,
+    NS_STYLE_GRID_AUTO_FLOW_DENSE | NS_STYLE_GRID_AUTO_FLOW_STACK,
     MASK_END_VALUE
   };
   if (!ParseBitmaskValues(value, nsCSSProps::kGridAutoFlowKTable, mask)) {
@@ -6961,16 +6962,16 @@ CSSParserImpl::ParseGridAutoFlow()
   int32_t bitField = value.GetIntValue();
 
   // Requires one of these
-  if (!(bitField & NS_STYLE_GRID_AUTO_FLOW_NONE ||
+  if (!(bitField & NS_STYLE_GRID_AUTO_FLOW_ROW ||
         bitField & NS_STYLE_GRID_AUTO_FLOW_COLUMN ||
-        bitField & NS_STYLE_GRID_AUTO_FLOW_ROW)) {
+        bitField & NS_STYLE_GRID_AUTO_FLOW_STACK)) {
     return false;
   }
 
-  // 'none' is only valid if it occurs alone:
-  if (bitField & NS_STYLE_GRID_AUTO_FLOW_NONE &&
-      bitField != NS_STYLE_GRID_AUTO_FLOW_NONE) {
-    return false;
+  // 'stack' without 'row' or 'column' defaults to 'stack row'
+  if (bitField == NS_STYLE_GRID_AUTO_FLOW_STACK) {
+    value.SetIntValue(bitField | NS_STYLE_GRID_AUTO_FLOW_ROW,
+                      eCSSUnit_Enumerated);
   }
 
   AppendValue(eCSSProperty_grid_auto_flow, value);
@@ -7825,37 +7826,17 @@ CSSParserImpl::ParseGrid()
     return true;
   }
 
-  // 'none' at the beginning could be a <'grid-auto-flow'>
-  // (which also covers 'none' by itself)
-  // or a <'grid-template-columns'> (as part of <'grid-template'>)
-  if (ParseVariant(value, VARIANT_NONE, nullptr)) {
-    if (ExpectSymbol('/', true)) {
-      AppendValue(eCSSProperty_grid_template_columns, value);
-
-      // Set grid-auto-* subproperties to their initial values.
-      value.SetIntValue(NS_STYLE_GRID_AUTO_FLOW_NONE, eCSSUnit_Enumerated);
-      AppendValue(eCSSProperty_grid_auto_flow, value);
-      value.SetAutoValue();
-      AppendValue(eCSSProperty_grid_auto_columns, value);
-      AppendValue(eCSSProperty_grid_auto_rows, value);
-
-      return ParseGridTemplateAfterSlash(/* aColumnsIsTrackList = */ false);
-    }
-    value.SetIntValue(NS_STYLE_GRID_AUTO_FLOW_NONE, eCSSUnit_Enumerated);
-    AppendValue(eCSSProperty_grid_auto_flow, value);
-    return ParseGridShorthandAutoProps();
-  }
-
   // An empty value is always invalid.
   if (!GetToken(true)) {
     return false;
   }
 
-  // If the value starts with a 'dense', 'column' or 'row' keyword,
-  // it can only start with a <'grid-auto-flow'>
+  // The values starts with a <'grid-auto-flow'> if and only if
+  // it starts with a 'stack', 'dense', 'column' or 'row' keyword.
   if (mToken.mType == eCSSToken_Ident) {
     nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
-    if (keyword == eCSSKeyword_dense ||
+    if (keyword == eCSSKeyword_stack ||
+        keyword == eCSSKeyword_dense ||
         keyword == eCSSKeyword_column ||
         keyword == eCSSKeyword_row) {
       UngetToken();
@@ -7866,7 +7847,7 @@ CSSParserImpl::ParseGrid()
 
   // Set other subproperties to their initial values
   // and parse <'grid-template'>.
-  value.SetIntValue(NS_STYLE_GRID_AUTO_FLOW_NONE, eCSSUnit_Enumerated);
+  value.SetIntValue(NS_STYLE_GRID_AUTO_FLOW_ROW, eCSSUnit_Enumerated);
   AppendValue(eCSSProperty_grid_auto_flow, value);
   value.SetAutoValue();
   AppendValue(eCSSProperty_grid_auto_columns, value);
