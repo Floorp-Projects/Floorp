@@ -757,7 +757,7 @@ Http2Session::GenerateGoAway(uint32_t aStatusCode)
 
   // last-good-stream-id are bytes 8-11 reflecting pushes
   uint32_t goAway = PR_htonl(mOutgoingGoAwayID);
-  memcpy (packet + 7, &goAway, 4);
+  memcpy(packet + 8, &goAway, 4);
 
   // bytes 12-15 are the status code.
   aStatusCode = PR_htonl(aStatusCode);

@@ -932,6 +932,16 @@ protected:
   // True is we are decoding a realtime stream, like a camera stream
   bool mRealTime;
 
+  // True if we've dispatched a task to the decode task queue to call
+  // ReadMetadata on the reader. We maintain a flag to ensure that we don't
+  // dispatch multiple tasks to re-do the metadata loading.
+  bool mDispatchedDecodeMetadataTask;
+
+  // True if we've dispatched a task to the decode task queue to call
+  // Seek on the reader. We maintain a flag to ensure that we don't
+  // dispatch multiple tasks to re-do the seek.
+  bool mDispatchedDecodeSeekTask;
+
   // Stores presentation info required for playback. The decoder monitor
   // must be held when accessing this.
   MediaInfo mInfo;
