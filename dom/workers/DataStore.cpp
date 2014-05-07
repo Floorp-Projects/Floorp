@@ -676,10 +676,14 @@ WorkerDataStore::Sync(JSContext* aCx,
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  // Create a WorkerDataStoreCursor on the worker. DataStoreSyncStoreRunnable
-  // will point that to the DataStoreCursor created on the main thread.
-  nsRefPtr<WorkerDataStoreCursor> workerCursor = new WorkerDataStoreCursor();
+  // Create a WorkerDataStoreCursor on the worker. Note that we need to pass
+  // this WorkerDataStore into the WorkerDataStoreCursor, so that it can keep
+  // track of which WorkerDataStore owns the WorkerDataStoreCursor.
+  nsRefPtr<WorkerDataStoreCursor> workerCursor =
+    new WorkerDataStoreCursor(this);
 
+  // DataStoreSyncStoreRunnable will point the WorkerDataStoreCursor to the
+  // DataStoreCursor created on the main thread.
   nsRefPtr<DataStoreSyncStoreRunnable> runnable =
     new DataStoreSyncStoreRunnable(workerPrivate,
                                    mBackingStore,

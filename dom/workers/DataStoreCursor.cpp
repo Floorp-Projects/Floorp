@@ -20,6 +20,17 @@
 
 BEGIN_WORKERS_NAMESPACE
 
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WorkerDataStoreCursor, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WorkerDataStoreCursor, Release)
+
+NS_IMPL_CYCLE_COLLECTION(WorkerDataStoreCursor, mWorkerStore)
+
+WorkerDataStoreCursor::WorkerDataStoreCursor(WorkerDataStore* aWorkerStore)
+  : mWorkerStore(aWorkerStore)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+}
+
 already_AddRefed<WorkerDataStoreCursor>
 WorkerDataStoreCursor::Constructor(GlobalObject& aGlobal, ErrorResult& aRv)
 {
@@ -49,57 +60,6 @@ public:
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
-  }
-};
-
-// A DataStoreCursorRunnable to run DataStoreCursor::GetStore(...) on the main
-// thread.
-class DataStoreCursorGetStoreRunnable MOZ_FINAL : public DataStoreCursorRunnable
-{
-  WorkerDataStore* mWorkerStore;
-  ErrorResult& mRv;
-  nsRefPtr<DataStoreChangeEventProxy> mEventProxy;
-
-public:
-  DataStoreCursorGetStoreRunnable(WorkerPrivate* aWorkerPrivate,
-                                  const nsMainThreadPtrHandle<DataStoreCursor>& aBackingCursor,
-                                  WorkerDataStore* aWorkerStore,
-                                  ErrorResult& aRv)
-    : DataStoreCursorRunnable(aWorkerPrivate, aBackingCursor)
-    , mWorkerStore(aWorkerStore)
-    , mRv(aRv)
-  {
-    MOZ_ASSERT(aWorkerPrivate);
-    aWorkerPrivate->AssertIsOnWorkerThread();
-
-    // When we're on the worker thread, prepare an DataStoreChangeEventProxy.
-    mEventProxy = new DataStoreChangeEventProxy(aWorkerPrivate, mWorkerStore);
-  }
-
-protected:
-  virtual bool
-  MainThreadRun() MOZ_OVERRIDE
-  {
-    AssertIsOnMainThread();
-
-    nsRefPtr<DataStore> store = mBackingCursor->GetStore(mRv);
-
-    // Add |mEventProxy| as an event listner to DataStore;
-    if (NS_FAILED(store->AddEventListener(NS_LITERAL_STRING("change"),
-                                          mEventProxy,
-                                          false,
-                                          false,
-                                          2))) {
-      NS_WARNING("Failed to add event listener!");
-      return false;
-    }
-
-    // Point WorkerDataStore to DataStore.
-    nsMainThreadPtrHandle<DataStore> backingStore =
-      new nsMainThreadPtrHolder<DataStore>(store);
-    mWorkerStore->SetBackingDataStore(backingStore);
-
-    return true;
   }
 };
 
@@ -172,18 +132,11 @@ WorkerDataStoreCursor::GetStore(JSContext* aCx, ErrorResult& aRv)
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  // Create a WorkerDataStore on the worker. DataStoreCursorGetStoreRunnable
-  // will point that to the DataStore created on the main thread.
-  nsRefPtr<WorkerDataStore> workerStore =
-    new WorkerDataStore(workerPrivate->GlobalScope());
-
-  nsRefPtr<DataStoreCursorGetStoreRunnable> runnable =
-    new DataStoreCursorGetStoreRunnable(workerPrivate,
-                                        mBackingCursor,
-                                        workerStore,
-                                        aRv);
-  runnable->Dispatch(aCx);
-
+  // We should direcly return the existing WorkerDataStore which owns this
+  // WorkerDataStoreCursor, so that the WorkerDataStoreCursor.store can be
+  // tested as equal to the WorkerDataStore owning this WorkerDataStoreCursor.
+  MOZ_ASSERT(mWorkerStore);
+  nsRefPtr<WorkerDataStore> workerStore = mWorkerStore;
   return workerStore.forget();
 }
 
