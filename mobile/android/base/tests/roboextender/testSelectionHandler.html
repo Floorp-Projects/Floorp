@@ -1,0 +1,301 @@
+<html>
+  <head>
+    <title>Automated Text Selection tests for Mobile</title>
+    <meta name="viewport" content="initial-scale=1.0"/>
+    <script type="application/javascript"
+      src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+    <script type="application/javascript">
+
+const DIV_POINT_TEXT = "Under";
+const INPUT_TEXT = "Text for select all in an <input>";
+const TEXTAREA_TEXT = "Text for select all in a <textarea>";
+
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+Cu.import("resource://gre/modules/Messaging.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+/* =================================================================================
+ *
+ * Start of all text selection tests, check initialization state.
+ *
+ */
+function startTests() {
+  testSelectAllDivs().
+    then(testSelectDivAtPoint).
+    then(testSelectInput).
+    then(testSelectTextarea).
+    then(testCloseSelection).
+    then(finishTests, function(err) {
+      ok(false, "Error in selection test " + err);
+      finishTests();
+    });
+}
+
+/* =================================================================================
+ *
+ * "Select all" text selection tests, for <div> (non-editable) fields.
+ *
+ */
+function testSelectAllDivs() {
+  var sh = getSelectionHandler();
+  var selDiv = document.getElementById("selDiv");
+  var nonSelDiv = document.getElementById("nonSelDiv");
+
+  // Check the initial state of the selection handler, and selectable/non-selectable <div>s.
+  return Promise.all([
+    ok(!sh.isSelectionActive(), "Selection should not be active at start of testSelectAllDivs"),
+    ok(sh.canSelect(selDiv), "Can select selectable <div>"),
+    ok(!sh.canSelect(nonSelDiv), "Can't select non-selectable <div>"),
+
+  ]).then(function() {
+    // Select all on a non-editable text node selects all the text in the page.
+    sh.startSelection(selDiv);
+    var selection = sh._getSelection();
+
+    return Promise.all([
+      ok(sh.isSelectionActive(), "Selection should be active now"),
+      is(selection.anchorNode, document.documentElement, "Anchor Node should be start of document"),
+      is(selection.anchorOffset, 0, "Anchor offset should be 0"),
+      is(selection.focusNode, document.body.lastChild, "Focus node should be lastChild of document"),
+      is(selection.focusOffset, document.body.lastChild.textContent.length, "Focus offset should be it's length"),
+    ]);
+  });
+}
+
+/* =================================================================================
+ *
+ * "Select word-at-point" text selection test, for <div> (non-editable) field.
+ * "collapseToStart" test closes selection (Bug 864589).
+ *
+ */
+function testSelectDivAtPoint() {
+  var sh = getSelectionHandler();
+  var selDiv = document.getElementById("selDiv");
+
+  // Select word at point in <div>
+  var rect = selDiv.getBoundingClientRect();
+  sh.startSelection(selDiv, {
+    mode: sh.SELECT_AT_POINT,
+    x: rect.left + 1,
+    y: rect.top + 1
+  });
+  var selection = sh._getSelection();
+
+  // Check the state of the selection handler after selecting at a point.
+  return Promise.all([
+    ok(sh.isSelectionActive(), "Selection should be active at start of testSelectDivAtPoint"),
+    is(selection.toString(), DIV_POINT_TEXT, "The first word in the <div> was selected"),
+
+  ]).then(function() {
+    // Check the state of the selection handler after collapsing a selection.
+    selection.collapseToStart();
+
+    return Promise.all([
+      ok(selection.getRangeAt(0).collapsed, "Selection should be collapsed"),
+      ok(!sh.isSelectionActive(), "Selection should not be active"),
+    ]);
+  });
+}
+
+/* =================================================================================
+ *
+ * "Select all" text selection test, for <input> (editable) field.
+ *
+ */
+function testSelectInput() {
+  var sh = getSelectionHandler();
+  var inputNode = document.getElementById("inputNode");
+  inputNode.value = INPUT_TEXT;
+
+  // Test that calling startSelection with an input selects all the text in the input.
+  return Promise.all([
+    ok(!sh.isSelectionActive(), "Selection should not be active at start of testSelectInput"),
+    ok(sh.canSelect(inputNode), "Can select selectable <input>"),
+
+  ]).then(function() {
+    // Check the state of the selection handler after calling startSelection on it.
+    sh.startSelection(inputNode);
+    var selection = sh._getSelection();
+
+    return Promise.all([
+      ok(sh.isSelectionActive(), "Selection should be active"),
+      ok((sh._targetElement instanceof Ci.nsIDOMNSEditableElement), "Selected element is editable"),
+      is(selection.toString(), INPUT_TEXT, "All text in the <input> was selected"),
+    ]);
+  });
+}
+
+/* =================================================================================
+ *
+ * "Select all" text selection test, for <textarea> (editable) field.
+ *
+ */
+
+function testSelectTextarea() {
+  var sh = getSelectionHandler();
+  var textareaNode = document.getElementById("textareaNode");
+  textareaNode.value = TEXTAREA_TEXT;
+
+  // Change (still-active) selection from previous <input> field to <textarea>
+  sh.startSelection(textareaNode);
+  var selection = sh._getSelection();
+
+  return Promise.all([
+    ok(sh.isSelectionActive(), "Selection should be active at start of testSelectTextarea"),
+    ok((sh._targetElement instanceof Ci.nsIDOMHTMLTextAreaElement), "Selected element is editable, and a <textarea>"),
+    is(selection.toString(), TEXTAREA_TEXT, "All text in the <textarea> was selected"),
+
+  ]).then(function() {
+    // Collpase the selection to close it again.
+    selection.collapseToStart();
+
+    return Promise.all([
+      ok(!sh.isSelectionActive(), "Selection should not be active"),
+    ]);
+  });
+}
+
+/* =================================================================================
+ *
+ * Various text selection tests to end active selections, including:
+ *   1.) Clicking outside the selection.
+ *   2.) SelectionEnd or Tab:Selected messages from java.
+ *
+ */
+function testCloseSelection() {
+  var sh = getSelectionHandler();
+  var inputNode = document.getElementById("inputNode");
+  inputNode.value = INPUT_TEXT;
+
+  // Check the initial state of the selection handler.
+  return Promise.all([
+    ok(!sh.isSelectionActive(), "Selection should not be active at start of testCloseSelection"),
+
+  ]).then(function() {
+    // Start by selecting all in an <input>.
+    sh.startSelection(inputNode);
+    return is(sh._activeType, sh.TYPE_SELECTION, "Selection should be active in <input> before Gesture:SingleTap");
+
+  }).then(function() {
+    // Tap outside <input> to close active selection.
+    sh.observe(null, "Gesture:SingleTap", JSON.stringify({
+      x: 1,
+      y: 1
+    }));
+    return ok(!sh.isSelectionActive(), "Gesture:SingleTap outside <input> should close active selection");
+
+  // Various other ways to close an active selection.
+  }).then(function() {
+    sh.startSelection(inputNode);
+    sh.observe(null, "TextSelection:End", {});
+    return ok(!sh.isSelectionActive(), "TextSelection:End should close active selection");
+
+  }).then(function() {
+    sh.startSelection(inputNode);
+    sh.observe(null, "Tab:Selected", {});
+    return ok(!sh.isSelectionActive(), "Tab:Selected should close active selection");
+
+  }).then(function() {
+    sh.startSelection(inputNode);
+    sh.handleEvent({ type: "pagehide" });
+    return ok(!sh.isSelectionActive(), "pagehide should close active selection");
+
+  }).then(function() {
+    sh.startSelection(inputNode);
+    sh.handleEvent({ type: "blur" });
+    return ok(!sh.isSelectionActive(), "blur should close active selection");
+  });
+}
+
+/* =================================================================================
+ *
+ * After finish of all selection tests, wrap up and go home.
+ *
+ */
+function finishTests() {
+  sendMessageToJava({
+    type: "Robocop:testSelectionHandler",
+    result: true,
+    msg: "Done!",
+    done: true
+  });
+}
+
+/* ============================== Utility functions ======================
+ *
+ * Common functions available to all tests.
+ *
+ */
+function getSelectionHandler() {
+  return (!this._selectionHandler) ?
+    this._selectionHandler = Services.wm.getMostRecentWindow("navigator:browser").SelectionHandler :
+    this._selectionHandler;
+}
+
+function ok(one, msg) {
+  return new Promise(function(resolve, reject) {
+    sendMessageToJava({
+      type: "Robocop:testSelectionHandler",
+      result: one,
+      msg: msg
+    },
+    function (res, err) {
+      (err) ? reject(err) : resolve(res);
+    });
+  });
+}
+
+function is(one, two, msg) {
+  return new Promise(function(resolve, reject) {
+    sendMessageToJava({
+      type: "Robocop:testSelectionHandler",
+      result: one === two,
+      msg: msg + " : " + one + " === " + two
+    },
+    function (res, err) {
+      (err) ? reject(err) : resolve(res);
+    });
+  });
+}
+
+/* =================================================================================
+ *
+ * Page definition for all tests.
+ *
+ */
+    </script>
+  </head>
+
+  <body onload="startTests();">
+
+    <div id="selDiv">Under sufficiently extreme conditions, quarks may become
+      deconfined and exist as free particles. In the course of asymptotic freedom,
+      the strong interaction becomes weaker at higher temperatures. Eventually,
+      color confinement would be lost and an extremely hot plasma of freely moving
+      quarks and gluons would be formed. This theoretical phase of matter is called
+      quark-gluon plasma.[81] The exact conditions needed to give rise to this state
+      are unknown and have been the subject of a great deal of speculation and
+      experimentation. A recent estimate puts the needed temperature at
+      (1.90±0.02)×1012 Kelvin. While a state of entirely free quarks and gluons has
+      never been achieved (despite numerous attempts by CERN in the 1980s and 1990s),
+      recent experiments at the Relativistic Heavy Ion Collider have yielded evidence
+      for liquid-like quark matter exhibiting "nearly perfect" fluid motion.</div><br>
+
+    <div id="nonSelDiv" style="-moz-user-select: none;">Lorem ipsum dolor sit amet,
+      consectetur adipiscing elit. Proin in blandit magna, non porttitor augue.
+      Nam in neque sagittis, varius augue at, ornare velit. Vestibulum eget nisl
+      congue odio molestie scelerisque. Pellentesque ut augue orci. In hac habitasse
+      platea dictumst. Sed placerat tellus quis lacus condimentum, quis luctus elit
+      pellentesque. Mauris cursus neque diam, sit amet gravida quam porta ac.
+      Aliquam aliquam feugiat vestibulum. Proin commodo nulla ligula, in bibendum
+      massa euismod a. Ut ac lobortis dui. Ut id augue id arcu ornare suscipit eu
+      ornare lorem. Pellentesque nec dictum ante. Nam quis ligula ultricies, auctor
+      nunc vel, fringilla turpis. Nulla lacinia, leo ut egestas hendrerit, risus
+      ligula interdum enim, vel varius libero sem ut ligula.</div><br>
+
+    <input id="inputNode" type="text"><br>
+
+    <textarea id="textareaNode"></textarea><br>
+
+  </body>
+</html>

@@ -19,24 +19,32 @@ function spawnTest() {
     get3Spread(panel.panelWin, EVENTS.UI_ADD_NODE_LIST)
   ]);
 
+  let setAndCheck = setAndCheckVariable(panel.panelWin, gVars);
 
   checkVariableView(gVars, 1, {
     "type": "\"sine\"",
     "frequency": 440,
     "detune": 0
-  });
+  }, "default loaded string");
 
   checkVariableView(gVars, 2, {
     "gain": 0
-  });
+  }, "default loaded number");
 
-  yield modifyVariableView(panel.panelWin, gVars, 1, "type", "square");
+  yield setAndCheck(1, "type", "\"square\"", "\"square\"", "sets string as string");
 
-  checkVariableView(gVars, 1, {
-    "type": "\"square\""
-  });
+  yield setAndCheck(2, "gain", 0.005, 0.005, "sets number as number");
 
   yield teardown(panel);
   finish();
+}
+
+function setAndCheckVariable (panelWin, gVars) {
+  return Task.async(function (varNum, prop, value, expected, desc) {
+    yield modifyVariableView(panelWin, gVars, varNum, prop, value);
+    var props = {};
+    props[prop] = expected;
+    checkVariableView(gVars, varNum, props, desc);
+  });
 }
 
