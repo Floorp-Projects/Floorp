@@ -169,8 +169,10 @@ CompositorChild::ActorDestroy(ActorDestroyReason aWhy)
     NS_RUNTIMEABORT("ActorDestroy by IPC channel failure at CompositorChild");
   }
 #endif
-
-  sCompositor = nullptr;
+  if (sCompositor) {
+    sCompositor->Release();
+    sCompositor = nullptr;
+  }
   // We don't want to release the ref to sCompositor here, during
   // cleanup, because that will cause it to be deleted while it's
   // still being used.  So defer the deletion to after it's not in
