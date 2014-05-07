@@ -143,16 +143,12 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
                     continue;
                 }
 
-                // Function.arguments can be used to access all arguments in
-                // non-strict scripts, so we can't optimize out any arguments.
-                CompileInfo &info = block->info();
-                if (!info.script()->strict()) {
-                    uint32_t slot = uses->index();
-                    uint32_t firstArgSlot = info.firstArgSlot();
-                    if (firstArgSlot <= slot && slot - firstArgSlot < info.nargs()) {
-                        uses++;
-                        continue;
-                    }
+                // The operand is an uneliminable slot. This currently
+                // includes argument slots in non-strict scripts (due to being
+                // observable via Function.arguments).
+                if (!block->info().canOptimizeOutSlot(uses->index())) {
+                    uses++;
+                    continue;
                 }
 
                 // Store an optimized out magic value in place of all dead
@@ -254,18 +250,11 @@ IsPhiObservable(MPhi *phi, Observability observe)
         return true;
     }
 
-    // If the Phi is one of the formal argument, and we are using an argument
-    // object in the function. The phi might be observable after a bailout.
-    // For inlined frames this is not needed, as they are captured in the inlineResumePoint.
-    if (fun && info.hasArguments()) {
-        uint32_t first = info.firstArgSlot();
-        if (first <= slot && slot - first < info.nargs()) {
-            // If arguments obj aliases formals, then the arg slots will never be used.
-            if (info.argsObjAliasesFormals())
-                return false;
-            return true;
-        }
-    }
+    // The Phi is an uneliminable slot. Currently this includes argument slots
+    // in non-strict scripts (due to being observable via Function.arguments).
+    if (fun && !info.canOptimizeOutSlot(slot))
+        return true;
+
     return false;
 }
 
