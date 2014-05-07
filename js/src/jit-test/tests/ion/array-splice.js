@@ -25,3 +25,13 @@ function test2() {
     assertEq(arr[0], 80);
 }
 test2();
+
+function testNonArray() {
+    for (var i=0; i<10; i++) {
+	var o = {splice:[].splice, 0:"a", 1:"b", 2:"c", length:3};
+	o.splice(0, 2);
+	assertEq(o.length, 1);
+	assertEq(o[0], "c");
+    }
+}
+testNonArray();
