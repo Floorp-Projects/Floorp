@@ -6,10 +6,6 @@
 
 TEST_DIRS += ['test']
 
-EXPORTS += [
-    'nsIFileStorage.h',
-]
-
 EXPORTS.mozilla.dom += [
     'File.h',
     'FileHandle.h',

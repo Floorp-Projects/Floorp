@@ -6,12 +6,12 @@
 
 #include "FileStreamWrappers.h"
 
+#include "FileHandle.h"
 #include "FileHelper.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsIFileStorage.h"
 #include "nsIRunnable.h"
 #include "nsISeekableStream.h"
 #include "nsThreadUtils.h"
@@ -252,7 +252,7 @@ FileOutputStreamWrapper::Close()
   if (!mFirstTime) {
     NS_ASSERTION(PR_GetCurrentThread() == mWriteThread,
                  "Unsetting thread locals on wrong thread!");
-    mFileHelper->mFileStorage->UnsetThreadLocals();
+    mFileHelper->mFileHandle->UnsetThreadLocals();
   }
 
   if (mFlags & NOTIFY_CLOSE) {
@@ -283,7 +283,7 @@ FileOutputStreamWrapper::Write(const char* aBuf, uint32_t aCount,
 #ifdef DEBUG
     mWriteThread = PR_GetCurrentThread();
 #endif
-    mFileHelper->mFileStorage->SetThreadLocals();
+    mFileHelper->mFileHandle->SetThreadLocals();
 
     nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mOutputStream);
     if (seekable) {
