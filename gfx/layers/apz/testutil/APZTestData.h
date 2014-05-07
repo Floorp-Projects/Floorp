@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT
 #include "mozilla/DebugOnly.h"   // for DebugOnly
 #include "mozilla/ToString.h"    // for ToString
+#include "ipc/IPCMessageUtils.h"
 
 namespace mozilla {
 namespace layers {
@@ -36,6 +37,7 @@ typedef uint32_t SequenceNumber;
 //    with the sequence number of the paint that caused the layers update.
 class APZTestData {
   typedef FrameMetrics::ViewID ViewID;
+  friend struct IPC::ParamTraits<APZTestData>;
 public:
   void StartNewPaint(SequenceNumber aSequenceNumber) {
     auto insertResult = mPaints.insert(DataStore::value_type(aSequenceNumber, Bucket()));
@@ -130,5 +132,40 @@ private:
 
 }
 }
+
+namespace IPC {
+
+template <>
+struct ParamTraits<mozilla::layers::APZTestData>
+{
+  typedef mozilla::layers::APZTestData paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mPaints);
+    WriteParam(aMsg, aParam.mRepaintRequests);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mPaints) &&
+            ReadParam(aMsg, aIter, &aResult->mRepaintRequests));
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::APZTestData::ScrollFrameData>
+  : ParamTraits<mozilla::layers::APZTestData::ScrollFrameDataBase> {};
+
+template <>
+struct ParamTraits<mozilla::layers::APZTestData::Bucket>
+  : ParamTraits<mozilla::layers::APZTestData::BucketBase> {};
+
+template <>
+struct ParamTraits<mozilla::layers::APZTestData::DataStore>
+  : ParamTraits<mozilla::layers::APZTestData::DataStoreBase> {};
+
+}
+
 
 #endif /* mozilla_layers_APZTestData_h */

@@ -694,6 +694,13 @@ LayerTransactionParent::RecvSetAsyncScrollOffset(PLayerParent* aLayer,
 }
 
 bool
+LayerTransactionParent::RecvGetAPZTestData(APZTestData* aOutData)
+{
+  mShadowLayersManager->GetAPZTestData(this, aOutData);
+  return true;
+}
+
+bool
 LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent,
                                CompositableHost* aCompositable,
                                bool aIsAsync)
