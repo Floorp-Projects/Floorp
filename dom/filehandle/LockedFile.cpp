@@ -24,7 +24,6 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMFile.h"
 #include "nsIEventTarget.h"
-#include "nsIFileStorage.h"
 #include "nsISeekableStream.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
@@ -316,8 +315,7 @@ LockedFile::CreateParallelStream(nsISupports** aStream)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsIFileStorage* fileStorage = mFileHandle->mFileStorage;
-  if (fileStorage->IsInvalidated()) {
+  if (mFileHandle->IsInvalid()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -336,8 +334,7 @@ LockedFile::GetOrCreateStream(nsISupports** aStream)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsIFileStorage* fileStorage = mFileHandle->mFileStorage;
-  if (fileStorage->IsInvalidated()) {
+  if (mFileHandle->IsInvalid()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -853,8 +850,7 @@ FinishHelper::Run()
     return NS_OK;
   }
 
-  nsIFileStorage* fileStorage = mLockedFile->mFileHandle->mFileStorage;
-  if (fileStorage->IsInvalidated()) {
+  if (mLockedFile->mFileHandle->IsInvalid()) {
     mAborted = true;
   }
 

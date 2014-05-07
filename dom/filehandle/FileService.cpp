@@ -9,10 +9,11 @@
 #include "FileHandle.h"
 #include "LockedFile.h"
 #include "MainThreadUtils.h"
+#include "mozilla/Assertions.h"
 #include "nsError.h"
 #include "nsIEventTarget.h"
-#include "nsIFileStorage.h"
 #include "nsIObserverService.h"
+#include "nsIOfflineStorage.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -55,7 +56,7 @@ FileService::Cleanup()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsIThread* thread = NS_GetCurrentThread();
-  while (mFileStorageInfos.Count()) {
+  while (mStorageInfos.Count()) {
     if (!NS_ProcessNextEvent(thread)) {
       NS_ERROR("Failed to process next event!");
       break;
@@ -152,64 +153,64 @@ FileService::Enqueue(LockedFile* aLockedFile, FileHelper* aFileHelper)
 
   FileHandle* fileHandle = aLockedFile->mFileHandle;
 
-  if (fileHandle->mFileStorage->IsInvalidated()) {
+  if (fileHandle->IsInvalid()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  const nsACString& storageId = fileHandle->mFileStorage->Id();
+  const nsACString& storageId = fileHandle->mStorageId;
   const nsAString& fileName = fileHandle->mFileName;
   bool modeIsWrite = aLockedFile->mMode == FileMode::Readwrite;
 
-  FileStorageInfo* fileStorageInfo;
-  if (!mFileStorageInfos.Get(storageId, &fileStorageInfo)) {
-    nsAutoPtr<FileStorageInfo> newFileStorageInfo(new FileStorageInfo());
+  StorageInfo* storageInfo;
+  if (!mStorageInfos.Get(storageId, &storageInfo)) {
+    nsAutoPtr<StorageInfo> newStorageInfo(new StorageInfo());
 
-    mFileStorageInfos.Put(storageId, newFileStorageInfo);
+    mStorageInfos.Put(storageId, newStorageInfo);
 
-    fileStorageInfo = newFileStorageInfo.forget();
+    storageInfo = newStorageInfo.forget();
   }
 
   LockedFileQueue* existingLockedFileQueue =
-    fileStorageInfo->GetLockedFileQueue(aLockedFile);
+    storageInfo->GetLockedFileQueue(aLockedFile);
 
   if (existingLockedFileQueue) {
     existingLockedFileQueue->Enqueue(aFileHelper);
     return NS_OK;
   }
 
-  bool lockedForReading = fileStorageInfo->IsFileLockedForReading(fileName);
-  bool lockedForWriting = fileStorageInfo->IsFileLockedForWriting(fileName);
+  bool lockedForReading = storageInfo->IsFileLockedForReading(fileName);
+  bool lockedForWriting = storageInfo->IsFileLockedForWriting(fileName);
 
   if (modeIsWrite) {
     if (!lockedForWriting) {
-      fileStorageInfo->LockFileForWriting(fileName);
+      storageInfo->LockFileForWriting(fileName);
     }
   }
   else {
     if (!lockedForReading) {
-      fileStorageInfo->LockFileForReading(fileName);
+      storageInfo->LockFileForReading(fileName);
     }
   }
 
   if (lockedForWriting || (lockedForReading && modeIsWrite)) {
-    fileStorageInfo->CreateDelayedEnqueueInfo(aLockedFile, aFileHelper);
+    storageInfo->CreateDelayedEnqueueInfo(aLockedFile, aFileHelper);
   }
   else {
     LockedFileQueue* lockedFileQueue =
-      fileStorageInfo->CreateLockedFileQueue(aLockedFile);
+      storageInfo->CreateLockedFileQueue(aLockedFile);
 
     if (aFileHelper) {
       // Enqueue() will queue the file helper if there's already something
       // running. That can't fail, so no need to eventually remove
-      // fileStorageInfo from the hash table.
+      // storageInfo from the hash table.
       //
       // If the file helper is free to run then AsyncRun() is called on the
       // file helper. AsyncRun() is responsible for calling all necessary
       // callbacks when something fails. We're propagating the error here,
-      // however there's no need to eventually remove fileStorageInfo from
+      // however there's no need to eventually remove storageInfo from
       // the hash table. Code behind AsyncRun() will take care of it. The last
       // item in the code path is NotifyLockedFileCompleted() which removes
-      // fileStorageInfo from the hash table if there are no locked files for
+      // storageInfo from the hash table if there are no locked files for
       // the file storage.
       nsresult rv = lockedFileQueue->Enqueue(aFileHelper);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -226,18 +227,18 @@ FileService::NotifyLockedFileCompleted(LockedFile* aLockedFile)
   NS_ASSERTION(aLockedFile, "Null pointer!");
 
   FileHandle* fileHandle = aLockedFile->mFileHandle;
-  const nsACString& storageId = fileHandle->mFileStorage->Id();
+  const nsACString& storageId = fileHandle->mStorageId;
 
-  FileStorageInfo* fileStorageInfo;
-  if (!mFileStorageInfos.Get(storageId, &fileStorageInfo)) {
+  StorageInfo* storageInfo;
+  if (!mStorageInfos.Get(storageId, &storageInfo)) {
     NS_ERROR("We don't know anyting about this locked file?!");
     return;
   }
 
-  fileStorageInfo->RemoveLockedFileQueue(aLockedFile);
+  storageInfo->RemoveLockedFileQueue(aLockedFile);
 
-  if (!fileStorageInfo->HasRunningLockedFiles()) {
-    mFileStorageInfos.Remove(storageId);
+  if (!storageInfo->HasRunningLockedFiles()) {
+    mStorageInfos.Remove(storageId);
 
     // See if we need to fire any complete callbacks.
     uint32_t index = 0;
@@ -254,7 +255,7 @@ FileService::NotifyLockedFileCompleted(LockedFile* aLockedFile)
 
 void
 FileService::WaitForStoragesToComplete(
-                                 nsTArray<nsCOMPtr<nsIFileStorage> >& aStorages,
+                                 nsTArray<nsCOMPtr<nsIOfflineStorage> >& aStorages,
                                  nsIRunnable* aCallback)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -271,19 +272,18 @@ FileService::WaitForStoragesToComplete(
 }
 
 void
-FileService::AbortLockedFilesForStorage(nsIFileStorage* aFileStorage)
+FileService::AbortLockedFilesForStorage(nsIOfflineStorage* aStorage)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aFileStorage, "Null pointer!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(aStorage, "Null pointer!");
 
-  FileStorageInfo* fileStorageInfo;
-  if (!mFileStorageInfos.Get(aFileStorage->Id(), &fileStorageInfo)) {
+  StorageInfo* storageInfo;
+  if (!mStorageInfos.Get(aStorage->Id(), &storageInfo)) {
     return;
   }
 
   nsAutoTArray<nsRefPtr<LockedFile>, 10> lockedFiles;
-  fileStorageInfo->CollectRunningAndDelayedLockedFiles(aFileStorage,
-                                                       lockedFiles);
+  storageInfo->CollectRunningAndDelayedLockedFiles(aStorage, lockedFiles);
 
   for (uint32_t index = 0; index < lockedFiles.Length(); index++) {
     ErrorResult ignored;
@@ -292,17 +292,17 @@ FileService::AbortLockedFilesForStorage(nsIFileStorage* aFileStorage)
 }
 
 bool
-FileService::HasLockedFilesForStorage(nsIFileStorage* aFileStorage)
+FileService::HasLockedFilesForStorage(nsIOfflineStorage* aStorage)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aFileStorage, "Null pointer!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(aStorage, "Null pointer!");
 
-  FileStorageInfo* fileStorageInfo;
-  if (!mFileStorageInfos.Get(aFileStorage->Id(), &fileStorageInfo)) {
+  StorageInfo* storageInfo;
+  if (!mStorageInfos.Get(aStorage->Id(), &storageInfo)) {
     return false;
   }
 
-  return fileStorageInfo->HasRunningLockedFiles(aFileStorage);
+  return storageInfo->HasRunningLockedFiles(aStorage);
 }
 
 NS_IMPL_ISUPPORTS(FileService, nsIObserver)
@@ -325,7 +325,7 @@ FileService::MaybeFireCallback(StoragesCompleteCallback& aCallback)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   for (uint32_t index = 0; index < aCallback.mStorages.Length(); index++) {
-    if (mFileStorageInfos.Get(aCallback.mStorages[index]->Id(), nullptr)) {
+    if (mStorageInfos.Get(aCallback.mStorages[index]->Id(), nullptr)) {
       return false;
     }
   }
@@ -406,7 +406,7 @@ FileService::DelayedEnqueueInfo::~DelayedEnqueueInfo()
 }
 
 FileService::LockedFileQueue*
-FileService::FileStorageInfo::CreateLockedFileQueue(LockedFile* aLockedFile)
+FileService::StorageInfo::CreateLockedFileQueue(LockedFile* aLockedFile)
 {
   nsRefPtr<LockedFileQueue>* lockedFileQueue =
     mLockedFileQueues.AppendElement();
@@ -415,7 +415,7 @@ FileService::FileStorageInfo::CreateLockedFileQueue(LockedFile* aLockedFile)
 }
 
 FileService::LockedFileQueue*
-FileService::FileStorageInfo::GetLockedFileQueue(LockedFile* aLockedFile)
+FileService::StorageInfo::GetLockedFileQueue(LockedFile* aLockedFile)
 {
   uint32_t count = mLockedFileQueues.Length();
   for (uint32_t index = 0; index < count; index++) {
@@ -428,7 +428,7 @@ FileService::FileStorageInfo::GetLockedFileQueue(LockedFile* aLockedFile)
 }
 
 void
-FileService::FileStorageInfo::RemoveLockedFileQueue(LockedFile* aLockedFile)
+FileService::StorageInfo::RemoveLockedFileQueue(LockedFile* aLockedFile)
 {
   for (uint32_t index = 0; index < mDelayedEnqueueInfos.Length(); index++) {
     if (mDelayedEnqueueInfos[index].mLockedFile == aLockedFile) {
@@ -489,12 +489,11 @@ FileService::FileStorageInfo::RemoveLockedFileQueue(LockedFile* aLockedFile)
 }
 
 bool
-FileService::FileStorageInfo::HasRunningLockedFiles(
-                                                   nsIFileStorage* aFileStorage)
+FileService::StorageInfo::HasRunningLockedFiles(nsIOfflineStorage* aStorage)
 {
   for (uint32_t index = 0; index < mLockedFileQueues.Length(); index++) {
     LockedFile* lockedFile = mLockedFileQueues[index]->mLockedFile;
-    if (lockedFile->mFileHandle->mFileStorage == aFileStorage) {
+    if (lockedFile->mFileHandle->Storage() == aStorage) {
       return true;
     }
   }
@@ -502,8 +501,8 @@ FileService::FileStorageInfo::HasRunningLockedFiles(
 }
 
 FileService::DelayedEnqueueInfo*
-FileService::FileStorageInfo::CreateDelayedEnqueueInfo(LockedFile* aLockedFile,
-                                                       FileHelper* aFileHelper)
+FileService::StorageInfo::CreateDelayedEnqueueInfo(LockedFile* aLockedFile,
+                                                   FileHelper* aFileHelper)
 {
   DelayedEnqueueInfo* info = mDelayedEnqueueInfos.AppendElement();
   info->mLockedFile = aLockedFile;
@@ -512,20 +511,20 @@ FileService::FileStorageInfo::CreateDelayedEnqueueInfo(LockedFile* aLockedFile,
 }
 
 void
-FileService::FileStorageInfo::CollectRunningAndDelayedLockedFiles(
-                                 nsIFileStorage* aFileStorage,
+FileService::StorageInfo::CollectRunningAndDelayedLockedFiles(
+                                 nsIOfflineStorage* aStorage,
                                  nsTArray<nsRefPtr<LockedFile> >& aLockedFiles)
 {
   for (uint32_t index = 0; index < mLockedFileQueues.Length(); index++) {
     LockedFile* lockedFile = mLockedFileQueues[index]->mLockedFile;
-    if (lockedFile->mFileHandle->mFileStorage == aFileStorage) {
+    if (lockedFile->mFileHandle->Storage() == aStorage) {
       aLockedFiles.AppendElement(lockedFile);
     }
   }
 
   for (uint32_t index = 0; index < mDelayedEnqueueInfos.Length(); index++) {
     LockedFile* lockedFile = mDelayedEnqueueInfos[index].mLockedFile;
-    if (lockedFile->mFileHandle->mFileStorage == aFileStorage) {
+    if (lockedFile->mFileHandle->Storage() == aStorage) {
       aLockedFiles.AppendElement(lockedFile);
     }
   }

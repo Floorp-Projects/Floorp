@@ -777,8 +777,8 @@ public:
 
     nsRefPtr<FileInfo>& fileInfo = aFile.mFileInfo;
 
-    nsRefPtr<IDBFileHandle> fileHandle = IDBFileHandle::Create(aDatabase,
-      aData.name, aData.type, fileInfo.forget());
+    nsRefPtr<IDBFileHandle> fileHandle = IDBFileHandle::Create(aData.name,
+      aData.type, aDatabase, fileInfo.forget());
 
     return fileHandle->WrapObject(aCx);
   }

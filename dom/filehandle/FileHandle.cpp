@@ -20,7 +20,6 @@
 #include "nsError.h"
 #include "nsIDOMFile.h"
 #include "nsIFile.h"
-#include "nsIFileStorage.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
@@ -71,35 +70,10 @@ FileHandle::~FileHandle()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(FileHandle, DOMEventTargetHelper,
-                                   mFileStorage)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileHandle)
-NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
-
-NS_IMPL_ADDREF_INHERITED(FileHandle, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(FileHandle, DOMEventTargetHelper)
-
-// static
-already_AddRefed<FileHandle>
-FileHandle::Create(nsPIDOMWindow* aWindow,
-                   nsIFileStorage* aFileStorage,
-                   nsIFile* aFile)
+bool
+FileHandle::IsShuttingDown()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-  nsRefPtr<FileHandle> newFileHandle = new FileHandle(aWindow);
-
-  newFileHandle->mFileStorage = aFileStorage;
-  nsresult rv = aFile->GetLeafName(newFileHandle->mName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  newFileHandle->mFile = aFile;
-  newFileHandle->mFileName = newFileHandle->mName;
-
-  return newFileHandle.forget();
+  return FileService::IsShuttingDown();
 }
 
 // virtual
@@ -149,7 +123,7 @@ FileHandle::Open(FileMode aMode, ErrorResult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (FileService::IsShuttingDown() || mFileStorage->IsShuttingDown()) {
+  if (IsShuttingDown()) {
     aError.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;
   }

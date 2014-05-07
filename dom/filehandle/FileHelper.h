@@ -12,12 +12,11 @@
 #include "nsCOMPtr.h"
 #include "nsIRequestObserver.h"
 
-class nsIFileStorage;
-
 namespace mozilla {
 namespace dom {
 
 class FileHelper;
+class FileHandle;
 class FileRequest;
 class FileOutputStreamWrapper;
 class LockedFile;
@@ -84,7 +83,7 @@ protected:
   void
   Finish();
 
-  nsCOMPtr<nsIFileStorage> mFileStorage;
+  nsRefPtr<FileHandle> mFileHandle;
   nsRefPtr<LockedFile> mLockedFile;
   nsRefPtr<FileRequest> mFileRequest;
 
