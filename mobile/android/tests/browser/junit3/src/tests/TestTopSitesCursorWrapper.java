@@ -162,6 +162,41 @@ public class TestTopSitesCursorWrapper extends BrowserTestCase {
         c.close();
     }
 
+    public void testIsNull() {
+        Integer[] pinnedPositions = new Integer[] { 0, 1, 4 };
+        TopSitesCursorWrapper c = createTopSitesCursorWrapper(2, pinnedPositions);
+
+        c.moveToPosition(-1);
+        while (c.moveToNext()) {
+            int position = c.getPosition();
+
+            // Last position is blank
+            if (position == MIN_COUNT - 1) {
+                assertTrue(c.isNull(c.getColumnIndex(Combined.URL)));
+                assertTrue(c.isNull(c.getColumnIndex(Combined.TITLE)));
+                assertTrue(c.isNull(c.getColumnIndex(Combined.DISPLAY)));
+                assertTrue(c.isNull(c.getColumnIndex(Combined.BOOKMARK_ID)));
+                assertTrue(c.isNull(c.getColumnIndex(Combined.HISTORY_ID)));
+            } else {
+                if (c.isPinned()) {
+                    assertFalse(c.isNull(c.getColumnIndex(Combined.URL)));
+                    assertFalse(c.isNull(c.getColumnIndex(Combined.TITLE)));
+                    assertTrue(c.isNull(c.getColumnIndex(Combined.DISPLAY)));
+                    assertTrue(c.isNull(c.getColumnIndex(Combined.BOOKMARK_ID)));
+                    assertTrue(c.isNull(c.getColumnIndex(Combined.HISTORY_ID)));
+                } else {
+                    assertFalse(c.isNull(c.getColumnIndex(Combined.URL)));
+                    assertFalse(c.isNull(c.getColumnIndex(Combined.TITLE)));
+                    assertFalse(c.isNull(c.getColumnIndex(Combined.DISPLAY)));
+                    assertFalse(c.isNull(c.getColumnIndex(Combined.BOOKMARK_ID)));
+                    assertFalse(c.isNull(c.getColumnIndex(Combined.HISTORY_ID)));
+                }
+            }
+        }
+
+        c.close();
+    }
+
     public void testColumnValues() {
         Integer[] pinnedPositions = new Integer[] { 0, 1, 4 };
         TopSitesCursorWrapper c = createTopSitesCursorWrapper(2, pinnedPositions);
