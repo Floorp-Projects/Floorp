@@ -43,6 +43,103 @@ using namespace mozilla::widget;
 extern int32_t             gXULModalLevel;
 
 static bool gAppShellMethodsSwizzled = false;
+// List of current Cocoa app-modal windows (nested if more than one).
+nsCocoaAppModalWindowList *gCocoaAppModalWindowList = NULL;
+
+// Push a Cocoa app-modal window onto the top of our list.
+nsresult nsCocoaAppModalWindowList::PushCocoa(NSWindow *aWindow, NSModalSession aSession)
+{
+  NS_ENSURE_STATE(aWindow && aSession);
+  mList.AppendElement(nsCocoaAppModalWindowListItem(aWindow, aSession));
+  return NS_OK;
+}
+
+// Pop the topmost Cocoa app-modal window off our list.  aWindow and aSession
+// are just used to check that it's what we expect it to be.
+nsresult nsCocoaAppModalWindowList::PopCocoa(NSWindow *aWindow, NSModalSession aSession)
+{
+  NS_ENSURE_STATE(aWindow && aSession);
+
+  for (int i = mList.Length(); i > 0; --i) {
+    nsCocoaAppModalWindowListItem &item = mList.ElementAt(i - 1);
+    if (item.mSession) {
+      NS_ASSERTION((item.mWindow == aWindow) && (item.mSession == aSession),
+                   "PopCocoa() called without matching call to PushCocoa()!");
+      mList.RemoveElementAt(i - 1);
+      return NS_OK;
+    }
+  }
+
+  NS_ERROR("PopCocoa() called without matching call to PushCocoa()!");
+  return NS_ERROR_FAILURE;
+}
+
+// Push a Gecko-modal window onto the top of our list.
+nsresult nsCocoaAppModalWindowList::PushGecko(NSWindow *aWindow, nsCocoaWindow *aWidget)
+{
+  NS_ENSURE_STATE(aWindow && aWidget);
+  mList.AppendElement(nsCocoaAppModalWindowListItem(aWindow, aWidget));
+  return NS_OK;
+}
+
+// Pop the topmost Gecko-modal window off our list.  aWindow and aWidget are
+// just used to check that it's what we expect it to be.
+nsresult nsCocoaAppModalWindowList::PopGecko(NSWindow *aWindow, nsCocoaWindow *aWidget)
+{
+  NS_ENSURE_STATE(aWindow && aWidget);
+
+  for (int i = mList.Length(); i > 0; --i) {
+    nsCocoaAppModalWindowListItem &item = mList.ElementAt(i - 1);
+    if (item.mWidget) {
+      NS_ASSERTION((item.mWindow == aWindow) && (item.mWidget == aWidget),
+                   "PopGecko() called without matching call to PushGecko()!");
+      mList.RemoveElementAt(i - 1);
+      return NS_OK;
+    }
+  }
+
+  NS_ERROR("PopGecko() called without matching call to PushGecko()!");
+  return NS_ERROR_FAILURE;
+}
+
+// The "current session" is normally the "session" corresponding to the
+// top-most Cocoa app-modal window (both on the screen and in our list).
+// But because Cocoa app-modal dialog can be "interrupted" by a Gecko-modal
+// dialog, the top-most Cocoa app-modal dialog may already have finished
+// (and no longer be visible).  In this case we need to check the list for
+// the "next" visible Cocoa app-modal window (and return its "session"), or
+// (if no Cocoa app-modal window is visible) return nil.  This way we ensure
+// (as we need to) that all nested Cocoa app-modal sessions are dealt with
+// before we get to any Gecko-modal session(s).  See nsAppShell::
+// ProcessNextNativeEvent() below.
+NSModalSession nsCocoaAppModalWindowList::CurrentSession()
+{
+  if (![NSApp _isRunningAppModal])
+    return nil;
+
+  NSModalSession currentSession = nil;
+
+  for (int i = mList.Length(); i > 0; --i) {
+    nsCocoaAppModalWindowListItem &item = mList.ElementAt(i - 1);
+    if (item.mSession && [item.mWindow isVisible]) {
+      currentSession = item.mSession;
+      break;
+    }
+  }
+
+  return currentSession;
+}
+
+// Has a Gecko modal dialog popped up over a Cocoa app-modal dialog?
+bool nsCocoaAppModalWindowList::GeckoModalAboveCocoaModal()
+{
+  if (mList.IsEmpty())
+    return false;
+
+  nsCocoaAppModalWindowListItem &topItem = mList.ElementAt(mList.Length() - 1);
+
+  return (topItem.mWidget != nullptr);
+}
 
 @implementation GeckoNSApplication
 
@@ -112,6 +209,8 @@ nsAppShell::nsAppShell()
 , mStarted(false)
 , mTerminated(false)
 , mSkippedNativeCallback(false)
+, mHadMoreEventsCount(0)
+, mRecursionDepth(0)
 , mNativeEventCallbackDepth(0)
 , mNativeEventScheduledDepth(0)
 {
@@ -218,7 +317,12 @@ nsAppShell::Init()
   TextInputHandler::InstallPluginKeyEventsHandler();
 #endif
 
+  gCocoaAppModalWindowList = new nsCocoaAppModalWindowList;
   if (!gAppShellMethodsSwizzled) {
+    nsToolkit::SwizzleMethods([NSApplication class], @selector(beginModalSessionForWindow:),
+                              @selector(nsAppShell_NSApplication_beginModalSessionForWindow:));
+    nsToolkit::SwizzleMethods([NSApplication class], @selector(endModalSession:),
+                              @selector(nsAppShell_NSApplication_endModalSession:));
     // We should only replace the original terminate: method if we're not
     // running in a Cocoa embedder (like Camino).  See bug 604901.
     if (!mRunningCocoaEmbedded) {
@@ -287,7 +391,8 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
     self->mSkippedNativeCallback = true;
   }
 
-  // Still needed to avoid crashes on quit in most Mochitests.
+  // Still needed to fix bug 343033 ("5-10 second delay or hang or crash
+  // when quitting Cocoa Firefox").
   [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
                                       location:NSMakePoint(0,0)
                                  modifierFlags:0
@@ -405,16 +510,17 @@ nsAppShell::ScheduleNativeEventCallback()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// Undocumented Cocoa Event Manager function, present in the same form since
-// at least OS X 10.6.
-extern "C" EventAttributes GetEventAttributes(EventRef inEvent);
-
 // ProcessNextNativeEvent
 //
 // If aMayWait is false, process a single native event.  If it is true, run
 // the native run loop until stopped by ProcessGeckoEvents.
 //
 // Returns true if more events are waiting in the native event queue.
+//
+// But (now that we're using [NSRunLoop runMode:beforeDate:]) it's too
+// expensive to call ProcessNextNativeEvent() many times in a row (in a
+// tight loop), so we never return true more than kHadMoreEventsCountMax
+// times in a row.  This doesn't seem to cause native event starvation.
 //
 // protected virtual
 bool
@@ -430,6 +536,19 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
   if (mTerminated)
     return false;
 
+  // We don't want any native events to be processed here (via Gecko) while
+  // Cocoa is displaying an app-modal dialog (as opposed to a window-modal
+  // "sheet" or a Gecko-modal dialog).  Otherwise Cocoa event-processing loops
+  // may be interrupted, and inappropriate events may get through to the
+  // browser window(s) underneath.  This resolves bmo bugs 419668 and 420967.
+  //
+  // But we need more complex handling (we need to make an exception) if a
+  // Gecko modal dialog is running above the Cocoa app-modal dialog -- for
+  // which see below.
+  if ([NSApp _isRunningAppModal] &&
+      (!gCocoaAppModalWindowList || !gCocoaAppModalWindowList->GeckoModalAboveCocoaModal()))
+    return false;
+
   bool wasRunningEventLoop = mRunningEventLoop;
   mRunningEventLoop = aMayWait;
   NSDate* waitUntil = nil;
@@ -438,78 +557,130 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
 
   NSRunLoop* currentRunLoop = [NSRunLoop currentRunLoop];
 
-  EventQueueRef currentEventQueue = GetCurrentEventQueue();
-  EventTargetRef eventDispatcherTarget = GetEventDispatcherTarget();
-
-  if (aMayWait) {
-    mozilla::HangMonitor::Suspend();
-  }
-
-  // Only call -[NSApp sendEvent:] (and indirectly send user-input events to
-  // Gecko) if aMayWait is true.  Tbis ensures most calls to -[NSApp
-  // sendEvent:] happen under nsAppShell::Run(), at the lowest level of
-  // recursion -- thereby making it less likely Gecko will process user-input
-  // events in the wrong order or skip some of them.  It also avoids eating
-  // too much CPU in nsBaseAppShell::OnProcessNextEvent() (which calls
-  // us) -- thereby avoiding the starvation of nsIRunnable events in
-  // nsThread::ProcessNextEvent().  For more information see bug 996848.
   do {
     // No autorelease pool is provided here, because OnProcessNextEvent
     // and AfterProcessNextEvent are responsible for maintaining it.
     NS_ASSERTION(mAutoreleasePools && ::CFArrayGetCount(mAutoreleasePools),
                  "No autorelease pool for native event");
 
+    // If an event is waiting to be processed, run the main event loop
+    // just long enough to process it.  For some reason, using [NSApp
+    // nextEventMatchingMask:...] to dequeue the event and [NSApp sendEvent:]
+    // to "send" it causes trouble, so we no longer do that.  (The trouble
+    // was very strange, and only happened while processing Gecko events on
+    // demand (via ProcessGeckoEvents()), as opposed to processing Gecko
+    // events in a tight loop (via nsBaseAppShell::Run()):  Particularly in
+    // Camino, mouse-down events sometimes got dropped (or mis-handled), so
+    // that (for example) you sometimes needed to click more than once on a
+    // button to make it work (the zoom button was particularly susceptible).
+    // You also sometimes had to ctrl-click or right-click multiple times to
+    // bring up a context menu.)
+
+    // Now that we're using [NSRunLoop runMode:beforeDate:], it's too
+    // expensive to call ProcessNextNativeEvent() many times in a row, so we
+    // never return true more than kHadMoreEventsCountMax in a row.  I'm not
+    // entirely sure why [NSRunLoop runMode:beforeDate:] is too expensive,
+    // since it and its cousin [NSRunLoop acceptInputForMode:beforeDate:] are
+    // designed to be called in a tight loop.  Possibly the problem is due to
+    // combining [NSRunLoop runMode:beforeDate] with [NSApp
+    // nextEventMatchingMask:...].
+
+    // We special-case timer events (events of type NSPeriodic) to avoid
+    // starving them.  Apple's documentation is very scanty, and it's now
+    // more scanty than it used to be.  But it appears that [NSRunLoop
+    // acceptInputForMode:beforeDate:] doesn't process timer events at all,
+    // that it is called from [NSRunLoop runMode:beforeDate:], and that
+    // [NSRunLoop runMode:beforeDate:], though it does process timer events,
+    // doesn't return after doing so.  To get around this, when aWait is
+    // false we check for timer events and process them using [NSApp
+    // sendEvent:].  When aWait is true [NSRunLoop runMode:beforeDate:]
+    // will only return on a "real" event.  But there's code in
+    // ProcessGeckoEvents() that should (when need be) wake us up by sending
+    // a "fake" "real" event.  (See Apple's current doc on [NSRunLoop
+    // runMode:beforeDate:] and a quote from what appears to be an older
+    // version of this doc at
+    // http://lists.apple.com/archives/cocoa-dev/2001/May/msg00559.html.)
+
+    // If the current mode is something else than NSDefaultRunLoopMode, look
+    // for events in that mode.
+    currentMode = [currentRunLoop currentMode];
+    if (!currentMode)
+      currentMode = NSDefaultRunLoopMode;
+
+    NSEvent* nextEvent = nil;
+
     if (aMayWait) {
-      currentMode = [currentRunLoop currentMode];
-      if (!currentMode)
-        currentMode = NSDefaultRunLoopMode;
-      NSEvent *nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
-                                              untilDate:waitUntil
-                                                 inMode:currentMode
-                                                dequeue:YES];
-      if (nextEvent) {
+      mozilla::HangMonitor::Suspend();
+    }
+
+    // If we're running modal (or not in a Gecko "main" event loop) we still
+    // need to use nextEventMatchingMask and sendEvent -- otherwise (in
+    // Minefield) the modal window (or non-main event loop) won't receive key
+    // events or most mouse events.
+    //
+    // Add aMayWait to minimize the number of calls to -[NSApp sendEvent:]
+    // made from nsAppShell::ProcessNextNativeEvent() (and indirectly from
+    // nsBaseAppShell::OnProcessNextEvent()), to work around bug 959281.
+    if ([NSApp _isRunningModal] || (aMayWait && !InGeckoMainEventLoop())) {
+      if ((nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                          untilDate:waitUntil
+                                             inMode:currentMode
+                                            dequeue:YES])) {
+        // If we're in a Cocoa app-modal session that's been interrupted by a
+        // Gecko-modal dialog, send the event to the Cocoa app-modal dialog's
+        // session.  This ensures that the app-modal session won't be starved
+        // of events, and fixes bugs 463473 and 442442.  (The case of an
+        // ordinary Cocoa app-modal dialog has been dealt with above.)
+        //
+        // Otherwise (if we're in an ordinary Gecko-modal dialog, or if we're
+        // otherwise not in a Gecko main event loop), process the event as
+        // expected.
+        NSModalSession currentAppModalSession = nil;
+        if (gCocoaAppModalWindowList)
+          currentAppModalSession = gCocoaAppModalWindowList->CurrentSession();
+
         mozilla::HangMonitor::NotifyActivity();
-        [NSApp sendEvent:nextEvent];
+
+        if (currentAppModalSession) {
+          [NSApp _modalSession:currentAppModalSession sendEvent:nextEvent];
+        } else {
+          [NSApp sendEvent:nextEvent];
+        }
         eventProcessed = true;
       }
     } else {
-      // AcquireFirstMatchingEventInQueue() doesn't spin the (native) event
-      // loop, though it does queue up any newly available events from the
-      // window server.
-      EventRef currentEvent = AcquireFirstMatchingEventInQueue(currentEventQueue, 0, NULL,
-                                                               kEventQueueOptionsNone);
-      if (!currentEvent) {
-        continue;
+      if (aMayWait ||
+          (nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                          untilDate:nil
+                                             inMode:currentMode
+                                            dequeue:NO])) {
+        if (nextEvent && ([nextEvent type] == NSPeriodic)) {
+          nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                         untilDate:waitUntil
+                                            inMode:currentMode
+                                           dequeue:YES];
+          [NSApp sendEvent:nextEvent];
+        } else {
+          [currentRunLoop runMode:currentMode beforeDate:waitUntil];
+        }
+        eventProcessed = true;
       }
-      EventAttributes attrs = GetEventAttributes(currentEvent);
-      // If attrs is kEventAttributeUserEvent or kEventAttributeMonitored
-      // (i.e. a user input event), we shouldn't process it here while
-      // aMayWait is false.
-      if (attrs != kEventAttributeNone) {
-        // Since we can't process the next event here (while aMayWait is false),
-        // we want moreEvents to be false on return.
-        eventProcessed = false;
-        // This call to ReleaseEvent() matches a call to RetainEvent() in
-        // AcquireFirstMatchingEventInQueue() above.
-        ReleaseEvent(currentEvent);
-        break;
-      }
-      // This call to RetainEvent() matches a call to ReleaseEvent() in
-      // RemoveEventFromQueue() below.
-      RetainEvent(currentEvent);
-      RemoveEventFromQueue(currentEventQueue, currentEvent);
-      SendEventToEventTarget(currentEvent, eventDispatcherTarget);
-      // This call to ReleaseEvent() matches a call to RetainEvent() in
-      // AcquireFirstMatchingEventInQueue() above.
-      ReleaseEvent(currentEvent);
-      eventProcessed = true;
     }
   } while (mRunningEventLoop);
 
-  if (eventProcessed) {
-    moreEvents =
-      (AcquireFirstMatchingEventInQueue(currentEventQueue, 0, NULL,
-                                        kEventQueueOptionsNone) != NULL);
+  if (eventProcessed && (mHadMoreEventsCount < kHadMoreEventsCountMax)) {
+    moreEvents = ([NSApp nextEventMatchingMask:NSAnyEventMask
+                                     untilDate:nil
+                                        inMode:currentMode
+                                       dequeue:NO] != nil);
+  }
+
+  if (moreEvents) {
+    // Once this reaches kHadMoreEventsCountMax, it will be reset to 0 the
+    // next time through (whether or not we process any events then).
+    ++mHadMoreEventsCount;
+  } else {
+    mHadMoreEventsCount = 0;
   }
 
   mRunningEventLoop = wasRunningEventLoop;
@@ -521,6 +692,35 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
   }
 
   return moreEvents;
+}
+
+// Returns true if Gecko events are currently being processed in its "main"
+// event loop (or one of its "main" event loops).  Returns false if Gecko
+// events are being processed in a "nested" event loop, or if we're not
+// running in any sort of Gecko event loop.  How we process native events in
+// ProcessNextNativeEvent() turns on our decision (and if we make the wrong
+// choice, the result may be a hang).
+//
+// We define the "main" event loop(s) as the place (or places) where Gecko
+// event processing "normally" takes place, and all other Gecko event loops
+// as "nested".  The "nested" event loops are normally processed while a call
+// from a "main" event loop is on the stack ... but not always.  For example,
+// the Venkman JavaScript debugger runs a "nested" event loop (in jsdService::
+// EnterNestedEventLoop()) whenever it breaks into the current script.  But
+// if this happens as the result of the user pressing a key combination, there
+// won't be any other Gecko event-processing call on the stack (e.g.
+// NS_ProcessNextEvent() or NS_ProcessPendingEvents()).  (In the current
+// nsAppShell implementation, what counts as the "main" event loop is what
+// nsBaseAppShell::NativeEventCallback() does to process Gecko events.  We
+// don't currently use nsBaseAppShell::Run().)
+bool
+nsAppShell::InGeckoMainEventLoop()
+{
+  if ((gXULModalLevel > 0) || (mRecursionDepth > 0))
+    return false;
+  if (mNativeEventCallbackDepth <= 0)
+    return false;
+  return true;
 }
 
 // Run
@@ -564,6 +764,9 @@ nsAppShell::Exit(void)
   }
 
   mTerminated = true;
+
+  delete gCocoaAppModalWindowList;
+  gCocoaAppModalWindowList = NULL;
 
 #ifndef __LP64__
   TextInputHandler::RemovePluginKeyEventsHandler();
@@ -619,6 +822,8 @@ nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
+  mRecursionDepth = aRecursionDepth;
+
   NS_ASSERTION(mAutoreleasePools,
                "No stack on which to store autorelease pool");
 
@@ -643,6 +848,8 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
                                   bool aEventWasProcessed)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  mRecursionDepth = aRecursionDepth;
 
   CFIndex count = ::CFArrayGetCount(mAutoreleasePools);
 
@@ -759,15 +966,49 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 
 @end
 
+// We hook beginModalSessionForWindow: and endModalSession: in order to
+// maintain a list of Cocoa app-modal windows (and the "sessions" to which
+// they correspond).  We need this in order to deal with the consequences
+// of a Cocoa app-modal dialog being "interrupted" by a Gecko-modal dialog.
+// See nsCocoaAppModalWindowList::CurrentSession() and
+// nsAppShell::ProcessNextNativeEvent() above.
+//
 // We hook terminate: in order to make OS-initiated termination work nicely
 // with Gecko's shutdown sequence.  (Two ways to trigger OS-initiated
 // termination:  1) Quit from the Dock menu; 2) Log out from (or shut down)
 // your computer while the browser is active.)
 @interface NSApplication (MethodSwizzling)
+- (NSModalSession)nsAppShell_NSApplication_beginModalSessionForWindow:(NSWindow *)aWindow;
+- (void)nsAppShell_NSApplication_endModalSession:(NSModalSession)aSession;
 - (void)nsAppShell_NSApplication_terminate:(id)sender;
 @end
 
 @implementation NSApplication (MethodSwizzling)
+
+// Called if and only if a Cocoa app-modal session is beginning.  Always call
+// gCocoaAppModalWindowList->PushCocoa() here (if gCocoaAppModalWindowList is
+// non-nil).
+- (NSModalSession)nsAppShell_NSApplication_beginModalSessionForWindow:(NSWindow *)aWindow
+{
+  NSModalSession session =
+    [self nsAppShell_NSApplication_beginModalSessionForWindow:aWindow];
+  if (gCocoaAppModalWindowList)
+    gCocoaAppModalWindowList->PushCocoa(aWindow, session);
+  return session;
+}
+
+// Called to end any Cocoa modal session (app-modal or otherwise).  Only call
+// gCocoaAppModalWindowList->PopCocoa() when an app-modal session is ending
+// (and when gCocoaAppModalWindowList is non-nil).
+- (void)nsAppShell_NSApplication_endModalSession:(NSModalSession)aSession
+{
+  BOOL wasRunningAppModal = [NSApp _isRunningAppModal];
+  NSWindow *prevAppModalWindow = [NSApp modalWindow];
+  [self nsAppShell_NSApplication_endModalSession:aSession];
+  if (gCocoaAppModalWindowList &&
+      wasRunningAppModal && (prevAppModalWindow != [NSApp modalWindow]))
+    gCocoaAppModalWindowList->PopCocoa(prevAppModalWindow, aSession);
+}
 
 // Called by the OS after [MacApplicationDelegate applicationShouldTerminate:]
 // has returned NSTerminateNow.  This method "subclasses" and replaces the
