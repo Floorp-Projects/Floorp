@@ -152,6 +152,30 @@ public class TopSitesCursorWrapper implements Cursor {
         return numFound;
     }
 
+    private void updateTopCursorPosition(int position) {
+        // Move the real cursor as if we were stepping through it to this position.
+        // Account for pinned sites, and be careful to update its position to the
+        // minimum or maximum position, even if we're moving beyond its bounds.
+        final int pinnedBefore = getPinnedBefore(position);
+        final int actualPosition = position - pinnedBefore;
+
+        if (actualPosition <= -1) {
+            topCursor.moveToPosition(-1);
+        } else if (actualPosition >= topCursor.getCount()) {
+            topCursor.moveToPosition(topCursor.getCount());
+        } else {
+            topCursor.moveToPosition(actualPosition);
+        }
+    }
+
+    private void updatePinnedCursorPosition(int position) {
+        if (pinnedPositions.get(position)) {
+            pinnedCursor.moveToPosition(pinnedPositions.indexOfKey(position));
+        } else {
+            pinnedCursor.moveToPosition(-1);
+        }
+    }
+
     private void assertValidColumnIndex(int columnIndex) {
         if (columnIndex < 0 || columnIndex > columnNames.length - 1) {
             throw new IllegalArgumentException("Column index is out of bounds: " + columnIndex);
@@ -246,26 +270,8 @@ public class TopSitesCursorWrapper implements Cursor {
     public boolean moveToPosition(int position) {
         currentPosition = position;
 
-        // Move the real cursor as if we were stepping through it to this position.
-        // Account for pinned sites, and be careful to update its position to the
-        // minimum or maximum position, even if we're moving beyond its bounds.
-        final int before = getPinnedBefore(position);
-        final int p2 = position - before;
-
-        if (p2 <= -1) {
-            topCursor.moveToPosition(-1);
-        } else if (p2 >= topCursor.getCount()) {
-            topCursor.moveToPosition(topCursor.getCount());
-        } else {
-            topCursor.moveToPosition(p2);
-        }
-
-        if (pinnedPositions.get(position)) {
-            pinnedCursor.moveToPosition(pinnedPositions.indexOfKey(position));
-        } else {
-            pinnedCursor.moveToPosition(-1);
-        }
-
+        updatePinnedCursorPosition(position);
+        updateTopCursorPosition(position);
         updateRowState();
 
         return (!isBeforeFirst() && !isAfterLast());
