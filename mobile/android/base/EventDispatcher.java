@@ -209,6 +209,7 @@ public final class EventDispatcher {
         }
     }
 
+    @RobocopTarget
     @Deprecated
     public static void sendResponse(JSONObject message, Object response) {
         sendResponseHelper(STATUS_SUCCESS, message, response);
