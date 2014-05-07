@@ -22,8 +22,11 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-let NFC = {};
-Cu.import("resource://gre/modules/nfc_consts.js", NFC);
+XPCOMUtils.defineLazyGetter(this, "NFC", function () {
+  let obj = {};
+  Cu.import("resource://gre/modules/nfc_consts.js", obj);
+  return obj;
+});
 
 Cu.import("resource://gre/modules/systemlibs.js");
 const NFC_ENABLED = libcutils.property_get("ro.moz.nfc.enabled", "false") === "true";
