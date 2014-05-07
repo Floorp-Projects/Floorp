@@ -557,11 +557,6 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   }
-  case NS_POINTER_CANCEL:
-  {
-    GenerateMouseEnterExit(mouseEvent);
-    break;
-  }
   case NS_MOUSE_EXIT:
     // If the event is not a top-level window exit, then it's not
     // really an exit --- we may have traversed widget boundaries but
@@ -2864,7 +2859,13 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       SetActiveManager(this, activeContent);
     }
     break;
-  case NS_POINTER_CANCEL:
+  case NS_POINTER_CANCEL: {
+    if(WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
+      GenerateMouseEnterExit(mouseEvent);
+    }
+    // This break was commented specially
+    // break;
+  }
   case NS_POINTER_UP: {
     WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
     // After UP/Cancel Touch pointers become invalid so we can remove relevant helper from Table
