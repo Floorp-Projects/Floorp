@@ -18,6 +18,7 @@
 
 #define A_RTP_WRITER_H_
 
+#include "mozilla/Types.h"
 #include <media/stagefright/foundation/ABase.h>
 #include <media/stagefright/foundation/AHandlerReflector.h>
 #include <media/stagefright/foundation/AString.h>
@@ -31,8 +32,8 @@
 
 namespace android {
 
-struct ABuffer;
-struct MediaBuffer;
+struct MOZ_EXPORT ABuffer;
+struct MOZ_EXPORT MediaBuffer;
 
 struct ARTPWriter : public MediaWriter {
     ARTPWriter(int fd);

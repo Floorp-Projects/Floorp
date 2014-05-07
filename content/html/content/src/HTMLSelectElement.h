@@ -395,6 +395,7 @@ public:
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidityStateType aType) MOZ_OVERRIDE;
 
+  void UpdateValueMissingValidityState();
   /**
    * Insert aElement before the node given by aBefore
    */
@@ -511,7 +512,6 @@ protected:
   // nsIConstraintValidation
   void UpdateBarredFromConstraintValidation();
   bool IsValueMissing();
-  void UpdateValueMissingValidityState();
 
   /**
    * Find out how deep this content is from the select (1=direct child)

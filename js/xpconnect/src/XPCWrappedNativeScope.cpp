@@ -135,7 +135,7 @@ XPCWrappedNativeScope::GetComponentsJSObject()
     AutoJSContext cx;
     if (!mComponents) {
         nsIPrincipal *p = GetPrincipal();
-        bool system = XPCWrapper::GetSecurityManager()->IsSystemPrincipal(p);
+        bool system = nsXPConnect::SecurityManager()->IsSystemPrincipal(p);
         mComponents = system ? new nsXPCComponents(this)
                              : new nsXPCComponentsBase(this);
     }

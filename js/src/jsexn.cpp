@@ -706,8 +706,8 @@ IsDuckTypedErrorObject(JSContext *cx, HandleObject exnObject, const char **filen
 
     const char *filename_str = *filename_strp;
     if (!JS_HasProperty(cx, exnObject, filename_str, &found) || !found) {
-        /* DOMException duck quacks "filename" (all lowercase) */
-        filename_str = "filename";
+        /* Now try "fileName", in case this quacks like an Error */
+        filename_str = js_fileName_str;
         if (!JS_HasProperty(cx, exnObject, filename_str, &found) || !found)
             return false;
     }
@@ -778,8 +778,13 @@ js_ReportUncaughtException(JSContext *cx)
 
     // If js_ErrorFromException didn't get us a JSErrorReport, then the object
     // was not an ErrorObject, security-wrapped or otherwise. However, it might
-    // still quack like one. Give duck-typing a chance.
-    const char *filename_str = js_fileName_str;
+    // still quack like one. Give duck-typing a chance.  We start by looking for
+    // "filename" (all lowercase), since that's where DOMExceptions store their
+    // filename.  Then we check "fileName", which is where Errors store it.  We
+    // have to do it in that order, because DOMExceptions have Error.prototype
+    // on their proto chain, and hence also have a "fileName" property, but its
+    // value is "".
+    const char *filename_str = "filename";
     JSAutoByteString filename;
     if (!reportp && exnObject && IsDuckTypedErrorObject(cx, exnObject, &filename_str))
     {

@@ -11,7 +11,7 @@ interface nsIChannel;
 interface nsIDocShell;
 interface nsIDomainPolicy;
 
-[scriptable, uuid(4c087cc3-e0cc-4ec3-88df-8d68f3023b45)]
+[scriptable, uuid(2565769a-eaec-47a1-a076-605f5294d286)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     /**
@@ -99,12 +99,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     [noscript,notxpcom] boolean scriptAllowed(in JSObjectPtr aGlobal);
 
     ///////////////// Principals ///////////////////////
-    /**
-     * Return the principal of the innermost frame of the currently
-     * executing script. Will return null if there is no script
-     * currently executing.
-     */
-    [noscript] nsIPrincipal getSubjectPrincipal();
 
     /**
      * Return the all-powerful system principal.
@@ -151,12 +145,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     [deprecated] nsIPrincipal getCodebasePrincipal(in nsIURI uri);
 
     /**
-     * Returns true if the principal of the currently running script is the
-     * system principal, false otherwise.
-     */
-    [noscript] boolean subjectPrincipalIsSystem();
-
-    /**
      * Returns OK if aJSContext and target have the same "origin"
      * (scheme, host, and port).
      */
@@ -192,14 +180,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
       return isSystem;
     }
 %}
-
-    /**
-     * Same as getSubjectPrincipal(), only faster. cx must *never* be
-     * passed null, and it must be the context on the top of the
-     * context stack. Does *not* reference count the returned
-     * principal.
-     */
-    [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipal(in JSContextPtr cx);
 
     const unsigned long NO_APP_ID = 0;
     const unsigned long UNKNOWN_APP_ID = 4294967295; // UINT32_MAX

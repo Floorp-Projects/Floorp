@@ -19,6 +19,7 @@
 #include "nsIStringBundle.h"
 #include "nsReadableUtils.h"
 
+#include "nsContentUtils.h"
 #include "nsEscape.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
@@ -208,15 +209,8 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   // SetInitialPrincipalToSubject. This avoids creating the about:blank document
   // and then blowing it away with a second one, which can cause problems for the
   // top-level chrome window case. See bug 789773.
-  nsCOMPtr<nsIScriptSecurityManager> ssm =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  if (ssm) { // Sometimes this happens really early  See bug 793370.
-    nsCOMPtr<nsIPrincipal> principal;
-    ssm->GetSubjectPrincipal(getter_AddRefs(principal));
-    if (!principal) {
-      ssm->GetSystemPrincipal(getter_AddRefs(principal));
-    }
-    rv = mDocShell->CreateAboutBlankContentViewer(principal);
+  if (nsContentUtils::IsInitialized()) { // Sometimes this happens really early  See bug 793370.
+    rv = mDocShell->CreateAboutBlankContentViewer(nsContentUtils::GetSubjectPrincipal());
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDocument> doc = do_GetInterface(mDocShell);
     NS_ENSURE_TRUE(!!doc, NS_ERROR_FAILURE);

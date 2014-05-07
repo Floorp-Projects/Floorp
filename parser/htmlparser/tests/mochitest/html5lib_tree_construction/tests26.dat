@@ -396,3 +396,16 @@ Line 1 Col 19 Expected closing tag. Unexpected end of file.
 | <html>
 |   <head>
 |   <frameset>
+
+#data
+<!DOCTYPE html><html><frameset></frameset></html>XXX</frameset>
+#errors
+52: Non-space character in page trailer.
+52: Non-space character in page trailer.
+52: Non-space character in page trailer.
+63: Stray end tag “frameset”.
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <frameset>
