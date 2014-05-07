@@ -13,6 +13,7 @@ namespace layers {
 class TargetConfig;
 class LayerTransactionParent;
 class AsyncCompositionManager;
+class APZTestData;
 
 class ShadowLayersManager
 {
@@ -29,6 +30,8 @@ public:
     virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
                                    const TimeStamp& aTime) { return true; }
     virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) { }
+    virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
+                                APZTestData* aOutData) { }
 };
 
 } // layers

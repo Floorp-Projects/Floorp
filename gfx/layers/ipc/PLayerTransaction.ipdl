@@ -18,6 +18,7 @@ include "mozilla/GfxMessageUtils.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
+using class mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
 
 /**
  * The layers protocol is spoken between thread contexts that manage
@@ -88,6 +89,10 @@ parent:
 
   // Schedule a composite if one isn't already scheduled.
   async ForceComposite();
+
+  // Get a copy of the compositor-side APZ test data instance for this
+  // layers id.
+  sync GetAPZTestData() returns (APZTestData data);
 
   async ChildAsyncMessages(AsyncChildMessageData[] aMessages);
 
