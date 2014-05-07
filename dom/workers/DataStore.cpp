@@ -34,14 +34,10 @@ WorkerDataStore::WorkerDataStore(WorkerGlobalScope* aScope)
 already_AddRefed<WorkerDataStore>
 WorkerDataStore::Constructor(GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  JSContext* cx = aGlobal.GetContext();
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
-  MOZ_ASSERT(workerPrivate);
-  workerPrivate->AssertIsOnWorkerThread();
-
-  nsRefPtr<WorkerDataStore> store =
-    new WorkerDataStore(workerPrivate->GlobalScope());
-  return store.forget();
+  // We don't allow Gecko to create WorkerDataStore through JS codes like
+  // window.DataStore() on the worker, so disable this for now.
+  NS_NOTREACHED("Cannot use the chrome constructor on the worker!");
+  return nullptr;
 }
 
 JSObject*
@@ -359,6 +355,42 @@ protected:
   }
 };
 
+// A DataStoreRunnable to run DataStore::Clear(...) on the main thread.
+class DataStoreClearRunnable MOZ_FINAL : public DataStoreRunnable
+{
+  nsRefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
+  const nsString mRevisionId;
+  ErrorResult& mRv;
+
+public:
+  DataStoreClearRunnable(WorkerPrivate* aWorkerPrivate,
+                         const nsMainThreadPtrHandle<DataStore>& aBackingStore,
+                         Promise* aWorkerPromise,
+                         const nsAString& aRevisionId,
+                         ErrorResult& aRv)
+    : DataStoreRunnable(aWorkerPrivate, aBackingStore)
+    , mRevisionId(aRevisionId)
+    , mRv(aRv)
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+
+    mPromiseWorkerProxy =
+      new PromiseWorkerProxy(aWorkerPrivate, aWorkerPromise);
+  }
+
+protected:
+  virtual bool
+  MainThreadRun() MOZ_OVERRIDE
+  {
+    AssertIsOnMainThread();
+
+    nsRefPtr<Promise> promise = mBackingStore->Clear(mRevisionId, mRv);
+    promise->AppendNativeHandler(mPromiseWorkerProxy);
+    return true;
+  }
+};
+
 // A DataStoreRunnable to run DataStore::Sync(...) on the main thread.
 class DataStoreSyncStoreRunnable MOZ_FINAL : public DataStoreRunnable
 {
@@ -543,42 +575,6 @@ WorkerDataStore::Remove(JSContext* aCx,
   return promise.forget();
 }
 
-// A DataStoreRunnable to run DataStore::Clear(...) on the main thread.
-class DataStoreClearRunnable MOZ_FINAL : public DataStoreRunnable
-{
-  nsRefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
-  const nsString mRevisionId;
-  ErrorResult& mRv;
-
-public:
-  DataStoreClearRunnable(WorkerPrivate* aWorkerPrivate,
-                         const nsMainThreadPtrHandle<DataStore>& aBackingStore,
-                         Promise* aWorkerPromise,
-                         const nsAString& aRevisionId,
-                         ErrorResult& aRv)
-    : DataStoreRunnable(aWorkerPrivate, aBackingStore)
-    , mRevisionId(aRevisionId)
-    , mRv(aRv)
-  {
-    MOZ_ASSERT(aWorkerPrivate);
-    aWorkerPrivate->AssertIsOnWorkerThread();
-
-    mPromiseWorkerProxy =
-      new PromiseWorkerProxy(aWorkerPrivate, aWorkerPromise);
-  }
-
-protected:
-  virtual bool
-  MainThreadRun() MOZ_OVERRIDE
-  {
-    AssertIsOnMainThread();
-
-    nsRefPtr<Promise> promise = mBackingStore->Clear(mRevisionId, mRv);
-    promise->AppendNativeHandler(mPromiseWorkerProxy);
-    return true;
-  }
-};
-
 already_AddRefed<Promise>
 WorkerDataStore::Clear(JSContext* aCx,
                        const nsAString& aRevisionId,
@@ -676,13 +672,13 @@ WorkerDataStore::Sync(JSContext* aCx,
                       const nsAString& aRevisionId,
                       ErrorResult& aRv)
 {
-  // Create a WorkerDataStoreCursor on the worker. DataStoreSyncStoreRunnable
-  // will point that to the DataStoreCursor created on the main thread.
-  nsRefPtr<WorkerDataStoreCursor> workerCursor = new WorkerDataStoreCursor();
-
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
+
+  // Create a WorkerDataStoreCursor on the worker. DataStoreSyncStoreRunnable
+  // will point that to the DataStoreCursor created on the main thread.
+  nsRefPtr<WorkerDataStoreCursor> workerCursor = new WorkerDataStoreCursor();
 
   nsRefPtr<DataStoreSyncStoreRunnable> runnable =
     new DataStoreSyncStoreRunnable(workerPrivate,
