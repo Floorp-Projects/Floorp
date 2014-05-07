@@ -1111,7 +1111,7 @@ public:
         break;
       }
     }
-    MOZ_ASSERT_IF(i == properties.Length(), "failed to get device name");
+    MOZ_ASSERT(i != properties.Length(), "failed to get device name");
 
     nsRefPtr<DistributeBluetoothSignalTask> task =
       new DistributeBluetoothSignalTask(mSignal);
