@@ -119,8 +119,8 @@
     <command id="Social:SharePage" oncommand="SocialShare.sharePage();" disabled="true"/>
     <command id="Social:ToggleSidebar" oncommand="SocialSidebar.toggleSidebar();" hidden="true"/>
     <command id="Social:ToggleNotifications" oncommand="Social.toggleNotifications();" hidden="true"/>
+    <command id="Social:FocusChat" oncommand="SocialChatBar.focus();" hidden="true" disabled="true"/>
     <command id="Social:Addons" oncommand="BrowserOpenAddonsMgr('addons://list/service');"/>
-    <command id="Chat:Focus" oncommand="Cu.import('resource:///modules/Chat.jsm', {}).Chat.focus(window);"/>
   </commandset>
 
   <commandset id="placesCommands">
@@ -380,15 +380,7 @@
 #endif
 
     <!--<key id="markPage" key="&markPageCmd.commandkey;" command="Social:TogglePageMark" modifiers="accel,shift"/>-->
-    <key id="focusChatBar" key="&social.chatBar.commandkey;" command="Chat:Focus"
-#ifdef XP_MACOSX
-# Sadly the devtools uses shift-accel-c on non-mac and alt-accel-c everywhere else
-# So we just use the other
-         modifiers="accel,shift"
-#else
-         modifiers="accel,alt"
-#endif
-    />
+    <key id="focusChatBar" key="&social.chatBar.commandkey;" command="Social:FocusChat" modifiers="accel,shift"/>
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
 
