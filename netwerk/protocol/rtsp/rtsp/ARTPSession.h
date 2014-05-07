@@ -18,6 +18,7 @@
 
 #define A_RTP_SESSION_H_
 
+#include "mozilla/Types.h"
 #include <media/stagefright/foundation/AHandler.h>
 
 namespace android {
@@ -25,7 +26,7 @@ namespace android {
 struct APacketSource;
 struct ARTPConnection;
 struct ASessionDescription;
-struct MediaSource;
+struct MOZ_EXPORT MediaSource;
 
 struct ARTPSession : public AHandler {
     ARTPSession();

@@ -18,6 +18,7 @@
 
 #define A_MPEG4_AUDIO_ASSEMBLER_H_
 
+#include "mozilla/Types.h"
 #include "ARTPAssembler.h"
 
 #include <utils/List.h>
@@ -26,8 +27,8 @@
 
 namespace android {
 
-struct AMessage;
-struct AString;
+struct MOZ_EXPORT AMessage;
+struct MOZ_EXPORT AString;
 
 struct AMPEG4AudioAssembler : public ARTPAssembler {
     AMPEG4AudioAssembler(

@@ -1317,6 +1317,14 @@ SpecialPowersAPI.prototype = {
     Cu.forceCC();
   },
 
+  finishCC: function() {
+    Cu.finishCC();
+  },
+
+  ccSlice: function(budget) {
+    Cu.ccSlice(budget);
+  },
+
   // Due to various dependencies between JS objects and C++ objects, an ordinary
   // forceGC doesn't necessarily clear all unused objects, thus the GC and CC
   // needs to run several times and when no other JS is running.

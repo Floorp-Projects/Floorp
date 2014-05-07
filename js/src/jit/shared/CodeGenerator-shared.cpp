@@ -138,7 +138,7 @@ ToStackIndex(LAllocation *a)
 
 bool
 CodeGeneratorShared::encodeAllocation(LSnapshot *snapshot, MDefinition *mir,
-                                       uint32_t *allocIndex)
+                                      uint32_t *allocIndex)
 {
     if (mir->isBox())
         mir = mir->toBox()->getOperand(0);

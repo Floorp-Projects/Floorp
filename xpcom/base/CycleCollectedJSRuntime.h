@@ -76,6 +76,13 @@ class IncrementalFinalizeRunnable;
 // Contains various stats about the cycle collection.
 struct CycleCollectorResults
 {
+  CycleCollectorResults()
+  {
+    // Initialize here so when we increment mNumSlices the first time we're
+    // not using uninitialized memory.
+    Init();
+  }
+
   void Init()
   {
     mForcedGC = false;
@@ -84,6 +91,9 @@ struct CycleCollectorResults
     mVisitedGCed = 0;
     mFreedRefCounted = 0;
     mFreedGCed = 0;
+    mNumSlices = 1;
+    // mNumSlices is initialized to one, because we call Init() after the
+    // per-slice increment of mNumSlices has already occurred.
   }
 
   bool mForcedGC;
@@ -92,6 +102,7 @@ struct CycleCollectorResults
   uint32_t mVisitedGCed;
   uint32_t mFreedRefCounted;
   uint32_t mFreedGCed;
+  uint32_t mNumSlices;
 };
 
 class CycleCollectedJSRuntime
@@ -198,8 +209,8 @@ public:
   nsresult TraverseRoots(nsCycleCollectionNoteRootCallback &aCb);
   bool UsefulToMergeZones() const;
   void FixWeakMappingGrayBits() const;
-  bool NeedCollect() const;
-  void Collect(uint32_t reason) const;
+  bool AreGCGrayBitsValid() const;
+  void GarbageCollect(uint32_t reason) const;
 
   void DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
                         DeferredFinalizeFunction aFunc,

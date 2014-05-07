@@ -163,6 +163,59 @@ private:
   WifiCertServiceResultOptions mResult;
 };
 
+class DeleteCertTask MOZ_FINAL: public CryptoTask
+{
+public:
+  DeleteCertTask(int32_t aId, const nsAString& aCertNickname)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mResult.mId = aId;
+    mResult.mStatus = 0;
+    mResult.mUsageFlag = 0;
+    mResult.mNickname = aCertNickname;
+  }
+
+private:
+  virtual void ReleaseNSSResources() {}
+
+  virtual nsresult CalculateResult() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    nsCString userNickname;
+    CopyUTF16toUTF8(mResult.mNickname, userNickname);
+
+    // Delete server certificate.
+    nsCString serverCertName("WIFI_SERVERCERT_", 16);
+    serverCertName += userNickname;
+
+    ScopedCERTCertificate cert(
+      CERT_FindCertByNickname(CERT_GetDefaultCertDB(), serverCertName.get())
+    );
+    if (!cert) {
+      return MapSECStatus(SECFailure);
+    }
+
+    SECStatus srv = SEC_DeletePermCertificate(cert);
+    if (srv != SECSuccess) {
+      return MapSECStatus(srv);
+    }
+
+    return NS_OK;
+  }
+
+  virtual void CallCallback(nsresult rv)
+  {
+    if (NS_FAILED(rv)) {
+      mResult.mStatus = -1;
+    }
+    gWifiCertService->DispatchResult(mResult);
+  }
+
+  WifiCertServiceResultOptions mResult;
+};
+
 NS_IMPL_ISUPPORTS(WifiCertService, nsIWifiCertService)
 
 NS_IMETHODIMP
@@ -247,6 +300,13 @@ WifiCertService::ImportCert(int32_t aId, nsIDOMBlob* aCertBlob,
   RefPtr<CryptoTask> task = new ImportCertTask(aId, aCertBlob, aCertPassword,
                                                aCertNickname);
   return task->Dispatch("WifiImportCert");
+}
+
+NS_IMETHODIMP
+WifiCertService::DeleteCert(int32_t aId, const nsAString& aCertNickname)
+{
+  RefPtr<CryptoTask> task = new DeleteCertTask(aId, aCertNickname);
+  return task->Dispatch("WifiDeleteCert");
 }
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(WifiCertService,

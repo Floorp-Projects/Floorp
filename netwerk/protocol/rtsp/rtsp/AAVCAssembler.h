@@ -18,6 +18,7 @@
 
 #define A_AVC_ASSEMBLER_H_
 
+#include "mozilla/Types.h"
 #include "ARTPAssembler.h"
 
 #include <utils/List.h>
@@ -25,8 +26,8 @@
 
 namespace android {
 
-struct ABuffer;
-struct AMessage;
+struct MOZ_EXPORT ABuffer;
+struct MOZ_EXPORT AMessage;
 
 struct AAVCAssembler : public ARTPAssembler {
     AAVCAssembler(const sp<AMessage> &notify);
