@@ -7,9 +7,15 @@ import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.util.ArrayMap;
 import android.util.SparseBooleanArray;
+import android.util.SparseIntArray;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 
 /**
@@ -19,21 +25,45 @@ import org.mozilla.gecko.db.BrowserDB.URLColumns;
  * entries.
  */
 public class TopSitesCursorWrapper implements Cursor {
-
     private enum RowType {
         UNKNOWN,
+        BLANK,
         TOP,
         PINNED
     }
 
+    private static final String[] columnNames = new String[] {
+        TopSites._ID,
+        TopSites.URL,
+        TopSites.TITLE,
+        TopSites.BOOKMARK_ID,
+        TopSites.HISTORY_ID,
+        TopSites.DISPLAY,
+        TopSites.TYPE
+    };
+
+    private static final ArrayMap<String, Integer> columnIndexes =
+            new ArrayMap<String, Integer>(columnNames.length) {{
+        for (int i = 0; i < columnNames.length; i++) {
+            put(columnNames[i], i);
+        }
+    }};
+
+    // Maps column indexes from the wrapper to the cursor's.
+    private SparseIntArray topIndexes;
+    private SparseIntArray pinnedIndexes;
+
     // Type of content in the current position
     private RowType currentRowType;
+
+    // Currently active cursor
+    private Cursor currentCursor;
 
     // The cursor for the top sites query
     private final Cursor topCursor;
 
     // The cursor for the pinned sites query
-    private Cursor pinnedCursor;
+    private final Cursor pinnedCursor;
 
     // Associates pinned sites and their respective positions
     private SparseBooleanArray pinnedPositions;
@@ -54,8 +84,27 @@ public class TopSitesCursorWrapper implements Cursor {
         this.topCursor = topCursor;
         this.pinnedCursor = pinnedCursor;
 
+        updateIndexMaps();
         updatePinnedPositions();
         updateCount();
+    }
+
+    private void updateIndexMaps() {
+        topIndexes = new SparseIntArray(topCursor.getColumnCount());
+        updateIndexMapFromCursor(topIndexes, topCursor);
+
+        pinnedIndexes = new SparseIntArray(pinnedCursor.getColumnCount());
+        updateIndexMapFromCursor(pinnedIndexes, pinnedCursor);
+    }
+
+    private static void updateIndexMapFromCursor(SparseIntArray indexMap, Cursor c) {
+        final int columnCount = c.getColumnCount();
+        for (int i = 0; i < columnCount; i++) {
+            final Integer index = columnIndexes.get(c.getColumnName(i));
+            if (index != null) {
+                indexMap.put(index, i);
+            }
+        }
     }
 
     private void updatePinnedPositions() {
@@ -76,17 +125,19 @@ public class TopSitesCursorWrapper implements Cursor {
         count = Math.max(minSize, pinnedCursor.getCount() + topCursor.getCount());
     }
 
-    public boolean isPinned() {
-        return (currentRowType == RowType.PINNED);
-    }
-
-    private void updateRowType() {
+    private void updateRowState() {
         if (!pinnedCursor.isBeforeFirst() && !pinnedCursor.isAfterLast()) {
             currentRowType = RowType.PINNED;
+            currentCursor = pinnedCursor;
         } else if (!topCursor.isBeforeFirst() && !topCursor.isAfterLast()) {
             currentRowType = RowType.TOP;
+            currentCursor = topCursor;
+        } else if (currentPosition >= 0 && currentPosition < minSize) {
+            currentRowType = RowType.BLANK;
+            currentCursor = null;
         } else {
             currentRowType = RowType.UNKNOWN;
+            currentCursor = null;
         }
     }
 
@@ -99,6 +150,41 @@ public class TopSitesCursorWrapper implements Cursor {
         }
 
         return numFound;
+    }
+
+    private void assertValidColumnIndex(int columnIndex) {
+        if (columnIndex < 0 || columnIndex > columnNames.length - 1) {
+            throw new IllegalArgumentException("Column index is out of bounds: " + columnIndex);
+        }
+    }
+
+    private void assertValidRowType() {
+        if (currentRowType == RowType.UNKNOWN) {
+            throw new IllegalStateException("No provided cursor holds data at this position");
+        }
+    }
+
+    private int getColumnIndexForCurrentRowType(int columnIndex) {
+        assertValidRowType();
+        assertValidColumnIndex(columnIndex);
+
+        SparseIntArray map = null;
+
+        switch (currentRowType) {
+            case TOP:
+                map = topIndexes;
+                break;
+
+            case PINNED:
+                map = pinnedIndexes;
+                break;
+        }
+
+        if (map != null) {
+            return map.get(columnIndex, -1);
+        }
+
+        return -1;
     }
 
     @Override
@@ -180,15 +266,16 @@ public class TopSitesCursorWrapper implements Cursor {
             pinnedCursor.moveToPosition(-1);
         }
 
-        updateRowType();
+        updateRowState();
 
         return (!isBeforeFirst() && !isAfterLast());
     }
 
     @Override
     public long getLong(int columnIndex) {
-        if (currentRowType == RowType.TOP) {
-            return topCursor.getLong(columnIndex);
+        final int index = getColumnIndexForCurrentRowType(columnIndex);
+        if (index >= 0) {
+            return currentCursor.getLong(index);
         }
 
         return 0;
@@ -196,8 +283,28 @@ public class TopSitesCursorWrapper implements Cursor {
 
     @Override
     public int getInt(int columnIndex) {
-        if (currentRowType == RowType.TOP) {
-            return topCursor.getInt(columnIndex);
+        assertValidRowType();
+        assertValidColumnIndex(columnIndex);
+
+        if (columnNames[columnIndex].equals(TopSites.TYPE)) {
+            switch (currentRowType) {
+                case BLANK:
+                    return TopSites.TYPE_BLANK;
+
+                case TOP:
+                    return TopSites.TYPE_TOP;
+
+                case PINNED:
+                    return TopSites.TYPE_PINNED;
+
+                default:
+                    return -1;
+            }
+        }
+
+        final int index = getColumnIndexForCurrentRowType(columnIndex);
+        if (index >= 0) {
+            return currentCursor.getInt(index);
         }
 
         return 0;
@@ -205,17 +312,9 @@ public class TopSitesCursorWrapper implements Cursor {
 
     @Override
     public String getString(int columnIndex) {
-        switch (currentRowType) {
-            case TOP:
-                return topCursor.getString(columnIndex);
-
-            case PINNED:
-                if (columnIndex == topCursor.getColumnIndex(URLColumns.URL)) {
-                    return pinnedCursor.getString(pinnedCursor.getColumnIndex(URLColumns.URL));
-                } else if (columnIndex == topCursor.getColumnIndex(URLColumns.TITLE)) {
-                    return pinnedCursor.getString(pinnedCursor.getColumnIndex(URLColumns.TITLE));
-                }
-                break;
+        final int index = getColumnIndexForCurrentRowType(columnIndex);
+        if (index >= 0) {
+            return currentCursor.getString(index);
         }
 
         return "";
@@ -248,16 +347,9 @@ public class TopSitesCursorWrapper implements Cursor {
 
     @Override
     public boolean isNull(int columnIndex) {
-        switch (currentRowType) {
-            case TOP:
-                return topCursor.isNull(columnIndex);
-
-            case PINNED:
-                if (columnIndex == topCursor.getColumnIndex(URLColumns.URL) ||
-                    columnIndex == topCursor.getColumnIndex(URLColumns.TITLE)) {
-                    return false;
-                }
-                break;
+        final int index = getColumnIndexForCurrentRowType(columnIndex);
+        if (index >= 0) {
+            return currentCursor.isNull(index);
         }
 
         return true;
@@ -270,28 +362,37 @@ public class TopSitesCursorWrapper implements Cursor {
 
     @Override
     public int getColumnCount() {
-        throw new UnsupportedOperationException();
+        return columnNames.length;
     }
 
     @Override
     public int getColumnIndex(String columnName) {
-        return topCursor.getColumnIndex(columnName);
+        final Integer index = columnIndexes.get(columnName);
+        if (index == null) {
+            return -1;
+        }
+
+        return index;
     }
 
     @Override
-    public int getColumnIndexOrThrow(String columnName)
-            throws IllegalArgumentException {
-        return topCursor.getColumnIndexOrThrow(columnName);
+    public int getColumnIndexOrThrow(String columnName) throws IllegalArgumentException {
+        final int index = getColumnIndex(columnName);
+        if (index < 0) {
+            throw new IllegalArgumentException("Column index not found: " + columnName);
+        }
+
+        return index;
     }
 
     @Override
     public String getColumnName(int columnIndex) {
-        throw new UnsupportedOperationException();
+        return columnNames[columnIndex];
     }
 
     @Override
     public String[] getColumnNames() {
-        throw new UnsupportedOperationException();
+        return columnNames;
     }
 
     @Override
@@ -364,7 +465,10 @@ public class TopSitesCursorWrapper implements Cursor {
     @Override
     public void close() {
         topCursor.close();
+        topIndexes = null;
+
         pinnedCursor.close();
+        pinnedIndexes = null;
         pinnedPositions = null;
     }
 }

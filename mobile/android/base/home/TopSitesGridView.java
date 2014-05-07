@@ -11,7 +11,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.ThumbnailHelper;
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.TopSitesCursorWrapper;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
@@ -240,9 +240,11 @@ public class TopSitesGridView extends GridView {
      * @param  cursor  used to update the context menu info object
      */
     private void updateContextMenuFromCursor(TopSitesGridContextMenuInfo info, Cursor cursor) {
-        info.url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
-        info.title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
-        info.isPinned = ((TopSitesCursorWrapper) cursor).isPinned();
+        info.url = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.URL));
+        info.title = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.TITLE));
+
+        int type = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.TYPE));
+        info.isPinned = (type == TopSites.TYPE_PINNED);
     }
     /**
      * Set an url open listener to be used by this view.

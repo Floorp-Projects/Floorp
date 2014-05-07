@@ -13,10 +13,9 @@ import java.util.Map;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
+import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.db.TopSitesCursorWrapper;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
@@ -179,7 +178,7 @@ public class TopSitesPanel extends HomeFragment {
                     return;
                 }
 
-                final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
+                final String url = c.getString(c.getColumnIndexOrThrow(TopSites.URL));
 
                 Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM);
 
@@ -192,10 +191,10 @@ public class TopSitesPanel extends HomeFragment {
             @Override
             public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor) {
                 final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
-                info.url = cursor.getString(cursor.getColumnIndexOrThrow(Combined.URL));
-                info.title = cursor.getString(cursor.getColumnIndexOrThrow(Combined.TITLE));
-                info.historyId = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
-                final int bookmarkIdCol = cursor.getColumnIndexOrThrow(Combined.BOOKMARK_ID);
+                info.url = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.URL));
+                info.title = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.TITLE));
+                info.historyId = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.HISTORY_ID));
+                final int bookmarkIdCol = cursor.getColumnIndexOrThrow(TopSites.BOOKMARK_ID);
                 if (cursor.isNull(bookmarkIdCol)) {
                     // If this is a combined cursor, we may get a history item without a
                     // bookmark, in which case the bookmarks ID column value will be null.
@@ -518,9 +517,11 @@ public class TopSitesPanel extends HomeFragment {
 
             // Cursor is already moved to required position.
             if (!cursor.isAfterLast()) {
-                url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
-                title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
-                pinned = ((TopSitesCursorWrapper) cursor).isPinned();
+                url = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.URL));
+                title = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.TITLE));
+
+                int type = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.TYPE));
+                pinned = (type == TopSites.TYPE_PINNED);
             }
 
             final TopSitesGridItemView view = (TopSitesGridItemView) bindView;
@@ -622,7 +623,7 @@ public class TopSitesPanel extends HomeFragment {
             mGridAdapter.swapCursor(c);
             updateUiFromCursor(c);
 
-            final int col = c.getColumnIndexOrThrow(URLColumns.URL);
+            final int col = c.getColumnIndexOrThrow(TopSites.URL);
 
             // Load the thumbnails.
             // Even though the cursor we're given is supposed to be fresh,
