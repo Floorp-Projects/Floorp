@@ -138,13 +138,13 @@
         onselect="gAdvancedPane.tabSelectionChanged();">
 
   <tabs id="tabsElement">
-    <tab id="generalTab" label="&generalTab.label;"/>
+    <tab id="generalTab" label="&generalTab.label;" helpTopic="prefs-advanced-general"/>
 #ifdef MOZ_DATA_REPORTING
-    <tab id="dataChoicesTab" label="&dataChoicesTab.label;"/>
+    <tab id="dataChoicesTab" label="&dataChoicesTab.label;" helpTopic="prefs-advanced-data-choices"/>
 #endif
-    <tab id="networkTab" label="&networkTab.label;"/>
-    <tab id="updateTab" label="&updateTab.label;"/>
-    <tab id="encryptionTab" label="&certificateTab.label;"/>
+    <tab id="networkTab" label="&networkTab.label;" helpTopic="prefs-advanced-network"/>
+    <tab id="updateTab" label="&updateTab.label;"  helpTopic="prefs-advanced-update"/>
+    <tab id="encryptionTab" label="&certificateTab.label;" helpTopic="prefs-advanced-encryption"/>
   </tabs>
 
   <tabpanels flex="1">

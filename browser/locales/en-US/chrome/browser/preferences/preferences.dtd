@@ -23,5 +23,3 @@
 <!ENTITY  paneSync.title          "Sync">
 <!ENTITY  buttonForward.tooltip   "Go forward one page">
 <!ENTITY  buttonBack.tooltip      "Go back one page">
-
-<!ENTITY  helpButton.label        "Help">
