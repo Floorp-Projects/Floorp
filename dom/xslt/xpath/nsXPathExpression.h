@@ -24,7 +24,7 @@ class nsXPathExpression MOZ_FINAL : public nsIDOMXPathExpression,
                                     public nsIDOMNSXPathExpression
 {
 public:
-    nsXPathExpression(nsAutoPtr<Expr>& aExpression, txResultRecycler* aRecycler,
+    nsXPathExpression(nsAutoPtr<Expr>&& aExpression, txResultRecycler* aRecycler,
                       nsIDOMDocument *aDocument);
 
     // nsISupports interface
