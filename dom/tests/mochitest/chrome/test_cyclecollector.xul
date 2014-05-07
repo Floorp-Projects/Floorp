@@ -38,8 +38,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
 
   // Make sure that we call the observer even if we're in the middle
   // of an ICC when we add the observer. See bug 981033.
-  SpecialPowers.finishCC();
-  SpecialPowers.ccSlice(1);
+  // XXX This will assert if we try to start an ICC during a IGC.
+  //SpecialPowers.finishCC();
+  //SpecialPowers.ccSlice(1);
 
   obs.addObserver(observer, "cycle-collector-begin", false);
 
