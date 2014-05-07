@@ -14,18 +14,6 @@ menulist:not([editable="true"]) > .menulist-dropmarker {
   -moz-margin-start: 0;
 }
 
-checkbox:hover::before,
-checkbox[checked]::before {
-  -moz-margin-end: -20px;
-  -moz-margin-start: 5px;
-}
-
-radio:hover::before,
-radio[selected]::before {
-  -moz-margin-end: -18px;
-  -moz-margin-start: 7px;
-}
-
 .numberbox-input-box {
   -moz-appearance: none;
   border-width: 0;
