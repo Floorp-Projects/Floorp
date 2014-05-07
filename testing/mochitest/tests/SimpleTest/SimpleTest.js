@@ -648,6 +648,24 @@ SimpleTest.expectAssertions = function(min, max) {
     }
 }
 
+/**
+ * Request the framework to allow usage of setTimeout(func, timeout)
+ * where |timeout > 0|.  This is required to note that the author of
+ * the test is aware of the inherent flakiness in the test caused by
+ * that, and asserts that there is no way around using the magic timeout
+ * value number for some reason.
+ *
+ * The reason parameter should be a string representation of the
+ * reason why using such flaky timeouts.
+ *
+ * Use of this function is STRONGLY discouraged.  Think twice before
+ * using it.  Such magic timeout values could result in intermittent
+ * failures in your test, and are almost never necessary!
+ */
+SimpleTest.requestFlakyTimeout = function (reason) {
+    // TODO: This will get implemented in bug 649012.
+}
+
 SimpleTest.waitForFocus_started = false;
 SimpleTest.waitForFocus_loaded = false;
 SimpleTest.waitForFocus_focused = false;
