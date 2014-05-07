@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Move.h"
 #include "txInstructions.h"
 #include "nsError.h"
 #include "txExpr.h"
@@ -17,6 +18,8 @@
 #include "txNodeSorter.h"
 #include "txXSLTNumber.h"
 #include "txExecutionState.h"
+
+using mozilla::Move;
 
 nsresult
 txApplyDefaultElementTemplate::execute(txExecutionState& aEs)
@@ -86,11 +89,9 @@ txApplyTemplates::execute(txExecutionState& aEs)
     return aEs.runTemplate(templ);
 }
 
-txAttribute::txAttribute(nsAutoPtr<Expr> aName, nsAutoPtr<Expr> aNamespace,
+txAttribute::txAttribute(nsAutoPtr<Expr>&& aName, nsAutoPtr<Expr>&& aNamespace,
                          txNamespaceMap* aMappings)
-    : mName(aName),
-      mNamespace(aNamespace),
-      mMappings(aMappings)
+    : mName(Move(aName)), mNamespace(Move(aNamespace)), mMappings(aMappings)
 {
 }
 
@@ -179,10 +180,9 @@ txCheckParam::execute(txExecutionState& aEs)
     return NS_OK;
 }
 
-txConditionalGoto::txConditionalGoto(nsAutoPtr<Expr> aCondition,
+txConditionalGoto::txConditionalGoto(nsAutoPtr<Expr>&& aCondition,
                                      txInstruction* aTarget)
-    : mCondition(aCondition),
-      mTarget(aTarget)
+    : mCondition(Move(aCondition)), mTarget(aTarget)
 {
 }
 
@@ -365,8 +365,8 @@ txCopy::execute(txExecutionState& aEs)
     return NS_OK;
 }
 
-txCopyOf::txCopyOf(nsAutoPtr<Expr> aSelect)
-    : mSelect(aSelect)
+txCopyOf::txCopyOf(nsAutoPtr<Expr>&& aSelect)
+    : mSelect(Move(aSelect))
 {
 }
 
@@ -486,11 +486,11 @@ txLoopNodeSet::execute(txExecutionState& aEs)
 }
 
 txLREAttribute::txLREAttribute(int32_t aNamespaceID, nsIAtom* aLocalName,
-                               nsIAtom* aPrefix, nsAutoPtr<Expr> aValue)
+                               nsIAtom* aPrefix, nsAutoPtr<Expr>&& aValue)
     : mNamespaceID(aNamespaceID),
       mLocalName(aLocalName),
       mPrefix(aPrefix),
-      mValue(aValue)
+      mValue(Move(aValue))
 {
     if (aNamespaceID == kNameSpaceID_None) {
         mLowercaseLocalName = TX_ToLowerCaseAtom(aLocalName);
@@ -541,13 +541,17 @@ txMessage::execute(txExecutionState& aEs)
     return mTerminate ? NS_ERROR_XSLT_ABORTED : NS_OK;
 }
 
-txNumber::txNumber(txXSLTNumber::LevelType aLevel, nsAutoPtr<txPattern> aCount,
-                   nsAutoPtr<txPattern> aFrom, nsAutoPtr<Expr> aValue,
-                   nsAutoPtr<Expr> aFormat, nsAutoPtr<Expr> aGroupingSeparator,
-                   nsAutoPtr<Expr> aGroupingSize)
-    : mLevel(aLevel), mCount(aCount), mFrom(aFrom), mValue(aValue),
-      mFormat(aFormat), mGroupingSeparator(aGroupingSeparator),
-      mGroupingSize(aGroupingSize)
+txNumber::txNumber(txXSLTNumber::LevelType aLevel,
+                   nsAutoPtr<txPattern>&& aCount, nsAutoPtr<txPattern>&& aFrom,
+                   nsAutoPtr<Expr>&& aValue, nsAutoPtr<Expr>&& aFormat,
+                   nsAutoPtr<Expr>&& aGroupingSeparator,
+                   nsAutoPtr<Expr>&& aGroupingSize)
+    : mLevel(aLevel), mCount(Move(aCount)),
+      mFrom(Move(aFrom)),
+      mValue(Move(aValue)),
+      mFormat(Move(aFormat)),
+      mGroupingSeparator(Move(aGroupingSeparator)),
+      mGroupingSize(Move(aGroupingSize))
 {
 }
 
@@ -572,8 +576,8 @@ txPopParams::execute(txExecutionState& aEs)
     return NS_OK;
 }
 
-txProcessingInstruction::txProcessingInstruction(nsAutoPtr<Expr> aName)
-    : mName(aName)
+txProcessingInstruction::txProcessingInstruction(nsAutoPtr<Expr>&& aName)
+    : mName(Move(aName))
 {
 }
 
@@ -599,8 +603,8 @@ txProcessingInstruction::execute(txExecutionState& aEs)
     return aEs.mResultHandler->processingInstruction(name, handler->mValue);
 }
 
-txPushNewContext::txPushNewContext(nsAutoPtr<Expr> aSelect)
-    : mSelect(aSelect), mBailTarget(nullptr)
+txPushNewContext::txPushNewContext(nsAutoPtr<Expr>&& aSelect)
+    : mSelect(Move(aSelect)), mBailTarget(nullptr)
 {
 }
 
@@ -660,19 +664,19 @@ txPushNewContext::execute(txExecutionState& aEs)
 }
 
 nsresult
-txPushNewContext::addSort(nsAutoPtr<Expr> aSelectExpr,
-                          nsAutoPtr<Expr> aLangExpr,
-                          nsAutoPtr<Expr> aDataTypeExpr,
-                          nsAutoPtr<Expr> aOrderExpr,
-                          nsAutoPtr<Expr> aCaseOrderExpr)
+txPushNewContext::addSort(nsAutoPtr<Expr>&& aSelectExpr,
+                          nsAutoPtr<Expr>&& aLangExpr,
+                          nsAutoPtr<Expr>&& aDataTypeExpr,
+                          nsAutoPtr<Expr>&& aOrderExpr,
+                          nsAutoPtr<Expr>&& aCaseOrderExpr)
 {
     if (SortKey *key = mSortKeys.AppendElement()) {
         // workaround for not triggering the Copy Constructor
-        key->mSelectExpr = aSelectExpr;
-        key->mLangExpr = aLangExpr;
-        key->mDataTypeExpr = aDataTypeExpr;
-        key->mOrderExpr = aOrderExpr;
-        key->mCaseOrderExpr = aCaseOrderExpr;
+        key->mSelectExpr = Move(aSelectExpr);
+        key->mLangExpr = Move(aLangExpr);
+        key->mDataTypeExpr = Move(aDataTypeExpr);
+        key->mOrderExpr = Move(aOrderExpr);
+        key->mCaseOrderExpr = Move(aCaseOrderExpr);
         return NS_OK;
     }
     return NS_ERROR_OUT_OF_MEMORY;
@@ -748,8 +752,8 @@ txReturn::execute(txExecutionState& aEs)
     return NS_OK;
 }
 
-txSetParam::txSetParam(const txExpandedName& aName, nsAutoPtr<Expr> aValue)
-    : mName(aName), mValue(aValue)
+txSetParam::txSetParam(const txExpandedName& aName, nsAutoPtr<Expr>&& aValue)
+    : mName(aName), mValue(Move(aValue))
 {
 }
 
@@ -782,8 +786,8 @@ txSetParam::execute(txExecutionState& aEs)
 }
 
 txSetVariable::txSetVariable(const txExpandedName& aName,
-                             nsAutoPtr<Expr> aValue)
-    : mName(aName), mValue(aValue)
+                             nsAutoPtr<Expr>&& aValue)
+    : mName(aName), mValue(Move(aValue))
 {
 }
 
@@ -806,11 +810,11 @@ txSetVariable::execute(txExecutionState& aEs)
     return aEs.bindVariable(mName, exprRes);
 }
 
-txStartElement::txStartElement(nsAutoPtr<Expr> aName,
-                               nsAutoPtr<Expr> aNamespace,
+txStartElement::txStartElement(nsAutoPtr<Expr>&& aName,
+                               nsAutoPtr<Expr>&& aNamespace,
                                txNamespaceMap* aMappings)
-    : mName(aName),
-      mNamespace(aNamespace),
+    : mName(Move(aName)),
+      mNamespace(Move(aNamespace)),
       mMappings(aMappings)
 {
 }
@@ -916,8 +920,8 @@ txText::execute(txExecutionState& aEs)
     return aEs.mResultHandler->characters(mStr, mDOE);
 }
 
-txValueOf::txValueOf(nsAutoPtr<Expr> aExpr, bool aDOE)
-    : mExpr(aExpr),
+txValueOf::txValueOf(nsAutoPtr<Expr>&& aExpr, bool aDOE)
+    : mExpr(Move(aExpr)),
       mDOE(aDOE)
 {
 }
