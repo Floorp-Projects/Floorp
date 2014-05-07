@@ -1217,6 +1217,7 @@ public:
   void RemoveObjectFromGraph(void *aPtr);
 
   void PrepareForGarbageCollection();
+  void FinishAnyCurrentCollection();
 
   bool Collect(ccType aCCType,
                SliceBudget &aBudget,
@@ -3363,8 +3364,18 @@ nsCycleCollector::PrepareForGarbageCollection()
     return;
   }
 
+  FinishAnyCurrentCollection();
+}
+
+void
+nsCycleCollector::FinishAnyCurrentCollection()
+{
+  if (mIncrementalPhase == IdlePhase) {
+    return;
+  }
+
   SliceBudget unlimitedBudget;
-  PrintPhase("PrepareForGarbageCollection");
+  PrintPhase("FinishAnyCurrentCollection");
   // Use SliceCC because we only want to finish the CC in progress.
   Collect(SliceCC, unlimitedBudget, nullptr);
   MOZ_ASSERT(mIncrementalPhase == IdlePhase);
@@ -3871,10 +3882,25 @@ nsCycleCollector_collectSlice(int64_t aSliceTime)
 
   PROFILER_LABEL("CC", "nsCycleCollector_collectSlice");
   SliceBudget budget;
-  if (aSliceTime > 0) {
+  if (aSliceTime >= 0) {
     budget = SliceBudget::TimeBudget(aSliceTime);
-  } else if (aSliceTime == 0) {
-    budget = SliceBudget::WorkBudget(1);
+  }
+  data->mCollector->Collect(SliceCC, budget, nullptr);
+}
+
+void
+nsCycleCollector_collectSliceWork(int64_t aSliceWork)
+{
+  CollectorData *data = sCollectorData.get();
+
+  // We should have started the cycle collector by now.
+  MOZ_ASSERT(data);
+  MOZ_ASSERT(data->mCollector);
+
+  PROFILER_LABEL("CC", "nsCycleCollector_collectSliceWork");
+  SliceBudget budget;
+  if (aSliceWork >= 0) {
+    budget = SliceBudget::WorkBudget(aSliceWork);
   }
   data->mCollector->Collect(SliceCC, budget, nullptr);
 }
@@ -3891,6 +3917,20 @@ nsCycleCollector_prepareForGarbageCollection()
   }
 
   data->mCollector->PrepareForGarbageCollection();
+}
+
+void
+nsCycleCollector_finishAnyCurrentCollection()
+{
+    CollectorData *data = sCollectorData.get();
+
+    MOZ_ASSERT(data);
+
+    if (!data->mCollector) {
+        return;
+    }
+
+    data->mCollector->FinishAnyCurrentCollection();
 }
 
 void

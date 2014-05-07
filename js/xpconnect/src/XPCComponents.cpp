@@ -2786,6 +2786,22 @@ nsXPCComponents_Utils::ForceCC()
     return NS_OK;
 }
 
+/* void finishCC(); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::FinishCC()
+{
+    nsCycleCollector_finishAnyCurrentCollection();
+    return NS_OK;
+}
+
+/* void ccSlice(long long budget); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::CcSlice(int64_t budget)
+{
+    nsCycleCollector_collectSliceWork(budget);
+    return NS_OK;
+}
+
 /* void forceShrinkingGC (); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceShrinkingGC()
