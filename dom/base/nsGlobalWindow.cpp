@@ -218,7 +218,6 @@
 #include "nsITabChild.h"
 #include "mozilla/dom/MediaQueryList.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/NavigatorBinding.h"
 #ifdef HAVE_SIDEBAR
 #include "mozilla/dom/ExternalBinding.h"
 #endif
@@ -1138,8 +1137,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
         // events. Use a strong reference.
         os->AddObserver(mObserver, "dom-storage2-changed", false);
       }
-
-      Preferences::AddStrongObserver(mObserver, "intl.accept_languages");
     }
   } else {
     // |this| is an outer window. Outer windows start out frozen and
@@ -1421,8 +1418,6 @@ nsGlobalWindow::CleanUp()
     if (mIdleService) {
       mIdleService->RemoveIdleObserver(mObserver, MIN_IDLE_NOTIFICATION_TIME_S);
     }
-
-    Preferences::RemoveObserver(mObserver, "intl.accept_languages");
 
     // Drop its reference to this dying window, in case for some bogus reason
     // the object stays around.
@@ -11212,32 +11207,6 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     return DispatchEvent(event, &dummy);
   }
 #endif // MOZ_B2G
-
-  if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    MOZ_ASSERT(!nsCRT::strcmp(aData, "intl.accept_languages"));
-    MOZ_ASSERT(IsInnerWindow());
-
-    // The user preferred languages have changed, we need to fire an event on
-    // Window object and invalidate the cache for navigator.languages. It is
-    // done for every change which can be a waste of cycles but those should be
-    // fairly rare.
-    // We MUST invalidate navigator.languages before sending the event in the
-    // very likely situation where an event handler will try to read its value.
-
-    if (mNavigator) {
-      NavigatorBinding::ClearCachedLanguagesValue(mNavigator);
-    }
-
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
-    nsresult rv = event->InitEvent(NS_LITERAL_STRING("languagechange"), false, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    event->SetTrusted(true);
-
-    bool dummy;
-    return DispatchEvent(event, &dummy);
-  }
 
   NS_WARNING("unrecognized topic in nsGlobalWindow::Observe");
   return NS_ERROR_FAILURE;
