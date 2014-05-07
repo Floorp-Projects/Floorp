@@ -2649,6 +2649,13 @@ var gListView = {
     // the existing item
     if (aInstall.existingAddon)
       this.removeItem(aInstall, true);
+
+    if (aInstall.addon.type == "experiment") {
+      let item = this.getListItemForID(aInstall.addon.id);
+      if (item) {
+        item.endDate = getExperimentEndDate(aInstall.addon);
+      }
+    }
   },
 
   addItem: function gListView_addItem(aObj, aIsInstall) {
