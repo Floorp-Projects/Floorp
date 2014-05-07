@@ -834,8 +834,8 @@ StackFrames.prototype = {
 
       // The innermost scope is always automatically expanded, because it
       // contains the variables in the current stack frame which are likely to
-      // be inspected.
-      if (innermost) {
+      // be inspected. The previously expanded scopes are also reexpanded here.
+      if (innermost || DebuggerView.Variables.wasExpanded(scope)) {
         scope.expand();
       }
     } while ((environment = environment.parent));
