@@ -199,10 +199,6 @@ CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
-    if (!ssm)
-        return false;
-
     RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
     MOZ_ASSERT(global);
 
@@ -1294,8 +1290,6 @@ GetExpandedPrincipal(JSContext *cx, HandleObject arrayObj, nsIExpandedPrincipal 
 
     nsTArray< nsCOMPtr<nsIPrincipal> > allowedDomains(length);
     allowedDomains.SetLength(length);
-    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
-    NS_ENSURE_TRUE(ssm, false);
 
     for (uint32_t i = 0; i < length; ++i) {
         RootedValue allowed(cx);
@@ -1326,7 +1320,7 @@ GetExpandedPrincipal(JSContext *cx, HandleObject arrayObj, nsIExpandedPrincipal 
 
         // We do not allow ExpandedPrincipals to contain any system principals.
         bool isSystem;
-        rv = ssm->IsSystemPrincipal(principal, &isSystem);
+        rv = nsXPConnect::SecurityManager()->IsSystemPrincipal(principal, &isSystem);
         NS_ENSURE_SUCCESS(rv, false);
         if (isSystem) {
             JS_ReportError(cx, "System principal is not allowed in an expanded principal");
@@ -1648,7 +1642,7 @@ ContextHolder::ContextHolder(JSContext *aOuterCx,
 {
     if (mJSContext) {
         bool isChrome;
-        DebugOnly<nsresult> rv = XPCWrapper::GetSecurityManager()->
+        DebugOnly<nsresult> rv = nsXPConnect::SecurityManager()->
                                    IsSystemPrincipal(mPrincipal, &isChrome);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
 
