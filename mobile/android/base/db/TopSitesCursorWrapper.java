@@ -25,6 +25,15 @@ public class TopSitesCursorWrapper extends CursorWrapper {
         }
     }
 
+    private enum RowType {
+        UNKNOWN,
+        TOP,
+        PINNED
+    }
+
+    // Type of content in the current position
+    private RowType currentRowType;
+
     // The cursor for the top sites query
     private final Cursor topCursor;
 
@@ -39,6 +48,8 @@ public class TopSitesCursorWrapper extends CursorWrapper {
 
     public TopSitesCursorWrapper(Cursor pinnedCursor, Cursor topCursor, int minSize) {
         super(topCursor);
+
+        currentRowType = RowType.UNKNOWN;
 
         setPinnedSites(pinnedCursor);
         this.topCursor = topCursor;
@@ -70,28 +81,22 @@ public class TopSitesCursorWrapper extends CursorWrapper {
         }
     }
 
-    public boolean hasPinnedSites() {
-        return (pinnedSites != null && pinnedSites.size() > 0);
-    }
-
-    public PinnedSite getPinnedSite(int position) {
-        if (!hasPinnedSites()) {
-            return null;
-        }
-
-        return pinnedSites.get(position);
-    }
-
     public boolean isPinned() {
-        return (pinnedSites.get(currentPosition) != null);
+        return (currentRowType == RowType.PINNED);
+    }
+
+    private void updateRowType() {
+        if (pinnedSites.get(currentPosition) != null) {
+            currentRowType = RowType.PINNED;
+        } else if (!super.isBeforeFirst() && !super.isAfterLast()) {
+            currentRowType = RowType.TOP;
+        } else {
+            currentRowType = RowType.UNKNOWN;
+        }
     }
 
     private int getPinnedBefore(int position) {
         int numFound = 0;
-        if (!hasPinnedSites()) {
-            return numFound;
-        }
-
         for (int i = 0; i < position; i++) {
             if (pinnedSites.get(i) != null) {
                 numFound++;
@@ -169,20 +174,14 @@ public class TopSitesCursorWrapper extends CursorWrapper {
             super.moveToPosition(p2);
         }
 
+        updateRowType();
+
         return (!isBeforeFirst() && !isAfterLast());
     }
 
     @Override
     public long getLong(int columnIndex) {
-        if (hasPinnedSites()) {
-            final PinnedSite site = getPinnedSite(currentPosition);
-
-            if (site != null) {
-                return 0;
-            }
-        }
-
-        if (!super.isBeforeFirst() && !super.isAfterLast()) {
+        if (currentRowType == RowType.TOP) {
             return super.getLong(columnIndex);
         }
 
@@ -191,15 +190,7 @@ public class TopSitesCursorWrapper extends CursorWrapper {
 
     @Override
     public int getInt(int columnIndex) {
-        if (hasPinnedSites()) {
-            final PinnedSite site = getPinnedSite(currentPosition);
-
-            if (site != null) {
-                return 0;
-            }
-        }
-
-        if (!super.isBeforeFirst() && !super.isAfterLast()) {
+        if (currentRowType == RowType.TOP) {
             return super.getInt(columnIndex);
         }
 
@@ -208,22 +199,18 @@ public class TopSitesCursorWrapper extends CursorWrapper {
 
     @Override
     public String getString(int columnIndex) {
-        if (hasPinnedSites()) {
-            final PinnedSite site = getPinnedSite(currentPosition);
+        switch (currentRowType) {
+            case TOP:
+                return super.getString(columnIndex);
 
-            if (site != null) {
+            case PINNED:
+                final PinnedSite site = pinnedSites.get(currentPosition);
                 if (columnIndex == topCursor.getColumnIndex(URLColumns.URL)) {
                     return site.url;
                 } else if (columnIndex == topCursor.getColumnIndex(URLColumns.TITLE)) {
                     return site.title;
                 }
-
-                return "";
-            }
-        }
-
-        if (!super.isBeforeFirst() && !super.isAfterLast()) {
-            return super.getString(columnIndex);
+                break;
         }
 
         return "";
