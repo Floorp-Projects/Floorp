@@ -18,6 +18,7 @@
 
 #define A_SESSION_DESCRIPTION_H_
 
+#include "mozilla/Types.h"
 #include <sys/types.h>
 
 #include <media/stagefright/foundation/ABase.h>
@@ -27,7 +28,7 @@
 
 namespace android {
 
-struct AString;
+struct MOZ_EXPORT AString;
 
 struct ASessionDescription : public RefBase {
     ASessionDescription();

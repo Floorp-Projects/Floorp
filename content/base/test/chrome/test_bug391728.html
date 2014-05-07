@@ -118,7 +118,7 @@ function next_text() {
 }
 
 function frame_loaded() {
-  // We must delay to wait for the plugin sources to be loaded :(
+  SimpleTest.requestFlakyTimeout("We must delay to wait for the plugin sources to be loaded :(");
   setTimeout(next_text, 500);
 }
 

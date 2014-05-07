@@ -34,6 +34,13 @@ function test()
   if (testSetup()) {
     SimpleTest.waitForExplicitFinish();
 
+    SimpleTest.requestFlakyTimeout(
+      "This test uses non-zero timeout values because it needs to check the condition " +
+      "that -nothing happened-, so there are no events or observers to watch and rely on. " +
+      "The alternative way to test it would be too tied to the actual implementation to " +
+      "be useful. The test is not unstable; see detailed explanation in  bug 544356 comment 57."
+    );
+
     //Start test
     gGen = doTest();
     gGen.next();

@@ -1826,6 +1826,13 @@ JS_GetObjectPrototype(JSContext *cx, JS::HandleObject forObj);
 extern JS_PUBLIC_API(JSObject *)
 JS_GetArrayPrototype(JSContext *cx, JS::HandleObject forObj);
 
+/*
+ * Returns the original value of |Error.prototype| from the global
+ * object of the current compartment of cx.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_GetErrorPrototype(JSContext *cx);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
 
@@ -4906,8 +4913,7 @@ typedef bool
 (* OpenAsmJSCacheEntryForReadOp)(HandleObject global, const jschar *begin, const jschar *limit,
                                  size_t *size, const uint8_t **memory, intptr_t *handle);
 typedef void
-(* CloseAsmJSCacheEntryForReadOp)(HandleObject global, size_t size, const uint8_t *memory,
-                                  intptr_t handle);
+(* CloseAsmJSCacheEntryForReadOp)(size_t size, const uint8_t *memory, intptr_t handle);
 
 /*
  * This callback represents a request by the JS engine to open for writing a
@@ -4929,8 +4935,7 @@ typedef bool
                                   const jschar *begin, const jschar *end,
                                   size_t size, uint8_t **memory, intptr_t *handle);
 typedef void
-(* CloseAsmJSCacheEntryForWriteOp)(HandleObject global, size_t size, uint8_t *memory,
-                                   intptr_t handle);
+(* CloseAsmJSCacheEntryForWriteOp)(size_t size, uint8_t *memory, intptr_t handle);
 
 typedef js::Vector<char, 0, js::SystemAllocPolicy> BuildIdCharVector;
 

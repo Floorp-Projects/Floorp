@@ -1385,6 +1385,14 @@ JS_GetArrayPrototype(JSContext *cx, HandleObject forObj)
 }
 
 JS_PUBLIC_API(JSObject *)
+JS_GetErrorPrototype(JSContext *cx)
+{
+    CHECK_REQUEST(cx);
+    Rooted<GlobalObject*> global(cx, cx->global());
+    return GlobalObject::getOrCreateCustomErrorPrototype(cx, global, JSEXN_ERR);
+}
+
+JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 {
     AssertHeapIsIdle(cx);

@@ -83,19 +83,27 @@ class CommandAction(argparse.Action):
         into that parser. We then merge the results with the main
         ArgumentParser.
         """
-        if not values:
-            raise NoCommandError()
-
-        command = values[0].lower()
-        args = values[1:]
-
-        if command == 'help':
-            if len(args):
-                self._handle_subcommand_help(parser, args[0])
-            else:
-                self._handle_main_help(parser)
-
+        if namespace.help:
+            # -h or --help is in the global arguments.
+            self._handle_main_help(parser)
             sys.exit(0)
+        elif values:
+            command = values[0].lower()
+            args = values[1:]
+
+            if command == 'help':
+                if args and args[0] not in ['-h', '--help']:
+                    # Make sure args[0] is indeed a command.
+                    self._handle_subcommand_help(parser, args[0])
+                else:
+                    self._handle_main_help(parser)
+                sys.exit(0)
+            elif '-h' in args or '--help' in args:
+                # -h or --help is in the command arguments.
+                self._handle_subcommand_help(parser, command)
+                sys.exit(0)
+        else:
+            raise NoCommandError()
 
         handler = self._mach_registrar.command_handlers.get(command)
 
