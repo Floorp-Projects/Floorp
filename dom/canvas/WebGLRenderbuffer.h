@@ -6,6 +6,7 @@
 #ifndef WEBGLRENDERBUFFER_H_
 #define WEBGLRENDERBUFFER_H_
 
+#include "WebGLBindableName.h"
 #include "WebGLObjectModel.h"
 #include "WebGLFramebufferAttachable.h"
 
@@ -17,6 +18,7 @@ namespace mozilla {
 
 class WebGLRenderbuffer MOZ_FINAL
     : public nsWrapperCache
+    , public WebGLBindableName
     , public WebGLRefCountedObject<WebGLRenderbuffer>
     , public LinkedListElement<WebGLRenderbuffer>
     , public WebGLRectangleObject
@@ -27,9 +29,6 @@ public:
     WebGLRenderbuffer(WebGLContext *context);
 
     void Delete();
-
-    bool HasEverBeenBound() { return mHasEverBeenBound; }
-    void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
 
     bool HasUninitializedImageData() const { return mImageDataStatus == WebGLImageDataStatus::UninitializedImageData; }
     void SetImageDataStatus(WebGLImageDataStatus x) {
@@ -71,7 +70,6 @@ protected:
     GLuint mSecondaryRB;
     GLenum mInternalFormat;
     GLenum mInternalFormatForGL;
-    bool mHasEverBeenBound;
     WebGLImageDataStatus mImageDataStatus;
 
     friend class WebGLFramebuffer;
