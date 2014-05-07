@@ -8983,6 +8983,8 @@ else
 fi
 AC_SUBST(JS_SHARED_LIBRARY)
 
+AC_SUBST(UPLOAD_EXTRA_FILES)
+
 MOZ_CREATE_CONFIG_STATUS()
 
 # No need to run subconfigures when building with LIBXUL_SDK_DIR

@@ -28,7 +28,7 @@
 #include <sys/types.h>
 
 #ifdef ANDROID
-extern "C" __attribute__((weak))
+extern "C" MOZ_EXPORT __attribute__((weak))
 int dl_iterate_phdr(
           int (*callback) (struct dl_phdr_info *info,
                            size_t size, void *data),

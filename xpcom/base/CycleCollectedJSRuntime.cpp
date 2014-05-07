@@ -949,13 +949,13 @@ CycleCollectedJSRuntime::FixWeakMappingGrayBits() const
 }
 
 bool
-CycleCollectedJSRuntime::NeedCollect() const
+CycleCollectedJSRuntime::AreGCGrayBitsValid() const
 {
-  return !js::AreGCGrayBitsValid(mJSRuntime);
+  return js::AreGCGrayBitsValid(mJSRuntime);
 }
 
 void
-CycleCollectedJSRuntime::Collect(uint32_t aReason) const
+CycleCollectedJSRuntime::GarbageCollect(uint32_t aReason) const
 {
   MOZ_ASSERT(aReason < JS::gcreason::NUM_REASONS);
   JS::gcreason::Reason gcreason = static_cast<JS::gcreason::Reason>(aReason);

@@ -2136,14 +2136,14 @@ Range::wrapAroundToBoolean()
 }
 
 bool
-MDefinition::truncate(TruncateKind kind)
+MDefinition::truncate()
 {
     // No procedure defined for truncating this instruction.
     return false;
 }
 
 bool
-MConstant::truncate(TruncateKind kind)
+MConstant::truncate()
 {
     if (!value_.isDouble())
         return false;
@@ -2158,15 +2158,15 @@ MConstant::truncate(TruncateKind kind)
 }
 
 bool
-MAdd::truncate(TruncateKind kind)
+MAdd::truncate()
 {
     // Remember analysis, needed for fallible checks.
-    setTruncateKind(kind);
+    setTruncated(true);
 
     if (type() == MIRType_Double || type() == MIRType_Int32) {
         specialization_ = MIRType_Int32;
         setResultType(MIRType_Int32);
-        if (kind >= IndirectTruncate && range())
+        if (range())
             range()->wrapAroundToInt32();
         return true;
     }
@@ -2175,15 +2175,15 @@ MAdd::truncate(TruncateKind kind)
 }
 
 bool
-MSub::truncate(TruncateKind kind)
+MSub::truncate()
 {
     // Remember analysis, needed for fallible checks.
-    setTruncateKind(kind);
+    setTruncated(true);
 
     if (type() == MIRType_Double || type() == MIRType_Int32) {
         specialization_ = MIRType_Int32;
         setResultType(MIRType_Int32);
-        if (kind >= IndirectTruncate && range())
+        if (range())
             range()->wrapAroundToInt32();
         return true;
     }
@@ -2192,19 +2192,17 @@ MSub::truncate(TruncateKind kind)
 }
 
 bool
-MMul::truncate(TruncateKind kind)
+MMul::truncate()
 {
     // Remember analysis, needed to remove negative zero checks.
-    setTruncateKind(kind);
+    setTruncated(true);
 
     if (type() == MIRType_Double || type() == MIRType_Int32) {
         specialization_ = MIRType_Int32;
         setResultType(MIRType_Int32);
-        if (kind >= IndirectTruncate) {
-            setCanBeNegativeZero(false);
-            if (range())
-                range()->wrapAroundToInt32();
-        }
+        setCanBeNegativeZero(false);
+        if (range())
+            range()->wrapAroundToInt32();
         return true;
     }
 
@@ -2212,19 +2210,36 @@ MMul::truncate(TruncateKind kind)
 }
 
 bool
-MDiv::truncate(TruncateKind kind)
+MDiv::truncate()
 {
-    setTruncateKind(kind);
+    // Remember analysis, needed to remove negative zero checks.
+    setTruncatedIndirectly(true);
 
-    if (type() == MIRType_Double || type() == MIRType_Int32) {
-        specialization_ = MIRType_Int32;
-        setResultType(MIRType_Int32);
+    // Check if this division only flows in bitwise instructions.
+    if (!isTruncated()) {
+        bool allUsesExplictlyTruncate = true;
+        for (MUseDefIterator use(this); allUsesExplictlyTruncate && use; use++) {
+            switch (use.def()->op()) {
+              case MDefinition::Op_BitAnd:
+              case MDefinition::Op_BitOr:
+              case MDefinition::Op_BitXor:
+              case MDefinition::Op_Lsh:
+              case MDefinition::Op_Rsh:
+              case MDefinition::Op_Ursh:
+                break;
+              default:
+                allUsesExplictlyTruncate = false;
+            }
+        }
 
-        // Divisions where the lhs and rhs are unsigned and the result is
-        // truncated can be lowered more efficiently.
-        if (tryUseUnsignedOperands())
-            unsigned_ = true;
+        if (allUsesExplictlyTruncate)
+            setTruncated(true);
+    }
 
+    // Divisions where the lhs and rhs are unsigned and the result is
+    // truncated can be lowered more efficiently.
+    if (specialization() == MIRType_Int32 && tryUseUnsignedOperands()) {
+        unsigned_ = true;
         return true;
     }
 
@@ -2233,19 +2248,14 @@ MDiv::truncate(TruncateKind kind)
 }
 
 bool
-MMod::truncate(TruncateKind kind)
+MMod::truncate()
 {
     // Remember analysis, needed to remove negative zero checks.
-    setTruncateKind(kind);
+    setTruncated(true);
 
     // As for division, handle unsigned modulus with a truncated result.
-    if (type() == MIRType_Double || type() == MIRType_Int32) {
-        specialization_ = MIRType_Int32;
-        setResultType(MIRType_Int32);
-
-        if (tryUseUnsignedOperands())
-            unsigned_ = true;
-
+    if (specialization() == MIRType_Int32 && tryUseUnsignedOperands()) {
+        unsigned_ = true;
         return true;
     }
 
@@ -2254,103 +2264,90 @@ MMod::truncate(TruncateKind kind)
 }
 
 bool
-MToDouble::truncate(TruncateKind kind)
+MToDouble::truncate()
 {
     JS_ASSERT(type() == MIRType_Double);
-
-    setTruncateKind(kind);
 
     // We use the return type to flag that this MToDouble should be replaced by
     // a MTruncateToInt32 when modifying the graph.
     setResultType(MIRType_Int32);
-    if (kind >= IndirectTruncate) {
-        if (range())
-            range()->wrapAroundToInt32();
-    }
+    if (range())
+        range()->wrapAroundToInt32();
 
     return true;
 }
 
 bool
-MLoadTypedArrayElementStatic::truncate(TruncateKind kind)
+MLoadTypedArrayElementStatic::truncate()
 {
     setInfallible();
     return false;
 }
 
-MDefinition::TruncateKind
-MDefinition::operandTruncateKind(size_t index) const
+bool
+MDefinition::isOperandTruncated(size_t index) const
 {
-    // Generic routine: We don't know anything.
-    return NoTruncate;
-}
-
-MDefinition::TruncateKind
-MTruncateToInt32::operandTruncateKind(size_t index) const
-{
-    // This operator is an explicit truncate to int32.
-    return Truncate;
-}
-
-MDefinition::TruncateKind
-MBinaryBitwiseInstruction::operandTruncateKind(size_t index) const
-{
-    // The bitwise operators truncate to int32.
-    return Truncate;
-}
-
-MDefinition::TruncateKind
-MAdd::operandTruncateKind(size_t index) const
-{
-    // This operator is doing some arithmetic. If its result is truncated,
-    // it's an indirect truncate for its operands.
-    return Min(truncateKind(), IndirectTruncate);
-}
-
-MDefinition::TruncateKind
-MSub::operandTruncateKind(size_t index) const
-{
-    // See the comment in MAdd::operandTruncateKind.
-    return Min(truncateKind(), IndirectTruncate);
-}
-
-MDefinition::TruncateKind
-MMul::operandTruncateKind(size_t index) const
-{
-    // See the comment in MAdd::operandTruncateKind.
-    return Min(truncateKind(), IndirectTruncate);
-}
-
-MDefinition::TruncateKind
-MToDouble::operandTruncateKind(size_t index) const
-{
-    // MToDouble propagates its truncate kind to its operand.
-    return truncateKind();
-}
-
-MDefinition::TruncateKind
-MStoreTypedArrayElement::operandTruncateKind(size_t index) const
-{
-    // An integer store truncates the stored value.
-    return index == 2 && !isFloatArray() ? Truncate : NoTruncate;
-}
-
-MDefinition::TruncateKind
-MStoreTypedArrayElementHole::operandTruncateKind(size_t index) const
-{
-    // An integer store truncates the stored value.
-    return index == 3 && !isFloatArray() ? Truncate : NoTruncate;
-}
-
-MDefinition::TruncateKind
-MStoreTypedArrayElementStatic::operandTruncateKind(size_t index) const
-{
-    // An integer store truncates the stored value.
-    return index == 1 && !isFloatArray() ? Truncate : NoTruncate;
+    return false;
 }
 
 bool
-MCompare::truncate(TruncateKind kind)
+MTruncateToInt32::isOperandTruncated(size_t index) const
+{
+    return true;
+}
+
+bool
+MBinaryBitwiseInstruction::isOperandTruncated(size_t index) const
+{
+    return true;
+}
+
+bool
+MAdd::isOperandTruncated(size_t index) const
+{
+    return isTruncated();
+}
+
+bool
+MSub::isOperandTruncated(size_t index) const
+{
+    return isTruncated();
+}
+
+bool
+MMul::isOperandTruncated(size_t index) const
+{
+    return isTruncated();
+}
+
+bool
+MToDouble::isOperandTruncated(size_t index) const
+{
+    // The return type is used to flag that we are replacing this Double by a
+    // Truncate of its operand if needed.
+    return type() == MIRType_Int32;
+}
+
+bool
+MStoreTypedArrayElement::isOperandTruncated(size_t index) const
+{
+    return index == 2 && !isFloatArray();
+}
+
+bool
+MStoreTypedArrayElementHole::isOperandTruncated(size_t index) const
+{
+    return index == 3 && !isFloatArray();
+}
+
+bool
+MStoreTypedArrayElementStatic::isOperandTruncated(size_t index) const
+{
+    return index == 1 && !isFloatArray();
+}
+
+bool
+MCompare::truncate()
 {
     if (!isDoubleComparison())
         return false;
@@ -2362,34 +2359,32 @@ MCompare::truncate(TruncateKind kind)
 
     compareType_ = Compare_Int32;
 
-    // Truncating the operands won't change their value because we don't force a
-    // truncation, but it will change their type, which we need because we
-    // now expect integer inputs.
+    // Truncating the operands won't change their value, but it will change
+    // their type, which we need because we now expect integer inputs.
     truncateOperands_ = true;
 
     return true;
 }
 
-MDefinition::TruncateKind
-MCompare::operandTruncateKind(size_t index) const
+bool
+MCompare::isOperandTruncated(size_t index) const
 {
     // If we're doing an int32 comparison on operands which were previously
     // floating-point, convert them!
     JS_ASSERT_IF(truncateOperands_, isInt32Comparison());
-    return truncateOperands_ ? TruncateAfterBailouts : NoTruncate;
+    return truncateOperands_;
 }
 
-// Examine all the users of |candidate| and determine the most aggressive
-// truncate kind that satisfies all of them.
-static MDefinition::TruncateKind
-ComputeRequestedTruncateKind(MInstruction *candidate)
+// Ensure that all observables uses can work with a truncated
+// version of the |candidate|'s result.
+static bool
+AllUsesTruncate(MInstruction *candidate)
 {
     // If the value naturally produces an int32 value (before bailout checks)
     // that needs no conversion, we don't have to worry about resume points
     // seeing truncated values.
     bool needsConversion = !candidate->range() || !candidate->range()->isInt32();
 
-    MDefinition::TruncateKind kind = MDefinition::Truncate;
     for (MUseIterator use(candidate->usesBegin()); use != candidate->usesEnd(); use++) {
         if (!use->consumer()->isDefinition()) {
             // We can only skip testing resume points, if all original uses are
@@ -2398,27 +2393,24 @@ ComputeRequestedTruncateKind(MInstruction *candidate)
             // value, and any bailout with a truncated value might lead an
             // incorrect value.
             if (candidate->isUseRemoved() && needsConversion)
-                kind = Min(kind, MDefinition::TruncateAfterBailouts);
+                return false;
             continue;
         }
 
-        MDefinition *consumer = use->consumer()->toDefinition();
-        MDefinition::TruncateKind consumerKind = consumer->operandTruncateKind(use->index());
-        kind = Min(kind, consumerKind);
-        if (kind == MDefinition::NoTruncate)
-            break;
+        if (!use->consumer()->toDefinition()->isOperandTruncated(use->index()))
+            return false;
     }
 
-    return kind;
+    return true;
 }
 
-static MDefinition::TruncateKind
-ComputeTruncateKind(MInstruction *candidate)
+static bool
+CanTruncate(MInstruction *candidate)
 {
     // Compare operations might coerce its inputs to int32 if the ranges are
     // correct.  So we do not need to check if all uses are coerced.
     if (candidate->isCompare())
-        return MDefinition::TruncateAfterBailouts;
+        return true;
 
     // Set truncated flag if range analysis ensure that it has no
     // rounding errors and no fractional part. Note that we can't use
@@ -2433,10 +2425,10 @@ ComputeTruncateKind(MInstruction *candidate)
         canHaveRoundingErrors = false;
 
     if (canHaveRoundingErrors)
-        return MDefinition::NoTruncate;
+        return false;
 
     // Ensure all observable uses are truncated.
-    return ComputeRequestedTruncateKind(candidate);
+    return AllUsesTruncate(candidate);
 }
 
 static void
@@ -2463,7 +2455,7 @@ AdjustTruncatedInputs(TempAllocator &alloc, MInstruction *truncated)
 {
     MBasicBlock *block = truncated->block();
     for (size_t i = 0, e = truncated->numOperands(); i < e; i++) {
-        if (truncated->operandTruncateKind(i) == MDefinition::NoTruncate)
+        if (!truncated->isOperandTruncated(i))
             continue;
 
         MDefinition *input = truncated->getOperand(i);
@@ -2523,12 +2515,11 @@ RangeAnalysis::truncate()
               default:;
             }
 
-            MDefinition::TruncateKind kind = ComputeTruncateKind(*iter);
-            if (kind == MDefinition::NoTruncate)
+            if (!CanTruncate(*iter))
                 continue;
 
             // Truncate this instruction if possible.
-            if (!iter->truncate(kind))
+            if (!iter->truncate())
                 continue;
 
             // Delay updates of inputs/outputs to avoid creating node which

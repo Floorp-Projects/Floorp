@@ -269,6 +269,14 @@ class IDLScope(IDLObject):
                 % (identifier.name,
                     originalObject.location, newObject.location), [])
 
+        if (isinstance(originalObject, IDLDictionary) or
+            isinstance(newObject, IDLDictionary)):
+            raise WebIDLError(
+                "Name collision between dictionary declarations for "
+                "identifier '%s'.\n%s\n%s"
+                % (identifier.name,
+                   originalObject.location, newObject.location), [])
+
         # We do the merging of overloads here as opposed to in IDLInterface
         # because we need to merge overloads of NamedConstructors and we need to
         # detect conflicts in those across interfaces. See also the comment in
@@ -913,7 +921,7 @@ class IDLInterface(IDLObjectWithScope):
                 args = attr.args() if attr.hasArgs() else []
 
                 retType = IDLWrapperType(self.location, self)
-                
+
                 if identifier == "Constructor" or identifier == "ChromeConstructor":
                     name = "constructor"
                     allowForbidden = True
@@ -966,6 +974,14 @@ class IDLInterface(IDLObjectWithScope):
                                       [attr.location])
                 if self.parent:
                     raise WebIDLError("[ArrayClass] must not be specified on "
+                                      "an interface with inherited interfaces",
+                                      [attr.location, self.location])
+            elif (identifier == "ExceptionClass"):
+                if not attr.noArguments():
+                    raise WebIDLError("[ExceptionClass] must take no arguments",
+                                      [attr.location])
+                if self.parent:
+                    raise WebIDLError("[ExceptionClass] must not be specified on "
                                       "an interface with inherited interfaces",
                                       [attr.location, self.location])
             elif identifier == "Global":
@@ -1444,7 +1460,7 @@ class IDLType(IDLObject):
 
 class IDLUnresolvedType(IDLType):
     """
-        Unresolved types are interface types 
+        Unresolved types are interface types
     """
 
     def __init__(self, location, name):
@@ -3659,7 +3675,7 @@ class Parser(Tokenizer):
     # The p_Foo functions here must match the WebIDL spec's grammar.
     # It's acceptable to split things at '|' boundaries.
     def p_Definitions(self, p):
-        """ 
+        """
             Definitions : ExtendedAttributeList Definition Definitions
         """
         if p[2]:
@@ -4587,7 +4603,7 @@ class Parser(Tokenizer):
 
     def p_UnionMemberTypesEmpty(self, p):
         """
-            UnionMemberTypes : 
+            UnionMemberTypes :
         """
         p[0] = []
 

@@ -17,6 +17,7 @@
 <script class="testbody" type="application/javascript;version=1.7">
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("This test needs to generate artificial pauses, hence it uses timeouts.  There is no way around it, unfortunately. :(");
 
 window.addEventListener("message", function(e) {
   gen.send(e.data);

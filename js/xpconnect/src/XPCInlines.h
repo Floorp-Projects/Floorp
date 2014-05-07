@@ -81,22 +81,13 @@ XPCCallContext::GetPrevCallContext() const
     return mPrevCallContext;
 }
 
-inline JSObject*
-XPCCallContext::GetFlattenedJSObject() const
-{
-    CHECK_STATE(HAVE_OBJECT);
-    return mFlattenedJSObject;
-}
-
 inline nsISupports*
 XPCCallContext::GetIdentityObject() const
 {
     CHECK_STATE(HAVE_OBJECT);
     if (mWrapper)
         return mWrapper->GetIdentityObject();
-    return mFlattenedJSObject ?
-           static_cast<nsISupports*>(xpc_GetJSPrivate(mFlattenedJSObject)) :
-           nullptr;
+    return nullptr;
 }
 
 inline XPCWrappedNative*

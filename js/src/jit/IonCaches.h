@@ -20,6 +20,8 @@ namespace js {
 class LockedJSContext;
 class TypedArrayObject;
 
+typedef Handle<TypedArrayObject *> HandleTypedArrayObject;
+
 namespace jit {
 
 #define IONCACHE_KIND_LIST(_)                                   \
@@ -168,6 +170,10 @@ class IonCache
     JSScript *script_;
     jsbytecode *pc_;
 
+    // Location to use when updating profiler pseudostack when leaving this
+    // IC code to enter a callee.
+    jsbytecode *profilerLeavePc_;
+
   private:
     static const size_t MAX_STUBS;
     void incrementStubCount() {
@@ -185,7 +191,8 @@ class IonCache
         stubCount_(0),
         fallbackLabel_(),
         script_(nullptr),
-        pc_(nullptr)
+        pc_(nullptr),
+        profilerLeavePc_(nullptr)
     {
     }
 
@@ -199,6 +206,11 @@ class IonCache
     // be set to the exitJump of the last generated stub.
     void setFallbackLabel(CodeOffsetLabel fallbackLabel) {
         fallbackLabel_ = fallbackLabel;
+    }
+
+    void setProfilerLeavePC(jsbytecode *pc) {
+        JS_ASSERT(pc != nullptr);
+        profilerLeavePc_ = pc;
     }
 
     virtual void emitInitialJump(MacroAssembler &masm, AddCacheState &addState) = 0;
@@ -614,24 +626,34 @@ class GetPropertyIC : public RepatchIonCache
     }
 
     // Attach the proper stub, if possible
-    bool tryAttachStub(JSContext *cx, IonScript *ion, HandleObject obj,
-                       HandlePropertyName name, void *returnAddr, bool *emitted);
-    bool tryAttachProxy(JSContext *cx, IonScript *ion, HandleObject obj,
-                        HandlePropertyName name, void *returnAddr, bool *emitted);
-    bool tryAttachGenericProxy(JSContext *cx, IonScript *ion, HandleObject obj,
-                               HandlePropertyName name, void *returnAddr, bool *emitted);
-    bool tryAttachDOMProxyShadowed(JSContext *cx, IonScript *ion, HandleObject obj,
-                                   void *returnAddr, bool *emitted);
-    bool tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, HandleObject obj,
-                                     HandlePropertyName name, bool resetNeeded,
-                                     void *returnAddr, bool *emitted);
-    bool tryAttachNative(JSContext *cx, IonScript *ion, HandleObject obj,
-                         HandlePropertyName name, void *returnAddr, bool *emitted);
-    bool tryAttachTypedArrayLength(JSContext *cx, IonScript *ion, HandleObject obj,
-                                   HandlePropertyName name, bool *emitted);
+    bool tryAttachStub(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                       HandleObject obj, HandlePropertyName name,
+                       void *returnAddr, bool *emitted);
 
-    bool tryAttachArgumentsLength(JSContext *cx, IonScript *ion, HandleObject obj,
-                                  HandlePropertyName name, bool *emitted);
+    bool tryAttachProxy(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                        HandleObject obj, HandlePropertyName name,
+                        void *returnAddr, bool *emitted);
+
+    bool tryAttachGenericProxy(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                               HandleObject obj, HandlePropertyName name,
+                               void *returnAddr, bool *emitted);
+
+    bool tryAttachDOMProxyShadowed(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                                   HandleObject obj, void *returnAddr, bool *emitted);
+
+    bool tryAttachDOMProxyUnshadowed(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                                     HandleObject obj, HandlePropertyName name, bool resetNeeded,
+                                     void *returnAddr, bool *emitted);
+
+    bool tryAttachNative(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                         HandleObject obj, HandlePropertyName name,
+                         void *returnAddr, bool *emitted);
+
+    bool tryAttachTypedArrayLength(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                                   HandleObject obj, HandlePropertyName name, bool *emitted);
+
+    bool tryAttachArgumentsLength(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                                  HandleObject obj, HandlePropertyName name, bool *emitted);
 
     static bool update(JSContext *cx, size_t cacheIndex, HandleObject obj, MutableHandleValue vp);
 };
@@ -694,20 +716,26 @@ class SetPropertyIC : public RepatchIonCache
         CanAttachCallSetter
     };
 
-    bool attachSetSlot(JSContext *cx, IonScript *ion, HandleObject obj, HandleShape shape,
-                       bool checkTypeset);
-    bool attachCallSetter(JSContext *cx, IonScript *ion, HandleObject obj,
-                          HandleObject holder, HandleShape shape, void *returnAddr);
-    bool attachAddSlot(JSContext *cx, IonScript *ion, JSObject *obj, HandleShape oldShape,
-                       bool checkTypeset);
-    bool attachGenericProxy(JSContext *cx, IonScript *ion, void *returnAddr);
-    bool attachDOMProxyShadowed(JSContext *cx, IonScript *ion, HandleObject obj,
-                                void *returnAddr);
-    bool attachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, HandleObject obj,
-                                  void *returnAddr);
+    bool attachSetSlot(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                       HandleObject obj, HandleShape shape, bool checkTypeset);
 
-    static bool
-    update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue value);
+    bool attachCallSetter(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                          HandleObject obj, HandleObject holder, HandleShape shape,
+                          void *returnAddr);
+
+    bool attachAddSlot(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                       HandleObject obj, HandleShape oldShape, bool checkTypeset);
+
+    bool attachGenericProxy(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                            void *returnAddr);
+
+    bool attachDOMProxyShadowed(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                                HandleObject obj, void *returnAddr);
+
+    bool attachDOMProxyUnshadowed(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                                  HandleObject obj, void *returnAddr);
+
+    static bool update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue value);
 };
 
 class GetElementIC : public RepatchIonCache
@@ -788,12 +816,18 @@ class GetElementIC : public RepatchIonCache
     static bool canAttachTypedArrayElement(JSObject *obj, const Value &idval,
                                            TypedOrValueRegister output);
 
-    bool attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj, const Value &idval,
-                       HandlePropertyName name, void *returnAddr);
-    bool attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval);
-    bool attachTypedArrayElement(JSContext *cx, IonScript *ion, TypedArrayObject *tarr,
-                                 const Value &idval);
-    bool attachArgumentsElement(JSContext *cx, IonScript *ion, JSObject *obj);
+    bool attachGetProp(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                       HandleObject obj, const Value &idval, HandlePropertyName name,
+                       void *returnAddr);
+
+    bool attachDenseElement(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                            HandleObject obj, const Value &idval);
+
+    bool attachTypedArrayElement(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                                 HandleTypedArrayObject tarr, const Value &idval);
+
+    bool attachArgumentsElement(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                                HandleObject obj);
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
@@ -878,8 +912,11 @@ class SetElementIC : public RepatchIonCache
         hasDenseStub_ = true;
     }
 
-    bool attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval);
-    bool attachTypedArrayElement(JSContext *cx, IonScript *ion, TypedArrayObject *tarr);
+    bool attachDenseElement(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                            HandleObject obj, const Value &idval);
+
+    bool attachTypedArrayElement(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                                 HandleTypedArrayObject tarr);
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
@@ -913,8 +950,11 @@ class BindNameIC : public RepatchIonCache
         return output_;
     }
 
-    bool attachGlobal(JSContext *cx, IonScript *ion, JSObject *scopeChain);
-    bool attachNonGlobal(JSContext *cx, IonScript *ion, JSObject *scopeChain, JSObject *holder);
+    bool attachGlobal(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                      HandleObject scopeChain);
+
+    bool attachNonGlobal(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                         HandleObject scopeChain, HandleObject holder);
 
     static JSObject *
     update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain);
@@ -959,10 +999,13 @@ class NameIC : public RepatchIonCache
         return typeOf_;
     }
 
-    bool attachReadSlot(JSContext *cx, IonScript *ion, HandleObject scopeChain,
-                        HandleObject holderBase, HandleObject holder, HandleShape shape);
-    bool attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
-                          HandleShape shape, void *returnAddr);
+    bool attachReadSlot(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                        HandleObject scopeChain, HandleObject holderBase,
+                        HandleObject holder, HandleShape shape);
+
+    bool attachCallGetter(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                          HandleObject obj, HandleObject holder, HandleShape shape,
+                          void *returnAddr);
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, MutableHandleValue vp);
@@ -1000,7 +1043,8 @@ class CallsiteCloneIC : public RepatchIonCache
         return output_;
     }
 
-    bool attach(JSContext *cx, IonScript *ion, HandleFunction original, HandleFunction clone);
+    bool attach(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                HandleFunction original, HandleFunction clone);
 
     static JSObject *update(JSContext *cx, size_t cacheIndex, HandleObject callee);
 };
@@ -1072,10 +1116,10 @@ class GetPropertyParIC : public ParallelIonCache
     bool allowGetters() const { return false; }
     bool allowArrayLength(Context, HandleObject) const { return true; }
 
-    bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, JSObject *holder,
-                        Shape *shape);
-    bool attachArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj);
-    bool attachTypedArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj);
+    bool attachReadSlot(LockedJSContext &cx, IonScript *ion, HandleObject obj, HandleObject holder,
+                        HandleShape shape);
+    bool attachArrayLength(LockedJSContext &cx, IonScript *ion, HandleObject obj);
+    bool attachTypedArrayLength(LockedJSContext &cx, IonScript *ion, HandleObject obj);
 
     static bool update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj,
                        MutableHandleValue vp);
@@ -1132,10 +1176,11 @@ class GetElementParIC : public ParallelIonCache
     bool allowGetters() const { return false; }
     bool allowArrayLength(Context, HandleObject) const { return false; }
 
-    bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval,
-                        PropertyName *name, JSObject *holder, Shape *shape);
-    bool attachDenseElement(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval);
-    bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, TypedArrayObject *tarr,
+    bool attachReadSlot(LockedJSContext &cx, IonScript *ion, HandleObject obj, const Value &idval,
+                        HandlePropertyName name, HandleObject holder, HandleShape shape);
+    bool attachDenseElement(LockedJSContext &cx, IonScript *ion, HandleObject obj,
+                            const Value &idval);
+    bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, HandleTypedArrayObject tarr,
                                  const Value &idval);
 
     static bool update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
@@ -1187,9 +1232,9 @@ class SetPropertyParIC : public ParallelIonCache
         return needsTypeBarrier_;
     }
 
-    bool attachSetSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *shape,
+    bool attachSetSlot(LockedJSContext &cx, IonScript *ion, HandleObject obj, HandleShape shape,
                        bool checkTypeset);
-    bool attachAddSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *oldShape,
+    bool attachAddSlot(LockedJSContext &cx, IonScript *ion, HandleObject obj, HandleShape oldShape,
                        bool checkTypeset);
 
     static bool update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj,
@@ -1256,8 +1301,9 @@ class SetElementParIC : public ParallelIonCache
         return guardHoles_;
     }
 
-    bool attachDenseElement(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval);
-    bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, TypedArrayObject *tarr);
+    bool attachDenseElement(LockedJSContext &cx, IonScript *ion, HandleObject obj,
+                            const Value &idval);
+    bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, HandleTypedArrayObject tarr);
 
     static bool update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj,
                        HandleValue idval, HandleValue value);

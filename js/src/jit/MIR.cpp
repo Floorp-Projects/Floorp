@@ -1621,7 +1621,7 @@ MAdd::fallible() const
 {
     // the add is fallible if range analysis does not say that it is finite, AND
     // either the truncation analysis shows that there are non-truncated uses.
-    if (truncateKind() >= IndirectTruncate)
+    if (isTruncated())
         return false;
     if (range() && range()->hasInt32Bounds())
         return false;
@@ -1632,7 +1632,7 @@ bool
 MSub::fallible() const
 {
     // see comment in MAdd::fallible()
-    if (truncateKind() >= IndirectTruncate)
+    if (isTruncated())
         return false;
     if (range() && range()->hasInt32Bounds())
         return false;

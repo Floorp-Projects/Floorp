@@ -1271,6 +1271,14 @@ static bool
 DoTypeMonitorFallback(JSContext *cx, BaselineFrame *frame, ICTypeMonitor_Fallback *stub,
                       HandleValue value, MutableHandleValue res)
 {
+    // It's possible that we arrived here from bailing out of Ion, and that
+    // Ion proved that the value is dead and optimized out. In such cases, do
+    // nothing.
+    if (value.isMagic(JS_OPTIMIZED_OUT)) {
+        res.set(value);
+        return true;
+    }
+
     RootedScript script(cx, frame->script());
     jsbytecode *pc = stub->icEntry()->pc(script);
     TypeFallbackICSpew(cx, stub, "TypeMonitor");

@@ -19,7 +19,6 @@ class nsAXPCNativeCallContext
 public:
     NS_IMETHOD GetCallee(nsISupports **aResult) = 0;
     NS_IMETHOD GetCalleeMethodIndex(uint16_t *aResult) = 0;
-    NS_IMETHOD GetCalleeWrapper(nsIXPConnectWrappedNative **aResult) = 0;
     NS_IMETHOD GetJSContext(JSContext **aResult) = 0;
     NS_IMETHOD GetArgc(uint32_t *aResult) = 0;
     NS_IMETHOD GetArgvPtr(JS::Value **aResult) = 0;
