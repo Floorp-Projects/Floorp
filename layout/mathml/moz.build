@@ -57,8 +57,7 @@ RESOURCE_FILES.fonts += [
     'mathfont.properties',
     'mathfontMathJax_Main.properties',
     'mathfontStandardSymbolsL.properties',
-    'mathfontSTIXNonUnicode.properties',
-    'mathfontSTIXSizeOneSym.properties',
+    'mathfontSTIXGeneral.properties',
     'mathfontUnicode.properties',
 ]
 
