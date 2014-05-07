@@ -23,9 +23,8 @@ WebGLTexture::WrapObject(JSContext *cx) {
 }
 
 WebGLTexture::WebGLTexture(WebGLContext *context)
-    : WebGLContextBoundObject(context)
-    , mHasEverBeenBound(false)
-    , mTarget(0)
+    : WebGLBindableName()
+    , WebGLContextBoundObject(context)
     , mMinFilter(LOCAL_GL_NEAREST_MIPMAP_LINEAR)
     , mMagFilter(LOCAL_GL_LINEAR)
     , mWrapS(LOCAL_GL_REPEAT)
@@ -108,18 +107,21 @@ WebGLTexture::Bind(GLenum aTarget) {
     // this function should only be called by bindTexture().
     // it assumes that the GL context is already current.
 
-    bool firstTimeThisTextureIsBound = !mHasEverBeenBound;
+    bool firstTimeThisTextureIsBound = !HasEverBeenBound();
 
-    if (!firstTimeThisTextureIsBound && aTarget != mTarget) {
+    if (firstTimeThisTextureIsBound) {
+        BindTo(aTarget);
+    } else if (aTarget != Target()) {
         mContext->ErrorInvalidOperation("bindTexture: this texture has already been bound to a different target");
         // very important to return here before modifying texture state! This was the place when I lost a whole day figuring
         // very strange 'invalid write' crashes.
         return;
     }
 
-    mTarget = aTarget;
+    GLuint name = GLName();
+    GLenum target = Target();
 
-    mContext->gl->fBindTexture(mTarget, mGLName);
+    mContext->gl->fBindTexture(target, name);
 
     if (firstTimeThisTextureIsBound) {
         mFacesCount = (mTarget == LOCAL_GL_TEXTURE_2D) ? 1 : 6;
@@ -132,8 +134,6 @@ WebGLTexture::Bind(GLenum aTarget) {
         if (mTarget == LOCAL_GL_TEXTURE_CUBE_MAP && !mContext->gl->IsGLES())
             mContext->gl->fTexParameteri(mTarget, LOCAL_GL_TEXTURE_WRAP_R, LOCAL_GL_CLAMP_TO_EDGE);
     }
-
-    mHasEverBeenBound = true;
 }
 
 void
@@ -141,8 +141,14 @@ WebGLTexture::SetImageInfo(GLenum aTarget, GLint aLevel,
                   GLsizei aWidth, GLsizei aHeight,
                   GLenum aFormat, GLenum aType, WebGLImageDataStatus aStatus)
 {
-    if ( (aTarget == LOCAL_GL_TEXTURE_2D) != (mTarget == LOCAL_GL_TEXTURE_2D) )
+    // TODO(djg): I suspected the following ASSERT and check are
+    //            trying to express more than they're saying, probably
+    //            to do with cubemap targets. We should do this
+    //            properly. https://bugzilla.mozilla.org/show_bug.cgi?id=1006908
+    MOZ_ASSERT((aTarget == LOCAL_GL_TEXTURE_2D) == (mTarget == LOCAL_GL_TEXTURE_2D));
+    if ((aTarget == LOCAL_GL_TEXTURE_2D) != (mTarget == LOCAL_GL_TEXTURE_2D)) {
         return;
+    }
 
     EnsureMaxLevelWithCustomImagesAtLeast(aLevel);
 
