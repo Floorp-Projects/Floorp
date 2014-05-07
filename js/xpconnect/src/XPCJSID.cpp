@@ -663,8 +663,7 @@ nsJSCID::CreateInstance(HandleValue iidval, JSContext *cx,
         return NS_ERROR_UNEXPECTED;
     }
 
-    nsIXPCSecurityManager* sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
-    if (sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID()))) {
+    if (NS_FAILED(nsXPConnect::SecurityManager()->CanCreateInstance(cx, mDetails.ID()))) {
         NS_ERROR("how are we not being called from chrome here?");
         return NS_OK;
     }
@@ -706,9 +705,7 @@ nsJSCID::GetService(HandleValue iidval, JSContext *cx, uint8_t optionalArgc,
         return NS_ERROR_UNEXPECTED;
     }
 
-    nsIXPCSecurityManager *sm;
-    sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
-    if (sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID()))) {
+    if (NS_FAILED(nsXPConnect::SecurityManager()->CanCreateInstance(cx, mDetails.ID()))) {
         MOZ_ASSERT(JS_IsExceptionPending(cx),
                    "security manager vetoed GetService without setting exception");
         return NS_OK;

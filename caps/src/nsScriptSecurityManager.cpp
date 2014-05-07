@@ -1242,27 +1242,20 @@ nsScriptSecurityManager::Shutdown()
 nsScriptSecurityManager *
 nsScriptSecurityManager::GetScriptSecurityManager()
 {
-    if (!gScriptSecMan && nsXPConnect::XPConnect())
-    {
-        nsRefPtr<nsScriptSecurityManager> ssManager = new nsScriptSecurityManager();
-
-        nsresult rv;
-        rv = ssManager->Init();
-        if (NS_FAILED(rv)) {
-            return nullptr;
-        }
- 
-        rv = nsXPConnect::XPConnect()->
-            SetDefaultSecurityManager(ssManager);
-        if (NS_FAILED(rv)) {
-            NS_WARNING("Failed to install xpconnect security manager!");
-            return nullptr;
-        }
-
-        ClearOnShutdown(&gScriptSecMan);
-        gScriptSecMan = ssManager;
-    }
     return gScriptSecMan;
+}
+
+/* static */ void
+nsScriptSecurityManager::InitStatics()
+{
+    nsRefPtr<nsScriptSecurityManager> ssManager = new nsScriptSecurityManager();
+    nsresult rv = ssManager->Init();
+    if (NS_FAILED(rv)) {
+        MOZ_CRASH();
+    }
+
+    ClearOnShutdown(&gScriptSecMan);
+    gScriptSecMan = ssManager;
 }
 
 // Currently this nsGenericFactory constructor is used only from FastLoad
