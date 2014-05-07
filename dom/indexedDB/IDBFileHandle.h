@@ -9,16 +9,16 @@
 
 #include "IndexedDatabase.h"
 
-#include "mozilla/dom/file/FileHandle.h"
+#include "mozilla/dom/FileHandle.h"
 #include "mozilla/dom/indexedDB/FileInfo.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBDatabase;
 
-class IDBFileHandle : public file::FileHandle
+class IDBFileHandle : public FileHandle
 {
-  typedef mozilla::dom::file::LockedFile LockedFile;
+  typedef mozilla::dom::LockedFile LockedFile;
 
 public:
   static already_AddRefed<IDBFileHandle>
