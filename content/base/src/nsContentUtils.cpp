@@ -380,9 +380,6 @@ nsContentUtils::Init()
   sSecurityManager->GetSystemPrincipal(&sSystemPrincipal);
   MOZ_ASSERT(sSystemPrincipal);
 
-  // Getting the first context can trigger GC, so do this non-lazily.
-  sXPConnect->InitSafeJSContext();
-
   nsresult rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
   if (NS_FAILED(rv)) {
     // This makes life easier, but we can live without it.
