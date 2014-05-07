@@ -25,9 +25,10 @@ withJitOptions(Opts_Ion2NoParallelCompilation, function () {
     }
   };
 
-  g.eval("" + function f(d, x) { g(d, x); });
+  g.eval("" + function f(d, x) { "use strict"; g(d, x); });
 
   g.eval("" + function g(d, x) {
+    "use strict";
     for (var i = 0; i < 200; i++);
     // Hack to prevent inlining.
     function inner() { i = 42; };

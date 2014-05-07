@@ -306,9 +306,9 @@ public:
   Checkpoint(const char* aEvent)
   {
     TimeStamp now = TimeStamp::Now();
-    uint32_t dur = (uint32_t) ((now - mLastCheckpoint).ToMilliseconds());
-    if (dur > 0) {
-      printf("cc: %s took %dms\n", aEvent, dur);
+    double dur = (now - mLastCheckpoint).ToMilliseconds();
+    if (dur >= 0.5) {
+      printf("cc: %s took %.1fms\n", aEvent, dur);
     }
     mLastCheckpoint = now;
   }
@@ -1217,6 +1217,7 @@ public:
   void RemoveObjectFromGraph(void *aPtr);
 
   void PrepareForGarbageCollection();
+  void FinishAnyCurrentCollection();
 
   bool Collect(ccType aCCType,
                SliceBudget &aBudget,
@@ -2672,6 +2673,12 @@ private:
   bool &mFailed;
 };
 
+static void
+FloodBlackNode(uint32_t& aWhiteNodeCount, bool& aFailed, PtrInfo* aPi)
+{
+    GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(aWhiteNodeCount, aFailed)).Walk(aPi);
+    MOZ_ASSERT(aPi->mColor == black || !aPi->mParticipant, "FloodBlackNode should make aPi black");
+}
 
 struct scanVisitor
 {
@@ -2703,9 +2710,7 @@ struct scanVisitor
       pi->mColor = white;
       ++mWhiteNodeCount;
     } else {
-      GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount, mFailed)).Walk(pi);
-      MOZ_ASSERT(pi->mColor == black,
-                 "Why didn't ScanBlackVisitor make pi black?");
+      FloodBlackNode(mWhiteNodeCount, mFailed, pi);
     }
   }
 
@@ -2747,12 +2752,12 @@ nsCycleCollector::ScanWeakMaps()
       MOZ_ASSERT(vColor != grey, "Uncolored weak map value");
 
       if (mColor == black && kColor != black && kdColor == black) {
-        GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount, failed)).Walk(wm->mKey);
+        FloodBlackNode(mWhiteNodeCount, failed, wm->mKey);
         anyChanged = true;
       }
 
       if (mColor == black && kColor == black && vColor != black) {
-        GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount, failed)).Walk(wm->mVal);
+        FloodBlackNode(mWhiteNodeCount, failed, wm->mVal);
         anyChanged = true;
       }
     }
@@ -2797,7 +2802,7 @@ public:
     if (pi->mColor == black) {
       return;
     }
-    GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mCount, mFailed)).Walk(pi);
+    FloodBlackNode(mCount, mFailed, pi);
   }
 
 private:
@@ -2878,7 +2883,7 @@ nsCycleCollector::ScanIncrementalRoots()
         mListener->NoteIncrementalRoot((uint64_t)pi->mPointer);
       }
 
-      GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount, failed)).Walk(pi);
+      FloodBlackNode(mWhiteNodeCount, failed, pi);
     }
 
     timeLog.Checkpoint("ScanIncrementalRoots::fix JS");
@@ -3032,6 +3037,8 @@ nsCycleCollector::CollectWhite()
   timeLog.Checkpoint("CollectWhite::Unroot");
 
   nsCycleCollector_dispatchDeferredDeletion(false);
+  timeLog.Checkpoint("CollectWhite::dispatchDeferredDeletion");
+
   mIncrementalPhase = CleanupPhase;
 
   return count > 0;
@@ -3212,7 +3219,7 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
   if (!aForceGC) {
     mJSRuntime->FixWeakMappingGrayBits();
 
-    bool needGC = mJSRuntime->NeedCollect();
+    bool needGC = !mJSRuntime->AreGCGrayBitsValid();
     // Only do a telemetry ping for non-shutdown CCs.
     CC_TELEMETRY(_NEED_GC, needGC);
     if (!needGC)
@@ -3221,19 +3228,21 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
   }
 
   TimeLog timeLog;
-  mJSRuntime->Collect(aForceGC ? JS::gcreason::SHUTDOWN_CC : JS::gcreason::CC_FORCED);
+  mJSRuntime->GarbageCollect(aForceGC ? JS::gcreason::SHUTDOWN_CC : JS::gcreason::CC_FORCED);
   timeLog.Checkpoint("GC()");
 }
 
 void
 nsCycleCollector::CleanupAfterCollection()
 {
+  TimeLog timeLog;
   MOZ_ASSERT(mIncrementalPhase == CleanupPhase);
   mGraph.Clear();
+  timeLog.Checkpoint("CleanupAfterCollection::mGraph.Clear()");
 
   uint32_t interval = (uint32_t) ((TimeStamp::Now() - mCollectionStart).ToMilliseconds());
 #ifdef COLLECT_TIME_DEBUG
-  printf("cc: total cycle collector time was %ums\n", interval);
+  printf("cc: total cycle collector time was %ums in %u slices\n", interval, mResults.mNumSlices);
   printf("cc: visited %u ref counted and %u GCed objects, freed %d ref counted and %d GCed objects",
          mResults.mVisitedRefCounted, mResults.mVisitedGCed,
          mResults.mFreedRefCounted, mResults.mFreedGCed);
@@ -3244,13 +3253,16 @@ nsCycleCollector::CleanupAfterCollection()
   }
   printf(".\ncc: \n");
 #endif
+
   CC_TELEMETRY( , interval);
   CC_TELEMETRY(_VISITED_REF_COUNTED, mResults.mVisitedRefCounted);
   CC_TELEMETRY(_VISITED_GCED, mResults.mVisitedGCed);
   CC_TELEMETRY(_COLLECTED, mWhiteNodeCount);
+  timeLog.Checkpoint("CleanupAfterCollection::telemetry");
 
   if (mJSRuntime) {
     mJSRuntime->EndCycleCollectionCallback(mResults);
+    timeLog.Checkpoint("CleanupAfterCollection::EndCycleCollectionCallback()");
   }
   mIncrementalPhase = IdlePhase;
 }
@@ -3296,8 +3308,12 @@ nsCycleCollector::Collect(ccType aCCType,
   // If the CC started idle, it will call BeginCollection, which
   // will do FreeSnowWhite, so it doesn't need to be done here.
   if (!startedIdle) {
+    TimeLog timeLog;
     FreeSnowWhite(true);
+    timeLog.Checkpoint("Collect::FreeSnowWhite");
   }
+
+  ++mResults.mNumSlices;
 
   bool finished = false;
   do {
@@ -3363,8 +3379,18 @@ nsCycleCollector::PrepareForGarbageCollection()
     return;
   }
 
+  FinishAnyCurrentCollection();
+}
+
+void
+nsCycleCollector::FinishAnyCurrentCollection()
+{
+  if (mIncrementalPhase == IdlePhase) {
+    return;
+  }
+
   SliceBudget unlimitedBudget;
-  PrintPhase("PrepareForGarbageCollection");
+  PrintPhase("FinishAnyCurrentCollection");
   // Use SliceCC because we only want to finish the CC in progress.
   Collect(SliceCC, unlimitedBudget, nullptr);
   MOZ_ASSERT(mIncrementalPhase == IdlePhase);
@@ -3871,10 +3897,25 @@ nsCycleCollector_collectSlice(int64_t aSliceTime)
 
   PROFILER_LABEL("CC", "nsCycleCollector_collectSlice");
   SliceBudget budget;
-  if (aSliceTime > 0) {
+  if (aSliceTime >= 0) {
     budget = SliceBudget::TimeBudget(aSliceTime);
-  } else if (aSliceTime == 0) {
-    budget = SliceBudget::WorkBudget(1);
+  }
+  data->mCollector->Collect(SliceCC, budget, nullptr);
+}
+
+void
+nsCycleCollector_collectSliceWork(int64_t aSliceWork)
+{
+  CollectorData *data = sCollectorData.get();
+
+  // We should have started the cycle collector by now.
+  MOZ_ASSERT(data);
+  MOZ_ASSERT(data->mCollector);
+
+  PROFILER_LABEL("CC", "nsCycleCollector_collectSliceWork");
+  SliceBudget budget;
+  if (aSliceWork >= 0) {
+    budget = SliceBudget::WorkBudget(aSliceWork);
   }
   data->mCollector->Collect(SliceCC, budget, nullptr);
 }
@@ -3891,6 +3932,20 @@ nsCycleCollector_prepareForGarbageCollection()
   }
 
   data->mCollector->PrepareForGarbageCollection();
+}
+
+void
+nsCycleCollector_finishAnyCurrentCollection()
+{
+    CollectorData *data = sCollectorData.get();
+
+    MOZ_ASSERT(data);
+
+    if (!data->mCollector) {
+        return;
+    }
+
+    data->mCollector->FinishAnyCurrentCollection();
 }
 
 void

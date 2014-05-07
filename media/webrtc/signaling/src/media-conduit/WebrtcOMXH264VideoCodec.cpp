@@ -13,10 +13,10 @@
 #include <foundation/AMessage.h>
 #include <gui/Surface.h>
 #include <media/ICrypto.h>
-#include <MediaCodec.h>
-#include <MediaDefs.h>
-#include <MediaErrors.h>
-#include <MetaData.h>
+#include <media/stagefright/MediaCodec.h>
+#include <media/stagefright/MediaDefs.h>
+#include <media/stagefright/MediaErrors.h>
+#include <media/stagefright/MetaData.h>
 #include <OMX_Component.h>
 using namespace android;
 

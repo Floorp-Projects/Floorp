@@ -952,6 +952,10 @@ class LRecoverInfo : public TempObject
         bool operator !=(const OperandIter &where) const {
             return it_ != where.it_ || op_ != where.op_;
         }
+
+#ifdef DEBUG
+        bool canOptimizeOutIfUnused();
+#endif
     };
 };
 

@@ -423,6 +423,7 @@ pref(layers.force-active,true) load 859630-1.html
 load 866588.html
 load 897852.html
 asserts(4-6) load 898913.html # bug 847368
+pref(layout.css.sticky.enabled,true) load 926728.html
 load 931464.html
 load 936988-1.html
 load 931460-1.html

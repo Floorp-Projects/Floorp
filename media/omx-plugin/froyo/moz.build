@@ -20,6 +20,7 @@ LOCAL_INCLUDES += [
 
 # Don't use STL wrappers; this isn't Gecko code
 DISABLE_STL_WRAPPING = True
+NO_VISIBILITY_FLAGS = True
 
 # Suppress warnings in third-party code.
 CXXFLAGS += ['-Wno-multichar']

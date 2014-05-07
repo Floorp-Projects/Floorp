@@ -160,7 +160,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
       }
     }
 
-    owner = do_QueryInterface(ssm->GetCxSubjectPrincipal(cx));
+    owner = nsContentUtils::GetSubjectPrincipal();
   }
 
   // Create load info

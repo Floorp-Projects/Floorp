@@ -73,14 +73,9 @@ AccessCheck::wrapperSubsumes(JSObject *wrapper)
 bool
 AccessCheck::isChrome(JSCompartment *compartment)
 {
-    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
-    if (!ssm) {
-        return false;
-    }
-
     bool privileged;
     nsIPrincipal *principal = GetCompartmentPrincipal(compartment);
-    return NS_SUCCEEDED(ssm->IsSystemPrincipal(principal, &privileged)) && privileged;
+    return NS_SUCCEEDED(nsXPConnect::SecurityManager()->IsSystemPrincipal(principal, &privileged)) && privileged;
 }
 
 bool
@@ -92,12 +87,7 @@ AccessCheck::isChrome(JSObject *obj)
 bool
 AccessCheck::callerIsChrome()
 {
-    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
-    if (!ssm)
-        return false;
-    bool subjectIsSystem;
-    nsresult rv = ssm->SubjectPrincipalIsSystem(&subjectIsSystem);
-    return NS_SUCCEEDED(rv) && subjectIsSystem;
+    return nsContentUtils::IsCallerChrome();
 }
 
 nsIPrincipal *
@@ -180,9 +170,6 @@ bool
 AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, jsid idArg,
                                           Wrapper::Action act)
 {
-    if (!XPCWrapper::GetSecurityManager())
-        return true;
-
     if (act == Wrapper::CALL)
         return false;
 
