@@ -189,17 +189,7 @@ XPCJSContextStack::InitSafeJSContext()
     if (!mSafeJSContextGlobal)
         MOZ_CRASH();
 
-    // Note: make sure to set the private before calling
-    // InitClasses
     nsRefPtr<SandboxPrivate> sp = new SandboxPrivate(principal, mSafeJSContextGlobal);
     JS_SetPrivate(mSafeJSContextGlobal, sp.forget().take());
-
-    // After this point either glob is null and the
-    // nsIScriptObjectPrincipal ownership is either handled by the
-    // nsCOMPtr or dealt with, or we'll release in the finalize
-    // hook.
-    if (NS_FAILED(xpc->InitClasses(mSafeJSContext, mSafeJSContextGlobal)))
-        MOZ_CRASH();
-
     return mSafeJSContext;
 }
