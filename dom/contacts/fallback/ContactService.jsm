@@ -15,8 +15,11 @@ this.EXPORTED_SYMBOLS = ["ContactService"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/ContactDB.jsm");
-Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "ContactDB",
+                                  "resource://gre/modules/ContactDB.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PhoneNumberUtils",
+                                  "resource://gre/modules/PhoneNumberUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
