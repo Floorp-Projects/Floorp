@@ -2673,6 +2673,12 @@ private:
   bool &mFailed;
 };
 
+static void
+FloodBlackNode(uint32_t& aWhiteNodeCount, bool& aFailed, PtrInfo* aPi)
+{
+    GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(aWhiteNodeCount, aFailed)).Walk(aPi);
+    MOZ_ASSERT(aPi->mColor == black || !aPi->mParticipant, "FloodBlackNode should make aPi black");
+}
 
 struct scanVisitor
 {
@@ -2704,9 +2710,7 @@ struct scanVisitor
       pi->mColor = white;
       ++mWhiteNodeCount;
     } else {
-      GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount, mFailed)).Walk(pi);
-      MOZ_ASSERT(pi->mColor == black,
-                 "Why didn't ScanBlackVisitor make pi black?");
+      FloodBlackNode(mWhiteNodeCount, mFailed, pi);
     }
   }
 
@@ -2748,12 +2752,12 @@ nsCycleCollector::ScanWeakMaps()
       MOZ_ASSERT(vColor != grey, "Uncolored weak map value");
 
       if (mColor == black && kColor != black && kdColor == black) {
-        GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount, failed)).Walk(wm->mKey);
+        FloodBlackNode(mWhiteNodeCount, failed, wm->mKey);
         anyChanged = true;
       }
 
       if (mColor == black && kColor == black && vColor != black) {
-        GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount, failed)).Walk(wm->mVal);
+        FloodBlackNode(mWhiteNodeCount, failed, wm->mVal);
         anyChanged = true;
       }
     }
@@ -2798,7 +2802,7 @@ public:
     if (pi->mColor == black) {
       return;
     }
-    GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mCount, mFailed)).Walk(pi);
+    FloodBlackNode(mCount, mFailed, pi);
   }
 
 private:
@@ -2879,7 +2883,7 @@ nsCycleCollector::ScanIncrementalRoots()
         mListener->NoteIncrementalRoot((uint64_t)pi->mPointer);
       }
 
-      GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount, failed)).Walk(pi);
+      FloodBlackNode(mWhiteNodeCount, failed, pi);
     }
 
     timeLog.Checkpoint("ScanIncrementalRoots::fix JS");
