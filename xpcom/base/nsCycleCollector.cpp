@@ -306,9 +306,9 @@ public:
   Checkpoint(const char* aEvent)
   {
     TimeStamp now = TimeStamp::Now();
-    uint32_t dur = (uint32_t) ((now - mLastCheckpoint).ToMilliseconds());
-    if (dur > 0) {
-      printf("cc: %s took %dms\n", aEvent, dur);
+    double dur = (now - mLastCheckpoint).ToMilliseconds();
+    if (dur >= 0.5) {
+      printf("cc: %s took %.1fms\n", aEvent, dur);
     }
     mLastCheckpoint = now;
   }
