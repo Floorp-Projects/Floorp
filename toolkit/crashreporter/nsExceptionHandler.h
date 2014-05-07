@@ -36,10 +36,19 @@ nsresult UnsetExceptionHandler();
 
 /**
  * Tell the crash reporter to recalculate where crash events files should go.
+ * SetCrashEventsDir is used before XPCOM is initialized from the startup
+ * code.
  *
- * This should be called during crash reporter initialization and when a
- * profile is activated or deactivated.
+ * UpdateCrashEventsDir uses the directory service to re-set the
+ * crash event directory based on the current profile.
+ *
+ * 1. If environment variable is present, use it. We don't expect
+ *    the environment variable except for tests and other atypical setups.
+ * 2. <profile>/crashes/events
+ * 3. <UAppData>/Crash Reports/events
  */
+void SetUserAppDataDirectory(nsIFile* aDir);
+void SetProfileDirectory(nsIFile* aDir);
 void UpdateCrashEventsDir();
 
 /**
