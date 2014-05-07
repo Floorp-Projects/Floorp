@@ -1633,7 +1633,7 @@ GetPluginIsFromExtension(const nsCOMPtr<nsIFile>& pluginFile,
 {
   for (uint32_t i = 0; i < extensionDirs.Length(); ++i) {
     bool contains;
-    if (NS_FAILED(extensionDirs[i]->Contains(pluginFile, true, &contains)) || !contains) {
+    if (NS_FAILED(extensionDirs[i]->Contains(pluginFile, &contains)) || !contains) {
       continue;
     }
 
