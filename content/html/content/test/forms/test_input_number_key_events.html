@@ -232,6 +232,12 @@ function test() {
     // Reset 'required' attribute:
     elem.removeAttribute("required");
   }
+
+  // Test that key events are correctly dispatched
+  elem.max = "";
+  elem.value = "";
+  sendString("7837281");
+  is(elem.value, "7837281", "Test keypress event dispatch for number control");
 }
 
 </script>
