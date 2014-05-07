@@ -270,6 +270,14 @@ function test_origin() {
   seer.predict(loaduri, null, seer.PREDICT_LOAD, load_context, verifier);
 }
 
+var prefs;
+var seer_pref;
+
+function cleanup() {
+  reset_seer();
+  prefs.setBoolPref("network.seer.enabled", seer_pref);
+}
+
 var tests = [
   test_link_hover,
   test_pageload,
@@ -282,7 +290,10 @@ var tests = [
 function run_test() {
   tests.forEach(add_test);
   profile = do_get_profile();
+  prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+  seer_pref = prefs.getBoolPref("network.seer.enabled");
+  prefs.setBoolPref("network.seer.enabled", true);
   seer = Cc["@mozilla.org/network/seer;1"].getService(Ci.nsINetworkSeer);
-  do_register_cleanup(reset_seer);
+  do_register_cleanup(cleanup);
   run_next_test();
 }
