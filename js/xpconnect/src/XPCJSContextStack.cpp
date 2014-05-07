@@ -70,8 +70,7 @@ XPCJSContextStack::Push(JSContext *cx)
         // The cx we're pushing is also stack-top. In general we still need to
         // call JS_SaveFrameChain here. But if that would put us in a
         // compartment that's same-origin with the current one, we can skip it.
-        nsIScriptSecurityManager* ssm = XPCWrapper::GetSecurityManager();
-        if ((e.cx == cx) && ssm) {
+        if (e.cx == cx) {
             // DOM JSContexts don't store their default compartment object on
             // the cx, so in those cases we need to fetch it via the scx
             // instead. And in some cases (i.e. the SafeJSContext), we have no

@@ -40,9 +40,9 @@ class nsScriptSecurityManager : public nsIScriptSecurityManager,
 {
 public:
     static void Shutdown();
-    
+
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_SCRIPTSECURITYMANAGER_CID)
-        
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCRIPTSECURITYMANAGER
     NS_DECL_NSIXPCSECURITYMANAGER
@@ -51,6 +51,9 @@ public:
 
     static nsScriptSecurityManager*
     GetScriptSecurityManager();
+
+    // Invoked exactly once, by XPConnect.
+    static void InitStatics();
 
     static nsSystemPrincipal*
     SystemPrincipalSingletonConstructor();

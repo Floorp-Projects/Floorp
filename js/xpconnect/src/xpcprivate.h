@@ -279,13 +279,10 @@ public:
 
     static bool IsISupportsDescendant(nsIInterfaceInfo* info);
 
-    nsIXPCSecurityManager* GetDefaultSecurityManager() const
+    static nsIScriptSecurityManager* SecurityManager()
     {
-        // mDefaultSecurityManager is main-thread only.
-        if (!NS_IsMainThread()) {
-            return nullptr;
-        }
-        return mDefaultSecurityManager;
+        MOZ_ASSERT(NS_IsMainThread());
+        return gScriptSecurityManager;
     }
 
     // This returns an AddRef'd pointer. It does not do this with an 'out' param
