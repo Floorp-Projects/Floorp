@@ -125,11 +125,15 @@ public class TopSitesCursorWrapper implements Cursor {
         count = Math.max(minSize, pinnedCursor.getCount() + topCursor.getCount());
     }
 
+    private static boolean cursorHasValidPosition(Cursor c) {
+        return (!c.isBeforeFirst() && !c.isAfterLast());
+    }
+
     private void updateRowState() {
-        if (!pinnedCursor.isBeforeFirst() && !pinnedCursor.isAfterLast()) {
+        if (cursorHasValidPosition(pinnedCursor)) {
             currentRowType = RowType.PINNED;
             currentCursor = pinnedCursor;
-        } else if (!topCursor.isBeforeFirst() && !topCursor.isAfterLast()) {
+        } else if (cursorHasValidPosition(topCursor)) {
             currentRowType = RowType.TOP;
             currentCursor = topCursor;
         } else if (currentPosition >= 0 && currentPosition < minSize) {
@@ -274,7 +278,7 @@ public class TopSitesCursorWrapper implements Cursor {
         updateTopCursorPosition(position);
         updateRowState();
 
-        return (!isBeforeFirst() && !isAfterLast());
+        return cursorHasValidPosition(this);
     }
 
     @Override
