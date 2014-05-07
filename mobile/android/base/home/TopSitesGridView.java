@@ -110,7 +110,7 @@ public class TopSitesGridView extends GridView {
 
                 // If the url is empty, the user can pin a site.
                 // If not, navigate to the page given by the url.
-                if (!TextUtils.isEmpty(url)) {
+                if (item.getType() != TopSites.TYPE_BLANK) {
                     if (mUrlOpenListener != null) {
                         Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.GRID_ITEM);
 
@@ -129,8 +129,8 @@ public class TopSitesGridView extends GridView {
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor cursor = (Cursor) parent.getItemAtPosition(position);
 
-                TopSitesGridItemView gridView = (TopSitesGridItemView) view;
-                if (cursor == null || gridView.isEmpty()) {
+                TopSitesGridItemView item = (TopSitesGridItemView) view;
+                if (cursor == null || item.getType() == TopSites.TYPE_BLANK) {
                     mContextMenuInfo = null;
                     return false;
                 }
@@ -242,9 +242,7 @@ public class TopSitesGridView extends GridView {
     private void updateContextMenuFromCursor(TopSitesGridContextMenuInfo info, Cursor cursor) {
         info.url = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.URL));
         info.title = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.TITLE));
-
-        int type = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.TYPE));
-        info.isPinned = (type == TopSites.TYPE_PINNED);
+        info.type = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.TYPE));
     }
     /**
      * Set an url open listener to be used by this view.
@@ -268,7 +266,7 @@ public class TopSitesGridView extends GridView {
      * Stores information regarding the creation of the context menu for a GridView item.
      */
     public static class TopSitesGridContextMenuInfo extends HomeContextMenuInfo {
-        public boolean isPinned = false;
+        public int type = -1;
 
         public TopSitesGridContextMenuInfo(View targetView, int position, long id) {
             super(targetView, position, id);
