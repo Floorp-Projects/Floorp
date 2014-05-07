@@ -155,9 +155,8 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
   }),
 
   /**
-   * Changes a param on the audio node. Responds with a `string` that's either
-   * an empty string `""` on success, or a description of the error upon
-   * param set failure.
+   * Changes a param on the audio node. Responds with either `undefined`
+   * on success, or a description of the error upon param set failure.
    *
    * @param String param
    *        Name of the AudioParam to change.
@@ -165,10 +164,6 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
    *        Value to change AudioParam to.
    */
   setParam: method(function (param, value) {
-    // Strip quotes because sometimes UIs include that for strings
-    if (typeof value === "string") {
-      value = value.replace(/[\'\"]*/g, "");
-    }
     try {
       if (isAudioParam(this.node, param))
         this.node[param].value = value;
