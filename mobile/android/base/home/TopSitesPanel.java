@@ -511,18 +511,10 @@ public class TopSitesPanel extends HomeFragment {
 
         @Override
         public void bindView(View bindView, Context context, Cursor cursor) {
-            String url = "";
-            String title = "";
-            boolean pinned = false;
-
-            // Cursor is already moved to required position.
-            if (!cursor.isAfterLast()) {
-                url = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.URL));
-                title = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.TITLE));
-
-                int type = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.TYPE));
-                pinned = (type == TopSites.TYPE_PINNED);
-            }
+            final String url = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.URL));
+            final String title = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.TITLE));
+            final int type = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.TYPE));
+            final boolean pinned = (type == TopSites.TYPE_PINNED);
 
             final TopSitesGridItemView view = (TopSitesGridItemView) bindView;
 
