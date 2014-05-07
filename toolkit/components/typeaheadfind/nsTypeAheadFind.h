@@ -70,6 +70,8 @@ protected:
   // attached to the DOM window.
   NS_HIDDEN_(already_AddRefed<nsIPresShell>) GetPresShell();
 
+  void ReleaseStrongMemberVariables();
+
   // Current find state
   nsString mTypeAheadBuffer;
   nsCString mNotFoundSoundURL;
@@ -78,6 +80,7 @@ protected:
   // boolean variable is getting passed into a method.
   bool mStartLinksOnlyPref;
   bool mCaretBrowsingOn;
+  bool mDidAddObservers;
   nsCOMPtr<nsIDOMElement> mFoundLink;     // Most recent elem found, if a link
   nsCOMPtr<nsIDOMElement> mFoundEditable; // Most recent elem found, if editable
   nsCOMPtr<nsIDOMRange> mFoundRange;      // Most recent range found

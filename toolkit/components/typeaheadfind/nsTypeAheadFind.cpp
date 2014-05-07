@@ -7,6 +7,7 @@
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/Services.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsCURILoader.h"
 #include "nsCycleCollectionParticipant.h"
@@ -75,6 +76,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 nsTypeAheadFind::nsTypeAheadFind():
   mStartLinksOnlyPref(false),
   mCaretBrowsingOn(false),
+  mDidAddObservers(false),
   mLastFindLength(0),
   mIsSoundInitialized(false),
   mCaseSensitive(false)
@@ -103,14 +105,21 @@ nsTypeAheadFind::Init(nsIDocShell* aDocShell)
 
   SetDocShell(aDocShell);
 
-  // ----------- Listen to prefs ------------------
-  nsresult rv = prefInternal->AddObserver("accessibility.browsewithcaret", this, true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDidAddObservers) {
+    mDidAddObservers = true;
+    // ----------- Listen to prefs ------------------
+    nsresult rv = prefInternal->AddObserver("accessibility.browsewithcaret", this, true);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  // ----------- Get initial preferences ----------
-  PrefsReset();
+    // ----------- Get initial preferences ----------
+    PrefsReset();
 
-  return rv;
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC, true);
+    }
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -169,6 +178,13 @@ nsTypeAheadFind::SetDocShell(nsIDocShell* aDocShell)
   presShell = aDocShell->GetPresShell();
   mPresShell = do_GetWeakReference(presShell);
 
+  ReleaseStrongMemberVariables();
+  return NS_OK;
+}
+
+void
+nsTypeAheadFind::ReleaseStrongMemberVariables()
+{
   mStartFindRange = nullptr;
   mStartPointRange = nullptr;
   mSearchRange = nullptr;
@@ -182,8 +198,6 @@ nsTypeAheadFind::SetDocShell(nsIDocShell* aDocShell)
   mSelectionController = nullptr;
 
   mFind = nullptr;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -223,8 +237,12 @@ NS_IMETHODIMP
 nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
                          const char16_t *aData)
 {
-  if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID))
+  if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     return PrefsReset();
+  } else if (!nsCRT::strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC) &&
+             SameCOMIdentity(aSubject, mCurrentWindow)) {
+    ReleaseStrongMemberVariables();
+  }
 
   return NS_OK;
 }
@@ -460,7 +478,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
       if (!document)
         return NS_ERROR_UNEXPECTED;
 
-      nsCOMPtr<nsPIDOMWindow> window = document->GetWindow();
+      nsCOMPtr<nsPIDOMWindow> window = document->GetInnerWindow();
       NS_ASSERTION(window, "document has no window");
       if (!window)
         return NS_ERROR_UNEXPECTED;
