@@ -1,0 +1,28 @@
+{
+	"version"       : "2.0",
+	"name"          : "Flashlight (Linterna)",
+	"description"   : "Simple Flashlight that you can use everywhere without internet connection and also with cool modes: * Flashlight mode - * Disco mode - * Colors mode",
+	"launch_path"   : "/index.html",
+	"icons": {
+		"16": "/img/icons/mortar-16.png",
+		"48": "/img/icons/mortar-48.png",
+        	"60": "/img/icons/mortar-60.png",
+		"128": "/img/icons/mortar-128.png"
+	},
+	"developer": {
+		"name": "William Vargas",
+		"url" : "https://twitter.com/tecnowilliam"
+	},
+	"installs_allowed_from": ["*"],
+	"locales": {
+		"es": {
+			"description": "Una simple linterna que puedes utilizar en cualquier lugar sin conexión a internet y con opciones geniales: * Modo Linterna - * Modo Disco - * Modo Colores",
+			"developer": {
+        			"name": "William Vargas",
+				"url" : "https://twitter.com/tecnowilliam"
+			}
+		}
+	},
+	"default_locale": "en",
+	"package_path": "marketplace_app.zip"
+}

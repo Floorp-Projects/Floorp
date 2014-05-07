@@ -102,7 +102,7 @@ function readFile(path) {
 
 function makeResource(templatePath, version, packagePath, packageSize,
                       appName, developerName, developerUrl) {
-  var res = readFile(templatePath, false).
+  var res = readFile(templatePath).
               replace(/VERSIONTOKEN/g, version).
               replace(/PACKAGEPATHTOKEN/g, packagePath).
               replace(/PACKAGESIZETOKEN/g, packageSize).
