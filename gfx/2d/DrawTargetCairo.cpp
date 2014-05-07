@@ -82,70 +82,6 @@ private:
 } // end anonymous namespace
 
 static bool
-GetCairoSurfaceSize(cairo_surface_t* surface, IntSize& size)
-{
-  switch (cairo_surface_get_type(surface))
-  {
-    case CAIRO_SURFACE_TYPE_IMAGE:
-    {
-      size.width = cairo_image_surface_get_width(surface);
-      size.height = cairo_image_surface_get_height(surface);
-      return true;
-    }
-
-#ifdef CAIRO_HAS_XLIB_SURFACE
-    case CAIRO_SURFACE_TYPE_XLIB:
-    {
-      size.width = cairo_xlib_surface_get_width(surface);
-      size.height = cairo_xlib_surface_get_height(surface);
-      return true;
-    }
-#endif
-
-#ifdef CAIRO_HAS_QUARTZ_SURFACE
-    case CAIRO_SURFACE_TYPE_QUARTZ:
-    {
-      CGContextRef cgc = cairo_quartz_surface_get_cg_context(surface);
-
-      // It's valid to call these CGBitmapContext functions on non-bitmap
-      // contexts; they'll just return 0 in that case.
-      size.width = CGBitmapContextGetWidth(cgc);
-      size.height = CGBitmapContextGetHeight(cgc);
-      return true;
-    }
-#endif
-#ifdef CAIRO_HAS_WIN32_SURFACE
-#ifdef MOZ2D_HAS_MOZ_CAIRO
-    case CAIRO_SURFACE_TYPE_WIN32:
-    case CAIRO_SURFACE_TYPE_WIN32_PRINTING:
-    {
-      size.width = cairo_win32_surface_get_width(surface);
-      size.height = cairo_win32_surface_get_height(surface);
-      return true;
-    }
-#else
-    case CAIRO_SURFACE_TYPE_WIN32:
-    {
-      cairo_surface_t *img = cairo_win32_surface_get_image(surface);
-
-      if (!img) {
-        // XXX - fix me
-        MOZ_ASSERT(false);
-        return true;
-      }
-      size.width = cairo_image_surface_get_width(img);
-      size.height = cairo_image_surface_get_height(img);
-      return true;
-    }
-#endif
-#endif
-
-    default:
-      return false;
-  }
-}
-
-static bool
 SupportsSelfCopy(cairo_surface_t* surface)
 {
   switch (cairo_surface_get_type(surface))
@@ -1131,26 +1067,14 @@ TemporaryRef<SourceSurface>
 DrawTargetCairo::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const
 {
   if (aSurface.mType == NativeSurfaceType::CAIRO_SURFACE) {
-    IntSize size;
-    cairo_surface_t* surf = static_cast<cairo_surface_t*>(aSurface.mSurface);
-    if (GetCairoSurfaceSize(surf, size)) {
-      RefPtr<SourceSurfaceCairo> source =
-        new SourceSurfaceCairo(surf, size, aSurface.mFormat);
-      return source;
+    if (aSurface.mSize.width <= 0 ||
+        aSurface.mSize.height <= 0) {
+      gfxWarning() << "Can't create a SourceSurface without a valid size";
+      return nullptr;
     }
-  }
-
-  return nullptr;
-}
-
-TemporaryRef<SourceSurface>
-DrawTargetCairo::CreateSourceSurfaceForCairoSurface(cairo_surface_t *aSurface,
-                                                    SurfaceFormat aFormat)
-{
-  IntSize size;
-  if (GetCairoSurfaceSize(aSurface, size)) {
+    cairo_surface_t* surf = static_cast<cairo_surface_t*>(aSurface.mSurface);
     RefPtr<SourceSurfaceCairo> source =
-      new SourceSurfaceCairo(aSurface, size, aFormat);
+      new SourceSurfaceCairo(surf, aSurface.mSize, aSurface.mFormat);
     return source;
   }
 
