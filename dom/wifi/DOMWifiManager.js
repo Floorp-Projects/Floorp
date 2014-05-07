@@ -96,6 +96,7 @@ DOMWifiManager.prototype = {
                       "WifiManager:setStaticIpMode:Return:OK", "WifiManager:setStaticIpMode:Return:NO",
                       "WifiManager:importCert:Return:OK", "WifiManager:importCert:Return:NO",
                       "WifiManager:getImportedCerts:Return:OK", "WifiManager:getImportedCerts:Return:NO",
+                      "WifiManager:deleteCert:Return:OK", "WifiManager:deleteCert:Return:NO",
                       "WifiManager:wifiDown", "WifiManager:wifiUp",
                       "WifiManager:onconnecting", "WifiManager:onassociate",
                       "WifiManager:onconnect", "WifiManager:ondisconnect",
@@ -288,6 +289,14 @@ DOMWifiManager.prototype = {
         Services.DOMRequest.fireError(request, msg.data);
         break;
 
+      case "WifiManager:deleteCert:Return:OK":
+        Services.DOMRequest.fireSuccess(request, msg.data);
+        break;
+
+      case "WifiManager:deleteCert:Return:NO":
+        Services.DOMRequest.fireError(request, msg.data);
+        break;
+
       case "WifiManager:wifiDown":
         this._enabled = false;
         this._currentNetwork = null;
@@ -449,6 +458,15 @@ DOMWifiManager.prototype = {
   getImportedCerts: function nsIDOMWifiManager_getImportedCerts() {
     var request = this.createRequest();
     this._sendMessageForRequest("WifiManager:getImportedCerts", null, request);
+    return request;
+  },
+
+  deleteCert: function nsIDOMWifiManager_deleteCert(certNickname) {
+    var request = this.createRequest();
+    this._sendMessageForRequest("WifiManager:deleteCert",
+                                {
+                                  certNickname: certNickname
+                                }, request);
     return request;
   },
 
