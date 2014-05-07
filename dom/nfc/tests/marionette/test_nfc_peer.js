@@ -61,7 +61,7 @@ function handleTechnologyDiscoveredRE0ForP2PRegFailure(msg) {
 
 function activateRE(re) {
   let deferred = Promise.defer();
-  let cmd = "nfc ntf rf_intf_activated " + re;
+  let cmd = "nfc nci rf_intf_activated_ntf " + re;
 
   emulator.run(cmd, function(result) {
     is(result.pop(), "OK", "check activation of RE" + re);
