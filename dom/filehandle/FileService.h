@@ -20,7 +20,7 @@
 
 class nsAString;
 class nsIEventTarget;
-class nsIFileStorage;
+class nsIOfflineStorage;
 class nsIRunnable;
 
 namespace mozilla {
@@ -56,14 +56,14 @@ public:
   NotifyLockedFileCompleted(LockedFile* aLockedFile);
 
   void
-  WaitForStoragesToComplete(nsTArray<nsCOMPtr<nsIFileStorage> >& aStorages,
+  WaitForStoragesToComplete(nsTArray<nsCOMPtr<nsIOfflineStorage> >& aStorages,
                             nsIRunnable* aCallback);
 
   void
-  AbortLockedFilesForStorage(nsIFileStorage* aFileStorage);
+  AbortLockedFilesForStorage(nsIOfflineStorage* aStorage);
 
   bool
-  HasLockedFilesForStorage(nsIFileStorage* aFileStorage);
+  HasLockedFilesForStorage(nsIOfflineStorage* aStorage);
 
   nsIEventTarget*
   StreamTransportTarget()
@@ -113,7 +113,7 @@ private:
     nsRefPtr<FileHelper> mFileHelper;
   };
 
-  class FileStorageInfo
+  class StorageInfo
   {
     friend class FileService;
 
@@ -134,14 +134,14 @@ private:
     }
 
     inline bool
-    HasRunningLockedFiles(nsIFileStorage* aFileStorage);
+    HasRunningLockedFiles(nsIOfflineStorage* aStorage);
 
     inline DelayedEnqueueInfo*
     CreateDelayedEnqueueInfo(LockedFile* aLockedFile, FileHelper* aFileHelper);
 
     inline void
     CollectRunningAndDelayedLockedFiles(
-                                 nsIFileStorage* aFileStorage,
+                                 nsIOfflineStorage* aStorage,
                                  nsTArray<nsRefPtr<LockedFile> >& aLockedFiles);
 
     void
@@ -169,7 +169,7 @@ private:
     }
 
   private:
-    FileStorageInfo()
+    StorageInfo()
     {
     }
 
@@ -181,7 +181,7 @@ private:
 
   struct StoragesCompleteCallback
   {
-    nsTArray<nsCOMPtr<nsIFileStorage> > mStorages;
+    nsTArray<nsCOMPtr<nsIOfflineStorage> > mStorages;
     nsCOMPtr<nsIRunnable> mCallback;
   };
 
@@ -198,7 +198,7 @@ private:
   MaybeFireCallback(StoragesCompleteCallback& aCallback);
 
   nsCOMPtr<nsIEventTarget> mStreamTransportTarget;
-  nsClassHashtable<nsCStringHashKey, FileStorageInfo> mFileStorageInfos;
+  nsClassHashtable<nsCStringHashKey, StorageInfo> mStorageInfos;
   nsTArray<StoragesCompleteCallback> mCompleteCallbacks;
 };
 

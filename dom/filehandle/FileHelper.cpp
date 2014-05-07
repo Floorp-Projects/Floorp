@@ -12,9 +12,9 @@
 #include "js/Value.h"
 #include "LockedFile.h"
 #include "MainThreadUtils.h"
+#include "mozilla/Assertions.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsIFileStorage.h"
 #include "nsIRequest.h"
 
 namespace mozilla {
@@ -28,7 +28,7 @@ LockedFile* gCurrentLockedFile = nullptr;
 
 FileHelper::FileHelper(LockedFile* aLockedFile,
                        FileRequest* aFileRequest)
-: mFileStorage(aLockedFile->mFileHandle->mFileStorage),
+: mFileHandle(aLockedFile->mFileHandle),
   mLockedFile(aLockedFile),
   mFileRequest(aFileRequest),
   mResultCode(NS_OK),
@@ -39,8 +39,8 @@ FileHelper::FileHelper(LockedFile* aLockedFile,
 
 FileHelper::~FileHelper()
 {
-  NS_ASSERTION(!mFileStorage && !mLockedFile && !mFileRequest && !mListener &&
-               !mRequest, "Should have cleared this!");
+  MOZ_ASSERT(!mFileHandle && !mLockedFile && !mFileRequest && !mListener &&
+             !mRequest, "Should have cleared this!");
 }
 
 NS_IMPL_ISUPPORTS(FileHelper, nsIRequestObserver)
@@ -169,7 +169,7 @@ FileHelper::ReleaseObjects()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  mFileStorage = nullptr;
+  mFileHandle = nullptr;
   mLockedFile = nullptr;
   mFileRequest = nullptr;
   mListener = nullptr;
@@ -212,8 +212,8 @@ FileHelper::Finish()
 
   ReleaseObjects();
 
-  NS_ASSERTION(!(mFileStorage || mLockedFile || mFileRequest || mListener ||
-                 mRequest), "Subclass didn't call FileHelper::ReleaseObjects!");
+  MOZ_ASSERT(!(mFileHandle || mLockedFile || mFileRequest || mListener ||
+               mRequest), "Subclass didn't call FileHelper::ReleaseObjects!");
 
 }
 
