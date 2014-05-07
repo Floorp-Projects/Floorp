@@ -29,7 +29,6 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mXPCContext(nullptr),
         mJSContext(cx),
         mCallerLanguage(callerLanguage),
-        mFlattenedJSObject(cx),
         mWrapper(nullptr),
         mTearOff(nullptr),
         mName(cx)
@@ -77,14 +76,10 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         }
     }
     if (mWrapper) {
-        mFlattenedJSObject = mWrapper->GetFlatJSObject();
-
         if (mTearOff)
             mScriptableInfo = nullptr;
         else
             mScriptableInfo = mWrapper->GetScriptableInfo();
-    } else {
-        MOZ_ASSERT(!mFlattenedJSObject, "What object do we have?");
     }
 
     if (!JSID_IS_VOID(name))
