@@ -1447,7 +1447,7 @@ void MediaDecoderStateMachine::Seek(const SeekTarget& aTarget)
   mSeekTarget = SeekTarget(seekTime, aTarget.mType);
 
   mBasePosition = seekTime - mStartTime;
-  DECODER_LOG(PR_LOG_DEBUG, "Changed state to SEEKING (to %ld)", mSeekTarget.mTime);
+  DECODER_LOG(PR_LOG_DEBUG, "Changed state to SEEKING (to %lld)", mSeekTarget.mTime);
   mState = DECODER_STATE_SEEKING;
   if (mDecoder->GetDecodedStream()) {
     mDecoder->RecreateDecodedStream(seekTime - mStartTime);
