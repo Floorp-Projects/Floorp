@@ -32,10 +32,6 @@ function spawnTest () {
   ise(type, "square", "AudioNode:setParam correctly sets a `string` non-AudioParam");
   is(resSuccess, undefined, "AudioNode:setParam returns undefined for correctly set AudioParam");
 
-  resSuccess = yield oscNode.setParam("type", "\"triangle\"");
-  type = yield oscNode.getParam("type");
-  ise(type, "triangle", "AudioNode:setParam correctly removes quotes in `string` non-AudioParam");
-
   try {
     yield oscNode.setParam("frequency", "hello");
     ok(false, "setParam with invalid types should throw");
