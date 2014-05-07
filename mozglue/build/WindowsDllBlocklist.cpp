@@ -147,6 +147,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   // Topcrash with V-bates, bug 1002748
   { "libinject.dll", UNVERSIONED },
 
+  // Crashes with RoboForm2Go written against old SDK, bug 988311
+  { "rf-firefox-22.dll", ALL_VERSIONS },
+
   { nullptr, 0 }
 };
 
