@@ -55,7 +55,7 @@ function test() {
   }
 
   function setConditional(aClient) {
-    aClient.condition = "hello";
+    return gBreakpoints.updateCondition(aClient.location, "hello");
   }
 
   function toggleBreakpoint() {

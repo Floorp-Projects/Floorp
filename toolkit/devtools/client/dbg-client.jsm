@@ -1437,11 +1437,10 @@ ThreadClient.prototype = {
             location,
             root.traits.conditionalBreakpoints ? condition : undefined
           );
-          if (aCallback) {
-            aCallback(aOnResponse(aResponse, bpClient));
-          } else {
-            aOnResponse(aResponse, bpClient);
-          }
+          aOnResponse(aResponse, bpClient);
+        }
+        if (aCallback) {
+          aCallback();
         }
       }.bind(this));
     }.bind(this);
@@ -1588,7 +1587,6 @@ ThreadClient.prototype = {
    */
   fillFrames: function (aTotal, aCallback=noop) {
     this._assertPaused("fillFrames");
-
     if (this._frameCache.length >= aTotal) {
       return false;
     }
@@ -2258,19 +2256,35 @@ BreakpointClient.prototype = {
       let info = {
         url: this.location.url,
         line: this.location.line,
+        column: this.location.column,
         condition: aCondition
       };
-      gThreadClient.setBreakpoint(info, (aResponse, ignoredBreakpoint) => {
-        if(aResponse && aResponse.error) {
+
+      // Remove the current breakpoint and add a new one with the
+      // condition.
+      this.remove(aResponse => {
+        if (aResponse && aResponse.error) {
           deferred.reject(aResponse);
-        } else {
-          this.condition = aCondition;
-          deferred.resolve(null);
+          return;
         }
+
+        gThreadClient.setBreakpoint(info, (aResponse, aNewBreakpoint) => {
+          if (aResponse && aResponse.error) {
+            deferred.reject(aResponse);
+          } else {
+            deferred.resolve(aNewBreakpoint);
+          }
+        });
       });
     } else {
-      this.conditionalExpression = aCondition;
-      deferred.resolve(null);
+      // The property shouldn't even exist if the condition is blank
+      if(aCondition === "") {
+        delete this.conditionalExpression;
+      }
+      else {
+        this.conditionalExpression = aCondition;
+      }
+      deferred.resolve(this);
     }
 
     return deferred.promise;
