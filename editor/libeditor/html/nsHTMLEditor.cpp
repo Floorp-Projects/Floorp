@@ -80,13 +80,18 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::widget;
 
-// Some utilities to handle annoying overloading of "A" tag for link and named anchor
-static char hrefText[] = "href";
-static char anchorTxt[] = "anchor";
-static char namedanchorText[] = "namedanchor";
+// Some utilities to handle overloading of "A" tag for link and named anchor.
+static bool
+IsLinkTag(const nsString& s)
+{
+  return s.EqualsIgnoreCase("href");
+}
 
-#define IsLinkTag(s) (s.EqualsIgnoreCase(hrefText))
-#define IsNamedAnchorTag(s) (s.EqualsIgnoreCase(anchorTxt) || s.EqualsIgnoreCase(namedanchorText))
+static bool
+IsNamedAnchorTag(const nsString& s)
+{
+  return s.EqualsIgnoreCase("anchor") || s.EqualsIgnoreCase("namedanchor");
+}
 
 nsHTMLEditor::nsHTMLEditor()
 : nsPlaintextEditor()
