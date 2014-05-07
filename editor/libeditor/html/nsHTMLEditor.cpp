@@ -648,7 +648,7 @@ nsHTMLEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
       }
 
       bool handled = false;
-      nsresult rv;
+      nsresult rv = NS_OK;
       if (nsHTMLEditUtils::IsTableElement(blockParent)) {
         rv = TabInTable(nativeKeyEvent->IsShift(), &handled);
         if (handled) {
