@@ -401,7 +401,7 @@ MediaEngineDefaultAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
 
   // 1 Audio frame per 10ms
   mTimer->InitWithCallback(this, MediaEngine::DEFAULT_AUDIO_TIMER_MS,
-                           nsITimer::TYPE_REPEATING_PRECISE);
+                           nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP);
   mState = kStarted;
 
   return NS_OK;
