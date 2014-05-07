@@ -101,13 +101,6 @@ public class TopSitesGridItemView extends RelativeLayout {
     }
 
     /**
-     * @return true, if this view is pinned, false otherwise.
-     */
-    public boolean isPinned() {
-        return mIsPinned;
-    }
-
-    /**
      * @return true, if this view has no content to show.
      */
     public boolean isEmpty() {
@@ -136,14 +129,6 @@ public class TopSitesGridItemView extends RelativeLayout {
 
         mUrl = url;
         updateTitleView();
-    }
-
-    /**
-     * @param pinned The pinned state of this view.
-     */
-    public void setPinned(boolean pinned) {
-        mIsPinned = pinned;
-        mTitleView.setCompoundDrawablesWithIntrinsicBounds(pinned ? R.drawable.pin : 0, 0, 0, 0);
     }
 
     public void blankOut() {
