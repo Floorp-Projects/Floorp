@@ -46,6 +46,8 @@ public:
 protected:
   LayerTransactionChild()
     : mIPCOpen(false)
+    , mDestroyed(false)
+    , mForwarder(nullptr)
   {}
   ~LayerTransactionChild() { }
 
@@ -78,6 +80,7 @@ protected:
   friend class layout::RenderFrameChild;
 
   bool mIPCOpen;
+  bool mDestroyed;
   ShadowLayerForwarder* mForwarder;
 };
 
