@@ -17,6 +17,7 @@
 #define GONKDISPLAY_H
 
 #include <system/window.h>
+#include "mozilla/Types.h"
 
 namespace mozilla {
 
@@ -27,7 +28,7 @@ class Layer;
 typedef void * EGLDisplay;
 typedef void * EGLSurface;
 
-class GonkDisplay {
+class MOZ_EXPORT GonkDisplay {
 public:
     virtual ANativeWindow* GetNativeWindow() = 0;
 
@@ -66,7 +67,7 @@ public:
     uint32_t surfaceformat;
 };
 
-__attribute__ ((weak))
+MOZ_EXPORT __attribute__ ((weak))
 GonkDisplay* GetGonkDisplay();
 
 }

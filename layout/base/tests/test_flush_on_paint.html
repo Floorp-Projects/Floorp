@@ -13,6 +13,9 @@
 <pre id="test">
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("This test deals with painting and invalidation. " +
+                               "Those are tricky to detect, so we have to poll here, which means that we have to rely on flaky timeouts. " +
+                               "This special case is safe because we're only polling for events.");
 
 var iterations = 0;
 var plugin = document.getElementById("plugin");

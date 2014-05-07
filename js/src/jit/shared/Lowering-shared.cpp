@@ -70,6 +70,25 @@ LIRGeneratorShared::getRecoverInfo(MResumePoint *rp)
     return recoverInfo;
 }
 
+#ifdef DEBUG
+bool
+LRecoverInfo::OperandIter::canOptimizeOutIfUnused()
+{
+    MDefinition *ins = **this;
+
+    // We check ins->type() in addition to ins->isUnused() because
+    // EliminateDeadResumePointOperands may replace nodes with the constant
+    // MagicValue(JS_OPTIMIZED_OUT).
+    if ((ins->isUnused() || ins->type() == MIRType_MagicOptimizedOut) &&
+        (*it_)->isResumePoint())
+    {
+        return (*it_)->block()->info().canOptimizeOutSlot(op_);
+    }
+
+    return true;
+}
+#endif
+
 #ifdef JS_NUNBOX32
 LSnapshot *
 LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKind kind)
@@ -86,7 +105,11 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
     LRecoverInfo::OperandIter it(recoverInfo->begin());
     LRecoverInfo::OperandIter end(recoverInfo->end());
     for (; it != end; ++it) {
+        // Check that optimized out operands are in eliminable slots.
+        MOZ_ASSERT(it.canOptimizeOutIfUnused());
+
         MDefinition *ins = *it;
+
         if (ins->isRecoveredOnBailout())
             continue;
 
@@ -98,12 +121,12 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
             ins = ins->toBox()->getOperand(0);
 
         // Guards should never be eliminated.
-        JS_ASSERT_IF(ins->isUnused(), !ins->isGuard());
+        MOZ_ASSERT_IF(ins->isUnused(), !ins->isGuard());
 
         // Snapshot operands other than constants should never be
         // emitted-at-uses. Try-catch support depends on there being no
         // code between an instruction and the LOsiPoint that follows it.
-        JS_ASSERT_IF(!ins->isConstant(), !ins->isEmittedAtUses());
+        MOZ_ASSERT_IF(!ins->isConstant(), !ins->isEmittedAtUses());
 
         // The register allocation will fill these fields in with actual
         // register/stack assignments. During code generation, we can restore
@@ -142,6 +165,9 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
     LRecoverInfo::OperandIter it(recoverInfo->begin());
     LRecoverInfo::OperandIter end(recoverInfo->end());
     for (; it != end; ++it) {
+        // Check that optimized out operands are in eliminable slots.
+        MOZ_ASSERT(it.canOptimizeOutIfUnused());
+
         MDefinition *def = *it;
 
         if (def->isRecoveredOnBailout())
@@ -151,12 +177,12 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
             def = def->toBox()->getOperand(0);
 
         // Guards should never be eliminated.
-        JS_ASSERT_IF(def->isUnused(), !def->isGuard());
+        MOZ_ASSERT_IF(def->isUnused(), !def->isGuard());
 
         // Snapshot operands other than constants should never be
         // emitted-at-uses. Try-catch support depends on there being no
         // code between an instruction and the LOsiPoint that follows it.
-        JS_ASSERT_IF(!def->isConstant(), !def->isEmittedAtUses());
+        MOZ_ASSERT_IF(!def->isConstant(), !def->isEmittedAtUses());
 
         LAllocation *a = snapshot->getEntry(index++);
 

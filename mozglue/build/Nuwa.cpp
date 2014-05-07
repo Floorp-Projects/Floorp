@@ -41,6 +41,7 @@ extern "C" MFBT_API int tgkill(pid_t tgid, pid_t tid, int signalno) {
  * Real functions for the wrappers.
  */
 extern "C" {
+#pragma GCC visibility push(default)
 int __real_pthread_create(pthread_t *thread,
                           const pthread_attr_t *attr,
                           void *(*start_routine) (void *),
@@ -69,6 +70,7 @@ int __real_pipe2(int __pipedes[2], int flags);
 int __real_pipe(int __pipedes[2]);
 int __real_epoll_ctl(int aEpollFd, int aOp, int aFd, struct epoll_event *aEvent);
 int __real_close(int aFd);
+#pragma GCC visibility pop
 }
 
 #define REAL(s) __real_##s

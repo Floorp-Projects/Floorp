@@ -51,6 +51,8 @@ public:
   virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                  const nsAttrValueOrString* aValue,
                                  bool aNotify) MOZ_OVERRIDE;
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
 
   void SetSelectedInternal(bool aValue, bool aNotify);
 

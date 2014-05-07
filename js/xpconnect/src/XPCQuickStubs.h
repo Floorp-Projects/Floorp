@@ -422,31 +422,6 @@ castNativeFromWrapper(JSContext *cx,
                       JS::MutableHandleValue pVal,
                       nsresult *rv);
 
-bool
-xpc_qsUnwrapThisFromCcxImpl(XPCCallContext &ccx,
-                            const nsIID &iid,
-                            void **ppThis,
-                            nsISupports **pThisRef,
-                            JS::MutableHandleValue vp);
-
-/**
- * Alternate implementation of xpc_qsUnwrapThis using information already
- * present in the given XPCCallContext.
- */
-template <class T>
-inline bool
-xpc_qsUnwrapThisFromCcx(XPCCallContext &ccx,
-                        T **ppThis,
-                        nsISupports **pThisRef,
-                        JS::MutableHandleValue pThisVal)
-{
-    return xpc_qsUnwrapThisFromCcxImpl(ccx,
-                                       NS_GET_TEMPLATE_IID(T),
-                                       reinterpret_cast<void **>(ppThis),
-                                       pThisRef,
-                                       pThisVal);
-}
-
 MOZ_ALWAYS_INLINE JSObject*
 xpc_qsUnwrapObj(jsval v, nsISupports **ppArgRef, nsresult *rv)
 {

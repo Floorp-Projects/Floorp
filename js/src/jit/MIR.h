@@ -378,11 +378,32 @@ class MDefinition : public MNode
     const BytecodeSite &trackedSite() const {
         return trackedSite_;
     }
-    jsbytecode *trackedPc() {
+    jsbytecode *trackedPc() const {
         return trackedSite_.pc();
     }
-    InlineScriptTree *trackedTree() {
+    InlineScriptTree *trackedTree() const {
         return trackedSite_.tree();
+    }
+
+    JSScript *profilerLeaveScript() const {
+        return trackedTree()->outermostCaller()->script();
+    }
+
+    jsbytecode *profilerLeavePc() const {
+        // If this is in a top-level function, use the pc directly.
+        if (trackedTree()->isOutermostCaller())
+            return trackedPc();
+
+        // Walk up the InlineScriptTree chain to find the top-most callPC
+        InlineScriptTree *curTree = trackedTree();
+        InlineScriptTree *callerTree = curTree->caller();
+        while (!callerTree->isOutermostCaller()) {
+            curTree = callerTree;
+            callerTree = curTree->caller();
+        }
+
+        // Return the callPc of the topmost inlined script.
+        return curTree->callerPc();
     }
 
     // Return the range of this value, *before* any bailout checks. Contrast
@@ -412,44 +433,8 @@ class MDefinition : public MNode
     virtual void analyzeEdgeCasesForward();
     virtual void analyzeEdgeCasesBackward();
 
-    // When a floating-point value is used by nodes which would prefer to
-    // recieve integer inputs, we may be able to help by computing our result
-    // into an integer directly.
-    //
-    // A value can be truncated in 4 differents ways:
-    //   1. Ignore Infinities (x / 0 --> 0).
-    //   2. Ignore overflow (INT_MIN / -1 == (INT_MAX + 1) --> INT_MIN)
-    //   3. Ignore negative zeros. (-0 --> 0)
-    //   4. Ignore remainder. (3 / 4 --> 0)
-    //
-    // Indirect truncation is used to represent that we are interested in the
-    // truncated result, but only if it can safely flow into operations which
-    // are computed modulo 2^32, such as (2) and (3). Infinities are not safe,
-    // as they would have absorbed other math operations. Remainders are not
-    // safe, as fractions can be scaled up by multiplication.
-    //
-    // Division is a particularly interesting node here because it covers all 4
-    // cases even when its own operands are integers.
-    //
-    // Note that these enum values are ordered from least value-modifying to
-    // most value-modifying, and code relies on this ordering.
-    enum TruncateKind {
-        // No correction.
-        NoTruncate = 0,
-        // An integer is desired, but we can't skip bailout checks.
-        TruncateAfterBailouts = 1,
-        // The value will be truncated after some arithmetic (see above).
-        IndirectTruncate = 2,
-        // Direct and infallible truncation to int32.
-        Truncate = 3
-    };
-
-    // Apply the given truncate to this node itself.
-    virtual bool truncate(TruncateKind kind);
-
-    // Determine what kind of truncate this node prefers for the operand at the
-    // given index.
-    virtual TruncateKind operandTruncateKind(size_t index) const;
+    virtual bool truncate();
+    virtual bool isOperandTruncated(size_t index) const;
 
     // Compute an absolute or symbolic range for the value of this node.
     virtual void computeRange(TempAllocator &alloc) {
@@ -1013,7 +998,7 @@ class MConstant : public MNullaryInstruction
     }
 
     void computeRange(TempAllocator &alloc);
-    bool truncate(TruncateKind kind);
+    bool truncate();
 
     bool canProduceFloat32() const;
 };
@@ -2411,8 +2396,8 @@ class MCompare
 
     void trySpecializeFloat32(TempAllocator &alloc);
     bool isFloat32Commutative() const { return true; }
-    bool truncate(TruncateKind kind);
-    TruncateKind operandTruncateKind(size_t index) const;
+    bool truncate();
+    bool isOperandTruncated(size_t index) const;
 
 # ifdef DEBUG
     bool isConsistentFloat32Use(MUse *use) const {
@@ -2941,10 +2926,8 @@ class MToDouble
   private:
     ConversionKind conversion_;
 
-    TruncateKind implicitTruncate_;
-
     MToDouble(MDefinition *def, ConversionKind conversion = NonStringPrimitives)
-      : MUnaryInstruction(def), conversion_(conversion), implicitTruncate_(NoTruncate)
+      : MUnaryInstruction(def), conversion_(conversion)
     {
         setResultType(MIRType_Double);
         setMovable();
@@ -2984,19 +2967,12 @@ class MToDouble
     }
 
     void computeRange(TempAllocator &alloc);
-    bool truncate(TruncateKind kind);
-    TruncateKind operandTruncateKind(size_t index) const;
+    bool truncate();
+    bool isOperandTruncated(size_t index) const;
 
 #ifdef DEBUG
     bool isConsistentFloat32Use(MUse *use) const { return true; }
 #endif
-
-    TruncateKind truncateKind() const {
-        return implicitTruncate_;
-    }
-    void setTruncateKind(TruncateKind kind) {
-        implicitTruncate_ = Max(implicitTruncate_, kind);
-    }
 };
 
 // Converts a primitive (either typed or untyped) to a float32. If the input is
@@ -3216,7 +3192,7 @@ class MTruncateToInt32 : public MUnaryInstruction
     }
 
     void computeRange(TempAllocator &alloc);
-    TruncateKind operandTruncateKind(size_t index) const;
+    bool isOperandTruncated(size_t index) const;
 # ifdef DEBUG
     bool isConsistentFloat32Use(MUse *use) const {
         return true;
@@ -3394,7 +3370,7 @@ class MBinaryBitwiseInstruction
         return AliasSet::None();
     }
 
-    TruncateKind operandTruncateKind(size_t index) const;
+    bool isOperandTruncated(size_t index) const;
 };
 
 class MBitAnd : public MBinaryBitwiseInstruction
@@ -3569,14 +3545,14 @@ class MBinaryArithInstruction
     // This optimization happens when the multiplication cannot be truncated
     // even if all uses are truncating its result, such as when the range
     // analysis detect a precision loss in the multiplication.
-    TruncateKind implicitTruncate_;
+    bool implicitTruncate_;
 
     void inferFallback(BaselineInspector *inspector, jsbytecode *pc);
 
   public:
     MBinaryArithInstruction(MDefinition *left, MDefinition *right)
       : MBinaryInstruction(left, right),
-        implicitTruncate_(NoTruncate)
+        implicitTruncate_(false)
     {
         setMovable();
     }
@@ -3611,13 +3587,10 @@ class MBinaryArithInstruction
     }
 
     bool isTruncated() const {
-        return implicitTruncate_ == Truncate;
-    }
-    TruncateKind truncateKind() const {
         return implicitTruncate_;
     }
-    void setTruncateKind(TruncateKind kind) {
-        implicitTruncate_ = Max(implicitTruncate_, kind);
+    void setTruncated(bool truncate) {
+        implicitTruncate_ = truncate;
     }
 };
 
@@ -4065,7 +4038,7 @@ class MAdd : public MBinaryArithInstruction
         add->specialization_ = type;
         add->setResultType(type);
         if (type == MIRType_Int32) {
-            add->setTruncateKind(Truncate);
+            add->setTruncated(true);
             add->setCommutative();
         }
         return add;
@@ -4079,8 +4052,8 @@ class MAdd : public MBinaryArithInstruction
 
     bool fallible() const;
     void computeRange(TempAllocator &alloc);
-    bool truncate(TruncateKind kind);
-    TruncateKind operandTruncateKind(size_t index) const;
+    bool truncate();
+    bool isOperandTruncated(size_t index) const;
 
     bool writeRecoverData(CompactBufferWriter &writer) const;
     bool canRecoverOnBailout() const {
@@ -4108,7 +4081,7 @@ class MSub : public MBinaryArithInstruction
         sub->specialization_ = type;
         sub->setResultType(type);
         if (type == MIRType_Int32)
-            sub->setTruncateKind(Truncate);
+            sub->setTruncated(true);
         return sub;
     }
 
@@ -4120,8 +4093,8 @@ class MSub : public MBinaryArithInstruction
 
     bool fallible() const;
     void computeRange(TempAllocator &alloc);
-    bool truncate(TruncateKind kind);
-    TruncateKind operandTruncateKind(size_t index) const;
+    bool truncate();
+    bool isOperandTruncated(size_t index) const;
 };
 
 class MMul : public MBinaryArithInstruction
@@ -4148,7 +4121,7 @@ class MMul : public MBinaryArithInstruction
             // This implements the required behavior for Math.imul, which
             // can never fail and always truncates its output to int32.
             canBeNegativeZero_ = false;
-            setTruncateKind(Truncate);
+            setTruncated(true);
             setCommutative();
         }
         JS_ASSERT_IF(mode != Integer, mode == Normal);
@@ -4213,8 +4186,8 @@ class MMul : public MBinaryArithInstruction
     bool isFloat32Commutative() const { return true; }
 
     void computeRange(TempAllocator &alloc);
-    bool truncate(TruncateKind kind);
-    TruncateKind operandTruncateKind(size_t index) const;
+    bool truncate();
+    bool isOperandTruncated(size_t index) const;
 
     Mode mode() const { return mode_; }
 };
@@ -4227,13 +4200,32 @@ class MDiv : public MBinaryArithInstruction
     bool canBeNegativeDividend_;
     bool unsigned_;
 
+    // A Division can be truncated in 4 differents ways:
+    //   1. Ignore Infinities (x / 0 --> 0).
+    //   2. Ignore overflow (INT_MIN / -1 == (INT_MAX + 1) --> INT_MIN)
+    //   3. Ignore negative zeros. (-0 --> 0)
+    //   4. Ignore remainder. (3 / 4 --> 0)
+    //
+    // isTruncatedIndirectly is used to represent that we are interested in the
+    // truncated result, but only if they it can safely flow in operations which
+    // are computed modulo 2^32, such as (2) and (3).
+    //
+    // A division can return either Infinities (1) or a remainder (4) when both
+    // operands are integers. Infinities are not safe, as they would have
+    // absorbed other math operations. Remainders are not safe, as multiple can
+    // add up to integers. This implies that we need to distinguish between a
+    // division which is truncated directly (isTruncated) or which flow into
+    // truncated operations (isTruncatedIndirectly).
+    bool isTruncatedIndirectly_;
+
     MDiv(MDefinition *left, MDefinition *right, MIRType type)
       : MBinaryArithInstruction(left, right),
         canBeNegativeZero_(true),
         canBeNegativeOverflow_(true),
         canBeDivideByZero_(true),
         canBeNegativeDividend_(true),
-        unsigned_(false)
+        unsigned_(false),
+        isTruncatedIndirectly_(false)
     {
         if (type != MIRType_Value)
             specialization_ = type;
@@ -4254,7 +4246,7 @@ class MDiv : public MBinaryArithInstruction
         MDiv *div = new(alloc) MDiv(left, right, type);
         div->unsigned_ = unsignd;
         if (type == MIRType_Int32)
-            div->setTruncateKind(Truncate);
+            div->setTruncated(true);
         return div;
     }
 
@@ -4290,7 +4282,10 @@ class MDiv : public MBinaryArithInstruction
     }
 
     bool isTruncatedIndirectly() const {
-        return truncateKind() >= IndirectTruncate;
+        return isTruncatedIndirectly_;
+    }
+    void setTruncatedIndirectly(bool truncate) {
+        isTruncatedIndirectly_ = truncate;
     }
 
     bool canTruncateInfinities() const {
@@ -4310,7 +4305,7 @@ class MDiv : public MBinaryArithInstruction
 
     void computeRange(TempAllocator &alloc);
     bool fallible() const;
-    bool truncate(TruncateKind kind);
+    bool truncate();
     void collectRangeInfoPreTrunc();
 };
 
@@ -4340,7 +4335,7 @@ class MMod : public MBinaryArithInstruction
         MMod *mod = new(alloc) MMod(left, right, type);
         mod->unsigned_ = unsignd;
         if (type == MIRType_Int32)
-            mod->setTruncateKind(Truncate);
+            mod->setTruncated(true);
         return mod;
     }
 
@@ -4364,7 +4359,7 @@ class MMod : public MBinaryArithInstruction
     bool fallible() const;
 
     void computeRange(TempAllocator &alloc);
-    bool truncate(TruncateKind kind);
+    bool truncate();
     void collectRangeInfoPreTrunc();
 };
 
@@ -6569,7 +6564,7 @@ class MLoadTypedArrayElementStatic
     }
 
     void computeRange(TempAllocator &alloc);
-    bool truncate(TruncateKind kind);
+    bool truncate();
     bool canProduceFloat32() const { return typedArray_->type() == ScalarTypeDescr::TYPE_FLOAT32; }
 };
 
@@ -6634,7 +6629,7 @@ class MStoreTypedArrayElement
     void setRacy() {
         racy_ = true;
     }
-    TruncateKind operandTruncateKind(size_t index) const;
+    bool isOperandTruncated(size_t index) const;
 
     bool canConsumeFloat32(MUse *use) const {
         return use->index() == 2 && arrayType_ == ScalarTypeDescr::TYPE_FLOAT32;
@@ -6702,7 +6697,7 @@ class MStoreTypedArrayElementHole
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::TypedArrayElement);
     }
-    TruncateKind operandTruncateKind(size_t index) const;
+    bool isOperandTruncated(size_t index) const;
 
     bool canConsumeFloat32(MUse *use) const {
         return use->index() == 3 && arrayType_ == ScalarTypeDescr::TYPE_FLOAT32;
@@ -6749,7 +6744,7 @@ class MStoreTypedArrayElementStatic :
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::TypedArrayElement);
     }
-    TruncateKind operandTruncateKind(size_t index) const;
+    bool isOperandTruncated(size_t index) const;
 
     bool canConsumeFloat32(MUse *use) const {
         return use->index() == 1 && typedArray_->type() == ScalarTypeDescr::TYPE_FLOAT32;
