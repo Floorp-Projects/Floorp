@@ -285,8 +285,8 @@ public class TopSitesPanel extends HomeFragment {
         TopSitesGridContextMenuInfo info = (TopSitesGridContextMenuInfo) menuInfo;
         menu.setHeaderTitle(info.getDisplayTitle());
 
-        if (!TextUtils.isEmpty(info.url)) {
-            if (info.isPinned) {
+        if (info.type != TopSites.TYPE_BLANK) {
+            if (info.type == TopSites.TYPE_PINNED) {
                 menu.findItem(R.id.top_sites_pin).setVisible(false);
             } else {
                 menu.findItem(R.id.top_sites_unpin).setVisible(false);
@@ -514,12 +514,11 @@ public class TopSitesPanel extends HomeFragment {
             final String url = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.URL));
             final String title = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.TITLE));
             final int type = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.TYPE));
-            final boolean pinned = (type == TopSites.TYPE_PINNED);
 
             final TopSitesGridItemView view = (TopSitesGridItemView) bindView;
 
             // If there is no url, then show "add bookmark".
-            if (TextUtils.isEmpty(url)) {
+            if (type == TopSites.TYPE_BLANK) {
                 // Wait until thumbnails are loaded before showing anything.
                 if (mThumbnails != null) {
                     view.blankOut();
@@ -533,7 +532,7 @@ public class TopSitesPanel extends HomeFragment {
 
             // Debounce bindView calls to avoid redundant redraws and favicon
             // fetches.
-            final boolean updated = view.updateState(title, url, pinned, thumbnail);
+            final boolean updated = view.updateState(title, url, type, thumbnail);
 
             // If thumbnails are still being loaded, don't try to load favicons
             // just yet. If we sent in a thumbnail, we're done now.
