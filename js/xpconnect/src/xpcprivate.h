@@ -1081,8 +1081,6 @@ public:
     static bool
     IsDyingScope(XPCWrappedNativeScope *scope);
 
-    static void InitStatics() { gScopes = nullptr; gDyingScopes = nullptr; }
-
     XPCContext *GetContext() { return mContext; }
     void ClearContext() { mContext = nullptr; }
 
