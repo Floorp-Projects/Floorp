@@ -421,7 +421,11 @@ class CodeGeneratorShared : public LInstructionVisitor
     // mir->lir()->label(), or use getJumpLabelForBranch() if a label to use
     // directly is needed.
     void jumpToBlock(MBasicBlock *mir);
+
+// This function is not used for MIPS. MIPS has branchToBlock.
+#ifndef JS_CODEGEN_MIPS
     void jumpToBlock(MBasicBlock *mir, Assembler::Condition cond);
+#endif
 
   private:
     void generateInvalidateEpilogue();

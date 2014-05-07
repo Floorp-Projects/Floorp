@@ -974,6 +974,10 @@ public:
     void sub32(Imm32 imm, Register dest);
     void sub32(Register src, Register dest);
 
+    void incrementInt32Value(const Address &addr) {
+        add32(Imm32(1), ToPayload(addr));
+    }
+
     template <typename T>
     void branchAdd32(Condition cond, T src, Register dest, Label *overflow) {
         switch (cond) {
@@ -1240,8 +1244,9 @@ public:
     }
 
 #ifdef JSGC_GENERATIONAL
-    void branchPtrInNurseryRange(Register ptr, Register temp, Label *label);
-    void branchValueIsNurseryObject(ValueOperand value, Register temp, Label *label);
+    void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label *label);
+    void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
+                                    Label *label);
 #endif
 };
 
