@@ -47,6 +47,36 @@ let emulator = (function() {
   };
 }());
 
+// Delay 1s before each telephony.dial()
+// The workaround here should be removed after bug 1005816.
+
+let originalDial;
+
+function delayTelephonyDial() {
+  originalDial = telephony.dial;
+  telephony.dial = function(number, serviceId) {
+    let deferred = Promise.defer();
+
+    let startTime = Date.now();
+    waitFor(function() {
+      originalDial.call(telephony, number, serviceId).then(call => {
+        deferred.resolve(call);
+      }, cause => {
+        deferred.reject(cause);
+      });
+    }, function() {
+      duration = Date.now() - startTime;
+      return (duration >= 1000);
+    });
+
+    return deferred.promise;
+  };
+}
+
+function restoreTelephonyDial() {
+  telephony.dial = originalDial;
+}
+
 /**
  * Telephony related helper functions.
  */
@@ -107,6 +137,7 @@ function _startTest(permissions, test) {
     // Make sure that we get the telephony after adding permission.
     telephony = window.navigator.mozTelephony;
     ok(telephony);
+    delayTelephonyDial();
     return clearCalls().then(checkInitialState);
   }
 
@@ -116,6 +147,7 @@ function _startTest(permissions, test) {
 
     function tearDown() {
       log("== Test TearDown ==");
+      restoreTelephonyDial();
       emulator.waitFinish()
         .then(permissionTearDown)
         .then(function() {
