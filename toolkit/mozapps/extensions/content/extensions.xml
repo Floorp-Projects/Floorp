@@ -1364,30 +1364,34 @@
           this._debugBtn.disabled = this._debugBtn.hidden = !debuggable
 
           if (this.mAddon.type == "experiment") {
+            this.removeAttribute("notification");
             let prefix = "experiment.";
             let active = this.mAddon.isActive;
 
-            let stateKey = prefix + "state." + (active ? "active" : "complete");
-            this._experimentState.value = gStrings.ext.GetStringFromName(stateKey);
+            if (!showProgress) {
+              let stateKey = prefix + "state." + (active ? "active" : "complete");
+              this._experimentState.value = gStrings.ext.GetStringFromName(stateKey);
 
-            let now = Date.now();
-            let end = this.endDate;
-            let days = Math.abs(end - now) / (24 * 60 * 60 * 1000);
+              let now = Date.now();
+              let end = this.endDate;
+              let days = Math.abs(end - now) / (24 * 60 * 60 * 1000);
 
-            let timeKey = prefix + "time.";
-            let timeMessage;
-            if (days < 1) {
-              timeKey += (active ? "endsToday" : "endedToday");
-              timeMessage = gStrings.ext.GetStringFromName(timeKey);
-            } else {
-              timeKey += (active ? "daysRemaining" : "daysPassed");
-              days = Math.round(days);
-              let timeString = gStrings.ext.GetStringFromName(timeKey);
-              timeMessage = PluralForm.get(days, timeString)
-                                      .replace("#1", days);
+              let timeKey = prefix + "time.";
+              let timeMessage;
+
+              if (days < 1) {
+                timeKey += (active ? "endsToday" : "endedToday");
+                timeMessage = gStrings.ext.GetStringFromName(timeKey);
+              } else {
+                timeKey += (active ? "daysRemaining" : "daysPassed");
+                days = Math.round(days);
+                let timeString = gStrings.ext.GetStringFromName(timeKey);
+                timeMessage = PluralForm.get(days, timeString)
+                                        .replace("#1", days);
+              }
+
+              this._experimentTime.value = timeMessage;
             }
-
-            this._experimentTime.value = timeMessage;
           }
         ]]></body>
       </method>
