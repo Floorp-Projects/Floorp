@@ -70,8 +70,7 @@ XPCJSContextStack::Push(JSContext *cx)
         // The cx we're pushing is also stack-top. In general we still need to
         // call JS_SaveFrameChain here. But if that would put us in a
         // compartment that's same-origin with the current one, we can skip it.
-        nsIScriptSecurityManager* ssm = XPCWrapper::GetSecurityManager();
-        if ((e.cx == cx) && ssm) {
+        if (e.cx == cx) {
             // DOM JSContexts don't store their default compartment object on
             // the cx, so in those cases we need to fetch it via the scx
             // instead. And in some cases (i.e. the SafeJSContext), we have no
@@ -174,6 +173,13 @@ XPCJSContextStack::InitSafeJSContext()
 
     JS_SetErrorReporter(mSafeJSContext, xpc::SystemErrorReporter);
 
+    // Note - We intentionally avoid firing OnNewGlobalObject while
+    // simultaneously skipping the call to setInvisibleToDebugger(true) here.
+    // This lets us piggy-back on the assertions in the JS engine (which make
+    // sure that, for non-invisible globals, we always fire onNewGlobalObject
+    // before creating scripts), to assert that we never create scripts with
+    // the SafeJSContextGlobal. This is all happening way before anyone could be
+    // listening for debugger notifications anyway.
     JS::CompartmentOptions options;
     options.setZone(JS::SystemZone)
            .setTrace(TraceXPCGlobal);
@@ -183,20 +189,7 @@ XPCJSContextStack::InitSafeJSContext()
     if (!mSafeJSContextGlobal)
         MOZ_CRASH();
 
-    // Note: make sure to set the private before calling
-    // InitClasses
     nsRefPtr<SandboxPrivate> sp = new SandboxPrivate(principal, mSafeJSContextGlobal);
     JS_SetPrivate(mSafeJSContextGlobal, sp.forget().take());
-
-    // After this point either glob is null and the
-    // nsIScriptObjectPrincipal ownership is either handled by the
-    // nsCOMPtr or dealt with, or we'll release in the finalize
-    // hook.
-    if (NS_FAILED(xpc->InitClasses(mSafeJSContext, mSafeJSContextGlobal)))
-        MOZ_CRASH();
-
-    JS::RootedObject glob(mSafeJSContext, mSafeJSContextGlobal);
-    JS_FireOnNewGlobalObject(mSafeJSContext, glob);
-
     return mSafeJSContext;
 }

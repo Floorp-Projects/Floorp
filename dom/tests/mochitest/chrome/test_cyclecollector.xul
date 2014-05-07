@@ -18,13 +18,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript">
   <![CDATA[
   /** Test for Bug  **/
+  let Ci = Components.interfaces;
   var obs = Components.classes["@mozilla.org/observer-service;1"]
-                      .getService(Components.interfaces.nsIObserverService);
+                      .getService(Ci.nsIObserverService);
   var didCall = false;
   var observer = {
     QueryInterface: function QueryInterface(aIID) {
-      if (aIID.equals(Components.interfaces.nsIObserver) ||
-          aIID.equals(Components.interfaces.nsISupports))
+      if (aIID.equals(Ci.nsIObserver) ||
+          aIID.equals(Ci.nsISupports))
         return this;
       throw Components.results.NS_NOINTERFACE;
     },
@@ -35,9 +36,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
     }
   };
 
+  // Make sure that we call the observer even if we're in the middle
+  // of an ICC when we add the observer. See bug 981033.
+  // XXX This will assert if we try to start an ICC during a IGC.
+  //SpecialPowers.finishCC();
+  //SpecialPowers.ccSlice(1);
+
   obs.addObserver(observer, "cycle-collector-begin", false);
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIDOMWindowUtils).cycleCollect();
+
+  SpecialPowers.DOMWindowUtils.cycleCollect();
 
   ok(didCall, "Observer should have been called!");
   ]]>
