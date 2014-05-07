@@ -18,7 +18,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1f6a1fe07f81c5bc5e1d079c9b60f7f78ca2bf4f"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="870a5c518742665d36b17e7e88c2ab07d440b94c"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="347d0517f0a77122c876d5f62c0942006a7a0bfe"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="f313e6d3aaaefe8c82eaed15912a09b120fb7260"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="3691614d0045f7968addce45d4140fb360c3ceaf"/>
@@ -129,7 +129,7 @@
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="494c177966fdc31183a5f7af82dc9130f523da4b"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="320b05a5761eb2a4816f7529c91ea49422979b55"/>
   <project name="platform/frameworks/av" path="frameworks/av" revision="1df6dac11d7370a2fffca8e31d65b80f537faec5"/>
-  <project name="platform/frameworks/base" path="frameworks/base" revision="807d87d5ff66cb5e0664f6924f612fcdb5e2c453"/>
+  <project name="platform/frameworks/base" path="frameworks/base" revision="eed05deb23b612ef6b415a039c9e77483669b0c4"/>
   <project name="platform/frameworks/native" path="frameworks/native" revision="33a2b51f78416536e1bfba0c0b7776db307f3a4f"/>
   <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="484802559ed106bac4811bd01c024ca64f741e60"/>
   <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="d30227d7ae5cbe8bac8775358b472f44504a20d2"/>
@@ -140,7 +140,7 @@
   <project name="platform/hardware/qcom/wlan" path="hardware/qcom/wlan" revision="2208fa3537ace873b8f9ec2355055761c79dfd5f"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="c4e2ac95907a5519a0e09f01a0d8e27fec101af0"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="e1eb226fa3ad3874ea7b63c56a9dc7012d7ff3c2"/>
-  <project name="platform/system/core" path="system/core" revision="e284280277c1312017a9450956a9676584441cdf"/>
+  <project name="platform/system/core" path="system/core" revision="81c9921fcf372228aab336ff7cf0076c66505af0"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="f620016437dd2f050e044eccef5e70e3f689ccbe"/>
   <project name="platform/system/qcom" path="system/qcom" revision="1cdab258b15258b7f9657da70e6f06ebd5a2fc25"/>
   <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="b3001d5f1686f89995b7bf70963cf69c8faebd83"/>
