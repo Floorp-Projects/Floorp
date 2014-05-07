@@ -10,6 +10,9 @@ const TAB_URL = EXAMPLE_URL + "doc_breakpoints-break-on-last-line-of-script-on-r
 const CODE_URL = EXAMPLE_URL + "code_breakpoints-break-on-last-line-of-script-on-reload.js";
 
 function test() {
+  // Debug test slaves are a bit slow at this test.
+  requestLongerTimeout(2);
+
   let gPanel, gDebugger, gThreadClient, gEvents;
 
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
