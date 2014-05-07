@@ -21,13 +21,14 @@
 #include "nsITimer.h"
 #include "nsIURI.h"
 #include "nsIUsageCallback.h"
+#include "nsPIDOMWindow.h"
 
 #include <algorithm>
 #include "GeckoProfiler.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
-#include "mozilla/dom/file/FileService.h"
+#include "mozilla/dom/FileService.h"
 #include "mozilla/dom/indexedDB/Client.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/LazyIdleThread.h"
@@ -89,7 +90,7 @@
 
 USING_QUOTA_NAMESPACE
 using namespace mozilla::dom;
-using mozilla::dom::file::FileService;
+using mozilla::dom::FileService;
 
 static_assert(
   static_cast<uint32_t>(StorageType::Persistent) ==

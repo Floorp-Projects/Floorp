@@ -6,7 +6,7 @@
 
 #include "IDBFileHandle.h"
 
-#include "mozilla/dom/file/File.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/IDBFileHandleBinding.h"
 #include "mozilla/dom/quota/FileStreams.h"
 
@@ -97,11 +97,11 @@ IDBFileHandle::CreateStream(nsIFile* aFile, bool aReadOnly)
 }
 
 already_AddRefed<nsIDOMFile>
-IDBFileHandle::CreateFileObject(mozilla::dom::file::LockedFile* aLockedFile,
+IDBFileHandle::CreateFileObject(mozilla::dom::LockedFile* aLockedFile,
                                 uint32_t aFileSize)
 {
-  nsCOMPtr<nsIDOMFile> file = new mozilla::dom::file::File(
-    mName, mType, aFileSize, mFile, aLockedFile, mFileInfo);
+  nsCOMPtr<nsIDOMFile> file =
+    new File(mName, mType, aFileSize, mFile, aLockedFile, mFileInfo);
 
   return file.forget();
 }
