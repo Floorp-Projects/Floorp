@@ -69,7 +69,6 @@ BluetoothProfileController::BluetoothProfileController(
   mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   MOZ_ASSERT(mTimer);
 
-  mCheckProfileStatusCallback = new CheckProfileStatusCallback(this);
   mProfiles.Clear();
 
   /**
@@ -225,8 +224,8 @@ BluetoothProfileController::StartSession()
   }
 
   if (mTimer) {
-    mTimer->InitWithCallback(mCheckProfileStatusCallback, CONNECTION_TIMEOUT_MS,
-                             nsITimer::TYPE_ONE_SHOT);
+    mTimer->InitWithCallback(new CheckProfileStatusCallback(this),
+                             CONNECTION_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT);
   }
 
   BT_LOGR("%s", mConnect ? "connecting" : "disconnecting");
