@@ -575,18 +575,19 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
         cairo_surface_destroy(tempXlibSurface);
         return;
     }
-  
+
     SurfaceFormat moz2DFormat =
         cairo_surface_get_content(tempXlibSurface) == CAIRO_CONTENT_COLOR ?
             SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
     if (method != eAlphaExtraction) {
         if (drawTarget) {
-            // It doesn't matter if moz2DFormat doesn't exactly match the format
-            // of tempXlibSurface, since this DrawTarget just wraps the cairo
-            // drawing.
+            NativeSurface native;
+            native.mFormat = moz2DFormat;
+            native.mType = NativeSurfaceType::CAIRO_SURFACE;
+            native.mSurface = tempXlibSurface;
+            native.mSize = ToIntSize(size);
             RefPtr<SourceSurface> sourceSurface =
-                Factory::CreateSourceSurfaceForCairoSurface(tempXlibSurface,
-                                                            moz2DFormat);
+                drawTarget->CreateSourceSurfaceFromNativeSurface(native);
             if (sourceSurface) {
                 drawTarget->DrawSurface(sourceSurface,
                     Rect(offset.x, offset.y, size.width, size.height),
@@ -622,9 +623,13 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
 
         gfxASurface* paintSurface = blackImage;
         if (drawTarget) {
+            NativeSurface native;
+            native.mFormat = moz2DFormat;
+            native.mType = NativeSurfaceType::CAIRO_SURFACE;
+            native.mSurface = tempXlibSurface;
+            native.mSize = ToIntSize(size);
             RefPtr<SourceSurface> sourceSurface =
-                Factory::CreateSourceSurfaceForCairoSurface(paintSurface->CairoSurface(),
-                                                            moz2DFormat);
+                drawTarget->CreateSourceSurfaceFromNativeSurface(native);
             if (sourceSurface) {
                 drawTarget->DrawSurface(sourceSurface,
                     Rect(offset.x, offset.y, size.width, size.height),

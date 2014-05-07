@@ -46,7 +46,7 @@ MacIOSurfaceTextureHostBasic::MacIOSurfaceTextureHostBasic(
 }
 
 gfx::SourceSurface*
-MacIOSurfaceTextureSourceBasic::GetSurface()
+MacIOSurfaceTextureSourceBasic::GetSurface(gfx::DrawTarget* aTarget)
 {
   if (!mSourceSurface) {
     mSourceSurface = mSurface->GetAsSurface();

@@ -28,7 +28,7 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
 
-  virtual gfx::SourceSurface* GetSurface() MOZ_OVERRIDE;
+  virtual gfx::SourceSurface* GetSurface(gfx::DrawTarget* aTarget) MOZ_OVERRIDE;
 
   virtual void DeallocateDeviceData() MOZ_OVERRIDE { }
 
