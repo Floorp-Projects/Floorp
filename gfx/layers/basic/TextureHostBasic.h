@@ -22,7 +22,7 @@ class TextureSourceBasic
 {
 public:
   virtual ~TextureSourceBasic() {}
-  virtual gfx::SourceSurface* GetSurface() = 0;
+  virtual gfx::SourceSurface* GetSurface(gfx::DrawTarget* aTarget) = 0;
 };
 
 } // namespace layers
