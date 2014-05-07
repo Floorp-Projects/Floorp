@@ -173,6 +173,13 @@ XPCJSContextStack::InitSafeJSContext()
 
     JS_SetErrorReporter(mSafeJSContext, xpc::SystemErrorReporter);
 
+    // Note - We intentionally avoid firing OnNewGlobalObject while
+    // simultaneously skipping the call to setInvisibleToDebugger(true) here.
+    // This lets us piggy-back on the assertions in the JS engine (which make
+    // sure that, for non-invisible globals, we always fire onNewGlobalObject
+    // before creating scripts), to assert that we never create scripts with
+    // the SafeJSContextGlobal. This is all happening way before anyone could be
+    // listening for debugger notifications anyway.
     JS::CompartmentOptions options;
     options.setZone(JS::SystemZone)
            .setTrace(TraceXPCGlobal);
@@ -193,9 +200,6 @@ XPCJSContextStack::InitSafeJSContext()
     // hook.
     if (NS_FAILED(xpc->InitClasses(mSafeJSContext, mSafeJSContextGlobal)))
         MOZ_CRASH();
-
-    JS::RootedObject glob(mSafeJSContext, mSafeJSContextGlobal);
-    JS_FireOnNewGlobalObject(mSafeJSContext, glob);
 
     return mSafeJSContext;
 }
