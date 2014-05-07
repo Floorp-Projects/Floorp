@@ -250,7 +250,7 @@ nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
 NS_IMETHODIMP
 nsXPConnect::GarbageCollect(uint32_t reason)
 {
-    GetRuntime()->Collect(reason);
+    GetRuntime()->GarbageCollect(reason);
     return NS_OK;
 }
 
