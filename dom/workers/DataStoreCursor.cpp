@@ -23,9 +23,10 @@ BEGIN_WORKERS_NAMESPACE
 already_AddRefed<WorkerDataStoreCursor>
 WorkerDataStoreCursor::Constructor(GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  MOZ_ASSERT(!NS_IsMainThread());
-  nsRefPtr<WorkerDataStoreCursor> workerCursor = new WorkerDataStoreCursor();
-  return workerCursor.forget();
+  // We don't allow Gecko to create WorkerDataStoreCursor through JS codes like
+  // window.DataStoreCursor() on the worker, so disable this for now.
+  NS_NOTREACHED("Cannot use the chrome constructor on the worker!");
+  return nullptr;
 }
 
 JSObject*
