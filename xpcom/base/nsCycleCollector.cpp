@@ -3033,6 +3033,8 @@ nsCycleCollector::CollectWhite()
   timeLog.Checkpoint("CollectWhite::Unroot");
 
   nsCycleCollector_dispatchDeferredDeletion(false);
+  timeLog.Checkpoint("CollectWhite::dispatchDeferredDeletion");
+
   mIncrementalPhase = CleanupPhase;
 
   return count > 0;
@@ -3229,8 +3231,10 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
 void
 nsCycleCollector::CleanupAfterCollection()
 {
+  TimeLog timeLog;
   MOZ_ASSERT(mIncrementalPhase == CleanupPhase);
   mGraph.Clear();
+  timeLog.Checkpoint("CleanupAfterCollection::mGraph.Clear()");
 
   uint32_t interval = (uint32_t) ((TimeStamp::Now() - mCollectionStart).ToMilliseconds());
 #ifdef COLLECT_TIME_DEBUG
@@ -3245,13 +3249,16 @@ nsCycleCollector::CleanupAfterCollection()
   }
   printf(".\ncc: \n");
 #endif
+
   CC_TELEMETRY( , interval);
   CC_TELEMETRY(_VISITED_REF_COUNTED, mResults.mVisitedRefCounted);
   CC_TELEMETRY(_VISITED_GCED, mResults.mVisitedGCed);
   CC_TELEMETRY(_COLLECTED, mWhiteNodeCount);
+  timeLog.Checkpoint("CleanupAfterCollection::telemetry");
 
   if (mJSRuntime) {
     mJSRuntime->EndCycleCollectionCallback(mResults);
+    timeLog.Checkpoint("CleanupAfterCollection::EndCycleCollectionCallback()");
   }
   mIncrementalPhase = IdlePhase;
 }
@@ -3297,7 +3304,9 @@ nsCycleCollector::Collect(ccType aCCType,
   // If the CC started idle, it will call BeginCollection, which
   // will do FreeSnowWhite, so it doesn't need to be done here.
   if (!startedIdle) {
+    TimeLog timeLog;
     FreeSnowWhite(true);
+    timeLog.Checkpoint("Collect::FreeSnowWhite");
   }
 
   ++mResults.mNumSlices;
