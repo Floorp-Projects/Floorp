@@ -1331,6 +1331,22 @@ TabChild::DestroyWindow()
       }
       mLayersId = 0;
     }
+
+    for (uint32_t index = 0, count = mCachedFileDescriptorInfos.Length();
+         index < count;
+         index++) {
+        nsAutoPtr<CachedFileDescriptorInfo>& info =
+            mCachedFileDescriptorInfos[index];
+
+        MOZ_ASSERT(!info->mCallback);
+        MOZ_ASSERT(!info->mCanceled);
+
+        if (info->mFileDescriptor.IsValid()) {
+            nsRefPtr<CloseFileRunnable> runnable =
+                new CloseFileRunnable(info->mFileDescriptor);
+            runnable->Dispatch();
+        }
+    }
 }
 
 bool
