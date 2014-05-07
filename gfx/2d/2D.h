@@ -60,6 +60,7 @@ class FilterNode;
 struct NativeSurface {
   NativeSurfaceType mType;
   SurfaceFormat mFormat;
+  gfx::IntSize mSize;
   void *mSurface;
 };
 
@@ -1033,10 +1034,6 @@ public:
   static bool CheckSurfaceSize(const IntSize &sz, int32_t limit = 0);
 
   static TemporaryRef<DrawTarget> CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSize& aSize, SurfaceFormat* aFormat = nullptr);
-
-  static TemporaryRef<SourceSurface>
-    CreateSourceSurfaceForCairoSurface(cairo_surface_t* aSurface,
-                                       SurfaceFormat aFormat);
 
   static TemporaryRef<DrawTarget>
     CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat);
