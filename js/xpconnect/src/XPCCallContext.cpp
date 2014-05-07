@@ -258,15 +258,6 @@ XPCCallContext::GetCalleeMethodIndex(uint16_t *aCalleeMethodIndex)
     return NS_OK;
 }
 
-/* readonly attribute nsIXPConnectWrappedNative CalleeWrapper; */
-NS_IMETHODIMP
-XPCCallContext::GetCalleeWrapper(nsIXPConnectWrappedNative * *aCalleeWrapper)
-{
-    nsCOMPtr<nsIXPConnectWrappedNative> rval = mWrapper;
-    rval.forget(aCalleeWrapper);
-    return NS_OK;
-}
-
 /* readonly attribute XPCNativeInterface CalleeInterface; */
 NS_IMETHODIMP
 XPCCallContext::GetCalleeInterface(nsIInterfaceInfo * *aCalleeInterface)
