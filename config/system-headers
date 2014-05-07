@@ -649,8 +649,10 @@ lib$routines.h
 limits
 limits.h
 link.h
+#ifdef ANDROID
 linux/android_alarm.h
 linux/ashmem.h
+#endif
 linux/ioprio.h
 linux/kernel.h
 linux/limits.h
