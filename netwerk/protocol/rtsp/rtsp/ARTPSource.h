@@ -18,6 +18,7 @@
 
 #define A_RTP_SOURCE_H_
 
+#include "mozilla/Types.h"
 #include <stdint.h>
 
 #include <media/stagefright/foundation/ABase.h>
@@ -26,8 +27,8 @@
 
 namespace android {
 
-struct ABuffer;
-struct AMessage;
+struct MOZ_EXPORT ABuffer;
+struct MOZ_EXPORT AMessage;
 struct ARTPAssembler;
 struct ASessionDescription;
 

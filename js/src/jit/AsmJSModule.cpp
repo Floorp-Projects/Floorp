@@ -167,10 +167,10 @@ InvokeFromAsmJS_ToNumber(JSContext *cx, int32_t exitIndex, int32_t argc, Value *
 #if defined(JS_CODEGEN_ARM)
 extern "C" {
 
-extern int64_t
+extern MOZ_EXPORT int64_t
 __aeabi_idivmod(int, int);
 
-extern int64_t
+extern MOZ_EXPORT int64_t
 __aeabi_uidivmod(int, int);
 
 }
@@ -1246,7 +1246,7 @@ struct ScopedCacheEntryOpenedForWrite
 
     ~ScopedCacheEntryOpenedForWrite() {
         if (memory)
-            cx->asmJSCacheOps().closeEntryForWrite(cx->global(), serializedSize, memory, handle);
+            cx->asmJSCacheOps().closeEntryForWrite(serializedSize, memory, handle);
     }
 };
 
@@ -1303,7 +1303,7 @@ struct ScopedCacheEntryOpenedForRead
 
     ~ScopedCacheEntryOpenedForRead() {
         if (memory)
-            cx->asmJSCacheOps().closeEntryForRead(cx->global(), serializedSize, memory, handle);
+            cx->asmJSCacheOps().closeEntryForRead(serializedSize, memory, handle);
     }
 };
 

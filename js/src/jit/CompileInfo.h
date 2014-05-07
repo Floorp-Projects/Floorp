@@ -80,6 +80,15 @@ class InlineScriptTree {
         return caller_;
     }
 
+    bool isOutermostCaller() const {
+        return caller_ == nullptr;
+    }
+    InlineScriptTree *outermostCaller() {
+        if (isOutermostCaller())
+            return this;
+        return caller_->outermostCaller();
+    }
+
     jsbytecode *callerPc() const {
         return callerPc_;
     }
@@ -390,6 +399,15 @@ class CompileInfo
 
     bool isParallelExecution() const {
         return executionMode_ == ParallelExecution;
+    }
+
+    bool canOptimizeOutSlot(uint32_t i) const {
+        if (script()->strict())
+            return true;
+
+        // Function.arguments can be used to access all arguments in
+        // non-strict scripts, so we can't optimize out any arguments.
+        return !(firstArgSlot() <= i && i - firstArgSlot() < nargs());
     }
 
   private:

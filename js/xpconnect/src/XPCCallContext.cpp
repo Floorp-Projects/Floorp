@@ -29,7 +29,6 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mXPCContext(nullptr),
         mJSContext(cx),
         mCallerLanguage(callerLanguage),
-        mFlattenedJSObject(cx),
         mWrapper(nullptr),
         mTearOff(nullptr),
         mName(cx)
@@ -77,14 +76,10 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         }
     }
     if (mWrapper) {
-        mFlattenedJSObject = mWrapper->GetFlatJSObject();
-
         if (mTearOff)
             mScriptableInfo = nullptr;
         else
             mScriptableInfo = mWrapper->GetScriptableInfo();
-    } else {
-        MOZ_ASSERT(!mFlattenedJSObject, "What object do we have?");
     }
 
     if (!JSID_IS_VOID(name))
@@ -255,15 +250,6 @@ NS_IMETHODIMP
 XPCCallContext::GetCalleeMethodIndex(uint16_t *aCalleeMethodIndex)
 {
     *aCalleeMethodIndex = mMethodIndex;
-    return NS_OK;
-}
-
-/* readonly attribute nsIXPConnectWrappedNative CalleeWrapper; */
-NS_IMETHODIMP
-XPCCallContext::GetCalleeWrapper(nsIXPConnectWrappedNative * *aCalleeWrapper)
-{
-    nsCOMPtr<nsIXPConnectWrappedNative> rval = mWrapper;
-    rval.forget(aCalleeWrapper);
     return NS_OK;
 }
 

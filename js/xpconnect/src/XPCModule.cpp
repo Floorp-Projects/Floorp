@@ -11,7 +11,6 @@ nsresult
 xpcModuleCtor()
 {
     nsXPConnect::InitStatics();
-    XPCWrappedNativeScope::InitStatics();
 
     return NS_OK;
 }

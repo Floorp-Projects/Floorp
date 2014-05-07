@@ -121,7 +121,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(45b80e00-fb0d-439e-b7bf-54f24af0c4a6)]
+[scriptable, uuid(c9b6f5a0-cfe8-11e3-9c1a-0800200c9a66)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -259,6 +259,22 @@ interface nsIXPCComponents_Utils : nsISupports
      * Force an immediate cycle collection cycle.
      */
     void forceCC();
+
+    /*
+     * To be called from JS only.
+     *
+     * If any incremental CC is in progress, finish it. For testing.
+     */
+    void finishCC();
+
+    /*
+     * To be called from JS only.
+     *
+     * Do some cycle collector work, with the given work budget.
+     * The cost of calling Traverse() on a single object is set as 1.
+     * For testing.
+     */
+    void ccSlice(in long long budget);
 
     /*
      * To be called from JS only.
