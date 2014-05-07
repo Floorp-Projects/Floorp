@@ -97,7 +97,7 @@ add_test(function() {
     },
     onInstallEnded: function() {
       check_list(gItem);
-      run_next_test();
+      executeSoon(run_next_test);
     }
   });
 
@@ -136,7 +136,7 @@ add_test(function() {
     onInstallEnded: function() {
       check_list(null);
       extension.cancel();
-      run_next_test();
+      executeSoon(run_next_test);
     }
   });
 
