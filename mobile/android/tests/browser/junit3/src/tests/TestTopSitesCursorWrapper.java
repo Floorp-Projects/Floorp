@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
+import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.TopSitesCursorWrapper;
 
 public class TestTopSitesCursorWrapper extends BrowserTestCase {
@@ -78,19 +79,28 @@ public class TestTopSitesCursorWrapper extends BrowserTestCase {
     }
 
     private void assertUrlAndTitle(Cursor c, String prefix, int index) {
-        String url = c.getString(c.getColumnIndex(Combined.URL));
-        String title = c.getString(c.getColumnIndex(Combined.TITLE));
+        String url = c.getString(c.getColumnIndex(TopSites.URL));
+        String title = c.getString(c.getColumnIndex(TopSites.TITLE));
 
         assertEquals(prefix + "url" + index, url);
         assertEquals(prefix + "title" + index, title);
     }
 
     private void assertBlank(Cursor c) {
-        String url = c.getString(c.getColumnIndex(Combined.URL));
-        String title = c.getString(c.getColumnIndex(Combined.TITLE));
+        String url = c.getString(c.getColumnIndex(TopSites.URL));
+        String title = c.getString(c.getColumnIndex(TopSites.TITLE));
 
         assertTrue(TextUtils.isEmpty(url));
         assertTrue(TextUtils.isEmpty(title));
+    }
+
+    private void assertRowType(Cursor c, int position, int rowType) {
+        assertTrue(c.moveToPosition(position));
+        assertEquals(rowType, getRowType(c));
+    }
+
+    private int getRowType(Cursor c) {
+        return c.getInt(c.getColumnIndex(TopSites.TYPE));
     }
 
     public void testCount() {
@@ -139,7 +149,7 @@ public class TestTopSitesCursorWrapper extends BrowserTestCase {
         c.moveToPosition(-1);
         while (c.moveToNext()) {
             boolean isPinnedPosition = pinnedList.contains(c.getPosition());
-            assertEquals(isPinnedPosition, c.isPinned());
+            assertEquals(isPinnedPosition, getRowType(c) == TopSites.TYPE_PINNED);
         }
 
         c.close();
@@ -151,7 +161,7 @@ public class TestTopSitesCursorWrapper extends BrowserTestCase {
 
         c.moveToPosition(-1);
         while (c.moveToNext()) {
-            if (!c.isPinned()) {
+            if (getRowType(c) == TopSites.TYPE_BLANK) {
                 assertBlank(c);
             }
         }
@@ -165,29 +175,28 @@ public class TestTopSitesCursorWrapper extends BrowserTestCase {
 
         c.moveToPosition(-1);
         while (c.moveToNext()) {
-            int position = c.getPosition();
+            int rowType = getRowType(c);
 
-            // Last position is blank
-            if (position == MIN_COUNT - 1) {
-                assertTrue(c.isNull(c.getColumnIndex(Combined.URL)));
-                assertTrue(c.isNull(c.getColumnIndex(Combined.TITLE)));
-                assertTrue(c.isNull(c.getColumnIndex(Combined.DISPLAY)));
-                assertTrue(c.isNull(c.getColumnIndex(Combined.BOOKMARK_ID)));
-                assertTrue(c.isNull(c.getColumnIndex(Combined.HISTORY_ID)));
+            if (rowType == TopSites.TYPE_BLANK) {
+                assertTrue(c.isNull(c.getColumnIndex(TopSites.URL)));
+                assertTrue(c.isNull(c.getColumnIndex(TopSites.TITLE)));
+                assertTrue(c.isNull(c.getColumnIndex(TopSites.DISPLAY)));
+                assertTrue(c.isNull(c.getColumnIndex(TopSites.BOOKMARK_ID)));
+                assertTrue(c.isNull(c.getColumnIndex(TopSites.HISTORY_ID)));
+            } else if (rowType == TopSites.TYPE_PINNED) {
+                assertFalse(c.isNull(c.getColumnIndex(TopSites.URL)));
+                assertFalse(c.isNull(c.getColumnIndex(TopSites.TITLE)));
+                assertTrue(c.isNull(c.getColumnIndex(TopSites.DISPLAY)));
+                assertTrue(c.isNull(c.getColumnIndex(TopSites.BOOKMARK_ID)));
+                assertTrue(c.isNull(c.getColumnIndex(TopSites.HISTORY_ID)));
+            } else if (rowType == TopSites.TYPE_TOP) {
+                assertFalse(c.isNull(c.getColumnIndex(TopSites.URL)));
+                assertFalse(c.isNull(c.getColumnIndex(TopSites.TITLE)));
+                assertFalse(c.isNull(c.getColumnIndex(TopSites.DISPLAY)));
+                assertFalse(c.isNull(c.getColumnIndex(TopSites.BOOKMARK_ID)));
+                assertFalse(c.isNull(c.getColumnIndex(TopSites.HISTORY_ID)));
             } else {
-                if (c.isPinned()) {
-                    assertFalse(c.isNull(c.getColumnIndex(Combined.URL)));
-                    assertFalse(c.isNull(c.getColumnIndex(Combined.TITLE)));
-                    assertTrue(c.isNull(c.getColumnIndex(Combined.DISPLAY)));
-                    assertTrue(c.isNull(c.getColumnIndex(Combined.BOOKMARK_ID)));
-                    assertTrue(c.isNull(c.getColumnIndex(Combined.HISTORY_ID)));
-                } else {
-                    assertFalse(c.isNull(c.getColumnIndex(Combined.URL)));
-                    assertFalse(c.isNull(c.getColumnIndex(Combined.TITLE)));
-                    assertFalse(c.isNull(c.getColumnIndex(Combined.DISPLAY)));
-                    assertFalse(c.isNull(c.getColumnIndex(Combined.BOOKMARK_ID)));
-                    assertFalse(c.isNull(c.getColumnIndex(Combined.HISTORY_ID)));
-                }
+                fail("Invalid row type found in the cursor");
             }
         }
 
@@ -203,26 +212,112 @@ public class TestTopSitesCursorWrapper extends BrowserTestCase {
 
         c.moveToPosition(-1);
         while (c.moveToNext()) {
-            int position = c.getPosition();
+            int rowType = getRowType(c);
 
-            // Last position should be blank
-            if (position == MIN_COUNT - 1) {
+            if (rowType == TopSites.TYPE_BLANK) {
                 assertBlank(c);
+            } else if (rowType == TopSites.TYPE_PINNED) {
+                assertUrlAndTitle(c, PINNED_PREFIX, pinnedIndex++);
+            } else if (rowType == TopSites.TYPE_TOP) {
+                assertUrlAndTitle(c, TOP_PREFIX, topIndex++);
             } else {
-                int index;
-                String prefix;
-
-                if (c.isPinned()) {
-                    index = pinnedIndex++;
-                    prefix = PINNED_PREFIX;
-                } else {
-                    index = topIndex++;
-                    prefix = TOP_PREFIX;
-                }
-
-                assertUrlAndTitle(c, prefix, index);
+                fail("Invalid row type found in the cursor");
             }
         }
+
+        c.close();
+    }
+
+    public void testColumns() {
+        Integer[] pinnedPositions = new Integer[] { 0, 1, 4 };
+        TopSitesCursorWrapper c = createTopSitesCursorWrapper(2, pinnedPositions);
+
+        assertEquals(7, c.getColumnCount());
+
+        String[] columnNames = c.getColumnNames();
+        assertEquals(columnNames.length, c.getColumnCount());
+
+        boolean allRowsHaveAllCols = true;
+        c.moveToPosition(-1);
+        while (c.moveToNext()) {
+            for (int i = 0; i < columnNames.length; i++) {
+                try {
+                    c.getColumnIndexOrThrow(columnNames[i]);
+                } catch (Exception e) {
+                    allRowsHaveAllCols = false;
+                }
+            }
+        }
+        assertTrue(allRowsHaveAllCols);
+
+        c.close();
+    }
+
+    public void testRowTypes() {
+        Integer[] pinnedPositions = new Integer[] { 0, 1, 4 };
+        TopSitesCursorWrapper c = createTopSitesCursorWrapper(2, pinnedPositions);
+
+        // Check pinned sites
+        for (int i = 0; i < pinnedPositions.length; i++) {
+            assertRowType(c, pinnedPositions[0], TopSites.TYPE_PINNED);
+        }
+
+        // Check top sites
+        assertRowType(c, 2, TopSites.TYPE_TOP);
+        assertRowType(c, 3, TopSites.TYPE_TOP);
+
+        // Blank position
+        assertRowType(c, 5, TopSites.TYPE_BLANK);
+
+        c.close();
+    }
+
+    public void testPositionOutOfBounds() {
+        Integer[] pinnedPositions = new Integer[] { 0, 1, 4 };
+        TopSitesCursorWrapper c = createTopSitesCursorWrapper(2, pinnedPositions);
+
+        boolean failed = false;
+        try {
+            assertFalse(c.moveToPosition(-1));
+            c.getInt(0);
+        } catch (Exception e) {
+            failed = true;
+        }
+        assertTrue(failed);
+
+        failed = false;
+        try {
+            assertFalse(c.moveToPosition(c.getCount()));
+            c.getInt(0);
+        } catch (Exception e) {
+            failed = true;
+        }
+        assertTrue(failed);
+
+        c.close();
+    }
+
+    public void testColumnIndexOutOfBounds() {
+        Integer[] pinnedPositions = new Integer[] { 0, 1, 4 };
+        TopSitesCursorWrapper c = createTopSitesCursorWrapper(2, pinnedPositions);
+
+        boolean failed = false;
+        try {
+            assertTrue(c.moveToPosition(0));
+            c.getInt(-1);
+        } catch (Exception e) {
+            failed = true;
+        }
+        assertTrue(failed);
+
+        failed = false;
+        try {
+            assertTrue(c.moveToPosition(0));
+            c.getString(c.getColumnCount());
+        } catch (Exception e) {
+            failed = true;
+        }
+        assertTrue(failed);
 
         c.close();
     }
