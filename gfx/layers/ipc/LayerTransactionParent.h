@@ -109,6 +109,7 @@ protected:
                                          MOZ_OVERRIDE;
   virtual bool RecvSetAsyncScrollOffset(PLayerParent* aLayer,
                                         const int32_t& aX, const int32_t& aY) MOZ_OVERRIDE;
+  virtual bool RecvGetAPZTestData(APZTestData* aOutData);
 
   virtual PLayerParent* AllocPLayerParent() MOZ_OVERRIDE;
   virtual bool DeallocPLayerParent(PLayerParent* actor) MOZ_OVERRIDE;
