@@ -494,7 +494,11 @@ bool OmxDecoder::AllocateMediaResources()
     // is currently used, and for formats this code is currently used
     // for (h.264).  So if we don't get a hardware decoder, just give
     // up.
+#ifdef MOZ_OMX_WEBM_DECODER
+    int flags = 0;//fallback to omx sw decoder if there is no hw decoder
+#else
     int flags = kHardwareCodecsOnly;
+#endif//MOZ_OMX_WEBM_DECODER
 
     if (isInEmulator()) {
       // If we are in emulator, allow to fall back to software.
