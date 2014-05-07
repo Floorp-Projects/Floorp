@@ -3331,24 +3331,30 @@ MacroAssemblerMIPSCompat::toggledCall(JitCode *target, bool enabled)
 #ifdef JSGC_GENERATIONAL
 
 void
-MacroAssemblerMIPSCompat::branchPtrInNurseryRange(Register ptr, Register temp, Label *label)
+MacroAssemblerMIPSCompat::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
+                                                  Label *label)
 {
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     JS_ASSERT(ptr != temp);
     JS_ASSERT(ptr != SecondScratchReg);
 
     const Nursery &nursery = GetIonContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
     addPtr(ptr, SecondScratchReg);
-    branchPtr(Assembler::Below, SecondScratchReg, Imm32(Nursery::NurserySize), label);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              SecondScratchReg, Imm32(Nursery::NurserySize), label);
 }
 
 void
-MacroAssemblerMIPSCompat::branchValueIsNurseryObject(ValueOperand value, Register temp, Label *label)
+MacroAssemblerMIPSCompat::branchValueIsNurseryObject(Condition cond, ValueOperand value,
+                                                     Register temp, Label *label)
 {
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
     Label done;
 
-    branchTestObject(Assembler::NotEqual, value, &done);
-    branchPtrInNurseryRange(value.payloadReg(), temp, label);
+    branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
+    branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
 
     bind(&done);
 }
