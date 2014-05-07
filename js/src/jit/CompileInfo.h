@@ -401,6 +401,15 @@ class CompileInfo
         return executionMode_ == ParallelExecution;
     }
 
+    bool canOptimizeOutSlot(uint32_t i) const {
+        if (script()->strict())
+            return true;
+
+        // Function.arguments can be used to access all arguments in
+        // non-strict scripts, so we can't optimize out any arguments.
+        return !(firstArgSlot() <= i && i - firstArgSlot() < nargs());
+    }
+
   private:
     unsigned nimplicit_;
     unsigned nargs_;
