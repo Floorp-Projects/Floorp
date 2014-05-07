@@ -55,14 +55,6 @@ function search(aQuery, aAttribute) {
   let elements = document.getElementById("mainPrefPane").children;
   for (let element of elements) {
     let attributeValue = element.getAttribute(aAttribute);
-    element.hidden = (attributeValue && attributeValue != aQuery);
+    element.hidden = (attributeValue != aQuery);
   }
-}
-
-function helpButtonCommand() {
-  let pane = history.state;
-  let categories = document.getElementById("categories");
-  let helpTopic = categories.querySelector(".category[value=" + pane + "]")
-                            .getAttribute("helpTopic");
-  openHelpLink(helpTopic);
 }
