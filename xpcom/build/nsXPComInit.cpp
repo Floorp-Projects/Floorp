@@ -14,10 +14,12 @@
 #include "nsXPCOMPrivate.h"
 #include "nsXPCOMCIDInternal.h"
 
-#include "prlink.h"
-
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/AsyncTransactionTracker.h"
+#include "mozilla/layers/SharedBufferManagerChild.h"
+
+#include "prlink.h"
 
 #include "nsCycleCollector.h"
 #include "nsObserverList.h"
@@ -789,12 +791,22 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
             }
         }
 
+        // This must happen after the shutdown of media and widgets, which
+        // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
+        layers::ImageBridgeChild::ShutDown();
+#ifdef MOZ_WIDGET_GONK
+        layers::SharedBufferManagerChild::ShutDown();
+#endif
+
         NS_ProcessPendingEvents(thread);
         mozilla::scache::StartupCache::DeleteSingleton();
         if (observerService)
             (void) observerService->
                 NotifyObservers(nullptr, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
                                 nullptr);
+
+        layers::CompositorParent::ShutDown();
+        layers::AsyncTransactionTracker::Finalize();
 
         gXPCOMThreadsShutDown = true;
         NS_ProcessPendingEvents(thread);
