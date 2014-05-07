@@ -16,36 +16,6 @@ class nsCocoaWindow;
 #include "nsBaseAppShell.h"
 #include "nsTArray.h"
 
-typedef struct _nsCocoaAppModalWindowListItem {
-  _nsCocoaAppModalWindowListItem(NSWindow *aWindow, NSModalSession aSession) :
-    mWindow(aWindow), mSession(aSession), mWidget(nullptr) {}
-  _nsCocoaAppModalWindowListItem(NSWindow *aWindow, nsCocoaWindow *aWidget) :
-    mWindow(aWindow), mSession(nil), mWidget(aWidget) {}
-  NSWindow *mWindow;       // Weak
-  NSModalSession mSession; // Weak (not retainable)
-  nsCocoaWindow *mWidget;  // Weak
-} nsCocoaAppModalWindowListItem;
-
-class nsCocoaAppModalWindowList {
-public:
-  nsCocoaAppModalWindowList() {}
-  ~nsCocoaAppModalWindowList() {}
-  // Push a Cocoa app-modal window onto the top of our list.
-  nsresult PushCocoa(NSWindow *aWindow, NSModalSession aSession);
-  // Pop the topmost Cocoa app-modal window off our list.
-  nsresult PopCocoa(NSWindow *aWindow, NSModalSession aSession);
-  // Push a Gecko-modal window onto the top of our list.
-  nsresult PushGecko(NSWindow *aWindow, nsCocoaWindow *aWidget);
-  // Pop the topmost Gecko-modal window off our list.
-  nsresult PopGecko(NSWindow *aWindow, nsCocoaWindow *aWidget);
-  // Return the "session" of the top-most visible Cocoa app-modal window.
-  NSModalSession CurrentSession();
-  // Has a Gecko modal dialog popped up over a Cocoa app-modal dialog?
-  bool GeckoModalAboveCocoaModal();
-private:
-  nsTArray<nsCocoaAppModalWindowListItem> mList;
-};
-
 // GeckoNSApplication
 //
 // Subclass of NSApplication for filtering out certain events.
@@ -82,8 +52,6 @@ protected:
   virtual void ScheduleNativeEventCallback();
   virtual bool ProcessNextNativeEvent(bool aMayWait);
 
-  bool InGeckoMainEventLoop();
-
   static void ProcessGeckoEvents(void* aInfo);
 
 protected:
@@ -99,17 +67,6 @@ protected:
   bool               mSkippedNativeCallback;
   bool               mRunningCocoaEmbedded;
 
-  // mHadMoreEventsCount and kHadMoreEventsCountMax are used in
-  // ProcessNextNativeEvent().
-  uint32_t               mHadMoreEventsCount;
-  // Setting kHadMoreEventsCountMax to '10' contributed to a fairly large
-  // (about 10%) increase in the number of calls to malloc (though without
-  // effecting the total amount of memory used).  Cutting it to '3'
-  // reduced the number of calls by 6%-7% (reducing the original regression
-  // to 3%-4%).  See bmo bug 395397.
-  static const uint32_t  kHadMoreEventsCountMax = 3;
-
-  int32_t            mRecursionDepth;
   int32_t            mNativeEventCallbackDepth;
   // Can be set from different threads, so must be modified atomically
   int32_t            mNativeEventScheduledDepth;
