@@ -1192,7 +1192,7 @@ types::FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode execu
     return true;
 }
 
-MOZ_NEVER_INLINE void
+static void
 CheckDefinitePropertiesTypeSet(JSContext *cx, TemporaryTypeSet *frozen, StackTypeSet *actual)
 {
     // The definite properties analysis happens on the main thread, so no new
@@ -3621,7 +3621,8 @@ JSScript::makeTypes(JSContext *cx)
 
     unsigned count = TypeScript::NumTypeSets(this);
 
-    TypeScript *typeScript = (TypeScript *) cx->calloc_(sizeof(TypeScript) + (sizeof(StackTypeSet) * count));
+    TypeScript *typeScript = (TypeScript *)
+        cx->calloc_(TypeScript::SizeIncludingTypeArray(count));
     if (!typeScript)
         return false;
 
@@ -4167,6 +4168,17 @@ TypeObject::sweep(FreeOp *fop, bool *oom)
             }
         }
     }
+}
+
+void
+TypeCompartment::clearTables()
+{
+    if (allocationSiteTable && allocationSiteTable->initialized())
+        allocationSiteTable->clear();
+    if (arrayTypeTable && arrayTypeTable->initialized())
+        arrayTypeTable->clear();
+    if (objectTypeTable && objectTypeTable->initialized())
+        objectTypeTable->clear();
 }
 
 void

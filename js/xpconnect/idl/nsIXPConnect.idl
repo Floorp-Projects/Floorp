@@ -274,7 +274,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[noscript, uuid(3d5a6320-8764-11e3-baa7-0800200c9a66)]
+[noscript, uuid(47fbe8ff-0507-4647-9ea7-e0e1fc76c995)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -422,12 +422,6 @@ interface nsIXPConnect : nsISupports
     getNativeOfWrapper(in JSContextPtr aJSContext,
                        in JSObjectPtr  aJSObj);
 
-    /**
-    * The security manager to use when the current JSContext has no security
-    * manager.
-    */
-    void setDefaultSecurityManager(in nsIXPCSecurityManager aManager);
-
     nsIStackFrame
     createStackFrameLocation(in uint32_t       aLanguage,
                              in string         aFilename,
@@ -437,7 +431,6 @@ interface nsIXPConnect : nsISupports
 
 
     [noscript,notxpcom,nostdcall] JSContextPtr getCurrentJSContext();
-    [noscript,notxpcom,nostdcall] JSContextPtr initSafeJSContext();
     [noscript,notxpcom,nostdcall] JSContextPtr getSafeJSContext();
 
     readonly attribute nsIStackFrame                CurrentJSStack;
