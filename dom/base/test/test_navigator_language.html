@@ -1,0 +1,227 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=889335
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for NavigatorLanguage</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=889335">Mozilla Bug 889335</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript;version=1.7">
+  "use strict";
+
+  SimpleTest.waitForExplicitFinish();
+
+  /** Test for NavigatorLanguage **/
+  var prefValue = null;
+  var actualLanguageChangesFromHandler = 0;
+  var actualLanguageChangesFromAVL = 0;
+  var expectedLanguageChanges = 0;
+
+  function setUp() {
+    try {
+      prefValue = SpecialPowers.getCharPref('intl.accept_languages');
+    } catch (e) {
+    }
+  }
+
+  function tearDown() {
+    SpecialPowers.setCharPref('intl.accept_languages', prefValue);
+  }
+
+  var testValues = [
+    { accept_languages: 'foo', language: 'foo', languages: ['foo'] },
+    { accept_languages: '', language: '', languages: [] },
+    { accept_languages: 'foo,bar', language: 'foo', languages: [ 'foo', 'bar' ] },
+    { accept_languages: '  foo , bar ', language: 'foo', languages: [ 'foo', 'bar' ] },
+    { accept_languages: '  foo ; bar ', language: 'foo ; bar', languages: [ 'foo ; bar' ] },
+    { accept_languages: '_foo_', language: '_foo_', languages: ['_foo_'] },
+    { accept_languages: 'en_', language: 'en-', languages: ['en-'] },
+    { accept_languages: 'en__', language: 'en-_', languages: ['en-_'] },
+    { accept_languages: 'en_US, fr_FR', language: 'en-US', languages: ['en-US', 'fr-FR'] },
+    { accept_languages: 'en_US_CA', language: 'en-US_CA', languages: ['en-US_CA'] },
+    { accept_languages: 'en_us-ca', language: 'en-US-CA', languages: ['en-US-CA'] },
+    { accept_languages: 'en_us-cal, en_us-c', language: 'en-US-cal', languages: ['en-US-cal', 'en-US-c'] },
+  ];
+
+  var currentTestIdx = 0;
+  var tests = [];
+  function nextTest() {
+    currentTestIdx++;
+    if (currentTestIdx >= tests.length) {
+      tearDown();
+      SimpleTest.finish();
+    }
+
+    tests[currentTestIdx]();
+  }
+
+  // Check that the API is there.
+  tests.push(function testAPIPresence() {
+    ok('language' in window.navigator);
+    ok('languages' in window.navigator);
+    ok('onlanguagechange' in window);
+
+    nextTest();
+  });
+
+  // Check that calling navigator.languages return the same array, unless there
+  // was a change.
+  tests.push(function testArrayCached() {
+    var previous = navigator.languages;
+    is(navigator.languages, navigator.languages, "navigator.languages is cached");
+    is(navigator.languages, previous, "navigator.languages is cached");
+
+    window.onlanguagechange = function() {
+      isnot(navigator.languages, previous, "navigator.languages cached value was updated");
+      window.onlanguagechange = null;
+
+      nextTest();
+    }
+
+    setTimeout(function() {
+      SpecialPowers.setCharPref('intl.accept_languages', 'testArrayCached');
+    }, 0);
+  });
+
+  // Test that event handler inside the <body> works as expected and that the
+  // event has the expected properties.
+  tests.push(function testEventProperties() {
+    document.body.setAttribute('onlanguagechange',
+      "document.body.removeAttribute('onlanguagechange');" +
+      "is(event.cancelable, false); is(event.bubbles, false);" +
+      "nextTest();");
+
+    setTimeout(function() {
+      SpecialPowers.setCharPref('intl.accept_languages', 'testEventProperties');
+    }, 0);
+  });
+
+  // Check that the returned values such as the behavior when the underlying
+  // languages change.
+  tests.push(function testBasicBehaviour() {
+    function checkIfDoneAndProceed() {
+      if (actualLanguageChangesFromHandler == actualLanguageChangesFromAVL) {
+        if (genEvents.next().done) {
+          window.onlanguagechange = null;
+          window.removeEventListener('languagechange', languageChangeAVL);
+          nextTest();
+        }
+      }
+    }
+    window.onlanguagechange = function() {
+      actualLanguageChangesFromHandler++;
+      checkIfDoneAndProceed();
+    }
+    function languageChangeAVL() {
+      actualLanguageChangesFromAVL++;
+      checkIfDoneAndProceed();
+    }
+    window.addEventListener('languagechange', languageChangeAVL);
+
+    function* testEvents() {
+      for (var i = 0; i < testValues.length; ++i) {
+        var data = testValues[i];
+        setTimeout(function(data) {
+          SpecialPowers.setCharPref('intl.accept_languages', data.accept_languages);
+        }, 0, data);
+        expectedLanguageChanges++;
+        yield undefined;
+
+        is(actualLanguageChangesFromAVL, expectedLanguageChanges);
+        is(actualLanguageChangesFromHandler, expectedLanguageChanges);
+
+        is(navigator.language, data.language);
+        is(navigator.languages.length, data.languages.length);
+        if (navigator.languages.length > 0) {
+          is(navigator.languages[0], navigator.language)
+        }
+        for (var j = 0; j < navigator.languages.length; ++j) {
+          is(navigator.languages[j], data.languages[j]);
+        }
+      }
+    }
+
+    var genEvents = testEvents();
+    genEvents.next();
+  });
+
+  // Check that the orientationchange event isn't sent twice if the preference
+  // is set to the same value.
+  tests.push(function testOnlyFireIfRealChange() {
+    function* changeLanguage() {
+      setTimeout(function() {
+        SpecialPowers.setCharPref('intl.accept_languages', 'fr-CA');
+      });
+      yield undefined;
+
+      setTimeout(function() {
+        // Twice the same change, should fire only one event.
+        SpecialPowers.setCharPref('intl.accept_languages', 'fr-CA');
+        setTimeout(function() {
+          // A real change to tell the test it should now count how many changes were
+          // received until now.
+          SpecialPowers.setCharPref('intl.accept_languages', 'fr-FR');
+        });
+      });
+      yield undefined;
+    }
+
+    var genChanges = changeLanguage();
+
+    var doubleEventCount = 0;
+    window.onlanguagechange = function() {
+      if (navigator.language == 'fr-FR') {
+        is(1, doubleEventCount);
+        window.onlanguagechange = null;
+        nextTest();
+        return;
+      }
+
+      if (navigator.language == 'fr-CA') {
+        doubleEventCount++;
+      }
+      genChanges.next();
+    }
+
+    genChanges.next();
+  });
+
+  // Check that there is no crash when a change happen after a window listening
+  // to them is killed.
+  tests.push(function testThatAddingAnEventDoesNotHaveSideEffects() {
+    var frame = document.createElement('iframe');
+    frame.src = 'data:text/html,<script>window.onlanguagechange=function(){}<\/script>';
+    document.body.appendChild(frame);
+
+    frame.contentWindow.onload = function() {
+      document.body.removeChild(frame);
+      frame = null;
+
+      SpecialPowers.exactGC(window, function() {
+        // This should not crash.
+        SpecialPowers.setCharPref('intl.accept_languages', 'en-GB');
+
+        nextTest();
+      });
+    }
+  });
+
+  // There is one test using document.body.
+  addLoadEvent(function() {
+    setUp();
+    tests[0]();
+  });
+
+</script>
+</body>
+</html>
