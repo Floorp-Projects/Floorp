@@ -198,8 +198,8 @@ public:
   nsresult TraverseRoots(nsCycleCollectionNoteRootCallback &aCb);
   bool UsefulToMergeZones() const;
   void FixWeakMappingGrayBits() const;
-  bool NeedCollect() const;
-  void Collect(uint32_t reason) const;
+  bool AreGCGrayBitsValid() const;
+  void GarbageCollect(uint32_t reason) const;
 
   void DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
                         DeferredFinalizeFunction aFunc,

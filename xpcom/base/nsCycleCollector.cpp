@@ -3213,7 +3213,7 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
   if (!aForceGC) {
     mJSRuntime->FixWeakMappingGrayBits();
 
-    bool needGC = mJSRuntime->NeedCollect();
+    bool needGC = !mJSRuntime->AreGCGrayBitsValid();
     // Only do a telemetry ping for non-shutdown CCs.
     CC_TELEMETRY(_NEED_GC, needGC);
     if (!needGC)
@@ -3222,7 +3222,7 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
   }
 
   TimeLog timeLog;
-  mJSRuntime->Collect(aForceGC ? JS::gcreason::SHUTDOWN_CC : JS::gcreason::CC_FORCED);
+  mJSRuntime->GarbageCollect(aForceGC ? JS::gcreason::SHUTDOWN_CC : JS::gcreason::CC_FORCED);
   timeLog.Checkpoint("GC()");
 }
 
