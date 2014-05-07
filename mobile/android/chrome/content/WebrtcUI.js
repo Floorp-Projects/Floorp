@@ -197,8 +197,8 @@ var WebrtcUI = {
     if (videoDevices.length > 1 || audioDevices.length > 0) {
       // Only show the No Video option if there are also Audio devices to choose from
       if (audioDevices.length > 0)
-        extraItems = [ Strings.browser.GetStringFromName("getUserMedia.videoDevice.none") ];
-      this._addDevicesToOptions(videoDevices, "videoDevice", options, extraItems);
+        extraItems = [ Strings.browser.GetStringFromName("getUserMedia.videoSource.none") ];
+      this._addDevicesToOptions(videoDevices, "videoSource", options, extraItems);
     }
 
     if (audioDevices.length > 1 || videoDevices.length > 0) {
