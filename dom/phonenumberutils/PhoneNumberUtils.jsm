@@ -14,8 +14,10 @@ const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-Cu.import("resource://gre/modules/PhoneNumberNormalizer.jsm");
-Cu.import("resource://gre/modules/mcc_iso3166_table.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PhoneNumberNormalizer",
+                                  "resource://gre/modules/PhoneNumberNormalizer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MCC_ISO3166_TABLE",
+                                  "resource://gre/modules/mcc_iso3166_table.jsm");
 
 #ifdef MOZ_B2G_RIL
 XPCOMUtils.defineLazyServiceGetter(this, "mobileConnection",
@@ -196,7 +198,8 @@ this.PhoneNumberUtils = {
 let inParent = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
                  .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 if (inParent) {
-  Cu.import("resource://gre/modules/PhoneNumber.jsm");
+  XPCOMUtils.defineLazyModuleGetter(this, "PhoneNumber",
+                                    "resource://gre/modules/PhoneNumber.jsm");
   XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                      "@mozilla.org/parentprocessmessagemanager;1",
                                      "nsIMessageListenerManager");
