@@ -7,7 +7,7 @@ import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.SparseArray;
+import android.util.SparseBooleanArray;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
@@ -19,16 +19,6 @@ import org.mozilla.gecko.db.BrowserDB.URLColumns;
  * entries.
  */
 public class TopSitesCursorWrapper implements Cursor {
-
-    private static class PinnedSite {
-        public final String title;
-        public final String url;
-
-        public PinnedSite(String title, String url) {
-            this.title = (title == null ? "" : title);
-            this.url = (url == null ? "" : url);
-        }
-    }
 
     private enum RowType {
         UNKNOWN,
@@ -42,46 +32,48 @@ public class TopSitesCursorWrapper implements Cursor {
     // The cursor for the top sites query
     private final Cursor topCursor;
 
+    // The cursor for the pinned sites query
+    private Cursor pinnedCursor;
+
     // Associates pinned sites and their respective positions
-    private SparseArray<PinnedSite> pinnedSites;
+    private SparseBooleanArray pinnedPositions;
 
     // Current position of the cursor
     private int currentPosition = -1;
 
     // The size of the cursor wrapper
-    private final int count;
+    private int count;
+
+    // The minimum size of the cursor wrapper
+    private final int minSize;
 
     public TopSitesCursorWrapper(Cursor pinnedCursor, Cursor topCursor, int minSize) {
         currentRowType = RowType.UNKNOWN;
 
-        setPinnedSites(pinnedCursor);
+        this.minSize = minSize;
         this.topCursor = topCursor;
+        this.pinnedCursor = pinnedCursor;
 
-        count = Math.max(minSize, pinnedSites.size() + topCursor.getCount());
+        updatePinnedPositions();
+        updateCount();
     }
 
-    public void setPinnedSites(Cursor c) {
-        pinnedSites = new SparseArray<PinnedSite>();
-
-        if (c == null) {
-            return;
+    private void updatePinnedPositions() {
+        if (pinnedPositions == null) {
+            pinnedPositions = new SparseBooleanArray();
+        } else {
+            pinnedPositions.clear();
         }
 
-        try {
-            if (c.getCount() <= 0) {
-                return;
-            }
+        pinnedCursor.moveToPosition(-1);
+        while (pinnedCursor.moveToNext()) {
+            int pos = pinnedCursor.getInt(pinnedCursor.getColumnIndex(Bookmarks.POSITION));
+            pinnedPositions.put(pos, true);
+        };
+    }
 
-            c.moveToPosition(0);
-            do {
-                final int pos = c.getInt(c.getColumnIndex(Bookmarks.POSITION));
-                final String url = c.getString(c.getColumnIndex(URLColumns.URL));
-                final String title = c.getString(c.getColumnIndex(URLColumns.TITLE));
-                pinnedSites.put(pos, new PinnedSite(title, url));
-            } while (c.moveToNext());
-        } finally {
-            c.close();
-        }
+    private void updateCount() {
+        count = Math.max(minSize, pinnedCursor.getCount() + topCursor.getCount());
     }
 
     public boolean isPinned() {
@@ -89,7 +81,7 @@ public class TopSitesCursorWrapper implements Cursor {
     }
 
     private void updateRowType() {
-        if (pinnedSites.get(currentPosition) != null) {
+        if (!pinnedCursor.isBeforeFirst() && !pinnedCursor.isAfterLast()) {
             currentRowType = RowType.PINNED;
         } else if (!topCursor.isBeforeFirst() && !topCursor.isAfterLast()) {
             currentRowType = RowType.TOP;
@@ -101,7 +93,7 @@ public class TopSitesCursorWrapper implements Cursor {
     private int getPinnedBefore(int position) {
         int numFound = 0;
         for (int i = 0; i < position; i++) {
-            if (pinnedSites.get(i) != null) {
+            if (pinnedPositions.get(i)) {
                 numFound++;
             }
         }
@@ -182,6 +174,12 @@ public class TopSitesCursorWrapper implements Cursor {
             topCursor.moveToPosition(p2);
         }
 
+        if (pinnedPositions.get(position)) {
+            pinnedCursor.moveToPosition(pinnedPositions.indexOfKey(position));
+        } else {
+            pinnedCursor.moveToPosition(-1);
+        }
+
         updateRowType();
 
         return (!isBeforeFirst() && !isAfterLast());
@@ -212,11 +210,10 @@ public class TopSitesCursorWrapper implements Cursor {
                 return topCursor.getString(columnIndex);
 
             case PINNED:
-                final PinnedSite site = pinnedSites.get(currentPosition);
                 if (columnIndex == topCursor.getColumnIndex(URLColumns.URL)) {
-                    return site.url;
+                    return pinnedCursor.getString(pinnedCursor.getColumnIndex(URLColumns.URL));
                 } else if (columnIndex == topCursor.getColumnIndex(URLColumns.TITLE)) {
-                    return site.title;
+                    return pinnedCursor.getString(pinnedCursor.getColumnIndex(URLColumns.TITLE));
                 }
                 break;
         }
@@ -299,7 +296,12 @@ public class TopSitesCursorWrapper implements Cursor {
 
     @Override
     public boolean requery() {
-        return topCursor.requery();
+        boolean result = topCursor.requery() && pinnedCursor.requery();
+
+        updatePinnedPositions();
+        updateCount();
+
+        return result;
     }
 
     @Override
@@ -327,36 +329,42 @@ public class TopSitesCursorWrapper implements Cursor {
     @Override
     public void registerContentObserver(ContentObserver observer) {
         topCursor.registerContentObserver(observer);
+        pinnedCursor.registerContentObserver(observer);
     }
 
     @Override
     public void unregisterContentObserver(ContentObserver observer) {
         topCursor.unregisterContentObserver(observer);
+        pinnedCursor.unregisterContentObserver(observer);
     }
 
     @Override
     public void registerDataSetObserver(DataSetObserver observer) {
         topCursor.registerDataSetObserver(observer);
+        pinnedCursor.registerDataSetObserver(observer);
     }
 
     @Override
     public void unregisterDataSetObserver(DataSetObserver observer) {
         topCursor.unregisterDataSetObserver(observer);
+        pinnedCursor.unregisterDataSetObserver(observer);
     }
 
     @Override
     public void deactivate() {
         topCursor.deactivate();
+        pinnedCursor.deactivate();
     }
 
     @Override
     public boolean isClosed() {
-        return topCursor.isClosed();
+        return topCursor.isClosed() && pinnedCursor.isClosed();
     }
 
     @Override
     public void close() {
         topCursor.close();
-        pinnedSites = null;
+        pinnedCursor.close();
+        pinnedPositions = null;
     }
 }
