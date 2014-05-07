@@ -4123,4 +4123,4 @@ pref("beacon.enabled", true);
 
 // Camera prefs
 pref("camera.control.autofocus_moving_callback.enabled", false);
-pref("camera.control.face_detection.enabled", false);
+pref("camera.control.face_detection.enabled", true);
