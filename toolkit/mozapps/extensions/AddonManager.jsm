@@ -479,7 +479,6 @@ var AddonManagerInternal = {
   // Store telemetry details per addon provider
   telemetryDetails: {},
 
-
   // A read-only wrapper around the types dictionary
   typesProxy: Proxy.create({
     getOwnPropertyDescriptor: function typesProxy_getOwnPropertyDescriptor(aName) {
@@ -1134,13 +1133,15 @@ var AddonManagerInternal = {
   /**
    * Performs a background update check by starting an update for all add-ons
    * that can be updated.
-   * @return Promise{null} resolves when the background update check is complete
-   *                       (including all addon installs)
+   * @return Promise{null} Resolves when the background update check is complete
+   *                       (the resulting addon installations may still be in progress).
    */
   backgroundUpdateCheck: function AMI_backgroundUpdateCheck() {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
+
+    logger.debug("Background update check beginning");
 
     return Task.spawn(function* backgroundUpdateTask() {
       let hotfixID = this.hotfixID;
@@ -1284,6 +1285,7 @@ var AddonManagerInternal = {
         }
       }
 
+      logger.debug("Background update check complete");
       Services.obs.notifyObservers(null,
                                    "addons-background-update-complete",
                                    null);
@@ -2326,7 +2328,7 @@ this.AddonManagerPrivate = {
   },
 
   backgroundUpdateCheck: function AMP_backgroundUpdateCheck() {
-    AddonManagerInternal.backgroundUpdateCheck();
+    return AddonManagerInternal.backgroundUpdateCheck();
   },
 
   addStartupChange: function AMP_addStartupChange(aType, aID) {
