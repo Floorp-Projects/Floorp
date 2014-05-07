@@ -32,11 +32,15 @@ X11TextureSourceBasic::GetFormat() const
 }
 
 SourceSurface*
-X11TextureSourceBasic::GetSurface()
+X11TextureSourceBasic::GetSurface(DrawTarget* aTarget)
 {
   if (!mSourceSurface) {
-    mSourceSurface =
-      Factory::CreateSourceSurfaceForCairoSurface(mSurface->CairoSurface(), GetFormat());
+    NativeSurface surf;
+    surf.mFormat = GetFormat();
+    surf.mType = NativeSurfaceType::CAIRO_SURFACE;
+    surf.mSurface = mSurface->CairoSurface();
+    surf.mSize = GetSize();
+    mSourceSurface = aTarget->CreateSourceSurfaceFromNativeSurface(surf);
   }
   return mSourceSurface;
 }
