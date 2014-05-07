@@ -52,6 +52,7 @@ interface NavigatorID {
 [NoInterfaceObject]
 interface NavigatorLanguage {
   readonly attribute DOMString? language;
+  [Pure, Cached, Frozen] readonly attribute sequence<DOMString> languages;
 };
 
 [NoInterfaceObject]
