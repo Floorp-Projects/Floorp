@@ -142,6 +142,9 @@ nsXPConnect::InitStatics()
     // Fire up the SSM.
     nsScriptSecurityManager::InitStatics();
     gScriptSecurityManager = nsScriptSecurityManager::GetScriptSecurityManager();
+
+    // Initialize the SafeJSContext.
+    gSelf->mRuntime->GetJSContextStack()->InitSafeJSContext();
 }
 
 nsXPConnect*
@@ -1203,13 +1206,6 @@ JSContext*
 nsXPConnect::GetCurrentJSContext()
 {
     return GetRuntime()->GetJSContextStack()->Peek();
-}
-
-/* virtual */
-JSContext*
-nsXPConnect::InitSafeJSContext()
-{
-    return GetRuntime()->GetJSContextStack()->InitSafeJSContext();
 }
 
 /* virtual */
