@@ -245,10 +245,8 @@ struct AssemblerBuffer
     // Break the instruction stream so we can go back and edit it at this point
     void perforate() {
         Slice *tmp = newSlice(LifoAlloc_);
-        if (!tmp) {
+        if (!tmp)
             m_oom = true;
-            return;
-        }
         bufferSize += tail->size();
         tail->setNext(tmp);
         tail = tmp;
