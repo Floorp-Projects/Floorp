@@ -53,7 +53,6 @@ if (!this.debug) {
 }
 
 let RIL_CELLBROADCAST_DISABLED;
-let RIL_CLIR_MODE;
 let RIL_EMERGENCY_NUMBERS;
 const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
 
@@ -226,7 +225,6 @@ function RilObject(aContext) {
   // Init properties that are only initialized once.
   this.v5Legacy = RILQUIRKS_V5_LEGACY;
   this.cellBroadcastDisabled = RIL_CELLBROADCAST_DISABLED;
-  this.clirMode = RIL_CLIR_MODE;
 
   this._hasHangUpPendingOutgoingCall = false;
 }
@@ -270,11 +268,6 @@ RilObject.prototype = {
    * Global Cell Broadcast switch.
    */
   cellBroadcastDisabled: false,
-
-  /**
-   * Global CLIR mode settings.
-   */
-  clirMode: CLIR_DEFAULT,
 
   /**
    * Parsed Cell Broadcast search lists.
@@ -1121,13 +1114,10 @@ RilObject.prototype = {
    *        nsIDOMMozMobileConnection interface.
    */
   setCLIR: function(options) {
-    if (options) {
-      this.clirMode = options.clirMode;
-    }
     let Buf = this.context.Buf;
     Buf.newParcel(REQUEST_SET_CLIR, options);
     Buf.writeInt32(1);
-    Buf.writeInt32(this.clirMode);
+    Buf.writeInt32(options.clirMode);
     Buf.sendParcel();
   },
 
@@ -6489,7 +6479,6 @@ RilObject.prototype[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLIC
     this.getBasebandVersion();
     this.updateCellBroadcastConfig();
     this.setPreferredNetworkType();
-    this.setCLIR();
     if ((RILQUIRKS_DATA_REGISTRATION_ON_DEMAND ||
          RILQUIRKS_SUBSCRIPTION_CONTROL) &&
         this._attachDataRegistration) {
@@ -14747,7 +14736,6 @@ let ContextPool = {
     DEBUG = DEBUG_WORKER || aOptions.debug;
     RIL_EMERGENCY_NUMBERS = aOptions.rilEmergencyNumbers;
     RIL_CELLBROADCAST_DISABLED = aOptions.cellBroadcastDisabled;
-    RIL_CLIR_MODE = aOptions.clirMode;
 
     let quirks = aOptions.quirks;
     RILQUIRKS_CALLSTATE_EXTRA_UINT32 = quirks.callstateExtraUint32;
