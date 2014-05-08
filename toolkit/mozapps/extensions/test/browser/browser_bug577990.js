@@ -40,7 +40,7 @@ function install_locale(aCallback) {
   gInstall.addTestListener({
     onInstallEnded: function(aInstall) {
       gInstall.removeTestListener(this);
-      executeSoon(aCallback);
+      aCallback();
     }
   });
   gInstall.install();
