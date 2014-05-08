@@ -673,7 +673,7 @@ function do_report_unexpected_exception(ex, text) {
   text = text ? text + " - " : "";
 
   _passed = false;
-  _log_message_with_stack("test_unexpected_fail", ex, ex.stack,
+  _log_message_with_stack("test_unexpected_fail", ex, ex.stack || "",
                           caller_stack.filename, text + "Unexpected exception ");
   _do_quit();
   throw Components.results.NS_ERROR_ABORT;

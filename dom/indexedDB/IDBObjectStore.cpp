@@ -777,8 +777,8 @@ public:
 
     nsRefPtr<FileInfo>& fileInfo = aFile.mFileInfo;
 
-    nsRefPtr<IDBFileHandle> fileHandle = IDBFileHandle::Create(aDatabase,
-      aData.name, aData.type, fileInfo.forget());
+    nsRefPtr<IDBFileHandle> fileHandle = IDBFileHandle::Create(aData.name,
+      aData.type, aDatabase, fileInfo.forget());
 
     return fileHandle->WrapObject(aCx);
   }
@@ -1560,7 +1560,7 @@ IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
   IDBTransaction* transaction = cloneWriteInfo->mTransaction;
   FileManager* fileManager = transaction->Database()->Manager();
 
-  file::FileHandle* fileHandle = nullptr;
+  FileHandle* fileHandle = nullptr;
   if (NS_SUCCEEDED(UNWRAP_OBJECT(FileHandle, aObj, fileHandle))) {
     nsRefPtr<FileInfo> fileInfo = fileHandle->GetFileInfo();
 
