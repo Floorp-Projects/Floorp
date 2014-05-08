@@ -280,6 +280,11 @@ ProcessOrDeferMessage(HWND hwnd,
     case WM_SYNCPAINT:
       return 0;
 
+    // This message causes QuickTime to make re-entrant calls.
+    // Simply discarding it doesn't seem to hurt anything.
+    case WM_APP-1:
+      return 0;
+
     default: {
       if (uMsg && uMsg == mozilla::widget::sAppShellGeckoMsgId) {
         // Widget's registered native event callback
@@ -390,8 +395,10 @@ WindowIsDeferredWindow(HWND hWnd)
 
   // Plugin windows that can trigger ipc calls in child:
   // 'ShockwaveFlashFullScreen' - flash fullscreen window
+  // 'QTNSHIDDEN' - QuickTime
   // 'AGFullScreenWinClass' - silverlight fullscreen window
   if (className.EqualsLiteral("ShockwaveFlashFullScreen") ||
+      className.EqualsLiteral("QTNSHIDDEN") ||
       className.EqualsLiteral("AGFullScreenWinClass")) {
     return true;
   }
