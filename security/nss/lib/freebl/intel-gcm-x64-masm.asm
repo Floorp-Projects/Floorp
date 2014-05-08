@@ -1259,12 +1259,6 @@ LDecDataTail:
         inc KS
         jmp @b
 @@:
-        cmp KS, 16
-        je  @f
-        mov BYTE PTR[rsp + KS], 0
-        inc KS
-        jmp @b
-@@:
 
 LDecDataEnd:
 
