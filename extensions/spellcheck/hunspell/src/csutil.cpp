@@ -83,13 +83,12 @@ struct unicode_info {
 
 #ifdef MOZILLA_CLIENT
 #include "nsCOMPtr.h"
-#include "nsServiceManagerUtils.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsUnicharUtils.h"
-#include "nsICharsetConverterManager.h"
+#include "mozilla/dom/EncodingUtils.h"
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+using mozilla::dom::EncodingUtils;
 #endif
 
 struct unicode_info2 {
@@ -5536,21 +5535,16 @@ struct cs_info * get_current_cs(const char * es) {
   nsCOMPtr<nsIUnicodeDecoder> decoder; 
 
   nsresult rv;
-  nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &rv);
-  if (NS_FAILED(rv))
-    return ccs;
 
-  rv = ccm->GetUnicodeEncoder(es, getter_AddRefs(encoder));
-  if (NS_FAILED(rv))
+  nsAutoCString label(es);
+  nsAutoCString encoding;
+  if (!EncodingUtils::FindEncodingForLabelNoReplacement(label, encoding)) {
     return ccs;
+  }
+  encoder = EncodingUtils::EncoderForEncoding(encoding);
+  decoder = EncodingUtils::DecoderForEncoding(encoding);
   encoder->SetOutputErrorBehavior(encoder->kOnError_Signal, nullptr, '?');
-  rv = ccm->GetUnicodeDecoder(es, getter_AddRefs(decoder));
-  if (NS_FAILED(rv))
-    return ccs;
   decoder->SetInputErrorBehavior(decoder->kOnError_Signal);
-
-  if (NS_FAILED(rv))
-    return ccs;
 
   for (unsigned int i = 0; i <= 0xff; ++i) {
     bool success = false;

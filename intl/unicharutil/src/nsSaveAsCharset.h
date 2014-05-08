@@ -9,7 +9,7 @@
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nsISaveAsCharset.h"
-
+#include "nsCOMPtr.h"
 
 #define MASK_FALLBACK(a) (nsISaveAsCharset::mask_Fallback & (a))
 #define MASK_ENTITY(a) (nsISaveAsCharset::mask_Entity & (a))

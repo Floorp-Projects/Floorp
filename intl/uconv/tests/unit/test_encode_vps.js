@@ -9,5 +9,5 @@ const expectedString = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGH
 const aliases = [ "x-viet-vps" ];
 
 function run_test() {
-  testEncodeAliases();
+  testEncodeAliasesInternal();
 }

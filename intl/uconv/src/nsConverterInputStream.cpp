@@ -5,11 +5,12 @@
 
 #include "nsConverterInputStream.h"
 #include "nsIInputStream.h"
-#include "nsICharsetConverterManager.h"
 #include "nsReadLine.h"
 #include "nsStreamUtils.h"
-#include "nsServiceManagerUtils.h"
 #include <algorithm>
+#include "mozilla/dom/EncodingUtils.h"
+
+using mozilla::dom::EncodingUtils;
 
 #define CONVERTER_BUFFER_SIZE 8192
 
@@ -23,22 +24,25 @@ nsConverterInputStream::Init(nsIInputStream* aStream,
                              int32_t aBufferSize,
                              char16_t aReplacementChar)
 {
-    static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
-    if (!aCharset)
-        aCharset = "UTF-8";
-
-    nsresult rv;
+    nsAutoCString label;
+    if (!aCharset) {
+        label.AssignLiteral("UTF-8");
+    } else {
+        label = aCharset;
+    }
 
     if (aBufferSize <=0) aBufferSize=CONVERTER_BUFFER_SIZE;
     
     // get the decoder
-    nsCOMPtr<nsICharsetConverterManager> ccm =
-        do_GetService(kCharsetConverterManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = ccm->GetUnicodeDecoder(aCharset ? aCharset : "ISO-8859-1", getter_AddRefs(mConverter));
-    if (NS_FAILED(rv)) return rv;
+    nsAutoCString encoding;
+    if (label.EqualsLiteral("UTF-16")) {
+        // Compat with old test cases. Unclear if any extensions really care.
+        encoding.Assign(label);
+    } else if (!EncodingUtils::FindEncodingForLabelNoReplacement(label,
+                                                                 encoding)) {
+      return NS_ERROR_UCONV_NOCONV;
+    }
+    mConverter = EncodingUtils::DecoderForEncoding(encoding);
  
     // set up our buffers
     if (!mByteData.SetCapacity(aBufferSize) ||

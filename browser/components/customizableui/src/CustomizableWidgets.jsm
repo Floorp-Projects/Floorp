@@ -20,9 +20,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
   "resource://gre/modules/ShortcutUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
   "resource://gre/modules/CharsetMenu.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "CharsetManager",
-                                   "@mozilla.org/charset-converter-manager;1",
-                                   "nsICharsetConverterManager");
 
 XPCOMUtils.defineLazyGetter(this, "CharsetBundle", function() {
   const kCharsetBundle = "chrome://global/locale/charsetMenu.properties";
