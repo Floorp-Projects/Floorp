@@ -49,6 +49,10 @@ public interface TelemetryContract {
 
         // Generic action, usually for tracking menu and toolbar actions.
         public static final String ACTION = "action.1";
+
+        // Launching (opening) an external application
+        // Note: Only used in JavaScript for now, but here for completeness.
+        public static final String LAUNCH = "launch.1";
     }
 
     /**
@@ -82,6 +86,10 @@ public interface TelemetryContract {
 
         // Action triggered from a suggestion provided to the user.
         public static final String SUGGESTION = "suggestion";
+
+        // Action triggered from a pageaction in the URLBar.
+        // Note: Only used in JavaScript for now, but here for completeness.
+        public static final String PAGEACTION = "pageaction";
     }
 
     /**
@@ -101,10 +109,10 @@ public interface TelemetryContract {
         public static final String READER = "reader.1";
 
         // URL bar focused.
-        public static final String URLBAR_FOCUSED = "urlbar.1:";
+        public static final String URLBAR_FOCUSED = "urlbar.1";
 
         // Awesomescreen frecency search is active.
-        public static final String FRECENCY = "frecency.1:";
+        public static final String FRECENCY = "frecency.1";
     }
 
     /**
