@@ -405,12 +405,13 @@ let StyleSheetActor = protocol.ActorClass({
     }
 
     let docHref;
-    if (this.rawSheet.ownerNode) {
-      if (this.rawSheet.ownerNode instanceof Ci.nsIDOMHTMLDocument) {
-        docHref = this.rawSheet.ownerNode.location.href;
+    let ownerNode = this.rawSheet.ownerNode;
+    if (ownerNode) {
+      if (ownerNode instanceof Ci.nsIDOMHTMLDocument) {
+        docHref = ownerNode.location.href;
       }
-      if (this.rawSheet.ownerNode.ownerDocument) {
-        docHref = this.rawSheet.ownerNode.ownerDocument.location.href;
+      else if (ownerNode.ownerDocument && ownerNode.ownerDocument.location) {
+        docHref = ownerNode.ownerDocument.location.href;
       }
     }
 
@@ -845,6 +846,11 @@ let OriginalSourceActor = protocol.ActorClass({
   _getText: function() {
     if (this.text) {
       return promise.resolve(this.text);
+    }
+    let content = this.sourceMap.sourceContentFor(this.url);
+    if (content) {
+      this.text = content;
+      return promise.resolve(content);
     }
     return fetch(this.url, { window: this.window }).then(({content}) => {
       this.text = content;
