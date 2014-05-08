@@ -32,3 +32,26 @@ FRAGMENT(Root, HeapSlot) {
   (void) plinth;
   (void) array;
 }
+
+FRAGMENT(Root, barriers) {
+  JSObject *obj = JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr());
+  js::PreBarriered<JSObject *> prebarriered(obj);
+  js::HeapPtr<JSObject *> heapptr(obj);
+  js::RelocatablePtr<JSObject *> relocatable(obj);
+
+  JS::Value val = ObjectValue(*obj);
+  js::PreBarrieredValue prebarrieredValue(ObjectValue(*obj));
+  js::HeapValue heapValue(ObjectValue(*obj));
+  js::RelocatableValue relocatableValue(ObjectValue(*obj));
+
+  breakpoint();
+
+  (void) prebarriered;
+  (void) heapptr;
+  (void) relocatable;
+  (void) val;
+  (void) prebarrieredValue;
+  (void) heapValue;
+  (void) relocatableValue;
+}
+
