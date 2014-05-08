@@ -46,15 +46,22 @@ DEFINES += -DENABLE_MARIONETTE=1
 endif
 
 ifdef MOZ_PKG_MANIFEST_P
-$(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) $(GLOBAL_DEPS)
+# When MOZ_CHROME_MULTILOCALE is defined, we write multilocale.json like:
+# {"locales": ["en-US", "de", "ar", ...]}
+
+$(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) $(GLOBAL_DEPS) FORCE
 	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $< -o $@)
 ifdef MOZ_CHROME_MULTILOCALE
 	printf '\n[multilocale]\n' >> $@
+	printf '@BINPATH@/res/multilocale.json\n' >> $@
 	for LOCALE in en-US $(MOZ_CHROME_MULTILOCALE) ;\
 	do \
 	  printf '$(BINPATH)/chrome/'"$$LOCALE"'$(JAREXT)\n' >> $@; \
 	  printf '$(BINPATH)/chrome/'"$$LOCALE"'.manifest\n' >> $@; \
 	done
+	COMMA=,
+	echo '{"locales": [$(foreach l,$(MOZ_CHROME_MULTILOCALE),"$(l)"$(COMMA)) "en-US"]}' \
+	  > $(FINAL_TARGET)/res/multilocale.json
 endif
 
 GARBAGE += $(MOZ_PKG_MANIFEST)

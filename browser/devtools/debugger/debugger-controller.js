@@ -785,13 +785,9 @@ StackFrames.prototype = {
     if (!isClientEval && !isPopupShown) {
       // Move the editor's caret to the proper url and line.
       DebuggerView.setEditorLocation(where.url, where.line);
-    } else {
-      // Highlight the line where the execution is paused in the editor.
-      DebuggerView.setEditorLocation(where.url, where.line, { noCaret: true });
+      // Highlight the breakpoint at the specified url and line if it exists.
+      DebuggerView.Sources.highlightBreakpoint(where, { noEditorUpdate: true });
     }
-
-    // Highlight the breakpoint at the line and column if it exists.
-    DebuggerView.Sources.highlightBreakpointAtCursor();
 
     // Don't display the watch expressions textbox inputs in the pane.
     DebuggerView.WatchExpressions.toggleContents(false);
