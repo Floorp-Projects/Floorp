@@ -6,8 +6,10 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 let tmp = {};
 Components.utils.import("resource://gre/modules/AddonManager.jsm", tmp);
+Components.utils.import("resource://gre/modules/Log.jsm", tmp);
 let AddonManager = tmp.AddonManager;
 let AddonManagerPrivate = tmp.AddonManagerPrivate;
+let Log = tmp.Log;
 
 var pathParts = gTestPath.split("/");
 // Drop the test filename
@@ -124,17 +126,16 @@ registerCleanupFunction(function() {
   checkOpenWindows("Addons:Compatibility");
   checkOpenWindows("Addons:Install");
 
-  // We can for now know that getAllInstalls actually calls its callback before
-  // it returns so this will complete before the next test start.
-  AddonManager.getAllInstalls(function(aInstalls) {
-    for (let install of aInstalls) {
-      if (install instanceof MockInstall)
-        continue;
+  return new Promise((resolve, reject) => AddonManager.getAllInstalls(resolve))
+    .then(aInstalls => {
+      for (let install of aInstalls) {
+        if (install instanceof MockInstall)
+          continue;
 
-      ok(false, "Should not have seen an install of " + install.sourceURI.spec + " in state " + install.state);
-      install.cancel();
-    }
-  });
+        ok(false, "Should not have seen an install of " + install.sourceURI.spec + " in state " + install.state);
+        install.cancel();
+      }
+    });
 });
 
 function log_exceptions(aCallback, ...aArgs) {
@@ -583,6 +584,7 @@ function MockProvider(aUseAsyncCallbacks, aTypes) {
   this.addons = [];
   this.installs = [];
   this.callbackTimers = [];
+  this.timerLocations = new Map();
   this.useAsyncCallbacks = (aUseAsyncCallbacks === undefined) ? true : aUseAsyncCallbacks;
   this.types = (aTypes === undefined) ? [{
     id: "extension",
@@ -606,6 +608,7 @@ MockProvider.prototype = {
   started: null,
   apiDelay: 10,
   callbackTimers: null,
+  timerLocations: null,
   useAsyncCallbacks: null,
   types: null,
 
@@ -786,11 +789,20 @@ MockProvider.prototype = {
     if (this.callbackTimers.length) {
       info("MockProvider: pending callbacks at shutdown(): calling immediately");
     }
-    for (let timer of this.callbackTimers) {
-      timer.callback();
-      timer.cancel();
+    while (this.callbackTimers.length > 0) {
+      // When we notify the callback timer, it removes itself from our array
+      let timer = this.callbackTimers[0];
+      try {
+        let setAt = this.timerLocations.get(timer);
+        info("Notifying timer set at " + (setAt || "unknown location"));
+        timer.callback.notify(timer);
+        timer.cancel();
+      } catch(e) {
+        info("Timer notify failed: " + e);
+      }
     }
     this.callbackTimers = [];
+    this.timerLocations = null;
 
     this.started = false;
   },
@@ -973,21 +985,26 @@ MockProvider.prototype = {
    */
   _delayCallback: function MP_delayCallback(aCallback, ...aArgs) {
     if (!this.useAsyncCallbacks) {
-      aCallback.apply(null, aArgs);
+      aCallback(...aArgs);
       return;
     }
 
-    var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     // Need to keep a reference to the timer, so it doesn't get GC'ed
     this.callbackTimers.push(timer);
+    // Capture a stack trace where the timer was set
+    // needs the 'new Error' hack until bug 1007656
+    this.timerLocations.set(timer, Log.stackTrace(new Error("dummy")));
     timer.initWithCallback(() => {
       let idx = this.callbackTimers.indexOf(timer);
       if (idx == -1) {
-        info("MockProvider._delayCallback lost track of a timer.");
+        dump("MockProvider._delayCallback lost track of timer set at "
+             + (this.timerLocations.get(timer) || "unknown location") + "\n");
       } else {
         this.callbackTimers.splice(idx, 1);
       }
-      aCallback.apply(null, aArgs);
+      this.timerLocations.delete(timer);
+      aCallback(...aArgs);
     }, this.apiDelay, timer.TYPE_ONE_SHOT);
   }
 };

@@ -106,7 +106,7 @@ static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { FloatRegisters::inval
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = v1;
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = v0;
 static MOZ_CONSTEXPR_VAR Register StackPointer = sp;
-static MOZ_CONSTEXPR_VAR Register FramePointer = fp;
+static MOZ_CONSTEXPR_VAR Register FramePointer = InvalidReg;
 static MOZ_CONSTEXPR_VAR Register ReturnReg = v0;
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloatReg = { FloatRegisters::f0 };
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloatReg = { FloatRegisters::f18 };
@@ -171,7 +171,7 @@ static const uint32_t RDBits = 5;
 static const uint32_t SAShift = 6;
 static const uint32_t SABits = 5;
 static const uint32_t FunctionShift = 0;
-static const uint32_t FunctionBits = 5;
+static const uint32_t FunctionBits = 6;
 static const uint32_t Imm16Shift = 0;
 static const uint32_t Imm16Bits = 16;
 static const uint32_t Imm26Shift = 0;
@@ -381,19 +381,19 @@ class BOffImm16
 
   public:
     uint32_t encode() {
-        JS_ASSERT(!isInvalid());
+        MOZ_ASSERT(!isInvalid());
         return data;
     }
     int32_t decode() {
-        JS_ASSERT(!isInvalid());
+        MOZ_ASSERT(!isInvalid());
         return (int32_t(data << 18) >> 16) + 4;
     }
 
     explicit BOffImm16(int offset)
       : data ((offset - 4) >> 2 & Imm16Mask)
     {
-        JS_ASSERT((offset & 0x3) == 0);
-        JS_ASSERT(isInRange(offset));
+        MOZ_ASSERT((offset & 0x3) == 0);
+        MOZ_ASSERT(isInRange(offset));
     }
     static bool isInRange(int offset) {
         if ((offset - 4) < (INT16_MIN << 2))
@@ -422,19 +422,19 @@ class JOffImm26
 
   public:
     uint32_t encode() {
-        JS_ASSERT(!isInvalid());
+        MOZ_ASSERT(!isInvalid());
         return data;
     }
     int32_t decode() {
-        JS_ASSERT(!isInvalid());
+        MOZ_ASSERT(!isInvalid());
         return (int32_t(data << 8) >> 6) + 4;
     }
 
     explicit JOffImm26(int offset)
       : data ((offset - 4) >> 2 & Imm26Mask)
     {
-        JS_ASSERT((offset & 0x3) == 0);
-        JS_ASSERT(isInRange(offset));
+        MOZ_ASSERT((offset & 0x3) == 0);
+        MOZ_ASSERT(isInRange(offset));
     }
     static bool isInRange(int offset) {
         if ((offset - 4) < -536870912)
@@ -527,35 +527,35 @@ class Operand
     }
 
     Register toReg() const {
-        JS_ASSERT(tag == REG);
+        MOZ_ASSERT(tag == REG);
         return Register::FromCode(reg);
     }
 
     FloatRegister toFReg() const {
-        JS_ASSERT(tag == FREG);
+        MOZ_ASSERT(tag == FREG);
         return FloatRegister::FromCode(reg);
     }
 
     void toAddr(Register *r, Imm32 *dest) const {
-        JS_ASSERT(tag == MEM);
+        MOZ_ASSERT(tag == MEM);
         *r = Register::FromCode(reg);
         *dest = Imm32(offset);
     }
     Address toAddress() const {
-        JS_ASSERT(tag == MEM);
+        MOZ_ASSERT(tag == MEM);
         return Address(Register::FromCode(reg), offset);
     }
     int32_t disp() const {
-        JS_ASSERT(tag == MEM);
+        MOZ_ASSERT(tag == MEM);
         return offset;
     }
 
     int32_t base() const {
-        JS_ASSERT(tag == MEM);
+        MOZ_ASSERT(tag == MEM);
         return reg;
     }
     Register baseReg() const {
-        JS_ASSERT(tag == MEM);
+        MOZ_ASSERT(tag == MEM);
         return Register::FromCode(reg);
     }
 };
@@ -856,7 +856,7 @@ class Assembler : public AssemblerShared
     // This is used to access the odd regiter form the pair of single
     // precision registers that make one double register.
     FloatRegister getOddPair(FloatRegister reg) {
-        JS_ASSERT(reg.code() % 2 == 0);
+        MOZ_ASSERT(reg.code() % 2 == 0);
         return FloatRegister::FromCode(reg.code() + 1);
     }
 
@@ -1227,7 +1227,7 @@ GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register *out)
 {
     // NOTE: We can't properly determine which regs are used if there are
     // float arguments. If this is needed, we will have to guess.
-    JS_ASSERT(usedFloatArgs == 0);
+    MOZ_ASSERT(usedFloatArgs == 0);
 
     if (GetIntArgReg(usedIntArgs, out))
         return true;
@@ -1244,7 +1244,7 @@ GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register *out)
 static inline uint32_t
 GetArgStackDisp(uint32_t usedArgSlots)
 {
-    JS_ASSERT(usedArgSlots >= NumIntArgRegs);
+    MOZ_ASSERT(usedArgSlots >= NumIntArgRegs);
     // Even register arguments have place reserved on stack.
     return usedArgSlots * sizeof(intptr_t);
 }

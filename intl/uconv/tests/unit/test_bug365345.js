@@ -20,8 +20,8 @@ const expectedMonospace9 = "Hello9Monospace9";
 const EntityAfterCharsetConv = 512;
 const transliterate = 8;
 
-const charset = "ISO-8859-1";
-    
+const charset = "ISO-8859-2";
+
 function run_test() {
     var SaveAsCharset =
 	Components.Constructor("@mozilla.org/intl/saveascharset;1",

@@ -68,8 +68,11 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
 
   // Get the content and frame of the accessible. In the case of document
   // accessible it's role content and root frame.
-  nsIContent *hyperTextElm = mHyperTextAcc->GetContent();
-  nsIFrame *rootFrame = mHyperTextAcc->GetFrame();
+  nsIContent* hyperTextElm = mHyperTextAcc->GetContent();
+  if (!hyperTextElm)
+    return; // XXX: we don't support text attrs on document with no body
+
+  nsIFrame* rootFrame = mHyperTextAcc->GetFrame();
   NS_ASSERTION(rootFrame, "No frame for accessible!");
   if (!rootFrame)
     return;
