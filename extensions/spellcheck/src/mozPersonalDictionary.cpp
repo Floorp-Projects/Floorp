@@ -8,7 +8,6 @@
 #include "nsReadableUtils.h"
 #include "nsIFile.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"

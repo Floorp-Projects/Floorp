@@ -9,5 +9,5 @@ const expectedString = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUV
 const aliases = [ "x-mac-gurmukhi" ];
 
 function run_test() {
-  testEncodeAliases();
+  testEncodeAliasesInternal();
 }

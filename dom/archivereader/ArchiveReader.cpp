@@ -36,8 +36,8 @@ ArchiveReader::Constructor(const GlobalObject& aGlobal,
   }
 
   nsAutoCString encoding;
-  if (!EncodingUtils::FindEncodingForLabel(aOptions.mEncoding, encoding) ||
-      encoding.EqualsLiteral("replacement")) {
+  if (!EncodingUtils::FindEncodingForLabelNoReplacement(aOptions.mEncoding,
+                                                        encoding)) {
     aError.ThrowTypeError(MSG_ENCODING_NOT_SUPPORTED, &aOptions.mEncoding);
     return nullptr;
   }

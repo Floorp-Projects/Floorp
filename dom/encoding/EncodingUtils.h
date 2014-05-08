@@ -27,7 +27,7 @@ public:
    * our internal implementations.
    *
    * @param      aLabel, incoming label describing charset to be decoded.
-   * @param      aRetEncoding, returning corresponding encoding for label.
+   * @param      aOutEncoding, returning corresponding encoding for label.
    * @return     false if no encoding was found for label.
    *             true if valid encoding found.
    */
@@ -38,6 +38,25 @@ public:
                                    nsACString& aOutEncoding)
   {
     return FindEncodingForLabel(NS_ConvertUTF16toUTF8(aLabel), aOutEncoding);
+  }
+
+  /**
+   * Like FindEncodingForLabel() except labels that map to "replacement"
+   * are treated as unknown.
+   *
+   * @param      aLabel, incoming label describing charset to be decoded.
+   * @param      aOutEncoding, returning corresponding encoding for label.
+   * @return     false if no encoding was found for label.
+   *             true if valid encoding found.
+   */
+  static bool FindEncodingForLabelNoReplacement(const nsACString& aLabel,
+                                                nsACString& aOutEncoding);
+
+  static bool FindEncodingForLabelNoReplacement(const nsAString& aLabel,
+                                                nsACString& aOutEncoding)
+  {
+    return FindEncodingForLabelNoReplacement(NS_ConvertUTF16toUTF8(aLabel),
+                                             aOutEncoding);
   }
 
   /**
@@ -108,6 +127,16 @@ public:
    */
   static already_AddRefed<nsIUnicodeEncoder>
   EncoderForEncoding(const nsACString& aEncoding);
+
+  /**
+   * Finds a Gecko language group string (e.g. x-western) for a Gecko-canonical
+   * encoding name.
+   *
+   * @param      aEncoding, incoming label describing charset to be decoded.
+   * @param      aOutGroup, returning corresponding language group.
+   */
+  static void LangGroupForEncoding(const nsACString& aEncoding,
+                                   nsACString& aOutGroup);
 
 private:
   EncodingUtils() MOZ_DELETE;

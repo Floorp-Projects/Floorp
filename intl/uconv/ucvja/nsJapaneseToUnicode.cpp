@@ -8,10 +8,10 @@
 
 #include "japanese.map"
 
-#include "nsICharsetConverterManager.h"
-#include "nsServiceManagerUtils.h"
-
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/EncodingUtils.h"
+
+using mozilla::dom::EncodingUtils;
 
 // HTML5 says to use Windows-31J instead of the real Shift_JIS for decoding
 #define SJIS_INDEX gCP932Index[0]
@@ -377,8 +377,6 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
    const char * aSrc, int32_t * aSrcLen,
      char16_t * aDest, int32_t * aDestLen)
 {
-   static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
    static const uint16_t fbIdx[128] =
    {
 /* 0x8X */
@@ -765,12 +763,8 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             } else {
               if (!mGB2312Decoder) {
                 // creating a delegate converter (GB2312)
-                nsresult rv;
-                nsCOMPtr<nsICharsetConverterManager> ccm = 
-                         do_GetService(kCharsetConverterManagerCID, &rv);
-                if (NS_SUCCEEDED(rv)) {
-                  rv = ccm->GetUnicodeDecoderRaw("GB2312", &mGB2312Decoder);
-                }
+                mGB2312Decoder =
+                  EncodingUtils::DecoderForEncoding(NS_LITERAL_CSTRING("GB2312"));
               }
               if (!mGB2312Decoder) {// failed creating a delegate converter
                 goto error2;
@@ -823,12 +817,8 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             } else {
               if (!mEUCKRDecoder) {
                 // creating a delegate converter (EUC-KR)
-                nsresult rv;
-                nsCOMPtr<nsICharsetConverterManager> ccm = 
-                         do_GetService(kCharsetConverterManagerCID, &rv);
-                if (NS_SUCCEEDED(rv)) {
-                  rv = ccm->GetUnicodeDecoderRaw("EUC-KR", &mEUCKRDecoder);
-                }
+                mEUCKRDecoder =
+                  EncodingUtils::DecoderForEncoding(NS_LITERAL_CSTRING("EUC-KR"));
               }
               if (!mEUCKRDecoder) {// failed creating a delegate converter
                 goto error2;
@@ -904,12 +894,8 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
               } else if (G2_ISO88597 == G2charset) {
                 if (!mISO88597Decoder) {
                   // creating a delegate converter (ISO-8859-7)
-                  nsresult rv;
-                  nsCOMPtr<nsICharsetConverterManager> ccm = 
-                           do_GetService(kCharsetConverterManagerCID, &rv);
-                  if (NS_SUCCEEDED(rv)) {
-                    rv = ccm->GetUnicodeDecoderRaw("ISO-8859-7", &mISO88597Decoder);
-                  }
+                  mISO88597Decoder =
+                    EncodingUtils::DecoderForEncoding(NS_LITERAL_CSTRING("ISO-8859-7"));
                 }
                 if (!mISO88597Decoder) {// failed creating a delegate converter
                   goto error2;

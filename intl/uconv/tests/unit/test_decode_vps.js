@@ -9,5 +9,5 @@ const expectedString = "\u1ea0\u1eac\u1eb6\u1eb8\u1ec6\u1eca\u1ecc\u1ed8\u1ee2\u
 const aliases = [ "x-viet-vps" ];
 
 function run_test() {
-  testDecodeAliases();
+  testDecodeAliasesInternal();
 }

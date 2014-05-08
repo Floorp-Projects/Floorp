@@ -73,9 +73,8 @@ interface nsIScriptableUnicodeConverter : nsISupports
   /**
    * Internal use
    *
-   * When this attribute is set, all charsets may be accessed.
-   * When it is not set (the default), charsets with the isInternal flag
-   *  may not be accessed.
+   * When this attribute is set, all charsets may be accessed but only 
+   * by Gecko-canonical name.
    */
   attribute boolean isInternal;
 };

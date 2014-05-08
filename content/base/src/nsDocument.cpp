@@ -114,7 +114,6 @@
 #include "nsIRequest.h"
 #include "nsHostObjectProtocolHandler.h"
 
-#include "nsCharsetAlias.h"
 #include "nsCharsetSource.h"
 #include "nsIParser.h"
 #include "nsIContentSink.h"

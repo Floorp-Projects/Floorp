@@ -9,5 +9,5 @@ const expectedString = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUV
 const aliases = [ "x-mac-romanian" ];
 
 function run_test() {
-  testDecodeAliases();
+  testDecodeAliasesInternal();
 }
