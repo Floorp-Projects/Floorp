@@ -404,4 +404,5 @@
   <!-- Miscellaneous -->
   <string name="ellipsis">&ellipsis;</string>
 
+  <string name="remote_tabs_last_synced">&remote_tabs_last_synced;</string>
 </resources>
