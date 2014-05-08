@@ -371,7 +371,7 @@ proxy_Call(JSContext *cx, unsigned argc, JS::Value *vp);
 extern JS_FRIEND_API(bool)
 proxy_Construct(JSContext *cx, unsigned argc, JS::Value *vp);
 extern JS_FRIEND_API(JSObject *)
-proxy_innerObject(JSContext *cx, JS::HandleObject obj);
+proxy_innerObject(JSObject *obj);
 extern JS_FRIEND_API(bool)
 proxy_Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable);
 extern JS_FRIEND_API(bool)
