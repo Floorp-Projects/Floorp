@@ -92,7 +92,7 @@ JS_ObjectToInnerObject(JSContext *cx, HandleObject obj)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INACTIVE);
         return nullptr;
     }
-    return GetInnerObject(cx, obj);
+    return GetInnerObject(obj);
 }
 
 JS_FRIEND_API(JSObject *)
@@ -4219,7 +4219,7 @@ js::HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
         return true;
 
     JSObject *outer = nullptr;
-    if (JSObjectOp op = objp->getClass()->ext.outerObject) {
+    if (js::ObjectOp op = objp->getClass()->ext.outerObject) {
         if (!allowGC)
             return false;
         RootedObject inner(cx, objp);
@@ -5201,7 +5201,7 @@ baseops::DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, bool *su
 bool
 js::WatchGuts(JSContext *cx, JS::HandleObject origObj, JS::HandleId id, JS::HandleObject callable)
 {
-    RootedObject obj(cx, GetInnerObject(cx, origObj));
+    RootedObject obj(cx, GetInnerObject(origObj));
     if (obj->isNative()) {
         // Use sparse indexes for watched objects, as dense elements can be
         // written to without checking the watchpoint map.
@@ -5241,7 +5241,7 @@ js::UnwatchGuts(JSContext *cx, JS::HandleObject origObj, JS::HandleId id)
 {
     // Looking in the map for an unsupported object will never hit, so we don't
     // need to check for nativeness or watchable-ness here.
-    RootedObject obj(cx, GetInnerObject(cx, origObj));
+    RootedObject obj(cx, GetInnerObject(origObj));
     if (WatchpointMap *wpmap = cx->compartment()->watchpointMap)
         wpmap->unwatch(obj, id, nullptr, nullptr);
     return true;
