@@ -234,11 +234,8 @@ nsHtml5StreamParser::Notify(const char* aCharset, nsDetectionConfident aConf)
   if (aConf == eBestAnswer || aConf == eSureAnswer) {
     mFeedChardet = false; // just in case
     nsAutoCString encoding;
-    if (!EncodingUtils::FindEncodingForLabel(nsDependentCString(aCharset),
-                                             encoding)) {
-      return NS_OK;
-    }
-    if (encoding.EqualsLiteral("replacement")) {
+    if (!EncodingUtils::FindEncodingForLabelNoReplacement(
+        nsDependentCString(aCharset), encoding)) {
       return NS_OK;
     }
     if (HasDecoder()) {

@@ -88,9 +88,6 @@ public:
      }
  virtual ~nsISO2022JPToUnicodeV2()
      {
-        NS_IF_RELEASE(mGB2312Decoder);
-        NS_IF_RELEASE(mEUCKRDecoder);
-        NS_IF_RELEASE(mISO88597Decoder);
      }
 
  NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength,
@@ -139,8 +136,8 @@ private:
    G2_ISO88591,
    G2_ISO88597
  } G2charset;
- nsIUnicodeDecoder *mGB2312Decoder;
- nsIUnicodeDecoder *mEUCKRDecoder;
- nsIUnicodeDecoder *mISO88597Decoder;
+ nsCOMPtr<nsIUnicodeDecoder> mGB2312Decoder;
+ nsCOMPtr<nsIUnicodeDecoder> mEUCKRDecoder;
+ nsCOMPtr<nsIUnicodeDecoder> mISO88597Decoder;
 };
 #endif // nsShiftJISToUnicode_h__

@@ -25,29 +25,56 @@ const testContent = "<pre id='testPara'>" + inString;
 
 const Ci = SpecialPowers.Ci;
 const Cc = SpecialPowers.Cc;
-var ccManager = Cc["@mozilla.org/charset-converter-manager;1"].getService(Ci.nsICharsetConverterManager);
 
-var decoderList = ccManager.getDecoderList();
-SimpleTest.waitForExplicitFinish();
-while (decoderList.hasMore()) {
-    var decoder =  decoderList.getNext();
+var decoders = [
+    "Big5",
+    "Big5-HKSCS",
+    "EUC-JP",
+    "EUC-KR",
+    "gb18030",
+    "IBM866",
+    "ISO-2022-JP",
+    "ISO-8859-3",
+    "ISO-8859-4",
+    "ISO-8859-5",
+    "ISO-8859-6",
+    "ISO-8859-7",
+    "ISO-8859-8",
+    "ISO-8859-8-I",
+    "ISO-8859-10",
+    "ISO-8859-13",
+    "ISO-8859-14",
+    "ISO-8859-15",
+    "ISO-8859-16",
+    "ISO-8859-2",
+    "KOI8-R",
+    "KOI8-U",
+    "Shift_JIS",
+    "windows-1250",
+    "windows-1251",
+    "windows-1252",
+    "windows-1253",
+    "windows-1254",
+    "windows-1255",
+    "windows-1256",
+    "windows-1257",
+    "windows-1258",
+    "windows-874",
+    "x-mac-cyrillic",
+    "UTF-8"
+];
 
-    // Skip UTF-16 variants. (Other non-ASCII compatible encodings will be
-    // ignored anyway because of bug 601429
-    if (decoder.substring(0, 6)  == "UTF-16" || 
-        decoder == "replacement" ||
-        decoder == "ISO-2022-KR" ||
-        decoder == "ISO-2022-CN")
-	continue;
-
-    data = encodeURI(testContent);
+var decoder;
+for (var i = 0; i < decoders.length; i++) {
+    var decoder = decoders[i];
+    var data = encodeURI(testContent);
     var dataURI = "data:text/html;charset=" + decoder + "," + data;
    
     var testFrame = document.createElement("iframe");
     frameID = decoder;
     testFrame.setAttribute("id", frameID);
     var testFrameObj = document.body.appendChild(testFrame);
-    if (decoderList.hasMore())
+    if (i < decoders.length)
         testFrameObj.setAttribute("onload", "testDecoding('" + decoder + "')");
     else
         testFrameObj.setAttribute("onload", "lastTest('" + decoder + "')");

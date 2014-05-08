@@ -2809,7 +2809,7 @@ Proxy::slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
 }
 
 JSObject *
-js::proxy_innerObject(JSContext *cx, HandleObject obj)
+js::proxy_innerObject(JSObject *obj)
 {
     return obj->as<ProxyObject>().private_().toObjectOrNull();
 }

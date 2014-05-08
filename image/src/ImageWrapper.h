@@ -35,6 +35,10 @@ public:
   virtual size_t NonHeapSizeOfDecoded() const MOZ_OVERRIDE;
   virtual size_t OutOfProcessSizeOfDecoded() const MOZ_OVERRIDE;
 
+  virtual size_t HeapSizeOfVectorImageDocument(nsACString* aDocURL = nullptr) const MOZ_OVERRIDE {
+    return mInnerImage->HeapSizeOfVectorImageDocument(aDocURL);
+  }
+
   virtual void IncrementAnimationConsumers() MOZ_OVERRIDE;
   virtual void DecrementAnimationConsumers() MOZ_OVERRIDE;
 #ifdef DEBUG

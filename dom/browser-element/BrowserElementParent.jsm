@@ -254,9 +254,9 @@ BrowserElementParent.prototype = {
       "hello": this._recvHello,
       "contextmenu": this._fireCtxMenuEvent,
       "locationchange": this._fireEventFromMsg,
-      "loadstart": this._fireEventFromMsg,
-      "loadend": this._fireEventFromMsg,
-      "titlechange": this._fireEventFromMsg,
+      "loadstart": this._fireProfiledEventFromMsg,
+      "loadend": this._fireProfiledEventFromMsg,
+      "titlechange": this._fireProfiledEventFromMsg,
       "iconchange": this._fireEventFromMsg,
       "manifestchange": this._fireEventFromMsg,
       "metachange": this._fireEventFromMsg,
@@ -267,8 +267,8 @@ BrowserElementParent.prototype = {
       "securitychange": this._fireEventFromMsg,
       "error": this._fireEventFromMsg,
       "scroll": this._fireEventFromMsg,
-      "firstpaint": this._fireEventFromMsg,
-      "documentfirstpaint": this._fireEventFromMsg,
+      "firstpaint": this._fireProfiledEventFromMsg,
+      "documentfirstpaint": this._fireProfiledEventFromMsg,
       "nextpaint": this._recvNextPaint,
       "keyevent": this._fireKeyEvent,
       "showmodalprompt": this._handleShowModalPrompt,
@@ -405,6 +405,16 @@ BrowserElementParent.prototype = {
     // we fire a context menu event even if the child didn't define a
     // custom context menu
     return !this._frameElement.dispatchEvent(evt);
+  },
+
+  /**
+   * add profiler marker for each event fired.
+   */
+  _fireProfiledEventFromMsg: function(data) {
+    if (Services.profiler !== undefined) {
+      Services.profiler.AddMarker(data.json.msg_name);
+    }
+    this._fireEventFromMsg(data);
   },
 
   /**

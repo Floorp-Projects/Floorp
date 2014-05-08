@@ -30,12 +30,15 @@
 #include "nsReadableUtils.h"
 
 #include "nsIServiceManager.h"
-#include "nsICharsetConverterManager.h"
 // unicode conversion
-#  include "nsIPlatformCharset.h"
+#include "nsIPlatformCharset.h"
+#include "nsIUnicodeDecoder.h"
 #include "nsISaveAsCharset.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Likely.h"
+#include "mozilla/dom/EncodingUtils.h"
+
+using mozilla::dom::EncodingUtils;
 
 
 //
@@ -196,17 +199,9 @@ nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, in
     if (NS_SUCCEEDED(rv))
       rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
     if (NS_FAILED(rv))
-      platformCharset.AssignLiteral("ISO-8859-1");
+      platformCharset.AssignLiteral("windows-1252");
       
-    // get the decoder
-    nsCOMPtr<nsICharsetConverterManager> ccm = 
-             do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);  
-    rv = ccm->GetUnicodeDecoderRaw(platformCharset.get(),
-                                   getter_AddRefs(decoder));
-
-    NS_ASSERTION(NS_SUCCEEDED(rv), "GetUnicodeEncoderRaw failed.");
-    if (NS_FAILED(rv))
-      return NS_ERROR_FAILURE;
+    decoder = EncodingUtils::DecoderForEncoding(platformCharset);
 
     hasConverter = true;
   }

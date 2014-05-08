@@ -2498,7 +2498,7 @@ nsDOMWindowUtils::GetParent(JS::Handle<JS::Value> aObject,
 
   // Outerize if necessary.
   if (parent) {
-    if (JSObjectOp outerize = js::GetObjectClass(parent)->ext.outerObject) {
+    if (js::ObjectOp outerize = js::GetObjectClass(parent)->ext.outerObject) {
       parent = outerize(aCx, parent);
     }
   }

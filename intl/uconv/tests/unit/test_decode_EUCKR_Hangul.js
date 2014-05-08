@@ -4,7 +4,7 @@
 load('CharsetConversionTests.js');
 load('hangulTestStrings.js');
 
-const aliases = [ "euc-kr", "EUC-KR", "iso-ir-149", "ks_c_5601-1989", "ksc_5601", "ksc5601", "korean", "csksc56011987", "5601", "windows-949", "ks_c_5601-1987", "cseuckr"];
+const aliases = [ "euc-kr", "EUC-KR", "iso-ir-149", "ks_c_5601-1989", "ksc_5601", "ksc5601", "korean", "csksc56011987", "windows-949", "ks_c_5601-1987", "cseuckr"];
 
 function to8byteHangul(byte3, byte5, byte7)
 {

@@ -12,7 +12,6 @@
 #include "nsIFile.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIIDNService.h"
@@ -24,14 +23,15 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ipc/URIUtils.h"
 #include <algorithm>
+#include "mozilla/dom/EncodingUtils.h"
 
+using mozilla::dom::EncodingUtils;
 using namespace mozilla::ipc;
 
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_STANDARDURL_IMPL_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
 nsIIDNService *nsStandardURL::gIDN = nullptr;
-nsICharsetConverterManager *nsStandardURL::gCharsetMgr = nullptr;
 bool nsStandardURL::gInitialized = false;
 bool nsStandardURL::gEscapeUTF8 = true;
 bool nsStandardURL::gAlwaysEncodeInUTF8 = true;
@@ -212,23 +212,17 @@ bool nsStandardURL::
 nsSegmentEncoder::InitUnicodeEncoder()
 {
     NS_ASSERTION(!mEncoder, "Don't call this if we have an encoder already!");
-    nsresult rv;
-    if (!gCharsetMgr) {
-        rv = CallGetService("@mozilla.org/charset-converter-manager;1",
-                            &gCharsetMgr);
-        if (NS_FAILED(rv)) {
-            NS_ERROR("failed to get charset-converter-manager");
-            return false;
-        }
+    // "replacement" won't survive another label resolution
+    nsDependentCString label(mCharset);
+    if (label.EqualsLiteral("replacement")) {
+      mEncoder = EncodingUtils::EncoderForEncoding(label);
+      return true;
     }
-
-    rv = gCharsetMgr->GetUnicodeEncoder(mCharset, getter_AddRefs(mEncoder));
-    if (NS_FAILED(rv)) {
-        NS_ERROR("failed to get unicode encoder");
-        mEncoder = 0; // just in case
-        return false;
+    nsAutoCString encoding;
+    if (!EncodingUtils::FindEncodingForLabelNoReplacement(label, encoding)) {
+      return false;
     }
-
+    mEncoder = EncodingUtils::EncoderForEncoding(encoding);
     return true;
 }
 
@@ -330,7 +324,6 @@ void
 nsStandardURL::ShutdownGlobalObjects()
 {
     NS_IF_RELEASE(gIDN);
-    NS_IF_RELEASE(gCharsetMgr);
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
     if (gInitialized) {

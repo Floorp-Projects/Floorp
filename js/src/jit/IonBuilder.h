@@ -398,27 +398,27 @@ class IonBuilder : public MIRGenerator
                    MIRType slotType = MIRType_None);
 
     // jsop_getprop() helpers.
-    bool getPropTryArgumentsLength(bool *emitted);
-    bool getPropTryConstant(bool *emitted, PropertyName *name,
+    bool getPropTryArgumentsLength(bool *emitted, MDefinition *obj);
+    bool getPropTryConstant(bool *emitted, MDefinition *obj, PropertyName *name,
                             types::TemporaryTypeSet *types);
-    bool getPropTryDefiniteSlot(bool *emitted, PropertyName *name,
+    bool getPropTryDefiniteSlot(bool *emitted, MDefinition *obj, PropertyName *name,
                                 BarrierKind barrier, types::TemporaryTypeSet *types);
-    bool getPropTryCommonGetter(bool *emitted, PropertyName *name,
+    bool getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName *name,
                                 types::TemporaryTypeSet *types);
-    bool getPropTryInlineAccess(bool *emitted, PropertyName *name,
+    bool getPropTryInlineAccess(bool *emitted, MDefinition *obj, PropertyName *name,
                                 BarrierKind barrier, types::TemporaryTypeSet *types);
-    bool getPropTryTypedObject(bool *emitted, PropertyName *name,
+    bool getPropTryTypedObject(bool *emitted, MDefinition *obj, PropertyName *name,
                                types::TemporaryTypeSet *resultTypes);
-    bool getPropTryScalarPropOfTypedObject(bool *emitted,
+    bool getPropTryScalarPropOfTypedObject(bool *emitted, MDefinition *typedObj,
                                            int32_t fieldOffset,
                                            TypeDescrSet fieldTypeReprs,
                                            types::TemporaryTypeSet *resultTypes);
-    bool getPropTryComplexPropOfTypedObject(bool *emitted,
+    bool getPropTryComplexPropOfTypedObject(bool *emitted, MDefinition *typedObj,
                                             int32_t fieldOffset,
                                             TypeDescrSet fieldTypeReprs,
                                             size_t fieldIndex,
                                             types::TemporaryTypeSet *resultTypes);
-    bool getPropTryCache(bool *emitted, PropertyName *name,
+    bool getPropTryCache(bool *emitted, MDefinition *obj, PropertyName *name,
                          BarrierKind barrier, types::TemporaryTypeSet *types);
     bool needsToMonitorMissingProperties(types::TemporaryTypeSet *types);
 
@@ -590,7 +590,6 @@ class IonBuilder : public MIRGenerator
     bool jsop_length();
     bool jsop_length_fastPath();
     bool jsop_arguments();
-    bool jsop_arguments_length();
     bool jsop_arguments_getelem();
     bool jsop_runonce();
     bool jsop_rest();

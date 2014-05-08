@@ -8,9 +8,9 @@
 #define nsDateTimeFormatUnix_h__
 
 
-#include "nsICharsetConverterManager.h"
 #include "nsCOMPtr.h"
 #include "nsIDateTimeFormat.h"
+#include "nsIUnicodeDecoder.h"
 
 #define kPlatformLocaleLength 64
 

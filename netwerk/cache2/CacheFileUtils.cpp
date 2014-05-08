@@ -8,6 +8,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
+#include <algorithm>
 
 
 namespace mozilla {
@@ -283,6 +284,144 @@ KeyMatchesLoadContextInfo(const nsACString &aKey, nsILoadContextInfo *aInfo,
 
   *_retval = info->Equals(aInfo);
   return NS_OK;
+}
+
+ValidityPair::ValidityPair(uint32_t aOffset, uint32_t aLen)
+  : mOffset(aOffset), mLen(aLen)
+{}
+
+ValidityPair&
+ValidityPair::operator=(const ValidityPair& aOther)
+{
+  mOffset = aOther.mOffset;
+  mLen = aOther.mLen;
+  return *this;
+}
+
+bool
+ValidityPair::CanBeMerged(const ValidityPair& aOther) const
+{
+  // The pairs can be merged into a single one if the start of one of the pairs
+  // is placed anywhere in the validity interval of other pair or exactly after
+  // its end.
+  return IsInOrFollows(aOther.mOffset) || aOther.IsInOrFollows(mOffset);
+}
+
+bool
+ValidityPair::IsInOrFollows(uint32_t aOffset) const
+{
+  return mOffset <= aOffset && mOffset + mLen >= aOffset;
+}
+
+bool
+ValidityPair::LessThan(const ValidityPair& aOther) const
+{
+  if (mOffset < aOther.mOffset) {
+    return true;
+  }
+
+  if (mOffset == aOther.mOffset && mLen < aOther.mLen) {
+    return true;
+  }
+
+  return false;
+}
+
+void
+ValidityPair::Merge(const ValidityPair& aOther)
+{
+  MOZ_ASSERT(CanBeMerged(aOther));
+
+  uint32_t offset = std::min(mOffset, aOther.mOffset);
+  uint32_t end = std::max(mOffset + mLen, aOther.mOffset + aOther.mLen);
+
+  mOffset = offset;
+  mLen = end - offset;
+}
+
+void
+ValidityMap::Log() const
+{
+  LOG(("ValidityMap::Log() - number of pairs: %u", mMap.Length()));
+  for (uint32_t i=0; i<mMap.Length(); i++) {
+    LOG(("    (%u, %u)", mMap[i].Offset() + 0, mMap[i].Len() + 0));
+  }
+}
+
+uint32_t
+ValidityMap::Length() const
+{
+  return mMap.Length();
+}
+
+void
+ValidityMap::AddPair(uint32_t aOffset, uint32_t aLen)
+{
+  ValidityPair pair(aOffset, aLen);
+
+  if (mMap.Length() == 0) {
+    mMap.AppendElement(pair);
+    return;
+  }
+
+  // Find out where to place this pair into the map, it can overlap only with
+  // one preceding pair and all subsequent pairs.
+  uint32_t pos = 0;
+  for (pos = mMap.Length(); pos > 0; ) {
+    --pos;
+
+    if (mMap[pos].LessThan(pair)) {
+      // The new pair should be either inserted after pos or merged with it.
+      if (mMap[pos].CanBeMerged(pair)) {
+        // Merge with the preceding pair
+        mMap[pos].Merge(pair);
+      } else {
+        // They don't overlap, element must be placed after pos element
+        ++pos;
+        if (pos == mMap.Length()) {
+          mMap.AppendElement(pair);
+        } else {
+          mMap.InsertElementAt(pos, pair);
+        }
+      }
+
+      break;
+    }
+
+    if (pos == 0) {
+      // The new pair should be placed in front of all existing pairs.
+      mMap.InsertElementAt(0, pair);
+    }
+  }
+
+  // pos now points to merged or inserted pair, check whether it overlaps with
+  // subsequent pairs.
+  while (pos + 1 < mMap.Length()) {
+    if (mMap[pos].CanBeMerged(mMap[pos + 1])) {
+      mMap[pos].Merge(mMap[pos + 1]);
+      mMap.RemoveElementAt(pos + 1);
+    } else {
+      break;
+    }
+  }
+}
+
+void
+ValidityMap::Clear()
+{
+  mMap.Clear();
+}
+
+size_t
+ValidityMap::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+  return mMap.SizeOfExcludingThis(mallocSizeOf);
+}
+
+ValidityPair&
+ValidityMap::operator[](uint32_t aIdx)
+{
+  return mMap.ElementAt(aIdx);
 }
 
 } // CacheFileUtils
