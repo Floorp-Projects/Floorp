@@ -3,16 +3,28 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<org.mozilla.gecko.widget.AllCapsTextView xmlns:android="http://schemas.android.com/apk/res/android"
-                                          android:id="@+id/client"
-                                          android:layout_width="fill_parent"
-                                          android:layout_height="@dimen/remote_tab_group_row_height"
-                                          style="@style/TabRowTextAppearance.Url"
-                                          android:background="@android:color/transparent"
-                                          android:paddingLeft="2dip"
-                                          android:paddingRight="2dip"
-                                          android:textStyle="bold"
-                                          android:textSize="12sp"
-                                          android:singleLine="false"
-                                          android:maxLines="2"
-                                          android:gravity="center_vertical"/>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:background="@android:color/transparent"
+              android:layout_width="fill_parent"
+              android:layout_height="@dimen/remote_tab_child_row_height"
+              android:gravity="center_vertical"
+              android:orientation="vertical"
+              android:paddingLeft="2dp"
+              android:paddingRight="2dp">
+
+    <org.mozilla.gecko.widget.AllCapsTextView android:id="@+id/client"
+                                              style="@style/TabRowTextAppearance"
+                                              android:layout_width="fill_parent"
+                                              android:layout_height="wrap_content"
+                                              android:maxLines="2"
+                                              android:singleLine="false"
+                                              android:textSize="14sp"
+                                              android:textStyle="bold" />
+
+    <TextView android:id="@+id/last_synced"
+              style="@style/TabRowTextAppearance.Url"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:textSize="12sp"/>
+
+</LinearLayout>
