@@ -54,6 +54,16 @@ public:
     mArenaStats.addToTabSizes(sizes);
   }
 
+  size_t getTotalSize() const
+  {
+    size_t total = 0;
+    #define ADD_TO_TOTAL_SIZE(kind, mSize) total += mSize;
+    FOR_EACH_SIZE(ADD_TO_TOTAL_SIZE)
+    #undef ADD_TO_TOTAL_SIZE
+    total += mArenaStats.getTotalSize();
+    return total;
+  }
+
   #define DECL_SIZE(kind, mSize) size_t mSize;
   FOR_EACH_SIZE(DECL_SIZE);
   #undef DECL_SIZE

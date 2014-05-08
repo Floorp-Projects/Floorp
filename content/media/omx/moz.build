@@ -73,3 +73,5 @@ CXXFLAGS += [
     ]
 ]
 
+if CONFIG['ANDROID_VERSION'] > '15':
+    DEFINES['MOZ_OMX_WEBM_DECODER'] = True
