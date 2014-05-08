@@ -165,6 +165,7 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY stopButton.tooltip           "Stop loading this page">
 <!ENTITY goEndCap.tooltip             "Go to the address in the Location Bar">
 <!ENTITY printButton.label            "Print">
+<!ENTITY printButton.tooltip          "Print this page">
 
 <!ENTITY locationItem.title           "Location">
 <!ENTITY searchItem.title             "Search">
