@@ -69,7 +69,7 @@ class TypedObjectModuleObject;
 class GlobalObject : public JSObject
 {
     /* Count of slots set aside for application use. */
-    static const unsigned APPLICATION_SLOTS = 3;
+    static const unsigned APPLICATION_SLOTS = JSCLASS_GLOBAL_APPLICATION_SLOTS;
 
     /*
      * Count of slots to store built-in constructors, prototypes, and initial

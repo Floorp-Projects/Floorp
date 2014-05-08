@@ -922,6 +922,7 @@ let PlacesToolbarHelper = {
     if (forceToolbarOverflowCheck) {
       viewElt._placesView.updateOverflowStatus();
     }
+    this._shouldWrap = false;
     this._setupPlaceholder();
   },
 

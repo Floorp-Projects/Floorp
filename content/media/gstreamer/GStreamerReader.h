@@ -178,8 +178,16 @@ private:
   // Try to find MP3 headers in this stream using our MP3 frame parser.
   nsresult ParseMP3Headers();
 
+  // Get the length of the stream, excluding any metadata we have ignored at the
+  // start of the stream: ID3 headers, for example.
+  int64_t GetDataLength();
+
   // Use our own MP3 parser here, largely for consistency with other platforms.
   MP3FrameParser mMP3FrameParser;
+
+  // The byte position in the stream where the actual media (ignoring, for
+  // example, ID3 tags) starts.
+  uint64_t mDataOffset;
 
   // We want to be able to decide in |ReadMetadata| whether or not we use the
   // duration from the MP3 frame parser, as this backend supports more than just

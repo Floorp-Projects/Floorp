@@ -300,12 +300,6 @@ function isCaretPos(aPanel, aLine, aCol = 1) {
   return cursor.line == (aLine - 1) && cursor.ch == (aCol - 1);
 }
 
-function isDebugPos(aPanel, aLine) {
-  let editor = aPanel.panelWin.DebuggerView.editor;
-  let location = editor.getDebugLocation();
-  return location != null && editor.hasLineClass(aLine - 1, "debug-line");
-}
-
 function isEditorSel(aPanel, [start, end]) {
   let editor = aPanel.panelWin.DebuggerView.editor;
   let range = {

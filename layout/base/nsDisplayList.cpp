@@ -73,7 +73,6 @@ static void AddTransformFunctions(nsCSSValueList* aList,
                                   nsStyleContext* aContext,
                                   nsPresContext* aPresContext,
                                   nsRect& aBounds,
-                                  float aAppUnitsPerPixel,
                                   InfallibleTArray<TransformFunction>& aFunctions)
 {
   if (aList->mValue.GetUnit() == eCSSUnit_None) {
@@ -158,7 +157,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       {
         double x = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(1), aContext, aPresContext, canStoreInRuleTree,
-          aBounds.Width(), aAppUnitsPerPixel);
+          aBounds.Width());
         aFunctions.AppendElement(Translation(x, 0, 0));
         break;
       }
@@ -166,7 +165,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       {
         double y = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(1), aContext, aPresContext, canStoreInRuleTree,
-          aBounds.Height(), aAppUnitsPerPixel);
+          aBounds.Height());
         aFunctions.AppendElement(Translation(0, y, 0));
         break;
       }
@@ -174,7 +173,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       {
         double z = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(1), aContext, aPresContext, canStoreInRuleTree,
-          0, aAppUnitsPerPixel);
+          0);
         aFunctions.AppendElement(Translation(0, 0, z));
         break;
       }
@@ -182,13 +181,13 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       {
         double x = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(1), aContext, aPresContext, canStoreInRuleTree,
-          aBounds.Width(), aAppUnitsPerPixel);
+          aBounds.Width());
         // translate(x) is shorthand for translate(x, 0)
         double y = 0;
         if (array->Count() == 3) {
            y = nsStyleTransformMatrix::ProcessTranslatePart(
             array->Item(2), aContext, aPresContext, canStoreInRuleTree,
-            aBounds.Height(), aAppUnitsPerPixel);
+            aBounds.Height());
         }
         aFunctions.AppendElement(Translation(x, y, 0));
         break;
@@ -197,13 +196,13 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       {
         double x = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(1), aContext, aPresContext, canStoreInRuleTree,
-          aBounds.Width(), aAppUnitsPerPixel);
+          aBounds.Width());
         double y = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(2), aContext, aPresContext, canStoreInRuleTree,
-          aBounds.Height(), aAppUnitsPerPixel);
+          aBounds.Height());
         double z = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(3), aContext, aPresContext, canStoreInRuleTree,
-          0, aAppUnitsPerPixel);
+          0);
 
         aFunctions.AppendElement(Translation(x, y, z));
         break;
@@ -282,8 +281,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
                                                          aContext,
                                                          aPresContext,
                                                          canStoreInRuleTree,
-                                                         aBounds,
-                                                         aAppUnitsPerPixel);
+                                                         aBounds);
         gfx::Matrix4x4 transform;
         gfx::ToMatrix4x4(matrix, transform);
         aFunctions.AppendElement(TransformMatrix(transform));
@@ -322,8 +320,6 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   nsStyleContext* styleContext = aFrame->StyleContext();
   nsPresContext* presContext = aFrame->PresContext();
   nsRect bounds = nsDisplayTransform::GetFrameBoundsForTransform(aFrame);
-  // all data passed directly to the compositor should be in css pixels
-  float scale = nsDeviceContext::AppUnitsPerCSSPixel();
 
   mozilla::layers::Animation* animation =
     aPending ?
@@ -354,11 +350,11 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
         animSegment->endState() = InfallibleTArray<TransformFunction>();
 
         nsCSSValueSharedList* list = segment->mFromValue.GetCSSValueSharedListValue();
-        AddTransformFunctions(list->mHead, styleContext, presContext, bounds, scale,
+        AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
                               animSegment->startState().get_ArrayOfTransformFunction());
 
         list = segment->mToValue.GetCSSValueSharedListValue();
-        AddTransformFunctions(list->mHead, styleContext, presContext, bounds, scale,
+        AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
                               animSegment->endState().get_ArrayOfTransformFunction());
       } else if (aProperty == eCSSProperty_opacity) {
         animSegment->startState() = segment->mFromValue.GetFloatValue();

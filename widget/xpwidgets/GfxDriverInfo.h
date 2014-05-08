@@ -216,6 +216,8 @@ inline void PadDriverDecimal(char *aString)
 inline bool
 ParseDriverVersion(const nsAString& aVersion, uint64_t *aNumericVersion)
 {
+  *aNumericVersion = 0;
+
 #if defined(XP_WIN)
   int a, b, c, d;
   char aStr[8], bStr[8], cStr[8], dStr[8];
@@ -238,12 +240,15 @@ ParseDriverVersion(const nsAString& aVersion, uint64_t *aNumericVersion)
   if (d < 0 || d > 0xffff) return false;
 
   *aNumericVersion = GFX_DRIVER_VERSION(a, b, c, d);
+  return true;
 #elif defined(ANDROID)
   // Can't use aVersion.ToInteger() because that's not compiled into our code
   // unless we have XPCOM_GLUE_AVOID_NSPR disabled.
   *aNumericVersion = atoi(NS_LossyConvertUTF16toASCII(aVersion).get());
-#endif
   return true;
+#else
+  return false;
+#endif
 }
 
 }

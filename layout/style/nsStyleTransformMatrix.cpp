@@ -41,8 +41,7 @@ ProcessTranslatePart(const nsCSSValue& aValue,
                      nsStyleContext* aContext,
                      nsPresContext* aPresContext,
                      bool& aCanStoreInRuleTree,
-                     nscoord aSize,
-                     float aAppUnitsPerMatrixUnit)
+                     nscoord aSize)
 {
   nscoord offset = 0;
   float percent = 0.0f;
@@ -60,8 +59,7 @@ ProcessTranslatePart(const nsCSSValue& aValue,
     // Raw numbers are treated as being pixels.
     //
     // Don't convert to aValue to AppUnits here to avoid precision issues.
-    return aValue.GetFloatValue() *
-           (float(nsPresContext::AppUnitsPerCSSPixel()) / aAppUnitsPerMatrixUnit);
+    return aValue.GetFloatValue();
   } else if (aValue.IsCalcUnit()) {
     nsRuleNode::ComputedCalc result =
       nsRuleNode::SpecifiedCalcToComputedCalc(aValue, aContext, aPresContext,
@@ -73,8 +71,8 @@ ProcessTranslatePart(const nsCSSValue& aValue,
                                     aCanStoreInRuleTree);
   }
 
-  return (percent * NSAppUnitsToFloatPixels(aSize, aAppUnitsPerMatrixUnit)) + 
-         NSAppUnitsToFloatPixels(offset, aAppUnitsPerMatrixUnit);
+  return (percent * NSAppUnitsToFloatPixels(aSize, nsPresContext::AppUnitsPerCSSPixel())) +
+         NSAppUnitsToFloatPixels(offset, nsPresContext::AppUnitsPerCSSPixel());
 }
 
 /**
@@ -90,7 +88,7 @@ ProcessMatrix(gfx3DMatrix& aMatrix,
               nsStyleContext* aContext,
               nsPresContext* aPresContext,
               bool& aCanStoreInRuleTree,
-              nsRect& aBounds, float aAppUnitsPerMatrixUnit)
+              nsRect& aBounds)
 {
   NS_PRECONDITION(aData->Count() == 7, "Invalid array!");
 
@@ -109,10 +107,10 @@ ProcessMatrix(gfx3DMatrix& aMatrix,
    */
   result.x0 = ProcessTranslatePart(aData->Item(5),
                                    aContext, aPresContext, aCanStoreInRuleTree,
-                                   aBounds.Width(), aAppUnitsPerMatrixUnit);
+                                   aBounds.Width());
   result.y0 = ProcessTranslatePart(aData->Item(6),
                                    aContext, aPresContext, aCanStoreInRuleTree,
-                                   aBounds.Height(), aAppUnitsPerMatrixUnit);
+                                   aBounds.Height());
 
   aMatrix.PreMultiply(result);
 }
@@ -123,7 +121,7 @@ ProcessMatrix3D(gfx3DMatrix& aMatrix,
                 nsStyleContext* aContext,
                 nsPresContext* aPresContext,
                 bool& aCanStoreInRuleTree,
-                nsRect& aBounds, float aAppUnitsPerMatrixUnit)
+                nsRect& aBounds)
 {
   NS_PRECONDITION(aData->Count() == 17, "Invalid array!");
 
@@ -145,13 +143,13 @@ ProcessMatrix3D(gfx3DMatrix& aMatrix,
 
   temp._41 = ProcessTranslatePart(aData->Item(13),
                                   aContext, aPresContext, aCanStoreInRuleTree,
-                                  aBounds.Width(), aAppUnitsPerMatrixUnit);
+                                  aBounds.Width());
   temp._42 = ProcessTranslatePart(aData->Item(14),
                                   aContext, aPresContext, aCanStoreInRuleTree,
-                                  aBounds.Height(), aAppUnitsPerMatrixUnit);
+                                  aBounds.Height());
   temp._43 = ProcessTranslatePart(aData->Item(15),
                                   aContext, aPresContext, aCanStoreInRuleTree,
-                                  aBounds.Height(), aAppUnitsPerMatrixUnit);
+                                  aBounds.Height());
 
   aMatrix.PreMultiply(temp);
 }
@@ -163,7 +161,7 @@ ProcessInterpolateMatrix(gfx3DMatrix& aMatrix,
                          nsStyleContext* aContext,
                          nsPresContext* aPresContext,
                          bool& aCanStoreInRuleTree,
-                         nsRect& aBounds, float aAppUnitsPerMatrixUnit)
+                         nsRect& aBounds)
 {
   NS_PRECONDITION(aData->Count() == 4, "Invalid array!");
 
@@ -172,13 +170,13 @@ ProcessInterpolateMatrix(gfx3DMatrix& aMatrix,
     matrix1 = nsStyleTransformMatrix::ReadTransforms(aData->Item(1).GetListValue(),
                              aContext, aPresContext,
                              aCanStoreInRuleTree,
-                             aBounds, aAppUnitsPerMatrixUnit);
+                             aBounds, nsPresContext::AppUnitsPerCSSPixel());
   }
   if (aData->Item(2).GetUnit() == eCSSUnit_List) {
     matrix2 = ReadTransforms(aData->Item(2).GetListValue(),
                              aContext, aPresContext,
                              aCanStoreInRuleTree,
-                             aBounds, aAppUnitsPerMatrixUnit);
+                             aBounds, nsPresContext::AppUnitsPerCSSPixel());
   }
   double progress = aData->Item(3).GetPercentValue();
 
@@ -192,7 +190,7 @@ ProcessTranslateX(gfx3DMatrix& aMatrix,
                   nsStyleContext* aContext,
                   nsPresContext* aPresContext,
                   bool& aCanStoreInRuleTree,
-                  nsRect& aBounds, float aAppUnitsPerMatrixUnit)
+                  nsRect& aBounds)
 {
   NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
 
@@ -200,7 +198,7 @@ ProcessTranslateX(gfx3DMatrix& aMatrix,
 
   temp.x = ProcessTranslatePart(aData->Item(1),
                                 aContext, aPresContext, aCanStoreInRuleTree,
-                                aBounds.Width(), aAppUnitsPerMatrixUnit);
+                                aBounds.Width());
   aMatrix.Translate(temp);
 }
 
@@ -211,7 +209,7 @@ ProcessTranslateY(gfx3DMatrix& aMatrix,
                   nsStyleContext* aContext,
                   nsPresContext* aPresContext,
                   bool& aCanStoreInRuleTree,
-                  nsRect& aBounds, float aAppUnitsPerMatrixUnit)
+                  nsRect& aBounds)
 {
   NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
 
@@ -219,7 +217,7 @@ ProcessTranslateY(gfx3DMatrix& aMatrix,
 
   temp.y = ProcessTranslatePart(aData->Item(1),
                                 aContext, aPresContext, aCanStoreInRuleTree,
-                                aBounds.Height(), aAppUnitsPerMatrixUnit);
+                                aBounds.Height());
   aMatrix.Translate(temp);
 }
 
@@ -227,17 +225,15 @@ static void
 ProcessTranslateZ(gfx3DMatrix& aMatrix,
                   const nsCSSValue::Array* aData,
                   nsStyleContext* aContext,
-                                          nsPresContext* aPresContext,
-                                          bool& aCanStoreInRuleTree,
-                                          float aAppUnitsPerMatrixUnit)
+                  nsPresContext* aPresContext,
+                  bool& aCanStoreInRuleTree)
 {
   NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
 
   gfxPoint3D temp;
 
-  temp.z = ProcessTranslatePart(aData->Item(1),
-                                aContext, aPresContext, aCanStoreInRuleTree,
-                                0, aAppUnitsPerMatrixUnit);
+  temp.z = ProcessTranslatePart(aData->Item(1), aContext,
+                                aPresContext, aCanStoreInRuleTree, 0);
   aMatrix.Translate(temp);
 }
 
@@ -248,7 +244,7 @@ ProcessTranslate(gfx3DMatrix& aMatrix,
                  nsStyleContext* aContext,
                  nsPresContext* aPresContext,
                  bool& aCanStoreInRuleTree,
-                 nsRect& aBounds, float aAppUnitsPerMatrixUnit)
+                 nsRect& aBounds)
 {
   NS_PRECONDITION(aData->Count() == 2 || aData->Count() == 3, "Invalid array!");
 
@@ -256,13 +252,13 @@ ProcessTranslate(gfx3DMatrix& aMatrix,
 
   temp.x = ProcessTranslatePart(aData->Item(1),
                                 aContext, aPresContext, aCanStoreInRuleTree,
-                                aBounds.Width(), aAppUnitsPerMatrixUnit);
+                                aBounds.Width());
 
   /* If we read in a Y component, set it appropriately */
   if (aData->Count() == 3) {
     temp.y = ProcessTranslatePart(aData->Item(2),
                                   aContext, aPresContext, aCanStoreInRuleTree,
-                                  aBounds.Height(), aAppUnitsPerMatrixUnit);
+                                  aBounds.Height());
   }
   aMatrix.Translate(temp);
 }
@@ -273,7 +269,7 @@ ProcessTranslate3D(gfx3DMatrix& aMatrix,
                    nsStyleContext* aContext,
                    nsPresContext* aPresContext,
                    bool& aCanStoreInRuleTree,
-                   nsRect& aBounds, float aAppUnitsPerMatrixUnit)
+                   nsRect& aBounds)
 {
   NS_PRECONDITION(aData->Count() == 4, "Invalid array!");
 
@@ -281,15 +277,15 @@ ProcessTranslate3D(gfx3DMatrix& aMatrix,
 
   temp.x = ProcessTranslatePart(aData->Item(1),
                                 aContext, aPresContext, aCanStoreInRuleTree,
-                                aBounds.Width(), aAppUnitsPerMatrixUnit);
+                                aBounds.Width());
 
   temp.y = ProcessTranslatePart(aData->Item(2),
                                 aContext, aPresContext, aCanStoreInRuleTree,
-                                aBounds.Height(), aAppUnitsPerMatrixUnit);
+                                aBounds.Height());
 
   temp.z = ProcessTranslatePart(aData->Item(3),
                                 aContext, aPresContext, aCanStoreInRuleTree,
-                                0, aAppUnitsPerMatrixUnit);
+                                0);
 
   aMatrix.Translate(temp);
 }
@@ -480,14 +476,13 @@ ProcessPerspective(gfx3DMatrix& aMatrix,
                    const nsCSSValue::Array* aData,
                    nsStyleContext *aContext,
                    nsPresContext *aPresContext,
-                   bool &aCanStoreInRuleTree,
-                   float aAppUnitsPerMatrixUnit)
+                   bool &aCanStoreInRuleTree)
 {
   NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
 
   float depth = ProcessTranslatePart(aData->Item(1), aContext,
                                      aPresContext, aCanStoreInRuleTree,
-                                     0, aAppUnitsPerMatrixUnit);
+                                     0);
   aMatrix.Perspective(depth);
 }
 
@@ -502,8 +497,7 @@ MatrixForTransformFunction(gfx3DMatrix& aMatrix,
                            nsStyleContext* aContext,
                            nsPresContext* aPresContext,
                            bool& aCanStoreInRuleTree,
-                           nsRect& aBounds, 
-                           float aAppUnitsPerMatrixUnit)
+                           nsRect& aBounds)
 {
   NS_PRECONDITION(aData, "Why did you want to get data from a null array?");
   // It's OK if aContext and aPresContext are null if the caller already
@@ -515,23 +509,23 @@ MatrixForTransformFunction(gfx3DMatrix& aMatrix,
   switch (TransformFunctionOf(aData)) {
   case eCSSKeyword_translatex:
     ProcessTranslateX(aMatrix, aData, aContext, aPresContext,
-                      aCanStoreInRuleTree, aBounds, aAppUnitsPerMatrixUnit);
+                      aCanStoreInRuleTree, aBounds);
     break;
   case eCSSKeyword_translatey:
     ProcessTranslateY(aMatrix, aData, aContext, aPresContext,
-                      aCanStoreInRuleTree, aBounds, aAppUnitsPerMatrixUnit);
+                      aCanStoreInRuleTree, aBounds);
     break;
   case eCSSKeyword_translatez:
     ProcessTranslateZ(aMatrix, aData, aContext, aPresContext,
-                      aCanStoreInRuleTree, aAppUnitsPerMatrixUnit);
+                      aCanStoreInRuleTree);
     break;
   case eCSSKeyword_translate:
     ProcessTranslate(aMatrix, aData, aContext, aPresContext,
-                     aCanStoreInRuleTree, aBounds, aAppUnitsPerMatrixUnit);
+                     aCanStoreInRuleTree, aBounds);
     break;
   case eCSSKeyword_translate3d:
     ProcessTranslate3D(aMatrix, aData, aContext, aPresContext,
-                       aCanStoreInRuleTree, aBounds, aAppUnitsPerMatrixUnit);
+                       aCanStoreInRuleTree, aBounds);
     break;
   case eCSSKeyword_scalex:
     ProcessScaleX(aMatrix, aData);
@@ -572,19 +566,19 @@ MatrixForTransformFunction(gfx3DMatrix& aMatrix,
     break;
   case eCSSKeyword_matrix:
     ProcessMatrix(aMatrix, aData, aContext, aPresContext,
-                  aCanStoreInRuleTree, aBounds, aAppUnitsPerMatrixUnit);
+                  aCanStoreInRuleTree, aBounds);
     break;
   case eCSSKeyword_matrix3d:
     ProcessMatrix3D(aMatrix, aData, aContext, aPresContext,
-                    aCanStoreInRuleTree, aBounds, aAppUnitsPerMatrixUnit);
+                    aCanStoreInRuleTree, aBounds);
     break;
   case eCSSKeyword_interpolatematrix:
     ProcessInterpolateMatrix(aMatrix, aData, aContext, aPresContext,
-                             aCanStoreInRuleTree, aBounds, aAppUnitsPerMatrixUnit);
+                             aCanStoreInRuleTree, aBounds);
     break;
   case eCSSKeyword_perspective:
     ProcessPerspective(aMatrix, aData, aContext, aPresContext, 
-                       aCanStoreInRuleTree, aAppUnitsPerMatrixUnit);
+                       aCanStoreInRuleTree);
     break;
   default:
     NS_NOTREACHED("Unknown transform function!");
@@ -621,9 +615,12 @@ ReadTransforms(const nsCSSValueList* aList,
 
     /* Read in a single transform matrix. */
     MatrixForTransformFunction(result, currElem.GetArrayValue(), aContext,
-                               aPresContext, aCanStoreInRuleTree,
-                               aBounds, aAppUnitsPerMatrixUnit);
+                               aPresContext, aCanStoreInRuleTree, aBounds);
   }
+
+  float scale = float(nsPresContext::AppUnitsPerCSSPixel()) / aAppUnitsPerMatrixUnit;
+  result.Scale(1/scale, 1/scale, 1/scale);
+  result.ScalePost(scale, scale, scale);
   
   return result;
 }
