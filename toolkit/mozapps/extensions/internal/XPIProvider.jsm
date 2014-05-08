@@ -3610,7 +3610,13 @@ this.XPIProvider = {
    *         The AddonInstall to remove
    */
   removeActiveInstall: function XPI_removeActiveInstall(aInstall) {
-    this.installs = this.installs.filter(function installFilter(i) i != aInstall);
+    let where = this.installs.indexOf(aInstall);
+    if (where == -1) {
+      logger.warn("removeActiveInstall: could not find active install for "
+          + aInstall.sourceURI.spec);
+      return;
+    }
+    this.installs.splice(where, 1);
   },
 
   /**
