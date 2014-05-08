@@ -704,6 +704,12 @@ AboutReader.prototype = {
 
         aEvent.stopPropagation();
 
+        // Create a relative timestamp for telemetry
+        let uptime = Date.now() - Services.startup.getStartupInfo().linkerInitialized;
+        // Just pass the ID of the button as an extra and hope the ID doesn't change
+        // unless the context changes
+        UITelemetry.addEvent("action.1", "button", uptime, id);
+
         let items = segmentedButton.children;
         for (let j = items.length - 1; j >= 0; j--) {
           items[j].classList.remove("selected");
