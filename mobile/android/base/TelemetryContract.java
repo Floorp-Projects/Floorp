@@ -52,7 +52,7 @@ public interface TelemetryContract {
 
         // Launching (opening) an external application
         // Note: Only used in JavaScript for now, but here for completeness.
-        public static final String ACTION = "launch.1";
+        public static final String LAUNCH = "launch.1";
     }
 
     /**
