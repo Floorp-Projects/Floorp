@@ -16,7 +16,7 @@ function handleConferenceAddError(callToAdd) {
     is(evt.name, 'addError', 'conference addError');
 
     deferred.resolve();
-  }
+  };
   conference.add(callToAdd);
 
   return deferred.promise;
@@ -40,8 +40,8 @@ function testConferenceAddError() {
   let inInfo5 = gInCallStrPool(inNumber5);
 
   return Promise.resolve()
-    .then(() => gSetupConferenceFiveCalls(outNumber, inNumber, inNumber2,
-                                          inNumber3, inNumber4))
+    .then(() => gSetupConference([outNumber, inNumber, inNumber2, inNumber3,
+                                 inNumber4]))
     .then(calls => {
       [outCall, inCall, inCall2, inCall3, inCall4] = calls;
     })
