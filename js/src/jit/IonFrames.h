@@ -838,6 +838,12 @@ class InvalidationBailoutStack
     uint8_t *osiPointReturnAddress() const {
         return osiPointReturnAddress_;
     }
+    static size_t offsetOfFpRegs() {
+        return offsetof(InvalidationBailoutStack, fpregs_);
+    }
+    static size_t offsetOfRegs() {
+        return offsetof(InvalidationBailoutStack, regs_);
+    }
 
     void checkInvariants() const;
 };
