@@ -13,17 +13,15 @@
 <script type="application/javascript"><!--
 
 SimpleTest.waitForExplicitFinish();
-var notification = new Notification("");
+new Notification("");
 var promise = Notification.get();
 promise.then(
   function onSuccess() {
     ok(true, "No crash!");
-    notification.close();
     SimpleTest.finish();
   },
   function onFailure() {
     ok(false, "Should not get an error in promise callback");
-    notification.close();
   }
 );
 
