@@ -5026,23 +5026,12 @@ static int32_t RoundUp(double aDouble)
                                            NPCocoaEventScrollWheel,
                                            &cocoaEvent);
 
-#ifdef __LP64__
-  // Only dispatch this event if we're not currently tracking a scroll event as
-  // swipe.
-  if (!mCancelSwipeAnimation || *mCancelSwipeAnimation == YES) {
-#endif // #ifdef __LP64__
-    mGeckoChild->DispatchWindowEvent(wheelEvent);
-    if (!mGeckoChild) {
-      return;
-    }
-#ifdef __LP64__
-  } else {
-    // Manually set these members here since we didn't dispatch the event.
-    wheelEvent.overflowDeltaX = wheelEvent.deltaX;
-    wheelEvent.overflowDeltaY = wheelEvent.deltaY;
-    wheelEvent.mViewPortIsOverscrolled = true;
+  mGeckoChild->DispatchWindowEvent(wheelEvent);
+  if (!mGeckoChild) {
+    return;
   }
 
+#ifdef __LP64__
   // overflowDeltaX and overflowDeltaY tell us when the user has tried to
   // scroll past the edge of a page (in those cases it's non-zero).
   if ((wheelEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) &&
