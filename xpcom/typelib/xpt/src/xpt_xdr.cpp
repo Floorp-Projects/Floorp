@@ -305,7 +305,7 @@ XPT_SeekTo(XPTCursor *cursor, uint32_t offset)
 }
 
 XPT_PUBLIC_API(XPTString *)
-XPT_NewString(XPTArena *arena, uint16_t length, char *bytes)
+XPT_NewString(XPTArena *arena, uint16_t length, const char *bytes)
 {
     XPTString *str = XPT_NEW(arena, XPTString);
     if (!str)
@@ -324,7 +324,7 @@ XPT_NewString(XPTArena *arena, uint16_t length, char *bytes)
 }
 
 XPT_PUBLIC_API(XPTString *)
-XPT_NewStringZ(XPTArena *arena, char *bytes)
+XPT_NewStringZ(XPTArena *arena, const char *bytes)
 {
     uint32_t length = strlen(bytes);
     if (length > 0xffff)

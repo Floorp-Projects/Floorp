@@ -283,7 +283,8 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
 XPT_PUBLIC_API(PRBool)
 XPT_FillInterfaceDirectoryEntry(XPTArena *arena,
                                 XPTInterfaceDirectoryEntry *ide,
-                                nsID *iid, char *name, char *name_space,
+                                nsID *iid, const char *name,
+                                const char *name_space,
                                 XPTInterfaceDescriptor *descriptor)
 {
     XPT_COPY_IID(ide->iid, *iid);
@@ -694,8 +695,8 @@ DoConstDescriptor(XPTArena *arena, XPTCursor *cursor, XPTConstDescriptor *cd,
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_FillMethodDescriptor(XPTArena *arena, XPTMethodDescriptor *meth, 
-                         uint8_t flags, char *name, uint8_t num_args)
+XPT_FillMethodDescriptor(XPTArena *arena, XPTMethodDescriptor *meth,
+                         uint8_t flags, const char *name, uint8_t num_args)
 {
     meth->flags = flags & XPT_MD_FLAGMASK;
     meth->name = XPT_STRDUP(arena, name);
@@ -874,11 +875,11 @@ DoAnnotation(XPTArena *arena, XPTCursor *cursor, XPTAnnotation **annp)
 
 PRBool
 XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
-                            uint16_t num_interfaces, char *name, 
-                            uint16_t *indexp) 
+                            uint16_t num_interfaces, const char *name,
+                            uint16_t *indexp)
 {
     int i;
-    
+
     for (i=1; i<=num_interfaces; i++) {
         fprintf(stderr, "%s == %s ?\n", ide_block[i].name, name);
         if (strcmp(ide_block[i].name, name) == 0) {

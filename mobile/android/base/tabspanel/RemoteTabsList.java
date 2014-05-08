@@ -4,14 +4,6 @@
 
 package org.mozilla.gecko.tabspanel;
 
-import android.content.Context;
-import android.text.TextUtils;
-import android.util.AttributeSet;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ExpandableListView;
-import android.widget.SimpleExpandableListAdapter;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +14,14 @@ import org.mozilla.gecko.TabsAccessor;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 
+import android.content.Context;
+import android.text.TextUtils;
+import android.text.format.DateUtils;
+import android.util.AttributeSet;
+import android.view.View;
+import android.widget.ExpandableListView;
+import android.widget.SimpleExpandableListAdapter;
+
 /**
  * The actual list of synced tabs. This serves as the only child view of {@link RemoteTabsContainer}
  * so it can be refreshed using a swipe-to-refresh gesture.
@@ -30,9 +30,9 @@ class RemoteTabsList extends ExpandableListView
                      implements ExpandableListView.OnGroupClickListener,
                                 ExpandableListView.OnChildClickListener,
                                 TabsAccessor.OnQueryTabsCompleteListener {
-    private static final String[] CLIENT_KEY = new String[] { "name" };
+    private static final String[] CLIENT_KEY = new String[] { "name", "last_synced" };
     private static final String[] TAB_KEY = new String[] { "title", "url" };
-    private static final int[] CLIENT_RESOURCE = new int[] { R.id.client };
+    private static final int[] CLIENT_RESOURCE = new int[] { R.id.client, R.id.last_synced };
     private static final int[] TAB_RESOURCE = new int[] { R.id.tab, R.id.url };
 
     private final Context context;
@@ -92,10 +92,13 @@ class RemoteTabsList extends ExpandableListView
         HashMap <String, String> client;
         HashMap <String, String> tab;
 
+        final long now = System.currentTimeMillis();
+
         for (TabsAccessor.RemoteTab remoteTab : remoteTabs) {
             if (oldGuid == null || !TextUtils.equals(oldGuid, remoteTab.guid)) {
                 client = new HashMap <String, String>();
                 client.put("name", remoteTab.name);
+                client.put("last_synced", getLastSyncedString(now, remoteTab.lastModified));
                 clients.add(client);
 
                 tabsForClient = new ArrayList <HashMap <String, String>>();
@@ -123,5 +126,17 @@ class RemoteTabsList extends ExpandableListView
         for (int i = 0; i < clients.size(); i++) {
             expandGroup(i);
         }
+    }
+
+    /**
+     * Return a relative "Last synced" time span for the given tab record.
+     *
+     * @param now local time.
+     * @param time to format string for.
+     * @return string describing time span
+     */
+    protected String getLastSyncedString(long now, long time) {
+        CharSequence relativeTimeSpanString = DateUtils.getRelativeTimeSpanString(time, now, DateUtils.MINUTE_IN_MILLIS);
+        return getResources().getString(R.string.remote_tabs_last_synced, relativeTimeSpanString);
     }
 }

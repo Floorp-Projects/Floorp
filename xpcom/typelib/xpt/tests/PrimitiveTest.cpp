@@ -26,15 +26,17 @@
 #define TRY(msg, cond)		TRY_(msg, cond, 0)
 #define TRY_Q(msg, cond)	TRY_(msg, cond, 1);
 
-XPTString in_str = { 4, "bazz" };
+static char bazz[] = "bazz";
+XPTString in_str = { 4, bazz };
 
+static char foobar[] = "foobar";
 struct TestData {
     uint32_t	bit32;
     uint16_t      bit16;
     uint8_t       bit8[2];
     char	*cstr;
     XPTString   *str;
-} input = { 0xdeadbeef, 0xcafe, {0xba, 0xbe}, "foobar", &in_str},
+} input = { 0xdeadbeef, 0xcafe, {0xba, 0xbe}, foobar, &in_str},
   output = {0, 0, {0, 0}, NULL, NULL };
 
 void

@@ -171,3 +171,110 @@ TEST(Gfx, RegionScaleToInside) {
   }
 
 }
+
+TEST(Gfx, RegionSimplify) {
+  { // ensure simplify works on a single rect
+    nsRegion r(nsRect(0,100,200,100));
+
+    r.SimplifyOutwardByArea(100*100);
+
+    nsRegion result(nsRect(0,100,200,100));
+
+    EXPECT_TRUE(r.IsEqual(result)) <<
+      "regions not the same";
+  }
+
+  { // the rectangles will be merged
+    nsRegion r(nsRect(0,100,200,100));
+    r.Or(r, nsRect(0,200,300,200));
+
+    r.SimplifyOutwardByArea(100*100);
+
+    nsRegion result(nsRect(0,100,300,300));
+
+    EXPECT_TRUE(r.IsEqual(result)) <<
+      "regions not merged";
+  }
+
+  { // two rectangle on the first span
+    // one on the second
+    nsRegion r(nsRect(0,100,200,100));
+    r.Or(r, nsRect(0,200,300,200));
+    r.Or(r, nsRect(250,100,50,100));
+
+    EXPECT_TRUE(r.GetNumRects() == 3) <<
+      "wrong number of rects";
+
+    r.SimplifyOutwardByArea(100*100);
+
+    nsRegion result(nsRect(0,100,300,300));
+
+    EXPECT_TRUE(r.IsEqual(result)) <<
+      "regions not merged";
+  }
+
+  { // the rectangles will be merged
+    nsRegion r(nsRect(0,100,200,100));
+    r.Or(r, nsRect(0,200,300,200));
+    r.Or(r, nsRect(250,100,50,100));
+    r.Sub(r, nsRect(200,200,40,200));
+
+    EXPECT_TRUE(r.GetNumRects() == 4) <<
+      "wrong number of rects";
+
+    r.SimplifyOutwardByArea(100*100);
+
+    nsRegion result(nsRect(0,100,300,300));
+    result.Sub(result, nsRect(200,100,40,300));
+
+    EXPECT_TRUE(r.IsEqual(result)) <<
+      "regions not merged";
+  }
+
+  { // three spans of rectangles
+    nsRegion r(nsRect(0,100,200,100));
+    r.Or(r, nsRect(0,200,300,200));
+    r.Or(r, nsRect(250,100,50,50));
+    r.Sub(r, nsRect(200,200,40,200));
+
+    r.SimplifyOutwardByArea(100*100);
+
+    nsRegion result(nsRect(0,100,300,300));
+    result.Sub(result, nsRect(200,100,40,300));
+
+    EXPECT_TRUE(r.IsEqual(result)) <<
+      "regions not merged";
+  }
+
+  { // three spans of rectangles and an unmerged rectangle
+    nsRegion r(nsRect(0,100,200,100));
+    r.Or(r, nsRect(0,200,300,200));
+    r.Or(r, nsRect(250,100,50,50));
+    r.Sub(r, nsRect(200,200,40,200));
+    r.Or(r, nsRect(250,900,150,50));
+
+    r.SimplifyOutwardByArea(100*100);
+
+    nsRegion result(nsRect(0,100,300,300));
+    result.Sub(result, nsRect(200,100,40,300));
+    result.Or(result, nsRect(250,900,150,50));
+
+    EXPECT_TRUE(r.IsEqual(result)) <<
+      "regions not merged";
+  }
+
+  { // unmerged regions
+    nsRegion r(nsRect(0,100,200,100));
+    r.Or(r, nsRect(0,200,300,200));
+
+    r.SimplifyOutwardByArea(100);
+
+    nsRegion result(nsRect(0,100,200,100));
+    result.Or(result, nsRect(0,200,300,200));
+
+    EXPECT_TRUE(r.IsEqual(result)) <<
+      "regions not merged";
+  }
+
+
+}

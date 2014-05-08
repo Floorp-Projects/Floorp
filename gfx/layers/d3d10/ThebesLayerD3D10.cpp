@@ -412,6 +412,8 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
     destinationSurface = mD2DSurface;
   }
 
+  aRegion.SimplifyOutwardByArea(100 * 100);
+
   MOZ_ASSERT(mDrawTarget);
   nsRefPtr<gfxContext> context = new gfxContext(mDrawTarget);
 
