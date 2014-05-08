@@ -17,7 +17,7 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="1e0574b8f6b8a2a8d9d468878ce2b4c283fc9a84"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="68f7b3d4c3734a699b053cc897c1d11b8326fb93"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="f313e6d3aaaefe8c82eaed15912a09b120fb7260"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="3691614d0045f7968addce45d4140fb360c3ceaf"/>
@@ -128,7 +128,7 @@
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="3a9a17613cc685aa232432566ad6cc607eab4ec1"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="c3ee0c875393607430086f942950d1b3f496ab0e"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="7d33aaf740bbf6c7c6e9c34a92b371eda311b66b"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="07f695559cf1834e908fce0ec2a8531582369bac"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="24e0e7016bbc22096b28e8bfdd6362b250ac78b7"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="bc70af75eac79073c4c935bf1f71c0cb10e821b7"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="f620016437dd2f050e044eccef5e70e3f689ccbe"/>

@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -34,7 +33,8 @@ public final class TabsAccessor {
                                                                 BrowserContract.Tabs.TITLE,
                                                                 BrowserContract.Tabs.URL,
                                                                 BrowserContract.Clients.GUID,
-                                                                BrowserContract.Clients.NAME
+                                                                BrowserContract.Clients.NAME,
+                                                                BrowserContract.Clients.LAST_MODIFIED,
                                                             };
 
     // Projection column numbers
@@ -42,7 +42,8 @@ public final class TabsAccessor {
         TITLE,
         URL,
         GUID,
-        NAME
+        NAME,
+        LAST_MODIFIED,
     };
 
     private static final String CLIENTS_SELECTION = BrowserContract.Clients.GUID + " IS NOT NULL";
@@ -57,6 +58,11 @@ public final class TabsAccessor {
         public String url;
         public String guid;
         public String name;
+        /**
+         * This is the last time the remote client uploaded a tabs record; that
+         * is, it is not per tab, but per remote client.
+         */
+        public long lastModified;
     }
 
     public interface OnQueryTabsCompleteListener {
@@ -105,7 +111,8 @@ public final class TabsAccessor {
                         tab.url = cursor.getString(TABS_COLUMN.URL.ordinal());
                         tab.guid = cursor.getString(TABS_COLUMN.GUID.ordinal());
                         tab.name = cursor.getString(TABS_COLUMN.NAME.ordinal());
-                
+                        tab.lastModified = cursor.getLong(TABS_COLUMN.LAST_MODIFIED.ordinal());
+
                         tabs.add(tab);
                     }
                 } finally {
