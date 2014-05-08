@@ -36,6 +36,7 @@ import org.mozilla.gecko.background.announcements.AnnouncementsBroadcastService;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.gfx.FullScreenState;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PluginLayer;
@@ -564,13 +565,14 @@ public abstract class GeckoApp
                 // Local ref to layerView for thread safety
                 LayerView layerView = mLayerView;
                 if (layerView != null) {
-                    layerView.setFullScreen(true);
+                    layerView.setFullScreenState(message.getBoolean("rootElement")
+                            ? FullScreenState.ROOT_ELEMENT : FullScreenState.NON_ROOT_ELEMENT);
                 }
             } else if (event.equals("DOMFullScreen:Stop")) {
                 // Local ref to layerView for thread safety
                 LayerView layerView = mLayerView;
                 if (layerView != null) {
-                    layerView.setFullScreen(false);
+                    layerView.setFullScreenState(FullScreenState.NONE);
                 }
             } else if (event.equals("Permissions:Data")) {
                 String host = message.getString("host");

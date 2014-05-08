@@ -11,7 +11,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.ThumbnailHelper;
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.TopSitesCursorWrapper;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
@@ -103,14 +103,14 @@ public class TopSitesGridView extends GridView {
         setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                TopSitesGridItemView row = (TopSitesGridItemView) view;
+                TopSitesGridItemView item = (TopSitesGridItemView) view;
 
                 // Decode "user-entered" URLs before loading them.
-                String url = HomeFragment.decodeUserEnteredUrl(row.getUrl());
+                String url = HomeFragment.decodeUserEnteredUrl(item.getUrl());
 
                 // If the url is empty, the user can pin a site.
                 // If not, navigate to the page given by the url.
-                if (!TextUtils.isEmpty(url)) {
+                if (item.getType() != TopSites.TYPE_BLANK) {
                     if (mUrlOpenListener != null) {
                         Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.GRID_ITEM);
 
@@ -129,8 +129,8 @@ public class TopSitesGridView extends GridView {
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor cursor = (Cursor) parent.getItemAtPosition(position);
 
-                TopSitesGridItemView gridView = (TopSitesGridItemView) view;
-                if (cursor == null || gridView.isEmpty()) {
+                TopSitesGridItemView item = (TopSitesGridItemView) view;
+                if (cursor == null || item.getType() == TopSites.TYPE_BLANK) {
                     mContextMenuInfo = null;
                     return false;
                 }
@@ -240,9 +240,9 @@ public class TopSitesGridView extends GridView {
      * @param  cursor  used to update the context menu info object
      */
     private void updateContextMenuFromCursor(TopSitesGridContextMenuInfo info, Cursor cursor) {
-        info.url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
-        info.title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
-        info.isPinned = ((TopSitesCursorWrapper) cursor).isPinned();
+        info.url = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.URL));
+        info.title = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.TITLE));
+        info.type = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.TYPE));
     }
     /**
      * Set an url open listener to be used by this view.
@@ -266,7 +266,7 @@ public class TopSitesGridView extends GridView {
      * Stores information regarding the creation of the context menu for a GridView item.
      */
     public static class TopSitesGridContextMenuInfo extends HomeContextMenuInfo {
-        public boolean isPinned = false;
+        public int type = -1;
 
         public TopSitesGridContextMenuInfo(View targetView, int position, long id) {
             super(targetView, position, id);
