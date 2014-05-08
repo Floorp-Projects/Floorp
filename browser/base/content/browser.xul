@@ -867,6 +867,7 @@
              during the customization of the toolbar, in the palette, and before
              the Downloads Indicator overlay is loaded. -->
         <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       key="key_openDownloads"
                        oncommand="DownloadsIndicatorView.onCommand(event);"
                        ondrop="DownloadsIndicatorView.onDrop(event);"
                        ondragover="DownloadsIndicatorView.onDragOver(event);"
@@ -883,6 +884,7 @@
                        ondragenter="homeButtonObserver.onDragOver(event)"
                        ondrop="homeButtonObserver.onDrop(event)"
                        ondragexit="homeButtonObserver.onDragExit(event)"
+                       key="goHome"
                        onclick="BrowserGoHome(event);"
                        cui-areatype="toolbar"
                        aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
