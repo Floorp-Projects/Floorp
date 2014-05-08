@@ -30,7 +30,7 @@ function install_test_addon(aCallback) {
       onInstallEnded: function() {
         AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
           gTestAddon = addon;
-          executeSoon(aCallback);
+          aCallback();
         });
       }
     };
