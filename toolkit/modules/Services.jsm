@@ -64,6 +64,9 @@ let initTable = [
   ["obs", "@mozilla.org/observer-service;1", "nsIObserverService"],
   ["perms", "@mozilla.org/permissionmanager;1", "nsIPermissionManager"],
   ["prompt", "@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService"],
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  ["profiler", "@mozilla.org/tools/profiler;1", "nsIProfiler"],
+#endif
   ["scriptloader", "@mozilla.org/moz/jssubscript-loader;1", "mozIJSSubScriptLoader"],
   ["scriptSecurityManager", "@mozilla.org/scriptsecuritymanager;1", "nsIScriptSecurityManager"],
 #ifdef MOZ_TOOLKIT_SEARCH

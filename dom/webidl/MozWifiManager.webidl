@@ -10,6 +10,7 @@ enum WifiWPSMethod {
 
 enum ConnectionStatus {
   "connecting",
+  "authenticating",
   "associated",
   "connected",
   "disconnected",
@@ -53,6 +54,7 @@ dictionary NetworkProperties {
   DOMString eap;
   DOMString pin;
   boolean dontConnect;
+  DOMString serverCertificate;
 };
 
 [Constructor(optional NetworkProperties properties),
@@ -87,6 +89,7 @@ interface MozWifiNetwork {
            attribute DOMString? eap;
            attribute DOMString? pin;
            attribute boolean? dontConnect;
+           attribute DOMString? serverCertificate;
 };
 
 [JSImplementation="@mozilla.org/mozwificonnection;1",
