@@ -8,9 +8,11 @@ let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 const TESTCASE_URI_HTML = TEST_BASE + "sourcemaps.html";
 const TESTCASE_URI_CSS = TEST_BASE + "sourcemap-css/sourcemaps.css";
+const TESTCASE_URI_CSS2 = TEST_BASE + "sourcemap-css/contained.css";
 const TESTCASE_URI_REG_CSS = TEST_BASE + "simple.css";
 const TESTCASE_URI_SCSS = TEST_BASE + "sourcemap-sass/sourcemaps.scss";
 const TESTCASE_URI_MAP = TEST_BASE + "sourcemap-css/sourcemaps.css.map";
+const TESTCASE_SCSS_NAME = "sourcemaps.scss";
 
 const PREF = "devtools.styleeditor.source-maps-enabled";
 
@@ -35,6 +37,7 @@ function test()
     // copy all our files over so we don't screw them up for other tests
     let HTMLFile = yield copy(TESTCASE_URI_HTML, ["sourcemaps.html"]);
     let CSSFile = yield copy(TESTCASE_URI_CSS, ["sourcemap-css", "sourcemaps.css"]);
+    let CSSFile2 = yield copy(TESTCASE_URI_CSS2, ["sourcemap-css", "contained.css"]);
     yield copy(TESTCASE_URI_SCSS, ["sourcemap-sass", "sourcemaps.scss"]);
     yield copy(TESTCASE_URI_MAP, ["sourcemap-css", "sourcemaps.css.map"]);
     yield copy(TESTCASE_URI_REG_CSS, ["simple.css"]);
@@ -71,15 +74,19 @@ function test()
 function openEditor(testcaseURI) {
   let deferred = promise.defer();
 
-  addTabAndOpenStyleEditors(3, panel => {
+  addTabAndOpenStyleEditors(5, panel => {
     let UI = panel.UI;
 
-    // wait for 3 editors - 1 for first style sheet, 1 for the
-    // generated style sheet, and 1 for original source after it
-    // loads and replaces the generated style sheet.
+    // wait for 5 editors - 1 for first style sheet, 2 for the
+    // generated style sheets, and 2 for original source after it
+    // loads and replaces the generated style sheets.
     let editor = UI.editors[1];
+    if (getStylesheetNameFor(editor) != TESTCASE_SCSS_NAME) {
+      editor = UI.editors[2];
+    }
+    is(getStylesheetNameFor(editor), TESTCASE_SCSS_NAME, "found scss editor");
 
-    let link = getStylesheetNameLinkFor(editor);
+    let link = getLinkFor(editor);
     link.click();
 
     editor.getSourceEditor().then(deferred.resolve);
@@ -125,8 +132,13 @@ function finishUp() {
 
 /* Helpers */
 
-function getStylesheetNameLinkFor(editor) {
+function getLinkFor(editor) {
   return editor.summary.querySelector(".stylesheet-name");
+}
+
+function getStylesheetNameFor(editor) {
+  return editor.summary.querySelector(".stylesheet-name > label")
+         .getAttribute("value")
 }
 
 function copy(aSrcChromeURL, aDestFilePath)

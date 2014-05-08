@@ -6,13 +6,11 @@ const TEST_BASE_HTTP = "http://example.com/browser/browser/devtools/styleeditor/
 const TEST_BASE_HTTPS = "https://example.com/browser/browser/devtools/styleeditor/test/";
 const TEST_HOST = 'mochi.test:8888';
 
-let tempScope = {};
-Cu.import("resource://gre/modules/devtools/Loader.jsm", tempScope);
-let TargetFactory = tempScope.devtools.TargetFactory;
-Cu.import("resource://gre/modules/LoadContextInfo.jsm", tempScope);
-let LoadContextInfo = tempScope.LoadContextInfo;
-Cu.import("resource://gre/modules/devtools/Console.jsm", tempScope);
-let console = tempScope.console;
+let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let TargetFactory = devtools.TargetFactory;
+let {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
+let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 let gPanelWindow;
 let cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
@@ -28,6 +26,13 @@ SimpleTest.registerCleanupFunction(() => {
   gDevTools.testing = false;
 });
 
+/**
+ * Define an async test based on a generator function
+ */
+function asyncTest(generator) {
+  return () => Task.spawn(generator).then(null, ok.bind(null, false)).then(finish);
+}
+
 function cleanup()
 {
   gPanelWindow = null;
@@ -36,16 +41,25 @@ function cleanup()
   }
 }
 
-function addTabAndOpenStyleEditors(count, callback) {
+function addTabAndOpenStyleEditors(count, callback, uri) {
+  let deferred = promise.defer();
   let currentCount = 0;
   let panel;
   addTabAndCheckOnStyleEditorAdded(p => panel = p, function () {
     currentCount++;
     info(currentCount + " of " + count + " editors opened");
     if (currentCount == count) {
-      callback(panel);
+      if (callback) {
+        callback(panel);
+      }
+      deferred.resolve(panel);
     }
   });
+
+  if (uri) {
+    content.location = uri;
+  }
+  return deferred.promise;
 }
 
 function addTabAndCheckOnStyleEditorAdded(callbackOnce, callbackOnAdded) {
