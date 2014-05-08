@@ -136,7 +136,7 @@ private:
 
   nsRefPtr<MediaSource> mMediaSource;
 
-  const nsAutoCString mType;
+  const nsCString mType;
 
   nsAutoPtr<ContainerParser> mParser;
 
