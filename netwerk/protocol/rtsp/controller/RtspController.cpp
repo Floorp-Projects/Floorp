@@ -188,9 +188,7 @@ RtspController::AsyncOpen(nsIStreamingProtocolListener *aListener)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // Use main thread pointer, but allow access off main thread.
-  mListener =
-    new nsMainThreadPtrHolder<nsIStreamingProtocolListener>(aListener, false);
+  mListener = aListener;
 
   if (!mURI) {
     LOG(("RtspController::AsyncOpen() illegal URI"));
