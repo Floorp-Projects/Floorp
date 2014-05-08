@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.R;
 
@@ -45,14 +46,13 @@ public class TopSitesGridItemView extends RelativeLayout {
 
     private boolean mThumbnailSet;
 
-    // Pinned state.
-    private boolean mIsPinned = false;
+    // Matches BrowserContract.TopSites row types
+    private int mType = -1;
 
     // Dirty state.
     private boolean mIsDirty = false;
 
     // Empty state.
-    private boolean mIsEmpty = true;
     private int mLoadId = Favicons.NOT_LOADING;
 
     public TopSitesGridItemView(Context context) {
@@ -79,7 +79,7 @@ public class TopSitesGridItemView extends RelativeLayout {
     public int[] onCreateDrawableState(int extraSpace) {
         final int[] drawableState = super.onCreateDrawableState(extraSpace + 1);
 
-        if (mIsEmpty) {
+        if (mType == TopSites.TYPE_BLANK) {
             mergeDrawableStates(drawableState, STATE_EMPTY);
         }
 
@@ -101,17 +101,10 @@ public class TopSitesGridItemView extends RelativeLayout {
     }
 
     /**
-     * @return true, if this view is pinned, false otherwise.
+     * @return The site type associated with this view.
      */
-    public boolean isPinned() {
-        return mIsPinned;
-    }
-
-    /**
-     * @return true, if this view has no content to show.
-     */
-    public boolean isEmpty() {
-        return mIsEmpty;
+    public int getType() {
+        return mType;
     }
 
     /**
@@ -138,18 +131,10 @@ public class TopSitesGridItemView extends RelativeLayout {
         updateTitleView();
     }
 
-    /**
-     * @param pinned The pinned state of this view.
-     */
-    public void setPinned(boolean pinned) {
-        mIsPinned = pinned;
-        mTitleView.setCompoundDrawablesWithIntrinsicBounds(pinned ? R.drawable.pin : 0, 0, 0, 0);
-    }
-
     public void blankOut() {
         mUrl = "";
         mTitle = "";
-        mIsPinned = false;
+        mType = TopSites.TYPE_BLANK;
         updateTitleView();
         mTitleView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         setLoadId(Favicons.NOT_LOADING);
@@ -167,7 +152,7 @@ public class TopSitesGridItemView extends RelativeLayout {
      *
      * Returns true if any fields changed.
      */
-    public boolean updateState(final String title, final String url, final boolean pinned, final Bitmap thumbnail) {
+    public boolean updateState(final String title, final String url, final int type, final Bitmap thumbnail) {
         boolean changed = false;
         if (mUrl == null || !mUrl.equals(url)) {
             mUrl = url;
@@ -192,9 +177,12 @@ public class TopSitesGridItemView extends RelativeLayout {
             setLoadId(Favicons.NOT_LOADING);
         }
 
-        if (mIsPinned != pinned) {
-            mIsPinned = pinned;
-            mTitleView.setCompoundDrawablesWithIntrinsicBounds(pinned ? R.drawable.pin : 0, 0, 0, 0);
+        if (mType != type) {
+            mType = type;
+
+            int pinResourceId = (type == TopSites.TYPE_PINNED ? R.drawable.pin : 0); 
+            mTitleView.setCompoundDrawablesWithIntrinsicBounds(pinResourceId, 0, 0, 0);
+
             changed = true;
         }
 
@@ -286,10 +274,8 @@ public class TopSitesGridItemView extends RelativeLayout {
         String title = getTitle();
         if (!TextUtils.isEmpty(title)) {
             mTitleView.setText(title);
-            mIsEmpty = false;
         } else {
             mTitleView.setText(R.string.home_top_sites_add);
-            mIsEmpty = true;
         }
 
         // Refresh for state change.

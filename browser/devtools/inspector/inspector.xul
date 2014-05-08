@@ -56,6 +56,11 @@
         label="&inspectorCopyImageDataUri.label;"
         oncommand="inspector.copyImageDataUri()"/>
       <menuseparator/>
+      <menuitem id="node-menu-pasteouterhtml"
+        label="&inspectorHTMLPasteOuter.label;"
+        accesskey="&inspectorHTMLPasteOuter.accesskey;"
+        oncommand="inspector.pasteOuterHTML()"/>
+      <menuseparator/>
       <menuitem id="node-menu-delete"
         label="&inspectorHTMLDelete.label;"
         accesskey="&inspectorHTMLDelete.accesskey;"

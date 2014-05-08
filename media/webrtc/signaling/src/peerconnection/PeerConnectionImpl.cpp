@@ -1328,6 +1328,7 @@ public:
     mIceCandidatePairStats.Construct();
     mIceCandidateStats.Construct();
     mCodecStats.Construct();
+    mTimestamp.Construct(now);
   }
 };
 
@@ -2122,6 +2123,14 @@ PeerConnectionImpl::BuildStatsQuery_m(
   query->report = RTCStatsReportInternalConstruct(
       NS_ConvertASCIItoUTF16(mName.c_str()),
       query->now);
+
+  // Populate SDP on main
+  if (query->internalStats) {
+    query->report.mLocalSdp.Construct(
+        NS_ConvertASCIItoUTF16(mLocalSDP.c_str()));
+    query->report.mRemoteSdp.Construct(
+        NS_ConvertASCIItoUTF16(mRemoteSDP.c_str()));
+  }
 
   // Gather up pipelines from mMedia so they may be inspected on STS
   TrackID trackId = aSelector ? aSelector->GetTrackID() : 0;

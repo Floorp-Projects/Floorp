@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsParentalControlsServiceWin.h"
+#include "nsParentalControlsService.h"
 #include "nsString.h"
 #include "nsIArray.h"
 #include "nsIWidget.h"
@@ -17,7 +17,7 @@
 static const CLSID CLSID_WinParentalControls = {0xE77CC89B,0x7401,0x4C04,{0x8C,0xED,0x14,0x9D,0xB3,0x5A,0xDD,0x04}};
 static const IID IID_IWinParentalControls  = {0x28B4D88B,0xE072,0x49E6,{0x80,0x4D,0x26,0xED,0xBE,0x21,0xA7,0xB9}};
 
-NS_IMPL_ISUPPORTS(nsParentalControlsServiceWin, nsIParentalControlsService)
+NS_IMPL_ISUPPORTS(nsParentalControlsService, nsIParentalControlsService)
 
 static HINSTANCE gAdvAPIDLLInst = nullptr;
 
@@ -25,7 +25,7 @@ decltype(EventWrite)* gEventWrite = nullptr;
 decltype(EventRegister)* gEventRegister = nullptr;
 decltype(EventUnregister)* gEventUnregister = nullptr;
 
-nsParentalControlsServiceWin::nsParentalControlsServiceWin() :
+nsParentalControlsService::nsParentalControlsService() :
   mEnabled(false)
 , mProvider(0)
 , mPC(nullptr)
@@ -60,7 +60,7 @@ nsParentalControlsServiceWin::nsParentalControlsServiceWin() :
   }
 }
 
-nsParentalControlsServiceWin::~nsParentalControlsServiceWin()
+nsParentalControlsService::~nsParentalControlsService()
 {
   if (mPC)
     mPC->Release();
@@ -75,7 +75,7 @@ nsParentalControlsServiceWin::~nsParentalControlsServiceWin()
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsParentalControlsServiceWin::GetParentalControlsEnabled(bool *aResult)
+nsParentalControlsService::GetParentalControlsEnabled(bool *aResult)
 {
   *aResult = false;
 
@@ -86,7 +86,7 @@ nsParentalControlsServiceWin::GetParentalControlsEnabled(bool *aResult)
 }
 
 NS_IMETHODIMP
-nsParentalControlsServiceWin::GetBlockFileDownloadsEnabled(bool *aResult)
+nsParentalControlsService::GetBlockFileDownloadsEnabled(bool *aResult)
 {
   *aResult = false;
 
@@ -105,7 +105,7 @@ nsParentalControlsServiceWin::GetBlockFileDownloadsEnabled(bool *aResult)
 }
 
 NS_IMETHODIMP
-nsParentalControlsServiceWin::GetLoggingEnabled(bool *aResult)
+nsParentalControlsService::GetLoggingEnabled(bool *aResult)
 {
   *aResult = false;
 
@@ -126,7 +126,7 @@ nsParentalControlsServiceWin::GetLoggingEnabled(bool *aResult)
 
 // Post a log event to the system
 NS_IMETHODIMP
-nsParentalControlsServiceWin::Log(int16_t aEntryType, bool blocked, nsIURI *aSource, nsIFile *aTarget)
+nsParentalControlsService::Log(int16_t aEntryType, bool blocked, nsIURI *aSource, nsIFile *aTarget)
 {
   if (!mEnabled)
     return NS_ERROR_NOT_AVAILABLE;
@@ -163,7 +163,7 @@ nsParentalControlsServiceWin::Log(int16_t aEntryType, bool blocked, nsIURI *aSou
 
 // Override a single URI
 NS_IMETHODIMP
-nsParentalControlsServiceWin::RequestURIOverride(nsIURI *aTarget, nsIInterfaceRequestor *aWindowContext, bool *_retval)
+nsParentalControlsService::RequestURIOverride(nsIURI *aTarget, nsIInterfaceRequestor *aWindowContext, bool *_retval)
 {
   *_retval = false;
 
@@ -199,7 +199,7 @@ nsParentalControlsServiceWin::RequestURIOverride(nsIURI *aTarget, nsIInterfaceRe
 
 // Override a web page
 NS_IMETHODIMP
-nsParentalControlsServiceWin::RequestURIOverrides(nsIArray *aTargets, nsIInterfaceRequestor *aWindowContext, bool *_retval)
+nsParentalControlsService::RequestURIOverrides(nsIArray *aTargets, nsIInterfaceRequestor *aWindowContext, bool *_retval)
 {
   *_retval = false;
 
@@ -284,7 +284,7 @@ nsParentalControlsServiceWin::RequestURIOverrides(nsIArray *aTargets, nsIInterfa
 
 // Sends a file download event to the Vista Event Log 
 void
-nsParentalControlsServiceWin::LogFileDownload(bool blocked, nsIURI *aSource, nsIFile *aTarget)
+nsParentalControlsService::LogFileDownload(bool blocked, nsIURI *aSource, nsIFile *aTarget)
 {
   nsAutoCString curi;
 

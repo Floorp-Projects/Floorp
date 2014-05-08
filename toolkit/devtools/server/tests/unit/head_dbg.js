@@ -361,3 +361,23 @@ function executeSoon(aFunc) {
     run: DevToolsUtils.makeInfallible(aFunc)
   }, Ci.nsIThread.DISPATCH_NORMAL);
 }
+
+// Create async version of the object where calling each method
+// is equivalent of calling it with asyncall. Mainly useful for
+// destructuring objects with methods that take callbacks.
+const Async = target => new Proxy(target, Async);
+Async.get = (target, name) =>
+  typeof(target[name]) === "function" ? asyncall.bind(null, target[name], target) :
+  target[name];
+
+// Calls async function that takes callback and errorback and returns
+// returns promise representing result.
+const asyncall = (fn, self, ...args) =>
+  new Promise((...etc) => fn.call(self, ...args, ...etc));
+
+const Test = task => () => {
+  add_task(task);
+  run_next_test();
+};
+
+const assert = do_check_true;

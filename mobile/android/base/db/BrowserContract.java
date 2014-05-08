@@ -415,4 +415,18 @@ public class BrowserContract {
         public static final String TABLE_NAME = "reading_list";
     }
 
+    @RobocopTarget
+    public static final class TopSites implements CommonColumns, URLColumns {
+        private TopSites() {}
+
+        public static final int TYPE_BLANK = 0;
+        public static final int TYPE_TOP = 1;
+        public static final int TYPE_PINNED = 2;
+
+        public static final String BOOKMARK_ID = "bookmark_id";
+        public static final String HISTORY_ID = "history_id";
+        public static final String DISPLAY = "display";
+
+        public static final String TYPE = "type";
+    }
 }
