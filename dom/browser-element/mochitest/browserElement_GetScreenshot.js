@@ -11,19 +11,20 @@ browserElementTestHelpers.addPermission();
 function runTest() {
   var iframe1 = document.createElement('iframe');
   SpecialPowers.wrap(iframe1).mozbrowser = true;
-  document.body.appendChild(iframe1);
+
   iframe1.src = 'data:text/html,<html>' +
     '<body style="background:green">hello</body></html>';
+  document.body.appendChild(iframe1);
 
   var screenshotImageDatas = [];
-  var numLoaded = 0;
 
-  function screenshotTaken(screenshotImageData) {
-    screenshotImageDatas.push(screenshotImageData);
+  function screenshotTaken(aScreenshotImageData) {
+    screenshotImageDatas.push(aScreenshotImageData);
+
     if (screenshotImageDatas.length === 1) {
       ok(true, 'Got initial non blank screenshot');
 
-      var view = screenshotImageData.data;
+      var view = aScreenshotImageData.data;
       if (view[3] !== 255) {
         ok(false, 'The first pixel of initial screenshot is not opaque');
         SimpleTest.finish();
@@ -34,28 +35,13 @@ function runTest() {
       iframe1.src = 'data:text/html,<html>' +
         '<body style="background:transparent">hello</body></html>';
 
-      // Wait until screenshotImageData !== screenshotImageDatas[0].
-      waitForScreenshot(function(screenshotImageData) {
-        var view1 = screenshotImageData.data;
-        var view2 = screenshotImageDatas[0].data;
+      iframe1.addEventListener('mozbrowserloadend', ()=>takeScreenshot('image/png'));
 
-        if (view1.length != view2.length) {
-          return true;
-        }
-
-        for (var i = 0; i < view1.length; i++) {
-          if (view1[i] != view2[i]) {
-            return true;
-          }
-        }
-
-        return false;
-      }, 'image/png');
     }
     else if (screenshotImageDatas.length === 2) {
       ok(true, 'Got updated screenshot after source page changed');
 
-      var view = screenshotImageData.data;
+      var view = aScreenshotImageData.data;
       if (view[3] !== 0) {
         // The case here will always fail when oop'd on Firefox Desktop,
         // but not on B2G Emulator
@@ -79,15 +65,15 @@ function runTest() {
 
   // We continually take screenshots until we get one that we are
   // happy with.
-  function waitForScreenshot(filter, mimeType) {
+  function takeScreenshot(mimeType) {
     function gotImage(e) {
       // |this| is the Image.
 
       URL.revokeObjectURL(this.src);
 
       if (e.type === 'error' || !this.width || !this.height) {
-        tryAgain();
-
+        ok(false, "load image error");
+        SimpleTest.finish();
         return;
       }
 
@@ -97,23 +83,7 @@ function runTest() {
       ctx.drawImage(this, 0, 0);
       var imageData = ctx.getImageData(0, 0, 1000, 1000);
 
-      if (filter(imageData)) {
-        screenshotTaken(imageData);
-        return;
-      }
-      tryAgain();
-    }
-
-    function tryAgain() {
-      if (--attempts === 0) {
-        ok(false, 'Timed out waiting for correct screenshot');
-        SimpleTest.finish();
-      } else {
-        setTimeout(function() {
-          iframe1.getScreenshot(1000, 1000, mimeType).onsuccess =
-            getScreenshotImageData;
-        }, 200);
-      }
+      screenshotTaken(imageData);
     }
 
     function getScreenshotImageData(e) {
@@ -124,9 +94,8 @@ function runTest() {
       }
 
       if (blob.size === 0) {
-        tryAgain();
-
-        return;
+        ok(false, "get screenshot image error");
+        SimpleTest.finish();
       }
 
       var img = new Image();
@@ -134,18 +103,13 @@ function runTest() {
       img.onload = img.onerror = gotImage;
     }
 
-    var attempts = 10;
     iframe1.getScreenshot(1000, 1000, mimeType).onsuccess =
       getScreenshotImageData;
   }
 
-  function iframeLoadedHandler() {
-    numLoaded++;
-    if (numLoaded === 2) {
-      waitForScreenshot(function(screenshotImageData) {
-        return true;
-      }, 'image/jpeg');
-    }
+  function iframeLoadedHandler(e) {
+    iframe1.removeEventListener('mozbrowserloadend', iframeLoadedHandler);
+    takeScreenshot('image/jpeg');
   }
 
   iframe1.addEventListener('mozbrowserloadend', iframeLoadedHandler);
