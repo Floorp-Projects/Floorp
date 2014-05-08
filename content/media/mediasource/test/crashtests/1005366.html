@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+/*
+user_pref("media.mediasource.enabled", true);
+*/
+
+function boom()
+{
+    var source = new window.MediaSource();
+    var videoElement = document.createElementNS('http://www.w3.org/1999/xhtml', 'video');
+    videoElement.src = URL.createObjectURL(source);
+
+    setTimeout(function() {
+        var buf = source.addSourceBuffer("video/webm");
+        buf.abort();
+        buf.appendBuffer(new Float32Array(203));
+    }, 0);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
