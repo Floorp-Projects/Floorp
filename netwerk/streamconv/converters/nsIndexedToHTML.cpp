@@ -18,7 +18,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIChromeRegistry.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIDateTimeFormat.h"
 #include "nsIStringBundle.h"
 #include "nsITextToSubURI.h"

@@ -337,7 +337,10 @@ JitRuntime::generateInvalidator(JSContext *cx)
 
     // Save floating point registers
     // We can use as_sd because stack is alligned.
-    for (uint32_t i = 0; i < FloatRegisters::Total; i++)
+    // :TODO: (Bug 972836) // Fix this once odd regs can be used as float32
+    // only. For now we skip saving odd regs for O32 ABI.
+    uint32_t increment = 2;
+    for (uint32_t i = 0; i < FloatRegisters::Total; i += increment)
         masm.as_sd(FloatRegister::FromCode(i), StackPointer,
                    InvalidationBailoutStack::offsetOfFpRegs() + i * sizeof(double));
 
@@ -556,7 +559,10 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
 
     // Save floating point registers
     // We can use as_sd because stack is alligned.
-    for (uintptr_t i = 0; i < FloatRegisters::Total; i++)
+    // :TODO: (Bug 972836) // Fix this once odd regs can be used as float32
+    // only. For now we skip saving odd regs for O32 ABI.
+    uint32_t increment = 2;
+    for (uint32_t i = 0; i < FloatRegisters::Total; i += increment)
         masm.as_sd(FloatRegister::FromCode(i), StackPointer,
                    BailoutStack::offsetOfFpRegs() + i * sizeof(double));
 

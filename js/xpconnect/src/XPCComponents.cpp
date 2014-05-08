@@ -2926,7 +2926,7 @@ nsXPCComponents_Utils::GetGlobalForObject(HandleValue object,
         return NS_ERROR_FAILURE;
 
     // Outerize if necessary.
-    if (JSObjectOp outerize = js::GetObjectClass(obj)->ext.outerObject)
+    if (js::ObjectOp outerize = js::GetObjectClass(obj)->ext.outerObject)
       obj = outerize(cx, obj);
 
     retval.setObject(*obj);

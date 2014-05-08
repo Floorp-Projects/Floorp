@@ -11,5 +11,7 @@ localesfallbacks.properties.h: $(PROPS2ARRAYS) localesfallbacks.properties
 	$(PYTHON) $^ $@
 domainsfallbacks.properties.h: $(PROPS2ARRAYS) domainsfallbacks.properties
 	$(PYTHON) $^ $@
+encodingsgroups.properties.h: $(PROPS2ARRAYS) encodingsgroups.properties
+	$(PYTHON) $^ $@
 nonparticipatingdomains.properties.h: $(PROPS2ARRAYS) nonparticipatingdomains.properties
 	$(PYTHON) $^ $@

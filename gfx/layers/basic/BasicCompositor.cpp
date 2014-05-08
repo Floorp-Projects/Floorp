@@ -144,6 +144,11 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
                      aTextureCoords.y * aSource->GetSize().height,
                      aTextureCoords.width * aSource->GetSize().width,
                      aTextureCoords.height * aSource->GetSize().height);
+
+  // Floating point error can accumulate above and we know our visible region
+  // is integer-aligned, so round it out.
+  sourceRect.Round();
+
   // Compute a transform that maps sourceRect to aDestRect.
   gfxMatrix transform =
     gfxUtils::TransformRectToRect(sourceRect,

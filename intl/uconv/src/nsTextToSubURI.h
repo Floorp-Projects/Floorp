@@ -6,6 +6,7 @@
 #define nsTextToSubURI_h__
 
 #include "nsITextToSubURI.h"
+#include "nsString.h"
 
 //==============================================================
 class nsTextToSubURI: public nsITextToSubURI {
