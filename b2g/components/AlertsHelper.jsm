@@ -144,7 +144,8 @@ let AlertsHelper = {
             lang: listener.lang,
             dir: listener.dir,
             id: listener.id,
-            tag: listener.tag
+            tag: listener.tag,
+            timestamp: listener.timestamp
           },
           Services.io.newURI(listener.target, null, null),
           Services.io.newURI(listener.manifestURL, null, null)
@@ -194,7 +195,7 @@ let AlertsHelper = {
   },
 
   showNotification: function(imageURL, title, text, textClickable, cookie,
-                             uid, bidi, lang, manifestURL) {
+                             uid, bidi, lang, manifestURL, timestamp) {
     function send(appName, appIcon) {
       SystemAppProxy._sendCustomEvent(kMozChromeNotificationEvent, {
         type: kDesktopNotification,
@@ -206,7 +207,8 @@ let AlertsHelper = {
         lang: lang,
         appName: appName,
         appIcon: appIcon,
-        manifestURL: manifestURL
+        manifestURL: manifestURL,
+        timestamp: timestamp
       });
     }
 
@@ -248,12 +250,13 @@ let AlertsHelper = {
       lang: details.lang || undefined,
       id: details.id || undefined,
       dir: details.dir || undefined,
-      tag: details.tag || undefined
+      tag: details.tag || undefined,
+      timestamp: details.timestamp || undefined
     };
     this.registerAppListener(data.uid, listener);
     this.showNotification(data.imageURL, data.title, data.text,
                           details.textClickable, null, data.uid, details.dir,
-                          details.lang, details.manifestURL);
+                          details.lang, details.manifestURL, details.timestamp);
   },
 
   closeAlert: function(name) {
