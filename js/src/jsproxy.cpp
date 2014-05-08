@@ -1802,26 +1802,28 @@ ScriptedDirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject prox
                            cx->names().getOwnPropertyNames);
 }
 
-// Proxy.[[Delete]](P, Throw)
+// ES6 (5 April 2014) Proxy.[[Delete]](P)
 bool
 ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
-    // step 1
+    // step 2
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // step 2
+    // TODO: step 3: Implement revocation semantics
+
+    // step 4
     RootedObject target(cx, proxy->as<ProxyObject>().target());
 
-    // step 3
+    // step 5
     RootedValue trap(cx);
     if (!JSObject::getProperty(cx, handler, handler, cx->names().deleteProperty, &trap))
         return false;
 
-    // step 4
+    // step 7
     if (trap.isUndefined())
         return DirectProxyHandler::delete_(cx, proxy, id, bp);
 
-    // step 5
+    // step 8
     RootedValue value(cx);
     if (!IdToExposableValue(cx, id, &value))
         return false;
@@ -1833,24 +1835,26 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId 
     if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
-    // step 6-7
+    // step 9
     if (ToBoolean(trapResult)) {
+        // step 12
         Rooted<PropertyDescriptor> desc(cx);
         if (!GetOwnPropertyDescriptor(cx, target, id, &desc))
             return false;
 
+        // step 14-15
         if (desc.object() && desc.isPermanent()) {
             RootedValue v(cx, IdToValue(id));
             js_ReportValueError(cx, JSMSG_CANT_DELETE, JSDVG_IGNORE_STACK, v, js::NullPtr());
             return false;
         }
 
+        // step 16
         *bp = true;
         return true;
     }
 
-    // step 8
-    // FIXME: API does not include a Throw parameter
+    // step 11
     *bp = false;
     return true;
 }
