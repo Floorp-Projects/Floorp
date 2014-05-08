@@ -178,6 +178,9 @@
       * The time stamp resolution is 1 second at best, but might be worse
       * depending on the platform.
       *
+      * WARNING: This method is not implemented on Android/B2G. On Android/B2G,
+      * you should use File.setDates instead.
+      *
       * @param {Date,number=} accessDate The last access date. If numeric,
       * milliseconds since epoch. If omitted or null, then the current date
       * will be used.
@@ -188,18 +191,14 @@
       * @throws {TypeError} In case of invalid parameters.
       * @throws {OS.File.Error} In case of I/O error.
       */
-     File.prototype.setDates = function setDates(accessDate, modificationDate) {
-       accessDate = normalizeDate("File.prototype.setDates", accessDate);
-       modificationDate = normalizeDate("File.prototype.setDates",
-                                        modificationDate);
-       gTimevals[0].tv_sec = (accessDate / 1000) | 0;
-       gTimevals[0].tv_usec = 0;
-       gTimevals[1].tv_sec = (modificationDate / 1000) | 0;
-       gTimevals[1].tv_usec = 0;
-       throw_on_negative("setDates",
-                         UnixFile.futimes(this.fd, gTimevalsPtr),
-                         this._path);
-     };
+     if (SharedAll.Constants.Sys.Name != "Android") {
+       File.prototype.setDates = function(accessDate, modificationDate) {
+         let {value, ptr} = datesToTimevals(accessDate, modificationDate);
+         throw_on_negative("setDates",
+           UnixFile.futimes(this.fd, ptr),
+           this._path);
+       };
+     }
 
      /**
       * Flushes the file's buffers and causes all buffered data
@@ -370,7 +369,7 @@
        let fileSystemInfo = new Type.statvfs.implementation();
        let fileSystemInfoPtr = fileSystemInfo.address();
 
-       throw_on_negative("statvfs",  UnixFile.statvfs(sourcePath, fileSystemInfoPtr));
+       throw_on_negative("statvfs",  (UnixFile.statvfs || UnixFile.statfs)(sourcePath, fileSystemInfoPtr));
 
        let bytes = new Type.uint64_t.implementation(
                         fileSystemInfo.f_bsize * fileSystemInfo.f_bavail);
@@ -826,8 +825,7 @@
 
      let gStatData = new Type.stat.implementation();
      let gStatDataPtr = gStatData.address();
-     let gTimevals = new Type.timevals.implementation();
-     let gTimevalsPtr = gTimevals.address();
+
      let MODE_MASK = 4095 /*= 07777*/;
      File.Info = function Info(stat, path) {
        let isDir = (stat.st_mode & Const.S_IFMT) == Const.S_IFDIR;
@@ -912,6 +910,25 @@
      };
 
      /**
+      * Convert an access date and a modification date to an array
+      * of two |timeval|.
+      */
+     function datesToTimevals(accessDate, modificationDate) {
+       accessDate = normalizeDate("File.setDates", accessDate);
+       modificationDate = normalizeDate("File.setDates", modificationDate);
+
+       let timevals = new Type.timevals.implementation();
+       let timevalsPtr = timevals.address();
+
+       timevals[0].tv_sec = (accessDate / 1000) | 0;
+       timevals[0].tv_usec = 0;
+       timevals[1].tv_sec = (modificationDate / 1000) | 0;
+       timevals[1].tv_usec = 0;
+
+       return { value: timevals, ptr: timevalsPtr };
+     }
+
+     /**
       * Set the last access and modification date of the file.
       * The time stamp resolution is 1 second at best, but might be worse
       * depending on the platform.
@@ -928,14 +945,9 @@
       * @throws {OS.File.Error} In case of I/O error.
       */
      File.setDates = function setDates(path, accessDate, modificationDate) {
-       accessDate = normalizeDate("File.setDates", accessDate);
-       modificationDate = normalizeDate("File.setDates", modificationDate);
-       gTimevals[0].tv_sec = (accessDate / 1000) | 0;
-       gTimevals[0].tv_usec = 0;
-       gTimevals[1].tv_sec = (modificationDate / 1000) | 0;
-       gTimevals[1].tv_usec = 0;
+       let {value, ptr} = datesToTimevals(accessDate, modificationDate);
        throw_on_negative("setDates",
-                         UnixFile.utimes(path, gTimevalsPtr),
+                         UnixFile.utimes(path, ptr),
                          path);
      };
 
@@ -984,8 +996,17 @@
       * Get the current directory by getCurrentDirectory.
       */
      File.getCurrentDirectory = function getCurrentDirectory() {
-       let path = UnixFile.get_current_dir_name?UnixFile.get_current_dir_name():
-         UnixFile.getwd_auto(null);
+       let path, buf;
+       if (UnixFile.get_current_dir_name) {
+	 path = UnixFile.get_current_dir_name();
+       } else if (UnixFile.getwd_auto) {
+         path = UnixFile.getwd_auto(null);
+       } else {
+	 for (let length = Const.PATH_MAX; !path; length *= 2) {
+	   buf = new (ctypes.char.array(length));
+	   path = UnixFile.getcwd(buf, length);
+	 };
+       }
        throw_on_null("getCurrentDirectory", path);
        return path.readString();
      };
