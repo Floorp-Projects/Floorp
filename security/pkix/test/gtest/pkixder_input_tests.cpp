@@ -90,8 +90,12 @@ TEST_F(pkixder_input_tests, InputInitWithNullPointerOrZeroLength)
   ASSERT_EQ(Failure, input.Init(nullptr, 100));
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 
-  // Is this a bug?
+  // Though it seems odd to initialize with zero-length and non-null ptr, this
+  // is working as intended. The Input class was intended to protect against
+  // buffer overflows, and there's no risk with the current behavior. See bug
+  // 1000354.
   ASSERT_EQ(Success, input.Init((const uint8_t*) "hello", 0));
+  ASSERT_TRUE(input.AtEnd());
 }
 
 TEST_F(pkixder_input_tests, InputInitWithLargeData)

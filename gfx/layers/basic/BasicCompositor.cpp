@@ -32,7 +32,7 @@ public:
 
   virtual TextureSourceBasic* AsSourceBasic() MOZ_OVERRIDE { return this; }
 
-  virtual gfx::SourceSurface* GetSurface() MOZ_OVERRIDE { return mSurface; }
+  virtual gfx::SourceSurface* GetSurface(DrawTarget* aTarget) MOZ_OVERRIDE { return mSurface; }
 
   SurfaceFormat GetFormat() const MOZ_OVERRIDE
   {
@@ -293,7 +293,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
   Matrix maskTransform;
   if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
     EffectMask *effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EffectTypes::MASK].get());
-    sourceMask = effectMask->mMaskTexture->AsSourceBasic()->GetSurface();
+    sourceMask = effectMask->mMaskTexture->AsSourceBasic()->GetSurface(dest);
     MOZ_ASSERT(effectMask->mMaskTransform.Is2D(), "How did we end up with a 3D transform here?!");
     MOZ_ASSERT(!effectMask->mIs3D);
     maskTransform = effectMask->mMaskTransform.As2D();
@@ -315,7 +315,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       TextureSourceBasic* source = texturedEffect->mTexture->AsSourceBasic();
 
       DrawSurfaceWithTextureCoords(dest, aRect,
-                                   source->GetSurface(),
+                                   source->GetSurface(dest),
                                    texturedEffect->mTextureCoords,
                                    texturedEffect->mFilter,
                                    aOpacity, sourceMask, &maskTransform);

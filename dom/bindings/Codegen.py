@@ -23,7 +23,7 @@ HASINSTANCE_HOOK_NAME = '_hasInstance'
 NEWRESOLVE_HOOK_NAME = '_newResolve'
 ENUMERATE_HOOK_NAME = '_enumerate'
 ENUM_ENTRY_VARIABLE_NAME = 'strings'
-INSTANCE_RESERVED_SLOTS = 3
+INSTANCE_RESERVED_SLOTS = 1
 
 
 def memberReservedSlot(member):
@@ -353,6 +353,7 @@ JS_NULL_OBJECT_OPS
         if self.descriptor.interface.getExtendedAttribute("Global"):
             classFlags += "JSCLASS_DOM_GLOBAL | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS) | JSCLASS_IMPLEMENTS_BARRIERS"
             traceHook = "JS_GlobalObjectTraceHook"
+            reservedSlots = "JSCLASS_GLOBAL_APPLICATION_SLOTS"
             if not self.descriptor.workers:
                 classExtensionAndObjectOps = """\
 {
@@ -388,6 +389,7 @@ JS_NULL_OBJECT_OPS
 """
         else:
             classFlags += "JSCLASS_HAS_RESERVED_SLOTS(%d)" % slotCount
+            reservedSlots = slotCount
         if self.descriptor.interface.getExtendedAttribute("NeedNewResolve"):
             newResolveHook = "(JSResolveOp)" + NEWRESOLVE_HOOK_NAME
             classFlags += " | JSCLASS_NEW_RESOLVE"
@@ -423,6 +425,10 @@ JS_NULL_OBJECT_OPS
               },
               $*{descriptor}
             };
+            static_assert(${instanceReservedSlots} == DOM_INSTANCE_RESERVED_SLOTS,
+                          "Must have the right minimal number of reserved slots.");
+            static_assert(${reservedSlots} >= ${slotCount},
+                          "Must have enough reserved slots.");
             """,
             name=self.descriptor.interface.identifier.name,
             flags=classFlags,
@@ -433,7 +439,10 @@ JS_NULL_OBJECT_OPS
             call=callHook,
             trace=traceHook,
             classExtensionAndObjectOps=classExtensionAndObjectOps,
-            descriptor=DOMClass(self.descriptor))
+            descriptor=DOMClass(self.descriptor),
+            instanceReservedSlots=INSTANCE_RESERVED_SLOTS,
+            reservedSlots=reservedSlots,
+            slotCount=slotCount)
 
 
 class CGDOMProxyJSClass(CGThing):
@@ -10029,6 +10038,12 @@ class CGDescriptor(CGThing):
             not descriptor.workers):
             cgThings.append(CGConstructorEnabled(descriptor))
 
+        if (descriptor.interface.hasMembersInSlots() and
+            descriptor.interface.hasChildInterfaces()):
+            raise TypeError("We don't support members in slots on "
+                            "non-leaf interfaces like %s" %
+                            descriptor.interface.identifier.name)
+
         if descriptor.concrete:
             if descriptor.proxy:
                 if descriptor.interface.totalMembersInSlots != 0:
@@ -10056,10 +10071,6 @@ class CGDescriptor(CGThing):
                 cgThings.append(CGDOMJSClass(descriptor))
                 cgThings.append(CGGetJSClassMethod(descriptor))
                 if descriptor.interface.hasMembersInSlots():
-                    if descriptor.interface.hasChildInterfaces():
-                        raise TypeError("We don't support members in slots on "
-                                        "non-leaf interfaces like %s" %
-                                        descriptor.interface.identifier.name)
                     cgThings.append(CGUpdateMemberSlotsMethod(descriptor))
 
             if descriptor.interface.getExtendedAttribute("Global"):
