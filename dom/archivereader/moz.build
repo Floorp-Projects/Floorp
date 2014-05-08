@@ -1,0 +1,32 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+TEST_DIRS += ['test']
+
+EXPORTS.mozilla.dom.archivereader += [
+    'ArchiveEvent.h',
+    'ArchiveReader.h',
+    'ArchiveReaderCommon.h',
+    'ArchiveRequest.h',
+    'ArchiveZipEvent.h',
+    'ArchiveZipFile.h',
+]
+
+UNIFIED_SOURCES += [
+    'ArchiveEvent.cpp',
+    'ArchiveReader.cpp',
+    'ArchiveRequest.cpp',
+    'ArchiveZipEvent.cpp',
+    'ArchiveZipFile.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+LOCAL_INCLUDES += [
+    '../base',
+]
+
+FINAL_LIBRARY = 'gklayout'

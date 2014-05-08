@@ -80,6 +80,13 @@ class PeerConnectionCtx : public CSF::CC_Observer {
   friend class PeerConnectionWrapper;
   friend class mozilla::dom::WebrtcGlobalInformation;
 
+#ifdef MOZILLA_INTERNAL_API
+  // WebrtcGlobalInformation uses this; we put it here so we don't need to
+  // create another shutdown observer class.
+  mozilla::dom::Sequence<mozilla::dom::RTCStatsReportInternal>
+    mStatsForClosedPeerConnections;
+#endif
+
  private:
   // We could make these available only via accessors but it's too much trouble.
   std::map<const std::string, PeerConnectionImpl *> mPeerConnections;

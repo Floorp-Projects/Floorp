@@ -3466,11 +3466,14 @@ nsDocShell::IsSandboxedFrom(nsIDocShell* aTargetDocShell)
         return false;
     }
 
-    uint32_t sandboxFlags = 0;
-
-    nsCOMPtr<nsIDocument> doc = mContentViewer->GetDocument();
-    if (doc) {
-        sandboxFlags = doc->GetSandboxFlags();
+    // Default the sandbox flags to our flags, so that if we can't retrieve the
+    // active document, we will still enforce our own.
+    uint32_t sandboxFlags = mSandboxFlags;
+    if (mContentViewer) {
+        nsCOMPtr<nsIDocument> doc = mContentViewer->GetDocument();
+        if (doc) {
+            sandboxFlags = doc->GetSandboxFlags();
+        }
     }
 
     // If no flags, we are not sandboxed at all.

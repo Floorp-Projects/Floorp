@@ -29,8 +29,6 @@ Cu.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAl
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 
-XPCOMUtils.defineLazyModuleGetter(this, 'Deprecated',
-  'resource://gre/modules/Deprecated.jsm');
 
 // Boilerplate, to simplify the transition to require()
 let LOG = SharedAll.LOG.bind(SharedAll, "Controller");
@@ -676,20 +674,6 @@ File.prototype = {
   },
 
   /**
-   * Set the last access and modification date of the file.
-   * The time stamp resolution is 1 second at best, but might be worse
-   * depending on the platform.
-   *
-   * @return {promise}
-   * @rejects {TypeError}
-   * @rejects {OS.File.Error}
-   */
-  setDates: function setDates(accessDate, modificationDate) {
-    return Scheduler.post("File_prototype_setDates",
-                          [this._fdmsg, accessDate, modificationDate], this);
-  },
-
-  /**
    * Read a number of bytes from the file and into a buffer.
    *
    * @param {Typed array | C pointer} buffer This buffer will be
@@ -826,6 +810,27 @@ File.prototype = {
       [this._fdmsg]);
   }
 };
+
+
+if (SharedAll.Constants.Sys.Name != "Android") {
+  /**
+   * Set the last access and modification date of the file.
+   * The time stamp resolution is 1 second at best, but might be worse
+   * depending on the platform.
+   *
+   * WARNING: This method is not implemented on Android/B2G. On Android/B2G,
+   * you should use File.setDates instead.
+   *
+   * @return {promise}
+   * @rejects {TypeError}
+   * @rejects {OS.File.Error}
+   */
+  File.prototype.setDates = function(accessDate, modificationDate) {
+    return Scheduler.post("File_prototype_setDates",
+      [this._fdmsg, accessDate, modificationDate], this);
+  };
+}
+
 
 /**
  * Open a file asynchronously.
@@ -1234,6 +1239,7 @@ File.Info.prototype = SysAll.AbstractInfo.prototype;
 // Deprecated
 Object.defineProperty(File.Info.prototype, "creationDate", {
   get: function creationDate() {
+    let {Deprecated} = Cu.import("resource://gre/modules/Deprecated.jsm", {});
     Deprecated.warning("Field 'creationDate' is deprecated.", "https://developer.mozilla.org/en-US/docs/JavaScript_OS.File/OS.File.Info#Cross-platform_Attributes");
     return this._deprecatedCreationDate;
   }

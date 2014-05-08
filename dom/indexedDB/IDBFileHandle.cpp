@@ -6,9 +6,10 @@
 
 #include "IDBFileHandle.h"
 
-#include "mozilla/dom/file/File.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/IDBFileHandleBinding.h"
 #include "mozilla/dom/quota/FileStreams.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 
 #include "IDBDatabase.h"
 
@@ -40,11 +41,19 @@ IDBFileHandle::IDBFileHandle(IDBDatabase* aOwner)
 {
 }
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(IDBFileHandle, FileHandle, mDatabase)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBFileHandle)
+NS_INTERFACE_MAP_END_INHERITING(FileHandle)
+
+NS_IMPL_ADDREF_INHERITED(IDBFileHandle, FileHandle)
+NS_IMPL_RELEASE_INHERITED(IDBFileHandle, FileHandle)
+
 // static
 already_AddRefed<IDBFileHandle>
-IDBFileHandle::Create(IDBDatabase* aDatabase,
-                      const nsAString& aName,
+IDBFileHandle::Create(const nsAString& aName,
                       const nsAString& aType,
+                      IDBDatabase* aDatabase,
                       already_AddRefed<FileInfo> aFileInfo)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -54,28 +63,45 @@ IDBFileHandle::Create(IDBDatabase* aDatabase,
 
   nsRefPtr<IDBFileHandle> newFile = new IDBFileHandle(aDatabase);
 
-  newFile->mFileStorage = aDatabase;
   newFile->mName = aName;
   newFile->mType = aType;
 
   newFile->mFile = GetFileFor(fileInfo);
   NS_ENSURE_TRUE(newFile->mFile, nullptr);
+
+  newFile->mStorageId = aDatabase->Id();
   newFile->mFileName.AppendInt(fileInfo->Id());
 
+  newFile->mDatabase = aDatabase;
   fileInfo.swap(newFile->mFileInfo);
 
   return newFile.forget();
 }
 
+bool
+IDBFileHandle::IsShuttingDown()
+{
+  return QuotaManager::IsShuttingDown() || FileHandle::IsShuttingDown();
+}
+
+bool
+IDBFileHandle::IsInvalid()
+{
+  return mDatabase->IsInvalidated();
+}
+
+nsIOfflineStorage*
+IDBFileHandle::Storage()
+{
+  return mDatabase;
+}
+
 already_AddRefed<nsISupports>
 IDBFileHandle::CreateStream(nsIFile* aFile, bool aReadOnly)
 {
-  nsCOMPtr<nsIOfflineStorage> storage = do_QueryInterface(mFileStorage);
-  NS_ASSERTION(storage, "This should always succeed!");
-
-  PersistenceType persistenceType = storage->Type();
-  const nsACString& group = storage->Group();
-  const nsACString& origin = storage->Origin();
+  PersistenceType persistenceType = mDatabase->Type();
+  const nsACString& group = mDatabase->Group();
+  const nsACString& origin = mDatabase->Origin();
 
   nsCOMPtr<nsISupports> result;
 
@@ -96,12 +122,25 @@ IDBFileHandle::CreateStream(nsIFile* aFile, bool aReadOnly)
   return result.forget();
 }
 
+void
+IDBFileHandle::SetThreadLocals()
+{
+  MOZ_ASSERT(mDatabase->GetOwner(), "Should have owner!");
+  QuotaManager::SetCurrentWindow(mDatabase->GetOwner());
+}
+
+void
+IDBFileHandle::UnsetThreadLocals()
+{
+  QuotaManager::SetCurrentWindow(nullptr);
+}
+
 already_AddRefed<nsIDOMFile>
-IDBFileHandle::CreateFileObject(mozilla::dom::file::LockedFile* aLockedFile,
+IDBFileHandle::CreateFileObject(mozilla::dom::LockedFile* aLockedFile,
                                 uint32_t aFileSize)
 {
-  nsCOMPtr<nsIDOMFile> file = new mozilla::dom::file::File(
-    mName, mType, aFileSize, mFile, aLockedFile, mFileInfo);
+  nsCOMPtr<nsIDOMFile> file =
+    new File(mName, mType, aFileSize, mFile, aLockedFile, mFileInfo);
 
   return file.forget();
 }
@@ -111,15 +150,4 @@ JSObject*
 IDBFileHandle::WrapObject(JSContext* aCx)
 {
   return IDBFileHandleBinding::Wrap(aCx, this);
-}
-
-IDBDatabase*
-IDBFileHandle::Database()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  IDBDatabase* database = static_cast<IDBDatabase*>(mFileStorage.get());
-  MOZ_ASSERT(database);
-
-  return database;
 }
