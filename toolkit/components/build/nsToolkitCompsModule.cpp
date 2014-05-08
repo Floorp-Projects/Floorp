@@ -11,8 +11,8 @@
 #include "nsUpdateDriver.h"
 #endif
 
-#if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
-#include "nsParentalControlsServiceWin.h"
+#if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
+#include "nsParentalControlsService.h"
 #endif
 
 #include "nsAlertsService.h"
@@ -44,8 +44,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFindService)
 
-#if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsParentalControlsServiceWin)
+#if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsParentalControlsService)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
@@ -94,7 +94,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(NativeOSFileInternalsService)
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_APPSTARTUP_CID);
 NS_DEFINE_NAMED_CID(NS_USERINFO_CID);
 NS_DEFINE_NAMED_CID(NS_ALERTSSERVICE_CID);
-#if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
+#if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
 NS_DEFINE_NAMED_CID(NS_PARENTALCONTROLSSERVICE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_DOWNLOADMANAGER_CID);
@@ -120,8 +120,8 @@ static const Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_TOOLKIT_APPSTARTUP_CID, false, nullptr, nsAppStartupConstructor },
   { &kNS_USERINFO_CID, false, nullptr, nsUserInfoConstructor },
   { &kNS_ALERTSSERVICE_CID, false, nullptr, nsAlertsServiceConstructor },
-#if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
-  { &kNS_PARENTALCONTROLSSERVICE_CID, false, nullptr, nsParentalControlsServiceWinConstructor },
+#if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
+  { &kNS_PARENTALCONTROLSSERVICE_CID, false, nullptr, nsParentalControlsServiceConstructor },
 #endif
   { &kNS_DOWNLOADMANAGER_CID, false, nullptr, nsDownloadManagerConstructor },
   { &kNS_DOWNLOADPLATFORM_CID, false, nullptr, DownloadPlatformConstructor },
@@ -148,7 +148,7 @@ static const Module::ContractIDEntry kToolkitContracts[] = {
   { NS_APPSTARTUP_CONTRACTID, &kNS_TOOLKIT_APPSTARTUP_CID },
   { NS_USERINFO_CONTRACTID, &kNS_USERINFO_CID },
   { NS_ALERTSERVICE_CONTRACTID, &kNS_ALERTSSERVICE_CID },
-#if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
+#if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
   { NS_PARENTALCONTROLSSERVICE_CONTRACTID, &kNS_PARENTALCONTROLSSERVICE_CID },
 #endif
   { NS_DOWNLOADMANAGER_CONTRACTID, &kNS_DOWNLOADMANAGER_CID },

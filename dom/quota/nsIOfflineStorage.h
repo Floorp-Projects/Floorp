@@ -7,13 +7,11 @@
 #ifndef nsIOfflineStorage_h__
 #define nsIOfflineStorage_h__
 
-#include "nsIFileStorage.h"
-
 #include "mozilla/dom/quota/PersistenceType.h"
 
 #define NS_OFFLINESTORAGE_IID \
-  {0xec7e878d, 0xc8c1, 0x402e, \
-  { 0xa2, 0xc4, 0xf6, 0x82, 0x29, 0x4e, 0x3c, 0xb1 } }
+  {0x3ae00063, 0x6c13, 0x4afd, \
+  { 0x86, 0x7d, 0x33, 0xc2, 0x12, 0xd8, 0x97, 0x25 } }
 
 class nsPIDOMWindow;
 
@@ -25,13 +23,16 @@ class Client;
 }
 }
 
-class nsIOfflineStorage : public nsIFileStorage
+class nsIOfflineStorage : public nsISupports
 {
 public:
   typedef mozilla::dom::quota::Client Client;
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_OFFLINESTORAGE_IID)
+
+  NS_IMETHOD_(const nsACString&)
+  Id() = 0;
 
   NS_IMETHOD_(Client*)
   GetClient() = 0;
@@ -83,6 +84,9 @@ protected:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIOfflineStorage, NS_OFFLINESTORAGE_IID)
 
 #define NS_DECL_NSIOFFLINESTORAGE                                              \
+  NS_IMETHOD_(const nsACString&)                                               \
+  Id() MOZ_OVERRIDE;                                                           \
+                                                                               \
   NS_IMETHOD_(Client*)                                                         \
   GetClient() MOZ_OVERRIDE;                                                    \
                                                                                \

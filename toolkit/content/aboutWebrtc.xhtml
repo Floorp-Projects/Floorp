@@ -175,7 +175,16 @@ function buildPcDiv(stats, pcDivHeading) {
   var newPcDiv = document.createElement('div');
 
   var heading = document.createElement('h3');
+
+  if (stats.closed) {
+    heading.appendChild(document.createTextNode("Closed "));
+  }
+
   heading.appendChild(document.createTextNode(pcDivHeading));
+
+  heading.appendChild(document.createTextNode(" " +
+    new Date(stats.timestamp).toTimeString()));
+
   newPcDiv.appendChild(heading);
 
   // First, ICE stats
@@ -238,6 +247,26 @@ function buildPcDiv(stats, pcDivHeading) {
   }
 
   // end of ICE stats
+
+  // Now, SDP
+  var localSdpHeading = document.createElement('h4');
+  localSdpHeading.appendChild(document.createTextNode("Local SDP"));
+  newPcDiv.appendChild(localSdpHeading);
+
+  var localSdpDiv = document.createElement('pre');
+  localSdpDiv.appendChild(document.createTextNode(stats.localSdp));
+
+  newPcDiv.appendChild(localSdpDiv);
+
+  var remoteSdpHeading = document.createElement('h4');
+  remoteSdpHeading.appendChild(document.createTextNode("Remote SDP"));
+  newPcDiv.appendChild(remoteSdpHeading);
+
+  var remoteSdpDiv = document.createElement('pre');
+  remoteSdpDiv.appendChild(document.createTextNode(stats.remoteSdp));
+
+  newPcDiv.appendChild(remoteSdpDiv);
+  // End of SDP
 
   // Now, RTP stats
   var rtpHeading = document.createElement('h4');

@@ -31,7 +31,7 @@ LOCAL_INCLUDES += [
     '../url-classifier',
 ]
 
-if not CONFIG['MOZ_DISABLE_PARENTAL_CONTROLS'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if not CONFIG['MOZ_DISABLE_PARENTAL_CONTROLS']:
     LOCAL_INCLUDES += [
         '../parentalcontrols',
     ]
