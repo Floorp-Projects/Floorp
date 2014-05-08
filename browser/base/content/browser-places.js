@@ -1544,6 +1544,10 @@ let BookmarkingUI = {
       viewToolbar.removeAttribute("checked");
     else
       viewToolbar.setAttribute("checked", "true");
+    // Get all statically placed buttons to supply them with keyboard shortcuts.
+    let staticButtons = viewToolbar.parentNode.getElementsByTagName("toolbarbutton");
+    for (let i = 0, l = staticButtons.length; i < l; ++i)
+      CustomizableUI.addShortcut(staticButtons[i]);
     // Setup the Places view.
     this._panelMenuView = new PlacesPanelMenuView("place:folder=BOOKMARKS_MENU",
                                                   "panelMenu_bookmarksMenu",
