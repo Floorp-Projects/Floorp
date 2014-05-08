@@ -133,10 +133,7 @@ protected:
 
   static nsresult GetOrigin(nsPIDOMWindow* aWindow, nsString& aOrigin);
 
-  void GetAlertName(nsAString& aRetval)
-  {
-    aRetval = mAlertName;
-  }
+  nsresult GetAlertName(nsString& aAlertName);
 
   nsString mID;
   nsString mTitle;
@@ -145,8 +142,6 @@ protected:
   nsString mLang;
   nsString mTag;
   nsString mIconUrl;
-
-  nsString mAlertName;
 
   bool mIsClosed;
 
