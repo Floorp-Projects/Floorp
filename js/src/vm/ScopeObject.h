@@ -238,18 +238,20 @@ class CallObject : public ScopeObject
     /* These functions are internal and are exposed only for JITs. */
 
     /*
-     * Construct a bare-bones call object given a shape and a non-singleton
-     * type.  The call object must be further initialized to be usable.
+     * Construct a bare-bones call object given a shape, a non-singleton type,
+     * and slots pointer.  The call object must be further initialized to be
+     * usable.
      */
     static CallObject *
-    create(JSContext *cx, HandleShape shape, HandleTypeObject type);
+    create(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots);
 
     /*
-     * Construct a bare-bones call object given a shape and make it have
-     * singleton type.  The call object must be initialized to be usable.
+     * Construct a bare-bones call object given a shape and slots pointer, and
+     * make it have singleton type.  The call object must be initialized to be
+     * usable.
      */
     static CallObject *
-    createSingleton(JSContext *cx, HandleShape shape);
+    createSingleton(JSContext *cx, HandleShape shape, HeapSlot *slots);
 
     static CallObject *
     createTemplateObject(JSContext *cx, HandleScript script, gc::InitialHeap heap);
