@@ -31,7 +31,6 @@ static const char *sEGLExtensionNames[] = {
     "EGL_EXT_create_context_robustness",
     "EGL_KHR_image",
     "EGL_KHR_fence_sync",
-    "EGL_ANDROID_native_fence_sync",
     nullptr
 };
 
@@ -196,10 +195,6 @@ GLLibraryEGL::EnsureInitialized()
         SYMBOL(GetProcAddress),
         SYMBOL(SwapBuffers),
         SYMBOL(CopyBuffers),
-        // On Android 4.2 and up, certain features like ANDROID_native_fence_sync
-        // can only be queried by using a special eglQueryString.
-        { (PRFuncPtr*) &mSymbols.fQueryStringImplementationANDROID,
-          { "_Z35eglQueryStringImplementationANDROIDPvi", nullptr } },
         SYMBOL(QueryString),
         SYMBOL(QueryContext),
         SYMBOL(BindTexImage),
@@ -212,11 +207,6 @@ GLLibraryEGL::EnsureInitialized()
         NS_WARNING("Couldn't find required entry points in EGL library (early init)");
         return false;
     }
-
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-    MOZ_RELEASE_ASSERT(mSymbols.fQueryStringImplementationANDROID,
-                       "Couldn't find eglQueryStringImplementationANDROID");
-#endif
 
     mEGLDisplay = fGetDisplay(EGL_DEFAULT_DISPLAY);
     if (!fInitialize(mEGLDisplay, nullptr, nullptr))
