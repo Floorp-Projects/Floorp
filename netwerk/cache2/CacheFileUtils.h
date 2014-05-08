@@ -8,6 +8,7 @@
 #include "nsError.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsTArray.h"
 
 class nsILoadContextInfo;
 class nsACString;
@@ -31,6 +32,59 @@ nsresult
 KeyMatchesLoadContextInfo(const nsACString &aKey,
                           nsILoadContextInfo *aInfo,
                           bool *_retval);
+
+class ValidityPair {
+public:
+  ValidityPair(uint32_t aOffset, uint32_t aLen);
+
+  ValidityPair& operator=(const ValidityPair& aOther);
+
+  // Returns true when two pairs can be merged, i.e. they do overlap or the one
+  // ends exactly where the other begins.
+  bool CanBeMerged(const ValidityPair& aOther) const;
+
+  // Returns true when aOffset is placed anywhere in the validity interval or
+  // exactly after its end.
+  bool IsInOrFollows(uint32_t aOffset) const;
+
+  // Returns true when this pair has lower offset than the other pair. In case
+  // both pairs have the same offset it returns true when this pair has a
+  // shorter length.
+  bool LessThan(const ValidityPair& aOther) const;
+
+  // Merges two pair into one.
+  void Merge(const ValidityPair& aOther);
+
+  uint32_t Offset() const { return mOffset; }
+  uint32_t Len() const    { return mLen; }
+
+private:
+  uint32_t mOffset;
+  uint32_t mLen;
+};
+
+class ValidityMap {
+public:
+  // Prints pairs in the map into log.
+  void Log() const;
+
+  // Returns number of pairs in the map.
+  uint32_t Length() const;
+
+  // Adds a new pair to the map. It keeps the pairs ordered and merges pairs
+  // when possible.
+  void AddPair(uint32_t aOffset, uint32_t aLen);
+
+  // Removes all pairs from the map.
+  void Clear();
+
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
+  ValidityPair& operator[](uint32_t aIdx);
+
+private:
+  nsTArray<ValidityPair> mMap;
+};
 
 } // CacheFileUtils
 } // net
